@@ -112,6 +112,7 @@ namespace Java.InteropTests
 		{
 			bool missingObject = false;
 			CB cb = (env, instance) => {
+				IntPtr priorEnvironment = JNIEnv.Handle;
 				// NOTE: this callback runs on a raw native pthread spawned by
 				// libreuse-threads.so and attached to the JVM. NUnit 3 replaces
 				// Console.Out with a TextCapture that resolves the current
@@ -120,14 +121,15 @@ namespace Java.InteropTests
 				// MethodWrapper.get_Name, which SIGABRTs the entire process and
 				// causes the test host to report "0 tests ran" for the assembly.
 				// Route diagnostics through Android.Util.Log instead.
-				Android.Util.Log.Info ("ThreadReuse",
-						"CrossThreadObjectInteractions: JNIEnv.Handle={0} env={1}, instance={2}",
-						JNIEnv.Handle.ToString ("x"), env.ToString ("x"), instance.ToString ("x"));
-				if (env != JNIEnv.Handle)
-					Android.Util.Log.Info ("ThreadReuse", "GOOD: they should differ (on the second call)....");
 				if (instance == IntPtr.Zero)
 					return;
 				using (var o = Java.Lang.Object.GetObject<Java.Lang.Object>(env, instance, JniHandleOwnership.DoNotTransfer)) {
+					// JNI logging must follow GetObject, which refreshes the cached environment after pthread reattachment.
+					Android.Util.Log.Info ("ThreadReuse",
+							"CrossThreadObjectInteractions: prior JNIEnv.Handle={0} env={1}, instance={2}",
+							priorEnvironment.ToString ("x"), env.ToString ("x"), instance.ToString ("x"));
+					if (env != priorEnvironment)
+						Android.Util.Log.Info ("ThreadReuse", "GOOD: they should differ (on the second call)....");
 					if (o == null) {
 						// Report on the test thread, not across the native callback boundary.
 						Volatile.Write (ref missingObject, true);
@@ -173,8 +175,8 @@ namespace Java.InteropTests
 		public void NewOpenGenericTypeThrows ()
 		{
 			try {
-				var lrefInstance = JNIEnv.StartCreateInstance (typeof (JniEnvGenericHolder<>), "()V");
-				JNIEnv.FinishCreateInstance (lrefInstance, "()V");
+				var lrefInstance = JNIEnv.AllocObject (typeof (JniEnvGenericHolder<>));
+				JNIEnv.FinishCreateInstance (lrefInstance, "()V"u8);
 				Assert.Fail ("SHOULD NOT BE REACHED: creation of open generic types is not supported");
 			} catch (NotSupportedException) {
 			}
@@ -185,6 +187,32 @@ namespace Java.InteropTests
 		{
 			using (var holder = new JniEnvGenericHolder<int>()) {
 			}
+		}
+
+		[TestCase (false)]
+		[TestCase (true)]
+		[Category ("JniUtf8Construction")]
+		public void Utf8ConstructorArguments (bool usePointer)
+		{
+			IntPtr handle;
+			unsafe {
+				// SAFETY: The complete literal supplies stable, terminated class bytes.
+				handle = JNIEnv.AllocObject ("java/lang/StringBuilder"u8);
+			}
+			using var instance = new Java.Lang.StringBuilder (handle, JniHandleOwnership.TransferLocalRef);
+
+			unsafe {
+				// SAFETY: The peer owns the allocation; the initialized slot matches the terminated (I)V descriptor and lives through the call.
+				JValue* arguments = stackalloc JValue [1];
+				arguments [0] = new JValue (37);
+				if (usePointer)
+					JNIEnv.FinishCreateInstance (instance.Handle, "(I)V"u8, arguments);
+				else
+					JNIEnv.FinishCreateInstance (instance.Handle, "(I)V"u8, new JValue (37));
+			}
+
+			Assert.AreEqual (37, instance.Capacity ());
+			Assert.AreEqual ("", instance.ToString ());
 		}
 
 		[Test]
@@ -349,7 +377,7 @@ namespace Java.InteropTests
 			using (var ContainsExportedMethods_class  = Java.Lang.Class.FromType (typeof (ContainsExportedMethods))) {
 				var ContainsExportedMethods_init = JNIEnv.GetMethodID (ContainsExportedMethods_class.Handle, "<init>", "()V");
 
-				var o = JNIEnv.StartCreateInstance (ContainsExportedMethods_class.Handle, ContainsExportedMethods_init);
+				var o = JNIEnv.AllocObject (ContainsExportedMethods_class.Handle);
 				JNIEnv.FinishCreateInstance (o, ContainsExportedMethods_class.Handle, ContainsExportedMethods_init);
 
 				/*
@@ -382,7 +410,7 @@ namespace Java.InteropTests
 			using (var ThrowableActivatedFromJava_class  = Java.Lang.Class.FromType (typeof (ThrowableActivatedFromJava))) {
 				var ThrowableActivatedFromJava_init = JNIEnv.GetMethodID (ThrowableActivatedFromJava_class.Handle, "<init>", "()V");
 
-				var o = JNIEnv.StartCreateInstance (ThrowableActivatedFromJava_class.Handle, ThrowableActivatedFromJava_init);
+				var o = JNIEnv.AllocObject (ThrowableActivatedFromJava_class.Handle);
 				JNIEnv.FinishCreateInstance (o, ThrowableActivatedFromJava_class.Handle, ThrowableActivatedFromJava_init);
 
 				GC.Collect ();
@@ -405,7 +433,7 @@ namespace Java.InteropTests
 			using (var cause = new Java.Lang.Throwable ("a-cause")) {
 				var ctor = JNIEnv.GetMethodID (klass.Handle, "<init>", "(Ljava/lang/Throwable;)V");
 
-				var o = JNIEnv.StartCreateInstance (klass.Handle, ctor, new JValue (cause.Handle));
+				var o = JNIEnv.AllocObject (klass.Handle);
 				JNIEnv.FinishCreateInstance (o, klass.Handle, ctor, new JValue (cause.Handle));
 
 				GC.Collect ();
@@ -430,7 +458,7 @@ namespace Java.InteropTests
 				// Default ctor
 				{
 					var ctor = JNIEnv.GetMethodID (klass.Handle, "<init>", "()V");
-					var o = JNIEnv.StartCreateInstance (klass.Handle, ctor);
+					var o = JNIEnv.AllocObject (klass.Handle);
 					JNIEnv.FinishCreateInstance (o, klass.Handle, ctor);
 					var v = Java.Lang.Object.GetObject<MultiCtorActivatedFromJava> (o, JniHandleOwnership.TransferLocalRef);
 					if (v == null)
@@ -441,7 +469,7 @@ namespace Java.InteropTests
 				// (Throwable) ctor
 				using (var cause = new Java.Lang.Throwable ("only-cause")) {
 					var ctor = JNIEnv.GetMethodID (klass.Handle, "<init>", "(Ljava/lang/Throwable;)V");
-					var o = JNIEnv.StartCreateInstance (klass.Handle, ctor, new JValue (cause.Handle));
+					var o = JNIEnv.AllocObject (klass.Handle);
 					JNIEnv.FinishCreateInstance (o, klass.Handle, ctor, new JValue (cause.Handle));
 					var v = Java.Lang.Object.GetObject<MultiCtorActivatedFromJava> (o, JniHandleOwnership.TransferLocalRef);
 					if (v == null)

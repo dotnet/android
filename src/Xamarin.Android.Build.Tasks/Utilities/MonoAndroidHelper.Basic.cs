@@ -10,6 +10,17 @@ namespace Xamarin.Android.Tasks;
 
 partial class MonoAndroidHelper
 {
+	public static Dictionary<string, string> LoadMapFile (IEnumerable<string> lines, StringComparer comparer)
+	{
+		var map = new Dictionary<string, string> (comparer);
+		foreach (var line in lines) {
+			var items = line.Split (new char [] { ';' }, count: 2);
+			if (!map.ContainsKey (items [0]))
+				map.Add (items [0], items [1]);
+		}
+		return map;
+	}
+
 	public static class AndroidAbi
 	{
 		public const string Arm32 = "armeabi-v7a";
@@ -34,13 +45,6 @@ partial class MonoAndroidHelper
 	};
 
 	static readonly char[] ZipPathTrimmedChars = {'/', '\\'};
-
-	static readonly Dictionary<string, string> ClangAbiMap = new Dictionary<string, string> (StringComparer.OrdinalIgnoreCase) {
-		{"arm64-v8a",   "aarch64"},
-		{"armeabi-v7a", "arm"},
-		{"x86",         "i686"},
-		{"x86_64",      "x86_64"}
-	};
 
 	static readonly Dictionary<string, AndroidTargetArch> AbiToArchMap = new Dictionary<string, AndroidTargetArch> (StringComparer.OrdinalIgnoreCase) {
 		{ AndroidAbi.Arm32, AndroidTargetArch.Arm },
@@ -158,14 +162,6 @@ partial class MonoAndroidHelper
 		}
 
 		return Convert.ToString (obj, CultureInfo.InvariantCulture);
-	}
-
-	public static string? MapAndroidAbiToClang (string androidAbi)
-	{
-		if (ClangAbiMap.TryGetValue (androidAbi, out string? clangAbi)) {
-			return clangAbi;
-		}
-		return null;
 	}
 
 	public static string MakeZipArchivePath (string part1, params string[]? pathParts)

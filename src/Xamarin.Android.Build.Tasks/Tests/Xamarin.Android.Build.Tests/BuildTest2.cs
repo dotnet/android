@@ -691,6 +691,67 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
+		public void RuntimeLibraryFiltering ()
+		{
+			var proj = new XamarinAndroidApplicationProject ();
+			proj.SetRuntime (AndroidRuntime.CoreCLR);
+			proj.SetProperty (KnownProperties.RuntimeIdentifier, "android-arm64");
+			foreach (string library in new [] { "libc.so", "libdl.so", "liblog.so" }) {
+				proj.OtherBuildItems.Add (RuntimeLibrary (library, "Microsoft.Android.Runtime.CoreCLR.android-arm64", "android-arm64"));
+			}
+			proj.OtherBuildItems.Add (RuntimeLibrary ("libm.so", "Microsoft.Android.Runtime.NativeAOT.android-arm64", "android-arm64"));
+			proj.OtherBuildItems.Add (RuntimeLibrary ("LIBZ.SO", "MICROSOFT.ANDROID.RUNTIME.NATIVEAOT.ANDROID-ARM64", "android-arm64"));
+			var kept = new [] {
+				RuntimeLibrary (Path.Combine ("unrelated", "libc.so"), "Other.Package", "android-arm64"),
+				RuntimeLibrary (Path.Combine ("no-rid", "libc.so"), "Microsoft.Android.Runtime.CoreCLR.android-arm64"),
+				RuntimeLibrary (Path.Combine ("other", "libcustom.so"), "Microsoft.Android.Runtime.CoreCLR.android-arm64", "android-arm64"),
+			};
+			foreach (var item in kept) {
+				proj.OtherBuildItems.Add (item);
+			}
+			proj.Imports.Add (new Import ("RuntimeLibraries.targets") {
+				TextContent = () => """
+					<Project>
+					  <Target Name="AddRuntimeLibrariesForTest" BeforeTargets="_ResolveAssemblies"
+					      Condition=" '$(_ComputeFilesToPublishForRuntimeIdentifiers)' != 'true' ">
+					    <ItemGroup>
+					      <ResolvedFileToPublish Include="@(_TestRuntimeLibrary)" />
+					    </ItemGroup>
+					  </Target>
+					  <Target Name="ReportRuntimeLibrariesForTest" AfterTargets="_ResolveAssemblies"
+					      Condition=" '$(_ComputeFilesToPublishForRuntimeIdentifiers)' != 'true' ">
+					    <ItemGroup>
+					      <_TestRemainingLibrary Include="@(ResolvedFileToPublish)" Condition=" '%(ResolvedFileToPublish.TestLibrary)' == 'true' " />
+					    </ItemGroup>
+					    <Message Text="Runtime library: %(_TestRemainingLibrary.Identity)" Importance="high" />
+					    <ItemGroup>
+					      <ResolvedFileToPublish Remove="@(_TestRuntimeLibrary)" />
+					    </ItemGroup>
+					  </Target>
+					</Project>
+					""",
+			});
+			using var builder = CreateApkBuilder ();
+			Assert.IsTrue (builder.Build (proj), "The application should build after reporting and removing the synthetic library inputs.");
+			const string prefix = "Runtime library: ";
+			var actual = builder.LastBuildOutput.Where (line => line.Contains (prefix))
+				.Select (line => line.Substring (line.IndexOf (prefix, StringComparison.Ordinal) + prefix.Length).Trim ());
+			CollectionAssert.AreEquivalent (kept.Select (item => item.Include ()), actual,
+				"Only system library stubs from supported runtime packages with a RID should be removed.");
+		}
+
+		static BuildItem RuntimeLibrary (string file, string package, string? rid = null)
+		{
+			var item = new BuildItem ("_TestRuntimeLibrary", file) {
+				MetadataValues = $"TestLibrary=true;NuGetPackageId={package}",
+			};
+			if (rid != null) {
+				item.Metadata ["RuntimeIdentifier"] = rid;
+			}
+			return item;
+		}
+
+		[Test]
 		public void ClassLibraryHasNoWarnings ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			bool isRelease = runtime == AndroidRuntime.NativeAOT;
@@ -1659,26 +1720,6 @@ namespace UnamedProject
 		}
 
 		[Test]
-		public void BuildMultiDexApplication ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
-		{
-			bool isRelease = runtime == AndroidRuntime.NativeAOT;
-			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
-				return;
-			}
-			var proj = CreateMultiDexRequiredApplication ();
-			proj.IsRelease = isRelease;
-			proj.SetRuntime (runtime);
-			proj.SetProperty ("AndroidEnableMultiDex", "True");
-			using (var b = CreateApkBuilder ()) {
-				string intermediateDir = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath);
-				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
-				Assert.IsTrue (File.Exists (Path.Combine (Root, b.ProjectDirectory, intermediateDir, "android/bin/classes.dex")),
-					"multidex-ed classes.zip exists");
-				Assert.IsFalse (b.LastBuildOutput.ContainsText ("Duplicate zip entry"), "Should not get warning about [META-INF/MANIFEST.MF]");
-			}
-		}
-
-		[Test]
 		public void BuildAfterMultiDexIsNotRequired ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			bool isRelease = runtime == AndroidRuntime.NativeAOT;
@@ -1696,6 +1737,7 @@ namespace UnamedProject
 				string apkPath = Path.Combine (Root, b.ProjectDirectory, proj.OutputPath, $"{proj.PackageName}-Signed.apk");
 
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
+				Assert.IsFalse (b.LastBuildOutput.ContainsText ("Duplicate zip entry"), "Should not get warning about [META-INF/MANIFEST.MF]");
 				FileAssert.Exists (Path.Combine (androidBinDir, "classes.dex"));
 				FileAssert.Exists (Path.Combine (androidBinDir, "classes2.dex"));
 

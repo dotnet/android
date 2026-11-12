@@ -1,0 +1,90 @@
+// Metadata.xml XPath class reference: path="/api/package[@name='com.example']/class[@name='MyClass']"
+[global::Android.Runtime.Register ("com/example/MyClass", DoNotGenerateAcw=true)]
+public partial class MyClass : Java.Lang.Object {
+	static readonly JniPeerMembers _members = new JniPeerMembers ("com/example/MyClass", typeof (MyClass));
+
+	[global::System.Diagnostics.DebuggerBrowsable (global::System.Diagnostics.DebuggerBrowsableState.Never)]
+	[global::System.ComponentModel.EditorBrowsable (global::System.ComponentModel.EditorBrowsableState.Never)]
+	public override global::Java.Interop.JniPeerMembers JniPeerMembers {
+		get { return _members; }
+	}
+
+	protected MyClass (IntPtr javaReference, JniHandleOwnership transfer) : base (javaReference, transfer)
+	{
+	}
+
+	static Delegate cb_echo_Echo_arrayLjava_lang_CharSequence__arrayLjava_lang_CharSequence_;
+#pragma warning disable 0169
+	static Delegate GetEcho_arrayLjava_lang_CharSequence_Handler ()
+	{
+		unsafe {
+			// SAFETY: The delegate matches the registered callback signature; JNI, not this connector, supplies its arguments.
+			return cb_echo_Echo_arrayLjava_lang_CharSequence__arrayLjava_lang_CharSequence_ ??= new _JniMarshal_PPL_L (n_Echo_arrayLjava_lang_CharSequence_);
+		}
+	}
+
+	/// <safety>
+	/// Use the registered JNI ABI on jnienv's attached thread. Receiver/reference arguments
+	/// must match the registered types and stay live without concurrent deletion for this call;
+	/// permitted nulls stay null. JNI retains borrowed ownership. The helper reports managed
+	/// failures and may return default; invalid addresses are not validated.
+	/// </safety>
+	static unsafe IntPtr n_Echo_arrayLjava_lang_CharSequence_ (IntPtr jnienv, IntPtr native__this, IntPtr native_messages)
+	{
+		unsafe {
+			// SAFETY: JNI supplies this thread's environment and live typed references; the static target pointer is synchronous.
+			return global::Java.Interop.JniMarshal.SafeInvokeFunc (jnienv, native__this, native_messages, &__n_Echo_arrayLjava_lang_CharSequence_);
+		}
+	}
+	/// <safety>
+	/// Requires the entry point's live, type-correct borrowed references in its active JNI
+	/// frame/thread, without concurrent deletion. Copy-back occurs on normal return only;
+	/// failures propagate to the marshal helper.
+	/// </safety>
+	private static unsafe IntPtr __n_Echo_arrayLjava_lang_CharSequence_ (IntPtr jnienv, IntPtr native__this, IntPtr native_messages)
+	{
+		unsafe {
+			// SAFETY: The marshal frame keeps typed JNI references live on this thread through conversion and normal-return copy-back.
+			var __this = global::Java.Lang.Object.GetObject<Com.Example.MyClass> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
+			var messages = (Java.Lang.ICharSequence[]) JNIEnv.GetArray (native_messages, JniHandleOwnership.DoNotTransfer, typeof (Java.Lang.ICharSequence));
+			IntPtr __ret = JNIEnv.NewArray (__this.EchoFormatted (messages));
+			if (messages != null)
+				JNIEnv.CopyArray (messages, native_messages);
+			return __ret;
+		}
+	}
+#pragma warning restore 0169
+
+	// Metadata.xml XPath method reference: path="/api/package[@name='com.example']/class[@name='MyClass']/method[@name='echo' and count(parameter)=1 and parameter[1][@type='java.lang.CharSequence[]']]"
+	[Register ("echo", "([Ljava/lang/CharSequence;)[Ljava/lang/CharSequence;", "GetEcho_arrayLjava_lang_CharSequence_Handler")]
+	public virtual Java.Lang.ICharSequence[] EchoFormatted (Java.Lang.ICharSequence[] messages)
+	{
+		const string __id = "echo.([Ljava/lang/CharSequence;)[Ljava/lang/CharSequence;";
+		unsafe {
+			// SAFETY: __id fixes argument types/count; initialized stack arguments and JNI locals stay on this thread for the synchronous call.
+			IntPtr native_messages = JNIEnv.NewArray (messages);
+			try {
+				JniArgumentValue* __args = stackalloc JniArgumentValue [1];
+				__args [0] = new JniArgumentValue (native_messages);
+				var __rm = _members.InstanceMethods.InvokeVirtualObjectMethod (__id, this, __args);
+				return (Java.Lang.ICharSequence[]) JNIEnv.GetArray (__rm.Handle, JniHandleOwnership.TransferLocalRef, typeof (Java.Lang.ICharSequence));
+			} finally {
+				if (messages != null) {
+					JNIEnv.CopyArray (native_messages, messages);
+					JNIEnv.DeleteLocalRef (native_messages);
+				}
+				global::System.GC.KeepAlive (messages);
+			}
+		}
+	}
+
+	public string[] Echo (string[] messages)
+	{
+		var jlca_messages = CharSequence.ArrayFromStringArray (messages);
+		Java.Lang.ICharSequence[] __result = EchoFormatted (jlca_messages);
+		var __rsval = CharSequence.ArrayToStringArray (__result);
+		if (jlca_messages != null) foreach (var s in jlca_messages) s?.Dispose ();
+		return __rsval;
+	}
+
+}

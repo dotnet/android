@@ -46,11 +46,6 @@ namespace xamarin::android
 
 		jstring_wrapper& operator=(const jstring_wrapper&) = delete;
 
-		bool hasValue () noexcept
-		{
-			return jstr != nullptr;
-		}
-
 	private:
 		[[gnu::always_inline]]
 		void ensure_cstr () noexcept

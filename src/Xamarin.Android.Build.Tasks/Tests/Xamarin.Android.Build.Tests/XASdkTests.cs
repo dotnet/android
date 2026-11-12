@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
-using System.Runtime.InteropServices;
 using System.Text;
 using NUnit.Framework;
 using Xamarin.Android.Tools;
@@ -260,7 +259,7 @@ namespace Xamarin.Android.Build.Tests
 		[Test]
 		public void DotNetNewFramework (
 			[Values ("android", "androidlib", "android-bindinglib", "androidwear", "androidtest")] string template,
-			[Values (null, "net11.0-android", "net10.0-android")] string framework)
+			[Values (null, "net12.0-android", "net11.0-android")] string framework)
 		{
 			var templateName = TestName.Replace ("-", "");
 			var templatePath = Path.Combine (Root, "temp", templateName);
@@ -273,7 +272,7 @@ namespace Xamarin.Android.Build.Tests
 			Assert.IsTrue (dotnet.New (template, noRestore: true, framework: framework), $"`dotnet new {template}` should succeed with framework '{framework}'");
 
 			var project = System.Xml.Linq.XDocument.Load (projectFile);
-			Assert.AreEqual (framework ?? "net11.0-android", project.Root.Element ("PropertyGroup").Element ("TargetFramework").Value);
+			Assert.AreEqual (framework ?? $"{XABuildConfig.LatestDotNetTargetFramework}-android", project.Root.Element ("PropertyGroup").Element ("TargetFramework").Value);
 		}
 
 		[Test]
@@ -290,7 +289,6 @@ namespace Xamarin.Android.Build.Tests
 
 			var repoNuGetConfig = Path.Combine (XABuildPaths.TopDirectory, "NuGet.config");
 			var projectNuGetConfig = Path.Combine (dotnet.ProjectDirectory, "NuGet.config");
-			File.Copy (repoNuGetConfig, projectNuGetConfig);
 			FileAssert.AreEqual (repoNuGetConfig, projectNuGetConfig);
 
 			File.WriteAllBytes (Path.Combine (dotnet.ProjectDirectory, "foo.jar"), ResourceData.JavaSourceJarTestJar);
@@ -333,13 +331,13 @@ namespace Xamarin.Android.Build.Tests
 				AddTestData (
 					dotnetVersion: XABuildConfig.PreviousDotNetTargetFramework,
 					platform: "android",
-					apiLevel: new Version (36, 0),
+					apiLevel: new Version (37, 0),
 					runtime: runtime);
 
 				AddTestData (
 					dotnetVersion: XABuildConfig.PreviousDotNetTargetFramework,
-					platform: "android36",
-					apiLevel: new Version (36, 0),
+					platform: "android37",
+					apiLevel: new Version (37, 0),
 					runtime: runtime);
 
 				AddTestData (
@@ -484,7 +482,7 @@ public class JavaSourceTest {
 				AddTestData (
 					dotnetVersion: XABuildConfig.PreviousDotNetTargetFramework,
 					platform: "android",
-					apiLevel: new Version (36, 0),
+					apiLevel: new Version (37, 0),
 					runtime: runtime
 				);
 
@@ -705,17 +703,6 @@ public abstract class Foo<TVirtualView, TNativeView> : ViewHandler<TVirtualView,
 			if (!preview) {
 				builder.AssertHasNoWarnings ();
 			}
-		}
-
-		static string GetPreviousWorkloadJavaSdkPath ()
-		{
-			var architecture = RuntimeInformation.ProcessArchitecture.ToString ().ToUpperInvariant ();
-			var variableName = $"JAVA_HOME_21_{architecture}";
-			var javaSdkPath = Environment.GetEnvironmentVariable (variableName);
-			if (string.IsNullOrEmpty (javaSdkPath)) {
-				Assert.Ignore ($"The previous Android workload requires JDK 21, but {variableName} is not set.");
-			}
-			return javaSdkPath;
 		}
 	}
 }

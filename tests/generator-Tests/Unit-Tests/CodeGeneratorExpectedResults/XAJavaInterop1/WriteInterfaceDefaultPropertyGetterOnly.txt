@@ -1,0 +1,73 @@
+// Metadata.xml XPath interface reference: path="/api/package[@name='java.code']/interface[@name='IMyInterface']"
+[Register ("java/code/IMyInterface", "", "java.code.IMyInterfaceInvoker")]
+public partial interface IMyInterface : IJavaObject, IJavaPeerable {
+	private static readonly JniPeerMembers _members = new JniPeerMembers ("java/code/IMyInterface", typeof (IMyInterface), isInterface: true);
+
+	private static Delegate cb_get_Value_get_Value_I;
+#pragma warning disable 0169
+	private static Delegate Getget_ValueHandler ()
+	{
+		unsafe {
+			// SAFETY: The delegate matches the registered callback signature; JNI, not this connector, supplies its arguments.
+			return cb_get_Value_get_Value_I ??= new _JniMarshal_PP_I (n_get_Value);
+		}
+	}
+
+	/// <safety>
+	/// Use the registered JNI ABI on jnienv's attached thread. Receiver/reference arguments
+	/// must match the registered types and stay live without concurrent deletion for this call;
+	/// permitted nulls stay null. JNI retains borrowed ownership. The helper reports managed
+	/// failures and may return default; invalid addresses are not validated.
+	/// </safety>
+	private static unsafe int n_get_Value (IntPtr jnienv, IntPtr native__this)
+	{
+		unsafe {
+			// SAFETY: JNI supplies this thread's environment and live typed references; the static target pointer is synchronous.
+			return global::Java.Interop.JniMarshal.SafeInvokeFunc (jnienv, native__this, &__n_get_Value);
+		}
+	}
+	/// <safety>
+	/// Requires the entry point's live, type-correct borrowed references in its active JNI
+	/// frame/thread, without concurrent deletion. Copy-back occurs on normal return only;
+	/// failures propagate to the marshal helper.
+	/// </safety>
+	private static unsafe int __n_get_Value (IntPtr jnienv, IntPtr native__this)
+	{
+		unsafe {
+			// SAFETY: The marshal frame keeps typed JNI references live on this thread through conversion and normal-return copy-back.
+			var __this = global::Java.Lang.Object.GetObject<java.code.IMyInterface> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
+			return __this.Value;
+		}
+	}
+#pragma warning restore 0169
+
+	virtual int Value {
+		// Metadata.xml XPath method reference: path="/api/package[@name='java.code']/interface[@name='IMyInterface']/method[@name='get_Value' and count(parameter)=0]"
+		[Register ("get_Value", "()I", "Getget_ValueHandler:java.code.IMyInterface, MyAssembly")]
+		get {
+			const string __id = "get_Value.()I";
+			unsafe {
+				// SAFETY: __id fixes argument types/count; initialized stack arguments and JNI locals stay on this thread for the synchronous call.
+				var __rm = _members.InstanceMethods.InvokeVirtualInt32Method (__id, this, null);
+				return __rm;
+			}
+		}
+	}
+
+}
+
+[global::Android.Runtime.Register ("java/code/IMyInterface", DoNotGenerateAcw=true)]
+internal partial class IMyInterfaceInvoker : global::Java.Lang.Object, IMyInterface {
+	[global::System.Diagnostics.DebuggerBrowsable (global::System.Diagnostics.DebuggerBrowsableState.Never)]
+	[global::System.ComponentModel.EditorBrowsable (global::System.ComponentModel.EditorBrowsableState.Never)]
+	public override global::Java.Interop.JniPeerMembers JniPeerMembers {
+		get { return _members_java_code_IMyInterface; }
+	}
+
+	static readonly JniPeerMembers _members_java_code_IMyInterface = new JniPeerMembers ("java/code/IMyInterface", typeof (IMyInterfaceInvoker));
+
+	public IMyInterfaceInvoker (IntPtr handle, JniHandleOwnership transfer) : base (handle, transfer)
+	{
+	}
+
+}

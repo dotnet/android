@@ -13,7 +13,8 @@ namespace Xamarin.Android.Tasks
 	/// * Checks if ABI is valid
 	/// * Fixes up libmonodroid.so based on $(AndroidIncludeDebugSymbols)
 	/// </summary>
-	public class ProcessNativeLibraries : AndroidTask
+	[MSBuildMultiThreadableTask]
+	public class ProcessNativeLibraries : MultithreadedAndroidTask
 	{
 		public override string TaskPrefix => "PRNL";
 
@@ -40,7 +41,7 @@ namespace Xamarin.Android.Tasks
 			var output = new List<ITaskItem> (InputLibraries.Length);
 
 			foreach (var library in InputLibraries) {
-				var abi = AndroidRidAbiHelper.GetNativeLibraryAbi (library);
+				var abi = AndroidRidAbiHelper.GetNativeLibraryAbi (library, TaskEnvironment);
 				if (abi.IsNullOrEmpty ()) {
 					var packageId = library.GetMetadata ("NuGetPackageId");
 					if (!packageId.IsNullOrEmpty ()) {
@@ -52,7 +53,6 @@ namespace Xamarin.Android.Tasks
 				}
 				// Both lib{mono,net}-android.debug.so and lib{mono,net}-android.release.so are in InputLibraries.
 				// Use IncludeDebugSymbols to determine which one to include.
-				// We may eventually have files such as `lib{mono,net}-android-checked+asan.release.so` as well.
 				var fileName = Path.GetFileNameWithoutExtension (library.ItemSpec);
 				if (ExcludedLibraries != null && ExcludedLibraries.Contains (fileName, StringComparer.OrdinalIgnoreCase)) {
 					Log.LogDebugMessage ($"Excluding '{library.ItemSpec}'");

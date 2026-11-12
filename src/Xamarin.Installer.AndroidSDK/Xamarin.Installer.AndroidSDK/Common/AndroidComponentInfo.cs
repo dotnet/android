@@ -112,7 +112,7 @@ namespace Xamarin.Installer.AndroidSDK.Common
 			if (ReferenceEquals (this, other))
 				return true;
 
-			return String.Compare (Type, other.Type, StringComparison.Ordinal) == 0;
+			return string.Equals (Type, other.Type, StringComparison.Ordinal);
 		}
 
 		/// <summary>
@@ -150,7 +150,7 @@ namespace Xamarin.Installer.AndroidSDK.Common
 			if (one == null)
 				return two == null;
 
-			return String.Compare (one, two, StringComparison.Ordinal) == 0;
+			return string.Equals (one, two, StringComparison.Ordinal);
 		}
 	}
 }

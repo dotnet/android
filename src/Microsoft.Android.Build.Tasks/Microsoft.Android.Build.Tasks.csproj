@@ -2,7 +2,7 @@
   <Import Project="..\..\Configuration.props" />
 
   <!--
-    This assembly hosts MSBuild tasks that require .NET (net11.0) APIs that are not available in
+    This assembly hosts MSBuild tasks that require .NET (net12.0) APIs that are not available in
     netstandard2.0, so they cannot live in Xamarin.Android.Build.Tasks.dll (which multi-targets
     netstandard2.0 to run on both .NET Framework and .NET MSBuild). Tasks here are imported with
     <UsingTask ... Runtime="NET" /> so they run on .NET.
@@ -13,12 +13,16 @@
     <RootNamespace>Microsoft.Android.Tasks</RootNamespace>
     <Nullable>enable</Nullable>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <LangVersion>preview</LangVersion>
+    <!-- Use the property instead of the feature flag: satellite compilation forwards Features but not LangVersion.
+         https://github.com/dotnet/sdk/issues/56839 -->
+    <MemorySafetyRulesVersion>2</MemorySafetyRulesVersion>
     <WarningsAsErrors>Nullable</WarningsAsErrors>
     <!--
       Deliberately *not* the shared tools\ directory. MSBuild probes a task assembly's own
       directory before anything else, and tools\ holds the netstandard2.0 flavors of packages
       such as System.IO.Hashing that Xamarin.Android.Build.Tasks.dll deposits. Those bind their
-      Span<T> to System.Memory, so a net11.0 caller resolving them fails with
+      Span<T> to System.Memory, so a net12.0 caller resolving them fails with
       MissingMethodException. Living in our own directory means this assembly and its
       dependencies always resolve to their .NET flavors.
     -->
@@ -51,21 +55,31 @@
     <ProjectReference Include="..\Microsoft.Android.Build.BaseTasks\Microsoft.Android.Build.BaseTasks.csproj" />
     <ProjectReference Include="..\Microsoft.Android.Sdk.TrimmableTypeMap\Microsoft.Android.Sdk.TrimmableTypeMap.csproj" />
     <ProjectReference Include="..\Xamarin.Android.Tools.AndroidSdk\Xamarin.Android.Tools.AndroidSdk.csproj" />
-    <ProjectReference Include="..\..\external\Java.Interop\src\Java.Interop.Localization\Java.Interop.Localization.csproj" />
+    <ProjectReference Include="..\..\src\Java.Interop.Localization\Java.Interop.Localization.csproj" />
     <InternalsVisibleTo Include="Microsoft.Android.Build.Tasks.Tests" Key="0024000004800000940000000602000000240000525341310004000011000000438ac2a5acfbf16cbd2b2b47a62762f273df9cb2795ceccdf77d10bf508e69e7a362ea7a45455bbf3ac955e1f2e2814f144e5d817efc4c6502cc012df310783348304e3ae38573c6d658c234025821fda87a0be8a0d504df564e2c93b2b878925f42503e9d54dfef9f9586d9e6f38a305769587b1de01f6c0410328b2c9733db" />
   </ItemGroup>
 
   <ItemGroup>
-    <EmbeddedResource Include="..\Xamarin.Android.Build.Tasks\Resources\JavaInteropRuntime.java;..\Xamarin.Android.Build.Tasks\Resources\NativeAotRuntimeProvider.java">
+    <EmbeddedResource Include="..\Xamarin.Android.Build.Tasks\Resources\Resource.Designer.snk" LogicalName="Resource.Designer.snk" />
+    <EmbeddedResource Include="..\Xamarin.Android.Build.Tasks\Resources\JavaInteropRuntime.java;..\Xamarin.Android.Build.Tasks\Resources\NativeAotRuntimeProvider.java;..\Xamarin.Android.Build.Tasks\Resources\MonoRuntimeProvider.Bundled.java">
       <LogicalName>%(Filename)%(Extension)</LogicalName>
     </EmbeddedResource>
+    <Compile Include="..\Xamarin.Android.Build.Tasks\Utilities\AndroidRuntime.cs" Link="Utilities\AndroidRuntime.cs" />
     <Compile Include="..\Xamarin.Android.Build.Tasks\Utilities\NullableExtensions.cs" Link="Utilities\NullableExtensions.cs" />
     <Compile Include="..\Xamarin.Android.Build.Tasks\Utilities\MetadataExtensions.cs" Link="Utilities\MetadataExtensions.cs" />
     <Compile Include="..\Xamarin.Android.Build.Tasks\Utilities\KnownMetadata.cs" Link="Utilities\KnownMetadata.cs" />
     <Compile Include="..\Xamarin.Android.Build.Tasks\Utilities\DummyCustomAttributeProvider.cs" Link="Utilities\DummyCustomAttributeProvider.cs" />
     <Compile Include="..\Xamarin.Android.Build.Tasks\Utilities\ManifestPlaceholderResolver.cs" Link="Utilities\ManifestPlaceholderResolver.cs" />
     <Compile Include="..\Xamarin.Android.Build.Tasks\Utilities\MonoAndroidHelper.Basic.cs" Link="Utilities\MonoAndroidHelper.Basic.cs" />
+    <Compile Include="..\Xamarin.Android.Build.Tasks\Utilities\ResourceParser.cs" Link="Utilities\ResourceParser.cs" />
+    <Compile Include="..\Xamarin.Android.Build.Tasks\Utilities\ResourceIdentifier.cs" Link="Utilities\ResourceIdentifier.cs" />
+    <Compile Include="..\Xamarin.Android.Build.Tasks\Utilities\RtxtParser.cs" Link="Utilities\RtxtParser.cs" />
     <Compile Include="..\Xamarin.Android.Build.Tasks\Utilities\PackageFileListBuilder.cs" Link="Utilities\PackageFileListBuilder.cs" />
+    <!-- BuildAppBundle: the legacy BundleToolAdbTask tasks still derive from these, so they remain shared sources. -->
+    <Compile Include="..\Xamarin.Android.Build.Tasks\Tasks\JavaToolTask.cs" Link="Tasks\JavaToolTask.cs" />
+    <Compile Include="..\Xamarin.Android.Build.Tasks\Tasks\BundleTool.cs" Link="Tasks\BundleTool.cs" />
+    <Compile Include="..\Xamarin.Android.Build.Tasks\Utilities\AssemblyIdentityMap.cs" Link="Utilities\AssemblyIdentityMap.cs" />
+    <Compile Include="..\Xamarin.Android.Build.Tasks\Utilities\JsonExtensions.cs" Link="Utilities\JsonExtensions.cs" />
   </ItemGroup>
 
   <!--
@@ -77,6 +91,15 @@
     <Compile Include="..\Xamarin.Android.Build.Tasks\Properties\Resources.Designer.cs" Link="Properties\Resources.Designer.cs" />
     <EmbeddedResource Include="..\Xamarin.Android.Build.Tasks\Properties\Resources*.resx" Link="Properties\%(Filename)%(Extension)">
       <ManifestResourceName>Xamarin.Android.Tasks.Properties.%(Filename)</ManifestResourceName>
+    </EmbeddedResource>
+  </ItemGroup>
+
+  <!-- FastDeploy shares AndroidHelper and its localized XA#### messages with Xamarin.Android.Build.Debugging.Tasks. -->
+  <ItemGroup>
+    <Compile Include="..\Xamarin.Android.Build.Debugging.Tasks\Utilities\AndroidHelper.cs" Link="Utilities\AndroidHelper.cs" />
+    <Compile Include="..\Xamarin.Android.Build.Debugging.Tasks\Properties\Resources.Designer.cs" Link="Properties\DebuggingResources.Designer.cs" />
+    <EmbeddedResource Include="..\Xamarin.Android.Build.Debugging.Tasks\Properties\Resources*.resx" Link="Properties\Debugging%(Filename)%(Extension)">
+      <ManifestResourceName>Xamarin.Android.Build.Debugging.Tasks.Properties.%(Filename)</ManifestResourceName>
     </EmbeddedResource>
   </ItemGroup>
 

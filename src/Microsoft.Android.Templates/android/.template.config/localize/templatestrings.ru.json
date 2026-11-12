@@ -1,10 +1,10 @@
-﻿{
+{
   "author": "Microsoft",
   "name": "Приложение Android",
   "description": "Проект создания приложения .NET для Android",
   "symbols/Framework/description": "Целевая платформа для проекта.",
+  "symbols/Framework/choices/net12.0-android/description": "Целевая платформа net12.0-android",
   "symbols/Framework/choices/net11.0-android/description": "Целевая net11.0-android",
-  "symbols/Framework/choices/net10.0-android/description": "Целевая net10.0-android",
   "symbols/packageName/description": "Переопределяет имя пакета в AndroidManifest.xml",
   "symbols/supportedOSVersion/description": "Переопределяет $(SupportedOSPlatformVersion) в файле проекта",
   "symbols/skipRestore/description": "Если указано, пропускает автоматическое восстановление проекта при создании."

@@ -344,32 +344,13 @@ public sealed class JavaPeerScanner : IDisposable
 
 	static void ForceUnconditionalIfPresent (Dictionary<(string ManagedName, string AssemblyName), JavaPeerInfo> results, string? managedTypeName)
 	{
-		if (managedTypeName is null) {
+		if (managedTypeName is null || managedTypeName.IsNullOrWhiteSpace ()) {
 			return;
 		}
-
-		managedTypeName = managedTypeName.Trim ();
-		if (managedTypeName.Length == 0) {
-			return;
-		}
-
-		// TryGetTypeProperty may return assembly-qualified names like "Ns.Type, Assembly, ..."
-		// Strip to just the type name for lookup
-		var commaIndex = managedTypeName.IndexOf (',');
-		if (commaIndex > 0) {
-			managedTypeName = managedTypeName.Substring (0, commaIndex).Trim ();
-		}
-
-		if (managedTypeName.Length == 0) {
-			return;
-		}
-
-		// Search by managed type name across all assemblies (BackupAgent/ManageSpaceActivity
-		// attribute values are not assembly-qualified).
-		foreach (var key in results.Keys) {
-			if (string.Equals (key.ManagedName, managedTypeName, StringComparison.Ordinal)) {
-				results [key] = results [key] with { IsUnconditional = true };
-			}
+		var peers = results.Values.ToList ();
+		var peer = AssemblyLevelElementBuilder.FindPeerByAssemblyQualifiedName (peers, managedTypeName);
+		if (peer is not null) {
+			peer.IsUnconditional = true;
 		}
 	}
 
@@ -423,8 +404,8 @@ public sealed class JavaPeerScanner : IDisposable
 				} else {
 					// A managed class that implements Android.Runtime.IJavaObject but does not
 					// derive from a Java peer (Java.Lang.Object / Java.Lang.Throwable) cannot be
-					// marshaled to Java. Mirror the legacy XAJavaTypeScanner XA4212 diagnostic,
-					// which the managed/llvm-ir typemap paths raise via GenerateJavaStubs.
+					// marshaled to Java. Preserve the XA4212 diagnostic from the former
+					// XAJavaTypeScanner / GenerateJavaStubs pipeline.
 					if (IsCustomJavaObject (typeHandle, typeDef, index)) {
 						if (errorOnCustomJavaObject) {
 							logger?.LogCustomJavaObjectError (fullName);
@@ -1222,7 +1203,7 @@ public sealed class JavaPeerScanner : IDisposable
 		}
 
 		// Check each ctor on this type for additional constructors not yet covered
-		foreach (var methodHandle in typeDef.GetMethods ()) {
+		constructors: foreach (var methodHandle in typeDef.GetMethods ()) {
 			var methodDef = index.Reader.GetMethodDefinition (methodHandle);
 			if (!index.Reader.StringComparer.Equals (methodDef.Name, ".ctor")) {
 				continue;
@@ -1234,15 +1215,10 @@ public sealed class JavaPeerScanner : IDisposable
 			}
 
 			// Check if this ctor's params are already covered by a base registered ctor
-			bool alreadyCovered = false;
 			foreach (var baseCtor in baseRegisteredCtors) {
 				if (HaveIdenticalParameterTypes (methodDef, index, baseCtor.Method, baseCtor.Index, baseCtor.DeclaringType)) {
-					alreadyCovered = true;
-					break;
+					continue constructors;
 				}
-			}
-			if (alreadyCovered) {
-				continue;
 			}
 
 			// Fallback: if any base registered ctor is parameterless, accept this ctor
@@ -1290,8 +1266,8 @@ public sealed class JavaPeerScanner : IDisposable
 	/// <summary>
 	/// Maps a managed type name to its JNI descriptor for constructor signature
 	/// computation. Returns null for types that can't be mapped to JNI
-	/// (matching legacy GetJniSignature behavior). For Java peer object types
-	/// (types with [Register]), resolves to "L&lt;jniName&gt;;" via assembly cache.
+	/// (matching legacy GetJniSignature behavior). For Java peer object types,
+	/// resolves to "L&lt;jniName&gt;;" via assembly cache.
 	/// </summary>
 	string? ManagedTypeToJniDescriptorOrNull (string managedType)
 	{
@@ -1310,8 +1286,8 @@ public sealed class JavaPeerScanner : IDisposable
 	}
 
 	/// <summary>
-	/// Looks up a managed type in its referenced assembly. If the type has
-	/// [Register], returns "L&lt;jniName&gt;;". Otherwise returns null.
+	/// Looks up a managed type in its referenced assembly and returns its JNI
+	/// object descriptor, or null if it is not a Java peer.
 	/// </summary>
 	string? TryResolveJniObjectDescriptor (TypeRefData managedType)
 	{
@@ -1341,8 +1317,11 @@ public sealed class JavaPeerScanner : IDisposable
 			return $"L{registerInfo.JniName};";
 		}
 
-		// User peer types (extend a Java peer but lack [Register]) get a CRC64-based
-		// JNI name in ScanAssembly. Mirror that for exported signatures.
+		if (index.AttributesByType.TryGetValue (handle, out var attributeInfo) && attributeInfo.JniName is not null) {
+			return $"L{attributeInfo.JniName};";
+		}
+
+		// Match ScanAssembly's CRC64 fallback when the peer has no explicit JNI name.
 		var typeDef = index.Reader.GetTypeDefinition (handle);
 		if (ExtendsJavaPeer (handle, typeDef, index)) {
 			var (jniName, _) = ComputeAutoJniNames (typeDef, index);
@@ -1943,8 +1922,7 @@ public sealed class JavaPeerScanner : IDisposable
 		var javaCallableWrapperInterfaces = new List<string> ();
 		var addedJavaNames = new HashSet<string> (StringComparer.Ordinal);
 		var assignabilityVisited = new HashSet<(string ManagedTypeName, string AssemblyName)> ();
-		foreach (var iface in interfaces) {
-			var isRedundant = false;
+		interfaces: foreach (var iface in interfaces) {
 			foreach (var other in interfaces) {
 				if (IsSameTypeDefinition (iface.Type, other.Type)) {
 					continue;
@@ -1952,13 +1930,8 @@ public sealed class JavaPeerScanner : IDisposable
 
 				assignabilityVisited.Clear ();
 				if (IsInterfaceAssignableFrom (iface.Type, other.Type, assignabilityVisited)) {
-					isRedundant = true;
-					break;
+					continue interfaces;
 				}
-			}
-
-			if (isRedundant) {
-				continue;
 			}
 
 			if (addedJavaNames.Add (iface.JavaName)) {
@@ -2954,7 +2927,7 @@ public sealed class JavaPeerScanner : IDisposable
 	List<PublicConstructorInfo> GetSupportedPublicConstructors (TypeDefinition typeDef, AssemblyIndex index)
 	{
 		var constructors = new List<PublicConstructorInfo> ();
-		foreach (var methodHandle in typeDef.GetMethods ()) {
+		constructors: foreach (var methodHandle in typeDef.GetMethods ()) {
 			var methodDef = index.Reader.GetMethodDefinition (methodHandle);
 			if ((methodDef.Attributes & MethodAttributes.Static) != 0 ||
 			    (methodDef.Attributes & MethodAttributes.MemberAccessMask) != MethodAttributes.Public ||
@@ -2963,22 +2936,18 @@ public sealed class JavaPeerScanner : IDisposable
 			}
 
 			var sig = methodDef.DecodeSignature (index.TypeRefSignatureProvider, genericContext: index);
-			bool unsupported = false;
 			foreach (var parameter in sig.ParameterTypes) {
 				if (IsOwnedByConstructorDiagnostics (parameter)) {
-					unsupported = true;
-					break;
+					continue constructors;
 				}
 			}
-			if (!unsupported) {
-				var signature = new StringBuilder ();
-				signature.Append ('(');
-				foreach (var parameter in sig.ParameterTypes) {
-					signature.Append (ManagedTypeToJniDescriptor (parameter));
-				}
-				signature.Append (')');
-				constructors.Add (new (sig.ParameterTypes, signature.ToString ()));
+			var signature = new StringBuilder ();
+			signature.Append ('(');
+			foreach (var parameter in sig.ParameterTypes) {
+				signature.Append (ManagedTypeToJniDescriptor (parameter));
 			}
+			signature.Append (')');
+			constructors.Add (new (sig.ParameterTypes, signature.ToString ()));
 		}
 		return constructors;
 	}
@@ -3346,7 +3315,7 @@ public sealed class JavaPeerScanner : IDisposable
 
 	static ComponentInfo? ToComponentInfo (TypeAttributeInfo? attrInfo)
 	{
-		if (attrInfo is null) {
+		if (attrInfo is null || !attrInfo.IsComponentAttribute) {
 			return null;
 		}
 
@@ -3369,6 +3338,9 @@ public sealed class JavaPeerScanner : IDisposable
 			Properties = attrInfo.Properties,
 			IntentFilters = attrInfo.IntentFilters,
 			MetaData = attrInfo.MetaData,
+			ManifestProperties = attrInfo.ManifestProperties,
+			UsesLibraries = attrInfo.UsesLibraries,
+			GrantUriPermissions = attrInfo.GrantUriPermissions,
 			LayoutProperties = attrInfo.LayoutProperties,
 		};
 	}

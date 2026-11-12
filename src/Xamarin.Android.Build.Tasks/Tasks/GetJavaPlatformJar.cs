@@ -14,7 +14,8 @@ using Microsoft.Android.Build.Tasks;
 
 namespace Xamarin.Android.Tasks
 {
-	public class GetJavaPlatformJar : AndroidTask
+	[MSBuildMultiThreadableTask]
+	public class GetJavaPlatformJar : MultithreadedAndroidTask
 	{
 		public override string TaskPrefix => "GJP";
 
@@ -58,13 +59,14 @@ namespace Xamarin.Android.Tasks
 
 			// Look for targetSdkVersion in the user's AndroidManifest.xml
 			if (!AndroidManifest.IsNullOrWhiteSpace ()) {
-				if (!File.Exists (AndroidManifest)) {
+				var manifestPath = TaskEnvironment.GetAbsolutePath (AndroidManifest);
+				if (!File.Exists (manifestPath)) {
 					Log.LogCodedError ("XA1018", Properties.Resources.XA1018, AndroidManifest);
 					return false;
 				}
 
 				try {
-					var doc = XDocument.Load (AndroidManifest);
+					var doc = XDocument.Load (manifestPath);
 					var manifest = doc.Root;
 
 					if (manifest != null) {
@@ -91,7 +93,7 @@ namespace Xamarin.Android.Tasks
 							if (target_sdk != null && (!int.TryParse (target_sdk.Value, out int targetSdkVersion) || targetSdkVersion < XABuildConfig.AndroidMinimumDotNetApiLevel.Major)) {
 								Log.LogWarningForXmlNode (
 										code:             "XA4216",
-										file:             AndroidManifest,
+										file:             manifestPath,
 										node:             target_sdk,
 										message:          Properties.Resources.XA4216_TargetSdkVersion,
 										messageArgs:      new object [] { target_sdk?.Value ?? "", XABuildConfig.AndroidMinimumDotNetApiLevel }
@@ -101,16 +103,16 @@ namespace Xamarin.Android.Tasks
 					}
 				} catch (Exception ex) {
 					// If they're manifest is bad, let's error them out
-					Log.LogErrorFromException (ex, true);
+					Log.LogErrorFromException (ex, true, false, manifestPath);
 					return false;
 				}
 			}
 
-			var supportedVersions = MonoAndroidHelper.GetSupportedVersions (BuildEngine4, ReferenceAssemblyPaths);
+			var supportedVersions = MonoAndroidHelper.GetSupportedVersions (BuildEngine4, ReferenceAssemblyPaths, TaskEnvironment);
 			platform            = GetTargetSdkVersion (platform, target_sdk, supportedVersions);
 			JavaPlatformJarPath =  MonoAndroidHelper.TryGetAndroidJarPath (Log, platform, supportedVersions,
 				designTimeBuild: DesignTimeBuild, buildingInsideVisualStudio: BuildingInsideVisualStudio,
-				targetFramework: TargetFramework, androidSdkDirectory: AndroidSdkDirectory);
+				targetFramework: TargetFramework, androidSdkDirectory: AndroidSdkDirectory.IsNullOrEmpty () ? AndroidSdkDirectory : TaskEnvironment.GetAbsolutePath (AndroidSdkDirectory));
 			TargetSdkVersion = supportedVersions.GetApiLevelFromId (platform).ToString ();
 			if (JavaPlatformJarPath == null)
 				return !Log.HasLoggedErrors;
@@ -130,7 +132,7 @@ namespace Xamarin.Android.Tasks
 				// AndroidApiLevel is likely a *preview* API level; use it.
 				Log.LogWarningForXmlNode (
 						code:             "XA4211",
-						file:             AndroidManifest ?? "",
+						file:             AndroidManifest.IsNullOrWhiteSpace () ? "" : TaskEnvironment.GetAbsolutePath (AndroidManifest),
 						node:             (object?) target_sdk ?? "",
 						message:          Properties.Resources.XA4211,
 						messageArgs:      new [] {
@@ -145,7 +147,7 @@ namespace Xamarin.Android.Tasks
 					targetSdk.Major < frameworkSdk.Major) {
 				Log.LogWarningForXmlNode (
 						code:             "XA4211",
-						file:             AndroidManifest ?? "",
+						file:             AndroidManifest.IsNullOrWhiteSpace () ? "" : TaskEnvironment.GetAbsolutePath (AndroidManifest),
 						node:             (object?) target_sdk ?? "",
 						message:          Properties.Resources.XA4211,
 						messageArgs:      new [] {

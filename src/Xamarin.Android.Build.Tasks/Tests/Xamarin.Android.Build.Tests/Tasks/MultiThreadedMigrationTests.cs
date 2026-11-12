@@ -4,10 +4,13 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
+using System.Xml.Linq;
 using Microsoft.Android.Build.Tasks;
 using Microsoft.Build.Framework;
+using Microsoft.Build.Utilities;
 using Mono.Cecil;
 using NUnit.Framework;
+using Xamarin.Android.Tasks;
 using Xamarin.ProjectTools;
 
 namespace Xamarin.Android.Build.Tests
@@ -15,6 +18,137 @@ namespace Xamarin.Android.Build.Tests
 	[TestFixture]
 	public class MultiThreadedMigrationTests
 	{
+		[TestCase ("activity", ".First")]
+		[TestCase ("activity-alias", ".First")]
+		[TestCase ("service", null)]
+		public void GetAndroidActivityNamePreservesLauncherSelection (string elementName, string? expected)
+		{
+			var directory = Path.Combine (Path.GetTempPath (), Path.GetRandomFileName ());
+			Directory.CreateDirectory (directory);
+			try {
+				XNamespace android = "http://schemas.android.com/apk/res/android";
+				XElement Launcher (string element, string? name) =>
+					new XElement (element,
+						name == null ? null : new XAttribute (android + "name", name),
+						new XElement ("intent-filter",
+							new XElement ("category", new XAttribute (android + "name", "android.intent.category.LAUNCHER"))));
+				var application = new XElement ("application",
+					elementName == "activity" ? Launcher ("activity-alias", ".EarlierAlias") : null,
+					Launcher (elementName, "mono.android.__FastDevLauncher"),
+					Launcher (elementName, null),
+					Launcher (elementName, ""),
+					new XElement (elementName, new XAttribute (android + "name", ".NotALauncher")),
+					Launcher (elementName, ".First"),
+					Launcher (elementName, ".Second"));
+				new XDocument (new XElement ("manifest", application))
+					.Save (Path.Combine (directory, "AndroidManifest.xml"));
+				var task = new GetAndroidActivityName {
+					BuildEngine = new MockBuildEngine (TextWriter.Null),
+					TaskEnvironment = TaskEnvironment.CreateWithProjectDirectoryAndEnvironment (directory, new Dictionary<string, string> ()),
+					ManifestFile = "AndroidManifest.xml",
+				};
+				Assert.IsTrue (task.Execute ());
+				Assert.AreEqual (expected, task.ActivityName);
+			} finally {
+				Directory.Delete (directory, recursive: true);
+			}
+		}
+
+		[Test]
+		public void PrepareSatelliteAssembliesPreservesMetadataAndOrder ()
+		{
+			var reference = new TaskItem (Path.Combine ("references", "fr", "Library.resources.dll"));
+			reference.SetMetadata ("Culture", "de");
+			reference.SetMetadata ("Owner", "reference");
+			reference.SetMetadata ("Abi", "original");
+			reference.SetMetadata ("DestinationSubPath", "original");
+			reference.SetMetadata ("DestinationSubDirectory", "original");
+			var intermediate = new TaskItem (Path.Combine ("obj", "fr-CA", "App.resources.dll"));
+			intermediate.SetMetadata ("Owner", "intermediate");
+			string [] abis = ["arm64-v8a", "x86_64"];
+			var task = new PrepareSatelliteAssemblies {
+				BuildEngine = new MockBuildEngine (TextWriter.Null),
+				BuildTargetAbis = abis,
+				ReferenceSatellitePaths = [reference],
+				IntermediateSatelliteAssemblies = [intermediate],
+			};
+
+			Assert.IsTrue (task.Execute ());
+			Assert.AreEqual ("de", reference.GetMetadata ("Culture"));
+			Assert.AreEqual ("fr-CA", intermediate.GetMetadata ("Culture"));
+			Assert.AreEqual ("original", reference.GetMetadata ("Abi"));
+			Assert.AreEqual ("original", reference.GetMetadata ("DestinationSubPath"));
+			Assert.AreEqual ("original", reference.GetMetadata ("DestinationSubDirectory"));
+			Assert.AreEqual ("", intermediate.GetMetadata ("Abi"));
+			var output = task.ProcessedSatelliteAssemblies ?? throw new InvalidOperationException ("Missing satellite outputs.");
+			Assert.AreEqual (4, output.Length);
+			ITaskItem [] inputs = [reference, intermediate];
+			for (int i = 0; i < inputs.Length; i++) {
+				for (int a = 0; a < abis.Length; a++) {
+					var item = output [i * abis.Length + a];
+					var input = inputs [i];
+					var culture = input.GetMetadata ("Culture");
+					Assert.AreNotSame (input, item);
+					Assert.AreEqual (input.ItemSpec, item.ItemSpec);
+					Assert.AreEqual (input.GetMetadata ("Owner"), item.GetMetadata ("Owner"));
+					Assert.AreEqual (culture, item.GetMetadata ("Culture"));
+					Assert.AreEqual (abis [a], item.GetMetadata ("Abi"));
+					Assert.AreEqual ($"{abis [a]}/{culture}/{Path.GetFileName (input.ItemSpec)}", item.GetMetadata ("DestinationSubPath"));
+					Assert.AreEqual (Path.Combine (abis [a], culture) + Path.DirectorySeparatorChar, item.GetMetadata ("DestinationSubDirectory"));
+				}
+			}
+		}
+
+		[Test]
+		public void PrepareSatelliteAssembliesMissingCulture ()
+		{
+			var errors = new List<BuildErrorEventArgs> ();
+			var task = new PrepareSatelliteAssemblies {
+				BuildEngine = new MockBuildEngine (TextWriter.Null, errors: errors),
+				BuildTargetAbis = ["arm64-v8a"],
+				ReferenceSatellitePaths = [new TaskItem ("Library.resources.dll")],
+			};
+			Assert.IsFalse (task.Execute ());
+			Assert.IsNull (task.ProcessedSatelliteAssemblies);
+			Assert.AreEqual (1, errors.Count);
+			Assert.AreEqual ("XAPSA7009", errors [0].Code);
+			StringAssert.Contains ("missing the 'Culture' metadata", errors [0].Message);
+		}
+
+		[Test]
+		public void ReadLibraryProjectImportsCacheUsesProjectDirectory ()
+		{
+			var directory = Path.Combine (Path.GetTempPath (), Path.GetRandomFileName ());
+			Directory.CreateDirectory (directory);
+			try {
+				var cacheFile = Path.GetRandomFileName ();
+				File.WriteAllText (Path.Combine (directory, cacheFile), "<Paths><Jars><Jar>a.jar</Jar></Jars></Paths>");
+				var task = new ReadLibraryProjectImportsCache {
+					BuildEngine = new MockBuildEngine (TextWriter.Null),
+					TaskEnvironment = TaskEnvironment.CreateWithProjectDirectoryAndEnvironment (directory, new Dictionary<string, string> ()),
+					CacheFile = cacheFile,
+				};
+				Assert.IsTrue (task.Execute ());
+				Assert.AreEqual ("a.jar", task.Jars?.Single ().ItemSpec);
+			} finally {
+				Directory.Delete (directory, recursive: true);
+			}
+		}
+
+		[TestCase ("")]
+		[TestCase ("missing.xml")]
+		public void ReadLibraryProjectImportsCacheMissingFile (string cacheFile)
+		{
+			var task = new ReadLibraryProjectImportsCache {
+				BuildEngine = new MockBuildEngine (TextWriter.Null),
+				TaskEnvironment = TaskEnvironment.CreateWithProjectDirectoryAndEnvironment (
+					Path.Combine (Path.GetTempPath (), Path.GetRandomFileName ()), new Dictionary<string, string> ()),
+				CacheFile = cacheFile,
+			};
+			Assert.IsTrue (task.Execute ());
+			Assert.IsNull (task.Jars);
+		}
+
 		[Test]
 		public void MigratedTasksHaveDirectAttribute ()
 		{

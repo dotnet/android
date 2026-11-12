@@ -42,7 +42,7 @@ about the various Microsoft.Android workloads.
     <ReplaceFileContents
         SourceFile="$(XamarinAndroidSourcePath)src\Xamarin.Android.Build.Tasks\Microsoft.NET.Sdk.Android\WorkloadManifest.in.targets"
         DestinationFile="$(WorkloadManifestTargetsPath)"
-        Replacements="@NET_PREVIOUS_VERSION@=$(AndroidNetPreviousVersion)">
+        Replacements="@NET_PREVIOUS_VERSION@=$(AndroidNetPreviousVersion);@NET_PREVIOUS_ILLINK_VERSION@=$(AndroidNetPreviousILLinkVersion)">
     </ReplaceFileContents>
     <ItemGroup>
       <_AndroidWorkloadManifestLocalizationFiles Include="$(XamarinAndroidSourcePath)src\Xamarin.Android.Build.Tasks\Microsoft.NET.Sdk.Android\localize\WorkloadManifest.*.json" />

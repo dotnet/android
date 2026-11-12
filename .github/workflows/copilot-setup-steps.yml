@@ -76,7 +76,7 @@ jobs:
     - name: Setup .NET
       uses: actions/setup-dotnet@v4
       with:
-        dotnet-version: '9.x'
+        dotnet-version: '11.0.100-rc.3.26522.148'
 
     - name: Run android build
       id: android-build

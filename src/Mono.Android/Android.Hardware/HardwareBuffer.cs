@@ -12,10 +12,12 @@ public partial class HardwareBuffer
 	// Metadata.xml XPath method reference: path="/api/package[@name='android.hardware']/class[@name='HardwareBuffer']/method[@name='create' and count(parameter)=5 and parameter[1][@type='int'] and parameter[2][@type='int'] and parameter[3][@type='int'] and parameter[4][@type='int'] and parameter[5][@type='long']]"
 	[global::System.Runtime.Versioning.SupportedOSPlatformAttribute ("android26.0")]
 	[Register ("create", "(IIIIJ)Landroid/hardware/HardwareBuffer;", "", ApiSince = 26)]
-	public static unsafe Android.Hardware.HardwareBuffer Create (int width, int height, [global::Android.Runtime.GeneratedEnum] Android.Hardware.HardwareBufferFormat format, int layers, Android.Hardware.HardwareBufferUsage usage)
+	public static Android.Hardware.HardwareBuffer Create (int width, int height, [global::Android.Runtime.GeneratedEnum] Android.Hardware.HardwareBufferFormat format, int layers, Android.Hardware.HardwareBufferUsage usage)
 	{
 		const string __id = "create.(IIIIJ)Landroid/hardware/HardwareBuffer;";
-		try {
+		unsafe {
+			// SAFETY: the five slots match create.(IIIIJ)Landroid/hardware/HardwareBuffer;, including 64-bit usage.
+			// The cached class is retained, and the result local transfers to the managed peer.
 			JniArgumentValue* __args = stackalloc JniArgumentValue [5];
 			__args [0] = new JniArgumentValue (width);
 			__args [1] = new JniArgumentValue (height);
@@ -24,21 +26,17 @@ public partial class HardwareBuffer
 			__args [4] = new JniArgumentValue ((long) usage);
 			var __rm = _members.StaticMethods.InvokeObjectMethod (__id, __args);
 			return global::Java.Lang.Object.GetObject<Android.Hardware.HardwareBuffer> (__rm.Handle, JniHandleOwnership.TransferLocalRef)!;
-		} finally {
 		}
 	}
 
 	[global::System.Runtime.Versioning.SupportedOSPlatformAttribute ("android26.0")]
-	public unsafe Android.Hardware.HardwareBufferUsage Usage {
+	public Android.Hardware.HardwareBufferUsage Usage {
 		// Metadata.xml XPath method reference: path="/api/package[@name='android.hardware']/class[@name='HardwareBuffer']/method[@name='getUsage' and count(parameter)=0]"
 		[Register ("getUsage", "()J", "", ApiSince = 26)]
 		get {
 			const string __id = "getUsage.()J";
-			try {
-				var __rm = _members.InstanceMethods.InvokeAbstractInt64Method (__id, this, null);
-				return (Android.Hardware.HardwareBufferUsage) __rm!;
-			} finally {
-			}
+			// SAFETY: InvokeAbstractInt64Method retains this peer and reads no arguments for getUsage.()J.
+			return unsafe((Android.Hardware.HardwareBufferUsage) _members.InstanceMethods.InvokeAbstractInt64Method (__id, this, null));
 		}
 	}
 }

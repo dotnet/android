@@ -50,6 +50,7 @@ tools:
     - az *
     - c++ *
     - cat
+    - command *
     - dotnet *
     - git *
     - grep

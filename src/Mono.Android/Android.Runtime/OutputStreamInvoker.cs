@@ -9,8 +9,7 @@ namespace Android.Runtime
 
 		public OutputStreamInvoker (Java.IO.OutputStream stream)
 		{
-			if (stream == null)
-				throw new ArgumentNullException (nameof (stream));
+			ArgumentNullException.ThrowIfNull (stream);
 
 			this.BaseOutputStream = stream;
 		}

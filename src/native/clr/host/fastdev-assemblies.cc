@@ -4,8 +4,10 @@
 #include <unistd.h>
 
 #include <cerrno>
+#include <cstdio>
 #include <cstdlib>
 #include <cstring>
+#include <limits>
 
 #include <constants.hh>
 #include <host/fastdev-assemblies.hh>
@@ -15,46 +17,19 @@
 using namespace xamarin::android;
 
 namespace {
-	// A minimal growable NUL-terminated character buffer. The TPA list has no useful upper bound -
-	// it holds one absolute path per assembly in the override directory - so it grows on demand
-	// rather than using a fixed buffer.
-	struct char_buffer final
+	struct assembly_data final
 	{
-		char   *data = nullptr;
-		size_t  length = 0;
-		size_t  capacity = 0;
+		assembly_data *next;
+		void         *data;
+		int64_t       size;
+		size_t        name_length;
+		// The exact probe name follows this structure in the same allocation.
 	};
 
-	constexpr size_t CHAR_BUFFER_INITIAL_CAPACITY = 512uz;
-
-	// Appends `text` to `buffer`, growing it if needed. Returns `false` if the buffer could not be
-	// grown, in which case `buffer` is left unchanged and still owns its storage.
-	auto buffer_append (char_buffer &buffer, std::string_view text) noexcept -> bool
-	{
-		size_t required_capacity = Helpers::add_with_overflow_check<size_t> (buffer.length, text.length ());
-		required_capacity = Helpers::add_with_overflow_check<size_t> (required_capacity, 1uz);
-
-		if (required_capacity > buffer.capacity) {
-			size_t new_capacity = buffer.capacity == 0 ? CHAR_BUFFER_INITIAL_CAPACITY : buffer.capacity;
-			while (new_capacity < required_capacity) {
-				new_capacity = Helpers::add_with_overflow_check<size_t> (new_capacity, new_capacity);
-			}
-
-			char *grown = static_cast<char*> (std::realloc (buffer.data, new_capacity));
-			if (grown == nullptr) {
-				return false;
-			}
-
-			buffer.data = grown;
-			buffer.capacity = new_capacity;
-		}
-
-		memcpy (buffer.data + buffer.length, text.data (), text.length ());
-		buffer.length += text.length ();
-		buffer.data [buffer.length] = '\0';
-
-		return true;
-	}
+	// CoreCLR borrows external probe data; it neither copies nor releases it. Keep the first
+	// successful snapshot of each name until process exit, including across collectible loads.
+	// Protected by FastDevAssemblies::override_dir_lock.
+	assembly_data *loaded_assemblies = nullptr;
 }
 
 auto FastDevAssemblies::open_assembly (std::string_view const& name, int64_t &size) noexcept -> void*
@@ -83,6 +58,14 @@ auto FastDevAssemblies::open_assembly (std::string_view const& name, int64_t &si
 		return nullptr;
 	}
 
+	lock_guard dir_lock { override_dir_lock };
+	for (assembly_data *entry = loaded_assemblies; entry != nullptr; entry = entry->next) {
+		if (entry->name_length == name.length () && memcmp (entry + 1, name.data (), name.length ()) == 0) {
+			size = entry->size;
+			return entry->data;
+		}
+	}
+
 	const char *override_dir_path = AndroidSystem::get_primary_override_dir ();
 	if (!Util::dir_exists (override_dir_path)) [[unlikely]] {
 		log_debugf (LOG_ASSEMBLY, "Override directory '%s' does not exist", override_dir_path);
@@ -92,15 +75,12 @@ auto FastDevAssemblies::open_assembly (std::string_view const& name, int64_t &si
 	// NOTE: override_dir will be kept open, we have no way of knowing when it will be no longer
 	//       needed
 	if (override_dir_fd < 0) [[unlikely]] {
-		lock_guard dir_lock { override_dir_lock };
-		if (override_dir_fd < 0) [[likely]] {
-			override_dir = opendir (override_dir_path);
-			if (override_dir == nullptr) [[unlikely]] {
-				log_warnf (LOG_ASSEMBLY, "Failed to open override dir '%s'. %s", override_dir_path, strerror (errno));
-				return nullptr;
-			}
-			override_dir_fd = dirfd (override_dir);
+		override_dir = opendir (override_dir_path);
+		if (override_dir == nullptr) [[unlikely]] {
+			log_warnf (LOG_ASSEMBLY, "Failed to open override dir '%s'. %s", override_dir_path, strerror (errno));
+			return nullptr;
 		}
+		override_dir_fd = dirfd (override_dir);
 	}
 
 	log_debugf (
@@ -122,7 +102,12 @@ auto FastDevAssemblies::open_assembly (std::string_view const& name, int64_t &si
 		return nullptr;
 	}
 
-	size = static_cast<int64_t>(file_size.value ());
+	if (file_size.value () == 0 || static_cast<uintmax_t>(file_size.value ()) > static_cast<uintmax_t>(std::numeric_limits<int64_t>::max ())) [[unlikely]] {
+		log_warnf (LOG_ASSEMBLY, "Invalid FastDev assembly '%.*s' file size: %zu", static_cast<int>(name.length ()), name.data (), file_size.value ());
+		return nullptr;
+	}
+
+	size_t assembly_size = file_size.value ();
 	int asm_fd = openat (override_dir_fd, name.data (), O_RDONLY);
 	if (asm_fd < 0) {
 		log_warnf (
@@ -132,15 +117,10 @@ auto FastDevAssemblies::open_assembly (std::string_view const& name, int64_t &si
 			strerror (errno)
 		);
 
-		size = 0;
 		return nullptr;
 	}
 
-	// TODO: consider who owns the pointer - we allocate the data, but we have no way of knowing when
-	//       the allocated space is no longer (if ever) needed by CoreCLR. Probably would be best if
-	//       CoreCLR notified us when it wants to free the data, as that eliminates any races as well
-	//       as ambiguity.
-	auto buffer = static_cast<uint8_t*> (std::malloc (file_size.value ()));
+	auto buffer = static_cast<uint8_t*> (std::malloc (assembly_size));
 	if (buffer == nullptr) [[unlikely]] {
 		log_warnf (
 			LOG_ASSEMBLY,
@@ -148,33 +128,80 @@ auto FastDevAssemblies::open_assembly (std::string_view const& name, int64_t &si
 			static_cast<int>(name.length ()), name.data ()
 		);
 
-		close (asm_fd);
-		size = 0;
+		if (close (asm_fd) < 0) {
+			log_warnf (LOG_ASSEMBLY, "Failed to close FastDev assembly '%.*s'. %s", static_cast<int>(name.length ()), name.data (), strerror (errno));
+		}
 		return nullptr;
 	}
 
-	ssize_t nread = 0;
-	do {
-		nread = read (asm_fd, reinterpret_cast<void*>(buffer), file_size.value ());
-	} while (nread == -1 && errno == EINTR);
-	close (asm_fd);
+	size_t nread = 0;
+	int read_errno = 0;
+	while (nread < assembly_size) {
+		size_t read_count = assembly_size - nread;
+		if (read_count > static_cast<size_t>(std::numeric_limits<ssize_t>::max ())) {
+			read_count = static_cast<size_t>(std::numeric_limits<ssize_t>::max ());
+		}
 
-	if (nread != size) [[unlikely]] {
+		ssize_t r = read (asm_fd, buffer + nread, read_count);
+		if (r > 0) {
+			nread += static_cast<size_t>(r);
+			continue;
+		}
+
+		if (r < 0 && errno == EINTR) {
+			continue;
+		}
+		read_errno = r < 0 ? errno : 0;
+		break;
+	}
+	if (close (asm_fd) < 0) {
+		log_warnf (LOG_ASSEMBLY, "Failed to close FastDev assembly '%.*s'. %s", static_cast<int>(name.length ()), name.data (), strerror (errno));
+	}
+
+	if (nread != assembly_size) [[unlikely]] {
 		std::free (buffer);
 
-		log_warnf (
-			LOG_ASSEMBLY,
-			"Failed to read FastDev assembly '%.*s' data. %s",
-			static_cast<int>(name.length ()), name.data (),
-			strerror (errno)
-		);
+		if (read_errno != 0) {
+			log_warnf (
+				LOG_ASSEMBLY,
+				"Failed to read FastDev assembly '%.*s' data. %s",
+				static_cast<int>(name.length ()), name.data (),
+				strerror (read_errno)
+			);
+		} else {
+			log_warnf (
+				LOG_ASSEMBLY,
+				"Failed to read FastDev assembly '%.*s' data: unexpected end of file after %zu of %zu bytes",
+				static_cast<int>(name.length ()), name.data (),
+				nread, assembly_size
+			);
+		}
 
-		size = 0;
 		return nullptr;
 	}
-	log_debugf (LOG_ASSEMBLY, "Read %zd bytes of FastDev assembly '%.*s'", nread, static_cast<int>(name.length ()), name.data ());
+	log_debugf (LOG_ASSEMBLY, "Read %zu bytes of FastDev assembly '%.*s'", nread, static_cast<int>(name.length ()), name.data ());
 
-	return reinterpret_cast<void*>(buffer);
+	size_t entry_size = Helpers::add_with_overflow_check<size_t> (sizeof (assembly_data), name.length ());
+	auto entry = static_cast<assembly_data*> (std::malloc (entry_size));
+	if (entry == nullptr) [[unlikely]] {
+		log_warnf (
+			LOG_ASSEMBLY,
+			"Unable to retain FastDev assembly '%.*s'",
+			static_cast<int>(name.length ()), name.data ()
+		);
+		std::free (buffer);
+		return nullptr;
+	}
+
+	memcpy (entry + 1, name.data (), name.length ());
+	entry->next = loaded_assemblies;
+	entry->data = buffer;
+	entry->size = static_cast<int64_t>(assembly_size);
+	entry->name_length = name.length ();
+	loaded_assemblies = entry;
+
+	size = entry->size;
+	return buffer;
 }
 
 auto FastDevAssemblies::build_tpa_list () noexcept -> char*
@@ -192,13 +219,21 @@ auto FastDevAssemblies::build_tpa_list () noexcept -> char*
 		return nullptr;
 	}
 
+	char *tpa_list = nullptr;
+	size_t tpa_length = 0;
+	FILE *stream = open_memstream (&tpa_list, &tpa_length);
+	if (stream == nullptr) {
+		log_warnf (LOG_ASSEMBLY, "FastDev: unable to allocate memory for the TPA list. %s", std::strerror (errno));
+		closedir (dir);
+		return nullptr;
+	}
+
 	constexpr std::string_view dll_ext { ".dll" };
 	constexpr std::string_view r2r_ext { ".r2r.dll" };
 	constexpr std::string_view corelib_name { "System.Private.CoreLib.dll" };
-	char_buffer tpa_list {};
 	bool found_corelib = false;
 	bool found_r2r = false;
-	bool out_of_memory = false;
+	bool write_failed = false;
 	size_t count = 0;
 	dirent *e;
 	while ((e = readdir (dir)) != nullptr) {
@@ -216,14 +251,9 @@ auto FastDevAssemblies::build_tpa_list () noexcept -> char*
 			break;
 		}
 
-		if (tpa_list.length > 0 && !buffer_append (tpa_list, ":"sv)) {
-			out_of_memory = true;
-			break;
-		}
-		if (!buffer_append (tpa_list, override_dir_path) ||
-			!buffer_append (tpa_list, "/"sv) ||
-			!buffer_append (tpa_list, name)) {
-			out_of_memory = true;
+		if (std::fprintf (stream, "%s%s/%s", count > 0 ? ":" : "", override_dir_path, e->d_name) < 0) {
+			log_warnf (LOG_ASSEMBLY, "FastDev: unable to write the TPA list. %s", std::strerror (errno));
+			write_failed = true;
 			break;
 		}
 		if (name == corelib_name) {
@@ -231,13 +261,16 @@ auto FastDevAssemblies::build_tpa_list () noexcept -> char*
 		}
 		count++;
 	}
+	if (std::fclose (stream) != 0) {
+		log_warnf (LOG_ASSEMBLY, "FastDev: unable to close the TPA list stream. %s", std::strerror (errno));
+		write_failed = true;
+	}
 	closedir (dir);
 
-	if (out_of_memory) {
+	if (write_failed) {
 		// FastDev is a Debug-only convenience, so fall back to the probe-only path rather than
 		// aborting the application.
-		log_warnf (LOG_ASSEMBLY, "FastDev: unable to allocate memory for the TPA list");
-		std::free (tpa_list.data);
+		std::free (tpa_list);
 		return nullptr;
 	}
 
@@ -265,9 +298,9 @@ auto FastDevAssemblies::build_tpa_list () noexcept -> char*
 			count,
 			override_dir_path
 		);
-		return tpa_list.data;
+		return tpa_list;
 	}
-	std::free (tpa_list.data);
+	std::free (tpa_list);
 	return nullptr;
 }
 

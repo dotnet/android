@@ -1,5 +1,6 @@
 #nullable enable
 using System;
+using System.ComponentModel;
 using System.IO;
 using System.Runtime.InteropServices;
 
@@ -48,12 +49,17 @@ namespace Xamarin.Android.Tools
 				}
 			}
 			else {
-				rename (sourceFile, destFile);
+				if (rename (sourceFile, destFile) != 0) {
+					int errno = Marshal.GetLastWin32Error ();
+					var error = new Win32Exception (errno);
+					throw new IOException ($"Could not rename '{sourceFile}' to '{destFile}' (errno {errno}): {error.Message}", error);
+				}
 			}
 		}
 
+		// SAFETY: The platform C ABI matches this import; the marshaller supplies NUL-terminated
+		// path strings valid for the synchronous call, and libc retains neither pointer on success or failure.
 		[DllImport ("libc", SetLastError=true)]
-		static extern int rename (string old, string @new);
+		static safe extern int rename (string old, string @new);
 	}
 }
-

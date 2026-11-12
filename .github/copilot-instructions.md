@@ -1,12 +1,12 @@
 # Instructions for AIs
 
-**.NET for Android** (formerly Xamarin.Android) - Open-source Android development bindings for .NET languages. `main` branch targets **.NET 11**.
+**.NET for Android** (formerly Xamarin.Android) - Open-source Android development bindings for .NET languages. `main` branch targets **.NET 12**.
 
 ## Architecture
 - `src/Mono.Android/` - Android SDK bindings in C#
 - `src/Xamarin.Android.Build.Tasks/` - MSBuild tasks for Android apps  
 - `src/native/` - Native runtime (MonoVM/CoreCLR/NativeAOT)
-- `external/Java.Interop/` - JNI bindings and Java-to-.NET interop
+- `src/Java.Interop/`, `src/Java.Interop.Tools.*/` - JNI bindings and Java-to-.NET interop tooling
 - `src/Microsoft.Android.Build.BaseTasks/` - Shared MSBuild task infrastructure: `AndroidTask`, `AsyncTask`, NRT extensions, and common file/process utilities
 - `src/Xamarin.Android.Tools.AndroidSdk/` - Shared Android SDK/JDK discovery, `AdbRunner`, `EmulatorRunner`, and SDK info utilities
 - `tests/` - NUnit tests, integration tests, device tests
@@ -16,8 +16,8 @@
 ## Essential Commands
 - **Build:** `./build.sh` or `build.cmd`
 - **Test with local build:** `dotnet-local.sh`/`dotnet-local.cmd` 
-- **Run tests:** `dotnet-local.cmd test bin/TestDebug/net10.0/Xamarin.Android.Build.Tests.dll --filter Name~TestName`
-- **Device tests:** `dotnet-local.cmd test bin/TestDebug/MSBuildDeviceIntegration/net10.0/MSBuildDeviceIntegration.dll`
+- **Run tests:** `dotnet-local.cmd test bin/TestDebug/net11.0/Xamarin.Android.Build.Tests.dll --filter Name~TestName`
+- **Device tests:** `dotnet-local.cmd test bin/TestDebug/MSBuildDeviceIntegration/net11.0/MSBuildDeviceIntegration.dll`
 
 The test assembly framework comes from `DotNetStableTargetFramework` in `Directory.Build.props`. On macOS/Linux, use `./dotnet-local.sh` instead of `dotnet-local.cmd`.
 
@@ -52,6 +52,8 @@ Reference official Android documentation where helpful:
 
 - Use `MultithreadedAndroidTask` for new managed tasks. Do not derive new tasks from `AndroidTask`, `AsyncTask`, or `AndroidToolTask`, whose constructors capture the process working directory.
 - Use the engine-supplied `TaskEnvironment` for project-relative paths, environment access, and child processes. Keep constructors free of process-state dependencies; initialize `TaskEnvironment` to `Fallback` when implementing the interface directly so direct instantiation also works.
+- Before adding wrappers or workarounds, check the public APIs in the pinned dependency's reference assembly. XML documentation can include internal methods.
+- `TaskEnvironment.GetAbsolutePath (path)` roots a path but does not collapse `.` or `..`. When canonicalization is needed, call `.GetCanonicalForm ()` on the returned `AbsolutePath`; use `.Value` for string operations. Do not construct `FileInfo` or `DirectoryInfo` just to normalize paths.
 - Review helpers, exception paths, and static state for thread safety. Do not mutate shared process state or use process isolation as a substitute for MT support. For asynchronous tasks, preserve the `Yield()`/`Reacquire()` contract with `try`/`finally`.
 - Use `XA####` error codes and test in isolation. Validate ordinary and strict `-m -mt -nr:false -warnaserror:MSB4286,MSB4287,MSB4288` builds. See [MSBuild best practices](../Documentation/guides/MSBuildBestPractices.md#multithreaded-tasks).
 
@@ -67,6 +69,14 @@ Reference official Android documentation where helpful:
 **API Bindings:** Use `[Register]` attributes, follow `Android.*` namespace patterns.
 
 **Native Code:** Use CMake, handle multiple ABIs (arm64-v8a, armeabi-v7a, x86_64, x86).
+
+## Unsafe C# and Memory Safety
+
+Follow [Unsafe code best practices](https://learn.microsoft.com/dotnet/standard/unsafe-code/best-practices) for affected unsafe code; do not scan the repository unless asked. For caller contracts and safety documentation, see [Improving C# memory safety](https://devblogs.microsoft.com/dotnet/improving-csharp-memory-safety/).
+
+- Prefer `unsafe (expression)` for single value-producing operations, including getters, ref returns and `using` acquisition. Keep managed comparisons/hash/formatting outside; retain blocks for pinning, void calls and multiple statements.
+- Under the new rules, caller-unsafe members still need body contexts. Keep `// SAFETY:` proofs adjacent; use multiline `/// <safety>` for caller obligations.
+- Respect producer/consumer language modes, including generated code. Inline expressions need pinned-compiler preview; never enable preview just for syntax. Preserve behavior and lifetimes.
 
 ## Nullable Reference Types
 

@@ -1,0 +1,201 @@
+﻿#nullable enable
+
+using System;
+using System.Collections.Concurrent;
+
+namespace Java.Interop
+{
+	partial class JniPeerMembers {
+	public sealed partial class JniInstanceMethods
+	{
+		internal JniInstanceMethods (JniPeerMembers members)
+		{
+			DeclaringType   = members.ManagedPeerType;
+			this.members    = members;
+		}
+
+		JniInstanceMethods (Type declaringType)
+		{
+			var jvm     = JniEnvironment.Runtime;
+			var info    = jvm.TypeManager.GetTypeSignature (declaringType);
+			if (info.SimpleReference == null)
+				throw new NotSupportedException (
+						string.Format ("Cannot create instance of type '{0}': no Java peer type found.",
+							declaringType.FullName));
+
+			DeclaringType   = declaringType;
+			targetJniTypeName   = info.Name;
+			jniPeerType     = new JniType (targetJniTypeName);
+			jniPeerType.RegisterWithRuntime ();
+		}
+
+		JniPeerMembers?                                     members;
+		JniType?                                            jniPeerType;
+		readonly string?                                    targetJniTypeName;
+
+		string TargetJniTypeName => targetJniTypeName ?? Members.JniPeerTypeName;
+
+		internal    JniPeerMembers                          Members => members ?? throw new InvalidOperationException ();
+
+		internal    JniType                                 JniPeerType {
+			get {return jniPeerType ?? Members?.JniPeerType ?? throw new InvalidOperationException ();}
+		}
+
+		readonly Type                                       DeclaringType;
+
+		ConcurrentDictionary<string, JniMethodInfo>?             instanceMethods;
+		ConcurrentDictionary<Type, JniInstanceMethods>?          subclassConstructors;
+
+		ConcurrentDictionary<string, JniMethodInfo>               InstanceMethods      => GetOrCreate (ref instanceMethods, 3);
+		ConcurrentDictionary<Type, JniInstanceMethods>            SubclassConstructors => GetOrCreate (ref subclassConstructors, 1);
+
+		internal void Dispose ()
+		{
+			Clear (ref instanceMethods, static method => method.StaticRedirect?.Dispose ());
+			Clear (ref subclassConstructors, static value => value.Dispose ());
+
+			if (jniPeerType != null)
+				jniPeerType.Dispose ();
+			jniPeerType = null;
+		}
+
+		public JniMethodInfo GetConstructor (string signature)
+		{
+			ArgumentNullException.ThrowIfNull (signature);
+			return InstanceMethods.GetOrAdd (signature, static (member, methods) =>
+					methods.GetConstructorCore (member), this);
+		}
+
+		JniMethodInfo GetConstructorCore (string signature)
+		{
+			// Constructors are never renamed, but their parameter types can be, so the descriptor
+			// still has to be translated.
+			var newMethod = JniPeerMembers.GetReplacementMethodInfo (TargetJniTypeName, "<init>", signature);
+			if (newMethod.HasValue) {
+				var info = newMethod.Value;
+				using var t = CreateTargetType (info, TargetJniTypeName);
+				if (TryGetInstanceMethod (t, info, "<init>", signature, out var m)) {
+					return m;
+				}
+			}
+			return JniPeerType.GetConstructor (signature.AsSpan ());
+		}
+
+		internal JniInstanceMethods GetConstructorsForType (Type declaringType)
+		{
+			if (declaringType == DeclaringType)
+				return this;
+
+			// Initialize before publication in case construction recursively accesses this cache.
+			return GetOrAdd (
+				SubclassConstructors,
+				declaringType,
+				static (type, _) => new JniInstanceMethods (type),
+				this,
+				static value => value.Dispose ());
+		}
+
+		public JniMethodInfo GetMethodInfo (string encodedMember)
+		{
+			return GetOrAdd (
+				InstanceMethods,
+				encodedMember,
+				static (member, methods) => {
+					ReadOnlySpan<char> method, signature;
+					JniPeerMembers.GetNameAndSignature (member, out method, out signature);
+					return methods.GetMethodInfo (method, signature);
+				},
+				this,
+				static method => method.StaticRedirect?.Dispose ());
+		}
+
+		JniMethodInfo GetMethodInfo (ReadOnlySpan<char> method, ReadOnlySpan<char> signature)
+		{
+			var m              = (JniMethodInfo?) null;
+			var newMethod      = Members.GetReplacementMethodInfo (method, signature);
+			if (newMethod.HasValue) {
+				var info = newMethod.Value;
+				JniType? t = CreateTargetType (info, Members);
+				try {
+					if (info.TargetJniMethodInstanceToStatic &&
+							TryGetStaticMethod (t, info, method, signature, out m)) {
+						m.ParameterCount = info.TargetJniMethodParameterCount;
+						m.StaticRedirect = t;
+						t = null;
+						return m;
+					}
+					if (TryGetInstanceMethod (t, info, method, signature, out m)) {
+						return m;
+					}
+				} finally {
+					t?.Dispose ();
+				}
+				var targetType = GetTargetTypeNameForDiagnostics (info, Members);
+				var targetName = GetTargetMethodNameForDiagnostics (info, method);
+				var targetSignature = GetTargetMethodSignatureForDiagnostics (info, signature);
+				Console.Error.WriteLine ($"warning: For declared method `{Members.JniPeerTypeName}.{method}.{signature}`, could not find requested method `{targetType}.{targetName}.{targetSignature}`!");
+			}
+			if (JniPeerType.TryGetInstanceMethod (method, signature, out m))
+				return m;
+
+			newMethod = JniPeerMembers.GetBaseReplacementMethodInfo (DeclaringType, method, signature);
+			if (newMethod.HasValue) {
+				var info = newMethod.Value;
+				JniType? t = CreateTargetType (info, TargetJniTypeName);
+				try {
+					if (info.TargetJniMethodInstanceToStatic &&
+							TryGetStaticMethod (t, info, method, signature, out m)) {
+						m.ParameterCount = info.TargetJniMethodParameterCount;
+						m.StaticRedirect = t;
+						t = null;
+						return m;
+					}
+					if (TryGetInstanceMethod (t, info, method, signature, out m))
+						return m;
+				} finally {
+					t?.Dispose ();
+				}
+			}
+
+			return JniPeerType.GetInstanceMethod (method, signature);
+		}
+
+		public JniObjectReference StartCreateInstance (string constructorSignature, Type declaringType, JniArgumentValue* parameters)
+		{
+			// SAFETY: parameters is not read or retained; this phase only allocates the peer selected by declaringType.
+			#pragma warning disable CS1717
+			parameters = parameters;    // Silence CA1801
+			#pragma warning restore CS1717
+
+			ArgumentNullException.ThrowIfNull (constructorSignature);
+			ArgumentNullException.ThrowIfNull (declaringType);
+
+			var r   = GetConstructorsForType (declaringType)
+				.JniPeerType
+				.AllocObject ();
+			r.Flags = JniObjectReferenceFlags.Alloc;
+			return r;
+		}
+
+		/// <safety>
+		/// parameters must address readable initialized JNI argument slots matching constructorSignature,
+		/// or be null only for a zero-argument constructor. Keep the buffer and referenced Java objects
+		/// live through this call, including failure, with no concurrent writes or release through aliases.
+		/// self must refer to an allocated instance compatible with the resolved constructor.
+		/// The buffer is not retained; JNI local references must belong to the invoking thread.
+		/// </safety>
+		public unsafe void FinishCreateInstance (string constructorSignature, IJavaPeerable self, JniArgumentValue* parameters)
+		{
+			ArgumentNullException.ThrowIfNull (constructorSignature);
+			ArgumentNullException.ThrowIfNull (self);
+
+			var methods = GetConstructorsForType (self.GetType ());
+			var ctor    = methods.GetConstructor (constructorSignature);
+			unsafe {
+				// SAFETY: The caller keeps constructor-compatible slots/references alive for the nonvirtual JNI call.
+				JniEnvironment.InstanceMethods.CallNonvirtualVoidMethod (self.PeerReference, methods.JniPeerType.PeerReference, ctor, parameters);
+			}
+		}
+	}
+	}
+}

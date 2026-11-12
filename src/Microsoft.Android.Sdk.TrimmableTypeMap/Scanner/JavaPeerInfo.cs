@@ -434,8 +434,8 @@ public sealed record JavaFieldInfo
 	public required string JavaTypeName { get; init; }
 
 	/// <summary>
-	/// JNI type descriptor retained for validation where Java source dots cannot distinguish
-	/// package segments from nested type segments.
+	/// JNI type descriptor retained for validation and source generation where Java source
+	/// dots cannot distinguish package segments, nested types, and top-level '$' identifiers.
 	/// </summary>
 	internal string? JniTypeName { get; init; }
 
