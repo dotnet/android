@@ -117,18 +117,7 @@ namespace Xamarin.Android.Tools.Tests
 			}
 			if (OS.IsWindows)
 				return;
-			var chmod = new ProcessStartInfo {
-				FileName                    = "chmod",
-				Arguments                   = $"+x \"{path}\"",
-				UseShellExecute             = false,
-				RedirectStandardInput       = false,
-				RedirectStandardOutput      = true,
-				RedirectStandardError       = true,
-				CreateNoWindow              = true,
-				WindowStyle                 = ProcessWindowStyle.Hidden,
-			};
-			var p = Process.Start (chmod);
-			p.WaitForExit ();
+			Process.Run ("chmod", ["+x", path]);
 		}
 
 		[Test]
