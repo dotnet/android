@@ -1,4 +1,5 @@
 using System;
+using System.Globalization;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -63,16 +64,16 @@ namespace Xamarin.Android.Tasks
 				if (target != null && target.Length > 0 && !target.StartsWith ("-e", StringComparison.Ordinal) &&
 					!target.StartsWith ("-d", StringComparison.Ordinal) && !target.StartsWith ("-s", StringComparison.Ordinal)) {
 					if (logErrors)
-						logError (DefaultErrorCode, string.Format (Resources.XA0010_AdbTarget, target));
+						logError (DefaultErrorCode, string.Format (CultureInfo.CurrentCulture, Resources.XA0010_AdbTarget, target));
 				} else {
 					NoDeviceFound (target, adbPath, logError, logErrors, engine4);
 				}
 			} catch (Exception ex) {
 				RegisterDevice (engine4, target, adbPath, null);
 				if (logErrors)
-					logError (DefaultErrorCode, string.Format (Resources.XA0010_Adb, ex));
+					logError (DefaultErrorCode, string.Format (CultureInfo.CurrentCulture, Resources.XA0010_Adb, ex));
 				else
-					logMessage (string.Format (Resources.XA0010_Adb, ex));
+					logMessage (string.Format (CultureInfo.CurrentCulture, Resources.XA0010_Adb, ex));
 			}
 			return null;
 		}

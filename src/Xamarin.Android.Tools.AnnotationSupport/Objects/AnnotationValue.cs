@@ -1,4 +1,5 @@
 using System;
+using System.Globalization;
 using System.Collections.Generic;
 using System.Linq;
 using System.Xml.Linq;
@@ -39,7 +40,7 @@ namespace Xamarin.AndroidTools.AnnotationSupport
 		{
 			if (ArrayItemCommonPrefix == null)
 				return Name + " = " + Val;
-			return string.Format ("{0} = {1}[{2}]", Name, ArrayItemCommonPrefix, string.Join (",", ValueAsArray));
+			return string.Format (CultureInfo.CurrentCulture, "{0} = {1}[{2}]", Name, ArrayItemCommonPrefix, string.Join (",", ValueAsArray));
 		}
 	}
 }

@@ -93,7 +93,6 @@ namespace Xamarin.Java.Interop
 			o.WriteLine ("\tusing jstaticFieldID     = System.IntPtr;");
 			o.WriteLine ("\tusing jinstanceMethodID  = System.IntPtr;");
 			o.WriteLine ("\tusing jstaticMethodID    = System.IntPtr;");
-			o.WriteLine ("\tusing jobject            = System.IntPtr;");
 			o.WriteLine ();
 			o.WriteLine ("namespace Java.Interop {");
 			GenerateJniNativeInterface (o);
@@ -951,7 +950,7 @@ namespace Xamarin.Java.Interop
 
 		public override string GetMarshalType (bool isReturn, bool isPinvoke)
 		{
-			return "jobject";
+			return "IntPtr";
 		}
 
 		public override string GetManagedType (bool isReturn, bool isPinvoke)

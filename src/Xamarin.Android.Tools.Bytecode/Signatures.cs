@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Globalization;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
@@ -17,7 +18,7 @@ namespace Xamarin.Android.Tools.Bytecode {
 			case '[':
 				++i;
 				if (i >= signature.Length)
-					throw new InvalidOperationException (string.Format ("Missing array type after '[' at index {0} in: {1}", i, signature));
+					throw new InvalidOperationException (string.Format (CultureInfo.CurrentCulture, "Missing array type after '[' at index {0} in: {1}", i, signature));
 				string r = ExtractType (signature, ref index);
 				return "[" + r;
 			case 'B':
@@ -45,7 +46,7 @@ namespace Xamarin.Android.Tools.Bytecode {
 						depth--;
 				}
 				if (e > signature.Length)
-					throw new InvalidOperationException (string.Format ("Missing reference type after '{0}' at index {1} in: {2}", signature [i], i, signature));
+					throw new InvalidOperationException (string.Format (CultureInfo.CurrentCulture, "Missing reference type after '{0}' at index {1} in: {2}", signature [i], i, signature));
 				index = e;
 				return signature.Substring (i, (e - i));
 			default:
@@ -213,19 +214,19 @@ namespace Xamarin.Android.Tools.Bytecode {
 			Signature.ExtractFormalTypeParameters (TypeParameters, signature, ref index);
 			Signature.AssertSignatureIndex (signature, index);
 			if (signature [index] != '(')
-				throw new ArgumentException (string.Format ("Method signature needs to contain '(' at index {0} in: {1}", index, signature));
+				throw new ArgumentException (string.Format (CultureInfo.CurrentCulture, "Method signature needs to contain '(' at index {0} in: {1}", index, signature));
 			index++;
 			while (index < signature.Length && signature [index] != ')') {
 				Parameters.Add (Signature.ExtractType (signature, ref index));
 			}
 			if (signature [index] != ')')
-				throw new ArgumentException (string.Format ("Method signature needs to contain ')' at index {0} in: {1}", index, signature));
+				throw new ArgumentException (string.Format (CultureInfo.CurrentCulture, "Method signature needs to contain ')' at index {0} in: {1}", index, signature));
 			index++;
 			ReturnTypeSignature = Signature.ExtractType (signature, ref index);
 			if (index == signature.Length)
 				return;
 			if (signature [index] != '^')
-				throw new ArgumentException (string.Format ("Method signature should end with exception '^' types; found: '{0}' at {1} in: {2}",
+				throw new ArgumentException (string.Format (CultureInfo.CurrentCulture, "Method signature should end with exception '^' types; found: '{0}' at {1} in: {2}",
 						signature [index], index, signature));
 			while (index < signature.Length && signature [index] == '^') {
 				index++;

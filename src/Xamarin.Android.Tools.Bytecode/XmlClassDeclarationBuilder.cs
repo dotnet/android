@@ -854,12 +854,12 @@ namespace Xamarin.Android.Tools.Bytecode {
 				else
 					value = floatItem.Value.ToString ("G9", CultureInfo.InvariantCulture);
 				break;
-			case ConstantPoolItemType.Long:     value = ((ConstantPoolLongItem) constant).Value.ToString ();    break;
+			case ConstantPoolItemType.Long:     value = ((ConstantPoolLongItem) constant).Value.ToString (CultureInfo.CurrentCulture);    break;
 			case ConstantPoolItemType.Integer:
 				if (field.Descriptor == "Z")
 					value = ((ConstantPoolIntegerItem) constant).Value == 1 ? bool.TrueString.ToLower () : bool.FalseString.ToLower ();
 				else
-					value = ((ConstantPoolIntegerItem) constant).Value.ToString (); 
+					value = ((ConstantPoolIntegerItem) constant).Value.ToString (CultureInfo.CurrentCulture);
 				break;
 			case ConstantPoolItemType.String:
 				value = '"' + EscapeLiteral (((ConstantPoolStringItem) constant).StringData.Value) + '"';
@@ -893,7 +893,7 @@ namespace Xamarin.Android.Tools.Bytecode {
 						continue;
 					}
 					if (c < 0x20 || c > 0xff) {
-						sb.Append ("\\u").AppendFormat ("{0:x4}", (int)c);
+						sb.Append ("\\u").AppendFormat (CultureInfo.CurrentCulture, "{0:x4}", (int)c);
 						continue;
 					}
 					sb.Append (c);

@@ -1,4 +1,5 @@
 using System;
+using System.Globalization;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -24,7 +25,7 @@ namespace Xamarin.ProjectTools
 
 			if (string.IsNullOrEmpty (ProcessLogFile)) {
 				Directory.CreateDirectory (ProjectDirectory);
-				ProcessLogFile = Path.Combine (ProjectDirectory, $"gradle{DateTime.Now.ToString ("yyyyMMddHHmmssff")}-process.log");
+				ProcessLogFile = Path.Combine (ProjectDirectory, $"gradle{DateTime.Now.ToString ("yyyyMMddHHmmssff", CultureInfo.CurrentCulture)}-process.log");
 			}
 
 			var procOutput = new StringBuilder ();
@@ -56,13 +57,13 @@ namespace Xamarin.ProjectTools
 					}
 				};
 
-				procOutput.AppendLine ($"Running: {p.StartInfo.FileName} {p.StartInfo.Arguments}");
+				procOutput.AppendLine (CultureInfo.CurrentCulture, $"Running: {p.StartInfo.FileName} {p.StartInfo.Arguments}");
 				p.Start ();
 				p.BeginOutputReadLine ();
 				p.BeginErrorReadLine ();
 				bool completed = p.WaitForExit ((int) new TimeSpan (0, 5, 0).TotalMilliseconds);
 				succeeded = completed && p.ExitCode == 0;
-				procOutput.AppendLine ($"Exit Code: {p.ExitCode}");
+				procOutput.AppendLine (CultureInfo.CurrentCulture, $"Exit Code: {p.ExitCode}");
 			}
 
 			File.WriteAllText (ProcessLogFile, procOutput.ToString ());

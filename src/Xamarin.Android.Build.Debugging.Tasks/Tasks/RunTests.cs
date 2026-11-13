@@ -1,4 +1,5 @@
 using System;
+using System.Globalization;
 using System.IO;
 using Microsoft.Build.Utilities;
 using Microsoft.Build.Framework;
@@ -31,7 +32,7 @@ namespace Xamarin.Android.Tasks
 		{
 			// If we supported full MSBuild 4.0 expression syntax for [Class] and property access, we could write this...
 			//<Exec Command="&quot;$(_AndroidPlatformToolsDirectory)adb&quot; $(AdbTarget) $(AdbOptions) shell am start -a android.intent.action.MAIN -c android.intent.category.LAUNCHER --ez automated true -n $(_AndroidPackage)/$(RootNamespace.ToLowerInvariant()).MainActivity" />
-			return string.Format ("{0} {1} shell am start -a android.intent.action.MAIN -c android.intent.category.LAUNCHER --ez automated true -n {2}/{3}",
+			return string.Format (CultureInfo.CurrentCulture, "{0} {1} shell am start -a android.intent.action.MAIN -c android.intent.category.LAUNCHER --ez automated true -n {2}/{3}",
 			                      AdbTarget, AdbOptions, AndroidPackage, TargetTestActivity);
 		}
 	}

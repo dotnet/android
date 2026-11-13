@@ -81,7 +81,7 @@ namespace Xamarin.ProjectTools
 		{
 			if (string.IsNullOrEmpty (ProcessLogFile)) {
 				Directory.CreateDirectory (ProjectDirectory);
-				ProcessLogFile = Path.Combine (ProjectDirectory, $"dotnet{DateTime.Now.ToString ("yyyyMMddHHmmssff")}-process.log");
+				ProcessLogFile = Path.Combine (ProjectDirectory, $"dotnet{DateTime.Now.ToString ("yyyyMMddHHmmssff", CultureInfo.CurrentCulture)}-process.log");
 			}
 
 			var locker = new Lock ();
@@ -112,25 +112,25 @@ namespace Xamarin.ProjectTools
 					}
 				};
 
-				procOutput.AppendLine ($"Running: {p.StartInfo.FileName} {p.StartInfo.Arguments}");
+				procOutput.AppendLine (CultureInfo.CurrentCulture, $"Running: {p.StartInfo.FileName} {p.StartInfo.Arguments}");
 				p.BeginOutputReadLine ();
 				p.BeginErrorReadLine ();
 
 				bool completed = p.WaitForExit (timeoutMilliseconds);
 				if (!completed) {
-					procOutput.AppendLine ($"Process timed out after {timeoutMilliseconds}ms.");
+					procOutput.AppendLine (CultureInfo.CurrentCulture, $"Process timed out after {timeoutMilliseconds}ms.");
 					TryKillProcess (p, procOutput);
 					completed = p.WaitForExit (killTimeoutMilliseconds);
 					if (!completed) {
-						procOutput.AppendLine ($"Process did not exit within {killTimeoutMilliseconds}ms after kill request.");
+						procOutput.AppendLine (CultureInfo.CurrentCulture, $"Process did not exit within {killTimeoutMilliseconds}ms after kill request.");
 					}
 				}
 
 				if (!stdoutCompleted.Task.Wait (streamDrainTimeoutMilliseconds)) {
-					procOutput.AppendLine ($"Timed out waiting for stdout to drain after {streamDrainTimeoutMilliseconds}ms.");
+					procOutput.AppendLine (CultureInfo.CurrentCulture, $"Timed out waiting for stdout to drain after {streamDrainTimeoutMilliseconds}ms.");
 				}
 				if (!stderrCompleted.Task.Wait (streamDrainTimeoutMilliseconds)) {
-					procOutput.AppendLine ($"Timed out waiting for stderr to drain after {streamDrainTimeoutMilliseconds}ms.");
+					procOutput.AppendLine (CultureInfo.CurrentCulture, $"Timed out waiting for stderr to drain after {streamDrainTimeoutMilliseconds}ms.");
 				}
 
 				succeeded = completed && p.ExitCode == 0;
@@ -152,9 +152,9 @@ namespace Xamarin.ProjectTools
 			} catch (InvalidOperationException) {
 				// Process has already exited.
 			} catch (Win32Exception ex) {
-				procOutput.AppendLine ($"Failed to kill process tree: {ex.GetType ().Name}: {ex.Message}");
+				procOutput.AppendLine (CultureInfo.CurrentCulture, $"Failed to kill process tree: {ex.GetType ().Name}: {ex.Message}");
 			} catch (NotSupportedException ex) {
-				procOutput.AppendLine ($"Failed to kill process tree: {ex.GetType ().Name}: {ex.Message}");
+				procOutput.AppendLine (CultureInfo.CurrentCulture, $"Failed to kill process tree: {ex.GetType ().Name}: {ex.Message}");
 			}
 		}
 

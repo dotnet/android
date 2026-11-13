@@ -1,4 +1,5 @@
 using System;
+using System.Globalization;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -50,7 +51,7 @@ namespace Xamarin.AndroidTools.AnnotationSupport
 				// Most of the *Def values share the same type as the const fields' declaring type.
 				var vManagedType = _.GetContextManagedType (v.ArrayItemCommonPrefix);
 				if (vManagedType == null) {
-					_.Errors.Add (string.Format ("Managed type for '{0}' specified in the annotation '{1}' on '{2}' was not found",
+					_.Errors.Add (string.Format (CultureInfo.CurrentCulture, "Managed type for '{0}' specified in the annotation '{1}' on '{2}' was not found",
 								   v.ArrayItemCommonPrefix, a.Name, item.Name));
 				} else {
 					var missingConsts = new List<string> ();
@@ -66,7 +67,7 @@ namespace Xamarin.AndroidTools.AnnotationSupport
 						}
 					}
 					if (missingConsts.Count != 0 && /*x.ManagedConstants.Count != missingConsts.Count*/!x.IsTargetAlreadyEnumified)
-						_.Errors.Add (string.Format ("Warning: For '{0}', managed constants are partially missing in {1}: {2}",
+						_.Errors.Add (string.Format (CultureInfo.CurrentCulture, "Warning: For '{0}', managed constants are partially missing in {1}: {2}",
 									   item.Name, v.ArrayItemCommonPrefix, string.Join (", ", missingConsts)));
 				}
 			} else {

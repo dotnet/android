@@ -1,4 +1,5 @@
 using System;
+using System.Globalization;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -554,7 +555,7 @@ namespace Xamarin.Android.Tasks
 				builder.Append (entry.Key).Append ('\t')
 					.Append (entry.Value.RelativePath).Append ('\t')
 					.Append (entry.Value.Size).Append ('\t')
-					.AppendLine (entry.Value.LastWriteTimeUtcTicks.ToString ());
+					.AppendLine (entry.Value.LastWriteTimeUtcTicks.ToString (CultureInfo.CurrentCulture));
 			}
 			return builder.ToString ();
 		}

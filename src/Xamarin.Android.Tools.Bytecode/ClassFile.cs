@@ -1,4 +1,5 @@
 using System;
+using System.Globalization;
 using System.Collections;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -40,7 +41,7 @@ namespace Xamarin.Android.Tools.Bytecode {
 
 			uint magic;
 			if (!IsClassFile (stream, out magic))
-				throw new BadImageFormatException ("Stream doesn't start with valid 0xCAFEBABE header! Found: 0x" + magic.ToString ("x"));
+				throw new BadImageFormatException ("Stream doesn't start with valid 0xCAFEBABE header! Found: 0x" + magic.ToString ("x", CultureInfo.InvariantCulture));
 
 			MinorVersion    = stream.ReadNetworkUInt16 ();
 			MajorVersion    = stream.ReadNetworkUInt16 ();
@@ -56,10 +57,10 @@ namespace Xamarin.Android.Tools.Bytecode {
 			int e = stream.ReadByte ();
 			if (e >= 0) {
 				var trailing    = new System.Text.StringBuilder ();
-				trailing.AppendFormat ("{0:x2}", (byte) e);
+				trailing.AppendFormat (CultureInfo.CurrentCulture, "{0:x2}", (byte) e);
 				while ((e = stream.ReadByte ()) >= 0) {
 					trailing.Append (" ");
-					trailing.AppendFormat ("{0:x2}", (byte) e);
+					trailing.AppendFormat (CultureInfo.CurrentCulture, "{0:x2}", (byte) e);
 				}
 				throw new BadImageFormatException ($"Stream has trailing data?! {{{trailing}}}");
 			}

@@ -93,7 +93,7 @@ namespace Xamarin.Android.Tools.Bytecode {
 			case ConstantPoolItemType.Module:              return new ConstantPoolModuleItem (constantPool, stream);
 			case ConstantPoolItemType.Package:             return new ConstantPoolPackageItem (constantPool, stream);
 				default:
-				throw new NotSupportedException (string.Format ("Unknown constant type 0x{0}.", type.ToString ("x")));
+				throw new NotSupportedException (string.Format (CultureInfo.CurrentCulture, "Unknown constant type 0x{0}.", type.ToString ("x")));
 			}
 		}
 	}
