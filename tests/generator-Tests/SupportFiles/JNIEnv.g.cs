@@ -2,7 +2,6 @@
 // Generated file; DO NOT EDIT!
 //
 // To make changes, edit monodroid/tools/jnienv-gen and rerun
-#pragma warning disable
 using System;
 using System.Runtime.ExceptionServices;
 using System.Runtime.InteropServices;
@@ -1240,6 +1239,7 @@ namespace Android.Runtime {
 		public  IntPtr  GetObjectRefType;               // jobjectRefType (*GetObjectRefType)(JNIEnv*, jobject);
 	}
 
+#pragma warning disable CS0169 // Legacy delegate-cache shape retained for compilation; stub accessors throw instead of using caches.
 	partial class JniNativeInterfaceInvoker {
 
 		JniNativeInterfaceStruct JniEnv;
@@ -2643,4 +2643,4 @@ namespace Android.Runtime {
 		}
 	}
 }
-#pragma warning restore
+#pragma warning restore CS0169

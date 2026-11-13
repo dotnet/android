@@ -1,5 +1,4 @@
 
-#pragma warning disable
 using System;
 using System.Collections.Generic;
 using System.Reflection;
@@ -18,7 +17,9 @@ namespace Java.Interop {
 		// Lock on jniToManaged before accessing EITHER jniToManaged or managedToJni.
 		internal static Dictionary<string, Type> jniToManaged = new Dictionary<string, Type> ();
 
+#pragma warning disable CS0649 // Runtime-populated member retained for generated callers; fixture startup is not executed.
 		internal static IntPtr id_Class_getName;
+#pragma warning restore CS0649
 
 		static TypeManager ()
 		{
@@ -110,4 +111,3 @@ namespace Java.Interop {
 		}
 	}
 }
-#pragma warning restore

@@ -10,7 +10,6 @@
     <RootNamespace>Android</RootNamespace>
     <SignAssembly>true</SignAssembly>
     <AssemblyOriginatorKeyFile>..\..\product.snk</AssemblyOriginatorKeyFile>
-    <NoWarn>0618;0809;0465;8764;8765;8766;8767;RS0041</NoWarn>
     <WarningsAsErrors>$(WarningsAsErrors);CS2002</WarningsAsErrors>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <!-- Allows audited safe declarations while this assembly still uses legacy memory-safety rules. -->
@@ -33,9 +32,6 @@
     >true</IsUnstableVersion>
     <DefineConstants Condition=" '$(IsUnstableVersion)' == 'True' ">$(DefineConstants);ANDROID_UNSTABLE</DefineConstants>
     <OutputPath>$(_MonoAndroidNETDefaultOutDir)</OutputPath>
-
-    <!-- Allow PublicApiAnalyzers to be turned off -->
-    <RunAnalyzers Condition=" '$(DisableApiCompatibilityCheck)' == 'True' ">false</RunAnalyzers>
 
     <!-- PublicApiAnalyzers warnings should be errors, but building in VS throws incorrect extra warnings -->
     <WarningsAsErrors Condition=" '$(BuildingInsideVisualStudio)' != 'True' ">$(WarningsAsErrors);RS0016,RS0017</WarningsAsErrors>
@@ -382,6 +378,8 @@
     <PackageReference Include="Microsoft.CodeAnalysis.PublicApiAnalyzers" Version="5.6.0">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+      <!-- Disabling API compatibility must not disable unrelated analyzers. -->
+      <ExcludeAssets Condition=" '$(DisableApiCompatibilityCheck)' == 'True' ">analyzers</ExcludeAssets>
     </PackageReference>
   </ItemGroup>
 

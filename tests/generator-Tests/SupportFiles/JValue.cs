@@ -1,5 +1,4 @@
 
-#pragma warning disable
 using System;
 using System.Runtime.InteropServices;
 
@@ -80,4 +79,3 @@ namespace Android.Runtime {
 		}
 	}
 }
-#pragma warning restore

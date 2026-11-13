@@ -1,5 +1,4 @@
 
-#pragma warning disable
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -14,6 +13,7 @@ using System.Text;
 
 namespace Android.Runtime {
 
+#pragma warning disable CS0649 // Native initialization layout; this compile-only fixture does not run runtime startup.
 	struct JnienvInitializeArgs {
 		public IntPtr          javaVm;
 		public IntPtr          env;
@@ -27,27 +27,15 @@ namespace Android.Runtime {
 		public int             grefGcThreshold;
 		public IntPtr          grefIGCUserPeer;
 	}
+#pragma warning restore CS0649
 
 	public static partial class JNIEnv {
 
-		static IntPtr java_class_loader;
-		static IntPtr java_vm;
-		static IntPtr load_class_id;
-		static JNIInvokeInterface invoke_iface;
-		static int version;
-		static int gref_gc_threshold;
-		static int androidSdkVersion;
-
-		static bool AllocObjectSupported;
-
-		static IntPtr cid_System;
-		static IntPtr mid_System_identityHashCode;
+#pragma warning disable CS0649 // Runtime-populated members retained for generated callers; fixture startup is not executed.
 		internal static IntPtr mid_Class_getName;
 		
 		internal  static  bool  PropagateExceptions;
-
-		[ThreadStatic] static IntPtr handle;
-		[ThreadStatic] static JniNativeInterfaceInvoker env;
+#pragma warning restore CS0649
 
 		static JniNativeInterfaceInvoker Env {
 			get;
@@ -74,8 +62,6 @@ namespace Android.Runtime {
 
 		delegate Delegate GetCallbackHandler ();
 
-		static MethodInfo dynamic_callback_gen;
-
 		static Delegate CreateDynamicCallback (MethodInfo method)
 		{
 			throw new NotImplementedException ();
@@ -92,15 +78,15 @@ namespace Android.Runtime {
 		}
 
 
-		static volatile bool BridgeProcessing; // = false
-
 		public static void WaitForBridgeProcessing ()
 		{
 			throw new NotImplementedException ();
 		}
 
 
+#pragma warning disable CS0649 // Runtime-populated member retained for generated callers; fixture startup is not executed.
 		internal static Func<IntPtr, IntPtr> IdentityHash;
+#pragma warning restore CS0649
 
 		public static IntPtr AllocObject (string jniClassName)
 		{
@@ -190,9 +176,6 @@ namespace Android.Runtime {
 		{
 			throw new NotImplementedException ();
 		}
-
-		static readonly int nameBufferLength = 1024;
-		[ThreadStatic] static char[] nameBuffer;
 
 		static unsafe IntPtr BinaryName (string classname)
 		{
@@ -303,8 +286,6 @@ namespace Android.Runtime {
 		{
 			throw new NotImplementedException ();
 		}
-
-		static IntPtr char_sequence_to_string_id;
 
 		public static string GetCharSequence (IntPtr jobject, JniHandleOwnership transfer)
 		{
@@ -545,6 +526,7 @@ namespace Android.Runtime {
 		delegate int AttachCurrentThreadDelegate (IntPtr javavm, out IntPtr env, IntPtr args);
 		delegate int DetachCurrentThreadDelegate (IntPtr javavm);
 
+#pragma warning disable CS0649 // Preserve native VM and registration layouts; compile-only stubs do not populate their fields.
 		struct JNIInvokeInterface {
 			public IntPtr reserved0;
 			public IntPtr reserved1;
@@ -567,6 +549,7 @@ namespace Android.Runtime {
 			{
 					throw new NotImplementedException ();
 			}
+#pragma warning restore CS0649
 		} 
 
 #if ANDROID_8
@@ -590,4 +573,3 @@ namespace Android.Runtime {
 	partial class JniNativeInterfaceInvoker {
 	}
 }
-#pragma warning restore
