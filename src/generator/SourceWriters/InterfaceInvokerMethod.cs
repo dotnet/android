@@ -23,7 +23,7 @@ namespace generator.SourceWriters
 			IsPublic = true;
 			IsStatic = method.IsStatic;
 			var objectType = opt.SymbolTable.Lookup ("java.lang.Object") as GenBase;
-			IsShadow = iface.RequiresNew (Name, method) ||
+			IsShadow = objectType?.RequiresNew (Name, method) == true ||
 				objectType?.Methods.Any (m => m.Visibility != "private" && m.AdjustedName == Name &&
 					ParameterList.Equals (m.Parameters, method.Parameters)) == true;
 

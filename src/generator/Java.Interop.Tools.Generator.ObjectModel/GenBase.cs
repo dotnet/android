@@ -180,6 +180,9 @@ namespace MonoDroid.Generation
 		internal IEnumerable<GenBase> EnclosingBaseTypes () =>
 			Ancestors ().Where (g => FullName.StartsWith (g.FullName + ".", StringComparison.Ordinal));
 
+		internal bool InheritsCharSequenceEnumerator () =>
+			Ancestors ().Any (g => g.Interfaces.Any (i => i.FullName == "Java.Lang.ICharSequence"));
+
 		public string AnnotatedVisibility => support.AnnotatedVisibility;
 
 		// not: not currently assembly qualified, but it uses needed
@@ -914,9 +917,22 @@ namespace MonoDroid.Generation
 
 		public string RawVisibility => support.Visibility;
 
-		public bool RequiresNew (Property property) => RequiresNew (property.AdjustedName);
+		public bool RequiresNew (Property property) =>
+			property.Getter.ManagedOverride == "new" || RequiresNew (property.AdjustedName);
 
 		public bool RequiresNew (Field field) => RequiresNew (field.Name);
+
+		internal bool RequiresNewStringOverload (Method method) =>
+			Ancestors ().Any (a => a.Methods.Any (m => m.Visibility != "private" && m.Name == method.Name &&
+				(m.GenericArguments?.Count ?? 0) == (method.GenericArguments?.Count ?? 0) &&
+				m.Parameters.Select (p => p.Type.Replace ("Java.Lang.ICharSequence", "string"))
+					.SequenceEqual (method.Parameters.Select (p => p.Type.Replace ("Java.Lang.ICharSequence", "string")))));
+
+		internal bool RequiresNewEventArgs (string name) =>
+			Ancestors ().SelectMany (a => a.NestedTypes).OfType<InterfaceGen> ().Where (i => i.IsListener).Any (i =>
+				i.Methods.Any (m => m.EventName != string.Empty &&
+					(m.RetVal.IsVoid || m.IsEventHandlerWithHandledProperty) &&
+					(!m.IsSimpleEventHandler || m.IsEventHandlerWithHandledProperty) && i.GetArgsName (m) == name));
 
 		bool RequiresNew (string memberName)
 		{
@@ -977,7 +993,8 @@ namespace MonoDroid.Generation
 
 				if (ancestor.Methods.Any (m => m.Visibility != "private" && m.AdjustedName == memberName &&
 						(method == null || (m.GenericArguments?.Count ?? 0) == (method.GenericArguments?.Count ?? 0) &&
-							ParameterList.Equals (m.Parameters, method.Parameters))))
+						m.Parameters.Count == method.Parameters.Count &&
+						m.Parameters.Zip (method.Parameters, (p, other) => p.Equals (other) || p.Type == other.Type).All (same => same))))
 					return true;
 			}
 			return false;

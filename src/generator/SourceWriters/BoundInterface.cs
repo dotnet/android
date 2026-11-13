@@ -117,7 +117,9 @@ namespace generator.SourceWriters
 
 						// Check if there's an existing EventArgs class to add to
 						if (event_args_class is null) {
-							event_args_class = new InterfaceEventArgsClass (iface, method);
+							event_args_class = new InterfaceEventArgsClass (iface, method) {
+								IsShadow = context.ContextTypes.Skip (1).FirstOrDefault ()?.RequiresNewEventArgs (iface.GetArgsName (method)) == true,
+							};
 							post_sibling_types.Add (event_args_class);
 						}
 

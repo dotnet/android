@@ -252,6 +252,14 @@ method `java.lang.object.toString` to
     name="managedName">NewMethodName</attr>
 ```
 
+### managedOverride
+
+Controls a method's generated C# declaration: `virtual`, `override`, or
+`none` overrides the inferred modifier. For a property getter, `new`
+explicitly hides a hand-bound inherited property without changing the
+generated property's virtual slot. Use it only when the base member is
+absent from the binding generator's API model.
+
 ### managedType
 
 `managedType` is used to change the return type of a method. In some
