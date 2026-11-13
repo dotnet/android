@@ -11,8 +11,6 @@ This file contains the NativeAOT-specific MSBuild logic for .NET for Android.
   <UsingTask TaskName="Microsoft.Android.Tasks.GenerateNativeAotBootstrapSources" AssemblyFile="$(_MicrosoftAndroidBuildTasksAssembly)" Runtime="NET" Condition=" '$(MSBuildRuntimeType)' == 'Core' " />
   <UsingTask TaskName="Microsoft.Android.Tasks.GenerateNativeAotDataObject" AssemblyFile="$(_MicrosoftAndroidBuildTasksAssembly)" Runtime="NET" TaskFactory="TaskHostFactory" Condition=" '$(MSBuildRuntimeType)' == 'Full' " />
   <UsingTask TaskName="Microsoft.Android.Tasks.GenerateNativeAotDataObject" AssemblyFile="$(_MicrosoftAndroidBuildTasksAssembly)" Runtime="NET" Condition=" '$(MSBuildRuntimeType)' == 'Core' " />
-  <UsingTask TaskName="Microsoft.Android.Tasks.GetNativeAotRuntimeProviders" AssemblyFile="$(_MicrosoftAndroidBuildTasksAssembly)" Runtime="NET" TaskFactory="TaskHostFactory" Condition=" '$(MSBuildRuntimeType)' == 'Full' " />
-  <UsingTask TaskName="Microsoft.Android.Tasks.GetNativeAotRuntimeProviders" AssemblyFile="$(_MicrosoftAndroidBuildTasksAssembly)" Runtime="NET" Condition=" '$(MSBuildRuntimeType)' == 'Core' " />
   <UsingTask TaskName="Microsoft.Android.Tasks.LinkNativeAotSharedLibrary" AssemblyFile="$(_MicrosoftAndroidBuildTasksAssembly)" Runtime="NET" TaskFactory="TaskHostFactory" Condition=" '$(MSBuildRuntimeType)' == 'Full' " />
   <UsingTask TaskName="Microsoft.Android.Tasks.LinkNativeAotSharedLibrary" AssemblyFile="$(_MicrosoftAndroidBuildTasksAssembly)" Runtime="NET" Condition=" '$(MSBuildRuntimeType)' == 'Core' " />
 
@@ -81,9 +79,21 @@ This file contains the NativeAOT-specific MSBuild logic for .NET for Android.
       <_AndroidNativeAotTaskAssembly>$([MSBuild]::NormalizePath('$(MSBuildThisFileDirectory)', '$(_MicrosoftAndroidBuildTasksAssembly)'))</_AndroidNativeAotTaskAssembly>
     </PropertyGroup>
     <!-- Task-generated provider names are not inferred when the typemap generator is skipped. -->
-    <GetNativeAotRuntimeProviders ManifestFile="$(IntermediateOutputPath)AndroidManifest.xml">
-      <Output TaskParameter="AdditionalProviderSources" ItemName="_AndroidNativeAotRuntimeProvider" />
-    </GetNativeAotRuntimeProviders>
+    <!-- Provider names become Java file names, so accept only a nonempty ASCII-decimal suffix. -->
+    <XmlPeek
+        XmlInputPath="$(IntermediateOutputPath)AndroidManifest.xml"
+        ProhibitDtd="true"
+        Namespaces="&lt;Namespace Prefix='android' Uri='http://schemas.android.com/apk/res/android' /&gt;"
+        Query="//provider[
+          starts-with(@android:name, 'net.dot.jni.nativeaot.NativeAotRuntimeProvider_') and
+          substring-after(@android:name, 'net.dot.jni.nativeaot.NativeAotRuntimeProvider_') != '' and
+          translate(substring-after(@android:name, 'net.dot.jni.nativeaot.NativeAotRuntimeProvider_'), '0123456789', '') = ''
+        ]/@android:name">
+      <Output TaskParameter="Result" ItemName="_AndroidNativeAotRuntimeProviderName" />
+    </XmlPeek>
+    <ItemGroup>
+      <_AndroidNativeAotRuntimeProvider Include="@(_AndroidNativeAotRuntimeProviderName->Distinct()->Replace('net.dot.jni.nativeaot.', ''))" />
+    </ItemGroup>
     <!-- Only the library name and selected provider names affect these Java sources. -->
     <WriteLinesToFile
         File="$(_AndroidNativeAotBootstrapInputsFile)"
