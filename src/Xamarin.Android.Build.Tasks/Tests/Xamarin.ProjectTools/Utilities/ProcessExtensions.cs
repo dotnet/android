@@ -1,8 +1,10 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Globalization;
 using System.Runtime.InteropServices;
 using System.Threading;
+using Microsoft.Win32.SafeHandles;
 using NUnit.Framework;
 
 namespace Xamarin.ProjectTools
@@ -54,44 +56,25 @@ namespace Xamarin.ProjectTools
 			// Collect all descendant PIDs first, then send SIGINT to all of them.
 			var pids = new List<int> ();
 			GetDescendantPids (process.Id, pids);
-			pids.Add (process.Id);
-
 			foreach (int pid in pids) {
-				if (kill (pid, SIGINT) != 0) {
-					int errno = Marshal.GetLastPInvokeError ();
-					// ESRCH (3) = process already exited, expected in race conditions
-					if (errno != 3) {
-						Console.Error.WriteLine ($"kill({pid}, SIGINT) failed with errno {errno}");
-					}
+				// The process may already have exited, which is expected in race conditions.
+				if (SafeProcessHandle.TryOpen (pid, out var handle)) {
+					using (handle)
+						handle.Signal (PosixSignal.SIGINT);
 				}
 			}
+			process.SafeHandle.Signal (PosixSignal.SIGINT);
 		}
 
 		static void GetDescendantPids (int parentPid, List<int> pids)
 		{
-			var psi = new ProcessStartInfo ("pgrep", $"-P {parentPid}") {
-				RedirectStandardOutput = true,
-				UseShellExecute = false,
-				CreateNoWindow = true,
-			};
-			using var p = Process.Start (psi);
-			if (p == null) {
-				return;
-			}
-			string output = p.StandardOutput.ReadToEnd ();
-			p.WaitForExit ();
-
-			foreach (string line in output.Split ('\n', StringSplitOptions.RemoveEmptyEntries)) {
+			var result = Process.RunAndCaptureText ("pgrep", ["-P", parentPid.ToString (CultureInfo.InvariantCulture)]);
+			foreach (string line in result.StandardOutput.Split ('\n', StringSplitOptions.RemoveEmptyEntries)) {
 				if (int.TryParse (line.Trim (), out int childPid)) {
 					GetDescendantPids (childPid, pids);
 					pids.Add (childPid);
 				}
 			}
 		}
-
-		[DllImport ("libc", SetLastError = true)]
-		static extern int kill (int pid, int sig);
-
-		const int SIGINT = 2;
 	}
 }

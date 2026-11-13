@@ -6,6 +6,7 @@ using System.Text;
 using System.Text.Json;
 using System.Text.RegularExpressions;
 using System.Threading;
+using System.Threading.Tasks;
 using System.Xml.Linq;
 using System.Xml.XPath;
 using Microsoft.VisualStudio.TestPlatform.Utilities;
@@ -617,27 +618,21 @@ static int InvokeIntMethod (Java.Lang.Object instance, string methodName)
 			var outputReceived = new ManualResetEventSlim (false);
 			bool foundMessage = false;
 
-			process.OutputDataReceived += (sender, e) => {
-				if (e.Data != null) {
+			var reader = Task.Run (async () => {
+				await foreach (var line in process.ReadAllLinesAsync ()) {
 					lock (locker) {
-						output.AppendLine (e.Data);
-						if (e.Data.Contains (logcatMessage)) {
-							foundMessage = true;
-							outputReceived.Set ();
+						if (line.StandardError) {
+							output.AppendLine ($"STDERR: {line.Content}");
+						} else {
+							output.AppendLine (line.Content);
+							if (line.Content.Contains (logcatMessage)) {
+								foundMessage = true;
+								outputReceived.Set ();
+							}
 						}
 					}
 				}
-			};
-			process.ErrorDataReceived += (sender, e) => {
-				if (e.Data != null) {
-					lock (locker) {
-						output.AppendLine ($"STDERR: {e.Data}");
-					}
-				}
-			};
-
-			process.BeginOutputReadLine ();
-			process.BeginErrorReadLine ();
+			});
 
 			// Wait for the expected message or timeout
 			bool messageFound = outputReceived.Wait (TimeSpan.FromSeconds (ActivityStartTimeoutInSeconds));
@@ -647,6 +642,7 @@ static int InvokeIntMethod (Java.Lang.Object instance, string methodName)
 				process.Kill (entireProcessTree: true);
 				process.WaitForExit ();
 			}
+			reader.Wait (TimeSpan.FromSeconds (30));
 
 			// Write the output to a log file for debugging
 			string outputText = output.ToString ();
@@ -695,26 +691,20 @@ static int InvokeIntMethod (Java.Lang.Object instance, string methodName)
 			var output = new StringBuilder ();
 			var appLaunched = new ManualResetEventSlim (false);
 
-			process.OutputDataReceived += (sender, e) => {
-				if (e.Data != null) {
+			var reader = Task.Run (async () => {
+				await foreach (var line in process.ReadAllLinesAsync ()) {
 					lock (locker) {
-						output.AppendLine (e.Data);
-						if (e.Data.Contains (logcatMessage)) {
-							appLaunched.Set ();
+						if (line.StandardError) {
+							output.AppendLine ($"STDERR: {line.Content}");
+						} else {
+							output.AppendLine (line.Content);
+							if (line.Content.Contains (logcatMessage)) {
+								appLaunched.Set ();
+							}
 						}
 					}
 				}
-			};
-			process.ErrorDataReceived += (sender, e) => {
-				if (e.Data != null) {
-					lock (locker) {
-						output.AppendLine ($"STDERR: {e.Data}");
-					}
-				}
-			};
-
-			process.BeginOutputReadLine ();
-			process.BeginErrorReadLine ();
+			});
 
 			// Wait for the app to start and produce logcat output
 			bool launched = appLaunched.Wait (TimeSpan.FromSeconds (ActivityStartTimeoutInSeconds));
@@ -734,6 +724,7 @@ static int InvokeIntMethod (Java.Lang.Object instance, string methodName)
 				// Wait for the process to exit gracefully
 				bool exited = process.WaitForExit (30_000);
 				Assert.IsTrue (exited, "dotnet run process should have exited after SIGINT");
+				reader.Wait (TimeSpan.FromSeconds (30));
 				Assert.AreEqual (130, process.ExitCode, "dotnet run process should report user cancellation after SIGINT");
 
 				// Verify the output contains the "Stopping application..." message from Microsoft.Android.Run
@@ -753,6 +744,7 @@ static int InvokeIntMethod (Java.Lang.Object instance, string methodName)
 					process.Kill (entireProcessTree: true);
 					process.WaitForExit ();
 				}
+				reader.Wait (TimeSpan.FromSeconds (30));
 
 				File.WriteAllText (logPath, output.ToString ());
 				TestContext.AddTestAttachment (logPath);
@@ -791,31 +783,25 @@ static int InvokeIntMethod (Java.Lang.Object instance, string methodName)
 			bool foundMessage = false;
 			bool foundAdbTarget = false;
 
-			process.OutputDataReceived += (sender, e) => {
-				if (e.Data != null) {
+			var reader = Task.Run (async () => {
+				await foreach (var line in process.ReadAllLinesAsync ()) {
 					lock (locker) {
-						output.AppendLine (e.Data);
+						if (line.StandardError) {
+							output.AppendLine ($"STDERR: {line.Content}");
+							continue;
+						}
+						output.AppendLine (line.Content);
 						// Check for the --adb-target argument in verbose output
-						if (e.Data.Contains ($"Target: -s {serial}")) {
+						if (line.Content.Contains ($"Target: -s {serial}")) {
 							foundAdbTarget = true;
 						}
-						if (e.Data.Contains (logcatMessage)) {
+						if (line.Content.Contains (logcatMessage)) {
 							foundMessage = true;
 							outputReceived.Set ();
 						}
 					}
 				}
-			};
-			process.ErrorDataReceived += (sender, e) => {
-				if (e.Data != null) {
-					lock (locker) {
-						output.AppendLine ($"STDERR: {e.Data}");
-					}
-				}
-			};
-
-			process.BeginOutputReadLine ();
-			process.BeginErrorReadLine ();
+			});
 
 			// Wait for the expected message or timeout
 			bool messageFound = outputReceived.Wait (TimeSpan.FromSeconds (ActivityStartTimeoutInSeconds));
@@ -825,6 +811,7 @@ static int InvokeIntMethod (Java.Lang.Object instance, string methodName)
 				process.Kill (entireProcessTree: true);
 				process.WaitForExit ();
 			}
+			reader.Wait (TimeSpan.FromSeconds (30));
 
 			// Write the output to a log file for debugging
 			string logPath = Path.Combine (Root, builder.ProjectDirectory, "dotnet-run-device-output.log");
@@ -874,32 +861,19 @@ static int InvokeIntMethod (Java.Lang.Object instance, string methodName)
 			var initialMessageEvent = new ManualResetEventSlim ();
 			var hotReloadAppliedEvent = new ManualResetEventSlim ();
 
-			process.OutputDataReceived += (sender, e) => {
-				if (e.Data != null) {
+			var reader = Task.Run (async () => {
+				await foreach (var line in process.ReadAllLinesAsync ()) {
 					lock (locker) {
-						output.AppendLine (e.Data);
-						if (e.Data.Contains (initialMessage)) {
+						output.AppendLine (line.StandardError ? $"STDERR: {line.Content}" : line.Content);
+						if (!line.StandardError && line.Content.Contains (initialMessage)) {
 							initialMessageEvent.Set ();
 						}
-						if (e.Data.Contains (hotReloadMessage)) {
+						if (line.Content.Contains (hotReloadMessage)) {
 							hotReloadAppliedEvent.Set ();
 						}
 					}
 				}
-			};
-			process.ErrorDataReceived += (sender, e) => {
-				if (e.Data != null) {
-					lock (locker) {
-						output.AppendLine ($"STDERR: {e.Data}");
-						if (e.Data.Contains (hotReloadMessage)) {
-							hotReloadAppliedEvent.Set ();
-						}
-					}
-				}
-			};
-
-			process.BeginOutputReadLine ();
-			process.BeginErrorReadLine ();
+			});
 
 			string logPath = Path.Combine (Root, builder.ProjectDirectory, "dotnet-watch-output.log");
 
@@ -930,6 +904,7 @@ static int InvokeIntMethod (Java.Lang.Object instance, string methodName)
 					process.Kill (entireProcessTree: true);
 					process.WaitForExit ();
 				}
+				reader.Wait (TimeSpan.FromSeconds (30));
 
 				// Write the output to a log file for debugging
 				File.WriteAllText (logPath, output.ToString ());
@@ -3449,31 +3424,19 @@ Facebook.FacebookSdk.LogEvent(""TestFacebook"");
 				? dotnet.StartRun (waitForExit: true, parameters: runParameters.ToArray ())
 				: dotnet.StartTest (parameters: runParameters.ToArray ());
 
-			var locker = new Lock ();
 			var output = new StringBuilder ();
-
-			process.OutputDataReceived += (sender, e) => {
-				if (e.Data != null)
-					lock (locker)
-						output.AppendLine (e.Data);
-			};
-			process.ErrorDataReceived += (sender, e) => {
-				if (e.Data != null)
-					lock (locker)
-						output.AppendLine ($"STDERR: {e.Data}");
-			};
-
-			process.BeginOutputReadLine ();
-			process.BeginErrorReadLine ();
-
+			bool completed = true;
 			// Wait for the process to complete (instrumentation should finish on its own)
-			bool completed = process.WaitForExit ((int) TimeSpan.FromMinutes (5).TotalMilliseconds);
-			if (!completed) {
-				try { process.Kill (entireProcessTree: true); } catch { }
-			} else {
-				// Ensure async output events are fully drained
-				process.WaitForExit ();
+			using (var cts = new CancellationTokenSource (TimeSpan.FromMinutes (5))) {
+				try {
+					foreach (var line in process.ReadAllLinesAsync (cts.Token).ToBlockingEnumerable ())
+						output.AppendLine (line.StandardError ? $"STDERR: {line.Content}" : line.Content);
+				} catch (OperationCanceledException) {
+					completed = false;
+					process.Kill (entireProcessTree: true);
+				}
 			}
+			process.WaitForExit ();
 
 			// Write the output to a log file for debugging
 			string logPath = Path.Combine (projectDirectory, $"dotnet-{mode}-output.log");
@@ -3629,30 +3592,18 @@ Facebook.FacebookSdk.LogEvent(""TestFacebook"");
 			// collected into a single `-e args "..."` extra.
 			using var process = dotnet.StartRun (waitForExit: true, parameters: new [] { "--", "greeting=hello", "--custom-flag" });
 
-			var locker = new Lock ();
 			var output = new StringBuilder ();
-
-			process.OutputDataReceived += (sender, e) => {
-				if (e.Data != null)
-					lock (locker)
-						output.AppendLine (e.Data);
-			};
-			process.ErrorDataReceived += (sender, e) => {
-				if (e.Data != null)
-					lock (locker)
-						output.AppendLine ($"STDERR: {e.Data}");
-			};
-
-			process.BeginOutputReadLine ();
-			process.BeginErrorReadLine ();
-
-			bool completed = process.WaitForExit ((int) TimeSpan.FromMinutes (10).TotalMilliseconds);
-			if (!completed) {
-				try { process.Kill (entireProcessTree: true); } catch { }
-			} else {
-				// Ensure async output events are fully drained
-				process.WaitForExit ();
+			bool completed = true;
+			using (var cts = new CancellationTokenSource (TimeSpan.FromMinutes (10))) {
+				try {
+					foreach (var line in process.ReadAllLinesAsync (cts.Token).ToBlockingEnumerable ())
+						output.AppendLine (line.StandardError ? $"STDERR: {line.Content}" : line.Content);
+				} catch (OperationCanceledException) {
+					completed = false;
+					process.Kill (entireProcessTree: true);
+				}
 			}
+			process.WaitForExit ();
 
 			string logPath = Path.Combine (Root, builder.ProjectDirectory, "dotnet-run-benchmarkdotnet.log");
 			File.WriteAllText (logPath, output.ToString ());
