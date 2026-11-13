@@ -1589,6 +1589,15 @@ namespace Xamarin.Android.Tasks.Properties {
         }
 
         /// <summary>
+        ///   Looks up a localized string similar to Failed to read &apos;{0}&apos; with debugging symbols for target architecture &apos;{1}&apos;. Retrying to load it without debugging symbols. Error details are logged below..
+        /// </summary>
+        public static string XA4332 {
+            get {
+                return ResourceManager.GetString("XA4332", resourceCulture);
+            }
+        }
+
+        /// <summary>
         ///   Looks up a localized string similar to Missing Android NDK toolchains directory &apos;{0}&apos;. Please install the Android NDK..
         /// </summary>
         public static string XA5101 {

@@ -730,6 +730,11 @@ Remove the '{0}' reference from your project and add the '{1}' NuGet package ins
     <value>Failed to process bundle config file '{0}', split config files will be ignored at run time.</value>
     <comment>{0} - The bundle config file path.</comment>
   </data>
+  <data name="XA4332" xml:space="preserve">
+    <value>Failed to read '{0}' with debugging symbols for target architecture '{1}'. Retrying to load it without debugging symbols. Error details are logged below.</value>
+    <comment>{0} - The assembly file path.
+{1} - The target architecture, for example Arm64.</comment>
+  </data>
   <data name="XA5101" xml:space="preserve">
     <value>Missing Android NDK toolchains directory '{0}'. Please install the Android NDK.</value>
     <comment>{0} - The path of the missing directory</comment>
