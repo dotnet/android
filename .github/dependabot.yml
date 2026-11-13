@@ -8,7 +8,7 @@ updates:
   # discoverable via text scanning (e.g. msbuild-sdks in global.json).
   #
   # Workaround: target a release branch whose projects build against
-  # the SDK Dependabot has. PRs land on release/10.0.1xx; forward-port
+  # the SDK Dependabot has. PRs land on release/11.0.1xx; forward-port
   # them to `main` by cherry-picking onto a branch off `main` (PowerShell example):
   #
   #     gh pr checkout <dependabot-pr-number>
@@ -22,7 +22,7 @@ updates:
   #         --body  "Forward-port of #<dependabot-pr-number>"
   #
   # Do NOT use GitHub's "Change base branch" button to retarget the
-  # Dependabot PR at `main` -- the branch is based on release/10.0.1xx,
+  # Dependabot PR at `main` -- the branch is based on release/11.0.1xx,
   # so the resulting diff would include every commit on the release
   # branch that isn't on `main`.
   #
@@ -37,7 +37,7 @@ updates:
       - "/build-tools"
       - "/tools"
       - "/src/Xamarin.Android.Build.Tasks"
-    target-branch: "release/10.0.1xx"
+    target-branch: "release/11.0.1xx"
     schedule:
       interval: "weekly"
     ignore:
