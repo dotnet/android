@@ -4,6 +4,7 @@ using Xamarin.ProjectTools;
 using System.IO;
 using System.Linq;
 using Microsoft.Build.Framework;
+using Microsoft.Build.Logging.StructuredLogger;
 using System.Text;
 using System.Xml.Linq;
 using System.Collections.Generic;
@@ -494,6 +495,23 @@ namespace Xamarin.Android.Build.Tests
 			long lib1FirstBuildSize = new FileInfo (Path.Combine (rootPath, lib1.ProjectName, lib1.OutputPath, "Library1.dll")).Length;
 
 			using (var builder = CreateApkBuilder (Path.Combine (rootPath, app.ProjectName))) {
+				void AssertUnchangedInstall ()
+				{
+					foreach (var target in new [] { "CoreCompile", "XamlC", "_CompileToDalvik", "_BuildApkFastDev", "_Upload" })
+						builder.Output.AssertTargetIsSkipped (target);
+					builder.Output.AssertTargetIsSkipped ("_GenerateTrimmableTypeMap", defaultIfNotUsed: true);
+					if (packageFormat == "aab") {
+						builder.Output.AssertTargetIsSkipped ("_BuildApkSet");
+						builder.Output.AssertTargetIsSkipped ("_DeployAppBundle");
+					}
+					var binlog = Path.ChangeExtension (Path.Combine (Root, builder.ProjectDirectory, builder.BuildLogFile), ".binlog");
+					FileAssert.Exists (binlog);
+					var tasks = BinaryLog.ReadBuild (binlog).FindChildrenRecursive<Microsoft.Build.Logging.StructuredLogger.Task> ().Select (task => task.Name).ToArray ();
+					foreach (var task in new [] { "Csc", "XamlCTask", "GenerateTrimmableTypeMap", "D8", "R8", "BuildApk", "BuildAppBundle", "BuildApkSet", "InstallApkSet", "FastDeploy" })
+						CollectionAssert.DoesNotContain (tasks, task, $"The unchanged install should not execute {task}, including in referenced projects.");
+					Assert.IsFalse (builder.LastBuildOutput.Any (l => l.Contains ("NotifySync CopyFile")), "The unchanged install should not copy files.");
+				}
+
 				builder.Verbosity = LoggerVerbosity.Detailed;
 				builder.ThrowOnBuildFailure = false;
 				builder.BuildLogFile = "install.log";
@@ -505,11 +523,7 @@ namespace Xamarin.Android.Build.Tests
 				var firstInstallTime = builder.LastBuildTime;
 				builder.BuildLogFile = "install2.log";
 				Assert.IsTrue (builder.Install (app, doNotCleanupOnUpdate: true, saveProject: false), "Second install should have succeeded.");
-				builder.Output.AssertTargetIsSkipped ("_GenerateTrimmableTypeMap", defaultIfNotUsed: true);
-				Assert.IsTrue (builder.Output.IsTargetSkipped ("_Upload"), "The unchanged managed payload should not be deployed.");
-				if (packageFormat == "aab")
-					Assert.IsTrue (builder.Output.IsTargetSkipped ("_DeployAppBundle"), "The unchanged APK set should not be installed.");
-				Assert.IsFalse (builder.LastBuildOutput.Any (l => l.Contains ("NotifySync CopyFile")), "The unchanged install should not copy files.");
+				AssertUnchangedInstall ();
 				var secondInstallTime = builder.LastBuildTime;
 
 				var filesToTouch = new [] {
@@ -538,23 +552,20 @@ namespace Xamarin.Android.Build.Tests
 				Assert.IsTrue (logLines.Any (l => l.Contains ("NotifySync CopyFile") && l.Contains ("UnnamedProject.dll")), "UnnamedProject.dll should have been uploaded");
 				Assert.IsTrue (logLines.Any (l => l.Contains ("NotifySync CopyFile") && l.Contains ("Library1.dll")), "Library1.dll should have been uploaded");
 				Assert.IsTrue (logLines.Any (l => l.Contains ("NotifySync SkipCopyFile") && l.Contains ("Library2.dll")), "Library2.dll should not have been uploaded");
-				if (packageFormat == "aab")
-					Assert.IsTrue (builder.Output.IsTargetSkipped ("_DeployAppBundle"), "Managed-only updates should not reinstall the APK set.");
+				builder.Output.AssertTargetIsSkipped ("_CompileToDalvik");
+				builder.Output.AssertTargetIsSkipped ("_BuildApkFastDev");
+				if (packageFormat == "aab") {
+					builder.Output.AssertTargetIsSkipped ("_BuildApkSet");
+					builder.Output.AssertTargetIsSkipped ("_DeployAppBundle");
+				}
 				var thirdInstallTime = builder.LastBuildTime;
 				builder.BuildLogFile = "install4.log";
 				Assert.IsTrue (builder.Install (app, doNotCleanupOnUpdate: true, saveProject: false), "Fourth install should have succeeded.");
-				builder.Output.AssertTargetIsSkipped ("_GenerateTrimmableTypeMap", defaultIfNotUsed: true);
-				Assert.IsTrue (builder.Output.IsTargetSkipped ("_Upload"), "The unchanged managed payload should not be deployed.");
-				if (packageFormat == "aab")
-					Assert.IsTrue (builder.Output.IsTargetSkipped ("_DeployAppBundle"), "The unchanged APK set should not be installed.");
-				Assert.IsFalse (builder.LastBuildOutput.Any (l => l.Contains ("NotifySync CopyFile")), "The unchanged install should not copy files.");
-				var fourthInstalTime = builder.LastBuildTime;
+				AssertUnchangedInstall ();
+				var fourthInstallTime = builder.LastBuildTime;
 
-				Assert.IsTrue (thirdInstallTime < firstInstallTime, $"Third incremental install: '{thirdInstallTime}' should be faster than clean install: '{firstInstallTime}'.");
-				Assert.IsTrue (secondInstallTime < firstInstallTime && secondInstallTime < thirdInstallTime,
-					$"Second unchanged install: '{secondInstallTime}' should be faster than clean install: '{firstInstallTime}' and incremental install: '{thirdInstallTime}'.");
-				Assert.IsTrue (fourthInstalTime < firstInstallTime && fourthInstalTime < thirdInstallTime,
-					$"Fourth unchanged install: '{fourthInstalTime}' should be faster than clean install: '{firstInstallTime}' and incremental install: '{thirdInstallTime}'.");
+				// Build,Install elapsed times also include restore and evaluation, outside the deployment work checked above.
+				TestContext.Out.WriteLine ($"Build,Install elapsed: initial={firstInstallTime}, unchanged={secondInstallTime}, changed={thirdInstallTime}, unchanged={fourthInstallTime}");
 			}
 		}
 
