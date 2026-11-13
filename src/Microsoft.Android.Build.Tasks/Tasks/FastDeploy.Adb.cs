@@ -6,6 +6,7 @@ using System.Text;
 using System.Threading.Tasks;
 
 using Microsoft.Android.Build.Tasks;
+using Xamarin.Android.Tasks;
 using Xamarin.Android.Tools;
 
 namespace Microsoft.Android.Tasks
@@ -131,10 +132,8 @@ namespace Microsoft.Android.Tasks
 		internal virtual async Task WaitForInstallTransportRecovery ()
 		{
 			string serial = string.Equals (DeviceId, "any", StringComparison.OrdinalIgnoreCase) ? null : DeviceId;
-			var adbRunner = new AdbRunner (
-				ResolveAdbPath (),
-				TaskEnvironment.GetEnvironmentVariables ().ToDictionary (pair => pair.Key, pair => pair.Value),
-				logger: (_, message) => LogDiagnostic ($"ADB install recovery: {message}"));
+			var adbRunner = AndroidHelper.CreateAdbRunner (AdbToolPath, AdbToolExe, TaskEnvironment,
+				(_, message) => LogDiagnostic ($"ADB install recovery: {message}"));
 			await adbRunner.WaitForPackageManagerAsync (serial, TimeSpan.FromSeconds (10), CancellationToken);
 		}
 

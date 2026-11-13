@@ -51,12 +51,12 @@ namespace Xamarin.Android.Tasks
 			return new AdbRunner (GetAdbPath (adbToolPath, adbToolExe));
 		}
 
-		internal static AdbRunner CreateAdbRunner (string adbToolPath, string adbToolExe, TaskEnvironment taskEnvironment)
+		internal static AdbRunner CreateAdbRunner (string adbToolPath, string adbToolExe, TaskEnvironment taskEnvironment, Action<TraceLevel, string> logger = null)
 		{
 			var path = GetAdbPath (adbToolPath, adbToolExe, taskEnvironment);
 			var psi = taskEnvironment.GetProcessStartInfo ();
 			UseAdbProcessEnvironment (psi, taskEnvironment);
-			return AdbRunner.CreateWithProcessEnvironment (path, psi);
+			return AdbRunner.CreateWithProcessEnvironment (path, psi, logger);
 		}
 
 		internal static void UseAdbProcessEnvironment (ProcessStartInfo psi, TaskEnvironment taskEnvironment)
@@ -139,6 +139,8 @@ namespace Xamarin.Android.Tasks
 				} else {
 					NoDeviceFound (target, key, logError, logErrors, engine4);
 				}
+			} catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested) {
+				throw;
 			} catch (Exception ex) {
 				RegisterDevice (engine4, key, null);
 				if (logErrors)

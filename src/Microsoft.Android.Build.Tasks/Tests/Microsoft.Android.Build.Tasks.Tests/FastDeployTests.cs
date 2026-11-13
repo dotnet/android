@@ -400,6 +400,10 @@ namespace Xamarin.Android.Build.Tests
 				dir="$(dirname "$0")"
 				printf '%s\n' "$*" >> "$dir/adb.log"
 				printf '%s' "$FAKE_ADB_TASK_ENV" > "$dir/task-env"
+				if [ -f "$dir/hang" ] && [[ "$*" == *"$(cat "$dir/hang")"* ]]; then
+					touch "$dir/hanging"
+					exec sleep 60
+				fi
 				for fault in fault second-fault; do
 					if [ -f "$dir/$fault" ] && [[ "$*" == *"$(cat "$dir/$fault")"* ]]; then
 						cat "$dir/$fault.out" >&2
@@ -499,6 +503,13 @@ namespace Xamarin.Android.Build.Tests
 					files.Select (file => $"{StagingRoot}/{file.GetMetadata ("TargetPath")}|3|1700000000"));
 			}
 
+			public void HangOnCommand (string command)
+			{
+				File.WriteAllText (Path.Combine (directory, "hang"), command);
+			}
+
+			public bool IsHanging => File.Exists (Path.Combine (directory, "hanging"));
+
 			public void FailCommand (string command, string output, bool second = false, int exitCode = 1)
 			{
 				string fault = second ? "second-fault" : "fault";
@@ -512,7 +523,7 @@ namespace Xamarin.Android.Build.Tests
 				File.WriteAllText (Path.Combine (directory, name + ".out"), output);
 			}
 
-			public bool RunFastDeploy (bool symlink = false, bool embedded = false, bool install = false, bool projectRelative = false)
+			public bool RunFastDeploy (bool symlink = false, bool embedded = false, bool install = false, bool projectRelative = false, Action<FastDeploy>? started = null)
 			{
 				string apk = Path.Combine (directory, "app.apk");
 				if (install) {
@@ -544,6 +555,7 @@ namespace Xamarin.Android.Build.Tests
 					task.IntermediateOutputPath = "obj/";
 					task.UploadFlagFile = Path.Combine ("obj", "upload.flag");
 				}
+				started?.Invoke (task);
 				return task.Execute ();
 			}
 

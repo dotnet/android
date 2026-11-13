@@ -145,6 +145,26 @@ namespace Xamarin.Android.Build.Tests
 			Assert.AreEqual ("from-task", device.TaskEnvironmentVariable);
 		}
 
+		[TestCase ("devices -l")]
+		[TestCase (" install ")]
+		public void FastDeployCancellationIsNotLoggedAsTaskFailure (string command)
+		{
+			using var device = new FakeAdbDevice ();
+			device.HangOnCommand (command);
+
+			var stopwatch = System.Diagnostics.Stopwatch.StartNew ();
+			device.RunFastDeploy (install: true, started: task => System.Threading.Tasks.Task.Run (async () => {
+				while (!device.IsHanging)
+					await System.Threading.Tasks.Task.Delay (50);
+				task.Cancel ();
+			}));
+
+			Assert.IsTrue (device.IsHanging, command);
+			Assert.IsEmpty (device.Errors);
+			Assert.IsFalse (device.HasManifest);
+			Assert.Less (stopwatch.Elapsed.TotalSeconds, 30, "Cancellation must stop the hung adb command.");
+		}
+
 		[TestCase ("rm")]
 		[TestCase ("ln")]
 		public void FastDeployStopsGlobOnIntermediateFailure (string command)

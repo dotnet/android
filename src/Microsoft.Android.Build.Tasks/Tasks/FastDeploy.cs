@@ -151,6 +151,16 @@ namespace Microsoft.Android.Tasks
 
 		public override bool RunTask ()
 		{
+			try {
+				return Deploy ();
+			} catch (OperationCanceledException) when (CancellationToken.IsCancellationRequested) {
+				// Cancellation is not a build error.
+				return !Log.HasLoggedErrors;
+			}
+		}
+
+		bool Deploy ()
+		{
 			var device = AndroidHelper.ParseTarget (AdbTarget, Log, logErrors: true, engine4: BuildEngine4,
 				adbToolPath: AdbToolPath, adbToolExe: AdbToolExe, taskEnvironment: TaskEnvironment, cancellationToken: CancellationToken);
 			if (device == null) {
@@ -180,8 +190,6 @@ namespace Microsoft.Android.Tasks
 
 			try {
 				RunTaskAsync ().GetAwaiter ().GetResult ();
-			} catch (OperationCanceledException) when (CancellationToken.IsCancellationRequested) {
-				// Cancellation is not a build error.
 			} finally {
 				BuildEngine4.RegisterTaskObjectAssemblyLocal (key, packageInfo, lifetime, allowEarlyCollection: false);
 			}
@@ -241,6 +249,8 @@ namespace Microsoft.Android.Tasks
 			if (packageFileOutOfDate) {
 				try {
 					await InstallPackage ();
+				} catch (OperationCanceledException) when (CancellationToken.IsCancellationRequested) {
+					throw;
 				} catch (Exception ex) {
 					LogFastDeployError (GetErrorCode (ex), ex.ToString ());
 					return;
