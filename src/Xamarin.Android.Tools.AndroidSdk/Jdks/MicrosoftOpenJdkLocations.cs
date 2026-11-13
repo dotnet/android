@@ -7,9 +7,9 @@ using System.Text;
 
 namespace Xamarin.Android.Tools {
 
-	class MicrosoftOpenJdkLocations : JdkLocations {
+	partial class JdkLocations {
 
-		internal static IEnumerable<JdkInfo> GetMicrosoftOpenJdks (Action<TraceLevel, string> logger)
+		internal IEnumerable<JdkInfo> GetMicrosoftOpenJdks (Action<TraceLevel, string> logger)
 		{
 			return GetMacOSSystemJdks ("microsoft-*.jdk", logger)
 				.Concat (GetMacOSUserFileSystemJdks (logger))

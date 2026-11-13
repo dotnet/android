@@ -2,14 +2,8 @@ using Xamarin.SourceWriter;
 
 namespace Xamarin.Android.Tools.ManifestAttributeCodeGenerator;
 
-// This is the common data class used by both Mono.Android and Xamarin.Android.Build.Tasks.
 class AttributeDataClass : ClassWriter
 {
-	AttributeMappingField? mapping_field;
-	AttributeMappingStaticConstructor? static_constructor;
-
-	static AttributeMappingManualInitializer manual_mapping_partial = AttributeMappingManualInitializer.Create ();
-
 	public string Namespace { get; set; }
 
 	public AttributeDataClass (string ns)
@@ -64,12 +58,6 @@ class AttributeDataClass : ClassWriter
 			c.Properties.Add (p);
 		}
 
-		// Create mapping field used by Xamarin.Android.Build.Tasks
-		if (type.GenerateMapping) {
-			c.mapping_field = AttributeMappingField.Create (type);
-			c.static_constructor = AttributeMappingStaticConstructor.Create (attr, metadata, type);
-		}
-
 		return c;
 	}
 
@@ -84,24 +72,5 @@ class AttributeDataClass : ClassWriter
 		writer.WriteLine ();
 
 		base.Write (writer);
-	}
-
-	public override void WriteMembers (CodeWriter writer)
-	{
-		base.WriteMembers (writer);
-
-		if (mapping_field is not null) {
-			writer.WriteLineNoIndent ("#if XABT_MANIFEST_EXTENSIONS");
-
-			mapping_field?.Write (writer);
-			writer.WriteLine ();
-
-			static_constructor?.Write (writer);
-			writer.WriteLine ();
-
-			manual_mapping_partial?.Write (writer);
-
-			writer.WriteLineNoIndent ("#endif // XABT_MANIFEST_EXTENSIONS");
-		}
 	}
 }

@@ -81,7 +81,7 @@ namespace Microsoft.Android.Tasks
 				result = base.Execute ();
 				if (!result)
 					return result;
-				var m = new ManifestDocument (tempFile, MonoAndroidHelper.GetSupportedVersions (BuildEngine4, ReferenceAssemblyPaths));
+				var m = new ManifestDocument (tempFile);
 				var ms = MemoryStreamPool.Shared.Rent ();
 				try {
 					m.Save (Log, ms, removeNodes: true);

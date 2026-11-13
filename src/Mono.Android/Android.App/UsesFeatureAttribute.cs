@@ -28,33 +28,4 @@ public sealed partial class UsesFeatureAttribute : Attribute {
 
 	public int Version { get; set; }
 
-#if XABT_MANIFEST_EXTENSIONS
-	static Xamarin.Android.Manifest.ManifestDocumentElement<UsesFeatureAttribute> mapping = new ("uses-feature");
-
-	static UsesFeatureAttribute ()
-	{
-		mapping.Add (
-			member: "Name",
-			attributeName: "name",
-			getter: self => self.Name,
-			setter: null
-		);
-		mapping.Add (
-			member: "Required",
-			attributeName: "required",
-			getter: self => self.Required,
-			setter: (self, value) => self.Required = (bool) value
-		);
-		mapping.Add (
-			member: "Version",
-			attributeName: "version",
-			getter: self => self.Version,
-			setter: (self, value) => self.Version = (int) value
-		);
-
-		AddManualMapping ();
-	}
-
-	static partial void AddManualMapping ();
-#endif // XABT_MANIFEST_EXTENSIONS
 }

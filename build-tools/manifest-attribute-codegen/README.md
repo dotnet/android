@@ -8,8 +8,8 @@
  3. (Optionally) emits `manifest-definition.xml` (within this directory), based on (1),
     which specifies in which API level a given element or attribute was added.
 
-Using `metadata.xml`, we can generate `[(Application|Activity|etc)Attribute]` classes that can be used
-by both `Mono.Android` and `Xamarin.Android.Build.Tasks`.
+Using `metadata.xml`, we can generate `[(Application|Activity|etc)Attribute]` classes for `Mono.Android`.
+Manifest XML generation is handled separately by `Microsoft.Android.Sdk.TrimmableTypeMap`.
 
 This generally only needs to be done each time we bind a new Android API level.
 
@@ -108,15 +108,6 @@ Optional attributes:
 - **defaultConstructor** - Whether a parameterless constructor should be generated; defaults to `true`
 - **sealed** - Whether the attribute type should be `sealed`; defaults to `true`
 - **managedName** - The name of the managed attribute class if the default isn't correct
-- **generateMapping** - Whether to generate the `mapping` field used by `Xamarin.Android.Build.Tasks`; defaults to `true`
-
-Note that if a new type is created, there will be additional manual code that needs to be written to configure
-`Xamarin.Android.Build.Tasks` to translate the attribute to AndroidManifest xml.
-
-Example:
-
- - src/Xamarin.Android.Build.Tasks/Mono.Android/ApplicationAttribute.Partial.cs
- - src/Xamarin.Android.Build.Tasks/Utilities/ManifestDocument.cs
 
 # Handling new attributes
 
@@ -148,7 +139,6 @@ Optional metadata (note that if any metadata is set, `visible` is assumed to be 
 - **name** - The name of the managed attribute property if the default isn't correct
 - **obsolete** - A string describing the reason for this member being `[Obsolete ("reason")]`
 - **readonly** - Whether to generate the property with a `private set`; defaults to `false`
-- **manualMap** - Whether to exclude the property from the `mapping` field used by `Xamarin.Android.Build.Tasks`; defaults to `false`
 
 # Examples
 

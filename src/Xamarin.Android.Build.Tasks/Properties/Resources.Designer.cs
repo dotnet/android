@@ -302,7 +302,7 @@ namespace Xamarin.Android.Tasks.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Unable to find `EmbeddedResource` named `{0}`..
+        ///   Looks up a localized string similar to Unable to find required SDK file `{0}`..
         /// </summary>
         public static string XA0116 {
             get {
@@ -816,15 +816,6 @@ namespace Xamarin.Android.Tasks.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to The type &apos;{0}&apos; must provide a public default constructor.
-        /// </summary>
-        public static string XA4213 {
-            get {
-                return ResourceManager.GetString("XA4213", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Type `{0}` implements `Android.Runtime.IJavaObject` but does not inherit `Java.Lang.Object` or `Java.Lang.Throwable`. This is not supported..
         /// </summary>
         public static string XA4212 {
@@ -956,15 +947,6 @@ namespace Xamarin.Android.Tasks.Properties {
         public static string XA4226 {
             get {
                 return ResourceManager.GetString("XA4226", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Unable to find specified //activity-alias/@android:targetActivity: &apos;{0}&apos;.
-        /// </summary>
-        public static string XA4228 {
-            get {
-                return ResourceManager.GetString("XA4228", resourceCulture);
             }
         }
         
