@@ -170,6 +170,7 @@ stages:
       macTestAgentsUseCleanImages: ${{ parameters.macTestAgentsUseCleanImages }}
       use1ESTemplate: false
       useAgentJdkPath: false
+      jdkMajorVersion: $(LatestJavaSdkMajorVersion)
       macPool:
         name: AcesShared
         os: macOS
@@ -398,7 +399,7 @@ stages:
     steps:
     - template: /build-tools/automation/yaml-templates/setup-test-environment-public.yaml
       parameters:
-        jdkMajorVersion: $(DefaultJavaSdkMajorVersion)
+        jdkMajorVersion: $(LatestJavaSdkMajorVersion)
         useAgentJdkPath: false
         installTestSlicer: true
         installApkDiff: false
