@@ -13,6 +13,44 @@ parameters:
 
 steps:
 - ${{ if eq(parameters.command, 'start') }}:
+  - bash: |
+      run_diagnostic () {
+        printf '\n> '
+        printf '%q ' "$@"
+        printf '\n'
+        if "$@" 2>&1; then
+          echo "Exit code: 0"
+        else
+          status=$?
+          echo "##vso[task.logissue type=warning]Emulator diagnostic exited with code $status: $*"
+        fi
+      }
+
+      run_diagnostic sw_vers
+      run_diagnostic uname -m
+      for key in hw.model machdep.cpu.brand_string kern.hv_support kern.hv_vmm_present; do
+        run_diagnostic sysctl "$key"
+      done
+
+      emulator_dir="$HOME/android-toolchain/sdk/emulator"
+      run_diagnostic "$emulator_dir/emulator" -version
+      run_diagnostic "$emulator_dir/emulator" -accel-check
+
+      shopt -s nullglob
+      qemu_binaries=("$emulator_dir"/qemu/darwin-*/qemu-system-*)
+      if [ "${#qemu_binaries[@]}" -eq 0 ]; then
+        echo "##vso[task.logissue type=warning]No macOS QEMU binaries found under $emulator_dir/qemu."
+      fi
+      for binary in "${qemu_binaries[@]}"; do
+        if [ -f "$binary" ]; then
+          run_diagnostic file "$binary"
+          run_diagnostic codesign --verify --verbose=4 "$binary"
+          run_diagnostic codesign --display --entitlements :- "$binary"
+        fi
+      done
+    displayName: Log macOS emulator virtualization diagnostics
+    condition: and(succeeded(), eq(variables['Agent.OS'], 'Darwin'))
+
   - template: /build-tools/automation/yaml-templates/run-dotnet-preview.yaml
     parameters:
       displayName: Start emulator

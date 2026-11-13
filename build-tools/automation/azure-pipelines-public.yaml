@@ -169,6 +169,12 @@ stages:
     parameters:
       macTestAgentsUseCleanImages: ${{ parameters.macTestAgentsUseCleanImages }}
       use1ESTemplate: false
+      useAgentJdkPath: false
+      jdkMajorVersion: $(LatestJavaSdkMajorVersion)
+      macPool:
+        name: AcesShared
+        os: macOS
+        demands: ImageOverride -equals ACES_VM_SharedPool_GoldenGate
 
 # Linux Tests Stage
 - stage: linux_tests
@@ -382,11 +388,10 @@ stages:
     strategy:
       parallel: ${{ variables.MSBuildEmulatorTestAgentCount }}
     displayName: "macOS > Tests > MSBuild+Emulator"
-    # NOTE: AcesShared pool cannot boot Android emulators, so these jobs must use hosted images
     pool:
-      name: Azure Pipelines
-      vmImage: $(HostedMacImageWithEmulator)
+      name: AcesShared
       os: macOS
+      demands: ImageOverride -equals ACES_VM_SharedPool_GoldenGate
     timeoutInMinutes: 180
     cancelTimeoutInMinutes: 5
     workspace:
@@ -394,8 +399,8 @@ stages:
     steps:
     - template: /build-tools/automation/yaml-templates/setup-test-environment-public.yaml
       parameters:
-        jdkMajorVersion: $(DefaultJavaSdkMajorVersion)
-        useAgentJdkPath: true
+        jdkMajorVersion: $(LatestJavaSdkMajorVersion)
+        useAgentJdkPath: false
         installTestSlicer: true
         installApkDiff: false
         use1ESTemplate: false
