@@ -89,9 +89,6 @@
     <Compile Include="..\..\src\utils\StringRocks.cs">
       <Link>Utilities\StringRocks.cs</Link>
     </Compile>
-    <Compile Include="..\..\src\utils\NullableAttributes.cs">
-      <Link>Utilities\NullableAttributes.cs</Link>
-    </Compile>
     <Compile Include="..\Mono.Android\\Java.Interop\JavaLibraryReferenceAttribute.cs">
       <Link>Mono.Android\JavaLibraryReferenceAttribute.cs</Link>
     </Compile>
