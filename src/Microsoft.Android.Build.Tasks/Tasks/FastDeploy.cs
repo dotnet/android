@@ -16,11 +16,18 @@ using Xamarin.Android.Tools;
 
 namespace Microsoft.Android.Tasks
 {
-	public partial class FastDeploy : AsyncTask
+	[MSBuildMultiThreadableTask]
+	public partial class FastDeploy : MultithreadedAndroidTask, ICancelableTask
 	{
 		const string OverridePath = "files/.__override__";
 
+		readonly CancellationTokenSource cancellation = new CancellationTokenSource ();
+
 		public override string TaskPrefix => "FD";
+
+		public CancellationToken CancellationToken => cancellation.Token;
+
+		public void Cancel () => cancellation.Cancel ();
 
 		/// <summary>
 		/// Number of stale override files to delete per <c>rm</c> invocation. Exposed as an
@@ -120,7 +127,7 @@ namespace Microsoft.Android.Tasks
 		void LogDiagnostic (string message)
 		{
 			if (DiagnosticLogging) {
-				LogDebugMessage (message);
+				Log.LogDebugMessage (message);
 				return;
 			}
 			lock (diagnosticLogsLock) {
@@ -138,23 +145,24 @@ namespace Microsoft.Android.Tasks
 					}
 					message = diagnosticLogs.Dequeue ();
 				}
-				LogMessage (message);
+				Log.LogMessage (message);
 			}
 		}
 
-		public override bool Execute ()
+		public override bool RunTask ()
 		{
-			var device = AndroidHelper.ParseTarget (AdbTarget, LogMessage, LogCodedError, logErrors: true, engine4: BuildEngine4, adbToolPath: AdbToolPath, adbToolExe: AdbToolExe);
+			var device = AndroidHelper.ParseTarget (AdbTarget, Log, logErrors: true, engine4: BuildEngine4,
+				adbToolPath: AdbToolPath, adbToolExe: AdbToolExe, taskEnvironment: TaskEnvironment, cancellationToken: CancellationToken);
 			if (device == null) {
 				PrintDiagnostics ();
 				return false;
 			}
 			DeviceId = device.Serial;
-			LogMessage ($"Found device: {DeviceId}");
+			Log.LogMessage ($"Found device: {DeviceId}");
 
 			if (string.IsNullOrEmpty (PrimaryCpuAbi) && !EmbedAssembliesIntoApk) {
 				PrintDiagnostics ();
-				LogCodedError ("XA0010", Resources.XA0010_NoAbi, DeviceId);
+				Log.LogCodedError ("XA0010", Resources.XA0010_NoAbi, DeviceId);
 				return false;
 			}
 
@@ -163,21 +171,24 @@ namespace Microsoft.Android.Tasks
 			LogDiagnostic ($"LastWriteTime of `{flagFilePath}`: {lastUpload}");
 
 			var lifetime = RegisteredTaskObjectLifetime.AppDomain;
-			var key = ProjectSpecificTaskObjectKey ($"{DeviceId}_{PackageName}_{GetType ().Name}");
-			if (!File.Exists (UploadFlagFile)) {
+			var key = ($"{DeviceId}_{PackageName}_{GetType ().Name}", TaskEnvironment.ProjectDirectory.Value);
+			if (!File.Exists (flagFilePath)) {
 				packageInfo = new PackageInfo ();
 			} else {
 				packageInfo = BuildEngine4.GetRegisteredTaskObjectAssemblyLocal<PackageInfo> (key, lifetime) ?? new PackageInfo ();
 			}
 
 			try {
-				return base.Execute ();
+				RunTaskAsync ().GetAwaiter ().GetResult ();
+			} catch (OperationCanceledException) when (CancellationToken.IsCancellationRequested) {
+				// Cancellation is not a build error.
 			} finally {
 				BuildEngine4.RegisterTaskObjectAssemblyLocal (key, packageInfo, lifetime, allowEarlyCollection: false);
 			}
+			return !Log.HasLoggedErrors;
 		}
 
-		public async override Task RunTaskAsync ()
+		async Task RunTaskAsync ()
 		{
 			try {
 				await RunInstall ();
@@ -364,9 +375,9 @@ namespace Microsoft.Android.Tasks
 
 		async Task InstallPackage ()
 		{
-			LogDebugMessage ($"Installing Package {PackageName}");
+			Log.LogDebugMessage ($"Installing Package {PackageName}");
 			await InstallApkWithRetry (PackageFile, reinstall: ReInstall, testOnly: IsTestOnly, user: UserID);
-			LogDebugMessage ($"Installed Package {PackageName}.");
+			Log.LogDebugMessage ($"Installed Package {PackageName}.");
 		}
 
 		async Task TerminateApp ()
@@ -376,12 +387,12 @@ namespace Microsoft.Android.Tasks
 				pid = await RunLoggedDeviceOperation ($"GetProcessId {PackageName}", () => GetProcessId (PackageName));
 			}
 			if (pid == 0) {
-				LogDebugMessage ($"{PackageName} was not running, skipping kill");
+				Log.LogDebugMessage ($"{PackageName} was not running, skipping kill");
 				return;
 			}
-			LogDebugMessage ($"Terminating {PackageName}...");
+			Log.LogDebugMessage ($"Terminating {PackageName}...");
 			await RunLoggedDeviceOperation ($"ForceStop {PackageName}", () => ForceStopPackage (PackageName));
-			LogDebugMessage ($"{PackageName} Terminated.");
+			Log.LogDebugMessage ($"{PackageName} Terminated.");
 		}
 
 		async Task<string> CreateRemoteStagingDirectories (string remoteStagingPath, HashSet<string> stagedFiles)
@@ -405,15 +416,15 @@ namespace Microsoft.Android.Tasks
 		{
 			var files = new List<DirectPushFile> ();
 			foreach (var file in FilterPreTrimTypeMapFiles (FastDevFiles ?? [])) {
-				string localPath = GetFullPath (file.ItemSpec);
+				var localPath = GetFullPath (file.ItemSpec);
 				if (!File.Exists (localPath)) {
 					LogDiagnostic ($"File '{file.ItemSpec}' does not exist. Skipping.");
 					continue;
 				}
 				if (Path.GetExtension (file.ItemSpec) == ".so") {
-					string abi = AndroidRidAbiHelper.GetNativeLibraryAbi (file);
+					string abi = AndroidRidAbiHelper.GetNativeLibraryAbi (file, TaskEnvironment);
 					if (abi != PrimaryCpuAbi) {
-						LogDebugMessage ($"NotifySync SkipCopyFile {GetAdbPushTargetPath (file)} abi not suitable for this device.");
+						Log.LogDebugMessage ($"NotifySync SkipCopyFile {GetAdbPushTargetPath (file)} abi not suitable for this device.");
 						continue;
 					}
 				}
@@ -428,7 +439,7 @@ namespace Microsoft.Android.Tasks
 			if (EnvironmentFiles?.Length > 0) {
 				byte [] environmentData = CreateEnvironmentFileData (EnvironmentFiles, out DateTime newestFileDateTime);
 				if (environmentData.Length > 0) {
-					string environmentFile = Path.Combine (GetFullPath (IntermediateOutputPath), "fastdeploy-environment", PrimaryCpuAbi, "environment");
+					var environmentFile = TaskEnvironment.GetAbsolutePath (Path.Combine (GetFullPath (IntermediateOutputPath), "fastdeploy-environment", PrimaryCpuAbi, "environment"));
 					WriteFileIfChanged (environmentFile, environmentData, newestFileDateTime);
 					files.Add (new DirectPushFile {
 						LocalPath = environmentFile,
@@ -467,13 +478,13 @@ namespace Microsoft.Android.Tasks
 				!finalTargets.Contains (GetAdbPushTargetPath (file))).ToArray ();
 		}
 
-		bool WriteFileIfChanged (string path, byte [] contents, DateTime modifiedDateTime)
+		bool WriteFileIfChanged (AbsolutePath path, byte [] contents, DateTime modifiedDateTime)
 		{
 			if (!Files.HasBytesChanged (contents, path)) {
 				return false;
 			}
 
-			Directory.CreateDirectory (Path.GetDirectoryName (path));
+			Directory.CreateDirectory (TaskEnvironment.GetAbsolutePath (Path.GetDirectoryName (path)));
 			File.WriteAllBytes (path, contents);
 			File.SetLastWriteTimeUtc (path, modifiedDateTime);
 			return true;
@@ -499,17 +510,18 @@ namespace Microsoft.Android.Tasks
 			newestFileDateTime = DateTime.MinValue;
 			var data = new Dictionary<string, string> ();
 			foreach (ITaskItem env in environments ?? []) {
-				if (!File.Exists (env.ItemSpec))
+				var path = GetFullPath (env.ItemSpec);
+				if (!File.Exists (path))
 					continue;
-				DateTime modifiedDateTime = File.GetLastWriteTimeUtc (env.ItemSpec);
+				DateTime modifiedDateTime = File.GetLastWriteTimeUtc (path);
 				if (modifiedDateTime > newestFileDateTime)
 					newestFileDateTime = modifiedDateTime;
-				foreach (string line in File.ReadLines (env.ItemSpec)) {
+				foreach (string line in File.ReadLines (path)) {
 					if (string.IsNullOrEmpty (line))
 						continue;
 					int index = line.IndexOf ('=');
 					if (index == -1) {
-						LogDebugMessage ($"Skipping invalid environment line: {line}");
+						Log.LogDebugMessage ($"Skipping invalid environment line: {line}");
 						continue;
 					}
 					var key = line.Substring (0, index);
@@ -583,16 +595,16 @@ namespace Microsoft.Android.Tasks
 			foreach (string line in output.Split (new char [] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries)) {
 				var entries = line.Split (new char [] { '|' }, 3);
 				if (entries.Length != 3) {
-					LogDebugMessage ($"Ignoring remote file entry '{line}'. Line is incorrectly formatted.");
+					Log.LogDebugMessage ($"Ignoring remote file entry '{line}'. Line is incorrectly formatted.");
 					continue;
 				}
 				string remoteFile = entries [0].Trim ();
 				if (!remoteFile.StartsWith (prefix, StringComparison.Ordinal)) {
-					LogDebugMessage ($"Ignoring remote file entry '{line}'. Path is outside '{rootPath}'.");
+					Log.LogDebugMessage ($"Ignoring remote file entry '{line}'. Path is outside '{rootPath}'.");
 					continue;
 				}
 				if (!long.TryParse (entries [1].Trim (), out long size) || !long.TryParse (entries [2].Trim (), out long mtime)) {
-					LogDebugMessage ($"Ignoring remote file entry '{line}'. Size or timestamp is invalid.");
+					Log.LogDebugMessage ($"Ignoring remote file entry '{line}'. Size or timestamp is invalid.");
 					continue;
 				}
 				files [remoteFile.Substring (prefix.Length)] = new RemoteFileInfo {
@@ -769,8 +781,6 @@ namespace Microsoft.Android.Tasks
 		async Task<AdbCommandResult> RunAdbCommand (string [] arguments, Dictionary<string, string> environmentVariables)
 		{
 			string adb = ResolveAdbPath ();
-			if (!string.IsNullOrEmpty (Path.GetDirectoryName (adb)))
-				adb = Path.GetFullPath (adb);
 			var adbArguments = new List<string> ();
 			if (!string.IsNullOrEmpty (DeviceId) && !string.Equals (DeviceId, "any", StringComparison.OrdinalIgnoreCase)) {
 				adbArguments.Add ("-s");
@@ -779,7 +789,7 @@ namespace Microsoft.Android.Tasks
 			adbArguments.AddRange (arguments);
 
 			var psi = ProcessUtils.CreateProcessStartInfo (adb, adbArguments.ToArray ());
-			psi.WorkingDirectory = Path.GetTempPath ();
+			AndroidHelper.UseAdbProcessEnvironment (psi, TaskEnvironment);
 			psi.WindowStyle = ProcessWindowStyle.Hidden;
 
 			// psi.Arguments holds the exact, correctly quoted command line whenever ProcessUtils
@@ -872,23 +882,7 @@ namespace Microsoft.Android.Tasks
 			return "'" + value.Replace ("'", "'\"'\"'") + "'";
 		}
 
-		string ResolveAdbPath ()
-		{
-			var exe = string.IsNullOrEmpty (AdbToolExe) ? (OS.IsWindows ? "adb.exe" : "adb") : AdbToolExe;
-			if (!string.IsNullOrEmpty (AdbToolPath)) {
-				return Path.Combine (AdbToolPath, exe);
-			}
-			try {
-				var sdk = new AndroidSdkInfo ((_, message) => LogDiagnostic (message));
-				string sdkAdb = Path.Combine (sdk.AndroidSdkPath, "platform-tools", exe);
-				if (File.Exists (sdkAdb)) {
-					return sdkAdb;
-				}
-			} catch (Exception ex) {
-				LogDiagnostic ($"Could not locate adb in the Android SDK: {ex.Message}");
-			}
-			return exe;
-		}
+		string ResolveAdbPath () => AndroidHelper.GetAdbPath (AdbToolPath, AdbToolExe, TaskEnvironment);
 
 		string GetRemoteAdbPushStagingPath ()
 		{
@@ -917,13 +911,13 @@ namespace Microsoft.Android.Tasks
 			}
 			PrintDiagnostics ();
 			if (errorCode == "XA0129") {
-				LogCodedError (errorCode, Resources.XA0129_ErrorDeployingFile, file);
+				Log.LogCodedError (errorCode, Resources.XA0129_ErrorDeployingFile, file);
 			} else {
-				LogCodedError (errorCode, error);
+				Log.LogCodedError (errorCode, error);
 			}
 		}
 
-		string GetFullPath (string dir) => Path.IsPathRooted (dir) ? dir : Path.GetFullPath (Path.Combine (WorkingDirectory, dir));
+		AbsolutePath GetFullPath (string path) => TaskEnvironment.GetAbsolutePath (path).GetCanonicalForm ();
 
 		static string GetDirectoryName (string file)
 		{
@@ -954,7 +948,7 @@ namespace Microsoft.Android.Tasks
 			if (TryGetRunAsErrorCode (error, out var err)) {
 				LogDiagnostic ($"{err.code}: {err.message}");
 				PrintDiagnostics ();
-				LogCodedError (err.code, err.message, error);
+				Log.LogCodedError (err.code, err.message, error);
 				return true;
 			}
 			return false;

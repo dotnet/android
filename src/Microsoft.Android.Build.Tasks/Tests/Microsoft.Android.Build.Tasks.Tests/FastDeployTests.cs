@@ -399,6 +399,7 @@ namespace Xamarin.Android.Build.Tests
 				#!/bin/bash
 				dir="$(dirname "$0")"
 				printf '%s\n' "$*" >> "$dir/adb.log"
+				printf '%s' "$FAKE_ADB_TASK_ENV" > "$dir/task-env"
 				for fault in fault second-fault; do
 					if [ -f "$dir/$fault" ] && [[ "$*" == *"$(cat "$dir/$fault")"* ]]; then
 						cat "$dir/$fault.out" >&2
@@ -485,6 +486,8 @@ namespace Xamarin.Android.Build.Tests
 			// One entry per adb invocation, without the adb executable itself.
 			public IReadOnlyList<string> Commands => File.ReadAllLines (Path.Combine (directory, "adb.log"));
 
+			public string TaskEnvironmentVariable => File.ReadAllText (Path.Combine (directory, "task-env"));
+
 			public void AddFile (string name)
 			{
 				string path = Path.Combine (directory, name);
@@ -509,7 +512,7 @@ namespace Xamarin.Android.Build.Tests
 				File.WriteAllText (Path.Combine (directory, name + ".out"), output);
 			}
 
-			public bool RunFastDeploy (bool symlink = false, bool embedded = false, bool install = false)
+			public bool RunFastDeploy (bool symlink = false, bool embedded = false, bool install = false, bool projectRelative = false)
 			{
 				string apk = Path.Combine (directory, "app.apk");
 				if (install) {
@@ -527,6 +530,20 @@ namespace Xamarin.Android.Build.Tests
 					PrimaryCpuAbi = "arm64-v8a",
 					UploadFlagFile = Path.Combine (directory, "obj", "upload.flag"),
 				};
+				if (projectRelative) {
+					var environment = Environment.GetEnvironmentVariables ().Cast<System.Collections.DictionaryEntry> ()
+						.ToDictionary (e => (string) e.Key, e => (string) e.Value);
+					environment ["FAKE_ADB_TASK_ENV"] = "from-task";
+					task.TaskEnvironment = TaskEnvironment.CreateWithProjectDirectoryAndEnvironment (directory, environment);
+					task.AdbToolPath = ".";
+					task.FastDevFiles = files.Select (f => {
+						var item = new TaskItem (Path.GetFileName (f.ItemSpec));
+						f.CopyMetadataTo (item);
+						return (ITaskItem) item;
+					}).ToArray ();
+					task.IntermediateOutputPath = "obj/";
+					task.UploadFlagFile = Path.Combine ("obj", "upload.flag");
+				}
 				return task.Execute ();
 			}
 

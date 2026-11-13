@@ -133,6 +133,18 @@ namespace Xamarin.Android.Build.Tests
 			Assert.IsFalse (device.Commands.Any (c => c.Contains ("rm -rf files/.__override__")));
 		}
 
+		[Test]
+		public void FastDeployUsesTaskEnvironment ()
+		{
+			using var device = new FakeAdbDevice ();
+
+			Assert.IsTrue (device.RunFastDeploy (projectRelative: true));
+			Assert.IsEmpty (device.Errors);
+			Assert.IsTrue (device.HasManifest, "Relative paths must resolve against the project directory.");
+			Assert.That (device.Commands, Has.Some.Contain ("cp -p"));
+			Assert.AreEqual ("from-task", device.TaskEnvironmentVariable);
+		}
+
 		[TestCase ("rm")]
 		[TestCase ("ln")]
 		public void FastDeployStopsGlobOnIntermediateFailure (string command)
