@@ -45,11 +45,11 @@ namespace xamarin::android {
 		static inline constexpr std::string_view DEBUG_DOTNET_MAX_GREFC             { "debug.dotnet.max_grefc" };
 		static inline constexpr std::string_view DEBUG_DOTNET_PROFILE_PROPERTY      { "debug.dotnet.profile" };
 		static constexpr std::string_view LOG_CATEGORY_NAME_NONE                  { "*none*" };
-		static constexpr std::string_view LOG_CATEGORY_NAME_MONODROID             { "dotnet" };
-		static constexpr std::string_view LOG_CATEGORY_NAME_MONODROID_ASSEMBLY    { "dotnet-assembly" };
-		static constexpr std::string_view LOG_CATEGORY_NAME_MONODROID_GC          { "dotnet-gc" };
-		static constexpr std::string_view LOG_CATEGORY_NAME_MONODROID_TIMING      { "dotnet-timing" };
-		static constexpr std::string_view LOG_CATEGORY_NAME_MONODROID_NETWORK     { "dotnet-network" };
+		static constexpr std::string_view LOG_CATEGORY_NAME_MONODROID             { "DOTNET" };
+		static constexpr std::string_view LOG_CATEGORY_NAME_MONODROID_ASSEMBLY    { "DOTNET-assembly" };
+		static constexpr std::string_view LOG_CATEGORY_NAME_MONODROID_GC          { "DOTNET-gc" };
+		static constexpr std::string_view LOG_CATEGORY_NAME_MONODROID_TIMING      { "DOTNET-timing" };
+		static constexpr std::string_view LOG_CATEGORY_NAME_MONODROID_NETWORK     { "DOTNET-network" };
 		static constexpr std::string_view LOG_CATEGORY_NAME_ERROR                 { "*error*" };
 
 #if defined(__arm__)

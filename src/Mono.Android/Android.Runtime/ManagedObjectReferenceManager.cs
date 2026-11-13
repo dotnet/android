@@ -126,7 +126,7 @@ namespace Android.Runtime {
 			}
 
 			if (gcBridgeReferenceOperation == GCBridgeReferenceOperation.None && count >= JNIEnvInit.gref_gc_threshold) {
-				Logger.Log (LogLevel.Warn, "dotnet-gc", count + " outstanding GREFs. Performing a full GC!");
+				Logger.Log (LogLevel.Warn, "DOTNET-gc", count + " outstanding GREFs. Performing a full GC!");
 				GC.WaitForPendingFinalizers ();
 				GC.Collect ();
 			}

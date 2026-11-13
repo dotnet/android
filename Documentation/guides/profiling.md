@@ -41,11 +41,11 @@ Android-specific GC bridge and type-map timings are published by the
 
 The `timing` log category remains only for the obsolete
 `Android.Runtime.TimingLogger` managed API, which writes messages tagged
-`dotnet-timing` to `logcat`:
+`DOTNET-timing` to `logcat`:
 
 ```sh
 adb shell setprop debug.dotnet.log timing
-adb logcat -d | grep dotnet-timing
+adb logcat -d | grep DOTNET-timing
 ```
 
 ## Managed runtime profiling

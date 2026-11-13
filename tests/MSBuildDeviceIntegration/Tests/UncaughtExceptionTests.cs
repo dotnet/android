@@ -96,10 +96,10 @@ namespace Xamarin.Android.Build.Tests
 				$"A fatal managed exception should terminate {app.PackageName} within 30 seconds. Remaining PIDs: {remainingPids}");
 			var (logExitCode, logOutput, logError) = RunAdbCommandWithExitCode ("logcat -d");
 			Assert.AreEqual (0, logExitCode, $"Could not read logcat: {logError}");
-			StringAssert.IsMatch (@"\bW\s+dotnet-gc\s*:\s+Overriding max JNI Global Reference count to 1234", logOutput,
-				"Native GC diagnostics should retain their warning level under the dotnet-gc tag.");
-			StringAssert.IsMatch (@"\bI\s+dotnet-timing\s*:\s+FatalExceptionTiming", logOutput,
-				"Managed timing diagnostics should use the dotnet-timing tag when timing is enabled.");
+			StringAssert.IsMatch (@"\bW\s+DOTNET-gc\s*:\s+Overriding max JNI Global Reference count to 1234", logOutput,
+				"Native GC diagnostics should retain their warning level under the DOTNET-gc tag.");
+			StringAssert.IsMatch (@"\bI\s+DOTNET-timing\s*:\s+FatalExceptionTiming", logOutput,
+				"Managed timing diagnostics should use the DOTNET-timing tag when timing is enabled.");
 			Assert.IsFalse (logOutput.Contains (
 				"No implementation found for void mono.android.Runtime.propagateUncaughtException"),
 				"The uncaught exception handler should not call a missing native method.");

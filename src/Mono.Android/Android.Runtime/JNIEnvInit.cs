@@ -185,7 +185,7 @@ namespace Android.Runtime
 
 			var type = typeof(object).Assembly.GetType (typeName, throwOnError: false);
 			if (type is null) {
-				Logger.Log (LogLevel.Warn, "dotnet",
+				Logger.Log (LogLevel.Warn, "DOTNET",
 					$"Could not load type '{typeName}'. Skipping startup hooks.");
 				return;
 			}
@@ -193,7 +193,7 @@ namespace Android.Runtime
 			var method = type.GetMethod (methodName, 
 				BindingFlags.NonPublic | BindingFlags.Static, null, [ typeof(string) ], null);
 			if (method is null) {
-				Logger.Log (LogLevel.Warn, "dotnet",
+				Logger.Log (LogLevel.Warn, "DOTNET",
 					$"Could not load method '{typeName}.{methodName}'. Skipping startup hooks.");
 				return;
 			}

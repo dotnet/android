@@ -12,7 +12,7 @@ import android.os.Build;
 import android.util.Log;
 
 public final class NativeLibraryHelper {
-	static final String TAG = "dotnet";
+	static final String TAG = "DOTNET";
 
 	private NativeLibraryHelper ()
 	{

@@ -721,7 +721,7 @@ public class NativeLibraryLoadTests : DeviceTest
 		string logcatPath = Path.Combine (Root, builder.ProjectDirectory, "native-library-load.log");
 		bool foundDiagnostic = MonitorAdbLogcat (
 			line => {
-				if (Regex.IsMatch (line, @"\bE\s+dotnet\s*:")) {
+				if (Regex.IsMatch (line, @"\bE\s+DOTNET\s*:")) {
 					expectedMessages.RemoveWhere (message => line.Contains (message, StringComparison.Ordinal));
 				}
 				return expectedMessages.Count == 0;

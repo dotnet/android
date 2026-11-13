@@ -65,7 +65,7 @@ namespace Android.Runtime {
 		{
 			if (t == null) {
 				Logger.Log (LogLevel.Warn,
-				               "dotnet",
+				               "DOTNET",
 				               $"ShouldWrapJavaException was not passed a valid `Java.Lang.Throwable` instance. Called from method `{caller}`");
 				return false;
 			}
@@ -74,7 +74,7 @@ namespace Android.Runtime {
 			if (!wrap) {
 				Logger.Log (
 					LogLevel.Warn,
-					"dotnet",
+					"DOTNET",
 					$"Not wrapping exception of type {t.GetType().FullName} from method `{caller}`. This will change in a future release."
 				);
 			}
@@ -103,12 +103,12 @@ namespace Android.Runtime {
 					var jltp = javaException as JavaProxyThrowable;
 					Exception? innerException = jltp?.InnerException;
 
-					Logger.Log (LogLevel.Info, "dotnet", "UNHANDLED EXCEPTION:");
-					Logger.Log (LogLevel.Info, "dotnet", javaException.ToString ());
+					Logger.Log (LogLevel.Info, "DOTNET", "UNHANDLED EXCEPTION:");
+					Logger.Log (LogLevel.Info, "DOTNET", javaException.ToString ());
 
 					ExceptionHandling.RaiseAppDomainUnhandledExceptionEvent (innerException ?? javaException);
 				} catch (Exception e) {
-					Logger.Log (LogLevel.Error, "dotnet", "Exception thrown while raising AppDomain.UnhandledException event: " + e.ToString ());
+					Logger.Log (LogLevel.Error, "DOTNET", "Exception thrown while raising AppDomain.UnhandledException event: " + e.ToString ());
 				}
 			}
 		}
@@ -485,7 +485,7 @@ namespace Android.Runtime {
 			} catch (Java.Lang.Throwable e) {
 				if (!((e is Java.Lang.NoClassDefFoundError) || (e is Java.Lang.ClassNotFoundException)))
 					throw;
-				Logger.Log (LogLevel.Warn, "dotnet", $"JNIEnv.FindClass(Type) caught unexpected exception: {e}");
+				Logger.Log (LogLevel.Warn, "DOTNET", $"JNIEnv.FindClass(Type) caught unexpected exception: {e}");
 				var jni = JavaNativeTypeManager.ToJniNameFromAttributes (type);
 				if (jni != null) {
 					e.Dispose ();
