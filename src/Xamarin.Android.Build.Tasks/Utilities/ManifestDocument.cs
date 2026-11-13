@@ -216,7 +216,7 @@ namespace Xamarin.Android.Tasks {
 			return true;
 		}
 
-		public void CalculateVersionCode (string currentAbi, string versionCodePattern, string versionCodeProperties)
+		public void CalculateVersionCode (string? currentAbi, string versionCodePattern, string? versionCodeProperties)
 		{
 			var kvp = new Dictionary<string, int> ();
 			foreach (var item in versionCodeProperties?.Split (new char [] { ';', ':' }) ?? []) {
