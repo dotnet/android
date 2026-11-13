@@ -2174,7 +2174,9 @@ public class ToolbarEx {
 		{
 			var path = Path.Combine ("temp", TestName, directory);
 			var proj = new XamarinAndroidApplicationProject () {
-				IntermediateOutputPath = Path.Combine ("obj", "テスト intermediate"),
+				// Unicode is covered by the project directory inside the javac response file. Keep the
+				// intermediate path ASCII to avoid the separate ManifestMerger Unicode-path failure on Windows.
+				IntermediateOutputPath = Path.Combine ("obj", "with spaces"),
 				AndroidJavaSources = {
 					new BuildItem (AndroidBuildActions.AndroidJavaSource, "java/TestJava.java") {
 						TextContent = () => "public class TestJava { }",

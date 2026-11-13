@@ -150,6 +150,53 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
+		public void JavacResponseFilePreservesUnicodePaths ([Values (false, true)] bool binding)
+		{
+			var directory = Path.Combine (Root, "temp", TestName);
+			Directory.CreateDirectory (directory);
+			TestOutputDirectories [TestContext.CurrentContext.Test.ID] = directory;
+			var intermediate = Path.Combine (directory, "obj", "テスト\u2000 intermediate");
+			var responseFile = Path.Combine (directory, "javac.rsp");
+			var prefix = binding ? "_AndroidBindingJavac" : "_AndroidJavac";
+			var targets = XDocument.Load (Path.Combine (XABuildPaths.TopDirectory, "src", "Xamarin.Android.Build.Tasks", "MSBuild", "Xamarin", "Android", "Xamarin.Android.Javac.targets"));
+			var ns = targets.Root.Name.Namespace;
+			var target = targets.Root.Elements (ns + "Target").Single (element =>
+				(string) element.Attribute ("Name") == (binding ? "_CompileBindingJava" : "_CompileJava"));
+			var write = new XElement (target.Elements (ns + "WriteLinesToFile").Single ());
+			write.Name = "WriteLinesToFile";
+			var source = Path.Combine (intermediate, "source\u2000", "TestJava.java");
+			var stub = Path.Combine (intermediate, "stub\u2000", "TestStub.java");
+			var otherStub = Path.Combine (intermediate, "stub\u2002", "TestStub.java");
+			// An in-memory project has no Microsoft.Common.tasks import, so register the intrinsic task explicitly.
+			var project = new XElement ("Project",
+				new XElement ("UsingTask",
+					new XAttribute ("TaskName", "Microsoft.Build.Tasks.WriteLinesToFile"),
+					new XAttribute ("AssemblyName", "Microsoft.Build.Tasks.Core, Version=15.1.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a")),
+				new XElement ("PropertyGroup",
+					new XElement (prefix + "ResponseFile", responseFile),
+					new XElement (binding ? "_AndroidIntermediateBindingJavaClassDirectory" : "_AndroidIntermediateJavaClassDirectory",
+						Path.Combine (intermediate, "classes"))),
+				new XElement ("ItemGroup",
+					new XElement (prefix + "Source", new XAttribute ("Include", source)),
+					new XElement (prefix + "Stub", new XAttribute ("Include", stub)),
+					new XElement (prefix + "Stub", new XAttribute ("Include", otherStub))),
+				new XElement ("Target", new XAttribute ("Name", "Build"), write));
+
+			using var reader = project.CreateReader ();
+			using var collection = new ProjectCollection ();
+			var root = ProjectRootElement.Create (reader, collection);
+			root.FullPath = Path.Combine (directory, "JavacResponseFile.proj");
+			var instance = new ProjectInstance (root, globalProperties: null, toolsVersion: null, collection);
+			Assert.IsTrue (instance.Build ("Build", [new Microsoft.Build.Logging.ConsoleLogger (LoggerVerbosity.Minimal)]));
+			var response = File.ReadAllText (responseFile);
+			// Compare text, not file existence: macOS filesystems can treat U+2000 and U+2002 as equivalent.
+			foreach (var path in new [] { source, stub, otherStub }) {
+				Assert.IsTrue (response.Contains ($"\"{path.Replace ("\\", "\\\\")}\"", StringComparison.Ordinal),
+					$"The response file must preserve the exact Unicode path: {path}");
+			}
+		}
+
+		[Test]
 		public void RunWithLoggingEnablesManagedTimingLogger ()
 		{
 			var setupTargets = new Import (() => "SetupRunWithLogging.targets") {

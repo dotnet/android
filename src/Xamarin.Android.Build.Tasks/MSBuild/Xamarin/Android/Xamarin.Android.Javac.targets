@@ -158,7 +158,7 @@ It is shared between "legacy" binding projects and .NET 7+ projects.
                -classpath &quot;$(_AndroidBindingJavacClasspathArgument)&quot;;
                -encoding UTF8;
                @(_AndroidBindingJavacSource->'&quot;%(FullPath)&quot;'->Replace('\', '\\'));
-               @(_AndroidBindingJavacStub->'&quot;%(FullPath)&quot;'->Replace('\', '\\')->Normalize())"
+               @(_AndroidBindingJavacStub->'&quot;%(FullPath)&quot;'->Replace('\', '\\'))"
         Overwrite="true" />
     <ItemGroup>
       <FileWrites Include="$(_AndroidBindingJavacResponseFile)" />
@@ -246,7 +246,7 @@ It is shared between "legacy" binding projects and .NET 7+ projects.
                -classpath &quot;$(_AndroidJavacClasspathArgument)&quot;;
                -encoding UTF8;
                @(_AndroidJavacSource->'&quot;%(FullPath)&quot;'->Replace('\', '\\'));
-               @(_AndroidJavacStub->'&quot;%(FullPath)&quot;'->Replace('\', '\\')->Normalize())"
+               @(_AndroidJavacStub->'&quot;%(FullPath)&quot;'->Replace('\', '\\'))"
         Overwrite="true" />
     <ItemGroup>
       <FileWrites Include="$(_AndroidJavacResponseFile)" />
