@@ -1,13 +1,14 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.IO.Compression;
 using System.Linq;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
 using NUnit.Framework;
+using Microsoft.Android.Tasks;
 using Xamarin.Android.Tasks;
 using Xamarin.Android.Tools;
-using Xamarin.ProjectTools;
 using Microsoft.Android.Build.Tasks;
 
 namespace Xamarin.Android.Build.Tests
@@ -30,7 +31,7 @@ namespace Xamarin.Android.Build.Tests
 			}
 			var task = new Aapt2Compile {
 				BuildEngine = engine,
-				ToolPath = GetPathToAapt2 (),
+				ToolPath = AndroidSdkTestHelper.GetAapt2Directory (),
 				ResourcesToCompile = new ITaskItem [] {
 					item,
 				},
@@ -94,7 +95,7 @@ namespace Xamarin.Android.Build.Tests
 				files.Add (CreateTaskItemForResourceFile (resPath, "layout", $"main{i}.xml"));
 			var task = new Aapt2CompileWithProcessorCount (processorCount: 8) {
 				BuildEngine = engine,
-				ToolPath = GetPathToAapt2 (),
+				ToolPath = AndroidSdkTestHelper.GetAapt2Directory (),
 				ResourcesToCompile = files.ToArray (),
 				ResourceDirectories = new ITaskItem [] { new TaskItem (resPath) },
 				FlatArchivesDirectory = archivePath,
@@ -106,6 +107,35 @@ namespace Xamarin.Android.Build.Tests
 			Assert.AreEqual (expectedMax, daemon.MaxInstances, $"Expected {expectedMax} but was {daemon.MaxInstances}");
 			Assert.AreEqual (expectedInstances, daemon.CurrentInstances, $"Expected {expectedInstances} but was {daemon.CurrentInstances}");
 			Directory.Delete (Path.Combine (Root, path), recursive: true);
+		}
+
+		struct ApiInfo
+		{
+			public string Id;
+			public int Level;
+			public string Name;
+			public string FrameworkVersion;
+			public bool Stable;
+		}
+
+		string CreateFauxReferencesDirectory (string path, ApiInfo [] versions)
+		{
+			string referencesDirectory = Path.Combine (Root, path);
+			Directory.CreateDirectory (referencesDirectory);
+			Directory.CreateDirectory (Path.Combine (referencesDirectory, "MonoAndroid", "v1.0", "RedistList"));
+			File.WriteAllText (Path.Combine (referencesDirectory, "MonoAndroid", "v1.0", "mscorlib.dll"), "");
+			File.WriteAllText (Path.Combine (referencesDirectory, "MonoAndroid", "v1.0", "RedistList", "FrameworkList.xml"),
+				$"<FileList Redist=\"MonoAndroid\" Name=\".NET for Android Base Class Libraries\"></FileList>");
+			foreach (var v in versions) {
+				Directory.CreateDirectory (Path.Combine (referencesDirectory, "MonoAndroid", v.FrameworkVersion));
+				Directory.CreateDirectory (Path.Combine (referencesDirectory, "MonoAndroid", v.FrameworkVersion, "RedistList"));
+				File.WriteAllText (Path.Combine (referencesDirectory, "MonoAndroid", v.FrameworkVersion, "MonoAndroid.dll"), "");
+				File.WriteAllText (Path.Combine (referencesDirectory, "MonoAndroid", v.FrameworkVersion, "AndroidApiInfo.xml"),
+					$"<AndroidApiInfo>\n<Id>{v.Id}</Id>\n<Level>{v.Level}</Level>\n<Name>{v.Name}</Name>\n<Version>{v.FrameworkVersion}</Version>\n<Stable>{v.Stable}</Stable>\n</AndroidApiInfo>");
+				File.WriteAllText (Path.Combine (referencesDirectory, "MonoAndroid", v.FrameworkVersion, "RedistList", "FrameworkList.xml"),
+					$"<FileList Redist=\"MonoAndroid\" Name=\".NET for Android {v.FrameworkVersion} Support\" IncludeFramework=\"v1.0\"></FileList>");
+			}
+			return referencesDirectory;
 		}
 
 		class Aapt2CompileWithProcessorCount : Aapt2Compile
@@ -214,7 +244,6 @@ namespace Xamarin.Android.Build.Tests
 					items.Add (new TaskItem (file));
 				}
 			}
-			var platform = AndroidSdkResolver.GetMaxInstalledPlatform ();
 			var outputFile = Path.Combine (path, "resources.apk");
 			var referencePath = CreateFauxReferencesDirectory (Path.Combine ("temp", TestName, "references"), new [] {
 				new ApiInfo { Id = "28", Level = 28, Name = "Pie", FrameworkVersion = "v9.0", Stable = true },
@@ -222,7 +251,7 @@ namespace Xamarin.Android.Build.Tests
 			var manifestFile = Path.Combine (path, "AndroidManifest.xml");
 			var task = new Aapt2Link {
 				BuildEngine = engine,
-				ToolPath = GetPathToAapt2 (),
+				ToolPath = AndroidSdkTestHelper.GetAapt2Directory (),
 				YieldDuringToolExecution = true,
 				ReferenceAssemblyPaths = [Path.GetRelativePath (Directory.GetCurrentDirectory (), Path.Combine (referencePath, "MonoAndroid"))],
 				CreatePackagePerAbi = true,
@@ -235,7 +264,7 @@ namespace Xamarin.Android.Build.Tests
 				CompiledResourceFlatFiles = compilePerFile ? items.ToArray () : null,
 				OutputFile = outputFile,
 				AssemblyIdentityMapFile = Path.Combine (path, "foo.map"),
-				JavaPlatformJarPath = AndroidSdkResolver.GetAndroidJarPath (platform),
+				JavaPlatformJarPath = AndroidSdkTestHelper.GetAndroidJarPath (),
 			};
 			Assert.True (task.Execute (), $"task should have succeeded. {string.Join (";", errors.Select (x => x.Message))}");
 			Assert.AreEqual (1, engine.MetadataLookups, "All ABI links must share one API metadata lookup.");
@@ -248,7 +277,7 @@ namespace Xamarin.Android.Build.Tests
 			Assert.AreEqual (0, errors.Count, "There should be no errors.");
 			Assert.LessOrEqual (0, warnings.Count, "There should be 0 warnings.");
 			Assert.True (File.Exists (outputFile), $"{outputFile} should have been created.");
-			using (var apk = ZipHelper.OpenZip (outputFile)) {
+			using (var apk = ZipFile.OpenRead (outputFile)) {
 				Assert.AreEqual (3, apk.Entries.Count, $"{outputFile} should have 3 entries.");
 			}
 			Directory.Delete (Path.Combine (Root, path), recursive: true);
@@ -273,7 +302,7 @@ namespace Xamarin.Android.Build.Tests
 			IBuildEngine engine = new MockBuildEngine (TestContext.Out, errors);
 			var task = new Aapt2Compile {
 				BuildEngine = engine,
-				ToolPath = GetPathToAapt2 (),
+				ToolPath = AndroidSdkTestHelper.GetAapt2Directory (),
 				ResourcesToCompile = new ITaskItem [] {
 						new TaskItem (resPath, new Dictionary<string, string> () {
 								{ "ResourceDirectory", resPath },
@@ -287,7 +316,7 @@ namespace Xamarin.Android.Build.Tests
 			Assert.True (task.Execute (), "task should have succeeded.");
 			var flatArchive = Path.Combine (archivePath, "compiled.flata");
 			Assert.True (File.Exists (flatArchive), $"{flatArchive} should have been created.");
-			using (var apk = ZipHelper.OpenZip (flatArchive)) {
+			using (var apk = ZipFile.OpenRead (flatArchive)) {
 				Assert.AreEqual (2, apk.Entries.Count, $"{flatArchive} should have 2 entries.");
 			}
 			Assert.AreEqual (0, Directory.GetFiles (path, "*.zip", SearchOption.AllDirectories).Length, "Temporary resource archives should have been deleted.");
@@ -316,7 +345,7 @@ namespace Xamarin.Android.Build.Tests
 			IBuildEngine engine = new MockBuildEngine (TestContext.Out, errors);
 			var task = new Aapt2Compile {
 				BuildEngine = engine,
-				ToolPath = GetPathToAapt2 (),
+				ToolPath = AndroidSdkTestHelper.GetAapt2Directory (),
 				ResourcesToCompile = files.ToArray (),
 				ResourceDirectories = new ITaskItem [] { new TaskItem (resPath) },
 				FlatArchivesDirectory = archivePath,
@@ -330,82 +359,6 @@ namespace Xamarin.Android.Build.Tests
 				Assert.True (File.Exists (f), $"{f} should have been created.");
 			}
 			Directory.Delete (Path.Combine (Root, path), recursive: true);
-		}
-
-		[Test]
-		public void CollectNonEmptyDirectoriesTest ()
-		{
-			var path = Path.Combine (Root, "temp", TestName);
-			Directory.CreateDirectory (path);
-			var resPath = Path.Combine (path, "res");
-			var archivePath = Path.Combine (path, "flata");
-			var flatFilePath = Path.Combine(path, "flat");
-			var resizerPath = Path.Combine (path, "resizer");
-			Directory.CreateDirectory (resPath);
-			Directory.CreateDirectory (resizerPath);
-			Directory.CreateDirectory (Path.Combine (path, "stamps"));
-			Directory.CreateDirectory (archivePath);
-			Directory.CreateDirectory (flatFilePath);
-			Directory.CreateDirectory (Path.Combine (resPath, "values"));
-			Directory.CreateDirectory (Path.Combine (resPath, "layout"));
-			Directory.CreateDirectory (Path.Combine (resizerPath, "drawable"));
-			File.WriteAllText (Path.Combine (resPath, "values", "strings.xml"), @"<?xml version='1.0' ?><resources><string name='foo'>foo</string></resources>");
-			File.WriteAllText (Path.Combine (resPath, "layout", "main.xml"), @"<?xml version='1.0' ?><LinearLayout xmlns:android='http://schemas.android.com/apk/res/android' />");
-			File.WriteAllText (Path.Combine (resizerPath, "drawable", "icon.xml"), @"<?xml version='1.0' ?>
-<vector xmlns:android=""http://schemas.android.com/apk/res/android""
-   android:height=""64dp""
-   android:width=""64dp""
-   android:viewportHeight=""600""
-   android:viewportWidth=""600"" >
-   <group
-      android:name=""rotationGroup""
-      android:pivotX=""300.0""
-      android:pivotY=""300.0""
-      android:rotation=""45.0"" >
-      <path
-         android:name=""vectorPath""
-         android:fillColor=""#000000""
-         android:pathData=""M300,70 l 0,-70 70,70 0,0 -70,70z"" />
-   </group>
-</vector>");
-			var libPath = Path.Combine (path, "lp");
-			Directory.CreateDirectory (libPath);
-			Directory.CreateDirectory (Path.Combine (libPath, "0", "res", "values"));
-			Directory.CreateDirectory (Path.Combine (libPath, "1", "res", "values"));
-			File.WriteAllText (Path.Combine (libPath, "0", "res", "values", "strings.xml"), @"<?xml version='1.0' ?><resources><string name='foo1'>foo1</string></resources>");
-			File.WriteAllText (Path.Combine (libPath, "1", "res", "values", "strings.xml"), @"<?xml version='1.0' ?><resources><string name='foo2'>foo2</string></resources>");
-			File.WriteAllText (Path.Combine (path, "AndroidManifest.xml"), @"<?xml version='1.0' ?><manifest xmlns:android='http://schemas.android.com/apk/res/android' package='Foo.Foo' />");
-			File.WriteAllText (Path.Combine (path, "foo.map"), @"a\nb");
-			var errors = new List<BuildErrorEventArgs> ();
-			IBuildEngine engine = new MockBuildEngine (TestContext.Out, errors);
-			var task = new CollectNonEmptyDirectories {
-				BuildEngine = engine,
-				Directories = new ITaskItem[] {
-					new TaskItem (resPath, new Dictionary<string, string> {
-						{ "FilesCache", Path.Combine(path, "files.cache") },
-					}),
-					new TaskItem (resizerPath),
-					new TaskItem (Path.Combine (libPath, "0", "res"), new Dictionary<string, string> {
-						{ "AndroidSkipResourceProcessing", "True" },
-						{ "StampFile", "0.stamp" },
-					}),
-					new TaskItem (Path.Combine (libPath, "1", "res")),
-				},
-				LibraryProjectIntermediatePath = libPath,
-				StampDirectory = Path.Combine(path, "stamps"),
-			};
-			Assert.True (task.Execute (), $"task should have succeeded. {string.Join (";", errors.Select (x => x.Message))}");
-			Assert.AreEqual (4, task.Output.Length, "Output should have 4 items in it.");
-			Assert.AreEqual (5, task.LibraryResourceFiles.Length, "Output should have 5 items in it.");
-			Assert.AreEqual ("layout_main.xml.flat", task.LibraryResourceFiles[0].GetMetadata ("_FlatFile"));
-			Assert.AreEqual ("values_strings.arsc.flat", task.LibraryResourceFiles[1].GetMetadata ("_FlatFile"));
-			Assert.AreEqual ("0.flata", task.LibraryResourceFiles[3].GetMetadata ("_FlatFile"));
-			Assert.AreEqual ("values_strings.arsc.flat", task.LibraryResourceFiles[4].GetMetadata ("_FlatFile"));
-			foreach (var item in task.Output) {
-				Assert.IsNotNull (item.GetMetadata ("FilesCache"), "FilesCache should have been set");
-				var cacheFile = item.GetMetadata ("FilesCache");
-				FileAssert.Exists (cacheFile, $"{cacheFile} should have been created.");
-			}
 		}
 
 		[Test]
@@ -430,7 +383,7 @@ namespace Xamarin.Android.Build.Tests
 			IBuildEngine engine = new MockBuildEngine (TestContext.Out, errors);
 			var task = new Aapt2Compile {
 				BuildEngine = engine,
-				ToolPath = GetPathToAapt2 (),
+				ToolPath = AndroidSdkTestHelper.GetAapt2Directory (),
 				ResourcesToCompile = files.ToArray (),
 				ResourceDirectories = new ITaskItem [] { new TaskItem (resPath) },
 				FlatArchivesDirectory = archivePath,
@@ -483,7 +436,7 @@ namespace Xamarin.Android.Build.Tests
 						{ "OriginalName", $"Values{directorySeperator}Strings.xml" },
 					}),
 				},
-				ToolPath = GetPathToAapt2 (),
+				ToolPath = AndroidSdkTestHelper.GetAapt2Directory (),
 				ResourceDirectories = new ITaskItem [] {
 					new TaskItem (resPath, new Dictionary<string, string> () {
 							{ "ResourceDirectory", resPath },
@@ -525,16 +478,15 @@ namespace Xamarin.Android.Build.Tests
 			var archives = new List<ITaskItem>();
 			CallAapt2Compile (engine, resPath, archivePath, flatFilePath);
 			var outputFile = Path.Combine (path, "resources.apk");
-			var platform = AndroidSdkResolver.GetMaxInstalledPlatform ();
 			var task = new Aapt2Link {
 				BuildEngine = engine,
-				ToolPath = GetPathToAapt2 (),
+				ToolPath = AndroidSdkTestHelper.GetAapt2Directory (),
 				ResourceDirectories = new ITaskItem [] { new TaskItem (resPath) },
 				ManifestFiles = new ITaskItem [] { new TaskItem (Path.Combine (path, "AndroidManifest.xml")) },
 				CompiledResourceFlatArchive = new TaskItem (Path.Combine (path, "compiled.flata")),
 				OutputFile = outputFile,
 				AssemblyIdentityMapFile = Path.Combine (path, "foo.map"),
-				JavaPlatformJarPath = AndroidSdkResolver.GetAndroidJarPath (platform),
+				JavaPlatformJarPath = AndroidSdkTestHelper.GetAndroidJarPath (),
 				ExtraArgs = "--no-crunch "
 			};
 			Assert.False (task.Execute (), "task should have failed.");
@@ -565,18 +517,17 @@ namespace Xamarin.Android.Build.Tests
 			var archives = new List<ITaskItem>();
 			CallAapt2Compile (engine, resPath, archivePath, flatFilePath);
 			var outputFile = Path.Combine (path, "resources.apk");
-			var platform = AndroidSdkResolver.GetMaxInstalledPlatform ();
 			string emitids = Path.Combine (path, "emitids.txt");
 			string Rtxt = Path.Combine (path, "R.txt");
 			var task = new Aapt2Link {
 				BuildEngine = engine,
-				ToolPath = GetPathToAapt2 (),
+				ToolPath = AndroidSdkTestHelper.GetAapt2Directory (),
 				ResourceDirectories = new ITaskItem [] { new TaskItem (resPath) },
 				ManifestFiles = new ITaskItem [] { new TaskItem (Path.Combine (path, "AndroidManifest.xml")) },
 				CompiledResourceFlatArchive = new TaskItem (Path.Combine (archivePath, "compiled.flata")),
 				OutputFile = outputFile,
 				AssemblyIdentityMapFile = Path.Combine (path, "foo.map"),
-				JavaPlatformJarPath = AndroidSdkResolver.GetAndroidJarPath (platform),
+				JavaPlatformJarPath = AndroidSdkTestHelper.GetAndroidJarPath (),
 				ExtraArgs = $@"--no-version-vectors -v --emit-ids ""{emitids}"" --output-text-symbols '{Rtxt}'"
 			};
 			Assert.True (task.Execute (), $"task should have succeeded. {string.Join (" ", errors.Select (e => e.Message))}");
@@ -616,7 +567,7 @@ namespace Xamarin.Android.Build.Tests
 			var manifestFile = Path.Combine (path, "AndroidManifest.xml");
 			var task = new Aapt2Link {
 				BuildEngine = engine,
-				ToolPath = GetPathToAapt2 (),
+				ToolPath = AndroidSdkTestHelper.GetAapt2Directory (),
 				ResourceDirectories = new ITaskItem [] { new TaskItem (resPath) },
 				ManifestFiles = new ITaskItem [] { new TaskItem (manifestFile) },
 				CompiledResourceFlatArchive = new TaskItem (Path.Combine (path, "compiled.flata")),

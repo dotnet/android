@@ -15,8 +15,10 @@ using System.Text.RegularExpressions;
 using System.Collections.Generic;
 using Xamarin.Android.Tools;
 using Microsoft.Android.Build.Tasks;
+using Xamarin.Android.Tasks;
+using Properties = Xamarin.Android.Tasks.Properties;
 
-namespace Xamarin.Android.Tasks {
+namespace Microsoft.Android.Tasks {
 
 	public class Aapt2Compile : Aapt2 {
 		public override string TaskPrefix => "A2C";
@@ -110,7 +112,7 @@ namespace Xamarin.Android.Tasks {
 				outputArchive = Path.Combine (outputArchive, filename);
 				expectedOutputFile = outputArchive;
 			} else {
-				if (IsInvalidFilename (fileOrDirectory)) {
+				if (MonoAndroidHelper.IsInvalidFilename (fileOrDirectory)) {
 					LogDebugMessage ($"Invalid filename, ignoring: {fileOrDirectory}");
 					return;
 				}

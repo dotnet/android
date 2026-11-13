@@ -137,7 +137,7 @@ namespace Xamarin.Android.Tasks
 				}
 
 				string baseFileName = LowercaseFilenames ? rel.ToLowerInvariant () : rel;
-				if (Aapt2.IsInvalidFilename (baseFileName)) {
+				if (MonoAndroidHelper.IsInvalidFilename (baseFileName)) {
 					Log.LogDebugMessage ($"Invalid filename, ignoring: {baseFileName}");
 					continue;
 				}

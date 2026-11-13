@@ -10,8 +10,9 @@ using System.Reflection;
 using TPL = System.Threading.Tasks;
 using Xamarin.Android.Tools;
 using Microsoft.Android.Build.Tasks;
+using Xamarin.Android.Tasks;
 
-namespace Xamarin.Android.Tasks
+namespace Microsoft.Android.Tasks
 {
 	internal class Aapt2Daemon : IDisposable
 	{
@@ -159,7 +160,7 @@ namespace Xamarin.Android.Tasks
 		private bool SetProcessInputEncoding (ProcessStartInfo info, Encoding encoding)
 		{
 			Type type = info.GetType ();
-			PropertyInfo prop = type.GetRuntimeProperty ("StandardInputEncoding");
+			PropertyInfo? prop = type.GetRuntimeProperty ("StandardInputEncoding");
 			if (prop == null)
 				prop = type.GetProperty ("StandardInputEncoding", BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
 			if(prop?.CanWrite ?? false) {
@@ -216,7 +217,7 @@ namespace Xamarin.Android.Tasks
 							writer.WriteLine ();
 							writer.Flush ();
 						}
-						string line;
+						string? line;
 
 						Queue<string> stdError = new Queue<string> ();
 						while ((line = aapt2.StandardError.ReadLine ()) != null) {

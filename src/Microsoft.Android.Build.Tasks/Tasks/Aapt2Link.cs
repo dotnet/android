@@ -12,8 +12,10 @@ using System.Text.RegularExpressions;
 using System.Collections.Generic;
 using Xamarin.Android.Tools;
 using Microsoft.Android.Build.Tasks;
+using Xamarin.Android.Tasks;
+using Properties = Xamarin.Android.Tasks.Properties;
 
-namespace Xamarin.Android.Tasks {
+namespace Microsoft.Android.Tasks {
 
 	//aapt2 link -o resources.apk.bk --manifest Foo.xml --java . --custom-package com.infinitespace_studios.blankforms -R foo2 -v --auto-add-overlay
 	public class Aapt2Link : Aapt2 {
@@ -100,7 +102,7 @@ namespace Xamarin.Android.Tasks {
 		{
 			try {
 				var versions = supportedVersions ?? throw new InvalidOperationException ("API metadata must be resolved before linking resources.");
-				assemblyMap.Load (Path.Combine (WorkingDirectory, AssemblyIdentityMapFile));
+				assemblyMap.Load (Path.Combine (WorkingDirectory, AssemblyIdentityMapFile ?? ""));
 
 				resourceSymbolsTextFileTemp = GetTempFile ();
 
@@ -136,7 +138,7 @@ namespace Xamarin.Android.Tasks {
 					sb.AppendLine ("#Auto Generated file. Do not Edit.");
 					lock (rulesFiles) {
 						foreach (var file in rulesFiles) {
-							sb.AppendLine ($"# Data from {file}");
+							sb.AppendLine (CultureInfo.InvariantCulture, $"# Data from {file}");
 							foreach (var line in File.ReadLines (file))
 								sb.AppendLine (line);
 						}
@@ -158,11 +160,11 @@ namespace Xamarin.Android.Tasks {
 		string [] GenerateCommandLineCommands (string ManifestFile, string? currentAbi, string currentResourceOutputFile, AndroidVersions versions)
 		{
 			List<string> cmd = new List<string> ();
-			string manifestDir = Path.Combine (Path.GetDirectoryName (ManifestFile), currentAbi != null ? currentAbi : "manifest");
+			string manifestDir = Path.Combine (Path.GetDirectoryName (ManifestFile) ?? "", currentAbi != null ? currentAbi : "manifest");
 			Directory.CreateDirectory (manifestDir);
 			string manifestFile = Path.Combine (manifestDir, Path.GetFileName (ManifestFile));
 			string targetSdkVersion = AndroidApiLevel;
-			if (MonoAndroidHelper.TryParseApiLevel (targetSdkVersion, out Version v)) {
+			if (MonoAndroidHelper.TryParseApiLevel (targetSdkVersion, out var v)) {
 				targetSdkVersion = v.Major.ToString (CultureInfo.InvariantCulture);
 			}
 			ManifestDocument manifest = new ManifestDocument (ManifestFile);
@@ -341,7 +343,7 @@ namespace Xamarin.Android.Tasks {
 				}
 			}
 			// Use $(SupportedOSPlatformVersion) if minSdkVersion was not found in the manifest
-			if (minSdkVersion.IsNullOrEmpty () && MonoAndroidHelper.TryParseApiLevel (SupportedOSPlatformVersion, out Version version)) {
+			if (minSdkVersion.IsNullOrEmpty () && MonoAndroidHelper.TryParseApiLevel (SupportedOSPlatformVersion, out var version)) {
 				minSdkVersion = version.Major.ToString (CultureInfo.InvariantCulture);
 			}
 			if (!minSdkVersion.IsNullOrEmpty ()) {
@@ -383,7 +385,7 @@ namespace Xamarin.Android.Tasks {
 			if (AdditionalAndroidResourcePaths != null)
 				foreach (var dir in AdditionalAndroidResourcePaths)
 					if (!dir.ItemSpec.IsNullOrEmpty ())
-						upToDate = upToDate && ManifestIsUpToDate (string.Format ("{0}{1}{2}{3}{4}", dir, Path.DirectorySeparatorChar, "manifest", Path.DirectorySeparatorChar, "AndroidManifest.xml"));
+						upToDate = upToDate && ManifestIsUpToDate (string.Format (CultureInfo.InvariantCulture, "{0}{1}{2}{3}{4}", dir, Path.DirectorySeparatorChar, "manifest", Path.DirectorySeparatorChar, "AndroidManifest.xml"));
 
 			if (upToDate) {
 				LogMessage ("  Additional Android Resources manifsets files are unchanged. Skipping.");
@@ -394,7 +396,7 @@ namespace Xamarin.Android.Tasks {
 			var abis = CreatePackagePerAbi && SupportedAbis?.Length > 1 ? defaultAbi.Concat (SupportedAbis) : defaultAbi;
 			var outputFile = OutputFile.IsNullOrEmpty () ? GetTempFile () : OutputFile;
 			foreach (var abi in abis) {
-				var currentResourceOutputFile = abi != null ? string.Format ("{0}-{1}", outputFile, abi) : outputFile;
+				var currentResourceOutputFile = abi != null ? string.Format (CultureInfo.InvariantCulture, "{0}-{1}", outputFile, abi) : outputFile;
 				if (!currentResourceOutputFile.IsNullOrEmpty () && !Path.IsPathRooted (currentResourceOutputFile))
 					currentResourceOutputFile = Path.Combine (WorkingDirectory, currentResourceOutputFile);
 				string[] cmd = GenerateCommandLineCommands (manifest, abi, currentResourceOutputFile, versions);

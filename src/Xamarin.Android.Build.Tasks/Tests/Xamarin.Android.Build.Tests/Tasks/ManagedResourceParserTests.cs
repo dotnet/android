@@ -636,45 +636,26 @@ int xml myxml 0x7f140000
 		{
 			var path = Path.Combine ("temp", TestName);
 			CreateResourceDirectory (path);
-			File.WriteAllText (Path.Combine (Root, path, "foo.map"), @"a\nb");
 			Directory.CreateDirectory (Path.Combine (Root, path, "java"));
 			List<BuildErrorEventArgs> errors = new List<BuildErrorEventArgs> ();
 			List<BuildMessageEventArgs> messages = new List<BuildMessageEventArgs> ();
 			IBuildEngine engine = new MockBuildEngine (TestContext.Out, errors: errors, messages: messages);
-			var aapt2Compile = new Aapt2Compile {
-				BuildEngine = engine,
-				ToolPath = GetPathToAapt2 (),
-				ResourceDirectories = new ITaskItem [] {
-					new TaskItem(Path.Combine (Root, path, "lp", "res"), new Dictionary<string, string> {
-						{ "Hash", "lp" }
-					}),
-					new TaskItem(Path.Combine (Root, path, "res"), new Dictionary<string, string> {
-						{ "Hash", "compiled" }
-					}),
-				},
-				FlatArchivesDirectory = Path.Combine (Root, path),
-				FlatFilesDirectory = Path.Combine (Root, path),
-			};
-
-			Assert.IsTrue (aapt2Compile.Execute (), $"Aapt2 Compile should have succeeded. {string.Join (" ", errors.Select (x => x.Message))}");
-			var platform = AndroidSdkResolver.GetMaxInstalledPlatform ();
+			// Run aapt2 directly with the arguments that <Aapt2Compile/> and <Aapt2Link/> use.
+			string aapt2 = Path.Combine (GetPathToAapt2 (), IsWindows ? "aapt2.exe" : "aapt2");
 			string resPath = Path.Combine (Root, path, "res");
 			string rTxt = Path.Combine (Root, path, "R.txt");
-			var aapt2Link = new Aapt2Link {
-				BuildEngine = engine,
-				ToolPath = GetPathToAapt2 (),
-				ResourceDirectories = new ITaskItem [] { new TaskItem (resPath) },
-				ManifestFiles = new ITaskItem [] { new TaskItem (Path.Combine (Root, path, "AndroidManifest.xml")) },
-				AdditionalResourceArchives = new ITaskItem [] { new TaskItem (Path.Combine (Root, path, "lp.flata")) },
-				CompiledResourceFlatArchive = new TaskItem (Path.Combine (Root, path, "compiled.flata")),
-				OutputFile = Path.Combine (Root, path, "foo.apk"),
-				AssemblyIdentityMapFile = Path.Combine (Root, path, "foo.map"),
-				JavaPlatformJarPath = AndroidSdkResolver.GetAndroidJarPath (platform),
-				JavaDesignerOutputDirectory = Path.Combine (Root, path, "java"),
-				ResourceSymbolsTextFile = rTxt,
-
-			};
-			Assert.IsTrue (aapt2Link.Execute (), "Aapt2 Link should have succeeded.");
+			string javaPlatformJarPath = AndroidSdkResolver.GetAndroidJarPath (AndroidSdkResolver.GetMaxInstalledPlatform ());
+			RunAapt2 (aapt2, "compile", "-o", Path.Combine (Root, path, "lp.flata"), "--dir", Path.Combine (Root, path, "lp", "res"));
+			RunAapt2 (aapt2, "compile", "-o", Path.Combine (Root, path, "compiled.flata"), "--dir", resPath);
+			RunAapt2 (aapt2, "link",
+				"--manifest", Path.Combine (Root, path, "AndroidManifest.xml"),
+				"--java", Path.Combine (Root, path, "java"),
+				"-R", Path.Combine (Root, path, "lp.flata"),
+				"-R", Path.Combine (Root, path, "compiled.flata"),
+				"--auto-add-overlay",
+				"-I", javaPlatformJarPath,
+				"--output-text-symbols", rTxt,
+				"-o", Path.Combine (Root, path, "foo.apk"));
 
 			FileAssert.Exists (rTxt, $"{rTxt} should have been created.");
 
@@ -699,7 +680,7 @@ int xml myxml 0x7f140000
 			};
 			task.ResourceFlagFile = Path.Combine (Root, path, "AndroidResgen.flag");
 			task.IsApplication = true;
-			task.JavaPlatformJarPath = aapt2Link.JavaPlatformJarPath;
+			task.JavaPlatformJarPath = javaPlatformJarPath;
 			Assert.IsTrue (task.Execute (), "Task should have executed successfully.");
 
 			File.WriteAllText (task.ResourceFlagFile, string.Empty);
@@ -714,6 +695,12 @@ int xml myxml 0x7f140000
 			string managedDesigner = Path.Combine (Root, path, "Resource.designer.managed.cs");
 			CompareFilesIgnoreRuntimeInfoString (managedDesigner, aapt2Designer);
 			Directory.Delete (Path.Combine (Root, path), recursive: true);
+		}
+
+		static void RunAapt2 (string aapt2, params string [] args)
+		{
+			var result = Process.RunAndCaptureText (aapt2, args);
+			Assert.AreEqual (0, result.ExitStatus.ExitCode, $"`aapt2 {string.Join (" ", args)}` should have succeeded. {result.StandardError}");
 		}
 
 		[Test]
