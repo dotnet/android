@@ -27,28 +27,6 @@ namespace Xamarin.Android.Tasks
 	{
 		static Lazy<string> uname = new Lazy<string> (GetOSBinDirName, System.Threading.LazyThreadSafetyMode.PublicationOnly);
 
-		internal static XAAssemblyResolver MakeResolver (TaskLoggingHelper log, AndroidTargetArch targetArch, Dictionary<string, ITaskItem> assemblies, bool loadDebugSymbols = true)
-		{
-			var readerParams = new ReaderParameters ();
-
-			var res = new XAAssemblyResolver (targetArch, log, loadDebugSymbols: loadDebugSymbols, loadReaderParameters: readerParams);
-			var uniqueDirs = new HashSet<string> (StringComparer.OrdinalIgnoreCase);
-
-			log.LogDebugMessage ($"Adding search directories to new architecture {targetArch} resolver:");
-			foreach (var kvp in assemblies) {
-				string assemblyDir = Path.GetDirectoryName (kvp.Value.ItemSpec);
-				if (uniqueDirs.Contains (assemblyDir)) {
-					continue;
-				}
-
-				uniqueDirs.Add (assemblyDir);
-				res.SearchDirectories.Add (assemblyDir);
-				log.LogDebugMessage ($"  {assemblyDir}");
-			}
-
-			return res;
-		}
-
 		public static StringBuilder MergeStdoutAndStderrMessages (List<string> stdout, List<string> stderr)
 		{
 			var sb = new StringBuilder ();
