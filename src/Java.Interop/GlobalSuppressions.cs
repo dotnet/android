@@ -34,9 +34,9 @@ using System.Diagnostics.CodeAnalysis;
 [assembly: SuppressMessage ("Design", "CA1034:Nested types should not be visible", Justification = "Deliberate choice to 'hide' these types from code completion for `Java.Interop.`.", Scope = "type", Target = "~T:Java.Interop.JniEnvironment.StaticFields")]
 [assembly: SuppressMessage ("Design", "CA1034:Nested types should not be visible", Justification = "Deliberate choice to 'hide' these types from code completion for `Java.Interop.`.", Scope = "type", Target = "~T:Java.Interop.JniEnvironment.StaticMethods")]
 
-[assembly: SuppressMessage ("Design", "CA1051:Do not declare visible instance fields", Justification = "This type is passed to native code, and should use fields, not properties.", Scope = "member", Target = "~F:Java.Interop.JniNativeMethodRegistration.Name")]
-[assembly: SuppressMessage ("Design", "CA1051:Do not declare visible instance fields", Justification = "This type is passed to native code, and should use fields, not properties.", Scope = "member", Target = "~F:Java.Interop.JniNativeMethodRegistration.Signature")]
-[assembly: SuppressMessage ("Design", "CA1051:Do not declare visible instance fields", Justification = "This type is passed to native code, and should use fields, not properties.", Scope = "member", Target = "~F:Java.Interop.JniNativeMethodRegistration.Marshaler")]
+[assembly: SuppressMessage ("Design", "CA1051:Do not declare visible instance fields", Justification = "Native registration consumes this released public field; replacing it with a property would break binary compatibility.", Scope = "member", Target = "~F:Java.Interop.JniNativeMethodRegistration.Name")]
+[assembly: SuppressMessage ("Design", "CA1051:Do not declare visible instance fields", Justification = "Native registration consumes this released public field; replacing it with a property would break binary compatibility.", Scope = "member", Target = "~F:Java.Interop.JniNativeMethodRegistration.Signature")]
+[assembly: SuppressMessage ("Design", "CA1051:Do not declare visible instance fields", Justification = "Native registration consumes this released public field; replacing it with a property would break binary compatibility.", Scope = "member", Target = "~F:Java.Interop.JniNativeMethodRegistration.Marshaler")]
 
 [assembly: SuppressMessage ("Naming", "CA1707:Identifiers should not contain underscores", Justification = "Released enum names mirror the JNI_VERSION naming convention; renaming them would break callers.", Scope = "type", Target = "~T:Java.Interop.JniVersion")]
 [assembly: SuppressMessage ("Naming", "CA1707:Identifiers should not contain underscores", Justification = "The identifier is a released public property; renaming it would break callers.", Scope = "member", Target = "~P:Java.Interop.JniRuntime.CreationOptions.ClassLoader_LoadClass_id")]
@@ -79,6 +79,6 @@ using System.Diagnostics.CodeAnalysis;
 [assembly: SuppressMessage ("Performance", "CA1823:Avoid unused private fields", Justification = "Used for native interop", Scope = "type", Target = "~T:Java.Interop.JavaObject")]
 [assembly: SuppressMessage ("Performance", "CA1823:Avoid unused private fields", Justification = "Used for native interop", Scope = "type", Target = "~T:Java.Interop.JniRuntime")]
 
-[assembly: SuppressMessage ("Reliability", "CA2000:Dispose objects before losing scope", Justification = "We don't *want* to dispose the value!", Scope = "member", Target = "~M:Java.Interop.JniRuntime.#ctor(Java.Interop.JniRuntime.CreationOptions)")]
+[assembly: SuppressMessage ("Reliability", "CA2000:Dispose objects before losing scope", Justification = "JniEnvironment.SetEnvironmentInfo takes ownership of the new JniEnvironmentInfo; JniRuntime.Dispose(bool) disposes the runtime's thread-local environments.", Scope = "member", Target = "~M:Java.Interop.JniRuntime.#ctor(Java.Interop.JniRuntime.CreationOptions)")]
 
 [assembly: SuppressMessage ("Usage", "CA2213:Disposable fields should be disposed", Justification = "JniRuntime.Dispose(bool) disposes this field through the ValueManager property.", Scope = "member", Target = "~F:Java.Interop.JniRuntime.valueManager")]
