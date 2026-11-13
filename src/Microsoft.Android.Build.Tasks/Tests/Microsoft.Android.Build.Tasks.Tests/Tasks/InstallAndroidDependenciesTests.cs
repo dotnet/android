@@ -8,8 +8,9 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Build.Framework;
-using Microsoft.Build.Utilities;
 using NUnit.Framework;
+using Task = System.Threading.Tasks.Task;
+using TaskItem = Microsoft.Build.Utilities.TaskItem;
 using Xamarin.Installer.Build.Tasks;
 
 namespace Xamarin.Android.Build.Tests;
