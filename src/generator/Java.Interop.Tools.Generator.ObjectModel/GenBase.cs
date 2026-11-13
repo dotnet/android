@@ -911,9 +911,16 @@ namespace MonoDroid.Generation
 
 		public string RawVisibility => support.Visibility;
 
-		public bool RequiresNew (Property property)
+		public bool RequiresNew (Property property) => RequiresNew (property.AdjustedName);
+
+		public bool RequiresNew (Field field) => RequiresNew (field.Name);
+
+		bool RequiresNew (string memberName)
 		{
-			switch (property.AdjustedName.ToLowerInvariant ()) {
+			if (HidesBaseMember (memberName))
+				return true;
+
+			switch (memberName.ToLowerInvariant ()) {
 				case "handle":
 				case "gethashcode":
 				case "gettype":
@@ -923,11 +930,14 @@ namespace MonoDroid.Generation
 					return true;
 			}
 
-			return IsThrowable () && ThrowableRequiresNew.Contains (property.AdjustedName);
+			return IsThrowable () && ThrowableRequiresNew.Contains (memberName);
 		}
 
 		public bool RequiresNew (string memberName, Method method)
 		{
+			if (HidesBaseMember (memberName, method))
+				return true;
+
 			switch (memberName.ToLowerInvariant ()) {
 				case "handle":
 					// The same name as a property always requires new, no matter the parameters
@@ -951,6 +961,22 @@ namespace MonoDroid.Generation
 			}
 
 			return IsThrowable () && ThrowableRequiresNew.Contains (memberName);
+		}
+
+		bool HidesBaseMember (string memberName, Method method = null)
+		{
+			foreach (var ancestor in Ancestors ()) {
+				if (ancestor.Fields.Any (f => f.Visibility != "private" && f.Name == memberName) ||
+						ancestor.Properties.Any (p => p.Getter.Visibility != "private" && p.AdjustedName == memberName) ||
+						ancestor.NestedTypes.Any (t => t.Visibility != "private" && t.Name == memberName))
+					return true;
+
+				if (ancestor.Methods.Any (m => m.Visibility != "private" && m.AdjustedName == memberName &&
+						(method == null || (m.GenericArguments?.Count ?? 0) == (method.GenericArguments?.Count ?? 0) &&
+							ParameterList.Equals (m.Parameters, method.Parameters))))
+					return true;
+			}
+			return false;
 		}
 
 		public virtual void ResetValidation ()
