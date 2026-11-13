@@ -14,10 +14,10 @@
 **Build System:** MSBuild + .NET Arcade SDK + CMake (native)
 
 ## Essential Commands
-- **Build:** `./build.sh` or `build.cmd`
-- **Test with local build:** `dotnet-local.sh`/`dotnet-local.cmd` 
+- **Build the local SDK:** `make prepare && make leeroy` (not `make all`) or `build.cmd`; see the `local-build` skill
+- **Test with local build:** `dotnet-local.sh`/`dotnet-local.cmd` (prefers `bin/Release` when present)
 - **Run tests:** `dotnet-local.cmd test bin/TestDebug/net11.0/Xamarin.Android.Build.Tests.dll --filter Name~TestName`
-- **Device tests:** `dotnet-local.cmd test bin/TestDebug/MSBuildDeviceIntegration/net11.0/MSBuildDeviceIntegration.dll`
+- **Device tests:** `dotnet-local.cmd test bin/TestDebug/MSBuildDeviceIntegration/net11.0/MSBuildDeviceIntegration.dll` (`android-devices` skill)
 
 The test assembly framework comes from `DotNetStableTargetFramework` in `Directory.Build.props`. On macOS/Linux, use `./dotnet-local.sh` instead of `dotnet-local.cmd`.
 
@@ -33,9 +33,21 @@ dotnet test tests/Xamarin.Android.Tools.AndroidSdk-Tests/Xamarin.Android.Tools.A
 dotnet test tests/Microsoft.Android.Build.BaseTasks-Tests/Microsoft.Android.Build.BaseTasks-Tests.csproj
 ```
 
+## Working Principles
+
+- **Check for existing work first:** search PRs and branches (`gh pr list --repo dotnet/android --state all --search "<keywords>"`, `git log origin/main --grep "<keywords>"`) and prior sessions; extend rather than redo, including before fanning out.
+- **Reuse before inventing:** look for an existing MSBuild, SDK, `global.json`, or Arcade mechanism, in-repo helper, or CI template first.
+- **Keep it simple:** smallest change; prefer deleting over layering; simplifications end with less code; no fallbacks, options, or abstractions without a caller.
+- **Look up dependencies, don't guess URLs:** for .NET source matching our pins, search the VMR at the `Sha` in `eng/Version.Details.xml` (`gh search code --repo dotnet/dotnet "<symbol>"`, `gh api "repos/dotnet/dotnet/contents/<path>?ref=<sha>"`); for package versions, `dotnet package search <id> --exact-match --prerelease --source <feed from NuGet.config>`; for MS Learn, `microsoft_docs_search`.
+- **Ask before adding** workflows, scripts, `.editorconfig`/`Directory.*` files, tests for build scripts, or build-time-generated files.
+- **Measure performance claims** before and after with the same configuration; drop changes without a measured win.
+- **Validate proportionally:** use the smallest sufficient validation (table in the `tests` skill).
+
 ## Critical Rules
 
 **Never use `git commit --amend`:** Always create new commits. The user will squash or fixup as needed.
+
+**PR descriptions and commit messages:** PRs are squash-merged; follow the `pull-request` skill.
 
 Reference official Android documentation where helpful:
 * [Android Developer Guide](https://developer.android.com/develop)
@@ -205,10 +217,11 @@ try {
 
 **Build and test code changes locally before pushing or opening a PR.** Building the full SDK is a normal part of development, not something to avoid because it is assumed to be slow. CI provides additional coverage; it is not a substitute for local validation or the first place to discover whether a change builds.
 
-- **Prepare and build the SDK when needed.** On macOS/Linux, run `make prepare && make all`; on Windows, run `build.cmd`. Use the configuration required by the affected tests (for example, `make prepare CONFIGURATION=Release && make all CONFIGURATION=Release`). A missing local SDK is a reason to prepare and build it, not to offer skipping full-build tests. Rebuild after source changes so tests exercise the updated SDK, not stale binaries.
+- **Prepare and build the SDK when needed.** On macOS/Linux, run `make prepare && make leeroy`; on Windows, run `build.cmd`. Use the configuration required by the affected tests (for example, `make prepare CONFIGURATION=Release && make leeroy CONFIGURATION=Release`). A missing local SDK is a reason to prepare and build it, not to offer skipping full-build tests. Rebuild after source changes so tests exercise the updated SDK, not stale binaries.
 - **Run the relevant tests against the locally built SDK.** Use `dotnet-local.sh`/`dotnet-local.cmd` for full-build tests; standalone tests can use plain `dotnet test`. Consult `.github/skills/tests/SKILL.md` and its test catalog for commands and coverage. Start with focused tests while iterating, then expand coverage for cross-cutting changes. Runtime, JNI, and native changes need the relevant on-device tests, not just host-side unit tests; exercise the affected runtime, ABI, and build properties.
 - **Do not ask whether to skip validation solely because of presumed build time.** Proceed with the required local build and tests unless the user explicitly limits validation or a concrete environment constraint prevents it. If blocked, report the exact command, failure or missing prerequisite, and what remains unvalidated. Do not push known regressions or use repeated CI runs to debug them.
 - **Record actual validation results.** Report the build/test commands and their outcomes when handing off code changes or preparing a PR. Documentation-only changes do not require SDK compilation or device tests.
+- **Parallel sessions:** run at most one or two full SDK builds per host, give each device run its own emulator or serial, never stop processes or `adb` you didn't start, and queue heavy work instead of inventing lease protocols.
 
 **Modifying project files in tests:** Never use `File.WriteAllText()` directly to update project source files. Instead, use the `Xamarin.ProjectTools` infrastructure:
 
@@ -245,7 +258,7 @@ When diagnosing runtime, build, or test failures, follow these practices. They e
 
 - **Reproduce CI failures locally — do not iterate through CI.** A clean local test cycle is minutes; a CI iteration is hours. Run device tests the same way CI does:
   ```bash
-  make prepare && make all CONFIGURATION=Release
+  make prepare CONFIGURATION=Release && make leeroy CONFIGURATION=Release
   ./dotnet-local.sh build -t:Install -c Release \
       tests/Mono.Android-Tests/Mono.Android-Tests/Mono.Android.NET-Tests.csproj
   (
@@ -265,8 +278,10 @@ When diagnosing runtime, build, or test failures, follow these practices. They e
 
 - **`am instrument` going silent means it crashed, not hung.** Check `adb logcat -d | grep -E 'FATAL|tombstone|signal'` for a native crash dump. Do not wait for a CI timeout to "confirm" a hang that was really an instant crash.
 
+- **Confirm the runtime that ran.** `PublishAot=true` in Debug still uses CoreCLR unless `Optimize=true` or publishing; check `_AndroidRuntime` before claiming NativeAOT coverage.
+
 ## Troubleshooting
-- **Build:** Clean `bin/`+`obj/`, check Android SDK/NDK, `make clean && make prepare && make all`
+- **Build:** Clean `bin/`+`obj/`, check Android SDK/NDK, `make clean && make prepare && make leeroy`; see the `local-build` skill for stalls, SourceLink warnings, and disk space
 - **MSBuild:** Test in isolation, validate inputs
-- **Device:** Use update directories for rapid Debug iteration
+- **Device:** Use update directories for rapid Debug iteration; see the `android-devices` skill
 - **Performance:** See `../Documentation/guides/profiling.md` and `../Documentation/guides/tracing.md`
