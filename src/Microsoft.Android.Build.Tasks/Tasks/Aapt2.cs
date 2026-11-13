@@ -77,9 +77,9 @@ namespace Microsoft.Android.Tasks {
 		}
 
 		// This is set in Execute()
-		Aapt2Daemon daemon = null!;
+		Aapt2Daemon? daemon;
 
-		internal Aapt2Daemon Daemon => daemon;
+		internal Aapt2Daemon Daemon => daemon ?? throw new InvalidOperationException ("The AAPT2 daemon has not been started.");
 		public override bool Execute ()
 		{
 			// Must register on the UI thread!
@@ -91,7 +91,7 @@ namespace Microsoft.Android.Tasks {
 			else
 				DaemonMaxInstanceCount = Math.Min (DaemonMaxInstanceCount, maxInstances);
 			using (daemon = new Aapt2Daemon (GenerateFullPathToTool (), DaemonMaxInstanceCount, GetRequiredDaemonInstances (), LogDebugMessage)) {
-				return base.Execute ();
+				return base.Execute () && !CancellationToken.IsCancellationRequested;
 			}
 		}
 
@@ -100,7 +100,7 @@ namespace Microsoft.Android.Tasks {
 		protected long RunAapt (string [] args, string outputFile)
 		{
 			LogDebugMessage ($"Executing {string.Join (" ", args)}");
-			long jobid = daemon.QueueCommand (args, outputFile, CancellationToken);
+			long jobid = Daemon.QueueCommand (args, outputFile, CancellationToken);
 			jobs.Add (jobid);
 			return jobid;
 		}
@@ -108,6 +108,7 @@ namespace Microsoft.Android.Tasks {
 		protected void ProcessOutput ()
 		{
 			Aapt2Daemon.Job[] completedJobs = Daemon.WaitForJobsToComplete (jobs);
+			CancellationToken.ThrowIfCancellationRequested ();
 			foreach (var job in completedJobs) {
 				foreach (var line in job.Output) {
 					if (!LogAapt2EventsFromOutput (line.Line, MessageImportance.Normal, job.Succeeded)) {

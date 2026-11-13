@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
+using System.Threading;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
 using NUnit.Framework;
@@ -10,6 +11,7 @@ using Microsoft.Android.Tasks;
 using Xamarin.Android.Tasks;
 using Xamarin.Android.Tools;
 using Microsoft.Android.Build.Tasks;
+using TPL = System.Threading.Tasks;
 
 namespace Xamarin.Android.Build.Tests
 {
@@ -109,33 +111,41 @@ namespace Xamarin.Android.Build.Tests
 			Directory.Delete (Path.Combine (Root, path), recursive: true);
 		}
 
-		struct ApiInfo
+		[Test]
+		public void CancellingAapt2WithBlockedJob ()
 		{
-			public string Id;
-			public int Level;
-			public string Name;
-			public string FrameworkVersion;
-			public bool Stable;
+			// The fake daemon reads stdin but never writes stderr, so the job blocks until it is killed.
+			var task = new BlockingAapt2 {
+				BuildEngine = new MockBuildEngine (TextWriter.Null),
+				ToolPath = OperatingSystem.IsWindows () ? Environment.SystemDirectory : "/usr/bin",
+				ToolExe = OperatingSystem.IsWindows () ? "findstr.exe" : "grep",
+				DaemonMaxInstanceCount = 1,
+			};
+			var execution = TPL.Task.Run (task.Execute);
+			try {
+				Assert.IsTrue (SpinWait.SpinUntil (() => task.Queued && task.Daemon.JobsRunning, TimeSpan.FromSeconds (10)), "The first job did not start.");
+			} finally {
+				task.Cancel ();
+			}
+			Assert.IsTrue (execution.Wait (TimeSpan.FromSeconds (10)), "Cancelling a blocked task did not finish.");
+			Assert.IsFalse (execution.Result, "A cancelled task must not succeed.");
+			Assert.IsFalse (task.Daemon.JobSucceded (task.Pending), "The pending job must not succeed.");
 		}
 
-		string CreateFauxReferencesDirectory (string path, ApiInfo [] versions)
+		class BlockingAapt2 : Aapt2
 		{
-			string referencesDirectory = Path.Combine (Root, path);
-			Directory.CreateDirectory (referencesDirectory);
-			Directory.CreateDirectory (Path.Combine (referencesDirectory, "MonoAndroid", "v1.0", "RedistList"));
-			File.WriteAllText (Path.Combine (referencesDirectory, "MonoAndroid", "v1.0", "mscorlib.dll"), "");
-			File.WriteAllText (Path.Combine (referencesDirectory, "MonoAndroid", "v1.0", "RedistList", "FrameworkList.xml"),
-				$"<FileList Redist=\"MonoAndroid\" Name=\".NET for Android Base Class Libraries\"></FileList>");
-			foreach (var v in versions) {
-				Directory.CreateDirectory (Path.Combine (referencesDirectory, "MonoAndroid", v.FrameworkVersion));
-				Directory.CreateDirectory (Path.Combine (referencesDirectory, "MonoAndroid", v.FrameworkVersion, "RedistList"));
-				File.WriteAllText (Path.Combine (referencesDirectory, "MonoAndroid", v.FrameworkVersion, "MonoAndroid.dll"), "");
-				File.WriteAllText (Path.Combine (referencesDirectory, "MonoAndroid", v.FrameworkVersion, "AndroidApiInfo.xml"),
-					$"<AndroidApiInfo>\n<Id>{v.Id}</Id>\n<Level>{v.Level}</Level>\n<Name>{v.Name}</Name>\n<Version>{v.FrameworkVersion}</Version>\n<Stable>{v.Stable}</Stable>\n</AndroidApiInfo>");
-				File.WriteAllText (Path.Combine (referencesDirectory, "MonoAndroid", v.FrameworkVersion, "RedistList", "FrameworkList.xml"),
-					$"<FileList Redist=\"MonoAndroid\" Name=\".NET for Android {v.FrameworkVersion} Support\" IncludeFramework=\"v1.0\"></FileList>");
+			public override string TaskPrefix => "A2T";
+			public volatile bool Queued;
+			public long Pending { get; private set; }
+
+			public override TPL.Task RunTaskAsync ()
+			{
+				RunAapt (["command"], "");
+				Pending = RunAapt (["command"], "");
+				Queued = true;
+				ProcessOutput ();
+				return TPL.Task.CompletedTask;
 			}
-			return referencesDirectory;
 		}
 
 		class Aapt2CompileWithProcessorCount : Aapt2Compile
@@ -245,15 +255,16 @@ namespace Xamarin.Android.Build.Tests
 				}
 			}
 			var outputFile = Path.Combine (path, "resources.apk");
-			var referencePath = CreateFauxReferencesDirectory (Path.Combine ("temp", TestName, "references"), new [] {
-				new ApiInfo { Id = "28", Level = 28, Name = "Pie", FrameworkVersion = "v9.0", Stable = true },
-			});
+			var referencePath = Path.Combine (path, "references", "MonoAndroid");
+			Directory.CreateDirectory (Path.Combine (referencePath, "v9.0"));
+			File.WriteAllText (Path.Combine (referencePath, "v9.0", "AndroidApiInfo.xml"),
+				"<AndroidApiInfo><Id>28</Id><Level>28</Level><Name>Pie</Name><Version>v9.0</Version><Stable>True</Stable></AndroidApiInfo>");
 			var manifestFile = Path.Combine (path, "AndroidManifest.xml");
 			var task = new Aapt2Link {
 				BuildEngine = engine,
 				ToolPath = AndroidSdkTestHelper.GetAapt2Directory (),
 				YieldDuringToolExecution = true,
-				ReferenceAssemblyPaths = [Path.GetRelativePath (Directory.GetCurrentDirectory (), Path.Combine (referencePath, "MonoAndroid"))],
+				ReferenceAssemblyPaths = [Path.GetRelativePath (Directory.GetCurrentDirectory (), referencePath)],
 				CreatePackagePerAbi = true,
 				SupportedAbis = ["arm64-v8a", "x86_64"],
 				AndroidManifestFile = new TaskItem (manifestFile),
@@ -271,7 +282,7 @@ namespace Xamarin.Android.Build.Tests
 			Assert.IsTrue (engine.MetadataAccessBeforeYield, "Resolve API metadata on the calling thread before yielding.");
 			Assert.IsTrue (engine.Yielded);
 			Assert.IsNotNull (engine.Versions);
-			CollectionAssert.Contains (engine.Versions.FrameworkDirectories, Path.Combine (referencePath, "MonoAndroid"));
+			CollectionAssert.Contains (engine.Versions.FrameworkDirectories, referencePath);
 			FileAssert.Exists (outputFile + "-arm64-v8a");
 			FileAssert.Exists (outputFile + "-x86_64");
 			Assert.AreEqual (0, errors.Count, "There should be no errors.");
