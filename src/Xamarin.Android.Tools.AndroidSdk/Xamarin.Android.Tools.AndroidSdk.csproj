@@ -12,7 +12,6 @@
     <Nullable>enable</Nullable>
     <DefineConstants>INTERNAL_NULLABLE_ATTRIBUTES</DefineConstants>
     <UseProjectNullableAttributes>true</UseProjectNullableAttributes>
-    <NoWarn>$(NoWarn);CA5350</NoWarn>
     <SignAssembly>true</SignAssembly>
     <AssemblyOriginatorKeyFile>..\..\product.snk</AssemblyOriginatorKeyFile>
     <Title>Xamarin.Android.Tools</Title>
