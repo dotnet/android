@@ -54,10 +54,8 @@ static class AdbHelper
 		if (verbose)
 			Console.WriteLine ($"Running: adb {psi.Arguments}");
 
-		using var stdout = new StringWriter ();
-		using var stderr = new StringWriter ();
-		var exitCode = await ProcessUtils.StartProcess (psi, stdout, stderr, cancellationToken);
+		var result = await Process.RunAndCaptureTextAsync (psi, cancellationToken);
 
-		return (exitCode, stdout.ToString (), stderr.ToString ());
+		return (result.ExitStatus.ExitCode, result.StandardOutput, result.StandardError);
 	}
 }

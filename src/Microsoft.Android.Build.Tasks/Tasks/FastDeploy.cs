@@ -781,6 +781,8 @@ namespace Microsoft.Android.Tasks
 			var psi = ProcessUtils.CreateProcessStartInfo (adb, adbArguments.ToArray ());
 			psi.WorkingDirectory = Path.GetTempPath ();
 			psi.WindowStyle = ProcessWindowStyle.Hidden;
+			psi.RedirectStandardOutput = true;
+			psi.RedirectStandardError = true;
 
 			// psi.Arguments holds the exact, correctly quoted command line whenever ProcessUtils
 			// joined the arguments itself; it is empty when it used ProcessStartInfo.ArgumentList.
@@ -789,13 +791,15 @@ namespace Microsoft.Android.Tasks
 				: string.Join (" ", adbArguments.Select (a => $"[{a}]"));
 			LogDiagnostic ($"adb command: {psi.FileName} {commandLine}");
 
-			using var stdout = new StringWriter ();
-			using var stderr = new StringWriter ();
-			int exitCode = await ProcessUtils.StartProcess (psi, stdout, stderr, CancellationToken, environmentVariables);
+			if (environmentVariables != null) {
+				foreach (var kvp in environmentVariables)
+					psi.Environment [kvp.Key] = kvp.Value;
+			}
+			var output = await Process.RunAndCaptureTextAsync (psi, CancellationToken);
 			var result = new AdbCommandResult {
-				ExitCode = exitCode,
-				StandardOutput = stdout.ToString ().Trim (),
-				StandardError = stderr.ToString ().Trim (),
+				ExitCode = output.ExitStatus.ExitCode,
+				StandardOutput = output.StandardOutput.Trim (),
+				StandardError = output.StandardError.Trim (),
 			};
 			LogAdbCommandResult (result);
 			return result;

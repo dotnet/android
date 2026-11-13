@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Reflection;
 using System.Text.Json;
 using System.Threading.Tasks;
 using Microsoft.Android.Tasks;
@@ -92,6 +93,61 @@ public class ExtractTypeMapKeysFromNativeAotObjectTests : BaseTest
 		Assert.That (task.PartialOutputFile, Is.Not.Null.And.Not.EqualTo (fixture.OutputFile));
 		Assert.IsFalse (File.Exists (task.PartialOutputFile));
 		Assert.IsEmpty (Directory.GetFiles (fixture.OutputDirectory, "*.tmp"));
+	}
+
+	[Test]
+	public async Task ObjdumpStreamsOutputBeforeProcessExit ()
+	{
+		if (OperatingSystem.IsWindows ()) {
+			Assert.Ignore ("The fake llvm-objdump is a shell script.");
+			return;
+		}
+
+		string directory = Path.Combine (Root, "temp", TestName);
+		Directory.CreateDirectory (directory);
+		string signalFile = Path.Combine (directory, "received");
+		File.Delete (signalFile);
+		string objdump = Path.Combine (directory, "llvm-objdump");
+		File.WriteAllText (objdump, """
+			#!/bin/sh
+			cd "$(dirname "$0")" || exit 1
+			printf 'symbol output\n'
+			i=0
+			while [ "$i" -lt 10000 ]; do
+				printf 'stderr output\n' >&2
+				i=$((i + 1))
+			done
+			i=0
+			while [ "$i" -lt 100 ]; do
+				[ -f received ] && exit 0
+				sleep 0.05
+				i=$((i + 1))
+			done
+			echo "stdout was not delivered before exit" >&2
+			exit 1
+			""");
+		File.SetUnixFileMode (objdump, UnixFileMode.UserRead | UnixFileMode.UserWrite | UnixFileMode.UserExecute);
+
+		var task = new ExtractTypeMapKeysFromNativeAotObject {
+			LlvmReadObjPath = Path.Combine (directory, "llvm-readobj"),
+		};
+		using var stdout = new SignalingWriter (signalFile);
+		var method = typeof (ExtractTypeMapKeysFromNativeAotObject).GetMethod ("RunObjdumpAsync", BindingFlags.Instance | BindingFlags.NonPublic)
+			?? throw new InvalidOperationException ("RunObjdumpAsync not found.");
+		if (method.Invoke (task, [stdout, new [] { "--syms", "map.o" }]) is not Task run) {
+			throw new InvalidOperationException ("RunObjdumpAsync did not return a task.");
+		}
+		await run;
+		Assert.That (stdout.ToString (), Is.EqualTo ("symbol output\n"));
+	}
+
+	sealed class SignalingWriter (string signalFile) : StringWriter
+	{
+		public override void Write (char [] buffer, int index, int count)
+		{
+			base.Write (buffer, index, count);
+			File.WriteAllText (signalFile, "");
+		}
 	}
 
 	Fixture CreateFixture () => new (Path.Combine (Root, "temp", TestName));
