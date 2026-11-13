@@ -2,6 +2,8 @@
 
   <PropertyGroup>
     <TargetFramework>$(DotNetStableTargetFramework)</TargetFramework>
+    <OutputType>Exe</OutputType>
+    <EnableNUnitRunner>true</EnableNUnitRunner>
     <RootNamespace>Xamarin.Android.Build.Tests</RootNamespace>
     <OutputPath>..\..\bin\Test$(Configuration)\MSBuildDeviceIntegration\</OutputPath>
     <SignAssembly>true</SignAssembly>
@@ -13,7 +15,7 @@
 
   <Import Project="..\..\Configuration.props" />
   <Import Project="..\..\src\Microsoft.Android.Build.BaseTasks\MSBuildReferences.projitems" />
-  <Import Project="..\..\build-tools\scripts\NUnitMTPReferences.projitems" />
+  <Import Project="..\..\build-tools\scripts\NUnitReferences.projitems" />
 
   <ItemGroup>
     <Compile Include="..\..\src\Xamarin.Android.Build.Tasks\Tests\Xamarin.Android.Build.Tests\Utilities\*.cs">

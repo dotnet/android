@@ -2,6 +2,8 @@
 
   <PropertyGroup>
     <TargetFramework>$(DotNetStableTargetFramework)</TargetFramework>
+    <OutputType>Exe</OutputType>
+    <EnableNUnitRunner>true</EnableNUnitRunner>
     <OutputPath>..\..\..\..\bin\Test$(Configuration)</OutputPath>
     <SignAssembly>true</SignAssembly>
     <AssemblyOriginatorKeyFile>..\..\..\..\product.snk</AssemblyOriginatorKeyFile>
@@ -13,7 +15,7 @@
 
   <Import Project="..\..\..\..\Configuration.props" />
   <Import Project="..\..\..\Microsoft.Android.Build.BaseTasks\MSBuildReferences.projitems" />
-  <Import Project="..\..\..\..\build-tools\scripts\NUnitMTPReferences.projitems" />
+  <Import Project="..\..\..\..\build-tools\scripts\NUnitReferences.projitems" />
 
   <ItemGroup>
     <PackageReference Include="Mono.Cecil" Version="$(MonoCecilVersion)" />
