@@ -13,32 +13,32 @@ namespace Android.OS {
 
 		public bool Post (Action action)
 		{
-			return Post (Java.Lang.Thread.RunnableImplementor.GetOrCreate (action));
+			return Post (Java.Lang.Thread.RunnableImplementor.GetOrCreate (this, action));
 		}
 
 		public bool PostAtFrontOfQueue (Action action)
 		{
-			return PostAtFrontOfQueue (Java.Lang.Thread.RunnableImplementor.GetOrCreate (action));
+			return PostAtFrontOfQueue (Java.Lang.Thread.RunnableImplementor.GetOrCreate (this, action));
 		}
 
 		public bool PostAtTime (Action action, long uptimeMillis)
 		{
-			return PostAtTime (Java.Lang.Thread.RunnableImplementor.GetOrCreate (action), uptimeMillis);
+			return PostAtTime (Java.Lang.Thread.RunnableImplementor.GetOrCreate (this, action), uptimeMillis);
 		}
 
 		public bool PostAtTime (Action action, Java.Lang.Object token, long uptimeMillis)
 		{
-			return PostAtTime (Java.Lang.Thread.RunnableImplementor.GetOrCreate (action), token, uptimeMillis);
+			return PostAtTime (Java.Lang.Thread.RunnableImplementor.GetOrCreate (this, action), token, uptimeMillis);
 		}
 
 		public bool PostDelayed (Action action, long delayMillis)
 		{
-			return PostDelayed (Java.Lang.Thread.RunnableImplementor.GetOrCreate (action), delayMillis);
+			return PostDelayed (Java.Lang.Thread.RunnableImplementor.GetOrCreate (this, action), delayMillis);
 		}
 
 		public void RemoveCallbacks (Action action)
 		{
-			var runnable = Java.Lang.Thread.RunnableImplementor.Find (action);
+			var runnable = Java.Lang.Thread.RunnableImplementor.Find (this, action);
 			if (runnable == null)
 				return;
 			RemoveCallbacks (runnable);
@@ -46,7 +46,7 @@ namespace Android.OS {
 
 		public void RemoveCallbacks (Action action, Java.Lang.Object token)
 		{
-			var runnable = Java.Lang.Thread.RunnableImplementor.Find (action);
+			var runnable = Java.Lang.Thread.RunnableImplementor.Find (this, action);
 			if (runnable == null)
 				return;
 			RemoveCallbacks (runnable, token);
