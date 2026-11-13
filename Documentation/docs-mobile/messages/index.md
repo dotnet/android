@@ -264,6 +264,7 @@ Either change the value in the AndroidManifest.xml to match the $(SupportedOSPla
 + [XA4330](xa4330.md): A native library uses the reserved libbinary_blobs.so archive name.
 + [XA4331](xa4331.md): Failed to process bundle config file '{0}', split config files will be ignored at run time.
 + [XA4332](xa4332.md): The .aar archive path '{0}' for '{1}' resolves outside of the archive.
++ [XA4333](xa4333.md): The .aar library contains input or destination paths that differ only by case.
 
 ## XA5xxx: GCC and toolchain
 

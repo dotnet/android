@@ -1625,6 +1625,15 @@ namespace Xamarin.Android.Tasks.Properties {
         }
 
         /// <summary>
+        ///   Looks up a localized string similar to The .aar library contains input or destination paths that differ only by case. Use distinct names for these paths before packaging the library..
+        /// </summary>
+        public static string XA4333 {
+            get {
+                return ResourceManager.GetString("XA4333", resourceCulture);
+            }
+        }
+
+        /// <summary>
         ///   Looks up a localized string similar to Missing Android NDK toolchains directory &apos;{0}&apos;. Please install the Android NDK..
         /// </summary>
         public static string XA5101 {

@@ -1150,6 +1150,38 @@ namespace Xamarin.Android.Build.Tests
 			FileAssert.DoesNotExist (Path.Combine (Root, builder.ProjectDirectory, proj.OutputPath, $"{proj.ProjectName}.aar"));
 		}
 
+		[TestCase ("foo.txt", false)]
+		[TestCase ("Foo.txt", true)]
+		[TestCase ("Bar.txt", true)]
+		public void DotNetLibraryAarAssetDestinationCasing (string secondDestination, bool expectedSuccess)
+		{
+			var proj = new XamarinAndroidLibraryProject ();
+			proj.OtherBuildItems.Add (new AndroidItem.AndroidAsset ("one\\a.txt") {
+				TextContent = () => "first",
+				MetadataValues = "Link=Assets/Foo.txt",
+			});
+
+			using var builder = CreateDllBuilder ();
+			Assert.IsTrue (builder.Build (proj), "Initial build should have succeeded.");
+			proj.OtherBuildItems.Add (new AndroidItem.AndroidAsset ("two\\b.txt") {
+				TextContent = () => "second",
+				MetadataValues = $"Link=Assets/{secondDestination}",
+			});
+
+			builder.ThrowOnBuildFailure = false;
+			Assert.AreEqual (expectedSuccess, builder.Build (proj), "Unexpected build result.");
+			var aarPath = Path.Combine (Root, builder.ProjectDirectory, proj.OutputPath, $"{proj.ProjectName}.aar");
+			if (!expectedSuccess) {
+				StringAssertEx.Contains ("error XA4333", builder.LastBuildOutput, "XA4333 should have been raised");
+				FileAssert.DoesNotExist (aarPath);
+				return;
+			}
+
+			using var aar = ZipHelper.OpenZip (aarPath);
+			aar.AssertEntryContents (aarPath, "assets/Foo.txt", contents: secondDestination == "Foo.txt" ? "second" : "first");
+			aar.AssertEntryContents (aarPath, $"assets/{secondDestination}", contents: "second");
+		}
+
 		[TestCase ("AndroidJavaLibrary", "jar", "libs")]
 		[TestCase ("EmbeddedJar", "jar", "libs")]
 		[TestCase ("AndroidEnvironment", "env", ".net/env")]
@@ -1170,7 +1202,7 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		public void DotNetLibraryAarNativeLibraryCasingAndClean ()
+		public void DotNetLibraryAarNativeLibraryClean ()
 		{
 			var proj = new XamarinAndroidLibraryProject ();
 			proj.OtherBuildItems.Add (new AndroidItem.AndroidNativeLibrary ("x86_64\\libfoo.so") {
@@ -1179,21 +1211,10 @@ namespace Xamarin.Android.Build.Tests
 
 			using var builder = CreateDllBuilder ();
 			var projectDirectory = Path.Combine (Root, builder.ProjectDirectory);
-			Directory.CreateDirectory (projectDirectory);
-			bool caseSensitive = !Directory.Exists (projectDirectory.ToUpperInvariant ());
-			if (caseSensitive) {
-				proj.OtherBuildItems.Add (new AndroidItem.AndroidNativeLibrary ("x86_64\\libFoo.so") {
-					BinaryContent = () => new byte [] { 2 },
-				});
-			}
-
 			Assert.IsTrue (builder.Build (proj), "Build should have succeeded.");
 			var aarPath = Path.Combine (projectDirectory, proj.OutputPath, $"{proj.ProjectName}.aar");
 			using (var aar = ZipHelper.OpenZip (aarPath)) {
 				aar.AssertContainsEntry (aarPath, "jni/x86_64/libfoo.so");
-				if (caseSensitive) {
-					aar.AssertContainsEntry (aarPath, "jni/x86_64/libFoo.so");
-				}
 				aar.AssertDoesNotContainEntry (aarPath, "proguard.txt");
 			}
 
