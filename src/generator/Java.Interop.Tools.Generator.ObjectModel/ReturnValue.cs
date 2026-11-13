@@ -1,4 +1,5 @@
 using System;
+using System.Globalization;
 using System.Collections.Generic;
 using System.IO;
 using System.Xml;
@@ -100,7 +101,7 @@ namespace MonoDroid.Generation {
 		public string FromNative (CodeGenerationOptions opt, string var_name, bool owned, bool isMarshal = false)
 		{
 			if (!string.IsNullOrEmpty (managed_type) && (sym is ClassGen || sym is InterfaceGen)) {
-				return string.Format ("global::Java.Lang.Object.GetObject<{0}> ({1}, {2})", 
+				return string.Format (CultureInfo.CurrentCulture, "global::Java.Lang.Object.GetObject<{0}> ({1}, {2})",
 				                      opt.GetOutputName (managed_type), var_name, owned ? "JniHandleOwnership.TransferLocalRef" : "JniHandleOwnership.DoNotTransfer");
  			}
 			return sym.FromNative (opt, var_name, owned, isMarshal);
@@ -108,7 +109,7 @@ namespace MonoDroid.Generation {
 
 		public string ToNative (CodeGenerationOptions opt, string var_name)
 		{
-			return ((sym is GenericTypeParameter) || (sym is GenericSymbol)) ? String.Format ("JNIEnv.ToLocalJniHandle ({0})", var_name) : sym.ToNative (opt, var_name);
+			return ((sym is GenericTypeParameter) || (sym is GenericSymbol)) ? String.Format (CultureInfo.CurrentCulture, "JNIEnv.ToLocalJniHandle ({0})", var_name) : sym.ToNative (opt, var_name);
 		}
 
 		public string GetGenericReturn (CodeGenerationOptions opt, string name, Dictionary<string, string> mappings)
@@ -117,9 +118,9 @@ namespace MonoDroid.Generation {
 			if (string.IsNullOrEmpty (targetType))
 				return name;
 			if (targetType == "string")
-				return string.Format ("{0}?.ToString ()", name);
+				return string.Format (CultureInfo.CurrentCulture, "{0}?.ToString ()", name);
 			var rgm = opt.SymbolTable.Lookup (targetType) as IRequireGenericMarshal;
-			return string.Format ("global::Java.Interop.JavaObjectExtensions.JavaCast<{0}>({1}){2}",
+			return string.Format (CultureInfo.CurrentCulture, "global::Java.Interop.JavaObjectExtensions.JavaCast<{0}>({1}){2}",
 			                      rgm != null ? (rgm.GetGenericJavaObjectTypeOverride () ?? sym.FullName) : sym.FullName,
 			                      opt.GetSafeIdentifier (rgm != null ? rgm.ToInteroperableJavaObject (name) : name),
 			                      opt.NullForgivingOperator); 

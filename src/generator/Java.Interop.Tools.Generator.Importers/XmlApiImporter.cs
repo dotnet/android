@@ -1,4 +1,5 @@
 using System;
+using System.Globalization;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
@@ -319,7 +320,7 @@ namespace MonoDroid.Generation
 				support.Name = EnsureValidIdentifer (support.TypeNamePrefix + raw_name);
 				var supportNamespace = string.IsNullOrWhiteSpace (support.Namespace) ? string.Empty : $"{support.Namespace}.";
 				var supportSimpleName = idx > 0 ? StringRocks.TypeToPascalCase (support.JavaSimpleName.Substring (0, idx + 1)) : string.Empty;
-				support.FullName = string.Format ("{0}{1}{2}", supportNamespace, supportSimpleName, support.Name);
+				support.FullName = string.Format (CultureInfo.CurrentCulture, "{0}{1}{2}", supportNamespace, supportSimpleName, support.Name);
 			}
 
 			support.IsObfuscated = IsObfuscatedName (pkg.Elements ().Count (), support.JavaSimpleName) && elem.XGetAttribute ("obfuscated") != "false";
