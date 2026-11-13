@@ -2,6 +2,8 @@
 
   <PropertyGroup>
     <TargetFramework>$(DotNetTargetFramework)</TargetFramework>
+    <LangVersion>preview</LangVersion>
+    <MemorySafetyRulesVersion>2</MemorySafetyRulesVersion>
     <PackageType>Template</PackageType>
     <PackageId>Microsoft.Android.Templates</PackageId>
     <Title>.NET for Android Templates</Title>
