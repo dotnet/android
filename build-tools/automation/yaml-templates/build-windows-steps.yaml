@@ -96,6 +96,8 @@ steps:
     project: src/Microsoft.Android.Build.Tasks/Tests/Microsoft.Android.Build.Tasks.Tests/Microsoft.Android.Build.Tasks.Tests.csproj
     arguments: -c $(XA.Build.Configuration) --logger trx --results-directory $(Agent.TempDirectory)/microsoft-android-build-tasks-tests
     displayName: Test Microsoft.Android.Build.Tasks.Tests $(XA.Build.Configuration)
+    env:
+      XA_REQUIRE_FULL_MSBUILD_TEST: 'true'
 
 - task: PublishTestResults@2
   displayName: publish Microsoft.Android.Build.Tasks.Tests results

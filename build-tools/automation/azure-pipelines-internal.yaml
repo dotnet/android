@@ -168,7 +168,8 @@ extends:
         displayName: Windows > Build & Smoke Test
         pool:
           name: $(NetCoreInternalPoolName)
-          image: $(WindowsPoolImageNetCoreInternal)
+          # The build runs a .NET TaskHost test that requires MSBuild 18.7 or later.
+          image: windows.vs2026.amd64
           os: windows
         timeoutInMinutes: 240
         steps:
