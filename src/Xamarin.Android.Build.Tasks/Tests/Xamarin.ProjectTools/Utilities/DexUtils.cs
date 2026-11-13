@@ -371,8 +371,6 @@ namespace Xamarin.ProjectTools
 
 		static IReadOnlyList<string> DexDump (string dexFile, string androidSdkDirectory)
 		{
-			var lines = new List<string> ();
-			var linesLock = new Lock ();
 			var androidSdk = new AndroidSdkInfo ((l, m) => {
 				Console.WriteLine ($"{l}: {m}");
 				if (l == TraceLevel.Error) {
@@ -395,32 +393,18 @@ namespace Xamarin.ProjectTools
 				WorkingDirectory = Path.GetDirectoryName (dexFile),
 			};
 			psi.ArgumentList.Add (dexFileName);
-			using (var p = new Process { StartInfo = psi }) {
-				var errors = new List<string> ();
-				p.ErrorDataReceived += (s, e) => {
-					if (e.Data != null) {
-						errors.Add (e.Data);
-					}
-				};
-				p.OutputDataReceived += (s, e) => {
-					if (e.Data != null) {
-						lock (linesLock) {
-							lines.Add (e.Data);
-						}
-					}
-				};
+			var result = Process.RunAndCaptureText (psi);
+			if (result.ExitStatus.ExitCode != 0)
+				throw new Exception (
+					$"'{psi.FileName} {dexFileName}' exited with code: {result.ExitStatus.ExitCode}" +
+					$"{Environment.NewLine}stdout:{Environment.NewLine}{result.StandardOutput}" +
+					$"{Environment.NewLine}stderr:{Environment.NewLine}{result.StandardError}");
 
-				p.Start ();
-				p.BeginErrorReadLine ();
-				p.BeginOutputReadLine ();
-				p.WaitForExit ();
-
-				if (p.ExitCode != 0)
-					throw new Exception (
-						$"'{psi.FileName} {dexFileName}' exited with code: {p.ExitCode}" +
-						$"{Environment.NewLine}stdout:{Environment.NewLine}{string.Join (Environment.NewLine, lines)}" +
-						$"{Environment.NewLine}stderr:{Environment.NewLine}{string.Join (Environment.NewLine, errors)}");
-			}
+			var lines = new List<string> ();
+			using var reader = new StringReader (result.StandardOutput);
+			string line;
+			while ((line = reader.ReadLine ()) != null)
+				lines.Add (line);
 			return lines;
 		}
 	}
