@@ -143,6 +143,7 @@
     <Compile Include="Java.Interop\InterfaceCollectionMarshallingTests.cs" />
     <Compile Include="Java.Interop\InvokerActivationTests.cs" />
     <Compile Include="Java.Interop\JavaConvertTest.cs" />
+    <Compile Include="Java.Interop\JavaDictionaryTest.cs" />
     <Compile Include="Java.Interop\JavaListTest.cs" />
     <Compile Include="Java.Interop\JavaObjectExtensionsTests.cs" />
     <Compile Include="Java.Interop\JniRemappingLookupTests.cs" />

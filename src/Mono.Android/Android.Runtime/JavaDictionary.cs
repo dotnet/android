@@ -609,7 +609,7 @@ namespace Android.Runtime {
 
 		public bool Contains (KeyValuePair<K, V> item)
 		{
-			return ContainsKey (item.Key);
+			return ContainsKey (item.Key) && EqualityComparer<V>.Default.Equals (Get (item.Key), item.Value);
 		}
 
 		//
@@ -669,7 +669,7 @@ namespace Android.Runtime {
 
 		public bool Remove (KeyValuePair<K, V> pair)
 		{
-			return Remove (pair.Key);
+			return Contains (pair) && Remove (pair.Key);
 		}
 
 		//
