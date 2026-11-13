@@ -1633,6 +1633,8 @@
   <!-- Google has added getCellIdentity and getCellSignalStrength as abstract method on the base class.  Bind manually for API-compatibility. -->
   <remove-node api-since="30" path="/api/package[@name='android.telephony']/class[@name='CellInfo']/method[@name='getCellIdentity' and count(parameter)=0]" />
   <remove-node api-since="30" path="/api/package[@name='android.telephony']/class[@name='CellInfo']/method[@name='getCellSignalStrength' and count(parameter)=0]" />
+  <!-- Preserve the released derived slots while explicitly hiding the hand-bound base properties. -->
+  <attr path="/api/package[@name='android.telephony']/class[starts-with(@name, 'CellInfo') and @name!='CellInfo']/method[(@name='getCellIdentity' or @name='getCellSignalStrength') and count(parameter)=0]" name="managedOverride">new</attr>
 
   <!-- Work around a generator bug where having multiple Listener methods with the same name cause multiple conflicting EventArgs classes to be created. -->
   <!-- These are "default" method versions, so it's ok to remove them from an interface. -->

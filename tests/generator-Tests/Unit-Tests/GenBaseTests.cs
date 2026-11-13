@@ -63,6 +63,21 @@ namespace generatortests
 		}
 
 		[Test]
+		public void HandBoundBasePropertyRetainsDerivedVirtualSlot ()
+		{
+			var parent = SupportTypeBuilder.CreateClass ("java.Base", options);
+			var derived = new DerivedTestClass (parent);
+			var property = SupportTypeBuilder.CreateClassWithProperty ("Derived", "java.Derived", "Value", "int", options).Properties.Single ();
+			property.Getter.ManagedOverride = "new";
+			property.Getter.IsVirtual = true;
+			var writer = new BoundProperty (derived, property, options);
+
+			Assert.True (writer.IsShadow);
+			Assert.True (writer.IsVirtual);
+			Assert.False (writer.IsOverride);
+		}
+
+		[Test]
 		public void DifferentOverloadDoesNotRequireNew ()
 		{
 			var parent = SupportTypeBuilder.CreateClass ("java.Base", options);

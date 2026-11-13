@@ -164,7 +164,9 @@ namespace generator.SourceWriters
 		{
 			if (klass.Interfaces.Any (p => p.FullName == "Java.Lang.ICharSequence")) {
 				Methods.Add (new CharSequenceEnumeratorMethod ());
-				Methods.Add (new CharSequenceGenericEnumeratorMethod ());
+				Methods.Add (new CharSequenceGenericEnumeratorMethod {
+					IsShadow = klass.InheritsCharSequenceEnumerator (),
+				});
 			}
 		}
 
