@@ -108,9 +108,6 @@
     <Compile Include="..\..\src\utils\StringRocks.cs">
       <Link>Utilities\StringRocks.cs</Link>
     </Compile>
-    <Compile Include="..\..\src\utils\NullableAttributes.cs">
-      <Link>Utilities\NullableAttributes.cs</Link>
-    </Compile>
     <Compile Include="..\Mono.Android\\Android.App\UsesLibraryAttribute.cs">
       <Link>Mono.Android\UsesLibraryAttribute.cs</Link>
     </Compile>
