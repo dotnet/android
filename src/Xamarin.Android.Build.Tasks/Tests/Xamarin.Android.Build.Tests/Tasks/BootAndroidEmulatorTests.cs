@@ -3,11 +3,11 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Build.Framework;
-using Microsoft.Build.Utilities;
 using NUnit.Framework;
 using Xamarin.Android.Tasks;
 using Xamarin.Android.Tools;
@@ -15,7 +15,7 @@ using Xamarin.Android.Tools;
 namespace Xamarin.Android.Build.Tests;
 
 [TestFixture]
-public class BootAndroidEmulatorTests : BaseTest
+public class BootAndroidEmulatorTests
 {
 	List<BuildErrorEventArgs> errors = [];
 	List<BuildWarningEventArgs> warnings = [];
@@ -39,6 +39,8 @@ public class BootAndroidEmulatorTests : BaseTest
 		public EmulatorBootOptions? LastBootOptions { get; private set; }
 		public string? LastAdbPath { get; private set; }
 		public string? LastEmulatorPath { get; private set; }
+		public Action<TraceLevel, string>? LastLogger { get; private set; }
+		public Func<CancellationToken, Task<EmulatorBootResult>>? BootAsync { get; set; }
 
 		protected override Task<EmulatorBootResult> ExecuteBootAsync (
 			string adbPath,
@@ -52,7 +54,8 @@ public class BootAndroidEmulatorTests : BaseTest
 			LastEmulatorPath = emulatorPath;
 			LastBootedDevice = device;
 			LastBootOptions = options;
-			return System.Threading.Tasks.Task.FromResult (BootResult);
+			LastLogger = logger;
+			return BootAsync?.Invoke (cancellationToken) ?? Task.FromResult (BootResult);
 		}
 	}
 
@@ -178,10 +181,12 @@ public class BootAndroidEmulatorTests : BaseTest
 	[Test]
 	public void ToolPaths_ResolvedFromAndroidSdkDirectory ()
 	{
+		var directory = Path.Combine (Path.GetTempPath (), "boot tools");
 		var task = new MockBootAndroidEmulator {
 			BuildEngine = engine,
+			TaskEnvironment = TaskEnvironment.CreateWithProjectDirectoryAndEnvironment (directory, new Dictionary<string, string> ()),
 			Device = "emulator-5554",
-			AndroidSdkDirectory = "/android/sdk",
+			AndroidSdkDirectory = "sdk",
 			BootTimeoutSeconds = 10,
 			BootResult = new EmulatorBootResult {
 				Success = true,
@@ -191,12 +196,136 @@ public class BootAndroidEmulatorTests : BaseTest
 
 		Assert.IsTrue (task.Execute (), "Task should succeed");
 		Assert.AreEqual ("emulator-5554", task.ResolvedDevice);
-		var adbPath = task.LastAdbPath?.Replace ('\\', '/');
-		var emulatorPath = task.LastEmulatorPath?.Replace ('\\', '/');
-		Assert.IsTrue (adbPath?.EndsWith ("platform-tools/adb") == true || adbPath?.EndsWith ("platform-tools/adb.exe") == true,
-			$"adb path should be resolved from AndroidSdkDirectory, got: {adbPath}");
-		Assert.IsTrue (emulatorPath?.EndsWith ("emulator/emulator") == true || emulatorPath?.EndsWith ("emulator/emulator.exe") == true,
-			$"emulator path should be resolved from AndroidSdkDirectory, got: {emulatorPath}");
+		Assert.AreEqual (Path.Combine (directory, "sdk", "platform-tools", OS.IsWindows ? "adb.exe" : "adb"), task.LastAdbPath);
+		Assert.AreEqual (Path.Combine (directory, "sdk", "emulator", OS.IsWindows ? "emulator.exe" : "emulator"), task.LastEmulatorPath);
+	}
+
+	[Test]
+	public void ExtensionlessToolsUseTaskPath ()
+	{
+		var directory = Path.Combine (Path.GetTempPath (), "boot-tools-" + Guid.NewGuid ().ToString ("N"));
+		var tools = Path.Combine (directory, "tools");
+		Directory.CreateDirectory (tools);
+		try {
+			string extension = OS.IsWindows ? ".exe" : "";
+			var adb = Path.Combine (tools, "adb" + extension);
+			var emulator = Path.Combine (tools, "emulator" + extension);
+			File.WriteAllText (adb, "");
+			File.WriteAllText (emulator, "");
+			var task = new MockBootAndroidEmulator {
+				BuildEngine = engine,
+				TaskEnvironment = TaskEnvironment.CreateWithProjectDirectoryAndEnvironment (
+					directory, new Dictionary<string, string> { ["PATH"] = tools }),
+				Device = "emulator-5554",
+				AdbToolExe = "adb",
+				EmulatorToolExe = "emulator",
+			};
+			Assert.IsTrue (task.Execute ());
+			Assert.AreEqual (adb, task.LastAdbPath);
+			Assert.AreEqual (emulator, task.LastEmulatorPath);
+		} finally {
+			Directory.Delete (directory, recursive: true);
+		}
+	}
+
+	[Test]
+	public async Task BootUsesTaskEnvironment ()
+	{
+		var root = Path.Combine (Path.GetTempPath (), "boot-task-" + Guid.NewGuid ().ToString ("N"));
+		try {
+			var tasks = new List<BootAndroidEmulator> ();
+			for (int i = 0; i < 2; i++) {
+				var directory = Path.Combine (root, $"project {i}");
+				var tools = Path.Combine (directory, "tools");
+				var temp = Path.Combine (directory, "temp");
+				Directory.CreateDirectory (tools);
+				Directory.CreateDirectory (temp);
+				string adb = OperatingSystem.IsWindows () ? "adb.cmd" : "adb";
+				string emulator = OperatingSystem.IsWindows () ? "emulator.cmd" : "emulator";
+				File.WriteAllText (Path.Combine (tools, adb), OperatingSystem.IsWindows () ? """
+					@echo off
+					if defined USERNAME exit /b 43
+					echo %CD% > adb-directory
+					if "%1"=="devices" (
+					    echo List of devices attached
+					    echo other-device device
+					    if exist "%BOOT_MARKER%" echo %BOOT_SERIAL% device
+					    exit /b 0
+					)
+					if not "%2"=="%BOOT_SERIAL%" exit /b 44
+					if "%5"=="ro.boot.qemu.avd_name" (echo %BOOT_AVD%) else if "%5"=="sys.boot_completed" (echo 1) else (echo package:android)
+					""" : """
+					#!/bin/sh
+					if [ -n "$HOME" ]; then exit 43; fi
+					printf '%s\n' "$PWD" > adb-directory
+					if [ "$1" = devices ]; then
+					    echo 'List of devices attached'
+					    echo 'other-device device'
+					    if [ -f "$BOOT_MARKER" ]; then echo "$BOOT_SERIAL device"; fi
+					    exit 0
+					fi
+					if [ "$2" != "$BOOT_SERIAL" ]; then exit 44; fi
+					case "$5" in
+					    ro.boot.qemu.avd_name) echo "$BOOT_AVD";;
+					    sys.boot_completed) echo 1;;
+					    *) echo package:android;;
+					esac
+					""");
+				File.WriteAllText (Path.Combine (tools, emulator), OperatingSystem.IsWindows () ? """
+					@echo off
+					if defined USERNAME exit /b 43
+					if not "%2"=="%BOOT_AVD%" exit /b 44
+					echo %CD% > emulator-directory
+					echo launched > "%BOOT_MARKER%"
+					""" : """
+					#!/bin/sh
+					if [ -n "$HOME" ] || [ "$2" != "$BOOT_AVD" ]; then exit 43; fi
+					printf '%s\n' "$PWD" > emulator-directory
+					echo launched > "$BOOT_MARKER"
+					""");
+				if (!OperatingSystem.IsWindows ()) {
+					var mode = UnixFileMode.UserRead | UnixFileMode.UserWrite | UnixFileMode.UserExecute;
+					File.SetUnixFileMode (Path.Combine (tools, adb), mode);
+					File.SetUnixFileMode (Path.Combine (tools, emulator), mode);
+				}
+				var environment = new Dictionary<string, string> {
+					["BOOT_SERIAL"] = $"emulator-{5578 + 2 * i}",
+					["BOOT_AVD"] = $"TestAvd{i}",
+					["BOOT_MARKER"] = Path.Combine (directory, "launched"),
+					["PATH"] = tools,
+					["TMP"] = temp,
+					["TMPDIR"] = temp,
+				};
+				foreach (string name in new [] { "SystemRoot", "ComSpec" }) {
+					if (Environment.GetEnvironmentVariable (name) is string value)
+						environment [name] = value;
+				}
+				tasks.Add (new BootAndroidEmulator {
+					BuildEngine = new MockBuildEngine (TextWriter.Null),
+					TaskEnvironment = TaskEnvironment.CreateWithProjectDirectoryAndEnvironment (directory, environment),
+					Device = environment ["BOOT_AVD"],
+					AdbToolExe = adb,
+					EmulatorToolPath = "tools",
+					EmulatorToolExe = emulator,
+					BootTimeoutSeconds = 15,
+				});
+			}
+			var results = await Task.WhenAll (tasks.Select (task => Task.Run (() => task.Execute ())));
+			Assert.IsTrue (results.All (result => result), "Both boot tasks should succeed.");
+			for (int i = 0; i < tasks.Count; i++) {
+				var task = tasks [i];
+				var directory = task.TaskEnvironment.ProjectDirectory.Value;
+				string serial = $"emulator-{5578 + 2 * i}";
+				Assert.AreEqual (serial, task.ResolvedDevice);
+				Assert.AreEqual ($"-s {serial}", task.AdbTarget);
+				var temp = Path.Combine (directory, "temp");
+				Assert.AreEqual (temp, File.ReadAllText (Path.Combine (temp, "adb-directory")).Trim ());
+				Assert.AreEqual (directory, File.ReadAllText (Path.Combine (directory, "emulator-directory")).Trim ());
+			}
+		} finally {
+			if (Directory.Exists (root))
+				Directory.Delete (root, recursive: true);
+		}
 	}
 
 	[Test]
@@ -311,6 +440,66 @@ public class BootAndroidEmulatorTests : BaseTest
 		Assert.IsTrue (task.Execute (), "Cancelled task should not fail — MSBuild handles cancellation");
 		Assert.IsNull (task.ResolvedDevice, "ResolvedDevice should be null on cancellation");
 		Assert.IsEmpty (errors, "No errors should be logged for cancellation");
+	}
+
+	[Test]
+	public async Task CancelStopsPendingBoot ()
+	{
+		var started = new TaskCompletionSource<bool> (TaskCreationOptions.RunContinuationsAsynchronously);
+		var task = CreateTask ();
+		task.BootAsync = async token => {
+			started.SetResult (true);
+			await Task.Delay (Timeout.Infinite, token).ConfigureAwait (false);
+			return task.BootResult;
+		};
+		var execution = Task.Run (() => task.Execute ());
+		try {
+			await started.Task.WaitAsync (TimeSpan.FromSeconds (10));
+			task.Cancel ();
+			Assert.IsTrue (await execution.WaitAsync (TimeSpan.FromSeconds (10)));
+			Assert.IsNull (task.ResolvedDevice);
+			Assert.IsEmpty (errors);
+		} finally {
+			task.Cancel ();
+			await execution.WaitAsync (TimeSpan.FromSeconds (10));
+		}
+	}
+
+	[Test]
+	public void RunnerLoggingStopsWhenTaskReturns ()
+	{
+		using var output = new BootLogWriter ();
+		var task = CreateTask ();
+		task.BuildEngine = new MockBuildEngine (output, errors, warnings, messages);
+		task.BootAsync = _ => Task.Run (async () => {
+			var logger = task.LastLogger ?? throw new InvalidOperationException ("The runner logger was not supplied.");
+			logger (TraceLevel.Info, "boot progress");
+			await output.ProgressLogged.Task.WaitAsync (TimeSpan.FromSeconds (10));
+			logger (TraceLevel.Warning, "final boot warning");
+			return task.BootResult;
+		});
+		Assert.IsTrue (task.Execute ());
+		Assert.IsTrue (messages.Any (message => message.Message == "boot progress"));
+		Assert.AreEqual ("final boot warning", warnings.Single ().Message);
+		var callback = task.LastLogger ?? throw new InvalidOperationException ("The runner logger was not supplied.");
+		messages.Clear ();
+		callback (TraceLevel.Error, "late emulator output");
+		Assert.IsEmpty (messages);
+		Assert.IsEmpty (errors);
+	}
+
+	sealed class BootLogWriter : StringWriter
+	{
+		readonly int executeThread = Environment.CurrentManagedThreadId;
+		public TaskCompletionSource<bool> ProgressLogged { get; } = new (TaskCreationOptions.RunContinuationsAsynchronously);
+
+		public override void WriteLine (string? value)
+		{
+			Assert.AreEqual (executeThread, Environment.CurrentManagedThreadId, "MSBuild logging must use the executing thread.");
+			base.WriteLine (value);
+			if (value == "Message: boot progress")
+				ProgressLogged.TrySetResult (true);
+		}
 	}
 
 	[Test]

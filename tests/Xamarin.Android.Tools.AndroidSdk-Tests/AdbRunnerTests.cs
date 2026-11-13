@@ -1617,6 +1617,7 @@ public class AdbRunnerTests
 			echo "$ADB_TEST_VALUE" > environment.txt
 			if [[ "$1" == "devices" ]]; then
 			    echo "List of devices attached"
+			    echo "emulator-5554 offline"
 			else
 			    echo "package:$ADB_TEST_VALUE"
 			fi
@@ -1625,6 +1626,7 @@ public class AdbRunnerTests
 			echo %ADB_TEST_VALUE% > environment.txt
 			if "%1"=="devices" (
 			    echo List of devices attached
+			    echo emulator-5554 offline
 			) else (
 			    echo package:%ADB_TEST_VALUE%
 			)
@@ -1637,11 +1639,16 @@ public class AdbRunnerTests
 			if (Environment.GetEnvironmentVariable ("SystemRoot") is string systemRoot)
 				startInfo.EnvironmentVariables ["SystemRoot"] = systemRoot;
 			startInfo.EnvironmentVariables ["ADB_TEST_VALUE"] = "com.example.app";
+			var messages = new List<string> ();
 			var runner = AdbRunner.CreateWithProcessEnvironment (adbPath, startInfo);
+			var loggingRunner = AdbRunner.CreateWithProcessEnvironment (adbPath, startInfo, (_, message) => messages.Add (message));
 			startInfo.WorkingDirectory = Path.GetTempPath ();
 			startInfo.EnvironmentVariables ["ADB_TEST_VALUE"] = "changed";
 			await runner.ListDevicesWithoutAvdNamesAsync ();
 			Assert.AreEqual ("com.example.app", File.ReadAllText (marker).Trim ());
+			await loggingRunner.ListDevicesAsync ();
+			Assert.AreEqual ("com.example.app", File.ReadAllText (marker).Trim ());
+			StringAssert.Contains ("Skipping AVD name query", messages.Single ());
 			File.Delete (marker);
 			Assert.AreEqual ("package:com.example.app",
 				await runner.ExecuteShellCommandAsync ("device", "pm", new [] { "list", "packages" }));
