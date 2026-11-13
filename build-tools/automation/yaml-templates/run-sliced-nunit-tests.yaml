@@ -1,23 +1,21 @@
 parameters:
-  testAssembly: ''        # NUnit test assembly to run; it must use Microsoft.Testing.Platform
-  testFilter: ''          # Filter used to select tests (Microsoft.Testing.Platform --filter syntax, for example: TestCategory!=Localization)
+  testAssembly: ''        # NUnit test assembly to run, with Microsoft.Testing.Platform enabled
+  testFilter: ''          # Filter used to select tests (dotnet test filter language, for example: TestCategory!=Localization)
   testRunTitle: ''        # Title of the test run
   xaSourcePath: $(System.DefaultWorkingDirectory)
   retryFailedTests: true  # Retry failed tests once
   condition: succeeded()  # Condition to run tests
 
 steps:
-# Use the SDK installed during test setup, so the net11.0 test assembly can load.
-# RunSlicedTests.cs fails if this job's slice has no tests.
+# Run with the SDK installed during test setup, so the net11.0 test assembly can load.
 - pwsh: >-
     & "${{ parameters.xaSourcePath }}/bin/$(XA.Build.Configuration)/dotnet/dotnet"
     run build-tools/automation/scripts/RunSlicedTests.cs --
-    --dotnet "${{ parameters.xaSourcePath }}/bin/$(XA.Build.Configuration)/dotnet/dotnet"
     --test-assembly "${{ parameters.testAssembly }}"
     --results-directory "$(Agent.TempDirectory)/TestResults"
     --slice $(System.JobPositionInPhase)
     --total-slices $(System.TotalJobsInPhase)
-    "--filter=$env:TEST_FILTER"
+    --filter "$env:TEST_FILTER"
     --workers $(NUnit.NumberOfTestWorkers)
     --retry ${{ parameters.retryFailedTests }}
   displayName: run ${{ parameters.testRunTitle }}
@@ -30,7 +28,7 @@ steps:
 
 - template: /build-tools/automation/yaml-templates/diagnose-hanging-processes.yaml
 
-# When tests are retried, RunSlicedTests.cs removes the failed results from this file
+# RunSlicedTests.cs removes failed results that it ran again
 - task: PublishTestResults@2
   displayName: publish ${{ parameters.testRunTitle }} results
   inputs:

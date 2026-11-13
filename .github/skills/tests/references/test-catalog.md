@@ -70,7 +70,6 @@ skipped. Other target regression cases do not require native tools.
 Assembly: `bin/TestDebug/${TFM}/Xamarin.Android.Build.Tests.dll`
 Build: Full-build — `make prepare && make leeroy`
 Device: No
-Runner: VSTest (`dotnet test <dll>`) or Microsoft Testing Platform (`dotnet <dll>`); CI uses MTP through `build-tools/automation/scripts/RunSlicedTests.cs`
 
 | Test Area | Filter | Test Classes / Notes |
 |-----------|--------|---------------------|
@@ -118,7 +117,6 @@ Same assembly as above. These test individual MSBuild tasks in isolation with `M
 Assembly: `bin/TestDebug/MSBuildDeviceIntegration/${TFM}/MSBuildDeviceIntegration.dll`
 Build: Full-build + device/emulator connected
 Device: **Yes** (most tests have `[Category("UsesDevice")]`)
-Runner: VSTest (`dotnet test <dll>`) or Microsoft Testing Platform (`dotnet <dll>`); CI uses MTP through `build-tools/automation/scripts/RunSlicedTests.cs`
 
 | Test Area | Filter | Notes |
 |-----------|--------|-------|
