@@ -1,4 +1,5 @@
 using System;
+using System.Globalization;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -21,6 +22,18 @@ namespace Xamarin.Android.Build.Tests
 	[Parallelizable (ParallelScope.Children)]
 	public partial class ManifestTest : BaseTest
 	{
+		[Test]
+		public void UnloadedAttributesRejectElementGeneration ()
+		{
+			var cache = new TypeDefinitionCache ();
+			Assert.Throws<InvalidOperationException> (() => new PermissionAttribute ().ToElement ("test.package", cache));
+			Assert.Throws<InvalidOperationException> (() => new PermissionGroupAttribute ().ToElement ("test.package", cache));
+			Assert.Throws<InvalidOperationException> (() => new PermissionTreeAttribute ().ToElement ("test.package", cache));
+			Assert.Throws<InvalidOperationException> (() => new UsesPermissionAttribute ().ToElement ("test.package", cache));
+			using var resolver = new DefaultAssemblyResolver ();
+			Assert.Throws<InvalidOperationException> (() => new LayoutAttribute ().ToElement (resolver, "test.package", cache));
+		}
+
 		readonly string TargetSdkManifest = @"<?xml version=""1.0"" encoding=""utf-8""?>
 <manifest xmlns:android=""http://schemas.android.com/apk/res/android"" android:versionCode=""1"" android:versionName=""1.0"" package=""Bug12935.Bug12935"">
 	<uses-sdk android:targetSdkVersion=""{0}""/>
@@ -85,7 +98,7 @@ namespace Bug12935
 			proj.MainActivity = ScreenOrientationActivity;
 			using (var builder = CreateApkBuilder ()) {
 
-				proj.AndroidManifest = string.Format (TargetSdkManifest, "17");
+				proj.AndroidManifest = string.Format (CultureInfo.CurrentCulture, TargetSdkManifest, "17");
 				Assert.IsTrue (builder.Build (proj), "Build for TargetFrameworkVersion 17 should have succeeded");
 				var manifestFile = Path.Combine (Root, builder.ProjectDirectory, proj.IntermediateOutputPath, "android", "AndroidManifest.xml");
 
@@ -106,7 +119,7 @@ namespace Bug12935
 				Assert.AreEqual ("sensorPortrait", screenOrientation.Value, "screenOrientation should have been sensorPortrait");
 
 				builder.Cleanup ();
-				proj.AndroidManifest = string.Format (TargetSdkManifest, "16");
+				proj.AndroidManifest = string.Format (CultureInfo.CurrentCulture, TargetSdkManifest, "16");
 				Assert.IsTrue (builder.Build (proj), "Build for TargetFrameworkVersion 16 should have succeeded");
 
 				doc = XDocument.Load (manifestFile);
@@ -121,7 +134,7 @@ namespace Bug12935
 
 				builder.Cleanup ();
 				builder.ThrowOnBuildFailure = false;
-				proj.AndroidManifest = string.Format (TargetSdkManifest, "15");
+				proj.AndroidManifest = string.Format (CultureInfo.CurrentCulture, TargetSdkManifest, "15");
 				Assert.IsFalse (builder.Build (proj), "Build for TargetFrameworkVersion 15 should have failed");
 				StringAssertEx.Contains ("APT2259: ", builder.LastBuildOutput);
 				StringAssertEx.Contains ("APT2067", builder.LastBuildOutput);
@@ -1324,7 +1337,7 @@ class TestActivity : Activity { }"
 			FileAssert.Exists (manifestPath);
 			var manifest = XDocument.Load (manifestPath);
 			XNamespace ns = "http://schemas.android.com/apk/res/android";
-			Assert.AreEqual (minSdkVersionInt.ToString (), manifest.Root.Element ("uses-sdk").Attribute (ns + "minSdkVersion").Value);
+			Assert.AreEqual (minSdkVersionInt.ToString (CultureInfo.CurrentCulture), manifest.Root.Element ("uses-sdk").Attribute (ns + "minSdkVersion").Value);
 		}
 
 		static object [] SupportedOSErrorsTestSources = new object [] {
@@ -1661,12 +1674,12 @@ class TestActivity : Activity { }"
 			// Manifest generation strips "36.1" to "36" before setting TargetSdkVersion.
 			string targetSdkVersion = "36.1";
 			if (MonoAndroidHelper.TryParseApiLevel (targetSdkVersion, out var version)) {
-				targetSdkVersion = version.Major.ToString ();
+				targetSdkVersion = version.Major.ToString (CultureInfo.CurrentCulture);
 			}
 
 			var templateFile = Path.GetTempFileName ();
 			try {
-				File.WriteAllText (templateFile, string.Format (TargetSdkManifest, "36"));
+				File.WriteAllText (templateFile, string.Format (CultureInfo.CurrentCulture, TargetSdkManifest, "36"));
 
 				var manifest = new ManifestDocument (templateFile) {
 					PackageName = "com.test.targetsdkversion",

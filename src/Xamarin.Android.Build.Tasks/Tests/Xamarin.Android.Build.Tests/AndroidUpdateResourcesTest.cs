@@ -1,4 +1,5 @@
 using System;
+using System.Globalization;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -257,7 +258,7 @@ namespace Xamarin.Android.Build.Tests
 				// The AndroidGenerateLayoutBindings=false property is necessary because otherwise build
 				// will fail in code-behind generator instead of in aapt
 				Assert.IsFalse (b.Build (proj, parameters: new[] { "AndroidGenerateLayoutBindings=false" }), "Build should have failed.");
-				Assert.IsTrue (b.LastBuildOutput.Any (s => s.Contains (string.Format ("Resources{0}layout{0}Main.axml", Path.DirectorySeparatorChar)) && s.Contains (": error ")), "error with expected file name is not found");
+				Assert.IsTrue (b.LastBuildOutput.Any (s => s.Contains (string.Format (CultureInfo.CurrentCulture, "Resources{0}layout{0}Main.axml", Path.DirectorySeparatorChar)) && s.Contains (": error ")), "error with expected file name is not found");
 				Assert.IsTrue (b.Clean (proj), "Clean should have succeeded.");
 			}
 		}
@@ -530,7 +531,7 @@ namespace UnnamedProject
 				var packaged_resources = Path.Combine (intermediate, "android", "bin", "packaged_resources");
 				FileAssert.Exists (packaged_resources);
 				var assemblyIdentityMap = b.Output.GetAssemblyMapCache ();
-				var assemblyIndex = assemblyIdentityMap.IndexOf ($"{lib.ProjectName}.aar").ToString ();
+				var assemblyIndex = assemblyIdentityMap.IndexOf ($"{lib.ProjectName}.aar").ToString (CultureInfo.CurrentCulture);
 				using (var zip = ZipHelper.OpenZip (packaged_resources)) {
 					CheckCustomView (zip, intermediate, "lp", assemblyIndex, "jl", "res", "layout", "custom_text_lib.xml");
 					CheckCustomView (zip, intermediate, "res", "layout", "custom_text_app.xml");
@@ -1648,7 +1649,7 @@ $@"<?xml version=""1.0"" encoding=""utf-8""?>
 				// Add usage of Lib0.Resource.String.library_name0
 				var builder = new StringBuilder ();
 				for (int i = 0; i < libraryCount; i++) {
-					builder.AppendLine ($"int library_name{i} = Lib{i}.Resource.String.library_name{i};");
+					builder.AppendLine (CultureInfo.CurrentCulture, $"int library_name{i} = Lib{i}.Resource.String.library_name{i};");
 				}
 				foreach (var app in apps) {
 					app.Sources.Add (new BuildItem.Source ("Foo.cs") {

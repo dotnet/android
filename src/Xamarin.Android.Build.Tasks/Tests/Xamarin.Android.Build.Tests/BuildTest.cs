@@ -1,4 +1,5 @@
 using System;
+using System.Globalization;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -167,7 +168,7 @@ namespace Xamarin.Android.Build.Tests
 			XNamespace ns = "http://schemas.android.com/apk/res/android";
 			var uses_sdk = manifest.Root.Element ("uses-sdk");
 			Assert.AreEqual ("24", uses_sdk.Attribute (ns + "minSdkVersion").Value);
-			Assert.AreEqual (XABuildConfig.AndroidDefaultTargetDotnetApiLevel.Major.ToString (),
+			Assert.AreEqual (XABuildConfig.AndroidDefaultTargetDotnetApiLevel.Major.ToString (CultureInfo.CurrentCulture),
 				uses_sdk.Attribute (ns + "targetSdkVersion").Value);
 
 			bool expectEmbeddedAssembies = isRelease;
@@ -527,7 +528,7 @@ namespace Xamarin.Android.Build.Tests
 				AndroidResources = {
 					new AndroidItem.AndroidResource (() => "Resources\\Test\\Test2.png") {
 						BinaryContent = () => XamarinAndroidApplicationProject.icon_binary_mdpi,
-						MetadataValues = string.Format ("LogicalName=drawable{0}foo2.png", illegalSeperator)
+						MetadataValues = string.Format (CultureInfo.CurrentCulture, "LogicalName=drawable{0}foo2.png", illegalSeperator)
 					},
 				},
 			};
@@ -539,7 +540,7 @@ namespace Xamarin.Android.Build.Tests
 				AndroidResources = {
 					new AndroidItem.AndroidResource (() => "Resources\\Test\\Test.png") {
 						BinaryContent = () => XamarinAndroidApplicationProject.icon_binary_mdpi,
-						MetadataValues = string.Format ("LogicalName=drawable{0}foo.png", illegalSeperator)
+						MetadataValues = string.Format (CultureInfo.CurrentCulture, "LogicalName=drawable{0}foo.png", illegalSeperator)
 					},
 				},
 				References = {
@@ -622,7 +623,7 @@ namespace Xamarin.Android.Build.Tests
 				Assert.IsTrue (File.Exists (cache), $"{cache} should exist.");
 				var assemblyIdentityMap = builder.Output.GetAssemblyMapCache ();
 				var libraryProjects = Path.Combine (Root, builder.ProjectDirectory, proj.IntermediateOutputPath, "lp");
-				FileAssert.Exists (Path.Combine (libraryProjects, assemblyIdentityMap.IndexOf ("android-crop-1.0.1.aar").ToString (), "jl", "classes.jar"),
+				FileAssert.Exists (Path.Combine (libraryProjects, assemblyIdentityMap.IndexOf ("android-crop-1.0.1.aar").ToString (CultureInfo.CurrentCulture), "jl", "classes.jar"),
 					"classes.jar was not extracted from the aar.");
 				Assert.IsTrue (builder.Build (proj), "Build should have succeeded");
 				Assert.IsTrue (builder.Output.IsTargetSkipped ("_ResolveLibraryProjectImports"),

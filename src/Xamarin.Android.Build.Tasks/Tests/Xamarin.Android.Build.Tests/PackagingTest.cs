@@ -374,7 +374,7 @@ namespace Xamarin.Android.Build.Tests
 				], out _, out var missingFiles, out _, [AndroidTargetArch.Arm64, AndroidTargetArch.X86_64]);
 
 				Assert.IsTrue (missingFiles == null || missingFiles.Count == 0,
-					string.Format ("The following Expected files are missing. {0}",
+					string.Format (CultureInfo.CurrentCulture, "The following Expected files are missing. {0}",
 					string.Join (Environment.NewLine, missingFiles)));
 			}
 		}
@@ -453,7 +453,7 @@ Console.WriteLine ($""{DateTime.UtcNow.AddHours(-30).Humanize(culture:c)}"");
 				Assert.IsFalse (helper.Exists ("assemblies/Mono.Android.Runtime.dll"),
 					"Runtime helpers must be included in Mono.Android.dll, not a separate assembly.");
 				Assert.IsTrue (missingFiles == null || missingFiles.Count == 0,
-				       string.Format ("The following Expected files are missing. {0}",
+				       string.Format (CultureInfo.CurrentCulture, "The following Expected files are missing. {0}",
 				       string.Join (Environment.NewLine, missingFiles)));
 			}
 		}

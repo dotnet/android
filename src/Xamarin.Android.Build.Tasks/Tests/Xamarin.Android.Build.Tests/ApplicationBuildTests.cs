@@ -1,4 +1,5 @@
 using System;
+using System.Globalization;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -141,7 +142,7 @@ namespace {{libraryName}} {
 """;
 				solution.Projects.Add (library);
 				app.References.Add (new BuildItem.ProjectReference ($"..\\{libraryName}\\{libraryName}.csproj", libraryName, library.ProjectGuid));
-				code.AppendLine ($"\t\t\t{libraryName}.{libraryName}.Foo ();");
+				code.AppendLine (CultureInfo.CurrentCulture, $"\t\t\t{libraryName}.{libraryName}.Foo ();");
 			}
 			code.AppendLine ("\t\t}");
 			code.AppendLine ("\t}");

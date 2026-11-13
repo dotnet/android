@@ -2,6 +2,7 @@ using Microsoft.Build.Framework;
 using NUnit.Framework;
 using System.Collections.Generic;
 using System;
+using System.Globalization;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
@@ -596,7 +597,7 @@ namespace Xamarin.Android.Build.Tests
 
 			public void WriteResult (string name, int exitCode, string output)
 			{
-				File.WriteAllText (Path.Combine (directory, name + ".exit"), exitCode.ToString ());
+				File.WriteAllText (Path.Combine (directory, name + ".exit"), exitCode.ToString (CultureInfo.CurrentCulture));
 				File.WriteAllText (Path.Combine (directory, name + ".out"), output);
 			}
 

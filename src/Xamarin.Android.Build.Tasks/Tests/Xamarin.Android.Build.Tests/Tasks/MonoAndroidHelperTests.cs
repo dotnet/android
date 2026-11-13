@@ -12,6 +12,16 @@ namespace Xamarin.Android.Build.Tests.Tasks
 	[TestFixture]
 	public class MonoAndroidHelperTests : BaseTest
 	{
+		[TestCase (null, 0)]
+		[TestCase ("", 0)]
+		[TestCase ("invalid", 0)]
+		[TestCase ("35", 35)]
+		[TestCase ("35.1", 35)]
+		public void ConvertSupportedPlatformVersion (string? version, int expected)
+		{
+			Assert.AreEqual (expected, MonoAndroidHelper.ConvertSupportedOSPlatformVersionToApiLevel (version));
+		}
+
 		[TestCase (false)]
 		[TestCase (true)]
 		public void DetermineJavaLibrariesInSeparateProjects (bool multithreaded)

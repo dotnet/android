@@ -2,6 +2,7 @@ using Microsoft.Build.Framework;
 using Mono.Cecil;
 using NUnit.Framework;
 using System;
+using System.Globalization;
 using System.Buffers.Binary;
 using System.Collections.Generic;
 using System.IO;
@@ -876,7 +877,7 @@ public class TestMe {
 					"the _BuildApkEmbed target should not be skipped");
 				var expectedOutput = Path.Combine (Root, b.ProjectDirectory, app.IntermediateOutputPath, "android", "bin", "classes",
 					"com", "android", "test", "TestMe.class");
-				Assert.IsTrue (File.Exists (expectedOutput), string.Format ("{0} should exist.", expectedOutput));
+				Assert.IsTrue (File.Exists (expectedOutput), string.Format (CultureInfo.CurrentCulture, "{0} should exist.", expectedOutput));
 				Assert.IsTrue (b.Build (app), "Second build should have succeeded");
 				Assert.IsTrue (
 					b.Output.IsTargetSkipped ("_CompileJava"),
@@ -884,7 +885,7 @@ public class TestMe {
 				Assert.IsTrue (
 					b.Output.IsTargetSkipped ("_BuildApkEmbed"),
 					"the _BuildApkEmbed target should be skipped");
-				Assert.IsTrue (File.Exists (expectedOutput), string.Format ("{0} should exist.", expectedOutput));
+				Assert.IsTrue (File.Exists (expectedOutput), string.Format (CultureInfo.CurrentCulture, "{0} should exist.", expectedOutput));
 			}
 		}
 
