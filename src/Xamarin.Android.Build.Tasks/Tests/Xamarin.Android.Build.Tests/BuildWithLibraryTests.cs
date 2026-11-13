@@ -1150,6 +1150,25 @@ namespace Xamarin.Android.Build.Tests
 			FileAssert.DoesNotExist (Path.Combine (Root, builder.ProjectDirectory, proj.OutputPath, $"{proj.ProjectName}.aar"));
 		}
 
+		[TestCase ("AndroidJavaLibrary", "jar", "libs")]
+		[TestCase ("EmbeddedJar", "jar", "libs")]
+		[TestCase ("AndroidEnvironment", "env", ".net/env")]
+		public void DotNetLibraryAarHashedPaths (string buildAction, string extension, string archiveDirectory)
+		{
+			var source = $"sub\\directory\\input.{extension}";
+			var proj = new XamarinAndroidLibraryProject ();
+			proj.OtherBuildItems.Add (new BuildItem (buildAction, source) {
+				BinaryContent = () => extension == "jar" ? ResourceData.JavaSourceJarTestJar : Encoding.UTF8.GetBytes ("TEST_VARIABLE=value"),
+			});
+
+			using var builder = CreateDllBuilder ();
+			Assert.IsTrue (builder.Build (proj), "Build should have succeeded.");
+			var aarPath = Path.Combine (Root, builder.ProjectDirectory, proj.OutputPath, $"{proj.ProjectName}.aar");
+			var hash = Files.HashString (source.Replace ('\\', '/'));
+			using var aar = ZipHelper.OpenZip (aarPath);
+			aar.AssertContainsEntry (aarPath, $"{archiveDirectory}/{hash}.{extension}");
+		}
+
 		[Test]
 		public void DotNetLibraryAarNativeLibraryCasingAndClean ()
 		{

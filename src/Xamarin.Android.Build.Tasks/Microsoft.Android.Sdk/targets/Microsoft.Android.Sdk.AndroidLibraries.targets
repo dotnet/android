@@ -131,6 +131,16 @@ projects.
       <_AndroidAarAssetPrefix>$(_AndroidAarAssetDirectory)/</_AndroidAarAssetPrefix>
     </PropertyGroup>
     <ItemGroup>
+      <_AarJar Include="@(AndroidJavaLibrary)" Condition=" '%(AndroidJavaLibrary.Pack)' != 'false' " />
+      <_AarJar Include="@(EmbeddedJar)" Condition=" '%(EmbeddedJar.Pack)' != 'false' " />
+    </ItemGroup>
+    <ComputeHash Source="@(AndroidEnvironment->'$([System.String]::Copy('%(AndroidEnvironment.Identity)').Replace('\', '/'))')">
+      <Output TaskParameter="Output" ItemName="_AarHashedEnvironment" />
+    </ComputeHash>
+    <ComputeHash Source="@(_AarJar->'$([System.String]::Copy('%(_AarJar.Identity)').Replace('\', '/'))')">
+      <Output TaskParameter="Output" ItemName="_AarHashedJar" />
+    </ComputeHash>
+    <ItemGroup>
       <_AndroidAarAsset Include="@(AndroidAsset)" Condition=" !$([System.IO.Directory]::Exists('%(AndroidAsset.FullPath)')) " />
       <_AndroidAarAsset>
         <_AndroidAssetPath>$([MSBuild]::ValueOrDefault('%(_AndroidAarAsset.Link)', '%(_AndroidAarAsset.Identity)').Replace('\', '/'))</_AndroidAssetPath>
@@ -161,11 +171,8 @@ projects.
           ResourcePath="$([System.IO.Path]::GetFileName($([System.IO.Path]::GetDirectoryName('%(_AndroidResourceDest.FullPath)'))))/%(_AndroidResourceDest.Filename)%(_AndroidResourceDest.Extension)"
           LogicalName="$([System.String]::Copy('%(_AndroidResourceDest.LogicalName)').Replace('\', '/'))" />
       <_AarFile Include="@(_AarResource)" ArchivePath="res/%(_AarResource.ResourcePath)" />
-      <_AarFile Include="@(AndroidEnvironment)" ArchivePath=".net/env/$([MSBuild]::StableStringHash($([System.String]::Copy('%(AndroidEnvironment.Identity)').Replace('\', '/')))).env" />
-      <_AarFile Include="@(AndroidJavaLibrary)" Condition=" '%(AndroidJavaLibrary.Pack)' != 'false' "
-          ArchivePath="libs/$([MSBuild]::StableStringHash($([System.String]::Copy('%(AndroidJavaLibrary.Identity)').Replace('\', '/')))).jar" />
-      <_AarFile Include="@(EmbeddedJar)" Condition=" '%(EmbeddedJar.Pack)' != 'false' "
-          ArchivePath="libs/$([MSBuild]::StableStringHash($([System.String]::Copy('%(EmbeddedJar.Identity)').Replace('\', '/')))).jar" />
+      <_AarFile Include="@(_AarHashedEnvironment)" ArchivePath=".net/env/%(_AarHashedEnvironment.Hash).env" />
+      <_AarFile Include="@(_AarHashedJar)" ArchivePath="libs/%(_AarHashedJar.Hash).jar" />
       <_AarFile Include="@(_AarNativeLibrary)" ArchivePath="jni/%(_AarNativeLibrary.Abi)/%(_AarNativeLibrary.Filename)%(_AarNativeLibrary.Extension)" />
     </ItemGroup>
     <XmlPeek
