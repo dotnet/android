@@ -261,15 +261,27 @@ async Task<int> RunInstrumentationAsync (List<string> instrumentationArgs)
 
 	var output = new StringBuilder ();
 	var outputTask = Task.Run (async () => {
-		await foreach (var line in instrumentProcess.ReadAllLinesAsync ()) {
+		await foreach (var line in instrumentProcess.ReadAllLinesAsync (cts.Token)) {
 			output.AppendLine (line.Content);
 			(line.StandardError ? Console.Error : Console.Out).WriteLine (line.Content);
 		}
 	});
 
 	if (!waitForExit) {
-		await instrumentProcess.WaitForExitAsync (cts.Token);
-		await outputTask;
+		try {
+			await instrumentProcess.WaitForExitAsync (cts.Token);
+			await outputTask;
+		} catch (OperationCanceledException) when (cts.IsCancellationRequested) {
+			try { instrumentProcess.Kill (); } catch (Exception ex) {
+				if (verbose)
+					Console.Error.WriteLine ($"Cleanup: {ex.Message}");
+			}
+			await instrumentProcess.WaitForExitAsync ().WaitAsync (TimeSpan.FromSeconds (5));
+			throw;
+		} finally {
+			if (cts.IsCancellationRequested)
+				await ObserveOutputTaskAsync ();
+		}
 		return instrumentProcess.ExitCode == 0 ? 0 : 1;
 	}
 
@@ -292,6 +304,7 @@ async Task<int> RunInstrumentationAsync (List<string> instrumentationArgs)
 		}
 	} finally {
 		cts.Cancel ();
+		await ObserveOutputTaskAsync ();
 		await logcatTask;
 		// Clean up logcat
 		try {
@@ -302,6 +315,14 @@ async Task<int> RunInstrumentationAsync (List<string> instrumentationArgs)
 		} catch (Exception ex) {
 			if (verbose)
 				Console.Error.WriteLine ($"Logcat cleanup: {ex.Message}");
+		}
+	}
+
+	async Task ObserveOutputTaskAsync ()
+	{
+		try {
+			await outputTask;
+		} catch (OperationCanceledException) when (cts.IsCancellationRequested) {
 		}
 	}
 

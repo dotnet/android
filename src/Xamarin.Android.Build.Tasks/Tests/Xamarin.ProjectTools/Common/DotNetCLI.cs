@@ -248,7 +248,9 @@ namespace Xamarin.ProjectTools
 				arguments.AddRange (parameters);
 			}
 
-			return ExecuteProcess (arguments.ToArray ());
+			var process = ExecuteProcess (arguments.ToArray ());
+			process.TrackDescendants ();
+			return process;
 		}
 
 		/// <summary>
@@ -269,7 +271,9 @@ namespace Xamarin.ProjectTools
 				arguments.AddRange (parameters);
 			}
 
-			return ExecuteProcess (arguments.ToArray (), workingDirectory: ProjectDirectory);
+			var process = ExecuteProcess (arguments.ToArray (), workingDirectory: ProjectDirectory);
+			process.TrackDescendants ();
+			return process;
 		}
 
 		/// <summary>

@@ -615,11 +615,12 @@ static int InvokeIntMethod (Java.Lang.Object instance, string methodName)
 
 			var locker = new Lock ();
 			var output = new StringBuilder ();
+			using var readerCts = new CancellationTokenSource ();
 			var outputReceived = new ManualResetEventSlim (false);
 			bool foundMessage = false;
 
 			var reader = Task.Run (async () => {
-				await foreach (var line in process.ReadAllLinesAsync ()) {
+				await foreach (var line in process.ReadAllLinesAsync (readerCts.Token)) {
 					lock (locker) {
 						if (line.StandardError) {
 							output.AppendLine ($"STDERR: {line.Content}");
@@ -637,12 +638,8 @@ static int InvokeIntMethod (Java.Lang.Object instance, string methodName)
 			// Wait for the expected message or timeout
 			bool messageFound = outputReceived.Wait (TimeSpan.FromSeconds (ActivityStartTimeoutInSeconds));
 
-			// Kill the process (simulating Ctrl+C)
-			if (!process.HasExited) {
-				process.Kill (entireProcessTree: true);
-				process.WaitForExit ();
-			}
-			reader.Wait (TimeSpan.FromSeconds (30));
+			// Kill the process (simulating Ctrl+C) and drain its output.
+			process.StopAndDrainOutput (readerCts, reader);
 
 			// Write the output to a log file for debugging
 			string outputText = output.ToString ();
@@ -689,10 +686,11 @@ static int InvokeIntMethod (Java.Lang.Object instance, string methodName)
 
 			var locker = new Lock ();
 			var output = new StringBuilder ();
+			using var readerCts = new CancellationTokenSource ();
 			var appLaunched = new ManualResetEventSlim (false);
 
 			var reader = Task.Run (async () => {
-				await foreach (var line in process.ReadAllLinesAsync ()) {
+				await foreach (var line in process.ReadAllLinesAsync (readerCts.Token)) {
 					lock (locker) {
 						if (line.StandardError) {
 							output.AppendLine ($"STDERR: {line.Content}");
@@ -724,7 +722,7 @@ static int InvokeIntMethod (Java.Lang.Object instance, string methodName)
 				// Wait for the process to exit gracefully
 				bool exited = process.WaitForExit (30_000);
 				Assert.IsTrue (exited, "dotnet run process should have exited after SIGINT");
-				reader.Wait (TimeSpan.FromSeconds (30));
+				process.StopAndDrainOutput (readerCts, reader);
 				Assert.AreEqual (130, process.ExitCode, "dotnet run process should report user cancellation after SIGINT");
 
 				// Verify the output contains the "Stopping application..." message from Microsoft.Android.Run
@@ -739,12 +737,8 @@ static int InvokeIntMethod (Java.Lang.Object instance, string methodName)
 				Assert.IsTrue (string.IsNullOrEmpty (pidOutput),
 					$"App should not be running on the device after Ctrl+C. pidof output: '{pidOutput}'");
 			} finally {
-				// Ensure the process is killed if it's still running
-				if (!process.HasExited) {
-					process.Kill (entireProcessTree: true);
-					process.WaitForExit ();
-				}
-				reader.Wait (TimeSpan.FromSeconds (30));
+				// Ensure the process is stopped and its output reader has exited.
+				process.StopAndDrainOutput (readerCts, reader);
 
 				File.WriteAllText (logPath, output.ToString ());
 				TestContext.AddTestAttachment (logPath);
@@ -779,12 +773,13 @@ static int InvokeIntMethod (Java.Lang.Object instance, string methodName)
 
 			var locker = new Lock ();
 			var output = new StringBuilder ();
+			using var readerCts = new CancellationTokenSource ();
 			var outputReceived = new ManualResetEventSlim (false);
 			bool foundMessage = false;
 			bool foundAdbTarget = false;
 
 			var reader = Task.Run (async () => {
-				await foreach (var line in process.ReadAllLinesAsync ()) {
+				await foreach (var line in process.ReadAllLinesAsync (readerCts.Token)) {
 					lock (locker) {
 						if (line.StandardError) {
 							output.AppendLine ($"STDERR: {line.Content}");
@@ -806,12 +801,8 @@ static int InvokeIntMethod (Java.Lang.Object instance, string methodName)
 			// Wait for the expected message or timeout
 			bool messageFound = outputReceived.Wait (TimeSpan.FromSeconds (ActivityStartTimeoutInSeconds));
 
-			// Kill the process (simulating Ctrl+C)
-			if (!process.HasExited) {
-				process.Kill (entireProcessTree: true);
-				process.WaitForExit ();
-			}
-			reader.Wait (TimeSpan.FromSeconds (30));
+			// Kill the process (simulating Ctrl+C) and drain its output.
+			process.StopAndDrainOutput (readerCts, reader);
 
 			// Write the output to a log file for debugging
 			string logPath = Path.Combine (Root, builder.ProjectDirectory, "dotnet-run-device-output.log");
@@ -858,11 +849,12 @@ static int InvokeIntMethod (Java.Lang.Object instance, string methodName)
 
 			var locker = new Lock ();
 			var output = new StringBuilder ();
+			using var readerCts = new CancellationTokenSource ();
 			var initialMessageEvent = new ManualResetEventSlim ();
 			var hotReloadAppliedEvent = new ManualResetEventSlim ();
 
 			var reader = Task.Run (async () => {
-				await foreach (var line in process.ReadAllLinesAsync ()) {
+				await foreach (var line in process.ReadAllLinesAsync (readerCts.Token)) {
 					lock (locker) {
 						output.AppendLine (line.StandardError ? $"STDERR: {line.Content}" : line.Content);
 						if (!line.StandardError && line.Content.Contains (initialMessage)) {
@@ -899,12 +891,8 @@ static int InvokeIntMethod (Java.Lang.Object instance, string methodName)
 				Assert.IsTrue (hotReloadAppliedEvent.Wait (TimeSpan.FromMinutes (2)),
 					$"Hot reload message '{hotReloadMessage}' was not found in output. See {logPath} for details.");
 			} finally {
-				// Kill the process
-				if (!process.HasExited) {
-					process.Kill (entireProcessTree: true);
-					process.WaitForExit ();
-				}
-				reader.Wait (TimeSpan.FromSeconds (30));
+				// Ensure the process is stopped and its output reader has exited.
+				process.StopAndDrainOutput (readerCts, reader);
 
 				// Write the output to a log file for debugging
 				File.WriteAllText (logPath, output.ToString ());
@@ -3425,18 +3413,12 @@ Facebook.FacebookSdk.LogEvent(""TestFacebook"");
 				: dotnet.StartTest (parameters: runParameters.ToArray ());
 
 			var output = new StringBuilder ();
-			bool completed = true;
-			// Wait for the process to complete (instrumentation should finish on its own)
-			using (var cts = new CancellationTokenSource (TimeSpan.FromMinutes (5))) {
-				try {
-					foreach (var line in process.ReadAllLinesAsync (cts.Token).ToBlockingEnumerable ())
-						output.AppendLine (line.StandardError ? $"STDERR: {line.Content}" : line.Content);
-				} catch (OperationCanceledException) {
-					completed = false;
-					process.Kill (entireProcessTree: true);
-				}
-			}
-			process.WaitForExit ();
+			using var cts = new CancellationTokenSource ();
+			var reader = Task.Run (async () => {
+				await foreach (var line in process.ReadAllLinesAsync (cts.Token))
+					output.AppendLine (line.StandardError ? $"STDERR: {line.Content}" : line.Content);
+			});
+			bool completed = process.WaitForExitAndOutput (reader, cts, TimeSpan.FromMinutes (5));
 
 			// Write the output to a log file for debugging
 			string logPath = Path.Combine (projectDirectory, $"dotnet-{mode}-output.log");
@@ -3593,17 +3575,12 @@ Facebook.FacebookSdk.LogEvent(""TestFacebook"");
 			using var process = dotnet.StartRun (waitForExit: true, parameters: new [] { "--", "greeting=hello", "--custom-flag" });
 
 			var output = new StringBuilder ();
-			bool completed = true;
-			using (var cts = new CancellationTokenSource (TimeSpan.FromMinutes (10))) {
-				try {
-					foreach (var line in process.ReadAllLinesAsync (cts.Token).ToBlockingEnumerable ())
-						output.AppendLine (line.StandardError ? $"STDERR: {line.Content}" : line.Content);
-				} catch (OperationCanceledException) {
-					completed = false;
-					process.Kill (entireProcessTree: true);
-				}
-			}
-			process.WaitForExit ();
+			using var cts = new CancellationTokenSource ();
+			var reader = Task.Run (async () => {
+				await foreach (var line in process.ReadAllLinesAsync (cts.Token))
+					output.AppendLine (line.StandardError ? $"STDERR: {line.Content}" : line.Content);
+			});
+			bool completed = process.WaitForExitAndOutput (reader, cts, TimeSpan.FromMinutes (10));
 
 			string logPath = Path.Combine (Root, builder.ProjectDirectory, "dotnet-run-benchmarkdotnet.log");
 			File.WriteAllText (logPath, output.ToString ());
