@@ -46,9 +46,6 @@ namespace Xamarin.Android.Build.Tests {
 					var sdk = CreateFauxAndroidSdkDirectory (Path.Combine (project, "sdk"), "37.0.0");
 					var ndk = CreateFauxAndroidNdkDirectory (Path.Combine (project, "ndk"));
 					var jdk = CreateFauxJavaSdkDirectory (Path.Combine (project, "jdk"), "21.0.8", out _, out _);
-					CreateFauxReferencesDirectory (Path.Combine (project, "references"), [
-						new ApiInfo { Id = $"Project{i}", Level = 100 + i, Name = "Preview", FrameworkVersion = "v100.0", Stable = true },
-					]);
 					if (IsWindows) {
 						File.Move (Path.Combine (sdk, "platform-tools", "adb.exe"), Path.Combine (sdk, "platform-tools", "adb.DISCOVERY"));
 						File.Move (Path.Combine (ndk, "ndk-stack.cmd"), Path.Combine (ndk, "ndk-stack.DISCOVERY"));
@@ -69,7 +66,6 @@ namespace Xamarin.Android.Build.Tests {
 						AndroidNdkPath = discover ? " " : i == 0 ? ndk : "ndk",
 						JavaSdkPath = discover ? " " : i == 0 ? jdk : "jdk",
 						MonoAndroidToolsPath = "tools",
-						ReferenceAssemblyPaths = ["references"],
 						MinimumSupportedJavaVersion = "21.0",
 						LatestSupportedJavaVersion = "25.0.99",
 					};
@@ -83,7 +79,6 @@ namespace Xamarin.Android.Build.Tests {
 					Assert.AreEqual (Path.Combine (directory, "jdk"), task.JavaSdkPath);
 					Assert.AreEqual (Path.Combine (directory, "tools"), task.MonoAndroidToolsPath);
 					Assert.AreEqual (Path.Combine (directory, "sdk", "tools"), task.CommandLineToolsPath);
-					Assert.AreEqual (100 + i, MonoAndroidHelper.GetSupportedVersions (engine, task.ReferenceAssemblyPaths, task.TaskEnvironment).GetApiLevelFromId ($"Project{i}"));
 				});
 			} finally {
 				Directory.Delete (Path.Combine (Root, path), recursive: true);
@@ -147,6 +142,11 @@ namespace Xamarin.Android.Build.Tests {
 				["--no-restore", "-m:2", "-nr:false"];
 			Assert.IsTrue (dotnet.Build (msbuildArguments: arguments),
 				string.Join (Environment.NewLine, dotnet.LastBuildOutput) + File.ReadAllText (dotnet.ProcessLogFile));
+			if (multithreaded) {
+				Assert.IsEmpty (dotnet.LastBuildOutput.Where (line =>
+					line.Contains (nameof (ResolveSdks), StringComparison.Ordinal) && line.Contains ("ran in TaskHost process", StringComparison.Ordinal)),
+					"ResolveSdks must run in-process with -mt.");
+			}
 		}
 
 		[TestCase (false)]
