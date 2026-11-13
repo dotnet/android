@@ -65,7 +65,9 @@ namespace generator.SourceWriters
 				if (shouldObsolete && string.IsNullOrWhiteSpace (method.Deprecated))
 					method.Deprecated = $"Use '{iface.FullName}.{method.AdjustedName}'. This class will be removed in a future release.";
 
-				Methods.Add (new BoundMethod (iface, method, opt, true));
+				Methods.Add (new BoundMethod (iface, method, opt, true) {
+					IsShadow = (opt.SymbolTable.Lookup ("java.lang.Object") as GenBase)?.RequiresNew (method.AdjustedName, method) == true,
+				});
 
 				var name_and_jnisig = method.JavaName + method.JniSignature.Replace ("java/lang/CharSequence", "java/lang/String");
 				var gen_string_overload = !method.IsOverride && method.Parameters.HasCharSequence && !iface.ContainsMethod (name_and_jnisig);
@@ -119,9 +121,13 @@ namespace generator.SourceWriters
 					needs_property = needs_property || f.NeedsProperty;
 
 					if (f.NeedsProperty)
-						Properties.Add (new BoundFieldAsProperty (iface, f, opt));
+						Properties.Add (new BoundFieldAsProperty (iface, f, opt) {
+							IsShadow = (opt.SymbolTable.Lookup ("java.lang.Object") as GenBase)?.RequiresNew (f) == true,
+						});
 					else
-						Fields.Add (new BoundField (iface, f, opt));
+						Fields.Add (new BoundField (iface, f, opt) {
+							IsShadow = (opt.SymbolTable.Lookup ("java.lang.Object") as GenBase)?.RequiresNew (f) == true,
+						});
 				}
 			}
 
