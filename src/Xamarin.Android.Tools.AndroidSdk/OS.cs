@@ -22,7 +22,7 @@ namespace Xamarin.Android.Tools
 		static OS ()
 		{
 			IsWindows = Path.DirectorySeparatorChar == '\\';
-			IsMac = !IsWindows && IsRunningOnMac ();
+			IsMac = !IsWindows && RuntimeInformation.IsOSPlatform (OSPlatform.OSX);
 			IsLinux = !IsWindows && !IsMac;
 
 			if (IsWindows)
@@ -31,22 +31,6 @@ namespace Xamarin.Android.Tools
 				NativeLibraryFormat = "lib{0}.dylib";
 			if (IsLinux)
 				NativeLibraryFormat = "lib{0}.so";
-		}
-
-		// Match uname()'s "Darwin" sysname for Apple platforms recognized by the runtime.
-		// Equivalence is unverified on unsupported platforms such as watchOS.
-		static bool IsRunningOnMac ()
-		{
-#if NET
-			return OperatingSystem.IsMacOS () || OperatingSystem.IsMacCatalyst () || OperatingSystem.IsIOS () ||
-				OperatingSystem.IsTvOS () || OperatingSystem.IsWatchOS ();
-#else
-			return RuntimeInformation.IsOSPlatform (OSPlatform.OSX) ||
-				RuntimeInformation.IsOSPlatform (OSPlatform.Create ("MACCATALYST")) ||
-				RuntimeInformation.IsOSPlatform (OSPlatform.Create ("IOS")) ||
-				RuntimeInformation.IsOSPlatform (OSPlatform.Create ("TVOS")) ||
-				RuntimeInformation.IsOSPlatform (OSPlatform.Create ("WATCHOS"));
-#endif
 		}
 
 		static string GetProgramFilesX86 ()
