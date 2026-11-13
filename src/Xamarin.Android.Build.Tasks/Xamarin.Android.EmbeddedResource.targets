@@ -85,7 +85,7 @@ This file is used by all project types, including binding projects.
         <_AndroidImportStamp>$([MSBuild]::NormalizePath('$(MSBuildProjectDirectory)', '$(_AndroidLibrayProjectIntermediatePath)', '%(_AndroidImportId).stamp'))</_AndroidImportStamp>
       </_AndroidAarLibraryImport>
       <_AndroidAarLibraryImport>
-        <_AndroidImportsDirectory>%(_AndroidImportDirectory)$(_LibraryProjectImportsDirectoryName)/</_AndroidImportsDirectory>
+        <_AndroidImportsDirectory>$([MSBuild]::NormalizeDirectory('%(_AndroidImportDirectory)', '$(_LibraryProjectImportsDirectoryName)'))</_AndroidImportsDirectory>
         <_AndroidImportExtractedStamp>%(_AndroidImportDirectory)extracted.stamp</_AndroidImportExtractedStamp>
       </_AndroidAarLibraryImport>
     </ItemGroup>
