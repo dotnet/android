@@ -231,6 +231,16 @@
     <ApiCompatibilityFiles Include="$(ApiCompatibilityDir)/acceptable-breakages-v*.txt" />
     <ApiCompatibilityFiles Include="$(ApiCompatibilityDir)/reference/*.*" />
   </ItemGroup>
+  <!-- The opt-out also changes during evaluation for experimental callbacks.
+       Limit it to API analyzers, without disabling safety/globalization checks. -->
+  <Target Name="_AndroidDisableApiCompatibilityAnalyzers"
+      BeforeTargets="CoreCompile"
+      Condition=" '$(DisableApiCompatibilityCheck)' == 'True' ">
+    <ItemGroup>
+      <Analyzer Remove="@(Analyzer)" Condition=" '%(Analyzer.NuGetPackageId)' == 'Microsoft.CodeAnalysis.PublicApiAnalyzers' " />
+    </ItemGroup>
+  </Target>
+
   <Target
       Name="_CheckApiCompatibility"
       Condition=" '$(DisableApiCompatibilityCheck)' != 'True' "
