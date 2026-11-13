@@ -1,5 +1,6 @@
 #nullable enable
 
+using System.Globalization;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
 using System.Collections.Generic;
@@ -113,7 +114,7 @@ namespace Xamarin.Android.Tasks
 				if (doc.MinSdkVersion.HasValue) {
 					MinSdkVersion = doc.MinSdkVersion.Value;
 					WriteArg (response, "--min-api");
-					WriteArg (response, MinSdkVersion.ToString ());
+					WriteArg (response, MinSdkVersion.ToString (CultureInfo.CurrentCulture));
 				}
 			}
 

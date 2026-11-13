@@ -1,6 +1,7 @@
 #nullable enable
 
 using System;
+using System.Globalization;
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
@@ -43,7 +44,7 @@ namespace Microsoft.Android.Tasks
 				if (assetPack.IsNullOrEmpty () || string.Equals (assetPack, "base", StringComparison.OrdinalIgnoreCase))
 					continue;
 				if (!ValidAssetPackName.IsMatch (assetPack)) {
-					Log.LogCodedError ("XA0140", Properties.Resources.XA0140, asset.ItemSpec, assetPack);
+					Log.LogCodedError ("XA0140", string.Format (CultureInfo.CurrentCulture, Properties.Resources.XA0140, asset.ItemSpec, assetPack));
 					continue;
 				}
 				if (!assetPacks.TryGetValue (assetPack, out ITaskItem? item)) {
