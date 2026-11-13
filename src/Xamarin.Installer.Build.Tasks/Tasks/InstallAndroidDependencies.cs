@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Globalization;
 using System.Buffers;
 using System.Collections.Generic;
 using System.IO;
@@ -381,6 +382,12 @@ namespace Xamarin.Installer.Build.Tasks
 				Info ("Wrote '{0}' to '{1}'", archive.Url, path);
 				archive.DownloadedFilePath = path;
 			}
+		}
+
+		public void Action (string format, params object [] parms)
+		{
+			// The checksum override notice uses Action so it is visible at minimal verbosity without a warning.
+			LogMessage (string.Format (CultureInfo.CurrentCulture, format, parms), MessageImportance.High);
 		}
 
 		public void Debug (string format, params object [] parms)

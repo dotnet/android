@@ -1,4 +1,5 @@
 using System;
+using System.Globalization;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -24,7 +25,7 @@ namespace Xamarin.ProjectTools
 
 			if (string.IsNullOrEmpty (ProcessLogFile)) {
 				Directory.CreateDirectory (ProjectDirectory);
-				ProcessLogFile = Path.Combine (ProjectDirectory, $"gradle{DateTime.Now.ToString ("yyyyMMddHHmmssff")}-process.log");
+				ProcessLogFile = Path.Combine (ProjectDirectory, $"gradle{DateTime.Now.ToString ("yyyyMMddHHmmssff", CultureInfo.CurrentCulture)}-process.log");
 			}
 
 			var procOutput = new StringBuilder ();
@@ -41,13 +42,13 @@ namespace Xamarin.ProjectTools
 				psi.WorkingDirectory = ProjectDirectory;
 			}
 
-			procOutput.AppendLine ($"Running: {psi.FileName} {psi.Arguments}");
+			procOutput.AppendLine (CultureInfo.CurrentCulture, $"Running: {psi.FileName} {psi.Arguments}");
 			try {
 				var result = Process.RunAndCaptureText (psi, TimeSpan.FromMinutes (5));
 				procOutput.AppendLine (result.StandardOutput);
 				procOutput.AppendLine (result.StandardError);
 				succeeded = result.ExitStatus.ExitCode == 0;
-				procOutput.AppendLine ($"Exit Code: {result.ExitStatus.ExitCode}");
+				procOutput.AppendLine (CultureInfo.CurrentCulture, $"Exit Code: {result.ExitStatus.ExitCode}");
 			} catch (TimeoutException) {
 				succeeded = false;
 				procOutput.AppendLine ("Process timed out after 5 minutes.");
