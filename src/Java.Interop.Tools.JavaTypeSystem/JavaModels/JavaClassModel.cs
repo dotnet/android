@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 
 namespace Java.Interop.Tools.JavaTypeSystem.Models
@@ -109,7 +110,7 @@ namespace Java.Interop.Tools.JavaTypeSystem.Models
 
 			// NRT - This is checked above but compiler can't figure it out
 			if (BaseTypeReference.ReferencedType!.TypeParameters.Count != BaseTypeReference.TypeParameters.Count)
-				throw new Exception (string.Format ("On {0}.{1}, referenced generic arguments count do not match the base type parameters definition",
+				throw new Exception (string.Format (CultureInfo.CurrentCulture, "On {0}.{1}, referenced generic arguments count do not match the base type parameters definition",
 					DeclaringType?.Name, Name));
 
 			generic_inheritance_mapping = new Dictionary<JavaTypeReference, JavaTypeReference> ();

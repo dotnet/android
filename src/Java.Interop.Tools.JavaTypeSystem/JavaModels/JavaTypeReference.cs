@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -101,7 +102,7 @@ namespace Java.Interop.Tools.JavaTypeSystem.Models
 			else if (ReferencedTypeParameter != null)
 				return ReferencedTypeParameter.Name + ArrayPart;
 			else
-				return string.Format ("{0}{1}{2}",
+				return string.Format (CultureInfo.CurrentCulture, "{0}{1}{2}",
 					ReferencedType?.FullName.Replace ('$', '.'),
 					TypeParameters?.Any () == true ? '<' + string.Join (", ", TypeParameters.Select (_ => _.ToString ())) + '>' : null,
 					ArrayPart);
