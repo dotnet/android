@@ -7,7 +7,6 @@
     <TargetFramework>$(DotNetStableTargetFramework)</TargetFramework>
     <IsPackable>false</IsPackable>
     <DefineConstants>$(DefineConstants);HAVE_CECIL;JCW_ONLY_TYPE_NAMES</DefineConstants>
-    <NoWarn>$(NoWarn);CA1019;CA1813</NoWarn>
   </PropertyGroup>
 
   <Import Project="..\..\Configuration.props" />

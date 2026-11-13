@@ -5,7 +5,6 @@
     <TargetFramework>$(DotNetStableTargetFramework)</TargetFramework>
     <SignAssembly>true</SignAssembly>
     <AssemblyOriginatorKeyFile>..\..\..\..\product.snk</AssemblyOriginatorKeyFile>
-    <NoWarn>$(NoWarn);CA1305</NoWarn>
     <_IncludeMicrosoftBuildPackage>true</_IncludeMicrosoftBuildPackage>
     <Nullable>annotations</Nullable>
   </PropertyGroup>
