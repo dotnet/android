@@ -60,6 +60,8 @@ class TrimmableTypeMapTypeManager : JniRuntime.JniTypeManager
 			// generated array proxies.
 			return BuildRuntimeArrayTypes (elementType, typeSignature.ArrayRank);
 
+			[UnconditionalSuppressMessage ("Trimming", "IL2026:RequiresUnreferencedCode",
+				Justification = "Deferred compatibility debt: CoreCLR array reconstruction uses trimming-unsafe reflection; dynamic code support does not guarantee member preservation.")]
 			[RequiresDynamicCode ("This API uses reflection to create generic types at runtime, which is not supported in AOT scenarios.")]
 			static IEnumerable<Type> GetArrayTypesForCoreClr (JniTypeSignature typeSignature, Type elementType)
 			{
