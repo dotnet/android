@@ -43,7 +43,7 @@ namespace Java.InteropTests
 		}
 
 		[TestMethod]
-		[UnconditionalSuppressMessage ("AOT", "IL3050", Justification = "Test exercises non-AOT-compatible JniType.RegisterNativeMethods API.")]
+		[UnconditionalSuppressMessage ("AOT", "IL3050", Justification = "The disposed JniType fails AssertValid before registration can marshal delegates.")]
 		public void Dispose_Exceptions ()
 		{
 			var t = new JniType ("java/lang/Object");
@@ -185,7 +185,7 @@ namespace Java.InteropTests
 		}
 
 		[TestMethod]
-		[UnconditionalSuppressMessage ("AOT", "IL3050", Justification = "Test exercises non-AOT-compatible JniType.RegisterNativeMethods API.")]
+		[UnconditionalSuppressMessage ("AOT", "IL3050", Justification = "The params call supplies an empty registration array; RegisterNatives returns at numMethods == 0 before delegate marshaling.")]
 		public void RegisterNativeMethods ()
 		{
 			using (var TestType_class = new JniType ("net/dot/jni/test/CallNonvirtualBase")) {
