@@ -505,6 +505,7 @@ namespace Xamarin.Android.Build.Tests
 				var firstInstallTime = builder.LastBuildTime;
 				builder.BuildLogFile = "install2.log";
 				Assert.IsTrue (builder.Install (app, doNotCleanupOnUpdate: true, saveProject: false), "Second install should have succeeded.");
+				builder.Output.AssertTargetIsSkipped ("_GenerateTrimmableTypeMap", defaultIfNotUsed: true);
 				Assert.IsTrue (builder.Output.IsTargetSkipped ("_Upload"), "The unchanged managed payload should not be deployed.");
 				if (packageFormat == "aab")
 					Assert.IsTrue (builder.Output.IsTargetSkipped ("_DeployAppBundle"), "The unchanged APK set should not be installed.");
@@ -542,6 +543,7 @@ namespace Xamarin.Android.Build.Tests
 				var thirdInstallTime = builder.LastBuildTime;
 				builder.BuildLogFile = "install4.log";
 				Assert.IsTrue (builder.Install (app, doNotCleanupOnUpdate: true, saveProject: false), "Fourth install should have succeeded.");
+				builder.Output.AssertTargetIsSkipped ("_GenerateTrimmableTypeMap", defaultIfNotUsed: true);
 				Assert.IsTrue (builder.Output.IsTargetSkipped ("_Upload"), "The unchanged managed payload should not be deployed.");
 				if (packageFormat == "aab")
 					Assert.IsTrue (builder.Output.IsTargetSkipped ("_DeployAppBundle"), "The unchanged APK set should not be installed.");

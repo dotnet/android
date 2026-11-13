@@ -2506,6 +2506,41 @@ namespace Xamarin.Android.Build.Tests {
 		}
 
 		[Test]
+		public void Build_WithTrimmableTypeMap_PostCompileRewriteKeepsNoOpBuildIncremental ()
+		{
+			if (IgnoreUnsupportedConfiguration (AndroidRuntime.CoreCLR, release: false)) {
+				return;
+			}
+
+			var proj = new XamarinAndroidApplicationProject ();
+			proj.SetRuntime (AndroidRuntime.CoreCLR);
+			var directoryBuildTargets = proj.Imports.Single (import => import.Project () == "Directory.Build.targets");
+			var originalTargets = directoryBuildTargets.TextContent;
+			// Mirrors post-compile assembly rewriters such as XamlC.
+			directoryBuildTargets.TextContent = () => originalTargets ().Replace ("</Project>", """
+				  <PropertyGroup>
+				    <CompileDependsOn>$(CompileDependsOn);_RewriteIntermediateAssembly</CompileDependsOn>
+				  </PropertyGroup>
+				  <Target Name="_RewriteIntermediateAssembly"
+				      Inputs="@(IntermediateAssembly)"
+				      Outputs="$(IntermediateOutputPath)rewrite.stamp">
+				    <Touch Files="@(IntermediateAssembly)" />
+				    <Touch Files="$(IntermediateOutputPath)rewrite.stamp" AlwaysCreate="true" />
+				  </Target>
+				</Project>
+				""");
+
+			using var builder = CreateApkBuilder ();
+			Assert.IsTrue (builder.Build (proj), "First build should have succeeded.");
+			builder.Output.AssertTargetIsNotSkipped ("_RewriteIntermediateAssembly");
+			builder.Output.AssertTargetIsNotSkipped ("_GenerateTrimmableTypeMap");
+
+			Assert.IsTrue (builder.Build (proj, doNotCleanupOnUpdate: true, saveProject: false), "No-op build should have succeeded.");
+			builder.Output.AssertTargetIsSkipped ("_RewriteIntermediateAssembly");
+			builder.Output.AssertTargetIsSkipped ("_GenerateTrimmableTypeMap");
+		}
+
+		[Test]
 		public void Build_WithTrimmableTypeMap_PublishTrimmed_MissingLinkedJavaListRegenerates ()
 		{
 			if (IgnoreUnsupportedConfiguration (AndroidRuntime.CoreCLR, release: true)) {

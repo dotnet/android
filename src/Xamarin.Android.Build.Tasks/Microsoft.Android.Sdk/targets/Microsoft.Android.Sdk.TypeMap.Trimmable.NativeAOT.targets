@@ -51,8 +51,8 @@
     spawns the inner per-RID ILC build. The inner build consumes the typemap assembly list
     (via _AddTrimmableTypeMapAssembliesToIlc -> _ReadGeneratedTrimmableTypeMapAssemblies)
     but cannot generate it: _GenerateTrimmableTypeMap is gated to the outer build (it requires
-    '$(_OuterIntermediateOutputPath)' == ''). _GenerateTrimmableTypeMap's own AfterTargets="CoreCompile"
-    trigger does not fire when compilation is up-to-date - e.g. the IDE's separate "Compile" then
+    '$(_OuterIntermediateOutputPath)' == ''). _GenerateTrimmableTypeMap's own AfterTargets="Compile"
+    trigger is not sufficient on its own - e.g. the IDE's separate "Compile" then
     "SignAndroidPackage" invocations (BuildingInsideVisualStudio=true) - leaving the file ungenerated
     and the inner build failing with "Trimmable typemap assembly list ... was not found".
     This mirrors the CoreCLR _AddTrimmableTypeMapToLinker target, which forces generation before the

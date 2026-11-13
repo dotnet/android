@@ -191,7 +191,10 @@
 
   <!--
     Generate TypeMap assemblies and JCW files.
-    AfterTargets="CoreCompile" so it runs after compilation.
+    AfterTargets="Compile" so it runs after compilation, including post-compile steps in
+    $(CompileDependsOn) (such as XamlC) that rewrite the intermediate assembly. Running
+    earlier would make the stamp older than the rewritten assembly, so the next unchanged
+    build would regenerate the typemap.
     Uses @(ReferencePath) as the primary input (available after compilation).
     Skipped in design-time builds because project references may resolve to target
     paths that are not produced when SkipCompilerExecution=true, and because the
@@ -202,7 +205,7 @@
   -->
   <Target Name="_GenerateTrimmableTypeMap"
       Condition=" '$(DesignTimeBuild)' != 'true' and '@(ReferencePath->Count())' != '0' and '$(_OuterIntermediateOutputPath)' == '' "
-      AfterTargets="CoreCompile"
+      AfterTargets="Compile"
       DependsOnTargets="$(_GenerateTrimmableTypeMapDependsOn);_GenerateTrimmableTypeMapInputs"
       Inputs="@(ReferencePath);@(PrivateSdkAssemblies);@(FrameworkAssemblies);@(ExtractedManifestDocuments);@(_AndroidTrimmableTypeMapExtraFrameworkAssembly);@(_AndroidTrimmableTypeMapImplementationAssembly);$(IntermediateOutputPath)$(TargetFileName);$(_AndroidManifestAbs);$(_CustomViewMapFile);$(_AndroidBuildPropertiesCache)"
       Outputs="$(_TrimmableTypeMapOutputStamp)">
