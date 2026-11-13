@@ -83,7 +83,7 @@ async Task<int> RunAsync (string[] args)
 			"Do not wake the device or dismiss its keyguard before launching the application.",
 			v => wakeDevice = v == null },
 		{ "logcat-args=",
-			"Extra {ARGUMENTS} to pass to 'adb logcat' (e.g., 'monodroid-assembly:S' to silence a tag).",
+			"Extra {ARGUMENTS} to pass to 'adb logcat' (e.g., 'DOTNET-assembly:S' to silence a tag).",
 			v => logcatArgs = v },
 		{ "no-wait",
 			"Launch the application without waiting for it to exit or streaming logcat.",

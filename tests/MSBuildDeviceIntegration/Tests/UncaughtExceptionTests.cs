@@ -32,7 +32,13 @@ namespace Xamarin.Android.Build.Tests
 			app.SetRuntime (runtime);
 			app.SetRuntimeIdentifiers (new [] { DeviceAbi });
 			app.SetDefaultTargetDevice ();
+			app.OtherBuildItems.Add (new BuildItem ("AndroidEnvironment", "logging.env") {
+				TextContent = () => "debug.dotnet.log=timing\ndebug.dotnet.max_grefc=1234",
+			});
 			app.MainActivity = app.DefaultMainActivity.Replace ("//${AFTER_ONCREATE}", """
+				#pragma warning disable CS0618
+				using var timing = new Android.Runtime.TimingLogger ("FatalExceptionTiming");
+				#pragma warning restore CS0618
 				throw new InvalidOperationException ("FatalManagedExceptionTerminatesProcess");
 				""");
 
@@ -41,12 +47,29 @@ namespace Xamarin.Android.Build.Tests
 			ClearAdbLogcat ();
 
 			string logcatPath = Path.Combine (Root, builder.ProjectDirectory, "fatal-exception-logcat.log");
-			Assert.IsTrue (MonitorAdbLogcat (
-				line => line.Contains ("System.InvalidOperationException") && line.Contains ("FatalManagedExceptionTerminatesProcess"),
-				logcatPath,
-				timeout: ActivityStartTimeoutInSeconds,
-				onMonitoringStarted: () => StartActivityAndAssert (app)),
-				"The expected managed exception should have been logged.");
+			var deviceProperties = new Dictionary<string, string> ();
+			try {
+				foreach (string name in new [] { "debug.dotnet.log", "debug.dotnet.max_grefc" }) {
+					var (code, output, error) = RunAdbCommandWithExitCode ($"shell getprop {name}");
+					Assert.AreEqual (0, code, $"Could not read {name}: {error}");
+					deviceProperties.Add (name, output.TrimEnd ('\r', '\n'));
+					Assert.IsEmpty (ClearShellProp (name), $"Could not clear {name}.");
+				}
+				Assert.IsTrue (MonitorAdbLogcat (
+					line => line.Contains ("System.InvalidOperationException") && line.Contains ("FatalManagedExceptionTerminatesProcess"),
+					logcatPath,
+					timeout: ActivityStartTimeoutInSeconds,
+					onMonitoringStarted: () => StartActivityAndAssert (app)),
+					"The expected managed exception should have been logged.");
+			} finally {
+				Assert.Multiple (() => {
+					foreach (var property in deviceProperties) {
+						string value = property.Value.Replace ("'", "'\\''");
+						var (code, output, error) = RunAdbCommandWithExitCode ($"shell setprop {property.Key} '{value}'");
+						Assert.AreEqual (0, code, $"Could not restore {property.Key}: {output}{error}");
+					}
+				});
+			}
 			string remainingPids = "";
 			bool processExited = false;
 			var timeout = TimeSpan.FromSeconds (30);
@@ -73,6 +96,10 @@ namespace Xamarin.Android.Build.Tests
 				$"A fatal managed exception should terminate {app.PackageName} within 30 seconds. Remaining PIDs: {remainingPids}");
 			var (logExitCode, logOutput, logError) = RunAdbCommandWithExitCode ("logcat -d");
 			Assert.AreEqual (0, logExitCode, $"Could not read logcat: {logError}");
+			StringAssert.IsMatch (@"\bW\s+DOTNET-gc\s*:\s+Overriding max JNI Global Reference count to 1234", logOutput,
+				"Native GC diagnostics should retain their warning level under the DOTNET-gc tag.");
+			StringAssert.IsMatch (@"\bI\s+DOTNET-timing\s*:\s+FatalExceptionTiming", logOutput,
+				"Managed timing diagnostics should use the DOTNET-timing tag when timing is enabled.");
 			Assert.IsFalse (logOutput.Contains (
 				"No implementation found for void mono.android.Runtime.propagateUncaughtException"),
 				"The uncaught exception handler should not call a missing native method.");

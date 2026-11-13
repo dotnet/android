@@ -6,7 +6,7 @@ namespace Android.Runtime
 	/// <summary>
 	///   A class which uses a monotonic managed timer to measure time spent executing a portion of code bracketed
 	///   with calls to <see cref="Start"/> (or the constructor, by default) and <see cref="Stop"/>.
-	///   Timing messages are logged with the <c>Info</c> priority and the <c>monodroid-timing</c> tag in the
+	///   Timing messages are logged with the <c>Info</c> priority and the <c>DOTNET-timing</c> tag in the
 	///   device's logcat buffer when the <c>timing</c> managed log category is enabled.
 	/// </summary>
 	/// <remarks>
@@ -17,7 +17,7 @@ namespace Android.Runtime
 	public class TimingLogger : IDisposable
 	{
 		const string DefaultMessage = "Managed Timing";
-		const string LogTag = "monodroid-timing";
+		const string LogTag = "DOTNET-timing";
 
 		bool disposed = false;
 		bool active;

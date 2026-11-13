@@ -297,7 +297,7 @@ static class JniRemappingLookup
 
 		if (useReplacementTypes && Logger.LogAssembly) {
 			var message = $"Remapping type `{jniSimpleReference}` to one of {{ `{replacements [0]}`, `{replacements [1]}` }}";
-			Logger.Log (LogLevel.Debug, "monodroid-assembly", message);
+			Logger.Log (LogLevel.Debug, "DOTNET-assembly", message);
 		}
 
 		return replacements;
@@ -460,7 +460,7 @@ static class JniRemappingLookup
 				var message = $"Remapping method `{sourceType}.{jniMethodName}{jniMethodSignature}` to " +
 					$"`{targetType}.{targetName}{effectiveTargetSignature}`; " +
 					$"param-count: {paramCount}; instance-to-static? {isStatic}";
-				Logger.Log (LogLevel.Debug, "monodroid-assembly", message);
+				Logger.Log (LogLevel.Debug, "DOTNET-assembly", message);
 			}
 
 			return ret;
@@ -500,7 +500,7 @@ static class JniRemappingLookup
 			if (Logger.LogAssembly) {
 				var message = $"Remapping field `{jniSourceType}.{jniFieldName}:{jniFieldSignature}` to " +
 					$"`{targetType}.{targetName}:{targetSignature}`";
-				Logger.Log (LogLevel.Debug, "monodroid-assembly", message);
+				Logger.Log (LogLevel.Debug, "DOTNET-assembly", message);
 			}
 
 			return new JniRuntime.ReplacementFieldInfo {

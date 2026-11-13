@@ -51,10 +51,10 @@ sealed class JavaMarshalGCBridgeJni
 				throw new InvalidOperationException ("A GC bridge reference destination is invalid.");
 
 			if (!knownGCUserPeer && !JNIEnv.IsInstanceOf (source.Handle, igcUserPeerType.PeerReference.Handle)) {
-				Logger.Log (LogLevel.Error, "monodroid", "Failed to find monodroidAddReference method.");
+				Logger.Log (LogLevel.Error, "DOTNET", "Failed to find monodroidAddReference method.");
 				if (RuntimeFeature.GCBridgeLogging && Logger.LogGC) {
 					string? className = JniEnvironment.Types.GetJniTypeNameFromInstance (source);
-					Logger.Log (LogLevel.Error, "monodroid-gc", $"Missing monodroidAddReference method for object of class {className ?? "[unknown]"}.");
+					Logger.Log (LogLevel.Error, "DOTNET-gc", $"Missing monodroidAddReference method for object of class {className ?? "[unknown]"}.");
 				}
 				return false;
 			}
@@ -74,7 +74,7 @@ sealed class JavaMarshalGCBridgeJni
 			try {
 				JniEnvironment.InstanceMethods.CallVoidMethod (runtimeInstance, runtimeGc);
 			} catch (JavaException e) {
-				Logger.Log (LogLevel.Error, "monodroid", $"Java GC failed: {e.Message}");
+				Logger.Log (LogLevel.Error, "DOTNET", $"Java GC failed: {e.Message}");
 			}
 		}
 	}
