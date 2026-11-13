@@ -803,7 +803,7 @@ public class UsesDependency {
 			Assert.IsTrue (builder.RunTarget (proj, "_ExtractAar", doNotCleanupOnUpdate: true, saveProject: false));
 			var files = Directory.GetFiles (directory);
 			Assert.AreEqual (1, files.Length, "The old spelling must not leave a stale output.");
-			Assert.AreEqual (IsWindows ? "Helper.jar" : "helper.jar", Path.GetFileName (files [0]));
+			Assert.AreEqual ("helper.jar", Path.GetFileName (files [0]), "The new spelling should be used on every volume.");
 		}
 
 		[Test]

@@ -13,7 +13,6 @@ namespace Xamarin.Android.Tasks
 	public class ExtractJarsFromAar : MultithreadedAndroidTask
 	{
 		const int MaxEntryDepth = 8;
-		static readonly StringComparer PathComparer = Path.DirectorySeparatorChar == '\\' ? StringComparer.OrdinalIgnoreCase : StringComparer.Ordinal;
 
 		public override string TaskPrefix => "ELPJ";
 
@@ -46,13 +45,14 @@ namespace Xamarin.Android.Tasks
 				return false;
 
 			var archives = new List<string> ();
-			var selected = new Dictionary<string, (int Archive, int Entry, bool Backslash)> (PathComparer);
+			var selected = new Dictionary<string, (int Archive, int Entry, bool Backslash)> (StringComparer.Ordinal);
 			SelectEntries (Libraries, outputJars, outputAnnotations, archives, selected);
 			SelectEntries (ReferenceLibraries, referenceJars, referenceAnnotations, archives, selected);
 			if (Log.HasLoggedErrors)
 				return false;
 
-			// Remove stale files first, including case-only renames on case-sensitive platforms.
+			// Paths are compared ordinally, regardless of the volume's case sensitivity. Stale files, including
+			// case-only renames, are removed before any writes, so an alias on a case-insensitive volume is rewritten below.
 			foreach (var file in existingFiles) {
 				if (selected.ContainsKey (file))
 					continue;
@@ -70,8 +70,8 @@ namespace Xamarin.Android.Tasks
 			var memoryStream = MemoryStreamPool.Shared.Rent ();
 			try {
 				foreach (var group in byArchive) {
-					// Ordinally distinct paths can still alias on a case-insensitive Unix volume.
-					// Preserve archive precedence and write slash entries last without merging case-sensitive paths.
+					// Ordinally distinct paths can alias on a case-insensitive volume. Writing in archive order, then
+					// backslash entries before slash entries, then entry order makes the winning entry the last write.
 					group.Value.Sort ((left, right) => {
 						int order = right.Backslash.CompareTo (left.Backslash);
 						return order != 0 ? order : left.Entry.CompareTo (right.Entry);
