@@ -3,7 +3,7 @@ parameters:
   jobName: ''             # Name of the job
   jobDisplayName: ''      # Display name of the job
   agentCount: 1           # Number of build agents to run in parallel
-  testFilter: ''          # Filter used to select tests (NUnit test selection language, not dotnet test filter language)
+  testFilter: ''          # Filter used to select tests (Microsoft.Testing.Platform --filter syntax, for example: TestCategory!=Localization)
   xaSourcePath: $(System.DefaultWorkingDirectory)
   repositoryAlias: 'self'
   commit: ''
@@ -37,7 +37,6 @@ jobs:
 
   - template: /build-tools/automation/yaml-templates/setup-test-environment.yaml
     parameters:
-      installTestSlicer: true
       xaSourcePath: ${{ parameters.xaSourcePath }}
       repositoryAlias: ${{ parameters.repositoryAlias }}
       commit: ${{ parameters.commit }}

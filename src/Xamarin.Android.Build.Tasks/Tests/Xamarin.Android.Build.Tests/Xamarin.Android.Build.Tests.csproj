@@ -13,7 +13,7 @@
 
   <Import Project="..\..\..\..\Configuration.props" />
   <Import Project="..\..\..\Microsoft.Android.Build.BaseTasks\MSBuildReferences.projitems" />
-  <Import Project="..\..\..\..\build-tools\scripts\NUnitReferences.projitems" />
+  <Import Project="..\..\..\..\build-tools\scripts\NUnitMTPReferences.projitems" />
 
   <ItemGroup>
     <PackageReference Include="Mono.Cecil" Version="$(MonoCecilVersion)" />

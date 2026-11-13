@@ -1,118 +1,49 @@
 parameters:
-  testAssembly: ''        # NUnit test assembly to run
-  testFilter: ''          # Filter used to select tests (NUnit test selection language, not dotnet test filter language)
+  testAssembly: ''        # NUnit test assembly to run; it must use Microsoft.Testing.Platform
+  testFilter: ''          # Filter used to select tests (Microsoft.Testing.Platform --filter syntax, for example: TestCategory!=Localization)
   testRunTitle: ''        # Title of the test run
   xaSourcePath: $(System.DefaultWorkingDirectory)
   retryFailedTests: true  # Retry failed tests once
   condition: succeeded()  # Condition to run tests
 
 steps:
-# Run the slicer with the SDK installed during test setup. On macOS, the tool apphost used
-# .NET 10 even with DOTNET_ROOT set, could not load the net11.0 test assembly, and found 0 tests.
-- pwsh: |
-    $slicer = Get-ChildItem -Path "$(Agent.ToolsDirectory)/.store/dotnet-test-slicer/$(TestSlicerToolVersion)" -Recurse -Filter dotnet-test-slicer.dll | Select-Object -First 1
-    if (-not $slicer) {
-      throw "dotnet-test-slicer.dll was not found in $(Agent.ToolsDirectory)/.store"
-    }
-    Write-Host "##vso[task.setvariable variable=TestSlicerDll]$($slicer.FullName)"
-  displayName: Locate dotnet-test-slicer
+# Use the SDK installed during test setup, so the net11.0 test assembly can load.
+# Run-SlicedTests.ps1 fails if this job's slice has no tests.
+- pwsh: >-
+    ./build-tools/automation/scripts/Run-SlicedTests.ps1
+    -DotNet "${{ parameters.xaSourcePath }}/bin/$(XA.Build.Configuration)/dotnet/dotnet"
+    -TestAssembly "${{ parameters.testAssembly }}"
+    -ResultsDirectory "$(Agent.TempDirectory)/TestResults"
+    -SliceNumber $(System.JobPositionInPhase)
+    -TotalSlices $(System.TotalJobsInPhase)
+    -TestFilter "$env:TEST_FILTER"
+    -Workers $(NUnit.NumberOfTestWorkers)
+    -RetryFailedTests:$${{ parameters.retryFailedTests }}
+  displayName: run ${{ parameters.testRunTitle }}
+  workingDirectory: ${{ parameters.xaSourcePath }}
   condition: ${{ parameters.condition }}
-
-- pwsh: |
-    $sliceArgs = @(
-      'slice',
-      '--test-assembly=${{ parameters.testAssembly }}',
-      '--slice-number=$(System.JobPositionInPhase)',
-      '--total-slices=$(System.TotalJobsInPhase)',
-      '--outfile=${{ parameters.testAssembly }}.runsettings'
-    )
-    if ($env:TEST_FILTER) {
-      $sliceArgs += "--test-filter=$env:TEST_FILTER"
-    }
-    $output = & "${{ parameters.xaSourcePath }}/bin/$(XA.Build.Configuration)/dotnet/dotnet" "$(TestSlicerDll)" @sliceArgs
-    $exitCode = $LASTEXITCODE
-    $output | Write-Host
-    if ($exitCode -ne 0) {
-      exit $exitCode
-    }
-    if ($output -match '^Found 0 matching tests') {
-      throw "dotnet-test-slicer found no tests in ${{ parameters.testAssembly }}."
-    }
-  displayName: Slice unit tests
-  failOnStderr: true
-  condition: ${{ parameters.condition }}
+  continueOnError: true
+  timeoutInMinutes: 180
   env:
     TEST_FILTER: ${{ parameters.testFilter }}
 
-- ${{ if eq(parameters.retryFailedTests, 'false') }}:
-  # If we aren't using auto-retry logic, then this is just a simple template call
-  - template: /build-tools/automation/yaml-templates/run-nunit-tests.yaml
-    parameters:
-      testRunTitle: ${{ parameters.testRunTitle }}-$(System.JobPositionInPhase)
-      testAssembly: ${{ parameters.testAssembly }}
-      dotNetTestExtraArgs: --settings "${{ parameters.testAssembly }}.runsettings"
-      xaSourcePath: ${{ parameters.xaSourcePath }}
-      condition: ${{ parameters.condition }}
+- template: /build-tools/automation/yaml-templates/diagnose-hanging-processes.yaml
 
-- ${{ if eq(parameters.retryFailedTests, 'true') }}:
-  # We need a custom dotnet test invocation here that does not trigger a task failure on failed tests
-  - pwsh: |
-      dotnet `
-        test `
-        ${{ parameters.testAssembly }} `
-        --settings "${{ parameters.testAssembly }}.runsettings" `
-        --logger trx --results-directory $(Agent.TempDirectory) `
-        -- NUnit.NumberOfTestWorkers=$(NUnit.NumberOfTestWorkers)
-    displayName: Run tests
-    ignoreLASTEXITCODE: true
-    workingDirectory: ${{ parameters.xaSourcePath }}
-    condition: ${{ parameters.condition }}
+# When tests are retried, Run-SlicedTests.ps1 removes the failed results from this file
+- task: PublishTestResults@2
+  displayName: publish ${{ parameters.testRunTitle }} results
+  inputs:
+    testResultsFormat: VSTest
+    testResultsFiles: $(Agent.TempDirectory)/TestResults/*.trx
+    testRunTitle: ${{ parameters.testRunTitle }}-$(System.JobPositionInPhase)
+  condition: ${{ parameters.condition }}
 
-  - template: /build-tools/automation/yaml-templates/diagnose-hanging-processes.yaml
+- task: PublishTestResults@2
+  displayName: publish ${{ parameters.testRunTitle }} (Auto-Retry) results
+  inputs:
+    testResultsFormat: VSTest
+    testResultsFiles: $(Agent.TempDirectory)/TestResults/retry/*.trx
+    testRunTitle: ${{ parameters.testRunTitle }}-$(System.JobPositionInPhase) (Auto-Retry)
+  condition: and(${{ parameters.condition }}, eq(variables['TestsRetried'], 'true'))
 
-  - pwsh: |
-      & "${{ parameters.xaSourcePath }}/bin/$(XA.Build.Configuration)/dotnet/dotnet" "$(TestSlicerDll)" `
-        retry `
-        --trx="$(Agent.TempDirectory)" `
-        --outfile="${{ parameters.testAssembly }}.runsettings"
-    displayName: Look for failed tests
-    workingDirectory: ${{ parameters.xaSourcePath }}
-    condition: ${{ parameters.condition }}
-
-    # dotnet-test-slicer removed the failed tests from our results file, so it's safe to publish it now
-  - task: PublishTestResults@2
-    inputs:
-      testResultsFormat: VSTest
-      testResultsFiles: $(Agent.TempDirectory)/*.trx
-      testRunTitle: ${{ parameters.testRunTitle }}-$(System.JobPositionInPhase)
-    condition: ${{ parameters.condition }}
-
-  - task: DotNetCoreCLI@2
-    displayName: Shut down existing dotnet daemons
-    inputs:
-      command: custom
-      custom: build-server
-      arguments: shutdown
-    condition: ${{ parameters.condition }}
-
-  - pwsh: |
-      $filePath = "${{ parameters.testAssembly }}.runsettings"
-      $stringToFind = "dotnet-slicer-dummy-test-name"
-      if (Select-String -Path $filePath -Pattern $stringToFind) {
-          Write-Host "No tests to rerun"
-          Write-Host "##vso[task.setvariable variable=ShouldRetryTests]false"
-      } else {
-          Write-Host "Need to rerun failed tests"
-          Write-Host "##vso[task.setvariable variable=ShouldRetryTests]true"
-      }
-    displayName: Determine if we need to rerun failed tests
-    workingDirectory: ${{ parameters.xaSourcePath }}  
-    condition: ${{ parameters.condition }}
-  
-  - template: /build-tools/automation/yaml-templates/run-nunit-tests.yaml
-    parameters:
-      testRunTitle: ${{ parameters.testRunTitle }}-$(System.JobPositionInPhase) (Auto-Retry)
-      testAssembly: ${{ parameters.testAssembly }}
-      dotNetTestExtraArgs: --settings "${{ parameters.testAssembly }}.runsettings"
-      xaSourcePath: ${{ parameters.xaSourcePath }}
-      condition: and(${{ parameters.condition }}, eq(variables['ShouldRetryTests'], 'true'))
+- template: /build-tools/automation/yaml-templates/kill-processes.yaml

@@ -1,0 +1,17 @@
+<Project>
+  <!--
+    This file assumes Configuration.props has been imported.
+    Builds an NUnit test project that runs with Microsoft.Testing.Platform (MTP)
+    and also with VSTest (`dotnet test Foo.dll`).
+  -->
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <EnableNUnitRunner>true</EnableNUnitRunner>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="NUnit"                                  Version="$(NUnitVersion)" />
+    <PackageReference Include="NUnit3TestAdapter"                      Version="$(NUnit3TestAdapterMTPVersion)" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk"                 Version="$(MicrosoftNETTestSdkMTPVersion)" />
+    <PackageReference Include="Microsoft.Testing.Extensions.TrxReport" Version="$(MicrosoftTestingPlatformTestsVersion)" />
+  </ItemGroup>
+</Project>

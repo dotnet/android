@@ -289,7 +289,6 @@ stages:
     steps:
     - template: /build-tools/automation/yaml-templates/setup-test-environment-public.yaml
       parameters:
-        installTestSlicer: true
         use1ESTemplate: false
 
     # AndroidGradleProjectTests run the Gradle wrapper, which downloads the
@@ -341,7 +340,6 @@ stages:
     - template: /build-tools/automation/yaml-templates/setup-test-environment-public.yaml
       parameters:
         useAgentJdkPath: false
-        installTestSlicer: true
         use1ESTemplate: false
 
     # AndroidGradleProjectTests run the Gradle wrapper, which downloads the
@@ -397,7 +395,6 @@ stages:
       parameters:
         jdkMajorVersion: $(DefaultJavaSdkMajorVersion)
         useAgentJdkPath: true
-        installTestSlicer: true
         installApkDiff: false
         use1ESTemplate: false
 
@@ -419,7 +416,7 @@ stages:
     - template: /build-tools/automation/yaml-templates/run-sliced-nunit-tests.yaml
       parameters:
         testAssembly: $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/MSBuildDeviceIntegration/$(DotNetStableTargetFramework)/MSBuildDeviceIntegration.dll
-        testFilter: $(ExcludedNightlyNUnitCategories)
+        testFilter: $(ExcludedNightlyTestCategories)
         testRunTitle: MSBuildDeviceIntegration On Device - macOS
 
     - template: /build-tools/automation/yaml-templates/upload-results.yaml
