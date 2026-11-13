@@ -743,14 +743,6 @@ Remove the '{0}' reference from your project and add the '{1}' NuGet package ins
     <value>Failed to process bundle config file '{0}', split config files will be ignored at run time.</value>
     <comment>{0} - The bundle config file path.</comment>
   </data>
-  <data name="XA4332" xml:space="preserve">
-    <value>The .aar archive path '{0}' for '{1}' resolves outside of the archive.</value>
-    <comment>{0} - The archive path computed from the item's Link or Abi metadata.
-{1} - The item's file path.</comment>
-  </data>
-  <data name="XA4333" xml:space="preserve">
-    <value>The .aar library contains input or destination paths that differ only by case. Use distinct names for these paths before packaging the library.</value>
-  </data>
   <data name="XA5101" xml:space="preserve">
     <value>Missing Android NDK toolchains directory '{0}'. Please install the Android NDK.</value>
     <comment>{0} - The path of the missing directory</comment>

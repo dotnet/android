@@ -205,6 +205,9 @@ namespace Xamarin.Android.Build.Tests
 			var libBBuilder = CreateDllBuilder (Path.Combine (path, libB.ProjectName));
 			Assert.IsTrue (libBBuilder.Build (libB), $"{libB.ProjectName} should succeed");
 
+			var projectJarHash = Files.HashString (Path.Combine (libB.IntermediateOutputPath,
+					"binding", "bin", $"{libB.ProjectName}.jar").Replace ("\\", "/"));
+
 			// Check .aar file for class library
 			var libBOutputPath = Path.Combine (Root, libBBuilder.ProjectDirectory, libB.OutputPath);
 			aarPath = Path.Combine (libBOutputPath, $"{libB.ProjectName}.aar");
@@ -220,6 +223,7 @@ namespace Xamarin.Android.Build.Tests
 				Assert.AreEqual (2, envCount, $"{aarPath} should contain 2 .env files under .net/env/");
 				int jarCount = aar.Entries.Count (e => e.FullName.StartsWith ("libs/", StringComparison.Ordinal) && e.FullName.EndsWith (".jar", StringComparison.Ordinal));
 				Assert.AreEqual (2, jarCount, $"{aarPath} should contain 2 .jar files under libs/");
+				aar.AssertContainsEntry (aarPath, $"libs/{projectJarHash}.jar");
 				aar.AssertContainsEntry (aarPath, "jni/arm64-v8a/libfoo.so");
 				aar.AssertContainsEntry (aarPath, "jni/x86_64/libfoo.so");
 				// proguard.txt from Library C should not flow to Library B and "double"
@@ -1133,96 +1137,24 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		public void DotNetLibraryAarRejectsPathsOutsideArchive ()
-		{
-			var proj = new XamarinAndroidLibraryProject ();
-			proj.OtherBuildItems.Add (new AndroidItem.AndroidAsset ("Assets\\foo.txt") {
-				TextContent = () => "foo",
-				MetadataValues = "Link=Assets/../../escape.txt",
-			});
-
-			using var builder = CreateDllBuilder ();
-			builder.ThrowOnBuildFailure = false;
-			Assert.IsFalse (builder.Build (proj), "Build should have failed.");
-			StringAssertEx.Contains ("error XA4332", builder.LastBuildOutput, "XA4332 should have been raised");
-			var intermediate = Path.Combine (Root, builder.ProjectDirectory, proj.IntermediateOutputPath);
-			FileAssert.DoesNotExist (Path.GetFullPath (Path.Combine (intermediate, "aar", "assets", "..", "..", "escape.txt")));
-			FileAssert.DoesNotExist (Path.Combine (Root, builder.ProjectDirectory, proj.OutputPath, $"{proj.ProjectName}.aar"));
-		}
-
-		[TestCase ("foo.txt", false)]
-		[TestCase ("Foo.txt", true)]
-		[TestCase ("Bar.txt", true)]
-		public void DotNetLibraryAarAssetDestinationCasing (string secondDestination, bool expectedSuccess)
+		public void DotNetLibraryAarPreservesCaseDistinctAssets ()
 		{
 			var proj = new XamarinAndroidLibraryProject ();
 			proj.OtherBuildItems.Add (new AndroidItem.AndroidAsset ("one\\a.txt") {
 				TextContent = () => "first",
 				MetadataValues = "Link=Assets/Foo.txt",
 			});
-
-			using var builder = CreateDllBuilder ();
-			Assert.IsTrue (builder.Build (proj), "Initial build should have succeeded.");
 			proj.OtherBuildItems.Add (new AndroidItem.AndroidAsset ("two\\b.txt") {
 				TextContent = () => "second",
-				MetadataValues = $"Link=Assets/{secondDestination}",
-			});
-
-			builder.ThrowOnBuildFailure = false;
-			Assert.AreEqual (expectedSuccess, builder.Build (proj), "Unexpected build result.");
-			var aarPath = Path.Combine (Root, builder.ProjectDirectory, proj.OutputPath, $"{proj.ProjectName}.aar");
-			if (!expectedSuccess) {
-				StringAssertEx.Contains ("error XA4333", builder.LastBuildOutput, "XA4333 should have been raised");
-				FileAssert.DoesNotExist (aarPath);
-				return;
-			}
-
-			using var aar = ZipHelper.OpenZip (aarPath);
-			aar.AssertEntryContents (aarPath, "assets/Foo.txt", contents: secondDestination == "Foo.txt" ? "second" : "first");
-			aar.AssertEntryContents (aarPath, $"assets/{secondDestination}", contents: "second");
-		}
-
-		[TestCase ("AndroidJavaLibrary", "jar", "libs")]
-		[TestCase ("EmbeddedJar", "jar", "libs")]
-		[TestCase ("AndroidEnvironment", "env", ".net/env")]
-		public void DotNetLibraryAarHashedPaths (string buildAction, string extension, string archiveDirectory)
-		{
-			var source = $"sub\\directory\\input.{extension}";
-			var proj = new XamarinAndroidLibraryProject ();
-			proj.OtherBuildItems.Add (new BuildItem (buildAction, source) {
-				BinaryContent = () => extension == "jar" ? ResourceData.JavaSourceJarTestJar : Encoding.UTF8.GetBytes ("TEST_VARIABLE=value"),
+				MetadataValues = "Link=Assets/foo.txt",
 			});
 
 			using var builder = CreateDllBuilder ();
 			Assert.IsTrue (builder.Build (proj), "Build should have succeeded.");
 			var aarPath = Path.Combine (Root, builder.ProjectDirectory, proj.OutputPath, $"{proj.ProjectName}.aar");
-			var hash = Files.HashString (source.Replace ('\\', '/'));
 			using var aar = ZipHelper.OpenZip (aarPath);
-			aar.AssertContainsEntry (aarPath, $"{archiveDirectory}/{hash}.{extension}");
-		}
-
-		[Test]
-		public void DotNetLibraryAarNativeLibraryClean ()
-		{
-			var proj = new XamarinAndroidLibraryProject ();
-			proj.OtherBuildItems.Add (new AndroidItem.AndroidNativeLibrary ("x86_64\\libfoo.so") {
-				BinaryContent = () => new byte [] { 1 },
-			});
-
-			using var builder = CreateDllBuilder ();
-			var projectDirectory = Path.Combine (Root, builder.ProjectDirectory);
-			Assert.IsTrue (builder.Build (proj), "Build should have succeeded.");
-			var aarPath = Path.Combine (projectDirectory, proj.OutputPath, $"{proj.ProjectName}.aar");
-			using (var aar = ZipHelper.OpenZip (aarPath)) {
-				aar.AssertContainsEntry (aarPath, "jni/x86_64/libfoo.so");
-				aar.AssertDoesNotContainEntry (aarPath, "proguard.txt");
-			}
-
-			var stagedFile = Path.Combine (projectDirectory, proj.IntermediateOutputPath, "aar", "jni", "x86_64", "libfoo.so");
-			FileAssert.Exists (stagedFile);
-			Assert.IsTrue (builder.Clean (proj), "Clean should have succeeded.");
-			FileAssert.DoesNotExist (stagedFile);
-			FileAssert.DoesNotExist (aarPath);
+			aar.AssertEntryContents (aarPath, "assets/Foo.txt", contents: "first");
+			aar.AssertEntryContents (aarPath, "assets/foo.txt", contents: "second");
 		}
 
 		/// <summary>

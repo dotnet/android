@@ -14,7 +14,8 @@ projects.
 
   <PropertyGroup>
     <_AarCacheFile>$(IntermediateOutputPath)$(TargetName).aar.cache</_AarCacheFile>
-    <_AarStagingDirectory>$(IntermediateOutputPath)aar\</_AarStagingDirectory>
+    <_AarResourceCaseMapFile>$(IntermediateOutputPath)$(TargetName).aar.res_name_case_map.txt</_AarResourceCaseMapFile>
+    <_AarProguardFile>$(IntermediateOutputPath)$(TargetName).aar.proguard.txt</_AarProguardFile>
     <_AarOutputPath>$(OutputPath)$(TargetName).aar</_AarOutputPath>
   </PropertyGroup>
 
@@ -110,26 +111,18 @@ projects.
       </_AarAbiCandidate>
       <!-- The first candidate with an ABI wins. -->
       <_AarAbiResolved Include="@(_AarAbiCandidate)" Condition=" '%(_AarAbiCandidate.Abi)' != '' " />
-      <_AarNativeLibrary Include="@(_AarAbiResolved->DistinctWithCase())" RemoveMetadata="Name;Rid" />
+      <_AarNativeLibrary Include="@(_AarAbiResolved->DistinctWithCase())" />
       <_AarAbiUnresolved Include="@(EmbeddedNativeLibrary)" Exclude="@(_AarNativeLibrary)" />
     </ItemGroup>
-    <!-- ErrorAndContinue reports every invalid item instead of stopping at the first batch. -->
     <AndroidError
-        Condition=" '@(_AarAbiUnresolved)' != '' "
+        Condition=" '@(_AarAbiUnresolved->Count())' != '0' "
         ContinueOnError="ErrorAndContinue"
         Code="XA4301"
         ResourceName="XA4301_ABI"
         FormatArguments="%(_AarAbiUnresolved.Identity)"
         File="%(_AarAbiUnresolved.Identity)"
     />
-    <!--
-      Stage the AAR layout; when two items map to the same %(ArchivePath), the last one wins.
-      Asset paths drop everything up to and including the first $(MonoAndroidAssetsPrefix) directory.
-    -->
-    <PropertyGroup>
-      <_AndroidAarAssetDirectory>/$(MonoAndroidAssetsPrefix)</_AndroidAarAssetDirectory>
-      <_AndroidAarAssetPrefix>$(_AndroidAarAssetDirectory)/</_AndroidAarAssetPrefix>
-    </PropertyGroup>
+    <!-- Hash slash-normalized paths so entry names match across platforms. -->
     <ItemGroup>
       <_AarJar Include="@(AndroidJavaLibrary)" Condition=" '%(AndroidJavaLibrary.Pack)' != 'false' " />
       <_AarJar Include="@(EmbeddedJar)" Condition=" '%(EmbeddedJar.Pack)' != 'false' " />
@@ -140,43 +133,46 @@ projects.
     <ComputeHash Source="@(_AarJar->'$([System.String]::Copy('%(_AarJar.Identity)').Replace('\', '/'))')">
       <Output TaskParameter="Output" ItemName="_AarHashedJar" />
     </ComputeHash>
+    <!--
+      Asset paths drop everything up to and including the first $(MonoAndroidAssetsPrefix) directory.
+      The Identity conditions keep sources whose paths differ only by case in separate batches.
+    -->
     <ItemGroup>
-      <_AndroidAarAsset Include="@(AndroidAsset)" Condition=" !$([System.IO.Directory]::Exists('%(AndroidAsset.FullPath)')) " />
-      <!-- Keep distinct sources in separate metadata batches even when their logical paths differ only by case. -->
-      <_AndroidAarAsset Condition=" '%(_AndroidAarAsset.Identity)' != '' ">
-        <_AndroidAssetPath>$([MSBuild]::ValueOrDefault('%(_AndroidAarAsset.Link)', '%(_AndroidAarAsset.Identity)').Replace('\', '/'))</_AndroidAssetPath>
-      </_AndroidAarAsset>
-      <_AndroidAarAsset Condition=" '%(_AndroidAarAsset.Identity)' != '' ">
-        <_AndroidAssetSearchPath>/%(_AndroidAarAsset._AndroidAssetPath)</_AndroidAssetSearchPath>
-      </_AndroidAarAsset>
-      <_AndroidAarAsset Condition=" '%(_AndroidAarAsset.Identity)' != '' ">
-        <_AndroidAssetPrefixIndex>$([System.String]::Copy('%(_AndroidAarAsset._AndroidAssetSearchPath)').IndexOf('$(_AndroidAarAssetPrefix)', System.StringComparison.OrdinalIgnoreCase))</_AndroidAssetPrefixIndex>
-      </_AndroidAarAsset>
-      <_AndroidAarAsset Condition=" '%(_AndroidAarAsset.Identity)' != '' ">
-        <_AndroidAssetRelativeStart>$([MSBuild]::Add(%(_AndroidAarAsset._AndroidAssetPrefixIndex), $(_AndroidAarAssetPrefix.Length)))</_AndroidAssetRelativeStart>
-      </_AndroidAarAsset>
-      <_AndroidAarAsset Condition=" '%(_AndroidAarAsset.Identity)' != '' ">
-        <_AndroidAssetRelativePath>%(_AndroidAarAsset._AndroidAssetPath)</_AndroidAssetRelativePath>
-        <_AndroidAssetRelativePath
-            Condition=" '%(_AndroidAarAsset._AndroidAssetPrefixIndex)' &gt;= '0' "
-            >$([System.String]::Copy('%(_AndroidAarAsset._AndroidAssetSearchPath)').Substring(%(_AndroidAarAsset._AndroidAssetRelativeStart)).TrimStart('/'))</_AndroidAssetRelativePath>
-        <_AndroidAssetRelativePath
-            Condition=" '%(_AndroidAarAsset._AndroidAssetPrefixIndex)' == '-1' and $([System.String]::Copy('%(_AndroidAarAsset._AndroidAssetSearchPath)').EndsWith('$(_AndroidAarAssetDirectory)', System.StringComparison.OrdinalIgnoreCase)) "
-            ></_AndroidAssetRelativePath>
-      </_AndroidAarAsset>
-      <_AarDestination Include="@(_AndroidAarAsset->'assets/%(_AndroidAssetRelativePath)')" />
-      <_AndroidAarAsset Condition=" '%(_AndroidAarAsset.Identity)' != '' ">
-        <ArchivePath>assets/%(_AndroidAarAsset._AndroidAssetRelativePath)</ArchivePath>
-      </_AndroidAarAsset>
-      <_AarFile Include="@(_AndroidAarAsset)" />
+      <_AarAsset Include="@(AndroidAsset)" Condition=" !$([System.IO.Directory]::Exists('%(AndroidAsset.FullPath)')) " />
+      <_AarAsset>
+        <_Path>/$([MSBuild]::ValueOrDefault('%(_AarAsset.Link)', '%(_AarAsset.Identity)').Replace('\', '/'))</_Path>
+      </_AarAsset>
+      <_AarAsset Condition=" '%(_AarAsset.Identity)' != '' ">
+        <_PrefixIndex>$([System.String]::Copy('%(_AarAsset._Path)').IndexOf('/$(MonoAndroidAssetsPrefix)/', System.StringComparison.OrdinalIgnoreCase))</_PrefixIndex>
+      </_AarAsset>
+      <_AarAsset Condition=" '%(_AarAsset.Identity)' != '' ">
+        <ArchivePath>assets%(_AarAsset._Path)</ArchivePath>
+        <ArchivePath Condition=" '%(_AarAsset._PrefixIndex)' != '-1' ">assets/$([System.String]::Copy('%(_AarAsset._Path)').Substring($([MSBuild]::Add(%(_AarAsset._PrefixIndex), 1))).Substring($(MonoAndroidAssetsPrefix.Length)).TrimStart('/'))</ArchivePath>
+      </_AarAsset>
       <_AarResource Include="@(_AndroidResourceDest)" Condition=" !$([System.IO.Directory]::Exists('%(_AndroidResourceDest.FullPath)')) "
           ResourcePath="$([System.IO.Path]::GetFileName($([System.IO.Path]::GetDirectoryName('%(_AndroidResourceDest.FullPath)'))))/%(_AndroidResourceDest.Filename)%(_AndroidResourceDest.Extension)"
           LogicalName="$([System.String]::Copy('%(_AndroidResourceDest.LogicalName)').Replace('\', '/'))" />
+      <_AarFile Include="@(_AarAsset)" />
       <_AarFile Include="@(_AarResource)" ArchivePath="res/%(_AarResource.ResourcePath)" />
       <_AarFile Include="@(_AarHashedEnvironment)" ArchivePath=".net/env/%(_AarHashedEnvironment.Hash).env" />
       <_AarFile Include="@(_AarHashedJar)" ArchivePath="libs/%(_AarHashedJar.Hash).jar" />
       <_AarFile Include="@(_AarNativeLibrary)" ArchivePath="jni/%(_AarNativeLibrary.Abi)/%(_AarNativeLibrary.Filename)%(_AarNativeLibrary.Extension)" />
     </ItemGroup>
+    <WriteLinesToFile
+        Condition=" '@(_AarResource->Count())' != '0' "
+        File="$(_AarResourceCaseMapFile)"
+        Lines="@(_AarResource->'%(LogicalName)%3B%(ResourcePath)')"
+        Overwrite="true"
+    />
+    <ReadLinesFromFile Condition=" '@(ProguardConfiguration->Count())' != '0' " File="%(ProguardConfiguration.Identity)">
+      <Output TaskParameter="Lines" ItemName="_AarProguardLine" />
+    </ReadLinesFromFile>
+    <WriteLinesToFile
+        Condition=" '@(ProguardConfiguration->Count())' != '0' "
+        File="$(_AarProguardFile)"
+        Lines="@(_AarProguardLine)"
+        Overwrite="true"
+    />
     <XmlPeek
         Condition=" Exists('$(AndroidManifest)') "
         XmlInputPath="$(AndroidManifest)"
@@ -184,74 +180,20 @@ projects.
         ProhibitDtd="true">
       <Output TaskParameter="Result" PropertyName="_AarManifestPackage" />
     </XmlPeek>
-    <ItemGroup Condition=" '$(_AarManifestPackage)' != '' ">
-      <_AarFile Include="$(AndroidManifest)" ArchivePath="AndroidManifest.xml" />
-    </ItemGroup>
-    <!-- Reject archive paths such as 'assets/../../file' or a custom %(Abi) of '..' that would escape the staging directory. -->
-    <PropertyGroup>
-      <_AarStagingFullPath>$([MSBuild]::NormalizeDirectory('$(MSBuildProjectDirectory)', '$(_AarStagingDirectory)'))</_AarStagingFullPath>
-    </PropertyGroup>
-    <!-- Check original inputs too: case-insensitive metadata batching can merge names before staging. -->
     <ItemGroup>
-      <_AarDestination Include="@(_AarFile->'%(ArchivePath)')" />
-      <_AarDestination Include="@(_AarNativeLibrary->'jni/%(Abi)/%(Filename)%(Extension)')" />
-      <_AarNormalizedDestination Include="@(_AarDestination->'$([MSBuild]::NormalizePath('$(_AarStagingFullPath)', '%(Identity)'))')" />
-      <_AarAssetLink Include="@(AndroidAsset->Metadata('Link')->Replace('\', '/'))" />
-      <_AarCaseCheckedPath Include="@(_AarDestination->'archive/%(Identity)')" />
-      <_AarCaseCheckedPath Include="@(_AarNormalizedDestination->'destination/%(Identity)')" />
-      <_AarCaseCheckedPath Include="@(AndroidAsset->'source/%(FullPath)')" />
-      <_AarCaseCheckedPath Include="@(_AarAssetLink->'link/%(Identity)')" />
-      <_AarDistinctDestination Include="@(_AarCaseCheckedPath->Distinct())" />
-      <_AarCaseDistinctDestination Include="@(_AarCaseCheckedPath->DistinctWithCase())" />
-      <_AarFile StagedPath="$([MSBuild]::NormalizePath('$(_AarStagingFullPath)', '%(_AarFile.ArchivePath)'))" />
-      <_AarInvalidFile Include="@(_AarFile)" Condition=" !$([System.String]::Copy('%(_AarFile.StagedPath)').StartsWith('$(_AarStagingFullPath)', System.StringComparison.Ordinal)) " />
-      <_AarFile Remove="@(_AarInvalidFile)" MatchOnMetadata="StagedPath" />
+      <_AarFile Include="$(_AarResourceCaseMapFile)" ArchivePath=".net/__res_name_case_map.txt" Condition=" '@(_AarResource->Count())' != '0' " />
+      <_AarFile Include="$(_AarProguardFile)" ArchivePath="proguard.txt" Condition=" '@(ProguardConfiguration->Count())' != '0' " />
+      <_AarFile Include="$(AndroidManifest)" ArchivePath="AndroidManifest.xml" Condition=" '$(_AarManifestPackage)' != '' " />
     </ItemGroup>
-    <AndroidError
-        Condition=" '@(_AarInvalidFile)' != '' "
-        ContinueOnError="ErrorAndContinue"
-        Code="XA4332"
-        ResourceName="XA4332"
-        FormatArguments="%(_AarInvalidFile.ArchivePath);%(_AarInvalidFile.Identity)"
-        File="%(_AarInvalidFile.Identity)"
+    <!-- Start from an empty archive so entries from previous builds never linger. -->
+    <Delete Files="$(_AarOutputPath)" />
+    <MakeDir Directories="$(OutputPath)" />
+    <BuildArchive
+        Condition=" '@(_AarAbiUnresolved->Count())' == '0' "
+        ApkOutputPath="$(_AarOutputPath)"
+        FilesToAddToArchive="@(_AarFile)"
     />
-    <!-- Reject case-only collisions on every host so archives do not depend on filesystem case sensitivity. -->
-    <AndroidError
-        Condition=" '@(_AarDistinctDestination->Count())' != '@(_AarCaseDistinctDestination->Count())' "
-        ContinueOnError="ErrorAndContinue"
-        Code="XA4333"
-        ResourceName="XA4333"
-    />
-    <PropertyGroup>
-      <_AarHasErrors Condition=" '@(_AarAbiUnresolved)' != '' or '@(_AarInvalidFile)' != '' or '@(_AarDistinctDestination->Count())' != '@(_AarCaseDistinctDestination->Count())' ">true</_AarHasErrors>
-    </PropertyGroup>
-    <Delete Condition=" '$(_AarHasErrors)' == 'true' " Files="$(_AarOutputPath)" />
-    <RemoveDirFixed Condition=" '$(_AarHasErrors)' != 'true' " Directories="$(_AarStagingDirectory)" />
-    <Copy Condition=" '$(_AarHasErrors)' != 'true' " SourceFiles="@(_AarFile)" DestinationFiles="@(_AarFile->'%(StagedPath)')" />
-    <WriteLinesToFile
-        Condition=" '$(_AarHasErrors)' != 'true' and '@(_AarResource)' != '' "
-        File="$(_AarStagingDirectory).net/__res_name_case_map.txt"
-        Lines="@(_AarResource->'%(LogicalName)%3B%(ResourcePath)')"
-    />
-    <ReadLinesFromFile Condition=" '$(_AarHasErrors)' != 'true' and '@(ProguardConfiguration)' != '' " File="%(ProguardConfiguration.Identity)">
-      <Output TaskParameter="Lines" ItemName="_AarProguardLine" />
-    </ReadLinesFromFile>
-    <WriteLinesToFile
-        Condition=" '$(_AarHasErrors)' != 'true' and '@(ProguardConfiguration)' != '' "
-        File="$(_AarStagingDirectory)proguard.txt"
-        Lines="@(_AarProguardLine)"
-    />
-    <MakeDir Condition=" '$(_AarHasErrors)' != 'true' " Directories="$(_AarStagingDirectory);$(OutputPath)" />
-    <ZipDirectory
-        Condition=" '$(_AarHasErrors)' != 'true' "
-        SourceDirectory="$(_AarStagingDirectory)"
-        DestinationFile="$(_AarOutputPath)"
-        Overwrite="true"
-    />
-    <ItemGroup Condition=" '$(_AarHasErrors)' != 'true' ">
-      <FileWrites Include="@(_AarFile->'%(StagedPath)')" />
-      <FileWrites Include="$(_AarStagingDirectory).net/__res_name_case_map.txt" Condition=" '@(_AarResource)' != '' " />
-      <FileWrites Include="$(_AarStagingDirectory)proguard.txt" Condition=" '@(ProguardConfiguration)' != '' " />
+    <ItemGroup>
       <FileWrites Include="$(_AarOutputPath)" />
     </ItemGroup>
   </Target>
@@ -289,10 +231,7 @@ projects.
   </Target>
 
   <Target Name="_CleanAarCache">
-    <Delete Files="$(_AarCacheFile)" />
-    <!-- _CreateAar runs after IncrementalClean, so its @(FileWrites) are not recorded; remove its outputs explicitly. -->
-    <RemoveDirFixed Directories="$(_AarStagingDirectory)" Condition=" Exists('$(_AarStagingDirectory)') " />
-    <Delete Files="$(_AarOutputPath)" />
+    <Delete Files="$(_AarCacheFile);$(_AarResourceCaseMapFile);$(_AarProguardFile)" />
   </Target>
 
 </Project>
