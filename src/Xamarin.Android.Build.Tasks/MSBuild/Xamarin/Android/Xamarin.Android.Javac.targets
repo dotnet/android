@@ -140,7 +140,7 @@ It is shared between "legacy" binding projects and .NET 7+ projects.
     <MakeDir Directories="$(_AndroidIntermediateBindingJavaClassDirectory)" />
     <PropertyGroup>
       <_AndroidBindingJavacResponseFile>$([MSBuild]::NormalizePath('$(IntermediateOutputPath)', '_CompileBindingJava.rsp'))</_AndroidBindingJavacResponseFile>
-      <_AndroidBindingJavacResponseFileArgument>@$(_AndroidBindingJavacResponseFile)</_AndroidBindingJavacResponseFileArgument>
+      <_AndroidBindingJavacResponseFileArgument>@_CompileBindingJava.rsp</_AndroidBindingJavacResponseFileArgument>
       <_AndroidBindingJavacResponseFileArgument>$([System.String]::Copy('$(_AndroidBindingJavacResponseFileArgument)').Replace('$(_AndroidJavacShellEscapeFrom)', '$(_AndroidJavacShellEscapeTo)').Insert(0, '$(_AndroidJavacShellQuote)'))$(_AndroidJavacShellQuote)</_AndroidBindingJavacResponseFileArgument>
     </PropertyGroup>
     <ItemGroup>
@@ -149,7 +149,7 @@ It is shared between "legacy" binding projects and .NET 7+ projects.
       <_AndroidBindingJavacStub Include="$(_AndroidIntermediateBindingJavaSourceDirectory)\**\*.java" />
     </ItemGroup>
     <PropertyGroup>
-      <_AndroidBindingJavacClasspathArgument>@(_AndroidBindingJavacClasspath->Replace('\', '\\'), '$(_AndroidJavacEscapedPathSeparator)')</_AndroidBindingJavacClasspathArgument>
+      <_AndroidBindingJavacClasspathArgument>@(_AndroidBindingJavacClasspath->'%(FullPath)'->Replace('\', '\\'), '$(_AndroidJavacEscapedPathSeparator)')</_AndroidBindingJavacClasspathArgument>
     </PropertyGroup>
     <!-- javac response files interpret backslashes as escape characters. -->
     <WriteLinesToFile
@@ -157,19 +157,22 @@ It is shared between "legacy" binding projects and .NET 7+ projects.
         Lines="-d &quot;$([MSBuild]::NormalizeDirectory('$(_AndroidIntermediateBindingJavaClassDirectory)').Replace('\', '\\'))&quot;;
                -classpath &quot;$(_AndroidBindingJavacClasspathArgument)&quot;;
                -encoding UTF8;
-               @(_AndroidBindingJavacSource->'&quot;%(Identity)&quot;'->Replace('\', '\\'));
-               @(_AndroidBindingJavacStub->'&quot;%(Identity)&quot;'->Replace('\', '\\')->Normalize())"
+               @(_AndroidBindingJavacSource->'&quot;%(FullPath)&quot;'->Replace('\', '\\'));
+               @(_AndroidBindingJavacStub->'&quot;%(FullPath)&quot;'->Replace('\', '\\')->Normalize())"
         Overwrite="true" />
     <ItemGroup>
       <FileWrites Include="$(_AndroidBindingJavacResponseFile)" />
     </ItemGroup>
+    <!-- The Windows javac launcher cannot preserve Unicode command-line arguments. Pass only the
+         response-file name, with absolute paths inside it since javac runs from its directory. -->
     <Exec Command="$(_AndroidJavacCommand) $(_AndroidBindingJavacResponseFileArgument)"
+        WorkingDirectory="$([MSBuild]::NormalizeDirectory('$(IntermediateOutputPath)'))"
         IgnoreExitCode="true" IgnoreStandardErrorWarningFormat="true" ConsoleToMSBuild="true">
       <Output TaskParameter="ConsoleOutput" ItemName="_AndroidBindingJavacOutput" />
       <Output TaskParameter="ExitCode" PropertyName="_AndroidBindingJavacExitCode" />
     </Exec>
     <AndroidError Code="XA5213" ResourceName="XA5213"
-        FormatArguments="$(_AndroidJavacToolExe);$(_AndroidJavacCommand) &quot;@$(_AndroidBindingJavacResponseFile)&quot;"
+        FormatArguments="$(_AndroidJavacToolExe);$(_AndroidJavacCommand) $(_AndroidBindingJavacResponseFileArgument)"
         Condition=" '$(_AndroidBindingJavacExitCode)' != '0' and $([System.String]::Copy('@(_AndroidBindingJavacOutput)').Contains('java.lang.OutOfMemoryError:')) " />
     <ItemGroup Condition=" '$(_AndroidBindingJavacExitCode)' != '0' ">
       <_AndroidBindingJavacError Include="@(_AndroidBindingJavacOutput)"
@@ -222,7 +225,7 @@ It is shared between "legacy" binding projects and .NET 7+ projects.
     <MakeDir Directories="$(_AndroidIntermediateJavaClassDirectory)" />
     <PropertyGroup>
       <_AndroidJavacResponseFile>$([MSBuild]::NormalizePath('$(IntermediateOutputPath)', '_CompileJava.rsp'))</_AndroidJavacResponseFile>
-      <_AndroidJavacResponseFileArgument>@$(_AndroidJavacResponseFile)</_AndroidJavacResponseFileArgument>
+      <_AndroidJavacResponseFileArgument>@_CompileJava.rsp</_AndroidJavacResponseFileArgument>
       <_AndroidJavacResponseFileArgument>$([System.String]::Copy('$(_AndroidJavacResponseFileArgument)').Replace('$(_AndroidJavacShellEscapeFrom)', '$(_AndroidJavacShellEscapeTo)').Insert(0, '$(_AndroidJavacShellQuote)'))$(_AndroidJavacShellQuote)</_AndroidJavacResponseFileArgument>
     </PropertyGroup>
     <ItemGroup>
@@ -234,7 +237,7 @@ It is shared between "legacy" binding projects and .NET 7+ projects.
       <_AndroidJavacStub Include="%(_AdditionalJavaStubDirectory.Identity)\**\*.java" />
     </ItemGroup>
     <PropertyGroup>
-      <_AndroidJavacClasspathArgument>@(_AndroidJavacClasspath->Replace('\', '\\'), '$(_AndroidJavacEscapedPathSeparator)')</_AndroidJavacClasspathArgument>
+      <_AndroidJavacClasspathArgument>@(_AndroidJavacClasspath->'%(FullPath)'->Replace('\', '\\'), '$(_AndroidJavacEscapedPathSeparator)')</_AndroidJavacClasspathArgument>
     </PropertyGroup>
     <!-- javac response files interpret backslashes as escape characters. -->
     <WriteLinesToFile
@@ -242,19 +245,20 @@ It is shared between "legacy" binding projects and .NET 7+ projects.
         Lines="-d &quot;$([MSBuild]::NormalizeDirectory('$(_AndroidIntermediateJavaClassDirectory)').Replace('\', '\\'))&quot;;
                -classpath &quot;$(_AndroidJavacClasspathArgument)&quot;;
                -encoding UTF8;
-               @(_AndroidJavacSource->'&quot;%(Identity)&quot;'->Replace('\', '\\'));
-               @(_AndroidJavacStub->'&quot;%(Identity)&quot;'->Replace('\', '\\')->Normalize())"
+               @(_AndroidJavacSource->'&quot;%(FullPath)&quot;'->Replace('\', '\\'));
+               @(_AndroidJavacStub->'&quot;%(FullPath)&quot;'->Replace('\', '\\')->Normalize())"
         Overwrite="true" />
     <ItemGroup>
       <FileWrites Include="$(_AndroidJavacResponseFile)" />
     </ItemGroup>
     <Exec Command="$(_AndroidJavacCommand) $(_AndroidJavacResponseFileArgument)"
+        WorkingDirectory="$([MSBuild]::NormalizeDirectory('$(IntermediateOutputPath)'))"
         IgnoreExitCode="true" IgnoreStandardErrorWarningFormat="true" ConsoleToMSBuild="true">
       <Output TaskParameter="ConsoleOutput" ItemName="_AndroidJavacOutput" />
       <Output TaskParameter="ExitCode" PropertyName="_AndroidJavacExitCode" />
     </Exec>
     <AndroidError Code="XA5213" ResourceName="XA5213"
-        FormatArguments="$(_AndroidJavacToolExe);$(_AndroidJavacCommand) &quot;@$(_AndroidJavacResponseFile)&quot;"
+        FormatArguments="$(_AndroidJavacToolExe);$(_AndroidJavacCommand) $(_AndroidJavacResponseFileArgument)"
         Condition=" '$(_AndroidJavacExitCode)' != '0' and $([System.String]::Copy('@(_AndroidJavacOutput)').Contains('java.lang.OutOfMemoryError:')) " />
     <ItemGroup Condition=" '$(_AndroidJavacExitCode)' != '0' ">
       <_AndroidJavacError Include="@(_AndroidJavacOutput)"

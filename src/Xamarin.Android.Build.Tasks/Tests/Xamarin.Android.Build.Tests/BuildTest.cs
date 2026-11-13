@@ -2158,7 +2158,7 @@ public class ToolbarEx {
 				Assert.IsFalse (b.Build (proj), "Build should have failed.");
 				var expectedErrors = new [] {
 					@"TestMe\.java\s*: error JAVAC0000: line 1: class, interface, or enum expected",
-					@"TestMe2\.java\s*: error JAVAC0000: line 1: ';' expected",
+					@"TestMe2\.java\s*: error JAVAC0000: line 1: ('\{' or )?';' expected",
 				};
 				foreach (var error in expectedErrors) {
 					StringAssertEx.ContainsRegex (error, b.LastBuildOutput, $"Formatted Java compiler error should match `{error}`.");
@@ -2168,21 +2168,30 @@ public class ToolbarEx {
 		}
 
 		[Test]
-		public void BuildApplicationWithJavaSourceInShellSensitiveDirectory ()
+		public void BuildApplicationWithJavaSourceInShellSensitiveDirectory (
+			[Values ("app$HOME%PATH%'q", "テスト with spaces")] string directory,
+			[Values (false, true)] bool bind)
 		{
-			var path = Path.Combine ("temp", TestName, "app$HOME%PATH%'q");
+			var path = Path.Combine ("temp", TestName, directory);
 			var proj = new XamarinAndroidApplicationProject () {
+				IntermediateOutputPath = Path.Combine ("obj", "テスト intermediate"),
 				AndroidJavaSources = {
-					new BuildItem (AndroidBuildActions.AndroidJavaSource, "TestJava.java") {
+					new BuildItem (AndroidBuildActions.AndroidJavaSource, "java/TestJava.java") {
 						TextContent = () => "public class TestJava { }",
 						Encoding = Encoding.ASCII,
+						Metadata = { { "Bind", bind.ToString () } },
 					},
 				},
 			};
 			using (var b = CreateApkBuilder (path)) {
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
-				var quotedPathSegment = IsWindows ? "app$HOME%%PATH%%'q" : "app$HOME%PATH%'\\''q";
-				Assert.IsTrue (b.LastBuildOutput.ContainsText (quotedPathSegment), $"Javac command should contain `{quotedPathSegment}`.");
+				FileAssert.Exists (b.Output.GetIntermediaryPath (Path.Combine (bind ? "binding" : "android", "bin", "classes", "TestJava.class")),
+					"Java source should be compiled from the project directory.");
+				Assert.IsTrue (b.Build (proj), "Incremental build should have succeeded.");
+				b.Output.AssertTargetIsSkipped ("_CompileJava");
+				if (bind) {
+					b.Output.AssertTargetIsSkipped ("_CompileBindingJava");
+				}
 				Assert.IsTrue (b.Clean (proj), "Clean should have succeeded.");
 			}
 		}
