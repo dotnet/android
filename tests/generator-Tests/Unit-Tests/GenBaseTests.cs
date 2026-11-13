@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using MonoDroid.Generation;
 using NUnit.Framework;
+using generator.SourceWriters;
 
 namespace generatortests
 {
@@ -12,6 +13,54 @@ namespace generatortests
 	public class GenBaseTests
 	{
 		CodeGenerationOptions options = new CodeGenerationOptions ();
+
+		[Test]
+		public void InheritedFieldsAndPropertiesRequireNew ()
+		{
+			var parent = SupportTypeBuilder.CreateClass ("java.Base", options);
+			var derived = new DerivedTestClass (parent);
+			var field = SupportTypeBuilder.CreateField ("Count", options, "int");
+
+			Assert.True (new BoundFieldAsProperty (derived, field, options).IsShadow);
+			Assert.True (new BoundField (derived, field.SetConstant ("1"), options).IsShadow);
+		}
+
+		[Test]
+		public void HiddenVirtualMethodRetainsNewSlot ()
+		{
+			var parent = SupportTypeBuilder.CreateClass ("java.Base", options);
+			parent.Methods.Add (SupportTypeBuilder.CreateMethod (parent, "DoWork", options));
+			var derived = new DerivedTestClass (parent);
+			var method = SupportTypeBuilder.CreateMethod (derived, "DoWork", options);
+			var writer = new BoundMethod (derived, method, options, generateCallbacks: false);
+
+			Assert.True (writer.IsShadow);
+			Assert.True (writer.IsVirtual);
+			Assert.False (writer.IsOverride);
+		}
+
+		[Test]
+		public void DifferentOverloadDoesNotRequireNew ()
+		{
+			var parent = SupportTypeBuilder.CreateClass ("java.Base", options);
+			parent.Methods.Add (SupportTypeBuilder.CreateMethod (parent, "DoWork", options));
+			var derived = new DerivedTestClass (parent);
+			var method = SupportTypeBuilder.CreateMethod (derived, "DoWork", options, parameters: new Parameter ("value", "int", "int", false));
+
+			Assert.False (derived.RequiresNew (method.AdjustedName, method));
+		}
+
+		sealed class DerivedTestClass : TestClass
+		{
+			readonly ClassGen parent;
+
+			public DerivedTestClass (ClassGen parent) : base (parent.FullName, "java.Derived")
+			{
+				this.parent = parent;
+			}
+
+			public override ClassGen BaseGen => parent;
+		}
 
 		[Test]
 		public void PropertyRequiresNew ()

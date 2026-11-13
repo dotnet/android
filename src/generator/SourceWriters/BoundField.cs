@@ -36,6 +36,7 @@ namespace generator.SourceWriters
 
 			SetVisibility (field.Visibility);
 			IsConst = true;
+			IsShadow = type.RequiresNew (field);
 
 			// the Value complication is due to constant enum from negative integer value (C# compiler requires explicit parenthesis).
 			Value = $"({opt.GetOutputName (field.Symbol.FullName)}) {(field.Value.Contains ('-') && field.Symbol.FullName.Contains ('.') ? '(' + field.Value + ')' : field.Value)}";
