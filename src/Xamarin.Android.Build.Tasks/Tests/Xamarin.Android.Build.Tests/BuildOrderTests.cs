@@ -197,6 +197,37 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
+		public void JavacCommandResolvesRelativeToolPathFromProjectDirectory ([Values ("", "tools/jdk/bin")] string javacToolPath)
+		{
+			var directory = Path.Combine (Root, "temp", TestName);
+			Directory.CreateDirectory (directory);
+			TestOutputDirectories [TestContext.CurrentContext.Test.ID] = directory;
+			var targets = XDocument.Load (Path.Combine (XABuildPaths.TopDirectory, "src", "Xamarin.Android.Build.Tasks", "MSBuild", "Xamarin", "Android", "Xamarin.Android.Javac.targets"));
+			var ns = targets.Root.Name.Namespace;
+			var command = new XElement (targets.Root.Elements (ns + "Target").Single (element =>
+				(string) element.Attribute ("Name") == "_AndroidJavacCommand"));
+			foreach (var element in command.DescendantsAndSelf ())
+				element.Name = element.Name.LocalName;
+			var project = new XElement ("Project",
+				new XElement ("PropertyGroup",
+					new XElement ("JavacToolPath", javacToolPath),
+					new XElement ("JavacToolExe", "javac"),
+					new XElement ("JavacSourceVersion", "1.8"),
+					new XElement ("JavacTargetVersion", "1.8")),
+				command);
+
+			using var reader = project.CreateReader ();
+			using var collection = new ProjectCollection ();
+			var root = ProjectRootElement.Create (reader, collection);
+			root.FullPath = Path.Combine (directory, "JavacCommand.proj");
+			var instance = new ProjectInstance (root, globalProperties: null, toolsVersion: null, collection);
+			Assert.IsTrue (instance.Build ("_AndroidJavacCommand", [new Microsoft.Build.Logging.ConsoleLogger (LoggerVerbosity.Minimal)]));
+			var quote = IsWindows ? "\"" : "'";
+			var tool = javacToolPath.Length == 0 ? "javac" : Path.Combine (directory, "tools", "jdk", "bin", "javac");
+			StringAssert.StartsWith ($"{quote}{tool}{quote} ", instance.GetPropertyValue ("_AndroidJavacCommand"));
+		}
+
+		[Test]
 		public void RunWithLoggingEnablesManagedTimingLogger ()
 		{
 			var setupTargets = new Import (() => "SetupRunWithLogging.targets") {

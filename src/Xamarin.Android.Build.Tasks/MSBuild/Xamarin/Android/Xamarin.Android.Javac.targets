@@ -53,7 +53,8 @@ It is shared between "legacy" binding projects and .NET 7+ projects.
       <_AndroidJavacToolExe>$(JavacToolExe)</_AndroidJavacToolExe>
       <_AndroidJavacToolExe Condition=" '$(_AndroidJavacToolExe)' == '' ">javac</_AndroidJavacToolExe>
       <_AndroidJavacToolExe Condition=" '$(JavacToolExe)' == '' and $([MSBuild]::IsOSPlatform('windows')) ">javac.exe</_AndroidJavacToolExe>
-      <_AndroidJavacToolPath>$([System.IO.Path]::Combine('$(JavacToolPath)', '$(_AndroidJavacToolExe)'))</_AndroidJavacToolPath>
+      <_AndroidJavacToolPath>$(_AndroidJavacToolExe)</_AndroidJavacToolPath>
+      <_AndroidJavacToolPath Condition=" '$(JavacToolPath)' != '' ">$([MSBuild]::NormalizePath('$(MSBuildProjectDirectory)', '$(JavacToolPath)', '$(_AndroidJavacToolExe)'))</_AndroidJavacToolPath>
       <_AndroidJavacToolPath>$([System.String]::Copy('$(_AndroidJavacToolPath)').Replace('$(_AndroidJavacShellEscapeFrom)', '$(_AndroidJavacShellEscapeTo)').Insert(0, '$(_AndroidJavacShellQuote)'))$(_AndroidJavacShellQuote)</_AndroidJavacToolPath>
       <_AndroidJavacVersionArguments>-target $(JavacTargetVersion) -source $(JavacSourceVersion) -Xlint:-options</_AndroidJavacVersionArguments>
       <_AndroidJavacVersionArguments
