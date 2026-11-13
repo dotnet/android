@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.IO;
 using System.IO.MemoryMappedFiles;
 
-using Microsoft.Android.Build.Tasks;
 using Microsoft.Build.Utilities;
 using Mono.Cecil;
 using Xamarin.Android.Tools;
@@ -126,7 +125,7 @@ class XAAssemblyResolver : IAssemblyResolver
 		try {
 			return LoadFromMemoryMappedFile (filePath, loadReaderParams);
 		} catch (Exception ex) {
-			log.LogCodedWarning ("XA4332", Properties.Resources.XA4332, filePath, targetArch);
+			log.LogWarning ($"Failed to read '{filePath}' with debugging symbols for target architecture '{targetArch}'. Retrying to load it without it. Error details are logged below.");
 			log.LogWarning ($"{ex.ToString ()}");
 			loadReaderParams.ReadSymbols = false;
 			return LoadFromMemoryMappedFile (filePath, loadReaderParams);
