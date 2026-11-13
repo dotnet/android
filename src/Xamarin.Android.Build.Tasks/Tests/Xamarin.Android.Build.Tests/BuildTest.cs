@@ -516,9 +516,9 @@ namespace Xamarin.Android.Build.Tests
 
 		// Context https://bugzilla.xamarin.com/show_bug.cgi?id=29706
 		[Test]
-		public void CheckLogicalNamePathSeperators ([ValueSource (typeof (BaseTest), nameof (BaseTest.ValidRuntimeConfigurations))] (bool isRelease, AndroidRuntime runtime) configuration, [Values (false, true)] bool useDesignerAssembly)
+		public void CheckLogicalNamePathSeperators ([Values (false, true)] bool isRelease, [Values (false, true)] bool useDesignerAssembly)
 		{
-			var (isRelease, runtime) = configuration;
+			const AndroidRuntime runtime = AndroidRuntime.CoreCLR;
 
 			var illegalSeperator = IsWindows ? "/" : @"\";
 			var dll = new XamarinAndroidLibraryProject () {
@@ -1722,8 +1722,10 @@ namespace UnnamedProject
 			}
 		}
 
-		[Test]
-		public void KotlinServiceLoader ([Values ("apk", "aab")] string packageFormat, [Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
+		[TestCase ("apk", AndroidRuntime.CoreCLR)]
+		[TestCase ("aab", AndroidRuntime.CoreCLR)]
+		[TestCase ("apk", AndroidRuntime.NativeAOT)]
+		public void KotlinServiceLoader (string packageFormat, AndroidRuntime runtime)
 		{
 			bool isRelease = runtime == AndroidRuntime.NativeAOT;
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
@@ -1946,12 +1948,9 @@ namespace UnnamedProject
 		}
 
 		[Test]
-		public void XA4310 ([Values ("apk", "aab")] string packageFormat, [Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
+		public void XA4310 ([Values ("apk", "aab")] string packageFormat, [Values (AndroidRuntime.CoreCLR)] AndroidRuntime runtime)
 		{
 			const bool isRelease = true;
-			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
-				return;
-			}
 
 			var proj = new XamarinAndroidApplicationProject {
 				IsRelease = isRelease,

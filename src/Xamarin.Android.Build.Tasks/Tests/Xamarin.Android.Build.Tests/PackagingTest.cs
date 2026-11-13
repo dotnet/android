@@ -465,10 +465,13 @@ Console.WriteLine ($""{DateTime.UtcNow.AddHours(-30).Humanize(culture:c)}"");
 			foreach (AndroidRuntime runtime in new[] { AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT }) {
 				// testing characters as per https://www.compart.com/en/unicode/category/Zs
 				AddTestData ("TestUnicodeSpace0020\u0020Me", runtime);
-				AddTestData ("TestUnicodeSpace2000\u2000Me", runtime);
 				AddTestData ("TestUnicodeSpace2009\u2009Me", runtime);
-				AddTestData ("TestUnicodeSpace2002\u2002Me", runtime);
-				AddTestData ("TestUnicodeSpace2007\u2007Me", runtime);
+				// Run fewer NativeAOT cases to reduce CI time.
+				if (runtime == AndroidRuntime.CoreCLR) {
+					AddTestData ("TestUnicodeSpace2000\u2000Me", runtime);
+					AddTestData ("TestUnicodeSpace2002\u2002Me", runtime);
+					AddTestData ("TestUnicodeSpace2007\u2007Me", runtime);
+				}
 			}
 
 			return ret;
@@ -764,8 +767,12 @@ namespace UnnamedProject {
 			}
 		}
 
-		[Test]
-		public void CheckSignApk ([Values] bool useApkSigner, [Values] bool perAbiApk, [Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
+		[TestCase (false, false, AndroidRuntime.CoreCLR)]
+		[TestCase (false, true, AndroidRuntime.CoreCLR)]
+		[TestCase (true, false, AndroidRuntime.CoreCLR)]
+		[TestCase (true, true, AndroidRuntime.CoreCLR)]
+		[TestCase (true, true, AndroidRuntime.NativeAOT)]
+		public void CheckSignApk (bool useApkSigner, bool perAbiApk, AndroidRuntime runtime)
 		{
 			const bool isRelease = true;
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
@@ -1144,9 +1151,9 @@ public class Test
 		static IEnumerable<object[]> Get_BuildApkWithManyAssets_Data ()
 		{
 			foreach (AndroidRuntime runtime in new[] { AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT }) {
-				foreach (var assetCount in new [] { 1, 5, 50, 100, 512, 1024 })
+				foreach (var assetCount in new [] { 1, 50, 512, 1024 })
 					yield return new object [] { assetCount, 1, runtime };
-				foreach (var assetSizeKb in new [] { 2, 5, 10, 100, 200 })
+				foreach (var assetSizeKb in new [] { 2, 200 })
 					yield return new object [] { 1, assetSizeKb, runtime };
 			}
 		}

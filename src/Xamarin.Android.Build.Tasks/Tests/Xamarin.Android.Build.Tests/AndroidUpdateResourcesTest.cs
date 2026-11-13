@@ -18,10 +18,14 @@ namespace Xamarin.Android.Build.Tests
 	[Parallelizable (ParallelScope.Children)]
 	public class AndroidUpdateResourcesTest : BaseTest
 	{
-		[Test]
-		public void CheckMultipleLibraryProjectReferenceAlias ([Values] bool withGlobal, [Values] bool useDesignerAssembly, [Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
+		[TestCase (false, false, AndroidRuntime.CoreCLR)]
+		[TestCase (false, true, AndroidRuntime.CoreCLR)]
+		[TestCase (true, false, AndroidRuntime.CoreCLR)]
+		[TestCase (true, true, AndroidRuntime.CoreCLR)]
+		[TestCase (true, true, AndroidRuntime.NativeAOT)]
+		public void CheckMultipleLibraryProjectReferenceAlias (bool withGlobal, bool useDesignerAssembly, AndroidRuntime runtime)
 		{
-			bool isRelease = runtime == AndroidRuntime.NativeAOT;
+			bool isRelease = runtime == AndroidRuntime.NativeAOT || withGlobal;
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
 				return;
 			}
@@ -110,9 +114,9 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		public void DesignTimeBuild ([ValueSource (typeof (BaseTest), nameof (BaseTest.ValidRuntimeConfigurations))] (bool isRelease, AndroidRuntime runtime) configuration, [Values] bool useDesignerAssembly)
+		public void DesignTimeBuild ([Values (false, true)] bool isRelease, [Values] bool useDesignerAssembly)
 		{
-			var (isRelease, runtime) = configuration;
+			const AndroidRuntime runtime = AndroidRuntime.CoreCLR;
 
 			var regEx = new Regex (@"(?<type>([a-zA-Z_0-9])+)\slibrary_name=(?<value>([0-9A-Za-z])+);", RegexOptions.Compiled | RegexOptions.Multiline );
 
@@ -611,12 +615,10 @@ namespace UnnamedProject
 		{
 			var ret = new List<object[]> ();
 
-			foreach (AndroidRuntime runtime in new[] { AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT }) {
-				AddTestData (isRelease: false, language: XamarinAndroidProjectLanguage.CSharp, runtime: runtime);
-				AddTestData (isRelease: true,  language: XamarinAndroidProjectLanguage.CSharp, runtime: runtime);
-				AddTestData (isRelease: false, language: XamarinAndroidProjectLanguage.FSharp, runtime: runtime);
-				AddTestData (isRelease: true,  language: XamarinAndroidProjectLanguage.FSharp, runtime: runtime);
-			}
+			AddTestData (isRelease: false, language: XamarinAndroidProjectLanguage.CSharp, runtime: AndroidRuntime.CoreCLR);
+			AddTestData (isRelease: true,  language: XamarinAndroidProjectLanguage.CSharp, runtime: AndroidRuntime.CoreCLR);
+			AddTestData (isRelease: false, language: XamarinAndroidProjectLanguage.FSharp, runtime: AndroidRuntime.CoreCLR);
+			AddTestData (isRelease: true,  language: XamarinAndroidProjectLanguage.FSharp, runtime: AndroidRuntime.CoreCLR);
 
 			return ret;
 
@@ -1174,12 +1176,9 @@ namespace Lib1 {
 		}
 
 		[Test]
-		public void CheckDontUpdateResourceIfNotNeeded ([Values] bool useDesignerAssembly, [Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
+		public void CheckDontUpdateResourceIfNotNeeded ([Values] bool useDesignerAssembly, [Values (AndroidRuntime.CoreCLR)] AndroidRuntime runtime)
 		{
 			const bool isRelease = true;
-			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
-				return;
-			}
 			var path = Path.Combine ("temp", TestName);
 			var target = "_CreateAar";
 			var foo = new BuildItem.Source ("Foo.cs") {

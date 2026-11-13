@@ -604,6 +604,10 @@ namespace Bug12935
 			foreach (AndroidRuntime runtime in new[] { AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT }) {
 				AddTestData ("1", false, "manifest=1", runtime);
 				AddTestData ("1", true, "x86_64=500001;arm64-v8a=400001", runtime);
+				// Run fewer NativeAOT cases to reduce CI time.
+				if (runtime == AndroidRuntime.NativeAOT) {
+					continue;
+				}
 				AddTestData ("2", false, "manifest=2", runtime);
 				AddTestData ("2", true, "x86_64=500002;arm64-v8a=400002", runtime);
 				AddTestData ("999", false, "manifest=999", runtime);
@@ -1072,11 +1076,9 @@ class TestActivity : Activity { }"
 		{
 			var ret = new List<object[]> ();
 
-			foreach (AndroidRuntime runtime in new[] { AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT }) {
-				AddTestData ("Android.Content.PM.ForegroundService.TypeSpecialUse", "specialUse", runtime);
-				AddTestData ("Android.Content.PM.ForegroundService.TypeConnectedDevice", "connectedDevice", runtime);
-				AddTestData ("Android.Content.PM.ForegroundService.TypeCamera|Android.Content.PM.ForegroundService.TypeMicrophone", "camera|microphone", runtime);
-			}
+			AddTestData ("Android.Content.PM.ForegroundService.TypeSpecialUse", "specialUse", AndroidRuntime.CoreCLR);
+			AddTestData ("Android.Content.PM.ForegroundService.TypeConnectedDevice", "connectedDevice", AndroidRuntime.CoreCLR);
+			AddTestData ("Android.Content.PM.ForegroundService.TypeCamera|Android.Content.PM.ForegroundService.TypeMicrophone", "camera|microphone", AndroidRuntime.CoreCLR);
 
 			return ret;
 
@@ -1234,6 +1236,11 @@ class TestActivity : Activity { }"
 					removeUsesSdkElement: true,
 					runtime: runtime
 				);
+
+				// Run fewer NativeAOT cases to reduce CI time.
+				if (runtime == AndroidRuntime.NativeAOT) {
+					continue;
+				}
 
 				AddTestData (
 					minSdkVersion: "",
