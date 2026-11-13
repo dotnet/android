@@ -752,6 +752,29 @@ public class UsesDependency {
 		}
 
 		[Test]
+		public void ExtractAarHandlesCaseOnlyRename ()
+		{
+			var content = CreateAarWithFixedTimestamp (("libs/Helper.jar", "content"));
+			var proj = new XamarinAndroidLibraryProject {
+				OtherBuildItems = {
+					new AndroidItem.AndroidLibrary ("foo.aar") {
+						BinaryContent = () => content,
+						MetadataValues = "Bind=false",
+					},
+				},
+			};
+			using var builder = CreateDllBuilder ();
+			Assert.IsTrue (builder.Build (proj));
+			var directory = builder.Output.GetIntermediaryPath (Path.Combine ("reference_library_project_jars", "foo.aar", "libs"));
+			content = CreateAarWithFixedTimestamp (("libs/helper.jar", "content"));
+			proj.Touch ("foo.aar");
+			Assert.IsTrue (builder.RunTarget (proj, "_ExtractAar", doNotCleanupOnUpdate: true, saveProject: false));
+			var files = Directory.GetFiles (directory);
+			Assert.AreEqual (1, files.Length, "The old spelling must not leave a stale output.");
+			Assert.AreEqual (IsWindows ? "Helper.jar" : "helper.jar", Path.GetFileName (files [0]));
+		}
+
+		[Test]
 		public void ExtractAarLaterArchiveWinsBasenameCollision ()
 		{
 			// Both archives extract to `foo.aar`; their entries have the same size and timestamp.
@@ -873,26 +896,30 @@ public class UsesDependency {
 		}
 
 		[Test]
-		public void ExtractAarRejectsAmbiguousBackslashEntries ()
+		public void ExtractAarLaterBackslashEntryWins ([Values (false, true)] bool reverse)
 		{
-			if (IsWindows) {
-				Assert.Ignore ("Windows extracts backslash-separated entries into directories.");
-			}
-			// Both entries resolve to `libs/helper.jar`; the order of the entries in the archive cannot be determined.
+			var content = CreateAarWithFixedTimestamp ("classes");
 			var proj = new XamarinAndroidLibraryProject {
 				OtherBuildItems = {
 					new AndroidItem.AndroidLibrary ("foo.aar") {
-						BinaryContent = () => CreateAarWithFixedTimestamp (("classes.jar", "classes"), ("libs\\helper.jar", "first"), ("libs\\.\\helper.jar", "second")),
+						BinaryContent = () => content,
 						MetadataValues = "Bind=false",
 					},
 				},
 			};
 			using var builder = CreateDllBuilder ();
-			builder.ThrowOnBuildFailure = false;
-			Assert.IsFalse (builder.Build (proj), "Build should have failed.");
-			StringAssertEx.Contains ("XA4332", builder.LastBuildOutput, "XA4332 should have been raised.");
-			StringAssertEx.Contains ("libs\\.\\helper.jar", builder.LastBuildOutput, "XA4332 should name the ambiguous entry.");
-			FileAssert.DoesNotExist (builder.Output.GetIntermediaryPath (Path.Combine ("reference_library_project_jars", "foo.aar", "libs", "helper.jar")), "Ambiguous entries should not be extracted.");
+			Assert.IsTrue (builder.Build (proj), "Initial build should have succeeded.");
+			var jarFirst = reverse ? "libs\\.\\helper.jar" : "libs\\helper.jar";
+			var jarLast = reverse ? "libs\\helper.jar" : "libs\\.\\helper.jar";
+			var annotationsFirst = reverse ? "sub\\.\\annotations.zip" : "sub\\annotations.zip";
+			var annotationsLast = reverse ? "sub\\annotations.zip" : "sub\\.\\annotations.zip";
+			content = CreateAarWithFixedTimestamp ((jarFirst, "first"), (annotationsFirst, "first"), (jarLast, "second"), (annotationsLast, "second"));
+			proj.Touch ("foo.aar");
+			Assert.IsTrue (builder.RunTarget (proj, "_ExtractAar", doNotCleanupOnUpdate: true, saveProject: false), "Extraction should have succeeded.");
+			var jar = builder.Output.GetIntermediaryPath (Path.Combine ("reference_library_project_jars", "foo.aar", "libs", "helper.jar"));
+			var annotations = builder.Output.GetIntermediaryPath (Path.Combine ("reference_library_project_annotations", "foo.aar", "sub", "annotations.zip"));
+			Assert.AreEqual ("second", File.ReadAllText (jar));
+			Assert.AreEqual ("second", File.ReadAllText (annotations));
 		}
 
 		[Test]
@@ -916,6 +943,77 @@ public class UsesDependency {
 			var intermediate = builder.Output.GetIntermediaryPath ("");
 			Assert.IsEmpty (Directory.GetFiles (Path.Combine (Root, builder.ProjectDirectory), "outside.jar", SearchOption.AllDirectories), "Escaping entry should not have been written.");
 			DirectoryAssert.DoesNotExist (Path.Combine (intermediate, "extract_aar_staging"), "Staging directory should be removed after failure.");
+		}
+
+		[Test]
+		public void ExtractAarRejectsDeepEntries ()
+		{
+			var content = CreateAarWithFixedTimestamp ("classes");
+			var proj = new XamarinAndroidLibraryProject {
+				OtherBuildItems = {
+					new AndroidItem.AndroidLibrary ("foo.aar") {
+						BinaryContent = () => content,
+						MetadataValues = "Bind=false",
+					},
+				},
+			};
+			using var builder = CreateDllBuilder ();
+			Assert.IsTrue (builder.Build (proj));
+			content = CreateAarWithFixedTimestamp (("libs/a/b/c/d/e/f/eight.jar", "eight"));
+			proj.Touch ("foo.aar");
+			Assert.IsTrue (builder.RunTarget (proj, "_ExtractAar", doNotCleanupOnUpdate: true, saveProject: false));
+			var eight = builder.Output.GetIntermediaryPath (Path.Combine ("reference_library_project_jars", "foo.aar", "libs", "a", "b", "c", "d", "e", "f", "eight.jar"));
+			Assert.AreEqual ("eight", File.ReadAllText (eight));
+
+			content = CreateAarWithFixedTimestamp (("libs/a/b/c/d/e/f/g/nine.jar", "nine"));
+			proj.Touch ("foo.aar");
+			builder.ThrowOnBuildFailure = false;
+			Assert.IsFalse (builder.RunTarget (proj, "_ExtractAar", doNotCleanupOnUpdate: true, saveProject: false));
+			StringAssertEx.Contains ("XA4332", builder.LastBuildOutput);
+			Assert.AreEqual ("eight", File.ReadAllText (eight), "An invalid entry must not remove existing output.");
+		}
+
+		[Test]
+		public void ExtractAarRejectsOutputLinks ([Values ("directory", "file", "dangling", "cycle", "root")] string kind)
+		{
+			if (IsWindows)
+				Assert.Ignore ("Creating symbolic links on Windows may require additional privileges.");
+			var content = "original";
+			var proj = new XamarinAndroidLibraryProject {
+				OtherBuildItems = {
+					new AndroidItem.AndroidLibrary ("foo.aar") {
+						BinaryContent = () => CreateAarWithFixedTimestamp (content),
+						MetadataValues = "Bind=false",
+					},
+				},
+			};
+			using var builder = CreateDllBuilder ();
+			Assert.IsTrue (builder.Build (proj));
+			var outputRoot = builder.Output.GetIntermediaryPath ("reference_library_project_jars");
+			var classes = Path.Combine (outputRoot, "foo.aar", "classes.jar");
+			var outside = Path.Combine (Root, builder.ProjectDirectory, "outside");
+			Directory.CreateDirectory (outside);
+			var sentinel = Path.Combine (outside, "sentinel");
+			File.WriteAllText (sentinel, "untouched");
+			var link = kind == "root" ? outputRoot : Path.Combine (outputRoot, "foo.aar", "link");
+			if (kind == "root")
+				Directory.Move (outputRoot, outputRoot + ".original");
+			if (kind == "file")
+				File.CreateSymbolicLink (link, sentinel);
+			else
+				Directory.CreateSymbolicLink (link, kind == "cycle" ? outputRoot : kind == "dangling" ? Path.Combine (outside, "missing") : outside);
+			try {
+				content = "modified";
+				proj.Touch ("foo.aar");
+				builder.ThrowOnBuildFailure = false;
+				Assert.IsFalse (builder.RunTarget (proj, "_ExtractAar", doNotCleanupOnUpdate: true, saveProject: false));
+				StringAssertEx.Contains ("XA4333", builder.LastBuildOutput);
+				Assert.AreEqual ("untouched", File.ReadAllText (sentinel));
+				if (kind != "root")
+					Assert.AreEqual ("original", File.ReadAllText (classes));
+			} finally {
+				File.Delete (link);
+			}
 		}
 
 		[Test]

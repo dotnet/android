@@ -11,11 +11,11 @@ projects.
 <Project>
 
   <UsingTask TaskName="Xamarin.Android.Tasks.CreateAar"          AssemblyFile="$(_XamarinAndroidBuildTasksAssembly)" />
+  <UsingTask TaskName="Xamarin.Android.Tasks.ExtractJarsFromAar" AssemblyFile="$(_XamarinAndroidBuildTasksAssembly)" />
 
   <PropertyGroup>
     <_AarCacheFile>$(IntermediateOutputPath)$(TargetName).aar.cache</_AarCacheFile>
     <_AarOutputPath>$(OutputPath)$(TargetName).aar</_AarOutputPath>
-    <_ExtractAarStagingDirectory>$(IntermediateOutputPath)extract_aar_staging\</_ExtractAarStagingDirectory>
   </PropertyGroup>
 
   <Target Name="_ResolveAars" AfterTargets="ResolveReferences">
@@ -113,213 +113,17 @@ projects.
       DependsOnTargets="_CategorizeAndroidLibraries"
       Inputs="@(LibraryProjectZip);@(_AndroidReferenceLibraryProjectZip);@(_AndroidMSBuildAllProjects)"
       Outputs="$(_AndroidStampDirectory)_ExtractAar.stamp">
-    <ItemGroup>
-      <_ExtractAarLibrary Include="@(LibraryProjectZip)" OutputPrefix="library_project" />
-      <_ExtractAarLibrary Include="@(_AndroidReferenceLibraryProjectZip)" OutputPrefix="reference_library_project" />
-      <_ExtractAarLibrary>
-        <StagingId>$([MSBuild]::StableStringHash('%(OutputPrefix)|%(FullPath)'))</StagingId>
-      </_ExtractAarLibrary>
-    </ItemGroup>
-    <PropertyGroup>
-      <_ExtractAarStagingRoot>$([MSBuild]::NormalizeDirectory('$(MSBuildProjectDirectory)', '$(_ExtractAarStagingDirectory)'))</_ExtractAarStagingRoot>
-      <_ExtractAarArchivesRoot>$(_ExtractAarStagingRoot)archives/</_ExtractAarArchivesRoot>
-      <_ExtractAarMergedRoot>$(_ExtractAarStagingRoot)merged/</_ExtractAarMergedRoot>
-      <_ExtractAarOutputRoot>$([MSBuild]::NormalizeDirectory('$(MSBuildProjectDirectory)', '$(IntermediateOutputPath)'))</_ExtractAarOutputRoot>
-      <_ExtractAarMatchOptions Condition=" '$(OS)' == 'Windows_NT' ">CaseInsensitive</_ExtractAarMatchOptions>
-      <_ExtractAarMatchOptions Condition=" '$(OS)' != 'Windows_NT' ">CaseSensitive</_ExtractAarMatchOptions>
-    </PropertyGroup>
-    <RemoveDirFixed Directories="$(_ExtractAarStagingRoot)" />
-    <!--
-      Each archive is extracted into its own staging directory first; the final output directories are only updated once
-      the staged files have been validated. Unzip rejects entries that would be written outside of DestinationFolder.
-      .aar files only contribute classes.jar and libs/*.jar, see Files.ShouldSkipEntryInAar ().
-    -->
-    <Unzip
-        SourceFiles="@(_ExtractAarLibrary)"
-        DestinationFolder="$(_ExtractAarArchivesRoot)%(StagingId)\%(OutputPrefix)_jars\%(Filename)%(Extension)"
-        Include="*.jar"
-        SkipUnchangedFiles="false"
-        Condition=" '%(Extension)' != '.aar' "
-    />
-    <Unzip
-        SourceFiles="@(_ExtractAarLibrary)"
-        DestinationFolder="$(_ExtractAarArchivesRoot)%(StagingId)\%(OutputPrefix)_jars\%(Filename)%(Extension)"
-        Include="classes.jar;libs/*.jar"
-        SkipUnchangedFiles="false"
-        Condition=" '%(Extension)' == '.aar' "
-    />
-    <Unzip
-        SourceFiles="@(_ExtractAarLibrary)"
-        DestinationFolder="$(_ExtractAarArchivesRoot)%(StagingId)\%(OutputPrefix)_annotations\%(Filename)%(Extension)"
-        Include="annotations.zip;*/annotations.zip"
-        SkipUnchangedFiles="false"
-    />
-    <!--
-      On Unix, Unzip writes an entry such as 'libs\foo.jar' to a file literally named 'libs\foo.jar'.
-      Move such files to the path the entry describes on Windows. MSBuild converts '\' to '/' in item
-      specs, so file names are listed with a placeholder for '\' and moved using '%5C', which preserves it.
-      Entries that would resolve outside of their archive's directory, that are nested too deeply, or that resolve to the
-      same file as another such entry are errors, because the order of the entries in the archive is not known.
-      Within an archive, an entry with the same '/'-separated name wins; the repaired entry is discarded.
-    -->
-    <PropertyGroup Condition=" '$(OS)' != 'Windows_NT' and Exists('$(_ExtractAarArchivesRoot)') ">
-      <_ExtractAarBackslash>__XA_BACKSLASH__</_ExtractAarBackslash>
-      <_ExtractAarSlash>__XA_SLASH__</_ExtractAarSlash>
-      <_ExtractAarStagedPaths>$([System.String]::Join(';', $([System.IO.Directory]::GetFiles('$(_ExtractAarArchivesRoot)', '*', System.IO.SearchOption.AllDirectories))).Replace('\', '$(_ExtractAarBackslash)'))</_ExtractAarStagedPaths>
-    </PropertyGroup>
-    <ItemGroup Condition=" '$(_ExtractAarStagedPaths)' != '' ">
-      <_ExtractAarStagedPath Include="$([MSBuild]::Unescape('$(_ExtractAarStagedPaths)'))" />
-      <_ExtractAarBackslashEntry
-          Include="@(_ExtractAarStagedPath)"
-          Condition=" $([System.String]::Copy('%(Identity)').StartsWith('$(_ExtractAarArchivesRoot)')) and $([System.String]::Copy('%(Identity)').Contains('$(_ExtractAarBackslash)')) ">
-        <RelativePath>$([System.String]::Copy('%(Identity)').Substring($(_ExtractAarArchivesRoot.Length)))</RelativePath>
-      </_ExtractAarBackslashEntry>
-      <_ExtractAarBackslashEntry>
-        <Pieces>$([System.String]::Copy('%(RelativePath)').Replace('/', '$(_ExtractAarSlash)').Replace('$(_ExtractAarBackslash)', '/'))////////</Pieces>
-        <ArchiveDirectory>$([System.String]::Copy('%(RelativePath)///').Split('/').GetValue(0))/$([System.String]::Copy('%(RelativePath)///').Split('/').GetValue(1))/$([System.String]::Copy('%(RelativePath)///').Split('/').GetValue(2))/</ArchiveDirectory>
-        <Archive>$([System.String]::Copy('%(RelativePath)///').Split('/').GetValue(2))</Archive>
-        <Destination>$([MSBuild]::NormalizePath('$(_ExtractAarArchivesRoot)', $([System.String]::Copy('%(RelativePath)').Replace('$(_ExtractAarBackslash)', '/'))))</Destination>
-      </_ExtractAarBackslashEntry>
-      <_ExtractAarBackslashEntry>
-        <Entry>$([System.String]::Copy('%(RelativePath)').Substring($([System.String]::Copy('%(ArchiveDirectory)').Length)).Replace('$(_ExtractAarBackslash)', '\'))</Entry>
-        <PieceCount>$([MSBuild]::Subtract($([System.String]::Copy('%(Pieces)').Split('/').Length), 8))</PieceCount>
-        <IsInsideArchive>$([System.String]::Copy('%(Destination)').StartsWith('$(_ExtractAarArchivesRoot)%(ArchiveDirectory)'))</IsInsideArchive>
-        <MoveDestination>%(Destination)</MoveDestination>
-        <MoveDestination Condition=" Exists('%(Destination)') ">$(_ExtractAarStagingRoot)discarded/$([MSBuild]::StableStringHash('%(RelativePath)'))</MoveDestination>
-        <Piece0>$([System.String]::Copy($([System.String]::Copy('%(Pieces)').Split('/').GetValue(0))).Replace('$(_ExtractAarSlash)', '/'))</Piece0>
-        <Piece1>$([System.String]::Copy($([System.String]::Copy('%(Pieces)').Split('/').GetValue(1))).Replace('$(_ExtractAarSlash)', '/'))</Piece1>
-        <Piece2>$([System.String]::Copy($([System.String]::Copy('%(Pieces)').Split('/').GetValue(2))).Replace('$(_ExtractAarSlash)', '/'))</Piece2>
-        <Piece3>$([System.String]::Copy($([System.String]::Copy('%(Pieces)').Split('/').GetValue(3))).Replace('$(_ExtractAarSlash)', '/'))</Piece3>
-        <Piece4>$([System.String]::Copy($([System.String]::Copy('%(Pieces)').Split('/').GetValue(4))).Replace('$(_ExtractAarSlash)', '/'))</Piece4>
-        <Piece5>$([System.String]::Copy($([System.String]::Copy('%(Pieces)').Split('/').GetValue(5))).Replace('$(_ExtractAarSlash)', '/'))</Piece5>
-        <Piece6>$([System.String]::Copy($([System.String]::Copy('%(Pieces)').Split('/').GetValue(6))).Replace('$(_ExtractAarSlash)', '/'))</Piece6>
-        <Piece7>$([System.String]::Copy($([System.String]::Copy('%(Pieces)').Split('/').GetValue(7))).Replace('$(_ExtractAarSlash)', '/'))</Piece7>
-      </_ExtractAarBackslashEntry>
-      <_ExtractAarInvalidEntry Include="@(_ExtractAarBackslashEntry)" Condition=" '%(IsInsideArchive)' != 'True' or %(PieceCount) &gt; 8 " />
-      <_ExtractAarBackslashEntry Remove="@(_ExtractAarInvalidEntry)" />
-      <_ExtractAarInvalidEntry Include="@(_ExtractAarBackslashEntry)" Condition=" '%(_ExtractAarBackslashEntry.Destination)' != '' and '@(_ExtractAarBackslashEntry->Count())' != '1' " />
-      <_ExtractAarBackslashEntry Remove="@(_ExtractAarInvalidEntry)" />
-    </ItemGroup>
-    <AndroidError
-        Code="XA4332"
-        ResourceName="XA4332"
-        FormatArguments="%(_ExtractAarInvalidEntry.Archive);%(_ExtractAarInvalidEntry.Entry)"
-        ContinueOnError="ErrorAndContinue"
-        Condition=" '@(_ExtractAarInvalidEntry)' != '' "
-    />
-    <MakeDir
-        Directories="@(_ExtractAarBackslashEntry->'%(MoveDestination)'->DirectoryName())"
-        Condition=" '@(_ExtractAarInvalidEntry)' == '' "
-    />
-    <Move
-        SourceFiles="$(_ExtractAarArchivesRoot)%(_ExtractAarBackslashEntry.Piece0)%5C%(_ExtractAarBackslashEntry.Piece1)"
-        DestinationFiles="%(_ExtractAarBackslashEntry.MoveDestination)"
-        Condition=" '@(_ExtractAarInvalidEntry)' == '' and '%(_ExtractAarBackslashEntry.PieceCount)' == '2' "
-    />
-    <Move
-        SourceFiles="$(_ExtractAarArchivesRoot)%(_ExtractAarBackslashEntry.Piece0)%5C%(_ExtractAarBackslashEntry.Piece1)%5C%(_ExtractAarBackslashEntry.Piece2)"
-        DestinationFiles="%(_ExtractAarBackslashEntry.MoveDestination)"
-        Condition=" '@(_ExtractAarInvalidEntry)' == '' and '%(_ExtractAarBackslashEntry.PieceCount)' == '3' "
-    />
-    <Move
-        SourceFiles="$(_ExtractAarArchivesRoot)%(_ExtractAarBackslashEntry.Piece0)%5C%(_ExtractAarBackslashEntry.Piece1)%5C%(_ExtractAarBackslashEntry.Piece2)%5C%(_ExtractAarBackslashEntry.Piece3)"
-        DestinationFiles="%(_ExtractAarBackslashEntry.MoveDestination)"
-        Condition=" '@(_ExtractAarInvalidEntry)' == '' and '%(_ExtractAarBackslashEntry.PieceCount)' == '4' "
-    />
-    <Move
-        SourceFiles="$(_ExtractAarArchivesRoot)%(_ExtractAarBackslashEntry.Piece0)%5C%(_ExtractAarBackslashEntry.Piece1)%5C%(_ExtractAarBackslashEntry.Piece2)%5C%(_ExtractAarBackslashEntry.Piece3)%5C%(_ExtractAarBackslashEntry.Piece4)"
-        DestinationFiles="%(_ExtractAarBackslashEntry.MoveDestination)"
-        Condition=" '@(_ExtractAarInvalidEntry)' == '' and '%(_ExtractAarBackslashEntry.PieceCount)' == '5' "
-    />
-    <Move
-        SourceFiles="$(_ExtractAarArchivesRoot)%(_ExtractAarBackslashEntry.Piece0)%5C%(_ExtractAarBackslashEntry.Piece1)%5C%(_ExtractAarBackslashEntry.Piece2)%5C%(_ExtractAarBackslashEntry.Piece3)%5C%(_ExtractAarBackslashEntry.Piece4)%5C%(_ExtractAarBackslashEntry.Piece5)"
-        DestinationFiles="%(_ExtractAarBackslashEntry.MoveDestination)"
-        Condition=" '@(_ExtractAarInvalidEntry)' == '' and '%(_ExtractAarBackslashEntry.PieceCount)' == '6' "
-    />
-    <Move
-        SourceFiles="$(_ExtractAarArchivesRoot)%(_ExtractAarBackslashEntry.Piece0)%5C%(_ExtractAarBackslashEntry.Piece1)%5C%(_ExtractAarBackslashEntry.Piece2)%5C%(_ExtractAarBackslashEntry.Piece3)%5C%(_ExtractAarBackslashEntry.Piece4)%5C%(_ExtractAarBackslashEntry.Piece5)%5C%(_ExtractAarBackslashEntry.Piece6)"
-        DestinationFiles="%(_ExtractAarBackslashEntry.MoveDestination)"
-        Condition=" '@(_ExtractAarInvalidEntry)' == '' and '%(_ExtractAarBackslashEntry.PieceCount)' == '7' "
-    />
-    <Move
-        SourceFiles="$(_ExtractAarArchivesRoot)%(_ExtractAarBackslashEntry.Piece0)%5C%(_ExtractAarBackslashEntry.Piece1)%5C%(_ExtractAarBackslashEntry.Piece2)%5C%(_ExtractAarBackslashEntry.Piece3)%5C%(_ExtractAarBackslashEntry.Piece4)%5C%(_ExtractAarBackslashEntry.Piece5)%5C%(_ExtractAarBackslashEntry.Piece6)%5C%(_ExtractAarBackslashEntry.Piece7)"
-        DestinationFiles="%(_ExtractAarBackslashEntry.MoveDestination)"
-        Condition=" '@(_ExtractAarInvalidEntry)' == '' and '%(_ExtractAarBackslashEntry.PieceCount)' == '8' "
-    />
-    <!--
-      Merge the per-archive directories in item order, so that later archives win when libraries with the same
-      file name extract to the same output directory, including '/' and '\' entries that name the same file.
-    -->
-    <ItemGroup Condition=" '@(_ExtractAarInvalidEntry)' == '' ">
-      <_ExtractAarArchiveFile Include="$(_ExtractAarArchivesRoot)%(_ExtractAarLibrary.StagingId)/**/*" StagingId="%(_ExtractAarLibrary.StagingId)" />
-    </ItemGroup>
-    <Copy
-        SourceFiles="@(_ExtractAarArchiveFile)"
-        DestinationFiles="@(_ExtractAarArchiveFile->'$(_ExtractAarMergedRoot)%(RecursiveDir)%(Filename)%(Extension)')"
-        Condition=" '%(StagingId)' != '' "
-    />
-    <!-- Writing through a symbolic link or junction could modify files outside of the output directories. -->
-    <ItemGroup>
-      <_ExtractAarOutputDirectory Include="$(_ExtractAarOutputRoot)library_project_jars;$(_ExtractAarOutputRoot)library_project_annotations;$(_ExtractAarOutputRoot)reference_library_project_jars;$(_ExtractAarOutputRoot)reference_library_project_annotations" />
-      <_ExtractAarOutputLink Include="@(_ExtractAarOutputDirectory)" Condition=" Exists('%(Identity)') and $([MSBuild]::BitwiseAnd(1024, $([System.IO.File]::GetAttributes('%(Identity)').ToString('D')))) != 0 " />
-    </ItemGroup>
-    <PropertyGroup Condition=" '@(_ExtractAarOutputLink)' == '' ">
-      <_ExtractAarOutputEntries Condition=" Exists('%(_ExtractAarOutputDirectory.Identity)') ">$(_ExtractAarOutputEntries);$([System.String]::Join(';', $([System.IO.Directory]::GetDirectories('%(_ExtractAarOutputDirectory.Identity)', '*', System.IO.SearchOption.AllDirectories))));$([System.String]::Join(';', $([System.IO.Directory]::GetFiles('%(_ExtractAarOutputDirectory.Identity)', '*', System.IO.SearchOption.AllDirectories))))</_ExtractAarOutputEntries>
-    </PropertyGroup>
-    <ItemGroup Condition=" '$(_ExtractAarOutputEntries)' != '' ">
-      <_ExtractAarOutputEntry Include="$([MSBuild]::Unescape('$(_ExtractAarOutputEntries)'))" />
-      <_ExtractAarOutputLink Include="@(_ExtractAarOutputEntry)" Condition=" Exists('%(Identity)') and $([MSBuild]::BitwiseAnd(1024, $([System.IO.File]::GetAttributes('%(Identity)').ToString('D')))) != 0 " />
-    </ItemGroup>
-    <AndroidError
-        Code="XA4333"
-        ResourceName="XA4333"
-        FormatArguments="%(_ExtractAarOutputLink.Identity)"
-        ContinueOnError="ErrorAndContinue"
-        Condition=" '@(_ExtractAarOutputLink)' != '' "
-    />
-    <!-- Delete outputs that are no longer extracted before copying, so case-only renames are recreated with their new name. -->
-    <ItemGroup Condition=" '@(_ExtractAarInvalidEntry)' == '' and '@(_ExtractAarOutputLink)' == '' ">
-      <_ExtractAarStagedFile Include="$(_ExtractAarMergedRoot)library_project_jars\**\*" OutputDirectory="library_project_jars" />
-      <_ExtractAarStagedFile Include="$(_ExtractAarMergedRoot)library_project_annotations\**\*" OutputDirectory="library_project_annotations" />
-      <_ExtractAarStagedFile Include="$(_ExtractAarMergedRoot)reference_library_project_jars\**\*" OutputDirectory="reference_library_project_jars" />
-      <_ExtractAarStagedFile Include="$(_ExtractAarMergedRoot)reference_library_project_annotations\**\*" OutputDirectory="reference_library_project_annotations" />
-      <_ExtractAarStagedFile>
-        <OutputPath>%(OutputDirectory)/%(RecursiveDir)%(Filename)%(Extension)</OutputPath>
-      </_ExtractAarStagedFile>
-      <_ExtractAarStagedFile>
-        <DestinationPath>$([MSBuild]::NormalizePath('$(_ExtractAarOutputRoot)', '%(OutputPath)'))</DestinationPath>
-      </_ExtractAarStagedFile>
-      <_ExtractAarExistingFile Include="$(_ExtractAarOutputRoot)library_project_jars\**\*" OutputDirectory="library_project_jars" />
-      <_ExtractAarExistingFile Include="$(_ExtractAarOutputRoot)library_project_annotations\**\*" OutputDirectory="library_project_annotations" />
-      <_ExtractAarExistingFile Include="$(_ExtractAarOutputRoot)reference_library_project_jars\**\*" OutputDirectory="reference_library_project_jars" />
-      <_ExtractAarExistingFile Include="$(_ExtractAarOutputRoot)reference_library_project_annotations\**\*" OutputDirectory="reference_library_project_annotations" />
-      <_ExtractAarExistingFile>
-        <OutputPath>%(OutputDirectory)/%(RecursiveDir)%(Filename)%(Extension)</OutputPath>
-      </_ExtractAarExistingFile>
-      <_ExtractAarStaleFile Include="@(_ExtractAarExistingFile)" />
-      <_ExtractAarStaleFile Remove="@(_ExtractAarStagedFile)" MatchOnMetadata="OutputPath" MatchOnMetadataOptions="$(_ExtractAarMatchOptions)" />
-    </ItemGroup>
-    <Delete Files="@(_ExtractAarStaleFile)" />
-    <!-- Touch staged files so CopyIfChanged compares contents instead of trusting archive entry timestamps. -->
-    <Touch Files="@(_ExtractAarStagedFile)" />
-    <CopyIfChanged
-        SourceFiles="@(_ExtractAarStagedFile)"
-        DestinationFiles="@(_ExtractAarStagedFile->'%(DestinationPath)')"
-    />
-    <ItemGroup>
-      <FileWrites Include="@(_ExtractAarStagedFile->'%(DestinationPath)')" />
-    </ItemGroup>
-    <RemoveDirFixed Directories="$(_ExtractAarStagingRoot)" />
-    <Touch
-        Files="$(_AndroidStampDirectory)_ExtractAar.stamp"
-        AlwaysCreate="true"
-        Condition=" '@(_ExtractAarInvalidEntry)' == '' and '@(_ExtractAarOutputLink)' == '' "
-    />
-    <OnError ExecuteTargets="_CleanExtractAarStaging" />
-  </Target>
-
-  <Target Name="_CleanExtractAarStaging">
-    <RemoveDirFixed Directories="$(_ExtractAarStagingDirectory)" />
+    <ExtractJarsFromAar
+        OutputJarsDirectory="$(IntermediateOutputPath)library_project_jars"
+        OutputAnnotationsDirectory="$(IntermediateOutputPath)library_project_annotations"
+        Libraries="@(LibraryProjectZip)"
+        OutputReferenceJarsDirectory="$(IntermediateOutputPath)reference_library_project_jars"
+        OutputReferenceAnnotationsDirectory="$(IntermediateOutputPath)reference_library_project_annotations"
+        ReferenceLibraries="@(_AndroidReferenceLibraryProjectZip)"
+    >
+      <Output TaskParameter="FilesWritten" ItemName="FileWrites" />
+    </ExtractJarsFromAar>
+    <Touch Files="$(_AndroidStampDirectory)_ExtractAar.stamp" AlwaysCreate="true" />
   </Target>
 
   <Target Name="_CleanAarCache">
