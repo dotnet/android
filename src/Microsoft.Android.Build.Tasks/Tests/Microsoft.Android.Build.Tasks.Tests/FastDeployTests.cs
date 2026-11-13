@@ -166,18 +166,35 @@ namespace Xamarin.Android.Build.Tests
 			Assert.AreEqual (1, task.RecoveryAttempts);
 		}
 
-		[Test]
-		public void FastDeployDoesNotRetrySemanticInstallFailure ()
+		const string InsufficientStorageInstallOutput = """
+			Exception occurred while executing 'install':
+			android.os.ParcelableException: java.io.IOException: Requested internal only, but not enough space
+				at android.util.ExceptionUtils.wrap(ExceptionUtils.java:34)
+				at com.android.server.pm.PackageInstallerService.createSession(PackageInstallerService.java:671)
+			Caused by: java.io.IOException: Requested internal only, but not enough space
+				at com.android.internal.content.InstallLocationUtils.resolveInstallVolume(InstallLocationUtils.java:242)
+			""";
+
+		[TestCase (1, "Failure [INSTALL_FAILED_INSUFFICIENT_STORAGE]", "ADB0060")]
+		[TestCase (1, "Failure [INSTALL_FAILED_MEDIA_UNAVAILABLE]", "ADB0060")]
+		[TestCase (1, InsufficientStorageInstallOutput, "ADB0060")]
+		[TestCase (0, InsufficientStorageInstallOutput, "ADB0060")]
+		[TestCase (0, "Exception occurred while executing 'install':\nRequested internal only, but not enough space", "ADB0060")]
+		[TestCase (1, "Exception occurred while executing 'install':\njava.io.IOException: Permission denied", "ADB0010")]
+		[TestCase (0, "Exception occurred while executing 'install':\njava.io.IOException: Permission denied", "ADB0010")]
+		public void FastDeployDoesNotRetrySemanticInstallFailure (int exitCode, string output, string errorCode)
 		{
 			var task = new TestFastDeploy (
-				CreateAdbResult (1, "Failure [INSTALL_FAILED_INSUFFICIENT_STORAGE]"));
+				CreateAdbResult (exitCode, output));
 
 			var exception = Assert.ThrowsAsync<FastDeployInstallException> (
 				async () => await task.InstallApkWithRetry ("app.apk", reinstall: false, testOnly: false, user: ""));
 
 			Assert.IsNotNull (exception);
-			Assert.AreEqual ("ADB0060", exception.ErrorCode);
+			Assert.AreEqual (errorCode, exception.ErrorCode);
+			Assert.That (exception.Message, Does.Contain (output));
 			Assert.AreEqual (1, task.InstallAttempts);
+			Assert.AreEqual (0, task.UninstallAttempts);
 			Assert.AreEqual (0, task.RecoveryAttempts);
 		}
 
