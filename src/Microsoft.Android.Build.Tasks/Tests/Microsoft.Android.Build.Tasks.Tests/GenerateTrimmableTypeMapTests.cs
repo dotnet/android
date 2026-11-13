@@ -15,7 +15,7 @@ namespace Xamarin.Android.Build.Tests {
 	public class GenerateTrimmableTypeMapTests : BaseTest {
 
 		[Test]
-		public void SealedFrameworkProxiesOverrideIsSealed (
+		public void SealedFrameworkProxiesPassIsSealedToBase (
 			[Values ("Mono.Android", "Other")] string assemblyName,
 			[Values] bool isSealed,
 			[Values] bool alias,
@@ -75,22 +75,15 @@ namespace Xamarin.Android.Build.Tests {
 				var type = assembly.MainModule.Types.Single (type => type.Name == proxy.TypeName);
 				Assert.AreEqual (expectedBase, type.BaseType.FullName, type.FullName);
 				var constructor = type.Methods.Single (method => method.IsConstructor);
-				var baseConstructor = constructor.Body.Instructions
-					.Select (instruction => instruction.Operand)
-					.OfType<Mono.Cecil.MethodReference> ()
-					.Single (method => method.Name == ".ctor");
+				var baseCall = constructor.Body.Instructions
+					.Single (instruction => instruction.Operand is Mono.Cecil.MethodReference { Name: ".ctor" });
+				var baseConstructor = (Mono.Cecil.MethodReference) baseCall.Operand;
 				Assert.AreEqual (expectedBase, baseConstructor.DeclaringType.FullName, "The constructor must call the selected base.");
-				var property = type.Properties.SingleOrDefault (property => property.Name == "IsSealed");
-				if (eligible) {
-					var getter = property?.GetMethod
-						?? throw new InvalidOperationException ($"{type.FullName} must override IsSealed.");
-					Assert.IsTrue (getter.IsVirtual);
-					Assert.IsFalse (getter.IsNewSlot, "The getter must override the base property.");
-					Assert.AreEqual (Mono.Cecil.Cil.Code.Ldc_I4_1, getter.Body.Instructions [0].OpCode.Code);
-					Assert.AreEqual (Mono.Cecil.Cil.Code.Ret, getter.Body.Instructions [1].OpCode.Code);
-				} else {
-					Assert.IsNull (property, "Ineligible proxies must inherit IsSealed = false.");
-				}
+				Assert.AreEqual (3, baseConstructor.Parameters.Count, "The constructor must pass IsSealed to the base.");
+				Assert.AreEqual ("System.Boolean", baseConstructor.Parameters [2].ParameterType.FullName);
+				var expectedIsSealed = eligible ? Mono.Cecil.Cil.Code.Ldc_I4_1 : Mono.Cecil.Cil.Code.Ldc_I4_0;
+				Assert.AreEqual (expectedIsSealed, baseCall.Previous.OpCode.Code, type.FullName);
+				Assert.IsFalse (type.Properties.Any (property => property.Name == "IsSealed"), "Proxies must not override IsSealed.");
 			}
 		}
 

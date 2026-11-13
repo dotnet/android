@@ -42,12 +42,18 @@ namespace Java.Interop
 	public abstract class JavaPeerProxy : Attribute
 	{
 		protected JavaPeerProxy (string jniName, Type targetType)
+			: this (jniName, targetType, false)
+		{
+		}
+
+		protected JavaPeerProxy (string jniName, Type targetType, bool isSealed)
 		{
 			ArgumentNullException.ThrowIfNull (jniName);
 			ArgumentNullException.ThrowIfNull (targetType);
 
 			JniName = jniName;
 			TargetType = targetType;
+			IsSealed = isSealed;
 		}
 
 		/// <summary>
@@ -73,10 +79,10 @@ namespace Java.Interop
 		/// Gets whether the sealed target can be resolved directly using the runtime's class loader.
 		/// </summary>
 		/// <remarks>
-		/// Generated proxies override this only for sealed Mono.Android targets. External
-		/// targets return false even when sealed, because they can use a different class loader.
+		/// Generated proxies pass <see langword="true"/> only for sealed Mono.Android targets. External
+		/// targets pass <see langword="false"/> even when sealed, because they can use a different class loader.
 		/// </remarks>
-		public virtual bool IsSealed => false;
+		public bool IsSealed { get; }
 
 		/// <summary>
 		/// Returns <see langword="true"/> when the UCO constructor callback should skip
