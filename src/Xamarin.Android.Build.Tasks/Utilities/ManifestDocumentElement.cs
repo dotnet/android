@@ -135,7 +135,7 @@ namespace Xamarin.Android.Manifest {
 		}
 
 		public XElement ToElement (T value, ICollection<string> specified, string packageName, TypeDefinitionCache cache,
-			ICustomAttributeProvider provider = null, IAssemblyResolver resolver = null, int targetSdkVersion = 0)
+			ICustomAttributeProvider? provider = null, IAssemblyResolver? resolver = null, int targetSdkVersion = 0)
 		{
 			var r = new XElement (Element,
 					specified.OrderBy (e => e)

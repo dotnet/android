@@ -40,7 +40,7 @@ namespace Android.App {
 
 		public XElement ToElement (string packageName, TypeDefinitionCache cache)
 		{
-			return mapping.ToElement (this, specified, packageName, cache);
+			return mapping.ToElement (this, specified ?? throw new InvalidOperationException (), packageName, cache);
 		}
 
 		internal class UsesPermissionComparer : IEqualityComparer<UsesPermissionAttribute>
