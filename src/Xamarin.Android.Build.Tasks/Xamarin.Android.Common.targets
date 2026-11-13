@@ -2517,6 +2517,7 @@ because xbuild doesn't support framework reference assemblies.
   </ItemGroup>
   <!-- universal.apk has a fixed ZIP timestamp, so always overwrite instead of comparing size/timestamp. -->
   <Unzip SourceFiles="$(_UniversalApkSetIntermediate)" DestinationFolder="$(_UniversalApkExtractDir)" Include="universal.apk" SkipUnchangedFiles="false" />
+  <Touch Files="$(_UniversalApkExtractDir)universal.apk" />
   <Copy SourceFiles="$(_UniversalApkExtractDir)universal.apk" DestinationFiles="$(OutDir)$(_AndroidPackage)-Signed.apk" />
   <!-- bundletool's universal.apk has a fixed ZIP timestamp, which otherwise leaves this target
        perpetually out of date relative to the unchanged input AAB. -->
