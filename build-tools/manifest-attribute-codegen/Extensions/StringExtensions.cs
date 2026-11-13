@@ -112,7 +112,7 @@ static class StringExtensions
 	[return: NotNullIfNotNull (nameof (s))]
 	public static string? FirstSubset (this string? s, char separator)
 	{
-		if (s is null || !s.HasValue ())
+		if (string.IsNullOrWhiteSpace (s))
 			return s;
 
 		var index = s.IndexOf (separator);
@@ -129,7 +129,7 @@ static class StringExtensions
 	[return: NotNullIfNotNull (nameof (s))]
 	public static string? LastSubset (this string? s, char separator)
 	{
-		if (s is null || !s.HasValue ())
+		if (string.IsNullOrWhiteSpace (s))
 			return s;
 
 		var index = s.LastIndexOf (separator);
