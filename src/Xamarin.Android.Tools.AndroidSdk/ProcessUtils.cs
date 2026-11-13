@@ -69,12 +69,13 @@ namespace Xamarin.Android.Tools
 				//
 				// We wrap `stdout` and `stderr` in syncronized wrappers for safety in case they
 				// end up writing to the same buffer, or they are the same object.
+				// Redirected streams without a writer must still be drained so the process cannot block.
 				using (cancellationToken.Register (() => KillProcess (process))) {
 					if (psi.RedirectStandardOutput)
-						output = ReadStreamAsync (process.StandardOutput, TextWriter.Synchronized (stdout!));
+						output = ReadStreamAsync (process.StandardOutput, TextWriter.Synchronized (stdout ?? TextWriter.Null));
 
 					if (psi.RedirectStandardError)
-						error = ReadStreamAsync (process.StandardError, TextWriter.Synchronized (stderr!));
+						error = ReadStreamAsync (process.StandardError, TextWriter.Synchronized (stderr ?? TextWriter.Null));
 
 					await Task.WhenAll (new [] { output, error, exit }).ConfigureAwait (false);
 				}
@@ -320,23 +321,23 @@ namespace Xamarin.Android.Tools
 				logger: logger)?.Path;
 		}
 
-		internal static IEnumerable<string> FindExecutablesInPath (string executable)
+		internal static IEnumerable<string> FindExecutablesInPath (string executable, IDictionary<string, string>? environmentVariables = null)
 		{
-			var path        = Environment.GetEnvironmentVariable (EnvironmentVariableNames.Path) ?? "";
+			var path        = GetEnvironmentVariable (EnvironmentVariableNames.Path, environmentVariables) ?? "";
 			var pathDirs    = path.Split (new char[] { Path.PathSeparator }, StringSplitOptions.RemoveEmptyEntries);
 
 			foreach (var dir in pathDirs) {
-				foreach (var exe in FindExecutablesInDirectory (dir, executable)) {
+				foreach (var exe in FindExecutablesInDirectory (dir, executable, environmentVariables)) {
 					yield return exe;
 				}
 			}
 		}
 
-		internal static IEnumerable<string> FindExecutablesInDirectory (string dir, string executable)
+		internal static IEnumerable<string> FindExecutablesInDirectory (string dir, string executable, IDictionary<string, string>? environmentVariables = null)
 		{
 			if (!Directory.Exists (dir))
 				yield break;
-			foreach (var exe in ExecutableFiles (executable)) {
+			foreach (var exe in ExecutableFiles (executable, environmentVariables)) {
 				string exePath;
 				try {
 					exePath = Path.Combine (dir, exe);
@@ -348,14 +349,34 @@ namespace Xamarin.Android.Tools
 			}
 		}
 
-		internal static IEnumerable<string> ExecutableFiles (string executable)
+		internal static string? GetEnvironmentVariable (string name, IDictionary<string, string>? environmentVariables)
 		{
-			if (ExecutableFileExtensions == null || ExecutableFileExtensions.Length == 0) {
+			if (environmentVariables == null)
+				return Environment.GetEnvironmentVariable (name);
+			if (environmentVariables.TryGetValue (name, out var value))
+				return value;
+			if (OS.IsWindows)
+				foreach (var pair in environmentVariables)
+					if (string.Equals (pair.Key, name, StringComparison.OrdinalIgnoreCase))
+						return pair.Value;
+			return null;
+		}
+
+		internal static string? GetUnixHome (IDictionary<string, string>? environmentVariables)
+			=> environmentVariables == null
+				? Environment.GetFolderPath (Environment.SpecialFolder.UserProfile)
+				: GetEnvironmentVariable ("HOME", environmentVariables);
+
+		internal static IEnumerable<string> ExecutableFiles (string executable, IDictionary<string, string>? environmentVariables = null)
+		{
+			var extensions = environmentVariables == null ? ExecutableFileExtensions :
+				GetEnvironmentVariable (EnvironmentVariableNames.PathExt, environmentVariables)?.Split (new [] { Path.PathSeparator }, StringSplitOptions.RemoveEmptyEntries);
+			if (extensions == null || extensions.Length == 0) {
 				yield return executable;
 				yield break;
 			}
 
-			foreach (var ext in ExecutableFileExtensions)
+			foreach (var ext in extensions)
 				yield return Path.ChangeExtension (executable, ext);
 			yield return executable;
 		}

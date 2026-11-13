@@ -24,10 +24,6 @@
   <Target Name="GenerateManifestAttributes"
       DependsOnTargets="Build">
 
-    <PropertyGroup>
-      <_ManifestAttributeCodeGen>$(TargetPath)</_ManifestAttributeCodeGen>
-      <_ManifestFile>$(MSBuildThisFileDirectory)manifest-definition.xml</_ManifestFile>
-    </PropertyGroup>
     <ItemGroup>
       <_MacArgs Include="&quot;$(TargetPath)&quot;" />
       <_MacArgs Include="&quot;-sdk-path=$(AndroidSdkFullPath)&quot;" />
