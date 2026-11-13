@@ -75,15 +75,15 @@ namespace Xamarin.SourceWriter
 			else if (IsPrivate)
 				writer.Write ("private ");
 
+			if (IsShadow)
+				writer.Write ("new ");
+
 			if (IsStatic)
 				writer.Write ("static ");
 			if (IsReadonly)
 				writer.Write ("readonly ");
 			if (IsConst)
 				writer.Write ("const ");
-
-			if (IsShadow)
-				writer.Write ("new ");
 
 			WriteType (writer);
 
