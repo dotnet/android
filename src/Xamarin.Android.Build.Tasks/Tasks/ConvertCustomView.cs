@@ -3,6 +3,7 @@
 #nullable enable
 
 using System;
+using System.Globalization;
 using System.Diagnostics;
 using System.Collections.Generic;
 using System.IO;
@@ -169,7 +170,7 @@ namespace Xamarin.Android.Tasks {
 			if (matchingKey.Key != null) {
 				// we have elements with slightly different casing.
 				// lets issue a error.
-				logMessage (TraceLevel.Error, string.Format (Properties.Resources.XA1002, name, matchingKey.Key));
+				logMessage (TraceLevel.Error, string.Format (CultureInfo.CurrentCulture, Properties.Resources.XA1002, name, matchingKey.Key));
 			}
 			return false;
 		}

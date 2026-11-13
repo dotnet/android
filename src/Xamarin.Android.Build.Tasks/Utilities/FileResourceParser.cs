@@ -1,6 +1,7 @@
 #nullable enable
 
 using System;
+using System.Globalization;
 using System.CodeDom;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -159,7 +160,7 @@ namespace Xamarin.Android.Tasks
 				}
 				foreach (R r in resources[t].OrderBy(x => x.ToSortedString(), StringComparer.Ordinal)) {
 
-					int id = Convert.ToInt32 (itemPackageId + typeid.ToString ("X2") + itemid.ToString ("X4"), fromBase: 16);
+					int id = Convert.ToInt32 (itemPackageId + typeid.ToString ("X2", CultureInfo.InvariantCulture) + itemid.ToString ("X4", CultureInfo.InvariantCulture), fromBase: 16);
 					if ((r.Type != RType.Array) && r.Id == -1) {
 						itemid++;
 						r.UpdateId (id);

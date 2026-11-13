@@ -1,6 +1,7 @@
 #nullable enable
 
 using System;
+using System.Globalization;
 using System.IO;
 using Microsoft.Build.Framework;
 using Microsoft.Android.Build.Tasks;
@@ -36,7 +37,7 @@ namespace Xamarin.Android.Tasks
 			string sourceFilename = Path.GetFileNameWithoutExtension (Source.ItemSpec);
 			if (sourceFilename.EndsWith (strSignedUnaligned, StringComparison.OrdinalIgnoreCase))
 				sourceFilename = sourceFilename.Remove (sourceFilename.Length - strSignedUnaligned.Length);
-			return string.Format ("-p {0} \"{1}\" \"{2}{3}{4}-Signed.apk\"",
+			return string.Format (CultureInfo.CurrentCulture, "-p {0} \"{1}\" \"{2}{3}{4}-Signed.apk\"",
 				Alignment, Source.ItemSpec, DestinationDirectory.ItemSpec, Path.DirectorySeparatorChar, sourceFilename);
 		}
 
