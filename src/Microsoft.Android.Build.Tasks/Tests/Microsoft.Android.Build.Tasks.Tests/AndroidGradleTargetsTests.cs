@@ -10,8 +10,9 @@ namespace Xamarin.Android.Build.Tests;
 [TestFixture]
 public class AndroidGradleTargetsTests : BaseTest
 {
-	[Test]
-	public void CleanThenBuildPassesLiteralPathsAndResolvedSdkEnvironment ()
+	[TestCase ("")]
+	[TestCase ("feature$HOME")]
+	public void CleanThenBuildPassesLiteralPathsAndResolvedSdkEnvironment (string moduleName)
 	{
 		if (OperatingSystem.IsWindows ()) {
 			Assert.Ignore ("The fake Gradle wrapper is a POSIX shell script.");
@@ -63,7 +64,8 @@ public class AndroidGradleTargetsTests : BaseTest
 					new XElement ("_AndroidStampDirectory", "$(MSBuildProjectDirectory)/stamp/"),
 					new XElement ("_AGPInitScriptPath", "$(MSBuildProjectDirectory)/init.gradle.kts")),
 				new XElement ("ItemGroup",
-					new XElement ("AndroidGradleProject", new XAttribute ("Include", "lib/build.gradle.kts"))),
+					new XElement ("AndroidGradleProject", new XAttribute ("Include", "lib/build.gradle.kts"),
+						new XElement ("ModuleName", moduleName))),
 				new XElement ("Import", new XAttribute ("Project", targets)),
 				new XElement ("Target", new XAttribute ("Name", "_SetupMSBuildAllProjects")),
 				// Mirrors AndroidPrepareForBuild, which resolves the SDK/JDK only during Build.
@@ -95,6 +97,9 @@ public class AndroidGradleTargetsTests : BaseTest
 
 		void AssertInvocation (string [] lines, string task, bool hasInitScript)
 		{
+			if (moduleName.Length != 0) {
+				task = $"{moduleName}:{task}";
+			}
 			var args = lines.Where (l => l.StartsWith ("ARG=", StringComparison.Ordinal)).Select (l => l.Substring (4)).ToArray ();
 			Assert.AreEqual (task, args [0], string.Join ("\n", lines));
 			if (!hasInitScript) {
@@ -102,7 +107,7 @@ public class AndroidGradleTargetsTests : BaseTest
 				return;
 			}
 			Assert.AreEqual (5, args.Length, string.Join ("\n", lines));
-			StringAssert.StartsWith ($"-PnetAndroidBuildDirOverride={intermediate}gradle/Release-", args [1]);
+			StringAssert.StartsWith ($"-PnetAndroidBuildDirOverride={intermediate}gradle/{moduleName}Release-", args [1]);
 			StringAssert.EndsWith ("/.", args [1]);
 			Assert.AreEqual ("--init-script", args [2]);
 			Assert.AreEqual (initScript, args [3]);

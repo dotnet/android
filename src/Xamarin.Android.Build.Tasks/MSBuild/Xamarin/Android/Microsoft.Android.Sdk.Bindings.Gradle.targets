@@ -91,6 +91,12 @@ This file contains MSBuild targets that support building and operating on Androi
         <_AndroidGradleModule Condition=" '%(ModuleName)' != '' ">%(ModuleName):</_AndroidGradleModule>
       </AndroidGradleProject>
       <AndroidGradleProject>
+        <_AndroidGradleAssembleTask>%(AndroidGradleProject._AndroidGradleModule)assemble%(Configuration)</_AndroidGradleAssembleTask>
+        <_AndroidGradleCleanTask>%(AndroidGradleProject._AndroidGradleModule)clean</_AndroidGradleCleanTask>
+      </AndroidGradleProject>
+      <AndroidGradleProject>
+        <_AndroidGradleQuotedAssembleTask>$([System.String]::Copy('%(_AndroidGradleAssembleTask)').Replace('$(_AndroidGradleShellEscapeFrom)', '$(_AndroidGradleShellEscapeTo)').Insert(0, '$(_AndroidGradleShellQuote)'))$(_AndroidGradleShellQuote)</_AndroidGradleQuotedAssembleTask>
+        <_AndroidGradleQuotedCleanTask>$([System.String]::Copy('%(_AndroidGradleCleanTask)').Replace('$(_AndroidGradleShellEscapeFrom)', '$(_AndroidGradleShellEscapeTo)').Insert(0, '$(_AndroidGradleShellQuote)'))$(_AndroidGradleShellQuote)</_AndroidGradleQuotedCleanTask>
         <_AndroidGradleWrapperCommand>$([System.String]::Copy('%(_AndroidGradleWrapperPath)').Replace('$(_AndroidGradleShellEscapeFrom)', '$(_AndroidGradleShellEscapeTo)').Insert(0, '$(_AndroidGradleShellQuote)'))$(_AndroidGradleShellQuote)</_AndroidGradleWrapperCommand>
         <_AndroidGradleInitScriptArguments>$([System.String]::Copy('%(_AndroidGradleBuildDirOverride)').Replace('$(_AndroidGradleShellEscapeFrom)', '$(_AndroidGradleShellEscapeTo)').Insert(0, '$(_AndroidGradleShellQuote)'))$(_AndroidGradleShellQuote) --init-script $(_AndroidGradleQuotedInitScriptPath)</_AndroidGradleInitScriptArguments>
       </AndroidGradleProject>
@@ -131,7 +137,7 @@ This file contains MSBuild targets that support building and operating on Androi
         <_AndroidGradleAssembleArguments Condition=" Exists('$(_AGPInitScriptPath)') ">%(AndroidGradleProject._AndroidGradleInitScriptArguments)</_AndroidGradleAssembleArguments>
       </AndroidGradleProject>
       <AndroidGradleProject>
-        <_AndroidGradleAssembleCommand>%(AndroidGradleProject._AndroidGradleWrapperCommand) &quot;%(AndroidGradleProject._AndroidGradleModule)assemble%(AndroidGradleProject.Configuration)&quot; %(AndroidGradleProject._AndroidGradleAssembleArguments) --no-daemon</_AndroidGradleAssembleCommand>
+        <_AndroidGradleAssembleCommand>%(AndroidGradleProject._AndroidGradleWrapperCommand) %(AndroidGradleProject._AndroidGradleQuotedAssembleTask) %(AndroidGradleProject._AndroidGradleAssembleArguments) --no-daemon</_AndroidGradleAssembleCommand>
       </AndroidGradleProject>
     </ItemGroup>
     <Exec
@@ -181,7 +187,7 @@ This file contains MSBuild targets that support building and operating on Androi
         <_AndroidGradleCleanArguments Condition=" Exists('$(_AGPInitScriptPath)') ">%(AndroidGradleProject._AndroidGradleInitScriptArguments)</_AndroidGradleCleanArguments>
       </AndroidGradleProject>
       <AndroidGradleProject>
-        <_AndroidGradleCleanCommand>%(AndroidGradleProject._AndroidGradleWrapperCommand) &quot;%(AndroidGradleProject._AndroidGradleModule)clean&quot; %(AndroidGradleProject._AndroidGradleCleanArguments) --no-daemon</_AndroidGradleCleanCommand>
+        <_AndroidGradleCleanCommand>%(AndroidGradleProject._AndroidGradleWrapperCommand) %(AndroidGradleProject._AndroidGradleQuotedCleanTask) %(AndroidGradleProject._AndroidGradleCleanArguments) --no-daemon</_AndroidGradleCleanCommand>
       </AndroidGradleProject>
     </ItemGroup>
     <Exec
