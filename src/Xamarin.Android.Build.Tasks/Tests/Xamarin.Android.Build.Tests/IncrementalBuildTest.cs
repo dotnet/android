@@ -1642,12 +1642,9 @@ namespace Lib2
 		}
 
 		[Test]
-		public void ResolveLibraryProjectImports ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
+		public void ResolveLibraryProjectImports ([Values (false, true)] bool isRelease)
 		{
-			bool isRelease = runtime == AndroidRuntime.NativeAOT;
-			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
-				return;
-			}
+			const AndroidRuntime runtime = AndroidRuntime.CoreCLR;
 			var proj = new XamarinFormsAndroidApplicationProject {
 				IsRelease = isRelease,
 			};
@@ -1939,12 +1936,9 @@ namespace Lib2
 #pragma warning restore 414
 
 		[Test]
-		public void DeterministicBuilds ([Values] bool deterministic, [Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
+		public void DeterministicBuilds ([Values] bool deterministic, [Values (false, true)] bool isRelease)
 		{
-			bool isRelease = runtime == AndroidRuntime.NativeAOT;
-			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
-				return;
-			}
+			const AndroidRuntime runtime = AndroidRuntime.CoreCLR;
 
 			var proj = new XamarinAndroidApplicationProject {
 				IsRelease = isRelease,
