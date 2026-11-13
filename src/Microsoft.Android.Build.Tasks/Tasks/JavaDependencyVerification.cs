@@ -419,8 +419,21 @@ public class NuGetPackageVersionFinder
 	public List<Artifact> GetArtifactsInNugetPackage (string library, string version, TaskLoggingHelper log)
 	{
 		var artifacts = new List<Artifact> ();
+		Package? package = null;
 
-		if (!libraries.TryGetValue (library, out var versions) || !versions.TryGetValue (new NuGetVersion (version), out var package)) {
+		if (libraries.TryGetValue (library, out var versions)) {
+			if (version.IsNullOrEmpty ()) {
+				// Central Package Management leaves PackageReference.Version empty.
+				if (versions.Count == 1)
+					package = versions.Values.Single ();
+				else
+					log.LogMessage ("Multiple versions of NuGet package '{0}' were restored: {1}. Specify JavaArtifact metadata on the PackageReference to identify its Java dependencies.", library, string.Join (", ", versions.Keys));
+			} else if (NuGetVersion.TryParse (version, out var parsed_version) && parsed_version is not null) {
+				versions.TryGetValue (parsed_version, out package);
+			}
+		}
+
+		if (package is null) {
 			log.LogCodedError ("XA4248", Properties.Resources.XA4248, library, version);
 			return artifacts;
 		}
