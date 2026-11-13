@@ -109,14 +109,30 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		public void AssemblyWithoutLegacyContentDoesNotWarn ()
+		public void AssemblyWithoutLegacyContentDoesNotWarn ([Values] bool previouslyLegacy)
 		{
+			if (previouslyLegacy) {
+				// A previous version of the assembly embedded a .jar and resources
+				var legacyPath = CreateAssembly ("Modern",
+					("classes.jar", CreateZip (("META-INF/MANIFEST.MF", "Manifest-Version: 1.0"))),
+					("__AndroidLibraryProjects__.zip", CreateZip (("library_project_imports/res/values/strings.xml", "<resources />"))));
+				var legacyWarnings = new List<BuildWarningEventArgs> ();
+				Assert.IsTrue (CreateTask (legacyWarnings, new TaskItem (legacyPath)).Execute (), "Legacy task should have succeeded.");
+				Assert.IsTrue (legacyWarnings.Any (w => w.Code == "XA0150"), "XA0150 should have been logged for the legacy assembly.");
+			}
+
 			var assemblyPath = CreateAssembly ("Modern", ("SomeResource.txt", new byte [] { 1, 2, 3 }));
-			var warnings = new List<BuildWarningEventArgs> ();
-			var task = CreateTask (warnings, new TaskItem (assemblyPath));
-			Assert.IsTrue (task.Execute (), "Task should have succeeded.");
-			Assert.IsEmpty (warnings, "No warnings should have been logged.");
-			Assert.IsEmpty (task.ResolvedResourceDirectories, "No resource directories should have been resolved.");
+			// The second run checks that nothing left over from the legacy assembly is treated as up to date
+			for (int i = 0; i < 2; i++) {
+				var warnings = new List<BuildWarningEventArgs> ();
+				var task = CreateTask (warnings, new TaskItem (assemblyPath));
+				Assert.IsTrue (task.Execute (), $"Task should have succeeded. ({i})");
+				Assert.IsEmpty (warnings, $"No warnings should have been logged. ({i})");
+				Assert.IsEmpty (task.ResolvedResourceDirectories, $"No resource directories should have been resolved. ({i})");
+				Assert.IsEmpty (task.Jars, $"No jars should have been resolved. ({i})");
+			}
+			Assert.IsEmpty (Directory.GetFileSystemEntries (Path.Combine (path, "lp")).Where (e => Path.GetFileName (e) != "map.cache"),
+				"Nothing should remain extracted for the assembly.");
 		}
 
 		[Test]

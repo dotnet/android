@@ -130,7 +130,19 @@ This file is used by all project types, including binding projects.
     <PropertyGroup>
       <_AndroidAarLibraryImportsDirectory>@(_AndroidAarLibraryImportChanged->'%(_AndroidImportsDirectory)')</_AndroidAarLibraryImportsDirectory>
     </PropertyGroup>
-    <RemoveDir Directories="$(_AndroidAarLibraryImportsDirectory)" ContinueOnError="$(DesignTimeBuild)" />
+    <!-- Invalidate the stamps first, so a failure below always leaves this .aar eligible for extraction -->
+    <Delete
+        ContinueOnError="$(DesignTimeBuild)"
+        Files="@(_AndroidAarLibraryImportChanged->'%(_AndroidImportStamp)');@(_AndroidAarLibraryImportChanged->'%(_AndroidImportExtractedStamp)')"
+    />
+    <PropertyGroup>
+      <_AndroidAarLibraryExtracted>$(MSBuildLastTaskResult)</_AndroidAarLibraryExtracted>
+    </PropertyGroup>
+    <RemoveDir
+        Condition=" '$(_AndroidAarLibraryExtracted)' == 'true' "
+        ContinueOnError="$(DesignTimeBuild)"
+        Directories="$(_AndroidAarLibraryImportsDirectory)"
+    />
     <PropertyGroup>
       <_AndroidAarLibraryExtracted>$(MSBuildLastTaskResult)</_AndroidAarLibraryExtracted>
     </PropertyGroup>

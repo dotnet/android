@@ -92,6 +92,40 @@ namespace Xamarin.Android.Build.Tests
 			StringAssertEx.DoesNotContain ("aar_resource_string", File.ReadAllLines (rTxt), $"`{rTxt}` should not contain resources from the .aar.");
 		}
 
+		[Test]
+		public void AarIsExtractedAgainAfterFailedExtraction ()
+		{
+			bool corrupt = false;
+			// The restored .aar must have the same hash as the original one; entry timestamps would differ if recreated
+			var aar = CreateAarWithResources (includeResources: true);
+			var proj = new XamarinAndroidApplicationProject {
+				OtherBuildItems = {
+					new AndroidItem.AndroidAarLibrary ("resources.aar") {
+						BinaryContent = () => corrupt ? Encoding.ASCII.GetBytes ("not a zip file") : aar,
+					},
+				},
+			};
+
+			using var builder = CreateApkBuilder ();
+			Assert.IsTrue (builder.Build (proj), "Initial build should succeed.");
+			var importsDirectory = Path.Combine (builder.Output.GetAarImportDirectory ("resources.aar"), "jl");
+			var strings = Path.Combine (importsDirectory, "res", "values", "strings.xml");
+			FileAssert.Exists (strings);
+
+			corrupt = true;
+			proj.Touch ("resources.aar");
+			builder.ThrowOnBuildFailure = false;
+			Assert.IsFalse (builder.Build (proj, doNotCleanupOnUpdate: true, saveProject: false), "Build with a corrupt .aar should fail.");
+			builder.ThrowOnBuildFailure = true;
+
+			// Restoring the original .aar must not match the hash recorded before the failed extraction
+			corrupt = false;
+			proj.Touch ("resources.aar");
+			Assert.IsTrue (builder.Build (proj, doNotCleanupOnUpdate: true, saveProject: false), "Build after restoring the .aar should succeed.");
+			FileAssert.Exists (strings, "The restored .aar should have been extracted again.");
+			StringAssertEx.ContainsText (File.ReadAllLines (builder.Output.GetIntermediaryPath ("R.txt")), "aar_resource_string");
+		}
+
 		static byte [] CreateAarWithResources (bool includeResources)
 		{
 			using var stream = new MemoryStream ();

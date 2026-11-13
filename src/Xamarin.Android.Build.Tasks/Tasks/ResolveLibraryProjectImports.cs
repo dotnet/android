@@ -315,8 +315,17 @@ namespace Xamarin.Android.Tasks
 					}
 				}
 
-				if (hasLegacyContent)
+				if (hasLegacyContent) {
 					LogLegacyEmbeddedContentWarning (assemblyPath, nuGetPackageId, nuGetPackageVersion);
+				} else if (Directory.Exists (outDirForDll)) {
+					// Left over from a previous version of this assembly; keeping it would resolve stale content
+					// and log XA0150 when the hash matches the stamp on the next build.
+					Log.LogDebugMessage ($"Deleting '{outDirForDll}': '{assemblyPath}' no longer contains legacy Android library content");
+					Directory.Delete (outDirForDll, recursive: true);
+					if (File.Exists (stamp))
+						File.Delete (stamp);
+					continue;
+				}
 
 				if (Directory.Exists (importsDir)) {
 					// Delete unknown jars in the top directory of importsDir
