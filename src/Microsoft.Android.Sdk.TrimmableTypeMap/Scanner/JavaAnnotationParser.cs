@@ -165,6 +165,10 @@ sealed class JavaAnnotationParser
 		if (value is bool boolean) {
 			return boolean ? "true" : "false";
 		}
+		if (value is long int64) {
+			// Java requires the L suffix for long literals outside the int range
+			return int64.ToString (CultureInfo.InvariantCulture) + "L";
+		}
 		if (value is IFormattable formattable) {
 			return formattable.ToString (null, CultureInfo.InvariantCulture) ?? "";
 		}
