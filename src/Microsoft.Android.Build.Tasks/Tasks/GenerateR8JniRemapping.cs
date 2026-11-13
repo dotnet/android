@@ -23,7 +23,8 @@ namespace Microsoft.Android.Tasks
 	/// Converts an R8 mapping file into runtime JNI remapping XML without modifying managed
 	/// assemblies.
 	/// </summary>
-	public class GenerateR8JniRemapping : AndroidTask
+	[MSBuildMultiThreadableTask]
+	public class GenerateR8JniRemapping : MultithreadedAndroidTask
 	{
 		public override string TaskPrefix => "GR8JR";
 
@@ -46,14 +47,14 @@ namespace Microsoft.Android.Tasks
 
 		public override bool RunTask ()
 		{
-			if (!File.Exists (MappingFile)) {
+			if (!File.Exists (TaskEnvironment.GetAbsolutePath (MappingFile))) {
 				LogR8JniRemappingError (string.Format (CultureInfo.InvariantCulture, Properties.Resources.XA4325_MappingNotFound, MappingFile));
 				return false;
 			}
 
 			R8Mapping mapping;
 			try {
-				mapping = R8Mapping.Load (MappingFile);
+				mapping = R8Mapping.Load (MappingFile, TaskEnvironment);
 			} catch (Exception ex) when (ex is FormatException || ex is IOException || ex is UnauthorizedAccessException) {
 				LogR8JniRemappingError (string.Format (CultureInfo.InvariantCulture, Properties.Resources.XA4325_MappingDataFailure, MappingFile, ex.Message));
 				return false;
@@ -63,12 +64,12 @@ namespace Microsoft.Android.Tasks
 
 			HashSet<string>? requiredEntries;
 			if (NativeAot) {
-				if (NativeAotObjectFile.IsNullOrEmpty () || !File.Exists (NativeAotObjectFile)) {
+				if (NativeAotObjectFile.IsNullOrEmpty () || !File.Exists (TaskEnvironment.GetAbsolutePath (NativeAotObjectFile))) {
 					LogR8JniRemappingError (string.Format (CultureInfo.InvariantCulture, Properties.Resources.XA4325_NativeAotObjectRequired, NativeAotObjectFile ?? ""));
 					return false;
 				}
 				try {
-					requiredEntries = NativeAotJniRetention.GetRequiredEntries (NativeAotObjectFile, mapping);
+					requiredEntries = NativeAotJniRetention.GetRequiredEntries (NativeAotObjectFile, mapping, TaskEnvironment);
 				} catch (Exception ex) when (ex is IOException || ex is InvalidDataException || ex is UnauthorizedAccessException) {
 					LogR8JniRemappingError (string.Format (CultureInfo.InvariantCulture, Properties.Resources.XA4325_NativeAotObjectReadFailure, NativeAotObjectFile, ex.Message));
 					return false;
@@ -92,11 +93,12 @@ namespace Microsoft.Android.Tasks
 			if (Log.HasLoggedErrors) {
 				return false;
 			}
-			string? directory = Path.GetDirectoryName (OutputFile);
+			var outputFile = TaskEnvironment.GetAbsolutePath (OutputFile);
+			string? directory = Path.GetDirectoryName (outputFile);
 			if (!directory.IsNullOrEmpty ()) {
 				Directory.CreateDirectory (directory);
 			}
-			File.WriteAllText (OutputFile, content, Files.UTF8withoutBOM);
+			File.WriteAllText (outputFile, content, Files.UTF8withoutBOM);
 			return !Log.HasLoggedErrors;
 		}
 
@@ -108,7 +110,7 @@ namespace Microsoft.Android.Tasks
 
 			var seen = new HashSet<string> (StringComparer.OrdinalIgnoreCase);
 			foreach (ITaskItem assembly in LinkedAssemblies) {
-				string path = assembly.ItemSpec;
+				string path = TaskEnvironment.GetAbsolutePath (assembly.ItemSpec);
 				if (!seen.Add (path)) {
 					continue;
 				}
@@ -359,9 +361,10 @@ namespace Microsoft.Android.Tasks
 			var readerSettings = new XmlReaderSettings {
 				XmlResolver = null,
 			};
+			string outputFile = Path.GetFullPath (TaskEnvironment.GetAbsolutePath (OutputFile).Value);
 			foreach (ITaskItem item in ExistingRemapXmlFiles) {
-				string file = item.ItemSpec;
-				if (string.Equals (Path.GetFullPath (file), Path.GetFullPath (OutputFile), StringComparison.OrdinalIgnoreCase)) {
+				var file = TaskEnvironment.GetAbsolutePath (item.ItemSpec);
+				if (string.Equals (Path.GetFullPath (file.Value), outputFile, StringComparison.OrdinalIgnoreCase)) {
 					continue;
 				}
 				if (!File.Exists (file)) {

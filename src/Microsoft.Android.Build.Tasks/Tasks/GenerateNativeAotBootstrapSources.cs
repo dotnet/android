@@ -10,7 +10,8 @@ using Microsoft.Build.Framework;
 
 namespace Microsoft.Android.Tasks;
 
-public sealed class GenerateNativeAotBootstrapSources : AndroidTask
+[MSBuildMultiThreadableTask]
+public sealed class GenerateNativeAotBootstrapSources : MultithreadedAndroidTask
 {
 	public override string TaskPrefix => "GNABS";
 
@@ -28,17 +29,18 @@ public sealed class GenerateNativeAotBootstrapSources : AndroidTask
 	public override bool RunTask ()
 	{
 		string outputDirectory = Path.Combine (OutputDirectory, "src", "net", "dot", "jni", "nativeaot");
-		Directory.CreateDirectory (outputDirectory);
-		File.Delete (Path.Combine (outputDirectory, "NativeAotEnvironmentVars.java"));
+		string absoluteOutputDirectory = TaskEnvironment.GetAbsolutePath (outputDirectory);
+		Directory.CreateDirectory (absoluteOutputDirectory);
+		File.Delete (Path.Combine (absoluteOutputDirectory, "NativeAotEnvironmentVars.java"));
 		var sources = new List<string> {
 			WriteSource ("JavaInteropRuntime.java", ("@MAIN_ASSEMBLY_NAME@", EscapeJavaString (TargetName))),
 		};
 		sources.AddRange (RuntimeProviderSourceGenerator.WriteAdditionalRuntimeProviderSources (
-			TaskEnvironment.Fallback, OutputDirectory, isCoreCLR: false, AdditionalProviderSources, preserveTimestamp: false));
-		var selected = new HashSet<string> (sources, StringComparer.Ordinal);
-		foreach (string oldProvider in Directory.GetFiles (outputDirectory, "NativeAotRuntimeProvider_*.java")) {
+			TaskEnvironment, OutputDirectory, isCoreCLR: false, AdditionalProviderSources, preserveTimestamp: false));
+		var selected = new HashSet<string> (sources.ConvertAll (path => TaskEnvironment.GetAbsolutePath (path).ToString ()), StringComparer.Ordinal);
+		foreach (string oldProvider in Directory.GetFiles (absoluteOutputDirectory, "NativeAotRuntimeProvider_*.java")) {
 			if (Regex.IsMatch (Path.GetFileName (oldProvider), @"^NativeAotRuntimeProvider_[0-9]+\.java$") && !selected.Contains (oldProvider)) {
-				File.Delete (oldProvider);
+				File.Delete (TaskEnvironment.GetAbsolutePath (oldProvider));
 			}
 		}
 		GeneratedSources = sources.ToArray ();
@@ -56,7 +58,7 @@ public sealed class GenerateNativeAotBootstrapSources : AndroidTask
 				match => replacementValues [match.Value]);
 			string path = Path.Combine (outputDirectory, name);
 			Log.LogDebugMessage ($"Writing: {path}");
-			File.WriteAllText (path, source, new UTF8Encoding (false));
+			File.WriteAllText (TaskEnvironment.GetAbsolutePath (path), source, new UTF8Encoding (false));
 			return path;
 		}
 	}

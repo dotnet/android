@@ -16,7 +16,8 @@ namespace Microsoft.Android.Tasks;
 /// APK must be passed in via @(FilesToAddToArchive). This task will determine any unchanged files
 /// and skip them, as well as remove any existing files in the APK that are no longer required.
 /// </summary>
-public class BuildArchive : AndroidTask
+[MSBuildMultiThreadableTask]
+public class BuildArchive : MultithreadedAndroidTask
 {
 	public override string TaskPrefix => "BAA";
 
@@ -46,16 +47,18 @@ public class BuildArchive : AndroidTask
 			uncompressedMethod = CompressionLevel.Optimal;
 
 		var refresh = true;
+		AbsolutePath? apkInputPath = ApkInputPath is null ? null : TaskEnvironment.GetAbsolutePath (ApkInputPath);
+		var apkOutputPath = TaskEnvironment.GetAbsolutePath (ApkOutputPath);
 
 		// If we have an input apk but no output apk, copy it to the output
 		// so we don't modify the original.
-		if (ApkInputPath is not null && File.Exists (ApkInputPath) && !File.Exists (ApkOutputPath)) {
+		if (apkInputPath is AbsolutePath inputPath && File.Exists (inputPath) && !File.Exists (apkOutputPath)) {
 			Log.LogDebugMessage ($"Copying {ApkInputPath} to {ApkOutputPath}");
-			File.Copy (ApkInputPath, ApkOutputPath, overwrite: true);
+			File.Copy (inputPath, apkOutputPath, overwrite: true);
 			refresh = false;
 		}
 
-		using var apk = new ZipArchiveEx (ApkOutputPath, FileMode.OpenOrCreate);
+		using var apk = new ZipArchiveEx (apkOutputPath, FileMode.OpenOrCreate, TaskEnvironment);
 
 		// If we're modifying an existing APK we need to track what entries we started
 		// with so we can remove any existing entries that are no longer used.
@@ -70,12 +73,12 @@ public class BuildArchive : AndroidTask
 
 		// If we're modifying an existing APK we need to update any out
 		// of date entries in the output APK from the input APK.
-		if (ApkInputPath is not null && File.Exists (ApkInputPath) && refresh) {
+		if (apkInputPath is AbsolutePath refreshInputPath && File.Exists (refreshInputPath) && refresh) {
 
-			var lastWriteOutput = File.Exists (ApkOutputPath) ? File.GetLastWriteTimeUtc (ApkOutputPath) : DateTime.MinValue;
-			var lastWriteInput = File.GetLastWriteTimeUtc (ApkInputPath);
+			var lastWriteOutput = File.Exists (apkOutputPath) ? File.GetLastWriteTimeUtc (apkOutputPath) : DateTime.MinValue;
+			var lastWriteInput = File.GetLastWriteTimeUtc (refreshInputPath);
 
-			using (var packaged = ZipFile.OpenRead (ApkInputPath)) {
+			using (var packaged = ZipFile.OpenRead (refreshInputPath)) {
 				foreach (var entry in packaged.Entries) {
 
 					// NOTE: aapt2 is creating zip entries on Windows such as `assets\subfolder/asset2.txt`
@@ -143,7 +146,7 @@ public class BuildArchive : AndroidTask
 					continue;
 				}
 
-				using (var jar = ZipFile.OpenRead (jar_file_path)) {
+				using (var jar = ZipFile.OpenRead (TaskEnvironment.GetAbsolutePath (jar_file_path))) {
 					var jar_item = jar.GetEntry (jar_entry_name);
 					if (jar_item is null) {
 						Log.LogDebugMessage ("Failed to add jar entry {0} from {1}: entry not found in jar.", jar_entry_name, jar_file_path);
@@ -170,7 +173,7 @@ public class BuildArchive : AndroidTask
 
 			var compression = UncompressedFileExtensionsSet.Contains (Path.GetExtension (disk_path)) ? uncompressedMethod : CompressionLevel.Optimal;
 			existingEntries.Remove (apk_path);
-			apk.AddFileIfChanged (Log, disk_path, apk_path, compression);
+			apk.AddFileIfChanged (Log, TaskEnvironment.GetAbsolutePath (disk_path), apk_path, compression);
 		}
 
 		// Clean up Removed files.

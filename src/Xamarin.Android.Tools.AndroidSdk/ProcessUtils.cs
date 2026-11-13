@@ -14,15 +14,18 @@ namespace Xamarin.Android.Tools
 {
 	public static class ProcessUtils
 	{
-		static string[] ExecutableFileExtensions;
-
-		static ProcessUtils ()
+		static class LegacyExecutableExtensions
 		{
-			var pathExt     = Environment.GetEnvironmentVariable (EnvironmentVariableNames.PathExt);
-			var pathExts    = pathExt?.Split (new char [] { Path.PathSeparator }, StringSplitOptions.RemoveEmptyEntries) ?? new string [0];
+			internal static readonly string[] Values = GetExtensions ();
 
-			ExecutableFileExtensions    = pathExts;
+			static string[] GetExtensions ()
+			{
+				var pathExt = Environment.GetEnvironmentVariable (EnvironmentVariableNames.PathExt);
+				return pathExt?.Split (new char [] { Path.PathSeparator }, StringSplitOptions.RemoveEmptyEntries) ?? new string [0];
+			}
 		}
+
+		static string[] ExecutableFileExtensions => LegacyExecutableExtensions.Values;
 
 		/// Backward-compatible overload matching the original shipped API (without environmentVariables).
 #pragma warning disable RS0027 // Public API with optional parameter(s) should have the most parameters amongst its public overloads

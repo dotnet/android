@@ -24,6 +24,32 @@ public class BuildArchiveTests : BaseTest
 	}
 
 	[Test]
+	public void ConcurrentProjectsResolveRelativeArchiveInputsIndependently ()
+	{
+		var directories = new [] { Path.Combine (TempDirectory, "first"), Path.Combine (TempDirectory, "second") };
+		foreach (var directory in directories) {
+			Directory.CreateDirectory (directory);
+			CreateArchive (Path.Combine (directory, "base.apk"), ("AndroidManifest.xml", directory));
+			CreateArchive (Path.Combine (directory, "classes.jar"), ("entry.txt", directory));
+		}
+
+		System.Threading.Tasks.Parallel.ForEach (directories, directory => {
+			var task = new BuildArchive {
+				BuildEngine = new MockBuildEngine (TextWriter.Null),
+				TaskEnvironment = TaskEnvironment.CreateWithProjectDirectoryAndEnvironment (directory, new Dictionary<string, string> ()),
+				ApkInputPath = "base.apk",
+				ApkOutputPath = "app.apk",
+				FilesToAddToArchive = [JavaArchiveItem ("classes.jar", "entry.txt")],
+			};
+			Assert.IsTrue (task.Execute ());
+			Assert.AreEqual ("app.apk", task.ApkOutputPath);
+			using var archive = ZipFile.OpenRead (Path.Combine (directory, "app.apk"));
+			AssertEntryContents (archive, "entry.txt", directory);
+			AssertEntryContents (archive, "AndroidManifest.xml", directory);
+		});
+	}
+
+	[Test]
 	public void ConsecutiveUnchangedBuildsKeepJavaArchiveEntries ()
 	{
 		var apk = Path.Combine (TempDirectory, "app.apk");

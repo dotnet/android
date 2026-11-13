@@ -2,6 +2,7 @@
 using System.IO;
 
 using Microsoft.Android.Build.Tasks;
+using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
 using Xamarin.Android.Tasks;
 using Xamarin.Android.Tools;
@@ -17,15 +18,16 @@ static class DlopenAssemblyStoreGenerator
 	public const string PayloadStartSymbol = AssemblyStoreElfWriter.PayloadSymbol;
 	const string WrappedSubDirectory = "wrapped-assembly-store";
 
-	public static string WrapIt (TaskLoggingHelper log, string baseOutputDirectory, AndroidTargetArch targetArch, string payloadFilePath, string outputFileName)
+	public static string WrapIt (TaskLoggingHelper log, string baseOutputDirectory, AndroidTargetArch targetArch, string payloadFilePath, string outputFileName, TaskEnvironment? taskEnvironment = null)
 	{
+		taskEnvironment ??= TaskEnvironment.Fallback;
 		string outputDir = Path.Combine (baseOutputDirectory, MonoAndroidHelper.ArchToRid (targetArch), WrappedSubDirectory);
-		Directory.CreateDirectory (outputDir);
+		Directory.CreateDirectory (taskEnvironment.GetAbsolutePath (outputDir));
 
 		string outputFile = Path.Combine (outputDir, outputFileName);
 		log.LogDebugMessage ($"[{targetArch}] Wrapping '{payloadFilePath}' into loadable-symbol shared library '{outputFile}'");
-		using var payload = File.OpenRead (payloadFilePath);
-		using var output = File.Create (outputFile);
+		using var payload = File.OpenRead (taskEnvironment.GetAbsolutePath (payloadFilePath));
+		using var output = File.Create (taskEnvironment.GetAbsolutePath (outputFile));
 		AssemblyStoreElfWriter.Write (payload, output, targetArch, outputFileName);
 
 		return outputFile;

@@ -7,6 +7,7 @@ using System.Linq;
 using System.Text;
 using System.Xml;
 using System.Xml.Linq;
+using Microsoft.Build.Framework;
 
 namespace Microsoft.Android.Tasks;
 
@@ -24,16 +25,17 @@ static class JniRemappingBinaryBlob
 	sealed record TypeEntry (string Name, string Replacement);
 	sealed record Member (string Type, string Name, string? Signature, string TargetType, string TargetName, string? TargetSignature, bool IsStatic);
 
-	public static byte [] Create (string? xmlPath, bool compress)
+	public static byte [] Create (string? xmlPath, bool compress, TaskEnvironment? taskEnvironment = null)
 	{
 		if (string.IsNullOrWhiteSpace (xmlPath))
 			return [];
+		taskEnvironment ??= TaskEnvironment.Fallback;
 
 		var types = new List<TypeEntry> ();
 		var reverse = new List<TypeEntry> ();
 		var methods = new List<Member> ();
 		var fields = new List<Member> ();
-		using (Stream input = File.OpenRead (xmlPath))
+		using (Stream input = File.OpenRead (taskEnvironment.GetAbsolutePath (xmlPath)))
 		using (var reader = XmlReader.Create (input, new XmlReaderSettings { DtdProcessing = DtdProcessing.Prohibit, XmlResolver = null })) {
 			var root = XDocument.Load (reader).Root;
 			if (root?.Name != "replacements") {

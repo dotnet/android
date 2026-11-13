@@ -15,7 +15,8 @@ using Task = System.Threading.Tasks.Task;
 
 namespace Microsoft.Android.Tasks;
 
-public class LinkNativeAotSharedLibrary : AsyncTask
+[MSBuildMultiThreadableTask]
+public class LinkNativeAotSharedLibrary : MultithreadedAsyncTask
 {
 	static readonly string [] ArmEhabiPersonalitySymbols = [
 		"__aeabi_unwind_cpp_pr0",
@@ -69,10 +70,10 @@ public class LinkNativeAotSharedLibrary : AsyncTask
 			// A failed link or debug-info operation must not leave outputs that make
 			// the next incremental build skip the link target.
 			if (!success) {
-				File.Delete (OutputSharedLibrary);
-				File.Delete (Path.ChangeExtension (OutputSharedLibrary, ".dbg.so"));
+				File.Delete (TaskEnvironment.GetAbsolutePath (OutputSharedLibrary));
+				File.Delete (TaskEnvironment.GetAbsolutePath (Path.ChangeExtension (OutputSharedLibrary, ".dbg.so")));
 				if (Abi == "armeabi-v7a") {
-					File.Delete (ArmEhabiArchive);
+					File.Delete (TaskEnvironment.GetAbsolutePath (ArmEhabiArchive));
 				}
 			}
 		}
@@ -80,12 +81,12 @@ public class LinkNativeAotSharedLibrary : AsyncTask
 
 	async Task<bool> LinkAsync ()
 	{
-		Directory.CreateDirectory (IntermediateOutputPath);
-		Directory.CreateDirectory (Path.GetDirectoryName (Path.GetFullPath (OutputSharedLibrary)) ?? throw new InvalidOperationException ("Missing output directory."));
+		Directory.CreateDirectory (TaskEnvironment.GetAbsolutePath (IntermediateOutputPath));
+		Directory.CreateDirectory (TaskEnvironment.GetAbsolutePath (Path.GetDirectoryName (TaskEnvironment.GetAbsolutePath (OutputSharedLibrary)) ?? throw new InvalidOperationException ("Missing output directory.")));
 
 		if (!string.IsNullOrEmpty (LinkerScriptContent) && !string.IsNullOrEmpty (LinkerScript)) {
-			Directory.CreateDirectory (Path.GetDirectoryName (Path.GetFullPath (LinkerScript)) ?? throw new InvalidOperationException ("Missing linker script directory."));
-			File.WriteAllText (LinkerScript, LinkerScriptContent);
+			Directory.CreateDirectory (TaskEnvironment.GetAbsolutePath (Path.GetDirectoryName (TaskEnvironment.GetAbsolutePath (LinkerScript)) ?? throw new InvalidOperationException ("Missing linker script directory.")));
+			File.WriteAllText (TaskEnvironment.GetAbsolutePath (LinkerScript), LinkerScriptContent);
 		}
 
 		var libraries = new List<ITaskItem> ();
@@ -135,7 +136,7 @@ public class LinkNativeAotSharedLibrary : AsyncTask
 
 	void WriteResponseFile (string path, IEnumerable<ITaskItem> libraries)
 	{
-		using var writer = new StreamWriter (path, append: false, new UTF8Encoding (false));
+		using var writer = new StreamWriter (TaskEnvironment.GetAbsolutePath (path), append: false, new UTF8Encoding (false));
 		foreach (string arg in new [] {
 			"--shared", "--gc-sections", "-z relro", "-z noexecstack", "-z now",
 			"--enable-new-dtags", "--build-id=sha1", "--warn-shared-textrel",
@@ -211,8 +212,13 @@ public class LinkNativeAotSharedLibrary : AsyncTask
 		LogDebugMessage ("{0} {1}", tool, string.Join (" ", arguments));
 		int exitCode;
 		try {
+			var startInfo = TaskEnvironment.GetProcessStartInfo ();
+			startInfo.FileName = TaskEnvironment.GetAbsolutePath (tool);
+			foreach (var argument in arguments) {
+				startInfo.ArgumentList.Add (argument);
+			}
 			exitCode = await ProcessUtils.StartProcess (
-				ProcessUtils.CreateProcessStartInfo (tool, arguments), stdout, stderr, CancellationToken
+				startInfo, stdout, stderr, CancellationToken
 			).ConfigureAwait (false);
 		} catch (Win32Exception e) {
 			LogCodedError (errorCode, errorMessage, Path.GetFileName (OutputSharedLibrary), Environment.NewLine + e.Message);

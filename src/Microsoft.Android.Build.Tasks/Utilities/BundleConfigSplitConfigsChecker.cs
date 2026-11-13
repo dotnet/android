@@ -6,6 +6,7 @@ using System.Text;
 using System.Text.Json;
 
 using Microsoft.Android.Build.Tasks;
+using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
 using Xamarin.Android.Tasks;
 using Xamarin.Android.Tasks.Properties;
@@ -76,10 +77,11 @@ static class BundleConfigSplitConfigsChecker
 		}
 	}
 
-	public static bool ShouldIgnoreSplitConfigs (TaskLoggingHelper log, string configFilePath)
+	public static bool ShouldIgnoreSplitConfigs (TaskLoggingHelper log, string configFilePath, TaskEnvironment? taskEnvironment = null)
 	{
+		taskEnvironment ??= TaskEnvironment.Fallback;
 		try {
-			return DoShouldIgnoreSplitConfigs (log, configFilePath);
+			return DoShouldIgnoreSplitConfigs (log, taskEnvironment.GetAbsolutePath (configFilePath));
 		} catch (Exception ex) {
 			log.LogCodedWarning ("XA4331", Resources.XA4331, configFilePath);
 			log.LogWarningFromException (ex);
@@ -87,7 +89,7 @@ static class BundleConfigSplitConfigsChecker
 		}
 	}
 
-	static bool DoShouldIgnoreSplitConfigs (TaskLoggingHelper log, string configFilePath)
+	static bool DoShouldIgnoreSplitConfigs (TaskLoggingHelper log, AbsolutePath configFilePath)
 	{
 		var options = new JsonReaderOptions {
 			AllowTrailingCommas = true,

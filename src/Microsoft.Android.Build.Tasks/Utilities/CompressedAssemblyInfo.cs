@@ -18,13 +18,16 @@ namespace Microsoft.Android.Tasks
 			DescriptorIndex = descriptorIndex;
 		}
 
-		public static string GetKey (string projectFullPath)
+		public static string GetKey (string projectFullPath, string intermediateOutputPath)
 		{
 			ArgumentNullException.ThrowIfNull (projectFullPath);
 			if (projectFullPath.IsNullOrEmpty ())
 				throw new ArgumentException ("must be a non-empty string", nameof (projectFullPath));
+			ArgumentNullException.ThrowIfNull (intermediateOutputPath);
+			if (intermediateOutputPath.IsNullOrEmpty ())
+				throw new ArgumentException ("must be a non-empty string", nameof (intermediateOutputPath));
 
-			return $"{CompressedAssembliesInfoKey}:{projectFullPath}";
+			return $"{CompressedAssembliesInfoKey}:{projectFullPath}:{intermediateOutputPath}";
 		}
 
 		public static string GetDictionaryKey (ITaskItem assembly)

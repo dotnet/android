@@ -5,6 +5,7 @@ using System.IO;
 using System.IO.Compression;
 
 using Microsoft.Android.Build.Tasks;
+using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
 
 namespace Microsoft.Android.Tasks;
@@ -27,9 +28,10 @@ static class AssemblyCompressor
 		EncodingFailed,
 	}
 
-	public static bool TryCompress (TaskLoggingHelper log, string sourceAssembly, string destinationAssembly, uint descriptorIndex, int compressionLevel)
+	public static bool TryCompress (TaskLoggingHelper log, string sourceAssembly, string destinationAssembly, uint descriptorIndex, int compressionLevel, TaskEnvironment? taskEnvironment = null)
 	{
-		CompressionResult result = Compress (sourceAssembly, destinationAssembly, descriptorIndex, compressionLevel);
+		taskEnvironment ??= TaskEnvironment.Fallback;
+		CompressionResult result = Compress (sourceAssembly, destinationAssembly, descriptorIndex, compressionLevel, taskEnvironment);
 
 		if (result != CompressionResult.Success) {
 			log.LogMessage ($"Failed to compress {sourceAssembly}");
@@ -39,23 +41,24 @@ static class AssemblyCompressor
 		return true;
 	}
 
-	public static bool HasDescriptorIndex (string compressedAssembly, uint descriptorIndex)
+	public static bool HasDescriptorIndex (string compressedAssembly, uint descriptorIndex, TaskEnvironment? taskEnvironment = null)
 	{
-		using var reader = new BinaryReader (File.OpenRead (compressedAssembly));
+		taskEnvironment ??= TaskEnvironment.Fallback;
+		using var reader = new BinaryReader (File.OpenRead (taskEnvironment.GetAbsolutePath (compressedAssembly)));
 		return reader.BaseStream.Length >= 3 * sizeof (uint) &&
 			reader.ReadUInt32 () == CompressedDataMagic &&
 			reader.ReadUInt32 () == descriptorIndex;
 	}
 
-	static CompressionResult Compress (string sourcePath, string outputFilePath, uint descriptorIndex, int compressionLevel)
+	static CompressionResult Compress (string sourcePath, string outputFilePath, uint descriptorIndex, int compressionLevel, TaskEnvironment taskEnvironment)
 	{
 		var outputDirectory = Path.GetDirectoryName (outputFilePath);
 		if (string.IsNullOrEmpty (outputDirectory))
 			throw new ArgumentException ("must not be null or empty", nameof (outputFilePath));
 
-		Directory.CreateDirectory (outputDirectory);
+		Directory.CreateDirectory (taskEnvironment.GetAbsolutePath (outputDirectory));
 
-		var fi = new FileInfo (sourcePath);
+		var fi = new FileInfo (taskEnvironment.GetAbsolutePath (sourcePath));
 		if (!fi.Exists)
 			throw new InvalidOperationException ($"File '{sourcePath}' does not exist");
 
@@ -66,7 +69,7 @@ static class AssemblyCompressor
 		try {
 			sourceBytes = bytePool.Rent (fileSize);
 			int bytesRead = 0;
-			using (var fs = File.Open (sourcePath, FileMode.Open, FileAccess.Read, FileShare.Read)) {
+			using (var fs = File.Open (taskEnvironment.GetAbsolutePath (sourcePath), FileMode.Open, FileAccess.Read, FileShare.Read)) {
 				while (bytesRead < fileSize) {
 					int read = fs.Read (sourceBytes, bytesRead, fileSize - bytesRead);
 					if (read == 0)
@@ -94,7 +97,7 @@ static class AssemblyCompressor
 				bw.Write (destBytes, 0, encodedLength);
 				bw.Flush ();
 				bw.BaseStream.Position = 0;
-				Files.CopyIfStreamChanged (bw.BaseStream, outputFilePath);
+				Files.CopyIfStreamChanged (bw.BaseStream, taskEnvironment.GetAbsolutePath (outputFilePath), taskEnvironment);
 			}
 		} finally {
 			if (sourceBytes != null)

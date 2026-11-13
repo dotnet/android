@@ -14,26 +14,28 @@ class AssemblyStoreBuilder
 {
 	readonly TaskLoggingHelper log;
 	readonly AssemblyStoreGenerator storeGenerator;
+	readonly TaskEnvironment taskEnvironment;
 
-	public AssemblyStoreBuilder (TaskLoggingHelper log)
+	public AssemblyStoreBuilder (TaskLoggingHelper log, TaskEnvironment taskEnvironment)
 	{
 		this.log = log;
-		storeGenerator = new (log);
+		this.taskEnvironment = taskEnvironment;
+		storeGenerator = new (log, taskEnvironment);
 	}
 
 	public void AddAssembly (string assemblySourcePath, ITaskItem assemblyItem, bool includeDebugSymbols)
 	{
-		var storeAssemblyInfo = new AssemblyStoreAssemblyInfo (assemblySourcePath, assemblyItem);
+		var storeAssemblyInfo = new AssemblyStoreAssemblyInfo (assemblySourcePath, assemblyItem, taskEnvironment: taskEnvironment);
 
 		// Try to add config if exists.  We use assemblyItem, because `sourcePath` might refer to a compressed
 		// assembly file in a different location.
-		var config = Path.ChangeExtension (assemblyItem.ItemSpec, "dll.config");
+		var config = taskEnvironment.GetAbsolutePath (Path.ChangeExtension (assemblyItem.ItemSpec, "dll.config"));
 		if (File.Exists (config)) {
 			storeAssemblyInfo.ConfigFile = new FileInfo (config);
 		}
 
 		if (includeDebugSymbols) {
-			string debugSymbolsPath = Path.ChangeExtension (assemblyItem.ItemSpec, "pdb");
+			var debugSymbolsPath = taskEnvironment.GetAbsolutePath (Path.ChangeExtension (assemblyItem.ItemSpec, "pdb"));
 			if (File.Exists (debugSymbolsPath)) {
 				storeAssemblyInfo.SymbolsFile = new FileInfo (debugSymbolsPath);
 			}

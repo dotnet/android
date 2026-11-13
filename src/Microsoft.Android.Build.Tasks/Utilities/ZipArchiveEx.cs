@@ -5,6 +5,7 @@ using System.IO;
 using System.IO.Compression;
 using System.Linq;
 using Microsoft.Android.Build.Tasks;
+using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
 
 namespace Microsoft.Android.Tasks;
@@ -15,16 +16,18 @@ sealed class ZipArchiveEx : IDisposable
 	const int BufferedFilesLimit = 512;
 
 	readonly string archivePath;
+	readonly TaskEnvironment taskEnvironment;
 	long bufferedSize;
 	int bufferedFiles;
 	bool modified;
 
 	public ZipArchive Archive { get; private set; }
 
-	public ZipArchiveEx (string archive, FileMode mode)
+	public ZipArchiveEx (string archive, FileMode mode, TaskEnvironment? taskEnvironment = null)
 	{
-		archivePath = Path.GetFullPath (archive);
-		var stream = new FileStream (archivePath, mode, FileAccess.ReadWrite);
+		this.taskEnvironment = taskEnvironment ?? TaskEnvironment.Fallback;
+		archivePath = this.taskEnvironment.GetAbsolutePath (archive);
+		var stream = new FileStream (this.taskEnvironment.GetAbsolutePath (archivePath), mode, FileAccess.ReadWrite);
 		var ownsStream = false;
 		try {
 			Archive = new ZipArchive (stream, ZipArchiveMode.Update);
@@ -37,7 +40,7 @@ sealed class ZipArchiveEx : IDisposable
 
 	public void AddDirectory (string folder, string folderInArchive, CompressionLevel method = CompressionLevel.Optimal)
 	{
-		foreach (var (filename, relativePath) in Files.EnumerateArchiveFiles (folder)) {
+		foreach (var (filename, relativePath) in Files.EnumerateArchiveFiles (taskEnvironment.GetAbsolutePath (folder))) {
 			var archivePath = Path.Combine (folderInArchive, relativePath).Replace ('\\', '/').TrimStart ('/');
 			if (SkipExistingFile (filename, archivePath, method))
 				continue;
@@ -67,7 +70,7 @@ sealed class ZipArchiveEx : IDisposable
 
 		// Update mode retains changed uncompressed payloads until the archive is disposed.
 		Archive.Dispose ();
-		Archive = ZipFile.Open (archivePath, ZipArchiveMode.Update);
+		Archive = ZipFile.Open (taskEnvironment.GetAbsolutePath (archivePath), ZipArchiveMode.Update);
 		bufferedSize = 0;
 		bufferedFiles = 0;
 		modified = false;
@@ -75,10 +78,10 @@ sealed class ZipArchiveEx : IDisposable
 
 	void AddFile (string filename, string archivePath, CompressionLevel compression)
 	{
-		var size = new FileInfo (filename).Length;
+		var size = new FileInfo (taskEnvironment.GetAbsolutePath (filename)).Length;
 		PrepareWrite (size);
 		DeleteEntry (archivePath);
-		Archive.CreateEntryFromFile (filename, archivePath, compression);
+		Archive.CreateEntryFromFile (taskEnvironment.GetAbsolutePath (filename), archivePath, compression);
 		RecordWrite (size);
 	}
 
@@ -89,7 +92,7 @@ sealed class ZipArchiveEx : IDisposable
 		if (entry is null || entry.CompressionMethod != method)
 			return false;
 
-		var file = new FileInfo (filename);
+		var file = new FileInfo (taskEnvironment.GetAbsolutePath (filename));
 		if (!TryGetEntryLength (entry, out var length) || length != file.Length)
 			return false;
 

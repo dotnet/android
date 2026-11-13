@@ -3,6 +3,7 @@ using System;
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
+using System.Xml.Linq;
 
 using Microsoft.Android.Build.Tasks;
 using Microsoft.Android.Tasks;
@@ -16,6 +17,84 @@ namespace Xamarin.Android.Build.Tests.Tasks;
 public class CompressionMetadataTests : BaseTest
 {
 	string TestDirectory => Path.Combine (Root, "temp", TestName);
+
+	[TestCase (false)]
+	[TestCase (true)]
+	public void ProductionTargetsPassCompressionConfiguration (bool multithreaded)
+	{
+		const string abi = "arm64-v8a";
+		var assembly = CreateAssembly ("Kept.dll", abi);
+		var source = XDocument.Load (Path.Combine (NativeAotBootstrapTestTools.FindRepositoryRoot (),
+			"src", "Xamarin.Android.Build.Tasks", "Xamarin.Android.Common.targets"));
+		var targets = source.Descendants ().Where (element => element.Name.LocalName == "Target" &&
+			((string?) element.Attribute ("Name") == "_AndroidCollectCompressedAssemblyInfo" ||
+			 (string?) element.Attribute ("Name") == "_CollectAssembliesToCompress"))
+			.Select (element => new XElement (element)).ToArray ();
+		foreach (var target in targets) {
+			foreach (var element in target.DescendantsAndSelf ()) {
+				element.Name = element.Name.LocalName;
+			}
+		}
+		string project = Path.Combine (TestDirectory, "compression.proj");
+		new XDocument (new XElement ("Project",
+			new XElement ("PropertyGroup",
+				new XElement ("IntermediateOutputPath", "obj/net12.0/android-arm64/"),
+				new XElement ("_AndroidRuntime", "MonoVM"),
+				new XElement ("AndroidIncludeDebugSymbols", "false"),
+				new XElement ("AndroidEnableAssemblyCompression", "true"),
+				new XElement ("EmbedAssembliesIntoApk", "true")),
+			new XElement ("UsingTask", new XAttribute ("TaskName", typeof (CollectCompressedAssemblyInfo).FullName ?? throw new InvalidOperationException ("Missing compression metadata task type name")),
+				new XAttribute ("AssemblyFile", typeof (CollectCompressedAssemblyInfo).Assembly.Location)),
+			new XElement ("UsingTask", new XAttribute ("TaskName", typeof (CollectAssemblyFilesToCompress).FullName ?? throw new InvalidOperationException ("Missing assembly collection task type name")),
+				new XAttribute ("AssemblyFile", typeof (CollectAssemblyFilesToCompress).Assembly.Location)),
+			new XElement ("ItemGroup",
+				new XElement ("_BuildTargetAbis", new XAttribute ("Include", abi)),
+				new XElement ("_AndroidAssemblyCompressionInputs", new XAttribute ("Include", assembly.ItemSpec),
+					new XElement ("Abi", abi), new XElement ("DestinationSubPath", "Kept.dll")),
+				new XElement ("_ShrunkUserAssemblies", new XAttribute ("Include", "@(_AndroidAssemblyCompressionInputs)"))),
+			new XElement ("Target", new XAttribute ("Name", "_AndroidResolveAssemblyCompressionInputs")),
+			new XElement ("Target", new XAttribute ("Name", "_PrepareBuildApk")),
+			targets,
+			new XElement ("Target", new XAttribute ("Name", "Build"),
+				new XAttribute ("DependsOnTargets", "_CollectAssembliesToCompress"),
+				new XElement ("Error", new XAttribute ("Condition", "'@(_AssembliesToCompress->Count())' != '1'"),
+					new XAttribute ("Text", "Expected one assembly to compress.")),
+				new XElement ("Error", new XAttribute ("Condition", "'%(_AssembliesToCompress.DescriptorIndex)' != '0'"),
+					new XAttribute ("Text", "Expected the original descriptor index.")))))
+			.Save (project);
+
+		string dotnet = Environment.GetEnvironmentVariable ("DOTNET_HOST_PATH") ?? "dotnet";
+		var arguments = new [] { "msbuild", project, "-t:Build", "-v:minimal", "-m", "-nr:false" };
+		if (multithreaded) {
+			arguments = arguments.Concat (new [] { "-mt", "-warnaserror:MSB4286,MSB4287,MSB4288" }).ToArray ();
+		}
+		var result = NativeAotBootstrapTestTools.Run (dotnet, arguments);
+		Assert.AreEqual (0, result.ExitCode, result.Output + result.Error);
+	}
+
+	[TestCase ("net12.0", "x86_64")]
+	[TestCase ("net13.0", "arm64-v8a")]
+	public void InterleavedConfigurationsKeepTheirOwnDescriptorIndices (string secondFramework, string secondAbi)
+	{
+		const string firstAbi = "arm64-v8a";
+		string project = Path.Combine (TestDirectory, "Sample.csproj");
+		string firstIntermediate = Path.Combine (TestDirectory, "obj", "net12.0", firstAbi);
+		string secondIntermediate = Path.Combine (TestDirectory, "obj", secondFramework, secondAbi);
+		var removed = CreateAssembly ("Removed.dll", firstAbi);
+		var first = CreateAssembly ("Kept.dll", firstAbi);
+		var second = secondAbi == firstAbi ? first : CreateAssembly ("Kept.dll", secondAbi);
+		var engine = new MockBuildEngine (TestContext.Out);
+
+		Assert.IsTrue (Register (engine, project, [removed, first], [firstAbi],
+			intermediateOutputPath: Path.Combine (firstIntermediate, ".")));
+		Assert.IsTrue (Register (engine, project, [second], [secondAbi],
+			intermediateOutputPath: secondIntermediate));
+
+		var secondCollection = Collect (engine, project, [second], [secondAbi], Path.Combine (secondIntermediate, "."));
+		var firstCollection = Collect (engine, project, [first], [firstAbi], firstIntermediate);
+		Assert.AreEqual ("0", secondCollection.AssembliesToCompressOutput.Single ().GetMetadata ("DescriptorIndex"));
+		Assert.AreEqual ("1", firstCollection.AssembliesToCompressOutput.Single ().GetMetadata ("DescriptorIndex"));
+	}
 
 	[Test]
 	public void TrimmingRetainsSparseIndicesAndCompressedFiles ()
@@ -117,7 +196,7 @@ public class CompressionMetadataTests : BaseTest
 		return item;
 	}
 
-	static bool Register (MockBuildEngine engine, string project, ITaskItem [] assemblies, string [] abis, ITaskItem []? packagedAssemblies = null)
+	bool Register (MockBuildEngine engine, string project, ITaskItem [] assemblies, string [] abis, ITaskItem []? packagedAssemblies = null, string? intermediateOutputPath = null)
 	{
 		var task = new CollectCompressedAssemblyInfo {
 			BuildEngine = engine,
@@ -125,12 +204,13 @@ public class CompressionMetadataTests : BaseTest
 			PackagedAssemblies = packagedAssemblies ?? [],
 			SupportedAbis = abis,
 			ProjectFullPath = project,
+			IntermediateOutputPath = intermediateOutputPath ?? Path.Combine (TestDirectory, "obj"),
 			EnableCompression = true,
 		};
 		return task.Execute ();
 	}
 
-	CollectAssemblyFilesToCompress Collect (MockBuildEngine engine, string project, ITaskItem [] assemblies, string [] abis)
+	CollectAssemblyFilesToCompress Collect (MockBuildEngine engine, string project, ITaskItem [] assemblies, string [] abis, string? intermediateOutputPath = null)
 	{
 		var task = new CollectAssemblyFilesToCompress {
 			BuildEngine = engine,
@@ -138,6 +218,7 @@ public class CompressionMetadataTests : BaseTest
 			EmbedAssemblies = true,
 			EnableCompression = true,
 			ProjectFullPath = project,
+			IntermediateOutputPath = intermediateOutputPath ?? Path.Combine (TestDirectory, "obj"),
 			ResolvedUserAssemblies = assemblies,
 			SupportedAbis = abis,
 		};

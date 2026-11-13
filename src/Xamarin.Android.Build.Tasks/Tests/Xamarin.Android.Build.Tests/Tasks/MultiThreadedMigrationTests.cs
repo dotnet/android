@@ -176,13 +176,14 @@ namespace Xamarin.Android.Build.Tests
 						continue;
 					}
 					var baseTypes = GetBaseTypes (type).ToArray ();
-					if (baseTypes.Contains (typeof (MultithreadedAndroidTask).FullName)) {
+					bool usesMultithreadedAsyncTask = baseTypes.Contains (typeof (MultithreadedAsyncTask).FullName);
+					if (baseTypes.Contains (typeof (MultithreadedAndroidTask).FullName) || usesMultithreadedAsyncTask) {
 						migratedTasks++;
 						Assert.IsTrue (marked, $"{type.FullName} must declare MSBuildMultiThreadableTaskAttribute directly.");
 					}
 					if (marked) {
 						Assert.IsFalse (baseTypes.Contains (typeof (AndroidTask).FullName) ||
-							baseTypes.Contains (typeof (AsyncTask).FullName) ||
+							(baseTypes.Contains (typeof (AsyncTask).FullName) && !usesMultithreadedAsyncTask) ||
 							baseTypes.Contains (typeof (AndroidToolTask).FullName),
 							$"{type.FullName} must not use a base that captures the process working directory.");
 					}

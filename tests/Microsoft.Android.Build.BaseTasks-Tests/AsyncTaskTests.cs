@@ -1,6 +1,8 @@
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using System.Linq;
+using System;
+using System.IO;
 using Microsoft.Android.Build.BaseTasks.Tests.Utilities;
 using Microsoft.Android.Build.Tasks;
 using Microsoft.Build.Framework;
@@ -60,6 +62,46 @@ namespace Microsoft.Android.Build.BaseTasks.Tests
 			{
 				throw new System.InvalidOperationException (ExceptionMessage);
 			}
+		}
+
+		class MultithreadedAsyncTaskTest : MultithreadedAsyncTask
+		{
+			public override string TaskPrefix => "MTAT";
+
+			public bool Throw { get; set; }
+			public string ProjectDirectory => WorkingDirectory;
+			public object CacheKey => ProjectSpecificTaskObjectKey ("key");
+
+			public override async Task RunTaskAsync ()
+			{
+				await Task.Yield ();
+				LogMessage (TaskEnvironment.GetEnvironmentVariable ("TASK_VALUE"));
+				if (Throw) {
+					throw new InvalidOperationException ("MT failure");
+				}
+			}
+		}
+
+		[TestCase (false)]
+		[TestCase (true)]
+		public void MultithreadedAsyncTaskUsesProjectEnvironmentAndReacquires (bool fail)
+		{
+			var directory = Path.Combine (TestContext.CurrentContext.WorkDirectory, "async-project");
+			var task = new MultithreadedAsyncTaskTest {
+				BuildEngine = engine,
+				YieldDuringToolExecution = true,
+				Throw = fail,
+				TaskEnvironment = TaskEnvironment.CreateWithProjectDirectoryAndEnvironment (
+					directory, new Dictionary<string, string> { ["TASK_VALUE"] = "task-local" }),
+			};
+
+			Assert.AreEqual (!fail, task.Execute ());
+			Assert.AreEqual (directory, task.ProjectDirectory);
+			Assert.AreEqual (("key", directory), task.CacheKey);
+			Assert.That (messages.Select (e => e.Message), Does.Contain ("task-local"));
+			Assert.AreEqual (fail ? 1 : 0, errors.Count);
+			Assert.AreEqual (1, engine.YieldCount);
+			Assert.AreEqual (1, engine.ReacquireCount);
 		}
 
 

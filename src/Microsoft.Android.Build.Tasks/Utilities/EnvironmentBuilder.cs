@@ -19,10 +19,11 @@ class EnvironmentBuilder
 		systemProperties = new Dictionary<string, string> (StringComparer.Ordinal);
 	}
 
-	public void Read (ITaskItem[]? envItems)
+	public void Read (ITaskItem[]? envItems, TaskEnvironment? taskEnvironment = null)
 	{
+		taskEnvironment ??= TaskEnvironment.Fallback;
 		foreach (ITaskItem env in envItems ?? []) {
-			foreach (string line in File.ReadLines (env.ItemSpec)) {
+			foreach (string line in File.ReadLines (taskEnvironment.GetAbsolutePath (env.ItemSpec))) {
 				AddEnvironmentVariableLine (line);
 			}
 		}

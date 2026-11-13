@@ -44,6 +44,7 @@ sealed class CoreClrBootstrapBuilder
 	readonly SortedDictionary<string, string> systemProperties;
 	readonly SortedDictionary<string, string> runtimeProperties;
 	readonly TaskLoggingHelper log;
+	readonly TaskEnvironment taskEnvironment;
 
 	public string AndroidPackageName { get; set; } = "";
 	public int NumberOfAssembliesInApk { get; set; }
@@ -56,7 +57,7 @@ sealed class CoreClrBootstrapBuilder
 	public bool HaveAssemblyStore { get; set; }
 
 	public CoreClrBootstrapBuilder (IDictionary<string, string> environmentVariables, IDictionary<string, string> systemProperties,
-		IDictionary<string, string>? runtimeProperties, TaskLoggingHelper log)
+		IDictionary<string, string>? runtimeProperties, TaskLoggingHelper log, TaskEnvironment? taskEnvironment = null)
 	{
 		this.environmentVariables = new SortedDictionary<string, string> (environmentVariables, StringComparer.Ordinal);
 		this.systemProperties = new SortedDictionary<string, string> (systemProperties, StringComparer.Ordinal);
@@ -64,6 +65,7 @@ sealed class CoreClrBootstrapBuilder
 			? new SortedDictionary<string, string> (StringComparer.Ordinal)
 			: new SortedDictionary<string, string> (runtimeProperties, StringComparer.Ordinal);
 		this.log = log;
+		this.taskEnvironment = taskEnvironment ?? TaskEnvironment.Fallback;
 
 		// The host fills these slots before CLR initialization. Other host callbacks must not
 		// be supplied by runtimeconfig.json.
@@ -124,7 +126,7 @@ sealed class CoreClrBootstrapBuilder
 		var nameMutations = new List<string> ();
 		ICollection<string> ignorePreload = MakeJniPreloadIgnoreCollection (log, NativeLibrariesAlwaysJniPreload, NativeLibrariesNoJniPreload);
 		foreach (var dso in dsos) {
-			bool isJniLibrary = IsJniLibrary (log, dso.item.ItemSpec);
+			bool isJniLibrary = IsJniLibrary (log, taskEnvironment.GetAbsolutePath (dso.item.ItemSpec));
 			bool ignoreForPreload = ShouldIgnoreForJniPreload (log, ignorePreload, dso.item);
 			nameMutations.Clear ();
 			AddNameMutations (dso.name);
@@ -165,9 +167,9 @@ sealed class CoreClrBootstrapBuilder
 		}
 	}
 
-	static bool IsJniLibrary (TaskLoggingHelper log, string elfPath)
+	static bool IsJniLibrary (TaskLoggingHelper log, AbsolutePath elfPath)
 	{
-		if (elfPath.IsNullOrEmpty () || !File.Exists (elfPath)) {
+		if (!File.Exists (elfPath)) {
 			return false;
 		}
 

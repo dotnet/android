@@ -15,7 +15,8 @@ namespace Microsoft.Android.Tasks;
 /// System.IO.Compression.ZstandardEncoder, which is not available in netstandard2.0.
 /// It is imported with &lt;UsingTask ... Runtime="NET" /&gt; so it runs on .NET.
 /// </summary>
-public class CompressAssemblies : AndroidTask
+[MSBuildMultiThreadableTask]
+public class CompressAssemblies : MultithreadedAndroidTask
 {
 	public override string TaskPrefix => "CAS";
 
@@ -48,7 +49,7 @@ public class CompressAssemblies : AndroidTask
 		var failed_assemblies = new List<ITaskItem> ();
 
 		foreach (var assembly in AssembliesToCompress) {
-			ReferenceAssemblyChecker.LogIfReferenceAssembly (assembly, Log);
+			ReferenceAssemblyChecker.LogIfReferenceAssembly (assembly, Log, TaskEnvironment);
 
 			if (!assembly.TryGetRequiredMetadata ("AssembliesToCompress", "DestinationPath", Log, out var destination_path))
 				break;
@@ -61,7 +62,7 @@ public class CompressAssemblies : AndroidTask
 				break;
 			}
 
-			if (!AssemblyCompressor.TryCompress (Log, assembly.ItemSpec, destination_path, descriptor_index, CompressionLevel)) {
+			if (!AssemblyCompressor.TryCompress (Log, assembly.ItemSpec, destination_path, descriptor_index, CompressionLevel, TaskEnvironment)) {
 				failed_assemblies.Add (assembly);
 				continue;
 			}

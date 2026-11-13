@@ -20,14 +20,15 @@ class AssemblyStoreAssemblyInfo
 	public FileInfo? ConfigFile          { get; set; }
 	public bool Ignored                  { get; }
 
-	public AssemblyStoreAssemblyInfo (string sourceFilePath, ITaskItem assembly, bool assemblyIsIgnored = false)
+	public AssemblyStoreAssemblyInfo (string sourceFilePath, ITaskItem assembly, bool assemblyIsIgnored = false, TaskEnvironment? taskEnvironment = null)
 	{
+		taskEnvironment ??= TaskEnvironment.Fallback;
 		Arch = MonoAndroidHelper.GetTargetArch (assembly);
 		if (Arch == AndroidTargetArch.None) {
 			throw new InvalidOperationException ($"Internal error: assembly item '{assembly}' lacks ABI information metadata");
 		}
 
-		SourceFile = new FileInfo (sourceFilePath);
+		SourceFile = new FileInfo (taskEnvironment.GetAbsolutePath (sourceFilePath));
 		Ignored = assemblyIsIgnored;
 
 		string? name = Path.GetFileName (SourceFile.Name);
