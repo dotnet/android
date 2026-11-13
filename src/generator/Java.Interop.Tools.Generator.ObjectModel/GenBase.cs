@@ -179,6 +179,9 @@ namespace MonoDroid.Generation
 				yield return g;
 		}
 
+		internal IEnumerable<GenBase> EnclosingBaseTypes () =>
+			Ancestors ().Where (g => FullName.StartsWith (g.FullName + ".", StringComparison.Ordinal));
+
 		public string AnnotatedVisibility => support.AnnotatedVisibility;
 
 		// not: not currently assembly qualified, but it uses needed
@@ -940,7 +943,8 @@ namespace MonoDroid.Generation
 
 		bool HidesBaseMember (string memberName, Method method = null)
 		{
-			foreach (var ancestor in Ancestors ()) {
+			IEnumerable<GenBase> ancestors = this is InterfaceGen ? GetAllDerivedInterfaces () : Ancestors ();
+			foreach (var ancestor in ancestors) {
 				if (ancestor.Fields.Any (f => f.Visibility != "private" && f.Name == memberName) ||
 						ancestor.Properties.Any (p => p.Getter.Visibility != "private" && p.AdjustedName == memberName) ||
 						ancestor.NestedTypes.Any (t => t.Visibility != "private" && t.Name == memberName))

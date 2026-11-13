@@ -104,7 +104,9 @@ namespace generator.SourceWriters
 
 		void AddBindingInfrastructure (ClassGen klass, CodeGenerationOptions opt)
 		{
-			Fields.Add (new PeerMembersField (opt, klass.RawJniName, klass.Name, false));
+			Fields.Add (new PeerMembersField (opt, klass.RawJniName, klass.Name, false) {
+				IsShadow = klass.EnclosingBaseTypes ().Any (),
+			});
 
 			if (klass.BaseGen != null && klass.InheritsObject) {
 				Properties.Add (new JniPeerMembersGetter ());

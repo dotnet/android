@@ -40,6 +40,29 @@ namespace generatortests
 		}
 
 		[Test]
+		public void InheritedInterfaceMethodRequiresNew ()
+		{
+			var parent = SupportTypeBuilder.CreateEmptyInterface ("java.Parent");
+			parent.Methods.Add (SupportTypeBuilder.CreateMethod (parent, "Close", options));
+			var derived = SupportTypeBuilder.CreateEmptyInterface ("java.Derived");
+			derived.Interfaces.Add (parent);
+			var method = SupportTypeBuilder.CreateMethod (derived, "Close", options);
+
+			Assert.True (new BoundInterfaceMethodDeclaration (derived, method, "", options).IsShadow);
+		}
+
+		[Test]
+		public void NestedCallbackHidesEnclosingBaseCallback ()
+		{
+			var parent = SupportTypeBuilder.CreateClass ("java.Base", options);
+			parent.Methods.Add (SupportTypeBuilder.CreateMethod (parent, "DoWork", options));
+			var nested = new DerivedTestClass (parent, "java.Base.Nested");
+			var method = SupportTypeBuilder.CreateMethod (nested, "DoWork", options);
+
+			Assert.True (new MethodCallback (nested, method, options, null, false).IsShadow);
+		}
+
+		[Test]
 		public void DifferentOverloadDoesNotRequireNew ()
 		{
 			var parent = SupportTypeBuilder.CreateClass ("java.Base", options);
@@ -54,7 +77,7 @@ namespace generatortests
 		{
 			readonly ClassGen parent;
 
-			public DerivedTestClass (ClassGen parent) : base (parent.FullName, "java.Derived")
+			public DerivedTestClass (ClassGen parent, string name = "java.Derived") : base (parent.FullName, name)
 			{
 				this.parent = parent;
 			}
