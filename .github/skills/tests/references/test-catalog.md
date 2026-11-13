@@ -45,6 +45,16 @@ It uses the production raw-only envelope reader and checks compressed/truncated 
 On macOS/Linux, these tests require a C++23 compiler (`clang++`, or `CXX`); they do not
 require an Android device or a locally built Android SDK.
 
+`GetAndroidDefineConstantsTests` executes both registered task names through `dotnet msbuild`.
+On Windows it also runs them through the full-framework `MSBuild.exe` from the pinned
+`Microsoft.Build.Runtime` test dependency. `Runtime="NET"` hosting requires MSBuild 18 or
+newer; Visual Studio 2022's MSBuild 17 cannot host these tasks. The generated test project
+supplies the build SDK's `NetCoreSdkRoot` and `DOTNET_HOST_PATH`, which normally come from
+the .NET SDK imports, so the Full host can launch its .NET task worker. Missing tools or
+failed task-host execution fail the tests. Other platforms skip only the Full MSBuild cases.
+Run the focused standalone suite with:
+`dotnet test src/Microsoft.Android.Build.Tasks/Tests/Microsoft.Android.Build.Tasks.Tests/Microsoft.Android.Build.Tasks.Tests.csproj -v minimal --filter FullyQualifiedName~GetAndroidDefineConstantsTests`.
+
 ---
 
 The `TypeMapProguardTargetsTests` NativeAOT cases in the modern build-task suite
