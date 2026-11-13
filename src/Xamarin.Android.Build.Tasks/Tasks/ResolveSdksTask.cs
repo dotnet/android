@@ -118,28 +118,17 @@ namespace Xamarin.Android.Tasks
 				return false;
 			}
 
-			AndroidNdkPath = GetPath (androidSdk.AndroidNdkPath);
-			AndroidSdkPath = TaskEnvironment.GetAbsolutePath (androidSdk.AndroidSdkPath).GetCanonicalForm ().Value;
-			JavaSdkPath    = TaskEnvironment.GetAbsolutePath (androidSdk.JavaSdkPath).GetCanonicalForm ().Value;
+			AndroidNdkPath = androidSdk.AndroidNdkPath;
+			AndroidSdkPath = androidSdk.AndroidSdkPath;
+			JavaSdkPath    = androidSdk.JavaSdkPath;
 
 			CommandLineToolsPath    = AndroidSdkInfo.GetCommandLineToolsPaths (AndroidSdkPath, CommandLineToolsVersion ?? "")
 				.FirstOrDefault () ??
 				Path.Combine (AndroidSdkPath, "tools");
 
-			if (AndroidSdkPath.IsNullOrEmpty ()) {
-				Log.LogCodedError ("XA5300", Properties.Resources.XA5300_Android_SDK);
-				return false;
-			}
-			if (JavaSdkPath.IsNullOrEmpty ()) {
-				Log.LogCodedError ("XA5300", Properties.Resources.XA5300_Java_SDK);
-				return false;
-			}
-
 			//note: this task does not error out if it doesn't find all things. that's the job of the targets
 			return !Log.HasLoggedErrors;
 		}
-
-		string? GetPath (string? path) => path.IsNullOrEmpty () ? path : TaskEnvironment.GetAbsolutePath (path).GetCanonicalForm ().Value;
 
 		void LogSdkMessage (TraceLevel level, string value)
 		{

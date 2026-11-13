@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using NUnit.Framework;
 using System.IO;
 using System.Linq;
+using System.Security;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
 using Xamarin.Android.Tasks;
@@ -96,38 +97,47 @@ namespace Xamarin.Android.Build.Tests {
 			var directory = Path.Combine (Root, "temp", TestName);
 			TestOutputDirectories [TestContext.CurrentContext.Test.ID] = directory;
 			var resources = new List<ProjectResource> ();
+			var assembly = SecurityElement.Escape (Path.Combine (TestEnvironment.AndroidMSBuildDirectory, "Xamarin.Android.Build.Tasks.dll"));
 			foreach (var name in new [] { "first", "second" }) {
 				var path = Path.Combine ("temp", TestName, name);
 				CreateFauxAndroidSdkDirectory (Path.Combine (path, "sdk"), "37.0.0");
 				CreateFauxAndroidNdkDirectory (Path.Combine (path, "ndk"));
 				CreateFauxJavaSdkDirectory (Path.Combine (path, "jdk"), "21.0.8", out _, out _);
 				CreateFauxReferencesDirectory (Path.Combine (path, "references"), apiInfoSelection);
-				var project = new XElement ("Project",
-					new XElement ("UsingTask",
-						new XAttribute ("TaskName", "Xamarin.Android.Tasks.ResolveSdks"),
-						new XAttribute ("AssemblyFile", Path.Combine (TestEnvironment.AndroidMSBuildDirectory, "Xamarin.Android.Build.Tasks.dll"))),
-					new XElement ("Target", new XAttribute ("Name", "Build"),
-						new XElement ("ResolveSdks",
-							new XAttribute ("AndroidSdkPath", Path.Combine ("sdk", "..", "sdk")),
-							new XAttribute ("AndroidNdkPath", "ndk"),
-							new XAttribute ("JavaSdkPath", "jdk"),
-							new XAttribute ("ReferenceAssemblyPaths", "references"),
-							new XAttribute ("MinimumSupportedJavaVersion", "21.0"),
-							new XAttribute ("LatestSupportedJavaVersion", "25.0.99"),
-							new XElement ("Output", new XAttribute ("TaskParameter", "AndroidSdkPath"), new XAttribute ("PropertyName", "Sdk")),
-							new XElement ("Output", new XAttribute ("TaskParameter", "AndroidNdkPath"), new XAttribute ("PropertyName", "Ndk")),
-							new XElement ("Output", new XAttribute ("TaskParameter", "JavaSdkPath"), new XAttribute ("PropertyName", "Jdk"))),
-						new XElement ("Error",
-							new XAttribute ("Condition", $"'$(Sdk)' != '{Path.Combine ("$(MSBuildProjectDirectory)", "sdk")}' or '$(Ndk)' != '{Path.Combine ("$(MSBuildProjectDirectory)", "ndk")}' or '$(Jdk)' != '{Path.Combine ("$(MSBuildProjectDirectory)", "jdk")}'"),
-							new XAttribute ("Text", "Incorrect SDK paths: $(Sdk);$(Ndk);$(Jdk)"))));
-				resources.Add (new ProjectResource { Path = Path.Combine (name, "resolve.proj"), Content = project.ToString () });
+				resources.Add (new ProjectResource {
+					Path = Path.Combine (name, "resolve.proj"),
+					Content = $"""
+						<Project>
+						  <UsingTask TaskName="Xamarin.Android.Tasks.ResolveSdks" AssemblyFile="{assembly}" />
+						  <Target Name="Build">
+						    <ResolveSdks AndroidSdkPath="{Path.Combine ("sdk", "..", "sdk")}" AndroidNdkPath="ndk" JavaSdkPath="jdk"
+						        ReferenceAssemblyPaths="references" MinimumSupportedJavaVersion="21.0" LatestSupportedJavaVersion="25.0.99">
+						      <Output TaskParameter="AndroidSdkPath" PropertyName="Sdk" />
+						      <Output TaskParameter="AndroidNdkPath" PropertyName="Ndk" />
+						      <Output TaskParameter="JavaSdkPath" PropertyName="Jdk" />
+						    </ResolveSdks>
+						    <Error Condition="'$(Sdk)' != '{Path.Combine ("$(MSBuildProjectDirectory)", "sdk")}'
+						        or '$(Ndk)' != '{Path.Combine ("$(MSBuildProjectDirectory)", "ndk")}'
+						        or '$(Jdk)' != '{Path.Combine ("$(MSBuildProjectDirectory)", "jdk")}'"
+						        Text="Incorrect SDK paths: $(Sdk);$(Ndk);$(Jdk)" />
+						  </Target>
+						</Project>
+						""",
+				});
 			}
-			var driver = new XElement ("Project",
-				new XElement ("ItemGroup",
-					new XElement ("Child", new XAttribute ("Include", "first/resolve.proj;second/resolve.proj"))),
-				new XElement ("Target", new XAttribute ("Name", "Build"),
-					new XElement ("MSBuild", new XAttribute ("Projects", "@(Child)"), new XAttribute ("BuildInParallel", "true"))));
-			resources.Add (new ProjectResource { Path = "driver.proj", Content = driver.ToString () });
+			resources.Add (new ProjectResource {
+				Path = "driver.proj",
+				Content = """
+					<Project>
+					  <ItemGroup>
+					    <Child Include="first/resolve.proj;second/resolve.proj" />
+					  </ItemGroup>
+					  <Target Name="Build">
+					    <MSBuild Projects="@(Child)" BuildInParallel="true" />
+					  </Target>
+					</Project>
+					""",
+			});
 			new XamarinAndroidApplicationProject ().UpdateProjectFiles (directory, resources, doNotCleanup: true);
 			var dotnet = new DotNetCLI (Path.Combine (directory, "driver.proj")) { Verbosity = "diagnostic" };
 			dotnet.EnvironmentVariables ["DOTNET_CLI_USE_MSBUILD_SERVER"] = "0";
