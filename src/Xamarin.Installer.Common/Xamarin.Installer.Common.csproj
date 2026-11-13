@@ -1,9 +1,6 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <Import Project="$(MSBuildThisFileDirectory)..\..\Configuration.props" />
   <PropertyGroup>
-    <NoWarn>$(NoWarn);CS1591</NoWarn>
-  </PropertyGroup>
-  <PropertyGroup>
     <LangVersion>12</LangVersion>
     <TargetFramework>netstandard2.0</TargetFramework>
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>

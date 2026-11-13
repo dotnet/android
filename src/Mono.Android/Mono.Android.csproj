@@ -40,7 +40,6 @@
   <PropertyGroup Condition=" '$(IncludeAndroidJavadoc)' == 'True' ">
     <AndroidJavadocVerbosity Condition=" '$(AndroidJavadocVerbosity)' == '' ">full</AndroidJavadocVerbosity>
     <DocumentationFile>$(OutputPath)Mono.Android.xml</DocumentationFile>
-    <NoWarn>$(NoWarn);CS1572;CS1573;CS1574;CS1584;CS1587;CS1591;CS1658;</NoWarn>
   </PropertyGroup>
 
   <ItemGroup>
@@ -378,8 +377,6 @@
     <PackageReference Include="Microsoft.CodeAnalysis.PublicApiAnalyzers" Version="5.6.0">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-      <!-- Disabling API compatibility must not disable unrelated analyzers. -->
-      <ExcludeAssets Condition=" '$(DisableApiCompatibilityCheck)' == 'True' ">analyzers</ExcludeAssets>
     </PackageReference>
   </ItemGroup>
 
