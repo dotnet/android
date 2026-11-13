@@ -452,30 +452,6 @@ automatically picked up by the .NET SDK.
 
 ## Enabling Runtime Logging
 
-### The easy way
-
-A quick way to enable Mono logging is to use the `RunWithLogging`
-target:
-
-```bash
-$ dotnet build -t:RunWithLogging
-```
-
-If successful, messages printed to the screen will show location
-of the logcat file with the logged messages.
-
-Verbosity of logging can be increased by setting the `$(RunLogVerbose)`
-property to `true`. The target configures `debug.dotnet.log`.
-
-By default, the target will wait for a 1000ms before it dumps the
-logcat buffer to file.  This is to give the Android logging daemon
-time to actually put all the messages logged by the application in
-the logcat buffer.  This value can be overridden by setting the
-`$(RunLogDelayInMS)` MSBuild property to a number of milliseconds that
-the target should wait before creating the log file.
-
-### The manual way
-
 Set `debug.dotnet.log` to a comma-separated list of runtime categories:
 
 ```bash
@@ -486,6 +462,28 @@ Use `all` to enable every category:
 
 ```bash
 $ adb shell setprop debug.dotnet.log all
+```
+
+Then launch the app with `dotnet run`, which restarts the app (so the
+new value takes effect) and streams the app's logcat output until it
+exits or you press Ctrl+C:
+
+```bash
+$ dotnet run
+```
+
+`dotnet run` hides the `monodroid-assembly` logcat tag by default, so
+messages from the `assembly` category are not shown. To include them,
+override the logcat filter:
+
+```bash
+$ dotnet run -p:_AndroidRunLogcatArgs=monodroid-assembly:V
+```
+
+Alternatively, capture the complete device log in a separate terminal:
+
+```bash
+$ adb logcat > logcat.txt
 ```
 
 To unset `debug.dotnet.log`, run:

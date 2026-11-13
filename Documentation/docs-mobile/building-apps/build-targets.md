@@ -220,18 +220,6 @@ For example, to query the published artifacts:
 dotnet build MyApp.csproj -t:Publish -getTargetResult:Publish
 ```
 
-## RunWithLogging
-
-Runs the application with additional logging enabled.  Helpful when reporting or investigating an issue with
-either the application or the runtime.  If successful, messages printed to the screen will show location
-of the logcat file with the logged messages.
-
-Properties which affect how the target works:
-
-  * `/p:RunLogVerbose=true` enables even more verbose runtime logging
-  * `/p:RunLogDelayInMS=X` where `X` should be replaced with time in milliseconds to wait before writing the
-    log output to file.  Defaults to `1000`.
-
 ## SignAndroidPackage
 
 Creates and signs the Android package (`.apk`) file.
