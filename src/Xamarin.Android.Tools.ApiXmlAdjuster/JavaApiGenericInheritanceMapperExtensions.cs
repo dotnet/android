@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 
 namespace Xamarin.Android.Tools.ApiXmlAdjuster
@@ -34,7 +35,7 @@ namespace Xamarin.Android.Tools.ApiXmlAdjuster
 					cls.GenericInheritanceMapping = empty;
 				} else {
 					if (cls.ResolvedExtends.ReferencedType.TypeParameters.TypeParameters.Count != cls.ResolvedExtends.TypeParameters.Count)
-						throw new Exception (string.Format ("On {0}.{1}, referenced generic arguments count do not match the base type parameters definition",
+						throw new Exception (string.Format (CultureInfo.CurrentCulture, "On {0}.{1}, referenced generic arguments count do not match the base type parameters definition",
 							cls.Parent?.Name, cls.Name));
 					var dic = empty;
 					foreach (var kvp in cls.ResolvedExtends.ReferencedType.TypeParameters.TypeParameters.Zip (

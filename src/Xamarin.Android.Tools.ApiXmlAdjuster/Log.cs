@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Globalization;
 using System.IO;
 
 namespace Xamarin.Android.Tools.ApiXmlAdjuster
@@ -37,19 +38,19 @@ namespace Xamarin.Android.Tools.ApiXmlAdjuster
 		public static void LogError (string format, params object?[] args)
 		{
 			if ((int) Verbosity >= (int) LoggingLevel.Error)
-				LogErrorAction (args.Length > 0 ? string.Format (format, args) : format);
+				LogErrorAction (args.Length > 0 ? string.Format (CultureInfo.CurrentCulture, format, args) : format);
 		}
 
 		public static void LogWarning (string format, params object?[] args)
 		{
 			if ((int)Verbosity >= (int)LoggingLevel.Warning)
-				LogWarningAction (args.Length > 0 ? string.Format (format, args) : format);
+				LogWarningAction (args.Length > 0 ? string.Format (CultureInfo.CurrentCulture, format, args) : format);
 		}
 
 		public static void LogDebug (string format, params object?[] args)
 		{
 			if ((int)Verbosity >= (int)LoggingLevel.Debug)
-				LogDebugAction (args.Length > 0 ? string.Format (format, args) : format);
+				LogDebugAction (args.Length > 0 ? string.Format (CultureInfo.CurrentCulture, format, args) : format);
 		}
 	}
 }

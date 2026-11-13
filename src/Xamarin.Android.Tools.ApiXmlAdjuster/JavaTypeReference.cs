@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 
 namespace Xamarin.Android.Tools.ApiXmlAdjuster
@@ -122,7 +123,7 @@ namespace Xamarin.Android.Tools.ApiXmlAdjuster
 			else if (ReferencedTypeParameter != null)
 				return ReferencedTypeParameter.ToString () + ArrayPart;
 			else
-				return string.Format ("{0}{1}{2}{3}{4}",
+				return string.Format (CultureInfo.CurrentCulture, "{0}{1}{2}{3}{4}",
 					ReferencedType?.Parent?.Name,
 					string.IsNullOrEmpty (ReferencedType?.Parent?.Name) ? string.Empty : ".",
 					ReferencedType?.Name,

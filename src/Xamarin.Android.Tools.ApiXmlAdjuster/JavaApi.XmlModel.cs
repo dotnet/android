@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
+using System.Globalization;
 using System.Linq;
 using System.Xml;
 
@@ -84,7 +85,7 @@ namespace Xamarin.Android.Tools.ApiXmlAdjuster
 		// Content of this value is not stable.
 		public override string ToString ()
 		{
-			return string.Format ("[Package] " + Name);
+			return "[Package] " + Name;
 		}
 	}
 
@@ -267,7 +268,7 @@ namespace Xamarin.Android.Tools.ApiXmlAdjuster
 		// Content of this value is not stable.
 		public string ToStringHelper (string? returnType, string? name, JavaTypeParameters? typeParameters)
 		{
-			return string.Format ("{0}{1}{2}{3}{4}{5}({6})",
+			return string.Format (CultureInfo.CurrentCulture, "{0}{1}{2}{3}{4}{5}({6})",
 				returnType,
 				returnType == null ? null : " ",
 				Name,

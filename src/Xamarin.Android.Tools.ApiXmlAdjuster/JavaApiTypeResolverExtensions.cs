@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 
 namespace Xamarin.Android.Tools.ApiXmlAdjuster
@@ -70,7 +71,7 @@ namespace Xamarin.Android.Tools.ApiXmlAdjuster
 				if (name == "android.app.IntentService")
 					return FindNonGenericType (api, "mono.android.app.IntentService");
 
-				throw new JavaTypeResolutionException (string.Format ("Type '{0}' was not found.", name));
+				throw new JavaTypeResolutionException (string.Format (CultureInfo.CurrentCulture, "Type '{0}' was not found.", name));
 			}
 
 			return ret;
