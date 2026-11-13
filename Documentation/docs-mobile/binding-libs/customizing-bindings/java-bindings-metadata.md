@@ -241,6 +241,18 @@ Without this attribute, the generated implementation returns the type's default
 value. This does not change `EventHandler` projections that use a `Handled`
 property.
 
+The value is copied verbatim into generated C#, without expression-only
+validation or sanitization. Calls can have side effects, and crafted text can
+inject additional C# source. Treat metadata containing this attribute as trusted
+source code, not as untrusted runtime configuration. Review third-party metadata
+as carefully as hand-written binding code. Keep fallback expressions small; use a
+hand-written listener implementation for more complex behavior.
+
+For an ordinary return expression, evaluation occurs when the listener method is
+called without a managed handler, not during metadata processing or source
+generation. Invalid generated C# produces normal compiler diagnostics; runtime
+exceptions follow the usual managed-call or JNI callback exception handling.
+
 For example, retain a view's normal window-insets behavior when no handler is set:
 
 ```xml
