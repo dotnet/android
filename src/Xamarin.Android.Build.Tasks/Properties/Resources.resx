@@ -744,7 +744,7 @@ Remove the '{0}' reference from your project and add the '{1}' NuGet package ins
     <comment>{0} - The bundle config file path.</comment>
   </data>
   <data name="XA4332" xml:space="preserve">
-    <value>The library '{0}' contains the entry '{1}', which cannot be extracted safely because it would be written outside of its extraction directory or is nested too deeply.</value>
+    <value>The library '{0}' contains the entry '{1}', which cannot be extracted safely because it would be written outside of its extraction directory, is nested too deeply, or names the same file as another entry that uses '\' as a directory separator.</value>
     <comment>{0} - The library file name.
 {1} - The archive entry name.</comment>
   </data>

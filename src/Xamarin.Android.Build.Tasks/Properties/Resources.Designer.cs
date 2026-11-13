@@ -1616,7 +1616,7 @@ namespace Xamarin.Android.Tasks.Properties {
         }
 
         /// <summary>
-        ///   Looks up a localized string similar to The library &apos;{0}&apos; contains the entry &apos;{1}&apos;, which cannot be extracted safely because it would be written outside of its extraction directory or is nested too deeply..
+        ///   Looks up a localized string similar to The library &apos;{0}&apos; contains the entry &apos;{1}&apos;, which cannot be extracted safely because it would be written outside of its extraction directory, is nested too deeply, or names the same file as another entry that uses &apos;\&apos; as a directory separator..
         /// </summary>
         public static string XA4332 {
             get {

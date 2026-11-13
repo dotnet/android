@@ -774,6 +774,40 @@ public class UsesDependency {
 		}
 
 		[Test]
+		public void ExtractAarLaterArchiveWinsSeparatorCollision ()
+		{
+			// `foo.aar` collides a '\' entry with a later '/' entry, `bar.aar` collides a '/' entry with a later '\' entry.
+			var proj = new XamarinAndroidLibraryProject {
+				OtherBuildItems = {
+					new AndroidItem.AndroidLibrary ("first\\foo.aar") {
+						BinaryContent = () => CreateAarWithFixedTimestamp (("libs\\helper.jar", "first"), ("sub\\annotations.zip", "first")),
+						MetadataValues = "Bind=false",
+					},
+					new AndroidItem.AndroidLibrary ("other\\foo.aar") {
+						BinaryContent = () => CreateAarWithFixedTimestamp (("libs/helper.jar", "other"), ("sub/annotations.zip", "other")),
+						MetadataValues = "Bind=false",
+					},
+					new AndroidItem.AndroidLibrary ("first\\bar.aar") {
+						BinaryContent = () => CreateAarWithFixedTimestamp (("libs/helper.jar", "first"), ("sub/annotations.zip", "first")),
+						MetadataValues = "Bind=false",
+					},
+					new AndroidItem.AndroidLibrary ("other\\bar.aar") {
+						BinaryContent = () => CreateAarWithFixedTimestamp (("libs\\helper.jar", "other"), ("sub\\annotations.zip", "other")),
+						MetadataValues = "Bind=false",
+					},
+				},
+			};
+			using var builder = CreateDllBuilder ();
+			Assert.IsTrue (builder.Build (proj), "Build should have succeeded.");
+			foreach (var archive in new [] { "foo.aar", "bar.aar" }) {
+				var jar = builder.Output.GetIntermediaryPath (Path.Combine ("reference_library_project_jars", archive, "libs", "helper.jar"));
+				var annotations = builder.Output.GetIntermediaryPath (Path.Combine ("reference_library_project_annotations", archive, "sub", "annotations.zip"));
+				Assert.AreEqual ("other", File.ReadAllText (jar), $"The later archive should win for {archive} jars.");
+				Assert.AreEqual ("other", File.ReadAllText (annotations), $"The later archive should win for {archive} annotations.");
+			}
+		}
+
+		[Test]
 		public void ExtractAarRepairsBackslashEntries ()
 		{
 			if (IsWindows) {
@@ -807,6 +841,61 @@ public class UsesDependency {
 		}
 
 		[Test]
+		public void ExtractAarSlashEntryWinsWithinArchive ()
+		{
+			if (IsWindows) {
+				Assert.Ignore ("Windows extracts backslash-separated entries into directories.");
+			}
+			// `foo.aar` lists the '\' entries first, `bar.aar` lists the '/' entries first.
+			var proj = new XamarinAndroidLibraryProject {
+				OtherBuildItems = {
+					new AndroidItem.AndroidLibrary ("foo.aar") {
+						BinaryContent = () => CreateAarWithFixedTimestamp (("libs\\helper.jar", "backslash"), ("sub\\annotations.zip", "backslash"), ("libs/helper.jar", "slash"), ("sub/annotations.zip", "slash")),
+						MetadataValues = "Bind=false",
+					},
+					new AndroidItem.AndroidLibrary ("bar.aar") {
+						BinaryContent = () => CreateAarWithFixedTimestamp (("libs/other.jar", "slash"), ("sub/annotations.zip", "slash"), ("libs\\other.jar", "backslash"), ("sub\\annotations.zip", "backslash")),
+						MetadataValues = "Bind=false",
+					},
+				},
+			};
+			using var builder = CreateDllBuilder ();
+			Assert.IsTrue (builder.Build (proj), "Build should have succeeded.");
+			// Distinct jar names avoid XA1014 from `ResolveLibraryProjectImports`, which extracts the archives separately.
+			foreach (var (archive, jar) in new [] { ("foo.aar", "helper.jar"), ("bar.aar", "other.jar") }) {
+				var jars = builder.Output.GetIntermediaryPath (Path.Combine ("reference_library_project_jars", archive));
+				var annotations = builder.Output.GetIntermediaryPath (Path.Combine ("reference_library_project_annotations", archive));
+				Assert.AreEqual ("slash", File.ReadAllText (Path.Combine (jars, "libs", jar)), $"The '/' entry should win for {archive} jars.");
+				Assert.AreEqual ("slash", File.ReadAllText (Path.Combine (annotations, "sub", "annotations.zip")), $"The '/' entry should win for {archive} annotations.");
+				Assert.AreEqual (1, Directory.GetFiles (jars, "*", SearchOption.AllDirectories).Length, $"Only one jar should be extracted for {archive}.");
+				Assert.AreEqual (1, Directory.GetFiles (annotations, "*", SearchOption.AllDirectories).Length, $"Only one annotations archive should be extracted for {archive}.");
+			}
+		}
+
+		[Test]
+		public void ExtractAarRejectsAmbiguousBackslashEntries ()
+		{
+			if (IsWindows) {
+				Assert.Ignore ("Windows extracts backslash-separated entries into directories.");
+			}
+			// Both entries resolve to `libs/helper.jar`; the order of the entries in the archive cannot be determined.
+			var proj = new XamarinAndroidLibraryProject {
+				OtherBuildItems = {
+					new AndroidItem.AndroidLibrary ("foo.aar") {
+						BinaryContent = () => CreateAarWithFixedTimestamp (("classes.jar", "classes"), ("libs\\helper.jar", "first"), ("libs\\.\\helper.jar", "second")),
+						MetadataValues = "Bind=false",
+					},
+				},
+			};
+			using var builder = CreateDllBuilder ();
+			builder.ThrowOnBuildFailure = false;
+			Assert.IsFalse (builder.Build (proj), "Build should have failed.");
+			StringAssertEx.Contains ("XA4332", builder.LastBuildOutput, "XA4332 should have been raised.");
+			StringAssertEx.Contains ("libs\\.\\helper.jar", builder.LastBuildOutput, "XA4332 should name the ambiguous entry.");
+			FileAssert.DoesNotExist (builder.Output.GetIntermediaryPath (Path.Combine ("reference_library_project_jars", "foo.aar", "libs", "helper.jar")), "Ambiguous entries should not be extracted.");
+		}
+
+		[Test]
 		public void ExtractAarRejectsEscapingEntries ()
 		{
 			if (IsWindows) {
@@ -815,7 +904,7 @@ public class UsesDependency {
 			var proj = new XamarinAndroidLibraryProject {
 				OtherBuildItems = {
 					new AndroidItem.AndroidLibrary ("foo.aar") {
-						BinaryContent = () => CreateAarWithFixedTimestamp (("classes.jar", "classes"), ("libs\\..\\..\\..\\evil.jar", "evil")),
+						BinaryContent = () => CreateAarWithFixedTimestamp (("classes.jar", "classes"), ("libs\\..\\..\\..\\outside.jar", "outside")),
 						MetadataValues = "Bind=false",
 					},
 				},
@@ -825,7 +914,7 @@ public class UsesDependency {
 			Assert.IsFalse (builder.Build (proj), "Build should have failed.");
 			StringAssertEx.Contains ("XA4332", builder.LastBuildOutput, "XA4332 should have been raised.");
 			var intermediate = builder.Output.GetIntermediaryPath ("");
-			Assert.IsEmpty (Directory.GetFiles (Path.Combine (Root, builder.ProjectDirectory), "evil.jar", SearchOption.AllDirectories), "Escaping entry should not have been written.");
+			Assert.IsEmpty (Directory.GetFiles (Path.Combine (Root, builder.ProjectDirectory), "outside.jar", SearchOption.AllDirectories), "Escaping entry should not have been written.");
 			DirectoryAssert.DoesNotExist (Path.Combine (intermediate, "extract_aar_staging"), "Staging directory should be removed after failure.");
 		}
 
