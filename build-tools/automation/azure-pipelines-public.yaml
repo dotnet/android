@@ -53,7 +53,7 @@ variables:
 - name: NetCorePublicPoolName
   value: NetCore-Public
 - name: WindowsPoolImageNetCorePublic
-  value: windows.vs2022.amd64.open
+  value: windows.vs2026.amd64.open
 - name: LinuxPoolImageNetCorePublic
   value: build.Ubuntu.2204.amd64.open
 # Skip tests when explicitly requested; otherwise run full PR test matrix.
@@ -112,7 +112,7 @@ stages:
       name: $(NetCorePublicPoolName)
       demands:
       # The build runs a .NET TaskHost test that requires MSBuild 18.7 or later.
-      - ImageOverride -equals windows.vs2026.amd64.open
+      - ImageOverride -equals $(WindowsPoolImageNetCorePublic)
     timeoutInMinutes: 240
     steps:
     - checkout: self
