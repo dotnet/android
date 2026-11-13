@@ -58,6 +58,8 @@
     -->
     <_AndroidEnableUnmanagedCallersOnlyCallbacks Condition=" '$(_AndroidEnableUnmanagedCallersOnlyCallbacks)' == '' ">false</_AndroidEnableUnmanagedCallersOnlyCallbacks>
     <AndroidEnableRestrictToAttributes Condition=" '$(AndroidEnableRestrictToAttributes)' == '' ">obsolete</AndroidEnableRestrictToAttributes>
+    <!-- Test apps do not need XML documentation. -->
+    <GenerateDocumentationFile Condition=" '$(GenerateDocumentationFile)' == '' and '$(EnableMSTestRunner)' == 'true' ">false</GenerateDocumentationFile>
     <GenerateDocumentationFile Condition=" '$(GenerateDocumentationFile)' == '' ">true</GenerateDocumentationFile>
 
     <!-- Legacy alias retained for compatibility; no Mono profiler component is packaged. -->

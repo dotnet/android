@@ -50,6 +50,9 @@ class AndroidTestAdapter(
 		case RunTestExecutionRequest runRequest:
 			await RunAndReportAsync (context, runRequest.Session.SessionUid);
 			break;
+		case DiscoverTestExecutionRequest discoverRequest:
+			await DiscoverAndReportAsync (context, discoverRequest.Session.SessionUid);
+			break;
 		default:
 			break;
 		}
@@ -89,6 +92,42 @@ class AndroidTestAdapter(
 		} finally {
 			if (!finished)
 				state.WritePartialResults ();
+		}
+	}
+
+	/// <summary>
+	/// Runs the instrumentation with 'list-tests' and publishes the tests it discovers.
+	/// </summary>
+	async Task DiscoverAndReportAsync (ExecuteRequestContext context, SessionUid sessionUid)
+	{
+		var psi = AdbHelper.CreateStartInfo (adbPath, adbTarget, $"shell am instrument -w -r -e {InstrumentationProtocol.ArgListTests} true {package}/{instrumentation}");
+		if (verbose)
+			Console.WriteLine ($"Running: adb {psi.Arguments}");
+
+		var discovered = new List<InstrumentationStatus> ();
+		var fullOutput = new StringBuilder ();
+		var parser = new StatusStreamParser (discovered.Add, fullOutput, verbose);
+		using var stdout = new LineWriter (parser.OnLine);
+		using var stderr = new StringWriter ();
+		int exitCode = await ProcessUtils.StartProcess (psi, stdout, stderr, context.CancellationToken);
+		stdout.Flush ();
+
+		var output = fullOutput.ToString ();
+		var error = ParseInstrumentationBundle (output, stderr.ToString ()).Error ?? ExtractCrashMessage (output);
+		if (exitCode != 0 || error != null)
+			throw new InvalidOperationException ($"Test discovery failed: {error ?? $"adb exited with code {exitCode}."}");
+
+		foreach (var status in discovered) {
+			if (!status.Values.TryGetValue (InstrumentationProtocol.KeyEvent, out var eventKind) || eventKind != InstrumentationProtocol.EventDiscovered ||
+				!status.Values.TryGetValue (InstrumentationProtocol.KeyTest, out var uid) || string.IsNullOrEmpty (uid))
+				continue;
+			status.Values.TryGetValue (InstrumentationProtocol.KeyName, out var displayName);
+			var testNode = new TestNode {
+				Uid = new TestNodeUid (uid),
+				DisplayName = displayName ?? uid,
+				Properties = new PropertyBag (DiscoveredTestNodeStateProperty.CachedInstance),
+			};
+			await context.MessageBus.PublishAsync (this, new TestNodeUpdateMessage (sessionUid, testNode));
 		}
 	}
 

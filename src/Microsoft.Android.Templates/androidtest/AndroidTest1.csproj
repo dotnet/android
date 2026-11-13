@@ -19,6 +19,7 @@
 
   <ItemGroup>
     <PackageReference Include="MSTest" Version="4.3.2" />
+    <PackageReference Include="Microsoft.Testing.Platform.ServerMode.Client.Sources" Version="2.5.3" />
   </ItemGroup>
 
   <ItemGroup>
