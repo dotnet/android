@@ -42,7 +42,7 @@
   <Target Name="_CopyDotNetPackageDependencies" AfterTargets="ResolveAssemblyReferences">
     <ItemGroup>
       <ReferenceCopyLocalPaths Include="@(ReferencePath)"
-          Condition=" '%(Filename)' == 'ELFSharp' Or '%(Filename)' == 'System.IO.Hashing' " />
+          Condition=" '%(Filename)' == 'ELFSharp' Or '%(Filename)' == 'System.IO.Hashing' Or '%(Filename)' == 'NuGet.Versioning' " />
     </ItemGroup>
   </Target>
 
@@ -51,7 +51,9 @@
     <PackageReference Include="Microsoft.Build.TaskAuthoring.Analyzer" Version="$(MSBuildTaskAuthoringAnalyzerVersion)" PrivateAssets="all" IncludeAssets="analyzers" />
     <PackageReference Include="ELFSharp" Version="$(ELFSharpVersion)" />
     <PackageReference Include="System.IO.Hashing" Version="$(SystemIOHashingPackageVersion)" />
+    <PackageReference Include="NuGet.Versioning" Version="$(NuGetApiPackageVersion)" />
     <Compile Remove="Tests\**" />
+    <ProjectReference Include="..\..\src\Java.Interop.Tools.Maven\Java.Interop.Tools.Maven.csproj" />
     <ProjectReference Include="..\Microsoft.Android.Build.BaseTasks\Microsoft.Android.Build.BaseTasks.csproj" />
     <ProjectReference Include="..\Microsoft.Android.Sdk.TrimmableTypeMap\Microsoft.Android.Sdk.TrimmableTypeMap.csproj" />
     <ProjectReference Include="..\Xamarin.Android.Tools.AndroidSdk\Xamarin.Android.Tools.AndroidSdk.csproj" />
