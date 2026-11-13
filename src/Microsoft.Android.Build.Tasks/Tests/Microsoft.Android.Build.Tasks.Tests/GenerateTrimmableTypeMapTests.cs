@@ -15,7 +15,7 @@ namespace Xamarin.Android.Build.Tests {
 	public class GenerateTrimmableTypeMapTests : BaseTest {
 
 		[Test]
-		public void SealedFrameworkProxiesUseMarkerBase (
+		public void SealedFrameworkProxiesOverrideIsSealed (
 			[Values ("Mono.Android", "Other")] string assemblyName,
 			[Values] bool isSealed,
 			[Values] bool alias,
@@ -71,7 +71,7 @@ namespace Xamarin.Android.Build.Tests {
 			Assert.AreEqual (alias ? 2 : 1, model.ProxyTypes.Count, "Every peer must emit a proxy.");
 			foreach (var proxy in model.ProxyTypes) {
 				bool eligible = assemblyName == "Mono.Android" && isSealed && proxy.TargetType.ManagedTypeName == peer.ManagedTypeName;
-				string expectedBase = eligible ? "Java.Interop.JavaPeerProxyForSealedFrameworkClass" : "Java.Interop.JavaPeerProxy";
+				const string expectedBase = "Java.Interop.JavaPeerProxy";
 				var type = assembly.MainModule.Types.Single (type => type.Name == proxy.TypeName);
 				Assert.AreEqual (expectedBase, type.BaseType.FullName, type.FullName);
 				var constructor = type.Methods.Single (method => method.IsConstructor);
@@ -80,6 +80,17 @@ namespace Xamarin.Android.Build.Tests {
 					.OfType<Mono.Cecil.MethodReference> ()
 					.Single (method => method.Name == ".ctor");
 				Assert.AreEqual (expectedBase, baseConstructor.DeclaringType.FullName, "The constructor must call the selected base.");
+				var property = type.Properties.SingleOrDefault (property => property.Name == "IsSealed");
+				if (eligible) {
+					var getter = property?.GetMethod
+						?? throw new InvalidOperationException ($"{type.FullName} must override IsSealed.");
+					Assert.IsTrue (getter.IsVirtual);
+					Assert.IsFalse (getter.IsNewSlot, "The getter must override the base property.");
+					Assert.AreEqual (Mono.Cecil.Cil.Code.Ldc_I4_1, getter.Body.Instructions [0].OpCode.Code);
+					Assert.AreEqual (Mono.Cecil.Cil.Code.Ret, getter.Body.Instructions [1].OpCode.Code);
+				} else {
+					Assert.IsNull (property, "Ineligible proxies must inherit IsSealed = false.");
+				}
 			}
 		}
 

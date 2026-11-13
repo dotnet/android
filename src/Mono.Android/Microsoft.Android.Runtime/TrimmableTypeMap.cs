@@ -300,7 +300,7 @@ public class TrimmableTypeMap
 		// App peers can use class loaders which differ from the runtime fallback loader.
 		// The generator marks only sealed Mono.Android targets as safe for this lookup.
 		if (targetType is null ||
-				GetProxyForManagedType (targetType) is not JavaPeerProxyForSealedFrameworkClass targetProxy) {
+				GetProxyForManagedType (targetType) is not { IsSealed: true } targetProxy) {
 			return false;
 		}
 

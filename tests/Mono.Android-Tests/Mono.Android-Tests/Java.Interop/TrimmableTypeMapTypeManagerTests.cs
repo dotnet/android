@@ -243,7 +243,7 @@ namespace Java.InteropTests
 				return;
 			}
 			Assert.AreEqual (typeof (Java.Lang.String), proxy.TargetType);
-			Assert.IsInstanceOf<JavaPeerProxyForSealedFrameworkClass> (proxy);
+			Assert.IsTrue (proxy.IsSealed);
 		}
 
 		[Test]
@@ -270,7 +270,7 @@ namespace Java.InteropTests
 
 		[Test]
 		[Category ("NativeAOTTrimmable")]
-		public void GetProxyForJavaObject_SealedExternalTarget_UsesUnmarkedProxy ()
+		public void GetProxyForJavaObject_SealedExternalTarget_DoesNotUseSealedShortcut ()
 		{
 			const string javaClassName = "net.dot.android.test.TrimmableRuntimeJavaInteropPeer";
 			var sourceDir = Android.App.Application.Context.ApplicationInfo?.SourceDir
@@ -292,7 +292,7 @@ namespace Java.InteropTests
 			var proxy = TrimmableTypeMap.Instance.GetProxyForJavaObject (instance.Handle, typeof (TrimmableRuntimeJavaInteropPeer));
 
 			Assert.AreEqual (typeof (TrimmableRuntimeJavaInteropPeer), proxy?.TargetType);
-			Assert.IsNotInstanceOf<JavaPeerProxyForSealedFrameworkClass> (proxy);
+			Assert.IsFalse (proxy?.IsSealed);
 		}
 
 		[Test]

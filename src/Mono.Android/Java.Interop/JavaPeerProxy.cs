@@ -1,29 +1,10 @@
 #nullable enable
 
 using System;
-using System.ComponentModel;
 using Android.Runtime;
 
 namespace Java.Interop
 {
-	/// <summary>
-	/// Base class for generated proxies whose sealed Mono.Android target can be resolved
-	/// using the runtime's class loader without inspecting the Java object's hierarchy.
-	/// </summary>
-	[EditorBrowsable (EditorBrowsableState.Never)]
-	public abstract class JavaPeerProxyForSealedFrameworkClass : JavaPeerProxy
-	{
-		/// <summary>
-		/// Initializes a proxy for a sealed framework class.
-		/// </summary>
-		/// <param name="jniName">The JNI type name of the framework class.</param>
-		/// <param name="targetType">The sealed managed type defined in Mono.Android.</param>
-		protected JavaPeerProxyForSealedFrameworkClass (string jniName, Type targetType)
-			: base (jniName, targetType)
-		{
-		}
-	}
-
 	/// <summary>
 	/// Attribute applied to generated alias holder types. When multiple .NET types
 	/// map to the same JNI name (e.g., <c>JavaCollection</c> and <c>JavaCollection&lt;T&gt;</c>
@@ -87,6 +68,15 @@ namespace Java.Interop
 		/// Gets the target .NET type that this proxy represents.
 		/// </summary>
 		public Type TargetType { get; }
+
+		/// <summary>
+		/// Gets whether the sealed target can be resolved directly using the runtime's class loader.
+		/// </summary>
+		/// <remarks>
+		/// Generated proxies override this only for sealed Mono.Android targets. External
+		/// targets return false even when sealed, because they can use a different class loader.
+		/// </remarks>
+		public virtual bool IsSealed => false;
 
 		/// <summary>
 		/// Returns <see langword="true"/> when the UCO constructor callback should skip

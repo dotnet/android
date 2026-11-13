@@ -79,7 +79,6 @@ sealed class TypeMapAssemblyEmitter
 	AssemblyReferenceHandle _javaInteropRef;
 
 	TypeReferenceHandle _javaPeerProxyRef;
-	TypeReferenceHandle _sealedFrameworkProxyRef;
 	TypeReferenceHandle _iJavaPeerableRef;
 	TypeReferenceHandle _jniHandleOwnershipRef;
 	TypeReferenceHandle _jniObjectReferenceRef;
@@ -326,8 +325,6 @@ sealed class TypeMapAssemblyEmitter
 		var metadata = _pe.Metadata;
 		_javaPeerProxyRef = metadata.AddTypeReference (_pe.MonoAndroidRef,
 			metadata.GetOrAddString ("Java.Interop"), metadata.GetOrAddString ("JavaPeerProxy"));
-		_sealedFrameworkProxyRef = metadata.AddTypeReference (_pe.MonoAndroidRef,
-			metadata.GetOrAddString ("Java.Interop"), metadata.GetOrAddString ("JavaPeerProxyForSealedFrameworkClass"));
 		_iJavaPeerableRef = metadata.AddTypeReference (_javaInteropRef,
 			metadata.GetOrAddString ("Java.Interop"), metadata.GetOrAddString ("IJavaPeerable"));
 		_jniHandleOwnershipRef = metadata.AddTypeReference (_pe.MonoAndroidRef,
@@ -672,8 +669,7 @@ sealed class TypeMapAssemblyEmitter
 		// open generic definitions (whose T isn't available via the TypeMapLazyDictionary loader),
 		// and interfaces (which have no constructors). Peers are activated from their generated
 		// CreateInstance / InvokerType, never by reflecting over the target type.
-		var proxyBaseType = proxy.CanResolveFromSealedTargetType ? _sealedFrameworkProxyRef : _javaPeerProxyRef;
-		var baseCtorRef = _pe.AddMemberRef (proxyBaseType, ".ctor",
+		var baseCtorRef = _pe.AddMemberRef (_javaPeerProxyRef, ".ctor",
 			sig => sig.MethodSignature (isInstanceMethod: true).Parameters (2,
 				rt => rt.Void (),
 				p => {
@@ -685,7 +681,7 @@ sealed class TypeMapAssemblyEmitter
 			TypeAttributes.Public | TypeAttributes.Sealed | TypeAttributes.Class,
 			metadata.GetOrAddString (proxy.Namespace),
 			metadata.GetOrAddString (proxy.TypeName),
-			proxyBaseType,
+			_javaPeerProxyRef,
 			MetadataTokens.FieldDefinitionHandle (metadata.GetRowCount (TableIndex.Field) + 1),
 			MetadataTokens.MethodDefinitionHandle (metadata.GetRowCount (TableIndex.MethodDef) + 1));
 
@@ -711,6 +707,23 @@ sealed class TypeMapAssemblyEmitter
 		// at runtime for AOT-safe type resolution.
 		var selfAttrBlob = _pe.BuildAttributeBlob (b => { });
 		metadata.AddCustomAttribute (typeDefHandle, selfAttrCtorDef, selfAttrBlob);
+
+		if (proxy.CanResolveFromSealedTargetType) {
+			var getter = _pe.EmitBody ("get_IsSealed",
+				MethodAttributes.Public | MethodAttributes.Virtual | MethodAttributes.HideBySig | MethodAttributes.SpecialName,
+				sig => sig.MethodSignature (isInstanceMethod: true).Parameters (0,
+					rt => rt.Type ().Boolean (), p => { }),
+				encoder => {
+					encoder.LoadConstantI4 (1);
+					encoder.Return ();
+				});
+			var signature = _pe.GetOrAddSignature (sig => sig.PropertySignature (isInstanceProperty: true).Parameters (0,
+				rt => rt.Type ().Boolean (), p => { }));
+			var property = metadata.AddProperty (PropertyAttributes.None,
+				metadata.GetOrAddString ("IsSealed"), signature);
+			metadata.AddPropertyMap (typeDefHandle, property);
+			metadata.AddMethodSemantics (property, MethodSemanticsAttributes.Getter, getter);
+		}
 
 		// CreateInstance
 		EmitCreateInstance (proxy);
