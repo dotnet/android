@@ -76,7 +76,7 @@ namespace Microsoft.Android.Tasks {
 			return 1;
 		}
 
-		// This is set in Execute()
+		// Shared by all AAPT2 tasks in the build; MSBuild disposes it when the build ends.
 		Aapt2Daemon? daemon;
 
 		internal Aapt2Daemon Daemon => daemon ?? throw new InvalidOperationException ("The AAPT2 daemon has not been started.");
@@ -90,9 +90,8 @@ namespace Microsoft.Android.Tasks {
 				DaemonMaxInstanceCount = maxInstances;
 			else
 				DaemonMaxInstanceCount = Math.Min (DaemonMaxInstanceCount, maxInstances);
-			using (daemon = new Aapt2Daemon (GenerateFullPathToTool (), DaemonMaxInstanceCount, GetRequiredDaemonInstances (), LogDebugMessage)) {
-				return base.Execute () && !CancellationToken.IsCancellationRequested;
-			}
+			daemon = Aapt2Daemon.GetInstance (BuildEngine4, GenerateFullPathToTool (), DaemonMaxInstanceCount, GetRequiredDaemonInstances ());
+			return base.Execute () && !CancellationToken.IsCancellationRequested;
 		}
 
 		ConcurrentBag<long> jobs = new ConcurrentBag<long> ();

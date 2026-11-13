@@ -6,6 +6,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Text;
 using System.Threading;
+using Microsoft.Build.Framework;
 using TPL = System.Threading.Tasks;
 using Xamarin.Android.Tools;
 using Microsoft.Android.Build.Tasks;
@@ -15,6 +16,24 @@ namespace Microsoft.Android.Tasks
 {
 	internal class Aapt2Daemon : IDisposable
 	{
+		static readonly object instanceLock = new object ();
+
+		/// <summary>
+		/// Returns the daemon pool shared by all AAPT2 tasks in the build.
+		/// </summary>
+		public static Aapt2Daemon GetInstance (IBuildEngine4 engine, string aapt2, int numberOfInstances, int initalNumberOfDaemons)
+		{
+			var key = (typeof (Aapt2Daemon).FullName, aapt2);
+			lock (instanceLock) {
+				var daemon = engine.GetRegisteredTaskObjectAssemblyLocal<Aapt2Daemon> (key, RegisteredTaskObjectLifetime.Build);
+				if (daemon == null) {
+					daemon = new Aapt2Daemon (aapt2, numberOfInstances, initalNumberOfDaemons);
+					engine.RegisterTaskObjectAssemblyLocal (key, daemon, RegisteredTaskObjectLifetime.Build, allowEarlyCollection: false);
+				}
+				return daemon;
+			}
+		}
+
 		public class Job
 		{
 			TPL.TaskCompletionSource<bool> tcs = new TPL.TaskCompletionSource<bool> ();
@@ -49,7 +68,6 @@ namespace Microsoft.Android.Tasks
 		long jobsRunning = 0;
 		long jobId = 0;
 		int maxInstances = 0;
-		Action<string>? logger = null;
 
 		public CancellationToken Token => tcs.Token;
 
@@ -70,11 +88,10 @@ namespace Microsoft.Android.Tasks
 
 		public int CurrentInstances => daemons.Count;
 
-		public Aapt2Daemon (string aapt2, int maxNumberOfInstances, int initalNumberOfDaemons, Action<string> log)
+		public Aapt2Daemon (string aapt2, int maxNumberOfInstances, int initalNumberOfDaemons)
 		{
 			Aapt2 = aapt2;
 			maxInstances = maxNumberOfInstances;
-			logger = log;
 			for (int i = 0; i < initalNumberOfDaemons; i++) {
 				SpawnAapt2Daemon ();
 			}
@@ -196,8 +213,8 @@ namespace Microsoft.Android.Tasks
 					Interlocked.Add (ref jobsRunning, 1);
 					bool errored = false;
 					try {
+						// Unblocks a hung aapt2 when the pool is disposed at the end of the build.
 						using var cancellation = tcs.Token.Register (stopProcess);
-						using var jobCancellation = job.Token.Register (stopProcess);
 						tcs.Token.ThrowIfCancellationRequested ();
 						job.Token.ThrowIfCancellationRequested ();
 						// try to write Unicode UTF8 to aapt2
@@ -258,13 +275,7 @@ namespace Microsoft.Android.Tasks
 				aapt2.StandardInput.WriteLine ("quit");
 				aapt2.StandardInput.WriteLine ();
 			} catch (IOException) {
-				// Ignore this error. It occurs when the Build it cancelled.
-				try {
-					logger?.Invoke ($"{nameof (Aapt2Daemon)}: Ignoring IOException. Build was cancelled.");
-				} catch  {
-					// The Logger might not exist if the daemon exits after the logger has been
-					// collected.
-				}
+				// aapt2 already exited, e.g. it was killed during shutdown.
 			}
 			if (!aapt2.WaitForExit (TimeSpan.FromSeconds (5))) {
 				stopProcess ();
