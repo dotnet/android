@@ -1,4 +1,5 @@
 using System;
+using System.Globalization;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -64,7 +65,7 @@ namespace Xamarin.Installer.AndroidSDK.Common
 			using (var hashAlgorithm = SHA1.Create()) // CodeQL [SM02196] Used to verify checksums provided by an external party.
 			{
 				var bytes = Encoding.UTF8.GetBytes(licenseText);
-				var hash = string.Concat(hashAlgorithm.ComputeHash(bytes).Select(x => x.ToString("x2")));
+				var hash = string.Concat(hashAlgorithm.ComputeHash(bytes).Select(x => x.ToString("x2", CultureInfo.InvariantCulture)));
 				return hash;
 			}
 #pragma warning restore CA5350

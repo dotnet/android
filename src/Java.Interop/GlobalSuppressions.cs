@@ -4,17 +4,15 @@ using System.Diagnostics.CodeAnalysis;
 // attributes that are applied to this project.
 // Project-level suppressions either have no target or are given
 // a specific target and scoped to a namespace, type, member, etc.
-[assembly: SuppressMessage ("Design", "CA1001:Types that own disposable fields should be disposable", Justification = "JniEnvironmentInfo.Runtime is IDisposable, but JniRuntime will dispose JniEnvironmentInfo.", Scope = "type", Target = "~T:Java.Interop.JniPeerMembers.JniInstanceMethods")]
+[assembly: SuppressMessage ("Design", "CA1001:Types that own disposable fields should be disposable", Justification = "JniPeerMembers.Dispose(bool) calls this type's internal Dispose method, which disposes cached methods, subclass constructors, and the JNI peer type.", Scope = "type", Target = "~T:Java.Interop.JniPeerMembers.JniInstanceMethods")]
 
-[assembly: SuppressMessage ("Design", "CA1008:Enums should have zero value", Justification = "No thanks", Scope = "type", Target = "~T:Java.Interop.JniVersion")]
+[assembly: SuppressMessage ("Design", "CA1008:Enums should have zero value", Justification = "Values match the JNI_VERSION constants; zero is not a supported JNI version.", Scope = "type", Target = "~T:Java.Interop.JniVersion")]
 
-[assembly: SuppressMessage ("Design", "CA1012:Abstract types should not have constructors", Justification = "Public API checker in flux - Can change later", Scope = "type", Target = "~T:Java.Interop.JniRuntime.JniObjectReferenceManager")]
+[assembly: SuppressMessage ("Design", "CA1012:Abstract types should not have constructors", Justification = "The public constructor is part of the released API; changing its accessibility would break compatibility.", Scope = "type", Target = "~T:Java.Interop.JniRuntime.JniObjectReferenceManager")]
 
 [assembly: SuppressMessage ("Design", "CA1030:Use events where appropriate", Justification = "This isn't 'raising' an event; it's 'raising' a pending exception within the JVM.", Scope = "member", Target = "~M:Java.Interop.JniRuntime.RaisePendingException(System.Exception)")]
 
-[assembly: SuppressMessage ("Design", "CA1024:Use properties where appropriate", Justification = "<Pending>", Scope = "member", Target = "~M:Java.Interop.JniRuntime.GetRegisteredRuntimes()")]
-
-[assembly: SuppressMessage ("Design", "CA1032:Implement standard exception constructors", Justification = "System.Runtime.Serialization.SerializationInfo doesn't exist in our targeted PCL profile, so we can't provide the (SerializationInfo, StreamingContext) constructor.", Scope = "type", Target = "~T:Java.Interop.JniLocationException")]
+[assembly: SuppressMessage ("Design", "CA1024:Use properties where appropriate", Justification = "This is a released public method; replacing it with a property would break callers.", Scope = "member", Target = "~M:Java.Interop.JniRuntime.GetRegisteredRuntimes()")]
 
 // See: 045b8af7, 6a42bb89, f60906cf, e10f7cb0, etc.
 [assembly: SuppressMessage ("Design", "CA1034:Nested types should not be visible", Justification = "Deliberate choice to 'hide' these types from code completion for `Java.Interop.`.", Scope = "type", Target = "~T:Java.Interop.JniEnvironment.Exceptions")]
@@ -40,10 +38,8 @@ using System.Diagnostics.CodeAnalysis;
 [assembly: SuppressMessage ("Design", "CA1051:Do not declare visible instance fields", Justification = "This type is passed to native code, and should use fields, not properties.", Scope = "member", Target = "~F:Java.Interop.JniNativeMethodRegistration.Signature")]
 [assembly: SuppressMessage ("Design", "CA1051:Do not declare visible instance fields", Justification = "This type is passed to native code, and should use fields, not properties.", Scope = "member", Target = "~F:Java.Interop.JniNativeMethodRegistration.Marshaler")]
 
-[assembly: SuppressMessage ("Design", "CA1064:Exceptions should be public", Justification = "<Pending>", Scope = "type", Target = "~T:Java.Interop.JniLocationException")]
-
-[assembly: SuppressMessage ("Naming", "CA1707:Identifiers should not contain underscores", Justification = "<Pending>", Scope = "type", Target = "~T:Java.Interop.JniVersion")]
-[assembly: SuppressMessage ("Naming", "CA1707:Identifiers should not contain underscores", Justification = "<Pending>", Scope = "member", Target = "~P:Java.Interop.JniRuntime.CreationOptions.ClassLoader_LoadClass_id")]
+[assembly: SuppressMessage ("Naming", "CA1707:Identifiers should not contain underscores", Justification = "Released enum names mirror the JNI_VERSION naming convention; renaming them would break callers.", Scope = "type", Target = "~T:Java.Interop.JniVersion")]
+[assembly: SuppressMessage ("Naming", "CA1707:Identifiers should not contain underscores", Justification = "The identifier is a released public property; renaming it would break callers.", Scope = "member", Target = "~P:Java.Interop.JniRuntime.CreationOptions.ClassLoader_LoadClass_id")]
 
 [assembly: SuppressMessage ("Naming", "CA1710:Identifiers should have correct suffix", Justification = "These represent Java arrays, not collections", Scope = "type", Target = "~T:Java.Interop.JavaObjectArray`1")]
 [assembly: SuppressMessage ("Naming", "CA1710:Identifiers should have correct suffix", Justification = "These represent Java arrays, not collections", Scope = "type", Target = "~T:Java.Interop.JavaArray`1")]
@@ -68,27 +64,24 @@ using System.Diagnostics.CodeAnalysis;
 
 [assembly: SuppressMessage ("Performance", "CA1813:Avoid unsealed attributes", Justification = "Can't break public API", Scope = "type", Target = "~T:Java.Interop.JniValueMarshalerAttribute")]
 
-[assembly: SuppressMessage ("Performance", "CA1815:Override equals and operator equals on value types", Justification = "<Pending>", Scope = "type", Target = "~T:Java.Interop.JniNativeMethodRegistration")]
-[assembly: SuppressMessage ("Performance", "CA1815:Override equals and operator equals on value types", Justification = "<Pending>", Scope = "type", Target = "~T:Java.Interop.JniNativeMethod")]
-[assembly: SuppressMessage ("Performance", "CA1815:Override equals and operator equals on value types", Justification = "<Pending>", Scope = "type", Target = "~T:Java.Interop.JniNativeMethodRegistrationArguments")]
-[assembly: SuppressMessage ("Performance", "CA1815:Override equals and operator equals on value types", Justification = "<Pending>", Scope = "type", Target = "~T:Java.Interop.JniTransition")]
+[assembly: SuppressMessage ("Performance", "CA1815:Override equals and operator equals on value types", Justification = "A mutable native-registration descriptor has no supported value-equality contract.", Scope = "type", Target = "~T:Java.Interop.JniNativeMethodRegistration")]
+[assembly: SuppressMessage ("Performance", "CA1815:Override equals and operator equals on value types", Justification = "This descriptor stores borrowed native addresses, not comparable managed values.", Scope = "type", Target = "~T:Java.Interop.JniNativeMethod")]
+[assembly: SuppressMessage ("Performance", "CA1815:Override equals and operator equals on value types", Justification = "This descriptor contains a mutable registration collection, not a value-equality contract.", Scope = "type", Target = "~T:Java.Interop.JniNativeMethodRegistrationArguments")]
+[assembly: SuppressMessage ("Performance", "CA1815:Override equals and operator equals on value types", Justification = "This mutable JNI transition owns pending-exception and disposal state, not a value-equality contract.", Scope = "type", Target = "~T:Java.Interop.JniTransition")]
 
-[assembly: SuppressMessage ("Performance", "CA1822:Mark members as static", Justification = "<Pending>", Scope = "member", Target = "~M:Java.Interop.JniRuntime.JniValueManager.GetJniIdentityHashCode(Java.Interop.JniObjectReference)~System.Int32")]
-[assembly: SuppressMessage ("Performance", "CA1822:Mark members as static", Justification = "<Pending>", Scope = "member", Target = "~P:Java.Interop.JniFieldInfo.Name")]
-[assembly: SuppressMessage ("Performance", "CA1822:Mark members as static", Justification = "<Pending>", Scope = "member", Target = "~P:Java.Interop.JniFieldInfo.Signature")]
-[assembly: SuppressMessage ("Performance", "CA1822:Mark members as static", Justification = "<Pending>", Scope = "member", Target = "~P:Java.Interop.JniMethodInfo.Name")]
-[assembly: SuppressMessage ("Performance", "CA1822:Mark members as static", Justification = "<Pending>", Scope = "member", Target = "~P:Java.Interop.JniMethodInfo.Signature")]
+[assembly: SuppressMessage ("Performance", "CA1822:Mark members as static", Justification = "The instance method is part of the released public API; making it static would break callers.", Scope = "member", Target = "~M:Java.Interop.JniRuntime.JniValueManager.GetJniIdentityHashCode(Java.Interop.JniObjectReference)~System.Int32")]
+[assembly: SuppressMessage ("Performance", "CA1822:Mark members as static", Justification = "This released instance property reads per-instance metadata in Debug; Release must preserve the same API.", Scope = "member", Target = "~P:Java.Interop.JniFieldInfo.Name")]
+[assembly: SuppressMessage ("Performance", "CA1822:Mark members as static", Justification = "This released instance property reads per-instance metadata in Debug; Release must preserve the same API.", Scope = "member", Target = "~P:Java.Interop.JniFieldInfo.Signature")]
+[assembly: SuppressMessage ("Performance", "CA1822:Mark members as static", Justification = "This released instance property reads per-instance metadata in Debug; Release must preserve the same API.", Scope = "member", Target = "~P:Java.Interop.JniMethodInfo.Name")]
+[assembly: SuppressMessage ("Performance", "CA1822:Mark members as static", Justification = "This released instance property reads per-instance metadata in Debug; Release must preserve the same API.", Scope = "member", Target = "~P:Java.Interop.JniMethodInfo.Signature")]
 
 [assembly: SuppressMessage ("Performance", "CA1823:Avoid unused private fields", Justification = "Used for native interop", Scope = "type", Target = "~T:Java.Interop.JavaException")]
 [assembly: SuppressMessage ("Performance", "CA1823:Avoid unused private fields", Justification = "Used for native interop", Scope = "type", Target = "~T:Java.Interop.JavaObject")]
 [assembly: SuppressMessage ("Performance", "CA1823:Avoid unused private fields", Justification = "Used for native interop", Scope = "type", Target = "~T:Java.Interop.JniRuntime")]
 
-[assembly: SuppressMessage ("Reliability", "CA2000:Dispose objects before losing scope", Justification = "We don't *want* to dispose the value!", Scope = "member", Target = "~M:Java.Interop.JniEnvironment.Exceptions.Throw(System.Exception)")]
-[assembly: SuppressMessage ("Reliability", "CA2000:Dispose objects before losing scope", Justification = "We don't *want* to dispose the value!", Scope = "member", Target = "~M:Java.Interop.JniRuntime.UnTrack(System.IntPtr)")]
-[assembly: SuppressMessage ("Reliability", "CA2000:Dispose objects before losing scope", Justification = "We don't *want* to dispose the value!", Scope = "member", Target = "~M:Java.Interop.ProxyValueMarshaler.CreateGenericObjectReferenceArgumentState(System.Object,System.Reflection.ParameterAttributes)~Java.Interop.JniValueMarshalerState")]
 [assembly: SuppressMessage ("Reliability", "CA2000:Dispose objects before losing scope", Justification = "We don't *want* to dispose the value!", Scope = "member", Target = "~M:Java.Interop.JniRuntime.#ctor(Java.Interop.JniRuntime.CreationOptions)")]
 
 [assembly: SuppressMessage ("Usage", "CA2208:Instantiate argument exceptions correctly", Justification = "<Pending>", Scope = "member", Target = "~M:Java.Interop.JniEnvironment.Exceptions.Throw(Java.Interop.JniObjectReference)")]
 [assembly: SuppressMessage ("Usage", "CA2208:Instantiate argument exceptions correctly", Justification = "<Pending>", Scope = "member", Target = "~M:Java.Interop.JniEnvironment.Exceptions.ThrowNew(Java.Interop.JniObjectReference,System.String)")]
 
-[assembly: SuppressMessage ("Usage", "CA2213:Disposable fields should be disposed", Justification = "<Pending>", Scope = "member", Target = "~F:Java.Interop.JniRuntime.valueManager")]
+[assembly: SuppressMessage ("Usage", "CA2213:Disposable fields should be disposed", Justification = "JniRuntime.Dispose(bool) disposes this field through the ValueManager property.", Scope = "member", Target = "~F:Java.Interop.JniRuntime.valueManager")]

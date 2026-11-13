@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Globalization;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -409,7 +410,7 @@ namespace Xamarin.Installer.AndroidSDK
 			else if (args == null || args.Length == 0)
 				message = format;
 			else
-				message = String.Format (format, args);
+				message = String.Format (CultureInfo.CurrentCulture, format, args);
 			InstallationProgress (this, new InstallationProgressEventArgs { Message = message, Progress = progress, IsInitialEvent = isInitialEvent });
 		}
 
@@ -649,7 +650,7 @@ namespace Xamarin.Installer.AndroidSDK
 
 				OnInstallationProgress (true, 0f, progressMsgFormat, componentName);
 
-				monitor?.BeginStep (String.Format (progressMsgFormat, componentName), 100);
+				monitor?.BeginStep (String.Format (CultureInfo.CurrentCulture, progressMsgFormat, componentName), 100);
 
 				if (isMonitorWithTotalProgress && ((MonitorWithTotalProgress) monitor).IsMonitorWithTotalProgress) {
 					((MonitorWithTotalProgress) monitor).SubComponentIndex = installSubComponentIndex++;

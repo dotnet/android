@@ -8,6 +8,7 @@
 //
 
 using System;
+using System.Globalization;
 using System.IO;
 using System.Net;
 using System.Net.Http;
@@ -366,7 +367,7 @@ namespace Xamarin.Installer.AndroidSDK.Manager
 				permissions |= FilePermissions.S_IRUSR; // owner must be able to read the file
 
 			if (Syscall.chmod(filePath, permissions) == -1)
-				throw new InvalidOperationException (String.Format("Failed to set file attributes for '{0}'. {1}",
+				throw new InvalidOperationException (String.Format(CultureInfo.CurrentCulture, "Failed to set file attributes for '{0}'. {1}",
 				                                                   filePath, Stdlib.strerror(Stdlib.GetLastError())));
 			#endif
 		}

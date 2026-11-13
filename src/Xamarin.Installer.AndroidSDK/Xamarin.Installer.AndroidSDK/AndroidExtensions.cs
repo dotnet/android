@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Globalization;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -16,7 +17,7 @@ namespace Xamarin.Installer.AndroidSDK
 
 			packageName = packageName.SafeTrim ();
 			if (!String.IsNullOrEmpty (packageName))
-				packageName = String.Format ("'{0}' ", packageName);
+				packageName = String.Format (CultureInfo.CurrentCulture, "'{0}' ", packageName);
 
 			if (props == null) {
 				Logger.Debug ("No properties object, cannot obtain Android package {0}revision", packageName);

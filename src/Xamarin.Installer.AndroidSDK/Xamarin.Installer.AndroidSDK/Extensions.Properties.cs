@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Globalization;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -26,7 +27,7 @@ namespace Xamarin.Installer.AndroidSDK
 			}
 
 			try {
-				result = (T)Convert.ChangeType (value, typeof (T));
+				result = (T)Convert.ChangeType (value, typeof (T), CultureInfo.CurrentCulture);
 			} catch {
 				// ignore
 				return false;

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Globalization;
 using System.Collections.Generic;
 using System.IO;
 using System.Text.RegularExpressions;
@@ -217,7 +218,7 @@ namespace Xamarin.Installer.AndroidSDK
 			try {
 				componentUnzippedPath = CommonUtilities.Helpers.Unzip (temporaryPath, archivePath, AndroidSDKContext.Instance.UserName).RemoveTrailingDirectorySeparator ();
 			} catch (Exception ex) {
-				Logger.Exception (String.Format ("Exception caught while unzipping '{0}' in '{1}'", archivePath, temporaryPath), ex);
+				Logger.Exception (String.Format (CultureInfo.CurrentCulture, "Exception caught while unzipping '{0}' in '{1}'", archivePath, temporaryPath), ex);
 				componentUnzippedPath = null;
 			}
 
@@ -286,7 +287,7 @@ namespace Xamarin.Installer.AndroidSDK
 				// ignore
 			}
 			if (logError) {
-				string message = String.Format ("Failed to remove old destination directory '{0}'. User will have to remove it manually.", oldDestinationPath);
+				string message = String.Format (CultureInfo.CurrentCulture, "Failed to remove old destination directory '{0}'. User will have to remove it manually.", oldDestinationPath);
 				if (rex != null)
 					Logger.Exception (message, rex);
 				else
@@ -433,7 +434,7 @@ namespace Xamarin.Installer.AndroidSDK
 			if (String.Compare ("x86_64", abi, StringComparison.OrdinalIgnoreCase) == 0)
 				return AndroidSystemImageAbi.X86_64;
 
-			throw new ArgumentOutOfRangeException (String.Format ("Unknown ABI '{0}'", abi));
+			throw new ArgumentOutOfRangeException (String.Format (CultureInfo.CurrentCulture, "Unknown ABI '{0}'", abi));
 		}
 
 		/// <summary>
