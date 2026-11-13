@@ -6,9 +6,6 @@
   <PropertyGroup>
     <MSBuildTargetsSrcDir>$(XamarinAndroidSourcePath)src\Xamarin.Android.Build.Tasks\MSBuild\Xamarin\Android</MSBuildTargetsSrcDir>
     <DefaultRuntimeEntitlementsPath>$(MSBuildThisFileDirectory)runtime-entitlements.plist</DefaultRuntimeEntitlementsPath>
-    <LibExtension Condition=" '$(HostOS)' == 'Darwin' ">dylib</LibExtension>
-    <LibExtension Condition=" '$(HostOS)' == 'Linux' ">so</LibExtension>
-    <LibExtension Condition=" '$(HostOS)' == 'Windows' ">dll</LibExtension>
   </PropertyGroup>
   <ItemGroup>
     <VersionFiles Include="$(MicrosoftAndroidSdkOutDir)Version" />
@@ -46,8 +43,6 @@
     <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)Java.Interop.Tools.Maven.pdb" />
     <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)java-source-utils.jar" />
     <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)LayoutBinding.cs" />
-    <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)Mono.Unix.dll" />
-    <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)Mono.Unix.pdb" />
     <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)MonoRuntimeProvider.Bundled.java" />
     <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)Microsoft.Android.Build.BaseTasks.dll" />
     <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)Microsoft.Android.Build.BaseTasks.pdb" />
@@ -134,7 +129,6 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <_MSBuildFilesUnixSignAndHarden Include="$(MicrosoftAndroidSdkOutDir)$(HostOS)\aapt2" />
-    <_MSBuildFilesUnixSign Include="$(MicrosoftAndroidSdkOutDir)libMono.Unix.$(LibExtension)" />
   </ItemGroup>
   <!-- monodroid: in-tree installer/debugging projects under src/Xamarin.Installer.*
        and src/Xamarin.Android.Build.Debugging.Tasks. -->
@@ -159,7 +153,7 @@
       <MSBuildItemsWin Include="@(_MSBuildTargetsSrcFiles)">
         <RelativePath>$([MSBuild]::MakeRelative($(MSBuildTargetsSrcDir), %(FullPath)))</RelativePath>
       </MSBuildItemsWin>
-      <MSBuildItemsUnix Include="@(_MSBuildFiles);@(_MSBuildFilesUnix);@(_MSBuildFilesUnixSign);@(_MSBuildFilesUnixSignAndHarden)">
+      <MSBuildItemsUnix Include="@(_MSBuildFiles);@(_MSBuildFilesUnix);@(_MSBuildFilesUnixSignAndHarden)">
         <RelativePath>$([MSBuild]::MakeRelative($(MicrosoftAndroidSdkOutDir), %(FullPath)))</RelativePath>
       </MSBuildItemsUnix>
       <MSBuildItemsUnix Include="@(_MSBuildTargetsSrcFiles)">
