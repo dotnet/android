@@ -82,7 +82,7 @@ namespace Xamarin.Android.Build.Tests
 			using var builder = CreateApkBuilder ();
 			Assert.IsTrue (builder.Build (proj), "Initial build should succeed.");
 			var rTxt = builder.Output.GetIntermediaryPath ("R.txt");
-			StringAssertEx.ContainsText (File.ReadAllLines (rTxt), "aar_resource_string");
+			Assert.IsTrue (StringAssertEx.ContainsText (File.ReadAllLines (rTxt), "aar_resource_string"), $"`{rTxt}` should contain resources from the .aar.");
 
 			// Only the resources change; the jars, native libraries, and manifest of the .aar stay the same
 			includeResources = false;
@@ -123,7 +123,8 @@ namespace Xamarin.Android.Build.Tests
 			proj.Touch ("resources.aar");
 			Assert.IsTrue (builder.Build (proj, doNotCleanupOnUpdate: true, saveProject: false), "Build after restoring the .aar should succeed.");
 			FileAssert.Exists (strings, "The restored .aar should have been extracted again.");
-			StringAssertEx.ContainsText (File.ReadAllLines (builder.Output.GetIntermediaryPath ("R.txt")), "aar_resource_string");
+			var rTxt = builder.Output.GetIntermediaryPath ("R.txt");
+			Assert.IsTrue (StringAssertEx.ContainsText (File.ReadAllLines (rTxt), "aar_resource_string"), $"`{rTxt}` should contain resources from the restored .aar.");
 		}
 
 		static byte [] CreateAarWithResources (bool includeResources)
