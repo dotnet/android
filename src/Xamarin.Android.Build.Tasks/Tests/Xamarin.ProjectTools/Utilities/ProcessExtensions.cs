@@ -2,8 +2,10 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Globalization;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Threading;
+using System.Threading.Tasks;
 using Microsoft.Win32.SafeHandles;
 using NUnit.Framework;
 
@@ -11,6 +13,8 @@ namespace Xamarin.ProjectTools
 {
 	public static class ProcessExtensions
 	{
+		static readonly ConditionalWeakTable<Process, ProcessTreeTracker> processTreeTrackers = new ();
+
 		/// <summary>
 		/// Sets environment variables on ProcessStartInfo with retries to work around a Mono Legacy bug.
 		/// https://github.com/mono/mono/issues/16607
@@ -35,6 +39,60 @@ namespace Xamarin.ProjectTools
 			}
 
 			Assert.Inconclusive ("Could not set ProcessStartInfo environment variable.");
+		}
+
+		public static void StopAndDrainOutput (this Process process, CancellationTokenSource cts, Task outputTask)
+		{
+			try {
+				process.Kill (entireProcessTree: true);
+			} catch (InvalidOperationException) when (process.HasExited) {
+			}
+			if (processTreeTrackers.TryGetValue (process, out var tracker))
+				tracker.StopAndKillDescendants ();
+			bool exited = process.WaitForExit (30_000);
+			if (!exited)
+				cts.Cancel ();
+
+			bool readerCancelled = false;
+			try {
+				outputTask.WaitAsync (TimeSpan.FromSeconds (30)).GetAwaiter ().GetResult ();
+			} catch (OperationCanceledException) when (cts.IsCancellationRequested) {
+				readerCancelled = true;
+			} catch (TimeoutException) {
+				cts.Cancel ();
+				try {
+					outputTask.WaitAsync (TimeSpan.FromSeconds (30)).GetAwaiter ().GetResult ();
+				} catch (OperationCanceledException) when (cts.IsCancellationRequested) {
+					readerCancelled = true;
+				}
+			}
+			if (!exited)
+				throw new TimeoutException ("The process did not exit after being stopped.");
+			if (!readerCancelled)
+				outputTask.GetAwaiter ().GetResult ();
+		}
+
+		public static void TrackDescendants (this Process process)
+		{
+			if (!OperatingSystem.IsWindows ())
+				processTreeTrackers.Add (process, new ProcessTreeTracker (process));
+		}
+
+		public static bool WaitForExitAndOutput (this Process process, Task outputTask, CancellationTokenSource cts, TimeSpan timeout)
+		{
+			cts.CancelAfter (timeout);
+			try {
+				Task.WhenAll (process.WaitForExitAsync (cts.Token), outputTask).GetAwaiter ().GetResult ();
+				if (processTreeTrackers.TryGetValue (process, out var tracker))
+					tracker.StopTracking ();
+				return true;
+			} catch (OperationCanceledException) when (cts.IsCancellationRequested) {
+				process.StopAndDrainOutput (cts, outputTask);
+				return false;
+			} catch {
+				process.StopAndDrainOutput (cts, outputTask);
+				throw;
+			}
 		}
 
 		/// <summary>
@@ -73,6 +131,70 @@ namespace Xamarin.ProjectTools
 				if (int.TryParse (line.Trim (), out int childPid)) {
 					GetDescendantPids (childPid, pids);
 					pids.Add (childPid);
+				}
+			}
+		}
+
+		sealed class ProcessTreeTracker
+		{
+			readonly Process process;
+			readonly CancellationTokenSource cts = new ();
+			readonly Dictionary<int, SafeProcessHandle> handles = new ();
+			readonly Task trackingTask;
+			bool stopped;
+
+			public ProcessTreeTracker (Process process)
+			{
+				this.process = process;
+				trackingTask = Task.Run (TrackDescendantsAsync);
+			}
+
+			async Task TrackDescendantsAsync ()
+			{
+				while (!cts.IsCancellationRequested && !process.HasExited) {
+					var pids = new List<int> ();
+					GetDescendantPids (process.Id, pids);
+					foreach (int pid in pids) {
+						if (!handles.ContainsKey (pid) && SafeProcessHandle.TryOpen (pid, out var handle))
+							handles.Add (pid, handle);
+					}
+					await Task.Delay (50);
+				}
+			}
+
+			public void StopAndKillDescendants ()
+			{
+				Stop (killDescendants: true);
+			}
+
+			public void StopTracking ()
+			{
+				Stop (killDescendants: false);
+			}
+
+			void Stop (bool killDescendants)
+			{
+				if (stopped)
+					return;
+				stopped = true;
+				cts.Cancel ();
+				try {
+					try {
+						trackingTask.GetAwaiter ().GetResult ();
+					} finally {
+						foreach (var handle in handles.Values) {
+							try {
+								if (killDescendants && !OperatingSystem.IsWindows ())
+									handle.Signal (PosixSignal.SIGKILL);
+							} catch (InvalidOperationException) {
+							}
+						}
+					}
+				} finally {
+					foreach (var handle in handles.Values)
+						handle.Dispose ();
+					handles.Clear ();
+					cts.Dispose ();
 				}
 			}
 		}
