@@ -1,6 +1,7 @@
 #nullable enable
 
 using System;
+using System.Globalization;
 using System.Runtime.ExceptionServices;
 
 namespace Java.Interop
@@ -29,7 +30,7 @@ namespace Java.Interop
 				int r   = _GetJavaVM (out invocationPointer);
 
 				if (r != 0) {
-					throw new InvalidOperationException (string.Format ("Could not get JavaVM; JNIEnv::GetJavaVM() returned {0}.", r));
+					throw new InvalidOperationException (string.Format (CultureInfo.CurrentCulture, "Could not get JavaVM; JNIEnv::GetJavaVM() returned {0}.", r));
 				}
 			}
 
@@ -43,7 +44,7 @@ namespace Java.Interop
 				if (e != null)
 					ExceptionDispatchInfo.Capture (e).Throw ();
 
-				throw new InvalidOperationException (string.Format ("Could not ensure capacity; JNIEnv::EnsureLocalCapacity() returned {0}.", r));
+				throw new InvalidOperationException (string.Format (CultureInfo.CurrentCulture, "Could not ensure capacity; JNIEnv::EnsureLocalCapacity() returned {0}.", r));
 			}
 
 			public static void PushLocalFrame (int capacity)
@@ -56,7 +57,7 @@ namespace Java.Interop
 				if (e != null)
 					ExceptionDispatchInfo.Capture (e).Throw ();
 
-				throw new InvalidOperationException (string.Format ("Could not push a frame; JNIEnv::PushLocalFrame() returned {0}.", r));
+				throw new InvalidOperationException (string.Format (CultureInfo.CurrentCulture, "Could not push a frame; JNIEnv::PushLocalFrame() returned {0}.", r));
 			}
 
 			public static int GetIdentityHashCode (JniObjectReference value)
