@@ -46,17 +46,17 @@ namespace Android.Views {
 
 		public bool Post (Action action)
 		{
-			return Post (Java.Lang.Thread.RunnableImplementor.GetOrCreate (action));
+			return Post (Java.Lang.Thread.RunnableImplementor.GetOrCreate (this, action));
 		}
 
 		public bool PostDelayed (Action action, long delayMillis)
 		{
-			return PostDelayed (Java.Lang.Thread.RunnableImplementor.GetOrCreate (action), delayMillis);
+			return PostDelayed (Java.Lang.Thread.RunnableImplementor.GetOrCreate (this, action), delayMillis);
 		}
 
 		public bool RemoveCallbacks (Action action)
 		{
-			var runnable = Java.Lang.Thread.RunnableImplementor.Find (action);
+			var runnable = Java.Lang.Thread.RunnableImplementor.Find (this, action);
 			if (runnable == null)
 				return false;
 			return RemoveCallbacks (runnable);
@@ -64,12 +64,12 @@ namespace Android.Views {
 
 		public void ScheduleDrawable (Android.Graphics.Drawables.Drawable who, Action what, long when)
 		{
-			ScheduleDrawable (who, Java.Lang.Thread.RunnableImplementor.GetOrCreate (what), when);
+			ScheduleDrawable (who, Java.Lang.Thread.RunnableImplementor.GetOrCreate (who, what), when);
 		}
 
 		public void UnscheduleDrawable (Android.Graphics.Drawables.Drawable who, Action what)
 		{
-			var runnable = Java.Lang.Thread.RunnableImplementor.Find (what);
+			var runnable = Java.Lang.Thread.RunnableImplementor.Find (who, what);
 			if (runnable == null)
 				return;
 			UnscheduleDrawable (who, runnable);

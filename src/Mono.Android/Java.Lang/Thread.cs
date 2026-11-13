@@ -41,15 +41,16 @@ namespace Java.Lang {
 					Dispose ();
 			}
 
-			static readonly ConditionalWeakTable<Action, RunnableImplementor> instances = new ();
+			static readonly ConditionalWeakTable<Java.Lang.Object, ConditionalWeakTable<Action, RunnableImplementor>> instances = new ();
 
-			// Reusing one runnable per Action lets the Java remove/unschedule methods cancel every
-			// pending post, scoped by the handler, view, token, or drawable passed to them.
-			public static RunnableImplementor GetOrCreate (Action handler) =>
-				instances.GetValue (handler, static h => new RunnableImplementor (h, removable: true));
+			// Reusing one runnable per owner and Action lets the Java remove/unschedule methods cancel
+			// every pending post. Android matches runnables, not owners, when Views share a window
+			// Handler or Drawables share a View queue, so each owner needs its own runnable.
+			public static RunnableImplementor GetOrCreate (Java.Lang.Object owner, Action handler) =>
+				instances.GetValue (owner, static _ => new ()).GetValue (handler, static h => new RunnableImplementor (h, removable: true));
 
-			public static RunnableImplementor? Find (Action handler) =>
-				instances.TryGetValue (handler, out var runnable) ? runnable : null;
+			public static RunnableImplementor? Find (Java.Lang.Object owner, Action handler) =>
+				instances.TryGetValue (owner, out var runnables) && runnables.TryGetValue (handler, out var runnable) ? runnable : null;
 		}
 
 		/// <summary>
