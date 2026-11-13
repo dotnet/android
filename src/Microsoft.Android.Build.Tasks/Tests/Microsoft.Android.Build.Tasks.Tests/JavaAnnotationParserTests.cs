@@ -15,6 +15,6 @@ public class JavaAnnotationParserTests
 	public void LongValuesUseJavaLongLiteral (long value, string expected)
 	{
 		var parser = new JavaAnnotationParser (new Dictionary<string, AssemblyIndex> (), _ => null);
-		Assert.AreEqual (expected, parser.ManagedValueToJavaSource ("System.Int64", value));
+		Assert.AreEqual (expected, parser.ManagedValueToJavaSource ("Int64", value));
 	}
 }
