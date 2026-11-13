@@ -17,16 +17,9 @@ namespace Xamarin.Android.Tasks
 		const string DefaultErrorCode = "XA0010";
 		const RegisteredTaskObjectLifetime Lifetime = RegisteredTaskObjectLifetime.Build;
 
-		/// <summary>
-		/// Builds the device cache key for every ParseTarget call. GetPrimaryCpuAbi, DetectIfAppWasUninstalled
-		/// and FastDeploy share the cached device only when they use this method with the same TaskEnvironment.
-		/// </summary>
-		internal static object GetDeviceCacheKey (string target, string adbToolPath, string adbToolExe, TaskEnvironment taskEnvironment)
-		{
-			if (taskEnvironment == null)
-				throw new ArgumentNullException (nameof (taskEnvironment));
-			return GetDeviceCacheKey (target, GetAdbPath (adbToolPath, adbToolExe, taskEnvironment), taskEnvironment);
-		}
+		// Tests use this to check that FastDeploy and the debugging tasks share one key.
+		internal static object GetDeviceCacheKey (string target, string adbToolPath, string adbToolExe, TaskEnvironment taskEnvironment) =>
+			GetDeviceCacheKey (target, GetAdbPath (adbToolPath, adbToolExe, taskEnvironment), taskEnvironment);
 
 		static object GetDeviceCacheKey (string target, string adbPath, TaskEnvironment taskEnvironment) =>
 			(Tuple.Create ($"{nameof (AndroidHelper)}_AndroidDevice", target ?? "", adbPath), taskEnvironment.ProjectDirectory);
@@ -107,14 +100,12 @@ namespace Xamarin.Android.Tasks
 		internal static AdbDeviceInfo ParseTarget (string target, TaskLoggingHelper log, bool logErrors, IBuildEngine4 engine4, string adbToolPath, string adbToolExe, TaskEnvironment taskEnvironment, CancellationToken cancellationToken) =>
 			ParseTarget (target, m => log.LogDebugMessage (m), (c, m) => log.LogCodedError (c, m), logErrors, engine4, adbToolPath, adbToolExe, taskEnvironment, cancellationToken);
 
-		// MSBuild gives TaskEnvironment.Fallback to multithreadable tasks in multi-process builds.
+		// FastDeploy uses this overload. Fallback is the TaskEnvironment that GetPrimaryCpuAbi gets in multi-process builds.
 		public static AdbDeviceInfo ParseTarget (string target, Action<string> logMessage, Action<string, string> logError, bool logErrors = true, IBuildEngine4 engine4 = null, string adbToolPath = null, string adbToolExe = null) =>
 			ParseTarget (target, logMessage, logError, logErrors, engine4, adbToolPath, adbToolExe, TaskEnvironment.Fallback, default);
 
-		internal static AdbDeviceInfo ParseTarget (string target, Action<string> logMessage, Action<string, string> logError, bool logErrors, IBuildEngine4 engine4, string adbToolPath, string adbToolExe, TaskEnvironment taskEnvironment, CancellationToken cancellationToken)
+		static AdbDeviceInfo ParseTarget (string target, Action<string> logMessage, Action<string, string> logError, bool logErrors, IBuildEngine4 engine4, string adbToolPath, string adbToolExe, TaskEnvironment taskEnvironment, CancellationToken cancellationToken)
 		{
-			if (taskEnvironment == null)
-				throw new ArgumentNullException (nameof (taskEnvironment));
 			string adbPath = GetAdbPath (adbToolPath, adbToolExe, taskEnvironment);
 			var key = GetDeviceCacheKey (target, adbPath, taskEnvironment);
 			try {

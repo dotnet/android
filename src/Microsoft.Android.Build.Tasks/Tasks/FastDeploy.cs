@@ -144,9 +144,7 @@ namespace Microsoft.Android.Tasks
 
 		public override bool Execute ()
 		{
-			// Use the TaskEnvironment that MSBuild gives GetPrimaryCpuAbi in multi-process builds, so both tasks use the same device cache key.
-			var device = AndroidHelper.ParseTarget (AdbTarget, LogMessage, LogCodedError, logErrors: true, BuildEngine4, AdbToolPath, AdbToolExe,
-				TaskEnvironment.Fallback, CancellationToken.None);
+			var device = AndroidHelper.ParseTarget (AdbTarget, LogMessage, LogCodedError, logErrors: true, engine4: BuildEngine4, adbToolPath: AdbToolPath, adbToolExe: AdbToolExe);
 			if (device == null) {
 				PrintDiagnostics ();
 				return false;
