@@ -11,6 +11,38 @@ namespace Xamarin.Android.Tools.Tests
 	[TestFixture]
 	public class JdkInfoTests
 	{
+		[TestCase ("JI_JAVA_HOME")]
+		[TestCase ("JAVA_HOME")]
+		[TestCase ("PATH")]
+		public void FindJdk_UsesEnvironment (string variable)
+		{
+			var root = Path.Combine (Path.GetTempPath (), Guid.NewGuid ().ToString ("N"));
+			try {
+				CreateFauxJdk (root, "999.123.456", "", OS.IsWindows ? "%DISCOVERY_JAVA_VERSION%" : "$DISCOVERY_JAVA_VERSION");
+				var messages    = new List<string> ();
+				var environment = new Dictionary<string, string> {
+					[OS.IsWindows && variable == "PATH" ? "Path" : variable] = variable == "PATH" ? Path.Combine (root, "bin") : root,
+					[OS.IsWindows ? "PathExt" : "PATHEXT"] = ".CMD",
+					["DISCOVERY_JAVA_VERSION"] = variable,
+				};
+				if (variable != "JI_JAVA_HOME")
+					environment ["JI_JAVA_HOME"] = Path.Combine (root, "missing");
+				if (Environment.GetEnvironmentVariable ("SystemRoot") is string systemRoot)
+					environment ["SystemRoot"] = systemRoot;
+				var versionRange = new Version (999, 123, 456);
+				var jdk          = JdkInfo.FindJdk ((_, message) => messages.Add (message), null, versionRange, versionRange, environment);
+				Assert.IsNotNull (jdk);
+				Assert.AreEqual (root, jdk.HomePath);
+				Assert.AreEqual ($"${variable}", jdk.Locator);
+				Assert.IsTrue (jdk.GetJavaSettingsPropertyValue ("java.version", out var version));
+				Assert.AreEqual (variable, version);
+				if (variable != "JI_JAVA_HOME")
+					Assert.IsTrue (messages.Any (message => message.Contains ("$JI_JAVA_HOME") && message.Contains ("missing")));
+			} finally {
+				Directory.Delete (root, recursive: true);
+			}
+		}
+
 		[Test]
 		public void GetKnownSystemJdkInfos_PrefersJiJavaHome ()
 		{

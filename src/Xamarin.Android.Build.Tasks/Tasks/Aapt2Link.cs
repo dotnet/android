@@ -165,7 +165,7 @@ namespace Xamarin.Android.Tasks {
 			if (MonoAndroidHelper.TryParseApiLevel (targetSdkVersion, out Version v)) {
 				targetSdkVersion = v.Major.ToString (CultureInfo.InvariantCulture);
 			}
-			ManifestDocument manifest = new ManifestDocument (ManifestFile, versions);
+			ManifestDocument manifest = new ManifestDocument (ManifestFile);
 			manifest.TargetSdkVersion = targetSdkVersion;
 			if (!VersionCodePattern.IsNullOrEmpty ()) {
 				try {

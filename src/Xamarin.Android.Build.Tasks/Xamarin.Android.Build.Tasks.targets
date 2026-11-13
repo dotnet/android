@@ -35,16 +35,6 @@
       <Link>Xamarin.Android.Bindings.Core.targets</Link>
     </None>
     <None
-        Include="MSBuild\Xamarin\Android\Xamarin.Android.Bindings.Documentation.targets">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      <Link>Xamarin.Android.Bindings.Documentation.targets</Link>
-    </None>
-    <None
-        Include="MSBuild\Xamarin\Android\Xamarin.Android.Bindings.JarToXml.targets">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      <Link>Xamarin.Android.Bindings.JarToXml.targets</Link>
-    </None>
-    <None
         Include="MSBuild\Xamarin\Android\Xamarin.Android.Bindings.JavaDependencyVerification.targets">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <Link>Xamarin.Android.Bindings.JavaDependencyVerification.targets</Link>
@@ -112,16 +102,6 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
   </ItemGroup>
-  <Target Name="_GenerateMonoAndroidEnums"
-      BeforeTargets="CoreCompile"
-      Inputs="..\Mono.Android\obj\$(Configuration)\android-$(AndroidLatestStableApiLevel)\mcw\api.xml"
-      Outputs="@(_MonoAndroidEnum)">
-    <MSBuild
-        Condition=" !Exists ('%(_MonoAndroidEnum.Identity)') "
-        Projects="..\Mono.Android\Mono.Android.csproj"
-        Properties="Configuration=$(Configuration);AndroidApiLevel=$(AndroidLatestStableApiLevel);AndroidFrameworkVersion=$(AndroidLatestStableFrameworkVersion);AndroidPlatformId=$(AndroidLatestStablePlatformId)"
-    />
-  </Target>
   <Target Name="_GenerateXACommonProps"
       DependsOnTargets="GetXAVersionInfo"
       BeforeTargets="DeployOutputFiles"
