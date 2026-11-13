@@ -1,4 +1,5 @@
 using System;
+using System.Globalization;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -79,7 +80,7 @@ namespace generator.SourceWriters
 			var indirect = field.IsStatic ? "StaticFields" : "InstanceFields";
 			var invoke = "Get{0}Value";
 
-			invoke = string.Format (invoke, invokeType);
+			invoke = string.Format (CultureInfo.CurrentCulture, invoke, invokeType);
 
 			writer.WriteLine ($"var __v = {field.Symbol.ReturnCast}_members.{indirect}.{invoke} (__id{(field.IsStatic ? "" : ", this")});");
 

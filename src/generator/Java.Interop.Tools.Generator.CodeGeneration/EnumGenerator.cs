@@ -1,4 +1,5 @@
 using System;
+using System.Globalization;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -110,7 +111,7 @@ namespace MonoDroid.Generation
 			try {
 				DoParseJniMember (jniMember, out package, out type, out member);
 			} catch (Exception ex) {
-				throw new Exception (string.Format ("failed to parse enum mapping: JNI member: {0}", jniMember, ex));
+				throw new Exception (string.Format (CultureInfo.CurrentCulture, "failed to parse enum mapping: JNI member: {0}", jniMember, ex));
 			}
 		}
 

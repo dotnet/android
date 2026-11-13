@@ -1,4 +1,5 @@
 using System;
+using System.Globalization;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -81,7 +82,7 @@ namespace MonoDroid.Generation {
 			try {
 				DoParseJniMember (jniMember, out package, out type, out member);
 			} catch (Exception ex) {
-				throw new Exception (string.Format ("failed to parse enum mapping: JNI member: {0}", jniMember, ex));
+				throw new Exception (string.Format (CultureInfo.CurrentCulture, "failed to parse enum mapping: JNI member: {0}", jniMember, ex));
 			}
 		}
 
@@ -135,7 +136,7 @@ namespace MonoDroid.Generation {
 			lock (file_name_map) {
 				if (file_name_map.TryGetValue (file, out s))
 					return s;
-				s = file_name_map.Count.ToString ();
+				s = file_name_map.Count.ToString (CultureInfo.CurrentCulture);
 				file_name_map [file] = s;
 			}
 
@@ -170,7 +171,7 @@ namespace MonoDroid.Generation {
 					package     = c.Substring (0, s).Replace ('/', '.');
 					java_class  = "[Interface]" + c.Substring (s+1).Replace ('$', '.');
 				} else {
-					throw new InvalidOperationException (string.Format ("Missing mandatory attribute 'jni-class' or 'jni-interface' on a mapping element: {0}", e));
+					throw new InvalidOperationException (string.Format (CultureInfo.CurrentCulture, "Missing mandatory attribute 'jni-class' or 'jni-interface' on a mapping element: {0}", e));
 				}
 
 				foreach (var m in e.XPathSelectElements ("method")) {

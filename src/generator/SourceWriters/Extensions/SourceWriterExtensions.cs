@@ -1,4 +1,5 @@
 using System;
+using System.Globalization;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -106,21 +107,21 @@ namespace generator.SourceWriters
 					refs.Add (setter);
 
 					AddInterfaceListenerEventsAndProperties (tw, iface, target, name, setter,
-						string.Format ("__v => {0} = __v", prop.Name),
-						string.Format ("__v => {0} = null", prop.Name), opt, prop.Getter);
+						string.Format (CultureInfo.CurrentCulture, "__v => {0} = __v", prop.Name),
+						string.Format (CultureInfo.CurrentCulture, "__v => {0} = null", prop.Name), opt, prop.Getter);
 				} else {
 					refs.Add (method.Name);
 					string rm = null;
 					string remove;
 
 					if (method.Name.StartsWith ("Set", StringComparison.Ordinal))
-						remove = string.Format ("__v => {0} (null)", method.Name);
+						remove = string.Format (CultureInfo.CurrentCulture, "__v => {0} (null)", method.Name);
 					else if (method.Name.StartsWith ("Add", StringComparison.Ordinal) &&
 						 (rm = "Remove" + method.Name.Substring ("Add".Length)) != null &&
 						 methods.Where (m => m.Name == rm).Any ())
-						remove = string.Format ("__v => {0} (__v)", rm);
+						remove = string.Format (CultureInfo.CurrentCulture, "__v => {0} (__v)", rm);
 					else
-						remove = string.Format ("__v => {{throw new NotSupportedException (\"Cannot unregister from {0}.{1}\");}}",
+						remove = string.Format (CultureInfo.CurrentCulture, "__v => {{throw new NotSupportedException (\"Cannot unregister from {0}.{1}\");}}",
 							iface.FullName, method.Name);
 
 					AddInterfaceListenerEventsAndProperties (tw, iface, target, name, method.Name,

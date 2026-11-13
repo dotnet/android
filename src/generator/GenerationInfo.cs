@@ -1,4 +1,5 @@
 using System;
+using System.Globalization;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
@@ -76,15 +77,15 @@ namespace MonoDroid.Generation {
 			var defines = new StringBuilder ()
 				.Append ("$(DefineConstants);ANDROID_1");
 			for (int i = 2; i <= level.ApiLevel; ++i) {
-				defines.AppendFormat (";ANDROID_{0}", i.ToString ());
+				defines.AppendFormat (CultureInfo.CurrentCulture, ";ANDROID_{0}", i.ToString (CultureInfo.CurrentCulture));
 			}
 			// ASSUME one minor release per major release starting with API-36.1
 			for (int i = 36; i < level.ApiLevel; ++i) {
-				defines.Append ($";ANDROID_{i}_1");
+				defines.Append (CultureInfo.CurrentCulture, $";ANDROID_{i}_1");
 			}
 			if (level.MinorRelease != 0) {
 				for (int i = 1; i < level.MinorRelease + 1; ++i) {
-					defines.Append ($";ANDROID_{level.ApiLevel}_{i}");
+					defines.Append (CultureInfo.CurrentCulture, $";ANDROID_{level.ApiLevel}_{i}");
 				}
 			}
 			return new XElement (

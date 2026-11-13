@@ -1,4 +1,5 @@
 using System;
+using System.Globalization;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
@@ -26,7 +27,7 @@ namespace generator.SourceWriters
 			Name = klass.Name;
 
 			constructor.JavadocInfo?.AddJavadocs (Comments);
-			Comments.Add (string.Format ("// Metadata.xml XPath constructor reference: path=\"{0}/constructor[@name='{1}'{2}]\"", klass.MetadataXPathReference, klass.JavaSimpleName, constructor.Parameters.GetMethodXPathPredicate ()));
+			Comments.Add (string.Format (CultureInfo.CurrentCulture, "// Metadata.xml XPath constructor reference: path=\"{0}/constructor[@name='{1}'{2}]\"", klass.MetadataXPathReference, klass.JavaSimpleName, constructor.Parameters.GetMethodXPathPredicate ()));
 
 			SourceWriterExtensions.AddSupportedOSPlatform (Attributes, constructor, opt);
 

@@ -1,4 +1,5 @@
 using System;
+using System.Globalization;
 using System.Collections.Generic;
 
 namespace MonoDroid.Generation
@@ -27,17 +28,17 @@ namespace MonoDroid.Generation
 		public string FromNative (CodeGenerationOptions opt, string var_name, bool owned)
 		{
 			if (IsArray)
-				return String.Format ("({0}[]{3}) JNIEnv.GetArray ({1}, {2}, typeof ({0}))", opt.GetOutputName (enum_type), var_name, owned ? "JniHandleOwnership.TransferLocalRef" : "JniHandleOwnership.DoNotTransfer", opt.NullableOperator);
+				return String.Format (CultureInfo.CurrentCulture, "({0}[]{3}) JNIEnv.GetArray ({1}, {2}, typeof ({0}))", opt.GetOutputName (enum_type), var_name, owned ? "JniHandleOwnership.TransferLocalRef" : "JniHandleOwnership.DoNotTransfer", opt.NullableOperator);
 			else
-				return String.Format ("({0}) {1}", opt.GetOutputName (enum_type), var_name);
+				return String.Format (CultureInfo.CurrentCulture, "({0}) {1}", opt.GetOutputName (enum_type), var_name);
 		}
 	
 		public string ToNative (CodeGenerationOptions opt, string var_name, Dictionary<string, string> mappings = null)
 		{
 			if (IsArray)
-				return String.Format ("JNIEnv.NewArray ({0})", var_name);
+				return String.Format (CultureInfo.CurrentCulture, "JNIEnv.NewArray ({0})", var_name);
 			else
-				return String.Format ("({0}) {1}", JavaName, var_name);
+				return String.Format (CultureInfo.CurrentCulture, "({0}) {1}", JavaName, var_name);
 		}
 	
 		public bool Validate (CodeGenerationOptions opt, GenericParameterDefinitionList type_params, CodeGeneratorContext context)
@@ -86,27 +87,27 @@ namespace MonoDroid.Generation
 
 		public string[] PreCallback (CodeGenerationOptions opt, string var_name, bool owned)
 		{
-			throw new NotSupportedException (string.Format ("{0} does not support PreCallback", this.GetType ().Name));
+			throw new NotSupportedException (string.Format (CultureInfo.CurrentCulture, "{0} does not support PreCallback", this.GetType ().Name));
 		}
 
 		public string[] PostCallback (CodeGenerationOptions opt, string var_name)
 		{
-			throw new NotSupportedException (string.Format ("{0} does not support PostCallback", this.GetType ().Name));
+			throw new NotSupportedException (string.Format (CultureInfo.CurrentCulture, "{0} does not support PostCallback", this.GetType ().Name));
 		}
 
 		public string[] PreCall (CodeGenerationOptions opt, string var_name)
 		{
-			throw new NotSupportedException (string.Format ("{0} does not support PreCall", this.GetType ().Name));
+			throw new NotSupportedException (string.Format (CultureInfo.CurrentCulture, "{0} does not support PreCall", this.GetType ().Name));
 		}
 
 		public string Call (CodeGenerationOptions opt, string var_name)
 		{
-			throw new NotSupportedException (string.Format ("{0} does not support Call", this.GetType ().Name));
+			throw new NotSupportedException (string.Format (CultureInfo.CurrentCulture, "{0} does not support Call", this.GetType ().Name));
 		}
 
 		public string[] PostCall (CodeGenerationOptions opt, string var_name)
 		{
-			throw new NotSupportedException (string.Format ("{0} does not support PostCall", this.GetType ().Name));
+			throw new NotSupportedException (string.Format (CultureInfo.CurrentCulture, "{0} does not support PostCall", this.GetType ().Name));
 		}
 
 		public bool NeedsPrep { get { return false; } }

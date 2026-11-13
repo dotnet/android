@@ -1,4 +1,5 @@
 using System;
+using System.Globalization;
 using System.Collections.Generic;
 using System.Linq;
 using Java.Interop.Tools.Generator;
@@ -43,7 +44,7 @@ namespace MonoDroid.Generation
 
 		public override string FromNative (CodeGenerationOptions opt, string varname, bool owned)
 		{
-			return string.Format ("global::Java.Lang.Object.GetObject<{0}> ({1}, {2})", opt.GetOutputName (FullName), varname, owned ? "JniHandleOwnership.TransferLocalRef" : "JniHandleOwnership.DoNotTransfer");
+			return string.Format (CultureInfo.CurrentCulture, "global::Java.Lang.Object.GetObject<{0}> ({1}, {2})", opt.GetOutputName (FullName), varname, owned ? "JniHandleOwnership.TransferLocalRef" : "JniHandleOwnership.DoNotTransfer");
 			/*
 			if (String.IsNullOrEmpty (Marshaler))
 				return String.Format ("global::Java.Lang.Object.GetObject<{0}> ({1}, {2})", opt.GetOutputName (FullName), varname, owned ? "JniHandleOwnership.TransferLocalRef" : "JniHandleOwnership.DoNotTransfer");
@@ -235,7 +236,7 @@ namespace MonoDroid.Generation
 
 		public override string ToNative (CodeGenerationOptions opt, string varname, Dictionary<string, string> mappings = null)
 		{
-			return string.Format ("JNIEnv.ToLocalJniHandle ({0})", varname);
+			return string.Format (CultureInfo.CurrentCulture, "JNIEnv.ToLocalJniHandle ({0})", varname);
 			/*
 			if (String.IsNullOrEmpty (Marshaler))
 				return String.Format ("JNIEnv.ToLocalJniHandle ({0})", varname);

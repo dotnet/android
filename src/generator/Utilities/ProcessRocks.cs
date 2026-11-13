@@ -1,4 +1,5 @@
 using System;
+using System.Globalization;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
@@ -87,7 +88,7 @@ namespace MonoDroid.Utils {
 			
 			try {
 				// Find the root, by stripping off \obj and beyond
-				string root = filename.Substring (0, filename.IndexOf (string.Format ("{0}obj{0}", Path.DirectorySeparatorChar), StringComparison.Ordinal));
+				string root = filename.Substring (0, filename.IndexOf (string.Format (CultureInfo.CurrentCulture, "{0}obj{0}", Path.DirectorySeparatorChar), StringComparison.Ordinal));
 				
 				var files = FindFileInDirectory (root, Path.GetFileName (filename));
 
@@ -180,7 +181,7 @@ namespace MonoDroid.Utils {
 			// Fix off by one error
 			line_no++;
 
-			return string.Format ("{0}({1}): error 1: {2}", MessageUtils.MapGeneratedToProjectFile (filename), line_no, error);
+			return string.Format (CultureInfo.CurrentCulture, "{0}({1}): error 1: {2}", MessageUtils.MapGeneratedToProjectFile (filename), line_no, error);
 		}
 	}
 }
