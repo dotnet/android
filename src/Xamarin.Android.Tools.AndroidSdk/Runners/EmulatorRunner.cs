@@ -123,6 +123,9 @@ public class EmulatorRunner
 		// never see the 'close' event because the emulator holds the pipes open.
 		psi.RedirectStandardOutput = true;
 		psi.RedirectStandardError = true;
+		// Inherit only the standard handles, so the long-lived emulator doesn't keep
+		// unrelated inheritable handles (e.g. other processes' pipes) open.
+		psi.InheritedHandles = [];
 
 		logger.Invoke (TraceLevel.Verbose, $"Launching emulator AVD '{avdName}'");
 

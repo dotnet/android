@@ -109,6 +109,7 @@ namespace Xamarin.Android.Tools.BootstrapTasks
 				RedirectStandardOutput  = true,
 				RedirectStandardError   = true,
 				WindowStyle             = ProcessWindowStyle.Hidden,
+				InheritedHandles        = [],
 			};
 
 			Log.LogMessage (MessageImportance.Low, $"Environment variables being passed to the tool:");
