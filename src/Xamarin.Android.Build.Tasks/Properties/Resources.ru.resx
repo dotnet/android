@@ -212,9 +212,9 @@
     <comment>The following are literal names and should not be translated: AAPT2, Aapt2ToolPath, MSBuild</comment>
   </data>
   <data name="XA0116" xml:space="preserve">
-    <value>Не удалось найти "EmbeddedResource" с именем "{0}".</value>
-    <comment>The following are literal names and should not be translated: EmbeddedResource
-{0} - The name of the missing resource</comment>
+    <value>Unable to find required SDK file `{0}`.</value>
+    <comment>The following are literal names and should not be translated: SDK
+{0} - The path of the missing file</comment>
   </data>
   <data name="XA0119_LinkMode" xml:space="preserve">
     <value>Не рекомендуется использовать быстрое развертывание и компоновщик одновременно. Используйте быстрое развертывание для конфигураций отладки, а компоновщик — для конфигураций выпуска.</value>
