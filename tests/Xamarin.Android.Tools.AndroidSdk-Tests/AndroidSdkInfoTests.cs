@@ -27,15 +27,19 @@ namespace Xamarin.Android.Tools.Tests
 			File.WriteAllText (file + ".old", "previous");
 			var environment = new Dictionary<string, string> { ["HOME"] = "home" };
 			int errors = 0;
+			int warnings = 0;
 			try {
 				System.Threading.Tasks.Parallel.For (0, 2, _ => {
 					var config = AndroidSdkUnix.GetUnixConfigFile ((level, message) => {
 						if (level == TraceLevel.Error)
 							Interlocked.Increment (ref errors);
+						if (level == TraceLevel.Warning)
+							Interlocked.Increment (ref warnings);
 					}, environment, root);
 					Assert.IsEmpty (config.Elements ());
 				});
-				Assert.AreEqual (2, errors);
+				Assert.AreEqual (0, errors);
+				Assert.AreEqual (2, warnings);
 				Assert.AreEqual ("<broken", File.ReadAllText (file));
 				Assert.AreEqual ("previous", File.ReadAllText (file + ".old"));
 			} finally {

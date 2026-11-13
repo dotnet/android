@@ -236,11 +236,12 @@ namespace Xamarin.Android.Tools
 				try {
 					doc = XDocument.Load (file);
 				} catch (Exception ex) {
-					logger (TraceLevel.Error, string.Format (Resources.InvalidMonodroidConfigFile_path_message, file, ex.Message));
+					bool readOnly = environmentVariables != null || workingDirectory != null;
+					logger (readOnly ? TraceLevel.Warning : TraceLevel.Error, string.Format (Resources.InvalidMonodroidConfigFile_path_message, file, ex.Message));
 					logger (TraceLevel.Verbose, ex.ToString ());
 
 					// Discovery from a task snapshot must not modify shared preferences.
-					if (environmentVariables != null || workingDirectory != null)
+					if (readOnly)
 						return new XElement ("monodroid");
 
 					// move out of the way and create a new one
