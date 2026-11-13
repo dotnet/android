@@ -139,7 +139,84 @@ namespace Xamarin.Android.Tasks
 			return Path.Combine (toolsDir, "lib", $"host-{GetOSBinDirName ()}");
 		}
 
-		public static IEnumerable<string> GetDuplicateFileNames (IEnumerable<string> fullPaths, string [] excluded)
+		class SizeAndContentFileComparer : IEqualityComparer<FileInfo>
+#if MSBUILD
+			, IEqualityComparer<ITaskItem>
+#endif  // MSBUILD
+		{
+			public  static  readonly  SizeAndContentFileComparer  DefaultComparer     = new SizeAndContentFileComparer ();
+
+#if MSBUILD
+			readonly TaskEnvironment taskEnvironment;
+
+			public SizeAndContentFileComparer (TaskEnvironment? taskEnvironment = null)
+			{
+				this.taskEnvironment = taskEnvironment ?? TaskEnvironment.Fallback;
+			}
+#endif
+
+			public bool Equals (FileInfo x, FileInfo y)
+			{
+				if (x.Exists != y.Exists || x.Length != y.Length)
+					return false;
+				string xHash = Files.HashFile (x.FullName);
+				string yHash = Files.HashFile (y.FullName);
+				return xHash == yHash;
+			}
+
+			public int GetHashCode (FileInfo obj)
+			{
+				return (int) obj.Length;
+			}
+
+#if MSBUILD
+			public bool Equals (ITaskItem x, ITaskItem y)
+			{
+				return Equals (new FileInfo (taskEnvironment.GetAbsolutePath (x.ItemSpec)), new FileInfo (taskEnvironment.GetAbsolutePath (y.ItemSpec)));
+			}
+
+			public int GetHashCode (ITaskItem obj)
+			{
+				return GetHashCode (new FileInfo (taskEnvironment.GetAbsolutePath (obj.ItemSpec)));
+			}
+#endif  // MSBUILD
+		}
+
+#if MSBUILD
+		public static IEnumerable<string> ExpandFiles (ITaskItem[]? libraryProjectJars)
+		{
+			libraryProjectJars  = libraryProjectJars ?? [];
+			return (from path in libraryProjectJars
+					let     dir     = Path.GetDirectoryName (path.ItemSpec)
+					let     pattern = Path.GetFileName (path.ItemSpec)
+					where   Directory.Exists (dir)
+					select  Directory.GetFiles (dir, pattern))
+				.SelectMany (paths => paths);
+		}
+
+		public static IEnumerable<ITaskItem> DistinctFilesByContent (IEnumerable<ITaskItem> filePaths)
+		{
+			return filePaths.Distinct (MonoAndroidHelper.SizeAndContentFileComparer.DefaultComparer);
+		}
+
+		public static IEnumerable<ITaskItem> DistinctFilesByContent (IEnumerable<ITaskItem> filePaths, TaskEnvironment taskEnvironment)
+		{
+			return filePaths.Distinct (new MonoAndroidHelper.SizeAndContentFileComparer (taskEnvironment));
+		}
+
+		public static IEnumerable<string> DistinctFilesByContent (IEnumerable<string> filePaths, TaskEnvironment taskEnvironment)
+		{
+			return filePaths.Select (p => new FileInfo (taskEnvironment.GetAbsolutePath (p))).ToArray ()
+				.Distinct (new MonoAndroidHelper.SizeAndContentFileComparer ()).Select (f => f.FullName).ToArray ();
+		}
+#endif
+
+		public static IEnumerable<string> DistinctFilesByContent (IEnumerable<string> filePaths)
+		{
+			return filePaths.Select (p => new FileInfo (p)).ToArray ().Distinct (new MonoAndroidHelper.SizeAndContentFileComparer ()).Select (f => f.FullName).ToArray ();
+		}
+
+		public static IEnumerable<string> GetDuplicateFileNames (IEnumerable<string> fullPaths, string []? excluded)
 		{
 			var files = fullPaths.Select (full => Path.GetFileName (full)).Where (f => excluded == null || !excluded.Contains (f, StringComparer.OrdinalIgnoreCase)).ToArray ();
 			for (int i = 0; i < files.Length; i++)
@@ -354,7 +431,7 @@ namespace Xamarin.Android.Tasks
 		}
 
 #if MSBUILD
-		public static string TryGetAndroidJarPath (TaskLoggingHelper log, string platform, AndroidVersions supportedVersions, bool designTimeBuild = false, bool buildingInsideVisualStudio = false, string targetFramework = "", string androidSdkDirectory = "")
+		public static string? TryGetAndroidJarPath (TaskLoggingHelper log, string platform, AndroidVersions supportedVersions, bool designTimeBuild = false, bool buildingInsideVisualStudio = false, string? targetFramework = "", string? androidSdkDirectory = "")
 		{
 			if (string.IsNullOrEmpty (androidSdkDirectory)) {
 				log.LogCodedError ("XA5300", Properties.Resources.XA5300_Android_SDK);
@@ -397,10 +474,10 @@ namespace Xamarin.Android.Tasks
 		/// </summary>
 		/// <param name="version">The version to parse</param>
 		/// <returns>The API level that corresponds to $(SupportedOSPlatformVersion), or 0 if parsing fails.</returns>
-		public static int ConvertSupportedOSPlatformVersionToApiLevel (string version)
+		public static int ConvertSupportedOSPlatformVersionToApiLevel (string? version)
 		{
 			int apiLevel = 0;
-			if (version.IndexOf ('.') == -1) {
+			if (version?.IndexOf ('.') == -1) {
 				version += ".0";
 			}
 			if (Version.TryParse (version, out var parsedVersion)) {
