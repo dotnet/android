@@ -8,17 +8,18 @@ parameters:
 
 steps:
 # Use the SDK installed during test setup, so the net11.0 test assembly can load.
-# Run-SlicedTests.ps1 fails if this job's slice has no tests.
+# RunSlicedTests.cs fails if this job's slice has no tests.
 - pwsh: >-
-    ./build-tools/automation/scripts/Run-SlicedTests.ps1
-    -DotNet "${{ parameters.xaSourcePath }}/bin/$(XA.Build.Configuration)/dotnet/dotnet"
-    -TestAssembly "${{ parameters.testAssembly }}"
-    -ResultsDirectory "$(Agent.TempDirectory)/TestResults"
-    -SliceNumber $(System.JobPositionInPhase)
-    -TotalSlices $(System.TotalJobsInPhase)
-    -TestFilter "$env:TEST_FILTER"
-    -Workers $(NUnit.NumberOfTestWorkers)
-    -RetryFailedTests:$${{ parameters.retryFailedTests }}
+    & "${{ parameters.xaSourcePath }}/bin/$(XA.Build.Configuration)/dotnet/dotnet"
+    run build-tools/automation/scripts/RunSlicedTests.cs --
+    --dotnet "${{ parameters.xaSourcePath }}/bin/$(XA.Build.Configuration)/dotnet/dotnet"
+    --test-assembly "${{ parameters.testAssembly }}"
+    --results-directory "$(Agent.TempDirectory)/TestResults"
+    --slice $(System.JobPositionInPhase)
+    --total-slices $(System.TotalJobsInPhase)
+    "--filter=$env:TEST_FILTER"
+    --workers $(NUnit.NumberOfTestWorkers)
+    --retry ${{ parameters.retryFailedTests }}
   displayName: run ${{ parameters.testRunTitle }}
   workingDirectory: ${{ parameters.xaSourcePath }}
   condition: ${{ parameters.condition }}
@@ -29,7 +30,7 @@ steps:
 
 - template: /build-tools/automation/yaml-templates/diagnose-hanging-processes.yaml
 
-# When tests are retried, Run-SlicedTests.ps1 removes the failed results from this file
+# When tests are retried, RunSlicedTests.cs removes the failed results from this file
 - task: PublishTestResults@2
   displayName: publish ${{ parameters.testRunTitle }} results
   inputs:
