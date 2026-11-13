@@ -19,6 +19,9 @@ namespace Xamarin.Android.Build.Tests {
 	[TestFixture]
 	[NonParallelizable] // NOTE: This test was hanging without this
 	public class ResolveSdksTaskTests : BaseTest {
+		// These tests do not use adb; do not stop the shared server during host-only checks.
+		protected override void AfterAllTests () { }
+
 		static ApiInfo [] apiInfoSelection = new ApiInfo [] {
 			new ApiInfo () { Id = "35", Level = 35, Name = "Android15", FrameworkVersion = "v15.0", Stable = true },
 			new ApiInfo () { Id = "36", Level = 36, Name = "Android16", FrameworkVersion = "v16.0", Stable = true },
@@ -28,6 +31,39 @@ namespace Xamarin.Android.Build.Tests {
 		// via Xamarin.Android.Common.props
 		const   string  MinimumSupportedJavaVersion     = "1.6.0";
 		const   string  LatestSupportedJavaVersion      = "11.0.99";
+
+		[TestCase (false)]
+		[TestCase (true)]
+		[Platform ("Win")]
+		public void ResolveSdksEnvironmentPreservesMissingToolErrors (bool missingSdk)
+		{
+			var path   = Path.Combine ("temp", TestName);
+			var sdk    = CreateFauxAndroidSdkDirectory (Path.Combine (path, "sdk"), "37.0.0");
+			var jdk    = CreateFauxJavaSdkDirectory (Path.Combine (path, "jdk"), "21.0.8", out _, out _);
+			var errors = new List<BuildErrorEventArgs> ();
+			try {
+				File.Move (Path.Combine (sdk, "platform-tools", "adb.exe"), Path.Combine (sdk, "platform-tools", "adb.DISCOVERY"));
+				foreach (var file in Directory.GetFiles (Path.Combine (jdk, "bin")))
+					File.Move (file, Path.ChangeExtension (file, ".DISCOVERY"));
+				var task = new ResolveSdks {
+					BuildEngine = new MockBuildEngine (TestContext.Out, errors),
+					TaskEnvironment = TaskEnvironment.CreateWithProjectDirectoryAndEnvironment (
+						Path.Combine (Root, path), new Dictionary<string, string> {
+							["PATHEXT"] = ".DISCOVERY",
+							["XAMARIN_ANDROID_REGKEY"] = $@"Software\ResolveSdksTests\{Guid.NewGuid ():N}",
+						}),
+					AndroidSdkPath = missingSdk ? Path.Combine (sdk, "missing") : sdk,
+					JavaSdkPath = missingSdk ? jdk : Path.Combine (jdk, "missing"),
+					MinimumSupportedJavaVersion = "21.0",
+					LatestSupportedJavaVersion = "25.0.99",
+				};
+				Assert.IsFalse (task.Execute ());
+				Assert.AreEqual ("XA5300", errors.Single ().Code);
+				StringAssert.Contains (missingSdk ? "Android SDK" : "Java SDK", errors [0].Message);
+			} finally {
+				Directory.Delete (Path.Combine (Root, path), recursive: true);
+			}
+		}
 
 		[TestCase ("36.0.0", "35.0", "35", "35")]
 		[TestCase ("36.0.0", "36.0", "36", "36")]
@@ -88,8 +124,9 @@ namespace Xamarin.Android.Build.Tests {
 			}
 		}
 
-		[Test, NonParallelizable]
-		public void ResolveSdkOutputs ()
+		[TestCase (false)]
+		[TestCase (true)]
+		public void ResolveSdkOutputs (bool discoverJava)
 		{
 			var path = Path.Combine ("temp", TestName);
 			var androidSdkPath = CreateFauxAndroidSdkDirectory (Path.Combine (path, "android-sdk"), "26.0.3");
@@ -105,9 +142,14 @@ namespace Xamarin.Android.Build.Tests {
 			IBuildEngine engine = new MockBuildEngine (TestContext.Out, messages: messages);
 			var resolveSdks = new ResolveSdks {
 				BuildEngine = engine,
+				TaskEnvironment = discoverJava ? TaskEnvironment.CreateWithProjectDirectoryAndEnvironment (
+					Root, new Dictionary<string, string> {
+						["JI_JAVA_HOME"] = javaPath,
+						["PATHEXT"] = $".EXE{Path.PathSeparator}.CMD",
+					}) : TaskEnvironment.Fallback,
 				AndroidSdkPath = androidSdkPath,
 				AndroidNdkPath = androidNdkPath,
-				JavaSdkPath = javaPath,
+				JavaSdkPath = discoverJava ? null : javaPath,
 				MinimumSupportedJavaVersion = MinimumSupportedJavaVersion,
 				LatestSupportedJavaVersion  = LatestSupportedJavaVersion,
 				ReferenceAssemblyPaths = new [] {

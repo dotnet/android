@@ -7,9 +7,9 @@ using System.Text;
 
 namespace Xamarin.Android.Tools {
 
-	class VSAndroidJdkLocations : JdkLocations {
+	partial class JdkLocations {
 
-		internal static IEnumerable<JdkInfo> GetVSAndroidJdks (Action<TraceLevel, string> logger)
+		internal IEnumerable<JdkInfo> GetVSAndroidJdks (Action<TraceLevel, string> logger)
 		{
 			if (!OS.IsWindows) {
 				yield break;
@@ -20,14 +20,14 @@ namespace Xamarin.Android.Tools {
 			var valueName   = "JavaHome";
 
 			foreach (var wow in wows) {
-				if (!RegistryEx.CheckRegistryKeyForExecutable (root, subKey, valueName, wow, "bin", "java.exe")) {
+				if (!RegistryEx.CheckRegistryKeyForExecutable (root, subKey, valueName, wow, "bin", "java.exe", environmentVariables)) {
 					continue;
 				}
 				var path    = RegistryEx.GetValueString (root, subKey, valueName, wow) ?? "";
 				if (string.IsNullOrEmpty (path)) {
 					continue;
 				}
-				var jdk     = JdkInfo.TryGetJdkInfo (path, logger, subKey);
+				var jdk     = JdkInfo.TryGetJdkInfo (path, logger, subKey, environmentVariables);
 				if (jdk == null) {
 					continue;
 				}
