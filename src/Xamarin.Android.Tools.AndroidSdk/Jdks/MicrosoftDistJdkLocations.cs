@@ -30,7 +30,8 @@ namespace Xamarin.Android.Tools {
 					return Array.Empty<string> ();
 				jdks        = Path.Combine (home, "Library", "Developer", "Xamarin", "jdk");
 			}
-			if (!Directory.Exists (jdks))
+			jdks = ProcessUtils.ResolvePath (jdks, workingDirectory);
+			if (jdks == null || !Directory.Exists (jdks))
 				return Enumerable.Empty <string> ();
 
 			return Directory.EnumerateDirectories (jdks);

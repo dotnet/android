@@ -210,7 +210,7 @@ namespace Xamarin.Android.Tools
 		static safe extern int RegCloseKey (UIntPtr hKey);
 
 		internal static bool CheckRegistryKeyForExecutable (UIntPtr key, string subkey, string valueName, RegistryEx.Wow64 wow64, string subdir, string exe,
-			System.Collections.Generic.IDictionary<string, string>? environmentVariables = null)
+			System.Collections.Generic.IDictionary<string, string>? environmentVariables = null, string? workingDirectory = null)
 		{
 			try {
 				var path = AndroidSdkBase.NullIfEmpty (RegistryEx.GetValueString (key, subkey, valueName, wow64));
@@ -219,7 +219,7 @@ namespace Xamarin.Android.Tools
 					return false;
 				}
 
-				if (!ProcessUtils.FindExecutablesInDirectory (Path.Combine (path, subdir), exe, environmentVariables).Any ()) {
+				if (!ProcessUtils.FindExecutablesInDirectory (Path.Combine (path, subdir), exe, environmentVariables, workingDirectory).Any ()) {
 					return false;
 				}
 

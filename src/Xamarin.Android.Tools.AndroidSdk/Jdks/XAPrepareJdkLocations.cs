@@ -19,8 +19,8 @@ namespace Xamarin.Android.Tools {
 			var home = OS.IsWindows ? Environment.GetFolderPath (Environment.SpecialFolder.UserProfile) : ProcessUtils.GetUnixHome (environmentVariables);
 			if (home is not { Length: > 0 })
 				return Array.Empty<string> ();
-			var androidToolchainDir = Path.Combine (home, "android-toolchain");
-			if (!Directory.Exists (androidToolchainDir)) {
+			var androidToolchainDir = ProcessUtils.ResolvePath (Path.Combine (home, "android-toolchain"), workingDirectory);
+			if (androidToolchainDir == null || !Directory.Exists (androidToolchainDir)) {
 				return Array.Empty<string> ();
 			}
 			return Directory.EnumerateDirectories (androidToolchainDir, "jdk*");
