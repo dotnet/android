@@ -18,7 +18,6 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 <Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
 
 <UsingTask TaskName="Xamarin.Android.Tasks.AndroidComputeResPaths" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
-<UsingTask TaskName="Xamarin.Android.Tasks.Aapt2LinkAssetPack" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Microsoft.Android.Tasks.FixupAssetPackArchive" AssemblyFile="$(_MicrosoftAndroidBuildTasksAssembly)" Runtime="NET" TaskFactory="TaskHostFactory" Condition=" '$(MSBuildRuntimeType)' == 'Full' " />
 <UsingTask TaskName="Microsoft.Android.Tasks.FixupAssetPackArchive" AssemblyFile="$(_MicrosoftAndroidBuildTasksAssembly)" Runtime="NET" Condition=" '$(MSBuildRuntimeType)' == 'Core' " />
 <UsingTask TaskName="Xamarin.Android.Tasks.GetAssetPacks" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
@@ -138,16 +137,54 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
     Inputs="@(_AssetPacks->'%(AssetPackCacheFile)')"
     Outputs="@(_AssetPacks->'%(AssetPackOutput)')">
 
-  <Aapt2LinkAssetPack
-      ResourceCaseMap="@(_AndroidResourceCaseMap)"
-      DaemonMaxInstanceCount="$(Aapt2DaemonMaxInstanceCount)"
-      DaemonKeepInDomain="$(_Aapt2DaemonKeepInDomain)"
-      OutputArchive="%(_AssetPacks.AssetPackOutput)"
-      AssetDirectories="%(_AssetPacks.AssetPackDirectory)"
-      Manifest="%(_AssetPacks.ManifestFile)"
-      PackageName="$(_AndroidPackage).%(_AssetPacks.AssetPack)"
-      ToolPath="$(Aapt2ToolPath)"
-      ToolExe="$(Aapt2ToolExe)"
+  <!--
+    Exec runs the command through /bin/sh on Unix and cmd.exe on Windows, so every argument is
+    shell-quoted: single quotes (with ' escaped as '\'') on Unix, double quotes (with % escaped as %%)
+    on Windows. The opening quote is added with Insert() so MSBuild does not treat the result as a
+    Unix path and rewrite the backslash in '\'' to a slash.
+  -->
+  <PropertyGroup>
+    <_AndroidAssetPackShellQuote>'</_AndroidAssetPackShellQuote>
+    <_AndroidAssetPackShellEscapeFrom>'</_AndroidAssetPackShellEscapeFrom>
+    <_AndroidAssetPackShellEscapeTo>'\''</_AndroidAssetPackShellEscapeTo>
+    <_AndroidAssetPackShellQuote Condition=" $([MSBuild]::IsOSPlatform('Windows')) ">&quot;</_AndroidAssetPackShellQuote>
+    <_AndroidAssetPackShellEscapeFrom Condition=" $([MSBuild]::IsOSPlatform('Windows')) ">%25</_AndroidAssetPackShellEscapeFrom>
+    <_AndroidAssetPackShellEscapeTo Condition=" $([MSBuild]::IsOSPlatform('Windows')) ">%25%25</_AndroidAssetPackShellEscapeTo>
+    <_AndroidAssetPackAapt2ToolExe>aapt2</_AndroidAssetPackAapt2ToolExe>
+    <_AndroidAssetPackAapt2ToolExe Condition=" $([MSBuild]::IsOSPlatform('Windows')) ">aapt2.exe</_AndroidAssetPackAapt2ToolExe>
+    <_AndroidAssetPackAapt2ToolExe Condition=" '$(Aapt2ToolExe)' != '' ">$(Aapt2ToolExe)</_AndroidAssetPackAapt2ToolExe>
+    <_AndroidAssetPackAapt2ToolCommand>$([System.IO.Path]::Combine('$(Aapt2ToolPath)', '$(_AndroidAssetPackAapt2ToolExe)'))</_AndroidAssetPackAapt2ToolCommand>
+    <_AndroidAssetPackAapt2ToolCommand>$([System.String]::Copy('$(_AndroidAssetPackAapt2ToolCommand)').Replace('$(_AndroidAssetPackShellEscapeFrom)', '$(_AndroidAssetPackShellEscapeTo)').Insert(0, '$(_AndroidAssetPackShellQuote)'))$(_AndroidAssetPackShellQuote)</_AndroidAssetPackAapt2ToolCommand>
+    <_AndroidAssetPackLinkArguments>link</_AndroidAssetPackLinkArguments>
+    <_AndroidAssetPackLinkArguments Condition=" '$(__XA_LOG_ERRORS__)' == 'icanhaz' ">$(_AndroidAssetPackLinkArguments) -v</_AndroidAssetPackLinkArguments>
+  </PropertyGroup>
+  <ItemGroup>
+    <_AndroidAssetPackLink Include="@(_AssetPacks)">
+      <AssetDirectory>$([MSBuild]::NormalizePath('$(MSBuildProjectDirectory)', '%(_AssetPacks.AssetPackDirectory)'))</AssetDirectory>
+      <ManifestPath>$([MSBuild]::NormalizePath('$(MSBuildProjectDirectory)', '%(_AssetPacks.ManifestFile)'))</ManifestPath>
+      <OutputPath>$([MSBuild]::NormalizePath('$(MSBuildProjectDirectory)', '%(_AssetPacks.AssetPackOutput)'))</OutputPath>
+      <CustomPackage>$(_AndroidPackage).%(_AssetPacks.AssetPack)</CustomPackage>
+    </_AndroidAssetPackLink>
+    <_AndroidAssetPackLink>
+      <QuotedManifestPath>$([System.String]::Copy('%(ManifestPath)').Replace('$(_AndroidAssetPackShellEscapeFrom)', '$(_AndroidAssetPackShellEscapeTo)').Insert(0, '$(_AndroidAssetPackShellQuote)'))$(_AndroidAssetPackShellQuote)</QuotedManifestPath>
+      <QuotedCustomPackage>$([System.String]::Copy('%(CustomPackage)').Replace('$(_AndroidAssetPackShellEscapeFrom)', '$(_AndroidAssetPackShellEscapeTo)').Insert(0, '$(_AndroidAssetPackShellQuote)'))$(_AndroidAssetPackShellQuote)</QuotedCustomPackage>
+      <QuotedAssetDirectory>$([System.String]::Copy('%(AssetDirectory)').Replace('$(_AndroidAssetPackShellEscapeFrom)', '$(_AndroidAssetPackShellEscapeTo)').Insert(0, '$(_AndroidAssetPackShellQuote)'))$(_AndroidAssetPackShellQuote)</QuotedAssetDirectory>
+      <QuotedOutputPath>$([System.String]::Copy('%(OutputPath)').Replace('$(_AndroidAssetPackShellEscapeFrom)', '$(_AndroidAssetPackShellEscapeTo)').Insert(0, '$(_AndroidAssetPackShellQuote)'))$(_AndroidAssetPackShellQuote)</QuotedOutputPath>
+    </_AndroidAssetPackLink>
+    <_AndroidAssetPackLink>
+      <Arguments>$(_AndroidAssetPackLinkArguments) --manifest %(QuotedManifestPath) --proto-format --custom-package %(QuotedCustomPackage) -A %(QuotedAssetDirectory) -o %(QuotedOutputPath)</Arguments>
+    </_AndroidAssetPackLink>
+  </ItemGroup>
+  <AndroidError
+      Condition=" $([MSBuild]::IsOSPlatform('Windows')) And $([System.Text.RegularExpressions.Regex]::IsMatch('%(_AndroidAssetPackLink.AssetDirectory)', '[^\x00-\x7F]')) "
+      Code="APT2265"
+      ResourceName="APT2265"
+      FormatArguments="%(_AndroidAssetPackLink.AssetDirectory)"
+  />
+  <Exec
+      Condition=" '@(_AndroidAssetPackLink->Count())' != '0' "
+      Command="$(_AndroidAssetPackAapt2ToolCommand) %(_AndroidAssetPackLink.Arguments)"
+      WorkingDirectory="$(MSBuildProjectDirectory)"
   />
   <FixupAssetPackArchive
       Condition=" Exists('%(_AssetPacks.AssetPackOutput)') "

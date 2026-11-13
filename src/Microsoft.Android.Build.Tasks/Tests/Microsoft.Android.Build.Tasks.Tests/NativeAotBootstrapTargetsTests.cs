@@ -181,20 +181,24 @@ public class NativeAotBootstrapTargetsTests : BaseTest
 		File.WriteAllText (environmentFile, "DOTNET_VALUE=first\ndebug.dotnet.max_grefc=1234\n");
 		string manifestFile = Path.Combine (path, "AndroidManifest.xml");
 		XDocument.Parse ("""
-			<manifest xmlns:android="http://schemas.android.com/apk/res/android" xmlns:other="urn:other">
+			<manifest xmlns:android="http://schemas.android.com/apk/res/android" xmlns:alias="http://schemas.android.com/apk/res/android" xmlns:other="urn:other">
 			  <application>
 			    <provider android:name="net.dot.jni.nativeaot.NativeAotRuntimeProvider" />
 			    <provider android:name="mono.MonoRuntimeProvider_1" />
+			    <provider alias:name="net.dot.jni.nativeaot.NativeAotRuntimeProvider_12" />
 			    <provider android:name="net.dot.jni.nativeaot.NativeAotRuntimeProvider_1" />
-			    <provider android:name="net.dot.jni.nativeaot.NativeAotRuntimeProvider_12" />
 			    <provider android:name="net.dot.jni.nativeaot.NativeAotRuntimeProvider_12" />
 			    <provider android:name="net.dot.jni.nativeaot.NativeAotRuntimeProvider_" />
 			    <provider android:name="net.dot.jni.nativeaot.NativeAotRuntimeProvider_-1" />
+			    <provider android:name="net.dot.jni.nativeaot.NativeAotRuntimeProvider_1x" />
 			    <provider android:name="net.dot.jni.nativeaot.NativeAotRuntimeProvider_1 " />
 			    <provider android:name="net.dot.jni.nativeaot.NativeAotRuntimeProvider_&#x0661;" />
 			    <provider android:name="net.dot.jni.nativeaot.NativeAotRuntimeProvider_2/../../../../../escaped" />
 			    <provider android:name="net.dot.jni.nativeaot.NativeAotRuntimeProvider_3\..\..\..\..\..\escaped" />
+			    <provider android:name="Net.dot.jni.nativeaot.NativeAotRuntimeProvider_4" />
 			    <provider other:name="net.dot.jni.nativeaot.NativeAotRuntimeProvider_4" />
+			    <other:provider android:name="net.dot.jni.nativeaot.NativeAotRuntimeProvider_5" />
+			    <provider xmlns="urn:other" android:name="net.dot.jni.nativeaot.NativeAotRuntimeProvider_6" />
 			  </application>
 			</manifest>
 			""").Save (manifestFile);
@@ -252,6 +256,9 @@ public class NativeAotBootstrapTargetsTests : BaseTest
 			new [] { "JavaInteropRuntime.java", "NativeAotRuntimeProvider_1.java", "NativeAotRuntimeProvider_12.java" },
 			Directory.GetFiles (path, "*.java", SearchOption.AllDirectories).Select (Path.GetFileName));
 		StringAssert.Contains ("class NativeAotRuntimeProvider_12", File.ReadAllText (Path.Combine (sourceDirectory, "NativeAotRuntimeProvider_12.java")));
+		CollectionAssert.AreEqual (
+			new [] { "TargetName=App", "Provider=NativeAotRuntimeProvider_12", "Provider=NativeAotRuntimeProvider_1" },
+			File.ReadAllLines (Path.Combine (path, "nativeaot-bootstrap.inputs")));
 
 		var second = NativeAotBootstrapTestTools.Run (dotnet, "msbuild", projectFile, "-t:_FindJavaStubFiles;_AndroidGenerateNativeAotBootstrapObject", "-v:quiet", "-nr:false");
 		Assert.AreEqual (0, second.ExitCode, second.Output + second.Error);
@@ -286,5 +293,125 @@ public class NativeAotBootstrapTargetsTests : BaseTest
 		Assert.AreEqual (0, missingProvider.ExitCode, missingProvider.Output + missingProvider.Error);
 		FileAssert.Exists (providerFile, "Provider names must be recovered even when the typemap generator is skipped.");
 
+		XNamespace android = "http://schemas.android.com/apk/res/android";
+		var manifest = XDocument.Load (manifestFile);
+		manifest.Descendants ("provider")
+			.Where (provider => (string?)provider.Attribute (android + "name") == "net.dot.jni.nativeaot.NativeAotRuntimeProvider_12")
+			.Remove ();
+		manifest.Save (manifestFile);
+		var removedProvider = NativeAotBootstrapTestTools.Run (dotnet, "msbuild", projectFile, "-t:_FindJavaStubFiles", "-v:quiet", "-nr:false");
+		Assert.AreEqual (0, removedProvider.ExitCode, removedProvider.Output + removedProvider.Error);
+		CollectionAssert.AreEqual (
+			new [] { "TargetName=App", "Provider=NativeAotRuntimeProvider_1" },
+			File.ReadAllLines (Path.Combine (path, "nativeaot-bootstrap.inputs")));
+		FileAssert.DoesNotExist (Path.Combine (sourceDirectory, "NativeAotRuntimeProvider_12.java"), "A removed provider must be cleaned up on an incremental build.");
+
+		manifest.Descendants ("application").Single ().Add (
+			new XElement ("provider", new XAttribute (android + "name", "net.dot.jni.nativeaot.NativeAotRuntimeProvider_9")));
+		manifest.Save (manifestFile);
+		var addedProvider = NativeAotBootstrapTestTools.Run (dotnet, "msbuild", projectFile, "-t:_FindJavaStubFiles", "-v:quiet", "-nr:false");
+		Assert.AreEqual (0, addedProvider.ExitCode, addedProvider.Output + addedProvider.Error);
+		CollectionAssert.AreEqual (
+			new [] { "TargetName=App", "Provider=NativeAotRuntimeProvider_1", "Provider=NativeAotRuntimeProvider_9" },
+			File.ReadAllLines (Path.Combine (path, "nativeaot-bootstrap.inputs")));
+		FileAssert.Exists (Path.Combine (sourceDirectory, "NativeAotRuntimeProvider_9.java"), "An added provider must be generated on an incremental build.");
+
+		var numberedProviderNames = new [] {
+			"net.dot.jni.nativeaot.NativeAotRuntimeProvider_1",
+			"net.dot.jni.nativeaot.NativeAotRuntimeProvider_9",
+			"net.dot.jni.nativeaot.NativeAotRuntimeProvider_12",
+		};
+		manifest.Descendants ("provider")
+			.Where (provider => provider.Attribute (android + "name") is XAttribute name && numberedProviderNames.Contains (name.Value))
+			.Remove ();
+		manifest.Save (manifestFile);
+		var noNumberedProviders = NativeAotBootstrapTestTools.Run (dotnet, "msbuild", projectFile, "-t:_FindJavaStubFiles", "-v:quiet", "-nr:false");
+		Assert.AreEqual (0, noNumberedProviders.ExitCode, noNumberedProviders.Output + noNumberedProviders.Error);
+		CollectionAssert.AreEqual (
+			new [] { "TargetName=App" },
+			File.ReadAllLines (Path.Combine (path, "nativeaot-bootstrap.inputs")));
+		CollectionAssert.IsEmpty (Directory.GetFiles (sourceDirectory, "NativeAotRuntimeProvider_*.java"),
+			"All numbered providers must be cleaned up when the manifest no longer declares any.");
+		FileAssert.Exists (sourceFile);
+		DateTime singleProcessTimestamp = File.GetLastWriteTimeUtc (sourceFile);
+
+		var noNumberedProvidersAgain = NativeAotBootstrapTestTools.Run (dotnet, "msbuild", projectFile, "-t:_FindJavaStubFiles", "-v:quiet", "-nr:false");
+		Assert.AreEqual (0, noNumberedProvidersAgain.ExitCode, noNumberedProvidersAgain.Output + noNumberedProvidersAgain.Error);
+		Assert.AreEqual (singleProcessTimestamp, File.GetLastWriteTimeUtc (sourceFile), "A no-op build without numbered providers must skip the source generator.");
+		CollectionAssert.IsEmpty (Directory.GetFiles (sourceDirectory, "NativeAotRuntimeProvider_*.java"));
+	}
+
+	[Test]
+	public void MissingProviderManifestFailsTheBuild ()
+	{
+		AssertProviderManifestError (null);
+	}
+
+	[Test]
+	public void MalformedProviderManifestFailsTheBuild ()
+	{
+		AssertProviderManifestError ("<manifest>");
+	}
+
+	[Test]
+	public void ProviderManifestWithInternalDtdFailsTheBuild ()
+	{
+		AssertProviderManifestError ("""<!DOCTYPE manifest [<!ENTITY value "123">]><manifest>&value;</manifest>""");
+	}
+
+	[Test]
+	public void ProviderManifestWithExternalDtdFailsTheBuild ()
+	{
+		string path = Path.Combine (Root, "temp", TestName);
+		Directory.CreateDirectory (path);
+		string dtd = Path.Combine (path, "external.dtd");
+		try {
+			File.WriteAllText (dtd, "<!ELEMENT manifest ANY>");
+			AssertProviderManifestError ($"""
+				<!DOCTYPE manifest SYSTEM "{new Uri (dtd).AbsoluteUri}">
+				<manifest />
+				""");
+		} finally {
+			File.Delete (dtd);
+		}
+	}
+
+	void AssertProviderManifestError (string? manifest)
+	{
+		string path = Path.Combine (Root, "temp", TestName);
+		Directory.CreateDirectory (path);
+		string manifestFile = Path.Combine (path, "AndroidManifest.xml");
+		string projectFile = Path.Combine (path, "bootstrap.proj");
+		string inputsFile = Path.Combine (path, "nativeaot-bootstrap.inputs");
+		try {
+			WriteProviderManifestProject (path, manifest);
+			string dotnet = Environment.GetEnvironmentVariable ("DOTNET_HOST_PATH") ?? "dotnet";
+			var result = NativeAotBootstrapTestTools.Run (dotnet, "msbuild", projectFile, "-t:_AndroidGenerateNativeAotBootstrapSourcesInputs", "-v:quiet", "-nr:false");
+			Assert.AreNotEqual (0, result.ExitCode, result.Output + result.Error);
+			StringAssert.Contains ("MSB3733", result.Output + result.Error);
+			FileAssert.DoesNotExist (inputsFile);
+		} finally {
+			File.Delete (manifestFile);
+			File.Delete (projectFile);
+			File.Delete (inputsFile);
+		}
+	}
+
+	static void WriteProviderManifestProject (string path, string? manifest)
+	{
+		if (manifest != null) {
+			File.WriteAllText (Path.Combine (path, "AndroidManifest.xml"), manifest);
+		}
+
+		new XDocument (
+			new XElement ("Project",
+				new XElement ("PropertyGroup",
+					new XElement ("_MicrosoftAndroidBuildTasksAssembly", typeof (GenerateNativeAotBootstrapSources).Assembly.Location),
+					new XElement ("IntermediateOutputPath", path + Path.DirectorySeparatorChar),
+					new XElement ("TargetName", "App")),
+				new XElement ("Import", new XAttribute ("Project", TargetsPath)),
+				new XElement ("Target", new XAttribute ("Name", "_GenerateJavaStubs")),
+				new XElement ("Target", new XAttribute ("Name", "_GetGenerateJavaStubsInputs"))))
+			.Save (Path.Combine (path, "bootstrap.proj"));
 	}
 }

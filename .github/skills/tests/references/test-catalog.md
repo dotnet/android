@@ -7,7 +7,7 @@ Mapping of test area keywords to assemblies, filters, and build prerequisites.
 - **Filter**: The `--filter` argument for host-side `dotnet test`, or on-device MTP category/property notes.
 - **Build**: What must be built before running:
   - **Standalone** — Can run with plain `dotnet test <project>.csproj`. No local SDK needed.
-  - **Full-build** — Requires the local SDK (`dotnet-local.sh`). Build with `./dotnet-local.sh build Microsoft.Android.slnx -c Debug` or `make prepare && make all`.
+  - **Full-build** — Requires the local SDK (`dotnet-local.sh`). Build with `make prepare && make leeroy`.
 - **Device**: Whether an Android device/emulator is required.
 
 ---
@@ -23,6 +23,7 @@ These tests can be run immediately with `dotnet test` on the `.csproj`, even if 
 | **modern Android build tasks** | `src/Microsoft.Android.Build.Tasks/Tests/Microsoft.Android.Build.Tasks.Tests/` | `dotnet test src/Microsoft.Android.Build.Tasks/Tests/Microsoft.Android.Build.Tasks.Tests/Microsoft.Android.Build.Tasks.Tests.csproj -v minimal` |
 | **temporary-directory target execution/inference** | `src/Microsoft.Android.Build.Tasks/Tests/Microsoft.Android.Build.Tasks.Tests/` | `dotnet test src/Microsoft.Android.Build.Tasks/Tests/Microsoft.Android.Build.Tasks.Tests/Microsoft.Android.Build.Tasks.Tests.csproj -v minimal --filter FullyQualifiedName~TemporaryDirectoryTargetsTests` |
 | **package manager Java generation** | `src/Microsoft.Android.Build.Tasks/Tests/Microsoft.Android.Build.Tasks.Tests/` | `dotnet test src/Microsoft.Android.Build.Tasks/Tests/Microsoft.Android.Build.Tasks.Tests/Microsoft.Android.Build.Tasks.Tests.csproj -v minimal --filter FullyQualifiedName~GeneratePackageManagerJavaTests` |
+| **Gradle targets command quoting/environment** | `src/Microsoft.Android.Build.Tasks/Tests/Microsoft.Android.Build.Tasks.Tests/` | `dotnet test src/Microsoft.Android.Build.Tasks/Tests/Microsoft.Android.Build.Tasks.Tests/Microsoft.Android.Build.Tasks.Tests.csproj -v minimal --filter FullyQualifiedName~AndroidGradleTargetsTests` |
 | **aidl** | `tests/Xamarin.Android.Tools.Aidl-Tests/` | `dotnet test tests/Xamarin.Android.Tools.Aidl-Tests/Xamarin.Android.Tools.Aidl-Tests.csproj -v minimal` |
 | **source writer** | `tests/Xamarin.SourceWriter-Tests/` | `dotnet test tests/Xamarin.SourceWriter-Tests/Xamarin.SourceWriter-Tests.csproj -v minimal` |
 | **java source** | `tests/Java.Interop.Tools.JavaSource-Tests/` | `dotnet test tests/Java.Interop.Tools.JavaSource-Tests/Java.Interop.Tools.JavaSource-Tests.csproj -v minimal` |
@@ -67,7 +68,7 @@ skipped. Other target regression cases do not require native tools.
 ## Host-Side MSBuild Tests (full-build — requires local SDK)
 
 Assembly: `bin/TestDebug/${TFM}/Xamarin.Android.Build.Tests.dll`
-Build: Full-build — `./dotnet-local.sh build Microsoft.Android.slnx -c Debug` or `make prepare && make all`
+Build: Full-build — `make prepare && make leeroy`
 Device: No
 
 | Test Area | Filter | Test Classes / Notes |

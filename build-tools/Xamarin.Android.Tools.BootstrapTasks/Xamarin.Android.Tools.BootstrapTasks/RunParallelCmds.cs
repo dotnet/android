@@ -53,19 +53,17 @@ namespace Xamarin.Android.Tools.BootstrapTasks
 							if (!string.IsNullOrEmpty (wd))
 								proc.StartInfo.WorkingDirectory = wd;
 
-							proc.OutputDataReceived += new DataReceivedEventHandler ((sender, e) => {
-								if (!string.IsNullOrEmpty (e.Data))
-									standardOutput.Append (Environment.NewLine + e.Data);
-							});
-							proc.ErrorDataReceived += new DataReceivedEventHandler ((sender, e) => {
-								if (!string.IsNullOrEmpty (e.Data))
-									errorOutput.Append (Environment.NewLine + e.Data);
-							});
-
 							proc.Start ();
-							proc.BeginOutputReadLine ();
-							proc.BeginErrorReadLine ();
-							proc.WaitForExit ();
+							try {
+								foreach (var line in proc.ReadAllLines ()) {
+									if (!string.IsNullOrEmpty (line.Content))
+										(line.StandardError ? errorOutput : standardOutput).Append (Environment.NewLine + line.Content);
+								}
+								proc.SafeHandle.WaitForExit ();
+							} finally {
+								using var stdout = proc.StandardOutput;
+								using var stderr = proc.StandardError;
+							}
 
 							var output = standardOutput.ToString ();
 							var errOutput = errorOutput.ToString ();

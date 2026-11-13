@@ -482,7 +482,7 @@ $@"<Project>
 			using var builder = CreateDllBuilder ();
 			builder.ThrowOnBuildFailure = false;
 			Assert.IsFalse (builder.Build (proj), "Build should have failed.");
-			StringAssertEx.Contains ("error XAGRDL0000", builder.LastBuildOutput);
+			StringAssertEx.Contains ("error MSB3073", builder.LastBuildOutput);
 			StringAssertEx.Contains ($"'{invalidModuleName}' not found in root project '{TestName}'", builder.LastBuildOutput);
 		}
 
