@@ -914,6 +914,9 @@ namespace MonoDroid.Generation
 			if (HidesBaseMember (memberName))
 				return true;
 
+			if (this is InterfaceGen)
+				return false;
+
 			switch (memberName.ToLowerInvariant ()) {
 				case "handle":
 				case "gethashcode":
@@ -931,6 +934,9 @@ namespace MonoDroid.Generation
 		{
 			if (HidesBaseMember (memberName, method))
 				return true;
+
+			if (this is InterfaceGen)
+				return false;
 
 			switch (memberName.ToLowerInvariant ()) {
 				case "handle":
@@ -959,21 +965,35 @@ namespace MonoDroid.Generation
 
 		bool HidesBaseMember (string memberName, Method method = null)
 		{
-			IEnumerable<GenBase> ancestors = this is InterfaceGen ? GetAllDerivedInterfaces () : Ancestors ();
+			IEnumerable<GenBase> ancestors = this is InterfaceGen
+				? GetAllDerivedInterfaces ().Where (i => i.RawVisibility == "public")
+				: Ancestors ();
 			foreach (var ancestor in ancestors) {
 				if (ancestor.Fields.Any (f => f.Visibility != "private" && f.Name == memberName) ||
 						ancestor.Properties.Any (p => p.Getter.Visibility != "private" && p.AdjustedName == memberName) ||
 						ancestor.NestedTypes.Any (t => t.Visibility != "private" && t.Name == memberName))
 					return true;
 
-				if (ancestor.Methods.Any (m => m.Visibility != "private" && m.AdjustedName == memberName &&
-						(method == null || (m.GenericArguments?.Count ?? 0) == (method.GenericArguments?.Count ?? 0) &&
-						m.Parameters.Count == method.Parameters.Count &&
-						m.Parameters.Zip (method.Parameters, (p, other) => p.Equals (other) || p.Type == other.Type).All (same => same))))
+				var methods = ancestor.Methods.AsEnumerable ();
+				if (ancestor is ClassGen klass && klass.IsAbstract)
+					methods = methods.Concat (klass.GetAllDerivedInterfaces ().SelectMany (i => i.Methods).Where (m =>
+						!m.IsStatic && !m.IsInterfaceDefaultMethod && !klass.ExplicitlyImplementedInterfaceMethods.Contains (m.GetSignature ()) &&
+						!klass.SkippedInterfaceMethods.Contains (m.GetSkipInvokerSignature ())));
+
+				if (methods.Any (m => m.Visibility != "private" &&
+						(m.AdjustedName == memberName && (method == null || HasMatchingParameters (m, method)) ||
+						(m.IsReturnCharSequence || m.Parameters.HasCharSequence) && m.Name == memberName &&
+						(method == null || HasMatchingParameters (m, method, baseStringOverload: true)))))
 					return true;
 			}
 			return false;
 		}
+
+		static bool HasMatchingParameters (Method ancestor, Method method, bool baseStringOverload = false) =>
+			(ancestor.GenericArguments?.Count ?? 0) == (method.GenericArguments?.Count ?? 0) &&
+			ancestor.Parameters.Count == method.Parameters.Count &&
+			ancestor.Parameters.Zip (method.Parameters, (p, other) => p.Equals (other) ||
+				(baseStringOverload ? p.Type.Replace ("Java.Lang.ICharSequence", "string") : p.Type) == other.Type).All (same => same);
 
 		public virtual void ResetValidation ()
 		{
