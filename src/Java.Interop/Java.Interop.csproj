@@ -20,7 +20,6 @@
     <MemorySafetyRulesVersion>2</MemorySafetyRulesVersion>
     <Nullable>enable</Nullable>
     <ProduceReferenceAssembly>true</ProduceReferenceAssembly>
-    <MSBuildWarningsAsMessages>NU1702</MSBuildWarningsAsMessages>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
     <DefineConstants>DEBUG;$(DefineConstants)</DefineConstants>
