@@ -161,7 +161,7 @@ namespace Android.Runtime {
 		/// including failure. Complete ASCII u8 literals satisfy this contract; copies and slices may not.
 		/// The span is not retained.
 		/// </safety>
-		public static unsafe IntPtr AllocObject (ReadOnlySpan<byte> jniClassName)
+		public static IntPtr AllocObject (ReadOnlySpan<byte> jniClassName)
 		{
 			// SAFETY: The caller supplies terminated bytes; FindClass returns the owned class reference used through allocation.
 			IntPtr jniClass = unsafe (FindClass (jniClassName));
@@ -294,7 +294,7 @@ namespace Android.Runtime {
 		/// Keep argument storage and referenced objects live and unchanged through the call.
 		/// Local references must belong to the calling thread. The span and arguments are not retained.
 		/// </safety>
-		public static unsafe void FinishCreateInstance (IntPtr instance, ReadOnlySpan<byte> jniCtorSignature, JValue* constructorParameters)
+		public static void FinishCreateInstance (IntPtr instance, ReadOnlySpan<byte> jniCtorSignature, JValue* constructorParameters)
 		{
 			unsafe {
 				// SAFETY: The caller keeps the constructor-compatible peer, descriptor and argument slots live through invocation.
@@ -303,7 +303,7 @@ namespace Android.Runtime {
 		}
 
 		/// <inheritdoc cref="FinishCreateInstance(IntPtr, ReadOnlySpan{byte}, JValue*)"/>
-		public static unsafe void FinishCreateInstance (IntPtr instance, ReadOnlySpan<byte> jniCtorSignature, params ReadOnlySpan<JValue> constructorParameters)
+		public static void FinishCreateInstance (IntPtr instance, ReadOnlySpan<byte> jniCtorSignature, params ReadOnlySpan<JValue> constructorParameters)
 		{
 			unsafe {
 				// SAFETY: The span's backing storage is pinned through invocation; the caller supplies the matching descriptor and live peer/references.
@@ -350,7 +350,7 @@ namespace Android.Runtime {
 		}
 
 		/// <inheritdoc cref="FinishCreateInstance(IntPtr, ReadOnlySpan{byte}, JValue*)"/>
-		public static unsafe void InvokeConstructor (IntPtr instance, ReadOnlySpan<byte> jniCtorSignature, JValue* constructorParameters)
+		public static void InvokeConstructor (IntPtr instance, ReadOnlySpan<byte> jniCtorSignature, JValue* constructorParameters)
 		{
 			// SAFETY: The caller keeps the compatible peer live; GetObjectClass returns an owned local class reference.
 			IntPtr lrefClass = unsafe (GetObjectClass (instance));
@@ -370,7 +370,7 @@ namespace Android.Runtime {
 		}
 
 		/// <inheritdoc cref="FinishCreateInstance(IntPtr, ReadOnlySpan{byte}, JValue*)"/>
-		public static unsafe void InvokeConstructor (IntPtr instance, ReadOnlySpan<byte> jniCtorSignature, params JValue[] constructorParameters)
+		public static void InvokeConstructor (IntPtr instance, ReadOnlySpan<byte> jniCtorSignature, params JValue[] constructorParameters)
 		{
 			unsafe {
 				// SAFETY: The array is pinned through invocation; the caller supplies the matching descriptor and live peer/references.
