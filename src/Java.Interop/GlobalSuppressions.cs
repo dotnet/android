@@ -80,5 +80,4 @@ using System.Diagnostics.CodeAnalysis;
 [assembly: SuppressMessage ("Performance", "CA1823:Avoid unused private fields", Justification = "Used for native interop", Scope = "type", Target = "~T:Java.Interop.JniRuntime")]
 
 [assembly: SuppressMessage ("Reliability", "CA2000:Dispose objects before losing scope", Justification = "JniEnvironment.SetEnvironmentInfo takes ownership of the new JniEnvironmentInfo; JniRuntime.Dispose(bool) disposes the runtime's thread-local environments.", Scope = "member", Target = "~M:Java.Interop.JniRuntime.#ctor(Java.Interop.JniRuntime.CreationOptions)")]
-
 [assembly: SuppressMessage ("Usage", "CA2213:Disposable fields should be disposed", Justification = "JniRuntime.Dispose(bool) disposes this field through the ValueManager property.", Scope = "member", Target = "~F:Java.Interop.JniRuntime.valueManager")]
