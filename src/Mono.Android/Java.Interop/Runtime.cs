@@ -48,9 +48,10 @@ namespace Java.Interop {
 		/// A nonzero <paramref name="value"/> must be a live JNI object reference from this VM usable
 		/// on this thread until the type test returns or throws. Exclude concurrent release; zero returns false.
 		/// </safety>
-		public static unsafe bool IsGCUserPeer (IntPtr value)
+		public static bool IsGCUserPeer (IntPtr value)
 		{
-			return JNIEnv.IsGCUserPeer (value);
+			// SAFETY: the caller's contract above keeps value live on this thread for the type test.
+			return unsafe (JNIEnv.IsGCUserPeer (value));
 		}
 	}
 }
