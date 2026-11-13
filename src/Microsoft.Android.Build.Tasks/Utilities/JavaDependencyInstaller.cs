@@ -1,4 +1,6 @@
+#nullable disable
 using System;
+using System.Formats.Tar;
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
@@ -6,6 +8,7 @@ using System.Net.Http;
 using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.Build.Framework;
 using Xamarin.Android.Tools;
 
 namespace Xamarin.Installer.Build.Tasks
@@ -17,7 +20,7 @@ namespace Xamarin.Installer.Build.Tasks
 	/// </summary>
 	public class JavaDependencyInstaller
 	{
-		public string JdkPath { get; set; }
+		public AbsolutePath? JdkPath { get; set; }
 
 		public async Task<Archive> GetFirstValidJdkArchiveWithVersion (HttpClient httpClient, string version, CancellationToken cancellationToken)
 		{
@@ -42,11 +45,11 @@ namespace Xamarin.Installer.Build.Tasks
 
 		public bool GetJdkRevision (out Version version)
 		{
-			if (string.IsNullOrEmpty (JdkPath)) {
+			if (JdkPath is not AbsolutePath jdkPath) {
 				version = new Version (0, 0);
 				return false;
 			}
-			var javaVersion = InstallAndroidDependencies.ReadProperty (Path.Combine (JdkPath, "release"), "JAVA_VERSION");
+			var javaVersion = InstallAndroidDependencies.ReadProperty (new AbsolutePath ("release", jdkPath), "JAVA_VERSION");
 			bool foundUnparsedVersion = javaVersion != null;
 			javaVersion = javaVersion?.Replace ("\"", string.Empty).Replace ("'", string.Empty);
 			version = InstallAndroidDependencies.ParseVersion (javaVersion) ?? new Version (0, 0);
@@ -55,22 +58,25 @@ namespace Xamarin.Installer.Build.Tasks
 
 		public bool IsJdkPathValid ()
 		{
-			if (string.IsNullOrEmpty (JdkPath)) {
+			if (JdkPath is not AbsolutePath jdkPath) {
 				return false;
 			}
 
 			// If the requested path is in a known VS installation Program Files path on Windows, request a different path
 			if (RuntimeInformation.IsOSPlatform (OSPlatform.Windows)) {
-				if (JdkPath.StartsWith (Environment.GetFolderPath (Environment.SpecialFolder.ProgramFiles), StringComparison.OrdinalIgnoreCase)
-					|| JdkPath.StartsWith (Environment.GetFolderPath (Environment.SpecialFolder.ProgramFilesX86), StringComparison.OrdinalIgnoreCase)) {
+				// Program Files is a machine location rather than a per-project setting.
+#pragma warning disable MSBuildTask0005
+				if (jdkPath.Value.StartsWith (Environment.GetFolderPath (Environment.SpecialFolder.ProgramFiles), StringComparison.OrdinalIgnoreCase)
+					|| jdkPath.Value.StartsWith (Environment.GetFolderPath (Environment.SpecialFolder.ProgramFilesX86), StringComparison.OrdinalIgnoreCase)) {
+#pragma warning restore MSBuildTask0005
 					return false;
 				}
 			}
 
 			// If the requested path is not writable, request a different path
 			try {
-				Directory.CreateDirectory (JdkPath);
-				using var _ = File.Create (Path.Combine (JdkPath, "tmp"), 1, FileOptions.DeleteOnClose);
+				Directory.CreateDirectory (jdkPath);
+				using var _ = File.Create (new AbsolutePath ("tmp", jdkPath), 1, FileOptions.DeleteOnClose);
 			} catch (Exception) {
 				return false;
 			}
@@ -82,29 +88,28 @@ namespace Xamarin.Installer.Build.Tasks
 		{
 			// The original code extracted into %TEMP%. Extract next to JdkPath instead, because Directory.Move
 			// fails when %TEMP% and JdkPath are on different volumes.
-			var unzipDestination = Path.GetFullPath (JdkPath).TrimEnd (Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar) + "." + Path.GetRandomFileName ();
+			var jdkPath = JdkPath ?? throw new InvalidOperationException ("JdkPath must be set before installing the JDK.");
+			var downloadedFile = new AbsolutePath (archive.DownloadedFilePath);
+			var unzipDestination = new AbsolutePath (jdkPath.Value.TrimEnd (Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar) + "." + Path.GetRandomFileName ());
 			Directory.CreateDirectory (unzipDestination);
 
 			try {
 				if (RuntimeInformation.IsOSPlatform (OSPlatform.Windows)) {
-					ZipFile.ExtractToDirectory (archive.DownloadedFilePath, unzipDestination);
+					ZipFile.ExtractToDirectory (downloadedFile, unzipDestination);
 				} else {
-					var tar = ProcessUtils.CreateProcessStartInfo ("/usr/bin/tar", "-xzf", archive.DownloadedFilePath);
-					tar.WorkingDirectory = unzipDestination;
-					var extractResult = new InstallAndroidDependencies.OutputTail ();
-					int exitCode = await ProcessUtils.StartProcess (tar, extractResult, extractResult, cancellationToken);
-					if (exitCode != 0)
-						throw new Exception ($"Failed to extract temp Java SDK archive {archive.DownloadedFilePath}:\n{extractResult}");
+					using var file = File.OpenRead (downloadedFile);
+					using var gzip = new GZipStream (file, CompressionMode.Decompress);
+					await TarFile.ExtractToDirectoryAsync (gzip, unzipDestination, overwriteFiles: false, cancellationToken);
 				}
 
-				var jdkSubDir = Directory.GetDirectories (unzipDestination).FirstOrDefault ();
+				var jdkSubDir = new AbsolutePath (Directory.GetDirectories (unzipDestination).First ());
 				if (RuntimeInformation.IsOSPlatform (OSPlatform.OSX)) {
-					jdkSubDir = Path.Combine (jdkSubDir, "Contents", "Home");
+					jdkSubDir = new AbsolutePath (Path.Combine ("Contents", "Home"), jdkSubDir);
 				}
 				// Keep the existing JDK if the build was canceled during extraction.
 				cancellationToken.ThrowIfCancellationRequested ();
 				RemoveJdk ();
-				Directory.Move (jdkSubDir, JdkPath);
+				Directory.Move (jdkSubDir, jdkPath);
 			} finally {
 				if (Directory.Exists (unzipDestination))
 					Directory.Delete (unzipDestination, true);
@@ -113,8 +118,8 @@ namespace Xamarin.Installer.Build.Tasks
 
 		public void RemoveJdk ()
 		{
-			if (Directory.Exists (JdkPath))
-				Directory.Delete (JdkPath, true);
+			if (JdkPath is AbsolutePath jdkPath && Directory.Exists (jdkPath))
+				Directory.Delete (jdkPath, true);
 		}
 
 	}

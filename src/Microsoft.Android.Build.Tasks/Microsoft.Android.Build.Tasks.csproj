@@ -99,6 +99,22 @@
     </EmbeddedResource>
   </ItemGroup>
 
+  <!--
+    InstallAndroidDependencies keeps its localized messages and the Xamarin.Installer.Common.props/.targets
+    imported by Xamarin.Android.Common.targets in src/Xamarin.Installer.Build.Tasks; the props and targets
+    are deployed next to the other shipped targets in tools\.
+  -->
+  <ItemGroup>
+    <Compile Include="..\Xamarin.Installer.Build.Tasks\Properties\Resources.Designer.cs" Link="Properties\InstallerResources.Designer.cs" />
+    <EmbeddedResource Include="..\Xamarin.Installer.Build.Tasks\Properties\Resources*.resx" Link="Properties\Installer%(Filename)%(Extension)">
+      <ManifestResourceName>Xamarin.Installer.Build.Tasks.Properties.%(Filename)</ManifestResourceName>
+    </EmbeddedResource>
+    <None Include="..\Xamarin.Installer.Build.Tasks\Xamarin.Installer.Common.props;..\Xamarin.Installer.Build.Tasks\Xamarin.Installer.Common.targets">
+      <Link>..\%(Filename)%(Extension)</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
   <!-- FastDeploy shares AndroidHelper and its localized XA#### messages with Xamarin.Android.Build.Debugging.Tasks. -->
   <ItemGroup>
     <Compile Include="..\Xamarin.Android.Build.Debugging.Tasks\Utilities\AndroidHelper.cs" Link="Utilities\AndroidHelper.cs" />

@@ -1,6 +1,7 @@
 ﻿<?xml version="1.0" encoding="UTF-8"?>
 <Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003" ToolsVersion="4.0">
-	<UsingTask AssemblyFile="Xamarin.Installer.Build.Tasks.dll" TaskName="Xamarin.Installer.Build.Tasks.InstallAndroidDependencies" />
+	<UsingTask TaskName="Xamarin.Installer.Build.Tasks.InstallAndroidDependencies" AssemblyFile="$(_MicrosoftAndroidBuildTasksAssembly)" Runtime="NET" TaskFactory="TaskHostFactory" Condition=" '$(MSBuildRuntimeType)' == 'Full' " />
+	<UsingTask TaskName="Xamarin.Installer.Build.Tasks.InstallAndroidDependencies" AssemblyFile="$(_MicrosoftAndroidBuildTasksAssembly)" Runtime="NET" Condition=" '$(MSBuildRuntimeType)' == 'Core' " />
 	<PropertyGroup>
 		<BuildDependsOn Condition="'$(AndroidRestoreOnBuild)' == 'True'">
 			InstallAndroidDependencies;

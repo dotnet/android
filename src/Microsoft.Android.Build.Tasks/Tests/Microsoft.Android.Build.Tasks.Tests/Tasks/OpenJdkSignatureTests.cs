@@ -13,7 +13,6 @@ using System.Xml.Linq;
 using Microsoft.Build.Framework;
 using NUnit.Framework;
 using Xamarin.Installer.Build.Tasks;
-using Xamarin.ProjectTools;
 
 namespace Xamarin.Android.Build.Tests
 {
@@ -449,7 +448,7 @@ namespace Xamarin.Android.Build.Tests
 			Assert.IsFalse (new InstallAndroidDependencies ().SkipSignCheck);
 			Assert.AreEqual ("", new InstallAndroidDependencies ().OpenJdkPublicKeyUrl);
 			Assert.AreEqual ("", new InstallAndroidDependencies ().OpenJdkPublicKeySha256);
-			var targets = XDocument.Load (Path.Combine (XABuildPaths.TopDirectory, "src", "Xamarin.Installer.Build.Tasks", "Xamarin.Installer.Common.targets"));
+			var targets = XDocument.Load (Path.Combine (NativeAotBootstrapTestTools.FindRepositoryRoot (), "src", "Xamarin.Installer.Build.Tasks", "Xamarin.Installer.Common.targets"));
 			XNamespace ns = "http://schemas.microsoft.com/developer/msbuild/2003";
 			var task = targets.Root.Elements (ns + "Target").Single (target => (string) target.Attribute ("Name") == "InstallAndroidDependencies");
 			Assert.AreEqual ("$(_SkipSignCheck)", (string) task.Element (ns + "InstallAndroidDependencies").Attribute ("SkipSignCheck"));
@@ -605,7 +604,7 @@ namespace Xamarin.Android.Build.Tests
 			public Archive Archive { get; set; }
 			public bool Verified { get; private set; }
 
-			public override async Task RunTaskAsync ()
+			protected override async Task RunTaskAsync ()
 			{
 				Verified = await VerifyJavaArchiveAsync (Client, Archive, CancellationToken);
 			}
