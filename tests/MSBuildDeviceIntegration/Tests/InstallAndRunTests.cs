@@ -3406,12 +3406,23 @@ Facebook.FacebookSdk.LogEvent(""TestFacebook"");
 		}
 
 		[Test]
-		[TestCase ("run", MSTestPackageChannel.Nightly)]
-		[TestCase ("test", MSTestPackageChannel.Stable)]
-		[TestCase ("test", MSTestPackageChannel.Nightly)]
-		public void DotNetNewAndroidTest (string mode, MSTestPackageChannel msTestPackageChannel)
+		[TestCase ("run", MSTestPackageChannel.Nightly, "Debug")]
+		[TestCase ("test", MSTestPackageChannel.Stable, "Debug")]
+		[TestCase ("test", MSTestPackageChannel.Nightly, "Debug")]
+		[TestCase ("test", MSTestPackageChannel.Stable, "Release")]
+		[TestCase ("discover", MSTestPackageChannel.Stable, "Debug")]
+		[TestCase ("discover", MSTestPackageChannel.Nightly, "Debug")]
+		[TestCase ("discover", MSTestPackageChannel.Stable, "Release")]
+		[TestCase ("generic", MSTestPackageChannel.Stable, "Debug")]
+		[TestCase ("generic", MSTestPackageChannel.Stable, "Release")]
+		[TestCase ("filefilter", MSTestPackageChannel.Stable, "Debug")]
+		[TestCase ("select", MSTestPackageChannel.Stable, "Debug")]
+		[TestCase ("select", MSTestPackageChannel.Nightly, "Debug")]
+		[TestCase ("select", MSTestPackageChannel.Stable, "Release")]
+		[TestCase ("selectrow", MSTestPackageChannel.Stable, "Release")]
+		public void DotNetNewAndroidTest (string mode, MSTestPackageChannel msTestPackageChannel, string configuration)
 		{
-			var templateName = $"DotNetNewAndroidTest_{mode}_{msTestPackageChannel}";
+			var templateName = $"DotNetNewAndroidTest_{mode}_{msTestPackageChannel}_{configuration}";
 			var projectDirectory = Path.Combine (Root, "temp", templateName);
 			if (Directory.Exists (projectDirectory))
 				Directory.Delete (projectDirectory, true);
@@ -3420,30 +3431,173 @@ Facebook.FacebookSdk.LogEvent(""TestFacebook"");
 			var dotnet = new DotNetCLI (Path.Combine (projectDirectory, $"{templateName}.csproj"));
 			Assert.IsTrue (dotnet.New ("androidtest"), "`dotnet new androidtest` should succeed");
 
-			var buildParameters = new List<string> ();
+			var csprojPath = Path.Combine (projectDirectory, $"{templateName}.csproj");
+			var doc = XDocument.Load (csprojPath);
+			var ns = doc.Root?.Name.Namespace ?? XNamespace.None;
+			Assert.IsEmpty (doc.Descendants (ns + "TrimmerRootAssembly"),
+				"The template must rely on source generation, not an assembly-wide root.");
+			var sourceGeneration = doc.Descendants (ns + "PackageReference")
+				.Single (e => e.Attribute ("Include")?.Value == "MSTest.SourceGeneration");
+			Assert.AreEqual ("ReflectionFree", doc.Descendants (ns + "MSTestSourceGenMode").Single ().Value);
+
+			// Generated projects should use the SDK default, not the repository's XML-documentation policy.
+			var buildParameters = new List<string> { "GenerateDocumentationFile=false", $"Configuration={configuration}" };
 
 			if (msTestPackageChannel == MSTestPackageChannel.Nightly) {
 				// Override the stable template version with the version used by our build.
 				var msTestVersion = GetAssemblyMetadataValue ("MSTestPackageVersion");
-				var csprojPath = Path.Combine (projectDirectory, $"{templateName}.csproj");
-				var doc = XDocument.Load (csprojPath);
-				var ns = doc.Root?.Name.Namespace ?? XNamespace.None;
 				var msTestRef = doc.Descendants (ns + "PackageReference")
 					.FirstOrDefault (e => e.Attribute ("Include")?.Value == "MSTest");
 				Assert.IsNotNull (msTestRef, "MSTest PackageReference should exist in the generated project");
 				msTestRef.SetAttributeValue ("Version", msTestVersion);
+				sourceGeneration.SetAttributeValue ("Version", msTestVersion);
 				doc.Save (csprojPath);
 				buildParameters.Add ("RestoreAdditionalProjectSources=https://pkgs.dev.azure.com/dnceng/public/_packaging/test-tools/nuget/v3/index.json");
 			}
 
-			// Build and assert 0 warnings
+			if (configuration == "Release" || mode == "generic") {
+				var testSource = File.ReadAllText (Path.Combine (projectDirectory, "Test1.cs"));
+				if (configuration == "Release")
+					testSource += """
+
+						public static class UnusedTemplateCode
+						{
+							public static int ShouldBeTrimmed () => 42;
+						}
+						""";
+				if (mode == "selectrow") {
+					testSource += """
+
+						[TestClass]
+						public sealed class ParameterizedTests
+						{
+							[TestMethod]
+							[DataRow (2, 3, 5)]
+							[DataRow (-1, 1, 0)]
+							public void AddsNumbers (int left, int right, int expected)
+							{
+								Assert.AreEqual (expected, left + right);
+							}
+						}
+						""";
+				}
+				if (mode == "generic") {
+					testSource += """
+
+						[TestClass]
+						public sealed class GenericParameterTests
+						{
+							public static IEnumerable<object[]> Values ()
+							{
+								yield return [new List<string> { "value" }];
+							}
+
+							[TestMethod]
+							[DynamicData (nameof (Values))]
+							public void AcceptsList (List<string> values) => Assert.AreEqual ("value", values[0]);
+						}
+						""";
+				}
+				var testProject = new XamarinAndroidApplicationProject ();
+				testProject.UpdateProjectFiles (projectDirectory, [new ProjectResource {
+					Path = "Test1.cs",
+					Content = testSource,
+				}], doNotCleanup: true);
+			}
+
+			// MSTest's dependencies still emit IL2104 under full trimming.
 			Assert.IsTrue (dotnet.Build (parameters: buildParameters.ToArray ()), "`dotnet build` should succeed");
-			dotnet.AssertHasNoWarnings ();
+			if (configuration == "Debug") {
+				dotnet.AssertHasNoWarnings ();
+			} else {
+				foreach (var warning in dotnet.LastBuildOutput.Where (line => line.Contains (": warning ", StringComparison.Ordinal)))
+					StringAssert.Contains ("warning IL2104: Assembly ", warning, "Release must not introduce other warnings.");
+				var linkedAssemblies = Directory.GetFiles (Path.Combine (projectDirectory, "obj"), $"{templateName}.dll", SearchOption.AllDirectories)
+					.Where (path => Path.GetFileName (Path.GetDirectoryName (path)) == "linked").ToArray ();
+				Assert.IsNotEmpty (linkedAssemblies, "Release must exercise the trimmed test assembly.");
+				foreach (var assemblyPath in linkedAssemblies) {
+					using var module = ModuleDefinition.ReadModule (assemblyPath);
+					Assert.IsNotNull (module.GetType ("MSTest.SourceGenerated.MSTestReflectionMetadata"),
+						"Release must retain MSTest's generated metadata.");
+					Assert.IsNull (module.GetType ($"{templateName}.UnusedTemplateCode"),
+						"Unrelated code must be trimmed, not preserved by an assembly-wide root.");
+				}
+			}
 
 			// Run based on mode
 			var runParameters = buildParameters.Select (p => $"/p:{p}").ToList ();
-			if (mode == "test")
+			var serial = RunAdbCommand ("get-serialno").Trim ();
+			if (mode == "run")
+				runParameters.Add ($"/p:Device={serial}");
+			else
+				runParameters.Add ($"--device {serial}");
+			if (mode == "filefilter") {
+				Assert.IsTrue (dotnet.Build ("Install", parameters: [.. buildParameters, $"Device={serial}"]),
+					"The test app must be installed before discovery.");
+				var component = $"com.companyname.{templateName}/.TestInstrumentation";
+				var discovered = RunAdbCommand ($"shell am instrument -w -r -e list-tests true {component}").Replace ("\r\n", "\n");
+				var selectedTest = discovered.Split ("INSTRUMENTATION_STATUS_CODE:")
+					.Single (block => block.Contains ("INSTRUMENTATION_STATUS: name=TestMethod1\n", StringComparison.Ordinal));
+				var uid = selectedTest.Split ('\n')
+					.Single (line => line.StartsWith ("INSTRUMENTATION_STATUS: test=", StringComparison.Ordinal))
+					.Substring ("INSTRUMENTATION_STATUS: test=".Length).Trim ();
+				var directoryResult = RunAdbCommand ($"shell am instrument -w -r -e test-uids file-location {component}");
+				const string directoryPrefix = "INSTRUMENTATION_RESULT: test-uids-directory=";
+				var directory = directoryResult.Split ('\n')
+					.Single (line => line.StartsWith (directoryPrefix, StringComparison.Ordinal))
+					.Substring (directoryPrefix.Length).Trim ();
+				var token = Guid.NewGuid ().ToString ("N");
+				var fileName = $"test-uids-{token}.txt";
+				var localFile = Path.Combine (Path.GetTempPath (), fileName);
+				var deviceFile = $"{directory.TrimEnd ('/')}/{fileName}";
+				var encoded = Convert.ToBase64String (Encoding.UTF8.GetBytes (
+					new XElement ("tests", Enumerable.Repeat (uid, 2_000).Select (id => new XElement ("test", new XAttribute ("uid", id))))
+						.ToString (SaveOptions.DisableFormatting)));
+				Assert.Greater (encoded.Length, 32_767);
+				try {
+					File.WriteAllText (localFile, encoded);
+					var push = RunAdbCommandWithExitCode (["push", localFile, deviceFile]);
+					Assert.AreEqual (0, push.code, push.stdError);
+					var run = RunAdbCommandWithExitCode (["shell", "am", "instrument", "-w", "-r", "-e", "test-uids", $"file:{token}", component], timeout: 120);
+					Assert.AreEqual (0, run.code, run.stdError);
+					StringAssert.Contains ("INSTRUMENTATION_RESULT: passed=1", run.stdOutput);
+					StringAssert.Contains ("INSTRUMENTATION_RESULT: failed=0", run.stdOutput);
+					StringAssert.Contains ("INSTRUMENTATION_CODE: -1", run.stdOutput);
+				} finally {
+					RunAdbCommandWithExitCode (["shell", "rm", "-f", deviceFile]);
+					File.Delete (localFile);
+				}
+				return;
+			}
+			if (mode is "test" or "select" or "selectrow")
 				runParameters.Add ("--report-trx");
+			if (mode is "discover" or "generic")
+				runParameters.Add ("--list-tests");
+			if (mode is "select" or "selectrow") {
+				Assert.IsTrue (dotnet.Build ("Install", parameters: [.. buildParameters, $"Device={serial}"]),
+					"The test app must be installed before discovery.");
+				var discovered = RunAdbCommand ($"shell am instrument -w -r -e list-tests true com.companyname.{templateName}/.TestInstrumentation")
+					.Replace ("\r\n", "\n");
+				int expectedCount = mode == "selectrow" ? 5 : 3;
+				StringAssert.Contains ($"INSTRUMENTATION_RESULT: discovered={expectedCount}", discovered);
+				var selectedName = mode == "selectrow" ? "AddsNumbers (2,3,5)" : "TestMethod1";
+				var selectedTest = discovered.Split ("INSTRUMENTATION_STATUS_CODE:")
+					.Single (block => block.Contains ($"INSTRUMENTATION_STATUS: name={selectedName}\n", StringComparison.Ordinal));
+				if (mode == "selectrow") {
+					StringAssert.Contains ("INSTRUMENTATION_STATUS: type=ParameterizedTests\n", selectedTest);
+					StringAssert.Contains ("INSTRUMENTATION_STATUS: method=AddsNumbers\n", selectedTest);
+					const string parametersPrefix = "INSTRUMENTATION_STATUS: parameter-types=";
+					var encodedParameters = selectedTest.Split ('\n')
+						.Single (line => line.StartsWith (parametersPrefix, StringComparison.Ordinal)).Substring (parametersPrefix.Length);
+					var parameters = XElement.Parse (Encoding.UTF8.GetString (Convert.FromBase64String (encodedParameters)))
+						.Elements ("test").Select (test => (string) test.Attribute ("uid")).ToArray ();
+					CollectionAssert.AreEqual (new [] { "System.Int32", "System.Int32", "System.Int32" }, parameters);
+				}
+				var uid = selectedTest.Split ('\n')
+					.Single (line => line.StartsWith ("INSTRUMENTATION_STATUS: test=", StringComparison.Ordinal))
+					.Substring ("INSTRUMENTATION_STATUS: test=".Length).Trim ();
+				runParameters.Add ($"--filter-uid {uid}");
+			}
 
 			using var process = mode == "run"
 				? dotnet.StartRun (waitForExit: true, parameters: runParameters.ToArray ())
@@ -3493,6 +3647,38 @@ Facebook.FacebookSdk.LogEvent(""TestFacebook"");
 				Assert.AreEqual (1, passed, $"Expected 1 passed test, got {passed}. See {logPath} for details.");
 				Assert.AreEqual (1, failed, $"Expected 1 failed test, got {failed}. See {logPath} for details.");
 				Assert.AreEqual (1, skipped, $"Expected 1 skipped test, got {skipped}. See {logPath} for details.");
+			} else if (mode is "select" or "selectrow") {
+				Assert.AreEqual (0, process.ExitCode, $"Selected execution should succeed. See {logPath} for details.");
+				StringAssert.Contains ("total: 1", outputText);
+				StringAssert.Contains ("succeeded: 1", outputText);
+				StringAssert.Contains ("failed: 0", outputText);
+				StringAssert.Contains ("skipped: 0", outputText);
+			} else if (mode is "discover" or "generic") {
+				Assert.AreEqual (0, process.ExitCode, $"Discovery should succeed. See {logPath} for details.");
+				StringAssert.Contains ("TestMethod1", outputText);
+				StringAssert.Contains ("TestMethod2", outputText);
+				StringAssert.Contains ("TestMethod3", outputText);
+				StringAssert.DoesNotContain ("failed: 1", outputText, "Discovery must not execute the failing test.");
+				var discovered = RunAdbCommand ($"shell am instrument -w -r -e list-tests true com.companyname.{templateName}/.TestInstrumentation")
+					.Replace ("\r\n", "\n");
+				StringAssert.Contains ($"INSTRUMENTATION_STATUS: class={templateName}.Test1\n", discovered);
+				StringAssert.Contains ($"INSTRUMENTATION_STATUS: namespace={templateName}\n", discovered);
+				StringAssert.Contains ("INSTRUMENTATION_STATUS: type=Test1\n", discovered);
+				StringAssert.Contains ("INSTRUMENTATION_STATUS: method=TestMethod1\n", discovered);
+				StringAssert.Contains ("INSTRUMENTATION_STATUS: return-type=System.Void\n", discovered);
+				if (mode == "generic") {
+					var genericTest = discovered.Split ("INSTRUMENTATION_STATUS_CODE:")
+						.Single (block => block.Contains ("INSTRUMENTATION_STATUS: method=AcceptsList\n", StringComparison.Ordinal));
+					const string parametersPrefix = "INSTRUMENTATION_STATUS: parameter-types=";
+					var encodedParameters = genericTest.Split ('\n')
+						.Single (line => line.StartsWith (parametersPrefix, StringComparison.Ordinal)).Substring (parametersPrefix.Length);
+					var parameters = XElement.Parse (Encoding.UTF8.GetString (Convert.FromBase64String (encodedParameters)))
+						.Elements ("test").Select (test => (string) test.Attribute ("uid")).ToArray ();
+					CollectionAssert.AreEqual (new [] { "System.Collections.Generic.List`1<System.String>" }, parameters);
+					StringAssert.Contains ("INSTRUMENTATION_RESULT: discovered=4", discovered);
+				}
+				Assert.IsEmpty (Directory.GetFiles (projectDirectory, "*.trx", SearchOption.AllDirectories),
+					"Discovery must not create an execution report.");
 			} else {
 				// dotnet test reports results via MTP protocol
 				// Verify non-zero exit code (there is a failing test) and stable summary counts

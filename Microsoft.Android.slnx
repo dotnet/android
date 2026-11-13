@@ -47,6 +47,7 @@
     <Project Path="src/Xamarin.Installer.Build.Tasks/Xamarin.Installer.Build.Tasks.csproj" />
   </Folder>
   <Folder Name="/Tests/">
+    <Project Path="tests/Microsoft.Android.Run-Tests/Microsoft.Android.Run-Tests.csproj" />
     <Project Path="tests/generator-Tests/generator-Tests.csproj" />
     <Project Path="tests/Java.Interop.Tools.Generator-Tests/Java.Interop.Tools.Generator-Tests.csproj" />
     <Project Path="tests/Java.Interop.Tools.JavaCallableWrappers-Tests/Java.Interop.Tools.JavaCallableWrappers-Tests.csproj" />

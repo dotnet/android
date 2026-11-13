@@ -3,6 +3,10 @@ using Microsoft.Testing.Extensions;
 using Microsoft.Testing.Platform.Builder;
 using Microsoft.Testing.Platform.Extensions;
 using Microsoft.Testing.Platform.Extensions.Messages;
+using Microsoft.Testing.Platform.ServerMode.Client;
+using System.Diagnostics.CodeAnalysis;
+using System.Text;
+using System.Xml.Linq;
 
 [assembly: Parallelize(Scope = ExecutionScope.MethodLevel)]
 
@@ -11,11 +15,14 @@ namespace AndroidTest1;
 [Instrumentation(Name = "com.companyname.AndroidTest1.TestInstrumentation")]
 public class TestInstrumentation : Instrumentation
 {
+    Bundle? instrumentationArguments;
+
     protected TestInstrumentation(IntPtr handle, JniHandleOwnership ownership)
         : base(handle, ownership) { }
 
     public override void OnCreate(Bundle? arguments)
     {
+        instrumentationArguments = arguments;
         base.OnCreate(arguments);
         Start();
     }
@@ -28,12 +35,52 @@ public class TestInstrumentation : Instrumentation
         var bundle = new Bundle();
         try
         {
-            var writeablePath = Application.Context.GetExternalFilesDir(null)?.AbsolutePath ?? Path.GetTempPath();
+            var externalFilesPath = Application.Context.GetExternalFilesDir(null)?.AbsolutePath;
+            var writeablePath = externalFilesPath ?? Path.GetTempPath();
             var resultsPath = Path.Combine(writeablePath, "TestResults");
-            var builder = await TestApplication.CreateBuilderAsync([
+            string[]? testUids = null;
+            if (instrumentationArguments?.GetString("test-uids") is string encodedUids)
+            {
+                if (encodedUids == "file-location")
+                {
+                    if (externalFilesPath is null)
+                        throw new InvalidOperationException("The app's external files directory is unavailable.");
+                    bundle.PutString("test-uids-directory", externalFilesPath);
+                    Finish(Result.Ok, bundle);
+                    return;
+                }
+                if (encodedUids.StartsWith("file:", StringComparison.Ordinal))
+                {
+                    var token = encodedUids["file:".Length..];
+                    if (!Guid.TryParseExact(token, "N", out _))
+                        throw new FormatException("Invalid instrumentation filter file token.");
+                    if (externalFilesPath is null)
+                        throw new InvalidOperationException("The app's external files directory is unavailable.");
+                    encodedUids = File.ReadAllText(Path.Combine(externalFilesPath, $"test-uids-{token}.txt"));
+                }
+                testUids = XElement.Parse(Encoding.UTF8.GetString(Convert.FromBase64String(encodedUids)))
+                    .Elements("test").Select(test => (string?)test.Attribute("uid")
+                        ?? throw new FormatException("Missing test UID in the instrumentation filter.")).ToArray();
+                if (testUids.Length == 0)
+                    throw new ArgumentException("The selected-test filter must not be empty.");
+            }
+            bool discover = instrumentationArguments?.GetString("list-tests") == "true";
+            if (discover)
+            {
+                bundle.PutInt("discovered", await DiscoverTestsAsync(resultsPath, testUids));
+                Finish(Result.Ok, bundle);
+                return;
+            }
+            var args = new List<string> {
                 "--results-directory", resultsPath,
                 "--report-trx"
-            ]);
+            };
+            if (testUids is not null)
+            {
+                args.Add("--filter-uid");
+                args.AddRange(testUids);
+            }
+            var builder = await TestApplication.CreateBuilderAsync(args.ToArray());
             builder.AddMSTest(() => [GetType().Assembly]);
             builder.AddTrxReportProvider();
             builder.TestHost.AddDataConsumer(_ => consumer);
@@ -52,6 +99,109 @@ public class TestInstrumentation : Instrumentation
             bundle.PutString("error", ex.ToString());
             Finish(Result.Canceled, bundle);
         }
+    }
+
+    async Task<int> DiscoverTestsAsync(string resultsPath, string[]? testUids)
+    {
+        // MTP does not activate ordinary data consumers during discovery.
+        // Use its embedded server client to receive discovery notifications.
+        using var client = await MtpServerClient.LaunchInProcessAsync(async (serverArgs, cancellationToken) =>
+        {
+            var builder = await TestApplication.CreateBuilderAsync([
+                .. serverArgs, "--results-directory", resultsPath
+            ]);
+            builder.AddMSTest(() => [GetType().Assembly]);
+            using var app = await builder.BuildAsync();
+            return await app.RunAsync();
+        });
+        int discovered = 0;
+        Exception? discoveryError = null;
+        client.TestNodesUpdated += (_, update) =>
+        {
+            // Notification-handler exceptions are logged, not propagated by the client.
+            try
+            {
+                foreach (var node in update.Changes)
+                {
+                    if (node.ExecutionState != "discovered")
+                        continue;
+                    if (string.IsNullOrEmpty(node.Uid))
+                        throw new InvalidOperationException("A discovered test has no UID.");
+                    var status = new Bundle();
+                    status.PutString("event", "discover");
+                    status.PutString("test", node.Uid);
+                    status.PutString("name", node.DisplayName ?? node.Uid);
+                    WriteMethodIdentifier(status, GetDiscoveryMethodIdentifier(node));
+                    SendStatus(0, status);
+                    Interlocked.Increment(ref discovered);
+                }
+            }
+            catch (Exception ex)
+            {
+                discoveryError = ex;
+            }
+        };
+        try
+        {
+            await client.InitializeAsync();
+            if (testUids is not null)
+            {
+                await client.DiscoverTestsAsync(testUids);
+            }
+            else
+            {
+                await client.DiscoverTestsAsync();
+            }
+            await client.ExitAsync();
+        }
+        finally
+        {
+            await client.ShutdownAsync();
+        }
+        if (client.ServerExitCode is not 0)
+            throw new InvalidOperationException($"Test discovery server exited with code {client.ServerExitCode}.");
+        if (discoveryError is not null)
+            throw new InvalidOperationException("Failed to report discovered tests.", discoveryError);
+        return discovered;
+    }
+
+    [UnconditionalSuppressMessage("Trimming", "IL2026", Justification = "MSTest.SourceGeneration preserves the discovered test types and their members.")]
+    [UnconditionalSuppressMessage("Trimming", "IL2075", Justification = "MSTest.SourceGeneration preserves the methods on each discovered test class.")]
+    TestMethodIdentifierProperty? GetDiscoveryMethodIdentifier(MtpTestNodeUpdate node)
+    {
+        if (!node.Node.TryGetValue("location.type", out var typeValue) || typeValue is not string typeName ||
+            !node.Node.TryGetValue("location.method", out var methodValue) || methodValue is not string signature)
+            return null;
+
+        // Server notifications omit the assembly, return type, and separate parameter types.
+        // Resolve only discovered test members, preserved by MSTest.SourceGeneration.
+        var type = GetType().Assembly.GetType(typeName, throwOnError: true)
+            ?? throw new InvalidOperationException($"Discovered test type '{typeName}' could not be resolved.");
+        var arity = node.Node.TryGetValue("location.method-arity", out var arityValue)
+            ? Convert.ToInt32(arityValue, System.Globalization.CultureInfo.InvariantCulture) : 0;
+        var method = type.GetMethods(System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.Static
+            | System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.NonPublic)
+            .Single(candidate => ManagedTestName.Matches(candidate, signature, arity));
+        return new TestMethodIdentifierProperty(
+            type.Assembly.FullName ?? throw new InvalidOperationException("The test assembly has no full name."),
+            type.Namespace ?? "", type.Namespace is null ? typeName : typeName[(type.Namespace.Length + 1)..], method.Name, arity,
+            method.GetParameters().Select(parameter => ManagedTestName.GetTypeName(parameter.ParameterType)).ToArray(),
+            method.ReturnType.FullName ?? method.ReturnType.Name);
+    }
+
+    static void WriteMethodIdentifier(Bundle status, TestMethodIdentifierProperty? id)
+    {
+        if (id is null)
+            return;
+        status.PutString("class", string.IsNullOrEmpty(id.Namespace) ? id.TypeName : $"{id.Namespace}.{id.TypeName}");
+        status.PutString("assembly", id.AssemblyFullName);
+        status.PutString("namespace", id.Namespace);
+        status.PutString("type", id.TypeName);
+        status.PutString("method", id.MethodName);
+        status.PutString("method-arity", id.MethodArity.ToString(System.Globalization.CultureInfo.InvariantCulture));
+        status.PutString("parameter-types", Convert.ToBase64String(Encoding.UTF8.GetBytes(
+            new XElement("tests", id.ParameterTypeFullNames.Select(type => new XElement("test", new XAttribute("uid", type)))).ToString(SaveOptions.DisableFormatting))));
+        status.PutString("return-type", id.ReturnTypeFullName);
     }
 
     class ResultConsumer(Instrumentation instrumentation) : IDataConsumer
@@ -79,6 +229,17 @@ public class TestInstrumentation : Instrumentation
             else if (value is TestNodeUpdateMessage { TestNode: var node })
             {
                 var state = node.Properties.SingleOrDefault<TestNodeStateProperty>();
+                string? eventKind = state switch
+                {
+                    InProgressTestNodeStateProperty => "start",
+                    PassedTestNodeStateProperty or FailedTestNodeStateProperty
+                        or ErrorTestNodeStateProperty or TimeoutTestNodeStateProperty
+                        or SkippedTestNodeStateProperty => "finish",
+                    _ => null
+                };
+                if (eventKind is null)
+                    return Task.CompletedTask;
+
                 string? outcome = state switch
                 {
                     PassedTestNodeStateProperty => "passed",
@@ -87,15 +248,29 @@ public class TestInstrumentation : Instrumentation
                     SkippedTestNodeStateProperty => "skipped",
                     _ => null
                 };
-                if (outcome is null)
-                    return Task.CompletedTask;
-
-                _ = outcome switch { "passed" => Interlocked.Increment(ref _passed), "failed" => Interlocked.Increment(ref _failed), _ => Interlocked.Increment(ref _skipped) };
+                if (outcome is not null)
+                    _ = outcome switch { "passed" => Interlocked.Increment(ref _passed), "failed" => Interlocked.Increment(ref _failed), _ => Interlocked.Increment(ref _skipped) };
 
                 var id = node.Properties.SingleOrDefault<TestMethodIdentifierProperty>();
                 var b = new Bundle();
-                b.PutString("test", id is not null ? $"{id.Namespace}.{id.TypeName}.{id.MethodName}" : node.DisplayName);
-                b.PutString("outcome", outcome);
+                b.PutString("event", eventKind);
+                b.PutString("test", node.Uid.Value);
+                b.PutString("name", node.DisplayName);
+                if (outcome is not null)
+                    b.PutString("outcome", outcome);
+                WriteMethodIdentifier(b, id);
+                var exception = state switch
+                {
+                    FailedTestNodeStateProperty failed => failed.Exception,
+                    ErrorTestNodeStateProperty error => error.Exception,
+                    TimeoutTestNodeStateProperty timeout => timeout.Exception,
+                    _ => null
+                };
+                var message = state?.Explanation ?? exception?.Message;
+                if (message is not null)
+                    b.PutString("message-b64", Convert.ToBase64String(Encoding.UTF8.GetBytes(message)));
+                if (exception?.StackTrace is string stackTrace)
+                    b.PutString("stack-b64", Convert.ToBase64String(Encoding.UTF8.GetBytes(stackTrace)));
                 instrumentation.SendStatus(0, b);
             }
             return Task.CompletedTask;

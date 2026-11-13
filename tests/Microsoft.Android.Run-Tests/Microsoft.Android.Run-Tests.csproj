@@ -1,0 +1,23 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <Import Project="..\..\Configuration.props" />
+
+  <PropertyGroup>
+    <TargetFramework>$(DotNetStableTargetFramework)</TargetFramework>
+    <AssemblyName>Microsoft.Android.Run.Tests</AssemblyName>
+    <OutputType>Exe</OutputType>
+    <GenerateProgramFile>false</GenerateProgramFile>
+    <OutputPath>$(TestOutputDirectory)Microsoft.Android.Run</OutputPath>
+    <IsPackable>false</IsPackable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Include="..\..\src\Microsoft.Android.Templates\androidtest\ManagedTestName.cs" Link="ManagedTestName.cs" />
+    <PackageReference Include="NUnit" Version="$(NUnitVersion)" />
+    <PackageReference Include="NUnit3TestAdapter" Version="6.2.0" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="18.7.0" />
+    <PackageReference Include="Microsoft.Testing.Platform.ServerMode.Client.Sources" Version="2.4.1" PrivateAssets="all" />
+    <ProjectReference Include="..\..\src\Microsoft.Android.Run\Microsoft.Android.Run.csproj" />
+  </ItemGroup>
+</Project>
