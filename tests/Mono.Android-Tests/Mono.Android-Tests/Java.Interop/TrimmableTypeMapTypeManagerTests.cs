@@ -278,7 +278,9 @@ namespace Java.InteropTests
 			using var loader = new PathClassLoader (sourceDir, null);
 			using var javaClass = loader.LoadClass (javaClassName)
 				?? throw new InvalidOperationException ($"Could not load {javaClassName} from a separate class loader.");
-			using var instance = javaClass.NewInstance ();
+			using var constructor = javaClass.GetConstructor ()
+				?? throw new InvalidOperationException ($"{javaClassName} has no default constructor.");
+			using var instance = constructor.NewInstance ();
 			using var runtimeClass = Java.Lang.Class.ForName (
 				javaClassName,
 				initialize: false,
