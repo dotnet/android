@@ -10,6 +10,10 @@
     <Nullable>enable</Nullable>
     <SignAssembly>true</SignAssembly>
     <AssemblyOriginatorKeyFile>..\..\product.snk</AssemblyOriginatorKeyFile>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <MSBuildTreatWarningsAsErrors>true</MSBuildTreatWarningsAsErrors>
+    <!-- Use SDK analyzer defaults instead of the repository's legacy severity overrides. -->
+    <DiscoverEditorConfigFiles>false</DiscoverEditorConfigFiles>
   </PropertyGroup>
 
   <PropertyGroup>
