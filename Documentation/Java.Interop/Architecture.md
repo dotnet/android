@@ -169,8 +169,10 @@ Raw callback entry points and marshal targets require the registered ABI,
 current-thread JNI frame and live compatible borrowed references without
 concurrent deletion. Their `<safety>` contracts do not validate raw addresses.
 Typed managed targets stay safe. Generated syntax and the existing legacy
-compiler test harness are preserved; Mono.Android and customer projects do not
-opt into the updated memory-safety rules.
+compiler test harness are preserved. Mono.Android opts into the updated
+memory-safety rules; customer projects do not opt in implicitly. Public
+Mono.Android members that shipped before the opt-in remain safe-callable;
+their `<safety>` contracts still apply but are not compiler-enforced.
 
 Throwable bindings forward `JniObjectReferenceOptions.None` through internal,
 unregistered empty-peer constructors, preserving partial hooks and normal JNI
@@ -182,12 +184,11 @@ initialization. An updated-rules external raw base can therefore still reject a
 safe derived initializer; internal forwarding does not solve that separate
 cross-assembly enforcement boundary.
 
-Non-Throwable raw constructors, including class/interface invokers, construct
+Raw constructors, including Throwable and class/interface invokers, construct
 JNI peers, not opaque-address containers. Their documented handle type, lifetime,
 thread, aliasing, ownership and failure duties still apply. `RequiresUnsafe`
 enforcement is explicitly deferred to preserve safe zero/`DoNotTransfer` base
-initializers, without adding a general initialization API or weakening the
-approved Throwable path.
+initializers, without adding a general initialization API.
 
 ## Naming conventions
 

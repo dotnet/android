@@ -119,14 +119,17 @@ namespace Android.Runtime {
 		/// <paramref name="transfer"/> must describe ownership the caller holds. Do not race reference
 		/// release or reuse aliases after ownership is consumed, including when conversion later fails.
 		/// </safety>
-		public static unsafe JavaArray<T>? FromJniHandle (IntPtr handle, JniHandleOwnership transfer)
+		public static JavaArray<T>? FromJniHandle (IntPtr handle, JniHandleOwnership transfer)
 		{
 			if (handle == IntPtr.Zero)
 				return null;
 
 			var existing = Java.Lang.Object.PeekObject (handle) as JavaArray<T>;
 			if (existing != null) {
-				JNIEnv.DeleteRef (handle, transfer);
+				unsafe {
+					// SAFETY: the caller's transfer contract covers this reference; the cached peer replaces it.
+					JNIEnv.DeleteRef (handle, transfer);
+				}
 				return existing;
 			}
 			return new JavaArray<T>(handle, transfer);
