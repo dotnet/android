@@ -103,8 +103,9 @@ namespace Xamarin.Android.Build.Tests
 				"R8 must preserve ACTION_COLLAPSE with its original name and type for managed JNI access.");
 		}
 
-		[Test]
-		public void R8PreservesInstanceIntFieldType ()
+		[TestCase (true)]
+		[TestCase (false)]
+		public void R8PreservesInstanceIntFieldType (bool publishTrimmed)
 		{
 			if (IgnoreUnsupportedConfiguration (AndroidRuntime.CoreCLR, release: true)) {
 				return;
@@ -153,6 +154,7 @@ namespace Xamarin.Android.Build.Tests
 			proj.SetProperty (KnownProperties.RuntimeIdentifier, "android-arm64");
 			proj.SetProperty (KnownProperties.AndroidLinkTool, "r8");
 			proj.SetProperty (KnownProperties.AndroidR8ObfuscationMode, "private-members");
+			proj.SetProperty ("PublishTrimmed", publishTrimmed.ToString ());
 			proj.SetProperty ("TrimMode", "full");
 			proj.MainActivity = proj.DefaultMainActivity.Replace ("//${AFTER_ONCREATE}", """
 				using var error = new Example.PlaybackError (Intent.GetBooleanExtra ("source", false), Intent.GetBooleanExtra ("renderer", false));
@@ -164,6 +166,9 @@ namespace Xamarin.Android.Build.Tests
 			using var builder = CreateApkBuilder (Path.Combine (path, proj.ProjectName));
 			Assert.IsTrue (bindingBuilder.Build (binding), "The binding build should succeed.");
 			Assert.IsTrue (builder.Build (proj), "The R8 build should succeed.");
+			var referenceRules = builder.Output.GetIntermediaryPath (Path.Combine ("android-arm64", "proguard", "proguard_project_references.cfg"));
+			FileAssert.Exists (referenceRules);
+			Assert.IsFalse (builder.LastBuildOutput.Any (line => line.Contains ("XA4304")), "The generated R8 reference rules must be available.");
 
 			var dexDirectory = builder.Output.GetIntermediaryPath (Path.Combine ("android-arm64", "android", "bin"));
 			var dexFiles = Directory.GetFiles (dexDirectory, "classes*.dex");
@@ -171,6 +176,15 @@ namespace Xamarin.Android.Build.Tests
 			Assert.IsTrue (dexFiles.Any (dexFile => DexUtils.ContainsClassWithField (
 				"Lexample/PlaybackError;", "type", "I", DexUtils.GetDexDump (dexFile, AndroidSdkPath))),
 				"R8 must preserve the instance field as int, not narrow it to byte, for managed JNI access.");
+
+			if (!publishTrimmed) {
+				var timestamp = File.GetLastWriteTimeUtc (referenceRules);
+				Assert.IsTrue (builder.Build (proj, doNotCleanupOnUpdate: true, saveProject: false), "The unchanged R8 build should succeed.");
+				Assert.AreEqual (timestamp, File.GetLastWriteTimeUtc (referenceRules), "Unchanged assemblies must not regenerate R8 reference rules.");
+				File.Delete (referenceRules);
+				Assert.IsTrue (builder.Build (proj, doNotCleanupOnUpdate: true, saveProject: false), "The R8 build should restore missing reference rules.");
+				FileAssert.Exists (referenceRules);
+			}
 		}
 
 		[TestCase ("", true)]

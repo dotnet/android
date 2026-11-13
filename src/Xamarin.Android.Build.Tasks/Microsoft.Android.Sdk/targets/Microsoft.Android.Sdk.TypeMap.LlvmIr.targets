@@ -431,14 +431,26 @@
        _ComputeManagedAssemblyForILLink replaces ManagedAssemblyToLink after _LinkedResolvedFileToPublishCandidate
        is computed, so the ILLink target's ResolvedFileToPublish rewrite adds nothing.
        Instead, _AndroidComputeIlcCompileInputs populates ResolvedFileToPublish, so NativeAOT.targets
-       sets _GenerateProguardAfterTargets to run these targets after that. -->
+       sets _GenerateProguardAfterTargets to run these targets after that.
+       Untrimmed builds do not run ILLink, so they generate the rules after ComputeFilesToPublish. -->
   <PropertyGroup>
+    <_GenerateProguardAfterTargets Condition=" '$(_GenerateProguardAfterTargets)' == '' and '$(PublishTrimmed)' != 'true' ">ComputeFilesToPublish</_GenerateProguardAfterTargets>
     <_GenerateProguardAfterTargets Condition=" '$(_GenerateProguardAfterTargets)' == '' ">ILLink</_GenerateProguardAfterTargets>
   </PropertyGroup>
 
+  <!-- Untrimmed builds also need rules for Java members referenced only from managed code.
+       _PrepareLinking sets this path only for trimmed builds, so set it in the inner RID build. -->
+  <Target Name="_AndroidSetUntrimmedProguardConfiguration"
+      BeforeTargets="$(_GenerateProguardAfterTargets)"
+      Condition=" '$(PublishTrimmed)' != 'true' and '$(AndroidLinkTool)' != '' and '$(_ComputeFilesToPublishForRuntimeIdentifiers)' == 'true' ">
+    <PropertyGroup>
+      <_ProguardProjectConfiguration Condition=" '$(_ProguardProjectConfiguration)' == '' ">$(IntermediateOutputPath)proguard\proguard_project_references.cfg</_ProguardProjectConfiguration>
+    </PropertyGroup>
+  </Target>
+
   <Target Name="_PrepareLinkedAssembliesForProguard"
       AfterTargets="$(_GenerateProguardAfterTargets)"
-      Condition=" '$(PublishTrimmed)' == 'true' and '$(_ProguardProjectConfiguration)' != '' ">
+      Condition=" '$(_ProguardProjectConfiguration)' != '' and ('$(PublishTrimmed)' == 'true' or '$(_ComputeFilesToPublishForRuntimeIdentifiers)' == 'true') ">
     <ItemGroup>
       <_LinkedAssemblyForProguard Include="@(ResolvedFileToPublish)" Condition=" '%(Extension)' == '.dll' " />
     </ItemGroup>
@@ -446,7 +458,7 @@
 
   <Target Name="_GenerateProguardConfiguration"
       AfterTargets="_PrepareLinkedAssembliesForProguard"
-      Condition=" '$(PublishTrimmed)' == 'true' and '$(_ProguardProjectConfiguration)' != '' "
+      Condition=" '$(_ProguardProjectConfiguration)' != '' and ('$(PublishTrimmed)' == 'true' or '$(_ComputeFilesToPublishForRuntimeIdentifiers)' == 'true') "
       Inputs="@(_LinkedAssemblyForProguard)"
       Outputs="$(_ProguardProjectConfiguration)">
     <GenerateProguardConfiguration

@@ -129,6 +129,12 @@ So in addition to be being faster in general (if Google's claims are
 true), we will be calling a *single* command line tool to produce dex
 files!
 
+When managed trimming is disabled (`PublishTrimmed=false`), R8 still needs
+keep rules for Java classes and members accessed from managed bindings.
+The build generates `proguard/proguard_project_references.cfg` from the
+untrimmed publish assemblies in each inner RID build before R8 runs.
+Disabling managed trimming does not disable Java shrinking or optimization.
+
 # So how do developers use it? What are sensible MSBuild property defaults?
 
 Currently, a `csproj` file might have the following properties:
