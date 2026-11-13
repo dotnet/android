@@ -22,6 +22,6 @@ namespace Java.Interop.Tools.JavaTypeSystem.Models
 			ManagedName = managedName;
 		}
 
-		public override string ToString () => string.Format ($"[Package] {Name}");
+		public override string ToString () => $"[Package] {Name}";
 	}
 }
