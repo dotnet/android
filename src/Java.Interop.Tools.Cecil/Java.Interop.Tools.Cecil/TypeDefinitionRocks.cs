@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 
 using Mono.Cecil;
 
@@ -149,7 +150,7 @@ namespace Java.Interop.Tools.Cecil {
 
 		public static string GetPartialAssemblyQualifiedName (this TypeReference type, IMetadataResolver resolver)
 		{
-			return string.Format ("{0}, {1}",
+			return string.Format (CultureInfo.InvariantCulture, "{0}, {1}",
 					// Cecil likes to use '/' as the nested type separator, while
 					// Reflection uses '+' as the nested type separator. Use Reflection.
 			                CecilTypeNameToReflectionTypeName (type.FullName),
@@ -165,7 +166,7 @@ namespace Java.Interop.Tools.Cecil {
 		public static string GetAssemblyQualifiedName (this TypeReference type, IMetadataResolver resolver)
 		{
 			TypeDefinition? def = resolver.Resolve (type);
-			return string.Format ("{0}, {1}",
+			return string.Format (CultureInfo.InvariantCulture, "{0}, {1}",
 					// Cecil likes to use '/' as the nested type separator, while
 					// Reflection uses '+' as the nested type separator. Use Reflection.
 			                CecilTypeNameToReflectionTypeName (type.FullName),
