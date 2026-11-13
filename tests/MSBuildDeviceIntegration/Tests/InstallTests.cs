@@ -655,7 +655,7 @@ namespace Xamarin.Android.Build.Tests
 			var after = File.GetLastWriteTimeUtc (apkset);
 			Assert.AreNotEqual (before, after, $"{apkset} should change!");
 			Assert.IsFalse (b.Output.IsTargetSkipped ("_DeployAppBundle"), "Changing AdbTarget should install the APK set.");
-			Assert.IsTrue (b.Install (proj, parameters: new [] { $"AdbTarget=\"-e {serial}\"" }), "unchanged install should succeed.");
+			Assert.IsTrue (b.Install (proj, parameters: new [] { $"AdbTarget=\"-s {serial}\"" }), "unchanged install should succeed.");
 			Assert.IsTrue (b.Output.AreTargetsAllSkipped ("_DeployAppBundle", "_Upload"), "Unchanged deployment to the same target should be skipped.");
 		}
 
