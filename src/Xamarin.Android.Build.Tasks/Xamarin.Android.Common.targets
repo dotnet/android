@@ -2718,7 +2718,7 @@ because xbuild doesn't support framework reference assemblies.
 </Target>
 
 <Target Name="_BuildApkSet"
-    Inputs="$(_AndroidBuildPropertiesCache);$(_AdbPropertiesCache);$(_AppBundleIntermediate)"
+    Inputs="$(_AndroidBuildPropertiesCache);$(_AdbPropertiesCache);$(_AndroidApkSetDeviceCache);$(_AppBundleIntermediate)"
     Outputs="$(_ApkSetIntermediate)">
   <BuildApkSet
       ToolPath="$(JavaToolPath)"
@@ -2743,7 +2743,9 @@ because xbuild doesn't support framework reference assemblies.
 
 <Target Name="_DeployAppBundle"
     Condition=" '$(AndroidPackageFormat)' == 'aab' "
-    DependsOnTargets="_BuildApkSet;_AndroidAdbToolPath">
+    DependsOnTargets="_AndroidDeployAppBundleInputs;_BuildApkSet;_AndroidAdbToolPath"
+    Inputs="$(_ApkSetIntermediate)"
+    Outputs="$(_AndroidAppBundleInstallFlag)">
   <Exec
       Condition=" '$(EmbedAssembliesIntoApk)' == 'true' "
       Command="$(_AdbCommand) $(AdbTarget) shell pm list packages $(_AndroidPackage)"
@@ -2782,6 +2784,10 @@ because xbuild doesn't support framework reference assemblies.
       ApkSet="$(_ApkSetIntermediate)"
       Modules="@(AndroidInstallModules)"
   />
+  <Touch Files="$(_AndroidAppBundleInstallFlag)" AlwaysCreate="true" />
+  <ItemGroup>
+    <FileWrites Include="$(_AndroidAppBundleInstallFlag)" />
+  </ItemGroup>
 </Target>
 
 <Target Name="Install"
