@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Xml.Linq;
 
 using NUnit.Framework;
@@ -25,16 +26,16 @@ namespace Xamarin.Android.Tools.Tests
 			File.WriteAllText (file, "<broken");
 			File.WriteAllText (file + ".old", "previous");
 			var environment = new Dictionary<string, string> { ["HOME"] = "home" };
-			var errors = new System.Collections.Concurrent.ConcurrentBag<string> ();
+			int errors = 0;
 			try {
 				System.Threading.Tasks.Parallel.For (0, 2, _ => {
 					var config = AndroidSdkUnix.GetUnixConfigFile ((level, message) => {
 						if (level == TraceLevel.Error)
-							errors.Add (message);
+							Interlocked.Increment (ref errors);
 					}, environment, root);
 					Assert.IsEmpty (config.Elements ());
 				});
-				Assert.AreEqual (2, errors.Count);
+				Assert.AreEqual (2, errors);
 				Assert.AreEqual ("<broken", File.ReadAllText (file));
 				Assert.AreEqual ("previous", File.ReadAllText (file + ".old"));
 			} finally {

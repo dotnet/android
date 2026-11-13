@@ -11,41 +11,6 @@ namespace Xamarin.Android.Tools.Tests
 	[TestFixture]
 	public class JdkInfoTests
 	{
-		[Test]
-		public void FindJdk_RelativePathProbeUsesWorkingDirectory ()
-		{
-			var root = Path.Combine (Path.GetTempPath (), Guid.NewGuid ().ToString ("N"));
-			try {
-				for (int i = 0; i < 2; i++) {
-					var project = Path.Combine (root, $"project-{i}");
-					var home = Path.Combine (project, "jdk");
-					CreateFauxJdk (home, "1.0", "", OS.IsWindows ? "%DISCOVERY_JAVA_VERSION%" : "$DISCOVERY_JAVA_VERSION");
-					File.Delete (Path.Combine (home, "release"));
-					var java = Path.Combine (home, "bin", OS.IsWindows ? "java.cmd" : "java");
-					File.WriteAllText (java, (OS.IsWindows ?
-						"@if not exist probe.txt exit /b 1\n" :
-						"#!/bin/sh\n[ -f probe.txt ] || exit 1\n") + File.ReadAllText (java));
-					File.WriteAllText (Path.Combine (project, "probe.txt"), "");
-					var environment = new Dictionary<string, string> {
-						["PATH"] = Path.Combine ("jdk", "bin"),
-						["PATHEXT"] = ".CMD",
-						["DISCOVERY_JAVA_VERSION"] = $"999.123.{i}",
-						["XAMARIN_ANDROID_REGKEY"] = $@"Software\JdkInfoTests\{Guid.NewGuid ():N}",
-					};
-					if (Environment.GetEnvironmentVariable ("SystemRoot") is string systemRoot)
-						environment ["SystemRoot"] = systemRoot;
-					var version = new Version (999, 123, i);
-					var jdk = JdkInfo.FindJdk ((_, _) => { }, null, version, version, environment, project);
-					Assert.IsNotNull (jdk);
-					Assert.AreEqual (home, jdk.HomePath);
-					Assert.AreEqual ("$PATH", jdk.Locator);
-					Assert.AreEqual (version, jdk.Version);
-				}
-			} finally {
-				Directory.Delete (root, recursive: true);
-			}
-		}
-
 		[TestCase ("JI_JAVA_HOME")]
 		[TestCase ("JAVA_HOME")]
 		[TestCase ("PATH")]
@@ -54,9 +19,18 @@ namespace Xamarin.Android.Tools.Tests
 			var root = Path.Combine (Path.GetTempPath (), Guid.NewGuid ().ToString ("N"));
 			try {
 				CreateFauxJdk (root, "999.123.456", "", OS.IsWindows ? "%DISCOVERY_JAVA_VERSION%" : "$DISCOVERY_JAVA_VERSION");
+				var project = Path.Combine (root, "project");
+				if (variable == "PATH") {
+					Directory.CreateDirectory (project);
+					File.WriteAllText (Path.Combine (project, "probe.txt"), "");
+					var java = Path.Combine (root, "bin", OS.IsWindows ? "java.cmd" : "java");
+					File.WriteAllText (java, (OS.IsWindows ?
+						"@if not exist probe.txt exit /b 1\n" :
+						"#!/bin/sh\n[ -f probe.txt ] || exit 1\n") + File.ReadAllText (java));
+				}
 				var messages    = new List<string> ();
 				var environment = new Dictionary<string, string> {
-					[OS.IsWindows && variable == "PATH" ? "Path" : variable] = variable == "PATH" ? Path.Combine (root, "bin") : root,
+					[OS.IsWindows && variable == "PATH" ? "Path" : variable] = variable == "PATH" ? Path.Combine ("..", "bin") : root,
 					[OS.IsWindows ? "PathExt" : "PATHEXT"] = ".CMD",
 					["DISCOVERY_JAVA_VERSION"] = variable,
 				};
@@ -65,7 +39,10 @@ namespace Xamarin.Android.Tools.Tests
 				if (Environment.GetEnvironmentVariable ("SystemRoot") is string systemRoot)
 					environment ["SystemRoot"] = systemRoot;
 				var versionRange = new Version (999, 123, 456);
-				var jdk          = JdkInfo.FindJdk ((_, message) => messages.Add (message), null, versionRange, versionRange, environment);
+				Action<TraceLevel, string> logger = (_, message) => messages.Add (message);
+				var jdk = variable == "PATH"
+					? JdkInfo.FindJdk (logger, null, versionRange, versionRange, environment, project)
+					: JdkInfo.FindJdk (logger, null, versionRange, versionRange, environment);
 				Assert.IsNotNull (jdk);
 				Assert.AreEqual (root, jdk.HomePath);
 				Assert.AreEqual ($"${variable}", jdk.Locator);

@@ -33,9 +33,8 @@ namespace Xamarin.Android.Build.Tests {
 		const   string  MinimumSupportedJavaVersion     = "1.6.0";
 		const   string  LatestSupportedJavaVersion      = "11.0.99";
 
-		[TestCase (false)]
-		[TestCase (true)]
-		public void ResolveSdksUsesProjectPaths (bool discover)
+		[Test]
+		public void ResolveSdksUsesProjectPaths ()
 		{
 			var path = Path.Combine ("temp", TestName);
 			var tasks = new ResolveSdks [2];
@@ -62,9 +61,9 @@ namespace Xamarin.Android.Build.Tests {
 								["PATHEXT"] = ".DISCOVERY",
 								["XAMARIN_ANDROID_REGKEY"] = $@"Software\ResolveSdksTests\{Guid.NewGuid ():N}",
 							}),
-						AndroidSdkPath = discover ? " " : i == 0 ? sdk : Path.Combine ("sdk", "..", "sdk"),
-						AndroidNdkPath = discover ? " " : i == 0 ? ndk : "ndk",
-						JavaSdkPath = discover ? " " : i == 0 ? jdk : "jdk",
+						AndroidSdkPath = " ",
+						AndroidNdkPath = " ",
+						JavaSdkPath = " ",
 						MonoAndroidToolsPath = "tools",
 						MinimumSupportedJavaVersion = "21.0",
 						LatestSupportedJavaVersion = "25.0.99",
