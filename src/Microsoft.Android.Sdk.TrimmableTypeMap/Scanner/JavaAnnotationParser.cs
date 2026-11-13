@@ -147,7 +147,7 @@ sealed class JavaAnnotationParser
 		return result;
 	}
 
-	internal string ManagedValueToJavaSource (string managedType, object? value)
+	string ManagedValueToJavaSource (string managedType, object? value)
 	{
 		if (value is null) {
 			return "null";

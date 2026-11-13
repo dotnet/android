@@ -274,6 +274,18 @@ namespace Java.InteropTests
 			}
 		}
 
+		[Test]
+		public void JavaAnnotation_LongValueOutsideIntRange_UsesJavaLongLiteral ()
+		{
+			using var peer = new TrimmableRuntimeLongAnnotationPeer ();
+			using var annotationType = Java.Lang.Class.FromType (typeof (global::Net.Dot.Android.Test.ILongValueAnnotation));
+			using var annotation = peer.Class.GetAnnotation (annotationType)
+				?? throw new AssertionException ("The generated Java type must have the runtime annotation.");
+			var value = JNIEnv.GetMethodID (annotationType.Handle, "value", "()J");
+
+			Assert.AreEqual (long.MaxValue, JNIEnv.CallLongMethod (annotation.Handle, value));
+		}
+
 		static void CopyToJavaCollection (Java.Util.ArrayList arrayList, Array values)
 		{
 			using (var collection = new JavaCollection (arrayList.Handle, JniHandleOwnership.DoNotTransfer)) {
@@ -334,6 +346,12 @@ namespace Java.InteropTests
 				?? throw new InvalidOperationException ("The legacy callback peer was not found.");
 			return peer.GetHashCode ();
 		}
+	}
+
+	[Register ("net/dot/android/test/TrimmableRuntimeLongAnnotationPeer")]
+	[global::Net.Dot.Android.Test.LongValueAnnotation (Value = long.MaxValue)]
+	class TrimmableRuntimeLongAnnotationPeer : Java.Lang.Object
+	{
 	}
 
 	[Register ("net/dot/android/test/TrimmableRuntimeThrowingPeer")]
