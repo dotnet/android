@@ -1,6 +1,7 @@
 #nullable enable
 
 using System;
+using System.Globalization;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
@@ -771,7 +772,7 @@ namespace Java.Interop.Tools.TypeNameMappings
 			var hash = Crc64Helper.ComputeJones (data);
 			var buf  = new StringBuilder (hash.Length * 2);
 			foreach (var b in hash)
-				buf.AppendFormat ("{0:x2}", b);
+				buf.AppendFormat (CultureInfo.InvariantCulture, "{0:x2}", b);
 			return buf.ToString ();
 		}
 

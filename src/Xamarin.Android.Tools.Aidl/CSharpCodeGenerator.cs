@@ -1,4 +1,5 @@
 using System;
+using System.Globalization;
 using System.Collections.Generic;
 using Microsoft.CSharp;
 using System.IO;
@@ -418,37 +419,37 @@ namespace Xamarin.Android.Tools.Aidl
 			string csname = name_cache.ToCSharp (type);
 			switch (csname) {
 			case "String":
-				return String.Format ("{0} = {1}.ReadString ();", arg, parcel);
+				return String.Format (CultureInfo.InvariantCulture, "{0} = {1}.ReadString ();", arg, parcel);
 			case "String []":
-				return String.Format ("{0} = {1}.CreateStringArray ();", arg, parcel);
+				return String.Format (CultureInfo.InvariantCulture, "{0} = {1}.CreateStringArray ();", arg, parcel);
 			case "bool":
-				return String.Format ("{0} = {1}.ReadInt () != 0;", arg, parcel);
+				return String.Format (CultureInfo.InvariantCulture, "{0} = {1}.ReadInt () != 0;", arg, parcel);
 			case "bool []":
-				return String.Format ("{0} = {1}.CreateBooleanArray ();", arg, parcel);
+				return String.Format (CultureInfo.InvariantCulture, "{0} = {1}.CreateBooleanArray ();", arg, parcel);
 			case "sbyte":
-				return String.Format ("{0} = {1}.ReadByte ();", arg, parcel);
+				return String.Format (CultureInfo.InvariantCulture, "{0} = {1}.ReadByte ();", arg, parcel);
 			case "byte []":
-				return String.Format ("{0} = {1}.CreateByteArray ();", arg, parcel);
+				return String.Format (CultureInfo.InvariantCulture, "{0} = {1}.CreateByteArray ();", arg, parcel);
 			case "char":
-				return String.Format ("{0} = (char) {1}.ReadInt ();", arg, parcel);
+				return String.Format (CultureInfo.InvariantCulture, "{0} = (char) {1}.ReadInt ();", arg, parcel);
 			case "char []":
-				return String.Format ("{0} = {1}.CreateCharArray ();", arg, parcel);
+				return String.Format (CultureInfo.InvariantCulture, "{0} = {1}.CreateCharArray ();", arg, parcel);
 			case "int":
-				return String.Format ("{0} = {1}.ReadInt ();", arg, parcel);
+				return String.Format (CultureInfo.InvariantCulture, "{0} = {1}.ReadInt ();", arg, parcel);
 			case "int []":
-				return String.Format ("{0} = {1}.CreateIntArray ();", arg, parcel);
+				return String.Format (CultureInfo.InvariantCulture, "{0} = {1}.CreateIntArray ();", arg, parcel);
 			case "long":
-				return String.Format ("{0} = {1}.ReadLong ();", arg, parcel);
+				return String.Format (CultureInfo.InvariantCulture, "{0} = {1}.ReadLong ();", arg, parcel);
 			case "long []":
-				return String.Format ("{0} = {1}.CreateLongArray ();", arg, parcel);
+				return String.Format (CultureInfo.InvariantCulture, "{0} = {1}.CreateLongArray ();", arg, parcel);
 			case "float":
-				return String.Format ("{0} = {1}.ReadFloat ();", arg, parcel);
+				return String.Format (CultureInfo.InvariantCulture, "{0} = {1}.ReadFloat ();", arg, parcel);
 			case "float []":
-				return String.Format ("{0} = {1}.CreateFloatArray ();", arg, parcel);
+				return String.Format (CultureInfo.InvariantCulture, "{0} = {1}.CreateFloatArray ();", arg, parcel);
 			case "double":
-				return String.Format ("{0} = {1}.ReadDouble ();", arg, parcel);
+				return String.Format (CultureInfo.InvariantCulture, "{0} = {1}.ReadDouble ();", arg, parcel);
 			case "double []":
-				return String.Format ("{0} = {1}.CreateDoubleArray ();", arg, parcel);
+				return String.Format (CultureInfo.InvariantCulture, "{0} = {1}.CreateDoubleArray ();", arg, parcel);
 			// FIXME: are JavaList for List and JavaDictionary for Map always appropriate?
 			case "List":
 			case "Android.Runtime.JavaList":
@@ -456,37 +457,37 @@ namespace Xamarin.Android.Tools.Aidl
 					switch (name_cache.ToCSharp (type.GenericArguments.First ())) {
 					case "String":
 					case "Java.Lang.ICharSequence":
-						return String.Format ("{0} = (global::Android.Runtime.JavaList) {1}.CreateStringArrayList ();", arg, parcel);
+						return String.Format (CultureInfo.InvariantCulture, "{0} = (global::Android.Runtime.JavaList) {1}.CreateStringArrayList ();", arg, parcel);
 					case "Android.OS.IBinder":
-						return String.Format ("{0} = (global::Android.Runtime.JavaList) {1}.CreateBinderArrayList ();", arg, parcel);
+						return String.Format (CultureInfo.InvariantCulture, "{0} = (global::Android.Runtime.JavaList) {1}.CreateBinderArrayList ();", arg, parcel);
 					default:
-						return String.Format ("{0} = (global::Android.Runtime.JavaList) {1}.CreateTypedArrayList ({2}.Creator);", arg, parcel, ToOutputTypeName (name_cache.ToCSharp (type.GenericArguments [0])));
+						return String.Format (CultureInfo.InvariantCulture, "{0} = (global::Android.Runtime.JavaList) {1}.CreateTypedArrayList ({2}.Creator);", arg, parcel, ToOutputTypeName (name_cache.ToCSharp (type.GenericArguments [0])));
 					}
 				}
-				return String.Format ("{0} = (global::Android.Runtime.JavaList) {1}.ReadArrayList ((global::Java.Lang.ClassLoader) null);", arg, parcel);
+				return String.Format (CultureInfo.InvariantCulture, "{0} = (global::Android.Runtime.JavaList) {1}.ReadArrayList ((global::Java.Lang.ClassLoader) null);", arg, parcel);
 			case "Map":
 			case "Android.Runtime.JavaDictionary":
-				return String.Format ("{0} = (global::Android.Runtime.JavaDictionary) {1}.ReadHashMap ((global::Java.Lang.ClassLoader) null);", arg, parcel);
+				return String.Format (CultureInfo.InvariantCulture, "{0} = (global::Android.Runtime.JavaDictionary) {1}.ReadHashMap ((global::Java.Lang.ClassLoader) null);", arg, parcel);
 			case "Android.OS.IParcelable":
-				return String.Format ("{0} = {1}.ReadInt () != 0 ? ({2}) global::Android.OS.Bundle.Creator.CreateFromParcel ({1}) : null;", arg, parcel, ToOutputTypeName (csname));
+				return String.Format (CultureInfo.InvariantCulture, "{0} = {1}.ReadInt () != 0 ? ({2}) global::Android.OS.Bundle.Creator.CreateFromParcel ({1}) : null;", arg, parcel, ToOutputTypeName (csname));
 			case "Android.OS.IBinder":
-				return String.Format ("{0} = {1}.ReadStrongBinder ();", arg, parcel);
+				return String.Format (CultureInfo.InvariantCulture, "{0} = {1}.ReadStrongBinder ();", arg, parcel);
 			case "Android.OS.IBinder []":
-				return String.Format ("{0} = {1}.CreateBinderArray ();", arg, parcel);
+				return String.Format (CultureInfo.InvariantCulture, "{0} = {1}.CreateBinderArray ();", arg, parcel);
 			case "Java.Lang.ICharSequence":
-				return String.Format ("{0} = {1}.ReadInt () != 0 ? (global::Java.Lang.ICharSequence) global::Android.Text.TextUtils.CharSequenceCreator.CreateFromParcel ({1}) : null;", arg, parcel);
+				return String.Format (CultureInfo.InvariantCulture, "{0} = {1}.ReadInt () != 0 ? (global::Java.Lang.ICharSequence) global::Android.Text.TextUtils.CharSequenceCreator.CreateFromParcel ({1}) : null;", arg, parcel);
 			default:
 				if (name_cache.IsParcelable (type)) {
 					if (type.ArrayDimension > 0) // ParcelableCreator
-						return String.Format ("{0} = global::System.Array.ConvertAll<global::Java.Lang.Object,{2}> ({1}.CreateTypedArray ({2}.Creator), __input => ({2}) __input);", arg, parcel, ToOutputTypeName (csname.Substring (0, csname.Length - 3)));
+						return String.Format (CultureInfo.InvariantCulture, "{0} = global::System.Array.ConvertAll<global::Java.Lang.Object,{2}> ({1}.CreateTypedArray ({2}.Creator), __input => ({2}) __input);", arg, parcel, ToOutputTypeName (csname.Substring (0, csname.Length - 3)));
 					else
-						return String.Format ("{0} = {1}.ReadInt () != 0 ? ({2}) {2}.Creator.CreateFromParcel ({1}) : null;", arg, parcel, ToOutputTypeName (csname));
+						return String.Format (CultureInfo.InvariantCulture, "{0} = {1}.ReadInt () != 0 ? ({2}) {2}.Creator.CreateFromParcel ({1}) : null;", arg, parcel, ToOutputTypeName (csname));
 				}
 				else if (type.ArrayDimension > 0)
-					throw new NotSupportedException (String.Format ("AIDL does not support creating this array type: {0}", type));
+					throw new NotSupportedException (String.Format (CultureInfo.InvariantCulture, "AIDL does not support creating this array type: {0}", type));
 				else
 					// interfaces
-					return String.Format ("{0} = {2}Stub.AsInterface ({1}.ReadStrongBinder ());", arg, parcel, ToOutputTypeName (csname));
+					return String.Format (CultureInfo.InvariantCulture, "{0} = {2}Stub.AsInterface ({1}.ReadStrongBinder ());", arg, parcel, ToOutputTypeName (csname));
 			}
 		}
 
@@ -495,23 +496,23 @@ namespace Xamarin.Android.Tools.Aidl
 			string csname = name_cache.ToCSharp (type);
 			switch (csname) {
 			case "String []":
-				return String.Format ("{1}.ReadStringArray ({0});", arg, parcel);
+				return String.Format (CultureInfo.InvariantCulture, "{1}.ReadStringArray ({0});", arg, parcel);
 			case "bool []":
-				return String.Format ("{1}.ReadBooleanArray ({0});", arg, parcel);
+				return String.Format (CultureInfo.InvariantCulture, "{1}.ReadBooleanArray ({0});", arg, parcel);
 			case "byte []":
-				return String.Format ("{1}.ReadByteArray ({0});", arg, parcel);
+				return String.Format (CultureInfo.InvariantCulture, "{1}.ReadByteArray ({0});", arg, parcel);
 			case "char []":
-				return String.Format ("{1}.ReadCharArray ({0});", arg, parcel);
+				return String.Format (CultureInfo.InvariantCulture, "{1}.ReadCharArray ({0});", arg, parcel);
 			case "int []":
-				return String.Format ("{1}.ReadIntArray ({0});", arg, parcel);
+				return String.Format (CultureInfo.InvariantCulture, "{1}.ReadIntArray ({0});", arg, parcel);
 			case "long []":
-				return String.Format ("{1}.ReadLongArray ({0});", arg, parcel);
+				return String.Format (CultureInfo.InvariantCulture, "{1}.ReadLongArray ({0});", arg, parcel);
 			case "float []":
-				return String.Format ("{1}.ReadFloatArray ({0});", arg, parcel);
+				return String.Format (CultureInfo.InvariantCulture, "{1}.ReadFloatArray ({0});", arg, parcel);
 			case "double []":
-				return String.Format ("{1}.ReadDoubleArray ({0});", arg, parcel);
+				return String.Format (CultureInfo.InvariantCulture, "{1}.ReadDoubleArray ({0});", arg, parcel);
 			case "Android.OS.IParcelable":
-				return String.Format ("{0} = {1}.ReadInt () != 0 ? ({2}) global::Android.OS.Bundle.Creator.CreateFromParcel ({1}) : null;", arg, parcel, ToOutputTypeName (csname));
+				return String.Format (CultureInfo.InvariantCulture, "{0} = {1}.ReadInt () != 0 ? ({2}) global::Android.OS.Bundle.Creator.CreateFromParcel ({1}) : null;", arg, parcel, ToOutputTypeName (csname));
 			// FIXME: are JavaList for List and JavaDictionary for Map always appropriate?
 			case "List":
 			case "Android.Runtime.JavaList":
@@ -519,33 +520,33 @@ namespace Xamarin.Android.Tools.Aidl
 					switch (name_cache.ToCSharp (type.GenericArguments.First ())) {
 					case "String":
 					case "Java.Lang.ICharSequence":
-						return String.Format ("{1}.ReadStringList ((global::System.Collections.Generic.IList<string>) {0});", arg, parcel);
+						return String.Format (CultureInfo.InvariantCulture, "{1}.ReadStringList ((global::System.Collections.Generic.IList<string>) {0});", arg, parcel);
 					case "Android.OS.IBinder":
-						return String.Format ("{1}.ReadBinderList ((global::System.Collections.Generic.IList<global::Android.OS.IBinder>) {0});", arg, parcel);
+						return String.Format (CultureInfo.InvariantCulture, "{1}.ReadBinderList ((global::System.Collections.Generic.IList<global::Android.OS.IBinder>) {0});", arg, parcel);
 					default:
-						return String.Format ("{1}.ReadTypedList ({0}, {2}.Creator);", arg, parcel, ToOutputTypeName (name_cache.ToCSharp (type.GenericArguments [0])));
+						return String.Format (CultureInfo.InvariantCulture, "{1}.ReadTypedList ({0}, {2}.Creator);", arg, parcel, ToOutputTypeName (name_cache.ToCSharp (type.GenericArguments [0])));
 					}
 				}
-				return String.Format ("{1}.ReadList ({0}, (global::Java.Lang.ClassLoader) null);", arg, parcel);
+				return String.Format (CultureInfo.InvariantCulture, "{1}.ReadList ({0}, (global::Java.Lang.ClassLoader) null);", arg, parcel);
 			case "Map":
 			case "Android.Runtime.JavaDictionary":
-				return String.Format ("{1}.ReadMap ({0}, (global::Java.Lang.ClassLoader) null);", arg, parcel);
+				return String.Format (CultureInfo.InvariantCulture, "{1}.ReadMap ({0}, (global::Java.Lang.ClassLoader) null);", arg, parcel);
 			case "Android.OS.IBinder":
-				return String.Format ("{0} = {1}.ReadStrongBinder ();", arg, parcel);
+				return String.Format (CultureInfo.InvariantCulture, "{0} = {1}.ReadStrongBinder ();", arg, parcel);
 			case "Android.OS.IBinder []":
-				return String.Format ("{1}.ReadBinderArray ({0});", arg, parcel);
+				return String.Format (CultureInfo.InvariantCulture, "{1}.ReadBinderArray ({0});", arg, parcel);
 			default:
 				if (name_cache.IsParcelable (type)) {
 					if (type.ArrayDimension > 0) // ParcelableCreator
-						return String.Format ("{1}.ReadTypedArray ({0}, {2}.Creator);", arg, parcel, ToOutputTypeName (csname.Substring (0, csname.Length - 3)));
+						return String.Format (CultureInfo.InvariantCulture, "{1}.ReadTypedArray ({0}, {2}.Creator);", arg, parcel, ToOutputTypeName (csname.Substring (0, csname.Length - 3)));
 					else
-						return String.Format ("if ({1}.ReadInt () != 0) {0}.ReadFromParcel ({1});", arg, parcel);
+						return String.Format (CultureInfo.InvariantCulture, "if ({1}.ReadInt () != 0) {0}.ReadFromParcel ({1});", arg, parcel);
 				}
 				else if (type.ArrayDimension > 0)
-					throw new NotSupportedException (String.Format ("AIDL does not support reading this array type: {0}", type));
+					throw new NotSupportedException (String.Format (CultureInfo.InvariantCulture, "AIDL does not support reading this array type: {0}", type));
 				else
 					// interfaces
-					return String.Format ("{0} = {2}Stub.AsInterface ({1}.ReadStrongBinder ());", arg, parcel, ToOutputTypeName (csname));
+					return String.Format (CultureInfo.InvariantCulture, "{0} = {2}Stub.AsInterface ({1}.ReadStrongBinder ());", arg, parcel, ToOutputTypeName (csname));
 			}
 		}
 
@@ -564,7 +565,7 @@ namespace Xamarin.Android.Tools.Aidl
 			case "sbyte":
 				return parcel + ".WriteByte (" + arg + ");";
 			case "byte []":
-				return String.Format ("{1}.WriteByteArray ({0});", arg, parcel);
+				return String.Format (CultureInfo.InvariantCulture, "{1}.WriteByteArray ({0});", arg, parcel);
 			case "char":
 				return parcel + ".WriteInt ((int) " + arg + ");";
 			case "char []":
@@ -592,37 +593,37 @@ namespace Xamarin.Android.Tools.Aidl
 					switch (name_cache.ToCSharp (type.GenericArguments.First ())) {
 					case "String":
 					case "Java.Lang.ICharSequence":
-						return String.Format ("{1}.WriteStringList ((global::System.Collections.Generic.IList<string>) {0});", arg, parcel);
+						return String.Format (CultureInfo.InvariantCulture, "{1}.WriteStringList ((global::System.Collections.Generic.IList<string>) {0});", arg, parcel);
 					case "Android.OS.IBinder":
-						return String.Format ("{1}.WriteBinderList ((global::System.Collections.Generic.IList<global::Android.OS.IBinder>) {0});", arg, parcel);
+						return String.Format (CultureInfo.InvariantCulture, "{1}.WriteBinderList ((global::System.Collections.Generic.IList<global::Android.OS.IBinder>) {0});", arg, parcel);
 					default:
-						return String.Format ("{1}.WriteTypedList ({0});", arg, parcel, ToOutputTypeName (name_cache.ToCSharp (type.GenericArguments [0])));
+						return String.Format (CultureInfo.InvariantCulture, "{1}.WriteTypedList ({0});", arg, parcel, ToOutputTypeName (name_cache.ToCSharp (type.GenericArguments [0])));
 					}
 				}
-				return String.Format ("{1}.WriteList ({0});", arg, parcel);
+				return String.Format (CultureInfo.InvariantCulture, "{1}.WriteList ({0});", arg, parcel);
 			case "Map":
 			case "Android.Runtime.JavaDictionary":
-				return String.Format ("{1}.WriteMap ({0});", arg, parcel);
+				return String.Format (CultureInfo.InvariantCulture, "{1}.WriteMap ({0});", arg, parcel);
 			case "Android.OS.Bundle":
 			case "Android.OS.IParcelable":
-				return String.Format ("if ({0} != null) {{ {1}.WriteInt (1); {0}.WriteToParcel ({1}, {2}); }} else {1}.WriteInt (0);", arg, parcel, parcelableWriteFlags);
+				return String.Format (CultureInfo.InvariantCulture, "if ({0} != null) {{ {1}.WriteInt (1); {0}.WriteToParcel ({1}, {2}); }} else {1}.WriteInt (0);", arg, parcel, parcelableWriteFlags);
 			case "Android.OS.IBinder":
-				return String.Format ("{1}.WriteStrongBinder ({0});", arg, parcel);
+				return String.Format (CultureInfo.InvariantCulture, "{1}.WriteStrongBinder ({0});", arg, parcel);
 			case "Android.OS.IBinder []":
-				return String.Format ("{1}.WriteBinderArray ({0});", arg, parcel);
+				return String.Format (CultureInfo.InvariantCulture, "{1}.WriteBinderArray ({0});", arg, parcel);
 			case "Java.Lang.ICharSequence":
-				return String.Format ("if ({0} != null) {{ {1}.WriteInt (1); global::Android.Text.TextUtils.WriteToParcel ({0}, {1}, {2}); }} else {1}.WriteInt (0);", arg, parcel, parcelableWriteFlags);
+				return String.Format (CultureInfo.InvariantCulture, "if ({0} != null) {{ {1}.WriteInt (1); global::Android.Text.TextUtils.WriteToParcel ({0}, {1}, {2}); }} else {1}.WriteInt (0);", arg, parcel, parcelableWriteFlags);
 			default: // interfaces
 				if (name_cache.IsParcelable (type)) {
 					if (type.ArrayDimension > 0)
-						return String.Format ("{1}.WriteTypedArray ({0}, {2});", arg, parcel, parcelableWriteFlags);
+						return String.Format (CultureInfo.InvariantCulture, "{1}.WriteTypedArray ({0}, {2});", arg, parcel, parcelableWriteFlags);
 					else
-						return String.Format ("if ({0} != null) {{ {1}.WriteInt (1); {0}.WriteToParcel ({1}, {2}); }} else {1}.WriteInt (0);", arg, parcel, parcelableWriteFlags);
+						return String.Format (CultureInfo.InvariantCulture, "if ({0} != null) {{ {1}.WriteInt (1); {0}.WriteToParcel ({1}, {2}); }} else {1}.WriteInt (0);", arg, parcel, parcelableWriteFlags);
 				}
 				else if (type.ArrayDimension > 0)
-					throw new NotSupportedException (String.Format ("AIDL does not support writing this array type: {0}", type));
+					throw new NotSupportedException (String.Format (CultureInfo.InvariantCulture, "AIDL does not support writing this array type: {0}", type));
 				else
-					return String.Format ("{1}.WriteStrongBinder (((({0} != null)) ? ({0}.AsBinder ()) : (null)));", arg, parcel);
+					return String.Format (CultureInfo.InvariantCulture, "{1}.WriteStrongBinder (((({0} != null)) ? ({0}.AsBinder ()) : (null)));", arg, parcel);
 			}
 		}
 

@@ -1,5 +1,6 @@
 ﻿using Microsoft.Win32;
 using System;
+using System.Globalization;
 using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.Diagnostics;
@@ -240,7 +241,7 @@ namespace Xamarin.Installer.Common
 					else
 						sb.Append (' ');
 					if (a.Any (c => Char.IsWhiteSpace (c)))
-						sb.AppendFormat ("\"{0}\"", a);
+						sb.AppendFormat (CultureInfo.InvariantCulture, "\"{0}\"", a);
 					else
 						sb.Append (a);
 				}

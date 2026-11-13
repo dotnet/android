@@ -1,4 +1,5 @@
 using System;
+using System.Globalization;
 using System.Linq;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -246,7 +247,7 @@ namespace Xamarin.Android.Tools
 				try {
 					doc = XDocument.Load (file);
 				} catch (Exception ex) {
-					logger (TraceLevel.Error, string.Format (Resources.InvalidMonodroidConfigFile_path_message, file, ex.Message));
+					logger (TraceLevel.Error, string.Format (CultureInfo.CurrentCulture, Resources.InvalidMonodroidConfigFile_path_message, file, ex.Message));
 					logger (TraceLevel.Verbose, ex.ToString ());
 
 					// move out of the way and create a new one

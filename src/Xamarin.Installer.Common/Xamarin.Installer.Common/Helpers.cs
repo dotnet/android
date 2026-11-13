@@ -1,5 +1,6 @@
 ﻿using Microsoft.Win32;
 using System;
+using System.Globalization;
 using System.IO;
 
 
@@ -111,7 +112,7 @@ namespace Xamarin.Installer.Common
 					return false;
 
 				try {
-					result = (T)Convert.ChangeType (o, typeof (T));
+					result = (T)Convert.ChangeType (o, typeof (T), CultureInfo.CurrentCulture);
 					return true;
 				} catch {
 					// ignore
