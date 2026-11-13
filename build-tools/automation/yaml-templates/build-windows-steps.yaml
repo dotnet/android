@@ -8,6 +8,8 @@ parameters:
 steps:
 - template: /build-tools/automation/yaml-templates/log-disk-space.yaml
 
+- template: /build-tools/automation/yaml-templates/kill-processes.yaml
+
 - template: /build-tools/automation/yaml-templates/clean.yaml
 
 - template: /build-tools/automation/yaml-templates/log-disk-space.yaml

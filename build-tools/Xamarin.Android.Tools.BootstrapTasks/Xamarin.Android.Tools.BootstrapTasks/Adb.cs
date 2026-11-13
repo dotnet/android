@@ -1,19 +1,22 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Text;
 using System.Threading;
 
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
 
+using Xamarin.Android.BuildTools.PrepTasks;
+
 using Tasks = System.Threading.Tasks;
+using static System.Threading.Tasks.TaskAsyncEnumerableExtensions;
 
 namespace Xamarin.Android.Tools.BootstrapTasks
 {
-	public class Adb : Task, ICancelableTask
+	public class Adb : Task
 	{
 		protected class CommandInfo
 		{
@@ -30,15 +33,12 @@ namespace Xamarin.Android.Tools.BootstrapTasks
 			public StreamWriter StderrWriter         { get; set; }
 			public Func<bool>   ShouldRun            { get; set; } = () => true;
 			public bool         SuppressMSbuildLog   { get; set; }
-			public int          ExitCode             { get; set; } = -1;
 
 			public string       Arguments            => ArgumentsGenerator != null ? ArgumentsGenerator () : ArgumentsString;
 		}
 
-		readonly List<string>   lines = new List <string> ();
-		readonly Lock           cancellationLock = new Lock ();
-		CancellationTokenSource commandCancellation;
-		volatile bool           canceled;
+		List<string>            lines = new List <string> ();
+		readonly Lock           linesLock = new Lock ();
 
 		public                  string          AdbTarget             { get; set; }
 		public                  string          AdbOptions            { get; set; }
@@ -60,37 +60,7 @@ namespace Xamarin.Android.Tools.BootstrapTasks
 
 		protected   virtual     int             OutputTimeout         => 30; // seconds
 
-		protected bool IsCancellationRequested => canceled;
-
-		public void Cancel ()
-		{
-			lock (cancellationLock) {
-				canceled = true;
-				commandCancellation?.Cancel ();
-			}
-		}
-
 		public override bool Execute ()
-		{
-			using var cancellation = new CancellationTokenSource ();
-			lock (cancellationLock) {
-				if (canceled)
-					return false;
-				commandCancellation = cancellation;
-			}
-			lines.Clear ();
-			try {
-				bool success = ExecuteCommands (cancellation.Token);
-				return success && !cancellation.IsCancellationRequested;
-			} catch (OperationCanceledException) when (cancellation.IsCancellationRequested) {
-				return false;
-			} finally {
-				lock (cancellationLock) commandCancellation = null;
-				Output = lines.ToArray ();
-			}
-		}
-
-		protected virtual bool ExecuteCommands (CancellationToken cancellationToken)
 		{
 			List <CommandInfo> commandArguments = GenerateCommandArguments ();
 			if (commandArguments == null || commandArguments.Count == 0)
@@ -98,47 +68,47 @@ namespace Xamarin.Android.Tools.BootstrapTasks
 
 			string adbPath = Path.Combine (ToolPath, ToolExe);
 			for (int i = 0; i < commandArguments.Count; i++) {
-				cancellationToken.ThrowIfCancellationRequested ();
 				CommandInfo info = commandArguments [i];
 				if (info.ShouldRun != null && !info.ShouldRun ())
 					continue;
-				info.ExitCode = -1;
 
+				info.StdoutWriter = OpenOutputFile (info.StdoutFilePath, info.StdoutAppend);
+				if (!info.MergeStdoutAndStderr)
+					info.StderrWriter = OpenOutputFile (info.StderrFilePath, info.StderrAppend);
+				BeforeCommand (i, info);
 				try {
-					using (info.StdoutWriter = OpenOutputFile (info.StdoutFilePath, info.StdoutAppend))
-					using (info.StderrWriter = info.MergeStdoutAndStderr ? null : OpenOutputFile (info.StderrFilePath, info.StderrAppend)) {
-						BeforeCommand (i, info);
-						try {
-							string arguments = info.Arguments;
-							Log.LogMessage (MessageImportance.Normal, $"Executing: {adbPath} {arguments}");
-							if (info.StdoutWriter != null)
-								LogFileWrite ("stdout", info.StdoutFilePath, info.StdoutAppend);
-							if (info.StderrWriter != null)
-								LogFileWrite ("stderr", info.StderrFilePath, info.StderrAppend);
-							info.ExitCode = RunCommand (adbPath, arguments, info, cancellationToken);
-							if (info.ExitCode == 0)
-								continue;
+					Log.LogMessage (MessageImportance.Normal, $"Executing: {adbPath} {info.Arguments}");
+					if (info.StdoutWriter != null)
+						LogFileWrite ("stdout", info.StdoutFilePath, info.StdoutAppend);
+					if (info.StderrWriter != null)
+						LogFileWrite ("stderr", info.StderrFilePath, info.StderrAppend);
+					int exitCode = RunCommand (adbPath, info);
+					if (exitCode == 0)
+						continue;
 
-							bool ignoreExit = IgnoreExitCode | info.IgnoreExitCode;
-							string message = $"  Command {adbPath} {arguments} failed with exit code {info.ExitCode}";
-							if (!ignoreExit) {
-								Log.LogError (message);
-								break;
-							}
-
-							if (info.LogIgnoredExitCodeAsWarning)
-								Log.LogWarning (message);
-							else
-								Log.LogMessage (MessageImportance.Normal, message);
-						} finally {
-							AfterCommand (i, info);
-						}
+					bool ignoreExit = IgnoreExitCode | info.IgnoreExitCode;
+					string message = $"  Command {adbPath} {info.Arguments} failed with exit code {exitCode}";
+					if (!ignoreExit) {
+						Log.LogError (message);
+						break;
 					}
+
+					if (info.LogIgnoredExitCodeAsWarning)
+						Log.LogWarning (message);
+					else
+						Log.LogMessage (MessageImportance.Normal, message);
+				} catch {
+					throw;
 				} finally {
+					AfterCommand (i, info);
+					info.StdoutWriter?.Dispose ();
 					info.StdoutWriter = null;
+					info.StderrWriter?.Dispose ();
 					info.StderrWriter = null;
 				}
 			}
+
+			Output  = lines?.ToArray ();
 
 			return !Log.HasLoggedErrors;
 		}
@@ -181,9 +151,9 @@ namespace Xamarin.Android.Tools.BootstrapTasks
 		protected virtual void ProcessStderr (string line)
 		{}
 
-		void OnOutput (string line, bool isStdout, CommandInfo info, bool completeLine = true)
+		void OnOutput (string line, bool isStdout, CommandInfo info)
 		{
-			lines.Add (line);
+			lock (linesLock) lines.Add (line);
 
 			if (!info.SuppressMSbuildLog) {
 				if (isStdout || WriteOutputAsMessage)
@@ -192,22 +162,16 @@ namespace Xamarin.Android.Tools.BootstrapTasks
 					Log.LogWarning (line);
 			}
 
-			bool useStdout = isStdout || info.MergeStdoutAndStderr;
-			var writer = useStdout ? info.StdoutWriter : info.StderrWriter;
-			if (completeLine)
-				writer?.WriteLine (line);
-			else
-				writer?.Write (line);
-
-			if (completeLine) {
-				if (useStdout)
-					ProcessStdout (line);
-				else
-					ProcessStderr (line);
+			if (isStdout || info.MergeStdoutAndStderr) {
+				info.StdoutWriter?.WriteLine (line);
+				ProcessStdout (line);
+			} else {
+				info.StderrWriter?.WriteLine (line);
+				ProcessStderr (line);
 			}
 		}
 
-		int RunCommand (string commandPath, string arguments, CommandInfo info, CancellationToken cancellationToken)
+		int RunCommand (string commandPath, CommandInfo info)
 		{
 			var si = new ProcessStartInfo (commandPath) {
 				UseShellExecute = false,
@@ -221,7 +185,7 @@ namespace Xamarin.Android.Tools.BootstrapTasks
 			si.RedirectStandardError = true;
 			si.StandardOutputEncoding = Encoding.Default;
 			si.StandardErrorEncoding = Encoding.Default;
-			si.Arguments = arguments;
+			si.Arguments = info.Arguments;
 
 			if (EnvironmentVariables != null && EnvironmentVariables.Length > 0) {
 				foreach (string ev in EnvironmentVariables) {
@@ -254,6 +218,7 @@ namespace Xamarin.Android.Tools.BootstrapTasks
 
 			if (!si.RedirectStandardError)
 				si.StandardErrorEncoding = null;
+
 			if (!si.RedirectStandardOutput)
 				si.StandardOutputEncoding = null;
 
@@ -262,165 +227,40 @@ namespace Xamarin.Android.Tools.BootstrapTasks
 			};
 			p.Start ();
 
-			using var exitCancellation = CancellationTokenSource.CreateLinkedTokenSource (cancellationToken);
-			using var outputCancellation = CancellationTokenSource.CreateLinkedTokenSource (cancellationToken);
-			if (Timeout > 0)
-				exitCancellation.CancelAfter (Timeout);
-			var exit = WaitForExitAsync ();
+			using var readCancellation = new CancellationTokenSource ();
+			var output = ReadOutputAsync ();
 			try {
-				ReadOutput ();
-
-				int exitCode = exit.GetAwaiter ().GetResult ();
-				if (exitCancellation.IsCancellationRequested)
-					Log.LogWarning ($"  Process '{commandPath} {arguments}' failed to exit within the timeout of {Timeout}ms.");
-				return exitCode;
-			} catch (OperationCanceledException) when (!cancellationToken.IsCancellationRequested) {
-				if (exit.IsFaulted)
-					exit.GetAwaiter ().GetResult ();
-				if (exitCancellation.IsCancellationRequested)
-					Log.LogWarning ($"  Process '{commandPath} {arguments}' failed to exit within the timeout of {Timeout}ms.");
-				Log.LogWarning ($"  Process '{commandPath} {arguments}' output did not close within {OutputTimeout}s after exit.");
-				return -1;
+				var status = Timeout > 0
+					? p.SafeHandle.WaitForExitOrKillOnTimeout (TimeSpan.FromMilliseconds (Timeout))
+					: p.SafeHandle.WaitForExit ();
+				if (status.Canceled)
+					Log.LogWarning ($"  Process '{commandPath} {si.Arguments}' failed to exit within the timeout of {Timeout}ms, killing the process");
+				output.Wait (TimeSpan.FromSeconds (OutputTimeout));
+				return status.Canceled ? -1 : status.ExitCode;
 			} finally {
-				exitCancellation.Cancel ();
-				outputCancellation.Cancel ();
+				readCancellation.Cancel ();
 				try {
-					try {
-						exit.GetAwaiter ().GetResult ();
-					} catch (OperationCanceledException) when (exitCancellation.IsCancellationRequested) {
-					}
+					output.GetAwaiter ().GetResult ();
+				} catch (OperationCanceledException) when (readCancellation.IsCancellationRequested) {
 				} finally {
-					try {
-						// ADB can start a shared server. Only this finite client belongs to us.
-						try {
-							if (!p.HasExited)
-								p.Kill ();
-						} catch (InvalidOperationException) when (p.HasExited) {
-						}
-						if (!p.SafeHandle.TryWaitForExit (TimeSpan.FromSeconds (5), out _))
-							Log.LogError ($"Process '{commandPath} {arguments}' did not exit after termination.");
-					} catch (Win32Exception ex) {
-						Log.LogError ($"Could not terminate '{commandPath} {arguments}': {ex.Message}");
-					} finally {
-						using var stdout = si.RedirectStandardOutput ? p.StandardOutput : null;
-						using var stderr = si.RedirectStandardError ? p.StandardError : null;
-					}
+					using var stdout = si.RedirectStandardOutput ? p.StandardOutput : null;
+					using var stderr = si.RedirectStandardError ? p.StandardError : null;
 				}
 			}
 
-			void ReadOutput ()
+			async Tasks.Task ReadOutputAsync ()
 			{
-				var stdout = si.RedirectStandardOutput ? new ProcessOutputReader (p.StandardOutput) : null;
-				var stderr = si.RedirectStandardError ? new ProcessOutputReader (p.StandardError) : null;
-				var stdoutLine = new StringBuilder ();
-				var stderrLine = new StringBuilder ();
-				bool stdoutSkipLf = false;
-				bool stderrSkipLf = false;
-				Tasks.Task<int> stdoutRead = null;
-				Tasks.Task<int> stderrRead = null;
-				bool canceledOutput = false;
-				try {
-					stdoutRead = stdout?.ReadAsync (outputCancellation.Token);
-					stderrRead = stderr?.ReadAsync (outputCancellation.Token);
-
-					while (stdoutRead != null || stderrRead != null) {
-						var read = stdoutRead == null ? stderrRead : stderrRead == null ? stdoutRead :
-							Tasks.Task.WhenAny (stdoutRead, stderrRead).GetAwaiter ().GetResult ();
-						bool isStdout = read == stdoutRead;
-						int count = read.GetAwaiter ().GetResult ();
-						if (isStdout)
-							stdoutRead = null;
-						else
-							stderrRead = null;
-
-						if (count == 0) {
-							FlushLine (isStdout, completeLine: true);
-							continue;
-						}
-						ConsumeText ((isStdout ? stdout : stderr).Buffer.AsSpan (0, count), isStdout);
-						if (isStdout)
-							stdoutRead = stdout.ReadAsync (outputCancellation.Token);
-						else
-							stderrRead = stderr.ReadAsync (outputCancellation.Token);
-					}
-				} catch (OperationCanceledException) when (outputCancellation.IsCancellationRequested) {
-					canceledOutput = true;
-					throw;
-				} finally {
-					outputCancellation.Cancel ();
-					try {
-						Tasks.Task.WhenAll (stdoutRead ?? Tasks.Task.FromResult (0), stderrRead ?? Tasks.Task.FromResult (0))
-							.GetAwaiter ().GetResult ();
-					} catch (OperationCanceledException) when (outputCancellation.IsCancellationRequested) {
-					}
-					if (canceledOutput) {
-						if (stdoutRead?.IsCompletedSuccessfully == true)
-							ConsumeText (stdout.Buffer.AsSpan (0, stdoutRead.Result), isStdout: true);
-						if (stderrRead?.IsCompletedSuccessfully == true)
-							ConsumeText (stderr.Buffer.AsSpan (0, stderrRead.Result), isStdout: false);
-						// Cancellation is not EOF: retain fragments as diagnostics, not parser records.
-						FlushLine (isStdout: true, completeLine: false);
-						FlushLine (isStdout: false, completeLine: false);
-					}
-				}
-
-				void ConsumeText (ReadOnlySpan<char> text, bool isStdout)
-				{
-					var line = isStdout ? stdoutLine : stderrLine;
-					ref bool skipLf = ref (isStdout ? ref stdoutSkipLf : ref stderrSkipLf);
-					foreach (char value in text) {
-						if (skipLf) {
-							skipLf = false;
-							if (value == '\n')
-								continue;
-						}
-						if (value == '\r' || value == '\n') {
-							OnOutput (line.ToString (), isStdout, info);
-							line.Clear ();
-							skipLf = value == '\r';
-						} else {
-							line.Append (value);
-						}
-					}
-				}
-
-				void FlushLine (bool isStdout, bool completeLine)
-				{
-					var line = isStdout ? stdoutLine : stderrLine;
-					if (line.Length > 0) {
-						OnOutput (line.ToString (), isStdout, info, completeLine);
-						line.Clear ();
-					}
-				}
-			}
-
-			async Tasks.Task<int> WaitForExitAsync ()
-			{
-				try {
-					int exitCode;
-					try {
-						var status = await p.SafeHandle.WaitForExitAsync (exitCancellation.Token).ConfigureAwait (false);
-						exitCancellation.CancelAfter (System.Threading.Timeout.Infinite);
-						exitCode = status.ExitCode;
-					} catch (OperationCanceledException) when (!cancellationToken.IsCancellationRequested && exitCancellation.IsCancellationRequested) {
-						try {
-							if (!p.HasExited)
-								p.Kill ();
-						} catch (InvalidOperationException) when (p.HasExited) {
-						}
-						if (!p.SafeHandle.TryWaitForExit (TimeSpan.FromSeconds (5), out _))
-							throw new TimeoutException ($"Process '{commandPath} {arguments}' did not exit after termination.");
-						exitCode = -1;
-					}
-					if (OutputTimeout >= 0)
-						outputCancellation.CancelAfter (TimeSpan.FromSeconds (OutputTimeout));
-					return exitCode;
-				} catch {
-					outputCancellation.Cancel ();
-					throw;
+				if (si.RedirectStandardOutput && si.RedirectStandardError) {
+					await foreach (var line in p.ReadAllLinesAsync (readCancellation.Token).ConfigureAwait (false))
+						OnOutput (line.Content, !line.StandardError, info);
+				} else if (si.RedirectStandardOutput || si.RedirectStandardError) {
+					var reader = si.RedirectStandardOutput ? p.StandardOutput : p.StandardError;
+					while (await reader.ReadLineAsync (readCancellation.Token).ConfigureAwait (false) is string line)
+						OnOutput (line, si.RedirectStandardOutput, info);
 				}
 			}
 		}
+
 	}
 }
 

@@ -1057,14 +1057,12 @@ static (int code, string stdout, string stderr) Run (string file, params string 
 	var timer = Stopwatch.StartNew ();
 	using var process = Process.Start (psi) ?? throw new InvalidOperationException ($"Could not start '{file}'.");
 	using var readCancellation = new CancellationTokenSource ();
-	using var stdoutReader = process.StandardOutput;
-	using var stderrReader = process.StandardError;
 	var stdout = new StringBuilder ();
 	var stderr = new StringBuilder ();
 	// ReadAllText cannot return the captured prefix when EOF times out.
 	var readers = Task.WhenAll (
-		ReadOutputAsync (stdoutReader, stdout),
-		ReadOutputAsync (stderrReader, stderr));
+		ReadOutputAsync (process.StandardOutput, stdout),
+		ReadOutputAsync (process.StandardError, stderr));
 	int exitCode = -1;
 	bool timedOut = false;
 	try {

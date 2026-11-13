@@ -33,12 +33,11 @@ namespace Xamarin.Android.Tools.BootstrapTasks
 		{
 			// Log messages as output rather than warnings
 			WriteOutputAsMessage = true;
-			IsValidTarget = false;
 
 			base.Execute ();
 
-			// An unavailable target is not an error, but cancellation must still stop the build.
-			return !IsCancellationRequested;
+			// We always succeed
+			return true;
 		}
 
 		protected override List <CommandInfo> GenerateCommandArguments ()
@@ -67,12 +66,6 @@ namespace Xamarin.Android.Tools.BootstrapTasks
 				throw new ArgumentOutOfRangeException (nameof (commandIndex));
 
 			currentState = commandIndex;
-		}
-
-		protected override void AfterCommand (int commandIndex, CommandInfo info)
-		{
-			if (info.ExitCode != 0)
-				IsValidTarget = false;
 		}
 
 		protected override void ProcessStdout (string line)

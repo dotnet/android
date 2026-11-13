@@ -254,12 +254,7 @@ namespace Xamarin.Android.Tools.BootstrapTasks
 						LogError (ex.Message);
 						return;
 					} finally {
-						try {
-							genApiProcess.SafeHandle.WaitForExitOrKillOnTimeout (TimeSpan.Zero);
-						} finally {
-							using var stdout = genApiProcess.StandardOutput;
-							using var stderr = genApiProcess.StandardError;
-						}
+						genApiProcess.SafeHandle.WaitForExitOrKillOnTimeout (TimeSpan.Zero);
 					}
 
 					if (lines.Count == 0) {

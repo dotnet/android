@@ -1,10 +1,9 @@
 using System;
-using System.Collections.Concurrent;
-using System.Diagnostics;
 using System.IO;
-using System.Linq;
 using System.Text;
-using System.Threading;
+using System.Diagnostics;
+
+using Microsoft.Android.Build.Tasks;
 
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
@@ -13,25 +12,9 @@ using Tasks = System.Threading.Tasks;
 
 namespace Xamarin.Android.Tools.BootstrapTasks
 {
-	public class RunParallelCmds : Task, ICancelableTask
+	public class RunParallelCmds : AsyncTask
 	{
-		const int OutputTimeout = 30; // seconds after process exit
-
-		sealed class CommandResult
-		{
-			public string Command { get; set; }
-			public ProcessStartInfo StartInfo { get; set; }
-			public StringBuilder StandardOutput { get; } = new StringBuilder ();
-			public StringBuilder StandardError { get; } = new StringBuilder ();
-			public int ExitCode { get; set; } = -1;
-			public Exception Error { get; set; }
-		}
-
-		readonly Lock cancellationLock = new Lock ();
-		CancellationTokenSource commandCancellation;
-		volatile bool canceled;
-
-		public string TaskPrefix => "RPCMD";
+		public override string TaskPrefix => "RPCMD";
 
 		[Required]
 		public ITaskItem[] Commands { get; set; }
@@ -40,185 +23,75 @@ namespace Xamarin.Android.Tools.BootstrapTasks
 
 		public string ManagedRuntimeArguments { get; set; }
 
-		public bool YieldDuringToolExecution { get; set; }
-
-		public void Cancel ()
-		{
-			lock (cancellationLock) {
-				canceled = true;
-				commandCancellation?.Cancel ();
-			}
-		}
-
 		public override bool Execute ()
 		{
-			using var cancellation = new CancellationTokenSource ();
-			lock (cancellationLock) {
-				if (canceled)
-					return false;
-				commandCancellation = cancellation;
-			}
+			bool success = true;
+			int tasks = 0;
 
-			bool yielded = false;
-			try {
-				if (YieldDuringToolExecution && BuildEngine is IBuildEngine3 engine) {
-					engine.Yield ();
-					yielded = true;
-				}
+			LogMessage ($"RunParallelCmds max parallelism: {Environment.ProcessorCount}");
 
-				var commands = Commands.Select (CreateCommand).ToArray ();
-				int started = 0;
-				int completed = 0;
-				Log.LogMessage ($"RunParallelCmds max parallelism: {Environment.ProcessorCount}");
-				using var notifications = new BlockingCollection<(CommandResult Command, bool Completed)> ();
-				var execution = RunCommandsAsync ();
-				try {
-					foreach (var notification in notifications.GetConsumingEnumerable ()) {
-						var result = notification.Command;
-						if (!notification.Completed) {
-							Log.LogMessage ($"[{++started}/{Commands.Length}] Starting Command: {result.Command} Arguments: {result.StartInfo.Arguments}");
-							continue;
-						}
+			Tasks.Parallel.ForEach (Commands, new Tasks.ParallelOptions () { MaxDegreeOfParallelism = Environment.ProcessorCount },
+				cmd => {
+					var command = cmd.GetMetadata ("Command");
+					var useManagedRuntime = !string.IsNullOrEmpty (ManagedRuntime);
+					var argumentsBeginning = useManagedRuntime ? $"{ManagedRuntimeArguments} {command} " : "";
 
-						completed++;
-						if (result.StandardOutput.Length > 0)
-							Log.LogMessage ($"Output: {result.StandardOutput}");
-						if (result.Error is OperationCanceledException && cancellation.IsCancellationRequested)
-							Log.LogMessage ($"Command canceled: {result.Command}\nError output: {result.StandardError}");
-						else if (result.Error != null)
-							Log.LogError ($"Unable to run command: {result.Command}\nException:\n{result.Error}\nError output: {result.StandardError}");
-						else if (result.ExitCode != 0)
-							Log.LogError ($"\"{result.StartInfo.FileName} {result.StartInfo.Arguments}\" failed with code: {result.ExitCode}  Error output: {result.StandardError}");
-						else if (result.StandardError.Length > 0)
-							Log.LogMessage ($"Error output: {result.StandardError}");
-					}
-				} finally {
-					if (!execution.IsCompleted)
-						cancellation.Cancel ();
-					execution.GetAwaiter ().GetResult ();
-				}
+					LogMessage ($"[{++tasks}/{Commands.Length}] Starting Command: {command} Arguments: {cmd.GetMetadata ("Arguments")}");
 
-				Log.LogMessage ($"RunParallelCmds completed {completed} commands");
-				return !cancellation.IsCancellationRequested && !Log.HasLoggedErrors;
-
-				async Tasks.Task RunCommandsAsync ()
-				{
 					try {
-						await Tasks.Parallel.ForEachAsync (commands,
-							new Tasks.ParallelOptions { MaxDegreeOfParallelism = Environment.ProcessorCount },
-							async (command, _) => {
-								var result = new CommandResult {
-									Command = command.Command,
-									StartInfo = command.StartInfo,
-								};
-								try {
-									cancellation.Token.ThrowIfCancellationRequested ();
-									notifications.Add ((result, false));
-									await RunCommandAsync (result, cancellation.Token).ConfigureAwait (false);
-								} catch (Exception ex) {
-									result.Error = ex;
-								} finally {
-									notifications.Add ((result, true));
+						using (var proc = new Process ()) {
+							StringBuilder standardOutput = new StringBuilder (), errorOutput = new StringBuilder ();
+
+							proc.StartInfo.FileName = useManagedRuntime ? ManagedRuntime : command;
+							proc.StartInfo.Arguments = $"{argumentsBeginning}{cmd.GetMetadata ("Arguments")}".Replace ('\\', Path.DirectorySeparatorChar);
+							proc.StartInfo.CreateNoWindow = true;
+							proc.StartInfo.UseShellExecute = false;
+							proc.StartInfo.RedirectStandardOutput = true;
+							proc.StartInfo.RedirectStandardError = true;
+
+							var wd = cmd.GetMetadata ("WorkingDirectory");
+							if (!string.IsNullOrEmpty (wd))
+								proc.StartInfo.WorkingDirectory = wd;
+
+							proc.Start ();
+							try {
+								foreach (var line in proc.ReadAllLines ()) {
+									if (!string.IsNullOrEmpty (line.Content))
+										(line.StandardError ? errorOutput : standardOutput).Append (Environment.NewLine + line.Content);
 								}
-							}).ConfigureAwait (false);
-					} finally {
-						notifications.CompleteAdding ();
-					}
-				}
-			} finally {
-				try {
-					if (yielded && BuildEngine is IBuildEngine3 engine)
-						engine.Reacquire ();
-				} finally {
-					lock (cancellationLock) commandCancellation = null;
-				}
-			}
-		}
+								proc.SafeHandle.WaitForExit ();
+							} finally {
+								using var stdout = proc.StandardOutput;
+								using var stderr = proc.StandardError;
+							}
 
-		(string Command, ProcessStartInfo StartInfo) CreateCommand (ITaskItem item)
-		{
-			string command = item.GetMetadata ("Command");
-			var arguments = new CommandLineBuilder ();
-			if (!string.IsNullOrEmpty (ManagedRuntime)) {
-				arguments.AppendTextUnquoted (ManagedRuntimeArguments);
-				arguments.AppendFileNameIfNotNull (command);
-			}
-			arguments.AppendTextUnquoted (" " + item.GetMetadata ("Arguments"));
-			return (command, new ProcessStartInfo {
-				FileName = string.IsNullOrEmpty (ManagedRuntime) ? command : ManagedRuntime,
-				Arguments = arguments.ToString ().Replace ('\\', Path.DirectorySeparatorChar),
-				WorkingDirectory = item.GetMetadata ("WorkingDirectory"),
-				CreateNoWindow = true,
-				UseShellExecute = false,
-				RedirectStandardOutput = true,
-				RedirectStandardError = true,
-			});
-		}
+							var output = standardOutput.ToString ();
+							var errOutput = errorOutput.ToString ();
 
-		static async Tasks.Task RunCommandAsync (CommandResult result, CancellationToken cancellationToken)
-		{
-			using var process = new Process { StartInfo = result.StartInfo };
-			process.Start ();
-			using var exitCancellation = CancellationTokenSource.CreateLinkedTokenSource (cancellationToken);
-			using var outputCancellation = CancellationTokenSource.CreateLinkedTokenSource (cancellationToken);
-			var exit = WaitForExitAsync ();
-			try {
-				await Tasks.Task.WhenAll (
-					ReadOutputAsync (process.StandardOutput, result.StandardOutput),
-					ReadOutputAsync (process.StandardError, result.StandardError)).ConfigureAwait (false);
-				result.ExitCode = (await exit.ConfigureAwait (false)).ExitCode;
-			} catch (OperationCanceledException ex) when (!cancellationToken.IsCancellationRequested && !exitCancellation.IsCancellationRequested) {
-				if (exit.IsFaulted)
-					await exit.ConfigureAwait (false);
-				throw new TimeoutException ($"Command '{result.Command}' output did not close within {OutputTimeout}s after exit.", ex);
-			} finally {
-				exitCancellation.Cancel ();
-				outputCancellation.Cancel ();
-				try {
-					try {
-						await exit.ConfigureAwait (false);
-					} catch (OperationCanceledException) when (exitCancellation.IsCancellationRequested) {
-					}
-				} finally {
-					try {
-						try {
-							if (!process.HasExited)
-								process.Kill (entireProcessTree: true);
-						} catch (InvalidOperationException) when (process.HasExited) {
+							if (proc.ExitCode != 0) {
+								LogError ($"\"{proc.StartInfo.FileName} {proc.StartInfo.Arguments}\" failed with code: {proc.ExitCode}  Error output: {errOutput}");
+								success = false;
+							}
+
+							if (!string.IsNullOrEmpty (output))
+								LogMessage ($"Output: {output}");
 						}
-						if (!process.SafeHandle.TryWaitForExit (TimeSpan.FromSeconds (5), out _))
-							throw new TimeoutException ($"Command '{result.Command}' did not exit after termination.");
-					} finally {
-						using var stdout = process.StandardOutput;
-						using var stderr = process.StandardError;
+					} catch (Exception e) {
+						LogError ($"Unable to run command: {command}\nException:\n{e}");
+						success = false;
 					}
-				}
-			}
 
-			async Tasks.Task ReadOutputAsync (StreamReader reader, StringBuilder text)
-			{
-				var output = new ProcessOutputReader (reader);
-				try {
-					int count;
-					while ((count = await output.ReadAsync (outputCancellation.Token).ConfigureAwait (false)) > 0)
-						text.Append (output.Buffer, 0, count);
-				} catch {
-					outputCancellation.Cancel ();
-					throw;
-				}
-			}
+					Complete ();
+				});
 
-			async Tasks.Task<ProcessExitStatus> WaitForExitAsync ()
-			{
-				try {
-					var status = await process.SafeHandle.WaitForExitAsync (exitCancellation.Token).ConfigureAwait (false);
-					outputCancellation.CancelAfter (TimeSpan.FromSeconds (OutputTimeout));
-					return status;
-				} catch {
-					outputCancellation.Cancel ();
-					throw;
-				}
-			}
+			WaitForCompletion ();
+
+			LogMessage ($"RunParallelCmds completed {tasks} commands");
+
+			if (!success)
+				return false;
+
+			return !Log.HasLoggedErrors;
 		}
 	}
 }

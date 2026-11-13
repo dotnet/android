@@ -23,3 +23,5 @@ steps:
   retryCountOnTaskFailure: ${{ parameters.retryCountOnTaskFailure }}
 
 - template: /build-tools/automation/yaml-templates/diagnose-hanging-processes.yaml
+
+- template: /build-tools/automation/yaml-templates/kill-processes.yaml

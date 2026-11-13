@@ -191,14 +191,9 @@ namespace Xamarin.Android.BuildTools.PrepTasks
 			} catch (TimeoutException ex) {
 				throw new TimeoutException ($"Version command '{command}' did not complete within 30 seconds.", ex);
 			} finally {
-				try {
-					if (!process.HasExited) {
-						process.Kill (entireProcessTree: true);
-						process.SafeHandle.WaitForExitOrKillOnTimeout (TimeSpan.FromSeconds (5));
-					}
-				} finally {
-					using var stdout = process.StandardOutput;
-					using var stderr = process.StandardError;
+				if (!process.HasExited) {
+					process.Kill (entireProcessTree: true);
+					process.SafeHandle.WaitForExitOrKillOnTimeout (TimeSpan.FromSeconds (5));
 				}
 			}
 		}

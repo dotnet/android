@@ -111,8 +111,11 @@
   </Target>
 
   <Target Name="ReleaseAndroidTarget">
+    <PropertyGroup>
+      <_EmuTarget Condition=" '$(_EmuTarget)' == '' ">-s emulator-$(_AdbEmulatorPort)</_EmuTarget>
+    </PropertyGroup>
     <Xamarin.Android.Tools.BootstrapTasks.Adb
-        Condition=" '$(_EmuTarget)' != '' And '$(_EmuPid)' != '' "
+        Condition=" '$(_EmuTarget)' != '' "
         ContinueOnError="ErrorAndContinue"
         Arguments="$(_EmuTarget) emu kill"
         ToolExe="$(AdbToolExe)"
@@ -130,6 +133,21 @@
         ToolExe="$(AdbToolExe)"
         ToolPath="$(AdbToolPath)"
         Timeout="60000"
+    />
+    <Exec
+        Condition=" '$(HostOS)' != 'Windows' And '$(_EmuTarget)' != '' "
+        ContinueOnError="WarnAndContinue"
+        Command="kill -HUP $(_EmuPid)"
+    />
+    <XASleepInternal
+        Condition=" '$(HostOS)' != 'Windows' And '$(_EmuTarget)' != '' "
+        Milliseconds="5000"
+    />
+    <Exec
+        Condition=" '$(HostOS)' != 'Windows' And '$(_EmuTarget)' != '' "
+        ContinueOnError="WarnAndContinue"
+        IgnoreStandardErrorWarningFormat="true"
+        Command="kill -KILL $(_EmuPid)"
     />
   </Target>
 

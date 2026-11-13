@@ -289,9 +289,6 @@ namespace Xamarin.Android.BuildTools.PrepTasks
 				try {
 					output.WaitAsync (TimeSpan.FromSeconds (5)).GetAwaiter ().GetResult ();
 				} catch (OperationCanceledException) when (readCancellation.IsCancellationRequested) {
-				} finally {
-					using var stdout = p.StandardOutput;
-					using var stderr = p.StandardError;
 				}
 			}
 
