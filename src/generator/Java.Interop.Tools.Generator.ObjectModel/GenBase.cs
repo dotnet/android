@@ -469,7 +469,7 @@ namespace MonoDroid.Generation
 			foreach (var m in Methods) {
 				if (m.Name == Name || ContainsProperty (m.Name, true) || HasNestedType (m.Name))
 					m.Name = "Invoke" + m.Name;
-				if ((m.Name == "ToString" && m.Parameters.Count == 0) || (BaseGen != null && BaseGen.ContainsMethod (m, true)))
+				if ((m.Name == "ToString" && m.Parameters.Count == 0) || (BaseGen != null && BaseGen.ContainsMethod (m, false, false)))
 					m.IsOverride = true;
 			}
 
@@ -481,12 +481,11 @@ namespace MonoDroid.Generation
 		{
 			if (this is InterfaceGen) {
 				foreach (var method in Methods.Where (m => m.IsInterfaceDefaultMethod && m.OverriddenInterfaceMethod != null)) {
-					var contract = method.OverriddenInterfaceMethod;
-					while (contract.OverriddenInterfaceMethod != null)
-						contract = contract.OverriddenInterfaceMethod;
-					method.ReturnNotNull = method.RetVal.NotNull = method.RetVal.NotNull || contract.RetVal.NotNull;
-					for (int i = 0; i < method.Parameters.Count; i++)
-						method.Parameters [i].NotNull = contract.Parameters [i].NotNull;
+					for (var contract = method.OverriddenInterfaceMethod; contract != null; contract = contract.OverriddenInterfaceMethod) {
+						method.ReturnNotNull = method.RetVal.NotNull = method.RetVal.NotNull || contract.RetVal.NotNull;
+						for (int i = 0; i < method.Parameters.Count; i++)
+							method.Parameters [i].NotNull &= contract.Parameters [i].NotNull;
+					}
 				}
 			}
 			foreach (var nested in NestedTypes)
@@ -869,7 +868,7 @@ namespace MonoDroid.Generation
 					m.Name = "GetHashCode";
 				}
 				jni_sig_hash [m.JavaName + m.JniSignature] = m;
-				if ((m.Name == "ToString" && m.Parameters.Count == 0) || (BaseSymbol != null && BaseSymbol.ContainsMethod (m, true)))
+				if ((m.Name == "ToString" && m.Parameters.Count == 0) || (BaseSymbol != null && BaseSymbol.ContainsMethod (m, false, false)))
 					m.IsOverride = true;
 			}
 			return true;

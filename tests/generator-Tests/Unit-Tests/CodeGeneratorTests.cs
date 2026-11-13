@@ -1276,6 +1276,91 @@ namespace generatortests
 			Assert.AreEqual ("deprecated", gens.Single (g => g.Name == "MyClass").Methods.Single (m => m.Name == "DoStuff").Deprecated);
 		}
 
+		[TestCase (false)]
+		[TestCase (true)]
+		public void InterfaceOnlyAbstractBaseInfersOverrideAndObsoleteUnlessSkipped (bool skip)
+		{
+			options.FixObsoleteOverrides = true;
+			var gens = ParseApiDefinition ($$"""
+				<api>
+				  <package name='java.lang'>
+				    <class name='Object' visibility='public' deprecated='not deprecated' />
+				  </package>
+				  <package name='com.example'>
+				    <interface name='Counter' visibility='public' abstract='true' deprecated='not deprecated'>
+				      <method name='count' jni-signature='()I' return='int' visibility='public' abstract='true' static='false' deprecated='deprecated' deprecated-since='21' />
+				    </interface>
+				    <class name='Base' extends='java.lang.Object' visibility='public' abstract='true' deprecated='not deprecated'
+				        {{(skip ? "skipInterfaceMethods='com/example/Counter.count()I'" : "")}}>
+				      <implements name='com.example.Counter' name-generic-aware='com.example.Counter' />
+				    </class>
+				    <class name='Derived' extends='com.example.Base' visibility='public' abstract='false' deprecated='not deprecated'>
+				      <method name='count' return='int' visibility='public' abstract='false' static='false' final='false' deprecated='not deprecated' deprecated-since='29' />
+				    </class>
+				  </package>
+				</api>
+				""");
+			var baseType = gens.Single (g => g.Name == "Base");
+			var derived = gens.Single (g => g.Name == "Derived");
+			var method = derived.Methods.Single ();
+			Assert.That (baseType.Methods, Is.Empty, "The abstract slot exists only in the implemented interface.");
+			Assert.AreEqual (!skip, method.IsOverride);
+			Assert.AreEqual (skip ? null : "deprecated", method.Deprecated);
+			Assert.AreEqual (skip ? 29 : 21, method.DeprecatedSince?.ApiLevel ?? 0);
+
+			var source = GetGeneratedTypeOutput (derived);
+			StringAssert.Contains (skip ? "public virtual int Count ()" : "public override int Count ()", source);
+			Assert.AreEqual (!skip, source.Contains ("System.Obsolete"));
+		}
+
+		[TestCase (null, 0)]
+		[TestCase ("value + 1", 6)]
+		public void EventDefaultReturnPreservesFallbackAndHandlerDispatch (string expression, int fallback)
+		{
+			var gens = ParseApiDefinition ($$"""
+				<api>
+				  <package name='com.example'>
+				    <interface name='ResolverListener' visibility='public' abstract='true'>
+				      <method name='resolve' return='int' visibility='public' abstract='true' static='false'
+				          {{(expression == null ? "" : $"eventDefaultReturn='{expression}'")}}>
+				        <parameter name='value' type='int' />
+				      </method>
+				    </interface>
+				  </package>
+				</api>
+				""");
+			var iface = (InterfaceGen) gens.Single ();
+			var method = iface.Methods.Single ();
+			Assert.AreEqual (expression, method.EventDefaultReturn);
+			new InterfaceEventHandlerImplMethod (iface, method, [], options).Write (new CodeWriter (writer));
+			var source = writer.ToString ();
+			StringAssert.Contains ($"return __h != null ? __h (value) : {expression ?? "default (int)"};", source);
+
+			var assembly = Compiler.CompileSources ([
+				(options.SupportNullableReferenceTypes ? "#nullable enable\n" : "") + $$"""
+				namespace Com.Example {
+					public delegate int {{iface.GetEventDelegateName (method)}} (int value);
+					public class Listener {
+						{{source}}
+					}
+					public static class Probe {
+						public static int Invoke (bool installHandler) {
+							var listener = new Listener ();
+							if (installHandler)
+								listener.Handler = value => value * 2;
+							return listener.Resolve (5);
+						}
+					}
+				}
+				""",
+			], out var hasErrors, out var output, out _, allowWarnings: false);
+			Assert.False (hasErrors, output + "\n" + source);
+			var invoke = assembly.GetType ("Com.Example.Probe", throwOnError: true).GetMethod ("Invoke");
+			Assert.IsNotNull (invoke);
+			Assert.AreEqual (fallback, invoke.Invoke (null, [false]));
+			Assert.AreEqual (10, invoke.Invoke (null, [true]));
+		}
+
 		[Test]
 		public void FixupDeprecatedSinceBaseMethods ()
 		{

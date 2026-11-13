@@ -1,5 +1,6 @@
 using System;
 using System.Linq;
+using System.Reflection;
 using MonoDroid.Generation;
 using NUnit.Framework;
 
@@ -31,6 +32,71 @@ namespace generatortests
 			generator.WriteType (iface, string.Empty, new GenerationInfo (null, null, null));
 
 			AssertTargetedExpected (nameof (WriteInterfaceDefaultMethod), writer.ToString ());
+		}
+
+		[Test]
+		public void DefaultInterfaceNullabilityPreservesNullableOverridesAcrossLevels ()
+		{
+			options.SupportNullableReferenceTypes = true;
+			var gens = ParseApiDefinition ("""
+				<api>
+				  <package name='com.example'>
+				    <interface name='Argument' visibility='public' abstract='true' deprecated='not deprecated' />
+				    <interface name='Root' visibility='public' abstract='true' deprecated='not deprecated'>
+				      <method name='transform' return='java.lang.String' return-not-null='false' visibility='public' abstract='false' static='false' final='false' deprecated='not deprecated'>
+				        <parameter name='value' type='com.example.Argument' not-null='true' />
+				        <parameter name='required' type='java.lang.String' not-null='true' />
+				      </method>
+				    </interface>
+				    <interface name='Middle' visibility='public' abstract='true' deprecated='not deprecated'>
+				      <implements name='com.example.Root' name-generic-aware='com.example.Root' />
+				      <method name='transform' return='java.lang.String' return-not-null='true' visibility='public' abstract='false' static='false' final='false' deprecated='not deprecated'>
+				        <parameter name='value' type='com.example.Argument' not-null='false' />
+				        <parameter name='required' type='java.lang.String' not-null='true' />
+				      </method>
+				    </interface>
+				    <interface name='Leaf' visibility='public' abstract='true' deprecated='not deprecated'>
+				      <implements name='com.example.Middle' name-generic-aware='com.example.Middle' />
+				      <method name='transform' return='java.lang.String' return-not-null='false' visibility='public' abstract='false' static='false' final='false' deprecated='not deprecated'>
+				        <parameter name='value' type='com.example.Argument' not-null='true' />
+				        <parameter name='required' type='java.lang.String' not-null='true' />
+				      </method>
+				    </interface>
+				  </package>
+				</api>
+				""");
+			var middle = gens.Single (g => g.Name == "IMiddle").Methods.Single ();
+			var leaf = gens.Single (g => g.Name == "ILeaf").Methods.Single ();
+
+			Assert.False (middle.Parameters [0].NotNull, "The derived DIM explicitly accepts null.");
+			Assert.False (leaf.Parameters [0].NotNull, "The middle DIM's nullable input must survive the full chain.");
+			Assert.True (leaf.Parameters [1].NotNull);
+			Assert.True (leaf.RetVal.NotNull, "The middle DIM's non-null return must survive the full chain.");
+
+			foreach (var gen in gens)
+				GetGeneratedTypeOutput (gen);
+			var source = writer.ToString ();
+			StringAssert.Contains ("Com.Example.IArgument? value, string required", source);
+			StringAssert.DoesNotContain ("value ?? throw", source);
+			StringAssert.Contains ("required ?? throw new global::Java.Lang.NullPointerException ()", source);
+			StringAssert.Contains ("TransferLocalRef) ?? throw new global::Java.Lang.NullPointerException ()", source);
+
+			var support = $$"""
+				using System;
+				delegate IntPtr {{middle.GetDelegateType (options)}} (IntPtr env, IntPtr self, IntPtr value, IntPtr required);
+				namespace Java.Lang {
+					public class NullPointerException : Exception { }
+				}
+				""";
+			var assembly = Compiler.CompileSources ([
+				"#nullable enable\nusing System; using Android.Runtime; using Java.Interop; namespace Com.Example {\n" + source + "\n}",
+				support,
+			], out var hasErrors, out var output, out _, allowWarnings: false);
+			Assert.False (hasErrors, output + "\n" + source);
+			Assert.IsNotNull (assembly.GetType ("Com.Example.ILeafInvoker"));
+			var iface = assembly.GetType ("Com.Example.ILeaf", throwOnError: true);
+			Assert.That (iface.GetMethods (BindingFlags.Static | BindingFlags.NonPublic)
+				.Any (method => method.Name.StartsWith ("__n_Transform", StringComparison.Ordinal)));
 		}
 
 		[Test]
