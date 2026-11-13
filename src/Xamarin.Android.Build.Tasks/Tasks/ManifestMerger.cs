@@ -1,5 +1,6 @@
 #nullable enable
 using System;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -132,7 +133,7 @@ namespace Xamarin.Android.Tasks
 						sb.AppendLine ("--placeholder");
 						sb.AppendLine ($"{entry [0]}={entry [1]}");
 					} else
-						Log.LogCodedWarning ("XA1010", string.Format (Properties.Resources.XA1010, string.Join (";", ManifestPlaceholders)));
+						Log.LogCodedWarning ("XA1010", string.Format (CultureInfo.CurrentCulture, Properties.Resources.XA1010, string.Join (";", ManifestPlaceholders)));
 				}
 			}
 			if (!ExtraArgs.IsNullOrEmpty ()) {
