@@ -1,4 +1,5 @@
 using System;
+using System.Globalization;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -291,7 +292,7 @@ namespace Xamarin.Android.Build.Tests
 					}
 
 					var message = new StringBuilder ();
-					message.AppendLine ($"apkdiff regression check exited with code: {code}.");
+					message.AppendLine (CultureInfo.CurrentCulture, $"apkdiff regression check exited with code: {code}.");
 					message.AppendLine ();
 					message.AppendLine ("== apkdiff output ==");
 					if (!stdOut.IsNullOrEmpty ()) {
@@ -304,14 +305,14 @@ namespace Xamarin.Android.Build.Tests
 					message.AppendLine ("== .apkdesc diff (reference -> current) ==");
 					message.AppendLine (GetApkDescDiff (apkDescReferencePath, apkDescPath));
 					message.AppendLine ();
-					message.AppendLine ($"== current '{apkDescFilename}' (copy/paste to update the reference) ==");
+					message.AppendLine (CultureInfo.CurrentCulture, $"== current '{apkDescFilename}' (copy/paste to update the reference) ==");
 					if (File.Exists (apkDescPath)) {
 						message.AppendLine (File.ReadAllText (apkDescPath));
 					} else {
-						message.AppendLine ($"(current apkdesc not found: {apkDescPath})");
+						message.AppendLine (CultureInfo.CurrentCulture, $"(current apkdesc not found: {apkDescPath})");
 					}
 					message.AppendLine ();
-					message.AppendLine ($"If this change is intended, update the reference '{apkDescFilename}' with the current '.apkdesc' above (or attached to this test), or run build-tools/scripts/UpdateApkSizeReference.sh.");
+					message.AppendLine (CultureInfo.CurrentCulture, $"If this change is intended, update the reference '{apkDescFilename}' with the current '.apkdesc' above (or attached to this test), or run build-tools/scripts/UpdateApkSizeReference.sh.");
 					AssertApkSizeRegression (code, () => {
 						var (increaseCode, _, _) = RunApkDiffCommand ($"{regressionCheckArgs} {apkDescReferencePath} {apkFile}", Path.Combine (Root, b.ProjectDirectory, "apkdiff-increases.log"));
 						return increaseCode;
@@ -367,14 +368,14 @@ namespace Xamarin.Android.Build.Tests
 				bool inCurrent = current.TryGetValue (key, out long newSize);
 				if (inReference && inCurrent) {
 					if (oldSize != newSize) {
-						sb.AppendLine ($"  {key}");
-						sb.AppendLine ($"-     \"Size\": {oldSize}");
-						sb.AppendLine ($"+     \"Size\": {newSize}   ({(newSize - oldSize):+#,0;-#,0;0} bytes)");
+						sb.AppendLine (CultureInfo.CurrentCulture, $"  {key}");
+						sb.AppendLine (CultureInfo.CurrentCulture, $"-     \"Size\": {oldSize}");
+						sb.AppendLine (CultureInfo.CurrentCulture, $"+     \"Size\": {newSize}   ({(newSize - oldSize):+#,0;-#,0;0} bytes)");
 					}
 				} else if (inReference) {
-					sb.AppendLine ($"- {key} (\"Size\": {oldSize}) [removed]");
+					sb.AppendLine (CultureInfo.CurrentCulture, $"- {key} (\"Size\": {oldSize}) [removed]");
 				} else {
-					sb.AppendLine ($"+ {key} (\"Size\": {newSize}) [added]");
+					sb.AppendLine (CultureInfo.CurrentCulture, $"+ {key} (\"Size\": {newSize}) [added]");
 				}
 			}
 
@@ -1404,12 +1405,12 @@ namespace UnamedProject
 			};
 			lib.SetRuntime (runtime);
 			for (int i = 0; i < 1000; i++) {
-				lib.OtherBuildItems.Add (new AndroidItem.AndroidAsset (string.Format ("Assets\\somefile{0}.txt", i)) {
+				lib.OtherBuildItems.Add (new AndroidItem.AndroidAsset (string.Format (CultureInfo.CurrentCulture, "Assets\\somefile{0}.txt", i)) {
 					TextContent = () => "some readonly file...",
 					Attributes = FileAttributes.ReadOnly | FileAttributes.Normal,
 				});
-				lib.AndroidResources.Add (new AndroidItem.AndroidResource (string.Format ("Resources\\values\\Strings{0}.xml", i)) {
-					TextContent = () => string.Format (@"<?xml version=""1.0"" encoding=""utf-8""?>
+				lib.AndroidResources.Add (new AndroidItem.AndroidResource (string.Format (CultureInfo.CurrentCulture, "Resources\\values\\Strings{0}.xml", i)) {
+					TextContent = () => string.Format (CultureInfo.CurrentCulture, @"<?xml version=""1.0"" encoding=""utf-8""?>
 <resources>
 	<string name=""hello{0}"">Hello World, Click Me! {0}</string>
 </resources>", i++),
