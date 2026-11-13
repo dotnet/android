@@ -265,15 +265,6 @@ namespace Xamarin.Android.Tasks
 #endif  // MSBUILD
 		}
 
-		internal static bool LogInternalExceptions {
-			get {
-				return string.Equals (
-						"icanhaz",
-						Environment.GetEnvironmentVariable ("__XA_LOG_ERRORS__"),
-						StringComparison.OrdinalIgnoreCase);
-			}
-		}
-
 #if MSBUILD
 		public static IEnumerable<string> ExpandFiles (ITaskItem[] libraryProjectJars)
 		{
@@ -548,33 +539,7 @@ namespace Xamarin.Android.Tasks
 			}
 			return Path.Combine (platformPath, "android.jar");
 		}
-
-		public static Dictionary<string, string> ItemGroupToCaseMap (ITaskItem [] items)
-		{
-			var map = new Dictionary<string, string> (items.Length, StringComparer.Ordinal);
-			foreach (var item in items)
-				map [item.ItemSpec] = item.GetMetadata ("OriginalName");
-			return map;
-		}
 #endif // MSBUILD
-		public static string FixUpAndroidResourcePath (string file, string resourceDirectory, string resourceDirectoryFullPath, Dictionary<string, string> resource_name_case_map)
-		{
-			string newfile = null;
-			if (file.StartsWith (resourceDirectory, StringComparison.InvariantCultureIgnoreCase)) {
-				newfile = file.Substring (resourceDirectory.Length).TrimStart (Path.DirectorySeparatorChar);
-			}
-			if (!string.IsNullOrEmpty (resourceDirectoryFullPath) && file.StartsWith (resourceDirectoryFullPath, StringComparison.InvariantCultureIgnoreCase)) {
-				newfile = file.Substring (resourceDirectoryFullPath.Length).TrimStart (Path.DirectorySeparatorChar);
-			}
-			if (!string.IsNullOrEmpty (newfile)) {
-				if (resource_name_case_map.TryGetValue (newfile, out string value))
-					newfile = value;
-				newfile = Path.Combine ("Resources", newfile);
-				return newfile;
-			}
-			return string.Empty;
-		}
-
 		static readonly char [] DirectorySeparators = new [] { Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar };
 #if MSBUILD
 		/// <summary>
@@ -607,20 +572,6 @@ namespace Xamarin.Android.Tasks
 				apiLevel = parsedVersion.Major;
 			}
 			return apiLevel;
-		}
-
-		public static bool TryParseApiLevel (string apiLevel, out Version version)
-		{
-			if (Version.TryParse (apiLevel, out var v)) {
-				version = v;
-				return true;
-			}
-			if (int.TryParse (apiLevel, out var major)) {
-				version = new Version (major, 0);
-				return true;
-			}
-			version = null;
-			return false;
 		}
 
 #if MSBUILD

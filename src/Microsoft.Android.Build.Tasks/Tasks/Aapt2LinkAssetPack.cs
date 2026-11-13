@@ -13,8 +13,10 @@ using System.Text.RegularExpressions;
 using System.Collections.Generic;
 using Xamarin.Android.Tools;
 using Microsoft.Android.Build.Tasks;
+using Xamarin.Android.Tasks;
+using Properties = Xamarin.Android.Tasks.Properties;
 
-namespace Xamarin.Android.Tasks {
+namespace Microsoft.Android.Tasks {
 
 	public class Aapt2LinkAssetPack : Aapt2 {
 		public override string TaskPrefix => "A2LAP";

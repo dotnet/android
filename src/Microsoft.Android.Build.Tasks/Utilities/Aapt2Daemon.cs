@@ -6,32 +6,15 @@ using System.Diagnostics;
 using System.IO;
 using System.Text;
 using System.Threading;
-using System.Reflection;
-using Microsoft.Build.Framework;
 using TPL = System.Threading.Tasks;
 using Xamarin.Android.Tools;
 using Microsoft.Android.Build.Tasks;
+using Xamarin.Android.Tasks;
 
-namespace Xamarin.Android.Tasks
+namespace Microsoft.Android.Tasks
 {
 	internal class Aapt2Daemon : IDisposable
 	{
-		static readonly string TypeFullName = typeof (Aapt2Daemon).FullName;
-
-		internal static object RegisterTaskObjectKey => TypeFullName;
-
-		public static Aapt2Daemon GetInstance (IBuildEngine4 engine, Action<string> log, string aapt2, int numberOfInstances, int initalNumberOfDaemons, bool registerInDomain = false)
-		{
-			var area = registerInDomain ? RegisteredTaskObjectLifetime.AppDomain : RegisteredTaskObjectLifetime.Build;
-			var daemon = engine.GetRegisteredTaskObjectAssemblyLocal<Aapt2Daemon> (RegisterTaskObjectKey, area);
-			if (daemon == null)
-			{
-				daemon = new Aapt2Daemon (aapt2, numberOfInstances, initalNumberOfDaemons, log);
-				engine.RegisterTaskObjectAssemblyLocal (RegisterTaskObjectKey, daemon, area, allowEarlyCollection: false);
-			}
-			return daemon;
-		}
-
 		public class Job
 		{
 			TPL.TaskCompletionSource<bool> tcs = new TPL.TaskCompletionSource<bool> ();
@@ -58,7 +41,6 @@ namespace Xamarin.Android.Tasks
 			}
 		}
 
-		readonly object lockObject = new object ();
 		readonly BlockingCollection<Job> pendingJobs = new BlockingCollection<Job> ();
 		readonly ConcurrentDictionary<long, Job> jobs = new ConcurrentDictionary<long, Job> ();
 		readonly CancellationTokenSource tcs = new CancellationTokenSource ();
@@ -100,30 +82,43 @@ namespace Xamarin.Android.Tasks
 
 		void SpawnAapt2Daemon ()
 		{
-			// Don't spawn too many
-			if (daemons.Count >= maxInstances)
-				return;
-			var thread = new Thread (Aapt2DaemonStart)
-			{
-				IsBackground = true
-			};
-			thread.Start ();
-			daemons.Add(thread);
+			lock (pendingJobs) {
+				// Don't spawn too many or start a daemon after shutdown.
+				if (pendingJobs.IsAddingCompleted || daemons.Count >= maxInstances)
+					return;
+				var thread = new Thread (Aapt2DaemonStart)
+				{
+					IsBackground = true
+				};
+				thread.Start ();
+				daemons.Add(thread);
+			}
 		}
 
 		public void Dispose ()
 		{
 			Stop ();
 			tcs.Cancel ();
+			foreach (var thread in daemons) {
+				thread.Join ();
+			}
+			while (pendingJobs.TryTake (out var job)) {
+				job.Complete (true);
+			}
 		}
 
 		public long QueueCommand (string[] job, string outputFile, CancellationToken token)
 		{
-			if (!pendingJobs.IsAddingCompleted)
-			{
+			lock (pendingJobs) {
+				if (pendingJobs.IsAddingCompleted && !token.IsCancellationRequested)
+					throw new InvalidOperationException ("The AAPT2 daemon is not accepting new commands.");
 				long id = Interlocked.Add (ref jobId, 1);
 				var j = new Job (job, id, outputFile, token);
 				jobs [j.JobId] = j;
+				if (token.IsCancellationRequested) {
+					j.Complete (true);
+					return j.JobId;
+				}
 				pendingJobs.Add (j);
 				// if we have allot of pending jobs, spawn more daemons
 				if (pendingJobs.Count > (daemons.Count * 2)) {
@@ -131,7 +126,6 @@ namespace Xamarin.Android.Tasks
 				}
 				return j.JobId;
 			}
-			return -1;
 		}
 
 		public bool JobSucceded (long jobid) {
@@ -152,76 +146,60 @@ namespace Xamarin.Android.Tasks
 
 		public void Stop ()
 		{
-			//This will cause '_jobs.GetConsumingEnumerable' to stop blocking and exit when it's empty
-			pendingJobs.CompleteAdding ();
-		}
-
-		private bool SetConsoleInputEncoding (Encoding encoding)
-		{
-			try {
-				if (Console.InputEncoding != encoding) {
-					Console.InputEncoding = encoding;
-					return true;
-				}
-			} catch (IOException) {
-				//In a DesignTime Build on VS Windows sometimes this exception is raised.
-				//We should catch it, but there is nothing we can do about it.
+			lock (pendingJobs) {
+				// This causes GetConsumingEnumerable to exit when the queue is empty.
+				pendingJobs.CompleteAdding ();
 			}
-			return false;
 		}
 
-		private bool SetProcessInputEncoding (ProcessStartInfo info, Encoding encoding)
+		Process StartAapt2Daemon ()
 		{
-			Type type = info.GetType ();
-			PropertyInfo prop = type.GetRuntimeProperty ("StandardInputEncoding");
-			if (prop == null)
-				prop = type.GetProperty ("StandardInputEncoding", BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
-			if(prop?.CanWrite ?? false) {
-				prop.SetValue (info, encoding, null);
-				return true;
-			}
-			return false;
-		}
-
-		private void Aapt2DaemonStart ()
-		{
-			ProcessStartInfo info = new ProcessStartInfo (Aapt2)
+			// aapt2 reports results on stderr; nothing reads stdout, so discard it rather than let the pipe fill up.
+			// The child gets its own copy of the handle, so ours can be closed once it has started.
+			using var standardOutput = File.OpenNullHandle ();
+			var info = new ProcessStartInfo (Aapt2)
 			{
 				Arguments = "daemon",
 				CreateNoWindow = true,
 				WindowStyle = ProcessWindowStyle.Hidden,
 				RedirectStandardInput = true,
 				RedirectStandardError = true,
-				RedirectStandardOutput = true,
+				StandardOutputHandle = standardOutput,
+				// Don't leak other daemons' pipes into this process; they would keep those pipes open.
+				InheritedHandles = [],
 				UseShellExecute = false,
 				WorkingDirectory = Path.GetTempPath (),
 				StandardErrorEncoding = Encoding.UTF8,
-				StandardOutputEncoding = Encoding.UTF8,
 				// We need to FORCE the StandardInput to be UTF8 so we can use
 				// accented characters. Also DONT INCLUDE A BOM!!
 				// otherwise aapt2 will try to interpret the BOM as an argument.
-				// Cant use this cos its netstandard 2.1 only
-				// and we are using netstandard 2.0
-				//StandardInputEncoding = Files.UTF8withoutBOM,
+				StandardInputEncoding = Files.UTF8withoutBOM,
 			};
-			Process aapt2;
-			Encoding currentEncoding = Console.InputEncoding;
- 			lock (lockObject) {
-				try {
-					if (!SetProcessInputEncoding (info, Files.UTF8withoutBOM))
-						SetConsoleInputEncoding (Files.UTF8withoutBOM);
-					aapt2 = new Process ();
-					aapt2.StartInfo = info;
-					aapt2.Start ();
-				} finally {
-					SetConsoleInputEncoding (currentEncoding);
-				}
+			if (OperatingSystem.IsWindows () || OperatingSystem.IsLinux ()) {
+				info.KillOnParentExit = true;
 			}
+			return Process.Start (info) ?? throw new InvalidOperationException ($"Failed to start `{Aapt2} daemon`.");
+		}
+
+		private void Aapt2DaemonStart ()
+		{
+			using var aapt2 = StartAapt2Daemon ();
+			Action stopProcess = () => {
+				try {
+					aapt2.Kill ();
+				} catch (InvalidOperationException) {
+					// The process already exited.
+				}
+			};
 			try {
 				foreach (var job in pendingJobs.GetConsumingEnumerable (tcs.Token)) {
 					Interlocked.Add (ref jobsRunning, 1);
 					bool errored = false;
 					try {
+						using var cancellation = tcs.Token.Register (stopProcess);
+						using var jobCancellation = job.Token.Register (stopProcess);
+						tcs.Token.ThrowIfCancellationRequested ();
+						job.Token.ThrowIfCancellationRequested ();
 						// try to write Unicode UTF8 to aapt2
 						using (StreamWriter writer = new StreamWriter (aapt2.StandardInput.BaseStream, Files.UTF8withoutBOM, bufferSize: 1024, leaveOpen: true)) {
 							foreach (var arg in job.Commands) {
@@ -230,7 +208,7 @@ namespace Xamarin.Android.Tasks
 							writer.WriteLine ();
 							writer.Flush ();
 						}
-						string line;
+						string? line;
 
 						Queue<string> stdError = new Queue<string> ();
 						while ((line = aapt2.StandardError.ReadLine ()) != null) {
@@ -246,6 +224,8 @@ namespace Xamarin.Android.Tasks
 							// correctly we need to do this after we know if worked or failed.
 							stdError.Enqueue (line);
 						}
+						tcs.Token.ThrowIfCancellationRequested ();
+						job.Token.ThrowIfCancellationRequested ();
 						//now processed the output we queued up
 						while (stdError.Count > 0) {
 							line = stdError.Dequeue ();
@@ -277,7 +257,6 @@ namespace Xamarin.Android.Tasks
 			try {
 				aapt2.StandardInput.WriteLine ("quit");
 				aapt2.StandardInput.WriteLine ();
-				aapt2.WaitForExit ((int)TimeSpan.FromSeconds (5).TotalMilliseconds);
 			} catch (IOException) {
 				// Ignore this error. It occurs when the Build it cancelled.
 				try {
@@ -286,6 +265,10 @@ namespace Xamarin.Android.Tasks
 					// The Logger might not exist if the daemon exits after the logger has been
 					// collected.
 				}
+			}
+			if (!aapt2.WaitForExit (TimeSpan.FromSeconds (5))) {
+				stopProcess ();
+				aapt2.WaitForExit ();
 			}
 		}
 

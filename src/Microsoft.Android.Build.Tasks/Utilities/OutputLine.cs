@@ -1,6 +1,6 @@
 #nullable enable
 using System;
-namespace Xamarin.Android.Tasks {
+namespace Microsoft.Android.Tasks {
 	public struct OutputLine {
 		public string Line;
 		public bool StdError;

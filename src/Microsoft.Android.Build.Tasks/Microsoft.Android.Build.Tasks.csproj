@@ -55,6 +55,7 @@
     <ProjectReference Include="..\Microsoft.Android.Build.BaseTasks\Microsoft.Android.Build.BaseTasks.csproj" />
     <ProjectReference Include="..\Microsoft.Android.Sdk.TrimmableTypeMap\Microsoft.Android.Sdk.TrimmableTypeMap.csproj" />
     <ProjectReference Include="..\Xamarin.Android.Tools.AndroidSdk\Xamarin.Android.Tools.AndroidSdk.csproj" />
+    <ProjectReference Include="..\AndroidBuildConfig\AndroidBuildConfig.csproj" />
     <ProjectReference Include="..\..\src\Java.Interop.Localization\Java.Interop.Localization.csproj" />
     <InternalsVisibleTo Include="Microsoft.Android.Build.Tasks.Tests" Key="0024000004800000940000000602000000240000525341310004000011000000438ac2a5acfbf16cbd2b2b47a62762f273df9cb2795ceccdf77d10bf508e69e7a362ea7a45455bbf3ac955e1f2e2814f144e5d817efc4c6502cc012df310783348304e3ae38573c6d658c234025821fda87a0be8a0d504df564e2c93b2b878925f42503e9d54dfef9f9586d9e6f38a305769587b1de01f6c0410328b2c9733db" />
   </ItemGroup>
@@ -71,6 +72,10 @@
     <Compile Include="..\Xamarin.Android.Build.Tasks\Utilities\DummyCustomAttributeProvider.cs" Link="Utilities\DummyCustomAttributeProvider.cs" />
     <Compile Include="..\Xamarin.Android.Build.Tasks\Utilities\ManifestPlaceholderResolver.cs" Link="Utilities\ManifestPlaceholderResolver.cs" />
     <Compile Include="..\Xamarin.Android.Build.Tasks\Utilities\MonoAndroidHelper.Basic.cs" Link="Utilities\MonoAndroidHelper.Basic.cs" />
+    <Compile Include="..\Xamarin.Android.Build.Tasks\Utilities\MonoAndroidHelper.Tasks.cs" Link="Utilities\MonoAndroidHelper.Tasks.cs" />
+    <!-- Aapt2Link: ManifestMerger still uses these, so they remain shared sources. -->
+    <Compile Include="..\Xamarin.Android.Build.Tasks\Utilities\AndroidResource.cs" Link="Utilities\AndroidResource.cs" />
+    <Compile Include="..\Xamarin.Android.Build.Tasks\Utilities\ManifestDocument.cs" Link="Utilities\ManifestDocument.cs" />
     <Compile Include="..\Xamarin.Android.Build.Tasks\Utilities\ResourceParser.cs" Link="Utilities\ResourceParser.cs" />
     <Compile Include="..\Xamarin.Android.Build.Tasks\Utilities\ResourceIdentifier.cs" Link="Utilities\ResourceIdentifier.cs" />
     <Compile Include="..\Xamarin.Android.Build.Tasks\Utilities\RtxtParser.cs" Link="Utilities\RtxtParser.cs" />
