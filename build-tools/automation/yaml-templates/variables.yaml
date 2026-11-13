@@ -13,8 +13,6 @@ variables:
   value: test-assemblies
 - name: ApkDiffToolVersion
   value: 0.0.17
-- name: TestSlicerToolVersion
-  value: 0.1.0-alpha7
 - name: BootsToolVersion
   value: 1.1.0.36
 - name: NUnitConsoleVersion
@@ -64,8 +62,8 @@ variables:
   value: 21
 - name: LatestJavaSdkMajorVersion
   value: 25
-- name: ExcludedNightlyNUnitCategories
-  value: 'cat != SystemApplication & cat != TimeZoneInfo & cat != Localization'
+- name: ExcludedNightlyTestCategories
+  value: 'TestCategory!=SystemApplication&TestCategory!=TimeZoneInfo&TestCategory!=Localization'
 - name: RunMAUITestJob
   value: true
 - name: DOTNET_SYSTEM_NET_SECURITY_NOREVOCATIONCHECKBYDEFAULT

@@ -1,9 +1,11 @@
 <Project>
   <!-- This file assumes Configuration.props has been imported -->
+  <!-- Projects that set EnableNUnitRunner=true also run with Microsoft.Testing.Platform (`dotnet Foo.dll`) -->
   <ItemGroup>
     <PackageReference Include="NUnit"               Version="$(NUnitVersion)" />
     <PackageReference Include="NUnit.ConsoleRunner" Version="$(NUnitConsoleVersion)" />
-    <PackageReference Include="NUnit3TestAdapter"   Version="4.4.2" />
+    <PackageReference Include="NUnit3TestAdapter"   Version="6.3.1" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.5.0" />
+    <PackageReference Include="Microsoft.Testing.Extensions.TrxReport" Version="2.5.3" />
   </ItemGroup>
 </Project>
