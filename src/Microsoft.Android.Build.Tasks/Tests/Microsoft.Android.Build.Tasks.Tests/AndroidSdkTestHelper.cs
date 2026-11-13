@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using NUnit.Framework;
+using Xamarin.Android.Tasks;
 using Xamarin.Android.Tools;
 
 namespace Xamarin.Android.Build.Tests;
@@ -50,11 +51,8 @@ static class AndroidSdkTestHelper
 		string? jar = null;
 		foreach (var dir in Directory.EnumerateDirectories (Path.Combine (GetAndroidSdkDirectory (), "platforms"), "android-*")) {
 			string name = Path.GetFileName (dir).Substring ("android-".Length);
-			if (!Version.TryParse (name, out var version)) {
-				if (!int.TryParse (name, out var major))
-					continue;
-				version = new Version (major, 0);
-			}
+			if (!MonoAndroidHelper.TryParseApiLevel (name, out var version))
+				continue;
 			string path = Path.Combine (dir, "android.jar");
 			if (version > XABuildConfig.AndroidLatestStableApiLevel || (max != null && version < max) || !File.Exists (path))
 				continue;

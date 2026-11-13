@@ -84,6 +84,7 @@
     <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)Xamarin.Android.Build.Tasks.pdb" />
     <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)net\Microsoft.Android.Build.Tasks.dll" />
     <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)net\Microsoft.Android.Build.Tasks.pdb" />
+    <!-- Aapt2Link's manifest fallback loads AndroidBuildConfig from the .NET task directory. -->
     <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)net\AndroidBuildConfig.dll" />
     <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)net\AndroidBuildConfig.pdb" />
     <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)net\Microsoft.Android.Sdk.TrimmableTypeMap.dll" />
