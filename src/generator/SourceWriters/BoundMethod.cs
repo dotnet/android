@@ -61,7 +61,7 @@ namespace generator.SourceWriters
 				IsOverride = false;
 			}
 
-			IsShadow = !IsOverride && !ExplicitInterfaceImplementation.HasValue () && type.RequiresNew (Name, method);
+			IsShadow = !IsOverride && !ExplicitInterfaceImplementation.HasValue () && type.RequiresNew (Name, method, opt);
 
 			ReturnType = new TypeReferenceWriter (opt.GetTypeReferenceName (method.RetVal));
 

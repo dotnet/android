@@ -44,7 +44,7 @@ namespace generator.SourceWriters
 			if (string.Equals (method.ManagedOverride, "override", StringComparison.OrdinalIgnoreCase))
 				IsOverride = true;
 
-			IsShadow = !IsOverride && !ExplicitInterfaceImplementation.HasValue () && impl.RequiresNew (Name, method);
+			IsShadow = !IsOverride && !ExplicitInterfaceImplementation.HasValue () && impl.RequiresNew (Name, method, opt);
 
 			method_callback = new MethodCallback (impl, method, opt, null, method.IsReturnCharSequence);
 
