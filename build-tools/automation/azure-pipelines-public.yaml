@@ -111,7 +111,8 @@ stages:
     pool:
       name: $(NetCorePublicPoolName)
       demands:
-      - ImageOverride -equals $(WindowsPoolImageNetCorePublic)
+      # The build runs a .NET TaskHost test that requires MSBuild 18.7 or later.
+      - ImageOverride -equals windows.vs2026.amd64.open
     timeoutInMinutes: 240
     steps:
     - checkout: self

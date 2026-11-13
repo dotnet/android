@@ -41,12 +41,10 @@ This file is only used by binding projects.
 
     <ItemGroup>
       <_AndroidDocumentationPath Include="@(_JavaSourceJavadocXml)" />
-      <_AndroidDocumentationPath Include="@(JavaDocIndex->'%(RootDir)\%(Directory)')" />
       <_AndroidDocumentationPath Include="$(JavaDocPaths)" />
       <_AndroidDocumentationPath Include="$(Java7DocPaths)" />
       <_AndroidDocumentationPath Include="$(Java8DocPaths)" />
       <_AndroidDocumentationPath Include="$(DroidDocPaths)" />
-      <_AndroidDocumentationPath Include="@(JavaDocJar->'$(IntermediateOutputPath)javadocs\%(FileName)')" />
     </ItemGroup>
     <ClassParse
         OutputFile="$(ApiOutputFile).class-parse"
@@ -83,7 +81,7 @@ This file is only used by binding projects.
   </Target>
 
   <Target Name="_GetJavaSourceJarJavadocFiles"
-      Condition=" '$(_UseLegacyJavadocImport)' != 'True' And '@(JavaSourceJar->Count())' != '0' ">
+      Condition=" '@(JavaSourceJar->Count())' != '0' ">
     <ComputeHash
         CopyMetadata="True"
         Source="@(JavaSourceJar)">
@@ -95,7 +93,7 @@ This file is only used by binding projects.
   </Target>
 
   <Target Name="_ExtractJavadocsFromJavaSourceJars"
-      Condition=" '$(_UseLegacyJavadocImport)' != 'True' And '@(JavaSourceJar->Count())' != '0' "
+      Condition=" '@(JavaSourceJar->Count())' != '0' "
       DependsOnTargets="_GetJavaSourceJarJavadocFiles"
       Inputs="@(JavaSourceJar)"
       Outputs="@(_JavaSourceJavadocXml)">

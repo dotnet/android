@@ -2,6 +2,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
@@ -35,9 +36,12 @@ namespace Xamarin.Android.Tasks
 		public override string ToString ()
 		{
 			if (Type != RType.Array) {
-				return $"int {ResourceTypeName ?? ""} {Identifier ?? ""} { (Type == RType.Integer ? $"0x{Id.ToString ("x8")}" : $"{Id}")}";
+				var value = Type == RType.Integer
+					? $"0x{Id.ToString ("x8", CultureInfo.InvariantCulture)}"
+					: Id.ToString (CultureInfo.InvariantCulture);
+				return $"int {ResourceTypeName ?? ""} {Identifier ?? ""} {value}";
 			}
-			return $"int[] {ResourceTypeName ?? ""} {Identifier ?? ""} {{ {String.Join (", ", (Ids ?? []).Select (x => $"0x{x.ToString ("x8")}"))} }}";
+			return $"int[] {ResourceTypeName ?? ""} {Identifier ?? ""} {{ {String.Join (", ", (Ids ?? []).Select (x => $"0x{x.ToString ("x8", CultureInfo.InvariantCulture)}"))} }}";
 		}
 
 		public string ToSortedString ()
@@ -95,16 +99,20 @@ namespace Xamarin.Android.Tasks
 
 		public IEnumerable<R> Parse (string file, TaskLoggingHelper logger, Dictionary<string, string> mapping)
 		{
+			return Parse (File.Exists (file) ? File.ReadLines (file) : [], file, logger, mapping);
+		}
+
+		public IEnumerable<R> Parse (IEnumerable<string> lines, string file, TaskLoggingHelper logger, Dictionary<string, string> mapping)
+		{
 			var result = new List<R> (DefaultCapacity);
-			if (File.Exists (file))
-				ProcessRtxtFile (file, result, logger, mapping);
+			ProcessRtxtFile (lines, file, result, logger, mapping);
 			return result;
 		}
 
-		void ProcessRtxtFile (string file, List<R> result, TaskLoggingHelper log, Dictionary<string, string> map)
+		void ProcessRtxtFile (IEnumerable<string> lines, string file, List<R> result, TaskLoggingHelper log, Dictionary<string, string> map)
 		{
 			int lineNumber = 0;
-			foreach (var line in File.ReadLines (file) ) {
+			foreach (var line in lines) {
 				lineNumber++;
 				var items = line.Split (EmptyChar, 4);
 				if (items.Length < 4) {

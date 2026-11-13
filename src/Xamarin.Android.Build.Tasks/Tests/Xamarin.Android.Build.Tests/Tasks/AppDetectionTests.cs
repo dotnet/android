@@ -37,7 +37,7 @@ namespace Xamarin.Android.Build.Tests
 					new XElement ("WaitForAppDetection"),
 					new XElement ("Error", new XAttribute ("Condition", "Exists('upload.flag')"),
 						new XAttribute ("Text", "The waiter returned before the package query deleted the flag."))));
-			var log = await RunMSBuild (detection, project, multithreaded, "-warnaserror:MSB4286,MSB4287,MSB4288");
+			var log = await RunMSBuild (detection, project, multithreaded, waitForQuery: true, "-warnaserror:MSB4286,MSB4287,MSB4288");
 			StringAssert.DoesNotContain ("TaskHostFactory", log);
 			StringAssert.Contains ("--user 10", File.ReadAllText (Path.Combine (detection.Directory, "query-arguments")));
 		}
@@ -57,6 +57,7 @@ namespace Xamarin.Android.Build.Tests
 					new XElement ("AndroidLaunchActivity", "MainActivity"),
 					new XElement ("_AndroidComputeRunArgumentsDependsOn", "_AndroidAdbToolPath"),
 					new XElement ("_XamarinAndroidBuildTasksAssembly", Path.Combine (TestEnvironment.AndroidMSBuildDirectory, "Xamarin.Android.Build.Tasks.dll")),
+					new XElement ("_MicrosoftAndroidBuildTasksAssembly", Path.Combine (TestEnvironment.AndroidMSBuildDirectory, "net", "Microsoft.Android.Build.Tasks.dll")),
 					new XElement ("AdbToolPath", Path.Combine (detection.Directory, "tools")),
 					new XElement ("AdbToolExe", detection.Executable)),
 				new XElement ("Import", new XAttribute ("Project",
@@ -76,12 +77,93 @@ namespace Xamarin.Android.Build.Tests
 						new XAttribute ("Text", "Deployment did not receive the selected serial.")),
 					new XElement ("Error", new XAttribute ("Condition", "!$(RunArguments.Contains('-s emulator-5554'))"),
 						new XAttribute ("Text", "Run arguments lost the selected serial."))));
-			// GetPrimaryCpuAbi is still hosted; only the detector and waiter are MT tasks.
-			await RunMSBuild (detection, project, multithreaded, "-p:AdbTarget=-e");
+			await RunMSBuild (detection, project, multithreaded, waitForQuery: true, "-p:AdbTarget=-e", "-warnaserror:MSB4286,MSB4287,MSB4288");
 			StringAssert.StartsWith ("-s emulator-5554 ", File.ReadAllText (Path.Combine (detection.Directory, "query-arguments")));
 		}
 
-		static async Task<string> RunMSBuild (Detection detection, XElement project, bool multithreaded, params string [] arguments)
+		[TestCase (false)]
+		[TestCase (true)]
+		public async Task CpuAbiCacheInMSBuild (bool multithreaded)
+		{
+			using var detection = new Detection ("missing");
+			var cache = Path.Combine ("obj", "devices.cache");
+			var assembly = Path.Combine (TestEnvironment.AndroidMSBuildDirectory, "Xamarin.Android.Build.Debugging.Tasks.dll");
+			var cpuTask = new XElement ("GetPrimaryCpuAbi",
+				new XAttribute ("AdbToolPath", "tools"), new XAttribute ("AdbToolExe", detection.Executable),
+				new XAttribute ("AdbTarget", "-s missing"), new XAttribute ("DevicePropertyCache", cache),
+				new XAttribute ("RuntimeIdentifiers", "android-arm64"),
+				new XElement ("Output", new XAttribute ("TaskParameter", "ResultingAbi"), new XAttribute ("PropertyName", "Abi")),
+				new XElement ("Output", new XAttribute ("TaskParameter", "RuntimeIdentifier"), new XAttribute ("PropertyName", "Rid")),
+				new XElement ("Output", new XAttribute ("TaskParameter", "SdkVersion"), new XAttribute ("PropertyName", "Sdk")),
+				new XElement ("Output", new XAttribute ("TaskParameter", "AdbTarget"), new XAttribute ("PropertyName", "Serial")));
+			var project = new XElement ("Project",
+				new XElement ("UsingTask", new XAttribute ("TaskName", "Xamarin.Android.Tasks.GetPrimaryCpuAbi"),
+					new XAttribute ("AssemblyFile", assembly)),
+				new XElement ("Target", new XAttribute ("Name", "Probe"),
+					cpuTask, new XElement (cpuTask),
+					new XElement ("Error", new XAttribute ("Condition",
+						"'$(Abi)' != 'arm64-v8a' or '$(Rid)' != 'android-arm64' or '$(Sdk)' != '34' or '$(Serial)' != '-s missing'"),
+						new XAttribute ("Text", "CPU detection returned incorrect device properties."))));
+			var log = await RunMSBuild (detection, project, multithreaded, waitForQuery: false, "-warnaserror:MSB4286,MSB4287,MSB4288");
+			StringAssert.DoesNotContain ("TaskHostFactory", log);
+			StringAssert.Contains ($"Using cached properties: {cache}", log);
+			Assert.AreEqual (3, File.ReadAllLines (Path.Combine (detection.Directory, "property-arguments")).Length);
+			Assert.IsTrue (File.Exists (Path.Combine (detection.Directory, "obj", "devices.cache")));
+			Assert.IsFalse (File.Exists (Path.Combine (detection.Directory, "query-arguments")));
+		}
+
+		[Test]
+		public void CpuAbiUsesProjectCacheAndEnvironment ()
+		{
+			using var first = new Detection ("installed");
+			using var second = new Detection ("missing");
+			var engine = new MockBuildEngine (TestContext.Out);
+			var firstTask = first.CreateCpuTask (engine);
+			var secondTask = second.CreateCpuTask (engine);
+			firstTask.AdbToolPath = null;
+			// Share the executable and engine, but not project environments or cache files.
+			secondTask.AdbToolPath = Path.Combine (first.Directory, "tools");
+			Assert.IsTrue (firstTask.Execute ());
+			Assert.IsTrue (secondTask.Execute ());
+			Assert.AreEqual ("-s installed", firstTask.AdbTarget);
+			Assert.AreEqual ("-s missing", secondTask.AdbTarget);
+			foreach (var detection in new [] { first, second }) {
+				var cache = Path.Combine (detection.Directory, "devices.cache");
+				Assert.IsTrue (File.Exists (cache));
+				var timestamp = File.GetLastWriteTimeUtc (cache);
+				Assert.IsTrue (detection.CreateCpuTask (engine).Execute ());
+				Assert.AreEqual (timestamp, File.GetLastWriteTimeUtc (cache), "A cache hit must not rewrite the file.");
+				Assert.AreEqual (3, File.ReadAllLines (Path.Combine (detection.Directory, "property-arguments")).Length,
+					"The second call must use the XML cache.");
+				StringAssert.Contains (Path.Combine (detection.Directory, "temp"),
+					File.ReadAllText (Path.Combine (detection.Directory, "property-directory")).Trim ());
+			}
+		}
+
+		[Test]
+		public void CpuAbiCancellationDoesNotWriteCache ()
+		{
+			using var detection = new Detection ("pending");
+			var engine = new MockBuildEngine (TestContext.Out);
+			var task = detection.CreateCpuTask (engine);
+			var execution = Task.Run (() => task.Execute ());
+			try {
+				Assert.IsTrue (SpinWait.SpinUntil (() => execution.IsCompleted ||
+					File.Exists (Path.Combine (detection.Directory, "query-started")), TimeSpan.FromSeconds (10)));
+				Assert.IsFalse (execution.IsCompleted, "The property query must be pending before cancellation.");
+				task.Cancel ();
+				Assert.IsTrue (execution.Wait (TimeSpan.FromSeconds (5)));
+				Assert.IsTrue (execution.Result);
+				Assert.IsTrue (task.CancellationToken.IsCancellationRequested);
+				Assert.IsFalse (File.Exists (Path.Combine (detection.Directory, "devices.cache")));
+			} finally {
+				task.Cancel ();
+				detection.Release ();
+				Assert.IsTrue (execution.Wait (TimeSpan.FromSeconds (5)));
+			}
+		}
+
+		static async Task<string> RunMSBuild (Detection detection, XElement project, bool multithreaded, bool waitForQuery, params string [] arguments)
 		{
 			project.Save (Path.Combine (detection.Directory, "detection.proj"));
 			var startInfo = new ProcessStartInfo (Path.Combine (TestEnvironment.DotNetPreviewDirectory, "dotnet")) {
@@ -105,23 +187,28 @@ namespace Xamarin.Android.Build.Tests
 			var output = process.StandardOutput.ReadToEndAsync ();
 			var error = process.StandardError.ReadToEndAsync ();
 			try {
-				Assert.IsTrue (SpinWait.SpinUntil (() => process.HasExited ||
-					(File.Exists (Path.Combine (detection.Directory, "query-started")) &&
-					 File.Exists (Path.Combine (detection.Directory, "producer-returned"))), TimeSpan.FromSeconds (20)),
-					"The producer did not start its background query.");
-				if (process.HasExited)
-					Assert.Fail (await output + await error);
-				Assert.IsFalse (process.WaitForExit (100), "MSBuild must wait while the query is pending.");
-				detection.Release ();
-				Assert.IsTrue (process.WaitForExit (20000), "MSBuild did not finish after releasing the query.");
+				if (waitForQuery) {
+					Assert.IsTrue (SpinWait.SpinUntil (() => process.HasExited ||
+						(File.Exists (Path.Combine (detection.Directory, "query-started")) &&
+						 File.Exists (Path.Combine (detection.Directory, "producer-returned"))), TimeSpan.FromSeconds (20)),
+						"The producer did not start its background query.");
+					if (process.HasExited)
+						Assert.Fail (await output + await error);
+					Assert.IsFalse (process.WaitForExit (100), "MSBuild must wait while the query is pending.");
+					detection.Release ();
+				}
+				Assert.IsTrue (process.WaitForExit (20000), "MSBuild did not finish.");
 				var log = await output + await error;
 				TestContext.Out.WriteLine ($"Binlog: {binlog}");
 				Assert.AreEqual (0, process.ExitCode, log);
-				StringAssert.Contains ("DetectIfAppWasUninstalled Completed.", log);
-				Assert.IsFalse (File.Exists (detection.Flag));
+				if (waitForQuery) {
+					StringAssert.Contains ("DetectIfAppWasUninstalled Completed.", log);
+					Assert.IsFalse (File.Exists (detection.Flag));
+				}
 				return log;
 			} finally {
-				detection.Release ();
+				if (waitForQuery)
+					detection.Release ();
 				if (!process.HasExited) {
 					process.Kill (entireProcessTree: true);
 					process.WaitForExit ();
@@ -266,10 +353,17 @@ namespace Xamarin.Android.Build.Tests
 					    exit /b 0
 					)
 					if "%~4"=="getprop" (
+					    echo %* >> "%WAIT_TEST_ROOT%\property-arguments"
+					    echo %CD% > "%WAIT_TEST_ROOT%\property-directory"
+					    if "%WAIT_TEST_RESULT%"=="pending" (
+					        echo started > "%WAIT_TEST_ROOT%\query-started"
+					        goto wait
+					    )
 					    if "%~5"=="ro.build.version.sdk" (echo 34) else (echo arm64-v8a)
 					    exit /b 0
 					)
 					if "%~4"=="getprop ro.product.cpu.abilist64" (
+					    echo %* >> "%WAIT_TEST_ROOT%\property-arguments"
 					    echo arm64-v8a
 					    exit /b 0
 					)
@@ -305,10 +399,20 @@ namespace Xamarin.Android.Build.Tests
 					    exit 0
 					fi
 					if [ "$4" = getprop ]; then
+					    echo "$*" >> "$WAIT_TEST_ROOT/property-arguments"
+					    echo "$PWD" > "$WAIT_TEST_ROOT/property-directory"
+					    if [ "$WAIT_TEST_RESULT" = pending ]; then
+					        echo started > "$WAIT_TEST_ROOT/query-started"
+					        while [ ! -f "$WAIT_TEST_ROOT/release" ]; do sleep 0.05; done
+					    fi
 					    if [ "$5" = ro.build.version.sdk ]; then echo 34; else echo arm64-v8a; fi
 					    exit 0
 					fi
-					if [ "$4" = "getprop ro.product.cpu.abilist64" ]; then echo arm64-v8a; exit 0; fi
+					if [ "$4" = "getprop ro.product.cpu.abilist64" ]; then
+					    echo "$*" >> "$WAIT_TEST_ROOT/property-arguments"
+					    echo arm64-v8a
+					    exit 0
+					fi
 					echo "$*" > "$WAIT_TEST_ROOT/query-arguments"
 					echo "$PWD" > "$WAIT_TEST_ROOT/query-directory"
 					echo started > "$WAIT_TEST_ROOT/query-started"
@@ -332,6 +436,14 @@ namespace Xamarin.Android.Build.Tests
 				AdbToolExe = Executable,
 				PackageName = "com.example.app",
 				UploadFlagFile = "upload.flag",
+			};
+
+			public GetPrimaryCpuAbi CreateCpuTask (MockBuildEngine engine) => new GetPrimaryCpuAbi {
+				BuildEngine = engine,
+				TaskEnvironment = TaskEnvironment.CreateWithProjectDirectoryAndEnvironment (Directory, Environment),
+				AdbToolPath = "tools",
+				AdbToolExe = Executable,
+				DevicePropertyCache = "devices.cache",
 			};
 
 			public void Release () => File.WriteAllText (Path.Combine (Directory, "release"), "");

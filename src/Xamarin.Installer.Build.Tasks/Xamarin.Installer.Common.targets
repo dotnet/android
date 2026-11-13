@@ -16,20 +16,36 @@
 	</Target>
 
 	<Target Name="InstallAndroidDependencies" DependsOnTargets="_SetAndroidInstallJavaDependencies;GetAndroidDependencies">
+		<!-- Google's Android CLI, downloaded from Google and checked against these SHA-256 hashes. -->
+		<PropertyGroup>
+			<_AndroidCliVersion>1.1.16717390</_AndroidCliVersion>
+			<_AndroidCliBaseUrl>https://dl.google.com/android/cli/$(_AndroidCliVersion)</_AndroidCliBaseUrl>
+			<!-- Same per-user cache locations as $(MavenCacheDirectory) -->
+			<_AndroidCliDirectory Condition="$([MSBuild]::IsOSPlatform('Windows'))">$(LocalAppData)\dotnet-android\AndroidCli\$(_AndroidCliVersion)\</_AndroidCliDirectory>
+			<_AndroidCliDirectory Condition="$([MSBuild]::IsOSPlatform('OSX'))">$(HOME)/Library/Caches/dotnet-android/AndroidCli/$(_AndroidCliVersion)/</_AndroidCliDirectory>
+			<_AndroidCliDirectory Condition="'$(_AndroidCliDirectory)'==''">$(HOME)/.cache/dotnet-android/AndroidCli/$(_AndroidCliVersion)/</_AndroidCliDirectory>
+		</PropertyGroup>
+		<ItemGroup>
+			<_AndroidCliPackage Include="windows_x86_64" Url="$(_AndroidCliBaseUrl)/windows_x86_64/android-cli.exe" Sha256="E461A361540882A759031DD94AD4814B0BA109183CDFDF18013B639539A9AF7B" />
+			<_AndroidCliPackage Include="linux_x86_64" Url="$(_AndroidCliBaseUrl)/linux_x86_64/android-cli" Sha256="B34ED0BAEEFFA2AAEE2720D82491B975835696E2E56840449078BEC885436564" />
+			<_AndroidCliPackage Include="linux_arm64" Url="$(_AndroidCliBaseUrl)/linux_arm64/android-cli" Sha256="42F1FB9373A398CE72B65FA1D73DDCB6B7A419ABDF45CF0A293B51BEA1288EA5" />
+			<_AndroidCliPackage Include="darwin_x86_64" Url="$(_AndroidCliBaseUrl)/darwin_x86_64/android-cli" Sha256="4F102562A8D7ACA32FFE59FD9002D05EC0964675EDF17E7AC3E4C70546F30DD9" />
+			<_AndroidCliPackage Include="darwin_arm64" Url="$(_AndroidCliBaseUrl)/darwin_arm64/android-cli" Sha256="E9C6E19F5ED8142E2897E0B68B476E1768633E5740AA54BFC234767CC26401FE" />
+		</ItemGroup>
 		<InstallAndroidDependencies 
 				Dependencies="@(AndroidDependency)"
 				JavaDependencies="@(JavaDependency)"
 				AndroidSdkPath="$(AndroidSdkDirectory)"
 				JavaSdkPath="$(JavaSdkDirectory)"
 				AcceptAndroidSDKLicenses="$(AcceptAndroidSDKLicenses)"
-				ManifestType="$(AndroidManifestType)"
-				ManifestSource="$(AndroidManifestSource)"
 				TimeoutInMinutes="$(AndroidDependencyInstallationTimeout)"
 				InstallJavaDependencies="$(AndroidInstallJavaDependencies)"
-				IgnoreSdkArchiveChecksumErrors="$(_AndroidIgnoreSdkArchiveChecksumErrors)"
 				SkipSignCheck="$(_SkipSignCheck)"
 				OpenJdkPublicKeyUrl="$(_AndroidOpenJdkPublicKeyUrl)"
 				OpenJdkPublicKeySha256="$(_AndroidOpenJdkPublicKeySha256)"
+				AndroidCliDirectory="$(_AndroidCliDirectory)"
+				AndroidCliPackages="@(_AndroidCliPackage)"
+				AndroidCliPath="$(_AndroidCliPath)"
 			>
 		</InstallAndroidDependencies>
 	</Target>

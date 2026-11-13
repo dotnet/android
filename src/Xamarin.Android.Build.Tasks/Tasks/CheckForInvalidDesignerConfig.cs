@@ -3,6 +3,7 @@
 using Microsoft.Android.Build.Tasks;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
+using System;
 using System.Reflection.Metadata;
 using System.Reflection.PortableExecutable;
 using System.IO;
@@ -51,7 +52,7 @@ namespace Xamarin.Android.Tasks
 			foreach (var handle in reader.AssemblyReferences) {
 				var reference = reader.GetAssemblyReference (handle);
 				var name = reader.GetString (reference.Name);
-				if (string.CompareOrdinal (name, "_Microsoft.Android.Resource.Designer") == 0) {
+				if (string.Equals (name, "_Microsoft.Android.Resource.Designer", StringComparison.Ordinal)) {
 					return true;
 				}
 			}

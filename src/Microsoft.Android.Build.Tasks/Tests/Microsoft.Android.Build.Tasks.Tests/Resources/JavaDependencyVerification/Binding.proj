@@ -1,14 +1,16 @@
-<Project>
+<Project Sdk="Microsoft.NET.Sdk">
   <Import Project="$(JavaDependencyVerificationTargets)" />
   <ItemGroup>
     <AndroidLibrary Include="material.jar" Manifest="$(MSBuildProjectDirectory)/material.pom" />
     <PackageReference Include="Xamarin.Google.Material.Core" Version="1.0" />
   </ItemGroup>
   <Target Name="Verify">
+    <Error Condition=" '$(MSBuildRuntimeType)' != '$(ExpectedMSBuildRuntimeType)' "
+        Text="Expected $(ExpectedMSBuildRuntimeType) MSBuild but got $(MSBuildRuntimeType)." />
     <JavaDependencyVerification
         AndroidLibraries="@(AndroidLibrary)"
         PackageReferences="@(PackageReference)"
         ProjectAssetsLockFile="$(MSBuildProjectDirectory)/project.assets.json" />
-    <Message Text="Verified $(MSBuildProjectDirectory)" Importance="high" />
+    <Message Text="Verified $(MSBuildProjectDirectory) with $(MSBuildRuntimeType) MSBuild" Importance="high" />
   </Target>
 </Project>

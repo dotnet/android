@@ -44,6 +44,8 @@ namespace Xamarin.Android.Tasks
 	{
 		public override string TaskPrefix => "RSD";
 
+		public TaskEnvironment TaskEnvironment { get; set; } = TaskEnvironment.Fallback;
+
 		/// <summary>
 		/// In Xamarin.Android, this is the path to ReferenceAssemblies\Microsoft\Framework\MonoAndroid\v*.*\ that contains Mono.Android.dll
 		/// In .NET 6, this is dotnet\packs\Microsoft.Android.Sdk.Windows|Darwin\*\data\net6.0-android*\. Only contains AndroidApiInfo.xml
@@ -92,13 +94,15 @@ namespace Xamarin.Android.Tasks
 			var minVersion      = Version.Parse (MinimumSupportedJavaVersion);
 			var maxVersion      = Version.Parse (LatestSupportedJavaVersion);
 
-			JavaSdkPath         = MonoAndroidHelper.GetJdkInfo (this.CreateTaskLogger (), JavaSdkPath, minVersion, maxVersion)?.HomePath;
+			var environmentVariables = TaskEnvironment.GetEnvironmentVariables ()
+				.ToDictionary (pair => pair.Key, pair => pair.Value, OS.IsWindows ? StringComparer.OrdinalIgnoreCase : StringComparer.Ordinal);
+			JavaSdkPath              = JdkInfo.FindJdk (this.CreateTaskLogger (), JavaSdkPath, minVersion, maxVersion, environmentVariables)?.HomePath;
 
-			MonoAndroidHelper.GetSupportedVersions (BuildEngine4, ReferenceAssemblyPaths);
+			MonoAndroidHelper.GetSupportedVersions (BuildEngine4, ReferenceAssemblyPaths, TaskEnvironment);
 
 			AndroidSdkInfo androidSdk;
 			try {
-				androidSdk = new AndroidSdkInfo (LogSdkMessage, AndroidSdkPath, AndroidNdkPath, JavaSdkPath);
+				androidSdk = AndroidSdkInfo.CreateWithEnvironment (LogSdkMessage, AndroidSdkPath, AndroidNdkPath, JavaSdkPath, environmentVariables);
 			} catch (InvalidOperationException e) {
 				if (e.Message.Contains (" Android ")) {
 					Log.LogCodedError ("XA5300", Properties.Resources.XA5300_Android_SDK);
