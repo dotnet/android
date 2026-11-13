@@ -24,7 +24,7 @@ namespace generator.SourceWriters
 
 			ReturnType = new TypeReferenceWriter (opt.GetTypeReferenceName (method.RetVal));
 			IsDeclaration = true;
-			IsShadow = !ExplicitInterfaceImplementation.HasValue () && iface.RequiresNew (Name, method);
+			IsShadow = !ExplicitInterfaceImplementation.HasValue () && iface.RequiresNew (Name, method, opt);
 
 			// Allow user to force adding the 'abstract' keyword for "reabstraction"
 			if (method.ManagedOverride?.ToLowerInvariant () == "reabstract")

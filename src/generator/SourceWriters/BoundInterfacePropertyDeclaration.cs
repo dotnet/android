@@ -18,7 +18,7 @@ namespace generator.SourceWriters
 
 			PropertyType = new TypeReferenceWriter (opt.GetTypeReferenceName (property));
 			IsAutoProperty = true;
-			IsShadow = !ExplicitInterfaceImplementation.HasValue () && gen.RequiresNew (property);
+			IsShadow = !ExplicitInterfaceImplementation.HasValue () && gen.RequiresNew (property, opt);
 
 			// Allow user to force adding the 'abstract' keyword for "reabstraction"
 			if ((property.Getter ?? property.Setter).ManagedOverride?.ToLowerInvariant () == "reabstract")

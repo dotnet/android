@@ -67,7 +67,7 @@ namespace generator.SourceWriters
 				IsOverride = false;
 			}
 
-			IsShadow = !IsOverride && !ExplicitInterfaceImplementation.HasValue () && gen.RequiresNew (property);
+			IsShadow = !IsOverride && !ExplicitInterfaceImplementation.HasValue () && gen.RequiresNew (property, opt);
 
 			// Add [Obsolete] or [ObsoletedOSPlatform]
 			if (property.IsWholePropertyDeprecated) {

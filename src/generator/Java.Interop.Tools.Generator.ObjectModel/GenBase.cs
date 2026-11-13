@@ -892,10 +892,14 @@ namespace MonoDroid.Generation
 
 		public string RawVisibility => support.Visibility;
 
-		public bool RequiresNew (Property property) =>
-			property.Getter.ManagedOverride == "new" || RequiresNew (property.AdjustedName);
+		public bool RequiresNew (Property property) => RequiresNew (property, null);
 
-		public bool RequiresNew (Field field) => RequiresNew (field.Name);
+		internal bool RequiresNew (Property property, CodeGenerationOptions options) =>
+			property.Getter.ManagedOverride == "new" || RequiresNew (property.AdjustedName, options);
+
+		public bool RequiresNew (Field field) => RequiresNew (field, null);
+
+		internal bool RequiresNew (Field field, CodeGenerationOptions options) => RequiresNew (field.Name, options);
 
 		internal bool RequiresNewStringOverload (Method method) =>
 			Ancestors ().Any (a => a.Methods.Any (m => m.Visibility != "private" && m.Name == method.Name &&
@@ -909,13 +913,13 @@ namespace MonoDroid.Generation
 					(m.RetVal.IsVoid || m.IsEventHandlerWithHandledProperty) &&
 					(!m.IsSimpleEventHandler || m.IsEventHandlerWithHandledProperty) && i.GetArgsName (m) == name));
 
-		bool RequiresNew (string memberName)
+		bool RequiresNew (string memberName, CodeGenerationOptions options)
 		{
-			if (HidesBaseMember (memberName))
+			if (HidesBaseMember (memberName, null, options))
 				return true;
 
 			if (this is InterfaceGen)
-				return false;
+				return memberName == "Handle";
 
 			switch (memberName.ToLowerInvariant ()) {
 				case "handle":
@@ -931,12 +935,15 @@ namespace MonoDroid.Generation
 		}
 
 		public bool RequiresNew (string memberName, Method method)
+			=> RequiresNew (memberName, method, null);
+
+		internal bool RequiresNew (string memberName, Method method, CodeGenerationOptions options)
 		{
-			if (HidesBaseMember (memberName, method))
+			if (HidesBaseMember (memberName, method, options))
 				return true;
 
 			if (this is InterfaceGen)
-				return false;
+				return memberName == "Handle";
 
 			switch (memberName.ToLowerInvariant ()) {
 				case "handle":
@@ -963,10 +970,10 @@ namespace MonoDroid.Generation
 			return IsThrowable () && ThrowableRequiresNew.Contains (memberName);
 		}
 
-		bool HidesBaseMember (string memberName, Method method = null)
+		bool HidesBaseMember (string memberName, Method method, CodeGenerationOptions options)
 		{
 			IEnumerable<GenBase> ancestors = this is InterfaceGen
-				? GetAllDerivedInterfaces ().Where (i => i.RawVisibility == "public")
+				? GetAllDerivedInterfaces ().Where (i => i.RawVisibility == "public" && (options == null || !i.IsConstSugar (options)))
 				: Ancestors ();
 			foreach (var ancestor in ancestors) {
 				if (ancestor.Fields.Any (f => f.Visibility != "private" && f.Name == memberName) ||
