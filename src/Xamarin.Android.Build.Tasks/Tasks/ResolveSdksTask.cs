@@ -40,11 +40,10 @@ namespace Xamarin.Android.Tasks
 	/// <summary>
 	/// Discovers SDK paths and returns them to MSBuild.
 	/// </summary>
-	public class ResolveSdks : AndroidTask
+	[MSBuildMultiThreadableTask]
+	public class ResolveSdks : MultithreadedAndroidTask
 	{
 		public override string TaskPrefix => "RSD";
-
-		public TaskEnvironment TaskEnvironment { get; set; } = TaskEnvironment.Fallback;
 
 		/// <summary>
 		/// In Xamarin.Android, this is the path to ReferenceAssemblies\Microsoft\Framework\MonoAndroid\v*.*\ that contains Mono.Android.dll
@@ -87,6 +86,8 @@ namespace Xamarin.Android.Tasks
 			// Windows: %ProgramFiles(x86)%\MSBuild\Xamarin\Android
 			if (MonoAndroidToolsPath.IsNullOrEmpty ()) {
 				MonoAndroidToolsPath  = Path.GetDirectoryName (typeof (ResolveSdks).Assembly.Location);
+			} else {
+				MonoAndroidToolsPath = TaskEnvironment.GetAbsolutePath (MonoAndroidToolsPath).GetCanonicalForm ().Value;
 			}
 			MonoAndroidBinPath  = MonoAndroidHelper.GetOSBinPath () + Path.DirectorySeparatorChar;
 			MonoAndroidLibPath  = MonoAndroidHelper.GetOSLibPath () + Path.DirectorySeparatorChar;
@@ -96,13 +97,16 @@ namespace Xamarin.Android.Tasks
 
 			var environmentVariables = TaskEnvironment.GetEnvironmentVariables ()
 				.ToDictionary (pair => pair.Key, pair => pair.Value, OS.IsWindows ? StringComparer.OrdinalIgnoreCase : StringComparer.Ordinal);
-			JavaSdkPath              = JdkInfo.FindJdk (this.CreateTaskLogger (), JavaSdkPath, minVersion, maxVersion, environmentVariables)?.HomePath;
+			var projectDirectory = TaskEnvironment.ProjectDirectory.Value;
+			JavaSdkPath = JdkInfo.FindJdk (this.CreateTaskLogger (), JavaSdkPath, minVersion, maxVersion,
+				environmentVariables, projectDirectory)?.HomePath;
 
 			MonoAndroidHelper.GetSupportedVersions (BuildEngine4, ReferenceAssemblyPaths, TaskEnvironment);
 
 			AndroidSdkInfo androidSdk;
 			try {
-				androidSdk = AndroidSdkInfo.CreateWithEnvironment (LogSdkMessage, AndroidSdkPath, AndroidNdkPath, JavaSdkPath, environmentVariables);
+				androidSdk = AndroidSdkInfo.CreateWithEnvironment (LogSdkMessage, AndroidSdkPath, AndroidNdkPath,
+					JavaSdkPath, environmentVariables, projectDirectory);
 			} catch (InvalidOperationException e) {
 				if (e.Message.Contains (" Android ")) {
 					Log.LogCodedError ("XA5300", Properties.Resources.XA5300_Android_SDK);
@@ -114,9 +118,9 @@ namespace Xamarin.Android.Tasks
 				return false;
 			}
 
-			AndroidNdkPath = androidSdk.AndroidNdkPath is { Length: > 0 } ndkPath ? Path.GetFullPath (ndkPath) : androidSdk.AndroidNdkPath;
-			AndroidSdkPath = Path.GetFullPath (androidSdk.AndroidSdkPath);
-			JavaSdkPath    = Path.GetFullPath (androidSdk.JavaSdkPath);
+			AndroidNdkPath = GetPath (androidSdk.AndroidNdkPath);
+			AndroidSdkPath = TaskEnvironment.GetAbsolutePath (androidSdk.AndroidSdkPath).GetCanonicalForm ().Value;
+			JavaSdkPath    = TaskEnvironment.GetAbsolutePath (androidSdk.JavaSdkPath).GetCanonicalForm ().Value;
 
 			CommandLineToolsPath    = AndroidSdkInfo.GetCommandLineToolsPaths (AndroidSdkPath, CommandLineToolsVersion ?? "")
 				.FirstOrDefault () ??
@@ -134,6 +138,8 @@ namespace Xamarin.Android.Tasks
 			//note: this task does not error out if it doesn't find all things. that's the job of the targets
 			return !Log.HasLoggedErrors;
 		}
+
+		string? GetPath (string? path) => path.IsNullOrEmpty () ? path : TaskEnvironment.GetAbsolutePath (path).GetCanonicalForm ().Value;
 
 		void LogSdkMessage (TraceLevel level, string value)
 		{

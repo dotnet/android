@@ -15,6 +15,33 @@ namespace Xamarin.Android.Tools.Tests
 	{
 		const string NdkVersion = "21.0.6113669";
 
+		[Test]
+		public void SnapshotConfigReadsDoNotRepairSharedFiles ()
+		{
+			var root = CreateRoot ();
+			var directory = Path.Combine (root, "home", ".config", "xbuild");
+			Directory.CreateDirectory (directory);
+			var file = Path.Combine (directory, "monodroid-config.xml");
+			File.WriteAllText (file, "<broken");
+			File.WriteAllText (file + ".old", "previous");
+			var environment = new Dictionary<string, string> { ["HOME"] = "home" };
+			var errors = new System.Collections.Concurrent.ConcurrentBag<string> ();
+			try {
+				System.Threading.Tasks.Parallel.For (0, 2, _ => {
+					var config = AndroidSdkUnix.GetUnixConfigFile ((level, message) => {
+						if (level == TraceLevel.Error)
+							errors.Add (message);
+					}, environment, root);
+					Assert.IsEmpty (config.Elements ());
+				});
+				Assert.AreEqual (2, errors.Count);
+				Assert.AreEqual ("<broken", File.ReadAllText (file));
+				Assert.AreEqual ("previous", File.ReadAllText (file + ".old"));
+			} finally {
+				Directory.Delete (root, recursive: true);
+			}
+		}
+
 		string      UnixConfigDirOverridePath;
 		string      PreferredJdksOverridePath;
 

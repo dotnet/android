@@ -34,6 +34,113 @@ namespace Xamarin.Android.Build.Tests {
 
 		[TestCase (false)]
 		[TestCase (true)]
+		public void ResolveSdksUsesProjectPaths (bool discover)
+		{
+			var path = Path.Combine ("temp", TestName);
+			var tasks = new ResolveSdks [2];
+			var engine = new MockBuildEngine (TextWriter.Synchronized (new StringWriter ()));
+			try {
+				for (int i = 0; i < tasks.Length; i++) {
+					var project = Path.Combine (path, $"project-{i}");
+					var sdk = CreateFauxAndroidSdkDirectory (Path.Combine (project, "sdk"), "37.0.0");
+					var ndk = CreateFauxAndroidNdkDirectory (Path.Combine (project, "ndk"));
+					var jdk = CreateFauxJavaSdkDirectory (Path.Combine (project, "jdk"), "21.0.8", out _, out _);
+					CreateFauxReferencesDirectory (Path.Combine (project, "references"), [
+						new ApiInfo { Id = $"Project{i}", Level = 100 + i, Name = "Preview", FrameworkVersion = "v100.0", Stable = true },
+					]);
+					if (IsWindows) {
+						File.Move (Path.Combine (sdk, "platform-tools", "adb.exe"), Path.Combine (sdk, "platform-tools", "adb.DISCOVERY"));
+						File.Move (Path.Combine (ndk, "ndk-stack.cmd"), Path.Combine (ndk, "ndk-stack.DISCOVERY"));
+						foreach (var file in Directory.GetFiles (Path.Combine (jdk, "bin")))
+							File.Move (file, Path.ChangeExtension (file, ".DISCOVERY"));
+					}
+					tasks [i] = new ResolveSdks {
+						BuildEngine = engine,
+						TaskEnvironment = TaskEnvironment.CreateWithProjectDirectoryAndEnvironment (
+							Path.Combine (Root, project), new Dictionary<string, string> {
+								["JI_JAVA_HOME"] = "jdk",
+								["ANDROID_HOME"] = "sdk",
+								["PATH"] = "ndk",
+								["PATHEXT"] = ".DISCOVERY",
+								["XAMARIN_ANDROID_REGKEY"] = $@"Software\ResolveSdksTests\{Guid.NewGuid ():N}",
+							}),
+						AndroidSdkPath = discover ? " " : i == 0 ? sdk : Path.Combine ("sdk", "..", "sdk"),
+						AndroidNdkPath = discover ? " " : i == 0 ? ndk : "ndk",
+						JavaSdkPath = discover ? " " : i == 0 ? jdk : "jdk",
+						MonoAndroidToolsPath = "tools",
+						ReferenceAssemblyPaths = ["references"],
+						MinimumSupportedJavaVersion = "21.0",
+						LatestSupportedJavaVersion = "25.0.99",
+					};
+				}
+				System.Threading.Tasks.Parallel.For (0, tasks.Length, i => {
+					var task = tasks [i];
+					var directory = task.TaskEnvironment.ProjectDirectory.Value;
+					Assert.IsTrue (task.Execute ());
+					Assert.AreEqual (Path.Combine (directory, "sdk"), task.AndroidSdkPath);
+					Assert.AreEqual (Path.Combine (directory, "ndk"), task.AndroidNdkPath);
+					Assert.AreEqual (Path.Combine (directory, "jdk"), task.JavaSdkPath);
+					Assert.AreEqual (Path.Combine (directory, "tools"), task.MonoAndroidToolsPath);
+					Assert.AreEqual (Path.Combine (directory, "sdk", "tools"), task.CommandLineToolsPath);
+					Assert.AreEqual (100 + i, MonoAndroidHelper.GetSupportedVersions (engine, task.ReferenceAssemblyPaths, task.TaskEnvironment).GetApiLevelFromId ($"Project{i}"));
+				});
+			} finally {
+				Directory.Delete (Path.Combine (Root, path), recursive: true);
+			}
+		}
+
+		[TestCase (false)]
+		[TestCase (true)]
+		public void ResolveSdksUsesEngineEnvironment (bool multithreaded)
+		{
+			var directory = Path.Combine (Root, "temp", TestName);
+			TestOutputDirectories [TestContext.CurrentContext.Test.ID] = directory;
+			var resources = new List<ProjectResource> ();
+			foreach (var name in new [] { "first", "second" }) {
+				var path = Path.Combine ("temp", TestName, name);
+				CreateFauxAndroidSdkDirectory (Path.Combine (path, "sdk"), "37.0.0");
+				CreateFauxAndroidNdkDirectory (Path.Combine (path, "ndk"));
+				CreateFauxJavaSdkDirectory (Path.Combine (path, "jdk"), "21.0.8", out _, out _);
+				CreateFauxReferencesDirectory (Path.Combine (path, "references"), apiInfoSelection);
+				var project = new XElement ("Project",
+					new XElement ("UsingTask",
+						new XAttribute ("TaskName", "Xamarin.Android.Tasks.ResolveSdks"),
+						new XAttribute ("AssemblyFile", Path.Combine (TestEnvironment.AndroidMSBuildDirectory, "Xamarin.Android.Build.Tasks.dll"))),
+					new XElement ("Target", new XAttribute ("Name", "Build"),
+						new XElement ("ResolveSdks",
+							new XAttribute ("AndroidSdkPath", Path.Combine ("sdk", "..", "sdk")),
+							new XAttribute ("AndroidNdkPath", "ndk"),
+							new XAttribute ("JavaSdkPath", "jdk"),
+							new XAttribute ("ReferenceAssemblyPaths", "references"),
+							new XAttribute ("MinimumSupportedJavaVersion", "21.0"),
+							new XAttribute ("LatestSupportedJavaVersion", "25.0.99"),
+							new XElement ("Output", new XAttribute ("TaskParameter", "AndroidSdkPath"), new XAttribute ("PropertyName", "Sdk")),
+							new XElement ("Output", new XAttribute ("TaskParameter", "AndroidNdkPath"), new XAttribute ("PropertyName", "Ndk")),
+							new XElement ("Output", new XAttribute ("TaskParameter", "JavaSdkPath"), new XAttribute ("PropertyName", "Jdk"))),
+						new XElement ("Error",
+							new XAttribute ("Condition", $"'$(Sdk)' != '{Path.Combine ("$(MSBuildProjectDirectory)", "sdk")}' or '$(Ndk)' != '{Path.Combine ("$(MSBuildProjectDirectory)", "ndk")}' or '$(Jdk)' != '{Path.Combine ("$(MSBuildProjectDirectory)", "jdk")}'"),
+							new XAttribute ("Text", "Incorrect SDK paths: $(Sdk);$(Ndk);$(Jdk)"))));
+				resources.Add (new ProjectResource { Path = Path.Combine (name, "resolve.proj"), Content = project.ToString () });
+			}
+			var driver = new XElement ("Project",
+				new XElement ("ItemGroup",
+					new XElement ("Child", new XAttribute ("Include", "first/resolve.proj;second/resolve.proj"))),
+				new XElement ("Target", new XAttribute ("Name", "Build"),
+					new XElement ("MSBuild", new XAttribute ("Projects", "@(Child)"), new XAttribute ("BuildInParallel", "true"))));
+			resources.Add (new ProjectResource { Path = "driver.proj", Content = driver.ToString () });
+			new XamarinAndroidApplicationProject ().UpdateProjectFiles (directory, resources, doNotCleanup: true);
+			var dotnet = new DotNetCLI (Path.Combine (directory, "driver.proj")) { Verbosity = "diagnostic" };
+			dotnet.EnvironmentVariables ["DOTNET_CLI_USE_MSBUILD_SERVER"] = "0";
+			dotnet.EnvironmentVariables ["MSBUILDDISABLENODEREUSE"] = "1";
+			string [] arguments = multithreaded ?
+				["--no-restore", "-m:2", "-mt", "-nr:false", "-warnaserror:MSB4286,MSB4287,MSB4288"] :
+				["--no-restore", "-m:2", "-nr:false"];
+			Assert.IsTrue (dotnet.Build (msbuildArguments: arguments),
+				string.Join (Environment.NewLine, dotnet.LastBuildOutput) + File.ReadAllText (dotnet.ProcessLogFile));
+		}
+
+		[TestCase (false)]
+		[TestCase (true)]
 		[Platform ("Win")]
 		public void ResolveSdksEnvironmentPreservesMissingToolErrors (bool missingSdk)
 		{

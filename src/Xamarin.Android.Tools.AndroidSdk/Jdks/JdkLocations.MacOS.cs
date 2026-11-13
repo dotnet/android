@@ -11,14 +11,14 @@ namespace Xamarin.Android.Tools {
 		IEnumerable<JdkInfo> GetUnixPreferredJdks (Action<TraceLevel, string> logger)
 		{
 			return GetUnixConfiguredJdkPaths (logger)
-				.Select (p => JdkInfo.TryGetJdkInfo (p, logger, "monodroid-config.xml", environmentVariables))
+				.Select (p => JdkInfo.TryGetJdkInfo (p, logger, "monodroid-config.xml", environmentVariables, workingDirectory))
 				.OfType<JdkInfo> ()
 				.OrderByDescending (jdk => jdk, JdkInfoVersionComparer.Default);
 		}
 
 		IEnumerable<string> GetUnixConfiguredJdkPaths (Action<TraceLevel, string> logger)
 		{
-			var config = AndroidSdkUnix.GetUnixConfigFile (logger, OS.IsWindows ? null : environmentVariables);
+			var config = AndroidSdkUnix.GetUnixConfigFile (logger, OS.IsWindows ? null : environmentVariables, workingDirectory);
 
 			foreach (var java_sdk in config.Elements ("java-sdk")) {
 				var path    = (string?) java_sdk.Attribute ("path");
@@ -40,8 +40,8 @@ namespace Xamarin.Android.Tools {
 			var home = ProcessUtils.GetUnixHome (environmentVariables);
 			if (home is not { Length: > 0 })
 				return Array.Empty<JdkInfo> ();
-			var libraryAndroidRoot = Path.Combine (home, "Library", "Android");
-			if (!Directory.Exists (libraryAndroidRoot)) {
+			var libraryAndroidRoot = ProcessUtils.ResolvePath (Path.Combine (home, "Library", "Android"), workingDirectory);
+			if (libraryAndroidRoot == null || !Directory.Exists (libraryAndroidRoot)) {
 				return Array.Empty<JdkInfo> ();
 			}
 
@@ -78,7 +78,7 @@ namespace Xamarin.Android.Tools {
 			return FromPaths (GetMacOSSystemJvmPaths (pattern), logger, locator);
 		}
 
-		static IEnumerable<string> GetMacOSSystemJvmPaths (string pattern)
+		IEnumerable<string> GetMacOSSystemJvmPaths (string pattern)
 		{
 			var root    = MacOSJavaVirtualMachinesRoot;
 			var toHome  = Path.Combine ("Contents", "Home");
@@ -89,7 +89,8 @@ namespace Xamarin.Android.Tools {
 				toHome  = "";
 				pattern = "*";
 			}
-			if (!Directory.Exists (root)) {
+			root = ProcessUtils.ResolvePath (root, workingDirectory);
+			if (root == null || !Directory.Exists (root)) {
 				yield break;
 			}
 			foreach (var dir in Directory.EnumerateDirectories (root, pattern)) {

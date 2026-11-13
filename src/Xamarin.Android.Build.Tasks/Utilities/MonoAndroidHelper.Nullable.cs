@@ -62,7 +62,7 @@ public partial class MonoAndroidHelper
 	public static AndroidVersions GetSupportedVersions (IBuildEngine4 engine, string[]? referenceAssemblyPaths, TaskEnvironment taskEnvironment)
 	{
 		// GetAbsolutePath roots paths but does not collapse ".." for the cache key.
-		var paths = (referenceAssemblyPaths ?? []).Select (path => new DirectoryInfo (taskEnvironment.GetAbsolutePath (path)).FullName).ToArray ();
+		var paths = (referenceAssemblyPaths ?? []).Select (path => taskEnvironment.GetAbsolutePath (path).GetCanonicalForm ().Value).ToArray ();
 		// Share immutable API metadata by input, never a process-wide "current SDK".
 		var key = (typeof (MonoAndroidHelper).Assembly.Location, nameof (AndroidVersions), string.Join ("\0", paths));
 		var cached = engine.GetRegisteredTaskObjectAssemblyLocal<AndroidVersions> (key, RegisteredTaskObjectLifetime.Build);
