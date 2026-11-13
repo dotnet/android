@@ -77,14 +77,12 @@ dotnet test <project>.csproj -v minimal --filter "Name~TestName"
 ./dotnet-local.sh test bin/TestDebug/MSBuildDeviceIntegration/${TFM}/MSBuildDeviceIntegration.dll --filter "Name~InstallAndRunTests"
 ```
 
-Both assemblies also run directly with Microsoft Testing Platform (MTP). CI uses the C# file-based
-app `build-tools/automation/scripts/RunSlicedTests.cs`, which lists the tests with MTP, gives each
-parallel CI job an equal share, and runs failed tests again once:
+CI runs these assemblies with Microsoft Testing Platform, and splits them across jobs with
+`build-tools/automation/scripts/RunSlicedTests.cs`:
 ```bash
-./bin/Debug/dotnet/dotnet bin/TestDebug/${TFM}/Xamarin.Android.Build.Tests.dll --list-tests json --filter "FullyQualifiedName~BuildTest2"
-./bin/Debug/dotnet/dotnet run build-tools/automation/scripts/RunSlicedTests.cs -- --dotnet bin/Debug/dotnet/dotnet \
+./bin/Debug/dotnet/dotnet run build-tools/automation/scripts/RunSlicedTests.cs -- \
   --test-assembly bin/TestDebug/${TFM}/Xamarin.Android.Build.Tests.dll --results-directory bin/TestDebug/TestResults \
-  --filter "FullyQualifiedName~BuildTest2" --slice 1 --total-slices 4 --retry true
+  --filter "FullyQualifiedName~BuildTest2" --slice 1 --total-slices 4
 ```
 
 ### On-device runtime tests (stock NUnit/MTP, full-build + device)
