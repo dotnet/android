@@ -911,7 +911,7 @@ namespace Xamarin.Android.Tools.Bytecode {
 						continue;
 					}
 					if (c < 0x20 || c > 0xff) {
-						sb.Append ("\\u").AppendFormat ("{0:x4}", (int)c);
+						sb.Append ("\\u").AppendFormat (CultureInfo.CurrentCulture, "{0:x4}", (int)c);
 						continue;
 					}
 					sb.Append (c);
