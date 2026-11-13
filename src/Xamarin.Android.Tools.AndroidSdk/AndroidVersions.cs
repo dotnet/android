@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Globalization;
 using System.Collections;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -109,7 +110,7 @@ namespace Xamarin.Android.Tools
 		{
 			return installedVersions.FirstOrDefault (v => v.ApiLevel == apiLevel)?.Id ??
 				KnownVersions.FirstOrDefault (v => v.ApiLevel == apiLevel)?.Id ??
-				apiLevel.ToString ();
+				apiLevel.ToString (CultureInfo.InvariantCulture);
 		}
 
 		public string? GetIdFromVersionCodeFull (Version versionCodeFull)
