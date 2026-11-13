@@ -87,7 +87,7 @@ namespace Xamarin.Android.Binder
 				FixObsoleteOverrides = options.FixObsoleteOverrides,
 				UseUnmanagedCallersOnlyCallbacks = options.UseUnmanagedCallersOnlyCallbacks,
 			};
-			var resolverCache       = new TypeDefinitionCache ();
+			var resolverCache       = opt.TypeCache;
 
 			// Load reference libraries
 
@@ -267,7 +267,8 @@ namespace Xamarin.Android.Binder
 				return false;
 			if (!a.ImplementsInterface ("Android.Runtime.IJavaObject", cache) || !b.ImplementsInterface ("Android.Runtime.IJavaObject", cache))
 				return false;
-			return JavaNativeTypeManager.ToJniName (a, cache) == JavaNativeTypeManager.ToJniName (b, cache);
+			return JavaNativeTypeManager.ToJniName (a, cache, PackageNamingPolicy.LowercaseCrc64) ==
+				JavaNativeTypeManager.ToJniName (b, cache, PackageNamingPolicy.LowercaseCrc64);
 		}
 
 		static IEnumerable<GenBase> FlattenNestedTypes (IEnumerable<GenBase> gens)
@@ -338,7 +339,7 @@ namespace Xamarin.Android.Binder
 			if (td.Name.EndsWith ("Invoker", StringComparison.Ordinal)) {
 				string n = td.FullName;
 				n = n.Substring (0, n.Length - 7);
-				var types = td.DeclaringType != null ? td.DeclaringType.Resolve ().NestedTypes : td.Module.Types;
+				var types = td.DeclaringType != null ? td.DeclaringType.NestedTypes : td.Module.Types;
 				if (types.Any (t => t.FullName == n))
 					return;
 				//Console.Error.WriteLine ("WARNING: " + td.FullName + " survived");
@@ -346,7 +347,7 @@ namespace Xamarin.Android.Binder
 			if (td.Name.EndsWith ("Implementor", StringComparison.Ordinal)) {
 				string n = td.FullName;
 				n = n.Substring (0, n.Length - 11);
-				var types = td.DeclaringType != null ? td.DeclaringType.Resolve ().NestedTypes : td.Module.Types;
+				var types = td.DeclaringType != null ? td.DeclaringType.NestedTypes : td.Module.Types;
 				if (types.Any (t => t.FullName == n))
 					return;
 				//Console.Error.WriteLine ("WARNING: " + td.FullName + " survived");
