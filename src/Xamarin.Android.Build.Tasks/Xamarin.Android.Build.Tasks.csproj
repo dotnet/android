@@ -18,8 +18,6 @@
     <SignAssembly>true</SignAssembly>
     <AssemblyOriginatorKeyFile>..\..\product.snk</AssemblyOriginatorKeyFile>
     <Nullable>enable</Nullable>
-    <!-- Causes issues with linker files imported from Mono -->
-    <NoWarn>$(NoWarn);CA1310;CA1305</NoWarn>
     <WarningsAsErrors>$(WarningsAsErrors);Nullable</WarningsAsErrors>
   </PropertyGroup>
 

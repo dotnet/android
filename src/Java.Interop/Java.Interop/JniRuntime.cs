@@ -321,7 +321,7 @@ namespace Java.Interop
 
 		public override string ToString ()
 		{
-			return string.Format ("{0}(0x{1})", GetType ().FullName, InvocationPointer.ToString ("x", CultureInfo.InvariantCulture));
+			return string.Format (CultureInfo.CurrentCulture, "{0}(0x{1})", GetType ().FullName, InvocationPointer.ToString ("x", CultureInfo.InvariantCulture));
 		}
 
 		public void Dispose ()
