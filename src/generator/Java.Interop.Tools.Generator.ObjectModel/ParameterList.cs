@@ -1,4 +1,5 @@
 using System;
+using System.Globalization;
 using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.Text;
@@ -210,7 +211,7 @@ namespace MonoDroid.Generation {
 			StringBuilder sb = new StringBuilder ();
 			foreach (Parameter p in items) {
 				if (p.Name == "__self") {
-					sb.AppendFormat ("L\" + global::Android.Runtime.JNIEnv.GetJniName (GetType ().DeclaringType{0}) + \";", opt.NullForgivingOperator);
+					sb.AppendFormat (CultureInfo.CurrentCulture, "L\" + global::Android.Runtime.JNIEnv.GetJniName (GetType ().DeclaringType{0}) + \";", opt.NullForgivingOperator);
 					continue;
 				}
 				sb.Append (p.JniType);
