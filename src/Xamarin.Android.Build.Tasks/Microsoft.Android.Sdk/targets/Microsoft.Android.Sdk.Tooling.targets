@@ -81,11 +81,17 @@ This file contains .NET 6+ Java version validation and calls to the
         Code="XA5300"
         ResourceName="XA5300_Java_SDK"
     />
+    <!-- Pass the path through the environment so shell metacharacters in it stay literal. -->
+    <PropertyGroup Condition=" '$(_JavaSdkDirectory)' != '' and '$(_JdkVersion)' == '' ">
+      <_AndroidJavaVersionCommand Condition=" $([MSBuild]::IsOSPlatform('windows')) ">setlocal DisableDelayedExpansion&#xA;&quot;%_ANDROID_JAVA_TOOL%&quot; -version</_AndroidJavaVersionCommand>
+      <_AndroidJavaVersionCommand Condition=" !$([MSBuild]::IsOSPlatform('windows')) ">&quot;$_ANDROID_JAVA_TOOL&quot; -version</_AndroidJavaVersionCommand>
+    </PropertyGroup>
     <!-- `java -version` prints e.g. `openjdk version "21.0.8" 2025-07-15` -->
     <Exec
         Condition=" '$(_JavaSdkDirectory)' != '' and '$(_JdkVersion)' == '' "
         ContinueOnError="$(_AndroidAllowMissingSdkTooling)"
-        Command="&quot;$(_AndroidJavaTool)&quot; -version"
+        Command="$(_AndroidJavaVersionCommand)"
+        EnvironmentVariables="_ANDROID_JAVA_TOOL=$([MSBuild]::Escape('$(_AndroidJavaTool)'))"
         ConsoleToMSBuild="true"
         EchoOff="true"
         IgnoreExitCode="true"

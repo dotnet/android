@@ -126,15 +126,22 @@ namespace Xamarin.Android.Build.Tests
 			StringAssert.Contains ("java version unknown", warning.Message);
 		}
 
-		[TestCase (false)]
-		[TestCase (true)]
-		public void JavaPathsWithMSBuildSpecialCharacters (bool useReleaseFile)
+		[TestCase (false, "O'Brien;x=1")]
+		[TestCase (true, "O'Brien;x=1")]
+		[TestCase (false, "O'Brien;x=1 $HOME")]
+		[TestCase (true, "O'Brien;x=1 $HOME")]
+		[TestCase (false, "O'Brien;x=1 %JAVA_HOME%")]
+		[TestCase (true, "O'Brien;x=1 %JAVA_HOME%")]
+		[TestCase (false, "O'Brien;x=1 !JAVA_HOME!")]
+		[TestCase (true, "O'Brien;x=1 !JAVA_HOME!")]
+		public void JavaPathsWithMSBuildSpecialCharacters (bool useReleaseFile, string directoryName)
 		{
-			var javaPath = CreateFauxJavaSdkDirectory (Path.Combine (path, "O'Brien;x=1", "jdk"), "21.0.8", out string javaExe, out _);
+			var javaPath = CreateFauxJavaSdkDirectory (Path.Combine (path, directoryName, "jdk"), "21.0.8", out string javaExe, out _);
 			if (!useReleaseFile)
 				File.Delete (Path.Combine (javaPath, "release"));
 			var result = Validate (javaPath, javaExe, "21.0", "25.0.99");
 			Assert.IsTrue (result.Success, string.Join (Environment.NewLine, result.Errors.Select (e => e.Message)));
+			Assert.IsFalse (result.Warnings.Any (w => w.Code == "XA0033"), string.Join (Environment.NewLine, result.Warnings.Select (w => w.Message)));
 			Assert.AreEqual ("21.0.8", result.JdkVersion);
 		}
 
