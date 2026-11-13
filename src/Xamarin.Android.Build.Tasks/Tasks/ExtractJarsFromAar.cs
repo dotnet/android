@@ -33,9 +33,6 @@ namespace Xamarin.Android.Tasks
 
 		public string []? ReferenceLibraries { get; set; }
 
-		[Output]
-		public string [] FilesWritten { get; set; } = [];
-
 		public override bool RunTask ()
 		{
 			var outputJars = TaskEnvironment.GetAbsolutePath (OutputJarsDirectory).GetCanonicalForm ().Value;
@@ -64,17 +61,23 @@ namespace Xamarin.Android.Tasks
 				File.Delete (TaskEnvironment.GetAbsolutePath (file));
 			}
 
-			var byArchive = new Dictionary<int, List<(string Path, int Entry)>> ();
+			var byArchive = new SortedDictionary<int, List<(string Path, int Entry, bool Backslash)>> ();
 			foreach (var selection in selected) {
 				if (!byArchive.TryGetValue (selection.Value.Archive, out var files))
-					byArchive.Add (selection.Value.Archive, files = new List<(string, int)> ());
-				files.Add ((selection.Key, selection.Value.Entry));
+					byArchive.Add (selection.Value.Archive, files = new List<(string, int, bool)> ());
+				files.Add ((selection.Key, selection.Value.Entry, selection.Value.Backslash));
 			}
 			var memoryStream = MemoryStreamPool.Shared.Rent ();
 			try {
 				foreach (var group in byArchive) {
+					// Ordinally distinct paths can still alias on a case-insensitive Unix volume.
+					// Preserve archive precedence and write slash entries last without merging case-sensitive paths.
+					group.Value.Sort ((left, right) => {
+						int order = right.Backslash.CompareTo (left.Backslash);
+						return order != 0 ? order : left.Entry.CompareTo (right.Entry);
+					});
 					using var archive = Files.ReadZipFile (archives [group.Key]);
-					foreach (var (path, entryIndex) in group.Value) {
+					foreach (var (path, entryIndex, _) in group.Value) {
 						memoryStream.SetLength (0);
 						using (var source = archive.Entries [entryIndex].Open ())
 							source.CopyTo (memoryStream);
@@ -86,7 +89,6 @@ namespace Xamarin.Android.Tasks
 			} finally {
 				MemoryStreamPool.Shared.Return (memoryStream);
 			}
-			FilesWritten = new List<string> (selected.Keys).ToArray ();
 			return !Log.HasLoggedErrors;
 		}
 

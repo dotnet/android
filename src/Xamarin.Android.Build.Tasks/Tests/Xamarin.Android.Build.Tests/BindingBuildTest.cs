@@ -752,6 +752,38 @@ public class UsesDependency {
 		}
 
 		[Test]
+		public void ExtractAarOutputsSurviveNoChangeBuilds ()
+		{
+			var proj = new XamarinAndroidLibraryProject {
+				OtherBuildItems = {
+					new AndroidItem.AndroidLibrary ("foo.aar") {
+						BinaryContent = () => CreateAarWithFixedTimestamp (("classes.jar", "classes"), ("annotations.zip", "annotations")),
+						MetadataValues = "Bind=false",
+					},
+				},
+			};
+			using var builder = CreateDllBuilder ();
+			Assert.IsTrue (builder.Build (proj));
+			var jar = builder.Output.GetIntermediaryPath (Path.Combine ("reference_library_project_jars", "foo.aar", "classes.jar"));
+			var annotations = builder.Output.GetIntermediaryPath (Path.Combine ("reference_library_project_annotations", "foo.aar", "annotations.zip"));
+			var jarTime = File.GetLastWriteTimeUtc (jar);
+			var annotationsTime = File.GetLastWriteTimeUtc (annotations);
+			for (int i = 0; i < 2; i++) {
+				Assert.IsTrue (builder.Build (proj, doNotCleanupOnUpdate: true), $"No-change build {i + 1} should succeed.");
+				Assert.IsTrue (builder.Output.IsTargetSkipped ("_ExtractAar"), "Unchanged AARs should not be extracted again.");
+				FileAssert.Exists (jar);
+				FileAssert.Exists (annotations);
+				Assert.AreEqual ("classes", File.ReadAllText (jar));
+				Assert.AreEqual ("annotations", File.ReadAllText (annotations));
+				Assert.AreEqual (jarTime, File.GetLastWriteTimeUtc (jar));
+				Assert.AreEqual (annotationsTime, File.GetLastWriteTimeUtc (annotations));
+			}
+			Assert.IsTrue (builder.RunTarget (proj, "Clean", doNotCleanupOnUpdate: true, saveProject: false));
+			DirectoryAssert.DoesNotExist (builder.Output.GetIntermediaryPath ("reference_library_project_jars"));
+			DirectoryAssert.DoesNotExist (builder.Output.GetIntermediaryPath ("reference_library_project_annotations"));
+		}
+
+		[Test]
 		public void ExtractAarHandlesCaseOnlyRename ()
 		{
 			var content = CreateAarWithFixedTimestamp (("libs/Helper.jar", "content"));
@@ -827,6 +859,46 @@ public class UsesDependency {
 				var annotations = builder.Output.GetIntermediaryPath (Path.Combine ("reference_library_project_annotations", archive, "sub", "annotations.zip"));
 				Assert.AreEqual ("other", File.ReadAllText (jar), $"The later archive should win for {archive} jars.");
 				Assert.AreEqual ("other", File.ReadAllText (annotations), $"The later archive should win for {archive} annotations.");
+			}
+		}
+
+		[Test]
+		public void ExtractAarPreservesCaseAliasOrdering ([Values (false, true)] bool laterArchive, [Values (false, true)] bool reverse)
+		{
+			var first = CreateAarWithFixedTimestamp ("classes");
+			var other = first;
+			var proj = new XamarinAndroidLibraryProject {
+				OtherBuildItems = {
+					new AndroidItem.AndroidLibrary ("first\\foo.aar") {
+						BinaryContent = () => first,
+						MetadataValues = "Bind=false",
+					},
+				},
+			};
+			if (laterArchive) {
+				proj.OtherBuildItems.Add (new AndroidItem.AndroidLibrary ("other\\foo.aar") {
+					BinaryContent = () => other,
+					MetadataValues = "Bind=false",
+				});
+			}
+			using var builder = CreateDllBuilder ();
+			Assert.IsTrue (builder.Build (proj));
+			var jars = builder.Output.GetIntermediaryPath (Path.Combine ("reference_library_project_jars", "foo.aar"));
+			var annotations = builder.Output.GetIntermediaryPath (Path.Combine ("reference_library_project_annotations", "foo.aar"));
+			var caseInsensitive = File.Exists (Path.Combine (jars, "CLASSES.JAR"));
+			first = reverse
+				? CreateAarWithFixedTimestamp (("libs\\helper.jar", "backx"), ("sub\\annotations.zip", "backx"), ("libs/Helper.jar", "slash"), ("sub/Annotations.zip", "slash"))
+				: CreateAarWithFixedTimestamp (("libs/Helper.jar", "slash"), ("sub/Annotations.zip", "slash"), ("libs\\helper.jar", "backx"), ("sub\\annotations.zip", "backx"));
+			other = CreateAarWithFixedTimestamp (("libs/Helper.jar", "later"), ("sub/Annotations.zip", "later"));
+			proj.Touch ("first\\foo.aar");
+			if (laterArchive)
+				proj.Touch ("other\\foo.aar");
+			Assert.IsTrue (builder.RunTarget (proj, "_ExtractAar", doNotCleanupOnUpdate: true, saveProject: false));
+			foreach (var (directory, upper, lower) in new [] { (jars, "libs/Helper.jar", "libs/helper.jar"), (annotations, "sub/Annotations.zip", "sub/annotations.zip") }) {
+				var winner = laterArchive ? "later" : "slash";
+				Assert.AreEqual (winner, File.ReadAllText (Path.Combine (directory, upper)));
+				Assert.AreEqual (caseInsensitive ? winner : "backx", File.ReadAllText (Path.Combine (directory, lower)));
+				Assert.AreEqual (caseInsensitive ? 1 : 2, Directory.GetFiles (directory, "*", SearchOption.AllDirectories).Length);
 			}
 		}
 

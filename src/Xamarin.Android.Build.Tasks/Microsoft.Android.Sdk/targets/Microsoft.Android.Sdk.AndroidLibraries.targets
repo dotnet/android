@@ -120,9 +120,7 @@ projects.
         OutputReferenceJarsDirectory="$(IntermediateOutputPath)reference_library_project_jars"
         OutputReferenceAnnotationsDirectory="$(IntermediateOutputPath)reference_library_project_annotations"
         ReferenceLibraries="@(_AndroidReferenceLibraryProjectZip)"
-    >
-      <Output TaskParameter="FilesWritten" ItemName="FileWrites" />
-    </ExtractJarsFromAar>
+    />
     <Touch Files="$(_AndroidStampDirectory)_ExtractAar.stamp" AlwaysCreate="true" />
   </Target>
 
