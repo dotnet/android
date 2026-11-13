@@ -1,6 +1,7 @@
 #nullable disable
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Threading;
@@ -50,9 +51,16 @@ namespace Xamarin.Android.Tasks
 			return new AdbRunner (GetAdbPath (adbToolPath, adbToolExe));
 		}
 
-		internal static AdbRunner CreateAdbRunner (string adbToolPath, string adbToolExe, TaskEnvironment taskEnvironment)
+		internal static AdbRunner CreateAdbRunner (string adbToolPath, string adbToolExe, TaskEnvironment taskEnvironment, Action<TraceLevel, string> logger = null)
 		{
 			var path = GetAdbPath (adbToolPath, adbToolExe, taskEnvironment);
+			var psi = taskEnvironment.GetProcessStartInfo ();
+			UseAdbProcessEnvironment (psi, taskEnvironment);
+			return AdbRunner.CreateWithProcessEnvironment (path, psi, logger);
+		}
+
+		internal static void UseAdbProcessEnvironment (ProcessStartInfo psi, TaskEnvironment taskEnvironment)
+		{
 			var temp = OS.IsWindows ?
 				new [] { "TMP", "TEMP", "USERPROFILE" }.Select (taskEnvironment.GetEnvironmentVariable)
 					.FirstOrDefault (value => !string.IsNullOrEmpty (value)) ??
@@ -61,14 +69,12 @@ namespace Xamarin.Android.Tasks
 				taskEnvironment.GetEnvironmentVariable ("TMPDIR");
 			if (string.IsNullOrEmpty (temp))
 				temp = "/tmp";
-			var psi = taskEnvironment.GetProcessStartInfo ();
 			// The adb server must not retain the project directory on Windows.
 			psi.WorkingDirectory = taskEnvironment.GetAbsolutePath (temp);
 			// GetProcessStartInfo overlays the process environment in older MSBuild versions.
 			psi.EnvironmentVariables.Clear ();
 			foreach (var pair in taskEnvironment.GetEnvironmentVariables ())
 				psi.EnvironmentVariables [pair.Key] = pair.Value;
-			return AdbRunner.CreateWithProcessEnvironment (path, psi);
 		}
 
 		static string GetAdbPath (string adbToolPath, string adbToolExe)
@@ -77,7 +83,7 @@ namespace Xamarin.Android.Tasks
 			return string.IsNullOrEmpty (adbToolPath) ? exe : Path.Combine (adbToolPath, exe);
 		}
 
-		static string GetAdbPath (string adbToolPath, string adbToolExe, TaskEnvironment taskEnvironment)
+		internal static string GetAdbPath (string adbToolPath, string adbToolExe, TaskEnvironment taskEnvironment)
 		{
 			var path = GetAdbPath (adbToolPath, adbToolExe);
 			if (OS.IsWindows && string.IsNullOrEmpty (Path.GetExtension (path)))
@@ -133,6 +139,8 @@ namespace Xamarin.Android.Tasks
 				} else {
 					NoDeviceFound (target, key, logError, logErrors, engine4);
 				}
+			} catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested) {
+				throw;
 			} catch (Exception ex) {
 				RegisterDevice (engine4, key, null);
 				if (logErrors)

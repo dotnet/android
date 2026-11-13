@@ -18,6 +18,21 @@ namespace Xamarin.Android.Build.Tests
 	[TestFixture]
 	public class AppDetectionTests
 	{
+		[Test]
+		public void DetectIfAppWasUninstalledCancellationIsNotLoggedAsTaskFailure ()
+		{
+			var errors = new List<BuildErrorEventArgs> ();
+			var task = new DetectIfAppWasUninstalled {
+				BuildEngine = new MockBuildEngine (TestContext.Out, errors),
+				PackageName = "com.example.app",
+				UploadFlagFile = "upload.flag",
+			};
+			task.Cancel ();
+
+			Assert.IsTrue (task.Execute ());
+			Assert.IsEmpty (errors);
+		}
+
 		[TestCase (false)]
 		[TestCase (true)]
 		public async Task WaitsForPendingQueryInMSBuild (bool multithreaded)
