@@ -9,8 +9,6 @@
     <RollForward>Major</RollForward>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
     <MSBuildTreatWarningsAsErrors>true</MSBuildTreatWarningsAsErrors>
-    <!-- Use SDK analyzer defaults instead of the repository's legacy severity overrides. -->
-    <DiscoverEditorConfigFiles>false</DiscoverEditorConfigFiles>
   </PropertyGroup>
 
   <ItemGroup>

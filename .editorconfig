@@ -251,5 +251,3 @@ dotnet_diagnostic.CA5397.severity = error		# Do not use deprecated SslProtocols 
 dotnet_diagnostic.IA5350.severity = error		# Do Not Use Weak Cryptographic Algorithms
 dotnet_diagnostic.IA5351.severity = error		# Do Not Use Broken Cryptographic Algorithms
 dotnet_diagnostic.IA5352.severity = error		# Do Not Misuse Cryptographic APIs
-
-dotnet_diagnostic.CA1305.severity = none		# Historical compatibility: formatting is culture-agnostic unless a caller requires localization
