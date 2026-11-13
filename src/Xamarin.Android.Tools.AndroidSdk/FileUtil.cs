@@ -1,5 +1,4 @@
 ﻿using System;
-using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
 using System.Runtime.InteropServices;
@@ -10,55 +9,6 @@ namespace Xamarin.Android.Tools
 {
 	class FileUtil
 	{
-		public static string GetTempFilenameForWrite (string fileName)
-		{
-			return Path.GetDirectoryName (fileName) + Path.DirectorySeparatorChar + ".#" + Path.GetFileName (fileName);
-		}
-
-		//From MonoDevelop.Core.FileService
-		public static void SystemRename (string sourceFile, string destFile)
-		{
-			//FIXME: use the atomic System.IO.File.Replace on NTFS
-			if (OS.IsWindows) {
-				string? wtmp = null;
-				if (File.Exists (destFile)) {
-					do {
-						wtmp = Path.Combine (Path.GetTempPath (), Guid.NewGuid ().ToString ());
-					} while (File.Exists (wtmp));
-
-					File.Move (destFile, wtmp);
-				}
-				try {
-					File.Move (sourceFile, destFile);
-				}
-				catch {
-					try {
-						if (wtmp != null)
-							File.Move (wtmp, destFile);
-					}
-					catch {
-						wtmp = null;
-					}
-					throw;
-				}
-				finally {
-					if (wtmp != null) {
-						try {
-							File.Delete (wtmp);
-						}
-						catch { }
-					}
-				}
-			}
-			else {
-				if (rename (sourceFile, destFile) != 0) {
-					int errno = Marshal.GetLastWin32Error ();
-					var error = new Win32Exception (errno);
-					throw new IOException ($"Could not rename '{sourceFile}' to '{destFile}' (errno {errno}): {error.Message}", error);
-				}
-			}
-		}
-
 		/// <summary>Deletes a file if it exists, logging any failure instead of throwing.</summary>
 		internal static void TryDeleteFile (string path, Action<TraceLevel, string> logger)
 		{
@@ -264,9 +214,6 @@ namespace Xamarin.Android.Tools
 				}
 			}
 		}
-
-		[DllImport ("libc", SetLastError=true)]
-		static extern int rename (string old, string @new);
 
 #if !NET7_0_OR_GREATER
 		[DllImport ("libc", SetLastError = true)]

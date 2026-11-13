@@ -11,6 +11,18 @@ reference those assemblies directly. Use this library's `AndroidSdkInfo`,
 `AdbRunner`, and `ProcessUtils` APIs instead; installers can use
 `AndroidSdkInfo.DiscoverInstallationPaths` before an SDK or JDK is installed.
 
+## API changes
+
+`AndroidAppManifest.WriteToFile(string)` has been removed from the
+netstandard2.0, net10.0, and net11.0 assemblies. Existing consumers must update
+and recompile to use `AndroidAppManifest.Write(XmlWriter)` and manage file
+creation and replacement themselves; existing binaries calling the removed
+method will fail with `MissingMethodException`.
+
+The removed method wrote to a temporary file before replacing the destination.
+Writing directly to the destination does not preserve that behavior and can
+truncate an existing manifest if serialization fails.
+
 ## Build
 
 From the repository root:
