@@ -179,7 +179,9 @@ namespace Xamarin.Android.Build.Tests
 		[TestCase (1, "Failure [INSTALL_FAILED_MEDIA_UNAVAILABLE]", "ADB0060")]
 		[TestCase (1, InsufficientStorageInstallOutput, "ADB0060")]
 		[TestCase (0, InsufficientStorageInstallOutput, "ADB0060")]
+		[TestCase (0, "Exception occurred while executing 'install':\nRequested internal only, but not enough space", "ADB0060")]
 		[TestCase (1, "Exception occurred while executing 'install':\njava.io.IOException: Permission denied", "ADB0010")]
+		[TestCase (0, "Exception occurred while executing 'install':\njava.io.IOException: Permission denied", "ADB0010")]
 		public void FastDeployDoesNotRetrySemanticInstallFailure (int exitCode, string output, string errorCode)
 		{
 			var task = new TestFastDeploy (
