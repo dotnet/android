@@ -44,7 +44,6 @@
     <Project Path="src/Microsoft.Android.Sdk.Analysis/Microsoft.Android.Sdk.Analysis.csproj" />
     <Project Path="src/proguard-android/proguard-android.csproj" />
     <Project Path="src/Xamarin.Android.Build.Debugging.Tasks/Xamarin.Android.Build.Debugging.Tasks.csproj" />
-    <Project Path="src/Xamarin.Installer.Build.Tasks/Xamarin.Installer.Build.Tasks.csproj" />
   </Folder>
   <Folder Name="/Tests/">
     <Project Path="tests/generator-Tests/generator-Tests.csproj" />

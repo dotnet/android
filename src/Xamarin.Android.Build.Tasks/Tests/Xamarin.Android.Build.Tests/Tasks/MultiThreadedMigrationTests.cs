@@ -156,7 +156,6 @@ namespace Xamarin.Android.Build.Tests
 				"Microsoft.Android.Build.BaseTasks.dll",
 				"Xamarin.Android.Build.Tasks.dll",
 				"Xamarin.Android.Build.Debugging.Tasks.dll",
-				"Xamarin.Installer.Build.Tasks.dll",
 				Path.Combine ("net", "Microsoft.Android.Build.Tasks.dll"),
 			];
 			using var resolver = new DefaultAssemblyResolver ();
