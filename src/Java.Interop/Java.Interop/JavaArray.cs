@@ -1,6 +1,7 @@
 #nullable enable
 
 using System;
+using System.Globalization;
 using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -136,7 +137,7 @@ namespace Java.Interop
 		internal static Exception CreateMarshalNotSupportedException (Type sourceType, Type? targetType)
 		{
 			return new NotSupportedException (
-					string.Format ("Do not know how to marshal a `{0}`{1}.",
+					string.Format (CultureInfo.CurrentCulture, "Do not know how to marshal a `{0}`{1}.",
 						sourceType.FullName,
 						targetType != null ? $" into a `{targetType.FullName}`" : ""));
 		}

@@ -1,6 +1,7 @@
 #nullable enable
 
 using System;
+using System.Globalization;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
@@ -122,8 +123,8 @@ namespace Java.Interop
 				if (o.LogGlobalReferenceMessages) {
 					o.WriteGlobalReferenceLine ("Disposing PeerReference={0} IdentityHashCode=0x{1} Instance=0x{2} Instance.Type={3} Java.Type={4}",
 							h.ToString (),
-							value.JniIdentityHashCode.ToString ("x"),
-							RuntimeHelpers.GetHashCode (value).ToString ("x"),
+							value.JniIdentityHashCode.ToString ("x", CultureInfo.InvariantCulture),
+							RuntimeHelpers.GetHashCode (value).ToString ("x", CultureInfo.InvariantCulture),
 							value.GetType ().ToString (),
 							JniEnvironment.Types.GetJniTypeNameFromInstance (h));
 				}

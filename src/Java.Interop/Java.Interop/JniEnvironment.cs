@@ -1,6 +1,7 @@
 #nullable enable
 
 using System;
+using System.Globalization;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
@@ -222,13 +223,13 @@ namespace Java.Interop {
 				// The zero guard does not validate nonzero pointers or roll back this assignment on failure.
 				int r = unsafe (JniEnvironment.References.GetJavaVM (EnvironmentPointer, out vmh));
 				if (r < 0)
-					throw new InvalidOperationException ("JNIEnv::GetJavaVM() returned: " + r.ToString ());
+					throw new InvalidOperationException ("JNIEnv::GetJavaVM() returned: " + r.ToString (CultureInfo.CurrentCulture));
 
 				var vm = JniRuntime.GetRegisteredRuntime (vmh);
 				if (vm == null)
 					throw new NotSupportedException (
-							string.Format ("No JavaVM registered with handle 0x{0}.",
-								vmh.ToString ("x")));
+							string.Format (CultureInfo.CurrentCulture, "No JavaVM registered with handle 0x{0}.",
+								vmh.ToString ("x", CultureInfo.InvariantCulture)));
 				Runtime = vm;
 			}
 		}
