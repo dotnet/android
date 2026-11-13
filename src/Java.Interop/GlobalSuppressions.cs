@@ -81,7 +81,4 @@ using System.Diagnostics.CodeAnalysis;
 
 [assembly: SuppressMessage ("Reliability", "CA2000:Dispose objects before losing scope", Justification = "We don't *want* to dispose the value!", Scope = "member", Target = "~M:Java.Interop.JniRuntime.#ctor(Java.Interop.JniRuntime.CreationOptions)")]
 
-[assembly: SuppressMessage ("Usage", "CA2208:Instantiate argument exceptions correctly", Justification = "<Pending>", Scope = "member", Target = "~M:Java.Interop.JniEnvironment.Exceptions.Throw(Java.Interop.JniObjectReference)")]
-[assembly: SuppressMessage ("Usage", "CA2208:Instantiate argument exceptions correctly", Justification = "<Pending>", Scope = "member", Target = "~M:Java.Interop.JniEnvironment.Exceptions.ThrowNew(Java.Interop.JniObjectReference,System.String)")]
-
 [assembly: SuppressMessage ("Usage", "CA2213:Disposable fields should be disposed", Justification = "JniRuntime.Dispose(bool) disposes this field through the ValueManager property.", Scope = "member", Target = "~F:Java.Interop.JniRuntime.valueManager")]
