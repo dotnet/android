@@ -17,19 +17,19 @@ Device tests need a local SDK (`local-build` skill) and the commands in the `tes
 Use the `android` CLI from the repo-pinned cmdline-tools. Resolve its directory through MSBuild, which honors SDK overrides such as `ANDROID_SDK_ROOT` or `/mnt/android-toolchain`. Other `android` binaries on `PATH` may be different versions.
 
 ```bash
-B=$(dotnet msbuild src/Xamarin.Android.Build.Tasks/Tests/Xamarin.Android.Build.Tests/Emulator.csproj -getProperty:CommandLineToolsBinPath)
-$B/android emulator list --long             # AVDs, API level, status, serial
-$B/android emulator start --headless <avd>  # waits for full boot, prints the serial
-$B/android emulator stop <serial>           # stops only this emulator
-$B/android emulator remove <avd>
+B="$(dotnet msbuild src/Xamarin.Android.Build.Tasks/Tests/Xamarin.Android.Build.Tests/Emulator.csproj -getProperty:CommandLineToolsBinPath)"
+"$B/android" emulator list --long             # AVDs, API level, status, serial
+"$B/android" emulator start --headless <avd>  # waits for full boot, prints the serial
+"$B/android" emulator stop <serial>           # stops only this emulator
+"$B/android" emulator remove <avd>
 ```
 
 1. Reuse an idle online device, or start an existing suitable AVD.
 2. Otherwise, create an AVD with a unique name. (`android emulator create` can't choose the API level, ABI, or name.) Use x86_64 images on Intel hosts.
 
    ```bash
-   $B/android sdk install "system-images;android-35;google_apis;arm64-v8a"
-   $B/avdmanager create avd -n <unique-name> -k "system-images;android-35;google_apis;arm64-v8a" -d pixel_9_pro
+   "$B/android" sdk install "system-images;android-35;google_apis;arm64-v8a"
+   "$B/avdmanager" create avd -n <unique-name> -k "system-images;android-35;google_apis;arm64-v8a" -d pixel_9_pro
    ```
 
 3. When done, stop it and remove AVDs you created. `~/.android/avd` is shared, and each AVD can run only once at a time.

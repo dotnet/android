@@ -60,7 +60,8 @@ Escalate only when the change or focused results require it.
 
 | Change touches | Minimum validation |
 |---|---|
-| Docs, `.github/`, comments | None |
+| Docs, comments, and Markdown instructions/skills under `.github/` (not workflows, local actions, or scripts) | None |
+| `.github/workflows/` (workflows and local actions) or scripts | Run the affected workflow step or script command locally |
 | Standalone libraries (`Microsoft.Android.Build.BaseTasks`, `Xamarin.Android.Tools.AndroidSdk`, `Microsoft.Android.Build.Tasks`, Java.Interop tooling, `generator`, `class-parse`) | `dotnet build` + standalone tests |
 | `src/Xamarin.Android.Build.Tasks` | Focused `Xamarin.Android.Build.Tests.dll` filters on the local SDK; `MSBuildDeviceIntegration.dll` only if install/deploy/run changes |
 | `src/Mono.Android`, core `src/Java.Interop`, `src/native`, typemaps, hosting | `Mono.Android.NET-Tests` on device for each affected runtime |
