@@ -73,7 +73,6 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 <UsingTask TaskName="Xamarin.Android.Tasks.GetAndroidDefineConstants" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.KeyTool" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.LinkAssembliesNoShrink" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
-<UsingTask TaskName="Xamarin.Android.Tasks.Lint" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.MergeRemapXml" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.MamJsonToXml" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.ManifestMerger" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
@@ -853,22 +852,128 @@ because xbuild doesn't support framework reference assemblies.
   />
 </Target>
 
-<Target Name="_LintChecks" Condition=" '$(AndroidLintEnabled)' == 'True' ">
-	<Lint
-		TargetDirectory="$(IntermediateOutputPath)android"
-		EnabledIssues="$(AndroidLintEnabledIssues)"
-		DisabledIssues="$(AndroidLintDisabledIssues)"
-		CheckIssues="$(AndroidLintCheckIssues)"
-		ConfigFiles="@(AndroidLintConfig)"
-		ResourceDirectories="$(MonoAndroidResDirIntermediate);$(LibraryResourceDirectories)"
-		ResourceCaseMap="@(_AndroidResourceCaseMap)"
-		SourceDirectories="$(_AndroidIntermediateJavaSourceDirectory);@(_AdditionalJavaStubDirectory)"
-		IntermediateOutputPath="$(IntermediateOutputPath)"
-		ToolPath="$(LintToolPath)"
-		ToolExe="$(LintToolExe)"
-		JavaSdkPath="$(_JavaSdkDirectory)"
-		JdkVersion="$(_JdkVersion)"
-	/>
+<Target Name="_AndroidMergeLintConfigInputs">
+	<PropertyGroup>
+		<_AndroidLintConfigFile>$(IntermediateOutputPath)lint.xml</_AndroidLintConfigFile>
+		<_AndroidLintConfigInputsFile>$(IntermediateOutputPath)lint.configs</_AndroidLintConfigInputsFile>
+	</PropertyGroup>
+	<MakeDir Directories="$(IntermediateOutputPath)" />
+	<!-- Track membership and order as well as the individual config timestamps. -->
+	<WriteLinesToFile File="$(_AndroidLintConfigInputsFile)"
+		Lines="@(AndroidLintConfig->'%(FullPath)')"
+		Overwrite="true" WriteOnlyWhenDifferent="true" />
+	<ItemGroup>
+		<FileWrites Include="$(_AndroidLintConfigInputsFile)" />
+	</ItemGroup>
+</Target>
+
+<Target Name="_AndroidMergeLintConfig"
+	DependsOnTargets="_AndroidMergeLintConfigInputs"
+	Condition=" '@(AndroidLintConfig->Count())' != '0' "
+	Inputs="@(AndroidLintConfig);$(_AndroidLintConfigInputsFile);$(MSBuildProjectFullPath);$(MSBuildAllProjects)"
+	Outputs="$(_AndroidLintConfigFile)">
+	<XmlPeek XmlInputPath="%(AndroidLintConfig.Identity)" Query="/lint/issue" ProhibitDtd="true">
+		<Output TaskParameter="Result" ItemName="_AndroidLintConfigIssue" />
+	</XmlPeek>
+	<WriteLinesToFile File="$(_AndroidLintConfigFile)"
+		Lines="&lt;lint&gt;;@(_AndroidLintConfigIssue);&lt;/lint&gt;"
+		Encoding="UTF-8"
+		Overwrite="true" />
+	<ItemGroup>
+		<FileWrites Include="$(_AndroidLintConfigFile)" />
+	</ItemGroup>
+</Target>
+
+<Target Name="_LintChecks"
+	Condition=" '$(AndroidLintEnabled)' == 'True' "
+	DependsOnTargets="_AndroidMergeLintConfig">
+	<PropertyGroup>
+		<_AndroidLintToolExe>$(LintToolExe)</_AndroidLintToolExe>
+		<_AndroidLintToolExe Condition=" '$(_AndroidLintToolExe)' == '' and $([MSBuild]::IsOSPlatform('windows')) ">lint.bat</_AndroidLintToolExe>
+		<_AndroidLintToolExe Condition=" '$(_AndroidLintToolExe)' == '' ">lint</_AndroidLintToolExe>
+		<_AndroidLintTool>$([System.IO.Path]::Combine('$(LintToolPath)', '$(_AndroidLintToolExe)'))</_AndroidLintTool>
+		<_AndroidLintCommand>&quot;$(_AndroidLintTool)&quot;</_AndroidLintCommand>
+		<_AndroidLintCommand Condition=" !$([MSBuild]::IsOSPlatform('windows')) ">'$(_AndroidLintTool.Replace(`'`, `'&quot;'&quot;'`))'</_AndroidLintCommand>
+	</PropertyGroup>
+	<AndroidError Condition=" '$(LintToolPath)' == '' or !Exists('$(_AndroidLintTool)') "
+		Code="XA5205" ResourceName="XA5205_Lint" FormatArguments="$(_AndroidLintToolExe)" />
+	<PropertyGroup>
+		<_AndroidLintJavaOptions>$([System.Environment]::GetEnvironmentVariable('JAVA_OPTS'))</_AndroidLintJavaOptions>
+	</PropertyGroup>
+	<PropertyGroup Condition=" '$(_JdkVersion)' != '' and $([MSBuild]::VersionGreaterThanOrEquals('$(_JdkVersion)', '24.0')) ">
+		<_AndroidLintJavaOptions Condition=" !$(_AndroidLintJavaOptions.Contains('--enable-native-access=ALL-UNNAMED')) ">$(_AndroidLintJavaOptions) --enable-native-access=ALL-UNNAMED</_AndroidLintJavaOptions>
+		<_AndroidLintJavaOptions Condition=" !$(_AndroidLintJavaOptions.Contains('--sun-misc-unsafe-memory-access=allow')) ">$(_AndroidLintJavaOptions) --sun-misc-unsafe-memory-access=allow</_AndroidLintJavaOptions>
+	</PropertyGroup>
+	<ItemGroup>
+		<_AndroidLintEnvironment Include="$([MSBuild]::Escape('JAVA_HOME=$(_JavaSdkDirectory)'))" />
+		<_AndroidLintEnvironment Include="$([MSBuild]::Escape('JAVA_OPTS=$(_AndroidLintJavaOptions)'))" />
+	</ItemGroup>
+	<Exec Command="$(_AndroidLintCommand) --version"
+		EnvironmentVariables="@(_AndroidLintEnvironment)"
+		ConsoleToMSBuild="true"
+		IgnoreExitCode="true"
+		IgnoreStandardErrorWarningFormat="true"
+		StandardOutputImportance="Low"
+		StandardErrorImportance="Low">
+		<Output TaskParameter="ConsoleOutput" PropertyName="_AndroidLintVersionOutput" />
+		<Output TaskParameter="ExitCode" PropertyName="_AndroidLintVersionExitCode" />
+	</Exec>
+	<PropertyGroup Condition=" '$(_AndroidLintVersionExitCode)' == '0' and !$(_AndroidLintVersionOutput.Contains('unknown')) ">
+		<_AndroidLintVersion>$([System.Text.RegularExpressions.Regex]::Match('$(_AndroidLintVersionOutput)', '(?&lt;=version\s+)\d+\.\d+(?:\.\d+){0,2}(?![\d.])').Value)</_AndroidLintVersion>
+	</PropertyGroup>
+	<ItemGroup Condition=" '$(_AndroidLintVersionExitCode)' != '0' or $(_AndroidLintVersionOutput.Contains('unknown')) ">
+		<_AndroidLintVersionJar Include="$(LintToolPath)\..\lib\lint-??.?.?-dev.jar" />
+	</ItemGroup>
+	<PropertyGroup Condition=" '@(_AndroidLintVersionJar->Count())' != '0' ">
+		<_AndroidLintVersion>$([System.Text.RegularExpressions.Regex]::Match('@(_AndroidLintVersionJar->'%(Filename)')', '(?&lt;=lint-)\d{2}\.\d\.\d(?=-dev)').Value)</_AndroidLintVersion>
+	</PropertyGroup>
+	<AndroidWarning Condition=" '$(_AndroidLintVersion)' == '' and ('$(_AndroidLintVersionExitCode)' != '0' or $(_AndroidLintVersionOutput.Contains('unknown'))) "
+		Code="XA0108" ResourceName="XA0108" FormatArguments="$(_AndroidLintTool)" />
+	<PropertyGroup>
+		<_AndroidLintVersion Condition=" '$(_AndroidLintVersion)' == '' ">1.0</_AndroidLintVersion>
+	</PropertyGroup>
+	<Message Text="LintVersion: $(_AndroidLintVersion)" Importance="Low" />
+	<ItemGroup>
+		<!-- These checks produce false positives for generated Java code and managed resource usage. -->
+		<_AndroidLintIssue Include="HardcodedDebugMode;UnusedResources" MinVersion="1.0" />
+		<_AndroidLintIssue Include="StaticFieldLeak" MinVersion="26.0.2" />
+		<_AndroidLintIssue Include="MissingSuperCall;ObsoleteSdkInt" MinVersion="26.1.1" />
+		<_AndroidLintIssue Include="Instantiatable" MinVersion="4.2.0" />
+		<!-- Command-line tools restarted version numbering, but support all these checks. -->
+		<_AndroidLintDefaultDisabledIssue Include="@(_AndroidLintIssue)"
+			Condition=" !$(AndroidLintDisabledIssues.Contains('%(_AndroidLintIssue.Identity)')) and
+				($(LintToolPath.ToLowerInvariant().Contains('cmdline-tools')) or
+				$([MSBuild]::VersionGreaterThanOrEquals('$(_AndroidLintVersion)', '%(_AndroidLintIssue.MinVersion)'))) " />
+		<_AndroidLintResourceDirectory Include="$(MonoAndroidResDirIntermediate);$(LibraryResourceDirectories)" />
+		<_AndroidLintSourceDirectory Include="$(_AndroidIntermediateJavaSourceDirectory);@(_AdditionalJavaStubDirectory)" />
+	</ItemGroup>
+	<PropertyGroup>
+		<_AndroidLintDisabledIssues>@(_AndroidLintDefaultDisabledIssue->Reverse(), ',')</_AndroidLintDisabledIssues>
+		<_AndroidLintDisabledIssues Condition=" '$(_AndroidLintDisabledIssues)' != '' and '$(AndroidLintDisabledIssues)' != '' ">$(_AndroidLintDisabledIssues),$(AndroidLintDisabledIssues)</_AndroidLintDisabledIssues>
+		<_AndroidLintDisabledIssues Condition=" '$(_AndroidLintDisabledIssues)' == '' ">$(AndroidLintDisabledIssues)</_AndroidLintDisabledIssues>
+	</PropertyGroup>
+	<!-- Appending a dot avoids a trailing backslash escaping the closing quote on Windows. -->
+	<ItemGroup>
+		<_AndroidLintArgument Include="$([MSBuild]::Escape('$(_AndroidLintConfigFile)'))" Switch="--config" Condition=" '@(AndroidLintConfig->Count())' != '0' " />
+		<_AndroidLintArgument Include="$([MSBuild]::Escape('$(AndroidLintEnabledIssues)'))" Switch="--enable" Condition=" '$(AndroidLintEnabledIssues)' != '' " />
+		<_AndroidLintArgument Include="$([MSBuild]::Escape('$(_AndroidLintDisabledIssues)'))" Switch="--disable" Condition=" '$(_AndroidLintDisabledIssues)' != '' " />
+		<_AndroidLintArgument Include="$([MSBuild]::Escape('$(AndroidLintCheckIssues)'))" Switch="--check" Condition=" '$(AndroidLintCheckIssues)' != '' " />
+		<_AndroidLintArgument Include="@(_AndroidLintResourceDirectory->'%(FullPath)/.')" Switch="--resources" />
+		<_AndroidLintArgument Include="@(_AndroidLintSourceDirectory->'%(FullPath)/.')" Switch="--sources" />
+		<_AndroidLintArgument Include="$([MSBuild]::NormalizePath('$(IntermediateOutputPath)android'))" />
+		<_AndroidLintArgument>
+			<QuotedValue>&quot;%(_AndroidLintArgument.Identity)&quot;</QuotedValue>
+			<!-- Single quotes prevent shell expansion without backslashes that MSBuild normalizes in paths. -->
+			<QuotedValue Condition=" !$([MSBuild]::IsOSPlatform('windows')) ">'$([System.String]::Copy(&quot;%(_AndroidLintArgument.Identity)&quot;).Replace(`'`, `'&quot;'&quot;'`))'</QuotedValue>
+		</_AndroidLintArgument>
+	</ItemGroup>
+	<!-- Commit to the first file/line header rather than searching severity inside its message. -->
+	<Exec Command="$(_AndroidLintCommand) --quiet @(_AndroidLintArgument->'%(Switch) %(QuotedValue)', ' ')"
+		EnvironmentVariables="@(_AndroidLintEnvironment)"
+		IgnoreStandardErrorWarningFormat="true"
+		CustomErrorRegularExpression="^(?:(?!(?:Error|Warning):\s)(?&gt;.+?:\d+(?::\d+)?:\s*))?Error:\s"
+		CustomWarningRegularExpression="^(?:(?!(?:Error|Warning):\s)(?&gt;.+?:\d+(?::\d+)?:\s*))?Warning:\s"
+		StandardOutputImportance="Low" />
 </Target>
 
 <!-- Resource build properties -->
@@ -893,7 +998,6 @@ because xbuild doesn't support framework reference assemblies.
 	<_AcwMapFile>$(IntermediateOutputPath)acw-map.txt</_AcwMapFile>
 	<_CustomViewMapFile>$(IntermediateOutputPath)customview-map.txt</_CustomViewMapFile>
 	<AndroidResgenNamespace Condition="'$(AndroidResgenNamespace)'==''" >$(RootNamespace)</AndroidResgenNamespace>
-	<_AndroidLintConfigFile>$(IntermediateOutputPath)lint.xml</_AndroidLintConfigFile>
 	<_AndroidResourceDesignerFile Condition=" '$(AndroidUseIntermediateDesignerFile)' == 'True' ">$(IntermediateOutputPath)$(_AndroidResourceDesigner)</_AndroidResourceDesignerFile>
 	<_AndroidResourceDesignerFile Condition=" '$(AndroidUseIntermediateDesignerFile)' != 'True' ">$(AndroidResgenFile)</_AndroidResourceDesignerFile>
 	<_AndroidStaticResourcesFlag>$(IntermediateOutputPath)static.flag</_AndroidStaticResourcesFlag>
@@ -2620,6 +2724,8 @@ because xbuild doesn't support framework reference assemblies.
 <Target Name="_CleanMonoAndroidIntermediateDir" DependsOnTargets="_CleanGeneratedDeploymentFiles;_CleanMsymArchive">
 	<PropertyGroup>
 		<_AndroidProguardIntermediateDirectory>$([System.IO.Path]::Combine('$(IntermediateOutputPath)', 'proguard'))</_AndroidProguardIntermediateDirectory>
+		<_AndroidLintConfigFile>$(IntermediateOutputPath)lint.xml</_AndroidLintConfigFile>
+		<_AndroidLintConfigInputsFile>$(IntermediateOutputPath)lint.configs</_AndroidLintConfigInputsFile>
 	</PropertyGroup>
 	<RemoveDirFixed Directories="$(IntermediateOutputPath)android" Condition="Exists ('$(IntermediateOutputPath)android')" />
 	<!-- FIXME: remove this extraneous rmdir after a few release cycles since we release the one we killed it. -->
@@ -2661,6 +2767,7 @@ because xbuild doesn't support framework reference assemblies.
 	<Delete Files="$(_AndroidLinkFlag)" />
 	<Delete Files="$(_AndroidDebugKeyStoreFlag)" />
 	<Delete Files="$(_AndroidLintConfigFile)" />
+	<Delete Files="$(_AndroidLintConfigInputsFile)" />
 	<Delete Files="$(_AndroidResourceDesignerFile)" Condition=" '$(AndroidUseIntermediateDesignerFile)' == 'True' " />
 	<Delete Files="$(_AdbPropertiesCache)" />
 	<Delete Files="$(_AndroidLibraryImportsCache)" />

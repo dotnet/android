@@ -1993,27 +1993,29 @@ namespace UnnamedProject
 			proj.SetProperty ("AndroidLintDisabledIssues", disabledIssues);
 			proj.SetProperty ("AndroidLintEnabledIssues", "");
 			proj.SetProperty ("AndroidLintCheckIssues", "");
-			proj.MainActivity = proj.DefaultMainActivity.Replace ("public class MainActivity : Activity", @"
+			proj.MainActivity = proj.DefaultMainActivity.Replace ("public class MainActivity : Activity", """
+
 		[IntentFilter (new[] { Android.Content.Intent.ActionView },
 			Categories = new [] { Android.Content.Intent.CategoryDefault, Android.Content.Intent.CategoryBrowsable },
-			DataHost = ""mydomain.com"",
-			DataScheme = ""http""
+			DataHost = "mydomain.com",
+			DataScheme = "http"
 		)]
 		public class MainActivity : Activity
-			");
+
+""");
 			proj.AndroidResources.Add (new AndroidItem.AndroidResource ("Resources\\layout\\test.axml") {
-				TextContent = () => {
-					return @"<?xml version=""1.0"" encoding=""utf-8""?>
-<ConstraintLayout xmlns:android=""http://schemas.android.com/apk/res/android""
-	android:orientation=""vertical""
-	android:layout_width=""fill_parent""
-	android:layout_height=""fill_parent"">
-	<TextView android:id=""@+id/foo""
-		android:layout_width=""150dp""
-		android:layout_height=""wrap_content""
+				TextContent = () => """
+<?xml version="1.0" encoding="utf-8"?>
+<ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+	android:orientation="vertical"
+	android:layout_width="fill_parent"
+	android:layout_height="fill_parent">
+	<TextView android:id="@+id/foo"
+		android:layout_width="150dp"
+		android:layout_height="wrap_content"
 	/>
-</ConstraintLayout>";
-				}
+</ConstraintLayout>
+"""
 			});
 			using (var b = CreateApkBuilder ()) {
 				var maxApiLevel = AndroidSdkResolver.GetMaxInstalledPlatform ();
@@ -2025,8 +2027,10 @@ namespace UnnamedProject
 				proj.SupportedOSPlatformVersion = "24";
 				proj.TargetSdkVersion = apiLevel;
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
-				StringAssertEx.DoesNotContain ("XA0102", b.LastBuildOutput, "Output should not contain any XA0102 warnings");
-				StringAssertEx.DoesNotContain ("XA0103", b.LastBuildOutput, "Output should not contain any XA0103 errors");
+				Assert.IsFalse (b.LastBuildOutput.Any (line => line.Contains (": warning :") && line.Contains ("Warning:")),
+					"Output should not contain lint warnings.");
+				Assert.IsFalse (b.LastBuildOutput.Any (line => line.Contains (": error :") && line.Contains ("Error:")),
+					"Output should not contain lint errors.");
 				Assert.IsTrue (b.Clean (proj), "Clean should have succeeded.");
 			}
 		}
@@ -2044,34 +2048,89 @@ namespace UnnamedProject
 			};
 			proj.SetRuntime (runtime);
 			proj.SetProperty ("AndroidLintEnabled", true.ToString ());
+			proj.SetProperty ("AndroidLintCheckIssues", "MissingApplicationIcon");
 			proj.OtherBuildItems.Add (new AndroidItem.AndroidLintConfig ("lint1.xml") {
-				TextContent = () => @"<?xml version=""1.0"" encoding=""UTF-8""?>
+				TextContent = () => """
+<?xml version="1.0" encoding="UTF-8"?>
 <lint>
-	<issue id=""NewApi"" severity=""warning"" />
-</lint>"
+	<issue id="NewApi" severity="warning" />
+</lint>
+"""
 			});
 			proj.OtherBuildItems.Add (new AndroidItem.AndroidLintConfig ("lint2.xml") {
-				TextContent = () => @"<?xml version=""1.0"" encoding=""UTF-8""?>
+				TextContent = () => """
+<?xml version="1.0" encoding="UTF-8"?>
 <lint>
-	<issue id=""MissingApplicationIcon"" severity=""ignore"" />
-</lint>"
+	<issue id="MissingApplicationIcon" severity="ignore" />
+</lint>
+"""
 			});
 			using (var b = CreateApkBuilder ()) {
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
 				var lintFile = Path.Combine (Root, "temp", TestName, proj.IntermediateOutputPath, "lint.xml");
 				Assert.IsTrue (File.Exists (lintFile), "{0} should have been created.", lintFile);
 				var doc = XDocument.Load (lintFile);
-				Assert.IsNotNull (doc, "Document should have loaded successfully.");
-				Assert.IsNotNull (doc.Element ("lint"), "The xml file should have a lint element.");
-				Assert.IsNotNull (doc.Element ("lint")
-					.Elements ()
-					.Any (x => x.Name == "Issue" && x.Attribute ("id").Value == "MissingApplicationIcon"), "Element is missing");
-				Assert.IsNotNull (doc.Element ("lint")
-					.Elements ()
-					.Any (x => x.Name == "Issue" && x.Attribute ("id").Value == "NewApi"), "Element is missing");
+				var root = doc.Element ("lint") ?? throw new InvalidOperationException ("The XML file should have a lint element.");
+				Assert.AreEqual (2, root.Elements ("issue").Count (), "Both configuration files should contribute an issue.");
+				Assert.IsTrue (root.Elements ("issue").Any (issue =>
+					(string) issue.Attribute ("id") == "MissingApplicationIcon" && (string) issue.Attribute ("severity") == "ignore"),
+					"The merged configuration should preserve the ignored issue.");
+				Assert.IsTrue (root.Elements ("issue").Any (issue =>
+					(string) issue.Attribute ("id") == "NewApi" && (string) issue.Attribute ("severity") == "warning"),
+					"The merged configuration should preserve the warning severity.");
+				Assert.IsFalse (b.LastBuildOutput.Any (line => line.Contains (": warning :") && line.Contains ("[MissingApplicationIcon]")),
+					"The merged configuration should suppress the missing-icon warning.");
+				Assert.IsTrue (b.Build (proj, parameters: ["AndroidManifestPlaceholders=lintReview=changed"]),
+					"A cached property change should rebuild the lint configuration after cleanup.");
+				b.Output.AssertTargetIsNotSkipped ("_CleanIntermediateIfNeeded");
+				Assert.AreEqual (2, XDocument.Load (lintFile).Element ("lint")?.Elements ("issue").Count (),
+					"Both configurations should survive cleanup through CallTarget.");
 				Assert.IsTrue (b.Clean (proj), "Clean should have succeeded.");
 				Assert.IsFalse (File.Exists (lintFile), "{0} should have been deleted on clean.", lintFile);
 			}
+		}
+
+		[Test]
+		public void CheckLintConfigInputChanges ([Values ("delete", "add-older", "switch")] string change)
+		{
+			var proj = new XamarinAndroidApplicationProject ();
+			proj.SetRuntime (AndroidRuntime.CoreCLR);
+			var first = new BuildItem.NoActionResource ("lint/one.xml") {
+				TextContent = () => """<lint><issue id="NewApi" severity="warning" /></lint>""",
+				Timestamp = DateTimeOffset.UtcNow.AddDays (-1),
+			};
+			var second = new BuildItem.NoActionResource ("lint/two.xml") {
+				TextContent = () => """<lint><issue id="MissingApplicationIcon" severity="ignore" /></lint>""",
+				Timestamp = DateTimeOffset.UtcNow.AddDays (-1),
+				Deleted = change == "add-older",
+			};
+			proj.OtherBuildItems.Add (first);
+			proj.OtherBuildItems.Add (second);
+			proj.OtherBuildItems.Add (new AndroidItem.AndroidLintConfig (
+				change == "switch" ? "lint/$(LintConfigVariant).xml" : "lint/*.xml"));
+
+			using var builder = CreateApkBuilder ();
+			Assert.IsTrue (builder.RunTarget (proj, "_AndroidMergeLintConfig", parameters: ["LintConfigVariant=one"]),
+				"The initial config merge should succeed.");
+			var lintFile = Path.Combine (Root, builder.ProjectDirectory, proj.IntermediateOutputPath, "lint.xml");
+			var timestamp = File.GetLastWriteTimeUtc (lintFile);
+			Assert.AreEqual (change == "delete" ? 2 : 1,
+				XDocument.Load (lintFile).Element ("lint")?.Elements ("issue").Count ());
+
+			Assert.IsTrue (builder.RunTarget (proj, "_AndroidMergeLintConfig", doNotCleanupOnUpdate: true,
+				parameters: ["LintConfigVariant=one"], saveProject: false), "The unchanged merge should succeed.");
+			builder.Output.AssertTargetIsSkipped ("_AndroidMergeLintConfig");
+			Assert.AreEqual (timestamp, File.GetLastWriteTimeUtc (lintFile), "An unchanged list should not rewrite lint.xml.");
+
+			first.Deleted = change == "delete";
+			second.Deleted = false;
+			Assert.IsTrue (builder.RunTarget (proj, "_AndroidMergeLintConfig", doNotCleanupOnUpdate: true,
+				parameters: ["LintConfigVariant=two"], saveProject: false), "The changed config list should be merged.");
+			builder.Output.AssertTargetIsNotSkipped ("_AndroidMergeLintConfig");
+			var issues = XDocument.Load (lintFile).Element ("lint")?.Elements ("issue")
+				.Select (issue => (string) issue.Attribute ("id")).ToArray ();
+			CollectionAssert.AreEqual (change == "add-older" ? new [] { "NewApi", "MissingApplicationIcon" } : new [] { "MissingApplicationIcon" },
+				issues, "The merged configuration should reflect the current input list, even when all files are older.");
 		}
 
 		[Test]
@@ -2203,7 +2262,7 @@ public class ToolbarEx {
 		}
 
 		[Test]
-		public void CheckLintResourceFileReferencesAreFixed ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
+		public void CheckLintResourceFileReferencesArePreserved ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			bool isRelease = runtime == AndroidRuntime.NativeAOT;
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
@@ -2215,31 +2274,37 @@ public class ToolbarEx {
 			};
 			proj.SetRuntime (runtime);
 			proj.SetProperty ("AndroidLintEnabled", true.ToString ());
+			proj.SetProperty ("AndroidLintCheckIssues", "HardcodedText");
+			proj.OtherBuildItems.Add (new AndroidItem.AndroidLintConfig ("lint.xml") {
+				TextContent = () => """<lint><issue id="HardcodedText" severity="warning" /></lint>""",
+			});
 			proj.AndroidResources.Add (new AndroidItem.AndroidResource ("Resources\\layout\\test.axml") {
-				TextContent = () => {
-					return @"<?xml version=""1.0"" encoding=""utf-8""?>
-<ConstraintLayout xmlns:android=""http://schemas.android.com/apk/res/android""
-	android:orientation=""vertical""
-	android:layout_width=""fill_parent""
-	android:layout_height=""fill_parent"">
-	<TextView android:id=""@+id/foo""
-		android:layout_width=""150dp""
-		android:layout_height=""wrap_content""
+				TextContent = () => """
+<?xml version="1.0" encoding="utf-8"?>
+<ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+	android:orientation="vertical"
+	android:layout_width="fill_parent"
+	android:layout_height="fill_parent">
+	<TextView android:id="@+id/foo"
+		android:layout_width="150dp"
+		android:layout_height="wrap_content"
 	/>
 	<EditText
-		android:id=""@+id/phone""
-		android:layout_width=""fill_parent""
-		android:layout_height=""wrap_content""
-		android:hint=""Hint me up.""
+		android:id="@+id/phone"
+		android:layout_width="fill_parent"
+		android:layout_height="wrap_content"
+		android:hint="Status: Error: retry"
 	/>
- </ConstraintLayout>";
-				}
+</ConstraintLayout>
+"""
 			});
-			using (var b = CreateApkBuilder ()) {
+			using (var b = CreateApkBuilder (Path.Combine ("temp", TestName, "App$Debug`Lint"))) {
 				Assert.IsTrue (b.Build (proj), "Project should have built.");
-				StringAssertEx.Contains ("XA0102", b.LastBuildOutput, "Output should contain XA0102 warnings");
-				var errorFilePath = Path.Combine (proj.IntermediateOutputPath, "android", proj.IntermediateOutputPath, "res", "layout", "test.xml");
-				StringAssertEx.DoesNotContain (errorFilePath, b.LastBuildOutput, $"Path {errorFilePath} should have been replaced.");
+				Assert.IsTrue (b.LastBuildOutput.Any (line =>
+					line.Contains (": warning :") && line.Contains ("Warning:") && line.Contains ("Status: Error: retry") &&
+					line.Contains ("[HardcodedText]") &&
+					line.Replace ('\\', '/').Replace ("/./", "/").Contains ("res/layout/test.xml")),
+					"The lint warning should preserve the intermediate resource path and issue text.");
 			}
 		}
 
