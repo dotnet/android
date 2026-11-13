@@ -13,70 +13,43 @@ namespace Android.OS {
 
 		public bool Post (Action action)
 		{
-			var runnable    = new Java.Lang.Thread.RunnableImplementor (action, removable: true);
-			if (Post (runnable)) {
-				return true;
-			}
-			runnable.Dispose ();
-			return false;
+			return Post (Java.Lang.Thread.RunnableImplementor.GetOrCreate (action));
 		}
 
 		public bool PostAtFrontOfQueue (Action action)
 		{
-			var runnable    = new Java.Lang.Thread.RunnableImplementor (action, removable: true);
-			if (PostAtFrontOfQueue (runnable)) {
-				return true;
-			}
-			runnable.Dispose ();
-			return false;
+			return PostAtFrontOfQueue (Java.Lang.Thread.RunnableImplementor.GetOrCreate (action));
 		}
 
 		public bool PostAtTime (Action action, long uptimeMillis)
 		{
-			var runnable    = new Java.Lang.Thread.RunnableImplementor (action, removable: true);
-			if (PostAtTime (runnable, uptimeMillis)) {
-				return true;
-			}
-			runnable.Dispose ();
-			return false;
+			return PostAtTime (Java.Lang.Thread.RunnableImplementor.GetOrCreate (action), uptimeMillis);
 		}
 
 		public bool PostAtTime (Action action, Java.Lang.Object token, long uptimeMillis)
 		{
-			var runnable    = new Java.Lang.Thread.RunnableImplementor (action, removable: true);
-			if (PostAtTime (runnable, token, uptimeMillis)) {
-				return true;
-			}
-			runnable.Dispose ();
-			return false;
+			return PostAtTime (Java.Lang.Thread.RunnableImplementor.GetOrCreate (action), token, uptimeMillis);
 		}
 
 		public bool PostDelayed (Action action, long delayMillis)
 		{
-			var runnable    = new Java.Lang.Thread.RunnableImplementor (action, removable: true);
-			if (PostDelayed (runnable, delayMillis)) {
-				return true;
-			}
-			runnable.Dispose ();
-			return false;
+			return PostDelayed (Java.Lang.Thread.RunnableImplementor.GetOrCreate (action), delayMillis);
 		}
 
 		public void RemoveCallbacks (Action action)
 		{
-			var runnable = Java.Lang.Thread.RunnableImplementor.Remove (action);
+			var runnable = Java.Lang.Thread.RunnableImplementor.Find (action);
 			if (runnable == null)
 				return;
 			RemoveCallbacks (runnable);
-			runnable.Dispose ();
 		}
 
 		public void RemoveCallbacks (Action action, Java.Lang.Object token)
 		{
-			var runnable = Java.Lang.Thread.RunnableImplementor.Remove (action);
+			var runnable = Java.Lang.Thread.RunnableImplementor.Find (action);
 			if (runnable == null)
 				return;
 			RemoveCallbacks (runnable, token);
-			runnable.Dispose ();
 		}
 	}
 

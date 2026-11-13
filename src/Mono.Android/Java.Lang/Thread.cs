@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
-using System.Threading;
 
 using Android.Runtime;
 
@@ -18,7 +17,7 @@ namespace Java.Lang {
 
 			public RunnableImplementor (Action handler) : this (handler, false) {}
 
-			public RunnableImplementor (Action handler, bool removable)
+			RunnableImplementor (Action handler, bool removable)
 				: base (
 						// SAFETY: The complete ASCII literal supplies stable, NUL-terminated JNI class-name bytes.
 						unsafe (JNIEnv.AllocObject ("mono/java/lang/RunnableImplementor"u8)),
@@ -31,34 +30,26 @@ namespace Java.Lang {
 
 				Handler = handler;
 				this.removable = removable;
-				if (removable)
-					lock (instancesLock)
-						instances.AddOrUpdate (handler, this);
 			}
 
 			public void Run ()
 			{
 				if (Handler != null)
 					Handler ();
-				if (removable)
-					lock (instancesLock)
-						if (Handler != null)
-							instances.Remove (Handler);
-				Dispose ();
+				// A removable runnable is shared by every pending post of its Action.
+				if (!removable)
+					Dispose ();
 			}
 
-			static readonly Lock instancesLock = new ();
 			static readonly ConditionalWeakTable<Action, RunnableImplementor> instances = new ();
 
-			public static RunnableImplementor Remove (Action handler)
-			{
-				RunnableImplementor result;
-				lock (instancesLock) {
-					instances.TryGetValue (handler, out result!);
-					instances.Remove (handler);
-				}
-				return result;
-			}
+			// Reusing one runnable per Action lets the Java remove/unschedule methods cancel every
+			// pending post, scoped by the handler, view, token, or drawable passed to them.
+			public static RunnableImplementor GetOrCreate (Action handler) =>
+				instances.GetValue (handler, static h => new RunnableImplementor (h, removable: true));
+
+			public static RunnableImplementor? Find (Action handler) =>
+				instances.TryGetValue (handler, out var runnable) ? runnable : null;
 		}
 
 		/// <summary>
