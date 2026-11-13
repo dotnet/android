@@ -83,8 +83,10 @@ namespace Xamarin.Android.Tools.Tests
 			Assert.IsNull (AndroidSdkInfo.TryGetPlatformDirectoryFromApiLevel (missingSdk, "37", versions));
 		}
 
-		[Test]
-		public void Constructor_Paths ()
+		[TestCase (null)]
+		[TestCase ("FIRST")]
+		[TestCase ("SECOND")]
+		public void Constructor_Paths (string environmentExtension)
 		{
 			CreateSdks (out string root, out string jdk, out string ndk, out string sdk);
 
@@ -94,14 +96,78 @@ namespace Xamarin.Android.Tools.Tests
 			};
 
 			try {
-				var info    = new AndroidSdkInfo (logger, androidSdkPath: sdk, androidNdkPath: ndk, javaSdkPath: jdk);
+				var path     = Environment.GetEnvironmentVariable ("PATH");
+				var javaHome = Environment.GetEnvironmentVariable ("JAVA_HOME");
+				if (environmentExtension != null) {
+					File.Move (Path.Combine (sdk, "platform-tools", IsWindows ? "adb.exe" : "adb"), Path.Combine (sdk, "platform-tools", $"adb.{environmentExtension}"));
+					File.Move (Path.Combine (ndk, IsWindows ? "ndk-stack.cmd" : "ndk-stack"), Path.Combine (ndk, $"ndk-stack.{environmentExtension}"));
+				}
+				var info    = environmentExtension != null ? AndroidSdkInfo.CreateWithEnvironment (logger, null, ndk, jdk, new Dictionary<string, string> {
+					["ANDROID_HOME"] = Path.Combine (root, "missing"),
+					["ANDROID_SDK_ROOT"] = sdk,
+					[OS.IsWindows ? "PathExt" : "PATHEXT"] = $".{environmentExtension}",
+					["XAMARIN_ANDROID_REGKEY"] = $@"Software\AndroidSdkInfoTests\{Guid.NewGuid ():N}",
+				}) : new AndroidSdkInfo (logger, androidSdkPath: sdk, androidNdkPath: ndk, javaSdkPath: jdk);
 
 				Assert.AreEqual (ndk, info.AndroidNdkPath,  "AndroidNdkPath not preserved!");
 				Assert.AreEqual (sdk, info.AndroidSdkPath,  "AndroidSdkPath not preserved!");
 				Assert.AreEqual (jdk, info.JavaSdkPath,     "JavaSdkPath not preserved!");
+				if (environmentExtension != null) {
+					Assert.AreEqual (path, Environment.GetEnvironmentVariable ("PATH"));
+					Assert.AreEqual (javaHome, Environment.GetEnvironmentVariable ("JAVA_HOME"));
+				}
 			}
 			finally {
 				Directory.Delete (root, recursive: true);
+			}
+		}
+
+		[TestCase (false)]
+		[TestCase (true)]
+		public void UnixDiscoveryUsesSnapshotHome (bool configured)
+		{
+			var configOverride = AppDomain.CurrentDomain.GetData (GetUnixConfigDirOverrideName);
+			for (int i = 0; i < 2; i++) {
+				CreateSdks (out var home, out var jdk, out _, out var sdk);
+				try {
+					var environment = new Dictionary<string, string> {
+						["HOME"] = home,
+						["PATHEXT"] = $".EXE{Path.PathSeparator}.CMD",
+					};
+					if (configured) {
+						var configDirectory = Path.Combine (home, ".config", "xbuild");
+						Directory.CreateDirectory (configDirectory);
+						new XElement ("monodroid",
+							new XElement ("android-sdk", new XAttribute ("path", sdk)),
+							new XElement ("java-sdk", new XAttribute ("path", jdk)))
+							.Save (Path.Combine (configDirectory, "monodroid-config.xml"));
+						JdkInfoTests.CreateFauxJdk (jdk, "999.123.456", "", "999.123.456");
+						if (!OS.IsWindows)
+							Assert.AreEqual (jdk, JdkInfo.GetKnownSystemJdkInfos ((_, _) => { }, environment)
+								.First (candidate => candidate.Locator == "monodroid-config.xml").HomePath);
+					} else {
+						var fallback = Path.Combine (home, "Android", "Sdk");
+						Directory.CreateDirectory (Path.GetDirectoryName (fallback));
+						Directory.Move (sdk, fallback);
+						sdk = fallback;
+					}
+					var discovery = new AndroidSdkUnix ((_, _) => { }, environment);
+					discovery.Initialize (javaSdkPath: configured ? null : jdk);
+					Assert.AreEqual (sdk, discovery.AndroidSdkPath);
+					Assert.AreEqual (jdk, discovery.JavaSdkPath);
+					if (configured) {
+						AppDomain.CurrentDomain.SetData (GetUnixConfigDirOverrideName, Path.Combine (home, ".config", "xbuild"));
+						Assert.IsNotEmpty (AndroidSdkUnix.GetUnixConfigFile ((_, _) => { }).Elements ());
+						environment.Remove ("HOME");
+						Assert.IsEmpty (AndroidSdkUnix.GetUnixConfigFile ((_, _) => { }, environment).Elements ());
+						if (OS.IsWindows)
+							Assert.AreEqual (jdk, JdkInfo.GetKnownSystemJdkInfos ((_, _) => { }, environment)
+								.First (candidate => candidate.Locator == "monodroid-config.xml").HomePath);
+					}
+				} finally {
+					AppDomain.CurrentDomain.SetData (GetUnixConfigDirOverrideName, configOverride);
+					Directory.Delete (home, recursive: true);
+				}
 			}
 		}
 

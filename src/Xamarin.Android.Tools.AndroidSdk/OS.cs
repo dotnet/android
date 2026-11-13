@@ -174,7 +174,8 @@ namespace Xamarin.Android.Tools
 		[DllImport ("advapi32.dll", SetLastError = true)]
 		static extern int RegCloseKey (UIntPtr hKey);
 
-		internal static bool CheckRegistryKeyForExecutable (UIntPtr key, string subkey, string valueName, RegistryEx.Wow64 wow64, string subdir, string exe)
+		internal static bool CheckRegistryKeyForExecutable (UIntPtr key, string subkey, string valueName, RegistryEx.Wow64 wow64, string subdir, string exe,
+			System.Collections.Generic.IDictionary<string, string>? environmentVariables = null)
 		{
 			try {
 				var path = AndroidSdkBase.NullIfEmpty (RegistryEx.GetValueString (key, subkey, valueName, wow64));
@@ -183,7 +184,7 @@ namespace Xamarin.Android.Tools
 					return false;
 				}
 
-				if (!ProcessUtils.FindExecutablesInDirectory (Path.Combine (path, subdir), exe).Any ()) {
+				if (!ProcessUtils.FindExecutablesInDirectory (Path.Combine (path, subdir), exe, environmentVariables).Any ()) {
 					return false;
 				}
 
