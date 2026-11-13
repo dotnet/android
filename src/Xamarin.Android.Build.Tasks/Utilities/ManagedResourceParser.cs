@@ -1,6 +1,7 @@
 #nullable disable
 
 using System;
+using System.Globalization;
 using System.CodeDom;
 using System.Collections.Generic;
 using System.IO;
@@ -192,9 +193,9 @@ namespace Xamarin.Android.Tasks
 						typeid = typeIds.Count;
 					}
 					if (field.InitExpression == null) {
-						int id = Convert.ToInt32 (itemPackageId + typeid.ToString ("X2") + itemid.ToString ("X4"), fromBase: 16);
+						int id = Convert.ToInt32 (itemPackageId + typeid.ToString ("X2", CultureInfo.InvariantCulture) + itemid.ToString ("X4", CultureInfo.InvariantCulture), fromBase: 16);
 						field.InitExpression = new CodePrimitiveExpression (id);
-						field.Comments.Add (new CodeCommentStatement ($"aapt resource value: 0x{id.ToString ("X")}"));
+						field.Comments.Add (new CodeCommentStatement ($"aapt resource value: 0x{id.ToString ("X", CultureInfo.InvariantCulture)}"));
 						itemid++;
 					}
 				}
@@ -219,7 +220,7 @@ namespace Xamarin.Android.Tasks
 						value = Convert.ToInt32 (element?.Attribute ("id")?.Value ?? "0x0", fromBase: 16);
 					} else {
 						CodePrimitiveExpression initExpression = fields [i].InitExpression as CodePrimitiveExpression;
-						value = Convert.ToInt32 (initExpression.Value);
+						value = Convert.ToInt32 (initExpression.Value, CultureInfo.CurrentCulture);
 					}
 					arrayValues.Add ((Key: value, Value: fields [i]));
 				}
@@ -231,7 +232,7 @@ namespace Xamarin.Android.Tasks
 					CodePrimitiveExpression code = expression.Initializers [index] as CodePrimitiveExpression;
 					code.Value = value;
 					CreateIntField (styleable, $"{field.Name}_{f.Name}", index);
-					sb.Append ($"0x{value.ToString ("X")}");
+					sb.Append ($"0x{value.ToString ("X", CultureInfo.InvariantCulture)}");
 					if (index < count - 1)
 						sb.Append (",");
 					index++;
@@ -394,7 +395,7 @@ namespace Xamarin.Android.Tasks
 			};
 			if (value != -1) {
 				f.InitExpression = new CodePrimitiveExpression (value);
-				string valueName = parentType.Name == "Styleable" ? value.ToString () : $"0x{value.ToString ("X")}";
+				string valueName = parentType.Name == "Styleable" ? value.ToString (CultureInfo.CurrentCulture) : $"0x{value.ToString ("X", CultureInfo.InvariantCulture)}";
 				f.Comments.Add (new CodeCommentStatement ($"aapt resource value: {valueName}"));
 			}
 			parentType.Members.Add (f);
@@ -421,7 +422,7 @@ namespace Xamarin.Android.Tasks
 				if (i < values.Length)
 					value = values[i];
 				c.Initializers.Add (new CodePrimitiveExpression (value));
-				sb.Append ($"0x{value.ToString ("X")}");
+				sb.Append ($"0x{value.ToString ("X", CultureInfo.InvariantCulture)}");
 				if (i < count -1)
 					sb.Append (",");
 			}

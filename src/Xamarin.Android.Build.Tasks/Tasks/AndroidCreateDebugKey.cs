@@ -1,6 +1,7 @@
 #nullable enable
 
 using System;
+using System.Globalization;
 using System.IO;
 using System.Resources;
 using Microsoft.Build.Framework;
@@ -30,7 +31,7 @@ namespace Xamarin.Android.Tasks
 			var cmd = base.CreateCommandLine ();
 			cmd.AppendSwitchIfNotNull ("-dname ", dname);
 			cmd.AppendSwitchIfNotNull ("-keyalg ", KeyAlgorithm);
-			cmd.AppendSwitchIfNotNull ("-validity ", Validity.ToString()); 
+			cmd.AppendSwitchIfNotNull ("-validity ", Validity.ToString(CultureInfo.CurrentCulture));
 			cmd.AppendSwitchIfNotNull ("-storetype ", StoreType);
 			return cmd;
 		}

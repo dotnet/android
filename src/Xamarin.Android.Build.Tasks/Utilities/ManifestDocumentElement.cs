@@ -1,4 +1,5 @@
 #nullable disable
+#nullable enable annotations
 
 using System;
 using System.Collections;

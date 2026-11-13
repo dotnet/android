@@ -1,4 +1,5 @@
 using System;
+using System.Globalization;
 using System.Text.RegularExpressions;
 using System.IO;
 using System.Diagnostics.CodeAnalysis;
@@ -11,7 +12,7 @@ namespace Xamarin.Android.Tools
 			Regex.Escape (Path.DirectorySeparatorChar.ToString ()) +
 			"(?<culture>[a-zA-Z]{1,8}(-[a-zA-Z0-9]{1,8})*)" +
 			Regex.Escape (Path.DirectorySeparatorChar.ToString ()) +
-			string.Format ("(?<file>[^{0}]+.resources.dll)$", Regex.Escape (Path.DirectorySeparatorChar.ToString ())));
+			string.Format (CultureInfo.CurrentCulture, "(?<file>[^{0}]+.resources.dll)$", Regex.Escape (Path.DirectorySeparatorChar.ToString ())));
 
 		public static bool TryGetSatelliteCultureAndFileName (string assemblyPath, [NotNullWhen (true)] out string? culture, [NotNullWhen (true)] out string? fileName)
 		{

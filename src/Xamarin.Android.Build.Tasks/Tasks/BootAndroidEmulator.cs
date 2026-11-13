@@ -1,6 +1,7 @@
 #nullable enable
 
 using System;
+using System.Globalization;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -97,7 +98,7 @@ public class BootAndroidEmulator : AsyncTask
 	public override async Task RunTaskAsync ()
 	{
 		if (BootTimeoutSeconds <= 0) {
-			LogCodedError ("XA0145", string.Format (Properties.Resources.XA0145, Device, BootTimeoutSeconds));
+			LogCodedError ("XA0145", string.Format (CultureInfo.CurrentCulture, Properties.Resources.XA0145, Device, BootTimeoutSeconds));
 			return;
 		}
 
@@ -131,7 +132,7 @@ public class BootAndroidEmulator : AsyncTask
 			LogMessage ($"Emulator boot for '{Device}' was cancelled.");
 			break;
 		case EmulatorBootErrorKind.Timeout:
-			LogCodedError ("XA0145", string.Format (Properties.Resources.XA0145, Device, BootTimeoutSeconds));
+			LogCodedError ("XA0145", string.Format (CultureInfo.CurrentCulture, Properties.Resources.XA0145, Device, BootTimeoutSeconds));
 			break;
 		default:
 			LogCodedError ("XA0144", Properties.Resources.XA0144, Device, result.ErrorKind, result.ErrorMessage ?? "Unknown error");

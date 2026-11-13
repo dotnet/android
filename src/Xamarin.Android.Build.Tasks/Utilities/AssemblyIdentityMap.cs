@@ -1,5 +1,6 @@
 #nullable enable
 using System;
+using System.Globalization;
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
@@ -29,10 +30,10 @@ namespace Xamarin.Android.Tasks
 		public string GetLibraryImportDirectoryNameForAssembly (string assemblyIdentity)
 		{
 			if (map.Contains (assemblyIdentity)) {
-				return map.IndexOf (assemblyIdentity).ToString ();
+				return map.IndexOf (assemblyIdentity).ToString (CultureInfo.CurrentCulture);
 			}
 			map.Add (assemblyIdentity);
-			return map.IndexOf (assemblyIdentity).ToString ();
+			return map.IndexOf (assemblyIdentity).ToString (CultureInfo.CurrentCulture);
 		}
 
 		/// <summary>

@@ -1,5 +1,6 @@
 #nullable enable
 
+using System.Globalization;
 using Microsoft.Android.Build.Tasks;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
@@ -38,7 +39,7 @@ namespace Xamarin.Android.Tasks {
 			var sb = new StringBuilder ();
 			if (!AdbTarget.IsNullOrEmpty ())
 				sb.Append ($" {AdbTarget} ");
-			sb.AppendFormat ("{0} {1}", Command, Arguments);
+			sb.AppendFormat (CultureInfo.CurrentCulture, "{0} {1}", Command, Arguments);
 			return sb.ToString ();
 		}
 

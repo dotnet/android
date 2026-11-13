@@ -1,5 +1,6 @@
 #nullable enable
 using System;
+using System.Globalization;
 using System.Xml;
 using System.Xml.Linq;
 
@@ -14,7 +15,7 @@ static class UtilityExtensions
 		if (value.IsNullOrWhiteSpace ())
 			return defaultValue;
 
-		return (T) Convert.ChangeType (value, typeof (T));
+		return (T) Convert.ChangeType (value, typeof (T), CultureInfo.CurrentCulture);
 	}
 
 	public static string GetRequiredAttribute (this XElement xml, string name)

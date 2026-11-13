@@ -1,5 +1,6 @@
 #nullable enable
 using System;
+using System.Globalization;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -29,7 +30,7 @@ namespace Monodroid {
 					return Files.CopyIfStreamChanged (sw.BaseStream, filename);
 				}
 			} catch (Exception e) {
-				logMessage?.Invoke (TraceLevel.Warning, string.Format (Xamarin.Android.Tasks.Properties.Resources.XA1001, filename, e.Message));
+				logMessage?.Invoke (TraceLevel.Warning, string.Format (CultureInfo.CurrentCulture, Xamarin.Android.Tasks.Properties.Resources.XA1001, filename, e.Message));
 				return false;
 			}
 		}

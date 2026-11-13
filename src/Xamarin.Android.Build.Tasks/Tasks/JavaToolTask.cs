@@ -1,6 +1,7 @@
 #nullable enable
 
 using System;
+using System.Globalization;
 using System.Collections.Generic;
 using System.Linq;
 using System.IO;
@@ -164,7 +165,7 @@ namespace Xamarin.Android.Tasks
 				var asmName = assemblyMap.GetAssemblyNameForImportDirectory (id);
 				if (!asmName.IsNullOrEmpty ()) {
 					var path = Path.Combine(IntermediateOutputPath ?? "", "lp", id);
-					mappingText.Add (string.Format (Properties.Resources.XA_Directory_Is_From, path, asmName));
+					mappingText.Add (string.Format (CultureInfo.CurrentCulture, Properties.Resources.XA_Directory_Is_From, path, asmName));
 				}
 			}
 
@@ -209,7 +210,7 @@ namespace Xamarin.Android.Tasks
 
 		protected virtual void GetLineNumber (string match, out int line, out int column)
 		{
-			line = int.Parse (match) + 1;
+			line = int.Parse (match, CultureInfo.CurrentCulture) + 1;
 			column = 0;
 		}
 

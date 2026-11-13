@@ -383,7 +383,7 @@ namespace Xamarin.Android.Tasks {
 			if (AdditionalAndroidResourcePaths != null)
 				foreach (var dir in AdditionalAndroidResourcePaths)
 					if (!dir.ItemSpec.IsNullOrEmpty ())
-						upToDate = upToDate && ManifestIsUpToDate (string.Format ("{0}{1}{2}{3}{4}", dir, Path.DirectorySeparatorChar, "manifest", Path.DirectorySeparatorChar, "AndroidManifest.xml"));
+						upToDate = upToDate && ManifestIsUpToDate (string.Format (CultureInfo.CurrentCulture, "{0}{1}{2}{3}{4}", dir, Path.DirectorySeparatorChar, "manifest", Path.DirectorySeparatorChar, "AndroidManifest.xml"));
 
 			if (upToDate) {
 				LogMessage ("  Additional Android Resources manifsets files are unchanged. Skipping.");
@@ -394,7 +394,7 @@ namespace Xamarin.Android.Tasks {
 			var abis = CreatePackagePerAbi && SupportedAbis?.Length > 1 ? defaultAbi.Concat (SupportedAbis) : defaultAbi;
 			var outputFile = OutputFile.IsNullOrEmpty () ? GetTempFile () : OutputFile;
 			foreach (var abi in abis) {
-				var currentResourceOutputFile = abi != null ? string.Format ("{0}-{1}", outputFile, abi) : outputFile;
+				var currentResourceOutputFile = abi != null ? string.Format (CultureInfo.CurrentCulture, "{0}-{1}", outputFile, abi) : outputFile;
 				if (!currentResourceOutputFile.IsNullOrEmpty () && !Path.IsPathRooted (currentResourceOutputFile))
 					currentResourceOutputFile = Path.Combine (WorkingDirectory, currentResourceOutputFile);
 				string[] cmd = GenerateCommandLineCommands (manifest, abi, currentResourceOutputFile, versions);

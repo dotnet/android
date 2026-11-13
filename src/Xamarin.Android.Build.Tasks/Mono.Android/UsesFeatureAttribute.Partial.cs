@@ -1,6 +1,8 @@
 #nullable disable
+#nullable enable annotations
 
 using System;
+using System.Globalization;
 
 using System.Collections.Generic;
 using Xamarin.Android.Manifest;
@@ -25,7 +27,7 @@ namespace Android.App {
 
 		internal string GLESVesionAsString ()
 		{
-			return String.Format("0x{0}", GLESVersion.ToString("X8"));
+			return String.Format(CultureInfo.CurrentCulture, "0x{0}", GLESVersion.ToString("X8", CultureInfo.InvariantCulture));
 		}
 
 		internal XElement ToElement (string packageName, TypeDefinitionCache cache)

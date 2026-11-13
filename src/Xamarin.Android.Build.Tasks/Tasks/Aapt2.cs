@@ -2,6 +2,7 @@
 #nullable enable
 
 using System;
+using System.Globalization;
 using System.IO;
 using System.Threading;
 using System.Text;
@@ -132,7 +133,7 @@ namespace Xamarin.Android.Tasks {
 				file = match.Groups ["file"].Value;
 				int line = 0;
 				if (!match.Groups ["line"]?.Value.IsNullOrEmpty () == true)
-					line = int.Parse (match.Groups ["line"].Value.Trim ()) + 1;
+					line = int.Parse (match.Groups ["line"].Value.Trim (), CultureInfo.CurrentCulture) + 1;
 				var level = match.Groups ["level"].Value.ToLowerInvariant ();
 				var message = match.Groups ["message"].Value;
 
@@ -186,7 +187,7 @@ namespace Xamarin.Android.Tasks {
 				if (level.Contains ("error") || (line != 0 && !file.IsNullOrEmpty ())) {
 					var errorCode = GetErrorCodeForFile (message, file);
 					if (manifestError)
-						LogCodedError (errorCode, AndroidManifestFile?.ItemSpec ?? "", 0, string.Format (Xamarin.Android.Tasks.Properties.Resources.AAPTManifestError, message.TrimEnd('.')));
+						LogCodedError (errorCode, AndroidManifestFile?.ItemSpec ?? "", 0, string.Format (CultureInfo.CurrentCulture, Xamarin.Android.Tasks.Properties.Resources.AAPTManifestError, message.TrimEnd('.')));
 					else
 						LogCodedError (errorCode, file, line, AddAdditionalErrorText (errorCode, message));
 					return true;
@@ -194,7 +195,7 @@ namespace Xamarin.Android.Tasks {
 			}
 
 			if (!apptResult) {
-				var message = string.Format ("{0} \"{1}\".", singleLine.Trim (), singleLine.Substring (singleLine.LastIndexOfAny (new char [] { '\\', '/' }) + 1));
+				var message = string.Format (CultureInfo.CurrentCulture, "{0} \"{1}\".", singleLine.Trim (), singleLine.Substring (singleLine.LastIndexOfAny (new char [] { '\\', '/' }) + 1));
 				if (LogNotesOrWarnings (message, singleLine, messageImportance))
 					return true;
 				var errorCode = GetErrorCodeForFile (message, file);

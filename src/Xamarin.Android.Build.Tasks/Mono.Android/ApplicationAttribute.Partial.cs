@@ -1,6 +1,8 @@
 #nullable disable
+#nullable enable annotations
 
 using System;
+using System.Globalization;
 using System.Collections.Generic;
 using System.Linq;
 using System.Xml.Linq;
@@ -37,7 +39,7 @@ namespace Android.App {
 
 					if (!typeDef.IsSubclassOf ("Android.App.Backup.BackupAgent", cache))
 						throw new InvalidOperationException (
-								string.Format ("The Type '{0}', referenced by the Android.App.ApplicationAttribute.BackupAgent property, must be a subclass of the type Android.App.Backup.BackupAgent.",
+								string.Format (CultureInfo.CurrentCulture, "The Type '{0}', referenced by the Android.App.ApplicationAttribute.BackupAgent property, must be a subclass of the type Android.App.Backup.BackupAgent.",
 									typeDef.FullName));
 
 					return ManifestDocumentElement.ToString (typeDef, cache);
