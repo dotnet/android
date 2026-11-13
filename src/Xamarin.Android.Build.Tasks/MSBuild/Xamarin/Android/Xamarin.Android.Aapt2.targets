@@ -22,7 +22,6 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 
 <PropertyGroup>
   <Aapt2DaemonMaxInstanceCount Condition=" '$(Aapt2DaemonMaxInstanceCount)' == '' " >0</Aapt2DaemonMaxInstanceCount>
-  <_Aapt2DaemonKeepInDomain Condition=" '$(_Aapt2DaemonKeepInDomain)' == '' ">false</_Aapt2DaemonKeepInDomain>
 </PropertyGroup>
 
 
@@ -125,7 +124,6 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
       ResourceCaseMap="@(_AndroidResourceCaseMap)"
       ContinueOnError="$(DesignTimeBuild)"
       DaemonMaxInstanceCount="$(Aapt2DaemonMaxInstanceCount)"
-      DaemonKeepInDomain="$(_Aapt2DaemonKeepInDomain)"
       ExtraArgs="$(AndroidAapt2CompileExtraArgs)"
       FlatFilesDirectory="$(_AndroidLibraryFlatFilesDirectory)"
       FlatArchivesDirectory="$(_AndroidLibraryFlatArchivesDirectory)"
@@ -161,7 +159,6 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
       Condition=" '$(_AndroidResourceDesignerFile)' != '' Or '$(AndroidUseDesignerAssembly)' == 'True' "
       ContinueOnError="$(DesignTimeBuild)"
       DaemonMaxInstanceCount="$(Aapt2DaemonMaxInstanceCount)"
-      DaemonKeepInDomain="$(_Aapt2DaemonKeepInDomain)"
       AssemblyIdentityMapFile="$(_AndroidLibrayProjectAssemblyMapFile)"
       ImportsDirectory="$(_LibraryProjectImportsDirectoryName)"
       OutputImportDirectory="$(_AndroidLibrayProjectIntermediatePath)"
@@ -197,7 +194,6 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
       Condition=" '@(_ItemsToFixup->Count())' != '0' "
       ContinueOnError="$(DesignTimeBuild)"
       DaemonMaxInstanceCount="$(Aapt2DaemonMaxInstanceCount)"
-      DaemonKeepInDomain="$(_Aapt2DaemonKeepInDomain)"
       ResourcesToCompile="@(_ItemsToFixup)"
       ResourceDirectories="$(MonoAndroidResDirIntermediate);@(_LibraryResourceDirectories)"
       ExtraArgs="$(AndroidAapt2CompileExtraArgs)"
@@ -224,7 +220,6 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
       AndroidManifestFile="$(_AndroidManifestAbs)"
       CompiledResourceFlatFiles="@(_CompiledFlatFiles)"
       DaemonMaxInstanceCount="$(Aapt2DaemonMaxInstanceCount)"
-      DaemonKeepInDomain="$(_Aapt2DaemonKeepInDomain)"
       ResourceDirectories="$(MonoAndroidResDirIntermediate)"
       AssemblyIdentityMapFile="$(_AndroidLibrayProjectAssemblyMapFile)"
       ImportsDirectory="$(_LibraryProjectImportsDirectoryName)"

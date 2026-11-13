@@ -28,8 +28,6 @@ namespace Xamarin.Android.Tasks {
 
 		public int DaemonMaxInstanceCount { get; set; }
 
-		public bool DaemonKeepInDomain { get; set; }
-
 		public ITaskItem []? ResourceDirectories { get; set; }
 
 		public ITaskItem? AndroidManifestFile { get; set; }
@@ -95,9 +93,9 @@ namespace Xamarin.Android.Tasks {
 				DaemonMaxInstanceCount = maxInstances;
 			else
 				DaemonMaxInstanceCount = Math.Min (DaemonMaxInstanceCount, maxInstances);
-			daemon  = Aapt2Daemon.GetInstance (BuildEngine4, LogDebugMessage, GenerateFullPathToTool (),
-				DaemonMaxInstanceCount, GetRequiredDaemonInstances (), registerInDomain: DaemonKeepInDomain);
-			return base.Execute ();
+			using (daemon = new Aapt2Daemon (GenerateFullPathToTool (), DaemonMaxInstanceCount, GetRequiredDaemonInstances (), LogDebugMessage)) {
+				return base.Execute ();
+			}
 		}
 
 		ConcurrentBag<long> jobs = new ConcurrentBag<long> ();

@@ -141,7 +141,6 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
   <Aapt2LinkAssetPack
       ResourceCaseMap="@(_AndroidResourceCaseMap)"
       DaemonMaxInstanceCount="$(Aapt2DaemonMaxInstanceCount)"
-      DaemonKeepInDomain="$(_Aapt2DaemonKeepInDomain)"
       OutputArchive="%(_AssetPacks.AssetPackOutput)"
       AssetDirectories="%(_AssetPacks.AssetPackDirectory)"
       Manifest="%(_AssetPacks.ManifestFile)"

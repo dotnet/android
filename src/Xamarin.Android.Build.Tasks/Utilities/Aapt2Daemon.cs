@@ -7,7 +7,6 @@ using System.IO;
 using System.Text;
 using System.Threading;
 using System.Reflection;
-using Microsoft.Build.Framework;
 using TPL = System.Threading.Tasks;
 using Xamarin.Android.Tools;
 using Microsoft.Android.Build.Tasks;
@@ -16,22 +15,6 @@ namespace Xamarin.Android.Tasks
 {
 	internal class Aapt2Daemon : IDisposable
 	{
-		static readonly string TypeFullName = typeof (Aapt2Daemon).FullName;
-
-		internal static object RegisterTaskObjectKey => TypeFullName;
-
-		public static Aapt2Daemon GetInstance (IBuildEngine4 engine, Action<string> log, string aapt2, int numberOfInstances, int initalNumberOfDaemons, bool registerInDomain = false)
-		{
-			var area = registerInDomain ? RegisteredTaskObjectLifetime.AppDomain : RegisteredTaskObjectLifetime.Build;
-			var daemon = engine.GetRegisteredTaskObjectAssemblyLocal<Aapt2Daemon> (RegisterTaskObjectKey, area);
-			if (daemon == null)
-			{
-				daemon = new Aapt2Daemon (aapt2, numberOfInstances, initalNumberOfDaemons, log);
-				engine.RegisterTaskObjectAssemblyLocal (RegisterTaskObjectKey, daemon, area, allowEarlyCollection: false);
-			}
-			return daemon;
-		}
-
 		public class Job
 		{
 			TPL.TaskCompletionSource<bool> tcs = new TPL.TaskCompletionSource<bool> ();
@@ -115,6 +98,9 @@ namespace Xamarin.Android.Tasks
 		{
 			Stop ();
 			tcs.Cancel ();
+			foreach (var thread in daemons) {
+				thread.Join ();
+			}
 		}
 
 		public long QueueCommand (string[] job, string outputFile, CancellationToken token)

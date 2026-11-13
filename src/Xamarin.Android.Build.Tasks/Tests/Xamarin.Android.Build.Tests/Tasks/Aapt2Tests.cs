@@ -14,7 +14,7 @@ namespace Xamarin.Android.Build.Tests
 {
 	public class Aapt2Tests : BaseTest
 	{
-		void CallAapt2Compile (IBuildEngine engine, string dir, string outputPath, string flatFilePath, List<ITaskItem> output = null, int maxInstances = 0, bool keepInDomain = false)
+		void CallAapt2Compile (IBuildEngine engine, string dir, string outputPath, string flatFilePath, List<ITaskItem> output = null, int maxInstances = 0)
 		{
 			var errors = new List<BuildErrorEventArgs> ();
 			ITaskItem item;
@@ -40,7 +40,6 @@ namespace Xamarin.Android.Build.Tests
 				FlatArchivesDirectory = outputPath,
 				FlatFilesDirectory = flatFilePath,
 				DaemonMaxInstanceCount = maxInstances,
-				DaemonKeepInDomain = keepInDomain,
 			};
 			MockBuildEngine mockEngine = (MockBuildEngine)engine;
 			Assert.True (task.Execute (), $"task should have succeeded. {string.Join (" ", mockEngine.Errors.Select (x => x.Message))}");
@@ -101,11 +100,9 @@ namespace Xamarin.Android.Build.Tests
 				FlatArchivesDirectory = archivePath,
 				FlatFilesDirectory = flatFilePath,
 				DaemonMaxInstanceCount = maxInstances,
-				DaemonKeepInDomain = false,
 			};
 			Assert.True (task.Execute (), $"task should have succeeded. {string.Join (";", errors.Select (x => x.Message))}");
-			var daemon = engine.GetRegisteredTaskObjectAssemblyLocal<Aapt2Daemon> (Aapt2Daemon.RegisterTaskObjectKey, RegisteredTaskObjectLifetime.Build);
-			Assert.IsNotNull (daemon, "Should have got a Daemon");
+			var daemon = task.Daemon;
 			Assert.AreEqual (expectedMax, daemon.MaxInstances, $"Expected {expectedMax} but was {daemon.MaxInstances}");
 			Assert.AreEqual (expectedInstances, daemon.CurrentInstances, $"Expected {expectedInstances} but was {daemon.CurrentInstances}");
 			Directory.Delete (Path.Combine (Root, path), recursive: true);
