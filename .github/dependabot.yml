@@ -40,8 +40,10 @@ updates:
     target-branch: "release/11.0.1xx"
     schedule:
       interval: "weekly"
+    # Arcade packages are updated by darc/Maestro dependency flow.
     ignore:
       - dependency-name: "Microsoft.DotNet.Arcade.Sdk"
+      - dependency-name: "Microsoft.DotNet.Helix.Sdk"
   - package-ecosystem: "gradle"
     directories:
       - "/tests/Xamarin.Android.Tools.Bytecode-Tests/kotlin-gradle"
