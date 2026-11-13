@@ -1,4 +1,5 @@
 using System;
+using System.Globalization;
 using System.Collections.Generic;
 
 namespace MonoDroid.Generation {
@@ -68,12 +69,12 @@ namespace MonoDroid.Generation {
 
 		public string FromNative (CodeGenerationOptions opt, string var_name, bool owned)
 		{
-			return String.Format (opt.GetOutputName ("Android.Runtime.{0}Invoker") + ".FromJniHandle ({1}, {2})", base_name, var_name, owned ? "JniHandleOwnership.TransferLocalRef" : "JniHandleOwnership.DoNotTransfer");
+			return String.Format (CultureInfo.CurrentCulture, opt.GetOutputName ("Android.Runtime.{0}Invoker") + ".FromJniHandle ({1}, {2})", base_name, var_name, owned ? "JniHandleOwnership.TransferLocalRef" : "JniHandleOwnership.DoNotTransfer");
 		}
 
 		public string ToNative (CodeGenerationOptions opt, string var_name, Dictionary<string, string> mappings = null)
 		{
-			return String.Format (opt.GetOutputName ("Android.Runtime.{0}Adapter") + ".ToLocalJniHandle ({1})", base_name, var_name);
+			return String.Format (CultureInfo.CurrentCulture, opt.GetOutputName ("Android.Runtime.{0}Adapter") + ".ToLocalJniHandle ({1})", base_name, var_name);
 		}
 
 		public bool Validate (CodeGenerationOptions opt, GenericParameterDefinitionList type_params, CodeGeneratorContext context)
@@ -84,7 +85,7 @@ namespace MonoDroid.Generation {
 		public string[] PreCall (CodeGenerationOptions opt, string var_name)
 		{
 			return new string[] {
-				string.Format ("IntPtr {0} = global::Android.Runtime.{1}Adapter.ToLocalJniHandle ({2});",
+				string.Format (CultureInfo.CurrentCulture, "IntPtr {0} = global::Android.Runtime.{1}Adapter.ToLocalJniHandle ({2});",
 						opt.GetSafeIdentifier (TypeNameUtilities.GetNativeName (var_name)),
 						base_name,
 						opt.GetSafeIdentifier (var_name)),
@@ -99,7 +100,7 @@ namespace MonoDroid.Generation {
 		public string[] PostCall (CodeGenerationOptions opt, string var_name)
 		{
 			return new string[]{
-				string.Format ("JNIEnv.DeleteLocalRef ({0});",
+				string.Format (CultureInfo.CurrentCulture, "JNIEnv.DeleteLocalRef ({0});",
 						opt.GetSafeIdentifier (TypeNameUtilities.GetNativeName (var_name))),
 			};
 		}
@@ -107,7 +108,7 @@ namespace MonoDroid.Generation {
 		public string[] PreCallback (CodeGenerationOptions opt, string var_name, bool owned)
 		{
 			return new string[]{
-				string.Format ("var {0} = global::Android.Runtime.{1}Invoker.FromJniHandle ({2}, {3});",
+				string.Format (CultureInfo.CurrentCulture, "var {0} = global::Android.Runtime.{1}Invoker.FromJniHandle ({2}, {3});",
 						var_name,
 						base_name,
 						opt.GetSafeIdentifier (TypeNameUtilities.GetNativeName (var_name)),
