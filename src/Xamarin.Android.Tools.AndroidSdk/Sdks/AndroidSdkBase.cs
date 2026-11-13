@@ -26,7 +26,8 @@ namespace Xamarin.Android.Tools
 					var dirs = new List<string?> ();
 					dirs.Add (AndroidSdkPath);
 					dirs.AddRange (GetAllAvailableAndroidSdks ());
-					allAndroidSdks = dirs.Where (d => ValidateAndroidSdkLocation ("AllAndroidSdks", d))
+					allAndroidSdks = dirs.Select (ResolvePath)
+						.Where (d => ValidateAndroidSdkLocation ("AllAndroidSdks", d))
 						.OfType<string> ()
 						.Distinct ()
 						.ToArray ();

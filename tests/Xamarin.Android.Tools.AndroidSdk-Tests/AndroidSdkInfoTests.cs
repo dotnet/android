@@ -17,6 +17,22 @@ namespace Xamarin.Android.Tools.Tests
 		const string NdkVersion = "21.0.6113669";
 
 		[Test]
+		public void AllSdkPathsResolveRelativeCandidates ()
+		{
+			CreateSdks (out var root, out var jdk, out _, out var sdk);
+			try {
+				var discovery = new AndroidSdkUnix ((_, _) => { }, new Dictionary<string, string> {
+					["ANDROID_HOME"] = "sdk",
+					["PATHEXT"] = $".EXE{Path.PathSeparator}.CMD",
+				}, root);
+				discovery.Initialize (javaSdkPath: jdk);
+				CollectionAssert.AreEqual (new [] { sdk }, discovery.AllAndroidSdks);
+			} finally {
+				Directory.Delete (root, recursive: true);
+			}
+		}
+
+		[Test]
 		public void SnapshotConfigReadsDoNotRepairSharedFiles ()
 		{
 			var root = CreateRoot ();
