@@ -8,8 +8,6 @@
     <Nullable>enable</Nullable>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
     <MSBuildTreatWarningsAsErrors>true</MSBuildTreatWarningsAsErrors>
-    <!-- Use SDK analyzer defaults instead of the repository's legacy severity overrides. -->
-    <DiscoverEditorConfigFiles>false</DiscoverEditorConfigFiles>
     <!-- ProduceOnlyReferenceAssembly (not ProduceReferenceAssembly) — we only need the ref assembly.
          The real implementation is generated at app build time by the typemap generator. -->
     <ProduceOnlyReferenceAssembly>true</ProduceOnlyReferenceAssembly>
