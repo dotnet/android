@@ -944,33 +944,15 @@ If you want detailed output from the tool you can add the following to the
 
 ## AndroidManifestType
 
-An enum-style property with valid values of `Xamarin` or `GoogleV2`.
-This controls which repository is used by the
-[`InstallAndroidDependencies`](build-targets.md#installandroiddependencies)
-target to determine which Android packages and package versions are
-available and can be installed.
-
-`Xamarin` is the **Approved List (Recommended)** repository within the
-[Visual Studio SDK Manager](/xamarin/android/get-started/installation/android-sdk?tabs=windows#repository-selection).
-
-`GoogleV2` is the **Full List (Unsupported)** repository within the
-[Visual Studio SDK Manager](/xamarin/android/get-started/installation/android-sdk?tabs=windows#repository-selection).
-
-If `$(AndroidManifestType)` is not set, then `Xamarin` is used.
+This property was removed in .NET 12 and has no effect.
+The [`InstallAndroidDependencies`](build-targets.md#installandroiddependencies)
+target now uses the Android CLI to install Android SDK packages.
 
 ## AndroidManifestSource
 
-A string property that specifies an absolute URI or an existing local file path
-for the repository manifest used by the
-[`InstallAndroidDependencies`](build-targets.md#installandroiddependencies)
-target. When this property is not set, the default repository manifest selected
-by `$(AndroidManifestType)` is used.
-
-For example:
-
-```xml
-<AndroidManifestSource>https://example.com/AndroidManifestFeed.xml</AndroidManifestSource>
-```
+This property was removed in .NET 12 and has no effect.
+The [`InstallAndroidDependencies`](build-targets.md#installandroiddependencies)
+target now uses the Android CLI to install Android SDK packages.
 
 ## AndroidManifestPlaceholders
 

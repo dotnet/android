@@ -282,6 +282,9 @@ Either change the value in the AndroidManifest.xml to match the $(SupportedOSPla
 + [XA5303](xa5303.md): Failed to parse 'DescriptorIndex' metadata value '{value}' for assembly '{assembly}'.
 + [XA5304](xa5304.md): Invalid AssemblyStore compression level '{level}'. The value must be between {min} and {max}.
 + [XA5305](xa5305.md): Could not verify the Microsoft OpenJDK archive signature.
++ [XA5306](xa5306.md): The Android CLI is not available for this operating system and architecture.
++ [XA5307](xa5307.md): The SHA-256 hash of the downloaded Android CLI is not correct.
++ [XA5308](xa5308.md): The Android CLI failed while it installed Android SDK packages.
 
 ## XA6xxx: Internal tools
 
