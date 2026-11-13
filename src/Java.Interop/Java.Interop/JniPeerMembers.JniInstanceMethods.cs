@@ -1,6 +1,7 @@
 ﻿#nullable enable
 
 using System;
+using System.Globalization;
 using System.Collections.Concurrent;
 
 namespace Java.Interop
@@ -20,7 +21,7 @@ namespace Java.Interop
 			var info    = jvm.TypeManager.GetTypeSignature (declaringType);
 			if (info.SimpleReference == null)
 				throw new NotSupportedException (
-						string.Format ("Cannot create instance of type '{0}': no Java peer type found.",
+						string.Format (CultureInfo.CurrentCulture, "Cannot create instance of type '{0}': no Java peer type found.",
 							declaringType.FullName));
 
 			DeclaringType   = declaringType;

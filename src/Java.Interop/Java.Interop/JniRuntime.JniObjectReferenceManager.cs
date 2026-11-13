@@ -1,6 +1,7 @@
 # nullable enable
 
 using System;
+using System.Globalization;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -185,7 +186,7 @@ namespace Java.Interop {
 					return;
 
 				Debug.Assert (reference.Type == type,
-						string.Format ("Object reference {0} should be of type {1}, is instead {2}!",
+						string.Format (CultureInfo.CurrentCulture, "Object reference {0} should be of type {1}, is instead {2}!",
 							reference.ToString (), type, reference.Type));
 			}
 
@@ -193,7 +194,7 @@ namespace Java.Interop {
 			void AssertCount (int count, string type, string value)
 			{
 				Debug.Assert (count >= 0,
-						string.Format ("{0} count is {1}, expected to be >= 0 when dealing with handle {2} on thread '{3}'({4}).",
+						string.Format (CultureInfo.CurrentCulture, "{0} count is {1}, expected to be >= 0 when dealing with handle {2} on thread '{3}'({4}).",
 							type, count, value, Runtime.GetCurrentManagedThreadName (), Environment.CurrentManagedThreadId));
 				if (count < 0) {
 					Debug.WriteLine ("Perhaps `Java.Interop.JniEnvironment.References.{0}()` should be used to note the creation of handle {1} on thread '{2}'({3})?",
