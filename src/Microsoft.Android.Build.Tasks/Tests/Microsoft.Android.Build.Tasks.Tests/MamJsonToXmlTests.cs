@@ -21,7 +21,7 @@ namespace Xamarin.Android.Build.Tests.Tasks {
 			Path.Combine (TestContext.CurrentContext.TestDirectory, "Resources", "MamJsonToXml", name);
 
 		[Test]
-		public void TaskRegistrationsUseAttributeFreeCoreAndNonCoreSplit ()
+		public void TaskRegistrationsUseModernTaskForFullAndCore ()
 		{
 			var source = XDocument.Load (Path.Combine (NativeAotBootstrapTestTools.FindRepositoryRoot (),
 				"src", "Xamarin.Android.Build.Tasks", "Xamarin.Android.Common.targets"));
@@ -30,16 +30,16 @@ namespace Xamarin.Android.Build.Tests.Tasks {
 					((string?) element.Attribute ("TaskName"))?.EndsWith (".MamJsonToXml") == true)
 				.ToArray ();
 			Assert.AreEqual (2, registrations.Length);
-			var modern = registrations.Single (element => (string?) element.Attribute ("TaskName") == "Microsoft.Android.Tasks.MamJsonToXml");
-			var legacy = registrations.Single (element => (string?) element.Attribute ("TaskName") == "Xamarin.Android.Tasks.MamJsonToXml");
-			Assert.AreEqual ("'$(MSBuildRuntimeType)' == 'Core'", ((string?) modern.Attribute ("Condition"))?.Trim ());
-			Assert.AreEqual ("'$(MSBuildRuntimeType)' != 'Core'", ((string?) legacy.Attribute ("Condition"))?.Trim ());
-			Assert.AreEqual ("$(_MicrosoftAndroidBuildTasksAssembly)", (string?) modern.Attribute ("AssemblyFile"));
-			Assert.AreEqual ("Xamarin.Android.Build.Tasks.dll", (string?) legacy.Attribute ("AssemblyFile"));
+			Assert.IsTrue (registrations.All (element =>
+				(string?) element.Attribute ("TaskName") == "Microsoft.Android.Tasks.MamJsonToXml"));
+			var full = registrations.Single (element => (string?) element.Attribute ("Condition") == " '$(MSBuildRuntimeType)' == 'Full' ");
+			var core = registrations.Single (element => (string?) element.Attribute ("Condition") == " '$(MSBuildRuntimeType)' == 'Core' ");
 			foreach (var registration in registrations) {
-				Assert.IsNull (registration.Attribute ("TaskFactory"));
-				Assert.IsNull (registration.Attribute ("Runtime"));
+				Assert.AreEqual ("$(_MicrosoftAndroidBuildTasksAssembly)", (string?) registration.Attribute ("AssemblyFile"));
+				Assert.AreEqual ("NET", (string?) registration.Attribute ("Runtime"));
 			}
+			Assert.AreEqual ("TaskHostFactory", (string?) full.Attribute ("TaskFactory"));
+			Assert.IsNull (core.Attribute ("TaskFactory"));
 		}
 
 		[Test]
