@@ -269,6 +269,25 @@ namespace Java.InteropTests
 		}
 
 		[Test]
+		public void GetProxyForJavaObject_NonSealedTarget_DoesNotCacheManagedTarget ()
+		{
+			using var value = new Java.Lang.String ("value");
+			var instance = TrimmableTypeMap.Instance;
+			var cache = GetProxyCache (instance);
+			var targetType = typeof (Java.Lang.Object);
+			cache.TryRemove (targetType, out var previous);
+			try {
+				var proxy = instance.GetProxyForJavaObject (value.Handle, targetType);
+
+				Assert.AreEqual (typeof (Java.Lang.String), proxy?.TargetType);
+				Assert.IsFalse (cache.ContainsKey (targetType), "A nonsealed target should not trigger a managed-proxy lookup.");
+			} finally {
+				if (previous is not null)
+					cache.TryAdd (targetType, previous);
+			}
+		}
+
+		[Test]
 		[Category ("NativeAOTTrimmable")]
 		public void GetProxyForJavaObject_SealedExternalTarget_DoesNotUseSealedShortcut ()
 		{
