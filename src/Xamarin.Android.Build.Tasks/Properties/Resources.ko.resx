@@ -212,9 +212,9 @@
     <comment>The following are literal names and should not be translated: AAPT2, Aapt2ToolPath, MSBuild</comment>
   </data>
   <data name="XA0116" xml:space="preserve">
-    <value>이름이 '{0}'인 'EmbeddedResource'를 찾을 수 없습니다.</value>
-    <comment>The following are literal names and should not be translated: EmbeddedResource
-{0} - The name of the missing resource</comment>
+    <value>Unable to find required SDK file `{0}`.</value>
+    <comment>The following are literal names and should not be translated: SDK
+{0} - The path of the missing file</comment>
   </data>
   <data name="XA0119_LinkMode" xml:space="preserve">
     <value>빠른 배포와 링커를 동시에 사용하는 것은 좋지 않습니다. Debug 구성에 빠른 배포를 사용하고, Release 구성에 링커를 사용하세요.</value>
