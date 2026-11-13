@@ -20,7 +20,7 @@ On Windows, run `build.cmd`.
 - Don't use `make all`. It skips `BuildExtraApiLevels`, so `ConfigureLocalWorkload` fails.
 - Pass extra flags via `MSBUILD_ARGS='...'`. Overriding `MSBUILD_FLAGS` drops `-p:Configuration`.
 - On failure, read `bin/Build<cfg>/msbuild-*.binlog` (`msbuild` skill) rather than re-running verbosely.
-- `dotnet-local.sh` runs `bin/Release` whenever it exists, regardless of `CONFIGURATION`. Delete the configuration you aren't using, or call `bin/<cfg>/dotnet/dotnet` directly.
+- `dotnet-local.sh` runs `bin/Release` whenever it exists, regardless of `CONFIGURATION`. Delete the configuration you aren't using, or call `bin/<cfg>/dotnet/dotnet` directly with the same workload roots the wrapper sets: `DOTNETSDK_WORKLOAD_MANIFEST_ROOTS="$PWD/bin/<cfg>/lib/sdk-manifests" DOTNETSDK_WORKLOAD_PACK_ROOTS="$PWD/bin/<cfg>/lib"`.
 - An existing `bin/<cfg>/dotnet` only means `make prepare` ran, not that the SDK was built.
 
 ## Rebuild only what changed
