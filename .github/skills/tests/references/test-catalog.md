@@ -21,6 +21,7 @@ These tests can be run immediately with `dotnet test` on the `.csproj`, even if 
 | Test Area | Project | Command |
 |-----------|---------|---------|
 | **modern Android build tasks** | `src/Microsoft.Android.Build.Tasks/Tests/Microsoft.Android.Build.Tasks.Tests/` | `dotnet test src/Microsoft.Android.Build.Tasks/Tests/Microsoft.Android.Build.Tasks.Tests/Microsoft.Android.Build.Tasks.Tests.csproj -v minimal` |
+| **debug keystore target (shell quoting and exit/output classification)** | Same modern build-task project | `dotnet test src/Microsoft.Android.Build.Tasks/Tests/Microsoft.Android.Build.Tasks.Tests/Microsoft.Android.Build.Tasks.Tests.csproj -v minimal --filter FullyQualifiedName~DebugKeyTargetsTests` |
 | **temporary-directory target execution/inference** | `src/Microsoft.Android.Build.Tasks/Tests/Microsoft.Android.Build.Tasks.Tests/` | `dotnet test src/Microsoft.Android.Build.Tasks/Tests/Microsoft.Android.Build.Tasks.Tests/Microsoft.Android.Build.Tasks.Tests.csproj -v minimal --filter FullyQualifiedName~TemporaryDirectoryTargetsTests` |
 | **package manager Java generation** | `src/Microsoft.Android.Build.Tasks/Tests/Microsoft.Android.Build.Tasks.Tests/` | `dotnet test src/Microsoft.Android.Build.Tasks/Tests/Microsoft.Android.Build.Tasks.Tests/Microsoft.Android.Build.Tasks.Tests.csproj -v minimal --filter FullyQualifiedName~GeneratePackageManagerJavaTests` |
 | **aidl** | `tests/Xamarin.Android.Tools.Aidl-Tests/` | `dotnet test tests/Xamarin.Android.Tools.Aidl-Tests/Xamarin.Android.Tools.Aidl-Tests.csproj -v minimal` |
@@ -95,7 +96,6 @@ Same assembly as above. These test individual MSBuild tasks in isolation with `M
 | **d8/dex** | `--filter "FullyQualifiedName~D8Tests"` | D8 dexing task |
 | **filter assemblies** | `--filter "FullyQualifiedName~FilterAssembliesTests"` | Assembly filtering |
 | **resource generation** | `--filter "FullyQualifiedName~GenerateResourceCaseMapTests"` | Resource case map generation |
-| **key tool** | `--filter "FullyQualifiedName~KeyToolTests"` | Keystore/signing tasks |
 | **bundletool commands** | `--filter "FullyQualifiedName~BundleToolTaskTests"` | Command-line generation only; no project builds or device |
 | **ndk** | `--filter "FullyQualifiedName~AndroidNdkToolsTests"` | Canonical NDK tools and Clang runtime discovery |
 

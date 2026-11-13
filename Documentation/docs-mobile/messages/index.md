@@ -296,7 +296,6 @@ and `NNN` is a 3 digit number indicating the type of the unhandled `Exception`.
 * `A2C` - `Aapt2Compile`
 * `A2L` - `Aapt2Link`
 * `AAS` - `AndroidApkSigner`
-* `ACD` - `AndroidCreateDebugKey`
 * `ACM` - `AppendCustomMetadataToItemGroup`
 * `ADB` - `Adb`
 * `AJV` - `AdjustJavacVersionArguments`
@@ -352,7 +351,6 @@ and `NNN` is a 3 digit number indicating the type of the unhandled `Exception`.
 * `GRD` - `GenerateResourceDesigner`
 * `IAS` - `InstallApkSet`
 * `JVC` - `Javac`
-* `KEY` - `KeyTool`
 * `LNK` - `LinkAssemblies`
 * `LNS` - `LinkAssembliesNoShrink`
 * `LNT` - `Lint`
