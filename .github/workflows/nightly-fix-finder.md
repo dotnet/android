@@ -87,8 +87,6 @@ steps:
   name: Collect codebase metrics
   run: |
     mkdir -p /tmp/gh-aw/agent
-    # See engine.env XDG_RUNTIME_DIR below.
-    mkdir -p -m 700 /tmp/gh-aw/xdg-runtime
     SCRIPT_DIR=".github/workflows/nightly-fix-finder"
     if [ -n "$INPUT_SCRIPT" ]; then
       SCRIPT_PATH="$SCRIPT_DIR/${INPUT_SCRIPT}.sh"
@@ -118,9 +116,9 @@ engine:
   version: 1.0.102
   env:
     # .NET stores named mutexes (e.g. NuGet-Migrations) in $XDG_RUNTIME_DIR.
-    # The runner's /run/user/<uid> does not exist inside the AWF sandbox, so
-    # `./build.sh Prepare` fails without this override.
-    XDG_RUNTIME_DIR: /tmp/gh-aw/xdg-runtime
+    # The runner's /run/user/<uid> does not exist inside the AWF sandbox.
+    # An empty value makes .NET create a fallback directory under the home directory.
+    XDG_RUNTIME_DIR: ${{ '' }}
     COPILOT_GITHUB_TOKEN: |
       ${{ case(
         needs.pat_pool.outputs.pat_number == '0', secrets.COPILOT_PAT_0,
