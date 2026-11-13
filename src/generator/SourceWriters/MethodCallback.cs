@@ -52,6 +52,12 @@ namespace generator.SourceWriters
 			}
 
 			Name = UnmanagedCallbackSupport.GetCallbackName (type, method, options);
+			IsShadow = type.EnclosingBaseTypes ().Any (g => g.GetAllMethods ().Any (m =>
+				m.IsVirtual && !m.IsStatic && UnmanagedCallbackSupport.GetCallbackName (g, m, options) == Name));
+			if (delegate_field != null)
+				delegate_field.IsShadow = IsShadow;
+			if (delegate_getter != null)
+				delegate_getter.IsShadow = IsShadow;
 			target_name = UnmanagedCallbackSupport.GetCallbackTargetName (type, method, options);
 			// Interface invokers marshal an interface peer but declare the target on the invoker.
 			declaring_type = opt.GetOutputName (declaringType ?? type.FullName);
@@ -116,9 +122,9 @@ namespace generator.SourceWriters
 				attribute.WriteAttribute (writer);
 
 			if (typed_shape != null)
-				writer.WriteLine (typed_shape.GetTargetSignature (opt.GetOutputName (type.FullName), target_name, opt.NullableOperator));
+				writer.WriteLine (typed_shape.GetTargetSignature (opt.GetOutputName (type.FullName), target_name, opt.NullableOperator, IsShadow));
 			else
-				writer.WriteLine ($"private static unsafe {method.RetVal.NativeType} {target_name} (IntPtr jnienv, IntPtr native__this{method.Parameters.GetCallbackSignature (opt)})");
+				writer.WriteLine ($"private {(IsShadow ? "new " : "")}static unsafe {method.RetVal.NativeType} {target_name} (IntPtr jnienv, IntPtr native__this{method.Parameters.GetCallbackSignature (opt)})");
 			writer.WriteLine ("{");
 
 			writer.Indent ();
