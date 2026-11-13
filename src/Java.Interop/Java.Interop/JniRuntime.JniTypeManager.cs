@@ -1,6 +1,7 @@
 #nullable enable
 
 using System;
+using System.Globalization;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
@@ -186,7 +187,7 @@ namespace Java.Interop {
 					$", TargetJniMethodNameUtf8 = \"0x{unsafe ((IntPtr) TargetJniMethodNameUtf8Pointer):x}\"" +
 					// SAFETY: diagnostics format numeric addresses only, even when the stored pointer is not readable.
 					$", TargetJniMethodSignatureUtf8 = \"0x{unsafe ((IntPtr) TargetJniMethodSignatureUtf8Pointer):x}\"" +
-					$", {nameof (TargetJniMethodParameterCount)} = {TargetJniMethodParameterCount?.ToString () ?? "null"}" +
+					$", {nameof (TargetJniMethodParameterCount)} = {TargetJniMethodParameterCount?.ToString (CultureInfo.CurrentCulture) ?? "null"}" +
 					$", {nameof (TargetJniMethodInstanceToStatic)} = {TargetJniMethodInstanceToStatic}" +
 					$"}}";
 			}
