@@ -31,7 +31,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 
-using NUnit.Framework;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 using Cadenza.Collections;
 using Cadenza.Tests;
@@ -63,7 +63,7 @@ namespace Cadenza.Collections.Tests {
 			Remove ();
 		}
 
-		[Test]
+		[TestMethod]
 		public void Ctor_Initial_Count_Is_Zero ()
 		{
 			var c = CreateCollection (new T [0]);
@@ -86,7 +86,7 @@ namespace Cadenza.Collections.Tests {
 				Dispose (e);
 		}
 
-		[Test]
+		[TestMethod]
 		public void Ctor_CopySequence ()
 		{
 			var e = new[] {
@@ -100,7 +100,7 @@ namespace Cadenza.Collections.Tests {
 			DisposeCollection (e);
 		}
 
-		[Test]
+		[TestMethod]
 		public void Add ()
 		{
 			var c = CreateCollection (new T [0]);
@@ -125,7 +125,7 @@ namespace Cadenza.Collections.Tests {
 			return l != null && l.IsFixedSize;
 		}
 
-		[Test]
+		[TestMethod]
 		public void Clear ()
 		{
 			var a = CreateValueA ();
@@ -142,7 +142,7 @@ namespace Cadenza.Collections.Tests {
 			Dispose (a);
 		}
 
-		[Test]
+		[TestMethod]
 		public void Contains ()
 		{
 			var a = CreateValueA ();
@@ -157,7 +157,7 @@ namespace Cadenza.Collections.Tests {
 			Dispose (a);
 		}
 
-		[Test]
+		[TestMethod]
 		public void CopyTo_Exceptions ()
 		{
 			var e = new[] {
@@ -165,19 +165,19 @@ namespace Cadenza.Collections.Tests {
 				CreateValueB (),
 			};
 			var c = CreateCollection (e);
-			Assert.Throws<ArgumentNullException>(() => c.CopyTo (null, 0));
-			Assert.Throws<ArgumentOutOfRangeException>(() => c.CopyTo (new T [3], -1));
+			Assert.ThrowsExactly<ArgumentNullException>(() => c.CopyTo (null, 0));
+			Assert.ThrowsExactly<ArgumentOutOfRangeException>(() => c.CopyTo (new T [3], -1));
 			var d = new T[e.Length + 2];
 			// not enough space from d[3..d.Length-1] to hold c.Count elements.
-			Assert.Throws<ArgumentException>(() => c.CopyTo (d, 3));
-			Assert.Throws<ArgumentException>(() => c.CopyTo (new T [0], 0));
+			Assert.ThrowsExactly<ArgumentException>(() => c.CopyTo (d, 3));
+			Assert.ThrowsExactly<ArgumentException>(() => c.CopyTo (new T [0], 0));
 
 			Dispose (c);
 			DisposeCollection (e);
 		}
 
 		// can fail for IDictionary<TKey,TValue> implementations; override if appropriate.
-		[Test]
+		[TestMethod]
 		public virtual void CopyTo_SequenceComparison ()
 		{
 			var a = CreateValueA ();
@@ -202,7 +202,7 @@ namespace Cadenza.Collections.Tests {
 			return a.SequenceEqual (b);
 		}
 
-		[Test]
+		[TestMethod]
 		public void CopyTo ()
 		{
 			var a = CreateValueA ();
@@ -225,7 +225,7 @@ namespace Cadenza.Collections.Tests {
 			return Array.IndexOf (array, value);
 		}
 
-		[Test]
+		[TestMethod]
 		public void Remove ()
 		{
 			var a = CreateValueA ();

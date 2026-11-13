@@ -4,20 +4,20 @@ using System.Linq;
 
 using Java.Interop;
 
-using NUnit.Framework;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Java.InteropTests
 {
-	[TestFixture]
+	[TestClass]
 	public class JniTypeManagerTests
 	{
-		[Test]
+		[TestMethod]
 		public void GetTypeSignature_Type ()
 		{
-			Assert.Throws<ArgumentNullException> (() => JniRuntime.CurrentRuntime.TypeManager.GetTypeSignature ((Type) null));
-			Assert.Throws<ArgumentException>(() => JniRuntime.CurrentRuntime.TypeManager.GetTypeSignature (typeof (int[,])));
-			Assert.Throws<ArgumentException>(() => JniRuntime.CurrentRuntime.TypeManager.GetTypeSignature (typeof (int[,][])));
-			Assert.Throws<ArgumentException>(() => JniRuntime.CurrentRuntime.TypeManager.GetTypeSignature (typeof (int[][,])));
+			Assert.ThrowsExactly<ArgumentNullException> (() => JniRuntime.CurrentRuntime.TypeManager.GetTypeSignature ((Type) null));
+			Assert.ThrowsExactly<ArgumentException>(() => JniRuntime.CurrentRuntime.TypeManager.GetTypeSignature (typeof (int[,])));
+			Assert.ThrowsExactly<ArgumentException>(() => JniRuntime.CurrentRuntime.TypeManager.GetTypeSignature (typeof (int[,][])));
+			Assert.ThrowsExactly<ArgumentException>(() => JniRuntime.CurrentRuntime.TypeManager.GetTypeSignature (typeof (int[][,])));
 			Assert.AreEqual (null, JniRuntime.CurrentRuntime.TypeManager.GetTypeSignature (typeof (JniRuntimeTest)).SimpleReference);
 
 			AssertGetJniTypeInfoForType (typeof (string),   "java/lang/String",   false,  0);
@@ -105,18 +105,18 @@ namespace Java.InteropTests
 			Assert.AreEqual (arrayRank, info2.ArrayRank,    $"info2.ArrayRank for `{type}`");
 		}
 
-		[Test]
-		public new void GetType ()
+		[TestMethod]
+		public void GetTypeFromSignature ()
 		{
 			var manager = JniRuntime.CurrentRuntime.TypeManager;
 			Func<string, Type> GetType = s => {
 				var sig = JniTypeSignature.Parse (s);
 				return manager.GetType (sig);
 			};
-			Assert.Throws<ArgumentNullException> (() => GetType (null));
-			Assert.Throws<ArgumentException> (() => GetType ("java.lang.String"));
-			Assert.Throws<ArgumentException> (() => GetType ("Ljava/lang/String;I"));
-			Assert.Throws<ArgumentException> (() => GetType ("ILjava/lang/String;"));
+			Assert.ThrowsExactly<ArgumentNullException> (() => GetType (null));
+			Assert.ThrowsExactly<ArgumentException> (() => GetType ("java.lang.String"));
+			Assert.ThrowsExactly<ArgumentException> (() => GetType ("Ljava/lang/String;I"));
+			Assert.ThrowsExactly<ArgumentException> (() => GetType ("ILjava/lang/String;"));
 
 			Assert.AreEqual (typeof (void),     GetType ("V"));
 			Assert.AreEqual (typeof (bool),     GetType ("Z"));
@@ -189,7 +189,7 @@ namespace Java.InteropTests
 			}
 		}
 
-		[Test]
+		[TestMethod]
 		public void GetTypeSignature ()
 		{
 			var jvm = JniRuntime.CurrentRuntime;
@@ -197,8 +197,8 @@ namespace Java.InteropTests
 				var sig     = JniTypeSignature.Parse (s);
 				return jvm.TypeManager.GetType (sig);
 			};
-			Assert.Throws<ArgumentNullException> (() => GetTypeForSimpleReference (null));
-			Assert.Throws<ArgumentException> (() => GetTypeForSimpleReference ("foo.bar"));
+			Assert.ThrowsExactly<ArgumentNullException> (() => GetTypeForSimpleReference (null));
+			Assert.ThrowsExactly<ArgumentException> (() => GetTypeForSimpleReference ("foo.bar"));
 
 			Assert.AreEqual (typeof (void),     GetTypeForSimpleReference ("V"));
 			Assert.AreEqual (typeof (bool),     GetTypeForSimpleReference ("Z"));
@@ -213,13 +213,13 @@ namespace Java.InteropTests
 			Assert.AreEqual (null,              GetTypeForSimpleReference ("com/example/does/not/exist"));
 		}
 
-		[Test]
+		[TestMethod]
 		public void CanCreateGenericHolder ()
 		{
 			using var holder = new GenericHolder<int> ();
 		}
 
-		[Test]
+		[TestMethod]
 		public unsafe void CannotCreateGenericHolderFromJava ()
 		{
 			var signature   = JniRuntime.CurrentRuntime.TypeManager.GetTypeSignature (typeof (GenericHolder<>));
@@ -227,7 +227,7 @@ namespace Java.InteropTests
 			var ctor        = type.GetConstructor ("()V");
 			var instance    = type.AllocObject ();
 
-			Assert.Throws<NotSupportedException>(() =>
+			Assert.ThrowsExactly<NotSupportedException>(() =>
 				JniEnvironment.InstanceMethods.CallNonvirtualVoidMethod (instance, type.PeerReference, ctor));
 		}
 	}

@@ -3,7 +3,7 @@
 using System;
 using System.Threading.Tasks;
 
-using NUnit.Framework;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 using Android.App;
 using Android.OS;
@@ -13,11 +13,11 @@ using Android.Runtime;
 
 namespace Android.ContentTests {
 
-	[TestFixture]
+	[TestClass]
 	public class CursorLoaderTest {
 
-		[Test]
-		[Category ("ThresholdDispatch")]
+		[TestMethod]
+		[TestCategory ("ThresholdDispatch")]
 		public async Task LoadInBackgroundDispatch ()
 		{
 			var completion = new TaskCompletionSource<(bool CursorPresent, bool BaseCursorPresent, bool OverrideInvoked)> (TaskCreationOptions.RunContinuationsAsynchronously);

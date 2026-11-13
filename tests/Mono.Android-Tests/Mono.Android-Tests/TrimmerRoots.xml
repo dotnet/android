@@ -1,4 +1,16 @@
 <linker>
+  <!-- Loaded by its Java name from libreuse-threads, not by managed test discovery. -->
+  <assembly fullname="Mono.Android.NET-Tests">
+    <type fullname="Java.InteropTests.RegisterMeOnNewNativeThreadOne" preserve="all" />
+    <!-- Java field initialization invokes these helpers; no managed call roots them. -->
+    <type fullname="Java.InteropTests.ExportStaticField" preserve="nothing">
+      <method name="GetAnswer" />
+      <method name="GetObjectAnswer" />
+    </type>
+    <type fullname="Java.InteropTests.ExportInstanceField" preserve="nothing">
+      <method name="GetAnswer" />
+    </type>
+  </assembly>
   <!-- Preserve types that the test suite reaches via reflection or converter lookup in the trimmable lane. -->
   <assembly fullname="Mono.Android">
     <type fullname="Android.Runtime.JavaProxyThrowable" preserve="all" />

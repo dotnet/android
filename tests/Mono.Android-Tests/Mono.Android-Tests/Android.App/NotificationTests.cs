@@ -4,15 +4,15 @@ using System;
 
 using Android.Runtime;
 
-using NUnit.Framework;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Android.AppTests;
 
-[TestFixture]
-[Category ("HandwrittenJniBindings")]
+[TestClass]
+[TestCategory ("HandwrittenJniBindings")]
 public class NotificationTests
 {
-	[Test]
+	[TestMethod]
 	public void VibrateRoundTripsWithoutLeakingLocalReferences ()
 	{
 		using var notification = new Android.App.Notification ();
@@ -31,7 +31,7 @@ public class NotificationTests
 		Assert.AreEqual (localReferences, Java.Interop.JniEnvironment.LocalReferenceCount);
 	}
 
-	[Test]
+	[TestMethod]
 	public void VibrateReleasesArrayWhenSetFieldThrows ()
 	{
 		using var notification = new Android.App.Notification ();
@@ -42,7 +42,7 @@ public class NotificationTests
 
 		for (int i = 0; i < 16; ++i) {
 			// A disposed receiver is rejected by the managed JNI guard, before native dispatch.
-			var exception = Assert.Throws<ArgumentException> (() => notification.Vibrate = [0, 100]);
+			var exception = Assert.ThrowsExactly<ArgumentException> (() => notification.Vibrate = [0, 100]);
 			Assert.AreEqual ("instance", exception?.ParamName);
 			Assert.AreEqual (localReferences, Java.Interop.JniEnvironment.LocalReferenceCount,
 				"The temporary vibration array must be released even when SetField throws.");

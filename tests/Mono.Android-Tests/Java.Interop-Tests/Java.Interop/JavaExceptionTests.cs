@@ -2,14 +2,14 @@
 
 using Java.Interop;
 
-using NUnit.Framework;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Java.InteropTests
 {
-	[TestFixture]
+	[TestClass]
 	public class JavaExceptionTests
 	{
-		[Test]
+		[TestMethod]
 		public void StackTrace ()
 		{
 			void AssertMembers (string message, string stackTraceMember, string stackTrace) {
@@ -38,7 +38,7 @@ namespace Java.InteropTests
 			}
 		}
 
-		[Test]
+		[TestMethod]
 		public void InnerException ()
 		{
 			using (var t = new JniType ("java/lang/Throwable")) {

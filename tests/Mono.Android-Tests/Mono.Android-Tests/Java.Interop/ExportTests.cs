@@ -4,7 +4,7 @@ using Android.Runtime;
 
 using Java.Interop;
 
-using NUnit.Framework;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Java.InteropTests
 {
@@ -15,15 +15,15 @@ namespace Java.InteropTests
 	//
 	// Naming: each test is named Export_<Group>_<Feature>_<Behaviour> so the
 	// runner output is greppable.
-	[TestFixture]
-	[Category ("GeneratedJniDebuggerBoundary")]
+	[TestClass]
+	[TestCategory ("GeneratedJniDebuggerBoundary")]
 	public class ExportTests
 	{
 		// ---------------------------------------------------------------
 		// Group A — parameter / return marshalling
 		// ---------------------------------------------------------------
 
-		[Test, Category ("Export")]
+		[TestMethod, TestCategory ("Export")]
 		public void Export_Method_Primitive_RoundTrip ()
 		{
 			using var e = new ExportPrimitiveInt ();
@@ -33,7 +33,7 @@ namespace Java.InteropTests
 			Assert.AreEqual (43, r, "EchoInt(21) should be 43 (= 21*2 + 1)");
 		}
 
-		[Test, Category ("Export")]
+		[TestMethod, TestCategory ("Export")]
 		public void Export_Method_Bool_RoundTrip ()
 		{
 			using var e = new ExportPrimitiveBool ();
@@ -43,7 +43,7 @@ namespace Java.InteropTests
 			Assert.IsTrue  (JNIEnv.CallBooleanMethod (e.Handle, m, new JValue (false)), "EchoBool(false) should return true");
 		}
 
-		[Test, Category ("Export")]
+		[TestMethod, TestCategory ("Export")]
 		public void Export_Method_String_RoundTrip ()
 		{
 			using var e = new ExportString ();
@@ -63,7 +63,7 @@ namespace Java.InteropTests
 			}
 		}
 
-		[Test, Category ("Export")]
+		[TestMethod, TestCategory ("Export")]
 		public void Export_Method_PeerArg_RoundTrip ()
 		{
 			using var e = new ExportPeerArg ();
@@ -81,7 +81,7 @@ namespace Java.InteropTests
 			}
 		}
 
-		[Test, Category ("Export")]
+		[TestMethod, TestCategory ("Export")]
 		public void Export_Method_PeerArg_NullArg_HandledGracefully ()
 		{
 			using var e = new ExportPeerArg ();
@@ -95,7 +95,7 @@ namespace Java.InteropTests
 			}
 		}
 
-		[Test, Category ("Export")]
+		[TestMethod, TestCategory ("Export")]
 		public void Export_Method_IntArray_RoundTrip_AndCopyBack ()
 		{
 			using var e = new ExportIntArray ();
@@ -108,11 +108,11 @@ namespace Java.InteropTests
 				IntPtr resultHandle = JNIEnv.CallObjectMethod (e.Handle, m, new JValue (argHandle));
 				try {
 					var output = (int []) JNIEnv.GetArray (resultHandle, JniHandleOwnership.DoNotTransfer, typeof (int));
-					Assert.AreEqual (new [] { 2, 4, 6 }, output, "return array should have doubled values");
+					CollectionAssert.AreEqual (new [] { 2, 4, 6 }, output, "return array should have doubled values");
 
 					// Copy-back: the input handle should also reflect the doubled values
 					var roundTrippedInput = (int []) JNIEnv.GetArray (argHandle, JniHandleOwnership.DoNotTransfer, typeof (int));
-					Assert.AreEqual (new [] { 2, 4, 6 }, roundTrippedInput, "input array mutations should propagate back to JNI handle");
+					CollectionAssert.AreEqual (new [] { 2, 4, 6 }, roundTrippedInput, "input array mutations should propagate back to JNI handle");
 				} finally {
 					JNIEnv.DeleteLocalRef (resultHandle);
 				}
@@ -129,7 +129,7 @@ namespace Java.InteropTests
 		// belong with the codegen fix that teaches the JCW emitter to
 		// widen these types.
 
-		[Test, Category ("Export")]
+		[TestMethod, TestCategory ("Export")]
 		public void Export_Method_PeerArray_RoundTrip ()
 		{
 			using var e = new ExportPeerArray ();
@@ -173,7 +173,7 @@ namespace Java.InteropTests
 		// surfaces with a recognizable message". See
 		// ExportMethodDispatchEmitter.EmitWrappedExportMethodDispatch.
 
-		[Test, Category ("Export")]
+		[TestMethod, TestCategory ("Export")]
 		public void Export_Method_Throws_PrimitiveReturn_SurfacesAsManagedException ()
 		{
 			using var e = new ExportThrowing ();
@@ -184,25 +184,25 @@ namespace Java.InteropTests
 			// must catch it and route it through OnUserUnhandledException so the
 			// process survives; the exception then re-surfaces on the calling
 			// thread when the JNI call returns to managed code.
-			// A user-code catch avoids another debugger stop when JNI rethrows into NUnit's external Assert.Catch.
+			// A user-code catch avoids another debugger stop when JNI rethrows into an external assertion helper.
 			try {
 				JNIEnv.CallIntMethod (e.Handle, m);
 			} catch (Exception ex) {
 				Assert.AreSame (e.PrimitiveException, ex);
-				Assert.That (ex.Message, Contains.Substring ("boom"), "exception message should preserve 'boom'");
+				StringAssert.Contains (ex.Message, "boom", "exception message should preserve 'boom'");
 				return;
 			}
 			Assert.Fail ("Expected the original export exception.");
 		}
 
-		[Test, Category ("Export")]
+		[TestMethod, TestCategory ("Export")]
 		public void Export_Method_Throws_ObjectReturn_SurfacesAsManagedException ()
 		{
 			using var e = new ExportThrowing ();
 			var m = JNIEnv.GetMethodID (e.Class.Handle, "ThrowingString", "()Ljava/lang/String;");
 			Assert.AreNotEqual (IntPtr.Zero, m, "JNI method id for ThrowingString not found");
-			var ex = Assert.Catch (() => JNIEnv.CallObjectMethod (e.Handle, m));
-			Assert.That (ex, Is.Not.Null, "expected an exception, got null");
+			var ex = Assert.Throws<global::System.Exception> (() => JNIEnv.CallObjectMethod (e.Handle, m));
+			Assert.IsNotNull (ex, "expected an exception, got null");
 			Assert.AreSame (e.ObjectException, ex);
 		}
 
@@ -212,7 +212,7 @@ namespace Java.InteropTests
 		// state isn't restored cleanly across nested invocations, a *second* exception
 		// would either swallow the first or surface stale state.
 
-		[Test, Category ("Export")]
+		[TestMethod, TestCategory ("Export")]
 		public void Export_Method_Throws_FollowedBySecondCall_DoesNotLeakPendingException ()
 		{
 			using var e = new ExportThrowing ();
@@ -220,7 +220,7 @@ namespace Java.InteropTests
 			Assert.AreNotEqual (IntPtr.Zero, throwing, "JNI method id for Throwing not found");
 
 			// First call: must throw and the exception must surface to managed.
-			Assert.Catch (() => JNIEnv.CallIntMethod (e.Handle, throwing));
+			Assert.Throws<global::System.Exception> (() => JNIEnv.CallIntMethod (e.Handle, throwing));
 
 			// Second call on a *different* peer goes through a separate [Export]
 			// method that does NOT throw. If the previous pending exception had
@@ -233,7 +233,7 @@ namespace Java.InteropTests
 			Assert.AreEqual (21, result, "After a throwing [Export], a subsequent non-throwing [Export] must return its real value.");
 		}
 
-		[Test, Category ("Export")]
+		[TestMethod, TestCategory ("Export")]
 		public void Export_Method_NestedJniCall_PreservesExceptionFromInnerExport ()
 		{
 			// Outer [Export] method (ReentrantOuter) invokes Java reflection to call
@@ -246,10 +246,10 @@ namespace Java.InteropTests
 			using var e = new ExportReentrant ();
 			var outer = JNIEnv.GetMethodID (e.Class.Handle, "ReentrantOuter", "()I");
 			Assert.AreNotEqual (IntPtr.Zero, outer, "JNI method id for ReentrantOuter not found");
-			var ex = Assert.Catch (() => JNIEnv.CallIntMethod (e.Handle, outer));
-			Assert.That (ex, Is.Not.Null, "expected an exception from the nested call, got null");
+			var ex = Assert.Throws<global::System.Exception> (() => JNIEnv.CallIntMethod (e.Handle, outer));
+			Assert.IsNotNull (ex, "expected an exception from the nested call, got null");
 			Assert.AreSame (e.InnerException, ex);
-			Assert.That (ex.Message, Contains.Substring ("reentrant-boom"),
+			StringAssert.Contains (ex.Message, "reentrant-boom",
 				"the original inner-export exception message must propagate through both [Export] wrappers");
 		}
 
@@ -257,7 +257,7 @@ namespace Java.InteropTests
 		// Group C — static [Export] dispatch
 		// ---------------------------------------------------------------
 
-		[Test, Category ("Export")]
+		[TestMethod, TestCategory ("Export")]
 		public void Export_StaticMethod_Primitive_RoundTrip ()
 		{
 			using var klass = Java.Lang.Class.FromType (typeof (ExportStatic));
@@ -271,7 +271,7 @@ namespace Java.InteropTests
 		// Group D — [ExportField] runtime visibility from Java
 		// ---------------------------------------------------------------
 
-		[Test, Category ("Export")]
+		[TestMethod, TestCategory ("Export")]
 		public void ExportField_StaticPrimitive_InitializerVisibleFromJava ()
 		{
 			using var klass = Java.Lang.Class.FromType (typeof (ExportStaticField));
@@ -280,7 +280,7 @@ namespace Java.InteropTests
 			Assert.AreEqual (42, JNIEnv.GetStaticIntField (klass.Handle, field));
 		}
 
-		[Test, Category ("Export")]
+		[TestMethod, TestCategory ("Export")]
 		public void ExportField_StaticObject_InitializerVisibleFromJava ()
 		{
 			using var klass = Java.Lang.Class.FromType (typeof (ExportStaticField));
@@ -300,7 +300,7 @@ namespace Java.InteropTests
 			}
 		}
 
-		[Test, Category ("Export")]
+		[TestMethod, TestCategory ("Export")]
 		public void ExportField_InstancePrimitive_InitializerVisibleFromJava ()
 		{
 			using var value = new ExportInstanceField ();

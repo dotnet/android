@@ -2,30 +2,30 @@
 
 using Java.Interop;
 
-using NUnit.Framework;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Java.InteropTests
 {
-	[TestFixture]
+	[TestClass]
 	public class JniTypeSignatureTest
 	{
-		[Test]
+		[TestMethod]
 		public void Constructor_Exceptions ()
 		{
-			Assert.Throws<ArgumentException> (() => new JniTypeSignature ("java.lang.Object"));
-			Assert.Throws<ArgumentException> (() => new JniTypeSignature ("[[I"));
-			Assert.Throws<ArgumentException> (() => new JniTypeSignature ("Ljava/lang/Object;"));
-			Assert.Throws<ArgumentException> (() => new JniTypeSignature (""));
+			Assert.ThrowsExactly<ArgumentException> (() => new JniTypeSignature ("java.lang.Object"));
+			Assert.ThrowsExactly<ArgumentException> (() => new JniTypeSignature ("[[I"));
+			Assert.ThrowsExactly<ArgumentException> (() => new JniTypeSignature ("Ljava/lang/Object;"));
+			Assert.ThrowsExactly<ArgumentException> (() => new JniTypeSignature (""));
 		}
 
-		[Test]
+		[TestMethod]
 		public void DefaultConstructor ()
 		{
 			var t = new JniTypeSignature ();
-			Assert.False (t.IsValid);
+			Assert.IsFalse (t.IsValid);
 		}
 
-		[Test]
+		[TestMethod]
 		public void Sanity ()
 		{
 			var a = new JniTypeSignature ("java/lang/Object", arrayRank: 2);
@@ -35,7 +35,7 @@ namespace Java.InteropTests
 			Assert.AreEqual ("[[Ljava/lang/Object;", a.QualifiedReference);
 		}
 
-		[Test]
+		[TestMethod]
 		public void QualifiedReference ()
 		{
 			var info    = new JniTypeSignature ("java/lang/String");
@@ -59,14 +59,14 @@ namespace Java.InteropTests
 			Assert.AreEqual ("B",   info.SimpleReference);
 		}
 
-		[Test]
+		[TestMethod]
 		public void Parse ()
 		{
-			Assert.Throws<ArgumentNullException> (() => JniTypeSignature.Parse ((string) null));
-			Assert.Throws<ArgumentException> (() => JniTypeSignature.Parse (""));
-			Assert.Throws<ArgumentException> (() => JniTypeSignature.Parse ("java.lang.String"));
-			Assert.Throws<ArgumentException> (() => JniTypeSignature.Parse ("Ljava/lang/String;I"));
-			Assert.Throws<ArgumentException> (() => JniTypeSignature.Parse ("ILjava/lang/String;"));
+			Assert.ThrowsExactly<ArgumentNullException> (() => JniTypeSignature.Parse ((string) null));
+			Assert.ThrowsExactly<ArgumentException> (() => JniTypeSignature.Parse (""));
+			Assert.ThrowsExactly<ArgumentException> (() => JniTypeSignature.Parse ("java.lang.String"));
+			Assert.ThrowsExactly<ArgumentException> (() => JniTypeSignature.Parse ("Ljava/lang/String;I"));
+			Assert.ThrowsExactly<ArgumentException> (() => JniTypeSignature.Parse ("ILjava/lang/String;"));
 
 			AssertGetJniTypeInfoForJniTypeReference ("java/lang/String",    "java/lang/String");
 			AssertGetJniTypeInfoForJniTypeReference ("Ljava/lang/String;",  "java/lang/String");
@@ -88,10 +88,10 @@ namespace Java.InteropTests
 			Assert.AreEqual (arrayRank,     sig.ArrayRank,          "ArrayRank for: " + jniTypeReference);
 		}
 
-		[Test]
+		[TestMethod]
 		public void TryParse ()
 		{
-			Assert.False (JniTypeSignature.TryParse ("", out var _));
+			Assert.IsFalse (JniTypeSignature.TryParse ("", out var _));
 		}
 	}
 }

@@ -1,6 +1,6 @@
 using System;
 
-using NUnit.Framework;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 using Android.App;
 using Android.Content;
@@ -10,10 +10,10 @@ using Android.Runtime;
 
 namespace Android.WidgetTests {
 
-	[TestFixture]
+	[TestClass]
 	public class AdapterTests {
 
-		[Test]
+		[TestMethod]
 		public void InvokeOverriddenAbsListView_AdapterProperty ()
 		{
 			IntPtr grefAbsListView_class  = JNIEnv.FindClass ("android/widget/AbsListView");
@@ -52,7 +52,7 @@ namespace Android.WidgetTests {
 			}
 		}
 
-		[Test]
+		[TestMethod]
 		public void GridView_Adapter ()
 		{
 			var view = new GridView (Application.Context);
@@ -60,7 +60,7 @@ namespace Android.WidgetTests {
 			view.Adapter = adapter;
 		}
 
-		[Test]
+		[TestMethod]
 		public void GenericArrayAdapterUsesArrayAdapterClass ()
 		{
 			using var adapter = new ArrayAdapter<string> (Application.Context, Android.Resource.Layout.SimpleListItem1);
@@ -70,8 +70,8 @@ namespace Android.WidgetTests {
 			Assert.AreEqual ("first", adapter.GetItem (0));
 		}
 
-		[Test]
-		[Category ("ThresholdDispatch")]
+		[TestMethod]
+		[TestCategory ("ThresholdDispatch")]
 		public void DerivedArrayAdapterInListView ()
 		{
 			using var adapter = new DerivedStringArrayAdapter (Application.Context);
@@ -84,8 +84,8 @@ namespace Android.WidgetTests {
 			Assert.AreEqual ("first", view.GetItemAtPosition (0)?.ToString ());
 		}
 
-		[Test]
-		[Category ("ThresholdDispatch")]
+		[TestMethod]
+		[TestCategory ("ThresholdDispatch")]
 		public void AbsListView_SetAdapter ()
 		{
 			using (var view = new ListView (Application.Context)) {
@@ -109,8 +109,8 @@ namespace Android.WidgetTests {
 			}
 		}
 
-		[Test]
-		[Category ("ThresholdDispatch")]
+		[TestMethod]
+		[TestCategory ("ThresholdDispatch")]
 		public void AdapterViewAnimator_Adapter ()
 		{
 			using (var view = new AdapterViewFlipper (Application.Context)) {

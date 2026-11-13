@@ -3,14 +3,14 @@ using System;
 using Android.Runtime;
 using Android.Text;
 
-using NUnit.Framework;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Android.RuntimeTests {
 
-	[TestFixture]
+	[TestClass]
 	public class CharSequenceTest {
 
-		[Test]
+		[TestMethod]
 		public void ToLocalJniHandle ()
 		{
 			using (var s = new Java.Lang.String ("s")) {
@@ -21,7 +21,7 @@ namespace Android.RuntimeTests {
 
 		// JNI jchar is an unsigned 16-bit value; the tests below verify both Java implementations preserve all bits
 		// through the generated managed char API.
-		[Test]
+		[TestMethod]
 		public void JavaLangStringCharAtPreservesNonAsciiCharacters ()
 		{
 			const string value = "A\u00E4\u0100\u200B\u4E2D\uFFFF";
@@ -30,7 +30,7 @@ namespace Android.RuntimeTests {
 				AssertCharAt (javaString, value);
 		}
 
-		[Test]
+		[TestMethod]
 		public void SpannableStringBuilderCharAtPreservesNonAsciiCharacters ()
 		{
 			const string value = "A\u00E4\u0100\u200B\u4E2D\uFFFF";

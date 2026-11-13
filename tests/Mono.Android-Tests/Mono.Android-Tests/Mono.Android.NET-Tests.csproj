@@ -1,6 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk" >
 
   <Import Project="..\..\..\Configuration.props" />
+  <Import Project="..\..\TestRunner.MSTest.Android\MSTest.Android.props" />
 
   <PropertyGroup>
     <TargetFramework>$(DotNetAndroidTargetFramework)</TargetFramework>
@@ -18,7 +19,9 @@
     <_MonoAndroidTestPackage>Mono.Android.NET_Tests</_MonoAndroidTestPackage>
     <WarningsAsErrors>IL2037</WarningsAsErrors>
     <!-- Runtime regression tests intentionally exercise trim-unsafe and AOT-unsafe APIs and dependencies.
-         Keep linker and NativeAOT analysis warnings visible while enforcing C# compiler warnings and IL2037. -->
+         Keep linker and NativeAOT analysis warnings visible while enforcing C# compiler warnings and IL2037.
+         MSTest's generated test registry calls those test methods directly, so the trim analyzer reports them too. -->
+    <WarningsNotAsErrors>$(WarningsNotAsErrors);IL2026;IL2062;IL2111;IL3050</WarningsNotAsErrors>
     <ILLinkTreatWarningsAsErrors>false</ILLinkTreatWarningsAsErrors>
     <IlcTreatWarningsAsErrors>false</IlcTreatWarningsAsErrors>
     <AndroidUseNegotiateAuthentication>true</AndroidUseNegotiateAuthentication>
@@ -42,9 +45,9 @@
     <RuntimeHostConfigurationOption Include="PublishAot" Value="true" Condition=" '$(PublishAot)' == 'true' " />
     <!--
       $(IncludeCategories) is set from the pipeline (e.g. -p:IncludeCategories=Intune)
-      to restrict the on-device test run to a comma-separated list of NUnit [Category]
+      to restrict the on-device test run to a comma-separated list of MSTest [TestCategory]
       names. Used by lanes like `Mono.Android.NET_Tests-IsAssignableFrom` which only
-      want tests tagged [Category("Intune")] to run.
+      want tests tagged [TestCategory("Intune")] to run.
     -->
     <RuntimeHostConfigurationOption Include="IncludeCategories" Value="$(IncludeCategories)" Condition=" '$(IncludeCategories)' != '' " />
   </ItemGroup>
@@ -71,47 +74,22 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="NUnit" Version="$(NUnitVersion)" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <ProjectReference Include="..\..\TestRunner.Core\TestRunner.Core.NET.csproj" />
+    <ProjectReference Include="..\..\TestRunner.MSTest.Android\TestRunner.MSTest.Android.csproj" />
     <ProjectReference Include="..\..\StartupHook\StartupHook.csproj" />
-    <ProjectReference Include="..\Java.Interop-Tests\Java.Interop-Tests.NET.csproj" />
+    <ProjectReference Include="..\Java.Interop-Tests\Java.Interop-Tests.NET.csproj" Aliases="JavaInteropTests" />
     <ProjectReference Include="..\Mono.Android-Test.Library\Mono.Android-Test.Library.NET.csproj" />
     <!-- The callback format is assembly-wide; keep UCO fixtures separate from the legacy bindings above. -->
     <ProjectReference Include="..\TrimmableTypeMapCallbacks\TrimmableTypeMapCallbacks.csproj" />
   </ItemGroup>
 
   <ItemGroup>
-    <TrimmerRootAssembly Include="Mono.Android.NET-Tests" RootMode="All" />
     <TrimmerRootAssembly Include="Mono.Android-Test.Library.NET" RootMode="All" />
-    <TrimmerRootAssembly Include="Java.Interop-Tests" RootMode="All" />
     <TrimmerRootAssembly Include="StartupHook" RootMode="All" Condition=" '$(StartupHookSupport)' == 'true' " />
     <TrimmerRootDescriptor Include="TrimmerRoots.xml" />
     <_AndroidRemapMembers Include="Remaps.xml" />
     <_AndroidRemapMembers Include="IsAssignableFromRemaps.xml" Condition=" '$(_AndroidIsAssignableFromCheck)' == 'false' " />
     <ProguardConfiguration Include="proguard.cfg" />
     <ProguardConfiguration Include="InterfaceCollection.proguard.cfg" />
-  </ItemGroup>
-
-  <!--
-    NativeAOT trims the closed-generic-instantiation metadata for IEquatable<T>,
-    so NUnit's EquatablesComparer.GetEquatableImplementations() ends up calling
-    GetGenericArguments()[0] on an empty array. Force ILC to keep complete type
-    metadata for all reachable types so that reflection over IEquatable<T> works.
-
-    NativeAOT.rd.xml also forces ILC to generate invocation thunks for the
-    specific IEquatable<T>.Equals(T) closed instantiations our tests rely on,
-    and the closed NUnit TaskAwaitAdapter+GenericAdapter<VoidTaskResult> that
-    is built via Type.MakeGenericType for async Task tests.
-  -->
-  <PropertyGroup Condition=" '$(PublishAot)' == 'true' ">
-    <IlcGenerateCompleteTypeMetadata>true</IlcGenerateCompleteTypeMetadata>
-  </PropertyGroup>
-
-  <ItemGroup Condition=" '$(PublishAot)' == 'true' ">
-    <RdXmlFile Include="NativeAOT.rd.xml" />
   </ItemGroup>
 
   <ItemGroup>
@@ -302,6 +280,7 @@
   <PropertyGroup>
     <AndroidInstrumentation>xamarin.android.runtimetests.TestInstrumentation</AndroidInstrumentation>
     <IsTestingPlatformApplication>true</IsTestingPlatformApplication>
+    <EnableMSTestRunner>true</EnableMSTestRunner>
     <GenerateTestingPlatformEntryPoint>false</GenerateTestingPlatformEntryPoint>
   </PropertyGroup>
 

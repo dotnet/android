@@ -3,16 +3,16 @@ using System;
 using Android.App;
 using Android.Runtime;
 
-using NUnit.Framework;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 using MyResource        = global::Xamarin.Android.RuntimeTests.Resource;
 
 namespace Android.RuntimeTests {
 
-	[TestFixture]
+	[TestClass]
 	public class XmlReaderResourceParserTest {
 
-		[Test]
+		[TestMethod]
 		public void ToLocalJniHandle ()
 		{
 			var p = Application.Context.Resources.GetXml (MyResource.Xml.XmlReaderResourceParser);

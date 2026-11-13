@@ -1,27 +1,27 @@
 using System;
 using System.Reflection;
-using NUnit.Framework;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace SystemTests
 {
-	[TestFixture]
+	[TestClass]
 	public class StartupHookTest
 	{
-		[Test]
+		[TestMethod]
 		public void FeatureFlagIsEnabled ()
 		{
 			// NOTE: this is set to true in tests\Mono.Android-Tests\Mono.Android-Tests\Mono.Android.NET-Tests.csproj
 			Assert.IsTrue (Microsoft.Android.Runtime.RuntimeFeature.StartupHookSupport, "RuntimeFeature.StartupHookSupport should be true");
 		}
 
-		[Test]
+		[TestMethod]
 		public void EnvironmentVariableIsSet ()
 		{
 			var value = Environment.GetEnvironmentVariable ("DOTNET_STARTUP_HOOKS");
 			Assert.AreEqual ("StartupHook", value, "DOTNET_STARTUP_HOOKS should be set to 'StartupHook'");
 		}
 
-		[Test]
+		[TestMethod]
 		public void IsInitialized ()
 		{
 			var type = Type.GetType ("StartupHook, StartupHook", throwOnError: true);

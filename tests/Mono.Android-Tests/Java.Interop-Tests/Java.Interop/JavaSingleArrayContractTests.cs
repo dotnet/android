@@ -4,11 +4,11 @@ using System.Linq;
 
 using Java.Interop;
 
-using NUnit.Framework;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Java.InteropTests
 {
-	[TestFixture]
+	[TestClass]
 	public class JavaSingleArrayContractTests : JavaPrimitiveArrayContract<JavaSingleArray, float>
 	{
 		protected override ICollection<float> CreateCollection (IEnumerable<float> values)

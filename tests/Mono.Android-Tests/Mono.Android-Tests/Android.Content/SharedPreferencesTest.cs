@@ -1,11 +1,11 @@
 using System;
 using Android.App;
 using Android.Content;
-using NUnit.Framework;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Android.ContentTests;
 
-[TestFixture]
+[TestClass]
 public class SharedPreferencesTest
 {
     const string Name = "testpreferences";
@@ -14,7 +14,7 @@ public class SharedPreferencesTest
     ISharedPreferences GetPreferences (string name = Name) =>
         Application.Context.GetSharedPreferences (name, FileCreationMode.Private);
 
-    [Test]
+    [TestMethod]
     public void PutAndGetManyValues ()
     {
         // Each overlapping Apply snapshots the map; batch the values to avoid retaining growing copies.
@@ -35,7 +35,7 @@ public class SharedPreferencesTest
     // Regression for https://github.com/dotnet/android/pull/9136.
     // NOTE: test case on API 23 can trigger:
     // art/runtime/indirect_reference_table.cc:115] JNI ERROR (app bug): local reference table overflow
-    [Test]
+    [TestMethod]
     public void RepeatedEditorsDoNotLeakReferences ()
     {
         for (int i = 0; i < Count; i++) {
