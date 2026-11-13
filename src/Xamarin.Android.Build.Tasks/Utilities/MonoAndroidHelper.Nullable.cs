@@ -73,5 +73,11 @@ public partial class MonoAndroidHelper
 		engine.RegisterTaskObjectAssemblyLocal (key, versions, RegisteredTaskObjectLifetime.Build);
 		return versions;
 	}
+
+	public static Dictionary<string, string> LoadMapFile (IBuildEngine4 engine, string mapFile, StringComparer comparer)
+	{
+		var cachedMap = engine?.GetRegisteredTaskObjectAssemblyLocal<Dictionary<string, string>> (mapFile, RegisteredTaskObjectLifetime.Build);
+		return cachedMap ?? LoadMapFile (File.Exists (mapFile) ? File.ReadLines (mapFile) : [], comparer);
+	}
 #endif  // MSBUILD
 }

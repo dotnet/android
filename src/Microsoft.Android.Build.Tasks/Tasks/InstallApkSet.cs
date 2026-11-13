@@ -5,9 +5,10 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
+using Xamarin.Android.Tasks;
 using Xamarin.Android.Tools;
 
-namespace Xamarin.Android.Tasks
+namespace Microsoft.Android.Tasks
 {
 	/// <summary>
 	/// Invokes `bundletool` to install an APK set to an attached device

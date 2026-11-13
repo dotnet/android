@@ -2,8 +2,9 @@
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
 using System;
+using Xamarin.Android.Tasks;
 
-namespace Xamarin.Android.Tasks
+namespace Microsoft.Android.Tasks
 {
 	public abstract class BundleTool : JavaToolTask
 	{
@@ -19,7 +20,7 @@ namespace Xamarin.Android.Tasks
 		{
 			var cmd = new CommandLineBuilder ();
 
-			var javaOptions = GetJavaOptions (JavaOptions, JdkVersion);
+			var javaOptions = MonoAndroidHelper.GetJavaOptions (JavaOptions, JdkVersion);
 			if (!javaOptions.IsNullOrEmpty ()) {
 				cmd.AppendSwitch (javaOptions);
 			}

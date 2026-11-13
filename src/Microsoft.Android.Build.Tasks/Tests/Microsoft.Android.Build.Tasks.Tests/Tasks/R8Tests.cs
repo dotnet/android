@@ -1,7 +1,7 @@
 using System.IO;
 using Microsoft.Build.Utilities;
 using NUnit.Framework;
-using Xamarin.Android.Tasks;
+using Microsoft.Android.Tasks;
 
 namespace Xamarin.Android.Build.Tests
 {
@@ -181,6 +181,34 @@ namespace Xamarin.Android.Build.Tests
 				} else {
 					StringAssert.Contains ("-keepclassmembers class * {", common);
 				}
+			} finally {
+				Directory.Delete (directory, recursive: true);
+			}
+		}
+
+		[Test]
+		public void NonTypeMapRulesKeepAcwsAndIncludeXamarinConfiguration ()
+		{
+			var directory = Path.Combine (Path.GetTempPath (), "R8AcwMap_" + System.Guid.NewGuid ().ToString ("N"));
+			Directory.CreateDirectory (directory);
+			try {
+				var map = Path.Combine (directory, "acw-map.txt");
+				File.WriteAllText (map, "Example.Application;example.Application\n");
+				var task = new R8ResponseTestTask {
+					BuildEngine = new MockBuildEngine (TestContext.Out),
+					UseTypeMapProguardConfiguration = false,
+					EnableShrinking = true,
+					AcwMapFile = map,
+					JavaPlatformJarPath = Path.Combine (directory, "android.jar"),
+					ProguardGeneratedApplicationConfiguration = Path.Combine (directory, "primary.cfg"),
+					ProguardCommonXamarinConfiguration = Path.Combine (directory, "common.cfg"),
+					ResponseFile = Path.Combine (directory, "r8.rsp"),
+				};
+
+				var response = task.WriteResponse ();
+				StringAssert.DoesNotContain ("--no-tree-shaking", response);
+				StringAssert.Contains ("-keep class example.Application { *; }", File.ReadAllText (task.ProguardGeneratedApplicationConfiguration));
+				StringAssert.Contains ("-keep class android.support.multidex.MultiDexApplication { <init>(); }", File.ReadAllText (task.ProguardCommonXamarinConfiguration));
 			} finally {
 				Directory.Delete (directory, recursive: true);
 			}

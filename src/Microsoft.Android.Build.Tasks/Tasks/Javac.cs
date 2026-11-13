@@ -3,6 +3,7 @@
 #nullable enable
 
 using System;
+using System.Globalization;
 using System.Linq;
 using System.IO;
 using Microsoft.Build.Framework;
@@ -11,8 +12,9 @@ using System.Text;
 using System.Collections.Generic;
 using Xamarin.Android.Tools;
 using Microsoft.Android.Build.Tasks;
+using Xamarin.Android.Tasks;
 
-namespace Xamarin.Android.Tasks
+namespace Microsoft.Android.Tasks
 {
 	public class Javac : JavaCompileToolTask
 	{
@@ -41,12 +43,12 @@ namespace Xamarin.Android.Tasks
 
 			cmd.AppendSwitchIfNotNull ("-J-Dfile.encoding=", "UTF8");
 
-			cmd.AppendFileNameIfNotNull (string.Format ("@{0}", TemporarySourceListFile));
+			cmd.AppendFileNameIfNotNull (string.Format (CultureInfo.InvariantCulture, "@{0}", TemporarySourceListFile));
 
-			if (int.TryParse (JavacSourceVersion, out int sourceVersion) &&
-					int.TryParse (JavacTargetVersion, out int targetVersion) &&
+			if (int.TryParse (JavacSourceVersion, CultureInfo.InvariantCulture, out int sourceVersion) &&
+					int.TryParse (JavacTargetVersion, CultureInfo.InvariantCulture, out int targetVersion) &&
 					JavacSupportsRelease ()) {
-				cmd.AppendSwitchIfNotNull ("--release ", Math.Max (sourceVersion, targetVersion).ToString ());
+				cmd.AppendSwitchIfNotNull ("--release ", Math.Max (sourceVersion, targetVersion).ToString (CultureInfo.InvariantCulture));
 			} else {
 				cmd.AppendSwitchIfNotNull ("-target ", JavacTargetVersion);
 				cmd.AppendSwitchIfNotNull ("-source ", JavacSourceVersion);

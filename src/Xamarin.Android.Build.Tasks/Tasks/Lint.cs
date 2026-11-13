@@ -358,7 +358,7 @@ namespace Xamarin.Android.Tasks
 			var environmentVariables = new Dictionary<string, string> {
 				{ "JAVA_HOME", JavaSdkPath },
 			};
-			var javaOptions = JavaToolTask.GetJavaOptions (Environment.GetEnvironmentVariable ("JAVA_OPTS"), JdkVersion);
+			var javaOptions = MonoAndroidHelper.GetJavaOptions (Environment.GetEnvironmentVariable ("JAVA_OPTS"), JdkVersion);
 			if (!javaOptions.IsNullOrEmpty ()) {
 				environmentVariables.Add ("JAVA_OPTS", javaOptions);
 			}
