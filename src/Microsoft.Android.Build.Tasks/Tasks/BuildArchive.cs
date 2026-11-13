@@ -118,6 +118,7 @@ public class BuildArchive : AndroidTask
 		apk.FixupWindowsPathSeparators (Log);
 
 		// Add the files to the apk
+		var addedFiles = new HashSet<string> (StringComparer.Ordinal);
 		foreach (var file in FilesToAddToArchive) {
 			var disk_path = file.ItemSpec;
 			if (!file.TryGetRequiredMetadata ("FilesToAddToArchive", "ArchivePath", Log, out var apk_path)) {
@@ -170,7 +171,11 @@ public class BuildArchive : AndroidTask
 
 			var compression = UncompressedFileExtensionsSet.Contains (Path.GetExtension (disk_path)) ? uncompressedMethod : CompressionLevel.Optimal;
 			existingEntries.Remove (apk_path);
-			apk.AddFileIfChanged (Log, disk_path, apk_path, compression);
+			// A later item for the same path always wins, even if an earlier one was already flushed to disk.
+			if (addedFiles.Add (apk_path))
+				apk.AddFileIfChanged (Log, disk_path, apk_path, compression);
+			else
+				apk.AddFile (disk_path, apk_path, compression);
 		}
 
 		// Clean up Removed files.

@@ -144,6 +144,44 @@ public class BuildArchiveTests : BaseTest
 		}
 	}
 
+	[Test]
+	public void DuplicateFilesKeepLastItemAfterFlush ()
+	{
+		var apk = Path.Combine (TempDirectory, "app.aar");
+		var first = Path.Combine (TempDirectory, "first.txt");
+		var last = Path.Combine (TempDirectory, "last.txt");
+		File.WriteAllText (first, "first");
+		File.WriteAllText (last, "lastt");
+		File.SetLastWriteTimeUtc (last, File.GetLastWriteTimeUtc (first).AddDays (-1));
+
+		var items = new List<ITaskItem> { FileItem (first, "assets/shared.txt") };
+		// Crosses ZipArchiveEx's 512-write limit so the first shared.txt is flushed before the last one is added.
+		for (var i = 0; i < 511; i++) {
+			var filler = Path.Combine (TempDirectory, $"filler{i}.txt");
+			File.WriteAllText (filler, $"{i}");
+			items.Add (FileItem (filler, $"assets/filler{i}.txt"));
+		}
+		items.Add (FileItem (last, "assets/shared.txt"));
+
+		var task = new BuildArchive {
+			BuildEngine = new MockBuildEngine (TestContext.Out),
+			ApkOutputPath = apk,
+			FilesToAddToArchive = items.ToArray (),
+		};
+
+		Assert.IsTrue (task.RunTask (), "task should have succeeded");
+
+		using var archive = ZipFile.OpenRead (apk);
+		AssertEntryContents (archive, "assets/shared.txt", "lastt");
+	}
+
+	static TaskItem FileItem (string path, string archivePath)
+	{
+		var item = new TaskItem (path);
+		item.SetMetadata ("ArchivePath", archivePath);
+		return item;
+	}
+
 	static TaskItem JavaArchiveItem (string path, string entryName)
 	{
 		var item = new TaskItem ($"{path}#{entryName}");

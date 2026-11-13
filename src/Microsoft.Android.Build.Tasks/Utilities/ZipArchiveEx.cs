@@ -73,7 +73,7 @@ sealed class ZipArchiveEx : IDisposable
 		modified = false;
 	}
 
-	void AddFile (string filename, string archivePath, CompressionLevel compression)
+	public void AddFile (string filename, string archivePath, CompressionLevel compression)
 	{
 		var size = new FileInfo (filename).Length;
 		PrepareWrite (size);
