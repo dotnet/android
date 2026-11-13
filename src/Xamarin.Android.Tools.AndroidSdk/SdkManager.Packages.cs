@@ -87,24 +87,20 @@ public partial class SdkManager
 		List<SdkPackage>? target = null;
 		var parsingUpdates = false;
 
-		foreach (var line in output.Split (new[] { '\n', '\r' }, StringSplitOptions.RemoveEmptyEntries)) {
+		lines: foreach (var line in output.Split (new[] { '\n', '\r' }, StringSplitOptions.RemoveEmptyEntries)) {
 			var trimmed = line.Trim ();
 
 			// Match section headers case-insensitively: the classic sdkmanager emits
 			// "Available Packages:" (uppercase P) while the newer Android CLI replacement
 			// (cmdline-tools 23+) emits "Available packages:" (lowercase p).
-			var foundSection = false;
 			foreach (var section in PackageSections) {
 				if (trimmed.IndexOf (section.Header, StringComparison.OrdinalIgnoreCase) < 0)
 					continue;
 
 				target = section.IsInstalled ? installed : available;
 				parsingUpdates = section.IsUpdate;
-				foundSection = true;
-				break;
+				continue lines;
 			}
-			if (foundSection)
-				continue;
 
 			if (target is null || trimmed.StartsWith ("Path", StringComparison.Ordinal) || trimmed.StartsWith ("---", StringComparison.Ordinal))
 				continue;

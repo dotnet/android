@@ -11,7 +11,7 @@
   <type name="service" namespace="Android.App" outputFile="src\Xamarin.Android.NamingCustomAttributes\Android.App\ServiceAttribute.cs" usage="AttributeTargets.Class" jniNameProvider="true" />
 
   <type name="grant-uri-permission" namespace="Android.Content" outputFile="src\Mono.Android\Android.Content\GrantUriPermissionAttribute.cs" usage="AttributeTargets.Class" allowMultiple="true" sealed="false" />
-  <type name="intent-filter" namespace="Android.App" outputFile="src\Mono.Android\Android.App\IntentFilterAttribute.cs" usage="AttributeTargets.Class" allowMultiple="true" defaultConstructor="false" generateMapping="false" />
+  <type name="intent-filter" namespace="Android.App" outputFile="src\Mono.Android\Android.App\IntentFilterAttribute.cs" usage="AttributeTargets.Class" allowMultiple="true" defaultConstructor="false" />
   <type name="meta-data" namespace="Android.App" outputFile="src\Mono.Android\Android.App\MetaDataAttribute.cs" usage="AttributeTargets.Assembly | AttributeTargets.Class" allowMultiple="true" defaultConstructor="false" />
   <type name="permission" namespace="Android.App" outputFile="src\Mono.Android\Android.App\PermissionAttribute.cs" usage="AttributeTargets.Assembly" allowMultiple="true" />
   <type name="permission-group" namespace="Android.App" outputFile="src\Mono.Android\Android.App\PermissionGroupAttribute.cs" usage="AttributeTargets.Assembly" allowMultiple="true" />
@@ -113,7 +113,7 @@
   <element path="activity.multiprocess" name="MultiProcess" type="bool" />
   <element path="activity.name" visible="true" />
   <element path="activity.noHistory" type="bool" />
-  <element path="activity.parentActivityName" name="ParentActivity" type="Type?" manualMap="true" />
+  <element path="activity.parentActivityName" name="ParentActivity" type="Type?" />
   <element path="activity.permission" visible="true" />
   <element path="activity.persistableMode" type="Android.Content.PM.ActivityPersistableMode" />
   <element path="activity.process" visible="true" />
@@ -162,7 +162,7 @@
   <element path="application.allowNativeHeapPointerTagging" type="bool" />
   <element path="application.allowTaskReparenting" type="bool" />
   <element path="application.banner" visible="true" />
-  <element path="application.backupAgent" type="Type?" manualMap="true" />
+  <element path="application.backupAgent" type="Type?" />
   <element path="application.backupInForeground" type="bool" />
   <element path="application.dataExtractionRules" visible="true" />
   <element path="application.debuggable" type="bool" />
@@ -181,8 +181,8 @@
   <element path="application.label" visible="true" />
   <element path="application.largeHeap" visible="true" />
   <element path="application.logo" visible="true" />
-  <element path="application.manageSpaceActivity" type="Type?" manualMap="true" />
-  <element path="application.name" manualMap="true" />
+  <element path="application.manageSpaceActivity" type="Type?" />
+  <element path="application.name" />
   <element path="application.networkSecurityConfig" visible="true" />
   <element path="application.pageSizeCompat" visible="true" />
   <element path="application.permission" visible="true" />
@@ -353,7 +353,7 @@
   <element path="property.value" visible="true" />
 
   <!-- <provider> - https://developer.android.com/guide/topics/manifest/provider-element -->
-  <element path="provider.authorities" type="string[]" readonly="true" manualMap="true" />
+  <element path="provider.authorities" type="string[]" readonly="true" />
   <element path="provider.directBootAware" type="bool" />
   <element path="provider.enabled" type="bool" />
   <element path="provider.exported" type="bool" />
@@ -441,7 +441,7 @@
   <element path="uses-configuration.reqTouchScreen" visible="true" />
 
   <!-- <uses-feature> https://developer.android.com/guide/topics/manifest/uses-feature-element -->
-  <element path="uses-feature.glEsVersion" name="GLESVersion" manualMap="true" />
+  <element path="uses-feature.glEsVersion" name="GLESVersion" />
   <element path="uses-feature.name" readonly="true" />
   <element path="uses-feature.required" visible="true" />
   <element path="uses-feature.version" visible="true" />
