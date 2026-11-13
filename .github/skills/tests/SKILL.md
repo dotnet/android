@@ -77,6 +77,16 @@ dotnet test <project>.csproj -v minimal --filter "Name~TestName"
 ./dotnet-local.sh test bin/TestDebug/MSBuildDeviceIntegration/${TFM}/MSBuildDeviceIntegration.dll --filter "Name~InstallAndRunTests"
 ```
 
+Both assemblies also run directly with Microsoft Testing Platform (MTP). CI uses
+`build-tools/automation/scripts/Run-SlicedTests.ps1`, which lists the tests with MTP, gives each
+parallel CI job an equal share, and runs failed tests again once:
+```bash
+./bin/Debug/dotnet/dotnet bin/TestDebug/${TFM}/Xamarin.Android.Build.Tests.dll --list-tests json --filter "FullyQualifiedName~BuildTest2"
+pwsh build-tools/automation/scripts/Run-SlicedTests.ps1 -DotNet bin/Debug/dotnet/dotnet \
+  -TestAssembly bin/TestDebug/${TFM}/Xamarin.Android.Build.Tests.dll -ResultsDirectory bin/TestDebug/TestResults \
+  -TestFilter "FullyQualifiedName~BuildTest2" -SliceNumber 1 -TotalSlices 4 -RetryFailedTests
+```
+
 ### On-device runtime tests (stock NUnit/MTP, full-build + device)
 
 Build and install the APK first, then run `dotnet test` from the test project directory so the project-local `global.json` enables Microsoft Testing Platform:

@@ -191,7 +191,6 @@ stages:
 
     - template: /build-tools/automation/yaml-templates/setup-test-environment.yaml
       parameters:
-        installTestSlicer: true
         useAgentJdkPath: false
         jdkMajorVersion: $(LatestJavaSdkMajorVersion)
 
@@ -207,7 +206,7 @@ stages:
     - template: /build-tools/automation/yaml-templates/run-sliced-nunit-tests.yaml
       parameters:
         testAssembly: $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/MSBuildDeviceIntegration/$(DotNetStableTargetFramework)/MSBuildDeviceIntegration.dll
-        testFilter: method == CheckTimeZoneInfoIsCorrectWithSlicer
+        testFilter: Name~CheckTimeZoneInfoIsCorrectWithSlicer
         testRunTitle: CheckTimeZoneInfoIsCorrectNode On Device - macOS
 
     - template: /build-tools/automation/yaml-templates/upload-results.yaml
@@ -243,7 +242,6 @@ stages:
 
     - template: /build-tools/automation/yaml-templates/setup-test-environment.yaml
       parameters:
-        installTestSlicer: true
         useAgentJdkPath: false
         jdkMajorVersion: $(LatestJavaSdkMajorVersion)
 
@@ -259,7 +257,7 @@ stages:
     - template: /build-tools/automation/yaml-templates/run-sliced-nunit-tests.yaml
       parameters:
         testAssembly: $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/MSBuildDeviceIntegration/$(DotNetStableTargetFramework)/MSBuildDeviceIntegration.dll
-        testFilter: method == CheckLocalizationIsCorrectWithSlicer
+        testFilter: Name~CheckLocalizationIsCorrectWithSlicer
         testRunTitle: CheckLocalizationIsCorrect On Device - macOS
 
     - template: /build-tools/automation/yaml-templates/upload-results.yaml

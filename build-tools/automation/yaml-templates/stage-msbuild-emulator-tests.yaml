@@ -36,7 +36,6 @@ stages:
     steps:
     - template: /build-tools/automation/yaml-templates/setup-test-environment.yaml
       parameters:
-        installTestSlicer: true
         installApkDiff: false
         xaSourcePath: ${{ parameters.xaSourcePath }}
         repositoryAlias: ${{ parameters.repositoryAlias }}
@@ -64,7 +63,7 @@ stages:
     - template: /build-tools/automation/yaml-templates/run-sliced-nunit-tests.yaml
       parameters:
         testAssembly: ${{ parameters.xaSourcePath }}/bin/Test$(XA.Build.Configuration)/MSBuildDeviceIntegration/$(DotNetStableTargetFramework)/MSBuildDeviceIntegration.dll
-        testFilter: $(ExcludedNightlyNUnitCategories)
+        testFilter: $(ExcludedNightlyTestCategories)
         testRunTitle: MSBuildDeviceIntegration On Device - macOS
         xaSourcePath: ${{ parameters.xaSourcePath }}
 

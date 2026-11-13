@@ -42,6 +42,10 @@
     <MicroBuildCoreVersion>1.0.0</MicroBuildCoreVersion>
     <NuGetApiPackageVersion>6.14.3</NuGetApiPackageVersion>
     <MicrosoftTestingPlatformVersion>2.2.1</MicrosoftTestingPlatformVersion>
+    <!-- Test-only versions for build-tools/scripts/NUnitMTPReferences.projitems; MTP 2.3+ is needed for `list-tests json` -->
+    <MicrosoftTestingPlatformTestsVersion>2.5.3</MicrosoftTestingPlatformTestsVersion>
+    <NUnit3TestAdapterMTPVersion>6.3.1</NUnit3TestAdapterMTPVersion>
+    <MicrosoftNETTestSdkMTPVersion>18.12.0</MicrosoftNETTestSdkMTPVersion>
     <MSBuildTaskAuthoringAnalyzerVersion>18.13.0-1.26522.101</MSBuildTaskAuthoringAnalyzerVersion>
     <MonoOptionsVersion>6.12.0.148</MonoOptionsVersion>
     <SystemCollectionsImmutableVersion>8.0.0</SystemCollectionsImmutableVersion>

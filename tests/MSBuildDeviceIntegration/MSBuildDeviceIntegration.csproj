@@ -13,7 +13,7 @@
 
   <Import Project="..\..\Configuration.props" />
   <Import Project="..\..\src\Microsoft.Android.Build.BaseTasks\MSBuildReferences.projitems" />
-  <Import Project="..\..\build-tools\scripts\NUnitReferences.projitems" />
+  <Import Project="..\..\build-tools\scripts\NUnitMTPReferences.projitems" />
 
   <ItemGroup>
     <Compile Include="..\..\src\Xamarin.Android.Build.Tasks\Tests\Xamarin.Android.Build.Tests\Utilities\*.cs">
