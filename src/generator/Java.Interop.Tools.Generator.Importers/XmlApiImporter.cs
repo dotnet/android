@@ -380,6 +380,7 @@ namespace MonoDroid.Generation
 				DeprecatedSince = elem.XGetAttributeAsAndroidSdkVersionOrNull ("deprecated-since"),
 				ExplicitInterface = elem.XGetAttribute ("explicitInterface"),
 				EventName = elem.Attribute ("eventName")?.Value,
+				EventDefaultReturn = elem.XGetAttribute ("eventDefaultReturn"),
 				GenerateAsyncWrapper = elem.Attribute ("generateAsyncWrapper") != null,
 				GenerateDispatchingSetter = elem.Attribute ("generateDispatchingSetter") != null,
 				GenericArguments = elem.GenericArguments (),

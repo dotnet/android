@@ -141,7 +141,8 @@ namespace generator.SourceWriters
 			}
 
 			writer.WriteLine ($"var __h = {method_spec}Handler;");
-			writer.WriteLine ($"return __h != null ? __h ({method.Parameters.GetCall (opt)}) : default ({opt.GetTypeReferenceName (method.RetVal)});");
+			var defaultReturn = method.EventDefaultReturn ?? $"default ({opt.GetTypeReferenceName (method.RetVal)})";
+			writer.WriteLine ($"return __h != null ? __h ({method.Parameters.GetCall (opt)}) : {defaultReturn};");
 		}
 
 		public override void Write (CodeWriter writer)

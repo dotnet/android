@@ -14,14 +14,18 @@ namespace generator.SourceWriters
 		public JavaLangObjectConstructor (ClassGen klass, CodeGenerationOptions opt, string callPartialMethod)
 		{
 			Name = klass.Name;
-			IsUnsafe = SourceWriterExtensions.IsThrowable (klass);
-			if (IsUnsafe) {
+			if (SourceWriterExtensions.IsThrowable (klass)) {
 				Comments.Add ("/// <safety>");
 				Comments.Add ("/// javaReference must be zero or a live compatible JNI object. Use an attached thread");
 				Comments.Add ("/// (locals: creating thread), with no concurrent deletion through aliases during construction.");
 				Comments.Add ("/// transfer must match ownership; transferred references cannot be used again,");
 				Comments.Add ("/// even if construction throws.");
 				Comments.Add ("/// </safety>");
+				Comments.Add ("/// <remarks>");
+				Comments.Add ("/// This released raw-handle constructor is safe-callable only as a compatibility exception.");
+				Comments.Add ("/// The compiler does not enforce these obligations, including for nonzero references.");
+				Comments.Add ("/// Reference provenance, lifetime, thread and ownership are not validated here.");
+				Comments.Add ("/// </remarks>");
 			}
 
 			if (klass.IsFinal)

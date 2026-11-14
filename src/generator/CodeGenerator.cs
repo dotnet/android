@@ -222,6 +222,10 @@ namespace Xamarin.Android.Binder
 			foreach (GenBase gen in gens)
 				gen.FixupMethodOverrides (opt);
 
+			if (opt.SupportDefaultInterfaceMethods)
+				foreach (var gen in gens)
+					gen.FixupInterfaceMethodNullability ();
+
 			foreach (GenBase gen in gens)
 				gen.FixupExplicitImplementation ();
 

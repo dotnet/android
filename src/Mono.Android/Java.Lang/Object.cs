@@ -41,7 +41,12 @@ namespace Java.Lang {
 		/// an earlier base-constructor failure does not enter that cleanup. DoNotTransfer retains
 		/// the caller's ownership. Zero is accepted and does not supply a new Java peer.
 		/// </safety>
-		public unsafe Object (IntPtr handle, JniHandleOwnership transfer)
+		/// <remarks>
+		/// This released raw-handle constructor remains safe-callable for compatibility.
+		/// The compiler does not enforce the caller obligations above, including for nonzero handles.
+		/// The constructor does not validate reference provenance, lifetime, thread or ownership.
+		/// </remarks>
+		public Object (IntPtr handle, JniHandleOwnership transfer)
 			: base (JniObjectReferenceOptions.None)
 		{
 			// SAFETY: The caller supplies the reference and transfer rights described above.
@@ -132,7 +137,10 @@ namespace Java.Lang {
 						ref reference,
 						value == IntPtr.Zero ? JniObjectReferenceOptions.None : options);
 			} finally {
-				JNIEnv.DeleteRef (value, transfer);
+				unsafe {
+					// SAFETY: the caller supplies the reference and matching transfer; release runs once even if peer construction fails.
+					JNIEnv.DeleteRef (value, transfer);
+				}
 			}
 		}
 
@@ -156,7 +164,7 @@ namespace Java.Lang {
 		/// <paramref name="handle"/> must be null or a live object reference usable by that environment
 		/// for the call; <paramref name="transfer"/> must match reference ownership the caller holds.
 		/// </safety>
-		public static unsafe T? GetObject<[DynamicallyAccessedMembers (Constructors)] T> (
+		public static T? GetObject<[DynamicallyAccessedMembers (Constructors)] T> (
 			IntPtr jnienv, IntPtr handle, JniHandleOwnership transfer)
 			where T : class, IJavaObject
 		{
@@ -195,7 +203,10 @@ namespace Java.Lang {
 			try {
 				return JniEnvironment.Runtime.ValueManager.GetPeer (new JniObjectReference (handle), type);
 			} finally {
-				JNIEnv.DeleteRef (handle, transfer);
+				unsafe {
+					// SAFETY: the conversion caller retains this current-thread reference and supplies the ownership being consumed.
+					JNIEnv.DeleteRef (handle, transfer);
+				}
 			}
 		}
 

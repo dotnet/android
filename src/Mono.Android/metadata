@@ -1706,6 +1706,10 @@
   <attr api-since="28" path="/api/package[@name='android.media']/class[@name='MediaPlayer']/method[@name='setOnMediaTimeDiscontinuityListener' and count(parameter)=1 and parameter[1][@type='android.media.MediaPlayer.OnMediaTimeDiscontinuityListener']]/parameter[1]" name="not-null">false</attr>
   <attr api-since="28" path="/api/package[@name='android.media']/class[@name='MediaPlayer']/method[@name='setOnSubtitleDataListener' and count(parameter)=1 and parameter[1][@type='android.media.MediaPlayer.OnSubtitleDataListener']]/parameter[1]" name="not-null">false</attr>
 
+  <!-- Preserve platform behavior when a non-void listener has no managed handler. -->
+  <attr api-since="20" path="/api/package[@name='android.view']/interface[@name='View.OnApplyWindowInsetsListener']/method[@name='onApplyWindowInsets']" name="eventDefaultReturn">v.OnApplyWindowInsets (insets) ?? throw new global::Java.Lang.NullPointerException ()</attr>
+  <attr api-since="35" path="/api/package[@name='android.media']/interface[@name='LoudnessCodecController.OnLoudnessCodecUpdateListener']/method[@name='onLoudnessCodecUpdate']" name="eventDefaultReturn">codecValues</attr>
+
   <!-- Some things that are not annotated as not-null, but should never return null -->
   <attr path="/api/package[@name='java.lang']/interface[@name='Comparable']/method[@name='compareTo' and count(parameter)=1 and parameter[1][@type='T']]/parameter" name="not-null">true</attr>
   <attr api-since="9" path="/api/package[@name='java.sql']/class[@name='SQLException']/method[@name='iterator' and count(parameter)=0]" name="return-not-null">true</attr>

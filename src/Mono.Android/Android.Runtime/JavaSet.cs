@@ -275,7 +275,7 @@ namespace Android.Runtime {
 		/// <paramref name="transfer"/> must describe ownership the caller holds. Do not race reference
 		/// release or reuse aliases after ownership is consumed, including when conversion later fails.
 		/// </safety>
-		public static unsafe ICollection? FromJniHandle (IntPtr handle, JniHandleOwnership transfer)
+		public static ICollection? FromJniHandle (IntPtr handle, JniHandleOwnership transfer)
 		{
 			if (handle == IntPtr.Zero)
 				return null;
@@ -283,8 +283,12 @@ namespace Android.Runtime {
 			var inst = (IJavaObject?) Java.Lang.Object.PeekObject (handle, typeof (ICollection));
 			if (inst == null)
 				inst = new JavaSet (handle, transfer);
-			else
-				JNIEnv.DeleteRef (handle, transfer);
+			else {
+				unsafe {
+					// SAFETY: the caller retains this matching reference and owns the transfer consumed after finding its cached peer.
+					JNIEnv.DeleteRef (handle, transfer);
+				}
+			}
 
 			return (ICollection) inst;
 		}
@@ -488,7 +492,7 @@ namespace Android.Runtime {
 		/// <paramref name="transfer"/> must describe ownership the caller holds. Do not race reference
 		/// release or reuse aliases after ownership is consumed, including when conversion later fails.
 		/// </safety>
-		public new static unsafe ICollection<T>? FromJniHandle (IntPtr handle, JniHandleOwnership transfer)
+		public new static ICollection<T>? FromJniHandle (IntPtr handle, JniHandleOwnership transfer)
 		{
 			if (handle == IntPtr.Zero)
 				return null;
@@ -496,8 +500,12 @@ namespace Android.Runtime {
 			var inst = (IJavaObject?) Java.Lang.Object.PeekObject (handle, typeof (ICollection<T>));
 			if (inst == null)
 				inst = new JavaSet<T> (handle, transfer);
-			else
-				JNIEnv.DeleteRef (handle, transfer);
+			else {
+				unsafe {
+					// SAFETY: the caller retains this matching reference and owns the transfer consumed after finding its cached peer.
+					JNIEnv.DeleteRef (handle, transfer);
+				}
+			}
 
 			return (ICollection<T>) inst;
 		}

@@ -378,7 +378,8 @@ public class TrimmableTypeMap
 	// so we recurse into super-interfaces to find the matching TypeMap entry.
 	JavaPeerProxy? TryMatchInterfaces (JniObjectReference jniClass, Type targetType)
 	{
-		var interfaces = JniEnvironment.InstanceMethods.CallObjectMethod (jniClass, GetClassGetInterfacesMethod ());
+		// SAFETY: lookup/enumeration retains this java.lang.Class reference; the cached descriptor is the no-argument getInterfaces method.
+		var interfaces = unsafe (JniEnvironment.InstanceMethods.CallObjectMethod (jniClass, GetClassGetInterfacesMethod ()));
 		try {
 			if (!interfaces.IsValid) {
 				return null;
@@ -419,9 +420,11 @@ public class TrimmableTypeMap
 			return method;
 		}
 
-		var classClass = JniEnvironment.Types.FindClass ("java/lang/Class");
+		// SAFETY: the complete UTF-8 literal provides immutable NUL-terminated storage for the synchronous lookup.
+		var classClass = unsafe (JniEnvironment.Types.FindClass ("java/lang/Class"u8));
 		try {
-			method = JniEnvironment.InstanceMethods.GetMethodID (classClass, "getInterfaces", "()[Ljava/lang/Class;");
+			// SAFETY: FindClass supplies the live receiver; complete UTF-8 literals retain their terminators through this fixed-signature lookup.
+			method = unsafe (JniEnvironment.InstanceMethods.GetMethodID (classClass, "getInterfaces"u8, "()[Ljava/lang/Class;"u8));
 		} finally {
 			JniObjectReference.Dispose (ref classClass);
 		}

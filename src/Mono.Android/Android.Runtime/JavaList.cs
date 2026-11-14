@@ -573,7 +573,7 @@ namespace Android.Runtime {
 		/// <paramref name="transfer"/> must describe ownership the caller holds. Do not race reference
 		/// release or reuse aliases after ownership is consumed, including when conversion later fails.
 		/// </safety>
-		public static unsafe IList? FromJniHandle (IntPtr handle, JniHandleOwnership transfer)
+		public static IList? FromJniHandle (IntPtr handle, JniHandleOwnership transfer)
 		{
 			if (handle == IntPtr.Zero)
 				return null;
@@ -581,8 +581,12 @@ namespace Android.Runtime {
 			var inst = (IJavaObject?) Java.Lang.Object.PeekObject (handle, typeof (IList));
 			if (inst == null)
 				inst = new JavaList (handle, transfer);
-			else
-				JNIEnv.DeleteRef (handle, transfer);
+			else {
+				unsafe {
+					// SAFETY: the caller retains this matching reference and owns the transfer consumed after finding its cached peer.
+					JNIEnv.DeleteRef (handle, transfer);
+				}
+			}
 
 			return (IList) inst;
 		}
@@ -1115,7 +1119,7 @@ namespace Android.Runtime {
 		/// <paramref name="transfer"/> must describe ownership the caller holds. Do not race reference
 		/// release or reuse aliases after ownership is consumed, including when conversion later fails.
 		/// </safety>
-		public new static unsafe IList<T>? FromJniHandle (IntPtr handle, JniHandleOwnership transfer)
+		public new static IList<T>? FromJniHandle (IntPtr handle, JniHandleOwnership transfer)
 		{
 			if (handle == IntPtr.Zero)
 				return null;
@@ -1123,8 +1127,12 @@ namespace Android.Runtime {
 			var inst = (IJavaObject?) Java.Lang.Object.PeekObject (handle, typeof (IList<T>));
 			if (inst == null)
 				inst = new JavaList<T> (handle, transfer);
-			else
-				JNIEnv.DeleteRef (handle, transfer);
+			else {
+				unsafe {
+					// SAFETY: the caller retains this matching reference and owns the transfer consumed after finding its cached peer.
+					JNIEnv.DeleteRef (handle, transfer);
+				}
+			}
 
 			return (IList<T>) inst;
 		}

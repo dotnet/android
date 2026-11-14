@@ -130,11 +130,12 @@ static class SafeJavaCollectionFactory
 
 	static Func<IntPtr, JniHandleOwnership, object?> GetUntypedFromJniHandleConverter (Type genericDefinition)
 	{
+		// SAFETY: these synchronous converters run under JavaConvert's live-reference, current-thread and transfer contract.
 		if (genericDefinition == typeof (IList<>) || genericDefinition == typeof (JavaList<>))
-			return (handle, transfer) => JavaList.FromJniHandle (handle, transfer);
+			return (handle, transfer) => unsafe (JavaList.FromJniHandle (handle, transfer));
 		if (genericDefinition == typeof (ICollection<>) || genericDefinition == typeof (JavaCollection<>))
-			return (handle, transfer) => JavaCollection.FromJniHandle (handle, transfer);
-		return (handle, transfer) => JavaDictionary.FromJniHandle (handle, transfer);
+			return (handle, transfer) => unsafe (JavaCollection.FromJniHandle (handle, transfer));
+		return (handle, transfer) => unsafe (JavaDictionary.FromJniHandle (handle, transfer));
 	}
 
 	[UnconditionalSuppressMessage ("AOT", "IL3050:RequiresDynamicCode",
