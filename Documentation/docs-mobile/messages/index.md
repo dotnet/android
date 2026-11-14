@@ -329,7 +329,6 @@ and `NNN` is a 3 digit number indicating the type of the unhandled `Exception`.
 * `CPD` - `CalculateProjectDependencies`
 * `CPT` - `ComputeHash`
 * `CRC` - `ConvertResourcesCases`
-* `CRM` - `CreateResgenManifest`
 * `CRN` - `Crunch`
 * `CRP` - `AndroidComputeResPaths`
 * `CTX` - `CompileToDalvik`
