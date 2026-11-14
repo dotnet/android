@@ -454,6 +454,26 @@ namespace Xamarin.Android.Build.Tests {
 		}
 
 		[Test]
+		public void ScannerRecordsIsSealedFromTypeMetadata ()
+		{
+			var monoAndroidItem = FindMonoAndroidDll ();
+			if (monoAndroidItem is null) {
+				Assert.Ignore ("Mono.Android.dll not found; skipping.");
+				return;
+			}
+
+			using var stream = File.OpenRead (monoAndroidItem.ItemSpec);
+			using var reader = new System.Reflection.PortableExecutable.PEReader (stream);
+			using var scanner = new JavaPeerScanner ();
+			var peers = scanner.Scan ([new AssemblyInput ("Mono.Android", monoAndroidItem.ItemSpec, reader)]);
+
+			var sealedPeer = peers.Single (peer => peer.ManagedTypeName == "Java.Lang.String");
+			var nonsealedPeer = peers.Single (peer => peer.ManagedTypeName == "Java.Lang.Object");
+			Assert.IsTrue (sealedPeer.IsSealed, sealedPeer.ManagedTypeName);
+			Assert.IsFalse (nonsealedPeer.IsSealed, nonsealedPeer.ManagedTypeName);
+		}
+
+		[Test]
 		public void Execute_WithMonoAndroid_ProducesOutputs ()
 		{
 			var path = Path.Combine ("temp", TestName);
