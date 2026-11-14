@@ -32,6 +32,7 @@ public interface ITrimmableTypeMapLogger
 	void LogMissingBaseConstructorError (string managedTypeName, string jniSignature);
 	void LogInvalidSuperArgumentsStringError (string managedTypeName, string superArgumentsString);
 	void LogRidSpecificCallbackMetadataMismatchError (string assemblyName, string firstPath, string secondPath);
+	void LogCallbackBoundaryInfo (string assemblyName, string typeName, string methodName, string classification, string reason);
 	void LogCustomJavaObjectError (string managedTypeName);
 	void LogCustomJavaObjectWarning (string managedTypeName);
 }
