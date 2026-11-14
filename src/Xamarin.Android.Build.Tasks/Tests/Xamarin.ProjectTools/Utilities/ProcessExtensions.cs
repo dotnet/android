@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Globalization;
+using System.IO;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Threading;
@@ -13,7 +14,18 @@ namespace Xamarin.ProjectTools
 {
 	public static class ProcessExtensions
 	{
-		static readonly ConditionalWeakTable<Process, ProcessTreeTracker> processTreeTrackers = new ();
+		const int SIGKILL = 9;
+		const int EPERM = 1;
+		const int ESRCH = 3;
+		const string ProcessGroupLauncher = "/usr/bin/perl";
+		// Moves the launcher into a new process group, then execs the target so it keeps the
+		// started PID. Every descendant inherits that group, even after reparenting.
+		const string ProcessGroupScript = "setpgrp(0, 0) or die $!; exec {$ARGV[0]} @ARGV or die $!";
+
+		static readonly ConditionalWeakTable<Process, object> processGroups = new ();
+
+		[DllImport ("libc", SetLastError = true)]
+		static extern int kill (int pid, int sig);
 
 		/// <summary>
 		/// Sets environment variables on ProcessStartInfo with retries to work around a Mono Legacy bug.
@@ -43,12 +55,11 @@ namespace Xamarin.ProjectTools
 
 		public static void StopAndDrainOutput (this Process process, CancellationTokenSource cts, Task outputTask)
 		{
+			KillProcessGroup (process);
 			try {
 				process.Kill (entireProcessTree: true);
 			} catch (InvalidOperationException) when (process.HasExited) {
 			}
-			if (processTreeTrackers.TryGetValue (process, out var tracker))
-				tracker.StopAndKillDescendants ();
 			bool exited = process.WaitForExit (30_000);
 			if (!exited)
 				cts.Cancel ();
@@ -72,10 +83,46 @@ namespace Xamarin.ProjectTools
 				outputTask.GetAwaiter ().GetResult ();
 		}
 
-		public static void TrackDescendants (this Process process)
+		/// <summary>
+		/// Starts the process as the leader of a new process group on Unix, so that
+		/// <see cref="StopAndDrainOutput"/> can kill descendants even after their parents exit.
+		/// </summary>
+		public static void StartInProcessGroup (this Process process)
 		{
-			if (!OperatingSystem.IsWindows ())
-				processTreeTrackers.Add (process, new ProcessTreeTracker (process));
+			if (OperatingSystem.IsWindows ()) {
+				process.Start ();
+				return;
+			}
+			if (!File.Exists (ProcessGroupLauncher))
+				throw new InvalidOperationException ($"'{ProcessGroupLauncher}' is required to start a process in a new process group.");
+
+			var psi = process.StartInfo;
+			string fileName = psi.FileName;
+			psi.FileName = ProcessGroupLauncher;
+			if (psi.ArgumentList.Count > 0) {
+				psi.ArgumentList.Insert (0, "-e");
+				psi.ArgumentList.Insert (1, ProcessGroupScript);
+				psi.ArgumentList.Insert (2, "--");
+				psi.ArgumentList.Insert (3, fileName);
+			} else {
+				if (fileName.Contains ('"'))
+					throw new ArgumentException ($"The process file name must not contain quotes: {fileName}", nameof (process));
+				psi.Arguments = $"-e \"{ProcessGroupScript}\" -- \"{fileName}\" {psi.Arguments}";
+			}
+			process.Start ();
+			processGroups.Add (process, process.Id);
+		}
+
+		static void KillProcessGroup (Process process)
+		{
+			if (!processGroups.TryGetValue (process, out var pgid))
+				return;
+			if (kill (-(int) pgid, SIGKILL) != 0) {
+				int errno = Marshal.GetLastPInvokeError ();
+				// macOS reports EPERM when every remaining group member is an unreaped zombie.
+				if (errno != ESRCH && !(errno == EPERM && OperatingSystem.IsMacOS ()))
+					throw new InvalidOperationException ($"Failed to kill process group {pgid}: errno {errno}.");
+			}
 		}
 
 		public static bool WaitForExitAndOutput (this Process process, Task outputTask, CancellationTokenSource cts, TimeSpan timeout)
@@ -83,8 +130,6 @@ namespace Xamarin.ProjectTools
 			cts.CancelAfter (timeout);
 			try {
 				Task.WhenAll (process.WaitForExitAsync (cts.Token), outputTask).GetAwaiter ().GetResult ();
-				if (processTreeTrackers.TryGetValue (process, out var tracker))
-					tracker.StopTracking ();
 				return true;
 			} catch (OperationCanceledException) when (cts.IsCancellationRequested) {
 				process.StopAndDrainOutput (cts, outputTask);
@@ -131,70 +176,6 @@ namespace Xamarin.ProjectTools
 				if (int.TryParse (line.Trim (), out int childPid)) {
 					GetDescendantPids (childPid, pids);
 					pids.Add (childPid);
-				}
-			}
-		}
-
-		sealed class ProcessTreeTracker
-		{
-			readonly Process process;
-			readonly CancellationTokenSource cts = new ();
-			readonly Dictionary<int, SafeProcessHandle> handles = new ();
-			readonly Task trackingTask;
-			bool stopped;
-
-			public ProcessTreeTracker (Process process)
-			{
-				this.process = process;
-				trackingTask = Task.Run (TrackDescendantsAsync);
-			}
-
-			async Task TrackDescendantsAsync ()
-			{
-				while (!cts.IsCancellationRequested && !process.HasExited) {
-					var pids = new List<int> ();
-					GetDescendantPids (process.Id, pids);
-					foreach (int pid in pids) {
-						if (!handles.ContainsKey (pid) && SafeProcessHandle.TryOpen (pid, out var handle))
-							handles.Add (pid, handle);
-					}
-					await Task.Delay (50);
-				}
-			}
-
-			public void StopAndKillDescendants ()
-			{
-				Stop (killDescendants: true);
-			}
-
-			public void StopTracking ()
-			{
-				Stop (killDescendants: false);
-			}
-
-			void Stop (bool killDescendants)
-			{
-				if (stopped)
-					return;
-				stopped = true;
-				cts.Cancel ();
-				try {
-					try {
-						trackingTask.GetAwaiter ().GetResult ();
-					} finally {
-						foreach (var handle in handles.Values) {
-							try {
-								if (killDescendants && !OperatingSystem.IsWindows ())
-									handle.Signal (PosixSignal.SIGKILL);
-							} catch (InvalidOperationException) {
-							}
-						}
-					}
-				} finally {
-					foreach (var handle in handles.Values)
-						handle.Dispose ();
-					handles.Clear ();
-					cts.Dispose ();
 				}
 			}
 		}

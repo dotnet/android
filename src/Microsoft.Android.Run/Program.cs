@@ -304,17 +304,20 @@ async Task<int> RunInstrumentationAsync (List<string> instrumentationArgs)
 		}
 	} finally {
 		cts.Cancel ();
-		await ObserveOutputTaskAsync ();
-		await logcatTask;
-		// Clean up logcat
 		try {
-			if (logcatProcess != null && !logcatProcess.HasExited) {
-				logcatProcess.Kill ();
-				logcatProcess.WaitForExit (1000);
+			await ObserveOutputTaskAsync ();
+		} finally {
+			await logcatTask;
+			// Clean up logcat
+			try {
+				if (logcatProcess != null && !logcatProcess.HasExited) {
+					logcatProcess.Kill ();
+					logcatProcess.WaitForExit (1000);
+				}
+			} catch (Exception ex) {
+				if (verbose)
+					Console.Error.WriteLine ($"Logcat cleanup: {ex.Message}");
 			}
-		} catch (Exception ex) {
-			if (verbose)
-				Console.Error.WriteLine ($"Logcat cleanup: {ex.Message}");
 		}
 	}
 
