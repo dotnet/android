@@ -1,10 +1,12 @@
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using System.Runtime.Versioning;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Win32.SafeHandles;
@@ -22,10 +24,36 @@ namespace Xamarin.ProjectTools
 		// started PID. Every descendant inherits that group, even after reparenting.
 		const string ProcessGroupScript = "setpgrp(0, 0) or die $!; exec {$ARGV[0]} @ARGV or die $!";
 
+		// Unix: boxed process group ID. Windows: SafeJobHandle.
 		static readonly ConditionalWeakTable<Process, object> processGroups = new ();
 
 		[DllImport ("libc", SetLastError = true)]
 		static extern int kill (int pid, int sig);
+
+		[DllImport ("kernel32", SetLastError = true, CharSet = CharSet.Unicode)]
+		static extern SafeJobHandle CreateJobObjectW (IntPtr lpJobAttributes, IntPtr lpName);
+
+		[DllImport ("kernel32", SetLastError = true)]
+		[return: MarshalAs (UnmanagedType.Bool)]
+		static extern bool AssignProcessToJobObject (SafeJobHandle hJob, SafeProcessHandle hProcess);
+
+		[DllImport ("kernel32", SetLastError = true)]
+		[return: MarshalAs (UnmanagedType.Bool)]
+		static extern bool TerminateJobObject (SafeJobHandle hJob, uint uExitCode);
+
+		[DllImport ("kernel32", SetLastError = true)]
+		[return: MarshalAs (UnmanagedType.Bool)]
+		static extern bool CloseHandle (IntPtr hObject);
+
+		sealed class SafeJobHandle : SafeHandleZeroOrMinusOneIsInvalid
+		{
+			public SafeJobHandle ()
+				: base (ownsHandle: true)
+			{
+			}
+
+			protected override bool ReleaseHandle () => CloseHandle (handle);
+		}
 
 		/// <summary>
 		/// Sets environment variables on ProcessStartInfo with retries to work around a Mono Legacy bug.
@@ -84,13 +112,14 @@ namespace Xamarin.ProjectTools
 		}
 
 		/// <summary>
-		/// Starts the process as the leader of a new process group on Unix, so that
-		/// <see cref="StopAndDrainOutput"/> can kill descendants even after their parents exit.
+		/// Starts the process as the leader of a new process group on Unix, or in a new Job Object
+		/// on Windows, so that <see cref="StopAndDrainOutput"/> can kill descendants even after
+		/// their parents exit.
 		/// </summary>
 		public static void StartInProcessGroup (this Process process)
 		{
 			if (OperatingSystem.IsWindows ()) {
-				process.Start ();
+				StartInJobObject (process);
 				return;
 			}
 			if (!File.Exists (ProcessGroupLauncher))
@@ -113,11 +142,52 @@ namespace Xamarin.ProjectTools
 			processGroups.Add (process, process.Id);
 		}
 
+		// The process starts suspended so that it cannot create children before it joins the job;
+		// descendants then inherit the job even after their parents exit.
+		[SupportedOSPlatform ("windows")]
+		static void StartInJobObject (Process process)
+		{
+			var job = CreateJobObjectW (IntPtr.Zero, IntPtr.Zero);
+			if (job.IsInvalid) {
+				int error = Marshal.GetLastPInvokeError ();
+				job.Dispose ();
+				throw new Win32Exception (error);
+			}
+			try {
+				process.StartInfo.StartSuspended = true;
+				process.Start ();
+				try {
+					if (!AssignProcessToJobObject (job, process.SafeHandle))
+						throw new Win32Exception (Marshal.GetLastPInvokeError ());
+					process.SafeHandle.Resume ();
+				} catch {
+					process.Kill ();
+					process.WaitForExit ();
+					throw;
+				}
+				processGroups.Add (process, job);
+			} catch {
+				job.Dispose ();
+				throw;
+			}
+		}
+
 		static void KillProcessGroup (Process process)
 		{
-			if (!processGroups.TryGetValue (process, out var pgid))
+			if (!processGroups.TryGetValue (process, out var owner))
 				return;
-			if (kill (-(int) pgid, SIGKILL) != 0) {
+			if (owner is SafeJobHandle job) {
+				try {
+					if (!TerminateJobObject (job, 1))
+						throw new Win32Exception (Marshal.GetLastPInvokeError ());
+				} finally {
+					processGroups.Remove (process);
+					job.Dispose ();
+				}
+				return;
+			}
+			int pgid = (int) owner;
+			if (kill (-pgid, SIGKILL) != 0) {
 				int errno = Marshal.GetLastPInvokeError ();
 				// macOS reports EPERM when every remaining group member is an unreaped zombie.
 				if (errno != ESRCH && !(errno == EPERM && OperatingSystem.IsMacOS ()))

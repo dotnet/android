@@ -181,16 +181,20 @@ public class StreamingTests
 	[Test]
 	public async Task ProcessTimeoutStopsDescendantAfterRootAndIntermediateExitImmediately ()
 	{
-		if (OperatingSystem.IsWindows ())
-			Assert.Ignore ("The fake process is a Unix shell executable.");
-
-		var startInfo = new ProcessStartInfo ("/bin/sh") {
+		var startInfo = new ProcessStartInfo (OperatingSystem.IsWindows () ? "powershell.exe" : "/bin/sh") {
 			UseShellExecute = false,
 			RedirectStandardOutput = true,
 			RedirectStandardError = true,
 		};
-		startInfo.ArgumentList.Add ("-c");
-		startInfo.ArgumentList.Add ("(sleep 30 & echo $!); exit 0");
+		if (OperatingSystem.IsWindows ()) {
+			startInfo.ArgumentList.Add ("-NoProfile");
+			startInfo.ArgumentList.Add ("-NonInteractive");
+			startInfo.ArgumentList.Add ("-Command");
+			startInfo.ArgumentList.Add ("$psi = New-Object System.Diagnostics.ProcessStartInfo 'ping.exe', '-n 31 127.0.0.1'; $psi.UseShellExecute = $false; [System.Diagnostics.Process]::Start($psi).Id; exit 0");
+		} else {
+			startInfo.ArgumentList.Add ("-c");
+			startInfo.ArgumentList.Add ("(sleep 30 & echo $!); exit 0");
+		}
 		using var process = new Process { StartInfo = startInfo };
 		process.StartInProcessGroup ();
 		using var cts = new CancellationTokenSource ();
@@ -204,8 +208,8 @@ public class StreamingTests
 
 		Process? child = null;
 		try {
-			int childPid = await childPidSource.Task.WaitAsync (TimeSpan.FromSeconds (5));
-			await process.WaitForExitAsync ().WaitAsync (TimeSpan.FromSeconds (5));
+			int childPid = await childPidSource.Task.WaitAsync (TimeSpan.FromSeconds (30));
+			await process.WaitForExitAsync ().WaitAsync (TimeSpan.FromSeconds (30));
 			child = Process.GetProcessById (childPid);
 			Assert.That (child.HasExited, Is.False, "The reparented descendant must still be running after its ancestors exit.");
 			Assert.That (process.WaitForExitAndOutput (reader, cts, TimeSpan.FromSeconds (1)), Is.False);
