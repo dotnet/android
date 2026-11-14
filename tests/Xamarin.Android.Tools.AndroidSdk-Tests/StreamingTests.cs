@@ -179,7 +179,7 @@ public class StreamingTests
 	}
 
 	[Test]
-	public async Task ProcessTimeoutStopsDescendantAfterRootExit ()
+	public async Task ProcessTimeoutStopsDescendantAfterRootAndIntermediateExitImmediately ()
 	{
 		if (OperatingSystem.IsWindows ())
 			Assert.Ignore ("The fake process is a Unix shell executable.");
@@ -190,9 +190,9 @@ public class StreamingTests
 			RedirectStandardError = true,
 		};
 		startInfo.ArgumentList.Add ("-c");
-		startInfo.ArgumentList.Add ("sleep 30 & echo $!; sleep 1; exit 0");
-		using var process = Process.Start (startInfo) ?? throw new InvalidOperationException ("Failed to start the fake process.");
-		process.TrackDescendants ();
+		startInfo.ArgumentList.Add ("(sleep 30 & echo $!); exit 0");
+		using var process = new Process { StartInfo = startInfo };
+		process.StartInProcessGroup ();
 		using var cts = new CancellationTokenSource ();
 		var childPidSource = new TaskCompletionSource<int> (TaskCreationOptions.RunContinuationsAsynchronously);
 		var reader = Task.Run (async () => {
@@ -207,7 +207,7 @@ public class StreamingTests
 			int childPid = await childPidSource.Task.WaitAsync (TimeSpan.FromSeconds (5));
 			await process.WaitForExitAsync ().WaitAsync (TimeSpan.FromSeconds (5));
 			child = Process.GetProcessById (childPid);
-			Assert.That (child.HasExited, Is.False, "The descendant must still be running after the root exits.");
+			Assert.That (child.HasExited, Is.False, "The reparented descendant must still be running after its ancestors exit.");
 			Assert.That (process.WaitForExitAndOutput (reader, cts, TimeSpan.FromSeconds (1)), Is.False);
 			Assert.That (child.WaitForExit (5_000), Is.True, "The timed-out descendant must be terminated.");
 		} finally {
@@ -239,8 +239,8 @@ public class StreamingTests
 		};
 		startInfo.ArgumentList.Add ("-c");
 		startInfo.ArgumentList.Add ("exec 1>&- 2>&-; exec sleep 30");
-		using var process = Process.Start (startInfo) ?? throw new InvalidOperationException ("Failed to start the fake process.");
-		process.TrackDescendants ();
+		using var process = new Process { StartInfo = startInfo };
+		process.StartInProcessGroup ();
 		using var cts = new CancellationTokenSource ();
 		var reader = Task.Run (async () => {
 			await foreach (var _ in process.ReadAllLinesAsync (cts.Token)) {
