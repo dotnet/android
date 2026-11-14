@@ -30,6 +30,12 @@ public class JavaVersionTargetsTests : BaseTest
 	[TestCase ("default", null, "17", "XA0031", false)]
 	[TestCase ("default", null, "22", "XA0030", false)]
 	[TestCase ("default", null, "21.0.8", "", false)]
+	[TestCase ("absolute", "21.0.8", "17.0.1", "", false)]
+	[TestCase ("relative", "21.0.8", "17.0.1", "", false)]
+	[TestCase ("absolute", "17.0.1", "21.0.8", "XA0031", false)]
+	[TestCase ("relative", "17.0.1", "21.0.8", "XA0031", false)]
+	[TestCase ("absolute", "22.0.1", "21.0.8", "XA0030", false)]
+	[TestCase ("relative", "22.0.1", "21.0.8", "XA0030", false)]
 	[TestCase ("default", null, "", "XA0033", false, TestName = "SilentJavaProcess")]
 	[TestCase ("default", null, " \t ", "XA0033", false, TestName = "WhitespaceJavaProcess")]
 	public void ValidatesSelectedJavaToolRelease (string selection, string? toolVersion, string sdkVersion, string errorCode, bool useReleaseFile = true)
@@ -43,7 +49,7 @@ public class JavaVersionTargetsTests : BaseTest
 		if (toolVersion != null) {
 			File.WriteAllText (Path.Combine (toolJdk, "release"), $"JAVA_VERSION=\"{toolVersion}\"\n");
 		}
-		string executable = OperatingSystem.IsWindows () ? "java.exe" : "java";
+		string executable = OperatingSystem.IsWindows () ? (useReleaseFile ? "java.exe" : "java.cmd") : "java";
 		string tool = selection switch {
 			"absolute" => Path.Combine (toolJdk, "bin", executable),
 			"relative" => Path.Combine ("..", "..", "override jdk", "bin", executable),
@@ -52,9 +58,13 @@ public class JavaVersionTargetsTests : BaseTest
 		};
 		if (!useReleaseFile) {
 			File.Delete (Path.Combine (sdk, "release"));
-			tool = OperatingSystem.IsWindows () ? "java.cmd" : "java";
-			string java = Path.Combine (sdk, "bin", tool);
-			string versionOutput = string.IsNullOrWhiteSpace (sdkVersion) ? sdkVersion : $"java version \"{sdkVersion}\"";
+			File.Delete (Path.Combine (toolJdk, "release"));
+			if (tool == "") {
+				tool = executable;
+			}
+			string java = Path.GetFullPath (Path.Combine (sdk, "bin", tool));
+			string processVersion = toolVersion ?? sdkVersion;
+			string versionOutput = string.IsNullOrWhiteSpace (processVersion) ? processVersion : $"java version \"{processVersion}\"";
 			File.WriteAllText (java, OperatingSystem.IsWindows ()
 				? $"@echo off\r\necho({versionOutput} 1>&2\r\n"
 				: $"#!/bin/sh\nprintf '%s' '{versionOutput}' >&2\n");
