@@ -94,14 +94,6 @@ namespace Xamarin.Android.Build.Tests {
 					Path.Combine (referencePath, "MonoAndroid"),
 				},
 			};
-			var validateJavaVersion = new ValidateJavaVersion {
-				BuildEngine = engine,
-				JavaSdkPath = javaPath,
-				JavaToolExe = javaExe,
-				JavacToolExe = javacExe,
-				LatestSupportedJavaVersion = "25.0.99",
-				MinimumSupportedJavaVersion = "21.0",
-			};
 			var androidTooling = new ResolveAndroidTooling {
 				BuildEngine = engine,
 				ReferenceAssemblyPaths = resolveSdks.ReferenceAssemblyPaths,
@@ -111,7 +103,6 @@ namespace Xamarin.Android.Build.Tests {
 			};
 			try {
 				Assert.IsTrue (resolveSdks.Execute (), "ResolveSdks should succeed.");
-				Assert.IsTrue (validateJavaVersion.Execute (), "ValidateJavaVersion should succeed.");
 				Assert.IsTrue (androidTooling.Execute (), "ResolveAndroidTooling should succeed.");
 				Assert.AreEqual (targetPlatformVersion, androidTooling.TargetPlatformVersion, "TargetPlatformVersion should not be modified.");
 				Assert.AreEqual (expectedApiLevel, androidTooling.AndroidApiLevel);
@@ -156,14 +147,6 @@ namespace Xamarin.Android.Build.Tests {
 					Path.Combine (referencePath, "MonoAndroid"),
 				},
 			};
-			var validateJavaVersion = new ValidateJavaVersion {
-				BuildEngine = engine,
-				JavaSdkPath = javaPath,
-				JavaToolExe = javaExe,
-				JavacToolExe = javacExe,
-				LatestSupportedJavaVersion = "1.8.0",
-				MinimumSupportedJavaVersion = "1.8.0",
-			};
 			var androidTooling = new ResolveAndroidTooling {
 				BuildEngine = engine,
 				ReferenceAssemblyPaths = resolveSdks.ReferenceAssemblyPaths,
@@ -172,7 +155,6 @@ namespace Xamarin.Android.Build.Tests {
 				AndroidSdkBuildToolsVersion = "26.0.3",
 			};
 			Assert.IsTrue (resolveSdks.Execute (), "ResolveSdks should succeed!");
-			Assert.IsTrue (validateJavaVersion.Execute (), "ValidateJavaVersion should succeed!");
 			Assert.IsTrue (androidTooling.Execute (), "ResolveAndroidTooling should succeed!");
 			Assert.AreEqual (androidTooling.AndroidApiLevel, "26", "AndroidApiLevel should be 26");
 			Assert.AreEqual ("26.0", androidTooling.TargetPlatformVersion, "TargetPlatformVersion should be unchanged");
@@ -200,11 +182,8 @@ namespace Xamarin.Android.Build.Tests {
 			expected = Path.Combine (androidSdkPath, "build-tools", "26.0.3", "lib", "apksigner.jar");
 			Assert.AreEqual (androidTooling.ApkSignerJar, expected, $"ApkSignerJar should be {expected}");
 			Assert.AreEqual (androidTooling.AndroidUseApkSigner, false, "AndroidUseApkSigner should be false");
-			Assert.AreEqual (validateJavaVersion.JdkVersion, "1.8.0", "JdkVersion should be 1.8.0");
-			Assert.AreEqual (validateJavaVersion.MinimumRequiredJdkVersion, "1.8.0", "MinimumRequiredJdkVersion should be 1.8.0");
 			Assert.IsFalse (messages.Any (m => m.Message == "ResolveSdks Outputs:" ||
 				m.Message == "ResolveAndroidTooling Outputs:" ||
-				m.Message == "ValidateJavaVersion Outputs:" ||
 				m.Message.StartsWith ("  AndroidSdkPath:", StringComparison.Ordinal) ||
 				m.Message.StartsWith ("  AndroidApiLevel:", StringComparison.Ordinal) ||
 				m.Message.StartsWith ("  TargetFrameworkVersion:", StringComparison.Ordinal) ||

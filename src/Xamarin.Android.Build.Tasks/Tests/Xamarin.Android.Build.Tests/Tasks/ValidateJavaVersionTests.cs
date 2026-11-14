@@ -1,9 +1,13 @@
 using System;
-using Microsoft.Build.Framework;
-using NUnit.Framework;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Xml.Linq;
+using Microsoft.Build.Evaluation;
+using Microsoft.Build.Execution;
+using Microsoft.Build.Framework;
+using Microsoft.Build.Utilities;
+using NUnit.Framework;
 using Xamarin.Android.Tasks;
 using Xamarin.ProjectTools;
 
@@ -13,20 +17,11 @@ namespace Xamarin.Android.Build.Tests
 	public class ValidateJavaVersionTests : BaseTest
 	{
 		string path;
-		List<BuildErrorEventArgs> errors;
-		List<BuildWarningEventArgs> warnings;
-		List<BuildMessageEventArgs> messages;
-		MockBuildEngine engine;
 
 		[SetUp]
 		public void Setup ()
 		{
 			path = Path.Combine ("temp", TestName);
-			engine = new MockBuildEngine (TestContext.Out,
-				errors: errors = new List<BuildErrorEventArgs> (),
-				warnings: warnings = new List<BuildWarningEventArgs> (),
-				messages: messages = new List<BuildMessageEventArgs> ());
-
 			Directory.CreateDirectory (Path.Combine (Root, path));
 		}
 
@@ -54,43 +49,34 @@ namespace Xamarin.Android.Build.Tests
 		[TestCase ("25.0.100", false, "XA0030", true)]
 		[TestCase ("26.0.0", false, "XA0030", false)]
 		[TestCase ("26.0.0", false, "XA0030", true)]
-		public void CurrentSdkUsesConfiguredJavaVersionRange (string version, bool succeeds, string errorCode, bool useJavaExeVersion, string expectedVersion = null)
+		public void CurrentSdkUsesConfiguredJavaVersionRange (string version, bool succeeds, string errorCode, bool useReleaseFile, string expectedVersion = null)
 		{
-			var javaPath = CreateFauxJavaSdkDirectory (Path.Combine (path, "jdk"), version, out string javaExe, out string javacExe);
-			if (useJavaExeVersion)
-				File.WriteAllText (Path.Combine (javaPath, "release"), "JAVA_VERSION=\"99.0.0\"");
-			var validateJavaVersion = new ValidateJavaVersion {
-				BuildEngine = engine,
-				JavaSdkPath = javaPath,
-				JavaToolExe = Path.Combine (javaPath, "bin", javaExe),
-				JavacToolExe = javacExe,
-				LatestSupportedJavaVersion = "25.0.99",
-				MinimumSupportedJavaVersion = "21.0",
-				UseJavaExeVersion = useJavaExeVersion,
-			};
-			Assert.AreEqual (succeeds, validateJavaVersion.Execute ());
-			Assert.AreEqual ("21.0", validateJavaVersion.MinimumRequiredJdkVersion);
-			Assert.AreEqual (expectedVersion ?? version, validateJavaVersion.JdkVersion);
-			Assert.AreEqual (!useJavaExeVersion, messages.Any (m => m.Message.Contains ("contains JAVA_VERSION")));
-			Assert.IsEmpty (warnings);
-			Assert.AreEqual (succeeds ? 0 : 1, errors.Count);
+			var javaPath = CreateFauxJavaSdkDirectory (Path.Combine (path, "jdk"), version, out string javaExe, out _);
+			if (!useReleaseFile)
+				File.Delete (Path.Combine (javaPath, "release"));
+			var result = Validate (javaPath, javaExe, "21.0", "25.0.99");
+			Assert.AreEqual (succeeds, result.Success);
+			Assert.AreEqual ("21.0", result.DefaultJdkVersion);
+			Assert.AreEqual (expectedVersion ?? version, result.JdkVersion);
+			Assert.IsEmpty (result.Warnings);
+			Assert.AreEqual (succeeds ? 0 : 1, result.Errors.Count);
 			if (!succeeds)
-				Assert.AreEqual (errorCode, errors [0].Code);
+				Assert.AreEqual (errorCode, result.Errors [0].Code);
 		}
 
 		[TestCase (false)]
 		[TestCase (true)]
-		public void ToolingTargetRejectsOldJavaForModernAndroidApi (bool useJavaExeVersion)
+		public void ToolingTargetRejectsOldJavaForModernAndroidApi (bool useReleaseFile)
 		{
-			var javaPath = CreateFauxJavaSdkDirectory (Path.Combine (path, "jdk"), "17.0.1", out string javaExe, out string javacExe);
+			var javaPath = CreateFauxJavaSdkDirectory (Path.Combine (path, "jdk"), "17.0.1", out string javaExe, out _);
+			if (!useReleaseFile)
+				File.Delete (Path.Combine (javaPath, "release"));
 			var proj = new XamarinAndroidApplicationProject ();
 			proj.SetProperty ("TargetPlatformVersion", "37.0");
 			proj.SetProperty ("MinimumSupportedJavaVersion", "21.0");
 			proj.SetProperty ("LatestSupportedJavaVersion", "25.0.99");
 			proj.SetProperty ("_JavaSdkDirectory", javaPath);
-			proj.SetProperty ("JavaToolExe", Path.Combine (javaPath, "bin", javaExe));
-			proj.SetProperty ("JavacToolExe", javacExe);
-			proj.SetProperty ("_AndroidUseJavaExeVersion", useJavaExeVersion.ToString ());
+			proj.SetProperty ("JavaToolExe", javaExe);
 			proj.SetProperty ("_AndroidAllowMissingSdkTooling", "false");
 
 			using var builder = CreateApkBuilder (Path.Combine (path, "App"));
@@ -102,184 +88,82 @@ namespace Xamarin.Android.Build.Tests
 			StringAssertEx.Contains ("Found Java SDK version 17.0.1.", builder.LastBuildOutput);
 		}
 
-		[TestCase ("11.0.9", "XA0031")]
-		[TestCase ("17.0.1", "XA0031")]
-		[TestCase ("26.0.0", "XA0030")]
-		public void JavacMustMeetConfiguredJavaVersionRange (string version, string errorCode)
-		{
-			var javaPath = CreateFauxJavaSdkDirectory (Path.Combine (path, "jdk"), "21.0.8", out string javaExe, out string javacExe);
-			var otherJavaPath = CreateFauxJavaSdkDirectory (Path.Combine (path, "other-jdk"), version, out _, out string otherJavacExe);
-			File.Copy (Path.Combine (otherJavaPath, "bin", otherJavacExe), Path.Combine (javaPath, "bin", javacExe), overwrite: true);
-			var validateJavaVersion = new ValidateJavaVersion {
-				BuildEngine = engine,
-				JavaSdkPath = javaPath,
-				JavaToolExe = Path.Combine (javaPath, "bin", javaExe),
-				JavacToolExe = javacExe,
-				LatestSupportedJavaVersion = "25.0.99",
-				MinimumSupportedJavaVersion = "21.0",
-				UseJavaExeVersion = true,
-			};
-			Assert.IsFalse (validateJavaVersion.Execute ());
-			Assert.AreEqual ("21.0", validateJavaVersion.MinimumRequiredJdkVersion);
-			Assert.AreEqual (version, validateJavaVersion.JdkVersion);
-			Assert.AreEqual (1, errors.Count);
-			Assert.AreEqual (errorCode, errors [0].Code);
-		}
-
 		[Test]
 		public void ConfiguredMinimumJavaVersionIsRequired ()
 		{
-			var javaPath = CreateFauxJavaSdkDirectory (Path.Combine (path, "jdk"), "1.7.0", out string javaExe, out string javacExe);
-			var validateJavaVersion = new ValidateJavaVersion {
-				BuildEngine = engine,
-				JavaSdkPath = javaPath,
-				JavaToolExe = Path.Combine (javaPath, "bin", javaExe),
-				JavacToolExe = javacExe,
-				LatestSupportedJavaVersion = "1.8.0",
-				MinimumSupportedJavaVersion = "1.8.0",
-			};
-			Assert.False (validateJavaVersion.Execute (), "Execute should *not* succeed!");
-			Assert.IsTrue (
-					errors.Any (e => e.Code == "XA0031"),
-					"Should report the configured minimum Java version.");
+			var javaPath = CreateFauxJavaSdkDirectory (Path.Combine (path, "jdk"), "1.7.0", out string javaExe, out _);
+			var result = Validate (javaPath, javaExe, "1.8.0", "1.8.0");
+			Assert.IsFalse (result.Success, "Validation should *not* succeed!");
+			Assert.IsTrue (result.Errors.Any (e => e.Code == "XA0031"), "Should report the configured minimum Java version.");
 		}
 
 		[Test]
-		public void ExtraJavacOutputIsIgnored ()
+		public void ExtraJavaOutputIsIgnored ()
 		{
 			var extraPrefix = new[]{
 				"Picked up JAVA_TOOL_OPTIONS: -Dcom.sun.jndi.ldap.object.trustURLCodebase=false -Dcom.sun.jndi.rmi.object.trustURLCodebase=false -Dcom.sun.jndi.cosnaming.object.trustURLCodebase=false -Dlog4j2.formatMsgNoLookups=true",
 				"Picked up _JAVA_OPTIONS: -Dcom.sun.jndi.ldap.object.trustURLCodebase=false -Dcom.sun.jndi.rmi.object.trustURLCodebase=false -Dcom.sun.jndi.cosnaming.object.trustURLCodebase=false -Dlog4j2.formatMsgNoLookups=true",
 			};
-			var javaPath = CreateFauxJavaSdkDirectory (Path.Combine (path, "jdk"), "11.0.12", out string javaExe, out string javacExe, extraPrefix);
-			var validateJavaVersion = new ValidateJavaVersion {
-				BuildEngine                 = engine,
-				JavaSdkPath                 = javaPath,
-				JavaToolExe                 = Path.Combine (javaPath, "bin", javaExe),
-				JavacToolExe                = javacExe,
-				LatestSupportedJavaVersion  = "11.99.0",
-				MinimumSupportedJavaVersion = "11.0.0",
-			};
-			Assert.IsTrue (validateJavaVersion.Execute (), "Execute should succeed!");
-			Assert.IsFalse (
-					warnings.Any (e => e.Code == "XA0033"),
-					$"Want no XA0033 warnings! Got: ```{string.Join (Environment.NewLine, warnings.Select (m => $"warning {m.Code}: {m.Message}"))}```");
+			var javaPath = CreateFauxJavaSdkDirectory (Path.Combine (path, "jdk"), "11.0.12", out string javaExe, out _, extraPrefix);
+			File.Delete (Path.Combine (javaPath, "release"));
+			var result = Validate (javaPath, javaExe, "11.0.0", "11.99.0");
+			Assert.IsTrue (result.Success, "Validation should succeed!");
+			Assert.AreEqual ("11.0.12", result.JdkVersion);
+			Assert.IsFalse (result.Warnings.Any (e => e.Code == "XA0033"),
+				$"Want no XA0033 warnings! Got: ```{string.Join (Environment.NewLine, result.Warnings.Select (m => $"warning {m.Code}: {m.Message}"))}```");
+		}
+
+		[Test]
+		public void UnparsableJavaOutputWarns ()
+		{
+			var javaPath = CreateFauxJavaSdkDirectory (Path.Combine (path, "jdk"), "21.0.8", out string javaExe, out _);
+			File.Delete (Path.Combine (javaPath, "release"));
+			File.WriteAllText (Path.Combine (javaPath, "bin", javaExe), IsWindows ? "@echo java version unknown" : "#!/bin/sh\necho 'java version unknown; O'\\''Brien'\n");
+			var result = Validate (javaPath, javaExe, "21.0", "25.0.99");
+			Assert.IsTrue (result.Success);
+			Assert.AreEqual ("", result.JdkVersion);
+			var warning = result.Warnings.Single (w => w.Code == "XA0033");
+			StringAssert.Contains ("java version unknown", warning.Message);
+		}
+
+		[TestCase (false, "O'Brien;x=1")]
+		[TestCase (true, "O'Brien;x=1")]
+		[TestCase (false, "O'Brien;x=1 $HOME")]
+		[TestCase (true, "O'Brien;x=1 $HOME")]
+		[TestCase (false, "O'Brien;x=1 %JAVA_HOME%")]
+		[TestCase (true, "O'Brien;x=1 %JAVA_HOME%")]
+		[TestCase (false, "O'Brien;x=1 !JAVA_HOME!")]
+		[TestCase (true, "O'Brien;x=1 !JAVA_HOME!")]
+		public void JavaPathsWithMSBuildSpecialCharacters (bool useReleaseFile, string directoryName)
+		{
+			var javaPath = CreateFauxJavaSdkDirectory (Path.Combine (path, directoryName, "jdk"), "21.0.8", out string javaExe, out _);
+			if (!useReleaseFile)
+				File.Delete (Path.Combine (javaPath, "release"));
+			var result = Validate (javaPath, javaExe, "21.0", "25.0.99");
+			Assert.IsTrue (result.Success, string.Join (Environment.NewLine, result.Errors.Select (e => e.Message)));
+			Assert.IsFalse (result.Warnings.Any (w => w.Code == "XA0033"), string.Join (Environment.NewLine, result.Warnings.Select (w => w.Message)));
+			Assert.AreEqual ("21.0.8", result.JdkVersion);
 		}
 
 		[TestCase (false)]
 		[TestCase (true)]
-		public void RelativeJavaPathsUseProjectDirectory (bool useJavaExeVersion)
+		public void RelativeJavaPathsUseProjectDirectory (bool useReleaseFile)
 		{
 			var projectDirectory = Path.Combine (Root, path, "project");
-			CreateFauxJavaSdkDirectory (Path.Combine (path, "project", "jdk"), "21.0.8", out string javaExe, out string javacExe);
+			var javaPath = CreateFauxJavaSdkDirectory (Path.Combine (path, "project", "jdk"), "21.0.8", out string javaExe, out _);
+			if (!useReleaseFile)
+				File.Delete (Path.Combine (javaPath, "release"));
 			// Ignore a release file outside the selected JDK.
 			File.WriteAllText (Path.Combine (Root, path, "release"), "JAVA_VERSION=\"17.0.1\"");
-			var task = new ValidateJavaVersion {
-				BuildEngine = engine,
-				TaskEnvironment = TaskEnvironment.CreateWithProjectDirectoryAndEnvironment (projectDirectory, new Dictionary<string, string> ()),
-				JavaSdkPath = "jdk",
-				JavaToolExe = javaExe,
-				JavacToolExe = javacExe,
-				MinimumSupportedJavaVersion = "21.0",
-				LatestSupportedJavaVersion = "25.0.99",
-				UseJavaExeVersion = useJavaExeVersion,
-			};
-
-			Assert.IsTrue (task.Execute ());
-			Assert.AreEqual ("21.0.8", task.JdkVersion);
-		}
-
-		[Test]
-		public void JavaProcessUsesProjectEnvironment ()
-		{
-			var projectDirectory = Path.Combine (Root, path);
-			var javaPath = CreateFauxJavaSdkDirectory (Path.Combine (path, "jdk"), "21.0.8", out string javaExe, out string javacExe);
-			File.WriteAllText (Path.Combine (javaPath, "bin", javaExe), IsWindows ?
-				"@echo java version \"%JAVA_TOOL_OPTIONS%\"" :
-				"""
-				#!/bin/sh
-				echo "java version \"$JAVA_TOOL_OPTIONS\""
-				""");
-			var processOptions = Environment.GetEnvironmentVariable ("JAVA_TOOL_OPTIONS");
-
-			var task = new ValidateJavaVersion {
-				BuildEngine = engine,
-				TaskEnvironment = TaskEnvironment.CreateWithProjectDirectoryAndEnvironment (projectDirectory,
-					new Dictionary<string, string> { ["JAVA_TOOL_OPTIONS"] = "21.0.8" }),
-				JavaSdkPath = javaPath,
-				JavaToolExe = javaExe,
-				JavacToolExe = javacExe,
-				MinimumSupportedJavaVersion = "21.0",
-				LatestSupportedJavaVersion = "25.0.99",
-			};
-
-			Assert.IsTrue (task.Execute ());
-			Assert.AreEqual ("21.0.8", task.JdkVersion);
-
-			task.TaskEnvironment.SetEnvironmentVariable ("JAVA_TOOL_OPTIONS", "17.0.1");
-			Assert.IsFalse (task.Execute ());
-			Assert.AreEqual ("17.0.1", task.JdkVersion);
-			Assert.AreEqual (processOptions, Environment.GetEnvironmentVariable ("JAVA_TOOL_OPTIONS"));
-		}
-
-		[Test]
-		public void CacheWorks ()
-		{
-			var javaPath = CreateFauxJavaSdkDirectory (Path.Combine (path, "jdk"), "1.8.0", out string javaExe, out string javacExe);
-			var validateJavaVersion = new ValidateJavaVersion {
-				BuildEngine = engine,
-				JavaSdkPath = javaPath,
-				JavaToolExe = Path.Combine (javaPath, "bin", javaExe),
-				JavacToolExe = javacExe,
-				LatestSupportedJavaVersion = "1.8.0",
-				MinimumSupportedJavaVersion = "1.8.0",
-			};
-			Assert.IsTrue (validateJavaVersion.Execute (), "first Execute should succeed!");
-
-			validateJavaVersion.JavaToolExe = Path.Combine (javaPath, "bin", "..", "bin", javaExe);
-			validateJavaVersion.JavacToolExe = Path.Combine ("..", "bin", javacExe);
-			messages.Clear ();
-
-			Assert.IsTrue (validateJavaVersion.Execute (), "second Execute should succeed!");
-			Assert.AreEqual ("1.8.0", validateJavaVersion.JdkVersion);
-			Assert.AreEqual ("1.8.0", validateJavaVersion.MinimumRequiredJdkVersion);
-			Assert.IsFalse (messages.Any (m => m.Message == "ValidateJavaVersion Outputs:" ||
-				m.Message.StartsWith ("  JdkVersion:", StringComparison.Ordinal) ||
-				m.Message.StartsWith ("  MinimumRequiredJdkVersion:", StringComparison.Ordinal)));
-			var javaFullPath = Path.Combine (javaPath, "bin", javaExe);
-			var javacFullPath = Path.Combine (javaPath, "bin", javacExe);
-			Assert.IsTrue (messages.Any (m => m.Message == $"Using cached value for `{javaFullPath} -version`: 1.8.0"), "`java -version` should be cached!");
-			Assert.IsTrue (messages.Any (m => m.Message == $"Using cached value for `{javacFullPath} -version`: 1.8.0"), "`javac -version` should be cached!");
-		}
-
-		[Test]
-		public void CacheInvalidates ()
-		{
-			var javaPath = CreateFauxJavaSdkDirectory (Path.Combine (path, "jdk-1"), "1.8.0", out string javaExe, out string javacExe);
-			var validateJavaVersion = new ValidateJavaVersion {
-				BuildEngine = engine,
-				JavaSdkPath = javaPath,
-				JavaToolExe = Path.Combine (javaPath, "bin", javaExe),
-				JavacToolExe = javacExe,
-				LatestSupportedJavaVersion = "1.8.0",
-				MinimumSupportedJavaVersion = "1.7.0",
-			};
-			Assert.IsTrue (validateJavaVersion.Execute (), "first Execute should succeed!");
-
-			messages.Clear ();
-
-			javaPath = CreateFauxJavaSdkDirectory (Path.Combine (path, "jdk-2"), "1.8.0", out javaExe, out javacExe);
-			validateJavaVersion.JavaSdkPath = javaPath;
-			validateJavaVersion.JavaToolExe = Path.Combine (javaPath, "bin", javaExe);
-
-			Assert.IsTrue (validateJavaVersion.Execute (), "second Execute should succeed!");
-			Assert.IsFalse (messages.Any (m => m.Message.StartsWith ("Using cached value for", StringComparison.Ordinal)), "`java -version` should *not* be cached!");
+			var result = Validate ("jdk", javaExe, "21.0", "25.0.99", projectDirectory);
+			Assert.IsTrue (result.Success);
+			Assert.AreEqual ("21.0.8", result.JdkVersion);
 		}
 
 		[Test]
 		public void ReleaseFile_Valid ()
 		{
-			var javaPath = CreateFauxJavaSdkDirectory (Path.Combine (path, "jdk-1"), "11.0.9", out string javaExe, out string javacExe);
+			var javaPath = CreateFauxJavaSdkDirectory (Path.Combine (path, "jdk-1"), "11.0.9", out string javaExe, out _);
 			var releasePath = Path.Combine (javaPath, "release");
 			File.WriteAllText (releasePath,
 @"IMPLEMENTOR=""Microsoft""
@@ -293,79 +177,90 @@ OS_NAME=""Windows""
 SOURCE="".:git:6171c19d2c18""
 ");
 
-			var validateJavaVersion = new Android.Tasks.ValidateJavaVersion {
-				BuildEngine = engine,
-				JavaSdkPath = javaPath,
-				JavaToolExe = Path.Combine (javaPath, "bin", javaExe),
-				JavacToolExe = javacExe,
-				LatestSupportedJavaVersion = "17.99.0",
-				MinimumSupportedJavaVersion = "11.0.0",
-				UseJavaExeVersion = false,
-			};
-			Assert.IsTrue (validateJavaVersion.Execute (), "Execute should succeed!");
-			Assert.AreEqual ("11.0.19", validateJavaVersion.JdkVersion);
-			Assert.AreEqual ("11.0.0", validateJavaVersion.MinimumRequiredJdkVersion);
-			Assert.IsFalse (messages.Any (m => m.Message == "ValidateJavaVersion Outputs:" ||
-				m.Message.StartsWith ("  JdkVersion:", StringComparison.Ordinal) ||
-				m.Message.StartsWith ("  MinimumRequiredJdkVersion:", StringComparison.Ordinal)));
-			Assert.IsTrue (messages.Any (m => m.Message.Contains ("contains JAVA_VERSION")), "contains JAVA_VERSION should be found");
+			var result = Validate (javaPath, javaExe, "11.0.0", "17.99.0");
+			Assert.IsTrue (result.Success, "Validation should succeed!");
+			Assert.AreEqual ("11.0.19", result.JdkVersion);
+			Assert.AreEqual ("11.0.0", result.DefaultJdkVersion);
 		}
 
 		[Test]
 		public void ReleaseFile_Invalid ()
 		{
-			var javaPath = CreateFauxJavaSdkDirectory (Path.Combine (path, "jdk-1"), "11.0.9", out string javaExe, out string javacExe);
-			var releasePath = Path.Combine (javaPath, "release");
-			File.WriteAllText (releasePath, "Just some random text");
+			var javaPath = CreateFauxJavaSdkDirectory (Path.Combine (path, "jdk-1"), "11.0.9", out string javaExe, out _);
+			File.WriteAllText (Path.Combine (javaPath, "release"), "Just some random text");
 
-			var validateJavaVersion = new Android.Tasks.ValidateJavaVersion {
-				BuildEngine = engine,
-				JavaSdkPath = javaPath,
-				JavaToolExe = Path.Combine (javaPath, "bin", javaExe),
-				JavacToolExe = javacExe,
-				LatestSupportedJavaVersion = "17.99.0",
-				MinimumSupportedJavaVersion = "11.0.0",
-				UseJavaExeVersion = false,
-			};
-
-			// Will succeed due to fallback
-			Assert.IsTrue (validateJavaVersion.Execute (), "Execute should succeed!");
-			Assert.IsTrue (messages.Any (m => m.Message.Contains ("did not contain a valid JAVA_VERSION")), "valid JAVA_VERSION should *not* be found");
+			// Falls back to `java -version`.
+			var result = Validate (javaPath, javaExe, "11.0.0", "17.99.0");
+			Assert.IsTrue (result.Success, "Validation should succeed!");
+			Assert.AreEqual ("11.0.9", result.JdkVersion);
 		}
 
 		[Test]
-		public void NullJavaSdkPathDoesNotThrow ()
+		public void MissingJavaSdkPathReportsXA5300 ()
 		{
-			var validateJavaVersion = new Xamarin.Android.Tasks.ValidateJavaVersion {
-				BuildEngine = engine,
-				JavaSdkPath = null,
-				JavaToolExe = "java",
-				JavacToolExe = "javac",
-				LatestSupportedJavaVersion = "17.99.0",
-				MinimumSupportedJavaVersion = "11.0.0",
-				UseJavaExeVersion = true,
-			};
-
-			Assert.IsFalse (validateJavaVersion.Execute (), "Execute should fail when JavaSdkPath is null.");
-			Assert.IsFalse (errors.Any (e => e.Code == "XAVJV7001"), "ValidateJavaVersion should not throw when JavaSdkPath is null.");
-			Assert.IsTrue (messages.Any (m => m.Message.Contains ("JavaSdkPath is not set")), "Should log debug message about missing JavaSdkPath.");
+			var result = Validate (null, "java", "11.0.0", "17.99.0");
+			Assert.IsFalse (result.Success, "Validation should fail when JavaSdkPath is null.");
+			Assert.AreEqual ("XA5300", result.Errors.Single ().Code);
 		}
 
 		[Test]
-		public void NullJavaSdkPathWithReleaseFileDoesNotThrow ()
+		public void AllowMissingSdkToolingDowngradesErrors ()
 		{
-			var validateJavaVersion = new Xamarin.Android.Tasks.ValidateJavaVersion {
-				BuildEngine = engine,
-				JavaSdkPath = null,
-				JavaToolExe = "java",
-				JavacToolExe = "javac",
-				LatestSupportedJavaVersion = "17.99.0",
-				MinimumSupportedJavaVersion = "11.0.0",
-				UseJavaExeVersion = false,
-			};
+			var javaPath = CreateFauxJavaSdkDirectory (Path.Combine (path, "jdk"), "17.0.1", out string javaExe, out _);
+			var result = Validate (javaPath, javaExe, "21.0", "25.0.99",
+				properties: new Dictionary<string, string> { ["_AndroidAllowMissingSdkTooling"] = "true" });
+			Assert.IsTrue (result.Success);
+			Assert.IsEmpty (result.Errors);
+			Assert.IsTrue (result.Warnings.Any (w => w.Code == "XA0031"));
+		}
 
-			Assert.IsFalse (validateJavaVersion.Execute (), "Execute should fail when JavaSdkPath is null.");
-			Assert.IsFalse (errors.Any (e => e.Code == "XAVJV7001"), "ValidateJavaVersion should not throw when JavaSdkPath is null (release file path).");
+		(bool Success, string JdkVersion, string DefaultJdkVersion, List<BuildErrorEventArgs> Errors, List<BuildWarningEventArgs> Warnings) Validate (
+			string javaSdkPath, string javaToolExe, string minimum, string latest,
+			string projectDirectory = null, Dictionary<string, string> properties = null)
+		{
+			string targets = Path.Combine (XABuildPaths.TopDirectory, "src", "Xamarin.Android.Build.Tasks", "Microsoft.Android.Sdk", "targets", "Microsoft.Android.Sdk.Tooling.targets");
+			string tasksAssembly = typeof (AndroidError).Assembly.Location;
+			XNamespace ns = "http://schemas.microsoft.com/developer/msbuild/2003";
+			var project = new XElement (ns + "Project",
+				new XElement (ns + "PropertyGroup",
+					new XElement (ns + "_XamarinAndroidBuildTasksAssembly", tasksAssembly),
+					new XElement (ns + "_JavaSdkDirectory", javaSdkPath ?? ""),
+					new XElement (ns + "JavaToolExe", javaToolExe ?? ""),
+					new XElement (ns + "MinimumSupportedJavaVersion", minimum),
+					new XElement (ns + "LatestSupportedJavaVersion", latest),
+					new XElement (ns + "_AndroidAllowMissingSdkTooling", "False")),
+				new XElement (ns + "UsingTask", new XAttribute ("TaskName", typeof (AndroidError).FullName), new XAttribute ("AssemblyFile", tasksAssembly)),
+				new XElement (ns + "UsingTask", new XAttribute ("TaskName", typeof (AndroidWarning).FullName), new XAttribute ("AssemblyFile", tasksAssembly)),
+				new XElement (ns + "Import", new XAttribute ("Project", targets)));
+			foreach (var property in properties ?? []) {
+				project.Element (ns + "PropertyGroup").Add (new XElement (ns + property.Key, property.Value));
+			}
+
+			using var reader = project.CreateReader ();
+			using var collection = new ProjectCollection ();
+			string toolsPath = Directory.EnumerateDirectories (Path.Combine (TestEnvironment.DotNetPreviewDirectory, "sdk"))
+				.First (p => File.Exists (Path.Combine (p, "Microsoft.Common.tasks")));
+			collection.AddToolset (new Toolset ("Current", toolsPath, collection, ""));
+			var root = Microsoft.Build.Construction.ProjectRootElement.Create (reader, collection);
+			projectDirectory ??= Path.Combine (Root, path);
+			Directory.CreateDirectory (projectDirectory);
+			root.FullPath = Path.Combine (projectDirectory, "Validate.proj");
+			var instance = new ProjectInstance (root, globalProperties: null, toolsVersion: null, collection);
+			var logger = new ValidateLogger ();
+			bool success = instance.Build ("_ValidateJavaVersion", new [] { logger });
+			return (success, instance.GetPropertyValue ("_JdkVersion"), instance.GetPropertyValue ("_DefaultJdkVersion"), logger.Errors, logger.Warnings);
+		}
+
+		sealed class ValidateLogger : Logger
+		{
+			public List<BuildWarningEventArgs> Warnings { get; } = [];
+			public List<BuildErrorEventArgs> Errors { get; } = [];
+
+			public override void Initialize (IEventSource eventSource)
+			{
+				eventSource.WarningRaised += (_, warning) => Warnings.Add (warning);
+				eventSource.ErrorRaised += (_, error) => Errors.Add (error);
+			}
 		}
 	}
 }

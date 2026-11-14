@@ -221,15 +221,6 @@ namespace Xamarin.Android.Tasks.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Failed to get the Java SDK version. Please ensure you have Java {0} or above installed..
-        /// </summary>
-        public static string XA0034 {
-            get {
-                return ResourceManager.GetString("XA0034", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Unable to determine the Android ABI from the value &apos;{0}&apos;. Edit the project file in a text editor and set the &apos;RuntimeIdentifiers&apos; MSBuild property to contain only valid identifiers for the Android platform..
         /// </summary>
         public static string XA0035 {
