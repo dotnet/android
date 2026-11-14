@@ -110,6 +110,11 @@ sealed class JavaPeerProxyData
 	public required TypeRefData TargetType { get; init; }
 
 	/// <summary>
+	/// True when the sealed Mono.Android target can use the runtime's class loader.
+	/// </summary>
+	public bool CanResolveFromSealedTargetType { get; init; }
+
+	/// <summary>
 	/// Reference to the invoker type (for interfaces/abstract types). Null if not applicable.
 	/// </summary>
 	public TypeRefData? InvokerType { get; set; }

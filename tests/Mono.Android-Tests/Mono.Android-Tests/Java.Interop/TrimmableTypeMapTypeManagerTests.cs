@@ -7,6 +7,7 @@ using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 using Android.Runtime;
+using Dalvik.SystemInterop;
 using Java.Interop;
 using Microsoft.Android.Runtime;
 using NUnit.Framework;
@@ -231,6 +232,7 @@ namespace Java.InteropTests
 		}
 
 		[Test]
+		[Category ("NativeAOTTrimmable")]
 		public void GetProxyForJavaObject_SealedTarget_ReturnsProxy ()
 		{
 			using var value = new Java.Lang.String ("value");
@@ -241,9 +243,11 @@ namespace Java.InteropTests
 				return;
 			}
 			Assert.AreEqual (typeof (Java.Lang.String), proxy.TargetType);
+			Assert.IsTrue (proxy.IsSealed);
 		}
 
 		[Test]
+		[Category ("NativeAOTTrimmable")]
 		public void GetProxyForJavaObject_IncompatibleSealedTarget_ReturnsNull ()
 		{
 #pragma warning disable CA1422 // Integer(int) constructor is obsolete since API 33.
@@ -255,6 +259,63 @@ namespace Java.InteropTests
 		}
 
 		[Test]
+		[Category ("NativeAOTTrimmable")]
+		public void GetProxyForJavaObject_NonSealedTarget_UsesObjectHierarchy ()
+		{
+			using var value = new Java.Lang.String ("value");
+			var proxy = TrimmableTypeMap.Instance.GetProxyForJavaObject (value.Handle, typeof (Java.Lang.Object));
+
+			Assert.AreEqual (typeof (Java.Lang.String), proxy?.TargetType);
+		}
+
+		[Test]
+		public void GetProxyForJavaObject_NonSealedTarget_DoesNotCacheManagedTarget ()
+		{
+			using var value = new Java.Lang.String ("value");
+			var instance = TrimmableTypeMap.Instance;
+			var cache = GetProxyCache (instance);
+			var targetType = typeof (Java.Lang.Object);
+			cache.TryRemove (targetType, out var previous);
+			try {
+				var proxy = instance.GetProxyForJavaObject (value.Handle, targetType);
+
+				Assert.AreEqual (typeof (Java.Lang.String), proxy?.TargetType);
+				Assert.IsFalse (cache.ContainsKey (targetType), "A nonsealed target should not trigger a managed-proxy lookup.");
+			} finally {
+				if (previous is not null)
+					cache.TryAdd (targetType, previous);
+			}
+		}
+
+		[Test]
+		[Category ("NativeAOTTrimmable")]
+		public void GetProxyForJavaObject_SealedExternalTarget_DoesNotUseSealedShortcut ()
+		{
+			const string javaClassName = "net.dot.android.test.TrimmableRuntimeJavaInteropPeer";
+			var sourceDir = Android.App.Application.Context.ApplicationInfo?.SourceDir
+				?? throw new InvalidOperationException ("The application APK path is unavailable.");
+			using var loader = new PathClassLoader (sourceDir, null);
+			using var javaClass = loader.LoadClass (javaClassName)
+				?? throw new InvalidOperationException ($"Could not load {javaClassName} from a separate class loader.");
+			using var constructor = javaClass.GetConstructor ()
+				?? throw new InvalidOperationException ($"{javaClassName} has no default constructor.");
+			using var instance = constructor.NewInstance ();
+			using var runtimeClass = Java.Lang.Class.ForName (
+				javaClassName,
+				initialize: false,
+				Android.App.Application.Context.ClassLoader);
+
+			Assert.IsFalse (runtimeClass.IsInstance (instance),
+				"The test instance must not belong to the runtime's application class loader.");
+
+			var proxy = TrimmableTypeMap.Instance.GetProxyForJavaObject (instance.Handle, typeof (TrimmableRuntimeJavaInteropPeer));
+
+			Assert.AreEqual (typeof (TrimmableRuntimeJavaInteropPeer), proxy?.TargetType);
+			Assert.IsFalse (proxy?.IsSealed);
+		}
+
+		[Test]
+		[Category ("NativeAOTTrimmable")]
 		public void CreateInstance_SealedClosedGenericTarget_ReturnsClosedPeer ()
 		{
 			using var value = new Java.Util.ArrayList ();

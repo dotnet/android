@@ -76,6 +76,7 @@ public sealed record JavaPeerInfo
 
 	public bool IsInterface { get; init; }
 	public bool IsAbstract { get; init; }
+	public bool IsSealed { get; init; }
 
 	/// <summary>
 	/// If true, this is a Managed Callable Wrapper (MCW) binding type.

@@ -8356,7 +8356,9 @@ Java.Interop.JavaPeerCallbackFormatAttribute
 Java.Interop.JavaPeerCallbackFormatAttribute.JavaPeerCallbackFormatAttribute(int version) -> void
 Java.Interop.JavaPeerCallbackFormatAttribute.Version.get -> int
 Java.Interop.JavaPeerProxy
+Java.Interop.JavaPeerProxy.IsSealed.get -> bool
 Java.Interop.JavaPeerProxy.JavaPeerProxy(string! jniName, System.Type! targetType) -> void
+Java.Interop.JavaPeerProxy.JavaPeerProxy(string! jniName, System.Type! targetType, bool isSealed) -> void
 Java.Interop.JavaPeerProxy.JniName.get -> string!
 Java.Interop.JavaPeerProxy.TargetType.get -> System.Type!
 Java.Interop.JniMarshalTyped
