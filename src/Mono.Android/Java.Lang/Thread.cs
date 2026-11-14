@@ -2,8 +2,10 @@ using System;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using System.Threading;
 
 using Android.Runtime;
+using Java.Interop;
 
 namespace Java.Lang {
 
@@ -41,16 +43,84 @@ namespace Java.Lang {
 					Dispose ();
 			}
 
-			static readonly ConditionalWeakTable<Java.Lang.Object, ConditionalWeakTable<Action, RunnableImplementor>> instances = new ();
+			sealed class Owner (JniObjectReference reference)
+			{
+				public JniObjectReference Reference = reference;
+				public readonly ConditionalWeakTable<Action, RunnableImplementor> Runnables = new ();
+			}
+
+			const int MinimumSweepThreshold = 256;
+
+			static readonly Lock ownersLock = new ();
+			static readonly Dictionary<int, List<Owner>> owners = new ();
+			static int ownerCount;
+			static int sweepThreshold = MinimumSweepThreshold;
 
 			// Reusing one runnable per owner and Action lets the Java remove/unschedule methods cancel
 			// every pending post. Android matches runnables, not owners, when Views share a window
 			// Handler or Drawables share a View queue, so each owner needs its own runnable.
-			public static RunnableImplementor GetOrCreate (Java.Lang.Object owner, Action handler) =>
-				instances.GetValue (owner, static _ => new ()).GetValue (handler, static h => new RunnableImplementor (h, removable: true));
+			// Owners are matched by Java identity, so a replacement wrapper for the same Java object
+			// (e.g. after Dispose ()) still cancels posts made through the original wrapper.
+			public static RunnableImplementor GetOrCreate (Java.Lang.Object owner, Action handler)
+			{
+				var runnables = GetRunnables (owner, create: true) ?? throw new ObjectDisposedException (owner.GetType ().FullName);
+				return runnables.GetValue (handler, static h => new RunnableImplementor (h, removable: true));
+			}
 
 			public static RunnableImplementor? Find (Java.Lang.Object owner, Action handler) =>
-				instances.TryGetValue (owner, out var runnables) && runnables.TryGetValue (handler, out var runnable) ? runnable : null;
+				GetRunnables (owner, create: false) is { } runnables && runnables.TryGetValue (handler, out var runnable) ? runnable : null;
+
+			static ConditionalWeakTable<Action, RunnableImplementor>? GetRunnables (Java.Lang.Object owner, bool create)
+			{
+				var reference = owner.PeerReference;
+				if (!reference.IsValid)
+					return null;
+
+				int hash = owner.JniIdentityHashCode;
+				lock (ownersLock) {
+					if (owners.TryGetValue (hash, out var bucket)) {
+						foreach (var entry in bucket) {
+							if (JniEnvironment.Types.IsSameObject (entry.Reference, reference))
+								return entry.Runnables;
+						}
+					}
+					if (!create)
+						return null;
+
+					// Drop owners whose Java objects were collected; nothing can cancel their posts anymore.
+					if (ownerCount >= sweepThreshold) {
+						RemoveCollectedOwners ();
+						sweepThreshold = System.Math.Max (MinimumSweepThreshold, ownerCount * 2);
+					}
+					if (!owners.TryGetValue (hash, out bucket)) {
+						bucket = [];
+						owners.Add (hash, bucket);
+					}
+					var owned = new Owner (reference.NewWeakGlobalRef ());
+					bucket.Add (owned);
+					ownerCount++;
+					return owned.Runnables;
+				}
+			}
+
+			static void RemoveCollectedOwners ()
+			{
+				List<int>? empty = null;
+				foreach (var (hash, bucket) in owners) {
+					ownerCount -= bucket.RemoveAll (static entry => {
+						if (!JniEnvironment.Types.IsSameObject (entry.Reference, default))
+							return false;
+						JniObjectReference.Dispose (ref entry.Reference);
+						return true;
+					});
+					if (bucket.Count == 0)
+						(empty ??= []).Add (hash);
+				}
+				if (empty == null)
+					return;
+				foreach (var hash in empty)
+					owners.Remove (hash);
+			}
 		}
 
 		/// <summary>
