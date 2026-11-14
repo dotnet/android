@@ -658,7 +658,7 @@ extends:
       jobs:
       - job: mac_msbuild_tests
         strategy:
-          parallel: 10
+          parallel: 9
         displayName: macOS > Tests > MSBuild
         # dnceng/internal has no AcesShared pool, so use hosted macOS images
         pool:
@@ -705,7 +705,7 @@ extends:
 
       - job: win_msbuild_tests
         strategy:
-          parallel: 8
+          parallel: 7
         displayName: Windows > Tests > MSBuild
         pool:
           name: $(NetCoreInternalPoolName)
