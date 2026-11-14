@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using System.Threading;
 using Android.OS;
+using Android.Runtime;
 using Java.Interop;
 
 using NUnit.Framework;
@@ -47,29 +48,69 @@ namespace Xamarin.Android.RuntimeTests {
 			int calls = 0;
 			Action action = () => Interlocked.Increment (ref calls);
 
-			// Keep the looper busy so nothing runs before it is canceled.
-			Assert.IsTrue (h.Post (() => { blocked.Set (); release.Wait (); }));
-			Assert.IsTrue (blocked.Wait (TimeSpan.FromSeconds (10)));
-			for (int i = 0; i < 50; i++) {
+			try {
+				// Keep the looper busy so nothing runs before it is canceled.
+				Assert.IsTrue (h.Post (() => { blocked.Set (); release.Wait (); }));
+				Assert.IsTrue (blocked.Wait (TimeSpan.FromSeconds (10)));
+				for (int i = 0; i < 50; i++) {
+					Assert.IsTrue (h.Post (action));
+					Assert.IsTrue (h.PostDelayed (action, 0));
+					h.RemoveCallbacks (action);
+				}
+				Assert.IsTrue (other.Post (action));                       // runs: different handler
+				Assert.IsTrue (h.Post (action));
+				h.RemoveCallbacks (action);
+				long now = SystemClock.UptimeMillis ();
+				Assert.IsTrue (h.PostAtTime (action, token, now));
+				Assert.IsTrue (h.PostAtTime (action, token, now));
+				Assert.IsTrue (h.PostAtTime (action, otherToken, now));   // runs: different token
+				h.RemoveCallbacks (action, token);
+				Assert.IsTrue (h.Post (action));                           // runs: posted after cancellation
+				Assert.IsTrue (h.Post (action));                           // runs: same runnable queued twice
+				Assert.IsTrue (h.Post (done.Set));
+				release.Set ();
+				Assert.IsTrue (done.Wait (TimeSpan.FromSeconds (10)));
+				Assert.AreEqual (4, calls);
+			} finally {
+				release.Set ();
+				Quit (t);
+			}
+		}
+
+		[Test]
+		public void RemoveCallbacksThroughReplacementWrapper ()
+		{
+			using var t = new HandlerThread ("RemoveCallbacksThroughReplacementWrapper");
+			t.Start ();
+			using var blocked = new ManualResetEventSlim ();
+			using var release = new ManualResetEventSlim ();
+			using var done = new ManualResetEventSlim ();
+			int calls = 0;
+			Action action = () => Interlocked.Increment (ref calls);
+			var h = new Handler (t.Looper);
+			var handle = h.PeerReference.NewGlobalRef ();
+
+			try {
+				Assert.IsTrue (h.Post (() => { blocked.Set (); release.Wait (); }));
+				Assert.IsTrue (blocked.Wait (TimeSpan.FromSeconds (10)));
 				Assert.IsTrue (h.Post (action));
 				Assert.IsTrue (h.PostDelayed (action, 0));
-				h.RemoveCallbacks (action);
+				h.Dispose ();
+
+				using var replacement = Java.Lang.Object.GetObject<Handler> (handle.Handle, JniHandleOwnership.DoNotTransfer);
+				Assert.IsNotNull (replacement);
+				Assert.AreNotSame (h, replacement);
+				replacement.RemoveCallbacks (action);
+				Assert.IsTrue (replacement.Post (done.Set));
+				release.Set ();
+				Assert.IsTrue (done.Wait (TimeSpan.FromSeconds (10)));
+				Assert.AreEqual (0, calls, "Posts made through a disposed wrapper must be cancelable through a new wrapper.");
+			} finally {
+				release.Set ();
+				h.Dispose ();
+				JniObjectReference.Dispose (ref handle);
+				Quit (t);
 			}
-			Assert.IsTrue (other.Post (action));                       // runs: different handler
-			Assert.IsTrue (h.Post (action));
-			h.RemoveCallbacks (action);
-			long now = SystemClock.UptimeMillis ();
-			Assert.IsTrue (h.PostAtTime (action, token, now));
-			Assert.IsTrue (h.PostAtTime (action, token, now));
-			Assert.IsTrue (h.PostAtTime (action, otherToken, now));   // runs: different token
-			h.RemoveCallbacks (action, token);
-			Assert.IsTrue (h.Post (action));                           // runs: posted after cancellation
-			Assert.IsTrue (h.Post (action));                           // runs: same runnable queued twice
-			Assert.IsTrue (h.Post (done.Set));
-			release.Set ();
-			Assert.IsTrue (done.Wait (TimeSpan.FromSeconds (10)));
-			Assert.AreEqual (4, calls);
-			t.QuitSafely ();
 		}
 
 		[Test]
@@ -78,16 +119,25 @@ namespace Xamarin.Android.RuntimeTests {
 			using var t = new HandlerThread ("ExecutedActionCallbacksAreCollectible");
 			t.Start ();
 			using var h = new Handler (t.Looper);
-			var actions = PostAndRun (h, 100);
-			for (int i = 0; i < 50 && actions.Exists (a => a.IsAlive); i++) {
-				GC.Collect ();
-				GC.WaitForPendingFinalizers ();
-				Java.Lang.Runtime.GetRuntime ().Gc ();
-				JniEnvironment.Runtime.ValueManager.CollectPeers ();
-				Thread.Sleep (100);
+			try {
+				var actions = PostAndRun (h, 100);
+				for (int i = 0; i < 50 && actions.Exists (a => a.IsAlive); i++) {
+					GC.Collect ();
+					GC.WaitForPendingFinalizers ();
+					Java.Lang.Runtime.GetRuntime ().Gc ();
+					JniEnvironment.Runtime.ValueManager.CollectPeers ();
+					Thread.Sleep (100);
+				}
+				Assert.IsFalse (actions.Exists (a => a.IsAlive), "Executed callbacks must not keep their Action alive.");
+			} finally {
+				Quit (t);
 			}
-			Assert.IsFalse (actions.Exists (a => a.IsAlive), "Executed callbacks must not keep their Action alive.");
+		}
+
+		static void Quit (HandlerThread t)
+		{
 			t.QuitSafely ();
+			t.Join (10_000);
 		}
 
 		[MethodImpl (MethodImplOptions.NoInlining)]
