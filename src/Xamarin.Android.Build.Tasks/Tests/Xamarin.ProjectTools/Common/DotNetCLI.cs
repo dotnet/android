@@ -296,7 +296,7 @@ namespace Xamarin.ProjectTools
 				arguments.AddRange (parameters);
 			}
 
-			return ExecuteProcess (arguments.ToArray (), workingDirectory: ProjectDirectory);
+			return ExecuteProcess (arguments.ToArray (), workingDirectory: ProjectDirectory, startInProcessGroup: true);
 		}
 
 		public IEnumerable<string> LastBuildOutput {

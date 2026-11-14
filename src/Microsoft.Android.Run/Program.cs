@@ -19,6 +19,8 @@ bool verbose = false;
 bool wakeDevice = true;
 int? logcatPid = null;
 Process? logcatProcess = null;
+Task? logcatOutputTask = null;
+CancellationTokenSource? logcatOutputCts = null;
 CancellationTokenSource cts = new ();
 int ctrlCRequested = 0;
 string? logcatArgs = null;
@@ -307,16 +309,10 @@ async Task<int> RunInstrumentationAsync (List<string> instrumentationArgs)
 		try {
 			await ObserveOutputTaskAsync ();
 		} finally {
-			await logcatTask;
-			// Clean up logcat
 			try {
-				if (logcatProcess != null && !logcatProcess.HasExited) {
-					logcatProcess.Kill ();
-					logcatProcess.WaitForExit (1000);
-				}
-			} catch (Exception ex) {
-				if (verbose)
-					Console.Error.WriteLine ($"Logcat cleanup: {ex.Message}");
+				await logcatTask;
+			} finally {
+				await StopLogcatAsync ();
 			}
 		}
 	}
@@ -630,10 +626,46 @@ void StartLogcat ()
 
 	var process = Process.Start (psi) ?? throw new InvalidOperationException ("Failed to start adb logcat");
 	logcatProcess = process;
-	_ = Task.Run (async () => {
-		await foreach (var line in process.ReadAllLinesAsync ())
+	var outputCts = new CancellationTokenSource ();
+	logcatOutputCts = outputCts;
+	logcatOutputTask = Task.Run (async () => {
+		await foreach (var line in process.ReadAllLinesAsync (outputCts.Token))
 			(line.StandardError ? Console.Error : Console.Out).WriteLine (line.Content);
 	});
+}
+
+async Task StopLogcatAsync ()
+{
+	try {
+		try {
+			if (logcatProcess != null && !logcatProcess.HasExited) {
+				logcatProcess.Kill ();
+				logcatProcess.WaitForExit (1000);
+			}
+		} catch (Exception ex) {
+			Console.Error.WriteLine ($"Error cleaning up logcat process: {ex.Message}");
+		}
+	} finally {
+		try {
+			if (logcatOutputTask != null && logcatOutputCts != null) {
+				// Allow buffered final lines to drain before cancelling a stuck read.
+				logcatOutputCts.CancelAfter (TimeSpan.FromSeconds (5));
+				try {
+					await logcatOutputTask;
+				} catch (OperationCanceledException) when (logcatOutputCts.IsCancellationRequested) {
+					Console.Error.WriteLine ("Timed out draining logcat output.");
+				} catch (Exception ex) {
+					Console.Error.WriteLine ($"Error reading logcat output: {ex.Message}");
+				}
+			}
+		} finally {
+			logcatProcess?.Dispose ();
+			logcatOutputCts?.Dispose ();
+			logcatProcess = null;
+			logcatOutputTask = null;
+			logcatOutputCts = null;
+		}
+	}
 }
 
 async Task WaitForAppExitAsync ()
@@ -658,16 +690,7 @@ async Task WaitForAppExitAsync ()
 			await Task.Delay (1000, cts.Token).ConfigureAwait (ConfigureAwaitOptions.SuppressThrowing);
 		}
 	} finally {
-		// Clean up logcat process
-		try {
-			if (logcatProcess != null && !logcatProcess.HasExited) {
-				logcatProcess.Kill ();
-				logcatProcess.WaitForExit (1000);
-			}
-		} catch (Exception ex) {
-			if (verbose)
-				Console.Error.WriteLine ($"Error cleaning up logcat process: {ex.Message}");
-		}
+		await StopLogcatAsync ();
 	}
 }
 
