@@ -16,6 +16,7 @@
     <Compile Include="..\..\src\Microsoft.Android.Run\AdbHelper.cs" Link="AdbHelper.cs" />
     <Compile Include="..\..\src\Microsoft.Android.Run\AndroidTestAdapter.cs" Link="AndroidTestAdapter.cs" />
     <Compile Include="..\..\src\Microsoft.Android.Run\InstrumentationProtocol.cs" Link="InstrumentationProtocol.cs" />
+    <Compile Include="..\..\src\Xamarin.Android.Build.Tasks\Tests\Xamarin.ProjectTools\Utilities\ProcessExtensions.cs" Link="ProcessExtensions.cs" />
     <PackageReference Include="Microsoft.Testing.Platform" Version="$(MicrosoftTestingPlatformVersion)" />
     <PackageReference Include="Microsoft.Testing.Extensions.TrxReport" Version="$(MicrosoftTestingPlatformVersion)" />
     <PackageReference Include="NUnit" Version="$(NUnitVersion)" />

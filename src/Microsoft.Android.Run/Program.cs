@@ -257,32 +257,31 @@ async Task<int> RunInstrumentationAsync (List<string> instrumentationArgs)
 
 	// Run instrumentation with streaming output
 	var psi = AdbHelper.CreateStartInfo (adbPath, adbTarget, cmdArgs);
-	using var instrumentProcess = new Process { StartInfo = psi };
+	using var instrumentProcess = Process.Start (psi) ?? throw new InvalidOperationException ("Failed to start adb");
 
-	var locker = new Lock ();
 	var output = new StringBuilder ();
+	var outputTask = Task.Run (async () => {
+		await foreach (var line in instrumentProcess.ReadAllLinesAsync (cts.Token)) {
+			output.AppendLine (line.Content);
+			(line.StandardError ? Console.Error : Console.Out).WriteLine (line.Content);
+		}
+	});
 
-	instrumentProcess.OutputDataReceived += (s, e) => {
-		if (e.Data != null)
-			lock (locker) {
-				output.AppendLine (e.Data);
-				Console.WriteLine (e.Data);
-			}
-	};
-
-	instrumentProcess.ErrorDataReceived += (s, e) => {
-		if (e.Data != null)
-			lock (locker) {
-				output.AppendLine (e.Data);
-				Console.Error.WriteLine (e.Data);
-			}
-	};
-
-	instrumentProcess.Start ();
-	instrumentProcess.BeginOutputReadLine ();
-	instrumentProcess.BeginErrorReadLine ();
 	if (!waitForExit) {
-		await instrumentProcess.WaitForExitAsync (cts.Token);
+		try {
+			await instrumentProcess.WaitForExitAsync (cts.Token);
+			await outputTask;
+		} catch (OperationCanceledException) when (cts.IsCancellationRequested) {
+			try { instrumentProcess.Kill (); } catch (Exception ex) {
+				if (verbose)
+					Console.Error.WriteLine ($"Cleanup: {ex.Message}");
+			}
+			await instrumentProcess.WaitForExitAsync ().WaitAsync (TimeSpan.FromSeconds (5));
+			throw;
+		} finally {
+			if (cts.IsCancellationRequested)
+				await ObserveOutputTaskAsync ();
+		}
 		return instrumentProcess.ExitCode == 0 ? 0 : 1;
 	}
 
@@ -295,6 +294,7 @@ async Task<int> RunInstrumentationAsync (List<string> instrumentationArgs)
 	try {
 		try {
 			await instrumentProcess.WaitForExitAsync (cts.Token);
+			await outputTask;
 		} catch (OperationCanceledException) {
 			try { instrumentProcess.Kill (); } catch (Exception ex) {
 				if (verbose)
@@ -304,16 +304,28 @@ async Task<int> RunInstrumentationAsync (List<string> instrumentationArgs)
 		}
 	} finally {
 		cts.Cancel ();
-		await logcatTask;
-		// Clean up logcat
 		try {
-			if (logcatProcess != null && !logcatProcess.HasExited) {
-				logcatProcess.Kill ();
-				logcatProcess.WaitForExit (1000);
+			await ObserveOutputTaskAsync ();
+		} finally {
+			await logcatTask;
+			// Clean up logcat
+			try {
+				if (logcatProcess != null && !logcatProcess.HasExited) {
+					logcatProcess.Kill ();
+					logcatProcess.WaitForExit (1000);
+				}
+			} catch (Exception ex) {
+				if (verbose)
+					Console.Error.WriteLine ($"Logcat cleanup: {ex.Message}");
 			}
-		} catch (Exception ex) {
-			if (verbose)
-				Console.Error.WriteLine ($"Logcat cleanup: {ex.Message}");
+		}
+	}
+
+	async Task ObserveOutputTaskAsync ()
+	{
+		try {
+			await outputTask;
+		} catch (OperationCanceledException) when (cts.IsCancellationRequested) {
 		}
 	}
 
@@ -324,13 +336,8 @@ async Task<int> RunInstrumentationAsync (List<string> instrumentationArgs)
 	}
 
 	// `am instrument` exits 0 even when the instrumentation crashes or reports
-	// failure, so inspect what it printed to decide the exit code. `WaitForExitAsync`
-	// has already drained both readers, but read under the same lock for clarity.
-	string capturedOutput;
-	lock (locker)
-		capturedOutput = output.ToString ();
-
-	var failure = GetInstrumentationFailure (capturedOutput);
+	// failure, so inspect what it printed to decide the exit code.
+	var failure = GetInstrumentationFailure (output.ToString ());
 	if (failure != null) {
 		Console.Error.WriteLine ($"Error: {failure}");
 		return 1;
@@ -621,25 +628,12 @@ void StartLogcat ()
 	if (verbose)
 		Console.WriteLine ($"Running: adb {psi.Arguments}");
 
-	var locker = new Lock();
-
-	logcatProcess = new Process { StartInfo = psi };
-
-	logcatProcess.OutputDataReceived += (s, e) => {
-		if (e.Data != null)
-			lock (locker)
-				Console.WriteLine (e.Data);
-	};
-
-	logcatProcess.ErrorDataReceived += (s, e) => {
-		if (e.Data != null)
-			lock (locker)
-				Console.Error.WriteLine (e.Data);
-	};
-
-	logcatProcess.Start ();
-	logcatProcess.BeginOutputReadLine ();
-	logcatProcess.BeginErrorReadLine ();
+	var process = Process.Start (psi) ?? throw new InvalidOperationException ("Failed to start adb logcat");
+	logcatProcess = process;
+	_ = Task.Run (async () => {
+		await foreach (var line in process.ReadAllLinesAsync ())
+			(line.StandardError ? Console.Error : Console.Out).WriteLine (line.Content);
+	});
 }
 
 async Task WaitForAppExitAsync ()

@@ -1,6 +1,7 @@
 #nullable enable
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
@@ -15,6 +16,7 @@ using Microsoft.Testing.Platform.Extensions.TestFramework;
 using Microsoft.Testing.Platform.Messages;
 using Microsoft.Testing.Platform.Requests;
 using NUnit.Framework;
+using Xamarin.ProjectTools;
 
 namespace Xamarin.Android.Tools.Tests;
 
@@ -174,6 +176,89 @@ public class StreamingTests
 		using var application = await CreateApplication ("", missingAdb: true);
 		Assert.ThrowsAsync<System.ComponentModel.Win32Exception> (async () => { await application.RunAsync (); });
 		Assert.That (error.ToString (), Does.Contain ("Incomplete test run").And.Contain ("passed=0"));
+	}
+
+	[Test]
+	public async Task ProcessTimeoutStopsDescendantAfterRootAndIntermediateExitImmediately ()
+	{
+		var startInfo = new ProcessStartInfo (OperatingSystem.IsWindows () ? "powershell.exe" : "/bin/sh") {
+			UseShellExecute = false,
+			RedirectStandardOutput = true,
+			RedirectStandardError = true,
+		};
+		if (OperatingSystem.IsWindows ()) {
+			startInfo.ArgumentList.Add ("-NoProfile");
+			startInfo.ArgumentList.Add ("-NonInteractive");
+			startInfo.ArgumentList.Add ("-Command");
+			startInfo.ArgumentList.Add ("$psi = New-Object System.Diagnostics.ProcessStartInfo 'ping.exe', '-n 31 127.0.0.1'; $psi.UseShellExecute = $false; [System.Diagnostics.Process]::Start($psi).Id; exit 0");
+		} else {
+			startInfo.ArgumentList.Add ("-c");
+			startInfo.ArgumentList.Add ("(sleep 30 & echo $!); exit 0");
+		}
+		using var process = new Process { StartInfo = startInfo };
+		process.StartInProcessGroup ();
+		using var cts = new CancellationTokenSource ();
+		var childPidSource = new TaskCompletionSource<int> (TaskCreationOptions.RunContinuationsAsynchronously);
+		var reader = Task.Run (async () => {
+			await foreach (var line in process.ReadAllLinesAsync (cts.Token)) {
+				if (int.TryParse (line.Content, out int childPid))
+					childPidSource.TrySetResult (childPid);
+			}
+		});
+
+		Process? child = null;
+		try {
+			int childPid = await childPidSource.Task.WaitAsync (TimeSpan.FromSeconds (30));
+			await process.WaitForExitAsync ().WaitAsync (TimeSpan.FromSeconds (30));
+			child = Process.GetProcessById (childPid);
+			Assert.That (child.HasExited, Is.False, "The reparented descendant must still be running after its ancestors exit.");
+			Assert.That (process.WaitForExitAndOutput (reader, cts, TimeSpan.FromSeconds (1)), Is.False);
+			Assert.That (child.WaitForExit (5_000), Is.True, "The timed-out descendant must be terminated.");
+		} finally {
+			try {
+				process.StopAndDrainOutput (cts, reader);
+			} finally {
+				if (child is not null) {
+					try {
+						if (!child.HasExited)
+							child.Kill ();
+					} finally {
+						child.Dispose ();
+					}
+				}
+			}
+		}
+	}
+
+	[Test]
+	public async Task ProcessTimeoutStillAppliesAfterOutputCloses ()
+	{
+		if (OperatingSystem.IsWindows ())
+			Assert.Ignore ("The fake process is a Unix shell executable.");
+
+		var startInfo = new ProcessStartInfo ("/bin/sh") {
+			UseShellExecute = false,
+			RedirectStandardOutput = true,
+			RedirectStandardError = true,
+		};
+		startInfo.ArgumentList.Add ("-c");
+		startInfo.ArgumentList.Add ("exec 1>&- 2>&-; exec sleep 30");
+		using var process = new Process { StartInfo = startInfo };
+		process.StartInProcessGroup ();
+		using var cts = new CancellationTokenSource ();
+		var reader = Task.Run (async () => {
+			await foreach (var _ in process.ReadAllLinesAsync (cts.Token)) {
+			}
+		});
+
+		try {
+			await reader.WaitAsync (TimeSpan.FromSeconds (5));
+			Assert.That (process.HasExited, Is.False, "The process must remain alive after closing both output streams.");
+			Assert.That (process.WaitForExitAndOutput (reader, cts, TimeSpan.FromSeconds (1)), Is.False);
+			Assert.That (process.WaitForExit (5_000), Is.True, "The timed-out process must be terminated.");
+		} finally {
+			process.StopAndDrainOutput (cts, reader);
+		}
 	}
 
 	[TestCase (false)]
