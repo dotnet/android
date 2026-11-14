@@ -30,6 +30,8 @@ public class JavaVersionTargetsTests : BaseTest
 	[TestCase ("default", null, "17", "XA0031", false)]
 	[TestCase ("default", null, "22", "XA0030", false)]
 	[TestCase ("default", null, "21.0.8", "", false)]
+	[TestCase ("default", null, "", "XA0033", false, TestName = "SilentJavaProcess")]
+	[TestCase ("default", null, " \t ", "XA0033", false, TestName = "WhitespaceJavaProcess")]
 	public void ValidatesSelectedJavaToolRelease (string selection, string? toolVersion, string sdkVersion, string errorCode, bool useReleaseFile = true)
 	{
 		string directory = Path.Combine (Root, "temp", TestName);
@@ -52,9 +54,10 @@ public class JavaVersionTargetsTests : BaseTest
 			File.Delete (Path.Combine (sdk, "release"));
 			tool = OperatingSystem.IsWindows () ? "java.cmd" : "java";
 			string java = Path.Combine (sdk, "bin", tool);
+			string versionOutput = string.IsNullOrWhiteSpace (sdkVersion) ? sdkVersion : $"java version \"{sdkVersion}\"";
 			File.WriteAllText (java, OperatingSystem.IsWindows ()
-				? $"@echo off\r\necho java version \"{sdkVersion}\" 1>&2\r\n"
-				: $"#!/bin/sh\necho 'java version \"{sdkVersion}\"' >&2\n");
+				? $"@echo off\r\necho({versionOutput} 1>&2\r\n"
+				: $"#!/bin/sh\nprintf '%s' '{versionOutput}' >&2\n");
 			if (!OperatingSystem.IsWindows ()) {
 				File.SetUnixFileMode (java, UnixFileMode.UserRead | UnixFileMode.UserWrite | UnixFileMode.UserExecute);
 			}
@@ -77,7 +80,8 @@ public class JavaVersionTargetsTests : BaseTest
 			new XElement ("Import", new XAttribute ("Project", targets)),
 			new XElement ("Target", new XAttribute ("Name", "CheckJdkVersion"),
 				new XAttribute ("DependsOnTargets", "_ValidateJavaVersion"),
-				new XElement ("Message", new XAttribute ("Importance", "high"),
+				new XElement ("Message", new XAttribute ("Condition", "'$(_JdkVersion)' != ''"),
+					new XAttribute ("Importance", "high"),
 					new XAttribute ("Text", "Parsed Java SDK version $([System.Version]::Parse('$(_JdkVersion)')).")))))
 			.Save (project);
 
@@ -86,7 +90,12 @@ public class JavaVersionTargetsTests : BaseTest
 			"-t:CheckJdkVersion", "-v:normal", "-m", "-mt", "-nr:false",
 			"-warnaserror:MSB4286,MSB4287,MSB4288");
 		string output = result.Output + result.Error;
-		Assert.AreEqual (errorCode == "" ? 0 : 1, result.ExitCode, output);
+		Assert.AreEqual (errorCode == "" || errorCode == "XA0033" ? 0 : 1, result.ExitCode, output);
+		if (errorCode == "XA0033") {
+			StringAssert.Contains ($"warning XA0033: Failed to get the Java SDK version because the returned value does not appear to contain a valid version number. `{tool} -version` returned: ```(no output)```", output);
+			StringAssert.DoesNotContain ("FormatException", output);
+			return;
+		}
 		string expectedVersion = toolVersion ?? sdkVersion;
 		if (!expectedVersion.Contains ('.')) {
 			expectedVersion += ".0";

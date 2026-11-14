@@ -102,6 +102,7 @@ This file contains .NET 6+ Java version validation and calls to the
     </Exec>
     <PropertyGroup Condition=" '$(_JavaSdkDirectory)' != '' and '$(_JdkVersion)' == '' ">
       <_JdkVersion>$([System.Text.RegularExpressions.Regex]::Match('$(_AndroidJavaVersionOutput)', '(?&lt;=version ")\d+(\.\d+){0,3}'))</_JdkVersion>
+      <_AndroidJavaVersionOutput Condition=" $([System.String]::IsNullOrWhiteSpace('$(_AndroidJavaVersionOutput)')) ">(no output)</_AndroidJavaVersionOutput>
     </PropertyGroup>
     <PropertyGroup Condition=" '$(_JdkVersion)' != '' and !$(_JdkVersion.Contains('.')) ">
       <_JdkVersion>$(_JdkVersion).0</_JdkVersion>
