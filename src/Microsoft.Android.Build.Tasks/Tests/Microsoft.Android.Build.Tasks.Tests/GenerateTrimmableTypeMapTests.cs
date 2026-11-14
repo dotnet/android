@@ -2,6 +2,9 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Reflection;
+using System.Reflection.Metadata.Ecma335;
+using System.Reflection.PortableExecutable;
 using System.Xml.Linq;
 using Microsoft.Android.Sdk.TrimmableTypeMap;
 using Microsoft.Android.Tasks;
@@ -456,19 +459,50 @@ namespace Xamarin.Android.Build.Tests {
 		[Test]
 		public void ScannerRecordsIsSealedFromTypeMetadata ()
 		{
-			var monoAndroidItem = FindMonoAndroidDll ();
-			if (monoAndroidItem is null) {
-				Assert.Ignore ("Mono.Android.dll not found; skipping.");
-				return;
+			var pe = new PEAssemblyBuilder (new Version (11, 0, 0, 0));
+			pe.EmitPreamble ("ScannerPeers", "ScannerPeers.dll");
+			var registerAttribute = pe.Metadata.AddTypeReference (
+				pe.MonoAndroidRef,
+				pe.Metadata.GetOrAddString ("Android.Runtime"),
+				pe.Metadata.GetOrAddString ("RegisterAttribute"));
+			var registerCtor = pe.AddMemberRef (registerAttribute, ".ctor",
+				sig => sig.MethodSignature (isInstanceMethod: true).Parameters (1,
+					rt => rt.Void (),
+					p => p.AddParameter ().Type ().String ()));
+			var objectType = pe.Metadata.AddTypeReference (
+				pe.SystemRuntimeRef,
+				pe.Metadata.GetOrAddString ("System"),
+				pe.Metadata.GetOrAddString ("Object"));
+			var nonsealedType = pe.Metadata.AddTypeDefinition (
+				TypeAttributes.Public | TypeAttributes.Class,
+				pe.Metadata.GetOrAddString ("Example"),
+				pe.Metadata.GetOrAddString ("NonsealedPeer"),
+				objectType,
+				MetadataTokens.FieldDefinitionHandle (1),
+				MetadataTokens.MethodDefinitionHandle (1));
+			var sealedType = pe.Metadata.AddTypeDefinition (
+				TypeAttributes.Public | TypeAttributes.Class | TypeAttributes.Sealed,
+				pe.Metadata.GetOrAddString ("Example"),
+				pe.Metadata.GetOrAddString ("SealedPeer"),
+				nonsealedType,
+				MetadataTokens.FieldDefinitionHandle (1),
+				MetadataTokens.MethodDefinitionHandle (1));
+			foreach (var (type, javaName) in new [] {
+				(nonsealedType, "example/NonsealedPeer"),
+				(sealedType, "example/SealedPeer"),
+			}) {
+				pe.Metadata.AddCustomAttribute (type, registerCtor, pe.BuildAttributeBlob (blob => blob.WriteSerializedString (javaName)));
 			}
 
-			using var stream = File.OpenRead (monoAndroidItem.ItemSpec);
-			using var reader = new System.Reflection.PortableExecutable.PEReader (stream);
+			using var stream = new MemoryStream ();
+			pe.WritePE (stream);
+			stream.Position = 0;
+			using var reader = new PEReader (stream);
 			using var scanner = new JavaPeerScanner ();
-			var peers = scanner.Scan ([new AssemblyInput ("Mono.Android", monoAndroidItem.ItemSpec, reader)]);
+			var peers = scanner.Scan ([new AssemblyInput ("ScannerPeers", "", reader)]);
 
-			var sealedPeer = peers.Single (peer => peer.ManagedTypeName == "Java.Lang.String");
-			var nonsealedPeer = peers.Single (peer => peer.ManagedTypeName == "Java.Lang.Object");
+			var sealedPeer = peers.Single (peer => peer.JavaName == "example/SealedPeer");
+			var nonsealedPeer = peers.Single (peer => peer.JavaName == "example/NonsealedPeer");
 			Assert.IsTrue (sealedPeer.IsSealed, sealedPeer.ManagedTypeName);
 			Assert.IsFalse (nonsealedPeer.IsSealed, nonsealedPeer.ManagedTypeName);
 		}
