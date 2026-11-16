@@ -49,10 +49,9 @@ namespace Xamarin.ProjectTools
 				RedirectStandardOutput = true,
 				RedirectStandardError = true,
 			};
-			var javacPs = Process.Start (javacPsi);
-			javacPs.WaitForExit ();
-			if (javacPs.ExitCode != 0)
-				throw new InvalidOperationException ("`Javac` command line tool did not successfully finish: " + javacPs.StandardError.ReadToEnd ());
+			var javac = Process.RunAndCaptureText (javacPsi);
+			if (javac.ExitStatus.ExitCode != 0)
+				throw new InvalidOperationException ("`Javac` command line tool did not successfully finish: " + javac.StandardError);
 			if (File.Exists (jarfile))
 				File.Delete (jarfile);
 			var args = new string [] { "cvf", JarFileName };
@@ -69,11 +68,9 @@ namespace Xamarin.ProjectTools
 				RedirectStandardOutput = true,
 				RedirectStandardError = true,
 			};
-			var jarPs = Process.Start (jarPsi);
-			jarPs.WaitForExit ();
-			if (jarPs.ExitCode != 0)
-				throw new InvalidOperationException ("`Jar` command line tool did not successfully finish: " + jarPs.StandardError.ReadToEnd ());
-			Process.Start (jarPsi).WaitForExit ();
+			var jar = Process.RunAndCaptureText (jarPsi);
+			if (jar.ExitStatus.ExitCode != 0)
+				throw new InvalidOperationException ("`Jar` command line tool did not successfully finish: " + jar.StandardError);
 			return File.ReadAllBytes (jarfile);
 		}
 	}

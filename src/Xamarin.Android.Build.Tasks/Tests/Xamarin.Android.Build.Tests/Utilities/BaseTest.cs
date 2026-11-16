@@ -406,18 +406,7 @@ namespace Xamarin.Android.Build.Tests
 			}
 			if (IsWindows)
 				return;
-			var chmod = new ProcessStartInfo {
-				FileName                    = "chmod",
-				Arguments                   = $"+x \"{path}\"",
-				UseShellExecute             = false,
-				RedirectStandardInput       = false,
-				RedirectStandardOutput      = true,
-				RedirectStandardError       = true,
-				CreateNoWindow              = true,
-				WindowStyle                 = ProcessWindowStyle.Hidden,
-			};
-			var p = Process.Start (chmod);
-			p.WaitForExit ();
+			Process.Run ("chmod", ["+x", path]);
 		}
 
 		void CreateFauxExecutable (string exeFullPath, StringBuilder sb) {
@@ -543,11 +532,8 @@ namespace Xamarin.Android.Build.Tests
 				UseShellExecute = false,
 				CreateNoWindow = true,
 			};
-			using var proc = Process.Start (psi) ?? throw new InvalidOperationException ($"Failed to start '{apksignerExe}'.");
-			string stdout = proc.StandardOutput.ReadToEnd ();
-			string stderr = proc.StandardError.ReadToEnd ();
-			proc.WaitForExit ();
-			Assert.AreEqual (0, proc.ExitCode, $"APK file `{apkPath}` is not signed! apksigner verify failed:\n{stderr}\n{stdout}");
+			var result = Process.RunAndCaptureText (psi);
+			Assert.AreEqual (0, result.ExitStatus.ExitCode, $"APK file `{apkPath}` is not signed! apksigner verify failed:\n{result.StandardError}\n{result.StandardOutput}");
 		}
 
 		protected string GetResourceDesignerPath (ProjectBuilder builder, XamarinAndroidProject project)
@@ -624,50 +610,22 @@ namespace Xamarin.Android.Build.Tests
 				WindowStyle		= ProcessWindowStyle.Hidden,
 			};
 
-			var stderr_completed = new ManualResetEvent (false);
-			var stdout_completed = new ManualResetEvent (false);
-
-			var p = new Process () {
-				StartInfo   = psi,
-			};
-
-			p.ErrorDataReceived += (sender, e) => {
-				if (e.Data == null)
-					stderr_completed.Set ();
-				else
-					Console.WriteLine (e.Data);
-			};
-
-			p.OutputDataReceived += (sender, e) => {
-				if (e.Data == null)
-					stdout_completed.Set ();
-				else
-					Console.WriteLine (e.Data);
-			};
-
-			using (p) {
-				p.StartInfo = psi;
-				p.Start ();
-				p.BeginOutputReadLine ();
-				p.BeginErrorReadLine ();
-
-				bool success = p.WaitForExit (60000);
-
-				// We need to call the parameter-less WaitForExit only if any of the standard
-				// streams have been redirected (see
-				// https://docs.microsoft.com/en-us/dotnet/api/system.diagnostics.process.waitforexit?view=netframework-4.7.2#System_Diagnostics_Process_WaitForExit)
-				//
-				p.WaitForExit ();
-				stderr_completed.WaitOne (TimeSpan.FromSeconds (60));
-				stdout_completed.WaitOne (TimeSpan.FromSeconds (60));
-
-				if (!success || p.ExitCode != 0) {
-					Console.Error.WriteLine ($"Process `{command} {arguments}` exited with value {p.ExitCode}.");
-					return false;
-				}
-
-				return true;
+			ProcessTextOutput result;
+			try {
+				result = Process.RunAndCaptureText (psi, TimeSpan.FromSeconds (60));
+			} catch (TimeoutException) {
+				Console.Error.WriteLine ($"Process `{command} {arguments}` timed out.");
+				return false;
 			}
+
+			Console.WriteLine (result.StandardOutput);
+			Console.WriteLine (result.StandardError);
+			if (result.ExitStatus.ExitCode != 0) {
+				Console.Error.WriteLine ($"Process `{command} {arguments}` exited with value {result.ExitStatus.ExitCode}.");
+				return false;
+			}
+
+			return true;
 		}
 
 		protected bool IgnoreUnsupportedConfiguration (AndroidRuntime runtime, bool release = false)
