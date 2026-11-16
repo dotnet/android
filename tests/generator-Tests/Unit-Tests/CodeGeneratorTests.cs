@@ -1276,6 +1276,43 @@ namespace generatortests
 			Assert.AreEqual ("deprecated", gens.Single (g => g.Name == "MyClass").Methods.Single (m => m.Name == "DoStuff").Deprecated);
 		}
 
+		[TestCase (false)]
+		[TestCase (true)]
+		public void InterfaceOnlyAbstractBaseInfersOverrideAndObsoleteUnlessSkipped (bool skip)
+		{
+			options.FixObsoleteOverrides = true;
+			var gens = ParseApiDefinition ($$"""
+				<api>
+				  <package name='java.lang'>
+				    <class name='Object' visibility='public' deprecated='not deprecated' />
+				  </package>
+				  <package name='com.example'>
+				    <interface name='Counter' visibility='public' abstract='true' deprecated='not deprecated'>
+				      <method name='count' jni-signature='()I' return='int' visibility='public' abstract='true' static='false' deprecated='deprecated' deprecated-since='21' />
+				    </interface>
+				    <class name='Base' extends='java.lang.Object' visibility='public' abstract='true' deprecated='not deprecated'
+				        {{(skip ? "skipInterfaceMethods='com/example/Counter.count()I'" : "")}}>
+				      <implements name='com.example.Counter' name-generic-aware='com.example.Counter' />
+				    </class>
+				    <class name='Derived' extends='com.example.Base' visibility='public' abstract='false' deprecated='not deprecated'>
+				      <method name='count' return='int' visibility='public' abstract='false' static='false' final='false' deprecated='not deprecated' deprecated-since='29' />
+				    </class>
+				  </package>
+				</api>
+				""");
+			var baseType = gens.Single (g => g.Name == "Base");
+			var derived = gens.Single (g => g.Name == "Derived");
+			var method = derived.Methods.Single ();
+			Assert.That (baseType.Methods, Is.Empty, "The abstract slot exists only in the implemented interface.");
+			Assert.AreEqual (!skip, method.IsOverride);
+			Assert.AreEqual (skip ? null : "deprecated", method.Deprecated);
+			Assert.AreEqual (skip ? 29 : 21, method.DeprecatedSince?.ApiLevel ?? 0);
+
+			var source = GetGeneratedTypeOutput (derived);
+			StringAssert.Contains (skip ? "public virtual int Count ()" : "public override int Count ()", source);
+			Assert.AreEqual (!skip, source.Contains ("System.Obsolete"));
+		}
+
 		[Test]
 		public void FixupDeprecatedSinceBaseMethods ()
 		{
