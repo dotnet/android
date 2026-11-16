@@ -1,5 +1,6 @@
 Compat issues with assembly Mono.Android:
 CannotChangeAttribute : Attribute 'Android.Runtime.RequiresPermissionAttribute' on 'Android.Accounts.AccountManager.RemoveAccount(Android.Accounts.Account, Android.App.Activity, Android.Accounts.IAccountManagerCallback, Android.OS.Handler)' changed from '[RequiresPermissionAttribute("android.permission.MANAGE_ACCOUNTS")]' in the contract to '[RequiresPermissionAttribute("android.permission.REMOVE_ACCOUNTS")]' in the implementation.
+CannotChangeAttribute : Attribute 'System.AttributeUsageAttribute' on 'Android.Runtime.RegisterAttribute' changed from '[AttributeUsageAttribute(1508)]' in the contract to '[AttributeUsageAttribute(1516)]' in the implementation.
 CannotRemoveAttribute : Attribute 'Android.Runtime.RequiresPermissionAttribute' exists on 'Android.Bluetooth.BluetoothDevice.CreateInsecureL2capChannel(System.Int32)' in the contract but not the implementation.
 CannotRemoveAttribute : Attribute 'Android.Runtime.RequiresPermissionAttribute' exists on 'Android.Bluetooth.BluetoothDevice.CreateInsecureRfcommSocketToServiceRecord(Java.Util.UUID)' in the contract but not the implementation.
 CannotRemoveAttribute : Attribute 'Android.Runtime.RequiresPermissionAttribute' exists on 'Android.Bluetooth.BluetoothDevice.CreateL2capChannel(System.Int32)' in the contract but not the implementation.

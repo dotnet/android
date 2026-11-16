@@ -138,6 +138,21 @@ namespace Xamarin.Android.Tools.BytecodeTests
 			Assert.AreEqual ("Lxat/bytecode/tests/MyDp;", twice.GetParameters ().Single ().KotlinInlineClassJniType);
 		}
 
+		// A value class from another library (its .class file is not bound here) is still
+		// stamped, so the generator can project it to a struct from a referenced assembly.
+		[Test]
+		public void Fixup_StampsInlineClassFromAnotherLibrary ()
+		{
+			var widgets = LoadClassFile ("Widgets.class");
+			KotlinFixups.Fixup (new List<ClassFile> { widgets });
+
+			var pad = widgets.Methods.First (m => m.Name.StartsWith ("pad-", StringComparison.Ordinal));
+			Assert.AreEqual ("Lxat/bytecode/tests/MyDp;", pad.KotlinInlineClassReturnJniType);
+
+			var getter = widgets.Methods.Single (m => m.Name.StartsWith ("getTintColor-", StringComparison.Ordinal));
+			Assert.AreEqual ("Lxat/bytecode/tests/MyColor;", getter.KotlinInlineClassReturnJniType);
+		}
+
 		// dotnet/java-interop#1431 (Phase 2): when a method's Kotlin-source-level
 		// return type is a `@JvmInline value class`, KotlinFixups must stamp the
 		// method's `KotlinInlineClassReturnJniType` so the generator can project

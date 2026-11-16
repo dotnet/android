@@ -27,6 +27,12 @@ namespace generator.SourceWriters
 			klass.JavadocInfo?.AddJavadocs (Comments);
 			Comments.Add ($"// Metadata.xml XPath class reference: path=\"{klass.MetadataXPathReference}\"");
 			Comments.Add ("// Kotlin @JvmInline value class wrapper.");
+
+			// Lets other binding projects that reference this assembly find the value class.
+			Attributes.Add (new RegisterAttr (klass.RawJniName, noAcw: true) {
+				UseGlobal       = true,
+				UseShortForm    = true,
+			});
 		}
 
 		public override void WriteSignature (CodeWriter writer)

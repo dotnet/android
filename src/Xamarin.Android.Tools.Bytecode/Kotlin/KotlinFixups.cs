@@ -165,8 +165,14 @@ namespace Xamarin.Android.Tools.Bytecode
 		{
 			if (kotlinTypeClassName is null || jvmDescriptor is null)
 				return null;
-			if (!inlineClasses.TryGetValue (kotlinTypeClassName, out var underlying))
+			if (!inlineClasses.TryGetValue (kotlinTypeClassName, out var underlying)) {
+				// A value class from another library: only value classes and Kotlin built-in
+				// types are erased to a JVM primitive. The generator projects it only when a
+				// referenced binding assembly has the matching value-class struct.
+				if (IsJvmPrimitiveDescriptor (jvmDescriptor) && !kotlinTypeClassName.StartsWith ("kotlin/", StringComparison.Ordinal))
+					return "L" + kotlinTypeClassName;
 				return null;
+			}
 			if (jvmDescriptor != underlying)
 				return null;
 			return "L" + kotlinTypeClassName;
@@ -668,10 +674,7 @@ namespace Xamarin.Android.Tools.Bytecode
 			// even though the Kotlin metadata still says `MyColor`. Accept the
 			// match when the JVM primitive matches the inline class's recorded
 			// underlying-primitive descriptor.
-			if (inlineClasses != null && IsJvmPrimitiveDescriptor (javaType.BinaryName) &&
-					kotlinType.ClassName != null &&
-					inlineClasses.TryGetValue (kotlinType.ClassName, out var underlying) &&
-					underlying == javaType.BinaryName)
+			if (inlineClasses != null && GetInlineClassJniType (kotlinType.ClassName, javaType.BinaryName, inlineClasses) != null)
 				return true;
 
 			// Sometimes Kotlin keeps its native types rather than converting them to Java native types

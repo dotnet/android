@@ -84,7 +84,7 @@ namespace Xamarin.Android.Tasks
 		void ProcessType (MetadataReader reader, TypeDefinition type, TextWriter writer)
 		{
 			// RegisterAttribute can be applied to interfaces, but proguard rules are only needed for classes.
-			// Structs don't need to be checked because RegisterAttribute cannot be applied to them.
+			// Structs with RegisterAttribute are Kotlin value classes; keeping their Java class is correct.
 			if ((type.Attributes & System.Reflection.TypeAttributes.Interface) != 0)
 				return;
 

@@ -1207,27 +1207,62 @@ VNZXRob2RzLmphdmFQSwUGAAAAAAcABwDOAQAAVgMAAAAA
 		{
 			// androidx.compose.ui:ui-unit has `@JvmInline value class Dp(val value: Float)`
 			// and functions with mangled JVM names, such as `coerceAtLeast-YgX7TsA(FF)F`.
-			var item = new BuildItem ("AndroidMavenLibrary", "androidx.compose.ui:ui-unit-android");
-			item.Metadata.Add ("Version", "1.12.1");
-			item.Metadata.Add ("Repository", TestEnvironment.DotNetPublicMaven);
-			item.Metadata.Add ("VerifyDependencies", "false");
-
-			var proj = new XamarinAndroidBindingProject {
-				Jars = { item }
+			// ui-text uses ui-unit's `TextUnit` value class from another binding assembly.
+			var path = Path.Combine ("temp", TestName);
+			var unit = new XamarinAndroidBindingProject {
+				ProjectName = "UiUnit",
+				Jars = { CreateMavenLibrary ("androidx.compose.ui:ui-unit-android") },
 			};
 			// The generated value-class helpers must compile under the new unsafe rules too, which need C# preview.
-			proj.SetProperty ("MemorySafetyRulesVersion", "2");
-			proj.SetProperty ("LangVersion", "preview");
+			unit.SetProperty ("MemorySafetyRulesVersion", "2");
+			unit.SetProperty ("LangVersion", "preview");
 
-			using var b = CreateDllBuilder ();
-			Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
+			var text = new XamarinAndroidBindingProject {
+				ProjectName = "UiText",
+				Jars = { CreateMavenLibrary ("androidx.compose.ui:ui-text-android") },
+				// Only bind TextIndent; the rest of ui-text needs unrelated metadata fixes.
+				MetadataXml = """
+					<metadata>
+					  <remove-node path="/api/package[@name!='androidx.compose.ui.text.style']" />
+					  <remove-node path="/api/package[@name='androidx.compose.ui.text.style']/*[@name!='TextIndent']" />
+					</metadata>
+					""",
+			};
+			text.AddReference (unit);
 
-			var dp = File.ReadAllText (b.Output.GetIntermediaryPath (Path.Combine ("generated", "src", "Androidx.Compose.UI.Unit.Dp.cs")));
+			using var unitBuilder = CreateDllBuilder (Path.Combine (path, unit.ProjectName));
+			using var textBuilder = CreateDllBuilder (Path.Combine (path, text.ProjectName));
+			Assert.IsTrue (unitBuilder.Build (unit), "UiUnit build should have succeeded.");
+			Assert.IsTrue (textBuilder.Build (text), "UiText build should have succeeded.");
+
+			var dp = File.ReadAllText (unitBuilder.Output.GetIntermediaryPath (Path.Combine ("generated", "src", "Androidx.Compose.UI.Unit.Dp.cs")));
 			StringAssert.Contains ("readonly partial struct Dp", dp);
+			StringAssert.Contains ("[global::Android.Runtime.Register (\"androidx/compose/ui/unit/Dp\", DoNotGenerateAcw=true)]", dp);
 
-			var dpKt = File.ReadAllText (b.Output.GetIntermediaryPath (Path.Combine ("generated", "src", "Androidx.Compose.UI.Unit.DpKt.cs")));
+			var dpKt = File.ReadAllText (unitBuilder.Output.GetIntermediaryPath (Path.Combine ("generated", "src", "Androidx.Compose.UI.Unit.DpKt.cs")));
 			StringAssert.Contains ("Dp CoerceAtLeast (global::Androidx.Compose.UI.Unit.Dp obj, global::Androidx.Compose.UI.Unit.Dp minimumValue)", dpKt);
 			StringAssert.Contains ("DpSize Lerp (global::Androidx.Compose.UI.Unit.DpSize start, global::Androidx.Compose.UI.Unit.DpSize stop, float fraction)", dpKt);
+
+			// R8 must keep box-impl/unbox-impl/constructor-impl, which the structs call by name.
+			var aarPath = Path.Combine (Root, unitBuilder.ProjectDirectory, unit.OutputPath, $"{unit.ProjectName}.aar");
+			using (var aar = ZipHelper.OpenZip (aarPath)) {
+				var proguard = aar.GetEntry ("proguard.txt") ?? throw new InvalidOperationException ($"Missing proguard.txt in '{aarPath}'.");
+				using var reader = new StreamReader (proguard.Open ());
+				StringAssert.Contains ("-keep class androidx.compose.ui.unit.Dp { *; }", reader.ReadToEnd ());
+			}
+
+			// TextUnit comes from the UiUnit assembly.
+			var textIndent = File.ReadAllText (textBuilder.Output.GetIntermediaryPath (Path.Combine ("generated", "src", "Androidx.Compose.UI.Text.Style.TextIndent.cs")));
+			StringAssert.Contains ("global::Androidx.Compose.UI.Unit.TextUnit FirstLine", textIndent);
+
+			static BuildItem CreateMavenLibrary (string artifact)
+			{
+				var item = new BuildItem ("AndroidMavenLibrary", artifact);
+				item.Metadata.Add ("Version", "1.12.1");
+				item.Metadata.Add ("Repository", TestEnvironment.DotNetPublicMaven);
+				item.Metadata.Add ("VerifyDependencies", "false");
+				return item;
+			}
 		}
 
 		[Test]

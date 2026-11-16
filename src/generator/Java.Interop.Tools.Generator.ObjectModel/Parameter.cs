@@ -316,7 +316,7 @@ namespace MonoDroid.Generation {
 			if (javaName == null)
 				return;
 			var wrapper = opt.SymbolTable.Lookup (javaName, type_params) as ClassGen;
-			if (wrapper == null || !wrapper.IsKotlinInlineClass)
+			if (wrapper == null || !wrapper.IsKotlinInlineClass || wrapper.KotlinInlineClassUnderlyingJniType != sym.JniName)
 				return;
 			managed_type = wrapper.FullName;
 			NotNull = true;
