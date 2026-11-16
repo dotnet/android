@@ -25,7 +25,8 @@ public class TemporaryDirectoryTargetsTests : BaseTest
 		}
 		target.Attribute ("DependsOnTargets")?.Remove ();
 		// Isolate directory creation from the Android tooling, retaining the production incremental contract.
-		target.Elements ().Where (element => element.Name == "CreateResgenManifest" || element.Name == "GetExtraPackages").Remove ();
+		target.Elements ().Where (element => element.Name == "GetExtraPackages" || element.Name == "XmlPoke" ||
+			(element.Name == "WriteLinesToFile" && ((string?) element.Attribute ("File") ?? "").EndsWith ("AndroidManifest.xml", StringComparison.Ordinal))).Remove ();
 
 		string project = Path.Combine (directory, "temporary-directory.proj");
 		string input = Path.Combine (directory, "input.txt");

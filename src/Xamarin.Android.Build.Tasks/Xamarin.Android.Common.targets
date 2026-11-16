@@ -57,7 +57,6 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 <UsingTask TaskName="Xamarin.Android.Tasks.CopyIfChanged" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Microsoft.Android.Tasks.CreateAssemblyStore" AssemblyFile="$(_MicrosoftAndroidBuildTasksAssembly)" Runtime="NET" TaskFactory="TaskHostFactory" Condition=" '$(MSBuildRuntimeType)' == 'Full' " />
 <UsingTask TaskName="Microsoft.Android.Tasks.CreateAssemblyStore" AssemblyFile="$(_MicrosoftAndroidBuildTasksAssembly)" Runtime="NET" Condition=" '$(MSBuildRuntimeType)' == 'Core' " />
-<UsingTask TaskName="Xamarin.Android.Tasks.CreateResgenManifest" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.FilterAssemblies" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Microsoft.Android.Tasks.FindLayoutsToBind" AssemblyFile="$(_MicrosoftAndroidBuildTasksAssembly)" Runtime="NET" TaskFactory="TaskHostFactory" Condition=" '$(MSBuildRuntimeType)' == 'Full' " />
 <UsingTask TaskName="Microsoft.Android.Tasks.FindLayoutsToBind" AssemblyFile="$(_MicrosoftAndroidBuildTasksAssembly)" Runtime="NET" Condition=" '$(MSBuildRuntimeType)' == 'Core' " />
@@ -1147,9 +1146,20 @@ because xbuild doesn't support framework reference assemblies.
   </MakeDir>
 
   <!-- Create a dummy manifest file for aapt to work with -->
-  <CreateResgenManifest
-      ManifestOutputFile="$(ResgenTemporaryDirectory)\AndroidManifest.xml"
-      PackageName="$(_AndroidPackage)"
+  <PropertyGroup>
+    <_AndroidResgenManifest><![CDATA[<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android" package="" />]]></_AndroidResgenManifest>
+  </PropertyGroup>
+  <WriteLinesToFile
+      File="$(ResgenTemporaryDirectory)\AndroidManifest.xml"
+      Lines="$(_AndroidResgenManifest)"
+      Overwrite="true"
+  />
+  <!-- Use XmlPoke so $(_AndroidPackage) is escaped as an attribute value -->
+  <XmlPoke
+      XmlInputPath="$(ResgenTemporaryDirectory)\AndroidManifest.xml"
+      Query="/manifest/@package"
+      Value="$([MSBuild]::Escape($(_AndroidPackage)))"
   />
 
   <GetExtraPackages
