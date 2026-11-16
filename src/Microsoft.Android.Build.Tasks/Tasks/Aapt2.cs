@@ -31,6 +31,8 @@ namespace Microsoft.Android.Tasks {
 
 		public int DaemonMaxInstanceCount { get; set; }
 
+		public bool DaemonKeepInDomain { get; set; }
+
 		public ITaskItem []? ResourceDirectories { get; set; }
 
 		public ITaskItem? AndroidManifestFile { get; set; }
@@ -76,10 +78,10 @@ namespace Microsoft.Android.Tasks {
 			return 1;
 		}
 
-		// Shared by all AAPT2 tasks in the build; MSBuild disposes it when the build ends.
-		Aapt2Daemon? daemon;
+		// This is set in Execute()
+		Aapt2Daemon daemon = null!;
 
-		internal Aapt2Daemon Daemon => daemon ?? throw new InvalidOperationException ("The AAPT2 daemon has not been started.");
+		internal Aapt2Daemon Daemon => daemon;
 		public override bool Execute ()
 		{
 			// Must register on the UI thread!
@@ -90,7 +92,8 @@ namespace Microsoft.Android.Tasks {
 				DaemonMaxInstanceCount = maxInstances;
 			else
 				DaemonMaxInstanceCount = Math.Min (DaemonMaxInstanceCount, maxInstances);
-			daemon = Aapt2Daemon.GetInstance (BuildEngine4, GenerateFullPathToTool (), DaemonMaxInstanceCount, GetRequiredDaemonInstances ());
+			daemon  = Aapt2Daemon.GetInstance (BuildEngine4, LogDebugMessage, GenerateFullPathToTool (),
+				DaemonMaxInstanceCount, GetRequiredDaemonInstances (), registerInDomain: DaemonKeepInDomain);
 			return base.Execute () && !CancellationToken.IsCancellationRequested;
 		}
 
@@ -99,7 +102,7 @@ namespace Microsoft.Android.Tasks {
 		protected long RunAapt (string [] args, string outputFile)
 		{
 			LogDebugMessage ($"Executing {string.Join (" ", args)}");
-			long jobid = Daemon.QueueCommand (args, outputFile, CancellationToken);
+			long jobid = daemon.QueueCommand (args, outputFile, CancellationToken);
 			jobs.Add (jobid);
 			return jobid;
 		}

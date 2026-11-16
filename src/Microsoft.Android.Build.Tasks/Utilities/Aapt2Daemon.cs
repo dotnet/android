@@ -16,22 +16,20 @@ namespace Microsoft.Android.Tasks
 {
 	internal class Aapt2Daemon : IDisposable
 	{
-		static readonly object instanceLock = new object ();
+		static readonly string TypeFullName = typeof (Aapt2Daemon).FullName ?? nameof (Aapt2Daemon);
 
-		/// <summary>
-		/// Returns the daemon pool shared by all AAPT2 tasks in the build.
-		/// </summary>
-		public static Aapt2Daemon GetInstance (IBuildEngine4 engine, string aapt2, int numberOfInstances, int initalNumberOfDaemons)
+		internal static object RegisterTaskObjectKey => TypeFullName;
+
+		public static Aapt2Daemon GetInstance (IBuildEngine4 engine, Action<string> log, string aapt2, int numberOfInstances, int initalNumberOfDaemons, bool registerInDomain = false)
 		{
-			var key = (typeof (Aapt2Daemon).FullName, aapt2);
-			lock (instanceLock) {
-				var daemon = engine.GetRegisteredTaskObjectAssemblyLocal<Aapt2Daemon> (key, RegisteredTaskObjectLifetime.Build);
-				if (daemon == null) {
-					daemon = new Aapt2Daemon (aapt2, numberOfInstances, initalNumberOfDaemons);
-					engine.RegisterTaskObjectAssemblyLocal (key, daemon, RegisteredTaskObjectLifetime.Build, allowEarlyCollection: false);
-				}
-				return daemon;
+			var area = registerInDomain ? RegisteredTaskObjectLifetime.AppDomain : RegisteredTaskObjectLifetime.Build;
+			var daemon = engine.GetRegisteredTaskObjectAssemblyLocal<Aapt2Daemon> (RegisterTaskObjectKey, area);
+			if (daemon == null)
+			{
+				daemon = new Aapt2Daemon (aapt2, numberOfInstances, initalNumberOfDaemons, log);
+				engine.RegisterTaskObjectAssemblyLocal (RegisterTaskObjectKey, daemon, area, allowEarlyCollection: false);
 			}
+			return daemon;
 		}
 
 		public class Job
@@ -68,6 +66,7 @@ namespace Microsoft.Android.Tasks
 		long jobsRunning = 0;
 		long jobId = 0;
 		int maxInstances = 0;
+		Action<string>? logger = null;
 
 		public CancellationToken Token => tcs.Token;
 
@@ -88,10 +87,11 @@ namespace Microsoft.Android.Tasks
 
 		public int CurrentInstances => daemons.Count;
 
-		public Aapt2Daemon (string aapt2, int maxNumberOfInstances, int initalNumberOfDaemons)
+		public Aapt2Daemon (string aapt2, int maxNumberOfInstances, int initalNumberOfDaemons, Action<string> log)
 		{
 			Aapt2 = aapt2;
 			maxInstances = maxNumberOfInstances;
+			logger = log;
 			for (int i = 0; i < initalNumberOfDaemons; i++) {
 				SpawnAapt2Daemon ();
 			}
@@ -273,7 +273,13 @@ namespace Microsoft.Android.Tasks
 				aapt2.StandardInput.WriteLine ("quit");
 				aapt2.StandardInput.WriteLine ();
 			} catch (IOException) {
-				// aapt2 already exited, e.g. it was killed during shutdown.
+				// Ignore this error. It occurs when the Build it cancelled.
+				try {
+					logger?.Invoke ($"{nameof (Aapt2Daemon)}: Ignoring IOException. Build was cancelled.");
+				} catch  {
+					// The Logger might not exist if the daemon exits after the logger has been
+					// collected.
+				}
 			}
 			if (!aapt2.WaitForExit (TimeSpan.FromSeconds (5))) {
 				stopProcess ();
