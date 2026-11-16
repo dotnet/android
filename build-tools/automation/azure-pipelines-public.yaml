@@ -113,6 +113,7 @@ stages:
 # macOS Build Stage
 - stage: mac_build
   displayName: Mac
+  dependsOn: []
   jobs:
   - job: mac_build_create_installers
     displayName: macOS > Build

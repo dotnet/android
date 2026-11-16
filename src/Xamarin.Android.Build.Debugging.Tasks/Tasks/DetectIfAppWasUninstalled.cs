@@ -39,8 +39,14 @@ namespace Xamarin.Android.Tasks {
 
 		public override bool RunTask ()
 		{
-			var device = AndroidHelper.ParseTarget (AdbTarget, Log, logErrors: false, engine4: BuildEngine4,
-				adbToolPath: AdbToolPath, adbToolExe: AdbToolExe, taskEnvironment: TaskEnvironment, cancellationToken: Token);
+			AdbDeviceInfo device;
+			try {
+				device = AndroidHelper.ParseTarget (AdbTarget, Log, logErrors: false, engine4: BuildEngine4,
+					adbToolPath: AdbToolPath, adbToolExe: AdbToolExe, taskEnvironment: TaskEnvironment, cancellationToken: Token);
+			} catch (OperationCanceledException) when (Token.IsCancellationRequested) {
+				// Cancellation is not a build error.
+				return !Log.HasLoggedErrors;
+			}
 			if (device == null) {
 				Log.LogDebugMessage ($"No device found: {nameof (AdbTarget)}=\"{AdbTarget}\"");
 				return true;
