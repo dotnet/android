@@ -239,6 +239,24 @@ namespace Microsoft.Android.Run.Tests
 		}
 
 		[Test]
+		public async Task FakeServerToleratesAdbClientKilledMidRequest ()
+		{
+			// The CLI kills an in-flight adb child when a polling deadline expires;
+			// on Windows that resets the fake server's connection.
+			var server = new ManagedLaunchTestServer (PackageName);
+			using (var client = new System.Net.Sockets.TcpClient ()) {
+				client.LingerState = new System.Net.Sockets.LingerOption (true, 0);
+				await client.ConnectAsync (System.Net.IPAddress.Loopback, server.Port);
+				await client.GetStream ().WriteAsync (Encoding.ASCII.GetBytes ("00"));
+			}
+			// Dispose only after the server has observed the reset; otherwise
+			// disposal's cancellation could win and skip the reset path.
+			await server.ClientDisconnected.WaitAsync (TimeSpan.FromSeconds (30));
+
+			Assert.DoesNotThrowAsync (async () => await server.DisposeAsync ());
+		}
+
+		[Test]
 		public async Task InstrumentationIgnoresActivityDebugIntent ()
 		{
 			await using var server = new ManagedLaunchTestServer (PackageName);

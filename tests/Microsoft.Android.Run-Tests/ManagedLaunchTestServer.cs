@@ -5,6 +5,7 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Globalization;
+using System.IO;
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
@@ -18,6 +19,7 @@ namespace Microsoft.Android.Run.Tests
 		readonly TcpListener listener = new TcpListener (IPAddress.Loopback, 0);
 		readonly CancellationTokenSource stop = new CancellationTokenSource ();
 		readonly List<Task> connections = [];
+		readonly TaskCompletionSource clientDisconnected = new TaskCompletionSource (TaskCreationOptions.RunContinuationsAsynchronously);
 		readonly Task accepting;
 
 		public ManagedLaunchTestServer (string packageName, string serial = "managed-launch-test")
@@ -37,6 +39,9 @@ namespace Microsoft.Android.Run.Tests
 		public ConcurrentQueue<string> Commands => State.Commands;
 
 		public ConcurrentQueue<string> AdbCommands { get; } = new ConcurrentQueue<string> ();
+
+		// Completes once a client connection fails mid-exchange (reset or early close).
+		public Task ClientDisconnected => clientDisconnected.Task;
 
 		async Task AcceptAsync ()
 		{
@@ -94,6 +99,10 @@ namespace Microsoft.Android.Run.Tests
 					await stream.WriteAsync (Encoding.UTF8.GetBytes (status + response.Output), stop.Token);
 				}
 			} catch (OperationCanceledException) when (stop.IsCancellationRequested) {
+			} catch (IOException) {
+				// The CLI kills in-flight adb clients when a deadline expires, which can
+				// reset this connection. Tests assert CLI-visible results, not this exchange.
+				clientDisconnected.TrySetResult ();
 			}
 		}
 
