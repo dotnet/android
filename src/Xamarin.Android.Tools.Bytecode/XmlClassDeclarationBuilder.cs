@@ -420,6 +420,7 @@ namespace Xamarin.Android.Tools.Bytecode {
 				new XAttribute ("synthetic",    (method.AccessFlags & MethodAccessFlags.Synthetic) != 0),
 				new XAttribute ("jni-signature",    method.Descriptor),
 				GetNotNull (method),
+				GetKotlinDefaultArguments (method),
 				GetTypeParmeters (msig == null ? null : msig.TypeParameters),
 				GetMethodParameters (method),
 				GetExceptions (method));
@@ -445,6 +446,16 @@ namespace Xamarin.Android.Tools.Bytecode {
 			if (string.IsNullOrEmpty (method.KotlinInlineClassReturnJniType))
 				return null;
 			return new XAttribute ("kotlin-inline-class-return-jni-type", method.KotlinInlineClassReturnJniType);
+		}
+
+		static IEnumerable<XAttribute> GetKotlinDefaultArguments (MethodInfo method)
+		{
+			if (method.KotlinDefaultJniSignature is null || method.KotlinDefaultParameters is null)
+				yield break;
+			yield return new XAttribute ("kotlin-default-jni-signature", method.KotlinDefaultJniSignature);
+			if (method.KotlinDefaultOwner != null)
+				yield return new XAttribute ("kotlin-default-owner", method.KotlinDefaultOwner);
+			yield return new XAttribute ("kotlin-default-parameters", string.Join (",", method.KotlinDefaultParameters));
 		}
 
 		static XAttribute? GetNative (MethodInfo method)

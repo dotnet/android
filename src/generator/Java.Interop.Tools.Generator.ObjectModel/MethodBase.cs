@@ -28,6 +28,11 @@ namespace MonoDroid.Generation
 		public ParameterList Parameters { get; } = new ParameterList ();
 		public string Visibility { get; set; }
 
+		// Kotlin default arguments, see Xamarin.Android.Tools.Bytecode.KotlinFixups.FixupDefaultArguments ()
+		public string KotlinDefaultJniSignature { get; set; }
+		public string KotlinDefaultOwner { get; set; }
+		public int [] KotlinDefaultParameters { get; set; }
+
 		public int LineNumber { get; set; } = -1;
 		public int LinePosition { get; set; } = -1;
 		public string SourceFile { get; set; }

@@ -201,6 +201,8 @@ namespace MonoDroid.Generation
 
 			ctor.Name = EnsureValidIdentifer (ctor.Name);
 
+			SetKotlinDefaultArguments (ctor, elem);
+
 			// If declaring type was deprecated earlier than member, use the type's deprecated-since
 			if (declaringType.DeprecatedSince.HasValue && declaringType.DeprecatedSince < ctor.DeprecatedSince.GetValueOrDefault (default))
 				ctor.DeprecatedSince = declaringType.DeprecatedSince;
@@ -430,6 +432,8 @@ namespace MonoDroid.Generation
 
 			method.Name = EnsureValidIdentifer (method.Name);
 
+			SetKotlinDefaultArguments (method, elem);
+
 			method.FillReturnType ();
 
 			// If declaring type was deprecated earlier than member, use the type's deprecated-since
@@ -440,6 +444,17 @@ namespace MonoDroid.Generation
 			SetLineInfo (method, elem, options);
 
 			return method;
+		}
+
+		static void SetKotlinDefaultArguments (MethodBase method, XElement elem)
+		{
+			var signature = elem.Attribute ("kotlin-default-jni-signature")?.Value;
+			var parameters = elem.Attribute ("kotlin-default-parameters")?.Value;
+			if (string.IsNullOrEmpty (signature) || string.IsNullOrEmpty (parameters))
+				return;
+			method.KotlinDefaultJniSignature = signature;
+			method.KotlinDefaultOwner = elem.Attribute ("kotlin-default-owner")?.Value;
+			method.KotlinDefaultParameters = parameters.Split (',').Select (p => int.Parse (p, System.Globalization.CultureInfo.InvariantCulture)).ToArray ();
 		}
 
 		public static Parameter CreateParameter (XElement elem, CodeGenerationOptions options = null)
