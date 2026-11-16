@@ -94,13 +94,17 @@ namespace Xamarin.Android.Build.Tests
 			project.SetProperty ("AndroidLinkTool", "r8");
 			project.SetProperty ("AndroidR8ObfuscationMode", "runtime-remapping");
 			project.SetProperty ("AndroidEnableAssemblyCompression", "true");
+			project.SetProperty ("ZipAlignToolPath", Path.Combine (Root, "temp", TestName, "O'Brien;tag=1"));
 			var imports = project.Imports.Single (import => import.Project () == "Directory.Build.targets");
 			imports.TextContent = () => """
 				<Project>
 				  <Target Name="_TestInnerToolingPaths" AfterTargets="_ResolveMonoAndroidSdks"
 				      Condition=" '$(_OuterIntermediateOutputPath)' != '' ">
 				    <Error Condition=" '$(_AndroidUseResolvedSdk)' != 'true' or '$(_AndroidUseResolvedTooling)' != 'true' "
-				        Text="Inner builds must reuse the resolved SDK and tooling." />
+				        Text="Escaped tooling paths must not disable reuse." />
+				    <Error Condition=" '$(_AndroidOuterZipAlignToolPath)' != '$(ZipAlignToolPath)' or '$(_AndroidOuterToolingInputZipAlignToolPath)' != '$(ZipAlignToolPath)' "
+				        Text="The zipalign path changed during forwarding." />
+				    <Error Condition=" '$(tag)' != '' " Text="The path was split into a separate property." />
 				  </Target>
 				</Project>
 				""";

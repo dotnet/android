@@ -7,15 +7,14 @@ using Microsoft.Build.Framework;
 
 namespace Xamarin.Android.Tasks;
 
-// Helpers compile-linked into both Xamarin.Android.Build.Tasks and Microsoft.Android.Build.Tasks.
 partial class MonoAndroidHelper
 {
-	public static int RunProcess (string name, string args, DataReceivedEventHandler onOutput, DataReceivedEventHandler onError, Dictionary<string, string>? environmentVariables = null)
+	public static int RunProcess (string name, string args, DataReceivedEventHandler onOutput, DataReceivedEventHandler onError)
 	{
-		return RunProcess (TaskEnvironment.Fallback, name, args, onOutput, onError, environmentVariables);
+		return RunProcess (TaskEnvironment.Fallback, name, args, onOutput, onError);
 	}
 
-	public static int RunProcess (TaskEnvironment taskEnvironment, string name, string args, DataReceivedEventHandler onOutput, DataReceivedEventHandler onError, Dictionary<string, string>? environmentVariables = null)
+	public static int RunProcess (TaskEnvironment taskEnvironment, string name, string args, DataReceivedEventHandler onOutput, DataReceivedEventHandler onError)
 	{
 		if (taskEnvironment == null)
 			throw new ArgumentNullException (nameof (taskEnvironment));
@@ -28,11 +27,6 @@ partial class MonoAndroidHelper
 		psi.RedirectStandardError = true;
 		psi.CreateNoWindow = true;
 		psi.WindowStyle = ProcessWindowStyle.Hidden;
-		if (environmentVariables != null) {
-			foreach (var pair in environmentVariables) {
-				psi.EnvironmentVariables [pair.Key] = pair.Value;
-			}
-		}
 		Process p = new Process ();
 		p.StartInfo = psi;
 

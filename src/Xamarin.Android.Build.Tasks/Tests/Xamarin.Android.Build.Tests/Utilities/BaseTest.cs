@@ -283,7 +283,6 @@ namespace Xamarin.Android.Build.Tests
 				}
 				CreateFauxExecutable (Path.Combine (androidSdkBuildToolsPath, IsWindows ? "aapt2.cmd" : "aapt2"), sb);
 			}
-			File.WriteAllText (Path.Combine (androidSdkToolsPath, IsWindows ? "lint.bat" : "lint"), "");
 
 			List<ApiInfo> defaults = new List<ApiInfo> ();
 			for (int i = 10; i < 26; i++) {
