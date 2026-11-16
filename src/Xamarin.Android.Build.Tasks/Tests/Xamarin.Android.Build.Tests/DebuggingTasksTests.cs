@@ -147,6 +147,19 @@ namespace Xamarin.Android.Build.Tests
 				m.Message.StartsWith ("  SdkVersion:", StringComparison.Ordinal)));
 		}
 
+		[Test]
+		public void GetPrimaryCpuAbiCancellationIsNotLoggedAsTaskFailure ()
+		{
+			var errors = new List<BuildErrorEventArgs> ();
+			var task = new GetPrimaryCpuAbi {
+				BuildEngine = new MockBuildEngine (TestContext.Out, errors),
+			};
+			task.Cancel ();
+
+			Assert.IsTrue (task.Execute ());
+			Assert.IsEmpty (errors);
+		}
+
 		[TestCase (null, "physical")]
 		[TestCase ("-s physical", "physical")]
 		[TestCase ("-d", "physical")]

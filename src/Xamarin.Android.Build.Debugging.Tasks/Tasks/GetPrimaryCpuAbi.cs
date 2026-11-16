@@ -64,8 +64,14 @@ namespace Xamarin.Android.Tasks
 				return true;
 			}
 
-			var device = AndroidHelper.ParseTarget (AdbTarget, Log, logErrors: false, engine4: BuildEngine4,
-				adbToolPath: AdbToolPath, adbToolExe: AdbToolExe, taskEnvironment: TaskEnvironment, cancellationToken: CancellationToken);
+			AdbDeviceInfo device;
+			try {
+				device = AndroidHelper.ParseTarget (AdbTarget, Log, logErrors: false, engine4: BuildEngine4,
+					adbToolPath: AdbToolPath, adbToolExe: AdbToolExe, taskEnvironment: TaskEnvironment, cancellationToken: CancellationToken);
+			} catch (OperationCanceledException) when (CancellationToken.IsCancellationRequested) {
+				// Cancellation is not a build error.
+				return !Log.HasLoggedErrors;
+			}
 			if (device == null) {
 				Log.LogDebugMessage ($"No device found: {nameof (AdbTarget)}=\"{AdbTarget}\"");
 				// don't stop the build if we don't have a device.
