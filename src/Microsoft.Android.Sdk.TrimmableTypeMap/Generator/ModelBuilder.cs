@@ -301,6 +301,7 @@ static class ModelBuilder
 			},
 			IsAcw = isAcw,
 			IsGenericDefinition = peer.IsGenericDefinition,
+			CanResolveFromSealedTargetType = peer.IsSealed && string.Equals (peer.AssemblyName, "Mono.Android", StringComparison.Ordinal),
 			CannotRegisterInStaticConstructor = peer.CannotRegisterInStaticConstructor,
 		};
 

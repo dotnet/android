@@ -2352,7 +2352,9 @@ Java.Interop.JavaPeerAliasesAttribute
 Java.Interop.JavaPeerAliasesAttribute.Aliases.get -> string![]!
 Java.Interop.JavaPeerAliasesAttribute.JavaPeerAliasesAttribute(params string![]! aliases) -> void
 Java.Interop.JavaPeerProxy
+Java.Interop.JavaPeerProxy.IsSealed.get -> bool
 Java.Interop.JavaPeerProxy.JavaPeerProxy(string! jniName, System.Type! targetType) -> void
+Java.Interop.JavaPeerProxy.JavaPeerProxy(string! jniName, System.Type! targetType, bool isSealed) -> void
 Java.Interop.JavaPeerProxy.JniName.get -> string!
 Java.Interop.JavaPeerProxy.TargetType.get -> System.Type!
 Java.Lang.ICharSequence.GetChars(int srcBegin, int srcEnd, char[]! dst, int dstBegin) -> void

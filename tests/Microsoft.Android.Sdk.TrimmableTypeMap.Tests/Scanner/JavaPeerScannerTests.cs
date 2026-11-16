@@ -66,6 +66,8 @@ public partial class JavaPeerScannerTests : FixtureTestBase
 		Assert.True (FindFixtureByJavaName ("my/app/AbstractBase").IsAbstract);
 		Assert.True (FindFixtureByManagedName ("Android.Views.IOnClickListener").IsInterface);
 		Assert.False (FindFixtureByManagedName ("Android.Views.IOnClickListener").DoNotGenerateAcw);
+		Assert.True (FindFixtureByManagedName ("Android.Views.IOnClickListenerInvoker").IsSealed);
+		Assert.False (FindFixtureByManagedName ("Android.App.Activity").IsSealed);
 
 		var generic = FindFixtureByJavaName ("my/app/GenericHolder");
 		Assert.True (generic.IsGenericDefinition);
