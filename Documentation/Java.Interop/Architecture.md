@@ -184,11 +184,24 @@ initialization. An updated-rules external raw base can therefore still reject a
 safe derived initializer; internal forwarding does not solve that separate
 cross-assembly enforcement boundary.
 
-Raw constructors, including Throwable and class/interface invokers, construct
-JNI peers, not opaque-address containers. Their documented handle type, lifetime,
-thread, aliasing, ownership and failure duties still apply. `RequiresUnsafe`
-enforcement is explicitly deferred to preserve safe zero/`DoNotTransfer` base
-initializers, without adding a general initialization API.
+Released Mono.Android raw-handle constructors, including `Java.Lang.Object`,
+`Java.Lang.Throwable`, generated forwarding constructors and class/interface
+invokers, remain safe-callable as explicit compatibility exceptions. They construct
+JNI peers, not opaque-address containers. The compiler does not enforce their
+documented handle type, lifetime, thread, aliasing, ownership or failure duties,
+including for nonzero handles. These exceptions do not validate JNI references.
+They preserve existing zero/`DoNotTransfer` base initializers without adding a
+general initialization API, changing the Throwable internal `None` route, or
+relaxing Java.Interop's raw VM, reference, option, buffer or callback contracts.
+
+Mono.Android's existing public JNI and typed marshal methods likewise preserve
+their public member metadata without adding `RequiresUnsafeAttribute`.
+Implementation-only operations remain inside local unsafe contexts. Under the
+updated rules, pointer and function-pointer parameters no longer require a
+checked caller to enter an unsafe context for these methods. This broadens
+compiler-accepted calls; it does not validate or remove the documented JNI
+reference, buffer, ABI, thread, ownership or lifetime obligations. Java.Interop's
+independently enforced raw contracts are unchanged.
 
 ## Naming conventions
 

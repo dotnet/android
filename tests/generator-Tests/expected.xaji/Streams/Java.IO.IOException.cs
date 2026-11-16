@@ -32,6 +32,11 @@ namespace Java.IO {
 		/// transfer must match ownership; transferred references cannot be used again,
 		/// even if construction throws.
 		/// </safety>
+		/// <remarks>
+		/// This released raw-handle constructor is safe-callable only as a compatibility exception.
+		/// The compiler does not enforce these obligations, including for nonzero references.
+		/// Reference provenance, lifetime, thread and ownership are not validated here.
+		/// </remarks>
 		protected IOException (IntPtr javaReference, JniHandleOwnership transfer) : base (javaReference, transfer)
 		{
 		}
@@ -108,6 +113,10 @@ namespace Java.IO {
 		/// transfer must match ownership; transferred references cannot be used again,
 		/// even if construction throws.
 		/// </safety>
+		/// <remarks>
+		/// This raw-handle constructor is safe-callable as a compatibility exception.
+		/// The compiler does not enforce these obligations or validate nonzero references.
+		/// </remarks>
 		public IOExceptionInvoker (IntPtr handle, JniHandleOwnership transfer) : base (handle, transfer)
 		{
 		}

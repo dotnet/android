@@ -36,6 +36,8 @@
   />
   <PropertyGroup>
     <_Target Condition="'$(JavacSourceVersion)' != ''">-source $(JavacSourceVersion) -target $(JavacTargetVersion)</_Target>
+    <_Target Condition="'$(JavacSourceVersion)' != '' and '$(JavacSourceVersion)' == '$(JavacTargetVersion)'">--release $(JavacTargetVersion)</_Target>
+    <_Target Condition="'$(JavacSourceVersion)' == '1.8' and '$(JavacTargetVersion)' == '1.8'">--release 8</_Target>
     <_AndroidJar>"$(AndroidSdkDirectory)\platforms\android-$(AndroidJavaRuntimeApiLevel)\android.jar"</_AndroidJar>
   </PropertyGroup>
   <Exec

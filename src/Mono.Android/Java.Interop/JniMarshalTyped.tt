@@ -64,6 +64,11 @@ namespace Java.Interop {
 	/// generator falls back to <see cref="JniMarshal.SafeInvokeAction(IntPtr, IntPtr, delegate* managed&lt;IntPtr, IntPtr, void&gt;)" />
 	/// and friends for those.
 	/// </para>
+	/// <para>
+	/// Existing public member metadata is preserved for compatibility. Updated-rule callers can
+	/// pass function pointers without an unsafe context; the compiler does not enforce the
+	/// documented JNI reference, callback ABI or lifetime obligations.
+	/// </para>
 	/// </remarks>
 	[EditorBrowsable (EditorBrowsableState.Never)]
 	[SuppressMessage (
@@ -154,7 +159,7 @@ namespace Java.Interop {
 <# } #>
 		/// </safety>
 		[DebuggerDisableUserUnhandledExceptions]
-		public static unsafe <#= returnType #> <#= name #><<#= string.Join (", ", typeParams) #>> (<#= parameters #>)
+		public static <#= returnType #> <#= name #><<#= string.Join (", ", typeParams) #>> (<#= parameters #>)
 <#
 			foreach (var constraint in constraints) {
 #>
