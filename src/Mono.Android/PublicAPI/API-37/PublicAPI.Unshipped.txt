@@ -1,4 +1,6 @@
 #nullable enable
+*REMOVED*Java.Lang.Object.~Object() -> void
+*REMOVED*Java.Lang.Throwable.~Throwable() -> void
 static unsafe Android.Runtime.JNIEnv.AllocObject(System.ReadOnlySpan<byte> jniClassName) -> nint
 static unsafe Android.Runtime.JNIEnv.FinishCreateInstance(nint instance, System.ReadOnlySpan<byte> jniCtorSignature, Android.Runtime.JValue* constructorParameters) -> void
 static unsafe Android.Runtime.JNIEnv.FinishCreateInstance(nint instance, System.ReadOnlySpan<byte> jniCtorSignature, params System.ReadOnlySpan<Android.Runtime.JValue> constructorParameters) -> void
@@ -8356,7 +8358,9 @@ Java.Interop.JavaPeerCallbackFormatAttribute
 Java.Interop.JavaPeerCallbackFormatAttribute.JavaPeerCallbackFormatAttribute(int version) -> void
 Java.Interop.JavaPeerCallbackFormatAttribute.Version.get -> int
 Java.Interop.JavaPeerProxy
+Java.Interop.JavaPeerProxy.IsSealed.get -> bool
 Java.Interop.JavaPeerProxy.JavaPeerProxy(string! jniName, System.Type! targetType) -> void
+Java.Interop.JavaPeerProxy.JavaPeerProxy(string! jniName, System.Type! targetType, bool isSealed) -> void
 Java.Interop.JavaPeerProxy.JniName.get -> string!
 Java.Interop.JavaPeerProxy.TargetType.get -> System.Type!
 Java.Interop.JniMarshalTyped

@@ -80,7 +80,7 @@ variables:
 - name: NetCoreInternalPoolName
   value: NetCore1ESPool-Internal
 - name: WindowsPoolImageNetCoreInternal
-  value: windows.vs2022.amd64
+  value: windows.vs2026.amd64
 - name: LinuxPoolImageNetCoreInternal
   value: build.ubuntu.2204.amd64
 # Skip tests when explicitly requested; otherwise run full test matrix.
@@ -168,6 +168,7 @@ extends:
         displayName: Windows > Build & Smoke Test
         pool:
           name: $(NetCoreInternalPoolName)
+          # The build runs a .NET TaskHost test that requires MSBuild 18.7 or later.
           image: $(WindowsPoolImageNetCoreInternal)
           os: windows
         timeoutInMinutes: 240

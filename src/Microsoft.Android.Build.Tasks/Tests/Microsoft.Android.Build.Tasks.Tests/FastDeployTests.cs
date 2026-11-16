@@ -166,18 +166,35 @@ namespace Xamarin.Android.Build.Tests
 			Assert.AreEqual (1, task.RecoveryAttempts);
 		}
 
-		[Test]
-		public void FastDeployDoesNotRetrySemanticInstallFailure ()
+		const string InsufficientStorageInstallOutput = """
+			Exception occurred while executing 'install':
+			android.os.ParcelableException: java.io.IOException: Requested internal only, but not enough space
+				at android.util.ExceptionUtils.wrap(ExceptionUtils.java:34)
+				at com.android.server.pm.PackageInstallerService.createSession(PackageInstallerService.java:671)
+			Caused by: java.io.IOException: Requested internal only, but not enough space
+				at com.android.internal.content.InstallLocationUtils.resolveInstallVolume(InstallLocationUtils.java:242)
+			""";
+
+		[TestCase (1, "Failure [INSTALL_FAILED_INSUFFICIENT_STORAGE]", "ADB0060")]
+		[TestCase (1, "Failure [INSTALL_FAILED_MEDIA_UNAVAILABLE]", "ADB0060")]
+		[TestCase (1, InsufficientStorageInstallOutput, "ADB0060")]
+		[TestCase (0, InsufficientStorageInstallOutput, "ADB0060")]
+		[TestCase (0, "Exception occurred while executing 'install':\nRequested internal only, but not enough space", "ADB0060")]
+		[TestCase (1, "Exception occurred while executing 'install':\njava.io.IOException: Permission denied", "ADB0010")]
+		[TestCase (0, "Exception occurred while executing 'install':\njava.io.IOException: Permission denied", "ADB0010")]
+		public void FastDeployDoesNotRetrySemanticInstallFailure (int exitCode, string output, string errorCode)
 		{
 			var task = new TestFastDeploy (
-				CreateAdbResult (1, "Failure [INSTALL_FAILED_INSUFFICIENT_STORAGE]"));
+				CreateAdbResult (exitCode, output));
 
 			var exception = Assert.ThrowsAsync<FastDeployInstallException> (
 				async () => await task.InstallApkWithRetry ("app.apk", reinstall: false, testOnly: false, user: ""));
 
 			Assert.IsNotNull (exception);
-			Assert.AreEqual ("ADB0060", exception.ErrorCode);
+			Assert.AreEqual (errorCode, exception.ErrorCode);
+			Assert.That (exception.Message, Does.Contain (output));
 			Assert.AreEqual (1, task.InstallAttempts);
+			Assert.AreEqual (0, task.UninstallAttempts);
 			Assert.AreEqual (0, task.RecoveryAttempts);
 		}
 
@@ -399,6 +416,11 @@ namespace Xamarin.Android.Build.Tests
 				#!/bin/bash
 				dir="$(dirname "$0")"
 				printf '%s\n' "$*" >> "$dir/adb.log"
+				printf '%s' "$FAKE_ADB_TASK_ENV" > "$dir/task-env"
+				if [ -f "$dir/hang" ] && [[ "$*" == *"$(cat "$dir/hang")"* ]]; then
+					touch "$dir/hanging"
+					exec sleep 60
+				fi
 				for fault in fault second-fault; do
 					if [ -f "$dir/$fault" ] && [[ "$*" == *"$(cat "$dir/$fault")"* ]]; then
 						cat "$dir/$fault.out" >&2
@@ -485,6 +507,8 @@ namespace Xamarin.Android.Build.Tests
 			// One entry per adb invocation, without the adb executable itself.
 			public IReadOnlyList<string> Commands => File.ReadAllLines (Path.Combine (directory, "adb.log"));
 
+			public string TaskEnvironmentVariable => File.ReadAllText (Path.Combine (directory, "task-env"));
+
 			public void AddFile (string name)
 			{
 				string path = Path.Combine (directory, name);
@@ -495,6 +519,13 @@ namespace Xamarin.Android.Build.Tests
 				File.WriteAllLines (Path.Combine (directory, "staging-listing.out"),
 					files.Select (file => $"{StagingRoot}/{file.GetMetadata ("TargetPath")}|3|1700000000"));
 			}
+
+			public void HangOnCommand (string command)
+			{
+				File.WriteAllText (Path.Combine (directory, "hang"), command);
+			}
+
+			public bool IsHanging => File.Exists (Path.Combine (directory, "hanging"));
 
 			public void FailCommand (string command, string output, bool second = false, int exitCode = 1)
 			{
@@ -509,7 +540,7 @@ namespace Xamarin.Android.Build.Tests
 				File.WriteAllText (Path.Combine (directory, name + ".out"), output);
 			}
 
-			public bool RunFastDeploy (bool symlink = false, bool embedded = false, bool install = false)
+			public bool RunFastDeploy (bool symlink = false, bool embedded = false, bool install = false, bool projectRelative = false, Action<FastDeploy>? started = null)
 			{
 				string apk = Path.Combine (directory, "app.apk");
 				if (install) {
@@ -527,6 +558,21 @@ namespace Xamarin.Android.Build.Tests
 					PrimaryCpuAbi = "arm64-v8a",
 					UploadFlagFile = Path.Combine (directory, "obj", "upload.flag"),
 				};
+				if (projectRelative) {
+					var environment = Environment.GetEnvironmentVariables ().Cast<System.Collections.DictionaryEntry> ()
+						.ToDictionary (e => (string) e.Key, e => (string) e.Value);
+					environment ["FAKE_ADB_TASK_ENV"] = "from-task";
+					task.TaskEnvironment = TaskEnvironment.CreateWithProjectDirectoryAndEnvironment (directory, environment);
+					task.AdbToolPath = ".";
+					task.FastDevFiles = files.Select (f => {
+						var item = new TaskItem (Path.GetFileName (f.ItemSpec));
+						f.CopyMetadataTo (item);
+						return (ITaskItem) item;
+					}).ToArray ();
+					task.IntermediateOutputPath = "obj/";
+					task.UploadFlagFile = Path.Combine ("obj", "upload.flag");
+				}
+				started?.Invoke (task);
 				return task.Execute ();
 			}
 

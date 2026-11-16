@@ -212,6 +212,7 @@
     <AndroidJavaSource Update="java/net/dot/android/test/TrimmableSuperArgsBase.java" Bind="false" />
     <AndroidJavaSource Update="java/net/dot/android/test/JniRuntimeExceptionPolicy.java" Bind="false" />
     <AndroidJavaSource Update="java/net/dot/android/test/JniSpliteratorFixture.java" Bind="false" />
+    <AndroidJavaSource Update="java/net/dot/android/test/LongValueAnnotation.java" Bind="false" />
   </ItemGroup>
 
   <ItemGroup>

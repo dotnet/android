@@ -202,10 +202,6 @@ namespace Java.Lang {
 			return e;
 		}
 
-		~Throwable ()
-		{
-		}
-
 		public new void UnregisterFromRuntime () => base.UnregisterFromRuntime ();
 
 		public new void Dispose () => base.Dispose ();

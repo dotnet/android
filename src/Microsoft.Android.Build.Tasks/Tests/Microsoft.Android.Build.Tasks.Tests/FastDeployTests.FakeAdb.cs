@@ -133,6 +133,38 @@ namespace Xamarin.Android.Build.Tests
 			Assert.IsFalse (device.Commands.Any (c => c.Contains ("rm -rf files/.__override__")));
 		}
 
+		[Test]
+		public void FastDeployUsesTaskEnvironment ()
+		{
+			using var device = new FakeAdbDevice ();
+
+			Assert.IsTrue (device.RunFastDeploy (projectRelative: true));
+			Assert.IsEmpty (device.Errors);
+			Assert.IsTrue (device.HasManifest, "Relative paths must resolve against the project directory.");
+			Assert.That (device.Commands, Has.Some.Contain ("cp -p"));
+			Assert.AreEqual ("from-task", device.TaskEnvironmentVariable);
+		}
+
+		[TestCase ("devices -l")]
+		[TestCase (" install ")]
+		public void FastDeployCancellationIsNotLoggedAsTaskFailure (string command)
+		{
+			using var device = new FakeAdbDevice ();
+			device.HangOnCommand (command);
+
+			var stopwatch = System.Diagnostics.Stopwatch.StartNew ();
+			device.RunFastDeploy (install: true, started: task => System.Threading.Tasks.Task.Run (async () => {
+				while (!device.IsHanging)
+					await System.Threading.Tasks.Task.Delay (50);
+				task.Cancel ();
+			}));
+
+			Assert.IsTrue (device.IsHanging, command);
+			Assert.IsEmpty (device.Errors);
+			Assert.IsFalse (device.HasManifest);
+			Assert.Less (stopwatch.Elapsed.TotalSeconds, 30, "Cancellation must stop the hung adb command.");
+		}
+
 		[TestCase ("rm")]
 		[TestCase ("ln")]
 		public void FastDeployStopsGlobOnIntermediateFailure (string command)

@@ -428,6 +428,7 @@ public sealed class JavaPeerScanner : IDisposable
 			var isGenericDefinition = typeDef.GetGenericParameters ().Count > 0;
 			var isInterface = (typeDef.Attributes & TypeAttributes.Interface) != 0;
 			var isAbstract = (typeDef.Attributes & TypeAttributes.Abstract) != 0;
+			var isSealed = (typeDef.Attributes & TypeAttributes.Sealed) != 0;
 
 			var isFrameworkAssembly = frameworkAssemblyNames.Contains (index.AssemblyName);
 			var isUnconditional = !isFrameworkAssembly &&
@@ -483,6 +484,7 @@ public sealed class JavaPeerScanner : IDisposable
 				Annotations = annotationParser.Parse (typeDef.GetCustomAttributes (), index),
 				IsInterface = isInterface,
 				IsAbstract = isAbstract,
+				IsSealed = isSealed,
 				DoNotGenerateAcw = doNotGenerateAcw,
 				IsFromJniTypeSignature = registerInfo?.IsFromJniTypeSignature ?? false,
 				IsUnconditional = isUnconditional,
