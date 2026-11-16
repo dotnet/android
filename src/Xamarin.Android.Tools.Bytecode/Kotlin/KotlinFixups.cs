@@ -381,28 +381,23 @@ namespace Xamarin.Android.Tools.Bytecode
 				method.KotlinName = PascalCase (metadata.Name);
 		}
 
-		// Records the Kotlin default-argument helper for 'method', so the generator
-		// can create overloads that omit trailing defaulted parameters:
-		//   fun f(a: Int = 1)  ->  static f$default(Owner, int, int mask, Object)
+		// Records the helper that computes Kotlin default arguments, so the generator can
+		// create overloads that omit trailing defaulted parameters:
+		//   fun f(a: Int = 1)        ->  static f$default(Owner, int, int mask, Object)
 		//   constructor(a: Int = 1)  ->  <init>(int, int mask, DefaultConstructorMarker)
-		// There is one 'int' mask for each 32 parameters. Interface helpers can be on the
-		// interface or on its '$DefaultImpls' class. If we cannot find the exact helper,
-		// we record nothing and keep the full-argument API.
+		// If the exact helper does not exist, keep the full-argument API.
 		static void FixupDefaultArguments (MethodInfo? method, List<KotlinValueParameter>? valueParameters, IList<ClassFile> classes)
 		{
 			if (method is null || !method.IsPubliclyVisible || valueParameters is null)
 				return;
 
-			var defaults = new List<int> ();
-			for (var i = 0; i < valueParameters.Count; i++)
-				if (valueParameters [i].Flags.HasFlag (KotlinParameterFlags.DeclaresDefaultValue))
-					defaults.Add (i);
-			if (defaults.Count == 0)
+			var defaults = Enumerable.Range (0, valueParameters.Count)
+				.Where (i => valueParameters [i].Flags.HasFlag (KotlinParameterFlags.DeclaresDefaultValue))
+				.ToArray ();
+			if (defaults.Length == 0)
 				return;
 
-			// Receivers, continuations and outer-class parameters change the bit
-			// positions, so only handle methods whose JVM parameters are the Kotlin
-			// value parameters.
+			// Receivers, continuations and outer-class parameters move the mask bits.
 			if (method.GetParameters ().Length != valueParameters.Count)
 				return;
 
@@ -416,13 +411,14 @@ namespace Xamarin.Android.Tools.Bytecode
 				if (!owner.Methods.Any (m => m.IsConstructor && m.Descriptor == expected))
 					return;
 				method.KotlinDefaultJniSignature = expected;
-				method.KotlinDefaultParameters = defaults.ToArray ();
+				method.KotlinDefaultParameters = defaults;
 				return;
 			}
 
 			var receiver = method.AccessFlags.HasFlag (MethodAccessFlags.Static) ? "" : owner.FullJniName;
 			var helper_signature = "(" + receiver + parameters + masks + "Ljava/lang/Object;)" + method.Descriptor.Substring (close + 1);
 			var helper_name = method.Name + "$default";
+			// Interface helpers are on the interface or on its $DefaultImpls class.
 			var default_impls = owner.ThisClass.Name.Value + "$DefaultImpls";
 			var candidates = new [] { owner }.Concat (classes.Where (c => c.ThisClass.Name.Value == default_impls));
 
@@ -430,7 +426,7 @@ namespace Xamarin.Android.Tools.Bytecode
 				if (candidate.Methods.Any (m => m.Name == helper_name && m.Descriptor == helper_signature && m.AccessFlags.HasFlag (MethodAccessFlags.Static))) {
 					method.KotlinDefaultJniSignature = helper_signature;
 					method.KotlinDefaultOwner = candidate.ThisClass.Name.Value;
-					method.KotlinDefaultParameters = defaults.ToArray ();
+					method.KotlinDefaultParameters = defaults;
 					return;
 				}
 			}

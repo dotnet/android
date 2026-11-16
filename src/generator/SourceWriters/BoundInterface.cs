@@ -67,7 +67,7 @@ namespace generator.SourceWriters
 			AddProperties (iface, opt);
 			AddMethods (iface, opt);
 			if (opt.SupportDefaultInterfaceMethods)
-				KotlinDefaultArguments.AddMethods (this, iface, iface.Methods, opt, context);
+				KotlinDefaultArguments.AddMethods (this, iface, opt, context);
 			AddNestedTypes (iface, opt, context, genInfo);
 
 			// If this interface is just constant fields we don't need to add all the invoker bits
