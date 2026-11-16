@@ -7,6 +7,8 @@ class DefaultArguments (val name: String, val count: Int = 1) {
     fun greet (greeting: String, times: Int = 2, loud: Boolean = false): String = greeting
 
     fun middle (first: Int = 1, second: Int): Int = first + second
+
+    fun toString (indent: Int = 0): String = name
 }
 
 fun createDefaultArguments (name: String = "bob"): DefaultArguments = DefaultArguments (name)
