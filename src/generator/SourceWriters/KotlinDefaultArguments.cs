@@ -23,10 +23,14 @@ namespace generator.SourceWriters
 
 		public static void AddMethods (TypeWriter writer, GenBase type, CodeGenerationOptions opt, CodeGeneratorContext context)
 		{
-			var signatures = new HashSet<string> (type.Methods.Where (m => m.IsValid).Select (m => GetSignature (m.AdjustedName, m.Parameters, m.Parameters.Count)));
+			// Do not add an overload that already exists, including string overloads,
+			// abstract interface members and inherited methods.
+			var signatures = new HashSet<string> (writer.Methods.Select (m => GetSignature (m.Name, m.Parameters)));
+			for (var b = (type as ClassGen)?.BaseGen; b != null; b = b.BaseGen)
+				signatures.UnionWith (b.Methods.Where (m => m.IsValid).Select (m => GetSignature (m.AdjustedName, m.Parameters, m.Parameters.Count, opt)));
 
 			foreach (var method in type.Methods) {
-				if (!method.IsValid || method.KotlinDefaultJniSignature is null || method.KotlinDefaultOwner is null)
+				if (!method.IsValid || method.KotlinDefaultOwner is null || !IsSupported (method) || method.IsReturnEnumified)
 					continue;
 				if (type is ClassGen && method.KotlinDefaultOwner != type.RawJniName)
 					continue;
@@ -39,20 +43,15 @@ namespace generator.SourceWriters
 				if (helper is null)
 					continue;
 
-				var members = "_members";
-				if (type is InterfaceGen) {
-					members = "_members_kotlin_default_" + method.KotlinDefaultOwner.Replace ('/', '_').Replace ('$', '_');
-					if (!writer.Fields.Any (f => f.Name == members)) {
-						var field = new PeerMembersField (opt, method.KotlinDefaultOwner, type.Name, method.KotlinDefaultOwner == type.RawJniName, members) {
-							IsPrivate = true,
-						};
-						writer.Fields.Add (field);
-					}
-				}
+				var members = type is InterfaceGen
+					? "_members_kotlin_default_" + method.KotlinDefaultOwner.Replace ('/', '_').Replace ('$', '_')
+					: "_members";
 
 				for (var count = method.Parameters.Count - 1; count >= method.Parameters.Count - trailing; count--) {
-					if (!signatures.Add (GetSignature (method.AdjustedName, method.Parameters, count)))
+					if (!signatures.Add (GetSignature (method.AdjustedName, method.Parameters, count, opt)))
 						continue;
+					if (type is InterfaceGen && !writer.Fields.Any (f => f.Name == members))
+						writer.Fields.Add (new PeerMembersField (opt, method.KotlinDefaultOwner, type.Name, method.KotlinDefaultOwner == type.RawJniName, members) { IsPrivate = true });
 					writer.Methods.Add (new KotlinDefaultMethod (type, method, helper, count, members, opt));
 				}
 			}
@@ -65,10 +64,11 @@ namespace generator.SourceWriters
 			if (!klass.IsFinal)
 				return;
 
-			var signatures = new HashSet<string> (klass.Ctors.Where (c => c.IsValid).Select (c => GetSignature (klass.Name, c.Parameters, c.Parameters.Count)));
+			var signatures = new HashSet<string> (writer.Constructors.Select (c => GetSignature (c.Name, c.Parameters)));
 
 			foreach (var ctor in klass.Ctors) {
-				if (!ctor.IsValid || ctor.IsNonStaticNestedType || ctor.KotlinDefaultJniSignature is null)
+				// C# does not allow protected constructors in sealed classes.
+				if (!ctor.IsValid || ctor.IsNonStaticNestedType || ctor.Visibility == "protected" || !IsSupported (ctor))
 					continue;
 
 				var trailing = GetTrailingDefaultCount (ctor);
@@ -78,6 +78,7 @@ namespace generator.SourceWriters
 				var helper = new Ctor (klass) {
 					Name = ctor.Name,
 					Visibility = ctor.Visibility,
+					AnnotatedVisibility = ctor.AnnotatedVisibility,
 					Deprecated = ctor.Deprecated,
 					DeprecatedSince = ctor.DeprecatedSince,
 					ApiAvailableSince = ctor.ApiAvailableSince,
@@ -94,12 +95,16 @@ namespace generator.SourceWriters
 					continue;
 
 				for (var count = ctor.Parameters.Count - 1; count >= ctor.Parameters.Count - trailing; count--) {
-					if (!signatures.Add (GetSignature (klass.Name, ctor.Parameters, count)))
+					if (!signatures.Add (GetSignature (klass.Name, ctor.Parameters, count, opt)))
 						continue;
 					writer.Constructors.Add (new KotlinDefaultConstructor (klass, ctor, helper, count, opt, context));
 				}
 			}
 		}
+
+		// The helper clones the parameters, which loses generated enum types.
+		static bool IsSupported (MethodBase method)
+			=> !string.IsNullOrEmpty (method.KotlinDefaultJniSignature) && !method.Parameters.Any (p => p.IsEnumified);
 
 		static int GetTrailingDefaultCount (MethodBase method)
 		{
@@ -109,9 +114,14 @@ namespace generator.SourceWriters
 			return count;
 		}
 
-		static string GetSignature (string name, ParameterList parameters, int count)
-			=> name + "(" + string.Join (",", parameters.Take (count).Select (p => p.JniType)) + ")";
+		static string GetSignature (string name, ParameterList parameters, int count, CodeGenerationOptions opt)
+			=> GetSignature (name, parameters.Take (count).Select (p => opt.GetTypeReferenceName (p)));
 
+		static string GetSignature (string name, IEnumerable<MethodParameterWriter> parameters)
+			=> GetSignature (name, parameters.Select (p => !string.IsNullOrEmpty (p.Type.Namespace) ? p.Type.Namespace + "." + p.Type.Name : p.Type.Name));
+
+		static string GetSignature (string name, IEnumerable<string> types)
+			=> name + "(" + string.Join (",", types.Select (t => t.Replace ("params ", "").Replace ("global::", "").TrimEnd ('?'))) + ")";
 		static void AddMaskParameters (ParameterList parameters, int count)
 		{
 			for (var i = 0; i < (count + 31) / 32; i++)
@@ -185,9 +195,17 @@ namespace generator.SourceWriters
 			Comments.Add ($"// Kotlin default arguments: calls '{method.KotlinDefaultOwner}.{helper.JavaName}' to compute the omitted parameters.");
 
 			SourceWriterExtensions.AddObsolete (Attributes, method.Deprecated, opt, deprecatedSince: method.DeprecatedSince);
+			SourceWriterExtensions.AddRestrictToWarning (Attributes, method.AnnotatedVisibility, false, opt);
 			SourceWriterExtensions.AddSupportedOSPlatform (Attributes, method, opt);
 
-			this.AddMethodParameters (KotlinDefaultArguments.Take (method.Parameters, count), opt);
+			var parameters = KotlinDefaultArguments.Take (method.Parameters, count);
+			this.AddMethodParameters (parameters, opt);
+
+			// For example, `toString (indent: Int = 0)` makes `ToString ()`, which hides `object.ToString ()`.
+			var shape = new Method (type);
+			foreach (var p in parameters)
+				shape.Parameters.Add (p);
+			IsShadow = type.RequiresNew (Name, shape);
 
 			KotlinDefaultArguments.AddLocals (Body, method, count, !method.IsStatic, opt);
 			SourceWriterExtensions.AddMethodBody (Body, helper, opt, members);
