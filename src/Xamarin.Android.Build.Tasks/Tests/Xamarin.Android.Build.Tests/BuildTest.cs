@@ -1974,13 +1974,39 @@ namespace UnnamedProject
 		}
 
 		[Test]
-		public void AndroidLintEnabledWarns ()
+		public void AndroidLintHasNoNewIssues ()
 		{
 			var proj = new XamarinAndroidApplicationProject ();
 			proj.SetProperty ("AndroidLintEnabled", "true");
 			using var b = CreateApkBuilder ();
 			Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
 			StringAssertEx.Contains ("warning XA0108", b.LastBuildOutput, "Output should contain an XA0108 warning.");
+
+			// The build no longer runs lint, so run the Android SDK lint tool on the generated files.
+			var lint = AndroidSdkInfo.GetCommandLineToolsPaths (AndroidSdkResolver.GetAndroidSdkPath (), "")
+				.Select (p => Path.Combine (p, "bin", IsWindows ? "lint.bat" : "lint"))
+				.FirstOrDefault (File.Exists);
+			Assert.IsNotNull (lint, "lint should be installed in the Android SDK cmdline-tools.");
+			var intermediate = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath);
+			// Known issues in the generated files and the test project. Lint reports any other issue as a test failure.
+			var disabled = string.Join (",", [
+				"CustomX509TrustManager",
+				"HardcodedDebugMode",
+				"MissingApplicationIcon",
+				"RedundantLabel",
+				"UnusedResources",
+			]);
+			var args = $"--quiet --disable {disabled} " +
+				$"--resources \"{Path.Combine (intermediate, "res")}\" " +
+				$"--sources \"{Path.Combine (intermediate, "android", "src")}\" " +
+				$"--sources \"{Path.Combine (intermediate, "typemap", "java")}\" " +
+				$"\"{Path.Combine (intermediate, "android")}\"";
+			var (code, stdOutput, stdError) = RunProcessWithExitCode (lint, args, timeoutInSeconds: 600,
+				environment: new Dictionary<string, string> { ["JAVA_HOME"] = AndroidSdkResolver.GetJavaSdkPath () });
+			var output = stdOutput + stdError;
+			Assert.AreEqual (0, code, $"lint should succeed: {output}");
+			var issues = output.Split ('\n').Where (l => l.Contains (": Warning: ") || l.Contains (": Error: ")).ToArray ();
+			CollectionAssert.IsEmpty (issues, $"lint should not report new issues: {output}");
 		}
 
 		[Test]

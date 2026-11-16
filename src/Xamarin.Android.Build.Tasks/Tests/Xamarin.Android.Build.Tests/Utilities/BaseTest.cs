@@ -177,7 +177,7 @@ namespace Xamarin.Android.Build.Tests
 			return stdOutput + stdError;
 		}
 
-		protected static (int code, string stdOutput, string stdError) RunProcessWithExitCode (string exe, string args, int timeoutInSeconds = 30)
+		protected static (int code, string stdOutput, string stdError) RunProcessWithExitCode (string exe, string args, int timeoutInSeconds = 30, IDictionary<string, string>? environment = null)
 		{
 			TestContext.Out.WriteLine ($"{nameof(RunProcess)}: {exe} {args}");
 			var info = new ProcessStartInfo (exe, args) {
@@ -187,6 +187,10 @@ namespace Xamarin.Android.Build.Tests
 				CreateNoWindow = true,
 				WindowStyle = ProcessWindowStyle.Hidden,
 			};
+			if (environment != null) {
+				foreach (var variable in environment)
+					info.Environment [variable.Key] = variable.Value;
+			}
 			using (var proc = new Process ()) {
 				StringBuilder standardOutput = new StringBuilder (), errorOutput = new StringBuilder ();
 				var outputDone = new TaskCompletionSource<bool> (TaskCreationOptions.RunContinuationsAsynchronously);
