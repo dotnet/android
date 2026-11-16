@@ -52,7 +52,7 @@ namespace Xamarin.Android.Build.Tests
 			var standalone = GetTaskCounts ();
 			Assert.AreEqual (1, standalone ["ResolveSdks"]);
 			Assert.AreEqual (1, standalone ["ResolveAndroidTooling"]);
-			Assert.AreEqual (1, standalone ["ValidateJavaVersion"]);
+			Assert.AreEqual (1, standalone ["_ValidateJavaVersion"]);
 			Assert.IsFalse (dotnet.Build (parameters: parameters.Concat (["LatestSupportedJavaVersion=1.0"]).ToArray (), msbuildArguments: arguments),
 				"A changed Java limit must still be validated.");
 			StringAssertEx.Contains ("error XA0030", dotnet.LastBuildOutput);
@@ -62,7 +62,7 @@ namespace Xamarin.Android.Build.Tests
 				var counts = GetTaskCounts ();
 				Assert.AreEqual (1, counts ["ResolveSdks"], "Only the outer build should discover SDKs.");
 				Assert.AreEqual (1, counts ["ResolveAndroidTooling"], "Only the outer build should resolve Android tooling.");
-				Assert.AreEqual (1, counts ["ValidateJavaVersion"], "Only the outer build should validate Java.");
+				Assert.AreEqual (1, counts ["_ValidateJavaVersion"], "Only the outer build should validate Java.");
 				Assert.GreaterOrEqual (counts ["RuntimeIdentifierToAbi"], 3, "Both RID-specific target bodies must still execute.");
 			}
 
@@ -71,13 +71,12 @@ namespace Xamarin.Android.Build.Tests
 				var counts = new Dictionary<string, int> {
 					["ResolveSdks"] = 0,
 					["ResolveAndroidTooling"] = 0,
-					["ValidateJavaVersion"] = 0,
 					["RuntimeIdentifierToAbi"] = 0,
 				};
 				foreach (var task in counts.Keys.ToArray ()) {
-					counts [task] = dotnet.LastBuildOutput.Count (line => line.Contains ($"Task \"{task}\" (TaskId:", StringComparison.Ordinal));
+					counts [task] = CountTask (dotnet.LastBuildOutput, task);
 				}
-				counts ["ValidateJavaVersion"] = CountTarget (dotnet.LastBuildOutput, "_ValidateJavaVersion");
+				counts ["_ValidateJavaVersion"] = CountTarget (dotnet.LastBuildOutput, "_ValidateJavaVersion");
 				return counts;
 			}
 		}

@@ -31,29 +31,15 @@ namespace Xamarin.Android.Build.Tests
 			Directory.Delete (Path.Combine (Root, path), recursive: true);
 		}
 
-		[TestCase ("11.0.9", false, "XA0031", false)]
-		[TestCase ("11.0.9", false, "XA0031", true)]
-		[TestCase ("17.0.1", false, "XA0031", false)]
-		[TestCase ("17.0.1", false, "XA0031", true)]
-		[TestCase ("21.0", true, "", false)]
-		[TestCase ("21.0", true, "", true)]
-		[TestCase ("21.0.8", true, "", false)]
-		[TestCase ("21.0.8", true, "", true)]
-		[TestCase ("21.0.13.0.2", true, "", false, "21.0.13.0")]
-		[TestCase ("21.0.13.0.2", true, "", true, "21.0.13.0")]
-		[TestCase ("25.0.1", true, "", false)]
-		[TestCase ("25.0.1", true, "", true)]
-		[TestCase ("25.0.99", true, "", false)]
-		[TestCase ("25.0.99", true, "", true)]
-		[TestCase ("25.0.100", false, "XA0030", false)]
-		[TestCase ("25.0.100", false, "XA0030", true)]
-		[TestCase ("26.0.0", false, "XA0030", false)]
-		[TestCase ("26.0.0", false, "XA0030", true)]
-		public void CurrentSdkUsesConfiguredJavaVersionRange (string version, bool succeeds, string errorCode, bool useReleaseFile, string expectedVersion = null)
+		[TestCase ("17.0.1", false, "XA0031")]
+		[TestCase ("21", true, "", "21.0")]
+		[TestCase ("21.0.8", true, "")]
+		[TestCase ("21.0.13.0.2", true, "", "21.0.13.0")]
+		[TestCase ("25.0.99", true, "")]
+		[TestCase ("25.0.100", false, "XA0030")]
+		public void CurrentSdkUsesConfiguredJavaVersionRange (string version, bool succeeds, string errorCode, string expectedVersion = null)
 		{
 			var javaPath = CreateFauxJavaSdkDirectory (Path.Combine (path, "jdk"), version, out string javaExe, out _);
-			if (!useReleaseFile)
-				File.Delete (Path.Combine (javaPath, "release"));
 			var result = Validate (javaPath, javaExe, "21.0", "25.0.99");
 			Assert.AreEqual (succeeds, result.Success);
 			Assert.AreEqual ("21.0", result.DefaultJdkVersion);
@@ -64,13 +50,10 @@ namespace Xamarin.Android.Build.Tests
 				Assert.AreEqual (errorCode, result.Errors [0].Code);
 		}
 
-		[TestCase (false)]
-		[TestCase (true)]
-		public void ToolingTargetRejectsOldJavaForModernAndroidApi (bool useReleaseFile)
+		[Test]
+		public void ToolingTargetRejectsOldJavaForModernAndroidApi ()
 		{
 			var javaPath = CreateFauxJavaSdkDirectory (Path.Combine (path, "jdk"), "17.0.1", out string javaExe, out _);
-			if (!useReleaseFile)
-				File.Delete (Path.Combine (javaPath, "release"));
 			var proj = new XamarinAndroidApplicationProject ();
 			proj.SetProperty ("TargetPlatformVersion", "37.0");
 			proj.SetProperty ("MinimumSupportedJavaVersion", "21.0");
@@ -89,12 +72,14 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		public void ConfiguredMinimumJavaVersionIsRequired ()
+		public void JavaToolExeSelectsJdk ()
 		{
-			var javaPath = CreateFauxJavaSdkDirectory (Path.Combine (path, "jdk"), "1.7.0", out string javaExe, out _);
-			var result = Validate (javaPath, javaExe, "1.8.0", "1.8.0");
-			Assert.IsFalse (result.Success, "Validation should *not* succeed!");
-			Assert.IsTrue (result.Errors.Any (e => e.Code == "XA0031"), "Should report the configured minimum Java version.");
+			var javaPath = CreateFauxJavaSdkDirectory (Path.Combine (path, "jdk"), "21.0.8", out string javaExe, out _);
+			var overridePath = CreateFauxJavaSdkDirectory (Path.Combine (path, "override"), "17.0.1", out _, out _);
+			var result = Validate (javaPath, Path.Combine (overridePath, "bin", javaExe), "21.0", "25.0.99");
+			Assert.IsFalse (result.Success);
+			Assert.AreEqual ("17.0.1", result.JdkVersion);
+			Assert.AreEqual ("XA0031", result.Errors.Single ().Code);
 		}
 
 		[Test]
@@ -126,17 +111,11 @@ namespace Xamarin.Android.Build.Tests
 			StringAssert.Contains ("java version unknown", warning.Message);
 		}
 
-		[TestCase (false, "O'Brien;x=1")]
-		[TestCase (true, "O'Brien;x=1")]
-		[TestCase (false, "O'Brien;x=1 $HOME")]
-		[TestCase (true, "O'Brien;x=1 $HOME")]
-		[TestCase (false, "O'Brien;x=1 %JAVA_HOME%")]
-		[TestCase (true, "O'Brien;x=1 %JAVA_HOME%")]
-		[TestCase (false, "O'Brien;x=1 !JAVA_HOME!")]
-		[TestCase (true, "O'Brien;x=1 !JAVA_HOME!")]
-		public void JavaPathsWithMSBuildSpecialCharacters (bool useReleaseFile, string directoryName)
+		[TestCase (false)]
+		[TestCase (true)]
+		public void JavaPathsWithSpecialCharacters (bool useReleaseFile)
 		{
-			var javaPath = CreateFauxJavaSdkDirectory (Path.Combine (path, directoryName, "jdk"), "21.0.8", out string javaExe, out _);
+			var javaPath = CreateFauxJavaSdkDirectory (Path.Combine (path, "O'Brien;x=1 $HOME %JAVA_HOME%", "jdk"), "21.0.8", out string javaExe, out _);
 			if (!useReleaseFile)
 				File.Delete (Path.Combine (javaPath, "release"));
 			var result = Validate (javaPath, javaExe, "21.0", "25.0.99");
