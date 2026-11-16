@@ -115,10 +115,8 @@ namespace Microsoft.Android.Tasks
 		public void Dispose ()
 		{
 			Stop ();
+			// Workers kill a busy aapt2 and stop idle ones on their own; no need to wait for them.
 			tcs.Cancel ();
-			foreach (var thread in daemons) {
-				thread.Join ();
-			}
 			while (pendingJobs.TryTake (out var job)) {
 				job.Complete (true);
 			}

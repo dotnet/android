@@ -130,18 +130,19 @@ namespace Xamarin.Android.Build.Tests
 			Assert.IsTrue (execution.Wait (TimeSpan.FromSeconds (10)), "Cancelling a blocked task did not finish.");
 			Assert.IsFalse (execution.Result, "A cancelled task must not succeed.");
 			// Disposing the pool at the end of the build must stop the blocked daemon.
-			Assert.IsTrue (TPL.Task.Run (task.Daemon.Dispose).Wait (TimeSpan.FromSeconds (10)), "Disposing the pool did not finish.");
+			task.Daemon.Dispose ();
+			Assert.IsTrue (TPL.Task.Run (() => task.Daemon.WaitForJobsToComplete (task.Jobs)).Wait (TimeSpan.FromSeconds (10)), "Disposing the pool did not stop the blocked job.");
 		}
 
 		class BlockingAapt2 : Aapt2
 		{
 			public override string TaskPrefix => "A2T";
 			public volatile bool Queued;
+			public long [] Jobs = [];
 
 			public override TPL.Task RunTaskAsync ()
 			{
-				RunAapt (["command"], "");
-				RunAapt (["command"], "");
+				Jobs = [RunAapt (["command"], ""), RunAapt (["command"], "")];
 				Queued = true;
 				ProcessOutput ();
 				return TPL.Task.CompletedTask;
