@@ -216,17 +216,23 @@ public class StreamingTests
 		Assert.That (error.ToString (), Does.Contain ("[passed] Tests.One").And.Contain ("[unfinished] Tests.Two"));
 	}
 
-	[Test]
-	public async Task ListTestsReportsDiscoveredTests ()
+	[TestCase ("INSTRUMENTATION_CODE: -1", true)]
+	[TestCase ("", false)]
+	public async Task ListTestsReportsDiscoveredTests (string resultCode, bool finished)
 	{
-		using var application = await CreateApplication ("""
+		using var application = await CreateApplication ($"""
 			INSTRUMENTATION_STATUS: event=discovered
 			INSTRUMENTATION_STATUS: test=Tests.One
 			INSTRUMENTATION_STATUS_CODE: 0
-			INSTRUMENTATION_CODE: -1
-			""", listTests: true);
-		// MTP returns exit code 8 when zero tests are discovered.
-		Assert.That (await application.RunAsync (), Is.Zero);
+			{resultCode}
+			""", listTests: true, stderr: "* daemon started successfully");
+		if (finished) {
+			// MTP returns exit code 8 when zero tests are discovered.
+			Assert.That (await application.RunAsync (), Is.Zero);
+		} else {
+			var ex = Assert.ThrowsAsync<InvalidOperationException> (async () => { await application.RunAsync (); });
+			Assert.That (ex?.Message, Does.Contain ("Instrumentation did not finish"));
+		}
 	}
 
 	[Test]
@@ -258,14 +264,15 @@ public class StreamingTests
 	}
 
 	async Task<ITestApplication> CreateApplication (string transcript, bool reportFailure = false, int exitCode = 0, bool missingAdb = false,
-		CancellableAdapter? cancellationAdapter = null, bool listTests = false, string? deviceTrx = null)
+		CancellableAdapter? cancellationAdapter = null, bool listTests = false, string? deviceTrx = null, string stderr = "")
 	{
 		if (RuntimeInformation.IsOSPlatform (OSPlatform.Windows))
 			Assert.Ignore ("The fake adb is a Unix shell executable.");
 		string adb = Path.Combine (directory, "fake-adb");
 		var ending = cancellationAdapter == null ? $"exit {exitCode}" : "exec sleep 30";
 		var pull = deviceTrx == null ? "" : $"if [ \"$1\" = pull ]; then\ncat > \"$3\" <<'TRX'\n{deviceTrx}\nTRX\nexit 0\nfi\n";
-		File.WriteAllText (adb, $"#!/bin/sh\n{pull}cat <<'TRANSCRIPT'\n{transcript}\nTRANSCRIPT\n{ending}\n");
+		var stderrLine = stderr.Length == 0 ? "" : $"echo '{stderr}' >&2\n";
+		File.WriteAllText (adb, $"#!/bin/sh\n{pull}{stderrLine}cat <<'TRANSCRIPT'\n{transcript}\nTRANSCRIPT\n{ending}\n");
 		if (!OperatingSystem.IsWindows ())
 			File.SetUnixFileMode (adb, UnixFileMode.UserRead | UnixFileMode.UserWrite | UnixFileMode.UserExecute);
 		if (reportFailure)

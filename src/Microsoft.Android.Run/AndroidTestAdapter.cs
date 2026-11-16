@@ -113,9 +113,11 @@ class AndroidTestAdapter(
 		stdout.Flush ();
 
 		var output = fullOutput.ToString ();
-		var error = ParseInstrumentationBundle (output, stderr.ToString ()).Error ?? ExtractCrashMessage (output);
-		if (exitCode != 0 || error != null)
-			throw new InvalidOperationException ($"Test discovery failed: {error ?? $"adb exited with code {exitCode}."}");
+		// adb can write informational messages to stderr, so use stderr only when adb fails.
+		var result = ParseInstrumentationBundle (output, exitCode != 0 ? stderr.ToString () : "");
+		var error = result.Error ?? ExtractCrashMessage (output);
+		if (exitCode != 0 || error != null || result.InstrumentationCode != -1)
+			throw new InvalidOperationException ($"Test discovery failed: {error ?? (exitCode != 0 ? $"adb exited with code {exitCode}." : "Instrumentation did not finish.")}");
 
 		foreach (var status in discovered) {
 			if (!status.Values.TryGetValue (InstrumentationProtocol.KeyEvent, out var eventKind) || eventKind != InstrumentationProtocol.EventDiscovered ||
