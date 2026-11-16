@@ -1258,6 +1258,43 @@ VNZXRob2RzLmphdmFQSwUGAAAAAAcABwDOAQAAVgMAAAAA
 		}
 
 		[Test]
+		public void KotlinSuspendFunctionsAsTasks ()
+		{
+			// androidx.datastore has real Kotlin `suspend` APIs, such as `PreferencesKt.edit`.
+			// The NuGet packages for its dependencies are at 1.2.1.
+			var datastore = new BuildItem ("AndroidMavenLibrary", "androidx.datastore:datastore-preferences-core-jvm");
+			datastore.Metadata.Add ("Version", "1.2.1");
+			datastore.Metadata.Add ("Repository", TestEnvironment.DotNetPublicMaven);
+
+			var proj = new XamarinAndroidBindingProject {
+				Jars = { datastore },
+				PackageReferences = {
+					new Package { Id = "Xamarin.AndroidX.DataStore.Core.Jvm", Version = "1.2.1.1" },
+					new Package { Id = "Xamarin.AndroidX.DataStore.Core.OkIO.Jvm", Version = "1.2.1.1" },
+					new Package { Id = "Xamarin.AndroidX.DataStore.Preferences.Proto", Version = "1.2.1.1" },
+					new Package { Id = "Square.OkIO.JVM", Version = "3.17.0.1" },
+					new Package { Id = "Xamarin.Kotlin.StdLib", Version = "2.4.0.1" },
+				},
+				// The serializers need the generic-interface fixes from dotnet/android-libraries; this test does not use them.
+				MetadataXml = """
+					<metadata>
+					  <remove-node path="/api/package[@name='androidx.datastore.preferences.core']/class[@name='PreferencesSerializer']" />
+					  <remove-node path="/api/package[@name='androidx.datastore.preferences.core']/class[@name='PreferencesFileSerializer']" />
+					</metadata>
+					""",
+			};
+
+			using var b = CreateDllBuilder ();
+			Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
+
+			var cs_file = b.Output.GetIntermediaryPath (Path.Combine ("generated", "src", "Androidx.Datastore.Preferences.Core.PreferencesKt.cs"));
+			FileAssert.Exists (cs_file);
+			var code = File.ReadAllText (cs_file);
+			StringAssert.Contains ("public static global::System.Threading.Tasks.Task<global::Androidx.Datastore.Preferences.Core.Preferences> EditAsync (global::AndroidX.DataStore.Core.IDataStore obj, global::Kotlin.Jvm.Functions.IFunction2 transform, global::System.Threading.CancellationToken cancellationToken = default)", code);
+			StringAssert.Contains ("global::Android.Runtime.KotlinCoroutines.InvokeAsync<global::Androidx.Datastore.Preferences.Core.Preferences> (__continuation => Edit (", code);
+		}
+
+		[Test]
 		public void AndroidMavenLibrary_FailsDueToUnverifiedDependency ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			bool isRelease = runtime == AndroidRuntime.NativeAOT;
