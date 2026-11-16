@@ -105,6 +105,7 @@ namespace Xamarin.Android.Tasks
 
 			AndroidSdkInfo androidSdk;
 			try {
+				// Missing SDK/JDK paths throw here; the catch preserves the existing XA5300 diagnostics.
 				androidSdk = AndroidSdkInfo.CreateWithEnvironment (LogSdkMessage, AndroidSdkPath, AndroidNdkPath,
 					JavaSdkPath, environmentVariables, projectDirectory);
 			} catch (InvalidOperationException e) {
