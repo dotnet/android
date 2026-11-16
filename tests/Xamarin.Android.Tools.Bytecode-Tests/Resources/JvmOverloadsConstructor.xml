@@ -51,7 +51,9 @@
         visibility="public"
         bridge="false"
         synthetic="false"
-        jni-signature="(LJvmOverloadsConstructor;IILjava/lang/String;Z)V">
+        jni-signature="(LJvmOverloadsConstructor;IILjava/lang/String;Z)V"
+        kotlin-default-jni-signature="(LJvmOverloadsConstructor;IILjava/lang/String;ZILkotlin/jvm/internal/DefaultConstructorMarker;)V"
+        kotlin-default-parameters="1,2,4">
         <parameter
           name="something"
           type="JvmOverloadsConstructor"

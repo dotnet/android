@@ -143,14 +143,11 @@ namespace generatortests
 		// XmlClassDeclarationBuilder to produce the same api.xml the generator
 		// would normally consume off disk.
 		static string BuildApiXmlFromKotlinFixture ()
+			=> BuildApiXmlFromKotlinFixture ("MyColor.class", "MyAlpha.class", "MyDp.class", "Widgets.class", "ColorCallback.class");
+
+		internal static string BuildApiXmlFromKotlinFixture (params string [] resources)
 		{
-			var classes = new List<ClassFile> {
-				LoadClassFile ("MyColor.class"),
-				LoadClassFile ("MyAlpha.class"),
-				LoadClassFile ("MyDp.class"),
-				LoadClassFile ("Widgets.class"),
-				LoadClassFile ("ColorCallback.class"),
-			};
+			var classes = resources.Select (LoadClassFile).ToList ();
 			Xamarin.Android.Tools.Bytecode.KotlinFixups.Fixup (classes);
 
 			var classPath = new ClassPath { ApiSource = "class-parse" };
@@ -200,9 +197,9 @@ namespace generatortests
 
 		// Drive the parsed api.xml through XmlApiImporter + Validate + the
 		// JavaInteropCodeGenerator to produce the C# binding text.
-		static string GenerateCSharp (string apiXml, out List<GenBase> gens, bool nullableReferenceTypes = false)
+		internal static string GenerateCSharp (string apiXml, out List<GenBase> gens, bool nullableReferenceTypes = false, bool defaultInterfaceMethods = false)
 		{
-			var options = new CodeGenerationOptions { SupportNullableReferenceTypes = nullableReferenceTypes };
+			var options = new CodeGenerationOptions { SupportNullableReferenceTypes = nullableReferenceTypes, SupportDefaultInterfaceMethods = defaultInterfaceMethods };
 			var sb = new System.Text.StringBuilder ();
 			var writer = new StringWriter (sb);
 			var generator = new JavaInteropCodeGenerator (writer, options);
