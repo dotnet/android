@@ -187,7 +187,7 @@ namespace generatortests
 			return adjusted.ToString ();
 		}
 
-		static ClassFile LoadClassFile (string resource)
+		internal static ClassFile LoadClassFile (string resource)
 		{
 			var assembly = typeof (KotlinInlineClassEndToEndTests).Assembly;
 			var name = assembly.GetManifestResourceNames ()
