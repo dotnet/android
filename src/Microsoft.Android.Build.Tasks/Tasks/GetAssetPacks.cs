@@ -2,7 +2,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Globalization;
 using System.IO;
 using System.Text;
 using System.Linq;
@@ -20,7 +19,7 @@ namespace Microsoft.Android.Tasks
 	public partial class GetAssetPacks : AndroidTask
 	{
 		[GeneratedRegex ("^[A-Za-z0-9_]+$")]
-		private static partial Regex ValidAssetPackName ();
+		static partial Regex ValidAssetPackName { get; }
 
 		public override string TaskPrefix => "GAP";
 
@@ -43,8 +42,8 @@ namespace Microsoft.Android.Tasks
 				var assetPack = asset.GetMetadata ("AssetPack");
 				if (assetPack.IsNullOrEmpty () || string.Equals (assetPack, "base", StringComparison.OrdinalIgnoreCase))
 					continue;
-				if (!IsAssetPackNameValid (assetPack)) {
-					Log.LogCodedError ("XA0140", string.Format (CultureInfo.InvariantCulture, Properties.Resources.XA0140, asset.ItemSpec, assetPack));
+				if (!ValidAssetPackName.IsMatch (assetPack)) {
+					Log.LogCodedError ("XA0140", Properties.Resources.XA0140, asset.ItemSpec, assetPack);
 					continue;
 				}
 				if (!assetPacks.TryGetValue (assetPack, out ITaskItem? item)) {
@@ -95,11 +94,6 @@ namespace Microsoft.Android.Tasks
 					return false;
 				}
 			return true;
-		}
-
-		bool IsAssetPackNameValid (string assetPackName)
-		{
-			return ValidAssetPackName ().IsMatch (assetPackName);
 		}
 	}
 }
