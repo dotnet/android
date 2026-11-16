@@ -126,6 +126,8 @@ namespace MonoDroid.Generation
 
 		public string GetNullForgiveness (Field field)
 		{
+			if (field.Symbol is KotlinInlineClassBoxedSymbol)
+				return string.Empty;
 			if (field.NotNull || field.Symbol.IsEnum)
 				return NullForgivingOperator;
 

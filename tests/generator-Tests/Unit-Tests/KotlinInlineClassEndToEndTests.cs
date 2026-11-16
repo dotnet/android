@@ -104,6 +104,41 @@ namespace generatortests
 			StringAssert.Contains ("IList<Java.Lang.Object> Colors (System.Collections.Generic.IList<Java.Lang.Object> colors)", output);
 		}
 
+		[Test]
+		public void GeneratorHandlesNestedFieldAndArrayKotlinInlineClasses ()
+		{
+			var output = GenerateCSharp ("""
+				<api>
+				  <package name='java.lang' jni-name='java/lang'>
+				    <class abstract='false' deprecated='not deprecated' final='false' name='Object' static='false' visibility='public' jni-signature='Ljava/lang/Object;' />
+				  </package>
+				  <package name='com.example' jni-name='com/example'>
+				    <class abstract='false' deprecated='not deprecated' extends='java.lang.Object' extends-generic-aware='java.lang.Object' jni-extends='Ljava/lang/Object;' final='true' name='Outer' static='false' visibility='public' jni-signature='Lcom/example/Outer;'>
+				      <field deprecated='not deprecated' final='false' name='color' jni-signature='Lcom/example/Outer$Value;' static='false' transient='false' type='com.example.Outer.Value' visibility='public' volatile='false' />
+				      <method abstract='false' deprecated='not deprecated' final='true' name='maybe' jni-signature='(Lcom/example/Outer$Value;)Lcom/example/Outer$Value;' native='false' return='com.example.Outer.Value' jni-return='Lcom/example/Outer$Value;' static='false' synchronized='false' visibility='public'>
+				        <parameter name='value' type='com.example.Outer.Value' jni-type='Lcom/example/Outer$Value;' />
+				      </method>
+				      <method abstract='false' deprecated='not deprecated' final='true' name='all' jni-signature='([Lcom/example/Outer$Value;)V' native='false' return='void' jni-return='V' static='false' synchronized='false' visibility='public'>
+				        <parameter name='values' type='com.example.Outer.Value[]' jni-type='[Lcom/example/Outer$Value;' />
+				      </method>
+				    </class>
+				    <class abstract='false' deprecated='not deprecated' extends='java.lang.Object' extends-generic-aware='java.lang.Object' jni-extends='Ljava/lang/Object;' final='true' name='Outer.Value' static='true' visibility='public' jni-signature='Lcom/example/Outer$Value;' kotlin-inline-class='true' kotlin-inline-class-underlying-jni-type='I' />
+				  </package>
+				</api>
+				""", out _, nullableReferenceTypes: true);
+
+			// A nested value class is a struct too.
+			StringAssert.Contains ("readonly partial struct Value", output);
+			StringAssert.Contains ("Com.Example.Outer.Value? Maybe (Com.Example.Outer.Value? value)", output);
+
+			// A Java field of a value-class type is marshaled through the boxing helpers.
+			StringAssert.Contains ("Com.Example.Outer.Value.FromJniHandle (__v.Handle, JniHandleOwnership.TransferLocalRef);", output);
+			StringAssert.DoesNotContain ("GetObject<Com.Example.Outer.Value>", output);
+
+			// Arrays of value classes can't be marshaled, so the member is skipped.
+			StringAssert.DoesNotContain (" All (", output);
+		}
+
 		// Run the kotlin-gradle .class files through KotlinFixups and
 		// XmlClassDeclarationBuilder to produce the same api.xml the generator
 		// would normally consume off disk.
@@ -175,8 +210,15 @@ namespace generatortests
 			var doc = XDocument.Parse (apiXml);
 			gens = XmlApiImporter.Parse (doc, options);
 
-			foreach (var gen in gens)
+			// Like CodeGenerator.AddTypeToTable, include nested types.
+			void AddType (GenBase gen)
+			{
 				options.SymbolTable.AddType (gen);
+				foreach (var nested in gen.NestedTypes)
+					AddType (nested);
+			}
+			foreach (var gen in gens)
+				AddType (gen);
 
 			foreach (var gen in gens)
 				gen.FixupAccessModifiers (options);

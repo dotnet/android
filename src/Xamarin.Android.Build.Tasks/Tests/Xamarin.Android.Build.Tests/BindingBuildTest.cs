@@ -1215,6 +1215,9 @@ VNZXRob2RzLmphdmFQSwUGAAAAAAcABwDOAQAAVgMAAAAA
 			var proj = new XamarinAndroidBindingProject {
 				Jars = { item }
 			};
+			// The generated value-class helpers must compile under the new unsafe rules too, which need C# preview.
+			proj.SetProperty ("MemorySafetyRulesVersion", "2");
+			proj.SetProperty ("LangVersion", "preview");
 
 			using var b = CreateDllBuilder ();
 			Assert.IsTrue (b.Build (proj), "Build should have succeeded.");

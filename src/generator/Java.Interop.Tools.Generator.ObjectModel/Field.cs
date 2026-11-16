@@ -52,6 +52,12 @@ namespace MonoDroid.Generation
 				return false;
 			}
 
+			var boxed = KotlinInlineClassBoxedSymbol.Project (Symbol);
+			if (boxed != Symbol) {
+				Symbol = boxed;
+				NotNull = true;
+			}
+
 			if (!string.IsNullOrEmpty (Value) && Symbol != null && Symbol.FullName == "char" && !Value.StartsWith ("(char)", StringComparison.Ordinal))
 				Value = "(char)" + Value;
 
