@@ -65,10 +65,10 @@ if (bool.Parse (options ["--retry"]) && exitCode == 2) {
 	foreach (var trxPath in Directory.GetFiles (resultsDirectory, "*.trx")) {
 		var trx = XDocument.Load (trxPath);
 		var classNames = trx.Descendants (ns + "UnitTest").ToDictionary (
-			t => (string?) t.Attribute ("id"),
-			t => (string?) t.Element (ns + "TestMethod")?.Attribute ("className"));
+			t => (string?) t.Attribute ("id") ?? "",
+			t => (string?) t.Element (ns + "TestMethod")?.Attribute ("className") ?? "");
 		foreach (var result in trx.Descendants (ns + "UnitTestResult").Where (r => (string?) r.Attribute ("outcome") == "Failed").ToList ()) {
-			failed.Add ($"{classNames [(string?) result.Attribute ("testId")]}.{(string?) result.Attribute ("testName")}");
+			failed.Add ($"{classNames [(string?) result.Attribute ("testId") ?? ""]}.{(string?) result.Attribute ("testName")}");
 			result.Remove ();
 		}
 		trx.Save (trxPath);
