@@ -34,7 +34,6 @@ namespace Xamarin.Android.Tools.Bytecode {
 		public  AttributeCollection Attributes      {get; private set;}
 		public  string?             KotlinType      {get; set;}
 
-		// True when Kotlin metadata declares a non-null reference type.
 		public  bool                KotlinNotNull   {get; set;}
 
 		public FieldInfo (ConstantPool constantPool, ClassFile declaringType, Stream stream)
