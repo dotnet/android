@@ -613,7 +613,6 @@ static int InvokeIntMethod (Java.Lang.Object instance, string methodName)
 			// Start dotnet run with WaitForExit=true, which uses Microsoft.Android.Run
 			using var process = dotnet.StartRun ();
 
-			var locker = new Lock ();
 			var output = new StringBuilder ();
 			using var readerCts = new CancellationTokenSource ();
 			var outputReceived = new ManualResetEventSlim (false);
@@ -621,15 +620,13 @@ static int InvokeIntMethod (Java.Lang.Object instance, string methodName)
 
 			var reader = Task.Run (async () => {
 				await foreach (var line in process.ReadAllLinesAsync (readerCts.Token)) {
-					lock (locker) {
-						if (line.StandardError) {
-							output.AppendLine ($"STDERR: {line.Content}");
-						} else {
-							output.AppendLine (line.Content);
-							if (line.Content.Contains (logcatMessage)) {
-								foundMessage = true;
-								outputReceived.Set ();
-							}
+					if (line.StandardError) {
+						output.AppendLine ($"STDERR: {line.Content}");
+					} else {
+						output.AppendLine (line.Content);
+						if (line.Content.Contains (logcatMessage)) {
+							foundMessage = true;
+							outputReceived.Set ();
 						}
 					}
 				}
@@ -684,21 +681,18 @@ static int InvokeIntMethod (Java.Lang.Object instance, string methodName)
 			// Start dotnet run with WaitForExit=true, which uses Microsoft.Android.Run
 			using var process = dotnet.StartRun ();
 
-			var locker = new Lock ();
 			var output = new StringBuilder ();
 			using var readerCts = new CancellationTokenSource ();
 			var appLaunched = new ManualResetEventSlim (false);
 
 			var reader = Task.Run (async () => {
 				await foreach (var line in process.ReadAllLinesAsync (readerCts.Token)) {
-					lock (locker) {
-						if (line.StandardError) {
-							output.AppendLine ($"STDERR: {line.Content}");
-						} else {
-							output.AppendLine (line.Content);
-							if (line.Content.Contains (logcatMessage)) {
-								appLaunched.Set ();
-							}
+					if (line.StandardError) {
+						output.AppendLine ($"STDERR: {line.Content}");
+					} else {
+						output.AppendLine (line.Content);
+						if (line.Content.Contains (logcatMessage)) {
+							appLaunched.Set ();
 						}
 					}
 				}
@@ -771,7 +765,6 @@ static int InvokeIntMethod (Java.Lang.Object instance, string methodName)
 			// Start dotnet run with Device parameter, which should set $(AdbTarget)
 			using var process = dotnet.StartRun (waitForExit: true, parameters: [$"/p:Device={serial}"]);
 
-			var locker = new Lock ();
 			var output = new StringBuilder ();
 			using var readerCts = new CancellationTokenSource ();
 			var outputReceived = new ManualResetEventSlim (false);
@@ -780,20 +773,18 @@ static int InvokeIntMethod (Java.Lang.Object instance, string methodName)
 
 			var reader = Task.Run (async () => {
 				await foreach (var line in process.ReadAllLinesAsync (readerCts.Token)) {
-					lock (locker) {
-						if (line.StandardError) {
-							output.AppendLine ($"STDERR: {line.Content}");
-							continue;
-						}
-						output.AppendLine (line.Content);
-						// Check for the --adb-target argument in verbose output
-						if (line.Content.Contains ($"Target: -s {serial}")) {
-							foundAdbTarget = true;
-						}
-						if (line.Content.Contains (logcatMessage)) {
-							foundMessage = true;
-							outputReceived.Set ();
-						}
+					if (line.StandardError) {
+						output.AppendLine ($"STDERR: {line.Content}");
+						continue;
+					}
+					output.AppendLine (line.Content);
+					// Check for the --adb-target argument in verbose output
+					if (line.Content.Contains ($"Target: -s {serial}")) {
+						foundAdbTarget = true;
+					}
+					if (line.Content.Contains (logcatMessage)) {
+						foundMessage = true;
+						outputReceived.Set ();
 					}
 				}
 			});
@@ -847,7 +838,6 @@ static int InvokeIntMethod (Java.Lang.Object instance, string methodName)
 			// Start dotnet watch which will build, deploy, and watch for changes
 			using var process = dotnet.StartWatch ();
 
-			var locker = new Lock ();
 			var output = new StringBuilder ();
 			using var readerCts = new CancellationTokenSource ();
 			var initialMessageEvent = new ManualResetEventSlim ();
@@ -855,14 +845,12 @@ static int InvokeIntMethod (Java.Lang.Object instance, string methodName)
 
 			var reader = Task.Run (async () => {
 				await foreach (var line in process.ReadAllLinesAsync (readerCts.Token)) {
-					lock (locker) {
-						output.AppendLine (line.StandardError ? $"STDERR: {line.Content}" : line.Content);
-						if (!line.StandardError && line.Content.Contains (initialMessage)) {
-							initialMessageEvent.Set ();
-						}
-						if (line.Content.Contains (hotReloadMessage)) {
-							hotReloadAppliedEvent.Set ();
-						}
+					output.AppendLine (line.StandardError ? $"STDERR: {line.Content}" : line.Content);
+					if (!line.StandardError && line.Content.Contains (initialMessage)) {
+						initialMessageEvent.Set ();
+					}
+					if (line.Content.Contains (hotReloadMessage)) {
+						hotReloadAppliedEvent.Set ();
 					}
 				}
 			});
