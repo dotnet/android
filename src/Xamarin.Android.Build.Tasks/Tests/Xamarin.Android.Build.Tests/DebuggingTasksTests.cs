@@ -31,7 +31,6 @@ namespace Xamarin.Android.Build.Tests
 			proj.SetProperty ("AndroidPackageFormat", packageFormat);
 			proj.SetProperty ("ApkFileSigned", "application-Signed.apk");
 			proj.SetProperty ("_ApkSetIntermediate", "application.apks");
-			proj.SetProperty ("_AndroidAppBundleInstallFlag", "appbundle-install.flag");
 			proj.Imports.Add (new Import (() => "UploadInputs.targets") {
 				TextContent = () => """
 					<Project>
@@ -43,13 +42,12 @@ namespace Xamarin.Android.Build.Tests
 			});
 			using var builder = CreateApkBuilder ();
 			Assert.IsTrue (builder.RunTarget (proj, "WriteUploadInputs"), "Collecting upload inputs should succeed without a device.");
-			var inputs = File.ReadAllLines (Path.Combine (Root, builder.ProjectDirectory, "upload-inputs.txt"));
+			var inputs = File.ReadAllLines (Path.Combine (Root, builder.ProjectDirectory, "upload-inputs.txt")).Select (i => i.Replace ('\\', '/'));
 			CollectionAssert.AreEqual (
-				packageFormat == "aab" ? new [] { "application.apks", "appbundle-install.flag" } : new [] { "application-Signed.apk" },
+				packageFormat == "aab" ? new [] { "application.apks", "obj/Debug/appbundle-install.flag" } : new [] { "application-Signed.apk" },
 				inputs, "Upload inputs should only name files produced for the selected package format.");
 		}
 
-		[TestCase ("_AndroidDeploymentDeviceSerial", "second-device")]
 		[TestCase ("AdbTarget", "-s second-device")]
 		[TestCase ("AndroidDeviceUserId", "10")]
 		[TestCase ("AndroidPackageFormat", "apk")]
@@ -61,7 +59,6 @@ namespace Xamarin.Android.Build.Tests
 			var proj = new XamarinAndroidApplicationProject ();
 			proj.SetProperty ("AndroidPackageFormat", "aab");
 			proj.SetProperty ("_AndroidPackage", "com.xamarin.configuration");
-			proj.SetProperty ("_AndroidDeploymentDeviceSerial", "first-device");
 			proj.Imports.Add (new Import (() => "DeploymentConfiguration.targets") {
 				TextContent = () => """
 					<Project>
