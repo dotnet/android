@@ -17,11 +17,11 @@ namespace Microsoft.Android.Tasks
 {
 	// We have a list of files, we want to get the
 	// ones that actually exist on disk.
-	public class GetAssetPacks : AndroidTask
+	public partial class GetAssetPacks : AndroidTask
 	{
-		// Not [GeneratedRegex]: with IgnoreCase this runtime regex uses CurrentCulture case mappings
-		// (e.g. tr-TR rejects 'i'), while a generated regex would bake in invariant case mappings.
-		readonly Regex validAssetPackName = new Regex ("^[A-Z0-9_]+$", RegexOptions.Compiled | RegexOptions.IgnoreCase);
+		[GeneratedRegex ("^[A-Za-z0-9_]+$")]
+		private static partial Regex ValidAssetPackName ();
+
 		public override string TaskPrefix => "GAP";
 
 		[Required]
@@ -99,7 +99,7 @@ namespace Microsoft.Android.Tasks
 
 		bool IsAssetPackNameValid (string assetPackName)
 		{
-			return validAssetPackName.IsMatch (assetPackName);
+			return ValidAssetPackName ().IsMatch (assetPackName);
 		}
 	}
 }
