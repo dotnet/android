@@ -19,8 +19,6 @@ bool verbose = false;
 bool wakeDevice = true;
 int? logcatPid = null;
 Process? logcatProcess = null;
-Task? logcatOutputTask = null;
-CancellationTokenSource? logcatOutputCts = null;
 CancellationTokenSource cts = new ();
 int ctrlCRequested = 0;
 string? logcatArgs = null;
@@ -270,20 +268,8 @@ async Task<int> RunInstrumentationAsync (List<string> instrumentationArgs)
 	});
 
 	if (!waitForExit) {
-		try {
-			await instrumentProcess.WaitForExitAsync (cts.Token);
-			await outputTask;
-		} catch (OperationCanceledException) when (cts.IsCancellationRequested) {
-			try { instrumentProcess.Kill (); } catch (Exception ex) {
-				if (verbose)
-					Console.Error.WriteLine ($"Cleanup: {ex.Message}");
-			}
-			await instrumentProcess.WaitForExitAsync ().WaitAsync (TimeSpan.FromSeconds (5));
-			throw;
-		} finally {
-			if (cts.IsCancellationRequested)
-				await ObserveOutputTaskAsync ();
-		}
+		await instrumentProcess.WaitForExitAsync (cts.Token);
+		await outputTask;
 		return instrumentProcess.ExitCode == 0 ? 0 : 1;
 	}
 
@@ -306,22 +292,16 @@ async Task<int> RunInstrumentationAsync (List<string> instrumentationArgs)
 		}
 	} finally {
 		cts.Cancel ();
+		await logcatTask;
+		// Clean up logcat
 		try {
-			await ObserveOutputTaskAsync ();
-		} finally {
-			try {
-				await logcatTask;
-			} finally {
-				await StopLogcatAsync ();
+			if (logcatProcess != null && !logcatProcess.HasExited) {
+				logcatProcess.Kill ();
+				logcatProcess.WaitForExit (1000);
 			}
-		}
-	}
-
-	async Task ObserveOutputTaskAsync ()
-	{
-		try {
-			await outputTask;
-		} catch (OperationCanceledException) when (cts.IsCancellationRequested) {
+		} catch (Exception ex) {
+			if (verbose)
+				Console.Error.WriteLine ($"Logcat cleanup: {ex.Message}");
 		}
 	}
 
@@ -624,48 +604,12 @@ void StartLogcat ()
 	if (verbose)
 		Console.WriteLine ($"Running: adb {psi.Arguments}");
 
-	var process = Process.Start (psi) ?? throw new InvalidOperationException ("Failed to start adb logcat");
-	logcatProcess = process;
-	var outputCts = new CancellationTokenSource ();
-	logcatOutputCts = outputCts;
-	logcatOutputTask = Task.Run (async () => {
-		await foreach (var line in process.ReadAllLinesAsync (outputCts.Token))
+	logcatProcess = Process.Start (psi) ?? throw new InvalidOperationException ("Failed to start adb logcat");
+	var process = logcatProcess;
+	_ = Task.Run (async () => {
+		await foreach (var line in process.ReadAllLinesAsync (cts.Token))
 			(line.StandardError ? Console.Error : Console.Out).WriteLine (line.Content);
 	});
-}
-
-async Task StopLogcatAsync ()
-{
-	try {
-		try {
-			if (logcatProcess != null && !logcatProcess.HasExited) {
-				logcatProcess.Kill ();
-				logcatProcess.WaitForExit (1000);
-			}
-		} catch (Exception ex) {
-			Console.Error.WriteLine ($"Error cleaning up logcat process: {ex.Message}");
-		}
-	} finally {
-		try {
-			if (logcatOutputTask != null && logcatOutputCts != null) {
-				// Allow buffered final lines to drain before cancelling a stuck read.
-				logcatOutputCts.CancelAfter (TimeSpan.FromSeconds (5));
-				try {
-					await logcatOutputTask;
-				} catch (OperationCanceledException) when (logcatOutputCts.IsCancellationRequested) {
-					Console.Error.WriteLine ("Timed out draining logcat output.");
-				} catch (Exception ex) {
-					Console.Error.WriteLine ($"Error reading logcat output: {ex.Message}");
-				}
-			}
-		} finally {
-			logcatProcess?.Dispose ();
-			logcatOutputCts?.Dispose ();
-			logcatProcess = null;
-			logcatOutputTask = null;
-			logcatOutputCts = null;
-		}
-	}
 }
 
 async Task WaitForAppExitAsync ()
@@ -690,7 +634,16 @@ async Task WaitForAppExitAsync ()
 			await Task.Delay (1000, cts.Token).ConfigureAwait (ConfigureAwaitOptions.SuppressThrowing);
 		}
 	} finally {
-		await StopLogcatAsync ();
+		// Clean up logcat process
+		try {
+			if (logcatProcess != null && !logcatProcess.HasExited) {
+				logcatProcess.Kill ();
+				logcatProcess.WaitForExit (1000);
+			}
+		} catch (Exception ex) {
+			if (verbose)
+				Console.Error.WriteLine ($"Error cleaning up logcat process: {ex.Message}");
+		}
 	}
 }
 

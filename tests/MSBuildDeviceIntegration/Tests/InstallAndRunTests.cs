@@ -3413,12 +3413,7 @@ Facebook.FacebookSdk.LogEvent(""TestFacebook"");
 				: dotnet.StartTest (parameters: runParameters.ToArray ());
 
 			var output = new StringBuilder ();
-			using var cts = new CancellationTokenSource ();
-			var reader = Task.Run (async () => {
-				await foreach (var line in process.ReadAllLinesAsync (cts.Token))
-					output.AppendLine (line.StandardError ? $"STDERR: {line.Content}" : line.Content);
-			});
-			bool completed = process.WaitForExitAndOutput (reader, cts, TimeSpan.FromMinutes (5));
+			bool completed = process.WaitForExitAndOutput (output, TimeSpan.FromMinutes (5));
 
 			// Write the output to a log file for debugging
 			string logPath = Path.Combine (projectDirectory, $"dotnet-{mode}-output.log");
@@ -3575,12 +3570,7 @@ Facebook.FacebookSdk.LogEvent(""TestFacebook"");
 			using var process = dotnet.StartRun (waitForExit: true, parameters: new [] { "--", "greeting=hello", "--custom-flag" });
 
 			var output = new StringBuilder ();
-			using var cts = new CancellationTokenSource ();
-			var reader = Task.Run (async () => {
-				await foreach (var line in process.ReadAllLinesAsync (cts.Token))
-					output.AppendLine (line.StandardError ? $"STDERR: {line.Content}" : line.Content);
-			});
-			bool completed = process.WaitForExitAndOutput (reader, cts, TimeSpan.FromMinutes (10));
+			bool completed = process.WaitForExitAndOutput (output, TimeSpan.FromMinutes (10));
 
 			string logPath = Path.Combine (Root, builder.ProjectDirectory, "dotnet-run-benchmarkdotnet.log");
 			File.WriteAllText (logPath, output.ToString ());

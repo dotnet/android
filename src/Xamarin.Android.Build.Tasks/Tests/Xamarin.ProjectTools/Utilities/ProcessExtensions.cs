@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Globalization;
 using System.Runtime.InteropServices;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Win32.SafeHandles;
@@ -38,47 +39,37 @@ namespace Xamarin.ProjectTools
 			Assert.Inconclusive ("Could not set ProcessStartInfo environment variable.");
 		}
 
+		/// <summary>
+		/// Kills the process tree, then waits at most 30 seconds for <paramref name="outputTask"/> to read the remaining output.
+		/// </summary>
 		public static void StopAndDrainOutput (this Process process, CancellationTokenSource cts, Task outputTask)
 		{
-			try {
+			if (!process.HasExited)
 				process.Kill (entireProcessTree: true);
-			} catch (InvalidOperationException) when (process.HasExited) {
-			}
-			bool exited = process.WaitForExit (30_000);
-			if (!exited)
-				cts.Cancel ();
-
-			bool readerCancelled = false;
+			// A process that inherited the output pipe can keep it open after the kill.
+			cts.CancelAfter (TimeSpan.FromSeconds (30));
 			try {
-				outputTask.WaitAsync (TimeSpan.FromSeconds (30)).GetAwaiter ().GetResult ();
-			} catch (OperationCanceledException) when (cts.IsCancellationRequested) {
-				readerCancelled = true;
-			} catch (TimeoutException) {
-				cts.Cancel ();
-				try {
-					outputTask.WaitAsync (TimeSpan.FromSeconds (30)).GetAwaiter ().GetResult ();
-				} catch (OperationCanceledException) when (cts.IsCancellationRequested) {
-					readerCancelled = true;
-				}
-			}
-			if (!exited)
-				throw new TimeoutException ("The process did not exit after being stopped.");
-			if (!readerCancelled)
 				outputTask.GetAwaiter ().GetResult ();
+			} catch (OperationCanceledException) when (cts.IsCancellationRequested) {
+			}
 		}
 
-		public static bool WaitForExitAndOutput (this Process process, Task outputTask, CancellationTokenSource cts, TimeSpan timeout)
+		/// <summary>
+		/// Reads stdout and stderr into <paramref name="output"/> until the process exits.
+		/// Returns false and kills the process tree if <paramref name="timeout"/> expires first.
+		/// </summary>
+		public static bool WaitForExitAndOutput (this Process process, StringBuilder output, TimeSpan timeout)
 		{
-			cts.CancelAfter (timeout);
+			using var cts = new CancellationTokenSource (timeout);
 			try {
-				Task.WhenAll (process.WaitForExitAsync (cts.Token), outputTask).GetAwaiter ().GetResult ();
+				foreach (var line in process.ReadAllLinesAsync (cts.Token).ToBlockingEnumerable ())
+					output.AppendLine (line.StandardError ? $"STDERR: {line.Content}" : line.Content);
+				process.WaitForExitAsync (cts.Token).GetAwaiter ().GetResult ();
 				return true;
-			} catch (OperationCanceledException) when (cts.IsCancellationRequested) {
-				process.StopAndDrainOutput (cts, outputTask);
+			} catch (OperationCanceledException) {
+				if (!process.HasExited)
+					process.Kill (entireProcessTree: true);
 				return false;
-			} catch {
-				process.StopAndDrainOutput (cts, outputTask);
-				throw;
 			}
 		}
 
