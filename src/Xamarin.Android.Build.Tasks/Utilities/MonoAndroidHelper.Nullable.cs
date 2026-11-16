@@ -39,17 +39,7 @@ public partial class MonoAndroidHelper
 	}
 
 	public static JdkInfo? GetJdkInfo (Action<TraceLevel, string> logger, string? javaSdkPath, Version minSupportedVersion, Version maxSupportedVersion)
-	{
-		JdkInfo? info = null;
-		try {
-			info = new JdkInfo (javaSdkPath ?? "", logger:logger);
-		} catch {
-			info = JdkInfo.GetKnownSystemJdkInfos (logger)
-				.Where (jdk => jdk.Version >= minSupportedVersion && jdk.Version <= maxSupportedVersion)
-				.FirstOrDefault ();
-		}
-		return info;
-	}
+		=> JdkInfo.FindJdk (logger, javaSdkPath, minSupportedVersion, maxSupportedVersion, null);
 
 #if MSBUILD
 	public static string GetExecutablePath (string? dir, string exe, TaskEnvironment taskEnvironment)

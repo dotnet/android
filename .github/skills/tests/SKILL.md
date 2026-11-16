@@ -23,7 +23,7 @@ CONFIGURATION=Debug # Set to Release for Release tests.
 test -x "bin/${CONFIGURATION}/dotnet/dotnet"
 ```
 
-**If the local SDK is missing, prepare and build it, then run the full-build tests.** On macOS/Linux, use `make prepare && make all`; on Windows, use `build.cmd`. For Release tests on macOS/Linux, use `make prepare CONFIGURATION=Release && make all CONFIGURATION=Release`. The presence of the `dotnet` executable only confirms provisioning, not that the SDK or test assemblies have been built. Rebuild after source changes so tests exercise the updated SDK.
+**If the local SDK is missing, prepare and build it, then run the full-build tests.** On macOS/Linux, use `make prepare && make leeroy` (not `make all`); on Windows, use `build.cmd`. For Release tests on macOS/Linux, use `make prepare CONFIGURATION=Release && make leeroy CONFIGURATION=Release`. The presence of the `dotnet` executable only confirms provisioning, not that the SDK or test assemblies have been built. Rebuild after source changes so tests exercise the updated SDK. See `local-build` for per-project rebuilds and known issues, and `android-devices` for emulators.
 
 **Validate code changes locally before pushing.** Full SDK builds and relevant host/device tests are expected development work. Do not label them prohibitively slow, ask whether to skip them solely because of presumed duration, or rely on CI as the first validation. Start with focused tests while iterating and expand coverage as needed for the affected components. Never silently skip tests: if the user explicitly limits validation or an actual environment constraint blocks it, report the exact command, failure or missing prerequisite, and remaining unvalidated coverage. Include commands and outcomes in the handoff.
 
@@ -54,6 +54,19 @@ Classify the user's request:
 
 Present results as: **Must run** → **Should run** → **Consider running**, with exact commands.
 
+### Smallest sufficient validation
+
+Escalate only when the change or focused results require it.
+
+| Change touches | Minimum validation |
+|---|---|
+| Docs, comments, and Markdown instructions/skills under `.github/` (not workflows, local actions, or scripts) | None |
+| `.github/workflows/` (workflows and local actions) or scripts | Run the affected workflow step or script command locally |
+| Standalone libraries (`Microsoft.Android.Build.BaseTasks`, `Xamarin.Android.Tools.AndroidSdk`, `Microsoft.Android.Build.Tasks`, Java.Interop tooling, `generator`, `class-parse`) | `dotnet build` + standalone tests |
+| `src/Xamarin.Android.Build.Tasks` | Focused `Xamarin.Android.Build.Tests.dll` filters on the local SDK; `MSBuildDeviceIntegration.dll` only if install/deploy/run changes |
+| `src/Mono.Android`, core `src/Java.Interop`, `src/native`, typemaps, hosting | `Mono.Android.NET-Tests` on device for each affected runtime |
+| `Makefile`, `build-tools/`, `eng/`, CI YAML | Run the affected entry point or pipeline command locally |
+
 ## Running tests
 
 The `${TFM}` placeholder = `DotNetStableTargetFramework` from `Directory.Build.props` (currently `net11.0`).
@@ -75,6 +88,8 @@ dotnet test <project>.csproj -v minimal --filter "Name~TestName"
 ```bash
 ./dotnet-local.sh test bin/TestDebug/MSBuildDeviceIntegration/${TFM}/MSBuildDeviceIntegration.dll
 ./dotnet-local.sh test bin/TestDebug/MSBuildDeviceIntegration/${TFM}/MSBuildDeviceIntegration.dll --filter "Name~InstallAndRunTests"
+# With more than one device attached:
+ADB_TARGET='-s emulator-5554' ./dotnet-local.sh test bin/TestDebug/MSBuildDeviceIntegration/${TFM}/MSBuildDeviceIntegration.dll --filter "Name~InstallAndRunTests"
 ```
 
 ### On-device runtime tests (stock NUnit/MTP, full-build + device)
@@ -87,7 +102,7 @@ Build and install the APK first, then run `dotnet test` from the test project di
   ../../../dotnet-local.sh test Mono.Android.NET-Tests.csproj --no-build -c Debug --report-trx --results-directory ../../../bin/TestDebug/TestResults
 )
 ```
-Results are `.trx` files under `bin/TestDebug/TestResults/`. Repeat any `-c` and `-p:` arguments on both the build/install and `dotnet test --no-build` commands.
+Results are `.trx` files under `bin/TestDebug/TestResults/`. Repeat any `-c` and `-p:` arguments on both the build/install and `dotnet test --no-build` commands. With several devices attached, add `-p:Device=<serial>` to both.
 
 ### Java.Interop tests
 Tooling tests are standalone (`dotnet test` on `.csproj`). Core JNI interop tests

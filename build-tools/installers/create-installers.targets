@@ -6,9 +6,6 @@
   <PropertyGroup>
     <MSBuildTargetsSrcDir>$(XamarinAndroidSourcePath)src\Xamarin.Android.Build.Tasks\MSBuild\Xamarin\Android</MSBuildTargetsSrcDir>
     <DefaultRuntimeEntitlementsPath>$(MSBuildThisFileDirectory)runtime-entitlements.plist</DefaultRuntimeEntitlementsPath>
-    <LibExtension Condition=" '$(HostOS)' == 'Darwin' ">dylib</LibExtension>
-    <LibExtension Condition=" '$(HostOS)' == 'Linux' ">so</LibExtension>
-    <LibExtension Condition=" '$(HostOS)' == 'Windows' ">dll</LibExtension>
   </PropertyGroup>
   <ItemGroup>
     <VersionFiles Include="$(MicrosoftAndroidSdkOutDir)Version" />
@@ -46,8 +43,6 @@
     <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)Java.Interop.Tools.Maven.pdb" />
     <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)java-source-utils.jar" />
     <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)LayoutBinding.cs" />
-    <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)Mono.Unix.dll" />
-    <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)Mono.Unix.pdb" />
     <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)MonoRuntimeProvider.Bundled.java" />
     <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)Microsoft.Android.Build.BaseTasks.dll" />
     <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)Microsoft.Android.Build.BaseTasks.pdb" />
@@ -56,7 +51,6 @@
     <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)MULTIDEX_JAR_LICENSE" />
     <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)NativeAotRuntimeProvider.java" />
     <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)net.android.init.gradle.kts" />
-    <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)NuGet.Versioning.dll" />
     <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)r8.jar" />
     <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)bundletool.jar" />
     <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)java_runtime_trimmable.jar" />
@@ -95,6 +89,9 @@
     <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)net\Microsoft.Android.Build.BaseTasks.pdb" />
     <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)net\Java.Interop.Localization.dll" />
     <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)net\Java.Interop.Localization.pdb" />
+    <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)net\Java.Interop.Tools.Maven.dll" />
+    <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)net\Java.Interop.Tools.Maven.pdb" />
+    <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)net\NuGet.Versioning.dll" />
     <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)net\Xamarin.Android.Tools.AndroidSdk.dll" />
     <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)net\Xamarin.Android.Tools.AndroidSdk.pdb" />
     <_MSBuildFiles Include="@(_LocalizationLanguages->'$(MicrosoftAndroidSdkOutDir)net\%(Identity)\Microsoft.Android.Build.BaseTasks.resources.dll')" />
@@ -137,7 +134,6 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <_MSBuildFilesUnixSignAndHarden Include="$(MicrosoftAndroidSdkOutDir)$(HostOS)\aapt2" />
-    <_MSBuildFilesUnixSign Include="$(MicrosoftAndroidSdkOutDir)libMono.Unix.$(LibExtension)" />
   </ItemGroup>
   <!-- monodroid: in-tree installer/debugging projects under src/Xamarin.Installer.*
        and src/Xamarin.Android.Build.Debugging.Tasks. -->
@@ -162,7 +158,7 @@
       <MSBuildItemsWin Include="@(_MSBuildTargetsSrcFiles)">
         <RelativePath>$([MSBuild]::MakeRelative($(MSBuildTargetsSrcDir), %(FullPath)))</RelativePath>
       </MSBuildItemsWin>
-      <MSBuildItemsUnix Include="@(_MSBuildFiles);@(_MSBuildFilesUnix);@(_MSBuildFilesUnixSign);@(_MSBuildFilesUnixSignAndHarden)">
+      <MSBuildItemsUnix Include="@(_MSBuildFiles);@(_MSBuildFilesUnix);@(_MSBuildFilesUnixSignAndHarden)">
         <RelativePath>$([MSBuild]::MakeRelative($(MicrosoftAndroidSdkOutDir), %(FullPath)))</RelativePath>
       </MSBuildItemsUnix>
       <MSBuildItemsUnix Include="@(_MSBuildTargetsSrcFiles)">

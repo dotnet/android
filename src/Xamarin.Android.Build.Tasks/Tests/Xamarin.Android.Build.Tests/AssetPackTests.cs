@@ -151,6 +151,35 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
+		public void BuildApplicationWithAssetPackInShellSensitiveDirectory ()
+		{
+			var path = Path.Combine ("temp", TestName, "app$HOME%PATH%'q");
+			var app = new XamarinAndroidApplicationProject {
+				ProjectName = "MyApp",
+				OtherBuildItems = {
+					new AndroidItem.AndroidAsset ("Assets\\asset1.txt") {
+						TextContent = () => "Asset1",
+						Encoding = Encoding.ASCII,
+						MetadataValues="AssetPack=assetpack1",
+					},
+				}
+			};
+			app.SetProperty ("AndroidPackageFormat", "aab");
+			using (var appBuilder = CreateApkBuilder (Path.Combine (path, app.ProjectName))) {
+				Assert.IsTrue (appBuilder.Build (app), $"{app.ProjectName} should succeed");
+				var quotedSegment = IsWindows ? "app$HOME%%PATH%%'q" : "app$HOME%PATH%'\\''q";
+				Assert.IsTrue (appBuilder.LastBuildOutput.ContainsText (quotedSegment),
+					$"aapt2 link command should contain the escaped path segment `{quotedSegment}`.");
+				var aab = Path.Combine (Root, appBuilder.ProjectDirectory,
+					app.OutputPath, $"{app.PackageName}.aab");
+				using (var zip = ZipHelper.OpenZip (aab)) {
+					Assert.IsNotNull (zip.GetEntry ("assetpack1/assets/asset1.txt"), "aab should contain assetpack1/assets/asset1.txt");
+					Assert.IsNotNull (zip.GetEntry ("assetpack1/assets.pb"), "aab should contain assetpack1/assets.pb");
+				}
+			}
+		}
+
+		[Test]
 		[Category ("SmokeTests")]
 		public void BuildApplicationWithAssetPack ([ValueSource (typeof (BaseTest), nameof (BaseTest.ValidRuntimeConfigurations))] (bool isRelease, AndroidRuntime runtime) configuration)
 		{

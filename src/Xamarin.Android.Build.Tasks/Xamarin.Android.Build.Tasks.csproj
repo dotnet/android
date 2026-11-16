@@ -24,7 +24,7 @@
     <Nullable>enable</Nullable>
     <!-- Causes issues with linker files imported from Mono -->
     <NoWarn>$(NoWarn);CA1310;CA1305</NoWarn>
-    <WarningsAsErrors>Nullable</WarningsAsErrors>
+    <WarningsAsErrors>$(WarningsAsErrors);Nullable</WarningsAsErrors>
   </PropertyGroup>
 
   <ItemGroup>
@@ -33,7 +33,6 @@
     <PackageReference Include="System.CodeDom" />
     <PackageReference Include="System.IO.Hashing" Version="$(SystemIOHashingPackageVersion)" />
     <PackageReference Include="System.Reflection.Metadata" Version="$(SystemReflectionMetadataPackageVersion)" />
-    <PackageReference Include="NuGet.Versioning" Version="$(NuGetApiPackageVersion)" />
     <PackageReference Include="System.Text.Json" Version="8.0.6" />
     <PackageReference Include="ELFSharp" Version="$(ELFSharpVersion)" />
   </ItemGroup>
@@ -88,9 +87,6 @@
     </Compile>
     <Compile Include="..\..\src\utils\StringRocks.cs">
       <Link>Utilities\StringRocks.cs</Link>
-    </Compile>
-    <Compile Include="..\..\src\utils\NullableAttributes.cs">
-      <Link>Utilities\NullableAttributes.cs</Link>
     </Compile>
     <Compile Include="..\Mono.Android\\Java.Interop\JavaLibraryReferenceAttribute.cs">
       <Link>Mono.Android\JavaLibraryReferenceAttribute.cs</Link>
