@@ -184,7 +184,9 @@ namespace Microsoft.Android.Tasks
 
 			// NOTE: match without the trailing ']', since adb may print either
 			//       [INSTALL_FAILED_NO_MATCHING_ABIS] or [INSTALL_FAILED_NO_MATCHING_ABIS: ...].
-			if (output.Contains ("[INSTALL_FAILED_INSUFFICIENT_STORAGE") || output.Contains ("[INSTALL_FAILED_MEDIA_UNAVAILABLE")) {
+			if (output.Contains ("[INSTALL_FAILED_INSUFFICIENT_STORAGE") ||
+					output.Contains ("[INSTALL_FAILED_MEDIA_UNAVAILABLE") ||
+					output.Contains ("Requested internal only, but not enough space")) {
 				return InstallResultKind.InsufficientSpace;
 			}
 			if (output.Contains ("[INSTALL_FAILED_ALREADY_EXISTS")) {
@@ -207,6 +209,7 @@ namespace Microsoft.Android.Tasks
 			}
 
 			if (result.ExitCode != 0 ||
+					output.IndexOf ("Exception occurred while executing 'install'", StringComparison.OrdinalIgnoreCase) >= 0 ||
 					output.IndexOf ("Failure", StringComparison.OrdinalIgnoreCase) >= 0 ||
 					output.IndexOf ("INSTALL_FAILED", StringComparison.OrdinalIgnoreCase) >= 0 ||
 					output.IndexOf ("adb: failed", StringComparison.OrdinalIgnoreCase) >= 0) {
