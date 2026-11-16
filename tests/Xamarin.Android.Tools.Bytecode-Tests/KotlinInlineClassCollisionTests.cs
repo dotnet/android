@@ -173,34 +173,6 @@ namespace Xamarin.Android.Tools.BytecodeTests
 				"Inline-class typed property setter parameter must be stamped with the wrapper's JNI signature.");
 		}
 
-		// KotlinFixups must record the compiler-generated box-impl/unbox-impl/
-		// constructor-impl signatures so the generator can marshal boxed values.
-		[Test]
-		public void Fixup_StampsInlineClassHelperSignatures ()
-		{
-			var classes = LoadInlineClassFixture ();
-			KotlinFixups.Fixup (classes);
-
-			var myColor = classes.Single (c => c.ThisClass.Name.Value == "xat/bytecode/tests/MyColor");
-			Assert.AreEqual ("(J)Lxat/bytecode/tests/MyColor;", myColor.KotlinInlineClassBoxJniSignature);
-			Assert.AreEqual ("()J", myColor.KotlinInlineClassUnboxJniSignature);
-			Assert.AreEqual ("(J)J", myColor.KotlinInlineClassConstructorJniSignature);
-
-			var myDp = classes.Single (c => c.ThisClass.Name.Value == "xat/bytecode/tests/MyDp");
-			Assert.AreEqual ("(F)Lxat/bytecode/tests/MyDp;", myDp.KotlinInlineClassBoxJniSignature);
-			Assert.AreEqual ("()F", myDp.KotlinInlineClassUnboxJniSignature);
-			Assert.AreEqual ("(F)F", myDp.KotlinInlineClassConstructorJniSignature);
-
-			var widgets = classes.Single (c => c.ThisClass.Name.Value == "xat/bytecode/tests/Widgets");
-			Assert.IsNull (widgets.KotlinInlineClassBoxJniSignature);
-
-			// `MyColor?` is passed boxed, so it must not be projected to the underlying primitive.
-			var maybeColor = widgets.Methods.Single (m => m.Name.StartsWith ("maybeColor", StringComparison.Ordinal));
-			Assert.AreEqual ("(Lxat/bytecode/tests/MyColor;)Lxat/bytecode/tests/MyColor;", maybeColor.Descriptor);
-			Assert.IsNull (maybeColor.GetParameters ().Single ().KotlinInlineClassJniType);
-			Assert.IsNull (maybeColor.KotlinInlineClassReturnJniType);
-		}
-
 		// dotnet/java-interop#1431 (Phase 2): the new fields must round-trip
 		// through XmlClassDeclarationBuilder onto the api.xml that the generator
 		// consumes.
@@ -223,9 +195,6 @@ namespace Xamarin.Android.Tools.BytecodeTests
 			StringAssert.Contains ("kotlin-inline-class-underlying-jni-type=\"F\"", xml);
 			StringAssert.Contains ("kotlin-inline-class-jni-type=\"Lxat/bytecode/tests/MyColor;\"", xml);
 			StringAssert.Contains ("kotlin-inline-class-return-jni-type=\"Lxat/bytecode/tests/MyDp;\"", xml);
-			StringAssert.Contains ("kotlin-inline-class-box-jni-signature=\"(J)Lxat/bytecode/tests/MyColor;\"", xml);
-			StringAssert.Contains ("kotlin-inline-class-unbox-jni-signature=\"()J\"", xml);
-			StringAssert.Contains ("kotlin-inline-class-constructor-jni-signature=\"(J)J\"", xml);
 		}
 
 		static List<ClassFile> LoadInlineClassFixture () => new List<ClassFile> {

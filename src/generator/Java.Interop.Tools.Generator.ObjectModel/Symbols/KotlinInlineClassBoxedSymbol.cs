@@ -19,7 +19,7 @@ namespace MonoDroid.Generation {
 		// Returns the symbol to use for `sym` in a position the JVM boxes.
 		public static ISymbol Project (ISymbol sym)
 		{
-			return sym is ClassGen gen && gen.CanBoxKotlinInlineClass ? new KotlinInlineClassBoxedSymbol (gen) : sym;
+			return sym is ClassGen gen && gen.IsKotlinInlineClass ? new KotlinInlineClassBoxedSymbol (gen) : sym;
 		}
 
 		// The struct does not implement IJavaObject, so generic collections can't

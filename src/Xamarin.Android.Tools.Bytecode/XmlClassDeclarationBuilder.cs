@@ -109,12 +109,6 @@ namespace Xamarin.Android.Tools.Bytecode {
 				yield break;
 			yield return new XAttribute ("kotlin-inline-class", "true");
 			yield return new XAttribute ("kotlin-inline-class-underlying-jni-type", underlying);
-			if (!string.IsNullOrEmpty (classFile.KotlinInlineClassBoxJniSignature))
-				yield return new XAttribute ("kotlin-inline-class-box-jni-signature", classFile.KotlinInlineClassBoxJniSignature);
-			if (!string.IsNullOrEmpty (classFile.KotlinInlineClassUnboxJniSignature))
-				yield return new XAttribute ("kotlin-inline-class-unbox-jni-signature", classFile.KotlinInlineClassUnboxJniSignature);
-			if (!string.IsNullOrEmpty (classFile.KotlinInlineClassConstructorJniSignature))
-				yield return new XAttribute ("kotlin-inline-class-constructor-jni-signature", classFile.KotlinInlineClassConstructorJniSignature);
 		}
 
 		string GetElementName ()
