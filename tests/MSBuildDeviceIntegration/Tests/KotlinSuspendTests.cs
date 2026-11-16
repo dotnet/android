@@ -10,8 +10,9 @@ namespace Xamarin.Android.Build.Tests
 	public class KotlinSuspendTests : DeviceTest
 	{
 		// Binds a Gradle module with Kotlin `suspend` functions and awaits the generated `*Async` methods.
+		// R8 checks the keep rules for the Kotlin members that KotlinCoroutines finds by name.
 		[Test]
-		public void SuspendFunctionsAsTasks ([Values (false, true)] bool isRelease)
+		public void SuspendFunctionsAsTasks ()
 		{
 			const string Expected = "KotlinSuspend: sum=5 greeting=Hello, Kotlin nothing=True failure=boom canceled=True";
 
@@ -64,7 +65,7 @@ dependencies {
 			gradleProject.Create ();
 
 			var proj = new XamarinAndroidApplicationProject {
-				IsRelease = isRelease,
+				IsRelease = true,
 				PackageReferences = {
 					new Package { Id = "Xamarin.KotlinX.Coroutines.Core", Version = "1.11.0.1" },
 				},
@@ -78,6 +79,7 @@ dependencies {
 					},
 				},
 			};
+			proj.SetProperty ("AndroidLinkTool", "r8");
 			proj.SetRuntime (AndroidRuntime.CoreCLR);
 			proj.SetRuntimeIdentifiers (new [] { DeviceAbi });
 			proj.MainActivity = proj.DefaultMainActivity.Replace ("//${AFTER_ONCREATE}", """

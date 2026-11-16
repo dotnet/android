@@ -18,8 +18,7 @@ namespace Android.Runtime {
 	/// <remarks>
 	/// The <c>kotlin.coroutines.Continuation</c> is a <c>java.lang.reflect.Proxy</c>, so this type has no
 	/// build-time dependency on Kotlin. When <c>kotlinx.coroutines</c> is in the app, the continuation context
-	/// is a <c>kotlinx.coroutines.Job</c>, and cancellation of the token cancels that job. Without
-	/// <c>kotlinx.coroutines</c>, cancellation of the token cancels only the returned task.
+	/// is a <c>kotlinx.coroutines.Job</c>, and cancellation of the token also cancels that job.
 	/// </remarks>
 	public static class KotlinCoroutines {
 		const DynamicallyAccessedMemberTypes Constructors = DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.NonPublicConstructors;
@@ -27,10 +26,8 @@ namespace Android.Runtime {
 		/// <summary>Runs a Kotlin <c>suspend</c> function that returns <c>Unit</c>.</summary>
 		/// <param name="invoke">Calls the bound method with the supplied <c>kotlin.coroutines.Continuation</c>.</param>
 		/// <param name="cancellationToken">Cancels the operation.</param>
-		public static Task InvokeAsync (Func<IJavaObject, Java.Lang.Object?> invoke, CancellationToken cancellationToken = default)
-		{
-			return InvokeCoreAsync (invoke, cancellationToken);
-		}
+		public static Task InvokeAsync (Func<IJavaObject, Java.Lang.Object?> invoke, CancellationToken cancellationToken = default) =>
+			InvokeCoreAsync (invoke, cancellationToken);
 
 		/// <summary>Runs a Kotlin <c>suspend</c> function and converts its result to <typeparamref name="T" />.</summary>
 		/// <param name="invoke">Calls the bound method with the supplied <c>kotlin.coroutines.Continuation</c>.</param>
@@ -92,7 +89,7 @@ namespace Android.Runtime {
 			public void SetResult (Java.Lang.Object? value)
 			{
 				completion.TrySetResult (value);
-				registration.Dispose ();
+				registration.Unregister ();
 			}
 
 			public void SetException (Exception e)
@@ -101,18 +98,15 @@ namespace Android.Runtime {
 					completion.TrySetCanceled (cancellationToken.IsCancellationRequested ? cancellationToken : new CancellationToken (true));
 				else
 					completion.TrySetException (e);
-				registration.Dispose ();
+				registration.Unregister ();
 			}
 
 			void Cancel ()
 			{
-				if (job == null || types.CancelJob == null) {
-					completion.TrySetCanceled (cancellationToken);
-					return;
-				}
-				// Kotlin resumes the continuation with a CancellationException.
-				// Job.cancel(cause: CancellationException?) with no cause.
-				types.CancelJob.Invoke (job, new Java.Lang.Object [1]);
+				// With kotlinx.coroutines, also cancel the Kotlin work. Not all suspend functions observe the Job.
+				if (job != null)
+					types.CancelJob?.Invoke (job, new Java.Lang.Object [1]);
+				completion.TrySetCanceled (cancellationToken);
 			}
 
 			public Java.Lang.Object? Invoke (Java.Lang.Object? proxy, Method? method, Java.Lang.Object []? args)
@@ -141,13 +135,9 @@ namespace Android.Runtime {
 					SetResult (value);
 					return;
 				}
-				if (types.FailureException.Get (value) is not Java.Lang.Object throwable) {
-					SetException (new InvalidOperationException ("Kotlin returned a failure without an exception."));
-					return;
-				}
-				var reference = throwable.PeerReference;
+				var reference = types.FailureException.Get (value)?.PeerReference ?? default;
 				SetException (JniEnvironment.Runtime.GetExceptionForThrowable (ref reference, JniObjectReferenceOptions.Copy) ??
-					new InvalidOperationException ("Kotlin returned an invalid exception."));
+					new InvalidOperationException ("Kotlin returned an invalid failure."));
 			}
 		}
 
@@ -171,14 +161,13 @@ namespace Android.Runtime {
 				Failure = Class.ForName ("kotlin.Result$Failure", false, Loader);
 				FailureException = Failure.GetField ("exception");
 
-				Class job;
 				try {
-					job = Class.ForName ("kotlinx.coroutines.Job", false, Loader);
-				} catch (ClassNotFoundException) {
-					return;
+					var job = Class.ForName ("kotlinx.coroutines.Job", false, Loader);
+					CreateJob = Class.ForName ("kotlinx.coroutines.JobKt", false, Loader).GetMethod ("Job", job);
+					CancelJob = job.GetMethod ("cancel", Class.FromType (typeof (Java.Util.Concurrent.CancellationException)));
+				} catch (ReflectiveOperationException) {
+					CreateJob = CancelJob = null;
 				}
-				CreateJob = Class.ForName ("kotlinx.coroutines.JobKt", false, Loader).GetMethod ("Job", job);
-				CancelJob = job.GetMethod ("cancel", Class.FromType (typeof (Java.Util.Concurrent.CancellationException)));
 			}
 
 			Java.Lang.Object GetStaticField (string className, string fieldName) =>

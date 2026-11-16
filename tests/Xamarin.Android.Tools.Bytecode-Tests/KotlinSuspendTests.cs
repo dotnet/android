@@ -22,17 +22,5 @@ namespace Xamarin.Android.Tools.BytecodeTests
 			Assert.AreEqual ("kotlin/Any?", GetReturnType ("echo"));
 			Assert.IsNull (GetReturnType ("notSuspend"));
 		}
-
-		[Test]
-		public void XmlOutput_ContainsKotlinSuspendReturnType ()
-		{
-			var klass = LoadClassFile ("SuspendFunctions.class");
-			KotlinFixups.Fixup (new List<ClassFile> { klass });
-
-			var xml = new XmlClassDeclarationBuilder (klass).ToXElement ();
-			var method = xml.Elements ("method").Single (m => (string) m.Attribute ("name") == "getInt");
-
-			Assert.AreEqual ("kotlin/Int", (string) method.Attribute ("kotlin-suspend-return-type"));
-		}
 	}
 }

@@ -75,7 +75,7 @@ namespace generator.SourceWriters
 				return;
 
 			if (!iface.AssemblyQualifiedName.Contains ('/')) {
-				if (iface.Methods.Any (m => m.CanHaveStringOverload) || iface.Methods.Any (m => m.Asyncify || m.KotlinSuspendReturnType != null))
+				if (iface.Methods.Any (m => m.CanHaveStringOverload) || iface.Methods.Any (m => m.Asyncify || (!m.IsStatic && m.KotlinSuspendReturnType != null)))
 					post_sibling_types.Add (new InterfaceExtensionsClass (iface, null, opt));
 			}
 

@@ -16,8 +16,9 @@ namespace generator.SourceWriters
 			method.KotlinSuspendReturnType != null &&
 			method.IsValid &&
 			!method.IsOverride &&
-			!method.Asyncify &&
+			string.IsNullOrEmpty (method.ExplicitInterface) &&
 			method.Parameters.Count > 0 &&
+			!method.Asyncify &&
 			!type.ContainsName (method.AdjustedName + "Async");
 
 		public KotlinSuspendMethodWrapper (Method method, CodeGenerationOptions opt, string selfType = null)
@@ -39,7 +40,7 @@ namespace generator.SourceWriters
 			this.AddMethodParameters (parameters, opt);
 
 			var token = parameters.Any (p => opt.GetSafeIdentifier (p.Name) == "cancellationToken") ? "__cancellationToken" : "cancellationToken";
-			Parameters.Add (new OptionalParameterWriter (token, "global::System.Threading.CancellationToken", "default"));
+			Parameters.Add (new MethodParameterWriter (token, new TypeReferenceWriter ("global::System.Threading.CancellationToken")) { DefaultValue = "default" });
 
 			var continuation_type = opt.GetOutputName (method.Parameters [method.Parameters.Count - 1].Type);
 			var args = parameters.GetCall (opt);
@@ -50,18 +51,14 @@ namespace generator.SourceWriters
 			var invoke = $"__continuation => {target} ({args})";
 
 			var result = GetResultType (method.KotlinSuspendReturnType, opt);
-			if (result == null) {
-				ReturnType = new TypeReferenceWriter ("global::System.Threading.Tasks.Task");
-				Body.Add ($"return {Runtime}.InvokeAsync ({invoke}, {token});");
-			} else {
-				ReturnType = new TypeReferenceWriter ($"global::System.Threading.Tasks.Task<{result}>");
-				Body.Add ($"return {Runtime}.InvokeAsync<{result}> ({invoke}, {token});");
-			}
+			var generic = result == null ? "" : $"<{result}>";
+			ReturnType = new TypeReferenceWriter ("global::System.Threading.Tasks.Task" + generic);
+			Body.Add ($"return {Runtime}.InvokeAsync{generic} ({invoke}, {token});");
 		}
 
 		// Maps the Kotlin result type (e.g. `kotlin/Int?`) to a C# type.
 		// Returns null for `kotlin/Unit`, which becomes a non-generic `Task`.
-		internal static string GetResultType (string kotlinType, CodeGenerationOptions opt)
+		static string GetResultType (string kotlinType, CodeGenerationOptions opt)
 		{
 			var nullable = kotlinType.EndsWith ("?", StringComparison.Ordinal);
 			var name = nullable ? kotlinType.Substring (0, kotlinType.Length - 1) : kotlinType;
@@ -86,29 +83,13 @@ namespace generator.SourceWriters
 			string reference;
 			if (name == "kotlin/String")
 				reference = "string";
-			else if (opt.SymbolTable.Lookup (name.Replace ('/', '.')) is GenBase gen)
+			// Inline classes are boxed in this position; invalid or non-public types are not generated.
+			else if (opt.SymbolTable.Lookup (name.Replace ('/', '.')) is GenBase { IsValid: true, RawVisibility: "public" } gen && gen is not ClassGen { IsKotlinInlineClass: true })
 				reference = opt.GetOutputName (gen.FullName);
 			else
 				reference = "global::Java.Lang.Object";
 
 			return nullable ? reference + opt.NullableOperator : reference;
-		}
-
-		sealed class OptionalParameterWriter : MethodParameterWriter
-		{
-			readonly string default_value;
-
-			public OptionalParameterWriter (string name, string type, string defaultValue)
-				: base (name, new TypeReferenceWriter (type))
-			{
-				default_value = defaultValue;
-			}
-
-			public override void WriteParameter (CodeWriter writer)
-			{
-				base.WriteParameter (writer);
-				writer.Write (" = " + default_value);
-			}
 		}
 	}
 }

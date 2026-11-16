@@ -10,6 +10,7 @@ namespace Xamarin.SourceWriter
 		public List<AttributeWriter> Attributes { get; } = new List<AttributeWriter> ();
 		public string Name { get; set; }
 		public bool IsExtension { get; set; }
+		public string DefaultValue { get; set; }
 
 		public MethodParameterWriter (string name, TypeReferenceWriter type)
 		{
@@ -26,6 +27,9 @@ namespace Xamarin.SourceWriter
 
 			Type.WriteTypeReference (writer);
 			writer.Write (Name);
+
+			if (DefaultValue != null)
+				writer.Write (" = " + DefaultValue);
 		}
 
 		public virtual void WriteAttributes (CodeWriter writer)
