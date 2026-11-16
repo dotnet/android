@@ -533,30 +533,49 @@ namespace Xamarin.Android.Tools.Bytecode
 			var possible_functions = kotlinFile.Functions.Where (f => f.JvmName == javaMethod.Name).ToArray ();
 
 			// If we have metadata with a Descriptor/JvmSignature match, that means all parameters and return type match
-			if (possible_functions.SingleOrDefault (f => f.JvmSignature != null && f.JvmSignature == java_descriptor) is KotlinFunction kf)
-				return kf;
+			var matches = possible_functions.Where (f => f.JvmSignature != null && f.JvmSignature == java_descriptor).ToArray ();
 
 			// Sometimes JvmSignature is null (or unhelpful), so we're going to construct one ourselves and see if they match
-			if (possible_functions.SingleOrDefault (f => f.ConstructJvmSignature () == java_descriptor) is KotlinFunction kf2)
-				return kf2;
+			if (matches.Length == 0)
+				matches = possible_functions.Where (f => f.ConstructJvmSignature () == java_descriptor).ToArray ();
 
 			// If that didn't work, let's try it the hard way!
 			// This catches cases where Kotlin only wrote one metadata entry for multiple methods with the same mangled JvmName (ex: contains-WZ4Q5Ns)
-			var java_param_count = javaMethod.GetFilteredParameters ().Length;
+			if (matches.Length == 0) {
+				var java_param_count = javaMethod.GetFilteredParameters ().Length;
 
-			foreach (var function in possible_functions.Where (f => f.ValueParameters?.Count == java_param_count)) {
-				if (function.ReturnType == null)
-					continue;
-				if (!TypesMatch (javaMethod.ReturnType, function.ReturnType, kotlinFile))
-					continue;
-
-				if (!ParametersMatch (kotlinFile, javaMethod, function.ValueParameters!))
-					continue;
-
-				return function;
+				matches = possible_functions.Where (f =>
+						f.ValueParameters?.Count == java_param_count &&
+						f.ReturnType != null &&
+						TypesMatch (javaMethod.ReturnType, f.ReturnType, kotlinFile) &&
+						ParametersMatch (kotlinFile, javaMethod, f.ValueParameters)).ToArray ();
 			}
 
+			if (matches.Length == 1)
+				return matches [0];
+
+			if (matches.Length > 1)
+				ReportAmbiguousFunction (javaMethod, matches);
+
 			return null;
+		}
+
+		// Do not guess when more than one Kotlin function matches a Java method:
+		// a wrong match can rename parameters, hide the method, or change its types.
+		static void ReportAmbiguousFunction (MethodInfo javaMethod, KotlinFunction [] matches)
+		{
+			var java_method = $"{javaMethod.DeclaringType?.ThisClass.Name.Value}.{javaMethod.Name}{javaMethod.Descriptor}";
+			var kotlin_functions = string.Join (", ", matches.Select (f => $"{f.Name}{f.JvmSignature ?? f.ConstructJvmSignature ()}"));
+
+			// kotlinc emits synthetic bridge methods (for example `put(Ljava/lang/Object;)V` for a
+			// generic override) that can match several overloads. These are not public API,
+			// so a warning would only be noise.
+			if (javaMethod.AccessFlags.HasFlag (MethodAccessFlags.Synthetic)) {
+				Log.Debug ($"Kotlin: Skipping synthetic method {java_method} that matches more than one Kotlin function: {kotlin_functions}");
+				return;
+			}
+
+			Log.Warning (0, "class-parse: warning XA4268: " + string.Format (Java.Interop.Localization.Resources.ClassParse_XA4268, java_method, kotlin_functions));
 		}
 
 		static FieldInfo? FindJavaFieldProperty (KotlinFile kotlinClass, KotlinProperty property, ClassFile klass)
