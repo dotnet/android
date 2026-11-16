@@ -134,6 +134,8 @@ namespace MonoDroid.Generation
 
 		public string GetNullForgiveness (ReturnValue symbol)
 		{
+			if (symbol.Symbol is KotlinInlineClassBoxedSymbol)
+				return string.Empty;
 			if (symbol.NotNull || symbol.Symbol.IsEnum)
 				return NullForgivingOperator;
 
@@ -142,6 +144,8 @@ namespace MonoDroid.Generation
 
 		public string GetNullForgiveness (Parameter symbol)
 		{
+			if (symbol.Symbol is KotlinInlineClassBoxedSymbol)
+				return string.Empty;
 			if (symbol.NotNull || symbol.Symbol.IsEnum)
 				return NullForgivingOperator;
 

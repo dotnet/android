@@ -83,7 +83,7 @@ namespace generatortests
 		[Test]
 		public void GeneratorMarshalsBoxedKotlinInlineClasses ()
 		{
-			var output = GenerateCSharp (BuildApiXmlFromKotlinFixture (), out _);
+			var output = GenerateCSharp (BuildApiXmlFromKotlinFixture (), out _, nullableReferenceTypes: true);
 
 			StringAssert.Contains ("\"constructor-impl\", \"(J)J\"", output);
 			StringAssert.Contains ("\"box-impl\", \"(J)Lxat/bytecode/tests/MyColor;\"", output);
@@ -92,7 +92,8 @@ namespace generatortests
 			// Kotlin `MyColor?` is passed boxed.
 			StringAssert.Contains ("Xat.Bytecode.Tests.MyColor? MaybeColor (Xat.Bytecode.Tests.MyColor? color)", output);
 			StringAssert.Contains ("Xat.Bytecode.Tests.MyColor.ToLocalJniHandle (color)", output);
-			StringAssert.Contains ("Xat.Bytecode.Tests.MyColor.FromJniHandle (__rm.Handle, JniHandleOwnership.TransferLocalRef)", output);
+			StringAssert.DoesNotContain ("color!", output);
+			StringAssert.Contains ("Xat.Bytecode.Tests.MyColor.FromJniHandle (__rm.Handle, JniHandleOwnership.TransferLocalRef);", output);
 
 			// Java calls back into C# with a boxed value.
 			StringAssert.Contains ("Xat.Bytecode.Tests.MyColor.ToLocalJniHandle (__this.OnColor (color))", output);
@@ -146,9 +147,9 @@ namespace generatortests
 
 		// Drive the parsed api.xml through XmlApiImporter + Validate + the
 		// JavaInteropCodeGenerator to produce the C# binding text.
-		static string GenerateCSharp (string apiXml, out List<GenBase> gens)
+		static string GenerateCSharp (string apiXml, out List<GenBase> gens, bool nullableReferenceTypes = false)
 		{
-			var options = new CodeGenerationOptions ();
+			var options = new CodeGenerationOptions { SupportNullableReferenceTypes = nullableReferenceTypes };
 			var sb = new System.Text.StringBuilder ();
 			var writer = new StringWriter (sb);
 			var generator = new JavaInteropCodeGenerator (writer, options);
