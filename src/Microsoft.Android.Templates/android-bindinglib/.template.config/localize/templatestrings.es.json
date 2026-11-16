@@ -3,7 +3,7 @@
   "name": "Enlace de biblioteca Java de Android",
   "description": "Proyecto para crear una biblioteca de clases de .NET para Android que enlaza a una biblioteca de Java nativa",
   "symbols/Framework/description": "Marco de destino del proyecto.",
-  "symbols/Framework/choices/net12.0-android/description": "Target net12.0-android",
+  "symbols/Framework/choices/net12.0-android/description": "Net12.0-android de destino",
   "symbols/Framework/choices/net11.0-android/description": "Destino net11.0-android",
   "symbols/supportedOSVersion/description": "Invalida $(SupportedOSPlatformVersion) en el proyecto",
   "symbols/skipRestore/description": "Si se especifica, se omite la restauración automática del proyecto durante la creación."

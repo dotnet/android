@@ -89,14 +89,14 @@ namespace MonoDroid.Generation
 					result.Add (gen);
 			}
 
-			foreach (var name in nested.Keys) {
+			foreach (var (name, nestedGen) in nested) {
 				var top_ancestor = name.Substring (0, name.IndexOf ('.'));
 
-				if (by_name.ContainsKey (top_ancestor))
-					by_name [top_ancestor].AddNestedType (nested [name]);
+				if (by_name.TryGetValue (top_ancestor, out var ancestor))
+					ancestor.AddNestedType (nestedGen);
 				else {
-					Report.LogCodedWarning (0, Report.WarningNestedTypeAncestorNotFound, top_ancestor, nested [name].FullName);
-					nested [name].Invalidate ();
+					Report.LogCodedWarning (0, Report.WarningNestedTypeAncestorNotFound, top_ancestor, nestedGen.FullName);
+					nestedGen.Invalidate ();
 				}
 			}
 

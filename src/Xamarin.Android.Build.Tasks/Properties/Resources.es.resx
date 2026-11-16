@@ -212,9 +212,9 @@ Este error se debe probablemente a un problema con el archivo AndroidManifest.xm
     <comment>The following are literal names and should not be translated: AAPT2, Aapt2ToolPath, MSBuild</comment>
   </data>
   <data name="XA0116" xml:space="preserve">
-    <value>No se encuentra el elemento "EmbeddedResource" llamado "{0}".</value>
-    <comment>The following are literal names and should not be translated: EmbeddedResource
-{0} - The name of the missing resource</comment>
+    <value>Unable to find required SDK file `{0}`.</value>
+    <comment>The following are literal names and should not be translated: SDK
+{0} - The path of the missing file</comment>
   </data>
   <data name="XA0119_LinkMode" xml:space="preserve">
     <value>No se recomienda usar una implementación rápida y el enlazador al mismo tiempo. Use la implementación rápida para configuraciones de Debug y el enlazador para configuraciones de Release.</value>
@@ -327,11 +327,6 @@ When it appears in the middle of a sentence, "lint" is not capitalized.
   <data name="XA1020" xml:space="preserve">
     <value>Se necesita al menos una biblioteca Java para el enlace. Compruebe que haya una biblioteca Java incluida en el proyecto y que tenga la acción de compilación apropiada: "LibraryProjectZip" (para AAR o ZIP), "EmbeddedJar", "InputJar" (para JAR) o "LibraryProjectProperties" (project.properties).</value>
     <comment>The following are literal names and should not be translated: LibraryProjectZip, EmbeddedJar, InputJar, LibraryProjectProperties, project.properties</comment>
-  </data>
-  <data name="XA1021" xml:space="preserve">
-    <value>No se encontró la biblioteca Java de origen especificada: {0}</value>
-    <comment>In this message, the term "source Java library" refers to the library that will be processed. In this case, the term "source" does not refer to "source code."
-{0} - The file name of the library</comment>
   </data>
   <data name="XA1022" xml:space="preserve">
     <value>No se encontró la biblioteca Java de referencia especificada: {0}</value>

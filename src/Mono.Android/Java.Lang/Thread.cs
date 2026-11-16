@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using System.Threading;
 
 using Android.Runtime;
 
@@ -31,7 +32,7 @@ namespace Java.Lang {
 				Handler = handler;
 				this.removable = removable;
 				if (removable)
-					lock (instances)
+					lock (instancesLock)
 						instances.AddOrUpdate (handler, this);
 			}
 
@@ -40,18 +41,19 @@ namespace Java.Lang {
 				if (Handler != null)
 					Handler ();
 				if (removable)
-					lock (instances)
+					lock (instancesLock)
 						if (Handler != null)
 							instances.Remove (Handler);
 				Dispose ();
 			}
 
-			static ConditionalWeakTable<Action, RunnableImplementor> instances = new ();
+			static readonly Lock instancesLock = new ();
+			static readonly ConditionalWeakTable<Action, RunnableImplementor> instances = new ();
 
 			public static RunnableImplementor Remove (Action handler)
 			{
 				RunnableImplementor result;
-				lock (instances) {
+				lock (instancesLock) {
 					instances.TryGetValue (handler, out result!);
 					instances.Remove (handler);
 				}

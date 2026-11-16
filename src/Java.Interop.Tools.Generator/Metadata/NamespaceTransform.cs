@@ -113,7 +113,7 @@ namespace Java.Interop.Tools.Generator
 			if (valueIndex >= valueTokens.Length)
 				return false;
 
-			if (string.Compare (valueTokens [valueIndex], matchTokens [matchIndex], StringComparison.OrdinalIgnoreCase) == 0)
+			if (string.Equals (valueTokens [valueIndex], matchTokens [matchIndex], StringComparison.OrdinalIgnoreCase))
 				return AtMatch (valueTokens, valueIndex + 1, matchTokens, matchIndex + 1);
 
 			return false;

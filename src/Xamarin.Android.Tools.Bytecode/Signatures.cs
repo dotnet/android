@@ -55,8 +55,7 @@ namespace Xamarin.Android.Tools.Bytecode {
 
 		internal static void AssertSignatureIndex (string signature, int index)
 		{
-			if (signature == null)
-				throw new ArgumentNullException ("signature");
+			ArgumentNullException.ThrowIfNull (signature);
 			if (signature.Length == 0)
 				throw new ArgumentException ("Descriptor cannot be empty string", "descriptor");
 			if (index >= signature.Length)

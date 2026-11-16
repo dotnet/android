@@ -46,6 +46,27 @@ namespace Xamarin.Android.Tools.BytecodeTests
 		}
 
 		[Test]
+		public void GetParameterNames_UsesMatchingOverloadWhenSignatureIsNotDocumented ()
+		{
+			var tempFile = LoadToTempFile ("ParameterFixupApiXmlDocs.xml");
+
+			try {
+				var info = new JavaMethodParameterNameInfo (
+					"android.animation", "TypeEvaluator", "evaluate", "(FII)I",
+					new [] {
+						new JavaMethodParameterTypeInfo ("F", "float"),
+						new JavaMethodParameterTypeInfo ("I", "int"),
+						new JavaMethodParameterTypeInfo ("I", "int"),
+					}, false);
+
+				var scraper = new ApiXmlDocScraper (tempFile);
+				CollectionAssert.AreEqual (new [] { "amount", "start", "end" }, scraper.GetParameterNames (info));
+			} finally {
+				File.Delete (tempFile);
+			}
+		}
+
+		[Test]
 		public void XmlDeclaration_FixedUpFromUnresolvedApiXmlDocumentation ()
 		{
 			string docsPath = null;

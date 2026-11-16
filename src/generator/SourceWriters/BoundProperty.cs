@@ -57,13 +57,13 @@ namespace generator.SourceWriters
 			}
 
 			// Allow user to override our virtual/override logic
-			if (!forceOverride && (property.Getter ?? property.Setter).ManagedOverride?.ToLowerInvariant () == "virtual") {
+			if (!forceOverride && string.Equals ((property.Getter ?? property.Setter).ManagedOverride, "virtual", StringComparison.OrdinalIgnoreCase)) {
 				IsVirtual = true;
 				IsOverride = false;
-			} else if (!forceOverride && (property.Getter ?? property.Setter).ManagedOverride?.ToLowerInvariant () == "override") {
+			} else if (!forceOverride && string.Equals ((property.Getter ?? property.Setter).ManagedOverride, "override", StringComparison.OrdinalIgnoreCase)) {
 				IsVirtual = false;
 				IsOverride = true;
-			} else if (!forceOverride && (property.Getter ?? property.Setter).ManagedOverride?.ToLowerInvariant () == "none") {
+			} else if (!forceOverride && string.Equals ((property.Getter ?? property.Setter).ManagedOverride, "none", StringComparison.OrdinalIgnoreCase)) {
 				IsVirtual = false;
 				IsOverride = false;
 			}

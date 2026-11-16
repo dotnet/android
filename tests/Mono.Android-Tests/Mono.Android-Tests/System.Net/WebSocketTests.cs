@@ -28,7 +28,7 @@ namespace System.NetTests
 	{
 		static string ResponseMessage { get; set; }
 		public static int BytesSize { get; set; }
-		static object consoleLock = new object ();
+		static readonly Lock consoleLock = new ();
 		static readonly TimeSpan delay = TimeSpan.FromMilliseconds (1000);
 
 		public static async Task<string> Connect (string uri, byte[] message)
@@ -41,6 +41,11 @@ namespace System.NetTests
 			if (clientWebSocket != null)
 				clientWebSocket.Dispose ();
 
+			return GetResponse ();
+		}
+
+		static string GetResponse ()
+		{
 			lock (consoleLock)
 			{
 				Console.WriteLine ("Client WebSocket closed");

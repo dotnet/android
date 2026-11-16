@@ -212,9 +212,9 @@ Cette erreur est probablement due à un problème avec le fichier AndroidManifes
     <comment>The following are literal names and should not be translated: AAPT2, Aapt2ToolPath, MSBuild</comment>
   </data>
   <data name="XA0116" xml:space="preserve">
-    <value>'EmbeddedResource' nommé '{0}' introuvable.</value>
-    <comment>The following are literal names and should not be translated: EmbeddedResource
-{0} - The name of the missing resource</comment>
+    <value>Unable to find required SDK file `{0}`.</value>
+    <comment>The following are literal names and should not be translated: SDK
+{0} - The path of the missing file</comment>
   </data>
   <data name="XA0119_LinkMode" xml:space="preserve">
     <value>Il n'est pas recommandé d'utiliser le déploiement rapide et l'éditeur de liens en même temps. Utilisez le déploiement rapide pour les configurations Debug et l'éditeur de liens pour les configurations Release.</value>
@@ -327,11 +327,6 @@ When it appears in the middle of a sentence, "lint" is not capitalized.
   <data name="XA1020" xml:space="preserve">
     <value>Au moins une bibliothèque Java est nécessaire pour la liaison. Vérifiez qu'une bibliothèque Java est incluse dans le projet et qu'elle a l'action de génération appropriée : 'LibraryProjectZip' (pour AAR ou ZIP), 'EmbeddedJar', 'InputJar' (pour JAR) ou 'LibraryProjectProperties' (project.properties).</value>
     <comment>The following are literal names and should not be translated: LibraryProjectZip, EmbeddedJar, InputJar, LibraryProjectProperties, project.properties</comment>
-  </data>
-  <data name="XA1021" xml:space="preserve">
-    <value>Bibliothèque Java source spécifiée introuvable : {0}</value>
-    <comment>In this message, the term "source Java library" refers to the library that will be processed. In this case, the term "source" does not refer to "source code."
-{0} - The file name of the library</comment>
   </data>
   <data name="XA1022" xml:space="preserve">
     <value>Bibliothèque Java de référence spécifiée introuvable : {0}</value>

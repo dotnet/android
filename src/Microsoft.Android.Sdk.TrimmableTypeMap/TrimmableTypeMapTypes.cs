@@ -59,5 +59,4 @@ public record ManifestConfig (
 	bool NeedsInternet = false,
 	bool EmbedAssemblies = false,
 	string? ManifestPlaceholders = null,
-	string? CheckedBuild = null,
 	string? ApplicationJavaClass = null);

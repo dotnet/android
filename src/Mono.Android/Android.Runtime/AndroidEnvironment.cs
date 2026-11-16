@@ -25,7 +25,7 @@ namespace Android.Runtime {
 
 		static IX509TrustManager? sslTrustManager;
 		static KeyStore? certStore;
-		static object lock_ = new object ();
+		static readonly Lock lock_ = new ();
 
 		static void SetupTrustManager ()
 		{
@@ -80,8 +80,7 @@ namespace Android.Runtime {
 		{
 			unsafe {
 				// SAFETY: the managed Throwable owns its live JNI throwable reference and existing KeepAlive retains it through the throw operation.
-				if (throwable == null)
-					throw new ArgumentNullException ("throwable");
+				ArgumentNullException.ThrowIfNull (throwable);
 				JNIEnv.Throw (throwable.Handle);
 				GC.KeepAlive (throwable);
 			}

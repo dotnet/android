@@ -128,23 +128,19 @@ namespace Xamarin.AndroidTools.AnnotationSupport
 			Func<string, string> stripGenParams = s => s == null ? s : (s.Contains ('<') ? s.Substring (0, s.IndexOf ('<')) : s).Replace ("...", "[]");
 			Func<string, string, bool> cmp = (v, w) => stripGenParams (v) == stripGenParams (w);
 
-			for (int i = 0; i < argTypeLists.Length; i++) {
+			methods: for (int i = 0; i < argTypeLists.Length; i++) {
 				var argTypeListPair = argTypeLists [i];
 				var argTypeList = argTypeListPair.Arguments;
 				if (argTypeList == null || item.Arguments.Length != argTypeList.Length)
 					continue;
 
-				bool mismatch = false;
 				for (int a = 0; a < argTypeList.Length; a++) {
 					if (cmp (argTypeList [a], item.Arguments [a])
 						|| t.TypeParameters != null && t.TypeParameters.Any (ga => cmp (ga.Name, stripParamSuffix (item.Arguments [a])))
 						|| argTypeListPair.Method.GenericArguments != null && argTypeListPair.Method.GenericArguments.Any (ga => cmp (ga.Name, stripParamSuffix (item.Arguments [a]))))
 						continue;
-					mismatch = true;
-					break;
+					continue methods;
 				}
-				if (mismatch)
-					continue;
 				return methods [i].Wrap ();
 			}
 			Errors.Add ("warning: method overload not found: " + t.FullName + " member: " + item.FormatMember ());

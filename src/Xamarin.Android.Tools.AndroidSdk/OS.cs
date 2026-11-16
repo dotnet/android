@@ -63,8 +63,11 @@ namespace Xamarin.Android.Tools
 	}
 
 	public static class KernelEx {
+		/// <safety>
+		/// longPathLength must not exceed the capacity of longPath.
+		/// </safety>
 		[DllImport ("kernel32.dll", CharSet = CharSet.Auto)]
-		static extern int GetLongPathName (
+		static unsafe extern int GetLongPathName (
 			[MarshalAs (UnmanagedType.LPTStr)] string path,
 			[MarshalAs (UnmanagedType.LPTStr)] StringBuilder longPath,
 			int longPathLength
@@ -73,12 +76,16 @@ namespace Xamarin.Android.Tools
 		public static string GetLongPathName (string path)
 		{
 			StringBuilder sb = new StringBuilder (255);
-			GetLongPathName (path, sb, sb.Capacity);
+			// SAFETY: The native output limit equals the marshalled buffer capacity.
+			_ = unsafe (GetLongPathName (path, sb, sb.Capacity));
 			return sb.ToString ();
 		}
 
+		/// <safety>
+		/// shortPathLength must not exceed the capacity of shortPath.
+		/// </safety>
 		[DllImport ("kernel32.dll", CharSet = CharSet.Auto)]
-		static extern int GetShortPathName (
+		static unsafe extern int GetShortPathName (
 			[MarshalAs (UnmanagedType.LPTStr)] string path,
 			[MarshalAs (UnmanagedType.LPTStr)] StringBuilder shortPath,
 			int shortPathLength
@@ -87,7 +94,8 @@ namespace Xamarin.Android.Tools
 		public static string GetShortPathName (string path)
 		{
 			StringBuilder sb = new StringBuilder (255);
-			GetShortPathName (path, sb, sb.Capacity);
+			// SAFETY: The native output limit equals the marshalled buffer capacity.
+			_ = unsafe (GetShortPathName (path, sb, sb.Capacity));
 			return sb.ToString ();
 		}
 	}
@@ -100,27 +108,42 @@ namespace Xamarin.Android.Tools
 		public static UIntPtr LocalMachine = (UIntPtr)0x80000002;
 
 		[DllImport (ADVAPI, CharSet = CharSet.Unicode, SetLastError = true)]
-		static extern int RegOpenKeyEx (UIntPtr hKey, string subKey, uint reserved, uint sam, out UIntPtr phkResult);
+		static safe extern int RegOpenKeyEx (UIntPtr hKey, string subKey, uint reserved, uint sam, out UIntPtr phkResult);
 
+		/// <safety>
+		/// lpcbData must not exceed the marshalled lpData buffer size in bytes.
+		/// </safety>
 		[DllImport (ADVAPI, CharSet = CharSet.Unicode, SetLastError = true)]
-		static extern int RegQueryValueExW (UIntPtr hKey, string lpValueName, int lpReserved, out uint lpType,
+		static unsafe extern int RegQueryValueExW (UIntPtr hKey, string lpValueName, int lpReserved, out uint lpType,
 			StringBuilder lpData, ref uint lpcbData);
 
+		/// <safety>
+		/// cbData must not exceed the marshalled UTF-16 data size, including its terminator.
+		/// </safety>
 		[DllImport (ADVAPI, CharSet = CharSet.Unicode, SetLastError = true)]
-		static extern int RegSetValueExW (UIntPtr hKey, string lpValueName, int lpReserved,
+		static unsafe extern int RegSetValueExW (UIntPtr hKey, string lpValueName, int lpReserved,
 			uint dwType, string data, uint cbData);
 
+		/// <safety>
+		/// data must reference at least cbData readable bytes for the duration of the call.
+		/// </safety>
 		[DllImport (ADVAPI, CharSet = CharSet.Unicode, SetLastError = true)]
-		static extern int RegSetValueExW (UIntPtr hKey, string lpValueName, int lpReserved,
+		static unsafe extern int RegSetValueExW (UIntPtr hKey, string lpValueName, int lpReserved,
 			uint dwType, IntPtr data, uint cbData);
 
+		/// <safety>
+		/// lpSecurityAttributes must be null or reference a valid SECURITY_ATTRIBUTES structure.
+		/// </safety>
 		[DllImport (ADVAPI, CharSet = CharSet.Unicode, SetLastError = true)]
-		static extern int RegCreateKeyEx (UIntPtr hKey, string subKey, uint reserved, string? @class, uint options,
+		static unsafe extern int RegCreateKeyEx (UIntPtr hKey, string subKey, uint reserved, string? @class, uint options,
 			uint samDesired, IntPtr lpSecurityAttributes, out UIntPtr phkResult, out Disposition lpdwDisposition);
 
+		/// <safety>
+		/// lpcchName must not exceed lpName.Length; optional pointer outputs must be null or valid.
+		/// </safety>
 		// https://docs.microsoft.com/en-us/windows/win32/api/winreg/nf-winreg-regenumkeyexw
 		[DllImport (ADVAPI, CharSet = CharSet.Unicode, SetLastError = true)]
-		static extern int RegEnumKeyExW (
+		static unsafe extern int RegEnumKeyExW (
 				UIntPtr         hKey,
 				uint            dwIndex,
 				[Out] char[]    lpName,
@@ -131,9 +154,12 @@ namespace Xamarin.Android.Tools
 				IntPtr          lpftLastWriteTime
 		);
 
+		/// <safety>
+		/// Optional pointer outputs must be null or reference buffers sized for the requested information.
+		/// </safety>
 		// https://docs.microsoft.com/en-us/windows/win32/api/winreg/nf-winreg-regqueryinfokeyw
 		[DllImport (ADVAPI, CharSet = CharSet.Unicode, SetLastError = true)]
-		static extern int RegQueryInfoKey (
+		static unsafe extern int RegQueryInfoKey (
 				UIntPtr     hKey,
 				IntPtr      lpClass,
 				IntPtr      lpcchClass,
@@ -149,9 +175,10 @@ namespace Xamarin.Android.Tools
 		);
 
 		[DllImport ("advapi32.dll", SetLastError = true)]
-		static extern int RegCloseKey (UIntPtr hKey);
+		static safe extern int RegCloseKey (UIntPtr hKey);
 
-		internal static bool CheckRegistryKeyForExecutable (UIntPtr key, string subkey, string valueName, RegistryEx.Wow64 wow64, string subdir, string exe)
+		internal static bool CheckRegistryKeyForExecutable (UIntPtr key, string subkey, string valueName, RegistryEx.Wow64 wow64, string subdir, string exe,
+			System.Collections.Generic.IDictionary<string, string>? environmentVariables = null)
 		{
 			try {
 				var path = AndroidSdkBase.NullIfEmpty (RegistryEx.GetValueString (key, subkey, valueName, wow64));
@@ -160,7 +187,7 @@ namespace Xamarin.Android.Tools
 					return false;
 				}
 
-				if (!ProcessUtils.FindExecutablesInDirectory (Path.Combine (path, subdir), exe).Any ()) {
+				if (!ProcessUtils.FindExecutablesInDirectory (Path.Combine (path, subdir), exe, environmentVariables).Any ()) {
 					return false;
 				}
 
@@ -179,7 +206,8 @@ namespace Xamarin.Android.Tools
 				yield break;
 			}
 			try {
-				r = RegQueryInfoKey (
+				// SAFETY: All optional pointer outputs are null; requested outputs are marshalled scalars.
+				r = unsafe (RegQueryInfoKey (
 						hKey:                   regKeyHandle,
 						lpClass:                IntPtr.Zero,
 						lpcchClass:             IntPtr.Zero,
@@ -192,14 +220,15 @@ namespace Xamarin.Android.Tools
 						lpcbMaxValueLen:        IntPtr.Zero,
 						lpSecurityDescriptor:   IntPtr.Zero,
 						lpftLastWriteTime:      IntPtr.Zero
-				);
+				));
 				if (r != 0) {
 					yield break;
 				}
 				var name    = new char [cchMaxSubkeyLen+1];
 				for (uint i = 0; i < cSubkeys; ++i) {
 					var nameLen = (uint) name.Length;
-					r = RegEnumKeyExW (
+					// SAFETY: nameLen equals the array length and all optional pointer outputs are null.
+					r = unsafe (RegEnumKeyExW (
 							hKey:               regKeyHandle,
 							dwIndex:            i,
 							lpName:             name,
@@ -208,7 +237,7 @@ namespace Xamarin.Android.Tools
 							lpClass:            IntPtr.Zero,
 							lpcchClass:         IntPtr.Zero,
 							lpftLastWriteTime:  IntPtr.Zero
-					);
+					));
 					if (r != 0) {
 						continue;
 					}
@@ -231,7 +260,8 @@ namespace Xamarin.Android.Tools
 				uint type;
 				var sb = new StringBuilder (2048);
 				uint cbData = (uint) sb.Capacity;
-				if (RegQueryValueExW (regKeyHandle, valueName, 0, out type, sb, ref cbData) == 0) {
+				// SAFETY: The byte limit is no larger than the UTF-16 buffer's capacity in bytes.
+				if (unsafe (RegQueryValueExW (regKeyHandle, valueName, 0, out type, sb, ref cbData)) == 0) {
 					return sb.ToString ();
 				}
 				return null;
@@ -246,14 +276,16 @@ namespace Xamarin.Android.Tools
 			uint sam = (uint)(Rights.CreateSubKey | Rights.SetValue) + (uint)wow64;
 			uint options = (uint) Options.NonVolatile;
 			Disposition disposition;
-			if (RegCreateKeyEx (key, subkey, 0, "", options, sam, IntPtr.Zero, out regKeyHandle, out disposition) != 0) {
+			// SAFETY: No unmanaged security-attributes buffer is supplied.
+			if (unsafe (RegCreateKeyEx (key, subkey, 0, "", options, sam, IntPtr.Zero, out regKeyHandle, out disposition)) != 0) {
 				throw new Exception ("Could not open or create key");
 			}
 
 			try {
 				uint type = (uint)ValueType.String;
 				uint lenBytesPlusNull = ((uint)value.Length + 1) * 2;
-				var result = RegSetValueExW (regKeyHandle, valueName, 0, type, value, lenBytesPlusNull);
+				// SAFETY: The byte count describes the marshalled UTF-16 string and its terminator.
+				var result = unsafe (RegSetValueExW (regKeyHandle, valueName, 0, type, value, lenBytesPlusNull));
 				if (result != 0)
 					throw new Exception (string.Format ("Error {0} setting registry key '{1}{2}@{3}'='{4}'",
 						result, key, subkey, valueName, value));

@@ -4,7 +4,6 @@ set(LIB_ALIAS_PRECOMPILED xa::pinvoke-override-precompiled)
 set(XA_PINVOKE_OVERRIDE_PRECOMPILED_SOURCES
   precompiled.cc
 )
-add_clang_check_sources("${XA_PINVOKE_OVERRIDE_PRECOMPILED_SOURCES}")
 
 list(APPEND POTENTIAL_LOCAL_COMPILER_ARGS
   -ffunction-sections

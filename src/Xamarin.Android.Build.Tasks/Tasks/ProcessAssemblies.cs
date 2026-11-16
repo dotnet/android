@@ -20,7 +20,8 @@ namespace Xamarin.Android.Tasks
 	/// * %(HasMonoAndroidReference)=True for incremental build performance
 	/// * Modify %(DestinationSubDirectory) and %(DestinationSubPath) if an assembly has an architecture-specific version
 	/// </summary>
-	public class ProcessAssemblies : AndroidTask
+	[MSBuildMultiThreadableTask]
+	public class ProcessAssemblies : MultithreadedAndroidTask
 	{
 		public override string TaskPrefix => "PRAS";
 
@@ -129,7 +130,7 @@ namespace Xamarin.Android.Tasks
 		void SetMetadataForAssemblies (List<ITaskItem> output, Dictionary<string, ITaskItem> symbols)
 		{
 			foreach (ITaskItem assembly in InputAssemblies) {
-				if (DesignTimeBuild && !File.Exists (assembly.ItemSpec)) {
+				if (DesignTimeBuild && !File.Exists (TaskEnvironment.GetAbsolutePath (assembly.ItemSpec))) {
 					// Designer builds don't produce assemblies, so library and main application DLLs might not
 					// be there and would later cause an error when the `_CopyAssembliesForDesigner` task runs
 					continue;
@@ -142,18 +143,18 @@ namespace Xamarin.Android.Tasks
 
 				if (!DesignTimeBuild) {
 					// Designer builds don't produce assemblies, the HasMonoAndroidReference call would throw an exception in that case
-					assembly.SetMetadata ("HasMonoAndroidReference", MonoAndroidHelper.HasMonoAndroidReference (assembly).ToString ());
+					assembly.SetMetadata ("HasMonoAndroidReference", MonoAndroidHelper.HasMonoAndroidReference (assembly, TaskEnvironment).ToString ());
 				}
 				output.Add (assembly);
 			}
 		}
 
-		static ITaskItem? GetOrCreateSymbolItem (Dictionary<string, ITaskItem> symbols, ITaskItem assembly)
+		ITaskItem? GetOrCreateSymbolItem (Dictionary<string, ITaskItem> symbols, ITaskItem assembly)
 		{
 			var symbolPath = Path.ChangeExtension (assembly.ItemSpec, ".pdb");
 			if (!symbols.TryGetValue (symbolPath, out var symbol) || !symbol.GetMetadata ("DestinationSubDirectory").IsNullOrEmpty ()) {
 				// Sometimes .pdb files are not included in @(ResolvedFileToPublish), so add them if they exist
-				if (File.Exists (symbolPath)) {
+				if (File.Exists (TaskEnvironment.GetAbsolutePath (symbolPath))) {
 					symbols [symbolPath] = symbol = new TaskItem (symbolPath);
 					return symbol;
 				}
@@ -163,7 +164,7 @@ namespace Xamarin.Android.Tasks
 
 		bool Filter (ITaskItem item)
 		{
-			if (!File.Exists (item.ItemSpec)) {
+			if (!File.Exists (TaskEnvironment.GetAbsolutePath (item.ItemSpec))) {
 				Log.LogDebugMessage ($"Skipping non-existent file '{item.ItemSpec}'.");
 				return false;
 			}

@@ -100,7 +100,7 @@ static class Utils
 			}
 
 			foreach (ISymbolEntry symbol in symbols.Entries) {
-				if (String.CompareOrdinal (symbol.Name, AssemblyStorePayloadSymbol) != 0) {
+				if (!string.Equals (symbol.Name, AssemblyStorePayloadSymbol, StringComparison.Ordinal)) {
 					continue;
 				}
 

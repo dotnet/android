@@ -234,10 +234,10 @@ namespace Xamarin.Android.Tasks
 
 						Queue<string> stdError = new Queue<string> ();
 						while ((line = aapt2.StandardError.ReadLine ()) != null) {
-							if (string.Compare (line, "Done", StringComparison.OrdinalIgnoreCase) == 0) {
+							if (string.Equals (line, "Done", StringComparison.OrdinalIgnoreCase)) {
 								break;
 							}
-							if (string.Compare (line, "Error", StringComparison.OrdinalIgnoreCase) == 0) {
+							if (string.Equals (line, "Error", StringComparison.OrdinalIgnoreCase)) {
 								errored = true;
 								continue;
 							}

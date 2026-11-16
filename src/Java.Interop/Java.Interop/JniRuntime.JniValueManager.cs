@@ -98,8 +98,7 @@ namespace Java.Interop
 			{
 				EnsureNotDisposed ();
 
-				if (value == null)
-					throw new ArgumentNullException (nameof (value));
+				ArgumentNullException.ThrowIfNull (value);
 
 				if (!value.PeerReference.IsValid)
 					return;
@@ -136,8 +135,7 @@ namespace Java.Interop
 			{
 				EnsureNotDisposed ();
 
-				if (value == null)
-					throw new ArgumentNullException (nameof (value));
+				ArgumentNullException.ThrowIfNull (value);
 
 				var h = value.PeerReference;
 				if (!h.IsValid)
@@ -302,8 +300,7 @@ namespace Java.Interop
 			{
 				EnsureNotDisposed ();
 
-				if (type == null)
-					throw new ArgumentNullException (nameof (type));
+				ArgumentNullException.ThrowIfNull (type);
 				return CreateLocalObjectReferenceArgumentCore (type, value);
 			}
 

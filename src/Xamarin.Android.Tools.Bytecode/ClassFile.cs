@@ -35,8 +35,7 @@ namespace Xamarin.Android.Tools.Bytecode {
 
 		public ClassFile (Stream stream)
 		{
-			if (stream == null)
-				throw new ArgumentNullException ("stream");
+			ArgumentNullException.ThrowIfNull (stream);
 
 			uint magic;
 			if (!IsClassFile (stream, out magic))
@@ -67,8 +66,7 @@ namespace Xamarin.Android.Tools.Bytecode {
 
 		public static bool IsClassFile (Stream stream)
 		{
-			if (stream == null)
-				throw new ArgumentNullException ("stream");
+			ArgumentNullException.ThrowIfNull (stream);
 			try {
 				var magic = stream.ReadNetworkUInt32 ();
 				if (magic != unchecked ((uint) 0xcafebabe))
@@ -81,8 +79,7 @@ namespace Xamarin.Android.Tools.Bytecode {
 
 		static bool IsClassFile (Stream stream, out uint magic)
 		{
-			if (stream == null)
-				throw new ArgumentNullException ("stream");
+			ArgumentNullException.ThrowIfNull (stream);
 			try {
 				magic = stream.ReadNetworkUInt32 ();
 				if (magic != unchecked ((uint) 0xcafebabe))

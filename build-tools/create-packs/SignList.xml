@@ -5,8 +5,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ThirdParty Include="HtmlAgilityPack.dll" />
-    <ThirdParty Include="INIFileParser.dll" />
     <ThirdParty Include="Irony.dll" />
     <ThirdParty Include="ELFSharp.dll" />
     <ThirdParty Include="protobuf-net.dll" />

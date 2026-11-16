@@ -7,7 +7,7 @@ Mapping of test area keywords to assemblies, filters, and build prerequisites.
 - **Filter**: The `--filter` argument for host-side `dotnet test`, or on-device MTP category/property notes.
 - **Build**: What must be built before running:
   - **Standalone** — Can run with plain `dotnet test <project>.csproj`. No local SDK needed.
-  - **Full-build** — Requires the local SDK (`dotnet-local.sh`). Build with `./dotnet-local.sh build Microsoft.Android.slnx -c Debug` or `make prepare && make all`.
+  - **Full-build** — Requires the local SDK (`dotnet-local.sh`). Build with `make prepare && make leeroy`.
 - **Device**: Whether an Android device/emulator is required.
 
 ---
@@ -21,7 +21,9 @@ These tests can be run immediately with `dotnet test` on the `.csproj`, even if 
 | Test Area | Project | Command |
 |-----------|---------|---------|
 | **modern Android build tasks** | `src/Microsoft.Android.Build.Tasks/Tests/Microsoft.Android.Build.Tasks.Tests/` | `dotnet test src/Microsoft.Android.Build.Tasks/Tests/Microsoft.Android.Build.Tasks.Tests/Microsoft.Android.Build.Tasks.Tests.csproj -v minimal` |
+| **temporary-directory target execution/inference** | `src/Microsoft.Android.Build.Tasks/Tests/Microsoft.Android.Build.Tasks.Tests/` | `dotnet test src/Microsoft.Android.Build.Tasks/Tests/Microsoft.Android.Build.Tasks.Tests/Microsoft.Android.Build.Tasks.Tests.csproj -v minimal --filter FullyQualifiedName~TemporaryDirectoryTargetsTests` |
 | **package manager Java generation** | `src/Microsoft.Android.Build.Tasks/Tests/Microsoft.Android.Build.Tasks.Tests/` | `dotnet test src/Microsoft.Android.Build.Tasks/Tests/Microsoft.Android.Build.Tasks.Tests/Microsoft.Android.Build.Tasks.Tests.csproj -v minimal --filter FullyQualifiedName~GeneratePackageManagerJavaTests` |
+| **Gradle targets command quoting/environment** | `src/Microsoft.Android.Build.Tasks/Tests/Microsoft.Android.Build.Tasks.Tests/` | `dotnet test src/Microsoft.Android.Build.Tasks/Tests/Microsoft.Android.Build.Tasks.Tests/Microsoft.Android.Build.Tasks.Tests.csproj -v minimal --filter FullyQualifiedName~AndroidGradleTargetsTests` |
 | **aidl** | `tests/Xamarin.Android.Tools.Aidl-Tests/` | `dotnet test tests/Xamarin.Android.Tools.Aidl-Tests/Xamarin.Android.Tools.Aidl-Tests.csproj -v minimal` |
 | **source writer** | `tests/Xamarin.SourceWriter-Tests/` | `dotnet test tests/Xamarin.SourceWriter-Tests/Xamarin.SourceWriter-Tests.csproj -v minimal` |
 | **java source** | `tests/Java.Interop.Tools.JavaSource-Tests/` | `dotnet test tests/Java.Interop.Tools.JavaSource-Tests/Java.Interop.Tools.JavaSource-Tests.csproj -v minimal` |
@@ -44,6 +46,16 @@ It uses the production raw-only envelope reader and checks compressed/truncated 
 On macOS/Linux, these tests require a C++23 compiler (`clang++`, or `CXX`); they do not
 require an Android device or a locally built Android SDK.
 
+`GetAndroidDefineConstantsTests` executes both registered task names through `dotnet msbuild`.
+On Windows it also runs them through the full-framework `MSBuild.exe` from the pinned
+`Microsoft.Build.Runtime` test dependency. `Runtime="NET"` hosting requires MSBuild 18 or
+newer; Visual Studio 2022's MSBuild 17 cannot host these tasks. The generated test project
+supplies the build SDK's `NetCoreSdkRoot` and `DOTNET_HOST_PATH`, which normally come from
+the .NET SDK imports, so the Full host can launch its .NET task worker. Missing tools or
+failed task-host execution fail the tests. Other platforms skip only the Full MSBuild cases.
+Run the focused standalone suite with:
+`dotnet test src/Microsoft.Android.Build.Tasks/Tests/Microsoft.Android.Build.Tasks.Tests/Microsoft.Android.Build.Tasks.Tests.csproj -v minimal --filter FullyQualifiedName~GetAndroidDefineConstantsTests`.
+
 ---
 
 The `TypeMapProguardTargetsTests` NativeAOT cases in the modern build-task suite
@@ -56,7 +68,7 @@ skipped. Other target regression cases do not require native tools.
 ## Host-Side MSBuild Tests (full-build — requires local SDK)
 
 Assembly: `bin/TestDebug/${TFM}/Xamarin.Android.Build.Tests.dll`
-Build: Full-build — `./dotnet-local.sh build Microsoft.Android.slnx -c Debug` or `make prepare && make all`
+Build: Full-build — `make prepare && make leeroy`
 Device: No
 
 | Test Area | Filter | Test Classes / Notes |
@@ -96,7 +108,7 @@ Same assembly as above. These test individual MSBuild tasks in isolation with `M
 | **resource generation** | `--filter "FullyQualifiedName~GenerateResourceCaseMapTests"` | Resource case map generation |
 | **key tool** | `--filter "FullyQualifiedName~KeyToolTests"` | Keystore/signing tasks |
 | **bundletool commands** | `--filter "FullyQualifiedName~BundleToolTaskTests"` | Command-line generation only; no project builds or device |
-| **ndk** | `--filter "FullyQualifiedName~AndroidNdkToolsTests"` | Canonical NDK tools, Clang runtime discovery, and checked-build wrapper diagnostics |
+| **ndk** | `--filter "FullyQualifiedName~AndroidNdkToolsTests"` | Canonical NDK tools and Clang runtime discovery |
 
 ---
 

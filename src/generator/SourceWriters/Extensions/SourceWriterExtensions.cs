@@ -178,7 +178,7 @@ namespace generator.SourceWriters
 					Report.LogCodedWarning (0, Report.WarningInvalidEventName2, method, iface.FullName, name);
 					return;
 				} else {
-					var mt = target.Methods.Where (method => string.Compare (method.Name, connector_fmt, StringComparison.OrdinalIgnoreCase) == 0 && method.IsListenerConnector).FirstOrDefault ();
+					var mt = target.Methods.FirstOrDefault (method => string.Equals (method.Name, connector_fmt, StringComparison.OrdinalIgnoreCase) && method.IsListenerConnector);
 					var hasHandlerArgument = mt != null && mt.IsListenerConnector && mt.Parameters.Count == 2 && mt.Parameters [1].Type == "Android.OS.Handler";
 
 					tw.Events.Add (new InterfaceListenerEvent (iface, setListenerMethod, name, nameSpec, full_delegate_name, connector_fmt, add, remove, hasHandlerArgument, opt));

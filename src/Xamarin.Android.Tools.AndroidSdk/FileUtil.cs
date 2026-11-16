@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Diagnostics;
 using System.IO;
 using System.Runtime.InteropServices;
@@ -217,7 +217,7 @@ namespace Xamarin.Android.Tools
 
 #if !NET7_0_OR_GREATER
 		[DllImport ("libc", SetLastError = true)]
-		static extern int chmod (string pathname, int mode);
+		static safe extern int chmod (string pathname, int mode);
 #endif
 	}
 }

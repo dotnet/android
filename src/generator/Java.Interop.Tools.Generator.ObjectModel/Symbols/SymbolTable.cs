@@ -3,6 +3,7 @@ using System.Linq;
 using System.Text;
 using System.Collections.Generic;
 using System.Collections.Concurrent;
+using System.Threading;
 
 using CodeGenerationTarget = Xamarin.Android.Binder.CodeGenerationTarget;
 
@@ -256,7 +257,7 @@ namespace MonoDroid.Generation {
 		}
 
 		ConcurrentDictionary<string, ISymbol> all_symbols_cache;
-		static object cache_population_lock = new object ();
+		static readonly Lock cache_population_lock = new Lock ();
 
 		public ISymbol Lookup (string java_type)
 		{
@@ -351,7 +352,7 @@ namespace MonoDroid.Generation {
 			}
 		}
 
-		static readonly object populate_lock = new object ();
+		static readonly Lock populate_lock = new Lock ();
 
 		void EnsurePopulated (GenBase gen)
 		{

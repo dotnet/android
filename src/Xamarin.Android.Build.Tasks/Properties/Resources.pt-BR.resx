@@ -212,9 +212,9 @@ Provavelmente esse erro foi causado por um problema com o arquivo AndroidManifes
     <comment>The following are literal names and should not be translated: AAPT2, Aapt2ToolPath, MSBuild</comment>
   </data>
   <data name="XA0116" xml:space="preserve">
-    <value>Não é possível encontrar 'EmbeddedResource' com o nome '{0}'.</value>
-    <comment>The following are literal names and should not be translated: EmbeddedResource
-{0} - The name of the missing resource</comment>
+    <value>Unable to find required SDK file `{0}`.</value>
+    <comment>The following are literal names and should not be translated: SDK
+{0} - The path of the missing file</comment>
   </data>
   <data name="XA0119_LinkMode" xml:space="preserve">
     <value>Não é recomendado usar a implantação rápida e o vinculador ao mesmo tempo. Use a implantação rápida para configurações de Depuração e o vinculador para configurações de Liberação.</value>
@@ -327,11 +327,6 @@ When it appears in the middle of a sentence, "lint" is not capitalized.
   <data name="XA1020" xml:space="preserve">
     <value>Pelo menos uma biblioteca Java é necessária para associação. Verifique se uma biblioteca Java está incluída no projeto e se ela tem a ação de build apropriada: 'LibraryProjectZip' (para AAR ou ZIP), 'EmbeddedJar', 'InputJar' (para JAR) ou 'LibraryProjectProperties' (project.properties).</value>
     <comment>The following are literal names and should not be translated: LibraryProjectZip, EmbeddedJar, InputJar, LibraryProjectProperties, project.properties</comment>
-  </data>
-  <data name="XA1021" xml:space="preserve">
-    <value>A biblioteca Java de origem especificada não foi encontrada: {0}</value>
-    <comment>In this message, the term "source Java library" refers to the library that will be processed. In this case, the term "source" does not refer to "source code."
-{0} - The file name of the library</comment>
   </data>
   <data name="XA1022" xml:space="preserve">
     <value>A biblioteca Java de referência especificada não foi encontrada: {0}</value>

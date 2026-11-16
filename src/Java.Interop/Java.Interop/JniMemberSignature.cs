@@ -104,8 +104,7 @@ namespace Java.Interop
 
 		internal static void AssertSignatureIndex (string signature, int index)
 		{
-			if (signature == null)
-				throw new ArgumentNullException (nameof (signature));
+			ArgumentNullException.ThrowIfNull (signature);
 			if (signature.Length == 0)
 				throw new ArgumentException ("Descriptor cannot be empty string", nameof (signature));
 			if (index >= signature.Length)

@@ -212,9 +212,9 @@ This error is likely caused by an issue with the AndroidManifest.xml file or an 
     <comment>The following are literal names and should not be translated: AAPT2, Aapt2ToolPath, MSBuild</comment>
   </data>
   <data name="XA0116" xml:space="preserve">
-    <value>Unable to find `EmbeddedResource` named `{0}`.</value>
-    <comment>The following are literal names and should not be translated: EmbeddedResource
-{0} - The name of the missing resource</comment>
+    <value>Unable to find required SDK file `{0}`.</value>
+    <comment>The following are literal names and should not be translated: SDK
+{0} - The path of the missing file</comment>
   </data>
   <data name="XA0119_LinkMode" xml:space="preserve">
     <value>Using fast deployment and the linker at the same time is not recommended. Use fast deployment for Debug configurations and the linker for Release configurations.</value>
@@ -328,11 +328,6 @@ When it appears in the middle of a sentence, "lint" is not capitalized.
     <value>At least one Java library is required for binding. Check that a Java library is included in the project and has the appropriate build action: 'LibraryProjectZip' (for AAR or ZIP), 'EmbeddedJar', 'InputJar' (for JAR), or 'LibraryProjectProperties' (project.properties).</value>
     <comment>The following are literal names and should not be translated: LibraryProjectZip, EmbeddedJar, InputJar, LibraryProjectProperties, project.properties</comment>
   </data>
-  <data name="XA1021" xml:space="preserve">
-    <value>Specified source Java library not found: {0}</value>
-    <comment>In this message, the term "source Java library" refers to the library that will be processed. In this case, the term "source" does not refer to "source code."
-{0} - The file name of the library</comment>
-  </data>
   <data name="XA1022" xml:space="preserve">
     <value>Specified reference Java library not found: {0}</value>
     <comment>In this message, the term "reference Java library" refers to a library that is included as a reference so that types from the library can be resolved during the build process.
@@ -405,9 +400,6 @@ Either change the value in the AndroidManifest.xml to match the $(SupportedOSPla
 {0} - The target SDK version number
 {1} - The $(TargetPlatformVersion) number
 {2} - The API version number</comment>
-  </data>
-  <data name="XA4213" xml:space="preserve">
-    <value>The type '{0}' must provide a public default constructor</value>
   </data>
   <data name="XA4212" xml:space="preserve">
     <value>Type `{0}` implements `Android.Runtime.IJavaObject` but does not inherit `Java.Lang.Object` or `Java.Lang.Throwable`. This is not supported.</value>
@@ -492,11 +484,6 @@ In this mesage, the term "layout" means an Android UI layout.
     <value>Resource item '{0}' does not have the required metadata item '{1}'.</value>
     <comment>{0} - The name of the Android layout resource file
 {1} - The name of the metadata item</comment>
-  </data>
-  <data name="XA4228" xml:space="preserve">
-    <value>Unable to find specified //activity-alias/@android:targetActivity: '{0}'</value>
-    <comment>The following are literal names and should not be translated: //activity-alias/@android:targetActivity
-{0} - The specified targetActivity name</comment>
   </data>
   <data name="XA4229" xml:space="preserve">
     <value>Unrecognized `TransformFile` root element: {0}.</value>

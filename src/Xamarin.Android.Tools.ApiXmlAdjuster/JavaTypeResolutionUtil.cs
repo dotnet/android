@@ -22,8 +22,7 @@ namespace Xamarin.Android.Tools.ApiXmlAdjuster
 		//	- TODO?: array indicator fixup ("T..." should match "T[]")
 		public static bool IsImplementing (this JavaMethod derived, JavaMethod basis, IDictionary<JavaTypeReference,JavaTypeReference> genericInstantiation)
 		{
-			if (genericInstantiation == null)
-				throw new ArgumentNullException ("genericInstantiation");
+			ArgumentNullException.ThrowIfNull (genericInstantiation);
 
 			if (basis.Name != derived.Name)
 				return false;

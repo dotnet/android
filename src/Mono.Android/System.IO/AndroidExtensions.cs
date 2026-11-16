@@ -7,8 +7,7 @@ namespace System.IO {
 
 		public static bool IsDataAvailable (this Stream stream)
 		{
-			if (stream == null)
-				throw new ArgumentNullException ("stream");
+			ArgumentNullException.ThrowIfNull (stream);
 
 			var ns = stream as NetworkStream;
 			if (ns != null)

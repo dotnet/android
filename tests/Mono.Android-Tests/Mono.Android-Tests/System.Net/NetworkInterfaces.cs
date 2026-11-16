@@ -266,7 +266,7 @@ namespace System.NetTests
 		{
 			// Android 30 will not tell us the interface type if the app targets API 30, we need to look at the
 			// name then.
-			return inf.NetworkInterfaceType == NetworkInterfaceType.Loopback || String.Compare ("lo", inf.Name, StringComparison.OrdinalIgnoreCase) == 0;
+			return inf.NetworkInterfaceType == NetworkInterfaceType.Loopback || string.Equals ("lo", inf.Name, StringComparison.OrdinalIgnoreCase);
 		}
 	}
 }

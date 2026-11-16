@@ -149,7 +149,7 @@ namespace Xamarin.Android.AssemblyStore.V1
 						if (String.IsNullOrEmpty (assembly.Name)) {
 							Logger (AssemblyStoreExplorerLogLevel.Warning, $"64-bit hash 0x{assembly.Hash64:x} did not match any assembly name in the manifest");
 						}
-					} else if (String.Compare (assembly.Name, me.Name, StringComparison.Ordinal) != 0) {
+					} else if (!string.Equals (assembly.Name, me.Name, StringComparison.Ordinal)) {
 						Logger (AssemblyStoreExplorerLogLevel.Warning, $"32-bit hash 0x{assembly.Hash32:x} maps to assembly name '{assembly.Name}', however 64-bit hash 0x{assembly.Hash64:x} for the same entry matches assembly name '{me.Name}'");
 					}
 				}
@@ -203,11 +203,11 @@ namespace Xamarin.Android.AssemblyStore.V1
 		{
 			string basePathInArchive;
 
-			if (String.Compare (".aab", extension, StringComparison.OrdinalIgnoreCase) == 0) {
+			if (string.Equals (".aab", extension, StringComparison.OrdinalIgnoreCase)) {
 				basePathInArchive = "base/root/assemblies";
-			} else if (String.Compare (".apk", extension, StringComparison.OrdinalIgnoreCase) == 0) {
+			} else if (string.Equals (".apk", extension, StringComparison.OrdinalIgnoreCase)) {
 				basePathInArchive = "assemblies";
-			} else if (String.Compare (".zip", extension, StringComparison.OrdinalIgnoreCase) == 0) {
+			} else if (string.Equals (".zip", extension, StringComparison.OrdinalIgnoreCase)) {
 				basePathInArchive = "root/assemblies";
 			} else {
 				throw new InvalidOperationException ($"Unrecognized archive extension '{extension}'");
@@ -277,9 +277,9 @@ namespace Xamarin.Android.AssemblyStore.V1
 					continue;
 				}
 
-				if (String.Compare (".blob", extension, StringComparison.OrdinalIgnoreCase) == 0) {
+				if (string.Equals (".blob", extension, StringComparison.OrdinalIgnoreCase)) {
 					AddStore (ReadStore (de));
-				} else if (String.Compare (".manifest", extension, StringComparison.OrdinalIgnoreCase) == 0) {
+				} else if (string.Equals (".manifest", extension, StringComparison.OrdinalIgnoreCase)) {
 					manifest = ReadManifest (de);
 				}
 			}
@@ -309,9 +309,9 @@ namespace Xamarin.Android.AssemblyStore.V1
 		bool IsAndroidArchive (string extension)
 		{
 			return
-				String.Compare (".aab", extension, StringComparison.OrdinalIgnoreCase) == 0 ||
-				String.Compare (".apk", extension, StringComparison.OrdinalIgnoreCase) == 0 ||
-				String.Compare (".zip", extension, StringComparison.OrdinalIgnoreCase) == 0;
+				string.Equals (".aab", extension, StringComparison.OrdinalIgnoreCase) ||
+				string.Equals (".apk", extension, StringComparison.OrdinalIgnoreCase) ||
+				string.Equals (".zip", extension, StringComparison.OrdinalIgnoreCase);
 		}
 
 		string GetBaseNameHaveExtension (string storePath, string extension)

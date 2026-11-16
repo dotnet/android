@@ -3,6 +3,8 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Threading;
+using Java.Interop.Tools.Cecil;
 using Java.Interop.Tools.Generator;
 using Java.Interop.Tools.JavaCallableWrappers;
 
@@ -37,7 +39,7 @@ namespace MonoDroid.Generation
 		}
 
 		readonly SortedSet<string> jni_marshal_delegates = new SortedSet<string> ();
-		readonly object jni_marshal_delegates_lock = new object ();
+		readonly Lock jni_marshal_delegates_lock = new Lock ();
 
 		public string ApiXmlFile { get; set; }
 		public bool UseGlobal { get; set; }
@@ -54,6 +56,8 @@ namespace MonoDroid.Generation
 		public bool UseObsoletedOSPlatformAttributes { get; set; }
 		public bool UseRestrictToAttributes { get; set; }
 		public bool FixObsoleteOverrides { get; set; }
+
+		internal TypeDefinitionCache TypeCache { get; } = new TypeDefinitionCache ();
 
 		// Experimental: emit each supported non-generic `n_*` binding callback as an
 		// [UnmanagedCallersOnly] method which forwards to a shared typed marshaling helper,
@@ -276,13 +280,14 @@ namespace MonoDroid.Generation
 		}
 
 		readonly Dictionary<string,string> short_file_names = new Dictionary<string, string> ();
+		readonly Lock short_file_names_lock = new Lock ();
 
 		public string GetFileName (string fullName)
 		{
 			if (!UseShortFileNames)
 				return fullName;
 
-			lock (short_file_names) {
+			lock (short_file_names_lock) {
 				if (short_file_names.TryGetValue (fullName, out var s))
 					return s;
 

@@ -165,7 +165,7 @@ namespace Xamarin.Android.Tasks {
 			}
 			if (logMessage == null)
 				return false;
-			var matchingKey = acwMap.FirstOrDefault (x => String.Equals (x.Key, name, StringComparison.OrdinalIgnoreCase));
+			var matchingKey = acwMap.FirstOrDefault (x => string.Equals (x.Key, name, StringComparison.OrdinalIgnoreCase));
 			if (matchingKey.Key != null) {
 				// we have elements with slightly different casing.
 				// lets issue a error.

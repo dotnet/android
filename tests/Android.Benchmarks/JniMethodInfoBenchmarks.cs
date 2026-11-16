@@ -2,7 +2,7 @@ using BenchmarkDotNet.Attributes;
 
 namespace Xamarin.Android.Benchmarks;
 
-public unsafe class JniMethodInfoBenchmarks
+public class JniMethodInfoBenchmarks
 {
 	const string EncodedMember = "hashCode.()I";
 
@@ -31,7 +31,8 @@ public unsafe class JniMethodInfoBenchmarks
 	[Benchmark (Baseline = true)]
 	public int InvokeWithStringCache ()
 	{
-		return methods.InvokeVirtualInt32Method (EncodedMember, peer, null);
+		// SAFETY: hashCode takes no JNI arguments, and peer remains live until Cleanup.
+		return unsafe (methods.InvokeVirtualInt32Method (EncodedMember, peer, null));
 	}
 
 	[Benchmark]

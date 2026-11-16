@@ -61,8 +61,7 @@ namespace Xamarin.Android.Tools.Bytecode {
 
 		public void Load (Stream jarStream, bool leaveOpen = false)
 		{
-			if (jarStream == null)
-				throw new ArgumentNullException (nameof (jarStream));
+			ArgumentNullException.ThrowIfNull (jarStream);
 
 			using (var jar = CreateZipArchive (jarStream, leaveOpen)) {
 				foreach (var entry in jar.Entries) {
@@ -137,8 +136,7 @@ namespace Xamarin.Android.Tools.Bytecode {
 
 		public static bool IsJarFile (string jarFile)
 		{
-			if (jarFile == null)
-				throw new ArgumentNullException ("jarFile");
+			ArgumentNullException.ThrowIfNull (jarFile);
 			try {
 				using (var f = File.OpenRead (jarFile))
 				using (new ZipArchive (f)) {
@@ -152,8 +150,7 @@ namespace Xamarin.Android.Tools.Bytecode {
 
 		public static bool IsJmodFile (string jmodFile)
 		{
-			if (jmodFile == null)
-				throw new ArgumentNullException (nameof (jmodFile));
+			ArgumentNullException.ThrowIfNull (jmodFile);
 			try {
 				using var f = File.OpenRead (jmodFile);
 				var h = new byte[4];

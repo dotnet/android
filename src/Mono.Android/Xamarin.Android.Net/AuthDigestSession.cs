@@ -104,7 +104,7 @@ namespace Xamarin.Android.Net
 		string? HA1 (string username, string password)
 		{
 			string ha1 = $"{username}:{Realm}:{password}";
-			if (String.Compare (Algorithm, "md5-sess", StringComparison.OrdinalIgnoreCase) == 0)
+			if (string.Equals (Algorithm, "md5-sess", StringComparison.OrdinalIgnoreCase))
 				ha1 = $"{HashToHexString (ha1)}:{Nonce}:{CNonce}";
 			return HashToHexString (ha1);
 		}

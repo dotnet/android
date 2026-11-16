@@ -150,8 +150,7 @@ namespace Xamarin.Android.Tools.Bytecode
 
 		protected AndroidDocScraper (string dir, String patternHead, String? resetPatternHead, String parameterPairSplitter, bool continuousParamLines, string openMethod, string paramSep, string closeMethod, string? postCloseMethodParens)
 		{
-			if (dir == null)
-				throw new ArgumentNullException ("dir");
+			ArgumentNullException.ThrowIfNull (dir);
 	
 			pattern_head = patternHead;
 			reset_pattern_head = resetPatternHead;
@@ -419,19 +418,15 @@ namespace Xamarin.Android.Tools.Bytecode
 			XElement? member =
 				members.FirstOrDefault (m => info.MethodSignature == (string?) m.Attribute ("jni-signature"));
 			if (member == null) {
-				foreach (var m in members) {
-					var found   = true;
+				members: foreach (var m in members) {
 					int i       = 0;
 					foreach (var p in m.Elements ("parameter")) {
 						if (!ParameterTypesMatch (p, info.ParameterTypes [i++].JavaType)) {
-							found = false;
-							break;
+							continue members;
 						}
 					}
-					if (found) {
-						member = m;
-						break;
-					}
+					member = m;
+					break;
 				}
 			}
 			if (member == null)

@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Net;
 using System.Text;
+using System.Threading;
 
 using Android.Runtime;
 
@@ -13,7 +14,7 @@ namespace Xamarin.Android.Net
 	{
 		const string LOG_APP = AndroidMessageHandler.LOG_APP + "-digest-auth";
 
-		static readonly object cache_lock = new object ();
+		static readonly Lock cache_lock = new ();
 		static readonly Dictionary <int, AuthDigestSession> cache = new Dictionary <int, AuthDigestSession> ();
 
 		public AuthenticationScheme Scheme { get; } = AuthenticationScheme.Digest;

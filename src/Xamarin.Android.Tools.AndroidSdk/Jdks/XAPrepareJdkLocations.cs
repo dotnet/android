@@ -7,16 +7,19 @@ using System.Text;
 
 namespace Xamarin.Android.Tools {
 
-	class XAPrepareJdkLocations : JdkLocations {
+	partial class JdkLocations {
 
-		internal static IEnumerable<JdkInfo> GetXAPrepareJdks (Action<TraceLevel, string> logger)
+		internal IEnumerable<JdkInfo> GetXAPrepareJdks (Action<TraceLevel, string> logger)
 		{
 			return FromPaths (GetXAPrepareJdkPaths (), logger, "android-toolchain");
 		}
 
-		static IEnumerable<string> GetXAPrepareJdkPaths ()
+		IEnumerable<string> GetXAPrepareJdkPaths ()
 		{
-			var androidToolchainDir = Path.Combine (Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "android-toolchain");
+			var home = OS.IsWindows ? Environment.GetFolderPath (Environment.SpecialFolder.UserProfile) : ProcessUtils.GetUnixHome (environmentVariables);
+			if (home is not { Length: > 0 })
+				return Array.Empty<string> ();
+			var androidToolchainDir = Path.Combine (home, "android-toolchain");
 			if (!Directory.Exists (androidToolchainDir)) {
 				return Array.Empty<string> ();
 			}

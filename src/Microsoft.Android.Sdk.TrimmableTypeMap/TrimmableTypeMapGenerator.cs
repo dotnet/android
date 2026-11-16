@@ -419,8 +419,6 @@ public class TrimmableTypeMapGenerator
 			targetSdk = apiVersion.Major.ToString (System.Globalization.CultureInfo.InvariantCulture);
 		}
 
-		bool forceDebuggable = !config.CheckedBuild.IsNullOrEmpty ();
-
 		var generator = new ManifestGenerator {
 			PackageName = config.PackageName,
 			ApplicationLabel = config.ApplicationLabel ?? config.PackageName,
@@ -432,8 +430,6 @@ public class TrimmableTypeMapGenerator
 			Debug = config.Debug,
 			NeedsInternet = config.NeedsInternet,
 			EmbedAssemblies = config.EmbedAssemblies,
-			ForceDebuggable = forceDebuggable,
-			ForceExtractNativeLibs = forceDebuggable,
 			ManifestPlaceholders = config.ManifestPlaceholders,
 			ApplicationJavaClass = config.ApplicationJavaClass,
 			WarnInvalidPlaceholder = placeholders => logger.LogInvalidManifestPlaceholderWarning (placeholders),

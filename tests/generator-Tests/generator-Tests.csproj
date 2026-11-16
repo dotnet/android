@@ -3,7 +3,9 @@
   <PropertyGroup>
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
     <Version>11.0.0</Version>
-    <LangVersion>13.0</LangVersion>
+    <LangVersion>preview</LangVersion>
+    <!-- This opts in the test host, not the consumer compilations created by Compiler.cs. -->
+    <MemorySafetyRulesVersion>2</MemorySafetyRulesVersion>
     <TargetFramework>$(DotNetStableTargetFramework)</TargetFramework>
     <IntermediateOutputPath>obj\$(Configuration)\$(TargetFramework)\</IntermediateOutputPath>
     <IsPackable>false</IsPackable>

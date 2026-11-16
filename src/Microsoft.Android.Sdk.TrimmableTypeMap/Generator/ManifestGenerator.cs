@@ -29,8 +29,6 @@ class ManifestGenerator
 	public bool Debug { get; set; }
 	public bool NeedsInternet { get; set; }
 	public bool EmbedAssemblies { get; set; }
-	public bool ForceDebuggable { get; set; }
-	public bool ForceExtractNativeLibs { get; set; }
 	public string? ManifestPlaceholders { get; set; }
 	public string? ApplicationJavaClass { get; set; }
 	public Action<int, string>? Warn { get; set; }
@@ -140,13 +138,12 @@ class ManifestGenerator
 
 		// Handle debuggable
 		bool needDebuggable = Debug && app.Attribute (AndroidNs + "debuggable") is null;
-		if (ForceDebuggable || needDebuggable) {
+		if (needDebuggable) {
 			app.SetAttributeValue (AndroidNs + "debuggable", "true");
 		}
 
 		// Handle extractNativeLibs
-		if (targetSdkVersionValue >= 23 &&
-		    (ForceExtractNativeLibs || app.Attribute (AndroidNs + "extractNativeLibs") is null)) {
+		if (targetSdkVersionValue >= 23 && app.Attribute (AndroidNs + "extractNativeLibs") is null) {
 			app.SetAttributeValue (AndroidNs + "extractNativeLibs", "true");
 		}
 

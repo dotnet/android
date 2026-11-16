@@ -99,15 +99,13 @@ namespace Java.Interop
 
 		internal static int CheckLength (IList<T> value)
 		{
-			if (value == null)
-				throw new ArgumentNullException (nameof (value));
+			ArgumentNullException.ThrowIfNull (value);
 			return value.Count;
 		}
 
 		internal static IList<T> ToList (IEnumerable<T> value)
 		{
-			if (value == null)
-				throw new ArgumentNullException (nameof (value));
+			ArgumentNullException.ThrowIfNull (value);
 			if (value is IList<T> list)
 				return list;
 			return value.ToList ();
@@ -244,8 +242,7 @@ namespace Java.Interop
 
 		void ICollection.CopyTo (Array array, int index)
 		{
-			if (array == null)
-				throw new ArgumentNullException (nameof (array));
+			ArgumentNullException.ThrowIfNull (array);
 			CheckArrayCopy (0, Length, index, array.Length, Length);
 			int len = Length;
 			for (int i = 0; i < len; i++)
@@ -349,8 +346,7 @@ namespace Java.Interop
 
 		internal void* ElementsPointer {
 			get {
-				if (IsDisposed)
-					throw new ObjectDisposedException (GetType ().FullName);
+				ObjectDisposedException.ThrowIf (IsDisposed, this);
 				// SAFETY: Read only the address; this does not synchronize with release.
 				return unsafe (elements);
 			}
@@ -358,8 +354,7 @@ namespace Java.Interop
 
 		public int Size {
 			get {
-				if (IsDisposed)
-					throw new ObjectDisposedException (GetType ().FullName);
+				ObjectDisposedException.ThrowIf (IsDisposed, this);
 				return checked (elementCount * sizeOfElement);
 			}
 		}
@@ -373,8 +368,7 @@ namespace Java.Interop
 
 		public void Release (JniReleaseArrayElementsMode releaseMode)
 		{
-			if (IsDisposed)
-				throw new ObjectDisposedException (GetType ().FullName);
+			ObjectDisposedException.ThrowIf (IsDisposed, this);
 			Synchronize (releaseMode);
 			unsafe {
 				// SAFETY: Synchronize succeeded; clearing the sentinel does not access the buffer.

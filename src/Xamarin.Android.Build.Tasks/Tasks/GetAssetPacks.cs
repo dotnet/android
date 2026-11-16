@@ -37,7 +37,7 @@ namespace Xamarin.Android.Tasks
 			Dictionary<string, List<string>> files = new Dictionary<string, List<string>> ();
 			foreach (var asset in Assets) {
 				var assetPack = asset.GetMetadata ("AssetPack");
-				if (assetPack.IsNullOrEmpty () || string.Compare (assetPack, "base", StringComparison.OrdinalIgnoreCase) == 0)
+				if (assetPack.IsNullOrEmpty () || string.Equals (assetPack, "base", StringComparison.OrdinalIgnoreCase))
 					continue;
 				if (!IsAssetPackNameValid (assetPack)) {
 					Log.LogCodedError ("XA0140", string.Format (Properties.Resources.XA0140, asset.ItemSpec, assetPack));
@@ -85,9 +85,9 @@ namespace Xamarin.Android.Tasks
 
 		bool IsDeliveryTypeValid (ITaskItem item, string deliveryType)
 		{
-			if (string.Compare (deliveryType, "installtime", StringComparison.OrdinalIgnoreCase) == 0 &&
-				string.Compare (deliveryType, "ondemand", StringComparison.OrdinalIgnoreCase) == 0 &&
-				string.Compare (deliveryType, "fastfollow", StringComparison.OrdinalIgnoreCase) == 0) {
+			if (string.Equals (deliveryType, "installtime", StringComparison.OrdinalIgnoreCase) &&
+				string.Equals (deliveryType, "ondemand", StringComparison.OrdinalIgnoreCase) &&
+				string.Equals (deliveryType, "fastfollow", StringComparison.OrdinalIgnoreCase)) {
 					return false;
 				}
 			return true;

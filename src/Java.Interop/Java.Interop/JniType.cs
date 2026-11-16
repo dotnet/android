@@ -123,8 +123,7 @@ namespace Java.Interop {
 		[MethodImpl (MethodImplOptions.AggressiveInlining)]
 		void AssertValid ()
 		{
-			if (!PeerReference.IsValid)
-				throw new ObjectDisposedException (GetType ().FullName);
+			ObjectDisposedException.ThrowIf (!PeerReference.IsValid, this);
 		}
 
 		public static JniType GetCachedJniType ([NotNull] ref JniType? cachedType, string classname)
@@ -183,8 +182,7 @@ namespace Java.Interop {
 		{
 			AssertValid ();
 
-			if (c == null)
-				throw new ArgumentNullException (nameof (c));
+			ArgumentNullException.ThrowIfNull (c);
 			if (!c.PeerReference.IsValid)
 				throw new ArgumentException ("'c' has an invalid handle.", nameof (c));
 
@@ -227,8 +225,7 @@ namespace Java.Interop {
 		{
 			AssertValid ();
 
-			if (methods == null)
-				throw new ArgumentNullException (nameof (methods));
+			ArgumentNullException.ThrowIfNull (methods);
 
 			unsafe {
 				// SAFETY: Caller guarantees callback ABI and roots delegates on failure; success retains the array.

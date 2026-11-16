@@ -108,8 +108,7 @@ namespace Java.Interop.Tools.JavaTypeSystem.Models
 		//	- TODO?: array indicator fixup ("T..." should match "T[]")
 		public static bool IsImplementing (JavaMethodModel derived, JavaMethodModel basis, IDictionary<JavaTypeReference, JavaTypeReference> genericInstantiation)
 		{
-			if (genericInstantiation == null)
-				throw new ArgumentNullException ("genericInstantiation");
+			ArgumentNullException.ThrowIfNull (genericInstantiation);
 
 			if (basis.Name != derived.Name)
 				return false;

@@ -1,3 +1,4 @@
+using System;
 using System.IO;
 using System.Collections.Generic;
 using Microsoft.Android.Build.BaseTasks.Tests.Utilities;
@@ -85,7 +86,7 @@ namespace Microsoft.Android.Build.BaseTasks.Tests
 				ProjectSpecific = projectSpecificB,
 			};
 			task2.Execute ();
-			Assert.AreEqual (expectedResult, string.Compare (task2.Value, task.Value, ignoreCase: true) == 0);
+			Assert.AreEqual (expectedResult, string.Equals (task2.Value, task.Value, StringComparison.CurrentCultureIgnoreCase));
 		}
 
 		[Test]
@@ -115,7 +116,7 @@ namespace Microsoft.Android.Build.BaseTasks.Tests
 				ProjectSpecific = projectSpecificB,
 			};
 			task2.Execute ();
-			Assert.AreEqual (expectedResult, string.Compare (task2.Value, task.Value, ignoreCase: true) == 0);
+			Assert.AreEqual (expectedResult, string.Equals (task2.Value, task.Value, StringComparison.CurrentCultureIgnoreCase));
 		}
 
 		[Test]

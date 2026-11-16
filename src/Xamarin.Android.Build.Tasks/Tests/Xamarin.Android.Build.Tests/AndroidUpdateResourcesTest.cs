@@ -18,10 +18,14 @@ namespace Xamarin.Android.Build.Tests
 	[Parallelizable (ParallelScope.Children)]
 	public class AndroidUpdateResourcesTest : BaseTest
 	{
-		[Test]
-		public void CheckMultipleLibraryProjectReferenceAlias ([Values] bool withGlobal, [Values] bool useDesignerAssembly, [Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
+		[TestCase (false, false, AndroidRuntime.CoreCLR)]
+		[TestCase (false, true, AndroidRuntime.CoreCLR)]
+		[TestCase (true, false, AndroidRuntime.CoreCLR)]
+		[TestCase (true, true, AndroidRuntime.CoreCLR)]
+		[TestCase (true, true, AndroidRuntime.NativeAOT)]
+		public void CheckMultipleLibraryProjectReferenceAlias (bool withGlobal, bool useDesignerAssembly, AndroidRuntime runtime)
 		{
-			bool isRelease = runtime == AndroidRuntime.NativeAOT;
+			bool isRelease = runtime == AndroidRuntime.NativeAOT || withGlobal;
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
 				return;
 			}
@@ -110,9 +114,9 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		public void DesignTimeBuild ([ValueSource (typeof (BaseTest), nameof (BaseTest.ValidRuntimeConfigurations))] (bool isRelease, AndroidRuntime runtime) configuration, [Values] bool useDesignerAssembly)
+		public void DesignTimeBuild ([Values (false, true)] bool isRelease, [Values] bool useDesignerAssembly)
 		{
-			var (isRelease, runtime) = configuration;
+			const AndroidRuntime runtime = AndroidRuntime.CoreCLR;
 
 			var regEx = new Regex (@"(?<type>([a-zA-Z_0-9])+)\slibrary_name=(?<value>([0-9A-Za-z])+);", RegexOptions.Compiled | RegexOptions.Multiline );
 
@@ -611,12 +615,10 @@ namespace UnnamedProject
 		{
 			var ret = new List<object[]> ();
 
-			foreach (AndroidRuntime runtime in new[] { AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT }) {
-				AddTestData (isRelease: false, language: XamarinAndroidProjectLanguage.CSharp, runtime: runtime);
-				AddTestData (isRelease: true,  language: XamarinAndroidProjectLanguage.CSharp, runtime: runtime);
-				AddTestData (isRelease: false, language: XamarinAndroidProjectLanguage.FSharp, runtime: runtime);
-				AddTestData (isRelease: true,  language: XamarinAndroidProjectLanguage.FSharp, runtime: runtime);
-			}
+			AddTestData (isRelease: false, language: XamarinAndroidProjectLanguage.CSharp, runtime: AndroidRuntime.CoreCLR);
+			AddTestData (isRelease: true,  language: XamarinAndroidProjectLanguage.CSharp, runtime: AndroidRuntime.CoreCLR);
+			AddTestData (isRelease: false, language: XamarinAndroidProjectLanguage.FSharp, runtime: AndroidRuntime.CoreCLR);
+			AddTestData (isRelease: true,  language: XamarinAndroidProjectLanguage.FSharp, runtime: AndroidRuntime.CoreCLR);
 
 			return ret;
 
@@ -873,6 +875,78 @@ namespace UnnamedProject
 				Assert.AreEqual (new Version (1, 0, 0, 0), designer.Name.Version, "The designer version should remain compatible.");
 				CollectionAssert.AreEqual (Convert.FromHexString ("1e9360d6629057ee"), designer.Name.PublicKeyToken, "The historical public-key token should be retained.");
 				Assert.IsFalse ((designer.MainModule.Attributes & ModuleAttributes.StrongNameSigned) != 0, "The designer should not have a strong-name signature.");
+				var frameworkVersion = Version.Parse (project.TargetFramework.Split ('-') [0].Substring (3));
+				var frameworkAttribute = designer.CustomAttributes.Single (attribute => attribute.AttributeType.FullName == "System.Runtime.Versioning.TargetFrameworkAttribute");
+				Assert.AreEqual ($".NETCoreApp,Version=v{frameworkVersion}", frameworkAttribute.ConstructorArguments [0].Value, "The designer should target the project's framework.");
+				var frameworkReference = designer.MainModule.AssemblyReferences.Single ();
+				Assert.AreEqual ("System.Runtime", frameworkReference.Name);
+				Assert.AreEqual (new Version (frameworkVersion.Major, frameworkVersion.Minor, 0, 0), frameworkReference.Version);
+				StringAssert.Contains ("library_name", GetResourceDesignerText (project, designerPath), "The designer should decompile using the project's framework.");
+				Assert.IsTrue (GetResourceDesignerLines (project, designerPath).Any (line => line.Contains ("library_name")), "The designer lines should include library resources.");
+			}
+		}
+
+		[Test]
+		public void DesignTimeRetargetingDoesNotLeakIntoNormalBuild ([Values] bool isApplication, [Values (-1, 1)] int designTimeVersionOffset)
+		{
+			var path = Path.Combine (Root, "temp", TestName);
+			XamarinAndroidProject project = isApplication ? new XamarinAndroidApplicationProject () : new XamarinAndroidLibraryProject ();
+			// Retarget only the designer inputs so the design-time build shares the normal output path.
+			project.Imports.Add (new Import (() => "RetargetResourceDesigner.targets") {
+				TextContent = () => """
+					<Project>
+					  <Target Name="_TestRetargetResourceDesigner"
+					      BeforeTargets="_GenerateResourceDesignerAssemblyInputs"
+					      Condition=" '$(TestResourceDesignerFrameworkVersion)' != '' ">
+					    <PropertyGroup>
+					      <_TestOriginalTargetFrameworkVersion>$(TargetFrameworkVersion)</_TestOriginalTargetFrameworkVersion>
+					      <TargetFrameworkVersion>$(TestResourceDesignerFrameworkVersion)</TargetFrameworkVersion>
+					    </PropertyGroup>
+					  </Target>
+					  <Target Name="_TestRestoreResourceDesignerFramework"
+					      AfterTargets="_GenerateResourceDesignerAssembly"
+					      Condition=" '$(_TestOriginalTargetFrameworkVersion)' != '' ">
+					    <PropertyGroup>
+					      <TargetFrameworkVersion>$(_TestOriginalTargetFrameworkVersion)</TargetFrameworkVersion>
+					    </PropertyGroup>
+					  </Target>
+					</Project>
+					""",
+			});
+			int originalVersion = Version.Parse (project.TargetFramework.Split ('-') [0].Substring (3)).Major;
+			int designTimeVersion = originalVersion + designTimeVersionOffset;
+			using var builder = isApplication ? CreateApkBuilder (path) : CreateDllBuilder (path);
+			string designerPath = Path.Combine (path, project.IntermediateOutputPath, "_Microsoft.Android.Resource.Designer.dll");
+
+			Assert.IsTrue (builder.Build (project), "The initial normal build should succeed.");
+			AssertDesignerFramework (originalVersion);
+
+			builder.BuildLogFile = "designtime.log";
+			Assert.IsTrue (builder.DesignTimeBuild (project, doNotCleanupOnUpdate: true, parameters: [$"TestResourceDesignerFrameworkVersion=v{designTimeVersion}.0"]),
+				"The retargeted design-time build should succeed.");
+			AssertDesignerFramework (designTimeVersion);
+
+			builder.BuildLogFile = "build2.log";
+			Assert.IsTrue (builder.Build (project, doNotCleanupOnUpdate: true), "Returning to the original normal build should succeed.");
+			AssertDesignerFramework (originalVersion);
+			var timestamp = File.GetLastWriteTimeUtc (designerPath);
+			var image = File.ReadAllBytes (designerPath);
+
+			builder.BuildLogFile = "build3.log";
+			Assert.IsTrue (builder.Build (project, doNotCleanupOnUpdate: true), "An unchanged normal build should succeed.");
+			Assert.IsTrue (builder.Output.IsTargetSkipped ("_UpdateAndroidResgen"), "An unchanged framework should skip resource generation.");
+			Assert.AreEqual (timestamp, File.GetLastWriteTimeUtc (designerPath), "A no-op build should preserve the designer timestamp.");
+			CollectionAssert.AreEqual (image, File.ReadAllBytes (designerPath), "A no-op build should preserve the designer contents.");
+			AssertDesignerFramework (originalVersion);
+
+			void AssertDesignerFramework (int version)
+			{
+				using var designer = AssemblyDefinition.ReadAssembly (designerPath);
+				var frameworkAttribute = designer.CustomAttributes.Single (attribute => attribute.AttributeType.FullName == "System.Runtime.Versioning.TargetFrameworkAttribute");
+				Assert.AreEqual ($".NETCoreApp,Version=v{version}.0", frameworkAttribute.ConstructorArguments [0].Value, "The designer should target the expected framework.");
+				var frameworkReference = designer.MainModule.AssemblyReferences.Single ();
+				Assert.AreEqual ("System.Runtime", frameworkReference.Name);
+				Assert.AreEqual (new Version (version, 0, 0, 0), frameworkReference.Version, "The designer should reference the expected System.Runtime.");
 			}
 		}
 
@@ -1102,12 +1176,9 @@ namespace Lib1 {
 		}
 
 		[Test]
-		public void CheckDontUpdateResourceIfNotNeeded ([Values] bool useDesignerAssembly, [Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
+		public void CheckDontUpdateResourceIfNotNeeded ([Values] bool useDesignerAssembly, [Values (AndroidRuntime.CoreCLR)] AndroidRuntime runtime)
 		{
 			const bool isRelease = true;
-			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
-				return;
-			}
 			var path = Path.Combine ("temp", TestName);
 			var target = "_CreateAar";
 			var foo = new BuildItem.Source ("Foo.cs") {

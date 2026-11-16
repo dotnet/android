@@ -286,9 +286,9 @@ namespace Xamarin.Android.ApiMerge {
 
 			bool deprecatedSinceNow = false;
 			if (deprecatedOld == null) {
-				deprecatedSinceNow |= String.Compare ("deprecated", deprecatedNew.Value, StringComparison.Ordinal) == 0;
-			} else if (String.Compare ("not deprecated", deprecatedOld.Value, StringComparison.Ordinal) == 0 &&
-			           String.Compare ("deprecated", deprecatedNew.Value, StringComparison.Ordinal) == 0) {
+				deprecatedSinceNow |= string.Equals ("deprecated", deprecatedNew.Value, StringComparison.Ordinal);
+			} else if (string.Equals ("not deprecated", deprecatedOld.Value, StringComparison.Ordinal) &&
+			           string.Equals ("deprecated", deprecatedNew.Value, StringComparison.Ordinal)) {
 				deprecatedSinceNow = true;
 			}
 
@@ -301,7 +301,7 @@ namespace Xamarin.Android.ApiMerge {
 		void UpdateDeprecatedSince (XElement newElement, string platform)
 		{
 			XAttribute deprecated = newElement?.Attributes ("deprecated").LastOrDefault ();
-			if (deprecated == null || String.Compare ("deprecated", deprecated.Value, StringComparison.Ordinal) != 0)
+			if (deprecated == null || !string.Equals ("deprecated", deprecated.Value, StringComparison.Ordinal))
 				return;
 			SetDeprecatedSince (newElement, platform);
 		}

@@ -11,8 +11,7 @@ namespace Android.Runtime
 
 		public InputStreamInvoker (Java.IO.InputStream stream)
 		{
-			if (stream == null)
-				throw new ArgumentNullException (nameof (stream));
+			ArgumentNullException.ThrowIfNull (stream);
 
 			BaseInputStream = stream;
 

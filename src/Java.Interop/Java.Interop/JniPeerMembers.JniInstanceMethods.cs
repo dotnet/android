@@ -61,8 +61,7 @@ namespace Java.Interop
 
 		public JniMethodInfo GetConstructor (string signature)
 		{
-			if (signature == null)
-				throw new ArgumentNullException (nameof (signature));
+			ArgumentNullException.ThrowIfNull (signature);
 			return InstanceMethods.GetOrAdd (signature, static (member, methods) =>
 					methods.GetConstructorCore (member), this);
 		}
@@ -168,10 +167,8 @@ namespace Java.Interop
 			parameters = parameters;    // Silence CA1801
 			#pragma warning restore CS1717
 
-			if (constructorSignature == null)
-				throw new ArgumentNullException (nameof (constructorSignature));
-			if (declaringType == null)
-				throw new ArgumentNullException (nameof (declaringType));
+			ArgumentNullException.ThrowIfNull (constructorSignature);
+			ArgumentNullException.ThrowIfNull (declaringType);
 
 			var r   = GetConstructorsForType (declaringType)
 				.JniPeerType
@@ -189,10 +186,8 @@ namespace Java.Interop
 		/// </safety>
 		public unsafe void FinishCreateInstance (string constructorSignature, IJavaPeerable self, JniArgumentValue* parameters)
 		{
-			if (constructorSignature == null)
-				throw new ArgumentNullException (nameof (constructorSignature));
-			if (self == null)
-				throw new ArgumentNullException (nameof (self));
+			ArgumentNullException.ThrowIfNull (constructorSignature);
+			ArgumentNullException.ThrowIfNull (self);
 
 			var methods = GetConstructorsForType (self.GetType ());
 			var ctor    = methods.GetConstructor (constructorSignature);

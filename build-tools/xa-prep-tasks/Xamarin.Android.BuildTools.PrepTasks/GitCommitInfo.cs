@@ -77,7 +77,7 @@ namespace Xamarin.Android.BuildTools.PrepTasks
 				//     HEAD -> bundle-ndk16-fix, origin/pr/1105
 				//
 				branch = branchFull.Substring (8);
-			} else if (String.Compare ("HEAD", branchFull, StringComparison.Ordinal) == 0) {
+			} else if (string.Equals ("HEAD", branchFull, StringComparison.Ordinal)) {
 				Log.LogMessage (MessageImportance.Low, "  Detached HEAD, no branch information");
 				// Detached HEAD without branch information
 				if (isSubmodule) {
@@ -208,7 +208,7 @@ namespace Xamarin.Android.BuildTools.PrepTasks
 				return false;
 			}
 
-			if (String.Compare ("github.com", host, StringComparison.Ordinal) == 0) {
+			if (string.Equals ("github.com", host, StringComparison.Ordinal)) {
 				organization = parts [0];
 				repo = parts [1];
 				if (repo.EndsWith (".git", StringComparison.Ordinal))

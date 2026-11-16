@@ -42,7 +42,7 @@
   <Target Name="_CopyDotNetPackageDependencies" AfterTargets="ResolveAssemblyReferences">
     <ItemGroup>
       <ReferenceCopyLocalPaths Include="@(ReferencePath)"
-          Condition=" '%(Filename)' == 'ELFSharp' Or '%(Filename)' == 'System.IO.Hashing' " />
+          Condition=" '%(Filename)' == 'ELFSharp' Or '%(Filename)' == 'System.IO.Hashing' Or '%(Filename)' == 'NuGet.Versioning' " />
     </ItemGroup>
   </Target>
 
@@ -51,7 +51,9 @@
     <PackageReference Include="Microsoft.Build.TaskAuthoring.Analyzer" Version="$(MSBuildTaskAuthoringAnalyzerVersion)" PrivateAssets="all" IncludeAssets="analyzers" />
     <PackageReference Include="ELFSharp" Version="$(ELFSharpVersion)" />
     <PackageReference Include="System.IO.Hashing" Version="$(SystemIOHashingPackageVersion)" />
+    <PackageReference Include="NuGet.Versioning" Version="$(NuGetApiPackageVersion)" />
     <Compile Remove="Tests\**" />
+    <ProjectReference Include="..\..\src\Java.Interop.Tools.Maven\Java.Interop.Tools.Maven.csproj" />
     <ProjectReference Include="..\Microsoft.Android.Build.BaseTasks\Microsoft.Android.Build.BaseTasks.csproj" />
     <ProjectReference Include="..\Microsoft.Android.Sdk.TrimmableTypeMap\Microsoft.Android.Sdk.TrimmableTypeMap.csproj" />
     <ProjectReference Include="..\Xamarin.Android.Tools.AndroidSdk\Xamarin.Android.Tools.AndroidSdk.csproj" />
@@ -60,6 +62,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <EmbeddedResource Include="..\Xamarin.Android.Build.Tasks\Resources\Resource.Designer.snk" LogicalName="Resource.Designer.snk" />
     <EmbeddedResource Include="..\Xamarin.Android.Build.Tasks\Resources\JavaInteropRuntime.java;..\Xamarin.Android.Build.Tasks\Resources\NativeAotRuntimeProvider.java;..\Xamarin.Android.Build.Tasks\Resources\MonoRuntimeProvider.Bundled.java">
       <LogicalName>%(Filename)%(Extension)</LogicalName>
     </EmbeddedResource>
@@ -70,7 +73,17 @@
     <Compile Include="..\Xamarin.Android.Build.Tasks\Utilities\DummyCustomAttributeProvider.cs" Link="Utilities\DummyCustomAttributeProvider.cs" />
     <Compile Include="..\Xamarin.Android.Build.Tasks\Utilities\ManifestPlaceholderResolver.cs" Link="Utilities\ManifestPlaceholderResolver.cs" />
     <Compile Include="..\Xamarin.Android.Build.Tasks\Utilities\MonoAndroidHelper.Basic.cs" Link="Utilities\MonoAndroidHelper.Basic.cs" />
+    <Compile Include="..\Xamarin.Android.Build.Tasks\Utilities\ResourceParser.cs" Link="Utilities\ResourceParser.cs" />
+    <Compile Include="..\Xamarin.Android.Build.Tasks\Utilities\ResourceIdentifier.cs" Link="Utilities\ResourceIdentifier.cs" />
+    <Compile Include="..\Xamarin.Android.Build.Tasks\Utilities\RtxtParser.cs" Link="Utilities\RtxtParser.cs" />
     <Compile Include="..\Xamarin.Android.Build.Tasks\Utilities\PackageFileListBuilder.cs" Link="Utilities\PackageFileListBuilder.cs" />
+    <!-- BuildAppBundle: the legacy BundleToolAdbTask tasks still derive from these, so they remain shared sources. -->
+    <Compile Include="..\Xamarin.Android.Build.Tasks\Tasks\JavaToolTask.cs" Link="Tasks\JavaToolTask.cs" />
+    <Compile Include="..\Xamarin.Android.Build.Tasks\Tasks\BundleTool.cs" Link="Tasks\BundleTool.cs" />
+    <Compile Include="..\Xamarin.Android.Build.Tasks\Utilities\AssemblyIdentityMap.cs" Link="Utilities\AssemblyIdentityMap.cs" />
+    <Compile Include="..\Xamarin.Android.Build.Tasks\Utilities\JsonExtensions.cs" Link="Utilities\JsonExtensions.cs" />
+    <!-- Lint: Aapt2, ConvertResourcesCases, ValidateJavaVersion, etc. still use these helpers. -->
+    <Compile Include="..\Xamarin.Android.Build.Tasks\Utilities\MonoAndroidHelper.Shared.cs" Link="Utilities\MonoAndroidHelper.Shared.cs" />
   </ItemGroup>
 
   <!--
@@ -82,6 +95,15 @@
     <Compile Include="..\Xamarin.Android.Build.Tasks\Properties\Resources.Designer.cs" Link="Properties\Resources.Designer.cs" />
     <EmbeddedResource Include="..\Xamarin.Android.Build.Tasks\Properties\Resources*.resx" Link="Properties\%(Filename)%(Extension)">
       <ManifestResourceName>Xamarin.Android.Tasks.Properties.%(Filename)</ManifestResourceName>
+    </EmbeddedResource>
+  </ItemGroup>
+
+  <!-- FastDeploy shares AndroidHelper and its localized XA#### messages with Xamarin.Android.Build.Debugging.Tasks. -->
+  <ItemGroup>
+    <Compile Include="..\Xamarin.Android.Build.Debugging.Tasks\Utilities\AndroidHelper.cs" Link="Utilities\AndroidHelper.cs" />
+    <Compile Include="..\Xamarin.Android.Build.Debugging.Tasks\Properties\Resources.Designer.cs" Link="Properties\DebuggingResources.Designer.cs" />
+    <EmbeddedResource Include="..\Xamarin.Android.Build.Debugging.Tasks\Properties\Resources*.resx" Link="Properties\Debugging%(Filename)%(Extension)">
+      <ManifestResourceName>Xamarin.Android.Build.Debugging.Tasks.Properties.%(Filename)</ManifestResourceName>
     </EmbeddedResource>
   </ItemGroup>
 
