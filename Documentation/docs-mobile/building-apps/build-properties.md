@@ -859,6 +859,25 @@ used for Java code. The default value is an empty string, or
 
 [d8-r8]: https://github.com/dotnet/android/blob/main/Documentation/guides/D8andR8.md
 
+## AndroidLintEnabled
+
+This property was removed in .NET 12 and has no effect.
+When it is `True`, the build emits warning [XA0108](../messages/xa0108.md).
+To check your Android resources and manifest, run the Android `lint` tool directly.
+See [Lint Help](https://developer.android.com/studio/write/lint).
+
+## AndroidLintEnabledIssues
+
+This property was removed in .NET 12 and has no effect.
+
+## AndroidLintDisabledIssues
+
+This property was removed in .NET 12 and has no effect.
+
+## AndroidLintCheckIssues
+
+This property was removed in .NET 12 and has no effect.
+
 ## AndroidManagedSymbols
 
 A boolean property that controls

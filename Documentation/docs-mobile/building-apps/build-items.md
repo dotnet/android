@@ -299,6 +299,11 @@ The result of the above code snippet has a different effect for each
 
 This simplification means you can use **AndroidLibrary** everywhere.
 
+## AndroidLintConfig
+
+This build action was removed in .NET 12 and has no effect.
+See [`$(AndroidLintEnabled)`](build-properties.md#androidlintenabled).
+
 ## AndroidManifestOverlay
 
 The `AndroidManifestOverlay` build action can be used to provide
