@@ -317,10 +317,12 @@ namespace MonoDroid.Generation
 					if (bm == null && bt is ClassGen { IsAbstract: true } abstractBase &&
 							!bt.ContainsMethod (m, false, false)) {
 						// These abstract slots are emitted from interfaces later, during class generation.
+						// Skip methods that BoundClass emits as explicit implementations instead.
 						bm = bt.GetAllDerivedInterfaces ().SelectMany (iface => iface.Methods).FirstOrDefault (mm =>
-							!mm.IsInterfaceDefaultMethod && !mm.IsStatic && !mm.IsGeneric &&
+							!mm.IsInterfaceDefaultMethod && !mm.IsStatic && !mm.IsGeneric && !mm.RetVal.IsGeneric &&
+							string.IsNullOrEmpty (mm.ExplicitInterface) &&
 							!abstractBase.SkippedInterfaceMethods.Contains (mm.GetSkipInvokerSignature ()) &&
-							!abstractBase.ExplicitlyImplementedInterfaceMethods.Contains (mm.GetSignature ()) &&
+							!abstractBase.IsCovariantMethod (mm) &&
 							Matches (mm));
 					}
 					if (bm == null) {

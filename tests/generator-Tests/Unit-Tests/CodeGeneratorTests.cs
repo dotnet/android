@@ -1881,6 +1881,15 @@ namespace generatortests
 		}
 
 		[Test]
+		public void WriteInterfaceListenerProperty ()
+		{
+			var iface = SupportTypeBuilder.CreateInterface ("java.code.IMyInterface", options);
+			new InterfaceListenerProperty (iface, "MyName", "MyNameSpec", "MyMethodName", "MyFullDelegateName", options).Write (new CodeWriter (writer));
+
+			AssertOriginalExpected (nameof (WriteInterfaceListenerProperty), writer.ToString ());
+		}
+
+		[Test]
 		public void WriteInterface ()
 		{
 			var iface = SupportTypeBuilder.CreateInterface ("java.code.IMyInterface", options);
