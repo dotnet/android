@@ -1,4 +1,6 @@
 #nullable enable
+*REMOVED*Java.Lang.Object.~Object() -> void
+*REMOVED*Java.Lang.Throwable.~Throwable() -> void
 static Android.Runtime.JNIEnv.AllocObject(System.ReadOnlySpan<byte> jniClassName) -> nint
 static Android.Runtime.JNIEnv.FinishCreateInstance(nint instance, System.ReadOnlySpan<byte> jniCtorSignature, Android.Runtime.JValue* constructorParameters) -> void
 static Android.Runtime.JNIEnv.FinishCreateInstance(nint instance, System.ReadOnlySpan<byte> jniCtorSignature, params System.ReadOnlySpan<Android.Runtime.JValue> constructorParameters) -> void
