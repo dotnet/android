@@ -1,13 +1,19 @@
 ﻿using System.Diagnostics;
+using System.Globalization;
 using System.Text;
 using Microsoft.Testing.Extensions;
+using Microsoft.Android.Run;
 using Mono.Options;
 using Xamarin.Android.Tools;
+using static Microsoft.Android.Run.ManagedActivityLaunch;
 
 const string Name = "Microsoft.Android.Run";
 const string VersionsFileName = "Microsoft.Android.versions.txt";
 const int CtrlCExitCode = 130; // Standard Unix exit code for SIGINT: 128 + signal 2.
 const int StopAppTimeoutSeconds = 10;
+// Match the existing managed debugger's 30-second startup window.
+const int ManagedLaunchTimeoutSeconds = 30;
+const int AppPidPollMilliseconds = 250;
 
 string? adbPath = null;
 string? adbTarget = null;
@@ -25,12 +31,15 @@ string? logcatArgs = null;
 bool isDotnetTestMode = false;
 string? dotnetTestPipe = null;
 bool waitForExit = true;
+bool attachDebugger = false;
+bool enableManagedLaunchProtection = true;
+string? debugPidTarget = null;
 List<PortMapping> forwardPorts = [];
 List<PortMapping> reversePorts = [];
 
 try {
 	return await RunAsync (args);
-} catch (OperationCanceledException) {
+} catch (OperationCanceledException) when (Volatile.Read (ref ctrlCRequested) != 0) {
 	return CtrlCExitCode;
 } catch (Exception ex) {
 	Console.Error.WriteLine ($"Error: {ex.Message}");
@@ -88,6 +97,12 @@ async Task<int> RunAsync (string[] args)
 		{ "no-wait",
 			"Launch the application without waiting for it to exit or streaming logcat.",
 			v => waitForExit = v == null },
+		{ "attach-debugger",
+			"Protect activity startup while a managed debugger attaches. Does not request Java debugger attach.",
+			v => attachDebugger = v != null },
+		{ "no-managed-launch-protection",
+			"Disable the managed startup protection transaction while preserving debugger setup and non-waiting launch behavior.",
+			v => enableManagedLaunchProtection = v == null },
 		{ "forward-port=",
 			"Forward a TCP port from the host to the device in {MAPPING} format (HOST_PORT:DEVICE_PORT). May be repeated.",
 			v => forwardPorts.Add (ParsePortMapping (v, "--forward-port")) },
@@ -382,16 +397,6 @@ List<string> BuildInstrumentationExtras (List<string> instrumentationArgs)
 }
 
 /// <summary>
-/// Wraps a value in single quotes so the shell on the device treats it as a
-/// single token. `adb shell` deliberately does not escape the arguments it
-/// forwards, it just joins them with spaces (like `ssh`), so quoting for the
-/// device shell is up to the caller. The surrounding quoting needed to survive
-/// the *local* command line is handled by <see cref="ProcessStartInfo.ArgumentList"/>.
-/// </summary>
-static string QuoteForDeviceShell (string value) =>
-	"'" + value.Replace ("'", "'\\''") + "'";
-
-/// <summary>
 /// Inspects `am instrument` output for signs that the instrumentation crashed or
 /// reported failure. Returns a human readable reason, or <c>null</c> on success.
 /// </summary>
@@ -434,13 +439,13 @@ async Task StartLogcatWhenAppStartsAsync ()
 {
 	try {
 		while (!cts.Token.IsCancellationRequested) {
-			var pid = await GetAppPidAsync ();
+			var pid = await GetAppPidAsync (cts.Token);
 			if (pid != null) {
 				logcatPid = pid;
 				StartLogcat ();
 				return;
 			}
-			await Task.Delay (250, cts.Token).ConfigureAwait (ConfigureAwaitOptions.SuppressThrowing);
+			await Task.Delay (AppPidPollMilliseconds, cts.Token).ConfigureAwait (ConfigureAwaitOptions.SuppressThrowing);
 		}
 	} catch (OperationCanceledException) {
 		// The instrumentation finished (or was cancelled) before the app process was seen
@@ -519,7 +524,7 @@ async Task<int> RunAppAsync ()
 		return 0;
 
 	// 2. Get the PID
-	logcatPid = await GetAppPidAsync ();
+	logcatPid = attachDebugger ? await WaitForAppPidAsync () : await GetAppPidAsync (cts.Token);
 	if (logcatPid == null) {
 		Console.Error.WriteLine ("Error: App started but could not retrieve PID. The app may have crashed.");
 		return 1;
@@ -539,6 +544,13 @@ async Task<int> RunAppAsync ()
 
 async Task<bool> StartAppAsync ()
 {
+	// Only explicit managed debug intent selects the transaction. No-wait and
+	// port mappings also serve ordinary launches and instrumentation.
+	if (attachDebugger) {
+		await StartManagedAppAsync (enableManagedLaunchProtection);
+		return true;
+	}
+
 	var userArg = string.IsNullOrEmpty (deviceUserId) ? "" : $" --user {deviceUserId}";
 	// Device preparation is best effort; am start must run and determine the shell exit code.
 	var wakeDeviceCommand = wakeDevice ? "input keyevent KEYCODE_WAKEUP; wm dismiss-keyguard; " : "";
@@ -554,6 +566,107 @@ async Task<bool> StartAppAsync ()
 		Console.WriteLine (output);
 
 	return true;
+}
+
+async Task StartManagedAppAsync (bool enableManagedLaunchProtection)
+{
+	if (string.IsNullOrEmpty (adbPath) || string.IsNullOrEmpty (package) || string.IsNullOrEmpty (activity))
+		throw new InvalidOperationException (ManagedActivityLaunchResources.ManagedLaunchPackageMismatch);
+	var validatedAdbPath = adbPath;
+	var validatedPackage = package;
+	var component = $"{package}/{activity}";
+
+	string serial;
+	using (var timeout = CancellationTokenSource.CreateLinkedTokenSource (cts.Token)) {
+		timeout.CancelAfter (TimeSpan.FromSeconds (ManagedLaunchTimeoutSeconds));
+		try {
+			var (output, error) = await RunCheckedAdbAsync (["get-serialno"], timeout.Token);
+			// ADB can successfully start its daemon while writing diagnostics to
+			// stderr. Validate the returned serial, rather than rejecting that startup.
+			if (!string.IsNullOrWhiteSpace (error))
+				Console.Error.Write (error);
+			serial = output.Trim ();
+		} catch (OperationCanceledException ex) when (!cts.IsCancellationRequested) {
+			throw new TimeoutException (ManagedActivityLaunchResources.ManagedLaunchDeviceUnavailable, ex);
+		}
+	}
+	if (string.IsNullOrEmpty (serial) || serial == "unknown" || serial.Any (char.IsWhiteSpace))
+		throw new InvalidOperationException (ManagedActivityLaunchResources.ManagedLaunchDeviceUnavailable);
+	// Pin automatic device selection for the transaction, logcat and Ctrl+C.
+	adbTarget = $"-s {serial}";
+
+	var userArg = string.IsNullOrEmpty (deviceUserId) ? "" : $" --user {QuoteForDeviceShell (deviceUserId)}";
+	// Never use am start -W here, even when streaming logcat until app exit:
+	// managed application startup can be blocked waiting for debugger attach.
+	var startCommand = $"am start -S{userArg} -n {QuoteForDeviceShell (component)}";
+	async Task PrepareAsync (CancellationToken token)
+	{
+		if (wakeDevice) {
+			// As on the ordinary path, wake/keyguard preparation is best effort.
+			var (_, output, error) = await AdbHelper.RunAsync (validatedAdbPath, adbTarget,
+				new [] { "shell", "input keyevent KEYCODE_WAKEUP; wm dismiss-keyguard" }, token, verbose);
+			if (verbose)
+				Console.Write (output);
+			if (!string.IsNullOrWhiteSpace (error))
+				Console.Error.Write (error);
+		}
+	}
+
+	async Task LaunchUnprotectedAsync (CancellationToken token)
+	{
+		var output = await RunShellAsync (startCommand, token);
+		Console.WriteLine (output);
+		CheckStartResult (output, component);
+	}
+
+	string? processName;
+	if (enableManagedLaunchProtection) {
+		processName = await ManagedActivityLaunch.RunAsync (
+			serial, validatedPackage, component, deviceUserId, forceStop: true,
+			startCommand: startCommand, startupTimeout: TimeSpan.FromSeconds (ManagedLaunchTimeoutSeconds),
+			prepare: PrepareAsync,
+			runShellCommand: RunShellAsync,
+			launchUnprotected: LaunchUnprotectedAsync,
+			log: Console.WriteLine,
+			logCleanupError: (message, error) => Console.Error.WriteLine ($"{message}{Environment.NewLine}{error}"),
+			token: cts.Token);
+	} else {
+		using var timeout = CancellationTokenSource.CreateLinkedTokenSource (cts.Token);
+		timeout.CancelAfter (TimeSpan.FromSeconds (ManagedLaunchTimeoutSeconds));
+		try {
+			await PrepareAsync (timeout.Token);
+			timeout.Token.ThrowIfCancellationRequested ();
+			await LaunchUnprotectedAsync (timeout.Token);
+			timeout.Token.ThrowIfCancellationRequested ();
+		} catch (OperationCanceledException ex) when (timeout.IsCancellationRequested && !cts.IsCancellationRequested) {
+			throw new TimeoutException (ManagedActivityLaunchResources.ManagedLaunchTimeout, ex);
+		}
+		processName = null;
+	}
+	// Reuse confirmed ActivityInfo metadata for startup and exit tracking. When
+	// unavailable, retain the legacy package probe; never guess a custom process.
+	debugPidTarget = processName ?? validatedPackage;
+
+	async Task<string> RunShellAsync (string command, CancellationToken token)
+	{
+		var (output, error) = await RunCheckedAdbAsync (["shell", command], token);
+		// Non-waiting am start writes successful status warnings to stderr.
+		// Validate both channels, but keep mutation and state-query output strict.
+		if (command == startCommand)
+			return error.Length == 0 ? output : output + "\n" + error;
+		if (!string.IsNullOrWhiteSpace (error))
+			throw new CommandFailedException (error);
+		return output;
+	}
+
+	async Task<(string Output, string Error)> RunCheckedAdbAsync (IEnumerable<string> arguments, CancellationToken token)
+	{
+		var (exitCode, output, error) = await AdbHelper.RunAsync (validatedAdbPath, adbTarget, arguments, token, verbose);
+		if (exitCode != 0)
+			throw new CommandFailedException (string.Format (
+				CultureInfo.CurrentCulture, ManagedActivityLaunchResources.ManagedLaunchAdbFailed, exitCode, output + error));
+		return (output, error);
+	}
 }
 
 async Task<bool> ConfigurePortMappingsAsync ()
@@ -593,10 +706,36 @@ PortMapping ParsePortMapping (string value, string option)
 	return new PortMapping (source, destination);
 }
 
-async Task<int?> GetAppPidAsync ()
+async Task<int> WaitForAppPidAsync ()
 {
-	var cmdArgs = $"shell pidof {package}";
-	var (exitCode, output, error) = await AdbHelper.RunAsync (adbPath, adbTarget, cmdArgs, cts.Token, verbose);
+	// Without am start -W, an unprotected debug fallback can return before its
+	// process exists. Reuse the instrumentation PID polling cadence, not a
+	// settling delay or a wait for application code to finish starting.
+	using var timeout = CancellationTokenSource.CreateLinkedTokenSource (cts.Token);
+	timeout.CancelAfter (TimeSpan.FromSeconds (ManagedLaunchTimeoutSeconds));
+	try {
+		while (true) {
+			var pid = await GetAppPidAsync (timeout.Token, debugPidTarget);
+			timeout.Token.ThrowIfCancellationRequested ();
+			if (pid is int processId)
+				return processId;
+			await Task.Delay (AppPidPollMilliseconds, timeout.Token);
+		}
+	} catch (OperationCanceledException) when (timeout.IsCancellationRequested && !cts.IsCancellationRequested) {
+		throw new TimeoutException (ManagedActivityLaunchResources.ManagedLaunchPidTimeout);
+	}
+}
+
+async Task<int?> GetAppPidAsync (CancellationToken token, string? debugProcessName = null)
+{
+	var (exitCode, output, error) = debugProcessName == null
+		? await AdbHelper.RunAsync (adbPath, adbTarget, $"shell pidof {package}", token, verbose)
+		: await AdbHelper.RunAsync (adbPath, adbTarget, new [] { "shell", "pidof", QuoteForDeviceShell (debugProcessName) }, token, verbose);
+	// pidof normally exits nonzero with no output when the process is absent.
+	// Actual ADB diagnostics are failures, not startup retries or a clean app exit.
+	if (debugProcessName != null && (!string.IsNullOrWhiteSpace (error) || (exitCode != 0 && !string.IsNullOrWhiteSpace (output))))
+		throw new CommandFailedException (string.Format (
+			CultureInfo.CurrentCulture, ManagedActivityLaunchResources.ManagedLaunchAdbFailed, exitCode, output + error));
 	if (exitCode != 0 || string.IsNullOrWhiteSpace (output))
 		return null;
 
@@ -604,6 +743,8 @@ async Task<int?> GetAppPidAsync ()
 	if (int.TryParse (pidStr, out int pid))
 		return pid;
 
+	if (debugProcessName != null)
+		throw new CommandFailedException (output);
 	return null;
 }
 
@@ -647,7 +788,7 @@ async Task WaitForAppExitAsync ()
 	try {
 		while (!cts.Token.IsCancellationRequested) {
 			// Check if app is still running
-			var pid = await GetAppPidAsync ();
+			var pid = await GetAppPidAsync (cts.Token, debugPidTarget);
 			if (pid == null || pid != logcatPid) {
 				if (verbose)
 					Console.WriteLine ("App has exited.");
