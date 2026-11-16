@@ -302,8 +302,10 @@ namespace MonoDroid.Generation {
 		// for JNI marshaling.
 		void ApplyKotlinInlineClassProjection (CodeGenerationOptions opt, GenericParameterDefinitionList type_params)
 		{
-			if (string.IsNullOrEmpty (KotlinInlineClassJniType))
+			if (string.IsNullOrEmpty (KotlinInlineClassJniType)) {
+				ApplyKotlinInlineClassBoxedProjection ();
 				return;
+			}
 			var javaName = TypeNameUtilities.JniSignatureToJavaTypeName (KotlinInlineClassJniType);
 			if (javaName == null)
 				return;
@@ -311,6 +313,17 @@ namespace MonoDroid.Generation {
 			if (wrapper == null || !wrapper.IsKotlinInlineClass)
 				return;
 			managed_type = wrapper.FullName;
+			NotNull = true;
+		}
+
+		// A value class the JVM passes boxed (e.g. Kotlin `Foo?`) is projected as
+		// the nullable wrapper struct (`Foo?`); the type already carries its `?`.
+		void ApplyKotlinInlineClassBoxedProjection ()
+		{
+			var boxed = KotlinInlineClassBoxedSymbol.Project (sym);
+			if (boxed == sym)
+				return;
+			sym = boxed;
 			NotNull = true;
 		}
 
@@ -325,7 +338,7 @@ namespace MonoDroid.Generation {
 			// which wouldn't match any case below and would fall through to
 			// `true`, generating an unnecessary GC.KeepAlive call for what is
 			// ultimately a value-type holding a primitive.
-			if (!string.IsNullOrEmpty (KotlinInlineClassJniType))
+			if (!string.IsNullOrEmpty (KotlinInlineClassJniType) || sym is KotlinInlineClassBoxedSymbol)
 				return false;
 
 			return Type switch {

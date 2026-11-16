@@ -146,8 +146,16 @@ namespace MonoDroid.Generation {
 		void ApplyKotlinInlineClassProjection (CodeGenerationOptions opt, GenericParameterDefinitionList type_params)
 		{
 			var jni = owner?.KotlinInlineClassReturnJniType;
-			if (string.IsNullOrEmpty (jni))
+			if (string.IsNullOrEmpty (jni)) {
+				// A value class the JVM returns boxed (e.g. Kotlin `Foo?`) is
+				// projected as the nullable wrapper struct (`Foo?`).
+				var boxed = KotlinInlineClassBoxedSymbol.Project (sym);
+				if (boxed != sym) {
+					sym = boxed;
+					NotNull = true;
+				}
 				return;
+			}
 			var javaName = TypeNameUtilities.JniSignatureToJavaTypeName (jni);
 			if (javaName == null)
 				return;

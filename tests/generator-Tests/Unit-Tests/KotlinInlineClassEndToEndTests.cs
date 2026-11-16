@@ -80,6 +80,34 @@ namespace generatortests
 				$"Expected at least 3 inline-class ClassGens, generator output was:\n{output}");
 		}
 
+		[Test]
+		public void GeneratorMarshalsBoxedKotlinInlineClasses ()
+		{
+			var apiXml = BuildApiXmlFromKotlinFixture ();
+
+			StringAssert.Contains ("kotlin-inline-class-box-jni-signature=\"(J)Lxat/bytecode/tests/MyColor;\"", apiXml);
+
+			var output = GenerateCSharp (apiXml, out _);
+
+			// The struct wraps Kotlin's box-impl / unbox-impl / constructor-impl.
+			StringAssert.Contains ("public static unsafe MyColor Create (long value)", output);
+			StringAssert.Contains ("\"constructor-impl\", \"(J)J\"", output);
+			StringAssert.Contains ("public static unsafe global::System.IntPtr ToLocalJniHandle (MyColor? value)", output);
+			StringAssert.Contains ("\"box-impl\", \"(J)Lxat/bytecode/tests/MyColor;\"", output);
+			StringAssert.Contains ("public static MyColor? FromJniHandle (global::System.IntPtr handle, global::Android.Runtime.JniHandleOwnership transfer)", output);
+			StringAssert.Contains ("\"unbox-impl\", \"()J\"", output);
+			StringAssert.Contains ("JniEnvironment.InstanceMethods.CallFloatMethod", output);
+
+			// Kotlin `MyColor?` is passed boxed: project it as `MyColor?` and marshal with box/unbox.
+			StringAssert.Contains ("Xat.Bytecode.Tests.MyColor? MaybeColor (Xat.Bytecode.Tests.MyColor? color)", output);
+			StringAssert.Contains ("IntPtr native_color = Xat.Bytecode.Tests.MyColor.ToLocalJniHandle (color);", output);
+			StringAssert.Contains ("return Xat.Bytecode.Tests.MyColor.FromJniHandle (__rm.Handle, JniHandleOwnership.TransferLocalRef);", output);
+			StringAssert.DoesNotContain ("GetObject<Xat.Bytecode.Tests.MyColor>", output);
+
+			// `List<MyColor>` holds boxed Java objects, which a struct can't represent in JavaList<T>.
+			StringAssert.Contains ("IList<Java.Lang.Object> Colors (System.Collections.Generic.IList<Java.Lang.Object> colors)", output);
+		}
+
 		// Run the four kotlin-gradle .class files through KotlinFixups and
 		// XmlClassDeclarationBuilder to produce the same api.xml the generator
 		// would normally consume off disk.

@@ -133,6 +133,7 @@ namespace Xamarin.Android.Tools.Bytecode
 						continue;
 
 					c.KotlinInlineClassUnderlyingJniType = backing.Descriptor;
+					FixupInlineClassHelperSignatures (c, backing.Descriptor);
 
 					// Kotlin's `KotlinType.ClassName` strings are stored without the
 					// leading `L` but with a trailing `;` (e.g. `com/example/MyColor;`).
@@ -147,6 +148,27 @@ namespace Xamarin.Android.Tools.Bytecode
 			return map;
 		}
 
+		// Records the JNI signatures of the compiler-generated helpers used to cross
+		// between the underlying value and the JVM-boxed value class:
+		//   static box-impl(U)LFoo;   instance unbox-impl()U   static constructor-impl(U)U
+		// Boxed positions (`Foo?`, `List<Foo>`, ...) need these to marshal values.
+		static void FixupInlineClassHelperSignatures (ClassFile c, string underlying)
+		{
+			var box = $"({underlying}){c.FullJniName}";
+			var unbox = $"(){underlying}";
+			var ctor = $"({underlying}){underlying}";
+
+			foreach (var m in c.Methods) {
+				var is_static = m.AccessFlags.HasFlag (MethodAccessFlags.Static);
+				if (m.Name == "box-impl" && is_static && m.Descriptor == box)
+					c.KotlinInlineClassBoxJniSignature = box;
+				else if (m.Name == "unbox-impl" && !is_static && m.Descriptor == unbox)
+					c.KotlinInlineClassUnboxJniSignature = unbox;
+				else if (m.Name == "constructor-impl" && is_static && m.Descriptor == ctor)
+					c.KotlinInlineClassConstructorJniSignature = ctor;
+			}
+		}
+
 		// JNI signature for the Kotlin inline class referenced by `kotlinTypeClassName`,
 		// or null when projection should not apply. The returned form has a
 		// leading `L` and trailing `;` so it matches `ClassFile.FullJniName`
@@ -159,8 +181,8 @@ namespace Xamarin.Android.Tools.Bytecode
 		// struct's `implicit operator <primitive>` makes JNI marshaling work
 		// transparently. Boxed / nullable / generic positions keep their JVM
 		// reference signature (`L...MyColor;` or `Ljava/lang/Object;`); for
-		// those, projecting to a struct would mismatch JNI marshaling, so we
-		// fall through and let them keep the legacy peer-class binding path.
+		// those, the generator marshals through the struct's `box-impl` /
+		// `unbox-impl` helpers instead (see FixupInlineClassHelperSignatures).
 		static string? GetInlineClassJniType (string? kotlinTypeClassName, string? jvmDescriptor, IDictionary<string, string> inlineClasses)
 		{
 			if (kotlinTypeClassName is null || jvmDescriptor is null)

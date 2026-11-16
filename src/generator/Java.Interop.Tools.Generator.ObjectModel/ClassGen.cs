@@ -212,6 +212,17 @@ namespace MonoDroid.Generation
 
 		public string KotlinInlineClassUnderlyingJniType { get; set; }
 
+		// JNI signatures of the Kotlin `box-impl`, `unbox-impl` and `constructor-impl`
+		// helpers, used to marshal values in positions where the JVM boxes the value class.
+		public string KotlinInlineClassBoxJniSignature { get; set; }
+		public string KotlinInlineClassUnboxJniSignature { get; set; }
+		public string KotlinInlineClassConstructorJniSignature { get; set; }
+
+		public bool CanBoxKotlinInlineClass =>
+			IsKotlinInlineClass &&
+			!string.IsNullOrEmpty (KotlinInlineClassBoxJniSignature) &&
+			!string.IsNullOrEmpty (KotlinInlineClassUnboxJniSignature);
+
 		public bool NeedsNew { get; set; }
 
 		public string PeerConstructorPartialMethod { get; set; }

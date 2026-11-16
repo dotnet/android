@@ -30,6 +30,13 @@ namespace Xamarin.Android.Tools.Bytecode {
 		// See dotnet/java-interop#1431 (Phase 2).
 		public string? KotlinInlineClassUnderlyingJniType { get; set; }
 
+		// JNI signatures of the Kotlin compiler-generated `box-impl`, `unbox-impl`
+		// and `constructor-impl` methods of a `@JvmInline value class`, when present.
+		// e.g. "(J)Lcom/example/MyColor;", "()J", and "(J)J".
+		public string? KotlinInlineClassBoxJniSignature { get; set; }
+		public string? KotlinInlineClassUnboxJniSignature { get; set; }
+		public string? KotlinInlineClassConstructorJniSignature { get; set; }
+
 		ClassSignature?             signature;
 
 

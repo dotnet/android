@@ -1,0 +1,29 @@
+[generator] Marshal boxed Kotlin value classes via box-impl/unbox-impl
+
+Kotlin `@JvmInline value class` types are bound as a `readonly struct`
+(`KotlinInlineClassStruct`) wrapping the underlying primitive. That only
+worked where the JVM erases the value class to its primitive. Where the
+JVM passes the boxed class instead, such as a nullable `Foo?`, the
+generator treated the struct as a `Java.Lang.Object` peer and emitted
+`GetObject<Foo>()` / `JNIEnv.ToLocalJniHandle (foo)`, which can't marshal
+a struct.
+
+class-parse now records the JNI signatures of the compiler-generated
+`box-impl`, `unbox-impl`, and `constructor-impl` helpers of each value
+class. They are written to `api.xml` as
+`kotlin-inline-class-{box,unbox,constructor}-jni-signature`.
+
+The generator uses them to:
+
+  * Add `Create (T)` (`constructor-impl`, which runs `init` validation),
+    `ToLocalJniHandle (Foo?)` (`box-impl`), and
+    `FromJniHandle (IntPtr, JniHandleOwnership)` (`unbox-impl`) to the
+    generated struct.
+  * Project boxed positions as `Foo?` and marshal them through these
+    helpers, using the new `KotlinInlineClassBoxedSymbol`.
+  * Project value classes used as generic type arguments (for example
+    `List<Foo>`) as `Java.Lang.Object`. `JavaList<T>` and related types
+    can't marshal a struct, so the elements stay boxed Java objects that
+    callers convert with `Foo.FromJniHandle`/`Foo.ToLocalJniHandle`.
+
+Co-authored-by: Copilot App <223556219+Copilot@users.noreply.github.com>
