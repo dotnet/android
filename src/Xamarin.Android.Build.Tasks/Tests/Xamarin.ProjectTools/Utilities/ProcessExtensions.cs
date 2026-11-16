@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Globalization;
-using System.IO;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Runtime.Versioning;
@@ -19,10 +18,6 @@ namespace Xamarin.ProjectTools
 		const int SIGKILL = 9;
 		const int EPERM = 1;
 		const int ESRCH = 3;
-		const string ProcessGroupLauncher = "/usr/bin/perl";
-		// Moves the launcher into a new process group, then execs the target so it keeps the
-		// started PID. Every descendant inherits that group, even after reparenting.
-		const string ProcessGroupScript = "setpgrp(0, 0) or die $!; exec {$ARGV[0]} @ARGV or die $!";
 
 		// Unix: boxed process group ID. Windows: SafeJobHandle.
 		static readonly ConditionalWeakTable<Process, object> processGroups = new ();
@@ -122,22 +117,9 @@ namespace Xamarin.ProjectTools
 				StartInJobObject (process);
 				return;
 			}
-			if (!File.Exists (ProcessGroupLauncher))
-				throw new InvalidOperationException ($"'{ProcessGroupLauncher}' is required to start a process in a new process group.");
-
-			var psi = process.StartInfo;
-			string fileName = psi.FileName;
-			psi.FileName = ProcessGroupLauncher;
-			if (psi.ArgumentList.Count > 0) {
-				psi.ArgumentList.Insert (0, "-e");
-				psi.ArgumentList.Insert (1, ProcessGroupScript);
-				psi.ArgumentList.Insert (2, "--");
-				psi.ArgumentList.Insert (3, fileName);
-			} else {
-				if (fileName.Contains ('"'))
-					throw new ArgumentException ($"The process file name must not contain quotes: {fileName}", nameof (process));
-				psi.Arguments = $"-e \"{ProcessGroupScript}\" -- \"{fileName}\" {psi.Arguments}";
-			}
+			// On Unix, StartDetached calls setsid() in the child, so the child leads a new
+			// session and process group (pgid == pid). Every descendant inherits that group.
+			process.StartInfo.StartDetached = true;
 			process.Start ();
 			processGroups.Add (process, process.Id);
 		}
