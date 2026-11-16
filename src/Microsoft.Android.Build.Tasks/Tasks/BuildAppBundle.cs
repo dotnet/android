@@ -7,6 +7,7 @@ using System.Text.Json.Nodes;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.IO.Compression;
 using System.Linq;
 using Microsoft.Android.Build.Tasks;
 using Xamarin.Android.Tasks;
@@ -74,11 +75,25 @@ namespace Microsoft.Android.Tasks
 
 		public string? UncompressedFileExtensions { get; set; }
 
-		string? temp;
+		const string StagedConfigFileName = "BundleConfig.json";
+
+		string? configFile;
+		string? configArgument;
+		string? metaDataStagingDirectory;
+		string? stagingDirectoryToWorkingDirectory;
+		readonly List<string> bundleToolMetaDataFiles = new List<string> ();
+		readonly List<StagedMetaDataFile> stagedMetaDataFiles = new List<StagedMetaDataFile> ();
+		internal IReadOnlyList<string> BundleToolMetaDataFiles => bundleToolMetaDataFiles;
+		internal string? MetaDataStagingDirectory => metaDataStagingDirectory;
+		internal string? ConfigFile => configFile;
+		internal string TemporaryDirectory { get; set; } = Path.GetTempPath ();
+
+		// ZipArchiveMode.Update keeps replacement entries in memory until the archive is disposed.
+		internal long MetaDataRestoreBatchSizeLimit { get; set; } = 100 * 1024 * 1024;
+		internal int MetaDataRestoreBatchFilesLimit { get; set; } = 512;
 
 		public override bool RunTask ()
 		{
-			temp = Path.GetTempFileName ();
 			try {
 				var uncompressed = new List<string> (UncompressedByDefault);
 				if (!UncompressedFileExtensions.IsNullOrEmpty ()) {
@@ -107,35 +122,202 @@ namespace Microsoft.Android.Tasks
 				var output = mergedJson?.ToJsonString (new JsonSerializerOptions { WriteIndented = true });
 
 				Log.LogDebugMessage ($"BundleConfig.json: {output}");
-				File.WriteAllText (temp, output);
+				// The config may create the staging directory, which changes how metadata paths are rebased.
+				PrepareConfigFile (output ?? "");
+				PrepareMetaDataFiles ();
+				JarPath = GetToolPath (JarPath);
 
 				//NOTE: bundletool will not overwrite
 				if (File.Exists (Output))
 					File.Delete (Output);
 
 				base.RunTask ();
+				if (!Log.HasLoggedErrors)
+					RestoreMetaDataFileNames ();
 			} finally {
-				File.Delete (temp);
+				if (configFile != null)
+					File.Delete (configFile);
+				configFile = null;
+				configArgument = null;
+				DeleteMetaDataStagingDirectory ();
 			}
 
 			return !Log.HasLoggedErrors;
 		}
+
+		// Java on Windows can replace non-ASCII command-line characters, so the config path must be ASCII.
+		// When the temporary directory's full path is not ASCII, stage the config in the tool's working
+		// directory and pass a relative file name instead.
+		internal void PrepareConfigFile (string contents)
+		{
+			var tempFile = Path.Combine (TemporaryDirectory, $"bundletool-config-{Guid.NewGuid ():N}.json");
+			if (IsAscii (tempFile)) {
+				configFile = tempFile;
+				configArgument = tempFile;
+			} else {
+				configFile = Path.Combine (GetOrCreateMetaDataStagingDirectory (), StagedConfigFileName);
+				configArgument = StagedConfigFileName;
+			}
+			File.WriteAllText (configFile, contents);
+		}
+
+		static bool IsAscii (string value) => value.All (character => character <= 0x7f);
 
 		internal override CommandLineBuilder GetCommandLineBuilder ()
 		{
 			var cmd = base.GetCommandLineBuilder ();
 			cmd.AppendSwitch ("build-bundle");
 			var modules = new List<string> ();
-			modules.Add (BaseZip);
+			modules.Add (GetToolPath (BaseZip));
 			if (Modules != null && Modules.Any ())
-				modules.AddRange (Modules);
+				modules.AddRange (Modules.Select (GetToolPath));
 			cmd.AppendSwitchIfNotNull ("--modules ", string.Join (",", modules));
-			cmd.AppendSwitchIfNotNull ("--output ", Output);
-			cmd.AppendSwitchIfNotNull ("--config ", temp);
-			foreach (var file in MetaDataFiles ?? []) {
-				cmd.AppendSwitch ($"--metadata-file={file.ItemSpec}");
+			cmd.AppendSwitchIfNotNull ("--output ", GetToolPath (Output));
+			cmd.AppendSwitchIfNotNull ("--config ", configArgument);
+			foreach (var file in bundleToolMetaDataFiles) {
+				cmd.AppendSwitchIfNotNull ("--metadata-file=", file);
 			}
 			return cmd;
+		}
+
+		// Staged metadata arguments are relative to this directory so the command line stays ASCII
+		// even when the staging directory's full path is not.
+		protected override string? GetWorkingDirectory () =>
+			metaDataStagingDirectory ?? base.GetWorkingDirectory ();
+
+		// Paths that were relative to the project directory must be rebased onto the staging directory,
+		// preferably with a relative `..` prefix so ASCII paths stay ASCII.
+		string GetToolPath (string path)
+		{
+			if (metaDataStagingDirectory == null || path.IsNullOrEmpty () || Path.IsPathRooted (path))
+				return path;
+			if (stagingDirectoryToWorkingDirectory != null)
+				return Path.Combine (stagingDirectoryToWorkingDirectory, path);
+			return Path.GetFullPath (Path.Combine (WorkingDirectory, path));
+		}
+
+		internal void PrepareMetaDataFiles ()
+		{
+			bundleToolMetaDataFiles.Clear ();
+			stagedMetaDataFiles.Clear ();
+			var unstagedMetaDataFiles = new List<string> ();
+			foreach (var file in MetaDataFiles ?? []) {
+				if (IsAscii (file.ItemSpec)) {
+					unstagedMetaDataFiles.Add (file.ItemSpec);
+					continue;
+				}
+
+				var separator = file.ItemSpec.IndexOf (':');
+				if (separator < 0 || separator == file.ItemSpec.Length - 1) {
+					unstagedMetaDataFiles.Add (file.ItemSpec);
+					continue;
+				}
+
+				// Java on Windows can replace non-ASCII command-line characters before BundleTool sees them.
+				var archivePath = file.ItemSpec.Substring (0, separator);
+				var originalSourcePath = file.ItemSpec.Substring (separator + 1);
+				var directorySeparator = archivePath.IndexOf ('/');
+				if (directorySeparator < 0) {
+					unstagedMetaDataFiles.Add (file.ItemSpec);
+					continue;
+				}
+				var stagingDirectory = GetOrCreateMetaDataStagingDirectory ();
+				var sourceFileName = $"metadata-{Guid.NewGuid ():N}.bin";
+				var temporaryArchivePath = $"{archivePath.Substring (0, directorySeparator)}/xamarin-android-{Guid.NewGuid ():N}";
+				stagedMetaDataFiles.Add (new StagedMetaDataFile {
+					ArchivePath = $"BUNDLE-METADATA/{archivePath}",
+					SourcePath = Path.Combine (stagingDirectory, sourceFileName),
+					TemporaryArchivePath = $"BUNDLE-METADATA/{temporaryArchivePath}",
+				});
+				File.Copy (originalSourcePath, Path.Combine (stagingDirectory, sourceFileName), overwrite: true);
+				bundleToolMetaDataFiles.Add ($"{temporaryArchivePath}:{sourceFileName}");
+			}
+
+			foreach (var file in unstagedMetaDataFiles) {
+				var separator = file.IndexOf (':');
+				if (metaDataStagingDirectory == null || separator < 0 || separator == file.Length - 1) {
+					bundleToolMetaDataFiles.Add (file);
+					continue;
+				}
+				bundleToolMetaDataFiles.Add ($"{file.Substring (0, separator)}:{GetToolPath (file.Substring (separator + 1))}");
+			}
+		}
+
+		string GetOrCreateMetaDataStagingDirectory ()
+		{
+			if (metaDataStagingDirectory != null)
+				return metaDataStagingDirectory;
+
+			var stagingDirectoryName = $"bundletool-metadata-{Guid.NewGuid ():N}";
+			string directory;
+			if (IntermediateOutputPath.IsNullOrEmpty ()) {
+				directory = Path.Combine (TemporaryDirectory, stagingDirectoryName);
+				stagingDirectoryToWorkingDirectory = null;
+			} else {
+				directory = Path.Combine (WorkingDirectory, IntermediateOutputPath, stagingDirectoryName);
+				stagingDirectoryToWorkingDirectory = GetRelativePathToParent (IntermediateOutputPath);
+			}
+			directory = Path.GetFullPath (directory);
+			Directory.CreateDirectory (directory);
+			metaDataStagingDirectory = directory;
+			return directory;
+		}
+
+		// Returns the `..` path from `<relativeDirectory>/<child>` back to the working directory,
+		// or null when it cannot be expressed without resolving `..` segments in `relativeDirectory`.
+		static string? GetRelativePathToParent (string relativeDirectory)
+		{
+			if (Path.IsPathRooted (relativeDirectory))
+				return null;
+			var segments = relativeDirectory.Split (new [] { '/', '\\' }, StringSplitOptions.RemoveEmptyEntries)
+				.Where (segment => segment != ".")
+				.ToList ();
+			if (segments.Any (segment => segment == ".."))
+				return null;
+			return string.Join (Path.DirectorySeparatorChar.ToString (), Enumerable.Repeat ("..", segments.Count + 1));
+		}
+
+		void DeleteMetaDataStagingDirectory ()
+		{
+			if (metaDataStagingDirectory == null)
+				return;
+			if (Directory.Exists (metaDataStagingDirectory))
+				Directory.Delete (metaDataStagingDirectory, recursive: true);
+			metaDataStagingDirectory = null;
+			stagingDirectoryToWorkingDirectory = null;
+		}
+
+		internal void RestoreMetaDataFileNames ()
+		{
+			int index = 0;
+			while (index < stagedMetaDataFiles.Count) {
+				// Reopen the archive between batches to bound the memory retained by Update mode.
+				using var bundle = ZipFile.Open (Output, ZipArchiveMode.Update);
+				long batchSize = 0;
+				int batchFiles = 0;
+				do {
+					var file = stagedMetaDataFiles [index++];
+					var temporaryEntry = bundle.GetEntry (file.TemporaryArchivePath);
+					if (temporaryEntry == null)
+						throw new InvalidOperationException ($"Bundle metadata entry '{file.TemporaryArchivePath}' was not found.");
+
+					var entry = bundle.CreateEntry (file.ArchivePath, CompressionLevel.Optimal);
+					entry.LastWriteTime = temporaryEntry.LastWriteTime;
+					batchSize += temporaryEntry.Length;
+					batchFiles++;
+					using (var input = temporaryEntry.Open ())
+					using (var output = entry.Open ())
+						input.CopyTo (output);
+					temporaryEntry.Delete ();
+				} while (index < stagedMetaDataFiles.Count && batchSize < MetaDataRestoreBatchSizeLimit && batchFiles < MetaDataRestoreBatchFilesLimit);
+			}
+		}
+
+		sealed class StagedMetaDataFile
+		{
+			public string ArchivePath { get; set; } = "";
+			public string SourcePath { get; set; } = "";
+			public string TemporaryArchivePath { get; set; } = "";
 		}
 	}
 }

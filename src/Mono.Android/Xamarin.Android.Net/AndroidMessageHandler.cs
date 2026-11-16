@@ -481,7 +481,7 @@ namespace Xamarin.Android.Net
 					or WebException;
 		}
 
-		internal const string LOG_APP = "monodroid-net";
+		internal const string LOG_APP = "DOTNET-net";
 
 		const string GZIP_ENCODING = "gzip";
 		const string DEFLATE_ENCODING = "deflate";

@@ -212,9 +212,9 @@ Este error se debe probablemente a un problema con el archivo AndroidManifest.xm
     <comment>The following are literal names and should not be translated: AAPT2, Aapt2ToolPath, MSBuild</comment>
   </data>
   <data name="XA0116" xml:space="preserve">
-    <value>No se encuentra el elemento "EmbeddedResource" llamado "{0}".</value>
-    <comment>The following are literal names and should not be translated: EmbeddedResource
-{0} - The name of the missing resource</comment>
+    <value>Unable to find required SDK file `{0}`.</value>
+    <comment>The following are literal names and should not be translated: SDK
+{0} - The path of the missing file</comment>
   </data>
   <data name="XA0119_LinkMode" xml:space="preserve">
     <value>No se recomienda usar una implementación rápida y el enlazador al mismo tiempo. Use la implementación rápida para configuraciones de Debug y el enlazador para configuraciones de Release.</value>

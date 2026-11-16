@@ -52,7 +52,6 @@
     <!-- Used by the installer-side projects under src/Xamarin.Installer.* -->
     <GitInfoVersion>2.3.0</GitInfoVersion>
     <MicrosoftWin32RegistryVersion>5.0.0</MicrosoftWin32RegistryVersion>
-    <MonoUnixVersion>7.1.0-final.1.21458.1</MonoUnixVersion>
     <SharpZipLibVersion>1.3.3</SharpZipLibVersion>
   </PropertyGroup>
   

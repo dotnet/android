@@ -7,15 +7,15 @@ using System.Text;
 
 namespace Xamarin.Android.Tools {
 
-	class OracleJdkLocations : JdkLocations {
+	partial class JdkLocations {
 
-		internal static IEnumerable<JdkInfo> GetOracleJdks (Action<TraceLevel, string> logger)
+		internal IEnumerable<JdkInfo> GetOracleJdks (Action<TraceLevel, string> logger)
 		{
 			if (!OS.IsWindows) {
 				yield break;
 			}
 			foreach (var path in GetOracleJdkPaths ()) {
-				var jdk = JdkInfo.TryGetJdkInfo (path, logger, "Oracle Registry");
+				var jdk = JdkInfo.TryGetJdkInfo (path, logger, "Oracle Registry", environmentVariables);
 				if (jdk == null) {
 					continue;
 				}
@@ -23,7 +23,7 @@ namespace Xamarin.Android.Tools {
 			}
 		}
 
-		static IEnumerable<string> GetOracleJdkPaths ()
+		IEnumerable<string> GetOracleJdkPaths ()
 		{
 			string subkey = @"SOFTWARE\JavaSoft\Java Development Kit";
 
@@ -32,7 +32,7 @@ namespace Xamarin.Android.Tools {
 
 				if (!string.IsNullOrEmpty (currentVersion)) {
 
-					if (RegistryEx.CheckRegistryKeyForExecutable (RegistryEx.LocalMachine, subkey + "\\" + "1.8", "JavaHome", wow64, "bin", "java.exe"))
+					if (RegistryEx.CheckRegistryKeyForExecutable (RegistryEx.LocalMachine, subkey + "\\" + "1.8", "JavaHome", wow64, "bin", "java.exe", environmentVariables))
 						yield return RegistryEx.GetValueString (RegistryEx.LocalMachine, subkey + "\\" + "1.8", "JavaHome", wow64) ?? "";
 				}
 			}

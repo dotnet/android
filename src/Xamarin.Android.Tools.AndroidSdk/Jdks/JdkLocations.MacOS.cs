@@ -8,17 +8,17 @@ namespace Xamarin.Android.Tools {
 
 	partial class JdkLocations {
 
-		static IEnumerable<JdkInfo> GetUnixPreferredJdks (Action<TraceLevel, string> logger)
+		IEnumerable<JdkInfo> GetUnixPreferredJdks (Action<TraceLevel, string> logger)
 		{
 			return GetUnixConfiguredJdkPaths (logger)
-				.Select (p => JdkInfo.TryGetJdkInfo (p, logger, "monodroid-config.xml"))
+				.Select (p => JdkInfo.TryGetJdkInfo (p, logger, "monodroid-config.xml", environmentVariables))
 				.OfType<JdkInfo> ()
 				.OrderByDescending (jdk => jdk, JdkInfoVersionComparer.Default);
 		}
 
-		static IEnumerable<string> GetUnixConfiguredJdkPaths (Action<TraceLevel, string> logger)
+		IEnumerable<string> GetUnixConfiguredJdkPaths (Action<TraceLevel, string> logger)
 		{
-			var config = AndroidSdkUnix.GetUnixConfigFile (logger);
+			var config = AndroidSdkUnix.GetUnixConfigFile (logger, OS.IsWindows ? null : environmentVariables);
 
 			foreach (var java_sdk in config.Elements ("java-sdk")) {
 				var path    = (string?) java_sdk.Attribute ("path");
@@ -30,14 +30,17 @@ namespace Xamarin.Android.Tools {
 
 		const   string  MacOSJavaVirtualMachinesRoot    = "/Library/Java/JavaVirtualMachines";
 
-		protected static IEnumerable<JdkInfo> GetMacOSUserFileSystemJdks (Action<TraceLevel, string> logger)
+		IEnumerable<JdkInfo> GetMacOSUserFileSystemJdks (Action<TraceLevel, string> logger)
 		{
 			if (!OS.IsMac) {
 				return Array.Empty<JdkInfo> ();
 			}
 
 			// Search ~/Library/Android/*jdk*/ (matches microsoft-21.jdk, jdk-21, etc.)
-			var libraryAndroidRoot = Path.Combine (Environment.GetFolderPath (Environment.SpecialFolder.UserProfile), "Library", "Android");
+			var home = ProcessUtils.GetUnixHome (environmentVariables);
+			if (home is not { Length: > 0 })
+				return Array.Empty<JdkInfo> ();
+			var libraryAndroidRoot = Path.Combine (home, "Library", "Android");
 			if (!Directory.Exists (libraryAndroidRoot)) {
 				return Array.Empty<JdkInfo> ();
 			}
@@ -66,7 +69,7 @@ namespace Xamarin.Android.Tools {
 			return FromPaths (paths, logger, "~/Library/Android/*jdk*/");
 		}
 
-		protected static IEnumerable<JdkInfo> GetMacOSSystemJdks (string pattern, Action<TraceLevel, string> logger, string? locator = null)
+		IEnumerable<JdkInfo> GetMacOSSystemJdks (string pattern, Action<TraceLevel, string> logger, string? locator = null)
 		{
 			if (!OS.IsMac) {
 				return Array.Empty<JdkInfo>();
