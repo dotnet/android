@@ -707,7 +707,7 @@ namespace Android.Runtime {
 		/// <safety>
 		/// <paramref name="jobject"/> must be null where supported, or a live JNI object reference of the required type usable on the current thread for the call.
 		/// </safety>
-		public static unsafe string? GetClassNameFromInstance (IntPtr jobject)
+		public static string? GetClassNameFromInstance (IntPtr jobject)
 		{
 			return JniEnvironment.Types.GetJniTypeNameFromInstance (new JniObjectReference (jobject));
 		}
