@@ -447,9 +447,11 @@ namespace MonoDroid.Generation
 
 		static void SetKotlinDefaultArguments (MethodBase method, XElement elem)
 		{
-			if (elem.Attribute ("kotlin-default-parameters")?.Value is not string parameters)
+			var signature = elem.XGetAttribute ("kotlin-default-jni-signature");
+			var parameters = elem.XGetAttribute ("kotlin-default-parameters");
+			if (string.IsNullOrEmpty (signature) || string.IsNullOrEmpty (parameters))
 				return;
-			method.KotlinDefaultJniSignature = elem.XGetAttribute ("kotlin-default-jni-signature");
+			method.KotlinDefaultJniSignature = signature;
 			method.KotlinDefaultOwner = elem.Attribute ("kotlin-default-owner")?.Value;
 			method.KotlinDefaultParameters = parameters.Split (',').Select (p => int.Parse (p, System.Globalization.CultureInfo.InvariantCulture)).ToArray ();
 		}

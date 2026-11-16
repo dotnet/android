@@ -42,6 +42,9 @@ namespace generatortests
 			// fun middle (first: Int = 1, second: Int): only trailing defaults can be omitted.
 			StringAssert.DoesNotContain ("Middle (int second)", output);
 
+			// fun toString (indent: Int = 0): the overload hides object.ToString ().
+			StringAssert.Contains ("public new string ToString ()", output);
+
 			// constructor (name: String, count: Int = 1)
 			StringAssert.Contains ("public DefaultArguments (string name) :", output);
 			StringAssert.Contains ("const string __id = \"(Ljava/lang/String;IILkotlin/jvm/internal/DefaultConstructorMarker;)V\";", output);

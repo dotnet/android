@@ -96,6 +96,7 @@ namespace generator.SourceWriters
 			AddMethods (klass, opt, context);
 			AddAbstractMembers (klass, opt, context);
 			AddExplicitGenericInterfaceMembers (klass, opt);
+			KotlinDefaultArguments.AddMethods (this, klass, opt, context);
 			AddCharSequenceEnumerator (klass);
 
 			context.ContextGeneratedMethods.Clear ();
@@ -287,8 +288,6 @@ namespace generator.SourceWriters
 				context.ContextGeneratedMethods.Add (m);
 				m.IsVirtual = virt;
 			}
-
-			KotlinDefaultArguments.AddMethods (this, klass, opt, context);
 
 			var methods = klass.Methods.Concat (klass.Properties.Where (p => p.Setter != null).Select (p => p.Setter));
 
