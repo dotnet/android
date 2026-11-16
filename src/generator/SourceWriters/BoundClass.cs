@@ -288,7 +288,7 @@ namespace generator.SourceWriters
 				m.IsVirtual = virt;
 			}
 
-			KotlinDefaultArguments.AddMethods (this, klass, klass.Methods, opt, context);
+			KotlinDefaultArguments.AddMethods (this, klass, opt, context);
 
 			var methods = klass.Methods.Concat (klass.Properties.Where (p => p.Setter != null).Select (p => p.Setter));
 

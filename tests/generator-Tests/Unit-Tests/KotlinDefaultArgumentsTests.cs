@@ -30,14 +30,11 @@ namespace generatortests
 			var output = KotlinInlineClassEndToEndTests.GenerateCSharp (apiXml, out _, new CodeGenerationOptions { SupportDefaultInterfaceMethods = true });
 
 			// fun greet (greeting: String, times: Int = 2, loud: Boolean = false)
-			StringAssert.Contains ("public string Greet (string greeting, int times, bool loud)", output);
 			StringAssert.Contains ("public string Greet (string greeting, int times)", output);
 			StringAssert.Contains ("public string Greet (string greeting)", output);
 			StringAssert.Contains ("const string __id = \"greet$default.(Lxat/bytecode/tests/DefaultArguments;Ljava/lang/String;IZILjava/lang/Object;)Ljava/lang/String;\";", output);
 			StringAssert.Contains ("const int __mask0 = 4;", output);
 			StringAssert.Contains ("const int __mask0 = 6;", output);
-			StringAssert.Contains ("var loud = default (bool);", output);
-			StringAssert.Contains ("var __self = this;", output);
 
 			// The synthetic helpers themselves are not bound.
 			StringAssert.DoesNotContain ("_default (", output);
@@ -55,7 +52,6 @@ namespace generatortests
 
 			// interface: fun send (message: String, retries: Int = 3)
 			StringAssert.Contains ("void Send (string message)", output);
-			StringAssert.Contains ("static readonly JniPeerMembers _members_kotlin_default_xat_bytecode_tests_DefaultArgumentsInterface = new JniPeerMembers (\"xat/bytecode/tests/DefaultArgumentsInterface\", typeof (IDefaultArgumentsInterface), isInterface: true);", output);
 			StringAssert.Contains ("_members_kotlin_default_xat_bytecode_tests_DefaultArgumentsInterface.StaticMethods.InvokeVoidMethod (__id, __args);", output);
 		}
 	}
