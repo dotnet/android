@@ -94,11 +94,14 @@ namespace generatortests
 			StringAssert.Contains ("Xat.Bytecode.Tests.MyColor.ToLocalJniHandle (color)", output);
 			StringAssert.Contains ("Xat.Bytecode.Tests.MyColor.FromJniHandle (__rm.Handle, JniHandleOwnership.TransferLocalRef)", output);
 
+			// Java calls back into C# with a boxed value.
+			StringAssert.Contains ("Xat.Bytecode.Tests.MyColor.ToLocalJniHandle (__this.OnColor (color))", output);
+
 			// JavaList<T> can't hold a struct, so `List<MyColor>` keeps the boxed Java objects.
 			StringAssert.Contains ("IList<Java.Lang.Object> Colors (System.Collections.Generic.IList<Java.Lang.Object> colors)", output);
 		}
 
-		// Run the four kotlin-gradle .class files through KotlinFixups and
+		// Run the kotlin-gradle .class files through KotlinFixups and
 		// XmlClassDeclarationBuilder to produce the same api.xml the generator
 		// would normally consume off disk.
 		static string BuildApiXmlFromKotlinFixture ()
@@ -108,6 +111,7 @@ namespace generatortests
 				LoadClassFile ("MyAlpha.class"),
 				LoadClassFile ("MyDp.class"),
 				LoadClassFile ("Widgets.class"),
+				LoadClassFile ("ColorCallback.class"),
 			};
 			Xamarin.Android.Tools.Bytecode.KotlinFixups.Fixup (classes);
 

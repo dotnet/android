@@ -44,3 +44,8 @@ object Widgets {
     fun maybeColor(color: MyColor?): MyColor? = color
     fun colors(colors: List<MyColor>): List<MyColor> = colors
 }
+
+// Java calls back into C# with a boxed value class.
+interface ColorCallback {
+    fun onColor(color: MyColor?): MyColor?
+}
