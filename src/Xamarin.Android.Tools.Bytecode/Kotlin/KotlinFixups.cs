@@ -47,6 +47,8 @@ namespace Xamarin.Android.Tools.Bytecode
 						foreach (var con in class_metadata.Constructors) {
 							var java_constructors = FindJavaConstructors (class_metadata, con, c);
 							FixupConstructor (java_constructors.FirstOrDefault (), con, java_constructors.Count == 1);
+							if (java_constructors.Count == 1)
+								FixupDefaultArguments (java_constructors [0], con.ValueParameters, classes);
 						}
 					}
 
@@ -59,8 +61,10 @@ namespace Xamarin.Android.Tools.Bytecode
 						// We work from Java methods to Kotlin metadata because they aren't a 1:1 relation
 						// and we need to find the "best" match for each Java method.
 						foreach (var java_method in c.Methods)
-							if (FindKotlinFunctionMetadata (metadata, java_method) is KotlinFunction function_metadata)
+							if (FindKotlinFunctionMetadata (metadata, java_method) is KotlinFunction function_metadata) {
 								FixupFunction (java_method, function_metadata, class_metadata, inlineClasses);
+								FixupDefaultArguments (java_method, function_metadata.ValueParameters, classes);
+							}
 					}
 
 					if (metadata.Properties != null) {
@@ -380,6 +384,61 @@ namespace Xamarin.Android.Tools.Bytecode
 			// target. See dotnet/java-interop#1431 (Phase 2).
 			if (metadata.Name != null && metadata.JvmName != null && metadata.Name != metadata.JvmName)
 				method.KotlinName = PascalCase (metadata.Name);
+		}
+
+		// Records the Kotlin default-argument helper for 'method', so the generator
+		// can create overloads that omit trailing defaulted parameters:
+		//   fun f(a: Int = 1)  ->  static f$default(Owner, int, int mask, Object)
+		//   constructor(a: Int = 1)  ->  <init>(int, int mask, DefaultConstructorMarker)
+		// There is one 'int' mask for each 32 parameters. Interface helpers can be on the
+		// interface or on its '$DefaultImpls' class. If we cannot find the exact helper,
+		// we record nothing and keep the full-argument API.
+		static void FixupDefaultArguments (MethodInfo? method, List<KotlinValueParameter>? valueParameters, IList<ClassFile> classes)
+		{
+			if (method is null || !method.IsPubliclyVisible || valueParameters is null)
+				return;
+
+			var defaults = new List<int> ();
+			for (var i = 0; i < valueParameters.Count; i++)
+				if (valueParameters [i].Flags.HasFlag (KotlinParameterFlags.DeclaresDefaultValue))
+					defaults.Add (i);
+			if (defaults.Count == 0)
+				return;
+
+			// Receivers, continuations and outer-class parameters change the bit
+			// positions, so only handle methods whose JVM parameters are the Kotlin
+			// value parameters.
+			if (method.GetParameters ().Length != valueParameters.Count)
+				return;
+
+			var owner = method.DeclaringType;
+			var masks = new string ('I', (valueParameters.Count + 31) / 32);
+			var close = method.Descriptor.IndexOf (')');
+			var parameters = method.Descriptor.Substring (1, close - 1);
+
+			if (method.IsConstructor) {
+				var expected = "(" + parameters + masks + "Lkotlin/jvm/internal/DefaultConstructorMarker;)V";
+				if (!owner.Methods.Any (m => m.IsConstructor && m.Descriptor == expected))
+					return;
+				method.KotlinDefaultJniSignature = expected;
+				method.KotlinDefaultParameters = defaults.ToArray ();
+				return;
+			}
+
+			var receiver = method.AccessFlags.HasFlag (MethodAccessFlags.Static) ? "" : owner.FullJniName;
+			var helper_signature = "(" + receiver + parameters + masks + "Ljava/lang/Object;)" + method.Descriptor.Substring (close + 1);
+			var helper_name = method.Name + "$default";
+			var default_impls = owner.ThisClass.Name.Value + "$DefaultImpls";
+			var candidates = new [] { owner }.Concat (classes.Where (c => c.ThisClass.Name.Value == default_impls));
+
+			foreach (var candidate in candidates) {
+				if (candidate.Methods.Any (m => m.Name == helper_name && m.Descriptor == helper_signature && m.AccessFlags.HasFlag (MethodAccessFlags.Static))) {
+					method.KotlinDefaultJniSignature = helper_signature;
+					method.KotlinDefaultOwner = candidate.ThisClass.Name.Value;
+					method.KotlinDefaultParameters = defaults.ToArray ();
+					return;
+				}
+			}
 		}
 
 		static string PascalCase (string name)

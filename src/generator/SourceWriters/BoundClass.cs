@@ -156,6 +156,8 @@ namespace generator.SourceWriters
 				if (ctor.Parameters.HasCharSequence && !klass.ContainsCtor (ctor.JniSignature.Replace ("java/lang/CharSequence", "java/lang/String")))
 					Constructors.Add (new StringOverloadConstructor(klass, ctor, klass.InheritsObject, opt, context));
 			}
+
+			KotlinDefaultArguments.AddConstructors (this, klass, opt, context);
 		}
 
 		void AddCharSequenceEnumerator (ClassGen klass)
@@ -285,6 +287,8 @@ namespace generator.SourceWriters
 				context.ContextGeneratedMethods.Add (m);
 				m.IsVirtual = virt;
 			}
+
+			KotlinDefaultArguments.AddMethods (this, klass, klass.Methods, opt, context);
 
 			var methods = klass.Methods.Concat (klass.Properties.Where (p => p.Setter != null).Select (p => p.Setter));
 
