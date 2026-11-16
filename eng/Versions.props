@@ -11,7 +11,7 @@
     <MicrosoftDotNetBuildTasksFeedPackageVersion>12.0.0-beta.26565.104</MicrosoftDotNetBuildTasksFeedPackageVersion>
     <MicrosoftTemplateEngineAuthoringTasksPackageVersion>12.0.100-alpha.1.26565.104</MicrosoftTemplateEngineAuthoringTasksPackageVersion>
     <MicrosoftDotNetCecilPackageVersion>0.11.5-preview.26565.104</MicrosoftDotNetCecilPackageVersion>
-    <MSTestPackageVersion>4.6.0-preview.26531.5</MSTestPackageVersion>
+    <MSTestPackageVersion>5.0.0-preview.26563.12</MSTestPackageVersion>
     <SystemIOHashingPackageVersion>12.0.0-alpha.1.26565.104</SystemIOHashingPackageVersion>
     <SystemReflectionMetadataPackageVersion>11.0.0-preview.1.26104.118</SystemReflectionMetadataPackageVersion>
     <!-- Previous .NET Android version -->
