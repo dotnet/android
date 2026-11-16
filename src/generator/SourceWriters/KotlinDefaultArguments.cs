@@ -21,11 +21,11 @@ namespace generator.SourceWriters
 		const string Receiver = "__self";
 		const string Marker = "__marker";
 
-		public static void AddMethods (TypeWriter writer, GenBase type, IEnumerable<Method> methods, CodeGenerationOptions opt, CodeGeneratorContext context)
+		public static void AddMethods (TypeWriter writer, GenBase type, CodeGenerationOptions opt, CodeGeneratorContext context)
 		{
 			var signatures = new HashSet<string> (type.Methods.Where (m => m.IsValid).Select (m => GetSignature (m.AdjustedName, m.Parameters, m.Parameters.Count)));
 
-			foreach (var method in methods) {
+			foreach (var method in type.Methods) {
 				if (!method.IsValid || method.KotlinDefaultJniSignature is null || method.KotlinDefaultOwner is null)
 					continue;
 				if (type is ClassGen && method.KotlinDefaultOwner != type.RawJniName)
@@ -35,8 +35,8 @@ namespace generator.SourceWriters
 				if (trailing == 0)
 					continue;
 
-				var raw = CreateHelperMethod (type, method, opt, context);
-				if (raw is null)
+				var helper = CreateHelperMethod (type, method, opt, context);
+				if (helper is null)
 					continue;
 
 				var members = "_members";
@@ -53,7 +53,7 @@ namespace generator.SourceWriters
 				for (var count = method.Parameters.Count - 1; count >= method.Parameters.Count - trailing; count--) {
 					if (!signatures.Add (GetSignature (method.AdjustedName, method.Parameters, count)))
 						continue;
-					writer.Methods.Add (new KotlinDefaultMethod (type, method, raw, count, members, opt));
+					writer.Methods.Add (new KotlinDefaultMethod (type, method, helper, count, members, opt));
 				}
 			}
 		}
@@ -75,7 +75,7 @@ namespace generator.SourceWriters
 				if (trailing == 0)
 					continue;
 
-				var raw = new Ctor (klass) {
+				var helper = new Ctor (klass) {
 					Name = ctor.Name,
 					Visibility = ctor.Visibility,
 					Deprecated = ctor.Deprecated,
@@ -84,24 +84,23 @@ namespace generator.SourceWriters
 					ApiRemovedSince = ctor.ApiRemovedSince,
 				};
 				foreach (var p in ctor.Parameters)
-					raw.Parameters.Add (p.Clone ());
-				AddMaskParameters (raw.Parameters, ctor.Parameters.Count);
-				raw.Parameters.Add (new Parameter (Marker, "java.lang.Object", null, false) {
+					helper.Parameters.Add (p.Clone ());
+				AddMaskParameters (helper.Parameters, ctor.Parameters.Count);
+				helper.Parameters.Add (new Parameter (Marker, "java.lang.Object", null, false) {
 					JniTypeOverride = "Lkotlin/jvm/internal/DefaultConstructorMarker;",
 				});
 
-				if (!raw.Validate (opt, klass.TypeParameters, context) || raw.JniSignature != ctor.KotlinDefaultJniSignature)
+				if (!helper.Validate (opt, klass.TypeParameters, context) || helper.JniSignature != ctor.KotlinDefaultJniSignature)
 					continue;
 
 				for (var count = ctor.Parameters.Count - 1; count >= ctor.Parameters.Count - trailing; count--) {
 					if (!signatures.Add (GetSignature (klass.Name, ctor.Parameters, count)))
 						continue;
-					writer.Constructors.Add (new KotlinDefaultConstructor (klass, ctor, raw, count, opt, context));
+					writer.Constructors.Add (new KotlinDefaultConstructor (klass, ctor, helper, count, opt, context));
 				}
 			}
 		}
 
-		// The number of parameters at the end of the list that declare a default value.
 		static int GetTrailingDefaultCount (MethodBase method)
 		{
 			var count = 0;
@@ -123,22 +122,22 @@ namespace generator.SourceWriters
 		//   static R name$default (Owner __self, <parameters>, int __mask0, Object __marker)
 		static Method CreateHelperMethod (GenBase type, Method method, CodeGenerationOptions opt, CodeGeneratorContext context)
 		{
-			var raw = method.Clone (type);
-			raw.JavaName = method.JavaName + "$default";
-			raw.IsStatic = true;
-			raw.IsFinal = true;
-			raw.IsVirtual = false;
-			raw.IsAbstract = false;
-			raw.IsCompatVirtualMethod = false;
-			raw.IsInterfaceDefaultMethod = false;
-			raw.JniSignatureOverride = method.KotlinDefaultJniSignature;
+			var helper = method.Clone (type);
+			helper.JavaName = method.JavaName + "$default";
+			helper.IsStatic = true;
+			helper.IsFinal = true;
+			helper.IsVirtual = false;
+			helper.IsAbstract = false;
+			helper.IsCompatVirtualMethod = false;
+			helper.IsInterfaceDefaultMethod = false;
+			helper.JniSignatureOverride = method.KotlinDefaultJniSignature;
 
 			if (!method.IsStatic)
-				raw.Parameters.AddFirst (new Parameter (Receiver, type.JavaName, null, false));
-			AddMaskParameters (raw.Parameters, method.Parameters.Count);
-			raw.Parameters.Add (new Parameter (Marker, "java.lang.Object", null, false));
+				helper.Parameters.AddFirst (new Parameter (Receiver, type.JavaName, null, false));
+			AddMaskParameters (helper.Parameters, method.Parameters.Count);
+			helper.Parameters.Add (new Parameter (Marker, "java.lang.Object", null, false));
 
-			return raw.Validate (opt, type.TypeParameters, context) ? raw : null;
+			return helper.Validate (opt, type.TypeParameters, context) ? helper : null;
 		}
 
 		// Declares locals for the omitted parameters and the extra `$default` arguments.
