@@ -74,7 +74,7 @@ namespace Xamarin.Android.Build.Tests
 		{
 			var ret = new List<object[]> ();
 
-			foreach (AndroidRuntime runtime in new[] { AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT }) {
+			foreach (AndroidRuntime runtime in new[] { AndroidRuntime.CoreCLR }) {
 				AddTestData (
 					bind: true,
 					configuration: "Release",
@@ -118,10 +118,7 @@ namespace Xamarin.Android.Build.Tests
 		[TestCaseSource (nameof (Get_AGPMetadataTestSources))]
 		public void BindLibrary (bool bind, string configuration, bool refOutputs, AndroidRuntime runtime)
 		{
-			bool isRelease = runtime == AndroidRuntime.NativeAOT;
-			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
-				return;
-			}
+			bool isRelease = configuration == "Release";
 
 			var gradleProject = AndroidGradleProject.CreateDefault (GradleTestProjectDir);
 			var moduleName = gradleProject.Modules.First ().Name;

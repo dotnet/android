@@ -1,8 +1,12 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Globalization;
 using System.Runtime.InteropServices;
+using System.Text;
 using System.Threading;
+using System.Threading.Tasks;
+using Microsoft.Win32.SafeHandles;
 using NUnit.Framework;
 
 namespace Xamarin.ProjectTools
@@ -36,6 +40,40 @@ namespace Xamarin.ProjectTools
 		}
 
 		/// <summary>
+		/// Kills the process tree, then waits at most 30 seconds for <paramref name="outputTask"/> to read the remaining output.
+		/// </summary>
+		public static void StopAndDrainOutput (this Process process, CancellationTokenSource cts, Task outputTask)
+		{
+			if (!process.HasExited)
+				process.Kill (entireProcessTree: true);
+			// A process that inherited the output pipe can keep it open after the kill.
+			cts.CancelAfter (TimeSpan.FromSeconds (30));
+			try {
+				outputTask.GetAwaiter ().GetResult ();
+			} catch (OperationCanceledException) when (cts.IsCancellationRequested) {
+			}
+		}
+
+		/// <summary>
+		/// Reads stdout and stderr into <paramref name="output"/> until the process exits.
+		/// Returns false and kills the process tree if <paramref name="timeout"/> expires first.
+		/// </summary>
+		public static bool WaitForExitAndOutput (this Process process, StringBuilder output, TimeSpan timeout)
+		{
+			using var cts = new CancellationTokenSource (timeout);
+			try {
+				foreach (var line in process.ReadAllLinesAsync (cts.Token).ToBlockingEnumerable ())
+					output.AppendLine (line.StandardError ? $"STDERR: {line.Content}" : line.Content);
+				process.WaitForExitAsync (cts.Token).GetAwaiter ().GetResult ();
+				return true;
+			} catch (OperationCanceledException) {
+				if (!process.HasExited)
+					process.Kill (entireProcessTree: true);
+				return false;
+			}
+		}
+
+		/// <summary>
 		/// Sends Ctrl+C (SIGINT) to the specified process and all its descendants.
 		/// This simulates what a terminal does on Ctrl+C: send SIGINT to the entire
 		/// foreground process group. Without this, child processes (e.g. Microsoft.Android.Run
@@ -54,44 +92,25 @@ namespace Xamarin.ProjectTools
 			// Collect all descendant PIDs first, then send SIGINT to all of them.
 			var pids = new List<int> ();
 			GetDescendantPids (process.Id, pids);
-			pids.Add (process.Id);
-
 			foreach (int pid in pids) {
-				if (kill (pid, SIGINT) != 0) {
-					int errno = Marshal.GetLastPInvokeError ();
-					// ESRCH (3) = process already exited, expected in race conditions
-					if (errno != 3) {
-						Console.Error.WriteLine ($"kill({pid}, SIGINT) failed with errno {errno}");
-					}
+				// The process may already have exited, which is expected in race conditions.
+				if (SafeProcessHandle.TryOpen (pid, out var handle)) {
+					using (handle)
+						handle.Signal (PosixSignal.SIGINT);
 				}
 			}
+			process.SafeHandle.Signal (PosixSignal.SIGINT);
 		}
 
 		static void GetDescendantPids (int parentPid, List<int> pids)
 		{
-			var psi = new ProcessStartInfo ("pgrep", $"-P {parentPid}") {
-				RedirectStandardOutput = true,
-				UseShellExecute = false,
-				CreateNoWindow = true,
-			};
-			using var p = Process.Start (psi);
-			if (p == null) {
-				return;
-			}
-			string output = p.StandardOutput.ReadToEnd ();
-			p.WaitForExit ();
-
-			foreach (string line in output.Split ('\n', StringSplitOptions.RemoveEmptyEntries)) {
+			var result = Process.RunAndCaptureText ("pgrep", ["-P", parentPid.ToString (CultureInfo.InvariantCulture)]);
+			foreach (string line in result.StandardOutput.Split ('\n', StringSplitOptions.RemoveEmptyEntries)) {
 				if (int.TryParse (line.Trim (), out int childPid)) {
 					GetDescendantPids (childPid, pids);
 					pids.Add (childPid);
 				}
 			}
 		}
-
-		[DllImport ("libc", SetLastError = true)]
-		static extern int kill (int pid, int sig);
-
-		const int SIGINT = 2;
 	}
 }

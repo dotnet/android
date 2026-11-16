@@ -75,13 +75,11 @@ namespace Xamarin.ProjectTools
 					WindowStyle = ProcessWindowStyle.Hidden,
 					UseShellExecute = false,
 				};
+				var result = Process.RunAndCaptureText (psi);
 				var output = new StringBuilder ();
-				using (var p = Process.Start (psi)) {
-					p.WaitForExit ();
-					output.AppendLine (p.StandardOutput.ReadToEnd ());
-					output.AppendLine (p.StandardError.ReadToEnd ());
-					JavaSdkVersionString = output.ToString ();
-				}
+				output.AppendLine (result.StandardOutput);
+				output.AppendLine (result.StandardError);
+				JavaSdkVersionString = output.ToString ();
 			}
 			return JavaSdkVersionString;
 		}
@@ -94,15 +92,14 @@ namespace Xamarin.ProjectTools
 			var psi = new ProcessStartInfo (dotnet, args) {
 				CreateNoWindow = true,
 				RedirectStandardOutput = true,
+				RedirectStandardError = true,
 				WindowStyle = ProcessWindowStyle.Hidden,
 				UseShellExecute = false,
 				WorkingDirectory = XABuildPaths.TestAssemblyOutputDirectory,
 			};
-			using (var p = Process.Start (psi)) {
-				p.WaitForExit ();
-				string path = p.StandardOutput.ReadLine ().Trim ();
-				return Directory.Exists (path) ? path : null;
-			}
+			var result = Process.RunAndCaptureText (psi);
+			string path = new StringReader (result.StandardOutput).ReadLine ()?.Trim ();
+			return Directory.Exists (path) ? path : null;
 		}
 
 		static Version? maxInstalled;

@@ -769,11 +769,7 @@ namespace Xamarin.Android.Tools.Tests
 				WindowStyle             = ProcessWindowStyle.Hidden,
 
 			};
-			var proc    = Process.Start (psi);
-			if (!proc.WaitForExit ((int) TimeSpan.FromSeconds(30).TotalMilliseconds)) {
-				proc.Kill ();
-				proc.WaitForExit ();
-			}
+			Process.Run (psi, TimeSpan.FromSeconds (30));
 		}
 
 		[Test]

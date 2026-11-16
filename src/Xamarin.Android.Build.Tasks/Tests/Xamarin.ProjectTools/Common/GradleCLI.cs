@@ -30,39 +30,27 @@ namespace Xamarin.ProjectTools
 			var procOutput = new StringBuilder ();
 			bool succeeded;
 
-			using (var p = new Process ()) {
-				p.StartInfo.FileName = GradlePath;
-				p.StartInfo.Arguments = string.Join (" ", args);
-				p.StartInfo.Arguments += $" --no-daemon";
+			var psi = new ProcessStartInfo (GradlePath, string.Join (" ", args) + " --no-daemon") {
+				CreateNoWindow = true,
+				UseShellExecute = false,
+				RedirectStandardOutput = true,
+				RedirectStandardError = true,
+			};
+			psi.SetEnvironmentVariable ("JAVA_HOME", JavaSdkPath);
+			if (Directory.Exists (ProjectDirectory)) {
+				psi.WorkingDirectory = ProjectDirectory;
+			}
 
-				p.StartInfo.CreateNoWindow = true;
-				p.StartInfo.UseShellExecute = false;
-				p.StartInfo.RedirectStandardOutput = true;
-				p.StartInfo.RedirectStandardError = true;
-				p.StartInfo.SetEnvironmentVariable ("JAVA_HOME", JavaSdkPath);
-
-				if (Directory.Exists (ProjectDirectory)) {
-					p.StartInfo.WorkingDirectory = ProjectDirectory;
-				};
-
-				p.ErrorDataReceived += (sender, e) => {
-					if (e.Data != null) {
-						procOutput.AppendLine (e.Data);
-					}
-				};
-				p.ErrorDataReceived += (sender, e) => {
-					if (e.Data != null) {
-						procOutput.AppendLine (e.Data);
-					}
-				};
-
-				procOutput.AppendLine ($"Running: {p.StartInfo.FileName} {p.StartInfo.Arguments}");
-				p.Start ();
-				p.BeginOutputReadLine ();
-				p.BeginErrorReadLine ();
-				bool completed = p.WaitForExit ((int) new TimeSpan (0, 5, 0).TotalMilliseconds);
-				succeeded = completed && p.ExitCode == 0;
-				procOutput.AppendLine ($"Exit Code: {p.ExitCode}");
+			procOutput.AppendLine ($"Running: {psi.FileName} {psi.Arguments}");
+			try {
+				var result = Process.RunAndCaptureText (psi, TimeSpan.FromMinutes (5));
+				procOutput.AppendLine (result.StandardOutput);
+				procOutput.AppendLine (result.StandardError);
+				succeeded = result.ExitStatus.ExitCode == 0;
+				procOutput.AppendLine ($"Exit Code: {result.ExitStatus.ExitCode}");
+			} catch (TimeoutException) {
+				succeeded = false;
+				procOutput.AppendLine ("Process timed out after 5 minutes.");
 			}
 
 			File.WriteAllText (ProcessLogFile, procOutput.ToString ());

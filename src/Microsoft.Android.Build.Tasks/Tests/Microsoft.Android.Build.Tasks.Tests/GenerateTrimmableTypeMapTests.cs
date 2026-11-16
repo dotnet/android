@@ -2,6 +2,9 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Reflection;
+using System.Reflection.Metadata.Ecma335;
+using System.Reflection.PortableExecutable;
 using System.Xml.Linq;
 using Microsoft.Android.Sdk.TrimmableTypeMap;
 using Microsoft.Android.Tasks;
@@ -13,6 +16,79 @@ namespace Xamarin.Android.Build.Tests {
 	[TestFixture]
 	[Parallelizable (ParallelScope.Children)]
 	public class GenerateTrimmableTypeMapTests : BaseTest {
+
+		[Test]
+		public void SealedFrameworkProxiesPassIsSealedToBase (
+			[Values ("Mono.Android", "Other")] string assemblyName,
+			[Values] bool isSealed,
+			[Values] bool alias,
+			[Values] bool generic)
+		{
+			var peer = new JavaPeerInfo {
+				JavaName = "example/Peer",
+				CompatJniName = "example/Peer",
+				ManagedTypeName = generic ? "Example.Peer`1" : "Example.Peer",
+				ManagedTypeNamespace = "Example",
+				ManagedTypeShortName = generic ? "Peer`1" : "Peer",
+				AssemblyName = assemblyName,
+				IsFrameworkAssembly = true,
+				IsSealed = isSealed,
+				IsGenericDefinition = generic,
+				DoNotGenerateAcw = true,
+				ActivationCtor = new ActivationCtorInfo {
+					DeclaringTypeName = generic ? "Example.Peer`1" : "Example.Peer",
+					DeclaringAssemblyName = assemblyName,
+					DeclaringType = new TypeRefData {
+						ManagedTypeName = generic ? "Example.Peer`1" : "Example.Peer",
+						AssemblyName = assemblyName,
+					},
+					Style = ActivationCtorStyle.XamarinAndroid,
+				},
+				JavaConstructors = [new JavaConstructorInfo { JniSignature = "()V", ConstructorIndex = 0 }],
+			};
+			var peers = new List<JavaPeerInfo> { peer };
+			if (alias) {
+				peers.Add (peer with {
+					ManagedTypeName = "Example.OtherPeer",
+					ManagedTypeShortName = "OtherPeer",
+					IsSealed = false,
+					IsGenericDefinition = false,
+					ActivationCtor = new ActivationCtorInfo {
+						DeclaringTypeName = "Example.OtherPeer",
+						DeclaringAssemblyName = assemblyName,
+						DeclaringType = new TypeRefData {
+							ManagedTypeName = "Example.OtherPeer",
+							AssemblyName = assemblyName,
+						},
+						Style = ActivationCtorStyle.XamarinAndroid,
+					},
+				});
+			}
+
+			var generator = new TypeMapAssemblyGenerator (new Version (12, 0));
+			var model = generator.CreateModel (peers, "_Example.TypeMap");
+			using var stream = new MemoryStream ();
+			generator.Generate (model, stream, useSharedTypemapUniverse: true);
+			stream.Position = 0;
+			using var assembly = Mono.Cecil.AssemblyDefinition.ReadAssembly (stream);
+			Assert.AreEqual (alias ? 2 : 1, model.ProxyTypes.Count, "Every peer must emit a proxy.");
+			foreach (var proxy in model.ProxyTypes) {
+				bool eligible = assemblyName == "Mono.Android" && isSealed && proxy.TargetType.ManagedTypeName == peer.ManagedTypeName;
+				const string expectedBase = "Java.Interop.JavaPeerProxy";
+				var type = assembly.MainModule.Types.Single (type => type.Name == proxy.TypeName);
+				Assert.AreEqual (expectedBase, type.BaseType.FullName, type.FullName);
+				var constructor = type.Methods.Single (method => method.IsConstructor);
+				var baseCall = constructor.Body.Instructions
+					.Single (instruction => instruction.Operand is Mono.Cecil.MethodReference { Name: ".ctor" });
+				var baseConstructor = (Mono.Cecil.MethodReference) baseCall.Operand;
+				Assert.AreEqual (expectedBase, baseConstructor.DeclaringType.FullName, "The constructor must call the selected base.");
+				Assert.AreEqual (3, baseConstructor.Parameters.Count, "The constructor must pass IsSealed to the base.");
+				Assert.AreEqual ("System.Boolean", baseConstructor.Parameters [2].ParameterType.FullName);
+				var expectedIsSealed = eligible ? Mono.Cecil.Cil.Code.Ldc_I4_1 : Mono.Cecil.Cil.Code.Ldc_I4_0;
+				Assert.AreEqual (expectedIsSealed, baseCall.Previous.OpCode.Code, type.FullName);
+				Assert.IsFalse (type.Properties.Any (property => property.Name == "IsSealed"), "Proxies must not override IsSealed.");
+			}
+		}
 
 		[Test]
 		public void AssemblyQualifiedApplicationTypeReferencesSelectCorrectPeer ()
@@ -378,6 +454,57 @@ namespace Xamarin.Android.Build.Tests {
 			var exception = Assert.Throws<InvalidDataException> (() => GenerateTrimmableTypeMap.LoadCustomViewTypeNames (mapFile));
 
 			StringAssert.Contains ("Invalid custom view map entry 'invalid'", exception?.Message);
+		}
+
+		[Test]
+		public void ScannerRecordsIsSealedFromTypeMetadata ()
+		{
+			var pe = new PEAssemblyBuilder (new Version (11, 0, 0, 0));
+			pe.EmitPreamble ("ScannerPeers", "ScannerPeers.dll");
+			var registerAttribute = pe.Metadata.AddTypeReference (
+				pe.MonoAndroidRef,
+				pe.Metadata.GetOrAddString ("Android.Runtime"),
+				pe.Metadata.GetOrAddString ("RegisterAttribute"));
+			var registerCtor = pe.AddMemberRef (registerAttribute, ".ctor",
+				sig => sig.MethodSignature (isInstanceMethod: true).Parameters (1,
+					rt => rt.Void (),
+					p => p.AddParameter ().Type ().String ()));
+			var objectType = pe.Metadata.AddTypeReference (
+				pe.SystemRuntimeRef,
+				pe.Metadata.GetOrAddString ("System"),
+				pe.Metadata.GetOrAddString ("Object"));
+			var nonsealedType = pe.Metadata.AddTypeDefinition (
+				TypeAttributes.Public | TypeAttributes.Class,
+				pe.Metadata.GetOrAddString ("Example"),
+				pe.Metadata.GetOrAddString ("NonsealedPeer"),
+				objectType,
+				MetadataTokens.FieldDefinitionHandle (1),
+				MetadataTokens.MethodDefinitionHandle (1));
+			var sealedType = pe.Metadata.AddTypeDefinition (
+				TypeAttributes.Public | TypeAttributes.Class | TypeAttributes.Sealed,
+				pe.Metadata.GetOrAddString ("Example"),
+				pe.Metadata.GetOrAddString ("SealedPeer"),
+				nonsealedType,
+				MetadataTokens.FieldDefinitionHandle (1),
+				MetadataTokens.MethodDefinitionHandle (1));
+			foreach (var (type, javaName) in new [] {
+				(nonsealedType, "example/NonsealedPeer"),
+				(sealedType, "example/SealedPeer"),
+			}) {
+				pe.Metadata.AddCustomAttribute (type, registerCtor, pe.BuildAttributeBlob (blob => blob.WriteSerializedString (javaName)));
+			}
+
+			using var stream = new MemoryStream ();
+			pe.WritePE (stream);
+			stream.Position = 0;
+			using var reader = new PEReader (stream);
+			using var scanner = new JavaPeerScanner ();
+			var peers = scanner.Scan ([new AssemblyInput ("ScannerPeers", "", reader)]);
+
+			var sealedPeer = peers.Single (peer => peer.JavaName == "example/SealedPeer");
+			var nonsealedPeer = peers.Single (peer => peer.JavaName == "example/NonsealedPeer");
+			Assert.IsTrue (sealedPeer.IsSealed, sealedPeer.ManagedTypeName);
+			Assert.IsFalse (nonsealedPeer.IsSealed, nonsealedPeer.ManagedTypeName);
 		}
 
 		[Test]

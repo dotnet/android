@@ -53,7 +53,10 @@ var options = new OptionSet {
 	  v => PlatformVersion = v },
 	{ "preview-platform-version=",
 	  "The preview Android SDK Platform {VERSION} dotnet/android binds.",
-	  v => PreviewPlatformVersions.Add (v) },
+	  v => {
+		if (!string.IsNullOrWhiteSpace (v))
+			PreviewPlatformVersions.Add (v);
+	  } },
 	{ "workload-version=",
 	  "The {VERSION} of the dotnet/android workload.",
 	  v => WorkloadVersion = v },
