@@ -40,8 +40,9 @@ public class NuGetPackageVersionFinderTests : BaseTest
 		Assert.IsEmpty (engine.Errors);
 	}
 
-	[Test]
-	public void DependencyFulfilledByPackageNuspec ()
+	[TestCase ("1.0")]
+	[TestCase ("")]
+	public void DependencyFulfilledByPackageNuspec (string version)
 	{
 		var missingCache = Path.Combine (TestDirectory, "missing-packages");
 		var cache = Path.Combine (TestDirectory, "packages");
@@ -53,7 +54,7 @@ public class NuGetPackageVersionFinderTests : BaseTest
 		var library = new TaskItem ("material.jar");
 		library.SetMetadata ("Manifest", pom.FilePath);
 		var package = new TaskItem (PackageName);
-		package.SetMetadata ("Version", "1.0");
+		package.SetMetadata ("Version", version);
 
 		var engine = new MockBuildEngine (TestContext.Out, []);
 		var task = new JavaDependencyVerification {
@@ -65,6 +66,84 @@ public class NuGetPackageVersionFinderTests : BaseTest
 
 		Assert.IsTrue (task.RunTask ());
 		Assert.IsEmpty (engine.Errors);
+	}
+
+	[Test]
+	public void AmbiguousCentralPackageVersionLogsRestoreError ()
+	{
+		var assets = CreateAssets ("1.0.0", []);
+		var libraries = assets ["libraries"]?.AsObject ()
+			?? throw new InvalidOperationException ("Missing libraries.");
+		libraries [$"{PackageName}/2.0.0"] = new JsonObject {
+			["type"] = "package",
+			["path"] = "xamarin.google.material.core/2.0.0",
+			["files"] = new JsonArray (NuspecFile),
+		};
+
+		var engine = new MockBuildEngine (TestContext.Out, []);
+		var task = new JavaDependencyVerification { BuildEngine = engine };
+		var finder = NuGetPackageVersionFinder.Create (WriteAssets (assets.ToJsonString ()), task.Log)
+			?? throw new InvalidOperationException ("Could not read assets file.");
+
+		Assert.IsEmpty (finder.GetArtifactsInNugetPackage (PackageName, "", task.Log));
+		Assert.That (engine.Errors.Select (error => error.Code), Is.EqualTo (new [] { "XA4248" }));
+	}
+
+	[Test]
+	public void CentralPackageReferenceJavaArtifactOverridesNuspec ()
+	{
+		var cache = Path.Combine (TestDirectory, "packages");
+		CreateNuspec (cache);
+		using var pom = new PomBuilder ("com.google.android", "material", "2.0")
+			.WithDependency ("com.google.android", "material-core", "2.0")
+			.BuildTemporary ();
+		var library = new TaskItem ("material.jar");
+		library.SetMetadata ("Manifest", pom.FilePath);
+		var package = new TaskItem (PackageName);
+		package.SetMetadata ("JavaArtifact", "com.google.android:material-core:2.0");
+
+		var engine = new MockBuildEngine (TestContext.Out, []);
+		var task = new JavaDependencyVerification {
+			BuildEngine = engine,
+			AndroidLibraries = [library],
+			PackageReferences = [package],
+			ProjectAssetsLockFile = WriteAssets (CreateAssets ("1.0.0", [cache]).ToJsonString ()),
+		};
+
+		Assert.IsTrue (task.RunTask ());
+		Assert.IsEmpty (engine.Errors);
+	}
+
+	[TestCase (false)]
+	[TestCase (true)]
+	public void CentralPackageReferencePreservesMissingDependencyError (bool suggestPackage)
+	{
+		var cache = Path.Combine (TestDirectory, "packages");
+		CreateNuspec (cache);
+		using var pom = new PomBuilder ("com.google.android", "material", "1.0")
+			.WithDependency ("com.google.android", "material-core", "1.0")
+			.WithDependency ("com.google.android", "missing", "1.0")
+			.BuildTemporary ();
+		var library = new TaskItem ("material.jar");
+		library.SetMetadata ("Manifest", pom.FilePath);
+		using var packageMap = new TemporaryFile ("""
+			{"Packages":[{"JavaId":"com.google.android:missing","NuGetId":"Xamarin.Google.Missing"}]}
+			""");
+
+		var engine = new MockBuildEngine (TestContext.Out, []);
+		var task = new JavaDependencyVerification {
+			BuildEngine = engine,
+			AndroidLibraries = [library],
+			PackageReferences = [new TaskItem (PackageName)],
+			ProjectAssetsLockFile = WriteAssets (CreateAssets ("1.0.0", [cache]).ToJsonString ()),
+			MicrosoftPackagesFile = suggestPackage ? packageMap.FilePath : null,
+		};
+
+		Assert.IsFalse (task.RunTask ());
+		Assert.That (engine.Errors.Select (error => error.Code), Is.EqualTo (new [] { suggestPackage ? "XA4242" : "XA4241" }));
+		StringAssert.Contains ("com.google.android:missing:1.0", engine.Errors [0].Message);
+		if (suggestPackage)
+			StringAssert.Contains ("Xamarin.Google.Missing", engine.Errors [0].Message);
 	}
 
 	[TestCase (false)]
