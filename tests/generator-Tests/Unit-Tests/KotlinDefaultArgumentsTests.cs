@@ -1,7 +1,3 @@
-using System.Text;
-using System.Xml;
-using Java.Interop.Tools.JavaTypeSystem;
-using MonoDroid.Generation;
 using NUnit.Framework;
 
 namespace generatortests
@@ -15,19 +11,14 @@ namespace generatortests
 		[Test]
 		public void GeneratesOverloadsForTrailingDefaultArguments ()
 		{
-			var classParseXml = KotlinInlineClassEndToEndTests.BuildApiXmlFromKotlinFixture ("DefaultArguments.class", "DefaultArgumentsKt.class", "DefaultArgumentsInterface.class");
+			// The helper runs class-parse output through the JavaTypeSystem adjuster, like CodeGenerator,
+			// which removes the synthetic $default helpers and must keep the kotlin-default-* attributes.
+			var apiXml = KotlinInlineClassEndToEndTests.BuildApiXmlFromKotlinFixture ("DefaultArguments.class", "DefaultArgumentsKt.class", "DefaultArgumentsInterface.class");
 
-			StringAssert.Contains ("kotlin-default-jni-signature=\"(Lxat/bytecode/tests/DefaultArguments;Ljava/lang/String;IZILjava/lang/Object;)Ljava/lang/String;\"", classParseXml);
-			StringAssert.Contains ("kotlin-default-jni-signature=\"(Ljava/lang/String;IILkotlin/jvm/internal/DefaultConstructorMarker;)V\"", classParseXml);
+			StringAssert.Contains ("kotlin-default-jni-signature=\"(Lxat/bytecode/tests/DefaultArguments;Ljava/lang/String;IZILjava/lang/Object;)Ljava/lang/String;\"", apiXml);
+			StringAssert.Contains ("kotlin-default-jni-signature=\"(Ljava/lang/String;IILkotlin/jvm/internal/DefaultConstructorMarker;)V\"", apiXml);
 
-			// Like CodeGenerator, round-trip class-parse output through Java.Interop.Tools.JavaTypeSystem,
-			// which removes the synthetic `$default` helpers and must keep the kotlin-default-* attributes.
-			var sb = new StringBuilder ();
-			using (var writer = XmlWriter.Create (sb))
-				JavaXmlApiExporter.Save (JavaXmlApiImporter.ParseString (classParseXml), writer);
-			var apiXml = sb.ToString ();
-
-			var output = KotlinInlineClassEndToEndTests.GenerateCSharp (apiXml, out _, new CodeGenerationOptions { SupportDefaultInterfaceMethods = true });
+			var output = KotlinInlineClassEndToEndTests.GenerateCSharp (apiXml, out _, defaultInterfaceMethods: true);
 
 			// fun greet (greeting: String, times: Int = 2, loud: Boolean = false)
 			StringAssert.Contains ("public string Greet (string greeting, int times)", output);

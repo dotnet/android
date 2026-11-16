@@ -168,9 +168,11 @@ namespace generatortests
 				"</package>"));
 
 			// Like CodeGenerator, run class-parse output through the JavaTypeSystem adjuster.
-			// `java.util.List` comes from the reference API in a real build.
+			// `java.lang.String` and `java.util.List` come from the reference API in a real build.
 			var references = Java.Interop.Tools.JavaTypeSystem.JavaXmlApiImporter.ParseString (
-				"<api><package name='java.util' jni-name='java/util'>" +
+				"<api><package name='java.lang' jni-name='java/lang'>" +
+				"<class abstract='false' deprecated='not deprecated' final='true' name='String' static='false' visibility='public' jni-signature='Ljava/lang/String;' />" +
+				"</package><package name='java.util' jni-name='java/util'>" +
 				"<interface deprecated='not deprecated' name='List' static='false' visibility='public' jni-signature='Ljava/util/List;'>" +
 				"<typeParameters><typeParameter name='E' /></typeParameters>" +
 				"</interface></package></api>");
