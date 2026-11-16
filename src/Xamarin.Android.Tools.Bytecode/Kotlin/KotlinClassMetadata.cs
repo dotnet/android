@@ -246,7 +246,7 @@ namespace Xamarin.Android.Tools.Bytecode
 				Flags = (KotlinFunctionFlags)f.Flags,
 				Name = resolver.GetString (f.Name),
 				JvmName = resolver.GetString ((sig is null || sig.Name == 0) ? f.Name : sig.Name),
-				JvmSignature = sig is null ? null : resolver.GetString (sig.Desc),
+				JvmSignature = (sig is null || sig.Desc == 0) ? null : resolver.GetString (sig.Desc),
 				ReturnType = KotlinType.FromProtobuf (f.ReturnType, resolver),
 				ReturnTypeId = f.ReturnTypeId,
 				ReceiverType = KotlinType.FromProtobuf (f.ReceiverType, resolver),

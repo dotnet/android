@@ -485,6 +485,16 @@ namespace Xamarin.Android.Tools.BytecodeTests
 			StringAssert.Contains ("put(I)V, put(Ljava/lang/String;)V", warnings [0]);
 		}
 
+		[Test]
+		public void JvmNameOnlySignatureHasNoJvmSignature ()
+		{
+			var klass = LoadClassFile ("AmbiguousOverloads.class");
+			var function = GetClassMetadataForClass (klass).Functions.Single (f => f.Name == "original");
+
+			Assert.AreEqual ("renamed", function.JvmName);
+			Assert.IsNull (function.JvmSignature);
+		}
+
 		static List<string> FixupAndCaptureWarnings (ClassFile klass)
 		{
 			var warnings = new List<string> ();

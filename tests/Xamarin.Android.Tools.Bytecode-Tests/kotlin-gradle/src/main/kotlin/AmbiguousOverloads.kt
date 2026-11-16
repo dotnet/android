@@ -11,4 +11,8 @@ class AmbiguousOverloads : AmbiguousBase<String>() {
     @PublishedApi
     internal fun put(count: Int) { }
     override fun put(value: String) { }
+
+    // kotlinc writes only the JVM name, not the descriptor, for this function.
+    @JvmName("renamed")
+    fun original(count: Int) { }
 }
