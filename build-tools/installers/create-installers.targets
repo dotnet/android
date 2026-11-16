@@ -51,7 +51,6 @@
     <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)MULTIDEX_JAR_LICENSE" />
     <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)NativeAotRuntimeProvider.java" />
     <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)net.android.init.gradle.kts" />
-    <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)NuGet.Versioning.dll" />
     <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)r8.jar" />
     <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)bundletool.jar" />
     <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)java_runtime_trimmable.jar" />
@@ -87,6 +86,9 @@
     <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)net\Microsoft.Android.Build.BaseTasks.pdb" />
     <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)net\Java.Interop.Localization.dll" />
     <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)net\Java.Interop.Localization.pdb" />
+    <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)net\Java.Interop.Tools.Maven.dll" />
+    <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)net\Java.Interop.Tools.Maven.pdb" />
+    <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)net\NuGet.Versioning.dll" />
     <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)net\Xamarin.Android.Tools.AndroidSdk.dll" />
     <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)net\Xamarin.Android.Tools.AndroidSdk.pdb" />
     <_MSBuildFiles Include="@(_LocalizationLanguages->'$(MicrosoftAndroidSdkOutDir)net\%(Identity)\Microsoft.Android.Build.BaseTasks.resources.dll')" />
