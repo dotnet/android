@@ -32,6 +32,9 @@ namespace generator.SourceWriters
 
 				if (method.Asyncify)
 					Methods.Add (new MethodExtensionAsyncWrapper (method, opt, iface.FullName));
+
+				if (KotlinSuspendMethodWrapper.ShouldGenerate (method, iface))
+					Methods.Add (new KotlinSuspendMethodWrapper (method, opt, iface.FullName));
 			}
 		}
 

@@ -413,6 +413,7 @@ namespace Xamarin.Android.Tools.Bytecode {
 				ret,
 				jniRet,
 				GetKotlinInlineClassReturnJniType (method),
+				method.KotlinSuspendReturnType != null ? new XAttribute ("kotlin-suspend-return-type", method.KotlinSuspendReturnType) : null,
 				new XAttribute ("static",       (method.AccessFlags & MethodAccessFlags.Static) != 0),
 				GetSynchronized (method),
 				new XAttribute ("visibility",   GetVisibility (method.AccessFlags)),
