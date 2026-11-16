@@ -25,6 +25,8 @@ class Nullability(val name: String, val nickname: String?) {
 
     fun produce(): Maybe = Maybe(null)
 
+    suspend fun fetch(text: String): String = text
+
     val platform = System.getProperty("x")
 }
 

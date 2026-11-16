@@ -348,9 +348,7 @@ namespace Xamarin.Android.Tools.Bytecode
 			if (metadata.ReceiverType != null && start > 0)
 				java_parameters [0].KotlinNotNull = IsNotNullReference (metadata.ReceiverType, java_parameters [0].Type.BinaryName);
 
-			// The JVM return type of a suspend function is not the Kotlin return type
-			if (!metadata.Flags.HasFlag (KotlinFunctionFlags.IsSuspend))
-				method.KotlinReturnNotNull = IsNotNullReference (metadata.ReturnType, method.ReturnType.BinaryName);
+			method.KotlinReturnNotNull = IsNotNullReference (metadata.ReturnType, method.ReturnType.BinaryName);
 
 			// Handle erasure of Kotlin unsigned types
 			method.KotlinReturnType = GetKotlinType (method.ReturnType.TypeSignature, metadata.ReturnType?.ClassName);

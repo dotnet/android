@@ -524,6 +524,11 @@ namespace Xamarin.Android.Tools.BytecodeTests
 			Assert.IsNull (ReturnNotNull (xml.Elements ("method").Single (e => e.Attribute ("name").Value.StartsWith ("produce", StringComparison.Ordinal))),
 				"An unboxed value class can be null in Java.");
 			Assert.IsNull (ReturnNotNull (Method ("getPlatform")), "A platform type can be null.");
+
+			// The JVM return type is Object, not String
+			var fetch = Method ("fetch");
+			Assert.IsNull (ReturnNotNull (fetch));
+			Assert.AreEqual ("true", NotNull (fetch.Elements ("parameter").First ()));
 		}
 
 		static void RemoveInvisibleAnnotations (AttributeCollection attributes)
