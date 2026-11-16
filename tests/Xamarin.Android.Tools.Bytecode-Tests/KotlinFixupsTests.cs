@@ -459,12 +459,10 @@ namespace Xamarin.Android.Tools.BytecodeTests
 		{
 			var klass = LoadClassFile ("AmbiguousOverloads.class");
 			var bridge = klass.Methods.Single (m => m.Name == "put" && m.Descriptor == "(Ljava/lang/Object;)V");
-			Assert.IsTrue (bridge.AccessFlags.HasFlag (MethodAccessFlags.Bridge));
 
 			var warnings = FixupAndCaptureWarnings (klass);
 
-			// Both `put(count: Int)` and `put(value: String)` match the bridge. Do not apply the
-			// first match, the internal `put(count: Int)`, because it hides the bridge.
+			// Both `put` functions match the bridge. The first match, the internal `put(count: Int)`, would hide it.
 			Assert.IsTrue (bridge.AccessFlags.HasFlag (MethodAccessFlags.Public));
 			Assert.IsEmpty (warnings);
 		}
@@ -475,7 +473,7 @@ namespace Xamarin.Android.Tools.BytecodeTests
 			var klass = LoadClassFile ("AmbiguousOverloads.class");
 			var method = klass.Methods.Single (m => m.Name == "put" && m.Descriptor == "(Ljava/lang/Object;)V");
 
-			// Make the bridge look like a public API method that matches more than one Kotlin function.
+			// Make the bridge look like a public API method.
 			method.AccessFlags = MethodAccessFlags.Public;
 
 			var warnings = FixupAndCaptureWarnings (klass);

@@ -561,18 +561,15 @@ namespace Xamarin.Android.Tools.Bytecode
 			return null;
 		}
 
-		// Do not guess when more than one Kotlin function matches a Java method:
-		// a wrong match can rename parameters, hide the method, or change its types.
 		static void ReportAmbiguousFunction (MethodInfo javaMethod, KotlinFunction [] matches)
 		{
 			var java_method = $"{javaMethod.DeclaringType?.ThisClass.Name.Value}.{javaMethod.Name}{javaMethod.Descriptor}";
 			var kotlin_functions = string.Join (", ", matches.Select (f => $"{f.Name}{f.JvmSignature ?? f.ConstructJvmSignature ()}"));
 
-			// kotlinc emits synthetic bridge methods (for example `put(Ljava/lang/Object;)V` for a
-			// generic override) that can match several overloads. These are not public API,
+			// Non-public and synthetic methods (for example, kotlinc bridges) are not bound API,
 			// so a warning would only be noise.
-			if (javaMethod.AccessFlags.HasFlag (MethodAccessFlags.Synthetic)) {
-				Log.Debug ($"Kotlin: Skipping synthetic method {java_method} that matches more than one Kotlin function: {kotlin_functions}");
+			if (!javaMethod.IsPubliclyVisible || javaMethod.AccessFlags.HasFlag (MethodAccessFlags.Synthetic)) {
+				Log.Debug ($"Kotlin: Skipping non-public or synthetic method {java_method} that matches more than one Kotlin function: {kotlin_functions}");
 				return;
 			}
 
