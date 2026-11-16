@@ -306,12 +306,14 @@ namespace MonoDroid.Generation
 		{
 			// Process regular methods (non-static, non-interface default methods)
 			foreach (var m in Methods.Where (m => !m.IsStatic && !m.IsInterfaceDefaultMethod)) {
+				bool Matches (Method mm) =>
+					mm.Name == m.Name &&
+					mm.Visibility == m.Visibility &&
+					mm.RetVal.FullName == m.RetVal.FullName && // if return type is different, it could be still "new", not "override".
+					ParameterList.Equals (mm.Parameters, m.Parameters);
+
 				for (var bt = GetBaseGen (opt); bt != null; bt = bt.GetBaseGen (opt)) {
-					var bm = bt.Methods.FirstOrDefault (mm =>
-						mm.Name == m.Name &&
-						mm.Visibility == m.Visibility &&
-						mm.RetVal.FullName == m.RetVal.FullName && // if return type is different, it could be still "new", not "override".
-						ParameterList.Equals (mm.Parameters, m.Parameters));
+					var bm = bt.Methods.FirstOrDefault (Matches);
 					if (bm == null && bt is ClassGen { IsAbstract: true } abstractBase &&
 							!bt.ContainsMethod (m, false, false)) {
 						// These abstract slots are emitted from interfaces later, during class generation.
@@ -319,9 +321,7 @@ namespace MonoDroid.Generation
 							!mm.IsInterfaceDefaultMethod && !mm.IsStatic && !mm.IsGeneric &&
 							!abstractBase.SkippedInterfaceMethods.Contains (mm.GetSkipInvokerSignature ()) &&
 							!abstractBase.ExplicitlyImplementedInterfaceMethods.Contains (mm.GetSignature ()) &&
-							mm.Name == m.Name && mm.Visibility == m.Visibility &&
-							mm.RetVal.FullName == m.RetVal.FullName &&
-							ParameterList.Equals (mm.Parameters, m.Parameters));
+							Matches (mm));
 					}
 					if (bm == null) {
 						continue;

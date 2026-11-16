@@ -1303,7 +1303,7 @@ namespace generatortests
 			var baseType = gens.Single (g => g.Name == "Base");
 			var derived = gens.Single (g => g.Name == "Derived");
 			var method = derived.Methods.Single ();
-			Assert.That (baseType.Methods, Is.Empty, "The abstract slot exists only in the implemented interface.");
+			Assert.That (baseType.Methods, Is.Empty);
 			Assert.AreEqual (!skip, method.IsOverride);
 			Assert.AreEqual (skip ? null : "deprecated", method.Deprecated);
 			Assert.AreEqual (skip ? 29 : 21, method.DeprecatedSince?.ApiLevel ?? 0);

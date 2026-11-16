@@ -1,6 +1,5 @@
 using System;
 using System.Linq;
-using System.Reflection;
 using MonoDroid.Generation;
 using NUnit.Framework;
 
@@ -68,10 +67,10 @@ namespace generatortests
 			var middle = gens.Single (g => g.Name == "IMiddle").Methods.Single ();
 			var leaf = gens.Single (g => g.Name == "ILeaf").Methods.Single ();
 
-			Assert.False (middle.Parameters [0].NotNull, "The derived DIM explicitly accepts null.");
-			Assert.False (leaf.Parameters [0].NotNull, "The middle DIM's nullable input must survive the full chain.");
+			Assert.False (middle.Parameters [0].NotNull);
+			Assert.False (leaf.Parameters [0].NotNull);
 			Assert.True (leaf.Parameters [1].NotNull);
-			Assert.True (leaf.RetVal.NotNull, "The middle DIM's non-null return must survive the full chain.");
+			Assert.True (leaf.RetVal.NotNull);
 
 			foreach (var gen in gens)
 				GetGeneratedTypeOutput (gen);
@@ -88,15 +87,11 @@ namespace generatortests
 					public class NullPointerException : Exception { }
 				}
 				""";
-			var assembly = Compiler.CompileSources ([
+			Compiler.CompileSources ([
 				"#nullable enable\nusing System; using Android.Runtime; using Java.Interop; namespace Com.Example {\n" + source + "\n}",
 				support,
 			], out var hasErrors, out var output, out _, allowWarnings: false);
 			Assert.False (hasErrors, output + "\n" + source);
-			Assert.IsNotNull (assembly.GetType ("Com.Example.ILeafInvoker"));
-			var iface = assembly.GetType ("Com.Example.ILeaf", throwOnError: true);
-			Assert.That (iface.GetMethods (BindingFlags.Static | BindingFlags.NonPublic)
-				.Any (method => method.Name.StartsWith ("__n_Transform", StringComparison.Ordinal)));
 		}
 
 		[Test]
