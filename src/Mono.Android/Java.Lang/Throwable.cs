@@ -172,7 +172,7 @@ namespace Java.Lang {
 				try {
 					Dispose ();
 				} catch (System.Exception cleanupException) {
-					Logger.Log (LogLevel.Error, "monodroid", "Failed to dispose a partially constructed Throwable: " + cleanupException);
+					Logger.Log (LogLevel.Error, "DOTNET", "Failed to dispose a partially constructed Throwable: " + cleanupException);
 				}
 				throw;
 			} finally {
@@ -197,10 +197,6 @@ namespace Java.Lang {
 				throw new ArgumentNullException ("e");
 
 			return e;
-		}
-
-		~Throwable ()
-		{
 		}
 
 		public new void UnregisterFromRuntime () => base.UnregisterFromRuntime ();

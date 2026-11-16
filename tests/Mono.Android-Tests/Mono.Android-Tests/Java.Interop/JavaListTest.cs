@@ -141,6 +141,176 @@ namespace Java.InteropTests
 		}
 
 		[TestMethod]
+		[DataRow (1)]
+		[DataRow (2)]
+		public void RemoveAllRemovesEveryMatchingElement (int removalCount)
+		{
+			list.Add ("foo");
+			list.Add ("foo");
+			list.Add ("bar");
+			list.Add ("foo");
+			list.Add ("baz");
+			using var collection = new JavaList ();
+			for (int i = 0; i < removalCount; i++)
+				collection.Add ("foo");
+
+			Assert.IsTrue (list.RemoveAll (collection));
+			CollectionAssert.AreEqual (new [] { "bar", "baz" }, list);
+			Assert.AreEqual (removalCount, collection.Count);
+			Assert.IsFalse (list.RemoveAll (collection));
+		}
+
+		[TestMethod]
+		public void RemoveAllWithoutMatchesReturnsFalse ()
+		{
+			list.Add ("foo");
+			using var collection = new JavaList (new [] { "bar" });
+
+			Assert.IsFalse (list.RemoveAll (collection));
+			CollectionAssert.AreEqual (new [] { "foo" }, list);
+		}
+
+		[TestMethod]
+		public void RemoveAllRemovesBoxedValues ()
+		{
+			list.Add ((object) 42);
+			list.Add ((object) 42);
+			list.Add ((object) 7);
+			using var collection = new JavaList (new object [] { 42 });
+
+			Assert.IsTrue (list.RemoveAll (collection));
+			Assert.AreEqual (1, list.Count);
+			Assert.AreEqual (7, list [0]);
+		}
+
+		[TestMethod]
+		public void RemoveAllDoesNotDisposeExistingPeers ()
+		{
+			using var item = new Java.Lang.String ("foo");
+			list.Add ((object) item);
+			list.Add ((object) item);
+			using var collection = new JavaList ();
+			collection.Add ((object) item);
+
+			Assert.IsTrue (list.RemoveAll (collection));
+			Assert.AreEqual (0, list.Count);
+			Assert.IsTrue (item.PeerReference.IsValid);
+			Assert.AreEqual ("foo", item.ToString ());
+		}
+
+		[TestMethod]
+		[DataRow (false)]
+		[DataRow (true)]
+		[DoNotParallelize]
+		public void RemoveAllDoesNotDisposePeerFromReentrantLookup (bool reentrantActivation)
+		{
+			var handle = JNIEnv.CreateInstance (ReentrantLookupPeer.JniName, "()V");
+			ReentrantLookupPeer registered = null;
+			try {
+				using (var item = new Java.Lang.Object (handle, JniHandleOwnership.DoNotTransfer | JniHandleOwnership.DoNotRegister))
+					list.Add ((object) item);
+				if (reentrantActivation) {
+					ReentrantLookupPeer.BeforeRegistration = value => {
+						registered = Java.Lang.Object.GetObject<ReentrantLookupPeer> (value, JniHandleOwnership.DoNotTransfer);
+					};
+				}
+				using var collection = new BulkRemovalJavaList {
+					BeforeContains = item => {
+						registered = Java.Lang.Object.GetObject<ReentrantLookupPeer> (handle, JniHandleOwnership.DoNotTransfer);
+					},
+				};
+
+				Assert.IsNull (JniRuntime.CurrentRuntime.ValueManager.PeekPeer (new JniObjectReference (handle)));
+				Assert.IsFalse (list.RemoveAll (collection));
+				Assert.AreEqual (1, collection.ContainsCalls);
+				Assert.IsNotNull (registered);
+				if (registered == null)
+					throw new InvalidOperationException ("The Contains callback did not acquire a peer.");
+				Assert.IsTrue (registered.PeerReference.IsValid, "RemoveAll must not dispose a peer acquired by another lookup.");
+				Assert.AreSame (registered, JniRuntime.CurrentRuntime.ValueManager.PeekPeer (new JniObjectReference (handle)));
+				Assert.IsTrue (JniEnvironment.Types.IsSameObject (new JniObjectReference (handle), registered.PeerReference));
+			} finally {
+				ReentrantLookupPeer.BeforeRegistration = null;
+				registered?.Dispose ();
+				JNIEnv.DeleteLocalRef (handle);
+			}
+		}
+
+		[TestMethod]
+		public void RemoveAllWithEmptyCollectionsReturnsFalse ()
+		{
+			using var collection = new JavaList ();
+			Assert.IsFalse (list.RemoveAll (collection));
+
+			list.Add ("foo");
+			Assert.IsFalse (list.RemoveAll (collection));
+			CollectionAssert.AreEqual (new [] { "foo" }, list);
+
+			list.Clear ();
+			collection.Add ("foo");
+			Assert.IsFalse (list.RemoveAll (collection));
+			Assert.AreEqual (0, list.Count);
+		}
+
+		[TestMethod]
+		public void RemoveAllRemovesNullItems ()
+		{
+			list.Add ((object) null);
+			list.Add ("foo");
+			list.Add ((object) null);
+			using var collection = new JavaList ();
+			collection.Add ((object) null);
+
+			Assert.IsTrue (list.RemoveAll (collection));
+			CollectionAssert.AreEqual (new [] { "foo" }, list);
+			Assert.IsFalse (list.RemoveAll (collection));
+		}
+
+		[TestMethod]
+		[DataRow (true)]
+		[DataRow (false)]
+		public void RemoveAllRejectsNullCollection (bool populated)
+		{
+			if (populated)
+				list.Add ("foo");
+
+			var exception = Assert.ThrowsExactly<ArgumentNullException> (() => list.RemoveAll (null));
+			Assert.AreEqual ("collection", exception.ParamName);
+			Assert.AreEqual (populated ? 1 : 0, list.Count);
+		}
+
+		[TestMethod]
+		public void RemoveAllWithSelfRemovesEveryElement ()
+		{
+			list.Add ("foo");
+			list.Add ("foo");
+			list.Add ("bar");
+			list.Add ((object) null);
+
+			Assert.IsTrue (list.RemoveAll (list));
+			Assert.AreEqual (0, list.Count);
+			Assert.IsFalse (list.RemoveAll (list));
+		}
+
+		[TestMethod]
+		[DataRow (true)]
+		[DataRow (false)]
+		public void RemoveAllUsesVirtualContainsAndRemove (bool allowRemoval)
+		{
+			using var destination = new BulkRemovalJavaList { AllowRemoval = allowRemoval };
+			using var collection = new BulkRemovalJavaList ();
+			destination.Add ("foo");
+			destination.Add ("foo");
+			destination.Add ("bar");
+			collection.Add ("foo");
+
+			Assert.AreEqual (allowRemoval, destination.RemoveAll (collection));
+			Assert.AreEqual (3, collection.ContainsCalls);
+			Assert.AreEqual (2, destination.RemoveCalls);
+			CollectionAssert.AreEqual (allowRemoval ? new [] { "bar" } : new [] { "foo", "foo", "bar" }, destination);
+		}
+
+		[TestMethod]
 		public void Set ()
 		{
 			list.Add ("foo");
@@ -167,5 +337,26 @@ namespace Java.InteropTests
 	[TestClass]
 	public class JavaListStringTest : JavaListTest<JavaList<string>>
 	{
+	}
+
+	public class BulkRemovalJavaList : JavaList
+	{
+		public bool AllowRemoval { get; set; } = true;
+		public int ContainsCalls { get; private set; }
+		public int RemoveCalls { get; private set; }
+		public Action<Java.Lang.Object> BeforeContains { get; set; }
+
+		public override bool Contains (Java.Lang.Object item)
+		{
+			ContainsCalls++;
+			BeforeContains?.Invoke (item);
+			return base.Contains (item);
+		}
+
+		public override bool Remove (Java.Lang.Object item)
+		{
+			RemoveCalls++;
+			return AllowRemoval && base.Remove (item);
+		}
 	}
 }

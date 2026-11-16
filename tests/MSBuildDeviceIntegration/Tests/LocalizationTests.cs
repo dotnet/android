@@ -4,7 +4,6 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Threading;
-using Mono.Unix.Native;
 using NUnit.Framework;
 using NUnit.Framework.Interfaces;
 using Xamarin.ProjectTools;

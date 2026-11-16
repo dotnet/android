@@ -6,6 +6,8 @@
     <RootNamespace>manifest_attribute_codegen</RootNamespace>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
+    <LangVersion>preview</LangVersion>
+    <MemorySafetyRulesVersion>2</MemorySafetyRulesVersion>
     <OutputPath>..\..\bin\Build$(Configuration)</OutputPath>
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
   </PropertyGroup>
@@ -24,10 +26,6 @@
   <Target Name="GenerateManifestAttributes"
       DependsOnTargets="Build">
 
-    <PropertyGroup>
-      <_ManifestAttributeCodeGen>$(TargetPath)</_ManifestAttributeCodeGen>
-      <_ManifestFile>$(MSBuildThisFileDirectory)manifest-definition.xml</_ManifestFile>
-    </PropertyGroup>
     <ItemGroup>
       <_MacArgs Include="&quot;$(TargetPath)&quot;" />
       <_MacArgs Include="&quot;-sdk-path=$(AndroidSdkFullPath)&quot;" />

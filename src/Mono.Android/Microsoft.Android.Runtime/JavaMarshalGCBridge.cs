@@ -421,18 +421,18 @@ static class JavaMarshalGCBridge
 
 			Logger.Log (
 				LogLevel.Info,
-				"monodroid-gc",
+				"DOTNET-gc",
 				$"cross references callback invoked with {args->ComponentCount} sccs and {args->CrossReferenceCount} xrefs.");
 
 			for (nuint i = 0; i < args->ComponentCount; i++) {
 				StronglyConnectedComponent component = args->Components [i];
-				Logger.Log (LogLevel.Info, "monodroid-gc", $"group {i} with {component.Count} objects");
+				Logger.Log (LogLevel.Info, "DOTNET-gc", $"group {i} with {component.Count} objects");
 				for (nuint j = 0; j < component.Count; j++) {
 					JniObjectReference reference = GetContext (component, j)->PeerReference;
 					string? className = reference.IsValid ? JniEnvironment.Types.GetJniTypeNameFromInstance (reference) : null;
 					Logger.Log (
 						LogLevel.Info,
-						"monodroid-gc",
+						"DOTNET-gc",
 						string.Create (
 							CultureInfo.InvariantCulture,
 							$"gref 0x{unchecked((nuint)reference.Handle):x} [{className ?? "unknown class"}]"));
@@ -443,7 +443,7 @@ static class JavaMarshalGCBridge
 				ComponentCrossReference crossReference = args->CrossReferences [i];
 				Logger.Log (
 					LogLevel.Info,
-					"monodroid-gc",
+					"DOTNET-gc",
 					$"xref [{i}] {crossReference.SourceGroupIndex} -> {crossReference.DestinationGroupIndex}");
 			}
 		}
@@ -466,7 +466,7 @@ static class JavaMarshalGCBridge
 						alive++;
 				}
 			}
-			Logger.Log (LogLevel.Info, "monodroid-gc", $"GC cleanup summary: {total} objects tested - resurrecting {alive}.");
+			Logger.Log (LogLevel.Info, "DOTNET-gc", $"GC cleanup summary: {total} objects tested - resurrecting {alive}.");
 		}
 	}
 
@@ -536,7 +536,7 @@ static class JavaMarshalGCBridge
 				} catch (Exception e) when (e is JavaException || e is InvalidOperationException) {
 					Logger.Log (
 						LogLevel.Warn,
-						"monodroid-gc",
+						"DOTNET-gc",
 						$"Failed to reserve JNI local reference capacity for {temporaryPeerCount} temporary peers: {e.Message}");
 				}
 			}

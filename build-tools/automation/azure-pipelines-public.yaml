@@ -57,7 +57,7 @@ variables:
 - name: NetCorePublicPoolName
   value: NetCore-Public
 - name: WindowsPoolImageNetCorePublic
-  value: windows.vs2022.amd64.open
+  value: windows.vs2026.amd64.open
 - name: LinuxPoolImageNetCorePublic
   value: build.Ubuntu.2204.amd64.open
 # Skip tests when explicitly requested; otherwise run full PR test matrix.
@@ -156,6 +156,7 @@ stages:
     pool:
       name: $(NetCorePublicPoolName)
       demands:
+      # The build runs a .NET TaskHost test that requires MSBuild 18.7 or later.
       - ImageOverride -equals $(WindowsPoolImageNetCorePublic)
     timeoutInMinutes: 240
     steps:
@@ -321,7 +322,7 @@ stages:
   jobs:
   - job: mac_msbuild_tests
     strategy:
-      parallel: 10
+      parallel: 9
     displayName: macOS > Tests > MSBuild
     pool:
       name: AcesShared
@@ -367,7 +368,7 @@ stages:
 
   - job: win_msbuild_tests
     strategy:
-      parallel: 8
+      parallel: 7
     displayName: Windows > Tests > MSBuild
     pool:
       name: $(NetCorePublicPoolName)

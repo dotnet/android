@@ -83,12 +83,13 @@
   </Target>
 
   <PropertyGroup>
+    <_GenerateProguardAfterTargets Condition=" '$(_GenerateProguardAfterTargets)' == '' and '$(PublishTrimmed)' != 'true' ">ComputeFilesToPublish</_GenerateProguardAfterTargets>
     <_GenerateProguardAfterTargets Condition=" '$(_GenerateProguardAfterTargets)' == '' ">ILLink</_GenerateProguardAfterTargets>
   </PropertyGroup>
 
   <Target Name="_AndroidSetTrimmableProguardConfiguration"
-      BeforeTargets="ILLink"
-      Condition=" '$(PublishTrimmed)' == 'true' and '$(AndroidLinkTool)' != '' ">
+      BeforeTargets="$(_GenerateProguardAfterTargets)"
+      Condition=" '$(AndroidLinkTool)' != '' ">
     <PropertyGroup>
       <_ProguardProjectConfiguration Condition=" '$(_ProguardProjectConfiguration)' == '' ">$([System.IO.Path]::Combine('$(IntermediateOutputPath)', 'proguard', 'proguard_project_references.cfg'))</_ProguardProjectConfiguration>
     </PropertyGroup>
@@ -153,18 +154,19 @@
 
   <Target Name="_PrepareLinkedAssembliesForProguard"
       AfterTargets="$(_GenerateProguardAfterTargets)"
-      Condition=" '$(PublishTrimmed)' == 'true' and '$(_ProguardProjectConfiguration)' != '' ">
+      Condition=" '$(_ProguardProjectConfiguration)' != '' ">
     <ItemGroup>
       <_LinkedAssemblyForProguard Include="@(ResolvedFileToPublish)" Condition=" '%(Extension)' == '.dll' " />
     </ItemGroup>
   </Target>
 
-  <!-- Generate the R8 rules in the inner RID build before the outer R8 invocation.
+  <!-- Untrimmed builds also need rules for Java members referenced only from managed code.
+       Generate the R8 rules in the inner RID build before the outer R8 invocation.
        The outer build scans the final assemblies only for remapping metadata. -->
   <Target Name="_GenerateProguardConfiguration"
       AfterTargets="_PrepareLinkedAssembliesForProguard"
       DependsOnTargets="_AndroidInvalidateProguardConfigurationStamp"
-      Condition=" '$(PublishTrimmed)' == 'true' and '$(_ProguardProjectConfiguration)' != '' and '$(_ComputeFilesToPublishForRuntimeIdentifiers)' == 'true' and ('$(AndroidLinkTool)' != 'r8' or '$(_AndroidEnableTypemapR8Trimming)' == 'false' or '$(RunILLink)' == 'false') "
+      Condition=" '$(_ProguardProjectConfiguration)' != '' and '$(_ComputeFilesToPublishForRuntimeIdentifiers)' == 'true' and ('$(PublishTrimmed)' != 'true' or '$(AndroidLinkTool)' != 'r8' or '$(_AndroidEnableTypemapR8Trimming)' == 'false' or '$(RunILLink)' == 'false') "
       Inputs="@(_LinkedAssemblyForProguard);$(_AndroidBuildPropertiesCache)"
       Outputs="$(_ProguardProjectConfiguration).stamp">
     <GenerateProguardConfiguration

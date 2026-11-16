@@ -7,9 +7,9 @@ using System.Text;
 
 namespace Xamarin.Android.Tools {
 
-	class EclipseAdoptiumJdkLocations : JdkLocations {
+	partial class JdkLocations {
 
-		internal static IEnumerable<JdkInfo> GetEclipseAdoptiumJdks (Action<TraceLevel, string> logger)
+		internal IEnumerable<JdkInfo> GetEclipseAdoptiumJdks (Action<TraceLevel, string> logger)
 		{
 			return GetMacOSSystemJdks ("temurin-*.jdk", logger)
 				.Concat (GetMacOSSystemJdks ("adoptopenjdk-*.jdk", logger))

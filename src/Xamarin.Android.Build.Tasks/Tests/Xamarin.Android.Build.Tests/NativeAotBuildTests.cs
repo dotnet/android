@@ -122,6 +122,83 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
+		public void BuildNativeAotAppBundleIncludesDebugSymbols ()
+		{
+			var proj = new XamarinAndroidApplicationProject {
+				IsRelease = true,
+				ProjectName = "テスト\u2002Me",
+				RootNamespace = "Test.Me",
+			};
+			proj.SetRuntime (AndroidRuntime.NativeAOT);
+			string [] abis = ["arm64-v8a", "x86_64"];
+			proj.SetRuntimeIdentifiers (abis);
+			proj.SetProperty ("AndroidPackageFormat", "aab");
+			proj.SetProperty ("DebugSymbols", "false");
+
+			using var builder = CreateApkBuilder ();
+			Assert.IsTrue (builder.Build (proj), "NativeAOT AAB build should succeed.");
+			string bundle = Path.Combine (Root, builder.ProjectDirectory, proj.OutputPath, $"{proj.PackageName}-Signed.aab");
+			FileAssert.Exists (bundle);
+			string extractedDirectory = builder.Output.GetIntermediaryPath ("nativeaot-debug-symbols");
+			Directory.CreateDirectory (extractedDirectory);
+			using var archive = ZipHelper.OpenZip (bundle);
+			foreach (string abi in abis) {
+				string libraryEntryName = $"base/lib/{abi}/lib{proj.ProjectName}.so";
+				string symbolsEntryName = $"BUNDLE-METADATA/com.android.tools.build.debugsymbols/{abi}/lib{proj.ProjectName}.so.dbg";
+				string library = Path.Combine (extractedDirectory, $"{abi}.so");
+				string symbols = Path.Combine (extractedDirectory, $"{abi}.dbg.so");
+				ExtractEntry (libraryEntryName, library);
+				ExtractEntry (symbolsEntryName, symbols);
+				Assert.AreEqual (GetBuildId (library), GetBuildId (symbols),
+					$"NativeAOT debug symbols for {abi} must match the bundled application library.");
+			}
+
+			void ExtractEntry (string entryName, string path)
+			{
+				var entry = archive.GetEntry (entryName);
+				Assert.IsNotNull (entry, $"The bundle must contain '{entryName}'.");
+				using var source = entry.Open ();
+				using var destination = File.Create (path);
+				source.CopyTo (destination);
+			}
+
+			static string GetBuildId (string path)
+			{
+				string output = NativeToolTestHelper.Run ("llvm-readelf", "--notes", path);
+				string buildIdLine = output.Split ('\n').Single (line => line.Contains ("Build ID:", StringComparison.Ordinal));
+				return buildIdLine.Substring (buildIdLine.IndexOf ("Build ID:", StringComparison.Ordinal) + "Build ID:".Length).Trim ();
+			}
+		}
+
+		[Test]
+		public void NativeAotAppBundleOmitsStaleDebugSymbolsWhenIncludingDebugSymbols ()
+		{
+			var proj = new XamarinAndroidApplicationProject {
+				IsRelease = true,
+			};
+			proj.SetRuntime (AndroidRuntime.NativeAOT);
+			const string abi = "arm64-v8a";
+			proj.SetRuntimeIdentifiers ([abi]);
+			proj.SetProperty ("AndroidPackageFormat", "aab");
+			proj.SetProperty ("DebugSymbols", "false");
+
+			using var builder = CreateApkBuilder ();
+			Assert.IsTrue (builder.Build (proj), "First NativeAOT AAB build should succeed.");
+			string bundle = Path.Combine (Root, builder.ProjectDirectory, proj.OutputPath, $"{proj.PackageName}-Signed.aab");
+			string symbolsEntryName = $"BUNDLE-METADATA/com.android.tools.build.debugsymbols/{abi}/lib{proj.ProjectName}.so.dbg";
+			FileAssert.Exists (bundle);
+			using (var archive = ZipHelper.OpenZip (bundle))
+				Assert.IsNotNull (archive.GetEntry (symbolsEntryName), "The stripped build must include separate debug symbols.");
+
+			// $(AndroidIncludeDebugSymbols) is computed; this keeps Optimize=true so NativeAOT stays selected.
+			proj.SetProperty ("DebugSymbols", "true");
+			proj.SetProperty ("DebugType", "");
+			Assert.IsTrue (builder.Build (proj, doNotCleanupOnUpdate: true), "Second NativeAOT AAB build should succeed.");
+			using (var archive = ZipHelper.OpenZip (bundle))
+				Assert.IsNull (archive.GetEntry (symbolsEntryName), "Stale separate debug symbols must not be packaged once the library is unstripped.");
+		}
+
+		[Test]
 		public void BootstrapUpdatesForCommandLineFlavorChanges ()
 		{
 			var proj = new XamarinAndroidApplicationProject {
