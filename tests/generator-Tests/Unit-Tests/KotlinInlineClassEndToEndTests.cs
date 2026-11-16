@@ -12,7 +12,7 @@ namespace generatortests
 {
 	// dotnet/java-interop#1431 (Phase 2): end-to-end test that drives real
 	// Kotlin .class files (compiled by tests/Xamarin.Android.Tools.Bytecode-Tests/
-	// kotlin-gradle/) through KotlinFixups -> XmlClassDeclarationBuilder ->
+	// kotlin-gradle/) through KotlinFixups -> XmlClassDeclarationBuilder -> JavaTypeSystem adjuster ->
 	// XmlApiImporter -> JavaInteropCodeGenerator and asserts the projected C#
 	// output uses the generated `readonly partial struct` wrapper types in
 	// method signatures while keeping the JNI marshaling on the underlying
@@ -132,7 +132,23 @@ namespace generatortests
 				"<package name='java.lang' jni-name='java/lang'>" +
 				"<class abstract='false' deprecated='not deprecated' final='false' name='Object' static='false' visibility='public' jni-signature='Ljava/lang/Object;' />" +
 				"</package>"));
-			return doc.ToString ();
+
+			// Like CodeGenerator, run class-parse output through the JavaTypeSystem adjuster.
+			// `java.util.List` comes from the reference API in a real build.
+			var references = Java.Interop.Tools.JavaTypeSystem.JavaXmlApiImporter.ParseString (
+				"<api><package name='java.util' jni-name='java/util'>" +
+				"<interface deprecated='not deprecated' name='List' static='false' visibility='public' jni-signature='Ljava/util/List;'>" +
+				"<typeParameters><typeParameter name='E' /></typeParameters>" +
+				"</interface></package></api>");
+			var types = new Java.Interop.Tools.JavaTypeSystem.Models.JavaTypeCollection ();
+			foreach (var reference in references.TypesFlattened.Values)
+				types.AddReferencedType (reference);
+			Java.Interop.Tools.JavaTypeSystem.JavaXmlApiImporter.ParseString (doc.ToString (), types);
+			types.ResolveCollection ();
+			var adjusted = new StringWriter ();
+			using (var xw = System.Xml.XmlWriter.Create (adjusted))
+				Java.Interop.Tools.JavaTypeSystem.JavaXmlApiExporter.Save (types, xw);
+			return adjusted.ToString ();
 		}
 
 		static ClassFile LoadClassFile (string resource)

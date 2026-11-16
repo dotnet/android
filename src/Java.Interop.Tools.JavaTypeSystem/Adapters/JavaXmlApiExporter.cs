@@ -86,6 +86,7 @@ namespace Java.Interop.Tools.JavaTypeSystem
 				writer.WriteAttributeString ("merge.SourceFile", source);
 			if (cls.PropertyBag.TryGetValue ("deprecated-since", out var dep))
 				writer.WriteAttributeString ("deprecated-since", dep);
+			WriteAttributes (writer, cls.PropertyBag, JavaXmlApiImporter.KotlinClassAttributes);
 
 			SaveTypeParameters (cls.TypeParameters, writer);
 
@@ -325,6 +326,7 @@ namespace Java.Interop.Tools.JavaTypeSystem
 				writer.WriteAttributeString ("merge.SourceFile", source);
 			if (m.PropertyBag.TryGetValue ("deprecated-since", out var dep))
 				writer.WriteAttributeString ("deprecated-since", dep);
+			WriteAttributes (writer, m.PropertyBag, JavaXmlApiImporter.KotlinMethodAttributes);
 
 			if (notNull.GetValueOrDefault () && !(m is JavaFieldModel))
 				writer.WriteAttributeString (m is JavaFieldModel ? "not-null" : "return-not-null", "true");
@@ -341,6 +343,7 @@ namespace Java.Interop.Tools.JavaTypeSystem
 
 					if (p.IsNotNull == true)
 						writer.WriteAttributeString ("not-null", "true");
+					WriteAttributes (writer, p.PropertyBag, JavaXmlApiImporter.KotlinParameterAttributes);
 
 					WriteFullEndElement (writer);
 				}
@@ -356,6 +359,13 @@ namespace Java.Interop.Tools.JavaTypeSystem
 			}
 
 			WriteFullEndElement (writer);
+		}
+
+		static void WriteAttributes (XmlWriter writer, Dictionary<string, string> bag, string [] names)
+		{
+			foreach (var name in names)
+				if (bag.TryGetValue (name, out var value))
+					writer.WriteAttributeString (name, value);
 		}
 
 		static void WriteFullEndElement (XmlWriter writer) => writer.WriteEndElement ();
