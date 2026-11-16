@@ -97,6 +97,8 @@ namespace generatortests
 
 			// Java calls back into C# with a boxed value.
 			StringAssert.Contains ("Xat.Bytecode.Tests.MyColor.ToLocalJniHandle (__this.OnColor (color))", output);
+			StringAssert.Contains ("var dp = new Xat.Bytecode.Tests.MyDp (native_dp);", output);
+			StringAssert.Contains ("return __this.OnDp (dp);", output);
 
 			// JavaList<T> can't hold a struct, so `List<MyColor>` keeps the boxed Java objects.
 			StringAssert.Contains ("IList<Java.Lang.Object> Colors (System.Collections.Generic.IList<Java.Lang.Object> colors)", output);

@@ -28,6 +28,9 @@ namespace MonoDroid.Generation {
 
 		public string CallMethodPrefix => TypeNameUtilities.GetCallPrefix (sym);
 
+		// A Kotlin value class projected as a struct, either unboxed (`Foo`) or boxed (`Foo?`).
+		public bool IsKotlinInlineClass => sym is KotlinInlineClassBoxedSymbol || !string.IsNullOrEmpty (owner?.KotlinInlineClassReturnJniType);
+
 		public ReturnValue Clone (Method owner)
 		{
 			return new ReturnValue (owner, java_type, managed_type, is_enumified, NotNull);

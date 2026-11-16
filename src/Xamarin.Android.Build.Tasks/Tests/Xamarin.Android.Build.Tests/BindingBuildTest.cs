@@ -1203,6 +1203,31 @@ VNZXRob2RzLmphdmFQSwUGAAAAAAcABwDOAQAAVgMAAAAA
 		}
 
 		[Test]
+		public void AndroidMavenLibrary_KotlinValueClasses ()
+		{
+			// androidx.compose.ui:ui-unit has `@JvmInline value class Dp(val value: Float)`
+			// and functions with mangled JVM names, such as `coerceAtLeast-YgX7TsA(FF)F`.
+			var item = new BuildItem ("AndroidMavenLibrary", "androidx.compose.ui:ui-unit-android");
+			item.Metadata.Add ("Version", "1.12.1");
+			item.Metadata.Add ("Repository", TestEnvironment.DotNetPublicMaven);
+			item.Metadata.Add ("VerifyDependencies", "false");
+
+			var proj = new XamarinAndroidBindingProject {
+				Jars = { item }
+			};
+
+			using var b = CreateDllBuilder ();
+			Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
+
+			var dp = File.ReadAllText (b.Output.GetIntermediaryPath (Path.Combine ("generated", "src", "Androidx.Compose.UI.Unit.Dp.cs")));
+			StringAssert.Contains ("readonly partial struct Dp", dp);
+
+			var dpKt = File.ReadAllText (b.Output.GetIntermediaryPath (Path.Combine ("generated", "src", "Androidx.Compose.UI.Unit.DpKt.cs")));
+			StringAssert.Contains ("Dp CoerceAtLeast (global::Androidx.Compose.UI.Unit.Dp obj, global::Androidx.Compose.UI.Unit.Dp minimumValue)", dpKt);
+			StringAssert.Contains ("DpSize Lerp (global::Androidx.Compose.UI.Unit.DpSize start, global::Androidx.Compose.UI.Unit.DpSize stop, float fraction)", dpKt);
+		}
+
+		[Test]
 		public void AndroidMavenLibrary_FailsDueToUnverifiedDependency ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			bool isRelease = runtime == AndroidRuntime.NativeAOT;

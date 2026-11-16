@@ -43,9 +43,13 @@ object Widgets {
     // underlying primitive: a nullable value class, and a generic type argument.
     fun maybeColor(color: MyColor?): MyColor? = color
     fun colors(colors: List<MyColor>): List<MyColor> = colors
+
+    // Extension receiver typed as a value class.
+    fun MyDp.twice(): MyDp = MyDp(value * 2)
 }
 
 // Java calls back into C# with a boxed value class.
 interface ColorCallback {
     fun onColor(color: MyColor?): MyColor?
+    fun onDp(dp: MyDp): Int
 }

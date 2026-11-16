@@ -323,7 +323,7 @@ namespace Xamarin.Android.Tools.Bytecode
 					continue;
 
 				// Kotlin provides actual parameter names
-				if (TypesMatch (java_p.Type, kotlin_p.Type, kotlinClass) && java_p.IsUnnamedParameter () && !kotlin_p.IsUnnamedParameter ()) {
+				if (TypesMatch (java_p.Type, kotlin_p.Type, kotlinClass, inlineClasses) && java_p.IsUnnamedParameter () && !kotlin_p.IsUnnamedParameter ()) {
 					Log.Debug ($"Kotlin: Renaming parameter {method.DeclaringType?.ThisClass.Name.Value} - {method.Name} - {java_p.Name} -> {kotlin_p.Name}");
 					java_p.Name = kotlin_p.Name;
 				}
@@ -344,9 +344,11 @@ namespace Xamarin.Android.Tools.Bytecode
 				java_p.KotlinNotNull = IsNotNullReference (kotlin_p.Type, java_p.Type.BinaryName);
 			}
 
-			// The extension receiver is the first Java parameter
-			if (metadata.ReceiverType != null && start > 0)
+			// The extension receiver (e.g. `fun Dp.coerceAtLeast()`) is the first Java parameter
+			if (metadata.ReceiverType != null && start > 0) {
 				java_parameters [0].KotlinNotNull = IsNotNullReference (metadata.ReceiverType, java_parameters [0].Type.BinaryName);
+				java_parameters [0].KotlinInlineClassJniType = GetInlineClassJniType (metadata.ReceiverType.ClassName, java_parameters [0].Type.TypeSignature, inlineClasses);
+			}
 
 			// The JVM return type of a suspend function is not the Kotlin return type
 			if (!metadata.Flags.HasFlag (KotlinFunctionFlags.IsSuspend))
