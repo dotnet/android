@@ -536,7 +536,7 @@ namespace Xamarin.Android.Build.Tests {
 		}
 
 		[Test]
-		public void ResolveSdksReturnsAbsolutePaths ([Values (false, true)] bool discoverNdk, [Values (false, true)] bool commandLineTools)
+		public void ResolveSdksReturnsAbsolutePaths ([Values (false, true)] bool discoverNdk)
 		{
 			var path = Path.Combine ("temp", TestName);
 			var sdkPath = CreateFauxAndroidSdkDirectory (Path.Combine (path, "android-sdk"), "37.0.0");
@@ -544,8 +544,6 @@ namespace Xamarin.Android.Build.Tests {
 			var javaPath = CreateFauxJavaSdkDirectory (Path.Combine (path, "jdk"), "1.8.0", out _, out _);
 			try {
 				File.WriteAllText (Path.Combine (ndkPath, "source.properties"), "Pkg.Revision = 21.0.6113669");
-				var toolsPath = Path.Combine (sdkPath, commandLineTools ? Path.Combine ("cmdline-tools", "21.0") : "tools");
-				Directory.CreateDirectory (toolsPath);
 				var resolveSdks = new ResolveSdks {
 					BuildEngine = new MockBuildEngine (TestContext.Out),
 					AndroidSdkPath = Path.GetRelativePath (Environment.CurrentDirectory, sdkPath),
@@ -553,13 +551,11 @@ namespace Xamarin.Android.Build.Tests {
 					JavaSdkPath = Path.GetRelativePath (Environment.CurrentDirectory, javaPath),
 					MinimumSupportedJavaVersion = MinimumSupportedJavaVersion,
 					LatestSupportedJavaVersion = LatestSupportedJavaVersion,
-					CommandLineToolsVersion = "21.0",
 				};
 				Assert.IsTrue (resolveSdks.Execute ());
 				Assert.AreEqual (sdkPath, resolveSdks.AndroidSdkPath);
 				Assert.AreEqual (ndkPath, resolveSdks.AndroidNdkPath);
 				Assert.AreEqual (javaPath, resolveSdks.JavaSdkPath);
-				Assert.AreEqual (toolsPath, resolveSdks.CommandLineToolsPath);
 			} finally {
 				Directory.Delete (Path.Combine (Root, path), recursive: true);
 			}

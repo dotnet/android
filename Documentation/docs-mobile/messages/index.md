@@ -62,7 +62,7 @@ ms.date: 04/11/2024
 + XA0104: Invalid value for \`$(AndroidSequencePointsMode)\`
 + [XA0105](xa0105.md): No longer emitted by current SDKs.
 + [XA0107](xa0107.md): `{Assmebly}` is a Reference Assembly.
-+ [XA0108](xa0108.md): Android lint support was removed.
++ [XA0108](xa0108.md): The 'AndroidLintEnabled' MSBuild property is no longer supported.
 + [XA0109](xa0109.md): Unsupported or invalid `$(TargetFrameworkVersion)` value of 'v4.5'.
 + [XA0111](xa0111.md): Could not get the `aapt2` version. Please check it is installed correctly.
 + [XA0112](xa0112.md): `aapt2` is not installed. Disabling `aapt2` support. Please check it is installed correctly.

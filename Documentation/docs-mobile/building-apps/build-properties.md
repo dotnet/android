@@ -862,9 +862,7 @@ used for Java code. The default value is an empty string, or
 ## AndroidLintEnabled
 
 This property was removed in .NET 12 and has no effect.
-When it is `True`, the build emits warning [XA0108](../messages/xa0108.md).
-To check your Android resources and manifest, run the Android `lint` tool directly.
-See [Lint Help](https://developer.android.com/studio/write/lint).
+Setting it to `True` emits warning [XA0108](../messages/xa0108.md).
 
 ## AndroidLintEnabledIssues
 

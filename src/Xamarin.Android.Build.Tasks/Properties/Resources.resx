@@ -200,8 +200,8 @@ This error is likely caused by an issue with the AndroidManifest.xml file or an 
     <value>{0} is a Reference Assembly.</value>
   </data>
   <data name="XA0108" xml:space="preserve">
-    <value>Android lint support was removed. The 'AndroidLintEnabled' MSBuild property has no effect. Remove it, and run the 'lint' tool from the Android SDK command-line tools directly.</value>
-    <comment>The following are literal names and should not be translated: Android, 'AndroidLintEnabled', MSBuild, 'lint', Android SDK</comment>
+    <value>The 'AndroidLintEnabled' MSBuild property is no longer supported. Remove it and run the Android 'lint' tool directly.</value>
+    <comment>The following are literal names and should not be translated: 'AndroidLintEnabled', MSBuild, Android, 'lint'</comment>
   </data>
   <data name="XA0111" xml:space="preserve">
     <value>Unsupported version of AAPT2 found at path '{0}'. Open the project file in a text editor and remove the 'Aapt2ToolPath' MSBuild property or ensure it is set to a valid location.</value>

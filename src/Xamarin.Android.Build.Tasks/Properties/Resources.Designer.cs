@@ -275,7 +275,7 @@ namespace Xamarin.Android.Tasks.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Android lint support was removed. The &apos;AndroidLintEnabled&apos; MSBuild property has no effect. Remove it, and run the &apos;lint&apos; tool from the Android SDK command-line tools directly..
+        ///   Looks up a localized string similar to The &apos;AndroidLintEnabled&apos; MSBuild property is no longer supported. Remove it and run the Android &apos;lint&apos; tool directly..
         /// </summary>
         public static string XA0108 {
             get {

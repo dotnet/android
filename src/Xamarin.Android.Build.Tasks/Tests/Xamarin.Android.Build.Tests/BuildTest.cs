@@ -1988,7 +1988,7 @@ namespace UnnamedProject
 				.FirstOrDefault (File.Exists);
 			Assert.IsNotNull (lint, "lint should be installed in the Android SDK cmdline-tools.");
 			var intermediate = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath);
-			// Known issues in the generated files and the test project. Lint reports any other issue as a test failure.
+			// Known issues in the generated files and the test project.
 			var disabled = string.Join (",", [
 				"CustomX509TrustManager",
 				"HardcodedDebugMode",
@@ -1996,17 +1996,14 @@ namespace UnnamedProject
 				"RedundantLabel",
 				"UnusedResources",
 			]);
-			var args = $"--quiet --disable {disabled} " +
+			var args = $"--quiet --exitcode -Werror --disable {disabled} " +
 				$"--resources \"{Path.Combine (intermediate, "res")}\" " +
 				$"--sources \"{Path.Combine (intermediate, "android", "src")}\" " +
 				$"--sources \"{Path.Combine (intermediate, "typemap", "java")}\" " +
 				$"\"{Path.Combine (intermediate, "android")}\"";
 			var (code, stdOutput, stdError) = RunProcessWithExitCode (lint, args, timeoutInSeconds: 600,
 				environment: new Dictionary<string, string> { ["JAVA_HOME"] = AndroidSdkResolver.GetJavaSdkPath () });
-			var output = stdOutput + stdError;
-			Assert.AreEqual (0, code, $"lint should succeed: {output}");
-			var issues = output.Split ('\n').Where (l => l.Contains (": Warning: ") || l.Contains (": Error: ")).ToArray ();
-			CollectionAssert.IsEmpty (issues, $"lint should not report new issues: {output}");
+			Assert.AreEqual (0, code, $"lint should not report new issues: {stdOutput}{stdError}");
 		}
 
 		[Test]
