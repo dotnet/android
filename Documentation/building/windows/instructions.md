@@ -113,7 +113,7 @@ packages by setting the boolean queue parameter `publishWindowsPackages` to
 succeed, it publishes that directory as `nuget-windows-unsigned`.
 
 This is an additional unsigned artifact, not a signed release or a replacement
-for the macOS-produced `nuget-unsigned` and `installers-unsigned` artifacts.
+for the macOS-produced `nuget-unsigned` and `nuget-unsigned-symbols` artifacts.
 It does not include the Darwin SDK pack. Build and test jobs, their package
 downloads, and `skipTests` remain unchanged.
 
