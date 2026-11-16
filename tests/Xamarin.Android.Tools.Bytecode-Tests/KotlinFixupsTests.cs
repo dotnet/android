@@ -520,6 +520,10 @@ namespace Xamarin.Android.Tools.BytecodeTests
 			var extension = Method ("extension");
 			Assert.AreEqual ("true", ReturnNotNull (extension));
 			Assert.AreEqual ("true", NotNull (extension.Element ("parameter")), "The extension receiver is not null.");
+
+			Assert.IsNull (ReturnNotNull (xml.Elements ("method").Single (e => e.Attribute ("name").Value.StartsWith ("produce", StringComparison.Ordinal))),
+				"An unboxed value class can be null in Java.");
+			Assert.IsNull (ReturnNotNull (Method ("getPlatform")), "A platform type can be null.");
 		}
 
 		static void RemoveInvisibleAnnotations (AttributeCollection attributes)

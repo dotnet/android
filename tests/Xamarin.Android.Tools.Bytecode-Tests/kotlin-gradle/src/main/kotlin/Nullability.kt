@@ -22,4 +22,11 @@ class Nullability(val name: String, val nickname: String?) {
     fun <T> generic(value: T): T = value
 
     fun String.extension(): String = this
+
+    fun produce(): Maybe = Maybe(null)
+
+    val platform = System.getProperty("x")
 }
+
+@JvmInline
+value class Maybe(val value: String?)

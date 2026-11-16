@@ -495,13 +495,18 @@ namespace Xamarin.Android.Tools.Bytecode
 		// Kotlin metadata tells which types can be null. kotlinc also writes
 		// @NotNull annotations, but tools such as R8 can remove them.
 		// Type parameters (e.g. `T`) and platform types can be null, so
-		// only a non-null class type gives true.
+		// only a non-null class type gives true. The Kotlin type must also
+		// be the JVM type: an unboxed value class such as
+		// `value class Maybe(val value: String?)` can be null in Java.
 		static bool IsNotNullReference (KotlinType? type, string? jvmDescriptor)
 		{
-			if (type is null || type.Nullable || type.FlexibleUpperBound != null || type.ClassName is null)
+			if (type is null || type.Nullable || type.ClassName is null)
 				return false;
-			return jvmDescriptor != null &&
-				(jvmDescriptor.StartsWith ("L", StringComparison.Ordinal) || jvmDescriptor.StartsWith ("[", StringComparison.Ordinal));
+			if (type.FlexibleUpperBound != null || type.FlexibleTypeCapabilitiesId != null)
+				return false;
+			if (jvmDescriptor is null || !(jvmDescriptor.StartsWith ("L", StringComparison.Ordinal) || jvmDescriptor.StartsWith ("[", StringComparison.Ordinal)))
+				return false;
+			return KotlinUtilities.ConvertKotlinTypeSignature (type) == jvmDescriptor;
 		}
 
 		static MethodInfo? FindJavaConstructor (KotlinClass kotlinClass, KotlinConstructor constructor, ClassFile klass)
