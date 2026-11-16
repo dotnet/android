@@ -4,6 +4,7 @@ using System.Xml;
 using System.Collections.Generic;
 using System.Xml.Linq;
 using System.Text.RegularExpressions;
+using System.Text;
 
 namespace Xamarin.Android.Tools
 {
@@ -108,6 +109,20 @@ namespace Xamarin.Android.Tools
 				usesSdk.Remove ();
 
 			doc.Save (writer);
+		}
+
+		public void WriteToFile (string fileName)
+		{
+			var xmlSettings = new XmlWriterSettings () {
+				Encoding = Encoding.UTF8,
+				Indent = true,
+				IndentChars = "\t",
+				NewLineChars = "\n",
+			};
+
+			using (var writer = XmlWriter.Create (fileName, xmlSettings)) {
+				Write (writer);
+			}
 		}
 
 		static string? NullIfEmpty (string? value)
