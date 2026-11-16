@@ -1,11 +1,8 @@
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Diagnostics;
 using System.Globalization;
-using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
-using System.Runtime.Versioning;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Win32.SafeHandles;
@@ -15,41 +12,6 @@ namespace Xamarin.ProjectTools
 {
 	public static class ProcessExtensions
 	{
-		const int SIGKILL = 9;
-		const int EPERM = 1;
-		const int ESRCH = 3;
-
-		// Unix: boxed process group ID. Windows: SafeJobHandle.
-		static readonly ConditionalWeakTable<Process, object> processGroups = new ();
-
-		[DllImport ("libc", SetLastError = true)]
-		static extern int kill (int pid, int sig);
-
-		[DllImport ("kernel32", SetLastError = true, CharSet = CharSet.Unicode)]
-		static extern SafeJobHandle CreateJobObjectW (IntPtr lpJobAttributes, IntPtr lpName);
-
-		[DllImport ("kernel32", SetLastError = true)]
-		[return: MarshalAs (UnmanagedType.Bool)]
-		static extern bool AssignProcessToJobObject (SafeJobHandle hJob, SafeProcessHandle hProcess);
-
-		[DllImport ("kernel32", SetLastError = true)]
-		[return: MarshalAs (UnmanagedType.Bool)]
-		static extern bool TerminateJobObject (SafeJobHandle hJob, uint uExitCode);
-
-		[DllImport ("kernel32", SetLastError = true)]
-		[return: MarshalAs (UnmanagedType.Bool)]
-		static extern bool CloseHandle (IntPtr hObject);
-
-		sealed class SafeJobHandle : SafeHandleZeroOrMinusOneIsInvalid
-		{
-			public SafeJobHandle ()
-				: base (ownsHandle: true)
-			{
-			}
-
-			protected override bool ReleaseHandle () => CloseHandle (handle);
-		}
-
 		/// <summary>
 		/// Sets environment variables on ProcessStartInfo with retries to work around a Mono Legacy bug.
 		/// https://github.com/mono/mono/issues/16607
@@ -78,7 +40,6 @@ namespace Xamarin.ProjectTools
 
 		public static void StopAndDrainOutput (this Process process, CancellationTokenSource cts, Task outputTask)
 		{
-			KillProcessGroup (process);
 			try {
 				process.Kill (entireProcessTree: true);
 			} catch (InvalidOperationException) when (process.HasExited) {
@@ -104,77 +65,6 @@ namespace Xamarin.ProjectTools
 				throw new TimeoutException ("The process did not exit after being stopped.");
 			if (!readerCancelled)
 				outputTask.GetAwaiter ().GetResult ();
-		}
-
-		/// <summary>
-		/// Starts the process as the leader of a new process group on Unix, or in a new Job Object
-		/// on Windows, so that <see cref="StopAndDrainOutput"/> can kill descendants even after
-		/// their parents exit.
-		/// </summary>
-		public static void StartInProcessGroup (this Process process)
-		{
-			if (OperatingSystem.IsWindows ()) {
-				StartInJobObject (process);
-				return;
-			}
-			// On Unix, StartDetached calls setsid() in the child, so the child leads a new
-			// session and process group (pgid == pid). Every descendant inherits that group.
-			process.StartInfo.StartDetached = true;
-			process.Start ();
-			processGroups.Add (process, process.Id);
-		}
-
-		// The process starts suspended so that it cannot create children before it joins the job;
-		// descendants then inherit the job even after their parents exit.
-		[SupportedOSPlatform ("windows")]
-		static void StartInJobObject (Process process)
-		{
-			var job = CreateJobObjectW (IntPtr.Zero, IntPtr.Zero);
-			if (job.IsInvalid) {
-				int error = Marshal.GetLastPInvokeError ();
-				job.Dispose ();
-				throw new Win32Exception (error);
-			}
-			try {
-				process.StartInfo.StartSuspended = true;
-				process.Start ();
-				try {
-					if (!AssignProcessToJobObject (job, process.SafeHandle))
-						throw new Win32Exception (Marshal.GetLastPInvokeError ());
-					process.SafeHandle.Resume ();
-				} catch {
-					process.Kill ();
-					process.WaitForExit ();
-					throw;
-				}
-				processGroups.Add (process, job);
-			} catch {
-				job.Dispose ();
-				throw;
-			}
-		}
-
-		static void KillProcessGroup (Process process)
-		{
-			if (!processGroups.TryGetValue (process, out var owner))
-				return;
-			if (owner is SafeJobHandle job) {
-				try {
-					if (!TerminateJobObject (job, 1))
-						throw new Win32Exception (Marshal.GetLastPInvokeError ());
-				} finally {
-					processGroups.Remove (process);
-					job.Dispose ();
-				}
-				return;
-			}
-			int pgid = (int) owner;
-			if (kill (-pgid, SIGKILL) != 0) {
-				int errno = Marshal.GetLastPInvokeError ();
-				// macOS reports EPERM when every remaining group member is an unreaped zombie.
-				if (errno != ESRCH && !(errno == EPERM && OperatingSystem.IsMacOS ()))
-					throw new InvalidOperationException ($"Failed to kill process group {pgid}: errno {errno}.");
-			}
 		}
 
 		public static bool WaitForExitAndOutput (this Process process, Task outputTask, CancellationTokenSource cts, TimeSpan timeout)

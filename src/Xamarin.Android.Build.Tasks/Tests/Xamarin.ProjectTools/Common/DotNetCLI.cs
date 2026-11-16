@@ -35,9 +35,8 @@ namespace Xamarin.ProjectTools
 		/// </summary>
 		/// <param name="args">command arguments</param>
 		/// <param name="workingDirectory">optional working directory</param>
-		/// <param name="startInProcessGroup">whether to start the process as the leader of a new process group</param>
 		/// <returns>A started Process instance. Caller is responsible for disposing.</returns>
-		protected Process ExecuteProcess (string [] args, string workingDirectory = null, bool startInProcessGroup = false)
+		protected Process ExecuteProcess (string [] args, string workingDirectory = null)
 		{
 			var p = new Process ();
 			p.StartInfo.FileName = Path.Combine (TestEnvironment.DotNetPreviewDirectory, "dotnet");
@@ -69,10 +68,7 @@ namespace Xamarin.ProjectTools
 				p.StartInfo.SetEnvironmentVariable (variable.Key, variable.Value);
 			}
 
-			if (startInProcessGroup)
-				p.StartInProcessGroup ();
-			else
-				p.Start ();
+			p.Start ();
 			return p;
 		}
 
@@ -252,7 +248,7 @@ namespace Xamarin.ProjectTools
 				arguments.AddRange (parameters);
 			}
 
-			return ExecuteProcess (arguments.ToArray (), startInProcessGroup: true);
+			return ExecuteProcess (arguments.ToArray ());
 		}
 
 		/// <summary>
@@ -273,7 +269,7 @@ namespace Xamarin.ProjectTools
 				arguments.AddRange (parameters);
 			}
 
-			return ExecuteProcess (arguments.ToArray (), workingDirectory: ProjectDirectory, startInProcessGroup: true);
+			return ExecuteProcess (arguments.ToArray (), workingDirectory: ProjectDirectory);
 		}
 
 		/// <summary>
@@ -296,7 +292,7 @@ namespace Xamarin.ProjectTools
 				arguments.AddRange (parameters);
 			}
 
-			return ExecuteProcess (arguments.ToArray (), workingDirectory: ProjectDirectory, startInProcessGroup: true);
+			return ExecuteProcess (arguments.ToArray (), workingDirectory: ProjectDirectory);
 		}
 
 		public IEnumerable<string> LastBuildOutput {
