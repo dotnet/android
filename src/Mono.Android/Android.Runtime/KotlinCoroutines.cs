@@ -111,7 +111,8 @@ namespace Android.Runtime {
 					return;
 				}
 				// Kotlin resumes the continuation with a CancellationException.
-				types.CancelJob.Invoke (job, new Java.Util.Concurrent.CancellationException ("The .NET CancellationToken was canceled."));
+				// Job.cancel(cause: CancellationException?) with no cause.
+				types.CancelJob.Invoke (job, new Java.Lang.Object [1]);
 			}
 
 			public Java.Lang.Object? Invoke (Java.Lang.Object? proxy, Method? method, Java.Lang.Object []? args)
@@ -140,12 +141,13 @@ namespace Android.Runtime {
 					SetResult (value);
 					return;
 				}
-				if (types.FailureException.Get (value) is not Throwable throwable) {
+				if (types.FailureException.Get (value) is not Java.Lang.Object throwable) {
 					SetException (new InvalidOperationException ("Kotlin returned a failure without an exception."));
 					return;
 				}
 				var reference = throwable.PeerReference;
-				SetException (JniEnvironment.Runtime.GetExceptionForThrowable (ref reference, JniObjectReferenceOptions.Copy) ?? throwable);
+				SetException (JniEnvironment.Runtime.GetExceptionForThrowable (ref reference, JniObjectReferenceOptions.Copy) ??
+					new InvalidOperationException ("Kotlin returned an invalid exception."));
 			}
 		}
 
