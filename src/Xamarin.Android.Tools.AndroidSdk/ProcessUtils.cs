@@ -396,10 +396,10 @@ namespace Xamarin.Android.Tools
 #if !NET5_0_OR_GREATER
 		[DllImport ("shell32.dll")]
 		[return: MarshalAs (UnmanagedType.Bool)]
-		static extern bool IsUserAnAdmin ();
+		static safe extern bool IsUserAnAdmin ();
 
 		[DllImport ("libc", SetLastError = true)]
-		static extern uint geteuid ();
+		static safe extern uint geteuid ();
 #endif
 	}
 }

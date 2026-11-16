@@ -266,11 +266,11 @@ namespace Xamarin.Android.Tools
 		}
 
 		[DllImport ("libc", SetLastError=true)]
-		static extern int rename (string old, string @new);
+		static safe extern int rename (string old, string @new);
 
 #if !NET7_0_OR_GREATER
 		[DllImport ("libc", SetLastError = true)]
-		static extern int chmod (string pathname, int mode);
+		static safe extern int chmod (string pathname, int mode);
 #endif
 	}
 }

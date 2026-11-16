@@ -28,10 +28,6 @@ namespace Java.Lang {
 			}
 		}
 
-		~Object ()
-		{
-		}
-
 		/// <safety>
 		/// A nonzero <paramref name="handle"/> must be a live JNI object reference compatible
 		/// with this peer's Java type and VM throughout construction and cleanup, including failure.
