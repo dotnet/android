@@ -74,8 +74,6 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 <UsingTask TaskName="Microsoft.Android.Tasks.GetAndroidDefineConstants" AssemblyFile="$(_MicrosoftAndroidBuildTasksAssembly)" Runtime="NET" Condition=" '$(MSBuildRuntimeType)' == 'Core' " />
 <UsingTask TaskName="Xamarin.Android.Tasks.KeyTool" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.LinkAssembliesNoShrink" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
-<UsingTask TaskName="Microsoft.Android.Tasks.Lint" AssemblyFile="$(_MicrosoftAndroidBuildTasksAssembly)" Runtime="NET" TaskFactory="TaskHostFactory" Condition=" '$(MSBuildRuntimeType)' == 'Full' " />
-<UsingTask TaskName="Microsoft.Android.Tasks.Lint" AssemblyFile="$(_MicrosoftAndroidBuildTasksAssembly)" Runtime="NET" Condition=" '$(MSBuildRuntimeType)' == 'Core' " />
 <UsingTask TaskName="Xamarin.Android.Tasks.MergeRemapXml" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.MamJsonToXml" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.ManifestMerger" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
@@ -171,11 +169,6 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 	<!-- Obsolete build property: should be removed in the future releases -->
 	<AndroidMultiDexSupportJar></AndroidMultiDexSupportJar>
 
-	<!--- Default Lint Enabled and Disabled Checks -->
-	<AndroidLintEnabledIssues Condition=" '$(AndroidLintEnabledIssues)' == '' "></AndroidLintEnabledIssues>
-	<AndroidLintDisabledIssues Condition=" '$(AndroidLintDisabledIssues)' == ''"></AndroidLintDisabledIssues>
-	<AndroidLintChecks Condition=" '$(AndroidLintChecks)' == ''"></AndroidLintChecks>
-	<AndroidLintEnabled Condition=" '$(AndroidLintEnabled)' == ''">False</AndroidLintEnabled>
 	<AndroidUseIntermediateDesignerFile Condition=" '$(AndroidUseIntermediateDesignerFile)' == '' ">False</AndroidUseIntermediateDesignerFile>
 
 	<!-- Google Play Store Checks -->
@@ -521,6 +514,10 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
       ResourceName="XA1035"
       Condition=" '$(BundleAssemblies)' == 'true' "
   />
+  <AndroidWarning Code="XA0108"
+      ResourceName="XA0108"
+      Condition=" '$(AndroidLintEnabled)' == 'true' "
+  />
 </Target>
 
 <Target Name="_CheckNonIdealConfigurations"
@@ -744,8 +741,6 @@ because xbuild doesn't support framework reference assemblies.
 
 	<!-- We should slowly port all the <CreateProperty/> calls to <PropertyGroup/> here -->
 	<PropertyGroup>
-		<_DefaultLintToolPath>$(_AndroidSdkDirectory)\cmdline-tools\$(AndroidCommandLineToolsVersion)\bin</_DefaultLintToolPath>
-		<LintToolPath Condition=" '$(LintToolPath)' == '' And Exists ($(_DefaultLintToolPath)) ">$(_DefaultLintToolPath)</LintToolPath>
 		<AdbToolPath Condition=" '$(AdbToolPath)' == '' ">$(_AndroidPlatformToolsDirectory)</AdbToolPath>
 		<AdbToolExe Condition=" '$(AdbToolExe)' == '' And $([MSBuild]::IsOSPlatform('windows')) ">adb.exe</AdbToolExe>
 		<AdbToolExe Condition=" '$(AdbToolExe)' == '' And !$([MSBuild]::IsOSPlatform('windows')) ">adb</AdbToolExe>
@@ -854,24 +849,6 @@ because xbuild doesn't support framework reference assemblies.
   />
 </Target>
 
-<Target Name="_LintChecks" Condition=" '$(AndroidLintEnabled)' == 'True' ">
-	<Lint
-		TargetDirectory="$(IntermediateOutputPath)android"
-		EnabledIssues="$(AndroidLintEnabledIssues)"
-		DisabledIssues="$(AndroidLintDisabledIssues)"
-		CheckIssues="$(AndroidLintCheckIssues)"
-		ConfigFiles="@(AndroidLintConfig)"
-		ResourceDirectories="$(MonoAndroidResDirIntermediate);$(LibraryResourceDirectories)"
-		ResourceCaseMap="@(_AndroidResourceCaseMap)"
-		SourceDirectories="$(_AndroidIntermediateJavaSourceDirectory);@(_AdditionalJavaStubDirectory)"
-		IntermediateOutputPath="$(IntermediateOutputPath)"
-		ToolPath="$(LintToolPath)"
-		ToolExe="$(LintToolExe)"
-		JavaSdkPath="$(_JavaSdkDirectory)"
-		JdkVersion="$(_JdkVersion)"
-	/>
-</Target>
-
 <!-- Resource build properties -->
 <PropertyGroup>
 	<MonoAndroidResDirIntermediate>$(IntermediateOutputPath)res\</MonoAndroidResDirIntermediate>
@@ -894,7 +871,6 @@ because xbuild doesn't support framework reference assemblies.
 	<_AcwMapFile>$(IntermediateOutputPath)acw-map.txt</_AcwMapFile>
 	<_CustomViewMapFile>$(IntermediateOutputPath)customview-map.txt</_CustomViewMapFile>
 	<AndroidResgenNamespace Condition="'$(AndroidResgenNamespace)'==''" >$(RootNamespace)</AndroidResgenNamespace>
-	<_AndroidLintConfigFile>$(IntermediateOutputPath)lint.xml</_AndroidLintConfigFile>
 	<_AndroidResourceDesignerFile Condition=" '$(AndroidUseIntermediateDesignerFile)' == 'True' ">$(IntermediateOutputPath)$(_AndroidResourceDesigner)</_AndroidResourceDesignerFile>
 	<_AndroidResourceDesignerFile Condition=" '$(AndroidUseIntermediateDesignerFile)' != 'True' ">$(AndroidResgenFile)</_AndroidResourceDesignerFile>
 	<_AndroidStaticResourcesFlag>$(IntermediateOutputPath)static.flag</_AndroidStaticResourcesFlag>
@@ -2679,7 +2655,6 @@ because xbuild doesn't support framework reference assemblies.
 	<Delete Files="$(_AndroidResgenFlagFile)" />
 	<Delete Files="$(_AndroidLinkFlag)" />
 	<Delete Files="$(_AndroidDebugKeyStoreFlag)" />
-	<Delete Files="$(_AndroidLintConfigFile)" />
 	<Delete Files="$(_AndroidResourceDesignerFile)" Condition=" '$(AndroidUseIntermediateDesignerFile)' == 'True' " />
 	<Delete Files="$(_AdbPropertiesCache)" />
 	<Delete Files="$(_AndroidLibraryImportsCache)" />

@@ -86,7 +86,6 @@ properties that determine build ordering.
       _PrepareAssemblies;
       _ResolveSatellitePaths;
       _CheckApkPerAbiFlag;
-      _LintChecks;
       _IncludeNativeSystemLibraries;
       _AndroidGenerateCoreClrBootstrap;
       _CheckGoogleSdkRequirements;

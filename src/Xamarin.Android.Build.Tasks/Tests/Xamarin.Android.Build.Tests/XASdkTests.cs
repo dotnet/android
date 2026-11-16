@@ -37,7 +37,7 @@ namespace Xamarin.Android.Build.Tests
 			Assert.IsTrue (dotnet.New ("android", noRestore: true), "Creating the Android project should succeed.");
 			var parameters = new [] {
 				"EmbedAssembliesIntoApk=true",
-				$"LintToolPath=\"{Path.Combine (testPath, "O'Brien", "lint")}\"",
+				"AndroidCommandLineToolsVersion=\"O'Brien\"",
 			};
 			var arguments = multithreaded ? new [] { "-m:2", "-mt" } : new [] { "-m:1" };
 			dotnet.EnvironmentVariables ["DOTNET_CLI_USE_MSBUILD_SERVER"] = "0";
@@ -95,16 +95,16 @@ namespace Xamarin.Android.Build.Tests
 			project.SetProperty ("AndroidLinkTool", "r8");
 			project.SetProperty ("AndroidR8ObfuscationMode", "runtime-remapping");
 			project.SetProperty ("AndroidEnableAssemblyCompression", "true");
-			project.SetProperty ("LintToolPath", Path.Combine (Root, "temp", TestName, "O'Brien;tag=1"));
+			project.SetProperty ("AndroidCommandLineToolsVersion", "O'Brien;tag=1");
 			var imports = project.Imports.Single (import => import.Project () == "Directory.Build.targets");
 			imports.TextContent = () => """
 				<Project>
 				  <Target Name="_TestInnerToolingPaths" AfterTargets="_ResolveMonoAndroidSdks"
 				      Condition=" '$(_OuterIntermediateOutputPath)' != '' ">
 				    <Error Condition=" '$(_AndroidUseResolvedSdk)' != 'true' or '$(_AndroidUseResolvedTooling)' != 'true' "
-				        Text="Escaped tooling paths must not disable reuse." />
-				    <Error Condition=" '$(_AndroidOuterLintToolPath)' != '$(LintToolPath)' or '$(_AndroidOuterToolingInputLintToolPath)' != '$(LintToolPath)' "
-				        Text="The lint path changed during forwarding." />
+				        Text="Escaped SDK inputs must not disable reuse." />
+				    <Error Condition=" '$(_AndroidOuterSdkInputAndroidCommandLineToolsVersion)' != '$(AndroidCommandLineToolsVersion)' "
+				        Text="The command-line tools version changed during forwarding." />
 				    <Error Condition=" '$(tag)' != '' " Text="The path was split into a separate property." />
 				  </Target>
 				</Project>

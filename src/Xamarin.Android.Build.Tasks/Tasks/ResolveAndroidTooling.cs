@@ -28,8 +28,6 @@ namespace Xamarin.Android.Tasks
 
 		public string? AndroidSdkBuildToolsVersion { get; set; }
 
-		public string? CommandLineToolsVersion { get; set; }
-
 		public string []? ReferenceAssemblyPaths { get; set; }
 
 		AndroidVersions SupportedVersions => MonoAndroidHelper.GetSupportedVersions (BuildEngine4, ReferenceAssemblyPaths, TaskEnvironment);
@@ -50,9 +48,6 @@ namespace Xamarin.Android.Tasks
 		public string? ZipAlignPath { get; set; }
 
 		[Output]
-		public string? LintToolPath { get; set; }
-
-		[Output]
 		public string? ApkSignerJar { get; set; }
 
 		[Output]
@@ -68,7 +63,6 @@ namespace Xamarin.Android.Tasks
 		static readonly string ZipAlign = IsWindows ? "zipalign.exe" : "zipalign";
 		static readonly string Aapt2 = IsWindows ? "aapt2.exe" : "aapt2";
 		static readonly string Android = IsWindows ? "android.bat" : "android";
-		static readonly string Lint = IsWindows ? "lint.bat" : "lint";
 		static readonly string ApkSigner = "apksigner.jar";
 
 		public override bool RunTask ()
@@ -98,20 +92,6 @@ namespace Xamarin.Android.Tasks
 
 			string toolsZipAlignPath = Path.Combine (AndroidSdkPath, "tools", ZipAlign);
 			bool findZipAlign = (ZipAlignPath.IsNullOrEmpty () || !Directory.Exists (TaskEnvironment.GetAbsolutePath (ZipAlignPath))) && !File.Exists (TaskEnvironment.GetAbsolutePath (toolsZipAlignPath));
-
-			var lintPaths = AndroidSdkInfo.GetCommandLineToolsPaths (AndroidSdkPath, CommandLineToolsVersion ?? "")
-				.SelectMany (p => new [] {
-					p,
-					Path.Combine (p, "bin"),
-				});
-
-			LintToolPath = null;
-			foreach (var path in lintPaths) {
-				if (File.Exists (TaskEnvironment.GetAbsolutePath (Path.Combine (path, Lint)))) {
-					LintToolPath = path;
-					break;
-				}
-			}
 
 			foreach (var dir in AndroidSdkInfo.GetBuildToolsPaths (AndroidSdkPath, AndroidSdkBuildToolsVersion ?? "")) {
 				Log.LogDebugMessage ("Trying build-tools path: {0}", dir);

@@ -195,8 +195,6 @@ namespace Xamarin.Android.Build.Tests {
 			Assert.AreEqual (androidTooling.AndroidSdkBuildToolsPath, expected, $"AndroidSdkBuildToolsPath should be {expected}");
 			Assert.AreEqual (androidTooling.AndroidSdkBuildToolsBinPath, expected, "AndroidSdkBuildToolsBinPath should be {expected}");
 			Assert.AreEqual (androidTooling.ZipAlignPath, expected, "ZipAlignPath should be {expected}");
-			expected = Path.Combine (androidSdkPath, "tools");
-			Assert.AreEqual (androidTooling.LintToolPath, expected, $"LintToolPath should be {expected}");
 			expected = Path.Combine (androidSdkPath, "build-tools", "26.0.3", "lib", "apksigner.jar");
 			Assert.AreEqual (androidTooling.ApkSignerJar, expected, $"ApkSignerJar should be {expected}");
 			Assert.AreEqual (androidTooling.AndroidUseApkSigner, false, "AndroidUseApkSigner should be false");
@@ -302,8 +300,8 @@ namespace Xamarin.Android.Build.Tests {
 			var changedItemName = tooling ? "_AndroidChangedToolingInput" : "_AndroidChangedSdkInput";
 			var inputGroups = document.Descendants ().Where (e => e.Name.LocalName == "ItemGroup" &&
 				e.Elements ().Any (i => i.Name.LocalName == itemName || i.Name.LocalName == changedItemName));
-			var input = tooling ? "LintToolPath" : "AndroidSdkDirectory";
-			var outerInput = tooling ? "_AndroidOuterToolingInputLintToolPath" : "_AndroidOuterSdkInputAndroidSdkDirectory";
+			var input = tooling ? "ZipAlignToolPath" : "AndroidSdkDirectory";
+			var outerInput = tooling ? "_AndroidOuterToolingInputZipAlignToolPath" : "_AndroidOuterSdkInputAndroidSdkDirectory";
 			const string value = "O'Brien/sdk;a=b";
 			var globals = new Dictionary<string, string> {
 				[input] = value,
@@ -650,7 +648,6 @@ namespace Xamarin.Android.Build.Tests {
 				};
 				Assert.IsTrue (tooling.Execute ());
 				Assert.AreEqual (Path.Combine (secondSdk, "build-tools", "36.0.0"), tooling.AndroidSdkBuildToolsPath);
-				Assert.AreEqual (Path.Combine (secondSdk, "tools"), tooling.LintToolPath);
 
 				var proj = new XamarinAndroidApplicationProject {
 					AndroidManifest = """

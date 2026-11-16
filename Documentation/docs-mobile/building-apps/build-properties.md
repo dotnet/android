@@ -859,44 +859,6 @@ used for Java code. The default value is an empty string, or
 
 [d8-r8]: https://github.com/dotnet/android/blob/main/Documentation/guides/D8andR8.md
 
-## AndroidLintEnabled
-
-A bool property that allows the developer to
-run the android `lint` tool as part of the packaging process.
-
-When `$(AndroidLintEnabled)`=True, the following properties are used:
-
-- [`$(AndroidLintEnabledIssues)`](#androidlintenabledissues):
-- [`$(AndroidLintDisabledIssues)`](#androidlintdisabledissues):
-- [`$(AndroidLintCheckIssues)`](#androidlintcheckissues):
-
-The following build actions may also be used:
-
-- [`@(AndroidLintConfig)`](build-items.md#androidlintconfig):
-
-See [Lint Help](https://developer.android.com/studio/write/lint) for more details on
-the android `lint` tooling.
-
-## AndroidLintEnabledIssues
-
-A string property that is a comma-separated list of lint issues to enable.
-
-Only used when [`$(AndroidLintEnabled)`](#androidlintenabled)=True.
-
-## AndroidLintDisabledIssues
-
-A string property that is a comma-separated list of lint issues to disable.
-
-Only used when [`$(AndroidLintEnabled)`](#androidlintenabled)=True.
-
-## AndroidLintCheckIssues
-
-A string property that is a comma-separated list of lint issues to check.
-
-Only used when [`$(AndroidLintEnabled)`](#androidlintenabled)=True.
-
-Note: only these issues will be checked.
-
 ## AndroidManagedSymbols
 
 A boolean property that controls
