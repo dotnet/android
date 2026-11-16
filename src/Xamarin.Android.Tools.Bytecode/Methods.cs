@@ -52,6 +52,9 @@ namespace Xamarin.Android.Tools.Bytecode {
 		// See dotnet/java-interop#1431 (Phase 2).
 		public  string?             KotlinName { get; set; }
 
+		// True when Kotlin metadata declares a non-null reference return type.
+		public  bool                KotlinReturnNotNull { get; set; }
+
 		public MethodInfo (ConstantPool constantPool, ClassFile declaringType, Stream stream)
 		{
 			ConstantPool    = constantPool;
@@ -402,6 +405,9 @@ namespace Xamarin.Android.Tools.Bytecode {
 		// whose JVM type is `J`. null when no projection applies.
 		// See dotnet/java-interop#1431 (Phase 2).
 		public  string?     KotlinInlineClassJniType;
+
+		// True when Kotlin metadata declares a non-null reference type.
+		public  bool        KotlinNotNull;
 
 		public  MethodParameterAccessFlags      AccessFlags;
 
