@@ -1384,5 +1384,33 @@ VNZXRob2RzLmphdmFQSwUGAAAAAAcABwDOAQAAVgMAAAAA
 				Assert.Fail ("Build should have succeeded.");
 			}
 		}
+
+		[Test]
+		public void KotlinDefaultArgumentOverloads ()
+		{
+			// androidx.datastore:datastore-core-jvm has `class CorruptionException (message: String, cause: Throwable? = null)`.
+			// The NuGet packages for its dependencies match version 1.2.1.
+			var datastore = new BuildItem ("AndroidMavenLibrary", "androidx.datastore:datastore-core-jvm");
+			datastore.Metadata.Add ("Version", "1.2.1");
+			datastore.Metadata.Add ("Repository", TestEnvironment.DotNetPublicMaven);
+
+			var proj = new XamarinAndroidBindingProject {
+				Jars = { datastore },
+				PackageReferences = {
+					new Package { Id = "Xamarin.AndroidX.Annotation.Jvm", Version = "1.10.0.1" },
+					new Package { Id = "Xamarin.Kotlin.StdLib", Version = "2.4.0.1" },
+					new Package { Id = "Xamarin.KotlinX.Coroutines.Core", Version = "1.11.0.1" },
+				},
+			};
+
+			using var b = CreateDllBuilder ();
+			Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
+
+			var cs_file = b.Output.GetIntermediaryPath (Path.Combine ("generated", "src", "Androidx.Datastore.Core.CorruptionException.cs"));
+			FileAssert.Exists (cs_file);
+			var code = File.ReadAllText (cs_file);
+			StringAssert.Contains ("public CorruptionException (string message) :", code);
+			StringAssert.Contains ("(Ljava/lang/String;Ljava/lang/Throwable;ILkotlin/jvm/internal/DefaultConstructorMarker;)V", code);
+		}
 	}
 }
