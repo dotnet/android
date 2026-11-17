@@ -1,16 +1,16 @@
 # DevSkim banned-API stage
 #
-# Runs DevSkim over the first-party source trees and fails on every result tagged
-# API.DangerousAPI.BannedFunction. See Documentation/workflow/DevSkim.md.
+# Runs DevSkim over the source trees of the product and fails on every result
+# tagged API.DangerousAPI.BannedFunction. See Documentation/workflow/DevSkim.md.
 #
 # The scan doesn't need a build, so the stage has no dependencies. Add it as the
-# last stage of a pipeline: a stage without an explicit `dependsOn` depends on the
-# stage before it.
+# last stage of a pipeline: a stage without an explicit `dependsOn` waits for the
+# stage before it, so any stage after this one would wait for it.
 #
 # Referenced from:
 #   - build-tools/automation/azure-pipelines.yaml          (official / 1ES)
 #   - build-tools/automation/azure-pipelines-internal.yaml (dnceng internal / 1ES)
-#   - build-tools/automation/azure-pipelines-public.yaml   (public PR validation)
+#   - build-tools/automation/azure-pipelines-public.yaml   (public PR validation and nightly)
 
 parameters:
 - name: pool
@@ -39,7 +39,7 @@ stages:
       clean: true
       persistCredentials: false
 
-    # Create the reports directory before anything can fail, so that there is always something to publish.
+    # Create the reports directory first, so that the publish step always finds it.
     - bash: mkdir -p "$(DevSkimReports)"
       displayName: Create DevSkim reports directory
 
@@ -71,6 +71,7 @@ stages:
 
         # DevSkim opens all the files of a scan at once, which needs more than the usual default limit of 1024.
         ulimit -n "$(ulimit -Hn)" || ulimit -n 65536
+        echo "Open file limit: $(ulimit -n)"
 
         scan () {  # scan <directory> <base path> <report name>
           "$(DevSkimTool)/devskim" analyze \
@@ -86,7 +87,7 @@ stages:
             2>&1 | tee "$(DevSkimReports)/$3.log"
         }
 
-        # A scan that reports nothing proves nothing, unless this scanner is known to detect a banned function.
+        # First check that DevSkim detects a known banned function. Otherwise a clean scan proves nothing.
         canary="$(Agent.TempDirectory)/devskim-canary"
         mkdir -p "$canary"
         printf '%s\n' '#include <string.h>' 'void canary (char *dst, const char *src) { strcpy(dst, src); }' > "$canary/canary.c"
@@ -99,7 +100,8 @@ stages:
           reports+=("$(DevSkimReports)/$source.sarif")
           scan "$PWD/$source" "$PWD" "$source"
         done
-        python3 build-tools/automation/scripts/check_devskim.py --require-results "${reports[@]}"
+        # The native code is in src, so DevSkim must report something there: it exits with 0 when it analyzes nothing.
+        python3 build-tools/automation/scripts/check_devskim.py --require-results "$(DevSkimReports)/src.sarif" "${reports[@]}"
       displayName: Run DevSkim and fail on banned APIs
       workingDirectory: $(Build.SourcesDirectory)
 

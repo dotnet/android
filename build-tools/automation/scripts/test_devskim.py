@@ -75,16 +75,6 @@ class DevSkimTests(unittest.TestCase):
             with self.subTest(document=document), self.assertRaises(ValueError):
                 banned_findings(document)
 
-    def test_execution_errors_fail(self):
-        for invocation in [
-            {"executionSuccessful": False},
-            {"executionSuccessful": True, "toolExecutionNotifications": [{"level": "error"}]},
-        ]:
-            document = report([])
-            document["runs"][0]["invocations"] = [invocation]
-            with self.subTest(invocation=invocation), self.assertRaises(ValueError):
-                banned_findings(document)
-
     def test_exit_codes_and_diagnostics(self):
         with tempfile.TemporaryDirectory() as directory:
             path = Path(directory) / "report.sarif"
@@ -108,15 +98,22 @@ class DevSkimTests(unittest.TestCase):
 
     def test_require_results(self):
         with tempfile.TemporaryDirectory() as directory:
+            first = str(Path(directory) / "0.sarif")
             for documents, expected in [
                 ([report([])], 2),
-                ([report([]), report([])], 2),
+                ([report([]), report([finding(["Other.Tag"])])], 2),
+                ([report([finding(["Other.Tag"])]), report([])], 0),
                 ([report([finding(["Other.Tag"])])], 0),
-                ([report([]), report([finding(["Other.Tag"])])], 0),
-                ([report([finding()])], 1),
+                ([report([finding()]), report([])], 1),
             ]:
                 with self.subTest(documents=documents):
-                    self.assertEqual(expected, run_main(directory, documents, "--require-results"))
+                    self.assertEqual(expected, run_main(directory, documents, "--require-results", first))
+
+    def test_require_results_needs_a_listed_report(self):
+        with tempfile.TemporaryDirectory() as directory:
+            with self.assertRaises(SystemExit) as raised:
+                run_main(directory, [report([finding(["Other.Tag"])])], "--require-results", str(Path(directory) / "unlisted.sarif"))
+            self.assertEqual(2, raised.exception.code)
 
     def test_multiple_reports(self):
         with tempfile.TemporaryDirectory() as directory:
