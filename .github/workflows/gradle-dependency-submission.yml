@@ -57,12 +57,12 @@ jobs:
           }
           "gradle=$($Matches[1])" >> $env:GITHUB_OUTPUT
 
-  dependency-submission:
+  dependency-graph:
     name: ${{ matrix.build-root-directory }}
     runs-on: ubuntu-latest
     needs: setup
     permissions:
-      contents: write
+      contents: read
     strategy:
       fail-fast: false
       matrix:
@@ -84,5 +84,16 @@ jobs:
           additional-arguments: >-
             -PjavaSourceVer=${{ needs.setup.outputs.source }}
             -PjavaTargetVer=${{ needs.setup.outputs.target }}
-          dependency-graph: ${{ github.event_name == 'push' && 'generate-and-submit' || 'generate-and-upload' }}
+          dependency-graph: generate-and-upload
           cache-provider: basic
+
+  dependency-submission:
+    if: github.event_name == 'push'
+    runs-on: ubuntu-latest
+    needs: dependency-graph
+    permissions:
+      contents: write
+    steps:
+      - uses: gradle/actions/dependency-submission@v6
+        with:
+          dependency-graph: download-and-submit
