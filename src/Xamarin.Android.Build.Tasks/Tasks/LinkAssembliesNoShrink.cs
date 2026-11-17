@@ -2,6 +2,7 @@
 
 using System;
 using Microsoft.Android.Build.Tasks;
+using Microsoft.Build.Framework;
 using MonoDroid.Tuner;
 
 namespace Xamarin.Android.Tasks
@@ -10,6 +11,7 @@ namespace Xamarin.Android.Tasks
 	/// This task is called for builds that did not use ILLink. It runs "linker steps" that
 	/// should be run on assemblies even in non-linked builds.
 	/// </summary>
+	[MSBuildMultiThreadableTask]
 	public class LinkAssembliesNoShrink : AssemblyModifierPipeline
 	{
 		public override string TaskPrefix => "LNS";
