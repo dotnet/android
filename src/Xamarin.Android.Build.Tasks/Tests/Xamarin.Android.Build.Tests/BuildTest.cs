@@ -1993,7 +1993,6 @@ namespace UnnamedProject
 				"CustomX509TrustManager",
 				"HardcodedDebugMode",
 				"MissingApplicationIcon",
-				"OldTargetApi",
 				"RedundantLabel",
 				"UnusedResources",
 			]);
