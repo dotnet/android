@@ -142,7 +142,7 @@ architecture. Local workload setup installs the previous Android SDK.
 
 ## On-Device Runtime Tests (full-build — requires local SDK + device)
 
-Mono.Android device tests use stock NUnit through Microsoft Testing Platform (MTP), not NUnitLite. This changed in dotnet/android#11224.
+`Mono.Android.NET-Tests` (including the Java.Interop fixtures) and `Xamarin.Android.JcwGen-Tests` use MSTest with `MSTest.SourceGeneration` through Microsoft Testing Platform (MTP).
 
 Build/install with `-t:Install`, then run `dotnet test --no-build --report-trx` from the test project's directory so the project-local `global.json` selects the MTP runner.
 
@@ -171,6 +171,8 @@ The `Mono.Android.NET-Tests.csproj` dynamically excludes categories based on run
 - **NativeAOT runtime**: Excludes `NativeAOTIgnore`, `SSL`, `NTLM`
 
 Other categories: `SSL`, `InetAccess`, `JavaList`, `RuntimeConfig`, `Intune`, `NTLM`
+
+To run a subset, pass `-p:IncludeCategories=<Category>` to **both** install and test; `--filter` is not supported.
 
 Command:
 ```bash

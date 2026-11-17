@@ -4,21 +4,21 @@ using System.Reflection;
 using System.Threading.Tasks;
 
 using Java.Interop;
-using NUnit.Framework;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Java.InteropTests
 {
-	[TestFixture]
+	[TestClass]
 	public class JniPeerMembersTests
 	{
-		[Test]
+		[TestMethod]
 		public void Ctor_CanReferenceNonexistentType ()
 		{
 			var members = new JniPeerMembers (JavaObjectWithMissingJavaPeer.JniTypeName, typeof(JavaObjectWithMissingJavaPeer));
 			JniPeerMembers.Dispose (members);
 		}
 
-		[Test]
+		[TestMethod]
 		public void PeerMemberCachesAreInitiallyNull ()
 		{
 			var members = new JniPeerMembers (CallNonvirtualBase.JniTypeName, typeof (CallNonvirtualBase));
@@ -33,7 +33,7 @@ namespace Java.InteropTests
 			}
 		}
 
-		[Test]
+		[TestMethod]
 		public void ConstructorTypeCacheIsAllocatedOnlyForManagedSubclasses ()
 		{
 			var members = new JniPeerMembers (CallNonvirtualBase.JniTypeName, typeof (CallNonvirtualBase));
@@ -50,7 +50,7 @@ namespace Java.InteropTests
 
 				methods.Dispose ();
 				Assert.IsNull (GetSubclassConstructors (methods));
-				Assert.Throws<InvalidOperationException> (() => {
+				Assert.ThrowsExactly<InvalidOperationException> (() => {
 					var type = derivedMethods.JniPeerType;
 				});
 			} finally {
@@ -58,7 +58,7 @@ namespace Java.InteropTests
 			}
 		}
 
-		[Test]
+		[TestMethod]
 		public void ConcurrentFirstUsePublishesSingleFieldAndStaticMethodCaches ()
 		{
 			var instanceMembers = new JniPeerMembers (CallNonvirtualBase.JniTypeName, typeof (CallNonvirtualBase));
@@ -131,7 +131,7 @@ namespace Java.InteropTests
 			return (ConcurrentDictionary<TKey, TValue>) field.GetValue (owner);
 		}
 
-		[Test]
+		[TestMethod]
 		public void MethodLookupForNonexistentStaticMethodWillTryFallbacks ()
 		{
 			try {
@@ -157,8 +157,8 @@ namespace Java.InteropTests
 		}
 
 
-		[Test]
-		[Category ("NativeAOTIgnore")]
+		[TestMethod]
+		[TestCategory ("NativeAOTIgnore")]
 		public void ReplaceInstanceMethodName ()
 		{
 			using var o = new JavaLangRemappingTestObject ();
@@ -167,8 +167,8 @@ namespace Java.InteropTests
 			JniObjectReference.Dispose (ref r);
 		}
 
-		[Test]
-		[Category ("NativeAOTIgnore")]
+		[TestMethod]
+		[TestCategory ("NativeAOTIgnore")]
 		public void ReplaceInstanceMethodWithUtf8Signature ()
 		{
 			using var o = new JavaLangRemappingTestObject ();
@@ -177,16 +177,16 @@ namespace Java.InteropTests
 			JniObjectReference.Dispose (ref r);
 		}
 
-		[Test]
-		[Category ("NativeAOTIgnore")]
+		[TestMethod]
+		[TestCategory ("NativeAOTIgnore")]
 		public void ReplaceStaticMethodName ()
 		{
 			var r = JavaLangRemappingTestRuntime.remappedToGetRuntime ();
 			JniObjectReference.Dispose (ref r);
 		}
 
-		[Test]
-		[Category ("NativeAOTIgnore")]
+		[TestMethod]
+		[TestCategory ("NativeAOTIgnore")]
 		public void ReplaceInstanceMethodWithStaticMethod ()
 		{
 			using var o = new JavaLangRemappingTestObject ();
@@ -194,7 +194,7 @@ namespace Java.InteropTests
 			o.remappedToStaticHashCode ();
 		}
 
-		[Test]
+		[TestMethod]
 		public void DesugarInterfaceStaticMethod ()
 		{
 			var s = IAndroidInterface.getClassName ();

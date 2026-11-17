@@ -4,14 +4,14 @@ using System.Runtime.InteropServices;
 
 using Java.Interop;
 
-using NUnit.Framework;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Java.InteropTests
 {
-	[TestFixture]
+	[TestClass]
 	public class JniTypeTest {
 
-		[Test]
+		[TestMethod]
 		public unsafe void Sanity ()
 		{
 			using (var Integer_class = new JniType ("java/lang/Integer")) {
@@ -32,44 +32,44 @@ namespace Java.InteropTests
 			}
 		}
 
-		[Test]
+		[TestMethod]
 		public void Ctor_ThrowsIfTypeNotFound ()
 		{
-			Assert.Throws<Java.Lang.ClassNotFoundException> (() => new JniType ("__this__/__type__/__had__/__better__/__not__/__Exist__")).Dispose ();
+			Assert.ThrowsExactly<Java.Lang.ClassNotFoundException> (() => new JniType ("__this__/__type__/__had__/__better__/__not__/__Exist__")).Dispose ();
 		}
 
-		[Test]
+		[TestMethod]
 		[UnconditionalSuppressMessage ("AOT", "IL3050", Justification = "Test exercises non-AOT-compatible JniType.RegisterNativeMethods API.")]
 		public unsafe void Dispose_Exceptions ()
 		{
 			var t = new JniType ("java/lang/Object");
 			t.Dispose ();
-			Assert.Throws<ObjectDisposedException> (() => t.AllocObject ());
-			Assert.Throws<ObjectDisposedException> (() => t.NewObject (null, null));
-			Assert.Throws<ObjectDisposedException> (() => t.GetConstructor ((string) null));
-			Assert.Throws<ObjectDisposedException> (() => t.GetInstanceField ((string) null, (string) null));
-			Assert.Throws<ObjectDisposedException> (() => t.GetInstanceMethod ((string) null, (string) null));
-			Assert.Throws<ObjectDisposedException> (() => t.GetStaticField ((string) null, (string) null));
-			Assert.Throws<ObjectDisposedException> (() => t.GetStaticMethod ((string) null, (string) null));
-			Assert.Throws<ObjectDisposedException> (() => t.GetSuperclass ());
-			Assert.Throws<ObjectDisposedException> (() => t.IsAssignableFrom (null));
-			Assert.Throws<ObjectDisposedException> (() => t.IsInstanceOfType (new JniObjectReference ()));
-			Assert.Throws<ObjectDisposedException> (() => t.RegisterWithRuntime ());
-			Assert.Throws<ObjectDisposedException> (() => t.RegisterNativeMethods (null));
-			Assert.Throws<ObjectDisposedException> (() => t.UnregisterNativeMethods ());
+			Assert.ThrowsExactly<ObjectDisposedException> (() => t.AllocObject ());
+			Assert.ThrowsExactly<ObjectDisposedException> (() => t.NewObject (null, null));
+			Assert.ThrowsExactly<ObjectDisposedException> (() => t.GetConstructor ((string) null));
+			Assert.ThrowsExactly<ObjectDisposedException> (() => t.GetInstanceField ((string) null, (string) null));
+			Assert.ThrowsExactly<ObjectDisposedException> (() => t.GetInstanceMethod ((string) null, (string) null));
+			Assert.ThrowsExactly<ObjectDisposedException> (() => t.GetStaticField ((string) null, (string) null));
+			Assert.ThrowsExactly<ObjectDisposedException> (() => t.GetStaticMethod ((string) null, (string) null));
+			Assert.ThrowsExactly<ObjectDisposedException> (() => t.GetSuperclass ());
+			Assert.ThrowsExactly<ObjectDisposedException> (() => t.IsAssignableFrom (null));
+			Assert.ThrowsExactly<ObjectDisposedException> (() => t.IsInstanceOfType (new JniObjectReference ()));
+			Assert.ThrowsExactly<ObjectDisposedException> (() => t.RegisterWithRuntime ());
+			Assert.ThrowsExactly<ObjectDisposedException> (() => t.RegisterNativeMethods (null));
+			Assert.ThrowsExactly<ObjectDisposedException> (() => t.UnregisterNativeMethods ());
 
 			JniFieldInfo    jif = null;
-			Assert.Throws<ObjectDisposedException> (() => t.GetCachedInstanceField (ref jif, (string) null, (string) null));
+			Assert.ThrowsExactly<ObjectDisposedException> (() => t.GetCachedInstanceField (ref jif, (string) null, (string) null));
 			JniMethodInfo   jim = null;
-			Assert.Throws<ObjectDisposedException> (() => t.GetCachedConstructor (ref jim, (string) null));
-			Assert.Throws<ObjectDisposedException> (() => t.GetCachedInstanceMethod (ref jim, (string) null, (string) null));
+			Assert.ThrowsExactly<ObjectDisposedException> (() => t.GetCachedConstructor (ref jim, (string) null));
+			Assert.ThrowsExactly<ObjectDisposedException> (() => t.GetCachedInstanceMethod (ref jim, (string) null, (string) null));
 			JniFieldInfo    jsf = null;
-			Assert.Throws<ObjectDisposedException> (() => t.GetCachedStaticField (ref jsf, (string) null, (string) null));
+			Assert.ThrowsExactly<ObjectDisposedException> (() => t.GetCachedStaticField (ref jsf, (string) null, (string) null));
 			JniMethodInfo   jsm = null;
-			Assert.Throws<ObjectDisposedException> (() => t.GetCachedStaticMethod (ref jsm, (string) null, (string) null));
+			Assert.ThrowsExactly<ObjectDisposedException> (() => t.GetCachedStaticMethod (ref jsm, (string) null, (string) null));
 		}
 
-		[Test]
+		[TestMethod]
 		public void GetSuperclass ()
 		{
 			using (var t = new JniType ("java/lang/Object")) {
@@ -84,7 +84,7 @@ namespace Java.InteropTests
 			}
 		}
 
-		[Test]
+		[TestMethod]
 		public void IsAssignableFrom ()
 		{
 			using (var o = new JniType ("java/lang/Object"))
@@ -94,7 +94,7 @@ namespace Java.InteropTests
 			}
 		}
 
-		[Test]
+		[TestMethod]
 		public unsafe void IsInstanceOfType ()
 		{
 			using (var Object_class = new JniType ("java/lang/Object"))
@@ -109,15 +109,15 @@ namespace Java.InteropTests
 			}
 		}
 
-		[Test]
+		[TestMethod]
 		public void InvalidSignatureThrowsJniException ()
 		{
 			using (var Integer_class = new JniType ("java/lang/Integer")) {
-				Assert.Throws<Java.Lang.NoSuchMethodError> (() => Integer_class.GetConstructor ("(C)V")).Dispose ();
+				Assert.ThrowsExactly<Java.Lang.NoSuchMethodError> (() => Integer_class.GetConstructor ("(C)V")).Dispose ();
 			}
 		}
 
-		[Test]
+		[TestMethod]
 		public void GetStaticFieldID ()
 		{
 			using (var System_class = new JniType ("java/lang/System")) {
@@ -127,7 +127,7 @@ namespace Java.InteropTests
 			}
 		}
 
-		[Test]
+		[TestMethod]
 		public unsafe void Name ()
 		{
 			using (var Object_class         = new JniType ("java/lang/Object"))
@@ -156,7 +156,7 @@ namespace Java.InteropTests
 			}
 		}
 
-		[Test]
+		[TestMethod]
 		public void RegisterWithRuntime ()
 		{
 			using (var Object_class = new JniType ("java/lang/Object")) {
@@ -168,7 +168,7 @@ namespace Java.InteropTests
 			}
 		}
 
-		[Test]
+		[TestMethod]
 		[UnconditionalSuppressMessage ("AOT", "IL3050", Justification = "Test exercises non-AOT-compatible JniType.RegisterNativeMethods API.")]
 		public void RegisterNativeMethods ()
 		{
@@ -179,7 +179,7 @@ namespace Java.InteropTests
 			}
 		}
 
-		[Test]
+		[TestMethod]
 		public unsafe void RegisterNativeMethods_JniNativeMethod ()
 		{
 			using (var nativeClass = new JniType ("net/dot/jni/test/RegisterNativesTestType")) {
@@ -210,7 +210,7 @@ namespace Java.InteropTests
 		[UnmanagedCallersOnly]
 		static int NativeAdd (IntPtr jnienv, IntPtr self, int a, int b) => a + b;
 
-		[Test]
+		[TestMethod]
 		public unsafe void RegisterNativeMethods_JniNativeMethod_UnmanagedCallersOnly ()
 		{
 			using (var nativeClass = new JniType ("net/dot/jni/test/RegisterNativesTestType")) {
@@ -241,7 +241,7 @@ namespace Java.InteropTests
 		[UnmanagedCallersOnly]
 		static int ManagedAdd (IntPtr jnienv, IntPtr self, int a, int b) => a + b;
 
-		[Test]
+		[TestMethod]
 		public unsafe void RegisterNativeMethods_JniNativeMethod_UnmanagedCallersOnly_ManyMethods ()
 		{
 			using (var nativeClass = new JniType ("net/dot/jni/test/RegisterNativesTestType")) {

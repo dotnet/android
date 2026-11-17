@@ -30,7 +30,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 
-using NUnit.Framework;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 using Cadenza.Collections;
 using Cadenza.Tests;
@@ -56,7 +56,7 @@ namespace Cadenza.Collections.Tests {
 			}
 		}
 
-		[Test]
+		[TestMethod]
 		public void Create_SequencEqual ()
 		{
 			var a = new List<int> ();
@@ -66,7 +66,7 @@ namespace Cadenza.Collections.Tests {
 			}
 		}
 
-		[Test]
+		[TestMethod]
 		public void GetEnumerator_DisposeDisposesIterator ()
 		{
 			var d = new DisposedCounter ();

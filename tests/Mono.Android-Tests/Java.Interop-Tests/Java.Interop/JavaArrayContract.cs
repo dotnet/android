@@ -4,28 +4,28 @@ using System.Linq;
 using Java.Interop;
 
 using Cadenza.Collections.Tests;
-using NUnit.Framework;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Java.InteropTests
 {
 	public abstract class JavaArrayContract<T> : ListContract<T>
 	{
-		int lrefStartCount;
+		static int lrefStartCount;
 
-		[OneTimeSetUp]
-		public void StartArrayTests ()
+		[ClassInitialize (InheritanceBehavior.BeforeEachDerivedClass)]
+		public static void StartArrayTests (TestContext context)
 		{
 			lrefStartCount  = JniEnvironment.LocalReferenceCount;
 		}
 
-		[OneTimeTearDown]
-		public void EndArrayTests ()
+		[ClassCleanup (InheritanceBehavior.BeforeEachDerivedClass)]
+		public static void EndArrayTests ()
 		{
 			int lref    = JniEnvironment.LocalReferenceCount;
 			Assert.AreEqual (lrefStartCount, lref, "JNI local references");
 		}
 
-		[Test]
+		[TestMethod]
 		public void ToArray ()
 		{
 			var expected = new[] {
