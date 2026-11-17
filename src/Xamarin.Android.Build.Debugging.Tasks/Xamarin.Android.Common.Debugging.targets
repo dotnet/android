@@ -56,6 +56,8 @@ Copyright (C) 2016 Xamarin. All rights reserved.
 <PropertyGroup>
 	<_DevicePropertyCache>$(IntermediateOutputPath)devices.cache</_DevicePropertyCache>
 	<_UploadFlag>$(IntermediateOutputPath)upload.flag</_UploadFlag>
+	<_AndroidAppBundleInstallFlag>$(IntermediateOutputPath)appbundle-install.flag</_AndroidAppBundleInstallFlag>
+	<_AndroidApkSetDeviceCache>$(IntermediateOutputPath)appbundle-device.cache</_AndroidApkSetDeviceCache>
 	<_ConfigurationCacheDirectory>$(BaseIntermediateOutputPath).cache\</_ConfigurationCacheDirectory>
 	<_AndroidFastDeployAppFileTransferMode Condition=" '$(_AndroidFastDeployAppFileTransferMode)' == '' ">Symlink</_AndroidFastDeployAppFileTransferMode>
 </PropertyGroup>
@@ -149,7 +151,8 @@ Copyright (C) 2016 Xamarin. All rights reserved.
 
 <Target Name="_CheckForConfigurationChange">
 	<ItemGroup>
-		<_ConfigurationCacheItems Include="$(Configuration)|$(Platform)|$(AdbTarget)|$(_AndroidFastDeployAppFileTransferMode)" />
+		<_ConfigurationCacheItems Include="$(Configuration)|$(Platform)|$(AdbTarget)|$(_AndroidFastDeployAppFileTransferMode)|$(AndroidPackageFormat)|$(AndroidDeviceUserId)" />
+		<_ConfigurationCacheItems Include="@(AndroidInstallModules->'Module=%(Identity)')" />
 	</ItemGroup>
 	<ReadLinesFromFile File="$(_ConfigurationCacheDirectory)$(_AndroidPackage).flag"
 			Condition="Exists('$(_ConfigurationCacheDirectory)$(_AndroidPackage).flag')">
@@ -161,10 +164,23 @@ Copyright (C) 2016 Xamarin. All rights reserved.
 	<Delete Files="$(_UploadFlag)" Condition="'$(_FastDeploymentConfigurationChanged)' == 'true'" />
 </Target>
 
+<Target Name="_AndroidDeployAppBundleInputs"
+		DependsOnTargets="_DetectIfAppWasUninstalled;_CheckForConfigurationChange">
+	<WaitForAppDetection />
+	<!-- After device detection, $(AdbTarget) is "-s <serial>". adb.props is written before detection. -->
+	<WriteLinesToFile File="$(_AndroidApkSetDeviceCache)" Lines="$(AdbTarget)" Overwrite="true" WriteOnlyWhenDifferent="true" />
+	<ItemGroup>
+		<FileWrites Include="$(_AndroidApkSetDeviceCache)" />
+	</ItemGroup>
+	<!-- App detection and configuration changes invalidate the package as well as managed uploads. -->
+	<Delete Files="$(_AndroidAppBundleInstallFlag)" Condition="!Exists('$(_UploadFlag)')" />
+</Target>
+
 <Target Name="_GetUploadInputs">
 	<WaitForAppDetection />
 	<ItemGroup>
-		<_UploadInputs Include="$(ApkFileSigned)" />
+		<_UploadInputs Include="$(ApkFileSigned)" Condition=" '$(AndroidPackageFormat)' != 'aab' " />
+		<_UploadInputs Include="$(_ApkSetIntermediate);$(_AndroidAppBundleInstallFlag)" Condition=" '$(AndroidPackageFormat)' == 'aab' " />
 		<_UploadInputs Include="@(_ResolvedAssemblies)" />
 		<_UploadInputs Include="@(_AndroidResolvedSatellitePaths)" />
 		<_UploadInputs Include="@(_ResolvedUserAssemblies)" />
@@ -202,8 +218,8 @@ Copyright (C) 2016 Xamarin. All rights reserved.
 		_DetectIfAppWasUninstalled;
 		_CheckForConfigurationChange;
 		_ReadAndroidManifest;
-		_GetUploadInputs;
 		_DeployAppBundle;
+		_GetUploadInputs;
 		_ComputeFastDevFiles;
 	</_UploadDependsOnTargets>
 </PropertyGroup>
@@ -334,6 +350,7 @@ Copyright (C) 2016 Xamarin. All rights reserved.
 <Target Name="_CleanDebuggingCaches" DependsOnTargets="_CheckForConfigurationChange">
 	<Delete Files="$(IntermediateOutputPath)manifestdatarecord.cache;$(_DevicePropertyCache);$(IntermediateOutputPath)extract.stamp" />
 	<Delete Files="$(_UploadFlag)" />
+	<Delete Files="$(_AndroidAppBundleInstallFlag);$(_AndroidApkSetDeviceCache)" />
 	<RemoveDir Directories="$(_ConfigurationCacheDirectory)"
 		Condition="Exists('$(_ConfigurationCacheDirectory)') And '@(_ConfigurationCache)' == '@(_ConfigurationCacheItems)'" />
 </Target>

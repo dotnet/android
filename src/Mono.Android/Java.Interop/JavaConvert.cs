@@ -198,10 +198,11 @@ namespace Java.Interop {
 		/// </safety>
 		static unsafe object? FromJniHandleWithRuntimeTypeMapping (IntPtr handle, JniHandleOwnership transfer)
 		{
-			var converter = GetJniHandleConverter (GetTypeMapping (handle));
+			// SAFETY: the caller's contract above covers type lookup and conversion of handle.
+			var converter = GetJniHandleConverter (unsafe (GetTypeMapping (handle)));
 			if (converter != null)
 				return converter (handle, transfer);
-			return FromJniHandle (handle, transfer);
+			return unsafe (FromJniHandle (handle, transfer));
 		}
 
 		/// <safety>
@@ -225,7 +226,10 @@ namespace Java.Interop {
 				var peer = TrimmableTypeMap.Instance.CreateInstanceWithoutReflectionFallback (handle, elementType);
 				if (peer != null) {
 					consumed = true;
-					JNIEnv.DeleteRef (handle, transfer);
+					unsafe {
+						// SAFETY: the caller's transfer contract covers handle; consumed prevents a second release.
+						JNIEnv.DeleteRef (handle, transfer);
+					}
 					return peer;
 				}
 
@@ -233,7 +237,10 @@ namespace Java.Interop {
 					FormattableString.Invariant ($"Cannot convert Java collection element to array element type '{elementType}' using the trimmable type map."));
 			} finally {
 				if (!consumed) {
-					JNIEnv.DeleteRef (handle, transfer);
+					unsafe {
+						// SAFETY: the caller's transfer contract covers handle, which was not consumed above.
+						JNIEnv.DeleteRef (handle, transfer);
+					}
 				}
 			}
 		}
@@ -249,7 +256,8 @@ namespace Java.Interop {
 		>(IntPtr handle, JniHandleOwnership transfer)
 		{
 			bool set;
-			return FromJniHandle<T>(handle, transfer, out set);
+			// SAFETY: the caller's contract above applies unchanged to the inner conversion.
+			return unsafe (FromJniHandle<T>(handle, transfer, out set));
 		}
 
 		/// <safety>
@@ -271,7 +279,10 @@ namespace Java.Interop {
 			if (interned != null) {
 				T? r = FromJavaObject<T>(interned, out set);
 				if (set) {
-					JNIEnv.DeleteRef (handle, transfer);
+					unsafe {
+						// SAFETY: the caller's transfer contract covers handle; the cached peer replaces it.
+						JNIEnv.DeleteRef (handle, transfer);
+					}
 					return r;
 				}
 			}
@@ -281,8 +292,9 @@ namespace Java.Interop {
 			if (typeof (IJavaObject).IsAssignableFrom (typeof (T)))
 				return (T?) Java.Lang.Object._GetObject<T> (handle, transfer);
 
+			// SAFETY: the caller's contract above keeps handle live for the type lookup.
 			var converter = GetJniHandleConverter (typeof (T)) ??
-				GetJniHandleConverter (GetTypeMapping (handle));
+				GetJniHandleConverter (unsafe (GetTypeMapping (handle)));
 			if (converter != null)
 				return (T?) converter (handle, transfer);
 
@@ -343,7 +355,10 @@ namespace Java.Interop {
 			if (interned != null) {
 				var unwrapped = FromJavaObject (interned, targetType);
 				if (unwrapped != null) {
-					JNIEnv.DeleteRef (handle, transfer);
+					unsafe {
+						// SAFETY: the caller's transfer contract covers handle; the cached peer replaces it.
+						JNIEnv.DeleteRef (handle, transfer);
+					}
 					return unwrapped;
 				}
 			}
@@ -351,9 +366,10 @@ namespace Java.Interop {
 			if (targetType != null && typeof (IJavaObject).IsAssignableFrom (targetType))
 				return Java.Lang.Object.GetObject (handle, transfer, targetType);
 
+			// SAFETY: the caller's contract above keeps handle live for the type lookup.
 			var converter = targetType != null
-				? (GetJniHandleConverter (targetType) ?? GetJniHandleConverter (GetTypeMapping (handle)))
-				: GetJniHandleConverter (GetTypeMapping (handle));
+				? (GetJniHandleConverter (targetType) ?? GetJniHandleConverter (unsafe (GetTypeMapping (handle))))
+				: GetJniHandleConverter (unsafe (GetTypeMapping (handle)));
 			if (converter != null)
 				return converter (handle, transfer);
 
