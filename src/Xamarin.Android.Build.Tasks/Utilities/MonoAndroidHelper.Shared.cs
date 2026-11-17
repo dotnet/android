@@ -7,6 +7,7 @@ using Microsoft.Build.Framework;
 
 namespace Xamarin.Android.Tasks;
 
+// Helpers compile-linked into both Xamarin.Android.Build.Tasks and Microsoft.Android.Build.Tasks.
 partial class MonoAndroidHelper
 {
 	public static int RunProcess (string name, string args, DataReceivedEventHandler onOutput, DataReceivedEventHandler onError)

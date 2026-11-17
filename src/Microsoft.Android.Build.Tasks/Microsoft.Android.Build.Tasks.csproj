@@ -86,6 +86,8 @@
     <Compile Include="..\Xamarin.Android.Build.Tasks\Tasks\JavaToolTask.cs" Link="Tasks\JavaToolTask.cs" />
     <Compile Include="..\Xamarin.Android.Build.Tasks\Tasks\BundleTool.cs" Link="Tasks\BundleTool.cs" />
     <Compile Include="..\Xamarin.Android.Build.Tasks\Utilities\AssemblyIdentityMap.cs" Link="Utilities\AssemblyIdentityMap.cs" />
+    <!-- Aapt2 uses ItemGroupToCaseMap () and FixUpAndroidResourcePath (). -->
+    <Compile Include="..\Xamarin.Android.Build.Tasks\Utilities\MonoAndroidHelper.Shared.cs" Link="Utilities\MonoAndroidHelper.Shared.cs" />
   </ItemGroup>
 
   <!--
