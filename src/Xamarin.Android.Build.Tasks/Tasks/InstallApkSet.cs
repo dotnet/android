@@ -39,7 +39,7 @@ namespace Xamarin.Android.Tasks
 			if (Modules == null)
 				cmd.AppendSwitchIfNotNull ("--modules ", "_ALL_");
 			else
-				cmd.AppendSwitchIfNotNull ("--modules ", $"\"{string.Join ("\",\"", Modules)}\"");
+				cmd.AppendSwitchIfNotNull ("--modules ", string.Join (",", Modules));
 
 			return cmd;
 		}

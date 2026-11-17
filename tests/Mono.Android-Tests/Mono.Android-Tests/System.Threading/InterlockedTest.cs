@@ -1,22 +1,22 @@
 using System;
 using System.Threading;
 
-using NUnit.Framework;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace System.ThreadingTests {
 
-	[TestFixture]
+	[TestClass]
 	public class InterlockedTest {
 
-		[Test]
+		[TestMethod]
 		public void CAS64 ()
 		{
 			long i = 0, j = 42;
 
 			j = Interlocked.CompareExchange (ref i, 42, 0);
 
-			Assert.AreEqual (i, 42);
-			Assert.AreEqual (j, 0);
+			Assert.AreEqual (42, i);
+			Assert.AreEqual (0, j);
 		}
 	}
 }

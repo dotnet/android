@@ -1,16 +1,21 @@
 using System;
+using System.Collections.Generic;
 using System.Text;
 
-using NUnit.Framework;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Xamarin.Android.RuntimeTests
 {
-	[TestFixture]
+	[TestClass]
 	public class EncodingTests
 	{
-		static EncodingInfo[] EncodingTestData = Encoding.GetEncodings ();
+		public static IEnumerable<object []> EncodingTestData ()
+		{
+			foreach (var info in Encoding.GetEncodings ())
+				yield return [info];
+		}
 
-		[Test, TestCaseSource (nameof (EncodingTestData))]
+		[TestMethod, DynamicData (nameof (EncodingTestData))]
 		public void GetAllAvailableEncodings (EncodingInfo info)
 		{
 			// Requires <MandroidI18n>All</MandroidI18n> or can throw:

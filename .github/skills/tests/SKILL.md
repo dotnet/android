@@ -100,7 +100,7 @@ CI runs these assemblies with Microsoft Testing Platform, and splits them across
   --filter "FullyQualifiedName~BuildTest2" --slice 1 --total-slices 4
 ```
 
-### On-device runtime tests (stock NUnit/MTP, full-build + device)
+### On-device runtime tests (native MSTest/MTP, full-build + device)
 
 Build and install the APK first, then run `dotnet test` from the test project directory so the project-local `global.json` enables Microsoft Testing Platform:
 ```bash

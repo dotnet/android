@@ -2,14 +2,14 @@ using System;
 using System.IO;
 using System.IO.Compression;
 
-using NUnit.Framework;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace System.IO.CompressionTests
 {
-	[TestFixture]
+	[TestClass]
 	public class GzipStreamTest
 	{
-		[Test]
+		[TestMethod]
 		public void Compression ()
 		{
 			const string expected = "Hello, compressed world!";
@@ -29,10 +29,10 @@ namespace System.IO.CompressionTests
 		}
 
 		// https://bugzilla.xamarin.com/show_bug.cgi?id=34139
-		[Test]
+		[TestMethod]
 		public void GZipStreamFlush_WithNoData_ShouldNotThrow ()
 		{
-			Assert.DoesNotThrow (() => {
+			global::Xamarin.Android.UnitTests.AndroidTestAssert.DoesNotThrow (() => {
 				var data = new byte[1];
 				var backing = new MemoryStream ();
 				var compressing = new GZipStream (backing, CompressionMode.Compress);

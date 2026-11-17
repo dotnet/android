@@ -4,14 +4,14 @@ using System.Linq;
 
 using Android.Runtime;
 
-using NUnit.Framework;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Android.RuntimeTests
 {
-	[TestFixture]
+	[TestClass]
 	public class JavaCollectionTest
 	{
-		[Test]
+		[TestMethod]
 		public void GenericRemoveUsesObjectArgumentAndBooleanResult ()
 		{
 			using var list = new Java.Util.ArrayList ();
@@ -26,7 +26,7 @@ namespace Android.RuntimeTests
 			Assert.AreEqual (1, collection.Count);
 		}
 
-		[Test]
+		[TestMethod]
 		public void GenericRemoveStrings ()
 		{
 			using var list = new Java.Util.ArrayList ();
@@ -42,7 +42,7 @@ namespace Android.RuntimeTests
 			Assert.AreEqual (1, collection.Count);
 		}
 
-		[Test]
+		[TestMethod]
 		public void GenericRemoveManagedObjects ()
 		{
 			var first = new ManagedItem ();
@@ -65,7 +65,7 @@ namespace Android.RuntimeTests
 		{
 		}
 
-		[Test]
+		[TestMethod]
     public void CopyTo ()
     {
       using (var al = new Java.Util.ArrayList ()) {

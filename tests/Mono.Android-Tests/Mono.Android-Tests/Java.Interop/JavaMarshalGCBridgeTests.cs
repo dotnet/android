@@ -10,12 +10,12 @@ using Android.Runtime;
 using Java.Interop;
 using Microsoft.Android.Runtime;
 
-using NUnit.Framework;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Xamarin.Android.RuntimeTests;
 
-[TestFixture]
-[Category ("RuntimeInitialization")]
+[TestClass]
+[TestCategory ("RuntimeInitialization")]
 public class JavaMarshalGCBridgeTests
 {
 	// A static class cannot be used as the first parameter's type.
@@ -33,9 +33,10 @@ public class JavaMarshalGCBridgeTests
 	static extern JavaMarshalGCBridgeJni GetBridgeJni (
 		[UnsafeAccessorType ("Microsoft.Android.Runtime.JavaMarshalGCBridge, Mono.Android")] object target);
 
-	[TestCase ("net/dot/jni/test/GetThis")]
-	[TestCase ("net/dot/jni/test/CallNonvirtualBase")]
-	[TestCase ("net/dot/jni/test/CallNonvirtualDerived")]
+	[TestMethod]
+	[DataRow ("net/dot/jni/test/GetThis")]
+	[DataRow ("net/dot/jni/test/CallNonvirtualBase")]
+	[DataRow ("net/dot/jni/test/CallNonvirtualDerived")]
 	public unsafe void HandwrittenPeersUseAndroidGCReferenceContract (string jniTypeName)
 	{
 		using var peerType = new JniType (jniTypeName);
@@ -70,7 +71,7 @@ public class JavaMarshalGCBridgeTests
 		}
 	}
 
-	[Test]
+	[TestMethod]
 	public void OrdinaryJavaObjectsAreNotGCUserPeers ()
 	{
 		using var value = new Java.Interop.JavaObject ();
@@ -78,7 +79,7 @@ public class JavaMarshalGCBridgeTests
 		Assert.IsFalse (Java.Interop.Runtime.IsGCUserPeer (IntPtr.Zero));
 	}
 
-	[Test]
+	[TestMethod]
 	public void NativeAndManagedBridgeLayoutsMatch ()
 	{
 		Assert.AreEqual (IntPtr.Size * 4, Marshal.SizeOf<MarkCrossReferencesArgs> ());
@@ -97,15 +98,16 @@ public class JavaMarshalGCBridgeTests
 		Assert.AreEqual (IntPtr.Size + (2 * sizeof (int)), Marshal.SizeOf<HandleContext.JniObjectReferenceControlBlock> ());
 	}
 
-	[TestCase (0ul, true)]
-	[TestCase (1ul, false)]
-	[TestCase (2ul, false)]
+	[TestMethod]
+	[DataRow (0ul, true, DisplayName = "EmptyComponentsRequireTemporaryPeers(ulong.MinValue,True)")]
+	[DataRow (1ul, false, DisplayName = "EmptyComponentsRequireTemporaryPeers(1UL,False)")]
+	[DataRow (2ul, false, DisplayName = "EmptyComponentsRequireTemporaryPeers(2UL,False)")]
 	public void EmptyComponentsRequireTemporaryPeers (ulong count, bool expected)
 	{
 		Assert.AreEqual (expected, RequiresTemporaryPeer (null, new UIntPtr (count)));
 	}
 
-	[Test]
+	[TestMethod]
 	public void EmptyComponentsCanAddCrossReferenceWithoutLeakingLocalRefs ()
 	{
 		unsafe {
@@ -135,13 +137,13 @@ public class JavaMarshalGCBridgeTests
 		}
 	}
 
-	[Test]
-	[Category ("GCBridge")]
-	[Category ("ReferenceTracing")]
+	[TestMethod]
+	[TestCategory ("GCBridge")]
+	[TestCategory ("ReferenceTracing")]
 	public void ManagedPeerCycleSurvivesJavaRootAndIsCollectedAfterRelease ()
 	{
 		if (!Microsoft.Android.Runtime.RuntimeFeature.IsCoreClrRuntime && !Microsoft.Android.Runtime.RuntimeFeature.IsNativeAotRuntime)
-			Assert.Ignore ("This test exercises the managed GC bridge.");
+			Assert.Inconclusive ("This test exercises the managed GC bridge.");
 
 		WeakReference<BridgeCyclePeer> first;
 		WeakReference<BridgeCyclePeer> second;
@@ -209,7 +211,7 @@ public class JavaMarshalGCBridgeTests
 		public BridgeCyclePeer Next { get; set; }
 	}
 
-	[Test]
+	[TestMethod]
 	public void BridgeCallbackIsUnmanagedEntryPoint ()
 	{
 		Type bridge = typeof (JavaMarshalGCBridge);

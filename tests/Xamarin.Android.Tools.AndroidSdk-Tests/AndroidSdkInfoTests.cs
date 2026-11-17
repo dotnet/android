@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Xml.Linq;
 
 using NUnit.Framework;
@@ -14,6 +15,53 @@ namespace Xamarin.Android.Tools.Tests
 	public class AndroidSdkInfoTests
 	{
 		const string NdkVersion = "21.0.6113669";
+
+		[Test]
+		public void AllSdkPathsResolveRelativeCandidates ()
+		{
+			CreateSdks (out var root, out var jdk, out _, out var sdk);
+			try {
+				var discovery = new AndroidSdkUnix ((_, _) => { }, new Dictionary<string, string> {
+					["ANDROID_HOME"] = "sdk",
+					["PATHEXT"] = $".EXE{Path.PathSeparator}.CMD",
+				}, root);
+				discovery.Initialize (javaSdkPath: jdk);
+				CollectionAssert.AreEqual (new [] { sdk }, discovery.AllAndroidSdks);
+			} finally {
+				Directory.Delete (root, recursive: true);
+			}
+		}
+
+		[Test]
+		public void SnapshotConfigReadsDoNotRepairSharedFiles ()
+		{
+			var root = CreateRoot ();
+			var directory = Path.Combine (root, "home", ".config", "xbuild");
+			Directory.CreateDirectory (directory);
+			var file = Path.Combine (directory, "monodroid-config.xml");
+			File.WriteAllText (file, "<broken");
+			File.WriteAllText (file + ".old", "previous");
+			var environment = new Dictionary<string, string> { ["HOME"] = "home" };
+			int errors = 0;
+			int warnings = 0;
+			try {
+				System.Threading.Tasks.Parallel.For (0, 2, _ => {
+					var config = AndroidSdkUnix.GetUnixConfigFile ((level, message) => {
+						if (level == TraceLevel.Error)
+							Interlocked.Increment (ref errors);
+						if (level == TraceLevel.Warning)
+							Interlocked.Increment (ref warnings);
+					}, environment, root);
+					Assert.IsEmpty (config.Elements ());
+				});
+				Assert.AreEqual (0, errors);
+				Assert.AreEqual (2, warnings);
+				Assert.AreEqual ("<broken", File.ReadAllText (file));
+				Assert.AreEqual ("previous", File.ReadAllText (file + ".old"));
+			} finally {
+				Directory.Delete (root, recursive: true);
+			}
+		}
 
 		string      UnixConfigDirOverridePath;
 		string      PreferredJdksOverridePath;
