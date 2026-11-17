@@ -1890,6 +1890,83 @@ namespace generatortests
 		}
 
 		[Test]
+		public void ListenerEventUsesConnectorForSameListener ()
+		{
+			// 'addEventListener' checks the listener type; 'addOtherListener' checks that the shortest overload is used.
+			var gens = ParseApiDefinition ("""
+				<api>
+				  <package name='java.lang'>
+				    <class name='Object' visibility='public' deprecated='not deprecated' />
+				  </package>
+				  <package name='android.os'>
+				    <class name='Handler' extends='java.lang.Object' visibility='public' deprecated='not deprecated' />
+				  </package>
+				  <package name='com.example'>
+				    <interface name='FirstListener' visibility='public' abstract='true' deprecated='not deprecated'>
+				      <method name='onFirst' return='void' visibility='public' abstract='true' static='false' deprecated='not deprecated' />
+				    </interface>
+				    <interface name='SecondListener' visibility='public' abstract='true' deprecated='not deprecated'>
+				      <method name='onSecond' return='void' visibility='public' abstract='true' static='false' deprecated='not deprecated' />
+				    </interface>
+				    <class name='Target' extends='java.lang.Object' visibility='public' deprecated='not deprecated'>
+				      <method name='addEventListener' return='void' visibility='public' abstract='false' static='false' final='false' deprecated='not deprecated'>
+				        <parameter name='listener' type='com.example.SecondListener' />
+				      </method>
+				      <method name='addEventListener' return='void' visibility='public' abstract='false' static='false' final='false' deprecated='not deprecated'>
+				        <parameter name='listener' type='com.example.FirstListener' />
+				        <parameter name='handler' type='android.os.Handler' />
+				      </method>
+				      <method name='addOtherListener' return='void' visibility='public' abstract='false' static='false' final='false' deprecated='not deprecated'>
+				        <parameter name='listener' type='com.example.FirstListener' />
+				        <parameter name='handler' type='android.os.Handler' />
+				      </method>
+				      <method name='addOtherListener' return='void' visibility='public' abstract='false' static='false' final='false' deprecated='not deprecated'>
+				        <parameter name='listener' type='com.example.FirstListener' />
+				      </method>
+				    </class>
+				  </package>
+				</api>
+				""");
+			var source = GetGeneratedTypeOutput (gens.Single (g => g.Name == "Target")).Replace ("\t", "");
+			var nl = Environment.NewLine;
+
+			StringAssert.Contains ($"__CreateIFirstListenerImplementor,{nl}AddEventListener_Event_With_Handler_Helper,{nl}", source);
+			StringAssert.Contains ($"__CreateIFirstListenerImplementor,{nl}AddOtherListener,{nl}", source);
+		}
+
+		[TestCase (true)]
+		[TestCase (false)]
+		public void GenericExplicitImplementationChecksNonNullString (bool notNull)
+		{
+			var gens = ParseApiDefinition ($$"""
+				<api>
+				  <package name='java.lang'>
+				    <class name='Object' visibility='public' deprecated='not deprecated' />
+				    <class name='String' extends='java.lang.Object' visibility='public' final='true' deprecated='not deprecated' />
+				  </package>
+				  <package name='com.example'>
+				    <interface name='Sink' visibility='public' abstract='true' deprecated='not deprecated'>
+				      <typeParameters><typeParameter name='T' /></typeParameters>
+				      <method name='accept' return='void' visibility='public' abstract='true' static='false' deprecated='not deprecated'>
+				        <parameter name='value' type='T' not-null='{{(notNull ? "true" : "false")}}' />
+				      </method>
+				    </interface>
+				    <class name='StringSink' extends='java.lang.Object' visibility='public' deprecated='not deprecated'>
+				      <implements name='com.example.Sink' name-generic-aware='com.example.Sink&lt;java.lang.String&gt;' />
+				      <method name='accept' return='void' visibility='public' abstract='false' static='false' final='false' deprecated='not deprecated'>
+				        <parameter name='value' type='java.lang.String' />
+				      </method>
+				    </class>
+				  </package>
+				</api>
+				""");
+			var source = GetGeneratedTypeOutput (gens.Single (g => g.Name == "StringSink"));
+
+			StringAssert.Contains ("Accept (value?.ToString ()", source);
+			Assert.AreEqual (notNull, source.Contains ("value?.ToString () ?? throw new global::Java.Lang.NullPointerException ()"));
+		}
+
+		[Test]
 		public void WriteInterface ()
 		{
 			var iface = SupportTypeBuilder.CreateInterface ("java.code.IMyInterface", options);
