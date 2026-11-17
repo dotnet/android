@@ -120,15 +120,14 @@ stages:
       parameters:
         xaSourcePath: $(System.DefaultWorkingDirectory)
 
-    # CodeQL scans each language at most every 72 hours. When it skips, it does not set
-    # CODEQL_PATH, and we skip the build too.
+    # CodeQL scans each language at most every 72 hours. On the other nights the Init task does
+    # nothing, and this is just a regular Linux build.
     - task: CodeQL3000Init@0
       displayName: CodeQL 3000 Init
 
     - script: make jenkins CONFIGURATION=$(XA.Build.Configuration)
       displayName: make jenkins
       retryCountOnTaskFailure: 1
-      condition: and(succeeded(), ne(variables['CODEQL_PATH'], ''))
 
     - task: CodeQL3000Finalize@0
       displayName: CodeQL 3000 Finalize
