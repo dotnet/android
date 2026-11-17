@@ -214,11 +214,13 @@ For `Xamarin.Android.JcwGen-Tests`, use the same pattern from `tests/CodeGen-Bin
 Case counts change whenever tests are added on `main`, so there is no fixed
 expected total. To validate a migration, compare the MSTest run against the
 original NUnit runner on the **same source commit**: test identities, category
-sets and duplicate (data-row) multiplicity must match, not just totals.
+sets and duplicate (data-row) multiplicity must match, not just totals. Also
+check native UID/TRX agreement and the installed APK's runtime contents.
 Generated descriptors retain bounded reflection fallback.
 JCW retains its whole-app root: both original NUnit and migrated MSTest
 NativeAOT abort in `JavaAbstractMethodTest` at `ic.NewMethod()` (`RhFailFast`);
 do not exclude/weaken that test or claim completed JCW NativeAOT coverage.
+A run only covers the runtimes and ABIs it exercised; it does not certify others.
 See [on-device unit tests](../../../../Documentation/workflow/UnitTests.md#on-device-unit-tests)
 for trimming root boundaries.
 
