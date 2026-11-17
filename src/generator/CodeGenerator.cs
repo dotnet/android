@@ -252,6 +252,20 @@ namespace Xamarin.Android.Binder
 				: enummap.WriteEnumerations (enumdir, enums, FlattenNestedTypes (gens).ToArray (), opt);
 
 			gen_info.GenerateLibraryProjectFile (options, enumFiles);
+
+			WriteKotlinValueClassKeepRules (FlattenNestedTypes (gens), csdir);
+		}
+
+		// The value-class structs call Kotlin's `box-impl`, `unbox-impl` and `constructor-impl`
+		// by name over JNI, so R8 must keep them. The binding packs this file into its .aar.
+		static void WriteKotlinValueClassKeepRules (IEnumerable<GenBase> gens, string csdir)
+		{
+			var rules = gens.OfType<ClassGen> ()
+				.Where (k => k.IsKotlinInlineClass && k.IsGeneratable)
+				.Select (k => $"-keep class {k.RawJniName.Replace ('/', '.')} {{ *; }}")
+				.ToList ();
+			if (rules.Count > 0)
+				File.WriteAllLines (Path.Combine (csdir, "proguard_kotlin_value_classes.cfg"), rules);
 		}
 
 		static void AddTypeToTable (CodeGenerationOptions opt, GenBase gb)

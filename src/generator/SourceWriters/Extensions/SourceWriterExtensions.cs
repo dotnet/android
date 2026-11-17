@@ -539,7 +539,7 @@ namespace generator.SourceWriters
 		public static TypeWriter BuildManagedTypeModel (GenBase gen, CodeGenerationOptions opt, CodeGeneratorContext context, GenerationInfo genInfo)
 		{
 			if (gen is ClassGen klass)
-				return new BoundClass (klass, opt, context, genInfo);
+				return klass.IsKotlinInlineClass ? new KotlinInlineClassStruct (klass, opt) : new BoundClass (klass, opt, context, genInfo);
 			else if (gen is InterfaceGen iface)
 				return new BoundInterface (iface, opt, context, genInfo);
 

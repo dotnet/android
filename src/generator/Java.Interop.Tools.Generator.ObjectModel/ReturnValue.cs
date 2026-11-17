@@ -28,6 +28,9 @@ namespace MonoDroid.Generation {
 
 		public string CallMethodPrefix => TypeNameUtilities.GetCallPrefix (sym);
 
+		// A Kotlin value class projected as a struct, either unboxed (`Foo`) or boxed (`Foo?`).
+		public bool IsKotlinInlineClass => sym is KotlinInlineClassBoxedSymbol || !string.IsNullOrEmpty (owner?.KotlinInlineClassReturnJniType);
+
 		public ReturnValue Clone (Method owner)
 		{
 			return new ReturnValue (owner, java_type, managed_type, is_enumified, NotNull);
@@ -146,13 +149,21 @@ namespace MonoDroid.Generation {
 		void ApplyKotlinInlineClassProjection (CodeGenerationOptions opt, GenericParameterDefinitionList type_params)
 		{
 			var jni = owner?.KotlinInlineClassReturnJniType;
-			if (string.IsNullOrEmpty (jni))
+			if (string.IsNullOrEmpty (jni)) {
+				// A value class the JVM returns boxed (e.g. Kotlin `Foo?`) is
+				// projected as the nullable wrapper struct (`Foo?`).
+				var boxed = KotlinInlineClassBoxedSymbol.Project (sym);
+				if (boxed != sym) {
+					sym = boxed;
+					NotNull = true;
+				}
 				return;
+			}
 			var javaName = TypeNameUtilities.JniSignatureToJavaTypeName (jni);
 			if (javaName == null)
 				return;
 			var wrapper = opt.SymbolTable.Lookup (javaName, type_params) as ClassGen;
-			if (wrapper == null || !wrapper.IsKotlinInlineClass)
+			if (wrapper == null || !wrapper.IsKotlinInlineClass || wrapper.KotlinInlineClassUnderlyingJniType != sym.JniName)
 				return;
 			managed_type = wrapper.FullName;
 			NotNull = true;

@@ -138,6 +138,7 @@ It is shared between "legacy" binding projects and .NET 5 projects.
     <ItemGroup>
       <FileWrites Include="$(GeneratedOutputPath)**\*.cs" />
       <FileWrites Include="$(GeneratedOutputPath)src\$(AssemblyName).projitems" />
+      <FileWrites Include="$(GeneratedOutputPath)src\proguard_kotlin_value_classes.cfg" Condition="Exists ('$(GeneratedOutputPath)src\proguard_kotlin_value_classes.cfg')" />
       <FileWrites Include="$(_GeneratorStampFile)" />
     </ItemGroup>
 
@@ -155,6 +156,8 @@ It is shared between "legacy" binding projects and .NET 5 projects.
     <!-- Add the files to list of things to be compiled -->
     <ItemGroup>
       <Compile Include="@(_GeneratedManagedBindingFiles)" Condition="Exists ('%(_GeneratedManagedBindingFiles.Identity)')" />
+      <!-- R8 keep rules for Kotlin value classes, packed into the .aar for apps -->
+      <ProguardConfiguration Include="$(GeneratedOutputPath)src\proguard_kotlin_value_classes.cfg" Condition="Exists ('$(GeneratedOutputPath)src\proguard_kotlin_value_classes.cfg')" />
     </ItemGroup>
   </Target>
 

@@ -364,6 +364,11 @@ public sealed class JavaPeerScanner : IDisposable
 				continue;
 			}
 
+			// Kotlin value-class structs have [Register] for binding tools, but are not Java peers.
+			if (IsValueType (index.Reader, typeDef)) {
+				continue;
+			}
+
 			var fullName = index.GetTypeFullName (typeHandle);
 
 			// Determine the JNI name and whether this is a known Java peer.
@@ -2559,6 +2564,15 @@ public sealed class JavaPeerScanner : IDisposable
 	const string IJavaObjectFullName = "Android.Runtime.IJavaObject";
 
 	readonly Dictionary<(string AssemblyName, int TypeRow), bool> implementsIJavaObjectCache = new ();
+
+	static bool IsValueType (MetadataReader reader, TypeDefinition typeDef)
+	{
+		if (typeDef.BaseType.Kind != HandleKind.TypeReference) {
+			return false;
+		}
+		var baseType = reader.GetTypeReference ((TypeReferenceHandle) typeDef.BaseType);
+		return reader.StringComparer.Equals (baseType.Namespace, "System") && reader.StringComparer.Equals (baseType.Name, "ValueType");
+	}
 
 	/// <summary>
 	/// Determines whether a type is a "custom" Java object: a managed class that implements

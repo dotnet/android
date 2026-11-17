@@ -57,5 +57,36 @@ namespace Java.Interop.Tools.JavaTypeSystem.Tests
 			var annotated_field = annotated_interface ["field"];
 			Assert.AreEqual ("TESTS", annotated_field.Attributes ["annotated-visibility"].InnerText);
 		}
+
+		[Test]
+		public void KotlinValueClassAttributes ()
+		{
+			var xml = """
+				<api>
+				  <package name='com.example' jni-name='com/example'>
+				    <class abstract='false' deprecated='not deprecated' extends='java.lang.Object' extends-generic-aware='java.lang.Object' jni-extends='Ljava/lang/Object;' final='true' name='MyColor' jni-signature='Lcom/example/MyColor;' static='false' visibility='public' kotlin-inline-class='true' kotlin-inline-class-underlying-jni-type='J' />
+				    <class abstract='false' deprecated='not deprecated' extends='java.lang.Object' extends-generic-aware='java.lang.Object' jni-extends='Ljava/lang/Object;' final='true' name='Widgets' jni-signature='Lcom/example/Widgets;' static='false' visibility='public'>
+				      <method abstract='false' deprecated='not deprecated' final='true' name='tint-abc' jni-signature='(J)J' native='false' return='long' jni-return='J' static='false' synchronized='false' visibility='public' managedName='Tint' kotlin-inline-class-return-jni-type='Lcom/example/MyColor;'>
+				        <parameter name='color' type='long' jni-type='J' kotlin-inline-class-jni-type='Lcom/example/MyColor;' />
+				      </method>
+				    </class>
+				  </package>
+				</api>
+				""";
+			var xapi = JavaApiTestHelper.GetLoadedApi ();
+			JavaXmlApiImporter.ParseString (xml, xapi);
+			xapi.ResolveCollection ();
+
+			using var sw = new StringWriter ();
+			using (var xw = XmlWriter.Create (sw))
+				JavaXmlApiExporter.Save (xapi, xw);
+			var output = sw.ToString ();
+
+			StringAssert.Contains ("kotlin-inline-class=\"true\"", output);
+			StringAssert.Contains ("kotlin-inline-class-underlying-jni-type=\"J\"", output);
+			StringAssert.Contains ("managedName=\"Tint\"", output);
+			StringAssert.Contains ("kotlin-inline-class-return-jni-type=\"Lcom/example/MyColor;\"", output);
+			StringAssert.Contains ("kotlin-inline-class-jni-type=\"Lcom/example/MyColor;\"", output);
+		}
 	}
 }

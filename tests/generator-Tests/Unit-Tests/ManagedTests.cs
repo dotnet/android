@@ -50,6 +50,13 @@ namespace Com.Mypackage
 		public class NestedFieldClass : Java.Lang.Object { }
 	}
 
+	// A Kotlin value class struct, as generated in another binding assembly.
+	[Register ("com/mypackage/MyDp", DoNotGenerateAcw = true)]
+	public readonly struct MyDp
+	{
+		public readonly float Value;
+	}
+
 }
 
 namespace GenericTestClasses
@@ -126,6 +133,17 @@ namespace generatortests
 		{
 			module.Dispose ();
 			File.Delete (tempFile);
+		}
+
+		[Test]
+		public void KotlinValueClassStruct ()
+		{
+			var @class = CecilApiImporter.CreateClass (module.GetType ("Com.Mypackage.MyDp"), options);
+			Assert.IsTrue (@class.Validate (options, new GenericParameterDefinitionList (), new CodeGeneratorContext ()), "@class.Validate failed!");
+
+			Assert.AreEqual ("com.mypackage.MyDp", @class.JavaName);
+			Assert.IsTrue (@class.IsKotlinInlineClass);
+			Assert.AreEqual ("F", @class.KotlinInlineClassUnderlyingJniType);
 		}
 
 		[Test]

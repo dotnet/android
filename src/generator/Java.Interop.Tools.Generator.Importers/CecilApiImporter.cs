@@ -62,8 +62,27 @@ namespace MonoDroid.Generation
 
 			klass.BaseType = nominal_base_type?.FullNameCorrected ();
 
+			// A struct with [Register] is a Kotlin value class from another binding assembly.
+			if (t.IsValueType && klass.IsAcw) {
+				klass.BaseType = "Java.Lang.Object";
+				klass.IsKotlinInlineClass = true;
+				klass.KotlinInlineClassUnderlyingJniType = GetPrimitiveJniType (t.Fields.FirstOrDefault (f => f.Name == "Value" && !f.IsStatic)?.FieldType.FullName);
+			}
+
 			return klass;
 		}
+
+		static string GetPrimitiveJniType (string typeName) => typeName switch {
+			"System.Boolean" => "Z",
+			"System.SByte" => "B",
+			"System.Char" => "C",
+			"System.Double" => "D",
+			"System.Single" => "F",
+			"System.Int32" => "I",
+			"System.Int64" => "J",
+			"System.Int16" => "S",
+			_ => null,
+		};
 
 		public static Ctor CreateCtor (GenBase declaringType, MethodDefinition m, CodeGenerationOptions opt)
 		{
