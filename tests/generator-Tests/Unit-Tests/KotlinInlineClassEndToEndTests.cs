@@ -143,14 +143,11 @@ namespace generatortests
 		// XmlClassDeclarationBuilder to produce the same api.xml the generator
 		// would normally consume off disk.
 		static string BuildApiXmlFromKotlinFixture ()
+			=> BuildApiXmlFromKotlinFixture ("MyColor.class", "MyAlpha.class", "MyDp.class", "Widgets.class", "ColorCallback.class");
+
+		internal static string BuildApiXmlFromKotlinFixture (params string [] resources)
 		{
-			var classes = new List<ClassFile> {
-				LoadClassFile ("MyColor.class"),
-				LoadClassFile ("MyAlpha.class"),
-				LoadClassFile ("MyDp.class"),
-				LoadClassFile ("Widgets.class"),
-				LoadClassFile ("ColorCallback.class"),
-			};
+			var classes = resources.Select (LoadClassFile).ToList ();
 			Xamarin.Android.Tools.Bytecode.KotlinFixups.Fixup (classes);
 
 			var classPath = new ClassPath { ApiSource = "class-parse" };
@@ -171,9 +168,11 @@ namespace generatortests
 				"</package>"));
 
 			// Like CodeGenerator, run class-parse output through the JavaTypeSystem adjuster.
-			// `java.util.List` comes from the reference API in a real build.
+			// `java.lang.String` and `java.util.List` come from the reference API in a real build.
 			var references = Java.Interop.Tools.JavaTypeSystem.JavaXmlApiImporter.ParseString (
-				"<api><package name='java.util' jni-name='java/util'>" +
+				"<api><package name='java.lang' jni-name='java/lang'>" +
+				"<class abstract='false' deprecated='not deprecated' final='true' name='String' static='false' visibility='public' jni-signature='Ljava/lang/String;' />" +
+				"</package><package name='java.util' jni-name='java/util'>" +
 				"<interface deprecated='not deprecated' name='List' static='false' visibility='public' jni-signature='Ljava/util/List;'>" +
 				"<typeParameters><typeParameter name='E' /></typeParameters>" +
 				"</interface></package></api>");
@@ -200,9 +199,9 @@ namespace generatortests
 
 		// Drive the parsed api.xml through XmlApiImporter + Validate + the
 		// JavaInteropCodeGenerator to produce the C# binding text.
-		static string GenerateCSharp (string apiXml, out List<GenBase> gens, bool nullableReferenceTypes = false)
+		internal static string GenerateCSharp (string apiXml, out List<GenBase> gens, bool nullableReferenceTypes = false, bool defaultInterfaceMethods = false)
 		{
-			var options = new CodeGenerationOptions { SupportNullableReferenceTypes = nullableReferenceTypes };
+			var options = new CodeGenerationOptions { SupportNullableReferenceTypes = nullableReferenceTypes, SupportDefaultInterfaceMethods = defaultInterfaceMethods };
 			var sb = new System.Text.StringBuilder ();
 			var writer = new StringWriter (sb);
 			var generator = new JavaInteropCodeGenerator (writer, options);
