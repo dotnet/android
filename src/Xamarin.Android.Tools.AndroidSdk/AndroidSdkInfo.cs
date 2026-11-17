@@ -11,10 +11,26 @@ namespace Xamarin.Android.Tools
 		AndroidSdkBase sdk;
 
 		public AndroidSdkInfo (Action<TraceLevel, string>? logger = null, string? androidSdkPath = null, string? androidNdkPath = null, string? javaSdkPath = null)
+			: this (logger, androidSdkPath, androidNdkPath, javaSdkPath, null)
+		{
+		}
+
+		/// <summary>Uses a complete environment snapshot; null retains process-based discovery.</summary>
+		public static AndroidSdkInfo CreateWithEnvironment (Action<TraceLevel, string>? logger, string? androidSdkPath, string? androidNdkPath,
+			string? javaSdkPath, IDictionary<string, string>? environmentVariables)
+			=> new AndroidSdkInfo (logger, androidSdkPath, androidNdkPath, javaSdkPath, environmentVariables);
+
+		/// <summary>Resolves discovery paths and runs probes relative to the supplied working directory.</summary>
+		public static AndroidSdkInfo CreateWithEnvironment (Action<TraceLevel, string>? logger, string? androidSdkPath, string? androidNdkPath,
+			string? javaSdkPath, IDictionary<string, string>? environmentVariables, string workingDirectory)
+			=> new AndroidSdkInfo (logger, androidSdkPath, androidNdkPath, javaSdkPath, environmentVariables, workingDirectory);
+
+		internal AndroidSdkInfo (Action<TraceLevel, string>? logger, string? androidSdkPath, string? androidNdkPath, string? javaSdkPath,
+			IDictionary<string, string>? environmentVariables, string? workingDirectory = null)
 		{
 			logger  = logger ?? DefaultConsoleLogger;
 
-			sdk = CreateSdk (logger);
+			sdk = CreateSdk (logger, environmentVariables, workingDirectory);
 			sdk.Initialize (androidSdkPath, androidNdkPath, javaSdkPath);
 
 			// shouldn't happen, in that sdk.Initialize() should throw instead
@@ -44,11 +60,11 @@ namespace Xamarin.Android.Tools
 			javaSdkPath = sdk.JavaSdkPath;
 		}
 
-		static AndroidSdkBase CreateSdk (Action<TraceLevel, string> logger)
+		static AndroidSdkBase CreateSdk (Action<TraceLevel, string> logger, IDictionary<string, string>? environmentVariables = null, string? workingDirectory = null)
 		{
 			return OS.IsWindows
-				? (AndroidSdkBase) new AndroidSdkWindows (logger)
-				: (AndroidSdkBase) new AndroidSdkUnix (logger);
+				? (AndroidSdkBase) new AndroidSdkWindows (logger, environmentVariables, workingDirectory)
+				: (AndroidSdkBase) new AndroidSdkUnix (logger, environmentVariables, workingDirectory);
 		}
 
 		public IEnumerable<string> GetBuildToolsPaths (string preferredBuildToolsVersion)

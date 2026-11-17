@@ -12,7 +12,6 @@ using System.Threading.Tasks;
 using System.Xml.Linq;
 using Microsoft.Build.Framework;
 using NUnit.Framework;
-using Xamarin.Installer.AndroidSDK.Common;
 using Xamarin.Installer.Build.Tasks;
 using Xamarin.ProjectTools;
 
@@ -200,7 +199,7 @@ namespace Xamarin.Android.Build.Tests
 			Assert.Throws<OperationCanceledException> (() => Verify (archiveBytes, Sign (), cancellationToken: new CancellationToken (true)));
 			using (var client = new HttpClient (new SignatureHandler ([], []))) {
 				var task = new InstallAndroidDependencies { SkipSignCheck = skip };
-				Assert.ThrowsAsync<OperationCanceledException> (async () => await task.VerifyJavaArchiveAsync (client, new Archive ("windows"), new CancellationToken (true)));
+				Assert.ThrowsAsync<OperationCanceledException> (async () => await task.VerifyJavaArchiveAsync (client, new Archive (), new CancellationToken (true)));
 			}
 		}
 
@@ -223,7 +222,7 @@ namespace Xamarin.Android.Build.Tests
 				var task = new VerificationTask {
 					BuildEngine = engine,
 					Client = client,
-					Archive = new Archive ("windows") { Url = new Uri ("https://example.test/jdk.zip") },
+					Archive = new Archive () { Url = new Uri ("https://example.test/jdk.zip") },
 				};
 				Assert.IsFalse (task.Execute ());
 				Assert.IsTrue (handler.Blocked);
@@ -243,7 +242,7 @@ namespace Xamarin.Android.Build.Tests
 				using (var client = new HttpClient (handler) { Timeout = Timeout.InfiniteTimeSpan }) {
 					var engine = CreateBuildEngine ();
 					var task = new InstallAndroidDependencies { BuildEngine = engine };
-					var archive = new Archive ("windows") { Url = new Uri ("https://example.test/jdk.zip") };
+					var archive = new Archive () { Url = new Uri ("https://example.test/jdk.zip") };
 					Assert.CatchAsync<OperationCanceledException> (async () => await task.VerifyJavaArchiveAsync (client, archive, source.Token));
 					Assert.IsTrue (handler.Blocked);
 					Assert.IsTrue (source.IsCancellationRequested);
@@ -465,7 +464,7 @@ namespace Xamarin.Android.Build.Tests
 		public async Task PublishedMicrosoftArchive ()
 		{
 			using (var client = new HttpClient { Timeout = TimeSpan.FromMinutes (10) }) {
-				var archive = new Archive ("windows") {
+				var archive = new Archive () {
 					Url = new Uri ("https://aka.ms/download-jdk/microsoft-jdk-21.0.8-windows-x64.zip"),
 					DownloadedFilePath = Path.GetTempFileName (),
 				};
@@ -547,7 +546,7 @@ namespace Xamarin.Android.Build.Tests
 					var task = new VerificationTask {
 						BuildEngine = engine,
 						Client = client,
-						Archive = new Archive ("windows") {
+						Archive = new Archive () {
 							Url = new Uri ("https://example.test/jdk.tar.gz?token=test"),
 							DownloadedFilePath = path,
 						},

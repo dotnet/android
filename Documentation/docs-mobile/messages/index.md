@@ -54,7 +54,7 @@ ms.date: 04/11/2024
 + [XA0031](xa0031.md): Java SDK {minimumSupportedJavaVersion} or above is required by the .NET for Android SDK.
 + [XA0032](xa0032.md): Legacy Android Build-Tools Java requirement; no longer emitted by current SDKs.
 + [XA0033](xa0033.md): Failed to get the Java SDK version because the returned value does not appear to contain a valid version number.
-+ [XA0034](xa0034.md): Failed to get the Java SDK version.
++ [XA0034](xa0034.md): Legacy Java version retrieval warning; no longer emitted starting in .NET 12.
 + [XA0035](xa0035.md): Failed to determine the Android ABI for the project.
 + [XA0036](xa0036.md): $(AndroidSupportedAbis) is not supported in .NET 6 and higher.
 + XA0100: EmbeddedNativeLibrary is invalid in Android Application projects. Please use AndroidNativeLibrary instead.
@@ -70,7 +70,7 @@ ms.date: 04/11/2024
 + [XA0112](xa0112.md): `aapt2` is not installed. Disabling `aapt2` support. Please check it is installed correctly.
 + [XA0113](xa0113.md): Legacy Google Play target API warning; no longer emitted by current SDKs.
 + [XA0115](xa0115.md): Invalid value 'armeabi' in $(AndroidSupportedAbis). This ABI is no longer supported. Please update your project properties to remove the old value. If the properties page does not show an 'armeabi' checkbox, un-check and re-check one of the other ABIs and save the changes.
-+ [XA0116](xa0116.md): Unable to find `EmbeddedResource` named `{ResourceName}`.
++ [XA0116](xa0116.md): Unable to find required SDK file `{FilePath}`.
 + [XA0117](xa0117.md): Legacy deprecated `TargetFrameworkVersion` warning; no longer emitted by current SDKs.
 + [XA0118](xa0118.md): Could not parse '{TargetMoniker}'
 + [XA0119](xa0119.md): A non-ideal configuration was found in the project.
@@ -282,6 +282,9 @@ Either change the value in the AndroidManifest.xml to match the $(SupportedOSPla
 + [XA5303](xa5303.md): Failed to parse 'DescriptorIndex' metadata value '{value}' for assembly '{assembly}'.
 + [XA5304](xa5304.md): Invalid AssemblyStore compression level '{level}'. The value must be between {min} and {max}.
 + [XA5305](xa5305.md): Could not verify the Microsoft OpenJDK archive signature.
++ [XA5306](xa5306.md): The Android CLI is not available for this operating system and architecture.
++ [XA5307](xa5307.md): The SHA-256 hash of the downloaded Android CLI is not correct.
++ [XA5308](xa5308.md): The Android CLI failed while it installed Android SDK packages.
 
 ## XA6xxx: Internal tools
 
@@ -324,10 +327,8 @@ and `NNN` is a 3 digit number indicating the type of the unhandled `Exception`.
 * `CNE` - `CollectNonEmptyDirectories`
 * `CNL` - `CreateNativeLibraryArchive`
 * `CPD` - `CalculateProjectDependencies`
-* `CPR` - `CopyResource`
 * `CPT` - `ComputeHash`
 * `CRC` - `ConvertResourcesCases`
-* `CRM` - `CreateResgenManifest`
 * `CRN` - `Crunch`
 * `CRP` - `AndroidComputeResPaths`
 * `CTX` - `CompileToDalvik`

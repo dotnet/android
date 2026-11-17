@@ -142,6 +142,53 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
+		public void SourceOlderSameLengthDifferentContent ()
+		{
+			var src = NewFile ("foo");
+			var dest = NewFile ("bar");
+			File.SetLastWriteTimeUtc (src, new DateTime (2020, 1, 1, 0, 0, 0, DateTimeKind.Utc));
+			File.SetLastWriteTimeUtc (dest, new DateTime (2020, 1, 2, 0, 0, 0, DateTimeKind.Utc));
+			var timestamp = File.GetLastWriteTimeUtc (dest);
+
+			var task = new CopyIfChanged {
+				BuildEngine = new MockBuildEngine (TestContext.Out),
+				SourceFiles = ToArray (src),
+				DestinationFiles = ToArray (dest),
+			};
+			Assert.IsTrue (task.Execute (), "task.Execute() should have succeeded.");
+			Assert.IsEmpty (task.ModifiedFiles, "The default should trust the newer destination timestamp.");
+			Assert.AreEqual ("bar", File.ReadAllText (dest));
+			Assert.AreEqual (timestamp, File.GetLastWriteTimeUtc (dest));
+		}
+
+		[TestCase ("bar", true)]
+		[TestCase ("foo", false)]
+		public void VerifyContentWithNewerDestination (string destinationContent, bool expectCopy)
+		{
+			var src = NewFile ("foo");
+			var dest = NewFile (destinationContent);
+			File.SetLastWriteTimeUtc (src, new DateTime (2020, 1, 1, 0, 0, 0, DateTimeKind.Utc));
+			File.SetLastWriteTimeUtc (dest, new DateTime (2020, 1, 2, 0, 0, 0, DateTimeKind.Utc));
+			var timestamp = File.GetLastWriteTimeUtc (dest);
+
+			var task = new CopyIfChanged {
+				BuildEngine = new MockBuildEngine (TestContext.Out),
+				SourceFiles = ToArray (src),
+				DestinationFiles = ToArray (dest),
+				VerifyContent = true,
+			};
+			Assert.IsTrue (task.Execute (), "task.Execute() should have succeeded.");
+			FileAssert.AreEqual (src, dest);
+			if (expectCopy) {
+				Assert.AreEqual (1, task.ModifiedFiles.Length, "Different content should be copied despite the newer destination timestamp.");
+				Assert.AreEqual (dest, task.ModifiedFiles [0].ItemSpec);
+			} else {
+				Assert.IsEmpty (task.ModifiedFiles, "Identical content should not be copied.");
+				Assert.AreEqual (timestamp, File.GetLastWriteTimeUtc (dest));
+			}
+		}
+
+		[Test]
 		public void SourceOlderDifferentLength ()
 		{
 			var src = NewFile ("foo");

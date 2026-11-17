@@ -7,32 +7,42 @@ parameters:
   condition: succeeded()  # Condition to run tests
 
 steps:
-# The tool apphost does not locate its runtime from PATH, so use the SDK installed during test setup.
-- ${{if parameters.testFilter}}:
-  - pwsh: >-
-      $(Agent.ToolsDirectory)/dotnet-test-slicer slice
-      --test-assembly="${{ parameters.testAssembly }}"
-      --test-filter="${{ parameters.testFilter }}"
-      --slice-number=$(System.JobPositionInPhase)
-      --total-slices=$(System.TotalJobsInPhase)
-      --outfile="${{ parameters.testAssembly }}.runsettings"
-    displayName: Slice unit tests with filter
-    failOnStderr: true
-    condition: ${{ parameters.condition }}
-    env:
-      DOTNET_ROOT: ${{ parameters.xaSourcePath }}/bin/$(XA.Build.Configuration)/dotnet
-- ${{ else }}:
-  - pwsh: >-
-      $(Agent.ToolsDirectory)/dotnet-test-slicer slice
-      --test-assembly="${{ parameters.testAssembly }}"
-      --slice-number=$(System.JobPositionInPhase)
-      --total-slices=$(System.TotalJobsInPhase)
-      --outfile="${{ parameters.testAssembly }}.runsettings"
-    displayName: Slice unit tests
-    failOnStderr: true
-    condition: ${{ parameters.condition }}
-    env:
-      DOTNET_ROOT: ${{ parameters.xaSourcePath }}/bin/$(XA.Build.Configuration)/dotnet
+# Run the slicer with the SDK installed during test setup. On macOS, the tool apphost used
+# .NET 10 even with DOTNET_ROOT set, could not load the net11.0 test assembly, and found 0 tests.
+- pwsh: |
+    $slicer = Get-ChildItem -Path "$(Agent.ToolsDirectory)/.store/dotnet-test-slicer/$(TestSlicerToolVersion)" -Recurse -Filter dotnet-test-slicer.dll | Select-Object -First 1
+    if (-not $slicer) {
+      throw "dotnet-test-slicer.dll was not found in $(Agent.ToolsDirectory)/.store"
+    }
+    Write-Host "##vso[task.setvariable variable=TestSlicerDll]$($slicer.FullName)"
+  displayName: Locate dotnet-test-slicer
+  condition: ${{ parameters.condition }}
+
+- pwsh: |
+    $sliceArgs = @(
+      'slice',
+      '--test-assembly=${{ parameters.testAssembly }}',
+      '--slice-number=$(System.JobPositionInPhase)',
+      '--total-slices=$(System.TotalJobsInPhase)',
+      '--outfile=${{ parameters.testAssembly }}.runsettings'
+    )
+    if ($env:TEST_FILTER) {
+      $sliceArgs += "--test-filter=$env:TEST_FILTER"
+    }
+    $output = & "${{ parameters.xaSourcePath }}/bin/$(XA.Build.Configuration)/dotnet/dotnet" "$(TestSlicerDll)" @sliceArgs
+    $exitCode = $LASTEXITCODE
+    $output | Write-Host
+    if ($exitCode -ne 0) {
+      exit $exitCode
+    }
+    if ($output -match '^Found 0 matching tests') {
+      throw "dotnet-test-slicer found no tests in ${{ parameters.testAssembly }}."
+    }
+  displayName: Slice unit tests
+  failOnStderr: true
+  condition: ${{ parameters.condition }}
+  env:
+    TEST_FILTER: ${{ parameters.testFilter }}
 
 - ${{ if eq(parameters.retryFailedTests, 'false') }}:
   # If we aren't using auto-retry logic, then this is just a simple template call
@@ -61,15 +71,13 @@ steps:
   - template: /build-tools/automation/yaml-templates/diagnose-hanging-processes.yaml
 
   - pwsh: |
-      $(Agent.ToolsDirectory)/dotnet-test-slicer `
+      & "${{ parameters.xaSourcePath }}/bin/$(XA.Build.Configuration)/dotnet/dotnet" "$(TestSlicerDll)" `
         retry `
         --trx="$(Agent.TempDirectory)" `
         --outfile="${{ parameters.testAssembly }}.runsettings"
     displayName: Look for failed tests
     workingDirectory: ${{ parameters.xaSourcePath }}
     condition: ${{ parameters.condition }}
-    env:
-      DOTNET_ROOT: ${{ parameters.xaSourcePath }}/bin/$(XA.Build.Configuration)/dotnet
 
     # dotnet-test-slicer removed the failed tests from our results file, so it's safe to publish it now
   - task: PublishTestResults@2

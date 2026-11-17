@@ -56,7 +56,7 @@ comma-separated list of `NAME[=VALUE]` categories:
 * `default` enables general runtime messages.
 * `gc` logs garbage-collection messages.
 * `network` logs native network activity.
-* `timing` enables the `monodroid-timing` category used by the obsolete
+* `timing` enables the `DOTNET-timing` category used by the obsolete
   managed `Android.Runtime.TimingLogger` API.
 
 JNI global, weak-global, and local reference diagnostics now use the
@@ -72,6 +72,17 @@ adb shell setprop debug.dotnet.log default,assembly
 
 To enable only assembly-loading diagnostics, set
 `adb shell setprop debug.dotnet.log assembly` and restart the application.
+
+On CoreCLR and NativeAOT, runtime logcat tags now use `DOTNET` instead of
+`monodroid` or `MonoDroid`, matching `Console.WriteLine` in .NET.
+Update existing logcat filters to use `DOTNET`
+and the corresponding `DOTNET-*` tags: `DOTNET-assembly`, `DOTNET-gc`,
+`DOTNET-timing`, `DOTNET-network`, `DOTNET-net`, and `DOTNET-synccontext`.
+Log levels, category selection, and message text are unchanged. For example:
+
+```sh
+adb logcat DOTNET:I DOTNET-gc:I '*:S'
+```
 
 ## debug.dotnet.max_grefc
 

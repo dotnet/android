@@ -8,11 +8,20 @@ namespace Xamarin.Android.Tools {
 
 	partial class JdkLocations {
 
-		internal static IEnumerable<JdkInfo> GetPreferredJdks (Action<TraceLevel, string> logger)
+		readonly IDictionary<string, string>? environmentVariables;
+		readonly string? workingDirectory;
+
+		internal JdkLocations (IDictionary<string, string>? environmentVariables = null, string? workingDirectory = null)
+		{
+			this.environmentVariables = environmentVariables;
+			this.workingDirectory = workingDirectory;
+		}
+
+		internal IEnumerable<JdkInfo> GetPreferredJdks (Action<TraceLevel, string> logger)
 		{
 			if (OS.IsWindows) {
 				var path    = GetWindowsPreferredJdkPath ();
-				var jdk     = path == null ? null : JdkInfo.TryGetJdkInfo (path, logger, "Windows Registry");
+				var jdk     = path == null ? null : JdkInfo.TryGetJdkInfo (path, logger, "Windows Registry", environmentVariables, workingDirectory);
 				if (jdk != null)
 					yield return jdk;
 			}
@@ -21,10 +30,10 @@ namespace Xamarin.Android.Tools {
 			}
 		}
 
-		protected static IEnumerable<JdkInfo> FromPaths (IEnumerable<string> paths, Action<TraceLevel, string> logger, string locator)
+		IEnumerable<JdkInfo> FromPaths (IEnumerable<string> paths, Action<TraceLevel, string> logger, string locator)
 		{
 			return paths
-				.Select (p => JdkInfo.TryGetJdkInfo (p, logger, locator))
+				.Select (p => JdkInfo.TryGetJdkInfo (p, logger, locator, environmentVariables, workingDirectory))
 				.Where (jdk => jdk != null)
 				.Select (jdk => jdk!);
 		}

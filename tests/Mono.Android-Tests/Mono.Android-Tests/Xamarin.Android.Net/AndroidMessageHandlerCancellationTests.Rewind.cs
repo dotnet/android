@@ -13,13 +13,13 @@ using System.Threading.Tasks;
 
 using Xamarin.Android.Net;
 
-using NUnit.Framework;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Xamarin.Android.NetTests
 {
 	public partial class AndroidMessageHandlerCancellationTests
 	{
-		[Test]
+		[TestMethod]
 		public async Task HttpContentStreamIsRewoundAfterCancellation ()
 		{
 			const int requestContentLength = 1_000_000;
@@ -81,7 +81,7 @@ namespace Xamarin.Android.NetTests
 				await WaitForTask (retryTasks, requestTimeoutMilliseconds, "The retry request and server handler did not finish.").ConfigureAwait (false);
 
 				using var retryResponse = await retryResponseTask.ConfigureAwait (false);
-				Assert.True (retryResponse.IsSuccessStatusCode, "Second request should succeed with reused content");
+				Assert.IsTrue (retryResponse.IsSuccessStatusCode, "Second request should succeed with reused content");
 				Assert.AreEqual (2, contentStream.CopyCount, "The retry should perform a second, ungated content copy.");
 
 				var streamAfterRetry = await content.ReadAsStreamAsync ();
@@ -120,8 +120,8 @@ namespace Xamarin.Android.NetTests
 
 					var buffer = new byte [4096];
 					int bytesRead = await context.Request.InputStream.ReadAsync (buffer, 0, buffer.Length).ConfigureAwait (false);
-					Assert.Greater (bytesRead, 0, "The first request ended before the server received its body prefix.");
-					Assert.Less (bytesRead, context.Request.ContentLength64, "The first server read unexpectedly consumed the complete request body.");
+					Assert.IsGreaterThan (0, bytesRead, "The first request ended before the server received its body prefix.");
+					Assert.IsLessThan (context.Request.ContentLength64, bytesRead, "The first server read unexpectedly consumed the complete request body.");
 					for (int i = 0; i < bytesRead; i++) {
 						if (buffer [i] != requestBody [i])
 							Assert.Fail ($"The first request body differed at offset {i}.");
@@ -146,7 +146,7 @@ namespace Xamarin.Android.NetTests
 				while (totalBytesRead < requestBody.Length) {
 					int bytesToRead = Math.Min (buffer.Length, requestBody.Length - totalBytesRead);
 					int bytesRead = await context.Request.InputStream.ReadAsync (buffer, 0, bytesToRead).ConfigureAwait (false);
-					Assert.Greater (bytesRead, 0, "The retry request ended before the complete body was received.");
+					Assert.IsGreaterThan (0, bytesRead, "The retry request ended before the complete body was received.");
 					for (int i = 0; i < bytesRead; i++) {
 						if (buffer [i] != requestBody [totalBytesRead + i])
 							Assert.Fail ($"The retry request body differed at offset {totalBytesRead + i}.");
@@ -173,7 +173,7 @@ namespace Xamarin.Android.NetTests
 			}
 		}
 
-		[Test]
+		[TestMethod]
 		public async Task ControlledSeekableStreamGatesOnlyFirstCopy ()
 		{
 			const int copyTimeoutMilliseconds = 10_000;
@@ -222,7 +222,7 @@ namespace Xamarin.Android.NetTests
 			}
 		}
 
-		[Test]
+		[TestMethod]
 		public async Task HttpListenerAbortCompletesPendingRequestBodyRead ()
 		{
 			const int contentLength = 1024;
@@ -260,7 +260,7 @@ namespace Xamarin.Android.NetTests
 						totalBytesRead,
 						receivedPrefix.Length - totalBytesRead
 					).ConfigureAwait (false);
-					Assert.Greater (bytesRead, 0, "The partial request ended before the body prefix was received.");
+					Assert.IsGreaterThan (0, bytesRead, "The partial request ended before the body prefix was received.");
 					totalBytesRead += bytesRead;
 				}
 				CollectionAssert.AreEqual (bodyPrefix, receivedPrefix, "The listener received an unexpected request body prefix.");

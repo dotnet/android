@@ -4,28 +4,28 @@ using System.Linq;
 
 using Java.Interop;
 
-using NUnit.Framework;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Java.InteropTests;
 
-[TestFixture]
+[TestClass]
 public class JavaPeerableExtensionsTests {
 
-	[Test]
+	[TestMethod]
 	public void JavaAs_Exceptions ()
 	{
 		using var v = new MyJavaInterfaceImpl ();
 
 		// The Java type corresponding to JavaObjectWithMissingJavaPeer doesn't exist
-		Assert.Throws<ArgumentException>(() => v.JavaAs<JavaObjectWithMissingJavaPeer>());
+		Assert.ThrowsExactly<ArgumentException>(() => v.JavaAs<JavaObjectWithMissingJavaPeer>());
 
 		var r = v.PeerReference;
 		using var o = new JavaObject (ref r, JniObjectReferenceOptions.Copy);
 		// MyJavaInterfaceImpl doesn't provide an activation constructor
-		Assert.Throws<NotSupportedException>(() => o.JavaAs<MyJavaInterfaceImpl>());
+		Assert.ThrowsExactly<NotSupportedException>(() => o.JavaAs<MyJavaInterfaceImpl>());
 	}
 
-	[Test]
+	[TestMethod]
 	public void JavaAs_NullSelfReturnsNull ()
 	{
 		Assert.AreEqual (null, JavaPeerableExtensions.JavaAs<IAndroidInterface> (null));
@@ -38,14 +38,14 @@ public class JavaPeerableExtensionsTests {
 		Assert.AreEqual (null, JavaPeerableExtensions.JavaAs<IJavaInterface> (v));
 	}
 
-	[Test]
+	[TestMethod]
 	public void JavaAs_InstanceThatDoesNotImplementInterfaceReturnsNull ()
 	{
 		using var v = new MyJavaInterfaceImpl ();
 		Assert.AreEqual (null, JavaPeerableExtensions.JavaAs<IAndroidInterface> (v));
 	}
 
-	[Test]
+	[TestMethod]
 	public void JavaAs ()
 	{
 		using var impl  = new MyJavaInterfaceImpl ();

@@ -25,30 +25,6 @@ namespace Xamarin.Android.Tasks
 {
 	public partial class MonoAndroidHelper
 	{
-		static Lazy<string> uname = new Lazy<string> (GetOSBinDirName, System.Threading.LazyThreadSafetyMode.PublicationOnly);
-
-		internal static XAAssemblyResolver MakeResolver (TaskLoggingHelper log, AndroidTargetArch targetArch, Dictionary<string, ITaskItem> assemblies, bool loadDebugSymbols = true)
-		{
-			var readerParams = new ReaderParameters ();
-
-			var res = new XAAssemblyResolver (targetArch, log, loadDebugSymbols: loadDebugSymbols, loadReaderParameters: readerParams);
-			var uniqueDirs = new HashSet<string> (StringComparer.OrdinalIgnoreCase);
-
-			log.LogDebugMessage ($"Adding search directories to new architecture {targetArch} resolver:");
-			foreach (var kvp in assemblies) {
-				string assemblyDir = Path.GetDirectoryName (kvp.Value.ItemSpec);
-				if (uniqueDirs.Contains (assemblyDir)) {
-					continue;
-				}
-
-				uniqueDirs.Add (assemblyDir);
-				res.SearchDirectories.Add (assemblyDir);
-				log.LogDebugMessage ($"  {assemblyDir}");
-			}
-
-			return res;
-		}
-
 		public static StringBuilder MergeStdoutAndStderrMessages (List<string> stdout, List<string> stderr)
 		{
 			var sb = new StringBuilder ();
@@ -145,81 +121,20 @@ namespace Xamarin.Android.Tasks
 			}
 		}
 
-		public static int RunProcess (string name, string args, DataReceivedEventHandler onOutput, DataReceivedEventHandler onError, Dictionary<string, string> environmentVariables = null)
-		{
-			return RunProcess (TaskEnvironment.Fallback, name, args, onOutput, onError, environmentVariables);
-		}
-
-		public static int RunProcess (TaskEnvironment taskEnvironment, string name, string args, DataReceivedEventHandler onOutput, DataReceivedEventHandler onError, Dictionary<string, string> environmentVariables = null)
-		{
-			if (taskEnvironment == null)
-				throw new ArgumentNullException (nameof (taskEnvironment));
-
-			var psi = taskEnvironment.GetProcessStartInfo ();
-			psi.FileName = name;
-			psi.Arguments = args;
-			psi.UseShellExecute = false;
-			psi.RedirectStandardOutput = true;
-			psi.RedirectStandardError = true;
-			psi.CreateNoWindow = true;
-			psi.WindowStyle = ProcessWindowStyle.Hidden;
-			if (environmentVariables != null) {
-				foreach (var pair in environmentVariables) {
-					psi.EnvironmentVariables [pair.Key] = pair.Value;
-				}
-			}
-			Process p = new Process ();
-			p.StartInfo = psi;
-
-			p.OutputDataReceived += onOutput;
-			p.ErrorDataReceived += onError;
-			p.Start ();
-			p.BeginErrorReadLine ();
-			p.BeginOutputReadLine ();
-			p.WaitForExit ();
-			try {
-				return p.ExitCode;
-			} finally {
-				p.Close ();
-			}
-		}
-
-		static string GetOSBinDirName ()
-		{
-			if (OS.IsWindows)
-				return "";
-			string os = null;
-			DataReceivedEventHandler output = (o, e) => {
-				if (string.IsNullOrWhiteSpace (e.Data))
-					return;
-				os = e.Data.Trim ();
-			};
-			DataReceivedEventHandler error = (o, e) => {};
-
-			string uname = "/usr/bin/uname";
-			if (!File.Exists (uname)) {
-				uname = "uname";
-			}
-
-			int r = RunProcess (uname, "-s", output, error);
-			if (r == 0)
-				return os;
-			return null;
-		}
-
 		// Path which contains OS-specific binaries; formerly known as $prefix/bin
 		internal static string GetOSBinPath ()
 		{
 			var toolsDir = Path.GetDirectoryName (typeof (MonoAndroidHelper).Assembly.Location);
-			var os = RuntimeInformation.IsOSPlatform (OSPlatform.Windows) ? "" :
-				RuntimeInformation.IsOSPlatform (OSPlatform.OSX) ? "Darwin" : "Linux";
-			return Path.Combine (toolsDir, os);
+			return Path.Combine (toolsDir, GetOSBinDirName ());
 		}
+
+		static string GetOSBinDirName () => RuntimeInformation.IsOSPlatform (OSPlatform.Windows) ? "" :
+			RuntimeInformation.IsOSPlatform (OSPlatform.OSX) ? "Darwin" : "Linux";
 
 		internal static string GetOSLibPath ()
 		{
-			var toolsDir = Path.GetFullPath (Path.GetDirectoryName (typeof (MonoAndroidHelper).Assembly.Location));
-			return Path.Combine (toolsDir, "lib", $"host-{uname.Value}");
+			var toolsDir = Path.GetDirectoryName (typeof (MonoAndroidHelper).Assembly.Location);
+			return Path.Combine (toolsDir, "lib", $"host-{GetOSBinDirName ()}");
 		}
 
 		class SizeAndContentFileComparer : IEqualityComparer<FileInfo>
@@ -548,33 +463,7 @@ namespace Xamarin.Android.Tasks
 			}
 			return Path.Combine (platformPath, "android.jar");
 		}
-
-		public static Dictionary<string, string> ItemGroupToCaseMap (ITaskItem [] items)
-		{
-			var map = new Dictionary<string, string> (items.Length, StringComparer.Ordinal);
-			foreach (var item in items)
-				map [item.ItemSpec] = item.GetMetadata ("OriginalName");
-			return map;
-		}
 #endif // MSBUILD
-		public static string FixUpAndroidResourcePath (string file, string resourceDirectory, string resourceDirectoryFullPath, Dictionary<string, string> resource_name_case_map)
-		{
-			string newfile = null;
-			if (file.StartsWith (resourceDirectory, StringComparison.InvariantCultureIgnoreCase)) {
-				newfile = file.Substring (resourceDirectory.Length).TrimStart (Path.DirectorySeparatorChar);
-			}
-			if (!string.IsNullOrEmpty (resourceDirectoryFullPath) && file.StartsWith (resourceDirectoryFullPath, StringComparison.InvariantCultureIgnoreCase)) {
-				newfile = file.Substring (resourceDirectoryFullPath.Length).TrimStart (Path.DirectorySeparatorChar);
-			}
-			if (!string.IsNullOrEmpty (newfile)) {
-				if (resource_name_case_map.TryGetValue (newfile, out string value))
-					newfile = value;
-				newfile = Path.Combine ("Resources", newfile);
-				return newfile;
-			}
-			return string.Empty;
-		}
-
 		static readonly char [] DirectorySeparators = new [] { Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar };
 #if MSBUILD
 		/// <summary>
@@ -607,20 +496,6 @@ namespace Xamarin.Android.Tasks
 				apiLevel = parsedVersion.Major;
 			}
 			return apiLevel;
-		}
-
-		public static bool TryParseApiLevel (string apiLevel, out Version version)
-		{
-			if (Version.TryParse (apiLevel, out var v)) {
-				version = v;
-				return true;
-			}
-			if (int.TryParse (apiLevel, out var major)) {
-				version = new Version (major, 0);
-				return true;
-			}
-			version = null;
-			return false;
 		}
 
 #if MSBUILD

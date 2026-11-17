@@ -117,7 +117,6 @@ class MetadataAttribute
 	public string? Name { get; set; }
 	public string? Obsolete { get; set; }
 	public bool ReadOnly { get; set; }
-	public bool ManualMap { get; set; }
 
 	public MetadataAttribute (XElement element)
 	{
@@ -131,7 +130,6 @@ class MetadataAttribute
 		Name = element.Attribute ("name")?.Value;
 		Obsolete = element.Attribute ("obsolete")?.Value;
 		ReadOnly = element.GetAttributeBoolOrDefault ("readonly", false);
-		ManualMap = element.GetAttributeBoolOrDefault ("manualMap", false);
 	}
 }
 
@@ -147,7 +145,6 @@ public class MetadataType
 	public bool IsJniNameProvider { get; set; }
 	public bool HasDefaultConstructor { get; set; }
 	public bool IsSealed { get; set; }
-	public bool GenerateMapping { get; set; }
 
 	public MetadataType (XElement element)
 	{
@@ -165,6 +162,5 @@ public class MetadataType
 		HasDefaultConstructor = element.GetAttributeBoolOrDefault ("defaultConstructor", true);
 		IsSealed = element.GetAttributeBoolOrDefault ("sealed", true);
 		ManagedName = element.Attribute ("managedName")?.Value ?? Name.Unhyphenate ().Capitalize () + "Attribute";
-		GenerateMapping = element.GetAttributeBoolOrDefault ("generateMapping", true);
 	}
 }

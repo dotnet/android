@@ -6,21 +6,21 @@ using Android.Content.PM;
 using Android.OS;
 using Android.Runtime;
 
-using NUnit.Framework;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Android.AppTests
 {
-	[TestFixture]
+	[TestClass]
 	public class ApplicationTest
 	{
-		[Test]
+		[TestMethod]
 		public void ApplicationContextIsApp ()
 		{
 			Assert.IsTrue (Application.Context is App);
 			Assert.IsTrue (App.Created);
 		}
 
-		[Test]
+		[TestMethod]
 		public void SynchronizationContext_Is_ThreadingSynchronizationContextCurrent ()
 		{
 			bool same = false;
@@ -31,7 +31,7 @@ namespace Android.AppTests
 			Assert.IsTrue (same);
 		}
 
-		[Test]
+		[TestMethod]
 		public void SynchronizationContext_Post_DoesNotBlock ()
 		{
 			// To ensure we're on the main thread:
@@ -47,7 +47,7 @@ namespace Android.AppTests
 			Assert.IsTrue (sendFinishedBeforePost);
 		}
 
-		[Test]
+		[TestMethod]
 		public void EnsureAndroidManifestIsUpdated ()
 		{
 			var klass	  = Java.Lang.Class.FromType (typeof (RenamedActivity));

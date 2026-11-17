@@ -5,6 +5,8 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
+using Microsoft.Android.Build.Tasks;
+using Xamarin.Android.Tasks;
 using Xamarin.Android.Tools;
 
 namespace Microsoft.Android.Tasks
@@ -85,7 +87,7 @@ namespace Microsoft.Android.Tasks
 
 			if (kind == InstallResultKind.AlreadyExists || kind == InstallResultKind.RequiresUninstall) {
 				bool preserveData = kind == InstallResultKind.AlreadyExists;
-				LogDebugMessage ($"Package '{PackageName}' could not be installed directly ({kind}). Uninstalling (preserving data: {preserveData}) and retrying.");
+				Log.LogDebugMessage ($"Package '{PackageName}' could not be installed directly ({kind}). Uninstalling (preserving data: {preserveData}) and retrying.");
 				await UninstallPackage (PackageName, preserveData: preserveData, user: user);
 				result = await RunInstallCommandWithTransportRetry (apkFile, reinstall: true, testOnly: testOnly, user: user, retryState);
 				kind = ClassifyInstallResult (result);
@@ -111,7 +113,7 @@ namespace Microsoft.Android.Tasks
 			}
 
 			retryState.TransportRetryUsed = true;
-			LogDebugMessage ($"Transient ADB/package-manager communication failure while installing '{PackageName}'. Waiting for recovery before retrying once.");
+			Log.LogDebugMessage ($"Transient ADB/package-manager communication failure while installing '{PackageName}'. Waiting for recovery before retrying once.");
 			try {
 				await WaitForInstallTransportRecovery ();
 				retryState.AddRecoveryDiagnostic ("The device and Android package manager became responsive.");
@@ -130,9 +132,8 @@ namespace Microsoft.Android.Tasks
 		internal virtual async Task WaitForInstallTransportRecovery ()
 		{
 			string serial = string.Equals (DeviceId, "any", StringComparison.OrdinalIgnoreCase) ? null : DeviceId;
-			var adbRunner = new AdbRunner (
-				ResolveAdbPath (),
-				logger: (_, message) => LogDiagnostic ($"ADB install recovery: {message}"));
+			var adbRunner = AndroidHelper.CreateAdbRunner (AdbToolPath, AdbToolExe, TaskEnvironment,
+				(_, message) => LogDiagnostic ($"ADB install recovery: {message}"));
 			await adbRunner.WaitForPackageManagerAsync (serial, TimeSpan.FromSeconds (10), CancellationToken);
 		}
 
@@ -184,7 +185,9 @@ namespace Microsoft.Android.Tasks
 
 			// NOTE: match without the trailing ']', since adb may print either
 			//       [INSTALL_FAILED_NO_MATCHING_ABIS] or [INSTALL_FAILED_NO_MATCHING_ABIS: ...].
-			if (output.Contains ("[INSTALL_FAILED_INSUFFICIENT_STORAGE") || output.Contains ("[INSTALL_FAILED_MEDIA_UNAVAILABLE")) {
+			if (output.Contains ("[INSTALL_FAILED_INSUFFICIENT_STORAGE") ||
+					output.Contains ("[INSTALL_FAILED_MEDIA_UNAVAILABLE") ||
+					output.Contains ("Requested internal only, but not enough space")) {
 				return InstallResultKind.InsufficientSpace;
 			}
 			if (output.Contains ("[INSTALL_FAILED_ALREADY_EXISTS")) {
@@ -207,6 +210,7 @@ namespace Microsoft.Android.Tasks
 			}
 
 			if (result.ExitCode != 0 ||
+					output.IndexOf ("Exception occurred while executing 'install'", StringComparison.OrdinalIgnoreCase) >= 0 ||
 					output.IndexOf ("Failure", StringComparison.OrdinalIgnoreCase) >= 0 ||
 					output.IndexOf ("INSTALL_FAILED", StringComparison.OrdinalIgnoreCase) >= 0 ||
 					output.IndexOf ("adb: failed", StringComparison.OrdinalIgnoreCase) >= 0) {

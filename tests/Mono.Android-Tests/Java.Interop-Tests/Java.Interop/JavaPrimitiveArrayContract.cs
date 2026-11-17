@@ -4,7 +4,7 @@ using System.Linq;
 
 using Java.Interop;
 
-using NUnit.Framework;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Java.InteropTests
 {
@@ -30,40 +30,40 @@ namespace Java.InteropTests
 			return (TElement) Convert.ChangeType (value, typeof(TElement));
 		}
 
-		[Test]
+		[TestMethod]
 		public void Constructor_Exceptions ()
 		{
-			Assert.Throws<ArgumentNullException>(() => CreateCollection ((IEnumerable<TElement>) null));
-			Assert.Throws<ArgumentNullException>(() => CreateCollection ((IList<TElement>) null));
-			Assert.Throws<ArgumentException>(() => CreateCollection (-1));
+			Assert.ThrowsExactly<ArgumentNullException>(() => CreateCollection ((IEnumerable<TElement>) null));
+			Assert.ThrowsExactly<ArgumentNullException>(() => CreateCollection ((IList<TElement>) null));
+			Assert.ThrowsExactly<ArgumentException>(() => CreateCollection (-1));
 		}
 
-		[Test]
-		[Category ("JniPrimitiveArrayBounds")]
+		[TestMethod]
+		[TestCategory ("JniPrimitiveArrayBounds")]
 		public void GetElements ()
 		{
 			var a = (TArray) CreateCollection (new[]{FromInt32 ('A')});
-			Assert.AreEqual (CreateValueA (), a [0]);
-			Assert.Catch<ArgumentException> (() => {
+			Assert.IsTrue (global::Java.Interop.JniMarshal.RecursiveEquals (CreateValueA (), a [0]));
+			Assert.Throws<ArgumentException> (() => {
 				var _ = a [-1];
 			});
-			Assert.Catch<ArgumentException> (() => {
+			Assert.Throws<ArgumentException> (() => {
 				var _ = a [1];
 			});
-			Assert.Catch<ArgumentException> (() => {
+			Assert.Throws<ArgumentException> (() => {
 				var _ = a [2];
 			});
 			JniArrayElements e;
 			using (e = a.GetElements ()) {
 				if (e == null) // OOM?
 					return;
-				Assert.Greater (e.Size, 0);
+				Assert.IsGreaterThan (0, e.Size);
 				Assert.IsTrue (e.Elements != IntPtr.Zero);
 				// Multi-dispose is supported.
 				e.Dispose ();
 			}
-			Assert.Throws<ObjectDisposedException> (() => e.Release (JniReleaseArrayElementsMode.Abort));
-			Assert.Throws<ObjectDisposedException> (() => {
+			Assert.ThrowsExactly<ObjectDisposedException> (() => e.Release (JniReleaseArrayElementsMode.Abort));
+			Assert.ThrowsExactly<ObjectDisposedException> (() => {
 					#pragma warning disable 0219
 					var _ = e.Elements;
 					#pragma warning restore 0219
@@ -79,18 +79,18 @@ namespace Java.InteropTests
 		//  Try to test this.
 		//  (Alas, on OpenJDK JNIEnv::Get<Type>ArrayElements() returns a non-NULL pointer
 		//   when the array is empty, so we'll need to run this on Android.)
-		[Test]
-		[Category ("JniPrimitiveArrayBounds")]
+		[TestMethod]
+		[TestCategory ("JniPrimitiveArrayBounds")]
 		public void GetElements_EmptyArray ()
 		{
 			var a = (TArray) CreateCollection (new TElement[0]);
-			Assert.Catch<ArgumentException> (() => {
+			Assert.Throws<ArgumentException> (() => {
 				var _ = a [-1];
 			});
-			Assert.Catch<ArgumentException> (() => {
+			Assert.Throws<ArgumentException> (() => {
 				var _ = a [0];
 			});
-			Assert.Catch<ArgumentException> (() => {
+			Assert.Throws<ArgumentException> (() => {
 				var _ = a [1];
 			});
 			JniArrayElements e;
@@ -102,8 +102,8 @@ namespace Java.InteropTests
 				// Multi-dispose is supported.
 				e.Dispose ();
 			}
-			Assert.Throws<ObjectDisposedException> (() => e.Release (JniReleaseArrayElementsMode.Abort));
-			Assert.Throws<ObjectDisposedException> (() => {
+			Assert.ThrowsExactly<ObjectDisposedException> (() => e.Release (JniReleaseArrayElementsMode.Abort));
+			Assert.ThrowsExactly<ObjectDisposedException> (() => {
 				#pragma warning disable 0219
 				var _ = e.Elements;
 				#pragma warning restore 0219

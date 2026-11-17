@@ -2,14 +2,14 @@ using System;
 
 using Android.Content;
 
-using NUnit.Framework;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Android.ContentTests
 {
-	[TestFixture]
+	[TestClass]
 	public class IntentTest
 	{
-		[Test]
+		[TestMethod]
 		public void PutCharSequenceArrayListExtra_NullValue ()
 		{
 			using (var intent = new Intent ()) {
