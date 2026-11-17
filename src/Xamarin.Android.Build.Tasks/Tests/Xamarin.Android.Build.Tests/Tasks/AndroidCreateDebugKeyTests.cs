@@ -1,5 +1,8 @@
+using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Threading;
+using System.Threading.Tasks;
 using Microsoft.Build.Framework;
 using NUnit.Framework;
 using Xamarin.Android.Tasks;
@@ -45,6 +48,28 @@ namespace Xamarin.Android.Build.Tests
 			Assert.AreEqual (1, warnings.Count, "Second run should have one warning.");
 			Assert.AreEqual ("ANDKT0000", warnings [0].Code);
 			StringAssert.Contains ("alias <androiddebugkey> already exists", warnings [0].Message);
+		}
+
+		[Test]
+		public void CancelStopsKeytool ()
+		{
+			string directory = Path.Combine (Root, "temp", TestName);
+			Directory.CreateDirectory (directory);
+			bool windows = OperatingSystem.IsWindows ();
+			string tool = Path.Combine (directory, windows ? "keytool.cmd" : "keytool");
+			File.WriteAllText (tool, windows ? "@ping -n 60 127.0.0.1 > nul\r\n" : "#!/bin/sh\nsleep 60\n");
+			if (!windows)
+				File.SetUnixFileMode (tool, UnixFileMode.UserRead | UnixFileMode.UserWrite | UnixFileMode.UserExecute);
+
+			var task = CreateTask (Path.Combine (directory, "debug.keystore"), new List<BuildErrorEventArgs> (), new List<BuildWarningEventArgs> ());
+			task.ToolPath = directory;
+			task.ToolExe = Path.GetFileName (tool);
+			var execute = Task.Run (task.Execute);
+			Thread.Sleep (1000);
+			task.Cancel ();
+
+			Assert.IsTrue (execute.Wait (TimeSpan.FromSeconds (30)), "Cancel should stop keytool.");
+			Assert.IsFalse (execute.Result, "A canceled task should fail.");
 		}
 	}
 }
