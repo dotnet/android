@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 
 using Android.Runtime;
 
@@ -72,7 +73,7 @@ namespace Java.InteropTests
 			Assert.IsFalse (dictionary.Remove (key));
 		}
 
-		static void AssertPairOperations<T> (string key, T value, T equalValue, T mismatch)
+		static void AssertPairOperations<[DynamicallyAccessedMembers (DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.NonPublicConstructors)] T> (string key, T value, T equalValue, T mismatch)
 		{
 			using var dictionary = new JavaDictionary<string, T> ();
 			ICollection<KeyValuePair<string, T>> pairs = dictionary;
