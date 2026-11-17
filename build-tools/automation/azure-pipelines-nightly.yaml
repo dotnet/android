@@ -74,6 +74,10 @@ stages:
 - stage: linux_codeql
   displayName: CodeQL
   dependsOn: []
+  # Gate on the branch ourselves. CodeQL only warns when it runs on another branch, and the default
+  # branch check of the 1ES templates is always true for GitHub repositories: the lookup of the
+  # default branch fails with a 404 and falls back to the branch being built.
+  # See https://dev.azure.com/mseng/1ES/_workitems/edit/2479329
   condition: eq(variables['Build.SourceBranch'], '${{ parameters.CodeQLSourceBranch }}')
   jobs:
   - job: linux_codeql_build
