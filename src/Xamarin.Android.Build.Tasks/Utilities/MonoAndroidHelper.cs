@@ -180,15 +180,6 @@ namespace Xamarin.Android.Tasks
 #endif  // MSBUILD
 		}
 
-		internal static bool LogInternalExceptions {
-			get {
-				return string.Equals (
-						"icanhaz",
-						Environment.GetEnvironmentVariable ("__XA_LOG_ERRORS__"),
-						StringComparison.OrdinalIgnoreCase);
-			}
-		}
-
 #if MSBUILD
 		public static IEnumerable<string> ExpandFiles (ITaskItem[] libraryProjectJars)
 		{
