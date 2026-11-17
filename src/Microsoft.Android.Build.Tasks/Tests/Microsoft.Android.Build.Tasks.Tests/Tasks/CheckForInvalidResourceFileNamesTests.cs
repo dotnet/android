@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Xml.Linq;
-using NUnit.Framework;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
 using Microsoft.Android.Tasks;
@@ -13,11 +13,12 @@ using TaskItem = Microsoft.Build.Utilities.TaskItem;
 namespace Xamarin.Android.Build.Tests
 {
 
-	[TestFixture]
+	[TestClass]
+	[DoNotParallelize]
 	public class CheckForInvalidResourceFileNamesTests : BaseTest {
 
 #pragma warning disable 414
-		static object [] InvalidResourceFileNamesChecks () => new object [] {
+		static object [] [] InvalidResourceFileNamesChecks () => new object [] [] {
 			new object[] {
 				"myresource.xml",
 				true,
@@ -80,23 +81,24 @@ namespace Xamarin.Android.Build.Tests
 			},
 		};
 #pragma warning restore 414
-		[Test]
-		[TestCaseSource(nameof(InvalidResourceFileNamesChecks))]
+		[TestMethod]
+		[DynamicData (nameof(InvalidResourceFileNamesChecks))]
 		public void InvalidResourceFileNames (string file, bool shouldPass, string [] expectedErrorCodes)
 		{
 			var errors = new List<BuildErrorEventArgs> ();
 			var task = new CheckForInvalidResourceFileNames {
-				BuildEngine = new MockBuildEngine (TestContext.Out, errors),
+				BuildEngine = new MockBuildEngine (Console.Out, errors),
 				Resources = new TaskItem [] {
 					new TaskItem (file),
 				},
 			};
 			Assert.AreEqual (shouldPass, task.Execute (), $"task.Execute() should have {(shouldPass ? "succeeded" : "failed")}.");
-			CollectionAssert.AreEqual (expectedErrorCodes, errors.Select (e => e.Code), "Unexpected error codes.");
+			CollectionAssert.AreEqual (expectedErrorCodes, errors.Select (e => e.Code).ToArray (), "Unexpected error codes.");
 		}
 
-		[TestCase ("Microsoft.Android.Tasks.CheckForInvalidResourceFileNames")]
-		[TestCase ("CheckForInvalidResourceFileNames")]
+		[TestMethod]
+		[DataRow ("Microsoft.Android.Tasks.CheckForInvalidResourceFileNames")]
+		[DataRow ("CheckForInvalidResourceFileNames")]
 		public void RegisteredTaskNamesExecute (string taskName)
 		{
 			string directory = Path.Combine (Root, "temp", TestName);
@@ -130,7 +132,7 @@ namespace Xamarin.Android.Build.Tests
 			string dotnet = Environment.GetEnvironmentVariable ("DOTNET_HOST_PATH") ?? "dotnet";
 			var result = NativeAotBootstrapTestTools.Run (dotnet, "msbuild", project, "-t:Build", "-v:minimal", "-nr:false");
 			Assert.AreEqual (0, result.ExitCode, result.Output + result.Error);
-			FileAssert.Exists (marker);
+			Assert.IsTrue (File.Exists (marker), marker);
 		}
 	}
 }

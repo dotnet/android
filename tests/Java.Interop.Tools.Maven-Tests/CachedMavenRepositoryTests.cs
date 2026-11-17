@@ -8,25 +8,26 @@ using Java.Interop.Tools.Maven.Repositories;
 
 namespace Java.Interop.Tools.Maven_Tests;
 
+[TestClass]
 public class CachedMavenRepositoryTests
 {
 	string cache_dir = "";
 
-	[SetUp]
+	[TestInitialize]
 	public void SetUp ()
 	{
 		cache_dir = Path.Combine (Path.GetTempPath (), "Java.Interop.Tools.Maven-Tests", Path.GetRandomFileName ());
 		Directory.CreateDirectory (cache_dir);
 	}
 
-	[TearDown]
+	[TestCleanup]
 	public void TearDown ()
 	{
 		if (Directory.Exists (cache_dir))
 			Directory.Delete (cache_dir, recursive: true);
 	}
 
-	[Test]
+	[TestMethod]
 	public void GetArtifactFilePath_HappyPath_ReturnsExpectedLayout ()
 	{
 		var artifact = new Artifact ("com.example", "lib", "1.0.0");
@@ -40,7 +41,7 @@ public class CachedMavenRepositoryTests
 		Assert.IsFalse (File.Exists (actual), "GetArtifactFilePath must not create/download the file.");
 	}
 
-	[Test]
+	[TestMethod]
 	public void TryGetFilePath_HappyPath_DownloadsAndReturnsExpectedPath ()
 	{
 		var artifact = new Artifact ("com.example", "lib", "1.0.0");
@@ -56,7 +57,7 @@ public class CachedMavenRepositoryTests
 		CollectionAssert.AreEqual (content, File.ReadAllBytes (path!));
 	}
 
-	[Test]
+	[TestMethod]
 	public void GetArtifactFilePath_RelativeFilename_Throws ()
 	{
 		var artifact = new Artifact ("com.example", "lib", "1.0.0");
@@ -67,10 +68,10 @@ public class CachedMavenRepositoryTests
 		var outside = Path.Combine (Path.GetDirectoryName (cache_dir)!, Path.GetFileName (cache_dir) + "-sibling", "relative.jar");
 		var malicious = Path.GetRelativePath (artifact_dir, outside);
 
-		Assert.Throws<InvalidOperationException> (() => cache.GetArtifactFilePath (artifact, malicious));
+		Assert.ThrowsExactly<InvalidOperationException> (() => cache.GetArtifactFilePath (artifact, malicious));
 	}
 
-	[Test]
+	[TestMethod]
 	public void TryGetFilePath_RelativeFilename_Throws ()
 	{
 		var artifact = new Artifact ("com.example", "lib", "1.0.0");
@@ -81,11 +82,11 @@ public class CachedMavenRepositoryTests
 		var outside = Path.Combine (Path.GetDirectoryName (cache_dir)!, Path.GetFileName (cache_dir) + "-sibling", "relative.jar");
 		var malicious = Path.GetRelativePath (artifact_dir, outside);
 
-		Assert.Throws<InvalidOperationException> (() => cache.TryGetFilePath (artifact, malicious, out _));
+		Assert.ThrowsExactly<InvalidOperationException> (() => cache.TryGetFilePath (artifact, malicious, out _));
 		Assert.AreEqual (0, inner.CallCount, "Inner repository must not be consulted for an escaping path.");
 	}
 
-	[Test]
+	[TestMethod]
 	public void TryGetFile_RelativeFilename_Throws ()
 	{
 		var artifact = new Artifact ("com.example", "lib", "1.0.0");
@@ -96,12 +97,12 @@ public class CachedMavenRepositoryTests
 		var outside = Path.Combine (Path.GetDirectoryName (cache_dir)!, Path.GetFileName (cache_dir) + "-sibling", "relative.jar");
 		var malicious = Path.GetRelativePath (artifact_dir, outside);
 
-		Assert.Throws<InvalidOperationException> (() => cache.TryGetFile (artifact, malicious, out _));
+		Assert.ThrowsExactly<InvalidOperationException> (() => cache.TryGetFile (artifact, malicious, out _));
 		Assert.AreEqual (0, inner.CallCount, "Inner repository must not be consulted for an escaping path.");
 	}
 
-	[Test]
-	public void GetFilePathAsync_RelativeFilename_Throws ()
+	[TestMethod]
+	public async System.Threading.Tasks.Task GetFilePathAsync_RelativeFilename_Throws ()
 	{
 		var artifact = new Artifact ("com.example", "lib", "1.0.0");
 		var inner = new ThrowingRepository ("central");
@@ -111,22 +112,22 @@ public class CachedMavenRepositoryTests
 		var outside = Path.Combine (Path.GetDirectoryName (cache_dir)!, Path.GetFileName (cache_dir) + "-sibling", "relative.jar");
 		var malicious = Path.GetRelativePath (artifact_dir, outside);
 
-		Assert.ThrowsAsync<InvalidOperationException> (async () =>
+		await Assert.ThrowsExactlyAsync<InvalidOperationException> (async () =>
 			await cache.GetFilePathAsync (artifact, malicious, CancellationToken.None));
 		Assert.AreEqual (0, inner.CallCount, "Inner repository must not be consulted for an escaping path.");
 	}
 
-	[Test]
+	[TestMethod]
 	public void GetArtifactFilePath_RelativeRepositoryName_Throws ()
 	{
 		var artifact = new Artifact ("com.example", "lib", "1.0.0");
 		var inner = new ThrowingRepository (Path.Combine ("..", Path.GetFileName (cache_dir) + "-sibling"));
 		var cache = new CachedMavenRepository (cache_dir, inner);
 
-		Assert.Throws<InvalidOperationException> (() => cache.GetArtifactFilePath (artifact, "lib-1.0.0.jar"));
+		Assert.ThrowsExactly<InvalidOperationException> (() => cache.GetArtifactFilePath (artifact, "lib-1.0.0.jar"));
 	}
 
-	[Test]
+	[TestMethod]
 	public void GetArtifactFilePath_SiblingPrefixCacheDirectory_Throws ()
 	{
 		var artifact = new Artifact ("com.example", "lib", "1.0.0");
@@ -135,7 +136,7 @@ public class CachedMavenRepositoryTests
 		var inner = new ThrowingRepository (repo_name);
 		var cache = new CachedMavenRepository (cache_dir, inner);
 
-		Assert.Throws<InvalidOperationException> (() => cache.GetArtifactFilePath (artifact, "lib-1.0.0.jar"));
+		Assert.ThrowsExactly<InvalidOperationException> (() => cache.GetArtifactFilePath (artifact, "lib-1.0.0.jar"));
 	}
 
 	sealed class StubRepository : IMavenRepository

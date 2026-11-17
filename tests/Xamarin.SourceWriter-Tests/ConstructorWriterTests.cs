@@ -2,14 +2,14 @@ using System;
 using System.IO;
 using System.Linq;
 using System.Xml.Linq;
-using NUnit.Framework;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Xamarin.SourceWriter.Tests
 {
-	[TestFixture]
+	[TestClass]
 	public class ConstructorWriterTests
 	{
-		[Test]
+		[TestMethod]
 		public void Basics ()
 		{
 			var ctor = new ConstructorWriter { Name = "MyClass", IsPublic = true, BaseCall = "base ()" };

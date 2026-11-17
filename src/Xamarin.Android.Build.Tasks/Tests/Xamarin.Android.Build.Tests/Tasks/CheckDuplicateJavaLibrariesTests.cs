@@ -5,14 +5,14 @@ using System.Linq;
 using System.Xml.Linq;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
-using NUnit.Framework;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Xamarin.Android.Tasks;
 using Xamarin.ProjectTools;
 
 namespace Xamarin.Android.Build.Tests {
 
-	[TestFixture]
-	[Parallelizable (ParallelScope.Self)]
+	[TestClass]
+	[DoNotParallelize]
 	public class CheckDuplicateJavaLibrariesTests : BaseTest {
 		List<BuildErrorEventArgs> errors;
 		List<BuildWarningEventArgs> warnings;
@@ -20,20 +20,20 @@ namespace Xamarin.Android.Build.Tests {
 		MockBuildEngine engine;
 		string path;
 
-		[SetUp]
+		[TestInitialize]
 		public void Setup ()
 		{
-			engine = new MockBuildEngine (TestContext.Out,
+			engine = new MockBuildEngine (Console.Out,
 				errors: errors = new List<BuildErrorEventArgs> (),
 				warnings: warnings = new List<BuildWarningEventArgs> (),
 				messages: messages = new List<BuildMessageEventArgs> ());
 
 			path = Path.Combine (Root, "temp", TestName);
-			TestOutputDirectories [TestContext.CurrentContext.Test.ID] = path;
+			TestOutputDirectories [TestId] = path;
 			Directory.CreateDirectory (path);
 		}
 
-		[Test]
+		[TestMethod]
 		public void XA1014ConflictingJarNames ()
 		{
 			string jar1 = Path.Combine (path, "library.jar");
@@ -51,13 +51,14 @@ namespace Xamarin.Android.Build.Tests {
 			Assert.IsFalse (task.Execute (), "Task should fail!");
 			BuildErrorEventArgs error = errors [0];
 			Assert.AreEqual ("XA1014", error.Code);
-			StringAssert.Contains ("library.jar", error.Message);
+			Assert.Contains ("library.jar", error.Message);
 		}
 
-		[TestCase ("same", true, null)]
-		[TestCase ("diff", false, null)]
-		[TestCase ("different size", false, null)]
-		[TestCase ("diff", true, "LIBRARY.JAR")]
+		[TestMethod]
+		[DataRow ("same", true, null)]
+		[DataRow ("diff", false, null)]
+		[DataRow ("different size", false, null)]
+		[DataRow ("diff", true, "LIBRARY.JAR")]
 		public void RelativeJarContents (string content, bool expected, string? excludedFile)
 		{
 			Directory.CreateDirectory (Path.Combine (path, "imports"));
@@ -78,12 +79,12 @@ namespace Xamarin.Android.Build.Tests {
 			} else {
 				Assert.AreEqual (1, errors.Count);
 				Assert.AreEqual ("XA1014", errors [0].Code);
-				StringAssert.Contains ("library.jar", errors [0].Message);
+				Assert.Contains ("library.jar", errors [0].Message);
 			}
 		}
 
-		[Test]
-		[Platform ("Win")]
+		[TestMethod]
+		[OSCondition (OperatingSystems.Windows)]
 		public void LockedRelativeJarKeepsFileLockDiagnostic ()
 		{
 			Directory.CreateDirectory (Path.Combine (path, "imports"));
@@ -100,10 +101,10 @@ namespace Xamarin.Android.Build.Tests {
 			Assert.IsFalse (task.Execute ());
 			Assert.AreEqual (1, errors.Count);
 			Assert.AreEqual ("XACDJ7024", errors [0].Code);
-			StringAssert.Contains (lockedJar, errors [0].Message);
+			Assert.Contains (lockedJar, errors [0].Message);
 		}
 
-		[Test]
+		[TestMethod]
 		public void ContentComparisonPreservesItemsAndOrder ()
 		{
 			Directory.CreateDirectory (Path.Combine (path, "imports"));
@@ -123,10 +124,10 @@ namespace Xamarin.Android.Build.Tests {
 			Assert.AreEqual ("library.jar", first.ItemSpec);
 			Assert.AreEqual ("first", first.GetMetadata ("Owner"));
 			CollectionAssert.AreEqual (new [] { Path.Combine (path, "library.jar"), Path.Combine (path, "different.jar") },
-				MonoAndroidHelper.DistinctFilesByContent (items.Select (i => i.ItemSpec), environment));
+				MonoAndroidHelper.DistinctFilesByContent (items.Select (i => i.ItemSpec), environment).ToArray ());
 		}
 
-		[Test]
+		[TestMethod]
 		public void ConcurrentProjectsUseTheirOwnJarContents ()
 		{
 			string assembly = Path.Combine (TestEnvironment.AndroidMSBuildDirectory, "Xamarin.Android.Build.Tasks.dll");
@@ -163,8 +164,8 @@ namespace Xamarin.Android.Build.Tests {
 			var errorLines = dotnet.LastBuildOutput.Where (line => line.Contains (": error ")).ToArray ();
 			Assert.IsNotEmpty (errorLines);
 			foreach (string line in errorLines) {
-				StringAssert.Contains (": error XA1014:", line);
-				StringAssert.Contains (Path.Combine (path, "second", "check.proj"), line);
+				Assert.Contains (": error XA1014:", line);
+				Assert.Contains (Path.Combine (path, "second", "check.proj"), line);
 			}
 			Assert.AreEqual ("first", File.ReadAllText (Path.Combine (path, "first", "checked.txt")).Trim ());
 			Assert.IsFalse (File.Exists (Path.Combine (path, "second", "checked.txt")));

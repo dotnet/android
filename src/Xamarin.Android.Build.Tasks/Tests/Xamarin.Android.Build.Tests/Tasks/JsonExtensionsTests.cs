@@ -1,14 +1,16 @@
 using System.Text.Json;
-using NUnit.Framework;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Xamarin.Android.Build.Tests.Tasks {
 
-	[TestFixture]
+	[TestClass]
+	[DoNotParallelize]
 	public class JsonExtensionsTests {
 
-		[TestCase ("9007199254740993")]
-		[TestCase ("9223372036854775807")]
-		[TestCase ("18446744073709551615")]
+		[TestMethod]
+		[DataRow ("9007199254740993")]
+		[DataRow ("9223372036854775807")]
+		[DataRow ("18446744073709551615")]
 		public void ToNodePreservesLargeNumbers (string number)
 		{
 			var json = $"{{\"value\":{number}}}";

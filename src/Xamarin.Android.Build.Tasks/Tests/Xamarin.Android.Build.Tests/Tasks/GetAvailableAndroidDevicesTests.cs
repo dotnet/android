@@ -1,6 +1,6 @@
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
-using NUnit.Framework;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -9,7 +9,8 @@ using Xamarin.Android.Tools;
 
 namespace Xamarin.Android.Build.Tests
 {
-	[TestFixture]
+	[TestClass]
+	[DoNotParallelize]
 	public class GetAvailableAndroidDevicesTests : BaseTest
 	{
 		List<BuildErrorEventArgs> errors;
@@ -17,10 +18,10 @@ namespace Xamarin.Android.Build.Tests
 		List<BuildMessageEventArgs> messages;
 		MockBuildEngine engine;
 
-		[SetUp]
+		[TestInitialize]
 		public void Setup ()
 		{
-			engine = new MockBuildEngine (TestContext.Out, errors = [], warnings = [], messages = []);
+			engine = new MockBuildEngine (Console.Out, errors = [], warnings = [], messages = []);
 		}
 
 		/// <summary>
@@ -73,7 +74,7 @@ namespace Xamarin.Android.Build.Tests
 			return GetAvailableAndroidDevices.ConvertToTaskItems (devices);
 		}
 
-		[Test]
+		[TestMethod]
 		public void ParseRealWorldData ()
 		{
 			var task = new MockGetAvailableAndroidDevices {
@@ -115,7 +116,7 @@ namespace Xamarin.Android.Build.Tests
 			Assert.AreEqual ("1", device2.GetMetadata ("TransportId"), "TransportId should be '1'");
 		}
 
-		[Test]
+		[TestMethod]
 		public void ParseEmptyOutput ()
 		{
 			var task = new MockGetAvailableAndroidDevices {
@@ -132,7 +133,7 @@ namespace Xamarin.Android.Build.Tests
 			Assert.AreEqual (0, devices.Length, "Should return no devices for empty list");
 		}
 
-		[Test]
+		[TestMethod]
 		public void ParseSingleEmulator ()
 		{
 			var task = new MockGetAvailableAndroidDevices {
@@ -157,7 +158,7 @@ namespace Xamarin.Android.Build.Tests
 			Assert.AreEqual ("1", device.GetMetadata ("TransportId"), "TransportId should be present");
 		}
 
-		[Test]
+		[TestMethod]
 		public void ParseSinglePhysicalDevice ()
 		{
 			var task = new MockGetAvailableAndroidDevices {
@@ -182,7 +183,7 @@ namespace Xamarin.Android.Build.Tests
 			Assert.AreEqual ("2", device.GetMetadata ("TransportId"), "TransportId should be present");
 		}
 
-		[Test]
+		[TestMethod]
 		public void ParseMultipleDevices ()
 		{
 			var task = new MockGetAvailableAndroidDevices {
@@ -216,7 +217,7 @@ namespace Xamarin.Android.Build.Tests
 			Assert.AreEqual ("Pixel 6 Pro", devices [2].GetMetadata ("Description"), "Physical device should use model name");
 		}
 
-		[Test]
+		[TestMethod]
 		public void ParseOfflineDevice ()
 		{
 			var task = new MockGetAvailableAndroidDevices {
@@ -237,7 +238,7 @@ namespace Xamarin.Android.Build.Tests
 			Assert.AreEqual ("Pixel 7 - API 35", device.GetMetadata ("Description"), "Offline emulator should still get AVD name");
 		}
 
-		[Test]
+		[TestMethod]
 		public void ParseUnauthorizedDevice ()
 		{
 			var task = new MockGetAvailableAndroidDevices {
@@ -258,7 +259,7 @@ namespace Xamarin.Android.Build.Tests
 			Assert.AreEqual ("Device", device.GetMetadata ("Type"));
 		}
 
-		[Test]
+		[TestMethod]
 		public void ParseNoPermissionsDevice ()
 		{
 			var task = new MockGetAvailableAndroidDevices {
@@ -278,7 +279,7 @@ namespace Xamarin.Android.Build.Tests
 			Assert.AreEqual ("NoPermissions", device.GetMetadata ("Status"), "Status should be NoPermissions");
 		}
 
-		[Test]
+		[TestMethod]
 		public void ParseDeviceWithMinimalMetadata ()
 		{
 			var task = new MockGetAvailableAndroidDevices {
@@ -300,7 +301,7 @@ namespace Xamarin.Android.Build.Tests
 			Assert.AreEqual ("ABC123", device.GetMetadata ("Description"), "Description should fall back to serial");
 		}
 
-		[Test]
+		[TestMethod]
 		public void ParseDeviceWithProductOnly ()
 		{
 			var task = new MockGetAvailableAndroidDevices {
@@ -320,7 +321,7 @@ namespace Xamarin.Android.Build.Tests
 			Assert.AreEqual ("aosp_x86_64", device.GetMetadata ("Product"));
 		}
 
-		[Test]
+		[TestMethod]
 		public void ParseInvalidLines ()
 		{
 			var task = new MockGetAvailableAndroidDevices {
@@ -344,7 +345,7 @@ namespace Xamarin.Android.Build.Tests
 			Assert.AreEqual ("Pixel 7 - API 35", devices [0].GetMetadata ("Description"), "Emulator should have AVD name");
 		}
 
-		[Test]
+		[TestMethod]
 		public void ParseMixedDeviceStates ()
 		{
 			var task = new MockGetAvailableAndroidDevices {
@@ -375,7 +376,7 @@ namespace Xamarin.Android.Build.Tests
 			Assert.AreEqual ("Unauthorized", devices [3].GetMetadata ("Status"));
 		}
 
-		[Test]
+		[TestMethod]
 		public void ParseDeviceWithSpecialCharacters ()
 		{
 			var task = new MockGetAvailableAndroidDevices {
@@ -396,7 +397,7 @@ namespace Xamarin.Android.Build.Tests
 			Assert.AreEqual ("Remote Device", device.GetMetadata ("Description"));
 		}
 
-		[Test]
+		[TestMethod]
 		public void DescriptionPriorityOrder ()
 		{
 			var task = new MockGetAvailableAndroidDevices {
@@ -428,7 +429,7 @@ namespace Xamarin.Android.Build.Tests
 			Assert.AreEqual ("device name", devices3 [0].GetMetadata ("Description"), "Device should have third priority");
 		}
 
-		[Test]
+		[TestMethod]
 		public void ParseAdbDaemonStarting ()
 		{
 			var task = new MockGetAvailableAndroidDevices {
@@ -463,7 +464,7 @@ namespace Xamarin.Android.Build.Tests
 			Assert.AreEqual ("Online", physical.GetMetadata ("Status"));
 		}
 
-		[Test]
+		[TestMethod]
 		public void FormatDisplayName_ReplacesUnderscoresWithSpaces ()
 		{
 			var result = AdbRunner.FormatDisplayName ("pixel_7_pro");
@@ -471,7 +472,7 @@ namespace Xamarin.Android.Build.Tests
 			Assert.AreEqual ("Pixel 7 Pro", result, "Should replace underscores with spaces");
 		}
 
-		[Test]
+		[TestMethod]
 		public void FormatDisplayName_AppliesTitleCase ()
 		{
 			var result = AdbRunner.FormatDisplayName ("pixel 7 pro");
@@ -479,7 +480,7 @@ namespace Xamarin.Android.Build.Tests
 			Assert.AreEqual ("Pixel 7 Pro", result, "Should apply title case");
 		}
 
-		[Test]
+		[TestMethod]
 		public void FormatDisplayName_ReplacesApiWithAPIUppercase ()
 		{
 			var result = AdbRunner.FormatDisplayName ("pixel_5_api_34");
@@ -487,7 +488,7 @@ namespace Xamarin.Android.Build.Tests
 			Assert.AreEqual ("Pixel 5 API 34", result, "Should replace 'Api' with 'API'");
 		}
 
-		[Test]
+		[TestMethod]
 		public void FormatDisplayName_HandlesMultipleApiOccurrences ()
 		{
 			var result = AdbRunner.FormatDisplayName ("test_api_device_api_35");
@@ -495,7 +496,7 @@ namespace Xamarin.Android.Build.Tests
 			Assert.AreEqual ("Test API Device API 35", result, "Should replace all 'Api' occurrences with 'API'");
 		}
 
-		[Test]
+		[TestMethod]
 		public void FormatDisplayName_HandlesMixedCaseInput ()
 		{
 			var result = AdbRunner.FormatDisplayName ("PiXeL_7_API_35");
@@ -503,7 +504,7 @@ namespace Xamarin.Android.Build.Tests
 			Assert.AreEqual ("Pixel 7 API 35", result, "Should normalize mixed case input");
 		}
 
-		[Test]
+		[TestMethod]
 		public void FormatDisplayName_HandlesComplexNames ()
 		{
 			var result = AdbRunner.FormatDisplayName ("pixel_9_pro_xl_api_36");
@@ -511,7 +512,7 @@ namespace Xamarin.Android.Build.Tests
 			Assert.AreEqual ("Pixel 9 Pro Xl API 36", result, "Should format complex names correctly");
 		}
 
-		[Test]
+		[TestMethod]
 		public void FormatDisplayName_PreservesNumbersAndSpecialChars ()
 		{
 			var result = AdbRunner.FormatDisplayName ("pixel_7-pro_api_35");
@@ -519,7 +520,7 @@ namespace Xamarin.Android.Build.Tests
 			Assert.AreEqual ("Pixel 7-Pro API 35", result, "Should preserve hyphens and numbers");
 		}
 
-		[Test]
+		[TestMethod]
 		public void FormatDisplayName_HandlesEmptyString ()
 		{
 			var result = AdbRunner.FormatDisplayName ("");
@@ -527,7 +528,7 @@ namespace Xamarin.Android.Build.Tests
 			Assert.AreEqual ("", result, "Should handle empty string");
 		}
 
-		[Test]
+		[TestMethod]
 		public void FormatDisplayName_HandlesSingleWord ()
 		{
 			var result = AdbRunner.FormatDisplayName ("pixel");
@@ -535,7 +536,7 @@ namespace Xamarin.Android.Build.Tests
 			Assert.AreEqual ("Pixel", result, "Should capitalize single word");
 		}
 
-		[Test]
+		[TestMethod]
 		public void FormatDisplayName_DoesNotReplaceApiInsideWords ()
 		{
 			var result = AdbRunner.FormatDisplayName ("erapidevice");
@@ -543,7 +544,7 @@ namespace Xamarin.Android.Build.Tests
 			Assert.AreEqual ("Erapidevice", result, "Should not replace 'api' when it's part of a larger word");
 		}
 
-		[Test]
+		[TestMethod]
 		public void MergeDevicesAndEmulators_NoEmulators_ReturnsAdbDevicesOnly ()
 		{
 			var adbDevices = new List<AdbDeviceInfo> {
@@ -558,7 +559,7 @@ namespace Xamarin.Android.Build.Tests
 			Assert.AreEqual ("0A041FDD400327", result [0].ItemSpec);
 		}
 
-		[Test]
+		[TestMethod]
 		public void MergeDevicesAndEmulators_NoRunningEmulators_AddsAllAvailableEmulators ()
 		{
 			var adbDevices = new List<AdbDeviceInfo> {
@@ -587,7 +588,7 @@ namespace Xamarin.Android.Build.Tests
 			Assert.AreEqual ("Pixel 9 API 36 (Not Running)", result [2].GetMetadata ("Description"));
 		}
 
-		[Test]
+		[TestMethod]
 		public void MergeDevicesAndEmulators_RunningEmulator_NoDuplicate ()
 		{
 			// Emulator is running (has adb entry with AvdName metadata)
@@ -605,7 +606,7 @@ namespace Xamarin.Android.Build.Tests
 			Assert.AreEqual ("Online", result [0].GetMetadata ("Status"));
 		}
 
-		[Test]
+		[TestMethod]
 		public void MergeDevicesAndEmulators_MixedRunningAndNotRunning ()
 		{
 			// One emulator is running
@@ -639,7 +640,7 @@ namespace Xamarin.Android.Build.Tests
 			Assert.AreEqual ("Pixel 9 API 36 (Not Running)", result [3].GetMetadata ("Description"));
 		}
 
-		[Test]
+		[TestMethod]
 		public void MergeDevicesAndEmulators_CaseInsensitiveAvdNameMatching ()
 		{
 			// Running emulator with different case
@@ -656,7 +657,7 @@ namespace Xamarin.Android.Build.Tests
 			Assert.AreEqual ("emulator-5554", result [0].ItemSpec);
 		}
 
-		[Test]
+		[TestMethod]
 		public void MergeDevicesAndEmulators_EmptyAdbDevices_ReturnsAllAvailableEmulators ()
 		{
 			var adbDevices = new List<AdbDeviceInfo> ();
@@ -672,7 +673,7 @@ namespace Xamarin.Android.Build.Tests
 			Assert.AreEqual ("Pixel 9 API 36 (Not Running)", result [1].GetMetadata ("Description"));
 		}
 
-		[Test]
+		[TestMethod]
 		public void MergeDevicesAndEmulators_AllEmulatorsRunning_NoDuplicates ()
 		{
 			var emulator1 = CreateDeviceInfo ("emulator-5554", "Pixel 7 API 35", AdbDeviceType.Emulator, AdbDeviceStatus.Online);
@@ -693,7 +694,7 @@ namespace Xamarin.Android.Build.Tests
 			Assert.IsTrue (result.All (d => d.GetMetadata ("Status") == "Online"), "All should be Online (running)");
 		}
 
-		[Test]
+		[TestMethod]
 		public void MergeDevicesAndEmulators_NonRunningEmulatorHasFormattedDescription ()
 		{
 			var adbDevices = new List<AdbDeviceInfo> ();
@@ -706,7 +707,7 @@ namespace Xamarin.Android.Build.Tests
 			Assert.AreEqual ("Pixel 7 Pro API 35 (Not Running)", result [0].GetMetadata ("Description"), "Description should be formatted with (Not Running) suffix");
 		}
 
-		[Test]
+		[TestMethod]
 		public void FilterDevicesForSelection_SingleOnlineDevice_WithNonRunningEmulators_ReturnsOnlyOnline ()
 		{
 			var devices = new List<AdbDeviceInfo> {
@@ -723,7 +724,7 @@ namespace Xamarin.Android.Build.Tests
 			Assert.AreEqual (AdbDeviceStatus.Online, filtered [0].Status);
 		}
 
-		[Test]
+		[TestMethod]
 		public void FilterDevicesForSelection_SinglePhysicalDevice_WithNonRunningEmulators_ReturnsOnlyOnline ()
 		{
 			var devices = new List<AdbDeviceInfo> {
@@ -738,7 +739,7 @@ namespace Xamarin.Android.Build.Tests
 			Assert.AreEqual ("0A041FDD400327", filtered [0].Serial);
 		}
 
-		[Test]
+		[TestMethod]
 		public void FilterDevicesForSelection_MultipleOnlineDevices_ReturnsOnlyOnline ()
 		{
 			var devices = new List<AdbDeviceInfo> {
@@ -753,7 +754,7 @@ namespace Xamarin.Android.Build.Tests
 			Assert.IsTrue (filtered.All (d => d.Status == AdbDeviceStatus.Online), "All returned devices should be online");
 		}
 
-		[Test]
+		[TestMethod]
 		public void FilterDevicesForSelection_NoOnlineDevices_ReturnsAll ()
 		{
 			var devices = new List<AdbDeviceInfo> {
@@ -766,7 +767,7 @@ namespace Xamarin.Android.Build.Tests
 			Assert.AreEqual (2, filtered.Count, "Should return all devices when none are online");
 		}
 
-		[Test]
+		[TestMethod]
 		public void FilterDevicesForSelection_EmptyList_ReturnsEmpty ()
 		{
 			var devices = new List<AdbDeviceInfo> ();
@@ -776,7 +777,7 @@ namespace Xamarin.Android.Build.Tests
 			Assert.AreEqual (0, filtered.Count, "Should return empty list");
 		}
 
-		[Test]
+		[TestMethod]
 		public void FilterDevicesForSelection_OnlineDeviceWithOfflineDevice_ReturnsOnlyOnline ()
 		{
 			var devices = new List<AdbDeviceInfo> {
@@ -791,7 +792,7 @@ namespace Xamarin.Android.Build.Tests
 			Assert.AreEqual ("0A041FDD400327", filtered [0].Serial);
 		}
 
-		[Test]
+		[TestMethod]
 		public void FilterDevicesForSelection_OnlineDeviceWithUnauthorizedDevice_ReturnsOnlyOnline ()
 		{
 			var devices = new List<AdbDeviceInfo> {

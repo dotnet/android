@@ -1,20 +1,22 @@
 #nullable enable
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 
 using Microsoft.Android.Tasks;
 using Microsoft.Build.Utilities;
-using NUnit.Framework;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Xamarin.Android.Build.Tests.Tasks;
 
-[TestFixture]
+[TestClass]
+[DoNotParallelize]
 public class CreateAssemblyStoreTests : BaseTest
 {
-	[Test]
-	[TestCase ("Example.dll.zst")]
-	[TestCase ("Example.ni.dll.zst")]
+	[TestMethod]
+	[DataRow ("Example.dll.zst")]
+	[DataRow ("Example.ni.dll.zst")]
 	public void CoreCLRStoreUsesVersionThreeHeader (string assemblyFileName)
 	{
 		string testDirectory = Path.Combine (Root, "temp", TestName);
@@ -27,7 +29,7 @@ public class CreateAssemblyStoreTests : BaseTest
 			["Abi"] = "arm64-v8a",
 		};
 		var task = new CreateAssemblyStore {
-			BuildEngine = new MockBuildEngine (TestContext.Out),
+			BuildEngine = new MockBuildEngine (Console.Out),
 			AppSharedLibrariesDir = Path.Combine (testDirectory, "stores"),
 			ResolvedFrameworkAssemblies = [],
 			ResolvedUserAssemblies = [new TaskItem (assemblyPath, metadata)],
@@ -51,6 +53,6 @@ public class CreateAssemblyStoreTests : BaseTest
 		Assert.AreEqual (0u, reader.ReadUInt32 (), "The first descriptor should immediately follow the index.");
 
 		string manifest = File.ReadAllText ($"{storePath}.manifest");
-		StringAssert.Contains ($" {Path.GetFileNameWithoutExtension (assemblyFileName)}", manifest, "The real assembly name should be indexed.");
+		Assert.Contains ($" {Path.GetFileNameWithoutExtension (assemblyFileName)}", manifest, "The real assembly name should be indexed.");
 	}
 }

@@ -8,19 +8,20 @@ using System.Xml.Linq;
 using Microsoft.Android.Tasks;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
-using NUnit.Framework;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 using Task = System.Threading.Tasks.Task;
 
 namespace Xamarin.Android.Build.Tests.Tasks {
 
-	[TestFixture]
+	[TestClass]
+	[DoNotParallelize]
 	public class MamJsonToXmlTests : BaseTest {
 
 		static string ResourcePath (string name) =>
-			Path.Combine (TestContext.CurrentContext.TestDirectory, "Resources", "MamJsonToXml", name);
+			Path.Combine (AppContext.BaseDirectory, "Resources", "MamJsonToXml", name);
 
-		[Test]
+		[TestMethod]
 		public void TaskRegistrationsUseModernTaskForFullAndCore ()
 		{
 			var source = XDocument.Load (Path.Combine (NativeAotBootstrapTestTools.FindRepositoryRoot (),
@@ -42,12 +43,12 @@ namespace Xamarin.Android.Build.Tests.Tasks {
 			Assert.IsNull (core.Attribute ("TaskFactory"));
 		}
 
-		[Test]
+		[TestMethod]
 		public void TestMamJsonIsParsedToXml ()
 		{
 			var errors = new List<BuildErrorEventArgs> ();
 			var warnings = new List<BuildWarningEventArgs> ();
-			var engine = new MockBuildEngine (TestContext.Out, errors, warnings);
+			var engine = new MockBuildEngine (Console.Out, errors, warnings);
 			var path = Path.Combine (Root, "temp", TestName);
 			Directory.CreateDirectory (path);
 			File.Copy (ResourcePath ("mam.json"), Path.Combine (path, "input.json"), overwrite: true);
@@ -63,30 +64,30 @@ namespace Xamarin.Android.Build.Tests.Tasks {
 			Assert.AreEqual (0, errors.Count, "Task should have no errors.");
 			Assert.AreEqual (0, warnings.Count);
 			var output = Path.Combine (path, "output.xml");
-			FileAssert.Exists (output, $"The expected XML file '{output}' does not exist.");
+			Assert.IsTrue (File.Exists (output), $"The expected XML file '{output}' does not exist.");
 			var expected = File.ReadAllText (ResourcePath ("mam.xml")).ReplaceLineEndings ();
 			var xml = File.ReadAllText (output).ReplaceLineEndings ();
 			Assert.AreEqual (expected, xml);
 		}
 
-		[TestCase (false)]
-		[TestCase (true)]
+		[TestMethod]
+		[DataRow (false)]
+		[DataRow (true)]
 		public void MissingOrEmptyOutputIsRejected (bool supplyEmptyItem)
 		{
 			var errors = new List<BuildErrorEventArgs> ();
 			var task = new MamJsonToXml {
-				BuildEngine = new MockBuildEngine (TestContext.Out, errors),
+				BuildEngine = new MockBuildEngine (Console.Out, errors),
 			};
 			if (supplyEmptyItem) {
 				task.XmlMappingOutput = new TaskItem ("");
 			}
 
 			Assert.IsFalse (task.Execute ());
-			Assert.That (errors, Has.Exactly (1).Matches<BuildErrorEventArgs> (error =>
-				error.Message.Contains ("XmlMappingOutput is required.")));
+			Assert.ContainsSingle (error => error.Message?.Contains ("XmlMappingOutput is required.") == true, errors);
 		}
 
-		[Test]
+		[TestMethod]
 		public void ConcurrentProjectDirectoriesAreIsolated ()
 		{
 			var root = Path.Combine (Root, "temp", TestName);

@@ -1,14 +1,14 @@
 // Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 
-using NUnit.Framework;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Xamarin.Android.Tools.Tests
 {
-	[TestFixture]
+	[TestClass]
 	public class JdkVersionInfoTests
 	{
-		[Test]
+		[TestMethod]
 		public void Constructor_SetsAllProperties ()
 		{
 			var info = new JdkVersionInfo (
@@ -27,7 +27,7 @@ namespace Xamarin.Android.Tools.Tests
 			Assert.AreEqual ("abc123", info.Checksum);
 		}
 
-		[Test]
+		[TestMethod]
 		public void Constructor_DefaultSizeAndChecksum ()
 		{
 			var info = new JdkVersionInfo (
@@ -40,7 +40,7 @@ namespace Xamarin.Android.Tools.Tests
 			Assert.IsNull (info.Checksum);
 		}
 
-		[Test]
+		[TestMethod]
 		public void ToString_ReturnsDisplayName ()
 		{
 			var info = new JdkVersionInfo (21, "Microsoft OpenJDK 21", "https://example.com/dl", "https://example.com/cs");

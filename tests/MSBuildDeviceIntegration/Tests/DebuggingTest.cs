@@ -4,7 +4,8 @@ using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Net;
-using NUnit.Framework;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Microsoft.VisualStudio.TestTools.UnitTesting.Combinatorial;
 using Xamarin.ProjectTools;
 using System.Collections.Generic;
 using Microsoft.Build.Framework;
@@ -13,8 +14,8 @@ using Xamarin.Android.Tools;
 
 namespace Xamarin.Android.Build.Tests
 {
-	[TestFixture]
-	[Category ("UsesDevice")]
+	[TestClass]
+	[TestCategory ("UsesDevice")]
 	public class DebuggingTest : DeviceTest
 	{
 		const int DEBUGGER_MAX_CONNECTIONS = 100;
@@ -45,7 +46,7 @@ namespace Xamarin.Android.Build.Tests
 			return -1;
 		}
 
-		static IEnumerable<TestCaseData> ApplicationRunsWithoutDebuggerCases ()
+		static IEnumerable<object []> ApplicationRunsWithoutDebuggerCases ()
 		{
 			foreach (var configuration in BaseTest.ValidRuntimeConfigurations) {
 				foreach (var extractNativeLibs in new [] { false, true }) {
@@ -54,20 +55,28 @@ namespace Xamarin.Android.Build.Tests
 						if (configuration.isRelease && configuration.runtime == AndroidRuntime.CoreCLR && useEmbeddedDex) {
 							continue;
 						}
-						yield return new TestCaseData (configuration, extractNativeLibs, useEmbeddedDex);
+						yield return [configuration, extractNativeLibs, useEmbeddedDex];
 					}
 				}
 			}
 		}
 
-		[TestCaseSource (nameof (ApplicationRunsWithoutDebuggerCases))]
+		[TestMethod]
+		[DynamicData (nameof (ApplicationRunsWithoutDebuggerCases))]
 		public void ApplicationRunsWithoutDebugger ((bool isRelease, AndroidRuntime runtime) configuration, bool extractNativeLibs, bool useEmbeddedDex)
 		{
 			var (isRelease, runtime) = configuration;
 
+			// TODO: NativeAOT fails with the following exception:
+			//
+			// FATAL UNHANDLED EXCEPTION: System.InvalidCastException: Unable to convert instance of type 'AndroidX.AppCompat.Widget.AppCompatImageButton' to type 'AndroidX.AppCompat.Widget.Toolbar'.
+			//    at Java.Interop.JavaObjectExtensions._JavaCast[TResult](IJavaObject) + 0x190
+			//    at Android.Runtime.Extensions.JavaCast[TResult](IJavaObject) + 0x18
+			//    at Xamarin.Forms.Platform.Android.FormsAppCompatActivity.OnCreate(Bundle, ActivationFlags) + 0x5bc
+			//    at UnnamedProject.MainActivity.OnCreate(Bundle savedInstanceState) + 0x4c
+			//    at Android.App.Activity.n_OnCreate_Landroid_os_Bundle_(IntPtr jnienv, IntPtr native__this, IntPtr native_savedInstanceState) + 0x7c
 			if (runtime == AndroidRuntime.NativeAOT) {
-				// TODO: Xamarin.Forms startup cannot find the ResourcesProvider constructor under NativeAOT.
-				Assert.Ignore ("NativeAOT Xamarin.Forms startup throws MissingMethodException.");
+				Assert.Inconclusive ("NativeAOT currently crashes with an exception.");
 			}
 
 			SwitchUser ();
@@ -88,23 +97,46 @@ namespace Xamarin.Android.Build.Tests
 			using (var b = CreateApkBuilder ()) {
 				SetTargetFrameworkAndManifest (proj, b, null);
 				proj.AndroidManifest = proj.AndroidManifest.Replace ("<application ", $"<application android:extractNativeLibs=\"{extractNativeLibs.ToString ().ToLowerInvariant ()}\" android:useEmbeddedDex=\"{useEmbeddedDex.ToString ().ToLowerInvariant ()}\" ");
-				Assert.True (b.Install (proj), "Project should have installed.");
+				Assert.IsTrue (b.Install (proj), "Project should have installed.");
 				var manifest = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath, "android", "AndroidManifest.xml");
 				AssertExtractNativeLibs (manifest, extractNativeLibs);
 				RunProjectAndAssert (proj, b);
-				Assert.True (WaitForActivityToStart (proj.PackageName, "MainActivity",
+				Assert.IsTrue (WaitForActivityToStart (proj.PackageName, "MainActivity",
 					Path.Combine (Root, b.ProjectDirectory, "logcat.log"), ActivityStartTimeoutInSeconds), "Activity should have started.");
 				b.BuildLogFile = "uninstall.log";
-				Assert.True (b.Uninstall (proj), "Project should have uninstalled.");
+				Assert.IsTrue (b.Uninstall (proj), "Project should have uninstalled.");
 			}
 		}
 
-		[Test]
-		public void ClassLibraryMainLauncherRuns ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
+		[TestMethod]
+		[CombinatorialData]
+		public void ClassLibraryMainLauncherRuns ([CombinatorialValues (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			bool isRelease = runtime == AndroidRuntime.NativeAOT;
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
 				return;
+			}
+
+			// TODO: NativeAOT currently dies with a Java android.os.DeadObjectException exception (GC issue?):
+			//
+			// Exception thrown during dispatchAppVisibility Window{74689fa u0 com.xamarin.classlibrarymainlauncherruns/com.xamarin.classlibrarymainlauncherruns.MainActivity EXITING}
+			// android.os.DeadObjectException
+			//         at android.os.BinderProxy.transactNative(Native Method)
+			//         at android.os.BinderProxy.transact(BinderProxy.java:592)
+			//         at android.view.IWindow$Stub$Proxy.dispatchAppVisibility(IWindow.java:538)
+			//         at com.android.server.wm.WindowState.sendAppVisibilityToClients(WindowState.java:3183)
+			//         at com.android.server.wm.WindowContainer.sendAppVisibilityToClients(WindowContainer.java:1233)
+			//         at com.android.server.wm.WindowToken.setClientVisible(WindowToken.java:394)
+			//         at com.android.server.wm.ActivityRecord.commitVisibility(ActivityRecord.java:5546)
+			//         at com.android.server.wm.Transition.finishTransition(Transition.java:1485)
+			//         at com.android.server.wm.TransitionController.finishTransition(TransitionController.java:1048)
+			//         at com.android.server.wm.WindowOrganizerController.finishTransition(WindowOrganizerController.java:514)
+			//         at android.window.IWindowOrganizerController$Stub.onTransact(IWindowOrganizerController.java:270)
+			//         at com.android.server.wm.WindowOrganizerController.onTransact(WindowOrganizerController.java:230)
+			//         at android.os.Binder.execTransactInternal(Binder.java:1446)
+			//         at android.os.Binder.execTransact(Binder.java:1385)
+			if (runtime == AndroidRuntime.NativeAOT) {
+				Assert.Inconclusive ("NativeAOT currently dies at startup with a Java android.os.DeadObjectException exception");
 			}
 
 			SwitchUser ();
@@ -148,9 +180,9 @@ namespace Xamarin.Android.Build.Tests
 			using (var appBuilder = CreateApkBuilder (Path.Combine (path, app.ProjectName))) {
 				SetTargetFrameworkAndManifest (app, appBuilder, null);
 				Assert.IsTrue (libBuilder.Build (lib), "library build should have succeeded.");
-				Assert.True (appBuilder.Install (app), "app should have installed.");
+				Assert.IsTrue (appBuilder.Install (app), "app should have installed.");
 				RunProjectAndAssert (app, appBuilder);
-				Assert.True (WaitForActivityToStart (app.PackageName, "MainActivity",
+				Assert.IsTrue (WaitForActivityToStart (app.PackageName, "MainActivity",
 					Path.Combine (Root, appBuilder.ProjectDirectory, "logcat.log"), ActivityStartTimeoutInSeconds), "Activity should have started.");
 			}
 		}

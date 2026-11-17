@@ -1,13 +1,13 @@
 using System;
 using Java.Interop.Tools.JavaTypeSystem.Models;
-using NUnit.Framework;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Java.Interop.Tools.JavaTypeSystem.Tests
 {
-	[TestFixture]
+	[TestClass]
 	public class JavaTypeNameTests
 	{
-		[Test]
+		[TestMethod]
 		public void ParseName ()
 		{
 			var tn = JavaTypeName.Parse ("java.util.Function<java.util.Map.Entry<K, V>, ? extends U>");
@@ -27,7 +27,7 @@ namespace Java.Interop.Tools.JavaTypeSystem.Tests
 			Assert.AreEqual ("U", ga2.GenericConstraints [0].FullNameNonGeneric, "genarg#1.1 constraint name mismatch");
 		}
 
-		[Test]
+		[TestMethod]
 		public void ParseName2 ()
 		{
 			var name = "com.good.gd.ndkproxy.auth.GDFingerprintAuthenticationManager.a<com.good.gd.ndkproxy.auth.c.a>.b<com.good.gd.ndkproxy.auth.d.a>";

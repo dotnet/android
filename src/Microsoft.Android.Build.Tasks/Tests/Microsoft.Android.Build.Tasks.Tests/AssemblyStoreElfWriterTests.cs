@@ -7,21 +7,24 @@ using System.Linq;
 using System.Text;
 using System.Text.Json;
 
-using NUnit.Framework;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Microsoft.VisualStudio.TestTools.UnitTesting.Combinatorial;
 using Microsoft.Android.Tasks;
 using Xamarin.Android.Tools;
 
 namespace Xamarin.Android.Build.Tests.Tasks;
 
-[TestFixture]
+[TestClass]
+[DoNotParallelize]
 public class AssemblyStoreElfWriterTests : BaseTest
 {
 	const string LibraryName = "libassembly-store.so";
 
-	[Test]
-	[Category ("RequiresAndroidNdk")]
+	[TestMethod]
+	[CombinatorialData]
+	[TestCategory ("RequiresAndroidNdk")]
 	public void WritesLinkableNativeAotDataObject (
-		[Values (AndroidTargetArch.Arm, AndroidTargetArch.Arm64, AndroidTargetArch.X86_64)] AndroidTargetArch arch)
+		[CombinatorialValues (AndroidTargetArch.Arm, AndroidTargetArch.Arm64, AndroidTargetArch.X86_64)] AndroidTargetArch arch)
 	{
 		byte [] data = [1, 2, 3, 4, 5, 6, 7];
 		using var output = new MemoryStream ();
@@ -54,8 +57,8 @@ public class AssemblyStoreElfWriterTests : BaseTest
 		Assert.AreEqual (2u, rodata.GetProperty ("Flags").GetProperty ("Value").GetUInt32 ());
 		Assert.AreEqual (4u, rodata.GetProperty ("AddressAlignment").GetUInt32 ());
 		byte [] bytes = NativeToolTestHelper.ReadSection (objectFile, ".rodata");
-		CollectionAssert.AreEqual (data, bytes.Take (data.Length));
-		Assert.AreEqual (data.Length, BinaryPrimitives.ReadUInt32LittleEndian (bytes.AsSpan (8, 4)));
+		CollectionAssert.AreEqual (data, bytes.Take (data.Length).ToArray ());
+		Assert.AreEqual ((uint) data.Length, BinaryPrimitives.ReadUInt32LittleEndian (bytes.AsSpan (8, 4)));
 		var symbols = elf.GetProperty ("Symbols").EnumerateArray ().Select (item => item.GetProperty ("Symbol")).ToArray ();
 		Assert.AreEqual (3, symbols.Length);
 		foreach (var symbol in symbols.Skip (1)) {
@@ -64,7 +67,7 @@ public class AssemblyStoreElfWriterTests : BaseTest
 			Assert.AreEqual (2, symbol.GetProperty ("Other").GetProperty ("Value").GetInt32 ());
 		}
 		CollectionAssert.AreEqual (new [] { NativeAotBootstrapBlob.Symbol, NativeAotBootstrapBlob.Symbol + "_size" },
-			symbols.Skip (1).Select (symbol => symbol.GetProperty ("Name").GetProperty ("Name").GetString ()));
+			symbols.Skip (1).Select (symbol => symbol.GetProperty ("Name").GetProperty ("Name").GetString ()).ToArray ());
 		NativeToolTestHelper.Run ("ld.lld", "--shared", "--gc-sections", "--no-undefined",
 			"--undefined=" + NativeAotBootstrapBlob.Symbol, objectFile, "-o", library);
 		CollectionAssert.AreEqual (bytes, NativeToolTestHelper.ReadSection (library, ".rodata"));
@@ -95,11 +98,12 @@ public class AssemblyStoreElfWriterTests : BaseTest
 		}
 	}
 
-	[Test]
-	[Category ("RequiresAndroidNdk")]
+	[TestMethod]
+	[CombinatorialData]
+	[TestCategory ("RequiresAndroidNdk")]
 	public void WritesLoadableReadOnlyPayload (
-		[Values (AndroidTargetArch.Arm, AndroidTargetArch.Arm64, AndroidTargetArch.X86, AndroidTargetArch.X86_64)] AndroidTargetArch arch,
-		[Values (1, 4, 4095, 4096, 4097, 16383, 16384, 16385)] int payloadSize)
+		[CombinatorialValues (AndroidTargetArch.Arm, AndroidTargetArch.Arm64, AndroidTargetArch.X86, AndroidTargetArch.X86_64)] AndroidTargetArch arch,
+		[CombinatorialValues (1, 4, 4095, 4096, 4097, 16383, 16384, 16385)] int payloadSize)
 	{
 		byte [] payload = Enumerable.Range (0, payloadSize).Select (i => (byte)(i % 251)).ToArray ();
 		using var source = new MemoryStream (payload);
@@ -108,8 +112,8 @@ public class AssemblyStoreElfWriterTests : BaseTest
 
 		bool is64Bit = arch == AndroidTargetArch.Arm64 || arch == AndroidTargetArch.X86_64;
 		uint pageSize = is64Bit ? 16384u : 4096u;
-		Assert.Greater (output.Length, pageSize + payloadSize, "Non-allocated section metadata follows the payload.");
-		Assert.Less (output.Length, pageSize + payloadSize + 1024, "Section metadata overhead is bounded.");
+		Assert.IsGreaterThan (pageSize + payloadSize, output.Length, "Non-allocated section metadata follows the payload.");
+		Assert.IsLessThan (pageSize + payloadSize + 1024, output.Length, "Section metadata overhead is bounded.");
 		string directory = Path.Combine (Root, "temp", TestName);
 		Directory.CreateDirectory (directory);
 		string library = Path.Combine (directory, LibraryName);
@@ -134,7 +138,7 @@ public class AssemblyStoreElfWriterTests : BaseTest
 			"Architecture-specific ELF flags.");
 		AssertLayout (elf, library, payload, pageSize, is64Bit);
 
-		CollectionAssert.AreEqual (payload, output.ToArray ().Skip ((int)pageSize).Take (payloadSize));
+		CollectionAssert.AreEqual (payload, output.ToArray ().Skip ((int)pageSize).Take (payloadSize).ToArray ());
 	}
 
 	static void AssertLayout (JsonElement elf, string library, byte [] data, uint pageSize, bool is64Bit)
@@ -158,33 +162,32 @@ public class AssemblyStoreElfWriterTests : BaseTest
 		Assert.AreEqual (1, symbol.GetProperty ("Type").GetProperty ("Value").GetInt32 (), "The payload symbol must be an object.");
 		Assert.AreEqual (payload.GetProperty ("Index").GetInt32 (), symbol.GetProperty ("Section").GetProperty ("Value").GetInt32 ());
 		Assert.AreEqual (pageSize, symbol.GetProperty ("Value").GetUInt64 ());
-		Assert.AreEqual (data.Length, symbol.GetProperty ("Size").GetUInt64 ());
+		Assert.AreEqual ((ulong) data.Length, symbol.GetProperty ("Size").GetUInt64 ());
 		Assert.IsFalse (symbols.Any (item => item.GetProperty ("Name").GetProperty ("Name").GetString () == "_assembly_store_end"));
 
 		var segments = elf.GetProperty ("ProgramHeaders").EnumerateArray ().Select (item => item.GetProperty ("ProgramHeader")).ToArray ();
 		Assert.AreEqual (4, segments.Length);
 		var load = segments.Single (item => item.GetProperty ("Type").GetProperty ("Value").GetUInt32 () == 1);
 		Assert.AreEqual (4u, load.GetProperty ("Flags").GetProperty ("Value").GetUInt32 (), "No writable or executable load segments.");
-		Assert.AreEqual (0, load.GetProperty ("Offset").GetUInt64 ());
-		Assert.AreEqual (0, load.GetProperty ("VirtualAddress").GetUInt64 ());
+		Assert.AreEqual (0UL, load.GetProperty ("Offset").GetUInt64 ());
+		Assert.AreEqual (0UL, load.GetProperty ("VirtualAddress").GetUInt64 ());
 		Assert.AreEqual (pageSize, load.GetProperty ("Alignment").GetUInt64 ());
 		ulong loadSize = load.GetProperty ("FileSize").GetUInt64 ();
-		Assert.AreEqual (pageSize + data.Length, loadSize);
+		Assert.AreEqual ((ulong) (pageSize + data.Length), loadSize);
 		Assert.AreEqual (loadSize, load.GetProperty ("MemSize").GetUInt64 ());
 		foreach (uint systemPageSize in pageSize == 16384 ? new uint [] { 4096, 16384 } : new uint [] { 4096 }) {
 			Assert.AreEqual (load.GetProperty ("Offset").GetUInt64 () % systemPageSize, load.GetProperty ("VirtualAddress").GetUInt64 () % systemPageSize);
 		}
 
 		var sectionNames = sections [".shstrtab"];
-		Assert.AreEqual (0, sectionNames.GetProperty ("Flags").GetProperty ("Value").GetUInt32 ());
-		Assert.AreEqual (0, sectionNames.GetProperty ("Address").GetUInt64 ());
-		Assert.GreaterOrEqual (sectionNames.GetProperty ("Offset").GetUInt64 (), loadSize, "Section names must be outside PT_LOAD for stripping.");
-		Assert.GreaterOrEqual (elf.GetProperty ("ElfHeader").GetProperty ("SectionHeaderOffset").GetUInt64 (),
-			sectionNames.GetProperty ("Offset").GetUInt64 () + sectionNames.GetProperty ("Size").GetUInt64 ());
+		Assert.AreEqual (0U, sectionNames.GetProperty ("Flags").GetProperty ("Value").GetUInt32 ());
+		Assert.AreEqual (0UL, sectionNames.GetProperty ("Address").GetUInt64 ());
+		Assert.IsGreaterThanOrEqualTo (loadSize, sectionNames.GetProperty ("Offset").GetUInt64 (), "Section names must be outside PT_LOAD for stripping.");
+		Assert.IsGreaterThanOrEqualTo (sectionNames.GetProperty ("Offset").GetUInt64 () + sectionNames.GetProperty ("Size").GetUInt64 (), elf.GetProperty ("ElfHeader").GetProperty ("SectionHeaderOffset").GetUInt64 ());
 
 		var programHeaders = segments.Single (item => item.GetProperty ("Type").GetProperty ("Value").GetUInt32 () == 6);
-		Assert.Greater (programHeaders.GetProperty ("Offset").GetUInt64 (), 0);
-		Assert.LessOrEqual (programHeaders.GetProperty ("Offset").GetUInt64 () + programHeaders.GetProperty ("FileSize").GetUInt64 (), loadSize);
+		Assert.IsGreaterThan (0UL, programHeaders.GetProperty ("Offset").GetUInt64 ());
+		Assert.IsLessThanOrEqualTo (loadSize, programHeaders.GetProperty ("Offset").GetUInt64 () + programHeaders.GetProperty ("FileSize").GetUInt64 ());
 		var stack = segments.Single (item => item.GetProperty ("Type").GetProperty ("Value").GetUInt32 () == 0x6474e551);
 		Assert.AreEqual (6u, stack.GetProperty ("Flags").GetProperty ("Value").GetUInt32 (), "The stack must not be executable.");
 
@@ -195,7 +198,7 @@ public class AssemblyStoreElfWriterTests : BaseTest
 		Assert.AreEqual (dynamicSection.GetProperty ("Offset").GetUInt64 (), dynamicSegment.GetProperty ("Offset").GetUInt64 ());
 		Assert.AreEqual (dynamicSection.GetProperty ("Size").GetUInt64 (), dynamicSegment.GetProperty ("FileSize").GetUInt64 ());
 		Assert.AreEqual (dynamicSection.GetProperty ("Address").GetUInt64 (), dynamicSegment.GetProperty ("VirtualAddress").GetUInt64 ());
-		Assert.LessOrEqual (dynamicSegment.GetProperty ("Offset").GetUInt64 () + dynamicSegment.GetProperty ("FileSize").GetUInt64 (), loadSize);
+		Assert.IsLessThanOrEqualTo (loadSize, dynamicSegment.GetProperty ("Offset").GetUInt64 () + dynamicSegment.GetProperty ("FileSize").GetUInt64 ());
 
 		var tags = new Dictionary<ulong, ulong> ();
 		using (var reader = new BinaryReader (new MemoryStream (NativeToolTestHelper.ReadSection (library, ".dynamic")))) {
@@ -207,23 +210,24 @@ public class AssemblyStoreElfWriterTests : BaseTest
 		}
 		CollectionAssert.AreEquivalent (new ulong [] { 0, 4, 5, 6, 10, 11, 14 }, tags.Keys,
 			"No dependencies, relocations, constructors or other dynamic linker work.");
-		Assert.AreEqual (0, tags [0]);
-		Assert.AreEqual (is64Bit ? 24 : 16, tags [11]);
+		Assert.AreEqual (0UL, tags [0]);
+		Assert.AreEqual (is64Bit ? 24UL : 16UL, tags [11]);
 		Assert.AreEqual (sections [".hash"].GetProperty ("Address").GetUInt64 (), tags [4]);
 		Assert.AreEqual (sections [".dynstr"].GetProperty ("Address").GetUInt64 (), tags [5]);
 		Assert.AreEqual (sections [".dynsym"].GetProperty ("Address").GetUInt64 (), tags [6]);
 		byte [] strings = NativeToolTestHelper.ReadSection (library, ".dynstr");
-		Assert.AreEqual (strings.Length, tags [10]);
+		Assert.AreEqual ((ulong) strings.Length, tags [10]);
 		Assert.AreEqual (LibraryName + "\0", Encoding.UTF8.GetString (strings, (int)tags [14], strings.Length - (int)tags [14]));
 
 		using var hashReader = new BinaryReader (new MemoryStream (NativeToolTestHelper.ReadSection (library, ".hash")));
-		CollectionAssert.AreEqual (new uint [] { 1, 2, 1, 0, 0 }, Enumerable.Range (0, 5).Select (_ => hashReader.ReadUInt32 ()));
+		CollectionAssert.AreEqual (new uint [] { 1, 2, 1, 0, 0 }, Enumerable.Range (0, 5).Select (_ => hashReader.ReadUInt32 ()).ToArray ());
 		Assert.AreEqual (hashReader.BaseStream.Length, hashReader.BaseStream.Position);
 	}
 
-	[Test]
+	[TestMethod]
+	[CombinatorialData]
 	public void WritesMultipleNamedPayloads (
-		[Values (AndroidTargetArch.Arm, AndroidTargetArch.Arm64, AndroidTargetArch.X86, AndroidTargetArch.X86_64)] AndroidTargetArch arch)
+		[CombinatorialValues (AndroidTargetArch.Arm, AndroidTargetArch.Arm64, AndroidTargetArch.X86, AndroidTargetArch.X86_64)] AndroidTargetArch arch)
 	{
 		byte [] first = [1, 2, 3];
 		byte [] second = JniRemappingBinaryBlob.Wrap ([4, 5, 6, 7, 8], compress: true);
@@ -275,26 +279,26 @@ public class AssemblyStoreElfWriterTests : BaseTest
 			? BinaryPrimitives.ReadUInt64LittleEndian (image.AsSpan (entryOffset + 16, 8))
 			: BinaryPrimitives.ReadUInt32LittleEndian (image.AsSpan (entryOffset + 8, 4));
 		Assert.AreEqual (payloadOffset, value);
-		Assert.AreEqual (0, value % 4, "Every independently sized payload must be uint32-aligned.");
+		Assert.AreEqual (0UL, value % 4, "Every independently sized payload must be uint32-aligned.");
 		Assert.AreEqual ((ulong)payload.Length, size);
 		CollectionAssert.AreEqual (Encoding.UTF8.GetBytes (name + "\0"),
 			image.AsSpan (checked ((int)(stringsOffset + (ulong)nameOffset)), name.Length + 1).ToArray ());
 		CollectionAssert.AreEqual (payload, image.AsSpan (checked ((int)payloadOffset), payload.Length).ToArray ());
 	}
 
-	[Test]
+	[TestMethod]
 	public void MultiSymbolRejectsInvalidInputsBeforeWriting ()
 	{
 		using var first = new MemoryStream (new byte [] { 1 });
 		using var output = new MemoryStream ();
-		Assert.Throws<ArgumentException> (() => AssemblyStoreElfWriter.Write (
+		Assert.ThrowsExactly<ArgumentException> (() => AssemblyStoreElfWriter.Write (
 			new [] { ("xa_same", (Stream)first), ("xa_same", (Stream)first) }, output, AndroidTargetArch.Arm64, "libbinary_blobs.so"));
-		Assert.Throws<ArgumentException> (() => AssemblyStoreElfWriter.Write (
+		Assert.ThrowsExactly<ArgumentException> (() => AssemblyStoreElfWriter.Write (
 			new [] { ("bad\0name", (Stream)first) }, output, AndroidTargetArch.Arm64, "libbinary_blobs.so"));
-		Assert.Zero (output.Length);
+		Assert.AreEqual (0,output.Length);
 	}
 
-	[Test]
+	[TestMethod]
 	public void OutputIsDeterministicAndTruncatesPreviousContents ()
 	{
 		byte [] data = [1, 2, 3, 4, 5];
@@ -309,7 +313,7 @@ public class AssemblyStoreElfWriterTests : BaseTest
 		CollectionAssert.AreEqual (first.ToArray (), second.ToArray ());
 	}
 
-	[Test]
+	[TestMethod]
 	public void CopiesFromCurrentPositionAndLeavesStreamsOpen ()
 	{
 		using var payload = new MemoryStream (new byte [] { 1, 2, 3, 4, 5 });
@@ -320,63 +324,65 @@ public class AssemblyStoreElfWriterTests : BaseTest
 		Assert.AreEqual (payload.Length, payload.Position);
 		Assert.IsTrue (payload.CanRead);
 		Assert.IsTrue (output.CanWrite);
-		CollectionAssert.AreEqual (new byte [] { 3, 4, 5 }, output.ToArray ().Skip (16384).Take (3));
+		CollectionAssert.AreEqual (new byte [] { 3, 4, 5 }, output.ToArray ().Skip (16384).Take (3).ToArray ());
 	}
 
-	[Test]
+	[TestMethod]
 	public void EmptyPayloadIsRejected ()
 	{
 		using var source = new MemoryStream ();
 		using var output = new MemoryStream ();
-		Assert.Throws<InvalidDataException> (() => AssemblyStoreElfWriter.Write (source, output, AndroidTargetArch.Arm64, LibraryName));
+		Assert.ThrowsExactly<InvalidDataException> (() => AssemblyStoreElfWriter.Write (source, output, AndroidTargetArch.Arm64, LibraryName));
 		Assert.AreEqual (0, output.Length);
 	}
 
-	[TestCase (AndroidTargetArch.Arm, (long)uint.MaxValue)]
-	[TestCase (AndroidTargetArch.X86, (long)uint.MaxValue)]
-	[TestCase (AndroidTargetArch.Arm64, (long)uint.MaxValue + 1)]
-	[TestCase (AndroidTargetArch.X86_64, (long)uint.MaxValue + 1)]
+	[TestMethod]
+	[DataRow (AndroidTargetArch.Arm, (long)uint.MaxValue)]
+	[DataRow (AndroidTargetArch.X86, (long)uint.MaxValue)]
+	[DataRow (AndroidTargetArch.Arm64, (long)uint.MaxValue + 1)]
+	[DataRow (AndroidTargetArch.X86_64, (long)uint.MaxValue + 1)]
 	public void OversizedPayloadIsRejectedBeforeWriting (AndroidTargetArch arch, long length)
 	{
 		using var source = new OversizedPayloadStream (length);
 		using var output = new MemoryStream ();
-		Assert.Throws<NotSupportedException> (() => AssemblyStoreElfWriter.Write (source, output, arch, LibraryName));
+		Assert.ThrowsExactly<NotSupportedException> (() => AssemblyStoreElfWriter.Write (source, output, arch, LibraryName));
 		Assert.AreEqual (0, output.Length);
 	}
 
-	[Test]
+	[TestMethod]
 	public void UnsupportedArchitectureIsRejected ()
 	{
 		using var source = new MemoryStream (new byte [] { 1 });
 		using var output = new MemoryStream ();
-		Assert.Throws<NotSupportedException> (() => AssemblyStoreElfWriter.Write (source, output, (AndroidTargetArch)int.MaxValue, LibraryName));
+		Assert.ThrowsExactly<NotSupportedException> (() => AssemblyStoreElfWriter.Write (source, output, (AndroidTargetArch)int.MaxValue, LibraryName));
 		Assert.AreEqual (0, output.Length);
 	}
 
-	[TestCase ("")]
-	[TestCase ("lib\0store.so")]
+	[TestMethod]
+	[DataRow ("")]
+	[DataRow ("lib\0store.so")]
 	public void InvalidLibraryNameIsRejected (string libraryName)
 	{
 		using var source = new MemoryStream (new byte [] { 1 });
 		using var output = new MemoryStream ();
-		Assert.Throws<ArgumentException> (() => AssemblyStoreElfWriter.Write (source, output, AndroidTargetArch.Arm64, libraryName));
+		Assert.ThrowsExactly<ArgumentException> (() => AssemblyStoreElfWriter.Write (source, output, AndroidTargetArch.Arm64, libraryName));
 		Assert.AreEqual (0, output.Length);
 	}
 
-	[Test]
+	[TestMethod]
 	public void SameStreamIsRejectedBeforeWriting ()
 	{
 		using var stream = new MemoryStream (new byte [] { 1, 2, 3 });
-		Assert.Throws<ArgumentException> (() => AssemblyStoreElfWriter.Write (stream, stream, AndroidTargetArch.Arm64, LibraryName));
+		Assert.ThrowsExactly<ArgumentException> (() => AssemblyStoreElfWriter.Write (stream, stream, AndroidTargetArch.Arm64, LibraryName));
 		CollectionAssert.AreEqual (new byte [] { 1, 2, 3 }, stream.ToArray ());
 	}
 
-	[Test]
+	[TestMethod]
 	public void ChangingPayloadLengthIsRejected ()
 	{
 		using var source = new OversizedPayloadStream (10);
 		using var output = new MemoryStream ();
-		Assert.Throws<IOException> (() => AssemblyStoreElfWriter.Write (source, output, AndroidTargetArch.Arm64, LibraryName));
+		Assert.ThrowsExactly<IOException> (() => AssemblyStoreElfWriter.Write (source, output, AndroidTargetArch.Arm64, LibraryName));
 	}
 
 	sealed class OversizedPayloadStream : MemoryStream

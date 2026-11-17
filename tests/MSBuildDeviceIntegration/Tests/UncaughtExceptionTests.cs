@@ -4,14 +4,15 @@ using System.Diagnostics;
 using System.IO;
 using System.Text.RegularExpressions;
 using System.Threading;
-using NUnit.Framework;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Microsoft.VisualStudio.TestTools.UnitTesting.Combinatorial;
 using Xamarin.Android.Tasks;
 using Xamarin.ProjectTools;
 
 namespace Xamarin.Android.Build.Tests
 {
-	[TestFixture]
-	[Category ("UsesDevice")]
+	[TestClass]
+	[TestCategory ("UsesDevice")]
 	public class UncaughtExceptionTests : DeviceTest
 	{
 		class LogcatLine
@@ -22,8 +23,9 @@ namespace Xamarin.Android.Build.Tests
 			public int Count = 0;
 		};
 
-		[Test]
-		public void FatalManagedExceptionTerminatesProcess ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
+		[TestMethod]
+		[CombinatorialData]
+		public void FatalManagedExceptionTerminatesProcess ([CombinatorialValues (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			string packageName = PackageUtils.MakePackageName (runtime).ToLowerInvariant ();
 			var app = new XamarinAndroidApplicationProject (packageName: packageName) {
@@ -62,13 +64,14 @@ namespace Xamarin.Android.Build.Tests
 					onMonitoringStarted: () => StartActivityAndAssert (app)),
 					"The expected managed exception should have been logged.");
 			} finally {
-				Assert.Multiple (() => {
-					foreach (var property in deviceProperties) {
-						string value = property.Value.Replace ("'", "'\\''");
-						var (code, output, error) = RunAdbCommandWithExitCode ($"shell setprop {property.Key} '{value}'");
-						Assert.AreEqual (0, code, $"Could not restore {property.Key}: {output}{error}");
-					}
-				});
+				var restoreFailures = new List<string> ();
+				foreach (var property in deviceProperties) {
+					string value = property.Value.Replace ("'", "'\\''");
+					var (code, output, error) = RunAdbCommandWithExitCode ($"shell setprop {property.Key} '{value}'");
+					if (code != 0)
+						restoreFailures.Add ($"Could not restore {property.Key}: {output}{error}");
+				}
+				Assert.IsEmpty (restoreFailures, string.Join (Environment.NewLine, restoreFailures));
 			}
 			string remainingPids = "";
 			bool processExited = false;
@@ -90,23 +93,24 @@ namespace Xamarin.Android.Build.Tests
 				}
 				Thread.Sleep ((int) Math.Min (1000, Math.Max (0, (timeout - stopwatch.Elapsed).TotalMilliseconds)));
 			}
-			TestContext.Out.WriteLine (RunAdbCommand ("logcat -d -b crash"));
+			Console.Out.WriteLine (RunAdbCommand ("logcat -d -b crash"));
 
 			Assert.IsTrue (processExited,
 				$"A fatal managed exception should terminate {app.PackageName} within 30 seconds. Remaining PIDs: {remainingPids}");
 			var (logExitCode, logOutput, logError) = RunAdbCommandWithExitCode ("logcat -d");
 			Assert.AreEqual (0, logExitCode, $"Could not read logcat: {logError}");
-			StringAssert.IsMatch (@"\bW\s+DOTNET-gc\s*:\s+Overriding max JNI Global Reference count to 1234", logOutput,
+			Assert.MatchesRegex (@"\bW\s+DOTNET-gc\s*:\s+Overriding max JNI Global Reference count to 1234", logOutput,
 				"Native GC diagnostics should retain their warning level under the DOTNET-gc tag.");
-			StringAssert.IsMatch (@"\bI\s+DOTNET-timing\s*:\s+FatalExceptionTiming", logOutput,
+			Assert.MatchesRegex (@"\bI\s+DOTNET-timing\s*:\s+FatalExceptionTiming", logOutput,
 				"Managed timing diagnostics should use the DOTNET-timing tag when timing is enabled.");
 			Assert.IsFalse (logOutput.Contains (
 				"No implementation found for void mono.android.Runtime.propagateUncaughtException"),
 				"The uncaught exception handler should not call a missing native method.");
 		}
 
-		[Test]
-		public void EnsureUncaughtExceptionWorks ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
+		[TestMethod]
+		[CombinatorialData]
+		public void EnsureUncaughtExceptionWorks ([CombinatorialValues (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			bool isRelease = runtime == AndroidRuntime.NativeAOT;
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
@@ -253,7 +257,7 @@ namespace Scratch.JMJMException
 			string path = Path.Combine ("temp", TestName);
 			using (var libBuilder = CreateDllBuilder (Path.Combine (path, lib.ProjectName)))
 			using (var appBuilder = CreateApkBuilder (Path.Combine (path, app.ProjectName))) {
-				Assert.True (libBuilder.Build (lib), "Library should have built.");
+				Assert.IsTrue (libBuilder.Build (lib), "Library should have built.");
 				Assert.IsTrue (appBuilder.Install (app), "Install should have succeeded.");
 				ClearAdbLogcat ();
 

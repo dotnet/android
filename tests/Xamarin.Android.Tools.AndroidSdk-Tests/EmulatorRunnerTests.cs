@@ -7,16 +7,17 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using NUnit.Framework;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Xamarin.Android.Tools.Tests;
 
-[TestFixture]
+[TestClass]
 public class EmulatorRunnerTests
 {
-	[Test]
+	[TestMethod]
 	public void ParseListAvdsOutput_MultipleAvds ()
 	{
 		var output = "Pixel_7_API_35\nMAUI_Emulator\nNexus_5X\n";
@@ -29,14 +30,14 @@ public class EmulatorRunnerTests
 		Assert.AreEqual ("Nexus_5X", avds [2]);
 	}
 
-	[Test]
+	[TestMethod]
 	public void ParseListAvdsOutput_EmptyOutput ()
 	{
 		var avds = EmulatorRunner.ParseListAvdsOutput ("");
 		Assert.AreEqual (0, avds.Count);
 	}
 
-	[Test]
+	[TestMethod]
 	public void ParseListAvdsOutput_WindowsNewlines ()
 	{
 		var output = "Pixel_7_API_35\r\nMAUI_Emulator\r\n";
@@ -48,7 +49,7 @@ public class EmulatorRunnerTests
 		Assert.AreEqual ("MAUI_Emulator", avds [1]);
 	}
 
-	[Test]
+	[TestMethod]
 	public void ParseListAvdsOutput_BlankLines ()
 	{
 		var output = "\nPixel_7_API_35\n\n\nMAUI_Emulator\n\n";
@@ -58,24 +59,26 @@ public class EmulatorRunnerTests
 		Assert.AreEqual (2, avds.Count);
 	}
 
-	[TestCase (null)]
-	[TestCase ("")]
-	[TestCase ("   ")]
+	[TestMethod]
+	[DataRow (null)]
+	[DataRow ("")]
+	[DataRow ("   ")]
 	public void Constructor_ThrowsOnInvalidPath (string path)
 	{
-		Assert.Throws<ArgumentException> (() => new EmulatorRunner (path));
+		Assert.ThrowsExactly<ArgumentException> (() => new EmulatorRunner (path));
 	}
 
-	[TestCase (null)]
-	[TestCase ("")]
-	[TestCase ("   ")]
+	[TestMethod]
+	[DataRow (null)]
+	[DataRow ("")]
+	[DataRow ("   ")]
 	public void LaunchEmulator_ThrowsOnInvalidAvdName (string avdName)
 	{
 		var runner = new EmulatorRunner ("/fake/emulator");
-		Assert.Throws<ArgumentException> (() => runner.LaunchEmulator (avdName));
+		Assert.ThrowsExactly<ArgumentException> (() => runner.LaunchEmulator (avdName));
 	}
 
-	[Test]
+	[TestMethod]
 	public async Task CommandsCopySuppliedProcessEnvironment ()
 	{
 		var (tempDir, emuPath) = CreateFakeEmulatorSdk ();
@@ -92,7 +95,7 @@ public class EmulatorRunnerTests
 			startInfo.WorkingDirectory = Path.GetTempPath ();
 			startInfo.EnvironmentVariables ["EMULATOR_TEST_VALUE"] = "changed";
 
-			CollectionAssert.AreEqual (new [] { "TestAVD" }, await runner.ListAvdNamesAsync ());
+			CollectionAssert.AreEqual (new [] { "TestAVD" }, (await runner.ListAvdNamesAsync ()).ToArray ());
 			CollectionAssert.AreEqual (new [] { "original", "" }, File.ReadAllLines (marker));
 			File.Delete (marker);
 
@@ -105,7 +108,7 @@ public class EmulatorRunnerTests
 		}
 	}
 
-	[Test]
+	[TestMethod]
 	public async Task ConstructorPreservesInheritedEnvironmentAndWorkingDirectory ()
 	{
 		var (tempDir, emuPath) = CreateFakeEmulatorSdk ();
@@ -119,7 +122,7 @@ public class EmulatorRunnerTests
 			var inheritedValue = Environment.GetEnvironmentVariable (OS.IsWindows ? "USERNAME" : "HOME") ?? "";
 			var expected = new [] { "override", inheritedValue };
 
-			CollectionAssert.AreEqual (new [] { "TestAVD" }, await runner.ListAvdNamesAsync ());
+			CollectionAssert.AreEqual (new [] { "TestAVD" }, (await runner.ListAvdNamesAsync ()).ToArray ());
 			CollectionAssert.AreEqual (expected, File.ReadAllLines (marker));
 			File.Delete (marker);
 
@@ -133,7 +136,7 @@ public class EmulatorRunnerTests
 		}
 	}
 
-	[Test]
+	[TestMethod]
 	public async Task AlreadyOnlineDevice_PassesThrough ()
 	{
 		var devices = new List<AdbDeviceInfo> {
@@ -155,7 +158,7 @@ public class EmulatorRunnerTests
 		Assert.IsNull (result.ErrorMessage);
 	}
 
-	[Test]
+	[TestMethod]
 	public async Task AvdAlreadyRunning_WaitsForFullBoot ()
 	{
 		var devices = new List<AdbDeviceInfo> {
@@ -180,7 +183,7 @@ public class EmulatorRunnerTests
 		Assert.AreEqual ("emulator-5554", result.Serial);
 	}
 
-	[Test]
+	[TestMethod]
 	public async Task BootEmulator_AppearsAfterPolling ()
 	{
 		var devices = new List<AdbDeviceInfo> ();
@@ -225,15 +228,15 @@ public class EmulatorRunnerTests
 			Assert.IsTrue (pollCount >= 2);
 			Assert.IsTrue (await WaitForFileAsync (launchedPath, TimeSpan.FromSeconds (5)), "The fake emulator should log its arguments.");
 			var logged = File.ReadAllText (launchedPath);
-			Assert.That (logged, Does.Contain ("-avd Pixel_7_API_35"));
-			Assert.That (logged, Does.Contain ("-no-snapshot-load"));
-			Assert.That (logged, Does.Contain ("-gpu auto -no-audio"));
+			Assert.Contains ("-avd Pixel_7_API_35", logged);
+			Assert.Contains ("-no-snapshot-load", logged);
+			Assert.Contains ("-gpu auto -no-audio", logged);
 		} finally {
 			DeleteDirectoryWithRetry (tempDir);
 		}
 	}
 
-	[Test]
+	[TestMethod]
 	public async Task LaunchFailure_ReturnsError ()
 	{
 		var devices = new List<AdbDeviceInfo> ();
@@ -249,7 +252,7 @@ public class EmulatorRunnerTests
 		Assert.AreEqual (EmulatorBootErrorKind.LaunchFailed, result.ErrorKind);
 	}
 
-	[Test]
+	[TestMethod]
 	public async Task BootTimeout_BootCompletedNeverReaches1 ()
 	{
 		var devices = new List<AdbDeviceInfo> {
@@ -274,32 +277,33 @@ public class EmulatorRunnerTests
 		var result = await runner.BootEmulatorAsync ("Pixel_7_API_35", mockAdb, options);
 
 		Assert.IsFalse (result.Success);
-		Assert.That (result.ErrorMessage, Does.Contain ("Timed out"));
+		Assert.IsNotNull (result.ErrorMessage);
+		Assert.Contains ("Timed out", result.ErrorMessage);
 	}
 
-	[Test]
-	public void BootEmulatorAsync_InvalidBootTimeout_Throws ()
+	[TestMethod]
+	public async Task BootEmulatorAsync_InvalidBootTimeout_Throws ()
 	{
 		var runner = new EmulatorRunner ("/fake/emulator");
 		var mockAdb = new MockAdbRunner (new List<AdbDeviceInfo> ());
 		var options = new EmulatorBootOptions { BootTimeout = TimeSpan.Zero };
 
-		Assert.ThrowsAsync<ArgumentOutOfRangeException> (() =>
+		await Assert.ThrowsExactlyAsync<ArgumentOutOfRangeException> (() =>
 			runner.BootEmulatorAsync ("test", mockAdb, options));
 	}
 
-	[Test]
-	public void BootEmulatorAsync_InvalidPollInterval_Throws ()
+	[TestMethod]
+	public async Task BootEmulatorAsync_InvalidPollInterval_Throws ()
 	{
 		var runner = new EmulatorRunner ("/fake/emulator");
 		var mockAdb = new MockAdbRunner (new List<AdbDeviceInfo> ());
 		var options = new EmulatorBootOptions { PollInterval = TimeSpan.FromMilliseconds (-1) };
 
-		Assert.ThrowsAsync<ArgumentOutOfRangeException> (() =>
+		await Assert.ThrowsExactlyAsync<ArgumentOutOfRangeException> (() =>
 			runner.BootEmulatorAsync ("test", mockAdb, options));
 	}
 
-	[Test]
+	[TestMethod]
 	public async Task MultipleEmulators_FindsCorrectAvd ()
 	{
 		var devices = new List<AdbDeviceInfo> {
@@ -336,7 +340,7 @@ public class EmulatorRunnerTests
 		Assert.AreEqual ("emulator-5556", result.Serial, "Should find the correct AVD among multiple emulators");
 	}
 
-	[Test]
+	[TestMethod]
 	public async Task AlreadyOnlinePhysicalDevice_PassesThrough ()
 	{
 		// Physical devices have non-emulator serials (e.g., USB serial numbers).
@@ -360,7 +364,7 @@ public class EmulatorRunnerTests
 		Assert.IsNull (result.ErrorMessage);
 	}
 
-	[Test]
+	[TestMethod]
 	public async Task CancellationToken_AbortsBoot ()
 	{
 		// Verify that cancelling the token during the polling phase causes
@@ -388,7 +392,7 @@ public class EmulatorRunnerTests
 			} catch (OperationCanceledException) {
 				sw.Stop ();
 				// Should abort well before the 30s BootTimeout
-				Assert.That (sw.Elapsed.TotalSeconds, Is.LessThan (5),
+				Assert.IsLessThan (5, sw.Elapsed.TotalSeconds,
 					"Cancellation should abort within a few seconds, not wait for full timeout");
 			}
 		} finally {
@@ -396,27 +400,27 @@ public class EmulatorRunnerTests
 		}
 	}
 
-	[Test]
-	public void BootEmulatorAsync_NullAdbRunner_Throws ()
+	[TestMethod]
+	public async Task BootEmulatorAsync_NullAdbRunner_Throws ()
 	{
 		var runner = new EmulatorRunner ("/fake/emulator");
 
-		Assert.ThrowsAsync<ArgumentNullException> (() =>
+		await Assert.ThrowsExactlyAsync<ArgumentNullException> (() =>
 			runner.BootEmulatorAsync ("test", null!));
 	}
 
-	[Test]
-	public void BootEmulatorAsync_EmptyDeviceName_Throws ()
+	[TestMethod]
+	public async Task BootEmulatorAsync_EmptyDeviceName_Throws ()
 	{
 		var runner = new EmulatorRunner ("/fake/emulator");
 		var mockAdb = new MockAdbRunner (new List<AdbDeviceInfo> ());
 
-		Assert.ThrowsAsync<ArgumentException> (() =>
+		await Assert.ThrowsExactlyAsync<ArgumentException> (() =>
 			runner.BootEmulatorAsync ("", mockAdb));
 	}
 
-	[Test]
-	[Platform ("Linux,MacOsX")]
+	[TestMethod]
+	[OSCondition (OperatingSystems.Linux | OperatingSystems.OSX)]
 	public async Task LaunchEmulator_SurvivesSigint ()
 	{
 		var (tempDir, emuPath) = CreateFakeEmulatorSdk (keepRunning: true);
@@ -445,7 +449,7 @@ public class EmulatorRunnerTests
 		}
 	}
 
-	[Test]
+	[TestMethod]
 	public async Task InvalidEmulatorBinary_ReturnsLaunchFailed ()
 	{
 		var (tempDir, emuPath) = CreateFakeEmulatorSdk ();
@@ -471,14 +475,15 @@ public class EmulatorRunnerTests
 
 			Assert.IsFalse (result.Success);
 			Assert.AreEqual (EmulatorBootErrorKind.LaunchFailed, result.ErrorKind);
-			Assert.That (result.ErrorMessage, Does.Contain ("exited with code"));
+			Assert.IsNotNull (result.ErrorMessage);
+			Assert.Contains ("exited with code", result.ErrorMessage);
 		} finally {
 			Directory.Delete (tempDir, true);
 		}
 	}
 
-	[Test]
-	[Platform ("Linux,MacOsX")]
+	[TestMethod]
+	[OSCondition (OperatingSystems.Linux | OperatingSystems.OSX)]
 	public void ShellQuote_EscapesSingleQuotes ()
 	{
 		var tempDir = Path.Combine (Path.GetTempPath (), $"emu-quote-test-{Path.GetRandomFileName ()}");

@@ -9,18 +9,20 @@ using Microsoft.Android.Build.Tasks;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
 using Mono.Cecil;
-using NUnit.Framework;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Xamarin.Android.Tasks;
 using Xamarin.ProjectTools;
 
 namespace Xamarin.Android.Build.Tests
 {
-	[TestFixture]
+	[TestClass]
+	[DoNotParallelize]
 	public class MultiThreadedMigrationTests
 	{
-		[TestCase ("activity", ".First")]
-		[TestCase ("activity-alias", ".First")]
-		[TestCase ("service", null)]
+		[TestMethod]
+		[DataRow ("activity", ".First")]
+		[DataRow ("activity-alias", ".First")]
+		[DataRow ("service", null)]
 		public void GetAndroidActivityNamePreservesLauncherSelection (string elementName, string? expected)
 		{
 			var directory = Path.Combine (Path.GetTempPath (), Path.GetRandomFileName ());
@@ -54,7 +56,7 @@ namespace Xamarin.Android.Build.Tests
 			}
 		}
 
-		[Test]
+		[TestMethod]
 		public void PrepareSatelliteAssembliesPreservesMetadataAndOrder ()
 		{
 			var reference = new TaskItem (Path.Combine ("references", "fr", "Library.resources.dll"));
@@ -99,7 +101,7 @@ namespace Xamarin.Android.Build.Tests
 			}
 		}
 
-		[Test]
+		[TestMethod]
 		public void PrepareSatelliteAssembliesMissingCulture ()
 		{
 			var errors = new List<BuildErrorEventArgs> ();
@@ -112,10 +114,12 @@ namespace Xamarin.Android.Build.Tests
 			Assert.IsNull (task.ProcessedSatelliteAssemblies);
 			Assert.AreEqual (1, errors.Count);
 			Assert.AreEqual ("XAPSA7009", errors [0].Code);
-			StringAssert.Contains ("missing the 'Culture' metadata", errors [0].Message);
+			var message = errors [0].Message;
+			Assert.IsNotNull (message);
+			Assert.Contains ("missing the 'Culture' metadata", message);
 		}
 
-		[Test]
+		[TestMethod]
 		public void ReadLibraryProjectImportsCacheUsesProjectDirectory ()
 		{
 			var directory = Path.Combine (Path.GetTempPath (), Path.GetRandomFileName ());
@@ -135,8 +139,9 @@ namespace Xamarin.Android.Build.Tests
 			}
 		}
 
-		[TestCase ("")]
-		[TestCase ("missing.xml")]
+		[TestMethod]
+		[DataRow ("")]
+		[DataRow ("missing.xml")]
 		public void ReadLibraryProjectImportsCacheMissingFile (string cacheFile)
 		{
 			var task = new ReadLibraryProjectImportsCache {
@@ -149,7 +154,7 @@ namespace Xamarin.Android.Build.Tests
 			Assert.IsNull (task.Jars);
 		}
 
-		[Test]
+		[TestMethod]
 		public void MigratedTasksHaveDirectAttribute ()
 		{
 			string [] assemblies = [
@@ -162,7 +167,7 @@ namespace Xamarin.Android.Build.Tests
 			using var resolver = new DefaultAssemblyResolver ();
 			resolver.AddSearchDirectory (TestEnvironment.AndroidMSBuildDirectory);
 			resolver.AddSearchDirectory (Path.Combine (TestEnvironment.AndroidMSBuildDirectory, "net"));
-			resolver.AddSearchDirectory (TestContext.CurrentContext.TestDirectory);
+			resolver.AddSearchDirectory (AppContext.BaseDirectory);
 			resolver.AddSearchDirectory (RuntimeEnvironment.GetRuntimeDirectory ());
 			int migratedTasks = 0;
 			foreach (var name in assemblies) {
@@ -188,7 +193,7 @@ namespace Xamarin.Android.Build.Tests
 					}
 				}
 			}
-			Assert.Greater (migratedTasks, 0, "No migrated tasks were found in the SDK task assemblies.");
+			Assert.IsGreaterThan (0, migratedTasks, "No migrated tasks were found in the SDK task assemblies.");
 		}
 
 		static IEnumerable<string> GetBaseTypes (TypeDefinition type)

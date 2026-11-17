@@ -9,7 +9,7 @@
 - `src/Java.Interop/`, `src/Java.Interop.Tools.*/` - JNI bindings and Java-to-.NET interop tooling
 - `src/Microsoft.Android.Build.BaseTasks/` - Shared MSBuild task infrastructure: `AndroidTask`, `AsyncTask`, NRT extensions, and common file/process utilities
 - `src/Xamarin.Android.Tools.AndroidSdk/` - Shared Android SDK/JDK discovery, `AdbRunner`, `EmulatorRunner`, and SDK info utilities
-- `tests/` - NUnit tests, integration tests, device tests
+- `tests/` - MSTest tests, integration tests, device tests
 
 **Build System:** MSBuild + .NET Arcade SDK + CMake (native)
 

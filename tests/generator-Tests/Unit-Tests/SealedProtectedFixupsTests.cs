@@ -3,16 +3,16 @@ using System.Linq;
 using System.Xml.Linq;
 using Java.Interop.Tools.Generator.Transformation;
 using MonoDroid.Generation;
-using NUnit.Framework;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace generatortests
 {
-	[TestFixture]
+	[TestClassAttribute]
 	public class SealedProtectedFixupsTests
 	{
 		private CodeGenerationOptions options = new CodeGenerationOptions ();
 
-		[Test]
+		[TestMethodAttribute]
 		public void FixProtectedMethod ()
 		{
 			var klass = CreateSealedClass ();
@@ -29,7 +29,7 @@ namespace generatortests
 			Assert.AreEqual ("private", method.Visibility);
 		}
 
-		[Test]
+		[TestMethodAttribute]
 		public void FixProtectedProperty ()
 		{
 			var klass = CreateSealedClass ();
@@ -50,7 +50,7 @@ namespace generatortests
 			Assert.AreEqual ("private", method.Setter.Visibility);
 		}
 
-		[Test]
+		[TestMethodAttribute]
 		public void FixProtectedField ()
 		{
 			var klass = CreateSealedClass ();
@@ -68,7 +68,7 @@ namespace generatortests
 			Assert.AreEqual ("private", field.Visibility);
 		}
 
-		[Test]
+		[TestMethodAttribute]
 		public void FixProtectedType ()
 		{
 			var klass = CreateSealedClass ();

@@ -7,18 +7,17 @@ using System.Text;
 using Java.Interop.Tools.Generator;
 using Java.Interop.Tools.Generator.Enumification;
 using MonoDroid.Generation;
-using NUnit.Framework;
-using NUnit.Framework.Internal;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace generatortests
 {
-	[TestFixture]
+	[TestClassAttribute]
 	class EnumGeneratorTests : CodeGeneratorTestBase
 	{
 		protected new EnumGenerator generator;
 
-		[SetUp]
-		public new void SetUp ()
+		[TestInitialize]
+		public void SetUpEnumGenerator ()
 		{
 			builder = new StringBuilder ();
 			writer = new StringWriter (builder);
@@ -26,7 +25,7 @@ namespace generatortests
 			generator = new EnumGenerator (writer);
 		}
 
-		[Test]
+		[TestMethodAttribute]
 		public void WriteBasicEnum ()
 		{
 			var enu = CreateEnum ();
@@ -34,10 +33,10 @@ namespace generatortests
 
 			generator.WriteEnumeration (new CodeGenerationOptions (), enu, null);
 
-			Assert.AreEqual (GetExpected (nameof (WriteBasicEnum)), writer.ToString ().NormalizeLineEndings ());
+			Assert.AreEqual (GetExpectedEnum (nameof (WriteBasicEnum)), writer.ToString ().NormalizeLineEndings ());
 		}
 
-		[Test]
+		[TestMethodAttribute]
 		public void WriteFlagsEnum ()
 		{
 			var enu = CreateEnum ();
@@ -46,10 +45,10 @@ namespace generatortests
 
 			generator.WriteEnumeration (new CodeGenerationOptions (), enu, null);
 
-			Assert.AreEqual (GetExpected (nameof (WriteFlagsEnum)), writer.ToString ().NormalizeLineEndings ());
+			Assert.AreEqual (GetExpectedEnum (nameof (WriteFlagsEnum)), writer.ToString ().NormalizeLineEndings ());
 		}
 
-		[Test]
+		[TestMethodAttribute]
 		public void WriteEnumWithGens ()
 		{
 			var enu = CreateEnum ();
@@ -57,10 +56,10 @@ namespace generatortests
 
 			generator.WriteEnumeration (new CodeGenerationOptions (), enu, gens);
 			
-			Assert.AreEqual (GetExpected (nameof (WriteEnumWithGens)), writer.ToString ().NormalizeLineEndings ());
+			Assert.AreEqual (GetExpectedEnum (nameof (WriteEnumWithGens)), writer.ToString ().NormalizeLineEndings ());
 		}
 
-		[Test]
+		[TestMethodAttribute]
 		public void ObsoletedOSPlatformAttributeSupport ()
 		{
 			var xml = @"<api>
@@ -82,10 +81,10 @@ namespace generatortests
 			generator.WriteEnumeration (options, enu, gens.ToArray ());
 
 			// Ensure [ObsoletedOSPlatform] and [SupportedOSPlatform] are written
-			Assert.True (writer.ToString ().NormalizeLineEndings ().Contains ("[global::System.Runtime.Versioning.SupportedOSPlatformAttribute(\"android30.0\")][global::System.Runtime.Versioning.ObsoletedOSPlatform(\"android31.0\")]WithExcluded=1"), writer.ToString ());
+			Assert.IsTrue (writer.ToString ().NormalizeLineEndings ().Contains ("[global::System.Runtime.Versioning.SupportedOSPlatformAttribute(\"android30.0\")][global::System.Runtime.Versioning.ObsoletedOSPlatform(\"android31.0\")]WithExcluded=1"), writer.ToString ());
 		}
 
-		[Test]
+		[TestMethodAttribute]
 		public void ObsoleteAttributeSupport ()
 		{
 			var xml = @"<api>
@@ -105,10 +104,10 @@ namespace generatortests
 			generator.WriteEnumeration (options, enu, gens.ToArray ());
 
 			// Ensure [Obsolete] is written
-			Assert.True (writer.ToString ().NormalizeLineEndings ().Contains ("[global::System.Obsolete(@\"deprecated\")]WithExcluded=1"), writer.ToString ());
+			Assert.IsTrue (writer.ToString ().NormalizeLineEndings ().Contains ("[global::System.Obsolete(@\"deprecated\")]WithExcluded=1"), writer.ToString ());
 		}
 
-		[Test]
+		[TestMethodAttribute]
 		public void ObsoleteFieldButNotEnumAttributeSupport ()
 		{
 			var xml = @"<api>
@@ -128,10 +127,10 @@ namespace generatortests
 			generator.WriteEnumeration (options, enu, gens.ToArray ());
 
 			// [Obsolete] should not be written because the value isn't deprecated, just the _field_ is deprecated because we want people to use the enum instead
-			Assert.False (writer.ToString ().NormalizeLineEndings ().Contains ("[global::System.Obsolete(@\"deprecated\")]WithExcluded=1"), writer.ToString ());
+			Assert.IsFalse (writer.ToString ().NormalizeLineEndings ().Contains ("[global::System.Obsolete(@\"deprecated\")]WithExcluded=1"), writer.ToString ());
 		}
 
-		[Test]
+		[TestMethodAttribute]
 		public void ObsoletedOSPlatformAttributeOverrideSupport ()
 		{
 			var xml = @"<api>
@@ -155,10 +154,10 @@ namespace generatortests
 			generator.WriteEnumeration (options, enu, gens.ToArray ());
 
 			// The field itself is not deprecated, but [ObsoletedOSPlatform] should be written because we set `DeprecatedSince` on the enum map
-			Assert.True (writer.ToString ().NormalizeLineEndings ().Contains ("[global::System.Runtime.Versioning.ObsoletedOSPlatform(\"android33.0\")]WithExcluded=1"), writer.ToString ());
+			Assert.IsTrue (writer.ToString ().NormalizeLineEndings ().Contains ("[global::System.Runtime.Versioning.ObsoletedOSPlatform(\"android33.0\")]WithExcluded=1"), writer.ToString ());
 		}
 
-		[Test]
+		[TestMethodAttribute]
 		public void ObsoleteAccidentalAddition ()
 		{
 			var xml = @"<api>
@@ -182,10 +181,10 @@ namespace generatortests
 			generator.WriteEnumeration (options, enu, gens.ToArray ());
 
 			// "-1" is a "magic" API level which adds a message indicating the enum value shouldn't even exist
-			Assert.True (writer.ToString ().NormalizeLineEndings ().Contains ("[global::System.Obsolete(@\"Thisvaluewasincorrectlyaddedtotheenumerationandisnotavalidvalue\")]WithExcluded=1"), writer.ToString ());
+			Assert.IsTrue (writer.ToString ().NormalizeLineEndings ().Contains ("[global::System.Obsolete(@\"Thisvaluewasincorrectlyaddedtotheenumerationandisnotavalidvalue\")]WithExcluded=1"), writer.ToString ());
 		}
 
-		protected new string GetExpected (string testName)
+		string GetExpectedEnum (string testName)
 		{
 			var root = Path.GetDirectoryName (Assembly.GetExecutingAssembly ().Location);
 

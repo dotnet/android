@@ -99,3 +99,4 @@ steps:
     parameters:
       toolName: apkdiff
       version: $(ApkDiffToolVersion)
+

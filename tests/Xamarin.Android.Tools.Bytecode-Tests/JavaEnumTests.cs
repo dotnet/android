@@ -4,18 +4,18 @@ using System.Linq;
 
 using Xamarin.Android.Tools.Bytecode;
 
-using NUnit.Framework;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 using Assembly = System.Reflection.Assembly;
 
 namespace Xamarin.Android.Tools.BytecodeTests {
 
-	[TestFixture]
+	[TestClass]
 	public class JavaEnumTests : ClassFileFixture {
 
 		const string JavaType = "JavaEnum";
 
-		[Test]
+		[TestMethod]
 		public void ClassFileDescription ()
 		{
 			var c   = LoadClassFile (JavaType + ".class");
@@ -85,7 +85,7 @@ namespace Xamarin.Android.Tools.BytecodeTests {
 			}.Assert (c);
 		}
 
-		[Test]
+		[TestMethod]
 		public void XmlDescription ()
 		{
 			AssertXmlDeclaration (JavaType + ".class", JavaType + ".xml");

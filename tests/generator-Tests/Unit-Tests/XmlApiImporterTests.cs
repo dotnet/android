@@ -4,16 +4,16 @@ using System.Linq;
 using System.Xml.Linq;
 using Java.Interop.Tools.Generator;
 using MonoDroid.Generation;
-using NUnit.Framework;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace generatortests
 {
-	[TestFixture]
+	[TestClassAttribute]
 	public class XmlApiImporterTests
 	{
 		CodeGenerationOptions opt = new CodeGenerationOptions ();
 
-		[Test]
+		[TestMethodAttribute]
 		public void CreateClass_EnsureValidName ()
 		{
 			var xml = XDocument.Parse ("<package name=\"com.example.test\" jni-name=\"com/example/test\"><class name=\"$3\" /></package>");
@@ -22,7 +22,7 @@ namespace generatortests
 			Assert.AreEqual ("_3", klass.Name);
 		}
 
-		[Test]
+		[TestMethodAttribute]
 		public void CreateClass_CorrectApiSince ()
 		{
 			var xml = XDocument.Parse ("<package name='com.example.test' jni-name='com/example/test'><class name='myclass' api-since='7' /></package>");
@@ -31,7 +31,7 @@ namespace generatortests
 			Assert.AreEqual (7, klass.ApiAvailableSince.ApiLevel);
 		}
 
-		[Test]
+		[TestMethodAttribute]
 		public void CreateClass_CorrectApiSinceFromPackage ()
 		{
 			// Make sure we inherit it from <package>.
@@ -41,7 +41,7 @@ namespace generatortests
 			Assert.AreEqual (7, klass.ApiAvailableSince.ApiLevel);
 		}
 
-		[Test]
+		[TestMethodAttribute]
 		public void CreateClass_CorrectApiSinceOverridePackage ()
 		{
 			// Make sure we inherit it from <package>.
@@ -51,7 +51,7 @@ namespace generatortests
 			Assert.AreEqual (9, klass.ApiAvailableSince.ApiLevel);
 		}
 
-		[Test]
+		[TestMethodAttribute]
 		public void CreateClass_CorrectApiRemoved ()
 		{
 			var xml = XDocument.Parse ("<package name='com.example.test' jni-name='com/example/test'><class name='myclass' removed-since='7' /></package>");
@@ -60,7 +60,7 @@ namespace generatortests
 			Assert.AreEqual (7, klass.ApiRemovedSince.ApiLevel);
 		}
 
-		[Test]
+		[TestMethodAttribute]
 		public void CreateCtor_EnsureValidName ()
 		{
 			var xml = XDocument.Parse ("<package name=\"com.example.test\" jni-name=\"com/example/test\"><class name=\"test\"><constructor name=\"$3\" /></class></package>");
@@ -69,7 +69,7 @@ namespace generatortests
 			Assert.AreEqual ("_3", klass.Ctors[0].Name);
 		}
 
-		[Test]
+		[TestMethodAttribute]
 		public void CreateCtor_CorrectApiSince ()
 		{
 			var xml = XDocument.Parse ("<package name='com.example.test' jni-name='com/example/test'><class name='test'><constructor name='ctor' api-since='7' /></class></package>");
@@ -78,7 +78,7 @@ namespace generatortests
 			Assert.AreEqual (7, klass.Ctors [0].ApiAvailableSince.ApiLevel);
 		}
 
-		[Test]
+		[TestMethodAttribute]
 		public void CreateCtor_CorrectApiSinceFromClass ()
 		{
 			var xml = XDocument.Parse ("<package name='com.example.test' jni-name='com/example/test'><class name='test' api-since='7'><constructor name='ctor' /></class></package>");
@@ -87,7 +87,7 @@ namespace generatortests
 			Assert.AreEqual (7, klass.Ctors [0].ApiAvailableSince.ApiLevel);
 		}
 
-		[Test]
+		[TestMethodAttribute]
 		public void CreateCtor_CorrectDeprecatedSinceFromClass ()
 		{
 			var xml = XDocument.Parse ("<package name='com.example.test' jni-name='com/example/test'><class name='test' deprecated-since='7'><constructor name='ctor' deprecated-since='17' /></class></package>");
@@ -96,7 +96,7 @@ namespace generatortests
 			Assert.AreEqual (7, klass.Ctors [0].DeprecatedSince.Value.ApiLevel);
 		}
 
-		[Test]
+		[TestMethodAttribute]
 		public void CreateField_StudlyCaseName ()
 		{
 			var klass = new TestClass ("object", "MyNamespace.MyType");
@@ -106,7 +106,7 @@ namespace generatortests
 			Assert.AreEqual ("DesEdeCbc", field.Name);
 		}
 
-		[Test]
+		[TestMethodAttribute]
 		public void CreateField_EnsureValidName ()
 		{
 			var klass = new TestClass ("object", "MyNamespace.MyType");
@@ -116,7 +116,7 @@ namespace generatortests
 			Assert.AreEqual ("_3desEdeCbc", field.Name);
 		}
 
-		[Test]
+		[TestMethodAttribute]
 		public void CreateField_HandleDollarSign ()
 		{
 			var klass = new TestClass ("object", "MyNamespace.MyType");
@@ -126,7 +126,7 @@ namespace generatortests
 			Assert.AreEqual ("A_3", field.Name);
 		}
 
-		[Test]
+		[TestMethodAttribute]
 		public void CreateField_HandleDollarSignNumber ()
 		{
 			var klass = new TestClass ("object", "MyNamespace.MyType");
@@ -136,7 +136,7 @@ namespace generatortests
 			Assert.AreEqual ("_3", field.Name);
 		}
 
-		[Test]
+		[TestMethodAttribute]
 		public void CreateField_CorrectApiVersion ()
 		{
 			var klass = new TestClass ("object", "MyNamespace.MyType");
@@ -146,7 +146,7 @@ namespace generatortests
 			Assert.AreEqual (7, field.ApiAvailableSince.ApiLevel);
 		}
 
-		[Test]
+		[TestMethodAttribute]
 		public void CreateField_CorrectApiVersionFromClass ()
 		{
 			var klass = new TestClass ("object", "MyNamespace.MyType") { ApiAvailableSince = new AndroidSdkVersion (7) };
@@ -156,7 +156,7 @@ namespace generatortests
 			Assert.AreEqual (7, field.ApiAvailableSince.ApiLevel);
 		}
 
-		[Test]
+		[TestMethodAttribute]
 		public void CreateField_CorrectDeprecatedSinceFromClass ()
 		{
 			var xml = XDocument.Parse ("<package name='com.example.test' jni-name='com/example/test'><class name='test' deprecated-since='7'><field name='$3' deprecated-since='17' /></class></package>");
@@ -165,7 +165,7 @@ namespace generatortests
 			Assert.AreEqual (7, klass.Fields [0].DeprecatedSince.Value.ApiLevel);
 		}
 
-		[Test]
+		[TestMethodAttribute]
 		public void CreateInterface_EnsureValidName ()
 		{
 			var xml = XDocument.Parse ("<package name=\"com.example.test\" jni-name=\"com/example/test\"><interface name=\"$3\" /></package>");
@@ -174,7 +174,7 @@ namespace generatortests
 			Assert.AreEqual ("I_3", iface.Name);
 		}
 
-		[Test]
+		[TestMethodAttribute]
 		public void CreateInterface_CorrectApiSince ()
 		{
 			var xml = XDocument.Parse ("<package name='com.example.test' jni-name='com/example/test'><interface name='myclass' api-since='7' /></package>");
@@ -183,7 +183,7 @@ namespace generatortests
 			Assert.AreEqual (7, iface.ApiAvailableSince.ApiLevel);
 		}
 
-		[Test]
+		[TestMethodAttribute]
 		public void CreateInterface_CorrectApiSinceFromPackage ()
 		{
 			// Make sure we inherit it from <package>.
@@ -193,7 +193,7 @@ namespace generatortests
 			Assert.AreEqual (7, iface.ApiAvailableSince.ApiLevel);
 		}
 
-		[Test]
+		[TestMethodAttribute]
 		public void CreateInterface_CorrectApiSinceOverridePackage ()
 		{
 			// Make sure we inherit it from <package>.
@@ -203,7 +203,7 @@ namespace generatortests
 			Assert.AreEqual (9, iface.ApiAvailableSince.ApiLevel);
 		}
 
-		[Test]
+		[TestMethodAttribute]
 		public void CreateMethod_EnsureValidName ()
 		{
 			var xml = XDocument.Parse ("<package name=\"com.example.test\" jni-name=\"com/example/test\"><class name=\"test\"><method name=\"$3\" /></class></package>");
@@ -212,7 +212,7 @@ namespace generatortests
 			Assert.AreEqual ("_3", klass.Methods [0].Name);
 		}
 
-		[Test]
+		[TestMethodAttribute]
 		public void CreateMethod_EnsureValidNameHyphen ()
 		{
 			var xml = XDocument.Parse ("<package name=\"com.example.test\" jni-name=\"com/example/test\"><class name=\"test\"><method name=\"-3\" /></class></package>");
@@ -221,7 +221,7 @@ namespace generatortests
 			Assert.AreEqual ("_3", klass.Methods [0].Name);
 		}
 
-		[Test]
+		[TestMethodAttribute]
 		public void CreateMethod_CorrectApiSince ()
 		{
 			var xml = XDocument.Parse ("<package name='com.example.test' jni-name='com/example/test'><class name='test'><method name='-3' api-since='7' /></class></package>");
@@ -230,7 +230,7 @@ namespace generatortests
 			Assert.AreEqual (7, klass.Methods [0].ApiAvailableSince.ApiLevel);
 		}
 
-		[Test]
+		[TestMethodAttribute]
 		public void CreateMethod_CorrectApiSinceFromClass ()
 		{
 			var xml = XDocument.Parse ("<package name='com.example.test' jni-name='com/example/test'><class name='test' api-since='7'><method name='-3' /></class></package>");
@@ -239,7 +239,7 @@ namespace generatortests
 			Assert.AreEqual (7, klass.Methods [0].ApiAvailableSince.ApiLevel);
 		}
 
-		[Test]
+		[TestMethodAttribute]
 		public void CreateMethod_CorrectDeprecatedSinceFromClass ()
 		{
 			var xml = XDocument.Parse ("<package name='com.example.test' jni-name='com/example/test'><class name='test' deprecated-since='7'><method name='-3' deprecated-since='17' /></class></package>");
@@ -248,7 +248,7 @@ namespace generatortests
 			Assert.AreEqual (7, klass.Methods [0].DeprecatedSince.Value.ApiLevel);
 		}
 
-		[Test]
+		[TestMethodAttribute]
 		public void CreateMethod_JniSignatureOverride ()
 		{
 			var xml = XDocument.Parse ("<package name='com.example.test' jni-name='com/example/test'><class name='test'><method name='test' managed-jni-signature='(Ljava/lang/Object;)V' return='void'><parameter name='value' type='java.lang.String' managed-jni-type='Ljava/lang/CharSequence;' /></method></class></package>");
@@ -259,7 +259,7 @@ namespace generatortests
 			Assert.AreEqual ("Ljava/lang/CharSequence;", method.Parameters [0].JniType);
 		}
 
-		[Test]
+		[TestMethodAttribute]
 		public void CreateParameter_EnsureValidName ()
 		{
 			var xml = XDocument.Parse ("<parameter name=\"$3\" />");
@@ -268,16 +268,16 @@ namespace generatortests
 			Assert.AreEqual ("_3", p.Name);
 		}
 
-		[Test]
+		[TestMethodAttribute]
 		public void CreateParameter_NotNull ()
 		{
 			var xml = XDocument.Parse ("<parameter name=\"sender\" not-null=\"true\" />");
 			var p = XmlApiImporter.CreateParameter (xml.Root);
 
-			Assert.True (p.NotNull);
+			Assert.IsTrue (p.NotNull);
 		}
 
-		[Test]
+		[TestMethodAttribute]
 		public void PreserveSourceLineInfo ()
 		{
 			var xml = XDocument.Parse ("<package name=\"com.example.test\" jni-name=\"com/example/test\">\n<class name=\"test\">\n<method name=\"add-h-_1V8i\" final=\"false\" />\n</class>\n</package>", LoadOptions.SetBaseUri | LoadOptions.SetLineInfo);
@@ -294,7 +294,7 @@ namespace generatortests
 			Assert.AreEqual ("obj/Debug/api.xml", method.SourceFile);
 		}
 
-		[Test]
+		[TestMethodAttribute]
 		public void IgnoreKotlinInternalMembers ()
 		{
 			var xml = XDocument.Parse (@"
@@ -315,7 +315,7 @@ namespace generatortests
 			Assert.AreEqual (0, klass.Methods.Count);
 		}
 
-		[Test]
+		[TestMethodAttribute]
 		public void IgnoreTypesWithInvalidNames ()
 		{
 			var xml = XDocument.Parse (@"
@@ -334,7 +334,7 @@ namespace generatortests
 			Assert.AreEqual (0, gens.Count);
 		}
 
-		[Test]
+		[TestMethodAttribute]
 		public void IgnoreUserObfuscatedTypes ()
 		{
 			var xml = XDocument.Parse (@"
@@ -351,7 +351,7 @@ namespace generatortests
 			Assert.AreEqual (0, gens.Count);
 		}
 
-		[Test]
+		[TestMethodAttribute]
 		public void TransformNamespaces ()
 		{
 			var xml = XDocument.Parse (@"

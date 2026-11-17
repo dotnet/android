@@ -1,25 +1,27 @@
+using System;
 using System.IO;
-using NUnit.Framework;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Microsoft.Android.Tasks;
 
 namespace Xamarin.Android.Build.Tests;
 
-[TestFixture]
+[TestClass]
+[DoNotParallelize]
 public class GenerateCoreClrRuntimeProviderSourcesTests : BaseTest
 {
-	[Test]
+	[TestMethod]
 	public void GeneratesAdditionalProcessProvider ()
 	{
 		var outputDirectory = Path.Combine (Root, "temp", TestName, "android");
 		var task = new GenerateCoreClrRuntimeProviderSources {
-			BuildEngine = new MockBuildEngine (TestContext.Out),
+			BuildEngine = new MockBuildEngine (Console.Out),
 			AdditionalProviderSources = ["MonoRuntimeProvider_1"],
 			OutputDirectory = outputDirectory,
 		};
 
 		Assert.IsTrue (task.Execute (), "The additional provider should be generated.");
 		var provider = Path.Combine (outputDirectory, "src", "mono", "MonoRuntimeProvider_1.java");
-		FileAssert.Exists (provider);
-		StringAssert.Contains ("class MonoRuntimeProvider_1", File.ReadAllText (provider));
+		Assert.IsTrue (File.Exists (provider));
+		Assert.Contains ("class MonoRuntimeProvider_1", File.ReadAllText (provider));
 	}
 }

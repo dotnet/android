@@ -1,5 +1,6 @@
 using System;
-using NUnit.Framework;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Microsoft.VisualStudio.TestTools.UnitTesting.Combinatorial;
 using Xamarin.ProjectTools;
 using System.IO;
 using System.Linq;
@@ -11,13 +12,15 @@ using Xamarin.Android.Tasks;
 
 namespace Xamarin.Android.Build.Tests
 {
-	[TestFixture]
-	[Category ("UsesDevice")]
+	[TestClass]
+	[TestCategory ("UsesDevice")]
 	public class SystemApplicationTests : DeviceTest
 	{
 		// All Tests here require the emulator to be started with -writable-system
-		[Test, Category ("SystemApplication")]
-		public void SystemApplicationCanInstall ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
+		[TestMethod]
+		[CombinatorialData]
+		[TestCategory ("SystemApplication")]
+		public void SystemApplicationCanInstall ([CombinatorialValues (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			const bool isRelease = false;
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
@@ -42,7 +45,7 @@ namespace Xamarin.Android.Build.Tests
 			using (var b = CreateApkBuilder ()) {
 				proj.SetProperty ("AndroidSigningPlatformKey", Path.Combine (Root, b.ProjectDirectory, "platform.pk8"));
 				proj.SetProperty ("AndroidSigningPlatformCert", Path.Combine (Root, b.ProjectDirectory, "platform.x509.pem"));
-				Assert.True (b.Install (proj), "Project should have installed.");
+				Assert.IsTrue (b.Install (proj), "Project should have installed.");
 			}
 		}
 	}

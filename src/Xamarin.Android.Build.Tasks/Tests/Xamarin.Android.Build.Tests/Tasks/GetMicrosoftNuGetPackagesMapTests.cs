@@ -3,17 +3,19 @@
 using System;
 using System.IO;
 using System.Threading.Tasks;
-using NUnit.Framework;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Xamarin.Android.Tasks;
 
 namespace Xamarin.Android.Build.Tests
 {
+	[TestClass]
+	[DoNotParallelize]
 	public class GetMicrosoftNuGetPackagesMapTests
 	{
-		[Test]
+		[TestMethod]
 		public async Task NoCachedFile ()
 		{
-			var engine = new MockBuildEngine (TestContext.Out, []);
+			var engine = new MockBuildEngine (Console.Out, []);
 			var temp_cache_dir = Path.Combine (Path.GetTempPath (), Guid.NewGuid ().ToString ());
 			var today_file = Path.Combine (temp_cache_dir, $"microsoft-packages-{DateTime.Today:yyyyMMdd}.json");
 
@@ -34,11 +36,11 @@ namespace Xamarin.Android.Build.Tests
 			}
 		}
 
-		[Test]
+		[TestMethod]
 		public async Task CachedTodayFile ()
 		{
 			// If a file already exists for today, it should be used and nothing new should be downloaded
-			var engine = new MockBuildEngine (TestContext.Out, []);
+			var engine = new MockBuildEngine (Console.Out, []);
 			var temp_cache_dir = Path.Combine (Path.GetTempPath (), Guid.NewGuid ().ToString ());
 			var today_file = Path.Combine (temp_cache_dir, $"microsoft-packages-{DateTime.Today:yyyyMMdd}.json");
 
@@ -66,11 +68,11 @@ namespace Xamarin.Android.Build.Tests
 			}
 		}
 
-		[Test]
+		[TestMethod]
 		public async Task CachedYesterdayFile ()
 		{
 			// If a file only exists for yesterday, a new one should be downloaded and the old one should be deleted
-			var engine = new MockBuildEngine (TestContext.Out, []);
+			var engine = new MockBuildEngine (Console.Out, []);
 			var temp_cache_dir = Path.Combine (Path.GetTempPath (), Guid.NewGuid ().ToString ());
 			var yesterday_file = Path.Combine (temp_cache_dir, $"microsoft-packages-{DateTime.Today.AddDays (-1):yyyyMMdd}.json");
 			var today_file = Path.Combine (temp_cache_dir, $"microsoft-packages-{DateTime.Today:yyyyMMdd}.json");
@@ -95,11 +97,11 @@ namespace Xamarin.Android.Build.Tests
 			}
 		}
 
-		[Test]
+		[TestMethod]
 		public async Task MalformedFileName ()
 		{
 			// Make sure a malformed file name doesn't cause an exception, a new file should be downloaded and returned
-			var engine = new MockBuildEngine (TestContext.Out, []);
+			var engine = new MockBuildEngine (Console.Out, []);
 			var temp_cache_dir = Path.Combine (Path.GetTempPath (), Guid.NewGuid ().ToString ());
 			var malformed_file = Path.Combine (temp_cache_dir, $"microsoft-packages-dummy.json");
 			var today_file = Path.Combine (temp_cache_dir, $"microsoft-packages-{DateTime.Today:yyyyMMdd}.json");
@@ -131,7 +133,7 @@ namespace Xamarin.Android.Build.Tests
 		{
 			// If a file only exists for yesterday, but we fail to download a new file today, return
 			// the old file and don't delete it
-			var engine = new MockBuildEngine (TestContext.Out, []);
+			var engine = new MockBuildEngine (Console.Out, []);
 			var temp_cache_dir = Path.Combine (Path.GetTempPath (), Guid.NewGuid ().ToString ());
 			var yesterday_file = Path.Combine (temp_cache_dir, $"microsoft-packages-{DateTime.Today.AddDays (-1):yyyyMMdd}.json");
 

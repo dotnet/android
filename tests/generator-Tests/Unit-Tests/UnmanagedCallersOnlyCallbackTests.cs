@@ -2,7 +2,7 @@ using System;
 using System.Linq;
 using System.Reflection;
 using Mono.Cecil;
-using NUnit.Framework;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 using MonoDroid.Generation;
 
 namespace generatortests
@@ -11,7 +11,7 @@ namespace generatortests
 	/// Tests for the experimental direct-<c>[UnmanagedCallersOnly]</c> binding callback shape
 	/// enabled by <c>--lang-features=unmanaged-callers-only-callbacks</c>.
 	/// </summary>
-	[TestFixture]
+	[TestClassAttribute]
 	class UnmanagedCallersOnlyCallbackTests : CodeGeneratorTestBase
 	{
 		protected override CodeGenerationOptions CreateOptions () => new CodeGenerationOptions {
@@ -54,90 +54,90 @@ namespace generatortests
 			return GetGeneratedTypeOutput (gens.Single (g => g.Name == "Widget"));
 		}
 
-		[Test]
+		[TestMethodAttribute]
 		public void CallbacksAreUnmanagedCallersOnlyAndDropConnectors ()
 		{
 			var source = GenerateWidget ();
 
-			Assert.True (source.Contains ("[global::System.Runtime.InteropServices.UnmanagedCallersOnly]"), source);
+			Assert.IsTrue (source.Contains ("[global::System.Runtime.InteropServices.UnmanagedCallersOnly]"), source);
 
 			// No `cb_*` delegate cache fields and no `Get*Handler ()` connector methods.
-			Assert.False (source.Contains ("cb_onLayout"), source);
-			Assert.False (source.Contains ("static Delegate GetOnLayout_ZIIIIHandler ()"), source);
-			Assert.False (source.Contains ("static Delegate Get"), source);
+			Assert.IsFalse (source.Contains ("cb_onLayout"), source);
+			Assert.IsFalse (source.Contains ("static Delegate GetOnLayout_ZIIIIHandler ()"), source);
+			Assert.IsFalse (source.Contains ("static Delegate Get"), source);
 
 			// There is no connector method left to name, so the connector stores the callback name.
-			Assert.True (source.Contains ("\"onLayout\", \"(ZIIII)V\", \"n_OnLayout\""), source);
+			Assert.IsTrue (source.Contains ("\"onLayout\", \"(ZIIII)V\", \"n_OnLayout\""), source);
 		}
 
-		[Test]
+		[TestMethodAttribute]
 		public void AllScalarCallbackUsesTypedHelper ()
 		{
 			var source = GenerateWidget ();
 
 			// boolean marshals as a blittable `sbyte`, so the shape is 5 scalars returning void.
-			Assert.True (source.Contains (
+			Assert.IsTrue (source.Contains (
 				"global::Java.Interop.JniMarshalTyped.Invoke_SSSSSX<global::Com.Example.Widget, sbyte, int, int, int, int> (jnienv, native__this, native_changed, left, top, right, bottom, &global::Com.Example.Widget.m3);"),
 				source);
 
 			// The function-pointer target contains only the projection of the JNI scalars and the
 			// managed member invocation -- no JNI transition, no peer lookup, no exception handling.
-			Assert.True (source.Contains (
+			Assert.IsTrue (source.Contains (
 				"private static void m3 (global::Com.Example.Widget __this, sbyte native_changed, int left, int top, int right, int bottom)"),
 				source);
-			Assert.True (source.Contains ("var changed = native_changed != 0;"), source);
-			Assert.True (source.Contains ("__this.OnLayout (changed, left, top, right, bottom);"), source);
+			Assert.IsTrue (source.Contains ("var changed = native_changed != 0;"), source);
+			Assert.IsTrue (source.Contains ("__this.OnLayout (changed, left, top, right, bottom);"), source);
 		}
 
-		[Test]
+		[TestMethodAttribute]
 		public void PeerArgumentAndPeerReturnUseTypedHelper ()
 		{
 			var source = GenerateWidget ();
 
 			// The peer return is not a type argument: bound methods frequently have covariant
 			// returns, so the target is typed as IJavaObject. That also keeps the MethodSpec smaller.
-			Assert.True (source.Contains (
+			Assert.IsTrue (source.Contains (
 				"global::Java.Interop.JniMarshalTyped.Invoke_OSO<global::Com.Example.Widget, global::Com.Example.Peer, int> (jnienv, native__this, native_peer, flags, &global::Com.Example.Widget.m0);"),
 				source);
 
 			// The helper owns both the argument peer lookup and the JNI conversion of the result,
 			// so the target neither calls GetObject<T> () nor ToLocalJniHandle ().
-			Assert.True (source.Contains (
+			Assert.IsTrue (source.Contains (
 				"private static global::Android.Runtime.IJavaObject? m0 (global::Com.Example.Widget __this, global::Com.Example.Peer? peer, int flags)"),
 				source);
-			Assert.True (source.Contains ("return __this.Attach (peer, flags);"), source);
-			Assert.False (source.Contains ("m0 (IntPtr jnienv"), source);
+			Assert.IsTrue (source.Contains ("return __this.Attach (peer, flags);"), source);
+			Assert.IsFalse (source.Contains ("m0 (IntPtr jnienv"), source);
 		}
 
-		[Test]
+		[TestMethodAttribute]
 		public void StringShapesFallBackToRawSafeInvoke ()
 		{
 			var source = GenerateWidget ();
 
 			// Strings need JNI string marshaling the shared typed helper cannot own, so the callback
 			// stays [UnmanagedCallersOnly] but forwards to the raw SafeInvoke helper.
-			Assert.True (source.Contains (
+			Assert.IsTrue (source.Contains (
 				"global::Java.Interop.JniMarshal.SafeInvokeFunc (jnienv, native__this, native_label, &global::Com.Example.Widget.m2);"),
 				source);
-			Assert.False (source.Contains ("WaitForBridgeProcessing"), source);
-			Assert.True (source.Contains (
+			Assert.IsFalse (source.Contains ("WaitForBridgeProcessing"), source);
+			Assert.IsTrue (source.Contains (
 				"private static unsafe IntPtr m2 (IntPtr jnienv, IntPtr native__this, IntPtr native_label)"),
 				source);
-			Assert.True (source.Contains ("global::Java.Lang.Object.GetObject<global::Com.Example.Widget> (jnienv, native__this, JniHandleOwnership.DoNotTransfer)"), source);
+			Assert.IsTrue (source.Contains ("global::Java.Lang.Object.GetObject<global::Com.Example.Widget> (jnienv, native__this, JniHandleOwnership.DoNotTransfer)"), source);
 		}
 
-		[Test]
+		[TestMethodAttribute]
 		public void ScalarReturnUsesTypedHelper ()
 		{
 			var source = GenerateWidget ();
 
-			Assert.True (source.Contains (
+			Assert.IsTrue (source.Contains (
 				"global::Java.Interop.JniMarshalTyped.Invoke_S<global::Com.Example.Widget, int> (jnienv, native__this, &global::Com.Example.Widget.m1);"),
 				source);
-			Assert.True (source.Contains ("private static int m1 (global::Com.Example.Widget __this)"), source);
+			Assert.IsTrue (source.Contains ("private static int m1 (global::Com.Example.Widget __this)"), source);
 		}
 
-		[Test]
+		[TestMethodAttribute]
 		public void DefaultsAreUnchangedWhenFlagIsOff ()
 		{
 			options = new CodeGenerationOptions {
@@ -148,10 +148,10 @@ namespace generatortests
 
 			var source = GenerateWidget ();
 
-			Assert.False (source.Contains ("UnmanagedCallersOnly"), source);
-			Assert.False (source.Contains ("JniMarshalTyped"), source);
-			Assert.True (source.Contains ("cb_onLayout"), source);
-			Assert.True (source.Contains ("static Delegate GetOnLayout_ZIIIIHandler ()"), source);
+			Assert.IsFalse (source.Contains ("UnmanagedCallersOnly"), source);
+			Assert.IsFalse (source.Contains ("JniMarshalTyped"), source);
+			Assert.IsTrue (source.Contains ("cb_onLayout"), source);
+			Assert.IsTrue (source.Contains ("static Delegate GetOnLayout_ZIIIIHandler ()"), source);
 		}
 		/// <summary>
 		/// A class with several overloads of the same Java method, plus an interface whose members
@@ -207,56 +207,56 @@ namespace generatortests
 			return GenerateOverloads (type);
 		}
 
-		[Test]
+		[TestMethodAttribute]
 		public void CallbackNamesDoNotContainJavaSignatures ()
 		{
 			var source = GenerateWidget ();
 
 			foreach (var name in new [] { "n_OnLayout", "n_Attach", "n_Describe", "n_Count" })
-				Assert.True (source.Contains ($"static {(name == "n_Count" ? "int" : "void")} {name} (IntPtr jnienv") || source.Contains ($" {name} (IntPtr jnienv"), $"missing {name}\n{source}");
+				Assert.IsTrue (source.Contains ($"static {(name == "n_Count" ? "int" : "void")} {name} (IntPtr jnienv") || source.Contains ($" {name} (IntPtr jnienv"), $"missing {name}\n{source}");
 
 			// None of the escaped Java signatures the legacy format appends survive.
-			Assert.False (source.Contains ("n_OnLayout_ZIIII"), source);
-			Assert.False (source.Contains ("_Lcom_example_Peer_"), source);
-			Assert.False (source.Contains ("_Ljava_lang_String_"), source);
+			Assert.IsFalse (source.Contains ("n_OnLayout_ZIIII"), source);
+			Assert.IsFalse (source.Contains ("_Lcom_example_Peer_"), source);
+			Assert.IsFalse (source.Contains ("_Ljava_lang_String_"), source);
 		}
 
-		[Test]
+		[TestMethodAttribute]
 		public void DuplicateManagedNamesAreNumberedDeterministically ()
 		{
 			var source = GenerateOverloads ();
 
 			// Ordering is by the member's own signature, not by its position in the API
 			// description, so (I)V < (J)V < (Z)V.
-			Assert.True (source.Contains ("\"remove\", \"(I)V\", \"n_Remove\")"), source);
-			Assert.True (source.Contains ("\"remove\", \"(J)V\", \"n_Remove_1\")"), source);
-			Assert.True (source.Contains ("\"remove\", \"(Z)V\", \"n_Remove_2\")"), source);
+			Assert.IsTrue (source.Contains ("\"remove\", \"(I)V\", \"n_Remove\")"), source);
+			Assert.IsTrue (source.Contains ("\"remove\", \"(J)V\", \"n_Remove_1\")"), source);
+			Assert.IsTrue (source.Contains ("\"remove\", \"(Z)V\", \"n_Remove_2\")"), source);
 
 			// A name which is unique needs no suffix, and the numbering of an unrelated group does
 			// not shift it.
-			Assert.True (source.Contains ("\"clear\", \"()V\", \"n_Clear\")"), source);
+			Assert.IsTrue (source.Contains ("\"clear\", \"()V\", \"n_Clear\")"), source);
 
 			foreach (var name in new [] { "n_Remove", "n_Remove_1", "n_Remove_2", "n_Clear" })
-				Assert.True (source.Contains ($"static unsafe void {name} (IntPtr jnienv"), $"missing {name}\n{source}");
+				Assert.IsTrue (source.Contains ($"static unsafe void {name} (IntPtr jnienv"), $"missing {name}\n{source}");
 		}
 
-		[Test]
+		[TestMethodAttribute]
 		public void FunctionPointerTargetsAreOpaquePerTypeOrdinals ()
 		{
 			var source = GenerateOverloads ();
 
 			// Ordinals are assigned in the same deterministic order as the callbacks: Clear first
 			// (group names are ordered), then the three Remove overloads.
-			Assert.True (source.Contains ("private static void m0 (global::Com.Example.Registry __this)"), source);
-			Assert.True (source.Contains ("&global::Com.Example.Registry.m0);"), source);
+			Assert.IsTrue (source.Contains ("private static void m0 (global::Com.Example.Registry __this)"), source);
+			Assert.IsTrue (source.Contains ("&global::Com.Example.Registry.m0);"), source);
 
 			foreach (var target in new [] { "m1", "m2", "m3" })
-				Assert.True (source.Contains ($"&global::Com.Example.Registry.{target});"), $"missing &{target}\n{source}");
+				Assert.IsTrue (source.Contains ($"&global::Com.Example.Registry.{target});"), $"missing &{target}\n{source}");
 
-			Assert.False (source.Contains ("__n_"), source);
+			Assert.IsFalse (source.Contains ("__n_"), source);
 		}
 
-		[Test]
+		[TestMethodAttribute]
 		public void FunctionPointerTargetsDoNotCollideWithBoundMembers ()
 		{
 			const string api = """
@@ -274,14 +274,14 @@ namespace generatortests
 			var source = GetGeneratedTypeOutput (ParseApiDefinition (api).Single (g => g.Name == "Widget"));
 
 			CompileCallbacks (source);
-			Assert.True (source.Contains ("public virtual void m0 ()"), source);
-			Assert.True (source.Contains ("&global::Com.Example.Widget.m0_1);"), source);
-			Assert.True (source.Contains ("private static void m0_1 (global::Com.Example.Widget __this)"), source);
-			Assert.True (source.Contains ("[Register (\"work\", \"()V\", \"n_Work_1\")]"), source);
-			Assert.True (source.Contains ("static unsafe void n_Work_1 (IntPtr jnienv"), source);
+			Assert.IsTrue (source.Contains ("public virtual void m0 ()"), source);
+			Assert.IsTrue (source.Contains ("&global::Com.Example.Widget.m0_1);"), source);
+			Assert.IsTrue (source.Contains ("private static void m0_1 (global::Com.Example.Widget __this)"), source);
+			Assert.IsTrue (source.Contains ("[Register (\"work\", \"()V\", \"n_Work_1\")]"), source);
+			Assert.IsTrue (source.Contains ("static unsafe void n_Work_1 (IntPtr jnienv"), source);
 		}
 
-		[Test]
+		[TestMethodAttribute]
 		public void GenerationIsRepeatable ()
 		{
 			// A second generator run over the same API description must produce byte-identical
@@ -291,35 +291,35 @@ namespace generatortests
 			Assert.AreEqual (GenerateFromScratch ("IListener"), GenerateFromScratch ("IListener"));
 		}
 
-		[Test]
+		[TestMethodAttribute]
 		public void InterfaceConnectorsKeepTheirOwnerQualifier ()
 		{
 			var source = GenerateOverloads ("IListener");
 
 			// The compact name replaces only the Get*Handler segment; the invoker qualifier which
 			// tells a reader which type declares the callback is preserved verbatim.
-			Assert.True (source.Contains ("\"remove\", \"(I)V\", \"n_Remove:Com.Example.IListenerInvoker"), source);
-			Assert.True (source.Contains ("\"remove\", \"(J)V\", \"n_Remove_1:Com.Example.IListenerInvoker"), source);
+			Assert.IsTrue (source.Contains ("\"remove\", \"(I)V\", \"n_Remove:Com.Example.IListenerInvoker"), source);
+			Assert.IsTrue (source.Contains ("\"remove\", \"(J)V\", \"n_Remove_1:Com.Example.IListenerInvoker"), source);
 
 			// ... and the invoker really does declare callbacks under those names.
-			Assert.True (source.Contains ("static unsafe void n_Remove (IntPtr jnienv"), source);
-			Assert.True (source.Contains ("static unsafe void n_Remove_1 (IntPtr jnienv"), source);
+			Assert.IsTrue (source.Contains ("static unsafe void n_Remove (IntPtr jnienv"), source);
+			Assert.IsTrue (source.Contains ("static unsafe void n_Remove_1 (IntPtr jnienv"), source);
 		}
 
-		[Test]
+		[TestMethodAttribute]
 		public void JavaNamesAndSignaturesAreUnaffected ()
 		{
 			var source = GenerateOverloads ();
 
 			// Renaming managed callback infrastructure must not disturb the Java method name or
 			// JNI signature a JCW declares and RegisterNatives binds.
-			Assert.True (source.Contains ("[Register (\"remove\", \"(I)V\""), source);
-			Assert.True (source.Contains ("[Register (\"remove\", \"(J)V\""), source);
-			Assert.True (source.Contains ("[Register (\"remove\", \"(Z)V\""), source);
-			Assert.True (source.Contains ("[Register (\"clear\", \"()V\""), source);
+			Assert.IsTrue (source.Contains ("[Register (\"remove\", \"(I)V\""), source);
+			Assert.IsTrue (source.Contains ("[Register (\"remove\", \"(J)V\""), source);
+			Assert.IsTrue (source.Contains ("[Register (\"remove\", \"(Z)V\""), source);
+			Assert.IsTrue (source.Contains ("[Register (\"clear\", \"()V\""), source);
 		}
 
-		[Test]
+		[TestMethodAttribute]
 		public void LegacyOutputIsUnchangedWhenFlagIsOff ()
 		{
 			options = new CodeGenerationOptions {
@@ -332,11 +332,11 @@ namespace generatortests
 
 			// Legacy names still carry the escaped Java signature, and the connector still names a
 			// connector method rather than the callback.
-			Assert.True (source.Contains ("\"remove\", \"(I)V\", \"GetRemove_IHandler\")"), source);
-			Assert.True (source.Contains ("static unsafe void n_Remove_I (IntPtr jnienv"), source);
-			Assert.True (source.Contains ("static Delegate GetRemove_IHandler ()"), source);
-			Assert.False (source.Contains ("n_Remove_1"), source);
-			Assert.False (source.Contains ("&m0)"), source);
+			Assert.IsTrue (source.Contains ("\"remove\", \"(I)V\", \"GetRemove_IHandler\")"), source);
+			Assert.IsTrue (source.Contains ("static unsafe void n_Remove_I (IntPtr jnienv"), source);
+			Assert.IsTrue (source.Contains ("static Delegate GetRemove_IHandler ()"), source);
+			Assert.IsFalse (source.Contains ("n_Remove_1"), source);
+			Assert.IsFalse (source.Contains ("&m0)"), source);
 		}
 
 		const string CompilationSupport = """
@@ -374,14 +374,15 @@ namespace generatortests
 				"using System; using Android.Runtime; using Java.Interop; namespace Com.Example {\n" + source + "\n}",
 				CompilationSupport,
 			}, out var hasErrors, out var output, out assemblyImage);
-			Assert.False (hasErrors, output + "\n" + source);
+			Assert.IsFalse (hasErrors, output + "\n" + source);
 			return assembly;
 		}
 
-		[TestCase (false, false)]
-		[TestCase (false, true)]
-		[TestCase (true, false)]
-		[TestCase (true, true)]
+		[TestMethodAttribute]
+		[DataRow (false, false)]
+		[DataRow (false, true)]
+		[DataRow (true, false)]
+		[DataRow (true, true)]
 		public void PrimitiveParametersDoNotShadowCallbackTargets (bool isInterface, bool raw)
 		{
 			var element = isInterface ? "interface" : "class";
@@ -406,13 +407,13 @@ namespace generatortests
 			var owner = name + (isInterface ? "Invoker" : "");
 
 			var assembly = CompileCallbacks (source);
-			Assert.True (source.Contains ($"&global::Com.Example.{owner}.m0)"), source);
-			Assert.True (source.Contains (raw ? "JniMarshal.SafeInvokeAction" : "JniMarshalTyped.Invoke_SX"), source);
+			Assert.IsTrue (source.Contains ($"&global::Com.Example.{owner}.m0)"), source);
+			Assert.IsTrue (source.Contains (raw ? "JniMarshal.SafeInvokeAction" : "JniMarshalTyped.Invoke_SX"), source);
 			var callback = assembly.GetType ("Com.Example." + owner)?.GetMethod ("n_Work", BindingFlags.Static | BindingFlags.NonPublic);
 			Assert.IsNotNull (callback);
 		}
 
-		[Test]
+		[TestMethodAttribute]
 		public void InterfacePropertyTargetsUseInvokerOwner ()
 		{
 			var api = """
@@ -431,12 +432,13 @@ namespace generatortests
 			var gens = ParseApiDefinition (api);
 			var source = GetGeneratedTypeOutput (gens.Single (g => g.Name == "IWidget"));
 			CompileCallbacks (source);
-			Assert.True (source.Contains ("&global::Com.Example.IWidgetInvoker.m0)"), source);
-			Assert.True (source.Contains ("&global::Com.Example.IWidgetInvoker.m1)"), source);
+			Assert.IsTrue (source.Contains ("&global::Com.Example.IWidgetInvoker.m0)"), source);
+			Assert.IsTrue (source.Contains ("&global::Com.Example.IWidgetInvoker.m1)"), source);
 		}
 
-		[TestCase (false)]
-		[TestCase (true)]
+		[TestMethodAttribute]
+		[DataRow (false)]
+		[DataRow (true)]
 		public void InheritedInterfaceTargetsUseEmittedInvoker (bool raw)
 		{
 			var api = $$"""
@@ -459,12 +461,13 @@ namespace generatortests
 				GetGeneratedTypeOutput (gen);
 			var source = writer.ToString ();
 			CompileCallbacks (source);
-			Assert.True (source.Contains ("&global::Com.Example.IChildInvoker.m0)"), source);
-			Assert.True (source.Contains ("&global::Com.Example.IParentInvoker.m0)"), source);
+			Assert.IsTrue (source.Contains ("&global::Com.Example.IChildInvoker.m0)"), source);
+			Assert.IsTrue (source.Contains ("&global::Com.Example.IParentInvoker.m0)"), source);
 		}
 
-		[TestCase (false)]
-		[TestCase (true)]
+		[TestMethodAttribute]
+		[DataRow (false)]
+		[DataRow (true)]
 		public void DefaultInterfaceTargetsUseInterfaceOwner (bool raw)
 		{
 			options.SupportDefaultInterfaceMethods = true;
@@ -484,13 +487,14 @@ namespace generatortests
 			var gens = ParseApiDefinition (api);
 			var source = GetGeneratedTypeOutput (gens.Single (g => g.Name == "IWidget"));
 			CompileCallbacks (source);
-			Assert.True (source.Contains ("&global::Com.Example.IWidget.m0)"), source);
+			Assert.IsTrue (source.Contains ("&global::Com.Example.IWidget.m0)"), source);
 		}
 
-		[TestCase (true, false, false)]
-		[TestCase (true, true, false)]
-		[TestCase (false, false, false)]
-		[TestCase (true, false, true)]
+		[TestMethodAttribute]
+		[DataRow (true, false, false)]
+		[DataRow (true, true, false)]
+		[DataRow (false, false, false)]
+		[DataRow (true, false, true)]
 		public void AbstractPropertyOverridesReuseEmittingDeclaration (bool abstractBase, bool redeclareMiddle, bool genericBase)
 		{
 			const string property = """
@@ -534,16 +538,18 @@ namespace generatortests
 				Assert.IsNotNull (type);
 				var value = type.GetProperty ("Value", BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly);
 				Assert.IsNotNull (value);
-				Assert.Multiple (() => {
+#pragma warning disable MSTESTEXP // Preserve grouped assertions with the native preview API.
+				using (Assert.Scope ()) {
 					AssertInheritedConnector (assembly, value.GetMethod, (genericBase ? "GetGetValueHandler" : "n_GetValue") + ":Com.Example.Base, Callbacks", genericBase);
 					AssertInheritedConnector (assembly, value.SetMethod, (genericBase ? "GetSetValue_JHandler" : "n_SetValue_1") + ":Com.Example.Base, Callbacks", genericBase);
-				});
-				Assert.False (type.GetMethods (BindingFlags.Static | BindingFlags.NonPublic | BindingFlags.DeclaredOnly)
+				}
+#pragma warning restore MSTESTEXP
+				Assert.IsFalse (type.GetMethods (BindingFlags.Static | BindingFlags.NonPublic | BindingFlags.DeclaredOnly)
 					.Any (m => m.Name.StartsWith ("n_", StringComparison.Ordinal)), source);
 			}
 		}
 
-		[Test]
+		[TestMethodAttribute]
 		public void ImportedCallbackNamesMatchCompiledAssembly ()
 		{
 			const string baseApi = """
@@ -573,7 +579,7 @@ namespace generatortests
 			var importedParent = CecilApiImporter.CreateInterface (
 				baseDefinition.MainModule.GetType ("Com.Example.IParent"), importOptions);
 			foreach (var method in importedParent.Methods)
-				Assert.True (method.Validate (importOptions, new GenericParameterDefinitionList (), new CodeGeneratorContext ()));
+				Assert.IsTrue (method.Validate (importOptions, new GenericParameterDefinitionList (), new CodeGeneratorContext ()));
 			var parentType = baseAssembly.GetType ("Com.Example.IParent");
 			Assert.IsNotNull (parentType);
 			var importedCallbackNames = importedParent.Methods
@@ -600,8 +606,7 @@ namespace generatortests
 			Assert.AreEqual (!legacy, callback.GetCustomAttributesData ().Any (a => a.AttributeType.Name == "UnmanagedCallersOnlyAttribute"), connector);
 			if (!legacy) {
 				Assert.AreEqual (accessor.ReturnType, callback.ReturnType, connector);
-				CollectionAssert.AreEqual (accessor.GetParameters ().Select (p => p.ParameterType),
-					callback.GetParameters ().Skip (2).Select (p => p.ParameterType), connector);
+				CollectionAssert.AreEqual (accessor.GetParameters ().Select (p => p.ParameterType).ToArray (), callback.GetParameters ().Skip (2).Select (p => p.ParameterType).ToArray (), connector);
 			}
 		}
 	}

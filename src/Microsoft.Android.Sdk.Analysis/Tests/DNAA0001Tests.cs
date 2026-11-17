@@ -1,17 +1,17 @@
 ﻿using System;
-using NUnit.Framework;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis.Testing;
 using VerifyCS = CSharpCodeFixVerifier <CustomApplicationAnalyzer, CustomApplicationCodeFixProvider>;
 
-[TestFixture]
+[TestClass]
 public class DNAA0001Tests
 {
-	[Test]
-	[TestCase ("IntPtr", "JniHandleOwnership")]
-	[TestCase ("nint", "Android.Runtime.JniHandleOwnership")]
-	[TestCase ("global::System.IntPtr", "global::Android.Runtime.JniHandleOwnership")]
-	[TestCase ("System.IntPtr", "AR.JniHandleOwnership")]
+	[TestMethod]
+	[DataRow ("IntPtr", "JniHandleOwnership")]
+	[DataRow ("nint", "Android.Runtime.JniHandleOwnership")]
+	[DataRow ("global::System.IntPtr", "global::Android.Runtime.JniHandleOwnership")]
+	[DataRow ("System.IntPtr", "AR.JniHandleOwnership")]
 	public async Task DNAA0001DoesNotShowForExistingCode (string handle, string type)
 	{
 		var test = $@"
@@ -44,11 +44,11 @@ namespace Android.App {{
 ";
 		await VerifyCS.VerifyAnalyzerAsync (test);
 	}
-	[Test]
-	[TestCase ("IntPtr", "JniHandleOwnership")]
-	[TestCase ("nint", "Android.Runtime.JniHandleOwnership")]
-	[TestCase ("global::System.IntPtr", "global::Android.Runtime.JniHandleOwnership")]
-	[TestCase ("System.IntPtr", "AR.JniHandleOwnership")]
+	[TestMethod]
+	[DataRow ("IntPtr", "JniHandleOwnership")]
+	[DataRow ("nint", "Android.Runtime.JniHandleOwnership")]
+	[DataRow ("global::System.IntPtr", "global::Android.Runtime.JniHandleOwnership")]
+	[DataRow ("System.IntPtr", "AR.JniHandleOwnership")]
 	public async Task DNAA0001DoesNotShowForPrimaryConstructor (string handle, string type)
 	{
 		var test = $@"
@@ -79,7 +79,7 @@ namespace Android.App {{
 		await VerifyCS.VerifyAnalyzerAsync (test);
 	}
 
-	[Test]
+	[TestMethod]
 	public async Task DNAA0001DoesNotShowForOriginalIssueExample ()
 	{
 		var test = @"
@@ -111,7 +111,7 @@ namespace Android.App {
 		await VerifyCS.VerifyAnalyzerAsync (test);
 	}
 
-	[Test]
+	[TestMethod]
 	public async Task DNAA0001IsShownForInvalidPrimaryConstructor ()
 	{
 		var brokenCode = @"
@@ -144,7 +144,7 @@ namespace Android.App {
 		await VerifyCS.VerifyAnalyzerAsync (brokenCode, expected);
 	}
 
-	[Test]
+	[TestMethod]
 	public async Task DNAA0001IsShownForEmptyPrimaryConstructor ()
 	{
 		var brokenCode = @"
@@ -177,7 +177,7 @@ namespace Android.App {
 		await VerifyCS.VerifyAnalyzerAsync (brokenCode, expected);
 	}
 
-	[Test]
+	[TestMethod]
 	public async Task DNAA0001IsShownWhenUsingFullyQualifiedType ()
 	{
 		var brokenCode = @"
@@ -209,7 +209,7 @@ namespace Android.App {
 		await VerifyCS.VerifyAnalyzerAsync (brokenCode, expected);
 	}
 
-	[Test]
+	[TestMethod]
 	public async Task DNAA0001IsShownWhen ()
 	{
 		var brokenCode = @"
@@ -242,7 +242,7 @@ namespace Android.App {
 		await VerifyCS.VerifyAnalyzerAsync (brokenCode, expected);
 	}
 
-	[Test]
+	[TestMethod]
 	public async Task DNAA0001IsFixed()
 	{
 		var brokenCode = @"

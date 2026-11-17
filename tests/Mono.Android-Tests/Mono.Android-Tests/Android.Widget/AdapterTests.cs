@@ -251,8 +251,7 @@ namespace Android.WidgetTests {
 		 *		at android.widget.AbsListView.initAbsListView(AbsListView.java:812)
 		 *		at android.widget.AbsListView.<init>(AbsListView.java:753)
 		 *		at xamarin.android.runtimetests.CanOverrideAbsListView_Adapter.<init>(CanOverrideAbsListView_Adapter.java:22)
-		 *		at xamarin.android.nunitlite.TestSuiteInstrumentation.n_onStart(Native Method)
-		 *		at xamarin.android.nunitlite.TestSuiteInstrumentation.onStart(TestSuiteInstrumentation.java:52)
+		 *		...
 		 *		at android.app.Instrumentation$InstrumentationThread.run(Instrumentation.java:1701)
 		 */
 		public CanOverrideAbsListView_Adapter (IntPtr handle, JniHandleOwnership transfer)

@@ -124,28 +124,20 @@ and path for the proper version of `dotnet`.
 
 ## Running Unit Tests
 
-All NUnit-based unit tests can be executed via
+Host test projects are MSTest apps on Microsoft.Testing.Platform; the
+repository `global.json` selects it for `dotnet test`. Run a built test
+assembly with `dotnet-local.cmd`:
 
-    dotnet-local.cmd build Microsoft.Android.slnx /t:RunNUnitTests
+    dotnet-local.cmd test bin\TestRelease\net11.0\Xamarin.Android.Build.Tests.dll
 
-### Listing NUnit Tests
+List the tests with `--list-tests`, and select tests with `--filter`:
 
-In order to get a list of the tests you can use the `ListNUnitTests` target
-
-    dotnet-local.cmd build Microsoft.Android.slnx /t:ListNUnitTests
-
-This will produce a list of the tests in all of the test assemblies.
-
-### Running Specific NUnit Tests
-
-You can run then a single (or a group) of tests using the `$(TEST)` MSBuild property.
-
-    dotnet-local.cmd build Microsoft.Android.slnx /t:RunNUnitTests /p:TEST=Xamarin.Android.Build.Tests.Aapt2Tests.Aapt2Compile
+    dotnet-local.cmd test bin\TestRelease\net11.0\Xamarin.Android.Build.Tests.dll --filter "FullyQualifiedName~Xamarin.Android.Build.Tests.Aapt2Tests.Aapt2Compile"
 
 ## Running On-Device Tests
 
 The on-device test apps are ordinary `dotnet test` projects that run their
-NUnit tests inside an Android instrumentation. Install the app, then run the
+MSTest tests inside an Android instrumentation. Install the app, then run the
 tests against the attached device or emulator:
 
     dotnet-local.cmd build -t:Install -c Release tests\Mono.Android-Tests\Mono.Android-Tests\Mono.Android.NET-Tests.csproj
@@ -172,7 +164,7 @@ not establish that every intended test ran. Normal TRX reporting is unchanged.
 
 ### Running On-Device Tests with Include/Exclude
 
-If an on-device test uses the NUnit `[Category]` custom attribute, then those
+If an on-device test uses the MSTest `[TestCategory]` attribute, then those
 tests can be explicitly included or excluded from execution by setting the
 `$(IncludeCategories)` or `$(ExcludeCategories)` MSBuild properties when
 building the test app. These flow to the on-device instrumentation through

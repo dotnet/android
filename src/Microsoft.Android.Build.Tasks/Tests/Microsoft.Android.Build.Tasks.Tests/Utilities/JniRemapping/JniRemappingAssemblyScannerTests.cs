@@ -13,16 +13,17 @@ using Microsoft.Build.Utilities;
 using Microsoft.Android.Tasks;
 using Cecil = Mono.Cecil;
 using Mono.Cecil.Cil;
-using NUnit.Framework;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 using Microsoft.Android.Tasks.JniRemapping;
 
 namespace Xamarin.Android.Build.Tests
 {
-	[TestFixture]
+	[TestClass]
+	[DoNotParallelize]
 	public class JniRemappingAssemblyScannerTests : BaseTest
 	{
-		[Test]
+		[TestMethod]
 		public void RecordsOnlyMappingsReferencedBySurvivingMetadata ()
 		{
 			string path = CreateAssembly (p => CreateFixture (p));
@@ -39,14 +40,15 @@ namespace Xamarin.Android.Build.Tests
 				"C\tcom/contoso/Peer",
 				"M\tcom/contoso/Peer\tonClick():void",
 				"F\tcom/contoso/Peer\tvalue",
-			}, mapping.AccessedEntries);
+			}, mapping.AccessedEntries.ToArray ());
 		}
 
-		[TestCase ("System.Runtime.InteropServices", "System.Runtime", false)]
-		[TestCase ("System.Runtime.InteropServices", "System.Runtime", true)]
-		[TestCase ("System.Private.CoreLib", "System.Private.CoreLib", false)]
-		[TestCase ("System.Runtime.InteropServices", "System.Private.CoreLib", true)]
-		[TestCase ("System.Private.CoreLib", "System.Runtime", true)]
+		[TestMethod]
+		[DataRow ("System.Runtime.InteropServices", "System.Runtime", false)]
+		[DataRow ("System.Runtime.InteropServices", "System.Runtime", true)]
+		[DataRow ("System.Private.CoreLib", "System.Private.CoreLib", false)]
+		[DataRow ("System.Runtime.InteropServices", "System.Private.CoreLib", true)]
+		[DataRow ("System.Private.CoreLib", "System.Runtime", true)]
 		public void TypeMapAttributeRetainsOnlyClassMapping (string attributeAssembly, string typeAssembly, bool localAnchor)
 		{
 			string path = CreateAssembly (p => CreateTypeMapFixture (p,
@@ -61,20 +63,21 @@ namespace Xamarin.Android.Build.Tests
 
 			CollectionAssert.AreEquivalent (new [] {
 				"C\tcom/contoso/ProxyPeer",
-			}, mapping.AccessedEntries);
+			}, mapping.AccessedEntries.ToArray ());
 			CollectionAssert.AreEqual (originalBytes, File.ReadAllBytes (path));
 		}
 
-		[TestCase ("System.Runtime.InteropServices", "System.Runtime", false, false)]
-		[TestCase ("System.Private.CoreLib", "System.Private.CoreLib", false, false)]
-		[TestCase ("System.Runtime.InteropServices", "System.Private.CoreLib", false, false)]
-		[TestCase ("System.Private.CoreLib", "System.Runtime", true, false)]
-		[TestCase ("System.Private.CoreLib", "System.Private.CoreLib", true, false)]
-		[TestCase ("System.Runtime.InteropServices", "System.Runtime", false, true)]
-		[TestCase ("System.Private.CoreLib", "System.Private.CoreLib", false, true)]
-		[TestCase ("System.Runtime.InteropServices", "System.Private.CoreLib", false, true)]
-		[TestCase ("System.Private.CoreLib", "System.Runtime", true, true)]
-		[TestCase ("System.Private.CoreLib", "System.Private.CoreLib", true, true)]
+		[TestMethod]
+		[DataRow ("System.Runtime.InteropServices", "System.Runtime", false, false)]
+		[DataRow ("System.Private.CoreLib", "System.Private.CoreLib", false, false)]
+		[DataRow ("System.Runtime.InteropServices", "System.Private.CoreLib", false, false)]
+		[DataRow ("System.Private.CoreLib", "System.Runtime", true, false)]
+		[DataRow ("System.Private.CoreLib", "System.Private.CoreLib", true, false)]
+		[DataRow ("System.Runtime.InteropServices", "System.Runtime", false, true)]
+		[DataRow ("System.Private.CoreLib", "System.Private.CoreLib", false, true)]
+		[DataRow ("System.Runtime.InteropServices", "System.Private.CoreLib", false, true)]
+		[DataRow ("System.Private.CoreLib", "System.Runtime", true, true)]
+		[DataRow ("System.Private.CoreLib", "System.Private.CoreLib", true, true)]
 		public void SurvivingClassOnlyTypeMapProducesBothDirections (string attributeAssembly, string typeAssembly, bool localAnchor, bool includeTargetType)
 		{
 			string path = CreateAssembly (p => CreateTypeMapFixture (p, "com/contoso/Marker",
@@ -88,22 +91,23 @@ namespace Xamarin.Android.Build.Tests
 				    void unused() -> f
 
 				""");
-			var root = XDocument.Parse (xml).Root ?? throw new AssertionException ("Generated XML has no root.");
+			var root = XDocument.Parse (xml).Root ?? throw new AssertFailedException ("Generated XML has no root.");
 			CollectionAssert.AreEquivalent (new [] { "replace-type", "reverse-type" },
-				root.Elements ().Select (element => element.Name.LocalName));
-			var forward = root.Element ("replace-type") ?? throw new AssertionException ("Missing forward type mapping.");
+				root.Elements ().Select (element => element.Name.LocalName).ToArray ());
+			var forward = root.Element ("replace-type") ?? throw new AssertFailedException ("Missing forward type mapping.");
 			Assert.AreEqual ("com/contoso/Marker", (string?) forward.Attribute ("from"));
 			Assert.AreEqual ("a/b", (string?) forward.Attribute ("to"));
-			var reverse = root.Element ("reverse-type") ?? throw new AssertionException ("Missing reverse type mapping.");
+			var reverse = root.Element ("reverse-type") ?? throw new AssertFailedException ("Missing reverse type mapping.");
 			Assert.AreEqual ("a/b", (string?) reverse.Attribute ("from"));
 			Assert.AreEqual ("com/contoso/Marker", (string?) reverse.Attribute ("to"));
 			CollectionAssert.AreEqual (originalBytes, File.ReadAllBytes (path));
 		}
 
-		[TestCase (false, false)]
-		[TestCase (false, true)]
-		[TestCase (true, false)]
-		[TestCase (true, true)]
+		[TestMethod]
+		[DataRow (false, false)]
+		[DataRow (false, true)]
+		[DataRow (true, false)]
+		[DataRow (true, true)]
 		public void TypeMapWithSurvivingMetadataRetainsOnlyReferencedMembers (bool localAnchor, bool includeTargetType)
 		{
 			string path = CreateAssembly (p => CreateTypeMapFixture (p, localAnchor: localAnchor,
@@ -124,9 +128,9 @@ namespace Xamarin.Android.Build.Tests
 				"C\tcom/contoso/ProxyPeer",
 				"M\tcom/contoso/ProxyPeer\tonClick():void",
 				"F\tcom/contoso/ProxyPeer\tvalue",
-			}, mapping.AccessedEntries);
+			}, mapping.AccessedEntries.ToArray ());
 			var root = XDocument.Parse (Generate (path, mappingText)).Root
-				?? throw new AssertionException ("Generated XML has no root.");
+				?? throw new AssertFailedException ("Generated XML has no root.");
 			Assert.AreEqual (1, root.Elements ("replace-type").Count ());
 			Assert.AreEqual (1, root.Elements ("reverse-type").Count ());
 			var method = root.Elements ("replace-method").Single ();
@@ -137,30 +141,31 @@ namespace Xamarin.Android.Build.Tests
 				root.Elements ("replace-field").Select (field => (
 					(string?) field.Attribute ("source-field-name"),
 					(string?) field.Attribute ("source-field-signature"),
-					(string?) field.Attribute ("target-field-name"))));
+					(string?) field.Attribute ("target-field-name"))).ToArray ());
 			CollectionAssert.AreEqual (originalBytes, File.ReadAllBytes (path));
 		}
 
-		[TestCase ("System.Runtime.InteropServices", "System.Runtime")]
-		[TestCase ("System.Private.CoreLib", "System.Private.CoreLib")]
+		[TestMethod]
+		[DataRow ("System.Runtime.InteropServices", "System.Runtime")]
+		[DataRow ("System.Private.CoreLib", "System.Private.CoreLib")]
 		public void UnrelatedTypeMapUniverseIsNotParsedAsJni (string attributeAssembly, string typeAssembly)
 		{
 			string path = CreateAssembly (p => CreateTypeMapFixture (p,
 				"System.Collections.Generic.IDictionary`2[System.Boolean,System.Boolean]",
 				attributeAssembly: attributeAssembly, typeAssembly: typeAssembly, groupName: "JavaDictionary"));
 			var mapping = Scan (path, "com.contoso.ProxyPeer -> a.b:\n");
-			CollectionAssert.IsEmpty (mapping.AccessedEntries);
+			Assert.IsEmpty (mapping.AccessedEntries);
 		}
 
-		[Test]
+		[TestMethod]
 		public void UnrelatedMethodAttributesAreNotDecoded ()
 		{
 			string path = CreateAssembly (p => CreateFixture (p, unrelatedAttributes: true));
 			var mapping = Scan (path, "com.contoso.Peer -> a.b:\n    void onClick() -> c\n");
-			CollectionAssert.Contains (mapping.AccessedEntries, "M\tcom/contoso/Peer\tonClick():void");
+			CollectionAssert.Contains (mapping.AccessedEntries.ToArray (), "M\tcom/contoso/Peer\tonClick():void");
 		}
 
-		[Test]
+		[TestMethod]
 		public void NameOnlyFieldMetadataRetainsEveryDescriptorVariant ()
 		{
 			string path = CreateAssembly (p => CreateFixture (p));
@@ -170,24 +175,24 @@ namespace Xamarin.Android.Build.Tests
 				    java.lang.String value -> d
 
 				""");
-			StringAssert.Contains ("source-field-signature=\"I\"", xml);
-			StringAssert.Contains ("source-field-signature=\"Ljava/lang/String;\"", xml);
-			StringAssert.Contains ("target-field-name=\"c\"", xml);
-			StringAssert.Contains ("target-field-name=\"d\"", xml);
+			Assert.Contains ("source-field-signature=\"I\"", xml);
+			Assert.Contains ("source-field-signature=\"Ljava/lang/String;\"", xml);
+			Assert.Contains ("target-field-name=\"c\"", xml);
+			Assert.Contains ("target-field-name=\"d\"", xml);
 		}
 
-		[Test]
-		[NUnit.Framework.Category ("ILLink")]
+		[TestMethod]
+		[TestCategory ("ILLink")]
 		public void RealLinkedTypeMapUsesImplementationIdentities ()
 		{
-			string? linker = TestContext.Parameters ["ILLinkPath"];
-			string? frameworkDirectory = TestContext.Parameters ["ILLinkFrameworkDirectory"];
+			string? linker = TestContext.Properties.TryGetValue ("ILLinkPath", out var linkerValue) ? linkerValue as string : null;
+			string? frameworkDirectory = TestContext.Properties.TryGetValue ("ILLinkFrameworkDirectory", out var frameworkValue) ? frameworkValue as string : null;
 			if (string.IsNullOrEmpty (linker) || string.IsNullOrEmpty (frameworkDirectory)) {
-				Assert.Ignore ("Supply ILLinkPath and ILLinkFrameworkDirectory to exercise actual linked metadata.");
+				Assert.Inconclusive ("Supply ILLinkPath and ILLinkFrameworkDirectory to exercise actual linked metadata.");
 				return;
 			}
 			string path = CreateAssembly (p => CreateTypeMapFixture (p, "com/contoso/Marker", localAnchor: true), "_Fixture.TypeMap.dll");
-			string linkedDirectory = Path.Combine (Path.GetDirectoryName (path) ?? throw new AssertionException ("Fixture has no directory."), "linked");
+			string linkedDirectory = Path.Combine (Path.GetDirectoryName (path) ?? throw new AssertFailedException ("Fixture has no directory."), "linked");
 			string dotnet = Environment.GetEnvironmentVariable ("DOTNET_HOST_PATH") ?? "dotnet";
 			var info = new ProcessStartInfo (dotnet,
 				$"\"{linker}\" -reference \"{path}\" -a _Fixture.TypeMap all -d \"{frameworkDirectory}\" " +
@@ -199,7 +204,7 @@ namespace Xamarin.Android.Build.Tests
 				CreateNoWindow = true,
 				WindowStyle = ProcessWindowStyle.Hidden,
 			};
-			TestContext.Out.WriteLine ($"Process.RunAndCaptureText: {info.FileName} {info.Arguments}");
+			Console.Out.WriteLine ($"Process.RunAndCaptureText: {info.FileName} {info.Arguments}");
 			var result = Process.RunAndCaptureText (info, TimeSpan.FromSeconds (120));
 			Assert.IsFalse (result.ExitStatus.Canceled, $"Process timed out after 120 seconds.{Environment.NewLine}{result.StandardOutput}{result.StandardError}");
 			Assert.AreEqual (0, result.ExitStatus.ExitCode, result.StandardOutput.Trim () + result.StandardError.Trim ());
@@ -210,39 +215,41 @@ namespace Xamarin.Android.Build.Tests
 				Assert.AreEqual ("System.Private.CoreLib", attribute.Constructor.Parameters [1].ParameterType.Scope.Name);
 			}
 			string xml = Generate (linkedFile, "com.contoso.Marker -> a.b:\n");
-			StringAssert.Contains ("""<replace-type from="com/contoso/Marker" to="a/b" />""", xml);
-			StringAssert.Contains ("""<reverse-type from="a/b" to="com/contoso/Marker" />""", xml);
+			Assert.Contains ("""<replace-type from="com/contoso/Marker" to="a/b" />""", xml);
+			Assert.Contains ("""<reverse-type from="a/b" to="com/contoso/Marker" />""", xml);
 		}
 
-		[TestCase ("com/contoso/ProxyPeer[+1]", true)]
-		[TestCase ("com/contoso/ProxyPeer[ 1]", true)]
-		[TestCase ("com/contoso/ProxyPeer[1]", false)]
+		[TestMethod]
+		[DataRow ("com/contoso/ProxyPeer[+1]", true)]
+		[DataRow ("com/contoso/ProxyPeer[ 1]", true)]
+		[DataRow ("com/contoso/ProxyPeer[1]", false)]
 		public void TypeMapAttributeValidatesAliasSuffix (string key, bool throws)
 		{
 			string path = CreateAssembly (p => CreateTypeMapFixture (p, key));
 			void ScanFixture () => Scan (path, "com.contoso.ProxyPeer -> a.b:\n");
 
 			if (throws) {
-				Assert.Throws<BadImageFormatException> (ScanFixture);
+				Assert.ThrowsExactly<BadImageFormatException> (ScanFixture);
 			} else {
-				Assert.DoesNotThrow (ScanFixture);
+				ScanFixture ();
 			}
 		}
 
-		[Test]
+		[TestMethod]
 		public void TypeMapAttributeValidatesConstructorSignature ()
 		{
 			string path = CreateAssembly (p => CreateTypeMapFixture (p, "com/contoso/ProxyPeer", includeTypeArgument: false));
-			Assert.Throws<BadImageFormatException> (() => Scan (path, "com.contoso.ProxyPeer -> a.b:\n"));
+			Assert.ThrowsExactly<BadImageFormatException> (() => Scan (path, "com.contoso.ProxyPeer -> a.b:\n"));
 		}
 
-		[TestCase (false)]
-		[TestCase (true)]
+		[TestMethod]
+		[DataRow (false)]
+		[DataRow (true)]
 		public void IgnoresUserDefinedTypeMapAttribute (bool localDefinition)
 		{
 			string path = CreateAssembly (p => CreateTypeMapFixture (p, attributeAssembly: "User", userDefinedAttribute: localDefinition));
 			var mapping = Scan (path, "com.contoso.ProxyPeer -> a.b:\n");
-			CollectionAssert.IsEmpty (mapping.AccessedEntries);
+			Assert.IsEmpty (mapping.AccessedEntries);
 		}
 
 		string CreateAssembly (Action<string> createFixture, string fileName = "Linked.dll")
@@ -257,7 +264,7 @@ namespace Xamarin.Android.Build.Tests
 		R8Mapping Scan (string path, string mappingText)
 		{
 			var mapping = R8Mapping.Parse (new StringReader (mappingText));
-			var task = new GenerateR8JniRemapping { BuildEngine = new MockBuildEngine (TestContext.Out) };
+			var task = new GenerateR8JniRemapping { BuildEngine = new MockBuildEngine (Console.Out) };
 			using var stream = File.OpenRead (path);
 			using var peReader = new PEReader (stream);
 			JniRemappingAssemblyScanner.Scan (peReader.GetMetadataReader (), mapping, new TaskLoggingHelper (task));
@@ -266,12 +273,12 @@ namespace Xamarin.Android.Build.Tests
 
 		string Generate (string path, string mappingText)
 		{
-			string directory = Path.GetDirectoryName (path) ?? throw new AssertionException ("Fixture has no directory.");
+			string directory = Path.GetDirectoryName (path) ?? throw new AssertFailedException ("Fixture has no directory.");
 			string mappingFile = Path.Combine (directory, "mapping.txt");
 			File.WriteAllText (mappingFile, mappingText);
 			string outputFile = Path.Combine (directory, "remap.xml");
 			var task = new GenerateR8JniRemapping {
-				BuildEngine = new MockBuildEngine (TestContext.Out),
+				BuildEngine = new MockBuildEngine (Console.Out),
 				MappingFile = mappingFile, OutputFile = outputFile, LinkedAssemblies = [new TaskItem (path)],
 			};
 			Assert.IsTrue (task.Execute ());
@@ -308,7 +315,7 @@ namespace Xamarin.Android.Build.Tests
 				var enumConstructor = typeof (EditorBrowsableAttribute).GetConstructor ([typeof (EditorBrowsableState)]);
 				var typeConstructor = typeof (TypeConverterAttribute).GetConstructor ([typeof (Type)]);
 				if (enumConstructor == null || typeConstructor == null) {
-					throw new AssertionException ("Fixture attribute constructors were not found.");
+					throw new AssertFailedException ("Fixture attribute constructors were not found.");
 				}
 				var enumAttribute = new Cecil.CustomAttribute (module.ImportReference (enumConstructor));
 				enumAttribute.ConstructorArguments.Add (new Cecil.CustomAttributeArgument (

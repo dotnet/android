@@ -3,20 +3,21 @@ using System.IO;
 using System.Linq;
 using System.Xml.Linq;
 
-using NUnit.Framework;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Microsoft.VisualStudio.TestTools.UnitTesting.Combinatorial;
 
 namespace Xamarin.Android.Build.Tests;
 
-[TestFixture]
-[Parallelizable (ParallelScope.Children)]
+[TestClass]
 public class DesignTimeResourceTargetsTests : BaseTest
 {
-	[Test]
+	[TestMethod]
+	[CombinatorialData]
 	public void ResourcePipelineAndJavaValidationSkipDesignTimeBuilds (
-		[Values ("Windows_NT", "Unix")] string os,
-		[Values ("true", "False")] string designTimeBuild,
-		[Values] bool useDesignerAssembly,
-		[Values] bool buildingInsideVisualStudio)
+		[CombinatorialValues ("Windows_NT", "Unix")] string os,
+		[CombinatorialValues ("true", "False")] string designTimeBuild,
+		bool useDesignerAssembly,
+		bool buildingInsideVisualStudio)
 	{
 		string directory = Path.Combine (Root, "temp", TestName);
 		Directory.CreateDirectory (directory);

@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using Microsoft.Build.Framework;
-using NUnit.Framework;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Microsoft.Android.Tasks;
 using Xamarin.Android.Tasks;
 using Xamarin.Android.Tools;
@@ -12,11 +12,11 @@ namespace Xamarin.Android.Build.Tests
 {
 	public partial class FastDeployTests
 	{
-		[Test]
+		[TestMethod]
 		public void FastDeployReusesDeviceSelectedByDebuggingTasks ()
 		{
 			string adbToolPath = Path.Combine (Path.GetTempPath (), "missing-" + Guid.NewGuid ().ToString ("N"));
-			IBuildEngine4 engine = new MockBuildEngine (TestContext.Out);
+			IBuildEngine4 engine = new MockBuildEngine (Console.Out);
 			engine.RegisterTaskObject (AndroidHelper.GetDeviceCacheKey ("-s emulator-5554", adbToolPath, "adb", TaskEnvironment.Fallback), new object [] {
 				"emulator-5554", "sdk_gphone64_arm64", (int) AdbDeviceType.Emulator, (int) AdbDeviceStatus.Online, null,
 				"sdk_gphone64_arm64", "sdk_gphone64_arm64", "emu64a", "1", "emulator-5554 device transport_id:1",
@@ -42,13 +42,13 @@ namespace Xamarin.Android.Build.Tests
 			Assert.AreEqual ("emulator-5554 device transport_id:1", device.LongOutput);
 		}
 
-		[Test]
+		[TestMethod]
 		public void FastDeployReusesMissingDeviceSelectedByDebuggingTasks ()
 		{
 			string adbToolPath = Path.Combine (Path.GetTempPath (), "missing-" + Guid.NewGuid ().ToString ("N"));
 			var errors = new List<BuildErrorEventArgs> ();
 			var messages = new List<BuildMessageEventArgs> ();
-			var engine = new MockBuildEngine (TestContext.Out, errors, messages: messages);
+			var engine = new MockBuildEngine (Console.Out, errors, messages: messages);
 			// adb does not exist, so this caches "no device".
 			((IBuildEngine4) engine).RegisterTaskObject (AndroidHelper.GetDeviceCacheKey ("", adbToolPath, "adb", TaskEnvironment.Fallback), new object [0], RegisteredTaskObjectLifetime.Build, false);
 
@@ -61,7 +61,7 @@ namespace Xamarin.Android.Build.Tests
 			Assert.IsFalse (task.Execute ());
 			Assert.IsTrue (messages.Any (m => m.Message == "Using cached value from RegisterTaskObject"));
 			CollectionAssert.AreEqual (new [] { Xamarin.Android.Build.Debugging.Tasks.Properties.Resources.XA0010_NoDevice },
-				errors.Select (e => e.Message));
+				errors.Select (e => e.Message).ToArray ());
 		}
 	}
 }

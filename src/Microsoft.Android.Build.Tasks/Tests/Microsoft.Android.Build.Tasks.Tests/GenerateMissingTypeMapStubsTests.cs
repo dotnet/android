@@ -1,17 +1,17 @@
+using System;
 using System.IO;
 using System.Linq;
 using System.Reflection.Metadata;
 using System.Reflection.PortableExecutable;
 using Microsoft.Android.Tasks;
 using Microsoft.Build.Framework;
-using NUnit.Framework;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Xamarin.Android.Build.Tests {
-	[TestFixture]
-	[Parallelizable (ParallelScope.Children)]
+	[TestClass]
 	public class GenerateMissingTypeMapStubsTests : BaseTest {
 
-		[Test]
+		[TestMethod]
 		public void Execute_TrimmedTypeMap_GeneratesLoadableStub ()
 		{
 			var path = Path.Combine (Root, "temp", TestName);
@@ -30,7 +30,7 @@ namespace Xamarin.Android.Build.Tests {
 			File.WriteAllText (Path.Combine (linkedDir, "_Microsoft.Android.TypeMaps.dll"), "survivor-root");
 
 			var task = new GenerateMissingTypeMapStubs {
-				BuildEngine = new MockBuildEngine (TestContext.Out),
+				BuildEngine = new MockBuildEngine (Console.Out),
 				TypeMapDirectory = typeMapDir,
 				LinkedAssembliesDirectory = linkedDir,
 				RootTypeMapAssemblyName = "_Microsoft.Android.TypeMaps",
@@ -44,7 +44,7 @@ namespace Xamarin.Android.Build.Tests {
 			Assert.AreEqual (1, stubs.Length, "Exactly one stub should be generated.");
 			var stubPath = Path.Combine (linkedDir, "_Trimmed.TypeMap.dll");
 			CollectionAssert.Contains (stubs, stubPath);
-			FileAssert.Exists (stubPath);
+			Assert.IsTrue (File.Exists (stubPath));
 
 			Assert.AreEqual ("survivor", File.ReadAllText (Path.Combine (linkedDir, "_Kept.TypeMap.dll")),
 				"A surviving typemap must not be overwritten.");
@@ -60,7 +60,7 @@ namespace Xamarin.Android.Build.Tests {
 			Assert.AreEqual ("_Trimmed.TypeMap", assemblyName, "Stub assembly name should match the trimmed typemap.");
 		}
 
-		[Test]
+		[TestMethod]
 		public void Execute_NothingTrimmed_GeneratesNoStubs ()
 		{
 			var path = Path.Combine (Root, "temp", TestName);
@@ -73,7 +73,7 @@ namespace Xamarin.Android.Build.Tests {
 			File.WriteAllText (Path.Combine (linkedDir, "_Kept.TypeMap.dll"), "survivor");
 
 			var task = new GenerateMissingTypeMapStubs {
-				BuildEngine = new MockBuildEngine (TestContext.Out),
+				BuildEngine = new MockBuildEngine (Console.Out),
 				TypeMapDirectory = typeMapDir,
 				LinkedAssembliesDirectory = linkedDir,
 				RootTypeMapAssemblyName = "_Microsoft.Android.TypeMaps",

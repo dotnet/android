@@ -84,14 +84,30 @@ stages:
           $(System.DefaultWorkingDirectory)/tests/Xamarin.Android.Tools.Benchmarks/Xamarin.Android.Tools.Benchmarks.csproj
         arguments: -c Debug $(XatBuildProperties) -bl:$(Build.ArtifactStagingDirectory)/build-windows.binlog
 
-    - task: DotNetCoreCLI@2
-      displayName: Run Tests
+    - script: >-
+        dotnet test
+        --project $(System.DefaultWorkingDirectory)/tests/Microsoft.Android.Build.BaseTasks-Tests/Microsoft.Android.Build.BaseTasks-Tests.csproj
+        -c Debug $(XatBuildProperties)
+        --report-trx --results-directory $(Agent.TempDirectory)/TestResults
+      displayName: Run Microsoft.Android.Build.BaseTasks-Tests
+
+    - script: >-
+        dotnet test
+        --project $(System.DefaultWorkingDirectory)/tests/Xamarin.Android.Tools.AndroidSdk-Tests/Xamarin.Android.Tools.AndroidSdk-Tests.csproj
+        -c Debug $(XatBuildProperties)
+        --report-trx --results-directory $(Agent.TempDirectory)/TestResults
+      displayName: Run Xamarin.Android.Tools.AndroidSdk-Tests
+      condition: succeededOrFailed()
+
+    - task: PublishTestResults@2
+      displayName: Publish test results
+      condition: succeededOrFailed()
       inputs:
-        command: test
-        projects: |
-          $(System.DefaultWorkingDirectory)/tests/Microsoft.Android.Build.BaseTasks-Tests/Microsoft.Android.Build.BaseTasks-Tests.csproj
-          $(System.DefaultWorkingDirectory)/tests/Xamarin.Android.Tools.AndroidSdk-Tests/Xamarin.Android.Tools.AndroidSdk-Tests.csproj
-        arguments: -c Debug $(XatBuildProperties)
+        testResultsFormat: VSTest
+        searchFolder: $(Agent.TempDirectory)/TestResults
+        testResultsFiles: '*.trx'
+        mergeTestResults: true
+        testRunTitle: Android Tools Tests - $(Agent.OS)
 
     - ${{ if eq(parameters.use1ESTemplate, false) }}:
       - task: PublishBuildArtifacts@1
@@ -136,14 +152,30 @@ stages:
           $(System.DefaultWorkingDirectory)/tests/Xamarin.Android.Tools.Benchmarks/Xamarin.Android.Tools.Benchmarks.csproj
         arguments: -c Debug $(XatBuildProperties) -bl:$(Build.ArtifactStagingDirectory)/build-mac.binlog
 
-    - task: DotNetCoreCLI@2
-      displayName: Run Tests
+    - script: >-
+        dotnet test
+        --project $(System.DefaultWorkingDirectory)/tests/Microsoft.Android.Build.BaseTasks-Tests/Microsoft.Android.Build.BaseTasks-Tests.csproj
+        -c Debug $(XatBuildProperties)
+        --report-trx --results-directory $(Agent.TempDirectory)/TestResults
+      displayName: Run Microsoft.Android.Build.BaseTasks-Tests
+
+    - script: >-
+        dotnet test
+        --project $(System.DefaultWorkingDirectory)/tests/Xamarin.Android.Tools.AndroidSdk-Tests/Xamarin.Android.Tools.AndroidSdk-Tests.csproj
+        -c Debug $(XatBuildProperties)
+        --report-trx --results-directory $(Agent.TempDirectory)/TestResults
+      displayName: Run Xamarin.Android.Tools.AndroidSdk-Tests
+      condition: succeededOrFailed()
+
+    - task: PublishTestResults@2
+      displayName: Publish test results
+      condition: succeededOrFailed()
       inputs:
-        command: test
-        projects: |
-          $(System.DefaultWorkingDirectory)/tests/Microsoft.Android.Build.BaseTasks-Tests/Microsoft.Android.Build.BaseTasks-Tests.csproj
-          $(System.DefaultWorkingDirectory)/tests/Xamarin.Android.Tools.AndroidSdk-Tests/Xamarin.Android.Tools.AndroidSdk-Tests.csproj
-        arguments: -c Debug $(XatBuildProperties)
+        testResultsFormat: VSTest
+        searchFolder: $(Agent.TempDirectory)/TestResults
+        testResultsFiles: '*.trx'
+        mergeTestResults: true
+        testRunTitle: Android Tools Tests - $(Agent.OS)
 
     - ${{ if eq(parameters.use1ESTemplate, false) }}:
       - task: PublishBuildArtifacts@1

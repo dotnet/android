@@ -8,11 +8,12 @@ using System.Linq;
 using Microsoft.Android.Tasks;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
-using NUnit.Framework;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Xamarin.Android.Build.Tests.Tasks
 {
-	[TestFixture]
+	[TestClass]
+	[DoNotParallelize]
 	public class BuildAppBundleTests
 	{
 		MockBuildEngine? engine;
@@ -20,22 +21,22 @@ namespace Xamarin.Android.Build.Tests.Tasks
 
 		MockBuildEngine Engine => engine ?? throw new InvalidOperationException ("SetUp did not run.");
 
-		[SetUp]
+		[TestInitialize]
 		public void Setup ()
 		{
-			engine = new MockBuildEngine (TestContext.Out, messages: new List<BuildMessageEventArgs> ());
+			engine = new MockBuildEngine (Console.Out, messages: new List<BuildMessageEventArgs> ());
 			tempDir = Path.Combine (Path.GetTempPath (), "BuildAppBundleTests_" + Guid.NewGuid ().ToString ("N"));
 			Directory.CreateDirectory (tempDir);
 		}
 
-		[TearDown]
+		[TestCleanup]
 		public void TearDown ()
 		{
 			if (Directory.Exists (tempDir))
 				Directory.Delete (tempDir, recursive: true);
 		}
 
-		[Test]
+		[TestMethod]
 		public void BuildAppBundleCommand ()
 		{
 			var task = new BuildAppBundle {
@@ -47,7 +48,7 @@ namespace Xamarin.Android.Build.Tests.Tasks
 			Assert.AreEqual ("-jar bundletool.jar build-bundle --modules base.zip --output foo.aab", cmd);
 		}
 
-		[Test]
+		[TestMethod]
 		public void StagesUnicodeMetadataForBundleTool ()
 		{
 			var sourcePath = Path.Combine (tempDir, "libテスト\u2002Me.dbg.so");
@@ -73,12 +74,12 @@ namespace Xamarin.Android.Build.Tests.Tasks
 
 			var metadata = task.BundleToolMetaDataFiles.Single ();
 			var separator = metadata.IndexOf (':');
-			Assert.Greater (separator, 0, $"Expected staged metadata argument in: {metadata}");
+			Assert.IsGreaterThan (0, separator, $"Expected staged metadata argument in: {metadata}");
 			var temporaryArchivePath = "BUNDLE-METADATA/" + metadata.Substring (0, separator);
 			var stagingDirectory = task.MetaDataStagingDirectory
-				?? throw new AssertionException ("Metadata should be staged in a private directory.");
+				?? throw new AssertFailedException ("Metadata should be staged in a private directory.");
 			var temporarySourcePath = Path.Combine (stagingDirectory, metadata.Substring (separator + 1));
-			FileAssert.Exists (temporarySourcePath);
+			Assert.IsTrue (File.Exists (temporarySourcePath));
 
 			try {
 				using (var outputBundle = ZipFile.Open (output, ZipArchiveMode.Create)) {
@@ -92,7 +93,7 @@ namespace Xamarin.Android.Build.Tests.Tasks
 				using var restoredBundle = ZipFile.OpenRead (output);
 				Assert.IsNull (restoredBundle.GetEntry (temporaryArchivePath), "Temporary metadata entry should be removed.");
 				var restored = restoredBundle.GetEntry ("BUNDLE-METADATA/" + archivePath)
-					?? throw new AssertionException ("Metadata entry should use its original Unicode path.");
+					?? throw new AssertFailedException ("Metadata entry should use its original Unicode path.");
 				using var reader = new StreamReader (restored.Open ());
 				Assert.AreEqual ("symbols", reader.ReadToEnd ());
 			} finally {
@@ -100,7 +101,7 @@ namespace Xamarin.Android.Build.Tests.Tasks
 			}
 		}
 
-		[Test]
+		[TestMethod]
 		public void StagesMetadataWithAsciiArgumentsUnderNonAsciiDirectory ()
 		{
 			var intermediateDir = Path.Combine (tempDir, "テスト\u2002obj");
@@ -121,22 +122,22 @@ namespace Xamarin.Android.Build.Tests.Tasks
 
 			task.PrepareMetaDataFiles ();
 			var stagingDirectory = task.MetaDataStagingDirectory
-				?? throw new AssertionException ("Metadata should be staged in a private directory.");
-			StringAssert.Contains ("テスト", stagingDirectory, "Test requires a non-ASCII staging directory path.");
+				?? throw new AssertFailedException ("Metadata should be staged in a private directory.");
+			Assert.Contains ("テスト", stagingDirectory, "Test requires a non-ASCII staging directory path.");
 
 			var metadata = task.BundleToolMetaDataFiles.Single ();
 			Assert.IsTrue (metadata.All (c => c <= 0x7f), $"Metadata argument should be ASCII: {metadata}");
 			var stagedPath = metadata.Substring (metadata.IndexOf (':') + 1);
 			Assert.IsFalse (Path.IsPathRooted (stagedPath), $"Staged metadata path should be relative to the tool working directory: {stagedPath}");
-			FileAssert.Exists (Path.Combine (stagingDirectory, stagedPath));
+			Assert.IsTrue (File.Exists (Path.Combine (stagingDirectory, stagedPath)));
 
 			var commandLine = task.GetCommandLineBuilder ().ToString ();
 			var metadataSwitch = $"--metadata-file={metadata}";
-			StringAssert.Contains (metadataSwitch, commandLine);
-			StringAssert.Contains (Path.Combine (intermediateDir, "base.zip"), commandLine, "Other tool paths should remain absolute.");
+			Assert.Contains (metadataSwitch, commandLine);
+			Assert.Contains (Path.Combine (intermediateDir, "base.zip"), commandLine, "Other tool paths should remain absolute.");
 		}
 
-		[Test]
+		[TestMethod]
 		public void RebasesRelativeMetadataPathsOntoStagingDirectory ()
 		{
 			var workingDirectory = Directory.GetCurrentDirectory ();
@@ -163,18 +164,18 @@ namespace Xamarin.Android.Build.Tests.Tasks
 
 				task.PrepareMetaDataFiles ();
 				var stagingDirectory = task.MetaDataStagingDirectory
-					?? throw new AssertionException ("Unicode metadata should be staged.");
+					?? throw new AssertFailedException ("Unicode metadata should be staged.");
 
 				foreach (var metadata in task.BundleToolMetaDataFiles) {
 					Assert.IsTrue (metadata.All (c => c <= 0x7f), $"Metadata argument should be ASCII: {metadata}");
 					var source = metadata.Substring (metadata.IndexOf (':') + 1);
-					FileAssert.Exists (Path.Combine (stagingDirectory, source), $"Metadata source should resolve from the BundleTool working directory: {metadata}");
+					Assert.IsTrue (File.Exists (Path.Combine (stagingDirectory, source)), $"Metadata source should resolve from the BundleTool working directory: {metadata}");
 				}
 
 				var commandLine = task.GetCommandLineBuilder ().ToString ();
 				Assert.IsTrue (commandLine.All (c => c <= 0x7f), $"Command line should be ASCII: {commandLine}");
 				var expectedOutput = Path.Combine ("..", "..", "..", relativeProjectDir, "bin", "output.aab");
-				StringAssert.Contains (expectedOutput, commandLine, "Relative output path should be rebased onto the staging directory.");
+				Assert.Contains (expectedOutput, commandLine, "Relative output path should be rebased onto the staging directory.");
 				Assert.AreEqual (Path.GetFullPath (Path.Combine (projectDir, "bin", "output.aab")), Path.GetFullPath (Path.Combine (stagingDirectory, expectedOutput)));
 			} finally {
 				if (Directory.Exists (projectDir))
@@ -182,7 +183,7 @@ namespace Xamarin.Android.Build.Tests.Tasks
 			}
 		}
 
-		[Test]
+		[TestMethod]
 		public void StagesConfigWithAsciiArgumentUnderNonAsciiTemporaryDirectory ()
 		{
 			var workingDirectory = Directory.GetCurrentDirectory ();
@@ -211,26 +212,26 @@ namespace Xamarin.Android.Build.Tests.Tasks
 				task.PrepareMetaDataFiles ();
 
 				var stagingDirectory = task.MetaDataStagingDirectory
-					?? throw new AssertionException ("Config should be staged when the temporary directory is not ASCII.");
+					?? throw new AssertFailedException ("Config should be staged when the temporary directory is not ASCII.");
 				var configFile = task.ConfigFile
-					?? throw new AssertionException ("Config file should be created.");
-				FileAssert.Exists (configFile);
+					?? throw new AssertFailedException ("Config file should be created.");
+				Assert.IsTrue (File.Exists (configFile));
 
 				var commandLine = task.GetCommandLineBuilder ().ToString ();
 				Assert.IsTrue (commandLine.All (c => c <= 0x7f), $"Command line should be ASCII: {commandLine}");
 				Assert.IsFalse (commandLine.Contains (temporaryDirectory), "Command line should not reference the non-ASCII temporary directory.");
-				StringAssert.Contains ("--config BundleConfig.json", commandLine);
+				Assert.Contains ("--config BundleConfig.json", commandLine);
 				Assert.AreEqual (Path.GetFullPath (configFile), Path.GetFullPath (Path.Combine (stagingDirectory, "BundleConfig.json")));
 
 				var metadata = task.BundleToolMetaDataFiles.Single ();
-				FileAssert.Exists (Path.Combine (stagingDirectory, metadata.Substring (metadata.IndexOf (':') + 1)), $"Metadata source should resolve from the BundleTool working directory: {metadata}");
+				Assert.IsTrue (File.Exists (Path.Combine (stagingDirectory, metadata.Substring (metadata.IndexOf (':') + 1))), $"Metadata source should resolve from the BundleTool working directory: {metadata}");
 			} finally {
 				if (Directory.Exists (projectDir))
 					Directory.Delete (projectDir, recursive: true);
 			}
 		}
 
-		[Test]
+		[TestMethod]
 		public void RestoresMetadataEntriesInBatches ()
 		{
 			const int count = 5;
@@ -273,12 +274,12 @@ namespace Xamarin.Android.Build.Tests.Tasks
 			Assert.IsFalse (restoredBundle.Entries.Any (e => e.FullName.Contains ("xamarin-android-")), "Temporary metadata entries should be removed.");
 			for (int i = 0; i < count; i++) {
 				var restored = restoredBundle.GetEntry ($"BUNDLE-METADATA/com.android.tools.build.debugsymbols/arm64-v8a/libテスト{i}.so.dbg")
-					?? throw new AssertionException ($"Metadata entry {i} should use its original Unicode path.");
+					?? throw new AssertFailedException ($"Metadata entry {i} should use its original Unicode path.");
 				using var reader = new StreamReader (restored.Open ());
 				Assert.AreEqual ($"symbols{i}", reader.ReadToEnd ());
 			}
 			var manifest = restoredBundle.GetEntry ("base/manifest/AndroidManifest.xml")
-				?? throw new AssertionException ("Manifest entry should be preserved.");
+				?? throw new AssertFailedException ("Manifest entry should be preserved.");
 			using (var reader = new StreamReader (manifest.Open ()))
 				Assert.AreEqual ("manifest", reader.ReadToEnd ());
 		}

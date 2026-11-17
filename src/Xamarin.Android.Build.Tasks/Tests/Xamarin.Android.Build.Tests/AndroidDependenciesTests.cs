@@ -7,7 +7,8 @@ using System.Net.Http;
 using System.Text;
 using System.Threading;
 using System.Xml.Linq;
-using NUnit.Framework;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Microsoft.VisualStudio.TestTools.UnitTesting.Combinatorial;
 using Microsoft.Android.Build.Tasks;
 using Xamarin.Android.Tasks;
 using Xamarin.Android.Tools;
@@ -18,13 +19,13 @@ using Xamarin.Installer.Build.Tasks;
 
 namespace Xamarin.Android.Build.Tests
 {
-	[TestFixture]
-	[Parallelizable (ParallelScope.Children)]
+	[TestClass]
 	public class AndroidDependenciesTests : BaseTest
 	{
-		[Test]
-		[NonParallelizable] // Do not run environment modifying tests in parallel.
-		public void InstallAndroidDependenciesTest ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
+		[TestMethod]
+		[CombinatorialData]
+		[DoNotParallelize] // Do not run environment modifying tests in parallel.
+		public void InstallAndroidDependenciesTest ([CombinatorialValues (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			bool isRelease = runtime == AndroidRuntime.NativeAOT;
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
@@ -90,13 +91,13 @@ namespace Xamarin.Android.Build.Tests
 							break;
 						}
 
-						TestContext.WriteLine ($"InstallAndroidDependencies attempt {attempt} of {maxInstallAttempts} failed. Please check the task output in 'install-deps.log'.");
+						Console.WriteLine ($"InstallAndroidDependencies attempt {attempt} of {maxInstallAttempts} failed. Please check the task output in 'install-deps.log'.");
 						if (attempt < maxInstallAttempts)
 							Thread.Sleep (TimeSpan.FromSeconds (10));
 					}
 					Assert.IsTrue (installSucceeded, $"InstallAndroidDependencies should have succeeded within {maxInstallAttempts} attempts.");
 
-					FileAssert.Exists (Path.Combine (sdkPath, "cmdline-tools", "21.0", "source.properties"));
+					Assert.IsTrue (File.Exists (Path.Combine (sdkPath, "cmdline-tools", "21.0", "source.properties")));
 
 					// When a package is not installed, a warning is present in the build output:
 					//    The Android CLI did not install Android SDK package `platform-tools` into `...`.
@@ -127,11 +128,12 @@ namespace Xamarin.Android.Build.Tests
 			}
 		}
 
-		[TestCase (AndroidRuntime.CoreCLR, false, false, false)]
-		[TestCase (AndroidRuntime.CoreCLR, false, true, true)]
-		[TestCase (AndroidRuntime.NativeAOT, true, false, true)]
-		[TestCase (AndroidRuntime.NativeAOT, false, false, false)]
-		[TestCase (AndroidRuntime.NativeAOT, false, true, true)]
+		[TestMethod]
+		[DataRow (AndroidRuntime.CoreCLR, false, false, false)]
+		[DataRow (AndroidRuntime.CoreCLR, false, true, true)]
+		[DataRow (AndroidRuntime.NativeAOT, true, false, true)]
+		[DataRow (AndroidRuntime.NativeAOT, false, false, false)]
+		[DataRow (AndroidRuntime.NativeAOT, false, true, true)]
 		public void NdkDependencyUsesEffectiveRuntime (AndroidRuntime runtime, bool isRelease, bool stripNativeLibraries, bool ndkRequired)
 		{
 			var proj = new XamarinAndroidApplicationProject ();
@@ -159,8 +161,9 @@ namespace Xamarin.Android.Build.Tests
 			}
 		}
 
-		[Test]
-		public void GetDependencyWhenBuildToolsAreMissingTest ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
+		[TestMethod]
+		[CombinatorialData]
+		public void GetDependencyWhenBuildToolsAreMissingTest ([CombinatorialValues (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			const bool isRelease = true;
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
@@ -187,7 +190,7 @@ namespace Xamarin.Android.Build.Tests
 				builder.Verbosity = LoggerVerbosity.Detailed;
 				builder.ThrowOnBuildFailure = false;
 				builder.Target = "GetAndroidDependencies";
-				Assert.True (builder.Build (proj, parameters: parameters),
+				Assert.IsTrue (builder.Build (proj, parameters: parameters),
 					string.Format ("First Build should have succeeded"));
 				var apiLevel = XABuildConfig.AndroidDefaultTargetDotnetApiLevel;
 				StringAssertEx.Contains (
@@ -199,8 +202,9 @@ namespace Xamarin.Android.Build.Tests
 			}
 		}
 
-		[Test]
-		public void GetDependencyWhenSDKIsMissingTest ([Values] bool createSdkDirectory, [Values] bool installJavaDeps, [Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
+		[TestMethod]
+		[CombinatorialData]
+		public void GetDependencyWhenSDKIsMissingTest (bool createSdkDirectory, bool installJavaDeps, [CombinatorialValues (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			const bool isRelease = true;
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
@@ -233,7 +237,7 @@ namespace Xamarin.Android.Build.Tests
 				builder.Verbosity = LoggerVerbosity.Detailed;
 				builder.ThrowOnBuildFailure = false;
 				builder.Target = "GetAndroidDependencies";
-				Assert.True (builder.Build (proj, parameters: parameters),
+				Assert.IsTrue (builder.Build (proj, parameters: parameters),
 					string.Format ("First Build should have succeeded"));
 				var apiLevel = XABuildConfig.AndroidDefaultTargetDotnetApiLevel;
 				StringAssertEx.Contains (
@@ -249,7 +253,7 @@ namespace Xamarin.Android.Build.Tests
 			}
 		}
 
-		[Test]
+		[TestMethod]
 		public void InstallAndroidDependenciesPassesPackagesToAndroidCli ()
 		{
 			var root = Path.Combine (Root, "temp", TestName);
@@ -270,7 +274,7 @@ namespace Xamarin.Android.Build.Tests
 
 			var errors = new List<BuildErrorEventArgs> ();
 			var task = new InstallAndroidDependencies {
-				BuildEngine = new MockBuildEngine (TestContext.Out, errors, [], []),
+				BuildEngine = new MockBuildEngine (Console.Out, errors, [], []),
 				AndroidSdkPath = Path.Combine (root, "sdk"),
 				AcceptAndroidSDKLicenses = true,
 				InstallJavaDependencies = false,
@@ -278,7 +282,7 @@ namespace Xamarin.Android.Build.Tests
 				JavaDependencies = [],
 				Dependencies = [
 					new TaskItem ("build-tools/37.0.0", new Dictionary<string, string> { { "Version", "37.0.0" } }),
-					new TaskItem ("platform-tools", new Dictionary<string, string> { { "Version", "37.0.3" } }),
+					new TaskItem ("platform-tools", new Dictionary<string, string> { { "Version", "37.0.1" } }),
 					new TaskItem ("ndk-bundle", new Dictionary<string, string> { { "Version", "27.2.12479018" } }),
 					new TaskItem ("platforms/android-37.0"),
 				],
@@ -286,11 +290,11 @@ namespace Xamarin.Android.Build.Tests
 			Assert.IsTrue (task.Execute (), string.Join (Environment.NewLine, errors.Select (e => e.Message)));
 
 			var args = File.ReadAllText (Path.Combine (root, "args.txt")).Trim ();
-			StringAssert.Contains ($"--no-metrics --sdk={Path.Combine (root, "sdk")} sdk install", args);
-			StringAssert.EndsWith ("build-tools/37.0.0 platform-tools@37.0.3 ndk/27.2.12479018 platforms/android-37.0", args);
+			Assert.Contains ($"--no-metrics --sdk={Path.Combine (root, "sdk")} sdk install", args);
+			Assert.EndsWith ("build-tools/37.0.0 platform-tools@37.0.1 ndk/27.2.12479018 platforms/android-37.0", args);
 		}
 
-		[Test]
+		[TestMethod]
 		public async System.Threading.Tasks.Task UnknownJdkVersionIsNotValid ()
 		{
 			// aka.ms sends an unknown link to an HTML page on bing.com with status 200.

@@ -5,7 +5,7 @@ using System;
 using System.IO;
 using System.Threading.Tasks;
 
-using NUnit.Framework;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Xamarin.Android.Tools.Tests;
 
@@ -16,8 +16,8 @@ namespace Xamarin.Android.Tools.Tests;
 /// images have JDK (JAVA_HOME) and Android SDK (ANDROID_HOME) pre-installed.
 /// Tests are skipped on local developer machines.
 /// </summary>
-[TestFixture]
-[Category ("Integration")]
+[TestClass]
+[TestCategory ("Integration")]
 public class RunnerIntegrationTests
 {
 	static string sdkPath;
@@ -31,7 +31,7 @@ public class RunnerIntegrationTests
 
 		if (!string.Equals (tfBuild, "true", StringComparison.OrdinalIgnoreCase) &&
 		    !string.Equals (ci, "true", StringComparison.OrdinalIgnoreCase)) {
-			Assert.Ignore ("Integration tests only run on CI (TF_BUILD=True or CI=true).");
+			Assert.Inconclusive ("Integration tests only run on CI (TF_BUILD=True or CI=true).");
 		}
 	}
 
@@ -39,36 +39,36 @@ public class RunnerIntegrationTests
 	/// One-time setup: use pre-installed JDK/SDK on CI agents.
 	/// Azure Pipelines hosted images have JAVA_HOME and ANDROID_HOME already configured.
 	/// </summary>
-	[OneTimeSetUp]
-	public void OneTimeSetUp ()
+	[ClassInitialize]
+	public static void OneTimeSetUp (TestContext context)
 	{
 		RequireCi ();
 
 		// Use pre-installed JDK from JAVA_HOME (always available on CI agents)
 		jdkPath = Environment.GetEnvironmentVariable (EnvironmentVariableNames.JavaHome);
 		if (string.IsNullOrEmpty (jdkPath) || !Directory.Exists (jdkPath)) {
-			Assert.Ignore ("JAVA_HOME not set or invalid — cannot run integration tests.");
+			Assert.Inconclusive ("JAVA_HOME not set or invalid — cannot run integration tests.");
 			return;
 		}
-		TestContext.Progress.WriteLine ($"Using JDK from JAVA_HOME: {jdkPath}");
+		Console.WriteLine ($"Using JDK from JAVA_HOME: {jdkPath}");
 
 		// Use pre-installed Android SDK from ANDROID_HOME (must be available on CI agents)
 		sdkPath = Environment.GetEnvironmentVariable (EnvironmentVariableNames.AndroidHome);
 		if (string.IsNullOrEmpty (sdkPath) || !Directory.Exists (sdkPath)) {
-			Assert.Ignore ("ANDROID_HOME not set or invalid — cannot run integration tests. Provision Android SDK and set ANDROID_HOME to enable these tests.");
+			Assert.Inconclusive ("ANDROID_HOME not set or invalid — cannot run integration tests. Provision Android SDK and set ANDROID_HOME to enable these tests.");
 			return;
 		}
 
-		TestContext.Progress.WriteLine ($"Using SDK from ANDROID_HOME: {sdkPath}");
+		Console.WriteLine ($"Using SDK from ANDROID_HOME: {sdkPath}");
 
 		// Resolve the full path to adb for AdbRunner
 		var adbExe = OS.IsWindows ? "adb.exe" : "adb";
 		adbPath = Path.Combine (sdkPath, "platform-tools", adbExe);
 		if (!File.Exists (adbPath))
-			Assert.Ignore ($"adb not found at {adbPath}");
+			Assert.Inconclusive ($"adb not found at {adbPath}");
 	}
 
-	[Test]
+	[TestMethod]
 	public async Task AdbRunner_ListDevicesAsync_ReturnsWithoutError ()
 	{
 		var runner = new AdbRunner (adbPath);
@@ -78,28 +78,28 @@ public class RunnerIntegrationTests
 		var devices = await runner.ListDevicesAsync ();
 
 		Assert.IsNotNull (devices);
-		TestContext.Progress.WriteLine ($"ListDevicesAsync returned {devices.Count} device(s)");
+		Console.WriteLine ($"ListDevicesAsync returned {devices.Count} device(s)");
 	}
 
-	[Test]
-	public void AdbRunner_WaitForDeviceAsync_TimesOut_WhenNoDevice ()
+	[TestMethod]
+	public async Task AdbRunner_WaitForDeviceAsync_TimesOut_WhenNoDevice ()
 	{
 		var runner = new AdbRunner (adbPath);
-		var ex = Assert.ThrowsAsync<TimeoutException> (async () =>
+		var ex = await Assert.ThrowsExactlyAsync<TimeoutException> (async () =>
 			await runner.WaitForDeviceAsync (timeout: TimeSpan.FromSeconds (5)));
 
-		Assert.That (ex, Is.Not.Null);
-		TestContext.Progress.WriteLine ($"WaitForDeviceAsync timed out as expected: {ex?.Message}");
+		Assert.IsNotNull (ex);
+		Console.WriteLine ($"WaitForDeviceAsync timed out as expected: {ex?.Message}");
 	}
 
-	[Test]
+	[TestMethod]
 	public async Task AvdManagerRunner_ListAvdsAsync_ReturnsWithoutError ()
 	{
 		var ext = OS.IsWindows ? ".bat" : "";
 		var avdManagerPath = ProcessUtils.FindCmdlineTool (sdkPath, "avdmanager", ext);
 
 		if (avdManagerPath is null) {
-			Assert.Ignore ("avdmanager not found in SDK — cmdline-tools may not be installed.");
+			Assert.Inconclusive ("avdmanager not found in SDK — cmdline-tools may not be installed.");
 			return;
 		}
 
@@ -112,6 +112,6 @@ public class RunnerIntegrationTests
 		var avds = await runner.ListAvdsAsync ();
 
 		Assert.IsNotNull (avds);
-		TestContext.Progress.WriteLine ($"ListAvdsAsync returned {avds.Count} AVD(s)");
+		Console.WriteLine ($"ListAvdsAsync returned {avds.Count} AVD(s)");
 	}
 }
