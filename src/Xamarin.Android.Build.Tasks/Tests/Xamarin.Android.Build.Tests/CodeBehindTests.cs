@@ -1,13 +1,15 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.IO;
 using System.Text.RegularExpressions;
 using System.Xml.Linq;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
-using NUnit.Framework;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Microsoft.VisualStudio.TestTools.UnitTesting.Combinatorial;
 
 using Xamarin.ProjectTools;
 using Xamarin.Android.Tasks;
@@ -15,44 +17,49 @@ using System.Text;
 
 namespace Xamarin.Android.Build.Tests
 {
-	[Parallelizable (ParallelScope.Children)]
+	[TestClass]
 	public class CodeBehindTests : BaseTest
 	{
-		[Test]
-		[SetCulture ("tr-TR")]
+		[TestMethod]
 		public void LayoutBindingIdentifiersUseInvariantCasing ()
 		{
-			var directory = Path.Combine (Root, "temp", nameof (LayoutBindingIdentifiersUseInvariantCasing));
-			TestOutputDirectories [TestContext.CurrentContext.Test.ID] = directory;
-			Directory.CreateDirectory (directory);
-			var layout = Path.Combine (directory, "culture.xml");
-			File.WriteAllText (layout, """
-				<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android">
-				  <com.google.io.indicator.CustomView android:id="@android:id/input" />
-				</LinearLayout>
-				""");
-			var engine = new MockBuildEngine (TestContext.Out);
-			var calculate = new CalculateLayoutCodeBehind {
-				BuildEngine = engine,
-				BaseNamespace = "Test.Binding",
-				OutputLanguage = "C#",
-				OutputFileExtension = ".cs",
-				BoundLayouts = [new TaskItem (layout)],
-			};
-			Assert.IsTrue (calculate.Execute ());
-			Assert.IsNotNull (calculate.LayoutBindingFiles);
+			var culture = CultureInfo.CurrentCulture;
+			try {
+				CultureInfo.CurrentCulture = CultureInfo.GetCultureInfo ("tr-TR");
+				var directory = Path.Combine (Root, "temp", nameof (LayoutBindingIdentifiersUseInvariantCasing));
+				TestOutputDirectories [TestId] = directory;
+				Directory.CreateDirectory (directory);
+				var layout = Path.Combine (directory, "culture.xml");
+				File.WriteAllText (layout, """
+					<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android">
+					  <com.google.io.indicator.CustomView android:id="@android:id/input" />
+					</LinearLayout>
+					""");
+				var engine = new MockBuildEngine (Console.Out);
+				var calculate = new CalculateLayoutCodeBehind {
+					BuildEngine = engine,
+					BaseNamespace = "Test.Binding",
+					OutputLanguage = "C#",
+					OutputFileExtension = ".cs",
+					BoundLayouts = [new TaskItem (layout)],
+				};
+				Assert.IsTrue (calculate.Execute ());
+				Assert.IsNotNull (calculate.LayoutBindingFiles);
 
-			var generate = new GenerateLayoutBindings {
-				BuildEngine = engine,
-				MonoAndroidCodeBehindDir = directory,
-				AndroidFragmentType = "Android.App.Fragment",
-				ResourceFiles = calculate.LayoutBindingFiles,
-			};
-			Assert.IsTrue (generate.Execute ());
-			Assert.IsNotNull (generate.GeneratedFiles);
-			var source = File.ReadAllText (generate.GeneratedFiles.Single ().ItemSpec);
-			StringAssert.Contains ("IO.Indicator.CustomView", source);
-			StringAssert.Contains ("global::Android.Resource.Id.Input", source);
+				var generate = new GenerateLayoutBindings {
+					BuildEngine = engine,
+					MonoAndroidCodeBehindDir = directory,
+					AndroidFragmentType = "Android.App.Fragment",
+					ResourceFiles = calculate.LayoutBindingFiles,
+				};
+				Assert.IsTrue (generate.Execute ());
+				Assert.IsNotNull (generate.GeneratedFiles);
+				var source = File.ReadAllText (generate.GeneratedFiles.Single ().ItemSpec);
+				Assert.Contains ("IO.Indicator.CustomView", source);
+				Assert.Contains ("global::Android.Resource.Id.Input", source);
+			} finally {
+				CultureInfo.CurrentCulture = culture;
+			}
 		}
 
 		sealed class LocalBuilder : Builder
@@ -319,26 +326,30 @@ namespace Xamarin.Android.Build.Tests
 			};
 		}
 
-		[Test]
-		public void SuccessfulBuildFew ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
+		[TestMethod]
+		[CombinatorialData]
+		public void SuccessfulBuildFew ([CombinatorialValues (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			RunTest (TestName, many: false, dtb: false, runner: SuccessfulBuild_RunTest, runtime: runtime);
 		}
 
-		[Test]
-		public void SuccessfulBuildMany ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
+		[TestMethod]
+		[CombinatorialData]
+		public void SuccessfulBuildMany ([CombinatorialValues (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			RunTest (TestName, many: true, dtb: false, runner: SuccessfulBuild_RunTest, runtime: runtime);
 		}
 
-		[Test]
-		public void SuccessfulBuildFew_DTB ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
+		[TestMethod]
+		[CombinatorialData]
+		public void SuccessfulBuildFew_DTB ([CombinatorialValues (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			RunTest (TestName, many: false, dtb: true, runner: SuccessfulBuild_RunTest, runtime: runtime);
 		}
 
-		[Test]
-		public void SuccessfulBuildMany_DTB ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
+		[TestMethod]
+		[CombinatorialData]
+		public void SuccessfulBuildMany_DTB ([CombinatorialValues (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			RunTest (TestName, many: true, dtb: true, runner: SuccessfulBuild_RunTest, runtime: runtime);
 		}
@@ -349,7 +360,7 @@ namespace Xamarin.Android.Build.Tests
 			bool success = builder.Build (testInfo.ProjectPath, GetBuildTarget (dtb), parameters);
 
 			CopyLogs (testInfo, true);
-			Assert.That (success, Is.True, "Build should have succeeded");
+			Assert.IsTrue (success, "Build should have succeeded");
 
 			CopyGeneratedFiles (testInfo);
 
@@ -357,9 +368,9 @@ namespace Xamarin.Android.Build.Tests
 				foreach (SourceFileMember member in src) {
 					string generatedFile = Path.Combine (testInfo.GeneratedPath, src.Path);
 					if (member.IsMethod)
-						Assert.That (SourceHasMethod (generatedFile, member.Visibility, member.Type, member.Name, member.Arguments), Is.True, $"Method {member.Name} must exist in {generatedFile}");
+						Assert.IsTrue (SourceHasMethod (generatedFile, member.Visibility, member.Type, member.Name, member.Arguments), $"Method {member.Name} must exist in {generatedFile}");
 					else
-						Assert.That (SourceHasProperty (generatedFile, member.Visibility, member.Type, member.Name, member.IsExpressionBody), Is.True, $"Property {member.Name} must exist in {generatedFile}");
+						Assert.IsTrue (SourceHasProperty (generatedFile, member.Visibility, member.Type, member.Name, member.IsExpressionBody), $"Property {member.Name} must exist in {generatedFile}");
 				}
 			}
 
@@ -370,8 +381,9 @@ namespace Xamarin.Android.Build.Tests
 				AssertExists (testInfo.TestName, Path.Combine (testInfo.BinPath, binaryName));
 		}
 
-		[Test]
-		public void SuccessfulAndroidXApp ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
+		[TestMethod]
+		[CombinatorialData]
+		public void SuccessfulAndroidXApp ([CombinatorialValues (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			RunTest (TestName, many: true, dtb: false, runner: SuccessfulBuild_AndroidX, runtime: runtime);
 		}
@@ -434,7 +446,7 @@ namespace Xamarin.Android.Build.Tests
 			bool success = builder.Build (testInfo.ProjectPath, GetBuildTarget (dtb), parameters);
 
 			CopyLogs (testInfo, true);
-			Assert.That (success, Is.True, "Build should have succeeded");
+			Assert.IsTrue (success, "Build should have succeeded");
 			if (testInfo.Runtime != AndroidRuntime.NativeAOT) { // NativeAOT currently (Nov 2025) produces 9 ILC warnings
 				Assert.IsTrue (StringAssertEx.ContainsText (builder.LastBuildOutput, " 0 Warning(s)"), $"{builder.BuildLogFile} should have no MSBuild warnings.");
 			}
@@ -446,9 +458,9 @@ namespace Xamarin.Android.Build.Tests
 					string type = member.Type.Replace ("global::Android.App.Fragment", "global::AndroidX.Fragment.App.Fragment");
 					string generatedFile = Path.Combine (testInfo.GeneratedPath, src.Path);
 					if (member.IsMethod)
-						Assert.That (SourceHasMethod (generatedFile, member.Visibility, type, member.Name, member.Arguments), Is.True, $"Method {member.Name} must exist in {generatedFile}");
+						Assert.IsTrue (SourceHasMethod (generatedFile, member.Visibility, type, member.Name, member.Arguments), $"Method {member.Name} must exist in {generatedFile}");
 					else
-						Assert.That (SourceHasProperty (generatedFile, member.Visibility, type, member.Name, member.IsExpressionBody), Is.True, $"Property {member.Name} must exist in {generatedFile}");
+						Assert.IsTrue (SourceHasProperty (generatedFile, member.Visibility, type, member.Name, member.IsExpressionBody), $"Property {member.Name} must exist in {generatedFile}");
 				}
 			}
 
@@ -459,14 +471,16 @@ namespace Xamarin.Android.Build.Tests
 				AssertExists (testInfo.TestName, Path.Combine (testInfo.BinPath, binaryName));
 		}
 
-		[Test]
-		public void FailedBuildFew_ConflictingFragment ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
+		[TestMethod]
+		[CombinatorialData]
+		public void FailedBuildFew_ConflictingFragment ([CombinatorialValues (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			RunTest (TestName, many: false, dtb: false, runner: FailedBuild_ConflictingFragment_RunTest, runtime: runtime);
 		}
 
-		[Test]
-		public void FailedBuildMany_ConflictingFragment ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
+		[TestMethod]
+		[CombinatorialData]
+		public void FailedBuildMany_ConflictingFragment ([CombinatorialValues (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			RunTest (TestName, many: true, dtb: false, runner: FailedBuild_ConflictingFragment_RunTest, runtime: runtime);
 		}
@@ -477,7 +491,7 @@ namespace Xamarin.Android.Build.Tests
 			bool success = builder.Build (testInfo.ProjectPath, GetBuildTarget (dtb), parameters);
 
 			CopyLogs (testInfo, true);
-			Assert.That (success, Is.False, "Build should have failed");
+			Assert.IsFalse (success, "Build should have failed");
 
 			string logPath = GetTestLogPath (testInfo);
 			bool haveError = HaveCompilerError_CS0266 (logPath, "MainActivity.cs", 26, "Android.App.Fragment", "CommonSampleLibrary.LogFragment");
@@ -487,14 +501,16 @@ namespace Xamarin.Android.Build.Tests
 			AssertHaveCompilerError (haveError, "AnotherMainActivity.cs", 23);
 		}
 
-		[Test]
-		public void FailedBuildFew_ConflictingTextView ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
+		[TestMethod]
+		[CombinatorialData]
+		public void FailedBuildFew_ConflictingTextView ([CombinatorialValues (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			RunTest (TestName, many: false, dtb: false, runner: FailedBuild_ConflictingTextView_RunTest, runtime: runtime);
 		}
 
-		[Test]
-		public void FailedBuildMany_ConflictingTextView ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
+		[TestMethod]
+		[CombinatorialData]
+		public void FailedBuildMany_ConflictingTextView ([CombinatorialValues (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			RunTest (TestName, many: true, dtb: false, runner: FailedBuild_ConflictingTextView_RunTest, runtime: runtime);
 		}
@@ -505,7 +521,7 @@ namespace Xamarin.Android.Build.Tests
 			bool success = builder.Build (testInfo.ProjectPath, GetBuildTarget (dtb), parameters);
 
 			CopyLogs (testInfo, true);
-			Assert.That (success, Is.False, "Build should have failed");
+			Assert.IsFalse (success, "Build should have failed");
 
 			string logPath = GetTestLogPath (testInfo);
 			bool haveError = HaveCompilerError_CS0266 (logPath, "OnboardingActivityPartial.cs", 32, "Android.Views.View", "Android.Widget.TextView");
@@ -515,14 +531,16 @@ namespace Xamarin.Android.Build.Tests
 			AssertHaveCompilerError (haveError, "OnboardingActivity.cs", 27);
 		}
 
-		[Test]
-		public void FailedBuildFew_ConflictingButton ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
+		[TestMethod]
+		[CombinatorialData]
+		public void FailedBuildFew_ConflictingButton ([CombinatorialValues (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			RunTest (TestName, many: false, dtb: false, runner: FailedBuild_ConflictingButton_RunTest, runtime: runtime);
 		}
 
-		[Test]
-		public void FailedBuildMany_ConflictingButton ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
+		[TestMethod]
+		[CombinatorialData]
+		public void FailedBuildMany_ConflictingButton ([CombinatorialValues (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			RunTest (TestName, many: true, dtb: false, runner: FailedBuild_ConflictingButton_RunTest, runtime: runtime);
 		}
@@ -533,7 +551,7 @@ namespace Xamarin.Android.Build.Tests
 			bool success = builder.Build (testInfo.ProjectPath, GetBuildTarget (dtb), parameters);
 
 			CopyLogs (testInfo, true);
-			Assert.That (success, Is.False, "Build should have failed");
+			Assert.IsFalse (success, "Build should have failed");
 
 			string logPath = GetTestLogPath (testInfo);
 			bool haveError = HaveCompilerError_CS0266 (logPath, "OnboardingActivityPartial.cs", 34, "Android.Views.View", "Android.Widget.Button");
@@ -543,14 +561,16 @@ namespace Xamarin.Android.Build.Tests
 			AssertHaveCompilerError (haveError, "OnboardingActivity.cs", 29);
 		}
 
-		[Test]
-		public void FailedBuildFew_ConflictingLinearLayout ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
+		[TestMethod]
+		[CombinatorialData]
+		public void FailedBuildFew_ConflictingLinearLayout ([CombinatorialValues (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			RunTest (TestName, many: false, dtb: false, runner: FailedBuild_ConflictingLinearLayout_RunTest, runtime: runtime);
 		}
 
-		[Test]
-		public void FailedBuildMany_ConflictingLinearLayout ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
+		[TestMethod]
+		[CombinatorialData]
+		public void FailedBuildMany_ConflictingLinearLayout ([CombinatorialValues (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			RunTest (TestName, many: true, dtb: false, runner: FailedBuild_ConflictingLinearLayout_RunTest, runtime: runtime);
 		}
@@ -561,7 +581,7 @@ namespace Xamarin.Android.Build.Tests
 			bool success = builder.Build (testInfo.ProjectPath, GetBuildTarget (dtb), parameters);
 
 			CopyLogs (testInfo, true);
-			Assert.That (success, Is.False, "Build should have failed");
+			Assert.IsFalse (success, "Build should have failed");
 
 			string logPath = GetTestLogPath (testInfo);
 			bool haveError = HaveCompilerError_CS0266 (logPath, "OnboardingActivityPartial.cs", 41, "Android.Views.View", "Android.Widget.LinearLayout");
@@ -571,14 +591,16 @@ namespace Xamarin.Android.Build.Tests
 			AssertHaveCompilerError (haveError, "OnboardingActivity.cs", 36);
 		}
 
-		[Test]
-		public void FailedBuildFew_ConflictingRelativeLayout ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
+		[TestMethod]
+		[CombinatorialData]
+		public void FailedBuildFew_ConflictingRelativeLayout ([CombinatorialValues (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			RunTest (TestName, many: false, dtb: false, runner: FailedBuild_ConflictingRelativeLayout_RunTest, runtime: runtime);
 		}
 
-		[Test]
-		public void FailedBuildMany_ConflictingRelativeLayout ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
+		[TestMethod]
+		[CombinatorialData]
+		public void FailedBuildMany_ConflictingRelativeLayout ([CombinatorialValues (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			RunTest (TestName, many: true, dtb: false, runner: FailedBuild_ConflictingRelativeLayout_RunTest, runtime: runtime);
 		}
@@ -589,7 +611,7 @@ namespace Xamarin.Android.Build.Tests
 			bool success = builder.Build (testInfo.ProjectPath, GetBuildTarget (dtb), parameters);
 
 			CopyLogs (testInfo, true);
-			Assert.That (success, Is.False, "Build should have failed");
+			Assert.IsFalse (success, "Build should have failed");
 
 			string logPath = GetTestLogPath (testInfo);
 			bool haveError = HaveCompilerError_CS0266 (logPath, "OnboardingActivityPartial.cs", 43, "Android.Views.View", "Android.Widget.RelativeLayout");
@@ -665,7 +687,7 @@ namespace Xamarin.Android.Build.Tests
 
 		void AssertHaveCompilerError (bool haveError, string fileName, int line)
 		{
-			Assert.That (haveError, Is.True, $"Expected compiler error CS0266 in {fileName}({line},?)");
+			Assert.IsTrue (haveError, $"Expected compiler error CS0266 in {fileName}({line},?)");
 		}
 
 		/// <summary>
@@ -720,16 +742,16 @@ namespace Xamarin.Android.Build.Tests
 				runner (testInfo, many, dtb, builder, runtime);
 
 				if (many) {
-					Assert.That (WasParsedInParallel (testInfo), Is.True, "Should have been parsed in parallel");
-					Assert.That (WasGeneratedInParallel (testInfo), Is.True, "Should have been generated in parallel");
+					Assert.IsTrue (WasParsedInParallel (testInfo), "Should have been parsed in parallel");
+					Assert.IsTrue (WasGeneratedInParallel (testInfo), "Should have been generated in parallel");
 				} else {
-					Assert.That (WasParsedInParallel (testInfo), Is.False, "Should have been parsed in serial manner");
-					Assert.That (WasGeneratedInParallel (testInfo), Is.False, "Should have been generated in serial manner");
+					Assert.IsFalse (WasParsedInParallel (testInfo), "Should have been parsed in serial manner");
+					Assert.IsFalse (WasGeneratedInParallel (testInfo), "Should have been generated in serial manner");
 				}
 			} catch {
 				CopyLogs (testInfo, false);
 				foreach (var file in Directory.GetFiles (testInfo.OutputDirectory, "*.*log", SearchOption.AllDirectories)) {
-					TestContext.AddTestAttachment (file);
+					TestContext.AddResultFile (file);
 				}
 				throw;
 			}
@@ -913,10 +935,10 @@ namespace Xamarin.Android.Build.Tests
 			}
 		}
 
-		void AssertExistsAndCopy (TestProjectInfo testInfo, string relativeFilePath, string destDir, bool nunitAssert = true)
+		void AssertExistsAndCopy (TestProjectInfo testInfo, string relativeFilePath, string destDir, bool assertExists = true)
 		{
 			string source = Path.Combine (testInfo.RootDirectory, relativeFilePath);
-			if (nunitAssert)
+			if (assertExists)
 				AssertExists (testInfo.TestName, source);
 			else if (!File.Exists (source))
 				return;
@@ -929,7 +951,7 @@ namespace Xamarin.Android.Build.Tests
 
 		void AssertExists (string testName, string filePath)
 		{
-			Assert.That (new FileInfo (filePath), Does.Exist, $"file {filePath} should exist for test '{testName}'");
+			Assert.IsTrue (File.Exists (filePath), $"file {filePath} should exist for test '{testName}'");
 		}
 	}
 }

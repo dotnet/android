@@ -1,13 +1,13 @@
 using generator.SourceWriters;
 using MonoDroid.Generation;
-using NUnit.Framework;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace generatortests.SourceWriters
 {
-	[TestFixture]
+	[TestClassAttribute]
 	public class PeerMembersFieldTests : SourceWritersTestBase
 	{
-		[Test]
+		[TestMethodAttribute]
 		public void PeerMembersField_XamarinAndroidClass ()
 		{
 			var field = new PeerMembersField (new CodeGenerationOptions (), "B", "MyJavaType", false);
@@ -15,7 +15,7 @@ namespace generatortests.SourceWriters
 			Assert.AreEqual ("static readonly JniPeerMembers _members = new JniPeerMembers (\"B\", typeof (MyJavaType));", GetOutput (field).Trim ());
 		}
 
-		[Test]
+		[TestMethodAttribute]
 		public void PeerMembersField_XAInterface ()
 		{
 			var field = new PeerMembersField (new CodeGenerationOptions (), "B", "IMyJavaType", true);

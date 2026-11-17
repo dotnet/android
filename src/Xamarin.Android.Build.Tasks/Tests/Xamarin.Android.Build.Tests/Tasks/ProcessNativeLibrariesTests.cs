@@ -1,18 +1,20 @@
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Threading.Tasks;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
-using NUnit.Framework;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 using Xamarin.Android.Tasks;
 
 namespace Xamarin.Android.Build.Tests;
 
-[TestFixture]
+[TestClass]
+[DoNotParallelize]
 public class ProcessNativeLibrariesTests : BaseTest
 {
-	[Test]
+	[TestMethod]
 	public void ConcurrentProjectDirectories ()
 	{
 		Parallel.ForEach (new [] { "arm64-v8a", "unknown" }, abi => {
@@ -37,7 +39,7 @@ public class ProcessNativeLibrariesTests : BaseTest
 		});
 	}
 
-	[Test]
+	[TestMethod]
 	public void ExcludesMonoRuntimeComponents ()
 	{
 		var component = new TaskItem ("libmono-component-debugger.so");
@@ -46,7 +48,7 @@ public class ProcessNativeLibrariesTests : BaseTest
 		runtimeLibrary.SetMetadata ("Abi", "arm64-v8a");
 
 		var task = new ProcessNativeLibraries {
-			BuildEngine = new MockBuildEngine (TestContext.Out),
+			BuildEngine = new MockBuildEngine (Console.Out),
 			InputLibraries = [component, runtimeLibrary],
 		};
 

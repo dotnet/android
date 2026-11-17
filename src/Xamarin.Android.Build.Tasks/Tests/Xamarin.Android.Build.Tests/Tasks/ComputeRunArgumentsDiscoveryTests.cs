@@ -8,13 +8,14 @@ using Microsoft.Build.Evaluation;
 using Microsoft.Build.Execution;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
-using NUnit.Framework;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Xamarin.Android.Tasks;
 using Xamarin.ProjectTools;
 
 namespace Xamarin.Android.Build.Tests;
 
-[TestFixture]
+[TestClass]
+[DoNotParallelize]
 public class ComputeRunArgumentsDiscoveryTests
 {
 	const string AndroidNamespace = "http://schemas.android.com/apk/res/android";
@@ -24,68 +25,73 @@ public class ComputeRunArgumentsDiscoveryTests
 	static readonly string ApplicationTargets = Path.Combine (TasksDirectory, "Microsoft.Android.Sdk", "targets", "Microsoft.Android.Sdk.Application.targets");
 	string directory = "";
 
-	[SetUp]
+	[TestInitialize]
 	public void Setup ()
 	{
 		directory = Path.Combine (Path.GetTempPath (), "AndroidRunArguments-" + Guid.NewGuid ());
 		Directory.CreateDirectory (Path.Combine (directory, "android"));
 	}
 
-	[TearDown]
+	[TestCleanup]
 	public void TearDown ()
 	{
 		Directory.Delete (directory, recursive: true);
 	}
 
-	[TestCase (false, "XA1043", 3)]
-	[TestCase (true, "XA1048", 2)]
+	[TestMethod]
+	[DataRow (false, "XA1043", 3)]
+	[DataRow (true, "XA1048", 2)]
 	public void MissingInstrumentationReportsLaunchModeError (bool useInstrumentation, string expectedCode, int expectedReads)
 	{
 		WriteManifest ("", "");
 		var (logger, _) = Build (useInstrumentation, expectedSuccess: false);
-		CollectionAssert.AreEqual (new [] { expectedCode }, logger.Errors.Select (error => error.Code));
+		CollectionAssert.AreEqual (new [] { expectedCode }, logger.Errors.Select (error => error.Code).ToArray ());
 		Assert.AreEqual (expectedReads, ManifestReadCount (logger));
 	}
 
-	[TestCase (false, "", 3)]
-	[TestCase (false, "android:name=''", 3)]
-	[TestCase (true, "", 2)]
-	[TestCase (true, "android:name=''", 2)]
+	[TestMethod]
+	[DataRow (false, "", 3)]
+	[DataRow (false, "android:name=''", 3)]
+	[DataRow (true, "", 2)]
+	[DataRow (true, "android:name=''", 2)]
 	public void MissingOrEmptyFirstInstrumentationNameIsXA1042 (bool useInstrumentation, string attributes, int expectedReads)
 	{
 		WriteManifest ("", $"<instrumentation {attributes} /><instrumentation android:name='.Second' />");
 		var (logger, _) = Build (useInstrumentation, expectedSuccess: false);
-		CollectionAssert.AreEqual (new [] { "XA1042" }, logger.Errors.Select (error => error.Code));
+		CollectionAssert.AreEqual (new [] { "XA1042" }, logger.Errors.Select (error => error.Code).ToArray ());
 		Assert.AreEqual (expectedReads, ManifestReadCount (logger));
 	}
 
-	[TestCase ("")]
-	[TestCase ("android:name=''")]
+	[TestMethod]
+	[DataRow ("")]
+	[DataRow ("android:name=''")]
 	public void ActivityWinsWithoutReadingMalformedInstrumentation (string attributes)
 	{
 		WriteManifest (Activity, $"<instrumentation {attributes} />");
 		var (logger, instance) = Build ();
 		Assert.IsEmpty (logger.Errors);
 		Assert.AreEqual (".Activity", instance.GetPropertyValue ("AndroidLaunchActivity"));
-		StringAssert.Contains ("--activity \".Activity\"", instance.GetPropertyValue ("RunArguments"));
+		Assert.Contains ("--activity \".Activity\"", instance.GetPropertyValue ("RunArguments"));
 		Assert.AreEqual (1, ManifestReadCount (logger));
 	}
 
-	[TestCase (false, 2)]
-	[TestCase (true, 1)]
+	[TestMethod]
+	[DataRow (false, 2)]
+	[DataRow (true, 1)]
 	public void NamedInstrumentationIsSelectedOnlyWhenNeeded (bool useInstrumentation, int expectedReads)
 	{
 		WriteManifest (useInstrumentation ? Activity : "", "<instrumentation android:name='.Instrumentation' />");
 		var (logger, instance) = Build (useInstrumentation);
 		Assert.AreEqual (".Instrumentation", instance.GetPropertyValue ("AndroidInstrumentation"));
-		StringAssert.Contains ("--instrument \".Instrumentation\"", instance.GetPropertyValue ("RunArguments"));
+		Assert.Contains ("--instrument \".Instrumentation\"", instance.GetPropertyValue ("RunArguments"));
 		Assert.AreEqual (expectedReads, ManifestReadCount (logger));
 		if (useInstrumentation)
 			Assert.AreEqual (0, logger.Tasks.Count (task => task == "GetAndroidActivityName"));
 	}
 
-	[TestCase ("", "XA1048", 2)]
-	[TestCase ("<instrumentation android:name='.Instrumentation' />", "", 1)]
+	[TestMethod]
+	[DataRow ("", "XA1048", 2)]
+	[DataRow ("<instrumentation android:name='.Instrumentation' />", "", 1)]
 	public void InstrumentationOptInIgnoresPreviouslyDiscoveredActivity (string instrumentation, string errorCode, int expectedReads)
 	{
 		WriteManifest (Activity, instrumentation);
@@ -95,15 +101,16 @@ public class ComputeRunArgumentsDiscoveryTests
 		Assert.AreEqual (expectedReads, ManifestReadCount (logger));
 		if (errorCode == "") {
 			Assert.AreEqual (".Instrumentation", instance.GetPropertyValue ("AndroidInstrumentation"));
-			StringAssert.Contains ("--instrument \".Instrumentation\"", instance.GetPropertyValue ("RunArguments"));
+			Assert.Contains ("--instrument \".Instrumentation\"", instance.GetPropertyValue ("RunArguments"));
 		} else {
-			CollectionAssert.AreEqual (new [] { errorCode }, logger.Errors.Select (error => error.Code));
+			CollectionAssert.AreEqual (new [] { errorCode }, logger.Errors.Select (error => error.Code).ToArray ());
 		}
 	}
 
-	[TestCase (".ExplicitActivity", "", "--activity \".ExplicitActivity\"")]
-	[TestCase ("", ".ExplicitInstrumentation", "--instrument \".ExplicitInstrumentation\"")]
-	[TestCase (".ExplicitActivity", ".ExplicitInstrumentation", "--instrument \".ExplicitInstrumentation\"")]
+	[TestMethod]
+	[DataRow (".ExplicitActivity", "", "--activity \".ExplicitActivity\"")]
+	[DataRow ("", ".ExplicitInstrumentation", "--instrument \".ExplicitInstrumentation\"")]
+	[DataRow (".ExplicitActivity", ".ExplicitInstrumentation", "--instrument \".ExplicitInstrumentation\"")]
 	public void ExplicitOverridesSkipDiscovery (string activity, string instrumentation, string expectedArgument)
 	{
 		File.WriteAllText (ManifestFile, "not XML");
@@ -112,11 +119,12 @@ public class ComputeRunArgumentsDiscoveryTests
 			["AndroidInstrumentation"] = instrumentation,
 		});
 		Assert.AreEqual (0, ManifestReadCount (logger));
-		StringAssert.Contains (expectedArgument, instance.GetPropertyValue ("RunArguments"));
+		Assert.Contains (expectedArgument, instance.GetPropertyValue ("RunArguments"));
 	}
 
-	[TestCase (false)]
-	[TestCase (true)]
+	[TestMethod]
+	[DataRow (false)]
+	[DataRow (true)]
 	public void ParallelProjectsUseTheirOwnRelativeManifests (bool multithreaded)
 	{
 		var resources = new List<ProjectResource> ();

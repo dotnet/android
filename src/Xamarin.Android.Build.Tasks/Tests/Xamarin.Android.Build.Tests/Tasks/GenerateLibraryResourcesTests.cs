@@ -1,4 +1,4 @@
-using NUnit.Framework;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Microsoft.Build.Framework;
 using System;
 using System.Collections.Generic;
@@ -9,7 +9,8 @@ using Xamarin.Android.Tasks;
 
 namespace Xamarin.Android.Build.Tests
 {
-	[TestFixture]
+	[TestClass]
+	[DoNotParallelize]
 	public class GenerateLibraryResourcesTests : BaseTest
 	{
 		string temp;
@@ -47,7 +48,7 @@ int styleable Foo_styleable_baz 1";
  */
 ";
 
-		[SetUp]
+		[TestInitialize]
 		public void Setup ()
 		{
 			string tempDirectoryName = Path.Combine ("temp", TestName);
@@ -69,7 +70,7 @@ int styleable Foo_styleable_baz 1";
 			};
 		}
 
-		[TearDown]
+		[TestCleanup]
 		public void TearDown ()
 		{
 			Directory.Delete (temp, recursive: true);
@@ -87,7 +88,7 @@ int styleable Foo_styleable_baz 1";
 			public int MetadataLookups { get; private set; }
 			public bool Yielded => yielded;
 
-			public ApiMetadataBuildEngine () : base (TestContext.Out)
+			public ApiMetadataBuildEngine () : base (Console.Out)
 			{
 			}
 
@@ -131,14 +132,14 @@ int styleable Foo_styleable_baz 1";
 
 			var r_java = Path.Combine (output_dir, "com", "mycompanyname", "foo", "R.java");
 			if (fileExists) {
-				FileAssert.Exists (r_java);
+				Assert.IsTrue (File.Exists (r_java));
 				Assert.AreEqual (ReplaceLineEndings (Header + expected), ReplaceLineEndings (File.ReadAllText (r_java)));
 			} else {
-				FileAssert.DoesNotExist (r_java);
+				Assert.IsFalse (File.Exists (r_java));
 			}
 		}
 
-		[Test]
+		[TestMethod]
 		public void Anim ()
 		{
 			File.WriteAllText (r_txt, "int anim foo_anim 0x00000000");
@@ -153,7 +154,7 @@ public final class R {
 ");
 		}
 
-		[Test]
+		[TestMethod]
 		public void Id ()
 		{
 			File.WriteAllText (r_txt, "int id foo_id 0x00000000");
@@ -168,7 +169,7 @@ public final class R {
 ");
 		}
 
-		[Test]
+		[TestMethod]
 		public void Styleable ()
 		{
 			File.WriteAllText (r_txt,
@@ -188,7 +189,7 @@ public final class R {
 ");
 		}
 
-		[Test]
+		[TestMethod]
 		public void Collision ()
 		{
 			const int count = 10;
@@ -224,7 +225,7 @@ public final class R {
 				manifestFiles: Enumerable.Repeat (manifest, count).ToArray ());
 		}
 
-		[Test]
+		[TestMethod]
 		public void NoMatches ()
 		{
 			File.WriteAllText (r_txt, "int id asdf 0x00000000");
@@ -237,7 +238,7 @@ public final class R {
 		}
 
 		//This one should just write the main R.txt file
-		[Test]
+		[TestMethod]
 		public void TextFileDoesNotExist ()
 		{
 			RunTask (expected:
@@ -289,7 +290,7 @@ public final class R {
 ");
 		}
 
-		[Test]
+		[TestMethod]
 		public void ManifestDoesNotExist ()
 		{
 			File.Delete (manifest);

@@ -5,27 +5,23 @@ using System.Linq;
 using System.Security;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
-using NUnit.Framework;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Xamarin.Android.Tasks;
 using Xamarin.ProjectTools;
 using Microsoft.Android.Build.Tasks;
 
 namespace Xamarin.Android.Build.Tests {
-	[TestFixture]
-	[Parallelizable (ParallelScope.Self)]
+	[TestClass]
+	[DoNotParallelize]
 	public class AndroidComputeResPathsTests : BaseTest {
 
-		// These tests use no device or adb server.
-		protected override void AfterAllTests ()
-		{
-		}
-
-		[TestCase (false)]
-		[TestCase (true)]
+		[TestMethod]
+		[DataRow (false)]
+		[DataRow (true)]
 		public void RelativeResourcePathsUseProjectDirectories (bool multithreaded)
 		{
 			var directory = Path.Combine (Root, "temp", TestName);
-			TestOutputDirectories [TestContext.CurrentContext.Test.ID] = directory;
+			TestOutputDirectories [TestId] = directory;
 			Directory.CreateDirectory (directory);
 			var assembly = SecurityElement.Escape (Path.Combine (TestEnvironment.AndroidMSBuildDirectory, "Xamarin.Android.Build.Tasks.dll"));
 			var resources = new List<ProjectResource> ();
@@ -85,11 +81,11 @@ namespace Xamarin.Android.Build.Tests {
 			}
 		}
 
-		[Test]
+		[TestMethod]
 		public void RelativeAssetPackAndMissingResource ()
 		{
 			var directory = Path.Combine (Root, "temp", TestName);
-			TestOutputDirectories [TestContext.CurrentContext.Test.ID] = directory;
+			TestOutputDirectories [TestId] = directory;
 			Directory.CreateDirectory (directory);
 			File.WriteAllText (Path.Combine (directory, "source.txt"), "");
 			var errors = new List<BuildErrorEventArgs> ();
@@ -98,7 +94,7 @@ namespace Xamarin.Android.Build.Tests {
 				{ "AssetPack", "textures" },
 			});
 			var task = new AndroidComputeResPaths {
-				BuildEngine = new MockBuildEngine (TestContext.Out, errors: errors),
+				BuildEngine = new MockBuildEngine (Console.Out, errors: errors),
 				TaskEnvironment = TaskEnvironment.CreateWithProjectDirectoryAndEnvironment (directory, new Dictionary<string, string> ()),
 				ResourceFiles = [source, new TaskItem ("missing.txt")],
 				IntermediateDir = Path.Combine ("obj", "assets"),
@@ -114,15 +110,16 @@ namespace Xamarin.Android.Build.Tests {
 			Assert.AreSame (source, task.ResolvedResourceFiles.Single ());
 			Assert.AreEqual ("XA2001", error.Code);
 			Assert.AreEqual ("missing.txt", error.File);
-			StringAssert.Contains ("missing.txt", error.Message);
+			Assert.Contains ("missing.txt", error.Message);
 		}
 
-		[TestCase (false)]
-		[TestCase (true)]
+		[TestMethod]
+		[DataRow (false)]
+		[DataRow (true)]
 		public void ResourceCaseMapCrossesProjects (bool emptyAssets)
 		{
 			var directory = Path.Combine (Root, "temp", TestName);
-			TestOutputDirectories [TestContext.CurrentContext.Test.ID] = directory;
+			TestOutputDirectories [TestId] = directory;
 			Directory.CreateDirectory (directory);
 			var tasksDirectory = TestEnvironment.AndroidMSBuildDirectory;
 			var assembly = SecurityElement.Escape (Path.Combine (tasksDirectory, "Xamarin.Android.Build.Tasks.dll"));
@@ -182,12 +179,13 @@ namespace Xamarin.Android.Build.Tests {
 			}, File.ReadAllLines (Path.Combine (directory, "map.txt")));
 		}
 
-		[TestCase (false)]
-		[TestCase (true)]
+		[TestMethod]
+		[DataRow (false)]
+		[DataRow (true)]
 		public void ResourceCaseMapIsExplicit (bool lowercase)
 		{
 			var directory = Path.Combine (Root, "temp", TestName);
-			TestOutputDirectories [TestContext.CurrentContext.Test.ID] = directory;
+			TestOutputDirectories [TestId] = directory;
 			Directory.CreateDirectory (directory);
 			var source = Path.Combine (directory, "source.xml");
 			File.WriteAllText (source, "");
@@ -222,7 +220,7 @@ namespace Xamarin.Android.Build.Tests {
 			Assert.IsEmpty (task.ResourceCaseMap);
 		}
 
-		[Test]
+		[TestMethod]
 		public void ResourceCaseMapUsesOrdinalLastWriter ()
 		{
 			var items = new [] {
@@ -239,7 +237,7 @@ namespace Xamarin.Android.Build.Tests {
 		class NoRegistryBuildEngine : MockBuildEngine, IBuildEngine4
 		{
 			public NoRegistryBuildEngine ()
-				: base (TestContext.Out)
+				: base (Console.Out)
 			{
 			}
 
@@ -254,7 +252,7 @@ namespace Xamarin.Android.Build.Tests {
 		}
 
 #pragma warning disable 414
-		static object [] AndroidComputeResPathsChecks () => new object [] {
+		static object [] [] AndroidComputeResPathsChecks () => new object [] [] {
 			new object[] {
 				/* Identity */	                Path.Combine ("Assets", "asset1.txt"),
 				/* LogicalName */               Path.Combine ("Assets", "subfolder", "asset1.txt"),
@@ -288,16 +286,16 @@ namespace Xamarin.Android.Build.Tests {
 		};
 #pragma warning restore 414
 
-		[Test]
-		[TestCaseSource (nameof (AndroidComputeResPathsChecks))]
+		[TestMethod]
+		[DynamicData (nameof (AndroidComputeResPathsChecks))]
 		public void AndroidComputeResPathsTest (string identity, string logicalName, string expectedIntermediateFile, string expectedResultFile)
 		{
 			var hash = Files.HashString (identity + logicalName + expectedIntermediateFile + expectedResultFile);
 			var projectDir = Path.Combine (Root, "temp", $"{nameof (AndroidComputeResPathsTest)}_{hash}");
-			TestOutputDirectories [TestContext.CurrentContext.Test.ID] = projectDir;
+			TestOutputDirectories [TestId] = projectDir;
 			var intermdiateDir = Path.Combine (projectDir, "assets");
 			var errors = new List<BuildErrorEventArgs> ();
-			IBuildEngine engine = new MockBuildEngine (TestContext.Out, errors);
+			IBuildEngine engine = new MockBuildEngine (Console.Out, errors);
 
 			var metaData = new Dictionary<string, string> ();
 			if (!string.IsNullOrEmpty (logicalName))
@@ -320,18 +318,14 @@ namespace Xamarin.Android.Build.Tests {
 				Prefixes = "Assets",
 				ResourceFiles = assets.ToArray (),
 			};
-			Assert.True (task.Execute (), "task should have succeeded.");
+			Assert.IsTrue (task.Execute (), "task should have succeeded.");
 			Assert.AreEqual (1, task.IntermediateFiles.Length, "Expected 1 entry in the IntermediateFiles Output");
 			Assert.AreEqual (1, task.ResolvedResourceFiles.Length, "Expected 1 entry in the ResolvedResourceFiles Output");
 			var expected = Path.GetFullPath (Path.Combine (intermdiateDir, expectedIntermediateFile));
-			StringAssert.AreEqualIgnoringCase (
-				expected,
-				task.IntermediateFiles [0].ItemSpec,
+			Assert.AreEqual (expected, task.IntermediateFiles [0].ItemSpec, ignoreCase: true,
 				$"Expected {expected} in task.IntermediateFiles, but got {task.IntermediateFiles [0].ItemSpec}"
 			);
-			StringAssert.AreEqualIgnoringCase (
-				expectedResultFile,
-				task.ResolvedResourceFiles [0].ItemSpec,
+			Assert.AreEqual (expectedResultFile, task.ResolvedResourceFiles [0].ItemSpec, ignoreCase: true,
 				$"Expected {expectedResultFile} in task.ResolvedResourceFiles, but got {task.ResolvedResourceFiles [0].ItemSpec}"
 			);
 		}

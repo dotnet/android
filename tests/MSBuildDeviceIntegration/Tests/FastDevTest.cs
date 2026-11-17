@@ -1,17 +1,18 @@
 using System;
 using System.IO;
 using System.Linq;
-using NUnit.Framework;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Microsoft.VisualStudio.TestTools.UnitTesting.Combinatorial;
 using Xamarin.ProjectTools;
 using Microsoft.Build.Framework;
 
 namespace Xamarin.Android.Build.Tests
 {
-	[TestFixture]
-	[Category ("UsesDevice")]
+	[TestClass]
+	[TestCategory ("UsesDevice")]
 	public class FastDevTest : DeviceTest
 	{
-		[Test]
+		[TestMethod]
 		public void FastDevSimpleBuild ()
 		{
 			var proj = new XamarinFormsAndroidApplicationProject {
@@ -38,7 +39,7 @@ namespace Xamarin.Android.Build.Tests
 			b.Dispose ();
 		}
 
-		[Test]
+		[TestMethod]
 		public void FastDeployUpdatesTypeMapAfterAssemblyEdit ()
 		{
 			const string logcatMessage = "FAST_DEPLOY_TYPEMAP_TEST_MESSAGE";
@@ -68,7 +69,7 @@ namespace Xamarin.Android.Build.Tests
 			Assert.IsTrue (builder.Output.IsApkInstalled, "The .apk should have been installed by the initial build.");
 			AssertActivityStarts ("MainActivity", "initial-launch.log");
 			var typeMapAssembly = builder.Output.GetIntermediaryPath (Path.Combine ("typemap", "_UnnamedProject.TypeMap.dll"));
-			FileAssert.Exists (typeMapAssembly, "The managed application type map should be generated.");
+			Assert.IsTrue (File.Exists (typeMapAssembly), "The managed application type map should be generated.");
 			byte [] originalTypeMap = File.ReadAllBytes (typeMapAssembly);
 
 			// 2. A C#-only change that adds a new Java-callable type, so the type map *must* be updated.
@@ -146,7 +147,7 @@ namespace Xamarin.Android.Build.Tests
 			}
 		}
 
-		[Test]
+		[TestMethod]
 		public void TargetsSkipped ()
 		{
 			var proj = new XamarinAndroidApplicationProject () {
@@ -208,8 +209,9 @@ namespace Xamarin.Android.Build.Tests
 			b.Dispose ();
 		}
 
-		[Test]
-		public void SkipFastDevAlreadyInstalledFile ([Values (false, true)] bool diagnosticLogging)
+		[TestMethod]
+		[CombinatorialData]
+		public void SkipFastDevAlreadyInstalledFile ([CombinatorialValues (false, true)] bool diagnosticLogging)
 		{
 			var proj = new XamarinAndroidApplicationProject {
 			};
@@ -252,7 +254,7 @@ namespace Xamarin.Android.Build.Tests
 			b.Dispose ();
 		}
 
-		[Test]
+		[TestMethod]
 		public void FastDeployRestoresMissingRemoteDirectory ()
 		{
 			var proj = new XamarinAndroidApplicationProject {
@@ -278,7 +280,7 @@ namespace Xamarin.Android.Build.Tests
 			}
 		}
 
-		[Test]
+		[TestMethod]
 		public void FastDeployCleansOrphanStagingDirectoriesAfterApkInstall ()
 		{
 			string [] orphanDirectories = {
@@ -354,14 +356,14 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		#pragma warning disable 414
-		static object [] SkipFastDevAlreadyInstalledResourcesSource = new object [] {
+		static object [] [] SkipFastDevAlreadyInstalledResourcesSource = new object [] [] {
 			new object[] { Array.Empty<Package> (), null },
 			new object[] { new Package [] { KnownPackages.AndroidXAppCompat }, "AndroidX.AppCompat.App.AppCompatActivity" },
 		};
 		#pragma warning restore 414
 
-		[Test]
-		[TestCaseSource ("SkipFastDevAlreadyInstalledResourcesSource")] // test for both cases that there is external resources or there are some.
+		[TestMethod]
+		[DynamicData ("SkipFastDevAlreadyInstalledResourcesSource")] // test for both cases that there is external resources or there are some.
 		public void SkipFastDevAlreadyInstalledResources (Package [] packages, string baseActivityClass)
 		{
 			var proj = new XamarinAndroidApplicationProject () {
@@ -388,8 +390,9 @@ namespace Xamarin.Android.Build.Tests
 			b.Dispose ();
 		}
 
-		[Test]
-		public void FastDevWithEmbeddedDex ([Values (false, true)] bool useEmbeddedDex)
+		[TestMethod]
+		[CombinatorialData]
+		public void FastDevWithEmbeddedDex ([CombinatorialValues (false, true)] bool useEmbeddedDex)
 		{
 			var proj = new XamarinAndroidApplicationProject () {
 			};
@@ -405,10 +408,10 @@ namespace Xamarin.Android.Build.Tests
 				Assert.IsTrue (logLines.Any (l => l.Contains ("Building target \"_Upload\" completely")), "_Upload target should have run");
 				ClearAdbLogcat ();
 				RunProjectAndAssert (proj, b);
-				Assert.True (WaitForActivityToStart (proj.PackageName, "MainActivity",
+				Assert.IsTrue (WaitForActivityToStart (proj.PackageName, "MainActivity",
 					Path.Combine (Root, b.ProjectDirectory, "logcat.log"), ActivityStartTimeoutInSeconds), "Activity should have started.");
 				b.BuildLogFile = "uninstall.log";
-				Assert.True (b.Uninstall (proj), "Project should have uninstalled.");
+				Assert.IsTrue (b.Uninstall (proj), "Project should have uninstalled.");
 			}
 		}
 	}

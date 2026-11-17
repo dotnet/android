@@ -1,26 +1,27 @@
 using System.IO;
 
 using Microsoft.Build.Utilities;
-using NUnit.Framework;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 using Xamarin.Android.Tasks;
 
 namespace Xamarin.Android.Build.Tests;
 
-[TestFixture]
+[TestClass]
+[DoNotParallelize]
 public class EnvironmentBuilderTests : BaseTest
 {
-	[Test]
+	[TestMethod]
 	public void NullEnvironmentFilesAreIgnored ()
 	{
 		var builder = new EnvironmentBuilder ();
 
-		Assert.DoesNotThrow (() => builder.Read (null));
+		builder.Read (null);
 		Assert.AreEqual (0, builder.EnvironmentVariables.Count);
 		Assert.AreEqual (0, builder.SystemProperties.Count);
 	}
 
-	[Test]
+	[TestMethod]
 	public void ReadsMultipleEnvironmentFiles ()
 	{
 		string firstEnvironmentFile = Path.Combine (Path.GetTempPath (), Path.GetRandomFileName ());
@@ -52,7 +53,7 @@ public class EnvironmentBuilderTests : BaseTest
 		}
 	}
 
-	[Test]
+	[TestMethod]
 	public void PreservesDotNetDiagnosticsSettings ()
 	{
 		string environmentFile = Path.Combine (Path.GetTempPath (), Path.GetRandomFileName ());

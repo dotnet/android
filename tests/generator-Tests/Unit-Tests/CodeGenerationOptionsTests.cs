@@ -1,49 +1,53 @@
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using MonoDroid.Generation;
-using NUnit.Framework;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Xamarin.Android.Binder;
 
 namespace generatortests
 {
-	[TestFixture]
+	[TestClassAttribute]
 	public class CodeGenerationOptionsTests
 	{
-		[TestCase ("JavaInterop1")]
-		[TestCase ("javainterop1")]
-		[TestCase ("JAVAINTEROP1")]
+		[TestMethodAttribute]
+		[DataRow ("JavaInterop1")]
+		[DataRow ("javainterop1")]
+		[DataRow ("JAVAINTEROP1")]
 		public void RetiredCodeGenerationTargetIsRejected (string target)
 		{
-			var error = Assert.Throws<NotSupportedException> (() =>
+			var error = Assert.ThrowsExactly<NotSupportedException> (() =>
 				CodeGeneratorOptions.Parse (new [] { $"--codegen-target={target}", "api.xml" }));
-			Assert.That (error?.Message, Does.Contain ("no longer supported").And.Contain ("XAJavaInterop1"));
+			StringAssert.Contains (error?.Message, "no longer supported");
+			StringAssert.Contains (error?.Message, "XAJavaInterop1");
 		}
 
-		[Test]
+		[TestMethodAttribute]
 		public void DefaultCodeGenerationTarget ()
 		{
 			var options = CodeGeneratorOptions.Parse (new [] { "--public", "api.xml" });
-			Assert.That (options?.CodeGenerationTarget, Is.EqualTo (CodeGenerationTarget.XAJavaInterop1));
-			Assert.That (new CodeGenerationOptions ().CodeGenerationTarget, Is.EqualTo (CodeGenerationTarget.XAJavaInterop1));
+			Assert.AreEqual (CodeGenerationTarget.XAJavaInterop1, options?.CodeGenerationTarget);
+			Assert.AreEqual (CodeGenerationTarget.XAJavaInterop1, new CodeGenerationOptions ().CodeGenerationTarget);
 		}
 
-		[TestCase ("XAJavaInterop1")]
-		[TestCase ("xajavainterop1")]
+		[TestMethodAttribute]
+		[DataRow ("XAJavaInterop1")]
+		[DataRow ("xajavainterop1")]
 		public void SupportedCodeGenerationTargetIsParsed (string target)
 		{
 			var options = CodeGeneratorOptions.Parse (new [] { $"--codegen-target={target}", "api.xml" });
-			Assert.That (options?.CodeGenerationTarget, Is.EqualTo (CodeGenerationTarget.XAJavaInterop1));
+			Assert.AreEqual (CodeGenerationTarget.XAJavaInterop1, options?.CodeGenerationTarget);
 		}
 
-		[Test]
+		[TestMethodAttribute]
 		public void UndefinedCodeGenerationTargetIsRejected ()
 		{
-			Assert.Throws<NotSupportedException> (() =>
+			Assert.ThrowsExactly<NotSupportedException> (() =>
 				new CodeGenerationOptions { CodeGenerationTarget = (CodeGenerationTarget) 1 });
 		}
 
-		[Test]
+		[TestMethodAttribute]
 		public void GetOutputNameUseGlobal ()
 		{
 			var opt = new CodeGenerationOptions { UseGlobal = true };
@@ -88,7 +92,7 @@ namespace generatortests
 				opt.GetOutputName ("System.Collections.Generic.List<System.Collections.Generic.List<string>.Enumerator[]>"));
 		}
 
-		[Test]
+		[TestMethodAttribute]
 		public void GetTypeReferenceName_Nullable ()
 		{
 			var opt = new CodeGenerationOptions { SupportNullableReferenceTypes = true };
@@ -116,16 +120,20 @@ namespace generatortests
 			Assert.AreEqual ("uint", opt.GetTypeReferenceName (primitive_uint));
 		}
 
-		[Test, TestCaseSource (nameof (ReservedKeywords))]
-		[SetCulture ("cs-CZ")]
+		[TestMethodAttribute, DynamicData (nameof (ReservedKeywords))]
 		public void GetSafeIdentifierCultureInvariant (string keyword)
 		{
-			var opt = new CodeGenerationOptions ();
-
-			Assert.AreEqual ($"{keyword}_", opt.GetSafeIdentifier (keyword));
+			var culture = CultureInfo.CurrentCulture;
+			try {
+				CultureInfo.CurrentCulture = CultureInfo.GetCultureInfo ("cs-CZ");
+				var opt = new CodeGenerationOptions ();
+				Assert.AreEqual ($"{keyword}_", opt.GetSafeIdentifier (keyword));
+			} finally {
+				CultureInfo.CurrentCulture = culture;
+			}
 		}
 
-		private static IEnumerable<TestCaseData> ReservedKeywords
-			=> TypeNameUtilities.reserved_keywords.Select (keyword => new TestCaseData (keyword));
+		public static IEnumerable<object []> ReservedKeywords
+			=> TypeNameUtilities.reserved_keywords.Select (keyword => new object [] { keyword });
 	}
 }

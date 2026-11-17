@@ -8,18 +8,21 @@ using Microsoft.Build.Evaluation;
 using Microsoft.Build.Execution;
 using Microsoft.Build.Framework;
 
-using NUnit.Framework;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Microsoft.VisualStudio.TestTools.UnitTesting.Combinatorial;
 
 using Xamarin.Android.Tasks;
 using Xamarin.ProjectTools;
 
 namespace Xamarin.Android.Build.Tests
 {
-	[TestFixture]
+	[TestClass]
+	[DoNotParallelize]
 	public class BuildOrderTests : BaseTest
 	{	
-		[Test]
-		public void APFBDependsOn ([Values (false, true)] bool isAppProject)
+		[TestMethod]
+		[CombinatorialData]
+		public void APFBDependsOn ([CombinatorialValues (false, true)] bool isAppProject)
 		{
 			var setupTargets = new Import (() => "SetupBuild.targets") {
 				TextContent = () =>@"
@@ -53,7 +56,7 @@ namespace Xamarin.Android.Build.Tests
 			StringAssertEx.Contains ("Running target: 'MyPrepareTarget'", builder.LastBuildOutput);
 		}
 
-		[Test]
+		[TestMethod]
 		public void ComputeRunArgumentsIncludesDebuggerPortForwarding ()
 		{
 			var setupTargets = new Import (() => "SetupRun.targets") {
@@ -112,9 +115,10 @@ namespace Xamarin.Android.Build.Tests
 			Assert.IsFalse (builder.LastBuildOutput.ContainsText ("--forward-port"), "A debugger client should connect without adb forwarding.");
 		}
 
-		[TestCase ("selected-serial", "true", false)]
-		[TestCase ("selected-serial", "", true)]
-		[TestCase ("", "", false)]
+		[TestMethod]
+		[DataRow ("selected-serial", "true", false)]
+		[DataRow ("selected-serial", "", true)]
+		[DataRow ("", "", false)]
 		public void DeviceBootIsLimitedToOuterBuilds (string device, string innerBuild, bool bootExpected)
 		{
 			var application = XDocument.Load (Path.Combine (XABuildPaths.TopDirectory, "src", "Xamarin.Android.Build.Tasks", "Microsoft.Android.Sdk", "targets", "Microsoft.Android.Sdk.Application.targets"));
@@ -145,8 +149,34 @@ namespace Xamarin.Android.Build.Tests
 			var instance = new ProjectInstance (root, globalProperties: null, toolsVersion: null, collection);
 			Assert.IsTrue (instance.Build ("Build", []));
 			string [] expected = bootExpected ? ["Boot=" + device, "ABI=-s resolved-serial"] : ["ABI=-s selected-serial"];
-			CollectionAssert.AreEqual (expected, instance.GetItems ("DeviceBootTrace").Select (item => item.EvaluatedInclude),
+			CollectionAssert.AreEqual (expected, instance.GetItems ("DeviceBootTrace").Select (item => item.EvaluatedInclude).ToArray (),
 				"Only outer builds with Device should check it, once, before the ABI query.");
+		}
+
+		[TestMethod]
+		public void RunWithLoggingEnablesManagedTimingLogger ()
+		{
+			var setupTargets = new Import (() => "SetupRunWithLogging.targets") {
+				TextContent = () => """
+<Project>
+  <Target Name="ReportRunWithLoggingProperties" DependsOnTargets="_PrepareRunWithLogging">
+    <Message Text="RuntimeLogProperty=$(_AndroidRuntimeLogProperty)" Importance="high" />
+    <Message Text="RuntimeLog=$(_AndroidRuntimeLog)" Importance="high" />
+  </Target>
+</Project>
+"""
+			};
+			var proj = new XamarinAndroidApplicationProject {
+				Imports = { setupTargets },
+			};
+			proj.SetRuntime (AndroidRuntime.CoreCLR);
+
+			using var builder = CreateApkBuilder ();
+			builder.Target = "ReportRunWithLoggingProperties";
+			builder.Verbosity = LoggerVerbosity.Detailed;
+			Assert.IsTrue (builder.Build (proj), "ReportRunWithLoggingProperties should succeed.");
+			StringAssertEx.Contains ("RuntimeLogProperty=debug.dotnet.log", builder.LastBuildOutput);
+			StringAssertEx.Contains ("RuntimeLog=default,assembly,timing", builder.LastBuildOutput);
 		}
 
 	}

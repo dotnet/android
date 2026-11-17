@@ -9,23 +9,24 @@ using System.Xml.Linq;
 using Microsoft.Android.Tasks;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
-using NUnit.Framework;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Xamarin.Android.Build.Tests.Tasks
 {
-	[TestFixture]
+	[TestClass]
+	[DoNotParallelize]
 	public class FindLayoutsToBindTests
 	{
 		string root = "";
 
-		[SetUp]
+		[TestInitialize]
 		public void SetUp ()
 		{
 			root = Path.Combine (Path.GetTempPath (), "FindLayoutsToBindTests", Guid.NewGuid ().ToString ("N"));
 			Directory.CreateDirectory (root);
 		}
 
-		[TearDown]
+		[TestCleanup]
 		public void TearDown ()
 		{
 			Directory.Delete (root, recursive: true);
@@ -39,7 +40,7 @@ namespace Xamarin.Android.Build.Tests.Tasks
 			return path;
 		}
 
-		[Test]
+		[TestMethod]
 		public void CollectsLayoutsFromResourcesBoundLayoutsAndCache ()
 		{
 			string layout = CreateFile ("Resources", "layout", "main.xml");
@@ -57,7 +58,7 @@ namespace Xamarin.Android.Build.Tests.Tasks
 			bound.SetMetadata ("ClassName", "Foo.Bar");
 
 			var task = new FindLayoutsToBind {
-				BuildEngine = new MockBuildEngine (TestContext.Out),
+				BuildEngine = new MockBuildEngine (Console.Out),
 				GenerateLayoutBindings = true,
 				ResourceFiles = new [] { layout, qualified, upper, drawable, notLayout, json, missing }
 					.Select (f => (ITaskItem) new TaskItem (f)).ToArray (),
@@ -71,8 +72,9 @@ namespace Xamarin.Android.Build.Tests.Tasks
 			Assert.AreEqual ("Foo.Bar", task.LayoutsToBind? [3].GetMetadata ("ClassName"));
 		}
 
-		[TestCase (false)]
-		[TestCase (true)]
+		[TestMethod]
+		[DataRow (false)]
+		[DataRow (true)]
 		public void ShortTaskNameResolves (bool projectRelativePaths)
 		{
 			string repo = NativeAotBootstrapTestTools.FindRepositoryRoot ();
@@ -129,13 +131,13 @@ namespace Xamarin.Android.Build.Tests.Tasks
 			CollectionAssert.AreEqual (new [] { InputPath (layout), InputPath (cached) }, identities);
 		}
 
-		[Test]
+		[TestMethod]
 		public void SkipsResourcesWhenLayoutBindingsAreDisabled ()
 		{
 			string layout = CreateFile ("Resources", "layout", "main.xml");
 
 			var task = new FindLayoutsToBind {
-				BuildEngine = new MockBuildEngine (TestContext.Out),
+				BuildEngine = new MockBuildEngine (Console.Out),
 				GenerateLayoutBindings = false,
 				ResourceFiles = [new TaskItem (layout)],
 			};

@@ -1,7 +1,7 @@
 using Android.Runtime;
 using Mono.Cecil;
 using MonoDroid.Generation;
-using NUnit.Framework;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -116,14 +116,14 @@ namespace NullableTestTypes
 
 namespace generatortests
 {
-	[TestFixture]
+	[TestClassAttribute]
 	public class ManagedTests
 	{
 		string tempFile;
 		ModuleDefinition module;
 		CodeGenerationOptions options;
 
-		[SetUp]
+		[TestInitialize]
 		public void SetUp ()
 		{
 			tempFile = Path.GetTempFileName ();
@@ -140,14 +140,14 @@ namespace generatortests
 			}
 		}
 
-		[TearDown]
+		[TestCleanup]
 		public void TearDown ()
 		{
 			module.Dispose ();
 			File.Delete (tempFile);
 		}
 
-		[Test]
+		[TestMethodAttribute]
 		public void KotlinValueClassStruct ()
 		{
 			var @class = CecilApiImporter.CreateClass (module.GetType ("Com.Mypackage.MyDp"), options);
@@ -156,10 +156,10 @@ namespace generatortests
 			Assert.AreEqual ("com.mypackage.MyDp", @class.JavaName);
 			Assert.IsTrue (@class.IsKotlinInlineClass);
 			Assert.AreEqual ("F", @class.KotlinInlineClassUnderlyingJniType);
-			CollectionAssert.IsEmpty (@class.ImplementedInterfaces, "IEquatable<T> is not a Java interface.");
+			Assert.IsEmpty (@class.ImplementedInterfaces, "IEquatable<T> is not a Java interface.");
 		}
 
-		[Test]
+		[TestMethodAttribute]
 		public void KotlinValueClassStructMembers ()
 		{
 			// Like a real build, which imports referenced types lazily.
@@ -183,7 +183,7 @@ namespace generatortests
 			Assert.AreEqual ("Com.Mypackage.MyDp?", maybe.RetVal.FullName);
 		}
 
-		[Test]
+		[TestMethodAttribute]
 		public void Class ()
 		{
 			var @class = CecilApiImporter.CreateClass (module.GetType ("Com.Mypackage.Foo"), options);
@@ -199,7 +199,7 @@ namespace generatortests
 			Assert.IsNull (@class.DeprecatedComment);
 		}
 
-		[Test]
+		[TestMethodAttribute]
 		public void FieldWithNestedType ()
 		{
 			var @class = CecilApiImporter.CreateClass (module.GetType ("Com.Mypackage.FieldClass"), options);
@@ -214,7 +214,7 @@ namespace generatortests
 			Assert.AreEqual ("Com.Mypackage.FieldClass.NestedFieldClass", @class.Fields [0].TypeName);
 		}
 
-		[Test]
+		[TestMethodAttribute]
 		public void Method ()
 		{
 			var type = module.GetType ("Com.Mypackage.Foo");
@@ -234,7 +234,7 @@ namespace generatortests
 			Assert.IsNull (method.Deprecated);
 		}
 
-		[Test]
+		[TestMethodAttribute]
 		public void Method_Matches_True ()
 		{
 			var type = module.GetType ("Com.Mypackage.Foo");
@@ -245,7 +245,7 @@ namespace generatortests
 			Assert.IsTrue (methodA.Matches (methodB), "Methods should match!");
 		}
 
-		[Test]
+		[TestMethodAttribute]
 		public void Method_Matches_False ()
 		{
 			var type = module.GetType ("Com.Mypackage.Foo");
@@ -259,7 +259,7 @@ namespace generatortests
 			Assert.IsFalse (methodA.Matches (methodB), "Methods should not match!");
 		}
 
-		[Test]
+		[TestMethodAttribute]
 		public void MethodWithParameters ()
 		{
 			var type = module.GetType ("Com.Mypackage.Foo");
@@ -289,7 +289,7 @@ namespace generatortests
 			Assert.AreEqual ("D", parameter.JniType);
 		}
 
-		[Test]
+		[TestMethodAttribute]
 		public void Ctor ()
 		{
 			var type = module.GetType ("Com.Mypackage.Foo");
@@ -303,7 +303,7 @@ namespace generatortests
 			Assert.IsNull (ctor.Deprecated);
 		}
 
-		[Test]
+		[TestMethodAttribute]
 		public void Field ()
 		{
 			var type = module.GetType ("Com.Mypackage.Foo");
@@ -319,7 +319,7 @@ namespace generatortests
 			Assert.IsTrue (field.IsConst);
 		}
 
-		[Test]
+		[TestMethodAttribute]
 		public void Interface ()
 		{
 			var type = module.GetType ("Com.Mypackage.IService");
@@ -332,7 +332,7 @@ namespace generatortests
 			Assert.AreEqual ("Lcom/mypackage/service;", @interface.JniName);
 		}
 
-		[Test]
+		[TestMethodAttribute]
 		public void StripArity ()
 		{
 			var @class = CecilApiImporter.CreateClass (module.GetType ("GenericTestClasses.MyCollection`1"), options);
@@ -354,7 +354,7 @@ namespace generatortests
 			Assert.AreEqual ("System.Collections.Generic.Dictionary<T,System.Collections.Generic.List<System.String>>", @class.Methods [0].ManagedReturn);
 		}
 
-		[Test]
+		[TestMethodAttribute]
 		public void TypeNullability ()
 		{
 			var type = module.GetType ("NullableTestTypes.NullableClass");

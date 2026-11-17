@@ -4,11 +4,11 @@ using System.Linq;
 using Microsoft.Android.Build.BaseTasks.Tests.Utilities;
 using Microsoft.Android.Build.Tasks;
 using Microsoft.Build.Framework;
-using NUnit.Framework;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Microsoft.Android.Build.BaseTasks.Tests
 {
-	[TestFixture]
+	[TestClass]
 	public class AsyncTaskTests
 	{
 		List<BuildErrorEventArgs> errors;
@@ -16,13 +16,13 @@ namespace Microsoft.Android.Build.BaseTasks.Tests
 		List<BuildMessageEventArgs> messages;
 		MockBuildEngine engine;
 
-		[SetUp]
+		[TestInitialize]
 		public void TestSetup ()
 		{
 			errors = new List<BuildErrorEventArgs> ();
 			warnings = new List<BuildWarningEventArgs> ();
 			messages = new List<BuildMessageEventArgs> ();
-			engine = new MockBuildEngine (TestContext.Out, errors, warnings, messages);
+			engine = new MockBuildEngine (System.Console.Out, errors, warnings, messages);
 		}
 
 		class AsyncTaskTest : AsyncTask
@@ -63,7 +63,7 @@ namespace Microsoft.Android.Build.BaseTasks.Tests
 		}
 
 
-		[Test]
+		[TestMethod]
 		public void RunAsyncTask ()
 		{
 			var task = new AsyncTaskTest () {
@@ -73,7 +73,7 @@ namespace Microsoft.Android.Build.BaseTasks.Tests
 			Assert.IsTrue (task.Execute (), "Empty AsyncTask should have ran successfully.");
 		}
 
-		[Test]
+		[TestMethod]
 		public void RunAsyncTaskOverride ()
 		{
 			var message = "Hello Async World!";
@@ -86,7 +86,7 @@ namespace Microsoft.Android.Build.BaseTasks.Tests
 				$"Task did not contain expected message text: '{message}'.");
 		}
 
-		[Test]
+		[TestMethod]
 		public void RunAsyncTaskExpectedException ()
 		{
 			var expectedException = "test exception!";

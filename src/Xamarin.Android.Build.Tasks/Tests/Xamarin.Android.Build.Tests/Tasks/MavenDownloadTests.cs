@@ -10,18 +10,20 @@ using Java.Interop.Tools.Maven.Models;
 using Java.Interop.Tools.Maven.Repositories;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
-using NUnit.Framework;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Xamarin.Android.Tasks;
 using Xamarin.ProjectTools;
 using Task = System.Threading.Tasks.Task;
 namespace Xamarin.Android.Build.Tests;
 
+[TestClass]
+[DoNotParallelize]
 public class MavenDownloadTests
 {
-	[Test]
+	[TestMethod]
 	public async Task MissingVersionMetadata ()
 	{
-		var engine = new MockBuildEngine (TestContext.Out, new List<BuildErrorEventArgs> ());
+		var engine = new MockBuildEngine (Console.Out, new List<BuildErrorEventArgs> ());
 		var task = new MavenDownload {
 			BuildEngine = engine,
 			AndroidMavenLibraries = [CreateMavenTaskItem ("com.google.android.material:material", null)],
@@ -33,10 +35,10 @@ public class MavenDownloadTests
 		Assert.AreEqual ("'<AndroidMavenLibrary>' item 'com.google.android.material:material' is missing required attribute 'Version'.", engine.Errors [0].Message);
 	}
 
-	[Test]
+	[TestMethod]
 	public async Task InvalidArtifactSpecification_WrongNumberOfParts ()
 	{
-		var engine = new MockBuildEngine (TestContext.Out, new List<BuildErrorEventArgs> ());
+		var engine = new MockBuildEngine (Console.Out, new List<BuildErrorEventArgs> ());
 		var task = new MavenDownload {
 			BuildEngine = engine,
 			AndroidMavenLibraries = [CreateMavenTaskItem ("com.google.android.material", "1.0.0")],
@@ -48,10 +50,10 @@ public class MavenDownloadTests
 		Assert.AreEqual ("Maven artifact specification 'com.google.android.material' is invalid. The correct format is 'group_id:artifact_id'.", engine.Errors [0].Message);
 	}
 
-	[Test]
+	[TestMethod]
 	public async Task InvalidArtifactSpecification_EmptyPart ()
 	{
-		var engine = new MockBuildEngine (TestContext.Out, new List<BuildErrorEventArgs> ());
+		var engine = new MockBuildEngine (Console.Out, new List<BuildErrorEventArgs> ());
 		var task = new MavenDownload {
 			BuildEngine = engine,
 			AndroidMavenLibraries = [CreateMavenTaskItem ("com.google.android.material: ", "1.0.0")],
@@ -63,10 +65,10 @@ public class MavenDownloadTests
 		Assert.AreEqual ("Maven artifact specification 'com.google.android.material: ' is invalid. The correct format is 'group_id:artifact_id'.", engine.Errors [0].Message);
 	}
 
-	[Test]
+	[TestMethod]
 	public async Task UnknownRepository ()
 	{
-		var engine = new MockBuildEngine (TestContext.Out, new List<BuildErrorEventArgs> ());
+		var engine = new MockBuildEngine (Console.Out, new List<BuildErrorEventArgs> ());
 		var task = new MavenDownload {
 			BuildEngine = engine,
 			AndroidMavenLibraries = [CreateMavenTaskItem ("com.google.android.material:material", "1.0.0", "bad-repo")],
@@ -78,10 +80,10 @@ public class MavenDownloadTests
 		Assert.AreEqual ("Unknown Maven repository: 'bad-repo'.", engine.Errors [0].Message);
 	}
 
-	[Test]
+	[TestMethod]
 	public async Task InsecureHttpRepository_Blocked ()
 	{
-		var engine = new MockBuildEngine (TestContext.Out, new List<BuildErrorEventArgs> ());
+		var engine = new MockBuildEngine (Console.Out, new List<BuildErrorEventArgs> ());
 		var task = new MavenDownload {
 			BuildEngine = engine,
 			AndroidMavenLibraries = [CreateMavenTaskItem ("com.google.android.material:material", "1.0.0", "http://repo.example.com/maven2/")],
@@ -93,10 +95,10 @@ public class MavenDownloadTests
 		Assert.AreEqual ("Insecure HTTP Maven repository URL 'http://repo.example.com/maven2/' is not allowed. Use an HTTPS URL, or set AllowInsecureHttp=\"true\" metadata on the item to override this check.", engine.Errors [0].Message);
 	}
 
-	[Test]
+	[TestMethod]
 	public async Task InsecureHttpRepository_AllowedWithOptIn ()
 	{
-		var engine = new MockBuildEngine (TestContext.Out, new List<BuildErrorEventArgs> ());
+		var engine = new MockBuildEngine (Console.Out, new List<BuildErrorEventArgs> ());
 		var item = CreateMavenTaskItem ("com.example:dummy", "1.0.0", "http://127.0.0.1:1/maven2/");
 		item.SetMetadata ("AllowInsecureHttp", "true");
 
@@ -113,13 +115,13 @@ public class MavenDownloadTests
 		Assert.AreEqual ("XA4236", engine.Errors [0].Code, "Expected a download error (XA4236), not a security error (XA4252)");
 	}
 
-	[Test]
+	[TestMethod]
 	public async Task UnknownArtifact ()
 	{
 		if (TestEnvironment.IsRunningOnCI)
-			Assert.Ignore ("The CI mirror returns 401 for uncached artifacts instead of Maven Central's 404.");
+			Assert.Inconclusive ("The CI mirror returns 401 for uncached artifacts instead of Maven Central's 404.");
 
-		var engine = new MockBuildEngine (TestContext.Out, new List<BuildErrorEventArgs> ());
+		var engine = new MockBuildEngine (Console.Out, new List<BuildErrorEventArgs> ());
 		var task = new MavenDownload {
 			BuildEngine = engine,
 			MavenCacheDirectory = Path.GetTempPath (),
@@ -132,16 +134,16 @@ public class MavenDownloadTests
 		Assert.AreEqual ($"Cannot download Maven artifact 'com.example:dummy'.{Environment.NewLine}- dummy-1.0.0.jar: Response status code does not indicate success: 404 (Not Found).{Environment.NewLine}- dummy-1.0.0.aar: Response status code does not indicate success: 404 (Not Found).", engine.Errors [0].Message?.ReplaceLineEndings ());
 	}
 
-	[Test]
+	[TestMethod]
 	public async Task UnknownPom ()
 	{
 		if (TestEnvironment.IsRunningOnCI)
-			Assert.Ignore ("The CI mirror returns 401 for uncached artifacts instead of Maven Central's 404.");
+			Assert.Inconclusive ("The CI mirror returns 401 for uncached artifacts instead of Maven Central's 404.");
 
 		var temp_cache_dir = Path.Combine (Path.GetTempPath (), Guid.NewGuid ().ToString ());
 
 		try {
-			var engine = new MockBuildEngine (TestContext.Out, new List<BuildErrorEventArgs> ());
+			var engine = new MockBuildEngine (Console.Out, new List<BuildErrorEventArgs> ());
 			var task = new MavenDownload {
 				BuildEngine = engine,
 				MavenCacheDirectory = temp_cache_dir,
@@ -166,7 +168,7 @@ public class MavenDownloadTests
 		}
 	}
 
-	[Test]
+	[TestMethod]
 	public void ImportedPomFailureIdentifiesTransitiveArtifactAndRepository ()
 	{
 		var root = new Artifact ("com.example", "library", "1.0.0");
@@ -195,7 +197,7 @@ public class MavenDownloadTests
 		var resolver = new LoggingPomResolver (cache, "https://repo.example.com/maven2/");
 
 		try {
-			var exception = Assert.Throws<InvalidOperationException> (() => ResolvedProject.FromArtifact (root, resolver));
+			var exception = Assert.ThrowsExactly<InvalidOperationException> (() => ResolvedProject.FromArtifact (root, resolver));
 
 			Assert.AreEqual ($"No POM found for {imported}", exception?.Message);
 			Assert.AreEqual (imported.VersionedArtifactString, resolver.UnresolvedArtifact?.VersionedArtifactString);
@@ -205,7 +207,7 @@ public class MavenDownloadTests
 		}
 	}
 
-	[Test]
+	[TestMethod]
 	public void ImportedPomModelFailureDoesNotBlameRootArtifact ()
 	{
 		var root = new Artifact ("com.example", "library", "1.0.0");
@@ -217,7 +219,7 @@ public class MavenDownloadTests
 		var resolver = new LoggingPomResolver (cache, "https://repo.example.com/maven2/");
 
 		try {
-			var exception = Assert.Throws<ArgumentException> (() => ResolvedProject.FromArtifact (root, resolver));
+			var exception = Assert.ThrowsExactly<ArgumentException> (() => ResolvedProject.FromArtifact (root, resolver));
 			if (exception is null)
 				throw new InvalidOperationException ("Expected imported POM model resolution to fail.");
 
@@ -230,13 +232,13 @@ public class MavenDownloadTests
 		}
 	}
 
-	[Test]
+	[TestMethod]
 	public async Task MavenCentralSuccess ()
 	{
 		var temp_cache_dir = Path.Combine (Path.GetTempPath (), Guid.NewGuid ().ToString ());
 
 		try {
-			var engine = new MockBuildEngine (TestContext.Out, new List<BuildErrorEventArgs> ());
+			var engine = new MockBuildEngine (Console.Out, new List<BuildErrorEventArgs> ());
 			var task = new MavenDownload {
 				BuildEngine = engine,
 				MavenCacheDirectory = temp_cache_dir,
@@ -254,20 +256,20 @@ public class MavenDownloadTests
 			var output_item = output_items [0];
 
 			Assert.AreEqual ("com.google.auto.value:auto-value-annotations:1.10.4", output_item.GetMetadata ("JavaArtifact"));
-			Assert.That (output_item.GetMetadata ("Manifest"), Does.StartWith (temp_cache_dir));
-			Assert.That (output_item.GetMetadata ("Manifest"), Does.EndWith (Path.Combine ("com.google.auto.value", "auto-value-annotations", "1.10.4", "auto-value-annotations-1.10.4.pom")));
+			Assert.StartsWith (temp_cache_dir, output_item.GetMetadata ("Manifest"));
+			Assert.EndsWith (Path.Combine ("com.google.auto.value", "auto-value-annotations", "1.10.4", "auto-value-annotations-1.10.4.pom"), output_item.GetMetadata ("Manifest"));
 		} finally {
 			DeleteTempDirectory (temp_cache_dir);
 		}
 	}
 
-	[Test]
+	[TestMethod]
 	public async Task MavenGoogleSuccess ()
 	{
 		var temp_cache_dir = Path.Combine (Path.GetTempPath (), Guid.NewGuid ().ToString ());
 
 		try {
-			var engine = new MockBuildEngine (TestContext.Out, new List<BuildErrorEventArgs> ());
+			var engine = new MockBuildEngine (Console.Out, new List<BuildErrorEventArgs> ());
 			var task = new MavenDownload {
 				BuildEngine = engine,
 				MavenCacheDirectory = temp_cache_dir,
@@ -285,14 +287,14 @@ public class MavenDownloadTests
 			var output_item = output_items [0];
 
 			Assert.AreEqual ("androidx.core:core:1.12.0", output_item.GetMetadata ("JavaArtifact"));
-			Assert.That (output_item.GetMetadata ("Manifest"), Does.StartWith (temp_cache_dir));
-			Assert.That (output_item.GetMetadata ("Manifest"), Does.EndWith (Path.Combine ("androidx.core", "core", "1.12.0", "core-1.12.0.pom")));
+			Assert.StartsWith (temp_cache_dir, output_item.GetMetadata ("Manifest"));
+			Assert.EndsWith (Path.Combine ("androidx.core", "core", "1.12.0", "core-1.12.0.pom"), output_item.GetMetadata ("Manifest"));
 		} finally {
 			DeleteTempDirectory (temp_cache_dir);
 		}
 	}
 
-	[Test]
+	[TestMethod]
 	public async Task ArtifactFilenameOverride ()
 	{
 		// Technically the artifact is 'react-android-0.76.1-release.aar' but we're going to override the filename to
@@ -300,7 +302,7 @@ public class MavenDownloadTests
 		var temp_cache_dir = Path.Combine (Path.GetTempPath (), Guid.NewGuid ().ToString ());
 
 		try {
-			var engine = new MockBuildEngine (TestContext.Out, new List<BuildErrorEventArgs> ());
+			var engine = new MockBuildEngine (Console.Out, new List<BuildErrorEventArgs> ());
 			var task = new MavenDownload {
 				BuildEngine = engine,
 				MavenCacheDirectory = temp_cache_dir,
@@ -318,9 +320,9 @@ public class MavenDownloadTests
 			var output_item = output_items [0];
 
 			Assert.AreEqual ("com.facebook.react:react-android:0.76.1", output_item.GetMetadata ("JavaArtifact"));
-			Assert.True (output_item.ItemSpec.EndsWith (Path.Combine ("0.76.1", "react-android-0.76.1.module"), StringComparison.OrdinalIgnoreCase));
-			Assert.That (output_item.GetMetadata ("Manifest"), Does.StartWith (temp_cache_dir));
-			Assert.That (output_item.GetMetadata ("Manifest"), Does.EndWith (Path.Combine ("com.facebook.react", "react-android", "0.76.1", "react-android-0.76.1.pom")));
+			Assert.IsTrue (output_item.ItemSpec.EndsWith (Path.Combine ("0.76.1", "react-android-0.76.1.module"), StringComparison.OrdinalIgnoreCase));
+			Assert.StartsWith (temp_cache_dir, output_item.GetMetadata ("Manifest"));
+			Assert.EndsWith (Path.Combine ("com.facebook.react", "react-android", "0.76.1", "react-android-0.76.1.pom"), output_item.GetMetadata ("Manifest"));
 		} finally {
 			DeleteTempDirectory (temp_cache_dir);
 		}
@@ -329,10 +331,11 @@ public class MavenDownloadTests
 	// The tests below route every download through TestEnvironment.DotNetPublicMaven, so the
 	// "Central"/"Google" shorthands are never exercised there. Cover them directly instead --
 	// this needs no network, so it also runs under CI's network isolation.
-	[TestCase ("Central", "central")]
-	[TestCase ("central", "central")]
-	[TestCase ("Google", "google")]
-	[TestCase ("google", "google")]
+	[TestMethod]
+	[DataRow ("Central", "central")]
+	[DataRow ("central", "central")]
+	[DataRow ("Google", "google")]
+	[DataRow ("google", "google")]
 	public void KnownRepositoryShorthand (string metadata, string expectedName)
 	{
 		var repository = MavenDownload.GetKnownRepository (metadata);
@@ -341,8 +344,9 @@ public class MavenDownloadTests
 		Assert.AreEqual (expectedName, repository?.Name);
 	}
 
-	[TestCase ("bad-repo")]
-	[TestCase ("https://repo1.maven.org/maven2/")]
+	[TestMethod]
+	[DataRow ("bad-repo")]
+	[DataRow ("https://repo1.maven.org/maven2/")]
 	public void UnknownRepositoryShorthand (string metadata)
 	{
 		Assert.IsNull (MavenDownload.GetKnownRepository (metadata));

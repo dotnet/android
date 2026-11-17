@@ -3,13 +3,13 @@ using System.Collections.Generic;
 using System.IO;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
-using NUnit.Framework;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Xamarin.Android.Tasks;
 
 namespace Xamarin.Android.Build.Tests
 {
-	[TestFixture]
-	[Parallelizable (ParallelScope.Self)]
+	[TestClass]
+	[DoNotParallelize]
 	public class ConvertResourcesCasesTests  : BaseTest
 	{
 		void DeleteDirectory (string path)
@@ -17,11 +17,11 @@ namespace Xamarin.Android.Build.Tests
 			try {
 				Directory.Delete (path, recursive: true);
 			} catch (Exception ex) {
-				TestContext.WriteLine ($"Error deleting '{path}': {ex}");
+				Console.WriteLine ($"Error deleting '{path}': {ex}");
 			}
 		}
 
-		[Test]
+		[TestMethod]
 		public void CheckAdaptiveIconIsConverted ()
 		{
 			var path = Path.Combine (Root, "temp", TestName);
@@ -37,7 +37,7 @@ namespace Xamarin.Android.Build.Tests
 			File.WriteAllText (Path.Combine (resPath, "mipmap-mdpi", "adaptiveicon_background.png"), "");
 			File.WriteAllText (Path.Combine (resPath, "mipmap-mdpi", "adaptiveicon_foreground.png"), "");
 			var errors = new List<BuildErrorEventArgs> ();
-			IBuildEngine engine = new MockBuildEngine (TestContext.Out, errors);
+			IBuildEngine engine = new MockBuildEngine (Console.Out, errors);
 			var task = new ConvertResourcesCases {
 				BuildEngine = engine,
 				CustomViewMapFile = "",
@@ -47,12 +47,12 @@ namespace Xamarin.Android.Build.Tests
 			};
 			Assert.IsTrue (task.Execute (), "Task should have executed successfully");
 			var output = File.ReadAllText (Path.Combine (resPath, "mipmap-anydpi-v26", "adaptiveicon.xml"));
-			StringAssert.DoesNotContain ("AdaptiveIcon_background", output, "AdaptiveIcon_background should have been replaced with adaptiveicon_background");
-			StringAssert.DoesNotContain ("AdaptiveIcon_foreground", output, "AdaptiveIcon_foreground should have been replaced with adaptiveicon_foreground");
+			Assert.DoesNotContain ("AdaptiveIcon_background", output, "AdaptiveIcon_background should have been replaced with adaptiveicon_background");
+			Assert.DoesNotContain ("AdaptiveIcon_foreground", output, "AdaptiveIcon_foreground should have been replaced with adaptiveicon_foreground");
 			DeleteDirectory (path);
 		}
 
-		[Test]
+		[TestMethod]
 		public void CheckClassIsReplacedWithMd5 ()
 		{
 			var path = Path.Combine (Root, "temp", "CheckClassIsReplacedWithMd5");
@@ -68,7 +68,7 @@ namespace Xamarin.Android.Build.Tests
 </LinearLayout>
 ");
 			var errors = new List<BuildErrorEventArgs> ();
-			IBuildEngine engine = new MockBuildEngine (TestContext.Out, errors);
+			IBuildEngine engine = new MockBuildEngine (Console.Out, errors);
 			var task = new ConvertResourcesCases {
 				BuildEngine = engine
 			};
@@ -91,16 +91,16 @@ namespace Xamarin.Android.Build.Tests
 			});
 			Assert.IsTrue (custom.Execute (), "Task should have executed successfully");
 			var output = File.ReadAllText (Path.Combine (resPath, "layout", "main.xml"));
-			StringAssert.Contains ("md5d6f7135293df7527c983d45d07471c5e.CustomTextView", output, "md5d6f7135293df7527c983d45d07471c5e.CustomTextView should exist in the main.xml");
-			StringAssert.DoesNotContain ("ClassLibrary1.CustomView", output, "ClassLibrary1.CustomView should have been replaced.");
-			StringAssert.DoesNotContain ("classlibrary1.CustomView", output, "classlibrary1.CustomView should have been replaced.");
+			Assert.Contains ("md5d6f7135293df7527c983d45d07471c5e.CustomTextView", output, "md5d6f7135293df7527c983d45d07471c5e.CustomTextView should exist in the main.xml");
+			Assert.DoesNotContain ("ClassLibrary1.CustomView", output, "ClassLibrary1.CustomView should have been replaced.");
+			Assert.DoesNotContain ("classlibrary1.CustomView", output, "classlibrary1.CustomView should have been replaced.");
 			Assert.IsTrue (custom.Execute (), "Task should have executed successfully");
 			var secondOutput = File.ReadAllText (Path.Combine(resPath, "layout", "main.xml"));
-			StringAssert.AreEqualIgnoringCase (output, secondOutput, "Files should not have changed.");
+			Assert.AreEqual (output, secondOutput, ignoreCase: true, "Files should not have changed.");
 			DeleteDirectory (path);
 		}
 
-		[Test]
+		[TestMethod]
 		public void CheckClassIsNotReplacedWithMd5 ()
 		{
 			var path = Path.Combine (Root, "temp", "CheckClassIsNotReplacedWithMd5");
@@ -116,7 +116,7 @@ namespace Xamarin.Android.Build.Tests
 </LinearLayout>
 ");
 			var errors = new List<BuildErrorEventArgs> ();
-			IBuildEngine engine = new MockBuildEngine (TestContext.Out, errors);
+			IBuildEngine engine = new MockBuildEngine (Console.Out, errors);
 			var task = new ConvertResourcesCases {
 				BuildEngine = engine
 			};
@@ -148,16 +148,16 @@ namespace Xamarin.Android.Build.Tests
 			});
 			Assert.IsFalse (custom.Execute (), "Task should have executed successfully");
 			var output = File.ReadAllText (Path.Combine (resPath, "layout", "main.xml"));
-			StringAssert.Contains ("md5d6f7135293df7527c983d45d07471c5e.CustomTextView", output, "md5d6f7135293df7527c983d45d07471c5e.CustomTextView should exist in the main.xml");
-			StringAssert.DoesNotContain ("ClassLibrary1.CustomView", output, "ClassLibrary1.CustomView should have been replaced.");
-			StringAssert.Contains ("classLibrary1.CustomView", output, "classLibrary1.CustomView should have been replaced.");
+			Assert.Contains ("md5d6f7135293df7527c983d45d07471c5e.CustomTextView", output, "md5d6f7135293df7527c983d45d07471c5e.CustomTextView should exist in the main.xml");
+			Assert.DoesNotContain ("ClassLibrary1.CustomView", output, "ClassLibrary1.CustomView should have been replaced.");
+			Assert.Contains ("classLibrary1.CustomView", output, "classLibrary1.CustomView should have been replaced.");
 			Assert.AreEqual (1, errors.Count, "One Error should have been raised.");
 			Assert.AreEqual ("XA1002", errors [0].Code, "XA1002 should have been raised.");
 			var expected = Path.Combine ("Resources", "Layout", "Main.axml");
 			Assert.AreEqual (expected, errors [0].File, $"Error should have the \"{expected}\" path. But contained \"{errors [0].File}\"");
 			Assert.IsFalse (custom.Execute (), "Task should have executed successfully");
 			var secondOutput = File.ReadAllText (Path.Combine (resPath, "layout", "main.xml"));
-			StringAssert.AreEqualIgnoringCase (output, secondOutput, "Files should not have changed.");
+			Assert.AreEqual (output, secondOutput, ignoreCase: true, "Files should not have changed.");
 			DeleteDirectory (path);
 		}
 	}

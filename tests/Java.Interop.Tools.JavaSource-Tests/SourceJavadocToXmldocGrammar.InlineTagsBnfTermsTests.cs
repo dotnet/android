@@ -2,7 +2,7 @@ using System;
 using System.Linq;
 using System.Xml.Linq;
 
-using NUnit.Framework;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 using Java.Interop.Tools.JavaSource;
 
@@ -11,10 +11,10 @@ using Irony.Parsing;
 
 namespace Java.Interop.Tools.JavaSource.Tests
 {
-	[TestFixture]
+	[TestClass]
 	public class SourceJavadocToXmldocGrammarInlineTagsBnfTermsTests : SourceJavadocToXmldocGrammarFixture {
 
-		[Test]
+		[TestMethod]
 		public void CodeDeclaration ()
 		{
 			var p = CreateParser (g => g.InlineTagsTerms.CodeDeclaration);
@@ -24,7 +24,7 @@ namespace Java.Interop.Tools.JavaSource.Tests
 			Assert.AreEqual ("<c>Object</c>", r.Root.AstNode.ToString ());
 		}
 
-		[Test]
+		[TestMethod]
 		public void DocRootDeclaration ()
 		{
 			var p = CreateParser (g => g.InlineTagsTerms.DocRootDeclaration);
@@ -34,7 +34,7 @@ namespace Java.Interop.Tools.JavaSource.Tests
 			Assert.AreEqual (DocRootPrefixExpected, r.Root.AstNode.ToString ());
 		}
 
-		[Test]
+		[TestMethod]
 		public void InheritDocDeclaration ()
 		{
 			var p = CreateParser (g => g.InlineTagsTerms.InheritDocDeclaration);
@@ -44,7 +44,7 @@ namespace Java.Interop.Tools.JavaSource.Tests
 			Assert.AreEqual ("To be added", r.Root.AstNode.ToString ());
 		}
 
-		[Test]
+		[TestMethod]
 		public void LinkDeclaration ()
 		{
 			var p = CreateParser (g => g.InlineTagsTerms.LinkDeclaration);
@@ -55,7 +55,7 @@ namespace Java.Interop.Tools.JavaSource.Tests
 			Assert.AreEqual ("<c>#ctor</c>", c.ToString (SaveOptions.DisableFormatting));
 		}
 
-		[Test]
+		[TestMethod]
 		public void LinkplainDeclaration ()
 		{
 			var p = CreateParser (g => g.InlineTagsTerms.LinkplainDeclaration);
@@ -65,7 +65,7 @@ namespace Java.Interop.Tools.JavaSource.Tests
 			Assert.AreEqual ("#ctor", r.Root.AstNode.ToString ());
 		}
 
-		[Test]
+		[TestMethod]
 		public void LiteralDeclaration ()
 		{
 			var p = CreateParser (g => g.InlineTagsTerms.LiteralDeclaration);
@@ -75,7 +75,7 @@ namespace Java.Interop.Tools.JavaSource.Tests
 			Assert.AreEqual ("A&lt;B&gt;C", r.Root.AstNode.ToString ());
 		}
 
-		[Test]
+		[TestMethod]
 		public void SeeDeclaration ()
 		{
 			var p = CreateParser (g => g.InlineTagsTerms.SeeDeclaration);
@@ -85,7 +85,7 @@ namespace Java.Interop.Tools.JavaSource.Tests
 			Assert.AreEqual ("<c>#cancelNotification(String, String, int)</c>", r.Root.AstNode.ToString ());
 		}
 
-		[Test]
+		[TestMethod]
 		public void ValueDeclaration ()
 		{
 			var p = CreateParser (g => g.InlineTagsTerms.ValueDeclaration);
@@ -99,7 +99,7 @@ namespace Java.Interop.Tools.JavaSource.Tests
 			Assert.AreEqual ("<c>#field</c>", r.Root.AstNode.ToString ());
 		}
 
-		[Test]
+		[TestMethod]
 		public void InlineParamDeclaration ()
 		{
 			var p = CreateParser (g => g.InlineTagsTerms.InlineParamDeclaration);

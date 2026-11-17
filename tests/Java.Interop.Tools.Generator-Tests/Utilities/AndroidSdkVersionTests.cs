@@ -1,13 +1,13 @@
 using System;
 using Java.Interop.Tools.Generator;
-using NUnit.Framework;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Java.Interop.Tools.Generator_Tests;
 
-[TestFixture]
+[TestClass]
 public class AndroidSdkVersionTests
 {
-	[Test]
+	[TestMethod]
 	public void CompareTo()
 	{
 		var a   = new AndroidSdkVersion (1);
@@ -19,7 +19,7 @@ public class AndroidSdkVersionTests
 		Assert.IsTrue (c.CompareTo (a) > 0, $"36.1 > 1");
 	}
 
-	[Test]
+	[TestMethod]
 	public void Operators ()
 	{
 		var a   = new AndroidSdkVersion (1);
@@ -37,7 +37,7 @@ public class AndroidSdkVersionTests
 		Assert.IsTrue (c >= a);
 	}
 
-	[Test]
+	[TestMethod]
 	public void TryParse ()
 	{
 		AndroidSdkVersion v;
@@ -53,8 +53,8 @@ public class AndroidSdkVersionTests
 		Assert.AreEqual (1,     v.MinorRelease);
 	}
 
-	[Test]
-	public new void ToString ()
+	[TestMethod]
+	public void ToStringFormatsVersion ()
 	{
 		Assert.AreEqual ("0",       new AndroidSdkVersion (0).ToString ());
 		Assert.AreEqual ("36",      new AndroidSdkVersion (36).ToString ());

@@ -7,36 +7,38 @@ using Microsoft.Build.Evaluation;
 using Microsoft.Build.Execution;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
-using NUnit.Framework;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Xamarin.Android.Tasks;
 using Xamarin.ProjectTools;
 
 namespace Xamarin.Android.Build.Tests
 {
-	[TestFixture]
+	[TestClass]
+	[DoNotParallelize]
 	public class ValidateJavaVersionTests : BaseTest
 	{
 		string path;
 
-		[SetUp]
+		[TestInitialize]
 		public void Setup ()
 		{
 			path = Path.Combine ("temp", TestName);
 			Directory.CreateDirectory (Path.Combine (Root, path));
 		}
 
-		[TearDown]
+		[TestCleanup]
 		public void TearDown ()
 		{
 			Directory.Delete (Path.Combine (Root, path), recursive: true);
 		}
 
-		[TestCase ("17.0.1", false, "XA0031")]
-		[TestCase ("21", true, "", "21.0")]
-		[TestCase ("21.0.8", true, "")]
-		[TestCase ("21.0.13.0.2", true, "", "21.0.13.0")]
-		[TestCase ("25.0.99", true, "")]
-		[TestCase ("25.0.100", false, "XA0030")]
+		[TestMethod]
+		[DataRow ("17.0.1", false, "XA0031")]
+		[DataRow ("21", true, "", "21.0")]
+		[DataRow ("21.0.8", true, "")]
+		[DataRow ("21.0.13.0.2", true, "", "21.0.13.0")]
+		[DataRow ("25.0.99", true, "")]
+		[DataRow ("25.0.100", false, "XA0030")]
 		public void CurrentSdkUsesConfiguredJavaVersionRange (string version, bool succeeds, string errorCode, string expectedVersion = null)
 		{
 			var javaPath = CreateFauxJavaSdkDirectory (Path.Combine (path, "jdk"), version, out string javaExe, out _);
@@ -50,7 +52,7 @@ namespace Xamarin.Android.Build.Tests
 				Assert.AreEqual (errorCode, result.Errors [0].Code);
 		}
 
-		[Test]
+		[TestMethod]
 		public void ToolingTargetRejectsOldJavaForModernAndroidApi ()
 		{
 			var javaPath = CreateFauxJavaSdkDirectory (Path.Combine (path, "jdk"), "17.0.1", out string javaExe, out _);
@@ -71,7 +73,7 @@ namespace Xamarin.Android.Build.Tests
 			StringAssertEx.Contains ("Found Java SDK version 17.0.1.", builder.LastBuildOutput);
 		}
 
-		[Test]
+		[TestMethod]
 		public void JavaToolExeSelectsJdk ()
 		{
 			var javaPath = CreateFauxJavaSdkDirectory (Path.Combine (path, "jdk"), "21.0.8", out string javaExe, out _);
@@ -82,7 +84,7 @@ namespace Xamarin.Android.Build.Tests
 			Assert.AreEqual ("XA0031", result.Errors.Single ().Code);
 		}
 
-		[Test]
+		[TestMethod]
 		public void ExtraJavaOutputIsIgnored ()
 		{
 			var extraPrefix = new[]{
@@ -98,7 +100,7 @@ namespace Xamarin.Android.Build.Tests
 				$"Want no XA0033 warnings! Got: ```{string.Join (Environment.NewLine, result.Warnings.Select (m => $"warning {m.Code}: {m.Message}"))}```");
 		}
 
-		[Test]
+		[TestMethod]
 		public void UnparsableJavaOutputWarns ()
 		{
 			var javaPath = CreateFauxJavaSdkDirectory (Path.Combine (path, "jdk"), "21.0.8", out string javaExe, out _);
@@ -108,11 +110,12 @@ namespace Xamarin.Android.Build.Tests
 			Assert.IsTrue (result.Success);
 			Assert.AreEqual ("", result.JdkVersion);
 			var warning = result.Warnings.Single (w => w.Code == "XA0033");
-			StringAssert.Contains ("java version unknown", warning.Message);
+			Assert.Contains ("java version unknown", warning.Message);
 		}
 
-		[TestCase (false)]
-		[TestCase (true)]
+		[TestMethod]
+		[DataRow (false)]
+		[DataRow (true)]
 		public void JavaPathsWithSpecialCharacters (bool useReleaseFile)
 		{
 			var javaPath = CreateFauxJavaSdkDirectory (Path.Combine (path, "O'Brien;x=1 $HOME %JAVA_HOME%", "jdk"), "21.0.8", out string javaExe, out _);
@@ -124,8 +127,9 @@ namespace Xamarin.Android.Build.Tests
 			Assert.AreEqual ("21.0.8", result.JdkVersion);
 		}
 
-		[TestCase (false)]
-		[TestCase (true)]
+		[TestMethod]
+		[DataRow (false)]
+		[DataRow (true)]
 		public void RelativeJavaPathsUseProjectDirectory (bool useReleaseFile)
 		{
 			var projectDirectory = Path.Combine (Root, path, "project");
@@ -139,7 +143,7 @@ namespace Xamarin.Android.Build.Tests
 			Assert.AreEqual ("21.0.8", result.JdkVersion);
 		}
 
-		[Test]
+		[TestMethod]
 		public void ReleaseFile_Valid ()
 		{
 			var javaPath = CreateFauxJavaSdkDirectory (Path.Combine (path, "jdk-1"), "11.0.9", out string javaExe, out _);
@@ -162,7 +166,7 @@ SOURCE="".:git:6171c19d2c18""
 			Assert.AreEqual ("11.0.0", result.DefaultJdkVersion);
 		}
 
-		[Test]
+		[TestMethod]
 		public void ReleaseFile_Invalid ()
 		{
 			var javaPath = CreateFauxJavaSdkDirectory (Path.Combine (path, "jdk-1"), "11.0.9", out string javaExe, out _);
@@ -174,7 +178,7 @@ SOURCE="".:git:6171c19d2c18""
 			Assert.AreEqual ("11.0.9", result.JdkVersion);
 		}
 
-		[Test]
+		[TestMethod]
 		public void MissingJavaSdkPathReportsXA5300 ()
 		{
 			var result = Validate (null, "java", "11.0.0", "17.99.0");
@@ -182,7 +186,7 @@ SOURCE="".:git:6171c19d2c18""
 			Assert.AreEqual ("XA5300", result.Errors.Single ().Code);
 		}
 
-		[Test]
+		[TestMethod]
 		public void AllowMissingSdkToolingDowngradesErrors ()
 		{
 			var javaPath = CreateFauxJavaSdkDirectory (Path.Combine (path, "jdk"), "17.0.1", out string javaExe, out _);

@@ -8,21 +8,22 @@ using ELFSharp.ELF;
 using ELFSharp.ELF.Sections;
 using Microsoft.Android.Tasks;
 using Microsoft.Build.Utilities;
-using NUnit.Framework;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Xamarin.Android.Build.Tests;
 
-[TestFixture]
-[Platform ("MacOsX,Linux")]
+[TestClass]
+[OSCondition (OperatingSystems.OSX | OperatingSystems.Linux)]
+[DoNotParallelize]
 public class NativeAotSystemPropertiesTests : BaseTest
 {
-	string nativeProbe = "";
-	string probeDirectory = "";
+	static string nativeProbe = "";
+	static string probeDirectory = "";
 
-	static string ResourcesDirectory => Path.Combine (TestContext.CurrentContext.TestDirectory, "Resources", "NativeAotBootstrap");
+	static string ResourcesDirectory => Path.Combine (AppContext.BaseDirectory, "Resources", "NativeAotBootstrap");
 
-	[OneTimeSetUp]
-	public void CompileProductionReader ()
+	[ClassInitialize]
+	public static void CompileProductionReader (TestContext context)
 	{
 		string root = NativeAotBootstrapTestTools.FindRepositoryRoot ();
 		probeDirectory = Path.Combine (Root, "temp", nameof (NativeAotSystemPropertiesTests));
@@ -41,20 +42,21 @@ public class NativeAotSystemPropertiesTests : BaseTest
 		Assert.AreEqual (0, compile.ExitCode, compile.Output + compile.Error);
 	}
 
-	[OneTimeTearDown]
-	public void DeleteProductionReaderProbe ()
+	[ClassCleanup]
+	public static void DeleteProductionReaderProbe ()
 	{
 		if (probeDirectory.Length > 0 && Directory.Exists (probeDirectory)) {
 			Directory.Delete (probeDirectory, recursive: true);
 		}
 	}
 
-	[TestCase ("armeabi-v7a", false)]
-	[TestCase ("armeabi-v7a", true)]
-	[TestCase ("arm64-v8a", false)]
-	[TestCase ("arm64-v8a", true)]
-	[TestCase ("x86_64", false)]
-	[TestCase ("x86_64", true)]
+	[TestMethod]
+	[DataRow ("armeabi-v7a", false)]
+	[DataRow ("armeabi-v7a", true)]
+	[DataRow ("arm64-v8a", false)]
+	[DataRow ("arm64-v8a", true)]
+	[DataRow ("x86_64", false)]
+	[DataRow ("x86_64", true)]
 	public void ReadsPropertiesFromMappedDataObjectAsTrueUtf8 (string abi, bool environment)
 	{
 		string value = "\"C:\\quoted\"\t\u00e9\u4e2d\ud83d\ude80";
@@ -66,8 +68,9 @@ public class NativeAotSystemPropertiesTests : BaseTest
 		Assert.AreEqual (value, result.Output);
 	}
 
-	[TestCase (false)]
-	[TestCase (true)]
+	[TestMethod]
+	[DataRow (false)]
+	[DataRow (true)]
 	public void EmptyConfigurationAndMissingPropertiesResetLength (bool environment)
 	{
 		string key = environment ? "DOTNET_BOOTSTRAP_EMPTY" : "debug.empty";
@@ -79,18 +82,19 @@ public class NativeAotSystemPropertiesTests : BaseTest
 		Assert.AreEqual ("", emptyValue.Output);
 	}
 
-	[Test]
+	[TestMethod]
 	public void RejectsMalformedBootstrapOffsets ()
 	{
 		var result = RunProbe ("debug.value=test\n", "debug.value", body => BitConverter.GetBytes (uint.MaxValue).CopyTo (body, 24));
 		Assert.AreNotEqual (0, result.ExitCode);
-		StringAssert.Contains ("Invalid NativeAOT bootstrap header", result.Error);
+		Assert.Contains ("Invalid NativeAOT bootstrap header", result.Error);
 	}
 
-	[TestCase (true, 0)]
-	[TestCase (true, 4)]
-	[TestCase (false, 0)]
-	[TestCase (false, 4)]
+	[TestMethod]
+	[DataRow (true, 0)]
+	[DataRow (true, 4)]
+	[DataRow (false, 0)]
+	[DataRow (false, 4)]
 	public void RejectsMalformedPairOffsets (bool environment, int fieldOffset)
 	{
 		var result = RunProbe ("DOTNET_BOOTSTRAP_TEST=environment\ndebug.value=test\n", "debug.value",
@@ -100,33 +104,34 @@ public class NativeAotSystemPropertiesTests : BaseTest
 				BinaryPrimitives.WriteUInt32LittleEndian (body.AsSpan (tableOffset + fieldOffset), uint.MaxValue);
 			});
 		Assert.AreNotEqual (0, result.ExitCode);
-		StringAssert.Contains ("Invalid NativeAOT bootstrap string", result.Error);
+		Assert.Contains ("Invalid NativeAOT bootstrap string", result.Error);
 	}
 
-	[TestCase ("armeabi-v7a")]
-	[TestCase ("arm64-v8a")]
-	[TestCase ("x86_64")]
+	[TestMethod]
+	[DataRow ("armeabi-v7a")]
+	[DataRow ("arm64-v8a")]
+	[DataRow ("x86_64")]
 	public void RejectsMisalignedBootstrapDataBeforeReadingPairs (string abi)
 	{
 		var result = RunProbe ("debug.value=test\n", "debug.value", abi: abi, misalignEnvelope: true);
 		Assert.AreNotEqual (0, result.ExitCode);
-		StringAssert.Contains ("Misaligned NativeAOT bootstrap data", result.Error);
+		Assert.Contains ("Misaligned NativeAOT bootstrap data", result.Error);
 	}
 
-	[Test]
+	[TestMethod]
 	public void RejectsCompressedNativeAotData ()
 	{
 		var result = RunProbe ("debug.value=test\n", "debug.value", markCompressed: true);
 		Assert.AreNotEqual (0, result.ExitCode);
-		StringAssert.Contains ("Compressed NativeAOT binary blob", result.Error);
+		Assert.Contains ("Compressed NativeAOT binary blob", result.Error);
 	}
 
-	[Test]
+	[TestMethod]
 	public void RejectsTruncatedEnvelopeBeforeReadingHeader ()
 	{
 		var result = RunProbe ("debug.value=test\n", "debug.value", envelopeLengthOverride: 15);
 		Assert.AreNotEqual (0, result.ExitCode);
-		StringAssert.Contains ("Missing or truncated binary blob", result.Error);
+		Assert.Contains ("Missing or truncated binary blob", result.Error);
 	}
 
 	(int ExitCode, string Output, string Error) RunProbe (
@@ -139,7 +144,7 @@ public class NativeAotSystemPropertiesTests : BaseTest
 		File.WriteAllText (environmentFile, contents);
 		string objectFile = Path.Combine (path, "nativeaot-bootstrap.o");
 		var task = new GenerateNativeAotDataObject {
-			BuildEngine = new MockBuildEngine (TestContext.Out),
+			BuildEngine = new MockBuildEngine (Console.Out),
 			OutputFile = objectFile,
 			Abi = abi,
 			Environments = [new TaskItem (environmentFile)],

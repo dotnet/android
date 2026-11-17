@@ -1,26 +1,31 @@
 #nullable enable
 
 using System;
+using System.Globalization;
 using System.IO;
 using System.Threading.Tasks;
-using NUnit.Framework;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Xamarin.Android.Tasks;
 
 namespace Xamarin.Android.Build.Tests
 {
+	[TestClass]
+	[DoNotParallelize]
 	public class GetMicrosoftNuGetPackagesMapTests
 	{
 		static string GetFileName (DateTime date) =>
 			FormattableString.Invariant ($"microsoft-packages-{date:yyyyMMdd}.json");
 
-		[Test]
-		[SetCulture ("fa-IR")]
+		[TestMethod]
 		public async Task NoCachedFile ()
 		{
-			var engine = new MockBuildEngine (TestContext.Out, []);
+			var engine = new MockBuildEngine (Console.Out, []);
 			var temp_cache_dir = Path.Combine (Path.GetTempPath (), Guid.NewGuid ().ToString ());
 			var today_file = Path.Combine (temp_cache_dir, GetFileName (DateTime.Today));
 
+			// Date formatting must not depend on the current culture (fa-IR uses the Persian calendar).
+			var culture = CultureInfo.CurrentCulture;
+			CultureInfo.CurrentCulture = CultureInfo.GetCultureInfo ("fa-IR");
 			try {
 				var task = new GetMicrosoftNuGetPackagesMap {
 					BuildEngine = engine,
@@ -34,20 +39,23 @@ namespace Xamarin.Android.Build.Tests
 				Assert.IsTrue (File.Exists (today_file));
 
 			} finally {
+				CultureInfo.CurrentCulture = culture;
 				MavenDownloadTests.DeleteTempDirectory (temp_cache_dir);
 			}
 		}
 
-		[Test]
-		[SetCulture ("fa-IR")]
+		[TestMethod]
 		public async Task CachedTodayFile ()
 		{
 			// If a file already exists for today, it should be used and nothing new should be downloaded
-			var engine = new MockBuildEngine (TestContext.Out, []);
+			var engine = new MockBuildEngine (Console.Out, []);
 			var temp_cache_dir = Path.Combine (Path.GetTempPath (), Guid.NewGuid ().ToString ());
 			var today = DateTime.Today;
 			var today_file = Path.Combine (temp_cache_dir, GetFileName (today));
 
+			// Date formatting must not depend on the current culture (fa-IR uses the Persian calendar).
+			var culture = CultureInfo.CurrentCulture;
+			CultureInfo.CurrentCulture = CultureInfo.GetCultureInfo ("fa-IR");
 			try {
 				Directory.CreateDirectory (temp_cache_dir);
 				File.WriteAllText (today_file, "dummy file");
@@ -71,15 +79,16 @@ namespace Xamarin.Android.Build.Tests
 				Assert.AreEqual ("dummy file", text);
 
 			} finally {
+				CultureInfo.CurrentCulture = culture;
 				MavenDownloadTests.DeleteTempDirectory (temp_cache_dir);
 			}
 		}
 
-		[Test]
+		[TestMethod]
 		public async Task CachedYesterdayFile ()
 		{
 			// If a file only exists for yesterday, a new one should be downloaded and the old one should be deleted
-			var engine = new MockBuildEngine (TestContext.Out, []);
+			var engine = new MockBuildEngine (Console.Out, []);
 			var temp_cache_dir = Path.Combine (Path.GetTempPath (), Guid.NewGuid ().ToString ());
 			var yesterday_file = Path.Combine (temp_cache_dir, GetFileName (DateTime.Today.AddDays (-1)));
 			var today_file = Path.Combine (temp_cache_dir, GetFileName (DateTime.Today));
@@ -104,11 +113,11 @@ namespace Xamarin.Android.Build.Tests
 			}
 		}
 
-		[Test]
+		[TestMethod]
 		public async Task MalformedFileName ()
 		{
 			// Make sure a malformed file name doesn't cause an exception, a new file should be downloaded and returned
-			var engine = new MockBuildEngine (TestContext.Out, []);
+			var engine = new MockBuildEngine (Console.Out, []);
 			var temp_cache_dir = Path.Combine (Path.GetTempPath (), Guid.NewGuid ().ToString ());
 			var malformed_file = Path.Combine (temp_cache_dir, $"microsoft-packages-dummy.json");
 			var today_file = Path.Combine (temp_cache_dir, GetFileName (DateTime.Today));
@@ -140,7 +149,7 @@ namespace Xamarin.Android.Build.Tests
 		{
 			// If a file only exists for yesterday, but we fail to download a new file today, return
 			// the old file and don't delete it
-			var engine = new MockBuildEngine (TestContext.Out, []);
+			var engine = new MockBuildEngine (Console.Out, []);
 			var temp_cache_dir = Path.Combine (Path.GetTempPath (), Guid.NewGuid ().ToString ());
 			var yesterday_file = Path.Combine (temp_cache_dir, GetFileName (DateTime.Today.AddDays (-1)));
 

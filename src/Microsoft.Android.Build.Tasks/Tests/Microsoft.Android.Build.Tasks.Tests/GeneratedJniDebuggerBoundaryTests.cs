@@ -5,25 +5,25 @@ using System.Linq;
 using Microsoft.Android.Sdk.TrimmableTypeMap;
 using Mono.Cecil;
 using Mono.Cecil.Cil;
-using NUnit.Framework;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Xamarin.Android.Build.Tests;
 
-[TestFixture]
-[Parallelizable (ParallelScope.Children)]
+[TestClass]
 public class GeneratedJniDebuggerBoundaryTests
 {
 	const string DebuggerAttribute = "System.Diagnostics.DebuggerDisableUserUnhandledExceptionsAttribute";
 	const string UcoAttribute = "System.Runtime.InteropServices.UnmanagedCallersOnlyAttribute";
 
-	[TestCase (true, false, false, false, false)]
-	[TestCase (false, true, false, false, false)]
-	[TestCase (false, true, true, false, false)]
-	[TestCase (false, false, false, false, false)]
-	[TestCase (false, false, false, true, false)]
-	[TestCase (false, false, true, false, false)]
-	[TestCase (false, false, true, true, false)]
-	[TestCase (false, false, false, false, true)]
+	[TestMethod]
+	[DataRow (true, false, false, false, false)]
+	[DataRow (false, true, false, false, false)]
+	[DataRow (false, true, true, false, false)]
+	[DataRow (false, false, false, false, false)]
+	[DataRow (false, false, false, true, false)]
+	[DataRow (false, false, true, false, false)]
+	[DataRow (false, false, true, true, false)]
+	[DataRow (false, false, false, false, true)]
 	public void ConstructorVariantsAnnotateTheInlineBoundary (bool matchingManagedCtor, bool invoker,
 		bool javaInterop, bool inherited, bool openGeneric)
 	{
@@ -46,7 +46,7 @@ public class GeneratedJniDebuggerBoundaryTests
 		AssertBoundary (method);
 		Assert.AreEqual ("System.Void", method.ReturnType.FullName);
 		CollectionAssert.AreEqual (new [] { "System.IntPtr", "System.IntPtr" },
-			method.Parameters.Select (p => p.ParameterType.FullName));
+			method.Parameters.Select (p => p.ParameterType.FullName).ToArray ());
 
 		var handler = method.Body.ExceptionHandlers.Single (h => h.HandlerType == ExceptionHandlerType.Catch);
 		var activation = method.Body.Instructions.Where (i => i.Offset >= handler.TryStart.Offset && i.Offset < handler.TryEnd.Offset).ToArray ();
@@ -62,14 +62,14 @@ public class GeneratedJniDebuggerBoundaryTests
 			string [] expectedParameters = matchingManagedCtor ? [] : javaInterop
 				? new [] { "Java.Interop.JniObjectReference&", "Java.Interop.JniObjectReferenceOptions" }
 				: new [] { "System.IntPtr", "Android.Runtime.JniHandleOwnership" };
-			CollectionAssert.AreEqual (expectedParameters, ctorReference.Parameters.Select (p => p.ParameterType.FullName));
+			CollectionAssert.AreEqual (expectedParameters, ctorReference.Parameters.Select (p => p.ParameterType.FullName).ToArray ());
 		}
 		Assert.IsFalse (GetProxy (assembly).Methods.Single (m => m.Name == "CreateInstance")
 			.CustomAttributes.Any (a => a.AttributeType.FullName == DebuggerAttribute),
 			"The managed activation entry point is not a JNI user-unhandled boundary.");
 	}
 
-	[Test]
+	[TestMethod]
 	public void MatchingConstructorKeepsMarshallingInsideTheBoundary ()
 	{
 		var target = PeerType ("Example.Peer");
@@ -86,7 +86,7 @@ public class GeneratedJniDebuggerBoundaryTests
 		var method = GetProxy (assembly).Methods.Single (m => m.Name == "nctor_0_uco");
 		AssertBoundary (method);
 		CollectionAssert.AreEqual (new [] { "System.IntPtr", "System.IntPtr", "System.Byte", "System.IntPtr", "System.IntPtr" },
-			method.Parameters.Select (p => p.ParameterType.FullName));
+			method.Parameters.Select (p => p.ParameterType.FullName).ToArray ());
 		AssertCallInsideTry (method, "GetActivationPeer");
 		AssertCallInsideTry (method, "SetActivationPeerReference");
 		AssertCallInsideTry (method, "GetString");
@@ -94,16 +94,17 @@ public class GeneratedJniDebuggerBoundaryTests
 		AssertCallInsideTry (method, "MarkActivationPeerReplaceable");
 	}
 
-	[TestCase ("V", "Void", "System.Void")]
-	[TestCase ("Z", "Boolean", "System.Byte")]
-	[TestCase ("B", "SByte", "System.SByte")]
-	[TestCase ("C", "Char", "System.UInt16")]
-	[TestCase ("S", "Int16", "System.Int16")]
-	[TestCase ("I", "Int32", "System.Int32")]
-	[TestCase ("J", "Int64", "System.Int64")]
-	[TestCase ("F", "Single", "System.Single")]
-	[TestCase ("D", "Double", "System.Double")]
-	[TestCase ("Ljava/lang/String;", "String", "System.IntPtr")]
+	[TestMethod]
+	[DataRow ("V", "Void", "System.Void")]
+	[DataRow ("Z", "Boolean", "System.Byte")]
+	[DataRow ("B", "SByte", "System.SByte")]
+	[DataRow ("C", "Char", "System.UInt16")]
+	[DataRow ("S", "Int16", "System.Int16")]
+	[DataRow ("I", "Int32", "System.Int32")]
+	[DataRow ("J", "Int64", "System.Int64")]
+	[DataRow ("F", "Single", "System.Single")]
+	[DataRow ("D", "Double", "System.Double")]
+	[DataRow ("Ljava/lang/String;", "String", "System.IntPtr")]
 	public void ExportBoundariesPreserveAbiDefaultsAndDispatch (string jniReturn, string managedReturn, string abiReturn)
 	{
 		var target = PeerType ("Example.Peer");
@@ -128,17 +129,17 @@ public class GeneratedJniDebuggerBoundaryTests
 			AssertBoundary (method);
 			Assert.AreEqual (abiReturn, method.ReturnType.FullName);
 			CollectionAssert.AreEqual (new [] { "System.IntPtr", "System.IntPtr", "System.Byte", "System.IntPtr", "System.IntPtr" },
-				method.Parameters.Select (p => p.ParameterType.FullName));
+				method.Parameters.Select (p => p.ParameterType.FullName).ToArray ());
 			AssertCallInsideTry (method, "GetString");
 			AssertCallInsideTry (method, "GetArray");
 			var copyBack = AssertCallInsideTry (method, "CopyArray");
 			bool isStatic = method.Name == "static_uco";
 			var dispatch = AssertCallInsideTry (method, isStatic ? "StaticDispatch" : "InstanceDispatch");
 			Assert.AreEqual (isStatic ? OpCodes.Call : OpCodes.Callvirt, dispatch.OpCode);
-			Assert.Less (dispatch.Offset, copyBack.Offset);
+			Assert.IsLessThan (copyBack.Offset, dispatch.Offset);
 			Assert.AreEqual (!isStatic, method.Body.Instructions.Any (i => i.Operand is MethodReference m && m.Name == "GetObject"));
 			if (managedReturn == "String") {
-				Assert.Less (copyBack.Offset, AssertCallInsideTry (method, "NewString").Offset);
+				Assert.IsLessThan (AssertCallInsideTry (method, "NewString").Offset, copyBack.Offset);
 			}
 
 			var instructions = method.Body.Instructions;
@@ -153,7 +154,7 @@ public class GeneratedJniDebuggerBoundaryTests
 				Assert.AreEqual (OpCodes.Ret, afterAll.Next.OpCode);
 				var store = instructions.Single (i => i.OpCode == OpCodes.Stloc_S && i.Operand == abiLocal);
 				var catchHandler = method.Body.ExceptionHandlers.Single (h => h.HandlerType == ExceptionHandlerType.Catch);
-				Assert.Less (store.Offset, catchHandler.TryEnd.Offset,
+				Assert.IsLessThan (catchHandler.TryEnd.Offset, store.Offset,
 					"Only successful dispatch assigns the zero-initialized ABI return local.");
 			}
 		}
@@ -195,13 +196,13 @@ public class GeneratedJniDebuggerBoundaryTests
 		Assert.AreEqual (OpCodes.Call, begin.OpCode);
 		Assert.AreEqual (OpCodes.Brfalse, begin.Next.OpCode);
 		Assert.AreSame (finallyHandler.HandlerEnd, begin.Next.Operand);
-		Assert.Less (begin.Offset, catchHandler.TryStart.Offset);
+		Assert.IsLessThan (catchHandler.TryStart.Offset, begin.Offset);
 		Assert.AreEqual (OpCodes.Callvirt, policy.OpCode);
-		Assert.GreaterOrEqual (policy.Offset, catchHandler.HandlerStart.Offset);
-		Assert.Less (policy.Offset, catchHandler.HandlerEnd.Offset);
+		Assert.IsGreaterThanOrEqualTo (catchHandler.HandlerStart.Offset, policy.Offset);
+		Assert.IsLessThan (catchHandler.HandlerEnd.Offset, policy.Offset);
 		Assert.AreEqual (OpCodes.Brfalse, catchHandler.HandlerStart.Next.Next.OpCode, "A null runtime must skip policy delivery.");
 		Assert.AreEqual (OpCodes.Call, end.OpCode);
-		Assert.GreaterOrEqual (end.Offset, finallyHandler.HandlerStart.Offset);
+		Assert.IsGreaterThanOrEqualTo (finallyHandler.HandlerStart.Offset, end.Offset);
 		Assert.AreEqual (OpCodes.Endfinally, end.Next.OpCode);
 		Assert.IsFalse (instructions.Any (i => i.Operand is MethodReference m &&
 			(m.Name == "UnhandledException" || m.Name == "WaitForBridgeProcessing" || m.Name == "Break" || m.Name == "BreakForUserUnhandledException")),
@@ -212,8 +213,8 @@ public class GeneratedJniDebuggerBoundaryTests
 	{
 		var instruction = method.Body.Instructions.Single (i => i.Operand is MethodReference m && m.Name == name);
 		var handler = method.Body.ExceptionHandlers.Single (h => h.HandlerType == ExceptionHandlerType.Catch);
-		Assert.GreaterOrEqual (instruction.Offset, handler.TryStart.Offset);
-		Assert.Less (instruction.Offset, handler.TryEnd.Offset);
+		Assert.IsGreaterThanOrEqualTo (handler.TryStart.Offset, instruction.Offset);
+		Assert.IsLessThan (handler.TryEnd.Offset, instruction.Offset);
 		return instruction;
 	}
 

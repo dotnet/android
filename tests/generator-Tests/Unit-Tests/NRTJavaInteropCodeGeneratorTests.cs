@@ -1,9 +1,9 @@
 using MonoDroid.Generation;
-using NUnit.Framework;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace generatortests
 {
-	[TestFixture]
+	[TestClassAttribute]
 	class NRTJavaInteropCodeGeneratorTests : CodeGeneratorTests
 	{
 		protected override CodeGenerationOptions CreateOptions ()

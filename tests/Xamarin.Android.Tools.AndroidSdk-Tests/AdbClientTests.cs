@@ -6,14 +6,14 @@ using System.IO;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using NUnit.Framework;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Xamarin.Android.Tools.Tests;
 
-[TestFixture]
+[TestClass]
 public class AdbClientTests
 {
-	[Test]
+	[TestMethod]
 	public async Task ReadLengthPrefixedStringFromStreamAsync_ValidPayload ()
 	{
 		var payload = "emulator-5554\tdevice\n";
@@ -25,7 +25,7 @@ public class AdbClientTests
 		Assert.AreEqual (payload, result);
 	}
 
-	[Test]
+	[TestMethod]
 	public async Task ReadLengthPrefixedStringFromStreamAsync_EmptyPayload ()
 	{
 		var data = Encoding.ASCII.GetBytes ("0000");
@@ -35,7 +35,7 @@ public class AdbClientTests
 		Assert.AreEqual (string.Empty, result);
 	}
 
-	[Test]
+	[TestMethod]
 	public async Task ReadLengthPrefixedStringFromStreamAsync_EndOfStream_ReturnsNull ()
 	{
 		using var stream = new MemoryStream (Array.Empty<byte> ());
@@ -44,7 +44,7 @@ public class AdbClientTests
 		Assert.IsNull (result);
 	}
 
-	[Test]
+	[TestMethod]
 	public async Task ReadLengthPrefixedStringFromStreamAsync_MultipleDevices ()
 	{
 		var payload =
@@ -63,24 +63,24 @@ public class AdbClientTests
 		Assert.AreEqual ("emulator-5554", devices [1].Serial);
 	}
 
-	[Test]
-	public void ReadLengthPrefixedStringFromStreamAsync_InvalidHex_ThrowsFormatException ()
+	[TestMethod]
+	public async Task ReadLengthPrefixedStringFromStreamAsync_InvalidHex_ThrowsFormatException ()
 	{
 		var data = Encoding.ASCII.GetBytes ("ZZZZ");
 		using var stream = new MemoryStream (data);
 
-		Assert.ThrowsAsync<FormatException> (
+		await Assert.ThrowsExactlyAsync<FormatException> (
 			() => AdbClient.ReadLengthPrefixedStringFromStreamAsync (stream, CancellationToken.None));
 	}
 
-	[Test]
-	public void ReadLengthPrefixedStringFromStreamAsync_TruncatedPayload_ThrowsIOException ()
+	[TestMethod]
+	public async Task ReadLengthPrefixedStringFromStreamAsync_TruncatedPayload_ThrowsIOException ()
 	{
 		// Header says 100 bytes but only 5 are present
 		var data = Encoding.ASCII.GetBytes ("0064hello");
 		using var stream = new MemoryStream (data);
 
-		Assert.ThrowsAsync<IOException> (
+		await Assert.ThrowsExactlyAsync<IOException> (
 			() => AdbClient.ReadLengthPrefixedStringFromStreamAsync (stream, CancellationToken.None));
 	}
 }

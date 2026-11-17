@@ -7,11 +7,13 @@ using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Text.Json.Nodes;
 using Microsoft.Build.Utilities;
-using NUnit.Framework;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Microsoft.Android.Tasks;
 
 namespace Xamarin.Android.Build.Tests;
 
+[TestClass]
+[DoNotParallelize]
 public class NuGetPackageVersionFinderTests : BaseTest
 {
 	const string PackageName = "Xamarin.Google.Material.Core";
@@ -21,13 +23,13 @@ public class NuGetPackageVersionFinderTests : BaseTest
 
 	string TestDirectory => Path.Combine (Root, "temp", TestName);
 
-	[Test]
+	[TestMethod]
 	public void PackageVersionsUseNuGetSemantics ()
 	{
 		var cache = Path.Combine (TestDirectory, "packages");
 		CreateNuspec (cache);
 
-		var engine = new MockBuildEngine (TestContext.Out, []);
+		var engine = new MockBuildEngine (Console.Out, []);
 		var task = new JavaDependencyVerification { BuildEngine = engine };
 		var assets = CreateAssets ("1.0.0", [cache]);
 		var finder = NuGetPackageVersionFinder.Create (WriteAssets (assets.ToJsonString ()), task.Log)
@@ -40,8 +42,9 @@ public class NuGetPackageVersionFinderTests : BaseTest
 		Assert.IsEmpty (engine.Errors);
 	}
 
-	[TestCase ("1.0")]
-	[TestCase ("")]
+	[TestMethod]
+	[DataRow ("1.0")]
+	[DataRow ("")]
 	public void DependencyFulfilledByPackageNuspec (string version)
 	{
 		var missingCache = Path.Combine (TestDirectory, "missing-packages");
@@ -56,7 +59,7 @@ public class NuGetPackageVersionFinderTests : BaseTest
 		var package = new TaskItem (PackageName);
 		package.SetMetadata ("Version", version);
 
-		var engine = new MockBuildEngine (TestContext.Out, []);
+		var engine = new MockBuildEngine (Console.Out, []);
 		var task = new JavaDependencyVerification {
 			BuildEngine = engine,
 			AndroidLibraries = [library],
@@ -68,7 +71,7 @@ public class NuGetPackageVersionFinderTests : BaseTest
 		Assert.IsEmpty (engine.Errors);
 	}
 
-	[Test]
+	[TestMethod]
 	public void AmbiguousCentralPackageVersionLogsRestoreError ()
 	{
 		var assets = CreateAssets ("1.0.0", []);
@@ -80,16 +83,16 @@ public class NuGetPackageVersionFinderTests : BaseTest
 			["files"] = new JsonArray (NuspecFile),
 		};
 
-		var engine = new MockBuildEngine (TestContext.Out, []);
+		var engine = new MockBuildEngine (Console.Out, []);
 		var task = new JavaDependencyVerification { BuildEngine = engine };
 		var finder = NuGetPackageVersionFinder.Create (WriteAssets (assets.ToJsonString ()), task.Log)
 			?? throw new InvalidOperationException ("Could not read assets file.");
 
 		Assert.IsEmpty (finder.GetArtifactsInNugetPackage (PackageName, "", task.Log));
-		Assert.That (engine.Errors.Select (error => error.Code), Is.EqualTo (new [] { "XA4248" }));
+		CollectionAssert.AreEqual (new [] { "XA4248" }, engine.Errors.Select (error => error.Code).ToArray ());
 	}
 
-	[Test]
+	[TestMethod]
 	public void CentralPackageReferenceJavaArtifactOverridesNuspec ()
 	{
 		var cache = Path.Combine (TestDirectory, "packages");
@@ -102,7 +105,7 @@ public class NuGetPackageVersionFinderTests : BaseTest
 		var package = new TaskItem (PackageName);
 		package.SetMetadata ("JavaArtifact", "com.google.android:material-core:2.0");
 
-		var engine = new MockBuildEngine (TestContext.Out, []);
+		var engine = new MockBuildEngine (Console.Out, []);
 		var task = new JavaDependencyVerification {
 			BuildEngine = engine,
 			AndroidLibraries = [library],
@@ -114,8 +117,9 @@ public class NuGetPackageVersionFinderTests : BaseTest
 		Assert.IsEmpty (engine.Errors);
 	}
 
-	[TestCase (false)]
-	[TestCase (true)]
+	[TestMethod]
+	[DataRow (false)]
+	[DataRow (true)]
 	public void CentralPackageReferencePreservesMissingDependencyError (bool suggestPackage)
 	{
 		var cache = Path.Combine (TestDirectory, "packages");
@@ -130,7 +134,7 @@ public class NuGetPackageVersionFinderTests : BaseTest
 			{"Packages":[{"JavaId":"com.google.android:missing","NuGetId":"Xamarin.Google.Missing"}]}
 			""");
 
-		var engine = new MockBuildEngine (TestContext.Out, []);
+		var engine = new MockBuildEngine (Console.Out, []);
 		var task = new JavaDependencyVerification {
 			BuildEngine = engine,
 			AndroidLibraries = [library],
@@ -140,22 +144,25 @@ public class NuGetPackageVersionFinderTests : BaseTest
 		};
 
 		Assert.IsFalse (task.RunTask ());
-		Assert.That (engine.Errors.Select (error => error.Code), Is.EqualTo (new [] { suggestPackage ? "XA4242" : "XA4241" }));
-		StringAssert.Contains ("com.google.android:missing:1.0", engine.Errors [0].Message);
+		CollectionAssert.AreEqual (new [] { suggestPackage ? "XA4242" : "XA4241" }, engine.Errors.Select (error => error.Code).ToArray ());
+		var message = engine.Errors [0].Message;
+		Assert.IsNotNull (message);
+		Assert.Contains ("com.google.android:missing:1.0", message);
 		if (suggestPackage)
-			StringAssert.Contains ("Xamarin.Google.Missing", engine.Errors [0].Message);
+			Assert.Contains ("Xamarin.Google.Missing", message);
 	}
 
-	[TestCase (false)]
-	[TestCase (true)]
+	[TestMethod]
+	[DataRow (false)]
+	[DataRow (true)]
 	public void ShortTaskNameResolvesWithNuGetMetadata (bool multithreaded)
 	{
 		var dotnet = Environment.GetEnvironmentVariable ("DOTNET_HOST_PATH") ?? "dotnet";
 		VerifyNuGetMetadata (dotnet, "Core", multithreaded);
 	}
 
-	[Test]
-	[Platform ("Win")]
+	[TestMethod]
+	[OSCondition (OperatingSystems.Windows)]
 	public void ShortTaskNameResolvesWithNuGetMetadataInFullMSBuild ()
 	{
 		var vswhere = Path.Combine (Environment.GetFolderPath (Environment.SpecialFolder.ProgramFilesX86),
@@ -176,7 +183,7 @@ public class NuGetPackageVersionFinderTests : BaseTest
 		var msbuild = Path.Combine (bin, architecture, "MSBuild.exe");
 		if (!File.Exists (msbuild))
 			msbuild = Path.Combine (bin, "MSBuild.exe");
-		FileAssert.Exists (msbuild, "Could not locate .NET Framework MSBuild.");
+		Assert.IsTrue (File.Exists (msbuild), "Could not locate .NET Framework MSBuild.");
 		VerifyNuGetMetadata (msbuild, "Full", multithreaded: false);
 	}
 
@@ -185,22 +192,22 @@ public class NuGetPackageVersionFinderTests : BaseTest
 		if (!available) {
 			if (string.Equals (Environment.GetEnvironmentVariable ("XA_REQUIRE_FULL_MSBUILD_TEST"), "true", StringComparison.OrdinalIgnoreCase))
 				Assert.Fail (message);
-			Assert.Ignore (message);
+			Assert.Inconclusive (message);
 		}
 	}
 
 	void VerifyNuGetMetadata (string executable, string runtime, bool multithreaded)
 	{
-		var fixture = Path.Combine (TestContext.CurrentContext.TestDirectory, "Resources", "JavaDependencyVerification");
+		var fixture = Path.Combine (AppContext.BaseDirectory, "Resources", "JavaDependencyVerification");
 		var taskAssembly = typeof (NuGetPackageVersionFinderTests).Assembly.GetCustomAttributes<AssemblyMetadataAttribute> ()
 			.Single (attribute => attribute.Key == "AndroidTaskAssembly").Value
 			?? throw new InvalidOperationException ("Missing task assembly path.");
 		var targets = Path.Combine (NativeAotBootstrapTestTools.FindRepositoryRoot (), "src", "Xamarin.Android.Build.Tasks",
 			"MSBuild", "Xamarin", "Android", "Xamarin.Android.Bindings.JavaDependencyVerification.targets");
-		FileAssert.Exists (taskAssembly);
+		Assert.IsTrue (File.Exists (taskAssembly));
 		var taskDirectory = Path.GetDirectoryName (taskAssembly) ?? throw new InvalidOperationException ("The task assembly directory is missing.");
-		FileAssert.Exists (Path.Combine (taskDirectory, "Java.Interop.Tools.Maven.dll"));
-		FileAssert.Exists (Path.Combine (taskDirectory, "NuGet.Versioning.dll"));
+		Assert.IsTrue (File.Exists (Path.Combine (taskDirectory, "Java.Interop.Tools.Maven.dll")));
+		Assert.IsTrue (File.Exists (Path.Combine (taskDirectory, "NuGet.Versioning.dll")));
 		var cache = Path.Combine (TestDirectory, "packages");
 		CreateNuspec (cache);
 
@@ -236,7 +243,7 @@ public class NuGetPackageVersionFinderTests : BaseTest
 		if (runtime == "Full") {
 			var dotnet = Environment.GetEnvironmentVariable ("DOTNET_HOST_PATH") ??
 				Path.GetFullPath (Path.Combine (RuntimeEnvironment.GetRuntimeDirectory (), "..", "..", "..", "dotnet.exe"));
-			FileAssert.Exists (dotnet, "A .NET host is required to run the task.");
+			Assert.IsTrue (File.Exists (dotnet), "A .NET host is required to run the task.");
 			var dotnetRoot = Path.GetDirectoryName (dotnet) ?? throw new InvalidOperationException ("The .NET host directory is missing.");
 			startInfo.Environment ["DOTNET_HOST_PATH"] = dotnet;
 			startInfo.Environment ["DOTNET_ROOT"] = dotnetRoot;
@@ -248,20 +255,19 @@ public class NuGetPackageVersionFinderTests : BaseTest
 
 		Assert.AreEqual (0, result.ExitCode, output);
 		foreach (var name in new [] { "first", "second" })
-			StringAssert.Contains ($"Verified {Path.Combine (TestDirectory, name)} with {runtime} MSBuild", output);
-		StringAssert.Contains ($"Using \"JavaDependencyVerification\" task from assembly \"{taskAssembly}\"", output);
-		StringAssert.Contains ("Found Java dependency 'com.google.android:material-core' version '1.0' from PackageReference", output);
+			Assert.Contains ($"Verified {Path.Combine (TestDirectory, name)} with {runtime} MSBuild", output);
+		Assert.Contains ($"Using \"JavaDependencyVerification\" task from assembly \"{taskAssembly}\"", output);
+		Assert.Contains ("Found Java dependency 'com.google.android:material-core' version '1.0' from PackageReference", output);
 	}
 
-	[Test]
+	[TestMethod]
 	public void MalformedAssetsAreLogged ()
 	{
-		var engine = new MockBuildEngine (TestContext.Out, [], [], []);
+		var engine = new MockBuildEngine (Console.Out, [], [], []);
 		var task = new JavaDependencyVerification { BuildEngine = engine };
 
 		Assert.IsNull (NuGetPackageVersionFinder.Create (WriteAssets ("not JSON"), task.Log));
-		Assert.That (engine.Messages, Has.Exactly (1).Matches<Microsoft.Build.Framework.BuildMessageEventArgs> (message =>
-			message.Message?.StartsWith ("Could not parse NuGet lock file.", StringComparison.Ordinal) == true));
+		Assert.ContainsSingle (message => message.Message?.StartsWith ("Could not parse NuGet lock file.", StringComparison.Ordinal) == true, engine.Messages);
 		Assert.IsEmpty (engine.Errors);
 	}
 

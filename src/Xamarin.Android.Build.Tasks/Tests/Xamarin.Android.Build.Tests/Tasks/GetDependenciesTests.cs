@@ -1,5 +1,6 @@
 using System;
-using NUnit.Framework;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Microsoft.VisualStudio.TestTools.UnitTesting.Combinatorial;
 using Xamarin.ProjectTools;
 using System.IO;
 using System.Linq;
@@ -10,18 +11,18 @@ using Microsoft.Build.Utilities;
 
 namespace Xamarin.Android.Build.Tests {
 
-	[TestFixture]
-	[Parallelizable (ParallelScope.Children)]
+	[TestClass]
 	public class GetDependenciesTest : BaseTest {
 
-		[Test]
-		public void CheckNdkBundle ([Values(true, false)] bool ndkRequred)
+		[TestMethod]
+		[CombinatorialData]
+		public void CheckNdkBundle ([CombinatorialValues (true, false)] bool ndkRequred)
 		{
 			var path = Path.Combine ("temp", TestName);
 			var referencePath = CreateFauxReferencesDirectory (Path.Combine (path, "references"), new ApiInfo [] {
 				new ApiInfo () { Id = "26", Level = 26, Name = "Oreo", FrameworkVersion = "v8.0", Stable = true },
 			});
-			IBuildEngine engine = new MockBuildEngine (TestContext.Out);
+			IBuildEngine engine = new MockBuildEngine (Console.Out);
 			var task = new CalculateProjectDependencies {
 				BuildEngine = engine,
 				ReferenceAssemblyPaths = [referencePath],
@@ -52,14 +53,14 @@ namespace Xamarin.Android.Build.Tests {
 			Directory.Delete (Path.Combine (Root, path), recursive: true);
 		}
 		
-		[Test]
+		[TestMethod]
 		public void ManifestFileDoesNotExist ()
 		{
 			var path = Path.Combine ("temp", TestName);
 			var referencePath = CreateFauxReferencesDirectory (Path.Combine (path, "references"), new ApiInfo[] {
 				new ApiInfo () { Id = "26", Level = 26, Name = "Oreo", FrameworkVersion = "v8.0", Stable = true },
 			} );
-			IBuildEngine engine = new MockBuildEngine (TestContext.Out);
+			IBuildEngine engine = new MockBuildEngine (Console.Out);
 			var task = new CalculateProjectDependencies {
 				BuildEngine = engine,
 				ReferenceAssemblyPaths = [referencePath],
@@ -85,14 +86,14 @@ namespace Xamarin.Android.Build.Tests {
 			Directory.Delete (Path.Combine (Root, path), recursive: true);
 		}
 
-		[Test]
+		[TestMethod]
 		public void ManifestFileExists ()
 		{
 			var path = Path.Combine (Root, "temp", TestName);
 			var referencePath = CreateFauxReferencesDirectory (Path.Combine (path, "references"), new ApiInfo[] {
 				new ApiInfo () { Id = "26", Level = 26, Name = "Oreo", FrameworkVersion = "v8.0", Stable = true },
 			} );
-			IBuildEngine engine = new MockBuildEngine (TestContext.Out);
+			IBuildEngine engine = new MockBuildEngine (Console.Out);
 			var task = new CalculateProjectDependencies {
 				BuildEngine = engine,
 				ReferenceAssemblyPaths = [referencePath],
@@ -127,14 +128,14 @@ namespace Xamarin.Android.Build.Tests {
 			Directory.Delete (path, recursive: true);
 		}
 
-		[Test]
+		[TestMethod]
 		public void MinorApiLevelEmitsPlatformDirectory ()
 		{
 			var path = Path.Combine ("temp", TestName);
 			var referencePath = CreateFauxReferencesDirectory (Path.Combine (path, "references"), new ApiInfo [] {
 				new ApiInfo () { Id = "36.1", Level = 36, Name = "Baklava", FrameworkVersion = "v16.1", Stable = true },
 			});
-			IBuildEngine engine = new MockBuildEngine (TestContext.Out);
+			IBuildEngine engine = new MockBuildEngine (Console.Out);
 			var task = new CalculateProjectDependencies {
 				BuildEngine = engine,
 				ReferenceAssemblyPaths = [referencePath],

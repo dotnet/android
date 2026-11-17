@@ -2,14 +2,14 @@ using System;
 using System.IO;
 using System.Linq;
 using System.Xml.Linq;
-using NUnit.Framework;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Xamarin.SourceWriter.Tests
 {
-	[TestFixture]
+	[TestClass]
 	public class DelegateWriterTests
 	{
-		[Test]
+		[TestMethod]
 		public void Basics ()
 		{
 			var method = new DelegateWriter { Name = "MyDelegate", IsPublic = true, Type = TypeReferenceWriter.IntPtr };

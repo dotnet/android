@@ -1,14 +1,15 @@
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.IO.Compression;
 using Microsoft.Build.Framework;
-using NUnit.Framework;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Xamarin.Android.Tasks;
 
 namespace Xamarin.Android.Build.Tests
 {
-	[TestFixture]
-	[Parallelizable (ParallelScope.Self)]
+	[TestClass]
+	[DoNotParallelize]
 	public class ExtractJarsFromAarTests : BaseTest
 	{
 		List<BuildErrorEventArgs>? errors;
@@ -16,19 +17,19 @@ namespace Xamarin.Android.Build.Tests
 		MockBuildEngine? engine;
 		string? path;
 
-		[SetUp]
+		[TestInitialize]
 		public void Setup ()
 		{
-			engine = new MockBuildEngine (TestContext.Out,
+			engine = new MockBuildEngine (Console.Out,
 				errors: errors = new List<BuildErrorEventArgs> (),
 				messages: messages = new List<BuildMessageEventArgs> ());
 
 			path = Path.Combine (Root, "temp", TestName);
-			TestOutputDirectories [TestContext.CurrentContext.Test.ID] = path;
+			TestOutputDirectories [TestId] = path;
 			Directory.CreateDirectory (path);
 		}
 
-		[Test]
+		[TestMethod]
 		public void PathTraversalInJarEntry ()
 		{
 			var aarPath = CreateAarWithEntry ("../../relative.jar");
@@ -54,7 +55,7 @@ namespace Xamarin.Android.Build.Tests
 			Assert.IsFalse (File.Exists (escapedPath), "File should not be written outside target directory.");
 		}
 
-		[Test]
+		[TestMethod]
 		public void PathTraversalInAnnotationsEntry ()
 		{
 			var aarPath = CreateAarWithEntry ("../../annotations.zip");
@@ -76,7 +77,7 @@ namespace Xamarin.Android.Build.Tests
 			Assert.AreEqual (1, errors?.Count, "The invalid archive should be reported as a build error.");
 		}
 
-		[Test]
+		[TestMethod]
 		public void ValidJarEntry ()
 		{
 			var aarPath = CreateAarWithEntry ("libs/helper.jar");
@@ -98,7 +99,7 @@ namespace Xamarin.Android.Build.Tests
 			Assert.IsEmpty (errors, "No errors should be logged.");
 		}
 
-		[Test]
+		[TestMethod]
 		public void ExtractsBoundAndReferenceLibraries ()
 		{
 			var boundAar = CreateAarWithEntry ("bound.aar", "classes.jar");

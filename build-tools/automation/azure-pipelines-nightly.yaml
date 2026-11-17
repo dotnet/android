@@ -159,11 +159,11 @@ stages:
       jobTimeout: 120
       use1ESTemplate: false
       testSteps:
-      - template: run-nunit-tests.yaml
+      - template: run-mstest-tests.yaml
         parameters:
           testRunTitle: SystemApplicationTests On Device - macOS
           testAssembly: $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/MSBuildDeviceIntegration/$(DotNetStableTargetFramework)/MSBuildDeviceIntegration.dll
-          dotNetTestExtraArgs: --filter "Name=SystemApplicationTests"
+          testFilter: ClassName=Xamarin.Android.Build.Tests.SystemApplicationTests
 
 
 # TimeZoneInfo test jobs
@@ -203,11 +203,13 @@ stages:
       parameters:
         emulatorMSBuildArgs: -p:TestAvdShowWindow=true
 
-    - template: /build-tools/automation/yaml-templates/run-sliced-nunit-tests.yaml
+    - template: /build-tools/automation/yaml-templates/run-mstest-tests.yaml
       parameters:
         testAssembly: $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/MSBuildDeviceIntegration/$(DotNetStableTargetFramework)/MSBuildDeviceIntegration.dll
         testFilter: Name~CheckTimeZoneInfoIsCorrectWithSlicer
         testRunTitle: CheckTimeZoneInfoIsCorrectNode On Device - macOS
+        sliceTests: true
+        retryFailedTests: 1
 
     - template: /build-tools/automation/yaml-templates/upload-results.yaml
       parameters:
@@ -254,11 +256,13 @@ stages:
       parameters:
         emulatorMSBuildArgs: -p:TestAvdShowWindow=true
 
-    - template: /build-tools/automation/yaml-templates/run-sliced-nunit-tests.yaml
+    - template: /build-tools/automation/yaml-templates/run-mstest-tests.yaml
       parameters:
         testAssembly: $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/MSBuildDeviceIntegration/$(DotNetStableTargetFramework)/MSBuildDeviceIntegration.dll
         testFilter: Name~CheckLocalizationIsCorrectWithSlicer
         testRunTitle: CheckLocalizationIsCorrect On Device - macOS
+        sliceTests: true
+        retryFailedTests: 1
 
     - template: /build-tools/automation/yaml-templates/upload-results.yaml
       parameters:

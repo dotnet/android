@@ -6,18 +6,19 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
-using NUnit.Framework;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Xamarin.Android.Tools.Tests;
 
-[TestFixture]
+[TestClass]
 public class AvdManagerRunnerTests
 {
-	[TestCase ("hw.gpu.enabled=no\nhw.gpu.mode=auto\n")]
-	[TestCase (" hw.gpu.enabled = no \nhw.gpu.mode = off\n")]
-	[TestCase ("hw.gpu.enabled=no\nhw.gpu.enabled=yes\nhw.gpu.mode=host\n")]
-	[TestCase ("hw.gpu.enabled=yes\nhw.gpu.mode=auto\n")]
-	[TestCase ("")]
+	[TestMethod]
+	[DataRow ("hw.gpu.enabled=no\nhw.gpu.mode=auto\n")]
+	[DataRow (" hw.gpu.enabled = no \nhw.gpu.mode = off\n")]
+	[DataRow ("hw.gpu.enabled=no\nhw.gpu.enabled=yes\nhw.gpu.mode=host\n")]
+	[DataRow ("hw.gpu.enabled=yes\nhw.gpu.mode=auto\n")]
+	[DataRow ("")]
 	public async Task GetOrCreateAvdAsync_NewAvd_EnablesGpu (string gpuConfig)
 	{
 		using var avd = new FakeAvdManager ("# Keep this comment\nhw.ramSize=2048\nhw.gpu.enabled.extra=no\n" + gpuConfig);
@@ -31,10 +32,10 @@ public class AvdManagerRunnerTests
 			"hw.gpu.enabled=yes",
 			"hw.gpu.mode=auto",
 		}, File.ReadAllLines (avd.ConfigPath));
-		Assert.That (avd.CreationCommand, Is.EqualTo ("create avd -n test-avd -k system-image"));
+		Assert.AreEqual ("create avd -n test-avd -k system-image", avd.CreationCommand);
 	}
 
-	[Test]
+	[TestMethod]
 	public async Task GetOrCreateAvdAsync_ExistingAvd_PreservesConfiguration ()
 	{
 		const string config = "hw.gpu.enabled=no\r\nhw.gpu.mode=host\r\nhw.ramSize=4096\r\n";
@@ -46,33 +47,33 @@ public class AvdManagerRunnerTests
 		Assert.IsEmpty (avd.CreationCommand);
 	}
 
-	[Test]
+	[TestMethod]
 	public async Task GetOrCreateAvdAsync_Force_EnablesGpu ()
 	{
 		using var avd = new FakeAvdManager ("hw.gpu.enabled=no\nhw.gpu.mode=off\n", existing: true);
 		await avd.Runner.GetOrCreateAvdAsync ("test-avd", "system-image", force: true);
 
 		CollectionAssert.AreEqual (new [] { "hw.gpu.enabled=yes", "hw.gpu.mode=auto" }, File.ReadAllLines (avd.ConfigPath));
-		Assert.That (avd.CreationCommand, Does.Contain ("--force"));
+		Assert.Contains ("--force", avd.CreationCommand);
 	}
 
-	[Test]
-	public void GetOrCreateAvdAsync_MissingConfig_Throws ()
+	[TestMethod]
+	public async Task GetOrCreateAvdAsync_MissingConfig_Throws ()
 	{
 		using var avd = new FakeAvdManager ("");
 		File.Delete (avd.ConfigPath);
 
-		Assert.ThrowsAsync<FileNotFoundException> (() => avd.Runner.GetOrCreateAvdAsync ("test-avd", "system-image"));
+		await Assert.ThrowsExactlyAsync<FileNotFoundException> (() => avd.Runner.GetOrCreateAvdAsync ("test-avd", "system-image"));
 		Assert.IsFalse (File.Exists (avd.ConfigPath));
 	}
 
-	[Test]
-	public void GetOrCreateAvdAsync_MissingPath_Throws ()
+	[TestMethod]
+	public async Task GetOrCreateAvdAsync_MissingPath_Throws ()
 	{
 		using var avd = new FakeAvdManager ("", reportPath: false);
 
-		var exception = Assert.ThrowsAsync<InvalidOperationException> (() => avd.Runner.GetOrCreateAvdAsync ("test-avd", "system-image"));
-		Assert.That (exception.Message, Does.Contain ("did not report a path"));
+		var exception = await Assert.ThrowsExactlyAsync<InvalidOperationException> (() => avd.Runner.GetOrCreateAvdAsync ("test-avd", "system-image"));
+		Assert.Contains ("did not report a path", exception.Message);
 	}
 
 	sealed class FakeAvdManager : IDisposable
@@ -88,7 +89,7 @@ public class AvdManagerRunnerTests
 		public FakeAvdManager (string config, bool existing = false, bool reportPath = true)
 		{
 			if (OS.IsWindows)
-				Assert.Ignore ("Fake avdmanager tests use shell scripts and are not supported on Windows.");
+				Assert.Inconclusive ("Fake avdmanager tests use shell scripts and are not supported on Windows.");
 
 			AvdPath = Path.Combine (directory, "custom location", "actual.avd");
 			Directory.CreateDirectory (AvdPath);
@@ -123,7 +124,7 @@ public class AvdManagerRunnerTests
 		public void Dispose () => Directory.Delete (directory, true);
 	}
 
-	[Test]
+	[TestMethod]
 	public void ParseAvdListOutput_MultipleAvds ()
 	{
 		var output =
@@ -153,7 +154,7 @@ public class AvdManagerRunnerTests
 		Assert.AreEqual ("/Users/test/.android/avd/MAUI_Emulator.avd", avds [1].Path);
 	}
 
-	[Test]
+	[TestMethod]
 	public void ParseAvdListOutput_WindowsNewlines ()
 	{
 		var output =
@@ -171,14 +172,14 @@ public class AvdManagerRunnerTests
 		Assert.AreEqual ("C:\\Users\\test\\.android\\avd\\Test_AVD.avd", avds [0].Path);
 	}
 
-	[Test]
+	[TestMethod]
 	public void ParseAvdListOutput_EmptyOutput ()
 	{
 		var avds = AvdManagerRunner.ParseAvdListOutput ("");
 		Assert.AreEqual (0, avds.Count);
 	}
 
-	[Test]
+	[TestMethod]
 	public void ParseAvdListOutput_NoAvds ()
 	{
 		var output = "Available Android Virtual Devices:\n";
@@ -186,7 +187,7 @@ public class AvdManagerRunnerTests
 		Assert.AreEqual (0, avds.Count);
 	}
 
-	[Test]
+	[TestMethod]
 	public void ParseAvdListOutput_SingleAvdNoDevice ()
 	{
 		var output =
@@ -201,14 +202,14 @@ public class AvdManagerRunnerTests
 		Assert.AreEqual ("/home/user/.android/avd/Minimal_AVD.avd", avds [0].Path);
 	}
 
-	[Test]
+	[TestMethod]
 	public void ParseAvdListOutput_ReturnsIReadOnlyList ()
 	{
 		var avds = AvdManagerRunner.ParseAvdListOutput ("");
-		Assert.IsInstanceOf<IReadOnlyList<AvdInfo>> (avds);
+		Assert.IsInstanceOfType<IReadOnlyList<AvdInfo>> (avds);
 	}
 
-	[Test]
+	[TestMethod]
 	public void FindCmdlineTool_FindsVersionedDir ()
 	{
 		var tempDir = Path.Combine (Path.GetTempPath (), $"avd-test-{Path.GetRandomFileName ()}");
@@ -220,13 +221,13 @@ public class AvdManagerRunnerTests
 			File.WriteAllText (Path.Combine (binDir, avdMgrName), "");
 
 			var path = ProcessUtils.FindCmdlineTool (tempDir, "avdmanager", OS.IsWindows ? ".bat" : "");
-			Assert.That (path, Does.Contain ("12.0"));
+			Assert.Contains ("12.0", path);
 		} finally {
 			Directory.Delete (tempDir, true);
 		}
 	}
 
-	[Test]
+	[TestMethod]
 	public void FindCmdlineTool_PrefersHigherVersion ()
 	{
 		var tempDir = Path.Combine (Path.GetTempPath (), $"avd-test-{Path.GetRandomFileName ()}");
@@ -241,13 +242,13 @@ public class AvdManagerRunnerTests
 
 		try {
 			var path = ProcessUtils.FindCmdlineTool (tempDir, "avdmanager", OS.IsWindows ? ".bat" : "");
-			Assert.That (path, Does.Contain ("12.0"));
+			Assert.Contains ("12.0", path);
 		} finally {
 			Directory.Delete (tempDir, true);
 		}
 	}
 
-	[Test]
+	[TestMethod]
 	public void FindCmdlineTool_HandlesPreReleaseVersionDir ()
 	{
 		var tempDir = Path.Combine (Path.GetTempPath (), $"avd-test-{Path.GetRandomFileName ()}");
@@ -263,13 +264,13 @@ public class AvdManagerRunnerTests
 
 		try {
 			var path = ProcessUtils.FindCmdlineTool (tempDir, "avdmanager", OS.IsWindows ? ".bat" : "");
-			Assert.That (path, Does.Contain ("13.0-rc1"));
+			Assert.Contains ("13.0-rc1", path);
 		} finally {
 			Directory.Delete (tempDir, true);
 		}
 	}
 
-	[Test]
+	[TestMethod]
 	public void FindCmdlineTool_PrefersLatest ()
 	{
 		var tempDir = Path.Combine (Path.GetTempPath (), $"avd-test-{Path.GetRandomFileName ()}");
@@ -281,55 +282,59 @@ public class AvdManagerRunnerTests
 			File.WriteAllText (Path.Combine (binDir, avdMgrName), "");
 
 			var path = ProcessUtils.FindCmdlineTool (tempDir, "avdmanager", OS.IsWindows ? ".bat" : "");
-			Assert.That (path, Does.Contain ("latest"));
+			Assert.Contains ("latest", path);
 		} finally {
 			Directory.Delete (tempDir, true);
 		}
 	}
 
-	[Test]
+	[TestMethod]
 	public void FindCmdlineTool_MissingSdk_ReturnsNull ()
 	{
 		var path = ProcessUtils.FindCmdlineTool ("/nonexistent/path", "avdmanager", OS.IsWindows ? ".bat" : "");
 		Assert.IsNull (path);
 	}
 
-	[TestCase (null)]
-	[TestCase ("")]
-	[TestCase ("   ")]
+	[TestMethod]
+	[DataRow (null)]
+	[DataRow ("")]
+	[DataRow ("   ")]
 	public void Constructor_InvalidPath_ThrowsArgumentException (string path)
 	{
-		Assert.Throws<ArgumentException> (() => new AvdManagerRunner (path));
+		Assert.ThrowsExactly<ArgumentException> (() => new AvdManagerRunner (path));
 	}
 
-	[TestCase (null)]
-	[TestCase ("")]
-	[TestCase ("   ")]
-	public void GetOrCreateAvdAsync_InvalidName_ThrowsArgumentException (string name)
+	[TestMethod]
+	[DataRow (null)]
+	[DataRow ("")]
+	[DataRow ("   ")]
+	public async Task GetOrCreateAvdAsync_InvalidName_ThrowsArgumentException (string name)
 	{
 		var runner = new AvdManagerRunner ("/fake/avdmanager");
-		Assert.ThrowsAsync<ArgumentException> (() => runner.GetOrCreateAvdAsync (name, "system-image"));
+		await Assert.ThrowsExactlyAsync<ArgumentException> (() => runner.GetOrCreateAvdAsync (name, "system-image"));
 	}
 
-	[TestCase (null)]
-	[TestCase ("")]
-	[TestCase (" \t ")]
-	public void GetOrCreateAvdAsync_InvalidSystemImage_ThrowsArgumentException (string systemImage)
+	[TestMethod]
+	[DataRow (null)]
+	[DataRow ("")]
+	[DataRow (" \t ")]
+	public async Task GetOrCreateAvdAsync_InvalidSystemImage_ThrowsArgumentException (string systemImage)
 	{
 		var runner = new AvdManagerRunner ("/fake/avdmanager");
-		Assert.ThrowsAsync<ArgumentException> (() => runner.GetOrCreateAvdAsync ("test-avd", systemImage));
+		await Assert.ThrowsExactlyAsync<ArgumentException> (() => runner.GetOrCreateAvdAsync ("test-avd", systemImage));
 	}
 
-	[TestCase (null)]
-	[TestCase ("")]
-	[TestCase (" \t ")]
-	public void DeleteAvdAsync_InvalidName_ThrowsArgumentException (string name)
+	[TestMethod]
+	[DataRow (null)]
+	[DataRow ("")]
+	[DataRow (" \t ")]
+	public async Task DeleteAvdAsync_InvalidName_ThrowsArgumentException (string name)
 	{
 		var runner = new AvdManagerRunner ("/fake/avdmanager");
-		Assert.ThrowsAsync<ArgumentException> (() => runner.DeleteAvdAsync (name));
+		await Assert.ThrowsExactlyAsync<ArgumentException> (() => runner.DeleteAvdAsync (name));
 	}
 
-	[Test]
+	[TestMethod]
 	public void FindCmdlineTool_PrefersStableOverPreRelease ()
 	{
 		var tempDir = Path.Combine (Path.GetTempPath (), $"avd-test-{Path.GetRandomFileName ()}");
@@ -345,13 +350,13 @@ public class AvdManagerRunnerTests
 
 		try {
 			var path = ProcessUtils.FindCmdlineTool (tempDir, "avdmanager", OS.IsWindows ? ".bat" : "");
-			Assert.That (path, Does.Contain (Path.Combine ("13.0", "bin")));
+			Assert.Contains (Path.Combine ("13.0", "bin"), path);
 		} finally {
 			Directory.Delete (tempDir, true);
 		}
 	}
 
-	[Test]
+	[TestMethod]
 	public void ParseCompactDeviceListOutput_MultipleProfiles ()
 	{
 		var output =
@@ -369,14 +374,14 @@ public class AvdManagerRunnerTests
 		Assert.AreEqual ("Galaxy Nexus", profiles [3].Id);
 	}
 
-	[Test]
+	[TestMethod]
 	public void ParseCompactDeviceListOutput_EmptyOutput ()
 	{
 		var profiles = AvdManagerRunner.ParseCompactDeviceListOutput ("");
 		Assert.AreEqual (0, profiles.Count);
 	}
 
-	[Test]
+	[TestMethod]
 	public void ParseCompactDeviceListOutput_WindowsNewlines ()
 	{
 		var output =
@@ -390,7 +395,7 @@ public class AvdManagerRunnerTests
 		Assert.AreEqual ("pixel_9_pro", profiles [1].Id);
 	}
 
-	[Test]
+	[TestMethod]
 	public void ParseCompactDeviceListOutput_SkipsBlankLines ()
 	{
 		var output = "\n\npixel_7\n\n";
@@ -401,10 +406,10 @@ public class AvdManagerRunnerTests
 		Assert.AreEqual ("pixel_7", profiles [0].Id);
 	}
 
-	[Test]
+	[TestMethod]
 	public void ParseCompactDeviceListOutput_ReturnsIReadOnlyList ()
 	{
 		var profiles = AvdManagerRunner.ParseCompactDeviceListOutput ("");
-		Assert.IsInstanceOf<IReadOnlyList<AvdDeviceProfile>> (profiles);
+		Assert.IsInstanceOfType<IReadOnlyList<AvdDeviceProfile>> (profiles);
 	}
 }

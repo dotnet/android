@@ -10,49 +10,49 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
-using NUnit.Framework;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Xamarin.Android.Tools.Tests
 {
-	[TestFixture]
+	[TestClass]
 	public class JdkInstallerTests
 	{
 		JdkInstaller installer;
 
-		[SetUp]
+		[TestInitialize]
 		public void SetUp ()
 		{
 			installer = new JdkInstaller (logger: (level, message) => {
-				TestContext.WriteLine ($"[{level}] {message}");
+				Console.WriteLine ($"[{level}] {message}");
 			});
 		}
 
-		[TearDown]
+		[TestCleanup]
 		public void TearDown ()
 		{
 			installer?.Dispose ();
 			installer = null!;
 		}
 
-		[Test]
+		[TestMethod]
 		public void IsValid_NullPath_ReturnsFalse ()
 		{
 			Assert.IsFalse (installer.IsValid (null!));
 		}
 
-		[Test]
+		[TestMethod]
 		public void IsValid_EmptyPath_ReturnsFalse ()
 		{
 			Assert.IsFalse (installer.IsValid (""));
 		}
 
-		[Test]
+		[TestMethod]
 		public void IsValid_NonExistentPath_ReturnsFalse ()
 		{
 			Assert.IsFalse (installer.IsValid (Path.Combine (Path.GetTempPath (), Guid.NewGuid ().ToString ())));
 		}
 
-		[Test]
+		[TestMethod]
 		public void IsValid_EmptyDirectory_ReturnsFalse ()
 		{
 			var dir = Path.Combine (Path.GetTempPath (), Guid.NewGuid ().ToString ());
@@ -65,7 +65,7 @@ namespace Xamarin.Android.Tools.Tests
 			}
 		}
 
-		[Test]
+		[TestMethod]
 		public void IsValid_FauxJdk_ReturnsTrue ()
 		{
 			var dir = Path.Combine (Path.GetTempPath (), $"jdk-test-{Guid.NewGuid ()}");
@@ -79,10 +79,11 @@ namespace Xamarin.Android.Tools.Tests
 			}
 		}
 
-		[TestCase ("invalid", false)]
-		[TestCase ("invalid", true)]
-		[TestCase ("cancel", true)]
-		[TestCase ("valid", true)]
+		[TestMethod]
+		[DataRow ("invalid", false)]
+		[DataRow ("invalid", true)]
+		[DataRow ("cancel", true)]
+		[DataRow ("valid", true)]
 		public async Task ExtractArchiveAsync_ValidatesBeforeCommitting (string outcome, bool existingTarget)
 		{
 			var dir = Path.Combine (Path.GetTempPath (), $"jdk-rollback-test-{Guid.NewGuid ():N}");
@@ -130,20 +131,20 @@ namespace Xamarin.Android.Tools.Tests
 					Assert.IsFalse (Directory.Exists (Path.Combine (target, "custom")));
 				} else {
 					if (outcome == "cancel")
-						Assert.ThrowsAsync<OperationCanceledException> (async () => await installer.ExtractArchiveAsync (archive, target, cts.Token, progress));
+						await Assert.ThrowsExactlyAsync<OperationCanceledException> (async () => await installer.ExtractArchiveAsync (archive, target, cts.Token, progress));
 					else
-						Assert.ThrowsAsync<InvalidOperationException> (async () => await installer.ExtractArchiveAsync (archive, target, cts.Token, progress));
+						await Assert.ThrowsExactlyAsync<InvalidOperationException> (async () => await installer.ExtractArchiveAsync (archive, target, cts.Token, progress));
 
 					Assert.AreEqual (existingTarget, Directory.Exists (target));
 					if (existingTarget) {
 						Assert.IsTrue (installer.IsValid (target));
-						Assert.That (Directory.GetFiles (target, "*", SearchOption.AllDirectories).Select (p => Path.GetRelativePath (target, p)), Is.EquivalentTo (previousFiles.Keys));
+						CollectionAssert.AreEquivalent (previousFiles.Keys.ToArray (), Directory.GetFiles (target, "*", SearchOption.AllDirectories).Select (p => Path.GetRelativePath (target, p)).ToArray ());
 						foreach (var file in previousFiles)
-							Assert.That (File.ReadAllBytes (Path.Combine (target, file.Key)), Is.EqualTo (file.Value), file.Key);
+							CollectionAssert.AreEqual (file.Value, File.ReadAllBytes (Path.Combine (target, file.Key)), file.Key);
 					}
 				}
 				Assert.IsEmpty (Directory.GetDirectories (dir, ".jdk-extract-*"));
-				Assert.That (Directory.GetDirectories (dir, "target.old-*"), Is.EquivalentTo (new [] { unrelatedBackup }));
+				CollectionAssert.AreEquivalent (new [] { unrelatedBackup }, Directory.GetDirectories (dir, "target.old-*"));
 				Assert.AreEqual ("unrelated", File.ReadAllText (Path.Combine (unrelatedBackup, "preserve.txt")));
 			}
 			finally {
@@ -160,19 +161,19 @@ namespace Xamarin.Android.Tools.Tests
 			public void Report (JdkInstallProgress value) => report (value);
 		}
 
-		[Test]
+		[TestMethod]
 		public void IsValid_SystemJdk_ReturnsTrue ()
 		{
 			// Find first known JDK on the system
 			var jdk = JdkInfo.GetKnownSystemJdkInfos ().FirstOrDefault ();
 			if (jdk is null) {
-				Assert.Ignore ("No system JDK found to validate.");
+				Assert.Inconclusive ("No system JDK found to validate.");
 				return;
 			}
 			Assert.IsTrue (installer.IsValid (jdk.HomePath));
 		}
 
-		[Test]
+		[TestMethod]
 		public async Task DiscoverAsync_ReturnsVersions ()
 		{
 			IReadOnlyList<JdkVersionInfo> versions;
@@ -182,60 +183,60 @@ namespace Xamarin.Android.Tools.Tests
 				}
 			}
 			catch (Exception ex) when (ex is System.Net.Http.HttpRequestException || ex is TaskCanceledException || ex is OperationCanceledException) {
-				Assert.Ignore ($"Network unavailable: {ex.Message}");
+				Assert.Inconclusive ($"Network unavailable: {ex.Message}");
 				return;
 			}
 
 			// We should get at least one version (if network is available)
 			Assert.IsNotNull (versions);
 			if (versions.Count == 0) {
-				Assert.Ignore ("No versions returned (network may be restricted).");
+				Assert.Inconclusive ("No versions returned (network may be restricted).");
 				return;
 			}
 
-			Assert.That (versions.Select (v => v.MajorVersion), Does.Contain (21), "Should contain JDK 21");
+			Assert.Contains (21, versions.Select (v => v.MajorVersion), "Should contain JDK 21");
 
 			// Verify structure of returned info
 			foreach (var v in versions) {
-				Assert.Greater (v.MajorVersion, 0, "MajorVersion should be positive");
+				Assert.IsGreaterThan (0, v.MajorVersion, "MajorVersion should be positive");
 				Assert.IsNotEmpty (v.DisplayName, "DisplayName should not be empty");
 				Assert.IsNotEmpty (v.DownloadUrl, "DownloadUrl should not be empty");
-				Assert.That (v.DownloadUrl, Does.Contain ("aka.ms/download-jdk"), "DownloadUrl should use Microsoft OpenJDK");
+				Assert.Contains ("aka.ms/download-jdk", v.DownloadUrl, "DownloadUrl should use Microsoft OpenJDK");
 			}
 		}
 
-		[Test]
+		[TestMethod]
 		public async Task DiscoverAsync_CancellationToken_Cancels ()
 		{
 			using var cts = new CancellationTokenSource ();
 			cts.Cancel ();
 
-			Assert.ThrowsAsync<OperationCanceledException> (
+			await Assert.ThrowsExactlyAsync<OperationCanceledException> (
 				async () => await installer.DiscoverAsync (cts.Token));
 		}
 
-		[Test]
-		public void InstallAsync_InvalidVersion_Throws ()
+		[TestMethod]
+		public async Task InstallAsync_InvalidVersion_Throws ()
 		{
-			Assert.ThrowsAsync<ArgumentException> (
+			await Assert.ThrowsExactlyAsync<ArgumentException> (
 				async () => await installer.InstallAsync (8, Path.GetTempPath ()));
 		}
 
-		[Test]
-		public void InstallAsync_NullPath_Throws ()
+		[TestMethod]
+		public async Task InstallAsync_NullPath_Throws ()
 		{
-			Assert.ThrowsAsync<ArgumentNullException> (
+			await Assert.ThrowsExactlyAsync<ArgumentNullException> (
 				async () => await installer.InstallAsync (21, null!));
 		}
 
-		[Test]
+		[TestMethod]
 		public async Task InstallAsync_ReportsProgress ()
 		{
 			// This test actually downloads and installs a JDK, so it may be slow.
 			// Skip if running in CI or if network is unavailable.
 			if (Environment.GetEnvironmentVariable ("CI") is not null ||
 			    Environment.GetEnvironmentVariable ("TF_BUILD") is not null) {
-				Assert.Ignore ("Skipping download test in CI environment.");
+				Assert.Inconclusive ("Skipping download test in CI environment.");
 				return;
 			}
 
@@ -261,7 +262,7 @@ namespace Xamarin.Android.Tools.Tests
 				Assert.AreEqual (21, jdkInfo.Version!.Major);
 			}
 			catch (Exception ex) when (ex is System.Net.Http.HttpRequestException || ex is TaskCanceledException) {
-				Assert.Ignore ($"Network unavailable: {ex.Message}");
+				Assert.Inconclusive ($"Network unavailable: {ex.Message}");
 			}
 			finally {
 				if (Directory.Exists (targetPath))
@@ -269,31 +270,31 @@ namespace Xamarin.Android.Tools.Tests
 			}
 		}
 
-		[Test]
+		[TestMethod]
 		public void Constructor_DefaultLogger_DoesNotThrow ()
 		{
 			using var defaultInstaller = new JdkInstaller ();
 			Assert.IsNotNull (defaultInstaller);
 		}
 
-		[Test]
+		[TestMethod]
 		public void RecommendedMajorVersion_Is21 ()
 		{
 			Assert.AreEqual (21, JdkInstaller.RecommendedMajorVersion);
 		}
 
-		[Test]
+		[TestMethod]
 		public void SupportedVersions_ContainsExpected ()
 		{
-			Assert.That (JdkInstaller.SupportedVersions, Does.Contain (21));
+			Assert.Contains (21, JdkInstaller.SupportedVersions);
 		}
 
-		[Test]
+		[TestMethod]
 		public void IsTargetPathWritable_TempDir_ReturnsTrue ()
 		{
 			var dir = Path.Combine (Path.GetTempPath (), $"jdk-write-test-{Guid.NewGuid ()}");
 			try {
-				Assert.IsTrue (FileUtil.IsTargetPathWritable (dir, (level, msg) => TestContext.WriteLine ($"[{level}] {msg}")));
+				Assert.IsTrue (FileUtil.IsTargetPathWritable (dir, (level, msg) => Console.WriteLine ($"[{level}] {msg}")));
 			}
 			finally {
 				if (Directory.Exists (dir))
@@ -301,21 +302,21 @@ namespace Xamarin.Android.Tools.Tests
 			}
 		}
 
-		[Test]
+		[TestMethod]
 		public void IsTargetPathWritable_NullOrEmpty_ReturnsFalse ()
 		{
-			var logger = new Action<TraceLevel, string> ((level, msg) => TestContext.WriteLine ($"[{level}] {msg}"));
+			var logger = new Action<TraceLevel, string> ((level, msg) => Console.WriteLine ($"[{level}] {msg}"));
 			Assert.IsFalse (FileUtil.IsTargetPathWritable (null!, logger));
 			Assert.IsFalse (FileUtil.IsTargetPathWritable ("", logger));
 		}
 
-		[Test]
+		[TestMethod]
 		public void Remove_NonExistentPath_ReturnsFalse ()
 		{
 			Assert.IsFalse (installer.Remove (Path.Combine (Path.GetTempPath (), Guid.NewGuid ().ToString ())));
 		}
 
-		[Test]
+		[TestMethod]
 		public void Remove_ExistingDirectory_RemovesIt ()
 		{
 			var dir = Path.Combine (Path.GetTempPath (), $"jdk-remove-test-{Guid.NewGuid ()}");

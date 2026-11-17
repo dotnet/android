@@ -1,14 +1,14 @@
 using System.Linq;
 using generator.SourceWriters;
 using MonoDroid.Generation;
-using NUnit.Framework;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace generatortests.SourceWriters
 {
-	[TestFixture]
+	[TestClassAttribute]
 	public class MethodExplicitInterfaceImplementationTests : SourceWritersTestBase
 	{
-		[Test]
+		[TestMethodAttribute]
 		public void MethodExplicitInterfaceImplementation ()
 		{
 			var opt = new CodeGenerationOptions ();

@@ -5,25 +5,26 @@ using System.Linq;
 using Microsoft.Android.Tasks;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
-using NUnit.Framework;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Xamarin.Android.Tasks;
 
 namespace Xamarin.Android.Build.Tests.Tasks {
 
-	[TestFixture]
+	[TestClass]
+	[DoNotParallelize]
 	public class AndroidNdkToolsTests : BaseTest {
 
 		List<BuildErrorEventArgs> errors;
 		List<BuildWarningEventArgs> warnings;
 		MockBuildEngine engine;
 
-		[SetUp]
+		[TestInitialize]
 		public void Setup ()
 		{
-			engine = new MockBuildEngine (TestContext.Out, errors = new List<BuildErrorEventArgs> (), warnings = new List<BuildWarningEventArgs> ());
+			engine = new MockBuildEngine (Console.Out, errors = new List<BuildErrorEventArgs> (), warnings = new List<BuildWarningEventArgs> ());
 		}
 
-		[Test]
+		[TestMethod]
 		public void OfficialNdkToolsAndRuntimeLibraries ()
 		{
 			var log = new TaskLoggingHelper (engine, TestName);
@@ -33,15 +34,16 @@ namespace Xamarin.Android.Build.Tests.Tasks {
 			foreach (string tool in new [] { "clang", "clang++", "ld.lld", "llvm-objcopy", "llvm-strip" }) {
 				string expected = Path.Combine (expectedToolchain, "bin", tool + (IsWindows ? ".exe" : ""));
 				Assert.AreEqual (expected, ndk.GetToolPath (tool), "Tools must come from the official NDK.");
-				FileAssert.Exists (expected);
+				Assert.IsTrue (File.Exists (expected));
 			}
 			string runtime = ndk.GetClangDeviceLibraryPath () ?? throw new InvalidOperationException ("Clang runtime libraries must be available.");
-			FileAssert.Exists (Path.Combine (runtime, "libclang_rt.builtins-aarch64-android.a"));
+			Assert.IsTrue (File.Exists (Path.Combine (runtime, "libclang_rt.builtins-aarch64-android.a")));
 			Assert.IsEmpty (errors);
 		}
 
-		[TestCase (false, "XA5104")]
-		[TestCase (true, "XA5101")]
+		[TestMethod]
+		[DataRow (false, "XA5104")]
+		[DataRow (true, "XA5101")]
 		public void MissingNdkOrHostToolchain (bool hasVersion, string errorCode)
 		{
 			string directory = Path.Combine (Root, "temp", TestName);
@@ -53,7 +55,7 @@ namespace Xamarin.Android.Build.Tests.Tasks {
 			Assert.AreEqual (errorCode, errors.Single ().Code);
 		}
 
-		[Test]
+		[TestMethod]
 		public void MissingToolDoesNotFallBack ()
 		{
 			var ndk = CreateNdk ();
@@ -61,8 +63,9 @@ namespace Xamarin.Android.Build.Tests.Tasks {
 			Assert.AreEqual ("XA5105", errors.Single ().Code);
 		}
 
-		[TestCase ("lib")]
-		[TestCase ("lib64")]
+		[TestMethod]
+		[DataRow ("lib")]
+		[DataRow ("lib64")]
 		public void ClangRuntimeUsesNewestVersion (string libDirectory)
 		{
 			var ndk = CreateNdk ();
@@ -77,7 +80,7 @@ namespace Xamarin.Android.Build.Tests.Tasks {
 			Assert.IsEmpty (errors);
 		}
 
-		[Test]
+		[TestMethod]
 		public void MissingClangRuntimeIsDiagnosed ()
 		{
 			var ndk = CreateNdk ();
@@ -91,9 +94,9 @@ namespace Xamarin.Android.Build.Tests.Tasks {
 				Assert.IsNull (ndk.GetClangDeviceLibraryPath ());
 				var error = errors.Single ();
 				Assert.AreEqual ("XA5101", error.Code);
-				StringAssert.Contains ("Could not locate Android NDK Clang runtime libraries", error.Message);
-				StringAssert.Contains (modernRoot, error.Message);
-				StringAssert.Contains (olderRoot, error.Message);
+				Assert.Contains ("Could not locate Android NDK Clang runtime libraries", error.Message);
+				Assert.Contains (modernRoot, error.Message);
+				Assert.Contains (olderRoot, error.Message);
 				errors.Clear ();
 			}
 		}

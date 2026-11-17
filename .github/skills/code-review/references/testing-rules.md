@@ -10,7 +10,7 @@ Guidance for test code. The repo-specific conventions (e.g., `BaseTest`,
 | Check | What to look for |
 |-------|-----------------|
 | **`BaseTest`** | Build integration fixtures that need its project, SDK, or platform helpers can follow existing `BaseTest` patterns; standalone tooling fixtures need not inherit it. |
-| **Test framework** | Follow the fixture's NUnit or MSTest conventions; disable parallel execution only when needed. |
+| **Test framework** | Use MSTest conventions (`[TestClass]`, `[TestMethod]`, `[DataRow]`/`[DynamicData]`, `[TestCategory]`); add `[DoNotParallelize]` only when needed. |
 | **Test command** | See the `tests` skill: standalone tooling uses `dotnet test`; full-build tests use the local SDK. |
 | **Tests must earn their place** | Flag new tests that duplicate coverage, overfit the implementation, or rely on GC timing. Request a test only for an unprotected real regression, never as a default. |
 | **Test assertions** | Assert the relevant behavior and add diagnostic context when a failure would otherwise be ambiguous. |
