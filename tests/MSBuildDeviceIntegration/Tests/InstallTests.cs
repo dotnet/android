@@ -213,7 +213,7 @@ namespace Xamarin.Android.Build.Tests
 				Assert.Contains ($"System.Private.CoreLib.dll", directorylist, $"System.Private.CoreLib.dll should exist in the .__override__/{DeviceAbi} directory.");
 				Assert.Contains ($"Mono.Android.dll", directorylist, $"Mono.Android.dll should exist in the .__override__/{DeviceAbi} directory.");
 				Assert.IsTrue (builder.Uninstall (proj), "unnstall should have succeeded.");
-			)
+			}
 		}
 
 		[TestMethod]
