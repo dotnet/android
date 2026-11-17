@@ -361,10 +361,10 @@ stages:
       value: VS
     - name: ApiScanSoftwareVersion
       value: 17.10
-    # Nothing is built in this job, so the CodeQL tasks injected by default
-    # can only produce failed C#, C++ and Java databases.
-    - name: Codeql.SkipTaskAutoInjection
-      value: true
+    # Nothing is built in this job, so the CodeQL tasks injected by default can only
+    # produce failed C#, C++ and Java databases. Limit them to the interpreted languages.
+    - name: Codeql.LanguageDetectorFilter
+      value: interpreted
     steps:
     - template: /build-tools/automation/yaml-templates/setup-test-environment.yaml
       parameters:
