@@ -47,6 +47,9 @@ namespace Java.Lang {
 			{
 				public JniObjectReference Reference = reference;
 				public readonly ConditionalWeakTable<Action, RunnableImplementor> Runnables = new ();
+				// Drawable runnables a View scheduled via View.ScheduleDrawable (who, Action, long),
+				// so that View.RemoveCallbacks (Action) also cancels them.
+				public readonly ConditionalWeakTable<Action, List<RunnableImplementor>> Scheduled = new ();
 			}
 
 			const int MinimumSweepThreshold = 256;
@@ -61,16 +64,38 @@ namespace Java.Lang {
 			// Handler or Drawables share a View queue, so each owner needs its own runnable.
 			// Owners are matched by Java identity, so a replacement wrapper for the same Java object
 			// (e.g. after Dispose ()) still cancels posts made through the original wrapper.
-			public static RunnableImplementor GetOrCreate (Java.Lang.Object owner, Action handler)
-			{
-				var runnables = GetRunnables (owner, create: true) ?? throw new ObjectDisposedException (owner.GetType ().FullName);
-				return runnables.GetValue (handler, static h => new RunnableImplementor (h, removable: true));
-			}
+			public static RunnableImplementor GetOrCreate (Java.Lang.Object owner, Action handler) =>
+				GetOwner (owner).Runnables.GetValue (handler, static h => new RunnableImplementor (h, removable: true));
 
 			public static RunnableImplementor? Find (Java.Lang.Object owner, Action handler) =>
-				GetRunnables (owner, create: false) is { } runnables && runnables.TryGetValue (handler, out var runnable) ? runnable : null;
+				FindOwner (owner) is { } entry && entry.Runnables.TryGetValue (handler, out var runnable) ? runnable : null;
 
-			static ConditionalWeakTable<Action, RunnableImplementor>? GetRunnables (Java.Lang.Object owner, bool create)
+			// Returns the runnable for (who, handler) and remembers it on view, for View.ScheduleDrawable.
+			public static RunnableImplementor GetOrCreateScheduled (Java.Lang.Object view, Java.Lang.Object who, Action handler)
+			{
+				var runnable = GetOrCreate (who, handler);
+				var scheduled = GetOwner (view).Scheduled.GetValue (handler, static _ => []);
+				lock (scheduled) {
+					if (!scheduled.Contains (runnable))
+						scheduled.Add (runnable);
+				}
+				return runnable;
+			}
+
+			public static RunnableImplementor[] FindScheduled (Java.Lang.Object view, Action handler)
+			{
+				if (FindOwner (view) is not { } entry || !entry.Scheduled.TryGetValue (handler, out var scheduled))
+					return [];
+				lock (scheduled)
+					return scheduled.ToArray ();
+			}
+
+			static Owner GetOwner (Java.Lang.Object owner) =>
+				GetOwner (owner, create: true) ?? throw new ObjectDisposedException (owner.GetType ().FullName);
+
+			static Owner? FindOwner (Java.Lang.Object owner) => GetOwner (owner, create: false);
+
+			static Owner? GetOwner (Java.Lang.Object owner, bool create)
 			{
 				var reference = owner.PeerReference;
 				if (!reference.IsValid)
@@ -81,7 +106,7 @@ namespace Java.Lang {
 					if (owners.TryGetValue (hash, out var bucket)) {
 						foreach (var entry in bucket) {
 							if (JniEnvironment.Types.IsSameObject (entry.Reference, reference))
-								return entry.Runnables;
+								return entry;
 						}
 					}
 					if (!create)
@@ -99,7 +124,7 @@ namespace Java.Lang {
 					var owned = new Owner (reference.NewWeakGlobalRef ());
 					bucket.Add (owned);
 					ownerCount++;
-					return owned.Runnables;
+					return owned;
 				}
 			}
 

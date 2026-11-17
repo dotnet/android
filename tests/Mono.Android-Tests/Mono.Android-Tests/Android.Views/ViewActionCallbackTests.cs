@@ -81,6 +81,33 @@ namespace Xamarin.Android.RuntimeTests {
 			Assert.AreEqual (1, calls);
 		}
 
+		[TestCase (false)]
+		[TestCase (true)]
+		public async Task RemoveCallbacksCancelsScheduledDrawable (bool attachFirst)
+		{
+			int calls = 0;
+			Action action = () => Interlocked.Increment (ref calls);
+			await WithActivity (content => {
+				var view = new View (content.Context);
+				var background = new ColorDrawable ();
+				view.Background = background;
+				var sibling = new View (content.Context);
+				var siblingBackground = new ColorDrawable ();
+				sibling.Background = siblingBackground;
+				content.AddView (sibling);
+				if (attachFirst)
+					content.AddView (view);
+				long now = SystemClock.UptimeMillis ();
+				view.ScheduleDrawable (background, action, now);
+				view.ScheduleDrawable (background, action, now);
+				sibling.ScheduleDrawable (siblingBackground, action, now);   // runs: different View
+				Assert.IsTrue (view.RemoveCallbacks (action));
+				if (!attachFirst)
+					content.AddView (view);
+			});
+			Assert.AreEqual (1, calls);
+		}
+
 		[Test]
 		public void UnscheduleSelfPreservesNestedSiblings ()
 		{

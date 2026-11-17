@@ -134,6 +134,78 @@ namespace Xamarin.Android.RuntimeTests {
 			}
 		}
 
+		static int sweepCalls;
+		static readonly Action rootedAction = () => Interlocked.Increment (ref sweepCalls);
+
+		[Test]
+		public void CollectedOwnersReleaseRunnablesOfRootedActions ()
+		{
+			using var t = new HandlerThread ("CollectedOwnersReleaseRunnablesOfRootedActions");
+			t.Start ();
+			using var survivor = new Handler (t.Looper);
+			using var blocked = new ManualResetEventSlim ();
+			using var release = new ManualResetEventSlim ();
+			using var done = new ManualResetEventSlim ();
+			sweepCalls = 0;
+
+			try {
+				Assert.IsTrue (survivor.Post (() => { blocked.Set (); release.Wait (); }));
+				Assert.IsTrue (blocked.Wait (TimeSpan.FromSeconds (10)));
+				Assert.IsTrue (survivor.Post (rootedAction));
+				Assert.IsTrue (survivor.PostDelayed (rootedAction, 0));
+
+				// Each transient Handler caches a runnable for the rooted Action; once the Handler's Java
+				// object is collected, sweeping its owner entry must release that runnable.
+				var runnables = new List<WeakReference> ();
+				for (int round = 0; round < 40 && (runnables.Count == 0 || runnables.Exists (r => r.IsAlive)); round++) {
+					CreateTransientOwners (t.Looper, 100, round == 0 ? runnables : null);
+					GC.Collect ();
+					GC.WaitForPendingFinalizers ();
+					Java.Lang.Runtime.GetRuntime ().Gc ();
+					JniEnvironment.Runtime.ValueManager.CollectPeers ();
+					Thread.Sleep (50);
+				}
+				Assert.AreEqual (100, runnables.Count);
+				Assert.IsFalse (runnables.Exists (r => r.IsAlive), "Runnables of collected owners must be collectible while their Action is rooted.");
+
+				survivor.RemoveCallbacks (rootedAction);
+				Assert.IsTrue (survivor.Post (done.Set));
+				release.Set ();
+				Assert.IsTrue (done.Wait (TimeSpan.FromSeconds (10)));
+				Assert.AreEqual (0, sweepCalls, "A surviving owner's pending posts must stay cancelable after a sweep.");
+			} finally {
+				release.Set ();
+				Quit (t);
+			}
+		}
+
+		[MethodImpl (MethodImplOptions.NoInlining)]
+		static void CreateTransientOwners (Looper looper, int count, List<WeakReference> runnables)
+		{
+			long later = SystemClock.UptimeMillis () + 3_600_000;
+			for (int i = 0; i < count; i++) {
+				using var h = new CapturingHandler (looper);
+				Assert.IsTrue (h.PostAtTime (rootedAction, later));
+				h.RemoveCallbacks (rootedAction);
+				if (runnables != null) {
+					Assert.IsNotNull (h.Runnable);
+					runnables.Add (new WeakReference (h.Runnable));
+				}
+			}
+		}
+
+		sealed class CapturingHandler : Handler {
+			public Java.Lang.IRunnable Runnable;
+
+			public CapturingHandler (Looper looper) : base (looper) {}
+
+			public override bool SendMessageAtTime (Message msg, long uptimeMillis)
+			{
+				Runnable = msg.Callback;
+				return base.SendMessageAtTime (msg, uptimeMillis);
+			}
+		}
+
 		static void Quit (HandlerThread t)
 		{
 			t.QuitSafely ();
