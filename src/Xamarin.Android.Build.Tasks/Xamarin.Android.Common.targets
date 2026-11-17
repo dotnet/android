@@ -516,7 +516,7 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
       Condition=" '$(BundleAssemblies)' == 'true' "
   />
   <AndroidWarning Code="XA0108"
-      ResourceName="XA0108"
+      ResourceName="XA0108_LintEnabled"
       Condition=" '$(AndroidLintEnabled)' == 'true' "
   />
 </Target>

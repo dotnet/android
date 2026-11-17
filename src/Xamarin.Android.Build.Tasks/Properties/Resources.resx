@@ -195,7 +195,7 @@ This error is likely caused by an issue with the AndroidManifest.xml file or an 
   <data name="XA0107" xml:space="preserve">
     <value>{0} is a Reference Assembly.</value>
   </data>
-  <data name="XA0108" xml:space="preserve">
+  <data name="XA0108_LintEnabled" xml:space="preserve">
     <value>The 'AndroidLintEnabled' MSBuild property is no longer supported. Remove it. If needed, run the Android 'lint' tool directly.</value>
     <comment>The following are literal names and should not be translated: 'AndroidLintEnabled', MSBuild, Android, 'lint'</comment>
   </data>
