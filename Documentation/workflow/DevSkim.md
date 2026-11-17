@@ -1,0 +1,119 @@
+# DevSkim banned-API analysis
+
+The `DevSkim` stage of the CI and PR pipelines runs
+[DevSkim](https://github.com/microsoft/DevSkim) over the first-party source code
+and fails when it finds a banned API, such as a banned C function. It supports
+the Microsoft.Security.SystemsADM.10082 requirement. Running the scanner is only
+part of meeting that requirement: each finding has to be fixed, or approved as an
+exception by the responsible security team.
+
+CodeQL runs separately, in the nightly pipeline, and isn't affected.
+
+## Pipelines
+
+The stage is defined in `build-tools/automation/yaml-templates/stage-devskim.yaml`.
+It is the last stage of every pipeline that builds the product:
+
+| Pipeline                                               | Runs for                                       |
+|--------------------------------------------------------|------------------------------------------------|
+| `build-tools/automation/azure-pipelines-public.yaml`   | Pull requests, and the nightly build of `main` |
+| `build-tools/automation/azure-pipelines.yaml`          | CI builds on DevDiv                            |
+| `build-tools/automation/azure-pipelines-internal.yaml` | CI builds and pull requests on dnceng/internal |
+
+The scan needs no build, so the stage has no dependencies. It runs on a Linux
+agent next to the build stages, and doesn't hold up packing or publishing.
+
+## What is scanned
+
+DevSkim scans these directories, one scan per directory:
+
+  * `src`: the runtime, build tasks, bindings and tools.
+  * `build-tools`: build and CI tooling.
+  * `eng`: engineering scripts from dotnet/arcade.
+  * `external`: code from other repositories.
+  * `tools`: developer tools.
+
+These are out of scope:
+
+  * `tests`, `samples`, `Documentation`, `docs` and `Localize`: tests, samples,
+    documentation and translations.
+  * `src-ThirdParty`: code copied from other projects, such as the Android
+    platform tools.
+  * Git submodules. The stage doesn't check them out, and the only one,
+    `external/android-api-docs`, is documentation.
+
+`build-tools/automation/scripts/devskim-options.json` lists the files that are
+skipped inside the scanned directories: the unit tests in `src/*/Tests`, the
+`external/android-api-docs` documentation for checkouts that have the
+submodule, and `.git`. Patterns match the full path of a file, so keep them
+specific: a pattern like `**/Tests/**` would skip a whole checkout that sits
+below a directory called `Tests`.
+
+## What fails the stage
+
+DevSkim exits with 0 when it reports findings, so the stage checks the SARIF
+reports with `build-tools/automation/scripts/check_devskim.py`. It fails on:
+
+  * every result tagged `API.DangerousAPI.BannedFunction`, at any severity or
+    confidence. This includes the moderate `DS154189`, which covers most banned
+    functions, and the important `DS185832` for `strcpy`.
+  * a report that is missing, malformed, or says that DevSkim failed.
+  * a scan that reports nothing at all, since DevSkim also exits with 0 when it
+    analyzes no files.
+
+Inline suppressions (`DevSkim: ignore ...`) are disabled with
+`--disable-supression`, which is how the CLI spells it, so a comment can't hide a
+finding. There is no baseline, and no exclusion for an individual API. Other
+findings stay in the reports for triage, but don't fail the stage. For instance,
+DevSkim 1.0.100 reports `strlen`, `memcpy` and `malloc` as problematic, but not
+banned.
+
+Before the scan, the stage runs DevSkim with the same settings over a one-line C
+file that calls `strcpy`, and requires the finding. Without it, a clean scan could
+mean that the scanner or its rules don't work, rather than that the code is clean.
+
+## Reports
+
+The `DevSkim` pipeline artifact has the SARIF report and the console log of each
+scan, and the log of the tool installation. It is published even when the stage
+fails.
+
+## Run it locally
+
+DevSkim needs the .NET 10 SDK, and has all the files of a scan open at once, so
+raise the open file limit first (macOS defaults to 256).
+
+Install the pinned version from outside the repository, so that `global.json`
+doesn't ask for its SDK:
+
+```shell
+(cd /tmp && dotnet tool install Microsoft.CST.DevSkim.CLI --version 1.0.100 \
+  --tool-path /tmp/devskim-tool --configfile "<repository>/NuGet.config")
+```
+
+Then scan each directory from the root of the repository, with the reports written
+outside of it, and check them:
+
+```shell
+ulimit -n 8192
+mkdir -p /tmp/devskim-reports
+reports=()
+for source in build-tools eng external src tools; do
+  reports+=("/tmp/devskim-reports/$source.sarif")
+  /tmp/devskim-tool/devskim analyze --source-code "$PWD/$source" --base-path "$PWD" \
+    --output-file "/tmp/devskim-reports/$source.sarif" --file-format sarif \
+    --severity Critical,Important,Moderate,BestPractice,ManualReview \
+    --confidence High,Medium,Low --disable-supression --disable-parallel \
+    --options-json build-tools/automation/scripts/devskim-options.json
+done
+python3 build-tools/automation/scripts/check_devskim.py --require-results "${reports[@]}"
+python3 -B -m unittest discover -s build-tools/automation/scripts -p test_devskim.py
+```
+
+## Updating DevSkim
+
+The version is set by `DevSkimVersion` in
+`build-tools/automation/yaml-templates/variables.yaml`. When you change it, run a
+real scan and the tests above, and check that the flags and the tags that
+`check_devskim.py` reads (`properties.tags` on each result) still exist. The stage
+fails if DevSkim stops reporting the banned function in its test file.

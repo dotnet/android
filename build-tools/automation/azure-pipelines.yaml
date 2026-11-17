@@ -476,3 +476,12 @@ extends:
         policheckPtbScanFolder: $(Build.SourcesDirectory)\Localize\loc\pt-BR
         policheckRusScanFolder: $(Build.SourcesDirectory)\Localize\loc\ru
         policheckTrkScanFolder: $(Build.SourcesDirectory)\Localize\loc\tr
+
+    # DevSkim Banned API Stage
+    - template: /build-tools/automation/yaml-templates/stage-devskim.yaml@self
+      parameters:
+        use1ESTemplate: true
+        pool:
+          name: MAUI-1ESPT
+          image: $(LinuxPoolImage1ESPT)
+          os: linux

@@ -19,6 +19,8 @@ variables:
   value: 1.1.0.36
 - name: NUnitConsoleVersion
   value: 3.16.3
+- name: DevSkimVersion
+  value: 1.0.100
 - name: NUnit.NumberOfTestWorkers
   value: -1
 - name: MSBuildEmulatorTestAgentCount
