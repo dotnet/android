@@ -295,14 +295,10 @@ namespace Xamarin.Android.Tools.Bytecode
 
 			// Nullability is only safe when one Java constructor matches
 			// (e.g. a Java `Object` parameter matches any Kotlin type)
-			if (!isOnlyMatch)
+			if (!isOnlyMatch || metadata.ValueParameters is not List<KotlinValueParameter> kotlin_parameters)
 				return;
 
 			var java_parameters = method.GetFilteredParameters ();
-			var kotlin_parameters = metadata.ValueParameters;
-			if (kotlin_parameters is null || kotlin_parameters.Count != java_parameters.Length)
-				return;
-
 			for (var i = 0; i < java_parameters.Length; i++)
 				java_parameters [i].KotlinNotNull = IsNotNullReference (kotlin_parameters [i].Type, java_parameters [i].Type.BinaryName);
 		}
@@ -505,21 +501,18 @@ namespace Xamarin.Android.Tools.Bytecode
 				field.KotlinNotNull = IsNotNullReference (metadata.ReturnType, field.Descriptor);
 		}
 
-		// Kotlin metadata tells which types can be null. kotlinc also writes
-		// @NotNull annotations, but tools such as R8 can remove them.
-		// Type parameters (e.g. `T`) and platform types can be null, so
-		// only a non-null class type gives true. The Kotlin type must also
-		// be the JVM type: an unboxed value class such as
-		// `value class Maybe(val value: String?)` can be null in Java.
-		static bool IsNotNullReference (KotlinType? type, string? jvmDescriptor)
+		// kotlinc writes @NotNull annotations, but R8 can remove them, so use the
+		// Kotlin metadata. Type parameters, platform types and unboxed value classes
+		// (e.g. `value class Maybe(val value: String?)`) can be null in Java, so the
+		// Kotlin type must be a non-null class that maps to the JVM reference type.
+		static bool IsNotNullReference (KotlinType? type, string jvmDescriptor)
 		{
 			if (type is null || type.Nullable || type.ClassName is null)
 				return false;
 			if (type.FlexibleUpperBound != null || type.FlexibleTypeCapabilitiesId != null)
 				return false;
-			if (jvmDescriptor is null || !(jvmDescriptor.StartsWith ("L", StringComparison.Ordinal) || jvmDescriptor.StartsWith ("[", StringComparison.Ordinal)))
-				return false;
-			return KotlinUtilities.ConvertKotlinTypeSignature (type) == jvmDescriptor;
+			// Primitive descriptors such as "I" are one character
+			return jvmDescriptor.Length > 1 && KotlinUtilities.ConvertKotlinTypeSignature (type) == jvmDescriptor;
 		}
 
 		static List<MethodInfo> FindJavaConstructors (KotlinClass kotlinClass, KotlinConstructor constructor, ClassFile klass)
