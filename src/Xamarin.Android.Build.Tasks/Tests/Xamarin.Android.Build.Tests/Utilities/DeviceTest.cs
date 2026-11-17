@@ -1,15 +1,9 @@
 using NUnit.Framework;
 using NUnit.Framework.Interfaces;
-using System;
-using System.Collections.Generic;
 using System.Globalization;
-using System.Linq;
 using System.Diagnostics;
-using System.IO;
 using System.Text;
 using System.Text.RegularExpressions;
-using System.Threading;
-using System.Threading.Tasks;
 using System.Xml.Linq;
 using System.Xml.XPath;
 using Xamarin.ProjectTools;

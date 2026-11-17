@@ -1,18 +1,6 @@
 // Copyright (C) 2011 Xamarin, Inc. All rights reserved.
 #nullable enable
 
-using System;
-using System.IO;
-using System.Globalization;
-using System.Linq;
-using System.Text;
-using Microsoft.Build.Utilities;
-using Microsoft.Build.Framework;
-using System.Text.RegularExpressions;
-using System.Collections.Generic;
-using Xamarin.Android.Tools;
-using Microsoft.Android.Build.Tasks;
-
 namespace Xamarin.Android.Tasks; 
 
 	//aapt2 link -o resources.apk.bk --manifest Foo.xml --java . --custom-package com.infinitespace_studios.blankforms -R foo2 -v --auto-add-overlay

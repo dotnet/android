@@ -1,10 +1,3 @@
-using System;
-using System.IO;
-
-using NUnit.Framework;
-
-using Xamarin.Android.Tools.Bytecode;
-
 namespace Xamarin.Android.Tools.BytecodeTests; 
 
 	[TestFixture]

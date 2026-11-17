@@ -1,8 +1,6 @@
 #nullable enable
 
-using System;
 using System.Runtime.ExceptionServices;
-using System.Runtime.InteropServices;
 
 namespace Java.Interop; 
 

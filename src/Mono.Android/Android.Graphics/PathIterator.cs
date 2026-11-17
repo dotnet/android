@@ -1,6 +1,3 @@
-using System;
-using Android.Runtime;
-
 namespace Android.Graphics;
 
 partial class PathIterator

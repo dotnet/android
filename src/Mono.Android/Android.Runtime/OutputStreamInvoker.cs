@@ -1,6 +1,3 @@
-using System;
-using System.IO;
-
 namespace Android.Runtime;
 
 	public class OutputStreamInvoker : Stream

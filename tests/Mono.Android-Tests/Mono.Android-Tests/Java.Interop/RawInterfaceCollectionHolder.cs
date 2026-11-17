@@ -1,12 +1,5 @@
-using System;
-using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
-
-using Android.Runtime;
-
-using Java.Interop;
-using Net.Dot.Android.Test;
 
 namespace Java.InteropTests;
 

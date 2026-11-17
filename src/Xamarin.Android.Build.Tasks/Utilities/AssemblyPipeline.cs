@@ -1,10 +1,4 @@
 #nullable enable
-using System;
-using System.Collections.Generic;
-using Java.Interop.Tools.Cecil;
-using Microsoft.Build.Framework;
-using Mono.Cecil;
-
 namespace Xamarin.Android.Tasks;
 
 public class AssemblyPipeline : IDisposable

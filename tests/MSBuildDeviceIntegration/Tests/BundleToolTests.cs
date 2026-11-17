@@ -1,8 +1,4 @@
 using NUnit.Framework;
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
 using Xamarin.Android.Tasks;
 using Xamarin.ProjectTools;
 using System.IO.Compression;

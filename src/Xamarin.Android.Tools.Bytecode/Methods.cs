@@ -1,12 +1,3 @@
-using System;
-using System.Collections.Generic;
-using System.Collections.ObjectModel;
-using System.Diagnostics;
-using System.Diagnostics.CodeAnalysis;
-using System.IO;
-using System.Linq;
-using System.Text;
-
 namespace Xamarin.Android.Tools.Bytecode; 
 
 public sealed class Methods : Collection<MethodInfo> {

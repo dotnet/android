@@ -1,6 +1,3 @@
-using System;
-using System.IO;
-using NUnit.Framework;
 using JavaStreamTest = global::Net.Dot.Android.Test.StreamTest;
 
 namespace System.IOTests;

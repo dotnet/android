@@ -1,6 +1,5 @@
 #nullable enable
 
-using System;
 using Android.Runtime;
 
 namespace Java.Interop;

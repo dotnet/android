@@ -1,10 +1,3 @@
-using System;
-
-using ELFSharp;
-using ELFSharp.ELF;
-using ELFSharp.ELF.Sections;
-using Xamarin.Android.Tools;
-
 namespace Xamarin.Android.Tasks;
 
 class ELFInfo

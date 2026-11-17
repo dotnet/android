@@ -1,5 +1,4 @@
 #nullable enable
-using System.Collections.Generic;
 using Microsoft.Android.Build.Tasks;
 using Microsoft.Build.Framework;
 using Properties = Xamarin.Android.Tasks.Properties;

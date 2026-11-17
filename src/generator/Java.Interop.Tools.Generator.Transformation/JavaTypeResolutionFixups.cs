@@ -1,6 +1,3 @@
-using System;
-using System.IO;
-using System.Linq;
 using Java.Interop.Tools.Cecil;
 using Java.Interop.Tools.Generator;
 using Java.Interop.Tools.JavaTypeSystem;

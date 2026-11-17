@@ -1,7 +1,3 @@
-using generator.SourceWriters;
-using MonoDroid.Generation;
-using NUnit.Framework;
-
 namespace generatortests.SourceWriters;
 
 	[TestFixture]

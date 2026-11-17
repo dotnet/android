@@ -1,7 +1,3 @@
-using System;
-using System.Collections.Generic;
-
-
 namespace Xamarin.AndroidTools.AnnotationSupport;
 
 public class ManagedApiQuery

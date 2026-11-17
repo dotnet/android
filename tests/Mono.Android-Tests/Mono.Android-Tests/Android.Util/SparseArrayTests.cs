@@ -1,10 +1,5 @@
 using System.Reflection;
 
-using NUnit.Framework;
-
-using Android.Runtime;
-using Android.Util;
-
 namespace Android.UtilTests; 
 
 [TestFixture]

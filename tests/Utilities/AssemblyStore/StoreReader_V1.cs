@@ -1,7 +1,3 @@
-using System;
-using System.Collections.Generic;
-using System.IO;
-
 using Xamarin.Android.Tools;
 using Legacy = Xamarin.Android.AssemblyStore.V1;
 

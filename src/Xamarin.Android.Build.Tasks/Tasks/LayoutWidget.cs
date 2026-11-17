@@ -1,8 +1,5 @@
 #nullable enable
 
-using System;
-using System.Collections.Generic;
-
 namespace Xamarin.Android.Tasks;
 
 	sealed class LayoutWidget

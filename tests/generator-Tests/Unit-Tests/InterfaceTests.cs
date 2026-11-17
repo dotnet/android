@@ -1,8 +1,3 @@
-using System;
-using System.Collections.Generic;
-using MonoDroid.Generation;
-using NUnit.Framework;
-
 namespace generatortests;
 
 	public class InterfaceTests

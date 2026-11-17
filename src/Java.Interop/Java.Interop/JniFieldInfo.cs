@@ -1,7 +1,5 @@
 #nullable enable
 
-using System;
-
 namespace Java.Interop;
 
 	public sealed class JniFieldInfo

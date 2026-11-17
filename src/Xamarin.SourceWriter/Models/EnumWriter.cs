@@ -1,6 +1,3 @@
-using System;
-using System.Collections.Generic;
-
 namespace Xamarin.SourceWriter;
 
 public class EnumWriter : ISourceWriter

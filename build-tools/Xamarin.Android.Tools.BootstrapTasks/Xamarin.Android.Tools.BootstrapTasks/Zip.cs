@@ -1,12 +1,7 @@
-using System;
-using System.IO;
 using System.IO.Compression;
-using System.Linq;
-
 using Microsoft.Build.Framework;
-using Microsoft.Build.Utilities;
-
-using IOFile        = System.IO.File;
+using IOFile = System.IO.File;
+using Task = Microsoft.Build.Utilities.Task;
 
 namespace Xamarin.Android.Tools.BootstrapTasks;
 

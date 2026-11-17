@@ -1,9 +1,3 @@
-using System;
-
-using Android.Runtime;
-
-using NUnit.Framework;
-
 namespace Java.InteropTests;
 
 internal static class TrimmableTypeMapTestHelpers

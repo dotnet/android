@@ -1,10 +1,5 @@
-using System;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.InteropServices;
-
-using Java.Interop;
-
-using NUnit.Framework;
 
 namespace Java.InteropTests;
 

@@ -1,9 +1,4 @@
-using System;
-using System.Linq;
-
 using NUnit.Framework;
-
-using Java.Interop.Tools.JavaSource;
 using Xamarin.Android.Tools.ApiXmlAdjuster;
 
 namespace Java.Interop.Tools.JavaSource.Tests;

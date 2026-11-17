@@ -1,5 +1,3 @@
-using System;
-
 namespace Android.Runtime; 
 
 	[Register ("mono/android/runtime/JavaObject")]

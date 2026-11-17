@@ -1,8 +1,3 @@
-using System;
-using System.Threading;
-
-using NUnit.Framework;
-
 namespace System.ThreadingTests; 
 
 [TestFixture]

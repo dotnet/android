@@ -1,8 +1,5 @@
 #nullable disable
 
-using System.Diagnostics;
-using Mono.Cecil;
-
 namespace Mono.Linker; 
 	[DebuggerDisplay ("{Override}")]
 	public class OverrideInformation {

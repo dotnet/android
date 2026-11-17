@@ -1,14 +1,3 @@
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Threading;
-using System.Xml.Linq;
-using System.Text.RegularExpressions;
-using Microsoft.Build.Framework;
-using Microsoft.Android.Build.Tasks;
-using Xamarin.Android.Tools;
-
 namespace Xamarin.Android.Tasks;
 
 	[MSBuildMultiThreadableTask]

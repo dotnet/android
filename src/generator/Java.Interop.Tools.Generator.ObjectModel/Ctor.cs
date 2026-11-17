@@ -1,7 +1,3 @@
-using System;
-using System.IO;
-using System.Xml;
-
 namespace MonoDroid.Generation;
 
 public class Ctor : MethodBase

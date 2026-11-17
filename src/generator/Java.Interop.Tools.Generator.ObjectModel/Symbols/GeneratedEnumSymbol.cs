@@ -1,6 +1,3 @@
-using System;
-using System.Collections.Generic;
-
 namespace MonoDroid.Generation;
 
 // This could be array and non-array, depending on metadata fixup.

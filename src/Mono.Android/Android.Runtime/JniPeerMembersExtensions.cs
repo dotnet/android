@@ -1,7 +1,3 @@
-using System;
-
-using Java.Interop;
-
 namespace Android.Runtime; 
 
 	internal static class JniPeerMembersExtensions {

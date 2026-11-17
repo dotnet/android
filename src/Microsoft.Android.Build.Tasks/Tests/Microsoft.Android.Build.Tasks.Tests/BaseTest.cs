@@ -1,5 +1,3 @@
-using System.IO;
-using System.Linq;
 using NUnit.Framework;
 
 namespace Xamarin.Android.Build.Tests;

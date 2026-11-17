@@ -1,8 +1,4 @@
 #nullable enable
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
 using System.Runtime.InteropServices;
 using System.Xml.Linq;
 using Microsoft.Android.Build.Tasks;

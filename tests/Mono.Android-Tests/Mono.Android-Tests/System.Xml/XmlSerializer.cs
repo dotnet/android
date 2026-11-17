@@ -4,8 +4,6 @@ using System.Xml.Serialization;
 using System.ComponentModel;
 using System.Diagnostics.CodeAnalysis;
 
-using NUnit.Framework;
-
 namespace System.XmlTests; 
     public class C {
         [DefaultValue(typeof(C), "c")]

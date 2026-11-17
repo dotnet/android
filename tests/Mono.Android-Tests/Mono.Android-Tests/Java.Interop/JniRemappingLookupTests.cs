@@ -1,9 +1,3 @@
-using System;
-
-using Android.Runtime;
-using Java.Interop;
-using NUnit.Framework;
-
 namespace Java.InteropTests;
 
 [TestFixture]

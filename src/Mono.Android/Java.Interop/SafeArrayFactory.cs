@@ -1,7 +1,4 @@
 #nullable enable
-using System;
-using System.Diagnostics.CodeAnalysis;
-
 namespace Java.Interop;
 
 static class SafeArrayFactory

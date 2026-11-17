@@ -28,8 +28,6 @@
 //
 //
 
-using System;
-
 namespace Android.Runtime; 
 
 	[Obsolete ("Please use [System.Diagnostics.CodeAnalysis.DynamicDependencyAttribute]", error: true)]

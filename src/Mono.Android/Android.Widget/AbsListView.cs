@@ -1,8 +1,3 @@
-using System;
-using System.Collections.Generic;
-
-using Java.Interop;
-
 using Android.Runtime;
 
 namespace Android.Widget; 

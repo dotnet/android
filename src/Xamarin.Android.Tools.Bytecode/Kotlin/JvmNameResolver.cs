@@ -1,5 +1,3 @@
-using System;
-using System.Collections.Generic;
 using org.jetbrains.kotlin.metadata.jvm;
 
 namespace Xamarin.Android.Tools.Bytecode;

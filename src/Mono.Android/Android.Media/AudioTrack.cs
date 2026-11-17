@@ -1,5 +1,3 @@
-using System;
-
 namespace Android.Media;
 
 	public partial class AudioTrack

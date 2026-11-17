@@ -1,6 +1,5 @@
 #nullable enable
 
-using System;
 using System.Runtime.CompilerServices;
 
 namespace Java.Interop;

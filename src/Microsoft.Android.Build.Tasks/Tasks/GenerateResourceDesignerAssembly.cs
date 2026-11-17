@@ -1,6 +1,3 @@
-using System;
-using System.Collections.Generic;
-using System.IO;
 using System.Runtime.Versioning;
 using Microsoft.Android.Build.Tasks;
 using Microsoft.Build.Framework;

@@ -1,11 +1,3 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using MonoDroid.Generation;
-using NUnit.Framework;
-
 namespace generatortests;
 
 	[TestFixture]

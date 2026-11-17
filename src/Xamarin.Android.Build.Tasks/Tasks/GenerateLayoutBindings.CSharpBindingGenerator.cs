@@ -1,8 +1,5 @@
 #nullable enable
 
-using System;
-using System.IO;
-using System.Linq;
 using Xamarin.Android.Tools;
 
 namespace Xamarin.Android.Tasks;

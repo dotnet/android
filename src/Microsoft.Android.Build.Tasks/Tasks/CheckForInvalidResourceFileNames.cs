@@ -1,6 +1,4 @@
 #nullable enable
-using System;
-using System.IO;
 using Microsoft.Build.Framework;
 using System.Text.RegularExpressions;
 using Microsoft.Android.Build.Tasks;

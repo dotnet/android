@@ -1,6 +1,4 @@
 #nullable enable
-using System;
-using System.IO.Compression;
 public static class ZipArchiveEntryExtensions {
     public static bool IsDirectory (this ZipArchiveEntry entry)
     {

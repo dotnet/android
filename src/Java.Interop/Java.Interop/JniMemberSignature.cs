@@ -1,13 +1,5 @@
 #nullable enable
 
-using System;
-using System.Diagnostics.CodeAnalysis;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Reflection;
-using System.Runtime.InteropServices;
-using System.Runtime.Versioning;
-
 namespace Java.Interop;
 
 	public struct JniMemberSignature : IEquatable<JniMemberSignature>

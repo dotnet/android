@@ -1,9 +1,3 @@
-using System;
-
-using Android.Runtime;
-
-using Java.Interop;
-
 namespace Xamarin.Android.LegacyThresholdBinding; 
 
 [Register ("com/xamarin/android/LegacyThresholdBase", DoNotGenerateAcw = true)]

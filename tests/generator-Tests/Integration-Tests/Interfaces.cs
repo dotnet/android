@@ -1,6 +1,3 @@
-using System;
-using NUnit.Framework;
-
 namespace generatortests;
 
 	[TestFixture]

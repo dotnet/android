@@ -28,14 +28,6 @@
 
 #nullable disable
 
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using Java.Interop.Tools.Cecil;
-using Mono.Cecil;
-using Mono.Cecil.Cil;
-
 namespace Mono.Linker; 
 
 	public class LinkContext : TypeDefinitionCache, IDisposable {

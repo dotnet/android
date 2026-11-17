@@ -1,5 +1,3 @@
-using Android.Content;
-
 namespace Xamarin.Android.RuntimeTests; 
 
 class MyIntent : Intent {

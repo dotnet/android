@@ -1,7 +1,5 @@
 #nullable enable
 
-using System;
-
 using Mono.Cecil;
 
 namespace Android.Runtime; 

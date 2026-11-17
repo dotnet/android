@@ -1,10 +1,4 @@
-using System;
-using System.Collections.Generic;
 using System.Diagnostics;
-using System.IO;
-using System.Linq;
-
-using Xamarin.Android.Tools.AndroidSdk.Properties;
 
 namespace Xamarin.Android.Tools;
 

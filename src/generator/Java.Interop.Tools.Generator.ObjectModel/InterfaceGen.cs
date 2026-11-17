@@ -1,8 +1,4 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using Java.Interop.Tools.Generator;
-using Xamarin.Android.Binder;
 
 namespace MonoDroid.Generation;
 

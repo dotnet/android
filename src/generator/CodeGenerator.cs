@@ -1,9 +1,4 @@
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
 using System.Xml;
-using System.Xml.Linq;
 using Mono.Cecil;
 using MonoDroid.Generation;
 using Xamarin.AndroidTools.AnnotationSupport;
@@ -13,8 +8,6 @@ using Java.Interop.Tools.TypeNameMappings;
 using MonoDroid.Generation.Utilities;
 using Java.Interop.Tools.Generator.Transformation;
 using Java.Interop.Tools.Generator;
-using Java.Interop.Tools.JavaTypeSystem;
-using System.Text;
 using generator;
 
 namespace Xamarin.Android.Binder;

@@ -1,6 +1,3 @@
-using System;
-using Test.Bindings;
-
 namespace Library;
 
 public class MyClrCursor : Java.Lang.Object, global::Test.Bindings.ICursor

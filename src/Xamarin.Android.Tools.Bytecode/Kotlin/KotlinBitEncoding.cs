@@ -1,7 +1,3 @@
-using System;
-using System.IO;
-using System.Linq;
-
 namespace Xamarin.Android.Tools.Bytecode;
 
 // https://github.com/JetBrains/kotlin/blob/master/core/metadata.jvm/src/org/jetbrains/kotlin/metadata/jvm/deserialization/BitEncoding.java

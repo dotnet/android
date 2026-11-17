@@ -1,5 +1,3 @@
-using System;
-
 namespace Android.Runtime;
 
 	public class AnnotationAttribute : Attribute

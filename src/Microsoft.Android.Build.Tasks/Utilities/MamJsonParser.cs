@@ -1,18 +1,14 @@
 #nullable enable
-using System;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
-using System.IO;
-using System.Linq;
 using System.Text;
 using System.Xml.Linq;
 using System.Globalization;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 
-using ReplacementTypesDict      = System.Collections.Generic.Dictionary<string, string>;
-using ReplacementMethodsDict    = System.Collections.Generic.Dictionary<
+using ReplacementTypesDict = System.Collections.Generic.Dictionary<string, string>;
+using ReplacementMethodsDict = System.Collections.Generic.Dictionary<
 	(string SourceType, string SourceName, string? SourceSignature),
 	(string? TargetType, string? TargetName, string? TargetSignature, int? ParamCount, bool IsStatic)
 >;

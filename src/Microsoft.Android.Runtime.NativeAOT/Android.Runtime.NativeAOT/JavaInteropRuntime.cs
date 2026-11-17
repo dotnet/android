@@ -1,4 +1,3 @@
-using Android.Runtime;
 using Java.Interop;
 using System.Globalization;
 using System.Runtime.CompilerServices;

@@ -1,16 +1,7 @@
 #nullable enable
 
-using System;
-using System.Collections.Generic;
 using System.Diagnostics.Tracing;
-using System.Linq;
 using System.Runtime.CompilerServices;
-using System.Threading;
-
-using Android.Runtime;
-using Java.Interop;
-using Microsoft.Android.Runtime;
-using NUnit.Framework;
 
 namespace Xamarin.Android.RuntimeTests; 
 

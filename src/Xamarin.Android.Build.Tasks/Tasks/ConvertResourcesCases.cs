@@ -1,15 +1,7 @@
 // Copyright (C) 2011 Xamarin, Inc. All rights reserved.
 
 #nullable enable
-using System;
-using System.Diagnostics;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using Microsoft.Build.Framework;
-using Microsoft.Build.Utilities;
 using Monodroid;
-using Microsoft.Android.Build.Tasks;
 
 namespace Xamarin.Android.Tasks;
 

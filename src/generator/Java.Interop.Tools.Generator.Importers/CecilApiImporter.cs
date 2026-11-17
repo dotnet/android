@@ -1,5 +1,3 @@
-using System;
-using System.Linq;
 using Java.Interop.Tools.Cecil;
 using Java.Interop.Tools.TypeNameMappings;
 using Mono.Cecil;

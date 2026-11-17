@@ -1,5 +1,3 @@
-using System;
-
 namespace Java.Interop.Tools.JavaTypeSystem.Models;
 
 public class JavaInterfaceModel : JavaTypeModel

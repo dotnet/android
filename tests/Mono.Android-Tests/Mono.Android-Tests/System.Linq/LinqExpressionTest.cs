@@ -1,4 +1,3 @@
-using NUnit.Framework;
 using System.Linq.Expressions;
 
 namespace System.LinqTests;

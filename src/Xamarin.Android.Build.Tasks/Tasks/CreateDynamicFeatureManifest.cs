@@ -1,11 +1,4 @@
 #nullable enable
-using System;
-using System.Xml.Linq;
-using Microsoft.Build.Framework;
-
-using Xamarin.Android.Tools;
-using Microsoft.Android.Build.Tasks;
-
 namespace Xamarin.Android.Tasks;
 
 	public class CreateDynamicFeatureManifest : AndroidTask

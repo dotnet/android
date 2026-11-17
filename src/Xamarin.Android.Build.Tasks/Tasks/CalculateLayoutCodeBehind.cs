@@ -1,18 +1,5 @@
 #nullable enable
 
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Text;
-using System.Xml;
-using System.Xml.XPath;
-
-using Microsoft.Build.Utilities;
-using Microsoft.Build.Framework;
-
-using Microsoft.Android.Build.Tasks;
-
 namespace Xamarin.Android.Tasks;
 
 	public class CalculateLayoutCodeBehind : AsyncTask

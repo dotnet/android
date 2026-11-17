@@ -1,8 +1,6 @@
 using Java.Interop.Tools.Cecil;
 using Java.Interop.Tools.TypeNameMappings;
 using Mono.Cecil;
-using System.Collections.Generic;
-using System.Linq;
 
 namespace MonoDroid.Generation;
 

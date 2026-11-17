@@ -1,7 +1,4 @@
 using System.Reflection;
-using Android.App;
-using Android.Runtime;
-using Xamarin.Android.UnitTests;
 
 namespace Xamarin.Android.JcwGenTests;
 

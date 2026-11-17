@@ -1,5 +1,3 @@
-using System;
-using Android.Views;
 using Java.Interop;
 
 namespace Android.App;

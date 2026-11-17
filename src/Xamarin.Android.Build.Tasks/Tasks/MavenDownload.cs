@@ -1,17 +1,4 @@
 #nullable enable
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Security.Cryptography;
-using System.Text;
-using Java.Interop.Tools.Maven;
-using Java.Interop.Tools.Maven.Models;
-using Java.Interop.Tools.Maven.Repositories;
-using Microsoft.Android.Build.Tasks;
-using Microsoft.Build.Framework;
-using Microsoft.Build.Utilities;
-
 namespace Xamarin.Android.Tasks;
 
 public class MavenDownload : AsyncTask

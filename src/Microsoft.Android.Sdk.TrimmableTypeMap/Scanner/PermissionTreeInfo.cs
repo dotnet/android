@@ -1,5 +1,3 @@
-using System.Collections.Generic;
-
 namespace Microsoft.Android.Sdk.TrimmableTypeMap;
 
 internal sealed record PermissionTreeInfo

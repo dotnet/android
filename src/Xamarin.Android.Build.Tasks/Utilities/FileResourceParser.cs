@@ -1,21 +1,5 @@
 #nullable enable
 
-using System;
-using System.CodeDom;
-using System.Collections.Concurrent;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Reflection;
-using System.Xml;
-using System.Xml.Linq;
-using System.Xml.XPath;
-using System.Text;
-using System.Text.RegularExpressions;
-using Microsoft.Build.Utilities;
-using Microsoft.Android.Build.Tasks;
-using System.IO.Compression;
-
 namespace Xamarin.Android.Tasks;
 
 	class FileResourceParser : ResourceParser

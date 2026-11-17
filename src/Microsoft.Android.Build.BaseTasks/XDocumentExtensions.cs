@@ -1,6 +1,5 @@
 // https://github.com/dotnet/android/blob/72bb66856814e0b64e02b21be66a6dc03e1ffcb6/src/Xamarin.Android.Build.Tasks/Utilities/XDocumentExtensions.cs
 
-using System.Linq;
 using System.Xml.XPath;
 using System.Xml.Linq;
 using Microsoft.Build.Framework;

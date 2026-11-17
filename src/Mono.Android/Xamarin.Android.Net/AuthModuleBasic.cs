@@ -1,9 +1,3 @@
-using System;
-using System.Net;
-using System.Text;
-
-using Java.Net;
-
 namespace Xamarin.Android.Net;
 
 	sealed class AuthModuleBasic : IAndroidAuthenticationModule

@@ -1,6 +1,3 @@
-using System;
-using Android.Runtime;
-
 #if ANDROID_16
 namespace Android.Media {
 

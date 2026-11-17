@@ -1,4 +1,3 @@
-using System;
 using Xamarin.SourceWriter;
 
 using Java.Interop.Tools.Generator;

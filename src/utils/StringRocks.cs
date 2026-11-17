@@ -1,6 +1,3 @@
-using System;
-using System.Linq;
-
 namespace MonoDroid.Utils; 
 
 static class StringRocks {

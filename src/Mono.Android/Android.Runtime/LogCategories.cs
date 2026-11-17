@@ -1,5 +1,3 @@
-using System;
-
 namespace Android.Runtime;
 
 	// Keep in sync with the LogCategories enum in

@@ -1,6 +1,3 @@
-using System.Collections;
-using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
 using Android.Runtime;
 
 using Java.Interop;

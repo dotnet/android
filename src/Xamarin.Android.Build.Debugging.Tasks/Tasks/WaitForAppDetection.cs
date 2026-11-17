@@ -1,10 +1,4 @@
 #nullable enable
-using System;
-using System.Threading;
-using System.Threading.Tasks;
-using Microsoft.Build.Framework;
-using Microsoft.Android.Build.Tasks;
-
 namespace Xamarin.Android.Tasks; 
 	[MSBuildMultiThreadableTask]
 	public class WaitForAppDetection : MultithreadedAndroidTask, ICancelableTask

@@ -1,5 +1,3 @@
-using System;
-
 namespace Android; 
 	[Obsolete ("This attribute is no longer supported.", error: true)]
 	public abstract class ReferenceFilesAttribute : Attribute

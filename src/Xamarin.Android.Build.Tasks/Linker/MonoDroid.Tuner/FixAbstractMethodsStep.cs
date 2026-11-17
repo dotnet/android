@@ -1,11 +1,5 @@
 #nullable disable
 
-using System;
-using System.Collections.Generic;
-using System.Globalization;
-using System.Linq;
-using Java.Interop.Tools.Cecil;
-using Mono.Cecil;
 using Mono.Linker;
 using Mono.Linker.Steps;
 using Mono.Tuner;

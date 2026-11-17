@@ -1,10 +1,4 @@
 using Android.Runtime;
-using Mono.Cecil;
-using MonoDroid.Generation;
-using NUnit.Framework;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
 
 namespace Java.Lang
 {

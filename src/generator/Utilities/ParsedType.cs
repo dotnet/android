@@ -1,7 +1,3 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-
 namespace MonoDroid.Generation;
 
 // Parses a type string into its type and optionally its generic type arguments

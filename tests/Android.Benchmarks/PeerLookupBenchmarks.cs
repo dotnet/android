@@ -1,6 +1,3 @@
-using Android.Runtime;
-using BenchmarkDotNet.Attributes;
-
 namespace Xamarin.Android.Benchmarks;
 
 [MemoryDiagnoser]

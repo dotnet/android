@@ -1,7 +1,3 @@
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Xml.Linq;
@@ -9,7 +5,6 @@ using Microsoft.Build.Framework;
 using Mono.Cecil;
 using NUnit.Framework;
 using Xamarin.Android.Tasks;
-using Xamarin.Android.Tools;
 using Xamarin.ProjectTools;
 
 namespace Xamarin.Android.Build.Tests;

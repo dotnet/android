@@ -1,5 +1,3 @@
-using System;
-
 namespace Android.Runtime;
 
 	// Field can be target too, but our toolchain doesn't generate any.

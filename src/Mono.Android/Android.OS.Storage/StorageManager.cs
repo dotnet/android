@@ -1,7 +1,3 @@
-using System;
-
-using Android.Content;
-
 #if ANDROID_9
 
 namespace Android.OS.Storage {

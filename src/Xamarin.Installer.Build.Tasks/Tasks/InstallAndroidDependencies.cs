@@ -1,18 +1,11 @@
-using System;
 using System.Buffers;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Net.Http;
 using System.Runtime.InteropServices;
 using System.Security.Cryptography;
 using System.Text;
-using System.Threading.Tasks;
 using Microsoft.Build.Framework;
 using Microsoft.Android.Build.Tasks;
 using Xamarin.Android.Tools;
 using Xamarin.Installer.Build.Tasks.Properties;
-using System.Threading;
 
 namespace Xamarin.Installer.Build.Tasks;
 

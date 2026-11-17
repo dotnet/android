@@ -1,5 +1,3 @@
-using System;
-using System.Collections.Generic;
 using Java.Interop.Tools.Generator;
 
 namespace MonoDroid.Generation;

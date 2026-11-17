@@ -1,8 +1,5 @@
 // Copyright (C) 2011 Xamarin, Inc. All rights reserved.
 #nullable enable
-using System;
-using System.Collections.Generic;
-using System.Text;
 using System.Text.RegularExpressions;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;

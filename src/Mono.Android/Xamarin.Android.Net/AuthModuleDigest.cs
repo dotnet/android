@@ -1,12 +1,4 @@
-using System;
-using System.Collections.Generic;
-using System.Net;
-using System.Text;
-using System.Threading;
-
 using Android.Runtime;
-
-using Java.Net;
 
 namespace Xamarin.Android.Net;
 

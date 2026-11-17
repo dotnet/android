@@ -1,11 +1,5 @@
 #nullable enable
 
-using System;
-
-using Android.Runtime;
-
-using NUnit.Framework;
-
 namespace Android.AppTests;
 
 [TestFixture]

@@ -1,8 +1,5 @@
 // Originally from: https://github.com/mono/mono/blob/8266c5604b8c03882f2b06af27fdea46b142d6b9/mono/mini/TestHelpers.cs#L12
 
-using System;
-using System.Threading;
-
 namespace Java.InteropTests;
 
 // False pinning cases are still possible. For example the thread can die

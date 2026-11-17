@@ -1,17 +1,6 @@
 #nullable enable annotations
 
-using System;
 using System.Diagnostics.CodeAnalysis;
-
-using Android.App;
-using Android.Content;
-using Android.Runtime;
-using Android.Util;
-using Android.Views;
-
-using Java.Interop;
-
-using NUnit.Framework;
 
 namespace Java.InteropTests;
 

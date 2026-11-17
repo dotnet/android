@@ -2,15 +2,8 @@
 
 #pragma warning disable CS0618 // These tests intentionally exercise the obsolete AndroidMessageHandler.
 
-using System;
-using System.IO;
 using System.Net;
-using System.Net.Http;
 using System.Net.Sockets;
-using System.Threading;
-using System.Threading.Tasks;
-using NUnit.Framework;
-using Xamarin.Android.Net;
 
 namespace Xamarin.Android.NetTests;
 

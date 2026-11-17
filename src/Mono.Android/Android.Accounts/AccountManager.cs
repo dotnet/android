@@ -1,9 +1,3 @@
-using System;
-using Android.Content;
-using Android.Runtime;
-
-using Java.Interop;
-
 #if ANDROID_5
 
 namespace Android.Accounts {

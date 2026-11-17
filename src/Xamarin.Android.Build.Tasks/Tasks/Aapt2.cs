@@ -1,17 +1,6 @@
 // Copyright (C) 2011 Xamarin, Inc. All rights reserved.
 #nullable enable
 
-using System;
-using System.IO;
-using System.Threading;
-using System.Text;
-using Microsoft.Build.Utilities;
-using Microsoft.Build.Framework;
-using System.Collections.Generic;
-using System.Collections.Concurrent;
-using Xamarin.Android.Tools;
-using Microsoft.Android.Build.Tasks;
-
 namespace Xamarin.Android.Tasks; 
 
 	public abstract class Aapt2 : AsyncTask {

@@ -1,13 +1,5 @@
 #nullable enable
 
-using Microsoft.Android.Build.Tasks;
-using Microsoft.Build.Framework;
-using Microsoft.Build.Utilities;
-using System;
-using System.Reflection.Metadata;
-using System.Reflection.PortableExecutable;
-using System.IO;
-
 namespace Xamarin.Android.Tasks;
 
 	/// <summary>

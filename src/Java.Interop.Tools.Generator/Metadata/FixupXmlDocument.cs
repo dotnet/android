@@ -1,10 +1,7 @@
-using System;
-using System.Linq;
 using System.Xml.XPath;
 using System.Xml.Linq;
 
 using Xamarin.Android.Tools;
-using System.Collections.Generic;
 
 namespace Java.Interop.Tools.Generator;
 

@@ -1,8 +1,4 @@
-using System;
-
-using Xamarin.Android.Tools.Bytecode;
-
-using NAssert   = NUnit.Framework.Assert;
+using NAssert = NUnit.Framework.Assert;
 
 namespace Xamarin.Android.Tools.BytecodeTests; 
 

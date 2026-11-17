@@ -1,5 +1,3 @@
-using System;
-
 namespace Android.Views;
 
 	partial class WindowManagerLayoutParams

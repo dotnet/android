@@ -1,13 +1,3 @@
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Reflection;
-using System.Xml.Linq;
-using Java.Interop.Tools.Generator;
-using MonoDroid.Generation;
-using NUnit.Framework;
-using Xamarin.Android.Tools.Bytecode;
-
 namespace generatortests;
 
 	// dotnet/java-interop#1431 (Phase 2): end-to-end test that drives real

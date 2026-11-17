@@ -1,6 +1,3 @@
-using System;
-using Android.AccessibilityServices;
-
 namespace Android.Views.Accessibility; 
 
 	partial class AccessibilityEvent {

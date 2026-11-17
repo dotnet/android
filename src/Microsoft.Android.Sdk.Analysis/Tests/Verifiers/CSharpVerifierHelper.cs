@@ -1,9 +1,7 @@
-﻿using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.Testing;
-using System;
 using System.Collections.Immutable;
-using System.IO;
 
 internal static class CSharpVerifierHelper
 {

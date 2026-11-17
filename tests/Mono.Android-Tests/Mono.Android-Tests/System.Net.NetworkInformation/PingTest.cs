@@ -1,7 +1,5 @@
 using System.Net.NetworkInformation;
 
-using NUnit.Framework;
-
 namespace System.NetTests; 
 
 [TestFixture]

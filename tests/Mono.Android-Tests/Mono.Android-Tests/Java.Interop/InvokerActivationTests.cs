@@ -1,11 +1,4 @@
-using System;
 using System.Diagnostics.CodeAnalysis;
-
-using Android.Runtime;
-
-using Java.Interop;
-
-using NUnit.Framework;
 
 namespace Java.InteropTests;
 

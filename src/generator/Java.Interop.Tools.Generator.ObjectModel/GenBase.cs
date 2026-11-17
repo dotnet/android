@@ -1,10 +1,6 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Reflection;
 using Java.Interop.Tools.Generator;
 using MonoDroid.Generation.Utilities;
-using Xamarin.Android.Binder;
 
 namespace MonoDroid.Generation;
 

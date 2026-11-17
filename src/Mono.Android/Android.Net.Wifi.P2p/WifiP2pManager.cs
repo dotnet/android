@@ -1,4 +1,3 @@
-using System;
 using Android.Runtime;
 
 namespace Android.Net.Wifi.P2p;

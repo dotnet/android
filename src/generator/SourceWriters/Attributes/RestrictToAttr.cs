@@ -1,4 +1,3 @@
-using System;
 using Xamarin.SourceWriter;
 
 namespace generator.SourceWriters;

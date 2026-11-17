@@ -1,19 +1,4 @@
 #nullable enable
-using System;
-using System.Collections.Generic;
-using System.IO;
-
-using ELFSharp;
-using ELFSharp.ELF;
-using ELFSharp.ELF.Sections;
-using ELFSharp.ELF.Segments;
-using Microsoft.Android.Build.Tasks;
-using Microsoft.Build.Framework;
-using Microsoft.Build.Utilities;
-
-using ELFSymbolType = global::ELFSharp.ELF.Sections.SymbolType;
-using ELFSectionType = global::ELFSharp.ELF.Sections.SectionType;
-
 namespace Xamarin.Android.Tasks;
 
 	static class ELFHelper

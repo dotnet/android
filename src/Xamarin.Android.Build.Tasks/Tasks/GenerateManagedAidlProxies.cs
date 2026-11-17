@@ -1,18 +1,5 @@
 // Copyright (C) 2011 Xamarin, Inc. All rights reserved.
 #nullable enable
-using System;
-using System.CodeDom;
-using System.CodeDom.Compiler;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using Mono.Cecil;
-using Microsoft.Build.Framework;
-using Microsoft.Build.Utilities;
-using Monodroid;
-using Xamarin.Android.Tools.Aidl;
-using Microsoft.Android.Build.Tasks;
-
 namespace Xamarin.Android.Tasks;
 
 	public class GenerateManagedAidlProxies : AndroidTask

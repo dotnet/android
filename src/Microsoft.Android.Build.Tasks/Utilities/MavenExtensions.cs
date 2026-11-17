@@ -1,8 +1,5 @@
 #nullable enable
-using System;
-using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
-using System.Linq;
 using Java.Interop.Tools.Maven.Models;
 using Microsoft.Android.Build.Tasks;
 using Microsoft.Build.Framework;

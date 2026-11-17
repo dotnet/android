@@ -1,21 +1,6 @@
-using System;
-using System.Collections.Generic;
-using System.Globalization;
-using System.Linq;
-using System.Resources;
-using System.Text;
-
-using Android.App;
 #if __ANDROID_8__
 using Android.App.Backup;
 #endif
-using Android.Content;
-using Android.OS;
-using Android.Runtime;
-using Android.Util;
-using Android.Views;
-using Android.Widget;
-
 [assembly: HelloLibrary.GenericTest<string>]
 namespace HelloLibrary;
 

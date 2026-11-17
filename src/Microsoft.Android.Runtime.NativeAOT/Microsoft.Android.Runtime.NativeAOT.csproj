@@ -7,7 +7,6 @@
   <PropertyGroup>
     <TargetFrameworks>$(DotNetTargetFramework)</TargetFrameworks>
     <Nullable>enable</Nullable>
-    <ImplicitUsings>enable</ImplicitUsings>
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
     <AssemblyOriginatorKeyFile>..\..\product.snk</AssemblyOriginatorKeyFile>
     <SignAssembly>true</SignAssembly>

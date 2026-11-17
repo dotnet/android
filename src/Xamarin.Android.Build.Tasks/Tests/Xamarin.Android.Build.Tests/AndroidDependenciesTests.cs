@@ -1,16 +1,8 @@
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
 using System.Net;
-using System.Net.Http;
 using System.Text;
-using System.Threading;
 using System.Xml.Linq;
 using NUnit.Framework;
-using Microsoft.Android.Build.Tasks;
 using Xamarin.Android.Tasks;
-using Xamarin.Android.Tools;
 using Xamarin.ProjectTools;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;

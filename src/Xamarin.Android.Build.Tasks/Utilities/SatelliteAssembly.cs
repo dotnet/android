@@ -1,6 +1,3 @@
-using System;
-using System.Text.RegularExpressions;
-using System.IO;
 using System.Diagnostics.CodeAnalysis;
 
 namespace Xamarin.Android.Tools;

@@ -1,14 +1,8 @@
 #nullable enable
 
-using System;
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
-using System.Threading;
-using System.Threading.Tasks;
-
-using Java.Interop;
-using NUnit.Framework;
 
 namespace Java.InteropTests;
 

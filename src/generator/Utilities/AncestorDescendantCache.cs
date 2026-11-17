@@ -1,7 +1,3 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-
 namespace MonoDroid.Generation.Utilities;
 
 // Finding all descendants of a type is expensive, so we cache the results here

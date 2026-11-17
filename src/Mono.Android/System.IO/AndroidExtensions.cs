@@ -1,6 +1,3 @@
-using System;
-using System.Net.Sockets;
-
 namespace System.IO; 
 
 	public static class AndroidExtensions {

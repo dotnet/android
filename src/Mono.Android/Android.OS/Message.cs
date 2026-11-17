@@ -1,6 +1,3 @@
-using System;
-using Android.Runtime;
-
 namespace Android.OS; 
 
 	public partial class Message {

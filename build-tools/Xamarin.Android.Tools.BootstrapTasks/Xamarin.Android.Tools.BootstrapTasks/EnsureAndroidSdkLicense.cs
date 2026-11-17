@@ -1,14 +1,9 @@
 #nullable enable
 
-using System;
-using System.Collections.Generic;
 using System.Diagnostics;
-using System.IO;
-using System.Linq;
 using System.Text;
-using System.Threading;
 using Microsoft.Build.Framework;
-using Microsoft.Build.Utilities;
+using Task = Microsoft.Build.Utilities.Task;
 
 namespace Xamarin.Android.Tools.BootstrapTasks;
 

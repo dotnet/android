@@ -1,7 +1,3 @@
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Threading.Tasks;
 using Microsoft.Build.Framework;
 using NUnit.Framework;
 using Microsoft.Android.Tasks;

@@ -1,8 +1,4 @@
-using System;
-using System.IO;
 using System.Net;
-
-using NUnit.Framework;
 
 using Xamarin.Android.NetTests;
 

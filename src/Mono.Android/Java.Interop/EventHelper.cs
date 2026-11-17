@@ -1,5 +1,3 @@
-using System;
-
 namespace Java.Interop; 
 
 	public static class EventHelper {

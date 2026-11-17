@@ -1,6 +1,3 @@
-using System;
-using System.Collections.Generic;
-
 namespace Java.Interop; 
 
 	[Obsolete ("This class is obsolete and will be removed in the next release. Use [Register] on Java peer types instead of explicit type registration.")]

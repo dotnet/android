@@ -1,7 +1,3 @@
-using System;
-using Android.OS;
-using Android.Runtime;
-
 namespace Android.Content; 
 
 	public abstract partial class Context {

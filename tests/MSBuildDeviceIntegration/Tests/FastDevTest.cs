@@ -1,6 +1,3 @@
-using System;
-using System.IO;
-using System.Linq;
 using NUnit.Framework;
 using Xamarin.ProjectTools;
 using Microsoft.Build.Framework;

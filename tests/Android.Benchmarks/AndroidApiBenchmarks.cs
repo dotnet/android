@@ -1,11 +1,3 @@
-using Android.App;
-using Android.Content;
-using Android.Content.PM;
-using Android.Graphics;
-using Android.OS;
-using Android.Views;
-using BenchmarkDotNet.Attributes;
-
 namespace Xamarin.Android.Benchmarks;
 
 [MemoryDiagnoser]

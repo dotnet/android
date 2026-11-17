@@ -1,7 +1,5 @@
 // There are built-in delegates for these, but we no longer generate them in Mono.Android.dll
 // because bool is not a blittable type.  But we still need them for pre-existing bindings.
-using System;
-
 [global::System.Runtime.InteropServices.UnmanagedFunctionPointer (global::System.Runtime.InteropServices.CallingConvention.Winapi)]
 delegate bool _JniMarshal_PP_Z (IntPtr jnienv, IntPtr klass);
 [global::System.Runtime.InteropServices.UnmanagedFunctionPointer (global::System.Runtime.InteropServices.CallingConvention.Winapi)]

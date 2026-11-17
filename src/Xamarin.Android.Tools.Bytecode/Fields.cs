@@ -1,9 +1,3 @@
-using System;
-using System.Collections.Generic;
-using System.Collections.ObjectModel;
-using System.IO;
-using System.Linq;
-
 namespace Xamarin.Android.Tools.Bytecode; 
 
 public sealed class Fields : Collection<FieldInfo> {

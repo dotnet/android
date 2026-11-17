@@ -1,12 +1,4 @@
-using System;
-using System.Threading;
-
-using Android.App;
-using Android.Content;
-
 using Mono.Android_Test.Library;
-
-using NUnit.Framework;
 
 namespace Android.AppTests;
 

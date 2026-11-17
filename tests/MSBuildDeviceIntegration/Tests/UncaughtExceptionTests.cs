@@ -1,9 +1,4 @@
-using System;
-using System.Collections.Generic;
 using System.Diagnostics;
-using System.IO;
-using System.Text.RegularExpressions;
-using System.Threading;
 using NUnit.Framework;
 using Xamarin.Android.Tasks;
 using Xamarin.ProjectTools;

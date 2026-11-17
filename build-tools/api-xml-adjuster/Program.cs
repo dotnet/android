@@ -1,5 +1,3 @@
-using System;
-
 namespace Xamarin.Android.Tools.ApiXmlAdjuster;
 
 class MainClass

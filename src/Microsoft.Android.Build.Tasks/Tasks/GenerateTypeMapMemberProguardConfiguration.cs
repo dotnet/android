@@ -1,5 +1,3 @@
-using System.IO;
-
 namespace Microsoft.Android.Tasks;
 
 public class GenerateTypeMapMemberProguardConfiguration : GenerateTypeMapProguardConfiguration

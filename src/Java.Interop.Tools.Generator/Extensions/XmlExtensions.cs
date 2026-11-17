@@ -1,5 +1,3 @@
-using System;
-using System.Globalization;
 using System.Xml.Linq;
 using System.Xml.XPath;
 

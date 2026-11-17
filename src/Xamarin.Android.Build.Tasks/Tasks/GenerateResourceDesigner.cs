@@ -1,16 +1,6 @@
 // Copyright (C) 2011 Xamarin, Inc. All rights reserved.
 #nullable enable
 
-using System;
-using System.CodeDom;
-using System.CodeDom.Compiler;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using Microsoft.Build.Framework;
-using Microsoft.Build.Utilities;
-using Microsoft.Android.Build.Tasks;
-
 namespace Xamarin.Android.Tasks;
 
 	public class GenerateResourceDesigner : AndroidTask

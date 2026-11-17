@@ -1,7 +1,3 @@
-using System;
-using System.Diagnostics.CodeAnalysis;
-using System.Threading;
-
 using Android.OS;
 using Android.Runtime;
 

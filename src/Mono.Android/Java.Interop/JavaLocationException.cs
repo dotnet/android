@@ -1,5 +1,3 @@
-using System;
-
 namespace Java.Interop; 
 
 	internal class JavaLocationException : Exception {

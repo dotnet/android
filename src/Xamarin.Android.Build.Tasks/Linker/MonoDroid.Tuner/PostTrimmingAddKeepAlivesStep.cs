@@ -1,6 +1,3 @@
-using System;
-using Java.Interop.Tools.Cecil;
-using Mono.Cecil;
 using Xamarin.Android.Tasks;
 
 namespace MonoDroid.Tuner;

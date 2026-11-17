@@ -1,14 +1,11 @@
 // https://github.com/dotnet/android/blob/eed430e4dc442ee98046fb13956ef49f29ce7b40/src/Xamarin.Android.Build.Tasks/Utilities/MSBuildExtensions.cs
 
-using System;
 using System.Diagnostics;
-using System.Collections.Generic;
-using System.IO;
-using System.Xml;
 using System.Text.RegularExpressions;
-
-using Microsoft.Build.Utilities;
+using System.Xml;
 using Microsoft.Build.Framework;
+using Microsoft.Build.Utilities;
+using Task = Microsoft.Build.Utilities.Task;
 
 namespace Microsoft.Android.Build.Tasks;
 

@@ -2,15 +2,6 @@
 
 #nullable enable
 
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Text;
-using Microsoft.Build.Framework;
-using Microsoft.Build.Utilities;
-using System.Security.Cryptography;
-using Microsoft.Android.Build.Tasks;
-
 namespace Xamarin.Android.Tasks;
 
 	// When we regenerate the Resource.designer.cs, if we write it

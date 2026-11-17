@@ -1,7 +1,3 @@
-using System;
-using Android.AccessibilityServices;
-using Android.OS;
-
 namespace Android.Views;
 
 	public partial class View

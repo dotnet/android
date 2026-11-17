@@ -1,10 +1,6 @@
 #nullable enable
 
-using System;
-using System.Collections.Generic;
 using System.Globalization;
-using System.IO;
-using System.Linq;
 using Microsoft.Android.Build.Tasks;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;

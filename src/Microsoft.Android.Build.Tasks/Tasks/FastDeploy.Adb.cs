@@ -1,13 +1,8 @@
 #nullable disable
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
 
 using Microsoft.Android.Build.Tasks;
 using Xamarin.Android.Tasks;
-using Xamarin.Android.Tools;
 
 namespace Microsoft.Android.Tasks;
 

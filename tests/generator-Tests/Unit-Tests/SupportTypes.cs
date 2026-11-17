@@ -1,6 +1,3 @@
-using MonoDroid.Generation;
-using System.Linq;
-
 namespace generatortests;
 
 	class TestClass : ClassGen

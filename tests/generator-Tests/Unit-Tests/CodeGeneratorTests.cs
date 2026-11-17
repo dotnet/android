@@ -1,16 +1,3 @@
-using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.IO;
-using System.Linq;
-using System.Text;
-using System.Xml.Linq;
-using generator.SourceWriters;
-using Java.Interop.Tools.Generator;
-using MonoDroid.Generation;
-using NUnit.Framework;
-using Xamarin.SourceWriter;
-
 namespace generatortests;
 
 	[TestFixture]

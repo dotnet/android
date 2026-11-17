@@ -1,8 +1,6 @@
 #nullable enable
 
-using System;
 using System.Diagnostics;
-using System.IO;
 using System.Reflection.Metadata;
 using System.Reflection.PortableExecutable;
 using Microsoft.Build.Utilities;

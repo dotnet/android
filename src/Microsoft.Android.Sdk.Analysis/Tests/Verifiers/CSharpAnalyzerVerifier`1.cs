@@ -1,13 +1,7 @@
-﻿using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Testing;
 using Microsoft.CodeAnalysis.Diagnostics;
 using Microsoft.CodeAnalysis.Testing;
-using System.Collections.Generic;
-using System.Collections.Immutable;
-using System.IO;
-using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
 
 public static partial class CSharpAnalyzerVerifier<TAnalyzer>
 	where TAnalyzer : DiagnosticAnalyzer, new ()

@@ -1,11 +1,4 @@
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Diagnostics;
 using Microsoft.Build.Framework;
-using System.Xml.Linq;
-using Xamarin.Android.Tools;
 
 namespace Xamarin.ProjectTools;
 

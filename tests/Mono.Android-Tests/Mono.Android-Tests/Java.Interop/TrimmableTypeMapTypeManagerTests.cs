@@ -1,16 +1,7 @@
 #nullable enable
 
-using System;
 using System.Collections.Concurrent;
-using System.Collections.Generic;
 using System.Reflection;
-using System.Threading;
-using System.Threading.Tasks;
-using Android.Runtime;
-using Dalvik.SystemInterop;
-using Java.Interop;
-using Microsoft.Android.Runtime;
-using NUnit.Framework;
 
 namespace Java.InteropTests;
 

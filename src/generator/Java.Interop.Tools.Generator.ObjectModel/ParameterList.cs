@@ -1,11 +1,5 @@
-using System;
-using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.Text;
-using System.Xml;
-using System.IO;
-
-using Xamarin.Android.Binder;
 
 namespace MonoDroid.Generation; 
 

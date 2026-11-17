@@ -1,14 +1,3 @@
-using System;
-using System.Collections.Generic;
-using System.Collections.ObjectModel;
-using System.IO;
-using System.IO.Compression;
-using System.Linq;
-using System.Xml;
-using System.Xml.Linq;
-using System.Xml.XPath;
-using System.Text;
-
 namespace Xamarin.Android.Tools.Bytecode; 
 
 public enum JavaDocletType {

@@ -1,5 +1,3 @@
-using System;
-
 using Xamarin.Android.Tasks;
 using Xamarin.ProjectTools;
 

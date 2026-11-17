@@ -1,8 +1,6 @@
 using Microsoft.Build.Framework;
-using System.IO;
 using System.IO.Compression;
 using System.Text;
-using System.Collections.Generic;
 using MTask = Microsoft.Build.Utilities.Task;
 using TTask = System.Threading.Tasks.Task;
 using Files = Microsoft.Android.Build.Tasks.Files;

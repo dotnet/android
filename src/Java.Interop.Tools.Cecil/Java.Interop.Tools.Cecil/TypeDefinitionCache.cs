@@ -1,4 +1,3 @@
-using System.Collections.Generic;
 using Mono.Cecil;
 
 namespace Java.Interop.Tools.Cecil;

@@ -1,12 +1,6 @@
 #nullable enable
 
-using System;
 using System.Runtime.InteropServices;
-
-using Android.Runtime;
-using Java.Interop;
-
-using NUnit.Framework;
 
 namespace Xamarin.Android.RuntimeTests;
 

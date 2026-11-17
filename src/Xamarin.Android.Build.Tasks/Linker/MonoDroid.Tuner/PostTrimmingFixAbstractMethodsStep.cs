@@ -1,9 +1,5 @@
 #nullable enable
 
-using System;
-using Java.Interop.Tools.Cecil;
-using Microsoft.Android.Build.Tasks;
-using Mono.Cecil;
 using Xamarin.Android.Tasks;
 
 namespace MonoDroid.Tuner;

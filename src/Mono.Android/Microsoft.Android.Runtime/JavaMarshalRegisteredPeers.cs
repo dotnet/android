@@ -1,15 +1,3 @@
-using System;
-using System.Collections.Concurrent;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Globalization;
-using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
-using System.Runtime.InteropServices.Java;
-using System.Threading;
-using Android.Runtime;
-using Java.Interop;
-
 namespace Microsoft.Android.Runtime;
 
 // Originally from: https://github.com/dotnet/java-interop/blob/9b1d8781e8e322849d05efac32119c913b21c192/src/Java.Runtime.Environment/Java.Interop/ManagedValueManager.cs

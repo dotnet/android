@@ -1,9 +1,3 @@
-using System;
-using System.Collections.Generic;
-using System.Xml;
-
-using MonoDroid.Utils;
-
 using CodeGenerationTarget = Xamarin.Android.Binder.CodeGenerationTarget;
 
 namespace MonoDroid.Generation; 

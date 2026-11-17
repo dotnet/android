@@ -1,19 +1,12 @@
 #nullable enable
 
-using System;
 using System.Buffers;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
-using System.Collections.Generic;
-using System.Linq;
-using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Runtime.ExceptionServices;
 using System.Text;
-using System.Threading;
-
-using Java.Interop;
 
 namespace Java.Interop; 
 

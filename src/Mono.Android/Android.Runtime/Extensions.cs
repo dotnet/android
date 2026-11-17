@@ -1,7 +1,3 @@
-using System;
-using System.Diagnostics.CodeAnalysis;
-using System.Reflection;
-
 namespace Android.Runtime; 
 
 	public static class Extensions {

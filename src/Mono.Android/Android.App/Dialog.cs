@@ -1,5 +1,3 @@
-using System;
-using System.Diagnostics.CodeAnalysis;
 using Android.Runtime;
 
 namespace Android.App; 

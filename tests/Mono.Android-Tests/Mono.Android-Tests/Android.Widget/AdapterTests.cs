@@ -1,13 +1,3 @@
-using System;
-
-using NUnit.Framework;
-
-using Android.App;
-using Android.Content;
-using Android.OS;
-using Android.Widget;
-using Android.Runtime;
-
 namespace Android.WidgetTests; 
 
 [TestFixture]

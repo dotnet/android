@@ -1,7 +1,3 @@
-using System.Net;
-
-using Java.Net;
-
 namespace Xamarin.Android.Net;
 
 	/// <summary>

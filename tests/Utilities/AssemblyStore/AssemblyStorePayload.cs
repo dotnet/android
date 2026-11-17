@@ -1,6 +1,3 @@
-using System;
-using System.IO;
-
 namespace Xamarin.Android.AssemblyStore;
 
 public static class AssemblyStorePayload

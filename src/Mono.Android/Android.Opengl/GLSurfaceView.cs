@@ -1,6 +1,3 @@
-using System;
-using Android.Runtime;
-
 namespace Android.Opengl; 
 
 	public partial class GLSurfaceView {

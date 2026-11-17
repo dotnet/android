@@ -1,9 +1,5 @@
 // https://github.com/dotnet/android/blob/2aea0af1da5c46924dd00587701b6c91391d62f8/src/Xamarin.Android.Build.Tasks/Utilities/LinePreservedXmlWriter.cs
 
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
 using System.Text;
 using System.Xml;
 using System.Xml.XPath;

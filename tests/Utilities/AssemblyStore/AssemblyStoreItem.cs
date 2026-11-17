@@ -1,5 +1,3 @@
-using System.Collections.Generic;
-
 using Xamarin.Android.Tools;
 
 namespace Xamarin.Android.AssemblyStore;

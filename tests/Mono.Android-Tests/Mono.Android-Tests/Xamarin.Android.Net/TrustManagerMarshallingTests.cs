@@ -1,11 +1,5 @@
 #nullable enable
 
-using System.Linq;
-using Android.Runtime;
-using Java.Security;
-using Javax.Net.Ssl;
-using NUnit.Framework;
-
 namespace Xamarin.Android.NetTests;
 
 [TestFixture]

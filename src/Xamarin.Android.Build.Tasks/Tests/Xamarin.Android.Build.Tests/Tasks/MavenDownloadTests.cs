@@ -1,11 +1,6 @@
 #nullable enable
 
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
 using System.Text;
-using Java.Interop.Tools.Maven;
 using Java.Interop.Tools.Maven.Models;
 using Java.Interop.Tools.Maven.Repositories;
 using Microsoft.Build.Framework;

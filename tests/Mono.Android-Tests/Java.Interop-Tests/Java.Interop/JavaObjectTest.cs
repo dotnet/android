@@ -1,10 +1,4 @@
-using System;
 using System.Diagnostics;
-using System.Threading.Tasks;
-
-using Java.Interop;
-
-using NUnit.Framework;
 
 namespace Java.InteropTests;
 

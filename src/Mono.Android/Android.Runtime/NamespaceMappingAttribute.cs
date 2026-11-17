@@ -1,5 +1,3 @@
-using System;
-
 namespace Android.Runtime;
 
 	[AttributeUsage (AttributeTargets.Assembly | AttributeTargets.Module, AllowMultiple = true)]

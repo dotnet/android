@@ -1,13 +1,4 @@
 #nullable enable
-using System;
-using System.CodeDom;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Reflection;
-using System.Text.RegularExpressions;
-using Microsoft.Build.Utilities;
-
 namespace Xamarin.Android.Tasks;
 
 	class JavaResourceParser : ResourceParser

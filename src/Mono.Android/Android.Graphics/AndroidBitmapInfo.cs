@@ -1,5 +1,3 @@
-using System;
-
 namespace Android.Graphics; 
 
 #if ANDROID_8

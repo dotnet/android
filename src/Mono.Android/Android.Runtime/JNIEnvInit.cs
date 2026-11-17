@@ -1,11 +1,3 @@
-using System;
-using System.Diagnostics.CodeAnalysis;
-using System.Reflection;
-using System.Runtime.InteropServices;
-using System.Runtime.InteropServices.Java;
-using System.Threading;
-
-using Java.Interop;
 using Java.Interop.Tools.TypeNameMappings;
 
 using Microsoft.Android.Runtime;

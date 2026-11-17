@@ -1,14 +1,7 @@
-using System;
 using System.Buffers;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
 using System.Net;
-using System.Net.Http;
 using System.Security.Cryptography;
 using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
 using System.Xml.Linq;
 using Microsoft.Build.Framework;
 using NUnit.Framework;

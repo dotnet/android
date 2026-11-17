@@ -1,15 +1,5 @@
 #nullable enable
-using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.IO;
-using System.Linq;
-using System.Text;
-using System.Text.RegularExpressions;
-using System.Xml.Linq;
-using System.Xml.XPath;
 using Xamarin.Android.Tasks;
-using Microsoft.Android.Build.Tasks;
 
 namespace Monodroid; 
 	static class AndroidResource {

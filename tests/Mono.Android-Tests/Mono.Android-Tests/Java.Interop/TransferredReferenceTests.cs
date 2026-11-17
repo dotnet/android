@@ -1,16 +1,6 @@
-using System;
 using System.Collections.Concurrent;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
-using System.Reflection;
-using System.Threading;
-
-using Android.Runtime;
-
-using Java.Interop;
-using Microsoft.Android.Runtime;
-
-using NUnit.Framework;
 
 namespace Java.InteropTests;
 

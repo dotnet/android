@@ -1,14 +1,5 @@
 #nullable enable annotations
 
-using System;
-using System.Threading;
-
-using Android.Runtime;
-
-using Java.Interop;
-
-using NUnit.Framework;
-
 namespace Java.InteropTests;
 
 [TestFixture]

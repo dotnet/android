@@ -1,17 +1,3 @@
-using System;
-using System.IO;
-using System.IO.Compression;
-using System.Linq;
-
-using Android.App;
-using Android.Content;
-using Android.Runtime;
-using Android.Widget;
-
-using Java.Interop;
-
-using NUnit.Framework;
-
 namespace Java.LangTests;
 
 [TestFixture]

@@ -1,12 +1,4 @@
-using System;
 using System.Collections;
-
-using Android.Runtime;
-using Android.Views;
-
-using Java.Interop;
-
-using NUnit.Framework;
 
 using static Java.InteropTests.TrimmableTypeMapTestHelpers;
 

@@ -1,5 +1,4 @@
 using System.Diagnostics.CodeAnalysis;
-using System.IO;
 using Java.Interop.Tools.Maven.Models;
 
 namespace Java.Interop.Tools.Maven.Repositories;

@@ -1,8 +1,3 @@
-using System;
-using System.Globalization;
-using System.Threading;
-
-using Java.Interop;
 using Microsoft.Android.Runtime;
 using RuntimeFeature = Microsoft.Android.Runtime.RuntimeFeature;
 

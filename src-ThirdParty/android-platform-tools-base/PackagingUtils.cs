@@ -16,11 +16,6 @@
  * Original source: https://android.googlesource.com/platform/tools/base/+/d41d662dbf89f9b60ca6256415a059c0107749b8/sdk-common/src/main/java/com/android/ide/common/packaging/PackagingUtils.java
  */
 
-using System;
-using System.Linq;
-using System.IO;
-using System.Text.RegularExpressions;
-
 namespace Xamarin.Android.Tasks;
 
 	/// <summary>

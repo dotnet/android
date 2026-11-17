@@ -1,11 +1,3 @@
-using System;
-using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
-using System.IO;
-using System.Linq;
-using System.Xml.Linq;
-using System.Xml.XPath;
-
 namespace Xamarin.Android.Tools.Bytecode;
 
 public class JavaParameterNamesLoader : IJavaMethodParameterNameProvider

@@ -1,11 +1,8 @@
 #nullable enable
 
-using System;
-using System.Collections.Generic;
 using System.Reflection.Metadata;
 
 using Microsoft.Build.Utilities;
-using Microsoft.Android.Tasks;
 
 using Xamarin.Android.Tasks;
 

@@ -1,9 +1,4 @@
 #nullable disable
-using System;
-using System.IO;
-using System.Linq;
-using System.Threading.Tasks;
-
 using Xamarin.Android.Build.Debugging.Tasks.Properties;
 
 namespace Microsoft.Android.Tasks;

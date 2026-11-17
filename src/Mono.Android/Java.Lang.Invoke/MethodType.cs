@@ -1,5 +1,3 @@
-using System.Linq;
-
 namespace Java.Lang.Invoke;
 
 #if ANDROID_34

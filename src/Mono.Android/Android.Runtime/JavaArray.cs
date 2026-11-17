@@ -1,8 +1,3 @@
-using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
-
 namespace Android.Runtime; 
 
 	[Register ("mono/android/runtime/JavaArray", DoNotGenerateAcw=true)]

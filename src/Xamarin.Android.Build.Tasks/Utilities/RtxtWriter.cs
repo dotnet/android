@@ -1,12 +1,4 @@
 #nullable enable
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Text;
-using System.Linq;
-using Microsoft.Android.Build.Tasks;
-using Microsoft.Build.Utilities;
-
 namespace Xamarin.Android.Tasks;
 
 	/// Write a list of Item to a file

@@ -1,7 +1,3 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-
 namespace Java.Interop.Tools.JavaTypeSystem.Models;
 
 // An internal Type that represents a parsed Java type name structure.

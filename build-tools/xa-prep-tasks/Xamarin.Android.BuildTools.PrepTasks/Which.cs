@@ -1,11 +1,8 @@
-using System;
 using System.Diagnostics;
-using System.IO;
-using System.Linq;
-using System.Text;
 using System.Text.RegularExpressions;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
+using Task = Microsoft.Build.Utilities.Task;
 
 namespace Xamarin.Android.BuildTools.PrepTasks;
 

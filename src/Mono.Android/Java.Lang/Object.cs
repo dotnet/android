@@ -1,15 +1,6 @@
-using System;
-using System.Collections.Generic;
-using System.Globalization;
-using System.Runtime.Serialization;
-using System.Text;
-
 using Java.Interop;
 
 using Android.Runtime;
-using System.ComponentModel;
-using System.Diagnostics;
-using System.Diagnostics.CodeAnalysis;
 
 namespace Java.Lang; 
 

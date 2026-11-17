@@ -1,10 +1,5 @@
 #nullable enable
 
-using System;
-using System.IO;
-using Microsoft.Build.Framework;
-using Microsoft.Android.Build.Tasks;
-
 namespace Xamarin.Android.Tasks;
 
 	public class AndroidZipAlign : AndroidRunToolTask

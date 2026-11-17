@@ -1,9 +1,3 @@
-using System;
-using System.Collections.Generic;
-using System.Threading;
-
-using Java.Interop;
-
 namespace Android.Runtime; 
 
 	public class XAPeerMembers : JniPeerMembers {

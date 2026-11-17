@@ -1,5 +1,3 @@
-using System.Collections.Generic;
-using System.IO;
 using System.Xml.Linq;
 
 namespace Microsoft.Android.Sdk.TrimmableTypeMap;

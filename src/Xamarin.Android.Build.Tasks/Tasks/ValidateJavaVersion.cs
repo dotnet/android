@@ -1,12 +1,5 @@
 #nullable enable
-using System;
 using System.Diagnostics.CodeAnalysis;
-using System.IO;
-using System.Text;
-using System.Text.RegularExpressions;
-using Microsoft.Build.Framework;
-using Xamarin.Android.Tools;
-using Microsoft.Android.Build.Tasks;
 
 namespace Xamarin.Android.Tasks;
 

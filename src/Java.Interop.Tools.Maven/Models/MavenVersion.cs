@@ -1,4 +1,3 @@
-using System;
 using Java.Interop.Tools.Maven.Extensions;
 
 namespace Java.Interop.Tools.Maven.Models;

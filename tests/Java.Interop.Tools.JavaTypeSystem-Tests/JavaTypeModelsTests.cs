@@ -1,6 +1,3 @@
-using System;
-using System.IO;
-using System.Linq;
 using System.Xml;
 using Java.Interop.Tools.JavaTypeSystem.Models;
 using NUnit.Framework;

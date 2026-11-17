@@ -1,4 +1,3 @@
-using System;
 using Java.Interop.Tools.Generator;
 using NUnit.Framework;
 

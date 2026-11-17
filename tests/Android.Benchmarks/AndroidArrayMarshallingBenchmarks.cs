@@ -1,11 +1,3 @@
-using Android.App;
-using Android.App.AppSearch;
-using Android.Content;
-using Android.Graphics;
-using Android.OS;
-using Android.Util;
-using BenchmarkDotNet.Attributes;
-using Java.Security;
 using System.Runtime.Versioning;
 
 namespace Xamarin.Android.Benchmarks;

@@ -1,7 +1,3 @@
-using System;
-using System.IO;
-using System.Linq;
-
 using Mono.Options;
 
 namespace Xamarin.Android.JniEnv;

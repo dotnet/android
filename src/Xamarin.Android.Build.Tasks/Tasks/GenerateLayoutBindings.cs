@@ -1,20 +1,5 @@
 #nullable enable
 
-using System;
-using System.Collections.Concurrent;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading;
-using System.Xml;
-using System.Xml.XPath;
-
-using Microsoft.Build.Utilities;
-using Microsoft.Build.Framework;
-
-using Microsoft.Android.Build.Tasks;
-
 namespace Xamarin.Android.Tasks;
 
 	// TODO: add doc comments to the generated properties

@@ -1,7 +1,3 @@
-using System;
-using System.Collections.Generic;
-using System.IO;
-using Microsoft.VisualStudio.TestPlatform.Utilities;
 using NUnit.Framework;
 
 namespace Xamarin.Android.Tools.Tests;

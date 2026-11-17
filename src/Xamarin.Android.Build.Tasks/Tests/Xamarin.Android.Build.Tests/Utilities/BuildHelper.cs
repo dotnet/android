@@ -1,8 +1,5 @@
-using System;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.Text.RegularExpressions;
-using Microsoft.Build.Framework;
 using Xamarin.ProjectTools;
 using NUnit.Framework;
 

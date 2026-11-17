@@ -1,11 +1,4 @@
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Reflection;
 using Java.Interop.Tools.JavaCallableWrappers;
-using NUnit.Framework;
-using Xamarin.Android.Binder;
 
 namespace generatortests;
 

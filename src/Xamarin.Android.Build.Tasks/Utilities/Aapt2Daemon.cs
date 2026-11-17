@@ -1,16 +1,5 @@
 #nullable enable
-using System;
-using System.Collections.Concurrent;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.IO;
-using System.Text;
-using System.Threading;
-using System.Reflection;
-using Microsoft.Build.Framework;
 using TPL = System.Threading.Tasks;
-using Xamarin.Android.Tools;
-using Microsoft.Android.Build.Tasks;
 
 namespace Xamarin.Android.Tasks;
 

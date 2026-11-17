@@ -1,8 +1,4 @@
 #nullable enable
-using System;
-using System.Xml;
-using System.Xml.Linq;
-
 namespace Xamarin.Android.Tasks;
 
 static class UtilityExtensions

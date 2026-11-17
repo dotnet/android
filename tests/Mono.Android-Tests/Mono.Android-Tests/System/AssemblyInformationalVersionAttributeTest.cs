@@ -1,8 +1,3 @@
-using System;
-using System.Threading;
-
-using NUnit.Framework;
-
 namespace Xamarin.Android.RuntimeTests; 
 
 [TestFixture]

@@ -1,10 +1,3 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using MonoDroid.Generation;
-using NUnit.Framework;
-using Xamarin.Android.Binder;
-
 namespace generatortests;
 
 	[TestFixture]

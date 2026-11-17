@@ -1,11 +1,4 @@
-using System;
-using System.Collections.Generic;
 using System.Runtime.Versioning;
-
-using Android.Runtime;
-using Java.Util;
-using Java.Util.Functions;
-using NUnit.Framework;
 
 namespace Java.UtilTests;
 

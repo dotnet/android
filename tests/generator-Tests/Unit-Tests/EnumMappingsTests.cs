@@ -1,15 +1,3 @@
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Xml.Linq;
-using MonoDroid.Generation;
-using NUnit.Framework;
-
-using Java.Interop.Tools.Generator;
-
 namespace generatortests;
 
 	[TestFixture]

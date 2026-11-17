@@ -1,5 +1,3 @@
-using System;
-using System.Collections.Generic;
 using Java.Interop.Tools.Maven.Models;
 
 namespace Java.Interop.Tools.Maven;

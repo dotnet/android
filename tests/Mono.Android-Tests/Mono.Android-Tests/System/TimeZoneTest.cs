@@ -1,10 +1,4 @@
-using System;
 using System.Globalization;
-
-using Android.App;
-using Android.Content;
-
-using NUnit.Framework;
 
 namespace Xamarin.Android.RuntimeTests;
 

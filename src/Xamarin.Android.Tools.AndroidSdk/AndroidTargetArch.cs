@@ -1,7 +1,3 @@
-using System;
-using System.Text.RegularExpressions;
-using System.IO;
-
 namespace Xamarin.Android.Tools;
 
 [Flags]

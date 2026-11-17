@@ -1,12 +1,3 @@
-using System;
-using System.Diagnostics.CodeAnalysis;
-using Android.App;
-using Android.Content.Res;
-using Android.Graphics;
-using Android.Graphics.Drawables;
-using Android.Runtime;
-using NUnit.Framework;
-
 namespace Android.GraphicsTests;
 
 // https://bugzilla.xamarin.com/show_bug.cgi?id=23823

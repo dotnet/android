@@ -1,7 +1,3 @@
-using System;
-using MonoDroid.Generation;
-using NUnit.Framework;
-
 namespace generatortests;
 
 [TestFixture]

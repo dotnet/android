@@ -1,11 +1,3 @@
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using Microsoft.Android.Build.Tasks;
-using Microsoft.Build.Framework;
-using Microsoft.Build.Tasks;
-using Microsoft.Build.Utilities;
-
 namespace Xamarin.Android.Tasks;
 
 	/// <summary>

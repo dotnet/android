@@ -1,8 +1,5 @@
 #nullable enable
 
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
 using System.Xml.Linq;
 
 using Microsoft.Build.Framework;

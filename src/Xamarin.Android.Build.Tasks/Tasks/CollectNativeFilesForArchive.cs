@@ -1,17 +1,7 @@
 // Copyright (C) 2011 Xamarin, Inc. All rights reserved.
 
 #nullable enable
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.IO;
-
-using Microsoft.Build.Utilities;
-using Microsoft.Build.Framework;
-
 using ArchiveFileList = System.Collections.Generic.List<(string filePath, string archivePath)>;
-using Microsoft.Android.Build.Tasks;
-using Microsoft.Android.Tasks;
 
 namespace Xamarin.Android.Tasks;
 

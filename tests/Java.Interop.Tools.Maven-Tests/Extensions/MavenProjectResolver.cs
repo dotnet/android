@@ -1,5 +1,3 @@
-using System;
-using System.IO;
 using Java.Interop.Tools.Maven;
 using Java.Interop.Tools.Maven.Models;
 using Java.Interop.Tools.Maven.Repositories;

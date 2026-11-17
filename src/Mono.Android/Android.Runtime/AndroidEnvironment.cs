@@ -1,22 +1,3 @@
-using System;
-using System.Net;
-using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
-using System.Net.Http;
-using System.Net.Security;
-using System.Runtime.CompilerServices;
-using System.Runtime.ExceptionServices;
-using System.Runtime.InteropServices;
-using System.Security.Cryptography.X509Certificates;
-using System.Threading;
-using Android.App;
-using Android.Content;
-using Android.Util;
-using Android.Views;
-using Java.Net;
-using Java.Security;
-using Javax.Net.Ssl;
-
 namespace Android.Runtime; 
 
 	public static partial class AndroidEnvironment {

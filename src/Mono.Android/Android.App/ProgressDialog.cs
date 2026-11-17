@@ -1,7 +1,4 @@
-using System;
-using System.Collections.Generic;
 using Android.Content;
-using Android.Runtime;
 
 namespace Android.App; 
 

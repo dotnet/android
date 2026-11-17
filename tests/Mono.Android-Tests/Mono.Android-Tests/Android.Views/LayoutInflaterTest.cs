@@ -1,9 +1,3 @@
-using System;
-using Android.App;
-using Android.Views;
-using Microsoft.Android.Runtime;
-using NUnit.Framework;
-
 namespace Android.ViewsTests;
 
 [TestFixture]

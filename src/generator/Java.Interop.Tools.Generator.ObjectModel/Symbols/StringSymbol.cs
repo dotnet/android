@@ -1,9 +1,3 @@
-using System;
-using System.Collections.Generic;
-using System.Xml;
-
-using MonoDroid.Utils;
-
 namespace MonoDroid.Generation; 
 
 public class StringSymbol : ISymbol {

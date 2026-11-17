@@ -1,5 +1,3 @@
-using System;
-using System.IO;
 using System.Reflection;
 using System.Reflection.Metadata;
 using System.Reflection.Metadata.Ecma335;

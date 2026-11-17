@@ -1,8 +1,5 @@
 #nullable enable
 
-using System;
-using System.Collections.Generic;
-
 namespace Java.Interop;
 
 	public struct JniNativeMethodRegistrationArguments

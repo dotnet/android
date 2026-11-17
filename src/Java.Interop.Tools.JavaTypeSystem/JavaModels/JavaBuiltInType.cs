@@ -1,6 +1,3 @@
-using System;
-using System.Collections.Generic;
-
 namespace Java.Interop.Tools.JavaTypeSystem.Models;
 
 // Represents a Java built-in type like 'int' or 'float'

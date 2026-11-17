@@ -1,8 +1,3 @@
-using Android.Apptests.Aidl;
-using Android.OS;
-
-using NUnit.Framework;
-
 namespace Android.OSTests;
 
 [TestFixture]

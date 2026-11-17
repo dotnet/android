@@ -1,9 +1,3 @@
-using Android.Runtime;
-
-using NUnit.Framework;
-
-using TrimmableTypeMapCallbacks;
-
 using static Java.InteropTests.TrimmableTypeMapTestHelpers;
 
 namespace Java.InteropTests;

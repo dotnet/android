@@ -1,7 +1,5 @@
 #nullable enable
 
-using System;
-
 namespace Android.App;
 
 public sealed partial class IntentFilterAttribute

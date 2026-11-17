@@ -1,15 +1,7 @@
-using System;
 using System.Diagnostics;
 using System.Globalization;
 using System.Runtime.CompilerServices;
 using System.Runtime.ExceptionServices;
-using System.Threading;
-using System.Threading.Tasks;
-
-using Android.Runtime;
-using Java.Interop;
-
-using NUnit.Framework;
 
 namespace Java.InteropTests;
 

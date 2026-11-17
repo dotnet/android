@@ -1,11 +1,3 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-
-using Android.Runtime;
-
-using NUnit.Framework;
-
 namespace Android.RuntimeTests;
 
 [TestFixture]

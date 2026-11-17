@@ -1,5 +1,3 @@
-using System;
-
 namespace Xamarin.Android.AssemblyStore;
 
 static class Log

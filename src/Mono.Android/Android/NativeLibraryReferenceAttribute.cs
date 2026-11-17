@@ -1,5 +1,3 @@
-using System;
-
 namespace Android; 
 
 	[AttributeUsage (AttributeTargets.Assembly, AllowMultiple = true)]

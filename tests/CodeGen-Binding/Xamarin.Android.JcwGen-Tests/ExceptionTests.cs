@@ -1,12 +1,3 @@
-using System;
-
-using NUnit.Framework;
-
-using Android.Graphics;
-using Android.Runtime;
-
-using Com.Xamarin.Android;
-
 namespace Xamarin.Android.JcwGenTests; 
 
 [TestFixture]

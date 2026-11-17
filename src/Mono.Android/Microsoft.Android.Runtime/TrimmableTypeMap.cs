@@ -1,12 +1,5 @@
 #nullable enable
 
-using System;
-using System.Collections.Concurrent;
-using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
-using System.Reflection;
-using System.Runtime.InteropServices;
-using System.Threading;
 using Android.Runtime;
 using Java.Interop;
 

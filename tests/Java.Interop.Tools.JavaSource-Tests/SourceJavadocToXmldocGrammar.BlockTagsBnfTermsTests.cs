@@ -1,13 +1,4 @@
-using System;
-using System.Linq;
-using System.Xml.Linq;
-
 using NUnit.Framework;
-
-using Java.Interop.Tools.JavaSource;
-
-using Irony;
-using Irony.Parsing;
 
 namespace Java.Interop.Tools.JavaSource.Tests;
 

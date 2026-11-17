@@ -1,12 +1,3 @@
-using System;
-
-using Android.App;
-using Android.Content;
-using Android.Runtime;
-using Android.Views;
-
-using NUnit.Framework;
-
 namespace Java.LangTests; 
 
 [TestFixture]

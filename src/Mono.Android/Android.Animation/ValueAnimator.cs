@@ -1,5 +1,3 @@
-using System;
-using Java.Interop;
 using Android.Runtime;
 
 namespace Android.Animation;

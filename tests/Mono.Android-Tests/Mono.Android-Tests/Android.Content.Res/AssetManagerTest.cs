@@ -1,9 +1,3 @@
-using System.IO;
-using Android.App;
-using Android.Graphics.Drawables;
-using Android.Widget;
-using NUnit.Framework;
-
 namespace Android.Content.ResTests;
 
 [TestFixture]

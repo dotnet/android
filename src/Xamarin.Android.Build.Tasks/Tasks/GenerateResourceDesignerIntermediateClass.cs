@@ -1,11 +1,5 @@
 #nullable enable
 
-using System;
-using System.IO;
-using System.CodeDom.Compiler;
-using Microsoft.Build.Framework;
-using Microsoft.Build.Utilities;
-using Microsoft.Android.Build.Tasks;
 using MonoDroid.Tuner;
 
 namespace Xamarin.Android.Tasks;

@@ -1,7 +1,4 @@
 #nullable enable
-using System;
-using System.Collections.Generic;
-using System.IO;
 using System.IO.Hashing;
 
 using Microsoft.Android.Build.Tasks;

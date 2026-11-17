@@ -1,9 +1,4 @@
-using System;
-using System.IO;
-using System.Text;
 using Android.Content.Res;
-using System.Xml;
-using Org.XmlPull.V1;
 
 namespace Android.Runtime;
 

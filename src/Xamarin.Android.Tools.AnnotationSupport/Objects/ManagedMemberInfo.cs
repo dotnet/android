@@ -1,4 +1,3 @@
-using System;
 namespace Xamarin.AndroidTools.AnnotationSupport;
 
 public class ManagedMemberInfo

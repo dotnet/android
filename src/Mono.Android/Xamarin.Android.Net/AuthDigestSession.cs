@@ -15,14 +15,6 @@
 // Original (server-side) source code available at
 // http://www.rassoc.com/gregr/weblog/stories/2002/07/09/webServicesSecurityHttpDigestAuthenticationWithoutActiveDirectory.html
 //
-using System;
-using System.Globalization;
-using System.Net;
-using System.Security.Cryptography;
-using System.Text;
-
-using Java.Net;
-
 namespace Xamarin.Android.Net;
 
 	sealed class AuthDigestSession

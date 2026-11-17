@@ -1,4 +1,3 @@
-using Mono.Cecil;
 using Mono.Linker.Steps;
 using Xamarin.Android.Tasks;
 

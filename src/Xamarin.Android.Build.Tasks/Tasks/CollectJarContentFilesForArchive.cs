@@ -1,14 +1,4 @@
 #nullable enable
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.IO.Compression;
-using System.Linq;
-using System.Text;
-using System.Text.RegularExpressions;
-using Microsoft.Android.Build.Tasks;
-using Microsoft.Build.Framework;
-
 namespace Xamarin.Android.Tasks;
 
 /// <summary>

@@ -1,18 +1,9 @@
-using System;
-using System.Collections.Generic;
 using System.Diagnostics;
-using System.IO;
-using System.Linq;
 using System.Text;
-using System.Threading;
-
 using Microsoft.Build.Framework;
-using Microsoft.Build.Utilities;
-
-using Xamarin.Android.BuildTools.PrepTasks;
-
-using Tasks = System.Threading.Tasks;
 using static System.Threading.Tasks.TaskAsyncEnumerableExtensions;
+using Task = Microsoft.Build.Utilities.Task;
+using Tasks = System.Threading.Tasks;
 
 namespace Xamarin.Android.Tools.BootstrapTasks;
 

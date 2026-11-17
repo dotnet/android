@@ -1,11 +1,3 @@
-using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.Collections.ObjectModel;
-using System.Diagnostics.CodeAnalysis;
-using System.IO;
-using System.Linq;
-
 namespace Xamarin.Android.Tools.Bytecode; 
 
 // http://docs.oracle.com/javase/specs/jvms/se7/html/jvms-4.html#jvms-4.1

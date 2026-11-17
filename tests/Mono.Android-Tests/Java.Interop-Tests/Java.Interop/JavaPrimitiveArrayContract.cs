@@ -1,11 +1,3 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-
-using Java.Interop;
-
-using NUnit.Framework;
-
 namespace Java.InteropTests;
 
 public abstract class JavaPrimitiveArrayContract<TArray, TElement> : JavaArrayContract<TElement>

@@ -1,4 +1,3 @@
-using System;
 using MonoDroid.Generation;
 using Xamarin.SourceWriter;
 

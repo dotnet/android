@@ -1,6 +1,3 @@
-using System;
-using System.IO;
-
 namespace Xamarin.Android.Tools.Bytecode;
 
 // This takes a Stream that contains several separate messages and provides callers

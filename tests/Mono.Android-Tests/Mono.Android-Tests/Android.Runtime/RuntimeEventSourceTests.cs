@@ -1,19 +1,11 @@
 #nullable enable
 
-using System;
 using System.Collections.Concurrent;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Diagnostics.Tracing;
 using System.Reflection;
 using System.Runtime.CompilerServices;
-using System.Threading;
-
-using Android.Runtime;
-using Java.Interop;
-using Microsoft.Android.Runtime;
-using NUnit.Framework;
 
 namespace Android.RuntimeTests;
 

@@ -1,5 +1,3 @@
-using System;
-
 namespace Java.Interop;
 
 	/// <include file="../Documentation/Java.Interop/JniManagedPeerStates.xml" path="/docs/member[@name='T:JniManagedPeerStates']/*" />

@@ -1,5 +1,4 @@
 using Android.Runtime;
-using Java.Interop;
 
 namespace Android.Hardware;
 

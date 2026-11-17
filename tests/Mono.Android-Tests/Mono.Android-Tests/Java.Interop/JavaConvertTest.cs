@@ -1,15 +1,4 @@
-using System;
-using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
-using System.Linq;
-
-using Android.App;
-using Android.Content;
-using Android.Runtime;
-
-using Java.Interop;
-
-using NUnit.Framework;
 
 using Xamarin.Android.RuntimeTests;
 

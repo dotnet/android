@@ -1,5 +1,4 @@
 #nullable enable
-using System.IO;
 using System.Reflection.Metadata;
 using System.Reflection.PortableExecutable;
 

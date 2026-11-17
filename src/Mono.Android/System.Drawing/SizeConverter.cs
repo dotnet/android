@@ -29,14 +29,6 @@
 // WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 //
 
-using System.Collections;
-using System.ComponentModel;
-using System.Diagnostics.CodeAnalysis;
-using System.Globalization;
-using System.ComponentModel.Design.Serialization;
-using System.Reflection;
-using System.Runtime.CompilerServices;
-
 namespace System.Drawing; 
 	[TypeForwardedFrom ("System.Drawing, Version=2.0.5.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a")]
 	public class SizeConverter : TypeConverter

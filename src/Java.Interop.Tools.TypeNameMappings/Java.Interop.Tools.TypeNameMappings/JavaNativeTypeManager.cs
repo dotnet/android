@@ -1,13 +1,5 @@
 #nullable enable
 
-using System;
-using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
-using System.Linq;
-using System.Reflection;
-using System.Security.Cryptography;
-using System.Text;
-using Android.Runtime;
 using Java.Interop.Tools.JavaCallableWrappers;
 
 #if HAVE_CECIL

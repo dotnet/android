@@ -1,17 +1,10 @@
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
 using System.Net;
-using System.Xml;
 using System.Xml.Linq;
 
 using Irony.Ast;
 using Irony.Parsing;
 
-namespace Java.Interop.Tools.JavaSource; 
-
-using static IronyExtensions;
+namespace Java.Interop.Tools.JavaSource;
 
 public partial class SourceJavadocToXmldocGrammar {
 

@@ -1,9 +1,3 @@
-using System;
-using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
-using Android.Views;
-using JLO = Java.Lang.Object;
-
 using Android.Runtime;
 
 using Java.Interop;

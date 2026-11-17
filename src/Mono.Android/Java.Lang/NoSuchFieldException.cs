@@ -1,5 +1,3 @@
-using System;
-
 namespace Java.Lang; 
 
 	partial class NoSuchFieldException {

@@ -1,7 +1,5 @@
 #nullable enable
 
-using System;
-
 namespace Java.Interop; 
 
 	// http://docs.oracle.com/javase/8/docs/technotes/guides/jni/spec/functions.html#Release_PrimitiveType_ArrayElements_routines

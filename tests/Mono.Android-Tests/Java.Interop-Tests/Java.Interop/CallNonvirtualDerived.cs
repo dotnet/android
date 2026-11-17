@@ -1,7 +1,3 @@
-using System;
-
-using Java.Interop;
-
 namespace Java.InteropTests;
 
 [JniTypeSignature (CallNonvirtualDerived.JniTypeName, GenerateJavaPeer=false)]

@@ -1,10 +1,5 @@
-using System;
-using System.Threading;
-
-using Microsoft.Build.Framework;
-using Microsoft.Build.Utilities;
 using Microsoft.Android.Build.Tasks;
-
+using Microsoft.Build.Framework;
 using TPLTask = System.Threading.Tasks.Task;
 
 namespace Xamarin.Android.BuildTools.PrepTasks;

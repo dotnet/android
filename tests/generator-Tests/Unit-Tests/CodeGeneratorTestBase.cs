@@ -1,13 +1,3 @@
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Reflection;
-using System.Text;
-using System.Xml.Linq;
-using MonoDroid.Generation;
-using NUnit.Framework;
-
 namespace generatortests;
 
 	abstract class CodeGeneratorTestBase

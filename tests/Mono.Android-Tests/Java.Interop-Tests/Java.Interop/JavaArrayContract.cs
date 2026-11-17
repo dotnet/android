@@ -1,10 +1,4 @@
-using System;
-using System.Linq;
-
-using Java.Interop;
-
 using Cadenza.Collections.Tests;
-using NUnit.Framework;
 
 namespace Java.InteropTests;
 

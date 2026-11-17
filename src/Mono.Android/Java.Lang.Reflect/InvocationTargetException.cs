@@ -1,5 +1,3 @@
-using System;
-
 namespace Java.Lang.Reflect; 
 
 	partial class InvocationTargetException {

@@ -1,16 +1,11 @@
-using System;
-using System.IO;
-using System.Linq;
 using System.Text;
 using System.Text.Json;
 using System.Xml.Linq;
 
 using ELFSharp.ELF;
 using ELFSharp.ELF.Sections;
-using Microsoft.Android.Tasks;
 using NUnit.Framework;
 using Xamarin.Android.Tasks;
-using Xamarin.Android.Tools;
 using Xamarin.ProjectTools;
 
 namespace Xamarin.Android.Build.Tests;

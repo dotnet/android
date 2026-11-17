@@ -1,6 +1,3 @@
-using System;
-using System.Linq;
-
 using Android.Runtime;
 
 using NUnit.Framework;

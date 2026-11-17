@@ -1,13 +1,4 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Xml.Linq;
-
 #nullable enable
-
-using Xamarin.Android.Tools.Bytecode;
-
-using NUnit.Framework;
 
 namespace Xamarin.Android.Tools.BytecodeTests;
 

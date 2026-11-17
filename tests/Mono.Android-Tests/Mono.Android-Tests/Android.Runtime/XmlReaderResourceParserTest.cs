@@ -1,11 +1,4 @@
-using System;
-
-using Android.App;
-using Android.Runtime;
-
-using NUnit.Framework;
-
-using MyResource        = global::Xamarin.Android.RuntimeTests.Resource;
+using MyResource = global::Xamarin.Android.RuntimeTests.Resource;
 
 namespace Android.RuntimeTests; 
 

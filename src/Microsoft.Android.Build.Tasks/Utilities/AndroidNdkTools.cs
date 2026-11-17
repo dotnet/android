@@ -1,6 +1,3 @@
-using System;
-using System.IO;
-using System.Linq;
 using System.Runtime.InteropServices;
 using Microsoft.Android.Build.Tasks;
 using Microsoft.Build.Utilities;

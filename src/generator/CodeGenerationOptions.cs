@@ -1,15 +1,9 @@
-using System;
-using System.Collections.Concurrent;
-using System.Collections.Generic;
-using System.Linq;
 using System.Text;
-using System.Threading;
 using Java.Interop.Tools.Cecil;
 using Java.Interop.Tools.Generator;
 using Java.Interop.Tools.JavaCallableWrappers;
 
 using Xamarin.Android.Binder;
-using Xamarin.AndroidTools.AnnotationSupport;
 
 namespace MonoDroid.Generation;
 

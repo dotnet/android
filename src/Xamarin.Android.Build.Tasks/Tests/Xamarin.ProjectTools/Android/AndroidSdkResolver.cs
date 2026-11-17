@@ -1,11 +1,6 @@
-using System;
-using System.Data;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
-using System.IO;
 using System.Text;
-using System.Threading;
-using Xamarin.Android.Tools;
 
 namespace Xamarin.ProjectTools;
 

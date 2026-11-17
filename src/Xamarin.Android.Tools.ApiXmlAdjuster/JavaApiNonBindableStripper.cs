@@ -1,7 +1,3 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-
 namespace Xamarin.Android.Tools.ApiXmlAdjuster;
 
 public static class JavaApiNonBindableStripper

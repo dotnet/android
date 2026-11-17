@@ -1,4 +1,3 @@
-using System;
 namespace Xamarin.AndroidTools.AnnotationSupport;
 
 // Looks for @RequiresPermission, store them and use for auditing user code to find missing permissions.

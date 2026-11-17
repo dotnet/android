@@ -1,9 +1,5 @@
 // https://github.com/dotnet/android/blob/83854738b8e01747f9536f426fe17ad784cc2081/src/Xamarin.Android.Build.Tasks/Utilities/AsyncTaskExtensions.cs
 
-using System;
-using System.Collections.Generic;
-using System.Threading.Tasks;
-
 namespace Microsoft.Android.Build.Tasks;
 
 public static class AsyncTaskExtensions

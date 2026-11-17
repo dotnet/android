@@ -1,11 +1,5 @@
 #nullable enable
 
-using System;
-using System.IO;
-using System.Resources;
-using Microsoft.Build.Framework;
-using Microsoft.Build.Utilities;
-
 namespace Xamarin.Android.Tasks;
 
 	public class AndroidCreateDebugKey : KeyTool

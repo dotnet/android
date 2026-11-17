@@ -1,9 +1,3 @@
-using System;
-
-using Android.Runtime;
-
-using Java.Interop;
-
 namespace Xamarin.Android.JcwGenTests; 
 
 public class LegacyCustomThresholdDerived : LegacyThresholdBinding.LegacyThresholdDerived {

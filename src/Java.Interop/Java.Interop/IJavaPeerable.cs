@@ -1,7 +1,5 @@
 #nullable enable
 
-using System;
-
 namespace Java.Interop;
 
 	/// <include file="../Documentation/Java.Interop/IJavaPeerable.xml" path="/docs/member[@name='T:IJavaPeerable']/*" />

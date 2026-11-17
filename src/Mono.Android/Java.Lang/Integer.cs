@@ -1,6 +1,3 @@
-using System;
-using Android.Runtime;
-
 namespace Java.Lang; 
 
 	public partial class Integer : IConvertible {

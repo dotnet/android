@@ -1,8 +1,5 @@
 #nullable enable
-using System;
-using System.Collections.Generic;
 using System.Text;
-using System.IO;
 using System.Diagnostics.CodeAnalysis;
 
 namespace Xamarin.ProjectTools;

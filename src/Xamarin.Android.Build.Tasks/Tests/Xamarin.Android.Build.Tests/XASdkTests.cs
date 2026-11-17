@@ -1,14 +1,7 @@
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Reflection;
 using System.Text;
 using NUnit.Framework;
-using Xamarin.Android.Tools;
 using Xamarin.ProjectTools;
 using System.IO.Compression;
-using Microsoft.Android.Build.Tasks;
 using Xamarin.Android.Tasks;
 
 namespace Xamarin.Android.Build.Tests;

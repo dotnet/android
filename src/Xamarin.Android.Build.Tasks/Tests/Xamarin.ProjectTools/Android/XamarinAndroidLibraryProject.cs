@@ -1,6 +1,3 @@
-using System;
-using System.IO;
-
 namespace Xamarin.ProjectTools;
 
 public class XamarinAndroidLibraryProject : XamarinAndroidCommonProject

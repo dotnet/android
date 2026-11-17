@@ -1,17 +1,4 @@
 #nullable enable
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.IO.Compression;
-using System.Linq;
-using System.Xml.Linq;
-using Microsoft.Build.Utilities;
-using Microsoft.Build.Framework;
-using Xamarin.Android.Tools;
-using System.Reflection.Metadata;
-using System.Reflection.PortableExecutable;
-using Microsoft.Android.Build.Tasks;
-
 namespace Xamarin.Android.Tasks;
 
 	public class ResolveLibraryProjectImports : AndroidTask

@@ -1,12 +1,5 @@
 #nullable enable
 
-using System.Collections.Generic;
-using System.IO;
-using Java.Interop.Tools.Cecil;
-using Microsoft.Android.Build.Tasks;
-using Microsoft.Build.Framework;
-using Microsoft.Build.Utilities;
-using Mono.Cecil;
 using MonoDroid.Tuner;
 
 namespace Xamarin.Android.Tasks;

@@ -1,10 +1,3 @@
-using System;
-using Android.App;
-using Android.Content;
-using Android.Util;
-using Android.Views;
-using Android.Widget;
-using NUnit.Framework;
 using Mono.Android_Test.Library;
 
 namespace Xamarin.Android.RuntimeTests;

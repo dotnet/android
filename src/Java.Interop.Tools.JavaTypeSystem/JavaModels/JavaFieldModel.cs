@@ -1,7 +1,3 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-
 namespace Java.Interop.Tools.JavaTypeSystem.Models;
 
 public class JavaFieldModel : JavaMemberModel

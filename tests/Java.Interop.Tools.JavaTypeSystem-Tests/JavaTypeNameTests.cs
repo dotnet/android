@@ -1,4 +1,3 @@
-using System;
 using Java.Interop.Tools.JavaTypeSystem.Models;
 using NUnit.Framework;
 

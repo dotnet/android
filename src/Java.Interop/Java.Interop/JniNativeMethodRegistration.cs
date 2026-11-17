@@ -1,10 +1,6 @@
 #nullable enable
 
-using System;
 using System.Runtime.InteropServices;
-using System.Threading;
-
-using Java.Interop;
 
 namespace Java.Interop; 
 

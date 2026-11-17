@@ -1,8 +1,4 @@
-using System;
-using System.Collections.Generic;
 using System.Diagnostics;
-using System.IO;
-using System.Linq;
 using System.Text;
 using System.Text.Json;
 using Java.Interop.Tools.Cecil;
@@ -15,7 +11,6 @@ using MonoDroid.Tuner;
 using NUnit.Framework;
 using Xamarin.Android.Tasks;
 using Xamarin.ProjectTools;
-using SR = System.Reflection;
 
 namespace Xamarin.Android.Build.Tests;
 

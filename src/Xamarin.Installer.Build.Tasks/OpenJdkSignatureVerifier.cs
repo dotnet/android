@@ -1,10 +1,7 @@
-using System;
 using System.Buffers;
 using System.Buffers.Binary;
-using System.IO;
 using System.Security.Cryptography;
 using System.Text;
-using System.Threading;
 using Microsoft.Android.Build.Tasks;
 
 namespace Xamarin.Installer.Build.Tasks;

@@ -1,8 +1,6 @@
 // https://github.com/dotnet/android/blob/9fca138604c53989e1cff7fc0c2e939583b4da28/src/Xamarin.Android.Build.Tasks/Tasks/AndroidTask.cs#L10
 
-using System;
-using System.IO;
-using Microsoft.Build.Utilities;
+using Task = Microsoft.Build.Utilities.Task;
 
 namespace Microsoft.Android.Build.Tasks;
 

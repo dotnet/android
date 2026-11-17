@@ -1,11 +1,6 @@
-using System;
-using System.Collections.Generic;
-
 using Java.Interop;
 
 using Android.Runtime;
-using System.ComponentModel;
-using System.Diagnostics;
 
 namespace Java.Lang; 
 

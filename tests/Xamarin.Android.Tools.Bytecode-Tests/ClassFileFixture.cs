@@ -1,13 +1,3 @@
-using System;
-using System.Diagnostics;
-using System.IO;
-using System.Linq;
-using System.Reflection;
-
-using Xamarin.Android.Tools.Bytecode;
-
-using NUnit.Framework;
-
 namespace Xamarin.Android.Tools.BytecodeTests; 
 
 	public class ClassFileFixture {

@@ -1,13 +1,5 @@
 #nullable enable
 
-using System;
-using Microsoft.Build.Utilities;
-using Microsoft.Build.Framework;
-using System.IO;
-using System.Diagnostics;
-using Xamarin.Android.Tools;
-using Microsoft.Android.Build.Tasks;
-
 namespace Xamarin.Android.Tasks;
 
 	public class AdjustJavacVersionArguments : AndroidTask

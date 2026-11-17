@@ -1,12 +1,6 @@
-using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
 using System.Xml.Linq;
 using NUnit.Framework;
 using Microsoft.Build.Framework;
-using Microsoft.Build.Utilities;
 using Microsoft.Android.Tasks;
 using TaskItem = Microsoft.Build.Utilities.TaskItem;
 

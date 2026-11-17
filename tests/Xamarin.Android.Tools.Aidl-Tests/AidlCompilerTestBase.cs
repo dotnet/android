@@ -2,9 +2,6 @@
 // This define will overwrite the files in /bin/TestData.
 // You will still need to copy them back to the original /TestData.
 
-using System;
-using System.IO;
-using System.Linq;
 using System.Reflection;
 using NUnit.Framework;
 using Xamarin.Android.Tools.Aidl;

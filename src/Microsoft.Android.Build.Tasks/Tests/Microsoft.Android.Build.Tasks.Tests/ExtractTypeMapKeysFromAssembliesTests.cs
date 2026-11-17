@@ -1,15 +1,9 @@
-using System;
-using System.Collections.Generic;
 using System.Diagnostics;
-using System.IO;
-using System.Linq;
 using System.Reflection;
 using System.Reflection.Metadata;
 using System.Reflection.Metadata.Ecma335;
 using System.Reflection.PortableExecutable;
 using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
 using Microsoft.Android.Sdk.TrimmableTypeMap;
 using Microsoft.Android.Tasks;
 using Xamarin.Android.Tasks;

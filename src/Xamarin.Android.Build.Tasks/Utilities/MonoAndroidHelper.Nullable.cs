@@ -1,15 +1,6 @@
 #nullable enable
-using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.IO;
-using System.Linq;
-using Xamarin.Android.Tools;
 
 #if MSBUILD
-using Microsoft.Android.Build.Tasks;
-using Microsoft.Build.Framework;
-using Microsoft.Build.Utilities;
 #endif
 
 namespace Xamarin.Android.Tasks;

@@ -1,5 +1,3 @@
-using System;
-
 internal static class StartupHook
 {
     public static bool IsInitialized { get; private set; }

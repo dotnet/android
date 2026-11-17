@@ -1,8 +1,6 @@
 using System.Security.Cryptography;
 using System.Text;
 
-using NUnit.Framework;
-
 namespace System.Security.CryptographyTests;
 
 [TestFixture]

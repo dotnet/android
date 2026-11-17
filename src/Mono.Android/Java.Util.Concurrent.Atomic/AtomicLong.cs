@@ -1,5 +1,3 @@
-using System;
-
 namespace Java.Util.Concurrent.Atomic;
 
 	public partial class AtomicLong

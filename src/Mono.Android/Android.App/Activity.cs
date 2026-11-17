@@ -1,6 +1,3 @@
-using System;
-using System.Diagnostics.CodeAnalysis;
-using System.Runtime.Versioning;
 using Android.Runtime;
 using RuntimeFeature = Microsoft.Android.Runtime.RuntimeFeature;
 

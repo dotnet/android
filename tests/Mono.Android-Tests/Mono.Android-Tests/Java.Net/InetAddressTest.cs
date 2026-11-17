@@ -1,5 +1,3 @@
-using NUnit.Framework;
-
 namespace Java.NetTests; 
 
 [TestFixture]

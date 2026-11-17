@@ -1,9 +1,3 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using NUnit.Framework;
-using Xamarin.Android.Tools.Bytecode;
-
 namespace Xamarin.Android.Tools.BytecodeTests;
 
 	// Exercises the real Kotlin bytecode produced by the Gradle fixture under

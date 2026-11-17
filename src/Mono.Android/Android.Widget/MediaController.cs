@@ -1,7 +1,3 @@
-using System;
-using System.Collections.Generic;
-
-using Android.Runtime;
 using Android.Views;
 
 using Java.Interop;

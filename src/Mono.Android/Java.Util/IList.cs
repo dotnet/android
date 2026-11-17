@@ -1,6 +1,3 @@
-using System;
-using Android.Runtime;
-
 namespace Java.Util;
 
 #if ANDROID_35

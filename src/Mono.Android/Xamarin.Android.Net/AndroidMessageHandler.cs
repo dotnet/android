@@ -1,28 +1,4 @@
-using System;
-using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
-using System.IO;
-using System.IO.Compression;
-using System.Linq;
-using System.Net;
-using System.Net.Http;
-using System.Net.Http.Headers;
-using System.Net.Security;
-using System.Security.Authentication;
-using System.Security.Cryptography;
-using System.Security.Cryptography.X509Certificates;
-using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
-
-using Android.OS;
 using Android.Runtime;
-using Java.IO;
-using Java.Net;
-using Java.Security;
-using Java.Security.Cert;
-using Javax.Net.Ssl;
-using JavaX509Certificate = Java.Security.Cert.X509Certificate;
 
 namespace Xamarin.Android.Net;
 

@@ -1,15 +1,3 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-
-using Android.App;
-using Android.Content;
-using Android.Runtime;
-
-using Java.Interop;
-
-using NUnit.Framework;
-
 namespace Java.InteropTests; 
 
 [TestFixture]

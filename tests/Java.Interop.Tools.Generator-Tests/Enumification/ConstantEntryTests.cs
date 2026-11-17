@@ -1,4 +1,3 @@
-using System;
 using Java.Interop.Tools.Generator.Enumification;
 using NUnit.Framework;
 

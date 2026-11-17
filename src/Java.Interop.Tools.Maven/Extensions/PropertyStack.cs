@@ -1,4 +1,3 @@
-using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Xml.Linq;
 using Java.Interop.Tools.Maven.Models;

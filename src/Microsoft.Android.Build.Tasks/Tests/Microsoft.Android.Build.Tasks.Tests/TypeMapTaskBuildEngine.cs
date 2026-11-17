@@ -1,6 +1,4 @@
-using System;
 using System.Collections;
-using System.Collections.Generic;
 using Microsoft.Build.Framework;
 
 namespace Xamarin.Android.Build.Tests;

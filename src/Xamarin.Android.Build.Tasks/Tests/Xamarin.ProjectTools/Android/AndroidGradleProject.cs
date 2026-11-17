@@ -1,9 +1,3 @@
-using System;
-using System.Collections.Generic;
-using System.IO;
-
-using Xamarin.Android.Tools;
-
 namespace Xamarin.ProjectTools;
 
 public class AndroidGradleProject

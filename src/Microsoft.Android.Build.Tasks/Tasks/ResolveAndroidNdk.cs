@@ -1,5 +1,3 @@
-using System;
-using System.IO;
 using Microsoft.Android.Build.Tasks;
 using Microsoft.Build.Framework;
 using Properties = Xamarin.Android.Tasks.Properties;

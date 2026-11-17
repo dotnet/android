@@ -1,5 +1,3 @@
-using System;
-
 namespace Java.Interop; 
 
 	[Obsolete ("Use EventHelper", error: true)]

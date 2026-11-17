@@ -1,13 +1,3 @@
-using System;
-using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
-using System.Net;
-using System.Net.Http;
-using System.Net.Http.Headers;
-using System.Net.Security;
-using System.Threading;
-using System.Threading.Tasks;
-
 namespace Xamarin.Android.Net;
 
 	// This code is heavily inspired by System.Net.Http.AuthenticationHelper

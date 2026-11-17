@@ -27,19 +27,12 @@
 // WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 //
 
-using System;
 using System.Diagnostics;
-using System.Collections;
-using System.Collections.Generic;
-using System.IO;
 using System.IO.MemoryMappedFiles;
-using System.Linq;
-using System.Reflection;
 
 using Java.Interop.Tools.Diagnostics;
 
 using Mono.Cecil;
-using Mono.Cecil.Cil;
 
 namespace Java.Interop.Tools.Cecil; 
 

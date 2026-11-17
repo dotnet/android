@@ -1,11 +1,7 @@
-using System;
 using System.Diagnostics;
-using System.IO;
-using System.Threading;
 using Microsoft.Build.Framework;
-using Microsoft.Build.Utilities;
-
 using Xamarin.Android.BuildTools.PrepTasks;
+using Task = Microsoft.Build.Utilities.Task;
 
 namespace Xamarin.Android.Tools.BootstrapTasks;
 

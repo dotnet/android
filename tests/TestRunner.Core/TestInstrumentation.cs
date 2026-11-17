@@ -1,12 +1,5 @@
 using System.Reflection;
 using System.Xml.Linq;
-using Android.App;
-using Android.OS;
-using Android.Runtime;
-using Android.Util;
-using NUnit.Framework.Api;
-using NUnit.Framework.Interfaces;
-using NUnit.Framework.Internal;
 
 namespace Xamarin.Android.UnitTests;
 

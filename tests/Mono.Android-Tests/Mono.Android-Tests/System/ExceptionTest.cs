@@ -1,14 +1,8 @@
 #nullable enable
 
-using System;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
-
-using Android.Runtime;
-using Java.Interop;
-
-using NUnit.Framework;
 
 namespace Xamarin.Android.RuntimeTests; 
 

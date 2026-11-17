@@ -1,12 +1,5 @@
 // Copyright (C) 2015 Xamarin, Inc. All rights reserved.
 
-using System.IO;
-using System.Text;
-using System.Text.RegularExpressions;
-using Microsoft.Android.Build.Tasks;
-using Microsoft.Build.Framework;
-using Microsoft.Build.Utilities;
-
 namespace Xamarin.Android.Tasks;
 
 	public class Adb : AndroidRunToolTask {

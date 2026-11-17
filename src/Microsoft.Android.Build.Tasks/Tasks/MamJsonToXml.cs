@@ -1,6 +1,4 @@
 #nullable enable
-using System.IO;
-
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
 using Microsoft.Android.Build.Tasks;

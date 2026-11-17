@@ -1,14 +1,5 @@
 #nullable enable
 
-using System;
-using System.Threading.Tasks;
-
-using NUnit.Framework;
-
-using Android.App;
-using Android.OS;
-using Android.Runtime;
-
 #pragma warning disable CA1422 // This fixture intentionally exercises the platform-obsolete CursorLoader binding.
 
 namespace Android.ContentTests; 

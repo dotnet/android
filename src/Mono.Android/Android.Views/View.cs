@@ -1,8 +1,3 @@
-using System;
-using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
-using Android.AccessibilityServices;
-using Android.OS;
 using Android.Runtime;
 
 namespace Android.Views; 

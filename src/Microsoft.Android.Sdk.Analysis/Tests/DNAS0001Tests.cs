@@ -1,16 +1,8 @@
-using System;
 using NUnit.Framework;
-using System.Threading.Tasks;
 using Microsoft.CodeAnalysis.Diagnostics;
-using Microsoft.CodeAnalysis.Testing;
-using Microsoft.CodeAnalysis.CSharp.Testing;
 using System.Collections.Immutable;
 using Microsoft.CodeAnalysis;
-using System.IO;
-using Microsoft.CodeAnalysis.VisualBasic.Syntax;
-using System.Linq;
-using VerifyCSSuppressor = CSharpSuppressorVerifier <DNAS0001Tests.IDE0002AnalyserWrapper, ResourceDesignerDiagnosticSuppressor>;
-using System.Security.Cryptography;
+using VerifyCSSuppressor = CSharpSuppressorVerifier<DNAS0001Tests.IDE0002AnalyserWrapper, ResourceDesignerDiagnosticSuppressor>;
 
 [TestFixture]
 public class DNAS0001Tests

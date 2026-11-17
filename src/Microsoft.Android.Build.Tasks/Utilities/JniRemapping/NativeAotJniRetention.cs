@@ -1,16 +1,10 @@
 #nullable enable
 
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
 using System.Text;
 
 using ELFSharp;
 using ELFSharp.ELF;
 using ELFSharp.ELF.Sections;
-
-using Microsoft.Android.Tasks;
 using Properties = Xamarin.Android.Tasks.Properties;
 
 namespace Microsoft.Android.Tasks.JniRemapping;

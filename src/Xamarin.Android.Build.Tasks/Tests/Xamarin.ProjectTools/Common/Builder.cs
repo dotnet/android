@@ -1,17 +1,9 @@
-using System;
-using System.Linq;
-using System.IO;
 using System.Diagnostics;
 using Microsoft.Build.Framework;
 using System.Text;
-using System.Collections.Generic;
 using System.Text.RegularExpressions;
-using System.Threading;
-using System.Threading.Tasks;
 using System.Xml.XPath;
 using System.Xml.Linq;
-
-using Xamarin.Android.Tasks;
 
 namespace Xamarin.ProjectTools;
 

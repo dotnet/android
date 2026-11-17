@@ -1,15 +1,5 @@
 #nullable enable
 
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.IO.Compression;
-using System.Text;
-using System.Xml.Linq;
-using Microsoft.Build.Framework;
-using Xamarin.Android.Tools;
-using Microsoft.Android.Build.Tasks;
-
 namespace Xamarin.Android.Tasks;
 
 	public class CreateAar : AndroidTask

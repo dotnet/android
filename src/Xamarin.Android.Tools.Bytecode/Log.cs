@@ -1,6 +1,3 @@
-using System;
-using System.Diagnostics;
-
 namespace Xamarin.Android.Tools.Bytecode;
 
 public class Log

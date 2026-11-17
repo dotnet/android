@@ -1,11 +1,5 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Net;
 using System.Net.NetworkInformation;
-using Java.Net;
-
-using NUnit.Framework;
 
 using MNetworkInterface = System.Net.NetworkInformation.NetworkInterface;
 using JNetworkInterface = Java.Net.NetworkInterface;

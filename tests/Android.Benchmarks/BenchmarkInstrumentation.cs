@@ -1,14 +1,3 @@
-using Android.Runtime;
-using BenchmarkDotNet.Columns;
-using BenchmarkDotNet.Configs;
-using BenchmarkDotNet.Exporters;
-using BenchmarkDotNet.Exporters.Csv;
-using BenchmarkDotNet.Filters;
-using BenchmarkDotNet.Jobs;
-using BenchmarkDotNet.Loggers;
-using BenchmarkDotNet.Running;
-using BenchmarkDotNet.Toolchains.InProcess.NoEmit;
-
 namespace Xamarin.Android.Benchmarks;
 
 [Instrumentation (Name = "net.dot.android.benchmarks.BenchmarkInstrumentation")]

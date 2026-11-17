@@ -2,15 +2,6 @@
 
 #nullable enable
 
-using System;
-using System.Linq;
-using System.IO;
-using System.Reflection;
-using Microsoft.Build.Framework;
-using Microsoft.Build.Utilities;
-using Xamarin.Android.Tools;
-using Microsoft.Android.Build.Tasks;
-
 namespace Xamarin.Android.Tasks;
 
 	public class JavaSourceUtils : AndroidToolTask

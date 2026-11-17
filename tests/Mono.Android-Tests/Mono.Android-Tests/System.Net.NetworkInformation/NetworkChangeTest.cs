@@ -1,8 +1,4 @@
-using System;
-using System.Net;
 using System.Net.NetworkInformation;
-
-using NUnit.Framework;
 
 namespace System.NetTests; 
 

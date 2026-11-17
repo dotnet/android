@@ -1,14 +1,6 @@
 #nullable enable
 
-using System;
-using System.Collections.Generic;
 using System.Runtime.CompilerServices;
-
-using Android.Runtime;
-
-using Java.Interop;
-
-using NUnit.Framework;
 
 namespace Java.InteropTests;
 

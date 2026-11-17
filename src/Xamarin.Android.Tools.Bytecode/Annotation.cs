@@ -1,8 +1,3 @@
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Text;
-
 namespace Xamarin.Android.Tools.Bytecode;
 
 public sealed class Annotation

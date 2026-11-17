@@ -28,12 +28,6 @@
 
 #nullable disable
 
-using System;
-using System.Collections.Generic;
-using System.IO;
-using Mono.Cecil;
-using Mono.Collections.Generic;
-
 namespace Mono.Linker; 
 
 #if FEATURE_ILLINK

@@ -1,6 +1,4 @@
 using NUnit.Framework;
-using System;
-using System.Xml;
 using System.Linq;
 
 namespace Xamarin.Android.Tools.ApiXmlAdjuster.Tests;

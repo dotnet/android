@@ -1,14 +1,9 @@
 #nullable enable
-using System;
-using System.Collections.Generic;
-using System.IO;
 using System.Text;
 
 using Microsoft.Android.Build.Tasks;
 using Microsoft.Android.Tasks;
 using NUnit.Framework;
-using Xamarin.Android.Tasks;
-using Xamarin.Android.Tools;
 
 namespace Xamarin.Android.Build.Tests.Tasks;
 

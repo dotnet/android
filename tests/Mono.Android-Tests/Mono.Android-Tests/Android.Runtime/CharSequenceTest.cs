@@ -1,10 +1,3 @@
-using System;
-
-using Android.Runtime;
-using Android.Text;
-
-using NUnit.Framework;
-
 namespace Android.RuntimeTests; 
 
 [TestFixture]

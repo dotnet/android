@@ -1,10 +1,4 @@
-using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Linq;
-using System.Text;
 using org.jetbrains.kotlin.metadata.jvm;
-using ProtoBuf;
 using Type = org.jetbrains.kotlin.metadata.jvm.Type;
 
 namespace Xamarin.Android.Tools.Bytecode;

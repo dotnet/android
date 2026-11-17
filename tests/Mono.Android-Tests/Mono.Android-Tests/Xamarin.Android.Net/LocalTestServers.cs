@@ -1,12 +1,7 @@
-using System;
-using System.Collections.Generic;
-using System.IO;
 using System.IO.Compression;
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
 #if !NETSTANDARD2_0
 using System.Net.Security;
 using System.Net.WebSockets;

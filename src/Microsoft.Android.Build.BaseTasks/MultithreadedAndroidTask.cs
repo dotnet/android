@@ -1,6 +1,5 @@
-using System;
 using Microsoft.Build.Framework;
-using Microsoft.Build.Utilities;
+using Task = Microsoft.Build.Utilities.Task;
 
 namespace Microsoft.Android.Build.Tasks;
 

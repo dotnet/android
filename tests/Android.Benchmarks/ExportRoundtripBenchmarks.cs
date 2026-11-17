@@ -1,7 +1,4 @@
 using System.Runtime.CompilerServices;
-using Android.Runtime;
-using BenchmarkDotNet.Attributes;
-using Java.Interop;
 
 namespace Xamarin.Android.Benchmarks;
 

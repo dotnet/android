@@ -1,15 +1,5 @@
 #nullable enable
 
-using System;
-using System.Collections.Generic;
-using System.Text;
-using System.IO;
-using System.Linq;
-using Microsoft.Build.Utilities;
-using Microsoft.Build.Framework;
-using Xamarin.Android.Tools;
-using Microsoft.Android.Build.Tasks;
-
 namespace Xamarin.Android.Tasks; 
 
 	public class CollectNonEmptyDirectories : AndroidTask {

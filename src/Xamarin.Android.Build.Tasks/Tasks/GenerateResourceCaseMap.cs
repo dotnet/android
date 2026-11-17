@@ -1,16 +1,5 @@
 // Copyright (C) 2021 Microsoft, Inc. All rights reserved.
 #nullable enable
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Text;
-using Microsoft.Build.Framework;
-using Microsoft.Build.Utilities;
-using Microsoft.Android.Build.Tasks;
-using Xamarin.Android.Tools;
-using System.IO.Compression;
-
 namespace Xamarin.Android.Tasks;
 
 	public class GenerateResourceCaseMap : AndroidTask

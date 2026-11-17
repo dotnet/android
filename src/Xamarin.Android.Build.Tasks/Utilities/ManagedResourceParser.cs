@@ -1,19 +1,5 @@
 #nullable disable
 
-using System;
-using System.CodeDom;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Reflection;
-using System.Xml;
-using System.Xml.Linq;
-using System.Xml.XPath;
-using System.Text.RegularExpressions;
-using System.Text;
-using Microsoft.Android.Build.Tasks;
-using Microsoft.Build.Utilities;
-
 
 namespace Xamarin.Android.Tasks;
 

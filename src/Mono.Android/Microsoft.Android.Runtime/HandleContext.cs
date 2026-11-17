@@ -1,9 +1,3 @@
-using System;
-using System.Collections.Generic;
-using System.Runtime.InteropServices;
-using System.Runtime.InteropServices.Java;
-using Java.Interop;
-
 namespace Microsoft.Android.Runtime;
 
 [ExtendedLayout (ExtendedLayoutKind.CStruct)]

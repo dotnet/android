@@ -1,9 +1,6 @@
-using System.IO;
-using System.Linq;
 using System.Reflection.Metadata;
 using System.Reflection.PortableExecutable;
 using Microsoft.Android.Tasks;
-using Microsoft.Build.Framework;
 using NUnit.Framework;
 
 namespace Xamarin.Android.Build.Tests; 

@@ -1,6 +1,4 @@
 #nullable enable
-using Mono.Cecil;
-
 namespace Xamarin.Android.Tasks;
 
 static class AssebmlyResolverExtensions

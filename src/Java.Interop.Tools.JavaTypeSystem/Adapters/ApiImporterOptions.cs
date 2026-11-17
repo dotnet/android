@@ -1,4 +1,3 @@
-using System;
 using System.Collections.ObjectModel;
 
 namespace Java.Interop.Tools.JavaTypeSystem;

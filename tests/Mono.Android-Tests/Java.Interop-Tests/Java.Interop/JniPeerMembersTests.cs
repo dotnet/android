@@ -1,10 +1,5 @@
-using System;
 using System.Collections.Concurrent;
 using System.Reflection;
-using System.Threading.Tasks;
-
-using Java.Interop;
-using NUnit.Framework;
 
 namespace Java.InteropTests;
 

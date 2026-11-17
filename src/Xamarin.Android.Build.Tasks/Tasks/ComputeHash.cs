@@ -1,11 +1,5 @@
 #nullable enable
 
-using System.Collections.Generic;
-using Microsoft.Build.Utilities;
-using Microsoft.Build.Framework;
-using Xamarin.Android.Tools;
-using Microsoft.Android.Build.Tasks;
-
 namespace Xamarin.Android.Tasks;
 
 	public class ComputeHash : AndroidTask

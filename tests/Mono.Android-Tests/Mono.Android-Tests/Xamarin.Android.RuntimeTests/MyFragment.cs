@@ -1,11 +1,5 @@
 #nullable enable
 
-using System;
-using Android.App;
-using Android.OS;
-using Android.Views;
-using Android.Widget;
-
 namespace Xamarin.Android.RuntimeTests;
 
 #if __ANDROID_11__

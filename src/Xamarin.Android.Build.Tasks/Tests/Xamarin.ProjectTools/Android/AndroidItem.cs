@@ -1,5 +1,3 @@
-using System;
-
 namespace Xamarin.ProjectTools;
 
 public class AndroidItem

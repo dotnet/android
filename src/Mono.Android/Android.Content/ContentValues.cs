@@ -1,4 +1,3 @@
-using System;
 using Android.Runtime;
 
 namespace Android.Content; 

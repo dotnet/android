@@ -1,14 +1,3 @@
-using System;
-using System.Diagnostics.CodeAnalysis;
-using System.Net.Http;
-using System.Net.Security;
-using System.Security.Cryptography.X509Certificates;
-
-using Android.OS;
-using Android.Net.Http;
-using Android.Runtime;
-using Javax.Net.Ssl;
-
 using JavaCertificateException = Java.Security.Cert.CertificateException;
 using JavaX509Certificate = Java.Security.Cert.X509Certificate;
 

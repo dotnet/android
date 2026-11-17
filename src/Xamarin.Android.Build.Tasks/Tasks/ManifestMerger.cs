@@ -1,13 +1,4 @@
 #nullable enable
-using System;
-using System.IO;
-using System.Linq;
-using System.Text;
-using System.Text.RegularExpressions;
-using Microsoft.Build.Framework;
-using Microsoft.Build.Utilities;
-using Microsoft.Android.Build.Tasks;
-
 namespace Xamarin.Android.Tasks;
 
 	public class ManifestMerger : JavaToolTask

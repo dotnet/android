@@ -1,7 +1,3 @@
-using System;
-
-using Android.Runtime;
-
 namespace Android.Media; 
 
 	partial class MediaPlayer {

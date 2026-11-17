@@ -1,7 +1,3 @@
-using System;
-
-using Android.Content;
-
 #if ANDROID_33
 namespace Android.Icu.Text
 {

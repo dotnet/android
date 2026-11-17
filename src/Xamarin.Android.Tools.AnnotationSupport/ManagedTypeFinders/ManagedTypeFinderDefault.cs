@@ -1,5 +1,3 @@
-using System;
-
 namespace Xamarin.AndroidTools.AnnotationSupport;
 
 public abstract class ManagedTypeFinderDefault : ManagedTypeFinder

@@ -1,6 +1,4 @@
 using System.Globalization;
-using System.Threading;
-using NUnit.Framework;
 
 namespace Xamarin.Android.RuntimeTests;
 

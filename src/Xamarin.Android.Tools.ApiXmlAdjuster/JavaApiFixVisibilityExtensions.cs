@@ -1,6 +1,3 @@
-using System;
-using System.Linq;
-
 namespace Xamarin.Android.Tools.ApiXmlAdjuster;
 
 public static class JavaApiFixVisibilityExtensions

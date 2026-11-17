@@ -1,5 +1,4 @@
 using System.Diagnostics;
-using System.IO;
 using Java.Interop.Tools.Cecil;
 using Mono.Cecil;
 using NUnit.Framework;

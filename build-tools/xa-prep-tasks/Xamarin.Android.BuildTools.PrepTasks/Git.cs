@@ -1,14 +1,4 @@
-using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.IO;
-using System.Linq;
-using System.Text;
-
 using Microsoft.Build.Framework;
-using Microsoft.Build.Utilities;
-
-using IOFile = System.IO.File;
 
 namespace Xamarin.Android.BuildTools.PrepTasks;
 

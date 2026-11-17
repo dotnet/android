@@ -1,6 +1,3 @@
-using System;
-using System.Threading;
-
 using Android.Content;
 using Android.Runtime;
 

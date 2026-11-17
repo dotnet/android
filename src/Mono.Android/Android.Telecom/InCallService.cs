@@ -1,6 +1,3 @@
-using System;
-using Android.Content;
-
 namespace Android.Telecom;
 
 	public abstract partial class InCallService : Android.App.Service

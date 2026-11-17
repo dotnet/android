@@ -1,7 +1,3 @@
-using System;
-using System.Globalization;
-using Android.Runtime;
-
 namespace Android.Util; 
 
 	public partial class Log {

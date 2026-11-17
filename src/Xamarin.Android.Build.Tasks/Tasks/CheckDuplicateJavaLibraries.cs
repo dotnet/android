@@ -1,12 +1,5 @@
 #nullable enable
 
-using System;
-using System.IO;
-using System.Linq;
-using Microsoft.Build.Framework;
-using Microsoft.Build.Utilities;
-using Microsoft.Android.Build.Tasks;
-
 namespace Xamarin.Android.Tasks;
 
 	[MSBuildMultiThreadableTask]

@@ -1,6 +1,3 @@
-using System;
-using Android.Runtime;
-
 #if ANDROID_23
 namespace Android.Hardware.Camera2 
 {

@@ -1,4 +1,3 @@
-using System;
 using Java.Interop;
 
 namespace Android.Content;

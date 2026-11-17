@@ -1,6 +1,3 @@
-using System;
-using System.IO;
-
 namespace Xamarin.Android.Tools.ApiXmlAdjuster;
 
 public static class Log

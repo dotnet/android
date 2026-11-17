@@ -1,7 +1,3 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-
 namespace Xamarin.Android.Tools.ApiXmlAdjuster;
 
 // An internal Type that represents a parsed Java type name structure.

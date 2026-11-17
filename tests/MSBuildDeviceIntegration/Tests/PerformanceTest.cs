@@ -1,14 +1,8 @@
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
 using System.Runtime.CompilerServices;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Logging.StructuredLogger;
 using StructuredBuild = Microsoft.Build.Logging.StructuredLogger.Build;
 using NUnit.Framework;
-using Xamarin.Android.Tasks;
-using Xamarin.Android.Tools;
 using Xamarin.ProjectTools;
 
 namespace Xamarin.Android.Build.Tests;

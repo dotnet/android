@@ -22,15 +22,6 @@
  *  SOFTWARE.
  */
 
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Text;
-using System.Xml.Linq;
-using System.Xml.XPath;
-using System.Text.RegularExpressions;
-
 namespace Xamarin.Android.Tools.Bytecode;
 
 class DroidDocScraper : AndroidDocScraper

@@ -1,7 +1,3 @@
-using System;
-using System.Linq;
-using Irony.Parsing;
-
 namespace Xamarin.Android.Tools.Aidl;
 
 public class CompilationUnit

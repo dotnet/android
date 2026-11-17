@@ -1,7 +1,3 @@
-using System;
-using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
-
 namespace Android.Runtime; 
 	internal static partial class Logger {
 		static bool hasNoLibLog;

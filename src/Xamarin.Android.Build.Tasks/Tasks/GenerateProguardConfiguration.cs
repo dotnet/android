@@ -1,12 +1,5 @@
 #nullable enable
 
-using System;
-using System.IO;
-using System.Reflection.Metadata;
-using System.Reflection.PortableExecutable;
-using Microsoft.Build.Framework;
-using Microsoft.Android.Build.Tasks;
-
 namespace Xamarin.Android.Tasks;
 
 	public class GenerateProguardConfiguration : AndroidTask

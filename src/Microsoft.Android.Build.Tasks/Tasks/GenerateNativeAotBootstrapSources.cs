@@ -1,8 +1,5 @@
 #nullable enable
-using System;
-using System.Collections.Generic;
 using System.Globalization;
-using System.IO;
 using System.Text;
 using System.Text.RegularExpressions;
 using Microsoft.Android.Build.Tasks;

@@ -1,9 +1,3 @@
-using System;
-using System.Diagnostics.CodeAnalysis;
-using System.IO;
-using System.Linq;
-using ProtoBuf;
-
 namespace Xamarin.Android.Tools.Bytecode;
 
 // https://github.com/JetBrains/kotlin/blob/master/libraries/stdlib/jvm/runtime/kotlin/Metadata.kt

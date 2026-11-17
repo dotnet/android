@@ -1,8 +1,4 @@
-using System;
-using System.Collections.Generic;
-using System.IO;
 using System.Linq;
-using System.Xml;
 using NUnit.Framework;
 
 namespace Xamarin.Android.Tools.ApiXmlAdjuster.Tests;

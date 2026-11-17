@@ -26,15 +26,6 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 #nullable enable
-using Microsoft.Build.Framework;
-using Microsoft.Build.Utilities;
-using System;
-using System.Diagnostics;
-using System.IO;
-using System.Linq;
-using Microsoft.Android.Build.Tasks;
-using Xamarin.Android.Tools;
-
 namespace Xamarin.Android.Tasks;
 
 	/// <summary>

@@ -1,11 +1,7 @@
 #nullable enable
-using System.Linq;
 using System.Collections.Immutable;
-using System.Threading;
 using Microsoft.CodeAnalysis;
-using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Diagnostics;
-using Microsoft.CodeAnalysis.Text;
 
 [DiagnosticAnalyzer (LanguageNames.CSharp)]
 public class ResourceDesignerDiagnosticSuppressor : DiagnosticSuppressor

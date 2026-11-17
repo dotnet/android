@@ -1,11 +1,3 @@
-using System;
-using System.Collections.Generic;
-using System.Collections.ObjectModel;
-using System.Diagnostics;
-using System.IO;
-using System.Linq;
-using System.Text;
-
 namespace Xamarin.Android.Tools.Bytecode; 
 
 public sealed class AttributeCollection : Collection<AttributeInfo> {

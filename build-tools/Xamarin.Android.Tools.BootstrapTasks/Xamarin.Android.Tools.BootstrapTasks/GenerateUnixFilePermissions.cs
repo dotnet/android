@@ -1,8 +1,6 @@
-using System.IO;
-using System.Linq;
 using System.Xml;
 using Microsoft.Build.Framework;
-using Microsoft.Build.Utilities;
+using Task = Microsoft.Build.Utilities.Task;
 
 namespace Xamarin.Android.Tools.BootstrapTasks;
 

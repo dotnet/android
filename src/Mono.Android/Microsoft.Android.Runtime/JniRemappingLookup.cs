@@ -1,14 +1,6 @@
 #nullable enable
 
-using System;
-using System.Buffers;
-using System.Collections.Concurrent;
-using System.Collections.Generic;
-using System.IO;
-using System.Runtime.InteropServices;
-using System.Text;
 using Android.Runtime;
-using Java.Interop;
 
 namespace Microsoft.Android.Runtime;
 

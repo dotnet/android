@@ -1,6 +1,4 @@
-using System;
 using System.Diagnostics.CodeAnalysis;
-using System.Linq;
 using Java.Interop.Tools.Maven.Extensions;
 
 namespace Java.Interop.Tools.Maven.Models;

@@ -1,16 +1,8 @@
-using System;
 using System.Diagnostics;
-using System.Linq;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Runtime.InteropServices.Java;
-using System.Threading;
-using Android.Runtime;
-using Java.Interop;
-using Microsoft.Android.Runtime;
-
-using NUnit.Framework;
 
 namespace Xamarin.Android.RuntimeTests;
 

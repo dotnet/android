@@ -1,16 +1,5 @@
 #nullable enable
 
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Text;
-using System.Linq;
-using Microsoft.Build.Framework;
-using Microsoft.Build.Utilities;
-using Microsoft.Android.Build.Tasks;
-using Irony;
-using System.Text.RegularExpressions;
-
 namespace Xamarin.Android.Tasks;
 
 	// We have a list of files, we want to get the

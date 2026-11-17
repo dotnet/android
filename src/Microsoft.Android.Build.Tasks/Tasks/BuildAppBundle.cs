@@ -4,11 +4,7 @@ using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
 using System.Text.Json;
 using System.Text.Json.Nodes;
-using System;
-using System.Collections.Generic;
-using System.IO;
 using System.IO.Compression;
-using System.Linq;
 using Microsoft.Android.Build.Tasks;
 using Xamarin.Android.Tasks;
 

@@ -1,7 +1,3 @@
-
-using System;
-using System.Diagnostics.CodeAnalysis;
-
 namespace Java.Interop.Tools.Generator;
 
 public struct AndroidSdkVersion : IComparable, IComparable<AndroidSdkVersion>, IEquatable<AndroidSdkVersion>

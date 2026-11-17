@@ -1,8 +1,5 @@
-using System;
 using System.Buffers.Binary;
-using System.IO;
 using System.IO.Compression;
-using System.Linq;
 using System.Text;
 using ELFSharp.ELF;
 using ELFSharp.ELF.Sections;

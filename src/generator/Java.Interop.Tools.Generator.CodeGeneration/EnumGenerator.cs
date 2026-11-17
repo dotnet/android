@@ -1,7 +1,3 @@
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
 using generator.SourceWriters;
 using Java.Interop.Tools.Generator.Enumification;
 using Xamarin.SourceWriter;

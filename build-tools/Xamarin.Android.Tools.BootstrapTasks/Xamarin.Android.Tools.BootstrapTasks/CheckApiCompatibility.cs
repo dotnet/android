@@ -1,12 +1,8 @@
-using System;
-using System.Collections.Generic;
 using System.Diagnostics;
-using System.IO;
 using System.IO.Compression;
-using System.Linq;
 using Microsoft.Build.Framework;
-using Microsoft.Build.Utilities;
 using Files = Microsoft.Android.Build.Tasks.Files;
+using Task = Microsoft.Build.Utilities.Task;
 
 namespace Xamarin.Android.Tools.BootstrapTasks;
 

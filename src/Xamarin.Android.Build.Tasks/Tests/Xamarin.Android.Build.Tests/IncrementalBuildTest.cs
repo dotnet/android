@@ -1,12 +1,8 @@
 using Microsoft.Build.Framework;
 using Mono.Cecil;
 using NUnit.Framework;
-using System;
 using System.Buffers.Binary;
-using System.Collections.Generic;
-using System.IO;
 using System.IO.Compression;
-using System.Linq;
 using System.Text;
 using Xamarin.Android.Tasks;
 using Xamarin.ProjectTools;

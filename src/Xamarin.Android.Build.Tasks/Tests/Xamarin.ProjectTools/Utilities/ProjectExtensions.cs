@@ -1,7 +1,3 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-
 using Xamarin.Android.Tasks;
 using Xamarin.Android.Tools;
 

@@ -1,9 +1,3 @@
-using System;
-
-using Android.Content;
-
-using NUnit.Framework;
-
 namespace Android.ContentTests;
 
 [TestFixture]

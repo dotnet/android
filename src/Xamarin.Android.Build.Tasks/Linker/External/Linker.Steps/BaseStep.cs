@@ -28,8 +28,6 @@
 
 #nullable disable
 
-using Mono.Cecil;
-
 namespace Mono.Linker.Steps; 
 
 	public abstract class BaseStep : IStep {

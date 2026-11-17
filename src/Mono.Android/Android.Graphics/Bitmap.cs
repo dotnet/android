@@ -1,8 +1,3 @@
-using System;
-using System.Runtime.InteropServices;
-
-using Android.Runtime;
-
 namespace Android.Graphics; 
 
 	partial class Bitmap {

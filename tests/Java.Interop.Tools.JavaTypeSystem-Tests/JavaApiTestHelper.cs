@@ -1,5 +1,3 @@
-using System;
-using System.IO;
 using Java.Interop.Tools.JavaTypeSystem.Models;
 
 namespace Java.Interop.Tools.JavaTypeSystem.Tests;

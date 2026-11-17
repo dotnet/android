@@ -2,7 +2,6 @@
 // 1) linux-bionic BCL doesn't redirect stdout/stderr to logcat
 // 2) Android.Util.Log won't work until we initialize the Java.Interop.JreRuntime
 
-using System.IO;
 using System.Runtime.InteropServices;
 using System.Text;
 

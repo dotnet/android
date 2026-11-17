@@ -1,9 +1,4 @@
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Diagnostics;
 using System.Runtime.CompilerServices;
-using System.Linq;
 
 namespace Xamarin.ProjectTools;
 

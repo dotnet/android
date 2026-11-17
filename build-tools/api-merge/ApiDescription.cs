@@ -1,12 +1,5 @@
 #define KEEP_OLD_WRONG_COMPATIBILITY
-using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.IO;
-using System.Linq;
 using System.Xml.Linq;
-
-using Mono.Options;
 
 namespace Xamarin.Android.ApiMerge;
  

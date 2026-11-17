@@ -1,16 +1,4 @@
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Xml.Linq;
-using System.Text;
-
 using NUnit.Framework;
-
-using Java.Interop.Tools.JavaSource;
-
-using Irony;
-using Irony.Parsing;
 
 namespace Java.Interop.Tools.JavaSource.Tests;
 

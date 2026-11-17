@@ -1,7 +1,3 @@
-using System;
-using System.IO;
-using System.Linq;
-
 using Microsoft.Android.Sdk.TrimmableTypeMap;
 using Mono.Cecil;
 using Mono.Cecil.Cil;

@@ -1,6 +1,3 @@
-using Android.Runtime;
-using Java.Interop;
-
 #if ANDROID_29
 
 namespace Android.Telephony.Mbms

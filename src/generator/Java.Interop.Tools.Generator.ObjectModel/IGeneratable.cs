@@ -1,5 +1,3 @@
-using System;
-
 namespace MonoDroid.Generation; 
 
 public interface IGeneratable : ISymbol {

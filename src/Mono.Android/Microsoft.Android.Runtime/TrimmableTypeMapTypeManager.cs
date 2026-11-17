@@ -1,10 +1,5 @@
 #nullable enable
 
-using System;
-using System.Collections.Concurrent;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Diagnostics.CodeAnalysis;
 using Java.Interop;
 
 namespace Microsoft.Android.Runtime;

@@ -1,5 +1,4 @@
 using System.Collections.Immutable;
-using System.Linq;
 using Microsoft.Android.Sdk.Analysis.Properties;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;

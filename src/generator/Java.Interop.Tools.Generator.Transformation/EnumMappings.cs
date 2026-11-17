@@ -1,18 +1,8 @@
-using System;
 using System.Collections.Concurrent;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
-using System.Xml;
 using System.Xml.Linq;
 using System.Xml.XPath;
 using Java.Interop.Tools.Generator;
 using Java.Interop.Tools.Generator.Enumification;
-using Mono.Options;
 
 using Xamarin.Android.Tools;
 

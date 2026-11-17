@@ -1,5 +1,4 @@
 using System.Diagnostics.CodeAnalysis;
-using System.IO;
 using System.Xml;
 using System.Xml.Serialization;
 using Java.Interop.Tools.Maven.Extensions;

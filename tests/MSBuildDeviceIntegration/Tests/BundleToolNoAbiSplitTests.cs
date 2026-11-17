@@ -1,7 +1,4 @@
 using NUnit.Framework;
-using System;
-using System.IO;
-using System.Linq;
 using Xamarin.Android.Tasks;
 using Xamarin.ProjectTools;
 

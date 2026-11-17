@@ -1,7 +1,4 @@
-using System;
-using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.Text;
 using Java.Interop.Tools.JavaTypeSystem.Models;
 
 namespace Java.Interop.Tools.JavaTypeSystem;

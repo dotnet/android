@@ -1,10 +1,4 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using Java.Interop.Tools.JavaCallableWrappers;
-using Java.Interop.Tools.TypeNameMappings;
 using NUnit.Framework;
 
 namespace Java.Interop.Tools.JavaCallableWrappersTests;

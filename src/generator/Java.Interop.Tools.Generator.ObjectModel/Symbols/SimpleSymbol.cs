@@ -1,5 +1,3 @@
-using System;
-
 namespace MonoDroid.Generation; 
 
 public class SimpleSymbol : FormatSymbol {

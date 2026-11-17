@@ -1,8 +1,3 @@
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Text;
-
 namespace Xamarin.SourceWriter;
 
 public class CodeWriter : IDisposable

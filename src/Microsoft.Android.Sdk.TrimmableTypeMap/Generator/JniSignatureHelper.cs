@@ -1,7 +1,4 @@
-using System;
 using System.Buffers;
-using System.Collections.Generic;
-using System.Reflection.Metadata;
 using System.Reflection.Metadata.Ecma335;
 
 namespace Microsoft.Android.Sdk.TrimmableTypeMap;

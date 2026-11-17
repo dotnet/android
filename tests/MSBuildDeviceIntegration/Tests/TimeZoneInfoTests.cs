@@ -1,8 +1,3 @@
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Threading;
 using NUnit.Framework;
 using NUnit.Framework.Interfaces;
 using Xamarin.Android.Tasks;

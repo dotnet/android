@@ -1,5 +1,3 @@
-using System;
-
 using Android.Runtime;
 
 namespace Java.Lang; 

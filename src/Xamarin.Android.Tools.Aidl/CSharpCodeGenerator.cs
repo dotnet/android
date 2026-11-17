@@ -1,8 +1,4 @@
-using System;
-using System.Collections.Generic;
 using Microsoft.CSharp;
-using System.IO;
-using System.Linq;
 
 namespace Xamarin.Android.Tools.Aidl;
 

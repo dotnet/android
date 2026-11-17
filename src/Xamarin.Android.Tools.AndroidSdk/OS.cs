@@ -1,8 +1,4 @@
-using System;
-using System.Collections.Generic;
 using System.Runtime.InteropServices;
-using System.IO;
-using System.Linq;
 using System.Text;
 
 namespace Xamarin.Android.Tools;

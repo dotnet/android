@@ -1,5 +1,4 @@
 #nullable disable
-using System.Collections.Generic;
 using System.Text.Json.Serialization;
 
 namespace Microsoft.Android.Tasks;

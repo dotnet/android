@@ -1,14 +1,9 @@
 #nullable enable
 
-using System;
-using System.Collections.Generic;
 using System.Globalization;
-using System.Linq;
-using System.IO;
 using System.Text;
 using System.Text.RegularExpressions;
 using Microsoft.Build.Framework;
-using Microsoft.Build.Utilities;
 using Xamarin.Android.Tools;
 using Microsoft.Android.Build.Tasks;
 

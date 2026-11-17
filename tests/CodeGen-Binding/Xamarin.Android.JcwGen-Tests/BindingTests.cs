@@ -1,16 +1,7 @@
-using System;
 using System.Reflection;
-using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Reflection.Metadata;
 using System.Reflection.PortableExecutable;
-
-using NUnit.Framework;
-
-using Android.Graphics;
-using Android.Runtime;
-
-using Com.Xamarin.Android;
 
 namespace Xamarin.Android.JcwGenTests; 
 

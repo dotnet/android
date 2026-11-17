@@ -1,5 +1,3 @@
-using BenchmarkDotNet.Attributes;
-
 namespace Xamarin.Android.Benchmarks;
 
 public class JniMethodInfoBenchmarks

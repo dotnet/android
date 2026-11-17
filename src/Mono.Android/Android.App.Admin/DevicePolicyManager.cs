@@ -1,7 +1,3 @@
-using System;
-
-using Android.Content;
-
 namespace Android.App.Admin; 
 
 #if ANDROID_8

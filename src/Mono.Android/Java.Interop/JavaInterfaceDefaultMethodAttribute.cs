@@ -1,5 +1,3 @@
-using System;
-
 namespace Java.Interop; 
 
 	[AttributeUsage (AttributeTargets.Method)]

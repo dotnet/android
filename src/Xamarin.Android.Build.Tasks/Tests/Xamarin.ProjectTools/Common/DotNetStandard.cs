@@ -1,8 +1,3 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-
 namespace Xamarin.ProjectTools;
 
 public class DotNetStandard : XamarinProject, IShortFormProject

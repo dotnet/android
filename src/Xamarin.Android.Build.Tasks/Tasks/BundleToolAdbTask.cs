@@ -1,10 +1,5 @@
 #nullable enable
 
-using System.IO;
-using Microsoft.Build.Framework;
-using Microsoft.Build.Utilities;
-using Xamarin.Android.Tools;
-
 namespace Xamarin.Android.Tasks;
 
 	public abstract class BundleToolAdbTask : BundleTool

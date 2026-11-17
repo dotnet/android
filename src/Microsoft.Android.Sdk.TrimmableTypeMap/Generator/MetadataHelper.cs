@@ -1,6 +1,4 @@
-using System;
 using System.Buffers;
-using System.Collections.Generic;
 using System.Security.Cryptography;
 using System.Text;
 using Sink = Microsoft.Android.Sdk.TrimmableTypeMap.FingerprintWriter.Sink;

@@ -1,8 +1,5 @@
 #nullable enable
-using System;
-using System.IO;
 using System.IO.Compression;
-using System.Linq;
 
 using Microsoft.Android.Build.Tasks;
 using Microsoft.Android.Tasks;

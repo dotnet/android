@@ -1,17 +1,5 @@
 #nullable enable
 
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Xml;
-using System.Text;
-
-using Microsoft.Build.Framework;
-using Microsoft.Build.Utilities;
-
-using Microsoft.Android.Build.Tasks;
-
 namespace Xamarin.Android.Tasks;
 
 	public class MergeRemapXml : AndroidTask

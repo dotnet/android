@@ -1,6 +1,5 @@
 #nullable enable
 
-using System;
 using System.Collections.Concurrent;
 
 namespace Java.Interop;

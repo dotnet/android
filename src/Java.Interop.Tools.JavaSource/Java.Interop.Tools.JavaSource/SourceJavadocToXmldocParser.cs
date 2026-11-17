@@ -1,12 +1,4 @@
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
 using System.Xml.Linq;
-using System.Text;
-
-using Irony;
-using Irony.Ast;
 using Irony.Parsing;
 
 namespace Java.Interop.Tools.JavaSource; 

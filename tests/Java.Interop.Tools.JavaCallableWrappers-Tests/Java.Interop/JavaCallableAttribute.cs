@@ -1,6 +1,4 @@
 #nullable enable
-using System;
-
 namespace Java.Interop; 
 
 [AttributeUsage (AttributeTargets.Method, AllowMultiple=false)]

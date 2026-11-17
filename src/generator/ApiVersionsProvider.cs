@@ -1,7 +1,4 @@
-using System;
-using System.Collections.Generic;
 using System.Xml;
-using System.Linq;
 using Java.Interop.Tools.Generator;
 
 namespace Xamarin.AndroidTools.AnnotationSupport;

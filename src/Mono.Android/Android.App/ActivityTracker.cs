@@ -6,11 +6,6 @@
 //
 // Copyright 2015 Xamarin Inc. All rights reserved.
 
-using System;
-using System.Collections.Generic;
-
-using Android.OS;
-
 namespace Android.App;
 
 	#if ANDROID_14 // For IActivityLifecycleCallbacks

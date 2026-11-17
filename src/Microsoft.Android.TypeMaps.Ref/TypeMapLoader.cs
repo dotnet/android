@@ -1,5 +1,3 @@
-using System;
-
 namespace Microsoft.Android.Runtime;
 
 /// <summary>

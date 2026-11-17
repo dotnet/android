@@ -1,7 +1,4 @@
-using System;
 using System.Text;
-
-using NUnit.Framework;
 
 namespace Xamarin.Android.RuntimeTests;
 

@@ -1,5 +1,3 @@
-using System;
-
 namespace Java.Interop.Tools.Generator;
 
 public class CsvParser

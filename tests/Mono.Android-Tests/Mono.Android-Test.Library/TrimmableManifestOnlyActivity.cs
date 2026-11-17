@@ -1,10 +1,3 @@
-using System;
-using System.Threading;
-
-using Android.App;
-using Android.OS;
-using Android.Runtime;
-
 namespace Mono.Android_Test.Library;
 
 // Only the app manifest entry should root this type; a component attribute would mask a rooting failure.

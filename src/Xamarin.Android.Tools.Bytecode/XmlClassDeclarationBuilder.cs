@@ -1,11 +1,3 @@
-using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Globalization;
-using System.Linq;
-using System.Xml.Linq;
-using System.Text;
-
 namespace Xamarin.Android.Tools.Bytecode; 
 
 public class XmlClassDeclarationBuilder {

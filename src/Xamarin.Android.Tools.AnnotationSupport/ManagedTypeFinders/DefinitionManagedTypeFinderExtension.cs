@@ -1,7 +1,3 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-
 namespace Xamarin.AndroidTools.AnnotationSupport;
 
 // Processes *Def (IntDef,StringDef, etc.) and sets ManagedInfo on each AnnotationValue constant values.
