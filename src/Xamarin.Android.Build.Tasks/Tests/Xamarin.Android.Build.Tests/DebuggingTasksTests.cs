@@ -38,7 +38,7 @@ namespace Xamarin.Android.Build.Tests
 			});
 			using var builder = CreateApkBuilder ();
 			Assert.IsTrue (builder.RunTarget (proj, "WriteUploadInputs"), "Collecting upload inputs should succeed without a device.");
-			var inputs = File.ReadAllLines (Path.Combine (Root, builder.ProjectDirectory, "upload-inputs.txt")).Select (i => i.Replace ('\\', '/'));
+			var inputs = File.ReadAllLines (Path.Combine (Root, builder.ProjectDirectory, "upload-inputs.txt")).Select (i => i.Replace ('\\', '/')).ToArray ();
 			CollectionAssert.AreEqual (
 				packageFormat == "aab" ? new [] { "application.apks", "obj/Debug/appbundle-install.flag" } : new [] { "application-Signed.apk" },
 				inputs, "Upload inputs should only name files produced for the selected package format.");
