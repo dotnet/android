@@ -290,6 +290,14 @@ namespace Xamarin.Android.Tools.Bytecode
 				Log.Debug ($"Kotlin: Hiding internal constructor {method.DeclaringType?.ThisClass.Name.Value} - {metadata.GetSignature ()}");
 				method.AccessFlags = SetVisibility (method.AccessFlags, MethodAccessFlags.Internal);
 			}
+
+			var java_parameters = method.GetFilteredParameters ();
+			var kotlin_parameters = metadata.ValueParameters;
+			if (kotlin_parameters is null || kotlin_parameters.Count != java_parameters.Length)
+				return;
+
+			for (var i = 0; i < java_parameters.Length; i++)
+				java_parameters [i].KotlinNotNull = IsNotNullReference (kotlin_parameters [i].Type, java_parameters [i].Type.BinaryName);
 		}
 
 		static void FixupFunction (MethodInfo? method, KotlinFunction metadata, KotlinClass? kotlinClass, IDictionary<string, string> inlineClasses)
@@ -332,7 +340,15 @@ namespace Xamarin.Android.Tools.Bytecode
 				// underlying primitive. Boxed positions are skipped.
 				// See dotnet/java-interop#1431 (Phase 2).
 				java_p.KotlinInlineClassJniType = GetInlineClassJniType (kotlin_p.Type.ClassName, java_p.Type.TypeSignature, inlineClasses);
+
+				java_p.KotlinNotNull = IsNotNullReference (kotlin_p.Type, java_p.Type.BinaryName);
 			}
+
+			// The extension receiver is the first Java parameter
+			if (metadata.ReceiverType != null && start > 0)
+				java_parameters [0].KotlinNotNull = IsNotNullReference (metadata.ReceiverType, java_parameters [0].Type.BinaryName);
+
+			method.KotlinReturnNotNull = IsNotNullReference (metadata.ReturnType, method.ReturnType.BinaryName);
 
 			// Handle erasure of Kotlin unsigned types
 			method.KotlinReturnType = GetKotlinType (method.ReturnType.TypeSignature, metadata.ReturnType?.ClassName);
@@ -434,6 +450,7 @@ namespace Xamarin.Android.Tools.Bytecode
 			if (getter != null) {
 				getter.KotlinReturnType = GetKotlinType (getter.ReturnType.TypeSignature, metadata.ReturnType?.ClassName);
 				getter.KotlinInlineClassReturnJniType = GetInlineClassJniType (metadata.ReturnType?.ClassName, getter.ReturnType.TypeSignature, inlineClasses);
+				getter.KotlinReturnNotNull = IsNotNullReference (metadata.ReturnType, getter.ReturnType.BinaryName);
 			}
 
 			if (setter != null) {
@@ -447,6 +464,7 @@ namespace Xamarin.Android.Tools.Bytecode
 				// Handle erasure of Kotlin unsigned types
 				setter_parameter.KotlinType = GetKotlinType (setter_parameter.Type.TypeSignature, metadata.ReturnType?.ClassName);
 				setter_parameter.KotlinInlineClassJniType = GetInlineClassJniType (metadata.ReturnType?.ClassName, setter_parameter.Type.TypeSignature, inlineClasses);
+				setter_parameter.KotlinNotNull = IsNotNullReference (metadata.ReturnType, setter_parameter.Type.BinaryName);
 			}
 		}
 
@@ -466,6 +484,27 @@ namespace Xamarin.Android.Tools.Bytecode
 
 			// Handle erasure of Kotlin unsigned types
 			field.KotlinType = GetKotlinType (field.Descriptor, metadata.ReturnType?.ClassName);
+
+			// A `lateinit` field is null until it is set
+			if (!metadata.Flags.HasFlag (KotlinPropertyFlags.IsLateInit))
+				field.KotlinNotNull = IsNotNullReference (metadata.ReturnType, field.Descriptor);
+		}
+
+		// Kotlin metadata tells which types can be null. kotlinc also writes
+		// @NotNull annotations, but tools such as R8 can remove them.
+		// Type parameters (e.g. `T`) and platform types can be null, so
+		// only a non-null class type gives true. The Kotlin type must also
+		// be the JVM type: an unboxed value class such as
+		// `value class Maybe(val value: String?)` can be null in Java.
+		static bool IsNotNullReference (KotlinType? type, string? jvmDescriptor)
+		{
+			if (type is null || type.Nullable || type.ClassName is null)
+				return false;
+			if (type.FlexibleUpperBound != null || type.FlexibleTypeCapabilitiesId != null)
+				return false;
+			if (jvmDescriptor is null || !(jvmDescriptor.StartsWith ("L", StringComparison.Ordinal) || jvmDescriptor.StartsWith ("[", StringComparison.Ordinal)))
+				return false;
+			return KotlinUtilities.ConvertKotlinTypeSignature (type) == jvmDescriptor;
 		}
 
 		static MethodInfo? FindJavaConstructor (KotlinClass kotlinClass, KotlinConstructor constructor, ClassFile klass)

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Xml.Linq;
 using NUnit.Framework;
 using Xamarin.Android.Tools.Bytecode;
 
@@ -460,6 +461,80 @@ namespace Xamarin.Android.Tools.BytecodeTests
 			Assert.AreEqual ("setFoo", KotlinUtilities.GetMethodNameWithoutUnsignedSuffix ("setFoo-7apg3OU"));
 			Assert.AreEqual ("setFoo$main", KotlinUtilities.GetMethodNameWithoutUnsignedSuffix ("setFoo-7apg3OU$main"));
 			Assert.AreEqual ("setFoo$main", KotlinUtilities.GetMethodNameWithoutUnsignedSuffix ("setFoo$main"));
+		}
+
+		[Test]
+		public void NullabilityFromKotlinMetadata ()
+		{
+			var klass = LoadClassFile ("Nullability.class");
+
+			// Remove the @NotNull/@Nullable annotations (as R8 can do), so only Kotlin metadata is left
+			foreach (var m in klass.Methods)
+				RemoveInvisibleAnnotations (m.Attributes);
+			foreach (var f in klass.Fields)
+				RemoveInvisibleAnnotations (f.Attributes);
+
+			KotlinFixups.Fixup (new [] { klass });
+
+			var xml = new XmlClassDeclarationBuilder (klass).ToXElement ();
+
+			XElement Method (string name) => xml.Elements ("method").Single (e => e.Attribute ("name").Value == name);
+			XElement Field (string name) => xml.Elements ("field").Single (e => e.Attribute ("name").Value == name);
+			string ReturnNotNull (XElement e) => e.Attribute ("return-not-null")?.Value;
+			string NotNull (XElement e) => e.Attribute ("not-null")?.Value;
+
+			// Constructor
+			var ctor = xml.Elements ("constructor").Single ().Elements ("parameter").ToList ();
+			Assert.AreEqual ("true", NotNull (ctor [0]));
+			Assert.IsNull (NotNull (ctor [1]));
+
+			// Properties
+			Assert.AreEqual ("true", ReturnNotNull (Method ("getName")));
+			Assert.IsNull (ReturnNotNull (Method ("getNickname")));
+			Assert.AreEqual ("true", ReturnNotNull (Method ("getTitle")));
+			Assert.AreEqual ("true", NotNull (Method ("setTitle").Element ("parameter")));
+			Assert.IsNull (ReturnNotNull (Method ("getSubtitle")));
+			Assert.IsNull (NotNull (Method ("setSubtitle").Element ("parameter")));
+
+			// Fields
+			Assert.AreEqual ("true", NotNull (Field ("field")));
+			Assert.IsNull (NotNull (Field ("nullableField")));
+			Assert.IsNull (NotNull (Field ("late")), "A lateinit field is null until it is set.");
+
+			// Functions
+			var join = Method ("join");
+			var join_parameters = join.Elements ("parameter").ToList ();
+			Assert.AreEqual ("true", ReturnNotNull (join));
+			Assert.AreEqual ("true", NotNull (join_parameters [0]));
+			Assert.IsNull (NotNull (join_parameters [1]));
+			Assert.IsNull (NotNull (join_parameters [2]), "A primitive type is not a reference.");
+
+			var find = Method ("find");
+			Assert.IsNull (ReturnNotNull (find));
+			Assert.AreEqual ("true", NotNull (find.Element ("parameter")));
+
+			var generic = Method ("generic");
+			Assert.IsNull (ReturnNotNull (generic), "A type parameter can be null.");
+			Assert.IsNull (NotNull (generic.Element ("parameter")));
+
+			var extension = Method ("extension");
+			Assert.AreEqual ("true", ReturnNotNull (extension));
+			Assert.AreEqual ("true", NotNull (extension.Element ("parameter")), "The extension receiver is not null.");
+
+			Assert.IsNull (ReturnNotNull (xml.Elements ("method").Single (e => e.Attribute ("name").Value.StartsWith ("produce", StringComparison.Ordinal))),
+				"An unboxed value class can be null in Java.");
+			Assert.IsNull (ReturnNotNull (Method ("getPlatform")), "A platform type can be null.");
+
+			// The JVM return type is Object, not String
+			var fetch = Method ("fetch");
+			Assert.IsNull (ReturnNotNull (fetch));
+			Assert.AreEqual ("true", NotNull (fetch.Elements ("parameter").First ()));
+		}
+
+		static void RemoveInvisibleAnnotations (AttributeCollection attributes)
+		{
+			foreach (var a in attributes.Where (a => a.GetType ().Name.StartsWith ("RuntimeInvisible", StringComparison.Ordinal)).ToList ())
+				attributes.Remove (a);
 		}
 	}
 }
