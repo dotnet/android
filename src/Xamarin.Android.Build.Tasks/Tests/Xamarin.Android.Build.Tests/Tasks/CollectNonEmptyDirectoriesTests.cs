@@ -66,7 +66,9 @@ namespace Xamarin.Android.Build.Tests
 			dotnet.EnvironmentVariables ["DOTNET_CLI_USE_MSBUILD_SERVER"] = "0";
 			Assert.IsTrue (dotnet.Build (msbuildArguments:
 				["--no-restore", "-m:2", "-mt", "-nr:false", "-warnaserror:MSB4286,MSB4287,MSB4288"]), File.ReadAllText (dotnet.ProcessLogFile));
-			StringAssert.DoesNotContain ("Task \"CollectNonEmptyDirectories\" ran in TaskHost", File.ReadAllText (dotnet.ProcessLogFile));
+			var buildLog = File.ReadAllText (dotnet.BuildLogFile);
+			StringAssert.Contains ("Task \"CollectNonEmptyDirectories\"", buildLog);
+			StringAssert.DoesNotContain ("Task \"CollectNonEmptyDirectories\" ran in TaskHost", buildLog);
 			foreach (var name in new [] { "first", "second" }) {
 				var projectDirectory = Path.Combine (path, name);
 				string cache = Path.Combine ("res", "..", $"{Files.HashString ("res")}-files.cache");
