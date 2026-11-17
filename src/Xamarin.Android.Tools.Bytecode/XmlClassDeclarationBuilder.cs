@@ -605,6 +605,8 @@ namespace Xamarin.Android.Tools.Bytecode {
 				ta => ta.TargetType == TypeAnnotationTargetType.MethodReturn);
 			if (typeNullness.HasValue)
 				return typeNullness;
+			if (method.KotlinReturnNotNull)
+				return true;
 			if (isNullMarked && IsReferenceTypeDescriptor (GetReturnDescriptor (method.Descriptor))
 					&& !IsTopLevelTypeVariableSignature (method.ReturnType.TypeSignature))
 				return true;
@@ -635,8 +637,11 @@ namespace Xamarin.Android.Tools.Bytecode {
 			if (typeNullness.HasValue)
 				return typeNullness;
 
+			var parameters = method.GetParameters ();
+			if (parameterIndex >= 0 && parameterIndex < parameters.Length && parameters [parameterIndex].KotlinNotNull)
+				return true;
+
 			if (isNullMarked) {
-				var parameters = method.GetParameters ();
 				if (parameterIndex >= 0 && parameterIndex < parameters.Length
 						&& IsReferenceTypeDescriptor (parameters [parameterIndex].Type.BinaryName)
 						&& !IsTopLevelTypeVariableSignature (parameters [parameterIndex].Type.TypeSignature))
@@ -655,6 +660,8 @@ namespace Xamarin.Android.Tools.Bytecode {
 				ta => ta.TargetType == TypeAnnotationTargetType.Field);
 			if (typeNullness.HasValue)
 				return typeNullness;
+			if (field.KotlinNotNull)
+				return true;
 			if (isNullMarked && IsReferenceTypeDescriptor (field.Descriptor)
 					&& !IsTopLevelTypeVariableSignature (field.GetSignature ()))
 				return true;
