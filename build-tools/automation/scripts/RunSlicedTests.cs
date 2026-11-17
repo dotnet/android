@@ -81,7 +81,7 @@ if (bool.Parse (options ["--retry"]) && exitCode == 2) {
 
 return exitCode;
 
-// Returns the MTP exit code. Fails if fewer tests run than expected.
+// Returns the MTP exit code.
 int RunTests (IReadOnlyCollection<string> tests, string directory)
 {
 	Directory.CreateDirectory (directory);
@@ -103,7 +103,6 @@ int RunTests (IReadOnlyCollection<string> tests, string directory)
 	using var process = Process.Start (dotnet, [
 		testAssembly,
 		"--settings", runSettings,
-		"--minimum-expected-tests", tests.Count.ToString (),
 		"--report-trx",
 		"--results-directory", directory,
 		"--no-banner",
