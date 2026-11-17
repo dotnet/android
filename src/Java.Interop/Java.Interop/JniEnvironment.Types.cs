@@ -8,8 +8,8 @@ using System.Runtime.ExceptionServices;
 using System.Runtime.InteropServices;
 using System.Text;
 
-namespace Java.Interop
-{
+namespace Java.Interop;
+
 	partial class JniEnvironment {
 		static partial class Types {
 
@@ -531,4 +531,3 @@ namespace Java.Interop
 			}
 		}
 	}
-}

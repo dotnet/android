@@ -6,7 +6,7 @@ using Java.Interop;
 using Microsoft.Android.Runtime;
 using RuntimeFeature = Microsoft.Android.Runtime.RuntimeFeature;
 
-namespace Android.Runtime {
+namespace Android.Runtime; 
 
 	enum ReferenceLogEvent {
 		GlobalCreated,
@@ -202,4 +202,3 @@ namespace Android.Runtime {
 			return globalCount;
 		}
 	}
-}

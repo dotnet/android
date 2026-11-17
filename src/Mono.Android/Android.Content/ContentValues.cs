@@ -1,7 +1,7 @@
 using System;
 using Android.Runtime;
 
-namespace Android.Content {
+namespace Android.Content; 
 
 	public sealed partial class ContentValues {
 
@@ -271,4 +271,3 @@ namespace Android.Content {
 			}
 		}
 	}
-}

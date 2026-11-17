@@ -5,7 +5,7 @@ using Android.Runtime;
 
 using Java.Interop;
 
-namespace System.Linq {
+namespace System.Linq; 
 
 	/// <summary>
 	/// Provides LINQ-friendly extension methods for converting Java collection types
@@ -103,4 +103,3 @@ namespace System.Linq {
 				}
 		}
 	}
-}

@@ -17,8 +17,8 @@ using ReplacementMethodsDict    = System.Collections.Generic.Dictionary<
 	(string? TargetType, string? TargetName, string? TargetSignature, int? ParamCount, bool IsStatic)
 >;
 
-namespace Xamarin.Android.Tasks
-{
+namespace Xamarin.Android.Tasks;
+
 	class MamJsonParser
 	{
 		Action<TraceLevel, string>  Logger;
@@ -244,4 +244,3 @@ namespace Xamarin.Android.Tasks
 			return new XAttribute (name, value);
 		}
 	}
-}

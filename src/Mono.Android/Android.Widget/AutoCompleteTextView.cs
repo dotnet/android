@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using Android.Runtime;
 
-namespace Android.Widget {
+namespace Android.Widget; 
 	public partial class AutoCompleteTextView
 	{
 		List<EventHandler>? selection_cleared;
@@ -28,4 +28,3 @@ namespace Android.Widget {
 			}
 		}
 	}
-}

@@ -6,8 +6,8 @@ using Microsoft.Build.Framework;
 using Microsoft.Build.Tasks;
 using Microsoft.Build.Utilities;
 
-namespace Xamarin.Android.Tasks
-{
+namespace Xamarin.Android.Tasks;
+
 	/// <summary>
 	/// Extends the <Move/> task, so we can preserve directory structure of an unknown subfolder.
 	/// It fills out the SourceFiles & DestinationFiles properties, clears DestinationFolder, and calls the base <Move/> task.
@@ -65,4 +65,3 @@ namespace Xamarin.Android.Tasks
 			return base.Execute ();
 		}
 	}
-}

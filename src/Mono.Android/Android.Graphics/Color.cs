@@ -5,8 +5,8 @@ using System.Text;
 
 using Android.Runtime;
 
-namespace Android.Graphics
-{
+namespace Android.Graphics;
+
 	public struct Color
 	{
 		private int color;
@@ -551,4 +551,3 @@ namespace Android.Graphics
 		/// <summary>Gets a <see cref="Color" /> with the ARGB value #FF9ACD32 (yellow-green).</summary>
 		public static Color YellowGreen { get { return new Color (0xFF9ACD32); } }
 	}
-}

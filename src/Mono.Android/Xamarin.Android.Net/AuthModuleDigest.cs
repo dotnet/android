@@ -8,8 +8,8 @@ using Android.Runtime;
 
 using Java.Net;
 
-namespace Xamarin.Android.Net
-{
+namespace Xamarin.Android.Net;
+
 	sealed class AuthModuleDigest : IAndroidAuthenticationModule
 	{
 		const string LOG_APP = AndroidMessageHandler.LOG_APP + "-digest-auth";
@@ -111,4 +111,3 @@ namespace Xamarin.Android.Net
 			return ds.Authenticate (request, credentials);
 		}
 	}
-}

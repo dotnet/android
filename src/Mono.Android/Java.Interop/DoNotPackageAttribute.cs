@@ -1,7 +1,7 @@
 using System;
 
-namespace Java.Interop
-{
+namespace Java.Interop;
+
 	[Serializable]
 	[AttributeUsage (AttributeTargets.Assembly,
 			AllowMultiple=true,
@@ -16,4 +16,3 @@ namespace Java.Interop
 
 		public string JarFile { get; set; }
 	}
-}

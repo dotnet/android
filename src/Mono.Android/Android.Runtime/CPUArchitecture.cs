@@ -1,5 +1,5 @@
-namespace Android.Runtime
-{
+namespace Android.Runtime;
+
 	enum CPUArchitecture : ushort
 	{
 		Unknown  = 0,
@@ -9,4 +9,3 @@ namespace Android.Runtime
 		X86      = 4,
 		X86_64   = 5
 	}
-}

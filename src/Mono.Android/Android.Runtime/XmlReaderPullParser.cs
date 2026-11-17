@@ -5,8 +5,8 @@ using Android.Content.Res;
 using System.Xml;
 using Org.XmlPull.V1;
 
-namespace Android.Runtime
-{
+namespace Android.Runtime;
+
 	public class XmlReaderResourceParser : XmlReaderPullParser, IXmlResourceParser
 	{
 		public new static IntPtr ToLocalJniHandle (XmlReader? value)
@@ -494,4 +494,3 @@ namespace Android.Runtime
 			}
 		}
 	}
-}

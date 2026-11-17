@@ -15,8 +15,8 @@ using Microsoft.Android.Build.Tasks;
 using Microsoft.Build.Utilities;
 
 
-namespace Xamarin.Android.Tasks
-{
+namespace Xamarin.Android.Tasks;
+
 	class ManagedResourceParser : FileResourceParser
 	{
 		public ManagedResourceParser (TaskLoggingHelper log) : base (log) { }
@@ -641,4 +641,3 @@ namespace Xamarin.Android.Tasks
 			}
 		}
 	}
-}

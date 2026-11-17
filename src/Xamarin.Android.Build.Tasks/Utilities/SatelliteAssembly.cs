@@ -3,8 +3,8 @@ using System.Text.RegularExpressions;
 using System.IO;
 using System.Diagnostics.CodeAnalysis;
 
-namespace Xamarin.Android.Tools
-{
+namespace Xamarin.Android.Tools;
+
 	class SatelliteAssembly {
 		// culture match courtesy: http://stackoverflow.com/a/3962783/83444
 		static readonly Regex SatelliteChecker = new Regex (
@@ -26,5 +26,4 @@ namespace Xamarin.Android.Tools
 			return true;
 		}
 	}
-}
 

@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Reflection;
 using System.Linq;
 
-namespace Android.Runtime {
+namespace Android.Runtime; 
 	[Obsolete ("This class is obsolete and will be removed in the next release. Use [Register] on Java peer types instead of explicit type registration.", error: true)]
 	public static partial class TypeManager {
 
@@ -27,4 +27,3 @@ namespace Android.Runtime {
 			Java.Interop.TypeManager.RegisterPackages (packages, lookups);
 		}
 	}
-}

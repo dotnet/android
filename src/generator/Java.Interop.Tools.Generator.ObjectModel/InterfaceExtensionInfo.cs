@@ -1,9 +1,8 @@
-namespace MonoDroid.Generation
+namespace MonoDroid.Generation;
+
+class InterfaceExtensionInfo
 {
-	class InterfaceExtensionInfo
-	{
-		public string DeclaringType;
-		public InterfaceGen Type;
-	}
+	public string DeclaringType;
+	public InterfaceGen Type;
 }
 

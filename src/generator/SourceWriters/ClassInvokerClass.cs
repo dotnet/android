@@ -8,117 +8,116 @@ using System.Xml.Schema;
 using MonoDroid.Generation;
 using Xamarin.SourceWriter;
 
-namespace generator.SourceWriters
+namespace generator.SourceWriters;
+
+public class ClassInvokerClass : ClassWriter
 {
-	public class ClassInvokerClass : ClassWriter
+	public ClassInvokerClass (ClassGen klass, CodeGenerationOptions opt)
 	{
-		public ClassInvokerClass (ClassGen klass, CodeGenerationOptions opt)
-		{
-			Name = $"{klass.Name}Invoker";
+		Name = $"{klass.Name}Invoker";
 
-			IsInternal = true;
-			IsPartial = true;
-			UsePriorityOrder = true;
+		IsInternal = true;
+		IsPartial = true;
+		UsePriorityOrder = true;
 
-			Inherits = klass.Name;
+		Inherits = klass.Name;
 
-			foreach (var igen in klass.GetAllDerivedInterfaces ().Where (i => i.IsGeneric))
-				Implements.Add (opt.GetOutputName (igen.FullName));
+		foreach (var igen in klass.GetAllDerivedInterfaces ().Where (i => i.IsGeneric))
+			Implements.Add (opt.GetOutputName (igen.FullName));
 
-			Attributes.Add (new RegisterAttr (klass.RawJniName, noAcw: true, additionalProperties: klass.AdditionalAttributeString ()) {
-				UseGlobal       = true,
-			});
+		Attributes.Add (new RegisterAttr (klass.RawJniName, noAcw: true, additionalProperties: klass.AdditionalAttributeString ()) {
+			UseGlobal       = true,
+		});
 
-			SourceWriterExtensions.AddSupportedOSPlatform (Attributes, klass, opt);
+		SourceWriterExtensions.AddSupportedOSPlatform (Attributes, klass, opt);
 
-			ConstructorWriter ctor = new ConstructorWriter {
-				Name        = Name,
-				IsPublic    = true,
-				IsUnsafe    = SourceWriterExtensions.IsThrowable (klass),
-				BaseCall    = "base (handle, transfer)",
-				Parameters  = {
-					new MethodParameterWriter ("handle", TypeReferenceWriter.IntPtr),
-					new MethodParameterWriter ("transfer", new TypeReferenceWriter ("JniHandleOwnership")),
-				},
-			};
-			if (ctor.IsUnsafe) {
-				ctor.Comments.Add ("/// <safety>");
-				ctor.Comments.Add ("/// handle must be zero or a live compatible JNI object. Use an attached thread");
-				ctor.Comments.Add ("/// (locals: creating thread), with no concurrent deletion through aliases during construction.");
-				ctor.Comments.Add ("/// transfer must match ownership; transferred references cannot be used again,");
-				ctor.Comments.Add ("/// even if construction throws.");
-				ctor.Comments.Add ("/// </safety>");
-			}
-
-			Constructors.Add (ctor);
-
-			// ClassInvokerHandle
-			Fields.Add (new PeerMembersField (opt, klass.RawJniName, $"{klass.Name}Invoker", false));
-			Properties.Add (new JniPeerMembersGetter ());
-
-			AddMemberInvokers (klass, opt, new HashSet<string> (), klass.SkippedInvokerMethods);
+		ConstructorWriter ctor = new ConstructorWriter {
+			Name        = Name,
+			IsPublic    = true,
+			IsUnsafe    = SourceWriterExtensions.IsThrowable (klass),
+			BaseCall    = "base (handle, transfer)",
+			Parameters  = {
+				new MethodParameterWriter ("handle", TypeReferenceWriter.IntPtr),
+				new MethodParameterWriter ("transfer", new TypeReferenceWriter ("JniHandleOwnership")),
+			},
+		};
+		if (ctor.IsUnsafe) {
+			ctor.Comments.Add ("/// <safety>");
+			ctor.Comments.Add ("/// handle must be zero or a live compatible JNI object. Use an attached thread");
+			ctor.Comments.Add ("/// (locals: creating thread), with no concurrent deletion through aliases during construction.");
+			ctor.Comments.Add ("/// transfer must match ownership; transferred references cannot be used again,");
+			ctor.Comments.Add ("/// even if construction throws.");
+			ctor.Comments.Add ("/// </safety>");
 		}
 
-		void AddMemberInvokers (ClassGen klass, CodeGenerationOptions opt, HashSet<string> members, HashSet<string> skipInvokers)
-		{
-			AddPropertyInvokers (klass, klass.Properties, members, opt);
-			AddMethodInvokers (klass, klass.Methods, members, skipInvokers, null, opt);
+		Constructors.Add (ctor);
 
-			foreach (var iface in klass.GetAllDerivedInterfaces ()) {
-				AddPropertyInvokers (klass, iface.Properties.Where (p => !klass.ContainsProperty (p.Name, false, false)), members, opt);
-				AddMethodInvokers (klass, iface.Methods.Where (m => (opt.SupportDefaultInterfaceMethods || !m.IsInterfaceDefaultMethod) && !klass.ContainsMethod (m, false, false) && !klass.IsCovariantMethod (m) && !klass.ExplicitlyImplementedInterfaceMethods.Contains (m.GetSignature ())), members, skipInvokers, iface, opt);
-			}
+		// ClassInvokerHandle
+		Fields.Add (new PeerMembersField (opt, klass.RawJniName, $"{klass.Name}Invoker", false));
+		Properties.Add (new JniPeerMembersGetter ());
 
-			if (klass.BaseGen != null && klass.BaseGen.FullName != "Java.Lang.Object")
-				AddMemberInvokers (klass.BaseGen, opt, members, skipInvokers);
+		AddMemberInvokers (klass, opt, new HashSet<string> (), klass.SkippedInvokerMethods);
+	}
+
+	void AddMemberInvokers (ClassGen klass, CodeGenerationOptions opt, HashSet<string> members, HashSet<string> skipInvokers)
+	{
+		AddPropertyInvokers (klass, klass.Properties, members, opt);
+		AddMethodInvokers (klass, klass.Methods, members, skipInvokers, null, opt);
+
+		foreach (var iface in klass.GetAllDerivedInterfaces ()) {
+			AddPropertyInvokers (klass, iface.Properties.Where (p => !klass.ContainsProperty (p.Name, false, false)), members, opt);
+			AddMethodInvokers (klass, iface.Methods.Where (m => (opt.SupportDefaultInterfaceMethods || !m.IsInterfaceDefaultMethod) && !klass.ContainsMethod (m, false, false) && !klass.IsCovariantMethod (m) && !klass.ExplicitlyImplementedInterfaceMethods.Contains (m.GetSignature ())), members, skipInvokers, iface, opt);
 		}
 
-		void AddPropertyInvokers (ClassGen klass, IEnumerable<Property> properties, HashSet<string> members, CodeGenerationOptions opt)
-		{
-			foreach (var prop in properties) {
-				if (members.Contains (prop.Name))
-					continue;
+		if (klass.BaseGen != null && klass.BaseGen.FullName != "Java.Lang.Object")
+			AddMemberInvokers (klass.BaseGen, opt, members, skipInvokers);
+	}
 
-				members.Add (prop.Name);
+	void AddPropertyInvokers (ClassGen klass, IEnumerable<Property> properties, HashSet<string> members, CodeGenerationOptions opt)
+	{
+		foreach (var prop in properties) {
+			if (members.Contains (prop.Name))
+				continue;
 
-				if ((prop.Getter != null && !prop.Getter.IsAbstract) || (prop.Setter != null && !prop.Setter.IsAbstract))
-					continue;
+			members.Add (prop.Name);
 
-				var bound_property = new BoundProperty (klass, prop, opt, false, true);
-				Properties.Add (bound_property);
+			if ((prop.Getter != null && !prop.Getter.IsAbstract) || (prop.Setter != null && !prop.Setter.IsAbstract))
+				continue;
 
-				if (prop.Type.StartsWith ("Java.Lang.ICharSequence", StringComparison.Ordinal) && !bound_property.IsOverride)
-					Properties.Add (new BoundPropertyStringVariant (prop, opt, bound_property));
-			}
+			var bound_property = new BoundProperty (klass, prop, opt, false, true);
+			Properties.Add (bound_property);
+
+			if (prop.Type.StartsWith ("Java.Lang.ICharSequence", StringComparison.Ordinal) && !bound_property.IsOverride)
+				Properties.Add (new BoundPropertyStringVariant (prop, opt, bound_property));
 		}
+	}
 
-		void AddMethodInvokers (ClassGen klass, IEnumerable<Method> methods, HashSet<string> members, HashSet<string> skipInvokers, InterfaceGen gen, CodeGenerationOptions opt)
-		{
-			foreach (var m in methods) {
-				if (skipInvokers.Contains (m.GetSkipInvokerSignature ()))
-					continue;
+	void AddMethodInvokers (ClassGen klass, IEnumerable<Method> methods, HashSet<string> members, HashSet<string> skipInvokers, InterfaceGen gen, CodeGenerationOptions opt)
+	{
+		foreach (var m in methods) {
+			if (skipInvokers.Contains (m.GetSkipInvokerSignature ()))
+				continue;
 
-				var sig = m.GetSignature ();
+			var sig = m.GetSignature ();
 
-				if (members.Contains (sig))
-					continue;
+			if (members.Contains (sig))
+				continue;
 
-				members.Add (sig);
+			members.Add (sig);
 
-				if (!m.IsAbstract)
-					continue;
+			if (!m.IsAbstract)
+				continue;
 
-				if (klass.IsExplicitlyImplementedMethod (sig)) {
-					Methods.Add (new ExplicitInterfaceInvokerMethod (gen, m, opt));
-				} else {
-					m.IsOverride = true;
-					Methods.Add (new BoundMethod (klass, m, opt, false));
+			if (klass.IsExplicitlyImplementedMethod (sig)) {
+				Methods.Add (new ExplicitInterfaceInvokerMethod (gen, m, opt));
+			} else {
+				m.IsOverride = true;
+				Methods.Add (new BoundMethod (klass, m, opt, false));
 
-					if (m.Asyncify)
-						Methods.Add (new MethodAsyncWrapper (m, opt));
+				if (m.Asyncify)
+					Methods.Add (new MethodAsyncWrapper (m, opt));
 
-					m.IsOverride = false;
-				}
+				m.IsOverride = false;
 			}
 		}
 	}

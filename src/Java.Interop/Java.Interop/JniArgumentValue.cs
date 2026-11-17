@@ -3,8 +3,8 @@
 using System;
 using System.Runtime.InteropServices;
 
-namespace Java.Interop
-{
+namespace Java.Interop;
+
 
 	[ExtendedLayout (ExtendedLayoutKind.CUnion)]
 	public struct JniArgumentValue : IEquatable<JniArgumentValue> {
@@ -132,4 +132,3 @@ namespace Java.Interop
 					z, b, c, s, i, j, f, d, l.ToString ("x"));
 		}
 	}
-}

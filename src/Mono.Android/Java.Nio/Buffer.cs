@@ -1,7 +1,7 @@
 using System;
 using Android.Runtime;
 
-namespace Java.Nio {
+namespace Java.Nio; 
 
 	public partial class Buffer {
 
@@ -17,4 +17,3 @@ namespace Java.Nio {
 			}
 		}
 	}
-}

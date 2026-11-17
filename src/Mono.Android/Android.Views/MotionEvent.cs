@@ -1,4 +1,4 @@
-namespace Android.Views {
+namespace Android.Views; 
 
 	partial class MotionEvent {
 
@@ -32,4 +32,3 @@ namespace Android.Views {
 			return Obtain (downTime, eventTime, (MotionEventActions) action, x, y, pressure, size, metaState, xPrecision, yPrecision, deviceId, edgeFlags);
 		}
 	}
-}

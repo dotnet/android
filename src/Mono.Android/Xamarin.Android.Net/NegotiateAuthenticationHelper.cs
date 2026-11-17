@@ -8,8 +8,8 @@ using System.Net.Security;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace Xamarin.Android.Net
-{
+namespace Xamarin.Android.Net;
+
 	// This code is heavily inspired by System.Net.Http.AuthenticationHelper
 	internal static class NegotiateAuthenticationHelper
 	{
@@ -211,4 +211,3 @@ namespace Xamarin.Android.Net
 				? response.StatusCode == HttpStatusCode.ProxyAuthenticationRequired
 				: response.StatusCode == HttpStatusCode.Unauthorized;
 	}
-}

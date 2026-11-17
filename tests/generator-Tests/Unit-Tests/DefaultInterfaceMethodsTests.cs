@@ -3,8 +3,8 @@ using System.Linq;
 using MonoDroid.Generation;
 using NUnit.Framework;
 
-namespace generatortests
-{
+namespace generatortests;
+
 	[TestFixture]
 	class XAJavaInteropDefaultInterfaceMethodsTests : CodeGeneratorTestBase
 	{
@@ -539,4 +539,3 @@ namespace generatortests
 			Assert.AreSame (klass1.Methods [0].OverriddenInterfaceMethod, klass2.Methods [0]);
 		}
 	}
-}

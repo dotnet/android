@@ -21,8 +21,8 @@ using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
 #endif
 
-namespace Xamarin.Android.Tasks
-{
+namespace Xamarin.Android.Tasks;
+
 	public partial class MonoAndroidHelper
 	{
 		static Lazy<string> uname = new Lazy<string> (GetOSBinDirName, System.Threading.LazyThreadSafetyMode.PublicationOnly);
@@ -592,4 +592,3 @@ namespace Xamarin.Android.Tasks
 			return minValue;
 		}
 	}
-}

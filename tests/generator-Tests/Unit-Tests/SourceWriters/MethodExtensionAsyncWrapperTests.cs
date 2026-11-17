@@ -3,8 +3,8 @@ using generator.SourceWriters;
 using MonoDroid.Generation;
 using NUnit.Framework;
 
-namespace generatortests.SourceWriters
-{
+namespace generatortests.SourceWriters;
+
 	[TestFixture]
 	public class MethodExtensionAsyncWrapperTests : SourceWritersTestBase
 	{
@@ -42,4 +42,3 @@ namespace generatortests.SourceWriters
 			Assert.AreEqual (expected, GetOutput (wrapper).Trim ());
 		}
 	}
-}

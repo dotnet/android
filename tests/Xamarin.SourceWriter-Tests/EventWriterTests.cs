@@ -4,25 +4,24 @@ using System.Linq;
 using System.Xml.Linq;
 using NUnit.Framework;
 
-namespace Xamarin.SourceWriter.Tests
+namespace Xamarin.SourceWriter.Tests;
+
+[TestFixture]
+public class EventWriterTests
 {
-	[TestFixture]
-	public class EventWriterTests
+	[Test]
+	public void Basics ()
 	{
-		[Test]
-		public void Basics ()
-		{
-			var ev = new EventWriter { Name = "MyEvent", IsPublic = true, EventType = new TypeReferenceWriter ("EventHandler") };
+		var ev = new EventWriter { Name = "MyEvent", IsPublic = true, EventType = new TypeReferenceWriter ("EventHandler") };
 
-			var sw = new StringWriter ();
-			var writer = new CodeWriter (sw);
+		var sw = new StringWriter ();
+		var writer = new CodeWriter (sw);
 
-			ev.Write (writer);
+		ev.Write (writer);
 
-			var expected = @"public event EventHandler MyEvent;
+		var expected = @"public event EventHandler MyEvent;
 ";
 
-			Assert.AreEqual (expected, sw.ToString ());
-		}
+		Assert.AreEqual (expected, sw.ToString ());
 	}
 }

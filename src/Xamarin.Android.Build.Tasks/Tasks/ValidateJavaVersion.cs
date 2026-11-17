@@ -8,8 +8,8 @@ using Microsoft.Build.Framework;
 using Xamarin.Android.Tools;
 using Microsoft.Android.Build.Tasks;
 
-namespace Xamarin.Android.Tasks
-{
+namespace Xamarin.Android.Tasks;
+
 	/// <summary>
 	/// Validates the detected JDK against the SDK's configured supported version range.
 	/// </summary>
@@ -195,4 +195,3 @@ namespace Xamarin.Android.Tasks
 			return Version.TryParse (value, out version);
 		}
 	}
-}

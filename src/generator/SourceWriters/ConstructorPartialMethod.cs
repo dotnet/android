@@ -7,16 +7,15 @@ using MonoDroid.Generation;
 using Xamarin.Android.Binder;
 using Xamarin.SourceWriter;
 
-namespace generator.SourceWriters
+namespace generator.SourceWriters;
+
+public class ConstructorPartialMethod : MethodWriter
 {
-	public class ConstructorPartialMethod : MethodWriter
+	public ConstructorPartialMethod (string partialMethodName)
 	{
-		public ConstructorPartialMethod (string partialMethodName)
-		{
-			Name = partialMethodName;
-			IsPartial = true;
-			IsDeclaration = true;
-			ReturnType = new TypeReferenceWriter ("void");
-		}
+		Name = partialMethodName;
+		IsPartial = true;
+		IsDeclaration = true;
+		ReturnType = new TypeReferenceWriter ("void");
 	}
 }

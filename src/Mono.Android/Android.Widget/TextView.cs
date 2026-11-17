@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using Android.Runtime;
 using Android.Text;
 
-namespace Android.Widget {
+namespace Android.Widget; 
 
 	public partial class TextView {
 
@@ -73,4 +73,3 @@ namespace Android.Widget {
 			}
 		}
 	}
-}

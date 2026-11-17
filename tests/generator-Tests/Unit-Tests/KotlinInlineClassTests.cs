@@ -4,8 +4,8 @@ using Java.Interop.Tools.Generator;
 using MonoDroid.Generation;
 using NUnit.Framework;
 
-namespace generatortests
-{
+namespace generatortests;
+
 	[TestFixture]
 	public class KotlinInlineClassTests
 	{
@@ -98,4 +98,3 @@ namespace generatortests
 			Assert.IsNull (TypeNameUtilities.JniSignatureToJavaTypeName ("[Lcom/example/MyColor;"));
 		}
 	}
-}

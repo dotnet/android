@@ -4,7 +4,7 @@ using System;
 using System.Runtime.ExceptionServices;
 using System.Runtime.InteropServices;
 
-namespace Java.Interop {
+namespace Java.Interop; 
 
 	partial class JniEnvironment {
 
@@ -164,4 +164,3 @@ namespace Java.Interop {
 			}
 		}
 	}
-}

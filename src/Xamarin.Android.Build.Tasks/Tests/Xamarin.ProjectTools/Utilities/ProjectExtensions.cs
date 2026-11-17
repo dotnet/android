@@ -5,47 +5,46 @@ using System.Linq;
 using Xamarin.Android.Tasks;
 using Xamarin.Android.Tools;
 
-namespace Xamarin.ProjectTools
+namespace Xamarin.ProjectTools;
+
+public static class ProjectExtensions
 {
-	public static class ProjectExtensions
+	public static void SetRuntimeIdentifier (this IShortFormProject project, string androidAbi)
 	{
-		public static void SetRuntimeIdentifier (this IShortFormProject project, string androidAbi)
-		{
-			project.SetProperty (KnownProperties.RuntimeIdentifier, AbiUtils.AbiToRuntimeIdentifier (androidAbi));
+		project.SetProperty (KnownProperties.RuntimeIdentifier, AbiUtils.AbiToRuntimeIdentifier (androidAbi));
+	}
+
+	public static void SetRuntimeIdentifiers (this IShortFormProject project, IEnumerable<string> androidAbis)
+	{
+		var abis = new List<string> ();
+		foreach (var androidAbi in androidAbis) {
+			abis.Add (AbiUtils.AbiToRuntimeIdentifier (androidAbi));
+		}
+		project.SetProperty (KnownProperties.RuntimeIdentifiers, string.Join (";", abis));
+	}
+
+	public static void SetRuntimeIdentifiers (this IShortFormProject project, params AndroidTargetArch[] targetArches)
+	{
+		if (targetArches == null || targetArches.Length == 0) {
+			throw new ArgumentException ("must not be null or empty", nameof (targetArches));
 		}
 
-		public static void SetRuntimeIdentifiers (this IShortFormProject project, IEnumerable<string> androidAbis)
-		{
-			var abis = new List<string> ();
-			foreach (var androidAbi in androidAbis) {
-				abis.Add (AbiUtils.AbiToRuntimeIdentifier (androidAbi));
-			}
-			project.SetProperty (KnownProperties.RuntimeIdentifiers, string.Join (";", abis));
+		project.SetProperty (KnownProperties.RuntimeIdentifiers, String.Join (";", targetArches.Select (arch => MonoAndroidHelper.ArchToRid (arch))));
+	}
+
+	public static HashSet<string> GetRuntimeIdentifiers (this XamarinProject project)
+	{
+		var ridsPropValue = project.GetProperty (KnownProperties.RuntimeIdentifiers);
+
+		if (string.IsNullOrEmpty (ridsPropValue)) {
+			return new HashSet<string> () { "android-arm64", "android-x64", };
 		}
 
-		public static void SetRuntimeIdentifiers (this IShortFormProject project, params AndroidTargetArch[] targetArches)
-		{
-			if (targetArches == null || targetArches.Length == 0) {
-				throw new ArgumentException ("must not be null or empty", nameof (targetArches));
-			}
+		return ridsPropValue.Split (';').ToHashSet (StringComparer.OrdinalIgnoreCase);
+	}
 
-			project.SetProperty (KnownProperties.RuntimeIdentifiers, String.Join (";", targetArches.Select (arch => MonoAndroidHelper.ArchToRid (arch))));
-		}
-
-		public static HashSet<string> GetRuntimeIdentifiers (this XamarinProject project)
-		{
-			var ridsPropValue = project.GetProperty (KnownProperties.RuntimeIdentifiers);
-
-			if (string.IsNullOrEmpty (ridsPropValue)) {
-				return new HashSet<string> () { "android-arm64", "android-x64", };
-			}
-
-			return ridsPropValue.Split (';').ToHashSet (StringComparer.OrdinalIgnoreCase);
-		}
-
-		public static HashSet<string> GetRuntimeIdentifiersAsAbis (this XamarinProject project)
-		{
-			return project.GetRuntimeIdentifiers ().Select(r => MonoAndroidHelper.RidToAbi (r)).ToHashSet (StringComparer.OrdinalIgnoreCase);
-		}
+	public static HashSet<string> GetRuntimeIdentifiersAsAbis (this XamarinProject project)
+	{
+		return project.GetRuntimeIdentifiers ().Select(r => MonoAndroidHelper.RidToAbi (r)).ToHashSet (StringComparer.OrdinalIgnoreCase);
 	}
 }

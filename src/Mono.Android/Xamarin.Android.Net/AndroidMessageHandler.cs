@@ -24,8 +24,8 @@ using Java.Security.Cert;
 using Javax.Net.Ssl;
 using JavaX509Certificate = Java.Security.Cert.X509Certificate;
 
-namespace Xamarin.Android.Net
-{
+namespace Xamarin.Android.Net;
+
 	/// <summary>
 	/// A custom implementation of <see cref="System.Net.Http.HttpMessageHandler"/> which internally uses <see cref="Java.Net.HttpURLConnection"/>
 	/// (or its HTTPS incarnation) to send HTTP requests.
@@ -1416,7 +1416,7 @@ namespace Xamarin.Android.Net
 					if (!redirectUrl.IsAbsoluteUri) {
 						redirectUrl = new Uri (baseUrl, location);
 					} else if (string.Equals (baseUrl.Scheme, "https", StringComparison.OrdinalIgnoreCase)
-           				&& !string.Equals (redirectUrl.Scheme, "https", StringComparison.OrdinalIgnoreCase)) {
+       				&& !string.Equals (redirectUrl.Scheme, "https", StringComparison.OrdinalIgnoreCase)) {
 
 						disposeRet = false; // let the client decide what to do next
 						return true;
@@ -1842,5 +1842,3 @@ namespace Xamarin.Android.Net
 				httpConnection.SetChunkedStreamingMode (0);
 		}
 	}
-
-}

@@ -6,35 +6,34 @@ using Java.Interop;
 
 using NUnit.Framework;
 
-namespace Java.InteropTests
+namespace Java.InteropTests;
+
+[TestFixture]
+public class JavaBooleanArrayContractTests : JavaPrimitiveArrayContract<JavaBooleanArray, bool>
 {
-	[TestFixture]
-	public class JavaBooleanArrayContractTests : JavaPrimitiveArrayContract<JavaBooleanArray, bool>
+	protected override ICollection<bool> CreateCollection (IEnumerable<bool> values)
 	{
-		protected override ICollection<bool> CreateCollection (IEnumerable<bool> values)
-		{
-			return new JavaBooleanArray (values);
-		}
+		return new JavaBooleanArray (values);
+	}
 
-		protected override ICollection<bool> CreateCollection (IList<bool> values)
-		{
-			return new JavaBooleanArray (values);
-		}
+	protected override ICollection<bool> CreateCollection (IList<bool> values)
+	{
+		return new JavaBooleanArray (values);
+	}
 
-		protected override ICollection<bool> CreateCollection (int length)
-		{
-			return new JavaBooleanArray (length);
-		}
+	protected override ICollection<bool> CreateCollection (int length)
+	{
+		return new JavaBooleanArray (length);
+	}
 
-		protected override bool CreateValueA ()
-		{
-			return true;
-		}
+	protected override bool CreateValueA ()
+	{
+		return true;
+	}
 
-		protected override bool CreateValueB ()
-		{
-			return false;
-		}
+	protected override bool CreateValueB ()
+	{
+		return false;
 	}
 }
 

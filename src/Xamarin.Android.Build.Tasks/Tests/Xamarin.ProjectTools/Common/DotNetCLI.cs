@@ -9,345 +9,344 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace Xamarin.ProjectTools
+namespace Xamarin.ProjectTools;
+
+public class DotNetCLI
 {
-	public class DotNetCLI
+	public string BuildLogFile { get; set; }
+	public string ProcessLogFile { get; set; }
+	public string Verbosity { get; set; } = "normal";
+	public string AndroidSdkPath { get; set; } = AndroidSdkResolver.GetAndroidSdkPath ();
+	public string AndroidNdkPath { get; set; } = AndroidSdkResolver.GetAndroidNdkPath ();
+	public string JavaSdkPath { get; set; } = AndroidSdkResolver.GetJavaSdkPath ();
+	public string ProjectDirectory { get; set; }
+	public IDictionary<string, string> EnvironmentVariables { get; } = new Dictionary<string, string> ();
+
+	readonly string projectOrSolution;
+
+	public DotNetCLI (string projectOrSolution)
 	{
-		public string BuildLogFile { get; set; }
-		public string ProcessLogFile { get; set; }
-		public string Verbosity { get; set; } = "normal";
-		public string AndroidSdkPath { get; set; } = AndroidSdkResolver.GetAndroidSdkPath ();
-		public string AndroidNdkPath { get; set; } = AndroidSdkResolver.GetAndroidNdkPath ();
-		public string JavaSdkPath { get; set; } = AndroidSdkResolver.GetJavaSdkPath ();
-		public string ProjectDirectory { get; set; }
-		public IDictionary<string, string> EnvironmentVariables { get; } = new Dictionary<string, string> ();
+		this.projectOrSolution = projectOrSolution;
+		ProjectDirectory = Path.GetDirectoryName (projectOrSolution);
+	}
 
-		readonly string projectOrSolution;
-
-		public DotNetCLI (string projectOrSolution)
-		{
-			this.projectOrSolution = projectOrSolution;
-			ProjectDirectory = Path.GetDirectoryName (projectOrSolution);
+	/// <summary>
+	/// Creates and starts a `dotnet` process with the specified arguments.
+	/// </summary>
+	/// <param name="args">command arguments</param>
+	/// <param name="workingDirectory">optional working directory</param>
+	/// <returns>A started Process instance. Caller is responsible for disposing.</returns>
+	protected Process ExecuteProcess (string [] args, string workingDirectory = null)
+	{
+		var p = new Process ();
+		p.StartInfo.FileName = Path.Combine (TestEnvironment.DotNetPreviewDirectory, "dotnet");
+		p.StartInfo.Arguments = string.Join (" ", args);
+		p.StartInfo.CreateNoWindow = true;
+		p.StartInfo.UseShellExecute = false;
+		p.StartInfo.RedirectStandardOutput = true;
+		p.StartInfo.RedirectStandardError = true;
+		if (!string.IsNullOrEmpty (workingDirectory)) {
+			p.StartInfo.WorkingDirectory = workingDirectory;
+		}
+		p.StartInfo.SetEnvironmentVariable ("DOTNET_MULTILEVEL_LOOKUP", "0");
+		// Workaround for dotnet/msbuild#13175: the MSBuild app host needs DOTNET_HOST_PATH
+		// to bootstrap the .NET runtime when spawning TaskHostFactory task hosts (e.g. ILLink).
+		// Without this, builds fail with MSB4221 when using a locally-installed SDK.
+		p.StartInfo.SetEnvironmentVariable ("DOTNET_HOST_PATH", p.StartInfo.FileName);
+		p.StartInfo.SetEnvironmentVariable ("PATH", TestEnvironment.DotNetPreviewDirectory + Path.PathSeparator + Environment.GetEnvironmentVariable ("PATH"));
+		if (TestEnvironment.UseLocalBuildOutput) {
+			p.StartInfo.SetEnvironmentVariable ("DOTNETSDK_WORKLOAD_MANIFEST_ROOTS", TestEnvironment.WorkloadManifestOverridePath);
+			p.StartInfo.SetEnvironmentVariable ("DOTNETSDK_WORKLOAD_PACK_ROOTS", TestEnvironment.WorkloadPackOverridePath);
+		}
+		if (Directory.Exists (AndroidSdkPath)) {
+			p.StartInfo.SetEnvironmentVariable ("AndroidSdkDirectory", AndroidSdkPath.TrimEnd ('\\'));
+		}
+		if (Directory.Exists (JavaSdkPath)) {
+			p.StartInfo.SetEnvironmentVariable ("JavaSdkDirectory", JavaSdkPath.TrimEnd ('\\'));
+		}
+		foreach (var variable in EnvironmentVariables) {
+			p.StartInfo.SetEnvironmentVariable (variable.Key, variable.Value);
 		}
 
-		/// <summary>
-		/// Creates and starts a `dotnet` process with the specified arguments.
-		/// </summary>
-		/// <param name="args">command arguments</param>
-		/// <param name="workingDirectory">optional working directory</param>
-		/// <returns>A started Process instance. Caller is responsible for disposing.</returns>
-		protected Process ExecuteProcess (string [] args, string workingDirectory = null)
-		{
-			var p = new Process ();
-			p.StartInfo.FileName = Path.Combine (TestEnvironment.DotNetPreviewDirectory, "dotnet");
-			p.StartInfo.Arguments = string.Join (" ", args);
-			p.StartInfo.CreateNoWindow = true;
-			p.StartInfo.UseShellExecute = false;
-			p.StartInfo.RedirectStandardOutput = true;
-			p.StartInfo.RedirectStandardError = true;
-			if (!string.IsNullOrEmpty (workingDirectory)) {
-				p.StartInfo.WorkingDirectory = workingDirectory;
-			}
-			p.StartInfo.SetEnvironmentVariable ("DOTNET_MULTILEVEL_LOOKUP", "0");
-			// Workaround for dotnet/msbuild#13175: the MSBuild app host needs DOTNET_HOST_PATH
-			// to bootstrap the .NET runtime when spawning TaskHostFactory task hosts (e.g. ILLink).
-			// Without this, builds fail with MSB4221 when using a locally-installed SDK.
-			p.StartInfo.SetEnvironmentVariable ("DOTNET_HOST_PATH", p.StartInfo.FileName);
-			p.StartInfo.SetEnvironmentVariable ("PATH", TestEnvironment.DotNetPreviewDirectory + Path.PathSeparator + Environment.GetEnvironmentVariable ("PATH"));
-			if (TestEnvironment.UseLocalBuildOutput) {
-				p.StartInfo.SetEnvironmentVariable ("DOTNETSDK_WORKLOAD_MANIFEST_ROOTS", TestEnvironment.WorkloadManifestOverridePath);
-				p.StartInfo.SetEnvironmentVariable ("DOTNETSDK_WORKLOAD_PACK_ROOTS", TestEnvironment.WorkloadPackOverridePath);
-			}
-			if (Directory.Exists (AndroidSdkPath)) {
-				p.StartInfo.SetEnvironmentVariable ("AndroidSdkDirectory", AndroidSdkPath.TrimEnd ('\\'));
-			}
-			if (Directory.Exists (JavaSdkPath)) {
-				p.StartInfo.SetEnvironmentVariable ("JavaSdkDirectory", JavaSdkPath.TrimEnd ('\\'));
-			}
-			foreach (var variable in EnvironmentVariables) {
-				p.StartInfo.SetEnvironmentVariable (variable.Key, variable.Value);
-			}
+		p.Start ();
+		return p;
+	}
 
-			p.Start ();
-			return p;
-		}
-
-		/// <summary>
-		/// Runs the `dotnet` tool with the specified arguments.
-		/// </summary>
-		/// <param name="args">command arguments</param>
-		/// <returns>Whether or not the command succeeded.</returns>
-		protected bool Execute (params string [] args)
-		{
-			if (string.IsNullOrEmpty (ProcessLogFile)) {
-				Directory.CreateDirectory (ProjectDirectory);
-				ProcessLogFile = Path.Combine (ProjectDirectory, $"dotnet{DateTime.Now.ToString ("yyyyMMddHHmmssff")}-process.log");
-			}
-
-			var locker = new Lock ();
-			var procOutput = new StringBuilder ();
-			bool succeeded;
-			const int timeoutMilliseconds = 15 * 60 * 1000;
-			const int streamDrainTimeoutMilliseconds = 30 * 1000;
-			const int killTimeoutMilliseconds = 30 * 1000;
-
-			using (var p = ExecuteProcess (args)) {
-				var stderrCompleted = new TaskCompletionSource<bool> (TaskCreationOptions.RunContinuationsAsynchronously);
-				var stdoutCompleted = new TaskCompletionSource<bool> (TaskCreationOptions.RunContinuationsAsynchronously);
-
-				p.ErrorDataReceived += (sender, e) => {
-					if (e.Data == null) {
-						stderrCompleted.TrySetResult (true);
-					} else {
-						lock (locker)
-							procOutput.AppendLine (e.Data);
-					}
-				};
-				p.OutputDataReceived += (sender, e) => {
-					if (e.Data == null) {
-						stdoutCompleted.TrySetResult (true);
-					} else {
-						lock (locker)
-							procOutput.AppendLine (e.Data);
-					}
-				};
-
-				procOutput.AppendLine ($"Running: {p.StartInfo.FileName} {p.StartInfo.Arguments}");
-				p.BeginOutputReadLine ();
-				p.BeginErrorReadLine ();
-
-				bool completed = p.WaitForExit (timeoutMilliseconds);
-				if (!completed) {
-					procOutput.AppendLine ($"Process timed out after {timeoutMilliseconds}ms.");
-					TryKillProcess (p, procOutput);
-					completed = p.WaitForExit (killTimeoutMilliseconds);
-					if (!completed) {
-						procOutput.AppendLine ($"Process did not exit within {killTimeoutMilliseconds}ms after kill request.");
-					}
-				}
-
-				if (!stdoutCompleted.Task.Wait (streamDrainTimeoutMilliseconds)) {
-					procOutput.AppendLine ($"Timed out waiting for stdout to drain after {streamDrainTimeoutMilliseconds}ms.");
-				}
-				if (!stderrCompleted.Task.Wait (streamDrainTimeoutMilliseconds)) {
-					procOutput.AppendLine ($"Timed out waiting for stderr to drain after {streamDrainTimeoutMilliseconds}ms.");
-				}
-
-				succeeded = completed && p.ExitCode == 0;
-				procOutput.AppendLine (completed ? $"Exit Code: {p.ExitCode}" : "Exit Code: <not available>");
-			}
-
-			File.WriteAllText (ProcessLogFile, procOutput.ToString ());
-			return succeeded;
-		}
-
-		static void TryKillProcess (Process process, StringBuilder procOutput)
-		{
-			try {
-				if (process.HasExited) {
-					return;
-				}
-				process.Kill (entireProcessTree: true);
-				procOutput.AppendLine ("Issued kill request for process tree.");
-			} catch (InvalidOperationException) {
-				// Process has already exited.
-			} catch (Win32Exception ex) {
-				procOutput.AppendLine ($"Failed to kill process tree: {ex.GetType ().Name}: {ex.Message}");
-			} catch (NotSupportedException ex) {
-				procOutput.AppendLine ($"Failed to kill process tree: {ex.GetType ().Name}: {ex.Message}");
-			}
-		}
-
-		public bool New (string template, string output = null, bool noRestore = false, string framework = null)
-		{
+	/// <summary>
+	/// Runs the `dotnet` tool with the specified arguments.
+	/// </summary>
+	/// <param name="args">command arguments</param>
+	/// <returns>Whether or not the command succeeded.</returns>
+	protected bool Execute (params string [] args)
+	{
+		if (string.IsNullOrEmpty (ProcessLogFile)) {
 			Directory.CreateDirectory (ProjectDirectory);
-			var nugetConfig = Path.Combine (ProjectDirectory, "NuGet.config");
-			if (!File.Exists (nugetConfig)) {
-				File.Copy (Path.Combine (XABuildPaths.TopDirectory, "NuGet.config"), nugetConfig);
-			}
-
-			var arguments = new List<string> {
-				"new",
-				template,
-				"--output", $"\"{output ?? ProjectDirectory}\"",
-			};
-			if (noRestore) {
-				arguments.Add ("--no-restore");
-			}
-			if (!string.IsNullOrEmpty (framework)) {
-				arguments.Add ("--framework");
-				arguments.Add (framework);
-			}
-			return Execute (arguments.ToArray ());
+			ProcessLogFile = Path.Combine (ProjectDirectory, $"dotnet{DateTime.Now.ToString ("yyyyMMddHHmmssff")}-process.log");
 		}
 
-		public bool Restore (string target = null, string runtimeIdentifier = null, string [] parameters = null, string [] msbuildArguments = null)
-		{
-			var arguments = GetDefaultCommandLineArgs ("restore", target, runtimeIdentifier, parameters, msbuildArguments);
-			return Execute (arguments.ToArray ());
-		}
+		var locker = new Lock ();
+		var procOutput = new StringBuilder ();
+		bool succeeded;
+		const int timeoutMilliseconds = 15 * 60 * 1000;
+		const int streamDrainTimeoutMilliseconds = 30 * 1000;
+		const int killTimeoutMilliseconds = 30 * 1000;
 
-		public bool Build (string target = null, string runtimeIdentifier = null, string [] parameters = null, string [] msbuildArguments = null)
-		{
-			var arguments = GetDefaultCommandLineArgs ("build", target, runtimeIdentifier, parameters, msbuildArguments);
-			return Execute (arguments.ToArray ());
-		}
+		using (var p = ExecuteProcess (args)) {
+			var stderrCompleted = new TaskCompletionSource<bool> (TaskCreationOptions.RunContinuationsAsynchronously);
+			var stdoutCompleted = new TaskCompletionSource<bool> (TaskCreationOptions.RunContinuationsAsynchronously);
 
-		public bool Pack (string target = null, string runtimeIdentifier = null, string [] parameters = null, string [] msbuildArguments = null)
-		{
-			var arguments = GetDefaultCommandLineArgs ("pack", target, runtimeIdentifier, parameters, msbuildArguments);
-			return Execute (arguments.ToArray ());
-		}
-
-		public bool WorkloadSearch (string searchString)
-		{
-			return Execute ("workload", "search", searchString);
-		}
-
-		public bool Publish (string target = null, string runtimeIdentifier = null, string [] parameters = null, string [] msbuildArguments = null)
-		{
-			var arguments = GetDefaultCommandLineArgs ("publish", target, runtimeIdentifier, parameters, msbuildArguments);
-			return Execute (arguments.ToArray ());
-		}
-
-		public bool Run (bool waitForExit = false, bool noBuild = true, string [] parameters = null)
-		{
-			string binlog = Path.Combine (Path.GetDirectoryName (projectOrSolution), "run.binlog");
-			var arguments = new List<string> {
-				"run",
-				"--project", $"\"{projectOrSolution}\"",
-			};
-			if (noBuild) {
-				arguments.Add ("--no-build");
-			}
-			arguments.Add ($"/bl:\"{binlog}\"");
-			arguments.Add ($"/p:WaitForExit={waitForExit.ToString (CultureInfo.InvariantCulture)}");
-			if (parameters != null) {
-				arguments.AddRange (parameters);
-			}
-			return Execute (arguments.ToArray ());
-		}
-
-		/// <summary>
-		/// Starts `dotnet run` and returns a running Process that can be monitored and killed.
-		/// </summary>
-		/// <param name="waitForExit">Whether to use Microsoft.Android.Run tool which waits for app exit and streams logcat.</param>
-		/// <param name="parameters">Additional arguments to pass to `dotnet run`.</param>
-		/// <returns>A running Process instance. Caller is responsible for disposing.</returns>
-		public Process StartRun (bool waitForExit = true, string [] parameters = null)
-		{
-			string binlog = Path.Combine (Path.GetDirectoryName (projectOrSolution), "run.binlog");
-			var arguments = new List<string> {
-				"run",
-				"--project", $"\"{projectOrSolution}\"",
-				"--no-build",
-				$"/bl:\"{binlog}\"",
-				$"/p:WaitForExit={waitForExit.ToString (CultureInfo.InvariantCulture)}"
-			};
-			if (parameters != null) {
-				arguments.AddRange (parameters);
-			}
-
-			return ExecuteProcess (arguments.ToArray ());
-		}
-
-		/// <summary>
-		/// Starts `dotnet test` and returns a running Process that can be monitored and killed.
-		/// </summary>
-		/// <param name="parameters">Additional arguments to pass to `dotnet test`.</param>
-		/// <returns>A running Process instance. Caller is responsible for disposing.</returns>
-		public Process StartTest (string [] parameters = null)
-		{
-			string binlog = Path.Combine (Path.GetDirectoryName (projectOrSolution), "test.binlog");
-			var arguments = new List<string> {
-				"test",
-				$"\"{projectOrSolution}\"",
-				"--no-build",
-				$"/bl:\"{binlog}\"",
-			};
-			if (parameters != null) {
-				arguments.AddRange (parameters);
-			}
-
-			return ExecuteProcess (arguments.ToArray (), workingDirectory: ProjectDirectory);
-		}
-
-		/// <summary>
-		/// Starts `dotnet watch` and returns a running Process that can be monitored and killed.
-		/// This is used for hot reload testing where dotnet-watch builds, deploys, and watches for file changes.
-		/// </summary>
-		/// <param name="parameters">Additional arguments to pass to `dotnet watch`.</param>
-		/// <returns>A running Process instance. Caller is responsible for disposing.</returns>
-		public Process StartWatch (string [] parameters = null)
-		{
-			var arguments = new List<string> {
-				"watch",
-				"--project", $"\"{projectOrSolution}\"",
-				"--non-interactive",
-				"--verbose",
-				"--verbosity", "diag",
-				"-bl",
-			};
-			if (parameters != null) {
-				arguments.AddRange (parameters);
-			}
-
-			return ExecuteProcess (arguments.ToArray (), workingDirectory: ProjectDirectory);
-		}
-
-		public IEnumerable<string> LastBuildOutput {
-			get {
-				if (!string.IsNullOrEmpty (BuildLogFile) && File.Exists (BuildLogFile)) {
-					return File.ReadLines (BuildLogFile, Encoding.UTF8);
+			p.ErrorDataReceived += (sender, e) => {
+				if (e.Data == null) {
+					stderrCompleted.TrySetResult (true);
+				} else {
+					lock (locker)
+						procOutput.AppendLine (e.Data);
 				}
-				return Enumerable.Empty<string> ();
-			}
-		}
-
-		public bool IsTargetSkipped (string target, bool defaultIfNotUsed = false) => BuildOutput.IsTargetSkipped (LastBuildOutput, target, defaultIfNotUsed);
-
-		List<string> GetDefaultCommandLineArgs (string verb, string target = null, string runtimeIdentifier = null, string [] parameters = null, string [] msbuildArguments = null)
-		{
-			string testDir = string.IsNullOrEmpty (ProjectDirectory) ? Path.GetDirectoryName (projectOrSolution) : ProjectDirectory;
-			if (string.IsNullOrEmpty (BuildLogFile))
-				BuildLogFile = Path.Combine (testDir, "build.log");
-
-			var arguments = new List<string> {
-				verb,
-				$"\"{projectOrSolution}\"",
-				"/noconsolelogger",
-				$"/flp1:LogFile=\"{BuildLogFile}\";Encoding=UTF-8;Verbosity={Verbosity}",
-				$"/bl:\"{Path.Combine (testDir, $"{(string.IsNullOrEmpty (target) ? "msbuild" : target)}.binlog")}\"",
-				"-m:1",
-				"-nodeReuse:false",
-				"/p:_DisableParallelAot=true",
 			};
-			if (!string.IsNullOrEmpty (target)) {
-				arguments.Add ($"/t:{target}");
-			}
-			if (Directory.Exists (AndroidSdkPath)) {
-				arguments.Add ($"/p:AndroidSdkDirectory=\"{AndroidSdkPath.TrimEnd('\\')}\"");
-			}
-			if (Directory.Exists (AndroidNdkPath)) {
-				arguments.Add ($"/p:AndroidNdkDirectory=\"{AndroidNdkPath.TrimEnd('\\')}\"");
-			}
-			if (Directory.Exists (JavaSdkPath)) {
-				arguments.Add ($"/p:JavaSdkDirectory=\"{JavaSdkPath.TrimEnd ('\\')}\"");
-			}
-			if (parameters != null) {
-				foreach (var parameter in parameters) {
-					arguments.Add ($"/p:{parameter}");
+			p.OutputDataReceived += (sender, e) => {
+				if (e.Data == null) {
+					stdoutCompleted.TrySetResult (true);
+				} else {
+					lock (locker)
+						procOutput.AppendLine (e.Data);
+				}
+			};
+
+			procOutput.AppendLine ($"Running: {p.StartInfo.FileName} {p.StartInfo.Arguments}");
+			p.BeginOutputReadLine ();
+			p.BeginErrorReadLine ();
+
+			bool completed = p.WaitForExit (timeoutMilliseconds);
+			if (!completed) {
+				procOutput.AppendLine ($"Process timed out after {timeoutMilliseconds}ms.");
+				TryKillProcess (p, procOutput);
+				completed = p.WaitForExit (killTimeoutMilliseconds);
+				if (!completed) {
+					procOutput.AppendLine ($"Process did not exit within {killTimeoutMilliseconds}ms after kill request.");
 				}
 			}
-			if (msbuildArguments != null) {
-				arguments.AddRange (msbuildArguments);
+
+			if (!stdoutCompleted.Task.Wait (streamDrainTimeoutMilliseconds)) {
+				procOutput.AppendLine ($"Timed out waiting for stdout to drain after {streamDrainTimeoutMilliseconds}ms.");
 			}
-			if (!string.IsNullOrEmpty (runtimeIdentifier)) {
-				// NOTE: that this one has to be -r, /r does not appear to work
-				arguments.Add ("-r");
-				arguments.Add (runtimeIdentifier);
+			if (!stderrCompleted.Task.Wait (streamDrainTimeoutMilliseconds)) {
+				procOutput.AppendLine ($"Timed out waiting for stderr to drain after {streamDrainTimeoutMilliseconds}ms.");
 			}
-			return arguments;
+
+			succeeded = completed && p.ExitCode == 0;
+			procOutput.AppendLine (completed ? $"Exit Code: {p.ExitCode}" : "Exit Code: <not available>");
 		}
+
+		File.WriteAllText (ProcessLogFile, procOutput.ToString ());
+		return succeeded;
+	}
+
+	static void TryKillProcess (Process process, StringBuilder procOutput)
+	{
+		try {
+			if (process.HasExited) {
+				return;
+			}
+			process.Kill (entireProcessTree: true);
+			procOutput.AppendLine ("Issued kill request for process tree.");
+		} catch (InvalidOperationException) {
+			// Process has already exited.
+		} catch (Win32Exception ex) {
+			procOutput.AppendLine ($"Failed to kill process tree: {ex.GetType ().Name}: {ex.Message}");
+		} catch (NotSupportedException ex) {
+			procOutput.AppendLine ($"Failed to kill process tree: {ex.GetType ().Name}: {ex.Message}");
+		}
+	}
+
+	public bool New (string template, string output = null, bool noRestore = false, string framework = null)
+	{
+		Directory.CreateDirectory (ProjectDirectory);
+		var nugetConfig = Path.Combine (ProjectDirectory, "NuGet.config");
+		if (!File.Exists (nugetConfig)) {
+			File.Copy (Path.Combine (XABuildPaths.TopDirectory, "NuGet.config"), nugetConfig);
+		}
+
+		var arguments = new List<string> {
+			"new",
+			template,
+			"--output", $"\"{output ?? ProjectDirectory}\"",
+		};
+		if (noRestore) {
+			arguments.Add ("--no-restore");
+		}
+		if (!string.IsNullOrEmpty (framework)) {
+			arguments.Add ("--framework");
+			arguments.Add (framework);
+		}
+		return Execute (arguments.ToArray ());
+	}
+
+	public bool Restore (string target = null, string runtimeIdentifier = null, string [] parameters = null, string [] msbuildArguments = null)
+	{
+		var arguments = GetDefaultCommandLineArgs ("restore", target, runtimeIdentifier, parameters, msbuildArguments);
+		return Execute (arguments.ToArray ());
+	}
+
+	public bool Build (string target = null, string runtimeIdentifier = null, string [] parameters = null, string [] msbuildArguments = null)
+	{
+		var arguments = GetDefaultCommandLineArgs ("build", target, runtimeIdentifier, parameters, msbuildArguments);
+		return Execute (arguments.ToArray ());
+	}
+
+	public bool Pack (string target = null, string runtimeIdentifier = null, string [] parameters = null, string [] msbuildArguments = null)
+	{
+		var arguments = GetDefaultCommandLineArgs ("pack", target, runtimeIdentifier, parameters, msbuildArguments);
+		return Execute (arguments.ToArray ());
+	}
+
+	public bool WorkloadSearch (string searchString)
+	{
+		return Execute ("workload", "search", searchString);
+	}
+
+	public bool Publish (string target = null, string runtimeIdentifier = null, string [] parameters = null, string [] msbuildArguments = null)
+	{
+		var arguments = GetDefaultCommandLineArgs ("publish", target, runtimeIdentifier, parameters, msbuildArguments);
+		return Execute (arguments.ToArray ());
+	}
+
+	public bool Run (bool waitForExit = false, bool noBuild = true, string [] parameters = null)
+	{
+		string binlog = Path.Combine (Path.GetDirectoryName (projectOrSolution), "run.binlog");
+		var arguments = new List<string> {
+			"run",
+			"--project", $"\"{projectOrSolution}\"",
+		};
+		if (noBuild) {
+			arguments.Add ("--no-build");
+		}
+		arguments.Add ($"/bl:\"{binlog}\"");
+		arguments.Add ($"/p:WaitForExit={waitForExit.ToString (CultureInfo.InvariantCulture)}");
+		if (parameters != null) {
+			arguments.AddRange (parameters);
+		}
+		return Execute (arguments.ToArray ());
+	}
+
+	/// <summary>
+	/// Starts `dotnet run` and returns a running Process that can be monitored and killed.
+	/// </summary>
+	/// <param name="waitForExit">Whether to use Microsoft.Android.Run tool which waits for app exit and streams logcat.</param>
+	/// <param name="parameters">Additional arguments to pass to `dotnet run`.</param>
+	/// <returns>A running Process instance. Caller is responsible for disposing.</returns>
+	public Process StartRun (bool waitForExit = true, string [] parameters = null)
+	{
+		string binlog = Path.Combine (Path.GetDirectoryName (projectOrSolution), "run.binlog");
+		var arguments = new List<string> {
+			"run",
+			"--project", $"\"{projectOrSolution}\"",
+			"--no-build",
+			$"/bl:\"{binlog}\"",
+			$"/p:WaitForExit={waitForExit.ToString (CultureInfo.InvariantCulture)}"
+		};
+		if (parameters != null) {
+			arguments.AddRange (parameters);
+		}
+
+		return ExecuteProcess (arguments.ToArray ());
+	}
+
+	/// <summary>
+	/// Starts `dotnet test` and returns a running Process that can be monitored and killed.
+	/// </summary>
+	/// <param name="parameters">Additional arguments to pass to `dotnet test`.</param>
+	/// <returns>A running Process instance. Caller is responsible for disposing.</returns>
+	public Process StartTest (string [] parameters = null)
+	{
+		string binlog = Path.Combine (Path.GetDirectoryName (projectOrSolution), "test.binlog");
+		var arguments = new List<string> {
+			"test",
+			$"\"{projectOrSolution}\"",
+			"--no-build",
+			$"/bl:\"{binlog}\"",
+		};
+		if (parameters != null) {
+			arguments.AddRange (parameters);
+		}
+
+		return ExecuteProcess (arguments.ToArray (), workingDirectory: ProjectDirectory);
+	}
+
+	/// <summary>
+	/// Starts `dotnet watch` and returns a running Process that can be monitored and killed.
+	/// This is used for hot reload testing where dotnet-watch builds, deploys, and watches for file changes.
+	/// </summary>
+	/// <param name="parameters">Additional arguments to pass to `dotnet watch`.</param>
+	/// <returns>A running Process instance. Caller is responsible for disposing.</returns>
+	public Process StartWatch (string [] parameters = null)
+	{
+		var arguments = new List<string> {
+			"watch",
+			"--project", $"\"{projectOrSolution}\"",
+			"--non-interactive",
+			"--verbose",
+			"--verbosity", "diag",
+			"-bl",
+		};
+		if (parameters != null) {
+			arguments.AddRange (parameters);
+		}
+
+		return ExecuteProcess (arguments.ToArray (), workingDirectory: ProjectDirectory);
+	}
+
+	public IEnumerable<string> LastBuildOutput {
+		get {
+			if (!string.IsNullOrEmpty (BuildLogFile) && File.Exists (BuildLogFile)) {
+				return File.ReadLines (BuildLogFile, Encoding.UTF8);
+			}
+			return Enumerable.Empty<string> ();
+		}
+	}
+
+	public bool IsTargetSkipped (string target, bool defaultIfNotUsed = false) => BuildOutput.IsTargetSkipped (LastBuildOutput, target, defaultIfNotUsed);
+
+	List<string> GetDefaultCommandLineArgs (string verb, string target = null, string runtimeIdentifier = null, string [] parameters = null, string [] msbuildArguments = null)
+	{
+		string testDir = string.IsNullOrEmpty (ProjectDirectory) ? Path.GetDirectoryName (projectOrSolution) : ProjectDirectory;
+		if (string.IsNullOrEmpty (BuildLogFile))
+			BuildLogFile = Path.Combine (testDir, "build.log");
+
+		var arguments = new List<string> {
+			verb,
+			$"\"{projectOrSolution}\"",
+			"/noconsolelogger",
+			$"/flp1:LogFile=\"{BuildLogFile}\";Encoding=UTF-8;Verbosity={Verbosity}",
+			$"/bl:\"{Path.Combine (testDir, $"{(string.IsNullOrEmpty (target) ? "msbuild" : target)}.binlog")}\"",
+			"-m:1",
+			"-nodeReuse:false",
+			"/p:_DisableParallelAot=true",
+		};
+		if (!string.IsNullOrEmpty (target)) {
+			arguments.Add ($"/t:{target}");
+		}
+		if (Directory.Exists (AndroidSdkPath)) {
+			arguments.Add ($"/p:AndroidSdkDirectory=\"{AndroidSdkPath.TrimEnd('\\')}\"");
+		}
+		if (Directory.Exists (AndroidNdkPath)) {
+			arguments.Add ($"/p:AndroidNdkDirectory=\"{AndroidNdkPath.TrimEnd('\\')}\"");
+		}
+		if (Directory.Exists (JavaSdkPath)) {
+			arguments.Add ($"/p:JavaSdkDirectory=\"{JavaSdkPath.TrimEnd ('\\')}\"");
+		}
+		if (parameters != null) {
+			foreach (var parameter in parameters) {
+				arguments.Add ($"/p:{parameter}");
+			}
+		}
+		if (msbuildArguments != null) {
+			arguments.AddRange (msbuildArguments);
+		}
+		if (!string.IsNullOrEmpty (runtimeIdentifier)) {
+			// NOTE: that this one has to be -r, /r does not appear to work
+			arguments.Add ("-r");
+			arguments.Add (runtimeIdentifier);
+		}
+		return arguments;
 	}
 }

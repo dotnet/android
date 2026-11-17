@@ -7,8 +7,8 @@ using System.IO;
 using Xamarin.Android.Tools;
 using Microsoft.Android.Build.Tasks;
 
-namespace Xamarin.Android.Tasks
-{
+namespace Xamarin.Android.Tasks;
+
 	/// <summary>
 	/// This task invokes d8, and is also subclassed by the R8 task
 	/// </summary>
@@ -195,4 +195,3 @@ namespace Xamarin.Android.Tasks
 			Log.LogMessage (messageImportance, singleLine);
 		}
 	}
-}

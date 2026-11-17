@@ -1,10 +1,10 @@
-﻿#nullable enable
+#nullable enable
 
 using System;
 using System.Collections.Concurrent;
 
-namespace Java.Interop
-{
+namespace Java.Interop;
+
 	partial class JniPeerMembers {
 	public sealed partial class JniInstanceMethods
 	{
@@ -198,4 +198,3 @@ namespace Java.Interop
 		}
 	}
 	}
-}

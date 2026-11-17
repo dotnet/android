@@ -4,8 +4,8 @@ using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
 using Microsoft.Android.Build.Tasks;
 
-namespace Xamarin.Android.Tasks
-{
+namespace Xamarin.Android.Tasks;
+
 	/// <summary>
 	/// Provides a localizable way to log a message from an MSBuild target.
 	/// </summary>
@@ -31,4 +31,3 @@ namespace Xamarin.Android.Tasks
 			return true;
 		}
 	}
-}

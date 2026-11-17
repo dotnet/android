@@ -2,7 +2,7 @@ using System;
 
 using Java.Interop;
 
-namespace Android.Runtime {
+namespace Android.Runtime; 
 
 	internal static class JniPeerMembersExtensions {
 
@@ -11,4 +11,3 @@ namespace Android.Runtime {
 			return members.JniPeerType.PeerReference.Handle;
 		}
 	}
-}

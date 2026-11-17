@@ -8,38 +8,37 @@ using System.Text.RegularExpressions;
 using Microsoft.Build.Utilities;
 using Microsoft.Android.Build.Tasks;
 
-namespace Xamarin.Android.Tasks
+namespace Xamarin.Android.Tasks;
+
+class ResourceParser
 {
-	class ResourceParser
+	public TaskLoggingHelper Log { get; }
+
+	public ResourceParser (TaskLoggingHelper log)
 	{
-		public TaskLoggingHelper Log { get; }
+		Log = log;
+	}
 
-		public ResourceParser (TaskLoggingHelper log)
-		{
-			Log = log;
+	internal int ToInt32 (string value, int @base)
+	{
+		try {
+			return Convert.ToInt32 (value, @base);
+		} catch (Exception e) {
+			throw new NotSupportedException (
+					string.Format (CultureInfo.InvariantCulture, "Could not convert value '{0}' (base '{1}') into an Int32.",
+						value, @base),
+					e);
 		}
+	}
 
-		internal int ToInt32 (string value, int @base)
-		{
-			try {
-				return Convert.ToInt32 (value, @base);
-			} catch (Exception e) {
-				throw new NotSupportedException (
-						string.Format (CultureInfo.InvariantCulture, "Could not convert value '{0}' (base '{1}') into an Int32.",
-							value, @base),
-						e);
-			}
-		}
-
-		internal static string GetNestedTypeName (string name)
-		{
-			switch (name) {
-				case "anim": return "Animation";
-				case "attr": return "Attribute";
-				case "bool": return "Boolean";
-				case "dimen": return "Dimension";
-				default: return char.ToUpperInvariant (name[0]) + name.Substring (1);
-			}
+	internal static string GetNestedTypeName (string name)
+	{
+		switch (name) {
+			case "anim": return "Animation";
+			case "attr": return "Attribute";
+			case "bool": return "Boolean";
+			case "dimen": return "Dimension";
+			default: return char.ToUpperInvariant (name[0]) + name.Substring (1);
 		}
 	}
 }

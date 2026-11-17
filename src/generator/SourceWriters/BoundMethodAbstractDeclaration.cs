@@ -6,68 +6,67 @@ using System.Threading.Tasks;
 using MonoDroid.Generation;
 using Xamarin.SourceWriter;
 
-namespace generator.SourceWriters
+namespace generator.SourceWriters;
+
+public class BoundMethodAbstractDeclaration : MethodWriter
 {
-	public class BoundMethodAbstractDeclaration : MethodWriter
+	readonly Method method;
+	readonly CodeGenerationOptions opt;
+	readonly MethodCallback method_callback;
+
+	public BoundMethodAbstractDeclaration (GenBase gen, Method method, CodeGenerationOptions opt, GenBase impl)
 	{
-		readonly Method method;
-		readonly CodeGenerationOptions opt;
-		readonly MethodCallback method_callback;
+		this.method = method;
+		this.opt = opt;
 
-		public BoundMethodAbstractDeclaration (GenBase gen, Method method, CodeGenerationOptions opt, GenBase impl)
-		{
-			this.method = method;
-			this.opt = opt;
+		ReturnType = new TypeReferenceWriter (opt.GetTypeReferenceName (method.RetVal));
+		this.AddMethodParameters (method.Parameters, opt);
 
-			ReturnType = new TypeReferenceWriter (opt.GetTypeReferenceName (method.RetVal));
-			this.AddMethodParameters (method.Parameters, opt);
-
-			if (method.RetVal.IsGeneric && gen != null) {
-				Name = method.Name;
-				ExplicitInterfaceImplementation = opt.GetOutputName (gen.FullName);
-
-				SourceWriterExtensions.AddMethodCustomAttributes (Attributes, method);
-
-				Body.Add ("throw new NotImplementedException ();");
-
-				return;
-			}
-
-			Name = method.AdjustedName;
-			ExplicitInterfaceImplementation = method.ExplicitInterface;
-
-			IsAbstract = true;
-			IsShadow = impl.RequiresNew (method.Name, method);
-			SetVisibility (method.Visibility);
-
-			NewFirst = true;
-
-			if (string.Equals (method.ManagedOverride, "override", StringComparison.OrdinalIgnoreCase))
-				IsOverride = true;
-
-			method_callback = new MethodCallback (impl, method, opt, null, method.IsReturnCharSequence);
-
-			method.JavadocInfo?.AddJavadocs (Comments);
-
-			if (method.DeclaringType.IsGeneratable)
-				Comments.Add ($"// Metadata.xml XPath method reference: path=\"{method.GetMetadataXPathReference (method.DeclaringType)}\"");
-
-			SourceWriterExtensions.AddObsolete (Attributes, method.Deprecated, opt, deprecatedSince: method.DeprecatedSince);
-			SourceWriterExtensions.AddRestrictToWarning (Attributes, method.AnnotatedVisibility, false, opt);
-
-			SourceWriterExtensions.AddSupportedOSPlatform (Attributes, method, opt);
-
-			Attributes.Add (new RegisterAttr (method.JavaName, method.JniSignature, UnmanagedCallbackSupport.GetConnectorName (impl, method, opt), additionalProperties: method.AdditionalAttributeString ()));
+		if (method.RetVal.IsGeneric && gen != null) {
+			Name = method.Name;
+			ExplicitInterfaceImplementation = opt.GetOutputName (gen.FullName);
 
 			SourceWriterExtensions.AddMethodCustomAttributes (Attributes, method);
+
+			Body.Add ("throw new NotImplementedException ();");
+
+			return;
 		}
 
-		public override void Write (CodeWriter writer)
-		{
-			// Need to write our property callback first
-			method_callback?.Write (writer);
+		Name = method.AdjustedName;
+		ExplicitInterfaceImplementation = method.ExplicitInterface;
 
-			base.Write (writer);
-		}
+		IsAbstract = true;
+		IsShadow = impl.RequiresNew (method.Name, method);
+		SetVisibility (method.Visibility);
+
+		NewFirst = true;
+
+		if (string.Equals (method.ManagedOverride, "override", StringComparison.OrdinalIgnoreCase))
+			IsOverride = true;
+
+		method_callback = new MethodCallback (impl, method, opt, null, method.IsReturnCharSequence);
+
+		method.JavadocInfo?.AddJavadocs (Comments);
+
+		if (method.DeclaringType.IsGeneratable)
+			Comments.Add ($"// Metadata.xml XPath method reference: path=\"{method.GetMetadataXPathReference (method.DeclaringType)}\"");
+
+		SourceWriterExtensions.AddObsolete (Attributes, method.Deprecated, opt, deprecatedSince: method.DeprecatedSince);
+		SourceWriterExtensions.AddRestrictToWarning (Attributes, method.AnnotatedVisibility, false, opt);
+
+		SourceWriterExtensions.AddSupportedOSPlatform (Attributes, method, opt);
+
+		Attributes.Add (new RegisterAttr (method.JavaName, method.JniSignature, UnmanagedCallbackSupport.GetConnectorName (impl, method, opt), additionalProperties: method.AdditionalAttributeString ()));
+
+		SourceWriterExtensions.AddMethodCustomAttributes (Attributes, method);
+	}
+
+	public override void Write (CodeWriter writer)
+	{
+		// Need to write our property callback first
+		method_callback?.Write (writer);
+
+		base.Write (writer);
 	}
 }

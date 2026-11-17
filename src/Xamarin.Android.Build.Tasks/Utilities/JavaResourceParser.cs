@@ -8,8 +8,8 @@ using System.Reflection;
 using System.Text.RegularExpressions;
 using Microsoft.Build.Utilities;
 
-namespace Xamarin.Android.Tasks
-{
+namespace Xamarin.Android.Tasks;
+
 	class JavaResourceParser : ResourceParser
 	{
 		public CodeTypeDeclaration Parse (string file, bool isApp, Dictionary<string, string> resourceMap)
@@ -125,4 +125,3 @@ namespace Xamarin.Android.Tasks
 		};
 		}
 	}
-}

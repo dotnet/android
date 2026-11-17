@@ -5,7 +5,7 @@ using NUnit.Framework;
 
 using Xamarin.Android.Tools.Bytecode;
 
-namespace Xamarin.Android.Tools.BytecodeTests {
+namespace Xamarin.Android.Tools.BytecodeTests; 
 
 	[TestFixture]
 	public class ConstantPoolFloatingPointTests {
@@ -85,4 +85,3 @@ namespace Xamarin.Android.Tools.BytecodeTests {
 			return new MemoryStream (bytes);
 		}
 	}
-}

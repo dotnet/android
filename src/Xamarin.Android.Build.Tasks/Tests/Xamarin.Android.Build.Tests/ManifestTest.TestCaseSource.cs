@@ -9,41 +9,40 @@ using System.Xml.XPath;
 using Xamarin.Android.Tasks;
 using System.Collections.Generic;
 
-namespace Xamarin.Android.Build.Tests
+namespace Xamarin.Android.Build.Tests;
+
+public partial class ManifestTest : BaseTest
 {
-	public partial class ManifestTest : BaseTest
+	static IEnumerable<object[]> Get_DebuggerAttributeCases_Data ()
 	{
-		static IEnumerable<object[]> Get_DebuggerAttributeCases_Data ()
+		var ret = new List<object[]> ();
+
+		foreach (AndroidRuntime runtime in new[] { AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT }) {
+			AddTestData ( "", true, false, runtime);
+			// Run fewer NativeAOT cases to reduce CI time.
+			if (runtime == AndroidRuntime.NativeAOT) {
+				continue;
+			}
+			AddTestData ( "", false, true, runtime);
+			AddTestData ( "None", true, false, runtime);
+			AddTestData ( "None", false, true, runtime);
+			AddTestData ( "PdbOnly", true, false, runtime);
+			AddTestData ( "PdbOnly", false, true, runtime);
+			AddTestData ( "Full", true, false, runtime);
+			AddTestData ( "Full", false, true, runtime);
+			AddTestData ( "Portable", true, false, runtime);
+			AddTestData ( "Portable", false, true, runtime);
+		}
+		return ret;
+
+		void AddTestData (string debugType, bool isRelease, bool expected, AndroidRuntime runtime)
 		{
-			var ret = new List<object[]> ();
-
-			foreach (AndroidRuntime runtime in new[] { AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT }) {
-				AddTestData ( "", true, false, runtime);
-				// Run fewer NativeAOT cases to reduce CI time.
-				if (runtime == AndroidRuntime.NativeAOT) {
-					continue;
-				}
-				AddTestData ( "", false, true, runtime);
-				AddTestData ( "None", true, false, runtime);
-				AddTestData ( "None", false, true, runtime);
-				AddTestData ( "PdbOnly", true, false, runtime);
-				AddTestData ( "PdbOnly", false, true, runtime);
-				AddTestData ( "Full", true, false, runtime);
-				AddTestData ( "Full", false, true, runtime);
-				AddTestData ( "Portable", true, false, runtime);
-				AddTestData ( "Portable", false, true, runtime);
-			}
-			return ret;
-
-			void AddTestData (string debugType, bool isRelease, bool expected, AndroidRuntime runtime)
-			{
-				ret.Add (new object[] {
-					debugType,
-					isRelease,
-					expected,
-					runtime,
-				});
-			}
+			ret.Add (new object[] {
+				debugType,
+				isRelease,
+				expected,
+				runtime,
+			});
 		}
 	}
 }

@@ -1,5 +1,5 @@
-namespace Android.InputMethodServices
-{
+namespace Android.InputMethodServices;
+
 	public partial class KeyboardView
 	{
 		protected virtual KeyboardView.IOnKeyboardActionListener? GetOnKeyboardActionListener ()
@@ -7,5 +7,4 @@ namespace Android.InputMethodServices
 			return OnKeyboardActionListener;
 		}
 	}
-}
 

@@ -1,5 +1,5 @@
-namespace Java.IO
-{
+namespace Java.IO;
+
 	public partial class ObjectStreamField
 	{
 		protected virtual void SetOffset (int newValue)
@@ -9,4 +9,3 @@ namespace Java.IO
 #pragma warning restore CS0618
 		}
 	}
-}

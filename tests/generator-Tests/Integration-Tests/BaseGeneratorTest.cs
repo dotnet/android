@@ -7,8 +7,8 @@ using Java.Interop.Tools.JavaCallableWrappers;
 using NUnit.Framework;
 using Xamarin.Android.Binder;
 
-namespace generatortests
-{
+namespace generatortests;
+
 	public class BaseGeneratorTest
 	{
 		StringWriter sw = null;
@@ -104,15 +104,15 @@ namespace generatortests
 		private byte[] ReadAllBytesIgnoringLineEndings (string path)
 		{
 			using (var memoryStream = new MemoryStream ()) {
- 				using (var file = File.OpenRead (path)) {
- 					int readByte;
- 					while ((readByte = file.ReadByte()) != -1) {
- 						byte b = (byte)readByte;
- 						if (b != '\r' && b != '\n' && b != ' ' && b != '\t') {
- 							memoryStream.WriteByte (b);
- 						}
- 					}
- 				}
+				using (var file = File.OpenRead (path)) {
+					int readByte;
+					while ((readByte = file.ReadByte()) != -1) {
+						byte b = (byte)readByte;
+						if (b != '\r' && b != '\n' && b != ' ' && b != '\t') {
+							memoryStream.WriteByte (b);
+						}
+					}
+				}
 				return memoryStream.ToArray ();
 			}
 		}
@@ -165,4 +165,3 @@ namespace generatortests
 			CompareOutputs (expectedPath, outputPath);
 		}
 	}
-}

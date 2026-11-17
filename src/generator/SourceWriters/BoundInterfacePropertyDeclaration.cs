@@ -7,47 +7,46 @@ using System.Threading.Tasks;
 using MonoDroid.Generation;
 using Xamarin.SourceWriter;
 
-namespace generator.SourceWriters
+namespace generator.SourceWriters;
+
+public class BoundInterfacePropertyDeclaration : PropertyWriter
 {
-	public class BoundInterfacePropertyDeclaration : PropertyWriter
+	public BoundInterfacePropertyDeclaration (GenBase gen, Property property, string adapter, CodeGenerationOptions opt)
 	{
-		public BoundInterfacePropertyDeclaration (GenBase gen, Property property, string adapter, CodeGenerationOptions opt)
-		{
-			Name = property.AdjustedName;
-			ExplicitInterfaceImplementation = property.ExplicitInterface;
+		Name = property.AdjustedName;
+		ExplicitInterfaceImplementation = property.ExplicitInterface;
 
-			PropertyType = new TypeReferenceWriter (opt.GetTypeReferenceName (property));
-			IsAutoProperty = true;
+		PropertyType = new TypeReferenceWriter (opt.GetTypeReferenceName (property));
+		IsAutoProperty = true;
 
-			// Allow user to force adding the 'abstract' keyword for "reabstraction"
-			if (string.Equals ((property.Getter ?? property.Setter).ManagedOverride, "reabstract", StringComparison.OrdinalIgnoreCase))
-				IsAbstract = true;
+		// Allow user to force adding the 'abstract' keyword for "reabstraction"
+		if (string.Equals ((property.Getter ?? property.Setter).ManagedOverride, "reabstract", StringComparison.OrdinalIgnoreCase))
+			IsAbstract = true;
 
-			if (property.Getter != null) {
-				HasGet = true;
+		if (property.Getter != null) {
+			HasGet = true;
 
-				if (gen.IsGeneratable)
-					GetterComments.Add ($"// Metadata.xml XPath method reference: path=\"{gen.MetadataXPathReference}/method[@name='{property.Getter.JavaName}'{property.Getter.Parameters.GetMethodXPathPredicate ()}]\"");
-				if (property.Getter.GenericArguments?.Any () == true)
-					GetterAttributes.Add (new CustomAttr (property.Getter.GenericArguments.ToGeneratedAttributeString ()));
+			if (gen.IsGeneratable)
+				GetterComments.Add ($"// Metadata.xml XPath method reference: path=\"{gen.MetadataXPathReference}/method[@name='{property.Getter.JavaName}'{property.Getter.Parameters.GetMethodXPathPredicate ()}]\"");
+			if (property.Getter.GenericArguments?.Any () == true)
+				GetterAttributes.Add (new CustomAttr (property.Getter.GenericArguments.ToGeneratedAttributeString ()));
 
-				SourceWriterExtensions.AddSupportedOSPlatform (GetterAttributes, property.Getter, opt);
+			SourceWriterExtensions.AddSupportedOSPlatform (GetterAttributes, property.Getter, opt);
 
-				GetterAttributes.Add (new RegisterAttr (property.Getter.JavaName, property.Getter.JniSignature, UnmanagedCallbackSupport.GetConnectorName (gen, property.Getter, opt) + ":" + property.Getter.GetAdapterName (opt, adapter), additionalProperties: property.Getter.AdditionalAttributeString ()));
-			}
+			GetterAttributes.Add (new RegisterAttr (property.Getter.JavaName, property.Getter.JniSignature, UnmanagedCallbackSupport.GetConnectorName (gen, property.Getter, opt) + ":" + property.Getter.GetAdapterName (opt, adapter), additionalProperties: property.Getter.AdditionalAttributeString ()));
+		}
 
-			if (property.Setter != null) {
-				HasSet = true;
+		if (property.Setter != null) {
+			HasSet = true;
 
-				if (gen.IsGeneratable)
-					SetterComments.Add ($"// Metadata.xml XPath method reference: path=\"{gen.MetadataXPathReference}/method[@name='{property.Setter.JavaName}'{property.Setter.Parameters.GetMethodXPathPredicate ()}]\"");
-				if (property.Setter.GenericArguments?.Any () == true)
-					SetterAttributes.Add (new CustomAttr (property.Setter.GenericArguments.ToGeneratedAttributeString ()));
+			if (gen.IsGeneratable)
+				SetterComments.Add ($"// Metadata.xml XPath method reference: path=\"{gen.MetadataXPathReference}/method[@name='{property.Setter.JavaName}'{property.Setter.Parameters.GetMethodXPathPredicate ()}]\"");
+			if (property.Setter.GenericArguments?.Any () == true)
+				SetterAttributes.Add (new CustomAttr (property.Setter.GenericArguments.ToGeneratedAttributeString ()));
 
-				SourceWriterExtensions.AddSupportedOSPlatform (SetterAttributes, property.Setter, opt);
+			SourceWriterExtensions.AddSupportedOSPlatform (SetterAttributes, property.Setter, opt);
 
-				SetterAttributes.Add (new RegisterAttr (property.Setter.JavaName, property.Setter.JniSignature, UnmanagedCallbackSupport.GetConnectorName (gen, property.Setter, opt) + ":" + property.Setter.GetAdapterName (opt, adapter), additionalProperties: property.Setter.AdditionalAttributeString ()));
-			}
+			SetterAttributes.Add (new RegisterAttr (property.Setter.JavaName, property.Setter.JniSignature, UnmanagedCallbackSupport.GetConnectorName (gen, property.Setter, opt) + ":" + property.Setter.GetAdapterName (opt, adapter), additionalProperties: property.Setter.AdditionalAttributeString ()));
 		}
 	}
 }

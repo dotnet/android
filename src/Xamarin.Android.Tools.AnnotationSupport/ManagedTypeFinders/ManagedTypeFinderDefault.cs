@@ -1,14 +1,13 @@
-﻿using System;
+using System;
 
-namespace Xamarin.AndroidTools.AnnotationSupport
+namespace Xamarin.AndroidTools.AnnotationSupport;
+
+public abstract class ManagedTypeFinderDefault : ManagedTypeFinder
 {
-	public abstract class ManagedTypeFinderDefault : ManagedTypeFinder
+	public ManagedTypeFinderDefault ()
 	{
-		public ManagedTypeFinderDefault ()
-		{
-			Extensions.Add (new DefinitionManagedTypeFinderExtension (this));
-			Extensions.Add (new PermissionManagedTypeFinderExtension (this));
-		}
+		Extensions.Add (new DefinitionManagedTypeFinderExtension (this));
+		Extensions.Add (new PermissionManagedTypeFinderExtension (this));
 	}
 }
 

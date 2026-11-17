@@ -1,7 +1,7 @@
 using System;
 
-namespace Android.Runtime
-{
+namespace Android.Runtime;
+
 	internal enum JObjectRefType
 	{
 		Invalid     = 0,
@@ -9,5 +9,4 @@ namespace Android.Runtime
 		Global      = 2,
 		WeakGlobal  = 3,
 	}
-}
 

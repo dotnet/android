@@ -3,7 +3,7 @@
 using System;
 using System.Diagnostics.CodeAnalysis;
 
-namespace Java.Interop {
+namespace Java.Interop; 
 
 	/// <include file="../Documentation/Java.Interop/JavaPeerableExtensions.xml" path="/docs/member[@name='T:JavaPeerableExtensions']/*" />
 	public static class JavaPeerableExtensions {
@@ -53,4 +53,3 @@ namespace Java.Interop {
 			return peer;
 		}
 	}
-}

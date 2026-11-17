@@ -9,8 +9,8 @@ using Microsoft.Build.Framework;
 using Microsoft.Android.Build.Tasks;
 using Xamarin.Android.Tools;
 
-namespace Xamarin.Android.Tasks
-{
+namespace Xamarin.Android.Tasks;
+
 	[MSBuildMultiThreadableTask]
 	public class GetPrimaryCpuAbi : MultithreadedAndroidTask, ICancelableTask
 	{
@@ -248,4 +248,3 @@ namespace Xamarin.Android.Tasks
 			Log.LogDebugMessage ($"No device ABI matches the requested runtime identifiers: {string.Join (", ", RuntimeIdentifiers)}");
 		}
 	}
-}

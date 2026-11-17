@@ -15,8 +15,8 @@ using Microsoft.Build.Framework;
 
 using Microsoft.Android.Build.Tasks;
 
-namespace Xamarin.Android.Tasks
-{
+namespace Xamarin.Android.Tasks;
+
 	// TODO: add doc comments to the generated properties
 	//
 	public partial class GenerateLayoutBindings : AsyncTask
@@ -379,4 +379,3 @@ namespace Xamarin.Android.Tasks
 			return true;
 		}
 	}
-}

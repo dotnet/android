@@ -1,6 +1,6 @@
 using System;
 
-namespace Java.Interop {
+namespace Java.Interop; 
 
 	[Serializable]
 	[AttributeUsage (AttributeTargets.Parameter | AttributeTargets.ReturnValue, 
@@ -18,6 +18,5 @@ namespace Java.Interop {
 
 		public ExportParameterKind Kind { get; private set; }
 	}
-}
 
 

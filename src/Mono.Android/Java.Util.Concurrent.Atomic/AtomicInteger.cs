@@ -1,7 +1,7 @@
 using System;
 
-namespace Java.Util.Concurrent.Atomic
-{
+namespace Java.Util.Concurrent.Atomic;
+
 	public partial class AtomicInteger
 	{
 		[Obsolete ("This property was generated for getAndDecrement() method, while it does not make sense. It will be removed in the future version")]
@@ -13,5 +13,4 @@ namespace Java.Util.Concurrent.Atomic
 			get { return GetAndIncrement (); }
 		}
 	}
-}
 

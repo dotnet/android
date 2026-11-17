@@ -1,4 +1,4 @@
-﻿#nullable enable
+#nullable enable
 
 using System;
 using System.Collections;
@@ -8,7 +8,7 @@ using System.Linq.Expressions;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 
-namespace Java.Interop {
+namespace Java.Interop; 
 
 	public static partial class JniMarshal {
 
@@ -44,4 +44,3 @@ namespace Java.Interop {
 			return false;
 		}
 	}
-}

@@ -4,54 +4,53 @@ using System.Linq;
 using System.Xml.Linq;
 using NUnit.Framework;
 
-namespace Xamarin.SourceWriter.Tests
+namespace Xamarin.SourceWriter.Tests;
+
+[TestFixture]
+public class TypeReferenceWriterTests
 {
-	[TestFixture]
-	public class TypeReferenceWriterTests
+	[Test]
+	public void Constructor ()
 	{
-		[Test]
-		public void Constructor ()
-		{
-			var t = new TypeReferenceWriter ("String");
+		var t = new TypeReferenceWriter ("String");
 
-			Assert.AreEqual (null, t.Namespace);
-			Assert.AreEqual ("String", t.Name);
+		Assert.AreEqual (null, t.Namespace);
+		Assert.AreEqual ("String", t.Name);
 
-			t = new TypeReferenceWriter ("System.String");
+		t = new TypeReferenceWriter ("System.String");
 
-			Assert.AreEqual ("System", t.Namespace);
-			Assert.AreEqual ("String", t.Name);
+		Assert.AreEqual ("System", t.Namespace);
+		Assert.AreEqual ("String", t.Name);
 
-			t = new TypeReferenceWriter ("System.Internal.String");
+		t = new TypeReferenceWriter ("System.Internal.String");
 
-			Assert.AreEqual ("System.Internal", t.Namespace);
-			Assert.AreEqual ("String", t.Name);
-		}
+		Assert.AreEqual ("System.Internal", t.Namespace);
+		Assert.AreEqual ("String", t.Name);
+	}
 
-		[Test]
-		public void NotNull ()
-		{
-			var t = new TypeReferenceWriter ("string");
+	[Test]
+	public void NotNull ()
+	{
+		var t = new TypeReferenceWriter ("string");
 
-			var sw = new StringWriter ();
-			var cw = new CodeWriter (sw);
+		var sw = new StringWriter ();
+		var cw = new CodeWriter (sw);
 
-			t.WriteTypeReference (cw);
+		t.WriteTypeReference (cw);
 
-			Assert.AreEqual ("string ", sw.ToString ());
-		}
+		Assert.AreEqual ("string ", sw.ToString ());
+	}
 
-		[Test]
-		public void Nullable ()
-		{
-			var t = new TypeReferenceWriter ("string") { Nullable = true };
+	[Test]
+	public void Nullable ()
+	{
+		var t = new TypeReferenceWriter ("string") { Nullable = true };
 
-			var sw = new StringWriter ();
-			var cw = new CodeWriter (sw);
+		var sw = new StringWriter ();
+		var cw = new CodeWriter (sw);
 
-			t.WriteTypeReference (cw);
+		t.WriteTypeReference (cw);
 
-			Assert.AreEqual ("string? ", sw.ToString ());
-		}
+		Assert.AreEqual ("string? ", sw.ToString ());
 	}
 }

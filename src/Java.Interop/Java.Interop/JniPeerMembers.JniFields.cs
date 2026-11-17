@@ -1,8 +1,8 @@
-﻿#nullable enable
+#nullable enable
 
 using System;
 
-namespace Java.Interop {
+namespace Java.Interop; 
 
 	partial class JniPeerMembers {
 	partial class JniInstanceFields {
@@ -307,4 +307,3 @@ namespace Java.Interop {
 			JniEnvironment.StaticFields.SetStaticObjectField (GetFieldDeclaringType (f).PeerReference, f, value);
 		}
 	}}
-}

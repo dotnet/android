@@ -4,15 +4,14 @@ using Android.Runtime;
 
 using NUnit.Framework;
 
-namespace Java.InteropTests
+namespace Java.InteropTests;
+
+internal static class TrimmableTypeMapTestHelpers
 {
-	internal static class TrimmableTypeMapTestHelpers
+	public static IntPtr GetRequiredMethodID (IntPtr classHandle, string name, string signature)
 	{
-		public static IntPtr GetRequiredMethodID (IntPtr classHandle, string name, string signature)
-		{
-			var method = JNIEnv.GetMethodID (classHandle, name, signature);
-			Assert.AreNotEqual (IntPtr.Zero, method, $"JNI method '{name}{signature}' was not found.");
-			return method;
-		}
+		var method = JNIEnv.GetMethodID (classHandle, name, signature);
+		Assert.AreNotEqual (IntPtr.Zero, method, $"JNI method '{name}{signature}' was not found.");
+		return method;
 	}
 }

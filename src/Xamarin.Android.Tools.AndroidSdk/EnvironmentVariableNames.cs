@@ -1,56 +1,55 @@
 // Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 
-namespace Xamarin.Android.Tools
+namespace Xamarin.Android.Tools;
+
+/// <summary>
+/// Constants for environment variable names used by Android SDK tooling.
+/// See https://developer.android.com/tools/variables#envar
+/// </summary>
+internal static class EnvironmentVariableNames
 {
 	/// <summary>
-	/// Constants for environment variable names used by Android SDK tooling.
-	/// See https://developer.android.com/tools/variables#envar
+	/// The preferred variable for the Android SDK root directory.
 	/// </summary>
-	internal static class EnvironmentVariableNames
-	{
-		/// <summary>
-		/// The preferred variable for the Android SDK root directory.
-		/// </summary>
-		public const string AndroidHome = "ANDROID_HOME";
+	public const string AndroidHome = "ANDROID_HOME";
 
-		/// <summary>
-		/// Deprecated — use <see cref="AndroidHome"/> instead.
-		/// Retained for reading existing environment configurations.
-		/// </summary>
-		[System.Obsolete ("ANDROID_SDK_ROOT is deprecated. Use ANDROID_HOME instead.")]
-		public const string AndroidSdkRoot = "ANDROID_SDK_ROOT";
+	/// <summary>
+	/// Deprecated — use <see cref="AndroidHome"/> instead.
+	/// Retained for reading existing environment configurations.
+	/// </summary>
+	[System.Obsolete ("ANDROID_SDK_ROOT is deprecated. Use ANDROID_HOME instead.")]
+	public const string AndroidSdkRoot = "ANDROID_SDK_ROOT";
 
-		/// <summary>
-		/// The JDK installation directory.
-		/// </summary>
-		public const string JavaHome = "JAVA_HOME";
+	/// <summary>
+	/// The JDK installation directory.
+	/// </summary>
+	public const string JavaHome = "JAVA_HOME";
 
-		/// <summary>
-		/// Internal/override JDK path. Takes precedence over JAVA_HOME when set.
-		/// </summary>
-		public const string JiJavaHome = "JI_JAVA_HOME";
+	/// <summary>
+	/// Internal/override JDK path. Takes precedence over JAVA_HOME when set.
+	/// </summary>
+	public const string JiJavaHome = "JI_JAVA_HOME";
 
-		/// <summary>
-		/// Executable search paths.
-		/// </summary>
-		public const string Path = "PATH";
+	/// <summary>
+	/// Executable search paths.
+	/// </summary>
+	public const string Path = "PATH";
 
-		/// <summary>
-		/// Executable file extensions (Windows).
-		/// </summary>
-		public const string PathExt = "PATHEXT";
+	/// <summary>
+	/// Executable file extensions (Windows).
+	/// </summary>
+	public const string PathExt = "PATHEXT";
 
-		/// <summary>
-		/// Overrides the default location for Android user-specific data
-		/// (AVDs, preferences, etc.). Defaults to $HOME/.android.
-		/// </summary>
-		public const string AndroidUserHome = "ANDROID_USER_HOME";
+	/// <summary>
+	/// Overrides the default location for Android user-specific data
+	/// (AVDs, preferences, etc.). Defaults to $HOME/.android.
+	/// </summary>
+	public const string AndroidUserHome = "ANDROID_USER_HOME";
 
-		/// <summary>
-		/// Overrides the AVD storage directory. Takes precedence over
-		/// <see cref="AndroidUserHome"/>/avd.
-		/// </summary>
-		public const string AndroidAvdHome = "ANDROID_AVD_HOME";
-	}
+	/// <summary>
+	/// Overrides the AVD storage directory. Takes precedence over
+	/// <see cref="AndroidUserHome"/>/avd.
+	/// </summary>
+	public const string AndroidAvdHome = "ANDROID_AVD_HOME";
 }

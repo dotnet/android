@@ -3,8 +3,8 @@ using System.IO;
 using NUnit.Framework;
 using Xamarin.SourceWriter;
 
-namespace generatortests.SourceWriters
-{
+namespace generatortests.SourceWriters;
+
 	[TestFixture]
 	public class SourceWritersTestBase
 	{
@@ -18,4 +18,3 @@ namespace generatortests.SourceWriters
 			return sw.ToString ();
 		}
 	}
-}

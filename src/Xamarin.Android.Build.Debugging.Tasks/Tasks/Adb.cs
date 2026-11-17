@@ -1,4 +1,4 @@
-﻿// Copyright (C) 2015 Xamarin, Inc. All rights reserved.
+// Copyright (C) 2015 Xamarin, Inc. All rights reserved.
 
 using System.IO;
 using System.Text;
@@ -7,8 +7,8 @@ using Microsoft.Android.Build.Tasks;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
 
-namespace Xamarin.Android.Tasks
-{
+namespace Xamarin.Android.Tasks;
+
 	public class Adb : AndroidRunToolTask {
 		public override string TaskPrefix => "ADB";
 
@@ -78,4 +78,3 @@ namespace Xamarin.Android.Tasks
 			get { return IsWindows ? "adb.exe" : "adb"; }
 		}
 	}
-}

@@ -8,8 +8,8 @@ using System.Xml.Linq;
 using MonoDroid.Generation;
 using NUnit.Framework;
 
-namespace generatortests
-{
+namespace generatortests;
+
 	abstract class CodeGeneratorTestBase
 	{
 		protected JavaInteropCodeGenerator generator;
@@ -136,4 +136,3 @@ namespace generatortests
 			return writer.ToString ();
 		}
 	}
-}

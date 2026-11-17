@@ -2,7 +2,7 @@ using System;
 using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 
-namespace Android.Runtime {
+namespace Android.Runtime; 
 
 	public static class Extensions {
 
@@ -16,4 +16,3 @@ namespace Android.Runtime {
 			return Java.Interop.JavaObjectExtensions.JavaCast<TResult>(instance);
 		}
 	}
-}

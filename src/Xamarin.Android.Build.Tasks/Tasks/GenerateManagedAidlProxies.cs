@@ -13,8 +13,8 @@ using Monodroid;
 using Xamarin.Android.Tools.Aidl;
 using Microsoft.Android.Build.Tasks;
 
-namespace Xamarin.Android.Tasks
-{
+namespace Xamarin.Android.Tasks;
+
 	public class GenerateManagedAidlProxies : AndroidTask
 	{
 		public override string TaskPrefix => "GMA";
@@ -110,5 +110,4 @@ namespace Xamarin.Android.Tasks
 				throw new InvalidOperationException (String.Format ("File {0} not exist", name));
 		}
 	}
-}
 

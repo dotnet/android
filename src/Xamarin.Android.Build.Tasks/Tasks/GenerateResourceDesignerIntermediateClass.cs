@@ -8,8 +8,8 @@ using Microsoft.Build.Utilities;
 using Microsoft.Android.Build.Tasks;
 using MonoDroid.Tuner;
 
-namespace Xamarin.Android.Tasks
-{
+namespace Xamarin.Android.Tasks;
+
 	public class GenerateResourceDesignerIntermediateClass : AndroidTask
 	{
 		public override string TaskPrefix => "GRDIC";
@@ -75,4 +75,3 @@ type %MODIFIER% Resource = %BASECLASS%
 			return !Log.HasLoggedErrors;
 		}
 	}
-}

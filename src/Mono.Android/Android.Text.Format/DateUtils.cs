@@ -1,7 +1,7 @@
 using System;
 using Android.Runtime;
 
-namespace Android.Text.Format {
+namespace Android.Text.Format; 
 
 	partial class DateUtils {
 
@@ -17,4 +17,3 @@ namespace Android.Text.Format {
 			return FormatSameDayTimeFormatted (then, now, (int) dateStyle, (int) timeStyle);
 		}
 	}
-}

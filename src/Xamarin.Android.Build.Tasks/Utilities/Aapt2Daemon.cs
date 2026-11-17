@@ -12,8 +12,8 @@ using TPL = System.Threading.Tasks;
 using Xamarin.Android.Tools;
 using Microsoft.Android.Build.Tasks;
 
-namespace Xamarin.Android.Tasks
-{
+namespace Xamarin.Android.Tasks;
+
 	internal class Aapt2Daemon : IDisposable
 	{
 		static readonly string TypeFullName = typeof (Aapt2Daemon).FullName;
@@ -206,7 +206,7 @@ namespace Xamarin.Android.Tasks
 			};
 			Process aapt2;
 			Encoding currentEncoding = Console.InputEncoding;
- 			lock (lockObject) {
+			lock (lockObject) {
 				try {
 					if (!SetProcessInputEncoding (info, Files.UTF8withoutBOM))
 						SetConsoleInputEncoding (Files.UTF8withoutBOM);
@@ -309,4 +309,3 @@ namespace Xamarin.Android.Tasks
 			return false;
 		}
 	}
-}

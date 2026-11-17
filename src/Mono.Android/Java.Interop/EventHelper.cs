@@ -1,6 +1,6 @@
 using System;
 
-namespace Java.Interop {
+namespace Java.Interop; 
 
 	public static class EventHelper {
 		
@@ -39,5 +39,4 @@ namespace Java.Interop {
 			}
 		}
 	}
-}
 

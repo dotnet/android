@@ -5,8 +5,8 @@ using Mono.Cecil;
 using Mono.Cecil.Cil;
 using Xamarin.Android.Tasks;
 
-namespace MonoDroid.Tuner
-{
+namespace MonoDroid.Tuner;
+
 	static class AddKeepAlivesHelper
 	{
 		internal static bool AddKeepAlives (AssemblyDefinition assembly, IMetadataResolver resolver, Func<AssemblyDefinition?> getCorlibAssembly, Action<string> logMessage)
@@ -116,4 +116,3 @@ namespace MonoDroid.Tuner
 			}
 		}
 	}
-}

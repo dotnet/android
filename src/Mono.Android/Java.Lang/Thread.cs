@@ -6,7 +6,7 @@ using System.Threading;
 
 using Android.Runtime;
 
-namespace Java.Lang {
+namespace Java.Lang; 
 
 	public partial class Thread {
 
@@ -103,4 +103,3 @@ namespace Java.Lang {
 		/// <seealso href="https://developer.android.com/reference/java/lang/Thread#Thread(java.lang.ThreadGroup,%20java.lang.Runnable,%20java.lang.String,%20long)">Android documentation for <c>java.lang.Thread</c></seealso>
 		public Thread (ThreadGroup group, Action runHandler, string threadName, long stackSize) : this (group, new RunnableImplementor (runHandler), threadName, stackSize) {}
 	}
-}

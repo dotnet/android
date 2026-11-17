@@ -2,8 +2,8 @@ using System;
 using Android.AccessibilityServices;
 using Android.OS;
 
-namespace Android.Views.Accessibility
-{
+namespace Android.Views.Accessibility;
+
 	public partial class AccessibilityNodeProvider
 	{
 #if ANDROID_16
@@ -13,5 +13,4 @@ namespace Android.Views.Accessibility
 		}
 #endif
 	}
-}
 

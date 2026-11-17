@@ -1,8 +1,8 @@
 using MonoDroid.Generation;
 using NUnit.Framework;
 
-namespace generatortests
-{
+namespace generatortests;
+
 	[TestFixture]
 	class NRTJavaInteropCodeGeneratorTests : CodeGeneratorTests
 	{
@@ -18,4 +18,3 @@ namespace generatortests
 		protected override string CommonDirectoryOverride => "XAJavaInterop1-NRT";
 		protected override string TargetedDirectoryOverride => "XAJavaInterop1-NRT";
 	}
-}

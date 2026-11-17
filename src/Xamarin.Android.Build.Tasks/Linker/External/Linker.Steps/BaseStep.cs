@@ -30,7 +30,7 @@
 
 using Mono.Cecil;
 
-namespace Mono.Linker.Steps {
+namespace Mono.Linker.Steps; 
 
 	public abstract class BaseStep : IStep {
 
@@ -92,4 +92,3 @@ namespace Mono.Linker.Steps {
 			Context.LogError ($"XA{code}", message);
 		}
 	}
-}

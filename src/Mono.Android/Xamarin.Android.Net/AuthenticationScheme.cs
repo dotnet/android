@@ -1,5 +1,5 @@
-namespace Xamarin.Android.Net
-{
+namespace Xamarin.Android.Net;
+
 	/// <summary>
 	/// Authentication schemes supported by <see cref="AndroidMessageHandler"/>
 	/// </summary>
@@ -25,4 +25,3 @@ namespace Xamarin.Android.Net
 		/// </summary>
 		Digest
 	}
-}

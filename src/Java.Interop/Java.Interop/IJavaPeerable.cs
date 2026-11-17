@@ -2,8 +2,8 @@
 
 using System;
 
-namespace Java.Interop
-{
+namespace Java.Interop;
+
 	/// <include file="../Documentation/Java.Interop/IJavaPeerable.xml" path="/docs/member[@name='T:IJavaPeerable']/*" />
 	public interface IJavaPeerable : IDisposable
 	{
@@ -40,5 +40,4 @@ namespace Java.Interop
 
 		IntPtr  JniObjectReferenceControlBlock  => IntPtr.Zero;
 	}
-}
 

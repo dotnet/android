@@ -6,7 +6,7 @@ using Android.Views;
 
 using Java.Interop;
 
-namespace Android.Widget {
+namespace Android.Widget; 
 
 	public partial class MediaController {
 
@@ -68,4 +68,3 @@ namespace Android.Widget {
 			return new View.IOnClickListenerImplementor ();
 		}
 	}
-}

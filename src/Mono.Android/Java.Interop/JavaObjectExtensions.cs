@@ -5,7 +5,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 using Android.Runtime;
 
-namespace Java.Interop {
+namespace Java.Interop; 
 
 	public static class JavaObjectExtensions {
 		const DynamicallyAccessedMemberTypes Constructors = DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.NonPublicConstructors;
@@ -133,4 +133,3 @@ namespace Java.Interop {
 			return suffixDefinition.MakeGenericType (arguments);
 		}
 	}
-}

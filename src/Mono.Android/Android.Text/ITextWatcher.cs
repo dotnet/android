@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using Android.Runtime;
 
-namespace Android.Text {
+namespace Android.Text; 
 
 	/// <summary>
 	/// Provides data for the <see cref="Android.Widget.TextView.AfterTextChanged"/> event, raised after the text has been changed.
@@ -135,4 +135,3 @@ namespace Android.Text {
 				h (inst, new TextChangedEventArgs (s, start, before, count));
 		}
 	}
-}

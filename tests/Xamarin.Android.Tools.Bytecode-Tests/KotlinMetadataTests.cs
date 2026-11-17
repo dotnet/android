@@ -3,8 +3,8 @@ using Xamarin.Android.Tools.Bytecode;
 using NUnit.Framework;
 using System.Linq;
 
-namespace Xamarin.Android.Tools.BytecodeTests
-{
+namespace Xamarin.Android.Tools.BytecodeTests;
+
 	[TestFixture]
 	public class KotlinMetadataTests : ClassFileFixture
 	{
@@ -202,5 +202,4 @@ namespace Xamarin.Android.Tools.BytecodeTests
 			Assert.AreEqual (KotlinClassVisibility.Public, klass_meta.Visibility);
 		}
 	}
-}
 

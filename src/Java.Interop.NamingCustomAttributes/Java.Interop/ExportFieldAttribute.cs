@@ -1,23 +1,22 @@
 using System;
 
-namespace Java.Interop {
+namespace Java.Interop; 
 
-	[Serializable]
-	[AttributeUsage (AttributeTargets.Method, 
-			AllowMultiple=false, 
-			Inherited=false)]
+[Serializable]
+[AttributeUsage (AttributeTargets.Method, 
+		AllowMultiple=false, 
+		Inherited=false)]
 #if !JCW_ONLY_TYPE_NAMES
-	public
+public
 #endif  // !JCW_ONLY_TYPE_NAMES
-	partial class ExportFieldAttribute : Attribute {
+partial class ExportFieldAttribute : Attribute {
 
-		public ExportFieldAttribute (string name)
-		{
-			Name = name;
-		}
-
-		public string                 Name                    {get; set;}
+	public ExportFieldAttribute (string name)
+	{
+		Name = name;
 	}
+
+	public string                 Name                    {get; set;}
 }
 
 

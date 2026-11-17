@@ -6,60 +6,59 @@ using System.Threading.Tasks;
 using MonoDroid.Generation;
 using Xamarin.SourceWriter;
 
-namespace generator.SourceWriters
+namespace generator.SourceWriters;
+
+public class InterfaceListenerEvent : EventWriter
 {
-	public class InterfaceListenerEvent : EventWriter
+	readonly InterfaceListenerEventHandlerHelper helper_method;
+
+	public InterfaceListenerEvent (InterfaceGen iface, Method method, string name, string nameSpec, string fullDelegateName, string wrefSuffix, string add, string remove, bool hasHandlerArgument, CodeGenerationOptions opt)
 	{
-		readonly InterfaceListenerEventHandlerHelper helper_method;
+		Name = name;
+		EventType = new TypeReferenceWriter (opt.GetOutputName (fullDelegateName));
 
-		public InterfaceListenerEvent (InterfaceGen iface, Method method, string name, string nameSpec, string fullDelegateName, string wrefSuffix, string add, string remove, bool hasHandlerArgument, CodeGenerationOptions opt)
-		{
-			Name = name;
-			EventType = new TypeReferenceWriter (opt.GetOutputName (fullDelegateName));
+		IsPublic = true;
 
-			IsPublic = true;
+		SourceWriterExtensions.AddSupportedOSPlatform (Attributes, method, opt);
 
-			SourceWriterExtensions.AddSupportedOSPlatform (Attributes, method, opt);
+		HasAdd = true;
 
-			HasAdd = true;
+		AddBody.Add ($"global::Java.Interop.EventHelper.AddEventHandler<{opt.GetOutputName (iface.FullName)}, {opt.GetOutputName (iface.FullName)}Implementor>(");
+		AddBody.Add ($"ref weak_implementor_{wrefSuffix},");
+		AddBody.Add ($"__Create{iface.Name}Implementor,");
+		AddBody.Add ($"{add + (hasHandlerArgument ? "_Event_With_Handler_Helper" : null)},");
+		AddBody.Add ($"__h => __h.{nameSpec}Handler += value);");
 
-			AddBody.Add ($"global::Java.Interop.EventHelper.AddEventHandler<{opt.GetOutputName (iface.FullName)}, {opt.GetOutputName (iface.FullName)}Implementor>(");
-			AddBody.Add ($"ref weak_implementor_{wrefSuffix},");
-			AddBody.Add ($"__Create{iface.Name}Implementor,");
-			AddBody.Add ($"{add + (hasHandlerArgument ? "_Event_With_Handler_Helper" : null)},");
-			AddBody.Add ($"__h => __h.{nameSpec}Handler += value);");
+		HasRemove = true;
 
-			HasRemove = true;
+		RemoveBody.Add ($"global::Java.Interop.EventHelper.RemoveEventHandler<{opt.GetOutputName (iface.FullName)}, {opt.GetOutputName (iface.FullName)}Implementor>(");
+		RemoveBody.Add ($"ref weak_implementor_{wrefSuffix},");
+		RemoveBody.Add ($"{opt.GetOutputName (iface.FullName)}Implementor.__IsEmpty,");
+		RemoveBody.Add ($"{remove},");
+		RemoveBody.Add ($"__h => __h.{nameSpec}Handler -= value);");
 
-			RemoveBody.Add ($"global::Java.Interop.EventHelper.RemoveEventHandler<{opt.GetOutputName (iface.FullName)}, {opt.GetOutputName (iface.FullName)}Implementor>(");
-			RemoveBody.Add ($"ref weak_implementor_{wrefSuffix},");
-			RemoveBody.Add ($"{opt.GetOutputName (iface.FullName)}Implementor.__IsEmpty,");
-			RemoveBody.Add ($"{remove},");
-			RemoveBody.Add ($"__h => __h.{nameSpec}Handler -= value);");
-
-			if (hasHandlerArgument)
-				helper_method = new InterfaceListenerEventHandlerHelper (iface, method, add, opt);
-		}
-
-		public override void Write (CodeWriter writer)
-		{
-			base.Write (writer);
-
-			helper_method?.Write (writer);
-		}
+		if (hasHandlerArgument)
+			helper_method = new InterfaceListenerEventHandlerHelper (iface, method, add, opt);
 	}
 
-	public class InterfaceListenerEventHandlerHelper : MethodWriter
+	public override void Write (CodeWriter writer)
 	{
-		public InterfaceListenerEventHandlerHelper (InterfaceGen iface, Method method, string add, CodeGenerationOptions opt)
-		{
-			Name = add + "_Event_With_Handler_Helper";
-			Parameters.Add (new MethodParameterWriter ("value", new TypeReferenceWriter (opt.GetOutputName (iface.FullName))));
-			ReturnType = TypeReferenceWriter.Void;
+		base.Write (writer);
 
-			SourceWriterExtensions.AddSupportedOSPlatform (Attributes, method, opt);
+		helper_method?.Write (writer);
+	}
+}
 
-			Body.Add ($"{add} (value, null);");
-		}
+public class InterfaceListenerEventHandlerHelper : MethodWriter
+{
+	public InterfaceListenerEventHandlerHelper (InterfaceGen iface, Method method, string add, CodeGenerationOptions opt)
+	{
+		Name = add + "_Event_With_Handler_Helper";
+		Parameters.Add (new MethodParameterWriter ("value", new TypeReferenceWriter (opt.GetOutputName (iface.FullName))));
+		ReturnType = TypeReferenceWriter.Void;
+
+		SourceWriterExtensions.AddSupportedOSPlatform (Attributes, method, opt);
+
+		Body.Add ($"{add} (value, null);");
 	}
 }

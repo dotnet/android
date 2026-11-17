@@ -4,19 +4,18 @@ using System.Net.NetworkInformation;
 
 using NUnit.Framework;
 
-namespace System.NetTests {
+namespace System.NetTests; 
 
-	[TestFixture]
-	public class NetworkChangeTest
+[TestFixture]
+public class NetworkChangeTest
+{
+	[Test]
+	public void NetworkAvailabilityChanged ()
 	{
-		[Test]
-		public void NetworkAvailabilityChanged ()
-		{
-			NetworkAvailabilityChangedEventHandler h = (o, e) => {
-				Console.WriteLine ("NetworkAvailabilityChanged called");
-			};
-			NetworkChange.NetworkAvailabilityChanged += h;
-			NetworkChange.NetworkAvailabilityChanged -= h;
-		}
+		NetworkAvailabilityChangedEventHandler h = (o, e) => {
+			Console.WriteLine ("NetworkAvailabilityChanged called");
+		};
+		NetworkChange.NetworkAvailabilityChanged += h;
+		NetworkChange.NetworkAvailabilityChanged -= h;
 	}
 }

@@ -6,7 +6,7 @@ using System.Diagnostics.CodeAnalysis;
 
 using NUnit.Framework;
 
-namespace System.XmlTests {
+namespace System.XmlTests; 
     public class C {
         [DefaultValue(typeof(C), "c")]
         public Type? T { get; }
@@ -25,4 +25,3 @@ namespace System.XmlTests {
             _ = new C().T; // Prevent C.T from being removed by trimming
         }
     }
-}

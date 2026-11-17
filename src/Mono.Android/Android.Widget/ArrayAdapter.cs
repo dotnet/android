@@ -6,7 +6,7 @@ using Android.Runtime;
 
 using Java.Interop;
 
-namespace Android.Widget {
+namespace Android.Widget; 
 
 	[Register ("android/widget/ArrayAdapter", DoNotGenerateAcw=true)]
 	public partial class ArrayAdapter<
@@ -301,4 +301,3 @@ namespace Android.Widget {
 			}
 		}
 	}
-}

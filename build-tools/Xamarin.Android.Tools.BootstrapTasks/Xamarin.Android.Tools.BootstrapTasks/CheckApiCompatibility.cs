@@ -8,348 +8,347 @@ using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
 using Files = Microsoft.Android.Build.Tasks.Files;
 
-namespace Xamarin.Android.Tools.BootstrapTasks
+namespace Xamarin.Android.Tools.BootstrapTasks;
+
+public sealed class CheckApiCompatibility : Task
 {
-	public sealed class CheckApiCompatibility : Task
+	// This dictionary holds Api versions
+	// key is the Api version
+	// value is the previous Api version in relation to the key
+	static readonly Dictionary<string, string> api_versions = new Dictionary<string, string> ()
 	{
-		// This dictionary holds Api versions
-		// key is the Api version
-		// value is the previous Api version in relation to the key
-		static readonly Dictionary<string, string> api_versions = new Dictionary<string, string> ()
-		{
-			{ "v4.4", "" },
-			{ "v4.4.87", "v4.4" },
-			{ "v5.0", "v4.4.87" },
-			{ "v5.1", "v5.0" },
-			{ "v6.0", "v5.1" },
-			{ "v7.0", "v6.0" },
-			{ "v7.1", "v7.0" },
-			{ "v8.0", "v7.1" },
-			{ "v8.1", "v8.0" },
-			{ "v9.0", "v8.1" },
-			{ "v10.0", "v9.0" },
-			{ "v11.0", "v10.0" },
-			{ "v12.0", "v11.0" },
-			{ "v12.1", "v12.0" },
-			{ "v13.0", "v12.1" },
-			{ "v14.0", "v13.0" },
-			{ "v15.0", "v14.0" },
-			{ "v16.0", "v15.0" },
-			{ "v16.1", "v16.0" },
-			{ "v17.0", "v16.1" },
-			{ "v17.1", "v17.0" },
-			{ "v17.2", "v17.1" },
-		};
+		{ "v4.4", "" },
+		{ "v4.4.87", "v4.4" },
+		{ "v5.0", "v4.4.87" },
+		{ "v5.1", "v5.0" },
+		{ "v6.0", "v5.1" },
+		{ "v7.0", "v6.0" },
+		{ "v7.1", "v7.0" },
+		{ "v8.0", "v7.1" },
+		{ "v8.1", "v8.0" },
+		{ "v9.0", "v8.1" },
+		{ "v10.0", "v9.0" },
+		{ "v11.0", "v10.0" },
+		{ "v12.0", "v11.0" },
+		{ "v12.1", "v12.0" },
+		{ "v13.0", "v12.1" },
+		{ "v14.0", "v13.0" },
+		{ "v15.0", "v14.0" },
+		{ "v16.0", "v15.0" },
+		{ "v16.1", "v16.0" },
+		{ "v17.0", "v16.1" },
+		{ "v17.1", "v17.0" },
+		{ "v17.2", "v17.1" },
+	};
 
-		static readonly string assemblyToValidate = "Mono.Android.dll";
+	static readonly string assemblyToValidate = "Mono.Android.dll";
 
-		static string compatApiCommand = null;
+	static string compatApiCommand = null;
 
-		// Path where Microsoft.DotNet.ApiCompat nuget package is located
-		[Required]
-		public string ApiCompatPath { get; set; }
+	// Path where Microsoft.DotNet.ApiCompat nuget package is located
+	[Required]
+	public string ApiCompatPath { get; set; }
 
-		// Path where Microsoft.DotNet.CodeGen nuget package is located
-		[Required]
-		public string CodeGenPath { get; set; }
+	// Path where Microsoft.DotNet.CodeGen nuget package is located
+	[Required]
+	public string CodeGenPath { get; set; }
 
-		// Api level just built
-		[Required]
-		public string ApiLevel { get; set; }
+	// Api level just built
+	[Required]
+	public string ApiLevel { get; set; }
 
-		// The last stable api level.
-		[Required]
-		public string LastStableApiLevel { get; set; }
+	// The last stable api level.
+	[Required]
+	public string LastStableApiLevel { get; set; }
 
-		// Output Path where the assembly was just built
-		[Required]
-		public string TargetImplementationPath { get; set; }
+	// Output Path where the assembly was just built
+	[Required]
+	public string TargetImplementationPath { get; set; }
 
-		// Path to xamarin-android-api-compatibility folder
-		[Required]
-		public string ApiCompatibilityPath { get; set; }
+	// Path to xamarin-android-api-compatibility folder
+	[Required]
+	public string ApiCompatibilityPath { get; set; }
 
-		// In case API diffs vary between e.g. Classic MonoAndroid & .NET 6+
-		public string TargetFramework { get; set; }
+	// In case API diffs vary between e.g. Classic MonoAndroid & .NET 6+
+	public string TargetFramework { get; set; }
 
-		// What's missing from acceptableIssuesFile?
-		public string LinesToAdd { get; set; }
+	// What's missing from acceptableIssuesFile?
+	public string LinesToAdd { get; set; }
 
-		// This Build tasks validates that changes are not breaking Api
-		public override bool Execute ()
-		{
-			Log.LogMessage (MessageImportance.High, $"CheckApiCompatibility for ApiLevel: {ApiLevel}");
+	// This Build tasks validates that changes are not breaking Api
+	public override bool Execute ()
+	{
+		Log.LogMessage (MessageImportance.High, $"CheckApiCompatibility for ApiLevel: {ApiLevel}");
 
-			// Check to see if Api has a previous Api defined.
-			if (!api_versions.TryGetValue (ApiLevel, out string previousApiLevel)) {
-				LogError ($"Please add ApiLevel:{ApiLevel} to the list of supported apis. Supported APIs include: " +
-					string.Join (", ", api_versions.Keys.OrderBy (k => k)) + ".");
-				return !Log.HasLoggedErrors;
-			}
-
-			var implementationPath = new DirectoryInfo (TargetImplementationPath);
-			if (!implementationPath.Exists) {
-				LogError ($"Implementation path does not exists:'{TargetImplementationPath}'");
-				return !Log.HasLoggedErrors;
-			}
-
-			TargetImplementationPath = implementationPath.FullName;
-			if (TargetImplementationPath.EndsWith ("\\", StringComparison.Ordinal) || TargetImplementationPath.EndsWith ("/", StringComparison.Ordinal)) {
-				TargetImplementationPath = TargetImplementationPath.Substring (0, TargetImplementationPath.Length - 1);
-			}
-
-			// For non netcoreapp assemblies we should compare against previous version.
-			if (TargetImplementationPath.IndexOf ("MonoAndroid", StringComparison.OrdinalIgnoreCase) != -1) {
-
-				// Get the previous api implementation path by replacing the current api string with the previous one.
-				var previousTargetImplementationPath = new DirectoryInfo (TargetImplementationPath.Replace (ApiLevel, previousApiLevel));
-
-				// In case previous api is not defined or directory does not exist we can skip the check.
-				var validateAgainstPreviousApi = !(string.IsNullOrWhiteSpace (previousApiLevel) || !previousTargetImplementationPath.Exists);
-				if (validateAgainstPreviousApi) {
-
-					// First we check the Api level assembly against the previous api level assembly
-					// i.e.: check api breakages using "the just built V2.dll" against "the just built V1.dll"
-					ValidateApiCompat (previousTargetImplementationPath.FullName, false);
-
-					if (Log.HasLoggedErrors) {
-						return !Log.HasLoggedErrors;
-					}
-				}
-			}
-
-			// If Api level is the latest we should also compare it against the reference assembly
-			// located on the external folder. (xamarin-android-api-compatibility)
-			// i.e.: check apicompat using "the just built V2.dll" against V2.dll located on xamarin-android-api-compatibility repo
-			// This condition is also valid for netcoreapp
-			if (ApiLevel == LastStableApiLevel) {
-
-				// Check xamarin-android-api-compatibility reference directory exists
-				var referenceContractPath = new DirectoryInfo (Path.Combine (ApiCompatibilityPath, "reference", TargetFramework));
-				if (!referenceContractPath.Parent.Exists) {
-					Log.LogWarning ($"CheckApiCompatibility Warning: Skipping reference contract check.\n{referenceContractPath.Parent.FullName} does not exist.");
-					return !Log.HasLoggedErrors;
-				}
-
-				// Before validate, check that zip files were decompressed.
-				referenceContractPath.Create ();
-				var zipFiles = Directory.GetFiles (referenceContractPath.Parent.FullName, "*.zip");
-				foreach (var zipFile in zipFiles) {
-					var zipDateTime = File.GetLastWriteTimeUtc (zipFile);
-					using (var zip = ZipFile.OpenRead (zipFile)) {
-						var entries = zip.Entries.Select (entry => {
-							var isDirectory = entry.FullName.EndsWith ("/", StringComparison.Ordinal) || entry.FullName.EndsWith ("\\", StringComparison.Ordinal);
-							Files.GetArchiveExtractionPath (referenceContractPath.FullName, entry.FullName, isDirectory);
-							return (Entry: entry, IsDirectory: isDirectory);
-						}).ToArray ();
-						foreach (var (entry, isDirectory) in entries) {
-							var path = Files.GetArchiveExtractionPath (referenceContractPath.FullName, entry.FullName, isDirectory);
-							if (isDirectory) {
-								Directory.CreateDirectory (path);
-								continue;
-							}
-							if (!File.Exists (path) || File.GetLastWriteTimeUtc (path) < zipDateTime) {
-								Log.LogMessage ($"Extracting: {path}");
-								Directory.CreateDirectory (Path.GetDirectoryName (path));
-								File.Delete (path);
-								using (var entryStream = entry.Open ())
-								using (var fileStream = File.Create (path)) {
-									entryStream.CopyTo (fileStream);
-								}
-							} else {
-								Log.LogMessage ($"Skipping, up to date: {path}");
-							}
-						}
-					}
-				}
-
-				ValidateApiCompat (referenceContractPath.FullName, true);
-			}
-
+		// Check to see if Api has a previous Api defined.
+		if (!api_versions.TryGetValue (ApiLevel, out string previousApiLevel)) {
+			LogError ($"Please add ApiLevel:{ApiLevel} to the list of supported apis. Supported APIs include: " +
+				string.Join (", ", api_versions.Keys.OrderBy (k => k)) + ".");
 			return !Log.HasLoggedErrors;
 		}
 
-		// Validates Api compatibility between contract (previous version) and implementation (current version)
-		// We do that by using Microsoft.DotNet.ApiCompat.dll
-		void ValidateApiCompat (string contractPath, bool validateAgainstReference)
-		{
-			var contractAssembly = new FileInfo (Path.Combine (contractPath, assemblyToValidate));
-			if (!contractAssembly.Exists) {
-				LogError ($"Contract assembly {assemblyToValidate} does not exists in the contract path. {contractPath} - {validateAgainstReference}");
-				return;
+		var implementationPath = new DirectoryInfo (TargetImplementationPath);
+		if (!implementationPath.Exists) {
+			LogError ($"Implementation path does not exists:'{TargetImplementationPath}'");
+			return !Log.HasLoggedErrors;
+		}
+
+		TargetImplementationPath = implementationPath.FullName;
+		if (TargetImplementationPath.EndsWith ("\\", StringComparison.Ordinal) || TargetImplementationPath.EndsWith ("/", StringComparison.Ordinal)) {
+			TargetImplementationPath = TargetImplementationPath.Substring (0, TargetImplementationPath.Length - 1);
+		}
+
+		// For non netcoreapp assemblies we should compare against previous version.
+		if (TargetImplementationPath.IndexOf ("MonoAndroid", StringComparison.OrdinalIgnoreCase) != -1) {
+
+			// Get the previous api implementation path by replacing the current api string with the previous one.
+			var previousTargetImplementationPath = new DirectoryInfo (TargetImplementationPath.Replace (ApiLevel, previousApiLevel));
+
+			// In case previous api is not defined or directory does not exist we can skip the check.
+			var validateAgainstPreviousApi = !(string.IsNullOrWhiteSpace (previousApiLevel) || !previousTargetImplementationPath.Exists);
+			if (validateAgainstPreviousApi) {
+
+				// First we check the Api level assembly against the previous api level assembly
+				// i.e.: check api breakages using "the just built V2.dll" against "the just built V1.dll"
+				ValidateApiCompat (previousTargetImplementationPath.FullName, false);
+
+				if (Log.HasLoggedErrors) {
+					return !Log.HasLoggedErrors;
+				}
+			}
+		}
+
+		// If Api level is the latest we should also compare it against the reference assembly
+		// located on the external folder. (xamarin-android-api-compatibility)
+		// i.e.: check apicompat using "the just built V2.dll" against V2.dll located on xamarin-android-api-compatibility repo
+		// This condition is also valid for netcoreapp
+		if (ApiLevel == LastStableApiLevel) {
+
+			// Check xamarin-android-api-compatibility reference directory exists
+			var referenceContractPath = new DirectoryInfo (Path.Combine (ApiCompatibilityPath, "reference", TargetFramework));
+			if (!referenceContractPath.Parent.Exists) {
+				Log.LogWarning ($"CheckApiCompatibility Warning: Skipping reference contract check.\n{referenceContractPath.Parent.FullName} does not exist.");
+				return !Log.HasLoggedErrors;
 			}
 
-			var implementationAssembly = new FileInfo (Path.Combine (TargetImplementationPath, assemblyToValidate));
-			if (!implementationAssembly.Exists) {
-				LogError ($"Implementation assembly {assemblyToValidate} exists in the contract path but not on the implementation folder.");
-				return;
-			}
-
-			for (int i = 0; i < 3; i++) {
-				using (var genApiProcess = new Process ()) {
-
-					var apiCompat = new FileInfo (Path.Combine (ApiCompatPath, "..", "netcoreapp3.1", "Microsoft.DotNet.ApiCompat.dll"));
-					genApiProcess.StartInfo.FileName = "dotnet";
-					genApiProcess.StartInfo.EnvironmentVariables ["DOTNET_ROLL_FORWARD"] = "Major";
-					genApiProcess.StartInfo.EnvironmentVariables ["DOTNET_ROLL_FORWARD_TO_PRERELEASE"] = "1";
-					genApiProcess.StartInfo.ArgumentList.Add (apiCompat.FullName);
-					genApiProcess.StartInfo.ArgumentList.Add (contractAssembly.FullName);
-					genApiProcess.StartInfo.ArgumentList.Add ("-i");
-					genApiProcess.StartInfo.ArgumentList.Add (TargetImplementationPath);
-					genApiProcess.StartInfo.ArgumentList.Add ("--allow-default-interface-methods");
-
-					// Verify if there is a file with acceptable issues.
-					var acceptableIssuesFiles = new[]{
-						Path.Combine (ApiCompatibilityPath, $"acceptable-breakages-{ (validateAgainstReference ? "vReference" : ApiLevel) }-{TargetFramework}.txt"),
-						Path.Combine (ApiCompatibilityPath, $"acceptable-breakages-{ (validateAgainstReference ? "vReference" : ApiLevel) }.txt"),
-					};
-					var acceptableIssuesFile = acceptableIssuesFiles.Select (p => new FileInfo (p))
-						.Where (v => v.Exists)
-						.FirstOrDefault ();
-					if (acceptableIssuesFile != null) {
-						genApiProcess.StartInfo.ArgumentList.Add ("--baseline");
-						genApiProcess.StartInfo.ArgumentList.Add (acceptableIssuesFile.FullName);
-						genApiProcess.StartInfo.ArgumentList.Add ("--validate-baseline");
-					}
-
-					// Verify if there is an exclusion list
-					var excludeAttributes = new FileInfo (Path.Combine (ApiCompatibilityPath, $"api-compat-exclude-attributes.txt"));
-					if (excludeAttributes.Exists) {
-						genApiProcess.StartInfo.ArgumentList.Add ("--exclude-attributes");
-						genApiProcess.StartInfo.ArgumentList.Add (excludeAttributes.FullName);
-					}
-
-					genApiProcess.StartInfo.UseShellExecute = false;
-					genApiProcess.StartInfo.CreateNoWindow = true;
-					genApiProcess.StartInfo.RedirectStandardOutput = true;
-					genApiProcess.StartInfo.RedirectStandardError = true;
-					genApiProcess.StartInfo.InheritedHandles = [];
-					var lines = new List<string> ();
-					var processHasCrashed = false;
-					// Get api definition for previous Api
-					compatApiCommand = $"CompatApi command: dotnet {string.Join (" ", genApiProcess.StartInfo.ArgumentList.Select (a => $"\"{a}\""))}";
-					Log.LogMessage (MessageImportance.High, compatApiCommand);
-
-					int exitCode;
-					var timeout = TimeSpan.FromMinutes (5);
-					var timer = Stopwatch.StartNew ();
-					genApiProcess.Start ();
-					try {
-						foreach (var line in genApiProcess.ReadAllLines (timeout)) {
-							if (string.IsNullOrWhiteSpace (line.Content)) {
-								continue;
-							}
-							lines.Add (line.Content.Trim ());
-							if (line.Content.IndexOf ("Native Crash Reporting", StringComparison.Ordinal) != -1) {
-								processHasCrashed = true;
-							}
-						}
-						var remaining = timeout - timer.Elapsed;
-						var status = genApiProcess.SafeHandle.WaitForExitOrKillOnTimeout (remaining > TimeSpan.Zero ? remaining : TimeSpan.Zero);
-						if (status.Canceled) {
-							throw new TimeoutException ($"ApiCompat failed to exit within {timeout}.");
-						}
-						exitCode = status.ExitCode;
-					} catch (TimeoutException ex) {
-						LogError (ex.Message);
-						return;
-					} finally {
-						genApiProcess.SafeHandle.WaitForExitOrKillOnTimeout (TimeSpan.Zero);
-					}
-
-					if (lines.Count == 0) {
-						if (exitCode != 0) {
-							LogError ($"ApiCompat failed with exit code {exitCode}.");
-						}
-						return;
-					}
-
-					if (processHasCrashed) {
-						if (i + 1 < 3) {
-							Log.LogWarning ($"Process has crashed.");
-							Log.LogMessage (MessageImportance.High, string.Join (Environment.NewLine, lines));
-							Log.LogWarning ($"We will retry.");
+			// Before validate, check that zip files were decompressed.
+			referenceContractPath.Create ();
+			var zipFiles = Directory.GetFiles (referenceContractPath.Parent.FullName, "*.zip");
+			foreach (var zipFile in zipFiles) {
+				var zipDateTime = File.GetLastWriteTimeUtc (zipFile);
+				using (var zip = ZipFile.OpenRead (zipFile)) {
+					var entries = zip.Entries.Select (entry => {
+						var isDirectory = entry.FullName.EndsWith ("/", StringComparison.Ordinal) || entry.FullName.EndsWith ("\\", StringComparison.Ordinal);
+						Files.GetArchiveExtractionPath (referenceContractPath.FullName, entry.FullName, isDirectory);
+						return (Entry: entry, IsDirectory: isDirectory);
+					}).ToArray ();
+					foreach (var (entry, isDirectory) in entries) {
+						var path = Files.GetArchiveExtractionPath (referenceContractPath.FullName, entry.FullName, isDirectory);
+						if (isDirectory) {
+							Directory.CreateDirectory (path);
 							continue;
+						}
+						if (!File.Exists (path) || File.GetLastWriteTimeUtc (path) < zipDateTime) {
+							Log.LogMessage ($"Extracting: {path}");
+							Directory.CreateDirectory (Path.GetDirectoryName (path));
+							File.Delete (path);
+							using (var entryStream = entry.Open ())
+							using (var fileStream = File.Create (path)) {
+								entryStream.CopyTo (fileStream);
+							}
 						} else {
-							LogError ($"Unable to get a valid report. Process has crashed.'{Environment.NewLine}Crash report:{Environment.NewLine}{string.Join (Environment.NewLine, lines)}");
-							return;
+							Log.LogMessage ($"Skipping, up to date: {path}");
 						}
 					}
+				}
+			}
 
-					if (exitCode == 0 && lines [0].Equals ("Total issues: 0", StringComparison.OrdinalIgnoreCase)) {
-						Log.LogMessage (MessageImportance.High, lines [0]);
-						return;
-					}
+			ValidateApiCompat (referenceContractPath.FullName, true);
+		}
 
-					LogError ($"CheckApiCompatibility found nonacceptable Api breakages for ApiLevel: {ApiLevel}.{Environment.NewLine}{string.Join (Environment.NewLine, lines)}");
-					if (acceptableIssuesFile != null) {
-						ReportMissingLines (acceptableIssuesFile.FullName, lines);
-					}
+		return !Log.HasLoggedErrors;
+	}
 
-					var missingItems = CodeGenDiff.GenerateMissingItems (CodeGenPath, contractAssembly.FullName, implementationAssembly.FullName, CreateTaskLogger (this));
-					if (missingItems.Any ()) {
-						Log.LogMessage (MessageImportance.High, $"{Environment.NewLine}*** CodeGen missing items***{Environment.NewLine}");
-						var indent = 0;
-						foreach (var item in missingItems) {
-							if (item.StartsWith ("}", StringComparison.Ordinal)) {
-								indent--;
-							}
+	// Validates Api compatibility between contract (previous version) and implementation (current version)
+	// We do that by using Microsoft.DotNet.ApiCompat.dll
+	void ValidateApiCompat (string contractPath, bool validateAgainstReference)
+	{
+		var contractAssembly = new FileInfo (Path.Combine (contractPath, assemblyToValidate));
+		if (!contractAssembly.Exists) {
+			LogError ($"Contract assembly {assemblyToValidate} does not exists in the contract path. {contractPath} - {validateAgainstReference}");
+			return;
+		}
 
-							Log.LogMessage (MessageImportance.High, $"{(item.StartsWith ("namespace ", StringComparison.Ordinal) ? Environment.NewLine : string.Empty)}{new string (' ', indent * 2)}{item}");
+		var implementationAssembly = new FileInfo (Path.Combine (TargetImplementationPath, assemblyToValidate));
+		if (!implementationAssembly.Exists) {
+			LogError ($"Implementation assembly {assemblyToValidate} exists in the contract path but not on the implementation folder.");
+			return;
+		}
 
-							if (item.StartsWith ("{", StringComparison.Ordinal)) {
-								indent++;
-							}
+		for (int i = 0; i < 3; i++) {
+			using (var genApiProcess = new Process ()) {
+
+				var apiCompat = new FileInfo (Path.Combine (ApiCompatPath, "..", "netcoreapp3.1", "Microsoft.DotNet.ApiCompat.dll"));
+				genApiProcess.StartInfo.FileName = "dotnet";
+				genApiProcess.StartInfo.EnvironmentVariables ["DOTNET_ROLL_FORWARD"] = "Major";
+				genApiProcess.StartInfo.EnvironmentVariables ["DOTNET_ROLL_FORWARD_TO_PRERELEASE"] = "1";
+				genApiProcess.StartInfo.ArgumentList.Add (apiCompat.FullName);
+				genApiProcess.StartInfo.ArgumentList.Add (contractAssembly.FullName);
+				genApiProcess.StartInfo.ArgumentList.Add ("-i");
+				genApiProcess.StartInfo.ArgumentList.Add (TargetImplementationPath);
+				genApiProcess.StartInfo.ArgumentList.Add ("--allow-default-interface-methods");
+
+				// Verify if there is a file with acceptable issues.
+				var acceptableIssuesFiles = new[]{
+					Path.Combine (ApiCompatibilityPath, $"acceptable-breakages-{ (validateAgainstReference ? "vReference" : ApiLevel) }-{TargetFramework}.txt"),
+					Path.Combine (ApiCompatibilityPath, $"acceptable-breakages-{ (validateAgainstReference ? "vReference" : ApiLevel) }.txt"),
+				};
+				var acceptableIssuesFile = acceptableIssuesFiles.Select (p => new FileInfo (p))
+					.Where (v => v.Exists)
+					.FirstOrDefault ();
+				if (acceptableIssuesFile != null) {
+					genApiProcess.StartInfo.ArgumentList.Add ("--baseline");
+					genApiProcess.StartInfo.ArgumentList.Add (acceptableIssuesFile.FullName);
+					genApiProcess.StartInfo.ArgumentList.Add ("--validate-baseline");
+				}
+
+				// Verify if there is an exclusion list
+				var excludeAttributes = new FileInfo (Path.Combine (ApiCompatibilityPath, $"api-compat-exclude-attributes.txt"));
+				if (excludeAttributes.Exists) {
+					genApiProcess.StartInfo.ArgumentList.Add ("--exclude-attributes");
+					genApiProcess.StartInfo.ArgumentList.Add (excludeAttributes.FullName);
+				}
+
+				genApiProcess.StartInfo.UseShellExecute = false;
+				genApiProcess.StartInfo.CreateNoWindow = true;
+				genApiProcess.StartInfo.RedirectStandardOutput = true;
+				genApiProcess.StartInfo.RedirectStandardError = true;
+				genApiProcess.StartInfo.InheritedHandles = [];
+				var lines = new List<string> ();
+				var processHasCrashed = false;
+				// Get api definition for previous Api
+				compatApiCommand = $"CompatApi command: dotnet {string.Join (" ", genApiProcess.StartInfo.ArgumentList.Select (a => $"\"{a}\""))}";
+				Log.LogMessage (MessageImportance.High, compatApiCommand);
+
+				int exitCode;
+				var timeout = TimeSpan.FromMinutes (5);
+				var timer = Stopwatch.StartNew ();
+				genApiProcess.Start ();
+				try {
+					foreach (var line in genApiProcess.ReadAllLines (timeout)) {
+						if (string.IsNullOrWhiteSpace (line.Content)) {
+							continue;
 						}
-
-						Log.LogMessage (MessageImportance.High, string.Empty);
+						lines.Add (line.Content.Trim ());
+						if (line.Content.IndexOf ("Native Crash Reporting", StringComparison.Ordinal) != -1) {
+							processHasCrashed = true;
+						}
 					}
+					var remaining = timeout - timer.Elapsed;
+					var status = genApiProcess.SafeHandle.WaitForExitOrKillOnTimeout (remaining > TimeSpan.Zero ? remaining : TimeSpan.Zero);
+					if (status.Canceled) {
+						throw new TimeoutException ($"ApiCompat failed to exit within {timeout}.");
+					}
+					exitCode = status.ExitCode;
+				} catch (TimeoutException ex) {
+					LogError (ex.Message);
+					return;
+				} finally {
+					genApiProcess.SafeHandle.WaitForExitOrKillOnTimeout (TimeSpan.Zero);
+				}
 
+				if (lines.Count == 0) {
+					if (exitCode != 0) {
+						LogError ($"ApiCompat failed with exit code {exitCode}.");
+					}
 					return;
 				}
-			}
-		}
 
-		static Action<TraceLevel, string> CreateTaskLogger (Task task)
-		{
-			return (level, value) => {
-				switch (level) {
-				case TraceLevel.Error:
-					task.Log.LogError (value);
-					break;
-				case TraceLevel.Warning:
-					task.Log.LogWarning (value);
-					break;
-				default:
-					task.Log.LogMessage (MessageImportance.Low, "{0}", value);
-					break;
+				if (processHasCrashed) {
+					if (i + 1 < 3) {
+						Log.LogWarning ($"Process has crashed.");
+						Log.LogMessage (MessageImportance.High, string.Join (Environment.NewLine, lines));
+						Log.LogWarning ($"We will retry.");
+						continue;
+					} else {
+						LogError ($"Unable to get a valid report. Process has crashed.'{Environment.NewLine}Crash report:{Environment.NewLine}{string.Join (Environment.NewLine, lines)}");
+						return;
+					}
 				}
-			};
-		}
 
-		void ReportMissingLines (string acceptableIssuesFile, List<string> lines)
-		{
-			if (string.IsNullOrWhiteSpace (LinesToAdd)) {
+				if (exitCode == 0 && lines [0].Equals ("Total issues: 0", StringComparison.OrdinalIgnoreCase)) {
+					Log.LogMessage (MessageImportance.High, lines [0]);
+					return;
+				}
+
+				LogError ($"CheckApiCompatibility found nonacceptable Api breakages for ApiLevel: {ApiLevel}.{Environment.NewLine}{string.Join (Environment.NewLine, lines)}");
+				if (acceptableIssuesFile != null) {
+					ReportMissingLines (acceptableIssuesFile.FullName, lines);
+				}
+
+				var missingItems = CodeGenDiff.GenerateMissingItems (CodeGenPath, contractAssembly.FullName, implementationAssembly.FullName, CreateTaskLogger (this));
+				if (missingItems.Any ()) {
+					Log.LogMessage (MessageImportance.High, $"{Environment.NewLine}*** CodeGen missing items***{Environment.NewLine}");
+					var indent = 0;
+					foreach (var item in missingItems) {
+						if (item.StartsWith ("}", StringComparison.Ordinal)) {
+							indent--;
+						}
+
+						Log.LogMessage (MessageImportance.High, $"{(item.StartsWith ("namespace ", StringComparison.Ordinal) ? Environment.NewLine : string.Empty)}{new string (' ', indent * 2)}{item}");
+
+						if (item.StartsWith ("{", StringComparison.Ordinal)) {
+							indent++;
+						}
+					}
+
+					Log.LogMessage (MessageImportance.High, string.Empty);
+				}
+
 				return;
 			}
-			var known = new HashSet<string> (File.ReadAllLines (acceptableIssuesFile), StringComparer.Ordinal);
-			using var writer = File.CreateText (LinesToAdd);
-			foreach (var line in lines) {
-				if (known.Contains (line)) {
-					continue;
-				}
-				writer.WriteLine (line);
+		}
+	}
+
+	static Action<TraceLevel, string> CreateTaskLogger (Task task)
+	{
+		return (level, value) => {
+			switch (level) {
+			case TraceLevel.Error:
+				task.Log.LogError (value);
+				break;
+			case TraceLevel.Warning:
+				task.Log.LogWarning (value);
+				break;
+			default:
+				task.Log.LogMessage (MessageImportance.Low, "{0}", value);
+				break;
 			}
+		};
+	}
+
+	void ReportMissingLines (string acceptableIssuesFile, List<string> lines)
+	{
+		if (string.IsNullOrWhiteSpace (LinesToAdd)) {
+			return;
+		}
+		var known = new HashSet<string> (File.ReadAllLines (acceptableIssuesFile), StringComparer.Ordinal);
+		using var writer = File.CreateText (LinesToAdd);
+		foreach (var line in lines) {
+			if (known.Contains (line)) {
+				continue;
+			}
+			writer.WriteLine (line);
+		}
+	}
+
+	void LogError (string errorMessage)
+	{
+		if (!string.IsNullOrWhiteSpace (compatApiCommand)) {
+			errorMessage = $"{compatApiCommand}{Environment.NewLine}{errorMessage}";
 		}
 
-		void LogError (string errorMessage)
-		{
-			if (!string.IsNullOrWhiteSpace (compatApiCommand)) {
-				errorMessage = $"{compatApiCommand}{Environment.NewLine}{errorMessage}";
-			}
-
-			Log.LogMessage (MessageImportance.High, errorMessage);
-			Log.LogError (errorMessage);
-		}
+		Log.LogMessage (MessageImportance.High, errorMessage);
+		Log.LogError (errorMessage);
 	}
 }

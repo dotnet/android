@@ -6,7 +6,7 @@ using Android.Runtime;
 
 using Java.Interop;
 
-namespace Android.Runtime {
+namespace Android.Runtime; 
 
 	[Register ("java/util/HashSet", DoNotGenerateAcw=true)]
 	// java.util.HashSet allows null values
@@ -515,4 +515,3 @@ namespace Android.Runtime {
 				return JNIEnv.ToLocalJniHandle (s);
 		}
 	}
-}

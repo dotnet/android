@@ -11,8 +11,8 @@ using Microsoft.Android.Build.Tasks;
 using Xamarin.Android.Tools;
 using System.IO.Compression;
 
-namespace Xamarin.Android.Tasks
-{
+namespace Xamarin.Android.Tasks;
+
 	public class GenerateResourceCaseMap : AndroidTask
 	{
 		public override string TaskPrefix => "GRCM";
@@ -160,4 +160,3 @@ namespace Xamarin.Android.Tasks
 				value.Substring (s);
 		}
 	}
-}

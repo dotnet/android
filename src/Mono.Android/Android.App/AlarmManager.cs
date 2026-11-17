@@ -2,7 +2,7 @@ using System;
 
 using Android.Content;
 
-namespace Android.App {
+namespace Android.App; 
 
 	public partial class AlarmManager {
 
@@ -11,6 +11,5 @@ namespace Android.App {
 			return context.GetSystemService (Context.AlarmService) as AlarmManager;
 		}
 	}
-}
 
 

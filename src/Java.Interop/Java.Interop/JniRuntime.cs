@@ -9,8 +9,8 @@ using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Threading;
 
-namespace Java.Interop
-{
+namespace Java.Interop;
+
 	[ExtendedLayout (ExtendedLayoutKind.CStruct)]
 	[SuppressMessage ("Performance", "CA1823:Avoid unused private fields", Justification = "Fields preserve the unmanaged JavaVM vtable layout.")]
 	// These fields are populated from native memory and some are only present to preserve the JavaVM vtable layout.
@@ -483,4 +483,3 @@ namespace Java.Interop
 			GC.KeepAlive (throwable);
 		}
 	}
-}

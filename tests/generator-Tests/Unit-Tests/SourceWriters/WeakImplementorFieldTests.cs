@@ -2,8 +2,8 @@ using generator.SourceWriters;
 using MonoDroid.Generation;
 using NUnit.Framework;
 
-namespace generatortests.SourceWriters
-{
+namespace generatortests.SourceWriters;
+
 	[TestFixture]
 	public class WeakImplementorFieldTests : SourceWritersTestBase
 	{
@@ -23,4 +23,3 @@ namespace generatortests.SourceWriters
 			Assert.AreEqual ("WeakReference? weak_implementor_foo;", GetOutput (field).Trim ());
 		}
 	}
-}

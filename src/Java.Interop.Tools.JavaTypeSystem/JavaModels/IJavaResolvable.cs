@@ -1,10 +1,9 @@
 using System;
 using System.Collections.Generic;
 
-namespace Java.Interop.Tools.JavaTypeSystem.Models
+namespace Java.Interop.Tools.JavaTypeSystem.Models;
+
+public interface IJavaResolvable
 {
-	public interface IJavaResolvable
-	{
-		void Resolve (JavaTypeCollection types, ICollection<JavaUnresolvableModel> unresolvables);
-	}
+	void Resolve (JavaTypeCollection types, ICollection<JavaUnresolvableModel> unresolvables);
 }

@@ -2,7 +2,7 @@ using System;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
-namespace Android.Runtime {
+namespace Android.Runtime; 
 	internal static partial class Logger {
 		static bool hasNoLibLog;
 
@@ -50,4 +50,3 @@ namespace Android.Runtime {
 		internal static void SetLogCategories (LogCategories categories) =>
 			Categories = categories;
 	}
-}

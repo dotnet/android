@@ -3,7 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 
-namespace Android.Runtime {
+namespace Android.Runtime; 
 
 	[Register ("mono/android/runtime/JavaArray", DoNotGenerateAcw=true)]
 	public sealed class JavaArray<
@@ -84,8 +84,8 @@ namespace Android.Runtime {
 		{
 			// SAFETY: this array peer owns the live JNI array; marshaling completes before iterator suspension.
 			var items = unsafe(JNIEnv.GetArray<T> (Handle));
-                        for (int i = 0; i < items!.Length; i++)
-                                yield return items [i];
+                    for (int i = 0; i < items!.Length; i++)
+                            yield return items [i];
 		}
 
 		public int IndexOf (T item)
@@ -147,4 +147,3 @@ namespace Android.Runtime {
 			return  JNIEnv.NewArray (a, typeof (T));
 		}
 	}
-}

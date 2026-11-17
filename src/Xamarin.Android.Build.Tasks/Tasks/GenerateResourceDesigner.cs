@@ -11,8 +11,8 @@ using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
 using Microsoft.Android.Build.Tasks;
 
-namespace Xamarin.Android.Tasks
-{
+namespace Xamarin.Android.Tasks;
+
 	public class GenerateResourceDesigner : AndroidTask
 	{
 		public override string TaskPrefix => "GRD";
@@ -268,4 +268,3 @@ namespace Xamarin.Android.Tasks
 				value.Substring (s);
 		}
 	}
-}

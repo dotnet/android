@@ -2,8 +2,8 @@ using System;
 using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 
-namespace Android.Runtime
-{
+namespace Android.Runtime;
+
 	[AttributeUsage (AttributeTargets.Assembly)]
 	public class ResourceDesignerAttribute : Attribute
 	{
@@ -48,4 +48,3 @@ namespace Android.Runtime
 			return FallbackAssemblyGetType (assembly, FullName);
 		}
 	}
-}

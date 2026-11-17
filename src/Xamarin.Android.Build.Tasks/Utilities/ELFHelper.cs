@@ -14,8 +14,8 @@ using Microsoft.Build.Utilities;
 using ELFSymbolType = global::ELFSharp.ELF.Sections.SymbolType;
 using ELFSectionType = global::ELFSharp.ELF.Sections.SectionType;
 
-namespace Xamarin.Android.Tasks
-{
+namespace Xamarin.Android.Tasks;
+
 	static class ELFHelper
 	{
 		const string BinaryBlobLibraryName = "libbinary_blobs.so";
@@ -209,4 +209,3 @@ namespace Xamarin.Android.Tasks
 			}
 		}
 	}
-}

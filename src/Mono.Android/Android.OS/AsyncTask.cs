@@ -6,7 +6,7 @@ using Android.Runtime;
 
 using Java.Interop;
 
-namespace Android.OS {
+namespace Android.OS; 
 
 	[global::System.Runtime.Versioning.ObsoletedOSPlatform ("android30.0")]
 	[Register ("android/os/AsyncTask", DoNotGenerateAcw=true)]
@@ -150,4 +150,3 @@ namespace Android.OS {
 			base.PublishProgress (native_values);
 		}
 	}
-}

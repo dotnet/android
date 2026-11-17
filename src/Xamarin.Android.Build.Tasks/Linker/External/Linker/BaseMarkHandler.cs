@@ -3,8 +3,8 @@
 using Mono.Cecil;
 using Mono.Linker.Steps;
 
-namespace Mono.Linker
-{
+namespace Mono.Linker;
+
 	public class BaseMarkHandler : IMarkHandler
 	{
 		protected LinkContext Context;
@@ -17,4 +17,3 @@ namespace Mono.Linker
 			cache = context;
 		}
 	}
-}

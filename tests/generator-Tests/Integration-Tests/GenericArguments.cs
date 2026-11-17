@@ -1,8 +1,8 @@
 using System;
 using NUnit.Framework;
 
-namespace generatortests
-{
+namespace generatortests;
+
 	[TestFixture]
 	public class GenericArguments : BaseGeneratorTest
 	{
@@ -17,5 +17,4 @@ namespace generatortests
 					additionalSupportPaths: null);
 		}
 	}
-}
 

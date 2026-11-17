@@ -8,8 +8,8 @@ using System.Diagnostics;
 using Xamarin.Android.Tools;
 using Microsoft.Android.Build.Tasks;
 
-namespace Xamarin.Android.Tasks
-{
+namespace Xamarin.Android.Tasks;
+
 	public class AdjustJavacVersionArguments : AndroidTask
 	{
 		public override string TaskPrefix => "AJV";
@@ -52,5 +52,4 @@ namespace Xamarin.Android.Tasks
 			return !Log.HasLoggedErrors;
 		}
 	}
-}
 

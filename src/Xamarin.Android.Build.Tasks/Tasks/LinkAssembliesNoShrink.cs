@@ -4,8 +4,8 @@ using System;
 using Microsoft.Android.Build.Tasks;
 using MonoDroid.Tuner;
 
-namespace Xamarin.Android.Tasks
-{
+namespace Xamarin.Android.Tasks;
+
 	/// <summary>
 	/// This task is called for builds that did not use ILLink. It runs "linker steps" that
 	/// should be run on assemblies even in non-linked builds.
@@ -50,4 +50,3 @@ namespace Xamarin.Android.Tasks
 			base.BuildPipeline (pipeline, context);
 		}
 	}
-}

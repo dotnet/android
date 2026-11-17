@@ -8,94 +8,93 @@ using System.Threading.Tasks;
 using Xamarin.Android.Tasks;
 using Xamarin.ProjectTools;
 
-namespace Xamarin.Android.Build.Tests
+namespace Xamarin.Android.Build.Tests;
+
+static class ResourceData
 {
-	static class ResourceData
+	static Lazy<byte[]> javaSourceJarTestJar        = new Lazy<byte[]>(() => GetResourceData ("javasourcejartest.jar"));
+	static Lazy<byte[]> javaSourceJarTestSourcesJar = new Lazy<byte[]>(() => GetResourceData ("javasourcejartest-sources.jar"));
+	static Lazy<byte[]> javaSourceJarTestJavadocJar = new Lazy<byte[]>(() => GetResourceData ("javasourcejartest-javadoc.jar"));
+	static Lazy<byte []> library1Aar = new Lazy<byte []> (() => GetResourceData ("library1.aar"));
+	static Lazy<byte []> library2Aar = new Lazy<byte []> (() => GetResourceData ("library2.aar"));
+	static Lazy<byte []> apacheHttpClient_cs = new Lazy<byte []> (() => GetResourceData ("ApacheHttpClient.cs"));
+	static Lazy<byte []> javadocCopyright = new Lazy<byte []> (() => GetResourceData ("javadoc-copyright.xml"));
+	static Lazy<byte []> javaSourceTestExtension = new Lazy<byte []> (() => GetResourceData ("JavaSourceTestExtension.java"));
+	static Lazy<byte []> javaSourceTestInterface = new Lazy<byte []> (() => GetResourceData ("JavaSourceTestInterface.java"));
+	static Lazy<byte []> remapActivityJava = new Lazy<byte []> (() => GetResourceData ("RemapActivity.java"));
+	static Lazy<byte []> remapActivityXml = new Lazy<byte []> (() => GetResourceData ("RemapActivity.xml"));
+	static Lazy<byte []> interfaceMethods = new Lazy<byte []> (() => GetResourceData ("InterfaceMethods.java"));
+	static Lazy<byte []> interfaceMethodPeer = new Lazy<byte []> (() => GetResourceData ("InterfaceMethodPeer.java"));
+	static Lazy<byte []> concreteInterfaceMethodPeer = new Lazy<byte []> (() => GetResourceData ("ConcreteInterfaceMethodPeer.java"));
+	static Lazy<byte []> interfaceMethodBridgeInvoker = new Lazy<byte []> (() => GetResourceData ("InterfaceMethodBridgeInvoker.java"));
+	static Lazy<byte []> covariantInterfaceMethods = new Lazy<byte []> (() => GetResourceData ("CovariantInterfaceMethods.java"));
+
+	static Lazy<byte []> rtxt = new Lazy<byte []> (() => GetResourceData ("R.txt"));
+
+	public  static  byte[]  JavaSourceJarTestJar            => javaSourceJarTestJar.Value;
+	public  static  byte[]  JavaSourceJarTestSourcesJar     => javaSourceJarTestSourcesJar.Value;
+	public  static  byte[]  JavaSourceJarTestJavadocJar     => javaSourceJarTestJavadocJar.Value;
+	public  static  byte [] Library1Aar => library1Aar.Value;
+	public  static  byte [] Library2Aar => library2Aar.Value;
+	public  static  byte [] ApacheHttpClient_cs => apacheHttpClient_cs.Value;
+	public  static  byte [] JavadocCopyright => javadocCopyright.Value;
+
+	public  static  string JavaSourceTestExtension => Encoding.ASCII.GetString (javaSourceTestExtension.Value);
+	public  static  string JavaSourceTestInterface => Encoding.ASCII.GetString (javaSourceTestInterface.Value);
+	public  static  string RemapActivityJava => Encoding.UTF8.GetString (remapActivityJava.Value);
+	public  static  string RemapActivityXml => Encoding.UTF8.GetString (remapActivityXml.Value);
+	public static string InterfaceMethods => Encoding.UTF8.GetString (interfaceMethods.Value);
+	public static string InterfaceMethodPeer => Encoding.UTF8.GetString (interfaceMethodPeer.Value);
+	public static string ConcreteInterfaceMethodPeer => Encoding.UTF8.GetString (concreteInterfaceMethodPeer.Value);
+	public static string InterfaceMethodBridgeInvoker => Encoding.UTF8.GetString (interfaceMethodBridgeInvoker.Value);
+	public static string CovariantInterfaceMethods => Encoding.UTF8.GetString (covariantInterfaceMethods.Value);
+
+	public  static  string RTxt => Encoding.UTF8.GetString (rtxt.Value);
+
+	static byte[] GetResourceData (string name)
 	{
-		static Lazy<byte[]> javaSourceJarTestJar        = new Lazy<byte[]>(() => GetResourceData ("javasourcejartest.jar"));
-		static Lazy<byte[]> javaSourceJarTestSourcesJar = new Lazy<byte[]>(() => GetResourceData ("javasourcejartest-sources.jar"));
-		static Lazy<byte[]> javaSourceJarTestJavadocJar = new Lazy<byte[]>(() => GetResourceData ("javasourcejartest-javadoc.jar"));
-		static Lazy<byte []> library1Aar = new Lazy<byte []> (() => GetResourceData ("library1.aar"));
-		static Lazy<byte []> library2Aar = new Lazy<byte []> (() => GetResourceData ("library2.aar"));
-		static Lazy<byte []> apacheHttpClient_cs = new Lazy<byte []> (() => GetResourceData ("ApacheHttpClient.cs"));
-		static Lazy<byte []> javadocCopyright = new Lazy<byte []> (() => GetResourceData ("javadoc-copyright.xml"));
-		static Lazy<byte []> javaSourceTestExtension = new Lazy<byte []> (() => GetResourceData ("JavaSourceTestExtension.java"));
-		static Lazy<byte []> javaSourceTestInterface = new Lazy<byte []> (() => GetResourceData ("JavaSourceTestInterface.java"));
-		static Lazy<byte []> remapActivityJava = new Lazy<byte []> (() => GetResourceData ("RemapActivity.java"));
-		static Lazy<byte []> remapActivityXml = new Lazy<byte []> (() => GetResourceData ("RemapActivity.xml"));
-		static Lazy<byte []> interfaceMethods = new Lazy<byte []> (() => GetResourceData ("InterfaceMethods.java"));
-		static Lazy<byte []> interfaceMethodPeer = new Lazy<byte []> (() => GetResourceData ("InterfaceMethodPeer.java"));
-		static Lazy<byte []> concreteInterfaceMethodPeer = new Lazy<byte []> (() => GetResourceData ("ConcreteInterfaceMethodPeer.java"));
-		static Lazy<byte []> interfaceMethodBridgeInvoker = new Lazy<byte []> (() => GetResourceData ("InterfaceMethodBridgeInvoker.java"));
-		static Lazy<byte []> covariantInterfaceMethods = new Lazy<byte []> (() => GetResourceData ("CovariantInterfaceMethods.java"));
-
-		static Lazy<byte []> rtxt = new Lazy<byte []> (() => GetResourceData ("R.txt"));
-
-		public  static  byte[]  JavaSourceJarTestJar            => javaSourceJarTestJar.Value;
-		public  static  byte[]  JavaSourceJarTestSourcesJar     => javaSourceJarTestSourcesJar.Value;
-		public  static  byte[]  JavaSourceJarTestJavadocJar     => javaSourceJarTestJavadocJar.Value;
-		public  static  byte [] Library1Aar => library1Aar.Value;
-		public  static  byte [] Library2Aar => library2Aar.Value;
-		public  static  byte [] ApacheHttpClient_cs => apacheHttpClient_cs.Value;
-		public  static  byte [] JavadocCopyright => javadocCopyright.Value;
-
-		public  static  string JavaSourceTestExtension => Encoding.ASCII.GetString (javaSourceTestExtension.Value);
-		public  static  string JavaSourceTestInterface => Encoding.ASCII.GetString (javaSourceTestInterface.Value);
-		public  static  string RemapActivityJava => Encoding.UTF8.GetString (remapActivityJava.Value);
-		public  static  string RemapActivityXml => Encoding.UTF8.GetString (remapActivityXml.Value);
-		public static string InterfaceMethods => Encoding.UTF8.GetString (interfaceMethods.Value);
-		public static string InterfaceMethodPeer => Encoding.UTF8.GetString (interfaceMethodPeer.Value);
-		public static string ConcreteInterfaceMethodPeer => Encoding.UTF8.GetString (concreteInterfaceMethodPeer.Value);
-		public static string InterfaceMethodBridgeInvoker => Encoding.UTF8.GetString (interfaceMethodBridgeInvoker.Value);
-		public static string CovariantInterfaceMethods => Encoding.UTF8.GetString (covariantInterfaceMethods.Value);
-
-		public  static  string RTxt => Encoding.UTF8.GetString (rtxt.Value);
-
-		static byte[] GetResourceData (string name)
-		{
-			using var s = typeof (ResourceData).Assembly.GetManifestResourceStream (name);
-			if (s == null) {
-				throw new NotSupportedException ($"Could not find resource `{name}` in assembly `{typeof (ResourceData).Assembly}`!");
-			}
-			using var m = new MemoryStream (checked ((int) s.Length));
-			s.CopyTo (m);
-			return m.ToArray ();
+		using var s = typeof (ResourceData).Assembly.GetManifestResourceStream (name);
+		if (s == null) {
+			throw new NotSupportedException ($"Could not find resource `{name}` in assembly `{typeof (ResourceData).Assembly}`!");
 		}
+		using var m = new MemoryStream (checked ((int) s.Length));
+		s.CopyTo (m);
+		return m.ToArray ();
+	}
 
-		static readonly Lock keystoreLock = new Lock ();
-		static byte [] cachedKeystore;
+	static readonly Lock keystoreLock = new Lock ();
+	static byte [] cachedKeystore;
 
-		public static byte [] GetKeystore ()
-		{
-			lock (keystoreLock) {
-				if (cachedKeystore != null)
-					return cachedKeystore;
-
-				var keystorePath = Path.Combine (Path.GetTempPath (), $"test-{Guid.NewGuid ()}.keystore");
-				try {
-					GenerateKeystore (keystorePath);
-					cachedKeystore = File.ReadAllBytes (keystorePath);
-				} finally {
-					File.Delete (keystorePath);
-				}
+	public static byte [] GetKeystore ()
+	{
+		lock (keystoreLock) {
+			if (cachedKeystore != null)
 				return cachedKeystore;
-			}
-		}
 
-		public static void GenerateKeystore (string keystorePath, string storePass = "android", string keyAlias = "mykey", string keyPass = "android")
-		{
-			var keytoolName = TestEnvironment.IsWindows ? "keytool.exe" : "keytool";
-			var keytoolPath = Path.Combine (AndroidSdkResolver.GetJavaSdkPath (), "bin", keytoolName);
-			var arguments = $"-genkeypair -v -storetype pkcs12 -keystore \"{keystorePath}\" -alias {keyAlias} -keyalg RSA -keysize 2048 -validity 10000 -storepass {storePass} -keypass {keyPass} -dname \"CN=Test, OU=Test, O=Test, L=Test, ST=Test, C=US\"";
-			var stderr = new List<string> ();
-			int exitCode = MonoAndroidHelper.RunProcess (
-				keytoolPath, arguments,
-				onOutput: (s, e) => { },
-				onError: (s, e) => { if (e.Data != null) stderr.Add (e.Data); }
-			);
-			if (exitCode != 0) {
-				throw new InvalidOperationException ($"keytool failed with exit code {exitCode}: {string.Join (Environment.NewLine, stderr)}");
+			var keystorePath = Path.Combine (Path.GetTempPath (), $"test-{Guid.NewGuid ()}.keystore");
+			try {
+				GenerateKeystore (keystorePath);
+				cachedKeystore = File.ReadAllBytes (keystorePath);
+			} finally {
+				File.Delete (keystorePath);
 			}
+			return cachedKeystore;
+		}
+	}
+
+	public static void GenerateKeystore (string keystorePath, string storePass = "android", string keyAlias = "mykey", string keyPass = "android")
+	{
+		var keytoolName = TestEnvironment.IsWindows ? "keytool.exe" : "keytool";
+		var keytoolPath = Path.Combine (AndroidSdkResolver.GetJavaSdkPath (), "bin", keytoolName);
+		var arguments = $"-genkeypair -v -storetype pkcs12 -keystore \"{keystorePath}\" -alias {keyAlias} -keyalg RSA -keysize 2048 -validity 10000 -storepass {storePass} -keypass {keyPass} -dname \"CN=Test, OU=Test, O=Test, L=Test, ST=Test, C=US\"";
+		var stderr = new List<string> ();
+		int exitCode = MonoAndroidHelper.RunProcess (
+			keytoolPath, arguments,
+			onOutput: (s, e) => { },
+			onError: (s, e) => { if (e.Data != null) stderr.Add (e.Data); }
+		);
+		if (exitCode != 0) {
+			throw new InvalidOperationException ($"keytool failed with exit code {exitCode}: {string.Join (Environment.NewLine, stderr)}");
 		}
 	}
 }

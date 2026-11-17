@@ -12,7 +12,7 @@ using System.Text.RegularExpressions;
 using Mono.Collections.Generic;
 
 
-namespace MonoDroid.Tuner  {
+namespace MonoDroid.Tuner;  
 	public abstract class LinkDesignerBase : BaseStep
 	{
 		protected IMetadataResolver Cache => Context;
@@ -242,4 +242,3 @@ namespace MonoDroid.Tuner  {
 		protected abstract void LoadDesigner ();
 		protected abstract void FixBody (MethodBody body, TypeDefinition designer);
 	}
-}

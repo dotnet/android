@@ -9,7 +9,7 @@ using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Threading;
 
-namespace Java.Interop {
+namespace Java.Interop; 
 
 	public static partial class JniEnvironment {
 
@@ -291,4 +291,3 @@ namespace Java.Interop {
 		}
 
 	}
-}

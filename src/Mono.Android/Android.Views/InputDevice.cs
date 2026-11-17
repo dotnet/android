@@ -1,16 +1,16 @@
 using System;
 
-namespace Android.Views {
+namespace Android.Views; 
 
 #if !ANDROID_12
 	public enum Axis {
-    Orientation   = MotionRange.Orientation,
-    Pressure      = MotionRange.Pressure,
-    Size          = MotionRange.Size,
-    ToolMajor     = MotionRange.ToolMajor,
-    ToolMinor     = MotionRange.ToolMinor,
-    TouchMajor    = MotionRange.TouchMajor,
-    TouchMinor    = MotionRange.TouchMinor,
+Orientation   = MotionRange.Orientation,
+Pressure      = MotionRange.Pressure,
+Size          = MotionRange.Size,
+ToolMajor     = MotionRange.ToolMajor,
+ToolMinor     = MotionRange.ToolMinor,
+TouchMajor    = MotionRange.TouchMajor,
+TouchMinor    = MotionRange.TouchMinor,
 		X             = MotionRange.X,
 		Y             = MotionRange.Y,
 	}
@@ -24,4 +24,3 @@ namespace Android.Views {
 			return GetMotionRange ((Axis) rangeType);
 		}
 	}
-}

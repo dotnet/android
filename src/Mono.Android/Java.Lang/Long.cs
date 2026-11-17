@@ -2,7 +2,7 @@ using System;
 using System.Globalization;
 using Android.Runtime;
 
-namespace Java.Lang {
+namespace Java.Lang; 
 
 	public partial class Long : IConvertible {
 
@@ -99,4 +99,3 @@ namespace Java.Lang {
 			return Convert.ToUInt64 (LongValue ());
 		}
 	}
-}

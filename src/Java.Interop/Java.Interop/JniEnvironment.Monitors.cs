@@ -1,9 +1,9 @@
-﻿#nullable enable
+#nullable enable
 
 using System;
 using System.Runtime.ExceptionServices;
 
-namespace Java.Interop {
+namespace Java.Interop; 
 
 	partial class JniEnvironment {
 
@@ -30,5 +30,4 @@ namespace Java.Interop {
 			}
 		}
 	}
-}
 

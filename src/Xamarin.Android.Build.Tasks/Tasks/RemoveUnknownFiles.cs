@@ -8,8 +8,8 @@ using System.Collections.Generic;
 using System.Linq;
 using Microsoft.Android.Build.Tasks;
 
-namespace Xamarin.Android.Tasks
-{
+namespace Xamarin.Android.Tasks;
+
 	public class RemoveUnknownFiles : AndroidTask
 	{
 		public override string TaskPrefix => "RUF";
@@ -104,4 +104,3 @@ namespace Xamarin.Android.Tasks
 			return true;
 		}
 	}
-}

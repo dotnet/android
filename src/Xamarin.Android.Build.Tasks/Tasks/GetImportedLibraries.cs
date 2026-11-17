@@ -9,8 +9,8 @@ using Microsoft.Build.Utilities;
 using Microsoft.Build.Framework;
 using Microsoft.Android.Build.Tasks;
 
-namespace Xamarin.Android.Tasks
-{
+namespace Xamarin.Android.Tasks;
+
 	public class GetImportedLibraries : AndroidTask
 	{
 		public override string TaskPrefix => "GIL";
@@ -104,6 +104,3 @@ namespace Xamarin.Android.Tasks
 			return true;
 		}
 	}
-
-
-}

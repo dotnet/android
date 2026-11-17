@@ -1,8 +1,8 @@
-﻿using System;
+using System;
 using NUnit.Framework;
 
-namespace generatortests
-{
+namespace generatortests;
+
 	[TestFixture]
 	public class Streams : BaseGeneratorTest
 	{
@@ -16,5 +16,4 @@ namespace generatortests
 					additionalSupportPaths: new[]{ "TestInputs/Streams/SupportFiles" });
 		}
 	}
-}
 

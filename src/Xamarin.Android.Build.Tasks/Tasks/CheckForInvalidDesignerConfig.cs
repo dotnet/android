@@ -8,8 +8,8 @@ using System.Reflection.Metadata;
 using System.Reflection.PortableExecutable;
 using System.IO;
 
-namespace Xamarin.Android.Tasks
-{
+namespace Xamarin.Android.Tasks;
+
 	/// <summary>
 	/// Emits XA1034 is an assembly has a reference to _Microsoft.Android.Resource.Designer.dll
 	/// * NOTE: only called when $(AndroidUseDesignerAssembly) is false
@@ -59,4 +59,3 @@ namespace Xamarin.Android.Tasks
 			return false;
 		}
 	}
-}

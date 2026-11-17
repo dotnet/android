@@ -2,7 +2,7 @@ using System;
 
 using Android.Content;
 
-namespace Android.App {
+namespace Android.App; 
 
 	public partial class ActivityManager {
 
@@ -18,6 +18,5 @@ namespace Android.App {
 		}
 #endif
 	}
-}
 
 

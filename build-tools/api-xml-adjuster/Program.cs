@@ -1,21 +1,20 @@
-﻿using System;
+using System;
 
-namespace Xamarin.Android.Tools.ApiXmlAdjuster
+namespace Xamarin.Android.Tools.ApiXmlAdjuster;
+
+class MainClass
 {
-	class MainClass
+	public static void Main (string [] args)
 	{
-		public static void Main (string [] args)
-		{
-			var inputXmlFile    = args [0];
-			var outputXmlFile   = args [1];
+		var inputXmlFile    = args [0];
+		var outputXmlFile   = args [1];
 
-			var api = new JavaApi ();
-			api.Load (inputXmlFile);
-			api.Resolve ();
-			api.CreateGenericInheritanceMapping ();
-			api.MarkOverrides ();
-			api.FindDefects ();
-			api.Save (outputXmlFile);
-		}
+		var api = new JavaApi ();
+		api.Load (inputXmlFile);
+		api.Resolve ();
+		api.CreateGenericInheritanceMapping ();
+		api.MarkOverrides ();
+		api.FindDefects ();
+		api.Save (outputXmlFile);
 	}
 }

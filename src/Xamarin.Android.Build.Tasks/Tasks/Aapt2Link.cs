@@ -13,7 +13,7 @@ using System.Collections.Generic;
 using Xamarin.Android.Tools;
 using Microsoft.Android.Build.Tasks;
 
-namespace Xamarin.Android.Tasks {
+namespace Xamarin.Android.Tasks; 
 
 	//aapt2 link -o resources.apk.bk --manifest Foo.xml --java . --custom-package com.infinitespace_studios.blankforms -R foo2 -v --auto-add-overlay
 	public class Aapt2Link : Aapt2 {
@@ -420,5 +420,3 @@ namespace Xamarin.Android.Tasks {
 			return temp;
 		}
 	}
-
-}

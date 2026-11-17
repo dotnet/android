@@ -4,8 +4,8 @@ using System.Runtime.Versioning;
 using System.Security.Cryptography.X509Certificates;
 using System.Threading.Tasks;
 
-namespace Android.Security
-{
+namespace Android.Security;
+
 	public partial class KeyChain
 	{
 		/// <summary>
@@ -177,4 +177,3 @@ namespace Android.Security
 			public void Alias (string? alias) => tcs.SetResult (alias);
 		}
 	}
-}

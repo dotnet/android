@@ -2,22 +2,21 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace Java.Interop.Tools.JavaTypeSystem
+namespace Java.Interop.Tools.JavaTypeSystem;
+
+static class CollectionExtensions
 {
-	static class CollectionExtensions
+	public static bool ContainsAny<T> (this ICollection<T> collection, params T[] values)
 	{
-		public static bool ContainsAny<T> (this ICollection<T> collection, params T[] values)
-		{
-			foreach (var v in values)
-				if (collection.Contains (v))
-					return true;
+		foreach (var v in values)
+			if (collection.Contains (v))
+				return true;
 
-			return false;
-		}
+		return false;
+	}
 
-		public static IEnumerable<T> WhereNotNull<T> (this IEnumerable<T?> values) where T : class
-		{
-			return values.Where (p => p != null).Cast<T> ();
-		}
+	public static IEnumerable<T> WhereNotNull<T> (this IEnumerable<T?> values) where T : class
+	{
+		return values.Where (p => p != null).Cast<T> ();
 	}
 }

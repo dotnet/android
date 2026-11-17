@@ -2,8 +2,8 @@ using System.Net;
 
 using Java.Net;
 
-namespace Xamarin.Android.Net
-{
+namespace Xamarin.Android.Net;
+
 	/// <summary>
 	/// Implement this interface in order to provide support for HTTP authentication scheme not supported by <see cref="AndroidMessageHandler"/>
 	/// </summary>
@@ -46,4 +46,3 @@ namespace Xamarin.Android.Net
 		/// <param name="credentials">Credentials.</param>
 		Authorization? PreAuthenticate (HttpURLConnection request, ICredentials credentials);
 	}
-}

@@ -4,427 +4,426 @@ using System.Linq;
 
 using Mono.Options;
 
-namespace Xamarin.Android.JniEnv
+namespace Xamarin.Android.JniEnv;
+
+partial class Generator
 {
-	partial class Generator
+	static string monodroid_root = Path.GetDirectoryName (
+			Path.GetDirectoryName (
+				Path.GetDirectoryName (System.Reflection.Assembly.GetExecutingAssembly ().Location)));
+	static string jnienv_g_cs;
+
+	public static int Main (string [] args)
 	{
-		static string monodroid_root = Path.GetDirectoryName (
-				Path.GetDirectoryName (
-					Path.GetDirectoryName (System.Reflection.Assembly.GetExecutingAssembly ().Location)));
-		static string jnienv_g_cs;
-
-		public static int Main (string [] args)
-		{
-			var opts = new OptionSet {
-				{ "root=",            v => monodroid_root = v },
-				{ "o=",               v => jnienv_g_cs = v },
-			};
-			opts.Parse (args);
-			if (string.IsNullOrEmpty (jnienv_g_cs)) {
-				jnienv_g_cs = Path.Combine (monodroid_root, "Mono.Android", "src", "Runtime", "JNIEnv.g.cs");
-			}
-			try {
-				using (TextWriter w = new StringWriter ()) {
-					w.NewLine = "\n";
-					GenerateFile (w);
-					string content = w.ToString ();
-					if (jnienv_g_cs == "-")
-						Console.Out.WriteLine (content);
-					else if (!File.Exists (jnienv_g_cs) || !string.Equals (content, File.ReadAllText (jnienv_g_cs)))
-						File.WriteAllText (jnienv_g_cs, content);
-				}
-				return 0;
-			} catch (Exception ex) {
-				Console.WriteLine (ex);
-				return 1;
-			}
+		var opts = new OptionSet {
+			{ "root=",            v => monodroid_root = v },
+			{ "o=",               v => jnienv_g_cs = v },
+		};
+		opts.Parse (args);
+		if (string.IsNullOrEmpty (jnienv_g_cs)) {
+			jnienv_g_cs = Path.Combine (monodroid_root, "Mono.Android", "src", "Runtime", "JNIEnv.g.cs");
 		}
-
-		static string Escape (string value)
-		{
-			switch (value) {
-			case "string":
-			case "ref":
-				return "@" + value;
-			default: return value;
+		try {
+			using (TextWriter w = new StringWriter ()) {
+				w.NewLine = "\n";
+				GenerateFile (w);
+				string content = w.ToString ();
+				if (jnienv_g_cs == "-")
+					Console.Out.WriteLine (content);
+				else if (!File.Exists (jnienv_g_cs) || !string.Equals (content, File.ReadAllText (jnienv_g_cs)))
+					File.WriteAllText (jnienv_g_cs, content);
 			}
+			return 0;
+		} catch (Exception ex) {
+			Console.WriteLine (ex);
+			return 1;
 		}
+	}
 
-		static void GenerateFile (TextWriter o)
-		{
-			o.WriteLine ("// Generated file; DO NOT EDIT!");
-			o.WriteLine ("//");
-			o.WriteLine ("// To make changes, edit build-tools/jnienv-gen and rerun with -o=src/Mono.Android/Android.Runtime/JNIEnv.g.cs");
-			o.WriteLine ();
-			o.WriteLine ("using System;");
-			o.WriteLine ("using System.Runtime.ExceptionServices;");
-			o.WriteLine ("using System.Runtime.InteropServices;");
-			o.WriteLine ("using System.Threading;");
-			o.WriteLine ();
-			o.WriteLine ("using Java.Interop;");
-			o.WriteLine ();
-			o.WriteLine ("namespace Android.Runtime {");
-			o.WriteLine ();
-			GenerateJniEnv (o);
-			o.WriteLine ();
-			o.WriteLine ();
-			o.WriteLine ("}");
+	static string Escape (string value)
+	{
+		switch (value) {
+		case "string":
+		case "ref":
+			return "@" + value;
+		default: return value;
 		}
+	}
 
-		static void GenerateJniEnv (TextWriter o)
-		{
-			o.WriteLine ("\tpublic static partial class JNIEnv {");
-			foreach (JniFunction entry in JNIEnvEntries) {
-				if (entry.Parameters == null)
-					continue;
+	static void GenerateFile (TextWriter o)
+	{
+		o.WriteLine ("// Generated file; DO NOT EDIT!");
+		o.WriteLine ("//");
+		o.WriteLine ("// To make changes, edit build-tools/jnienv-gen and rerun with -o=src/Mono.Android/Android.Runtime/JNIEnv.g.cs");
+		o.WriteLine ();
+		o.WriteLine ("using System;");
+		o.WriteLine ("using System.Runtime.ExceptionServices;");
+		o.WriteLine ("using System.Runtime.InteropServices;");
+		o.WriteLine ("using System.Threading;");
+		o.WriteLine ();
+		o.WriteLine ("using Java.Interop;");
+		o.WriteLine ();
+		o.WriteLine ("namespace Android.Runtime {");
+		o.WriteLine ();
+		GenerateJniEnv (o);
+		o.WriteLine ();
+		o.WriteLine ();
+		o.WriteLine ("}");
+	}
 
-				o.WriteLine ();
-				if (entry.IsPrivate || entry.CustomWrapper)
-					continue;
+	static void GenerateJniEnv (TextWriter o)
+	{
+		o.WriteLine ("\tpublic static partial class JNIEnv {");
+		foreach (JniFunction entry in JNIEnvEntries) {
+			if (entry.Parameters == null)
+				continue;
 
-				switch (entry.ApiName) {
-				case "NewArray":
-					var copyArray = JNIEnvEntries.Single (e => e.Name.StartsWith ("Get", StringComparison.Ordinal) && e.Name.EndsWith ("ArrayRegion", StringComparison.Ordinal) &&
-							e.Parameters [0].Type.Type == entry.ReturnType.Type);
-					o.Write ("\t\t{2} static {0} {1} (", entry.ReturnType.ManagedType, entry.ApiName, entry.Visibility);
-					o.WriteLine ("{0} array)", copyArray.Parameters [3].Type.ManagedType);
-					o.WriteLine ("\t\t{");
-					o.WriteLine ("\t\t\tif (array == null)");
-					o.WriteLine ("\t\t\t\treturn IntPtr.Zero;");
-					o.WriteLine ("\t\t\tJniObjectReference result = JniEnvironment.{0}.{1} (array.Length);", entry.DeclaringType, entry.Name);
-					o.WriteLine ("\t\t\tunsafe {");
-					o.WriteLine ("\t\t\t\t// SAFETY: result is a newly allocated array of the matching primitive type and array.Length elements.");
-					o.WriteLine ("\t\t\t\tCopyArray (array, result.Handle);");
-					o.WriteLine ("\t\t\t}");
-					o.WriteLine ("\t\t\treturn result.Handle;");
-					o.WriteLine ("\t\t}");
-					break;
-				case "CopyArray":
-					WriteSafetyRequirements (o, entry.CallerSafetyRequirements);
-					o.Write ("\t\t{2} static {3}{0} {1} (", entry.ReturnType.ManagedType, entry.ApiName, entry.Visibility,
-						entry.RequiresUnsafe ? "unsafe " : "");
-					if (entry.Name.StartsWith ("G", StringComparison.Ordinal)) {
-						o.WriteLine ("IntPtr src, {0} dest)", entry.Parameters [3].Type.ManagedType);
-						o.WriteLine ("\t\t{");
-						o.WriteLine ("\t\t\tif (src == IntPtr.Zero)");
-						o.WriteLine ("\t\t\t\treturn;");
-						var t = entry.Parameters [3].Type.ManagedType.Replace ("[]", "*");
-						o.WriteLine ("\t\t\tunsafe {");
-						o.WriteLine ("\t\t\t\t// SAFETY: dest is pinned for dest.Length elements; the caller retains the matching JNI source and excludes conflicting access through return or throw.");
-						o.WriteLine ("\t\t\t\tfixed ({0} __p = dest)", t);
-						o.WriteLine ("\t\t\t\t\tJniEnvironment.{0}.{1} (new JniObjectReference (src), 0, dest.Length, {2}__p);",
-								entry.DeclaringType,
-								entry.Name,
-								t == "byte*" ? "(sbyte*) " : "");
-						o.WriteLine ("\t\t\t}");
-					} else {
-						o.WriteLine ("{0} src, IntPtr dest)", entry.Parameters [3].Type.ManagedType);
-						o.WriteLine ("\t\t{");
-						o.WriteLine ("\t\t\tif (src == null)");
-						o.WriteLine ("\t\t\t\tthrow new ArgumentNullException (\"src\");");
-						var t = entry.Parameters [3].Type.ManagedType.Replace ("[]", "*");
-						o.WriteLine ("\t\t\tunsafe {");
-						o.WriteLine ("\t\t\t\t// SAFETY: src is pinned for src.Length elements; the caller retains the matching JNI destination and excludes conflicting access until JNI returns or throws.");
-						o.WriteLine ("\t\t\t\tfixed ({0} __p = src)", t);
-						o.WriteLine ("\t\t\t\t\tJniEnvironment.{0}.{1} (new JniObjectReference (dest), 0, src.Length, {2}__p);",
-								entry.DeclaringType,
-								entry.Name,
-								t == "byte*" ? "(sbyte*) " : "");
-						o.WriteLine ("\t\t\t}");
-					}
-					o.WriteLine ("\t\t}");
-					break;
-				default:
-					GenerateDefaultJniFunction (o, entry);
-					break;
-				}
-			}
-			o.WriteLine ("\t}");
-		}
+			o.WriteLine ();
+			if (entry.IsPrivate || entry.CustomWrapper)
+				continue;
 
-		static void WriteJniFunctionParameters (TextWriter o, JniFunction entry, bool generateParamsOverload)
-		{
-			o.Write ("(");
-			for (int i = 0; i < entry.Parameters.Length; i++) {
-				if (i > 0)
-					o.Write (", ");
-				if (!entry.Parameters [i].IsParamArray) {
-					o.Write ("{0} {1}", entry.Parameters [i].Type.ManagedType, Escape (entry.Parameters [i].Name));
-				} else if (generateParamsOverload && i == entry.Parameters.Length -1) {
-					o.Write ("{0} {1}", entry.Parameters [i].Type.ManagedType, Escape (entry.Parameters [i].Name));
-				} else {
-					o.Write ("params {0} {1}", entry.Parameters [i].Type.ManagedType.Replace ("*", "[]"), Escape (entry.Parameters [i].Name));
-				}
-			}
-			o.WriteLine (")");
-		}
-
-		static void GenerateDefaultJniFunction (TextWriter o, JniFunction entry)
-		{
-			bool generateParamsOverload = entry.Parameters.Length > 1 &&
-				entry.Parameters [entry.Parameters.Length-1].IsParamArray &&
-				entry.Parameters [entry.Parameters.Length-1].Type.ManagedType == "JValue*";
-
-			switch (entry.Name)	{
-				// These must be hand-bound
-				case "GetBooleanArrayRegion":
-				case "GetJavaVM":
-				case "GetStringChars":
-				case "GetVersion":
-				case "RegisterNatives":
-				case "ReleaseStringChars":
-				case "SetBooleanArrayRegion":
-					return;
-			}
-
-			WriteSafetyRequirements (o, entry.CallerSafetyRequirements);
-			o.Write ("\t\t{0} static {3}{1} {2} ",
-						entry.Visibility,
-						entry.ReturnType.ManagedType,
-						entry.ApiName,
-						entry.RequiresUnsafe ? "unsafe " : "");
-			bool is_void = entry.ReturnType.ManagedType == "void";
-			WriteJniFunctionParameters (o, entry, generateParamsOverload);
-			o.WriteLine ("\t\t{");
-			bool needsUnsafeBody = entry.RequiresUnsafe && is_void;
-			if (entry.RequiresUnsafe) {
-				if (needsUnsafeBody)
-					o.WriteLine ("\t\t\tunsafe {");
-				o.Write (needsUnsafeBody ? "\t\t\t\t" : "\t\t\t");
-				o.WriteLine ("// SAFETY: this synchronous forwarder passes inputs unchanged under the documented JNI ABI and lifetime contract.");
-			}
-			o.Write (needsUnsafeBody ? "\t\t\t\t" : "\t\t\t");
-			if (!is_void)
-				o.Write ("return ");
-			bool needsUnsafeExpression = entry.RequiresUnsafe && !is_void;
-			if (needsUnsafeExpression)
-				o.Write ("unsafe(");
-			var n = entry.Name;
-			if (n.StartsWith ("Call", StringComparison.Ordinal))
-				n = n.TrimEnd (new[]{'A'});
-			o.Write ("JniEnvironment.{0}.{1} (", entry.DeclaringType, n);
-			for (int i = 0; i < entry.Parameters.Length; i++) {
-				if (i > 0)
-					o.Write (", ");
-				if (entry.Parameters [i].Type.ManagedType.StartsWith ("out ", StringComparison.Ordinal))
-					o.Write ("out ");
-				if (entry.Parameters [i].Type.ManagedType == "JValue*")
-					o.Write ("(JniArgumentValue*) " + Escape (entry.Parameters [i].Name));
-				else if (IsObjectReferenceType (entry.Parameters [i].Type))
-					o.Write (string.Format ("new JniObjectReference ({0})", Escape (entry.Parameters [i].Name)));
-				else if (IsMemberID (entry.Parameters [i].Type)) {
-					string ctorFormat = null;
-					switch (entry.Parameters [i].Type.Type) {
-						case "jfieldID":        ctorFormat = "new JniFieldInfo ({0}, isStatic: false)";  break;
-						case "jmethodID":       ctorFormat = "new JniMethodInfo ({0}, isStatic: false)"; break;
-						case "jstaticfieldID":  ctorFormat = "new JniFieldInfo ({0}, isStatic: true)";    break;
-						case "jstaticmethodID": ctorFormat = "new JniMethodInfo ({0}, isStatic: true)";   break;
-						default:
-							throw new NotSupportedException ("Don't know how to deal with: " + entry.Parameters [i].Type.Type);
-					}
-					o.Write (string.Format (ctorFormat, Escape (entry.Parameters [i].Name)));
-				}
-				else
-					o.Write (Escape (entry.Parameters [i].Name));
-			}
-			o.Write (")");
-			if (IsObjectReferenceType (entry.ReturnType))
-				o.Write (".Handle");
-			if (IsMemberID (entry.ReturnType))
-				o.Write (".ID");
-			o.WriteLine (needsUnsafeExpression ? ");" : ";");
-			if (needsUnsafeBody)
+			switch (entry.ApiName) {
+			case "NewArray":
+				var copyArray = JNIEnvEntries.Single (e => e.Name.StartsWith ("Get", StringComparison.Ordinal) && e.Name.EndsWith ("ArrayRegion", StringComparison.Ordinal) &&
+						e.Parameters [0].Type.Type == entry.ReturnType.Type);
+				o.Write ("\t\t{2} static {0} {1} (", entry.ReturnType.ManagedType, entry.ApiName, entry.Visibility);
+				o.WriteLine ("{0} array)", copyArray.Parameters [3].Type.ManagedType);
+				o.WriteLine ("\t\t{");
+				o.WriteLine ("\t\t\tif (array == null)");
+				o.WriteLine ("\t\t\t\treturn IntPtr.Zero;");
+				o.WriteLine ("\t\t\tJniObjectReference result = JniEnvironment.{0}.{1} (array.Length);", entry.DeclaringType, entry.Name);
+				o.WriteLine ("\t\t\tunsafe {");
+				o.WriteLine ("\t\t\t\t// SAFETY: result is a newly allocated array of the matching primitive type and array.Length elements.");
+				o.WriteLine ("\t\t\t\tCopyArray (array, result.Handle);");
 				o.WriteLine ("\t\t\t}");
-			o.WriteLine ("\t\t}");
-
-			if (!generateParamsOverload)
-				return;
-			o.WriteLine ();
-			WriteSafetyRequirements (o, entry.CallerSafetyRequirements);
-			o.Write ("\t\t{0} static {1}{2} {3} ",
-					entry.Visibility, entry.RequiresUnsafe ? "unsafe " : "", entry.ReturnType.ManagedType, entry.ApiName);
-			WriteJniFunctionParameters (o, entry, false);
-			o.WriteLine ("\t\t{");
-			o.WriteLine ("\t\t\tunsafe {");
-			o.WriteLine ("\t\t\t\t// SAFETY: the argument array stays pinned until return or throw; the caller supplies its JNI count/types and retains referenced peers.");
-			o.WriteLine ("\t\t\t\tfixed (JValue* __p = {0}) {{", Escape (entry.Parameters [entry.Parameters.Length-1].Name));
-			o.WriteLine ("\t\t\t\t\t{0}{1} ({2}, __p);",
-					is_void ? "" : "return ",
-					entry.ApiName,
-					string.Join (", ", entry.Parameters.Take (entry.Parameters.Length-1).Select (p => Escape (p.Name))));
-			o.WriteLine ("\t\t\t\t}");
-			o.WriteLine ("\t\t\t}");
-			o.WriteLine ("\t\t}");
-		}
-
-		static void WriteSafetyRequirements (TextWriter o, string [] requirements)
-		{
-			if (requirements.Length == 0)
-				return;
-			o.WriteLine ("\t\t/// <safety>");
-			foreach (var requirement in requirements)
-				o.WriteLine ("\t\t/// " + requirement);
-			o.WriteLine ("\t\t/// </safety>");
-		}
-
-		static bool IsObjectReferenceType (TypeInfo type)
-		{
-			switch (type.Type) {
-				case "jobject":
-				case "jclass":
-				case "jthrowable":
-				case "jstring":
-				case "jarray":
-				case "jweak":
-					return true;
+				o.WriteLine ("\t\t\treturn result.Handle;");
+				o.WriteLine ("\t\t}");
+				break;
+			case "CopyArray":
+				WriteSafetyRequirements (o, entry.CallerSafetyRequirements);
+				o.Write ("\t\t{2} static {3}{0} {1} (", entry.ReturnType.ManagedType, entry.ApiName, entry.Visibility,
+					entry.RequiresUnsafe ? "unsafe " : "");
+				if (entry.Name.StartsWith ("G", StringComparison.Ordinal)) {
+					o.WriteLine ("IntPtr src, {0} dest)", entry.Parameters [3].Type.ManagedType);
+					o.WriteLine ("\t\t{");
+					o.WriteLine ("\t\t\tif (src == IntPtr.Zero)");
+					o.WriteLine ("\t\t\t\treturn;");
+					var t = entry.Parameters [3].Type.ManagedType.Replace ("[]", "*");
+					o.WriteLine ("\t\t\tunsafe {");
+					o.WriteLine ("\t\t\t\t// SAFETY: dest is pinned for dest.Length elements; the caller retains the matching JNI source and excludes conflicting access through return or throw.");
+					o.WriteLine ("\t\t\t\tfixed ({0} __p = dest)", t);
+					o.WriteLine ("\t\t\t\t\tJniEnvironment.{0}.{1} (new JniObjectReference (src), 0, dest.Length, {2}__p);",
+							entry.DeclaringType,
+							entry.Name,
+							t == "byte*" ? "(sbyte*) " : "");
+					o.WriteLine ("\t\t\t}");
+				} else {
+					o.WriteLine ("{0} src, IntPtr dest)", entry.Parameters [3].Type.ManagedType);
+					o.WriteLine ("\t\t{");
+					o.WriteLine ("\t\t\tif (src == null)");
+					o.WriteLine ("\t\t\t\tthrow new ArgumentNullException (\"src\");");
+					var t = entry.Parameters [3].Type.ManagedType.Replace ("[]", "*");
+					o.WriteLine ("\t\t\tunsafe {");
+					o.WriteLine ("\t\t\t\t// SAFETY: src is pinned for src.Length elements; the caller retains the matching JNI destination and excludes conflicting access until JNI returns or throws.");
+					o.WriteLine ("\t\t\t\tfixed ({0} __p = src)", t);
+					o.WriteLine ("\t\t\t\t\tJniEnvironment.{0}.{1} (new JniObjectReference (dest), 0, src.Length, {2}__p);",
+							entry.DeclaringType,
+							entry.Name,
+							t == "byte*" ? "(sbyte*) " : "");
+					o.WriteLine ("\t\t\t}");
+				}
+				o.WriteLine ("\t\t}");
+				break;
+			default:
+				GenerateDefaultJniFunction (o, entry);
+				break;
 			}
-			if (type.Type.StartsWith ("j", StringComparison.Ordinal) && type.Type.EndsWith("Array", StringComparison.Ordinal))
-				return true;
-			return false;
 		}
-
-		static bool IsMemberID (TypeInfo type)
-		{
-			switch (type.Type) {
-				case "jfieldID":
-				case "jmethodID":
-				case "jstaticfieldID":
-				case "jstaticmethodID":
-					return true;
-			}
-			return false;
-		}
-
+		o.WriteLine ("\t}");
 	}
 
-	class JniFunction {
-		public string DeclaringType;
-
-		// The java name
-		public string Name;
-
-		// The name of the property/method we will generate. Defaults to the (java) name.
-		private string api_name;
-		public string ApiName
-		{
-			get { return api_name ?? Name; }
-			set { api_name = value; }
-		}
-
-		public TypeInfo ReturnType;
-		public ParamInfo [] Parameters;
-		public bool RequiresUnsafe;
-		public string [] CallerSafetyRequirements = [];
-
-		// If there is a custom wrapper in JNIEnv (so an automatic one shouldn't be generated)
-		public bool CustomWrapper;
-
-		private string visibility;
-		public string Visibility {
-			get {
-				if (visibility == null)
-					return "public";
-				return visibility;
-			}
-			set {
-				visibility = value;
-			}
-		}
-
-		public bool IsPrivate { get { return visibility == "private"; } }
-	}
-
-	class TypeInfo
+	static void WriteJniFunctionParameters (TextWriter o, JniFunction entry, bool generateParamsOverload)
 	{
-		public string Type;
+		o.Write ("(");
+		for (int i = 0; i < entry.Parameters.Length; i++) {
+			if (i > 0)
+				o.Write (", ");
+			if (!entry.Parameters [i].IsParamArray) {
+				o.Write ("{0} {1}", entry.Parameters [i].Type.ManagedType, Escape (entry.Parameters [i].Name));
+			} else if (generateParamsOverload && i == entry.Parameters.Length -1) {
+				o.Write ("{0} {1}", entry.Parameters [i].Type.ManagedType, Escape (entry.Parameters [i].Name));
+			} else {
+				o.Write ("params {0} {1}", entry.Parameters [i].Type.ManagedType.Replace ("*", "[]"), Escape (entry.Parameters [i].Name));
+			}
+		}
+		o.WriteLine (")");
+	}
 
-		private string managed_type;
-		public string ManagedType
-		{
-			get { return managed_type ?? GetManagedType (Type); }
-			set { managed_type = value; }
+	static void GenerateDefaultJniFunction (TextWriter o, JniFunction entry)
+	{
+		bool generateParamsOverload = entry.Parameters.Length > 1 &&
+			entry.Parameters [entry.Parameters.Length-1].IsParamArray &&
+			entry.Parameters [entry.Parameters.Length-1].Type.ManagedType == "JValue*";
+
+		switch (entry.Name)	{
+			// These must be hand-bound
+			case "GetBooleanArrayRegion":
+			case "GetJavaVM":
+			case "GetStringChars":
+			case "GetVersion":
+			case "RegisterNatives":
+			case "ReleaseStringChars":
+			case "SetBooleanArrayRegion":
+				return;
 		}
 
-		public string GetManagedType (string native_type)
-		{
-			switch (native_type) {
-			case "jvalue*":
-				return "JValue*";
-			case "jbyte": return "sbyte";
-			case "jchar": return "char";
-			case "jshort": return "short";
-			case "jsize":
-			case "jint": return "int";
-			case "jlong": return "long";
-			case "jfloat": return "float";
-			case "jdouble": return "double";
-			case "jboolean": return "bool";
-			case "": return "void";
+		WriteSafetyRequirements (o, entry.CallerSafetyRequirements);
+		o.Write ("\t\t{0} static {3}{1} {2} ",
+					entry.Visibility,
+					entry.ReturnType.ManagedType,
+					entry.ApiName,
+					entry.RequiresUnsafe ? "unsafe " : "");
+		bool is_void = entry.ReturnType.ManagedType == "void";
+		WriteJniFunctionParameters (o, entry, generateParamsOverload);
+		o.WriteLine ("\t\t{");
+		bool needsUnsafeBody = entry.RequiresUnsafe && is_void;
+		if (entry.RequiresUnsafe) {
+			if (needsUnsafeBody)
+				o.WriteLine ("\t\t\tunsafe {");
+			o.Write (needsUnsafeBody ? "\t\t\t\t" : "\t\t\t");
+			o.WriteLine ("// SAFETY: this synchronous forwarder passes inputs unchanged under the documented JNI ABI and lifetime contract.");
+		}
+		o.Write (needsUnsafeBody ? "\t\t\t\t" : "\t\t\t");
+		if (!is_void)
+			o.Write ("return ");
+		bool needsUnsafeExpression = entry.RequiresUnsafe && !is_void;
+		if (needsUnsafeExpression)
+			o.Write ("unsafe(");
+		var n = entry.Name;
+		if (n.StartsWith ("Call", StringComparison.Ordinal))
+			n = n.TrimEnd (new[]{'A'});
+		o.Write ("JniEnvironment.{0}.{1} (", entry.DeclaringType, n);
+		for (int i = 0; i < entry.Parameters.Length; i++) {
+			if (i > 0)
+				o.Write (", ");
+			if (entry.Parameters [i].Type.ManagedType.StartsWith ("out ", StringComparison.Ordinal))
+				o.Write ("out ");
+			if (entry.Parameters [i].Type.ManagedType == "JValue*")
+				o.Write ("(JniArgumentValue*) " + Escape (entry.Parameters [i].Name));
+			else if (IsObjectReferenceType (entry.Parameters [i].Type))
+				o.Write (string.Format ("new JniObjectReference ({0})", Escape (entry.Parameters [i].Name)));
+			else if (IsMemberID (entry.Parameters [i].Type)) {
+				string ctorFormat = null;
+				switch (entry.Parameters [i].Type.Type) {
+					case "jfieldID":        ctorFormat = "new JniFieldInfo ({0}, isStatic: false)";  break;
+					case "jmethodID":       ctorFormat = "new JniMethodInfo ({0}, isStatic: false)"; break;
+					case "jstaticfieldID":  ctorFormat = "new JniFieldInfo ({0}, isStatic: true)";    break;
+					case "jstaticmethodID": ctorFormat = "new JniMethodInfo ({0}, isStatic: true)";   break;
+					default:
+						throw new NotSupportedException ("Don't know how to deal with: " + entry.Parameters [i].Type.Type);
+				}
+				o.Write (string.Format (ctorFormat, Escape (entry.Parameters [i].Name)));
+			}
+			else
+				o.Write (Escape (entry.Parameters [i].Name));
+		}
+		o.Write (")");
+		if (IsObjectReferenceType (entry.ReturnType))
+			o.Write (".Handle");
+		if (IsMemberID (entry.ReturnType))
+			o.Write (".ID");
+		o.WriteLine (needsUnsafeExpression ? ");" : ";");
+		if (needsUnsafeBody)
+			o.WriteLine ("\t\t\t}");
+		o.WriteLine ("\t\t}");
+
+		if (!generateParamsOverload)
+			return;
+		o.WriteLine ();
+		WriteSafetyRequirements (o, entry.CallerSafetyRequirements);
+		o.Write ("\t\t{0} static {1}{2} {3} ",
+				entry.Visibility, entry.RequiresUnsafe ? "unsafe " : "", entry.ReturnType.ManagedType, entry.ApiName);
+		WriteJniFunctionParameters (o, entry, false);
+		o.WriteLine ("\t\t{");
+		o.WriteLine ("\t\t\tunsafe {");
+		o.WriteLine ("\t\t\t\t// SAFETY: the argument array stays pinned until return or throw; the caller supplies its JNI count/types and retains referenced peers.");
+		o.WriteLine ("\t\t\t\tfixed (JValue* __p = {0}) {{", Escape (entry.Parameters [entry.Parameters.Length-1].Name));
+		o.WriteLine ("\t\t\t\t\t{0}{1} ({2}, __p);",
+				is_void ? "" : "return ",
+				entry.ApiName,
+				string.Join (", ", entry.Parameters.Take (entry.Parameters.Length-1).Select (p => Escape (p.Name))));
+		o.WriteLine ("\t\t\t\t}");
+		o.WriteLine ("\t\t\t}");
+		o.WriteLine ("\t\t}");
+	}
+
+	static void WriteSafetyRequirements (TextWriter o, string [] requirements)
+	{
+		if (requirements.Length == 0)
+			return;
+		o.WriteLine ("\t\t/// <safety>");
+		foreach (var requirement in requirements)
+			o.WriteLine ("\t\t/// " + requirement);
+		o.WriteLine ("\t\t/// </safety>");
+	}
+
+	static bool IsObjectReferenceType (TypeInfo type)
+	{
+		switch (type.Type) {
 			case "jobject":
 			case "jclass":
-			case "void*":
+			case "jthrowable":
+			case "jstring":
+			case "jarray":
+			case "jweak":
+				return true;
+		}
+		if (type.Type.StartsWith ("j", StringComparison.Ordinal) && type.Type.EndsWith("Array", StringComparison.Ordinal))
+			return true;
+		return false;
+	}
+
+	static bool IsMemberID (TypeInfo type)
+	{
+		switch (type.Type) {
 			case "jfieldID":
 			case "jmethodID":
 			case "jstaticfieldID":
 			case "jstaticmethodID":
-			case "jmethod":
-			case "jthrowable":
-			case "jstring":
-			case "jchar*":
-			case "jarray":
-			case "jweak":
-				return "IntPtr";
-			case "const jchar*":
-			case "const char*":
-				return "string";
-			case "JavaVM**":
-				return "out IntPtr";
-			case "const JNINativeMethod*":
-				return "JNINativeMethod []";
-			case "jobjectRefType":
-				return "int";
-			default:
-				if (native_type.EndsWith ("Array", StringComparison.Ordinal))
-					return "IntPtr";
-				if (native_type.EndsWith ("*", StringComparison.Ordinal))
-					return "IntPtr";
-				return native_type;
-			}
+				return true;
 		}
+		return false;
+	}
 
-		public TypeInfo ()
-		{
+}
+
+class JniFunction {
+	public string DeclaringType;
+
+	// The java name
+	public string Name;
+
+	// The name of the property/method we will generate. Defaults to the (java) name.
+	private string api_name;
+	public string ApiName
+	{
+		get { return api_name ?? Name; }
+		set { api_name = value; }
+	}
+
+	public TypeInfo ReturnType;
+	public ParamInfo [] Parameters;
+	public bool RequiresUnsafe;
+	public string [] CallerSafetyRequirements = [];
+
+	// If there is a custom wrapper in JNIEnv (so an automatic one shouldn't be generated)
+	public bool CustomWrapper;
+
+	private string visibility;
+	public string Visibility {
+		get {
+			if (visibility == null)
+				return "public";
+			return visibility;
 		}
-
-		public TypeInfo (string Type, string ManagedType = null)
-		{
-			this.Type = Type;
-			this.ManagedType = ManagedType;
-		}
-
-		public static implicit operator TypeInfo (string type)
-		{
-			return new TypeInfo (type);
+		set {
+			visibility = value;
 		}
 	}
 
-	class ParamInfo
+	public bool IsPrivate { get { return visibility == "private"; } }
+}
+
+class TypeInfo
+{
+	public string Type;
+
+	private string managed_type;
+	public string ManagedType
 	{
-		public TypeInfo Type;
-		public string Name;
-		public bool IsParamArray;
+		get { return managed_type ?? GetManagedType (Type); }
+		set { managed_type = value; }
+	}
 
-		public ParamInfo (TypeInfo Type, string Name, bool IsParamArray)
-		{
-			this.Type = Type;
-			this.Name = Name;
-			this.IsParamArray = IsParamArray;
+	public string GetManagedType (string native_type)
+	{
+		switch (native_type) {
+		case "jvalue*":
+			return "JValue*";
+		case "jbyte": return "sbyte";
+		case "jchar": return "char";
+		case "jshort": return "short";
+		case "jsize":
+		case "jint": return "int";
+		case "jlong": return "long";
+		case "jfloat": return "float";
+		case "jdouble": return "double";
+		case "jboolean": return "bool";
+		case "": return "void";
+		case "jobject":
+		case "jclass":
+		case "void*":
+		case "jfieldID":
+		case "jmethodID":
+		case "jstaticfieldID":
+		case "jstaticmethodID":
+		case "jmethod":
+		case "jthrowable":
+		case "jstring":
+		case "jchar*":
+		case "jarray":
+		case "jweak":
+			return "IntPtr";
+		case "const jchar*":
+		case "const char*":
+			return "string";
+		case "JavaVM**":
+			return "out IntPtr";
+		case "const JNINativeMethod*":
+			return "JNINativeMethod []";
+		case "jobjectRefType":
+			return "int";
+		default:
+			if (native_type.EndsWith ("Array", StringComparison.Ordinal))
+				return "IntPtr";
+			if (native_type.EndsWith ("*", StringComparison.Ordinal))
+				return "IntPtr";
+			return native_type;
 		}
+	}
 
-		public ParamInfo (TypeInfo Type, string Name = null)
-		{
-			this.Type = Type;
-			this.Name = Name;
-		}
+	public TypeInfo ()
+	{
+	}
+
+	public TypeInfo (string Type, string ManagedType = null)
+	{
+		this.Type = Type;
+		this.ManagedType = ManagedType;
+	}
+
+	public static implicit operator TypeInfo (string type)
+	{
+		return new TypeInfo (type);
+	}
+}
+
+class ParamInfo
+{
+	public TypeInfo Type;
+	public string Name;
+	public bool IsParamArray;
+
+	public ParamInfo (TypeInfo Type, string Name, bool IsParamArray)
+	{
+		this.Type = Type;
+		this.Name = Name;
+		this.IsParamArray = IsParamArray;
+	}
+
+	public ParamInfo (TypeInfo Type, string Name = null)
+	{
+		this.Type = Type;
+		this.Name = Name;
 	}
 }

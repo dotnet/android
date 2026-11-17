@@ -30,7 +30,7 @@
 
 using System;
 
-namespace Android.Runtime {
+namespace Android.Runtime; 
 
 	[Obsolete ("Please use [System.Diagnostics.CodeAnalysis.DynamicDependencyAttribute]", error: true)]
 	[AttributeUsage (
@@ -53,4 +53,3 @@ namespace Android.Runtime {
 		{
 		}
 	}
-}

@@ -6,217 +6,216 @@ using System.Runtime.InteropServices;
 using System.Runtime.Versioning;
 using Xamarin.Android.Tools;
 
-namespace Xamarin.ProjectTools
+namespace Xamarin.ProjectTools;
+
+/// <summary>
+/// Provides utility methods and properties for detecting the test environment
+/// and locating build tools, directories, and platform-specific settings.
+/// </summary>
+/// <remarks>
+/// This class centralizes environment detection logic used throughout the test
+/// framework to adapt behavior based on the operating system, locate build tools,
+/// and configure platform-specific paths and settings.
+/// </remarks>
+/// <seealso cref="XABuildPaths"/>
+/// <seealso cref="FileSystemUtils"/>
+public static class TestEnvironment
 {
 	/// <summary>
-	/// Provides utility methods and properties for detecting the test environment
-	/// and locating build tools, directories, and platform-specific settings.
+	/// The dnceng <c>dotnet-public-maven</c> feed, which mirrors both Maven Central and
+	/// Google Maven and is readable anonymously.
 	/// </summary>
 	/// <remarks>
-	/// This class centralizes environment detection logic used throughout the test
-	/// framework to adapt behavior based on the operating system, locate build tools,
-	/// and configure platform-specific paths and settings.
+	/// Tests download through this feed unconditionally, including locally, so that a local
+	/// run exercises exactly the same URLs as CI. CI agents are network-isolated and can only
+	/// reach this feed, so an artifact the mirror does not have must fail everywhere rather
+	/// than only on CI.
 	/// </remarks>
-	/// <seealso cref="XABuildPaths"/>
-	/// <seealso cref="FileSystemUtils"/>
-	public static class TestEnvironment
+	public const string DotNetPublicMaven = "https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-public-maven/maven/v1";
+
+	[DllImport ("libc")]
+	static extern int uname (IntPtr buf);
+
+	static bool IsDarwin ()
 	{
-		/// <summary>
-		/// The dnceng <c>dotnet-public-maven</c> feed, which mirrors both Maven Central and
-		/// Google Maven and is readable anonymously.
-		/// </summary>
-		/// <remarks>
-		/// Tests download through this feed unconditionally, including locally, so that a local
-		/// run exercises exactly the same URLs as CI. CI agents are network-isolated and can only
-		/// reach this feed, so an artifact the mirror does not have must fail everywhere rather
-		/// than only on CI.
-		/// </remarks>
-		public const string DotNetPublicMaven = "https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-public-maven/maven/v1";
-
-		[DllImport ("libc")]
-		static extern int uname (IntPtr buf);
-
-		static bool IsDarwin ()
-		{
-			IntPtr buf = IntPtr.Zero;
-			try {
-				buf = Marshal.AllocHGlobal (8192);
-				if (uname (buf) == 0) {
-					string os = Marshal.PtrToStringAnsi (buf);
-					return os == "Darwin";
-				}
-			} catch {
-			} finally {
-				if (buf != IntPtr.Zero)
-					Marshal.FreeHGlobal (buf);
+		IntPtr buf = IntPtr.Zero;
+		try {
+			buf = Marshal.AllocHGlobal (8192);
+			if (uname (buf) == 0) {
+				string os = Marshal.PtrToStringAnsi (buf);
+				return os == "Darwin";
 			}
-			return false;
+		} catch {
+		} finally {
+			if (buf != IntPtr.Zero)
+				Marshal.FreeHGlobal (buf);
 		}
-
-		/// <summary>
-		/// Gets a value indicating whether the current platform is Windows.
-		/// </summary>
-		/// <remarks>
-		/// <see cref="SupportedOSPlatformGuardAttribute"/> teaches the platform-compatibility
-		/// analyzer (CA1416) that this property is a <c>windows</c> guard, so callers can use it
-		/// instead of <see cref="OperatingSystem.IsWindows"/>.
-		/// </remarks>
-		[SupportedOSPlatformGuard ("windows")]
-		public static bool IsWindows {
-			get {
-				return Environment.OSVersion.Platform == PlatformID.Win32NT;
-			}
-		}
-
-		/// <summary>
-		/// Gets a value indicating whether the current platform is macOS.
-		/// </summary>
-		[SupportedOSPlatformGuard ("macos")]
-		public static bool IsMacOS {
-			get {
-				return IsDarwin ();
-			}
-		}
-
-		/// <summary>
-		/// Gets a value indicating whether the current platform is Linux.
-		/// </summary>
-		[SupportedOSPlatformGuard ("linux")]
-		public static bool IsLinux {
-			get {
-				return !IsWindows && !IsMacOS;
-			}
-		}
-
-		public static bool IsRunningOnCI =>
-			string.Equals (Environment.GetEnvironmentVariable ("RUNNINGONCI"), "true", StringComparison.OrdinalIgnoreCase);
-
-		/// <summary>
-		/// The MonoAndroid reference assemblies directory within a local build tree, e.g. bin/Debug/lib/packs/Microsoft.Android.Ref.34/34.99.0/ref/net8.0/<br/>
-		/// If a local build tree can not be found, or if it is empty, this will return the system installation location instead:<br/>
-		///    bin/Debug/dotnet/packs/Microsoft.Android.Ref.34/$(Latest)/ref/net$(Latest)/
-		/// </summary>
-		public static string MonoAndroidFrameworkDirectory {
-			get {
-				var targetPlatform = XABuildConfig.AndroidDefaultTargetDotnetApiLevel;
-				var versionString = targetPlatform.Minor == 0 ? $"{targetPlatform.Major}" : $"{targetPlatform.Major}.{targetPlatform.Minor}";
-				var rootRefDir = Directory.GetDirectories (Path.Combine (DotNetPreviewPacksDirectory, $"Microsoft.Android.Ref.{versionString}")).LastOrDefault ();
-				if (!Directory.Exists (rootRefDir)) {
-					throw new DirectoryNotFoundException ($"Unable to locate Microsoft.Android.Ref.");
-				}
-
-				var maDll = Directory.GetFiles (rootRefDir, "Mono.Android.dll", SearchOption.AllDirectories).LastOrDefault ();
-				var refDir = Path.GetDirectoryName(maDll);
-				if (!Directory.Exists (refDir)) {
-					throw new DirectoryNotFoundException ($"Unable to locate Mono.Android.dll inside Microsoft.Android.Ref.");
-				}
-
-				return refDir;
-			}
-		}
-
-		/// <summary>
-		/// The MonoAndroidTools directory within a local build tree, e.g. bin/Debug/lib/packs/Microsoft.Android.Sdk.Darwin/34.99.0/tools/<br/>
-		/// If a local build tree can not be found, or if it is empty, this will return the .NET sandbox location instead:<br/>
-		///	Windows:  bin\Debug\dotnet\packs\Microsoft.Android.Sdk.Windows\$(Latest)\tools<br/>
-		///	macOS:    bin/Debug/dotnet/packs/Microsoft.Android.Sdk.Darwin/$(Latest)/tools
-		/// </summary>
-		public static string AndroidMSBuildDirectory {
-			get {
-				if (!Directory.Exists (DotNetPreviewAndroidSdkDirectory)) {
-					throw new DirectoryNotFoundException ($"Unable to locate a Microsoft.Android.Sdk in either '{DefaultPacksDir}' or '{LocalPacksDir}'.");
-				}
-				return Path.Combine (DotNetPreviewAndroidSdkDirectory, "tools");
-			}
-		}
-
-		public static string DotNetPreviewDirectory => Path.Combine (XABuildPaths.PrefixDirectory, "dotnet");
-
-		public static string DotNetPreviewPacksDirectory => UseLocalBuildOutput ? LocalPacksDir : DefaultPacksDir;
-
-		public static string DotNetPreviewAndroidSdkDirectory => UseLocalBuildOutput ? LocalDotNetAndroidSdkDirectory : DefaultDotNetAndroidSdkDirectory;
-
-		public static string WorkloadPackOverridePath => Path.Combine (XABuildPaths.PrefixDirectory, "lib");
-
-		public static string WorkloadManifestOverridePath => Path.Combine (WorkloadPackOverridePath, "sdk-manifests");
-
-		static string DefaultPacksDir => Path.Combine (DotNetPreviewDirectory, "packs");
-
-		static string LocalPacksDir => Path.Combine (WorkloadPackOverridePath, "packs");
-
-		static string _defaultDotNetAndroidSdkDirectory;
-		static string DefaultDotNetAndroidSdkDirectory {
-			get {
-				if (!string.IsNullOrEmpty (_defaultDotNetAndroidSdkDirectory)) {
-					return _defaultDotNetAndroidSdkDirectory;
-				}
-				return _defaultDotNetAndroidSdkDirectory = GetDotNetAndroidSdkDir (DefaultPacksDir);
-			}
-		}
-
-		static string _localDotNetAndroidSdkDirectory;
-		static string LocalDotNetAndroidSdkDirectory {
-			get {
-				if (!string.IsNullOrEmpty (_localDotNetAndroidSdkDirectory)) {
-					return _localDotNetAndroidSdkDirectory;
-				}
-				return _localDotNetAndroidSdkDirectory = GetDotNetAndroidSdkDir (LocalPacksDir);
-			}
-		}
-
-		static string GetDotNetAndroidSdkDir (string packsDirectory)
-		{
-			var sdkName = IsMacOS ? "Microsoft.Android.Sdk.Darwin" :
-				IsWindows ? "Microsoft.Android.Sdk.Windows" :
-				"Microsoft.Android.Sdk.Linux";
-
-			var sdkDir = Path.Combine (packsDirectory, sdkName);
-			if (!Directory.Exists (sdkDir))
-				return string.Empty;
-
-			var dirs = from d in Directory.GetDirectories (sdkDir)
-				   let version = ParseVersion (d)
-				   orderby version descending
-				   select d;
-
-			return dirs.FirstOrDefault ();
-		}
-
-		/// <summary>
-		/// Tests will attempt to run against local build output directories by default,
-		///  and fall back to `dotnet/packs` if a local build does not exist.
-		/// This will always return false for our tests running in CI.
-		/// </summary>
-		public static bool UseLocalBuildOutput {
-			get {
-				var msbuildDir = Path.Combine (LocalDotNetAndroidSdkDirectory, "tools");
-				return Directory.Exists (msbuildDir) && File.Exists (Path.Combine (msbuildDir, "Xamarin.Android.Build.Tasks.dll"));
-			}
-		}
-
-		public static string OSBinDirectory {
-			get {
-				var osSubdirName = IsMacOS ? "Darwin" :
-					IsLinux ? "Linux" :
-					string.Empty;
-				return Path.Combine (AndroidMSBuildDirectory, osSubdirName);
-			}
-		}
-
-		static Version ParseVersion (string path)
-		{
-			var folderName = Path.GetFileName (path);
-			var index = folderName.IndexOf ('-');
-			if (index != -1) {
-				folderName = folderName.Substring (0, index);
-			}
-			if (Version.TryParse (folderName, out var v))
-				return v;
-			return new Version (0, 0);
-		}
-
-		public static bool IsUsingJdk8 => AndroidSdkResolver.GetJavaSdkVersionString ().Contains ("1.8.0");
-
-		public static bool IsUsingJdk11 => AndroidSdkResolver.GetJavaSdkVersionString ().Contains ("11.0");
+		return false;
 	}
+
+	/// <summary>
+	/// Gets a value indicating whether the current platform is Windows.
+	/// </summary>
+	/// <remarks>
+	/// <see cref="SupportedOSPlatformGuardAttribute"/> teaches the platform-compatibility
+	/// analyzer (CA1416) that this property is a <c>windows</c> guard, so callers can use it
+	/// instead of <see cref="OperatingSystem.IsWindows"/>.
+	/// </remarks>
+	[SupportedOSPlatformGuard ("windows")]
+	public static bool IsWindows {
+		get {
+			return Environment.OSVersion.Platform == PlatformID.Win32NT;
+		}
+	}
+
+	/// <summary>
+	/// Gets a value indicating whether the current platform is macOS.
+	/// </summary>
+	[SupportedOSPlatformGuard ("macos")]
+	public static bool IsMacOS {
+		get {
+			return IsDarwin ();
+		}
+	}
+
+	/// <summary>
+	/// Gets a value indicating whether the current platform is Linux.
+	/// </summary>
+	[SupportedOSPlatformGuard ("linux")]
+	public static bool IsLinux {
+		get {
+			return !IsWindows && !IsMacOS;
+		}
+	}
+
+	public static bool IsRunningOnCI =>
+		string.Equals (Environment.GetEnvironmentVariable ("RUNNINGONCI"), "true", StringComparison.OrdinalIgnoreCase);
+
+	/// <summary>
+	/// The MonoAndroid reference assemblies directory within a local build tree, e.g. bin/Debug/lib/packs/Microsoft.Android.Ref.34/34.99.0/ref/net8.0/<br/>
+	/// If a local build tree can not be found, or if it is empty, this will return the system installation location instead:<br/>
+	///    bin/Debug/dotnet/packs/Microsoft.Android.Ref.34/$(Latest)/ref/net$(Latest)/
+	/// </summary>
+	public static string MonoAndroidFrameworkDirectory {
+		get {
+			var targetPlatform = XABuildConfig.AndroidDefaultTargetDotnetApiLevel;
+			var versionString = targetPlatform.Minor == 0 ? $"{targetPlatform.Major}" : $"{targetPlatform.Major}.{targetPlatform.Minor}";
+			var rootRefDir = Directory.GetDirectories (Path.Combine (DotNetPreviewPacksDirectory, $"Microsoft.Android.Ref.{versionString}")).LastOrDefault ();
+			if (!Directory.Exists (rootRefDir)) {
+				throw new DirectoryNotFoundException ($"Unable to locate Microsoft.Android.Ref.");
+			}
+
+			var maDll = Directory.GetFiles (rootRefDir, "Mono.Android.dll", SearchOption.AllDirectories).LastOrDefault ();
+			var refDir = Path.GetDirectoryName(maDll);
+			if (!Directory.Exists (refDir)) {
+				throw new DirectoryNotFoundException ($"Unable to locate Mono.Android.dll inside Microsoft.Android.Ref.");
+			}
+
+			return refDir;
+		}
+	}
+
+	/// <summary>
+	/// The MonoAndroidTools directory within a local build tree, e.g. bin/Debug/lib/packs/Microsoft.Android.Sdk.Darwin/34.99.0/tools/<br/>
+	/// If a local build tree can not be found, or if it is empty, this will return the .NET sandbox location instead:<br/>
+	///	Windows:  bin\Debug\dotnet\packs\Microsoft.Android.Sdk.Windows\$(Latest)\tools<br/>
+	///	macOS:    bin/Debug/dotnet/packs/Microsoft.Android.Sdk.Darwin/$(Latest)/tools
+	/// </summary>
+	public static string AndroidMSBuildDirectory {
+		get {
+			if (!Directory.Exists (DotNetPreviewAndroidSdkDirectory)) {
+				throw new DirectoryNotFoundException ($"Unable to locate a Microsoft.Android.Sdk in either '{DefaultPacksDir}' or '{LocalPacksDir}'.");
+			}
+			return Path.Combine (DotNetPreviewAndroidSdkDirectory, "tools");
+		}
+	}
+
+	public static string DotNetPreviewDirectory => Path.Combine (XABuildPaths.PrefixDirectory, "dotnet");
+
+	public static string DotNetPreviewPacksDirectory => UseLocalBuildOutput ? LocalPacksDir : DefaultPacksDir;
+
+	public static string DotNetPreviewAndroidSdkDirectory => UseLocalBuildOutput ? LocalDotNetAndroidSdkDirectory : DefaultDotNetAndroidSdkDirectory;
+
+	public static string WorkloadPackOverridePath => Path.Combine (XABuildPaths.PrefixDirectory, "lib");
+
+	public static string WorkloadManifestOverridePath => Path.Combine (WorkloadPackOverridePath, "sdk-manifests");
+
+	static string DefaultPacksDir => Path.Combine (DotNetPreviewDirectory, "packs");
+
+	static string LocalPacksDir => Path.Combine (WorkloadPackOverridePath, "packs");
+
+	static string _defaultDotNetAndroidSdkDirectory;
+	static string DefaultDotNetAndroidSdkDirectory {
+		get {
+			if (!string.IsNullOrEmpty (_defaultDotNetAndroidSdkDirectory)) {
+				return _defaultDotNetAndroidSdkDirectory;
+			}
+			return _defaultDotNetAndroidSdkDirectory = GetDotNetAndroidSdkDir (DefaultPacksDir);
+		}
+	}
+
+	static string _localDotNetAndroidSdkDirectory;
+	static string LocalDotNetAndroidSdkDirectory {
+		get {
+			if (!string.IsNullOrEmpty (_localDotNetAndroidSdkDirectory)) {
+				return _localDotNetAndroidSdkDirectory;
+			}
+			return _localDotNetAndroidSdkDirectory = GetDotNetAndroidSdkDir (LocalPacksDir);
+		}
+	}
+
+	static string GetDotNetAndroidSdkDir (string packsDirectory)
+	{
+		var sdkName = IsMacOS ? "Microsoft.Android.Sdk.Darwin" :
+			IsWindows ? "Microsoft.Android.Sdk.Windows" :
+			"Microsoft.Android.Sdk.Linux";
+
+		var sdkDir = Path.Combine (packsDirectory, sdkName);
+		if (!Directory.Exists (sdkDir))
+			return string.Empty;
+
+		var dirs = from d in Directory.GetDirectories (sdkDir)
+			   let version = ParseVersion (d)
+			   orderby version descending
+			   select d;
+
+		return dirs.FirstOrDefault ();
+	}
+
+	/// <summary>
+	/// Tests will attempt to run against local build output directories by default,
+	///  and fall back to `dotnet/packs` if a local build does not exist.
+	/// This will always return false for our tests running in CI.
+	/// </summary>
+	public static bool UseLocalBuildOutput {
+		get {
+			var msbuildDir = Path.Combine (LocalDotNetAndroidSdkDirectory, "tools");
+			return Directory.Exists (msbuildDir) && File.Exists (Path.Combine (msbuildDir, "Xamarin.Android.Build.Tasks.dll"));
+		}
+	}
+
+	public static string OSBinDirectory {
+		get {
+			var osSubdirName = IsMacOS ? "Darwin" :
+				IsLinux ? "Linux" :
+				string.Empty;
+			return Path.Combine (AndroidMSBuildDirectory, osSubdirName);
+		}
+	}
+
+	static Version ParseVersion (string path)
+	{
+		var folderName = Path.GetFileName (path);
+		var index = folderName.IndexOf ('-');
+		if (index != -1) {
+			folderName = folderName.Substring (0, index);
+		}
+		if (Version.TryParse (folderName, out var v))
+			return v;
+		return new Version (0, 0);
+	}
+
+	public static bool IsUsingJdk8 => AndroidSdkResolver.GetJavaSdkVersionString ().Contains ("1.8.0");
+
+	public static bool IsUsingJdk11 => AndroidSdkResolver.GetJavaSdkVersionString ().Contains ("11.0");
 }

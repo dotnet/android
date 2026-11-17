@@ -12,7 +12,7 @@ using System.Text;
 using Xamarin.Android.Tools;
 using Microsoft.Android.Build.Tasks;
 
-namespace Xamarin.Android.Tasks {
+namespace Xamarin.Android.Tasks; 
 
 	internal class ManifestDocument
 	{
@@ -248,4 +248,3 @@ namespace Xamarin.Android.Tasks {
 			VersionCode = versionCode.ToString ().TrimStart ('0');
 		}
 	}
-}

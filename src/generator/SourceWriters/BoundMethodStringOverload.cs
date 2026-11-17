@@ -6,37 +6,36 @@ using System.Threading.Tasks;
 using MonoDroid.Generation;
 using Xamarin.SourceWriter;
 
-namespace generator.SourceWriters
+namespace generator.SourceWriters;
+
+public class BoundMethodStringOverload : MethodWriter
 {
-	public class BoundMethodStringOverload : MethodWriter
+	readonly Method method;
+	readonly CodeGenerationOptions opt;
+
+	public BoundMethodStringOverload (Method method, CodeGenerationOptions opt)
 	{
-		readonly Method method;
-		readonly CodeGenerationOptions opt;
+		this.method = method;
+		this.opt = opt;
 
-		public BoundMethodStringOverload (Method method, CodeGenerationOptions opt)
-		{
-			this.method = method;
-			this.opt = opt;
+		Name = method.Name;
+		IsStatic = method.IsStatic;
 
-			Name = method.Name;
-			IsStatic = method.IsStatic;
+		SetVisibility (method.Visibility);
+		ReturnType = new TypeReferenceWriter (opt.GetTypeReferenceName (method.RetVal).Replace ("Java.Lang.ICharSequence", "string").Replace ("global::string", "string"));
 
-			SetVisibility (method.Visibility);
-			ReturnType = new TypeReferenceWriter (opt.GetTypeReferenceName (method.RetVal).Replace ("Java.Lang.ICharSequence", "string").Replace ("global::string", "string"));
+		SourceWriterExtensions.AddObsolete (Attributes, method.Deprecated, opt, deprecatedSince: method.DeprecatedSince);
+		SourceWriterExtensions.AddRestrictToWarning (Attributes, method.AnnotatedVisibility, false, opt);
 
-			SourceWriterExtensions.AddObsolete (Attributes, method.Deprecated, opt, deprecatedSince: method.DeprecatedSince);
-			SourceWriterExtensions.AddRestrictToWarning (Attributes, method.AnnotatedVisibility, false, opt);
+		SourceWriterExtensions.AddSupportedOSPlatform (Attributes, method, opt);
 
-			SourceWriterExtensions.AddSupportedOSPlatform (Attributes, method, opt);
+		method.JavadocInfo?.AddJavadocs (Comments);
 
-			method.JavadocInfo?.AddJavadocs (Comments);
+		this.AddMethodParametersStringOverloads (method.Parameters, opt);
+	}
 
-			this.AddMethodParametersStringOverloads (method.Parameters, opt);
-		}
-
-		protected override void WriteBody (CodeWriter writer)
-		{
-			SourceWriterExtensions.WriteMethodStringOverloadBody (writer, method, opt, false);
-		}
+	protected override void WriteBody (CodeWriter writer)
+	{
+		SourceWriterExtensions.WriteMethodStringOverloadBody (writer, method, opt, false);
 	}
 }

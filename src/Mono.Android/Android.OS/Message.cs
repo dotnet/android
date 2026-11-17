@@ -1,7 +1,7 @@
 using System;
 using Android.Runtime;
 
-namespace Android.OS {
+namespace Android.OS; 
 
 	public partial class Message {
 
@@ -11,5 +11,4 @@ namespace Android.OS {
 		}
 
 	}
-}
 

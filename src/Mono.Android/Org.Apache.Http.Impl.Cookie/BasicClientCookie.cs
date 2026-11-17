@@ -1,5 +1,5 @@
-namespace Org.Apache.Http.Impl.Cookie
-{
+namespace Org.Apache.Http.Impl.Cookie;
+
 	public partial class BasicClientCookie
 	{
 		public void SetComment (string? comment)
@@ -32,4 +32,3 @@ namespace Org.Apache.Http.Impl.Cookie
 			Version = version;
 		}
 	}
-}

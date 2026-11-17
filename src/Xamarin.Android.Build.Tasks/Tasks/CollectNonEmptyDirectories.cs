@@ -10,7 +10,7 @@ using Microsoft.Build.Framework;
 using Xamarin.Android.Tools;
 using Microsoft.Android.Build.Tasks;
 
-namespace Xamarin.Android.Tasks {
+namespace Xamarin.Android.Tasks; 
 
 	public class CollectNonEmptyDirectories : AndroidTask {
 		public override string TaskPrefix => "CNE";
@@ -122,4 +122,3 @@ namespace Xamarin.Android.Tasks {
 			return !Log.HasLoggedErrors;
 		}
 	}
-}

@@ -1,7 +1,7 @@
 using System;
 using Android.Runtime;
 
-namespace Java.Lang {
+namespace Java.Lang; 
 
 	public partial class String {
 
@@ -47,4 +47,3 @@ namespace Java.Lang {
 			return unsafe(JNIEnv.GetCharSequence (Handle, JniHandleOwnership.DoNotTransfer)!);
 		}
 	}
-}

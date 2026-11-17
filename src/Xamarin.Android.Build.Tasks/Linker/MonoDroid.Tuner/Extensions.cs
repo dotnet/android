@@ -13,7 +13,7 @@ using Mono.Tuner;
 using Java.Interop;
 using Java.Interop.Tools.Cecil;
 
-namespace MonoDroid.Tuner {
+namespace MonoDroid.Tuner; 
 
 	static class Extensions {
 
@@ -280,4 +280,3 @@ namespace MonoDroid.Tuner {
 			return Instruction.Create (OpCodes.Ldc_I4, intValue);
 		}
 	}
-}

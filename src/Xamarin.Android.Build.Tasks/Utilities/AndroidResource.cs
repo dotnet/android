@@ -11,7 +11,7 @@ using System.Xml.XPath;
 using Xamarin.Android.Tasks;
 using Microsoft.Android.Build.Tasks;
 
-namespace Monodroid {
+namespace Monodroid; 
 	static class AndroidResource {
 		
 		public static bool UpdateXmlResource (string res, string filename, IEnumerable<string>? additionalDirectories = null, Action<TraceLevel, string>? logMessage = null, Action<string, string>? registerCustomView = null)
@@ -241,4 +241,3 @@ namespace Monodroid {
 			return $"{dir}_{Path.GetFileNameWithoutExtension (file)}{ext}.flat";
 		}
 	}
-}

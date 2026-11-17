@@ -2,7 +2,7 @@ using System;
 
 using Android.Content;
 
-namespace Android.Net {
+namespace Android.Net; 
 
 	public partial class ConnectivityManager {
 
@@ -11,6 +11,5 @@ namespace Android.Net {
 			return context.GetSystemService (Context.ConnectivityService!) as ConnectivityManager;
 		}
 	}
-}
 
 

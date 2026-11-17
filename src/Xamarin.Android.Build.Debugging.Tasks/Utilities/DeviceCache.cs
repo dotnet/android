@@ -3,8 +3,8 @@ using System.Linq;
 using System.Xml.Linq;
 using Microsoft.Build.Utilities;
 
-namespace Xamarin.Android.Tasks
-{
+namespace Xamarin.Android.Tasks;
+
 	/// <summary>
 	/// Helper class for managing the device property cache XML file.
 	/// </summary>
@@ -101,4 +101,3 @@ namespace Xamarin.Android.Tasks
 			return !string.IsNullOrEmpty (resultingAbi) || Array.Exists (supportedAbis, abi => !string.IsNullOrWhiteSpace (abi));
 		}
 	}
-}

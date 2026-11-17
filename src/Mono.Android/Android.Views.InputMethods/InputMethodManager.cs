@@ -2,7 +2,7 @@ using System;
 
 using Android.Content;
 
-namespace Android.Views.InputMethods {
+namespace Android.Views.InputMethods; 
 
 	public partial class InputMethodManager {
 
@@ -11,6 +11,5 @@ namespace Android.Views.InputMethods {
 			return (context.GetSystemService (Context.InputMethodService) as InputMethodManager);
 		}
 	}
-}
 
 

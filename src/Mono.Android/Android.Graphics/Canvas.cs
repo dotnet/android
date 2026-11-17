@@ -1,7 +1,7 @@
 using System;
 using Android.Runtime;
 
-namespace Android.Graphics {
+namespace Android.Graphics; 
 
 	partial class Canvas {
 
@@ -14,4 +14,3 @@ namespace Android.Graphics {
 		}
 #endif
 	}
-}

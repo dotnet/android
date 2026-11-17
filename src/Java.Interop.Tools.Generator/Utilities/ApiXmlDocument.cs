@@ -3,45 +3,44 @@ using System.Xml;
 using System.Xml.Linq;
 using Xamarin.Android.Tools;
 
-namespace Java.Interop.Tools.Generator
+namespace Java.Interop.Tools.Generator;
+
+public class ApiXmlDocument
 {
-	public class ApiXmlDocument
+	public XDocument ApiDocument { get; }
+	public string ApiLevel { get; }
+	public int ProductVersion { get; }
+
+	public string? ApiSource => ApiDocument.Root?.XGetAttribute ("api-source");
+
+	public ApiXmlDocument (XDocument document, string apiLevel, int productVersion)
 	{
-		public XDocument ApiDocument { get; }
-		public string ApiLevel { get; }
-		public int ProductVersion { get; }
+		ApiDocument = document;
+		ApiLevel = apiLevel;
+		ProductVersion = productVersion;
+	}
 
-		public string? ApiSource => ApiDocument.Root?.XGetAttribute ("api-source");
+	public static ApiXmlDocument? Load (string filename, string apiLevel, int productVersion)
+	{
+		if (UtilityExtensions.LoadXmlDocument (filename) is XDocument doc)
+			return new ApiXmlDocument (doc, apiLevel, productVersion);
 
-		public ApiXmlDocument (XDocument document, string apiLevel, int productVersion)
-		{
-			ApiDocument = document;
-			ApiLevel = apiLevel;
-			ProductVersion = productVersion;
-		}
+		return null;
+	}
 
-		public static ApiXmlDocument? Load (string filename, string apiLevel, int productVersion)
-		{
-			if (UtilityExtensions.LoadXmlDocument (filename) is XDocument doc)
-				return new ApiXmlDocument (doc, apiLevel, productVersion);
+	public void ApplyFixupFile (string filename)
+	{
+		if (FixupXmlDocument.Load (filename) is FixupXmlDocument fixup)
+			ApplyFixupFile (fixup);
+	}
 
-			return null;
-		}
-
-		public void ApplyFixupFile (string filename)
-		{
-			if (FixupXmlDocument.Load (filename) is FixupXmlDocument fixup)
-				ApplyFixupFile (fixup);
-		}
-
-		public void ApplyFixupFile (FixupXmlDocument fixup)
-		{
-			try {
-				fixup.Apply (this, ApiLevel, ProductVersion);
-			} catch (XmlException ex) {
-				// BG4200
-				Report.LogCodedErrorAndExit (Report.ErrorFailedToProcessMetadata, null, fixup.FixupDocument, ex.Message);
-			}
+	public void ApplyFixupFile (FixupXmlDocument fixup)
+	{
+		try {
+			fixup.Apply (this, ApiLevel, ProductVersion);
+		} catch (XmlException ex) {
+			// BG4200
+			Report.LogCodedErrorAndExit (Report.ErrorFailedToProcessMetadata, null, fixup.FixupDocument, ex.Message);
 		}
 	}
 }

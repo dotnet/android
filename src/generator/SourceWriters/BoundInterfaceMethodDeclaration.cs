@@ -7,47 +7,46 @@ using System.Threading.Tasks;
 using MonoDroid.Generation;
 using Xamarin.SourceWriter;
 
-namespace generator.SourceWriters
+namespace generator.SourceWriters;
+
+public class BoundInterfaceMethodDeclaration : MethodWriter
 {
-	public class BoundInterfaceMethodDeclaration : MethodWriter
+	readonly Method method;
+	readonly CodeGenerationOptions opt;
+
+	public BoundInterfaceMethodDeclaration (GenBase iface, Method method, string adapter, CodeGenerationOptions opt)
 	{
-		readonly Method method;
-		readonly CodeGenerationOptions opt;
+		this.method = method;
+		this.opt = opt;
 
-		public BoundInterfaceMethodDeclaration (GenBase iface, Method method, string adapter, CodeGenerationOptions opt)
-		{
-			this.method = method;
-			this.opt = opt;
+		Name = method.AdjustedName;
+		ExplicitInterfaceImplementation = method.ExplicitInterface;
 
-			Name = method.AdjustedName;
-			ExplicitInterfaceImplementation = method.ExplicitInterface;
+		ReturnType = new TypeReferenceWriter (opt.GetTypeReferenceName (method.RetVal));
+		IsDeclaration = true;
 
-			ReturnType = new TypeReferenceWriter (opt.GetTypeReferenceName (method.RetVal));
-			IsDeclaration = true;
+		// Allow user to force adding the 'abstract' keyword for "reabstraction"
+		if (string.Equals (method.ManagedOverride, "reabstract", StringComparison.OrdinalIgnoreCase))
+			IsAbstract = true;
 
-			// Allow user to force adding the 'abstract' keyword for "reabstraction"
-			if (string.Equals (method.ManagedOverride, "reabstract", StringComparison.OrdinalIgnoreCase))
-				IsAbstract = true;
+		if (method.DeclaringType.IsGeneratable)
+			Comments.Add ($"// Metadata.xml XPath method reference: path=\"{method.GetMetadataXPathReference (method.DeclaringType)}\"");
 
-			if (method.DeclaringType.IsGeneratable)
-				Comments.Add ($"// Metadata.xml XPath method reference: path=\"{method.GetMetadataXPathReference (method.DeclaringType)}\"");
+		SourceWriterExtensions.AddObsolete (Attributes, method.Deprecated, opt, deprecatedSince: method.DeprecatedSince);
+		SourceWriterExtensions.AddRestrictToWarning (Attributes, method.AnnotatedVisibility, false, opt);
 
-			SourceWriterExtensions.AddObsolete (Attributes, method.Deprecated, opt, deprecatedSince: method.DeprecatedSince);
-			SourceWriterExtensions.AddRestrictToWarning (Attributes, method.AnnotatedVisibility, false, opt);
+		if (method.IsReturnEnumified)
+			Attributes.Add (new GeneratedEnumAttr (true));
+		if (method.IsInterfaceDefaultMethod)
+			Attributes.Add (new CustomAttr ("[global::Java.Interop.JavaInterfaceDefaultMethod]"));
 
-			if (method.IsReturnEnumified)
-				Attributes.Add (new GeneratedEnumAttr (true));
-			if (method.IsInterfaceDefaultMethod)
-				Attributes.Add (new CustomAttr ("[global::Java.Interop.JavaInterfaceDefaultMethod]"));
+		SourceWriterExtensions.AddSupportedOSPlatform (Attributes, method, opt);
 
-			SourceWriterExtensions.AddSupportedOSPlatform (Attributes, method, opt);
+		Attributes.Add (new RegisterAttr (method.JavaName, method.JniSignature, UnmanagedCallbackSupport.GetConnectorName (iface, method, opt) + ":" + method.GetAdapterName (opt, adapter), additionalProperties: method.AdditionalAttributeString ()));
 
-			Attributes.Add (new RegisterAttr (method.JavaName, method.JniSignature, UnmanagedCallbackSupport.GetConnectorName (iface, method, opt) + ":" + method.GetAdapterName (opt, adapter), additionalProperties: method.AdditionalAttributeString ()));
+		method.JavadocInfo?.AddJavadocs (Comments);
 
-			method.JavadocInfo?.AddJavadocs (Comments);
-
-			SourceWriterExtensions.AddMethodCustomAttributes (Attributes, method);
-			this.AddMethodParameters (method.Parameters, opt);
-		}
+		SourceWriterExtensions.AddMethodCustomAttributes (Attributes, method);
+		this.AddMethodParameters (method.Parameters, opt);
 	}
 }

@@ -1,8 +1,7 @@
 using System;
 
-namespace Android.Runtime {
+namespace Android.Runtime; 
 
 	public interface IJavaObject : IDisposable {
 		IntPtr Handle { get; }
 	}
-}

@@ -1,6 +1,6 @@
 using System;
 
-namespace Java.Interop {
+namespace Java.Interop; 
 
 	[Obsolete ("Use EventHelper", error: true)]
 	public static class AndroidEventHelper {
@@ -39,4 +39,3 @@ namespace Java.Interop {
 			}
 		}
 	}
-}

@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using Java.Interop;
 
-namespace Android.Runtime {
+namespace Android.Runtime; 
 
 	[Register ("java/util/ArrayList", DoNotGenerateAcw=true)]
 	// java.util.ArrayList allows null values
@@ -1142,4 +1142,3 @@ namespace Android.Runtime {
 				return JNIEnv.ToLocalJniHandle (c);
 		}
 	}
-}

@@ -5,8 +5,8 @@ using System.IO;
 using System.Reflection.Metadata;
 using System.Reflection.PortableExecutable;
 
-namespace Xamarin.Android.Tasks
-{
+namespace Xamarin.Android.Tasks;
+
 	/// <summary>
 	/// A replacement for DirectoryAssemblyResolver, using System.Reflection.Metadata
 	/// </summary>
@@ -62,4 +62,3 @@ namespace Xamarin.Android.Tasks
 			cache.Clear ();
 		}
 	}
-}

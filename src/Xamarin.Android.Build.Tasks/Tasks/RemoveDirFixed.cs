@@ -36,8 +36,8 @@ using Microsoft.Build.Framework;
 using Xamarin.Android.Tools;
 using Microsoft.Android.Build.Tasks;
 
-namespace Xamarin.Android.Tasks
-{
+namespace Xamarin.Android.Tasks;
+
 	public class RemoveDirFixed : AndroidTask
 	{
 		public override string TaskPrefix => "RDF";
@@ -130,4 +130,3 @@ namespace Xamarin.Android.Tasks
 		[Output]
 		public ITaskItem []? RemovedDirectories { get; set; }
 	}
-}

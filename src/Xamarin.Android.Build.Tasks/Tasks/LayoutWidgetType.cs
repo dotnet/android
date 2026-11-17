@@ -1,7 +1,7 @@
 #nullable enable
 
-namespace Xamarin.Android.Tasks
-{
+namespace Xamarin.Android.Tasks;
+
 	enum LayoutWidgetType
 	{
 		Unknown,
@@ -9,4 +9,3 @@ namespace Xamarin.Android.Tasks
 		Fragment,
 		Mixed,
 	}
-}

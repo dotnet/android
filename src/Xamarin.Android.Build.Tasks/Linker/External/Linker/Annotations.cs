@@ -33,7 +33,7 @@ using System.Collections.Generic;
 using Mono.Cecil;
 using Mono.Cecil.Cil;
 
-namespace Mono.Linker {
+namespace Mono.Linker;
 
 	public partial class AnnotationStore {
 
@@ -432,4 +432,3 @@ namespace Mono.Linker {
 			return null;
 		}
 	}
-}

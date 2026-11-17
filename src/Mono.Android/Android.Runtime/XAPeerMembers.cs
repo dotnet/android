@@ -4,7 +4,7 @@ using System.Threading;
 
 using Java.Interop;
 
-namespace Android.Runtime {
+namespace Android.Runtime; 
 
 	public class XAPeerMembers : JniPeerMembers {
 
@@ -78,4 +78,3 @@ namespace Android.Runtime {
 			return IntPtr.Zero;
 		}
 	}
-}

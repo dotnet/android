@@ -8,7 +8,7 @@ using NUnit.Framework;
 
 using Assembly = System.Reflection.Assembly;
 
-namespace Xamarin.Android.Tools.BytecodeTests {
+namespace Xamarin.Android.Tools.BytecodeTests; 
 
 	[TestFixture]
 	public class JavaTypeTests : ClassFileFixture {
@@ -352,5 +352,4 @@ namespace Xamarin.Android.Tools.BytecodeTests {
 			AssertXmlDeclaration ("JavaType.class", "JavaType.xml");
 		}
 	}
-}
 

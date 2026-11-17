@@ -6,8 +6,8 @@ using System.Threading.Tasks;
 using MonoDroid.Generation;
 using NUnit.Framework;
 
-namespace generatortests
-{
+namespace generatortests;
+
 	[TestFixture]
 	public class ManagedExtensionsTests
 	{
@@ -28,4 +28,3 @@ namespace generatortests
 			Assert.IsNull ((null as string).StripArity ());
 		}
 	}
-}

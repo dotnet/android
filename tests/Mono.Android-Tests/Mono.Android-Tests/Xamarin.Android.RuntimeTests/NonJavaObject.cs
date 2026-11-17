@@ -1,10 +1,9 @@
-namespace Xamarin.Android.RuntimeTests {
+namespace Xamarin.Android.RuntimeTests; 
 
-	class NonJavaObject {
+class NonJavaObject {
 
-		public override string ToString ()
-		{
-			return "This object is Sooooo not on java.";
-		}
+	public override string ToString ()
+	{
+		return "This object is Sooooo not on java.";
 	}
 }

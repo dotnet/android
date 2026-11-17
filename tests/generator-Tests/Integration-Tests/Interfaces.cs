@@ -1,8 +1,8 @@
 using System;
 using NUnit.Framework;
 
-namespace generatortests
-{
+namespace generatortests;
+
 	[TestFixture]
 	public class Interfaces : BaseGeneratorTest
 	{
@@ -23,5 +23,4 @@ namespace generatortests
 					expectedRelativePath:   "TestInterface");
 		}
 	}
-}
 

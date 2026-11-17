@@ -1,7 +1,6 @@
-namespace Mono.Android_Test.Library
+namespace Mono.Android_Test.Library;
+
+public static class TrimmableManifestActivityState
 {
-	public static class TrimmableManifestActivityState
-	{
-		public static int OnCreateCount;
-	}
+	public static int OnCreateCount;
 }

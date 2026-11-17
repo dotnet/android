@@ -2,8 +2,8 @@ using Mono.Cecil;
 using Mono.Linker.Steps;
 using Xamarin.Android.Tasks;
 
-namespace MonoDroid.Tuner
-{
+namespace MonoDroid.Tuner;
+
 	public class AddKeepAlivesStep : BaseStep, IAssemblyModifierPipelineStep
 	{
 
@@ -20,4 +20,3 @@ namespace MonoDroid.Tuner
 				(msg) => LogMessage (msg));
 		}
 	}
-}

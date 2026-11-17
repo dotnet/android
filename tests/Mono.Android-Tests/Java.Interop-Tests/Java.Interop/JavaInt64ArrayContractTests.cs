@@ -6,25 +6,24 @@ using Java.Interop;
 
 using NUnit.Framework;
 
-namespace Java.InteropTests
+namespace Java.InteropTests;
+
+[TestFixture]
+public class JavaInt64ArrayContractTests : JavaPrimitiveArrayContract<JavaInt64Array, long>
 {
-	[TestFixture]
-	public class JavaInt64ArrayContractTests : JavaPrimitiveArrayContract<JavaInt64Array, long>
+	protected override ICollection<long> CreateCollection (IEnumerable<long> values)
 	{
-		protected override ICollection<long> CreateCollection (IEnumerable<long> values)
-		{
-			return new JavaInt64Array (values);
-		}
+		return new JavaInt64Array (values);
+	}
 
-		protected override ICollection<long> CreateCollection (IList<long> values)
-		{
-			return new JavaInt64Array (values);
-		}
+	protected override ICollection<long> CreateCollection (IList<long> values)
+	{
+		return new JavaInt64Array (values);
+	}
 
-		protected override ICollection<long> CreateCollection (int length)
-		{
-			return new JavaInt64Array (length);
-		}
+	protected override ICollection<long> CreateCollection (int length)
+	{
+		return new JavaInt64Array (length);
 	}
 }
 

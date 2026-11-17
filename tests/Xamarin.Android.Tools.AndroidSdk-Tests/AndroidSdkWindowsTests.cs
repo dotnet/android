@@ -8,10 +8,9 @@ using System.Xml.Linq;
 
 using NUnit.Framework;
 
-namespace Xamarin.Android.Tools.Tests
+namespace Xamarin.Android.Tools.Tests;
+
+[TestFixture]
+public class AndroidSdkWindowsTests
 {
-	[TestFixture]
-	public class AndroidSdkWindowsTests
-	{
-	}
 }

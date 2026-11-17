@@ -3,7 +3,7 @@
 using System;
 using System.Diagnostics;
 
-namespace Java.Interop {
+namespace Java.Interop; 
 
 	partial class JniPeerMembers {
 
@@ -1280,4 +1280,3 @@ namespace Java.Interop {
 			}
 		}
 	}
-}

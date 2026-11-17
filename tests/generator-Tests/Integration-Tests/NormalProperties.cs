@@ -1,9 +1,9 @@
-﻿using System;
+using System;
 using System.IO;
 using NUnit.Framework;
 
-namespace generatortests
-{
+namespace generatortests;
+
 	[TestFixture]
 	public class NormalProperties : BaseGeneratorTest
 	{
@@ -22,4 +22,3 @@ namespace generatortests
 			})));
 		}
 	}
-}

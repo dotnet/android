@@ -3,8 +3,8 @@
 using System;
 using System.Diagnostics;
 
-namespace Java.Interop
-{
+namespace Java.Interop;
+
 	partial class JniEnvironment {
 
 		partial class Strings {
@@ -55,4 +55,3 @@ namespace Java.Interop
 			}
 		}
 	}
-}

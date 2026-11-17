@@ -5,8 +5,8 @@ using System.IO;
 using System.Linq;
 using Xamarin.Android.Tools;
 
-namespace Xamarin.Android.Tasks
-{
+namespace Xamarin.Android.Tasks;
+
 	partial class GenerateLayoutBindings
 	{
 		sealed class CSharpBindingGenerator : BindingGenerator
@@ -358,4 +358,3 @@ namespace Xamarin.Android.Tasks
 			}
 		}
 	}
-}

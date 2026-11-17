@@ -2,7 +2,7 @@ using System;
 #if HAVE_CECIL
 using Mono.Cecil;
 #endif
-namespace Android.Runtime {
+namespace Android.Runtime; 
 
 	[AttributeUsage (AttributeTargets.Class | AttributeTargets.Constructor | AttributeTargets.Field | AttributeTargets.Interface | AttributeTargets.Method | AttributeTargets.Property)]
 #if !JCW_ONLY_TYPE_NAMES
@@ -61,4 +61,3 @@ namespace Android.Runtime {
 
 		public int ApiSince {get; set;}
 	}
-}

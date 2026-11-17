@@ -1,8 +1,8 @@
 using MonoDroid.Generation;
 using System.Linq;
 
-namespace generatortests
-{
+namespace generatortests;
+
 	class TestClass : ClassGen
 	{
 		public TestClass (string baseType, string javaName) : base (new TestBaseSupport (javaName))
@@ -338,4 +338,3 @@ namespace generatortests
 			return list;
 		}
 	}
-}

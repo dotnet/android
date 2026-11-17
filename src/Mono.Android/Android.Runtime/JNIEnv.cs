@@ -15,7 +15,7 @@ using Java.Interop.Tools.TypeNameMappings;
 using Microsoft.Android.Runtime;
 using RuntimeFeature = Microsoft.Android.Runtime.RuntimeFeature;
 
-namespace Android.Runtime {
+namespace Android.Runtime; 
 	public static partial class JNIEnv {
 		const DynamicallyAccessedMemberTypes Constructors = DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.NonPublicConstructors;
 
@@ -2561,4 +2561,3 @@ namespace Android.Runtime {
 		}
 #endif  // ANDROID_8
 	}
-}

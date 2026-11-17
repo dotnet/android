@@ -1,8 +1,8 @@
 using System;
 using System.IO;
 
-namespace Android.Runtime
-{
+namespace Android.Runtime;
+
 	[Register ("mono/android/runtime/OutputStreamAdapter")]
 	public class OutputStreamAdapter : Java.IO.OutputStream
 	{
@@ -62,4 +62,3 @@ namespace Android.Runtime
 			return JNIEnv.ToLocalJniHandle (new OutputStreamAdapter (value));
 		}
 	}
-}

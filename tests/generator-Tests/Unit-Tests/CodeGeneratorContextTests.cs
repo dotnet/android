@@ -3,8 +3,8 @@ using System.Linq;
 using MonoDroid.Generation;
 using NUnit.Framework;
 
-namespace generatortests
-{
+namespace generatortests;
+
 	[TestFixture]
 	public class CodeGeneratorContextTests
 	{
@@ -37,4 +37,3 @@ namespace generatortests
 			Assert.AreEqual ("Echo (uint)", context.GetContextTypeMember ());
 		}
 	}
-}

@@ -12,749 +12,749 @@ using Xamarin.Android.Tools;
 using Xamarin.ProjectTools;
 using System.IO.Compression;
 
-namespace Xamarin.Android.Build.Tests
+namespace Xamarin.Android.Build.Tests;
+
+[Parallelizable (ParallelScope.Children)]
+public class PackagingTest : BaseTest
 {
-	[Parallelizable (ParallelScope.Children)]
-	public class PackagingTest : BaseTest
+	[Test]
+	[Category ("RequiresAndroidNdk")]
+	public void ManagedAssemblyStoreElfWrappers ([Values ("apk", "aab")] string packageFormat)
 	{
-		[Test]
-		[Category ("RequiresAndroidNdk")]
-		public void ManagedAssemblyStoreElfWrappers ([Values ("apk", "aab")] string packageFormat)
-		{
-			const AndroidRuntime runtime = AndroidRuntime.CoreCLR;
-			if (IgnoreUnsupportedConfiguration (runtime, release: true)) {
-				return;
-			}
-
-			var proj = new XamarinAndroidApplicationProject {
-				IsRelease = true,
-			};
-			AndroidTargetArch [] arches = [AndroidTargetArch.Arm, AndroidTargetArch.Arm64, AndroidTargetArch.X86_64];
-			proj.SetRuntime (runtime);
-			proj.SetRuntimeIdentifiers (arches);
-			proj.SetProperty ("AndroidPackageFormat", packageFormat);
-			proj.SetProperty ("AndroidUseAssemblyStore", "true");
-			proj.SetProperty ("AndroidEnableAssemblyCompression", "true");
-			proj.SetProperty ("PublishReadyToRun", "false");
-
-			using var builder = CreateApkBuilder ();
-			Assert.IsTrue (builder.Build (proj), "The compressed-store build should succeed.");
-			string archive = Path.Combine (Root, builder.ProjectDirectory, proj.OutputPath, $"{proj.PackageName}-Signed.{packageFormat}");
-			AssertArchive ();
-			DateTime archiveTimestamp = File.GetLastWriteTimeUtc (archive);
-
-			Assert.IsTrue (builder.Build (proj, doNotCleanupOnUpdate: true, saveProject: false), "The unchanged build should succeed.");
-			Assert.IsTrue (builder.Output.IsTargetSkipped ("_BuildApkEmbed"), "An unchanged build must not rewrite assembly-store wrappers.");
-			Assert.AreEqual (archiveTimestamp, File.GetLastWriteTimeUtc (archive), "The package should remain unchanged.");
-
-			proj.MainActivity = proj.DefaultMainActivity.Replace ("//${AFTER_ONCREATE}", "System.Console.WriteLine (\"assembly-store update\");");
-			proj.Touch ("MainActivity.cs");
-			builder.Save (proj, doNotCleanupOnUpdate: true, saveProject: false);
-			Assert.IsTrue (builder.Build (proj, doNotCleanupOnUpdate: true, saveProject: false), "The changed-assembly build should succeed.");
-			Assert.IsFalse (builder.Output.IsTargetSkipped ("_BuildApkEmbed"), "Changing an assembly must refresh the packaged stores.");
-			AssertArchive ();
-
-			void AssertArchive ()
-			{
-				FileAssert.Exists (archive);
-				string prefix = packageFormat == "aab" ? "base/lib/" : "lib/";
-				using var zip = ZipHelper.OpenZip (archive);
-				Assert.AreEqual (arches.Length, zip.Entries.Count (entry => entry.FullName.EndsWith ("/libassembly-store.so", StringComparison.Ordinal)));
-				var assemblies = new ArchiveAssemblyHelper (archive, useAssemblyStores: true);
-				foreach (var arch in arches) {
-					string abi = MonoAndroidHelper.ArchToAbi (arch);
-					string entryName = $"{prefix}{abi}/libassembly-store.so";
-					var entry = zip.GetEntry (entryName);
-					Assert.IsNotNull (entry, $"The package must preserve the ABI split path '{entryName}'.");
-					string directory = builder.Output.GetIntermediaryPath (Path.Combine ("elf-inspection", abi));
-					Directory.CreateDirectory (directory);
-					string library = Path.Combine (directory, "libassembly-store.so");
-					using (var source = entry.Open ())
-					using (var stream = File.Create (library)) {
-						source.CopyTo (stream);
-					}
-					using var document = NativeToolTestHelper.ReadElf (library);
-					var elf = document.RootElement [0];
-					var header = elf.GetProperty ("ElfHeader");
-					Assert.AreEqual ("SharedObject (0x3)", header.GetProperty ("Type").GetString ());
-					Assert.AreEqual (arch switch {
-						AndroidTargetArch.Arm => 40,
-						AndroidTargetArch.Arm64 => 183,
-						AndroidTargetArch.X86_64 => 62,
-						_ => throw new NotSupportedException ($"Unexpected test architecture: {arch}"),
-					}, header.GetProperty ("Machine").GetProperty ("Value").GetInt32 ());
-					var symbols = elf.GetProperty ("DynamicSymbols").EnumerateArray ().Select (item => item.GetProperty ("Symbol")).ToArray ();
-					Assert.AreEqual (2, symbols.Length);
-					Assert.AreEqual (1, symbols.Single (symbol => symbol.GetProperty ("Name").GetProperty ("Name").GetString () == "_assembly_store")
-						.GetProperty ("Type").GetProperty ("Value").GetInt32 ());
-					Assert.IsFalse (symbols.Any (symbol => symbol.GetProperty ("Name").GetProperty ("Name").GetString () == "_assembly_store_end"));
-					byte [] store = NativeToolTestHelper.ReadSection (library, "payload");
-					string rawStore = builder.Output.GetIntermediaryPath (Path.Combine ("app_shared_libraries", abi, "assembly-store.so"));
-					CollectionAssert.AreEqual (File.ReadAllBytes (rawStore), store, "Wrapping must preserve every raw store byte.");
-					using var payload = new BinaryReader (new MemoryStream (store));
-					Assert.AreEqual (0x41424158u, payload.ReadUInt32 (), "The raw XABA store must remain unchanged.");
-					Assert.AreEqual (3u, payload.ReadUInt32 () & 0xffffu, "The raw store format must remain version 3.");
-
-					using var compressed = assemblies.ReadEntry ("System.Private.CoreLib.dll", arch);
-					Assert.IsNotNull (compressed, "The store should contain the runtime assembly.");
-					using var compressedReader = new BinaryReader (compressed);
-					Assert.AreEqual (0x535a4158u, compressedReader.ReadUInt32 (), "The assembly should retain its XAZS compression header.");
-					compressedReader.ReadUInt32 (); // Descriptor index.
-					Assert.Greater (compressedReader.ReadUInt32 (), 0, "The compression header should record the uncompressed length.");
-					Assert.AreEqual (0xfd2fb528u, compressedReader.ReadUInt32 (), "The compressed bytes should begin with a Zstandard frame.");
-				}
-
-				string intermediate = builder.Output.GetIntermediaryPath ("");
-				Assert.IsEmpty (Directory.GetFiles (intermediate, "libassembly-store.so.S", SearchOption.AllDirectories));
-				Assert.IsEmpty (Directory.GetFiles (intermediate, "libassembly-store.so.o", SearchOption.AllDirectories));
-				Assert.IsEmpty (Directory.GetDirectories (intermediate, "wrapped-assembly-store", SearchOption.AllDirectories),
-					"Temporary wrapper directories should be removed after packaging.");
-			}
+		const AndroidRuntime runtime = AndroidRuntime.CoreCLR;
+		if (IgnoreUnsupportedConfiguration (runtime, release: true)) {
+			return;
 		}
 
-		[TestCase ("disabled")]
-		[TestCase ("private-members")]
-		public void R8PreservesAccessibilityActionField (string obfuscationMode)
+		var proj = new XamarinAndroidApplicationProject {
+			IsRelease = true,
+		};
+		AndroidTargetArch [] arches = [AndroidTargetArch.Arm, AndroidTargetArch.Arm64, AndroidTargetArch.X86_64];
+		proj.SetRuntime (runtime);
+		proj.SetRuntimeIdentifiers (arches);
+		proj.SetProperty ("AndroidPackageFormat", packageFormat);
+		proj.SetProperty ("AndroidUseAssemblyStore", "true");
+		proj.SetProperty ("AndroidEnableAssemblyCompression", "true");
+		proj.SetProperty ("PublishReadyToRun", "false");
+
+		using var builder = CreateApkBuilder ();
+		Assert.IsTrue (builder.Build (proj), "The compressed-store build should succeed.");
+		string archive = Path.Combine (Root, builder.ProjectDirectory, proj.OutputPath, $"{proj.PackageName}-Signed.{packageFormat}");
+		AssertArchive ();
+		DateTime archiveTimestamp = File.GetLastWriteTimeUtc (archive);
+
+		Assert.IsTrue (builder.Build (proj, doNotCleanupOnUpdate: true, saveProject: false), "The unchanged build should succeed.");
+		Assert.IsTrue (builder.Output.IsTargetSkipped ("_BuildApkEmbed"), "An unchanged build must not rewrite assembly-store wrappers.");
+		Assert.AreEqual (archiveTimestamp, File.GetLastWriteTimeUtc (archive), "The package should remain unchanged.");
+
+		proj.MainActivity = proj.DefaultMainActivity.Replace ("//${AFTER_ONCREATE}", "System.Console.WriteLine (\"assembly-store update\");");
+		proj.Touch ("MainActivity.cs");
+		builder.Save (proj, doNotCleanupOnUpdate: true, saveProject: false);
+		Assert.IsTrue (builder.Build (proj, doNotCleanupOnUpdate: true, saveProject: false), "The changed-assembly build should succeed.");
+		Assert.IsFalse (builder.Output.IsTargetSkipped ("_BuildApkEmbed"), "Changing an assembly must refresh the packaged stores.");
+		AssertArchive ();
+
+		void AssertArchive ()
 		{
-			if (IgnoreUnsupportedConfiguration (AndroidRuntime.CoreCLR, release: true)) {
-				return;
+			FileAssert.Exists (archive);
+			string prefix = packageFormat == "aab" ? "base/lib/" : "lib/";
+			using var zip = ZipHelper.OpenZip (archive);
+			Assert.AreEqual (arches.Length, zip.Entries.Count (entry => entry.FullName.EndsWith ("/libassembly-store.so", StringComparison.Ordinal)));
+			var assemblies = new ArchiveAssemblyHelper (archive, useAssemblyStores: true);
+			foreach (var arch in arches) {
+				string abi = MonoAndroidHelper.ArchToAbi (arch);
+				string entryName = $"{prefix}{abi}/libassembly-store.so";
+				var entry = zip.GetEntry (entryName);
+				Assert.IsNotNull (entry, $"The package must preserve the ABI split path '{entryName}'.");
+				string directory = builder.Output.GetIntermediaryPath (Path.Combine ("elf-inspection", abi));
+				Directory.CreateDirectory (directory);
+				string library = Path.Combine (directory, "libassembly-store.so");
+				using (var source = entry.Open ())
+				using (var stream = File.Create (library)) {
+					source.CopyTo (stream);
+				}
+				using var document = NativeToolTestHelper.ReadElf (library);
+				var elf = document.RootElement [0];
+				var header = elf.GetProperty ("ElfHeader");
+				Assert.AreEqual ("SharedObject (0x3)", header.GetProperty ("Type").GetString ());
+				Assert.AreEqual (arch switch {
+					AndroidTargetArch.Arm => 40,
+					AndroidTargetArch.Arm64 => 183,
+					AndroidTargetArch.X86_64 => 62,
+					_ => throw new NotSupportedException ($"Unexpected test architecture: {arch}"),
+				}, header.GetProperty ("Machine").GetProperty ("Value").GetInt32 ());
+				var symbols = elf.GetProperty ("DynamicSymbols").EnumerateArray ().Select (item => item.GetProperty ("Symbol")).ToArray ();
+				Assert.AreEqual (2, symbols.Length);
+				Assert.AreEqual (1, symbols.Single (symbol => symbol.GetProperty ("Name").GetProperty ("Name").GetString () == "_assembly_store")
+					.GetProperty ("Type").GetProperty ("Value").GetInt32 ());
+				Assert.IsFalse (symbols.Any (symbol => symbol.GetProperty ("Name").GetProperty ("Name").GetString () == "_assembly_store_end"));
+				byte [] store = NativeToolTestHelper.ReadSection (library, "payload");
+				string rawStore = builder.Output.GetIntermediaryPath (Path.Combine ("app_shared_libraries", abi, "assembly-store.so"));
+				CollectionAssert.AreEqual (File.ReadAllBytes (rawStore), store, "Wrapping must preserve every raw store byte.");
+				using var payload = new BinaryReader (new MemoryStream (store));
+				Assert.AreEqual (0x41424158u, payload.ReadUInt32 (), "The raw XABA store must remain unchanged.");
+				Assert.AreEqual (3u, payload.ReadUInt32 () & 0xffffu, "The raw store format must remain version 3.");
+
+				using var compressed = assemblies.ReadEntry ("System.Private.CoreLib.dll", arch);
+				Assert.IsNotNull (compressed, "The store should contain the runtime assembly.");
+				using var compressedReader = new BinaryReader (compressed);
+				Assert.AreEqual (0x535a4158u, compressedReader.ReadUInt32 (), "The assembly should retain its XAZS compression header.");
+				compressedReader.ReadUInt32 (); // Descriptor index.
+				Assert.Greater (compressedReader.ReadUInt32 (), 0, "The compression header should record the uncompressed length.");
+				Assert.AreEqual (0xfd2fb528u, compressedReader.ReadUInt32 (), "The compressed bytes should begin with a Zstandard frame.");
 			}
 
-			var proj = new XamarinAndroidApplicationProject {
-				IsRelease = true,
-				PackageReferences = {
-					new Package { Id = "Xamarin.AndroidX.Core", Version = "1.19.0.1" },
-				},
-			};
-			proj.SetRuntime (AndroidRuntime.CoreCLR);
-			proj.SetProperty (KnownProperties.RuntimeIdentifier, "android-arm64");
-			proj.SetProperty (KnownProperties.AndroidLinkTool, "r8");
-			proj.SetProperty (KnownProperties.AndroidR8ObfuscationMode, obfuscationMode);
-			proj.SetProperty ("TrimMode", "full");
-			proj.MainActivity = proj.DefaultMainActivity
-				.Replace ("//${FIELDS}", """
-					private static readonly int s_actionCollapseId =
-						AndroidX.Core.View.Accessibility.AccessibilityNodeInfoCompat.AccessibilityActionCompat.ActionCollapse?.Id ?? 0;
-					""")
-				.Replace ("//${AFTER_ONCREATE}", "System.Console.WriteLine (s_actionCollapseId);");
+			string intermediate = builder.Output.GetIntermediaryPath ("");
+			Assert.IsEmpty (Directory.GetFiles (intermediate, "libassembly-store.so.S", SearchOption.AllDirectories));
+			Assert.IsEmpty (Directory.GetFiles (intermediate, "libassembly-store.so.o", SearchOption.AllDirectories));
+			Assert.IsEmpty (Directory.GetDirectories (intermediate, "wrapped-assembly-store", SearchOption.AllDirectories),
+				"Temporary wrapper directories should be removed after packaging.");
+		}
+	}
 
-			using var builder = CreateApkBuilder ();
-			Assert.IsTrue (builder.Build (proj), "The R8 build should succeed.");
-
-			const string className = "Landroidx/core/view/accessibility/AccessibilityNodeInfoCompat$AccessibilityActionCompat;";
-			var dexDirectory = builder.Output.GetIntermediaryPath (Path.Combine ("android-arm64", "android", "bin"));
-			var dexFiles = Directory.GetFiles (dexDirectory, "classes*.dex");
-			Assert.IsNotEmpty (dexFiles, "The build should produce DEX files.");
-			Assert.IsTrue (dexFiles.Any (dexFile => DexUtils.ContainsClassWithField (
-				className, "ACTION_COLLAPSE", className, DexUtils.GetDexDump (dexFile, AndroidSdkPath))),
-				"R8 must preserve ACTION_COLLAPSE with its original name and type for managed JNI access.");
+	[TestCase ("disabled")]
+	[TestCase ("private-members")]
+	public void R8PreservesAccessibilityActionField (string obfuscationMode)
+	{
+		if (IgnoreUnsupportedConfiguration (AndroidRuntime.CoreCLR, release: true)) {
+			return;
 		}
 
-		[Test]
-		public void CheckR8MetadataFilesExist (
-			[Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime,
-			[Values ("disabled", "private-members", "runtime-remapping")] string obfuscationMode)
-		{
-			const bool isRelease = true;
-			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
-				return;
-			}
+		var proj = new XamarinAndroidApplicationProject {
+			IsRelease = true,
+			PackageReferences = {
+				new Package { Id = "Xamarin.AndroidX.Core", Version = "1.19.0.1" },
+			},
+		};
+		proj.SetRuntime (AndroidRuntime.CoreCLR);
+		proj.SetProperty (KnownProperties.RuntimeIdentifier, "android-arm64");
+		proj.SetProperty (KnownProperties.AndroidLinkTool, "r8");
+		proj.SetProperty (KnownProperties.AndroidR8ObfuscationMode, obfuscationMode);
+		proj.SetProperty ("TrimMode", "full");
+		proj.MainActivity = proj.DefaultMainActivity
+			.Replace ("//${FIELDS}", """
+				private static readonly int s_actionCollapseId =
+					AndroidX.Core.View.Accessibility.AccessibilityNodeInfoCompat.AccessibilityActionCompat.ActionCollapse?.Id ?? 0;
+				""")
+			.Replace ("//${AFTER_ONCREATE}", "System.Console.WriteLine (s_actionCollapseId);");
 
-			var proj = new XamarinAndroidApplicationProject {
-				IsRelease = isRelease,
-			};
-			proj.SetRuntime (runtime);
-			proj.SetProperty (proj.ReleaseProperties, KnownProperties.AndroidLinkTool, "r8");
-			proj.SetProperty (proj.ReleaseProperties, KnownProperties.AndroidR8ObfuscationMode, obfuscationMode);
-			if (obfuscationMode == "runtime-remapping") {
-				proj.SetProperty ("AndroidTypeMapImplementation", "trimmable");
-			}
-			// Projects must set $(AndroidCreateProguardMappingFile) to true to opt in
-			proj.SetProperty (proj.ReleaseProperties, "AndroidCreateProguardMappingFile", true);
-			proj.SetProperty ("AndroidPackageFormat", "aab");
+		using var builder = CreateApkBuilder ();
+		Assert.IsTrue (builder.Build (proj), "The R8 build should succeed.");
 
-			using (var b = CreateApkBuilder ()) {
-				string mappingFile = Path.Combine (Root, b.ProjectDirectory, proj.OutputPath, "mapping.txt");
-				Assert.IsTrue (b.Build (proj), "build should have succeeded.");
-				FileAssert.Exists (mappingFile, $"'{mappingFile}' should have been generated.");
-				var runtimeConfigFiles = Directory.GetFiles (
-					Path.Combine (Root, b.ProjectDirectory, proj.OutputPath),
-					$"{proj.ProjectName}.runtimeconfig.json",
-					SearchOption.AllDirectories);
-				Assert.AreEqual (1, runtimeConfigFiles.Length, "The build should produce one runtimeconfig.json.");
-				using (var runtimeConfig = JsonDocument.Parse (File.ReadAllText (runtimeConfigFiles [0]))) {
-					var configProperties = runtimeConfig.RootElement
-						.GetProperty ("runtimeOptions")
-						.GetProperty ("configProperties");
-					bool expectedJniRemapping = obfuscationMode == "runtime-remapping";
-					Assert.AreEqual (
-						expectedJniRemapping,
-						configProperties.GetProperty ("Java.Interop.RuntimeFeature.JniRemapping").GetBoolean (),
-						"Java.Interop JNI remapping must be retained only for runtime-remapping builds.");
-					Assert.AreEqual (
-						expectedJniRemapping,
-						configProperties.GetProperty ("Microsoft.Android.Runtime.RuntimeFeature.JniRemapping").GetBoolean (),
-						"Microsoft.Android.Runtime JNI remapping must be retained only for runtime-remapping builds.");
-				}
-				var aab = Path.Combine (Root, b.ProjectDirectory, proj.OutputPath, $"{proj.PackageName}-Signed.aab");
-				FileAssert.Exists (aab, $"'{aab}' should have been generated.");
-				using (var zip = ZipHelper.OpenZip (aab)) {
-					Assert.IsTrue (zip.Entries.Any (e => e.FullName == "BUNDLE-METADATA/com.android.tools.build.obfuscation/proguard.map"), $"AAB file `{aab}` should contain the ProGuard mapping.");
-					var metadata = zip.Entries.SingleOrDefault (e => e.FullName == "BUNDLE-METADATA/com.android.tools/r8.json");
-					Assert.IsNotNull (metadata, $"AAB file `{aab}` should contain the R8 build metadata.");
-					if (metadata == null)
-						return;
-					using var stream = metadata.Open ();
-					using var document = JsonDocument.Parse (stream);
-					var options = document.RootElement.GetProperty ("options");
-					Assert.AreEqual (
-						runtime == AndroidRuntime.CoreCLR || obfuscationMode != "disabled",
-						options.GetProperty ("isOptimizationsEnabled").GetBoolean ());
-				}
+		const string className = "Landroidx/core/view/accessibility/AccessibilityNodeInfoCompat$AccessibilityActionCompat;";
+		var dexDirectory = builder.Output.GetIntermediaryPath (Path.Combine ("android-arm64", "android", "bin"));
+		var dexFiles = Directory.GetFiles (dexDirectory, "classes*.dex");
+		Assert.IsNotEmpty (dexFiles, "The build should produce DEX files.");
+		Assert.IsTrue (dexFiles.Any (dexFile => DexUtils.ContainsClassWithField (
+			className, "ACTION_COLLAPSE", className, DexUtils.GetDexDump (dexFile, AndroidSdkPath))),
+			"R8 must preserve ACTION_COLLAPSE with its original name and type for managed JNI access.");
+	}
 
-				Assert.IsTrue (b.Build (proj), "second build should have succeeded.");
-				foreach (var target in new [] { "_CompileToDalvik", "_BuildApkEmbed" }) {
-					Assert.IsTrue (b.Output.IsTargetSkipped (target), $"`{target}` should be skipped!");
-				}
-			}
+	[Test]
+	public void CheckR8MetadataFilesExist (
+		[Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime,
+		[Values ("disabled", "private-members", "runtime-remapping")] string obfuscationMode)
+	{
+		const bool isRelease = true;
+		if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+			return;
 		}
 
-		[TestCase (true)]
-		[TestCase (false)]
-		public void R8PreservesInstanceIntFieldType (bool publishTrimmed)
-		{
-			if (IgnoreUnsupportedConfiguration (AndroidRuntime.CoreCLR, release: true)) {
-				return;
+		var proj = new XamarinAndroidApplicationProject {
+			IsRelease = isRelease,
+		};
+		proj.SetRuntime (runtime);
+		proj.SetProperty (proj.ReleaseProperties, KnownProperties.AndroidLinkTool, "r8");
+		proj.SetProperty (proj.ReleaseProperties, KnownProperties.AndroidR8ObfuscationMode, obfuscationMode);
+		if (obfuscationMode == "runtime-remapping") {
+			proj.SetProperty ("AndroidTypeMapImplementation", "trimmable");
+		}
+		// Projects must set $(AndroidCreateProguardMappingFile) to true to opt in
+		proj.SetProperty (proj.ReleaseProperties, "AndroidCreateProguardMappingFile", true);
+		proj.SetProperty ("AndroidPackageFormat", "aab");
+
+		using (var b = CreateApkBuilder ()) {
+			string mappingFile = Path.Combine (Root, b.ProjectDirectory, proj.OutputPath, "mapping.txt");
+			Assert.IsTrue (b.Build (proj), "build should have succeeded.");
+			FileAssert.Exists (mappingFile, $"'{mappingFile}' should have been generated.");
+			var runtimeConfigFiles = Directory.GetFiles (
+				Path.Combine (Root, b.ProjectDirectory, proj.OutputPath),
+				$"{proj.ProjectName}.runtimeconfig.json",
+				SearchOption.AllDirectories);
+			Assert.AreEqual (1, runtimeConfigFiles.Length, "The build should produce one runtimeconfig.json.");
+			using (var runtimeConfig = JsonDocument.Parse (File.ReadAllText (runtimeConfigFiles [0]))) {
+				var configProperties = runtimeConfig.RootElement
+					.GetProperty ("runtimeOptions")
+					.GetProperty ("configProperties");
+				bool expectedJniRemapping = obfuscationMode == "runtime-remapping";
+				Assert.AreEqual (
+					expectedJniRemapping,
+					configProperties.GetProperty ("Java.Interop.RuntimeFeature.JniRemapping").GetBoolean (),
+					"Java.Interop JNI remapping must be retained only for runtime-remapping builds.");
+				Assert.AreEqual (
+					expectedJniRemapping,
+					configProperties.GetProperty ("Microsoft.Android.Runtime.RuntimeFeature.JniRemapping").GetBoolean (),
+					"Microsoft.Android.Runtime JNI remapping must be retained only for runtime-remapping builds.");
+			}
+			var aab = Path.Combine (Root, b.ProjectDirectory, proj.OutputPath, $"{proj.PackageName}-Signed.aab");
+			FileAssert.Exists (aab, $"'{aab}' should have been generated.");
+			using (var zip = ZipHelper.OpenZip (aab)) {
+				Assert.IsTrue (zip.Entries.Any (e => e.FullName == "BUNDLE-METADATA/com.android.tools.build.obfuscation/proguard.map"), $"AAB file `{aab}` should contain the ProGuard mapping.");
+				var metadata = zip.Entries.SingleOrDefault (e => e.FullName == "BUNDLE-METADATA/com.android.tools/r8.json");
+				Assert.IsNotNull (metadata, $"AAB file `{aab}` should contain the R8 build metadata.");
+				if (metadata == null)
+					return;
+				using var stream = metadata.Open ();
+				using var document = JsonDocument.Parse (stream);
+				var options = document.RootElement.GetProperty ("options");
+				Assert.AreEqual (
+					runtime == AndroidRuntime.CoreCLR || obfuscationMode != "disabled",
+					options.GetProperty ("isOptimizationsEnabled").GetBoolean ());
 			}
 
-			var path = Path.Combine ("temp", TestName);
-			var binding = new XamarinAndroidBindingProject {
-				ProjectName = "FieldBinding",
-				IsRelease = true,
-				AndroidJavaSources = {
-					new AndroidItem.AndroidJavaSource ("PlaybackError.java") {
-						Encoding = Encoding.ASCII,
-						TextContent = () => """
-							package example;
+			Assert.IsTrue (b.Build (proj), "second build should have succeeded.");
+			foreach (var target in new [] { "_CompileToDalvik", "_BuildApkEmbed" }) {
+				Assert.IsTrue (b.Output.IsTargetSkipped (target), $"`{target}` should be skipped!");
+			}
+		}
+	}
 
-							public class PlaybackError {
-								public final int type;
+	[TestCase (true)]
+	[TestCase (false)]
+	public void R8PreservesInstanceIntFieldType (bool publishTrimmed)
+	{
+		if (IgnoreUnsupportedConfiguration (AndroidRuntime.CoreCLR, release: true)) {
+			return;
+		}
 
-								public PlaybackError(boolean source, boolean renderer) {
-									type = source ? 0 : renderer ? 1 : 2;
-								}
+		var path = Path.Combine ("temp", TestName);
+		var binding = new XamarinAndroidBindingProject {
+			ProjectName = "FieldBinding",
+			IsRelease = true,
+			AndroidJavaSources = {
+				new AndroidItem.AndroidJavaSource ("PlaybackError.java") {
+					Encoding = Encoding.ASCII,
+					TextContent = () => """
+						package example;
 
-								public String describe() {
-									switch (type) {
-										case 0: return "source";
-										case 1: return "renderer";
-										default: return "unexpected";
-									}
+						public class PlaybackError {
+							public final int type;
+
+							public PlaybackError(boolean source, boolean renderer) {
+								type = source ? 0 : renderer ? 1 : 2;
+							}
+
+							public String describe() {
+								switch (type) {
+									case 0: return "source";
+									case 1: return "renderer";
+									default: return "unexpected";
 								}
 							}
-							""",
-						Metadata = { { "Bind", "true" } },
-					},
+						}
+						""",
+					Metadata = { { "Bind", "true" } },
 				},
-			};
-			binding.SetRuntime (AndroidRuntime.CoreCLR);
+			},
+		};
+		binding.SetRuntime (AndroidRuntime.CoreCLR);
 
-			var proj = new XamarinAndroidApplicationProject {
-				ProjectName = "App",
-				IsRelease = true,
-				References = {
-					new BuildItem.ProjectReference ($"..\\{binding.ProjectName}\\{binding.ProjectName}.csproj", binding.ProjectName, binding.ProjectGuid),
-				},
-			};
-			proj.SetRuntime (AndroidRuntime.CoreCLR);
-			proj.SetProperty (KnownProperties.RuntimeIdentifier, "android-arm64");
-			proj.SetProperty (KnownProperties.AndroidLinkTool, "r8");
-			proj.SetProperty (KnownProperties.AndroidR8ObfuscationMode, "private-members");
-			proj.SetProperty ("PublishTrimmed", publishTrimmed.ToString ());
-			proj.SetProperty ("TrimMode", "full");
-			proj.MainActivity = proj.DefaultMainActivity.Replace ("//${AFTER_ONCREATE}", """
-				using var error = new Example.PlaybackError (Intent.GetBooleanExtra ("source", false), Intent.GetBooleanExtra ("renderer", false));
-				System.Console.WriteLine (error.Describe ());
-				System.Console.WriteLine (error.Type);
-				""");
+		var proj = new XamarinAndroidApplicationProject {
+			ProjectName = "App",
+			IsRelease = true,
+			References = {
+				new BuildItem.ProjectReference ($"..\\{binding.ProjectName}\\{binding.ProjectName}.csproj", binding.ProjectName, binding.ProjectGuid),
+			},
+		};
+		proj.SetRuntime (AndroidRuntime.CoreCLR);
+		proj.SetProperty (KnownProperties.RuntimeIdentifier, "android-arm64");
+		proj.SetProperty (KnownProperties.AndroidLinkTool, "r8");
+		proj.SetProperty (KnownProperties.AndroidR8ObfuscationMode, "private-members");
+		proj.SetProperty ("PublishTrimmed", publishTrimmed.ToString ());
+		proj.SetProperty ("TrimMode", "full");
+		proj.MainActivity = proj.DefaultMainActivity.Replace ("//${AFTER_ONCREATE}", """
+			using var error = new Example.PlaybackError (Intent.GetBooleanExtra ("source", false), Intent.GetBooleanExtra ("renderer", false));
+			System.Console.WriteLine (error.Describe ());
+			System.Console.WriteLine (error.Type);
+			""");
 
-			using var bindingBuilder = CreateDllBuilder (Path.Combine (path, binding.ProjectName));
-			using var builder = CreateApkBuilder (Path.Combine (path, proj.ProjectName));
-			Assert.IsTrue (bindingBuilder.Build (binding), "The binding build should succeed.");
-			Assert.IsTrue (builder.Build (proj), "The R8 build should succeed.");
-			var referenceRules = builder.Output.GetIntermediaryPath (Path.Combine ("android-arm64", "proguard", "proguard_project_references.cfg"));
+		using var bindingBuilder = CreateDllBuilder (Path.Combine (path, binding.ProjectName));
+		using var builder = CreateApkBuilder (Path.Combine (path, proj.ProjectName));
+		Assert.IsTrue (bindingBuilder.Build (binding), "The binding build should succeed.");
+		Assert.IsTrue (builder.Build (proj), "The R8 build should succeed.");
+		var referenceRules = builder.Output.GetIntermediaryPath (Path.Combine ("android-arm64", "proguard", "proguard_project_references.cfg"));
+		FileAssert.Exists (referenceRules);
+		Assert.IsFalse (builder.LastBuildOutput.Any (line => line.Contains ("XA4304")), "The generated R8 reference rules must be available.");
+
+		var dexDirectory = builder.Output.GetIntermediaryPath (Path.Combine ("android-arm64", "android", "bin"));
+		var dexFiles = Directory.GetFiles (dexDirectory, "classes*.dex");
+		Assert.IsNotEmpty (dexFiles, "The build should produce DEX files.");
+		Assert.IsTrue (dexFiles.Any (dexFile => DexUtils.ContainsClassWithField (
+			"Lexample/PlaybackError;", "type", "I", DexUtils.GetDexDump (dexFile, AndroidSdkPath))),
+			"R8 must preserve the instance field as int, not narrow it to byte, for managed JNI access.");
+
+		if (!publishTrimmed) {
+			var timestamp = File.GetLastWriteTimeUtc (referenceRules + ".stamp");
+			Assert.IsTrue (builder.Build (proj, doNotCleanupOnUpdate: true, saveProject: false), "The unchanged R8 build should succeed.");
+			Assert.AreEqual (timestamp, File.GetLastWriteTimeUtc (referenceRules + ".stamp"), "Unchanged assemblies must not regenerate R8 reference rules.");
+			File.Delete (referenceRules);
+			Assert.IsTrue (builder.Build (proj, doNotCleanupOnUpdate: true, saveProject: false), "The R8 build should restore missing reference rules.");
 			FileAssert.Exists (referenceRules);
-			Assert.IsFalse (builder.LastBuildOutput.Any (line => line.Contains ("XA4304")), "The generated R8 reference rules must be available.");
-
-			var dexDirectory = builder.Output.GetIntermediaryPath (Path.Combine ("android-arm64", "android", "bin"));
-			var dexFiles = Directory.GetFiles (dexDirectory, "classes*.dex");
-			Assert.IsNotEmpty (dexFiles, "The build should produce DEX files.");
-			Assert.IsTrue (dexFiles.Any (dexFile => DexUtils.ContainsClassWithField (
-				"Lexample/PlaybackError;", "type", "I", DexUtils.GetDexDump (dexFile, AndroidSdkPath))),
-				"R8 must preserve the instance field as int, not narrow it to byte, for managed JNI access.");
-
-			if (!publishTrimmed) {
-				var timestamp = File.GetLastWriteTimeUtc (referenceRules + ".stamp");
-				Assert.IsTrue (builder.Build (proj, doNotCleanupOnUpdate: true, saveProject: false), "The unchanged R8 build should succeed.");
-				Assert.AreEqual (timestamp, File.GetLastWriteTimeUtc (referenceRules + ".stamp"), "Unchanged assemblies must not regenerate R8 reference rules.");
-				File.Delete (referenceRules);
-				Assert.IsTrue (builder.Build (proj, doNotCleanupOnUpdate: true, saveProject: false), "The R8 build should restore missing reference rules.");
-				FileAssert.Exists (referenceRules);
-			}
 		}
+	}
 
-		[TestCase ("", true)]
-		[TestCase ("r8", false)]
-		public void InvalidR8ObfuscationModeIsValidatedOnlyForR8 (string linkTool, bool expectedResult)
-		{
-			var proj = new XamarinAndroidApplicationProject {
-				IsRelease = true,
-			};
-			proj.SetProperty (proj.ReleaseProperties, KnownProperties.AndroidLinkTool, linkTool);
-			proj.SetProperty (proj.ReleaseProperties, KnownProperties.AndroidR8ObfuscationMode, "private-member");
+	[TestCase ("", true)]
+	[TestCase ("r8", false)]
+	public void InvalidR8ObfuscationModeIsValidatedOnlyForR8 (string linkTool, bool expectedResult)
+	{
+		var proj = new XamarinAndroidApplicationProject {
+			IsRelease = true,
+		};
+		proj.SetProperty (proj.ReleaseProperties, KnownProperties.AndroidLinkTool, linkTool);
+		proj.SetProperty (proj.ReleaseProperties, KnownProperties.AndroidR8ObfuscationMode, "private-member");
 
-			using var builder = CreateApkBuilder ();
-			builder.Target = "_ValidateAndroidR8ObfuscationMode";
-			builder.ThrowOnBuildFailure = false;
-			builder.AutomaticNuGetRestore = false;
-			Assert.AreEqual (expectedResult, builder.Build (proj), "Validation result should depend on whether R8 is enabled.");
-			if (!expectedResult) {
-				StringAssertEx.Contains ("error XA1050", builder.LastBuildOutput);
-				StringAssertEx.Contains ("'private-member'", builder.LastBuildOutput);
-			}
+		using var builder = CreateApkBuilder ();
+		builder.Target = "_ValidateAndroidR8ObfuscationMode";
+		builder.ThrowOnBuildFailure = false;
+		builder.AutomaticNuGetRestore = false;
+		Assert.AreEqual (expectedResult, builder.Build (proj), "Validation result should depend on whether R8 is enabled.");
+		if (!expectedResult) {
+			StringAssertEx.Contains ("error XA1050", builder.LastBuildOutput);
+			StringAssertEx.Contains ("'private-member'", builder.LastBuildOutput);
 		}
+	}
 
-		[Test]
-		public void CheckR8InfoMessagesToNotBreakTheBuild ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
-		{
-			const bool isRelease = true;
-			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
-				return;
-			}
-			var proj = new XamarinAndroidApplicationProject {
-				IsRelease = isRelease,
-			};
-			proj.SetRuntime (runtime);
-			proj.SetProperty (proj.ReleaseProperties, KnownProperties.AndroidLinkTool, "r8");
-			proj.SetProperty (proj.ReleaseProperties, "AndroidCreateProguardMappingFile", true);
-			var packages = proj.PackageReferences;
-			packages.Add (KnownPackages.Xamarin_KotlinX_Coroutines_Android);
-			proj.OtherBuildItems.Add (new BuildItem ("ProguardConfiguration", "proguard.cfg") {
-				TextContent = () => @"-keepattributes Signature
+	[Test]
+	public void CheckR8InfoMessagesToNotBreakTheBuild ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
+	{
+		const bool isRelease = true;
+		if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+			return;
+		}
+		var proj = new XamarinAndroidApplicationProject {
+			IsRelease = isRelease,
+		};
+		proj.SetRuntime (runtime);
+		proj.SetProperty (proj.ReleaseProperties, KnownProperties.AndroidLinkTool, "r8");
+		proj.SetProperty (proj.ReleaseProperties, "AndroidCreateProguardMappingFile", true);
+		var packages = proj.PackageReferences;
+		packages.Add (KnownPackages.Xamarin_KotlinX_Coroutines_Android);
+		proj.OtherBuildItems.Add (new BuildItem ("ProguardConfiguration", "proguard.cfg") {
+			TextContent = () => @"-keepattributes Signature
 -keep class kotlinx.coroutines.channels.** { *; }
 "
-			});
+		});
 
-			using (var b = CreateApkBuilder ()) {
-				string mappingFile = Path.Combine (Root, b.ProjectDirectory, proj.OutputPath, "mapping.txt");
-				Assert.IsTrue (b.Build (proj), "build should have succeeded.");
-				FileAssert.Exists (mappingFile, $"'{mappingFile}' should have been generated.");
-			}
-		}
-
-		[Test]
-		public void CheckDebugModeWithTrimming ([Values (AndroidRuntime.CoreCLR)] AndroidRuntime runtime, [Values] bool readyToRun)
-		{
-			bool usesAssemblyStores = runtime == AndroidRuntime.CoreCLR;
-			var proj = new XamarinAndroidApplicationProject {
-				ProjectName = "MyApp",
-				IsRelease = false,
-				EmbedAssembliesIntoApk = true,
-			};
-			proj.SetRuntime (runtime);
-			proj.SetProperty ("PublishTrimmed", "true");
-			proj.SetProperty ("PublishReadyToRun", readyToRun.ToString ());
-			proj.SetProperty ("AndroidUseAssemblyStore", usesAssemblyStores.ToString ());
-
-			using var b = CreateApkBuilder ();
+		using (var b = CreateApkBuilder ()) {
+			string mappingFile = Path.Combine (Root, b.ProjectDirectory, proj.OutputPath, "mapping.txt");
 			Assert.IsTrue (b.Build (proj), "build should have succeeded.");
+			FileAssert.Exists (mappingFile, $"'{mappingFile}' should have been generated.");
+		}
+	}
 
-			AssertPackagedAssemblies ();
-			Assert.IsTrue (b.Build (proj, doNotCleanupOnUpdate: true, saveProject: false), "incremental build should have succeeded.");
-			AssertPackagedAssemblies ();
+	[Test]
+	public void CheckDebugModeWithTrimming ([Values (AndroidRuntime.CoreCLR)] AndroidRuntime runtime, [Values] bool readyToRun)
+	{
+		bool usesAssemblyStores = runtime == AndroidRuntime.CoreCLR;
+		var proj = new XamarinAndroidApplicationProject {
+			ProjectName = "MyApp",
+			IsRelease = false,
+			EmbedAssembliesIntoApk = true,
+		};
+		proj.SetRuntime (runtime);
+		proj.SetProperty ("PublishTrimmed", "true");
+		proj.SetProperty ("PublishReadyToRun", readyToRun.ToString ());
+		proj.SetProperty ("AndroidUseAssemblyStore", usesAssemblyStores.ToString ());
 
-			void AssertPackagedAssemblies ()
-			{
-				var apk = Path.Combine (Root, b.ProjectDirectory,
-					proj.OutputPath, $"{proj.PackageName}-Signed.apk");
-				var helper = new ArchiveAssemblyHelper (apk, usesAssemblyStores);
-				helper.Contains ([
-					"Mono.Android.dll",
-					$"{proj.ProjectName}.dll",
-					"_Microsoft.Android.TypeMaps.dll",
-					$"_{proj.ProjectName}.TypeMap.dll",
-					"_Java.Interop.TypeMap.dll",
-					"_Mono.Android.TypeMap.dll",
-				], out _, out var missingFiles, out _, [AndroidTargetArch.Arm64, AndroidTargetArch.X86_64]);
+		using var b = CreateApkBuilder ();
+		Assert.IsTrue (b.Build (proj), "build should have succeeded.");
 
-				Assert.IsTrue (missingFiles == null || missingFiles.Count == 0,
-					string.Format ("The following Expected files are missing. {0}",
-					string.Join (Environment.NewLine, missingFiles)));
-			}
+		AssertPackagedAssemblies ();
+		Assert.IsTrue (b.Build (proj, doNotCleanupOnUpdate: true, saveProject: false), "incremental build should have succeeded.");
+		AssertPackagedAssemblies ();
+
+		void AssertPackagedAssemblies ()
+		{
+			var apk = Path.Combine (Root, b.ProjectDirectory,
+				proj.OutputPath, $"{proj.PackageName}-Signed.apk");
+			var helper = new ArchiveAssemblyHelper (apk, usesAssemblyStores);
+			helper.Contains ([
+				"Mono.Android.dll",
+				$"{proj.ProjectName}.dll",
+				"_Microsoft.Android.TypeMaps.dll",
+				$"_{proj.ProjectName}.TypeMap.dll",
+				"_Java.Interop.TypeMap.dll",
+				"_Mono.Android.TypeMap.dll",
+			], out _, out var missingFiles, out _, [AndroidTargetArch.Arm64, AndroidTargetArch.X86_64]);
+
+			Assert.IsTrue (missingFiles == null || missingFiles.Count == 0,
+				string.Format ("The following Expected files are missing. {0}",
+				string.Join (Environment.NewLine, missingFiles)));
+		}
+	}
+
+	[Test]
+	[NonParallelizable] // Commonly fails NuGet restore
+	public void CheckIncludedAssemblies ([Values (false, true)] bool usesAssemblyStores, [Values (AndroidRuntime.CoreCLR)] AndroidRuntime runtime)
+	{
+		if (!usesAssemblyStores && runtime == AndroidRuntime.CoreCLR) {
+			Assert.Ignore ("CoreCLR only supports builds with assembly stores.");
+			return;
 		}
 
-		[Test]
-		[NonParallelizable] // Commonly fails NuGet restore
-		public void CheckIncludedAssemblies ([Values (false, true)] bool usesAssemblyStores, [Values (AndroidRuntime.CoreCLR)] AndroidRuntime runtime)
-		{
-			if (!usesAssemblyStores && runtime == AndroidRuntime.CoreCLR) {
-				Assert.Ignore ("CoreCLR only supports builds with assembly stores.");
-				return;
+		var proj = new XamarinAndroidApplicationProject {
+			IsRelease = true
+		};
+
+		AndroidTargetArch[] supportedArches = new[] {
+			runtime switch {
+				AndroidRuntime.CoreCLR => AndroidTargetArch.Arm64,
+				_ => throw new NotSupportedException ($"Unsupported runtime '{runtime}'")
 			}
-
-			var proj = new XamarinAndroidApplicationProject {
-				IsRelease = true
-			};
-
-			AndroidTargetArch[] supportedArches = new[] {
-				runtime switch {
-					AndroidRuntime.CoreCLR => AndroidTargetArch.Arm64,
-					_ => throw new NotSupportedException ($"Unsupported runtime '{runtime}'")
-				}
-			};
-			proj.SetRuntime (runtime);
-			proj.SetProperty ("AndroidUseAssemblyStore", usesAssemblyStores.ToString ());
-			proj.SetRuntimeIdentifiers (supportedArches);
-			proj.PackageReferences.Add (new Package {
-				Id = "Humanizer.Core",
-				Version = "2.14.1",
-			});
-			proj.PackageReferences.Add (new Package {
-				Id = "Humanizer.Core.es",
-				Version = "2.14.1",
-			});
-			proj.MainActivity = proj.DefaultMainActivity
-				.Replace ("//${USINGS}", @"using System;
+		};
+		proj.SetRuntime (runtime);
+		proj.SetProperty ("AndroidUseAssemblyStore", usesAssemblyStores.ToString ());
+		proj.SetRuntimeIdentifiers (supportedArches);
+		proj.PackageReferences.Add (new Package {
+			Id = "Humanizer.Core",
+			Version = "2.14.1",
+		});
+		proj.PackageReferences.Add (new Package {
+			Id = "Humanizer.Core.es",
+			Version = "2.14.1",
+		});
+		proj.MainActivity = proj.DefaultMainActivity
+			.Replace ("//${USINGS}", @"using System;
 using Humanizer;
 using System.Globalization;")
-				.Replace ("//${AFTER_ONCREATE}", @"var c = new CultureInfo (""es-ES"");
+			.Replace ("//${AFTER_ONCREATE}", @"var c = new CultureInfo (""es-ES"");
 Console.WriteLine ($""{DateTime.UtcNow.AddHours(-30).Humanize(culture:c)}"");
 //${AFTER_ONCREATE}");
-			proj.OtherBuildItems.Add (new BuildItem ("Using", "System.Globalization"));
-			proj.OtherBuildItems.Add (new BuildItem ("Using", "Humanizer"));
+		proj.OtherBuildItems.Add (new BuildItem ("Using", "System.Globalization"));
+		proj.OtherBuildItems.Add (new BuildItem ("Using", "Humanizer"));
 
-			var expectedFiles = new HashSet<string> {
-				"Java.Interop.dll",
-				"Mono.Android.dll",
-				"System.Console.dll",
-				"System.Private.CoreLib.dll",
-				"System.Runtime.dll",
-				"System.Linq.dll",
-				"UnnamedProject.dll",
-				"_Microsoft.Android.Resource.Designer.dll",
-				"_Microsoft.Android.TypeMaps.dll",
-				"_UnnamedProject.TypeMap.dll",
-				"_Mono.Android.TypeMap.dll",
-				"Humanizer.dll",
-				"es/Humanizer.resources.dll",
-				"System.Collections.dll",
-				"System.Text.RegularExpressions.dll",
-			};
+		var expectedFiles = new HashSet<string> {
+			"Java.Interop.dll",
+			"Mono.Android.dll",
+			"System.Console.dll",
+			"System.Private.CoreLib.dll",
+			"System.Runtime.dll",
+			"System.Linq.dll",
+			"UnnamedProject.dll",
+			"_Microsoft.Android.Resource.Designer.dll",
+			"_Microsoft.Android.TypeMaps.dll",
+			"_UnnamedProject.TypeMap.dll",
+			"_Mono.Android.TypeMap.dll",
+			"Humanizer.dll",
+			"es/Humanizer.resources.dll",
+			"System.Collections.dll",
+			"System.Text.RegularExpressions.dll",
+		};
 
-			using (var b = CreateApkBuilder ()) {
-				Assert.IsTrue (b.Build (proj), "build should have succeeded.");
-				var apk = Path.Combine (Root, b.ProjectDirectory,
-						proj.OutputPath, $"{proj.PackageName}-Signed.apk");
-				var helper = new ArchiveAssemblyHelper (apk, usesAssemblyStores);
-				List<string> existingFiles;
-				List<string> missingFiles;
-				List<string> additionalFiles;
+		using (var b = CreateApkBuilder ()) {
+			Assert.IsTrue (b.Build (proj), "build should have succeeded.");
+			var apk = Path.Combine (Root, b.ProjectDirectory,
+					proj.OutputPath, $"{proj.PackageName}-Signed.apk");
+			var helper = new ArchiveAssemblyHelper (apk, usesAssemblyStores);
+			List<string> existingFiles;
+			List<string> missingFiles;
+			List<string> additionalFiles;
 
-				helper.Contains (expectedFiles, out existingFiles, out missingFiles, out additionalFiles, supportedArches);
+			helper.Contains (expectedFiles, out existingFiles, out missingFiles, out additionalFiles, supportedArches);
 
-				// Release merges Java.Interop's remaining peer aliases into the Mono.Android typemap.
-				CollectionAssert.DoesNotContain (existingFiles, "_Java.Interop.TypeMap.dll");
-				Assert.IsFalse (helper.Exists ("assemblies/Mono.Android.Runtime.dll"),
-					"Runtime helpers must be included in Mono.Android.dll, not a separate assembly.");
-				Assert.IsTrue (missingFiles == null || missingFiles.Count == 0,
-				       string.Format ("The following Expected files are missing. {0}",
-				       string.Join (Environment.NewLine, missingFiles)));
+			// Release merges Java.Interop's remaining peer aliases into the Mono.Android typemap.
+			CollectionAssert.DoesNotContain (existingFiles, "_Java.Interop.TypeMap.dll");
+			Assert.IsFalse (helper.Exists ("assemblies/Mono.Android.Runtime.dll"),
+				"Runtime helpers must be included in Mono.Android.dll, not a separate assembly.");
+			Assert.IsTrue (missingFiles == null || missingFiles.Count == 0,
+			       string.Format ("The following Expected files are missing. {0}",
+			       string.Join (Environment.NewLine, missingFiles)));
+		}
+	}
+
+	static IEnumerable<object[]> Get_CheckProjectWithSpaceInNameWorks_Data ()
+	{
+		var ret = new List<object[]> ();
+
+		foreach (AndroidRuntime runtime in new[] { AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT }) {
+			// testing characters as per https://www.compart.com/en/unicode/category/Zs
+			AddTestData ("TestUnicodeSpace0020\u0020Me", runtime);
+			AddTestData ("TestUnicodeSpace2009\u2009Me", runtime);
+			// Run fewer NativeAOT cases to reduce CI time.
+			if (runtime == AndroidRuntime.CoreCLR) {
+				AddTestData ("TestUnicodeSpace2000\u2000Me", runtime);
+				AddTestData ("TestUnicodeSpace2002\u2002Me", runtime);
+				AddTestData ("TestUnicodeSpace2007\u2007Me", runtime);
 			}
 		}
 
-		static IEnumerable<object[]> Get_CheckProjectWithSpaceInNameWorks_Data ()
-		{
-			var ret = new List<object[]> ();
+		return ret;
 
-			foreach (AndroidRuntime runtime in new[] { AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT }) {
-				// testing characters as per https://www.compart.com/en/unicode/category/Zs
-				AddTestData ("TestUnicodeSpace0020\u0020Me", runtime);
-				AddTestData ("TestUnicodeSpace2009\u2009Me", runtime);
-				// Run fewer NativeAOT cases to reduce CI time.
-				if (runtime == AndroidRuntime.CoreCLR) {
-					AddTestData ("TestUnicodeSpace2000\u2000Me", runtime);
-					AddTestData ("TestUnicodeSpace2002\u2002Me", runtime);
-					AddTestData ("TestUnicodeSpace2007\u2007Me", runtime);
+		void AddTestData (string projectName, AndroidRuntime runtime)
+		{
+			ret.Add (new object[] {
+				projectName,
+				runtime,
+			});
+		}
+	}
+
+	[Test]
+	[Category ("SmokeTests")]
+	[TestCaseSource (nameof (Get_CheckProjectWithSpaceInNameWorks_Data))]
+	public void CheckProjectWithSpaceInNameWorks (string projectName, AndroidRuntime runtime)
+	{
+		const bool isRelease = true;
+		if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+			return;
+		}
+		var proj = new XamarinAndroidApplicationProject () {
+			IsRelease = isRelease,
+			ProjectName = projectName,
+			RootNamespace = "Test.Me",
+		};
+		proj.SetRuntime (runtime);
+		using (var b = CreateApkBuilder ()) {
+			Assert.IsTrue (b.Build (proj), "build failed");
+		}
+	}
+
+	[Test]
+	[Parallelizable (ParallelScope.Self)]
+	public void CheckIncludedNativeLibraries ([Values] bool compressNativeLibraries, [Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
+	{
+		const bool isRelease = true;
+		if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+			return;
+		}
+		var proj = new XamarinAndroidApplicationProject () {
+			IsRelease = isRelease,
+		};
+		proj.SetRuntime (runtime);
+		proj.PackageReferences.Add(KnownPackages.SQLitePCLRaw_Core);
+		proj.SetRuntimeIdentifiers (new[] { "x86_64" });
+		proj.SetProperty (proj.ReleaseProperties, "AndroidStoreUncompressedFileExtensions", compressNativeLibraries ? "" : "so");
+		using (var b = CreateApkBuilder ()) {
+			b.ThrowOnBuildFailure = false;
+			Assert.IsTrue (b.Build (proj), "build failed");
+			var apk = Path.Combine (Root, b.ProjectDirectory,
+					proj.OutputPath, $"{proj.PackageName}-Signed.apk");
+			using (var zip = ZipHelper.OpenZip (apk)) {
+				Assert.IsNotNull (zip.GetEntry ("classes.dex"), "Apk should contain classes.dex");
+				var libFiles = zip.Entries.Where (x => x.FullName.StartsWith("lib/", StringComparison.Ordinal) && !x.FullName.Equals("lib/", StringComparison.InvariantCultureIgnoreCase));
+				var abiPaths = new string[] { "lib/x86_64/" };
+				foreach (var file in libFiles) {
+					Assert.IsTrue (abiPaths.Any (x => file.FullName.Contains (x)), $"Apk contains an unnesscary lib file: {file.FullName}");
+					AssertCompression (file, compressNativeLibraries);
 				}
 			}
+		}
+	}
 
-			return ret;
-
-			void AddTestData (string projectName, AndroidRuntime runtime)
-			{
-				ret.Add (new object[] {
-					projectName,
-					runtime,
-				});
-			}
+	[Test]
+	public void EmbeddedDSOs ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
+	{
+		bool isRelease = runtime == AndroidRuntime.NativeAOT;
+		if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+			return;
 		}
 
-		[Test]
-		[Category ("SmokeTests")]
-		[TestCaseSource (nameof (Get_CheckProjectWithSpaceInNameWorks_Data))]
-		public void CheckProjectWithSpaceInNameWorks (string projectName, AndroidRuntime runtime)
-		{
-			const bool isRelease = true;
-			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
-				return;
-			}
-			var proj = new XamarinAndroidApplicationProject () {
-				IsRelease = isRelease,
-				ProjectName = projectName,
-				RootNamespace = "Test.Me",
-			};
-			proj.SetRuntime (runtime);
-			using (var b = CreateApkBuilder ()) {
-				Assert.IsTrue (b.Build (proj), "build failed");
-			}
-		}
-
-		[Test]
-		[Parallelizable (ParallelScope.Self)]
-		public void CheckIncludedNativeLibraries ([Values] bool compressNativeLibraries, [Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
-		{
-			const bool isRelease = true;
-			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
-				return;
-			}
-			var proj = new XamarinAndroidApplicationProject () {
-				IsRelease = isRelease,
-			};
-			proj.SetRuntime (runtime);
-			proj.PackageReferences.Add(KnownPackages.SQLitePCLRaw_Core);
-			proj.SetRuntimeIdentifiers (new[] { "x86_64" });
-			proj.SetProperty (proj.ReleaseProperties, "AndroidStoreUncompressedFileExtensions", compressNativeLibraries ? "" : "so");
-			using (var b = CreateApkBuilder ()) {
-				b.ThrowOnBuildFailure = false;
-				Assert.IsTrue (b.Build (proj), "build failed");
-				var apk = Path.Combine (Root, b.ProjectDirectory,
-						proj.OutputPath, $"{proj.PackageName}-Signed.apk");
-				using (var zip = ZipHelper.OpenZip (apk)) {
-					Assert.IsNotNull (zip.GetEntry ("classes.dex"), "Apk should contain classes.dex");
-					var libFiles = zip.Entries.Where (x => x.FullName.StartsWith("lib/", StringComparison.Ordinal) && !x.FullName.Equals("lib/", StringComparison.InvariantCultureIgnoreCase));
-					var abiPaths = new string[] { "lib/x86_64/" };
-					foreach (var file in libFiles) {
-						Assert.IsTrue (abiPaths.Any (x => file.FullName.Contains (x)), $"Apk contains an unnesscary lib file: {file.FullName}");
-						AssertCompression (file, compressNativeLibraries);
-					}
-				}
-			}
-		}
-
-		[Test]
-		public void EmbeddedDSOs ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
-		{
-			bool isRelease = runtime == AndroidRuntime.NativeAOT;
-			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
-				return;
-			}
-
-			var proj = new XamarinAndroidApplicationProject {
-				IsRelease = isRelease,
-			};
-			proj.SetRuntime (runtime);
-			proj.AndroidManifest = $@"<?xml version=""1.0"" encoding=""utf-8""?>
+		var proj = new XamarinAndroidApplicationProject {
+			IsRelease = isRelease,
+		};
+		proj.SetRuntime (runtime);
+		proj.AndroidManifest = $@"<?xml version=""1.0"" encoding=""utf-8""?>
 <manifest xmlns:android=""http://schemas.android.com/apk/res/android"" android:versionCode=""1"" android:versionName=""1.0"" package=""{proj.PackageName}"">
 	<uses-sdk />
 	<application android:label=""{proj.ProjectName}"" android:extractNativeLibs=""false"">
 	</application>
 </manifest>";
 
-			using (var b = CreateApkBuilder ()) {
-				Assert.IsTrue (b.Build (proj), "first build should have succeeded");
+		using (var b = CreateApkBuilder ()) {
+			Assert.IsTrue (b.Build (proj), "first build should have succeeded");
 
-				var manifest = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath, "android", "AndroidManifest.xml");
-				AssertExtractNativeLibs (manifest, extractNativeLibs: false);
+			var manifest = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath, "android", "AndroidManifest.xml");
+			AssertExtractNativeLibs (manifest, extractNativeLibs: false);
 
-				var apk = Path.Combine (Root, b.ProjectDirectory,
-						proj.OutputPath, $"{proj.PackageName}-Signed.apk");
-				AssertEmbeddedDSOs (apk);
+			var apk = Path.Combine (Root, b.ProjectDirectory,
+					proj.OutputPath, $"{proj.PackageName}-Signed.apk");
+			AssertEmbeddedDSOs (apk);
 
-				//Delete the apk & build again
-				File.Delete (apk);
-				Assert.IsTrue (b.Build (proj), "second build should have succeeded");
-				AssertEmbeddedDSOs (apk);
+			//Delete the apk & build again
+			File.Delete (apk);
+			Assert.IsTrue (b.Build (proj), "second build should have succeeded");
+			AssertEmbeddedDSOs (apk);
+		}
+	}
+
+	void AssertEmbeddedDSOs (string apk)
+	{
+		FileAssert.Exists (apk);
+
+		var zipAlignPath = Path.Combine (GetPathToZipAlign (), IsWindows ? "zipalign.exe" : "zipalign");
+		Assert.That (new FileInfo (zipAlignPath), Does.Exist, $"ZipAlign not found at {zipAlignPath}");
+		Assert.That (RunCommand (zipAlignPath, $"-c -v -p 4 {apk}"), Is.True, $"{apk} does not contain page-aligned .so files");
+
+		using (var zip = ZipHelper.OpenZip (apk)) {
+			foreach (var entry in zip.Entries) {
+				if (entry.FullName.EndsWith (".so", StringComparison.Ordinal)) {
+					AssertCompression (entry, compressed: false);
+				}
 			}
 		}
+	}
 
-		void AssertEmbeddedDSOs (string apk)
-		{
+	void AssertCompression (ZipArchiveEntry entry, bool compressed)
+	{
+		if (compressed) {
+			Assert.AreNotEqual (entry.Length, entry.CompressedLength, $"`{entry.FullName}` should be compressed!");
+		} else {
+			Assert.AreEqual (entry.Length, entry.CompressedLength, $"`{entry.FullName}` should be uncompressed!");
+		}
+	}
+
+	[Test]
+	public void IncrementalCompression ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
+	{
+		bool isRelease = runtime == AndroidRuntime.NativeAOT;
+		if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+			return;
+		}
+		var proj = new XamarinAndroidApplicationProject {
+			IsRelease = isRelease,
+		};
+		proj.SetRuntime (runtime);
+		proj.OtherBuildItems.Add (new AndroidItem.AndroidAsset ("foo.bar") {
+			BinaryContent = () => new byte [1024],
+		});
+
+		var manifest_template = proj.AndroidManifest;
+		proj.AndroidManifest = manifest_template.Replace ("<application ", "<application android:extractNativeLibs=\"true\" ");
+
+		using (var b = CreateApkBuilder ()) {
+			Assert.IsTrue (b.Build (proj), "first build should have succeeded");
+
+			var apk = Path.Combine (Root, b.ProjectDirectory,
+					proj.OutputPath, $"{proj.PackageName}-Signed.apk");
 			FileAssert.Exists (apk);
-
-			var zipAlignPath = Path.Combine (GetPathToZipAlign (), IsWindows ? "zipalign.exe" : "zipalign");
-			Assert.That (new FileInfo (zipAlignPath), Does.Exist, $"ZipAlign not found at {zipAlignPath}");
-			Assert.That (RunCommand (zipAlignPath, $"-c -v -p 4 {apk}"), Is.True, $"{apk} does not contain page-aligned .so files");
-
 			using (var zip = ZipHelper.OpenZip (apk)) {
 				foreach (var entry in zip.Entries) {
-					if (entry.FullName.EndsWith (".so", StringComparison.Ordinal)) {
+					if (entry.FullName.EndsWith (".so", StringComparison.Ordinal) || entry.FullName.EndsWith (".bar", StringComparison.Ordinal)) {
+						AssertCompression (entry, compressed: true);
+					}
+				}
+			}
+
+			// Change manifest & compressed extensions
+			proj.AndroidManifest = manifest_template.Replace ("<application ", "<application android:extractNativeLibs=\"false\" ");
+			proj.Touch ("Properties\\AndroidManifest.xml");
+			proj.SetProperty ("AndroidStoreUncompressedFileExtensions", ".bar");
+
+			b.BuildLogFile = "build2.log";
+			Assert.IsTrue (b.Build (proj), "second build should have succeeded");
+
+			FileAssert.Exists (apk);
+			using (var zip = ZipHelper.OpenZip (apk)) {
+				foreach (var entry in zip.Entries) {
+					if (entry.FullName.EndsWith (".so", StringComparison.Ordinal) || entry.FullName.EndsWith (".bar", StringComparison.Ordinal)) {
 						AssertCompression (entry, compressed: false);
 					}
 				}
 			}
 		}
+	}
 
-		void AssertCompression (ZipArchiveEntry entry, bool compressed)
-		{
-			if (compressed) {
-				Assert.AreNotEqual (entry.Length, entry.CompressedLength, $"`{entry.FullName}` should be compressed!");
-			} else {
-				Assert.AreEqual (entry.Length, entry.CompressedLength, $"`{entry.FullName}` should be uncompressed!");
-			}
+	[Test]
+	public void ExplicitPackageNamingPolicy ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
+	{
+		bool isRelease = runtime == AndroidRuntime.NativeAOT;
+		if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+			return;
 		}
 
-		[Test]
-		public void IncrementalCompression ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
-		{
-			bool isRelease = runtime == AndroidRuntime.NativeAOT;
-			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
-				return;
-			}
-			var proj = new XamarinAndroidApplicationProject {
-				IsRelease = isRelease,
-			};
-			proj.SetRuntime (runtime);
-			proj.OtherBuildItems.Add (new AndroidItem.AndroidAsset ("foo.bar") {
-				BinaryContent = () => new byte [1024],
-			});
+		var proj = new XamarinAndroidApplicationProject {
+			IsRelease = isRelease,
+		};
+		proj.SetRuntime (runtime);
+		proj.Sources.Add (new BuildItem.Source ("Bar.cs") {
+			TextContent = () => "namespace Foo { class Bar : Java.Lang.Object { } }"
+		});
+		proj.MainActivity = proj.DefaultMainActivity.Replace ("//${AFTER_ONCREATE}", "System.GC.KeepAlive (new Foo.Bar ());");
+		proj.SetProperty ("AndroidPackageNamingPolicy", "LowercaseCrc64");
+		using (var b = CreateApkBuilder ()) {
+			Assert.IsTrue (b.Build (proj), "build failed");
+			var javaSource = b.Output.GetIntermediaryPath (Path.Combine ("typemap", "java", "crc64dca3aed1e0ff8a1a", "Bar.java"));
+			FileAssert.Exists (javaSource);
+			StringAssert.Contains ("package crc64dca3aed1e0ff8a1a;", File.ReadAllText (javaSource));
+		}
+	}
 
-			var manifest_template = proj.AndroidManifest;
-			proj.AndroidManifest = manifest_template.Replace ("<application ", "<application android:extractNativeLibs=\"true\" ");
-
-			using (var b = CreateApkBuilder ()) {
-				Assert.IsTrue (b.Build (proj), "first build should have succeeded");
-
-				var apk = Path.Combine (Root, b.ProjectDirectory,
-						proj.OutputPath, $"{proj.PackageName}-Signed.apk");
-				FileAssert.Exists (apk);
-				using (var zip = ZipHelper.OpenZip (apk)) {
-					foreach (var entry in zip.Entries) {
-						if (entry.FullName.EndsWith (".so", StringComparison.Ordinal) || entry.FullName.EndsWith (".bar", StringComparison.Ordinal)) {
-							AssertCompression (entry, compressed: true);
-						}
-					}
-				}
-
-				// Change manifest & compressed extensions
-				proj.AndroidManifest = manifest_template.Replace ("<application ", "<application android:extractNativeLibs=\"false\" ");
-				proj.Touch ("Properties\\AndroidManifest.xml");
-				proj.SetProperty ("AndroidStoreUncompressedFileExtensions", ".bar");
-
-				b.BuildLogFile = "build2.log";
-				Assert.IsTrue (b.Build (proj), "second build should have succeeded");
-
-				FileAssert.Exists (apk);
-				using (var zip = ZipHelper.OpenZip (apk)) {
-					foreach (var entry in zip.Entries) {
-						if (entry.FullName.EndsWith (".so", StringComparison.Ordinal) || entry.FullName.EndsWith (".bar", StringComparison.Ordinal)) {
-							AssertCompression (entry, compressed: false);
-						}
-					}
-				}
-			}
+	[Test]
+	public void CheckMetadataSkipItemsAreProcessedCorrectly ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
+	{
+		bool isRelease = runtime == AndroidRuntime.NativeAOT;
+		if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+			return;
 		}
 
-		[Test]
-		public void ExplicitPackageNamingPolicy ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
-		{
-			bool isRelease = runtime == AndroidRuntime.NativeAOT;
-			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
-				return;
-			}
+		var packages = new List<Package> () {
+			KnownPackages.Xamarin_Jetbrains_Annotations,
+		};
 
-			var proj = new XamarinAndroidApplicationProject {
-				IsRelease = isRelease,
-			};
-			proj.SetRuntime (runtime);
-			proj.Sources.Add (new BuildItem.Source ("Bar.cs") {
-				TextContent = () => "namespace Foo { class Bar : Java.Lang.Object { } }"
-			});
-			proj.MainActivity = proj.DefaultMainActivity.Replace ("//${AFTER_ONCREATE}", "System.GC.KeepAlive (new Foo.Bar ());");
-			proj.SetProperty ("AndroidPackageNamingPolicy", "LowercaseCrc64");
-			using (var b = CreateApkBuilder ()) {
-				Assert.IsTrue (b.Build (proj), "build failed");
-				var javaSource = b.Output.GetIntermediaryPath (Path.Combine ("typemap", "java", "crc64dca3aed1e0ff8a1a", "Bar.java"));
-				FileAssert.Exists (javaSource);
-				StringAssert.Contains ("package crc64dca3aed1e0ff8a1a;", File.ReadAllText (javaSource));
-			}
-		}
-
-		[Test]
-		public void CheckMetadataSkipItemsAreProcessedCorrectly ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
-		{
-			bool isRelease = runtime == AndroidRuntime.NativeAOT;
-			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
-				return;
-			}
-
-			var packages = new List<Package> () {
-				KnownPackages.Xamarin_Jetbrains_Annotations,
-			};
-
-			string metaDataTemplate = @"<AndroidCustomMetaDataForReferences Include=""%"">
+		string metaDataTemplate = @"<AndroidCustomMetaDataForReferences Include=""%"">
 	<AndroidSkipAddToPackage>True</AndroidSkipAddToPackage>
 	<AndroidSkipJavaStubGeneration>True</AndroidSkipJavaStubGeneration>
 	<AndroidSkipResourceExtraction>True</AndroidSkipResourceExtraction>
 </AndroidCustomMetaDataForReferences>";
-			var proj = new XamarinAndroidApplicationProject () {
-				IsRelease = isRelease,
-				Imports = {
-					new Import (() => "CustomMetaData.target") {
-						TextContent = () => @"<Project xmlns=""http://schemas.microsoft.com/developer/msbuild/2003"">
+		var proj = new XamarinAndroidApplicationProject () {
+			IsRelease = isRelease,
+			Imports = {
+				new Import (() => "CustomMetaData.target") {
+					TextContent = () => @"<Project xmlns=""http://schemas.microsoft.com/developer/msbuild/2003"">
 <ItemGroup>" +
 string.Join ("\n", packages.Select (x => metaDataTemplate.Replace ("%", x.Id))) +
 @"</ItemGroup>
 </Project>"
-					},
-				}
-			};
-			proj.SetRuntime (runtime);
-			foreach (var package in packages)
-				proj.PackageReferences.Add (package);
-			using (var b = CreateApkBuilder ()) {
-				b.ThrowOnBuildFailure = false;
-				Assert.IsTrue (b.Build (proj), "build failed");
-				var bin = Path.Combine (Root, b.ProjectDirectory, proj.OutputPath);
-				var obj = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath);
-				var lp = Path.Combine (obj, "lp");
-				Assert.IsTrue (Directory.Exists (lp), $"{lp} should exists.");
-				Assert.AreEqual (0, Directory.GetDirectories (lp).Length, $"{lp} should NOT contain any directories.");
-				var support = Path.Combine (obj, "android", "src", "android", "support");
-				Assert.IsFalse (Directory.Exists (support), $"{support} should NOT exists.");
-				Assert.IsFalse (File.Exists (lp), $" should NOT have been generated.");
-				foreach (var apk in Directory.GetFiles (bin, "*-Signed.apk")) {
-					using (var zip = ZipHelper.OpenZip (apk)) {
-						foreach (var package in packages) {
-							Assert.IsFalse (zip.Entries.Any (e => e.FullName == $"assemblies/{package.Id}.dll"), $"APK file `{apk}` should not contain {package.Id}");
-						}
+				},
+			}
+		};
+		proj.SetRuntime (runtime);
+		foreach (var package in packages)
+			proj.PackageReferences.Add (package);
+		using (var b = CreateApkBuilder ()) {
+			b.ThrowOnBuildFailure = false;
+			Assert.IsTrue (b.Build (proj), "build failed");
+			var bin = Path.Combine (Root, b.ProjectDirectory, proj.OutputPath);
+			var obj = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath);
+			var lp = Path.Combine (obj, "lp");
+			Assert.IsTrue (Directory.Exists (lp), $"{lp} should exists.");
+			Assert.AreEqual (0, Directory.GetDirectories (lp).Length, $"{lp} should NOT contain any directories.");
+			var support = Path.Combine (obj, "android", "src", "android", "support");
+			Assert.IsFalse (Directory.Exists (support), $"{support} should NOT exists.");
+			Assert.IsFalse (File.Exists (lp), $" should NOT have been generated.");
+			foreach (var apk in Directory.GetFiles (bin, "*-Signed.apk")) {
+				using (var zip = ZipHelper.OpenZip (apk)) {
+					foreach (var package in packages) {
+						Assert.IsFalse (zip.Entries.Any (e => e.FullName == $"assemblies/{package.Id}.dll"), $"APK file `{apk}` should not contain {package.Id}");
 					}
 				}
 			}
 		}
+	}
 
-		[Test]
-		[NonParallelizable]
-		public void ExportAttributeBuildDoesNotPackageLegacyHelper ()
-		{
-			const AndroidRuntime runtime = AndroidRuntime.CoreCLR;
-			const bool isRelease = false;
+	[Test]
+	[NonParallelizable]
+	public void ExportAttributeBuildDoesNotPackageLegacyHelper ()
+	{
+		const AndroidRuntime runtime = AndroidRuntime.CoreCLR;
+		const bool isRelease = false;
 
-			var proj = new XamarinAndroidApplicationProject {
-				IsRelease = isRelease,
-			};
-			proj.SetRuntime (runtime);
-			proj.Sources.Add (new BuildItem.Source ("ContainsExportedMethods.cs") {
-				TextContent = () => @"using System;
+		var proj = new XamarinAndroidApplicationProject {
+			IsRelease = isRelease,
+		};
+		proj.SetRuntime (runtime);
+		proj.Sources.Add (new BuildItem.Source ("ContainsExportedMethods.cs") {
+			TextContent = () => @"using System;
 using Java.Interop;
 
 namespace UnnamedProject {
@@ -766,518 +766,517 @@ namespace UnnamedProject {
 		}
 	}
 }"
-			});
+		});
 
-			using (var b = CreateApkBuilder ()) {
-				Assert.IsTrue (b.Build (proj), "build failed");
+		using (var b = CreateApkBuilder ()) {
+			Assert.IsTrue (b.Build (proj), "build failed");
 
-				var apk = Path.Combine (Root, b.ProjectDirectory, proj.OutputPath, $"{proj.PackageName}-Signed.apk");
-				var helper = new ArchiveAssemblyHelper (apk, useAssemblyStores: true);
-				var contents = helper.ListArchiveContents ();
+			var apk = Path.Combine (Root, b.ProjectDirectory, proj.OutputPath, $"{proj.PackageName}-Signed.apk");
+			var helper = new ArchiveAssemblyHelper (apk, useAssemblyStores: true);
+			var contents = helper.ListArchiveContents ();
 
-				Assert.IsFalse (
-					contents.Any (e => Path.GetFileName (e).Equals ("Mono.Android.Export.dll", StringComparison.Ordinal)),
-					$"APK file `{apk}` should not contain Mono.Android.Export.dll when the trimmable type map is enabled.");
-			}
+			Assert.IsFalse (
+				contents.Any (e => Path.GetFileName (e).Equals ("Mono.Android.Export.dll", StringComparison.Ordinal)),
+				$"APK file `{apk}` should not contain Mono.Android.Export.dll when the trimmable type map is enabled.");
 		}
+	}
 
-		[TestCase (false, false, AndroidRuntime.CoreCLR)]
-		[TestCase (false, true, AndroidRuntime.CoreCLR)]
-		[TestCase (true, false, AndroidRuntime.CoreCLR)]
-		[TestCase (true, true, AndroidRuntime.CoreCLR)]
-		[TestCase (true, true, AndroidRuntime.NativeAOT)]
-		public void CheckSignApk (bool useApkSigner, bool perAbiApk, AndroidRuntime runtime)
-		{
-			const bool isRelease = true;
-			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
-				return;
-			}
-			string ext = Environment.OSVersion.Platform != PlatformID.Unix ? ".bat" : "";
-			var foundApkSigner = Directory.EnumerateDirectories (Path.Combine (AndroidSdkPath, "build-tools")).Any (dir => Directory.EnumerateFiles (dir, "apksigner"+ ext).Any ());
-			if (useApkSigner && !foundApkSigner) {
-				Assert.Ignore ("Skipping test. Required build-tools verison which contains apksigner is not installed.");
-			}
-			string keyfile = Path.Combine (Root, "temp", TestName, "keystore", "release.keystore");
-			if (File.Exists (keyfile))
-				File.Delete (keyfile);
-			string keyToolPath = Path.Combine (AndroidSdkResolver.GetJavaSdkPath (), "bin");
-			var engine = new MockBuildEngine (Console.Out);
-			string pass = "Cy(nBW~j.&@B-!R_aq7/syzFR!S$4]7R%i6)R!";
-			string alias = "release store";
-			var task = new AndroidCreateDebugKey {
-				BuildEngine = engine,
-				KeyStore = keyfile,
-				StorePass = pass,
-				KeyAlias = alias,
-				KeyPass = pass,
-				KeyAlgorithm="RSA",
-				Validity=30,
-				StoreType="pkcs12",
-				Command="-genkeypair",
-				ToolPath = keyToolPath,
-			};
-			Assert.IsTrue (task.Execute (), "Task should have succeeded.");
-			var proj = new XamarinAndroidApplicationProject () {
-				IsRelease = isRelease,
-			};
-			proj.SetRuntime (runtime);
-			proj.SetProperty (proj.ReleaseProperties, "AndroidUseApkSigner", useApkSigner);
-			proj.SetProperty (proj.ReleaseProperties, "AndroidKeyStore", "True");
-			proj.SetProperty (proj.ReleaseProperties, "AndroidSigningKeyStore", keyfile);
-			proj.SetProperty (proj.ReleaseProperties, "AndroidSigningKeyAlias", alias);
-			proj.SetProperty (proj.ReleaseProperties, "AndroidSigningKeyPass", Uri.EscapeDataString (pass));
-			proj.SetProperty (proj.ReleaseProperties, "AndroidSigningStorePass", Uri.EscapeDataString (pass));
-			proj.SetProperty (proj.ReleaseProperties, KnownProperties.AndroidCreatePackagePerAbi, perAbiApk);
-			if (perAbiApk) {
-				proj.SetRuntimeIdentifiers (AndroidTargetArch.Arm64, AndroidTargetArch.X86_64);
-			} else {
-				proj.SetRuntimeIdentifiers (AndroidTargetArch.Arm64, AndroidTargetArch.X86_64);
-			}
-			using (var b = CreateApkBuilder (Path.Combine ("temp", TestName, "App"))) {
-				var bin = Path.Combine (Root, b.ProjectDirectory, proj.OutputPath);
-				Assert.IsTrue (b.Build (proj), "First build failed");
-				if (runtime != AndroidRuntime.NativeAOT) {
-					b.AssertHasNoWarnings ();
-				} else {
-					b.AssertHasAtMostWarnings (2);
-				}
-
-				//Make sure the APKs are signed
-				foreach (var apk in Directory.GetFiles (bin, "*-Signed.apk")) {
-					AssertApkIsSigned (apk);
-				}
-
-				// Make sure the APKs have unique version codes
-				if (perAbiApk) {
-					var versionList = new List<int> ();
-					int arm64ManifestCode = GetVersionCodeFromIntermediateManifest (Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath, "android", "arm64-v8a", "AndroidManifest.xml"));
-					int x86_64ManifestCode = GetVersionCodeFromIntermediateManifest (Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath, "android", "x86_64", "AndroidManifest.xml"));
-					versionList.Add (arm64ManifestCode);
-					versionList.Add (x86_64ManifestCode);
-					Assert.True (versionList.Distinct ().Count () == versionList.Count,
-						$"APK version codes were not unique - arm64-v8a: {arm64ManifestCode}, x86_64: {x86_64ManifestCode}");
-				}
-
-				var item = proj.AndroidResources.First (x => x.Include () == "Resources\\values\\Strings.xml");
-				item.TextContent = () => proj.StringsXml.Replace ("${PROJECT_NAME}", "Foo");
-				item.Timestamp = null;
-				Assert.IsTrue (b.Build (proj), "Second build failed");
-				// Resource-only change does not trigger IlcCompile, so no IL3053 warnings on second build
+	[TestCase (false, false, AndroidRuntime.CoreCLR)]
+	[TestCase (false, true, AndroidRuntime.CoreCLR)]
+	[TestCase (true, false, AndroidRuntime.CoreCLR)]
+	[TestCase (true, true, AndroidRuntime.CoreCLR)]
+	[TestCase (true, true, AndroidRuntime.NativeAOT)]
+	public void CheckSignApk (bool useApkSigner, bool perAbiApk, AndroidRuntime runtime)
+	{
+		const bool isRelease = true;
+		if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+			return;
+		}
+		string ext = Environment.OSVersion.Platform != PlatformID.Unix ? ".bat" : "";
+		var foundApkSigner = Directory.EnumerateDirectories (Path.Combine (AndroidSdkPath, "build-tools")).Any (dir => Directory.EnumerateFiles (dir, "apksigner"+ ext).Any ());
+		if (useApkSigner && !foundApkSigner) {
+			Assert.Ignore ("Skipping test. Required build-tools verison which contains apksigner is not installed.");
+		}
+		string keyfile = Path.Combine (Root, "temp", TestName, "keystore", "release.keystore");
+		if (File.Exists (keyfile))
+			File.Delete (keyfile);
+		string keyToolPath = Path.Combine (AndroidSdkResolver.GetJavaSdkPath (), "bin");
+		var engine = new MockBuildEngine (Console.Out);
+		string pass = "Cy(nBW~j.&@B-!R_aq7/syzFR!S$4]7R%i6)R!";
+		string alias = "release store";
+		var task = new AndroidCreateDebugKey {
+			BuildEngine = engine,
+			KeyStore = keyfile,
+			StorePass = pass,
+			KeyAlias = alias,
+			KeyPass = pass,
+			KeyAlgorithm="RSA",
+			Validity=30,
+			StoreType="pkcs12",
+			Command="-genkeypair",
+			ToolPath = keyToolPath,
+		};
+		Assert.IsTrue (task.Execute (), "Task should have succeeded.");
+		var proj = new XamarinAndroidApplicationProject () {
+			IsRelease = isRelease,
+		};
+		proj.SetRuntime (runtime);
+		proj.SetProperty (proj.ReleaseProperties, "AndroidUseApkSigner", useApkSigner);
+		proj.SetProperty (proj.ReleaseProperties, "AndroidKeyStore", "True");
+		proj.SetProperty (proj.ReleaseProperties, "AndroidSigningKeyStore", keyfile);
+		proj.SetProperty (proj.ReleaseProperties, "AndroidSigningKeyAlias", alias);
+		proj.SetProperty (proj.ReleaseProperties, "AndroidSigningKeyPass", Uri.EscapeDataString (pass));
+		proj.SetProperty (proj.ReleaseProperties, "AndroidSigningStorePass", Uri.EscapeDataString (pass));
+		proj.SetProperty (proj.ReleaseProperties, KnownProperties.AndroidCreatePackagePerAbi, perAbiApk);
+		if (perAbiApk) {
+			proj.SetRuntimeIdentifiers (AndroidTargetArch.Arm64, AndroidTargetArch.X86_64);
+		} else {
+			proj.SetRuntimeIdentifiers (AndroidTargetArch.Arm64, AndroidTargetArch.X86_64);
+		}
+		using (var b = CreateApkBuilder (Path.Combine ("temp", TestName, "App"))) {
+			var bin = Path.Combine (Root, b.ProjectDirectory, proj.OutputPath);
+			Assert.IsTrue (b.Build (proj), "First build failed");
+			if (runtime != AndroidRuntime.NativeAOT) {
 				b.AssertHasNoWarnings ();
-
-				//Make sure the APKs are signed
-				foreach (var apk in Directory.GetFiles (bin, "*-Signed.apk")) {
-					AssertApkIsSigned (apk);
-				}
+			} else {
+				b.AssertHasAtMostWarnings (2);
 			}
 
-			int GetVersionCodeFromIntermediateManifest (string manifestFilePath)
-			{
-				var doc = XDocument.Load (manifestFilePath);
-				var versionCode = doc.Descendants ()
-					.Where (e => e.Name == "manifest")
-					.Select (m => m.Attribute ("{http://schemas.android.com/apk/res/android}versionCode")).FirstOrDefault ();
-
-				if (!int.TryParse (versionCode?.Value, out int parsedCode))
-					Assert.Fail ($"Unable to parse 'versionCode' value from manifest content: {File.ReadAllText (manifestFilePath)}.");
-				return parsedCode;
+			//Make sure the APKs are signed
+			foreach (var apk in Directory.GetFiles (bin, "*-Signed.apk")) {
+				AssertApkIsSigned (apk);
 			}
-		}
 
-		[Test]
-		public void CheckAppBundle ([ValueSource (typeof (BaseTest), nameof (BaseTest.ValidRuntimeConfigurations))] (bool isRelease, AndroidRuntime runtime) configuration)
-		{
-			var (isRelease, runtime) = configuration;
-			var proj = new XamarinAndroidApplicationProject () {
-				IsRelease = isRelease,
-			};
-			proj.SetRuntime (runtime);
-			proj.SetProperty ("AndroidPackageFormat", "aab");
-			// Disable the fast deployment because it is not currently compatible with aabs and so gives an XA0119 build error.
-			proj.EmbedAssembliesIntoApk = true;
+			// Make sure the APKs have unique version codes
+			if (perAbiApk) {
+				var versionList = new List<int> ();
+				int arm64ManifestCode = GetVersionCodeFromIntermediateManifest (Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath, "android", "arm64-v8a", "AndroidManifest.xml"));
+				int x86_64ManifestCode = GetVersionCodeFromIntermediateManifest (Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath, "android", "x86_64", "AndroidManifest.xml"));
+				versionList.Add (arm64ManifestCode);
+				versionList.Add (x86_64ManifestCode);
+				Assert.True (versionList.Distinct ().Count () == versionList.Count,
+					$"APK version codes were not unique - arm64-v8a: {arm64ManifestCode}, x86_64: {x86_64ManifestCode}");
+			}
 
-			using (var b = CreateApkBuilder ()) {
-				var bin = Path.Combine (Root, b.ProjectDirectory, proj.OutputPath);
-				Assert.IsTrue (b.Build (proj), "first build should have succeeded.");
+			var item = proj.AndroidResources.First (x => x.Include () == "Resources\\values\\Strings.xml");
+			item.TextContent = () => proj.StringsXml.Replace ("${PROJECT_NAME}", "Foo");
+			item.Timestamp = null;
+			Assert.IsTrue (b.Build (proj), "Second build failed");
+			// Resource-only change does not trigger IlcCompile, so no IL3053 warnings on second build
+			b.AssertHasNoWarnings ();
 
-				// Make sure the AAB is signed
-				var aab = Path.Combine (bin, $"{proj.PackageName}-Signed.aab");
-				using (var zip = ZipHelper.OpenZip (aab)) {
-					Assert.IsTrue (zip.Entries.Any (e => e.FullName == "META-INF/MANIFEST.MF"), $"AAB file `{aab}` is not signed! It is missing `META-INF/MANIFEST.MF`.");
-				}
-
-				// Build with no changes
-				Assert.IsTrue (b.Build (proj), "second build should have succeeded.");
-				foreach (var target in new [] { "_Sign", "_BuildApkEmbed" }) {
-					Assert.IsTrue (b.Output.IsTargetSkipped (target), $"`{target}` should be skipped!");
-				}
+			//Make sure the APKs are signed
+			foreach (var apk in Directory.GetFiles (bin, "*-Signed.apk")) {
+				AssertApkIsSigned (apk);
 			}
 		}
 
-		[Test]
-		public void MissingSatelliteAssemblyInLibrary ([Values (AndroidRuntime.CoreCLR)] AndroidRuntime runtime)
+		int GetVersionCodeFromIntermediateManifest (string manifestFilePath)
 		{
-			const bool isRelease = true;
-			var path = Path.Combine ("temp", TestName);
-			var lib = new XamarinAndroidLibraryProject {
-				IsRelease = isRelease,
-				ProjectName = "Localization",
-				OtherBuildItems = {
-					new BuildItem ("EmbeddedResource", "Foo.resx") {
-						TextContent = () => InlineData.ResxWithContents ("<data name=\"CancelButton\"><value>Cancel</value></data>")
-					},
-				}
-			};
-			lib.SetRuntime (runtime);
+			var doc = XDocument.Load (manifestFilePath);
+			var versionCode = doc.Descendants ()
+				.Where (e => e.Name == "manifest")
+				.Select (m => m.Attribute ("{http://schemas.android.com/apk/res/android}versionCode")).FirstOrDefault ();
 
-			var languages = new string[] {"es", "de", "fr", "he", "it", "pl", "pt", "ru", "sl" };
+			if (!int.TryParse (versionCode?.Value, out int parsedCode))
+				Assert.Fail ($"Unable to parse 'versionCode' value from manifest content: {File.ReadAllText (manifestFilePath)}.");
+			return parsedCode;
+		}
+	}
+
+	[Test]
+	public void CheckAppBundle ([ValueSource (typeof (BaseTest), nameof (BaseTest.ValidRuntimeConfigurations))] (bool isRelease, AndroidRuntime runtime) configuration)
+	{
+		var (isRelease, runtime) = configuration;
+		var proj = new XamarinAndroidApplicationProject () {
+			IsRelease = isRelease,
+		};
+		proj.SetRuntime (runtime);
+		proj.SetProperty ("AndroidPackageFormat", "aab");
+		// Disable the fast deployment because it is not currently compatible with aabs and so gives an XA0119 build error.
+		proj.EmbedAssembliesIntoApk = true;
+
+		using (var b = CreateApkBuilder ()) {
+			var bin = Path.Combine (Root, b.ProjectDirectory, proj.OutputPath);
+			Assert.IsTrue (b.Build (proj), "first build should have succeeded.");
+
+			// Make sure the AAB is signed
+			var aab = Path.Combine (bin, $"{proj.PackageName}-Signed.aab");
+			using (var zip = ZipHelper.OpenZip (aab)) {
+				Assert.IsTrue (zip.Entries.Any (e => e.FullName == "META-INF/MANIFEST.MF"), $"AAB file `{aab}` is not signed! It is missing `META-INF/MANIFEST.MF`.");
+			}
+
+			// Build with no changes
+			Assert.IsTrue (b.Build (proj), "second build should have succeeded.");
+			foreach (var target in new [] { "_Sign", "_BuildApkEmbed" }) {
+				Assert.IsTrue (b.Output.IsTargetSkipped (target), $"`{target}` should be skipped!");
+			}
+		}
+	}
+
+	[Test]
+	public void MissingSatelliteAssemblyInLibrary ([Values (AndroidRuntime.CoreCLR)] AndroidRuntime runtime)
+	{
+		const bool isRelease = true;
+		var path = Path.Combine ("temp", TestName);
+		var lib = new XamarinAndroidLibraryProject {
+			IsRelease = isRelease,
+			ProjectName = "Localization",
+			OtherBuildItems = {
+				new BuildItem ("EmbeddedResource", "Foo.resx") {
+					TextContent = () => InlineData.ResxWithContents ("<data name=\"CancelButton\"><value>Cancel</value></data>")
+				},
+			}
+		};
+		lib.SetRuntime (runtime);
+
+		var languages = new string[] {"es", "de", "fr", "he", "it", "pl", "pt", "ru", "sl" };
+		foreach (string lang in languages) {
+			lib.OtherBuildItems.Add (
+				new BuildItem ("EmbeddedResource", $"Foo.{lang}.resx") {
+					TextContent = () => InlineData.ResxWithContents ($"<data name=\"CancelButton\"><value>{lang}</value></data>")
+				}
+			);
+		}
+
+		var app = new XamarinAndroidApplicationProject {
+			IsRelease = true,
+		};
+		app.SetRuntime (runtime);
+		app.References.Add (new BuildItem.ProjectReference ($"..\\{lib.ProjectName}\\{lib.ProjectName}.csproj", lib.ProjectName, lib.ProjectGuid));
+
+		using (var libBuilder = CreateDllBuilder (Path.Combine (path, lib.ProjectName)))
+		using (var appBuilder = CreateApkBuilder (Path.Combine (path, app.ProjectName))) {
+			Assert.IsTrue (libBuilder.Build (lib), "Library Build should have succeeded.");
+			appBuilder.Target = "Build";
+			Assert.IsTrue (appBuilder.Build (app), "App Build should have succeeded.");
+			appBuilder.Target = "SignAndroidPackage";
+			Assert.IsTrue (appBuilder.Build (app), "App SignAndroidPackage should have succeeded.");
+
+			var apk = Path.Combine (Root, appBuilder.ProjectDirectory,
+				app.OutputPath, $"{app.PackageName}-Signed.apk");
+			var helper = new ArchiveAssemblyHelper (apk);
+
 			foreach (string lang in languages) {
-				lib.OtherBuildItems.Add (
-					new BuildItem ("EmbeddedResource", $"Foo.{lang}.resx") {
-						TextContent = () => InlineData.ResxWithContents ($"<data name=\"CancelButton\"><value>{lang}</value></data>")
-					}
-				);
-			}
-
-			var app = new XamarinAndroidApplicationProject {
-				IsRelease = true,
-			};
-			app.SetRuntime (runtime);
-			app.References.Add (new BuildItem.ProjectReference ($"..\\{lib.ProjectName}\\{lib.ProjectName}.csproj", lib.ProjectName, lib.ProjectGuid));
-
-			using (var libBuilder = CreateDllBuilder (Path.Combine (path, lib.ProjectName)))
-			using (var appBuilder = CreateApkBuilder (Path.Combine (path, app.ProjectName))) {
-				Assert.IsTrue (libBuilder.Build (lib), "Library Build should have succeeded.");
-				appBuilder.Target = "Build";
-				Assert.IsTrue (appBuilder.Build (app), "App Build should have succeeded.");
-				appBuilder.Target = "SignAndroidPackage";
-				Assert.IsTrue (appBuilder.Build (app), "App SignAndroidPackage should have succeeded.");
-
-				var apk = Path.Combine (Root, appBuilder.ProjectDirectory,
-					app.OutputPath, $"{app.PackageName}-Signed.apk");
-				var helper = new ArchiveAssemblyHelper (apk);
-
-				foreach (string lang in languages) {
-					foreach (string abi in app.GetRuntimeIdentifiersAsAbis ()) {
-						Assert.IsTrue (helper.Exists ($"assemblies/{abi}/{lang}/{lib.ProjectName}.resources.dll"), $"Apk should contain satellite assembly for language '{lang}'!");
-					}
+				foreach (string abi in app.GetRuntimeIdentifiersAsAbis ()) {
+					Assert.IsTrue (helper.Exists ($"assemblies/{abi}/{lang}/{lib.ProjectName}.resources.dll"), $"Apk should contain satellite assembly for language '{lang}'!");
 				}
 			}
 		}
+	}
 
-		[Test]
-		public void MissingSatelliteAssemblyInApp ([Values] bool publishAot, [Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
-		{
-			const bool isRelease = true;
-			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
-				return;
+	[Test]
+	public void MissingSatelliteAssemblyInApp ([Values] bool publishAot, [Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
+	{
+		const bool isRelease = true;
+		if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+			return;
+		}
+
+		if (publishAot) {
+			Assert.Ignore ("NativeAOT and CoreCLR don't support PublishAot with satellite assemblies");
+		}
+
+		var proj = new XamarinAndroidApplicationProject {
+			IsRelease = isRelease,
+			OtherBuildItems = {
+				new BuildItem ("EmbeddedResource", "Foo.resx") {
+					TextContent = () => InlineData.ResxWithContents ("<data name=\"CancelButton\"><value>Cancel</value></data>")
+				},
+				new BuildItem ("EmbeddedResource", "Foo.es.resx") {
+					TextContent = () => InlineData.ResxWithContents ("<data name=\"CancelButton\"><value>Cancelar</value></data>")
+				}
 			}
+		};
+		proj.SetPublishAot (publishAot);
+
+		using (var b = CreateApkBuilder ()) {
+			b.Verbosity = LoggerVerbosity.Diagnostic; // Needed for --satellite switch to appear in the log
+			b.Target = "Build";
+			Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
+			b.Target = "SignAndroidPackage";
+			Assert.IsTrue (b.Build (proj), "SignAndroidPackage should have succeeded.");
 
 			if (publishAot) {
-				Assert.Ignore ("NativeAOT and CoreCLR don't support PublishAot with satellite assemblies");
-			}
-
-			var proj = new XamarinAndroidApplicationProject {
-				IsRelease = isRelease,
-				OtherBuildItems = {
-					new BuildItem ("EmbeddedResource", "Foo.resx") {
-						TextContent = () => InlineData.ResxWithContents ("<data name=\"CancelButton\"><value>Cancel</value></data>")
-					},
-					new BuildItem ("EmbeddedResource", "Foo.es.resx") {
-						TextContent = () => InlineData.ResxWithContents ("<data name=\"CancelButton\"><value>Cancelar</value></data>")
-					}
-				}
-			};
-			proj.SetPublishAot (publishAot);
-
-			using (var b = CreateApkBuilder ()) {
-				b.Verbosity = LoggerVerbosity.Diagnostic; // Needed for --satellite switch to appear in the log
-				b.Target = "Build";
-				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
-				b.Target = "SignAndroidPackage";
-				Assert.IsTrue (b.Build (proj), "SignAndroidPackage should have succeeded.");
-
-				if (publishAot) {
-					// Best idea thus far is to assert ILC's --satellite switch
-					var regex = $"--satellite:.+{proj.ProjectName}.resources.dll";
-					StringAssertEx.ContainsRegex (regex, b.LastBuildOutput, $"Build log should contain the pattern: {regex}");
-				} else {
-					var apk = Path.Combine (Root, b.ProjectDirectory,
-						proj.OutputPath, $"{proj.PackageName}-Signed.apk");
-					var helper = new ArchiveAssemblyHelper (apk);
-					foreach (string abi in proj.GetRuntimeIdentifiersAsAbis ()) {
-						Assert.IsTrue (helper.Exists ($"assemblies/{abi}/es/{proj.ProjectName}.resources.dll"), "Apk should contain satellite assemblies!");
-					}
+				// Best idea thus far is to assert ILC's --satellite switch
+				var regex = $"--satellite:.+{proj.ProjectName}.resources.dll";
+				StringAssertEx.ContainsRegex (regex, b.LastBuildOutput, $"Build log should contain the pattern: {regex}");
+			} else {
+				var apk = Path.Combine (Root, b.ProjectDirectory,
+					proj.OutputPath, $"{proj.PackageName}-Signed.apk");
+				var helper = new ArchiveAssemblyHelper (apk);
+				foreach (string abi in proj.GetRuntimeIdentifiersAsAbis ()) {
+					Assert.IsTrue (helper.Exists ($"assemblies/{abi}/es/{proj.ProjectName}.resources.dll"), "Apk should contain satellite assemblies!");
 				}
 			}
 		}
+	}
 
-		[Test]
-		public void IgnoreManifestFromJar ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
-		{
-			const bool isRelease = true;
-			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
-				return;
-			}
+	[Test]
+	public void IgnoreManifestFromJar ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
+	{
+		const bool isRelease = true;
+		if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+			return;
+		}
 
-			string java = @"
+		string java = @"
 package com.xamarin.testing;
 
 public class Test
 {
 }
 ";
-			var path = Path.Combine (Root, "temp", TestName);
-			var javaDir = Path.Combine (path, "java", "com", "xamarin", "testing");
-			if (Directory.Exists (javaDir))
-				Directory.Delete (javaDir, true);
-			Directory.CreateDirectory (javaDir);
-			File.WriteAllText (Path.Combine (javaDir, "..", "..", "..", "AndroidManifest.xml"), @"<?xml version='1.0' ?><maniest />");
-			var lib = new XamarinAndroidBindingProject () {
-				IsRelease = isRelease,
-				AndroidClassParser = "class-parse",
-				ProjectName = "Binding1",
-			};
-			lib.MetadataXml = "<metadata></metadata>";
-			lib.Jars.Add (new AndroidItem.EmbeddedJar (Path.Combine ("java", "test.jar")) {
-				BinaryContent = new JarContentBuilder () {
-					BaseDirectory = Path.Combine (path, "java"),
-					JarFileName = "test.jar",
-					JavaSourceFileName = Path.Combine ("com", "xamarin", "testing", "Test.java"),
-					JavaSourceText = java,
-					AdditionalFileExtensions = "*.xml",
-				}.Build
-			});
-			lib.SetRuntime (runtime);
+		var path = Path.Combine (Root, "temp", TestName);
+		var javaDir = Path.Combine (path, "java", "com", "xamarin", "testing");
+		if (Directory.Exists (javaDir))
+			Directory.Delete (javaDir, true);
+		Directory.CreateDirectory (javaDir);
+		File.WriteAllText (Path.Combine (javaDir, "..", "..", "..", "AndroidManifest.xml"), @"<?xml version='1.0' ?><maniest />");
+		var lib = new XamarinAndroidBindingProject () {
+			IsRelease = isRelease,
+			AndroidClassParser = "class-parse",
+			ProjectName = "Binding1",
+		};
+		lib.MetadataXml = "<metadata></metadata>";
+		lib.Jars.Add (new AndroidItem.EmbeddedJar (Path.Combine ("java", "test.jar")) {
+			BinaryContent = new JarContentBuilder () {
+				BaseDirectory = Path.Combine (path, "java"),
+				JarFileName = "test.jar",
+				JavaSourceFileName = Path.Combine ("com", "xamarin", "testing", "Test.java"),
+				JavaSourceText = java,
+				AdditionalFileExtensions = "*.xml",
+			}.Build
+		});
+		lib.SetRuntime (runtime);
 
-			var app = new XamarinAndroidApplicationProject {
-				IsRelease = isRelease,
-			};
-			app.SetRuntime (runtime);
-			app.References.Add (new BuildItem.ProjectReference ($"..\\{lib.ProjectName}\\{lib.ProjectName}.csproj", lib.ProjectName, lib.ProjectGuid));
+		var app = new XamarinAndroidApplicationProject {
+			IsRelease = isRelease,
+		};
+		app.SetRuntime (runtime);
+		app.References.Add (new BuildItem.ProjectReference ($"..\\{lib.ProjectName}\\{lib.ProjectName}.csproj", lib.ProjectName, lib.ProjectGuid));
 
-			using (var builder = CreateDllBuilder (Path.Combine (path, lib.ProjectName))) {
-				Assert.IsTrue (builder.Build (lib), "Build of jar should have succeeded.");
-				using (var zip = ZipHelper.OpenZip (Path.Combine (path, "java", "test.jar"))) {
-					Assert.IsNotNull (zip.GetEntry ($"AndroidManifest.xml"), "Jar should contain AndroidManifest.xml");
-				}
-				using (var b = CreateApkBuilder (Path.Combine (path, app.ProjectName))) {
-					b.Verbosity = LoggerVerbosity.Detailed;
-					Assert.IsTrue (b.Build (app), "Build of jar should have succeeded.");
-					string expected = "Ignoring jar entry AndroidManifest.xml from ";
-					Assert.IsTrue (b.LastBuildOutput.ContainsText (expected), "AndroidManifest.xml from a jar should have been ignored.");
-				}
+		using (var builder = CreateDllBuilder (Path.Combine (path, lib.ProjectName))) {
+			Assert.IsTrue (builder.Build (lib), "Build of jar should have succeeded.");
+			using (var zip = ZipHelper.OpenZip (Path.Combine (path, "java", "test.jar"))) {
+				Assert.IsNotNull (zip.GetEntry ($"AndroidManifest.xml"), "Jar should contain AndroidManifest.xml");
 			}
-		}
-
-		[Test]
-		public void CheckExcludedFilesAreMissing (
-			[Values ("apk", "aab")] string packageFormat,
-			[Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
-		{
-			const bool isRelease = true;
-			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
-				return;
-			}
-			var proj = new XamarinAndroidApplicationProject () {
-				IsRelease = isRelease,
-			};
-			proj.SetRuntime (runtime);
-			proj.SetProperty ("AndroidPackageFormat", packageFormat);
-			proj.PackageReferences.Add (KnownPackages.Xamarin_Kotlin_StdLib_Common);
-			proj.PackageReferences.Add (KnownPackages.Xamarin_KotlinX_Coroutines_Android);
-			using (var b = CreateApkBuilder ()) {
+			using (var b = CreateApkBuilder (Path.Combine (path, app.ProjectName))) {
 				b.Verbosity = LoggerVerbosity.Detailed;
-				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
-				var archive = Path.Combine (Root, b.ProjectDirectory,
-					proj.OutputPath, $"{proj.PackageName}-Signed.{packageFormat}");
-				var prefix = packageFormat == "apk" ? "" : "base/root/";
-				var excludedFiles = new [] {
-					"kotlin/Error.kotlin_metadata",
-					"META-INF/proguard/coroutines.pro",
-					"META-INF/com.android.tools/r8/coroutines.pro",
-					"META-INF/com.android.tools/r8-from-1.6.0/coroutines.pro",
-				};
-				using (var zip = ZipHelper.OpenZip (archive)) {
-					foreach (var excludedFile in excludedFiles) {
-						Assert.IsTrue (b.LastBuildOutput.ContainsText ($"Ignoring jar entry '{excludedFile}'"), $"{excludedFile} should have been ignored.");
-						Assert.IsNull (zip.GetEntry (prefix + excludedFile), $"{prefix + excludedFile} should have been ignored.");
-					}
-				}
+				Assert.IsTrue (b.Build (app), "Build of jar should have succeeded.");
+				string expected = "Ignoring jar entry AndroidManifest.xml from ";
+				Assert.IsTrue (b.LastBuildOutput.ContainsText (expected), "AndroidManifest.xml from a jar should have been ignored.");
 			}
 		}
-
-		[Test]
-		public void CheckExcludedFilesCanBeModified ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
-		{
-			const bool isRelease = true;
-			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
-				return;
-			}
-			var proj = new XamarinAndroidApplicationProject () {
-				IsRelease = isRelease,
-			};
-			proj.SetRuntime (runtime);
-			proj.PackageReferences.Add (KnownPackages.Xamarin_Kotlin_StdLib_Common);
-			using (var b = CreateApkBuilder ()) {
-				b.Verbosity = LoggerVerbosity.Detailed;
-				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
-				var apk = Path.Combine (Root, b.ProjectDirectory,
-					proj.OutputPath, $"{proj.PackageName}-Signed.apk");
-				string expected = $"Ignoring jar entry 'kotlin/Error.kotlin_metadata'";
-				Assert.IsTrue (b.LastBuildOutput.ContainsText (expected), $"Error.kotlin_metadata should have been ignored.");
-				using (var zip = ZipHelper.OpenZip (apk)) {
-					Assert.IsNull (zip.GetEntry ("kotlin/Error.kotlin_metadata"), "Error.kotlin_metadata should have been ignored.");
-				}
-				proj.OtherBuildItems.Add (new BuildItem ("AndroidPackagingOptionsExclude") {
-					Remove = () => "$([MSBuild]::Escape('*.kotlin*'))",
-				});
-				Assert.IsTrue (b.Clean (proj), "Clean should have succeeded.");
-				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
-				using (var zip = ZipHelper.OpenZip (apk)) {
-					Assert.IsNotNull (zip.GetEntry ("kotlin/Error.kotlin_metadata"), "Error.kotlin_metadata should have been included.");
-				}
-			}
-		}
-
-		[Test]
-		public void CheckIncludedFilesArePresent ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
-		{
-			const bool isRelease = true;
-			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
-				return;
-			}
-			var proj = new XamarinAndroidApplicationProject () {
-				IsRelease = isRelease,
-			};
-			proj.SetRuntime (runtime);
-			proj.PackageReferences.Add (KnownPackages.Xamarin_Kotlin_Reflect);
-			using (var b = CreateApkBuilder ()) {
-				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
-				var apk = Path.Combine (Root, b.ProjectDirectory,
-					proj.OutputPath, $"{proj.PackageName}-Signed.apk");
-				using (var zip = ZipHelper.OpenZip (apk)) {
-					Assert.IsNotNull (zip.GetEntry ("kotlin/reflect/reflect.kotlin_builtins"), "reflect.kotlin_builtins should have been included.");
-				}
-			}
-		}
-
-		static IEnumerable<object[]> Get_BuildApkWithManyAssets_Data ()
-		{
-			foreach (AndroidRuntime runtime in new[] { AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT }) {
-				foreach (var assetCount in new [] { 1, 50, 512, 1024 })
-					yield return new object [] { assetCount, 1, runtime };
-				foreach (var assetSizeKb in new [] { 2, 200 })
-					yield return new object [] { 1, assetSizeKb, runtime };
-			}
-		}
-
-		[Test]
-		[TestCaseSource (nameof (Get_BuildApkWithManyAssets_Data))]
-		public void BuildApkWithManyAssets (int assetCount, int assetSizeKb, AndroidRuntime runtime)
-		{
-			const bool isRelease = false;
-			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
-				return;
-			}
-			var proj = new XamarinFormsAndroidApplicationProject {
-				IsRelease = isRelease,
-			};
-			proj.SetRuntime (runtime);
-			proj.SetProperty ("EmbedAssembliesIntoApk", "true");
-			var contents = new byte [assetSizeKb * 1024];
-			for (var i = 0; i < assetCount; i++) {
-				proj.OtherBuildItems.Add (new AndroidItem.AndroidAsset ($"Assets/asset{i}.dat") {
-					BinaryContent = () => contents,
-				});
-			}
-			using (var b = CreateApkBuilder ()) {
-				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
-			}
-		}
-
-		[Test]
-		public void ExtractNativeLibsTrue ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
-		{
-			bool isRelease = runtime == AndroidRuntime.NativeAOT;
-			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
-				return;
-			}
-
-			var proj = new XamarinAndroidApplicationProject {
-				IsRelease = isRelease,
-				// This combination produces android:extractNativeLibs="false" by default
-				SupportedOSPlatformVersion = "24",
-				ManifestMerger = "manifestmerger.jar",
-			};
-			proj.SetRuntime (runtime);
-
-			using (var b = CreateApkBuilder ()) {
-				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
-
-				// We should find extractNativeLibs="true"
-				var manifest = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath, "android", "AndroidManifest.xml");
-				AssertExtractNativeLibs (manifest, extractNativeLibs: true);
-
-				// All .so files should be compressed
-				var apk = Path.Combine (Root, b.ProjectDirectory,
-					proj.OutputPath, $"{proj.PackageName}-Signed.apk");
-				using (var zip = ZipHelper.OpenZip (apk)) {
-					foreach (var entry in zip.Entries) {
-						if (entry.FullName.EndsWith (".so", StringComparison.Ordinal)) {
-							AssertCompression (entry, compressed: true);
-						}
-					}
-				}
-			}
-		}
-
-		[Test]
-		public void DefaultItems ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
-		{
-			bool isRelease = runtime == AndroidRuntime.NativeAOT;
-			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
-				return;
-			}
-
-			void CreateEmptyFile (string path)
-			{
-				Directory.CreateDirectory (Path.GetDirectoryName (path));
-				File.WriteAllText (path, contents: "");
-			}
-
-			var proj = new XamarinAndroidApplicationProject () {
-				IsRelease = isRelease,
-				EnableDefaultItems = true,
-			};
-			proj.SetRuntime (runtime);
-
-			var builder = CreateApkBuilder ();
-			builder.Save (proj);
-			proj.ShouldPopulate = false;
-
-			// Build error -> no nested sub-directories in Resources
-			CreateEmptyFile (Path.Combine (Root, builder.ProjectDirectory, "Resources", "drawable", "foo", "bar.png"));
-			CreateEmptyFile (Path.Combine (Root, builder.ProjectDirectory, "Resources", "raw", "foo", "bar.png"));
-
-			// Build error -> no files/directories that start with .
-			CreateEmptyFile (Path.Combine (Root, builder.ProjectDirectory, "Resources", "raw", ".DS_Store"));
-			CreateEmptyFile (Path.Combine (Root, builder.ProjectDirectory, "Assets", ".DS_Store"));
-			CreateEmptyFile (Path.Combine (Root, builder.ProjectDirectory, "Assets", ".svn", "foo.txt"));
-
-			// Files that should work
-			CreateEmptyFile (Path.Combine (Root, builder.ProjectDirectory, "Resources", "raw", "foo.txt"));
-			CreateEmptyFile (Path.Combine (Root, builder.ProjectDirectory, "Assets", "foo", "bar.txt"));
-
-			Assert.IsTrue (builder.Build (proj), "`dotnet build` should succeed");
-
-			var apkPath = Path.Combine (Root, builder.ProjectDirectory, proj.OutputPath, $"{proj.PackageName}-Signed.apk");
-			FileAssert.Exists (apkPath);
-			using (var apk = ZipHelper.OpenZip (apkPath)) {
-				apk.AssertContainsEntry (apkPath, "res/raw/foo.txt");
-				apk.AssertContainsEntry (apkPath, "assets/foo/bar.txt");
-			}
-		}
-
 	}
+
+	[Test]
+	public void CheckExcludedFilesAreMissing (
+		[Values ("apk", "aab")] string packageFormat,
+		[Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
+	{
+		const bool isRelease = true;
+		if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+			return;
+		}
+		var proj = new XamarinAndroidApplicationProject () {
+			IsRelease = isRelease,
+		};
+		proj.SetRuntime (runtime);
+		proj.SetProperty ("AndroidPackageFormat", packageFormat);
+		proj.PackageReferences.Add (KnownPackages.Xamarin_Kotlin_StdLib_Common);
+		proj.PackageReferences.Add (KnownPackages.Xamarin_KotlinX_Coroutines_Android);
+		using (var b = CreateApkBuilder ()) {
+			b.Verbosity = LoggerVerbosity.Detailed;
+			Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
+			var archive = Path.Combine (Root, b.ProjectDirectory,
+				proj.OutputPath, $"{proj.PackageName}-Signed.{packageFormat}");
+			var prefix = packageFormat == "apk" ? "" : "base/root/";
+			var excludedFiles = new [] {
+				"kotlin/Error.kotlin_metadata",
+				"META-INF/proguard/coroutines.pro",
+				"META-INF/com.android.tools/r8/coroutines.pro",
+				"META-INF/com.android.tools/r8-from-1.6.0/coroutines.pro",
+			};
+			using (var zip = ZipHelper.OpenZip (archive)) {
+				foreach (var excludedFile in excludedFiles) {
+					Assert.IsTrue (b.LastBuildOutput.ContainsText ($"Ignoring jar entry '{excludedFile}'"), $"{excludedFile} should have been ignored.");
+					Assert.IsNull (zip.GetEntry (prefix + excludedFile), $"{prefix + excludedFile} should have been ignored.");
+				}
+			}
+		}
+	}
+
+	[Test]
+	public void CheckExcludedFilesCanBeModified ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
+	{
+		const bool isRelease = true;
+		if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+			return;
+		}
+		var proj = new XamarinAndroidApplicationProject () {
+			IsRelease = isRelease,
+		};
+		proj.SetRuntime (runtime);
+		proj.PackageReferences.Add (KnownPackages.Xamarin_Kotlin_StdLib_Common);
+		using (var b = CreateApkBuilder ()) {
+			b.Verbosity = LoggerVerbosity.Detailed;
+			Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
+			var apk = Path.Combine (Root, b.ProjectDirectory,
+				proj.OutputPath, $"{proj.PackageName}-Signed.apk");
+			string expected = $"Ignoring jar entry 'kotlin/Error.kotlin_metadata'";
+			Assert.IsTrue (b.LastBuildOutput.ContainsText (expected), $"Error.kotlin_metadata should have been ignored.");
+			using (var zip = ZipHelper.OpenZip (apk)) {
+				Assert.IsNull (zip.GetEntry ("kotlin/Error.kotlin_metadata"), "Error.kotlin_metadata should have been ignored.");
+			}
+			proj.OtherBuildItems.Add (new BuildItem ("AndroidPackagingOptionsExclude") {
+				Remove = () => "$([MSBuild]::Escape('*.kotlin*'))",
+			});
+			Assert.IsTrue (b.Clean (proj), "Clean should have succeeded.");
+			Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
+			using (var zip = ZipHelper.OpenZip (apk)) {
+				Assert.IsNotNull (zip.GetEntry ("kotlin/Error.kotlin_metadata"), "Error.kotlin_metadata should have been included.");
+			}
+		}
+	}
+
+	[Test]
+	public void CheckIncludedFilesArePresent ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
+	{
+		const bool isRelease = true;
+		if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+			return;
+		}
+		var proj = new XamarinAndroidApplicationProject () {
+			IsRelease = isRelease,
+		};
+		proj.SetRuntime (runtime);
+		proj.PackageReferences.Add (KnownPackages.Xamarin_Kotlin_Reflect);
+		using (var b = CreateApkBuilder ()) {
+			Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
+			var apk = Path.Combine (Root, b.ProjectDirectory,
+				proj.OutputPath, $"{proj.PackageName}-Signed.apk");
+			using (var zip = ZipHelper.OpenZip (apk)) {
+				Assert.IsNotNull (zip.GetEntry ("kotlin/reflect/reflect.kotlin_builtins"), "reflect.kotlin_builtins should have been included.");
+			}
+		}
+	}
+
+	static IEnumerable<object[]> Get_BuildApkWithManyAssets_Data ()
+	{
+		foreach (AndroidRuntime runtime in new[] { AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT }) {
+			foreach (var assetCount in new [] { 1, 50, 512, 1024 })
+				yield return new object [] { assetCount, 1, runtime };
+			foreach (var assetSizeKb in new [] { 2, 200 })
+				yield return new object [] { 1, assetSizeKb, runtime };
+		}
+	}
+
+	[Test]
+	[TestCaseSource (nameof (Get_BuildApkWithManyAssets_Data))]
+	public void BuildApkWithManyAssets (int assetCount, int assetSizeKb, AndroidRuntime runtime)
+	{
+		const bool isRelease = false;
+		if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+			return;
+		}
+		var proj = new XamarinFormsAndroidApplicationProject {
+			IsRelease = isRelease,
+		};
+		proj.SetRuntime (runtime);
+		proj.SetProperty ("EmbedAssembliesIntoApk", "true");
+		var contents = new byte [assetSizeKb * 1024];
+		for (var i = 0; i < assetCount; i++) {
+			proj.OtherBuildItems.Add (new AndroidItem.AndroidAsset ($"Assets/asset{i}.dat") {
+				BinaryContent = () => contents,
+			});
+		}
+		using (var b = CreateApkBuilder ()) {
+			Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
+		}
+	}
+
+	[Test]
+	public void ExtractNativeLibsTrue ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
+	{
+		bool isRelease = runtime == AndroidRuntime.NativeAOT;
+		if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+			return;
+		}
+
+		var proj = new XamarinAndroidApplicationProject {
+			IsRelease = isRelease,
+			// This combination produces android:extractNativeLibs="false" by default
+			SupportedOSPlatformVersion = "24",
+			ManifestMerger = "manifestmerger.jar",
+		};
+		proj.SetRuntime (runtime);
+
+		using (var b = CreateApkBuilder ()) {
+			Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
+
+			// We should find extractNativeLibs="true"
+			var manifest = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath, "android", "AndroidManifest.xml");
+			AssertExtractNativeLibs (manifest, extractNativeLibs: true);
+
+			// All .so files should be compressed
+			var apk = Path.Combine (Root, b.ProjectDirectory,
+				proj.OutputPath, $"{proj.PackageName}-Signed.apk");
+			using (var zip = ZipHelper.OpenZip (apk)) {
+				foreach (var entry in zip.Entries) {
+					if (entry.FullName.EndsWith (".so", StringComparison.Ordinal)) {
+						AssertCompression (entry, compressed: true);
+					}
+				}
+			}
+		}
+	}
+
+	[Test]
+	public void DefaultItems ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
+	{
+		bool isRelease = runtime == AndroidRuntime.NativeAOT;
+		if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+			return;
+		}
+
+		void CreateEmptyFile (string path)
+		{
+			Directory.CreateDirectory (Path.GetDirectoryName (path));
+			File.WriteAllText (path, contents: "");
+		}
+
+		var proj = new XamarinAndroidApplicationProject () {
+			IsRelease = isRelease,
+			EnableDefaultItems = true,
+		};
+		proj.SetRuntime (runtime);
+
+		var builder = CreateApkBuilder ();
+		builder.Save (proj);
+		proj.ShouldPopulate = false;
+
+		// Build error -> no nested sub-directories in Resources
+		CreateEmptyFile (Path.Combine (Root, builder.ProjectDirectory, "Resources", "drawable", "foo", "bar.png"));
+		CreateEmptyFile (Path.Combine (Root, builder.ProjectDirectory, "Resources", "raw", "foo", "bar.png"));
+
+		// Build error -> no files/directories that start with .
+		CreateEmptyFile (Path.Combine (Root, builder.ProjectDirectory, "Resources", "raw", ".DS_Store"));
+		CreateEmptyFile (Path.Combine (Root, builder.ProjectDirectory, "Assets", ".DS_Store"));
+		CreateEmptyFile (Path.Combine (Root, builder.ProjectDirectory, "Assets", ".svn", "foo.txt"));
+
+		// Files that should work
+		CreateEmptyFile (Path.Combine (Root, builder.ProjectDirectory, "Resources", "raw", "foo.txt"));
+		CreateEmptyFile (Path.Combine (Root, builder.ProjectDirectory, "Assets", "foo", "bar.txt"));
+
+		Assert.IsTrue (builder.Build (proj), "`dotnet build` should succeed");
+
+		var apkPath = Path.Combine (Root, builder.ProjectDirectory, proj.OutputPath, $"{proj.PackageName}-Signed.apk");
+		FileAssert.Exists (apkPath);
+		using (var apk = ZipHelper.OpenZip (apkPath)) {
+			apk.AssertContainsEntry (apkPath, "res/raw/foo.txt");
+			apk.AssertContainsEntry (apkPath, "assets/foo/bar.txt");
+		}
+	}
+
 }

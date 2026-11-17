@@ -5,8 +5,8 @@ using MonoDroid.Generation;
 using NUnit.Framework;
 using Xamarin.Android.Binder;
 
-namespace generatortests
-{
+namespace generatortests;
+
 	[TestFixture]
 	public class CodeGenerationOptionsTests
 	{
@@ -128,4 +128,3 @@ namespace generatortests
 		private static IEnumerable<TestCaseData> ReservedKeywords
 			=> TypeNameUtilities.reserved_keywords.Select (keyword => new TestCaseData (keyword));
 	}
-}

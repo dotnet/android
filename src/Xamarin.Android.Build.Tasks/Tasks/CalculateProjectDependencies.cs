@@ -8,8 +8,8 @@ using Microsoft.Build.Utilities;
 using Xamarin.Android.Tools;
 using Microsoft.Android.Build.Tasks;
 
-namespace Xamarin.Android.Tasks
-{
+namespace Xamarin.Android.Tasks;
+
 	public class CalculateProjectDependencies : AndroidTask
 	{
 		public override string TaskPrefix => "CPD";
@@ -95,4 +95,3 @@ namespace Xamarin.Android.Tasks
 			return !Log.HasLoggedErrors;
 		}
 	}
-}

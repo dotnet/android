@@ -4,8 +4,8 @@ using System;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.Serialization;
 
-namespace Java.Interop
-{
+namespace Java.Interop;
+
 	[JniTypeSignature ("java/lang/Object", GenerateJavaPeer=false)]
 	[Serializable]
 	public partial class JavaObject : IJavaPeerable
@@ -196,4 +196,3 @@ namespace Java.Interop
 		// SAFETY: Return only the address; this getter neither dereferences it nor extends the block's lifetime.
 		IntPtr IJavaPeerable.JniObjectReferenceControlBlock => unsafe ((IntPtr) jniObjectReferenceControlBlock);
 	}
-}

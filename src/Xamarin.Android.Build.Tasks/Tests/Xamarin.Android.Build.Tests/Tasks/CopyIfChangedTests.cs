@@ -7,247 +7,246 @@ using Microsoft.Build.Framework;
 using Xamarin.Android.Tasks;
 using Microsoft.Build.Utilities;
 
-namespace Xamarin.Android.Build.Tests
+namespace Xamarin.Android.Build.Tests;
+
+[TestFixture]
+public class CopyIfChangedTests
 {
-	[TestFixture]
-	public class CopyIfChangedTests
+	string tempDirectory;
+
+	[SetUp]
+	public void Setup ()
 	{
-		string tempDirectory;
+		tempDirectory = Path.Combine (Path.GetTempPath (), Path.GetRandomFileName ());
+	}
 
-		[SetUp]
-		public void Setup ()
-		{
-			tempDirectory = Path.Combine (Path.GetTempPath (), Path.GetRandomFileName ());
+	[TearDown]
+	public void TearDown ()
+	{
+		Directory.Delete (tempDirectory, recursive: true);
+	}
+
+	string NewFile (string contents = null, string fileName = "")
+	{
+		if (string.IsNullOrEmpty (fileName)) {
+			fileName = Path.GetRandomFileName ();
 		}
-
-		[TearDown]
-		public void TearDown ()
-		{
-			Directory.Delete (tempDirectory, recursive: true);
+		var path = Path.Combine (tempDirectory, fileName);
+		if (!string.IsNullOrEmpty (contents)) {
+			Directory.CreateDirectory (Path.GetDirectoryName (path));
+			File.WriteAllText (path, contents);
 		}
+		return path;
+	}
 
-		string NewFile (string contents = null, string fileName = "")
-		{
-			if (string.IsNullOrEmpty (fileName)) {
-				fileName = Path.GetRandomFileName ();
-			}
-			var path = Path.Combine (tempDirectory, fileName);
-			if (!string.IsNullOrEmpty (contents)) {
-				Directory.CreateDirectory (Path.GetDirectoryName (path));
-				File.WriteAllText (path, contents);
-			}
-			return path;
-		}
+	ITaskItem [] ToArray (string path)
+	{
+		return new [] { new TaskItem (path) };
+	}
 
-		ITaskItem [] ToArray (string path)
-		{
-			return new [] { new TaskItem (path) };
-		}
+	[Test]
+	public void DestinationNoExist ()
+	{
+		var src = NewFile ("foo");
+		var dest = NewFile ();
+		var messages = new List<BuildMessageEventArgs> ();
 
-		[Test]
-		public void DestinationNoExist ()
-		{
-			var src = NewFile ("foo");
-			var dest = NewFile ();
-			var messages = new List<BuildMessageEventArgs> ();
+		var task = new CopyIfChanged {
+			BuildEngine = new MockBuildEngine (TestContext.Out, messages: messages),
+			SourceFiles = ToArray (src),
+			DestinationFiles = ToArray (dest),
+		};
+		Assert.IsTrue (task.Execute (), "task.Execute() should have succeeded.");
+		Assert.AreEqual (1, task.ModifiedFiles.Length, "Changes should have been made.");
+		Assert.AreEqual (dest, task.ModifiedFiles [0].ItemSpec);
+		Assert.IsEmpty (messages, "ModifiedFiles should not be dumped to the log.");
+		FileAssert.AreEqual (src, dest);
+	}
 
-			var task = new CopyIfChanged {
-				BuildEngine = new MockBuildEngine (TestContext.Out, messages: messages),
-				SourceFiles = ToArray (src),
-				DestinationFiles = ToArray (dest),
-			};
-			Assert.IsTrue (task.Execute (), "task.Execute() should have succeeded.");
-			Assert.AreEqual (1, task.ModifiedFiles.Length, "Changes should have been made.");
+	[Test]
+	public void NoChange ()
+	{
+		var src = NewFile ("foo");
+		var dest = NewFile ("foo");
+		var now = DateTime.UtcNow;
+		File.SetLastWriteTimeUtc (src, now);
+		File.SetLastWriteTimeUtc (dest, now);
+		var messages = new List<BuildMessageEventArgs> ();
+
+		var task = new CopyIfChanged {
+			BuildEngine = new MockBuildEngine (TestContext.Out, messages: messages),
+			SourceFiles = ToArray (src),
+			DestinationFiles = ToArray (dest),
+		};
+		Assert.IsTrue (task.Execute (), "task.Execute() should have succeeded.");
+		Assert.AreEqual (0, task.ModifiedFiles.Length, "No changes should have been made.");
+		Assert.IsTrue (messages.Any (m => m.Message.Contains ("it was not changed.")));
+		Assert.IsFalse (messages.Any (m => m.Message == " ModifiedFiles:"));
+	}
+
+	[Test]
+	public void DestinationOlder ()
+	{
+		var src = NewFile ("foo");
+		var dest = NewFile ("bar");
+		var now = DateTime.UtcNow;
+		File.SetLastWriteTimeUtc (src, now);
+		File.SetLastWriteTimeUtc (dest, now.AddSeconds (-1)); // destination is older
+
+		var task = new CopyIfChanged {
+			BuildEngine = new MockBuildEngine (TestContext.Out),
+			SourceFiles = ToArray (src),
+			DestinationFiles = ToArray (dest),
+		};
+		Assert.IsTrue (task.Execute (), "task.Execute() should have succeeded.");
+		Assert.AreEqual (1, task.ModifiedFiles.Length, "Changes should have been made.");
+		FileAssert.AreEqual (src, dest);
+	}
+
+	[Test]
+	public void DestinationOlderNoLengthCheck ()
+	{
+		var src = NewFile ("foo");
+		var dest = NewFile ("bar");
+		var now = DateTime.UtcNow;
+		File.SetLastWriteTimeUtc (src, now);
+		File.SetLastWriteTimeUtc (dest, now.AddSeconds (-1)); // destination is older
+
+		var task = new CopyIfChanged {
+			BuildEngine = new MockBuildEngine (TestContext.Out),
+			SourceFiles = ToArray (src),
+			DestinationFiles = ToArray (dest),
+			CompareFileLengths = false,
+		};
+		Assert.IsTrue (task.Execute (), "task.Execute() should have succeeded.");
+		Assert.AreEqual (1, task.ModifiedFiles.Length, "Changes should have been made.");
+		FileAssert.AreEqual (src, dest);
+	}
+
+	[Test]
+	public void SourceOlder ()
+	{
+		var src = NewFile ("foo");
+		var dest = NewFile ("foo");
+		var now = DateTime.UtcNow;
+		File.SetLastWriteTimeUtc (src, now.AddSeconds (-1)); // source is older
+		File.SetLastWriteTimeUtc (dest, now);
+
+		var task = new CopyIfChanged {
+			BuildEngine = new MockBuildEngine (TestContext.Out),
+			SourceFiles = ToArray (src),
+			DestinationFiles = ToArray (dest),
+		};
+		Assert.IsTrue (task.Execute (), "task.Execute() should have succeeded.");
+		Assert.AreEqual (0, task.ModifiedFiles.Length, "No changes should have been made.");
+	}
+
+	[Test]
+	public void SourceOlderSameLengthDifferentContent ()
+	{
+		var src = NewFile ("foo");
+		var dest = NewFile ("bar");
+		File.SetLastWriteTimeUtc (src, new DateTime (2020, 1, 1, 0, 0, 0, DateTimeKind.Utc));
+		File.SetLastWriteTimeUtc (dest, new DateTime (2020, 1, 2, 0, 0, 0, DateTimeKind.Utc));
+		var timestamp = File.GetLastWriteTimeUtc (dest);
+
+		var task = new CopyIfChanged {
+			BuildEngine = new MockBuildEngine (TestContext.Out),
+			SourceFiles = ToArray (src),
+			DestinationFiles = ToArray (dest),
+		};
+		Assert.IsTrue (task.Execute (), "task.Execute() should have succeeded.");
+		Assert.IsEmpty (task.ModifiedFiles, "The default should trust the newer destination timestamp.");
+		Assert.AreEqual ("bar", File.ReadAllText (dest));
+		Assert.AreEqual (timestamp, File.GetLastWriteTimeUtc (dest));
+	}
+
+	[TestCase ("bar", true)]
+	[TestCase ("foo", false)]
+	public void VerifyContentWithNewerDestination (string destinationContent, bool expectCopy)
+	{
+		var src = NewFile ("foo");
+		var dest = NewFile (destinationContent);
+		File.SetLastWriteTimeUtc (src, new DateTime (2020, 1, 1, 0, 0, 0, DateTimeKind.Utc));
+		File.SetLastWriteTimeUtc (dest, new DateTime (2020, 1, 2, 0, 0, 0, DateTimeKind.Utc));
+		var timestamp = File.GetLastWriteTimeUtc (dest);
+
+		var task = new CopyIfChanged {
+			BuildEngine = new MockBuildEngine (TestContext.Out),
+			SourceFiles = ToArray (src),
+			DestinationFiles = ToArray (dest),
+			VerifyContent = true,
+		};
+		Assert.IsTrue (task.Execute (), "task.Execute() should have succeeded.");
+		FileAssert.AreEqual (src, dest);
+		if (expectCopy) {
+			Assert.AreEqual (1, task.ModifiedFiles.Length, "Different content should be copied despite the newer destination timestamp.");
 			Assert.AreEqual (dest, task.ModifiedFiles [0].ItemSpec);
-			Assert.IsEmpty (messages, "ModifiedFiles should not be dumped to the log.");
-			FileAssert.AreEqual (src, dest);
-		}
-
-		[Test]
-		public void NoChange ()
-		{
-			var src = NewFile ("foo");
-			var dest = NewFile ("foo");
-			var now = DateTime.UtcNow;
-			File.SetLastWriteTimeUtc (src, now);
-			File.SetLastWriteTimeUtc (dest, now);
-			var messages = new List<BuildMessageEventArgs> ();
-
-			var task = new CopyIfChanged {
-				BuildEngine = new MockBuildEngine (TestContext.Out, messages: messages),
-				SourceFiles = ToArray (src),
-				DestinationFiles = ToArray (dest),
-			};
-			Assert.IsTrue (task.Execute (), "task.Execute() should have succeeded.");
-			Assert.AreEqual (0, task.ModifiedFiles.Length, "No changes should have been made.");
-			Assert.IsTrue (messages.Any (m => m.Message.Contains ("it was not changed.")));
-			Assert.IsFalse (messages.Any (m => m.Message == " ModifiedFiles:"));
-		}
-
-		[Test]
-		public void DestinationOlder ()
-		{
-			var src = NewFile ("foo");
-			var dest = NewFile ("bar");
-			var now = DateTime.UtcNow;
-			File.SetLastWriteTimeUtc (src, now);
-			File.SetLastWriteTimeUtc (dest, now.AddSeconds (-1)); // destination is older
-
-			var task = new CopyIfChanged {
-				BuildEngine = new MockBuildEngine (TestContext.Out),
-				SourceFiles = ToArray (src),
-				DestinationFiles = ToArray (dest),
-			};
-			Assert.IsTrue (task.Execute (), "task.Execute() should have succeeded.");
-			Assert.AreEqual (1, task.ModifiedFiles.Length, "Changes should have been made.");
-			FileAssert.AreEqual (src, dest);
-		}
-
-		[Test]
-		public void DestinationOlderNoLengthCheck ()
-		{
-			var src = NewFile ("foo");
-			var dest = NewFile ("bar");
-			var now = DateTime.UtcNow;
-			File.SetLastWriteTimeUtc (src, now);
-			File.SetLastWriteTimeUtc (dest, now.AddSeconds (-1)); // destination is older
-
-			var task = new CopyIfChanged {
-				BuildEngine = new MockBuildEngine (TestContext.Out),
-				SourceFiles = ToArray (src),
-				DestinationFiles = ToArray (dest),
-				CompareFileLengths = false,
-			};
-			Assert.IsTrue (task.Execute (), "task.Execute() should have succeeded.");
-			Assert.AreEqual (1, task.ModifiedFiles.Length, "Changes should have been made.");
-			FileAssert.AreEqual (src, dest);
-		}
-
-		[Test]
-		public void SourceOlder ()
-		{
-			var src = NewFile ("foo");
-			var dest = NewFile ("foo");
-			var now = DateTime.UtcNow;
-			File.SetLastWriteTimeUtc (src, now.AddSeconds (-1)); // source is older
-			File.SetLastWriteTimeUtc (dest, now);
-
-			var task = new CopyIfChanged {
-				BuildEngine = new MockBuildEngine (TestContext.Out),
-				SourceFiles = ToArray (src),
-				DestinationFiles = ToArray (dest),
-			};
-			Assert.IsTrue (task.Execute (), "task.Execute() should have succeeded.");
-			Assert.AreEqual (0, task.ModifiedFiles.Length, "No changes should have been made.");
-		}
-
-		[Test]
-		public void SourceOlderSameLengthDifferentContent ()
-		{
-			var src = NewFile ("foo");
-			var dest = NewFile ("bar");
-			File.SetLastWriteTimeUtc (src, new DateTime (2020, 1, 1, 0, 0, 0, DateTimeKind.Utc));
-			File.SetLastWriteTimeUtc (dest, new DateTime (2020, 1, 2, 0, 0, 0, DateTimeKind.Utc));
-			var timestamp = File.GetLastWriteTimeUtc (dest);
-
-			var task = new CopyIfChanged {
-				BuildEngine = new MockBuildEngine (TestContext.Out),
-				SourceFiles = ToArray (src),
-				DestinationFiles = ToArray (dest),
-			};
-			Assert.IsTrue (task.Execute (), "task.Execute() should have succeeded.");
-			Assert.IsEmpty (task.ModifiedFiles, "The default should trust the newer destination timestamp.");
-			Assert.AreEqual ("bar", File.ReadAllText (dest));
+		} else {
+			Assert.IsEmpty (task.ModifiedFiles, "Identical content should not be copied.");
 			Assert.AreEqual (timestamp, File.GetLastWriteTimeUtc (dest));
 		}
+	}
 
-		[TestCase ("bar", true)]
-		[TestCase ("foo", false)]
-		public void VerifyContentWithNewerDestination (string destinationContent, bool expectCopy)
-		{
-			var src = NewFile ("foo");
-			var dest = NewFile (destinationContent);
-			File.SetLastWriteTimeUtc (src, new DateTime (2020, 1, 1, 0, 0, 0, DateTimeKind.Utc));
-			File.SetLastWriteTimeUtc (dest, new DateTime (2020, 1, 2, 0, 0, 0, DateTimeKind.Utc));
-			var timestamp = File.GetLastWriteTimeUtc (dest);
+	[Test]
+	public void SourceOlderDifferentLength ()
+	{
+		var src = NewFile ("foo");
+		var dest = NewFile ("foofoo");
+		var now = DateTime.UtcNow;
+		File.SetLastWriteTimeUtc (src, now.AddSeconds (-1)); // source is older
+		File.SetLastWriteTimeUtc (dest, now);
 
-			var task = new CopyIfChanged {
-				BuildEngine = new MockBuildEngine (TestContext.Out),
-				SourceFiles = ToArray (src),
-				DestinationFiles = ToArray (dest),
-				VerifyContent = true,
-			};
-			Assert.IsTrue (task.Execute (), "task.Execute() should have succeeded.");
-			FileAssert.AreEqual (src, dest);
-			if (expectCopy) {
-				Assert.AreEqual (1, task.ModifiedFiles.Length, "Different content should be copied despite the newer destination timestamp.");
-				Assert.AreEqual (dest, task.ModifiedFiles [0].ItemSpec);
-			} else {
-				Assert.IsEmpty (task.ModifiedFiles, "Identical content should not be copied.");
-				Assert.AreEqual (timestamp, File.GetLastWriteTimeUtc (dest));
-			}
-		}
+		var task = new CopyIfChanged {
+			BuildEngine = new MockBuildEngine (TestContext.Out),
+			SourceFiles = ToArray (src),
+			DestinationFiles = ToArray (dest),
+		};
+		Assert.IsTrue (task.Execute (), "task.Execute() should have succeeded.");
+		Assert.AreEqual (1, task.ModifiedFiles.Length, "Changes should have been made.");
+		FileAssert.AreEqual (src, dest);
+	}
 
-		[Test]
-		public void SourceOlderDifferentLength ()
-		{
-			var src = NewFile ("foo");
-			var dest = NewFile ("foofoo");
-			var now = DateTime.UtcNow;
-			File.SetLastWriteTimeUtc (src, now.AddSeconds (-1)); // source is older
-			File.SetLastWriteTimeUtc (dest, now);
+	[Test]
+	public void SourceOlderDifferentLengthButNoLengthCheck ()
+	{
+		var src = NewFile ("foo");
+		var dest = NewFile ("foofoo");
+		var now = DateTime.UtcNow;
+		File.SetLastWriteTimeUtc (src, now.AddSeconds (-1)); // source is older
+		File.SetLastWriteTimeUtc (dest, now);
 
-			var task = new CopyIfChanged {
-				BuildEngine = new MockBuildEngine (TestContext.Out),
-				SourceFiles = ToArray (src),
-				DestinationFiles = ToArray (dest),
-			};
-			Assert.IsTrue (task.Execute (), "task.Execute() should have succeeded.");
-			Assert.AreEqual (1, task.ModifiedFiles.Length, "Changes should have been made.");
-			FileAssert.AreEqual (src, dest);
-		}
+		var task = new CopyIfChanged {
+			BuildEngine = new MockBuildEngine (TestContext.Out),
+			SourceFiles = ToArray (src),
+			DestinationFiles = ToArray (dest),
+			CompareFileLengths = false,
+		};
+		Assert.IsTrue (task.Execute (), "task.Execute() should have succeeded.");
+		Assert.AreEqual (0, task.ModifiedFiles.Length, "Changes should not have been made.");
+		FileAssert.AreNotEqual (src, dest);
+	}
 
-		[Test]
-		public void SourceOlderDifferentLengthButNoLengthCheck ()
-		{
-			var src = NewFile ("foo");
-			var dest = NewFile ("foofoo");
-			var now = DateTime.UtcNow;
-			File.SetLastWriteTimeUtc (src, now.AddSeconds (-1)); // source is older
-			File.SetLastWriteTimeUtc (dest, now);
+	[Test]
+	public void CaseChanges ()
+	{
+		var src = NewFile (contents: "Foo");
+		var dest = NewFile (contents: "foo", fileName: "foo");
+		var now = DateTime.UtcNow;
+		File.SetLastWriteTimeUtc (src, now);
+		File.SetLastWriteTimeUtc (dest, now.AddSeconds (-1)); // destination is older
 
-			var task = new CopyIfChanged {
-				BuildEngine = new MockBuildEngine (TestContext.Out),
-				SourceFiles = ToArray (src),
-				DestinationFiles = ToArray (dest),
-				CompareFileLengths = false,
-			};
-			Assert.IsTrue (task.Execute (), "task.Execute() should have succeeded.");
-			Assert.AreEqual (0, task.ModifiedFiles.Length, "Changes should not have been made.");
-			FileAssert.AreNotEqual (src, dest);
-		}
+		dest = dest.Replace ("foo", "Foo");
+		var task = new CopyIfChanged {
+			BuildEngine = new MockBuildEngine (TestContext.Out),
+			SourceFiles = ToArray (src),
+			DestinationFiles = ToArray (dest),
+		};
+		Assert.IsTrue (task.Execute (), "task.Execute() should have succeeded.");
+		Assert.AreEqual (1, task.ModifiedFiles.Length, "Changes should have been made.");
+		FileAssert.AreEqual (src, dest);
 
-		[Test]
-		public void CaseChanges ()
-		{
-			var src = NewFile (contents: "Foo");
-			var dest = NewFile (contents: "foo", fileName: "foo");
-			var now = DateTime.UtcNow;
-			File.SetLastWriteTimeUtc (src, now);
-			File.SetLastWriteTimeUtc (dest, now.AddSeconds (-1)); // destination is older
-
-			dest = dest.Replace ("foo", "Foo");
-			var task = new CopyIfChanged {
-				BuildEngine = new MockBuildEngine (TestContext.Out),
-				SourceFiles = ToArray (src),
-				DestinationFiles = ToArray (dest),
-			};
-			Assert.IsTrue (task.Execute (), "task.Execute() should have succeeded.");
-			Assert.AreEqual (1, task.ModifiedFiles.Length, "Changes should have been made.");
-			FileAssert.AreEqual (src, dest);
-
-			var files = Directory.GetFiles (Path.GetDirectoryName (dest), "Foo");
-			Assert.AreEqual ("Foo", Path.GetFileName (files [0]), "File name should match");
-		}
+		var files = Directory.GetFiles (Path.GetDirectoryName (dest), "Foo");
+		Assert.AreEqual ("Foo", Path.GetFileName (files [0]), "File name should match");
 	}
 }

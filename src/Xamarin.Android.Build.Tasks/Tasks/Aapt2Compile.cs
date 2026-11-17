@@ -16,7 +16,7 @@ using System.Collections.Generic;
 using Xamarin.Android.Tools;
 using Microsoft.Android.Build.Tasks;
 
-namespace Xamarin.Android.Tasks {
+namespace Xamarin.Android.Tasks; 
 
 	public class Aapt2Compile : Aapt2 {
 		public override string TaskPrefix => "A2C";
@@ -149,4 +149,3 @@ namespace Xamarin.Android.Tasks {
 		}
 
 	}
-}

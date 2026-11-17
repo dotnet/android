@@ -1,8 +1,8 @@
 using System;
 using Android.Content;
 
-namespace Android.Telecom
-{
+namespace Android.Telecom;
+
 	public abstract partial class InCallService : Android.App.Service
 	{
 #if ANDROID_23
@@ -17,5 +17,4 @@ namespace Android.Telecom
 		}
 #endif
 	}
-}
 

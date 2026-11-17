@@ -5,7 +5,7 @@ using Android.AccessibilityServices;
 using Android.OS;
 using Android.Runtime;
 
-namespace Android.Views {
+namespace Android.Views; 
 
 #if ANDROID_11 && !ANDROID_14
 	public enum SystemUiFlags {
@@ -114,4 +114,3 @@ namespace Android.Views {
 		}
 #endif
 	}
-}

@@ -13,1123 +13,1122 @@ using Java.Interop;
 
 using NUnit.Framework;
 
-namespace Java.InteropTests
+namespace Java.InteropTests;
+
+[TestFixture]
+[Category ("GeneratedJniDebuggerBoundary")]
+public class ConstructorActivationTests
 {
-	[TestFixture]
-	[Category ("GeneratedJniDebuggerBoundary")]
-	public class ConstructorActivationTests
+	[Test]
+	public void JavaSideDefaultConstructorRunsOnceAndRegistersPeer ()
 	{
-		[Test]
-		public void JavaSideDefaultConstructorRunsOnceAndRegistersPeer ()
-		{
-			ConstructorActivationDefault.Reset ();
+		ConstructorActivationDefault.Reset ();
 
-			using (var instance = CreateFromJava<ConstructorActivationDefault> ("()V")) {
-				Assert.IsNotNull (instance);
-				Assert.AreEqual (1, ConstructorActivationDefault.ConstructorInvocations);
-				Assert.AreEqual (1, instance.ConstructorOrdinal);
-				AssertRegisteredSame (instance);
-			}
+		using (var instance = CreateFromJava<ConstructorActivationDefault> ("()V")) {
+			Assert.IsNotNull (instance);
+			Assert.AreEqual (1, ConstructorActivationDefault.ConstructorInvocations);
+			Assert.AreEqual (1, instance.ConstructorOrdinal);
+			AssertRegisteredSame (instance);
+		}
+	}
+
+	[Test]
+	[Category ("ManagedConstruction")]
+	[Category ("JniUtf8Construction")]
+	public void JavaSideExceptionConstructorCapturesStackFromPreinstalledPeer ()
+	{
+		ConstructorActivationJavaException.Reset ();
+
+		// SAFETY: AllocObject allocates a real current-thread local reference.
+		// Keep it through peer assertions/disposal; finally deletes it even if initialization throws.
+		var handle = JNIEnv.AllocObject (typeof (ConstructorActivationJavaException));
+		try {
+			JNIEnv.FinishCreateInstance (handle, "()V"u8);
+			var reference = new JniObjectReference (handle);
+			using var instance = JniEnvironment.Runtime.ValueManager.PeekPeer (reference) as ConstructorActivationJavaException;
+			Assert.IsNotNull (instance, "Java construction must activate and register the managed constructor.");
+			if (instance == null)
+				throw new InvalidOperationException ("The Java constructor did not register its managed peer.");
+
+			Assert.AreEqual (1, ConstructorActivationJavaException.ConstructorInvocations);
+			Assert.AreEqual (0, ConstructorActivationJavaException.ActivationConstructorInvocations);
+			Assert.IsTrue (JniEnvironment.Types.IsSameObject (reference, instance.PeerReference));
+			Assert.AreEqual (JniObjectReferenceType.Global, instance.PeerReference.Type);
+			Assert.IsNotEmpty (instance.StackAtConstruction, "The base constructor must capture the preinstalled peer's stack.");
+			StringAssert.Contains (ConstructorActivationJavaException.JavaName.Replace ('/', '.'), instance.JavaStackTrace);
+			Assert.AreEqual (instance.StackAtConstruction, instance.JavaStackTrace);
+		} finally {
+			JNIEnv.DeleteLocalRef (handle);
+		}
+	}
+
+	[Test]
+	[Category ("UnicodeJavaIdentifiers")]
+	public void JavaSideUnicodeIdentifierConstructorsRunAndRegisterPeers ()
+	{
+		UnicodeLetterIdentifierPeer.Reset ();
+		using (var instance = CreateFromJava<UnicodeLetterIdentifierPeer> ("()V")) {
+			Assert.AreEqual (1, UnicodeLetterIdentifierPeer.ConstructorInvocations);
+			Assert.AreEqual ("com/\u00e9xample/\u0394elta", JNIEnv.GetClassNameFromInstance (instance.Handle));
+			AssertRegisteredSame (instance);
 		}
 
-		[Test]
-		[Category ("ManagedConstruction")]
-		[Category ("JniUtf8Construction")]
-		public void JavaSideExceptionConstructorCapturesStackFromPreinstalledPeer ()
-		{
-			ConstructorActivationJavaException.Reset ();
+	}
 
-			// SAFETY: AllocObject allocates a real current-thread local reference.
-			// Keep it through peer assertions/disposal; finally deletes it even if initialization throws.
-			var handle = JNIEnv.AllocObject (typeof (ConstructorActivationJavaException));
-			try {
-				JNIEnv.FinishCreateInstance (handle, "()V"u8);
-				var reference = new JniObjectReference (handle);
-				using var instance = JniEnvironment.Runtime.ValueManager.PeekPeer (reference) as ConstructorActivationJavaException;
-				Assert.IsNotNull (instance, "Java construction must activate and register the managed constructor.");
-				if (instance == null)
-					throw new InvalidOperationException ("The Java constructor did not register its managed peer.");
+	[Test]
+	public void ManagedConstructionDoesNotReenterThroughJavaConstructorActivation ()
+	{
+		ConstructorActivationDefault.Reset ();
 
-				Assert.AreEqual (1, ConstructorActivationJavaException.ConstructorInvocations);
-				Assert.AreEqual (0, ConstructorActivationJavaException.ActivationConstructorInvocations);
-				Assert.IsTrue (JniEnvironment.Types.IsSameObject (reference, instance.PeerReference));
-				Assert.AreEqual (JniObjectReferenceType.Global, instance.PeerReference.Type);
-				Assert.IsNotEmpty (instance.StackAtConstruction, "The base constructor must capture the preinstalled peer's stack.");
-				StringAssert.Contains (ConstructorActivationJavaException.JavaName.Replace ('/', '.'), instance.JavaStackTrace);
-				Assert.AreEqual (instance.StackAtConstruction, instance.JavaStackTrace);
-			} finally {
-				JNIEnv.DeleteLocalRef (handle);
-			}
+		using (var instance = new ConstructorActivationDefault ()) {
+			Assert.IsNotNull (instance);
+			Assert.AreEqual (1, ConstructorActivationDefault.ConstructorInvocations);
+			Assert.AreEqual (1, instance.ConstructorOrdinal);
+			AssertRegisteredSame (instance);
 		}
+	}
 
-		[Test]
-		[Category ("UnicodeJavaIdentifiers")]
-		public void JavaSideUnicodeIdentifierConstructorsRunAndRegisterPeers ()
-		{
-			UnicodeLetterIdentifierPeer.Reset ();
-			using (var instance = CreateFromJava<UnicodeLetterIdentifierPeer> ("()V")) {
-				Assert.AreEqual (1, UnicodeLetterIdentifierPeer.ConstructorInvocations);
-				Assert.AreEqual ("com/\u00e9xample/\u0394elta", JNIEnv.GetClassNameFromInstance (instance.Handle));
-				AssertRegisteredSame (instance);
-			}
+	[Test]
+	public void CreateInstanceDoesNotActivateManagedConstructorInsideNewObjectScope ()
+	{
+		ConstructorActivationDefault.Reset ();
 
+		IntPtr handle = JNIEnv.CreateInstance (typeof (ConstructorActivationDefault), "()V");
+		try {
+			var peer = JniEnvironment.Runtime.ValueManager.PeekPeer (new JniObjectReference (handle));
+
+			Assert.AreEqual (0, ConstructorActivationDefault.ConstructorInvocations);
+			Assert.IsNull (peer);
+		} finally {
+			JNIEnv.DeleteLocalRef (handle);
 		}
+	}
 
-		[Test]
-		public void ManagedConstructionDoesNotReenterThroughJavaConstructorActivation ()
-		{
-			ConstructorActivationDefault.Reset ();
+	[Test]
+	[Category ("InheritedActivationCreateInstance")]
+	public void CreateInstanceWithInheritedActivationCtorDoesNotRegisterPeerInsideNewObjectScope ()
+	{
+		ConstructorActivationMarshalObject.Reset ();
 
-			using (var instance = new ConstructorActivationDefault ()) {
-				Assert.IsNotNull (instance);
-				Assert.AreEqual (1, ConstructorActivationDefault.ConstructorInvocations);
-				Assert.AreEqual (1, instance.ConstructorOrdinal);
-				AssertRegisteredSame (instance);
-			}
+		IntPtr handle = JNIEnv.CreateInstance (typeof (ConstructorActivationMarshalObject), "(Z)V", new JValue (true));
+		try {
+			var peer = JniEnvironment.Runtime.ValueManager.PeekPeer (new JniObjectReference (handle));
+
+			Assert.AreEqual (0, ConstructorActivationMarshalObject.ConstructorInvocations);
+			Assert.IsNull (peer);
+		} finally {
+			JNIEnv.DeleteLocalRef (handle);
 		}
+	}
 
-		[Test]
-		public void CreateInstanceDoesNotActivateManagedConstructorInsideNewObjectScope ()
-		{
-			ConstructorActivationDefault.Reset ();
+	[Test]
+	[Category ("JniUtf8Construction")]
+	public void JavaSideConstructorReinvokesExistingActivatablePeer ()
+	{
+		ConstructorActivationDefault.Reset ();
 
-			IntPtr handle = JNIEnv.CreateInstance (typeof (ConstructorActivationDefault), "()V");
-			try {
-				var peer = JniEnvironment.Runtime.ValueManager.PeekPeer (new JniObjectReference (handle));
+		using (var instance = new ConstructorActivationDefault ()) {
+			var peer = (IJavaPeerable) instance;
+			peer.SetJniManagedPeerState (instance.JniManagedPeerState | JniManagedPeerStates.Activatable | JniManagedPeerStates.Replaceable);
 
-				Assert.AreEqual (0, ConstructorActivationDefault.ConstructorInvocations);
-				Assert.IsNull (peer);
-			} finally {
-				JNIEnv.DeleteLocalRef (handle);
-			}
+			JNIEnv.FinishCreateInstance (instance.Handle, "()V"u8);
+
+			Assert.AreEqual (2, ConstructorActivationDefault.ConstructorInvocations);
+			Assert.AreEqual (2, instance.ConstructorOrdinal);
+			AssertRegisteredSame (instance);
 		}
+	}
 
-		[Test]
-		[Category ("InheritedActivationCreateInstance")]
-		public void CreateInstanceWithInheritedActivationCtorDoesNotRegisterPeerInsideNewObjectScope ()
-		{
-			ConstructorActivationMarshalObject.Reset ();
+	[Test]
+	public void JavaSideThrowingConstructorPropagatesException ()
+	{
+		ConstructorActivationThrowing.Reset ();
 
-			IntPtr handle = JNIEnv.CreateInstance (typeof (ConstructorActivationMarshalObject), "(Z)V", new JValue (true));
-			try {
-				var peer = JniEnvironment.Runtime.ValueManager.PeekPeer (new JniObjectReference (handle));
-
-				Assert.AreEqual (0, ConstructorActivationMarshalObject.ConstructorInvocations);
-				Assert.IsNull (peer);
-			} finally {
-				JNIEnv.DeleteLocalRef (handle);
-			}
-		}
-
-		[Test]
-		[Category ("JniUtf8Construction")]
-		public void JavaSideConstructorReinvokesExistingActivatablePeer ()
-		{
-			ConstructorActivationDefault.Reset ();
-
-			using (var instance = new ConstructorActivationDefault ()) {
-				var peer = (IJavaPeerable) instance;
-				peer.SetJniManagedPeerState (instance.JniManagedPeerState | JniManagedPeerStates.Activatable | JniManagedPeerStates.Replaceable);
-
-				JNIEnv.FinishCreateInstance (instance.Handle, "()V"u8);
-
-				Assert.AreEqual (2, ConstructorActivationDefault.ConstructorInvocations);
-				Assert.AreEqual (2, instance.ConstructorOrdinal);
-				AssertRegisteredSame (instance);
-			}
-		}
-
-		[Test]
-		public void JavaSideThrowingConstructorPropagatesException ()
-		{
-			ConstructorActivationThrowing.Reset ();
-
-			// A user-code catch avoids another debugger stop when JNI rethrows into NUnit's external Assert.Catch.
-			try {
-				CreateFromJavaExpectingConstructorException<ConstructorActivationThrowing> ("()V");
-			} catch (Exception exception) {
-				Assert.AreSame (ConstructorActivationThrowing.LastException, exception);
-				Assert.AreEqual (1, ConstructorActivationThrowing.ConstructorInvocations);
-				Assert.IsTrue (exception.ToString ().Contains (ConstructorActivationThrowing.ExceptionMessage));
-				return;
-			}
-			Assert.Fail ("Expected the original constructor exception.");
-		}
-
-		[Test]
-		public void JavaSideThrowingConstructorDoesNotLeakPendingException ()
-		{
-			ConstructorActivationThrowing.Reset ();
-			ConstructorActivationDefault.Reset ();
-
-			var exception = Assert.Catch<Exception> (() => CreateFromJavaExpectingConstructorException<ConstructorActivationThrowing> ("()V"));
+		// A user-code catch avoids another debugger stop when JNI rethrows into NUnit's external Assert.Catch.
+		try {
+			CreateFromJavaExpectingConstructorException<ConstructorActivationThrowing> ("()V");
+		} catch (Exception exception) {
 			Assert.AreSame (ConstructorActivationThrowing.LastException, exception);
-			using var instance = CreateFromJava<ConstructorActivationDefault> ("()V");
-			Assert.AreEqual (1, ConstructorActivationDefault.ConstructorInvocations);
-			AssertRegisteredSame (instance);
+			Assert.AreEqual (1, ConstructorActivationThrowing.ConstructorInvocations);
+			Assert.IsTrue (exception.ToString ().Contains (ConstructorActivationThrowing.ExceptionMessage));
+			return;
+		}
+		Assert.Fail ("Expected the original constructor exception.");
+	}
+
+	[Test]
+	public void JavaSideThrowingConstructorDoesNotLeakPendingException ()
+	{
+		ConstructorActivationThrowing.Reset ();
+		ConstructorActivationDefault.Reset ();
+
+		var exception = Assert.Catch<Exception> (() => CreateFromJavaExpectingConstructorException<ConstructorActivationThrowing> ("()V"));
+		Assert.AreSame (ConstructorActivationThrowing.LastException, exception);
+		using var instance = CreateFromJava<ConstructorActivationDefault> ("()V");
+		Assert.AreEqual (1, ConstructorActivationDefault.ConstructorInvocations);
+		AssertRegisteredSame (instance);
+	}
+
+	[Test]
+	public void JavaSideHandledConstructorExceptionDeliversPolicyOnce ()
+	{
+		ConstructorActivationThrowing.Reset ();
+		int notifications = 0;
+		Exception? notifiedException = null;
+		EventHandler<RaiseThrowableEventArgs> handler = (sender, args) => {
+			notifiedException = args.Exception;
+			notifications++;
+			args.Handled = true;
+		};
+		AndroidEnvironment.UnhandledExceptionRaiser += handler;
+		try {
+			Assert.DoesNotThrow (() => CreateFromJavaExpectingConstructorException<ConstructorActivationThrowing> ("()V"));
+			Assert.AreEqual (1, notifications);
+			Assert.AreSame (ConstructorActivationThrowing.LastException, notifiedException);
+			Assert.AreEqual (1, ConstructorActivationThrowing.ConstructorInvocations);
+		} finally {
+			AndroidEnvironment.UnhandledExceptionRaiser -= handler;
 		}
 
-		[Test]
-		public void JavaSideHandledConstructorExceptionDeliversPolicyOnce ()
+		ConstructorActivationDefault.Reset ();
+		using var instance = CreateFromJava<ConstructorActivationDefault> ("()V");
+		Assert.AreEqual (1, ConstructorActivationDefault.ConstructorInvocations);
+		AssertRegisteredSame (instance);
+	}
+
+	[Test]
+	[Category ("ConstructorParity")]
+	public void JavaSideExportConstructorWithThrowsRunsOnce ()
+	{
+		ConstructorActivationWithThrows.Reset ();
+
+		using (var instance = CreateFromJava<ConstructorActivationWithThrows> ("()V")) {
+			Assert.AreEqual (1, ConstructorActivationWithThrows.ConstructorInvocations);
+			AssertRegisteredSame (instance);
+		}
+	}
+
+	[Test]
+	public void JavaSideContextConstructorForwardsArgument ()
+	{
+		ConstructorActivationContextView.Reset ();
+
+		using (var instance = CreateFromJava<ConstructorActivationContextView> (
+				"(Landroid/content/Context;)V",
+				new JValue (Application.Context))) {
+			Assert.AreEqual (1, ConstructorActivationContextView.ConstructorInvocations);
+			Assert.IsNotNull (instance.ContextValue);
+			AssertSameJavaObject (Application.Context, instance.ContextValue);
+		}
+	}
+
+	[Test]
+	public void JavaSideContextAttributeSetConstructorForwardsArguments ()
+	{
+		ConstructorActivationAttributeSetView.Reset ();
+
+		using (var instance = CreateFromJava<ConstructorActivationAttributeSetView> (
+				"(Landroid/content/Context;Landroid/util/AttributeSet;)V",
+				new JValue (Application.Context),
+				JValue.Zero)) {
+			Assert.AreEqual (1, ConstructorActivationAttributeSetView.ConstructorInvocations);
+			Assert.IsNotNull (instance.ContextValue);
+			AssertSameJavaObject (Application.Context, instance.ContextValue);
+			Assert.IsNull (instance.AttributeSetValue);
+		}
+	}
+
+	[Test]
+	public void JavaSideContextAttributeSetStyleConstructorForwardsArguments ()
+	{
+		ConstructorActivationStyledView.Reset ();
+
+		using (var instance = CreateFromJava<ConstructorActivationStyledView> (
+				"(Landroid/content/Context;Landroid/util/AttributeSet;I)V",
+				new JValue (Application.Context),
+				JValue.Zero,
+				new JValue (42))) {
+			Assert.AreEqual (1, ConstructorActivationStyledView.ConstructorInvocations);
+			Assert.IsNotNull (instance.ContextValue);
+			AssertSameJavaObject (Application.Context, instance.ContextValue);
+			Assert.IsNull (instance.AttributeSetValue);
+			Assert.AreEqual (42, instance.DefStyleAttrValue);
+		}
+	}
+
+	[Test]
+	public void JavaSideBooleanConstructorForwardsTrue ()
+	{
+		ConstructorActivationMarshalObject.Reset ();
+
+		using (var instance = CreateFromJava<ConstructorActivationMarshalObject> ("(Z)V", new JValue (true))) {
+			Assert.AreEqual (1, ConstructorActivationMarshalObject.ConstructorInvocations);
+			Assert.AreEqual (true, instance.BooleanValue);
+		}
+	}
+
+	[Test]
+	public void JavaSideBooleanConstructorForwardsFalse ()
+	{
+		ConstructorActivationMarshalObject.Reset ();
+
+		using (var instance = CreateFromJava<ConstructorActivationMarshalObject> ("(Z)V", new JValue (false))) {
+			Assert.AreEqual (1, ConstructorActivationMarshalObject.ConstructorInvocations);
+			Assert.AreEqual (false, instance.BooleanValue);
+		}
+	}
+
+	[Test]
+	public void JavaSideByteConstructorForwardsSignedValue ()
+	{
+		ConstructorActivationMarshalObject.Reset ();
+
+		using (var instance = CreateFromJava<ConstructorActivationMarshalObject> ("(B)V", new JValue ((sbyte) -12))) {
+			Assert.AreEqual (1, ConstructorActivationMarshalObject.ConstructorInvocations);
+			Assert.AreEqual ((sbyte) -12, instance.ByteValue);
+		}
+	}
+
+	[Test]
+	public void JavaSideCharConstructorForwardsValue ()
+	{
+		ConstructorActivationMarshalObject.Reset ();
+
+		using (var instance = CreateFromJava<ConstructorActivationMarshalObject> ("(C)V", new JValue ('Q'))) {
+			Assert.AreEqual (1, ConstructorActivationMarshalObject.ConstructorInvocations);
+			Assert.AreEqual ('Q', instance.CharValue);
+		}
+	}
+
+	[Test]
+	public void JavaSideShortConstructorForwardsValue ()
+	{
+		ConstructorActivationMarshalObject.Reset ();
+
+		using (var instance = CreateFromJava<ConstructorActivationMarshalObject> ("(S)V", new JValue ((short) -1234))) {
+			Assert.AreEqual (1, ConstructorActivationMarshalObject.ConstructorInvocations);
+			Assert.AreEqual ((short) -1234, instance.ShortValue);
+		}
+	}
+
+	[Test]
+	public void JavaSideIntConstructorForwardsValue ()
+	{
+		ConstructorActivationMarshalObject.Reset ();
+
+		using (var instance = CreateFromJava<ConstructorActivationMarshalObject> ("(I)V", new JValue (0x1234567))) {
+			Assert.AreEqual (1, ConstructorActivationMarshalObject.ConstructorInvocations);
+			Assert.AreEqual (0x1234567, instance.IntValue);
+		}
+	}
+
+	[Test]
+	public void JavaSideLongConstructorForwardsValue ()
+	{
+		ConstructorActivationMarshalObject.Reset ();
+
+		using (var instance = CreateFromJava<ConstructorActivationMarshalObject> ("(J)V", new JValue (0x123456789L))) {
+			Assert.AreEqual (1, ConstructorActivationMarshalObject.ConstructorInvocations);
+			Assert.AreEqual (0x123456789L, instance.LongValue);
+		}
+	}
+
+	[Test]
+	public void JavaSideFloatConstructorForwardsValue ()
+	{
+		ConstructorActivationMarshalObject.Reset ();
+
+		using (var instance = CreateFromJava<ConstructorActivationMarshalObject> ("(F)V", new JValue (12.5f))) {
+			Assert.AreEqual (1, ConstructorActivationMarshalObject.ConstructorInvocations);
+			Assert.AreEqual (12.5f, instance.FloatValue);
+		}
+	}
+
+	[Test]
+	public void JavaSideDoubleConstructorForwardsValue ()
+	{
+		ConstructorActivationMarshalObject.Reset ();
+
+		using (var instance = CreateFromJava<ConstructorActivationMarshalObject> ("(D)V", new JValue (-42.25))) {
+			Assert.AreEqual (1, ConstructorActivationMarshalObject.ConstructorInvocations);
+			Assert.AreEqual (-42.25, instance.DoubleValue);
+		}
+	}
+
+	[Test]
+	public void JavaSidePrimitiveMixedConstructorForwardsValues ()
+	{
+		ConstructorActivationMarshalObject.Reset ();
+
+		using (var instance = CreateFromJava<ConstructorActivationMarshalObject> (
+				"(IZJ)V",
+				new JValue (12345),
+				new JValue (true),
+				new JValue (9876543210L))) {
+			Assert.AreEqual (1, ConstructorActivationMarshalObject.ConstructorInvocations);
+			Assert.AreEqual (12345, instance.MultiIntValue);
+			Assert.AreEqual (true, instance.MultiBooleanValue);
+			Assert.AreEqual (9876543210L, instance.MultiLongValue);
+		}
+	}
+
+	[Test]
+	public void JavaSideStringConstructorForwardsValue ()
+	{
+		ConstructorActivationMarshalObject.Reset ();
+
+		using (var value = new Java.Lang.String ("hello constructor"))
+		using (var instance = CreateFromJava<ConstructorActivationMarshalObject> ("(Ljava/lang/String;)V", new JValue (value))) {
+			Assert.AreEqual (1, ConstructorActivationMarshalObject.ConstructorInvocations);
+			Assert.AreEqual ("hello constructor", instance.StringValue);
+		}
+	}
+
+	[Test]
+	public void JavaSideStringConstructorForwardsNull ()
+	{
+		ConstructorActivationMarshalObject.Reset ();
+
+		using (var instance = CreateFromJava<ConstructorActivationMarshalObject> ("(Ljava/lang/String;)V", JValue.Zero)) {
+			Assert.AreEqual (1, ConstructorActivationMarshalObject.ConstructorInvocations);
+			Assert.IsNull (instance.StringValue);
+		}
+	}
+
+	[Test]
+	public void JavaSideTwoStringConstructorForwardsValues ()
+	{
+		ConstructorActivationMarshalObject.Reset ();
+
+		using (var first = new Java.Lang.String ("first"))
+		using (var second = new Java.Lang.String ("second"))
+		using (var instance = CreateFromJava<ConstructorActivationMarshalObject> (
+				"(Ljava/lang/String;Ljava/lang/String;)V",
+				new JValue (first),
+				new JValue (second))) {
+			Assert.AreEqual (1, ConstructorActivationMarshalObject.ConstructorInvocations);
+			Assert.AreEqual ("first", instance.FirstStringValue);
+			Assert.AreEqual ("second", instance.SecondStringValue);
+		}
+	}
+
+	[Test]
+	public void JavaSideTwoStringConstructorForwardsNullSecondValue ()
+	{
+		ConstructorActivationMarshalObject.Reset ();
+
+		using (var first = new Java.Lang.String ("first"))
+		using (var instance = CreateFromJava<ConstructorActivationMarshalObject> (
+				"(Ljava/lang/String;Ljava/lang/String;)V",
+				new JValue (first),
+				JValue.Zero)) {
+			Assert.AreEqual (1, ConstructorActivationMarshalObject.ConstructorInvocations);
+			Assert.AreEqual ("first", instance.FirstStringValue);
+			Assert.IsNull (instance.SecondStringValue);
+		}
+	}
+
+	[Test]
+	public void JavaSideStringIntConstructorForwardsValues ()
+	{
+		ConstructorActivationMarshalObject.Reset ();
+
+		using (var text = new Java.Lang.String ("string-int"))
+		using (var instance = CreateFromJava<ConstructorActivationMarshalObject> (
+				"(Ljava/lang/String;I)V",
+				new JValue (text),
+				new JValue (17))) {
+			Assert.AreEqual (1, ConstructorActivationMarshalObject.ConstructorInvocations);
+			Assert.AreEqual ("string-int", instance.StringIntStringValue);
+			Assert.AreEqual (17, instance.StringIntValue);
+		}
+	}
+
+	[Test]
+	public void JavaSideIntArrayConstructorForwardsValues ()
+	{
+		ConstructorActivationMarshalObject.Reset ();
+
+		using (var instance = CreateFromJavaWithLocalArray<ConstructorActivationMarshalObject> (
+				"([I)V",
+				JNIEnv.NewArray (new [] { 1, 2, 3, 5 }))) {
+			Assert.AreEqual (1, ConstructorActivationMarshalObject.ConstructorInvocations);
+			Assert.AreEqual (new [] { 1, 2, 3, 5 }, instance.IntArrayValue);
+		}
+	}
+
+	[Test]
+	public void JavaSideIntArrayConstructorForwardsEmptyArray ()
+	{
+		ConstructorActivationMarshalObject.Reset ();
+
+		using (var instance = CreateFromJavaWithLocalArray<ConstructorActivationMarshalObject> (
+				"([I)V",
+				JNIEnv.NewArray (Array.Empty<int> ()))) {
+			Assert.AreEqual (1, ConstructorActivationMarshalObject.ConstructorInvocations);
+			Assert.IsNotNull (instance.IntArrayValue);
+			Assert.AreEqual (0, instance.IntArrayValue.Length);
+		}
+	}
+
+	[Test]
+	public void JavaSideIntArrayConstructorForwardsNull ()
+	{
+		ConstructorActivationMarshalObject.Reset ();
+
+		using (var instance = CreateFromJava<ConstructorActivationMarshalObject> ("([I)V", JValue.Zero)) {
+			Assert.AreEqual (1, ConstructorActivationMarshalObject.ConstructorInvocations);
+			Assert.IsNull (instance.IntArrayValue);
+		}
+	}
+
+	[Test]
+	public void JavaSideStringIntArrayConstructorForwardsValues ()
+	{
+		ConstructorActivationMarshalObject.Reset ();
+
+		using (var label = new Java.Lang.String ("string-array"))
 		{
-			ConstructorActivationThrowing.Reset ();
-			int notifications = 0;
-			Exception? notifiedException = null;
-			EventHandler<RaiseThrowableEventArgs> handler = (sender, args) => {
-				notifiedException = args.Exception;
-				notifications++;
-				args.Handled = true;
-			};
-			AndroidEnvironment.UnhandledExceptionRaiser += handler;
+			IntPtr array = JNIEnv.NewArray (new [] { 8, 13, 21 });
 			try {
-				Assert.DoesNotThrow (() => CreateFromJavaExpectingConstructorException<ConstructorActivationThrowing> ("()V"));
-				Assert.AreEqual (1, notifications);
-				Assert.AreSame (ConstructorActivationThrowing.LastException, notifiedException);
-				Assert.AreEqual (1, ConstructorActivationThrowing.ConstructorInvocations);
-			} finally {
-				AndroidEnvironment.UnhandledExceptionRaiser -= handler;
-			}
-
-			ConstructorActivationDefault.Reset ();
-			using var instance = CreateFromJava<ConstructorActivationDefault> ("()V");
-			Assert.AreEqual (1, ConstructorActivationDefault.ConstructorInvocations);
-			AssertRegisteredSame (instance);
-		}
-
-		[Test]
-		[Category ("ConstructorParity")]
-		public void JavaSideExportConstructorWithThrowsRunsOnce ()
-		{
-			ConstructorActivationWithThrows.Reset ();
-
-			using (var instance = CreateFromJava<ConstructorActivationWithThrows> ("()V")) {
-				Assert.AreEqual (1, ConstructorActivationWithThrows.ConstructorInvocations);
-				AssertRegisteredSame (instance);
-			}
-		}
-
-		[Test]
-		public void JavaSideContextConstructorForwardsArgument ()
-		{
-			ConstructorActivationContextView.Reset ();
-
-			using (var instance = CreateFromJava<ConstructorActivationContextView> (
-					"(Landroid/content/Context;)V",
-					new JValue (Application.Context))) {
-				Assert.AreEqual (1, ConstructorActivationContextView.ConstructorInvocations);
-				Assert.IsNotNull (instance.ContextValue);
-				AssertSameJavaObject (Application.Context, instance.ContextValue);
-			}
-		}
-
-		[Test]
-		public void JavaSideContextAttributeSetConstructorForwardsArguments ()
-		{
-			ConstructorActivationAttributeSetView.Reset ();
-
-			using (var instance = CreateFromJava<ConstructorActivationAttributeSetView> (
-					"(Landroid/content/Context;Landroid/util/AttributeSet;)V",
-					new JValue (Application.Context),
-					JValue.Zero)) {
-				Assert.AreEqual (1, ConstructorActivationAttributeSetView.ConstructorInvocations);
-				Assert.IsNotNull (instance.ContextValue);
-				AssertSameJavaObject (Application.Context, instance.ContextValue);
-				Assert.IsNull (instance.AttributeSetValue);
-			}
-		}
-
-		[Test]
-		public void JavaSideContextAttributeSetStyleConstructorForwardsArguments ()
-		{
-			ConstructorActivationStyledView.Reset ();
-
-			using (var instance = CreateFromJava<ConstructorActivationStyledView> (
-					"(Landroid/content/Context;Landroid/util/AttributeSet;I)V",
-					new JValue (Application.Context),
-					JValue.Zero,
-					new JValue (42))) {
-				Assert.AreEqual (1, ConstructorActivationStyledView.ConstructorInvocations);
-				Assert.IsNotNull (instance.ContextValue);
-				AssertSameJavaObject (Application.Context, instance.ContextValue);
-				Assert.IsNull (instance.AttributeSetValue);
-				Assert.AreEqual (42, instance.DefStyleAttrValue);
-			}
-		}
-
-		[Test]
-		public void JavaSideBooleanConstructorForwardsTrue ()
-		{
-			ConstructorActivationMarshalObject.Reset ();
-
-			using (var instance = CreateFromJava<ConstructorActivationMarshalObject> ("(Z)V", new JValue (true))) {
-				Assert.AreEqual (1, ConstructorActivationMarshalObject.ConstructorInvocations);
-				Assert.AreEqual (true, instance.BooleanValue);
-			}
-		}
-
-		[Test]
-		public void JavaSideBooleanConstructorForwardsFalse ()
-		{
-			ConstructorActivationMarshalObject.Reset ();
-
-			using (var instance = CreateFromJava<ConstructorActivationMarshalObject> ("(Z)V", new JValue (false))) {
-				Assert.AreEqual (1, ConstructorActivationMarshalObject.ConstructorInvocations);
-				Assert.AreEqual (false, instance.BooleanValue);
-			}
-		}
-
-		[Test]
-		public void JavaSideByteConstructorForwardsSignedValue ()
-		{
-			ConstructorActivationMarshalObject.Reset ();
-
-			using (var instance = CreateFromJava<ConstructorActivationMarshalObject> ("(B)V", new JValue ((sbyte) -12))) {
-				Assert.AreEqual (1, ConstructorActivationMarshalObject.ConstructorInvocations);
-				Assert.AreEqual ((sbyte) -12, instance.ByteValue);
-			}
-		}
-
-		[Test]
-		public void JavaSideCharConstructorForwardsValue ()
-		{
-			ConstructorActivationMarshalObject.Reset ();
-
-			using (var instance = CreateFromJava<ConstructorActivationMarshalObject> ("(C)V", new JValue ('Q'))) {
-				Assert.AreEqual (1, ConstructorActivationMarshalObject.ConstructorInvocations);
-				Assert.AreEqual ('Q', instance.CharValue);
-			}
-		}
-
-		[Test]
-		public void JavaSideShortConstructorForwardsValue ()
-		{
-			ConstructorActivationMarshalObject.Reset ();
-
-			using (var instance = CreateFromJava<ConstructorActivationMarshalObject> ("(S)V", new JValue ((short) -1234))) {
-				Assert.AreEqual (1, ConstructorActivationMarshalObject.ConstructorInvocations);
-				Assert.AreEqual ((short) -1234, instance.ShortValue);
-			}
-		}
-
-		[Test]
-		public void JavaSideIntConstructorForwardsValue ()
-		{
-			ConstructorActivationMarshalObject.Reset ();
-
-			using (var instance = CreateFromJava<ConstructorActivationMarshalObject> ("(I)V", new JValue (0x1234567))) {
-				Assert.AreEqual (1, ConstructorActivationMarshalObject.ConstructorInvocations);
-				Assert.AreEqual (0x1234567, instance.IntValue);
-			}
-		}
-
-		[Test]
-		public void JavaSideLongConstructorForwardsValue ()
-		{
-			ConstructorActivationMarshalObject.Reset ();
-
-			using (var instance = CreateFromJava<ConstructorActivationMarshalObject> ("(J)V", new JValue (0x123456789L))) {
-				Assert.AreEqual (1, ConstructorActivationMarshalObject.ConstructorInvocations);
-				Assert.AreEqual (0x123456789L, instance.LongValue);
-			}
-		}
-
-		[Test]
-		public void JavaSideFloatConstructorForwardsValue ()
-		{
-			ConstructorActivationMarshalObject.Reset ();
-
-			using (var instance = CreateFromJava<ConstructorActivationMarshalObject> ("(F)V", new JValue (12.5f))) {
-				Assert.AreEqual (1, ConstructorActivationMarshalObject.ConstructorInvocations);
-				Assert.AreEqual (12.5f, instance.FloatValue);
-			}
-		}
-
-		[Test]
-		public void JavaSideDoubleConstructorForwardsValue ()
-		{
-			ConstructorActivationMarshalObject.Reset ();
-
-			using (var instance = CreateFromJava<ConstructorActivationMarshalObject> ("(D)V", new JValue (-42.25))) {
-				Assert.AreEqual (1, ConstructorActivationMarshalObject.ConstructorInvocations);
-				Assert.AreEqual (-42.25, instance.DoubleValue);
-			}
-		}
-
-		[Test]
-		public void JavaSidePrimitiveMixedConstructorForwardsValues ()
-		{
-			ConstructorActivationMarshalObject.Reset ();
-
-			using (var instance = CreateFromJava<ConstructorActivationMarshalObject> (
-					"(IZJ)V",
-					new JValue (12345),
-					new JValue (true),
-					new JValue (9876543210L))) {
-				Assert.AreEqual (1, ConstructorActivationMarshalObject.ConstructorInvocations);
-				Assert.AreEqual (12345, instance.MultiIntValue);
-				Assert.AreEqual (true, instance.MultiBooleanValue);
-				Assert.AreEqual (9876543210L, instance.MultiLongValue);
-			}
-		}
-
-		[Test]
-		public void JavaSideStringConstructorForwardsValue ()
-		{
-			ConstructorActivationMarshalObject.Reset ();
-
-			using (var value = new Java.Lang.String ("hello constructor"))
-			using (var instance = CreateFromJava<ConstructorActivationMarshalObject> ("(Ljava/lang/String;)V", new JValue (value))) {
-				Assert.AreEqual (1, ConstructorActivationMarshalObject.ConstructorInvocations);
-				Assert.AreEqual ("hello constructor", instance.StringValue);
-			}
-		}
-
-		[Test]
-		public void JavaSideStringConstructorForwardsNull ()
-		{
-			ConstructorActivationMarshalObject.Reset ();
-
-			using (var instance = CreateFromJava<ConstructorActivationMarshalObject> ("(Ljava/lang/String;)V", JValue.Zero)) {
-				Assert.AreEqual (1, ConstructorActivationMarshalObject.ConstructorInvocations);
-				Assert.IsNull (instance.StringValue);
-			}
-		}
-
-		[Test]
-		public void JavaSideTwoStringConstructorForwardsValues ()
-		{
-			ConstructorActivationMarshalObject.Reset ();
-
-			using (var first = new Java.Lang.String ("first"))
-			using (var second = new Java.Lang.String ("second"))
-			using (var instance = CreateFromJava<ConstructorActivationMarshalObject> (
-					"(Ljava/lang/String;Ljava/lang/String;)V",
-					new JValue (first),
-					new JValue (second))) {
-				Assert.AreEqual (1, ConstructorActivationMarshalObject.ConstructorInvocations);
-				Assert.AreEqual ("first", instance.FirstStringValue);
-				Assert.AreEqual ("second", instance.SecondStringValue);
-			}
-		}
-
-		[Test]
-		public void JavaSideTwoStringConstructorForwardsNullSecondValue ()
-		{
-			ConstructorActivationMarshalObject.Reset ();
-
-			using (var first = new Java.Lang.String ("first"))
-			using (var instance = CreateFromJava<ConstructorActivationMarshalObject> (
-					"(Ljava/lang/String;Ljava/lang/String;)V",
-					new JValue (first),
-					JValue.Zero)) {
-				Assert.AreEqual (1, ConstructorActivationMarshalObject.ConstructorInvocations);
-				Assert.AreEqual ("first", instance.FirstStringValue);
-				Assert.IsNull (instance.SecondStringValue);
-			}
-		}
-
-		[Test]
-		public void JavaSideStringIntConstructorForwardsValues ()
-		{
-			ConstructorActivationMarshalObject.Reset ();
-
-			using (var text = new Java.Lang.String ("string-int"))
-			using (var instance = CreateFromJava<ConstructorActivationMarshalObject> (
-					"(Ljava/lang/String;I)V",
-					new JValue (text),
-					new JValue (17))) {
-				Assert.AreEqual (1, ConstructorActivationMarshalObject.ConstructorInvocations);
-				Assert.AreEqual ("string-int", instance.StringIntStringValue);
-				Assert.AreEqual (17, instance.StringIntValue);
-			}
-		}
-
-		[Test]
-		public void JavaSideIntArrayConstructorForwardsValues ()
-		{
-			ConstructorActivationMarshalObject.Reset ();
-
-			using (var instance = CreateFromJavaWithLocalArray<ConstructorActivationMarshalObject> (
-					"([I)V",
-					JNIEnv.NewArray (new [] { 1, 2, 3, 5 }))) {
-				Assert.AreEqual (1, ConstructorActivationMarshalObject.ConstructorInvocations);
-				Assert.AreEqual (new [] { 1, 2, 3, 5 }, instance.IntArrayValue);
-			}
-		}
-
-		[Test]
-		public void JavaSideIntArrayConstructorForwardsEmptyArray ()
-		{
-			ConstructorActivationMarshalObject.Reset ();
-
-			using (var instance = CreateFromJavaWithLocalArray<ConstructorActivationMarshalObject> (
-					"([I)V",
-					JNIEnv.NewArray (Array.Empty<int> ()))) {
-				Assert.AreEqual (1, ConstructorActivationMarshalObject.ConstructorInvocations);
-				Assert.IsNotNull (instance.IntArrayValue);
-				Assert.AreEqual (0, instance.IntArrayValue.Length);
-			}
-		}
-
-		[Test]
-		public void JavaSideIntArrayConstructorForwardsNull ()
-		{
-			ConstructorActivationMarshalObject.Reset ();
-
-			using (var instance = CreateFromJava<ConstructorActivationMarshalObject> ("([I)V", JValue.Zero)) {
-				Assert.AreEqual (1, ConstructorActivationMarshalObject.ConstructorInvocations);
-				Assert.IsNull (instance.IntArrayValue);
-			}
-		}
-
-		[Test]
-		public void JavaSideStringIntArrayConstructorForwardsValues ()
-		{
-			ConstructorActivationMarshalObject.Reset ();
-
-			using (var label = new Java.Lang.String ("string-array"))
-			{
-				IntPtr array = JNIEnv.NewArray (new [] { 8, 13, 21 });
-				try {
-					using (var instance = CreateFromJava<ConstructorActivationMarshalObject> (
-							"(Ljava/lang/String;[I)V",
-							new JValue (label),
-							new JValue (array))) {
-						Assert.AreEqual (1, ConstructorActivationMarshalObject.ConstructorInvocations);
-						Assert.AreEqual ("string-array", instance.StringArrayLabel);
-						Assert.AreEqual (new [] { 8, 13, 21 }, instance.StringArrayValues);
-					}
-				} finally {
-					JNIEnv.DeleteLocalRef (array);
+				using (var instance = CreateFromJava<ConstructorActivationMarshalObject> (
+						"(Ljava/lang/String;[I)V",
+						new JValue (label),
+						new JValue (array))) {
+					Assert.AreEqual (1, ConstructorActivationMarshalObject.ConstructorInvocations);
+					Assert.AreEqual ("string-array", instance.StringArrayLabel);
+					Assert.AreEqual (new [] { 8, 13, 21 }, instance.StringArrayValues);
 				}
-			}
-		}
-
-		[Test]
-		public void JavaSideBooleanArrayConstructorForwardsValues ()
-		{
-			ConstructorActivationMarshalObject.Reset ();
-
-			using (var instance = CreateFromJavaWithLocalArray<ConstructorActivationMarshalObject> (
-					"([Z)V",
-					JNIEnv.NewArray (new [] { true, false, true }))) {
-				Assert.AreEqual (1, ConstructorActivationMarshalObject.ConstructorInvocations);
-				Assert.AreEqual (new [] { true, false, true }, instance.BooleanArrayValue);
-			}
-		}
-
-		[Test]
-		public void JavaSideByteArrayConstructorForwardsValues ()
-		{
-			ConstructorActivationMarshalObject.Reset ();
-
-			using (var instance = CreateFromJavaWithLocalArray<ConstructorActivationMarshalObject> (
-					"([B)V",
-					JNIEnv.NewArray (new byte [] { 1, 127, 255 }))) {
-				Assert.AreEqual (1, ConstructorActivationMarshalObject.ConstructorInvocations);
-				Assert.AreEqual (new byte [] { 1, 127, 255 }, instance.ByteArrayValue);
-			}
-		}
-
-		[Test]
-		public void JavaSideStringArrayConstructorForwardsValues ()
-		{
-			ConstructorActivationMarshalObject.Reset ();
-
-			using (var instance = CreateFromJavaWithLocalArray<ConstructorActivationMarshalObject> (
-					"([Ljava/lang/String;)V",
-					JNIEnv.NewArray (new [] { "red", "green", "blue" }))) {
-				Assert.AreEqual (1, ConstructorActivationMarshalObject.ConstructorInvocations);
-				Assert.AreEqual (new [] { "red", "green", "blue" }, instance.StringArrayValue);
-			}
-		}
-
-		[Test]
-		public void JavaSideStringArrayConstructorForwardsNullElement ()
-		{
-			ConstructorActivationMarshalObject.Reset ();
-
-			using (var instance = CreateFromJavaWithLocalArray<ConstructorActivationMarshalObject> (
-					"([Ljava/lang/String;)V",
-					JNIEnv.NewArray (new [] { "red", null, "blue" }))) {
-				Assert.AreEqual (1, ConstructorActivationMarshalObject.ConstructorInvocations);
-				Assert.AreEqual (new [] { "red", null, "blue" }, instance.StringArrayValue);
-			}
-		}
-
-		[Test]
-		public void JavaSideStringArrayConstructorForwardsNull ()
-		{
-			ConstructorActivationMarshalObject.Reset ();
-
-			using (var instance = CreateFromJava<ConstructorActivationMarshalObject> ("([Ljava/lang/String;)V", JValue.Zero)) {
-				Assert.AreEqual (1, ConstructorActivationMarshalObject.ConstructorInvocations);
-				Assert.IsNull (instance.StringArrayValue);
-			}
-		}
-
-		[Test]
-		public void JavaSideObjectArrayConstructorForwardsValues ()
-		{
-			ConstructorActivationMarshalObject.Reset ();
-
-			using (var first = new Java.Lang.String ("object-array-value"))
-			using (var instance = CreateFromJavaWithLocalArray<ConstructorActivationMarshalObject> (
-					"([Ljava/lang/Object;)V",
-					JNIEnv.NewArray (new Java.Lang.Object [] { first, Application.Context }))) {
-				Assert.AreEqual (1, ConstructorActivationMarshalObject.ConstructorInvocations);
-				Assert.IsNotNull (instance.ObjectArrayValue);
-				Assert.AreEqual (2, instance.ObjectArrayValue.Length);
-				Assert.AreEqual ("object-array-value", instance.ObjectArrayValue [0].ToString ());
-				AssertSameJavaObject (Application.Context, instance.ObjectArrayValue [1]);
-			}
-		}
-
-		[Test]
-		public void JavaSideObjectArrayConstructorForwardsNull ()
-		{
-			ConstructorActivationMarshalObject.Reset ();
-
-			using (var instance = CreateFromJava<ConstructorActivationMarshalObject> ("([Ljava/lang/Object;)V", JValue.Zero)) {
-				Assert.AreEqual (1, ConstructorActivationMarshalObject.ConstructorInvocations);
-				Assert.IsNull (instance.ObjectArrayValue);
-			}
-		}
-
-		[Test]
-		public void JavaSideNestedIntArrayConstructorForwardsValues ()
-		{
-			ConstructorActivationMarshalObject.Reset ();
-
-			using (var instance = CreateFromJavaWithLocalArray<ConstructorActivationMarshalObject> (
-					"([[I)V",
-					JNIEnv.NewArray<int[]> (new [] {
-						new [] { 1, 2 },
-						new [] { 3, 4, 5 },
-					}))) {
-				Assert.AreEqual (1, ConstructorActivationMarshalObject.ConstructorInvocations);
-				Assert.IsNotNull (instance.NestedIntArrayValue);
-				Assert.AreEqual (new [] { 1, 2 }, instance.NestedIntArrayValue [0]);
-				Assert.AreEqual (new [] { 3, 4, 5 }, instance.NestedIntArrayValue [1]);
-			}
-		}
-
-		static T CreateFromJava<
-			[DynamicallyAccessedMembers (DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.NonPublicConstructors)]
-			T> (string constructorSignature, params JValue [] arguments)
-			where T : Java.Lang.Object
-		{
-			var instance = JNIEnv.AllocObject (typeof (T));
-			JNIEnv.FinishCreateInstance (instance, constructorSignature, arguments);
-			var result = Java.Lang.Object.GetObject<T> (instance, JniHandleOwnership.TransferLocalRef);
-			Assert.IsNotNull (result);
-			return result;
-		}
-
-		static T CreateFromJavaWithLocalArray<
-			[DynamicallyAccessedMembers (DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.NonPublicConstructors)]
-			T> (string constructorSignature, IntPtr array)
-			where T : Java.Lang.Object
-		{
-			try {
-				return CreateFromJava<T> (constructorSignature, new JValue (array));
 			} finally {
 				JNIEnv.DeleteLocalRef (array);
 			}
 		}
+	}
 
-		static void CreateFromJavaExpectingConstructorException<T> (string constructorSignature, params JValue [] arguments)
-			where T : Java.Lang.Object
-		{
-			IntPtr instance = IntPtr.Zero;
-			try {
-				instance = JNIEnv.AllocObject (typeof (T));
-				JNIEnv.FinishCreateInstance (instance, constructorSignature, arguments);
-			} finally {
-				if (instance != IntPtr.Zero) {
-					JNIEnv.DeleteLocalRef (instance);
-				}
+	[Test]
+	public void JavaSideBooleanArrayConstructorForwardsValues ()
+	{
+		ConstructorActivationMarshalObject.Reset ();
+
+		using (var instance = CreateFromJavaWithLocalArray<ConstructorActivationMarshalObject> (
+				"([Z)V",
+				JNIEnv.NewArray (new [] { true, false, true }))) {
+			Assert.AreEqual (1, ConstructorActivationMarshalObject.ConstructorInvocations);
+			Assert.AreEqual (new [] { true, false, true }, instance.BooleanArrayValue);
+		}
+	}
+
+	[Test]
+	public void JavaSideByteArrayConstructorForwardsValues ()
+	{
+		ConstructorActivationMarshalObject.Reset ();
+
+		using (var instance = CreateFromJavaWithLocalArray<ConstructorActivationMarshalObject> (
+				"([B)V",
+				JNIEnv.NewArray (new byte [] { 1, 127, 255 }))) {
+			Assert.AreEqual (1, ConstructorActivationMarshalObject.ConstructorInvocations);
+			Assert.AreEqual (new byte [] { 1, 127, 255 }, instance.ByteArrayValue);
+		}
+	}
+
+	[Test]
+	public void JavaSideStringArrayConstructorForwardsValues ()
+	{
+		ConstructorActivationMarshalObject.Reset ();
+
+		using (var instance = CreateFromJavaWithLocalArray<ConstructorActivationMarshalObject> (
+				"([Ljava/lang/String;)V",
+				JNIEnv.NewArray (new [] { "red", "green", "blue" }))) {
+			Assert.AreEqual (1, ConstructorActivationMarshalObject.ConstructorInvocations);
+			Assert.AreEqual (new [] { "red", "green", "blue" }, instance.StringArrayValue);
+		}
+	}
+
+	[Test]
+	public void JavaSideStringArrayConstructorForwardsNullElement ()
+	{
+		ConstructorActivationMarshalObject.Reset ();
+
+		using (var instance = CreateFromJavaWithLocalArray<ConstructorActivationMarshalObject> (
+				"([Ljava/lang/String;)V",
+				JNIEnv.NewArray (new [] { "red", null, "blue" }))) {
+			Assert.AreEqual (1, ConstructorActivationMarshalObject.ConstructorInvocations);
+			Assert.AreEqual (new [] { "red", null, "blue" }, instance.StringArrayValue);
+		}
+	}
+
+	[Test]
+	public void JavaSideStringArrayConstructorForwardsNull ()
+	{
+		ConstructorActivationMarshalObject.Reset ();
+
+		using (var instance = CreateFromJava<ConstructorActivationMarshalObject> ("([Ljava/lang/String;)V", JValue.Zero)) {
+			Assert.AreEqual (1, ConstructorActivationMarshalObject.ConstructorInvocations);
+			Assert.IsNull (instance.StringArrayValue);
+		}
+	}
+
+	[Test]
+	public void JavaSideObjectArrayConstructorForwardsValues ()
+	{
+		ConstructorActivationMarshalObject.Reset ();
+
+		using (var first = new Java.Lang.String ("object-array-value"))
+		using (var instance = CreateFromJavaWithLocalArray<ConstructorActivationMarshalObject> (
+				"([Ljava/lang/Object;)V",
+				JNIEnv.NewArray (new Java.Lang.Object [] { first, Application.Context }))) {
+			Assert.AreEqual (1, ConstructorActivationMarshalObject.ConstructorInvocations);
+			Assert.IsNotNull (instance.ObjectArrayValue);
+			Assert.AreEqual (2, instance.ObjectArrayValue.Length);
+			Assert.AreEqual ("object-array-value", instance.ObjectArrayValue [0].ToString ());
+			AssertSameJavaObject (Application.Context, instance.ObjectArrayValue [1]);
+		}
+	}
+
+	[Test]
+	public void JavaSideObjectArrayConstructorForwardsNull ()
+	{
+		ConstructorActivationMarshalObject.Reset ();
+
+		using (var instance = CreateFromJava<ConstructorActivationMarshalObject> ("([Ljava/lang/Object;)V", JValue.Zero)) {
+			Assert.AreEqual (1, ConstructorActivationMarshalObject.ConstructorInvocations);
+			Assert.IsNull (instance.ObjectArrayValue);
+		}
+	}
+
+	[Test]
+	public void JavaSideNestedIntArrayConstructorForwardsValues ()
+	{
+		ConstructorActivationMarshalObject.Reset ();
+
+		using (var instance = CreateFromJavaWithLocalArray<ConstructorActivationMarshalObject> (
+				"([[I)V",
+				JNIEnv.NewArray<int[]> (new [] {
+					new [] { 1, 2 },
+					new [] { 3, 4, 5 },
+				}))) {
+			Assert.AreEqual (1, ConstructorActivationMarshalObject.ConstructorInvocations);
+			Assert.IsNotNull (instance.NestedIntArrayValue);
+			Assert.AreEqual (new [] { 1, 2 }, instance.NestedIntArrayValue [0]);
+			Assert.AreEqual (new [] { 3, 4, 5 }, instance.NestedIntArrayValue [1]);
+		}
+	}
+
+	static T CreateFromJava<
+		[DynamicallyAccessedMembers (DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.NonPublicConstructors)]
+		T> (string constructorSignature, params JValue [] arguments)
+		where T : Java.Lang.Object
+	{
+		var instance = JNIEnv.AllocObject (typeof (T));
+		JNIEnv.FinishCreateInstance (instance, constructorSignature, arguments);
+		var result = Java.Lang.Object.GetObject<T> (instance, JniHandleOwnership.TransferLocalRef);
+		Assert.IsNotNull (result);
+		return result;
+	}
+
+	static T CreateFromJavaWithLocalArray<
+		[DynamicallyAccessedMembers (DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.NonPublicConstructors)]
+		T> (string constructorSignature, IntPtr array)
+		where T : Java.Lang.Object
+	{
+		try {
+			return CreateFromJava<T> (constructorSignature, new JValue (array));
+		} finally {
+			JNIEnv.DeleteLocalRef (array);
+		}
+	}
+
+	static void CreateFromJavaExpectingConstructorException<T> (string constructorSignature, params JValue [] arguments)
+		where T : Java.Lang.Object
+	{
+		IntPtr instance = IntPtr.Zero;
+		try {
+			instance = JNIEnv.AllocObject (typeof (T));
+			JNIEnv.FinishCreateInstance (instance, constructorSignature, arguments);
+		} finally {
+			if (instance != IntPtr.Zero) {
+				JNIEnv.DeleteLocalRef (instance);
 			}
 		}
+	}
 
-		static void AssertRegisteredSame<
-			[DynamicallyAccessedMembers (DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.NonPublicConstructors)]
-			T> (T instance)
-			where T : Java.Lang.Object
-		{
-			var registered = Java.Lang.Object.GetObject<T> (instance.Handle, JniHandleOwnership.DoNotTransfer);
-			try {
-				Assert.AreSame (instance, registered);
-				Assert.AreEqual (Java.Lang.JavaSystem.IdentityHashCode (instance), instance.JniIdentityHashCode);
-			} finally {
-				if (registered != null && !object.ReferenceEquals (instance, registered))
-					registered.Dispose ();
-			}
-		}
-
-		static void AssertSameJavaObject (Java.Lang.Object expected, Java.Lang.Object actual)
-		{
-			Assert.IsNotNull (expected);
-			Assert.IsNotNull (actual);
-			Assert.IsTrue (
-				JniEnvironment.Types.IsSameObject (expected.PeerReference, actual.PeerReference),
-				$"Expected Java object identity to match. Expected handle: {expected.Handle}, actual handle: {actual.Handle}.");
+	static void AssertRegisteredSame<
+		[DynamicallyAccessedMembers (DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.NonPublicConstructors)]
+		T> (T instance)
+		where T : Java.Lang.Object
+	{
+		var registered = Java.Lang.Object.GetObject<T> (instance.Handle, JniHandleOwnership.DoNotTransfer);
+		try {
+			Assert.AreSame (instance, registered);
+			Assert.AreEqual (Java.Lang.JavaSystem.IdentityHashCode (instance), instance.JniIdentityHashCode);
+		} finally {
+			if (registered != null && !object.ReferenceEquals (instance, registered))
+				registered.Dispose ();
 		}
 	}
 
-	[JniTypeSignature (ConstructorActivationJavaException.JavaName)]
-	public class ConstructorActivationJavaException : JavaException
+	static void AssertSameJavaObject (Java.Lang.Object expected, Java.Lang.Object actual)
 	{
-		public const string JavaName = "net/dot/android/test/ConstructorActivationJavaException";
-		static readonly JniPeerMembers members = new JniPeerMembers (JavaName, typeof (ConstructorActivationJavaException));
+		Assert.IsNotNull (expected);
+		Assert.IsNotNull (actual);
+		Assert.IsTrue (
+			JniEnvironment.Types.IsSameObject (expected.PeerReference, actual.PeerReference),
+			$"Expected Java object identity to match. Expected handle: {expected.Handle}, actual handle: {actual.Handle}.");
+	}
+}
 
-		public static int ConstructorInvocations;
-		public static int ActivationConstructorInvocations;
-		public string? StackAtConstruction { get; }
+[JniTypeSignature (ConstructorActivationJavaException.JavaName)]
+public class ConstructorActivationJavaException : JavaException
+{
+	public const string JavaName = "net/dot/android/test/ConstructorActivationJavaException";
+	static readonly JniPeerMembers members = new JniPeerMembers (JavaName, typeof (ConstructorActivationJavaException));
 
-		public override JniPeerMembers JniPeerMembers => members;
+	public static int ConstructorInvocations;
+	public static int ActivationConstructorInvocations;
+	public string? StackAtConstruction { get; }
 
-		[JniConstructorSignature ("()V")]
-		public ConstructorActivationJavaException ()
-		{
-			ConstructorInvocations++;
-			StackAtConstruction = JavaStackTrace;
-		}
+	public override JniPeerMembers JniPeerMembers => members;
 
-		public ConstructorActivationJavaException (ref JniObjectReference reference, JniObjectReferenceOptions options)
-			: base (ref reference, options)
-		{
-			ActivationConstructorInvocations++;
-		}
-
-		public static void Reset ()
-		{
-			ConstructorInvocations = 0;
-			ActivationConstructorInvocations = 0;
-		}
+	[JniConstructorSignature ("()V")]
+	public ConstructorActivationJavaException ()
+	{
+		ConstructorInvocations++;
+		StackAtConstruction = JavaStackTrace;
 	}
 
-	[Register ("net/dot/android/test/ConstructorActivationThrowing")]
-	public class ConstructorActivationThrowing : Java.Lang.Object
+	public ConstructorActivationJavaException (ref JniObjectReference reference, JniObjectReferenceOptions options)
+		: base (ref reference, options)
 	{
-		public const string ExceptionMessage = "constructor activation throw";
-
-		public static int ConstructorInvocations;
-		public static Exception? LastException;
-
-		public ConstructorActivationThrowing ()
-		{
-			ConstructorInvocations++;
-			LastException = new InvalidOperationException (ExceptionMessage);
-			throw LastException;
-		}
-
-		public static void Reset ()
-		{
-			ConstructorInvocations = 0;
-			LastException = null;
-		}
+		ActivationConstructorInvocations++;
 	}
 
-	[Register ("net/dot/android/test/ConstructorActivationWithThrows")]
-	public class ConstructorActivationWithThrows : Java.Lang.Object
+	public static void Reset ()
 	{
-		public static int ConstructorInvocations;
+		ConstructorInvocations = 0;
+		ActivationConstructorInvocations = 0;
+	}
+}
 
-		[Export (SuperArgumentsString = "", Throws = new [] { typeof (Java.IO.IOException) })]
-		public ConstructorActivationWithThrows ()
-		{
-			ConstructorInvocations++;
-		}
+[Register ("net/dot/android/test/ConstructorActivationThrowing")]
+public class ConstructorActivationThrowing : Java.Lang.Object
+{
+	public const string ExceptionMessage = "constructor activation throw";
 
-		public static void Reset ()
-		{
-			ConstructorInvocations = 0;
-		}
+	public static int ConstructorInvocations;
+	public static Exception? LastException;
+
+	public ConstructorActivationThrowing ()
+	{
+		ConstructorInvocations++;
+		LastException = new InvalidOperationException (ExceptionMessage);
+		throw LastException;
 	}
 
-	[Register ("net/dot/android/test/ConstructorActivationBase", DoNotGenerateAcw = true)]
-	public class ConstructorActivationBase : Java.Lang.Object
+	public static void Reset ()
 	{
-		public ConstructorActivationBase ()
-		{
-		}
+		ConstructorInvocations = 0;
+		LastException = null;
+	}
+}
 
-		public ConstructorActivationBase (bool value)
-		{
-		}
+[Register ("net/dot/android/test/ConstructorActivationWithThrows")]
+public class ConstructorActivationWithThrows : Java.Lang.Object
+{
+	public static int ConstructorInvocations;
 
-		public ConstructorActivationBase (sbyte value)
-		{
-		}
-
-		public ConstructorActivationBase (char value)
-		{
-		}
-
-		public ConstructorActivationBase (short value)
-		{
-		}
-
-		public ConstructorActivationBase (int value)
-		{
-		}
-
-		public ConstructorActivationBase (long value)
-		{
-		}
-
-		public ConstructorActivationBase (float value)
-		{
-		}
-
-		public ConstructorActivationBase (double value)
-		{
-		}
-
-		public ConstructorActivationBase (int number, bool flag, long longValue)
-		{
-		}
-
-		public ConstructorActivationBase (string value)
-		{
-		}
-
-		public ConstructorActivationBase (string first, string second)
-		{
-		}
-
-		public ConstructorActivationBase (string text, int number)
-		{
-		}
-
-		public ConstructorActivationBase (int[] value)
-		{
-		}
-
-		public ConstructorActivationBase (string label, int[] value)
-		{
-		}
-
-		public ConstructorActivationBase (bool[] value)
-		{
-		}
-
-		public ConstructorActivationBase (byte[] value)
-		{
-		}
-
-		public ConstructorActivationBase (string[] value)
-		{
-		}
-
-		public ConstructorActivationBase (Java.Lang.Object[] value)
-		{
-		}
-
-		public ConstructorActivationBase (int[][] value)
-		{
-		}
-
-		public ConstructorActivationBase (IntPtr handle, JniHandleOwnership transfer)
-			: base (handle, transfer)
-		{
-		}
+	[Export (SuperArgumentsString = "", Throws = new [] { typeof (Java.IO.IOException) })]
+	public ConstructorActivationWithThrows ()
+	{
+		ConstructorInvocations++;
 	}
 
-	[Register ("net/dot/android/test/ConstructorActivationDefault")]
-	public class ConstructorActivationDefault : Java.Lang.Object
+	public static void Reset ()
 	{
-		public static int ConstructorInvocations;
+		ConstructorInvocations = 0;
+	}
+}
 
-		public int ConstructorOrdinal;
-
-		public ConstructorActivationDefault ()
-		{
-			ConstructorOrdinal = ++ConstructorInvocations;
-		}
-
-		public static void Reset ()
-		{
-			ConstructorInvocations = 0;
-		}
+[Register ("net/dot/android/test/ConstructorActivationBase", DoNotGenerateAcw = true)]
+public class ConstructorActivationBase : Java.Lang.Object
+{
+	public ConstructorActivationBase ()
+	{
 	}
 
-	[Register ("com/\u00e9xample/\u0394elta")]
-	public class UnicodeLetterIdentifierPeer : Java.Lang.Object
+	public ConstructorActivationBase (bool value)
 	{
-		public static int ConstructorInvocations;
-
-		public UnicodeLetterIdentifierPeer ()
-		{
-			ConstructorInvocations++;
-		}
-
-		public static void Reset ()
-		{
-			ConstructorInvocations = 0;
-		}
 	}
 
-	[Register ("net/dot/android/test/ConstructorActivationMarshalObject")]
-	public class ConstructorActivationMarshalObject : ConstructorActivationBase
+	public ConstructorActivationBase (sbyte value)
 	{
-		public static int ConstructorInvocations;
-
-		public bool BooleanValue;
-		public sbyte ByteValue;
-		public char CharValue;
-		public short ShortValue;
-		public int IntValue;
-		public long LongValue;
-		public float FloatValue;
-		public double DoubleValue;
-		public int MultiIntValue;
-		public bool MultiBooleanValue;
-		public long MultiLongValue;
-		public string StringValue;
-		public string FirstStringValue;
-		public string SecondStringValue;
-		public string StringIntStringValue;
-		public int StringIntValue;
-		public int[] IntArrayValue;
-		public string StringArrayLabel;
-		public int[] StringArrayValues;
-		public bool[] BooleanArrayValue;
-		public byte[] ByteArrayValue;
-		public string[] StringArrayValue;
-		public Java.Lang.Object[] ObjectArrayValue;
-		public int[][] NestedIntArrayValue;
-
-		[Register (".ctor", "(Z)V", "")]
-		public ConstructorActivationMarshalObject (bool value)
-			: base (value)
-		{
-			ConstructorInvocations++;
-			BooleanValue = value;
-		}
-
-		[Register (".ctor", "(B)V", "")]
-		public ConstructorActivationMarshalObject (sbyte value)
-			: base (value)
-		{
-			ConstructorInvocations++;
-			ByteValue = value;
-		}
-
-		[Register (".ctor", "(C)V", "")]
-		public ConstructorActivationMarshalObject (char value)
-			: base (value)
-		{
-			ConstructorInvocations++;
-			CharValue = value;
-		}
-
-		[Register (".ctor", "(S)V", "")]
-		public ConstructorActivationMarshalObject (short value)
-			: base (value)
-		{
-			ConstructorInvocations++;
-			ShortValue = value;
-		}
-
-		[Register (".ctor", "(I)V", "")]
-		public ConstructorActivationMarshalObject (int value)
-			: base (value)
-		{
-			ConstructorInvocations++;
-			IntValue = value;
-		}
-
-		[Register (".ctor", "(J)V", "")]
-		public ConstructorActivationMarshalObject (long value)
-			: base (value)
-		{
-			ConstructorInvocations++;
-			LongValue = value;
-		}
-
-		[Register (".ctor", "(F)V", "")]
-		public ConstructorActivationMarshalObject (float value)
-			: base (value)
-		{
-			ConstructorInvocations++;
-			FloatValue = value;
-		}
-
-		[Register (".ctor", "(D)V", "")]
-		public ConstructorActivationMarshalObject (double value)
-			: base (value)
-		{
-			ConstructorInvocations++;
-			DoubleValue = value;
-		}
-
-		[Register (".ctor", "(IZJ)V", "")]
-		public ConstructorActivationMarshalObject (int number, bool flag, long longValue)
-			: base (number, flag, longValue)
-		{
-			ConstructorInvocations++;
-			MultiIntValue = number;
-			MultiBooleanValue = flag;
-			MultiLongValue = longValue;
-		}
-
-		[Register (".ctor", "(Ljava/lang/String;)V", "")]
-		public ConstructorActivationMarshalObject (string value)
-			: base (value)
-		{
-			ConstructorInvocations++;
-			StringValue = value;
-		}
-
-		[Register (".ctor", "(Ljava/lang/String;Ljava/lang/String;)V", "")]
-		public ConstructorActivationMarshalObject (string first, string second)
-			: base (first, second)
-		{
-			ConstructorInvocations++;
-			FirstStringValue = first;
-			SecondStringValue = second;
-		}
-
-		[Register (".ctor", "(Ljava/lang/String;I)V", "")]
-		public ConstructorActivationMarshalObject (string text, int number)
-			: base (text, number)
-		{
-			ConstructorInvocations++;
-			StringIntStringValue = text;
-			StringIntValue = number;
-		}
-
-		[Register (".ctor", "([I)V", "")]
-		public ConstructorActivationMarshalObject (int[] value)
-			: base (value)
-		{
-			ConstructorInvocations++;
-			IntArrayValue = value;
-		}
-
-		[Register (".ctor", "(Ljava/lang/String;[I)V", "")]
-		public ConstructorActivationMarshalObject (string label, int[] value)
-			: base (label, value)
-		{
-			ConstructorInvocations++;
-			StringArrayLabel = label;
-			StringArrayValues = value;
-		}
-
-		[Register (".ctor", "([Z)V", "")]
-		public ConstructorActivationMarshalObject (bool[] value)
-			: base (value)
-		{
-			ConstructorInvocations++;
-			BooleanArrayValue = value;
-		}
-
-		[Register (".ctor", "([B)V", "")]
-		public ConstructorActivationMarshalObject (byte[] value)
-			: base (value)
-		{
-			ConstructorInvocations++;
-			ByteArrayValue = value;
-		}
-
-		[Register (".ctor", "([Ljava/lang/String;)V", "")]
-		public ConstructorActivationMarshalObject (string[] value)
-			: base (value)
-		{
-			ConstructorInvocations++;
-			StringArrayValue = value;
-		}
-
-		[Register (".ctor", "([Ljava/lang/Object;)V", "")]
-		public ConstructorActivationMarshalObject (Java.Lang.Object[] value)
-			: base (value)
-		{
-			ConstructorInvocations++;
-			ObjectArrayValue = value;
-		}
-
-		[Register (".ctor", "([[I)V", "")]
-		public ConstructorActivationMarshalObject (int[][] value)
-			: base (value)
-		{
-			ConstructorInvocations++;
-			NestedIntArrayValue = value;
-		}
-
-		public static void Reset ()
-		{
-			ConstructorInvocations = 0;
-		}
 	}
 
-	[Register ("net/dot/android/test/ConstructorActivationContextView")]
-	public class ConstructorActivationContextView : View
+	public ConstructorActivationBase (char value)
 	{
-		public static int ConstructorInvocations;
-
-		public Context ContextValue;
-
-		[Register (".ctor", "(Landroid/content/Context;)V", "")]
-		public ConstructorActivationContextView (Context context)
-			: base (context)
-		{
-			ConstructorInvocations++;
-			ContextValue = context;
-		}
-
-		public static void Reset ()
-		{
-			ConstructorInvocations = 0;
-		}
 	}
 
-	[Register ("net/dot/android/test/ConstructorActivationAttributeSetView")]
-	public class ConstructorActivationAttributeSetView : View
+	public ConstructorActivationBase (short value)
 	{
-		public static int ConstructorInvocations;
-
-		public Context ContextValue;
-		public IAttributeSet AttributeSetValue;
-
-		[Register (".ctor", "(Landroid/content/Context;Landroid/util/AttributeSet;)V", "")]
-		public ConstructorActivationAttributeSetView (Context context, IAttributeSet attrs)
-			: base (context, attrs)
-		{
-			ConstructorInvocations++;
-			ContextValue = context;
-			AttributeSetValue = attrs;
-		}
-
-		public static void Reset ()
-		{
-			ConstructorInvocations = 0;
-		}
 	}
 
-	[Register ("net/dot/android/test/ConstructorActivationStyledView")]
-	public class ConstructorActivationStyledView : View
+	public ConstructorActivationBase (int value)
 	{
-		public static int ConstructorInvocations;
+	}
 
-		public Context ContextValue;
-		public IAttributeSet AttributeSetValue;
-		public int DefStyleAttrValue;
+	public ConstructorActivationBase (long value)
+	{
+	}
 
-		[Register (".ctor", "(Landroid/content/Context;Landroid/util/AttributeSet;I)V", "")]
-		public ConstructorActivationStyledView (Context context, IAttributeSet attrs, int defStyleAttr)
-			: base (context, attrs, defStyleAttr)
-		{
-			ConstructorInvocations++;
-			ContextValue = context;
-			AttributeSetValue = attrs;
-			DefStyleAttrValue = defStyleAttr;
-		}
+	public ConstructorActivationBase (float value)
+	{
+	}
 
-		public static void Reset ()
-		{
-			ConstructorInvocations = 0;
-		}
+	public ConstructorActivationBase (double value)
+	{
+	}
+
+	public ConstructorActivationBase (int number, bool flag, long longValue)
+	{
+	}
+
+	public ConstructorActivationBase (string value)
+	{
+	}
+
+	public ConstructorActivationBase (string first, string second)
+	{
+	}
+
+	public ConstructorActivationBase (string text, int number)
+	{
+	}
+
+	public ConstructorActivationBase (int[] value)
+	{
+	}
+
+	public ConstructorActivationBase (string label, int[] value)
+	{
+	}
+
+	public ConstructorActivationBase (bool[] value)
+	{
+	}
+
+	public ConstructorActivationBase (byte[] value)
+	{
+	}
+
+	public ConstructorActivationBase (string[] value)
+	{
+	}
+
+	public ConstructorActivationBase (Java.Lang.Object[] value)
+	{
+	}
+
+	public ConstructorActivationBase (int[][] value)
+	{
+	}
+
+	public ConstructorActivationBase (IntPtr handle, JniHandleOwnership transfer)
+		: base (handle, transfer)
+	{
+	}
+}
+
+[Register ("net/dot/android/test/ConstructorActivationDefault")]
+public class ConstructorActivationDefault : Java.Lang.Object
+{
+	public static int ConstructorInvocations;
+
+	public int ConstructorOrdinal;
+
+	public ConstructorActivationDefault ()
+	{
+		ConstructorOrdinal = ++ConstructorInvocations;
+	}
+
+	public static void Reset ()
+	{
+		ConstructorInvocations = 0;
+	}
+}
+
+[Register ("com/\u00e9xample/\u0394elta")]
+public class UnicodeLetterIdentifierPeer : Java.Lang.Object
+{
+	public static int ConstructorInvocations;
+
+	public UnicodeLetterIdentifierPeer ()
+	{
+		ConstructorInvocations++;
+	}
+
+	public static void Reset ()
+	{
+		ConstructorInvocations = 0;
+	}
+}
+
+[Register ("net/dot/android/test/ConstructorActivationMarshalObject")]
+public class ConstructorActivationMarshalObject : ConstructorActivationBase
+{
+	public static int ConstructorInvocations;
+
+	public bool BooleanValue;
+	public sbyte ByteValue;
+	public char CharValue;
+	public short ShortValue;
+	public int IntValue;
+	public long LongValue;
+	public float FloatValue;
+	public double DoubleValue;
+	public int MultiIntValue;
+	public bool MultiBooleanValue;
+	public long MultiLongValue;
+	public string StringValue;
+	public string FirstStringValue;
+	public string SecondStringValue;
+	public string StringIntStringValue;
+	public int StringIntValue;
+	public int[] IntArrayValue;
+	public string StringArrayLabel;
+	public int[] StringArrayValues;
+	public bool[] BooleanArrayValue;
+	public byte[] ByteArrayValue;
+	public string[] StringArrayValue;
+	public Java.Lang.Object[] ObjectArrayValue;
+	public int[][] NestedIntArrayValue;
+
+	[Register (".ctor", "(Z)V", "")]
+	public ConstructorActivationMarshalObject (bool value)
+		: base (value)
+	{
+		ConstructorInvocations++;
+		BooleanValue = value;
+	}
+
+	[Register (".ctor", "(B)V", "")]
+	public ConstructorActivationMarshalObject (sbyte value)
+		: base (value)
+	{
+		ConstructorInvocations++;
+		ByteValue = value;
+	}
+
+	[Register (".ctor", "(C)V", "")]
+	public ConstructorActivationMarshalObject (char value)
+		: base (value)
+	{
+		ConstructorInvocations++;
+		CharValue = value;
+	}
+
+	[Register (".ctor", "(S)V", "")]
+	public ConstructorActivationMarshalObject (short value)
+		: base (value)
+	{
+		ConstructorInvocations++;
+		ShortValue = value;
+	}
+
+	[Register (".ctor", "(I)V", "")]
+	public ConstructorActivationMarshalObject (int value)
+		: base (value)
+	{
+		ConstructorInvocations++;
+		IntValue = value;
+	}
+
+	[Register (".ctor", "(J)V", "")]
+	public ConstructorActivationMarshalObject (long value)
+		: base (value)
+	{
+		ConstructorInvocations++;
+		LongValue = value;
+	}
+
+	[Register (".ctor", "(F)V", "")]
+	public ConstructorActivationMarshalObject (float value)
+		: base (value)
+	{
+		ConstructorInvocations++;
+		FloatValue = value;
+	}
+
+	[Register (".ctor", "(D)V", "")]
+	public ConstructorActivationMarshalObject (double value)
+		: base (value)
+	{
+		ConstructorInvocations++;
+		DoubleValue = value;
+	}
+
+	[Register (".ctor", "(IZJ)V", "")]
+	public ConstructorActivationMarshalObject (int number, bool flag, long longValue)
+		: base (number, flag, longValue)
+	{
+		ConstructorInvocations++;
+		MultiIntValue = number;
+		MultiBooleanValue = flag;
+		MultiLongValue = longValue;
+	}
+
+	[Register (".ctor", "(Ljava/lang/String;)V", "")]
+	public ConstructorActivationMarshalObject (string value)
+		: base (value)
+	{
+		ConstructorInvocations++;
+		StringValue = value;
+	}
+
+	[Register (".ctor", "(Ljava/lang/String;Ljava/lang/String;)V", "")]
+	public ConstructorActivationMarshalObject (string first, string second)
+		: base (first, second)
+	{
+		ConstructorInvocations++;
+		FirstStringValue = first;
+		SecondStringValue = second;
+	}
+
+	[Register (".ctor", "(Ljava/lang/String;I)V", "")]
+	public ConstructorActivationMarshalObject (string text, int number)
+		: base (text, number)
+	{
+		ConstructorInvocations++;
+		StringIntStringValue = text;
+		StringIntValue = number;
+	}
+
+	[Register (".ctor", "([I)V", "")]
+	public ConstructorActivationMarshalObject (int[] value)
+		: base (value)
+	{
+		ConstructorInvocations++;
+		IntArrayValue = value;
+	}
+
+	[Register (".ctor", "(Ljava/lang/String;[I)V", "")]
+	public ConstructorActivationMarshalObject (string label, int[] value)
+		: base (label, value)
+	{
+		ConstructorInvocations++;
+		StringArrayLabel = label;
+		StringArrayValues = value;
+	}
+
+	[Register (".ctor", "([Z)V", "")]
+	public ConstructorActivationMarshalObject (bool[] value)
+		: base (value)
+	{
+		ConstructorInvocations++;
+		BooleanArrayValue = value;
+	}
+
+	[Register (".ctor", "([B)V", "")]
+	public ConstructorActivationMarshalObject (byte[] value)
+		: base (value)
+	{
+		ConstructorInvocations++;
+		ByteArrayValue = value;
+	}
+
+	[Register (".ctor", "([Ljava/lang/String;)V", "")]
+	public ConstructorActivationMarshalObject (string[] value)
+		: base (value)
+	{
+		ConstructorInvocations++;
+		StringArrayValue = value;
+	}
+
+	[Register (".ctor", "([Ljava/lang/Object;)V", "")]
+	public ConstructorActivationMarshalObject (Java.Lang.Object[] value)
+		: base (value)
+	{
+		ConstructorInvocations++;
+		ObjectArrayValue = value;
+	}
+
+	[Register (".ctor", "([[I)V", "")]
+	public ConstructorActivationMarshalObject (int[][] value)
+		: base (value)
+	{
+		ConstructorInvocations++;
+		NestedIntArrayValue = value;
+	}
+
+	public static void Reset ()
+	{
+		ConstructorInvocations = 0;
+	}
+}
+
+[Register ("net/dot/android/test/ConstructorActivationContextView")]
+public class ConstructorActivationContextView : View
+{
+	public static int ConstructorInvocations;
+
+	public Context ContextValue;
+
+	[Register (".ctor", "(Landroid/content/Context;)V", "")]
+	public ConstructorActivationContextView (Context context)
+		: base (context)
+	{
+		ConstructorInvocations++;
+		ContextValue = context;
+	}
+
+	public static void Reset ()
+	{
+		ConstructorInvocations = 0;
+	}
+}
+
+[Register ("net/dot/android/test/ConstructorActivationAttributeSetView")]
+public class ConstructorActivationAttributeSetView : View
+{
+	public static int ConstructorInvocations;
+
+	public Context ContextValue;
+	public IAttributeSet AttributeSetValue;
+
+	[Register (".ctor", "(Landroid/content/Context;Landroid/util/AttributeSet;)V", "")]
+	public ConstructorActivationAttributeSetView (Context context, IAttributeSet attrs)
+		: base (context, attrs)
+	{
+		ConstructorInvocations++;
+		ContextValue = context;
+		AttributeSetValue = attrs;
+	}
+
+	public static void Reset ()
+	{
+		ConstructorInvocations = 0;
+	}
+}
+
+[Register ("net/dot/android/test/ConstructorActivationStyledView")]
+public class ConstructorActivationStyledView : View
+{
+	public static int ConstructorInvocations;
+
+	public Context ContextValue;
+	public IAttributeSet AttributeSetValue;
+	public int DefStyleAttrValue;
+
+	[Register (".ctor", "(Landroid/content/Context;Landroid/util/AttributeSet;I)V", "")]
+	public ConstructorActivationStyledView (Context context, IAttributeSet attrs, int defStyleAttr)
+		: base (context, attrs, defStyleAttr)
+	{
+		ConstructorInvocations++;
+		ContextValue = context;
+		AttributeSetValue = attrs;
+		DefStyleAttrValue = defStyleAttr;
+	}
+
+	public static void Reset ()
+	{
+		ConstructorInvocations = 0;
 	}
 }

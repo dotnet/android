@@ -2,7 +2,7 @@ using System;
 
 using Android.Content;
 
-namespace Android.Views {
+namespace Android.Views; 
 
 	public partial class LayoutInflater {
 
@@ -11,6 +11,5 @@ namespace Android.Views {
 			return context.GetSystemService (Context.LayoutInflaterService!) as LayoutInflater;
 		}
 	}
-}
 
 

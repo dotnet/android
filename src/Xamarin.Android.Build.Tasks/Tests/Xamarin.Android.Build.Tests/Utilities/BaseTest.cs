@@ -21,706 +21,705 @@ using ICSharpCode.Decompiler;
 using ICSharpCode.Decompiler.CSharp;
 using ICSharpCode.Decompiler.Metadata;
 
-namespace Xamarin.Android.Build.Tests
+namespace Xamarin.Android.Build.Tests;
+
+public class BaseTest
 {
-	public class BaseTest
+	public static ConcurrentDictionary<string, string> TestOutputDirectories = new ConcurrentDictionary<string, string> ();
+	public static ConcurrentDictionary<string, string> TestPackageNames = new ConcurrentDictionary<string, string> ();
+
+	public static IEnumerable<(bool isRelease, AndroidRuntime runtime)> ValidRuntimeConfigurations => [
+		(false, AndroidRuntime.CoreCLR),
+		(true, AndroidRuntime.CoreCLR),
+		(true, AndroidRuntime.NativeAOT),
+	];
+
+	protected static string GetPreviousWorkloadJavaSdkPath ()
 	{
-		public static ConcurrentDictionary<string, string> TestOutputDirectories = new ConcurrentDictionary<string, string> ();
-		public static ConcurrentDictionary<string, string> TestPackageNames = new ConcurrentDictionary<string, string> ();
+		var architecture = RuntimeInformation.ProcessArchitecture.ToString ().ToUpperInvariant ();
+		var variableName = $"JAVA_HOME_21_{architecture}";
+		var javaSdkPath = Environment.GetEnvironmentVariable (variableName);
+		if (string.IsNullOrEmpty (javaSdkPath)) {
+			Assert.Ignore ($"The previous Android workload requires JDK 21, but {variableName} is not set.");
+		}
+		return javaSdkPath;
+	}
 
-		public static IEnumerable<(bool isRelease, AndroidRuntime runtime)> ValidRuntimeConfigurations => [
-			(false, AndroidRuntime.CoreCLR),
-			(true, AndroidRuntime.CoreCLR),
-			(true, AndroidRuntime.NativeAOT),
-		];
+	protected bool IsWindows => TestEnvironment.IsWindows;
 
-		protected static string GetPreviousWorkloadJavaSdkPath ()
-		{
-			var architecture = RuntimeInformation.ProcessArchitecture.ToString ().ToUpperInvariant ();
-			var variableName = $"JAVA_HOME_21_{architecture}";
-			var javaSdkPath = Environment.GetEnvironmentVariable (variableName);
-			if (string.IsNullOrEmpty (javaSdkPath)) {
-				Assert.Ignore ($"The previous Android workload requires JDK 21, but {variableName} is not set.");
+	public string Root => Path.GetFullPath (XABuildPaths.TestOutputDirectory);
+
+	/// <summary>
+	/// Retrieves the value of an <see cref="AssemblyMetadataAttribute"/> embedded in the test assembly.
+	/// </summary>
+	protected string GetAssemblyMetadataValue (string key)
+	{
+		var assembly = GetType ().Assembly;
+		var value = assembly
+			.GetCustomAttributes<AssemblyMetadataAttribute> ()
+			.FirstOrDefault (a => a.Key == key)?.Value;
+		if (value == null) {
+			throw new InvalidOperationException ($"AssemblyMetadata '{key}' not found in {assembly.GetName ().Name}");
+		}
+		return value;
+	}
+
+	char [] invalidChars = { '{', '}', '(', ')', '$', ':', ';', '\"', '\'', ',', '=', '|' };
+
+	public string TestName {
+		get {
+			var result = TestContext.CurrentContext.Test.Name;
+			foreach (var c in invalidChars.Concat (Path.GetInvalidPathChars ().Concat (Path.GetInvalidFileNameChars ()))) {
+				result = result.Replace (c, '_');
 			}
-			return javaSdkPath;
+			return result.Replace ("_", string.Empty);
 		}
+	}
 
-		protected bool IsWindows => TestEnvironment.IsWindows;
-
-		public string Root => Path.GetFullPath (XABuildPaths.TestOutputDirectory);
-
-		/// <summary>
-		/// Retrieves the value of an <see cref="AssemblyMetadataAttribute"/> embedded in the test assembly.
-		/// </summary>
-		protected string GetAssemblyMetadataValue (string key)
-		{
-			var assembly = GetType ().Assembly;
-			var value = assembly
-				.GetCustomAttributes<AssemblyMetadataAttribute> ()
-				.FirstOrDefault (a => a.Key == key)?.Value;
-			if (value == null) {
-				throw new InvalidOperationException ($"AssemblyMetadata '{key}' not found in {assembly.GetName ().Name}");
-			}
-			return value;
+	public static string AndroidSdkPath {
+		get {
+			return AndroidSdkResolver.GetAndroidSdkPath ();
 		}
+	}
 
-		char [] invalidChars = { '{', '}', '(', ')', '$', ':', ';', '\"', '\'', ',', '=', '|' };
-
-		public string TestName {
-			get {
-				var result = TestContext.CurrentContext.Test.Name;
-				foreach (var c in invalidChars.Concat (Path.GetInvalidPathChars ().Concat (Path.GetInvalidFileNameChars ()))) {
-					result = result.Replace (c, '_');
-				}
-				return result.Replace ("_", string.Empty);
-			}
+	public static string AndroidNdkPath {
+		get {
+			return AndroidSdkResolver.GetAndroidNdkPath ();
 		}
+	}
 
-		public static string AndroidSdkPath {
-			get {
-				return AndroidSdkResolver.GetAndroidSdkPath ();
-			}
-		}
+	/// <summary>
+	/// Windows can only create a file of 255 characters: This type of path is composed of components separated by backslashes, each up to the value returned in the lpMaximumComponentLength parameter of the GetVolumeInformation function (this value is commonly 255 characters).
+	/// See: https://docs.microsoft.com/en-us/windows/win32/fileio/naming-a-file#maximum-path-length-limitation
+	/// </summary>
+	public const int MaxFileName = 255;
 
-		public static string AndroidNdkPath {
-			get {
-				return AndroidSdkResolver.GetAndroidNdkPath ();
-			}
-		}
+	protected static void WaitFor(int milliseconds)
+	{
+		var pause = new ManualResetEvent(false);
+		pause.WaitOne(milliseconds);
+	}
 
-		/// <summary>
-		/// Windows can only create a file of 255 characters: This type of path is composed of components separated by backslashes, each up to the value returned in the lpMaximumComponentLength parameter of the GetVolumeInformation function (this value is commonly 255 characters).
-		/// See: https://docs.microsoft.com/en-us/windows/win32/fileio/naming-a-file#maximum-path-length-limitation
-		/// </summary>
-		public const int MaxFileName = 255;
-
-		protected static void WaitFor(int milliseconds)
-		{
-			var pause = new ManualResetEvent(false);
-			pause.WaitOne(milliseconds);
-		}
-
-		protected static void WaitFor (TimeSpan timeSpan, Func<bool> func, int intervalInMS = 10)
-		{
-			var pause = new ManualResetEvent (false);
-			TimeSpan total = timeSpan;
-			TimeSpan interval = TimeSpan.FromMilliseconds (intervalInMS);
-			while (total.TotalMilliseconds > 0) {
-				pause.WaitOne (interval);
-				total = total.Subtract (interval);
-				if (func ()) {
-					break;
-				}
+	protected static void WaitFor (TimeSpan timeSpan, Func<bool> func, int intervalInMS = 10)
+	{
+		var pause = new ManualResetEvent (false);
+		TimeSpan total = timeSpan;
+		TimeSpan interval = TimeSpan.FromMilliseconds (intervalInMS);
+		while (total.TotalMilliseconds > 0) {
+			pause.WaitOne (interval);
+			total = total.Subtract (interval);
+			if (func ()) {
+				break;
 			}
 		}
+	}
 
-		protected static string RunAdbCommand (string command, bool ignoreErrors = true, int timeout = 30)
-		{
-			var (_, stdOutput, stdError) = RunAdbCommandWithExitCode (command, timeout);
-			return stdOutput + stdError;
+	protected static string RunAdbCommand (string command, bool ignoreErrors = true, int timeout = 30)
+	{
+		var (_, stdOutput, stdError) = RunAdbCommandWithExitCode (command, timeout);
+		return stdOutput + stdError;
+	}
+
+	protected static (int code, string stdOutput, string stdError) RunAdbCommandWithExitCode (string command, int timeout = 30)
+	{
+		string ext = Environment.OSVersion.Platform != PlatformID.Unix ? ".exe" : "";
+		string adb = Path.Combine (AndroidSdkPath, "platform-tools", "adb" + ext);
+		string adbTarget = Environment.GetEnvironmentVariable ("ADB_TARGET");
+		return RunProcessWithExitCode (adb, $"{adbTarget} {command}", timeout);
+	}
+
+	protected static (int code, string stdOutput, string stdError) RunAdbCommandWithExitCode (string [] command, int timeout = 30)
+	{
+		var arguments = new Microsoft.Build.Utilities.CommandLineBuilder ();
+		arguments.AppendSwitchIfNotNull ("", command, " ");
+		return RunAdbCommandWithExitCode (arguments.ToString (), timeout);
+	}
+
+	protected static (int code, string stdOutput, string stdError) RunApkDiffCommand (string args, string logFilePath)
+	{
+		var executableName = OperatingSystem.IsWindows () ? "apkdiff.exe" : "apkdiff";
+		var info = new ProcessStartInfo (executableName, $"--verbose {args}") {
+			CreateNoWindow = true,
+			WindowStyle = ProcessWindowStyle.Hidden,
+		};
+		using var stdOutput = new StringWriter ();
+		using var stdError = new StringWriter ();
+		int timeoutInSeconds = TestEnvironment.IsRunningOnCI ? 120 : 30;
+		using var cancellationTokenSource = new CancellationTokenSource (TimeSpan.FromSeconds (timeoutInSeconds));
+		int processId = -1;
+		int exitCode;
+		try {
+			exitCode = Xamarin.Android.Tools.ProcessUtils.StartProcess (
+				info,
+				stdOutput,
+				stdError,
+				cancellationTokenSource.Token,
+				onStarted: process => processId = process.Id
+			).GetAwaiter ().GetResult ();
+		} catch (OperationCanceledException) {
+			exitCode = -1;
+			stdError.WriteLine ($"apkdiff timed out after {timeoutInSeconds} seconds (PID {processId}).");
 		}
 
-		protected static (int code, string stdOutput, string stdError) RunAdbCommandWithExitCode (string command, int timeout = 30)
-		{
-			string ext = Environment.OSVersion.Platform != PlatformID.Unix ? ".exe" : "";
-			string adb = Path.Combine (AndroidSdkPath, "platform-tools", "adb" + ext);
-			string adbTarget = Environment.GetEnvironmentVariable ("ADB_TARGET");
-			return RunProcessWithExitCode (adb, $"{adbTarget} {command}", timeout);
-		}
+		var result = (code: exitCode, stdOutput: stdOutput.ToString ().Trim (), stdError: stdError.ToString ().Trim ());
+		var logContent = $"apkdiff exited with code: {exitCode}" +
+			$"\ncontext: https://github.com/dotnet/android/blob/main/Documentation/project-docs/ApkSizeRegressionChecks.md" +
+			$"\nstdOut:\n{result.stdOutput}\nstdErr:\n{result.stdError}";
+		File.WriteAllText (logFilePath, logContent);
+		TestContext.AddTestAttachment (logFilePath, Path.GetFileName (logFilePath));
+		return result;
+	}
 
-		protected static (int code, string stdOutput, string stdError) RunAdbCommandWithExitCode (string [] command, int timeout = 30)
-		{
-			var arguments = new Microsoft.Build.Utilities.CommandLineBuilder ();
-			arguments.AppendSwitchIfNotNull ("", command, " ");
-			return RunAdbCommandWithExitCode (arguments.ToString (), timeout);
-		}
+	protected static string RunProcess (string exe, string args, int timeoutInSeconds = 30)
+	{
+		var (_, stdOutput, stdError) = RunProcessWithExitCode (exe, args, timeoutInSeconds);
 
-		protected static (int code, string stdOutput, string stdError) RunApkDiffCommand (string args, string logFilePath)
-		{
-			var executableName = OperatingSystem.IsWindows () ? "apkdiff.exe" : "apkdiff";
-			var info = new ProcessStartInfo (executableName, $"--verbose {args}") {
-				CreateNoWindow = true,
-				WindowStyle = ProcessWindowStyle.Hidden,
-			};
-			using var stdOutput = new StringWriter ();
-			using var stdError = new StringWriter ();
-			int timeoutInSeconds = TestEnvironment.IsRunningOnCI ? 120 : 30;
-			using var cancellationTokenSource = new CancellationTokenSource (TimeSpan.FromSeconds (timeoutInSeconds));
-			int processId = -1;
-			int exitCode;
-			try {
-				exitCode = Xamarin.Android.Tools.ProcessUtils.StartProcess (
-					info,
-					stdOutput,
-					stdError,
-					cancellationTokenSource.Token,
-					onStarted: process => processId = process.Id
-				).GetAwaiter ().GetResult ();
-			} catch (OperationCanceledException) {
-				exitCode = -1;
-				stdError.WriteLine ($"apkdiff timed out after {timeoutInSeconds} seconds (PID {processId}).");
+		return stdOutput + stdError;
+	}
+
+	protected static (int code, string stdOutput, string stdError) RunProcessWithExitCode (string exe, string args, int timeoutInSeconds = 30)
+	{
+		TestContext.Out.WriteLine ($"{nameof(RunProcess)}: {exe} {args}");
+		var info = new ProcessStartInfo (exe, args) {
+			RedirectStandardOutput = true,
+			RedirectStandardError = true,
+			UseShellExecute = false,
+			CreateNoWindow = true,
+			WindowStyle = ProcessWindowStyle.Hidden,
+		};
+		using (var proc = new Process ()) {
+			StringBuilder standardOutput = new StringBuilder (), errorOutput = new StringBuilder ();
+			var outputDone = new TaskCompletionSource<bool> (TaskCreationOptions.RunContinuationsAsynchronously);
+			var errorDone = new TaskCompletionSource<bool> (TaskCreationOptions.RunContinuationsAsynchronously);
+			proc.StartInfo = info;
+			proc.OutputDataReceived += new DataReceivedEventHandler ((sender, e) => {
+				if (e.Data == null)
+					outputDone.TrySetResult (true);
+				else if (!string.IsNullOrEmpty (e.Data))
+					standardOutput.AppendLine (e.Data);
+			});
+			proc.ErrorDataReceived += new DataReceivedEventHandler ((sender, e) => {
+				if (e.Data == null)
+					errorDone.TrySetResult (true);
+				else if (!string.IsNullOrEmpty (e.Data))
+					errorOutput.AppendLine (e.Data);
+			});
+
+			proc.Start ();
+			proc.BeginOutputReadLine ();
+			proc.BeginErrorReadLine ();
+
+			if (!proc.WaitForExit ((int)TimeSpan.FromSeconds (timeoutInSeconds).TotalMilliseconds)) {
+				if (!proc.HasExited)
+					proc.Kill (entireProcessTree: true);
+				TestContext.Out.WriteLine ($"{nameof (RunProcess)} timed out: {exe} {args}");
+				return (-1, null, null); //Don't try to read stdout/stderr
 			}
 
-			var result = (code: exitCode, stdOutput: stdOutput.ToString ().Trim (), stdError: stdError.ToString ().Trim ());
-			var logContent = $"apkdiff exited with code: {exitCode}" +
-				$"\ncontext: https://github.com/dotnet/android/blob/main/Documentation/project-docs/ApkSizeRegressionChecks.md" +
-				$"\nstdOut:\n{result.stdOutput}\nstdErr:\n{result.stdError}";
-			File.WriteAllText (logFilePath, logContent);
-			TestContext.AddTestAttachment (logFilePath, Path.GetFileName (logFilePath));
-			return result;
+			// A child process can keep the redirected handles open after adb exits.
+			bool outputDrained = outputDone.Task.Wait (TimeSpan.FromSeconds (2));
+			bool errorDrained = errorDone.Task.Wait (TimeSpan.FromSeconds (2));
+			if (!outputDrained || !errorDrained)
+				TestContext.Out.WriteLine ($"{nameof (RunProcess)}: {exe} exited with redirected output still open.");
+
+			return (proc.ExitCode, standardOutput.ToString ().Trim (), errorOutput.ToString ().Trim ());
 		}
+	}
 
-		protected static string RunProcess (string exe, string args, int timeoutInSeconds = 30)
-		{
-			var (_, stdOutput, stdError) = RunProcessWithExitCode (exe, args, timeoutInSeconds);
-
-			return stdOutput + stdError;
+	protected string CreateFauxAndroidNdkDirectory (string path)
+	{
+		var androidNdkDirectory = Path.Combine (Root, path);
+		Directory.CreateDirectory (androidNdkDirectory);
+		Directory.CreateDirectory (Path.Combine (androidNdkDirectory, "toolchains"));
+		var sb  = new StringBuilder ();
+		if (IsWindows) {
+			sb.AppendLine ("@echo off");
+			sb.AppendLine ($"echo GNU Make 3.81");
+		} else {
+			sb.AppendLine ("#!/bin/bash");
+			sb.AppendLine ($"echo \"GNU Make 3.81\"");
 		}
-
-		protected static (int code, string stdOutput, string stdError) RunProcessWithExitCode (string exe, string args, int timeoutInSeconds = 30)
-		{
-			TestContext.Out.WriteLine ($"{nameof(RunProcess)}: {exe} {args}");
-			var info = new ProcessStartInfo (exe, args) {
-				RedirectStandardOutput = true,
-				RedirectStandardError = true,
-				UseShellExecute = false,
-				CreateNoWindow = true,
-				WindowStyle = ProcessWindowStyle.Hidden,
-			};
-			using (var proc = new Process ()) {
-				StringBuilder standardOutput = new StringBuilder (), errorOutput = new StringBuilder ();
-				var outputDone = new TaskCompletionSource<bool> (TaskCreationOptions.RunContinuationsAsynchronously);
-				var errorDone = new TaskCompletionSource<bool> (TaskCreationOptions.RunContinuationsAsynchronously);
-				proc.StartInfo = info;
-				proc.OutputDataReceived += new DataReceivedEventHandler ((sender, e) => {
-					if (e.Data == null)
-						outputDone.TrySetResult (true);
-					else if (!string.IsNullOrEmpty (e.Data))
-						standardOutput.AppendLine (e.Data);
-				});
-				proc.ErrorDataReceived += new DataReceivedEventHandler ((sender, e) => {
-					if (e.Data == null)
-						errorDone.TrySetResult (true);
-					else if (!string.IsNullOrEmpty (e.Data))
-						errorOutput.AppendLine (e.Data);
-				});
-
-				proc.Start ();
-				proc.BeginOutputReadLine ();
-				proc.BeginErrorReadLine ();
-
-				if (!proc.WaitForExit ((int)TimeSpan.FromSeconds (timeoutInSeconds).TotalMilliseconds)) {
-					if (!proc.HasExited)
-						proc.Kill (entireProcessTree: true);
-					TestContext.Out.WriteLine ($"{nameof (RunProcess)} timed out: {exe} {args}");
-					return (-1, null, null); //Don't try to read stdout/stderr
-				}
-
-				// A child process can keep the redirected handles open after adb exits.
-				bool outputDrained = outputDone.Task.Wait (TimeSpan.FromSeconds (2));
-				bool errorDrained = errorDone.Task.Wait (TimeSpan.FromSeconds (2));
-				if (!outputDrained || !errorDrained)
-					TestContext.Out.WriteLine ($"{nameof (RunProcess)}: {exe} exited with redirected output still open.");
-
-				return (proc.ExitCode, standardOutput.ToString ().Trim (), errorOutput.ToString ().Trim ());
-			}
+		CreateFauxExecutable (Path.Combine (androidNdkDirectory, IsWindows ? "ndk-build.cmd" : "ndk-build"), sb);
+		sb.Clear();
+		if (IsWindows) {
+			sb.AppendLine("@echo off");
+		} else {
+			sb.AppendLine("#!/bin/bash");
 		}
+		CreateFauxExecutable (Path.Combine (androidNdkDirectory, IsWindows ? "ndk-stack.cmd" : "ndk-stack"), sb);
+		return androidNdkDirectory;
+	}
 
-		protected string CreateFauxAndroidNdkDirectory (string path)
-		{
-			var androidNdkDirectory = Path.Combine (Root, path);
-			Directory.CreateDirectory (androidNdkDirectory);
-			Directory.CreateDirectory (Path.Combine (androidNdkDirectory, "toolchains"));
+	protected string CreateFauxAndroidSdkDirectory (string path, string buildToolsVersion, ApiInfo [] apiLevels = null)
+	{
+		var androidSdkDirectory = Path.Combine (Root, path);
+		var androidSdkToolsPath = Path.Combine (androidSdkDirectory, "tools");
+		var androidSdkBinPath = Path.Combine (androidSdkToolsPath, "bin");
+		var androidSdkPlatformToolsPath = Path.Combine (androidSdkDirectory, "platform-tools");
+		var androidSdkPlatformsPath = Path.Combine (androidSdkDirectory, "platforms");
+		var androidSdkBuildToolsPath = Path.Combine (androidSdkDirectory, "build-tools", buildToolsVersion ?? string.Empty);
+		Directory.CreateDirectory (androidSdkDirectory);
+		Directory.CreateDirectory (androidSdkToolsPath);
+		Directory.CreateDirectory (androidSdkBinPath);
+		Directory.CreateDirectory (androidSdkPlatformToolsPath);
+		Directory.CreateDirectory (androidSdkPlatformsPath);
+		Directory.CreateDirectory (androidSdkBuildToolsPath);
+
+		File.WriteAllText (Path.Combine (androidSdkPlatformToolsPath, IsWindows ? "adb.exe" : "adb"), "");
+		if (!string.IsNullOrEmpty (buildToolsVersion)) {
+			File.WriteAllText (Path.Combine (androidSdkBuildToolsPath, IsWindows ? "zipalign.exe" : "zipalign"), "");
+			//File.WriteAllText (Path.Combine (androidSdkBuildToolsPath, IsWindows ? "aapt.exe" : "aapt"), "");
 			var sb  = new StringBuilder ();
 			if (IsWindows) {
 				sb.AppendLine ("@echo off");
-				sb.AppendLine ($"echo GNU Make 3.81");
+				sb.AppendLine ($"echo Android Asset Packaging Tool (aapt) 2.19-10229193");
 			} else {
 				sb.AppendLine ("#!/bin/bash");
-				sb.AppendLine ($"echo \"GNU Make 3.81\"");
+				sb.AppendLine ($"echo \"Android Asset Packaging Tool (aapt) 2.19-10229193\"");
 			}
-			CreateFauxExecutable (Path.Combine (androidNdkDirectory, IsWindows ? "ndk-build.cmd" : "ndk-build"), sb);
-			sb.Clear();
+			CreateFauxExecutable (Path.Combine (androidSdkBuildToolsPath, IsWindows ? "aapt2.cmd" : "aapt2"), sb);
+		}
+		File.WriteAllText (Path.Combine (androidSdkToolsPath, IsWindows ? "lint.bat" : "lint"), "");
+
+		List<ApiInfo> defaults = new List<ApiInfo> ();
+		for (int i = 10; i < 26; i++) {
+			defaults.Add (new ApiInfo () {
+				Id = i.ToString (CultureInfo.InvariantCulture),
+			});
+		}
+		foreach (var level in apiLevels ?? defaults.ToArray ()) {
+			var dir = Path.Combine (androidSdkPlatformsPath, $"android-{level.Id}");
+			Directory.CreateDirectory(dir);
+			File.WriteAllText (Path.Combine (dir, "android.jar"), "");
+		}
+		return androidSdkDirectory;
+	}
+
+	public struct ApiInfo {
+		public string Id;
+		public int Level;
+		public string Name;
+		public string FrameworkVersion;
+		public bool Stable;
+	}
+
+	protected string CreateFauxReferencesDirectory (string path, ApiInfo [] versions)
+	{
+		string referencesDirectory = Path.Combine (Root, path);
+		Directory.CreateDirectory (referencesDirectory);
+		Directory.CreateDirectory (Path.Combine (referencesDirectory, "MonoAndroid", "v1.0", "RedistList"));
+		File.WriteAllText (Path.Combine (referencesDirectory, "MonoAndroid", "v1.0", "mscorlib.dll"), "");
+		File.WriteAllText (Path.Combine (referencesDirectory, "MonoAndroid", "v1.0", "RedistList", "FrameworkList.xml"),
+			$"<FileList Redist=\"MonoAndroid\" Name=\".NET for Android Base Class Libraries\"></FileList>");
+		foreach (var v in versions) {
+			Directory.CreateDirectory (Path.Combine (referencesDirectory, "MonoAndroid", v.FrameworkVersion));
+			Directory.CreateDirectory (Path.Combine (referencesDirectory, "MonoAndroid", v.FrameworkVersion, "RedistList"));
+			File.WriteAllText (Path.Combine (referencesDirectory, "MonoAndroid", v.FrameworkVersion, "MonoAndroid.dll"), "");
+			File.WriteAllText (Path.Combine (referencesDirectory, "MonoAndroid", v.FrameworkVersion, "AndroidApiInfo.xml"),
+				$"<AndroidApiInfo>\n<Id>{v.Id}</Id>\n<Level>{v.Level}</Level>\n<Name>{v.Name}</Name>\n<Version>{v.FrameworkVersion}</Version>\n<Stable>{v.Stable}</Stable>\n</AndroidApiInfo>");
+			File.WriteAllText (Path.Combine (referencesDirectory, "MonoAndroid", v.FrameworkVersion, "RedistList", "FrameworkList.xml"),
+				$"<FileList Redist=\"MonoAndroid\" Name=\".NET for Android {v.FrameworkVersion} Support\" IncludeFramework=\"v1.0\"></FileList>");
+		}
+		return referencesDirectory;
+	}
+
+	protected string CreateFauxJavaSdkDirectory (string path, string javaVersion, out string javaExe, out string javacExe, string[] extraPrefix = null)
+	{
+		javaExe = IsWindows ? "java.cmd" : "java";
+		javacExe  = IsWindows ? "javac.cmd" : "javac";
+
+		var javaPath = Path.Combine (Root, path);
+
+		CreateFauxJdk (javaPath, javaVersion, javaVersion, javaVersion, extraPrefix);
+
+		var jarSigner = IsWindows ? "jarsigner.exe" : "jarsigner";
+		var javaBinPath = Path.Combine (javaPath, "bin");
+		File.WriteAllText (Path.Combine (javaBinPath, jarSigner), "");
+
+		return javaPath;
+	}
+
+	// https://github.com/dotnet/android-tools/blob/683f37508b56c76c24b3287a5687743438625341/tests/Xamarin.Android.Tools.AndroidSdk-Tests/JdkInfoTests.cs#L60-L100
+	void CreateFauxJdk (string dir, string releaseVersion, string releaseBuildNumber, string javaVersion, string[] extraPrefix)
+	{
+		Directory.CreateDirectory (dir);
+
+		using (var release = new StreamWriter (Path.Combine (dir, "release"))) {
+			release.WriteLine ($"JAVA_VERSION=\"{releaseVersion}\"");
+			release.WriteLine ($"BUILD_NUMBER={releaseBuildNumber}");
+			release.WriteLine ($"JUST_A_KEY");
+		}
+
+		var bin = Path.Combine (dir, "bin");
+		var inc = Path.Combine (dir, "include");
+		var jre = Path.Combine (dir, "jre");
+		var jli = Path.Combine (jre, "lib", "jli");
+
+		Directory.CreateDirectory (bin);
+		Directory.CreateDirectory (inc);
+		Directory.CreateDirectory (jli);
+		Directory.CreateDirectory (jre);
+
+		string prefix = extraPrefix == null
+			? ""
+			: string.Join ("",
+				extraPrefix.Select (e => "echo " + e + Environment.NewLine));
+
+		string quote = IsWindows ? "" : "\"";
+		string java = IsWindows
+			? prefix + $"echo java version \"{javaVersion}\"{Environment.NewLine}"
+			: prefix + $"echo java version '\"{javaVersion}\"'{Environment.NewLine}";
+		java = java +
+			$"echo Property settings:{Environment.NewLine}" +
+			$"echo {quote}    java.home = {dir}{quote}{Environment.NewLine}" +
+			$"echo {quote}    java.vendor = .NET for Android Unit Tests{quote}{Environment.NewLine}" +
+			$"echo {quote}    java.version = {javaVersion}{quote}{Environment.NewLine}" +
+			$"echo {quote}    xamarin.multi-line = line the first{quote}{Environment.NewLine}" +
+			$"echo {quote}        line the second{quote}{Environment.NewLine}" +
+			$"echo {quote}        .{quote}{Environment.NewLine}";
+
+		string javac =
+			prefix +
+			$"echo javac {javaVersion}{Environment.NewLine}";
+
+		CreateShellScript (Path.Combine (bin, "jar"), "");
+		CreateShellScript (Path.Combine (bin, "java"), java);
+		CreateShellScript (Path.Combine (bin, "javac"), javac);
+		CreateShellScript (Path.Combine (jli, "libjli.dylib"), "");
+		CreateShellScript (Path.Combine (jre, "libjvm.so"), "");
+		CreateShellScript (Path.Combine (jre, "jvm.dll"), "");
+	}
+
+	// https://github.com/dotnet/android-tools/blob/683f37508b56c76c24b3287a5687743438625341/tests/Xamarin.Android.Tools.AndroidSdk-Tests/JdkInfoTests.cs#L108-L132
+	void CreateShellScript (string path, string contents)
+	{
+		if (IsWindows && !string.Equals (Path.GetExtension (path), ".dll", StringComparison.OrdinalIgnoreCase))
+			path += ".cmd";
+		using (var script = new StreamWriter (path)) {
 			if (IsWindows) {
-				sb.AppendLine("@echo off");
-			} else {
-				sb.AppendLine("#!/bin/bash");
+				script.WriteLine ("@echo off");
 			}
-			CreateFauxExecutable (Path.Combine (androidNdkDirectory, IsWindows ? "ndk-stack.cmd" : "ndk-stack"), sb);
-			return androidNdkDirectory;
+			else {
+				script.WriteLine ("#!/bin/sh");
+			}
+			script.WriteLine (contents);
 		}
+		if (IsWindows)
+			return;
+		Process.Run ("chmod", ["+x", path]);
+	}
 
-		protected string CreateFauxAndroidSdkDirectory (string path, string buildToolsVersion, ApiInfo [] apiLevels = null)
-		{
-			var androidSdkDirectory = Path.Combine (Root, path);
-			var androidSdkToolsPath = Path.Combine (androidSdkDirectory, "tools");
-			var androidSdkBinPath = Path.Combine (androidSdkToolsPath, "bin");
-			var androidSdkPlatformToolsPath = Path.Combine (androidSdkDirectory, "platform-tools");
-			var androidSdkPlatformsPath = Path.Combine (androidSdkDirectory, "platforms");
-			var androidSdkBuildToolsPath = Path.Combine (androidSdkDirectory, "build-tools", buildToolsVersion ?? string.Empty);
-			Directory.CreateDirectory (androidSdkDirectory);
-			Directory.CreateDirectory (androidSdkToolsPath);
-			Directory.CreateDirectory (androidSdkBinPath);
-			Directory.CreateDirectory (androidSdkPlatformToolsPath);
-			Directory.CreateDirectory (androidSdkPlatformsPath);
-			Directory.CreateDirectory (androidSdkBuildToolsPath);
+	void CreateFauxExecutable (string exeFullPath, StringBuilder sb) {
+		File.WriteAllText (exeFullPath, sb.ToString ());
+		if (!IsWindows) {
+			RunProcess ("chmod", $"u+x \"{exeFullPath}\"");
+		}
+	}
 
-			File.WriteAllText (Path.Combine (androidSdkPlatformToolsPath, IsWindows ? "adb.exe" : "adb"), "");
-			if (!string.IsNullOrEmpty (buildToolsVersion)) {
-				File.WriteAllText (Path.Combine (androidSdkBuildToolsPath, IsWindows ? "zipalign.exe" : "zipalign"), "");
-				//File.WriteAllText (Path.Combine (androidSdkBuildToolsPath, IsWindows ? "aapt.exe" : "aapt"), "");
-				var sb  = new StringBuilder ();
-				if (IsWindows) {
-					sb.AppendLine ("@echo off");
-					sb.AppendLine ($"echo Android Asset Packaging Tool (aapt) 2.19-10229193");
-				} else {
-					sb.AppendLine ("#!/bin/bash");
-					sb.AppendLine ($"echo \"Android Asset Packaging Tool (aapt) 2.19-10229193\"");
+	protected ProjectBuilder CreateApkBuilder (string directory = null, bool cleanupAfterSuccessfulBuild = false, bool cleanupOnDispose = false, [CallerMemberName] string packageName = "")
+	{
+		if (string.IsNullOrEmpty (directory))
+			directory = Path.Combine ("temp", TestName);
+		TestOutputDirectories [TestContext.CurrentContext.Test.ID] = Path.Combine (Root, directory);
+		TestPackageNames [packageName] = $"com.xamarin.{packageName}";
+		return BuildHelper.CreateApkBuilder (directory, cleanupAfterSuccessfulBuild, cleanupOnDispose);
+	}
+
+	protected ProjectBuilder CreateDllBuilder (string directory = null, bool cleanupAfterSuccessfulBuild = false, bool cleanupOnDispose = false)
+	{
+		if (string.IsNullOrEmpty (directory))
+			directory = Path.Combine ("temp", TestName);
+		TestOutputDirectories [TestContext.CurrentContext.Test.ID] = Path.Combine (Root, directory);
+		return BuildHelper.CreateDllBuilder (directory, cleanupAfterSuccessfulBuild, cleanupOnDispose);
+	}
+
+	protected void AssertFileContentsMatch (string file1, string file2)
+	{
+		if (!FileCompare (file1, file2)) {
+			TestContext.AddTestAttachment (file1, Path.GetFileName (file1));
+			TestContext.AddTestAttachment (file2, Path.GetFileName (file2));
+			Assert.Fail ($"{file1} and {file2} do not match.");
+		}
+	}
+
+	protected bool FileCompare (string file1, string file2)
+	{
+		FileAssert.Exists (file1);
+		FileAssert.Exists (file2);
+		using (var stream1 = File.OpenRead (file1))
+		using (var stream2 = File.OpenRead (file2)) {
+			return StreamCompare (stream1, stream2);
+		}
+	}
+
+	protected bool StreamCompare (Stream stream1, Stream stream2)
+	{
+		Assert.IsNotNull (stream1, "stream1 of StreamCompare should not be null");
+		Assert.IsNotNull (stream2, "stream2 of StreamCompare should not be null");
+		string hash1 = Files.HashBytes (ReadAllBytesIgnoringLineEndings (stream1));
+		string hash2 = Files.HashBytes (ReadAllBytesIgnoringLineEndings (stream2));
+		return hash1 == hash2;
+	}
+
+	protected byte [] ReadAllBytesIgnoringLineEndings (Stream stream)
+	{
+		using (var memoryStream = new MemoryStream ()) {
+			int readByte;
+			while ((readByte = stream.ReadByte()) != -1) {
+				byte b = (byte)readByte;
+				if (b != '\r' && b != '\n') {
+					memoryStream.WriteByte (b);
 				}
-				CreateFauxExecutable (Path.Combine (androidSdkBuildToolsPath, IsWindows ? "aapt2.cmd" : "aapt2"), sb);
 			}
-			File.WriteAllText (Path.Combine (androidSdkToolsPath, IsWindows ? "lint.bat" : "lint"), "");
-
-			List<ApiInfo> defaults = new List<ApiInfo> ();
-			for (int i = 10; i < 26; i++) {
-				defaults.Add (new ApiInfo () {
-					Id = i.ToString (CultureInfo.InvariantCulture),
-				});
-			}
-			foreach (var level in apiLevels ?? defaults.ToArray ()) {
-				var dir = Path.Combine (androidSdkPlatformsPath, $"android-{level.Id}");
-				Directory.CreateDirectory(dir);
-				File.WriteAllText (Path.Combine (dir, "android.jar"), "");
-			}
-			return androidSdkDirectory;
-		}
-
-		public struct ApiInfo {
-			public string Id;
-			public int Level;
-			public string Name;
-			public string FrameworkVersion;
-			public bool Stable;
-		}
-
-		protected string CreateFauxReferencesDirectory (string path, ApiInfo [] versions)
-		{
-			string referencesDirectory = Path.Combine (Root, path);
-			Directory.CreateDirectory (referencesDirectory);
-			Directory.CreateDirectory (Path.Combine (referencesDirectory, "MonoAndroid", "v1.0", "RedistList"));
-			File.WriteAllText (Path.Combine (referencesDirectory, "MonoAndroid", "v1.0", "mscorlib.dll"), "");
-			File.WriteAllText (Path.Combine (referencesDirectory, "MonoAndroid", "v1.0", "RedistList", "FrameworkList.xml"),
-				$"<FileList Redist=\"MonoAndroid\" Name=\".NET for Android Base Class Libraries\"></FileList>");
-			foreach (var v in versions) {
-				Directory.CreateDirectory (Path.Combine (referencesDirectory, "MonoAndroid", v.FrameworkVersion));
-				Directory.CreateDirectory (Path.Combine (referencesDirectory, "MonoAndroid", v.FrameworkVersion, "RedistList"));
-				File.WriteAllText (Path.Combine (referencesDirectory, "MonoAndroid", v.FrameworkVersion, "MonoAndroid.dll"), "");
-				File.WriteAllText (Path.Combine (referencesDirectory, "MonoAndroid", v.FrameworkVersion, "AndroidApiInfo.xml"),
-					$"<AndroidApiInfo>\n<Id>{v.Id}</Id>\n<Level>{v.Level}</Level>\n<Name>{v.Name}</Name>\n<Version>{v.FrameworkVersion}</Version>\n<Stable>{v.Stable}</Stable>\n</AndroidApiInfo>");
-				File.WriteAllText (Path.Combine (referencesDirectory, "MonoAndroid", v.FrameworkVersion, "RedistList", "FrameworkList.xml"),
-					$"<FileList Redist=\"MonoAndroid\" Name=\".NET for Android {v.FrameworkVersion} Support\" IncludeFramework=\"v1.0\"></FileList>");
-			}
-			return referencesDirectory;
-		}
-
-		protected string CreateFauxJavaSdkDirectory (string path, string javaVersion, out string javaExe, out string javacExe, string[] extraPrefix = null)
-		{
-			javaExe = IsWindows ? "java.cmd" : "java";
-			javacExe  = IsWindows ? "javac.cmd" : "javac";
-
-			var javaPath = Path.Combine (Root, path);
-
-			CreateFauxJdk (javaPath, javaVersion, javaVersion, javaVersion, extraPrefix);
-
-			var jarSigner = IsWindows ? "jarsigner.exe" : "jarsigner";
-			var javaBinPath = Path.Combine (javaPath, "bin");
-			File.WriteAllText (Path.Combine (javaBinPath, jarSigner), "");
-
-			return javaPath;
-		}
-
-		// https://github.com/dotnet/android-tools/blob/683f37508b56c76c24b3287a5687743438625341/tests/Xamarin.Android.Tools.AndroidSdk-Tests/JdkInfoTests.cs#L60-L100
-		void CreateFauxJdk (string dir, string releaseVersion, string releaseBuildNumber, string javaVersion, string[] extraPrefix)
-		{
-			Directory.CreateDirectory (dir);
-
-			using (var release = new StreamWriter (Path.Combine (dir, "release"))) {
-				release.WriteLine ($"JAVA_VERSION=\"{releaseVersion}\"");
-				release.WriteLine ($"BUILD_NUMBER={releaseBuildNumber}");
-				release.WriteLine ($"JUST_A_KEY");
-			}
-
-			var bin = Path.Combine (dir, "bin");
-			var inc = Path.Combine (dir, "include");
-			var jre = Path.Combine (dir, "jre");
-			var jli = Path.Combine (jre, "lib", "jli");
-
-			Directory.CreateDirectory (bin);
-			Directory.CreateDirectory (inc);
-			Directory.CreateDirectory (jli);
-			Directory.CreateDirectory (jre);
-
-			string prefix = extraPrefix == null
-				? ""
-				: string.Join ("",
-					extraPrefix.Select (e => "echo " + e + Environment.NewLine));
-
-			string quote = IsWindows ? "" : "\"";
-			string java = IsWindows
-				? prefix + $"echo java version \"{javaVersion}\"{Environment.NewLine}"
-				: prefix + $"echo java version '\"{javaVersion}\"'{Environment.NewLine}";
-			java = java +
-				$"echo Property settings:{Environment.NewLine}" +
-				$"echo {quote}    java.home = {dir}{quote}{Environment.NewLine}" +
-				$"echo {quote}    java.vendor = .NET for Android Unit Tests{quote}{Environment.NewLine}" +
-				$"echo {quote}    java.version = {javaVersion}{quote}{Environment.NewLine}" +
-				$"echo {quote}    xamarin.multi-line = line the first{quote}{Environment.NewLine}" +
-				$"echo {quote}        line the second{quote}{Environment.NewLine}" +
-				$"echo {quote}        .{quote}{Environment.NewLine}";
-
-			string javac =
-				prefix +
-				$"echo javac {javaVersion}{Environment.NewLine}";
-
-			CreateShellScript (Path.Combine (bin, "jar"), "");
-			CreateShellScript (Path.Combine (bin, "java"), java);
-			CreateShellScript (Path.Combine (bin, "javac"), javac);
-			CreateShellScript (Path.Combine (jli, "libjli.dylib"), "");
-			CreateShellScript (Path.Combine (jre, "libjvm.so"), "");
-			CreateShellScript (Path.Combine (jre, "jvm.dll"), "");
-		}
-
-		// https://github.com/dotnet/android-tools/blob/683f37508b56c76c24b3287a5687743438625341/tests/Xamarin.Android.Tools.AndroidSdk-Tests/JdkInfoTests.cs#L108-L132
-		void CreateShellScript (string path, string contents)
-		{
-			if (IsWindows && !string.Equals (Path.GetExtension (path), ".dll", StringComparison.OrdinalIgnoreCase))
-				path += ".cmd";
-			using (var script = new StreamWriter (path)) {
-				if (IsWindows) {
-					script.WriteLine ("@echo off");
-				}
-				else {
-					script.WriteLine ("#!/bin/sh");
-				}
-				script.WriteLine (contents);
-			}
-			if (IsWindows)
-				return;
-			Process.Run ("chmod", ["+x", path]);
-		}
-
-		void CreateFauxExecutable (string exeFullPath, StringBuilder sb) {
-			File.WriteAllText (exeFullPath, sb.ToString ());
-			if (!IsWindows) {
-				RunProcess ("chmod", $"u+x \"{exeFullPath}\"");
-			}
-		}
-
-		protected ProjectBuilder CreateApkBuilder (string directory = null, bool cleanupAfterSuccessfulBuild = false, bool cleanupOnDispose = false, [CallerMemberName] string packageName = "")
-		{
-			if (string.IsNullOrEmpty (directory))
-				directory = Path.Combine ("temp", TestName);
-			TestOutputDirectories [TestContext.CurrentContext.Test.ID] = Path.Combine (Root, directory);
-			TestPackageNames [packageName] = $"com.xamarin.{packageName}";
-			return BuildHelper.CreateApkBuilder (directory, cleanupAfterSuccessfulBuild, cleanupOnDispose);
-		}
-
-		protected ProjectBuilder CreateDllBuilder (string directory = null, bool cleanupAfterSuccessfulBuild = false, bool cleanupOnDispose = false)
-		{
-			if (string.IsNullOrEmpty (directory))
-				directory = Path.Combine ("temp", TestName);
-			TestOutputDirectories [TestContext.CurrentContext.Test.ID] = Path.Combine (Root, directory);
-			return BuildHelper.CreateDllBuilder (directory, cleanupAfterSuccessfulBuild, cleanupOnDispose);
-		}
-
-		protected void AssertFileContentsMatch (string file1, string file2)
-		{
-			if (!FileCompare (file1, file2)) {
-				TestContext.AddTestAttachment (file1, Path.GetFileName (file1));
-				TestContext.AddTestAttachment (file2, Path.GetFileName (file2));
-				Assert.Fail ($"{file1} and {file2} do not match.");
-			}
-		}
-
-		protected bool FileCompare (string file1, string file2)
-		{
-			FileAssert.Exists (file1);
-			FileAssert.Exists (file2);
-			using (var stream1 = File.OpenRead (file1))
-			using (var stream2 = File.OpenRead (file2)) {
-				return StreamCompare (stream1, stream2);
-			}
-		}
-
-		protected bool StreamCompare (Stream stream1, Stream stream2)
-		{
-			Assert.IsNotNull (stream1, "stream1 of StreamCompare should not be null");
-			Assert.IsNotNull (stream2, "stream2 of StreamCompare should not be null");
-			string hash1 = Files.HashBytes (ReadAllBytesIgnoringLineEndings (stream1));
-			string hash2 = Files.HashBytes (ReadAllBytesIgnoringLineEndings (stream2));
-			return hash1 == hash2;
-		}
-
-		protected byte [] ReadAllBytesIgnoringLineEndings (Stream stream)
-		{
-			using (var memoryStream = new MemoryStream ()) {
-				int readByte;
-				while ((readByte = stream.ReadByte()) != -1) {
-					byte b = (byte)readByte;
-					if (b != '\r' && b != '\n') {
-						memoryStream.WriteByte (b);
-					}
-				}
  				return memoryStream.ToArray ();
+		}
+	}
+
+	protected string GetPathToLatestBuildTools (string exe)
+	{
+		var path = Path.Combine (AndroidSdkPath, "build-tools");
+		foreach (var dir in Directory.GetDirectories (path, "*", SearchOption.TopDirectoryOnly).OrderByDescending (x => Path.GetFileName (x))) {
+			TestContext.Out.WriteLine ($"Found build tools version: {dir}.");
+			var aapt2 = Path.Combine (dir, exe);
+			if (File.Exists (aapt2))
+				return dir;
+		}
+		return Path.Combine (path, "25.0.2");
+	}
+
+	protected string GetPathToZipAlign()
+	{
+		var exe = IsWindows ? "zipalign.exe" : "zipalign";
+		return GetPathToLatestBuildTools (exe);
+	}
+
+	protected string GetPathToAapt2 ()
+	{
+		var exe = IsWindows ? "aapt2.exe" : "aapt2";
+		if (File.Exists (Path.Combine (TestEnvironment.OSBinDirectory, exe)))
+			return TestEnvironment.OSBinDirectory;
+		return GetPathToLatestBuildTools (exe);
+	}
+
+	protected string GetPathToAapt ()
+	{
+		var exe = IsWindows ? "aapt.exe" : "aapt";
+		return GetPathToLatestBuildTools (exe);
+	}
+
+	/// <summary>
+	/// Verifies that an APK is signed using `apksigner verify`.
+	/// With min SDK 24+, APKs may use v2/v3 signing only (no v1 JAR signatures),
+	/// so checking for META-INF/MANIFEST.MF is not reliable.
+	/// </summary>
+	protected void AssertApkIsSigned (string apkPath)
+	{
+		var ext = IsWindows ? ".bat" : "";
+		var apksignerExe = Path.Combine (GetPathToLatestBuildTools ("apksigner" + ext), "apksigner" + ext);
+		if (!File.Exists (apksignerExe)) {
+			// Fall back to META-INF check if apksigner is not available
+			using (var zip = ZipHelper.OpenZip (apkPath)) {
+				Assert.IsTrue (zip.Entries.Any (e => e.FullName == "META-INF/MANIFEST.MF"), $"APK file `{apkPath}` is not signed! It is missing `META-INF/MANIFEST.MF`.");
 			}
+			return;
 		}
 
-		protected string GetPathToLatestBuildTools (string exe)
-		{
-			var path = Path.Combine (AndroidSdkPath, "build-tools");
-			foreach (var dir in Directory.GetDirectories (path, "*", SearchOption.TopDirectoryOnly).OrderByDescending (x => Path.GetFileName (x))) {
-				TestContext.Out.WriteLine ($"Found build tools version: {dir}.");
-				var aapt2 = Path.Combine (dir, exe);
-				if (File.Exists (aapt2))
-					return dir;
+		var psi = new ProcessStartInfo {
+			FileName = apksignerExe,
+			Arguments = $"verify \"{apkPath}\"",
+			RedirectStandardOutput = true,
+			RedirectStandardError = true,
+			UseShellExecute = false,
+			CreateNoWindow = true,
+		};
+		var result = Process.RunAndCaptureText (psi);
+		Assert.AreEqual (0, result.ExitStatus.ExitCode, $"APK file `{apkPath}` is not signed! apksigner verify failed:\n{result.StandardError}\n{result.StandardOutput}");
+	}
+
+	protected string GetResourceDesignerPath (ProjectBuilder builder, XamarinAndroidProject project)
+	{
+		string path = Path.Combine (Root, builder.ProjectDirectory, project.IntermediateOutputPath);
+		if (!string.Equals (project.GetProperty ("AndroidUseDesignerAssembly"), "False", StringComparison.CurrentCultureIgnoreCase)) {
+			return Path.Combine (path, "_Microsoft.Android.Resource.Designer.dll");
+		}
+		return Path.Combine (path, "Resource.designer" + project.Language.DefaultDesignerExtension);
+	}
+
+	protected string GetResourceDesignerText (XamarinAndroidProject project, string path)
+	{
+		if (!string.Equals (project.GetProperty ("AndroidUseDesignerAssembly"), "False", StringComparison.CurrentCultureIgnoreCase)) {
+			string targetFramework = project.TargetFramework.Split ('-') [0];
+			string [] packDirectories = [
+				Path.Combine (TestEnvironment.DotNetPreviewDirectory, "packs", "Microsoft.NETCore.App.Ref"),
+				Path.Combine (project.GlobalPackagesFolder, "microsoft.netcore.app.ref"),
+			];
+			var referenceDirectory = packDirectories
+				.Where (Directory.Exists)
+				.SelectMany (directory => Directory.GetDirectories (directory))
+				.Select (directory => Path.Combine (directory, "ref", targetFramework))
+				.FirstOrDefault (Directory.Exists);
+			if (referenceDirectory == null) {
+				throw new DirectoryNotFoundException ($"Could not find Microsoft.NETCore.App.Ref for '{targetFramework}'.");
 			}
-			return Path.Combine (path, "25.0.2");
+			// Use the project's targeting pack instead of the unrelated dotnet found on PATH.
+			var resolver = new UniversalAssemblyResolver (path, throwOnError: true, targetFramework: null,
+				streamOptions: PEStreamOptions.PrefetchMetadata);
+			resolver.AddSearchDirectory (referenceDirectory);
+			var decompiler = new CSharpDecompiler (path, resolver, new DecompilerSettings ());
+			return decompiler.DecompileWholeModuleAsString ();
 		}
 
-		protected string GetPathToZipAlign()
-		{
-			var exe = IsWindows ? "zipalign.exe" : "zipalign";
-			return GetPathToLatestBuildTools (exe);
+		return File.ReadAllText (path);
+	}
+
+	protected string[] GetResourceDesignerLines (XamarinAndroidProject project, string path)
+	{
+		if (!string.Equals (project.GetProperty ("AndroidUseDesignerAssembly"), "False", StringComparison.CurrentCultureIgnoreCase)) {
+			return GetResourceDesignerText (project, path).Split (Environment.NewLine[0]);
+		}
+		return File.ReadAllLines (path);
+	}
+
+	/// <summary>
+	/// Asserts that a AndroidManifest.xml file contains the expected //application/@android:extractNativeLibs value.
+	/// </summary>
+	protected void AssertExtractNativeLibs (string manifest, bool extractNativeLibs)
+	{
+		FileAssert.Exists (manifest);
+		using (var stream = File.OpenRead (manifest)) {
+			var doc = XDocument.Load (stream);
+			var element = doc.Root.Element ("application");
+			Assert.IsNotNull (element, $"application element not found in {manifest}");
+			var ns = (XNamespace) "http://schemas.android.com/apk/res/android";
+			var attribute = element.Attribute (ns + "extractNativeLibs");
+			Assert.IsNotNull (attribute, $"android:extractNativeLibs attribute not found in {manifest}");
+			Assert.AreEqual (extractNativeLibs ? "true" : "false", attribute.Value, $"Unexpected android:extractNativeLibs value found in {manifest}");
+		}
+	}
+
+	protected bool RunCommand (string command, string arguments)
+	{
+		var psi = new ProcessStartInfo () {
+			FileName		= command,
+			Arguments		= arguments,
+			UseShellExecute		= false,
+			RedirectStandardInput	= false,
+			RedirectStandardOutput	= true,
+			RedirectStandardError	= true,
+			CreateNoWindow		= true,
+			WindowStyle		= ProcessWindowStyle.Hidden,
+		};
+
+		ProcessTextOutput result;
+		try {
+			result = Process.RunAndCaptureText (psi, TimeSpan.FromSeconds (60));
+		} catch (TimeoutException) {
+			Console.Error.WriteLine ($"Process `{command} {arguments}` timed out.");
+			return false;
 		}
 
-		protected string GetPathToAapt2 ()
-		{
-			var exe = IsWindows ? "aapt2.exe" : "aapt2";
-			if (File.Exists (Path.Combine (TestEnvironment.OSBinDirectory, exe)))
-				return TestEnvironment.OSBinDirectory;
-			return GetPathToLatestBuildTools (exe);
+		Console.WriteLine (result.StandardOutput);
+		Console.WriteLine (result.StandardError);
+		if (result.ExitStatus.ExitCode != 0) {
+			Console.Error.WriteLine ($"Process `{command} {arguments}` exited with value {result.ExitStatus.ExitCode}.");
+			return false;
 		}
 
-		protected string GetPathToAapt ()
-		{
-			var exe = IsWindows ? "aapt.exe" : "aapt";
-			return GetPathToLatestBuildTools (exe);
-		}
+		return true;
+	}
 
-		/// <summary>
-		/// Verifies that an APK is signed using `apksigner verify`.
-		/// With min SDK 24+, APKs may use v2/v3 signing only (no v1 JAR signatures),
-		/// so checking for META-INF/MANIFEST.MF is not reliable.
-		/// </summary>
-		protected void AssertApkIsSigned (string apkPath)
-		{
-			var ext = IsWindows ? ".bat" : "";
-			var apksignerExe = Path.Combine (GetPathToLatestBuildTools ("apksigner" + ext), "apksigner" + ext);
-			if (!File.Exists (apksignerExe)) {
-				// Fall back to META-INF check if apksigner is not available
-				using (var zip = ZipHelper.OpenZip (apkPath)) {
-					Assert.IsTrue (zip.Entries.Any (e => e.FullName == "META-INF/MANIFEST.MF"), $"APK file `{apkPath}` is not signed! It is missing `META-INF/MANIFEST.MF`.");
-				}
-				return;
-			}
-
-			var psi = new ProcessStartInfo {
-				FileName = apksignerExe,
-				Arguments = $"verify \"{apkPath}\"",
-				RedirectStandardOutput = true,
-				RedirectStandardError = true,
-				UseShellExecute = false,
-				CreateNoWindow = true,
-			};
-			var result = Process.RunAndCaptureText (psi);
-			Assert.AreEqual (0, result.ExitStatus.ExitCode, $"APK file `{apkPath}` is not signed! apksigner verify failed:\n{result.StandardError}\n{result.StandardOutput}");
-		}
-
-		protected string GetResourceDesignerPath (ProjectBuilder builder, XamarinAndroidProject project)
-		{
-			string path = Path.Combine (Root, builder.ProjectDirectory, project.IntermediateOutputPath);
-			if (!string.Equals (project.GetProperty ("AndroidUseDesignerAssembly"), "False", StringComparison.CurrentCultureIgnoreCase)) {
-				return Path.Combine (path, "_Microsoft.Android.Resource.Designer.dll");
-			}
-			return Path.Combine (path, "Resource.designer" + project.Language.DefaultDesignerExtension);
-		}
-
-		protected string GetResourceDesignerText (XamarinAndroidProject project, string path)
-		{
-			if (!string.Equals (project.GetProperty ("AndroidUseDesignerAssembly"), "False", StringComparison.CurrentCultureIgnoreCase)) {
-				string targetFramework = project.TargetFramework.Split ('-') [0];
-				string [] packDirectories = [
-					Path.Combine (TestEnvironment.DotNetPreviewDirectory, "packs", "Microsoft.NETCore.App.Ref"),
-					Path.Combine (project.GlobalPackagesFolder, "microsoft.netcore.app.ref"),
-				];
-				var referenceDirectory = packDirectories
-					.Where (Directory.Exists)
-					.SelectMany (directory => Directory.GetDirectories (directory))
-					.Select (directory => Path.Combine (directory, "ref", targetFramework))
-					.FirstOrDefault (Directory.Exists);
-				if (referenceDirectory == null) {
-					throw new DirectoryNotFoundException ($"Could not find Microsoft.NETCore.App.Ref for '{targetFramework}'.");
-				}
-				// Use the project's targeting pack instead of the unrelated dotnet found on PATH.
-				var resolver = new UniversalAssemblyResolver (path, throwOnError: true, targetFramework: null,
-					streamOptions: PEStreamOptions.PrefetchMetadata);
-				resolver.AddSearchDirectory (referenceDirectory);
-				var decompiler = new CSharpDecompiler (path, resolver, new DecompilerSettings ());
-				return decompiler.DecompileWholeModuleAsString ();
-			}
-
-			return File.ReadAllText (path);
-		}
-
-		protected string[] GetResourceDesignerLines (XamarinAndroidProject project, string path)
-		{
-			if (!string.Equals (project.GetProperty ("AndroidUseDesignerAssembly"), "False", StringComparison.CurrentCultureIgnoreCase)) {
-				return GetResourceDesignerText (project, path).Split (Environment.NewLine[0]);
-			}
-			return File.ReadAllLines (path);
-		}
-
-		/// <summary>
-		/// Asserts that a AndroidManifest.xml file contains the expected //application/@android:extractNativeLibs value.
-		/// </summary>
-		protected void AssertExtractNativeLibs (string manifest, bool extractNativeLibs)
-		{
-			FileAssert.Exists (manifest);
-			using (var stream = File.OpenRead (manifest)) {
-				var doc = XDocument.Load (stream);
-				var element = doc.Root.Element ("application");
-				Assert.IsNotNull (element, $"application element not found in {manifest}");
-				var ns = (XNamespace) "http://schemas.android.com/apk/res/android";
-				var attribute = element.Attribute (ns + "extractNativeLibs");
-				Assert.IsNotNull (attribute, $"android:extractNativeLibs attribute not found in {manifest}");
-				Assert.AreEqual (extractNativeLibs ? "true" : "false", attribute.Value, $"Unexpected android:extractNativeLibs value found in {manifest}");
-			}
-		}
-
-		protected bool RunCommand (string command, string arguments)
-		{
-			var psi = new ProcessStartInfo () {
-				FileName		= command,
-				Arguments		= arguments,
-				UseShellExecute		= false,
-				RedirectStandardInput	= false,
-				RedirectStandardOutput	= true,
-				RedirectStandardError	= true,
-				CreateNoWindow		= true,
-				WindowStyle		= ProcessWindowStyle.Hidden,
-			};
-
-			ProcessTextOutput result;
-			try {
-				result = Process.RunAndCaptureText (psi, TimeSpan.FromSeconds (60));
-			} catch (TimeoutException) {
-				Console.Error.WriteLine ($"Process `{command} {arguments}` timed out.");
+	protected bool IgnoreUnsupportedConfiguration (AndroidRuntime runtime, bool release = false)
+	{
+		if (runtime == AndroidRuntime.NativeAOT) {
+			// NativeAOT is release-only, AOT is always implied
+			if (release) {
 				return false;
 			}
 
-			Console.WriteLine (result.StandardOutput);
-			Console.WriteLine (result.StandardError);
-			if (result.ExitStatus.ExitCode != 0) {
-				Console.Error.WriteLine ($"Process `{command} {arguments}` exited with value {result.ExitStatus.ExitCode}.");
-				return false;
-			}
-
+			Assert.Ignore ($"NativeAOT: unsupported configuration (release == {release})");
 			return true;
 		}
 
-		protected bool IgnoreUnsupportedConfiguration (AndroidRuntime runtime, bool release = false)
-		{
-			if (runtime == AndroidRuntime.NativeAOT) {
-				// NativeAOT is release-only, AOT is always implied
-				if (release) {
-					return false;
-				}
+		return false;
+	}
 
-				Assert.Ignore ($"NativeAOT: unsupported configuration (release == {release})");
-				return true;
+	// Some behaviors differ fundamentally between NativeAOT (ILC) and CoreCLR/MonoVM
+	// (e.g. ILC does not run illink, and the trimmable typemap uses CRC-only package naming),
+	// so certain test cases cannot apply as-is on NativeAOT. Use this to skip such a case
+	// with an explicit reason.
+	protected bool IgnoreOnNativeAot (AndroidRuntime runtime, string reason)
+	{
+		if (runtime == AndroidRuntime.NativeAOT) {
+			Assert.Ignore ($"NativeAOT: {reason}");
+			return true;
+		}
+
+		return false;
+	}
+
+	[SetUp]
+	public void TestSetup ()
+	{
+		TestContext.Out.WriteLine ($"[TESTLOG] Test {TestName} Starting");
+		TestContext.Out.Flush ();
+	}
+
+	[OneTimeTearDown]
+	protected virtual void AfterAllTests ()
+	{
+		if (System.Diagnostics.Debugger.IsAttached)
+			return;
+
+		//NOTE: adb.exe can cause a couple issues on Windows
+		//	1) it holds a lock on ~/android-toolchain, so a future build that needs to delete/recreate would fail
+		//	2) the MSBuild <Exec /> task *can* hang until adb.exe exits
+		if (IsWindows) {
+			try {
+				RunAdbCommand ("kill-server", true);
+			} catch (Exception ex) {
+				Console.Error.WriteLine ("Failed to run adb kill-server: " + ex);
 			}
 
-			return false;
+			//NOTE: in case `adb kill-server` fails, kill the process as a last resort
+			foreach (var p in Process.GetProcessesByName ("adb.exe"))
+				p.Kill ();
 		}
+	}
 
-		// Some behaviors differ fundamentally between NativeAOT (ILC) and CoreCLR/MonoVM
-		// (e.g. ILC does not run illink, and the trimmable typemap uses CRC-only package naming),
-		// so certain test cases cannot apply as-is on NativeAOT. Use this to skip such a case
-		// with an explicit reason.
-		protected bool IgnoreOnNativeAot (AndroidRuntime runtime, string reason)
-		{
-			if (runtime == AndroidRuntime.NativeAOT) {
-				Assert.Ignore ($"NativeAOT: {reason}");
-				return true;
-			}
-
-			return false;
-		}
-
-		[SetUp]
-		public void TestSetup ()
-		{
-			TestContext.Out.WriteLine ($"[TESTLOG] Test {TestName} Starting");
-			TestContext.Out.Flush ();
-		}
-
-		[OneTimeTearDown]
-		protected virtual void AfterAllTests ()
-		{
-			if (System.Diagnostics.Debugger.IsAttached)
+	[TearDown]
+	protected virtual void CleanupTest ()
+	{
+		TestContext.Out.WriteLine ($"[TESTLOG] Test {TestName} Complete");
+		TestContext.Out.WriteLine ($"[TESTLOG] Test {TestName} Outcome={TestContext.CurrentContext.Result.Outcome.Status}");
+		TestContext.Out.Flush ();
+		string outputDir = null;
+		if (!TestOutputDirectories.TryGetValue (TestContext.CurrentContext.Test.ID, out outputDir))
+			return;
+		if (System.Diagnostics.Debugger.IsAttached || string.IsNullOrEmpty (outputDir))
 				return;
-
-			//NOTE: adb.exe can cause a couple issues on Windows
-			//	1) it holds a lock on ~/android-toolchain, so a future build that needs to delete/recreate would fail
-			//	2) the MSBuild <Exec /> task *can* hang until adb.exe exits
-			if (IsWindows) {
-				try {
-					RunAdbCommand ("kill-server", true);
-				} catch (Exception ex) {
-					Console.Error.WriteLine ("Failed to run adb kill-server: " + ex);
-				}
-
-				//NOTE: in case `adb kill-server` fails, kill the process as a last resort
-				foreach (var p in Process.GetProcessesByName ("adb.exe"))
-					p.Kill ();
-			}
+		// find the "root" directory just below "temp" and clean from there because
+		// some tests create multiple subdirectories
+		var output = Path.GetFullPath (outputDir);
+		while (!Directory.GetParent (output).Name.EndsWith ("temp", StringComparison.OrdinalIgnoreCase)) {
+				output = Directory.GetParent (output).FullName;
 		}
-
-		[TearDown]
-		protected virtual void CleanupTest ()
-		{
-			TestContext.Out.WriteLine ($"[TESTLOG] Test {TestName} Complete");
-			TestContext.Out.WriteLine ($"[TESTLOG] Test {TestName} Outcome={TestContext.CurrentContext.Result.Outcome.Status}");
-			TestContext.Out.Flush ();
-			string outputDir = null;
-			if (!TestOutputDirectories.TryGetValue (TestContext.CurrentContext.Test.ID, out outputDir))
-				return;
-			if (System.Diagnostics.Debugger.IsAttached || string.IsNullOrEmpty (outputDir))
-					return;
-			// find the "root" directory just below "temp" and clean from there because
-			// some tests create multiple subdirectories
-			var output = Path.GetFullPath (outputDir);
-			while (!Directory.GetParent (output).Name.EndsWith ("temp", StringComparison.OrdinalIgnoreCase)) {
-					output = Directory.GetParent (output).FullName;
+		if (!Directory.Exists (output))
+			return;
+		if (TestContext.CurrentContext.Result.Outcome.Status == NUnit.Framework.Interfaces.TestStatus.Passed ||
+		    TestContext.CurrentContext.Result.Outcome.Status == NUnit.Framework.Interfaces.TestStatus.Skipped) {
+			FileSystemUtils.SetDirectoryWriteable (output);
+			try {
+				Directory.Delete (output, recursive: true);
+			} catch (Exception ex) {
+				// This happens on CI occasionally, let's not fail the test
+				TestContext.Out.WriteLine ($"Failed to delete '{output}': {ex}");
 			}
-			if (!Directory.Exists (output))
-				return;
-			if (TestContext.CurrentContext.Result.Outcome.Status == NUnit.Framework.Interfaces.TestStatus.Passed ||
-			    TestContext.CurrentContext.Result.Outcome.Status == NUnit.Framework.Interfaces.TestStatus.Skipped) {
-				FileSystemUtils.SetDirectoryWriteable (output);
-				try {
-					Directory.Delete (output, recursive: true);
-				} catch (Exception ex) {
-					// This happens on CI occasionally, let's not fail the test
-					TestContext.Out.WriteLine ($"Failed to delete '{output}': {ex}");
-				}
-			} else {
-				foreach (var file in Directory.GetFiles (Path.Combine (output), "*.log", SearchOption.AllDirectories)) {
-					TestContext.AddTestAttachment (file, Path.GetFileName (output));
-				}
-				foreach (var bl in Directory.GetFiles (Path.Combine (output), "*.binlog", SearchOption.AllDirectories)) {
-					TestContext.AddTestAttachment (bl, Path.GetFileName (output));
-				}
+		} else {
+			foreach (var file in Directory.GetFiles (Path.Combine (output), "*.log", SearchOption.AllDirectories)) {
+				TestContext.AddTestAttachment (file, Path.GetFileName (output));
+			}
+			foreach (var bl in Directory.GetFiles (Path.Combine (output), "*.binlog", SearchOption.AllDirectories)) {
+				TestContext.AddTestAttachment (bl, Path.GetFileName (output));
 			}
 		}
 	}

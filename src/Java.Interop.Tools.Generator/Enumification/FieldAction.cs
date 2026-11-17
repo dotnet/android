@@ -1,9 +1,8 @@
-namespace Java.Interop.Tools.Generator.Enumification
+namespace Java.Interop.Tools.Generator.Enumification;
+
+public enum FieldAction
 {
-	public enum FieldAction
-	{
-		None,
-		Remove,
-		Keep
-	}
+	None,
+	Remove,
+	Keep
 }

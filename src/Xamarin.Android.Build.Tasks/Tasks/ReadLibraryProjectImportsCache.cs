@@ -29,8 +29,8 @@ using System.Xml.Linq;
 using Microsoft.Build.Framework;
 using Microsoft.Android.Build.Tasks;
 
-namespace Xamarin.Android.Tasks
-{
+namespace Xamarin.Android.Tasks;
+
 	[MSBuildMultiThreadableTask]
 	public class ReadLibraryProjectImportsCache : MultithreadedAndroidTask
 	{
@@ -81,4 +81,3 @@ namespace Xamarin.Android.Tasks
 			return !Log.HasLoggedErrors;
 		}
 	}
-}

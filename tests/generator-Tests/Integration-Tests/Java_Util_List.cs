@@ -1,8 +1,8 @@
-﻿using System;
+using System;
 using NUnit.Framework;
 
-namespace generatortests
-{
+namespace generatortests;
+
 	[TestFixture]
 	public class Java_Util_List : BaseGeneratorTest
 	{
@@ -16,5 +16,4 @@ namespace generatortests
 					expectedRelativePath:   "java.util.List");
 		}
 	}
-}
 

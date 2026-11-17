@@ -5,7 +5,7 @@ using System.Threading;
 using Android.OS;
 using Android.Runtime;
 
-namespace Android.App {
+namespace Android.App; 
 
 	internal class SyncContext : SynchronizationContext {
 
@@ -54,4 +54,3 @@ namespace Android.App {
 			m.WaitOne ();
 		}
 	}
-}

@@ -7,8 +7,8 @@ using System.Collections.Generic;
 using System.IO;
 using Microsoft.Android.Build.Tasks;
 
-namespace Xamarin.Android.Tasks
-{
+namespace Xamarin.Android.Tasks;
+
 	/// <summary>
 	/// This task invokes r8 in order to:
 	/// - Compile to dex format + code shrinking (replacement for proguard)
@@ -388,5 +388,3 @@ namespace Xamarin.Android.Tasks
 			Log.LogMessage (messageImportance, singleLine);
 		}
 	}
-
-}

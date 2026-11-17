@@ -13,731 +13,730 @@ using Xamarin.Android.Tasks;
 using Xamarin.Android.Tools;
 using Xamarin.ProjectTools;
 
-namespace Xamarin.Android.Build.Tests
+namespace Xamarin.Android.Build.Tests;
+
+/// <summary>
+/// Build tests for NativeAOT and native runtime packaging.
+/// </summary>
+[TestFixture]
+[Category ("Node-2")]
+public class NativeAotBuildTests : BaseTest
 {
-	/// <summary>
-	/// Build tests for NativeAOT and native runtime packaging.
-	/// </summary>
-	[TestFixture]
-	[Category ("Node-2")]
-	public class NativeAotBuildTests : BaseTest
+	static readonly string [] ArmEhabiPersonalitySymbols = [
+		"__aeabi_unwind_cpp_pr0",
+		"__aeabi_unwind_cpp_pr1",
+		"__aeabi_unwind_cpp_pr2",
+	];
+
+	static readonly string [] CPlusPlusArchiveNames = [
+		"libc++_static.a",
+		"libc++abi.a",
+		"libunwind.a", // Android NDK archive, unrelated to the removed bundled libunwind.
+	];
+
+	[TestCase ("armeabi-v7a")]
+	[TestCase ("arm64-v8a")]
+	[TestCase ("x86_64")]
+	public void BuildCoreClrWithPrebuiltRuntime (string abi)
 	{
-		static readonly string [] ArmEhabiPersonalitySymbols = [
-			"__aeabi_unwind_cpp_pr0",
-			"__aeabi_unwind_cpp_pr1",
-			"__aeabi_unwind_cpp_pr2",
-		];
+		var proj = new XamarinAndroidApplicationProject {
+			IsRelease = true,
+		};
+		proj.SetRuntime (AndroidRuntime.CoreCLR);
+		proj.SetRuntimeIdentifiers ([abi]);
+		using var builder = CreateApkBuilder ();
+		string missingNdk = Path.Combine (Root, "missing-ndk-for-prebuilt-coreclr");
+		DirectoryAssert.DoesNotExist (missingNdk);
+		Assert.IsTrue (builder.Build (proj, parameters: ["AndroidNdkDirectory=" + missingNdk]),
+			$"CoreCLR app build should succeed for {abi} without the Android NDK.");
+		string packagePath = Path.Combine (Root, builder.ProjectDirectory, proj.OutputPath, proj.PackageName + "-Signed.apk");
+		FileAssert.Exists (packagePath, "An NDK-free CoreCLR build must produce a signed package.");
+		using var package = ZipHelper.OpenZip (packagePath);
+		package.AssertContainsEntry (packagePath, $"lib/{abi}/libbinary_blobs.so");
+	}
 
-		static readonly string [] CPlusPlusArchiveNames = [
-			"libc++_static.a",
-			"libc++abi.a",
-			"libunwind.a", // Android NDK archive, unrelated to the removed bundled libunwind.
-		];
+	[TestCase ("armeabi-v7a")]
+	[TestCase ("arm64-v8a")]
+	[TestCase ("x86_64")]
+	public void BuildNativeAotWithoutCPlusPlusArchives (string abi)
+	{
+		var proj = new XamarinAndroidApplicationProject {
+			IsRelease = true,
+		};
+		proj.SetRuntime (AndroidRuntime.NativeAOT);
+		proj.SetRuntimeIdentifiers ([abi]);
+		proj.SetProperty ("DebugSymbols", "false");
 
-		[TestCase ("armeabi-v7a")]
-		[TestCase ("arm64-v8a")]
-		[TestCase ("x86_64")]
-		public void BuildCoreClrWithPrebuiltRuntime (string abi)
-		{
-			var proj = new XamarinAndroidApplicationProject {
-				IsRelease = true,
-			};
-			proj.SetRuntime (AndroidRuntime.CoreCLR);
-			proj.SetRuntimeIdentifiers ([abi]);
-			using var builder = CreateApkBuilder ();
-			string missingNdk = Path.Combine (Root, "missing-ndk-for-prebuilt-coreclr");
-			DirectoryAssert.DoesNotExist (missingNdk);
-			Assert.IsTrue (builder.Build (proj, parameters: ["AndroidNdkDirectory=" + missingNdk]),
-				$"CoreCLR app build should succeed for {abi} without the Android NDK.");
-			string packagePath = Path.Combine (Root, builder.ProjectDirectory, proj.OutputPath, proj.PackageName + "-Signed.apk");
-			FileAssert.Exists (packagePath, "An NDK-free CoreCLR build must produce a signed package.");
-			using var package = ZipHelper.OpenZip (packagePath);
-			package.AssertContainsEntry (packagePath, $"lib/{abi}/libbinary_blobs.so");
-		}
+		using var builder = CreateApkBuilder ();
+		Assert.IsTrue (builder.Build (proj), $"NativeAOT build should succeed for {abi} without libc++ or libunwind.");
 
-		[TestCase ("armeabi-v7a")]
-		[TestCase ("arm64-v8a")]
-		[TestCase ("x86_64")]
-		public void BuildNativeAotWithoutCPlusPlusArchives (string abi)
-		{
-			var proj = new XamarinAndroidApplicationProject {
-				IsRelease = true,
-			};
-			proj.SetRuntime (AndroidRuntime.NativeAOT);
-			proj.SetRuntimeIdentifiers ([abi]);
-			proj.SetProperty ("DebugSymbols", "false");
-
-			using var builder = CreateApkBuilder ();
-			Assert.IsTrue (builder.Build (proj), $"NativeAOT build should succeed for {abi} without libc++ or libunwind.");
-
-			string intermediateDirectory = Path.Combine (Root, builder.ProjectDirectory, proj.IntermediateOutputPath);
-			string [] responseFiles = Directory.GetFiles (intermediateDirectory, "ld.*.rsp", SearchOption.AllDirectories);
-			Assert.IsNotEmpty (responseFiles, "Native linker response files should be generated.");
-			foreach (string responseFile in responseFiles) {
-				string response = File.ReadAllText (responseFile);
-				StringAssert.Contains ("libnaot-android.release-static-release.a", response, responseFile);
-				StringAssert.Contains ("nativeaot-bootstrap.o", response, responseFile);
-				StringAssert.Contains ("--undefined=NativeAOT_InitializeEnvironment", response, responseFile);
-				StringAssert.Contains ("-init=NativeAOT_InitializeEnvironment", response, responseFile);
-				StringAssert.DoesNotContain ("jni_init_funcs.", response, responseFile);
-				StringAssert.DoesNotContain ("environment.", response, responseFile);
-				foreach (string archiveName in CPlusPlusArchiveNames) {
-					StringAssert.DoesNotContain (archiveName, response, responseFile);
-				}
-			}
-			if (abi == "armeabi-v7a") {
-				AssertArmEhabiSymbolsPromoted (builder, proj);
-			}
-			string nativeObject = Path.Combine (intermediateDirectory, MonoAndroidHelper.AbiToRid (abi), "native", proj.ProjectName + ".o");
-			string llvmNm = Path.Combine (GetNdkToolchainDirectory (), "bin", TestEnvironment.IsWindows ? "llvm-nm.exe" : "llvm-nm");
-			var (exitCode, standardOutput, standardError) = RunProcessWithExitCode (llvmNm, $"--undefined-only \"{nativeObject}\"");
-			Assert.AreEqual (0, exitCode, $"llvm-nm failed:{Environment.NewLine}{standardError}");
-			CollectionAssert.Contains (standardOutput.Split ('\n').Select (line => line.Trim ()), "U AndroidCryptoNative_InitLibraryOnLoad",
-				"The managed JNI_OnLoad must retain a direct crypto initializer reference even without application crypto calls.");
-			string applicationLibrary = Directory.GetFiles (
-				Path.Combine (Root, builder.ProjectDirectory, proj.OutputPath), $"lib{proj.ProjectName}.so", SearchOption.AllDirectories).Single ();
-			string dynamic = NativeToolTestHelper.Run ("llvm-readelf", "--dynamic", applicationLibrary);
-			StringAssert.Contains ("(INIT)", dynamic, "The fixed environment hook must survive as DT_INIT.");
-			StringAssert.Contains ("(INIT_ARRAY)", dynamic, "NativeAOT's initialization array must remain intact.");
-			StringAssert.DoesNotContain ("libbinary_blobs.so", dynamic, "NativeAOT data must not introduce a dynamic library dependency.");
-			StringAssert.DoesNotContain ("libnaot-android", dynamic, "The NativeAOT host must be linked statically.");
-			using var elf = NativeToolTestHelper.ReadElf (applicationLibrary);
-			var exports = elf.RootElement [0].GetProperty ("DynamicSymbols").EnumerateArray ()
-				.Select (entry => entry.GetProperty ("Symbol").GetProperty ("Name").GetProperty ("Name").GetString ()).ToArray ();
-			CollectionAssert.DoesNotContain (exports, "dotnet_android_nativeaot_bootstrap");
-			CollectionAssert.DoesNotContain (exports, "dotnet_android_nativeaot_bootstrap_size");
-			CollectionAssert.DoesNotContain (exports, "dotnet_android_nativeaot_remapping_data");
-			CollectionAssert.DoesNotContain (exports, "dotnet_android_nativeaot_remapping_data_size");
-			CollectionAssert.DoesNotContain (exports, "NativeAOT_InitializeEnvironment");
-			string definitions = NativeToolTestHelper.Run ("llvm-nm", "--demangle", "--defined-only",
-				Path.ChangeExtension (applicationLibrary, ".dbg.so"));
-			StringAssert.Contains ("BinaryBlobLoader::read_uncompressed(", definitions);
-			StringAssert.DoesNotContain ("BinaryBlobLoader::decode(", definitions,
-				"The NativeAOT host must not retain the CoreCLR blob decompression path.");
-			StringAssert.DoesNotContain ("BinaryBlobLoader::load(", definitions);
-			StringAssert.DoesNotContain ("BinaryBlobLoader::load_optional(", definitions);
-			StringAssert.DoesNotContain ("OSBridge::", definitions);
-			StringAssert.DoesNotContain ("RuntimeEnvironment::", definitions,
-				"NativeAOT startup must use the supplied JNI environment without retaining a native JavaVM cache.");
-		}
-
-		[Test]
-		public void BuildNativeAotAppBundleIncludesDebugSymbols ()
-		{
-			var proj = new XamarinAndroidApplicationProject {
-				IsRelease = true,
-				ProjectName = "テスト\u2002Me",
-				RootNamespace = "Test.Me",
-			};
-			proj.SetRuntime (AndroidRuntime.NativeAOT);
-			string [] abis = ["arm64-v8a", "x86_64"];
-			proj.SetRuntimeIdentifiers (abis);
-			proj.SetProperty ("AndroidPackageFormat", "aab");
-			proj.SetProperty ("DebugSymbols", "false");
-
-			using var builder = CreateApkBuilder ();
-			Assert.IsTrue (builder.Build (proj), "NativeAOT AAB build should succeed.");
-			string bundle = Path.Combine (Root, builder.ProjectDirectory, proj.OutputPath, $"{proj.PackageName}-Signed.aab");
-			FileAssert.Exists (bundle);
-			string extractedDirectory = builder.Output.GetIntermediaryPath ("nativeaot-debug-symbols");
-			Directory.CreateDirectory (extractedDirectory);
-			using var archive = ZipHelper.OpenZip (bundle);
-			foreach (string abi in abis) {
-				string libraryEntryName = $"base/lib/{abi}/lib{proj.ProjectName}.so";
-				string symbolsEntryName = $"BUNDLE-METADATA/com.android.tools.build.debugsymbols/{abi}/lib{proj.ProjectName}.so.dbg";
-				string library = Path.Combine (extractedDirectory, $"{abi}.so");
-				string symbols = Path.Combine (extractedDirectory, $"{abi}.dbg.so");
-				ExtractEntry (libraryEntryName, library);
-				ExtractEntry (symbolsEntryName, symbols);
-				Assert.AreEqual (GetBuildId (library), GetBuildId (symbols),
-					$"NativeAOT debug symbols for {abi} must match the bundled application library.");
-			}
-
-			void ExtractEntry (string entryName, string path)
-			{
-				var entry = archive.GetEntry (entryName);
-				Assert.IsNotNull (entry, $"The bundle must contain '{entryName}'.");
-				using var source = entry.Open ();
-				using var destination = File.Create (path);
-				source.CopyTo (destination);
-			}
-
-			static string GetBuildId (string path)
-			{
-				string output = NativeToolTestHelper.Run ("llvm-readelf", "--notes", path);
-				string buildIdLine = output.Split ('\n').Single (line => line.Contains ("Build ID:", StringComparison.Ordinal));
-				return buildIdLine.Substring (buildIdLine.IndexOf ("Build ID:", StringComparison.Ordinal) + "Build ID:".Length).Trim ();
+		string intermediateDirectory = Path.Combine (Root, builder.ProjectDirectory, proj.IntermediateOutputPath);
+		string [] responseFiles = Directory.GetFiles (intermediateDirectory, "ld.*.rsp", SearchOption.AllDirectories);
+		Assert.IsNotEmpty (responseFiles, "Native linker response files should be generated.");
+		foreach (string responseFile in responseFiles) {
+			string response = File.ReadAllText (responseFile);
+			StringAssert.Contains ("libnaot-android.release-static-release.a", response, responseFile);
+			StringAssert.Contains ("nativeaot-bootstrap.o", response, responseFile);
+			StringAssert.Contains ("--undefined=NativeAOT_InitializeEnvironment", response, responseFile);
+			StringAssert.Contains ("-init=NativeAOT_InitializeEnvironment", response, responseFile);
+			StringAssert.DoesNotContain ("jni_init_funcs.", response, responseFile);
+			StringAssert.DoesNotContain ("environment.", response, responseFile);
+			foreach (string archiveName in CPlusPlusArchiveNames) {
+				StringAssert.DoesNotContain (archiveName, response, responseFile);
 			}
 		}
+		if (abi == "armeabi-v7a") {
+			AssertArmEhabiSymbolsPromoted (builder, proj);
+		}
+		string nativeObject = Path.Combine (intermediateDirectory, MonoAndroidHelper.AbiToRid (abi), "native", proj.ProjectName + ".o");
+		string llvmNm = Path.Combine (GetNdkToolchainDirectory (), "bin", TestEnvironment.IsWindows ? "llvm-nm.exe" : "llvm-nm");
+		var (exitCode, standardOutput, standardError) = RunProcessWithExitCode (llvmNm, $"--undefined-only \"{nativeObject}\"");
+		Assert.AreEqual (0, exitCode, $"llvm-nm failed:{Environment.NewLine}{standardError}");
+		CollectionAssert.Contains (standardOutput.Split ('\n').Select (line => line.Trim ()), "U AndroidCryptoNative_InitLibraryOnLoad",
+			"The managed JNI_OnLoad must retain a direct crypto initializer reference even without application crypto calls.");
+		string applicationLibrary = Directory.GetFiles (
+			Path.Combine (Root, builder.ProjectDirectory, proj.OutputPath), $"lib{proj.ProjectName}.so", SearchOption.AllDirectories).Single ();
+		string dynamic = NativeToolTestHelper.Run ("llvm-readelf", "--dynamic", applicationLibrary);
+		StringAssert.Contains ("(INIT)", dynamic, "The fixed environment hook must survive as DT_INIT.");
+		StringAssert.Contains ("(INIT_ARRAY)", dynamic, "NativeAOT's initialization array must remain intact.");
+		StringAssert.DoesNotContain ("libbinary_blobs.so", dynamic, "NativeAOT data must not introduce a dynamic library dependency.");
+		StringAssert.DoesNotContain ("libnaot-android", dynamic, "The NativeAOT host must be linked statically.");
+		using var elf = NativeToolTestHelper.ReadElf (applicationLibrary);
+		var exports = elf.RootElement [0].GetProperty ("DynamicSymbols").EnumerateArray ()
+			.Select (entry => entry.GetProperty ("Symbol").GetProperty ("Name").GetProperty ("Name").GetString ()).ToArray ();
+		CollectionAssert.DoesNotContain (exports, "dotnet_android_nativeaot_bootstrap");
+		CollectionAssert.DoesNotContain (exports, "dotnet_android_nativeaot_bootstrap_size");
+		CollectionAssert.DoesNotContain (exports, "dotnet_android_nativeaot_remapping_data");
+		CollectionAssert.DoesNotContain (exports, "dotnet_android_nativeaot_remapping_data_size");
+		CollectionAssert.DoesNotContain (exports, "NativeAOT_InitializeEnvironment");
+		string definitions = NativeToolTestHelper.Run ("llvm-nm", "--demangle", "--defined-only",
+			Path.ChangeExtension (applicationLibrary, ".dbg.so"));
+		StringAssert.Contains ("BinaryBlobLoader::read_uncompressed(", definitions);
+		StringAssert.DoesNotContain ("BinaryBlobLoader::decode(", definitions,
+			"The NativeAOT host must not retain the CoreCLR blob decompression path.");
+		StringAssert.DoesNotContain ("BinaryBlobLoader::load(", definitions);
+		StringAssert.DoesNotContain ("BinaryBlobLoader::load_optional(", definitions);
+		StringAssert.DoesNotContain ("OSBridge::", definitions);
+		StringAssert.DoesNotContain ("RuntimeEnvironment::", definitions,
+			"NativeAOT startup must use the supplied JNI environment without retaining a native JavaVM cache.");
+	}
 
-		[Test]
-		public void NativeAotAppBundleOmitsStaleDebugSymbolsWhenIncludingDebugSymbols ()
-		{
-			var proj = new XamarinAndroidApplicationProject {
-				IsRelease = true,
-			};
-			proj.SetRuntime (AndroidRuntime.NativeAOT);
-			const string abi = "arm64-v8a";
-			proj.SetRuntimeIdentifiers ([abi]);
-			proj.SetProperty ("AndroidPackageFormat", "aab");
-			proj.SetProperty ("DebugSymbols", "false");
+	[Test]
+	public void BuildNativeAotAppBundleIncludesDebugSymbols ()
+	{
+		var proj = new XamarinAndroidApplicationProject {
+			IsRelease = true,
+			ProjectName = "テスト\u2002Me",
+			RootNamespace = "Test.Me",
+		};
+		proj.SetRuntime (AndroidRuntime.NativeAOT);
+		string [] abis = ["arm64-v8a", "x86_64"];
+		proj.SetRuntimeIdentifiers (abis);
+		proj.SetProperty ("AndroidPackageFormat", "aab");
+		proj.SetProperty ("DebugSymbols", "false");
 
-			using var builder = CreateApkBuilder ();
-			Assert.IsTrue (builder.Build (proj), "First NativeAOT AAB build should succeed.");
-			string bundle = Path.Combine (Root, builder.ProjectDirectory, proj.OutputPath, $"{proj.PackageName}-Signed.aab");
+		using var builder = CreateApkBuilder ();
+		Assert.IsTrue (builder.Build (proj), "NativeAOT AAB build should succeed.");
+		string bundle = Path.Combine (Root, builder.ProjectDirectory, proj.OutputPath, $"{proj.PackageName}-Signed.aab");
+		FileAssert.Exists (bundle);
+		string extractedDirectory = builder.Output.GetIntermediaryPath ("nativeaot-debug-symbols");
+		Directory.CreateDirectory (extractedDirectory);
+		using var archive = ZipHelper.OpenZip (bundle);
+		foreach (string abi in abis) {
+			string libraryEntryName = $"base/lib/{abi}/lib{proj.ProjectName}.so";
 			string symbolsEntryName = $"BUNDLE-METADATA/com.android.tools.build.debugsymbols/{abi}/lib{proj.ProjectName}.so.dbg";
-			FileAssert.Exists (bundle);
-			using (var archive = ZipHelper.OpenZip (bundle))
-				Assert.IsNotNull (archive.GetEntry (symbolsEntryName), "The stripped build must include separate debug symbols.");
-
-			// $(AndroidIncludeDebugSymbols) is computed; this keeps Optimize=true so NativeAOT stays selected.
-			proj.SetProperty ("DebugSymbols", "true");
-			proj.SetProperty ("DebugType", "");
-			Assert.IsTrue (builder.Build (proj, doNotCleanupOnUpdate: true), "Second NativeAOT AAB build should succeed.");
-			using (var archive = ZipHelper.OpenZip (bundle))
-				Assert.IsNull (archive.GetEntry (symbolsEntryName), "Stale separate debug symbols must not be packaged once the library is unstripped.");
+			string library = Path.Combine (extractedDirectory, $"{abi}.so");
+			string symbols = Path.Combine (extractedDirectory, $"{abi}.dbg.so");
+			ExtractEntry (libraryEntryName, library);
+			ExtractEntry (symbolsEntryName, symbols);
+			Assert.AreEqual (GetBuildId (library), GetBuildId (symbols),
+				$"NativeAOT debug symbols for {abi} must match the bundled application library.");
 		}
 
-		[Test]
-		public void BootstrapUpdatesForCommandLineFlavorChanges ()
+		void ExtractEntry (string entryName, string path)
 		{
-			var proj = new XamarinAndroidApplicationProject {
-				IsRelease = true,
-				PackageName = "com.xamarin.bootstraprename",
-				MainActivity = """
-					[Activity (Name = "my.app.MainActivity", MainLauncher = true, Process = ":secondary")]
-					public class MainActivity : Activity
+			var entry = archive.GetEntry (entryName);
+			Assert.IsNotNull (entry, $"The bundle must contain '{entryName}'.");
+			using var source = entry.Open ();
+			using var destination = File.Create (path);
+			source.CopyTo (destination);
+		}
+
+		static string GetBuildId (string path)
+		{
+			string output = NativeToolTestHelper.Run ("llvm-readelf", "--notes", path);
+			string buildIdLine = output.Split ('\n').Single (line => line.Contains ("Build ID:", StringComparison.Ordinal));
+			return buildIdLine.Substring (buildIdLine.IndexOf ("Build ID:", StringComparison.Ordinal) + "Build ID:".Length).Trim ();
+		}
+	}
+
+	[Test]
+	public void NativeAotAppBundleOmitsStaleDebugSymbolsWhenIncludingDebugSymbols ()
+	{
+		var proj = new XamarinAndroidApplicationProject {
+			IsRelease = true,
+		};
+		proj.SetRuntime (AndroidRuntime.NativeAOT);
+		const string abi = "arm64-v8a";
+		proj.SetRuntimeIdentifiers ([abi]);
+		proj.SetProperty ("AndroidPackageFormat", "aab");
+		proj.SetProperty ("DebugSymbols", "false");
+
+		using var builder = CreateApkBuilder ();
+		Assert.IsTrue (builder.Build (proj), "First NativeAOT AAB build should succeed.");
+		string bundle = Path.Combine (Root, builder.ProjectDirectory, proj.OutputPath, $"{proj.PackageName}-Signed.aab");
+		string symbolsEntryName = $"BUNDLE-METADATA/com.android.tools.build.debugsymbols/{abi}/lib{proj.ProjectName}.so.dbg";
+		FileAssert.Exists (bundle);
+		using (var archive = ZipHelper.OpenZip (bundle))
+			Assert.IsNotNull (archive.GetEntry (symbolsEntryName), "The stripped build must include separate debug symbols.");
+
+		// $(AndroidIncludeDebugSymbols) is computed; this keeps Optimize=true so NativeAOT stays selected.
+		proj.SetProperty ("DebugSymbols", "true");
+		proj.SetProperty ("DebugType", "");
+		Assert.IsTrue (builder.Build (proj, doNotCleanupOnUpdate: true), "Second NativeAOT AAB build should succeed.");
+		using (var archive = ZipHelper.OpenZip (bundle))
+			Assert.IsNull (archive.GetEntry (symbolsEntryName), "Stale separate debug symbols must not be packaged once the library is unstripped.");
+	}
+
+	[Test]
+	public void BootstrapUpdatesForCommandLineFlavorChanges ()
+	{
+		var proj = new XamarinAndroidApplicationProject {
+			IsRelease = true,
+			PackageName = "com.xamarin.bootstraprename",
+			MainActivity = """
+				[Activity (Name = "my.app.MainActivity", MainLauncher = true, Process = ":secondary")]
+				public class MainActivity : Activity
+				{
+					protected override void OnCreate (Bundle? bundle)
 					{
-						protected override void OnCreate (Bundle? bundle)
-						{
-							base.OnCreate (bundle);
-					#if BOOTSTRAP_FIRST
-							Android.Util.Log.Info ("BootstrapFlavor", "first:" + System.Environment.GetEnvironmentVariable ("BOOTSTRAP_TEST"));
-					#else
-							Android.Util.Log.Info ("BootstrapFlavor", "second:" + System.Environment.GetEnvironmentVariable ("BOOTSTRAP_TEST"));
-					#endif
-						}
+						base.OnCreate (bundle);
+				#if BOOTSTRAP_FIRST
+						Android.Util.Log.Info ("BootstrapFlavor", "first:" + System.Environment.GetEnvironmentVariable ("BOOTSTRAP_TEST"));
+				#else
+						Android.Util.Log.Info ("BootstrapFlavor", "second:" + System.Environment.GetEnvironmentVariable ("BOOTSTRAP_TEST"));
+				#endif
 					}
-					""",
-				OtherBuildItems = {
-					new BuildItem ("None", "first-environment.txt") {
-						TextContent = () => "BOOTSTRAP_TEST=first\ndebug.dotnet.max_grefc=1234",
-					},
-					new BuildItem ("None", "second-environment.txt") {
-						TextContent = () => "BOOTSTRAP_TEST=second\ndebug.dotnet.max_grefc=5678",
-					},
-				},
-			};
-			proj.Imports.Add (new Import ("BootstrapEnvironment.targets") {
-				TextContent = () => """
-					<Project>
-					  <ItemGroup>
-					    <AndroidEnvironment Include="first-environment.txt" Condition=" '$(_BootstrapEnvironmentFlavor)' == 'first' or '$(_BootstrapEnvironmentFlavor)' == 'forward' " />
-					    <AndroidEnvironment Include="second-environment.txt"
-					        Condition=" '$(_BootstrapEnvironmentFlavor)' == 'second' or '$(_BootstrapEnvironmentFlavor)' == 'forward' or '$(_BootstrapEnvironmentFlavor)' == 'reverse' " />
-					    <AndroidEnvironment Include="first-environment.txt" Condition=" '$(_BootstrapEnvironmentFlavor)' == 'reverse' " />
-					  </ItemGroup>
-					</Project>
-					""",
-			});
-			proj.SetRuntime (AndroidRuntime.NativeAOT);
-			proj.SetRuntimeIdentifiers (["arm64-v8a"]);
-			proj.SetProperty ("AndroidPackageFormat", "apk");
-
-			using var builder = CreateApkBuilder ();
-			string [] firstParameters = ["AssemblyName=BootstrapOriginal", "_BootstrapEnvironmentFlavor=first", "DefineConstants=BOOTSTRAP_FIRST"];
-			string [] renamedParameters = ["AssemblyName=BootstrapRenamed", "_BootstrapEnvironmentFlavor=reverse", "DefineConstants=BOOTSTRAP_SECOND"];
-			builder.Save (proj);
-			string projectDirectory = Path.Combine (Root, builder.ProjectDirectory);
-			string intermediate = Path.Combine (projectDirectory, proj.IntermediateOutputPath);
-			string legacySource = Path.Combine (intermediate, "android", "src", "net", "dot", "jni", "nativeaot", "NativeAotEnvironmentVars.java");
-			Directory.CreateDirectory (Path.GetDirectoryName (legacySource));
-			File.WriteAllText (legacySource, """
-				package net.dot.jni.nativeaot;
-				public class NativeAotEnvironmentVars {
-					static String[] envNames = { "REMOVED_APP_SETTING" };
-					static String[] envValues = { "obsolete-value" };
 				}
-				""");
-			Assert.IsTrue (builder.Build (proj, doNotCleanupOnUpdate: true, parameters: firstParameters));
-			builder.AutomaticNuGetRestore = false;
+				""",
+			OtherBuildItems = {
+				new BuildItem ("None", "first-environment.txt") {
+					TextContent = () => "BOOTSTRAP_TEST=first\ndebug.dotnet.max_grefc=1234",
+				},
+				new BuildItem ("None", "second-environment.txt") {
+					TextContent = () => "BOOTSTRAP_TEST=second\ndebug.dotnet.max_grefc=5678",
+				},
+			},
+		};
+		proj.Imports.Add (new Import ("BootstrapEnvironment.targets") {
+			TextContent = () => """
+				<Project>
+				  <ItemGroup>
+				    <AndroidEnvironment Include="first-environment.txt" Condition=" '$(_BootstrapEnvironmentFlavor)' == 'first' or '$(_BootstrapEnvironmentFlavor)' == 'forward' " />
+				    <AndroidEnvironment Include="second-environment.txt"
+				        Condition=" '$(_BootstrapEnvironmentFlavor)' == 'second' or '$(_BootstrapEnvironmentFlavor)' == 'forward' or '$(_BootstrapEnvironmentFlavor)' == 'reverse' " />
+				    <AndroidEnvironment Include="first-environment.txt" Condition=" '$(_BootstrapEnvironmentFlavor)' == 'reverse' " />
+				  </ItemGroup>
+				</Project>
+				""",
+		});
+		proj.SetRuntime (AndroidRuntime.NativeAOT);
+		proj.SetRuntimeIdentifiers (["arm64-v8a"]);
+		proj.SetProperty ("AndroidPackageFormat", "apk");
 
-			string sourceFile = Path.Combine (intermediate, "android", "src", "net", "dot", "jni", "nativeaot", "JavaInteropRuntime.java");
-			string environmentObject = Path.Combine (intermediate, "android-arm64", "native", "data", "nativeaot-bootstrap.o");
-			FileAssert.DoesNotExist (legacySource, "Upgrading an existing intermediate directory must remove obsolete Java environment data.");
-			Assert.IsFalse (DexUtils.ContainsClass ("Lnet/dot/jni/nativeaot/NativeAotEnvironmentVars;",
-				Path.Combine (intermediate, "android", "bin", "classes.dex"), AndroidSdkPath),
-				"The obsolete environment class must not remain in the application's DEX.");
-			string [] inputs = [
-				Path.Combine (projectDirectory, proj.ProjectFilePath),
-				Path.Combine (projectDirectory, "BootstrapEnvironment.targets"),
-				Path.Combine (projectDirectory, "first-environment.txt"),
-				Path.Combine (projectDirectory, "second-environment.txt"),
-				Path.Combine (intermediate, "AndroidManifest.xml"),
-				Path.Combine (intermediate, "build.props"),
-				Path.GetFullPath (Path.Combine (intermediate, "..", "project.assets.json")),
-			];
-			var inputTimestamps = inputs.Select (File.GetLastWriteTimeUtc).ToArray ();
-			StringAssert.Contains ("NativeLibraryHelper.loadLibrary(\"BootstrapOriginal\", context);", File.ReadAllText (sourceFile));
-			string nativeObject = Path.Combine (intermediate, "android-arm64", "native", "BootstrapOriginal.o");
-			DateTime nativeObjectTimestamp = File.GetLastWriteTimeUtc (nativeObject);
-			DateTime bootstrapSourceTimestamp = File.GetLastWriteTimeUtc (sourceFile);
-			Assert.Less (File.GetLastWriteTimeUtc (inputs [3]), File.GetLastWriteTimeUtc (environmentObject),
-				"The alternate environment file must predate the bootstrap outputs.");
+		using var builder = CreateApkBuilder ();
+		string [] firstParameters = ["AssemblyName=BootstrapOriginal", "_BootstrapEnvironmentFlavor=first", "DefineConstants=BOOTSTRAP_FIRST"];
+		string [] renamedParameters = ["AssemblyName=BootstrapRenamed", "_BootstrapEnvironmentFlavor=reverse", "DefineConstants=BOOTSTRAP_SECOND"];
+		builder.Save (proj);
+		string projectDirectory = Path.Combine (Root, builder.ProjectDirectory);
+		string intermediate = Path.Combine (projectDirectory, proj.IntermediateOutputPath);
+		string legacySource = Path.Combine (intermediate, "android", "src", "net", "dot", "jni", "nativeaot", "NativeAotEnvironmentVars.java");
+		Directory.CreateDirectory (Path.GetDirectoryName (legacySource));
+		File.WriteAllText (legacySource, """
+			package net.dot.jni.nativeaot;
+			public class NativeAotEnvironmentVars {
+				static String[] envNames = { "REMOVED_APP_SETTING" };
+				static String[] envValues = { "obsolete-value" };
+			}
+			""");
+		Assert.IsTrue (builder.Build (proj, doNotCleanupOnUpdate: true, parameters: firstParameters));
+		builder.AutomaticNuGetRestore = false;
 
+		string sourceFile = Path.Combine (intermediate, "android", "src", "net", "dot", "jni", "nativeaot", "JavaInteropRuntime.java");
+		string environmentObject = Path.Combine (intermediate, "android-arm64", "native", "data", "nativeaot-bootstrap.o");
+		FileAssert.DoesNotExist (legacySource, "Upgrading an existing intermediate directory must remove obsolete Java environment data.");
+		Assert.IsFalse (DexUtils.ContainsClass ("Lnet/dot/jni/nativeaot/NativeAotEnvironmentVars;",
+			Path.Combine (intermediate, "android", "bin", "classes.dex"), AndroidSdkPath),
+			"The obsolete environment class must not remain in the application's DEX.");
+		string [] inputs = [
+			Path.Combine (projectDirectory, proj.ProjectFilePath),
+			Path.Combine (projectDirectory, "BootstrapEnvironment.targets"),
+			Path.Combine (projectDirectory, "first-environment.txt"),
+			Path.Combine (projectDirectory, "second-environment.txt"),
+			Path.Combine (intermediate, "AndroidManifest.xml"),
+			Path.Combine (intermediate, "build.props"),
+			Path.GetFullPath (Path.Combine (intermediate, "..", "project.assets.json")),
+		];
+		var inputTimestamps = inputs.Select (File.GetLastWriteTimeUtc).ToArray ();
+		StringAssert.Contains ("NativeLibraryHelper.loadLibrary(\"BootstrapOriginal\", context);", File.ReadAllText (sourceFile));
+		string nativeObject = Path.Combine (intermediate, "android-arm64", "native", "BootstrapOriginal.o");
+		DateTime nativeObjectTimestamp = File.GetLastWriteTimeUtc (nativeObject);
+		DateTime bootstrapSourceTimestamp = File.GetLastWriteTimeUtc (sourceFile);
+		Assert.Less (File.GetLastWriteTimeUtc (inputs [3]), File.GetLastWriteTimeUtc (environmentObject),
+			"The alternate environment file must predate the bootstrap outputs.");
+
+		Assert.IsTrue (builder.Build (proj, doNotCleanupOnUpdate: true, saveProject: false, parameters: [
+			"AssemblyName=BootstrapOriginal", "_BootstrapEnvironmentFlavor=second", "DefineConstants=BOOTSTRAP_SECOND",
+		]));
+		Assert.Greater (File.GetLastWriteTimeUtc (nativeObject), nativeObjectTimestamp, "The managed build flavor must recompile.");
+		CollectionAssert.AreEqual (inputTimestamps, inputs.Select (File.GetLastWriteTimeUtc),
+			"Selecting a pre-existing environment file must not change the other bootstrap inputs.");
+		Assert.AreEqual ("second", EnvironmentHelper.ReadNativeAotEnvironmentVariables (intermediate) ["BOOTSTRAP_TEST"]);
+		Assert.AreEqual ("5678", EnvironmentHelper.ReadNativeAotEnvironmentVariables (intermediate, systemProperties: true) ["debug.dotnet.max_grefc"]);
+		builder.Output.AssertTargetIsNotSkipped ("_AndroidGenerateNativeAotBootstrapObject");
+		builder.Output.AssertTargetIsSkipped ("_AndroidGenerateNativeAotBootstrapSources", defaultIfNotUsed: true);
+		Assert.AreEqual (bootstrapSourceTimestamp, File.GetLastWriteTimeUtc (sourceFile), "Unchanged library/provider selection must not rewrite Java.");
+		nativeObjectTimestamp = File.GetLastWriteTimeUtc (nativeObject);
+
+		foreach (var (flavor, expectedValue) in new [] { ("forward", "second"), ("reverse", "first") }) {
 			Assert.IsTrue (builder.Build (proj, doNotCleanupOnUpdate: true, saveProject: false, parameters: [
-				"AssemblyName=BootstrapOriginal", "_BootstrapEnvironmentFlavor=second", "DefineConstants=BOOTSTRAP_SECOND",
+				"AssemblyName=BootstrapOriginal", "_BootstrapEnvironmentFlavor=" + flavor, "DefineConstants=BOOTSTRAP_SECOND",
 			]));
-			Assert.Greater (File.GetLastWriteTimeUtc (nativeObject), nativeObjectTimestamp, "The managed build flavor must recompile.");
+			Assert.AreEqual (expectedValue, EnvironmentHelper.ReadNativeAotEnvironmentVariables (intermediate) ["BOOTSTRAP_TEST"]);
+			string expectedProperty = expectedValue == "first" ? "1234" : "5678";
+			Assert.AreEqual (expectedProperty, EnvironmentHelper.ReadNativeAotEnvironmentVariables (intermediate, systemProperties: true) ["debug.dotnet.max_grefc"]);
 			CollectionAssert.AreEqual (inputTimestamps, inputs.Select (File.GetLastWriteTimeUtc),
-				"Selecting a pre-existing environment file must not change the other bootstrap inputs.");
-			Assert.AreEqual ("second", EnvironmentHelper.ReadNativeAotEnvironmentVariables (intermediate) ["BOOTSTRAP_TEST"]);
-			Assert.AreEqual ("5678", EnvironmentHelper.ReadNativeAotEnvironmentVariables (intermediate, systemProperties: true) ["debug.dotnet.max_grefc"]);
+				"Reordering pre-existing files must update override precedence without changing their timestamps.");
 			builder.Output.AssertTargetIsNotSkipped ("_AndroidGenerateNativeAotBootstrapObject");
 			builder.Output.AssertTargetIsSkipped ("_AndroidGenerateNativeAotBootstrapSources", defaultIfNotUsed: true);
-			Assert.AreEqual (bootstrapSourceTimestamp, File.GetLastWriteTimeUtc (sourceFile), "Unchanged library/provider selection must not rewrite Java.");
-			nativeObjectTimestamp = File.GetLastWriteTimeUtc (nativeObject);
-
-			foreach (var (flavor, expectedValue) in new [] { ("forward", "second"), ("reverse", "first") }) {
-				Assert.IsTrue (builder.Build (proj, doNotCleanupOnUpdate: true, saveProject: false, parameters: [
-					"AssemblyName=BootstrapOriginal", "_BootstrapEnvironmentFlavor=" + flavor, "DefineConstants=BOOTSTRAP_SECOND",
-				]));
-				Assert.AreEqual (expectedValue, EnvironmentHelper.ReadNativeAotEnvironmentVariables (intermediate) ["BOOTSTRAP_TEST"]);
-				string expectedProperty = expectedValue == "first" ? "1234" : "5678";
-				Assert.AreEqual (expectedProperty, EnvironmentHelper.ReadNativeAotEnvironmentVariables (intermediate, systemProperties: true) ["debug.dotnet.max_grefc"]);
-				CollectionAssert.AreEqual (inputTimestamps, inputs.Select (File.GetLastWriteTimeUtc),
-					"Reordering pre-existing files must update override precedence without changing their timestamps.");
-				builder.Output.AssertTargetIsNotSkipped ("_AndroidGenerateNativeAotBootstrapObject");
-				builder.Output.AssertTargetIsSkipped ("_AndroidGenerateNativeAotBootstrapSources", defaultIfNotUsed: true);
-				Assert.AreEqual (bootstrapSourceTimestamp, File.GetLastWriteTimeUtc (sourceFile), "Environment order must not regenerate Java.");
-				Assert.AreEqual (nativeObjectTimestamp, File.GetLastWriteTimeUtc (nativeObject), "Environment order must not recompile managed ILC output.");
-				builder.Output.AssertTargetIsSkipped ("_CompileToDalvik", defaultIfNotUsed: true);
-			}
-
-			Assert.IsTrue (builder.Build (proj, doNotCleanupOnUpdate: true, parameters: renamedParameters, saveProject: false));
-			StringAssert.Contains ("NativeLibraryHelper.loadLibrary(\"BootstrapRenamed\", context);", File.ReadAllText (sourceFile));
-			builder.Output.AssertTargetIsNotSkipped ("_AndroidGenerateNativeAotBootstrapSources");
-			CollectionAssert.AreEqual (inputTimestamps, inputs.Select (File.GetLastWriteTimeUtc),
-				"The manifest, environment and project must stay unchanged during the command-line AssemblyName change.");
-
-			string packagePath = Path.Combine (projectDirectory, proj.OutputPath, proj.PackageName + "-Signed.apk");
-			using (var package = ZipHelper.OpenZip (packagePath)) {
-				Assert.IsNotNull (package);
-				package.AssertContainsEntry (packagePath, "lib/arm64-v8a/libBootstrapRenamed.so");
-				package.AssertDoesNotContainEntry (packagePath, "lib/arm64-v8a/libBootstrapOriginal.so");
-			}
-
-			string fingerprint = Path.Combine (intermediate, "nativeaot-bootstrap.inputs");
-			FileAssert.Exists (fingerprint);
-			DateTime fingerprintTimestamp = File.GetLastWriteTimeUtc (fingerprint);
-			DateTime sourceTimestamp = File.GetLastWriteTimeUtc (sourceFile);
-			Assert.IsTrue (builder.Build (proj, doNotCleanupOnUpdate: true, parameters: renamedParameters, saveProject: false));
-			builder.Output.AssertTargetIsSkipped ("_AndroidGenerateNativeAotBootstrapSources");
-			Assert.AreEqual (fingerprintTimestamp, File.GetLastWriteTimeUtc (fingerprint));
-			Assert.AreEqual (sourceTimestamp, File.GetLastWriteTimeUtc (sourceFile));
-
-			string deviceTarget = Environment.GetEnvironmentVariable ("ADB_TARGET");
-			if (!string.IsNullOrEmpty (deviceTarget)) {
-				string sourceManifest = Path.Combine (projectDirectory, "Properties", "AndroidManifest.xml");
-				string packageName = (string)XDocument.Load (sourceManifest).Root?.Attribute ("package");
-				Assert.AreEqual (proj.PackageName, packageName);
-				TestContext.Out.WriteLine ($"Installing fixture package '{packageName}' from '{sourceManifest}' to '{deviceTarget}'.");
-				string [] deviceParameters = [.. renamedParameters, "AdbTarget=" + deviceTarget];
-				Assert.IsTrue (builder.Install (proj, doNotCleanupOnUpdate: true, parameters: deviceParameters, saveProject: false));
-				try {
-					RunAdbCommand ("logcat -c");
-					Assert.IsTrue (builder.RunTarget (proj, "Run", doNotCleanupOnUpdate: true, parameters: deviceParameters, saveProject: false));
-					string startupLog = "";
-					WaitFor (TimeSpan.FromSeconds (30), () => {
-						startupLog = RunAdbCommand ("logcat -d -s BootstrapFlavor:I");
-						return startupLog.Contains ("second:first", StringComparison.Ordinal);
-					}, intervalInMS: 250);
-					StringAssert.Contains ("second:first", startupLog,
-						"The renamed app and secondary-process provider must read the selected bootstrap environment.");
-				} finally {
-					Assert.IsTrue (builder.RunTarget (proj, "Uninstall", doNotCleanupOnUpdate: true, parameters: deviceParameters, saveProject: false));
-				}
-			}
-
-			Assert.IsTrue (builder.RunTarget (proj, "Clean", doNotCleanupOnUpdate: true, parameters: renamedParameters, saveProject: false));
-			FileAssert.DoesNotExist (fingerprint);
+			Assert.AreEqual (bootstrapSourceTimestamp, File.GetLastWriteTimeUtc (sourceFile), "Environment order must not regenerate Java.");
+			Assert.AreEqual (nativeObjectTimestamp, File.GetLastWriteTimeUtc (nativeObject), "Environment order must not recompile managed ILC output.");
+			builder.Output.AssertTargetIsSkipped ("_CompileToDalvik", defaultIfNotUsed: true);
 		}
 
-		[Test]
-		public void RestoreNativeAot_AndroidArmRuntimePack ()
-		{
-			var proj = new XamarinAndroidApplicationProject {
-				IsRelease = true,
-			};
-			proj.SetRuntime (AndroidRuntime.NativeAOT);
-			proj.SetRuntimeIdentifiers (["armeabi-v7a"]);
+		Assert.IsTrue (builder.Build (proj, doNotCleanupOnUpdate: true, parameters: renamedParameters, saveProject: false));
+		StringAssert.Contains ("NativeLibraryHelper.loadLibrary(\"BootstrapRenamed\", context);", File.ReadAllText (sourceFile));
+		builder.Output.AssertTargetIsNotSkipped ("_AndroidGenerateNativeAotBootstrapSources");
+		CollectionAssert.AreEqual (inputTimestamps, inputs.Select (File.GetLastWriteTimeUtc),
+			"The manifest, environment and project must stay unchanged during the command-line AssemblyName change.");
 
-			using var builder = CreateApkBuilder ();
-			Assert.IsTrue (
-				builder.RunTarget (proj, "Restore"),
-				"Restore should succeed for android-arm."
-			);
-
-			var intermediate = Path.Combine (Root, builder.ProjectDirectory, proj.IntermediateOutputPath);
-			var assets = File.ReadAllText (Path.Combine (intermediate, "..", "project.assets.json"));
-			StringAssert.Contains (
-				"\"Microsoft.NETCore.App.Runtime.NativeAOT.android-arm\"",
-				assets,
-				"Restore should select the android-arm NativeAOT runtime pack."
-			);
-			StringAssert.DoesNotContain (
-				"\"Microsoft.NETCore.App.Runtime.NativeAOT.linux-bionic-arm\"",
-				assets,
-				"Restore should not fall back to the linux-bionic-arm NativeAOT runtime pack."
-			);
+		string packagePath = Path.Combine (projectDirectory, proj.OutputPath, proj.PackageName + "-Signed.apk");
+		using (var package = ZipHelper.OpenZip (packagePath)) {
+			Assert.IsNotNull (package);
+			package.AssertContainsEntry (packagePath, "lib/arm64-v8a/libBootstrapRenamed.so");
+			package.AssertDoesNotContainEntry (packagePath, "lib/arm64-v8a/libBootstrapOriginal.so");
 		}
 
-		[Test]
-		public void RestoreNativeAot_UsesSdkRuntimePackVersion ()
-		{
-			var proj = new XamarinAndroidApplicationProject {
-				IsRelease = true,
-			};
-			proj.SetRuntime (AndroidRuntime.NativeAOT);
+		string fingerprint = Path.Combine (intermediate, "nativeaot-bootstrap.inputs");
+		FileAssert.Exists (fingerprint);
+		DateTime fingerprintTimestamp = File.GetLastWriteTimeUtc (fingerprint);
+		DateTime sourceTimestamp = File.GetLastWriteTimeUtc (sourceFile);
+		Assert.IsTrue (builder.Build (proj, doNotCleanupOnUpdate: true, parameters: renamedParameters, saveProject: false));
+		builder.Output.AssertTargetIsSkipped ("_AndroidGenerateNativeAotBootstrapSources");
+		Assert.AreEqual (fingerprintTimestamp, File.GetLastWriteTimeUtc (fingerprint));
+		Assert.AreEqual (sourceTimestamp, File.GetLastWriteTimeUtc (sourceFile));
 
-			using var builder = CreateApkBuilder ();
-			Assert.IsTrue (
-				builder.RunTarget (proj, "Restore", parameters: [
-					"MicrosoftNETCoreAppRefPackageVersion=0.0.0",
-				]),
-				"Restore should use the .NET SDK's NativeAOT runtime pack version."
-			);
-
-			var intermediate = Path.Combine (Root, builder.ProjectDirectory, proj.IntermediateOutputPath);
-			using var assets = JsonDocument.Parse (File.ReadAllText (Path.Combine (intermediate, "..", "project.assets.json")));
-			var runtimePacks = assets.RootElement
-				.GetProperty ("project")
-				.GetProperty ("frameworks")
-				.EnumerateObject ()
-				.SelectMany (framework => framework.Value.GetProperty ("downloadDependencies").EnumerateArray ())
-				.Where (dependency => dependency.GetProperty ("name").GetString ()?.StartsWith ("Microsoft.NETCore.App.Runtime.NativeAOT.", StringComparison.Ordinal) == true)
-				.ToArray ();
-			Assert.IsNotEmpty (
-				runtimePacks,
-				"Restore should select a NativeAOT runtime pack."
-			);
-			foreach (var runtimePack in runtimePacks) {
-				Assert.AreNotEqual (
-					"[0.0.0, 0.0.0]",
-					runtimePack.GetProperty ("version").GetString (),
-					"Restore should ignore MicrosoftNETCoreAppRefPackageVersion and use the SDK-selected NativeAOT runtime pack version."
-				);
+		string deviceTarget = Environment.GetEnvironmentVariable ("ADB_TARGET");
+		if (!string.IsNullOrEmpty (deviceTarget)) {
+			string sourceManifest = Path.Combine (projectDirectory, "Properties", "AndroidManifest.xml");
+			string packageName = (string)XDocument.Load (sourceManifest).Root?.Attribute ("package");
+			Assert.AreEqual (proj.PackageName, packageName);
+			TestContext.Out.WriteLine ($"Installing fixture package '{packageName}' from '{sourceManifest}' to '{deviceTarget}'.");
+			string [] deviceParameters = [.. renamedParameters, "AdbTarget=" + deviceTarget];
+			Assert.IsTrue (builder.Install (proj, doNotCleanupOnUpdate: true, parameters: deviceParameters, saveProject: false));
+			try {
+				RunAdbCommand ("logcat -c");
+				Assert.IsTrue (builder.RunTarget (proj, "Run", doNotCleanupOnUpdate: true, parameters: deviceParameters, saveProject: false));
+				string startupLog = "";
+				WaitFor (TimeSpan.FromSeconds (30), () => {
+					startupLog = RunAdbCommand ("logcat -d -s BootstrapFlavor:I");
+					return startupLog.Contains ("second:first", StringComparison.Ordinal);
+				}, intervalInMS: 250);
+				StringAssert.Contains ("second:first", startupLog,
+					"The renamed app and secondary-process provider must read the selected bootstrap environment.");
+			} finally {
+				Assert.IsTrue (builder.RunTarget (proj, "Uninstall", doNotCleanupOnUpdate: true, parameters: deviceParameters, saveProject: false));
 			}
 		}
 
-		[Test]
-		public void BuildNativeAot_WithoutNdk ()
-		{
-			var proj = new XamarinAndroidApplicationProject {
-				IsRelease = true,
-			};
-			proj.SetRuntime (AndroidRuntime.NativeAOT);
-			proj.SetRuntimeIdentifiers (["arm64-v8a"]);
-			proj.SetProperty ("_SkipNdkResolution", "true");
+		Assert.IsTrue (builder.RunTarget (proj, "Clean", doNotCleanupOnUpdate: true, parameters: renamedParameters, saveProject: false));
+		FileAssert.DoesNotExist (fingerprint);
+	}
 
-			using var builder = CreateApkBuilder ();
-			builder.ThrowOnBuildFailure = false;
-			Assert.IsFalse (builder.Build (proj), "NativeAOT must require an NDK.");
-			StringAssertEx.Contains ("error XA5104:", builder.LastBuildOutput, "A missing NDK should produce XA5104.");
+	[Test]
+	public void RestoreNativeAot_AndroidArmRuntimePack ()
+	{
+		var proj = new XamarinAndroidApplicationProject {
+			IsRelease = true,
+		};
+		proj.SetRuntime (AndroidRuntime.NativeAOT);
+		proj.SetRuntimeIdentifiers (["armeabi-v7a"]);
+
+		using var builder = CreateApkBuilder ();
+		Assert.IsTrue (
+			builder.RunTarget (proj, "Restore"),
+			"Restore should succeed for android-arm."
+		);
+
+		var intermediate = Path.Combine (Root, builder.ProjectDirectory, proj.IntermediateOutputPath);
+		var assets = File.ReadAllText (Path.Combine (intermediate, "..", "project.assets.json"));
+		StringAssert.Contains (
+			"\"Microsoft.NETCore.App.Runtime.NativeAOT.android-arm\"",
+			assets,
+			"Restore should select the android-arm NativeAOT runtime pack."
+		);
+		StringAssert.DoesNotContain (
+			"\"Microsoft.NETCore.App.Runtime.NativeAOT.linux-bionic-arm\"",
+			assets,
+			"Restore should not fall back to the linux-bionic-arm NativeAOT runtime pack."
+		);
+	}
+
+	[Test]
+	public void RestoreNativeAot_UsesSdkRuntimePackVersion ()
+	{
+		var proj = new XamarinAndroidApplicationProject {
+			IsRelease = true,
+		};
+		proj.SetRuntime (AndroidRuntime.NativeAOT);
+
+		using var builder = CreateApkBuilder ();
+		Assert.IsTrue (
+			builder.RunTarget (proj, "Restore", parameters: [
+				"MicrosoftNETCoreAppRefPackageVersion=0.0.0",
+			]),
+			"Restore should use the .NET SDK's NativeAOT runtime pack version."
+		);
+
+		var intermediate = Path.Combine (Root, builder.ProjectDirectory, proj.IntermediateOutputPath);
+		using var assets = JsonDocument.Parse (File.ReadAllText (Path.Combine (intermediate, "..", "project.assets.json")));
+		var runtimePacks = assets.RootElement
+			.GetProperty ("project")
+			.GetProperty ("frameworks")
+			.EnumerateObject ()
+			.SelectMany (framework => framework.Value.GetProperty ("downloadDependencies").EnumerateArray ())
+			.Where (dependency => dependency.GetProperty ("name").GetString ()?.StartsWith ("Microsoft.NETCore.App.Runtime.NativeAOT.", StringComparison.Ordinal) == true)
+			.ToArray ();
+		Assert.IsNotEmpty (
+			runtimePacks,
+			"Restore should select a NativeAOT runtime pack."
+		);
+		foreach (var runtimePack in runtimePacks) {
+			Assert.AreNotEqual (
+				"[0.0.0, 0.0.0]",
+				runtimePack.GetProperty ("version").GetString (),
+				"Restore should ignore MicrosoftNETCoreAppRefPackageVersion and use the SDK-selected NativeAOT runtime pack version."
+			);
 		}
+	}
 
-		[TestCase ("apk", false)]
-		[TestCase ("aab", true)]
-		public void BuildCoreClrWithNativeLibraryStripping (string packageFormat, bool isRelease)
-		{
-			string fixture = GetInstalledRuntimePackFile ("libnet-android.debug.so");
-			byte [] original = File.ReadAllBytes (fixture);
-			byte [] wrapper = Encoding.UTF8.GetBytes ("#!/system/bin/sh\nexec \"$@\"\n");
-			const string nativeLibrary = "native/arm64-v8a/libstrip-input.so";
-			var proj = new XamarinAndroidApplicationProject {
-				IsRelease = isRelease,
-				OtherBuildItems = {
-					new AndroidItem.AndroidNativeLibrary (nativeLibrary) {
-						BinaryContent = () => original,
-					},
-					new AndroidItem.AndroidNativeLibrary ("arm64-wrap.sh") {
-						BinaryContent = () => wrapper,
-						MetadataValues = "Link=lib\\arm64-v8a\\wrap.sh",
-					},
+	[Test]
+	public void BuildNativeAot_WithoutNdk ()
+	{
+		var proj = new XamarinAndroidApplicationProject {
+			IsRelease = true,
+		};
+		proj.SetRuntime (AndroidRuntime.NativeAOT);
+		proj.SetRuntimeIdentifiers (["arm64-v8a"]);
+		proj.SetProperty ("_SkipNdkResolution", "true");
+
+		using var builder = CreateApkBuilder ();
+		builder.ThrowOnBuildFailure = false;
+		Assert.IsFalse (builder.Build (proj), "NativeAOT must require an NDK.");
+		StringAssertEx.Contains ("error XA5104:", builder.LastBuildOutput, "A missing NDK should produce XA5104.");
+	}
+
+	[TestCase ("apk", false)]
+	[TestCase ("aab", true)]
+	public void BuildCoreClrWithNativeLibraryStripping (string packageFormat, bool isRelease)
+	{
+		string fixture = GetInstalledRuntimePackFile ("libnet-android.debug.so");
+		byte [] original = File.ReadAllBytes (fixture);
+		byte [] wrapper = Encoding.UTF8.GetBytes ("#!/system/bin/sh\nexec \"$@\"\n");
+		const string nativeLibrary = "native/arm64-v8a/libstrip-input.so";
+		var proj = new XamarinAndroidApplicationProject {
+			IsRelease = isRelease,
+			OtherBuildItems = {
+				new AndroidItem.AndroidNativeLibrary (nativeLibrary) {
+					BinaryContent = () => original,
 				},
-			};
-			proj.SetRuntime (AndroidRuntime.CoreCLR);
-			proj.SetRuntimeIdentifiers (["arm64-v8a"]);
-			proj.SetProperty ("AndroidPackageFormat", packageFormat);
-			proj.SetProperty ("AndroidStripNativeLibraries", "true");
-			proj.SetProperty ("AndroidIncludeWrapSh", "true");
-
-			using var builder = CreateApkBuilder ();
-			Assert.IsTrue (builder.Build (proj), $"The {proj.Configuration} {packageFormat} build should strip native libraries using the NDK.");
-
-			string package = Path.Combine (Root, builder.ProjectDirectory, proj.OutputPath, $"{proj.PackageName}-Signed.{packageFormat}");
-			string archivePath = $"{(packageFormat == "aab" ? "base/" : "")}lib/arm64-v8a/libstrip-input.so";
-			byte [] stripped = ZipHelper.ReadFileFromZip (package, archivePath);
-			Assert.IsNotNull (stripped, "The stripped native input should be packaged.");
-			Assert.Less (stripped.Length, original.Length, "The packaged native library should be smaller after stripping.");
-			CollectionAssert.AreEqual (wrapper, ZipHelper.ReadFileFromZip (package, $"{(packageFormat == "aab" ? "base/" : "")}lib/arm64-v8a/wrap.sh"),
-				"Linked wrapper scripts must be packaged unchanged.");
-			using (var stream = new MemoryStream (stripped)) {
-				using IELF elf = ELFReader.Load (stream, shouldOwnStream: false);
-				Assert.AreEqual (FileType.SharedObject, elf.Type);
-				Assert.AreEqual (Machine.AArch64, elf.Machine);
-				Assert.IsFalse (elf.Sections.Any (section => section.Type == SectionType.SymbolTable || section.Name == ".debug_info"));
-				var symbols = (ISymbolTable)elf.GetSection (".dynsym");
-				CollectionAssert.Contains (symbols.Entries.Select (symbol => symbol.Name), "JNI_OnLoad", "Stripping must preserve dynamic exports.");
-			}
-			string intermediateDirectory = Path.Combine (Root, builder.ProjectDirectory, proj.IntermediateOutputPath);
-			string strippedLibrary = Path.Combine (intermediateDirectory, "android-arm64", "stripped", "libstrip-input.so");
-			FileAssert.Exists (strippedLibrary);
-
-			builder.BuildLogFile = "stripping-disabled.log";
-			Assert.IsTrue (builder.Build (proj, doNotCleanupOnUpdate: true, saveProject: false, parameters: [
-				"AndroidStripNativeLibraries=false",
-				"_SkipNdkResolution=true",
-			]), "Disabling stripping should not require the NDK.");
-			CollectionAssert.AreEqual (original, ZipHelper.ReadFileFromZip (package, archivePath), "Toggling stripping off must repackage the original.");
-
-			builder.BuildLogFile = "stripping-enabled.log";
-			Assert.IsTrue (builder.Build (proj, doNotCleanupOnUpdate: true, saveProject: false, parameters: [
-				"AndroidStripNativeLibraries=true",
-				"_SkipNdkResolution=false",
-			]), "Re-enabling stripping should use the NDK on an incremental build.");
-			CollectionAssert.AreEqual (stripped, ZipHelper.ReadFileFromZip (package, archivePath), "Toggling stripping on must repackage the stripped copy.");
-			CollectionAssert.AreEqual (original, File.ReadAllBytes (Path.Combine (Root, builder.ProjectDirectory, nativeLibrary)), "Stripping must not modify project inputs.");
-			CollectionAssert.AreEqual (original, File.ReadAllBytes (fixture), "Stripping must not modify the installed runtime pack.");
-
-			Assert.IsTrue (builder.Clean (proj), "Clean should remove intermediate stripped libraries.");
-			FileAssert.DoesNotExist (strippedLibrary);
-		}
-
-		[Test]
-		public void BuildCoreClrWithNativeLibraryStripping_FailsForInvalidLibrary ()
-		{
-			var proj = new XamarinAndroidApplicationProject {
-				OtherBuildItems = {
-					new AndroidItem.AndroidNativeLibrary ("native/arm64-v8a/libinvalid.so") {
-						BinaryContent = () => [1, 2, 3, 4],
-					},
+				new AndroidItem.AndroidNativeLibrary ("arm64-wrap.sh") {
+					BinaryContent = () => wrapper,
+					MetadataValues = "Link=lib\\arm64-v8a\\wrap.sh",
 				},
-			};
-			proj.SetRuntime (AndroidRuntime.CoreCLR);
-			proj.SetRuntimeIdentifiers (["arm64-v8a"]);
-			proj.SetProperty ("AndroidStripNativeLibraries", "true");
+			},
+		};
+		proj.SetRuntime (AndroidRuntime.CoreCLR);
+		proj.SetRuntimeIdentifiers (["arm64-v8a"]);
+		proj.SetProperty ("AndroidPackageFormat", packageFormat);
+		proj.SetProperty ("AndroidStripNativeLibraries", "true");
+		proj.SetProperty ("AndroidIncludeWrapSh", "true");
 
-			using var builder = CreateApkBuilder ();
-			builder.ThrowOnBuildFailure = false;
-			Assert.IsFalse (builder.Build (proj), "A failed strip must fail packaging rather than use the original file.");
-			StringAssertEx.Contains ("error XA0142:", builder.LastBuildOutput, "The failed native tool should produce XA0142.");
-			StringAssertEx.Contains ("llvm-strip", builder.LastBuildOutput, "The failure should identify the NDK strip command.");
+		using var builder = CreateApkBuilder ();
+		Assert.IsTrue (builder.Build (proj), $"The {proj.Configuration} {packageFormat} build should strip native libraries using the NDK.");
+
+		string package = Path.Combine (Root, builder.ProjectDirectory, proj.OutputPath, $"{proj.PackageName}-Signed.{packageFormat}");
+		string archivePath = $"{(packageFormat == "aab" ? "base/" : "")}lib/arm64-v8a/libstrip-input.so";
+		byte [] stripped = ZipHelper.ReadFileFromZip (package, archivePath);
+		Assert.IsNotNull (stripped, "The stripped native input should be packaged.");
+		Assert.Less (stripped.Length, original.Length, "The packaged native library should be smaller after stripping.");
+		CollectionAssert.AreEqual (wrapper, ZipHelper.ReadFileFromZip (package, $"{(packageFormat == "aab" ? "base/" : "")}lib/arm64-v8a/wrap.sh"),
+			"Linked wrapper scripts must be packaged unchanged.");
+		using (var stream = new MemoryStream (stripped)) {
+			using IELF elf = ELFReader.Load (stream, shouldOwnStream: false);
+			Assert.AreEqual (FileType.SharedObject, elf.Type);
+			Assert.AreEqual (Machine.AArch64, elf.Machine);
+			Assert.IsFalse (elf.Sections.Any (section => section.Type == SectionType.SymbolTable || section.Name == ".debug_info"));
+			var symbols = (ISymbolTable)elf.GetSection (".dynsym");
+			CollectionAssert.Contains (symbols.Entries.Select (symbol => symbol.Name), "JNI_OnLoad", "Stripping must preserve dynamic exports.");
+		}
+		string intermediateDirectory = Path.Combine (Root, builder.ProjectDirectory, proj.IntermediateOutputPath);
+		string strippedLibrary = Path.Combine (intermediateDirectory, "android-arm64", "stripped", "libstrip-input.so");
+		FileAssert.Exists (strippedLibrary);
+
+		builder.BuildLogFile = "stripping-disabled.log";
+		Assert.IsTrue (builder.Build (proj, doNotCleanupOnUpdate: true, saveProject: false, parameters: [
+			"AndroidStripNativeLibraries=false",
+			"_SkipNdkResolution=true",
+		]), "Disabling stripping should not require the NDK.");
+		CollectionAssert.AreEqual (original, ZipHelper.ReadFileFromZip (package, archivePath), "Toggling stripping off must repackage the original.");
+
+		builder.BuildLogFile = "stripping-enabled.log";
+		Assert.IsTrue (builder.Build (proj, doNotCleanupOnUpdate: true, saveProject: false, parameters: [
+			"AndroidStripNativeLibraries=true",
+			"_SkipNdkResolution=false",
+		]), "Re-enabling stripping should use the NDK on an incremental build.");
+		CollectionAssert.AreEqual (stripped, ZipHelper.ReadFileFromZip (package, archivePath), "Toggling stripping on must repackage the stripped copy.");
+		CollectionAssert.AreEqual (original, File.ReadAllBytes (Path.Combine (Root, builder.ProjectDirectory, nativeLibrary)), "Stripping must not modify project inputs.");
+		CollectionAssert.AreEqual (original, File.ReadAllBytes (fixture), "Stripping must not modify the installed runtime pack.");
+
+		Assert.IsTrue (builder.Clean (proj), "Clean should remove intermediate stripped libraries.");
+		FileAssert.DoesNotExist (strippedLibrary);
+	}
+
+	[Test]
+	public void BuildCoreClrWithNativeLibraryStripping_FailsForInvalidLibrary ()
+	{
+		var proj = new XamarinAndroidApplicationProject {
+			OtherBuildItems = {
+				new AndroidItem.AndroidNativeLibrary ("native/arm64-v8a/libinvalid.so") {
+					BinaryContent = () => [1, 2, 3, 4],
+				},
+			},
+		};
+		proj.SetRuntime (AndroidRuntime.CoreCLR);
+		proj.SetRuntimeIdentifiers (["arm64-v8a"]);
+		proj.SetProperty ("AndroidStripNativeLibraries", "true");
+
+		using var builder = CreateApkBuilder ();
+		builder.ThrowOnBuildFailure = false;
+		Assert.IsFalse (builder.Build (proj), "A failed strip must fail packaging rather than use the original file.");
+		StringAssertEx.Contains ("error XA0142:", builder.LastBuildOutput, "The failed native tool should produce XA0142.");
+		StringAssertEx.Contains ("llvm-strip", builder.LastBuildOutput, "The failure should identify the NDK strip command.");
+	}
+
+	static string GetNdkToolchainDirectory ()
+	{
+		string hostTag = TestEnvironment.IsWindows ? "windows-x86_64" :
+			TestEnvironment.IsMacOS ? "darwin-x86_64" : "linux-x86_64";
+		return Path.Combine (AndroidNdkPath, "toolchains", "llvm", "prebuilt", hostTag);
+	}
+
+	static string GetInstalledRuntimePackFile (string fileName)
+	{
+		Version apiLevel = XABuildConfig.AndroidLatestStableApiLevel;
+		string apiLevelName = apiLevel.Minor == 0 ? $"{apiLevel.Major}" : $"{apiLevel.Major}.{apiLevel.Minor}";
+		string installedRuntimePack = Path.Combine (TestEnvironment.DotNetPreviewPacksDirectory, $"Microsoft.Android.Runtime.CoreCLR.{apiLevelName}.android-arm64");
+		return Directory.GetFiles (installedRuntimePack, fileName, SearchOption.AllDirectories).Single ();
+	}
+
+	void AssertArmEhabiSymbolsPromoted (ProjectBuilder builder, XamarinAndroidApplicationProject proj)
+	{
+		string nativeDirectory = Path.Combine (Root, builder.ProjectDirectory, proj.IntermediateOutputPath, "android-arm", "native");
+		string runtimeArchive = Path.Combine (nativeDirectory, "libRuntime.WorkstationGC.arm-ehabi.a");
+		FileAssert.Exists (runtimeArchive);
+
+		string [] linkerResponseFiles = Directory.GetFiles (nativeDirectory, "ld.*.rsp");
+		Assert.AreEqual (1, linkerResponseFiles.Length, "One native linker response file should be generated.");
+		string linkerResponse = File.ReadAllText (linkerResponseFiles [0]);
+		StringAssert.Contains ("libRuntime.WorkstationGC.arm-ehabi.a", linkerResponse);
+		foreach (string archiveName in CPlusPlusArchiveNames) {
+			StringAssert.DoesNotContain (archiveName, linkerResponse);
 		}
 
-		static string GetNdkToolchainDirectory ()
-		{
-			string hostTag = TestEnvironment.IsWindows ? "windows-x86_64" :
-				TestEnvironment.IsMacOS ? "darwin-x86_64" : "linux-x86_64";
-			return Path.Combine (AndroidNdkPath, "toolchains", "llvm", "prebuilt", hostTag);
+		string llvmNm = Path.Combine (GetNdkToolchainDirectory (), "bin", TestEnvironment.IsWindows ? "llvm-nm.exe" : "llvm-nm");
+		var (exitCode, standardOutput, standardError) = RunProcessWithExitCode (llvmNm, $"--defined-only \"{runtimeArchive}\"");
+		Assert.AreEqual (0, exitCode, $"llvm-nm failed:{Environment.NewLine}{standardError}");
+		foreach (string symbol in ArmEhabiPersonalitySymbols) {
+			StringAssert.Contains ($" W {symbol}", standardOutput, $"{symbol} should be a weak global symbol.");
+		}
+	}
+
+	[TestCase (AndroidRuntime.NativeAOT, "android-arm")]
+	[TestCase (AndroidRuntime.NativeAOT, "android-arm64")]
+	[TestCase (AndroidRuntime.NativeAOT, "android-x64")]
+	[TestCase (AndroidRuntime.CoreCLR, "android-arm")]
+	[TestCase (AndroidRuntime.CoreCLR, "android-arm64")]
+	[TestCase (AndroidRuntime.CoreCLR, "android-x64")]
+	public void RuntimePackDoesNotContainCPlusPlusArchives (AndroidRuntime runtime, string rid)
+	{
+		string outputDirectory = Path.Combine (Root, TestName);
+		if (Directory.Exists (outputDirectory)) {
+			Directory.Delete (outputDirectory, recursive: true);
+		}
+		Directory.CreateDirectory (outputDirectory);
+		Version apiLevel = XABuildConfig.AndroidLatestStableApiLevel;
+		string apiLevelName = apiLevel.Minor == 0 ? $"{apiLevel.Major}" : $"{apiLevel.Major}.{apiLevel.Minor}";
+		string installedRuntimePack = Path.Combine (
+			TestEnvironment.DotNetPreviewPacksDirectory,
+			$"Microsoft.Android.Runtime.NativeAOT.{apiLevelName}.{rid}"
+		);
+		string runtimeAssembly = Directory.GetFiles (
+			installedRuntimePack,
+			"Microsoft.Android.Runtime.NativeAOT.dll",
+			SearchOption.AllDirectories
+		).Single ();
+		string managedOutputRoot = Path.Combine (outputDirectory, "xbuild-frameworks", "Microsoft.Android");
+		string managedOutputDirectory = Path.Combine (managedOutputRoot, apiLevelName);
+		Directory.CreateDirectory (managedOutputDirectory);
+		File.Copy (runtimeAssembly, Path.Combine (managedOutputDirectory, Path.GetFileName (runtimeAssembly)));
+		// The pack target requires a PDB, but its contents are unrelated to native asset composition.
+		File.Create (Path.Combine (managedOutputDirectory, "Microsoft.Android.Runtime.NativeAOT.pdb")).Dispose ();
+
+		string nativeOutputRoot = Path.Combine (outputDirectory, "runtime-output");
+		if (runtime == AndroidRuntime.NativeAOT) {
+			// CI test jobs have installed packs, but not the native build's output tree.
+			string nativeOutputDirectory = Path.Combine (nativeOutputRoot, "nativeaot", rid);
+			Directory.CreateDirectory (nativeOutputDirectory);
+			foreach (string configuration in new [] { "debug", "release" }) {
+				string archiveName = $"libnaot-android.{configuration}-static-{configuration}.a";
+				string archive = Directory.GetFiles (installedRuntimePack, archiveName, SearchOption.AllDirectories).Single ();
+				File.Copy (archive, Path.Combine (nativeOutputDirectory, archiveName));
+			}
 		}
 
-		static string GetInstalledRuntimePackFile (string fileName)
-		{
-			Version apiLevel = XABuildConfig.AndroidLatestStableApiLevel;
-			string apiLevelName = apiLevel.Minor == 0 ? $"{apiLevel.Major}" : $"{apiLevel.Major}.{apiLevel.Minor}";
-			string installedRuntimePack = Path.Combine (TestEnvironment.DotNetPreviewPacksDirectory, $"Microsoft.Android.Runtime.CoreCLR.{apiLevelName}.android-arm64");
-			return Directory.GetFiles (installedRuntimePack, fileName, SearchOption.AllDirectories).Single ();
+		string runtimePackProject = Path.Combine (XABuildPaths.TopDirectory, "build-tools", "create-packs", "Microsoft.Android.Runtime.proj");
+		var dotnet = new DotNetCLI (runtimePackProject) {
+			ProjectDirectory = outputDirectory,
+			BuildLogFile = Path.Combine (outputDirectory, "build.log"),
+			ProcessLogFile = Path.Combine (outputDirectory, "process.log"),
+		};
+		Assert.IsTrue (
+			dotnet.Pack (parameters: [
+				$"Configuration={XABuildPaths.Configuration}",
+				$"AndroidApiLevel={apiLevelName}",
+				$"AndroidRuntime={runtime}",
+				$"AndroidRID={rid}",
+				$"_MonoAndroidNETOutputRoot={managedOutputRoot}{Path.DirectorySeparatorChar}",
+				$"NativeRuntimeOutputRootDir={nativeOutputRoot}{Path.DirectorySeparatorChar}",
+				$"BaseIntermediateOutputPath={Path.Combine (outputDirectory, "obj")}{Path.DirectorySeparatorChar}",
+				$"PackageOutputPath={outputDirectory}",
+			]),
+			$"Packing the {runtime} runtime pack should succeed. See {dotnet.ProcessLogFile}."
+		);
+
+		string packagePath = Directory.GetFiles (outputDirectory, "*.nupkg")
+			.Single (path => !path.EndsWith (".symbols.nupkg", StringComparison.OrdinalIgnoreCase));
+		using var package = ZipHelper.OpenZip (packagePath);
+		foreach (string archiveName in CPlusPlusArchiveNames) {
+			string archivePath = $"runtimes/{rid}/native/{archiveName}";
+			package.AssertDoesNotContainEntry (packagePath, archivePath);
 		}
+		if (runtime == AndroidRuntime.NativeAOT) {
+			foreach (string configuration in new [] { "debug", "release" }) {
+				package.AssertContainsEntry (packagePath, $"runtimes/{rid}/native/libnaot-android.{configuration}-static-{configuration}.a");
+				package.AssertDoesNotContainEntry (packagePath, $"runtimes/{rid}/native/libnaot-android.{configuration}.so");
+			}
+		}
+	}
 
-		void AssertArmEhabiSymbolsPromoted (ProjectBuilder builder, XamarinAndroidApplicationProject proj)
-		{
-			string nativeDirectory = Path.Combine (Root, builder.ProjectDirectory, proj.IntermediateOutputPath, "android-arm", "native");
-			string runtimeArchive = Path.Combine (nativeDirectory, "libRuntime.WorkstationGC.arm-ehabi.a");
-			FileAssert.Exists (runtimeArchive);
+	[TestCase (AndroidRuntime.NativeAOT)]
+	[TestCase (AndroidRuntime.CoreCLR)]
+	public void CopyRuntimePackRemovesStaleNativeLibraries (AndroidRuntime runtime)
+	{
+		string outputDirectory = Path.Combine (Root, TestName);
+		if (Directory.Exists (outputDirectory)) {
+			Directory.Delete (outputDirectory, recursive: true);
+		}
+		Directory.CreateDirectory (outputDirectory);
 
-			string [] linkerResponseFiles = Directory.GetFiles (nativeDirectory, "ld.*.rsp");
-			Assert.AreEqual (1, linkerResponseFiles.Length, "One native linker response file should be generated.");
-			string linkerResponse = File.ReadAllText (linkerResponseFiles [0]);
-			StringAssert.Contains ("libRuntime.WorkstationGC.arm-ehabi.a", linkerResponse);
+		Version apiLevel = XABuildConfig.AndroidLatestStableApiLevel;
+		string apiLevelName = apiLevel.Minor == 0 ? $"{apiLevel.Major}" : $"{apiLevel.Major}.{apiLevel.Minor}";
+		string packVersion = "1.0.0-test";
+		string packsRoot = Path.Combine (outputDirectory, "packs");
+		string runtimeOutputPath = Path.Combine (outputDirectory, "runtime-output");
+		var runtimeDirectories = new [] {
+			(Rid: "android-arm", ClangArch: "arm"),
+			(Rid: "android-arm64", ClangArch: "aarch64"),
+			(Rid: "android-x64", ClangArch: "x86_64"),
+		}.Select (entry => (
+			entry.Rid,
+			entry.ClangArch,
+			Native: Path.Combine (packsRoot, $"Microsoft.Android.Runtime.{runtime}.{apiLevelName}.{entry.Rid}",
+				packVersion, "runtimes", entry.Rid, "native"),
+			Output: Path.Combine (runtimeOutputPath, entry.Rid)
+		)).ToArray ();
+		string [] obsoleteSharedLibraries = runtime == AndroidRuntime.NativeAOT ? [
+			"libnaot-android.debug.so",
+			"libnaot-android.release.so",
+		] : [];
+		string [] retainedLibraries = runtime == AndroidRuntime.NativeAOT ? [
+			"libnaot-android.debug-static-debug.a",
+			"libnaot-android.release-static-release.a",
+		] : ["libnet-android.release.so"];
+		foreach (var directory in runtimeDirectories) {
+			Directory.CreateDirectory (directory.Native);
+			Directory.CreateDirectory (directory.Output);
 			foreach (string archiveName in CPlusPlusArchiveNames) {
-				StringAssert.DoesNotContain (archiveName, linkerResponse);
+				File.Create (Path.Combine (directory.Native, archiveName)).Dispose ();
 			}
-
-			string llvmNm = Path.Combine (GetNdkToolchainDirectory (), "bin", TestEnvironment.IsWindows ? "llvm-nm.exe" : "llvm-nm");
-			var (exitCode, standardOutput, standardError) = RunProcessWithExitCode (llvmNm, $"--defined-only \"{runtimeArchive}\"");
-			Assert.AreEqual (0, exitCode, $"llvm-nm failed:{Environment.NewLine}{standardError}");
-			foreach (string symbol in ArmEhabiPersonalitySymbols) {
-				StringAssert.Contains ($" W {symbol}", standardOutput, $"{symbol} should be a weak global symbol.");
+			foreach (string libraryName in obsoleteSharedLibraries) {
+				File.Create (Path.Combine (directory.Output, libraryName)).Dispose ();
+				File.Create (Path.Combine (directory.Native, libraryName)).Dispose ();
+			}
+			foreach (string libraryName in retainedLibraries) {
+				File.WriteAllText (Path.Combine (directory.Output, libraryName), $"{directory.Rid}/{libraryName}");
 			}
 		}
 
-		[TestCase (AndroidRuntime.NativeAOT, "android-arm")]
-		[TestCase (AndroidRuntime.NativeAOT, "android-arm64")]
-		[TestCase (AndroidRuntime.NativeAOT, "android-x64")]
-		[TestCase (AndroidRuntime.CoreCLR, "android-arm")]
-		[TestCase (AndroidRuntime.CoreCLR, "android-arm64")]
-		[TestCase (AndroidRuntime.CoreCLR, "android-x64")]
-		public void RuntimePackDoesNotContainCPlusPlusArchives (AndroidRuntime runtime, string rid)
-		{
-			string outputDirectory = Path.Combine (Root, TestName);
-			if (Directory.Exists (outputDirectory)) {
-				Directory.Delete (outputDirectory, recursive: true);
-			}
-			Directory.CreateDirectory (outputDirectory);
-			Version apiLevel = XABuildConfig.AndroidLatestStableApiLevel;
-			string apiLevelName = apiLevel.Minor == 0 ? $"{apiLevel.Major}" : $"{apiLevel.Major}.{apiLevel.Minor}";
-			string installedRuntimePack = Path.Combine (
-				TestEnvironment.DotNetPreviewPacksDirectory,
-				$"Microsoft.Android.Runtime.NativeAOT.{apiLevelName}.{rid}"
-			);
-			string runtimeAssembly = Directory.GetFiles (
-				installedRuntimePack,
-				"Microsoft.Android.Runtime.NativeAOT.dll",
-				SearchOption.AllDirectories
-			).Single ();
-			string managedOutputRoot = Path.Combine (outputDirectory, "xbuild-frameworks", "Microsoft.Android");
-			string managedOutputDirectory = Path.Combine (managedOutputRoot, apiLevelName);
-			Directory.CreateDirectory (managedOutputDirectory);
-			File.Copy (runtimeAssembly, Path.Combine (managedOutputDirectory, Path.GetFileName (runtimeAssembly)));
-			// The pack target requires a PDB, but its contents are unrelated to native asset composition.
-			File.Create (Path.Combine (managedOutputDirectory, "Microsoft.Android.Runtime.NativeAOT.pdb")).Dispose ();
-
-			string nativeOutputRoot = Path.Combine (outputDirectory, "runtime-output");
-			if (runtime == AndroidRuntime.NativeAOT) {
-				// CI test jobs have installed packs, but not the native build's output tree.
-				string nativeOutputDirectory = Path.Combine (nativeOutputRoot, "nativeaot", rid);
-				Directory.CreateDirectory (nativeOutputDirectory);
-				foreach (string configuration in new [] { "debug", "release" }) {
-					string archiveName = $"libnaot-android.{configuration}-static-{configuration}.a";
-					string archive = Directory.GetFiles (installedRuntimePack, archiveName, SearchOption.AllDirectories).Single ();
-					File.Copy (archive, Path.Combine (nativeOutputDirectory, archiveName));
-				}
-			}
-
-			string runtimePackProject = Path.Combine (XABuildPaths.TopDirectory, "build-tools", "create-packs", "Microsoft.Android.Runtime.proj");
-			var dotnet = new DotNetCLI (runtimePackProject) {
-				ProjectDirectory = outputDirectory,
-				BuildLogFile = Path.Combine (outputDirectory, "build.log"),
-				ProcessLogFile = Path.Combine (outputDirectory, "process.log"),
-			};
-			Assert.IsTrue (
-				dotnet.Pack (parameters: [
+		string nativeProjectName = runtime == AndroidRuntime.NativeAOT ? "native-nativeaot.csproj" : "native-clr.csproj";
+		string nativeProject = Path.Combine (XABuildPaths.TopDirectory, "src", "native", nativeProjectName);
+		var dotnet = new DotNetCLI (nativeProject) {
+			ProjectDirectory = outputDirectory,
+			BuildLogFile = Path.Combine (outputDirectory, "build.log"),
+			ProcessLogFile = Path.Combine (outputDirectory, "process.log"),
+		};
+		Assert.IsTrue (
+			dotnet.Build (
+				target: "_CopyToPackDirs",
+				parameters: [
 					$"Configuration={XABuildPaths.Configuration}",
 					$"AndroidApiLevel={apiLevelName}",
-					$"AndroidRuntime={runtime}",
-					$"AndroidRID={rid}",
-					$"_MonoAndroidNETOutputRoot={managedOutputRoot}{Path.DirectorySeparatorChar}",
-					$"NativeRuntimeOutputRootDir={nativeOutputRoot}{Path.DirectorySeparatorChar}",
-					$"BaseIntermediateOutputPath={Path.Combine (outputDirectory, "obj")}{Path.DirectorySeparatorChar}",
-					$"PackageOutputPath={outputDirectory}",
-				]),
-				$"Packing the {runtime} runtime pack should succeed. See {dotnet.ProcessLogFile}."
-			);
+					$"AndroidPackVersion={packVersion}",
+					"AndroidSupportedTargetJitAbis=armeabi-v7a:arm64-v8a:x86_64",
+					$"MicrosoftAndroidPacksRootDir={packsRoot}{Path.DirectorySeparatorChar}",
+					$"OutputPath={runtimeOutputPath}{Path.DirectorySeparatorChar}",
+				]
+			),
+			$"Copying the {runtime} runtime pack should succeed. See {dotnet.ProcessLogFile}."
+		);
 
-			string packagePath = Directory.GetFiles (outputDirectory, "*.nupkg")
-				.Single (path => !path.EndsWith (".symbols.nupkg", StringComparison.OrdinalIgnoreCase));
-			using var package = ZipHelper.OpenZip (packagePath);
+		foreach (var directory in runtimeDirectories) {
 			foreach (string archiveName in CPlusPlusArchiveNames) {
-				string archivePath = $"runtimes/{rid}/native/{archiveName}";
-				package.AssertDoesNotContainEntry (packagePath, archivePath);
+				FileAssert.DoesNotExist (Path.Combine (directory.Native, archiveName));
 			}
-			if (runtime == AndroidRuntime.NativeAOT) {
-				foreach (string configuration in new [] { "debug", "release" }) {
-					package.AssertContainsEntry (packagePath, $"runtimes/{rid}/native/libnaot-android.{configuration}-static-{configuration}.a");
-					package.AssertDoesNotContainEntry (packagePath, $"runtimes/{rid}/native/libnaot-android.{configuration}.so");
-				}
+			foreach (string libraryName in obsoleteSharedLibraries) {
+				FileAssert.DoesNotExist (Path.Combine (directory.Output, libraryName));
+				FileAssert.DoesNotExist (Path.Combine (directory.Native, libraryName));
 			}
+			foreach (string libraryName in retainedLibraries) {
+				FileAssert.Exists (Path.Combine (directory.Output, libraryName));
+				FileAssert.Exists (Path.Combine (directory.Native, libraryName));
+				Assert.AreEqual ($"{directory.Rid}/{libraryName}", File.ReadAllText (Path.Combine (directory.Native, libraryName)));
+			}
+			FileAssert.Exists (Path.Combine (directory.Native, "libc.so"));
+			FileAssert.Exists (Path.Combine (directory.Native, $"libclang_rt.builtins-{directory.ClangArch}-android.a"));
 		}
-
-		[TestCase (AndroidRuntime.NativeAOT)]
-		[TestCase (AndroidRuntime.CoreCLR)]
-		public void CopyRuntimePackRemovesStaleNativeLibraries (AndroidRuntime runtime)
-		{
-			string outputDirectory = Path.Combine (Root, TestName);
-			if (Directory.Exists (outputDirectory)) {
-				Directory.Delete (outputDirectory, recursive: true);
-			}
-			Directory.CreateDirectory (outputDirectory);
-
-			Version apiLevel = XABuildConfig.AndroidLatestStableApiLevel;
-			string apiLevelName = apiLevel.Minor == 0 ? $"{apiLevel.Major}" : $"{apiLevel.Major}.{apiLevel.Minor}";
-			string packVersion = "1.0.0-test";
-			string packsRoot = Path.Combine (outputDirectory, "packs");
-			string runtimeOutputPath = Path.Combine (outputDirectory, "runtime-output");
-			var runtimeDirectories = new [] {
-				(Rid: "android-arm", ClangArch: "arm"),
-				(Rid: "android-arm64", ClangArch: "aarch64"),
-				(Rid: "android-x64", ClangArch: "x86_64"),
-			}.Select (entry => (
-				entry.Rid,
-				entry.ClangArch,
-				Native: Path.Combine (packsRoot, $"Microsoft.Android.Runtime.{runtime}.{apiLevelName}.{entry.Rid}",
-					packVersion, "runtimes", entry.Rid, "native"),
-				Output: Path.Combine (runtimeOutputPath, entry.Rid)
-			)).ToArray ();
-			string [] obsoleteSharedLibraries = runtime == AndroidRuntime.NativeAOT ? [
-				"libnaot-android.debug.so",
-				"libnaot-android.release.so",
-			] : [];
-			string [] retainedLibraries = runtime == AndroidRuntime.NativeAOT ? [
-				"libnaot-android.debug-static-debug.a",
-				"libnaot-android.release-static-release.a",
-			] : ["libnet-android.release.so"];
-			foreach (var directory in runtimeDirectories) {
-				Directory.CreateDirectory (directory.Native);
-				Directory.CreateDirectory (directory.Output);
-				foreach (string archiveName in CPlusPlusArchiveNames) {
-					File.Create (Path.Combine (directory.Native, archiveName)).Dispose ();
-				}
-				foreach (string libraryName in obsoleteSharedLibraries) {
-					File.Create (Path.Combine (directory.Output, libraryName)).Dispose ();
-					File.Create (Path.Combine (directory.Native, libraryName)).Dispose ();
-				}
-				foreach (string libraryName in retainedLibraries) {
-					File.WriteAllText (Path.Combine (directory.Output, libraryName), $"{directory.Rid}/{libraryName}");
-				}
-			}
-
-			string nativeProjectName = runtime == AndroidRuntime.NativeAOT ? "native-nativeaot.csproj" : "native-clr.csproj";
-			string nativeProject = Path.Combine (XABuildPaths.TopDirectory, "src", "native", nativeProjectName);
-			var dotnet = new DotNetCLI (nativeProject) {
-				ProjectDirectory = outputDirectory,
-				BuildLogFile = Path.Combine (outputDirectory, "build.log"),
-				ProcessLogFile = Path.Combine (outputDirectory, "process.log"),
-			};
-			Assert.IsTrue (
-				dotnet.Build (
-					target: "_CopyToPackDirs",
-					parameters: [
-						$"Configuration={XABuildPaths.Configuration}",
-						$"AndroidApiLevel={apiLevelName}",
-						$"AndroidPackVersion={packVersion}",
-						"AndroidSupportedTargetJitAbis=armeabi-v7a:arm64-v8a:x86_64",
-						$"MicrosoftAndroidPacksRootDir={packsRoot}{Path.DirectorySeparatorChar}",
-						$"OutputPath={runtimeOutputPath}{Path.DirectorySeparatorChar}",
-					]
-				),
-				$"Copying the {runtime} runtime pack should succeed. See {dotnet.ProcessLogFile}."
-			);
-
-			foreach (var directory in runtimeDirectories) {
-				foreach (string archiveName in CPlusPlusArchiveNames) {
-					FileAssert.DoesNotExist (Path.Combine (directory.Native, archiveName));
-				}
-				foreach (string libraryName in obsoleteSharedLibraries) {
-					FileAssert.DoesNotExist (Path.Combine (directory.Output, libraryName));
-					FileAssert.DoesNotExist (Path.Combine (directory.Native, libraryName));
-				}
-				foreach (string libraryName in retainedLibraries) {
-					FileAssert.Exists (Path.Combine (directory.Output, libraryName));
-					FileAssert.Exists (Path.Combine (directory.Native, libraryName));
-					Assert.AreEqual ($"{directory.Rid}/{libraryName}", File.ReadAllText (Path.Combine (directory.Native, libraryName)));
-				}
-				FileAssert.Exists (Path.Combine (directory.Native, "libc.so"));
-				FileAssert.Exists (Path.Combine (directory.Native, $"libclang_rt.builtins-{directory.ClangArch}-android.a"));
-			}
-		}
-
 	}
+
 }

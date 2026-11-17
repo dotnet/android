@@ -1,8 +1,8 @@
-﻿using NUnit.Framework;
+using NUnit.Framework;
 using System;
 
-namespace generatortests
-{
+namespace generatortests;
+
 	[TestFixture]
 	public class Java_Lang_Enum : BaseGeneratorTest
 	{
@@ -16,5 +16,4 @@ namespace generatortests
 					expectedRelativePath:   "java.lang.Enum");
 		}
 	}
-}
 

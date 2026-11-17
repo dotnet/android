@@ -7,8 +7,8 @@ using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
 using Microsoft.Android.Build.Tasks;
 
-namespace Xamarin.Android.Tasks
-{
+namespace Xamarin.Android.Tasks;
+
 	/// <summary>
 	/// A base class that can detect when we are running on .NET 5+
 	/// to determine if we should run `foo.exe` or `dotnet foo.dll`
@@ -146,4 +146,3 @@ namespace Xamarin.Android.Tasks
 			return cmd;
 		}
 	}
-}

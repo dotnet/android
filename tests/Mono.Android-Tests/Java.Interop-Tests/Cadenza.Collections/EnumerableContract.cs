@@ -35,47 +35,46 @@ using NUnit.Framework;
 using Cadenza.Collections;
 using Cadenza.Tests;
 
-namespace Cadenza.Collections.Tests {
+namespace Cadenza.Collections.Tests; 
 
-	public abstract class EnumerableContract : BaseRocksFixture {
+public abstract class EnumerableContract : BaseRocksFixture {
 
-		protected abstract IEnumerable<T> CreateSequence<T> (IEnumerable<T> source);
+	protected abstract IEnumerable<T> CreateSequence<T> (IEnumerable<T> source);
 
-		protected class DisposedCounter {
-			public int Disposed;
-			public IEnumerable<int> Values (int max)
-			{
-				int v = 0;
-				try {
-					for (int i = 0; i < max; ++i)
-						yield return v++;
-				}
-				finally {
-					Disposed++;
-				}
+	protected class DisposedCounter {
+		public int Disposed;
+		public IEnumerable<int> Values (int max)
+		{
+			int v = 0;
+			try {
+				for (int i = 0; i < max; ++i)
+					yield return v++;
+			}
+			finally {
+				Disposed++;
 			}
 		}
+	}
 
-		[Test]
-		public void Create_SequencEqual ()
-		{
-			var a = new List<int> ();
-			for (int i = 0; i < 10; ++i) {
-				a.Add (i);
-				Assert.IsTrue (CreateSequence (a).SequenceEqual (a), "Count=" + (i+1));
-			}
+	[Test]
+	public void Create_SequencEqual ()
+	{
+		var a = new List<int> ();
+		for (int i = 0; i < 10; ++i) {
+			a.Add (i);
+			Assert.IsTrue (CreateSequence (a).SequenceEqual (a), "Count=" + (i+1));
 		}
+	}
 
-		[Test]
-		public void GetEnumerator_DisposeDisposesIterator ()
-		{
-			var d = new DisposedCounter ();
-			var s = CreateSequence (d.Values (2));
-			var i = s.GetEnumerator ();
-			Assert.IsTrue (i.MoveNext ());
-			i.Dispose ();
-			Assert.AreEqual (1, d.Disposed);
-		}
+	[Test]
+	public void GetEnumerator_DisposeDisposesIterator ()
+	{
+		var d = new DisposedCounter ();
+		var s = CreateSequence (d.Values (2));
+		var i = s.GetEnumerator ();
+		Assert.IsTrue (i.MoveNext ());
+		i.Dispose ();
+		Assert.AreEqual (1, d.Disposed);
 	}
 }
 

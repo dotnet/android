@@ -34,53 +34,52 @@ using Microsoft.Android.Build.Tasks;
 using Xamarin.Android.Tasks;
 using Properties = Xamarin.Android.Tasks.Properties;
 
-namespace Microsoft.Android.Tasks
+namespace Microsoft.Android.Tasks;
+
+[MSBuildMultiThreadableTask]
+public class GetAndroidPackageName : MultithreadedAndroidTask
 {
-	[MSBuildMultiThreadableTask]
-	public class GetAndroidPackageName : MultithreadedAndroidTask
+	public override string TaskPrefix => "GAP";
+
+	public string? ManifestFile { get; set; }
+
+	[Required]
+	public string AssemblyName { get; set; } = "";
+
+	public string []? ManifestPlaceholders { get; set; }
+
+	[Output]
+	public string? PackageName { get; set; }
+
+	public override bool RunTask ()
 	{
-		public override string TaskPrefix => "GAP";
-
-		public string? ManifestFile { get; set; }
-
-		[Required]
-		public string AssemblyName { get; set; } = "";
-
-		public string []? ManifestPlaceholders { get; set; }
-
-		[Output]
-		public string? PackageName { get; set; }
-
-		public override bool RunTask ()
-		{
-			if (!ManifestFile.IsNullOrEmpty ()) {
-				var manifestFile = TaskEnvironment.GetAbsolutePath (ManifestFile);
-				if (File.Exists (manifestFile)) {
-					using var stream = File.OpenRead (manifestFile);
-					using var reader = XmlReader.Create (stream);
-					if (reader.MoveToContent () == XmlNodeType.Element) {
-						var package = reader.GetAttribute ("package");
-						if (!package.IsNullOrEmpty ()) {
-							PackageName = ManifestPlaceholderResolver.Replace (ManifestPlaceholders, package);
-						}
+		if (!ManifestFile.IsNullOrEmpty ()) {
+			var manifestFile = TaskEnvironment.GetAbsolutePath (ManifestFile);
+			if (File.Exists (manifestFile)) {
+				using var stream = File.OpenRead (manifestFile);
+				using var reader = XmlReader.Create (stream);
+				if (reader.MoveToContent () == XmlNodeType.Element) {
+					var package = reader.GetAttribute ("package");
+					if (!package.IsNullOrEmpty ()) {
+						PackageName = ManifestPlaceholderResolver.Replace (ManifestPlaceholders, package);
 					}
 				}
 			}
-
-			if (!PackageName.IsNullOrEmpty ()) {
-				// PackageName may be passed in via $(ApplicationId) and missing from AndroidManifest.xml
-				PackageName = AndroidAppManifest.CanonicalizePackageName (PackageName);
-			} else {
-				// If we don't have a manifest, default to using the assembly name
-				// If the assembly doesn't have a period in it, duplicate it so it does
-				PackageName = AndroidAppManifest.CanonicalizePackageName (AssemblyName);
-			}
-
-			if (JavaNameValidator.TryGetInvalidPackageSegment (PackageName, '.', out var invalidIdentifier)) {
-				Log.LogCodedError ("XA4258", Properties.Resources.XA4258, PackageName, invalidIdentifier.ToString ());
-			}
-
-			return !Log.HasLoggedErrors;
 		}
+
+		if (!PackageName.IsNullOrEmpty ()) {
+			// PackageName may be passed in via $(ApplicationId) and missing from AndroidManifest.xml
+			PackageName = AndroidAppManifest.CanonicalizePackageName (PackageName);
+		} else {
+			// If we don't have a manifest, default to using the assembly name
+			// If the assembly doesn't have a period in it, duplicate it so it does
+			PackageName = AndroidAppManifest.CanonicalizePackageName (AssemblyName);
+		}
+
+		if (JavaNameValidator.TryGetInvalidPackageSegment (PackageName, '.', out var invalidIdentifier)) {
+			Log.LogCodedError ("XA4258", Properties.Resources.XA4258, PackageName, invalidIdentifier.ToString ());
+		}
+
+		return !Log.HasLoggedErrors;
 	}
 }

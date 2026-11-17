@@ -35,166 +35,165 @@ using NUnit.Framework;
 using Cadenza.Collections;
 using Cadenza.Tests;
 
-namespace Cadenza.Collections.Tests {
+namespace Cadenza.Collections.Tests; 
 
-	public abstract class ListContract<T> : CollectionContract<T> {
+public abstract class ListContract<T> : CollectionContract<T> {
 
-		private IList<T> CreateList (IEnumerable<T> values)
-		{
-			return (IList<T>) CreateCollection (values);
-		}
+	private IList<T> CreateList (IEnumerable<T> values)
+	{
+		return (IList<T>) CreateCollection (values);
+	}
 
-		[Test]
-		public void IndexOf ()
-		{
-			var a = CreateValueA ();
-			var b = CreateValueB ();
+	[Test]
+	public void IndexOf ()
+	{
+		var a = CreateValueA ();
+		var b = CreateValueB ();
 
-			var list = CreateList (new T[0]);
+		var list = CreateList (new T[0]);
 
+		Assert.AreEqual (-1,  list.IndexOf (a));
+
+		try {
+			list.Add (a);
+			Assert.AreEqual (0,   list.IndexOf (a));
+
+			list.Add (b);
+			Assert.AreEqual (1,   list.IndexOf (b));
+
+			list.Remove (a);
 			Assert.AreEqual (-1,  list.IndexOf (a));
+			Assert.AreEqual (0,   list.IndexOf (b));
 
-			try {
-				list.Add (a);
-				Assert.AreEqual (0,   list.IndexOf (a));
+			list.Remove (b);
+			Assert.AreEqual (-1,  list.IndexOf (b));
+		}
+		catch (NotSupportedException) {
+			Assert.IsTrue (list.IsReadOnly || IsFixedSize (list));
+		}
+		Dispose (list);
 
-				list.Add (b);
-				Assert.AreEqual (1,   list.IndexOf (b));
+		list = CreateList (new T[]{ a, b });
+		Assert.AreEqual (0, list.IndexOf (a));
+		Assert.AreEqual (1, list.IndexOf (b));
 
-				list.Remove (a);
-				Assert.AreEqual (-1,  list.IndexOf (a));
-				Assert.AreEqual (0,   list.IndexOf (b));
+		Dispose (list);
+		Dispose (a);
+		Dispose (b);
+	}
 
-				list.Remove (b);
-				Assert.AreEqual (-1,  list.IndexOf (b));
-			}
-			catch (NotSupportedException) {
-				Assert.IsTrue (list.IsReadOnly || IsFixedSize (list));
-			}
-			Dispose (list);
+	[Test]
+	public void Insert ()
+	{
+		var a = CreateValueA ();
+		var b = CreateValueB ();
 
-			list = CreateList (new T[]{ a, b });
+		var list = CreateList (new T[0]);
+
+		try {
+			list.Insert (-1, a);
+		} catch (ArgumentOutOfRangeException) {
+		} catch (NotSupportedException) {
+			Assert.IsTrue (list.IsReadOnly || IsFixedSize (list));
+		}
+
+		try {
+			list.Insert (1, a);
+		} catch (ArgumentOutOfRangeException) {
+		} catch (NotSupportedException) {
+			Assert.IsTrue (list.IsReadOnly || IsFixedSize (list));
+		}
+
+		try {
+			list.Insert (0, a);
 			Assert.AreEqual (0, list.IndexOf (a));
-			Assert.AreEqual (1, list.IndexOf (b));
 
-			Dispose (list);
-			Dispose (a);
-			Dispose (b);
+			list.Insert (0, b);
+			Assert.AreEqual (2, list.Count);
+			Assert.AreEqual (0, list.IndexOf (b));
+			Assert.AreEqual (1, list.IndexOf (a));
+		}
+		catch (NotSupportedException) {
+			Assert.IsTrue (list.IsReadOnly || IsFixedSize (list));
 		}
 
-		[Test]
-		public void Insert ()
-		{
-			var a = CreateValueA ();
-			var b = CreateValueB ();
+		Dispose (list);
+		Dispose (a);
+		Dispose (b);
+	}
 
-			var list = CreateList (new T[0]);
+	[Test]
+	public void RemoveAt ()
+	{
+		var a = CreateValueA ();
+		var b = CreateValueB ();
 
-			try {
-				list.Insert (-1, a);
-			} catch (ArgumentOutOfRangeException) {
-			} catch (NotSupportedException) {
-				Assert.IsTrue (list.IsReadOnly || IsFixedSize (list));
-			}
+		var list = CreateList (new T [0]);
 
-			try {
-				list.Insert (1, a);
-			} catch (ArgumentOutOfRangeException) {
-			} catch (NotSupportedException) {
-				Assert.IsTrue (list.IsReadOnly || IsFixedSize (list));
-			}
-
-			try {
-				list.Insert (0, a);
-				Assert.AreEqual (0, list.IndexOf (a));
-
-				list.Insert (0, b);
-				Assert.AreEqual (2, list.Count);
-				Assert.AreEqual (0, list.IndexOf (b));
-				Assert.AreEqual (1, list.IndexOf (a));
-			}
-			catch (NotSupportedException) {
-				Assert.IsTrue (list.IsReadOnly || IsFixedSize (list));
-			}
-
-			Dispose (list);
-			Dispose (a);
-			Dispose (b);
+		try {
+			list.RemoveAt (-1);
+		} catch (ArgumentOutOfRangeException) {
+		} catch (NotSupportedException) {
+			Assert.IsTrue (list.IsReadOnly || IsFixedSize (list));
 		}
 
-		[Test]
-		public void RemoveAt ()
-		{
-			var a = CreateValueA ();
-			var b = CreateValueB ();
-
-			var list = CreateList (new T [0]);
-
-			try {
-				list.RemoveAt (-1);
-			} catch (ArgumentOutOfRangeException) {
-			} catch (NotSupportedException) {
-				Assert.IsTrue (list.IsReadOnly || IsFixedSize (list));
-			}
-
-			try {
-				list.RemoveAt (0);
-			} catch (ArgumentOutOfRangeException) {
-			} catch (NotSupportedException) {
-				Assert.IsTrue (list.IsReadOnly || IsFixedSize (list));
-			}
-
-			try {
-				list.Add (a);
-				Assert.AreEqual (1, list.Count);
-
-				list.RemoveAt (0);
-				Assert.AreEqual (0, list.Count);
-
-				list.Add (a);
-				list.Add (b);
-				list.RemoveAt (0);
-				Assert.AreEqual (1, list.Count);
-				Assert.AreEqual (0, list.IndexOf (b));
-			}
-			catch (NotSupportedException) {
-				Assert.IsTrue (list.IsReadOnly || IsFixedSize (list));
-			}
-
-			Dispose (list);
-			Dispose (a);
-			Dispose (b);
+		try {
+			list.RemoveAt (0);
+		} catch (ArgumentOutOfRangeException) {
+		} catch (NotSupportedException) {
+			Assert.IsTrue (list.IsReadOnly || IsFixedSize (list));
 		}
 
-		[Test]
-		public void Item ()
-		{
-			var a = CreateValueA ();
-			var b = CreateValueB ();
+		try {
+			list.Add (a);
+			Assert.AreEqual (1, list.Count);
 
-			var list = CreateList (new []{a});
+			list.RemoveAt (0);
+			Assert.AreEqual (0, list.Count);
 
-			var e = list [0];
-			Assert.AreEqual (a, e);
-			Assert.Throws<ArgumentOutOfRangeException>(() => Ignore (list [-1]));
-
-			try {
-				Assert.Throws<ArgumentOutOfRangeException>(() => list [-1] = a);
-				Assert.Throws<ArgumentOutOfRangeException>(() => list [1] = a);
-
-				list [0] = b;
-				Assert.AreEqual (-1,  list.IndexOf (a));
-				Assert.AreEqual (0,   list.IndexOf (b));
-			}
-			catch (NotSupportedException) {
-				Assert.IsTrue (list.IsReadOnly);
-			}
-
-			Dispose (list);
-			Dispose (a);
-			Dispose (b);
-			Dispose (e);
+			list.Add (a);
+			list.Add (b);
+			list.RemoveAt (0);
+			Assert.AreEqual (1, list.Count);
+			Assert.AreEqual (0, list.IndexOf (b));
 		}
+		catch (NotSupportedException) {
+			Assert.IsTrue (list.IsReadOnly || IsFixedSize (list));
+		}
+
+		Dispose (list);
+		Dispose (a);
+		Dispose (b);
+	}
+
+	[Test]
+	public void Item ()
+	{
+		var a = CreateValueA ();
+		var b = CreateValueB ();
+
+		var list = CreateList (new []{a});
+
+		var e = list [0];
+		Assert.AreEqual (a, e);
+		Assert.Throws<ArgumentOutOfRangeException>(() => Ignore (list [-1]));
+
+		try {
+			Assert.Throws<ArgumentOutOfRangeException>(() => list [-1] = a);
+			Assert.Throws<ArgumentOutOfRangeException>(() => list [1] = a);
+
+			list [0] = b;
+			Assert.AreEqual (-1,  list.IndexOf (a));
+			Assert.AreEqual (0,   list.IndexOf (b));
+		}
+		catch (NotSupportedException) {
+			Assert.IsTrue (list.IsReadOnly);
+		}
+
+		Dispose (list);
+		Dispose (a);
+		Dispose (b);
+		Dispose (e);
 	}
 }
 

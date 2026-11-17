@@ -1,10 +1,10 @@
-﻿using System;
+using System;
 using System.IO;
 using NUnit.Framework;
 using Xamarin.Android.Tools.Bytecode;
 
-namespace Xamarin.Android.Tools.BytecodeTests
-{
+namespace Xamarin.Android.Tools.BytecodeTests;
+
 	[TestFixture]
 	public class ParameterFixupTests : ClassFileFixture {
 
@@ -149,5 +149,4 @@ namespace Xamarin.Android.Tools.BytecodeTests
 			}
 		}
 	}
-}
 

@@ -6,21 +6,20 @@ using System.Threading.Tasks;
 using MonoDroid.Generation;
 using Xamarin.SourceWriter;
 
-namespace generator.SourceWriters
+namespace generator.SourceWriters;
+
+public class PeerMembersField : FieldWriter
 {
-	public class PeerMembersField : FieldWriter
+	// static readonly JniPeerMembers _members = new JniPeerMembers ("android/provider/ContactsContract$AggregationExceptions", typeof (AggregationExceptions));
+	public PeerMembersField (CodeGenerationOptions opt, string rawJniType, string declaringType, bool isInterface, string name = "_members")
 	{
-		// static readonly JniPeerMembers _members = new JniPeerMembers ("android/provider/ContactsContract$AggregationExceptions", typeof (AggregationExceptions));
-		public PeerMembersField (CodeGenerationOptions opt, string rawJniType, string declaringType, bool isInterface, string name = "_members")
-		{
-			Name = name;
-			Type = new TypeReferenceWriter ("JniPeerMembers");
+		Name = name;
+		Type = new TypeReferenceWriter ("JniPeerMembers");
 
-			IsPrivate = isInterface;
-			IsStatic = true;
-			IsReadonly = true;
+		IsPrivate = isInterface;
+		IsStatic = true;
+		IsReadonly = true;
 
-			Value = $"new JniPeerMembers (\"{rawJniType}\", typeof ({declaringType}){(isInterface ? ", isInterface: true" : string.Empty)})";
-		}		
-	}
+		Value = $"new JniPeerMembers (\"{rawJniType}\", typeof ({declaringType}){(isInterface ? ", isInterface: true" : string.Empty)})";
+	}		
 }

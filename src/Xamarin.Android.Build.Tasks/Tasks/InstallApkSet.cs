@@ -7,8 +7,8 @@ using System.Linq;
 using System.Text.RegularExpressions;
 using Xamarin.Android.Tools;
 
-namespace Xamarin.Android.Tasks
-{
+namespace Xamarin.Android.Tasks;
+
 	/// <summary>
 	/// Invokes `bundletool` to install an APK set to an attached device
 	///
@@ -67,4 +67,3 @@ namespace Xamarin.Android.Tasks
 			return base.ProcessOutput (singleLine, assemblyMap);
 		}
 	}
-}

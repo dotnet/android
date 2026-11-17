@@ -19,8 +19,8 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace Xamarin.Android.Net
-{
+namespace Xamarin.Android.Net;
+
 	sealed class AuthDigestHeaderParser
 	{
 		const string REALM     = "realm";
@@ -45,14 +45,14 @@ namespace Xamarin.Android.Net
 			get { return keywords [REALM]; }
 		}        
 
-                public string? Opaque {
+            public string? Opaque {
 			get { return keywords [OPAQUE]; }
 		}
 
 		public string? Nonce {
 			get { return keywords [NONCE]; }
 		}
- 
+
 		public string? Algorithm {
 			get { return keywords [ALGORITHM]; }
 		}
@@ -65,7 +65,7 @@ namespace Xamarin.Android.Net
 		{
 			this.header = header?.Trim () ?? string.Empty;
 		}
-                
+            
 		public bool Parse ()
 		{
 			if (header == null || !header.StartsWith ("digest ", StringComparison.OrdinalIgnoreCase))
@@ -96,7 +96,7 @@ namespace Xamarin.Android.Net
 
 			return true;
 		}
-                
+            
 		void SkipWhitespace ()
 		{
 			char c = ' ';
@@ -150,7 +150,7 @@ namespace Xamarin.Android.Net
 					if (c == ',' || c == ' ' || c == '\t' || c == '\r' || c == '\n')
 						break;
 				} while (++pos < length);
-        
+    
 				if (pos >= length && beginQ == pos)
 					return false;
 			}                
@@ -160,4 +160,3 @@ namespace Xamarin.Android.Net
 			return true;
 		}
 	}
-}

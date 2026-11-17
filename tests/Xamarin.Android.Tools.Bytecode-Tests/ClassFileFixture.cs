@@ -8,7 +8,7 @@ using Xamarin.Android.Tools.Bytecode;
 
 using NUnit.Framework;
 
-namespace Xamarin.Android.Tools.BytecodeTests {
+namespace Xamarin.Android.Tools.BytecodeTests; 
 
 	public class ClassFileFixture {
 
@@ -155,5 +155,4 @@ namespace Xamarin.Android.Tools.BytecodeTests {
 			return assembly.GetManifestResourceStream (name);
 		}
 	}
-}
 

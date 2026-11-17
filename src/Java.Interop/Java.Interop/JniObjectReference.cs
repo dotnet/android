@@ -3,8 +3,8 @@
 using System;
 using System.Runtime.CompilerServices;
 
-namespace Java.Interop
-{
+namespace Java.Interop;
+
 	[Flags]
 	enum JniObjectReferenceFlags : uint {
 		None,
@@ -151,4 +151,3 @@ namespace Java.Interop
 			Dispose (ref reference);
 		}
 	}
-}

@@ -1,5 +1,5 @@
-namespace Xamarin.Android.Net
-{
+namespace Xamarin.Android.Net;
+
 	/// <summary>
 	/// Contains all the information required to perform pre-authentication of HTTP requests. See <see cref="AndroidMessageHandler"/>.
 	/// </summary>
@@ -36,4 +36,3 @@ namespace Xamarin.Android.Net
 		/// <value>The auth module.</value>
 		public IAndroidAuthenticationModule? AuthModule { get; set; }
 	}
-}

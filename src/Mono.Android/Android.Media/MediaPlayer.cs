@@ -2,7 +2,7 @@ using System;
 
 using Android.Runtime;
 
-namespace Android.Media {
+namespace Android.Media; 
 
 	partial class MediaPlayer {
 
@@ -20,5 +20,4 @@ namespace Android.Media {
 		public const int MediaErrorUnsupported = (int) MediaError.Unsupported;
 #endif
 	}
-}
 

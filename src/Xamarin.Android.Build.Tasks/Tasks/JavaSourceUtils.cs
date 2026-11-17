@@ -11,8 +11,8 @@ using Microsoft.Build.Utilities;
 using Xamarin.Android.Tools;
 using Microsoft.Android.Build.Tasks;
 
-namespace Xamarin.Android.Tasks
-{
+namespace Xamarin.Android.Tasks;
+
 	public class JavaSourceUtils : AndroidToolTask
 	{
 		public  override    string  TaskPrefix => "JSU";
@@ -187,4 +187,3 @@ namespace Xamarin.Android.Tasks
 			return Path.Combine (JavaSdkDirectory, "bin", ToolExe);
 		}
 	}
-}

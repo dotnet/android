@@ -1,8 +1,8 @@
-﻿#nullable enable
+#nullable enable
 
 using System;
 
-namespace Java.Interop {
+namespace Java.Interop; 
 
 	partial class JniEnvironment {
 
@@ -60,4 +60,3 @@ namespace Java.Interop {
 			}
 		}
 	}
-}

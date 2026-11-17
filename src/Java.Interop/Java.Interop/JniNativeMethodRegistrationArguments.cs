@@ -1,10 +1,10 @@
-﻿#nullable enable
+#nullable enable
 
 using System;
 using System.Collections.Generic;
 
-namespace Java.Interop
-{
+namespace Java.Interop;
+
 	public struct JniNativeMethodRegistrationArguments
 	{
 		const string invalidStateMessage = nameof(JniNativeMethodRegistrationArguments) + " state is invalid. Please use constructor with parameters.";
@@ -34,4 +34,3 @@ namespace Java.Interop
 			}
 		}
 	}
-}

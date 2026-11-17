@@ -1,6 +1,6 @@
 using System;
 
-namespace Java.Lang {
+namespace Java.Lang; 
 
 	partial class Exception {
 
@@ -10,4 +10,3 @@ namespace Java.Lang {
 			throw new NotSupportedException ("The Java.Lang.Exception(string, Throwable, bool, bool) constructor was erroneously bound. It does not exist.");
 		}
 	}
-}

@@ -39,295 +39,294 @@ using System.Net;
 using System.Linq;
 using System.IO;
 
-namespace Xamarin.Android.NetTests {
-	[Category ("InetAccess")]
-	public sealed class AndroidMessageHandlerIntegrationTests
+namespace Xamarin.Android.NetTests; 
+[Category ("InetAccess")]
+public sealed class AndroidMessageHandlerIntegrationTests
+{
+	class CustomStream : Stream
 	{
-		class CustomStream : Stream
+		public override void Flush ()
 		{
-			public override void Flush ()
-			{
-				throw new NotImplementedException ();
-			}
+			throw new NotImplementedException ();
+		}
 
-			int pos;
+		int pos;
 
-			public override int Read (byte[] buffer, int offset, int count)
-			{
-				++pos;
-				if (pos > 4)
-					return 0;
+		public override int Read (byte[] buffer, int offset, int count)
+		{
+			++pos;
+			if (pos > 4)
+				return 0;
 
-				return 11;
-			}
+			return 11;
+		}
 
-			public override long Seek (long offset, SeekOrigin origin)
-			{
-				throw new NotImplementedException ();
-			}
+		public override long Seek (long offset, SeekOrigin origin)
+		{
+			throw new NotImplementedException ();
+		}
 
-			public override void SetLength (long value)
-			{
-				throw new NotImplementedException ();
-			}
+		public override void SetLength (long value)
+		{
+			throw new NotImplementedException ();
+		}
 
-			public override void Write (byte[] buffer, int offset, int count)
-			{
-				throw new NotImplementedException ();
-			}
+		public override void Write (byte[] buffer, int offset, int count)
+		{
+			throw new NotImplementedException ();
+		}
 
-			public override bool CanRead {
-				get {
-					return true;
-				}
-			}
-
-			public override bool CanSeek {
-				get {
-					return false;
-				}
-			}
-
-			public override bool CanWrite {
-				get {
-					throw new NotImplementedException ();
-				}
-			}
-
-			public override long Length {
-				get {
-					throw new NotImplementedException ();
-				}
-			}
-
-			public override long Position {
-				get {
-					throw new NotImplementedException ();
-				}
-				set {
-					throw new NotImplementedException ();
-				}
+		public override bool CanRead {
+			get {
+				return true;
 			}
 		}
 
-		const int WaitTimeout = 10000;
+		public override bool CanSeek {
+			get {
+				return false;
+			}
+		}
 
-		string port, TestHost, LocalServer;
+		public override bool CanWrite {
+			get {
+				throw new NotImplementedException ();
+			}
+		}
 
-		[SetUp]
-		public void SetupFixture ()
-		{
-			if (Environment.OSVersion.Platform == PlatformID.Win32NT) {
-				port = "810";
+		public override long Length {
+			get {
+				throw new NotImplementedException ();
+			}
+		}
+
+		public override long Position {
+			get {
+				throw new NotImplementedException ();
+			}
+			set {
+				throw new NotImplementedException ();
+			}
+		}
+	}
+
+	const int WaitTimeout = 10000;
+
+	string port, TestHost, LocalServer;
+
+	[SetUp]
+	public void SetupFixture ()
+	{
+		if (Environment.OSVersion.Platform == PlatformID.Win32NT) {
+			port = "810";
+		} else {
+			port = "8810";
+		}
+
+		TestHost = "localhost:" + port;
+		LocalServer = string.Format ("http://{0}/", TestHost);
+	}
+
+	[Test]
+	public void Ctor_Default ()
+	{
+		using (var handler = new Xamarin.Android.Net.AndroidMessageHandler ()) {
+			var client = new HttpClient (handler);
+			Assert.IsNull (client.BaseAddress, "#1");
+			Assert.IsNotNull (client.DefaultRequestHeaders, "#2");  // TODO: full check
+			Assert.AreEqual (int.MaxValue, client.MaxResponseContentBufferSize, "#3");
+			Assert.AreEqual (TimeSpan.FromSeconds (100), client.Timeout, "#4");
+		}
+	}
+
+
+	[Test]
+	public void CancelRequestViaProxy ()
+	{
+		using (var handler = new Xamarin.Android.Net.AndroidMessageHandler ()) {
+			handler.Proxy = new WebProxy ("192.168.10.25:8888/"); // proxy that doesn't exist
+			handler.UseProxy = true;
+			handler.AutomaticDecompression = DecompressionMethods.GZip | DecompressionMethods.Deflate;
+
+			var httpClient = new HttpClient (handler) {
+				BaseAddress = new Uri ("https://localhost/"),
+				Timeout = TimeSpan.FromMilliseconds (1)
+			};
+
+			var restRequest = new HttpRequestMessage {
+				Method = HttpMethod.Post,
+				RequestUri = new Uri ("foo", UriKind.Relative),
+				Content = new StringContent ("", null, "application/json")
+			};
+
+			var task = httpClient.PostAsync (restRequest.RequestUri, restRequest.Content);
+			bool completed = false;
+			try {
+				completed = task.Wait (WaitTimeout);
+			} catch (AggregateException e) {
+				Console.WriteLine ("CancelRequestViaProxy exception: {0}", e);
+				Assert.IsTrue (e.InnerException is TaskCanceledException, $"Expected TaskCanceledException but got: {e.InnerException?.GetType ().FullName}: {e.InnerException?.Message}");
+				return; // Test passed - got expected exception
+			}
+
+			// If we reach here, the task completed or timed out without throwing
+			if (!completed) {
+				Assert.Inconclusive ($"Test timed out waiting for task. Task status: {task.Status}. This can happen due to timing issues on slow machines.");
+			}
+
+			// Task completed without throwing - this is unexpected
+			if (task.IsFaulted) {
+				Assert.Fail ($"Task faulted with unexpected exception: {task.Exception?.InnerException?.GetType ().FullName}: {task.Exception?.InnerException?.Message}");
+			} else if (task.IsCanceled) {
+				// This is actually fine - the task was canceled as expected
+				return;
 			} else {
-				port = "8810";
-			}
-
-			TestHost = "localhost:" + port;
-			LocalServer = string.Format ("http://{0}/", TestHost);
-		}
-
-		[Test]
-		public void Ctor_Default ()
-		{
-			using (var handler = new Xamarin.Android.Net.AndroidMessageHandler ()) {
-				var client = new HttpClient (handler);
-				Assert.IsNull (client.BaseAddress, "#1");
-				Assert.IsNotNull (client.DefaultRequestHeaders, "#2");  // TODO: full check
-				Assert.AreEqual (int.MaxValue, client.MaxResponseContentBufferSize, "#3");
-				Assert.AreEqual (TimeSpan.FromSeconds (100), client.Timeout, "#4");
+				Assert.Fail ($"Expected request to be canceled due to 1ms timeout with non-existent proxy, but task completed successfully with Status: {task.Status}");
 			}
 		}
+	}
 
+	[Test]
+	public void Properties ()
+	{
+		using (var handler = new Xamarin.Android.Net.AndroidMessageHandler ()) {
+			var client = new HttpClient (handler);
+			client.BaseAddress = null;
+			client.MaxResponseContentBufferSize = int.MaxValue;
+			client.Timeout = Timeout.InfiniteTimeSpan;
 
-		[Test]
-		public void CancelRequestViaProxy ()
-		{
-			using (var handler = new Xamarin.Android.Net.AndroidMessageHandler ()) {
-				handler.Proxy = new WebProxy ("192.168.10.25:8888/"); // proxy that doesn't exist
-				handler.UseProxy = true;
-				handler.AutomaticDecompression = DecompressionMethods.GZip | DecompressionMethods.Deflate;
-
-				var httpClient = new HttpClient (handler) {
-					BaseAddress = new Uri ("https://localhost/"),
-					Timeout = TimeSpan.FromMilliseconds (1)
-				};
-
-				var restRequest = new HttpRequestMessage {
-					Method = HttpMethod.Post,
-					RequestUri = new Uri ("foo", UriKind.Relative),
-					Content = new StringContent ("", null, "application/json")
-				};
-
-				var task = httpClient.PostAsync (restRequest.RequestUri, restRequest.Content);
-				bool completed = false;
-				try {
-					completed = task.Wait (WaitTimeout);
-				} catch (AggregateException e) {
-					Console.WriteLine ("CancelRequestViaProxy exception: {0}", e);
-					Assert.IsTrue (e.InnerException is TaskCanceledException, $"Expected TaskCanceledException but got: {e.InnerException?.GetType ().FullName}: {e.InnerException?.Message}");
-					return; // Test passed - got expected exception
-				}
-
-				// If we reach here, the task completed or timed out without throwing
-				if (!completed) {
-					Assert.Inconclusive ($"Test timed out waiting for task. Task status: {task.Status}. This can happen due to timing issues on slow machines.");
-				}
-
-				// Task completed without throwing - this is unexpected
-				if (task.IsFaulted) {
-					Assert.Fail ($"Task faulted with unexpected exception: {task.Exception?.InnerException?.GetType ().FullName}: {task.Exception?.InnerException?.Message}");
-				} else if (task.IsCanceled) {
-					// This is actually fine - the task was canceled as expected
-					return;
-				} else {
-					Assert.Fail ($"Expected request to be canceled due to 1ms timeout with non-existent proxy, but task completed successfully with Status: {task.Status}");
-				}
-			}
+			Assert.IsNull (client.BaseAddress, "#1");
+			Assert.AreEqual (int.MaxValue, client.MaxResponseContentBufferSize, "#2");
+			Assert.AreEqual (Timeout.InfiniteTimeSpan, client.Timeout, "#3");
 		}
+	}
 
-		[Test]
-		public void Properties ()
-		{
-			using (var handler = new Xamarin.Android.Net.AndroidMessageHandler ()) {
-				var client = new HttpClient (handler);
-				client.BaseAddress = null;
-				client.MaxResponseContentBufferSize = int.MaxValue;
-				client.Timeout = Timeout.InfiniteTimeSpan;
-
-				Assert.IsNull (client.BaseAddress, "#1");
-				Assert.AreEqual (int.MaxValue, client.MaxResponseContentBufferSize, "#2");
-				Assert.AreEqual (Timeout.InfiniteTimeSpan, client.Timeout, "#3");
-			}
-		}
-
-		[Test]
-		public void Properties_Invalid ()
-		{
-			using (var handler = new Xamarin.Android.Net.AndroidMessageHandler ()) {
-				var client = new HttpClient (handler);
-				try {
-					client.MaxResponseContentBufferSize = 0;
-					Assert.Fail ("#1");
-				} catch (ArgumentOutOfRangeException) {
-				}
-
-				try {
-					client.Timeout = TimeSpan.MinValue;
-					Assert.Fail ("#2");
-				} catch (ArgumentOutOfRangeException) {
-				}
-			}
-		}
-
-		[Test]
-		public async Task UrlEscaping_Bug43411 ()
-		{
-			await UrlEscaping_TestUrl ($"http://{TestHost}/?example=value%20_value", "#1");
-			await UrlEscaping_TestUrl ($"http://{TestHost}/?query=anna%20%26%20lotte&param2=true", "#2");
-		}
-
-		async Task UrlEscaping_TestUrl (string url, string messagePrefix)
-		{
-			var expectedPathAndQuery = new Uri (url).PathAndQuery;
-			string receivedRawUrl = null;
-
-			var listener = CreateListener (l => {
-					receivedRawUrl = l.Request.RawUrl;
-				});
-
-			using (listener) {
-				try {
-					var client = new HttpClient ();
-					var request = new HttpRequestMessage (HttpMethod.Get, url);
-
-					await client.SendAsync (request, HttpCompletionOption.ResponseHeadersRead);
-					// Use AbsoluteUri rather than ToString(): ToString() returns the
-					// "human-readable" form and unescapes safe characters like %20,
-					// while AbsoluteUri preserves the canonical percent-encoding.
-					Assert.AreEqual (url, request.RequestUri.AbsoluteUri, $"{messagePrefix}-1");
-					Assert.AreEqual (expectedPathAndQuery, receivedRawUrl, $"{messagePrefix}-2");
-				} finally {
-					listener.Abort ();
-					listener.Close ();
-				}
-			}
-		}
-
-		[Test]
-		public void Send_Invalid ()
-		{
-			var client = new HttpClient (new Xamarin.Android.Net.AndroidMessageHandler ());
+	[Test]
+	public void Properties_Invalid ()
+	{
+		using (var handler = new Xamarin.Android.Net.AndroidMessageHandler ()) {
+			var client = new HttpClient (handler);
 			try {
-				client.SendAsync (null).Wait (WaitTimeout);
+				client.MaxResponseContentBufferSize = 0;
 				Assert.Fail ("#1");
-			} catch (ArgumentNullException) {
+			} catch (ArgumentOutOfRangeException) {
 			}
 
 			try {
-				var request = new HttpRequestMessage ();
-				client.SendAsync (request).Wait (WaitTimeout);
+				client.Timeout = TimeSpan.MinValue;
 				Assert.Fail ("#2");
-			} catch (InvalidOperationException) {
+			} catch (ArgumentOutOfRangeException) {
 			}
 		}
+	}
 
-		[Test]
-		public void GetString_Many ()
-		{
-			using var server = LocalHttpServer.Start ();
-			var client = new HttpClient (new Xamarin.Android.Net.AndroidMessageHandler ());
-			var t1 = client.GetStringAsync (server.OkUri);
-			var t2 = client.GetStringAsync (server.OkUri);
-			Assert.IsTrue (Task.WaitAll (new [] { t1, t2 }, WaitTimeout));
-			server.AssertNoUnhandledExceptions ();
+	[Test]
+	public async Task UrlEscaping_Bug43411 ()
+	{
+		await UrlEscaping_TestUrl ($"http://{TestHost}/?example=value%20_value", "#1");
+		await UrlEscaping_TestUrl ($"http://{TestHost}/?query=anna%20%26%20lotte&param2=true", "#2");
+	}
+
+	async Task UrlEscaping_TestUrl (string url, string messagePrefix)
+	{
+		var expectedPathAndQuery = new Uri (url).PathAndQuery;
+		string receivedRawUrl = null;
+
+		var listener = CreateListener (l => {
+				receivedRawUrl = l.Request.RawUrl;
+			});
+
+		using (listener) {
+			try {
+				var client = new HttpClient ();
+				var request = new HttpRequestMessage (HttpMethod.Get, url);
+
+				await client.SendAsync (request, HttpCompletionOption.ResponseHeadersRead);
+				// Use AbsoluteUri rather than ToString(): ToString() returns the
+				// "human-readable" form and unescapes safe characters like %20,
+				// while AbsoluteUri preserves the canonical percent-encoding.
+				Assert.AreEqual (url, request.RequestUri.AbsoluteUri, $"{messagePrefix}-1");
+				Assert.AreEqual (expectedPathAndQuery, receivedRawUrl, $"{messagePrefix}-2");
+			} finally {
+				listener.Abort ();
+				listener.Close ();
+			}
+		}
+	}
+
+	[Test]
+	public void Send_Invalid ()
+	{
+		var client = new HttpClient (new Xamarin.Android.Net.AndroidMessageHandler ());
+		try {
+			client.SendAsync (null).Wait (WaitTimeout);
+			Assert.Fail ("#1");
+		} catch (ArgumentNullException) {
 		}
 
-		[Test]
-		public void DisallowAutoRedirect ()
-		{
-			var listener = CreateListener (l => {
-					using (var response = l.Response)
-					{
-						response.Redirect("http://localhost/");
-					}
-				});
+		try {
+			var request = new HttpRequestMessage ();
+			client.SendAsync (request).Wait (WaitTimeout);
+			Assert.Fail ("#2");
+		} catch (InvalidOperationException) {
+		}
+	}
 
-			using (listener) {
-				try {
-					var chandler = new Xamarin.Android.Net.AndroidMessageHandler ();
-					chandler.AllowAutoRedirect = false;
-					var client = new HttpClient (chandler);
+	[Test]
+	public void GetString_Many ()
+	{
+		using var server = LocalHttpServer.Start ();
+		var client = new HttpClient (new Xamarin.Android.Net.AndroidMessageHandler ());
+		var t1 = client.GetStringAsync (server.OkUri);
+		var t2 = client.GetStringAsync (server.OkUri);
+		Assert.IsTrue (Task.WaitAll (new [] { t1, t2 }, WaitTimeout));
+		server.AssertNoUnhandledExceptions ();
+	}
 
-					try {
-						client.GetStringAsync (LocalServer).Wait (WaitTimeout);
-						Assert.Fail ("#1: HttpRequestException wasn't thrown.");
-					} catch (AggregateException e) {
-						Assert.IsTrue (e.InnerException is HttpRequestException, "#2: " + e.ToString ());
-					}
-				} finally {
-					listener.Abort ();
-					listener.Close ();
+	[Test]
+	public void DisallowAutoRedirect ()
+	{
+		var listener = CreateListener (l => {
+				using (var response = l.Response)
+				{
+					response.Redirect("http://localhost/");
 				}
+			});
+
+		using (listener) {
+			try {
+				var chandler = new Xamarin.Android.Net.AndroidMessageHandler ();
+				chandler.AllowAutoRedirect = false;
+				var client = new HttpClient (chandler);
+
+				try {
+					client.GetStringAsync (LocalServer).Wait (WaitTimeout);
+					Assert.Fail ("#1: HttpRequestException wasn't thrown.");
+				} catch (AggregateException e) {
+					Assert.IsTrue (e.InnerException is HttpRequestException, "#2: " + e.ToString ());
+				}
+			} finally {
+				listener.Abort ();
+				listener.Close ();
 			}
 		}
+	}
 
-		HttpListener CreateListener (Action<HttpListenerContext> contextAssert)
-		{
-			var l = new HttpListener ();
-			l.Prefixes.Add (string.Format ("http://+:{0}/", port));
-			l.Start ();
-			l.BeginGetContext (ar => {
-					var ctx = l.EndGetContext (ar);
-					try {
-						if (contextAssert != null)
-							contextAssert (ctx);
-					} finally {
-						ctx.Response.Close ();
-					}
-				}, null);
+	HttpListener CreateListener (Action<HttpListenerContext> contextAssert)
+	{
+		var l = new HttpListener ();
+		l.Prefixes.Add (string.Format ("http://+:{0}/", port));
+		l.Start ();
+		l.BeginGetContext (ar => {
+				var ctx = l.EndGetContext (ar);
+				try {
+					if (contextAssert != null)
+						contextAssert (ctx);
+				} finally {
+					ctx.Response.Close ();
+				}
+			}, null);
 
-			return l;
-		}
+		return l;
 	}
 }

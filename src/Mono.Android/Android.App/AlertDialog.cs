@@ -7,7 +7,7 @@ using Android.Widget;
 
 using Java.Interop;
 
-namespace Android.App {
+namespace Android.App; 
 
 	public partial class AlertDialog {
 
@@ -245,4 +245,3 @@ namespace Android.App {
 #pragma warning restore CS0618
 
 	}
-}

@@ -17,8 +17,8 @@ using Android.Views;
 using Android.Widget;
 
 [assembly: HelloLibrary.GenericTest<string>]
-namespace HelloLibrary
-{
+namespace HelloLibrary;
+
     [AttributeUsage(AttributeTargets.Assembly, AllowMultiple = true, Inherited = false)]
     public class GenericTestAttribute<T> : Attribute { }
 
@@ -84,4 +84,3 @@ namespace HelloLibrary
         }
     }
 #endregion
-}

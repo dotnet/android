@@ -5,8 +5,8 @@ using System.Net.Http;
 using Android.Runtime;
 using Java.Net;
 
-namespace Xamarin.Android.Net
-{
+namespace Xamarin.Android.Net;
+
 	/// <summary>
 	/// A convenience wrapper around <see cref="System.Net.Http.HttpResponseMessage"/> returned by <see cref="AndroidMessageHandler.SendAsync"/>
 	/// that allows easy access to authentication data as returned by the server, if any.
@@ -71,4 +71,3 @@ namespace Xamarin.Android.Net
 			}
 		}
 	}
-}

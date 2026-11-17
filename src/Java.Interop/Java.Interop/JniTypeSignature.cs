@@ -10,8 +10,8 @@ using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Threading;
 
-namespace Java.Interop
-{
+namespace Java.Interop;
+
 	public struct JniTypeSignature : IEquatable<JniTypeSignature>
 	{
 		public static readonly JniTypeSignature Empty;
@@ -209,4 +209,3 @@ namespace Java.Interop
 			return !lhs.Equals (rhs);
 		}
 	}
-}

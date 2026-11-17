@@ -4,8 +4,8 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace generatortests
-{
+namespace generatortests;
+
 	static class TestExtensions
 	{
 		public static string NormalizeLineEndings (this string str)
@@ -15,4 +15,3 @@ namespace generatortests
 			return str?.Replace ("\r\n", "\n").Replace ("\n", "").Replace ("\t", "").Replace (" ", "");
 		}
 	}
-}

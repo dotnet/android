@@ -2,7 +2,7 @@ using System;
 
 using Android.Content;
 
-namespace Android.App.Admin {
+namespace Android.App.Admin; 
 
 #if ANDROID_8
 
@@ -15,7 +15,5 @@ namespace Android.App.Admin {
 	}
 
 #endif
-
-}
 
 

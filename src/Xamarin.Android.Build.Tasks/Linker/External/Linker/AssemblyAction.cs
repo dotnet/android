@@ -26,7 +26,7 @@
 // WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 //
 
-namespace Mono.Linker {
+namespace Mono.Linker; 
 
 	public enum AssemblyAction {
 		// Ignore the assembly
@@ -52,4 +52,3 @@ namespace Mono.Linker {
 		// Delete unmarked assemblies.
 		AddBypassNGenUsed
 	}
-}

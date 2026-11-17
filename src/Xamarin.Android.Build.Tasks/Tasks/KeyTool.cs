@@ -5,8 +5,8 @@ using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
 using Microsoft.Android.Build.Tasks;
 
-namespace Xamarin.Android.Tasks
-{
+namespace Xamarin.Android.Tasks;
+
 	public class KeyTool : AndroidRunToolTask
 	{
 		public override string TaskPrefix => "KEY";
@@ -94,5 +94,4 @@ namespace Xamarin.Android.Tasks
 			get { return IsWindows ? "keytool.exe" : "keytool"; }
 		}
 	}
-}
 

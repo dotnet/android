@@ -4,7 +4,7 @@ using System;
 using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 
-namespace Java.Interop {
+namespace Java.Interop; 
 
 	sealed class JniStringValueMarshaler : JniValueMarshaler<string?> {
 
@@ -31,4 +31,3 @@ namespace Java.Interop {
 			state   = new JniValueMarshalerState ();
 		}
 	}
-}

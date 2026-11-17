@@ -5,20 +5,19 @@ using System.Text;
 using System.Threading.Tasks;
 using Xamarin.SourceWriter;
 
-namespace generator.SourceWriters
+namespace generator.SourceWriters;
+
+public class CustomAttr : AttributeWriter
 {
-	public class CustomAttr : AttributeWriter
+	public string Value { get; set; }
+
+	public CustomAttr (string value)
 	{
-		public string Value { get; set; }
+		Value = value;
+	}
 
-		public CustomAttr (string value)
-		{
-			Value = value;
-		}
-
-		public override void WriteAttribute (CodeWriter writer)
-		{
-			writer.WriteLine (Value);
-		}
+	public override void WriteAttribute (CodeWriter writer)
+	{
+		writer.WriteLine (Value);
 	}
 }

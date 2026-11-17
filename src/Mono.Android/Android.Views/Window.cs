@@ -2,7 +2,7 @@ using System;
 using System.Diagnostics.CodeAnalysis;
 using Java.Interop;
 
-namespace Android.Views {
+namespace Android.Views; 
 
 	partial class Window {
 
@@ -15,4 +15,3 @@ namespace Android.Views {
 			return this.FindViewById (id).JavaCast<T> ();
 		}
 	}
-}

@@ -10,8 +10,8 @@ using System.Collections.Generic;
 using Xamarin.Android.Tools;
 using Microsoft.Android.Build.Tasks;
 
-namespace Xamarin.Android.Tasks
-{
+namespace Xamarin.Android.Tasks;
+
 
 	public abstract class JavaCompileToolTask : JavaToolTask
 	{
@@ -106,4 +106,3 @@ namespace Xamarin.Android.Tasks
 			}
 		}
 	}
-}

@@ -6,8 +6,8 @@ using System.IO;
 using Microsoft.Android.Build.Tasks;
 using Microsoft.Build.Framework;
 
-namespace Xamarin.Android.Tasks
-{
+namespace Xamarin.Android.Tasks;
+
 	public class ClassParse : AndroidDotnetToolTask
 	{
 		public override string TaskPrefix => "CLP";
@@ -60,4 +60,3 @@ namespace Xamarin.Android.Tasks
 			Log.LogDebugMessage (line);
 		}
 	}
-}

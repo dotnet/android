@@ -23,8 +23,8 @@ using System.Text;
 
 using Java.Net;
 
-namespace Xamarin.Android.Net
-{
+namespace Xamarin.Android.Net;
+
 	sealed class AuthDigestSession
 	{
 		static readonly RandomNumberGenerator rng = RandomNumberGenerator.Create ();
@@ -181,4 +181,3 @@ namespace Xamarin.Android.Net
 			return new Authorization (auth.ToString ());
 		}
 	}
-}

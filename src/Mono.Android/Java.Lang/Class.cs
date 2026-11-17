@@ -3,7 +3,7 @@ using Android.Runtime;
 using Java.Interop;
 using Java.Lang.Invoke;
 
-namespace Java.Lang {
+namespace Java.Lang; 
 
 	public partial class Class {
 
@@ -40,4 +40,3 @@ namespace Java.Lang {
 			=> ComponentType;
 #endif
 	}
-}

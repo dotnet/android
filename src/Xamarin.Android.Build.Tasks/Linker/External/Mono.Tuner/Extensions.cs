@@ -7,7 +7,7 @@ using Mono.Cecil;
 
 using Mono.Linker;
 
-namespace Mono.Tuner {
+namespace Mono.Tuner; 
 
 	public static partial class Extensions {
 
@@ -35,4 +35,3 @@ namespace Mono.Tuner {
 			return ((type != null) && (type.Name == name) && (type.Namespace == @namespace));
 		}
 	}
-}

@@ -5,7 +5,7 @@ using Java.Interop;
 
 using Android.Runtime;
 
-namespace Android.Widget {
+namespace Android.Widget; 
 
 	partial class AbsListView {
 
@@ -121,5 +121,3 @@ namespace Android.Widget {
 			}
 		}
 	}
-
-}

@@ -8,7 +8,7 @@ using Android.Runtime;
 
 using Java.Interop;
 
-namespace Android.Widget {
+namespace Android.Widget; 
 	[Obsolete ("Use AdapterView.ItemClickEventArgs instead", error: true)]
 	public class ItemEventArgs : AdapterView.ItemClickEventArgs {
 
@@ -129,4 +129,3 @@ namespace Android.Widget {
 			[Register ("setAdapter", "(Landroid/widget/Adapter;)V", "GetSetAdapter_Landroid_widget_Adapter_Handler")] set;
 		}
 	}
-}

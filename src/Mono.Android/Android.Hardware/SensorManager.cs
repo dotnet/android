@@ -2,7 +2,7 @@ using System;
 
 using Android.Content;
 
-namespace Android.Hardware {
+namespace Android.Hardware; 
 
 	public partial class SensorManager {
 
@@ -15,6 +15,5 @@ namespace Android.Hardware {
 			return context.GetSystemService (Context.SensorService!) as SensorManager;
 		}
 	}
-}
 
 

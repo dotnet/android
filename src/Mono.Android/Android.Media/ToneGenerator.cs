@@ -1,7 +1,7 @@
 using System;
 
-namespace Android.Media
-{
+namespace Android.Media;
+
 	public partial class ToneGenerator
 	{
 		[Obsolete ("It was based on wrong use of enum. Please use ToneGenerator(Stream,int) instead.")]
@@ -10,4 +10,3 @@ namespace Android.Media
 		{
 		}
 	}
-}

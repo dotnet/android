@@ -1,7 +1,7 @@
 using System;
 using Android.Runtime;
 
-namespace Android.Content {
+namespace Android.Content; 
 
 	public partial class Intent {
 
@@ -14,4 +14,3 @@ namespace Android.Content {
 			return SetClass (packageContext, Java.Lang.Class.FromType (type));
 		}
 	}
-}

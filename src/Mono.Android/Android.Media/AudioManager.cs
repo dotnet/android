@@ -2,7 +2,7 @@ using System;
 using Android.Content;
 using Android.Runtime;
 
-namespace Android.Media {
+namespace Android.Media; 
 
 	public partial class AudioManager {
 
@@ -18,6 +18,5 @@ namespace Android.Media {
 		public const int StreamAccessibility = 10;
 #endif // ANDROID_26
 	}
-}
 
 

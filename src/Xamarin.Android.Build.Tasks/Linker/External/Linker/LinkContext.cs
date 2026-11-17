@@ -1,4 +1,4 @@
-﻿//
+//
 // LinkContext.cs
 //
 // Author:
@@ -36,7 +36,7 @@ using Java.Interop.Tools.Cecil;
 using Mono.Cecil;
 using Mono.Cecil.Cil;
 
-namespace Mono.Linker {
+namespace Mono.Linker; 
 
 	public class LinkContext : TypeDefinitionCache, IDisposable {
 
@@ -237,4 +237,3 @@ namespace Mono.Linker {
 
 		public virtual void LogError (string code, string message) { }
 	}
-}

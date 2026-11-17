@@ -10,8 +10,8 @@ using System.Collections.Generic;
 using Mono.Cecil.Cil;
 using System.Text.RegularExpressions;
 
-namespace MonoDroid.Tuner
-{
+namespace MonoDroid.Tuner;
+
 	public class RemoveResourceDesignerStep : LinkDesignerBase, IAssemblyModifierPipelineStep
 	{
 		TypeDefinition mainDesigner = null;
@@ -126,4 +126,3 @@ namespace MonoDroid.Tuner
 			return true;
 		}
 	}
-}

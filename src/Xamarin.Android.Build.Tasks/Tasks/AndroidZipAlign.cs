@@ -5,8 +5,8 @@ using System.IO;
 using Microsoft.Build.Framework;
 using Microsoft.Android.Build.Tasks;
 
-namespace Xamarin.Android.Tasks
-{
+namespace Xamarin.Android.Tasks;
+
 	public class AndroidZipAlign : AndroidRunToolTask
 	{
 		// Default to 16 since it's going to be a Google Play store requirement for application submissions sometime next year
@@ -58,4 +58,3 @@ namespace Xamarin.Android.Tasks
 				base.LogEventsFromTextOutput (singleLine, messageImportance);
 		}
 	}
-}

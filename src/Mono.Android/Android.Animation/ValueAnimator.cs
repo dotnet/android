@@ -2,8 +2,8 @@ using System;
 using Java.Interop;
 using Android.Runtime;
 
-namespace Android.Animation
-{
+namespace Android.Animation;
+
 	public partial class ValueAnimator
 	{
 		static Delegate? cb_setDuration_SetDuration_J_Landroid_animation_Animator_;
@@ -51,4 +51,3 @@ namespace Android.Animation
 		}
 #pragma warning restore 0169
 	}
-}

@@ -4,8 +4,8 @@ using System.IO;
 using System.Text;
 using System.Runtime.InteropServices;
 
-namespace Xamarin.Android.Tools
-{
+namespace Xamarin.Android.Tools;
+
 	public static class PathUtil
 	{
 
@@ -291,4 +291,3 @@ namespace Xamarin.Android.Tools
 			return i;
 		}
 	}
-}

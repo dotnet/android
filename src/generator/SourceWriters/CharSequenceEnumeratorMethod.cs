@@ -5,39 +5,38 @@ using System.Text;
 using System.Threading.Tasks;
 using Xamarin.SourceWriter;
 
-namespace generator.SourceWriters
+namespace generator.SourceWriters;
+
+public class CharSequenceEnumeratorMethod : MethodWriter
 {
-	public class CharSequenceEnumeratorMethod : MethodWriter
+	// System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator ()
+	// {
+	// 	return GetEnumerator ();
+	// }
+	public CharSequenceEnumeratorMethod ()
 	{
-		// System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator ()
-		// {
-		// 	return GetEnumerator ();
-		// }
-		public CharSequenceEnumeratorMethod ()
-		{
-			Name = "global::System.Collections.IEnumerable.GetEnumerator";
-			ReturnType = new TypeReferenceWriter ("global::System.Collections.IEnumerator");
+		Name = "global::System.Collections.IEnumerable.GetEnumerator";
+		ReturnType = new TypeReferenceWriter ("global::System.Collections.IEnumerator");
 
-			Body.Add ("return GetEnumerator ();");
-		}		
-	}
+		Body.Add ("return GetEnumerator ();");
+	}		
+}
 
-	public class CharSequenceGenericEnumeratorMethod : MethodWriter
+public class CharSequenceGenericEnumeratorMethod : MethodWriter
+{
+	// public System.Collections.Generic.IEnumerator<char> GetEnumerator ()
+	// {
+	// 	for (int i = 0; i < Length(); i++)
+	// 		yield return CharAt (i);
+	// }
+	public CharSequenceGenericEnumeratorMethod ()
 	{
-		// public System.Collections.Generic.IEnumerator<char> GetEnumerator ()
-		// {
-		// 	for (int i = 0; i < Length(); i++)
-		// 		yield return CharAt (i);
-		// }
-		public CharSequenceGenericEnumeratorMethod ()
-		{
-			Name = "GetEnumerator";
-			ReturnType = new TypeReferenceWriter ("global::System.Collections.Generic.IEnumerator<char>");
+		Name = "GetEnumerator";
+		ReturnType = new TypeReferenceWriter ("global::System.Collections.Generic.IEnumerator<char>");
 
-			IsPublic = true;
+		IsPublic = true;
 
-			Body.Add ("for (int i = 0; i < Length (); i++)");
-			Body.Add ("\tyield return CharAt (i);");
-		}
+		Body.Add ("for (int i = 0; i < Length (); i++)");
+		Body.Add ("\tyield return CharAt (i);");
 	}
 }

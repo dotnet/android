@@ -3,8 +3,8 @@
 using System;
 using System.Runtime.ExceptionServices;
 
-namespace Java.Interop
-{
+namespace Java.Interop;
+
 	partial class JniEnvironment {
 
 		/// <include file="../Documentation/Java.Interop/JniEnvironment.References.xml" path="/docs/member[@name='T:JniEnvironment.References']/*" />
@@ -80,5 +80,4 @@ namespace Java.Interop
 			}
 		}
 	}
-}
 

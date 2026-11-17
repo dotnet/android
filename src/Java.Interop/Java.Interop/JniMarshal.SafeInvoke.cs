@@ -4,7 +4,7 @@ using System;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 
-namespace Java.Interop {
+namespace Java.Interop; 
 
 	[SuppressMessage (
 		"Design",
@@ -794,4 +794,3 @@ namespace Java.Interop {
 			}
 		}
 	}
-}

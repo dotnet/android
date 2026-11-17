@@ -11,8 +11,8 @@ using Microsoft.Build.Utilities;
 using System.Security.Cryptography;
 using Microsoft.Android.Build.Tasks;
 
-namespace Xamarin.Android.Tasks
-{
+namespace Xamarin.Android.Tasks;
+
 	// When we regenerate the Resource.designer.cs, if we write it
 	// when it hasn't actually changed, the user will get a "Reload?"
 	// prompt in IDEs, so we only want to copy the file if there is
@@ -70,4 +70,3 @@ namespace Xamarin.Android.Tasks
 			return true;
 		}
 	}
-}

@@ -1,8 +1,8 @@
 using System;
 using NUnit.Framework;
 
-namespace generatortests
-{
+namespace generatortests;
+
 	[TestFixture]
 	public class Core_Jar2Xml : BaseGeneratorTest
 	{
@@ -21,5 +21,4 @@ namespace generatortests
 					);
 		}
 	}
-}
 

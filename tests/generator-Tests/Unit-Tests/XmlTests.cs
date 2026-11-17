@@ -5,8 +5,8 @@ using System.IO;
 using System.Linq;
 using System.Xml.Linq;
 
-namespace generatortests
-{
+namespace generatortests;
+
 	[TestFixture]
 	public class XmlTests
 	{
@@ -287,4 +287,3 @@ namespace generatortests
 			Assert.AreEqual ("Lcom/mypackage/service;", @interface.JniName);
 		}
 	}
-}

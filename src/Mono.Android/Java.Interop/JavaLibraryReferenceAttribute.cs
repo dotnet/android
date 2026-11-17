@@ -1,6 +1,6 @@
 using System;
 
-namespace Java.Interop {
+namespace Java.Interop; 
 
 	[AttributeUsage (AttributeTargets.Assembly, AllowMultiple = true)]
 	[Obsolete ("This attribute is no longer supported.", error: true)]
@@ -15,4 +15,3 @@ namespace Java.Interop {
 
 		public string   LibraryFileName {get; private set;}
 	}
-}

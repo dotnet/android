@@ -11,8 +11,8 @@ using Microsoft.Android.Build.Tasks;
 using Irony;
 using System.Text.RegularExpressions;
 
-namespace Xamarin.Android.Tasks
-{
+namespace Xamarin.Android.Tasks;
+
 	// We have a list of files, we want to get the
 	// ones that actually exist on disk.
 	public class GetAssetPacks : AndroidTask
@@ -98,4 +98,3 @@ namespace Xamarin.Android.Tasks
 			return validAssetPackName.IsMatch (assetPackName);
 		}
 	}
-}

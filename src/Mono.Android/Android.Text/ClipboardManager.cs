@@ -2,7 +2,7 @@ using System;
 
 using Android.Content;
 
-namespace Android.Text {
+namespace Android.Text; 
 
 	public partial class ClipboardManager {
 
@@ -11,6 +11,5 @@ namespace Android.Text {
 			return context.GetSystemService (Context.ClipboardService!) as ClipboardManager;
 		}
 	}
-}
 
 

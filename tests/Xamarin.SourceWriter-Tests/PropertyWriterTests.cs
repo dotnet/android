@@ -4,34 +4,33 @@ using System.Linq;
 using System.Xml.Linq;
 using NUnit.Framework;
 
-namespace Xamarin.SourceWriter.Tests
+namespace Xamarin.SourceWriter.Tests;
+
+[TestFixture]
+public class PropertyWriterTests
 {
-	[TestFixture]
-	public class PropertyWriterTests
+	[Test]
+	public void Basics ()
 	{
-		[Test]
-		public void Basics ()
-		{
-			var property = new PropertyWriter { Name = "MyProperty", IsPublic = true, PropertyType = TypeReferenceWriter.IntPtr, HasGet = true, HasSet = true };
+		var property = new PropertyWriter { Name = "MyProperty", IsPublic = true, PropertyType = TypeReferenceWriter.IntPtr, HasGet = true, HasSet = true };
 
-			property.GetBody.Add ("return IntPtr.Zero;");
-			property.SetBody.Add ("this.Handle = value;");
+		property.GetBody.Add ("return IntPtr.Zero;");
+		property.SetBody.Add ("this.Handle = value;");
 
-			var sw = new StringWriter ();
-			var writer = new CodeWriter (sw);
+		var sw = new StringWriter ();
+		var writer = new CodeWriter (sw);
 
-			property.Write (writer);
+		property.Write (writer);
 
-			Console.WriteLine (sw.ToString ());
+		Console.WriteLine (sw.ToString ());
 
-			var expected =
+		var expected =
 @"public IntPtr MyProperty {
 	get { return IntPtr.Zero; }
 	set { this.Handle = value; }
 }
 ";
 
-			Assert.AreEqual (expected, sw.ToString ());
-		}
+		Assert.AreEqual (expected, sw.ToString ());
 	}
 }

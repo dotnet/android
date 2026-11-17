@@ -2,7 +2,7 @@ using System;
 
 using Android.Content;
 
-namespace Android.App {
+namespace Android.App; 
 
 #if ANDROID_9
 
@@ -15,7 +15,5 @@ namespace Android.App {
 	}
 
 #endif
-
-}
 
 

@@ -4,8 +4,8 @@ using System.Xml.Linq;
 using Java.Interop.Tools.Generator;
 using NUnit.Framework;
 
-namespace generatortests
-{
+namespace generatortests;
+
 	[TestFixture]
 	public class FixupXmlDocumentTests
 	{
@@ -307,4 +307,3 @@ namespace generatortests
 			return new FixupXmlDocument (XDocument.Parse ("<metadata>" + text + "</metadata>"));
 		}
 	}
-}

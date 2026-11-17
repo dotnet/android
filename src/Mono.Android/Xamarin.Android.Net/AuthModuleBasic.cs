@@ -4,8 +4,8 @@ using System.Text;
 
 using Java.Net;
 
-namespace Xamarin.Android.Net
-{
+namespace Xamarin.Android.Net;
+
 	sealed class AuthModuleBasic : IAndroidAuthenticationModule
 	{
 		public AuthenticationScheme Scheme { get; } = AuthenticationScheme.Basic;
@@ -21,7 +21,7 @@ namespace Xamarin.Android.Net
 			if (header?.IndexOf ("basic", StringComparison.OrdinalIgnoreCase) == -1)
 				return null;
 
-                        return InternalAuthenticate (request, credentials);
+                    return InternalAuthenticate (request, credentials);
 		}
 		
 		public Authorization? PreAuthenticate (HttpURLConnection request, ICredentials credentials)
@@ -30,7 +30,7 @@ namespace Xamarin.Android.Net
 		}
 
 		Authorization? InternalAuthenticate (HttpURLConnection request, ICredentials credentials)
-                {
+            {
 			if (request == null || credentials == null)
 				return null;
 
@@ -50,6 +50,5 @@ namespace Xamarin.Android.Net
 			response += cred.UserName + ":" + cred.Password;
 
 			return new Authorization ($"{AuthenticationType} {Convert.ToBase64String (Encoding.ASCII.GetBytes (response))}");
-                }
+            }
 	}
-}

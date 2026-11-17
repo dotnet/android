@@ -1,6 +1,6 @@
 using System;
 
-namespace Android.Graphics {
+namespace Android.Graphics; 
 
 #if ANDROID_8
 	/// <summary>
@@ -80,4 +80,3 @@ namespace Android.Graphics {
 		}
 	}
 #endif
-}

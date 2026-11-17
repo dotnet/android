@@ -3,8 +3,6 @@ using System.Collections.Generic;
 
 using Android.Runtime;
 
-namespace Java.Lang {
+namespace Java.Lang; 
 
 	public partial interface ICharSequence : IEnumerable<char> {}
-
-}

@@ -1,8 +1,8 @@
 using System;
 using Android.Runtime;
 
-namespace Android.Net.Wifi.P2p
-{
+namespace Android.Net.Wifi.P2p;
+
 	// This was converted to an enum in .NET 9
 	partial class WifiP2pManager
 	{
@@ -14,4 +14,3 @@ namespace Android.Net.Wifi.P2p
 		[Register ("WIFI_P2P_DISCOVERY_STOPPED")]
 		public const int WifiP2pDiscoveryStopped = (int) 1;
 	}
-}

@@ -1,8 +1,8 @@
-﻿using System;
+using System;
 using NUnit.Framework;
 
-namespace generatortests
-{
+namespace generatortests;
+
 	[TestFixture]
 	public class StaticProperties : BaseGeneratorTest
 	{
@@ -15,5 +15,4 @@ namespace generatortests
 					expectedRelativePath:   "StaticProperties");
 		}
 	}
-}
 

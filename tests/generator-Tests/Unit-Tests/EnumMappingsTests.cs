@@ -10,8 +10,8 @@ using NUnit.Framework;
 
 using Java.Interop.Tools.Generator;
 
-namespace generatortests
-{
+namespace generatortests;
+
 	[TestFixture]
 	public class EnumMappingsTests
 	{
@@ -384,4 +384,3 @@ namespace generatortests
 			Assert.AreEqual (expected, lines);
 		}
 	}
-}

@@ -1,4 +1,4 @@
-﻿using NUnit.Framework;
+using NUnit.Framework;
 using System;
 using System.Net.WebSockets;
 using System.Threading;
@@ -6,104 +6,103 @@ using System.Threading.Tasks;
 
 using Xamarin.Android.NetTests;
 
-namespace System.NetTests
+namespace System.NetTests;
+
+[TestFixture]
+public class WebSocketTests
 {
-	[TestFixture]
-	public class WebSocketTests
+	[Test, Category ("InetAccess")]
+	public void TestSocketConnection()
 	{
-		[Test, Category ("InetAccess")]
-		public void TestSocketConnection()
+		string testMessage = "This is a test!";
+		var messageBytes = CustomWebSocket.GetBytes (testMessage);
+		CustomWebSocket.BytesSize = messageBytes.Length;
+		using var server = LocalWebSocketServer.Start ();
+		var result = CustomWebSocket.Connect (server.Url, messageBytes).Result;
+		Assert.AreEqual (result, testMessage, $"Socket test failed. Expected: {testMessage}, Received: {result}");
+		server.AssertNoUnhandledExceptions ();
+	}
+}
+
+public class CustomWebSocket
+{
+	static string ResponseMessage { get; set; }
+	public static int BytesSize { get; set; }
+	static readonly Lock consoleLock = new ();
+	static readonly TimeSpan delay = TimeSpan.FromMilliseconds (1000);
+
+	public static async Task<string> Connect (string uri, byte[] message)
+	{
+		ClientWebSocket clientWebSocket = null;
+		clientWebSocket = new ClientWebSocket ();
+		await clientWebSocket.ConnectAsync (new Uri (uri), CancellationToken.None).ConfigureAwait (false);
+		await Task.WhenAll (Receive (clientWebSocket), Send(clientWebSocket, message)).ConfigureAwait (false);
+
+		if (clientWebSocket != null)
+			clientWebSocket.Dispose ();
+
+		return GetResponse ();
+	}
+
+	static string GetResponse ()
+	{
+		lock (consoleLock)
 		{
-			string testMessage = "This is a test!";
-			var messageBytes = CustomWebSocket.GetBytes (testMessage);
-			CustomWebSocket.BytesSize = messageBytes.Length;
-			using var server = LocalWebSocketServer.Start ();
-			var result = CustomWebSocket.Connect (server.Url, messageBytes).Result;
-			Assert.AreEqual (result, testMessage, $"Socket test failed. Expected: {testMessage}, Received: {result}");
-			server.AssertNoUnhandledExceptions ();
+			Console.WriteLine ("Client WebSocket closed");
+			return ResponseMessage;
 		}
 	}
 
-	public class CustomWebSocket
+	static async Task Send (ClientWebSocket webSocket, byte[] message)
 	{
-		static string ResponseMessage { get; set; }
-		public static int BytesSize { get; set; }
-		static readonly Lock consoleLock = new ();
-		static readonly TimeSpan delay = TimeSpan.FromMilliseconds (1000);
-
-		public static async Task<string> Connect (string uri, byte[] message)
+		if (webSocket.State == WebSocketState.Open)
 		{
-			ClientWebSocket clientWebSocket = null;
-			clientWebSocket = new ClientWebSocket ();
-			await clientWebSocket.ConnectAsync (new Uri (uri), CancellationToken.None).ConfigureAwait (false);
-			await Task.WhenAll (Receive (clientWebSocket), Send(clientWebSocket, message)).ConfigureAwait (false);
-
-			if (clientWebSocket != null)
-				clientWebSocket.Dispose ();
-
-			return GetResponse ();
+			await webSocket.SendAsync (new ArraySegment<byte> (message), WebSocketMessageType.Binary, false, CancellationToken.None);
+			LogStatus (false, message, message.Length);
+			await Task.Delay (delay);
 		}
+	}
 
-		static string GetResponse ()
+	static async Task Receive (ClientWebSocket webSocket)
+	{
+		byte[] buffer = new byte[BytesSize];
+		if (webSocket.State == WebSocketState.Open)
 		{
-			lock (consoleLock)
+			var result = await webSocket.ReceiveAsync (new ArraySegment<byte> (buffer), CancellationToken.None);
+			if (result.MessageType == WebSocketMessageType.Close)
 			{
-				Console.WriteLine ("Client WebSocket closed");
-				return ResponseMessage;
+				await webSocket.CloseAsync (WebSocketCloseStatus.NormalClosure, string.Empty, CancellationToken.None);
+			}
+			else
+			{
+				LogStatus (true, buffer, result.Count);
 			}
 		}
+	}
 
-		static async Task Send (ClientWebSocket webSocket, byte[] message)
+	static void LogStatus (bool receiving, byte[] buffer, int length)
+	{
+		lock (consoleLock)
 		{
-			if (webSocket.State == WebSocketState.Open)
-			{
-				await webSocket.SendAsync (new ArraySegment<byte> (message), WebSocketMessageType.Binary, false, CancellationToken.None);
-				LogStatus (false, message, message.Length);
-				await Task.Delay (delay);
-			}
-		}
+			Console.Write (string.Format ("{0} {1} bytes", receiving ? "Received" : "Sent", length));
+			Console.WriteLine (GetString (buffer));
 
-		static async Task Receive (ClientWebSocket webSocket)
-		{
-			byte[] buffer = new byte[BytesSize];
-			if (webSocket.State == WebSocketState.Open)
-			{
-				var result = await webSocket.ReceiveAsync (new ArraySegment<byte> (buffer), CancellationToken.None);
-				if (result.MessageType == WebSocketMessageType.Close)
-				{
-					await webSocket.CloseAsync (WebSocketCloseStatus.NormalClosure, string.Empty, CancellationToken.None);
-				}
-				else
-				{
-					LogStatus (true, buffer, result.Count);
-				}
-			}
+			if (receiving)
+				ResponseMessage = GetString (buffer);
 		}
+	}
 
-		static void LogStatus (bool receiving, byte[] buffer, int length)
-		{
-			lock (consoleLock)
-			{
-				Console.Write (string.Format ("{0} {1} bytes", receiving ? "Received" : "Sent", length));
-				Console.WriteLine (GetString (buffer));
+	public static byte[] GetBytes (string str)
+	{
+		byte[] bytes = new byte[str.Length * sizeof (char)];
+		Buffer.BlockCopy (str.ToCharArray (), 0, bytes, 0, bytes.Length);
+		return bytes;
+	}
 
-				if (receiving)
-					ResponseMessage = GetString (buffer);
-			}
-		}
-
-		public static byte[] GetBytes (string str)
-		{
-			byte[] bytes = new byte[str.Length * sizeof (char)];
-			Buffer.BlockCopy (str.ToCharArray (), 0, bytes, 0, bytes.Length);
-			return bytes;
-		}
-
-		static string GetString (byte[] bytes)
-		{
-			char[] chars = new char[bytes.Length / sizeof (char)];
-			Buffer.BlockCopy (bytes, 0, chars, 0, bytes.Length);
-			return new string (chars);
-		}
+	static string GetString (byte[] bytes)
+	{
+		char[] chars = new char[bytes.Length / sizeof (char)];
+		Buffer.BlockCopy (bytes, 0, chars, 0, bytes.Length);
+		return new string (chars);
 	}
 }

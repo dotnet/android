@@ -3,8 +3,8 @@ using System.Collections.Generic;
 using MonoDroid.Generation;
 using NUnit.Framework;
 
-namespace generatortests
-{
+namespace generatortests;
+
 	public class InterfaceTests
 	{
 		[Test]
@@ -54,4 +54,3 @@ namespace generatortests
 			Assert.AreEqual (1, iface.Methods.Count);
 		}
 	}
-}

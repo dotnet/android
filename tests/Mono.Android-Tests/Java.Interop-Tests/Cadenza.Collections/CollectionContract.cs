@@ -36,217 +36,216 @@ using NUnit.Framework;
 using Cadenza.Collections;
 using Cadenza.Tests;
 
-namespace Cadenza.Collections.Tests {
+namespace Cadenza.Collections.Tests; 
 
-	// NOTE:  when adding new tests to this type, add them to the
-	//        RunAllTests() method as well.
-	//        RunAllTests() is used by IDictionaryContract<T>.Keys()/.Values()
-	//        to test the behavior of the .Keys/.Values read-only collections.
-	//
-	// NOTE:  No test may use [ExpectedException]; use Assert.Throws<T> instead.
-	public abstract class CollectionContract<T> : BaseRocksFixture {
+// NOTE:  when adding new tests to this type, add them to the
+//        RunAllTests() method as well.
+//        RunAllTests() is used by IDictionaryContract<T>.Keys()/.Values()
+//        to test the behavior of the .Keys/.Values read-only collections.
+//
+// NOTE:  No test may use [ExpectedException]; use Assert.Throws<T> instead.
+public abstract class CollectionContract<T> : BaseRocksFixture {
 
-		protected abstract ICollection<T> CreateCollection (IEnumerable<T> values);
-		protected abstract T CreateValueA ();
-		protected abstract T CreateValueB ();
+	protected abstract ICollection<T> CreateCollection (IEnumerable<T> values);
+	protected abstract T CreateValueA ();
+	protected abstract T CreateValueB ();
 
-		public void RunAllTests ()
-		{
-			Add ();
-			Clear ();
-			Contains ();
-			CopyTo_Exceptions ();
-			CopyTo_SequenceComparison ();
-			CopyTo ();
-			Ctor_CopySequence ();
-			Ctor_Initial_Count_Is_Zero ();
-			Remove ();
+	public void RunAllTests ()
+	{
+		Add ();
+		Clear ();
+		Contains ();
+		CopyTo_Exceptions ();
+		CopyTo_SequenceComparison ();
+		CopyTo ();
+		Ctor_CopySequence ();
+		Ctor_Initial_Count_Is_Zero ();
+		Remove ();
+	}
+
+	[Test]
+	public void Ctor_Initial_Count_Is_Zero ()
+	{
+		var c = CreateCollection (new T [0]);
+		Assert.AreEqual (0, c.Count);
+		Dispose (c);
+	}
+
+	protected static void Dispose (object value)
+	{
+		var d = value as IDisposable;
+		if (d != null)
+			d.Dispose ();
+	}
+
+	protected static void DisposeCollection (IEnumerable c)
+	{
+		if (c == null)
+			return;
+		foreach (var e in c)
+			Dispose (e);
+	}
+
+	[Test]
+	public void Ctor_CopySequence ()
+	{
+		var e = new[] {
+			CreateValueA (),
+			CreateValueB (),
+		};
+		var c = CreateCollection (e);
+		Assert.AreEqual (e.Length,  c.Count);
+
+		Dispose (c);
+		DisposeCollection (e);
+	}
+
+	[Test]
+	public void Add ()
+	{
+		var c = CreateCollection (new T [0]);
+		var n = c.Count;
+		var a = CreateValueA ();
+
+		try {
+			c.Add (a);
+			Assert.AreEqual (n+1, c.Count);
+		}
+		catch (NotSupportedException) {
+			Assert.IsTrue (c.IsReadOnly || IsFixedSize (c));
 		}
 
-		[Test]
-		public void Ctor_Initial_Count_Is_Zero ()
-		{
-			var c = CreateCollection (new T [0]);
-			Assert.AreEqual (0, c.Count);
-			Dispose (c);
+		Dispose (c);
+		Dispose (a);
+	}
+
+	protected static bool IsFixedSize (ICollection<T> c)
+	{
+		var l = c as IList;
+		return l != null && l.IsFixedSize;
+	}
+
+	[Test]
+	public void Clear ()
+	{
+		var a = CreateValueA ();
+		var c = CreateCollection (new []{a});
+		try {
+			c.Clear ();
+			Assert.AreEqual (IsFixedSize (c) ? 1 : 0, c.Count);
+		}
+		catch (NotSupportedException) {
+			Assert.IsTrue (c.IsReadOnly);
 		}
 
-		protected static void Dispose (object value)
-		{
-			var d = value as IDisposable;
-			if (d != null)
-				d.Dispose ();
+		Dispose (c);
+		Dispose (a);
+	}
+
+	[Test]
+	public void Contains ()
+	{
+		var a = CreateValueA ();
+
+		var c = CreateCollection (new []{a});
+		Assert.IsTrue (c.Contains (a));
+		var b = CreateValueB ();
+		Assert.IsFalse (c.Contains (b));
+
+		Dispose (c);
+		Dispose (b);
+		Dispose (a);
+	}
+
+	[Test]
+	public void CopyTo_Exceptions ()
+	{
+		var e = new[] {
+			CreateValueA (),
+			CreateValueB (),
+		};
+		var c = CreateCollection (e);
+		Assert.Throws<ArgumentNullException>(() => c.CopyTo (null, 0));
+		Assert.Throws<ArgumentOutOfRangeException>(() => c.CopyTo (new T [3], -1));
+		var d = new T[e.Length + 2];
+		// not enough space from d[3..d.Length-1] to hold c.Count elements.
+		Assert.Throws<ArgumentException>(() => c.CopyTo (d, 3));
+		Assert.Throws<ArgumentException>(() => c.CopyTo (new T [0], 0));
+
+		Dispose (c);
+		DisposeCollection (e);
+	}
+
+	// can fail for IDictionary<TKey,TValue> implementations; override if appropriate.
+	[Test]
+	public virtual void CopyTo_SequenceComparison ()
+	{
+		var a = CreateValueA ();
+		var b = CreateValueB ();
+
+		var coll = CreateCollection (new []{a, b});
+		var d = new T [4];
+		coll.CopyTo (d, 1);
+		Assert.IsTrue (
+			SequenceEqual (
+					new []{default (T), a, b, default (T)},
+					d));
+
+		Dispose (coll);
+		DisposeCollection (d);
+		Dispose (b);
+		Dispose (a);
+	}
+
+	protected virtual bool SequenceEqual (IEnumerable<T> a, IEnumerable<T> b)
+	{
+		return a.SequenceEqual (b);
+	}
+
+	[Test]
+	public void CopyTo ()
+	{
+		var a = CreateValueA ();
+		var b = CreateValueB ();
+
+		var coll = CreateCollection (new []{a, b});
+		var d = new T [5];
+		coll.CopyTo (d, 1);
+		Assert.IsTrue (IndexOf (d, a) >= 0);
+		Assert.IsTrue (IndexOf (d, b) >= 0);
+
+		Dispose (coll);
+		DisposeCollection (d);
+		Dispose (b);
+		Dispose (a);
+	}
+
+	protected virtual int IndexOf (T[] array, T value)
+	{
+		return Array.IndexOf (array, value);
+	}
+
+	[Test]
+	public void Remove ()
+	{
+		var a = CreateValueA ();
+		var b = CreateValueB ();
+
+		var coll = CreateCollection (new []{a});
+		int n = coll.Count;
+		try {
+			Assert.IsFalse (coll.Remove (b));
+			Assert.AreEqual (n, coll.Count);
+			Assert.IsTrue (coll.Remove (a));
+			Assert.AreEqual (n-1, coll.Count);
+		}
+		catch (NotSupportedException) {
+			Assert.IsTrue (coll.IsReadOnly || IsFixedSize (coll));
 		}
 
-		protected static void DisposeCollection (IEnumerable c)
-		{
-			if (c == null)
-				return;
-			foreach (var e in c)
-				Dispose (e);
-		}
-
-		[Test]
-		public void Ctor_CopySequence ()
-		{
-			var e = new[] {
-				CreateValueA (),
-				CreateValueB (),
-			};
-			var c = CreateCollection (e);
-			Assert.AreEqual (e.Length,  c.Count);
-
-			Dispose (c);
-			DisposeCollection (e);
-		}
-
-		[Test]
-		public void Add ()
-		{
-			var c = CreateCollection (new T [0]);
-			var n = c.Count;
-			var a = CreateValueA ();
-
-			try {
-				c.Add (a);
-				Assert.AreEqual (n+1, c.Count);
-			}
-			catch (NotSupportedException) {
-				Assert.IsTrue (c.IsReadOnly || IsFixedSize (c));
-			}
-
-			Dispose (c);
-			Dispose (a);
-		}
-
-		protected static bool IsFixedSize (ICollection<T> c)
-		{
-			var l = c as IList;
-			return l != null && l.IsFixedSize;
-		}
-
-		[Test]
-		public void Clear ()
-		{
-			var a = CreateValueA ();
-			var c = CreateCollection (new []{a});
-			try {
-				c.Clear ();
-				Assert.AreEqual (IsFixedSize (c) ? 1 : 0, c.Count);
-			}
-			catch (NotSupportedException) {
-				Assert.IsTrue (c.IsReadOnly);
-			}
-
-			Dispose (c);
-			Dispose (a);
-		}
-
-		[Test]
-		public void Contains ()
-		{
-			var a = CreateValueA ();
-
-			var c = CreateCollection (new []{a});
-			Assert.IsTrue (c.Contains (a));
-			var b = CreateValueB ();
-			Assert.IsFalse (c.Contains (b));
-
-			Dispose (c);
-			Dispose (b);
-			Dispose (a);
-		}
-
-		[Test]
-		public void CopyTo_Exceptions ()
-		{
-			var e = new[] {
-				CreateValueA (),
-				CreateValueB (),
-			};
-			var c = CreateCollection (e);
-			Assert.Throws<ArgumentNullException>(() => c.CopyTo (null, 0));
-			Assert.Throws<ArgumentOutOfRangeException>(() => c.CopyTo (new T [3], -1));
-			var d = new T[e.Length + 2];
-			// not enough space from d[3..d.Length-1] to hold c.Count elements.
-			Assert.Throws<ArgumentException>(() => c.CopyTo (d, 3));
-			Assert.Throws<ArgumentException>(() => c.CopyTo (new T [0], 0));
-
-			Dispose (c);
-			DisposeCollection (e);
-		}
-
-		// can fail for IDictionary<TKey,TValue> implementations; override if appropriate.
-		[Test]
-		public virtual void CopyTo_SequenceComparison ()
-		{
-			var a = CreateValueA ();
-			var b = CreateValueB ();
-
-			var coll = CreateCollection (new []{a, b});
-			var d = new T [4];
-			coll.CopyTo (d, 1);
-			Assert.IsTrue (
-				SequenceEqual (
-						new []{default (T), a, b, default (T)},
-						d));
-
-			Dispose (coll);
-			DisposeCollection (d);
-			Dispose (b);
-			Dispose (a);
-		}
-
-		protected virtual bool SequenceEqual (IEnumerable<T> a, IEnumerable<T> b)
-		{
-			return a.SequenceEqual (b);
-		}
-
-		[Test]
-		public void CopyTo ()
-		{
-			var a = CreateValueA ();
-			var b = CreateValueB ();
-
-			var coll = CreateCollection (new []{a, b});
-			var d = new T [5];
-			coll.CopyTo (d, 1);
-			Assert.IsTrue (IndexOf (d, a) >= 0);
-			Assert.IsTrue (IndexOf (d, b) >= 0);
-
-			Dispose (coll);
-			DisposeCollection (d);
-			Dispose (b);
-			Dispose (a);
-		}
-
-		protected virtual int IndexOf (T[] array, T value)
-		{
-			return Array.IndexOf (array, value);
-		}
-
-		[Test]
-		public void Remove ()
-		{
-			var a = CreateValueA ();
-			var b = CreateValueB ();
-
-			var coll = CreateCollection (new []{a});
-			int n = coll.Count;
-			try {
-				Assert.IsFalse (coll.Remove (b));
-				Assert.AreEqual (n, coll.Count);
-				Assert.IsTrue (coll.Remove (a));
-				Assert.AreEqual (n-1, coll.Count);
-			}
-			catch (NotSupportedException) {
-				Assert.IsTrue (coll.IsReadOnly || IsFixedSize (coll));
-			}
-
-			Dispose (coll);
-			Dispose (b);
-			Dispose (a);
-		}
+		Dispose (coll);
+		Dispose (b);
+		Dispose (a);
 	}
 }
 

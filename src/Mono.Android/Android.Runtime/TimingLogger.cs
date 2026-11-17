@@ -1,8 +1,8 @@
 using System;
 using System.Diagnostics;
 
-namespace Android.Runtime
-{
+namespace Android.Runtime;
+
 	/// <summary>
 	///   A class which uses a monotonic managed timer to measure time spent executing a portion of code bracketed
 	///   with calls to <see cref="Start"/> (or the constructor, by default) and <see cref="Stop"/>.
@@ -124,4 +124,3 @@ namespace Android.Runtime
 			}
 		}
 	}
-}

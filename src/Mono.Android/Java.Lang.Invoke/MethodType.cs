@@ -1,7 +1,7 @@
 using System.Linq;
 
-namespace Java.Lang.Invoke
-{
+namespace Java.Lang.Invoke;
+
 #if ANDROID_34
 	// A new interface (Java.Lang.Invoke.ITypeDescriptor.IOfMethod) was added to the MethodType class in API-34.
 	// The existing methods have covariant return types so they cannot fulfill the interface contract,
@@ -21,4 +21,3 @@ namespace Java.Lang.Invoke
 			=> InsertParameterTypes (num, ptypesToInsert?.Cast<Java.Lang.Class> ().ToArray ());
 	}
 #endif
-}

@@ -2,7 +2,7 @@ using System;
 using Android.OS;
 using Android.Runtime;
 
-namespace Android.Content {
+namespace Android.Content; 
 
 	public abstract partial class Context {
 
@@ -33,4 +33,3 @@ namespace Android.Content {
 #pragma warning restore CS0618
 #endif
 	}
-}

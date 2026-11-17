@@ -11,8 +11,8 @@ using Java.Interop.Tools.TypeNameMappings;
 using Microsoft.Android.Runtime;
 using RuntimeFeature = Microsoft.Android.Runtime.RuntimeFeature;
 
-namespace Android.Runtime
-{
+namespace Android.Runtime;
+
 	static internal partial class JNIEnvInit
 	{
 #pragma warning disable 0649
@@ -208,4 +208,3 @@ namespace Android.Runtime
 		static void SetSynchronizationContext () =>
 			SynchronizationContext.SetSynchronizationContext (Android.App.Application.SynchronizationContext);
 	}
-}

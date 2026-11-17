@@ -2,8 +2,8 @@
 
 using System;
 
-namespace Java.Interop
-{
+namespace Java.Interop;
+
 	static class JniSystem {
 		static JniType? _typeRef;
 		static JniType TypeRef {
@@ -22,4 +22,3 @@ namespace Java.Interop
 			}
 		}
 	}
-}

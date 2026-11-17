@@ -12,8 +12,8 @@ using Microsoft.Build.Utilities;
 
 using Microsoft.Android.Build.Tasks;
 
-namespace Xamarin.Android.Tasks
-{
+namespace Xamarin.Android.Tasks;
+
 	public class MergeRemapXml : AndroidTask
 	{
 		public  override    string      TaskPrefix      => "MRX";
@@ -97,4 +97,3 @@ namespace Xamarin.Android.Tasks
 			}
 		}
 	}
-}

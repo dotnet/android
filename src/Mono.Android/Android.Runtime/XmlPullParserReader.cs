@@ -8,8 +8,8 @@ using Android.Content.Res;
 using Android.Runtime;
 using Org.XmlPull.V1;
 
-namespace Android.Runtime
-{
+namespace Android.Runtime;
+
 	public class XmlResourceParserReader : XmlPullParserReader
 	{
 		IXmlResourceParser source;
@@ -397,4 +397,3 @@ namespace Android.Runtime
 			return new XmlPullParserReader (inst);
 		}
 	}
-}

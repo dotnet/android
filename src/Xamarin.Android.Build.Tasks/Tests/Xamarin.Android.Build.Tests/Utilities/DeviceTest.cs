@@ -15,619 +15,618 @@ using System.Xml.XPath;
 using Xamarin.ProjectTools;
 using System.Runtime.InteropServices;
 
-namespace Xamarin.Android.Build.Tests
+namespace Xamarin.Android.Build.Tests;
+
+public class DeviceTest: BaseTest
 {
-	public class DeviceTest: BaseTest
+	public const string GuestUserName = "guest1";
+
+	// When running on CI we often see failures where the test fails to spot the "Displayed:" line
+	// because time between when we start logging and when the application actually is launched
+	// by the emulator is longer than the timeout we specify (usually 30s). Use this constant as the
+	// default timeout for all the activity start monitoring calls, adjust per-test as necessary.
+	//
+	// Sometimes emulators, for whatever reason, launch the app after a delay of up to 100s and the
+	// logcat is filled with time-consuming Java exceptions unrelated to our test. We need to account
+	// for that. Most of the tests used 30s as the activity start timeout, so let's give the emulator
+	// up to 2 minutes to gather all its ducks in the row + 30 "standard" seconds for our test app
+	// to start.
+	//
+	// It is recommended that no test waiting for the "Displayed:" message waits shorter than this
+	public const int ActivityStartTimeoutInSeconds = 150;
+
+	protected string DeviceAbi { get; private set; }
+
+	protected int DeviceSdkVersion { get; private set;}
+
+	static string _shellEchoOutput = null;
+	protected static bool IsDeviceAttached (bool refreshCachedValue = false)
 	{
-		public const string GuestUserName = "guest1";
+		if (string.IsNullOrEmpty (_shellEchoOutput) || refreshCachedValue) {
+			// run this twice as sometimes the first time returns the
+			// device as "offline".
+			RunAdbCommand ("devices");
+			var devices = RunAdbCommand ("devices");
+			TestContext.Out.WriteLine ($"LOG adb devices: {devices}");
+			_shellEchoOutput = RunAdbCommand ("shell echo OK", timeout: 15);
+		}
+		return _shellEchoOutput.Contains ("OK");
+	}
 
-		// When running on CI we often see failures where the test fails to spot the "Displayed:" line
-		// because time between when we start logging and when the application actually is launched
-		// by the emulator is longer than the timeout we specify (usually 30s). Use this constant as the
-		// default timeout for all the activity start monitoring calls, adjust per-test as necessary.
-		//
-		// Sometimes emulators, for whatever reason, launch the app after a delay of up to 100s and the
-		// logcat is filled with time-consuming Java exceptions unrelated to our test. We need to account
-		// for that. Most of the tests used 30s as the activity start timeout, so let's give the emulator
-		// up to 2 minutes to gather all its ducks in the row + 30 "standard" seconds for our test app
-		// to start.
-		//
-		// It is recommended that no test waiting for the "Displayed:" message waits shorter than this
-		public const int ActivityStartTimeoutInSeconds = 150;
-
-		protected string DeviceAbi { get; private set; }
-
-		protected int DeviceSdkVersion { get; private set;}
-
-		static string _shellEchoOutput = null;
-		protected static bool IsDeviceAttached (bool refreshCachedValue = false)
-		{
-			if (string.IsNullOrEmpty (_shellEchoOutput) || refreshCachedValue) {
-				// run this twice as sometimes the first time returns the
-				// device as "offline".
-				RunAdbCommand ("devices");
-				var devices = RunAdbCommand ("devices");
-				TestContext.Out.WriteLine ($"LOG adb devices: {devices}");
-				_shellEchoOutput = RunAdbCommand ("shell echo OK", timeout: 15);
+	/// <summary>
+	/// Checks if there is a device available
+	/// * Defaults to Assert.Fail ()
+	/// </summary>
+	public void AssertHasDevices (bool fail = true)
+	{
+		if (!IsDeviceAttached (refreshCachedValue: true)) {
+			var message = "This test requires an attached device or emulator.";
+			if (fail) {
+				Assert.Fail (message);
+			} else {
+				Assert.Ignore (message);
 			}
-			return _shellEchoOutput.Contains ("OK");
+		}
+	}
+
+	/// <summary>
+	/// Probes the Android package manager service the same way `bundletool build-apks
+	/// --connected-device` (which runs `pm list features`) and `adb install` do. On CI the
+	/// emulator's system_server sometimes wedges while `adb shell echo OK` still succeeds, so
+	/// <see cref="IsDeviceAttached"/> reports the device as healthy even though every subsequent
+	/// build/install fails deep inside a test with a cryptic
+	/// "Failure calling service package: Broken pipe" (XABAS0000). Retries a few times so a
+	/// momentary hiccup does not trigger an unnecessary emulator restart.
+	/// </summary>
+	protected static bool IsPackageManagerResponsive (out string diagnostic)
+	{
+		string output = "";
+		for (int attempt = 0; attempt < 3; attempt++) {
+			output = (RunAdbCommand ("shell pm list features", timeout: 30) ?? "").Trim ();
+			bool broken = output.Contains ("Failure calling service", StringComparison.OrdinalIgnoreCase) ||
+				output.Contains ("Broken pipe", StringComparison.OrdinalIgnoreCase) ||
+				output.Contains ("Can't find service", StringComparison.OrdinalIgnoreCase);
+			// A responsive package service always lists the framework's own features.
+			if (!broken && output.Contains ("feature:", StringComparison.OrdinalIgnoreCase)) {
+				diagnostic = output;
+				return true;
+			}
+			WaitFor ((int) TimeSpan.FromSeconds (2).TotalMilliseconds);
+		}
+		diagnostic = output;
+		return false;
+	}
+
+	/// <summary>
+	/// Fails fast, with a clear reason, when the emulator's package manager service is
+	/// unusable — instead of letting the app build/install fail cryptically later and
+	/// reporting an emulator crash as N unrelated test failures. Attempts one emulator
+	/// restart first; if the service is still broken the run is marked inconclusive
+	/// (an infrastructure problem, not a product regression).
+	/// </summary>
+	protected void AssertPackageManagerResponsive ()
+	{
+		if (IsPackageManagerResponsive (out _)) {
+			return;
 		}
 
-		/// <summary>
-		/// Checks if there is a device available
-		/// * Defaults to Assert.Fail ()
-		/// </summary>
-		public void AssertHasDevices (bool fail = true)
-		{
-			if (!IsDeviceAttached (refreshCachedValue: true)) {
-				var message = "This test requires an attached device or emulator.";
-				if (fail) {
-					Assert.Fail (message);
+		TestContext.Out.WriteLine ("Android package manager service is unresponsive; restarting the emulator.");
+		RestartDevice ();
+		AssertHasDevices ();
+
+		if (!IsPackageManagerResponsive (out string diagnostic)) {
+			Assert.Inconclusive (
+				"Android package manager service is unresponsive even after restarting the emulator " +
+				"(system_server likely crashed). Skipping so an emulator failure is not reported as a test failure. " +
+				$"Last 'adb shell pm list features' output: {diagnostic}");
+		}
+	}
+
+	[OneTimeSetUp]
+	public void DeviceSetup ()
+	{
+		if (IsDeviceAttached ()) {
+			try {
+				DeviceSdkVersion = GetSdkVersion ();
+				if (DeviceSdkVersion != -1) {
+					if (DeviceSdkVersion >= 21)
+						DeviceAbi = RunAdbCommand ("shell getprop ro.product.cpu.abilist64").Trim ();
+
+					if (string.IsNullOrEmpty (DeviceAbi))
+						DeviceAbi = (RunAdbCommand ("shell getprop ro.product.cpu.abi") ?? RunAdbCommand ("shell getprop ro.product.cpu.abi2")) ?? "x86_64";
+
+					if (DeviceAbi.Contains (",")) {
+						DeviceAbi = DeviceAbi.Split (',')[0];
+					}
 				} else {
-					Assert.Ignore (message);
+					TestContext.Out.WriteLine ($"LOG GetSdkVersion: {DeviceSdkVersion}");
+					DeviceAbi = "x86_64";
 				}
+			} catch (Exception ex) {
+				Console.Error.WriteLine ("Failed to determine whether there is Android target emulator or not: " + ex);
+			}
+			SetAdbLogcatBufferSize (128);
+			CreateGuestUser (GuestUserName);
+			return;
+		}
+		TestContext.Out.WriteLine ($"LOG DeviceSetup: No Device!!!!");
+		DeviceAbi = RuntimeInformation.OSArchitecture == Architecture.Arm64 ? "arm64-v8a" : "x86_64";
+	}
+
+	[OneTimeTearDown]
+	protected virtual void DeviceTearDown ()
+	{
+		if (IsDeviceAttached ()) {
+			// make sure we are not on a guest user anymore.
+			SwitchUser ();
+			DeleteGuestUser (GuestUserName);
+
+			var packages = TestPackageNames.Values.ToArray ();
+			TestPackageNames.Clear ();
+			foreach (var package in packages) {
+				RunAdbCommand ($"uninstall {package}");
 			}
 		}
+	}
 
-		/// <summary>
-		/// Probes the Android package manager service the same way `bundletool build-apks
-		/// --connected-device` (which runs `pm list features`) and `adb install` do. On CI the
-		/// emulator's system_server sometimes wedges while `adb shell echo OK` still succeeds, so
-		/// <see cref="IsDeviceAttached"/> reports the device as healthy even though every subsequent
-		/// build/install fails deep inside a test with a cryptic
-		/// "Failure calling service package: Broken pipe" (XABAS0000). Retries a few times so a
-		/// momentary hiccup does not trigger an unnecessary emulator restart.
-		/// </summary>
-		protected static bool IsPackageManagerResponsive (out string diagnostic)
-		{
-			string output = "";
-			for (int attempt = 0; attempt < 3; attempt++) {
-				output = (RunAdbCommand ("shell pm list features", timeout: 30) ?? "").Trim ();
-				bool broken = output.Contains ("Failure calling service", StringComparison.OrdinalIgnoreCase) ||
-					output.Contains ("Broken pipe", StringComparison.OrdinalIgnoreCase) ||
-					output.Contains ("Can't find service", StringComparison.OrdinalIgnoreCase);
-				// A responsive package service always lists the framework's own features.
-				if (!broken && output.Contains ("feature:", StringComparison.OrdinalIgnoreCase)) {
-					diagnostic = output;
-					return true;
-				}
-				WaitFor ((int) TimeSpan.FromSeconds (2).TotalMilliseconds);
-			}
-			diagnostic = output;
-			return false;
-		}
-
-		/// <summary>
-		/// Fails fast, with a clear reason, when the emulator's package manager service is
-		/// unusable — instead of letting the app build/install fail cryptically later and
-		/// reporting an emulator crash as N unrelated test failures. Attempts one emulator
-		/// restart first; if the service is still broken the run is marked inconclusive
-		/// (an infrastructure problem, not a product regression).
-		/// </summary>
-		protected void AssertPackageManagerResponsive ()
-		{
-			if (IsPackageManagerResponsive (out _)) {
-				return;
-			}
-
-			TestContext.Out.WriteLine ("Android package manager service is unresponsive; restarting the emulator.");
+	[SetUp]
+	public virtual void SetupTest ()
+	{
+		if (!IsDeviceAttached (refreshCachedValue: true)) {
+			// something went wrong with the emulator.
+			// lets restart it.
 			RestartDevice ();
 			AssertHasDevices ();
-
-			if (!IsPackageManagerResponsive (out string diagnostic)) {
-				Assert.Inconclusive (
-					"Android package manager service is unresponsive even after restarting the emulator " +
-					"(system_server likely crashed). Skipping so an emulator failure is not reported as a test failure. " +
-					$"Last 'adb shell pm list features' output: {diagnostic}");
-			}
 		}
 
-		[OneTimeSetUp]
-		public void DeviceSetup ()
-		{
-			if (IsDeviceAttached ()) {
-				try {
-					DeviceSdkVersion = GetSdkVersion ();
-					if (DeviceSdkVersion != -1) {
-						if (DeviceSdkVersion >= 21)
-							DeviceAbi = RunAdbCommand ("shell getprop ro.product.cpu.abilist64").Trim ();
+		// `adb shell echo OK` can succeed while the package manager service is wedged, so
+		// verify it is responsive before a test wastes time building/installing an app that
+		// would otherwise fail with a cryptic "Failure calling service package" error.
+		AssertPackageManagerResponsive ();
 
-						if (string.IsNullOrEmpty (DeviceAbi))
-							DeviceAbi = (RunAdbCommand ("shell getprop ro.product.cpu.abi") ?? RunAdbCommand ("shell getprop ro.product.cpu.abi2")) ?? "x86_64";
+		// We want to start with a clean logcat buffer for each test
+		ClearAdbLogcat ();
+	}
 
-						if (DeviceAbi.Contains (",")) {
-							DeviceAbi = DeviceAbi.Split (',')[0];
-						}
-					} else {
-						TestContext.Out.WriteLine ($"LOG GetSdkVersion: {DeviceSdkVersion}");
-						DeviceAbi = "x86_64";
-					}
-				} catch (Exception ex) {
-					Console.Error.WriteLine ("Failed to determine whether there is Android target emulator or not: " + ex);
-				}
-				SetAdbLogcatBufferSize (128);
-				CreateGuestUser (GuestUserName);
-				return;
-			}
-			TestContext.Out.WriteLine ($"LOG DeviceSetup: No Device!!!!");
-			DeviceAbi = RuntimeInformation.OSArchitecture == Architecture.Arm64 ? "arm64-v8a" : "x86_64";
-		}
+	[TearDown]
+	protected override void CleanupTest ()
+	{
+		if (TestContext.CurrentContext.Result.Outcome.Status == TestStatus.Failed && IsDeviceAttached () &&
+				TestOutputDirectories.TryGetValue (TestContext.CurrentContext.Test.ID, out string outputDir)) {
+			Directory.CreateDirectory (outputDir);
+			string local = Path.Combine (outputDir, "screenshot.png");
+			string deviceLog = Path.Combine (outputDir, "logcat-failed.log");
+			string remote = "/data/local/tmp/screenshot.png";
+			string localUi = Path.Combine (outputDir, "ui.xml");
+			RunAdbCommand ($"shell screencap {remote}");
 
-		[OneTimeTearDown]
-		protected virtual void DeviceTearDown ()
-		{
-			if (IsDeviceAttached ()) {
-				// make sure we are not on a guest user anymore.
-				SwitchUser ();
-				DeleteGuestUser (GuestUserName);
-
-				var packages = TestPackageNames.Values.ToArray ();
-				TestPackageNames.Clear ();
-				foreach (var package in packages) {
-					RunAdbCommand ($"uninstall {package}");
-				}
-			}
-		}
-
-		[SetUp]
-		public virtual void SetupTest ()
-		{
-			if (!IsDeviceAttached (refreshCachedValue: true)) {
-				// something went wrong with the emulator.
-				// lets restart it.
-				RestartDevice ();
-				AssertHasDevices ();
-			}
-
-			// `adb shell echo OK` can succeed while the package manager service is wedged, so
-			// verify it is responsive before a test wastes time building/installing an app that
-			// would otherwise fail with a cryptic "Failure calling service package" error.
-			AssertPackageManagerResponsive ();
-
-			// We want to start with a clean logcat buffer for each test
-			ClearAdbLogcat ();
-		}
-
-		[TearDown]
-		protected override void CleanupTest ()
-		{
-			if (TestContext.CurrentContext.Result.Outcome.Status == TestStatus.Failed && IsDeviceAttached () &&
-					TestOutputDirectories.TryGetValue (TestContext.CurrentContext.Test.ID, out string outputDir)) {
-				Directory.CreateDirectory (outputDir);
-				string local = Path.Combine (outputDir, "screenshot.png");
-				string deviceLog = Path.Combine (outputDir, "logcat-failed.log");
-				string remote = "/data/local/tmp/screenshot.png";
-				string localUi = Path.Combine (outputDir, "ui.xml");
-				RunAdbCommand ($"shell screencap {remote}");
-
-				// Give the app a chance to finish logging
-				WaitFor (1000);
-				var output = RunAdbCommand ($"logcat -d");
-				File.WriteAllText (deviceLog, output);
-				RunAdbCommand ($"pull {remote} \"{local}\"");
-				RunAdbCommand ($"shell rm {remote}");
-				if (File.Exists (local)) {
-					TestContext.AddTestAttachment (local);
-				} else {
-					TestContext.WriteLine ($"{local} did not exist!");
-				}
-				var ui = GetUI (timeoutInSeconds: 0);
-				ui.Save (localUi);
-				if (File.Exists (localUi)) {
-					TestContext.AddTestAttachment (localUi);
-				} else {
-					TestContext.WriteLine ($"{localUi} did not exist!");
-				}
-
-				CaptureDeviceState (outputDir);
-			}
-
-			base.CleanupTest ();
-		}
-
-		// Best-effort device-state snapshot captured on test failure so that on-device
-		// install/deploy failures can be classified from CI artifacts instead of guessed:
-		// connectivity (adb devices/get-state), disk pressure (df, dumpsys diskstats),
-		// storage-service readiness (dumpsys storaged - the StorageStatsManager NPE seen
-		// during install-create), boot completion, and how many test apps have piled up.
-		// See dotnet/android#11830.
-		static void CaptureDeviceState (string outputDir)
-		{
-			// Re-check attachment (the cached value can be stale if the device
-			// disconnected mid-test); otherwise each adb command below would wait
-			// the full timeout against an unresponsive device.
-			if (!IsDeviceAttached (refreshCachedValue: true)) {
-				TestContext.WriteLine ("No device attached; skipping device-state capture.");
-				return;
-			}
-
-			var sb = new StringBuilder ();
-			foreach (var (title, command) in new [] {
-					("adb devices -l", "devices -l"),
-					("adb get-state", "get-state"),
-					("getprop sys.boot_completed", "shell getprop sys.boot_completed"),
-					("getprop dev.bootcomplete", "shell getprop dev.bootcomplete"),
-					("df /data", "shell df /data"),
-					("df /storage/emulated/0", "shell df /storage/emulated/0"),
-					("dumpsys diskstats", "shell dumpsys diskstats"),
-					("dumpsys storaged", "shell dumpsys storaged"),
-					("pm list packages -3", "shell pm list packages -3"),
-				}) {
-				sb.AppendLine (CultureInfo.InvariantCulture, $"===== {title} =====");
-				sb.AppendLine (RunAdbCommand (command));
-				sb.AppendLine ();
-			}
-
-			string localState = Path.Combine (outputDir, "device-state-failed.log");
-			File.WriteAllText (localState, sb.ToString ());
-			if (File.Exists (localState)) {
-				TestContext.AddTestAttachment (localState);
+			// Give the app a chance to finish logging
+			WaitFor (1000);
+			var output = RunAdbCommand ($"logcat -d");
+			File.WriteAllText (deviceLog, output);
+			RunAdbCommand ($"pull {remote} \"{local}\"");
+			RunAdbCommand ($"shell rm {remote}");
+			if (File.Exists (local)) {
+				TestContext.AddTestAttachment (local);
 			} else {
-				TestContext.WriteLine ($"{localState} did not exist!");
+				TestContext.WriteLine ($"{local} did not exist!");
 			}
-		}
-
-		protected int GetSdkVersion ()
-		{
-			var command = $"shell getprop ro.build.version.sdk";
-			var result = RunAdbCommand (command);
-			if (result.Contains ("*")) {
-				// Run the command again, we likely got:
-				// * daemon not running; starting now at tcp:5037
-				// * daemon started successfully
-				// adb.exe: device offline
-				TestContext.WriteLine ($"Retrying:\n{command}\n{result}");
-				result = RunAdbCommand (command);
+			var ui = GetUI (timeoutInSeconds: 0);
+			ui.Save (localUi);
+			if (File.Exists (localUi)) {
+				TestContext.AddTestAttachment (localUi);
+			} else {
+				TestContext.WriteLine ($"{localUi} did not exist!");
 			}
-			if (!int.TryParse (result, out var sdkVersion)) {
-				sdkVersion = -1;
+
+			CaptureDeviceState (outputDir);
+		}
+
+		base.CleanupTest ();
+	}
+
+	// Best-effort device-state snapshot captured on test failure so that on-device
+	// install/deploy failures can be classified from CI artifacts instead of guessed:
+	// connectivity (adb devices/get-state), disk pressure (df, dumpsys diskstats),
+	// storage-service readiness (dumpsys storaged - the StorageStatsManager NPE seen
+	// during install-create), boot completion, and how many test apps have piled up.
+	// See dotnet/android#11830.
+	static void CaptureDeviceState (string outputDir)
+	{
+		// Re-check attachment (the cached value can be stale if the device
+		// disconnected mid-test); otherwise each adb command below would wait
+		// the full timeout against an unresponsive device.
+		if (!IsDeviceAttached (refreshCachedValue: true)) {
+			TestContext.WriteLine ("No device attached; skipping device-state capture.");
+			return;
+		}
+
+		var sb = new StringBuilder ();
+		foreach (var (title, command) in new [] {
+				("adb devices -l", "devices -l"),
+				("adb get-state", "get-state"),
+				("getprop sys.boot_completed", "shell getprop sys.boot_completed"),
+				("getprop dev.bootcomplete", "shell getprop dev.bootcomplete"),
+				("df /data", "shell df /data"),
+				("df /storage/emulated/0", "shell df /storage/emulated/0"),
+				("dumpsys diskstats", "shell dumpsys diskstats"),
+				("dumpsys storaged", "shell dumpsys storaged"),
+				("pm list packages -3", "shell pm list packages -3"),
+			}) {
+			sb.AppendLine (CultureInfo.InvariantCulture, $"===== {title} =====");
+			sb.AppendLine (RunAdbCommand (command));
+			sb.AppendLine ();
+		}
+
+		string localState = Path.Combine (outputDir, "device-state-failed.log");
+		File.WriteAllText (localState, sb.ToString ());
+		if (File.Exists (localState)) {
+			TestContext.AddTestAttachment (localState);
+		} else {
+			TestContext.WriteLine ($"{localState} did not exist!");
+		}
+	}
+
+	protected int GetSdkVersion ()
+	{
+		var command = $"shell getprop ro.build.version.sdk";
+		var result = RunAdbCommand (command);
+		if (result.Contains ("*")) {
+			// Run the command again, we likely got:
+			// * daemon not running; starting now at tcp:5037
+			// * daemon started successfully
+			// adb.exe: device offline
+			TestContext.WriteLine ($"Retrying:\n{command}\n{result}");
+			result = RunAdbCommand (command);
+		}
+		if (!int.TryParse (result, out var sdkVersion)) {
+			sdkVersion = -1;
+		}
+		return sdkVersion;
+	}
+
+	public static void RestartDevice ()
+	{
+		TestContext.Out.WriteLine ($"Trying to restart Emulator");
+		// shell out to msbuild and start the emulator again
+		var dotnet = new DotNetCLI (Path.Combine (XABuildPaths.TopDirectory, "src", "Xamarin.Android.Build.Tasks", "Tests", "Xamarin.Android.Build.Tests", "Emulator.csproj"));
+		dotnet.ProjectDirectory = XABuildPaths.TestAssemblyOutputDirectory;
+		if (!dotnet.Build ("AcquireAndroidTarget", parameters: new string[] { "TestAvdForceCreation=false", $"Configuration={XABuildPaths.Configuration}" })) {
+			bool isTransient = dotnet.LastBuildOutput.Any (line =>
+				line.Contains ("did not finish launching", StringComparison.OrdinalIgnoreCase) ||
+				line.Contains ("Emulator failed to start", StringComparison.OrdinalIgnoreCase) ||
+				line.Contains ("failed to exit within the timeout", StringComparison.OrdinalIgnoreCase));
+			if (isTransient) {
+				Assert.Inconclusive ("Failed to acquire emulator due to transient infrastructure issue.");
 			}
-			return sdkVersion;
+			Assert.Fail ("Failed to acquire emulator.");
 		}
+		WaitFor ((int)TimeSpan.FromSeconds (5).TotalMilliseconds);
+	}
 
-		public static void RestartDevice ()
-		{
-			TestContext.Out.WriteLine ($"Trying to restart Emulator");
-			// shell out to msbuild and start the emulator again
-			var dotnet = new DotNetCLI (Path.Combine (XABuildPaths.TopDirectory, "src", "Xamarin.Android.Build.Tasks", "Tests", "Xamarin.Android.Build.Tests", "Emulator.csproj"));
-			dotnet.ProjectDirectory = XABuildPaths.TestAssemblyOutputDirectory;
-			if (!dotnet.Build ("AcquireAndroidTarget", parameters: new string[] { "TestAvdForceCreation=false", $"Configuration={XABuildPaths.Configuration}" })) {
-				bool isTransient = dotnet.LastBuildOutput.Any (line =>
-					line.Contains ("did not finish launching", StringComparison.OrdinalIgnoreCase) ||
-					line.Contains ("Emulator failed to start", StringComparison.OrdinalIgnoreCase) ||
-					line.Contains ("failed to exit within the timeout", StringComparison.OrdinalIgnoreCase));
-				if (isTransient) {
-					Assert.Inconclusive ("Failed to acquire emulator due to transient infrastructure issue.");
-				}
-				Assert.Fail ("Failed to acquire emulator.");
-			}
-			WaitFor ((int)TimeSpan.FromSeconds (5).TotalMilliseconds);
-		}
+	protected static void RunAdbInput (string command, params object [] args)
+	{
+		RunAdbCommand ($"shell {command} {string.Join (" ", args)}");
+	}
 
-		protected static void RunAdbInput (string command, params object [] args)
-		{
-			RunAdbCommand ($"shell {command} {string.Join (" ", args)}");
-		}
+	protected static string SetAdbLogcatBufferSize (int sizeInMeg)
+	{
+		return RunAdbCommand ($"logcat -G {sizeInMeg}M");
+	}
 
-		protected static string SetAdbLogcatBufferSize (int sizeInMeg)
-		{
-			return RunAdbCommand ($"logcat -G {sizeInMeg}M");
-		}
+	protected static string ClearAdbLogcat ()
+	{
+		return RunAdbCommand ("logcat -c");
+	}
 
-		protected static string ClearAdbLogcat ()
-		{
-			return RunAdbCommand ("logcat -c");
-		}
+	protected static string ClearShellProp (string propName)
+	{
+		return RunAdbCommand ($"shell setprop {propName} \"''\"");
+	}
 
-		protected static string ClearShellProp (string propName)
-		{
-			return RunAdbCommand ($"shell setprop {propName} \"''\"");
-		}
+	protected static string AdbStartActivity (string activity)
+	{
+		return RunAdbCommand ($"shell am start -S -n \"{activity}\"");
+	}
 
-		protected static string AdbStartActivity (string activity)
-		{
-			return RunAdbCommand ($"shell am start -S -n \"{activity}\"");
-		}
+	protected static void RunProjectAndAssert (XamarinAndroidApplicationProject proj, ProjectBuilder builder, string logName = "run.log", Dictionary<string, string> environmentVariables = null, bool doNotCleanupOnUpdate = false, string [] parameters = null)
+	{
+		builder.BuildLogFile = logName;
+		Assert.True (builder.RunTarget (proj, "Run", doNotCleanupOnUpdate: doNotCleanupOnUpdate, parameters: parameters, environmentVariables: environmentVariables), "Project should have run.");
+	}
 
-		protected static void RunProjectAndAssert (XamarinAndroidApplicationProject proj, ProjectBuilder builder, string logName = "run.log", Dictionary<string, string> environmentVariables = null, bool doNotCleanupOnUpdate = false, string [] parameters = null)
-		{
-			builder.BuildLogFile = logName;
-			Assert.True (builder.RunTarget (proj, "Run", doNotCleanupOnUpdate: doNotCleanupOnUpdate, parameters: parameters, environmentVariables: environmentVariables), "Project should have run.");
-		}
+	protected static void StartActivityAndAssert (XamarinAndroidApplicationProject proj)
+	{
+		var result = AdbStartActivity ($"{proj.PackageName}/{proj.JavaPackageName}.MainActivity");
+		Assert.IsTrue (result.Contains ("Starting: Intent { cmp="), $"Attempt to start activity failed with:\n{result}");
+	}
 
-		protected static void StartActivityAndAssert (XamarinAndroidApplicationProject proj)
-		{
-			var result = AdbStartActivity ($"{proj.PackageName}/{proj.JavaPackageName}.MainActivity");
-			Assert.IsTrue (result.Contains ("Starting: Intent { cmp="), $"Attempt to start activity failed with:\n{result}");
-		}
+	protected TimeSpan ProfileFor (Func<bool> func, TimeSpan? timeout = null)
+	{
+		var stopwatch = new Stopwatch ();
+		stopwatch.Start ();
+		WaitFor (timeout ?? TimeSpan.FromMinutes (1), func);
+		stopwatch.Stop ();
+		return stopwatch.Elapsed;
+	}
 
-		protected TimeSpan ProfileFor (Func<bool> func, TimeSpan? timeout = null)
-		{
-			var stopwatch = new Stopwatch ();
-			stopwatch.Start ();
-			WaitFor (timeout ?? TimeSpan.FromMinutes (1), func);
-			stopwatch.Stop ();
-			return stopwatch.Elapsed;
-		}
+	protected static bool MonitorAdbLogcat (Func<string, bool> action, string logcatFilePath, int timeout = 15, Action? onMonitoringStarted = null)
+	{
+		string ext = Environment.OSVersion.Platform != PlatformID.Unix ? ".exe" : "";
+		string adb = Path.Combine (AndroidSdkPath, "platform-tools", "adb" + ext);
+		string adbTarget = Environment.GetEnvironmentVariable ("ADB_TARGET");
+		var info = new ProcessStartInfo (adb, $"{adbTarget} logcat") {
+			RedirectStandardOutput = true,
+			RedirectStandardError = true,
+			UseShellExecute = false,
+			CreateNoWindow = true,
+			WindowStyle = ProcessWindowStyle.Hidden,
+		};
 
-		protected static bool MonitorAdbLogcat (Func<string, bool> action, string logcatFilePath, int timeout = 15, Action? onMonitoringStarted = null)
-		{
-			string ext = Environment.OSVersion.Platform != PlatformID.Unix ? ".exe" : "";
-			string adb = Path.Combine (AndroidSdkPath, "platform-tools", "adb" + ext);
-			string adbTarget = Environment.GetEnvironmentVariable ("ADB_TARGET");
-			var info = new ProcessStartInfo (adb, $"{adbTarget} logcat") {
-				RedirectStandardOutput = true,
-				RedirectStandardError = true,
-				UseShellExecute = false,
-				CreateNoWindow = true,
-				WindowStyle = ProcessWindowStyle.Hidden,
-			};
-
-			bool didActionSucceed = false;
-			using (var sw = File.CreateText (logcatFilePath)) {
-				// Process already-buffered logcat lines first so startup messages emitted before
-				// this monitor starts are still visible to tests.
-				if (TryMatchLogcatOutput (RunAdbCommand ("logcat -d"), sw, action)) {
-					sw.Flush ();
-					return true;
-				}
-
-				using (var proc = Process.Start (info)) {
-					try {
-						onMonitoringStarted?.Invoke ();
-						using var cts = new CancellationTokenSource (TimeSpan.FromSeconds (timeout));
-						foreach (var line in proc.ReadAllLinesAsync (cts.Token).ToBlockingEnumerable ()) {
-							sw.WriteLine (line.Content);
-							if (action (line.Content)) {
-								didActionSucceed = true;
-								break;
-							}
-						}
-					} catch (OperationCanceledException) {
-					} finally {
-						proc.Kill ();
-						proc.WaitForExit ();
-						sw.Flush ();
-					}
-					return didActionSucceed;
-				}
-			}
-		}
-
-		static bool TryMatchLogcatOutput (string output, TextWriter logcatOutput, Func<string, bool> action)
-		{
-			bool didActionSucceed = false;
-			using (var sr = new StringReader (output ?? "")) {
-				string line = sr.ReadLine ();
-				while (line != null) {
-					logcatOutput.WriteLine (line);
-					if (action (line)) {
-						didActionSucceed = true;
-						break;
-					}
-					line = sr.ReadLine ();
-				}
-			}
-			return didActionSucceed;
-		}
-
-		protected static bool WaitForDebuggerToStart (string logcatFilePath, int timeout = 120)
-		{
-			bool result = MonitorAdbLogcat ((line) => {
-				return line.IndexOf ("Trying to initialize the debugger with options:", StringComparison.OrdinalIgnoreCase) > 0;
-			}, logcatFilePath, timeout);
-			return result;
-		}
-
-		static Regex regex = new Regex (@"\s*(\++)(?<seconds>\d+)s(?<milliseconds>\d+)ms", RegexOptions.Compiled | RegexOptions.ExplicitCapture);
-
-		protected static bool WaitForPermissionActivity (string logcatFilePath, int timeout = 5)
-		{
-			string activityNamespace = "com.android.permissioncontroller";
-			string activityName = "com.android.packageinstaller.permission.ui.ReviewPermissionsActivity";
-			bool result = WaitForActivityToStart (activityNamespace, activityName, logcatFilePath, timeout);
-			if (result)
-				ClickButton ("", "com.android.permissioncontroller:id/continue_button", "CONTINUE");
-			return result;
-		}
-
-		protected static void ClearBlockingDialogs ()
-		{
-			ClickButton ("", "android:id/aerr_wait", "Wait");
-			WaitFor ((int)TimeSpan.FromSeconds (2).TotalMilliseconds);
-		}
-
-		protected static bool WaitForAppBuiltForOlderAndroidWarning (string packageName, string logcatFilePath, int timeout = 5)
-		{
-			bool result = MonitorAdbLogcat ((line) => {
-				return line.Contains ($"ActivityTaskManager: Showing SDK deprecation warning for package {packageName}");
-			}, logcatFilePath, timeout);
-			if (result)
-				ClickButton ("", "android:id/button1", "OK");
-			return result;
-		}
-
-		protected static bool WaitForActivityToStart (string activityNamespace, string activityName, string logcatFilePath, int timeout = 120)
-		{
-			return WaitForActivityToStart (activityNamespace, activityName, logcatFilePath, out TimeSpan time, timeout);
-		}
-
-		protected static bool WaitForActivityToStart (string activityNamespace, string activityName, string logcatFilePath, out TimeSpan startupTime, int timeout = 120)
-		{
-			startupTime = TimeSpan.Zero;
-			string capturedLine = string.Empty;
-			bool result = MonitorAdbLogcat ((line) => {
-				capturedLine = line;
-				var idx1 = line.IndexOf ("ActivityManager: Displayed", StringComparison.OrdinalIgnoreCase);
-				var idx2 = idx1 > 0 ? 0 : line.IndexOf ("ActivityTaskManager: Displayed", StringComparison.OrdinalIgnoreCase);
-				return (idx1 > 0 || idx2 > 0) && line.Contains (activityNamespace) && line.Contains (activityName);
-			}, logcatFilePath, timeout);
-			var match = regex.Match (capturedLine);
-			if (match.Success) {
-				startupTime = new TimeSpan (0, 0, 0,
-					int.Parse (match.Groups ["seconds"].Value, CultureInfo.InvariantCulture),
-					int.Parse (match.Groups ["milliseconds"].Value, CultureInfo.InvariantCulture));
-			}
-			if (result)
+		bool didActionSucceed = false;
+		using (var sw = File.CreateText (logcatFilePath)) {
+			// Process already-buffered logcat lines first so startup messages emitted before
+			// this monitor starts are still visible to tests.
+			if (TryMatchLogcatOutput (RunAdbCommand ("logcat -d"), sw, action)) {
+				sw.Flush ();
 				return true;
-
-			string activityState = RunAdbCommand ("shell dumpsys activity activities", timeout: 10);
-			result = IsActivityResumed (activityState, activityNamespace, activityName);
-			string diagnostics = $"""
-
-				===== Activity start detection: {(result ? "resumed" : "not detected")} =====
-				===== dumpsys activity activities =====
-				{activityState}
-				===== pidof {activityNamespace} =====
-				{RunAdbCommand ($"shell pidof {activityNamespace}", timeout: 5)}
-				""";
-			if (!result) {
-				diagnostics += $"""
-					===== dumpsys window windows =====
-					{RunAdbCommand ("shell dumpsys window windows", timeout: 10)}
-					""";
 			}
-			File.AppendAllText (logcatFilePath, diagnostics);
-			TestContext.Out.WriteLine (diagnostics);
-			return result;
-		}
 
-		static bool IsActivityResumed (string activityState, string activityNamespace, string activityName)
-		{
-			string componentPrefix = activityNamespace + "/";
-			foreach (string line in activityState.Split ('\n')) {
-				if (!line.Contains ("ResumedActivity", StringComparison.OrdinalIgnoreCase))
-					continue;
-				foreach (string field in line.Split (new [] { ' ', '\t' }, StringSplitOptions.RemoveEmptyEntries)) {
-					if (!field.StartsWith (componentPrefix, StringComparison.OrdinalIgnoreCase))
-						continue;
-					string activity = field.Substring (componentPrefix.Length).TrimStart ('.');
-					return activity.Equals (activityName, StringComparison.OrdinalIgnoreCase) ||
-						activity.EndsWith ("." + activityName, StringComparison.OrdinalIgnoreCase);
+			using (var proc = Process.Start (info)) {
+				try {
+					onMonitoringStarted?.Invoke ();
+					using var cts = new CancellationTokenSource (TimeSpan.FromSeconds (timeout));
+					foreach (var line in proc.ReadAllLinesAsync (cts.Token).ToBlockingEnumerable ()) {
+						sw.WriteLine (line.Content);
+						if (action (line.Content)) {
+							didActionSucceed = true;
+							break;
+						}
+					}
+				} catch (OperationCanceledException) {
+				} finally {
+					proc.Kill ();
+					proc.WaitForExit ();
+					sw.Flush ();
 				}
+				return didActionSucceed;
 			}
-			return false;
 		}
+	}
 
-		protected static XDocument GetUI (int timeoutInSeconds = 120)
-		{
-			var ui = RunAdbCommand ("exec-out uiautomator dump /dev/tty");
-			int time = 0;
-			while (ui.Contains ("ERROR:")) {
-				ui = RunAdbCommand ("exec-out uiautomator dump /dev/tty");
-				WaitFor (1);
-				time += 1;
-				if (time * 1000 > timeoutInSeconds)
+	static bool TryMatchLogcatOutput (string output, TextWriter logcatOutput, Func<string, bool> action)
+	{
+		bool didActionSucceed = false;
+		using (var sr = new StringReader (output ?? "")) {
+			string line = sr.ReadLine ();
+			while (line != null) {
+				logcatOutput.WriteLine (line);
+				if (action (line)) {
+					didActionSucceed = true;
 					break;
-			}
-			ui = ui.Replace ("UI hierchary dumped to: /dev/tty", string.Empty).Trim ();
-			try {
-				return XDocument.Parse (ui);
-			} catch {
-				return XDocument.Parse ("<node />");
+				}
+				line = sr.ReadLine ();
 			}
 		}
+		return didActionSucceed;
+	}
 
-		protected static (int x, int y, int w, int h)? GetControlBounds (string packageName, string uiElement, string text, int timeoutInSeconds = 120)
-		{
-			var regex = new Regex (@"[(0-9)]\d*", RegexOptions.Compiled);
-			var uiDoc = GetUI (timeoutInSeconds);
-			var node = uiDoc.XPathSelectElement ($"//node[contains(@resource-id,'{uiElement}')]");
-			if (node == null)
-				node = uiDoc.XPathSelectElement ($"//node[contains(@content-desc,'{uiElement}')]");
-			if (node == null)
-				node = uiDoc.XPathSelectElement ($"//node[contains(@text,'{text}')]");
-			if (node == null)
-				return null;
-			var bounds = node.Attribute ("bounds");
-			var matches = regex.Matches (bounds.Value);
-			int.TryParse (matches [0].Value, out int x);
-			int.TryParse (matches [1].Value, out int y);
-			int.TryParse (matches [2].Value, out int w);
-			int.TryParse (matches [3].Value, out int h);
-			return (x: x, y: y, w: w, h: h);
+	protected static bool WaitForDebuggerToStart (string logcatFilePath, int timeout = 120)
+	{
+		bool result = MonitorAdbLogcat ((line) => {
+			return line.IndexOf ("Trying to initialize the debugger with options:", StringComparison.OrdinalIgnoreCase) > 0;
+		}, logcatFilePath, timeout);
+		return result;
+	}
+
+	static Regex regex = new Regex (@"\s*(\++)(?<seconds>\d+)s(?<milliseconds>\d+)ms", RegexOptions.Compiled | RegexOptions.ExplicitCapture);
+
+	protected static bool WaitForPermissionActivity (string logcatFilePath, int timeout = 5)
+	{
+		string activityNamespace = "com.android.permissioncontroller";
+		string activityName = "com.android.packageinstaller.permission.ui.ReviewPermissionsActivity";
+		bool result = WaitForActivityToStart (activityNamespace, activityName, logcatFilePath, timeout);
+		if (result)
+			ClickButton ("", "com.android.permissioncontroller:id/continue_button", "CONTINUE");
+		return result;
+	}
+
+	protected static void ClearBlockingDialogs ()
+	{
+		ClickButton ("", "android:id/aerr_wait", "Wait");
+		WaitFor ((int)TimeSpan.FromSeconds (2).TotalMilliseconds);
+	}
+
+	protected static bool WaitForAppBuiltForOlderAndroidWarning (string packageName, string logcatFilePath, int timeout = 5)
+	{
+		bool result = MonitorAdbLogcat ((line) => {
+			return line.Contains ($"ActivityTaskManager: Showing SDK deprecation warning for package {packageName}");
+		}, logcatFilePath, timeout);
+		if (result)
+			ClickButton ("", "android:id/button1", "OK");
+		return result;
+	}
+
+	protected static bool WaitForActivityToStart (string activityNamespace, string activityName, string logcatFilePath, int timeout = 120)
+	{
+		return WaitForActivityToStart (activityNamespace, activityName, logcatFilePath, out TimeSpan time, timeout);
+	}
+
+	protected static bool WaitForActivityToStart (string activityNamespace, string activityName, string logcatFilePath, out TimeSpan startupTime, int timeout = 120)
+	{
+		startupTime = TimeSpan.Zero;
+		string capturedLine = string.Empty;
+		bool result = MonitorAdbLogcat ((line) => {
+			capturedLine = line;
+			var idx1 = line.IndexOf ("ActivityManager: Displayed", StringComparison.OrdinalIgnoreCase);
+			var idx2 = idx1 > 0 ? 0 : line.IndexOf ("ActivityTaskManager: Displayed", StringComparison.OrdinalIgnoreCase);
+			return (idx1 > 0 || idx2 > 0) && line.Contains (activityNamespace) && line.Contains (activityName);
+		}, logcatFilePath, timeout);
+		var match = regex.Match (capturedLine);
+		if (match.Success) {
+			startupTime = new TimeSpan (0, 0, 0,
+				int.Parse (match.Groups ["seconds"].Value, CultureInfo.InvariantCulture),
+				int.Parse (match.Groups ["milliseconds"].Value, CultureInfo.InvariantCulture));
 		}
+		if (result)
+			return true;
 
-		protected static bool ClickButton (string packageName, string buttonName, string buttonText, int timeoutInSeconds = 30)
-		{
-			var bounds = GetControlBounds (packageName, buttonName, buttonText, timeoutInSeconds);
-			if (!bounds.HasValue)
-				return false;
-			RunAdbInput ("input tap", bounds.Value.x + ((bounds.Value.w - bounds.Value.x) / 2), bounds.Value.y + ((bounds.Value.h - bounds.Value.y) / 2));
+		string activityState = RunAdbCommand ("shell dumpsys activity activities", timeout: 10);
+		result = IsActivityResumed (activityState, activityNamespace, activityName);
+		string diagnostics = $"""
+
+			===== Activity start detection: {(result ? "resumed" : "not detected")} =====
+			===== dumpsys activity activities =====
+			{activityState}
+			===== pidof {activityNamespace} =====
+			{RunAdbCommand ($"shell pidof {activityNamespace}", timeout: 5)}
+			""";
+		if (!result) {
+			diagnostics += $"""
+				===== dumpsys window windows =====
+				{RunAdbCommand ("shell dumpsys window windows", timeout: 10)}
+				""";
+		}
+		File.AppendAllText (logcatFilePath, diagnostics);
+		TestContext.Out.WriteLine (diagnostics);
+		return result;
+	}
+
+	static bool IsActivityResumed (string activityState, string activityNamespace, string activityName)
+	{
+		string componentPrefix = activityNamespace + "/";
+		foreach (string line in activityState.Split ('\n')) {
+			if (!line.Contains ("ResumedActivity", StringComparison.OrdinalIgnoreCase))
+				continue;
+			foreach (string field in line.Split (new [] { ' ', '\t' }, StringSplitOptions.RemoveEmptyEntries)) {
+				if (!field.StartsWith (componentPrefix, StringComparison.OrdinalIgnoreCase))
+					continue;
+				string activity = field.Substring (componentPrefix.Length).TrimStart ('.');
+				return activity.Equals (activityName, StringComparison.OrdinalIgnoreCase) ||
+					activity.EndsWith ("." + activityName, StringComparison.OrdinalIgnoreCase);
+			}
+		}
+		return false;
+	}
+
+	protected static XDocument GetUI (int timeoutInSeconds = 120)
+	{
+		var ui = RunAdbCommand ("exec-out uiautomator dump /dev/tty");
+		int time = 0;
+		while (ui.Contains ("ERROR:")) {
+			ui = RunAdbCommand ("exec-out uiautomator dump /dev/tty");
+			WaitFor (1);
+			time += 1;
+			if (time * 1000 > timeoutInSeconds)
+				break;
+		}
+		ui = ui.Replace ("UI hierchary dumped to: /dev/tty", string.Empty).Trim ();
+		try {
+			return XDocument.Parse (ui);
+		} catch {
+			return XDocument.Parse ("<node />");
+		}
+	}
+
+	protected static (int x, int y, int w, int h)? GetControlBounds (string packageName, string uiElement, string text, int timeoutInSeconds = 120)
+	{
+		var regex = new Regex (@"[(0-9)]\d*", RegexOptions.Compiled);
+		var uiDoc = GetUI (timeoutInSeconds);
+		var node = uiDoc.XPathSelectElement ($"//node[contains(@resource-id,'{uiElement}')]");
+		if (node == null)
+			node = uiDoc.XPathSelectElement ($"//node[contains(@content-desc,'{uiElement}')]");
+		if (node == null)
+			node = uiDoc.XPathSelectElement ($"//node[contains(@text,'{text}')]");
+		if (node == null)
+			return null;
+		var bounds = node.Attribute ("bounds");
+		var matches = regex.Matches (bounds.Value);
+		int.TryParse (matches [0].Value, out int x);
+		int.TryParse (matches [1].Value, out int y);
+		int.TryParse (matches [2].Value, out int w);
+		int.TryParse (matches [3].Value, out int h);
+		return (x: x, y: y, w: w, h: h);
+	}
+
+	protected static bool ClickButton (string packageName, string buttonName, string buttonText, int timeoutInSeconds = 30)
+	{
+		var bounds = GetControlBounds (packageName, buttonName, buttonText, timeoutInSeconds);
+		if (!bounds.HasValue)
+			return false;
+		RunAdbInput ("input tap", bounds.Value.x + ((bounds.Value.w - bounds.Value.x) / 2), bounds.Value.y + ((bounds.Value.h - bounds.Value.y) / 2));
+		return true;
+	}
+
+	/// <summary>
+	/// Returns the first device listed via `adb devices`
+	///
+	/// Output is:
+	/// > adb devices
+	/// List of devices attached
+	/// 89RY0AEFA device
+	/// </summary>
+	/// <returns></returns>
+	protected static string GetAttachedDeviceSerial ()
+	{
+		var text = RunAdbCommand ("devices");
+		var lines = text.Split ('\n');
+		if (lines.Length < 2) {
+			Assert.Fail ($"Unexpected `adb devices` output: {text}");
+		}
+		var serial = lines [1];
+		var index = serial.IndexOf ('\t');
+		if (index != -1) {
+			serial = serial.Substring (0, index);
+		}
+		return serial.Trim ();
+	}
+
+	protected static string [] GetOverrideDirectoryPaths (string packageName, string abi)
+	{
+		return new string [] {
+			$"/data/data/{packageName}/files/.__override__/{abi}",
+			$"/storage/emulated/0/Android/data/{packageName}/files/.__override__/{abi}",
+			$"/mnt/shell/emulated/0/Android/data/{packageName}/files/.__override__/{abi}",
+			$"/storage/sdcard/Android/data/{packageName}/files/.__override__/{abi}",
+		};
+	}
+
+	protected static void CreateGuestUser (string username)
+	{
+		if (GetUserId (username) == -1)
+			RunAdbCommand ($"shell pm create-user --guest {username}");
+	}
+
+	protected static void DeleteGuestUser (string username)
+	{
+		int userId = GetUserId (username);
+		if (userId > 0)
+			RunAdbCommand ($"shell pm remove-user --guest {userId}");
+	}
+
+	protected static int GetUserId (string username)
+	{
+		string output = RunAdbCommand ($"shell pm list users");
+		if (string.IsNullOrEmpty (username))
+			username = "Owner";
+		Regex regex = new Regex ($@"UserInfo{{(?<userId>\d+):{username}", RegexOptions.Compiled);
+		Console.WriteLine (output);
+		var match = regex.Match (output);
+		if (match.Success) {
+			return int.Parse (match.Groups ["userId"].Value, CultureInfo.InvariantCulture);
+		}
+		return -1;
+	}
+
+	protected static bool SwitchUser (string username = "")
+	{
+		int userId = GetUserId (username);
+		if (userId == -1)
+			userId = 0;
+		if (userId >= 0) {
+			RunAdbCommand ($"shell am switch-user {userId}");
 			return true;
 		}
-
-		/// <summary>
-		/// Returns the first device listed via `adb devices`
-		///
-		/// Output is:
-		/// > adb devices
-		/// List of devices attached
-		/// 89RY0AEFA device
-		/// </summary>
-		/// <returns></returns>
-		protected static string GetAttachedDeviceSerial ()
-		{
-			var text = RunAdbCommand ("devices");
-			var lines = text.Split ('\n');
-			if (lines.Length < 2) {
-				Assert.Fail ($"Unexpected `adb devices` output: {text}");
-			}
-			var serial = lines [1];
-			var index = serial.IndexOf ('\t');
-			if (index != -1) {
-				serial = serial.Substring (0, index);
-			}
-			return serial.Trim ();
-		}
-
-		protected static string [] GetOverrideDirectoryPaths (string packageName, string abi)
-		{
-			return new string [] {
-				$"/data/data/{packageName}/files/.__override__/{abi}",
-				$"/storage/emulated/0/Android/data/{packageName}/files/.__override__/{abi}",
-				$"/mnt/shell/emulated/0/Android/data/{packageName}/files/.__override__/{abi}",
-				$"/storage/sdcard/Android/data/{packageName}/files/.__override__/{abi}",
-			};
-		}
-
-		protected static void CreateGuestUser (string username)
-		{
-			if (GetUserId (username) == -1)
-				RunAdbCommand ($"shell pm create-user --guest {username}");
-		}
-
-		protected static void DeleteGuestUser (string username)
-		{
-			int userId = GetUserId (username);
-			if (userId > 0)
-				RunAdbCommand ($"shell pm remove-user --guest {userId}");
-		}
-
-		protected static int GetUserId (string username)
-		{
-			string output = RunAdbCommand ($"shell pm list users");
-			if (string.IsNullOrEmpty (username))
-				username = "Owner";
-			Regex regex = new Regex ($@"UserInfo{{(?<userId>\d+):{username}", RegexOptions.Compiled);
-			Console.WriteLine (output);
-			var match = regex.Match (output);
-			if (match.Success) {
-				return int.Parse (match.Groups ["userId"].Value, CultureInfo.InvariantCulture);
-			}
-			return -1;
-		}
-
-		protected static bool SwitchUser (string username = "")
-		{
-			int userId = GetUserId (username);
-			if (userId == -1)
-				userId = 0;
-			if (userId >= 0) {
-				RunAdbCommand ($"shell am switch-user {userId}");
-				return true;
-			}
-			return false;
-		}
+		return false;
 	}
 }

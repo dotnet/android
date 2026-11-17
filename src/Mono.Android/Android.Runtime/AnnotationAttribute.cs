@@ -1,7 +1,7 @@
 using System;
 
-namespace Android.Runtime
-{
+namespace Android.Runtime;
+
 	public class AnnotationAttribute : Attribute
 	{
 		public AnnotationAttribute (string javaName)
@@ -11,5 +11,4 @@ namespace Android.Runtime
 
 		public string JavaName { get; private set; }
 	}
-}
 

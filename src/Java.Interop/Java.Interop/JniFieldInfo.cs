@@ -2,8 +2,8 @@
 
 using System;
 
-namespace Java.Interop
-{
+namespace Java.Interop;
+
 	public sealed class JniFieldInfo
 	{
 		public      IntPtr      ID      {get; private set;}
@@ -71,4 +71,3 @@ namespace Java.Interop
 					ID.ToString ("x"));
 		}
 	}
-}

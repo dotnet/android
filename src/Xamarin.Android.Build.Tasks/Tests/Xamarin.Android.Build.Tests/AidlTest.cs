@@ -7,32 +7,32 @@ using Microsoft.Build.Framework;
 using System.Text;
 using Xamarin.Android.Tasks;
 
-namespace Xamarin.Android.Build.Tests
+namespace Xamarin.Android.Build.Tests;
+
+[TestFixture]
+[Parallelizable (ParallelScope.Children)]
+public class AidlTest : BaseTest
 {
-	[TestFixture]
-	[Parallelizable (ParallelScope.Children)]
-	public class AidlTest : BaseTest
+	void TestAidl (string testName, string aidl, AndroidRuntime runtime)
 	{
-		void TestAidl (string testName, string aidl, AndroidRuntime runtime)
-		{
-			var proj = new XamarinAndroidApplicationProject () {
-				IsRelease = true,
-			};
-			proj.SetRuntime (runtime);
-			proj.OtherBuildItems.Add (new BuildItem (AndroidBuildActions.AndroidInterfaceDescription, "Test.aidl") { TextContent = () => aidl });
-			using (var p = CreateApkBuilder (Path.Combine ("temp", testName))) {
-				Assert.IsTrue (p.Build (proj), "Build should have succeeded.");
-			}
+		var proj = new XamarinAndroidApplicationProject () {
+			IsRelease = true,
+		};
+		proj.SetRuntime (runtime);
+		proj.OtherBuildItems.Add (new BuildItem (AndroidBuildActions.AndroidInterfaceDescription, "Test.aidl") { TextContent = () => aidl });
+		using (var p = CreateApkBuilder (Path.Combine ("temp", testName))) {
+			Assert.IsTrue (p.Build (proj), "Build should have succeeded.");
+		}
+	}
+
+	[Test]
+	public void ListAndMap ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
+	{
+		if (IgnoreUnsupportedConfiguration (runtime, release: true)) {
+			return;
 		}
 
-		[Test]
-		public void ListAndMap ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
-		{
-			if (IgnoreUnsupportedConfiguration (runtime, release: true)) {
-				return;
-			}
-
-			string aidl = @"
+		string aidl = @"
 import android.os;
 import android.view;
 import android.animation;
@@ -42,17 +42,17 @@ interface Test {
 	void map(inout Map m);
 }
 ";
-			TestAidl (TestName, aidl, runtime);
+		TestAidl (TestName, aidl, runtime);
+	}
+
+	[Test]
+	public void NamespaceResolution ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
+	{
+		if (IgnoreUnsupportedConfiguration (runtime, release: true)) {
+			return;
 		}
 
-		[Test]
-		public void NamespaceResolution ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
-		{
-			if (IgnoreUnsupportedConfiguration (runtime, release: true)) {
-				return;
-			}
-
-			string aidl = @"
+		string aidl = @"
 import android.os;
 import android.view;
 import android.animation;
@@ -60,17 +60,17 @@ import android.animation;
 interface Test {
 }
 ";
-			TestAidl (TestName, aidl, runtime);
+		TestAidl (TestName, aidl, runtime);
+	}
+
+	[Test]
+	public void PrimitiveTypes ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
+	{
+		if (IgnoreUnsupportedConfiguration (runtime, release: true)) {
+			return;
 		}
 
-		[Test]
-		public void PrimitiveTypes ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
-		{
-			if (IgnoreUnsupportedConfiguration (runtime, release: true)) {
-				return;
-			}
-
-			string aidl = @"
+		string aidl = @"
 package com.xamarin.test;
 interface Test {
 	void test0();
@@ -96,7 +96,6 @@ interface Test {
 	String [] test23 ();
 }
 ";
-			TestAidl (TestName, aidl, runtime);
-		}
+		TestAidl (TestName, aidl, runtime);
 	}
 }

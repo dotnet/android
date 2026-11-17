@@ -1,17 +1,16 @@
 // Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 
-namespace Xamarin.Android.Tools
+namespace Xamarin.Android.Tools;
+
+/// <summary>
+/// Phases of JDK installation.
+/// </summary>
+public enum JdkInstallPhase
 {
-	/// <summary>
-	/// Phases of JDK installation.
-	/// </summary>
-	public enum JdkInstallPhase
-	{
-		Downloading,
-		Verifying,
-		Extracting,
-		Validating,
-		Complete
-	}
+	Downloading,
+	Verifying,
+	Extracting,
+	Validating,
+	Complete
 }

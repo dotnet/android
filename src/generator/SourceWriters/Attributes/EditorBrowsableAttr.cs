@@ -5,13 +5,12 @@ using System.Text;
 using System.Threading.Tasks;
 using Xamarin.SourceWriter;
 
-namespace generator.SourceWriters
+namespace generator.SourceWriters;
+
+public class EditorBrowsableAttr : AttributeWriter
 {
-	public class EditorBrowsableAttr : AttributeWriter
+	public override void WriteAttribute (CodeWriter writer)
 	{
-		public override void WriteAttribute (CodeWriter writer)
-		{
-			writer.WriteLine ("[global::System.ComponentModel.EditorBrowsable (global::System.ComponentModel.EditorBrowsableState.Never)]");
-		}
+		writer.WriteLine ("[global::System.ComponentModel.EditorBrowsable (global::System.ComponentModel.EditorBrowsableState.Never)]");
 	}
 }

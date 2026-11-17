@@ -2,8 +2,8 @@
 
 using System;
 
-namespace Java.Interop
-{
+namespace Java.Interop;
+
 	[JniTypeSignature (JniTypeName, GenerateJavaPeer=false)]
 	public partial class JavaException : Exception, IJavaPeerable
 	{
@@ -360,4 +360,3 @@ namespace Java.Interop
 		// SAFETY: Only copy the address; no memory access or lifetime extension occurs in this getter.
 		IntPtr IJavaPeerable.JniObjectReferenceControlBlock => unsafe ((IntPtr) jniObjectReferenceControlBlock);
 	}
-}

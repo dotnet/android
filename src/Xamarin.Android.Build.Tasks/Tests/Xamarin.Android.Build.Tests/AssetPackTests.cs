@@ -6,269 +6,268 @@ using Xamarin.Android.Tasks;
 using Xamarin.ProjectTools;
 using System.Collections.Generic;
 
-namespace Xamarin.Android.Build.Tests
+namespace Xamarin.Android.Build.Tests;
+
+[Category ("Node-3")]
+[Parallelizable (ParallelScope.Children)]
+public class AssetPackTests : BaseTest
 {
-	[Category ("Node-3")]
-	[Parallelizable (ParallelScope.Children)]
-	public class AssetPackTests : BaseTest
+	[Test]
+	[Category ("SmokeTests")]
+	public void BuildLibraryWithAssetPack ([ValueSource (typeof (BaseTest), nameof (BaseTest.ValidRuntimeConfigurations))] (bool isRelease, AndroidRuntime runtime) configuration)
 	{
-		[Test]
-		[Category ("SmokeTests")]
-		public void BuildLibraryWithAssetPack ([ValueSource (typeof (BaseTest), nameof (BaseTest.ValidRuntimeConfigurations))] (bool isRelease, AndroidRuntime runtime) configuration)
-		{
-			var (isRelease, runtime) = configuration;
-			var path = Path.Combine ("temp", TestName);
-			var lib = new XamarinAndroidLibraryProject {
-				IsRelease = isRelease,
-				OtherBuildItems = {
-					new AndroidItem.AndroidAsset ("Assets\\asset1.txt") {
-						TextContent = () => "Asset1",
-						Encoding = Encoding.ASCII,
-						MetadataValues="AssetPack=assetpack1",
-					},
-				}
-			};
-			lib.SetRuntime (runtime);
-			using (var builder = CreateDllBuilder (Path.Combine (path, lib.ProjectName))) {
-				builder.ThrowOnBuildFailure = false;
-				Assert.IsFalse (builder.Build (lib), $"{lib.ProjectName} should fail.");
-				StringAssertEx.Contains ("error XA0138:", builder.LastBuildOutput,
-					"Build Output did not contain error XA0138'.");
+		var (isRelease, runtime) = configuration;
+		var path = Path.Combine ("temp", TestName);
+		var lib = new XamarinAndroidLibraryProject {
+			IsRelease = isRelease,
+			OtherBuildItems = {
+				new AndroidItem.AndroidAsset ("Assets\\asset1.txt") {
+					TextContent = () => "Asset1",
+					Encoding = Encoding.ASCII,
+					MetadataValues="AssetPack=assetpack1",
+				},
+			}
+		};
+		lib.SetRuntime (runtime);
+		using (var builder = CreateDllBuilder (Path.Combine (path, lib.ProjectName))) {
+			builder.ThrowOnBuildFailure = false;
+			Assert.IsFalse (builder.Build (lib), $"{lib.ProjectName} should fail.");
+			StringAssertEx.Contains ("error XA0138:", builder.LastBuildOutput,
+				"Build Output did not contain error XA0138'.");
+		}
+	}
+
+	[Test]
+	[Category ("SmokeTests")]
+	public void BuildApplicationWithAssetPackThatHasInvalidName ([ValueSource (typeof (BaseTest), nameof (BaseTest.ValidRuntimeConfigurations))] (bool isRelease, AndroidRuntime runtime) configuration)
+	{
+		var (isRelease, runtime) = configuration;
+		var path = Path.Combine ("temp", TestName);
+		var app = new XamarinAndroidApplicationProject {
+			IsRelease = isRelease,
+			OtherBuildItems = {
+				new AndroidItem.AndroidAsset ("Assets\\asset1.txt") {
+					TextContent = () => "Asset1",
+					Encoding = Encoding.ASCII,
+					MetadataValues="AssetPack=asset-pack1",
+				},
+			}
+		};
+		app.SetRuntime (runtime);
+		app.SetProperty ("AndroidPackageFormat", "aab");
+		using (var builder = CreateApkBuilder (Path.Combine (path, app.ProjectName))) {
+			builder.ThrowOnBuildFailure = false;
+			Assert.IsFalse (builder.Build (app), $"{app.ProjectName} should fail.");
+			StringAssertEx.Contains ("error XA0140:", builder.LastBuildOutput,
+				"Build Output did not contain error XA0140'.");
+		}
+	}
+
+	[Test]
+	[Category ("SmokeTests")]
+	public void BuildApplicationWithAssetPackOutsideProjectDirectory ([ValueSource (typeof (BaseTest), nameof (BaseTest.ValidRuntimeConfigurations))] (bool isRelease, AndroidRuntime runtime) configuration)
+	{
+		var (isRelease, runtime) = configuration;
+		var path = Path.Combine ("temp", TestName);
+		var app = new XamarinAndroidApplicationProject {
+			ProjectName = "MyApp",
+			IsRelease = isRelease,
+			OtherBuildItems = {
+				new AndroidItem.AndroidAsset ("..\\Assets\\asset1.txt") {
+					TextContent = () => "Asset1",
+					Encoding = Encoding.ASCII,
+					MetadataValues="AssetPack=assetpack1;Link=Assets\\asset1.txt",
+				},
+				new AndroidItem.AndroidAsset ("..\\Assets\\asset2.txt") {
+					TextContent = () => "Asset2",
+					Encoding = Encoding.ASCII,
+					MetadataValues="AssetPack=assetpack1;Link=Assets\\asset2.txt",
+				},
+				new AndroidItem.AndroidAsset ("..\\Assets\\SubDirectory\\asset3.txt") {
+					TextContent = () => "Asset2",
+					Encoding = Encoding.ASCII,
+					MetadataValues="AssetPack=assetpack1;Link=Assets\\SubDirectory\\asset3.txt",
+				},
+			}
+		};
+		app.SetRuntime (runtime);
+		app.SetProperty ("AndroidPackageFormat", "aab");
+		using (var appBuilder = CreateApkBuilder (Path.Combine (path, app.ProjectName))) {
+			Assert.IsTrue (appBuilder.Build (app), $"{app.ProjectName} should succeed");
+			// Check the final aab has the required feature files in it.
+			var aab = Path.Combine (Root, appBuilder.ProjectDirectory,
+				app.OutputPath, $"{app.PackageName}.aab");
+			using (var zip = ZipHelper.OpenZip (aab)) {
+				Assert.IsNull (zip.GetEntry ("base/assets/asset1.txt"), "aab should not contain base/assets/asset1.txt");
+				Assert.IsNull (zip.GetEntry ("base/assets/asset2.txt"), "aab should not contain base/assets/asset2.txt");
+				Assert.IsNull (zip.GetEntry ("base/assets/SubDirectory/asset3.txt"), "aab should not contain base/assets/SubDirectory/asset3.txt");
+				Assert.IsNotNull (zip.GetEntry ("assetpack1/assets/asset1.txt"), "aab should contain assetpack1/assets/asset1.txt");
+				Assert.IsNotNull (zip.GetEntry ("assetpack1/assets/asset2.txt"), "aab should contain assetpack1/assets/asset2.txt");
+				Assert.IsNotNull (zip.GetEntry ("assetpack1/assets/SubDirectory/asset3.txt"), "aab should contain assetpack1/assets/SubDirectory/asset3.txt");
+				Assert.IsNotNull (zip.GetEntry ("assetpack1/assets.pb"), "aab should contain assetpack1/assets.pb");
+				Assert.IsNull (zip.GetEntry ("assetpack1/resources.pb"), "aab should not contain assetpack1/resources.pb");
 			}
 		}
+	}
 
-		[Test]
-		[Category ("SmokeTests")]
-		public void BuildApplicationWithAssetPackThatHasInvalidName ([ValueSource (typeof (BaseTest), nameof (BaseTest.ValidRuntimeConfigurations))] (bool isRelease, AndroidRuntime runtime) configuration)
-		{
-			var (isRelease, runtime) = configuration;
-			var path = Path.Combine ("temp", TestName);
-			var app = new XamarinAndroidApplicationProject {
-				IsRelease = isRelease,
-				OtherBuildItems = {
-					new AndroidItem.AndroidAsset ("Assets\\asset1.txt") {
-						TextContent = () => "Asset1",
-						Encoding = Encoding.ASCII,
-						MetadataValues="AssetPack=asset-pack1",
-					},
-				}
-			};
-			app.SetRuntime (runtime);
-			app.SetProperty ("AndroidPackageFormat", "aab");
-			using (var builder = CreateApkBuilder (Path.Combine (path, app.ProjectName))) {
-				builder.ThrowOnBuildFailure = false;
-				Assert.IsFalse (builder.Build (app), $"{app.ProjectName} should fail.");
-				StringAssertEx.Contains ("error XA0140:", builder.LastBuildOutput,
-					"Build Output did not contain error XA0140'.");
+	[Test]
+	[Category ("SmokeTests")]
+	public void BuildApplicationWithAssetPackOverrides ([ValueSource (typeof (BaseTest), nameof (BaseTest.ValidRuntimeConfigurations))] (bool isRelease, AndroidRuntime runtime) configuration)
+	{
+		var (isRelease, runtime) = configuration;
+		var path = Path.Combine ("temp", TestName);
+		var app = new XamarinAndroidApplicationProject {
+			ProjectName = "MyApp",
+			IsRelease = isRelease,
+			OtherBuildItems = {
+				new AndroidItem.AndroidAsset ("Assets\\asset1.txt") {
+					TextContent = () => "Asset1",
+					Encoding = Encoding.ASCII,
+					MetadataValues="AssetPack=assetpack1",
+				},
+				new AndroidItem.AndroidAsset ("Assets\\asset2.txt") {
+					TextContent = () => "Asset2",
+					Encoding = Encoding.ASCII,
+					MetadataValues="AssetPack=base",
+				},
+			}
+		};
+		app.SetRuntime (runtime);
+		app.SetProperty ("AndroidPackageFormat", "aab");
+		using (var appBuilder = CreateApkBuilder (Path.Combine (path, app.ProjectName))) {
+			Assert.IsTrue (appBuilder.Build (app), $"{app.ProjectName} should succeed");
+			// Check the final aab has the required feature files in it.
+			var aab = Path.Combine (Root, appBuilder.ProjectDirectory,
+				app.OutputPath, $"{app.PackageName}.aab");
+			using (var zip = ZipHelper.OpenZip (aab)) {
+				Assert.IsNull (zip.GetEntry ("base/assets/asset1.txt"), "aab should not contain base/assets/asset1.txt");
+				Assert.IsNotNull (zip.GetEntry ("base/assets/asset2.txt"), "aab should contain base/assets/asset2.txt");
+				Assert.IsNotNull (zip.GetEntry ("assetpack1/assets/asset1.txt"), "aab should contain assetpack1/assets/asset1.txt");
+				Assert.IsNull (zip.GetEntry ("assetpack1/assets/asset2.txt"), "aab should not contain assetpack1/assets/asset2.txt");
+				Assert.IsNotNull (zip.GetEntry ("assetpack1/assets.pb"), "aab should contain assetpack1/assets.pb");
+				Assert.IsNull (zip.GetEntry ("assetpack1/resources.pb"), "aab should not contain assetpack1/resources.pb");
 			}
 		}
+	}
 
-		[Test]
-		[Category ("SmokeTests")]
-		public void BuildApplicationWithAssetPackOutsideProjectDirectory ([ValueSource (typeof (BaseTest), nameof (BaseTest.ValidRuntimeConfigurations))] (bool isRelease, AndroidRuntime runtime) configuration)
-		{
-			var (isRelease, runtime) = configuration;
-			var path = Path.Combine ("temp", TestName);
-			var app = new XamarinAndroidApplicationProject {
-				ProjectName = "MyApp",
-				IsRelease = isRelease,
-				OtherBuildItems = {
-					new AndroidItem.AndroidAsset ("..\\Assets\\asset1.txt") {
-						TextContent = () => "Asset1",
-						Encoding = Encoding.ASCII,
-						MetadataValues="AssetPack=assetpack1;Link=Assets\\asset1.txt",
-					},
-					new AndroidItem.AndroidAsset ("..\\Assets\\asset2.txt") {
-						TextContent = () => "Asset2",
-						Encoding = Encoding.ASCII,
-						MetadataValues="AssetPack=assetpack1;Link=Assets\\asset2.txt",
-					},
-					new AndroidItem.AndroidAsset ("..\\Assets\\SubDirectory\\asset3.txt") {
-						TextContent = () => "Asset2",
-						Encoding = Encoding.ASCII,
-						MetadataValues="AssetPack=assetpack1;Link=Assets\\SubDirectory\\asset3.txt",
-					},
-				}
-			};
-			app.SetRuntime (runtime);
-			app.SetProperty ("AndroidPackageFormat", "aab");
-			using (var appBuilder = CreateApkBuilder (Path.Combine (path, app.ProjectName))) {
-				Assert.IsTrue (appBuilder.Build (app), $"{app.ProjectName} should succeed");
-				// Check the final aab has the required feature files in it.
-				var aab = Path.Combine (Root, appBuilder.ProjectDirectory,
-					app.OutputPath, $"{app.PackageName}.aab");
-				using (var zip = ZipHelper.OpenZip (aab)) {
-					Assert.IsNull (zip.GetEntry ("base/assets/asset1.txt"), "aab should not contain base/assets/asset1.txt");
-					Assert.IsNull (zip.GetEntry ("base/assets/asset2.txt"), "aab should not contain base/assets/asset2.txt");
-					Assert.IsNull (zip.GetEntry ("base/assets/SubDirectory/asset3.txt"), "aab should not contain base/assets/SubDirectory/asset3.txt");
-					Assert.IsNotNull (zip.GetEntry ("assetpack1/assets/asset1.txt"), "aab should contain assetpack1/assets/asset1.txt");
-					Assert.IsNotNull (zip.GetEntry ("assetpack1/assets/asset2.txt"), "aab should contain assetpack1/assets/asset2.txt");
-					Assert.IsNotNull (zip.GetEntry ("assetpack1/assets/SubDirectory/asset3.txt"), "aab should contain assetpack1/assets/SubDirectory/asset3.txt");
-					Assert.IsNotNull (zip.GetEntry ("assetpack1/assets.pb"), "aab should contain assetpack1/assets.pb");
-					Assert.IsNull (zip.GetEntry ("assetpack1/resources.pb"), "aab should not contain assetpack1/resources.pb");
-				}
+	[Test]
+	public void BuildApplicationWithAssetPackInShellSensitiveDirectory ()
+	{
+		var path = Path.Combine ("temp", TestName, "app$HOME%PATH%'q");
+		var app = new XamarinAndroidApplicationProject {
+			ProjectName = "MyApp",
+			OtherBuildItems = {
+				new AndroidItem.AndroidAsset ("Assets\\asset1.txt") {
+					TextContent = () => "Asset1",
+					Encoding = Encoding.ASCII,
+					MetadataValues="AssetPack=assetpack1",
+				},
+			}
+		};
+		app.SetProperty ("AndroidPackageFormat", "aab");
+		using (var appBuilder = CreateApkBuilder (Path.Combine (path, app.ProjectName))) {
+			Assert.IsTrue (appBuilder.Build (app), $"{app.ProjectName} should succeed");
+			var quotedSegment = IsWindows ? "app$HOME%%PATH%%'q" : "app$HOME%PATH%'\\''q";
+			Assert.IsTrue (appBuilder.LastBuildOutput.ContainsText (quotedSegment),
+				$"aapt2 link command should contain the escaped path segment `{quotedSegment}`.");
+			var aab = Path.Combine (Root, appBuilder.ProjectDirectory,
+				app.OutputPath, $"{app.PackageName}.aab");
+			using (var zip = ZipHelper.OpenZip (aab)) {
+				Assert.IsNotNull (zip.GetEntry ("assetpack1/assets/asset1.txt"), "aab should contain assetpack1/assets/asset1.txt");
+				Assert.IsNotNull (zip.GetEntry ("assetpack1/assets.pb"), "aab should contain assetpack1/assets.pb");
 			}
 		}
+	}
 
-		[Test]
-		[Category ("SmokeTests")]
-		public void BuildApplicationWithAssetPackOverrides ([ValueSource (typeof (BaseTest), nameof (BaseTest.ValidRuntimeConfigurations))] (bool isRelease, AndroidRuntime runtime) configuration)
-		{
-			var (isRelease, runtime) = configuration;
-			var path = Path.Combine ("temp", TestName);
-			var app = new XamarinAndroidApplicationProject {
-				ProjectName = "MyApp",
-				IsRelease = isRelease,
-				OtherBuildItems = {
-					new AndroidItem.AndroidAsset ("Assets\\asset1.txt") {
-						TextContent = () => "Asset1",
-						Encoding = Encoding.ASCII,
-						MetadataValues="AssetPack=assetpack1",
-					},
-					new AndroidItem.AndroidAsset ("Assets\\asset2.txt") {
-						TextContent = () => "Asset2",
-						Encoding = Encoding.ASCII,
-						MetadataValues="AssetPack=base",
-					},
-				}
-			};
-			app.SetRuntime (runtime);
-			app.SetProperty ("AndroidPackageFormat", "aab");
-			using (var appBuilder = CreateApkBuilder (Path.Combine (path, app.ProjectName))) {
-				Assert.IsTrue (appBuilder.Build (app), $"{app.ProjectName} should succeed");
-				// Check the final aab has the required feature files in it.
-				var aab = Path.Combine (Root, appBuilder.ProjectDirectory,
-					app.OutputPath, $"{app.PackageName}.aab");
-				using (var zip = ZipHelper.OpenZip (aab)) {
-					Assert.IsNull (zip.GetEntry ("base/assets/asset1.txt"), "aab should not contain base/assets/asset1.txt");
-					Assert.IsNotNull (zip.GetEntry ("base/assets/asset2.txt"), "aab should contain base/assets/asset2.txt");
-					Assert.IsNotNull (zip.GetEntry ("assetpack1/assets/asset1.txt"), "aab should contain assetpack1/assets/asset1.txt");
-					Assert.IsNull (zip.GetEntry ("assetpack1/assets/asset2.txt"), "aab should not contain assetpack1/assets/asset2.txt");
-					Assert.IsNotNull (zip.GetEntry ("assetpack1/assets.pb"), "aab should contain assetpack1/assets.pb");
-					Assert.IsNull (zip.GetEntry ("assetpack1/resources.pb"), "aab should not contain assetpack1/resources.pb");
-				}
+	[Test]
+	[Category ("SmokeTests")]
+	public void BuildApplicationWithAssetPack ([ValueSource (typeof (BaseTest), nameof (BaseTest.ValidRuntimeConfigurations))] (bool isRelease, AndroidRuntime runtime) configuration)
+	{
+		var (isRelease, runtime) = configuration;
+		var path = Path.Combine ("temp", TestName);
+		var asset3 = new AndroidItem.AndroidAsset ("Assets\\asset3.txt") {
+			TextContent = () => "Asset3",
+			Encoding = Encoding.ASCII,
+			MetadataValues="AssetPack=assetpack1",
+		};
+		var app = new XamarinAndroidApplicationProject {
+			ProjectName = "MyApp",
+			IsRelease = isRelease,
+			OtherBuildItems = {
+				new AndroidItem.AndroidAsset ("Assets\\asset1.txt") {
+					TextContent = () => "Asset1",
+					Encoding = Encoding.ASCII,
+				},
+				new AndroidItem.AndroidAsset ("Assets\\asset2.txt") {
+					TextContent = () => "Asset2",
+					Encoding = Encoding.ASCII,
+					MetadataValues="AssetPack=assetpack1;DeliveryType=InstallTime",
+				},
+				asset3,
+				new AndroidItem.AndroidAsset ("Assets\\asset4.txt") {
+					TextContent = () => "Asset4",
+					Encoding = Encoding.ASCII,
+					MetadataValues="AssetPack=assetpack2;DeliveryType=OnDemand",
+				},
+				new AndroidItem.AndroidAsset ("Assets\\asset5.txt") {
+					TextContent = () => "Asset5",
+					Encoding = Encoding.ASCII,
+					MetadataValues="AssetPack=assetpack3;DeliveryType=FastFollow",
+				},
 			}
-		}
-
-		[Test]
-		public void BuildApplicationWithAssetPackInShellSensitiveDirectory ()
-		{
-			var path = Path.Combine ("temp", TestName, "app$HOME%PATH%'q");
-			var app = new XamarinAndroidApplicationProject {
-				ProjectName = "MyApp",
-				OtherBuildItems = {
-					new AndroidItem.AndroidAsset ("Assets\\asset1.txt") {
-						TextContent = () => "Asset1",
-						Encoding = Encoding.ASCII,
-						MetadataValues="AssetPack=assetpack1",
-					},
-				}
-			};
-			app.SetProperty ("AndroidPackageFormat", "aab");
-			using (var appBuilder = CreateApkBuilder (Path.Combine (path, app.ProjectName))) {
-				Assert.IsTrue (appBuilder.Build (app), $"{app.ProjectName} should succeed");
-				var quotedSegment = IsWindows ? "app$HOME%%PATH%%'q" : "app$HOME%PATH%'\\''q";
-				Assert.IsTrue (appBuilder.LastBuildOutput.ContainsText (quotedSegment),
-					$"aapt2 link command should contain the escaped path segment `{quotedSegment}`.");
-				var aab = Path.Combine (Root, appBuilder.ProjectDirectory,
-					app.OutputPath, $"{app.PackageName}.aab");
-				using (var zip = ZipHelper.OpenZip (aab)) {
-					Assert.IsNotNull (zip.GetEntry ("assetpack1/assets/asset1.txt"), "aab should contain assetpack1/assets/asset1.txt");
-					Assert.IsNotNull (zip.GetEntry ("assetpack1/assets.pb"), "aab should contain assetpack1/assets.pb");
-				}
+		};
+		app.SetRuntime (runtime);
+		app.SetProperty ("AndroidPackageFormat", "aab");
+		using (var appBuilder = CreateApkBuilder (Path.Combine (path, app.ProjectName))) {
+			Assert.IsTrue (appBuilder.Build (app), $"{app.ProjectName} should succeed");
+			// Check the final aab has the required feature files in it.
+			var aab = Path.Combine (Root, appBuilder.ProjectDirectory,
+				app.OutputPath, $"{app.PackageName}.aab");
+			var asset3File = Path.Combine (Root, path, app.ProjectName,
+				app.IntermediateOutputPath, "assetpacks", "assetpack1", "assets", "asset3.txt");
+			using (var zip = ZipHelper.OpenZip (aab)) {
+				Assert.IsNotNull (zip.GetEntry ("base/assets/asset1.txt"), "aab should contain base/assets/asset1.txt");
+				Assert.IsNull (zip.GetEntry ("base/assets/asset2.txt"), "aab should not contain base/assets/asset2.txt");
+				Assert.IsNull (zip.GetEntry ("base/assets/asset3.txt"), "aab should not contain base/assets/asset3.txt");
+				Assert.IsNull (zip.GetEntry ("base/assets/asset4.txt"), "aab should not contain base/assets/asset4.txt");
+				Assert.IsNotNull (zip.GetEntry ("assetpack1/assets/asset2.txt"), "aab should contain assetpack1/assets/asset2.txt");
+				Assert.IsNotNull (zip.GetEntry ("assetpack1/assets/asset3.txt"), "aab should contain assetpack1/assets/asset3.txt");
+				Assert.IsNotNull (zip.GetEntry ("assetpack2/assets/asset4.txt"), "aab should contain assetpack2/assets/asset4.txt");
+				Assert.IsNotNull (zip.GetEntry ("assetpack3/assets/asset5.txt"), "aab should contain assetpack3/assets/asset5.txt");
+				Assert.IsNotNull (zip.GetEntry ("assetpack1/assets.pb"), "aab should contain assetpack1/assets.pb");
+				Assert.IsNull (zip.GetEntry ("assetpack1/resources.pb"), "aab should not contain assetpack1/resources.pb");
 			}
-		}
-
-		[Test]
-		[Category ("SmokeTests")]
-		public void BuildApplicationWithAssetPack ([ValueSource (typeof (BaseTest), nameof (BaseTest.ValidRuntimeConfigurations))] (bool isRelease, AndroidRuntime runtime) configuration)
-		{
-			var (isRelease, runtime) = configuration;
-			var path = Path.Combine ("temp", TestName);
-			var asset3 = new AndroidItem.AndroidAsset ("Assets\\asset3.txt") {
-				TextContent = () => "Asset3",
-				Encoding = Encoding.ASCII,
-				MetadataValues="AssetPack=assetpack1",
-			};
-			var app = new XamarinAndroidApplicationProject {
-				ProjectName = "MyApp",
-				IsRelease = isRelease,
-				OtherBuildItems = {
-					new AndroidItem.AndroidAsset ("Assets\\asset1.txt") {
-						TextContent = () => "Asset1",
-						Encoding = Encoding.ASCII,
-					},
-					new AndroidItem.AndroidAsset ("Assets\\asset2.txt") {
-						TextContent = () => "Asset2",
-						Encoding = Encoding.ASCII,
-						MetadataValues="AssetPack=assetpack1;DeliveryType=InstallTime",
-					},
-					asset3,
-					new AndroidItem.AndroidAsset ("Assets\\asset4.txt") {
-						TextContent = () => "Asset4",
-						Encoding = Encoding.ASCII,
-						MetadataValues="AssetPack=assetpack2;DeliveryType=OnDemand",
-					},
-					new AndroidItem.AndroidAsset ("Assets\\asset5.txt") {
-						TextContent = () => "Asset5",
-						Encoding = Encoding.ASCII,
-						MetadataValues="AssetPack=assetpack3;DeliveryType=FastFollow",
-					},
-				}
-			};
-			app.SetRuntime (runtime);
-			app.SetProperty ("AndroidPackageFormat", "aab");
-			using (var appBuilder = CreateApkBuilder (Path.Combine (path, app.ProjectName))) {
-				Assert.IsTrue (appBuilder.Build (app), $"{app.ProjectName} should succeed");
-				// Check the final aab has the required feature files in it.
-				var aab = Path.Combine (Root, appBuilder.ProjectDirectory,
-					app.OutputPath, $"{app.PackageName}.aab");
-				var asset3File = Path.Combine (Root, path, app.ProjectName,
-					app.IntermediateOutputPath, "assetpacks", "assetpack1", "assets", "asset3.txt");
-				using (var zip = ZipHelper.OpenZip (aab)) {
-					Assert.IsNotNull (zip.GetEntry ("base/assets/asset1.txt"), "aab should contain base/assets/asset1.txt");
-					Assert.IsNull (zip.GetEntry ("base/assets/asset2.txt"), "aab should not contain base/assets/asset2.txt");
-					Assert.IsNull (zip.GetEntry ("base/assets/asset3.txt"), "aab should not contain base/assets/asset3.txt");
-					Assert.IsNull (zip.GetEntry ("base/assets/asset4.txt"), "aab should not contain base/assets/asset4.txt");
-					Assert.IsNotNull (zip.GetEntry ("assetpack1/assets/asset2.txt"), "aab should contain assetpack1/assets/asset2.txt");
-					Assert.IsNotNull (zip.GetEntry ("assetpack1/assets/asset3.txt"), "aab should contain assetpack1/assets/asset3.txt");
-					Assert.IsNotNull (zip.GetEntry ("assetpack2/assets/asset4.txt"), "aab should contain assetpack2/assets/asset4.txt");
-					Assert.IsNotNull (zip.GetEntry ("assetpack3/assets/asset5.txt"), "aab should contain assetpack3/assets/asset5.txt");
-					Assert.IsNotNull (zip.GetEntry ("assetpack1/assets.pb"), "aab should contain assetpack1/assets.pb");
-					Assert.IsNull (zip.GetEntry ("assetpack1/resources.pb"), "aab should not contain assetpack1/resources.pb");
-				}
-				Assert.IsTrue (appBuilder.Build (app, doNotCleanupOnUpdate: true, saveProject: false), $"{app.ProjectName} should succeed");
-				appBuilder.Output.AssertTargetIsSkipped ("_CreateAssetPackManifests");
-				appBuilder.Output.AssertTargetIsSkipped ("_BuildAssetPacks");
-				appBuilder.Output.AssertTargetIsSkipped ("_GenerateAndroidAssetsDir");
-				FileAssert.Exists (asset3File, $"file {asset3File} should exist.");
-				asset3.TextContent = () => "Asset3 Updated";
-				asset3.Timestamp = DateTime.UtcNow.AddSeconds(1);
-				Assert.IsTrue (appBuilder.Build (app, doNotCleanupOnUpdate: true, saveProject: false), $"{app.ProjectName} should succeed");
-				appBuilder.Output.AssertTargetIsNotSkipped ("_CreateAssetPackManifests");
-				appBuilder.Output.AssertTargetIsNotSkipped ("_BuildAssetPacks");
-				appBuilder.Output.AssertTargetIsNotSkipped ("_GenerateAndroidAssetsDir");
-				FileAssert.Exists (asset3File, $"file {asset3File} should exist.");
-				Assert.AreEqual (asset3.TextContent (), File.ReadAllText (asset3File), $"Contents of {asset3File} should have been updated.");
-				app.OtherBuildItems.Remove (asset3);
-				Assert.IsTrue (appBuilder.Build (app, doNotCleanupOnUpdate: true), $"{app.ProjectName} should succeed");
-				FileAssert.DoesNotExist (asset3File, $"file {asset3File} should not exist.");
-				using (var zip = ZipHelper.OpenZip (aab)) {
-					Assert.IsNotNull (zip.GetEntry ("base/assets/asset1.txt"), "aab should contain base/assets/asset1.txt");
-					Assert.IsNull (zip.GetEntry ("base/assets/asset2.txt"), "aab should not contain base/assets/asset2.txt");
-					Assert.IsNull (zip.GetEntry ("base/assets/asset3.txt"), "aab should not contain base/assets/asset3.txt");
-					Assert.IsNull (zip.GetEntry ("base/assets/asset4.txt"), "aab should not contain base/assets/asset4.txt");
-					Assert.IsNotNull (zip.GetEntry ("assetpack1/assets/asset2.txt"), "aab should contain assetpack1/assets/asset2.txt");
-					Assert.IsNull (zip.GetEntry ("assetpack1/assets/asset3.txt"), "aab should not contain assetpack1/assets/asset3.txt");
-					Assert.IsNotNull (zip.GetEntry ("assetpack2/assets/asset4.txt"), "aab should contain assetpack2/assets/asset4.txt");
-					Assert.IsNotNull (zip.GetEntry ("assetpack3/assets/asset5.txt"), "aab should contain assetpack3/assets/asset5.txt");
-					Assert.IsNotNull (zip.GetEntry ("assetpack1/assets.pb"), "aab should contain assetpack1/assets.pb");
-					Assert.IsNull (zip.GetEntry ("assetpack1/resources.pb"), "aab should not contain assetpack1/resources.pb");
-				}
-				appBuilder.Output.AssertTargetIsNotSkipped ("_CreateAssetPackManifests");
-				appBuilder.Output.AssertTargetIsNotSkipped ("_BuildAssetPacks");
-				appBuilder.Output.AssertTargetIsNotSkipped ("_GenerateAndroidAssetsDir");
+			Assert.IsTrue (appBuilder.Build (app, doNotCleanupOnUpdate: true, saveProject: false), $"{app.ProjectName} should succeed");
+			appBuilder.Output.AssertTargetIsSkipped ("_CreateAssetPackManifests");
+			appBuilder.Output.AssertTargetIsSkipped ("_BuildAssetPacks");
+			appBuilder.Output.AssertTargetIsSkipped ("_GenerateAndroidAssetsDir");
+			FileAssert.Exists (asset3File, $"file {asset3File} should exist.");
+			asset3.TextContent = () => "Asset3 Updated";
+			asset3.Timestamp = DateTime.UtcNow.AddSeconds(1);
+			Assert.IsTrue (appBuilder.Build (app, doNotCleanupOnUpdate: true, saveProject: false), $"{app.ProjectName} should succeed");
+			appBuilder.Output.AssertTargetIsNotSkipped ("_CreateAssetPackManifests");
+			appBuilder.Output.AssertTargetIsNotSkipped ("_BuildAssetPacks");
+			appBuilder.Output.AssertTargetIsNotSkipped ("_GenerateAndroidAssetsDir");
+			FileAssert.Exists (asset3File, $"file {asset3File} should exist.");
+			Assert.AreEqual (asset3.TextContent (), File.ReadAllText (asset3File), $"Contents of {asset3File} should have been updated.");
+			app.OtherBuildItems.Remove (asset3);
+			Assert.IsTrue (appBuilder.Build (app, doNotCleanupOnUpdate: true), $"{app.ProjectName} should succeed");
+			FileAssert.DoesNotExist (asset3File, $"file {asset3File} should not exist.");
+			using (var zip = ZipHelper.OpenZip (aab)) {
+				Assert.IsNotNull (zip.GetEntry ("base/assets/asset1.txt"), "aab should contain base/assets/asset1.txt");
+				Assert.IsNull (zip.GetEntry ("base/assets/asset2.txt"), "aab should not contain base/assets/asset2.txt");
+				Assert.IsNull (zip.GetEntry ("base/assets/asset3.txt"), "aab should not contain base/assets/asset3.txt");
+				Assert.IsNull (zip.GetEntry ("base/assets/asset4.txt"), "aab should not contain base/assets/asset4.txt");
+				Assert.IsNotNull (zip.GetEntry ("assetpack1/assets/asset2.txt"), "aab should contain assetpack1/assets/asset2.txt");
+				Assert.IsNull (zip.GetEntry ("assetpack1/assets/asset3.txt"), "aab should not contain assetpack1/assets/asset3.txt");
+				Assert.IsNotNull (zip.GetEntry ("assetpack2/assets/asset4.txt"), "aab should contain assetpack2/assets/asset4.txt");
+				Assert.IsNotNull (zip.GetEntry ("assetpack3/assets/asset5.txt"), "aab should contain assetpack3/assets/asset5.txt");
+				Assert.IsNotNull (zip.GetEntry ("assetpack1/assets.pb"), "aab should contain assetpack1/assets.pb");
+				Assert.IsNull (zip.GetEntry ("assetpack1/resources.pb"), "aab should not contain assetpack1/resources.pb");
 			}
+			appBuilder.Output.AssertTargetIsNotSkipped ("_CreateAssetPackManifests");
+			appBuilder.Output.AssertTargetIsNotSkipped ("_BuildAssetPacks");
+			appBuilder.Output.AssertTargetIsNotSkipped ("_GenerateAndroidAssetsDir");
 		}
 	}
 }

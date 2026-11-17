@@ -2,46 +2,45 @@ using System;
 
 using Java.Interop;
 
-namespace Java.InteropTests
+namespace Java.InteropTests;
+
+[JniTypeSignature (GetThis.JniTypeName, GenerateJavaPeer=false)]
+public class GetThis : JavaObject
 {
-	[JniTypeSignature (GetThis.JniTypeName, GenerateJavaPeer=false)]
-	public class GetThis : JavaObject
+	internal const string JniTypeName = "net/dot/jni/test/GetThis";
+
+	bool _isDisposed;
+
+	readonly static JniPeerMembers _members = new JniPeerMembers (JniTypeName, typeof (GetThis));
+
+	public override JniPeerMembers JniPeerMembers {
+		get {return _members;}
+	}
+
+	public GetThis ()
 	{
-		internal const string JniTypeName = "net/dot/jni/test/GetThis";
+	}
 
-		bool _isDisposed;
-
-		readonly static JniPeerMembers _members = new JniPeerMembers (JniTypeName, typeof (GetThis));
-
-		public override JniPeerMembers JniPeerMembers {
-			get {return _members;}
+	public unsafe GetThis This {
+		get {
+			var o   = _members.InstanceMethods.InvokeNonvirtualObjectMethod ("getThis.()Lnet/dot/jni/test/GetThis;", this, null);
+			return JniEnvironment.Runtime.ValueManager.GetValue<GetThis> (ref o, JniObjectReferenceOptions.CopyAndDispose);
 		}
+	}
 
-		public GetThis ()
-		{
+	protected override void Dispose (bool disposing)
+	{
+		if (_isDisposed) {
+			return;
 		}
-
-		public unsafe GetThis This {
-			get {
-				var o   = _members.InstanceMethods.InvokeNonvirtualObjectMethod ("getThis.()Lnet/dot/jni/test/GetThis;", this, null);
-				return JniEnvironment.Runtime.ValueManager.GetValue<GetThis> (ref o, JniObjectReferenceOptions.CopyAndDispose);
+		_isDisposed = true;
+		if (disposing) {
+			var t = This;
+			if (t != this) {
+				throw new InvalidOperationException ("SHOULD NOT BE REACHED");
 			}
 		}
-
-		protected override void Dispose (bool disposing)
-		{
-			if (_isDisposed) {
-				return;
-			}
-			_isDisposed = true;
-			if (disposing) {
-				var t = This;
-				if (t != this) {
-					throw new InvalidOperationException ("SHOULD NOT BE REACHED");
-				}
-			}
-			base.Dispose (disposing);
-		}
+		base.Dispose (disposing);
 	}
 }
 

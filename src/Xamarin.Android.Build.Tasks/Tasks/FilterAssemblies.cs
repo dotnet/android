@@ -8,8 +8,8 @@ using System.Reflection.Metadata;
 using System.Reflection.PortableExecutable;
 using Microsoft.Android.Build.Tasks;
 
-namespace Xamarin.Android.Tasks
-{
+namespace Xamarin.Android.Tasks;
+
 	/// <summary>
 	/// Filters a set of assemblies to be known as ".NET for Android" assemblies through various checks:
 	/// * The presence of [assembly: System.Runtime.Versioning.TargetFramework("MonoAndroid,Version=v9.0")]
@@ -156,4 +156,3 @@ namespace Xamarin.Android.Tasks
 			return false;
 		}
 	}
-}

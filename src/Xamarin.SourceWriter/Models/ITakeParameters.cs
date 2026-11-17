@@ -2,10 +2,9 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace Xamarin.SourceWriter
+namespace Xamarin.SourceWriter;
+
+public interface ITakeParameters
 {
-	public interface ITakeParameters
-	{
-		List<MethodParameterWriter> Parameters { get; }
-	}
+	List<MethodParameterWriter> Parameters { get; }
 }

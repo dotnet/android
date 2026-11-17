@@ -6,17 +6,16 @@ using System.Threading.Tasks;
 using MonoDroid.Generation;
 using Xamarin.SourceWriter;
 
-namespace generator.SourceWriters
+namespace generator.SourceWriters;
+
+public class CreateImplementorMethod : MethodWriter
 {
-	public class CreateImplementorMethod : MethodWriter
+	public CreateImplementorMethod (InterfaceGen iface, CodeGenerationOptions opt)
 	{
-		public CreateImplementorMethod (InterfaceGen iface, CodeGenerationOptions opt)
-		{
-			Name = $"__Create{iface.Name}Implementor";
+		Name = $"__Create{iface.Name}Implementor";
 
-			ReturnType = new TypeReferenceWriter ($"{opt.GetOutputName (iface.FullName)}Implementor");
+		ReturnType = new TypeReferenceWriter ($"{opt.GetOutputName (iface.FullName)}Implementor");
 
-			Body.Add ($"return new {opt.GetOutputName (iface.FullName)}Implementor ({(iface.NeedsSender ? "this" : "")});");
-		}
+		Body.Add ($"return new {opt.GetOutputName (iface.FullName)}Implementor ({(iface.NeedsSender ? "this" : "")});");
 	}
 }

@@ -2,7 +2,7 @@ using System;
 using System.Globalization;
 using Android.Runtime;
 
-namespace Android.Util {
+namespace Android.Util; 
 
 	public partial class Log {
 
@@ -268,4 +268,3 @@ namespace Android.Util {
 			return Wtf (tag, string.Format (FormatProvider, format, args), tr);
 		}
 	}
-}

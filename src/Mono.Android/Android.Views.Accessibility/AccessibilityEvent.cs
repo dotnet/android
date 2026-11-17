@@ -1,7 +1,7 @@
 using System;
 using Android.AccessibilityServices;
 
-namespace Android.Views.Accessibility {
+namespace Android.Views.Accessibility; 
 
 	partial class AccessibilityEvent {
 
@@ -30,4 +30,3 @@ namespace Android.Views.Accessibility {
 		}
 #endif  // ANDROID_14
 	}
-}

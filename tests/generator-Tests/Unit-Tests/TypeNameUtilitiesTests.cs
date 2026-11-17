@@ -3,8 +3,8 @@ using System.Linq;
 using MonoDroid.Generation;
 using NUnit.Framework;
 
-namespace generatortests
-{
+namespace generatortests;
+
 	[TestFixture]
 	public class TypeNameUtilitiesTests
 	{
@@ -33,4 +33,3 @@ namespace generatortests
 				.Where (keyword => keyword != "event") // "event" is a special case which is mapped to "e" instead of "@event"
 				.Select (keyword => new TestCaseData (keyword));
 	}
-}

@@ -3,23 +3,22 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Text;
 
-namespace Xamarin.SourceWriter
+namespace Xamarin.SourceWriter;
+
+public class ClassWriter : TypeWriter
 {
-	public class ClassWriter : TypeWriter
+	public ObservableCollection<ConstructorWriter> Constructors { get; } = new ObservableCollection<ConstructorWriter> ();
+
+	public ClassWriter ()
 	{
-		public ObservableCollection<ConstructorWriter> Constructors { get; } = new ObservableCollection<ConstructorWriter> ();
+		Constructors.CollectionChanged += MemberAdded;
+	}
 
-		public ClassWriter ()
-		{
-			Constructors.CollectionChanged += MemberAdded;
-		}
-
-		public override void WriteConstructors (CodeWriter writer)
-		{
-			foreach (var ctor in Constructors) {
-				ctor.Write (writer);
-				writer.WriteLine ();
-			}
+	public override void WriteConstructors (CodeWriter writer)
+	{
+		foreach (var ctor in Constructors) {
+			ctor.Write (writer);
+			writer.WriteLine ();
 		}
 	}
 }

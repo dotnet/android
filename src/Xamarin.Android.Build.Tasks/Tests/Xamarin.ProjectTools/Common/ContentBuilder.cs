@@ -1,8 +1,7 @@
-﻿using System;
-namespace Xamarin.ProjectTools
+using System;
+namespace Xamarin.ProjectTools;
+
+public abstract class ContentBuilder
 {
-	public abstract class ContentBuilder
-	{
-		public abstract byte [] Build ();
-	}
+	public abstract byte [] Build ();
 }

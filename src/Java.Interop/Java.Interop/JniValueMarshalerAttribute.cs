@@ -4,7 +4,7 @@ using System;
 using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 
-namespace Java.Interop {
+namespace Java.Interop; 
 
 	[AttributeUsage (Targets, AllowMultiple=false)]
 	public class JniValueMarshalerAttribute : Attribute {
@@ -33,5 +33,4 @@ namespace Java.Interop {
 			get;
 		}
 	}
-}
 

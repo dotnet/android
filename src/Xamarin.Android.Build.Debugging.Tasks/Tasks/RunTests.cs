@@ -5,8 +5,8 @@ using Microsoft.Build.Framework;
 
 using Xamarin.Android.Tools;
 
-namespace Xamarin.Android.Tasks
-{
+namespace Xamarin.Android.Tasks;
+
 	public class RunTests : ToolTask
 	{
 		public string AdbTarget { get; set; }
@@ -35,4 +35,3 @@ namespace Xamarin.Android.Tasks
 			                      AdbTarget, AdbOptions, AndroidPackage, TargetTestActivity);
 		}
 	}
-}

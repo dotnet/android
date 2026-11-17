@@ -13,8 +13,8 @@ using Microsoft.Build.Framework;
 
 using Microsoft.Android.Build.Tasks;
 
-namespace Xamarin.Android.Tasks
-{
+namespace Xamarin.Android.Tasks;
+
 	public class CalculateLayoutCodeBehind : AsyncTask
 	{
 		public override string TaskPrefix => "CLC";
@@ -563,4 +563,3 @@ namespace Xamarin.Android.Tasks
 			group.InputItems?.Add (item);
 		}
 	}
-}

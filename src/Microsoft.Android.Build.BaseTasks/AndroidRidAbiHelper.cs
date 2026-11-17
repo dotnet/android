@@ -7,118 +7,117 @@ using System.IO;
 using System.Linq;
 using Microsoft.Build.Framework;
 
-namespace Microsoft.Android.Build.Tasks
+namespace Microsoft.Android.Build.Tasks;
+
+public static class AndroidRidAbiHelper
 {
-	public static class AndroidRidAbiHelper
+	static readonly string[] ValidAbis = new[]{
+		"arm64-v8a",
+		"armeabi-v7a",
+		"x86",
+		"x86_64",
+	};
+
+	public static string? GetNativeLibraryAbi (string lib)
+		=> GetNativeLibraryAbi (lib, TaskEnvironment.Fallback);
+
+	public static string? GetNativeLibraryAbi (string lib, TaskEnvironment taskEnvironment)
 	{
-		static readonly string[] ValidAbis = new[]{
-			"arm64-v8a",
-			"armeabi-v7a",
-			"x86",
-			"x86_64",
-		};
+		if (string.IsNullOrEmpty (lib))
+			return null;
+		lib = lib.Replace ('\\', Path.DirectorySeparatorChar);
 
-		public static string? GetNativeLibraryAbi (string lib)
-			=> GetNativeLibraryAbi (lib, TaskEnvironment.Fallback);
+		// The topmost directory the .so file is contained within
+		var dir = Directory.GetParent (taskEnvironment.GetAbsolutePath (lib));
+		if (dir == null)
+			return null;
 
-		public static string? GetNativeLibraryAbi (string lib, TaskEnvironment taskEnvironment)
-		{
-			if (string.IsNullOrEmpty (lib))
-				return null;
-			lib = lib.Replace ('\\', Path.DirectorySeparatorChar);
+		var dirName = dir.Name.ToLowerInvariant ();
+		if (dirName.StartsWith ("interpreter-", StringComparison.Ordinal)) {
+			dirName = dirName.Substring ("interpreter-".Length);
+		}
+		if (ValidAbis.Contains (dirName)) {
+			return dirName;
+		}
 
-			// The topmost directory the .so file is contained within
-			var dir = Directory.GetParent (taskEnvironment.GetAbsolutePath (lib));
-			if (dir == null)
-				return null;
+		// Look for a directory with a RID as a name, such as:
+		// android-arm64/libfoo.so
+		var abi = RuntimeIdentifierToAbi (dirName);
+		if (!string.IsNullOrEmpty (abi))
+			return abi;
 
-			var dirName = dir.Name.ToLowerInvariant ();
-			if (dirName.StartsWith ("interpreter-", StringComparison.Ordinal)) {
-				dirName = dirName.Substring ("interpreter-".Length);
-			}
-			if (ValidAbis.Contains (dirName)) {
-				return dirName;
-			}
-
-			// Look for a directory with a RID as a name, such as:
-			// android-arm64/libfoo.so
-			var abi = RuntimeIdentifierToAbi (dirName);
+		// Try one directory higher, such as:
+		// packages/sqlitepclraw.lib.e_sqlite3.android/1.1.11/runtimes/android-arm64/native/libe_sqlite3.so
+		if (dir.Parent is DirectoryInfo parent) {
+			abi = RuntimeIdentifierToAbi (parent.Name);
 			if (!string.IsNullOrEmpty (abi))
 				return abi;
-
-			// Try one directory higher, such as:
-			// packages/sqlitepclraw.lib.e_sqlite3.android/1.1.11/runtimes/android-arm64/native/libe_sqlite3.so
-			if (dir.Parent is DirectoryInfo parent) {
-				abi = RuntimeIdentifierToAbi (parent.Name);
-				if (!string.IsNullOrEmpty (abi))
-					return abi;
-			}
-
-			return null;
 		}
 
-		public static string? GetNativeLibraryAbi (ITaskItem lib)
-			=> GetNativeLibraryAbi (lib, TaskEnvironment.Fallback);
+		return null;
+	}
 
-		public static string? GetNativeLibraryAbi (ITaskItem lib, TaskEnvironment taskEnvironment)
-		{
-			// If Abi is explicitly specified, simply return it.
-			var lib_abi = lib.GetMetadata ("Abi");
+	public static string? GetNativeLibraryAbi (ITaskItem lib)
+		=> GetNativeLibraryAbi (lib, TaskEnvironment.Fallback);
 
-			if (!string.IsNullOrWhiteSpace (lib_abi))
-				return lib_abi;
+	public static string? GetNativeLibraryAbi (ITaskItem lib, TaskEnvironment taskEnvironment)
+	{
+		// If Abi is explicitly specified, simply return it.
+		var lib_abi = lib.GetMetadata ("Abi");
 
-			// Try to figure out what type of abi this is from the path
-			// First, try nominal "Link" path.
-			var link = lib.GetMetadata ("Link");
-			if (!string.IsNullOrWhiteSpace (link)) {
-				lib_abi = GetNativeLibraryAbi (link, taskEnvironment);
-			}
+		if (!string.IsNullOrWhiteSpace (lib_abi))
+			return lib_abi;
 
-			// Check for a RuntimeIdentifier
-			var rid = lib.GetMetadata ("RuntimeIdentifier");
-			if (!string.IsNullOrWhiteSpace (rid)) {
-				lib_abi = RuntimeIdentifierToAbi (rid);
-			}
-			
-			if (!string.IsNullOrWhiteSpace (lib_abi))
-				return lib_abi;
-
-			// If not resolved, use ItemSpec
-			return GetNativeLibraryAbi (lib.ItemSpec, taskEnvironment);
+		// Try to figure out what type of abi this is from the path
+		// First, try nominal "Link" path.
+		var link = lib.GetMetadata ("Link");
+		if (!string.IsNullOrWhiteSpace (link)) {
+			lib_abi = GetNativeLibraryAbi (link, taskEnvironment);
 		}
 
-		/// <summary>
-		/// Converts .NET 5 RIDs to Android ABIs or an empty string if no match.
-		/// 
-		/// Known RIDs:
-		/// "android.21-arm64" -> "arm64-v8a"
-		/// "android.21-arm"   -> "armeabi-v7a"
-		/// "android.21-x86"   -> "x86"
-		/// "android.21-x64"   -> "x86_64"
-		/// "android-arm64"    -> "arm64-v8a"
-		/// "android-arm"      -> "armeabi-v7a"
-		/// "android-x86"      -> "x86"
-		/// "android-x64"      -> "x86_64"
-		/// </summary>
-		public static string RuntimeIdentifierToAbi (string runtimeIdentifier)
-		{
-			if (string.IsNullOrEmpty (runtimeIdentifier) || !runtimeIdentifier.StartsWith ("android", StringComparison.OrdinalIgnoreCase)) {
-				return "";
-			}
-			if (runtimeIdentifier.EndsWith ("-arm64", StringComparison.OrdinalIgnoreCase)) {
-				return "arm64-v8a";
-			}
-			if (runtimeIdentifier.EndsWith ("-arm", StringComparison.OrdinalIgnoreCase)) {
-				return "armeabi-v7a";
-			}
-			if (runtimeIdentifier.EndsWith ("-x86", StringComparison.OrdinalIgnoreCase)) {
-				return "x86";
-			}
-			if (runtimeIdentifier.EndsWith ("-x64", StringComparison.OrdinalIgnoreCase)) {
-				return "x86_64";
-			}
+		// Check for a RuntimeIdentifier
+		var rid = lib.GetMetadata ("RuntimeIdentifier");
+		if (!string.IsNullOrWhiteSpace (rid)) {
+			lib_abi = RuntimeIdentifierToAbi (rid);
+		}
+		
+		if (!string.IsNullOrWhiteSpace (lib_abi))
+			return lib_abi;
+
+		// If not resolved, use ItemSpec
+		return GetNativeLibraryAbi (lib.ItemSpec, taskEnvironment);
+	}
+
+	/// <summary>
+	/// Converts .NET 5 RIDs to Android ABIs or an empty string if no match.
+	/// 
+	/// Known RIDs:
+	/// "android.21-arm64" -> "arm64-v8a"
+	/// "android.21-arm"   -> "armeabi-v7a"
+	/// "android.21-x86"   -> "x86"
+	/// "android.21-x64"   -> "x86_64"
+	/// "android-arm64"    -> "arm64-v8a"
+	/// "android-arm"      -> "armeabi-v7a"
+	/// "android-x86"      -> "x86"
+	/// "android-x64"      -> "x86_64"
+	/// </summary>
+	public static string RuntimeIdentifierToAbi (string runtimeIdentifier)
+	{
+		if (string.IsNullOrEmpty (runtimeIdentifier) || !runtimeIdentifier.StartsWith ("android", StringComparison.OrdinalIgnoreCase)) {
 			return "";
 		}
+		if (runtimeIdentifier.EndsWith ("-arm64", StringComparison.OrdinalIgnoreCase)) {
+			return "arm64-v8a";
+		}
+		if (runtimeIdentifier.EndsWith ("-arm", StringComparison.OrdinalIgnoreCase)) {
+			return "armeabi-v7a";
+		}
+		if (runtimeIdentifier.EndsWith ("-x86", StringComparison.OrdinalIgnoreCase)) {
+			return "x86";
+		}
+		if (runtimeIdentifier.EndsWith ("-x64", StringComparison.OrdinalIgnoreCase)) {
+			return "x86_64";
+		}
+		return "";
 	}
 }

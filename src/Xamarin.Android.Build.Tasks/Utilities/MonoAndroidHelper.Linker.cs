@@ -5,8 +5,8 @@ using System.Linq;
 using System.IO;
 using Mono.Cecil;
 
-namespace Xamarin.Android.Tasks
-{
+namespace Xamarin.Android.Tasks;
+
 	public partial class MonoAndroidHelper
 	{
 		static readonly HashSet<string> KnownAssemblyNames = new (StringComparer.OrdinalIgnoreCase) {
@@ -55,4 +55,3 @@ namespace Xamarin.Android.Tasks
 			return map;
 		}
 	}
-}

@@ -5,8 +5,8 @@ using Mono.Cecil;
 using NUnit.Framework;
 using MonoDroid.Generation;
 
-namespace generatortests
-{
+namespace generatortests;
+
 	/// <summary>
 	/// Tests for the experimental direct-<c>[UnmanagedCallersOnly]</c> binding callback shape
 	/// enabled by <c>--lang-features=unmanaged-callers-only-callbacks</c>.
@@ -605,4 +605,3 @@ namespace generatortests
 			}
 		}
 	}
-}

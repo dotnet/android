@@ -1,4 +1,4 @@
-namespace Android.Telephony {
+namespace Android.Telephony; 
 
 	partial class PhoneNumberUtils {
 
@@ -7,4 +7,3 @@ namespace Android.Telephony {
 			return StringFromStringAndTOA (s, (PhoneNumberToa) TOA);
 		}
 	}
-}

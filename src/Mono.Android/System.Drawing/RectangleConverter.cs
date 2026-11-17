@@ -38,7 +38,7 @@ using System.ComponentModel.Design.Serialization;
 using System.Runtime.CompilerServices;
 using System.Reflection;
 
-namespace System.Drawing {
+namespace System.Drawing; 
 	[TypeForwardedFrom ("System.Drawing, Version=2.0.5.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a")]
 	public class RectangleConverter : TypeConverter
 	{
@@ -168,4 +168,3 @@ namespace System.Drawing {
 			return true;
 		}
 	}
-}

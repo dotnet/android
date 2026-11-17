@@ -6,29 +6,28 @@ using System.Threading.Tasks;
 using MonoDroid.Generation;
 using Xamarin.SourceWriter;
 
-namespace generator.SourceWriters
+namespace generator.SourceWriters;
+
+public class MethodExtensionAsyncWrapper : MethodWriter
 {
-	public class MethodExtensionAsyncWrapper : MethodWriter
+	public MethodExtensionAsyncWrapper (Method method, CodeGenerationOptions opt, string selfType)
 	{
-		public MethodExtensionAsyncWrapper (Method method, CodeGenerationOptions opt, string selfType)
-		{
-			Name = method.AdjustedName + "Async";
-			IsStatic = true;
+		Name = method.AdjustedName + "Async";
+		IsStatic = true;
 
-			SetVisibility (method.Visibility);
+		SetVisibility (method.Visibility);
 
-			ReturnType = new TypeReferenceWriter ("global::System.Threading.Tasks.Task");
+		ReturnType = new TypeReferenceWriter ("global::System.Threading.Tasks.Task");
 
-			if (!method.IsVoid)
-				ReturnType.Name += "<" + opt.GetTypeReferenceName (method.RetVal) + ">";
+		if (!method.IsVoid)
+			ReturnType.Name += "<" + opt.GetTypeReferenceName (method.RetVal) + ">";
 
-			SourceWriterExtensions.AddSupportedOSPlatform (Attributes, method, opt);
+		SourceWriterExtensions.AddSupportedOSPlatform (Attributes, method, opt);
 
-			Body.Add ($"return global::System.Threading.Tasks.Task.Run (() => self.{method.AdjustedName} ({method.Parameters.GetCall (opt)}));");
+		Body.Add ($"return global::System.Threading.Tasks.Task.Run (() => self.{method.AdjustedName} ({method.Parameters.GetCall (opt)}));");
 
-			Parameters.Add (new MethodParameterWriter ("self", new TypeReferenceWriter (selfType)) { IsExtension = true });
+		Parameters.Add (new MethodParameterWriter ("self", new TypeReferenceWriter (selfType)) { IsExtension = true });
 
-			this.AddMethodParameters (method.Parameters, opt);
-		}
+		this.AddMethodParameters (method.Parameters, opt);
 	}
 }

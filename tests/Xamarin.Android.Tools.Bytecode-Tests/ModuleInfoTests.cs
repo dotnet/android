@@ -1,10 +1,10 @@
-﻿using System;
+using System;
 
 using Xamarin.Android.Tools.Bytecode;
 
 using NUnit.Framework;
 
-namespace Xamarin.Android.Tools.BytecodeTests {
+namespace Xamarin.Android.Tools.BytecodeTests; 
 
 	[TestFixture]
 	public class ModuleInfoTests : ClassFileFixture {
@@ -42,4 +42,3 @@ namespace Xamarin.Android.Tools.BytecodeTests {
 			Assert.AreEqual ("com/xamarin",         moduleAttr.Exports [0].Exports);
 		}
 	}
-}

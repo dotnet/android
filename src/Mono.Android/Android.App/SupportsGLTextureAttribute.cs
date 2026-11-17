@@ -1,7 +1,7 @@
 using System;
 
-namespace Android.App
-{
+namespace Android.App;
+
 	/// <summary>
 	/// Declares a single GL texture compression format that the application supports,
 	/// generating a <c>&lt;supports-gl-texture&gt;</c> element in the Android manifest.
@@ -30,5 +30,4 @@ namespace Android.App
 		/// </summary>
 		public string                 Name                    {get; private set;}
 	}
-}
 

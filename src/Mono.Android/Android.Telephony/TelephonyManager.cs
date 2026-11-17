@@ -2,7 +2,7 @@ using System;
 
 using Android.Content;
 
-namespace Android.Telephony {
+namespace Android.Telephony; 
 
 	public partial class TelephonyManager {
 
@@ -11,6 +11,5 @@ namespace Android.Telephony {
 			return context.GetSystemService (Context.TelephonyService!) as TelephonyManager;
 		}
 	}
-}
 
 

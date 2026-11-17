@@ -6,8 +6,8 @@ using Android.Runtime;
 
 using Java.Interop;
 
-namespace Android.Util
-{
+namespace Android.Util;
+
 	[Register ("android/util/SparseArray", DoNotGenerateAcw=true)]
 	public partial class SparseArray<
 			[DynamicallyAccessedMembers (Constructors)]
@@ -129,4 +129,3 @@ namespace Android.Util
 			}
 		}
 	}
-}

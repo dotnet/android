@@ -9,8 +9,8 @@ using Xamarin.Android.Tools.Bytecode;
 
 using NUnit.Framework;
 
-namespace Xamarin.Android.Tools.BytecodeTests
-{
+namespace Xamarin.Android.Tools.BytecodeTests;
+
 	[TestFixture]
 	public class JSpecifyAnnotationTests : ClassFileFixture
 	{
@@ -262,4 +262,3 @@ namespace Xamarin.Android.Tools.BytecodeTests
 				"package-info.class must be flagged via IsPackageInfo");
 		}
 	}
-}

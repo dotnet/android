@@ -4,14 +4,14 @@ using Android.OS;
 
 using NUnit.Framework;
 
-namespace Xamarin.Android.RuntimeTests {
+namespace Xamarin.Android.RuntimeTests; 
 
-	[TestFixture]
-	public class HandlerTest {
+[TestFixture]
+public class HandlerTest {
 
-		[Test]
-		public void RemoveDisposedInstance ()
-		{
+	[Test]
+	public void RemoveDisposedInstance ()
+	{
       using (var t = new HandlerThread ("RemoveDisposedInstance")) {
         t.Start ();
         using (var h = new Handler (t.Looper)) {
@@ -27,6 +27,5 @@ namespace Xamarin.Android.RuntimeTests {
         
         t.QuitSafely ();
       }
-		}
 	}
 }

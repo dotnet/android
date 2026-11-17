@@ -7,8 +7,8 @@ using Microsoft.Build.Framework;
 using Xamarin.Android.Tools;
 using Microsoft.Android.Build.Tasks;
 
-namespace Xamarin.Android.Tasks
-{
+namespace Xamarin.Android.Tasks;
+
 	/// <summary>
 	/// Extracts .jar files from @(AndroidLibrary) .aar files or @(LibraryProjectZip) for bindings
 	/// </summary>
@@ -112,4 +112,3 @@ namespace Xamarin.Android.Tasks
 			}
 		}
 	}
-}

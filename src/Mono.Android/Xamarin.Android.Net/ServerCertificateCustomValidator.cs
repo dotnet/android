@@ -12,8 +12,8 @@ using Javax.Net.Ssl;
 using JavaCertificateException = Java.Security.Cert.CertificateException;
 using JavaX509Certificate = Java.Security.Cert.X509Certificate;
 
-namespace Xamarin.Android.Net
-{
+namespace Xamarin.Android.Net;
+
 	internal sealed class ServerCertificateCustomValidator
 	{
 		public IHostnameVerifier HostnameVerifier => AlwaysAcceptingHostnameVerifier.Instance;
@@ -206,4 +206,3 @@ namespace Xamarin.Android.Net
 			return modifiedTrustManagersArray;
 		}
 	}
-}

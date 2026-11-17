@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using Android.Runtime;
 
-namespace Android.App {
+namespace Android.App; 
 
 	public partial class DatePickerDialog {
 
@@ -44,4 +44,3 @@ namespace Android.App {
 			UpdateDate (date.Year, date.Month - 1, date.Day);
 		}
 	}
-}

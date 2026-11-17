@@ -7,8 +7,8 @@ using Java.Interop.Tools.Generator;
 using MonoDroid.Generation;
 using NUnit.Framework;
 
-namespace generatortests
-{
+namespace generatortests;
+
 	public class ReportTests
 	{
 		[Test]
@@ -28,4 +28,3 @@ namespace generatortests
 			Assert.AreEqual (@"C:\code\test.cs(32,12): warning BG0037: There was a bad error", Report.Format (false, code, sourcefile, line, col, msg, args));
 		}
 	}
-}

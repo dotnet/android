@@ -1,8 +1,8 @@
 using System;
 using System.Diagnostics.CodeAnalysis;
 
-namespace Java.Interop
-{
+namespace Java.Interop;
+
 	static class RuntimeFeature
 	{
 		const bool JniRemappingEnabledByDefault = true;
@@ -14,4 +14,3 @@ namespace Java.Interop
 				? isEnabled
 				: JniRemappingEnabledByDefault;
 	}
-}

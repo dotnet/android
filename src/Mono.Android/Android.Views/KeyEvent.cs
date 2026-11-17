@@ -1,6 +1,6 @@
 using System;
 
-namespace Android.Views {
+namespace Android.Views; 
 
 	partial class KeyEvent {
 
@@ -16,4 +16,3 @@ namespace Android.Views {
 			return GetUnicodeChar ((MetaKeyStates) meta);
 		}
 	}
-}

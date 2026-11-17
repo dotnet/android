@@ -6,8 +6,8 @@ using System.Threading.Tasks;
 using MonoDroid.Generation;
 using NUnit.Framework;
 
-namespace generatortests
-{
+namespace generatortests;
+
 	[TestFixture]
 	public class GenBaseTests
 	{
@@ -143,4 +143,3 @@ namespace generatortests
 			Assert.False (c.RequiresNew (m.Name, m));
 		}
 	}
-}

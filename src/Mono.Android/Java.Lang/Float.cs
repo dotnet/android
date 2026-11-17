@@ -1,7 +1,7 @@
 using System;
 using Android.Runtime;
 
-namespace Java.Lang {
+namespace Java.Lang; 
 
 	public partial class Float : IConvertible {
 
@@ -98,4 +98,3 @@ namespace Java.Lang {
 			return Convert.ToUInt64 (FloatValue ());
 		}
 	}
-}

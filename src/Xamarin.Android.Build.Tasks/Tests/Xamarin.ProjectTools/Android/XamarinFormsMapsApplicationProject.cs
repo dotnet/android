@@ -2,35 +2,35 @@ using System;
 using System.IO;
 using System.Runtime.CompilerServices;
 
-namespace Xamarin.ProjectTools
+namespace Xamarin.ProjectTools;
+
+public class XamarinFormsMapsApplicationProject : XamarinFormsAndroidApplicationProject
 {
-	public class XamarinFormsMapsApplicationProject : XamarinFormsAndroidApplicationProject
+	static readonly string MainPageMaps_xaml;
+
+	static XamarinFormsMapsApplicationProject ()
 	{
-		static readonly string MainPageMaps_xaml;
+		using (var sr = new StreamReader (typeof (XamarinAndroidApplicationProject).Assembly.GetManifestResourceStream ("Xamarin.ProjectTools.Resources.Forms.MainPageMaps.xaml")))
+			MainPageMaps_xaml = sr.ReadToEnd ();
+	}
 
-		static XamarinFormsMapsApplicationProject ()
-		{
-			using (var sr = new StreamReader (typeof (XamarinAndroidApplicationProject).Assembly.GetManifestResourceStream ("Xamarin.ProjectTools.Resources.Forms.MainPageMaps.xaml")))
-				MainPageMaps_xaml = sr.ReadToEnd ();
-		}
+	public XamarinFormsMapsApplicationProject ([CallerMemberName] string packageName = "")
+		: base (packageName: packageName)
+	{
+		PackageReferences.Add (KnownPackages.XamarinFormsMaps);
+		PackageReferences.Add (KnownPackages.Xamarin_GooglePlayServices_Base);
+		PackageReferences.Add (KnownPackages.Xamarin_GooglePlayServices_Basement);
+		PackageReferences.Add (KnownPackages.Xamarin_GooglePlayServices_Maps);
+		PackageReferences.Add (KnownPackages.Xamarin_GooglePlayServices_Tasks);
+		PackageReferences.Add (KnownPackages.Xamarin_Build_Download);
 
-		public XamarinFormsMapsApplicationProject ([CallerMemberName] string packageName = "")
-			: base (packageName: packageName)
-		{
-			PackageReferences.Add (KnownPackages.XamarinFormsMaps);
-			PackageReferences.Add (KnownPackages.Xamarin_GooglePlayServices_Base);
-			PackageReferences.Add (KnownPackages.Xamarin_GooglePlayServices_Basement);
-			PackageReferences.Add (KnownPackages.Xamarin_GooglePlayServices_Maps);
-			PackageReferences.Add (KnownPackages.Xamarin_GooglePlayServices_Tasks);
-			PackageReferences.Add (KnownPackages.Xamarin_Build_Download);
-
-			MainActivity = MainActivity.Replace ("//${AFTER_FORMS_INIT}", "Xamarin.FormsMaps.Init (this, savedInstanceState);");
-			//NOTE: API_KEY metadata just has to *exist*
-			AndroidManifest = AndroidManifest.Replace ("</application>", "<meta-data android:name=\"com.google.android.maps.v2.API_KEY\" android:value=\"\" /></application>");
-			// From https://github.com/xamarin/GooglePlayServicesComponents/blob/fc057c754e04d3e719d8c111d03d60eb2467b9ce/source/com.google.android.gms/play-services-basement/buildtasks.tests/google-services.json
-			OtherBuildItems.Add (new BuildItem ("GoogleServicesJson", "google-services.json") {
-				Encoding = new System.Text.UTF8Encoding (encoderShouldEmitUTF8Identifier: false),
-				TextContent = () =>
+		MainActivity = MainActivity.Replace ("//${AFTER_FORMS_INIT}", "Xamarin.FormsMaps.Init (this, savedInstanceState);");
+		//NOTE: API_KEY metadata just has to *exist*
+		AndroidManifest = AndroidManifest.Replace ("</application>", "<meta-data android:name=\"com.google.android.maps.v2.API_KEY\" android:value=\"\" /></application>");
+		// From https://github.com/xamarin/GooglePlayServicesComponents/blob/fc057c754e04d3e719d8c111d03d60eb2467b9ce/source/com.google.android.gms/play-services-basement/buildtasks.tests/google-services.json
+		OtherBuildItems.Add (new BuildItem ("GoogleServicesJson", "google-services.json") {
+			Encoding = new System.Text.UTF8Encoding (encoderShouldEmitUTF8Identifier: false),
+			TextContent = () =>
 @"{
   ""project_info"": {
     ""project_number"": ""1041063143217"",
@@ -100,9 +100,8 @@ namespace Xamarin.ProjectTools
   ],
   ""configuration_version"": ""1""
 }"
-			});
-		}
-
-		protected override string MainPageXaml () => ProcessSourceTemplate (MainPageMaps_xaml);
+		});
 	}
+
+	protected override string MainPageXaml () => ProcessSourceTemplate (MainPageMaps_xaml);
 }

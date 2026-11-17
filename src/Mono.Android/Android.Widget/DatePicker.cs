@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using Android.Runtime;
 
-namespace Android.Widget {
+namespace Android.Widget; 
 
 	public partial class DatePicker
 	{
@@ -28,4 +28,3 @@ namespace Android.Widget {
 		}
 #endif
 	}
-}

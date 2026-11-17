@@ -1,8 +1,8 @@
 using System;
 using System.IO;
 
-namespace Android.Runtime
-{
+namespace Android.Runtime;
+
 	public class OutputStreamInvoker : Stream
 	{
 		public Java.IO.OutputStream BaseOutputStream {get; private set;}
@@ -134,4 +134,3 @@ namespace Android.Runtime
 			return new OutputStreamInvoker (inst);
 		}
 	}
-}

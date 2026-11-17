@@ -1,7 +1,7 @@
 using System;
 using System.Runtime.InteropServices;
 
-namespace Android.Runtime {
+namespace Android.Runtime; 
 
 	/// <summary>
 	/// Represents a JNI <c>jvalue</c> union, used to pass arguments to Java methods
@@ -155,4 +155,3 @@ namespace Android.Runtime {
 			l = value == null ? IntPtr.Zero : value.Handle;
 		}
 	}
-}

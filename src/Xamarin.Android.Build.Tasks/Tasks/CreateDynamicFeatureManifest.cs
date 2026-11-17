@@ -6,8 +6,8 @@ using Microsoft.Build.Framework;
 using Xamarin.Android.Tools;
 using Microsoft.Android.Build.Tasks;
 
-namespace Xamarin.Android.Tasks
-{
+namespace Xamarin.Android.Tasks;
+
 	public class CreateDynamicFeatureManifest : AndroidTask
 	{
 		readonly XNamespace androidNS = "http://schemas.android.com/apk/res/android";
@@ -134,4 +134,3 @@ namespace Xamarin.Android.Tasks
 			return distribution;
 		}
 	}
-}

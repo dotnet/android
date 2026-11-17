@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using Android.Content;
 using Android.Runtime;
 
-namespace Android.App {
+namespace Android.App; 
 
 	public partial class ProgressDialog {
 
@@ -17,4 +17,3 @@ namespace Android.App {
 			return Show (context, title, message, indeterminate, cancelable, new IDialogInterfaceOnCancelListenerImplementor () { Handler = cancelHandler });
 		}
 	}
-}

@@ -35,7 +35,7 @@ using System.Linq;
 using Mono.Cecil;
 using Mono.Cecil.Cil;
 
-namespace Mono.Tuner {
+namespace Mono.Tuner; 
 
 	public static class MethodBodyRocks {
 
@@ -456,4 +456,3 @@ namespace Mono.Tuner {
 			return parameters [index];
 		}
 	}
-}

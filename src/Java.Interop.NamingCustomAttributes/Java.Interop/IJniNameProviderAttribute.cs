@@ -1,11 +1,10 @@
-﻿using System;
-namespace Java.Interop
-{
+using System;
+namespace Java.Interop;
+
 #if !JCW_ONLY_TYPE_NAMES
-	public
+public
 #endif  // !JCW_ONLY_TYPE_NAMES
-	interface IJniNameProviderAttribute
-	{
-		string Name { get; }
-	}
+interface IJniNameProviderAttribute
+{
+	string Name { get; }
 }

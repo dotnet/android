@@ -8,8 +8,8 @@ using MonoDroid.Generation;
 using NUnit.Framework;
 using Xamarin.Android.Tools.Bytecode;
 
-namespace generatortests
-{
+namespace generatortests;
+
 	// dotnet/java-interop#1431 (Phase 2): end-to-end test that drives real
 	// Kotlin .class files (compiled by tests/Xamarin.Android.Tools.Bytecode-Tests/
 	// kotlin-gradle/) through KotlinFixups -> XmlClassDeclarationBuilder ->
@@ -167,4 +167,3 @@ namespace generatortests
 			return sb.ToString ();
 		}
 	}
-}

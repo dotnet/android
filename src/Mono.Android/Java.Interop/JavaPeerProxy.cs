@@ -3,8 +3,8 @@
 using System;
 using Android.Runtime;
 
-namespace Java.Interop
-{
+namespace Java.Interop;
+
 	/// <summary>
 	/// Attribute applied to generated alias holder types. When multiple .NET types
 	/// map to the same JNI name (e.g., <c>JavaCollection</c> and <c>JavaCollection&lt;T&gt;</c>
@@ -132,4 +132,3 @@ namespace Java.Interop
 				|| (state & JniManagedPeerStates.Replaceable) == JniManagedPeerStates.Replaceable;
 		}
 	}
-}

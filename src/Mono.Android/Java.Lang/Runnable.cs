@@ -2,7 +2,7 @@ using System;
 
 using Android.Runtime;
 
-namespace Java.Lang {
+namespace Java.Lang; 
 
 	[Register ("mono/java/lang/Runnable")]
 	public sealed class Runnable : Java.Lang.Object, Java.Lang.IRunnable {
@@ -31,4 +31,3 @@ namespace Java.Lang {
 			handler ();
 		}
 	}
-}

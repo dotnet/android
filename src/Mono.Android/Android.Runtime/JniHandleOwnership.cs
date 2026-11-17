@@ -1,7 +1,7 @@
 using System;
 
-namespace Android.Runtime
-{
+namespace Android.Runtime;
+
 	[Flags]
 	public enum JniHandleOwnership {
 		DoNotTransfer         = 0,
@@ -9,5 +9,4 @@ namespace Android.Runtime
 		TransferGlobalRef     = 2,
 		DoNotRegister         = 0x10,
 	}
-}
 

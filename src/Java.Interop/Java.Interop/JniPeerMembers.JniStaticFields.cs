@@ -1,10 +1,10 @@
-﻿#nullable enable
+#nullable enable
 
 using System;
 using System.Collections.Concurrent;
 
-namespace Java.Interop
-{
+namespace Java.Interop;
+
 	partial class JniPeerMembers {
 	public sealed partial class JniStaticFields
 	{
@@ -86,4 +86,3 @@ namespace Java.Interop
 			Clear (ref staticFields, static field => field.StaticRedirect?.Dispose ());
 		}
 	}}
-}

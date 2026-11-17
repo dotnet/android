@@ -2,24 +2,23 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace Xamarin.SourceWriter
+namespace Xamarin.SourceWriter;
+
+public class CommentWriter : ISourceWriter
 {
-	public class CommentWriter : ISourceWriter
+	public string Value { get; set; }
+	public int Priority { get; set; }
+
+	public CommentWriter (string value)
 	{
-		public string Value { get; set; }
-		public int Priority { get; set; }
+		Value = value;
+	}
 
-		public CommentWriter (string value)
-		{
-			Value = value;
-		}
-
-		public virtual void Write (CodeWriter writer)
-		{
-			if (Value.StartsWith ("#pragma", StringComparison.Ordinal))
-				writer.WriteLineNoIndent (Value);
-			else
-				writer.WriteLine (Value);
-		}
+	public virtual void Write (CodeWriter writer)
+	{
+		if (Value.StartsWith ("#pragma", StringComparison.Ordinal))
+			writer.WriteLineNoIndent (Value);
+		else
+			writer.WriteLine (Value);
 	}
 }

@@ -8,8 +8,8 @@ using Microsoft.Android.Build.Tasks;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
 
-namespace Xamarin.Android.Tasks
-{
+namespace Xamarin.Android.Tasks;
+
 	public static class ITaskItemExtensions
 	{
 		public static IEnumerable<XElement> ToXElements (this ICollection<ITaskItem> items, string itemName, string[] knownMetadata)
@@ -63,4 +63,3 @@ namespace Xamarin.Android.Tasks
 		public static bool HasMetadata (this ITaskItem item, string name)
 			=> item.MetadataNames.OfType<string> ().Contains (name, StringComparer.OrdinalIgnoreCase);
 	}
-}

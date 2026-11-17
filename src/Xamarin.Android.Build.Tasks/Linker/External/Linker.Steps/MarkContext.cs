@@ -4,8 +4,8 @@
 using System;
 using Mono.Cecil;
 
-namespace Mono.Linker.Steps
-{
+namespace Mono.Linker.Steps;
+
 	/// <summary>
 	/// Context which can be used to register actions to call during MarkStep
 	/// when various members are marked.
@@ -37,4 +37,3 @@ namespace Mono.Linker.Steps
 
 		public override void RegisterMarkMethodAction (Action<MethodDefinition> action) { }
 	}
-}

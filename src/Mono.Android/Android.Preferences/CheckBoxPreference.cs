@@ -1,4 +1,4 @@
-namespace Android.Preferences {
+namespace Android.Preferences; 
 
 	partial class CheckBoxPreference {
 
@@ -14,4 +14,3 @@ namespace Android.Preferences {
 		}
 #endif  // ANDROID_14
 	}
-}

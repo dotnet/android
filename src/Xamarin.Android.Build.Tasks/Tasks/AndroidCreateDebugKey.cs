@@ -6,8 +6,8 @@ using System.Resources;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
 
-namespace Xamarin.Android.Tasks
-{
+namespace Xamarin.Android.Tasks;
+
 	public class AndroidCreateDebugKey : KeyTool
 	{
 		public override string TaskPrefix => "ACD";
@@ -61,5 +61,4 @@ namespace Xamarin.Android.Tasks
 			return base.HandleTaskExecutionErrors ();
 		}
 	}
-}
 

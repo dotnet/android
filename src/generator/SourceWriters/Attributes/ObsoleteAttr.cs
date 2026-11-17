@@ -5,33 +5,32 @@ using System.Text;
 using System.Threading.Tasks;
 using Xamarin.SourceWriter;
 
-namespace generator.SourceWriters
+namespace generator.SourceWriters;
+
+public class ObsoleteAttr : AttributeWriter
 {
-	public class ObsoleteAttr : AttributeWriter
+	public string Message { get; set; }
+	public bool IsError { get; set; }
+
+	public ObsoleteAttr (string message = null, bool isError = false)
 	{
-		public string Message { get; set; }
-		public bool IsError { get; set; }
+		Message = message?.Replace ("\"", "\"\"").Trim ();
+		IsError = isError;
+	}
 
-		public ObsoleteAttr (string message = null, bool isError = false)
-		{
-			Message = message?.Replace ("\"", "\"\"").Trim ();
-			IsError = isError;
-		}
+	public override void WriteAttribute (CodeWriter writer)
+	{
+		var content = string.Empty;
 
-		public override void WriteAttribute (CodeWriter writer)
-		{
-			var content = string.Empty;
+		if (Message != null || IsError)
+			content += $"@\"{Message}\"";
 
-			if (Message != null || IsError)
-				content += $"@\"{Message}\"";
+		if (IsError)
+			content += ", error: true";
 
-			if (IsError)
-				content += ", error: true";
-
-			if (content.HasValue ())
-				writer.WriteLine ($"[global::System.Obsolete ({content})]");
-			else
-				writer.WriteLine ("[global::System.Obsolete]");
-		}
+		if (content.HasValue ())
+			writer.WriteLine ($"[global::System.Obsolete ({content})]");
+		else
+			writer.WriteLine ("[global::System.Obsolete]");
 	}
 }

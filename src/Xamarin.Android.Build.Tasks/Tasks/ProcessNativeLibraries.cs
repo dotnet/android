@@ -6,8 +6,8 @@ using System.Linq;
 using Microsoft.Build.Framework;
 using Microsoft.Android.Build.Tasks;
 
-namespace Xamarin.Android.Tasks
-{
+namespace Xamarin.Android.Tasks;
+
 	/// <summary>
 	/// Processes .so files coming from @(ResolvedFileToPublish).
 	/// * Checks if ABI is valid
@@ -89,4 +89,3 @@ namespace Xamarin.Android.Tasks
 		}
 
 	}
-}

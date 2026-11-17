@@ -5,8 +5,8 @@ using Java.Interop.Tools.Generator.Transformation;
 using MonoDroid.Generation;
 using NUnit.Framework;
 
-namespace generatortests
-{
+namespace generatortests;
+
 	[TestFixture]
 	public class SealedProtectedFixupsTests
 	{
@@ -90,4 +90,3 @@ namespace generatortests
 			return klass;
 		}
 	}
-}

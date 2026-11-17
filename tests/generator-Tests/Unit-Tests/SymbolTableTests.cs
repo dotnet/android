@@ -2,8 +2,8 @@ using System;
 using MonoDroid.Generation;
 using NUnit.Framework;
 
-namespace generatortests
-{
+namespace generatortests;
+
 	[TestFixture]
 	public class SymbolTableTests
 	{
@@ -37,4 +37,3 @@ namespace generatortests
 			Assert.AreEqual ("System.Collections.Generic.IList`1", table.Lookup ("System.Collections.Generic.IList<Dictionary<string, Java.Util.Locale.LanguageRange>>").FullName);
 		}
 	}
-}

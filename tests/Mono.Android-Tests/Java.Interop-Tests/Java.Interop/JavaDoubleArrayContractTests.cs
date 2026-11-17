@@ -6,25 +6,24 @@ using Java.Interop;
 
 using NUnit.Framework;
 
-namespace Java.InteropTests
+namespace Java.InteropTests;
+
+[TestFixture]
+public class JavaDoubleArrayContractTests : JavaPrimitiveArrayContract<JavaDoubleArray, double>
 {
-	[TestFixture]
-	public class JavaDoubleArrayContractTests : JavaPrimitiveArrayContract<JavaDoubleArray, double>
+	protected override ICollection<double> CreateCollection (IEnumerable<double> values)
 	{
-		protected override ICollection<double> CreateCollection (IEnumerable<double> values)
-		{
-			return new JavaDoubleArray (values);
-		}
+		return new JavaDoubleArray (values);
+	}
 
-		protected override ICollection<double> CreateCollection (IList<double> values)
-		{
-			return new JavaDoubleArray (values);
-		}
+	protected override ICollection<double> CreateCollection (IList<double> values)
+	{
+		return new JavaDoubleArray (values);
+	}
 
-		protected override ICollection<double> CreateCollection (int length)
-		{
-			return new JavaDoubleArray (length);
-		}
+	protected override ICollection<double> CreateCollection (int length)
+	{
+		return new JavaDoubleArray (length);
 	}
 }
 

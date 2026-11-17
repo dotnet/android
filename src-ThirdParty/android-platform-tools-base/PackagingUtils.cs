@@ -21,8 +21,8 @@ using System.Linq;
 using System.IO;
 using System.Text.RegularExpressions;
 
-namespace Xamarin.Android.Tasks
-{
+namespace Xamarin.Android.Tasks;
+
 	/// <summary>
 	/// Utility class for packaging.
 	/// </summary>
@@ -111,4 +111,3 @@ namespace Xamarin.Android.Tasks
 			return string.Equals (a, b, StringComparison.OrdinalIgnoreCase);
 		}
 	}
-}

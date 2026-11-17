@@ -13,7 +13,7 @@ using Microsoft.Build.Utilities;
 using Monodroid;
 using Microsoft.Android.Build.Tasks;
 
-namespace Xamarin.Android.Tasks {
+namespace Xamarin.Android.Tasks; 
 	public class ConvertCustomView : AndroidTask {
 		public override string TaskPrefix => "CCV";
 
@@ -174,4 +174,3 @@ namespace Xamarin.Android.Tasks {
 			return false;
 		}
 	}
-}

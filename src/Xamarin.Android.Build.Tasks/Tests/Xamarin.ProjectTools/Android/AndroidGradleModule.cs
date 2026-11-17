@@ -5,59 +5,59 @@ using System.Linq;
 
 using Xamarin.Android.Tools;
 
-namespace Xamarin.ProjectTools
+namespace Xamarin.ProjectTools;
+
+public class AndroidGradleModule
 {
-	public class AndroidGradleModule
+	public string Name { get; set; }
+
+	public string PackageName = "com.example.gradletest";
+
+	public string ModuleDirectory { get; private set; } = string.Empty;
+
+	public int CompileSdk { get; set; } = XABuildConfig.AndroidDefaultTargetDotnetApiLevel.Major;
+
+	public int MinSdk { get; set; } = XABuildConfig.AndroidMinimumDotNetApiLevel.Major;
+
+	public bool IsApplication { get; set; } = false;
+
+	public string AndroidManifestContent { get; set; } = string.Empty;
+
+	public string BuildGradleFileContent { get; set; } = string.Empty;
+
+	public List<AndroidItem.AndroidJavaSource> JavaSources { get; set; } = new List<AndroidItem.AndroidJavaSource> ();
+
+	public AndroidGradleModule (string directory)
 	{
-		public string Name { get; set; }
+		ModuleDirectory = directory;
+		Name = Path.GetFileName (ModuleDirectory);
+	}
 
-		public string PackageName = "com.example.gradletest";
+	public void WriteAndroidManifest ()
+	{	
+		var manifestDirectory = Path.Combine (ModuleDirectory, "src", "main");
+		Directory.CreateDirectory (manifestDirectory);
 
-		public string ModuleDirectory { get; private set; } = string.Empty;
-
-		public int CompileSdk { get; set; } = XABuildConfig.AndroidDefaultTargetDotnetApiLevel.Major;
-
-		public int MinSdk { get; set; } = XABuildConfig.AndroidMinimumDotNetApiLevel.Major;
-
-		public bool IsApplication { get; set; } = false;
-
-		public string AndroidManifestContent { get; set; } = string.Empty;
-
-		public string BuildGradleFileContent { get; set; } = string.Empty;
-
-		public List<AndroidItem.AndroidJavaSource> JavaSources { get; set; } = new List<AndroidItem.AndroidJavaSource> ();
-
-		public AndroidGradleModule (string directory)
-		{
-			ModuleDirectory = directory;
-			Name = Path.GetFileName (ModuleDirectory);
-		}
-
-		public void WriteAndroidManifest ()
-		{	
-			var manifestDirectory = Path.Combine (ModuleDirectory, "src", "main");
-			Directory.CreateDirectory (manifestDirectory);
-
-			var manifest = $@"
+		var manifest = $@"
 <manifest xmlns:android=""http://schemas.android.com/apk/res/android"">
 	{AndroidManifestContent}
 </manifest>
 ";
-			File.WriteAllText (Path.Combine (manifestDirectory, "AndroidManifest.xml"), manifest);
-		}
+		File.WriteAllText (Path.Combine (manifestDirectory, "AndroidManifest.xml"), manifest);
+	}
 
-		public void WriteJavaSource (AndroidItem.AndroidJavaSource javaSource)
-		{
-			var srcPathParts = new[] { ModuleDirectory, "src", "main", "java" };
-			var javaDirectory = Path.Combine (srcPathParts.Concat (PackageName.Split ('.')).ToArray ());
-			Directory.CreateDirectory (javaDirectory);
-			File.WriteAllText (Path.Combine (javaDirectory, javaSource.Include ()), javaSource.TextContent ());
-		}
+	public void WriteJavaSource (AndroidItem.AndroidJavaSource javaSource)
+	{
+		var srcPathParts = new[] { ModuleDirectory, "src", "main", "java" };
+		var javaDirectory = Path.Combine (srcPathParts.Concat (PackageName.Split ('.')).ToArray ());
+		Directory.CreateDirectory (javaDirectory);
+		File.WriteAllText (Path.Combine (javaDirectory, javaSource.Include ()), javaSource.TextContent ());
+	}
 
-		public void WriteGradleBuildFile ()
-		{	
-			var pluginId = IsApplication ? "com.android.application" : "com.android.library";
-			var buildGradleContent = $@"
+	public void WriteGradleBuildFile ()
+	{	
+		var pluginId = IsApplication ? "com.android.application" : "com.android.library";
+		var buildGradleContent = $@"
 plugins {{
     id(""{pluginId}"")
 }}
@@ -76,28 +76,28 @@ dependencies {{
     implementation(""com.google.android.material:material:1.11.0"")
 }}
 ";
-			File.WriteAllText (Path.Combine (ModuleDirectory, "build.gradle.kts"), string.IsNullOrEmpty (BuildGradleFileContent) ? buildGradleContent : BuildGradleFileContent);
-		}
+		File.WriteAllText (Path.Combine (ModuleDirectory, "build.gradle.kts"), string.IsNullOrEmpty (BuildGradleFileContent) ? buildGradleContent : BuildGradleFileContent);
+	}
 
-		public void Create ()
-		{
-			Directory.CreateDirectory (ModuleDirectory);
-			if (IsApplication) {
-				SetupDefaultApp ();
-			} else {
-				SetupDefaultLibrary ();
-			}
-			WriteGradleBuildFile ();
-			WriteAndroidManifest ();
-			foreach (var javaSource in JavaSources) {
-				WriteJavaSource (javaSource);
-			}
+	public void Create ()
+	{
+		Directory.CreateDirectory (ModuleDirectory);
+		if (IsApplication) {
+			SetupDefaultApp ();
+		} else {
+			SetupDefaultLibrary ();
 		}
+		WriteGradleBuildFile ();
+		WriteAndroidManifest ();
+		foreach (var javaSource in JavaSources) {
+			WriteJavaSource (javaSource);
+		}
+	}
 
-		public void SetupDefaultApp ()
-		{
-			JavaSources.Add (new AndroidItem.AndroidJavaSource ("MainActivity.java") {
-				TextContent = () => $@"
+	public void SetupDefaultApp ()
+	{
+		JavaSources.Add (new AndroidItem.AndroidJavaSource ("MainActivity.java") {
+			TextContent = () => $@"
 package {PackageName};
 import android.os.Bundle;
 import android.widget.TextView;
@@ -112,8 +112,8 @@ public class MainActivity extends AppCompatActivity {{
     }}
 }}
 ",
-			});
-			AndroidManifestContent = $@"
+		});
+		AndroidManifestContent = $@"
   <application android:label=""App"">
     <activity android:name="".TestActivity"" android:exported=""true"">
       <intent-filter>
@@ -123,13 +123,13 @@ public class MainActivity extends AppCompatActivity {{
     </activity>
   </application>
 ";
-		}
+	}
 
 
-		public void SetupDefaultLibrary ()
-		{
-			JavaSources.Add (new AndroidItem.AndroidJavaSource ($"{Name}Class.java") {
-				TextContent = () => $@"
+	public void SetupDefaultLibrary ()
+	{
+		JavaSources.Add (new AndroidItem.AndroidJavaSource ($"{Name}Class.java") {
+			TextContent = () => $@"
 package {PackageName};
 public class {Name}Class {{
     public static String getString(String myString) {{
@@ -137,8 +137,7 @@ public class {Name}Class {{
     }}
 }}
 ",
-			});
-		}
-
+		});
 	}
+
 }

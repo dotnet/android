@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Threading;
 
 using Microsoft.Build.Framework;
@@ -7,8 +7,8 @@ using Microsoft.Android.Build.Tasks;
 
 using TPLTask = System.Threading.Tasks.Task;
 
-namespace Xamarin.Android.BuildTools.PrepTasks
-{
+namespace Xamarin.Android.BuildTools.PrepTasks;
+
 	public class XASleepInternal : AsyncTask
 	{
 		public override string TaskPrefix => "XASI";
@@ -20,4 +20,3 @@ namespace Xamarin.Android.BuildTools.PrepTasks
 			return TPLTask.Delay (Milliseconds, CancellationToken);
 		}
 	}
-}

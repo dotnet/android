@@ -15,7 +15,7 @@ using System.Threading;
 
 using Java.Interop;
 
-namespace Java.Interop {
+namespace Java.Interop; 
 
 	/// <remarks>
 	/// For overloads accepting UTF-8 spans, the caller must ensure each span has readable
@@ -968,4 +968,3 @@ namespace Java.Interop {
 			}
 		}
 	}
-}

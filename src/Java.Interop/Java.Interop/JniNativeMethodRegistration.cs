@@ -6,7 +6,7 @@ using System.Threading;
 
 using Java.Interop;
 
-namespace Java.Interop {
+namespace Java.Interop; 
 
 	public struct JniNativeMethodRegistration {
 
@@ -52,4 +52,3 @@ namespace Java.Interop {
 			this.functionPointer = functionPointer;
 		}
 	}
-}

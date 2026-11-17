@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 using Android.Runtime;
 
-namespace Android.App {
+namespace Android.App; 
 
 	partial class Notification {
 
@@ -39,4 +39,3 @@ namespace Android.App {
 			}
 		}
 	}
-}

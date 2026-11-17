@@ -2,7 +2,7 @@ using System;
 
 using Android.Content;
 
-namespace Android.OS {
+namespace Android.OS; 
 
 	public partial class PowerManager {
 
@@ -11,6 +11,5 @@ namespace Android.OS {
 			return context.GetSystemService (Context.PowerService!) as PowerManager;
 		}
 	}
-}
 
 

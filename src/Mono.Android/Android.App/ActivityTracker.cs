@@ -11,8 +11,8 @@ using System.Collections.Generic;
 
 using Android.OS;
 
-namespace Android.App
-{
+namespace Android.App;
+
 	#if ANDROID_14 // For IActivityLifecycleCallbacks
 	// For internal use by inspector
 	class ActivityTracker : Java.Lang.Object, Application.IActivityLifecycleCallbacks
@@ -57,5 +57,4 @@ namespace Android.App
 		}
 	}
 	#endif
-}
 

@@ -1,11 +1,10 @@
 using System;
 
-namespace Java.Interop.Tools.JavaTypeSystem.Models
-{
-	public class JavaGenericConstraint
-	{
-		public string Type { get; }
+namespace Java.Interop.Tools.JavaTypeSystem.Models;
 
-		public JavaGenericConstraint (string type) => Type = type;
-	}
+public class JavaGenericConstraint
+{
+	public string Type { get; }
+
+	public JavaGenericConstraint (string type) => Type = type;
 }

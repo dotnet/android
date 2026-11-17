@@ -12,8 +12,8 @@ using System.Collections.Generic;
 using Xamarin.Android.Tools;
 using Microsoft.Android.Build.Tasks;
 
-namespace Xamarin.Android.Tasks
-{
+namespace Xamarin.Android.Tasks;
+
 	public class Javac : JavaCompileToolTask
 	{
 		public override string TaskPrefix => "JVC";
@@ -81,4 +81,3 @@ namespace Xamarin.Android.Tasks
 			sw.WriteLine ($"-encoding UTF8");
 		}
 	}
-}

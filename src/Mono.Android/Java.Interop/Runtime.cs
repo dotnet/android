@@ -4,7 +4,7 @@ using System.Runtime.InteropServices;
 
 using Android.Runtime;
 
-namespace Java.Interop {
+namespace Java.Interop; 
 
 	public static class Runtime {
 
@@ -53,4 +53,3 @@ namespace Java.Interop {
 			return JNIEnv.IsGCUserPeer (value);
 		}
 	}
-}

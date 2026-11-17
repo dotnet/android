@@ -1,6 +1,6 @@
 using System;
 
-namespace Android.Runtime {
+namespace Android.Runtime; 
 
 	[Register ("mono/android/runtime/JavaObject")]
 	internal sealed class JavaObject : Java.Lang.Object {
@@ -99,4 +99,3 @@ namespace Android.Runtime {
 			return inst.ToString () ?? "";
 		}
 	}
-}

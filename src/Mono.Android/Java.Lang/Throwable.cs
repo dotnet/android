@@ -7,7 +7,7 @@ using Android.Runtime;
 using System.ComponentModel;
 using System.Diagnostics;
 
-namespace Java.Lang {
+namespace Java.Lang; 
 
 	public partial class Throwable : JavaException, IJavaObject, IDisposable, IJavaObjectEx
 	{
@@ -207,4 +207,3 @@ namespace Java.Lang {
 		{
 		}
 	}
-}

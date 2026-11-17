@@ -1,6 +1,6 @@
 using System;
 
-namespace Java.Lang.Reflect {
+namespace Java.Lang.Reflect; 
 
 	partial class InvocationTargetException {
 
@@ -9,4 +9,3 @@ namespace Java.Lang.Reflect {
 			get {return Cause;}
 		}
 	}
-}

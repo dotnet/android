@@ -1,5 +1,5 @@
-namespace Android.Runtime
-{
+namespace Android.Runtime;
+
 	// Keep in sync with the LogLevel enum in
 	// monodroid/libmonodroid/logger.{c,h}
 	internal enum LogLevel {
@@ -13,4 +13,3 @@ namespace Android.Runtime
 		Fatal   = 0x07,
 		Silent  = 0x08
 	}
-}

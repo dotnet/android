@@ -1,7 +1,7 @@
 using System;
 
-namespace Java.Interop
-{
+namespace Java.Interop;
+
 	/// <include file="../Documentation/Java.Interop/JniManagedPeerStates.xml" path="/docs/member[@name='T:JniManagedPeerStates']/*" />
 	[Flags]
 	public enum JniManagedPeerStates {
@@ -19,4 +19,3 @@ namespace Java.Interop
 	partial class JavaException {
 		const       JniManagedPeerStates        Disposed            = (JniManagedPeerStates) (1 << 2);
 	}
-}

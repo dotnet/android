@@ -12,8 +12,8 @@ using Mono.Tuner;
 using Xamarin.Android.Tasks;
 using Resources = Xamarin.Android.Tasks.Properties.Resources;
 
-namespace MonoDroid.Tuner
-{
+namespace MonoDroid.Tuner;
+
 	public class FixAbstractMethodsStep : BaseStep, IAssemblyModifierPipelineStep
 	{
 		readonly IMetadataResolver _injectedCache;
@@ -283,4 +283,3 @@ namespace MonoDroid.Tuner
 			return Context.Resolver.GetAssembly ("Mono.Android.dll");
 		}
 	}
-}

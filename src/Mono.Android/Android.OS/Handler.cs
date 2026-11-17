@@ -1,7 +1,7 @@
 using System;
 using Android.Runtime;
 
-namespace Android.OS {
+namespace Android.OS; 
 
 	public partial class Handler {
 
@@ -105,4 +105,3 @@ namespace Android.OS {
 			return true;
 		}
 	}
-}

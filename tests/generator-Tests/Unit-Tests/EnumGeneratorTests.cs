@@ -10,8 +10,8 @@ using MonoDroid.Generation;
 using NUnit.Framework;
 using NUnit.Framework.Internal;
 
-namespace generatortests
-{
+namespace generatortests;
+
 	[TestFixture]
 	class EnumGeneratorTests : CodeGeneratorTestBase
 	{
@@ -215,4 +215,3 @@ namespace generatortests
 			return new [] { klass };
 		}
 	}
-}

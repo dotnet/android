@@ -1,11 +1,10 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 
-namespace Xamarin.AndroidTools.AnnotationSupport
+namespace Xamarin.AndroidTools.AnnotationSupport;
+
+public abstract class AnnotationParserExtension
 {
-	public abstract class AnnotationParserExtension
-	{
-		protected internal abstract void OnAnnotationsParsed (IEnumerable<AnnotatedItem> anns);
-	}
+	protected internal abstract void OnAnnotationsParsed (IEnumerable<AnnotatedItem> anns);
 }
 

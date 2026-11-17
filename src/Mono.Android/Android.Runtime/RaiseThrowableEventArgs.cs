@@ -1,6 +1,6 @@
 using System;
 
-namespace Android.Runtime {
+namespace Android.Runtime; 
 
 	public class RaiseThrowableEventArgs : EventArgs {
 
@@ -20,5 +20,4 @@ namespace Android.Runtime {
 			}
 		}
 	}
-}
 

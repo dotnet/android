@@ -5,8 +5,8 @@ using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 
-namespace Java.Interop
-{
+namespace Java.Interop;
+
 	public class JniSurfacedPeerInfo {
 
 		public  int                             JniIdentityHashCode     {get; private set;}
@@ -307,4 +307,3 @@ namespace Java.Interop
 			protected abstract JniObjectReference CreateLocalObjectReferenceArgumentCore (Type type, object? value);
 		}
 	}
-}

@@ -11,7 +11,7 @@ using System.ComponentModel;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 
-namespace Java.Lang {
+namespace Java.Lang; 
 
 	[Serializable]
 	public partial class Object : global::Java.Interop.JavaObject, IJavaObject, IJavaObjectEx
@@ -475,4 +475,3 @@ namespace Java.Lang {
 			return value.ToArray<string>();
 		}
 	}
-}

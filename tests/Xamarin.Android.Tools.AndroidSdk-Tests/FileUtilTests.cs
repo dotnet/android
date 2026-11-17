@@ -8,205 +8,204 @@ using System.Threading;
 
 using NUnit.Framework;
 
-namespace Xamarin.Android.Tools.Tests
+namespace Xamarin.Android.Tools.Tests;
+
+[TestFixture]
+public class FileUtilTests
 {
-	[TestFixture]
-	public class FileUtilTests
+	string tempDir = null!;
+	Action<TraceLevel, string> logger = null!;
+
+	[SetUp]
+	public void SetUp ()
 	{
-		string tempDir = null!;
-		Action<TraceLevel, string> logger = null!;
-
-		[SetUp]
-		public void SetUp ()
-		{
-			tempDir = Path.Combine (Path.GetTempPath (), $"FileUtilTests-{Guid.NewGuid ():N}");
-			Directory.CreateDirectory (tempDir);
-			logger = (level, msg) => TestContext.WriteLine ($"[{level}] {msg}");
-		}
-
-		[TearDown]
-		public void TearDown ()
-		{
-			if (Directory.Exists (tempDir))
-				Directory.Delete (tempDir, recursive: true);
-		}
-
-		[Test]
-		public void MoveWithRollback_NewTarget_Succeeds ()
-		{
-			var source = Path.Combine (tempDir, "source");
-			var target = Path.Combine (tempDir, "target");
-			Directory.CreateDirectory (source);
-			File.WriteAllText (Path.Combine (source, "file.txt"), "hello");
-
-			FileUtil.MoveWithRollback (source, target, logger);
-
-			Assert.IsFalse (Directory.Exists (source), "Source should no longer exist");
-			Assert.IsTrue (Directory.Exists (target), "Target should exist");
-			Assert.AreEqual ("hello", File.ReadAllText (Path.Combine (target, "file.txt")));
-		}
-
-		[Test]
-		public void MoveWithRollback_ExistingTarget_BacksUpAndReplaces ()
-		{
-			var source = Path.Combine (tempDir, "source");
-			var target = Path.Combine (tempDir, "target");
-			Directory.CreateDirectory (source);
-			File.WriteAllText (Path.Combine (source, "new.txt"), "new");
-
-			Directory.CreateDirectory (target);
-			File.WriteAllText (Path.Combine (target, "old.txt"), "old");
-
-			FileUtil.MoveWithRollback (source, target, logger);
-
-			Assert.IsFalse (Directory.Exists (source), "Source should no longer exist");
-			Assert.IsTrue (File.Exists (Path.Combine (target, "new.txt")), "New file should exist");
-			Assert.IsFalse (File.Exists (Path.Combine (target, "old.txt")), "Old file should be gone");
-		}
-
-		[Test]
-		public void MoveWithRollback_SourceDoesNotExist_RestoresBackup ()
-		{
-			var source = Path.Combine (tempDir, "nonexistent");
-			var target = Path.Combine (tempDir, "target");
-
-			// Create an existing target that should be backed up and restored
-			Directory.CreateDirectory (target);
-			File.WriteAllText (Path.Combine (target, "original.txt"), "preserve me");
-
-			Assert.Throws<DirectoryNotFoundException> (() => FileUtil.MoveWithRollback (source, target, logger));
-
-			// The original target should be restored from backup
-			Assert.IsTrue (Directory.Exists (target), "Target should be restored");
-			Assert.AreEqual ("preserve me", File.ReadAllText (Path.Combine (target, "original.txt")));
-		}
-
-		[Test]
-		public void MoveWithRollback_SourceDoesNotExist_NoExistingTarget_Throws ()
-		{
-			var source = Path.Combine (tempDir, "nonexistent");
-			var target = Path.Combine (tempDir, "also-nonexistent");
-
-			Assert.Throws<DirectoryNotFoundException> (() => FileUtil.MoveWithRollback (source, target, logger));
-			Assert.IsFalse (Directory.Exists (target));
-		}
-
-		[Test]
-		public void MoveWithRollback_CancelledAfterValidation_RestoresBackup ()
-		{
-			var source = Path.Combine (tempDir, "source");
-			var target = Path.Combine (tempDir, "target");
-			Directory.CreateDirectory (source);
-			File.WriteAllText (Path.Combine (source, "new.txt"), "new");
-			Directory.CreateDirectory (target);
-			File.WriteAllText (Path.Combine (target, "old.txt"), "old");
-			using var cts = new CancellationTokenSource ();
-			Action validate = () => {
-				Assert.IsTrue (File.Exists (Path.Combine (target, "new.txt")));
-				var backups = Directory.GetDirectories (tempDir, "target.old-*");
-				Assert.That (backups, Has.Length.EqualTo (1), "Backup must survive through validation");
-				Assert.AreEqual ("old", File.ReadAllText (Path.Combine (backups [0], "old.txt")));
-				cts.Cancel ();
-			};
-
-			Assert.Throws<OperationCanceledException> (() => FileUtil.MoveWithRollback (source, target, logger, validate, cts.Token));
-
-			Assert.AreEqual ("old", File.ReadAllText (Path.Combine (target, "old.txt")));
-			Assert.IsFalse (File.Exists (Path.Combine (target, "new.txt")));
-			Assert.IsEmpty (Directory.GetDirectories (tempDir, "target.old-*"));
-		}
-
-		[Test]
-		public void MoveWithRollback_RollbackFailure_PreservesBackupAndBothErrors ()
-		{
-			var source = Path.Combine (tempDir, "source");
-			var target = Path.Combine (tempDir, "target");
-			Directory.CreateDirectory (source);
-			Directory.CreateDirectory (target);
-			File.WriteAllText (Path.Combine (target, "old.txt"), "old");
-			var validationError = new InvalidOperationException ("Validation failed");
-
-			var error = Assert.Throws<AggregateException> (() => FileUtil.MoveWithRollback (source, target, logger, validate: () => {
-				Directory.Delete (target);
-				File.WriteAllText (target, "blocking file");
-				throw validationError;
-			}));
-
-			Assert.IsNotNull (error);
-			if (error is null)
-				throw new InvalidOperationException ("Expected rollback failure");
-			Assert.That (error.InnerExceptions, Has.Count.EqualTo (2));
-			Assert.AreSame (validationError, error.InnerExceptions [0]);
-			var backups = Directory.GetDirectories (tempDir, "target.old-*");
-			Assert.That (backups, Has.Length.EqualTo (1));
-			Assert.AreEqual ("old", File.ReadAllText (Path.Combine (backups [0], "old.txt")));
-			Assert.AreEqual ("blocking file", File.ReadAllText (target));
-		}
-
-		[Test]
-		public void IsUnderDirectory_ChildPath_ReturnsTrue ()
-		{
-			var parent = Path.Combine (tempDir, "programs");
-			var child = Path.Combine (parent, "java", "jdk-21");
-			Assert.IsTrue (FileUtil.IsUnderDirectory (child, parent));
-		}
-
-		[Test]
-		public void IsUnderDirectory_ExactMatch_ReturnsTrue ()
-		{
-			var directory = Path.Combine (tempDir, "programs");
-			Assert.IsTrue (FileUtil.IsUnderDirectory (directory, directory));
-		}
-
-		[Test]
-		public void IsUnderDirectory_SiblingPath_ReturnsFalse ()
-		{
-			Assert.IsFalse (FileUtil.IsUnderDirectory (
-				Path.Combine (tempDir, "data", "java"),
-				Path.Combine (tempDir, "programs")));
-		}
-
-		[Test]
-		public void IsUnderDirectory_DifferentRoot_ReturnsFalse ()
-		{
-			Assert.IsFalse (FileUtil.IsUnderDirectory (
-				Path.Combine (Path.GetPathRoot (tempDir), "other", "java"),
-				Path.Combine (tempDir, "programs")));
-		}
-
-		[Test]
-		public void IsUnderDirectory_PartialDirNameMatch_ReturnsFalse ()
-		{
-			var parent = Path.Combine (tempDir, "programs");
-			var sibling = Path.Combine (tempDir, "programs-extra", "java");
-			Assert.IsFalse (FileUtil.IsUnderDirectory (sibling, parent));
-		}
-
-		[TestCase (null, "/dir")]
-		[TestCase ("/dir", null)]
-		[TestCase ("", "/dir")]
-		[TestCase ("/dir", "")]
-		[TestCase (null, null)]
-		public void IsUnderDirectory_NullOrEmpty_ReturnsFalse (string path, string directory)
-		{
-			Assert.IsFalse (FileUtil.IsUnderDirectory (path, directory));
-		}
-
-		[Test]
-		public void IsUnderDirectory_CaseSensitive ()
-		{
-			var parent = Path.Combine (tempDir, "Programs");
-			var child = Path.Combine (tempDir, "PROGRAMS", "java");
-			Assert.IsFalse (FileUtil.IsUnderDirectory (child, parent));
-		}
-
-		[Test]
-		public void IsUnderDirectory_CanonicalCaseMismatch_ReturnsFalse ()
-		{
-			var parent = Path.Combine (tempDir, "programs");
-			var sibling = Path.Combine (parent, "..", "PROGRAMS", "java");
-			Assert.IsFalse (FileUtil.IsUnderDirectory (sibling, parent));
-		}
-
+		tempDir = Path.Combine (Path.GetTempPath (), $"FileUtilTests-{Guid.NewGuid ():N}");
+		Directory.CreateDirectory (tempDir);
+		logger = (level, msg) => TestContext.WriteLine ($"[{level}] {msg}");
 	}
+
+	[TearDown]
+	public void TearDown ()
+	{
+		if (Directory.Exists (tempDir))
+			Directory.Delete (tempDir, recursive: true);
+	}
+
+	[Test]
+	public void MoveWithRollback_NewTarget_Succeeds ()
+	{
+		var source = Path.Combine (tempDir, "source");
+		var target = Path.Combine (tempDir, "target");
+		Directory.CreateDirectory (source);
+		File.WriteAllText (Path.Combine (source, "file.txt"), "hello");
+
+		FileUtil.MoveWithRollback (source, target, logger);
+
+		Assert.IsFalse (Directory.Exists (source), "Source should no longer exist");
+		Assert.IsTrue (Directory.Exists (target), "Target should exist");
+		Assert.AreEqual ("hello", File.ReadAllText (Path.Combine (target, "file.txt")));
+	}
+
+	[Test]
+	public void MoveWithRollback_ExistingTarget_BacksUpAndReplaces ()
+	{
+		var source = Path.Combine (tempDir, "source");
+		var target = Path.Combine (tempDir, "target");
+		Directory.CreateDirectory (source);
+		File.WriteAllText (Path.Combine (source, "new.txt"), "new");
+
+		Directory.CreateDirectory (target);
+		File.WriteAllText (Path.Combine (target, "old.txt"), "old");
+
+		FileUtil.MoveWithRollback (source, target, logger);
+
+		Assert.IsFalse (Directory.Exists (source), "Source should no longer exist");
+		Assert.IsTrue (File.Exists (Path.Combine (target, "new.txt")), "New file should exist");
+		Assert.IsFalse (File.Exists (Path.Combine (target, "old.txt")), "Old file should be gone");
+	}
+
+	[Test]
+	public void MoveWithRollback_SourceDoesNotExist_RestoresBackup ()
+	{
+		var source = Path.Combine (tempDir, "nonexistent");
+		var target = Path.Combine (tempDir, "target");
+
+		// Create an existing target that should be backed up and restored
+		Directory.CreateDirectory (target);
+		File.WriteAllText (Path.Combine (target, "original.txt"), "preserve me");
+
+		Assert.Throws<DirectoryNotFoundException> (() => FileUtil.MoveWithRollback (source, target, logger));
+
+		// The original target should be restored from backup
+		Assert.IsTrue (Directory.Exists (target), "Target should be restored");
+		Assert.AreEqual ("preserve me", File.ReadAllText (Path.Combine (target, "original.txt")));
+	}
+
+	[Test]
+	public void MoveWithRollback_SourceDoesNotExist_NoExistingTarget_Throws ()
+	{
+		var source = Path.Combine (tempDir, "nonexistent");
+		var target = Path.Combine (tempDir, "also-nonexistent");
+
+		Assert.Throws<DirectoryNotFoundException> (() => FileUtil.MoveWithRollback (source, target, logger));
+		Assert.IsFalse (Directory.Exists (target));
+	}
+
+	[Test]
+	public void MoveWithRollback_CancelledAfterValidation_RestoresBackup ()
+	{
+		var source = Path.Combine (tempDir, "source");
+		var target = Path.Combine (tempDir, "target");
+		Directory.CreateDirectory (source);
+		File.WriteAllText (Path.Combine (source, "new.txt"), "new");
+		Directory.CreateDirectory (target);
+		File.WriteAllText (Path.Combine (target, "old.txt"), "old");
+		using var cts = new CancellationTokenSource ();
+		Action validate = () => {
+			Assert.IsTrue (File.Exists (Path.Combine (target, "new.txt")));
+			var backups = Directory.GetDirectories (tempDir, "target.old-*");
+			Assert.That (backups, Has.Length.EqualTo (1), "Backup must survive through validation");
+			Assert.AreEqual ("old", File.ReadAllText (Path.Combine (backups [0], "old.txt")));
+			cts.Cancel ();
+		};
+
+		Assert.Throws<OperationCanceledException> (() => FileUtil.MoveWithRollback (source, target, logger, validate, cts.Token));
+
+		Assert.AreEqual ("old", File.ReadAllText (Path.Combine (target, "old.txt")));
+		Assert.IsFalse (File.Exists (Path.Combine (target, "new.txt")));
+		Assert.IsEmpty (Directory.GetDirectories (tempDir, "target.old-*"));
+	}
+
+	[Test]
+	public void MoveWithRollback_RollbackFailure_PreservesBackupAndBothErrors ()
+	{
+		var source = Path.Combine (tempDir, "source");
+		var target = Path.Combine (tempDir, "target");
+		Directory.CreateDirectory (source);
+		Directory.CreateDirectory (target);
+		File.WriteAllText (Path.Combine (target, "old.txt"), "old");
+		var validationError = new InvalidOperationException ("Validation failed");
+
+		var error = Assert.Throws<AggregateException> (() => FileUtil.MoveWithRollback (source, target, logger, validate: () => {
+			Directory.Delete (target);
+			File.WriteAllText (target, "blocking file");
+			throw validationError;
+		}));
+
+		Assert.IsNotNull (error);
+		if (error is null)
+			throw new InvalidOperationException ("Expected rollback failure");
+		Assert.That (error.InnerExceptions, Has.Count.EqualTo (2));
+		Assert.AreSame (validationError, error.InnerExceptions [0]);
+		var backups = Directory.GetDirectories (tempDir, "target.old-*");
+		Assert.That (backups, Has.Length.EqualTo (1));
+		Assert.AreEqual ("old", File.ReadAllText (Path.Combine (backups [0], "old.txt")));
+		Assert.AreEqual ("blocking file", File.ReadAllText (target));
+	}
+
+	[Test]
+	public void IsUnderDirectory_ChildPath_ReturnsTrue ()
+	{
+		var parent = Path.Combine (tempDir, "programs");
+		var child = Path.Combine (parent, "java", "jdk-21");
+		Assert.IsTrue (FileUtil.IsUnderDirectory (child, parent));
+	}
+
+	[Test]
+	public void IsUnderDirectory_ExactMatch_ReturnsTrue ()
+	{
+		var directory = Path.Combine (tempDir, "programs");
+		Assert.IsTrue (FileUtil.IsUnderDirectory (directory, directory));
+	}
+
+	[Test]
+	public void IsUnderDirectory_SiblingPath_ReturnsFalse ()
+	{
+		Assert.IsFalse (FileUtil.IsUnderDirectory (
+			Path.Combine (tempDir, "data", "java"),
+			Path.Combine (tempDir, "programs")));
+	}
+
+	[Test]
+	public void IsUnderDirectory_DifferentRoot_ReturnsFalse ()
+	{
+		Assert.IsFalse (FileUtil.IsUnderDirectory (
+			Path.Combine (Path.GetPathRoot (tempDir), "other", "java"),
+			Path.Combine (tempDir, "programs")));
+	}
+
+	[Test]
+	public void IsUnderDirectory_PartialDirNameMatch_ReturnsFalse ()
+	{
+		var parent = Path.Combine (tempDir, "programs");
+		var sibling = Path.Combine (tempDir, "programs-extra", "java");
+		Assert.IsFalse (FileUtil.IsUnderDirectory (sibling, parent));
+	}
+
+	[TestCase (null, "/dir")]
+	[TestCase ("/dir", null)]
+	[TestCase ("", "/dir")]
+	[TestCase ("/dir", "")]
+	[TestCase (null, null)]
+	public void IsUnderDirectory_NullOrEmpty_ReturnsFalse (string path, string directory)
+	{
+		Assert.IsFalse (FileUtil.IsUnderDirectory (path, directory));
+	}
+
+	[Test]
+	public void IsUnderDirectory_CaseSensitive ()
+	{
+		var parent = Path.Combine (tempDir, "Programs");
+		var child = Path.Combine (tempDir, "PROGRAMS", "java");
+		Assert.IsFalse (FileUtil.IsUnderDirectory (child, parent));
+	}
+
+	[Test]
+	public void IsUnderDirectory_CanonicalCaseMismatch_ReturnsFalse ()
+	{
+		var parent = Path.Combine (tempDir, "programs");
+		var sibling = Path.Combine (parent, "..", "PROGRAMS", "java");
+		Assert.IsFalse (FileUtil.IsUnderDirectory (sibling, parent));
+	}
+
 }

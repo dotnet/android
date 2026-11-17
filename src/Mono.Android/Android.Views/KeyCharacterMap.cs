@@ -1,4 +1,4 @@
-namespace Android.Views {
+namespace Android.Views; 
 
 	partial class KeyCharacterMap {
 
@@ -28,4 +28,3 @@ namespace Android.Views {
 			return GetMatch (keyCode, chars, (MetaKeyStates) metaState);
 		}
 	}
-}

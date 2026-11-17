@@ -2,8 +2,8 @@ using generator.SourceWriters;
 using MonoDroid.Generation;
 using NUnit.Framework;
 
-namespace generatortests.SourceWriters
-{
+namespace generatortests.SourceWriters;
+
 	[TestFixture]
 	public class PeerMembersFieldTests : SourceWritersTestBase
 	{
@@ -23,4 +23,3 @@ namespace generatortests.SourceWriters
 			Assert.AreEqual ("private static readonly JniPeerMembers _members = new JniPeerMembers (\"B\", typeof (IMyJavaType), isInterface: true);", GetOutput (field).Trim ());
 		}
 	}
-}

@@ -10,88 +10,87 @@ using Microsoft.Build.Utilities;
 
 using Tasks = System.Threading.Tasks;
 
-namespace Xamarin.Android.Tools.BootstrapTasks
+namespace Xamarin.Android.Tools.BootstrapTasks;
+
+public class RunParallelCmds : AsyncTask
 {
-	public class RunParallelCmds : AsyncTask
+	public override string TaskPrefix => "RPCMD";
+
+	[Required]
+	public ITaskItem[] Commands { get; set; }
+
+	public string ManagedRuntime { get; set; }
+
+	public string ManagedRuntimeArguments { get; set; }
+
+	public override bool Execute ()
 	{
-		public override string TaskPrefix => "RPCMD";
+		bool success = true;
+		int tasks = 0;
 
-		[Required]
-		public ITaskItem[] Commands { get; set; }
+		LogMessage ($"RunParallelCmds max parallelism: {Environment.ProcessorCount}");
 
-		public string ManagedRuntime { get; set; }
+		Tasks.Parallel.ForEach (Commands, new Tasks.ParallelOptions () { MaxDegreeOfParallelism = Environment.ProcessorCount },
+			cmd => {
+				var command = cmd.GetMetadata ("Command");
+				var useManagedRuntime = !string.IsNullOrEmpty (ManagedRuntime);
+				var argumentsBeginning = useManagedRuntime ? $"{ManagedRuntimeArguments} {command} " : "";
 
-		public string ManagedRuntimeArguments { get; set; }
+				LogMessage ($"[{++tasks}/{Commands.Length}] Starting Command: {command} Arguments: {cmd.GetMetadata ("Arguments")}");
 
-		public override bool Execute ()
-		{
-			bool success = true;
-			int tasks = 0;
+				try {
+					using (var proc = new Process ()) {
+						StringBuilder standardOutput = new StringBuilder (), errorOutput = new StringBuilder ();
 
-			LogMessage ($"RunParallelCmds max parallelism: {Environment.ProcessorCount}");
+						proc.StartInfo.FileName = useManagedRuntime ? ManagedRuntime : command;
+						proc.StartInfo.Arguments = $"{argumentsBeginning}{cmd.GetMetadata ("Arguments")}".Replace ('\\', Path.DirectorySeparatorChar);
+						proc.StartInfo.CreateNoWindow = true;
+						proc.StartInfo.UseShellExecute = false;
+						proc.StartInfo.RedirectStandardOutput = true;
+						proc.StartInfo.RedirectStandardError = true;
 
-			Tasks.Parallel.ForEach (Commands, new Tasks.ParallelOptions () { MaxDegreeOfParallelism = Environment.ProcessorCount },
-				cmd => {
-					var command = cmd.GetMetadata ("Command");
-					var useManagedRuntime = !string.IsNullOrEmpty (ManagedRuntime);
-					var argumentsBeginning = useManagedRuntime ? $"{ManagedRuntimeArguments} {command} " : "";
+						var wd = cmd.GetMetadata ("WorkingDirectory");
+						if (!string.IsNullOrEmpty (wd))
+							proc.StartInfo.WorkingDirectory = wd;
 
-					LogMessage ($"[{++tasks}/{Commands.Length}] Starting Command: {command} Arguments: {cmd.GetMetadata ("Arguments")}");
-
-					try {
-						using (var proc = new Process ()) {
-							StringBuilder standardOutput = new StringBuilder (), errorOutput = new StringBuilder ();
-
-							proc.StartInfo.FileName = useManagedRuntime ? ManagedRuntime : command;
-							proc.StartInfo.Arguments = $"{argumentsBeginning}{cmd.GetMetadata ("Arguments")}".Replace ('\\', Path.DirectorySeparatorChar);
-							proc.StartInfo.CreateNoWindow = true;
-							proc.StartInfo.UseShellExecute = false;
-							proc.StartInfo.RedirectStandardOutput = true;
-							proc.StartInfo.RedirectStandardError = true;
-
-							var wd = cmd.GetMetadata ("WorkingDirectory");
-							if (!string.IsNullOrEmpty (wd))
-								proc.StartInfo.WorkingDirectory = wd;
-
-							proc.Start ();
-							try {
-								foreach (var line in proc.ReadAllLines ()) {
-									if (!string.IsNullOrEmpty (line.Content))
-										(line.StandardError ? errorOutput : standardOutput).Append (Environment.NewLine + line.Content);
-								}
-								proc.SafeHandle.WaitForExit ();
-							} finally {
-								using var stdout = proc.StandardOutput;
-								using var stderr = proc.StandardError;
+						proc.Start ();
+						try {
+							foreach (var line in proc.ReadAllLines ()) {
+								if (!string.IsNullOrEmpty (line.Content))
+									(line.StandardError ? errorOutput : standardOutput).Append (Environment.NewLine + line.Content);
 							}
-
-							var output = standardOutput.ToString ();
-							var errOutput = errorOutput.ToString ();
-
-							if (proc.ExitCode != 0) {
-								LogError ($"\"{proc.StartInfo.FileName} {proc.StartInfo.Arguments}\" failed with code: {proc.ExitCode}  Error output: {errOutput}");
-								success = false;
-							}
-
-							if (!string.IsNullOrEmpty (output))
-								LogMessage ($"Output: {output}");
+							proc.SafeHandle.WaitForExit ();
+						} finally {
+							using var stdout = proc.StandardOutput;
+							using var stderr = proc.StandardError;
 						}
-					} catch (Exception e) {
-						LogError ($"Unable to run command: {command}\nException:\n{e}");
-						success = false;
+
+						var output = standardOutput.ToString ();
+						var errOutput = errorOutput.ToString ();
+
+						if (proc.ExitCode != 0) {
+							LogError ($"\"{proc.StartInfo.FileName} {proc.StartInfo.Arguments}\" failed with code: {proc.ExitCode}  Error output: {errOutput}");
+							success = false;
+						}
+
+						if (!string.IsNullOrEmpty (output))
+							LogMessage ($"Output: {output}");
 					}
+				} catch (Exception e) {
+					LogError ($"Unable to run command: {command}\nException:\n{e}");
+					success = false;
+				}
 
-					Complete ();
-				});
+				Complete ();
+			});
 
-			WaitForCompletion ();
+		WaitForCompletion ();
 
-			LogMessage ($"RunParallelCmds completed {tasks} commands");
+		LogMessage ($"RunParallelCmds completed {tasks} commands");
 
-			if (!success)
-				return false;
+		if (!success)
+			return false;
 
-			return !Log.HasLoggedErrors;
-		}
+		return !Log.HasLoggedErrors;
 	}
 }

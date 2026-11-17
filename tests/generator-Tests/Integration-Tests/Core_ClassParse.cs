@@ -1,8 +1,8 @@
 using System;
 using NUnit.Framework;
 
-namespace generatortests
-{
+namespace generatortests;
+
 	[TestFixture]
 	public class Core_ClassParse : BaseGeneratorTest
 	{
@@ -18,5 +18,4 @@ namespace generatortests
 					metadataFile: FullPath ("TestInputs/Core_ClassParse/metadata.xml"));
 		}
 	}
-}
 

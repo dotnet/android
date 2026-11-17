@@ -1,5 +1,5 @@
-namespace Android.OS
-{
+namespace Android.OS;
+
 	public enum VibrationEffectEffectType
 	{
 		EffectClick = 0,
@@ -7,4 +7,3 @@ namespace Android.OS
 		EffectTick = 2,
 		EffectHeavyClick = 5,
 	}
-}

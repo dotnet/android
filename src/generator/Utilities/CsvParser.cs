@@ -4,23 +4,22 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace MonoDroid.Generation
+namespace MonoDroid.Generation;
+
+public class CsvParser
 {
-	public class CsvParser
+	readonly string [] fields;
+
+	public CsvParser (string line)
 	{
-		readonly string [] fields;
+		fields = line.Split (',');
+	}
 
-		public CsvParser (string line)
-		{
-			fields = line.Split (',');
-		}
+	public string GetField (int index)
+	{
+		if (index >= fields.Length)
+			return string.Empty;
 
-		public string GetField (int index)
-		{
-			if (index >= fields.Length)
-				return string.Empty;
-
-			return fields [index].Trim ();
-		}
+		return fields [index].Trim ();
 	}
 }

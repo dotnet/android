@@ -2,8 +2,8 @@ using System;
 
 using Java.Interop;
 
-namespace Android.Runtime
-{
+namespace Android.Runtime;
+
 	static class AndroidExceptionManager
 	{
 		internal static Exception? GetExceptionForThrowable (ref JniObjectReference reference, JniObjectReferenceOptions options)
@@ -34,4 +34,3 @@ namespace Android.Runtime
 			GC.KeepAlive (throwable);
 		}
 	}
-}

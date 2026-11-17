@@ -1,35 +1,34 @@
-﻿using System;
+using System;
 
-namespace Xamarin.ProjectTools
+namespace Xamarin.ProjectTools;
+
+public class FailedBuildException : Exception
 {
-	public class FailedBuildException : Exception
+	public FailedBuildException ()
 	{
-		public FailedBuildException ()
-		{
-		}
+	}
 
-		public FailedBuildException (string message)
-			: base (message)
-		{
-		}
+	public FailedBuildException (string message)
+		: base (message)
+	{
+	}
 
-		public FailedBuildException (string message, Exception innerException)
-			: base (message, innerException)
-		{
-		}
+	public FailedBuildException (string message, Exception innerException)
+		: base (message, innerException)
+	{
+	}
 
-		public FailedBuildException (string message, Exception innerException, string buildLog)
-			: this (message, innerException)
-		{
-			BuildLog = buildLog;
-		}
+	public FailedBuildException (string message, Exception innerException, string buildLog)
+		: this (message, innerException)
+	{
+		BuildLog = buildLog;
+	}
 
-		public string BuildLog { get; set; }
+	public string BuildLog { get; set; }
 
-		public override string StackTrace {
-			get {
-				return $"{base.StackTrace}\nBuildLog: {BuildLog}";
-			}
+	public override string StackTrace {
+		get {
+			return $"{base.StackTrace}\nBuildLog: {BuildLog}";
 		}
 	}
 }

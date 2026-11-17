@@ -1,10 +1,10 @@
-﻿using System;
+using System;
 
 using Xamarin.Android.Tools.Bytecode;
 
 using NUnit.Framework;
 
-namespace Xamarin.Android.Tools.BytecodeTests {
+namespace Xamarin.Android.Tools.BytecodeTests; 
 
 	[TestFixture]
 	public class IJavaInterfaceTests : ClassFileFixture {
@@ -71,5 +71,4 @@ namespace Xamarin.Android.Tools.BytecodeTests {
 			AssertXmlDeclaration (JavaType + ".class", JavaType + ".xml");
 		}
 	}
-}
 

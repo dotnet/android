@@ -11,8 +11,8 @@ using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
 using Microsoft.Android.Build.Tasks;
 
-namespace Xamarin.Android.Tasks
-{
+namespace Xamarin.Android.Tasks;
+
 	public class BindingsGenerator : AndroidDotnetToolTask
 	{
 		public override string TaskPrefix => "BGN";
@@ -293,4 +293,3 @@ namespace Xamarin.Android.Tasks
 			}
 		}
 	}
-}

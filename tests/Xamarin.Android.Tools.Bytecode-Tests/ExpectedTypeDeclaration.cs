@@ -1,11 +1,11 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 
 using Xamarin.Android.Tools.Bytecode;
 
 using NAssert   = NUnit.Framework.Assert;
 
-namespace Xamarin.Android.Tools.BytecodeTests {
+namespace Xamarin.Android.Tools.BytecodeTests; 
 
 	class ExpectedTypeDeclaration {
 
@@ -70,4 +70,3 @@ namespace Xamarin.Android.Tools.BytecodeTests {
 			}
 		}
 	}
-}

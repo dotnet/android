@@ -1,10 +1,10 @@
-﻿using System;
+using System;
 
 using Xamarin.Android.Tools.Bytecode;
 
 using NAssert   = NUnit.Framework.Assert;
 
-namespace Xamarin.Android.Tools.BytecodeTests {
+namespace Xamarin.Android.Tools.BytecodeTests; 
 
 	class ExpectedInnerClassInfo {
 
@@ -21,5 +21,4 @@ namespace Xamarin.Android.Tools.BytecodeTests {
 			NAssert.AreEqual (AccessFlags,      info.InnerClassAccessFlags,     $"InnerClassAccessFlags");
 		}
 	}
-}
 

@@ -8,147 +8,146 @@ using System.Text;
 using Xamarin.Android.Tasks;
 using Microsoft.Build.Utilities;
 
-namespace Xamarin.Android.Build.Tests {
+namespace Xamarin.Android.Build.Tests; 
 
-	[TestFixture]
-	[Parallelizable (ParallelScope.Children)]
-	public class GetDependenciesTest : BaseTest {
+[TestFixture]
+[Parallelizable (ParallelScope.Children)]
+public class GetDependenciesTest : BaseTest {
 
-		[Test]
-		public void CheckNdkBundle ([Values(true, false)] bool ndkRequred)
-		{
-			var path = Path.Combine ("temp", TestName);
-			var referencePath = CreateFauxReferencesDirectory (Path.Combine (path, "references"), new ApiInfo [] {
-				new ApiInfo () { Id = "26", Level = 26, Name = "Oreo", FrameworkVersion = "v8.0", Stable = true },
-			});
-			IBuildEngine engine = new MockBuildEngine (TestContext.Out);
-			var task = new CalculateProjectDependencies {
-				BuildEngine = engine,
-				ReferenceAssemblyPaths = [referencePath],
-			};
+	[Test]
+	public void CheckNdkBundle ([Values(true, false)] bool ndkRequred)
+	{
+		var path = Path.Combine ("temp", TestName);
+		var referencePath = CreateFauxReferencesDirectory (Path.Combine (path, "references"), new ApiInfo [] {
+			new ApiInfo () { Id = "26", Level = 26, Name = "Oreo", FrameworkVersion = "v8.0", Stable = true },
+		});
+		IBuildEngine engine = new MockBuildEngine (TestContext.Out);
+		var task = new CalculateProjectDependencies {
+			BuildEngine = engine,
+			ReferenceAssemblyPaths = [referencePath],
+		};
 
-			task.AndroidApiLevel = "26";
-			task.PlatformToolsVersion = "26.0.3";
-			task.NdkVersion = "12.1";
-			task.NdkRequired = ndkRequred;
-			task.BuildToolsVersion = "26.0.1";
-			task.ManifestFile = new TaskItem (Path.Combine (path, "AndroidManifest.xml"));
-			Assert.IsTrue (task.Execute ());
-			Assert.IsNotNull (task.Dependencies);
-			Assert.AreEqual (ndkRequred ? 4 : 3, task.Dependencies.Length);
-			Assert.IsNotNull (task.Dependencies.FirstOrDefault (x => x.ItemSpec == "build-tools/26.0.1" && x.GetMetadata ("Version") == "26.0.1"),
-				"Dependencies should contains a build-tools version 26.0.1");
-			Assert.IsNotNull (task.Dependencies.FirstOrDefault (x => x.ItemSpec == "platforms/android-26" && x.GetMetadata ("Version") == ""),
-				"Dependencies should contains a platform version android-26");
-			Assert.IsNotNull (task.Dependencies.FirstOrDefault (x => x.ItemSpec == "platform-tools" && x.GetMetadata ("Version") == "26.0.3"),
-				"Dependencies should contains a platform-tools version 26.0.3");
-			if (ndkRequred) {
-				Assert.IsNotNull (task.Dependencies.FirstOrDefault (x => x.ItemSpec == "ndk-bundle" && x.GetMetadata ("Version") == "12.1"),
-					"Dependencies should contain a ndk-bundle version 12.1");
-			} else {
-				Assert.IsNull (task.Dependencies.FirstOrDefault (x => x.ItemSpec == "ndk-bundle"),
-					"Dependencies should not contain a ndk-bundle item");
-			}
-			Directory.Delete (Path.Combine (Root, path), recursive: true);
-		}
-		
-		[Test]
-		public void ManifestFileDoesNotExist ()
-		{
-			var path = Path.Combine ("temp", TestName);
-			var referencePath = CreateFauxReferencesDirectory (Path.Combine (path, "references"), new ApiInfo[] {
-				new ApiInfo () { Id = "26", Level = 26, Name = "Oreo", FrameworkVersion = "v8.0", Stable = true },
-			} );
-			IBuildEngine engine = new MockBuildEngine (TestContext.Out);
-			var task = new CalculateProjectDependencies {
-				BuildEngine = engine,
-				ReferenceAssemblyPaths = [referencePath],
-			};
-
-			task.AndroidApiLevel = "26";
-			task.PlatformToolsVersion = "26.0.3";
-			task.NdkVersion = "12.1";
-			task.NdkRequired = true;
-			task.BuildToolsVersion = "26.0.1";
-			task.ManifestFile = new TaskItem (Path.Combine (path, "AndroidManifest.xml"));
-			Assert.IsTrue (task.Execute ());
-			Assert.IsNotNull (task.Dependencies);
-			Assert.AreEqual (4, task.Dependencies.Length);
-			Assert.IsNotNull (task.Dependencies.FirstOrDefault (x => x.ItemSpec == "build-tools/26.0.1" && x.GetMetadata ("Version") == "26.0.1"),
-				"Dependencies should contains a build-tools version 26.0.1");
-			Assert.IsNotNull (task.Dependencies.FirstOrDefault (x => x.ItemSpec == "platforms/android-26" && x.GetMetadata ("Version") == ""),
-				"Dependencies should contains a platform version android-26");
-			Assert.IsNotNull (task.Dependencies.FirstOrDefault (x => x.ItemSpec == "platform-tools" && x.GetMetadata ("Version") == "26.0.3"),
-				"Dependencies should contains a platform-tools version 26.0.3");
+		task.AndroidApiLevel = "26";
+		task.PlatformToolsVersion = "26.0.3";
+		task.NdkVersion = "12.1";
+		task.NdkRequired = ndkRequred;
+		task.BuildToolsVersion = "26.0.1";
+		task.ManifestFile = new TaskItem (Path.Combine (path, "AndroidManifest.xml"));
+		Assert.IsTrue (task.Execute ());
+		Assert.IsNotNull (task.Dependencies);
+		Assert.AreEqual (ndkRequred ? 4 : 3, task.Dependencies.Length);
+		Assert.IsNotNull (task.Dependencies.FirstOrDefault (x => x.ItemSpec == "build-tools/26.0.1" && x.GetMetadata ("Version") == "26.0.1"),
+			"Dependencies should contains a build-tools version 26.0.1");
+		Assert.IsNotNull (task.Dependencies.FirstOrDefault (x => x.ItemSpec == "platforms/android-26" && x.GetMetadata ("Version") == ""),
+			"Dependencies should contains a platform version android-26");
+		Assert.IsNotNull (task.Dependencies.FirstOrDefault (x => x.ItemSpec == "platform-tools" && x.GetMetadata ("Version") == "26.0.3"),
+			"Dependencies should contains a platform-tools version 26.0.3");
+		if (ndkRequred) {
 			Assert.IsNotNull (task.Dependencies.FirstOrDefault (x => x.ItemSpec == "ndk-bundle" && x.GetMetadata ("Version") == "12.1"),
-				"Dependencies should contains a ndk-bundle version 12.1");
-			Directory.Delete (Path.Combine (Root, path), recursive: true);
+				"Dependencies should contain a ndk-bundle version 12.1");
+		} else {
+			Assert.IsNull (task.Dependencies.FirstOrDefault (x => x.ItemSpec == "ndk-bundle"),
+				"Dependencies should not contain a ndk-bundle item");
 		}
+		Directory.Delete (Path.Combine (Root, path), recursive: true);
+	}
+	
+	[Test]
+	public void ManifestFileDoesNotExist ()
+	{
+		var path = Path.Combine ("temp", TestName);
+		var referencePath = CreateFauxReferencesDirectory (Path.Combine (path, "references"), new ApiInfo[] {
+			new ApiInfo () { Id = "26", Level = 26, Name = "Oreo", FrameworkVersion = "v8.0", Stable = true },
+		} );
+		IBuildEngine engine = new MockBuildEngine (TestContext.Out);
+		var task = new CalculateProjectDependencies {
+			BuildEngine = engine,
+			ReferenceAssemblyPaths = [referencePath],
+		};
 
-		[Test]
-		public void ManifestFileExists ()
-		{
-			var path = Path.Combine (Root, "temp", TestName);
-			var referencePath = CreateFauxReferencesDirectory (Path.Combine (path, "references"), new ApiInfo[] {
-				new ApiInfo () { Id = "26", Level = 26, Name = "Oreo", FrameworkVersion = "v8.0", Stable = true },
-			} );
-			IBuildEngine engine = new MockBuildEngine (TestContext.Out);
-			var task = new CalculateProjectDependencies {
-				BuildEngine = engine,
-				ReferenceAssemblyPaths = [referencePath],
-			};
+		task.AndroidApiLevel = "26";
+		task.PlatformToolsVersion = "26.0.3";
+		task.NdkVersion = "12.1";
+		task.NdkRequired = true;
+		task.BuildToolsVersion = "26.0.1";
+		task.ManifestFile = new TaskItem (Path.Combine (path, "AndroidManifest.xml"));
+		Assert.IsTrue (task.Execute ());
+		Assert.IsNotNull (task.Dependencies);
+		Assert.AreEqual (4, task.Dependencies.Length);
+		Assert.IsNotNull (task.Dependencies.FirstOrDefault (x => x.ItemSpec == "build-tools/26.0.1" && x.GetMetadata ("Version") == "26.0.1"),
+			"Dependencies should contains a build-tools version 26.0.1");
+		Assert.IsNotNull (task.Dependencies.FirstOrDefault (x => x.ItemSpec == "platforms/android-26" && x.GetMetadata ("Version") == ""),
+			"Dependencies should contains a platform version android-26");
+		Assert.IsNotNull (task.Dependencies.FirstOrDefault (x => x.ItemSpec == "platform-tools" && x.GetMetadata ("Version") == "26.0.3"),
+			"Dependencies should contains a platform-tools version 26.0.3");
+		Assert.IsNotNull (task.Dependencies.FirstOrDefault (x => x.ItemSpec == "ndk-bundle" && x.GetMetadata ("Version") == "12.1"),
+			"Dependencies should contains a ndk-bundle version 12.1");
+		Directory.Delete (Path.Combine (Root, path), recursive: true);
+	}
+
+	[Test]
+	public void ManifestFileExists ()
+	{
+		var path = Path.Combine (Root, "temp", TestName);
+		var referencePath = CreateFauxReferencesDirectory (Path.Combine (path, "references"), new ApiInfo[] {
+			new ApiInfo () { Id = "26", Level = 26, Name = "Oreo", FrameworkVersion = "v8.0", Stable = true },
+		} );
+		IBuildEngine engine = new MockBuildEngine (TestContext.Out);
+		var task = new CalculateProjectDependencies {
+			BuildEngine = engine,
+			ReferenceAssemblyPaths = [referencePath],
+		};
 
 
-			Directory.CreateDirectory (path);
-			var manifestFile = Path.Combine (path, "AndroidManifest.xml");
-			File.WriteAllText (manifestFile, @"<?xml version='1.0' ?>
+		Directory.CreateDirectory (path);
+		var manifestFile = Path.Combine (path, "AndroidManifest.xml");
+		File.WriteAllText (manifestFile, @"<?xml version='1.0' ?>
 <manifest xmlns:android='http://schemas.android.com/apk/res/android' android:versionCode='1' android:versionName='1.0' package='Mono.Android.NET_Tests'>
 	<uses-sdk android:minSdkVersion='21' />
 </manifest>");
 
-			task.AndroidApiLevel = "26";
-			task.PlatformToolsVersion = "26.0.3";
-			task.NdkVersion = "12.1";
-			task.NdkRequired = true;
-			task.BuildToolsVersion = "26.0.1";
-			task.ManifestFile = new TaskItem (manifestFile);
-			Assert.IsTrue(task.Execute ());
-			Assert.IsNotNull (task.Dependencies);
-			Assert.AreEqual (4, task.Dependencies.Length);
-			Assert.IsNotNull (task.Dependencies.FirstOrDefault (x => x.ItemSpec == "build-tools/26.0.1" && x.GetMetadata ("Version") == "26.0.1"),
-				"Dependencies should contains a build-tools version 26.0.1");
-			Assert.IsNotNull (task.Dependencies.FirstOrDefault (x => x.ItemSpec == "platforms/android-26" && x.GetMetadata ("Version") == ""),
-				"Dependencies should contains a platform version android-26");
-			Assert.IsNotNull (task.Dependencies.FirstOrDefault (x => x.ItemSpec == "platform-tools" && x.GetMetadata ("Version") == "26.0.3"),
-				"Dependencies should contains a platform-tools version 26.0.3");
-			Assert.IsNotNull (task.Dependencies.FirstOrDefault (x => x.ItemSpec == "ndk-bundle" && x.GetMetadata ("Version") == "12.1"),
-				"Dependencies should contains a ndk-bundle version 12.1");
+		task.AndroidApiLevel = "26";
+		task.PlatformToolsVersion = "26.0.3";
+		task.NdkVersion = "12.1";
+		task.NdkRequired = true;
+		task.BuildToolsVersion = "26.0.1";
+		task.ManifestFile = new TaskItem (manifestFile);
+		Assert.IsTrue(task.Execute ());
+		Assert.IsNotNull (task.Dependencies);
+		Assert.AreEqual (4, task.Dependencies.Length);
+		Assert.IsNotNull (task.Dependencies.FirstOrDefault (x => x.ItemSpec == "build-tools/26.0.1" && x.GetMetadata ("Version") == "26.0.1"),
+			"Dependencies should contains a build-tools version 26.0.1");
+		Assert.IsNotNull (task.Dependencies.FirstOrDefault (x => x.ItemSpec == "platforms/android-26" && x.GetMetadata ("Version") == ""),
+			"Dependencies should contains a platform version android-26");
+		Assert.IsNotNull (task.Dependencies.FirstOrDefault (x => x.ItemSpec == "platform-tools" && x.GetMetadata ("Version") == "26.0.3"),
+			"Dependencies should contains a platform-tools version 26.0.3");
+		Assert.IsNotNull (task.Dependencies.FirstOrDefault (x => x.ItemSpec == "ndk-bundle" && x.GetMetadata ("Version") == "12.1"),
+			"Dependencies should contains a ndk-bundle version 12.1");
 
-			Directory.Delete (path, recursive: true);
-		}
+		Directory.Delete (path, recursive: true);
+	}
 
-		[Test]
-		public void MinorApiLevelEmitsPlatformDirectory ()
-		{
-			var path = Path.Combine ("temp", TestName);
-			var referencePath = CreateFauxReferencesDirectory (Path.Combine (path, "references"), new ApiInfo [] {
-				new ApiInfo () { Id = "36.1", Level = 36, Name = "Baklava", FrameworkVersion = "v16.1", Stable = true },
-			});
-			IBuildEngine engine = new MockBuildEngine (TestContext.Out);
-			var task = new CalculateProjectDependencies {
-				BuildEngine = engine,
-				ReferenceAssemblyPaths = [referencePath],
-			};
+	[Test]
+	public void MinorApiLevelEmitsPlatformDirectory ()
+	{
+		var path = Path.Combine ("temp", TestName);
+		var referencePath = CreateFauxReferencesDirectory (Path.Combine (path, "references"), new ApiInfo [] {
+			new ApiInfo () { Id = "36.1", Level = 36, Name = "Baklava", FrameworkVersion = "v16.1", Stable = true },
+		});
+		IBuildEngine engine = new MockBuildEngine (TestContext.Out);
+		var task = new CalculateProjectDependencies {
+			BuildEngine = engine,
+			ReferenceAssemblyPaths = [referencePath],
+		};
 
-			task.AndroidApiLevel = "36.1";
-			task.PlatformToolsVersion = "36.0.0";
-			task.BuildToolsVersion = "36.0.0";
-			task.ManifestFile = new TaskItem (Path.Combine (path, "AndroidManifest.xml"));
-			Assert.IsTrue (task.Execute ());
-			Assert.IsNotNull (task.Dependencies);
-			Assert.IsNotNull (task.Dependencies.FirstOrDefault (x => x.ItemSpec == "platforms/android-36.1"),
-				"Dependencies should contain platform android-36.1 when AndroidApiLevel has a minor version");
-			Directory.Delete (Path.Combine (Root, path), recursive: true);
-		}
+		task.AndroidApiLevel = "36.1";
+		task.PlatformToolsVersion = "36.0.0";
+		task.BuildToolsVersion = "36.0.0";
+		task.ManifestFile = new TaskItem (Path.Combine (path, "AndroidManifest.xml"));
+		Assert.IsTrue (task.Execute ());
+		Assert.IsNotNull (task.Dependencies);
+		Assert.IsNotNull (task.Dependencies.FirstOrDefault (x => x.ItemSpec == "platforms/android-36.1"),
+			"Dependencies should contain platform android-36.1 when AndroidApiLevel has a minor version");
+		Directory.Delete (Path.Combine (Root, path), recursive: true);
 	}
 }

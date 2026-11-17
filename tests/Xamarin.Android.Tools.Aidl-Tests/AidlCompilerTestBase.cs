@@ -9,55 +9,54 @@ using System.Reflection;
 using NUnit.Framework;
 using Xamarin.Android.Tools.Aidl;
 
-namespace Xamarin.Android.Tools.Aidl_Tests
+namespace Xamarin.Android.Tools.Aidl_Tests;
+
+public class AidlCompilerTestBase
 {
-	public class AidlCompilerTestBase
+	protected void RunTest (string name, ParcelableHandling parcelableHandling = ParcelableHandling.Ignore)
 	{
-		protected void RunTest (string name, ParcelableHandling parcelableHandling = ParcelableHandling.Ignore)
-		{
-			var root = Path.GetDirectoryName (Assembly.GetExecutingAssembly ().Location);
-			var file = Path.Combine (root, "TestData", name + ".txt");
-			var text = File.ReadAllText (file);
+		var root = Path.GetDirectoryName (Assembly.GetExecutingAssembly ().Location);
+		var file = Path.Combine (root, "TestData", name + ".txt");
+		var text = File.ReadAllText (file);
 
-			(var input, var expected_output) = SplitTestFile (text);
+		(var input, var expected_output) = SplitTestFile (text);
 
-			var compiler = new AidlCompiler ();
-			var results = compiler.Run (input, out var output, parcelableHandling: parcelableHandling);
+		var compiler = new AidlCompiler ();
+		var results = compiler.Run (input, out var output, parcelableHandling: parcelableHandling);
 
-			Assert.False (results.LogMessages.Any ());
+		Assert.False (results.LogMessages.Any ());
 
 #if GENERATE_OUTPUT
-			using (var sw = new StreamWriter (file)) {
-				sw.WriteLine (input);
-				sw.WriteLine ();
-				sw.WriteLine ("####");
-				sw.WriteLine ();
-				sw.WriteLine (output);
-			}
-
-			Assert.Ignore ("Generating output for this test.");
-#endif  // GENERATE_OUTPUT
-
-			Assert.AreEqual (StripLineEndings (expected_output), StripLineEndings (output));
+		using (var sw = new StreamWriter (file)) {
+			sw.WriteLine (input);
+			sw.WriteLine ();
+			sw.WriteLine ("####");
+			sw.WriteLine ();
+			sw.WriteLine (output);
 		}
 
-		(string input, string output) SplitTestFile (string text)
-		{
-			var index = text.IndexOf ("####");
-
-			if (index < 0) {
-#if GENERATE_OUTPUT
-				return (text, null);
+		Assert.Ignore ("Generating output for this test.");
 #endif  // GENERATE_OUTPUT
-				throw new Exception ("No expected output found.");
-			}
 
-			var input = text.Substring (0, index).Trim ();
-			var output = text.Substring (index + 4).Trim ();
-
-			return (input, output);
-		}
-
-		string StripLineEndings (string input) => input.Replace ("\n", "").Replace ("\r", "").Trim ();
+		Assert.AreEqual (StripLineEndings (expected_output), StripLineEndings (output));
 	}
+
+	(string input, string output) SplitTestFile (string text)
+	{
+		var index = text.IndexOf ("####");
+
+		if (index < 0) {
+#if GENERATE_OUTPUT
+			return (text, null);
+#endif  // GENERATE_OUTPUT
+			throw new Exception ("No expected output found.");
+		}
+
+		var input = text.Substring (0, index).Trim ();
+		var output = text.Substring (index + 4).Trim ();
+
+		return (input, output);
+	}
+
+	string StripLineEndings (string input) => input.Replace ("\n", "").Replace ("\r", "").Trim ();
 }

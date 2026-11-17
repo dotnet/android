@@ -8,396 +8,395 @@ using MonoDroid.Generation;
 using Xamarin.Android.Binder;
 using Xamarin.SourceWriter;
 
-namespace generator.SourceWriters
+namespace generator.SourceWriters;
+
+public class BoundClass : ClassWriter
 {
-	public class BoundClass : ClassWriter
+	readonly CodeGenerationOptions opt;
+	readonly List<TypeWriter> sibling_types = new List<TypeWriter> ();
+
+	public BoundClass (ClassGen klass, CodeGenerationOptions opt, CodeGeneratorContext context, GenerationInfo generationInfo)
 	{
-		readonly CodeGenerationOptions opt;
-		readonly List<TypeWriter> sibling_types = new List<TypeWriter> ();
+		context.ContextTypes.Push (klass);
+		context.ContextGeneratedMethods = new List<Method> ();
 
-		public BoundClass (ClassGen klass, CodeGenerationOptions opt, CodeGeneratorContext context, GenerationInfo generationInfo)
-		{
-			context.ContextTypes.Push (klass);
-			context.ContextGeneratedMethods = new List<Method> ();
+		var is_enum = klass.base_symbol != null && klass.base_symbol.FullName == "Java.Lang.Enum";
 
-			var is_enum = klass.base_symbol != null && klass.base_symbol.FullName == "Java.Lang.Enum";
+		if (is_enum)
+			generationInfo.Enums.Add (klass.RawJniName.Replace ('/', '.') + ":" + klass.Namespace + ":" + klass.JavaSimpleName);
 
-			if (is_enum)
-				generationInfo.Enums.Add (klass.RawJniName.Replace ('/', '.') + ":" + klass.Namespace + ":" + klass.JavaSimpleName);
+		this.opt = opt;
 
-			this.opt = opt;
+		Name = klass.Name;
 
-			Name = klass.Name;
+		SetVisibility (klass.Visibility);
+		IsShadow = klass.NeedsNew;
+		IsAbstract = klass.IsAbstract;
+		IsSealed = klass.IsFinal;
+		IsPartial = true;
 
-			SetVisibility (klass.Visibility);
-			IsShadow = klass.NeedsNew;
-			IsAbstract = klass.IsAbstract;
-			IsSealed = klass.IsFinal;
-			IsPartial = true;
+		UsePriorityOrder = true;
 
-			UsePriorityOrder = true;
+		AddImplementedInterfaces (klass);
 
-			AddImplementedInterfaces (klass);
+		klass.JavadocInfo?.AddJavadocs (Comments);
+		Comments.Add ($"// Metadata.xml XPath class reference: path=\"{klass.MetadataXPathReference}\"");
 
-			klass.JavadocInfo?.AddJavadocs (Comments);
-			Comments.Add ($"// Metadata.xml XPath class reference: path=\"{klass.MetadataXPathReference}\"");
+		SourceWriterExtensions.AddObsolete (Attributes, klass.DeprecatedComment, opt, forceDeprecate: klass.IsDeprecated, deprecatedSince: klass.DeprecatedSince);
+		SourceWriterExtensions.AddRestrictToWarning (Attributes, klass.AnnotatedVisibility, true, opt);
 
-			SourceWriterExtensions.AddObsolete (Attributes, klass.DeprecatedComment, opt, forceDeprecate: klass.IsDeprecated, deprecatedSince: klass.DeprecatedSince);
-			SourceWriterExtensions.AddRestrictToWarning (Attributes, klass.AnnotatedVisibility, true, opt);
+		SourceWriterExtensions.AddSupportedOSPlatform (Attributes, klass, opt);
 
-			SourceWriterExtensions.AddSupportedOSPlatform (Attributes, klass, opt);
+		Attributes.Add (new RegisterAttr (klass.RawJniName,
+				signature: null,
+				connector: IsAbstract ? Name + "Invoker" : null,
+				noAcw: true,
+				additionalProperties: klass.AdditionalAttributeString ()) {
+			UseGlobal       = true,
+			UseShortForm    = true,
+		});
 
-			Attributes.Add (new RegisterAttr (klass.RawJniName,
-					signature: null,
-					connector: IsAbstract ? Name + "Invoker" : null,
-					noAcw: true,
-					additionalProperties: klass.AdditionalAttributeString ()) {
-				UseGlobal       = true,
-				UseShortForm    = true,
-			});
+		if (klass.TypeParameters != null && klass.TypeParameters.Any ())
+			Attributes.Add (new CustomAttr (klass.TypeParameters.ToGeneratedAttributeString ()));
 
-			if (klass.TypeParameters != null && klass.TypeParameters.Any ())
-				Attributes.Add (new CustomAttr (klass.TypeParameters.ToGeneratedAttributeString ()));
+		// Figure out our base class
+		string obj_type = null;
 
-			// Figure out our base class
-			string obj_type = null;
+		if (klass.base_symbol != null)
+			obj_type = klass.base_symbol is GenericSymbol gs &&
+				gs.IsConcrete ? gs.GetGenericType (null) : opt.GetOutputName (klass.base_symbol.FullName);
 
-			if (klass.base_symbol != null)
-				obj_type = klass.base_symbol is GenericSymbol gs &&
-					gs.IsConcrete ? gs.GetGenericType (null) : opt.GetOutputName (klass.base_symbol.FullName);
+		if (klass.InheritsObject && obj_type != null)
+			Inherits = obj_type;
 
-			if (klass.InheritsObject && obj_type != null)
-				Inherits = obj_type;
+		// Handle fields
+		var seen = new HashSet<string> ();
 
-			// Handle fields
-			var seen = new HashSet<string> ();
+		SourceWriterExtensions.AddFields (this, klass, klass.Fields, seen, opt, context);
 
-			SourceWriterExtensions.AddFields (this, klass, klass.Fields, seen, opt, context);
+		var ic = new InterfaceConstsClass (klass, seen, opt, context);
 
-			var ic = new InterfaceConstsClass (klass, seen, opt, context);
+		if (ic.ShouldGenerate)
+			NestedTypes.Add (ic);
 
-			if (ic.ShouldGenerate)
-				NestedTypes.Add (ic);
-
-			// Sibling classes
-			if (!klass.AssemblyQualifiedName.Contains ('/')) {
-				foreach (InterfaceExtensionInfo nestedIface in klass.GetNestedInterfaceTypes ())
-					if (nestedIface.Type.Methods.Any (m => m.CanHaveStringOverload) || nestedIface.Type.Methods.Any (m => m.Asyncify))
-						sibling_types.Add (new InterfaceExtensionsClass (nestedIface.Type, nestedIface.DeclaringType, opt));
-			}
-
-			if (klass.IsAbstract)
-				sibling_types.Add (new ClassInvokerClass (klass, opt));
-
-			AddNestedTypes (klass, opt, context, generationInfo);
-			AddBindingInfrastructure (klass, opt);
-			AddConstructors (klass, opt, context);
-			AddProperties (klass, opt);
-			AddMethods (klass, opt, context);
-			AddAbstractMembers (klass, opt, context);
-			AddExplicitGenericInterfaceMembers (klass, opt);
-			AddCharSequenceEnumerator (klass);
-
-			context.ContextGeneratedMethods.Clear ();
-			context.ContextTypes.Pop ();
+		// Sibling classes
+		if (!klass.AssemblyQualifiedName.Contains ('/')) {
+			foreach (InterfaceExtensionInfo nestedIface in klass.GetNestedInterfaceTypes ())
+				if (nestedIface.Type.Methods.Any (m => m.CanHaveStringOverload) || nestedIface.Type.Methods.Any (m => m.Asyncify))
+					sibling_types.Add (new InterfaceExtensionsClass (nestedIface.Type, nestedIface.DeclaringType, opt));
 		}
 
-		void AddBindingInfrastructure (ClassGen klass, CodeGenerationOptions opt)
-		{
-			Fields.Add (new PeerMembersField (opt, klass.RawJniName, klass.Name, false));
+		if (klass.IsAbstract)
+			sibling_types.Add (new ClassInvokerClass (klass, opt));
 
-			if (klass.BaseGen != null && klass.InheritsObject) {
-				Properties.Add (new JniPeerMembersGetter ());
+		AddNestedTypes (klass, opt, context, generationInfo);
+		AddBindingInfrastructure (klass, opt);
+		AddConstructors (klass, opt, context);
+		AddProperties (klass, opt);
+		AddMethods (klass, opt, context);
+		AddAbstractMembers (klass, opt, context);
+		AddExplicitGenericInterfaceMembers (klass, opt);
+		AddCharSequenceEnumerator (klass);
+
+		context.ContextGeneratedMethods.Clear ();
+		context.ContextTypes.Pop ();
+	}
+
+	void AddBindingInfrastructure (ClassGen klass, CodeGenerationOptions opt)
+	{
+		Fields.Add (new PeerMembersField (opt, klass.RawJniName, klass.Name, false));
+
+		if (klass.BaseGen != null && klass.InheritsObject) {
+			Properties.Add (new JniPeerMembersGetter ());
+		}
+	}
+
+	void AddConstructors (ClassGen klass, CodeGenerationOptions opt, CodeGeneratorContext context)
+	{
+		// Add required constructor for all JLO inheriting classes
+		if (klass.FullName != "Java.Lang.Object" && klass.InheritsObject) {
+			if (!string.IsNullOrWhiteSpace (klass.PeerConstructorPartialMethod)) {
+				Methods.Add (new ConstructorPartialMethod (klass.PeerConstructorPartialMethod));
+			}
+			Constructors.Add (new JavaLangObjectConstructor (klass, opt, klass.PeerConstructorPartialMethod));
+
+			if (SourceWriterExtensions.UsesDeferredThrowableConstructor (klass)) {
+				if (klass.Ctors.Any (c => c.Parameters.Count == 1 && c.Parameters [0].Type == "Java.Interop.JniObjectReferenceOptions"))
+					throw new InvalidOperationException ($"The deferred throwable constructor for '{klass.FullName}' conflicts with a bound Java constructor.");
+				var deferred = new ConstructorWriter {
+					Name = klass.Name,
+					IsInternal = true,
+					BaseCall = "base (options)",
+				};
+				deferred.Comments.Add ("// Initializes an empty peer; the Java constructor is invoked by the derived binding.");
+				deferred.Comments.Add ("/// <param name=\"options\">");
+				deferred.Comments.Add ("/// Must be JniObjectReferenceOptions.None; other values throw before a peer is constructed.");
+				deferred.Comments.Add ("/// </param>");
+				deferred.Comments.Add ("/// <remarks>");
+				deferred.Comments.Add ("/// No JNI reference is accepted or transferred. The forwarding chain preserves");
+				deferred.Comments.Add ("/// peer-constructor partial hooks; JNI-dependent members require the derived binding");
+				deferred.Comments.Add ("/// to complete peer construction.");
+				deferred.Comments.Add ("/// </remarks>");
+				deferred.Parameters.Add (new MethodParameterWriter ("options", new TypeReferenceWriter ("global::Java.Interop.JniObjectReferenceOptions")));
+				if (!string.IsNullOrWhiteSpace (klass.PeerConstructorPartialMethod))
+					deferred.Body.Add ($"{klass.PeerConstructorPartialMethod} ();");
+				Constructors.Add (deferred);
 			}
 		}
 
-		void AddConstructors (ClassGen klass, CodeGenerationOptions opt, CodeGeneratorContext context)
-		{
-			// Add required constructor for all JLO inheriting classes
-			if (klass.FullName != "Java.Lang.Object" && klass.InheritsObject) {
-				if (!string.IsNullOrWhiteSpace (klass.PeerConstructorPartialMethod)) {
-					Methods.Add (new ConstructorPartialMethod (klass.PeerConstructorPartialMethod));
-				}
-				Constructors.Add (new JavaLangObjectConstructor (klass, opt, klass.PeerConstructorPartialMethod));
+		foreach (var ctor in klass.Ctors) {
+			// Don't bind final or protected constructors
+			if (klass.IsFinal && ctor.Visibility == "protected")
+				continue;
 
-				if (SourceWriterExtensions.UsesDeferredThrowableConstructor (klass)) {
-					if (klass.Ctors.Any (c => c.Parameters.Count == 1 && c.Parameters [0].Type == "Java.Interop.JniObjectReferenceOptions"))
-						throw new InvalidOperationException ($"The deferred throwable constructor for '{klass.FullName}' conflicts with a bound Java constructor.");
-					var deferred = new ConstructorWriter {
-						Name = klass.Name,
-						IsInternal = true,
-						BaseCall = "base (options)",
-					};
-					deferred.Comments.Add ("// Initializes an empty peer; the Java constructor is invoked by the derived binding.");
-					deferred.Comments.Add ("/// <param name=\"options\">");
-					deferred.Comments.Add ("/// Must be JniObjectReferenceOptions.None; other values throw before a peer is constructed.");
-					deferred.Comments.Add ("/// </param>");
-					deferred.Comments.Add ("/// <remarks>");
-					deferred.Comments.Add ("/// No JNI reference is accepted or transferred. The forwarding chain preserves");
-					deferred.Comments.Add ("/// peer-constructor partial hooks; JNI-dependent members require the derived binding");
-					deferred.Comments.Add ("/// to complete peer construction.");
-					deferred.Comments.Add ("/// </remarks>");
-					deferred.Parameters.Add (new MethodParameterWriter ("options", new TypeReferenceWriter ("global::Java.Interop.JniObjectReferenceOptions")));
-					if (!string.IsNullOrWhiteSpace (klass.PeerConstructorPartialMethod))
-						deferred.Body.Add ($"{klass.PeerConstructorPartialMethod} ();");
-					Constructors.Add (deferred);
-				}
+			// Bind Java declared constructor
+			Constructors.Add (new BoundConstructor(klass, ctor, klass.InheritsObject, opt, context));
+
+			// If the constructor takes ICharSequence, create an overload constructor that takes a string
+			if (ctor.Parameters.HasCharSequence && !klass.ContainsCtor (ctor.JniSignature.Replace ("java/lang/CharSequence", "java/lang/String")))
+				Constructors.Add (new StringOverloadConstructor(klass, ctor, klass.InheritsObject, opt, context));
+		}
+	}
+
+	void AddCharSequenceEnumerator (ClassGen klass)
+	{
+		if (klass.Interfaces.Any (p => p.FullName == "Java.Lang.ICharSequence")) {
+			Methods.Add (new CharSequenceEnumeratorMethod ());
+			Methods.Add (new CharSequenceGenericEnumeratorMethod ());
+		}
+	}
+
+	void AddImplementedInterfaces (ClassGen klass)
+	{
+		foreach (var isym in klass.Interfaces) {
+			if ((!(isym is GenericSymbol gs) ? isym : gs.Gen) is InterfaceGen gen && (gen.IsConstSugar (opt) || gen.RawVisibility != "public"))
+				continue;
+
+			Implements.Add (opt.GetOutputName (isym.FullName));
+		}
+	}
+
+	void AddExplicitGenericInterfaceMembers (ClassGen klass, CodeGenerationOptions opt)
+	{
+		foreach (var gs in klass.Interfaces.Where (sym => sym is GenericSymbol).Cast<GenericSymbol> ().Where (sym => sym.IsConcrete)) {
+
+			// FIXME: not sure if excluding default methods is a valid idea...
+			foreach (var m in gs.Gen.Methods) {
+				if (m.IsInterfaceDefaultMethod || m.IsStatic)
+					continue;
+				if (m.IsGeneric)
+					Methods.Add (new GenericExplicitInterfaceImplementationMethod (m, gs, opt));
 			}
 
-			foreach (var ctor in klass.Ctors) {
-				// Don't bind final or protected constructors
-				if (klass.IsFinal && ctor.Visibility == "protected")
+			foreach (var p in gs.Gen.Properties) {
+				if (p.Getter?.IsInterfaceDefaultMethod == true || p.Getter?.IsStatic == true)
 					continue;
 
-				// Bind Java declared constructor
-				Constructors.Add (new BoundConstructor(klass, ctor, klass.InheritsObject, opt, context));
-
-				// If the constructor takes ICharSequence, create an overload constructor that takes a string
-				if (ctor.Parameters.HasCharSequence && !klass.ContainsCtor (ctor.JniSignature.Replace ("java/lang/CharSequence", "java/lang/String")))
-					Constructors.Add (new StringOverloadConstructor(klass, ctor, klass.InheritsObject, opt, context));
-			}
-		}
-
-		void AddCharSequenceEnumerator (ClassGen klass)
-		{
-			if (klass.Interfaces.Any (p => p.FullName == "Java.Lang.ICharSequence")) {
-				Methods.Add (new CharSequenceEnumeratorMethod ());
-				Methods.Add (new CharSequenceGenericEnumeratorMethod ());
-			}
-		}
-
-		void AddImplementedInterfaces (ClassGen klass)
-		{
-			foreach (var isym in klass.Interfaces) {
-				if ((!(isym is GenericSymbol gs) ? isym : gs.Gen) is InterfaceGen gen && (gen.IsConstSugar (opt) || gen.RawVisibility != "public"))
+				if (p.Setter?.IsInterfaceDefaultMethod == true || p.Setter?.IsStatic == true)
 					continue;
 
-				Implements.Add (opt.GetOutputName (isym.FullName));
-			}
-		}
+				if (p.IsGeneric) {
+					var mappings = new Dictionary<string, string> ();
+					for (var i = 0; i < gs.TypeParams.Length; i++)
+						mappings [gs.Gen.TypeParameters [i].Name] = gs.TypeParams [i].FullName;
 
-		void AddExplicitGenericInterfaceMembers (ClassGen klass, CodeGenerationOptions opt)
-		{
-			foreach (var gs in klass.Interfaces.Where (sym => sym is GenericSymbol).Cast<GenericSymbol> ().Where (sym => sym.IsConcrete)) {
+					//If the property type is Java.Lang.Object, we don't need to generate an explicit implementation
+					if (p.Getter?.RetVal.GetGenericType (mappings) == "Java.Lang.Object")
+						return;
+					if (p.Setter?.Parameters [0].GetGenericType (mappings) == "Java.Lang.Object")
+						return;
 
-				// FIXME: not sure if excluding default methods is a valid idea...
-				foreach (var m in gs.Gen.Methods) {
-					if (m.IsInterfaceDefaultMethod || m.IsStatic)
-						continue;
-					if (m.IsGeneric)
-						Methods.Add (new GenericExplicitInterfaceImplementationMethod (m, gs, opt));
-				}
-
-				foreach (var p in gs.Gen.Properties) {
-					if (p.Getter?.IsInterfaceDefaultMethod == true || p.Getter?.IsStatic == true)
-						continue;
-
-					if (p.Setter?.IsInterfaceDefaultMethod == true || p.Setter?.IsStatic == true)
-						continue;
-
-					if (p.IsGeneric) {
-						var mappings = new Dictionary<string, string> ();
-						for (var i = 0; i < gs.TypeParams.Length; i++)
-							mappings [gs.Gen.TypeParameters [i].Name] = gs.TypeParams [i].FullName;
-
-						//If the property type is Java.Lang.Object, we don't need to generate an explicit implementation
-						if (p.Getter?.RetVal.GetGenericType (mappings) == "Java.Lang.Object")
-							return;
-						if (p.Setter?.Parameters [0].GetGenericType (mappings) == "Java.Lang.Object")
-							return;
-
-						Properties.Add (new GenericExplicitInterfaceImplementationProperty (p, gs, gs.Gen.AssemblyQualifiedName + "Invoker", mappings, opt));
-					}
+					Properties.Add (new GenericExplicitInterfaceImplementationProperty (p, gs, gs.Gen.AssemblyQualifiedName + "Invoker", mappings, opt));
 				}
 			}
-
 		}
 
-		void AddAbstractMembers (ClassGen klass, CodeGenerationOptions opt, CodeGeneratorContext context)
-		{
-			if (!klass.IsAbstract)
-				return;
+	}
 
-			foreach (var gen in klass.GetAllDerivedInterfaces ())
-				AddInterfaceAbstractMembers(klass, gen, opt, context);
+	void AddAbstractMembers (ClassGen klass, CodeGenerationOptions opt, CodeGeneratorContext context)
+	{
+		if (!klass.IsAbstract)
+			return;
+
+		foreach (var gen in klass.GetAllDerivedInterfaces ())
+			AddInterfaceAbstractMembers(klass, gen, opt, context);
+	}
+
+	// For each interface, generate either an abstract method or an explicit implementation method.
+	void AddInterfaceAbstractMembers (ClassGen klass, InterfaceGen iface, CodeGenerationOptions opt, CodeGeneratorContext context)
+	{
+		methods: foreach (var method in iface.Methods.Where (m => !m.IsInterfaceDefaultMethod && !m.IsStatic)) {
+			var sig = method.GetSignature ();
+
+			if (context.ContextGeneratedMethods.Any (_ => _.Name == method.Name && _.JniSignature == method.JniSignature))
+				continue;
+			if (klass.SkippedInterfaceMethods.Contains (method.GetSkipInvokerSignature ()))
+				continue;
+
+			for (var cls = klass; cls != null; cls = cls.BaseGen)
+				if (cls.ContainsMethod (method, false) || cls != klass && klass.ExplicitlyImplementedInterfaceMethods.Contains (sig)) {
+					continue methods;
+				}
+
+			if (klass.ExplicitlyImplementedInterfaceMethods.Contains (sig))
+				Methods.Add (new MethodExplicitInterfaceImplementation(iface, method, opt));
+			else
+				AddAbstractMethodDeclaration (klass, method, iface);
+
+			context.ContextGeneratedMethods.Add (method);
 		}
 
-		// For each interface, generate either an abstract method or an explicit implementation method.
-		void AddInterfaceAbstractMembers (ClassGen klass, InterfaceGen iface, CodeGenerationOptions opt, CodeGeneratorContext context)
-		{
-			methods: foreach (var method in iface.Methods.Where (m => !m.IsInterfaceDefaultMethod && !m.IsStatic)) {
-				var sig = method.GetSignature ();
+		foreach (var prop in iface.Properties.Where (p => !p.Getter.IsInterfaceDefaultMethod && !p.Getter.IsStatic)) {
+			if (klass.ContainsProperty (prop.Name, false))
+				continue;
 
-				if (context.ContextGeneratedMethods.Any (_ => _.Name == method.Name && _.JniSignature == method.JniSignature))
-					continue;
-				if (klass.SkippedInterfaceMethods.Contains (method.GetSkipInvokerSignature ()))
-					continue;
+			AddAbstractPropertyDeclaration (klass, prop, opt);
+		}
+	}
 
-				for (var cls = klass; cls != null; cls = cls.BaseGen)
-					if (cls.ContainsMethod (method, false) || cls != klass && klass.ExplicitlyImplementedInterfaceMethods.Contains (sig)) {
-						continue methods;
-					}
+	void AddMethods (ClassGen klass, CodeGenerationOptions opt, CodeGeneratorContext context)
+	{
+		var methodsToDeclare = klass.Methods.AsEnumerable ();
 
-				if (klass.ExplicitlyImplementedInterfaceMethods.Contains (sig))
-					Methods.Add (new MethodExplicitInterfaceImplementation(iface, method, opt));
-				else
-					AddAbstractMethodDeclaration (klass, method, iface);
+		// This does not exclude overrides (unlike virtual methods) because we're not sure
+		// if calling the base interface default method via JNI expectedly dispatches to
+		// the derived method.
+		var defaultMethods = klass.GetAllDerivedInterfaces ()
+			.SelectMany (i => i.Methods)
+			.Where (m => m.IsInterfaceDefaultMethod)
+			.Where (m => !klass.ContainsMethod (m, false, false));
 
-				context.ContextGeneratedMethods.Add (method);
-			}
+		var overrides = defaultMethods.Where (m => m.OverriddenInterfaceMethod != null);
 
-			foreach (var prop in iface.Properties.Where (p => !p.Getter.IsInterfaceDefaultMethod && !p.Getter.IsStatic)) {
-				if (klass.ContainsProperty (prop.Name, false))
-					continue;
+		var overridens = defaultMethods.Where (m => overrides.Where (_ => _.Name == m.Name && _.JniSignature == m.JniSignature)
+			.Any (mm => mm.DeclaringType.GetAllDerivedInterfaces ().Contains (m.DeclaringType)));
 
+		methodsToDeclare = opt.SupportDefaultInterfaceMethods ? methodsToDeclare : methodsToDeclare.Concat (defaultMethods.Except (overridens)).Where (m => m.DeclaringType.IsGeneratable);
+
+		foreach (var m in methodsToDeclare) {
+			var virt = m.IsVirtual;
+			m.IsVirtual = !klass.IsFinal && virt;
+
+			if (m.IsAbstract && m.OverriddenInterfaceMethod == null && (opt.SupportDefaultInterfaceMethods || !m.IsInterfaceDefaultMethod))
+				AddAbstractMethodDeclaration (klass, m, null);
+			else
+				AddMethod (klass, m, opt);
+
+			context.ContextGeneratedMethods.Add (m);
+			m.IsVirtual = virt;
+		}
+
+		var methods = klass.Methods.Concat (klass.Properties.Where (p => p.Setter != null).Select (p => p.Setter));
+
+		foreach (var type in methods.Where (m => m.IsListenerConnector && m.EventName != string.Empty).Select (m => m.ListenerType).Distinct ()) {
+			AddInlineComment ($"#region \"Event implementation for {type.FullName}\"");
+			SourceWriterExtensions.AddInterfaceListenerEventsAndProperties (this, type, klass, opt);
+			AddInlineComment ("#endregion");
+		}
+
+	}
+
+	void AddAbstractMethodDeclaration (GenBase klass, Method method, InterfaceGen iface)
+	{
+		Methods.Add (new BoundMethodAbstractDeclaration (iface, method, opt, klass));
+
+		if (method.IsReturnCharSequence || method.Parameters.HasCharSequence)
+			Methods.Add (new BoundMethodStringOverload (method, opt));
+
+		if (method.Asyncify)
+			Methods.Add (new MethodAsyncWrapper (method, opt));
+	}
+
+	void AddMethod (GenBase klass, Method method, CodeGenerationOptions opt)
+	{
+		if (!method.IsValid)
+			return;
+
+		Methods.Add (new BoundMethod(klass, method, opt, true));
+
+		var name_and_jnisig = method.JavaName + method.JniSignature.Replace ("java/lang/CharSequence", "java/lang/String");
+		var gen_string_overload = !method.IsOverride && method.Parameters.HasCharSequence && !klass.ContainsMethod (name_and_jnisig);
+
+		if (gen_string_overload  || method.IsReturnCharSequence)
+			Methods.Add (new BoundMethodStringOverload (method, opt));
+
+		if (method.Asyncify)
+			Methods.Add (new MethodAsyncWrapper (method, opt));
+	}
+
+	void AddProperties (ClassGen klass, CodeGenerationOptions opt)
+	{
+		foreach (var prop in klass.Properties) {
+			var get_virt = prop.Getter.IsVirtual;
+			var set_virt = prop.Setter == null ? false : prop.Setter.IsVirtual;
+
+			prop.Getter.IsVirtual = !klass.IsFinal && get_virt;
+
+			if (prop.Setter != null)
+				prop.Setter.IsVirtual = !klass.IsFinal && set_virt;
+
+			if (prop.Getter.IsAbstract)
 				AddAbstractPropertyDeclaration (klass, prop, opt);
-			}
+			else
+				AddProperty (klass, prop, opt);
+
+			prop.Getter.IsVirtual = get_virt;
+
+			if (prop.Setter != null)
+				prop.Setter.IsVirtual = set_virt;
 		}
+	}
 
-		void AddMethods (ClassGen klass, CodeGenerationOptions opt, CodeGeneratorContext context)
-		{
-			var methodsToDeclare = klass.Methods.AsEnumerable ();
+	void AddProperty (ClassGen klass, Property property, CodeGenerationOptions opt)
+	{
+		var bound_property = new BoundProperty (klass, property, opt, true, false);
+		Properties.Add (bound_property);
 
-			// This does not exclude overrides (unlike virtual methods) because we're not sure
-			// if calling the base interface default method via JNI expectedly dispatches to
-			// the derived method.
-			var defaultMethods = klass.GetAllDerivedInterfaces ()
-				.SelectMany (i => i.Methods)
-				.Where (m => m.IsInterfaceDefaultMethod)
-				.Where (m => !klass.ContainsMethod (m, false, false));
+		if (property.Type.StartsWith ("Java.Lang.ICharSequence", StringComparison.Ordinal) && !bound_property.IsOverride)
+			Properties.Add (new BoundPropertyStringVariant (property, opt, bound_property));
+	}
 
-			var overrides = defaultMethods.Where (m => m.OverriddenInterfaceMethod != null);
+	void AddAbstractPropertyDeclaration (ClassGen klass, Property property, CodeGenerationOptions opt)
+	{
+		var baseProp = klass.BaseSymbol?.GetPropertyByName (property.Name, true);
 
-			var overridens = defaultMethods.Where (m => overrides.Where (_ => _.Name == m.Name && _.JniSignature == m.JniSignature)
-				.Any (mm => mm.DeclaringType.GetAllDerivedInterfaces ().Contains (m.DeclaringType)));
-
-			methodsToDeclare = opt.SupportDefaultInterfaceMethods ? methodsToDeclare : methodsToDeclare.Concat (defaultMethods.Except (overridens)).Where (m => m.DeclaringType.IsGeneratable);
-
-			foreach (var m in methodsToDeclare) {
-				var virt = m.IsVirtual;
-				m.IsVirtual = !klass.IsFinal && virt;
-
-				if (m.IsAbstract && m.OverriddenInterfaceMethod == null && (opt.SupportDefaultInterfaceMethods || !m.IsInterfaceDefaultMethod))
-					AddAbstractMethodDeclaration (klass, m, null);
-				else
-					AddMethod (klass, m, opt);
-
-				context.ContextGeneratedMethods.Add (m);
-				m.IsVirtual = virt;
-			}
-
-			var methods = klass.Methods.Concat (klass.Properties.Where (p => p.Setter != null).Select (p => p.Setter));
-
-			foreach (var type in methods.Where (m => m.IsListenerConnector && m.EventName != string.Empty).Select (m => m.ListenerType).Distinct ()) {
-				AddInlineComment ($"#region \"Event implementation for {type.FullName}\"");
-				SourceWriterExtensions.AddInterfaceListenerEventsAndProperties (this, type, klass, opt);
-				AddInlineComment ("#endregion");
-			}
-
-		}
-
-		void AddAbstractMethodDeclaration (GenBase klass, Method method, InterfaceGen iface)
-		{
-			Methods.Add (new BoundMethodAbstractDeclaration (iface, method, opt, klass));
-
-			if (method.IsReturnCharSequence || method.Parameters.HasCharSequence)
-				Methods.Add (new BoundMethodStringOverload (method, opt));
-
-			if (method.Asyncify)
-				Methods.Add (new MethodAsyncWrapper (method, opt));
-		}
-
-		void AddMethod (GenBase klass, Method method, CodeGenerationOptions opt)
-		{
-			if (!method.IsValid)
+		if (baseProp != null) {
+			if (baseProp.Type != property.Getter.Return) {
+				// This may not be required if we can change generic parameter support to return constrained type (not just J.L.Object).
+				AddInlineComment ($"// skipped generating property {property.Name} because its Java method declaration is variant that we cannot represent in C#");
 				return;
-
-			Methods.Add (new BoundMethod(klass, method, opt, true));
-
-			var name_and_jnisig = method.JavaName + method.JniSignature.Replace ("java/lang/CharSequence", "java/lang/String");
-			var gen_string_overload = !method.IsOverride && method.Parameters.HasCharSequence && !klass.ContainsMethod (name_and_jnisig);
-
-			if (gen_string_overload  || method.IsReturnCharSequence)
-				Methods.Add (new BoundMethodStringOverload (method, opt));
-
-			if (method.Asyncify)
-				Methods.Add (new MethodAsyncWrapper (method, opt));
-		}
-
-		void AddProperties (ClassGen klass, CodeGenerationOptions opt)
-		{
-			foreach (var prop in klass.Properties) {
-				var get_virt = prop.Getter.IsVirtual;
-				var set_virt = prop.Setter == null ? false : prop.Setter.IsVirtual;
-
-				prop.Getter.IsVirtual = !klass.IsFinal && get_virt;
-
-				if (prop.Setter != null)
-					prop.Setter.IsVirtual = !klass.IsFinal && set_virt;
-
-				if (prop.Getter.IsAbstract)
-					AddAbstractPropertyDeclaration (klass, prop, opt);
-				else
-					AddProperty (klass, prop, opt);
-
-				prop.Getter.IsVirtual = get_virt;
-
-				if (prop.Setter != null)
-					prop.Setter.IsVirtual = set_virt;
 			}
 		}
 
-		void AddProperty (ClassGen klass, Property property, CodeGenerationOptions opt)
-		{
-			var bound_property = new BoundProperty (klass, property, opt, true, false);
-			Properties.Add (bound_property);
+		var bound_property = new BoundAbstractProperty (klass, property, opt);
+		Properties.Add (bound_property);
 
-			if (property.Type.StartsWith ("Java.Lang.ICharSequence", StringComparison.Ordinal) && !bound_property.IsOverride)
-				Properties.Add (new BoundPropertyStringVariant (property, opt, bound_property));
+		if (property.Type.StartsWith ("Java.Lang.ICharSequence", StringComparison.Ordinal))
+			Properties.Add (new BoundPropertyStringVariant (property, opt, bound_property));
+	}
+
+	void AddNestedTypes (ClassGen klass, CodeGenerationOptions opt, CodeGeneratorContext context, GenerationInfo genInfo)
+	{
+		foreach (var nest in klass.NestedTypes) {
+			if (klass.BaseGen?.ContainsNestedType (nest) == true && nest is ClassGen c)
+				c.NeedsNew = true;
+
+			NestedTypes.Add (SourceWriterExtensions.BuildManagedTypeModel (nest, opt, context, genInfo));
 		}
+	}
 
-		void AddAbstractPropertyDeclaration (ClassGen klass, Property property, CodeGenerationOptions opt)
-		{
-			var baseProp = klass.BaseSymbol?.GetPropertyByName (property.Name, true);
+	public override void Write (CodeWriter writer)
+	{
+		base.Write (writer);
 
-			if (baseProp != null) {
-				if (baseProp.Type != property.Getter.Return) {
-					// This may not be required if we can change generic parameter support to return constrained type (not just J.L.Object).
-					AddInlineComment ($"// skipped generating property {property.Name} because its Java method declaration is variant that we cannot represent in C#");
-					return;
-				}
-			}
+		WriteSiblingClasses (writer);
+	}
 
-			var bound_property = new BoundAbstractProperty (klass, property, opt);
-			Properties.Add (bound_property);
-
-			if (property.Type.StartsWith ("Java.Lang.ICharSequence", StringComparison.Ordinal))
-				Properties.Add (new BoundPropertyStringVariant (property, opt, bound_property));
-		}
-
-		void AddNestedTypes (ClassGen klass, CodeGenerationOptions opt, CodeGeneratorContext context, GenerationInfo genInfo)
-		{
-			foreach (var nest in klass.NestedTypes) {
-				if (klass.BaseGen?.ContainsNestedType (nest) == true && nest is ClassGen c)
-					c.NeedsNew = true;
-
-				NestedTypes.Add (SourceWriterExtensions.BuildManagedTypeModel (nest, opt, context, genInfo));
-			}
-		}
-
-		public override void Write (CodeWriter writer)
-		{
-			base.Write (writer);
-
-			WriteSiblingClasses (writer);
-		}
-
-		public void WriteSiblingClasses (CodeWriter writer)
-		{
-			foreach (var sibling in sibling_types) {
-				writer.WriteLine ();
-				sibling.Write (writer);
-			}
+	public void WriteSiblingClasses (CodeWriter writer)
+	{
+		foreach (var sibling in sibling_types) {
+			writer.WriteLine ();
+			sibling.Write (writer);
 		}
 	}
 }

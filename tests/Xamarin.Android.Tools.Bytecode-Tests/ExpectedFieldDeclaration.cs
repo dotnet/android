@@ -1,11 +1,11 @@
-﻿using System;
+using System;
 using System.Linq;
 
 using Xamarin.Android.Tools.Bytecode;
 
 using NAssert   = NUnit.Framework.Assert;
 
-namespace Xamarin.Android.Tools.BytecodeTests {
+namespace Xamarin.Android.Tools.BytecodeTests; 
 
 	class ExpectedFieldDeclaration {
 
@@ -32,5 +32,4 @@ namespace Xamarin.Android.Tools.BytecodeTests {
 			}
 		}
 	}
-}
 

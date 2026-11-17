@@ -8,37 +8,37 @@ using Microsoft.Build.Framework;
 using Xamarin.Android.Tasks;
 using Microsoft.Build.Utilities;
 
-namespace Xamarin.Android.Build.Tests {
-	[TestFixture]
-	[Parallelizable (ParallelScope.Self)]
-	public class AndroidResourceTests : BaseTest
+namespace Xamarin.Android.Build.Tests; 
+[TestFixture]
+[Parallelizable (ParallelScope.Self)]
+public class AndroidResourceTests : BaseTest
+{
+	[Test]
+	public void RTxtParserTest ()
 	{
-		[Test]
-		public void RTxtParserTest ()
-		{
-			var path = Path.Combine (Root, "temp", TestName);
-			var rtxt = Path.Combine (path, "R.txt");
-			Directory.CreateDirectory (path);
-			File.WriteAllText (rtxt, ResourceData.RTxt);
-			IBuildEngine4 engine = new MockBuildEngine (System.Console.Out);
-			var log = new TaskLoggingHelper (engine, TestName);
-			var parser = new RtxtParser ();
-			var resources = parser.Parse (rtxt, log, new Dictionary<string, string> ());
-			var lines = File.ReadAllLines (rtxt);
-			Assert.AreEqual (lines.Count () - 1, resources.Count ());
-		}
+		var path = Path.Combine (Root, "temp", TestName);
+		var rtxt = Path.Combine (path, "R.txt");
+		Directory.CreateDirectory (path);
+		File.WriteAllText (rtxt, ResourceData.RTxt);
+		IBuildEngine4 engine = new MockBuildEngine (System.Console.Out);
+		var log = new TaskLoggingHelper (engine, TestName);
+		var parser = new RtxtParser ();
+		var resources = parser.Parse (rtxt, log, new Dictionary<string, string> ());
+		var lines = File.ReadAllLines (rtxt);
+		Assert.AreEqual (lines.Count () - 1, resources.Count ());
+	}
 
-		[Test]
-		public void HeaderLayout ()
-		{
-			var path = Path.Combine (Root, "temp", TestName);
-			Directory.CreateDirectory (path);
-			var layoutDir = Path.Combine (path, "res", "layout");
-			var menuDir = Path.Combine (path, "res", "menu");
-			Directory.CreateDirectory (layoutDir);
-			Directory.CreateDirectory (menuDir);
-			var main = Path.Combine (layoutDir, "main.xml");
-			File.WriteAllText (main, @"<?xml version=""1.0"" encoding=""utf-8""?>
+	[Test]
+	public void HeaderLayout ()
+	{
+		var path = Path.Combine (Root, "temp", TestName);
+		Directory.CreateDirectory (path);
+		var layoutDir = Path.Combine (path, "res", "layout");
+		var menuDir = Path.Combine (path, "res", "menu");
+		Directory.CreateDirectory (layoutDir);
+		Directory.CreateDirectory (menuDir);
+		var main = Path.Combine (layoutDir, "main.xml");
+		File.WriteAllText (main, @"<?xml version=""1.0"" encoding=""utf-8""?>
 <LinearLayout xmlns:android=""http://schemas.android.com/apk/res/android""
 	xmlns:app=""http://schemas.android.com/apk/res-auto""
 	android:orientation = ""horizontal""
@@ -48,34 +48,34 @@ namespace Xamarin.Android.Build.Tests {
 	>
 </LinearLayout>");
 
-			var headerLayout = Path.Combine (layoutDir, "headerlayout.xml");
-			File.WriteAllText (headerLayout, @"<?xml version=""1.0"" encoding=""utf-8""?>
+		var headerLayout = Path.Combine (layoutDir, "headerlayout.xml");
+		File.WriteAllText (headerLayout, @"<?xml version=""1.0"" encoding=""utf-8""?>
 <LinearLayout>
 </LinearLayout>
 ");
-			Monodroid.AndroidResource.UpdateXmlResource (Path.Combine (path, "res"), main, null);
-			var mainText = File.ReadAllText (main);
-			Assert.True (mainText.Contains ("@layout/headerlayout"), "'@layout/headerLayout' was not converted to '@layout/headerlayout'");
-			Directory.Delete (path, recursive: true);
-		}
+		Monodroid.AndroidResource.UpdateXmlResource (Path.Combine (path, "res"), main, null);
+		var mainText = File.ReadAllText (main);
+		Assert.True (mainText.Contains ("@layout/headerlayout"), "'@layout/headerLayout' was not converted to '@layout/headerlayout'");
+		Directory.Delete (path, recursive: true);
+	}
 
-		[Test]
-		public void MenuActionLayout ()
-		{
-			var path = Path.Combine (Root, "temp", "MenuActionLayout");
-			Directory.CreateDirectory (path);
-			var layoutDir = Path.Combine (path, "res", "layout");
-			var menuDir = Path.Combine (path, "res", "menu");
-			Directory.CreateDirectory (layoutDir);
-			Directory.CreateDirectory (menuDir);
-			File.WriteAllText (Path.Combine (layoutDir, "servinglayout.xml"), @"<?xml version=""1.0"" encoding=""utf-8""?>
+	[Test]
+	public void MenuActionLayout ()
+	{
+		var path = Path.Combine (Root, "temp", "MenuActionLayout");
+		Directory.CreateDirectory (path);
+		var layoutDir = Path.Combine (path, "res", "layout");
+		var menuDir = Path.Combine (path, "res", "menu");
+		Directory.CreateDirectory (layoutDir);
+		Directory.CreateDirectory (menuDir);
+		File.WriteAllText (Path.Combine (layoutDir, "servinglayout.xml"), @"<?xml version=""1.0"" encoding=""utf-8""?>
 <LinearLayout xmlns:android=""http://schemas.android.com/apk/res/android""
 	android:orientation = ""horizontal""
 	android:layout_width = ""match_parent""
 	android:layout_height = ""match_parent"" >");
 
-			var actions = Path.Combine (menuDir, "actions.xml");
-			File.WriteAllText (actions, @"<?xml version=""1.0"" encoding=""utf-8""?>
+		var actions = Path.Combine (menuDir, "actions.xml");
+		File.WriteAllText (actions, @"<?xml version=""1.0"" encoding=""utf-8""?>
 <menu
 	xmlns:android = ""http://schemas.android.com/apk/res/android""
 	xmlns:app = ""http://schemas.android.com/apk/res-auto"">
@@ -112,23 +112,23 @@ namespace Xamarin.Android.Build.Tests {
 		app:showAsAction = ""never"" />
 
 </menu>");
-			Monodroid.AndroidResource.UpdateXmlResource (Path.Combine (path, "res"), actions, null);
-			var actionsText = File.ReadAllText (actions);
-			Assert.True (actionsText.Contains ("@layout/servinglayout"), "'@layout/ServingLayout' was not converted to '@layout/servinglayout'");
-			Directory.Delete (path, recursive: true);
-		}
+		Monodroid.AndroidResource.UpdateXmlResource (Path.Combine (path, "res"), actions, null);
+		var actionsText = File.ReadAllText (actions);
+		Assert.True (actionsText.Contains ("@layout/servinglayout"), "'@layout/ServingLayout' was not converted to '@layout/servinglayout'");
+		Directory.Delete (path, recursive: true);
+	}
 
-		[Test]
-		public void UserLayout ()
-		{
-			var path = Path.Combine (Root, "temp", TestName);
-			Directory.CreateDirectory (path);
-			var layoutDir = Path.Combine (path, "res", "layout");
-			var valuesDir = Path.Combine (path, "res", "values");
-			Directory.CreateDirectory (layoutDir);
-			Directory.CreateDirectory (valuesDir);
-			var main = Path.Combine (layoutDir, "main.xml");
-			File.WriteAllText (main, @"<?xml version=""1.0"" encoding=""utf-8""?>
+	[Test]
+	public void UserLayout ()
+	{
+		var path = Path.Combine (Root, "temp", TestName);
+		Directory.CreateDirectory (path);
+		var layoutDir = Path.Combine (path, "res", "layout");
+		var valuesDir = Path.Combine (path, "res", "values");
+		Directory.CreateDirectory (layoutDir);
+		Directory.CreateDirectory (valuesDir);
+		var main = Path.Combine (layoutDir, "main.xml");
+		File.WriteAllText (main, @"<?xml version=""1.0"" encoding=""utf-8""?>
 <LinearLayout xmlns:android=""http://schemas.android.com/apk/res/android""
 	xmlns:app=""http://schemas.android.com/apk/res-auto""
 	android:orientation = ""horizontal""
@@ -138,8 +138,8 @@ namespace Xamarin.Android.Build.Tests {
 	>
 </LinearLayout>");
 
-			var attrs = Path.Combine (valuesDir, "attrs.xml");
-			File.WriteAllText (attrs, @"<?xml version=""1.0"" encoding=""utf-8""?>
+		var attrs = Path.Combine (valuesDir, "attrs.xml");
+		File.WriteAllText (attrs, @"<?xml version=""1.0"" encoding=""utf-8""?>
 <resources>
 	<declare-styleable name=""UserLayoutAttributes"">
 		<attr name=""UserLayout"">
@@ -148,61 +148,60 @@ namespace Xamarin.Android.Build.Tests {
 	</declare-styleable>
 </resources>
 ");
-			Monodroid.AndroidResource.UpdateXmlResource (Path.Combine (path, "res"), attrs, null);
-			Monodroid.AndroidResource.UpdateXmlResource (Path.Combine (path, "res"), main, null);
-			var mainText = File.ReadAllText (main);
-			Assert.True (mainText.Contains ("FixedWidth"), "'FixedWidth' was converted to 'fixedwidth'");
-			Directory.Delete (path, recursive: true);
+		Monodroid.AndroidResource.UpdateXmlResource (Path.Combine (path, "res"), attrs, null);
+		Monodroid.AndroidResource.UpdateXmlResource (Path.Combine (path, "res"), main, null);
+		var mainText = File.ReadAllText (main);
+		Assert.True (mainText.Contains ("FixedWidth"), "'FixedWidth' was converted to 'fixedwidth'");
+		Directory.Delete (path, recursive: true);
+	}
+
+	[Test]
+	public void AdaptiveIcon ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
+	{
+		bool isRelease = runtime == AndroidRuntime.NativeAOT;
+		if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+			return;
 		}
 
-		[Test]
-		public void AdaptiveIcon ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
-		{
-			bool isRelease = runtime == AndroidRuntime.NativeAOT;
-			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
-				return;
+		var proj = new XamarinAndroidApplicationProject {
+			IsRelease = isRelease,
+			SupportedOSPlatformVersion = "26",
+			AndroidResources = {
+				new AndroidItem.AndroidResource ("Resources\\values\\colors.xml") {
+					TextContent = () => """
+						<resources>
+							<color name="adaptive_icon_background">#2C3E50</color>
+							<color name="adaptive_icon_foreground">#FFFFFF</color>
+						</resources>
+					""",
+				},
+				new AndroidItem.AndroidResource ("Resources\\drawable\\ic_shortcut_add.xml") {
+					TextContent = () => """
+						<adaptive-icon xmlns:android="http://schemas.android.com/apk/res/android">
+							<background android:drawable="@color/adaptive_icon_background"/>
+							<foreground android:drawable="@color/adaptive_icon_foreground"/>
+						</adaptive-icon>
+					""",
+				},
+				new AndroidItem.AndroidResource ("Resources\\mipmap-anydpi-v26\\adaptiveicon.xml") {
+					TextContent = () => """
+						<adaptive-icon xmlns:android="http://schemas.android.com/apk/res/android">
+							<background android:drawable="@mipmap/AdaptiveIcon_background" />
+							<foreground android:drawable="@mipmap/AdaptiveIcon_foreground" />
+						</adaptive-icon>
+					""",
+				},
+				new AndroidItem.AndroidResource ("Resources\\mipmap-mdpi\\AdaptiveIcon_background.png") {
+					BinaryContent = () => XamarinAndroidCommonProject.icon_binary_mdpi,
+				},
+				new AndroidItem.AndroidResource ("Resources\\mipmap-mdpi\\AdaptiveIcon_foreground.png") {
+					BinaryContent = () => XamarinAndroidCommonProject.icon_binary_mdpi,
+				},
 			}
+		};
+		proj.SetRuntime (runtime);
 
-			var proj = new XamarinAndroidApplicationProject {
-				IsRelease = isRelease,
-				SupportedOSPlatformVersion = "26",
-				AndroidResources = {
-					new AndroidItem.AndroidResource ("Resources\\values\\colors.xml") {
-						TextContent = () => """
-							<resources>
-								<color name="adaptive_icon_background">#2C3E50</color>
-								<color name="adaptive_icon_foreground">#FFFFFF</color>
-							</resources>
-						""",
-					},
-					new AndroidItem.AndroidResource ("Resources\\drawable\\ic_shortcut_add.xml") {
-						TextContent = () => """
-							<adaptive-icon xmlns:android="http://schemas.android.com/apk/res/android">
-								<background android:drawable="@color/adaptive_icon_background"/>
-								<foreground android:drawable="@color/adaptive_icon_foreground"/>
-							</adaptive-icon>
-						""",
-					},
-					new AndroidItem.AndroidResource ("Resources\\mipmap-anydpi-v26\\adaptiveicon.xml") {
-						TextContent = () => """
-							<adaptive-icon xmlns:android="http://schemas.android.com/apk/res/android">
-								<background android:drawable="@mipmap/AdaptiveIcon_background" />
-								<foreground android:drawable="@mipmap/AdaptiveIcon_foreground" />
-							</adaptive-icon>
-						""",
-					},
-					new AndroidItem.AndroidResource ("Resources\\mipmap-mdpi\\AdaptiveIcon_background.png") {
-						BinaryContent = () => XamarinAndroidCommonProject.icon_binary_mdpi,
-					},
-					new AndroidItem.AndroidResource ("Resources\\mipmap-mdpi\\AdaptiveIcon_foreground.png") {
-						BinaryContent = () => XamarinAndroidCommonProject.icon_binary_mdpi,
-					},
-				}
-			};
-			proj.SetRuntime (runtime);
-
-			using var b = CreateApkBuilder ();
-			Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
-		}
+		using var b = CreateApkBuilder ();
+		Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
 	}
 }

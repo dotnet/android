@@ -1,7 +1,7 @@
 using System;
 using Android.Runtime;
 
-namespace Android.Opengl {
+namespace Android.Opengl; 
 
 	public partial class GLSurfaceView {
 
@@ -10,5 +10,4 @@ namespace Android.Opengl {
 			QueueEvent (new Java.Lang.Thread.RunnableImplementor (r));
 		}
 	}
-}
 

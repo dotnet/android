@@ -5,8 +5,8 @@ using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 
-namespace Java.Interop
-{
+namespace Java.Interop;
+
 	[JniTypeSignature ("java/lang/Object", ArrayRank=1, GenerateJavaPeer=false)]
 	public class JavaObjectArray<[DynamicallyAccessedMembers (Constructors)] T> : JavaArray<T>
 	{
@@ -216,4 +216,3 @@ namespace Java.Interop
 			}
 		}
 	}
-}

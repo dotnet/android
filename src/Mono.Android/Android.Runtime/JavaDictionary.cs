@@ -6,7 +6,7 @@ using Android.Runtime;
 
 using Java.Interop;
 
-namespace Android.Runtime {
+namespace Android.Runtime; 
 
 	[Register ("java/util/HashMap", DoNotGenerateAcw=true)]
 	// java.util.HashMap allows null keys and values
@@ -750,4 +750,3 @@ namespace Android.Runtime {
 				return JNIEnv.ToLocalJniHandle (d);
 		}
 	}
-}

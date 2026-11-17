@@ -6,8 +6,8 @@ using System;
 using System.IO;
 using Xamarin.Android.Tools;
 
-namespace Xamarin.Android.Tasks
-{
+namespace Xamarin.Android.Tasks;
+
 	/// <summary>
 	/// Invokes `bundletool` to create an APK set (.apks file)
 	///
@@ -95,4 +95,3 @@ namespace Xamarin.Android.Tasks
 			return cmd;
 		}
 	}
-}

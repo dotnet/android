@@ -2,8 +2,8 @@
 
 using System;
 
-namespace Java.Interop
-{
+namespace Java.Interop;
+
 	[Flags]
 	public enum JniObjectReferenceOptions
 	{
@@ -17,4 +17,3 @@ namespace Java.Interop
 	partial struct JniObjectReference {
 		const       JniObjectReferenceOptions   DisposeSource       = (JniObjectReferenceOptions) (1 << 1);
 	}
-}

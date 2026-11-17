@@ -6,35 +6,34 @@ using System.Threading.Tasks;
 using MonoDroid.Generation;
 using Xamarin.SourceWriter;
 
-namespace generator.SourceWriters
+namespace generator.SourceWriters;
+
+public class InterfaceExtensionsClass : ClassWriter
 {
-	public class InterfaceExtensionsClass : ClassWriter
+	public InterfaceExtensionsClass (InterfaceGen iface, string declaringTypeName, CodeGenerationOptions opt)
 	{
-		public InterfaceExtensionsClass (InterfaceGen iface, string declaringTypeName, CodeGenerationOptions opt)
-		{
-			Name = $"{declaringTypeName}{iface.Name}Extensions";
+		Name = $"{declaringTypeName}{iface.Name}Extensions";
 
-			IsPublic = true;
-			IsStatic = true;
-			IsPartial = true;
+		IsPublic = true;
+		IsStatic = true;
+		IsPartial = true;
 
-			SourceWriterExtensions.AddObsolete (Attributes, iface.DeprecatedComment, opt, iface.IsDeprecated, deprecatedSince: iface.DeprecatedSince);
+		SourceWriterExtensions.AddObsolete (Attributes, iface.DeprecatedComment, opt, iface.IsDeprecated, deprecatedSince: iface.DeprecatedSince);
 
-			foreach (var method in iface.Methods.Where (m => !m.IsStatic)) {
-				if (method.CanHaveStringOverload) {
-					// TODO: Don't allow obsolete here to match old generator.
-					// Probably should allow this in the future.
-					var deprecated = method.Deprecated;
-					method.Deprecated = null;
-					Methods.Add (new BoundMethodExtensionStringOverload (method, opt, iface.FullName));
-					method.Deprecated = deprecated;
-				}
-
-				if (method.Asyncify)
-					Methods.Add (new MethodExtensionAsyncWrapper (method, opt, iface.FullName));
+		foreach (var method in iface.Methods.Where (m => !m.IsStatic)) {
+			if (method.CanHaveStringOverload) {
+				// TODO: Don't allow obsolete here to match old generator.
+				// Probably should allow this in the future.
+				var deprecated = method.Deprecated;
+				method.Deprecated = null;
+				Methods.Add (new BoundMethodExtensionStringOverload (method, opt, iface.FullName));
+				method.Deprecated = deprecated;
 			}
-		}
 
-		public bool ShouldGenerate => Methods.Any ();
+			if (method.Asyncify)
+				Methods.Add (new MethodExtensionAsyncWrapper (method, opt, iface.FullName));
+		}
 	}
+
+	public bool ShouldGenerate => Methods.Any ();
 }

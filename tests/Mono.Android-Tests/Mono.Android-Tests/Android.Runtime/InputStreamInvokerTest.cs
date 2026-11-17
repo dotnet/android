@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -7,19 +7,19 @@ using Android.Runtime;
 
 using NUnit.Framework;
 
-namespace Android.RuntimeTests
-{
+namespace Android.RuntimeTests;
+
         [TestFixture]
         public class InputStreamInvokerTest
         {
-		[Test]
-		public void Disposing_Shared_Data_Does_Not_Throw_IOE ()
-		{
-			var javaInputStream = new Java.IO.ByteArrayInputStream (new byte[]{0x1, 0x2, 0x3, 0x4});
-			var invoker = new InputStreamInvoker (javaInputStream);
-			javaInputStream.Dispose ();
-			invoker.Dispose ();
-		}
+	[Test]
+	public void Disposing_Shared_Data_Does_Not_Throw_IOE ()
+	{
+		var javaInputStream = new Java.IO.ByteArrayInputStream (new byte[]{0x1, 0x2, 0x3, 0x4});
+		var invoker = new InputStreamInvoker (javaInputStream);
+		javaInputStream.Dispose ();
+		invoker.Dispose ();
+	}
 
                 [Test]
                 public void InputStreamTest ()
@@ -69,4 +69,3 @@ namespace Android.RuntimeTests
                         File.Delete (path);
                 }
         }
-}

@@ -5,8 +5,8 @@ using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
 using Microsoft.Android.Build.Tasks;
 
-namespace Xamarin.Android.Tasks
-{
+namespace Xamarin.Android.Tasks;
+
 	/// <summary>
 	/// Generates a warning if LockFile exists, registers the file to be deleted at end of build
 	/// </summary>
@@ -64,4 +64,3 @@ namespace Xamarin.Android.Tasks
 			}
 		}
 	}
-}

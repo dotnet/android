@@ -7,8 +7,8 @@ using System.Linq;
 using Microsoft.Android.Build.Tasks;
 using Microsoft.Build.Utilities;
 
-namespace Xamarin.Android.Tasks
-{
+namespace Xamarin.Android.Tasks;
+
 	/// Write a list of Item to a file
 	///
 	public class RtxtWriter {
@@ -28,4 +28,3 @@ namespace Xamarin.Android.Tasks
 			}
 		}
 	}
-}

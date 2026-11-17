@@ -1,4 +1,4 @@
-namespace Android.Media {
+namespace Android.Media; 
 
 	partial class MediaMetadataRetriever {
 
@@ -14,4 +14,3 @@ namespace Android.Media {
 		}
 #endif
 	}
-}

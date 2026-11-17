@@ -1,7 +1,7 @@
 using NUnit.Framework;
 
-namespace generatortests
-{
+namespace generatortests;
+
 	[TestFixture]
 	public class Java_Lang_Object : BaseGeneratorTest
 	{
@@ -14,4 +14,3 @@ namespace generatortests
 					expectedRelativePath: "java.lang.Object");
 		}
 	}
-}

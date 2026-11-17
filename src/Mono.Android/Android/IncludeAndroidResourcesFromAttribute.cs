@@ -1,6 +1,6 @@
 using System;
 
-namespace Android {
+namespace Android; 
 
 	[AttributeUsage (AttributeTargets.Assembly, AllowMultiple = true)]
 	[Obsolete ("This attribute is no longer supported.", error: true)]
@@ -15,4 +15,3 @@ namespace Android {
 
 		public string   ResourceDirectory {get; private set;}
 	}
-}

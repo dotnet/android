@@ -1,6 +1,6 @@
 using System;
 
-namespace Java.Interop {
+namespace Java.Interop; 
 
 	internal class JavaLocationException : Exception {
 
@@ -17,5 +17,4 @@ namespace Java.Interop {
 			}
 		}
 	}
-}
 

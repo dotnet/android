@@ -11,8 +11,8 @@ using Microsoft.Build.Utilities;
 using Monodroid;
 using Microsoft.Android.Build.Tasks;
 
-namespace Xamarin.Android.Tasks
-{
+namespace Xamarin.Android.Tasks;
+
 	public class ConvertResourcesCases : AndroidTask
 	{
 		public override string TaskPrefix => "CRC";
@@ -127,4 +127,3 @@ namespace Xamarin.Android.Tasks
 			}
 		}
 	}
-}

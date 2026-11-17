@@ -9,8 +9,8 @@ using System.Text;
 using Xamarin.Android.Tools;
 using Microsoft.Android.Build.Tasks;
 
-namespace Xamarin.Android.Tasks
-{
+namespace Xamarin.Android.Tasks;
+
 	public partial class GenerateLibraryResources
 	{
 		/// <summary>
@@ -96,4 +96,3 @@ namespace Xamarin.Android.Tasks
 			}
 		}
 	}
-}

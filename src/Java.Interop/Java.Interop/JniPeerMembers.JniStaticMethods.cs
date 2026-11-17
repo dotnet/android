@@ -1,10 +1,10 @@
-﻿#nullable enable
+#nullable enable
 
 using System;
 using System.Collections.Concurrent;
 
-namespace Java.Interop
-{
+namespace Java.Interop;
+
 	partial class JniPeerMembers {
 	public sealed partial class JniStaticMethods {
 
@@ -236,4 +236,3 @@ namespace Java.Interop
 			return unsafe (JniEnvironment.StaticMethods.CallStaticObjectMethod (GetMethodDeclaringType (m).PeerReference, m, parameters));
 		}
 	}}
-}

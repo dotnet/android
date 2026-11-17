@@ -4,7 +4,7 @@ using System.Runtime.Versioning;
 using Android.Runtime;
 using RuntimeFeature = Microsoft.Android.Runtime.RuntimeFeature;
 
-namespace Android.App {
+namespace Android.App; 
 
 	partial class Activity {
 
@@ -89,4 +89,3 @@ namespace Android.App {
 			}
 		}
 	}
-}

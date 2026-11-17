@@ -1,7 +1,7 @@
 using System;
 
-namespace Android.Views
-{
+namespace Android.Views;
+
 	partial class WindowManagerLayoutParams
 	{
 #if ANDROID_34
@@ -14,4 +14,3 @@ namespace Android.Views
 		}
 #endif
 	}
-}

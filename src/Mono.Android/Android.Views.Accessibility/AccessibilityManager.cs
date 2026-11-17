@@ -2,7 +2,7 @@ using System;
 
 using Android.Content;
 
-namespace Android.Views.Accessibility {
+namespace Android.Views.Accessibility; 
 
 	public partial class AccessibilityManager {
 
@@ -11,6 +11,5 @@ namespace Android.Views.Accessibility {
 			return context.GetSystemService (Context.AccessibilityService!) as AccessibilityManager;
 		}
 	}
-}
 
 

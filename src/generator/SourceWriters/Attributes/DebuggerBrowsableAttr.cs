@@ -5,13 +5,12 @@ using System.Text;
 using System.Threading.Tasks;
 using Xamarin.SourceWriter;
 
-namespace generator.SourceWriters
+namespace generator.SourceWriters;
+
+public class DebuggerBrowsableAttr : AttributeWriter
 {
-	public class DebuggerBrowsableAttr : AttributeWriter
+	public override void WriteAttribute (CodeWriter writer)
 	{
-		public override void WriteAttribute (CodeWriter writer)
-		{
-			writer.WriteLine ("[global::System.Diagnostics.DebuggerBrowsable (global::System.Diagnostics.DebuggerBrowsableState.Never)]");
-		}
+		writer.WriteLine ("[global::System.Diagnostics.DebuggerBrowsable (global::System.Diagnostics.DebuggerBrowsableState.Never)]");
 	}
 }

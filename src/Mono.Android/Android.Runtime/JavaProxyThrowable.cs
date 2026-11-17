@@ -7,7 +7,7 @@ using System.Text;
 
 using StackTraceElement = Java.Lang.StackTraceElement;
 
-namespace Android.Runtime {
+namespace Android.Runtime; 
 
 	sealed class JavaProxyThrowable : Java.Lang.Error {
 
@@ -158,4 +158,3 @@ namespace Android.Runtime {
 			SetStackTrace (elements);
 		}
 	}
-}

@@ -4,7 +4,7 @@ using System.Threading;
 
 using Java.Interop;
 
-namespace Android.Runtime {
+namespace Android.Runtime; 
 
 	class AndroidRuntime : JniRuntime {
 
@@ -83,4 +83,3 @@ namespace Android.Runtime {
 			ValueManager            = valueManager;
 		}
 	}
-}

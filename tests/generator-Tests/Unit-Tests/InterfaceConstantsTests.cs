@@ -2,8 +2,8 @@ using System;
 using MonoDroid.Generation;
 using NUnit.Framework;
 
-namespace generatortests
-{
+namespace generatortests;
+
 	[TestFixture]
 	class XAJavaInteropInterfaceConstantsTests : CodeGeneratorTestBase
 	{
@@ -48,4 +48,3 @@ namespace generatortests
 			Assert.AreEqual (GetTargetedExpected (nameof (WriteConstSugarInterfaceFields)), writer.ToString ().NormalizeLineEndings ());
 		}
 	}
-}

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.IO;
 using System.Reflection;
 
@@ -6,7 +6,7 @@ using Xamarin.Android.Tools.Bytecode;
 
 using NUnit.Framework;
 
-namespace Xamarin.Android.Tools.BytecodeTests {
+namespace Xamarin.Android.Tools.BytecodeTests; 
 
 	[TestFixture]
 	public class ClassFileTests {
@@ -64,4 +64,3 @@ namespace Xamarin.Android.Tools.BytecodeTests {
 			return new ConstantPoolUtf8Item (pool, stream).Value;
 		}
 	}
-}

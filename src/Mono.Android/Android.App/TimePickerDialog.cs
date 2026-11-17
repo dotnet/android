@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using Android.Runtime;
 
-namespace Android.App {
+namespace Android.App; 
 
 	public partial class TimePickerDialog {
 
@@ -13,5 +13,4 @@ namespace Android.App {
 			: this (context, theme, new IOnTimeSetListenerImplementor () { Handler = callBack }, hourOfDay, minute, is24HourView) {}
 
 	}
-}
 

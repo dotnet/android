@@ -1,4 +1,4 @@
-﻿//
+//
 // AssemblyResolver.cs
 //
 // Author:
@@ -34,7 +34,7 @@ using System.IO;
 using Mono.Cecil;
 using Mono.Collections.Generic;
 
-namespace Mono.Linker {
+namespace Mono.Linker; 
 
 #if FEATURE_ILLINK
 	public class AssemblyResolver : DirectoryAssemblyResolver {
@@ -156,4 +156,3 @@ namespace Mono.Linker {
 				_unresolvedAssemblies.Clear ();
 		}
 	}
-}

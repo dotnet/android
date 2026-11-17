@@ -1,7 +1,7 @@
 using System;
 using Android.Runtime;
 
-namespace Android.Graphics.Drawables {
+namespace Android.Graphics.Drawables; 
 
 	public partial class Drawable {
 
@@ -19,5 +19,4 @@ namespace Android.Graphics.Drawables {
 			runnable.Dispose ();
 		}
 	}
-}
 

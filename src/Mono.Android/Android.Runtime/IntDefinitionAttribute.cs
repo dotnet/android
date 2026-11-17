@@ -1,7 +1,7 @@
 using System;
 
-namespace Android.Runtime
-{
+namespace Android.Runtime;
+
 	[AttributeUsage (AttributeTargets.Field)]
 	public class IntDefinitionAttribute : Attribute
 	{
@@ -13,4 +13,3 @@ namespace Android.Runtime
 		public string? ConstantMember { get; set; }
 		public string? JniField { get; set; }
 	}
-}

@@ -1,13 +1,12 @@
 using System;
 using System.Collections.Generic;
 
-namespace MonoDroid.Generation
+namespace MonoDroid.Generation;
+
+public interface IRequireGenericMarshal
 {
-	public interface IRequireGenericMarshal
-	{
-		bool MayHaveManagedGenericArguments { get; }
-		string GetGenericJavaObjectTypeOverride ();
-		string ToInteroperableJavaObject (string varname);
-	}
+	bool MayHaveManagedGenericArguments { get; }
+	string GetGenericJavaObjectTypeOverride ();
+	string ToInteroperableJavaObject (string varname);
 }
 

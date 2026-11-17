@@ -4,8 +4,8 @@ using System.Linq;
 using NUnit.Framework;
 using Xamarin.Android.Tools.Bytecode;
 
-namespace Xamarin.Android.Tools.BytecodeTests
-{
+namespace Xamarin.Android.Tools.BytecodeTests;
+
 	// Exercises the real Kotlin bytecode produced by the Gradle fixture under
 	// kotlin-gradle/ to confirm that the JVM-level mangling we expect (and that
 	// the generator's KotlinFixups must now de-collide) is actually what kotlinc
@@ -204,4 +204,3 @@ namespace Xamarin.Android.Tools.BytecodeTests
 			LoadClassFile ("Widgets.class"),
 		};
 	}
-}

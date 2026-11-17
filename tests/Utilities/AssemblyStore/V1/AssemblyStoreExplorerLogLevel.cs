@@ -1,10 +1,9 @@
-namespace Xamarin.Android.AssemblyStore.V1
+namespace Xamarin.Android.AssemblyStore.V1;
+
+enum AssemblyStoreExplorerLogLevel
 {
-	enum AssemblyStoreExplorerLogLevel
-	{
-		Debug,
-		Info,
-		Warning,
-		Error,
-	}
+	Debug,
+	Info,
+	Warning,
+	Error,
 }

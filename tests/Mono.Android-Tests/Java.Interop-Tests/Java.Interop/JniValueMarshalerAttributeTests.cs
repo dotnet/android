@@ -1,22 +1,21 @@
-﻿using System;
+using System;
 
 using Java.Interop;
 
 using NUnit.Framework;
 
-namespace Java.InteropTests {
+namespace Java.InteropTests; 
 
-	[TestFixture]
-	public class JniValueMarshalerAttributeTests {
+[TestFixture]
+public class JniValueMarshalerAttributeTests {
 
-		[Test]
-		public void Constructor ()
-		{
-			Assert.Throws<ArgumentNullException> (() => new JniValueMarshalerAttribute (null));
-			Assert.Throws<ArgumentException> (() => new JniValueMarshalerAttribute (typeof(int)));
+	[Test]
+	public void Constructor ()
+	{
+		Assert.Throws<ArgumentNullException> (() => new JniValueMarshalerAttribute (null));
+		Assert.Throws<ArgumentException> (() => new JniValueMarshalerAttribute (typeof(int)));
 
-			var a   = new JniValueMarshalerAttribute (typeof (JniInt32ValueMarshaler));
-			Assert.AreEqual (a.MarshalerType, typeof (JniInt32ValueMarshaler));
-		}
+		var a   = new JniValueMarshalerAttribute (typeof (JniInt32ValueMarshaler));
+		Assert.AreEqual (a.MarshalerType, typeof (JniInt32ValueMarshaler));
 	}
 }

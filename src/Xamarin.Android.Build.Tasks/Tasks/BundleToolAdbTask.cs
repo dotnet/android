@@ -5,8 +5,8 @@ using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
 using Xamarin.Android.Tools;
 
-namespace Xamarin.Android.Tasks
-{
+namespace Xamarin.Android.Tasks;
+
 	public abstract class BundleToolAdbTask : BundleTool
 	{
 		/// <summary>
@@ -37,4 +37,3 @@ namespace Xamarin.Android.Tasks
 			}
 		}
 	}
-}

@@ -12,8 +12,8 @@ using System.Reflection.Metadata;
 using System.Reflection.PortableExecutable;
 using Microsoft.Android.Build.Tasks;
 
-namespace Xamarin.Android.Tasks
-{
+namespace Xamarin.Android.Tasks;
+
 	public class ResolveLibraryProjectImports : AndroidTask
 	{
 		public override string TaskPrefix => "RLP";
@@ -519,4 +519,3 @@ namespace Xamarin.Android.Tasks
 			}
 		}
 	}
-}

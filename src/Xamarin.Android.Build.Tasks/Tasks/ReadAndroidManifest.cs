@@ -7,8 +7,8 @@ using System.Xml.Linq;
 using Xamarin.Android.Tools;
 using Microsoft.Android.Build.Tasks;
 
-namespace Xamarin.Android.Tasks
-{
+namespace Xamarin.Android.Tasks;
+
 	/// <summary>
 	/// Since GenerateJavaStubs can get skipped on incremental builds, this task parses the merged AndroidManifest.xml for values needed later in the build.
 	/// </summary>
@@ -139,4 +139,3 @@ namespace Xamarin.Android.Tasks
 			return !Log.HasLoggedErrors;
 		}
 	}
-}

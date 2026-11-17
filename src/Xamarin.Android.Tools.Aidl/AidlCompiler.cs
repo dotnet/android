@@ -7,112 +7,111 @@ using System.Text;
 using Irony.Parsing;
 using Mono.Cecil;
 
-namespace Xamarin.Android.Tools.Aidl
+namespace Xamarin.Android.Tools.Aidl;
+
+public class AidlCompiler
 {
-	public class AidlCompiler
+	public class Result
 	{
-		public class Result
+		public Result ()
 		{
-			public Result ()
-			{
-				LogMessages = new Dictionary<string,Irony.LogMessage> ();
-			}
-			
-			public IDictionary<string,Irony.LogMessage> LogMessages { get; private set; }
+			LogMessages = new Dictionary<string,Irony.LogMessage> ();
 		}
+		
+		public IDictionary<string,Irony.LogMessage> LogMessages { get; private set; }
+	}
+
+	Dictionary<string,CompilationUnit> units = new Dictionary<string,CompilationUnit> ();
+	string? output_path;
+	string? output_ns;
 	
-		Dictionary<string,CompilationUnit> units = new Dictionary<string,CompilationUnit> ();
-		string? output_path;
-		string? output_ns;
-		
-		public event Action<string,string>? FileWritten;
-		
-		public Result Run (ConverterOptions opts, Func<string,AssemblyDefinition> resolveAssembly)
-		{
-			return Run (opts, resolveAssembly, ((path, sourceFile) => {
-				var file = Path.GetFileNameWithoutExtension (sourceFile);
-				file = Path.Combine (output_path, /*file [0] == 'I' ? file : 'I' +*/ file) + ".cs";
-				return file;
-			}));
-		}
+	public event Action<string,string>? FileWritten;
+	
+	public Result Run (ConverterOptions opts, Func<string,AssemblyDefinition> resolveAssembly)
+	{
+		return Run (opts, resolveAssembly, ((path, sourceFile) => {
+			var file = Path.GetFileNameWithoutExtension (sourceFile);
+			file = Path.Combine (output_path, /*file [0] == 'I' ? file : 'I' +*/ file) + ".cs";
+			return file;
+		}));
+	}
 
-		public Result Run (ConverterOptions opts, Func<string,AssemblyDefinition> resolveAssembly, Func<string,string,string> outputFilenameSelector)
-		{
-			var result = new Result ();
-			var database = new BindingDatabase (opts.References, resolveAssembly);
-			var lang = new LanguageData (new AidlGrammar () { LanguageFlags = LanguageFlags.Default | LanguageFlags.CreateAst });
-			var parser = new Parser (lang);
-			output_path = opts.OutputDirectory;
-			output_ns = opts.OutputNS;
-			foreach (var file in opts.InputFiles) {
-				var pt = parser.Parse (File.ReadAllText (file), file);
-				if (pt.HasErrors ())
-					foreach (var l in pt.ParserMessages)
-						result.LogMessages.Add (file, l);
-				else
-					units.Add (file, (CompilationUnit) pt.Root.AstNode);
-			}
-			if (result.LogMessages.Any (e => e.Value.Level == Irony.ErrorLevel.Error))
-				return result;
-			
-			if (output_path != null && !Directory.Exists (output_path))
-				Directory.CreateDirectory (output_path);
-			output_path = output_path ?? "./";
-			
-			var parcelables = new List<TypeName> ();
-			foreach (var u in units.Values)
-				foreach (Parcelable t in u.Types.Where (t => t is Parcelable))
-					parcelables.Add (u.Package == null ? t.Name : new TypeName (u.Package.Identifiers.Concat (t.Name.Identifiers).ToArray ()));
-			
-			foreach (var pair in units) {
-				string file = outputFilenameSelector (output_path, pair.Key);
-				var sw = new StringWriter ();
-				new CSharpCodeGenerator (sw, database).GenerateCode (pair.Value, parcelables, opts);
-				string csharp = sw.ToString ();
-				if (pair.Value.Package != null && output_ns != null)
-					csharp = csharp.Replace (pair.Value.Package.ToString (), output_ns);
-				using (var fw = File.CreateText (file))
-					fw.Write (csharp);
-				FileWritten?.Invoke (file, csharp);
-			}
-
-			return result;
-		}
-
-		// This overload is primarily for unit tests.
-		public Result Run (string input, out string? output, AssemblyDefinition[]? references = null, ParcelableHandling parcelableHandling = ParcelableHandling.Ignore)
-		{
-			var result = new Result ();
-			var database = new BindingDatabase (references ?? Array.Empty<AssemblyDefinition> ());
-			var lang = new LanguageData (new AidlGrammar () { LanguageFlags = LanguageFlags.Default | LanguageFlags.CreateAst });
-			var parser = new Parser (lang);
-
-			var pt = parser.Parse (input);
-
-			if (pt.HasErrors ()) {
+	public Result Run (ConverterOptions opts, Func<string,AssemblyDefinition> resolveAssembly, Func<string,string,string> outputFilenameSelector)
+	{
+		var result = new Result ();
+		var database = new BindingDatabase (opts.References, resolveAssembly);
+		var lang = new LanguageData (new AidlGrammar () { LanguageFlags = LanguageFlags.Default | LanguageFlags.CreateAst });
+		var parser = new Parser (lang);
+		output_path = opts.OutputDirectory;
+		output_ns = opts.OutputNS;
+		foreach (var file in opts.InputFiles) {
+			var pt = parser.Parse (File.ReadAllText (file), file);
+			if (pt.HasErrors ())
 				foreach (var l in pt.ParserMessages)
-					result.LogMessages.Add ("input.aidl", l);
-
-				output = null;
-				return result;
-			}
-
-			var unit = (CompilationUnit) pt.Root.AstNode;
-
-			var parcelables = new List<TypeName> ();
-
-			foreach (Parcelable t in unit.Types.Where (t => t is Parcelable))
-				parcelables.Add (unit.Package == null ? t.Name : new TypeName (unit.Package.Identifiers.Concat (t.Name.Identifiers).ToArray ()));
-
+					result.LogMessages.Add (file, l);
+			else
+				units.Add (file, (CompilationUnit) pt.Root.AstNode);
+		}
+		if (result.LogMessages.Any (e => e.Value.Level == Irony.ErrorLevel.Error))
+			return result;
+		
+		if (output_path != null && !Directory.Exists (output_path))
+			Directory.CreateDirectory (output_path);
+		output_path = output_path ?? "./";
+		
+		var parcelables = new List<TypeName> ();
+		foreach (var u in units.Values)
+			foreach (Parcelable t in u.Types.Where (t => t is Parcelable))
+				parcelables.Add (u.Package == null ? t.Name : new TypeName (u.Package.Identifiers.Concat (t.Name.Identifiers).ToArray ()));
+		
+		foreach (var pair in units) {
+			string file = outputFilenameSelector (output_path, pair.Key);
 			var sw = new StringWriter ();
-			var opts = new ConverterOptions { ParcelableHandling = parcelableHandling };
+			new CSharpCodeGenerator (sw, database).GenerateCode (pair.Value, parcelables, opts);
+			string csharp = sw.ToString ();
+			if (pair.Value.Package != null && output_ns != null)
+				csharp = csharp.Replace (pair.Value.Package.ToString (), output_ns);
+			using (var fw = File.CreateText (file))
+				fw.Write (csharp);
+			FileWritten?.Invoke (file, csharp);
+		}
 
-			new CSharpCodeGenerator (sw, database).GenerateCode (unit, parcelables, opts);
+		return result;
+	}
 
-			output = sw.ToString ();
+	// This overload is primarily for unit tests.
+	public Result Run (string input, out string? output, AssemblyDefinition[]? references = null, ParcelableHandling parcelableHandling = ParcelableHandling.Ignore)
+	{
+		var result = new Result ();
+		var database = new BindingDatabase (references ?? Array.Empty<AssemblyDefinition> ());
+		var lang = new LanguageData (new AidlGrammar () { LanguageFlags = LanguageFlags.Default | LanguageFlags.CreateAst });
+		var parser = new Parser (lang);
 
+		var pt = parser.Parse (input);
+
+		if (pt.HasErrors ()) {
+			foreach (var l in pt.ParserMessages)
+				result.LogMessages.Add ("input.aidl", l);
+
+			output = null;
 			return result;
 		}
+
+		var unit = (CompilationUnit) pt.Root.AstNode;
+
+		var parcelables = new List<TypeName> ();
+
+		foreach (Parcelable t in unit.Types.Where (t => t is Parcelable))
+			parcelables.Add (unit.Package == null ? t.Name : new TypeName (unit.Package.Identifiers.Concat (t.Name.Identifiers).ToArray ()));
+
+		var sw = new StringWriter ();
+		var opts = new ConverterOptions { ParcelableHandling = parcelableHandling };
+
+		new CSharpCodeGenerator (sw, database).GenerateCode (unit, parcelables, opts);
+
+		output = sw.ToString ();
+
+		return result;
 	}
 }
 

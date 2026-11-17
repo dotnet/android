@@ -3,8 +3,8 @@ using System.Linq;
 using Microsoft.Build.Framework;
 using Microsoft.Android.Build.Tasks;
 
-namespace Xamarin.Android.Tasks
-{
+namespace Xamarin.Android.Tasks;
+
 	/// <summary>
 	/// For .NET 5 projects, this parses $(RuntimeIdentifer) (or RID) into $(AndroidSupportedAbis)
 	/// 
@@ -44,4 +44,3 @@ namespace Xamarin.Android.Tasks
 			return !Log.HasLoggedErrors;
 		}
 	}
-}

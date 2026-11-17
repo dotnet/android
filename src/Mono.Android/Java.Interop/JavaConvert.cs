@@ -8,7 +8,7 @@ using System.Reflection;
 using Android.Runtime;
 using Microsoft.Android.Runtime;
 
-namespace Java.Interop {
+namespace Java.Interop; 
 
 	static class JavaConvert {
 		const DynamicallyAccessedMemberTypes Constructors = DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.NonPublicConstructors;
@@ -672,4 +672,3 @@ namespace Java.Interop {
 			}
 		}
 	}
-}

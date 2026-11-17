@@ -6,8 +6,8 @@ using Java.Interop.Tools.Generator;
 using MonoDroid.Generation;
 using NUnit.Framework;
 
-namespace generatortests
-{
+namespace generatortests;
+
 	[TestFixture]
 	public class XmlApiImporterTests
 	{
@@ -371,4 +371,3 @@ namespace generatortests
 			Assert.AreEqual ("Example.Tests", gens [0].Namespace);
 		}
 	}
-}

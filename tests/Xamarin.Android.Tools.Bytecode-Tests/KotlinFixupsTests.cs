@@ -6,8 +6,8 @@ using System.Threading.Tasks;
 using NUnit.Framework;
 using Xamarin.Android.Tools.Bytecode;
 
-namespace Xamarin.Android.Tools.BytecodeTests
-{
+namespace Xamarin.Android.Tools.BytecodeTests;
+
 	[TestFixture]
 	public class KotlinFixupsTests : ClassFileFixture
 	{
@@ -462,4 +462,3 @@ namespace Xamarin.Android.Tools.BytecodeTests
 			Assert.AreEqual ("setFoo$main", KotlinUtilities.GetMethodNameWithoutUnsignedSuffix ("setFoo$main"));
 		}
 	}
-}

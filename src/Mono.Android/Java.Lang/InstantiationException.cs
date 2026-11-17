@@ -1,6 +1,6 @@
 using System;
 
-namespace Java.Lang {
+namespace Java.Lang; 
 
 	partial class InstantiationException {
 
@@ -9,4 +9,3 @@ namespace Java.Lang {
 			get {return Cause;}
 		}
 	}	
-}

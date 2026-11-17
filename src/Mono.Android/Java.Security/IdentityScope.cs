@@ -1,5 +1,5 @@
-namespace Java.Security
-{
+namespace Java.Security;
+
 	public partial class IdentityScope
 	{
 		protected static void SetSystemScope (IdentityScope scope)
@@ -7,4 +7,3 @@ namespace Java.Security
 			SystemScope = scope;
 		}
 	}
-}

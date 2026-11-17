@@ -1,13 +1,12 @@
 using System;
 using Xamarin.SourceWriter;
 
-namespace generator.SourceWriters
+namespace generator.SourceWriters;
+
+public class FlagsAttr : AttributeWriter
 {
-	public class FlagsAttr : AttributeWriter
+	public override void WriteAttribute (CodeWriter writer)
 	{
-		public override void WriteAttribute (CodeWriter writer)
-		{
-			writer.WriteLine ("[System.Flags]");
-		}
+		writer.WriteLine ("[System.Flags]");
 	}
 }

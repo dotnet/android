@@ -3,7 +3,7 @@
 using System.Diagnostics;
 using Mono.Cecil;
 
-namespace Mono.Linker {
+namespace Mono.Linker; 
 	[DebuggerDisplay ("{Override}")]
 	public class OverrideInformation {
 		public readonly MethodDefinition Base;
@@ -28,4 +28,3 @@ namespace Mono.Linker {
 			}
 		}
 	}
-}

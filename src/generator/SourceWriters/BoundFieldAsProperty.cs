@@ -5,171 +5,170 @@ using System.Threading.Tasks;
 using MonoDroid.Generation;
 using Xamarin.SourceWriter;
 
-namespace generator.SourceWriters
+namespace generator.SourceWriters;
+
+// This is a field that is not a constant, and thus we need to generate it as a
+// property so it can access the Java field.
+public class BoundFieldAsProperty : PropertyWriter
 {
-	// This is a field that is not a constant, and thus we need to generate it as a
-	// property so it can access the Java field.
-	public class BoundFieldAsProperty : PropertyWriter
+	readonly Field field;
+	readonly CodeGenerationOptions opt;
+
+	public BoundFieldAsProperty (GenBase type, Field field, CodeGenerationOptions opt)
 	{
-		readonly Field field;
-		readonly CodeGenerationOptions opt;
+		this.field = field;
+		this.opt = opt;
 
-		public BoundFieldAsProperty (GenBase type, Field field, CodeGenerationOptions opt)
-		{
-			this.field = field;
-			this.opt = opt;
+		Name = field.Name;
 
-			Name = field.Name;
+		string fieldType = field.Symbol.IsArray
+			? "IList<" + field.Symbol.ElementType + ">" + opt.NullableOperator
+			: opt.GetTypeReferenceName (field);
 
-			string fieldType = field.Symbol.IsArray
-				? "IList<" + field.Symbol.ElementType + ">" + opt.NullableOperator
-				: opt.GetTypeReferenceName (field);
+		PropertyType = new TypeReferenceWriter (fieldType);
 
-			PropertyType = new TypeReferenceWriter (fieldType);
+		field.JavadocInfo?.AddJavadocs (Comments);
+		Comments.Add ($"// Metadata.xml XPath field reference: path=\"{type.MetadataXPathReference}/field[@name='{field.JavaName}']\"");
 
-			field.JavadocInfo?.AddJavadocs (Comments);
-			Comments.Add ($"// Metadata.xml XPath field reference: path=\"{type.MetadataXPathReference}/field[@name='{field.JavaName}']\"");
+		if (field.IsEnumified)
+			Attributes.Add (new GeneratedEnumAttr ());
 
-			if (field.IsEnumified)
-				Attributes.Add (new GeneratedEnumAttr ());
+		SourceWriterExtensions.AddSupportedOSPlatform (Attributes, field, opt);
 
-			SourceWriterExtensions.AddSupportedOSPlatform (Attributes, field, opt);
+		Attributes.Add (new RegisterAttr (field.JavaName, additionalProperties: field.AdditionalAttributeString ()));
 
-			Attributes.Add (new RegisterAttr (field.JavaName, additionalProperties: field.AdditionalAttributeString ()));
+		SourceWriterExtensions.AddObsolete (Attributes, field.DeprecatedComment, opt, field.IsDeprecated, isError: field.IsDeprecatedError, deprecatedSince: field.DeprecatedSince);
+		SourceWriterExtensions.AddRestrictToWarning (Attributes, field.AnnotatedVisibility, false, opt);
 
-			SourceWriterExtensions.AddObsolete (Attributes, field.DeprecatedComment, opt, field.IsDeprecated, isError: field.IsDeprecatedError, deprecatedSince: field.DeprecatedSince);
-			SourceWriterExtensions.AddRestrictToWarning (Attributes, field.AnnotatedVisibility, false, opt);
+		SetVisibility (field.Visibility);
+		UseExplicitPrivateKeyword = true;
 
-			SetVisibility (field.Visibility);
-			UseExplicitPrivateKeyword = true;
+		IsStatic = field.IsStatic;
 
-			IsStatic = field.IsStatic;
+		HasGet = true;
 
-			HasGet = true;
+		if (!field.IsConst)
+			HasSet = true;
+	}
 
-			if (!field.IsConst)
-				HasSet = true;
+	public override void Write (CodeWriter writer)
+	{
+		// This is just a temporary hack to write the [GeneratedEnum] attribute before the // Metadata.xml
+		// comment so that we are 100% equal to pre-refactor.
+		var generated_attr = Attributes.OfType<GeneratedEnumAttr> ().FirstOrDefault ();
+
+		generated_attr?.WriteAttribute (writer);
+		writer.WriteLine ();
+
+		base.Write (writer);
+	}
+
+	public override void WriteAttributes (CodeWriter writer)
+	{
+		// Part of above hack ^^
+		foreach (var att in Attributes.Where (p => !(p is GeneratedEnumAttr)))
+			att.WriteAttribute (writer);
+	}
+
+	protected override void WriteGetterBody (CodeWriter writer)
+	{
+		writer.WriteLine ($"const string __id = \"{field.JavaName}.{field.Symbol.JniName}\";");
+		writer.WriteLine ();
+
+		var invokeType = SourceWriterExtensions.GetInvokeType (field.GetMethodPrefix);
+		var indirect = field.IsStatic ? "StaticFields" : "InstanceFields";
+		var invoke = "Get{0}Value";
+
+		invoke = string.Format (invoke, invokeType);
+
+		writer.WriteLine ($"var __v = {field.Symbol.ReturnCast}_members.{indirect}.{invoke} (__id{(field.IsStatic ? "" : ", this")});");
+
+		if (invokeType == "Object") {
+			writer.WriteLine ("unsafe {");
+			writer.Indent ();
+			writer.WriteLine ("// SAFETY: The field yields a current-thread local of __id's type, transferred once to its managed marshaler.");
+		}
+		if (field.Symbol.IsArray) {
+			writer.WriteLine ($"return global::Android.Runtime.JavaArray<{opt.GetOutputName (field.Symbol.ElementType)}>.FromJniHandle (__v.Handle, JniHandleOwnership.TransferLocalRef);");
+		} else if (field.Symbol.NativeType != field.Symbol.FullName && !field.Symbol.OnlyFormatOnMarshal) {
+			writer.WriteLine ($"return {field.Symbol.ReturnCast}{(field.Symbol.FromNative (opt, invokeType != "Object" ? "__v" : "__v.Handle", true, false) + opt.GetNullForgiveness (field))};");
+		} else {
+			writer.WriteLine ("return __v;");
+		}
+		if (invokeType == "Object") {
+			writer.Unindent ();
+			writer.WriteLine ("}");
+		}
+	}
+
+	protected override void WriteSetterBody (CodeWriter writer)
+	{
+		writer.WriteLine ($"const string __id = \"{field.JavaName}.{field.Symbol.JniName}\";");
+		writer.WriteLine ();
+
+		var invokeType = SourceWriterExtensions.GetInvokeType (field.GetMethodPrefix);
+		var indirect = field.IsStatic ? "StaticFields" : "InstanceFields";
+		if (invokeType == "Object") {
+			writer.WriteLine ("unsafe {");
+			writer.Indent ();
+			writer.WriteLine ("// SAFETY: The marshaler's local reference matches __id, remains live through SetValue and is released by finally.");
 		}
 
-		public override void Write (CodeWriter writer)
-		{
-			// This is just a temporary hack to write the [GeneratedEnum] attribute before the // Metadata.xml
-			// comment so that we are 100% equal to pre-refactor.
-			var generated_attr = Attributes.OfType<GeneratedEnumAttr> ().FirstOrDefault ();
+		string native_arg = opt.GetSafeIdentifier (TypeNameUtilities.GetNativeName ("value"));
+		string arg;
+		bool have_prep = false;
 
-			generated_attr?.WriteAttribute (writer);
-			writer.WriteLine ();
-
-			base.Write (writer);
-		}
-
-		public override void WriteAttributes (CodeWriter writer)
-		{
-			// Part of above hack ^^
-			foreach (var att in Attributes.Where (p => !(p is GeneratedEnumAttr)))
-				att.WriteAttribute (writer);
-		}
-
-		protected override void WriteGetterBody (CodeWriter writer)
-		{
-			writer.WriteLine ($"const string __id = \"{field.JavaName}.{field.Symbol.JniName}\";");
-			writer.WriteLine ();
-
-			var invokeType = SourceWriterExtensions.GetInvokeType (field.GetMethodPrefix);
-			var indirect = field.IsStatic ? "StaticFields" : "InstanceFields";
-			var invoke = "Get{0}Value";
-
-			invoke = string.Format (invoke, invokeType);
-
-			writer.WriteLine ($"var __v = {field.Symbol.ReturnCast}_members.{indirect}.{invoke} (__id{(field.IsStatic ? "" : ", this")});");
-
-			if (invokeType == "Object") {
-				writer.WriteLine ("unsafe {");
-				writer.Indent ();
-				writer.WriteLine ("// SAFETY: The field yields a current-thread local of __id's type, transferred once to its managed marshaler.");
-			}
-			if (field.Symbol.IsArray) {
-				writer.WriteLine ($"return global::Android.Runtime.JavaArray<{opt.GetOutputName (field.Symbol.ElementType)}>.FromJniHandle (__v.Handle, JniHandleOwnership.TransferLocalRef);");
-			} else if (field.Symbol.NativeType != field.Symbol.FullName && !field.Symbol.OnlyFormatOnMarshal) {
-				writer.WriteLine ($"return {field.Symbol.ReturnCast}{(field.Symbol.FromNative (opt, invokeType != "Object" ? "__v" : "__v.Handle", true, false) + opt.GetNullForgiveness (field))};");
-			} else {
-				writer.WriteLine ("return __v;");
-			}
-			if (invokeType == "Object") {
-				writer.Unindent ();
-				writer.WriteLine ("}");
-			}
-		}
-
-		protected override void WriteSetterBody (CodeWriter writer)
-		{
-			writer.WriteLine ($"const string __id = \"{field.JavaName}.{field.Symbol.JniName}\";");
-			writer.WriteLine ();
-
-			var invokeType = SourceWriterExtensions.GetInvokeType (field.GetMethodPrefix);
-			var indirect = field.IsStatic ? "StaticFields" : "InstanceFields";
-			if (invokeType == "Object") {
-				writer.WriteLine ("unsafe {");
-				writer.Indent ();
-				writer.WriteLine ("// SAFETY: The marshaler's local reference matches __id, remains live through SetValue and is released by finally.");
+		if (field.Symbol.IsArray) {
+			arg = native_arg;
+			writer.WriteLine ($"IntPtr {native_arg} = global::Android.Runtime.JavaArray<{opt.GetOutputName (field.Symbol.ElementType)}>.ToLocalJniHandle (value);");
+		} else {
+			foreach (var prep in field.SetParameters.GetCallPrep (opt)) {
+				have_prep = true;
+				writer.WriteLine (prep);
 			}
 
-			string native_arg = opt.GetSafeIdentifier (TypeNameUtilities.GetNativeName ("value"));
-			string arg;
-			bool have_prep = false;
+			var param = field.SetParameters [0];
+			arg = param.Symbol.OnlyFormatOnMarshal
+				? opt.GetSafeIdentifier (param.Name)
+				: param.ToNative (opt);
 
-			if (field.Symbol.IsArray) {
+			if (field.SetParameters.HasCleanup && !have_prep) {
 				arg = native_arg;
-				writer.WriteLine ($"IntPtr {native_arg} = global::Android.Runtime.JavaArray<{opt.GetOutputName (field.Symbol.ElementType)}>.ToLocalJniHandle (value);");
+				writer.WriteLine ($"IntPtr {native_arg} = global::Android.Runtime.JNIEnv.ToLocalJniHandle (value);");
+			}
+		}
+
+		var needsFinally = field.Symbol.IsArray ||
+			SourceWriterExtensions.HasCallCleanup (field.SetParameters, opt) ||
+			(field.SetParameters.HasCleanup && !have_prep);
+
+		if (needsFinally) {
+			writer.WriteLine ("try {");
+			writer.Write ("\t");
+		}
+
+		writer.Write ($"_members.{indirect}.SetValue (__id{(field.IsStatic ? "" : ", this")}, ");
+
+		writer.WriteLine ($"{(invokeType != "Object" ? arg : "new JniObjectReference (" + arg + ")")});");
+
+		if (needsFinally) {
+			writer.WriteLine ("} finally {");
+			writer.Indent ();
+
+			if (field.Symbol.IsArray) {
+				writer.WriteLine ($"global::Android.Runtime.JNIEnv.DeleteLocalRef ({arg});");
 			} else {
-				foreach (var prep in field.SetParameters.GetCallPrep (opt)) {
-					have_prep = true;
-					writer.WriteLine (prep);
-				}
-
-				var param = field.SetParameters [0];
-				arg = param.Symbol.OnlyFormatOnMarshal
-					? opt.GetSafeIdentifier (param.Name)
-					: param.ToNative (opt);
-
-				if (field.SetParameters.HasCleanup && !have_prep) {
-					arg = native_arg;
-					writer.WriteLine ($"IntPtr {native_arg} = global::Android.Runtime.JNIEnv.ToLocalJniHandle (value);");
-				}
-			}
-
-			var needsFinally = field.Symbol.IsArray ||
-				SourceWriterExtensions.HasCallCleanup (field.SetParameters, opt) ||
-				(field.SetParameters.HasCleanup && !have_prep);
-
-			if (needsFinally) {
-				writer.WriteLine ("try {");
-				writer.Write ("\t");
-			}
-
-			writer.Write ($"_members.{indirect}.SetValue (__id{(field.IsStatic ? "" : ", this")}, ");
-
-			writer.WriteLine ($"{(invokeType != "Object" ? arg : "new JniObjectReference (" + arg + ")")});");
-
-			if (needsFinally) {
-				writer.WriteLine ("} finally {");
-				writer.Indent ();
-
-				if (field.Symbol.IsArray) {
+				SourceWriterExtensions.WriteCallCleanup (writer, field.SetParameters, opt);
+				if (!have_prep)
 					writer.WriteLine ($"global::Android.Runtime.JNIEnv.DeleteLocalRef ({arg});");
-				} else {
-					SourceWriterExtensions.WriteCallCleanup (writer, field.SetParameters, opt);
-					if (!have_prep)
-						writer.WriteLine ($"global::Android.Runtime.JNIEnv.DeleteLocalRef ({arg});");
-				}
+			}
 
-				writer.Unindent ();
-				writer.WriteLine ("}");
-			}
-			if (invokeType == "Object") {
-				writer.Unindent ();
-				writer.WriteLine ("}");
-			}
+			writer.Unindent ();
+			writer.WriteLine ("}");
+		}
+		if (invokeType == "Object") {
+			writer.Unindent ();
+			writer.WriteLine ("}");
 		}
 	}
 }

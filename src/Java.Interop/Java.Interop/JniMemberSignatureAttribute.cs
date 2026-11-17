@@ -3,8 +3,8 @@
 using System;
 
 
-namespace Java.Interop
-{
+namespace Java.Interop;
+
 	public abstract class JniMemberSignatureAttribute : Attribute {
 
 		internal JniMemberSignatureAttribute (string memberName, string memberSignature)
@@ -21,4 +21,3 @@ namespace Java.Interop
 		public      string      MemberName          {get;}
 		public      string      MemberSignature     {get;}
 	}
-}

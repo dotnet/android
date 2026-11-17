@@ -17,7 +17,7 @@ using Java.Net;
 using Java.Security;
 using Javax.Net.Ssl;
 
-namespace Android.Runtime {
+namespace Android.Runtime; 
 
 	public static partial class AndroidEnvironment {
 
@@ -205,4 +205,3 @@ namespace Android.Runtime {
 			return new Xamarin.Android.Net.AndroidMessageHandler ();
 		}
 	}
-}

@@ -6,55 +6,54 @@ using System.Xml.Linq;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
 
-namespace Microsoft.Android.Build.Tasks
+namespace Microsoft.Android.Build.Tasks;
+
+public static class XDocumentExtensions
 {
-	public static class XDocumentExtensions
+	const string PathsElementName = "Paths";
+
+	public static ITaskItem[] GetPathsAsTaskItems (this XDocument doc, params string[] paths)
 	{
-		const string PathsElementName = "Paths";
-
-		public static ITaskItem[] GetPathsAsTaskItems (this XDocument doc, params string[] paths)
-		{
-			var e = doc.Elements (PathsElementName);
-			foreach (var p in paths)
-				e = e.Elements (p);
-			return e.Select (ToTaskItem).ToArray ();
-		}
-
-		static ITaskItem ToTaskItem (XElement element)
-		{
-			var taskItem = new TaskItem (element.Value);
-			foreach (var attribute in element.Attributes ()) {
-				taskItem.SetMetadata (attribute.Name.LocalName, attribute.Value);
-			}
-			return taskItem;
-		}
-
-		public static string[] GetPaths (this XDocument doc, params string[] paths)
-		{
-			var e = doc.Elements (PathsElementName);
-			foreach (var p in paths)
-				e = e.Elements (p);
-			return e.Select (p => p.Value).ToArray ();
-		}
-
-		public static string ToFullString (this XElement element)
-		{
-			return element.ToString (SaveOptions.DisableFormatting);
-		}
-
-		public static bool SaveIfChanged (this XDocument document, string fileName)
-			=> SaveIfChanged (document, fileName, TaskEnvironment.Fallback);
-
-		public static bool SaveIfChanged (this XDocument document, string fileName, TaskEnvironment? taskEnvironment)
-		{
-			taskEnvironment ??= TaskEnvironment.Fallback;
-			using (var sw = MemoryStreamPool.Shared.CreateStreamWriter ())
-			using (var xw = new LinePreservedXmlWriter (sw)) {
-				xw.WriteNode (document.CreateNavigator (), false);
-				xw.Flush ();
-				return Files.CopyIfStreamChanged (sw.BaseStream, taskEnvironment.GetAbsolutePath (fileName), taskEnvironment);
-			}
-		}
-
+		var e = doc.Elements (PathsElementName);
+		foreach (var p in paths)
+			e = e.Elements (p);
+		return e.Select (ToTaskItem).ToArray ();
 	}
+
+	static ITaskItem ToTaskItem (XElement element)
+	{
+		var taskItem = new TaskItem (element.Value);
+		foreach (var attribute in element.Attributes ()) {
+			taskItem.SetMetadata (attribute.Name.LocalName, attribute.Value);
+		}
+		return taskItem;
+	}
+
+	public static string[] GetPaths (this XDocument doc, params string[] paths)
+	{
+		var e = doc.Elements (PathsElementName);
+		foreach (var p in paths)
+			e = e.Elements (p);
+		return e.Select (p => p.Value).ToArray ();
+	}
+
+	public static string ToFullString (this XElement element)
+	{
+		return element.ToString (SaveOptions.DisableFormatting);
+	}
+
+	public static bool SaveIfChanged (this XDocument document, string fileName)
+		=> SaveIfChanged (document, fileName, TaskEnvironment.Fallback);
+
+	public static bool SaveIfChanged (this XDocument document, string fileName, TaskEnvironment? taskEnvironment)
+	{
+		taskEnvironment ??= TaskEnvironment.Fallback;
+		using (var sw = MemoryStreamPool.Shared.CreateStreamWriter ())
+		using (var xw = new LinePreservedXmlWriter (sw)) {
+			xw.WriteNode (document.CreateNavigator (), false);
+			xw.Flush ();
+			return Files.CopyIfStreamChanged (sw.BaseStream, taskEnvironment.GetAbsolutePath (fileName), taskEnvironment);
+		}
+	}
+
 }

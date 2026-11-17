@@ -3,8 +3,8 @@ using System.Collections.Generic;
 using Android.Runtime;
 using Org.XmlPull.V1;
 
-namespace Android.Content.Res
-{
+namespace Android.Content.Res;
+
 	public partial interface IXmlResourceParser : Android.Util.IAttributeSet, IXmlPullParser
 	{
 
@@ -16,5 +16,4 @@ namespace Android.Content.Res
 		new string GetAttributeValue (int pos);
 		new string? GetAttributeValue (string? ns, string? name);
 	}
-}
 

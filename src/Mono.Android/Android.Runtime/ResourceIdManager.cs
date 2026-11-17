@@ -2,8 +2,8 @@ using System;
 using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 
-namespace Android.Runtime
-{
+namespace Android.Runtime;
+
 	public static class ResourceIdManager
 	{
 		static bool id_initialized;
@@ -44,4 +44,3 @@ namespace Android.Runtime
 			return null;
 		}
 	}
-}

@@ -5,8 +5,8 @@ using System.IO;
 using Microsoft.Build.Framework;
 using Microsoft.Android.Build.Tasks;
 
-namespace Xamarin.Android.Tasks
-{
+namespace Xamarin.Android.Tasks;
+
 	public class GenerateRtxt : AndroidTask
 	{
 		public override string TaskPrefix => "GR";
@@ -42,4 +42,3 @@ namespace Xamarin.Android.Tasks
 			return !Log.HasLoggedErrors;
 		}
 	}
-}

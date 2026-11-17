@@ -3,13 +3,12 @@
 // that gets removed at compile time via [Conditional ("NEVER")].
 
 #if !NET
-namespace System.Runtime.Versioning
-{
+namespace System.Runtime.Versioning;
+
 	[System.Diagnostics.Conditional ("NEVER")]
 	[AttributeUsage (AttributeTargets.Assembly | AttributeTargets.Class | AttributeTargets.Constructor | AttributeTargets.Enum | AttributeTargets.Event | AttributeTargets.Field | AttributeTargets.Interface | AttributeTargets.Method | AttributeTargets.Module | AttributeTargets.Property | AttributeTargets.Struct, AllowMultiple = true, Inherited = false)]
 	sealed class SupportedOSPlatformAttribute : Attribute
 	{
 		public SupportedOSPlatformAttribute (string platformName) { }
 	}
-}
 #endif

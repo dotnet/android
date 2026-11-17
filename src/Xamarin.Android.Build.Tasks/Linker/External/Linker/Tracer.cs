@@ -1,4 +1,4 @@
-﻿//
+//
 // Tracer.cs
 //
 // Author:
@@ -31,8 +31,8 @@
 using System;
 using System.Collections.Generic;
 
-namespace Mono.Linker
-{
+namespace Mono.Linker;
+
 	public class Tracer
 	{
 		protected readonly LinkContext context;
@@ -114,4 +114,3 @@ namespace Mono.Linker
 			}
 		}
 	}
-}

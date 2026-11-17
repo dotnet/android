@@ -35,8 +35,8 @@ using System.Linq;
 using Microsoft.Android.Build.Tasks;
 using Xamarin.Android.Tools;
 
-namespace Xamarin.Android.Tasks
-{
+namespace Xamarin.Android.Tasks;
+
 	/// <summary>
 	/// Discovers SDK paths and returns them to MSBuild.
 	/// </summary>
@@ -150,4 +150,3 @@ namespace Xamarin.Android.Tasks
 			}
 		}
 	}
-}

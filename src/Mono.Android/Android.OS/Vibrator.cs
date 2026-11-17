@@ -2,7 +2,7 @@ using System;
 
 using Android.Content;
 
-namespace Android.OS {
+namespace Android.OS; 
 
 	public partial class Vibrator {
 
@@ -12,6 +12,5 @@ namespace Android.OS {
 			return context.GetSystemService (Context.VibratorService!) as Vibrator;
 		}
 	}
-}
 
 

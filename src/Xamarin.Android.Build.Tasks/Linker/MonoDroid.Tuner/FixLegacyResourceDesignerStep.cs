@@ -16,8 +16,8 @@ using Mono.Linker.Steps;
 using Mono.Tuner;
 using Resources = Xamarin.Android.Tasks.Properties.Resources;
 
-namespace MonoDroid.Tuner
-{
+namespace MonoDroid.Tuner;
+
 	public class FixLegacyResourceDesignerStep : LinkDesignerBase, Xamarin.Android.Tasks.IAssemblyModifierPipelineStep
 	{
 		internal const string DesignerAssemblyName = "_Microsoft.Android.Resource.Designer";
@@ -215,4 +215,3 @@ namespace MonoDroid.Tuner
 			}
 		}
 	}
-}

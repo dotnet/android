@@ -1,11 +1,10 @@
 #nullable enable
 
-namespace Xamarin.Android.Tasks
-{
+namespace Xamarin.Android.Tasks;
+
 	sealed class LayoutLocationInfo
 	{
 		public string? FilePath;
 		public int Line;
 		public int Column;
 	}
-}

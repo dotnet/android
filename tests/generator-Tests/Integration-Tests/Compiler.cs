@@ -8,8 +8,8 @@ using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using NUnit.Framework;
 
-namespace generatortests
-{
+namespace generatortests;
+
 	public static class Compiler
 	{
 		private static string supportFilePath = typeof (Compiler).Assembly.Location;
@@ -158,4 +158,3 @@ namespace generatortests
 			return sb.ToString ();
 		}
 	}
-}

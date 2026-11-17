@@ -2,7 +2,7 @@
 
 using System;
 
-namespace Java.Interop {
+namespace Java.Interop; 
 
 	/// <summary>
 	/// Declares the version of the binding callback format used by the assembly.
@@ -69,4 +69,3 @@ namespace Java.Interop {
 		/// </summary>
 		public int Version { get; }
 	}
-}

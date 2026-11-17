@@ -1,4 +1,4 @@
-﻿#nullable enable
+#nullable enable
 
 using System;
 using System.Collections.Concurrent;
@@ -8,7 +8,7 @@ using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Threading;
 
-namespace Java.Interop {
+namespace Java.Interop; 
 
 	public partial class JniPeerMembers {
 
@@ -465,4 +465,3 @@ namespace Java.Interop {
 			signature   = encodedMember.AsSpan (n + 1);
 		}
 	}
-}

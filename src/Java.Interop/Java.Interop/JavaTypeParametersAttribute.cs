@@ -1,8 +1,8 @@
 using System;
 
 
-namespace Java.Interop
-{
+namespace Java.Interop;
+
 	[AttributeUsage (AttributeTargets.Class | AttributeTargets.Interface | AttributeTargets.Method,
 		AllowMultiple=false)]
 	public sealed class JavaTypeParametersAttribute : Attribute
@@ -14,4 +14,3 @@ namespace Java.Interop
 
 		public string [] TypeParameters { get; }
 	}
-}

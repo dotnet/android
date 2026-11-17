@@ -3,8 +3,8 @@
 using System;
 using System.Collections.Generic;
 
-namespace Xamarin.Android.Tasks
-{
+namespace Xamarin.Android.Tasks;
+
 	sealed class LayoutWidget
 	{
 		public string? Id;
@@ -16,4 +16,3 @@ namespace Xamarin.Android.Tasks
 		public List<LayoutTypeFixup>? TypeFixups;
 		public LayoutWidgetType WidgetType = LayoutWidgetType.Unknown;
 	}
-}

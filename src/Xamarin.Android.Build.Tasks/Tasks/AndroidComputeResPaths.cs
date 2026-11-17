@@ -35,8 +35,8 @@ using System.Collections.Generic;
 using System.Linq;
 using Microsoft.Android.Build.Tasks;
 
-namespace Xamarin.Android.Tasks
-{
+namespace Xamarin.Android.Tasks;
+
 	[MSBuildMultiThreadableTask]
 	public class AndroidComputeResPaths : MultithreadedAndroidTask
 	{
@@ -188,4 +188,3 @@ namespace Xamarin.Android.Tasks
 			return !Log.HasLoggedErrors;
 		}
 	}
-}

@@ -2,7 +2,7 @@ using System;
 
 using Android.Runtime;
 
-namespace Javax.Microedition.Khronos.Egl {
+namespace Javax.Microedition.Khronos.Egl; 
 
 	partial class EGLContext {
 
@@ -12,5 +12,4 @@ namespace Javax.Microedition.Khronos.Egl {
 			}
 		}
 	}
-}
 

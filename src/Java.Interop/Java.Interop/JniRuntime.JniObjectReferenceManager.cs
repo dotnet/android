@@ -10,7 +10,7 @@ using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Threading;
 
-namespace Java.Interop {
+namespace Java.Interop; 
 
 	partial class JniRuntime {
 
@@ -205,4 +205,3 @@ namespace Java.Interop {
 			}
 		}
 	}
-}

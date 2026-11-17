@@ -5,7 +5,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 
-namespace Java.Interop {
+namespace Java.Interop; 
 
 	public struct JniValueMarshalerState : IEquatable<JniValueMarshalerState> {
 
@@ -155,4 +155,3 @@ namespace Java.Interop {
 			DestroyGenericArgumentState ((T) value!, ref state, synchronize);
 		}
 	}
-}

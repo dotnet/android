@@ -1,7 +1,7 @@
 using System;
 using Android.Runtime;
 
-namespace Android.App {
+namespace Android.App; 
 
 	public partial class Instrumentation {
 
@@ -16,5 +16,4 @@ namespace Android.App {
 		}
 
 	}
-}
 

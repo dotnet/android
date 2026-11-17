@@ -1,6 +1,5 @@
 #nullable enable
-namespace Xamarin.Android.Tools {
+namespace Xamarin.Android.Tools; 
 
 	static class Features {
 	}
-}

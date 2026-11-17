@@ -2,7 +2,7 @@ using System;
 
 using Android.Content;
 
-namespace Android.App {
+namespace Android.App; 
 
 	public partial class NotificationManager {
 
@@ -15,5 +15,4 @@ namespace Android.App {
 			return context.GetSystemService (Context.NotificationService!) as NotificationManager;
 		}
 	}
-}
 

@@ -2,7 +2,7 @@ using System;
 using System.Diagnostics.CodeAnalysis;
 using Android.Runtime;
 
-namespace Android.App {
+namespace Android.App; 
 
 	public partial class Dialog {
 
@@ -18,4 +18,3 @@ namespace Android.App {
 			return this.FindViewById (id).JavaCast<T> ();
 		}
 	}
-}

@@ -1,4 +1,4 @@
-namespace Java.Interop {
+namespace Java.Interop; 
 #if !JCW_ONLY_TYPE_NAMES
 	public
 #endif  // !JCW_ONLY_TYPE_NAMES
@@ -9,4 +9,3 @@ namespace Java.Interop {
 		XmlPullParser,
 		XmlResourceParser
 	}
-}

@@ -1,9 +1,8 @@
-namespace Java.Interop.Tools.Generator.Enumification
+namespace Java.Interop.Tools.Generator.Enumification;
+
+public enum MethodAction
 {
-	public enum MethodAction
-	{
-		None,
-		Ignore,
-		Enumify,
-	}
+	None,
+	Ignore,
+	Enumify,
 }

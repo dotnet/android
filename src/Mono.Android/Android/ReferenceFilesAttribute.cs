@@ -1,6 +1,6 @@
 using System;
 
-namespace Android {
+namespace Android; 
 	[Obsolete ("This attribute is no longer supported.", error: true)]
 	public abstract class ReferenceFilesAttribute : Attribute
 	{
@@ -13,4 +13,3 @@ namespace Android {
 		public string?   Version             {get; set;}
 		public string?   Sha1sum             {get; set;}
 	}
-}

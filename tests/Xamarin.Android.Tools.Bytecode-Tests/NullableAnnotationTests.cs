@@ -5,8 +5,8 @@ using Xamarin.Android.Tools.Bytecode;
 using NUnit.Framework;
 using System.Linq;
 
-namespace Xamarin.Android.Tools.BytecodeTests
-{
+namespace Xamarin.Android.Tools.BytecodeTests;
+
 	[TestFixture]
 	public class NullableAnnotationTests : ClassFileFixture
 	{
@@ -64,5 +64,4 @@ namespace Xamarin.Android.Tools.BytecodeTests
 			Assert.AreEqual ("true", field.Attribute ("not-null").Value);
 		}
 	}
-}
 

@@ -12,7 +12,7 @@ using System.Runtime.Versioning;
 using System.Text;
 using System.Threading;
 
-namespace Java.Interop {
+namespace Java.Interop; 
 
 	public partial class JniRuntime {
 
@@ -618,4 +618,3 @@ namespace Java.Interop {
 			}
 		}
 	}
-}

@@ -8,120 +8,120 @@ using NUnit.Framework;
 using Xamarin.Android.Tasks;
 using Xamarin.ProjectTools;
 
-namespace Xamarin.Android.Build.Tests
+namespace Xamarin.Android.Build.Tests;
+
+[TestFixture]
+[Category ("UsesDevice")]
+public class UncaughtExceptionTests : DeviceTest
 {
-	[TestFixture]
-	[Category ("UsesDevice")]
-	public class UncaughtExceptionTests : DeviceTest
+	class LogcatLine
 	{
-		class LogcatLine
-		{
-			public string Text;
-			public bool Found = false;
-			public int SequenceNumber = -1;
-			public int Count = 0;
+		public string Text;
+		public bool Found = false;
+		public int SequenceNumber = -1;
+		public int Count = 0;
+	};
+
+	[Test]
+	public void FatalManagedExceptionTerminatesProcess ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
+	{
+		string packageName = PackageUtils.MakePackageName (runtime).ToLowerInvariant ();
+		var app = new XamarinAndroidApplicationProject (packageName: packageName) {
+			IsRelease = true,
 		};
+		app.SetRuntime (runtime);
+		app.SetRuntimeIdentifiers (new [] { DeviceAbi });
+		app.SetDefaultTargetDevice ();
+		app.OtherBuildItems.Add (new BuildItem ("AndroidEnvironment", "logging.env") {
+			TextContent = () => "debug.dotnet.log=timing\ndebug.dotnet.max_grefc=1234",
+		});
+		app.MainActivity = app.DefaultMainActivity.Replace ("//${AFTER_ONCREATE}", """
+			#pragma warning disable CS0618
+			using var timing = new Android.Runtime.TimingLogger ("FatalExceptionTiming");
+			#pragma warning restore CS0618
+			throw new InvalidOperationException ("FatalManagedExceptionTerminatesProcess");
+			""");
 
-		[Test]
-		public void FatalManagedExceptionTerminatesProcess ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
-		{
-			string packageName = PackageUtils.MakePackageName (runtime).ToLowerInvariant ();
-			var app = new XamarinAndroidApplicationProject (packageName: packageName) {
-				IsRelease = true,
-			};
-			app.SetRuntime (runtime);
-			app.SetRuntimeIdentifiers (new [] { DeviceAbi });
-			app.SetDefaultTargetDevice ();
-			app.OtherBuildItems.Add (new BuildItem ("AndroidEnvironment", "logging.env") {
-				TextContent = () => "debug.dotnet.log=timing\ndebug.dotnet.max_grefc=1234",
+		using var builder = CreateApkBuilder (packageName: packageName);
+		Assert.IsTrue (builder.Install (app), "Install should have succeeded.");
+		ClearAdbLogcat ();
+
+		string logcatPath = Path.Combine (Root, builder.ProjectDirectory, "fatal-exception-logcat.log");
+		var deviceProperties = new Dictionary<string, string> ();
+		try {
+			foreach (string name in new [] { "debug.dotnet.log", "debug.dotnet.max_grefc" }) {
+				var (code, output, error) = RunAdbCommandWithExitCode ($"shell getprop {name}");
+				Assert.AreEqual (0, code, $"Could not read {name}: {error}");
+				deviceProperties.Add (name, output.TrimEnd ('\r', '\n'));
+				Assert.IsEmpty (ClearShellProp (name), $"Could not clear {name}.");
+			}
+			Assert.IsTrue (MonitorAdbLogcat (
+				line => line.Contains ("System.InvalidOperationException") && line.Contains ("FatalManagedExceptionTerminatesProcess"),
+				logcatPath,
+				timeout: ActivityStartTimeoutInSeconds,
+				onMonitoringStarted: () => StartActivityAndAssert (app)),
+				"The expected managed exception should have been logged.");
+		} finally {
+			Assert.Multiple (() => {
+				foreach (var property in deviceProperties) {
+					string value = property.Value.Replace ("'", "'\\''");
+					var (code, output, error) = RunAdbCommandWithExitCode ($"shell setprop {property.Key} '{value}'");
+					Assert.AreEqual (0, code, $"Could not restore {property.Key}: {output}{error}");
+				}
 			});
-			app.MainActivity = app.DefaultMainActivity.Replace ("//${AFTER_ONCREATE}", """
-				#pragma warning disable CS0618
-				using var timing = new Android.Runtime.TimingLogger ("FatalExceptionTiming");
-				#pragma warning restore CS0618
-				throw new InvalidOperationException ("FatalManagedExceptionTerminatesProcess");
-				""");
-
-			using var builder = CreateApkBuilder (packageName: packageName);
-			Assert.IsTrue (builder.Install (app), "Install should have succeeded.");
-			ClearAdbLogcat ();
-
-			string logcatPath = Path.Combine (Root, builder.ProjectDirectory, "fatal-exception-logcat.log");
-			var deviceProperties = new Dictionary<string, string> ();
-			try {
-				foreach (string name in new [] { "debug.dotnet.log", "debug.dotnet.max_grefc" }) {
-					var (code, output, error) = RunAdbCommandWithExitCode ($"shell getprop {name}");
-					Assert.AreEqual (0, code, $"Could not read {name}: {error}");
-					deviceProperties.Add (name, output.TrimEnd ('\r', '\n'));
-					Assert.IsEmpty (ClearShellProp (name), $"Could not clear {name}.");
-				}
-				Assert.IsTrue (MonitorAdbLogcat (
-					line => line.Contains ("System.InvalidOperationException") && line.Contains ("FatalManagedExceptionTerminatesProcess"),
-					logcatPath,
-					timeout: ActivityStartTimeoutInSeconds,
-					onMonitoringStarted: () => StartActivityAndAssert (app)),
-					"The expected managed exception should have been logged.");
-			} finally {
-				Assert.Multiple (() => {
-					foreach (var property in deviceProperties) {
-						string value = property.Value.Replace ("'", "'\\''");
-						var (code, output, error) = RunAdbCommandWithExitCode ($"shell setprop {property.Key} '{value}'");
-						Assert.AreEqual (0, code, $"Could not restore {property.Key}: {output}{error}");
-					}
-				});
+		}
+		string remainingPids = "";
+		bool processExited = false;
+		var timeout = TimeSpan.FromSeconds (30);
+		var stopwatch = Stopwatch.StartNew ();
+		while (stopwatch.Elapsed < timeout) {
+			int queryTimeout = (int) (timeout - stopwatch.Elapsed).TotalSeconds;
+			if (queryTimeout < 1) {
+				break;
 			}
-			string remainingPids = "";
-			bool processExited = false;
-			var timeout = TimeSpan.FromSeconds (30);
-			var stopwatch = Stopwatch.StartNew ();
-			while (stopwatch.Elapsed < timeout) {
-				int queryTimeout = (int) (timeout - stopwatch.Elapsed).TotalSeconds;
-				if (queryTimeout < 1) {
-					break;
-				}
-				var (exitCode, output, error) = RunAdbCommandWithExitCode ($"shell pidof {app.PackageName}", timeout: queryTimeout);
-				Assert.IsTrue (exitCode == 0 || exitCode == 1,
-					$"Could not query the app process: exit code {exitCode}, stdout: {output}, stderr: {error}");
-				Assert.IsEmpty (error, "Querying the app process should not write to stderr.");
-				remainingPids = output.Trim ();
-				processExited = exitCode == 1 && remainingPids.Length == 0 && stopwatch.Elapsed < timeout;
-				if (processExited || stopwatch.Elapsed >= timeout) {
-					break;
-				}
-				Thread.Sleep ((int) Math.Min (1000, Math.Max (0, (timeout - stopwatch.Elapsed).TotalMilliseconds)));
+			var (exitCode, output, error) = RunAdbCommandWithExitCode ($"shell pidof {app.PackageName}", timeout: queryTimeout);
+			Assert.IsTrue (exitCode == 0 || exitCode == 1,
+				$"Could not query the app process: exit code {exitCode}, stdout: {output}, stderr: {error}");
+			Assert.IsEmpty (error, "Querying the app process should not write to stderr.");
+			remainingPids = output.Trim ();
+			processExited = exitCode == 1 && remainingPids.Length == 0 && stopwatch.Elapsed < timeout;
+			if (processExited || stopwatch.Elapsed >= timeout) {
+				break;
 			}
-			TestContext.Out.WriteLine (RunAdbCommand ("logcat -d -b crash"));
+			Thread.Sleep ((int) Math.Min (1000, Math.Max (0, (timeout - stopwatch.Elapsed).TotalMilliseconds)));
+		}
+		TestContext.Out.WriteLine (RunAdbCommand ("logcat -d -b crash"));
 
-			Assert.IsTrue (processExited,
-				$"A fatal managed exception should terminate {app.PackageName} within 30 seconds. Remaining PIDs: {remainingPids}");
-			var (logExitCode, logOutput, logError) = RunAdbCommandWithExitCode ("logcat -d");
-			Assert.AreEqual (0, logExitCode, $"Could not read logcat: {logError}");
-			StringAssert.IsMatch (@"\bW\s+DOTNET-gc\s*:\s+Overriding max JNI Global Reference count to 1234", logOutput,
-				"Native GC diagnostics should retain their warning level under the DOTNET-gc tag.");
-			StringAssert.IsMatch (@"\bI\s+DOTNET-timing\s*:\s+FatalExceptionTiming", logOutput,
-				"Managed timing diagnostics should use the DOTNET-timing tag when timing is enabled.");
-			Assert.IsFalse (logOutput.Contains (
-				"No implementation found for void mono.android.Runtime.propagateUncaughtException"),
-				"The uncaught exception handler should not call a missing native method.");
+		Assert.IsTrue (processExited,
+			$"A fatal managed exception should terminate {app.PackageName} within 30 seconds. Remaining PIDs: {remainingPids}");
+		var (logExitCode, logOutput, logError) = RunAdbCommandWithExitCode ("logcat -d");
+		Assert.AreEqual (0, logExitCode, $"Could not read logcat: {logError}");
+		StringAssert.IsMatch (@"\bW\s+DOTNET-gc\s*:\s+Overriding max JNI Global Reference count to 1234", logOutput,
+			"Native GC diagnostics should retain their warning level under the DOTNET-gc tag.");
+		StringAssert.IsMatch (@"\bI\s+DOTNET-timing\s*:\s+FatalExceptionTiming", logOutput,
+			"Managed timing diagnostics should use the DOTNET-timing tag when timing is enabled.");
+		Assert.IsFalse (logOutput.Contains (
+			"No implementation found for void mono.android.Runtime.propagateUncaughtException"),
+			"The uncaught exception handler should not call a missing native method.");
+	}
+
+	[Test]
+	public void EnsureUncaughtExceptionWorks ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
+	{
+		bool isRelease = runtime == AndroidRuntime.NativeAOT;
+		if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+			return;
 		}
 
-		[Test]
-		public void EnsureUncaughtExceptionWorks ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
-		{
-			bool isRelease = runtime == AndroidRuntime.NativeAOT;
-			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
-				return;
-			}
+		var lib = new XamarinAndroidBindingProject {
+			ProjectName = "Scratch.Try",
+			AndroidClassParser = "class-parse",
+		};
+		lib.SetRuntime (runtime);
 
-			var lib = new XamarinAndroidBindingProject {
-				ProjectName = "Scratch.Try",
-				AndroidClassParser = "class-parse",
-			};
-			lib.SetRuntime (runtime);
-
-			lib.Imports.Add (
-				new Import (() => "Directory.Build.targets") {
-					TextContent = () =>
+		lib.Imports.Add (
+			new Import (() => "Directory.Build.targets") {
+				TextContent = () =>
 @"<Project>
 	<PropertyGroup>
 		<JavacSourceVersion>1.8</JavacSourceVersion>
@@ -150,12 +150,12 @@ namespace Xamarin.Android.Build.Tests
 	</Target>
 </Project>
 "
-			});
+		});
 
-			lib.Sources.Add (
-				new BuildItem.NoActionResource ("java\\testing\\Run.java") {
-					Encoding = new System.Text.UTF8Encoding (encoderShouldEmitUTF8Identifier: false),
-					TextContent = () =>
+		lib.Sources.Add (
+			new BuildItem.NoActionResource ("java\\testing\\Run.java") {
+				Encoding = new System.Text.UTF8Encoding (encoderShouldEmitUTF8Identifier: false),
+				TextContent = () =>
 @"package testing;
 
 public final class Run {
@@ -179,20 +179,20 @@ public final class Run {
 	}
 }
 "
-			});
+		});
 
-			var app = new XamarinAndroidApplicationProject (packageName: PackageUtils.MakePackageName (runtime)) {
-				IsRelease = isRelease,
-				ProjectName = "Scratch.JMJMException",
-			};
-			app.SetRuntime (runtime);
+		var app = new XamarinAndroidApplicationProject (packageName: PackageUtils.MakePackageName (runtime)) {
+			IsRelease = isRelease,
+			ProjectName = "Scratch.JMJMException",
+		};
+		app.SetRuntime (runtime);
 
-			app.SetDefaultTargetDevice ();
-			app.AddReference (lib);
+		app.SetDefaultTargetDevice ();
+		app.AddReference (lib);
 
-			app.Sources.Remove (app.GetItem ("MainActivity.cs"));
+		app.Sources.Remove (app.GetItem ("MainActivity.cs"));
 
-			string mainActivityTemplate = @"using System;
+		string mainActivityTemplate = @"using System;
 using Android.App;
 using Android.OS;
 using Android.Runtime;
@@ -237,58 +237,57 @@ namespace Scratch.JMJMException
 	}
 }
 ";
-			string mainActivity = app.ProcessSourceTemplate (mainActivityTemplate);
-			app.Sources.Add (
-				new BuildItem.Source ("MainActivity.cs") {
-					TextContent = () => mainActivity
-				}
-			);
+		string mainActivity = app.ProcessSourceTemplate (mainActivityTemplate);
+		app.Sources.Add (
+			new BuildItem.Source ("MainActivity.cs") {
+				TextContent = () => mainActivity
+			}
+		);
 
-			var expectedLogLines = new LogcatLine[] {
-				new LogcatLine { Text = "#UET-1#" },
-				new LogcatLine { Text = "#UET-2#" },
-				new LogcatLine { Text = "#UET-3#" },
-			};
+		var expectedLogLines = new LogcatLine[] {
+			new LogcatLine { Text = "#UET-1#" },
+			new LogcatLine { Text = "#UET-2#" },
+			new LogcatLine { Text = "#UET-3#" },
+		};
 
-			string path = Path.Combine ("temp", TestName);
-			using (var libBuilder = CreateDllBuilder (Path.Combine (path, lib.ProjectName)))
-			using (var appBuilder = CreateApkBuilder (Path.Combine (path, app.ProjectName))) {
-				Assert.True (libBuilder.Build (lib), "Library should have built.");
-				Assert.IsTrue (appBuilder.Install (app), "Install should have succeeded.");
-				ClearAdbLogcat ();
+		string path = Path.Combine ("temp", TestName);
+		using (var libBuilder = CreateDllBuilder (Path.Combine (path, lib.ProjectName)))
+		using (var appBuilder = CreateApkBuilder (Path.Combine (path, app.ProjectName))) {
+			Assert.True (libBuilder.Build (lib), "Library should have built.");
+			Assert.IsTrue (appBuilder.Install (app), "Install should have succeeded.");
+			ClearAdbLogcat ();
 
-				string logcatPath = Path.Combine (Root, appBuilder.ProjectDirectory, "logcat.log");
-				int sequenceCounter = 0;
-				MonitorAdbLogcat (
-					(string line) => {
-						foreach (LogcatLine ll in expectedLogLines) {
-							if (line.IndexOf (ll.Text, StringComparison.Ordinal) < 0) {
-								continue;
-							}
-							ll.Found = true;
-							ll.Count++;
-							ll.SequenceNumber = sequenceCounter++;
-							break;
+			string logcatPath = Path.Combine (Root, appBuilder.ProjectDirectory, "logcat.log");
+			int sequenceCounter = 0;
+			MonitorAdbLogcat (
+				(string line) => {
+					foreach (LogcatLine ll in expectedLogLines) {
+						if (line.IndexOf (ll.Text, StringComparison.Ordinal) < 0) {
+							continue;
 						}
-						return false; // we must examine all the lines, and returning `true` aborts the monitoring process
-					},
-					logcatPath,
-					timeout: 15,
-					onMonitoringStarted: () => StartActivityAndAssert (app)
-				);
-			}
+						ll.Found = true;
+						ll.Count++;
+						ll.SequenceNumber = sequenceCounter++;
+						break;
+					}
+					return false; // we must examine all the lines, and returning `true` aborts the monitoring process
+				},
+				logcatPath,
+				timeout: 15,
+				onMonitoringStarted: () => StartActivityAndAssert (app)
+			);
+		}
 
-			AssertValidLine (0, 0);
-			AssertValidLine (1, 1);
-			AssertValidLine (2, 2);
+		AssertValidLine (0, 0);
+		AssertValidLine (1, 1);
+		AssertValidLine (2, 2);
 
-			void AssertValidLine (int idx, int expectedSequence)
-			{
-				LogcatLine ll = expectedLogLines [idx];
-				Assert.IsTrue (ll.Found, $"Logcat line {idx} was not found");
-				Assert.IsTrue (ll.Count == 1, $"Logcat line {idx} should have been found only once but it was found {ll.Count} times");
-				Assert.IsTrue (ll.SequenceNumber == expectedSequence, $"Logcat line {idx} sequence number should be {expectedSequence} but it was {ll.SequenceNumber}");
-			}
+		void AssertValidLine (int idx, int expectedSequence)
+		{
+			LogcatLine ll = expectedLogLines [idx];
+			Assert.IsTrue (ll.Found, $"Logcat line {idx} was not found");
+			Assert.IsTrue (ll.Count == 1, $"Logcat line {idx} should have been found only once but it was found {ll.Count} times");
+			Assert.IsTrue (ll.SequenceNumber == expectedSequence, $"Logcat line {idx} sequence number should be {expectedSequence} but it was {ll.SequenceNumber}");
 		}
 	}
 }

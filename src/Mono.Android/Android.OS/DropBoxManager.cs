@@ -2,7 +2,7 @@ using System;
 
 using Android.Content;
 
-namespace Android.OS {
+namespace Android.OS; 
 
 #if ANDROID_8
 
@@ -15,6 +15,5 @@ namespace Android.OS {
 	}
 
 #endif  // ANDROID_8
-}
 
 

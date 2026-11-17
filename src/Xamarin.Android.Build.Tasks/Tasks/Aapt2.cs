@@ -12,7 +12,7 @@ using System.Collections.Concurrent;
 using Xamarin.Android.Tools;
 using Microsoft.Android.Build.Tasks;
 
-namespace Xamarin.Android.Tasks {
+namespace Xamarin.Android.Tasks; 
 
 	public abstract class Aapt2 : AsyncTask {
 
@@ -554,4 +554,3 @@ namespace Xamarin.Android.Tasks {
 			("APT2266", "in <data> tag has value of") //  error: attribute ‘android:path’ in <data> tag has value of ‘code/fooauth://com.foo.foo, it must start with a leading slash ‘/’.
 		];
 	}
-}

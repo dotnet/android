@@ -4,8 +4,8 @@ using System;
 using System.Diagnostics.CodeAnalysis;
 
 
-namespace Java.Interop
-{
+namespace Java.Interop;
+
 	[AttributeUsage (AttributeTargets.Method, AllowMultiple = false)]
 	public sealed class JniMethodSignatureAttribute : JniMemberSignatureAttribute {
 
@@ -14,4 +14,3 @@ namespace Java.Interop
 		{
 		}
 	}
-}

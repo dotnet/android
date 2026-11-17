@@ -2,11 +2,10 @@
 using System.Collections.Generic;
 using System.Text.Json.Serialization;
 
-namespace Microsoft.Android.Tasks
+namespace Microsoft.Android.Tasks;
+
+[JsonSourceGenerationOptions (WriteIndented = true)]
+[JsonSerializable (typeof (FastDeploy.ManifestData))]
+internal partial class FastDeployJsonSerializerContext : JsonSerializerContext
 {
-	[JsonSourceGenerationOptions (WriteIndented = true)]
-	[JsonSerializable (typeof (FastDeploy.ManifestData))]
-	internal partial class FastDeployJsonSerializerContext : JsonSerializerContext
-	{
-	}
 }

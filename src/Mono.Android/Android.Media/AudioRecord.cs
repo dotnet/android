@@ -1,8 +1,8 @@
 using System;
 using Android.Runtime;
 
-namespace Android.Media
-{
+namespace Android.Media;
+
 
 	public partial class AudioRecord
 	{
@@ -23,4 +23,3 @@ namespace Android.Media
 		}
 #endif  // ANDROID_29
 	}
-}

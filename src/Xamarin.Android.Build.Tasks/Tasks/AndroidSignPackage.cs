@@ -6,8 +6,8 @@ using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
 using Microsoft.Android.Build.Tasks;
 
-namespace Xamarin.Android.Tasks
-{
+namespace Xamarin.Android.Tasks;
+
 	public class AndroidSignPackage : AndroidRunToolTask
 	{
 		public override string TaskPrefix => "ASP";
@@ -161,5 +161,4 @@ namespace Xamarin.Android.Tasks
 			return base.ValidateParameters ();
 		}
 	}
-}
 

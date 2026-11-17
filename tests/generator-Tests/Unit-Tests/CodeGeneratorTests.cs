@@ -11,8 +11,8 @@ using MonoDroid.Generation;
 using NUnit.Framework;
 using Xamarin.SourceWriter;
 
-namespace generatortests
-{
+namespace generatortests;
+
 	[TestFixture]
 	class XAJavaInteropCodeGeneratorTests : CodeGeneratorTests
 	{
@@ -1989,4 +1989,3 @@ namespace generatortests
 			Assert.AreEqual (expected.NormalizeLineEndings (), writer.ToString ().NormalizeLineEndings ().Replace ("?", ""));
 		}
 	}
-}

@@ -4,7 +4,7 @@ using System.Threading;
 using Android.Content;
 using Android.Runtime;
 
-namespace Android.App {
+namespace Android.App; 
 
 	partial class Application {
 
@@ -41,5 +41,4 @@ namespace Android.App {
 			}
 		}
 	}
-}
 

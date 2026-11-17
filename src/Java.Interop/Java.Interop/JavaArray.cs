@@ -8,8 +8,8 @@ using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Reflection;
 
-namespace Java.Interop
-{
+namespace Java.Interop;
+
 	[JniTypeSignature ("java/lang/Object", ArrayRank=1, GenerateJavaPeer=false)]
 	public abstract class JavaArray<T> : JavaObject, IList, IList<T>
 	{
@@ -443,4 +443,3 @@ namespace Java.Interop
 			return value.ToArray ();
 		}
 	}
-}

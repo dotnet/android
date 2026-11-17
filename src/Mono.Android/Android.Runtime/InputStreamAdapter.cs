@@ -1,7 +1,7 @@
 using System;
 using System.IO;
 
-namespace Android.Runtime {
+namespace Android.Runtime; 
 
 	[Register ("mono/android/runtime/InputStreamAdapter")]
 	public sealed class InputStreamAdapter : Java.IO.InputStream {
@@ -59,4 +59,3 @@ namespace Android.Runtime {
 			return JNIEnv.ToLocalJniHandle (new InputStreamAdapter (value));
 		}
 	}
-}

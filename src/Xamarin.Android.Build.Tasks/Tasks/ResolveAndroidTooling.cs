@@ -11,8 +11,8 @@ using System.Globalization;
 using Microsoft.Android.Build.Tasks;
 using Xamarin.Android.Tools;
 
-namespace Xamarin.Android.Tasks
-{
+namespace Xamarin.Android.Tasks;
+
 	/// <summary>
 	/// Resolves the Android API level from TargetPlatformVersion and locates
 	/// the Android SDK tools needed by other tasks.
@@ -242,4 +242,3 @@ namespace Xamarin.Android.Tasks
 			return stableVersion.ApiLevel;
 		}
 	}
-}

@@ -5,33 +5,33 @@ using NUnit.Framework;
 using Xamarin.Android.Tasks;
 using Xamarin.ProjectTools;
 
-namespace Xamarin.Android.Build.Tests
+namespace Xamarin.Android.Build.Tests;
+
+[TestFixture]
+[Category ("UsesDevice")]
+public class WebViewJavascriptInterfaceTests : DeviceTest
 {
-	[TestFixture]
-	[Category ("UsesDevice")]
-	public class WebViewJavascriptInterfaceTests : DeviceTest
+	const string SuccessResult = "bridge-12542:payload-12542:1";
+	const string SuccessMarker = "# JAVASCRIPT_INTERFACE_RESULT ";
+	const string FailureMarker = "# JAVASCRIPT_INTERFACE_FAILURE ";
+
+	[TestCase (AndroidRuntime.CoreCLR)]
+	[TestCase (AndroidRuntime.NativeAOT)]
+	public void LocalJavascriptInvokesManagedBridge (AndroidRuntime runtime)
 	{
-		const string SuccessResult = "bridge-12542:payload-12542:1";
-		const string SuccessMarker = "# JAVASCRIPT_INTERFACE_RESULT ";
-		const string FailureMarker = "# JAVASCRIPT_INTERFACE_FAILURE ";
+		const bool isRelease = true;
+		if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+			return;
+		}
 
-		[TestCase (AndroidRuntime.CoreCLR)]
-		[TestCase (AndroidRuntime.NativeAOT)]
-		public void LocalJavascriptInvokesManagedBridge (AndroidRuntime runtime)
-		{
-			const bool isRelease = true;
-			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
-				return;
-			}
-
-			const string packageSuffix = "javascriptinterface";
-			var proj = new XamarinAndroidApplicationProject (packageName: PackageUtils.MakePackageName (runtime, packageSuffix)) {
-				IsRelease = isRelease,
-				EnableDefaultItems = true,
-				OtherBuildItems = {
-					new AndroidItem.AndroidJavaSource ("WebViewJavascriptBridgeBase.java") {
-						Encoding = new UTF8Encoding (encoderShouldEmitUTF8Identifier: false),
-						TextContent = () => """
+		const string packageSuffix = "javascriptinterface";
+		var proj = new XamarinAndroidApplicationProject (packageName: PackageUtils.MakePackageName (runtime, packageSuffix)) {
+			IsRelease = isRelease,
+			EnableDefaultItems = true,
+			OtherBuildItems = {
+				new AndroidItem.AndroidJavaSource ("WebViewJavascriptBridgeBase.java") {
+					Encoding = new UTF8Encoding (encoderShouldEmitUTF8Identifier: false),
+					TextContent = () => """
 package example;
 
 public abstract class WebViewJavascriptBridgeBase {
@@ -42,17 +42,17 @@ public abstract class WebViewJavascriptBridgeBase {
 	public abstract void completeTestForIssue12542 ();
 }
 """,
-						Metadata = {
-							{ "Bind", "True" },
-						},
+					Metadata = {
+						{ "Bind", "True" },
 					},
 				},
-			};
-			proj.SetRuntime (runtime);
-			proj.SetRuntimeIdentifiers (new [] { DeviceAbi });
-			proj.SetDefaultTargetDevice ();
-			proj.Sources.Add (new BuildItem.Source ("WebViewJavascriptBridge.cs") {
-				TextContent = () => """
+			},
+		};
+		proj.SetRuntime (runtime);
+		proj.SetRuntimeIdentifiers (new [] { DeviceAbi });
+		proj.SetDefaultTargetDevice ();
+		proj.Sources.Add (new BuildItem.Source ("WebViewJavascriptBridge.cs") {
+			TextContent = () => """
 using System.Threading;
 using System.Threading.Tasks;
 using Android.Webkit;
@@ -92,8 +92,8 @@ namespace UnnamedProject
 	}
 }
 """,
-			});
-			proj.MainActivity = """"
+		});
+		proj.MainActivity = """"
 using System;
 using System.Threading;
 using System.Threading.Tasks;
@@ -165,35 +165,34 @@ managedBridge.completeTestForIssue12542();
 }
 """";
 
-			using var builder = CreateApkBuilder ();
-			bool installed = false;
-			try {
-				installed = builder.Install (proj);
-				Assert.IsTrue (installed, "Project should have installed.");
+		using var builder = CreateApkBuilder ();
+		bool installed = false;
+		try {
+			installed = builder.Install (proj);
+			Assert.IsTrue (installed, "Project should have installed.");
 
-				ClearAdbLogcat ();
-				RunProjectAndAssert (proj, builder, doNotCleanupOnUpdate: true);
-				Assert.IsTrue (WaitForActivityToStart (proj.PackageName, "MainActivity",
-					Path.Combine (Root, builder.ProjectDirectory, "activity-logcat.log"), ActivityStartTimeoutInSeconds), "Activity should have started.");
+			ClearAdbLogcat ();
+			RunProjectAndAssert (proj, builder, doNotCleanupOnUpdate: true);
+			Assert.IsTrue (WaitForActivityToStart (proj.PackageName, "MainActivity",
+				Path.Combine (Root, builder.ProjectDirectory, "activity-logcat.log"), ActivityStartTimeoutInSeconds), "Activity should have started.");
 
-				var resultLog = Path.Combine (Root, builder.ProjectDirectory, "javascript-interface-logcat.log");
-				Assert.IsTrue (MonitorAdbLogcat (
-					line => line.Contains (SuccessMarker, StringComparison.Ordinal) || line.Contains (FailureMarker, StringComparison.Ordinal),
-					resultLog,
-					timeout: 30), "WebView did not report a JavaScript interface result.");
-				var logcat = File.ReadAllText (resultLog);
-				StringAssert.Contains (SuccessMarker + SuccessResult, logcat, "The JavaScript report callback should invoke the exact managed bridge instance once.");
-				StringAssert.DoesNotContain (FailureMarker, logcat, "WebView reported a JavaScript interface failure.");
-			} finally {
-				if (installed) {
-					try {
-						builder.ThrowOnBuildFailure = false;
-						if (!builder.Uninstall (proj)) {
-							TestContext.Error.WriteLine ($"Failed to uninstall '{proj.PackageName}' during test cleanup.");
-						}
-					} catch (Exception ex) {
-						TestContext.Error.WriteLine ($"Failed to uninstall '{proj.PackageName}' during test cleanup: {ex}");
+			var resultLog = Path.Combine (Root, builder.ProjectDirectory, "javascript-interface-logcat.log");
+			Assert.IsTrue (MonitorAdbLogcat (
+				line => line.Contains (SuccessMarker, StringComparison.Ordinal) || line.Contains (FailureMarker, StringComparison.Ordinal),
+				resultLog,
+				timeout: 30), "WebView did not report a JavaScript interface result.");
+			var logcat = File.ReadAllText (resultLog);
+			StringAssert.Contains (SuccessMarker + SuccessResult, logcat, "The JavaScript report callback should invoke the exact managed bridge instance once.");
+			StringAssert.DoesNotContain (FailureMarker, logcat, "WebView reported a JavaScript interface failure.");
+		} finally {
+			if (installed) {
+				try {
+					builder.ThrowOnBuildFailure = false;
+					if (!builder.Uninstall (proj)) {
+						TestContext.Error.WriteLine ($"Failed to uninstall '{proj.PackageName}' during test cleanup.");
 					}
+				} catch (Exception ex) {
+					TestContext.Error.WriteLine ($"Failed to uninstall '{proj.PackageName}' during test cleanup: {ex}");
 				}
 			}
 		}

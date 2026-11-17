@@ -6,11 +6,11 @@ using System.Text;
 using System.Threading.Tasks;
 using Xamarin.ProjectTools;
 
-namespace Xamarin.Android.Build.Tests
+namespace Xamarin.Android.Build.Tests;
+
+static class InlineData
 {
-	static class InlineData
-	{
-		const string Resx = @"<?xml version=""1.0"" encoding=""utf-8""?>
+	const string Resx = @"<?xml version=""1.0"" encoding=""utf-8""?>
 <root>
 	<resheader name=""resmimetype"">
 		<value>text/microsoft-resx</value>
@@ -27,7 +27,7 @@ namespace Xamarin.Android.Build.Tests
 	<!--contents-->
 </root>";
 
-		const string Designer = @"
+	const string Designer = @"
 using System;
 using System.Reflection;
 
@@ -72,41 +72,40 @@ namespace @projectNamespace@
 }
 ";
 
-		public static string ResxWithContents (string contents)
-		{
-			return Resx.Replace ("<!--contents-->", contents);
-		}
+	public static string ResxWithContents (string contents)
+	{
+		return Resx.Replace ("<!--contents-->", contents);
+	}
 
-		public static void AddCultureResourcesToProject (IShortFormProject proj, string filename, string dataName, CultureTypes types = CultureTypes.AllCultures)
-		{
-			foreach (var culture in CultureInfo.GetCultures (types)) {
-				proj.OtherBuildItems.Add (new BuildItem ("EmbeddedResource", $"{filename}.{culture.Name}.resx") {
-					TextContent = () => InlineData.ResxWithContents ($"<data name=\"{dataName}\"><value>{culture.Name}</value></data>")
-				});
-			}
+	public static void AddCultureResourcesToProject (IShortFormProject proj, string filename, string dataName, CultureTypes types = CultureTypes.AllCultures)
+	{
+		foreach (var culture in CultureInfo.GetCultures (types)) {
+			proj.OtherBuildItems.Add (new BuildItem ("EmbeddedResource", $"{filename}.{culture.Name}.resx") {
+				TextContent = () => InlineData.ResxWithContents ($"<data name=\"{dataName}\"><value>{culture.Name}</value></data>")
+			});
 		}
+	}
 
-		public static string DesignerWithContents (string projectNamespace, string className, string modifier, string[] dataNames)
-		{
-			var content = new StringBuilder ();
-			foreach (string data in dataNames) {
-				content.AppendFormat (CultureInfo.InvariantCulture, @"internal static string {0} {{
+	public static string DesignerWithContents (string projectNamespace, string className, string modifier, string[] dataNames)
+	{
+		var content = new StringBuilder ();
+		foreach (string data in dataNames) {
+			content.AppendFormat (CultureInfo.InvariantCulture, @"internal static string {0} {{
 			get {{
 				return ResourceManager.GetString(""{0}"", resourceCulture);
 			}}
 		}}" + Environment.NewLine, data);
-			}
-			return Designer.Replace ("@modifier@", modifier)
-				.Replace ("@className@", className)
-				.Replace ("@projectNamespace@", projectNamespace)
-				.Replace ("@content@", content.ToString ());
 		}
+		return Designer.Replace ("@modifier@", modifier)
+			.Replace ("@className@", className)
+			.Replace ("@projectNamespace@", projectNamespace)
+			.Replace ("@content@", content.ToString ());
+	}
 
-		public static void AddCultureResourceDesignerToProject (IShortFormProject proj, string projectNamespace, string className, params string[] dataNames)
-		{
-			proj.OtherBuildItems.Add (new BuildItem.Source ($"{className}.Designer.cs") {
-				TextContent = () => InlineData.DesignerWithContents (projectNamespace, className, "internal", dataNames)
-			});
-		}
+	public static void AddCultureResourceDesignerToProject (IShortFormProject proj, string projectNamespace, string className, params string[] dataNames)
+	{
+		proj.OtherBuildItems.Add (new BuildItem.Source ($"{className}.Designer.cs") {
+			TextContent = () => InlineData.DesignerWithContents (projectNamespace, className, "internal", dataNames)
+		});
 	}
 }

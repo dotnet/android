@@ -2,8 +2,8 @@
 
 using System;
 
-namespace Java.Interop
-{
+namespace Java.Interop;
+
 	/// <summary>
 	/// Interface for proxy types that represent Android Callable Wrappers (ACW).
 	/// ACW types are .NET types that have a corresponding generated Java class
@@ -18,4 +18,3 @@ namespace Java.Interop
 		/// <param name="nativeClass">The JNI type for the Java class.</param>
 		void RegisterNatives (JniType nativeClass);
 	}
-}

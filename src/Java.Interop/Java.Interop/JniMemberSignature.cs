@@ -8,8 +8,8 @@ using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Runtime.Versioning;
 
-namespace Java.Interop
-{
+namespace Java.Interop;
+
 	public struct JniMemberSignature : IEquatable<JniMemberSignature>
 	{
 		public   static readonly    JniMemberSignature  Empty;
@@ -142,4 +142,3 @@ namespace Java.Interop
 		public static bool operator== (JniMemberSignature a, JniMemberSignature b) => a.Equals (b);
 		public static bool operator!= (JniMemberSignature a, JniMemberSignature b) => !a.Equals (b);
 	}
-}

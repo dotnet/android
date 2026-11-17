@@ -1,8 +1,8 @@
-﻿#nullable enable
+#nullable enable
 
 using System;
 
-namespace Java.Interop {
+namespace Java.Interop; 
 
 	public struct JniTransition : IDisposable {
 
@@ -38,4 +38,3 @@ namespace Java.Interop {
 			}
 		}
 	}
-}

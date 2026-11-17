@@ -2,7 +2,7 @@ using System;
 
 using Android.Content;
 
-namespace Android.Locations {
+namespace Android.Locations; 
 
 	public partial class LocationManager {
 
@@ -11,6 +11,5 @@ namespace Android.Locations {
 			return context.GetSystemService (Context.LocationService!) as LocationManager;
 		}
 	}
-}
 
 

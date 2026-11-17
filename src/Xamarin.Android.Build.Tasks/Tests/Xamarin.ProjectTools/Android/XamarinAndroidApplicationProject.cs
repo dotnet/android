@@ -8,249 +8,248 @@ using System.Xml;
 using Microsoft.Build.Construction;
 using Xamarin.Android.Tools;
 
-namespace Xamarin.ProjectTools
-{
-	/// <summary>
-	/// Represents a Xamarin.Android application project for testing purposes.
-	/// This class provides a concrete implementation of an Android application project
-	/// with default templates, resources, and configuration suitable for test scenarios.
-	/// </summary>
-	/// <remarks>
-	/// This class extends <see cref="XamarinAndroidCommonProject"/> to provide a complete
-	/// Android application project setup including:
-	/// - Default MainActivity template
-	/// - Default layout resources
-	/// - Android manifest configuration
-	/// - Application-specific MSBuild properties
-	/// Used for testing build scenarios, deployment, and application-level functionality.
-	/// </remarks>
-	/// <seealso cref="XamarinAndroidCommonProject"/>
-	/// <seealso cref="XamarinAndroidLibraryProject"/>
-	/// <seealso cref="XamarinAndroidBindingProject"/>
-	public class XamarinAndroidApplicationProject : XamarinAndroidCommonProject
-	{
-		// Workaround for AndroidX, see: https://github.com/xamarin/AndroidSupportComponents/pull/239
-		protected override string ExtraDirectoryBuildTargetsContent => """
-			<PropertyGroup>
-				<VectorDrawableCheckBuildToolsVersionTaskBeforeTargets />
-			</PropertyGroup>
-		""";
+namespace Xamarin.ProjectTools;
 
-		const string default_strings_xml = @"<?xml version=""1.0"" encoding=""utf-8""?>
+/// <summary>
+/// Represents a Xamarin.Android application project for testing purposes.
+/// This class provides a concrete implementation of an Android application project
+/// with default templates, resources, and configuration suitable for test scenarios.
+/// </summary>
+/// <remarks>
+/// This class extends <see cref="XamarinAndroidCommonProject"/> to provide a complete
+/// Android application project setup including:
+/// - Default MainActivity template
+/// - Default layout resources
+/// - Android manifest configuration
+/// - Application-specific MSBuild properties
+/// Used for testing build scenarios, deployment, and application-level functionality.
+/// </remarks>
+/// <seealso cref="XamarinAndroidCommonProject"/>
+/// <seealso cref="XamarinAndroidLibraryProject"/>
+/// <seealso cref="XamarinAndroidBindingProject"/>
+public class XamarinAndroidApplicationProject : XamarinAndroidCommonProject
+{
+	// Workaround for AndroidX, see: https://github.com/xamarin/AndroidSupportComponents/pull/239
+	protected override string ExtraDirectoryBuildTargetsContent => """
+		<PropertyGroup>
+			<VectorDrawableCheckBuildToolsVersionTaskBeforeTargets />
+		</PropertyGroup>
+	""";
+
+	const string default_strings_xml = @"<?xml version=""1.0"" encoding=""utf-8""?>
 <resources>
 	<string name=""hello"">Hello World, Click Me!</string>
 	<string name=""app_name"">${PROJECT_NAME}</string>
 </resources>
 ";
 
-		static readonly string default_layout_main;
-		static readonly string default_main_activity_cs, default_main_activity_fs;
-		static readonly string default_android_manifest;
+	static readonly string default_layout_main;
+	static readonly string default_main_activity_cs, default_main_activity_fs;
+	static readonly string default_android_manifest;
 
-		static XamarinAndroidApplicationProject ()
-		{
-			using (var sr = new StreamReader (typeof(XamarinAndroidApplicationProject).Assembly.GetManifestResourceStream ($"Xamarin.ProjectTools.Resources.DotNet.MainActivity.cs")))
-				default_main_activity_cs = sr.ReadToEnd ();
-			using (var sr = new StreamReader (typeof(XamarinAndroidApplicationProject).Assembly.GetManifestResourceStream ("Xamarin.ProjectTools.Resources.Base.MainActivity.fs")))
-				default_main_activity_fs = sr.ReadToEnd ();
-			using (var sr = new StreamReader (typeof(XamarinAndroidApplicationProject).Assembly.GetManifestResourceStream ("Xamarin.ProjectTools.Resources.Base.LayoutMain.axml")))
-				default_layout_main = sr.ReadToEnd ();
-			using (var sr = new StreamReader (typeof(XamarinAndroidApplicationProject).Assembly.GetManifestResourceStream ("Xamarin.ProjectTools.Resources.Base.AndroidManifest.xml")))
-				default_android_manifest = sr.ReadToEnd ();
+	static XamarinAndroidApplicationProject ()
+	{
+		using (var sr = new StreamReader (typeof(XamarinAndroidApplicationProject).Assembly.GetManifestResourceStream ($"Xamarin.ProjectTools.Resources.DotNet.MainActivity.cs")))
+			default_main_activity_cs = sr.ReadToEnd ();
+		using (var sr = new StreamReader (typeof(XamarinAndroidApplicationProject).Assembly.GetManifestResourceStream ("Xamarin.ProjectTools.Resources.Base.MainActivity.fs")))
+			default_main_activity_fs = sr.ReadToEnd ();
+		using (var sr = new StreamReader (typeof(XamarinAndroidApplicationProject).Assembly.GetManifestResourceStream ("Xamarin.ProjectTools.Resources.Base.LayoutMain.axml")))
+			default_layout_main = sr.ReadToEnd ();
+		using (var sr = new StreamReader (typeof(XamarinAndroidApplicationProject).Assembly.GetManifestResourceStream ("Xamarin.ProjectTools.Resources.Base.AndroidManifest.xml")))
+			default_android_manifest = sr.ReadToEnd ();
 
+	}
+
+	/// <summary>
+	/// Initializes a new instance of the XamarinAndroidApplicationProject class.
+	/// Creates a complete Android application project with default templates and configuration.
+	/// </summary>
+	/// <param name="debugConfigurationName">The name for the debug configuration (default: "Debug").</param>
+	/// <param name="releaseConfigurationName">The name for the release configuration (default: "Release").</param>
+	/// <param name="packageName">The Android package name for the application. If empty, uses the caller's method name.</param>
+	/// <remarks>
+	/// Sets up the project as an executable (OutputType = "Exe") with nullable reference types enabled,
+	/// default Android support properties, and includes standard application templates.
+	/// </remarks>
+	public XamarinAndroidApplicationProject (string debugConfigurationName = "Debug", string releaseConfigurationName = "Release", [CallerMemberName] string packageName = "")
+		: base (debugConfigurationName, releaseConfigurationName)
+	{
+		SetProperty (KnownProperties.OutputType, "Exe");
+		SetProperty (KnownProperties.Nullable, "enable");
+		SetProperty (KnownProperties.ImplicitUsings, "enable");
+		SetProperty ("XamarinAndroidSupportSkipVerifyVersions", "True");
+		SetProperty ("_FastDeploymentDiagnosticLogging", "True");
+		SupportedOSPlatformVersion = "24.0";
+
+		AndroidManifest = default_android_manifest;
+		LayoutMain = default_layout_main;
+		StringsXml = default_strings_xml;
+		PackageName = $"com.xamarin.{(packageName ?? ProjectName).ToLower ()}";
+		JavaPackageName = JavaPackageName ?? PackageName.ToLowerInvariant ();
+
+		OtherBuildItems.Add (new BuildItem.NoActionResource ("Properties\\AndroidManifest.xml") {
+			TextContent = ProcessManifestTemplate,
+		});
+		AndroidResources.Add (new AndroidItem.AndroidResource ("Resources\\layout\\Main.axml") { TextContent = () => LayoutMain });
+		AndroidResources.Add (new AndroidItem.AndroidResource ("Resources\\values\\Strings.xml") { TextContent = () => StringsXml.Replace ("${PROJECT_NAME}", ProjectName) });
+
+		Sources.Add (new BuildItem.Source (() => "MainActivity" + Language.DefaultExtension) { TextContent = () => ProcessSourceTemplate (MainActivity ?? DefaultMainActivity) });
+	}
+
+	// it is exposed as public because we may want to slightly modify this.
+	public virtual string DefaultMainActivity {
+		get { return Language == XamarinAndroidProjectLanguage.FSharp ? default_main_activity_fs : default_main_activity_cs; }
+	}
+
+	/// <summary>
+	/// Defaults to AndroidSdkResolver.GetMaxInstalledPlatform ()
+	/// </summary>
+	public string TargetSdkVersion { get; set; }
+
+	/// <summary>
+	/// Set this to add the `android:minSdkVersion` attribute to the AndroidManifest.xml file
+	/// </summary>
+	public string MinSdkVersion { get; set; }
+
+	/// <summary>
+	/// Defaults to 24.0
+	/// </summary>
+	public string SupportedOSPlatformVersion {
+		get { return GetProperty (KnownProperties.SupportedOSPlatformVersion); }
+		set { SetProperty (KnownProperties.SupportedOSPlatformVersion, value); }
+	}
+
+	public bool EnableDesugar {
+		get { return string.Equals (GetProperty (KnownProperties.AndroidEnableDesugar), "True", StringComparison.OrdinalIgnoreCase); }
+		set { SetProperty (KnownProperties.AndroidEnableDesugar, value.ToString ()); }
+	}
+
+	public bool Deterministic {
+		get { return string.Equals (GetProperty (KnownProperties.Deterministic), "True", StringComparison.OrdinalIgnoreCase); }
+		set { SetProperty (KnownProperties.Deterministic, value.ToString ()); }
+	}
+
+	public bool AndroidEnableFastDeployment {
+		get { return string.Equals (GetProperty (KnownProperties.AndroidEnableFastDeployment), "True", StringComparison.OrdinalIgnoreCase); }
+		set { SetProperty (KnownProperties.AndroidEnableFastDeployment, value.ToString ()); }
+	}
+
+	public bool EmbedAssembliesIntoApk {
+		get { return string.Equals (GetProperty (KnownProperties.EmbedAssembliesIntoApk), "True", StringComparison.OrdinalIgnoreCase); }
+		set { SetProperty (KnownProperties.EmbedAssembliesIntoApk, value.ToString ()); }
+	}
+
+	public string ManifestMerger {
+		get { return GetProperty (KnownProperties.AndroidManifestMerger); }
+		set { SetProperty (KnownProperties.AndroidManifestMerger, value); }
+	}
+
+	public string LinkTool {
+		get { return GetProperty (KnownProperties.AndroidLinkTool); }
+		set { SetProperty (KnownProperties.AndroidLinkTool, value); }
+	}
+
+	public bool UseJackAndJill {
+		get { return string.Equals (GetProperty (KnownProperties.UseJackAndJill), "True", StringComparison.OrdinalIgnoreCase); }
+		set { SetProperty (KnownProperties.UseJackAndJill, value.ToString ()); }
+	}
+
+	public string RuntimeIdentifier {
+		get { return GetProperty (KnownProperties.RuntimeIdentifier); }
+		set { SetProperty (KnownProperties.RuntimeIdentifier, value); }
+	}
+
+	public AndroidLinkMode AndroidLinkModeDebug {
+		get {
+			AndroidLinkMode m;
+			return Enum.TryParse<AndroidLinkMode> (GetProperty (DebugProperties, KnownProperties.AndroidLinkMode), out m) ? m : AndroidLinkMode.None;
 		}
+		set { SetProperty (DebugProperties, KnownProperties.AndroidLinkMode, value.ToString ()); }
+	}
 
-		/// <summary>
-		/// Initializes a new instance of the XamarinAndroidApplicationProject class.
-		/// Creates a complete Android application project with default templates and configuration.
-		/// </summary>
-		/// <param name="debugConfigurationName">The name for the debug configuration (default: "Debug").</param>
-		/// <param name="releaseConfigurationName">The name for the release configuration (default: "Release").</param>
-		/// <param name="packageName">The Android package name for the application. If empty, uses the caller's method name.</param>
-		/// <remarks>
-		/// Sets up the project as an executable (OutputType = "Exe") with nullable reference types enabled,
-		/// default Android support properties, and includes standard application templates.
-		/// </remarks>
-		public XamarinAndroidApplicationProject (string debugConfigurationName = "Debug", string releaseConfigurationName = "Release", [CallerMemberName] string packageName = "")
-			: base (debugConfigurationName, releaseConfigurationName)
-		{
-			SetProperty (KnownProperties.OutputType, "Exe");
-			SetProperty (KnownProperties.Nullable, "enable");
-			SetProperty (KnownProperties.ImplicitUsings, "enable");
-			SetProperty ("XamarinAndroidSupportSkipVerifyVersions", "True");
-			SetProperty ("_FastDeploymentDiagnosticLogging", "True");
-			SupportedOSPlatformVersion = "24.0";
-
-			AndroidManifest = default_android_manifest;
-			LayoutMain = default_layout_main;
-			StringsXml = default_strings_xml;
-			PackageName = $"com.xamarin.{(packageName ?? ProjectName).ToLower ()}";
-			JavaPackageName = JavaPackageName ?? PackageName.ToLowerInvariant ();
-
-			OtherBuildItems.Add (new BuildItem.NoActionResource ("Properties\\AndroidManifest.xml") {
-				TextContent = ProcessManifestTemplate,
-			});
-			AndroidResources.Add (new AndroidItem.AndroidResource ("Resources\\layout\\Main.axml") { TextContent = () => LayoutMain });
-			AndroidResources.Add (new AndroidItem.AndroidResource ("Resources\\values\\Strings.xml") { TextContent = () => StringsXml.Replace ("${PROJECT_NAME}", ProjectName) });
-
-			Sources.Add (new BuildItem.Source (() => "MainActivity" + Language.DefaultExtension) { TextContent = () => ProcessSourceTemplate (MainActivity ?? DefaultMainActivity) });
+	public AndroidLinkMode AndroidLinkModeRelease {
+		get {
+			AndroidLinkMode m;
+			return Enum.TryParse<AndroidLinkMode> (GetProperty (ReleaseProperties, KnownProperties.AndroidLinkMode), out m) ? m : AndroidLinkMode.None;
 		}
+		set { SetProperty (ReleaseProperties, KnownProperties.AndroidLinkMode, value.ToString ()); }
+	}
 
-		// it is exposed as public because we may want to slightly modify this.
-		public virtual string DefaultMainActivity {
-			get { return Language == XamarinAndroidProjectLanguage.FSharp ? default_main_activity_fs : default_main_activity_cs; }
+	public TrimMode TrimModeRelease {
+		get => Enum.TryParse (GetProperty (ReleaseProperties, KnownProperties.TrimMode), out TrimMode trimMode) ? trimMode : TrimMode.Partial;
+		set => SetProperty (ReleaseProperties, KnownProperties.TrimMode, value.ToString ().ToLowerInvariant ());
+	}
+
+	public bool EnableMarshalMethods {
+		get { return string.Equals (GetProperty (KnownProperties.AndroidEnableMarshalMethods), "True", StringComparison.OrdinalIgnoreCase); }
+		set { SetProperty (KnownProperties.AndroidEnableMarshalMethods, value.ToString ()); }
+	}
+
+	private bool PublishAot {
+		get { return string.Equals (GetProperty (KnownProperties.PublishAot), "True", StringComparison.OrdinalIgnoreCase); }
+		set { SetProperty (KnownProperties.PublishAot, value.ToString ()); }
+	}
+
+	/// <summary>
+	/// Sets properties required for $(PublishAot)=true
+	/// </summary>
+	public void SetPublishAot (bool value)
+	{
+		// Only toggle IsRelease=true when value is true
+		if (value)
+			IsRelease = true;
+		PublishAot = value;
+	}
+
+	public string AndroidManifest { get; set; }
+	public string LayoutMain { get; set; }
+	public string MainActivity { get; set; }
+	public string StringsXml { get; set; }
+	public string PackageName { get; set; }
+
+	public string PackageNameJavaIntermediatePath { get { return PackageName.Replace ('.', Path.DirectorySeparatorChar).ToLower ();}}
+	public string JavaPackageName { get; set; }
+
+	public override BuildOutput CreateBuildOutput (ProjectBuilder builder)
+	{
+		return new AndroidApplicationBuildOutput (this) { Builder = builder };
+	}
+
+	public void SetDefaultTargetDevice ()
+	{
+		SetProperty ("AdbTarget", Environment.GetEnvironmentVariable ("ADB_TARGET"));
+	}
+
+	public virtual string ProcessManifestTemplate ()
+	{
+		var uses_sdk = new StringBuilder ();
+		if (!string.IsNullOrEmpty (MinSdkVersion)) {
+			uses_sdk.Append ("<uses-sdk ");
+			uses_sdk.Append ("android:minSdkVersion=\"");
+			uses_sdk.Append (MinSdkVersion);
+			uses_sdk.Append ("\" ");
 		}
-
-		/// <summary>
-		/// Defaults to AndroidSdkResolver.GetMaxInstalledPlatform ()
-		/// </summary>
-		public string TargetSdkVersion { get; set; }
-
-		/// <summary>
-		/// Set this to add the `android:minSdkVersion` attribute to the AndroidManifest.xml file
-		/// </summary>
-		public string MinSdkVersion { get; set; }
-
-		/// <summary>
-		/// Defaults to 24.0
-		/// </summary>
-		public string SupportedOSPlatformVersion {
-			get { return GetProperty (KnownProperties.SupportedOSPlatformVersion); }
-			set { SetProperty (KnownProperties.SupportedOSPlatformVersion, value); }
-		}
-
-		public bool EnableDesugar {
-			get { return string.Equals (GetProperty (KnownProperties.AndroidEnableDesugar), "True", StringComparison.OrdinalIgnoreCase); }
-			set { SetProperty (KnownProperties.AndroidEnableDesugar, value.ToString ()); }
-		}
-
-		public bool Deterministic {
-			get { return string.Equals (GetProperty (KnownProperties.Deterministic), "True", StringComparison.OrdinalIgnoreCase); }
-			set { SetProperty (KnownProperties.Deterministic, value.ToString ()); }
-		}
-
-		public bool AndroidEnableFastDeployment {
-			get { return string.Equals (GetProperty (KnownProperties.AndroidEnableFastDeployment), "True", StringComparison.OrdinalIgnoreCase); }
-			set { SetProperty (KnownProperties.AndroidEnableFastDeployment, value.ToString ()); }
-		}
-
-		public bool EmbedAssembliesIntoApk {
-			get { return string.Equals (GetProperty (KnownProperties.EmbedAssembliesIntoApk), "True", StringComparison.OrdinalIgnoreCase); }
-			set { SetProperty (KnownProperties.EmbedAssembliesIntoApk, value.ToString ()); }
-		}
-
-		public string ManifestMerger {
-			get { return GetProperty (KnownProperties.AndroidManifestMerger); }
-			set { SetProperty (KnownProperties.AndroidManifestMerger, value); }
-		}
-
-		public string LinkTool {
-			get { return GetProperty (KnownProperties.AndroidLinkTool); }
-			set { SetProperty (KnownProperties.AndroidLinkTool, value); }
-		}
-
-		public bool UseJackAndJill {
-			get { return string.Equals (GetProperty (KnownProperties.UseJackAndJill), "True", StringComparison.OrdinalIgnoreCase); }
-			set { SetProperty (KnownProperties.UseJackAndJill, value.ToString ()); }
-		}
-
-		public string RuntimeIdentifier {
-			get { return GetProperty (KnownProperties.RuntimeIdentifier); }
-			set { SetProperty (KnownProperties.RuntimeIdentifier, value); }
-		}
-
-		public AndroidLinkMode AndroidLinkModeDebug {
-			get {
-				AndroidLinkMode m;
-				return Enum.TryParse<AndroidLinkMode> (GetProperty (DebugProperties, KnownProperties.AndroidLinkMode), out m) ? m : AndroidLinkMode.None;
-			}
-			set { SetProperty (DebugProperties, KnownProperties.AndroidLinkMode, value.ToString ()); }
-		}
-
-		public AndroidLinkMode AndroidLinkModeRelease {
-			get {
-				AndroidLinkMode m;
-				return Enum.TryParse<AndroidLinkMode> (GetProperty (ReleaseProperties, KnownProperties.AndroidLinkMode), out m) ? m : AndroidLinkMode.None;
-			}
-			set { SetProperty (ReleaseProperties, KnownProperties.AndroidLinkMode, value.ToString ()); }
-		}
-
-		public TrimMode TrimModeRelease {
-			get => Enum.TryParse (GetProperty (ReleaseProperties, KnownProperties.TrimMode), out TrimMode trimMode) ? trimMode : TrimMode.Partial;
-			set => SetProperty (ReleaseProperties, KnownProperties.TrimMode, value.ToString ().ToLowerInvariant ());
-		}
-
-		public bool EnableMarshalMethods {
-			get { return string.Equals (GetProperty (KnownProperties.AndroidEnableMarshalMethods), "True", StringComparison.OrdinalIgnoreCase); }
-			set { SetProperty (KnownProperties.AndroidEnableMarshalMethods, value.ToString ()); }
-		}
-
-		private bool PublishAot {
-			get { return string.Equals (GetProperty (KnownProperties.PublishAot), "True", StringComparison.OrdinalIgnoreCase); }
-			set { SetProperty (KnownProperties.PublishAot, value.ToString ()); }
-		}
-
-		/// <summary>
-		/// Sets properties required for $(PublishAot)=true
-		/// </summary>
-		public void SetPublishAot (bool value)
-		{
-			// Only toggle IsRelease=true when value is true
-			if (value)
-				IsRelease = true;
-			PublishAot = value;
-		}
-
-		public string AndroidManifest { get; set; }
-		public string LayoutMain { get; set; }
-		public string MainActivity { get; set; }
-		public string StringsXml { get; set; }
-		public string PackageName { get; set; }
-
-		public string PackageNameJavaIntermediatePath { get { return PackageName.Replace ('.', Path.DirectorySeparatorChar).ToLower ();}}
-		public string JavaPackageName { get; set; }
-
-		public override BuildOutput CreateBuildOutput (ProjectBuilder builder)
-		{
-			return new AndroidApplicationBuildOutput (this) { Builder = builder };
-		}
-
-		public void SetDefaultTargetDevice ()
-		{
-			SetProperty ("AdbTarget", Environment.GetEnvironmentVariable ("ADB_TARGET"));
-		}
-
-		public virtual string ProcessManifestTemplate ()
-		{
-			var uses_sdk = new StringBuilder ();
-			if (!string.IsNullOrEmpty (MinSdkVersion)) {
+		if (!string.IsNullOrEmpty (TargetSdkVersion)) {
+			if (uses_sdk.Length == 0)
 				uses_sdk.Append ("<uses-sdk ");
-				uses_sdk.Append ("android:minSdkVersion=\"");
-				uses_sdk.Append (MinSdkVersion);
-				uses_sdk.Append ("\" ");
-			}
-			if (!string.IsNullOrEmpty (TargetSdkVersion)) {
-				if (uses_sdk.Length == 0)
-					uses_sdk.Append ("<uses-sdk ");
-				uses_sdk.Append ("android:targetSdkVersion=\"");
-				uses_sdk.Append (TargetSdkVersion);
-				uses_sdk.Append ("\" ");
-			}
-			if (uses_sdk.Length > 0)
-				uses_sdk.Append ("/>");
-
-			return AndroidManifest
-				.Replace ("${PROJECT_NAME}", ProjectName)
-				.Replace ("${PACKAGENAME}", PackageName)
-				.Replace ("${USES_SDK}", uses_sdk.ToString ());
+			uses_sdk.Append ("android:targetSdkVersion=\"");
+			uses_sdk.Append (TargetSdkVersion);
+			uses_sdk.Append ("\" ");
 		}
+		if (uses_sdk.Length > 0)
+			uses_sdk.Append ("/>");
 
-		public override string ProcessSourceTemplate (string source)
-		{
-			return source.Replace ("${ROOT_NAMESPACE}", RootNamespace ?? ProjectName)
-				.Replace ("${PROJECT_NAME}", ProjectName)
-				.Replace ("${PACKAGENAME}", PackageName)
-				.Replace ("${JAVA_PACKAGENAME}", JavaPackageName);
-		}
+		return AndroidManifest
+			.Replace ("${PROJECT_NAME}", ProjectName)
+			.Replace ("${PACKAGENAME}", PackageName)
+			.Replace ("${USES_SDK}", uses_sdk.ToString ());
+	}
+
+	public override string ProcessSourceTemplate (string source)
+	{
+		return source.Replace ("${ROOT_NAMESPACE}", RootNamespace ?? ProjectName)
+			.Replace ("${PROJECT_NAME}", ProjectName)
+			.Replace ("${PACKAGENAME}", PackageName)
+			.Replace ("${JAVA_PACKAGENAME}", JavaPackageName);
 	}
 }

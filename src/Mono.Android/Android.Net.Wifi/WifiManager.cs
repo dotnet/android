@@ -2,7 +2,7 @@ using System;
 
 using Android.Content;
 
-namespace Android.Net.Wifi {
+namespace Android.Net.Wifi; 
 
 	public partial class WifiManager {
 
@@ -11,6 +11,5 @@ namespace Android.Net.Wifi {
 			return context.GetSystemService (Context.WifiService!) as WifiManager;
 		}
 	}
-}
 
 

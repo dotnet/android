@@ -1,6 +1,6 @@
 using System;
 
-namespace Java.Interop {
+namespace Java.Interop; 
 
 	[Serializable]
 	[AttributeUsage (AttributeTargets.Method, 
@@ -19,4 +19,3 @@ namespace Java.Interop {
 		public string                 Name                    {get; set;}
 
 	}
-}

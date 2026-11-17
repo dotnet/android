@@ -3,7 +3,7 @@ using System.Runtime.InteropServices;
 
 using Android.Runtime;
 
-namespace Android.Graphics {
+namespace Android.Graphics; 
 
 	partial class Bitmap {
 
@@ -96,4 +96,3 @@ namespace Android.Graphics {
 		}
 #endif
 	}
-}

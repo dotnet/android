@@ -1,7 +1,7 @@
 using System;
 
-namespace Android.Media
-{
+namespace Android.Media;
+
 	public partial class AudioTrack
 	{
 		[global::System.Runtime.Versioning.ObsoletedOSPlatform ("android26.0")]
@@ -35,4 +35,3 @@ namespace Android.Media
 		}
 #endif  // ANDROID_29
 	}
-}

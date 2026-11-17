@@ -7,8 +7,8 @@ using Microsoft.Build.Utilities;
 using Xamarin.Android.Tools;
 using Microsoft.Android.Build.Tasks;
 
-namespace Xamarin.Android.Tasks
-{
+namespace Xamarin.Android.Tasks;
+
 	public class AndroidApkSigner : JavaToolTask
 	{
 		public override string TaskPrefix => "AAS";
@@ -168,4 +168,3 @@ namespace Xamarin.Android.Tasks
 			return base.ValidateParameters ();
 		}
 	}
-}

@@ -11,19 +11,19 @@ using Xamarin.Android.Tools;
 using Xamarin.ProjectTools;
 using System.IO.Compression;
 
-namespace Xamarin.Android.Build.Tests
+namespace Xamarin.Android.Build.Tests;
+
+[Parallelizable (ParallelScope.Children)]
+public partial class ManifestTest : BaseTest
 {
-	[Parallelizable (ParallelScope.Children)]
-	public partial class ManifestTest : BaseTest
-	{
-		readonly string TargetSdkManifest = @"<?xml version=""1.0"" encoding=""utf-8""?>
+	readonly string TargetSdkManifest = @"<?xml version=""1.0"" encoding=""utf-8""?>
 <manifest xmlns:android=""http://schemas.android.com/apk/res/android"" android:versionCode=""1"" android:versionName=""1.0"" package=""Bug12935.Bug12935"">
 	<uses-sdk android:targetSdkVersion=""{0}""/>
 	<application android:label=""Bug12935"">
 	</application>
 </manifest>";
 
-		readonly string ElementOrderManifest = @"<?xml version=""1.0"" encoding=""utf-8""?>
+	readonly string ElementOrderManifest = @"<?xml version=""1.0"" encoding=""utf-8""?>
 <manifest xmlns:android=""http://schemas.android.com/apk/res/android"" android:versionCode=""1"" android:versionName=""1.0"" package=""CheckElementReOrdering.CheckElementReOrdering"">
 	<uses-sdk android:targetSdkVersion=""21""/>
 	<application android:label=""CheckElementReOrdering"">
@@ -36,7 +36,7 @@ namespace Xamarin.Android.Build.Tests
 	<uses-permission android:name=""android.permission.CAMERA"" />
 </manifest>";
 
-		readonly string ScreenOrientationActivity = @"
+	readonly string ScreenOrientationActivity = @"
 using System;
 
 using Android.App;
@@ -66,242 +66,242 @@ namespace Bug12935
 }
 ";
 
-		[Test]
-		public void Bug12935 ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
-		{
-			const bool isRelease = true;
-			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
-				return;
-			}
-			var proj = new XamarinAndroidApplicationProject () {
-				IsRelease = isRelease,
-			};
-			proj.SetRuntime (runtime);
-			proj.MainActivity = ScreenOrientationActivity;
-			using (var builder = CreateApkBuilder ()) {
+	[Test]
+	public void Bug12935 ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
+	{
+		const bool isRelease = true;
+		if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+			return;
+		}
+		var proj = new XamarinAndroidApplicationProject () {
+			IsRelease = isRelease,
+		};
+		proj.SetRuntime (runtime);
+		proj.MainActivity = ScreenOrientationActivity;
+		using (var builder = CreateApkBuilder ()) {
 
-				proj.AndroidManifest = string.Format (TargetSdkManifest, "17");
-				Assert.IsTrue (builder.Build (proj), "Build for TargetFrameworkVersion 17 should have succeeded");
-				var manifestFile = Path.Combine (Root, builder.ProjectDirectory, proj.IntermediateOutputPath, "android", "AndroidManifest.xml");
+			proj.AndroidManifest = string.Format (TargetSdkManifest, "17");
+			Assert.IsTrue (builder.Build (proj), "Build for TargetFrameworkVersion 17 should have succeeded");
+			var manifestFile = Path.Combine (Root, builder.ProjectDirectory, proj.IntermediateOutputPath, "android", "AndroidManifest.xml");
 
-				XDocument doc = XDocument.Load (manifestFile);
-				var ns = doc.Root.GetNamespaceOfPrefix ("android");
-				var screenOrientationXName = XName.Get ("screenOrientation", ns.NamespaceName);
-				var targetSdkXName = XName.Get ("targetSdkVersion", ns.NamespaceName);
+			XDocument doc = XDocument.Load (manifestFile);
+			var ns = doc.Root.GetNamespaceOfPrefix ("android");
+			var screenOrientationXName = XName.Get ("screenOrientation", ns.NamespaceName);
+			var targetSdkXName = XName.Get ("targetSdkVersion", ns.NamespaceName);
 
-				var usesSdk = doc.XPathSelectElement ("/manifest/uses-sdk");
-				Assert.IsNotNull (usesSdk, "Failed to read the uses-sdk element");
-				var targetSdk = usesSdk.Attribute (targetSdkXName);
-				Assert.AreEqual ("17", targetSdk.Value, "targetSdkVersion should have been 17");
+			var usesSdk = doc.XPathSelectElement ("/manifest/uses-sdk");
+			Assert.IsNotNull (usesSdk, "Failed to read the uses-sdk element");
+			var targetSdk = usesSdk.Attribute (targetSdkXName);
+			Assert.AreEqual ("17", targetSdk.Value, "targetSdkVersion should have been 17");
 
-				var activityElement = doc.XPathSelectElement ("/manifest/application/activity");
-				Assert.IsNotNull (activityElement, "Failed to read the activity element");
-				var screenOrientation = activityElement.Attribute (screenOrientationXName);
-				Assert.IsNotNull (screenOrientation, "activity element did not contain a android:screenOrientation attribute");
-				Assert.AreEqual ("sensorPortrait", screenOrientation.Value, "screenOrientation should have been sensorPortrait");
+			var activityElement = doc.XPathSelectElement ("/manifest/application/activity");
+			Assert.IsNotNull (activityElement, "Failed to read the activity element");
+			var screenOrientation = activityElement.Attribute (screenOrientationXName);
+			Assert.IsNotNull (screenOrientation, "activity element did not contain a android:screenOrientation attribute");
+			Assert.AreEqual ("sensorPortrait", screenOrientation.Value, "screenOrientation should have been sensorPortrait");
 
-				builder.Cleanup ();
-				proj.AndroidManifest = string.Format (TargetSdkManifest, "16");
-				Assert.IsTrue (builder.Build (proj), "Build for TargetFrameworkVersion 16 should have succeeded");
+			builder.Cleanup ();
+			proj.AndroidManifest = string.Format (TargetSdkManifest, "16");
+			Assert.IsTrue (builder.Build (proj), "Build for TargetFrameworkVersion 16 should have succeeded");
 
-				doc = XDocument.Load (manifestFile);
-				usesSdk = doc.XPathSelectElement ("/manifest/uses-sdk");
-				Assert.IsNotNull (usesSdk, "Failed to read the uses-sdk element");
-				targetSdk = usesSdk.Attribute (targetSdkXName);
-				Assert.AreEqual ("16", targetSdk.Value, "targetSdkVersion should have been 16");
-				activityElement = doc.XPathSelectElement ("/manifest/application/activity");
-				Assert.IsNotNull (activityElement, "Failed to read the activity element");
-				screenOrientation = activityElement.Attribute (screenOrientationXName);
-				Assert.AreEqual ("sensorPortrait", screenOrientation.Value, "screenOrientation for targetSdkVersion 16 should have been sensorPortrait");
+			doc = XDocument.Load (manifestFile);
+			usesSdk = doc.XPathSelectElement ("/manifest/uses-sdk");
+			Assert.IsNotNull (usesSdk, "Failed to read the uses-sdk element");
+			targetSdk = usesSdk.Attribute (targetSdkXName);
+			Assert.AreEqual ("16", targetSdk.Value, "targetSdkVersion should have been 16");
+			activityElement = doc.XPathSelectElement ("/manifest/application/activity");
+			Assert.IsNotNull (activityElement, "Failed to read the activity element");
+			screenOrientation = activityElement.Attribute (screenOrientationXName);
+			Assert.AreEqual ("sensorPortrait", screenOrientation.Value, "screenOrientation for targetSdkVersion 16 should have been sensorPortrait");
 
-				builder.Cleanup ();
-				builder.ThrowOnBuildFailure = false;
-				proj.AndroidManifest = string.Format (TargetSdkManifest, "15");
-				Assert.IsFalse (builder.Build (proj), "Build for TargetFrameworkVersion 15 should have failed");
-				StringAssertEx.Contains ("APT2259: ", builder.LastBuildOutput);
-				StringAssertEx.Contains ("APT2067", builder.LastBuildOutput);
-				StringAssertEx.Contains (Path.Combine ("Properties", "AndroidManifest.xml"), builder.LastBuildOutput);
-				// Intentionally relaxed from an exact "2 Error(s)" count: this test is parameterized over
-				// CoreCLR/NativeAOT and the runtimes may legitimately emit a different number of errors. The
-				// specific aapt2 codes (APT2259, APT2067) are still asserted above, so a real regression is caught.
-				StringAssertEx.Contains ("Error(s)", builder.LastBuildOutput);
-			}
+			builder.Cleanup ();
+			builder.ThrowOnBuildFailure = false;
+			proj.AndroidManifest = string.Format (TargetSdkManifest, "15");
+			Assert.IsFalse (builder.Build (proj), "Build for TargetFrameworkVersion 15 should have failed");
+			StringAssertEx.Contains ("APT2259: ", builder.LastBuildOutput);
+			StringAssertEx.Contains ("APT2067", builder.LastBuildOutput);
+			StringAssertEx.Contains (Path.Combine ("Properties", "AndroidManifest.xml"), builder.LastBuildOutput);
+			// Intentionally relaxed from an exact "2 Error(s)" count: this test is parameterized over
+			// CoreCLR/NativeAOT and the runtimes may legitimately emit a different number of errors. The
+			// specific aapt2 codes (APT2259, APT2067) are still asserted above, so a real regression is caught.
+			StringAssertEx.Contains ("Error(s)", builder.LastBuildOutput);
+		}
+	}
+
+	[Test]
+	public void CheckElementReOrdering ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
+	{
+		const bool isRelease = true;
+		if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+			return;
+		}
+		var proj = new XamarinAndroidApplicationProject () {
+			IsRelease = isRelease,
+		};
+		proj.SetRuntime (runtime);
+		proj.MainActivity = ScreenOrientationActivity;
+		using (var builder = CreateApkBuilder ()) {
+			proj.AndroidManifest = ElementOrderManifest;
+			Assert.IsTrue (builder.Build (proj), "first build should have succeeded");
+			var manifestFile = Path.Combine (Root, builder.ProjectDirectory, proj.IntermediateOutputPath, "android", "AndroidManifest.xml");
+			XDocument doc = XDocument.Load (manifestFile);
+			var ns = doc.Root.GetNamespaceOfPrefix ("android");
+			var manifest = GetElement (doc, "manifest");
+			var app = GetElement (manifest, "application");
+			Assert.AreEqual (0, app.ElementsAfterSelf ().Count (),
+				"There should be no elements after the application element");
+			var activity = GetElement (app, "activity");
+			AssertAttribute (activity, ns + "exported", "true");
+			var intent_filter = GetElement (activity, "intent-filter");
+			var action = GetElement (intent_filter, "action");
+			AssertAttribute (action, ns + "name", "android.intent.action.MAIN");
+			var category = GetElement (intent_filter, "category");
+			AssertAttribute (category, ns + "name", "android.intent.category.LAUNCHER");
+
+			// Add Exported=true and build again
+			proj.MainActivity = proj.MainActivity.Replace ("MainLauncher = true,", "MainLauncher = true, Exported = true,");
+			proj.Touch ("MainActivity.cs");
+			Assert.IsTrue (builder.Build (proj), "second build should have succeeded");
 		}
 
-		[Test]
-		public void CheckElementReOrdering ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
+		static XElement GetElement (XContainer parent, XName name)
 		{
-			const bool isRelease = true;
-			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
-				return;
-			}
-			var proj = new XamarinAndroidApplicationProject () {
-				IsRelease = isRelease,
-			};
-			proj.SetRuntime (runtime);
-			proj.MainActivity = ScreenOrientationActivity;
-			using (var builder = CreateApkBuilder ()) {
-				proj.AndroidManifest = ElementOrderManifest;
-				Assert.IsTrue (builder.Build (proj), "first build should have succeeded");
-				var manifestFile = Path.Combine (Root, builder.ProjectDirectory, proj.IntermediateOutputPath, "android", "AndroidManifest.xml");
-				XDocument doc = XDocument.Load (manifestFile);
-				var ns = doc.Root.GetNamespaceOfPrefix ("android");
-				var manifest = GetElement (doc, "manifest");
-				var app = GetElement (manifest, "application");
-				Assert.AreEqual (0, app.ElementsAfterSelf ().Count (),
-					"There should be no elements after the application element");
-				var activity = GetElement (app, "activity");
-				AssertAttribute (activity, ns + "exported", "true");
-				var intent_filter = GetElement (activity, "intent-filter");
-				var action = GetElement (intent_filter, "action");
-				AssertAttribute (action, ns + "name", "android.intent.action.MAIN");
-				var category = GetElement (intent_filter, "category");
-				AssertAttribute (category, ns + "name", "android.intent.category.LAUNCHER");
-
-				// Add Exported=true and build again
-				proj.MainActivity = proj.MainActivity.Replace ("MainLauncher = true,", "MainLauncher = true, Exported = true,");
-				proj.Touch ("MainActivity.cs");
-				Assert.IsTrue (builder.Build (proj), "second build should have succeeded");
-			}
-
-			static XElement GetElement (XContainer parent, XName name)
-			{
-				var e = parent.Element (name);
-				Assert.IsNotNull (e, $"{name} element should not be null.");
-				return e;
-			}
-
-			static void AssertAttribute (XElement parent, XName name, string expected)
-			{
-				var a = parent.Attribute (name);
-				Assert.IsNotNull (a, $"{name} attribute should not be null.");
-				Assert.AreEqual (expected, a.Value, $"{name} attribute value did not match.");
-			}
+			var e = parent.Element (name);
+			Assert.IsNotNull (e, $"{name} element should not be null.");
+			return e;
 		}
 
-		[Test]
-		public void OverlayManifestIncrementalBuildTest ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
+		static void AssertAttribute (XElement parent, XName name, string expected)
 		{
-			const bool isRelease = true;
-			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
-				return;
-			}
-			var proj = new XamarinAndroidApplicationProject () {
-				IsRelease = isRelease,
-				ManifestMerger = "manifestmerger.jar",
-			};
-			proj.SetRuntime (runtime);
-			proj.AndroidManifest = @"<?xml version=""1.0"" encoding=""utf-8""?>
+			var a = parent.Attribute (name);
+			Assert.IsNotNull (a, $"{name} attribute should not be null.");
+			Assert.AreEqual (expected, a.Value, $"{name} attribute value did not match.");
+		}
+	}
+
+	[Test]
+	public void OverlayManifestIncrementalBuildTest ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
+	{
+		const bool isRelease = true;
+		if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+			return;
+		}
+		var proj = new XamarinAndroidApplicationProject () {
+			IsRelease = isRelease,
+			ManifestMerger = "manifestmerger.jar",
+		};
+		proj.SetRuntime (runtime);
+		proj.AndroidManifest = @"<?xml version=""1.0"" encoding=""utf-8""?>
 <manifest xmlns:android=""http://schemas.android.com/apk/res/android"" android:versionCode=""1"" android:versionName=""1.0"" package=""foo.foo"">
 	<application android:label=""foo"">
 	</application>
 </manifest>";
-			var overlay = new BuildItem ("AndroidManifestOverlay", "ManifestOverlay.xml") {
-				TextContent = () => @"<?xml version=""1.0"" encoding=""utf-8""?>
+		var overlay = new BuildItem ("AndroidManifestOverlay", "ManifestOverlay.xml") {
+			TextContent = () => @"<?xml version=""1.0"" encoding=""utf-8""?>
 <manifest xmlns:android=""http://schemas.android.com/apk/res/android"">
 	<uses-permission android:name=""android.permission.CAMERA"" />
 </manifest>
 "
-			};
-			proj.OtherBuildItems.Add (overlay);
-			using (var b = CreateApkBuilder (cleanupAfterSuccessfulBuild: false, cleanupOnDispose: false)) {
-				Assert.IsTrue (b.Build (proj), "First build should have succeeded.");
-				var text = b.Output.GetIntermediaryAsText ("android/AndroidManifest.xml");
-				StringAssert.Contains ("android.permission.CAMERA", text, "Merged manifest should contain the initial overlay permission.");
-				StringAssert.DoesNotContain ("android.permission.RECORD_AUDIO", text, "Merged manifest should not contain the updated overlay permission yet.");
+		};
+		proj.OtherBuildItems.Add (overlay);
+		using (var b = CreateApkBuilder (cleanupAfterSuccessfulBuild: false, cleanupOnDispose: false)) {
+			Assert.IsTrue (b.Build (proj), "First build should have succeeded.");
+			var text = b.Output.GetIntermediaryAsText ("android/AndroidManifest.xml");
+			StringAssert.Contains ("android.permission.CAMERA", text, "Merged manifest should contain the initial overlay permission.");
+			StringAssert.DoesNotContain ("android.permission.RECORD_AUDIO", text, "Merged manifest should not contain the updated overlay permission yet.");
 
-				Assert.IsTrue (b.Build (proj, doNotCleanupOnUpdate: true, saveProject: false), "Second build should have succeeded.");
-				b.Output.AssertTargetIsSkipped ("_ManifestMerger");
+			Assert.IsTrue (b.Build (proj, doNotCleanupOnUpdate: true, saveProject: false), "Second build should have succeeded.");
+			b.Output.AssertTargetIsSkipped ("_ManifestMerger");
 
-				overlay.TextContent = () => @"<?xml version=""1.0"" encoding=""utf-8""?>
+			overlay.TextContent = () => @"<?xml version=""1.0"" encoding=""utf-8""?>
 <manifest xmlns:android=""http://schemas.android.com/apk/res/android"">
 	<uses-permission android:name=""android.permission.CAMERA"" />
 	<uses-permission android:name=""android.permission.RECORD_AUDIO"" />
 </manifest>
 ";
-				proj.Touch ("ManifestOverlay.xml");
+			proj.Touch ("ManifestOverlay.xml");
 
-				Assert.IsTrue (b.Build (proj, doNotCleanupOnUpdate: true, saveProject: false), "Third build should have succeeded.");
-				b.Output.AssertTargetIsNotSkipped ("_ManifestMerger");
+			Assert.IsTrue (b.Build (proj, doNotCleanupOnUpdate: true, saveProject: false), "Third build should have succeeded.");
+			b.Output.AssertTargetIsNotSkipped ("_ManifestMerger");
 
-				text = b.Output.GetIntermediaryAsText ("android/AndroidManifest.xml");
-				StringAssert.Contains ("android.permission.RECORD_AUDIO", text, "Merged manifest should include permissions from the updated overlay.");
-			}
+			text = b.Output.GetIntermediaryAsText ("android/AndroidManifest.xml");
+			StringAssert.Contains ("android.permission.RECORD_AUDIO", text, "Merged manifest should include permissions from the updated overlay.");
 		}
+	}
 
-		[Test]
-		public void RemovePermissionTest ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
-		{
-			const bool isRelease = true;
-			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
-				return;
-			}
-			var proj = new XamarinAndroidApplicationProject () {
-				IsRelease = isRelease,
-				PackageReferences = {
-					KnownPackages.ZXing_Net_Mobile,
-				},
-				ManifestMerger = "manifestmerger.jar",
-			};
-			proj.SetRuntime (runtime);
-			proj.AndroidManifest = @"<?xml version=""1.0"" encoding=""utf-8""?>
+	[Test]
+	public void RemovePermissionTest ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
+	{
+		const bool isRelease = true;
+		if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+			return;
+		}
+		var proj = new XamarinAndroidApplicationProject () {
+			IsRelease = isRelease,
+			PackageReferences = {
+				KnownPackages.ZXing_Net_Mobile,
+			},
+			ManifestMerger = "manifestmerger.jar",
+		};
+		proj.SetRuntime (runtime);
+		proj.AndroidManifest = @"<?xml version=""1.0"" encoding=""utf-8""?>
 <manifest xmlns:android=""http://schemas.android.com/apk/res/android"" xmlns:tools=""http://schemas.android.com/tools"" android:versionCode=""1"" android:versionName=""1.0"" package=""foo.foo"">
 	<uses-sdk android:targetSdkVersion=""29""/>
 	<uses-permission android:name=""android.permission.CAMERA"" tools:node=""remove"" />
 	<application android:label=""foo"">
 	</application>
 </manifest>";
-			using (var b = CreateApkBuilder (cleanupAfterSuccessfulBuild: true, cleanupOnDispose: false)) {
-				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
-				var manifestFile = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath, "android", "AndroidManifest.xml");
-				var text = File.ReadAllText (manifestFile);
-				StringAssert.DoesNotContain ("android.permission.CAMERA", text, $"{manifestFile} should not contain 'android.permission.CAMERA'");
-			}
+		using (var b = CreateApkBuilder (cleanupAfterSuccessfulBuild: true, cleanupOnDispose: false)) {
+			Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
+			var manifestFile = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath, "android", "AndroidManifest.xml");
+			var text = File.ReadAllText (manifestFile);
+			StringAssert.DoesNotContain ("android.permission.CAMERA", text, $"{manifestFile} should not contain 'android.permission.CAMERA'");
 		}
+	}
 
-		[Test]
-		public void IntentFilterData ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
-		{
-			const bool isRelease = true;
-			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
-				return;
-			}
-			var proj = new XamarinAndroidApplicationProject () {
-				IsRelease = isRelease,
-			};
-			proj.SetRuntime (runtime);
-			string declHead = "public class MainActivity";
-			string intentFilter = @"[IntentFilter (new string [] {""action1""},
+	[Test]
+	public void IntentFilterData ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
+	{
+		const bool isRelease = true;
+		if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+			return;
+		}
+		var proj = new XamarinAndroidApplicationProject () {
+			IsRelease = isRelease,
+		};
+		proj.SetRuntime (runtime);
+		string declHead = "public class MainActivity";
+		string intentFilter = @"[IntentFilter (new string [] {""action1""},
 				DataPath = ""foo"",
 				DataPathPattern = ""foo*"",
 				DataPathPrefix = ""foo"",
 				Label = ""testTarget""
 				)]
 				";
-			proj.MainActivity = proj.DefaultMainActivity.Replace (declHead, intentFilter + declHead);
-			using (var b = CreateApkBuilder (cleanupAfterSuccessfulBuild: true, cleanupOnDispose: false)) {
-				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
-				var manifest = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath, "android", "AndroidManifest.xml");
-				var doc = XDocument.Load (manifest);
-				var nsResolver = new XmlNamespaceManager (new NameTable ());
-				nsResolver.AddNamespace ("android", "http://schemas.android.com/apk/res/android");
-				Assert.AreEqual (3, doc.XPathSelectElements ("//intent-filter[@android:label='testTarget']/data", nsResolver).Count (), "intent-filter/data count mismatch.");
-			}
+		proj.MainActivity = proj.DefaultMainActivity.Replace (declHead, intentFilter + declHead);
+		using (var b = CreateApkBuilder (cleanupAfterSuccessfulBuild: true, cleanupOnDispose: false)) {
+			Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
+			var manifest = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath, "android", "AndroidManifest.xml");
+			var doc = XDocument.Load (manifest);
+			var nsResolver = new XmlNamespaceManager (new NameTable ());
+			nsResolver.AddNamespace ("android", "http://schemas.android.com/apk/res/android");
+			Assert.AreEqual (3, doc.XPathSelectElements ("//intent-filter[@android:label='testTarget']/data", nsResolver).Count (), "intent-filter/data count mismatch.");
 		}
+	}
 
-		[Test]
-		public void IntentFilterDataLists ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
-		{
-			const bool isRelease = true;
-			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
-				return;
-			}
-			var proj = new XamarinAndroidApplicationProject () {
-				IsRelease = isRelease,
-			};
-			proj.SetRuntime (runtime);
-			string declHead = "public class MainActivity";
-			string intentFilter = @"[IntentFilter (new string [] {""action1""},
+	[Test]
+	public void IntentFilterDataLists ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
+	{
+		const bool isRelease = true;
+		if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+			return;
+		}
+		var proj = new XamarinAndroidApplicationProject () {
+			IsRelease = isRelease,
+		};
+		proj.SetRuntime (runtime);
+		string declHead = "public class MainActivity";
+		string intentFilter = @"[IntentFilter (new string [] {""action1""},
 				DataPaths = new string [] {""foo"", ""bar""},
 				DataPathPatterns = new string [] {""foo*"", ""bar*""},
 				DataPathPrefixes = new string [] {""foo"", ""bar""},
@@ -312,367 +312,367 @@ namespace Bug12935
 				Label = ""testTarget""
 				)]
 				";
-			proj.MainActivity = proj.DefaultMainActivity.Replace (declHead, intentFilter + declHead);
-			using (var b = CreateApkBuilder (cleanupAfterSuccessfulBuild: true, cleanupOnDispose: false)) {
-				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
-				var manifest = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath, "android", "AndroidManifest.xml");
-				var doc = XDocument.Load (manifest);
-				var nsResolver = new XmlNamespaceManager (new NameTable ());
-				nsResolver.AddNamespace ("android", "http://schemas.android.com/apk/res/android");
-				Assert.AreEqual (14, doc.XPathSelectElements ("//intent-filter[@android:label='testTarget']/data", nsResolver).Count (), "intent-filter/data count mismatch.");
-			}
-		}
-
-		[Test]
-		public void IntentFilterMultipleItems ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
-		{
-			const bool isRelease = true;
-			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
-				return;
-			}
-			// somehow the tests above passed but this example failed.
-			var proj = new XamarinAndroidApplicationProject () {
-				IsRelease = isRelease,
-			};
-			proj.SetRuntime (runtime);
-			proj.MainActivity = proj.DefaultMainActivity.Replace (
-				"public class MainActivity ",
-				@"[IntentFilter (new string []{""foo""}, DataSchemes=new string []{""http"", ""https""})] public class MainActivity ");
-			using var b = CreateApkBuilder ();
+		proj.MainActivity = proj.DefaultMainActivity.Replace (declHead, intentFilter + declHead);
+		using (var b = CreateApkBuilder (cleanupAfterSuccessfulBuild: true, cleanupOnDispose: false)) {
 			Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
-			var appsrc = File.ReadAllText (Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath, "android", "AndroidManifest.xml"));
-			Assert.IsTrue (appsrc.Contains ("<data android:scheme=\"http\""), "schemes:http");
-			Assert.IsTrue (appsrc.Contains ("<data android:scheme=\"https\""), "schemes:https");
-			b.Dispose ();
+			var manifest = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath, "android", "AndroidManifest.xml");
+			var doc = XDocument.Load (manifest);
+			var nsResolver = new XmlNamespaceManager (new NameTable ());
+			nsResolver.AddNamespace ("android", "http://schemas.android.com/apk/res/android");
+			Assert.AreEqual (14, doc.XPathSelectElements ("//intent-filter[@android:label='testTarget']/data", nsResolver).Count (), "intent-filter/data count mismatch.");
 		}
+	}
 
-		[Test]
-		public void LayoutAttributeElement ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
-		{
-			const bool isRelease = true;
-			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
-				return;
-			}
-			var proj = new XamarinAndroidApplicationProject () {
-				IsRelease = isRelease,
+	[Test]
+	public void IntentFilterMultipleItems ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
+	{
+		const bool isRelease = true;
+		if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+			return;
+		}
+		// somehow the tests above passed but this example failed.
+		var proj = new XamarinAndroidApplicationProject () {
+			IsRelease = isRelease,
+		};
+		proj.SetRuntime (runtime);
+		proj.MainActivity = proj.DefaultMainActivity.Replace (
+			"public class MainActivity ",
+			@"[IntentFilter (new string []{""foo""}, DataSchemes=new string []{""http"", ""https""})] public class MainActivity ");
+		using var b = CreateApkBuilder ();
+		Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
+		var appsrc = File.ReadAllText (Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath, "android", "AndroidManifest.xml"));
+		Assert.IsTrue (appsrc.Contains ("<data android:scheme=\"http\""), "schemes:http");
+		Assert.IsTrue (appsrc.Contains ("<data android:scheme=\"https\""), "schemes:https");
+		b.Dispose ();
+	}
+
+	[Test]
+	public void LayoutAttributeElement ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
+	{
+		const bool isRelease = true;
+		if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+			return;
+		}
+		var proj = new XamarinAndroidApplicationProject () {
+			IsRelease = isRelease,
+		};
+		proj.SetRuntime (runtime);
+		string declHead = "public class MainActivity";
+		string layout = @"[Layout (DefaultWidth=""500dp"", DefaultHeight=""600dp"", Gravity=""center"", MinWidth=""300dp"", MinHeight=""400dp"")]";
+		proj.MainActivity = proj.DefaultMainActivity.Replace (declHead, layout + declHead);
+		using (var b = CreateApkBuilder (cleanupAfterSuccessfulBuild: true, cleanupOnDispose: false)) {
+			Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
+			var manifest = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath, "android", "AndroidManifest.xml");
+			var doc = XDocument.Load (manifest);
+			var nsResolver = new XmlNamespaceManager (new NameTable ());
+			nsResolver.AddNamespace ("android", "http://schemas.android.com/apk/res/android");
+			var le = doc.XPathSelectElement ("//layout") as XElement;
+			Assert.IsNotNull (le, "no layout element found");
+			Assert.IsTrue (doc.XPathSelectElements ("//layout[@android:defaultWidth='500dp' and @android:defaultHeight='600dp' and @android:gravity='center' and @android:minWidth='300dp' and @android:minHeight='400dp']", nsResolver).Any (),
+						   "'layout' element is not generated as expected.");
+		}
+	}
+
+	[Test]
+	public void DirectBootAwareAttribute ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
+	{
+		const bool isRelease = true;
+		if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+			return;
+		}
+		var proj = new XamarinAndroidApplicationProject () {
+			IsRelease = isRelease,
+		};
+		proj.SetRuntime (runtime);
+		string attrHead = ", Activity (";
+		string attr = @", Activity (DirectBootAware=true, ";
+		proj.MainActivity = proj.DefaultMainActivity.Replace (attrHead, attr);
+		proj.OtherBuildItems.Add (new BuildItem (BuildActions.Compile, "MyService.cs") {
+			TextContent = () => "using Android.App; [Service (DirectBootAware = true)] public class MyService : Service { public override Android.OS.IBinder OnBind (Android.Content.Intent intent) { return null; } }"
+		});
+		proj.OtherBuildItems.Add (new BuildItem (BuildActions.Compile, "MyApplication.cs") {
+			TextContent = () => "using Android.App; [Application (DirectBootAware = true)] public class MyApplication : Application {}"
+		});
+		using (var b = CreateApkBuilder (cleanupAfterSuccessfulBuild: true, cleanupOnDispose: false)) {
+			Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
+			var manifest = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath, "android", "AndroidManifest.xml");
+			var doc = XDocument.Load (manifest);
+			var nsResolver = new XmlNamespaceManager (new NameTable ());
+			nsResolver.AddNamespace ("android", "http://schemas.android.com/apk/res/android");
+			var le = doc.XPathSelectElement ("//activity") as XElement;
+			Assert.IsNotNull (le, "no activity element found");
+			Assert.IsTrue (doc.XPathSelectElements ("//activity[@android:directBootAware='true']", nsResolver).Any (),
+					   "'activity' element is not generated as expected.");
+
+			string providerName = runtime switch {
+				AndroidRuntime.NativeAOT => "net.dot.jni.nativeaot.NativeAotRuntimeProvider",
+				_ => "mono.MonoRuntimeProvider"
 			};
-			proj.SetRuntime (runtime);
-			string declHead = "public class MainActivity";
-			string layout = @"[Layout (DefaultWidth=""500dp"", DefaultHeight=""600dp"", Gravity=""center"", MinWidth=""300dp"", MinHeight=""400dp"")]";
-			proj.MainActivity = proj.DefaultMainActivity.Replace (declHead, layout + declHead);
-			using (var b = CreateApkBuilder (cleanupAfterSuccessfulBuild: true, cleanupOnDispose: false)) {
-				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
-				var manifest = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath, "android", "AndroidManifest.xml");
-				var doc = XDocument.Load (manifest);
-				var nsResolver = new XmlNamespaceManager (new NameTable ());
-				nsResolver.AddNamespace ("android", "http://schemas.android.com/apk/res/android");
-				var le = doc.XPathSelectElement ("//layout") as XElement;
-				Assert.IsNotNull (le, "no layout element found");
-				Assert.IsTrue (doc.XPathSelectElements ("//layout[@android:defaultWidth='500dp' and @android:defaultHeight='600dp' and @android:gravity='center' and @android:minWidth='300dp' and @android:minHeight='400dp']", nsResolver).Any (),
-							   "'layout' element is not generated as expected.");
-			}
+			Assert.IsTrue (doc.XPathSelectElements ($"//provider[@android:name='{providerName}' and @android:directBootAware='true']", nsResolver).Any (),
+					   "'provider' element is not generated as expected.");
 		}
+	}
 
-		[Test]
-		public void DirectBootAwareAttribute ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
-		{
-			const bool isRelease = true;
-			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
-				return;
-			}
-			var proj = new XamarinAndroidApplicationProject () {
-				IsRelease = isRelease,
-			};
-			proj.SetRuntime (runtime);
-			string attrHead = ", Activity (";
-			string attr = @", Activity (DirectBootAware=true, ";
-			proj.MainActivity = proj.DefaultMainActivity.Replace (attrHead, attr);
-			proj.OtherBuildItems.Add (new BuildItem (BuildActions.Compile, "MyService.cs") {
-				TextContent = () => "using Android.App; [Service (DirectBootAware = true)] public class MyService : Service { public override Android.OS.IBinder OnBind (Android.Content.Intent intent) { return null; } }"
-			});
-			proj.OtherBuildItems.Add (new BuildItem (BuildActions.Compile, "MyApplication.cs") {
-				TextContent = () => "using Android.App; [Application (DirectBootAware = true)] public class MyApplication : Application {}"
-			});
-			using (var b = CreateApkBuilder (cleanupAfterSuccessfulBuild: true, cleanupOnDispose: false)) {
-				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
-				var manifest = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath, "android", "AndroidManifest.xml");
-				var doc = XDocument.Load (manifest);
-				var nsResolver = new XmlNamespaceManager (new NameTable ());
-				nsResolver.AddNamespace ("android", "http://schemas.android.com/apk/res/android");
-				var le = doc.XPathSelectElement ("//activity") as XElement;
-				Assert.IsNotNull (le, "no activity element found");
-				Assert.IsTrue (doc.XPathSelectElements ("//activity[@android:directBootAware='true']", nsResolver).Any (),
-						   "'activity' element is not generated as expected.");
+	static object [] VersionCodeTestSource = new object [] {
+		new object[] {
+			/* seperateApk */ false,
+			/* abis */ "armeabi-v7a",
+			/* versionCode */ "123",
+			/* useLagacy */ true,
+			/* pattern */ null,
+			/* props */ null,
+			/* shouldBuild */ true,
+			/* expected */ "123",
+		},
+		new object[] {
+			/* seperateApk */ false,
+			/* abis */ "armeabi-v7a",
+			/* versionCode */ "123",
+			/* useLagacy */ false,
+			/* pattern */ null,
+			/* props */ null,
+			/* shouldBuild */ true,
+			/* expected */ "123",
+		},
+		new object[] {
+			/* seperateApk */ false,
+			/* abis */ "armeabi-v7a",
+			/* versionCode */ "123",
+			/* useLagacy */ false,
+			/* pattern */ "{abi}{versionCode}",
+			/* props */ null,
+			/* shouldBuild */ true,
+			/* expected */ "123",
+		},
+		new object[] {
+			/* seperateApk */ false,
+			/* abis */ "armeabi-v7a",
+			/* versionCode */ "1",
+			/* useLagacy */ false,
+			/* pattern */ "{abi}{versionCode}",
+			/* props */ "versionCode=123",
+			/* shouldBuild */ true,
+			/* expected */ "123",
+		},
+		new object[] {
+			/* seperateApk */ false,
+			/* abis */ "armeabi-v7a;x86",
+			/* versionCode */ "123",
+			/* useLagacy */ false,
+			/* pattern */ "{abi}{versionCode}",
+			/* props */ null,
+			/* shouldBuild */ true,
+			/* expected */ "123",
+		},
+		new object[] {
+			/* seperateApk */ true,
+			/* abis */ "armeabi-v7a;x86",
+			/* versionCode */ "123",
+			/* useLagacy */ true,
+			/* pattern */ null,
+			/* props */ null,
+			/* shouldBuild */ true,
+			/* expected */ "131195;196731",
+		},
+		new object[] {
+			/* seperateApk */ true,
+			/* abis */ "armeabi-v7a;x86",
+			/* versionCode */ "123",
+			/* useLagacy */ false,
+			/* pattern */ null,
+			/* props */ null,
+			/* shouldBuild */ true,
+			/* expected */ "200123;300123",
+		},
+		new object[] {
+			/* seperateApk */ true,
+			/* abis */ "armeabi-v7a;x86",
+			/* versionCode */ "123",
+			/* useLagacy */ false,
+			/* pattern */ "{abi}{versionCode}",
+			/* props */ null,
+			/* shouldBuild */ true,
+			/* expected */ "2123;3123",
+		},
+		new object[] {
+			/* seperateApk */ true,
+			/* abis */ "armeabi-v7a;x86",
+			/* versionCode */ "12",
+			/* useLagacy */ false,
+			/* pattern */ "{abi}{minSDK:00}{versionCode:000}",
+			/* props */ null,
+			/* shouldBuild */ true,
+			/* expected */ "224012;324012",
+		},
+		new object[] {
+			/* seperateApk */ true,
+			/* abis */ "armeabi-v7a;x86",
+			/* versionCode */ "12",
+			/* useLagacy */ false,
+			/* pattern */ "{abi}{minSDK:00}{screen}{versionCode:000}",
+			/* props */ "screen=24",
+			/* shouldBuild */ true,
+			/* expected */ "22424012;32424012",
+		},
+		new object[] {
+			/* seperateApk */ true,
+			/* abis */ "armeabi-v7a;x86",
+			/* versionCode */ "12",
+			/* useLagacy */ false,
+			/* pattern */ "{abi}{minSDK:00}{screen}{foo:0}{versionCode:000}",
+			/* props */ "screen=24;foo=$(Foo)",
+			/* shouldBuild */ true,
+			/* expected */ "224241012;324241012",
+		},
+		new object[] {
+			/* seperateApk */ true,
+			/* abis */ "armeabi-v7a;x86",
+			/* versionCode */ "12",
+			/* useLagacy */ false,
+			/* pattern */ "{abi}{minSDK:00}{screen}{foo:00}{versionCode:000}",
+			/* props */ "screen=24;foo=$(Foo)",
+			/* shouldBuild */ false,
+			/* expected */ "2242401012;3242401012",
+		},
+	};
 
-				string providerName = runtime switch {
-					AndroidRuntime.NativeAOT => "net.dot.jni.nativeaot.NativeAotRuntimeProvider",
-					_ => "mono.MonoRuntimeProvider"
-				};
-				Assert.IsTrue (doc.XPathSelectElements ($"//provider[@android:name='{providerName}' and @android:directBootAware='true']", nsResolver).Any (),
-						   "'provider' element is not generated as expected.");
-			}
-		}
+	// TODO: make it work on CoreCLR and NativeAOT. The test data uses 32-bit ABIs
+	// (armeabi-v7a, x86) that are not supported on CoreCLR/NativeAOT, and the expected
+	// version codes were computed and verified manually for the Mono mobile runtime.
+	[Test]
+	[TestCaseSource(nameof (VersionCodeTestSource))]
+	public void VersionCodeTests (bool seperateApk, string abis, string versionCode, bool useLegacy, string versionCodePattern, string versionCodeProperties, bool shouldBuild, string expectedVersionCode)
+	{
+		Assert.Ignore ("TODO: rework the test data for CoreCLR/NativeAOT supported ABIs.");
 
-		static object [] VersionCodeTestSource = new object [] {
-			new object[] {
-				/* seperateApk */ false,
-				/* abis */ "armeabi-v7a",
-				/* versionCode */ "123",
-				/* useLagacy */ true,
-				/* pattern */ null,
-				/* props */ null,
-				/* shouldBuild */ true,
-				/* expected */ "123",
-			},
-			new object[] {
-				/* seperateApk */ false,
-				/* abis */ "armeabi-v7a",
-				/* versionCode */ "123",
-				/* useLagacy */ false,
-				/* pattern */ null,
-				/* props */ null,
-				/* shouldBuild */ true,
-				/* expected */ "123",
-			},
-			new object[] {
-				/* seperateApk */ false,
-				/* abis */ "armeabi-v7a",
-				/* versionCode */ "123",
-				/* useLagacy */ false,
-				/* pattern */ "{abi}{versionCode}",
-				/* props */ null,
-				/* shouldBuild */ true,
-				/* expected */ "123",
-			},
-			new object[] {
-				/* seperateApk */ false,
-				/* abis */ "armeabi-v7a",
-				/* versionCode */ "1",
-				/* useLagacy */ false,
-				/* pattern */ "{abi}{versionCode}",
-				/* props */ "versionCode=123",
-				/* shouldBuild */ true,
-				/* expected */ "123",
-			},
-			new object[] {
-				/* seperateApk */ false,
-				/* abis */ "armeabi-v7a;x86",
-				/* versionCode */ "123",
-				/* useLagacy */ false,
-				/* pattern */ "{abi}{versionCode}",
-				/* props */ null,
-				/* shouldBuild */ true,
-				/* expected */ "123",
-			},
-			new object[] {
-				/* seperateApk */ true,
-				/* abis */ "armeabi-v7a;x86",
-				/* versionCode */ "123",
-				/* useLagacy */ true,
-				/* pattern */ null,
-				/* props */ null,
-				/* shouldBuild */ true,
-				/* expected */ "131195;196731",
-			},
-			new object[] {
-				/* seperateApk */ true,
-				/* abis */ "armeabi-v7a;x86",
-				/* versionCode */ "123",
-				/* useLagacy */ false,
-				/* pattern */ null,
-				/* props */ null,
-				/* shouldBuild */ true,
-				/* expected */ "200123;300123",
-			},
-			new object[] {
-				/* seperateApk */ true,
-				/* abis */ "armeabi-v7a;x86",
-				/* versionCode */ "123",
-				/* useLagacy */ false,
-				/* pattern */ "{abi}{versionCode}",
-				/* props */ null,
-				/* shouldBuild */ true,
-				/* expected */ "2123;3123",
-			},
-			new object[] {
-				/* seperateApk */ true,
-				/* abis */ "armeabi-v7a;x86",
-				/* versionCode */ "12",
-				/* useLagacy */ false,
-				/* pattern */ "{abi}{minSDK:00}{versionCode:000}",
-				/* props */ null,
-				/* shouldBuild */ true,
-				/* expected */ "224012;324012",
-			},
-			new object[] {
-				/* seperateApk */ true,
-				/* abis */ "armeabi-v7a;x86",
-				/* versionCode */ "12",
-				/* useLagacy */ false,
-				/* pattern */ "{abi}{minSDK:00}{screen}{versionCode:000}",
-				/* props */ "screen=24",
-				/* shouldBuild */ true,
-				/* expected */ "22424012;32424012",
-			},
-			new object[] {
-				/* seperateApk */ true,
-				/* abis */ "armeabi-v7a;x86",
-				/* versionCode */ "12",
-				/* useLagacy */ false,
-				/* pattern */ "{abi}{minSDK:00}{screen}{foo:0}{versionCode:000}",
-				/* props */ "screen=24;foo=$(Foo)",
-				/* shouldBuild */ true,
-				/* expected */ "224241012;324241012",
-			},
-			new object[] {
-				/* seperateApk */ true,
-				/* abis */ "armeabi-v7a;x86",
-				/* versionCode */ "12",
-				/* useLagacy */ false,
-				/* pattern */ "{abi}{minSDK:00}{screen}{foo:00}{versionCode:000}",
-				/* props */ "screen=24;foo=$(Foo)",
-				/* shouldBuild */ false,
-				/* expected */ "2242401012;3242401012",
-			},
+		var proj = new XamarinAndroidApplicationProject () {
+			IsRelease = true,
+			MinSdkVersion = "24",
+			SupportedOSPlatformVersion = "24.0",
 		};
 
-		// TODO: make it work on CoreCLR and NativeAOT. The test data uses 32-bit ABIs
-		// (armeabi-v7a, x86) that are not supported on CoreCLR/NativeAOT, and the expected
-		// version codes were computed and verified manually for the Mono mobile runtime.
-		[Test]
-		[TestCaseSource(nameof (VersionCodeTestSource))]
-		public void VersionCodeTests (bool seperateApk, string abis, string versionCode, bool useLegacy, string versionCodePattern, string versionCodeProperties, bool shouldBuild, string expectedVersionCode)
-		{
-			Assert.Ignore ("TODO: rework the test data for CoreCLR/NativeAOT supported ABIs.");
-
-			var proj = new XamarinAndroidApplicationProject () {
-				IsRelease = true,
-				MinSdkVersion = "24",
-				SupportedOSPlatformVersion = "24.0",
-			};
-
-			proj.SetProperty ("Foo", "1");
-			proj.SetProperty ("GenerateApplicationManifest", "false"); // Disable $(AndroidVersionCode) support
-			proj.SetProperty (proj.ReleaseProperties, KnownProperties.AndroidCreatePackagePerAbi, seperateApk);
-			if (!string.IsNullOrEmpty (abis))
-				proj.SetRuntimeIdentifiers (abis.Split (';'));
-			if (!string.IsNullOrEmpty (versionCodePattern))
-				proj.SetProperty (proj.ReleaseProperties, "AndroidVersionCodePattern", versionCodePattern);
-			else
-				proj.RemoveProperty (proj.ReleaseProperties, "AndroidVersionCodePattern");
-			if (!string.IsNullOrEmpty (versionCodeProperties))
-				proj.SetProperty (proj.ReleaseProperties, "AndroidVersionCodeProperties", versionCodeProperties);
-			else
-				proj.RemoveProperty (proj.ReleaseProperties, "AndroidVersionCodeProperties");
-			if (useLegacy)
-				proj.SetProperty (proj.ReleaseProperties, "AndroidUseLegacyVersionCode", true);
-			proj.AndroidManifest = proj.AndroidManifest.Replace ("android:versionCode=\"1\"", $"android:versionCode=\"{versionCode}\"");
-			using (var builder = CreateApkBuilder ()) {
-				builder.ThrowOnBuildFailure = false;
-				Assert.AreEqual (shouldBuild, builder.Build (proj), shouldBuild ? "Build should have succeeded." : "Build should have failed.");
-				if (!shouldBuild)
-					return;
-				var abiItems = seperateApk ? abis.Split (';') : new string[1];
-				var expectedItems = expectedVersionCode.Split (';');
-				XNamespace aNS = "http://schemas.android.com/apk/res/android";
-				Assert.AreEqual (abiItems.Length, expectedItems.Length, "abis parameter should have matching elements for expected");
-				for (int i = 0; i < abiItems.Length; i++) {
-					var path = seperateApk ? Path.Combine ("android", abiItems[i], "AndroidManifest.xml") : Path.Combine ("android", "manifest", "AndroidManifest.xml");
-					var manifest = builder.Output.GetIntermediaryAsText (Root, path);
-					var doc = XDocument.Parse (manifest);
-					var nsResolver = new XmlNamespaceManager (new NameTable ());
-					nsResolver.AddNamespace ("android", "http://schemas.android.com/apk/res/android");
-					var m = doc.XPathSelectElement ("/manifest") as XElement;
-					Assert.IsNotNull (m, "no manifest element found");
-					var vc = m.Attribute (aNS + "versionCode");
-					Assert.IsNotNull (vc, "no versionCode attribute found");
-					StringAssert.AreEqualIgnoringCase (expectedItems[i], vc.Value,
-						$"Version Code is incorrect. Found {vc.Value} expect {expectedItems[i]}");
-				}
-			}
-		}
-
-		static IEnumerable<object[]> Get_ApplicationVersionTests_Data ()
-		{
-			var ret = new List<object[]> ();
-
-			foreach (AndroidRuntime runtime in new[] { AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT }) {
-				AddTestData ("1", false, "manifest=1", runtime);
-				AddTestData ("1", true, "x86_64=500001;arm64-v8a=400001", runtime);
-				// Run fewer NativeAOT cases to reduce CI time.
-				if (runtime == AndroidRuntime.NativeAOT) {
-					continue;
-				}
-				AddTestData ("2", false, "manifest=2", runtime);
-				AddTestData ("2", true, "x86_64=500002;arm64-v8a=400002", runtime);
-				AddTestData ("999", false, "manifest=999", runtime);
-				AddTestData ("999", true, "x86_64=500999;arm64-v8a=400999", runtime);
-			}
-
-			return ret;
-
-			void AddTestData (string applicationVersion, bool seperateApk, string expected, AndroidRuntime runtime)
-			{
-				ret.Add (new object[] {
-					applicationVersion,
-					seperateApk,
-					expected,
-					runtime,
-				});
-			}
-		}
-		[Test]
-		[TestCaseSource (nameof (Get_ApplicationVersionTests_Data))]
-		public void ApplicationVersionTests (string applicationVersion, bool seperateApk, string expected, AndroidRuntime runtime)
-		{
-			const bool isRelease = true;
-			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+		proj.SetProperty ("Foo", "1");
+		proj.SetProperty ("GenerateApplicationManifest", "false"); // Disable $(AndroidVersionCode) support
+		proj.SetProperty (proj.ReleaseProperties, KnownProperties.AndroidCreatePackagePerAbi, seperateApk);
+		if (!string.IsNullOrEmpty (abis))
+			proj.SetRuntimeIdentifiers (abis.Split (';'));
+		if (!string.IsNullOrEmpty (versionCodePattern))
+			proj.SetProperty (proj.ReleaseProperties, "AndroidVersionCodePattern", versionCodePattern);
+		else
+			proj.RemoveProperty (proj.ReleaseProperties, "AndroidVersionCodePattern");
+		if (!string.IsNullOrEmpty (versionCodeProperties))
+			proj.SetProperty (proj.ReleaseProperties, "AndroidVersionCodeProperties", versionCodeProperties);
+		else
+			proj.RemoveProperty (proj.ReleaseProperties, "AndroidVersionCodeProperties");
+		if (useLegacy)
+			proj.SetProperty (proj.ReleaseProperties, "AndroidUseLegacyVersionCode", true);
+		proj.AndroidManifest = proj.AndroidManifest.Replace ("android:versionCode=\"1\"", $"android:versionCode=\"{versionCode}\"");
+		using (var builder = CreateApkBuilder ()) {
+			builder.ThrowOnBuildFailure = false;
+			Assert.AreEqual (shouldBuild, builder.Build (proj), shouldBuild ? "Build should have succeeded." : "Build should have failed.");
+			if (!shouldBuild)
 				return;
-			}
-			var proj = new XamarinAndroidApplicationProject () {
-				IsRelease = isRelease,
-				MinSdkVersion = null,
-			};
-			proj.SetRuntime (runtime);
-			proj.SetProperty (proj.ReleaseProperties, "ApplicationVersion", applicationVersion);
-			proj.SetProperty (proj.ReleaseProperties, "ApplicationDisplayVersion", applicationVersion);
-			proj.SetProperty (proj.ReleaseProperties, KnownProperties.AndroidCreatePackagePerAbi, seperateApk);
-			proj.AndroidManifest = proj.AndroidManifest
-				.Replace ("android:versionCode=\"1\"", string.Empty)
-				.Replace ("android:versionName=\"1.0\"", string.Empty);
-			using (var builder = CreateApkBuilder ()) {
-				Assert.True (builder.Build (proj), "Build should have succeeded.");
-				XNamespace aNS = "http://schemas.android.com/apk/res/android";
-
-				var expectedItems = expected.Split (';');
-				foreach (var item in expectedItems) {
-					var items = item.Split ('=');
-					var path = Path.Combine ("android", items [0], "AndroidManifest.xml");
-					var manifest = builder.Output.GetIntermediaryAsText (Root, path);
-					var doc = XDocument.Parse (manifest);
-					var m = doc.XPathSelectElement ("/manifest") as XElement;
-					Assert.IsNotNull (m, "no manifest element found");
-					var vc = m.Attribute (aNS + "versionCode");
-					Assert.IsNotNull (vc, "no versionCode attribute found");
-					StringAssert.AreEqualIgnoringCase (items [1], vc.Value,
-						$"Version Code is incorrect. Found {vc.Value} expect {items [1]}");
-				}
-
+			var abiItems = seperateApk ? abis.Split (';') : new string[1];
+			var expectedItems = expectedVersionCode.Split (';');
+			XNamespace aNS = "http://schemas.android.com/apk/res/android";
+			Assert.AreEqual (abiItems.Length, expectedItems.Length, "abis parameter should have matching elements for expected");
+			for (int i = 0; i < abiItems.Length; i++) {
+				var path = seperateApk ? Path.Combine ("android", abiItems[i], "AndroidManifest.xml") : Path.Combine ("android", "manifest", "AndroidManifest.xml");
+				var manifest = builder.Output.GetIntermediaryAsText (Root, path);
+				var doc = XDocument.Parse (manifest);
+				var nsResolver = new XmlNamespaceManager (new NameTable ());
+				nsResolver.AddNamespace ("android", "http://schemas.android.com/apk/res/android");
+				var m = doc.XPathSelectElement ("/manifest") as XElement;
+				Assert.IsNotNull (m, "no manifest element found");
+				var vc = m.Attribute (aNS + "versionCode");
+				Assert.IsNotNull (vc, "no versionCode attribute found");
+				StringAssert.AreEqualIgnoringCase (expectedItems[i], vc.Value,
+					$"Version Code is incorrect. Found {vc.Value} expect {expectedItems[i]}");
 			}
 		}
+	}
 
-		[Test]
-		public void ManifestDataPathError ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
-		{
-			const bool isRelease = true;
-			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
-				return;
+	static IEnumerable<object[]> Get_ApplicationVersionTests_Data ()
+	{
+		var ret = new List<object[]> ();
+
+		foreach (AndroidRuntime runtime in new[] { AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT }) {
+			AddTestData ("1", false, "manifest=1", runtime);
+			AddTestData ("1", true, "x86_64=500001;arm64-v8a=400001", runtime);
+			// Run fewer NativeAOT cases to reduce CI time.
+			if (runtime == AndroidRuntime.NativeAOT) {
+				continue;
 			}
-			var proj = new XamarinAndroidApplicationProject () {
-				IsRelease = isRelease,
-			};
-			proj.SetRuntime (runtime);
-			var s = proj.AndroidManifest.Replace ("</application>", @"<activity android:name=""net.openid.appauth.RedirectUriReceiverActivity"" android:exported=""true"">
+			AddTestData ("2", false, "manifest=2", runtime);
+			AddTestData ("2", true, "x86_64=500002;arm64-v8a=400002", runtime);
+			AddTestData ("999", false, "manifest=999", runtime);
+			AddTestData ("999", true, "x86_64=500999;arm64-v8a=400999", runtime);
+		}
+
+		return ret;
+
+		void AddTestData (string applicationVersion, bool seperateApk, string expected, AndroidRuntime runtime)
+		{
+			ret.Add (new object[] {
+				applicationVersion,
+				seperateApk,
+				expected,
+				runtime,
+			});
+		}
+	}
+	[Test]
+	[TestCaseSource (nameof (Get_ApplicationVersionTests_Data))]
+	public void ApplicationVersionTests (string applicationVersion, bool seperateApk, string expected, AndroidRuntime runtime)
+	{
+		const bool isRelease = true;
+		if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+			return;
+		}
+		var proj = new XamarinAndroidApplicationProject () {
+			IsRelease = isRelease,
+			MinSdkVersion = null,
+		};
+		proj.SetRuntime (runtime);
+		proj.SetProperty (proj.ReleaseProperties, "ApplicationVersion", applicationVersion);
+		proj.SetProperty (proj.ReleaseProperties, "ApplicationDisplayVersion", applicationVersion);
+		proj.SetProperty (proj.ReleaseProperties, KnownProperties.AndroidCreatePackagePerAbi, seperateApk);
+		proj.AndroidManifest = proj.AndroidManifest
+			.Replace ("android:versionCode=\"1\"", string.Empty)
+			.Replace ("android:versionName=\"1.0\"", string.Empty);
+		using (var builder = CreateApkBuilder ()) {
+			Assert.True (builder.Build (proj), "Build should have succeeded.");
+			XNamespace aNS = "http://schemas.android.com/apk/res/android";
+
+			var expectedItems = expected.Split (';');
+			foreach (var item in expectedItems) {
+				var items = item.Split ('=');
+				var path = Path.Combine ("android", items [0], "AndroidManifest.xml");
+				var manifest = builder.Output.GetIntermediaryAsText (Root, path);
+				var doc = XDocument.Parse (manifest);
+				var m = doc.XPathSelectElement ("/manifest") as XElement;
+				Assert.IsNotNull (m, "no manifest element found");
+				var vc = m.Attribute (aNS + "versionCode");
+				Assert.IsNotNull (vc, "no versionCode attribute found");
+				StringAssert.AreEqualIgnoringCase (items [1], vc.Value,
+					$"Version Code is incorrect. Found {vc.Value} expect {items [1]}");
+			}
+
+		}
+	}
+
+	[Test]
+	public void ManifestDataPathError ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
+	{
+		const bool isRelease = true;
+		if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+			return;
+		}
+		var proj = new XamarinAndroidApplicationProject () {
+			IsRelease = isRelease,
+		};
+		proj.SetRuntime (runtime);
+		var s = proj.AndroidManifest.Replace ("</application>", @"<activity android:name=""net.openid.appauth.RedirectUriReceiverActivity"" android:exported=""true"">
 			<intent-filter>
 				<action android:name=""android.intent.action.VIEW""/>
 				<category android:name=""android.intent.category.DEFAULT""/>
@@ -682,133 +682,133 @@ namespace Bug12935
 			</intent-filter>
 	</activity>
 </application>");
-			proj.AndroidManifest = s;
-			using (var builder = CreateApkBuilder ()) {
-				builder.ThrowOnBuildFailure = false;
-				Assert.IsFalse (builder.Build (proj), "Build should have failed.");
-				var messages = builder.LastBuildOutput.SkipWhile (x => !x.StartsWith ("Build FAILED.", StringComparison.Ordinal));
-				string error = messages.FirstOrDefault (x => x.Contains ("error APT2266:"));
-				Assert.IsNotNull (error, "Warning should be APT2266");
-			}
+		proj.AndroidManifest = s;
+		using (var builder = CreateApkBuilder ()) {
+			builder.ThrowOnBuildFailure = false;
+			Assert.IsFalse (builder.Build (proj), "Build should have failed.");
+			var messages = builder.LastBuildOutput.SkipWhile (x => !x.StartsWith ("Build FAILED.", StringComparison.Ordinal));
+			string error = messages.FirstOrDefault (x => x.Contains ("error APT2266:"));
+			Assert.IsNotNull (error, "Warning should be APT2266");
 		}
+	}
 
-		[Test]
-		public void ManifestPlaceholders ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
-		{
-			const bool isRelease = true;
-			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
-				return;
-			}
-			var proj = new XamarinAndroidApplicationProject () {
-				IsRelease = isRelease,
-				JavaPackageName = "com.foo.bar",
-			};
-			proj.SetRuntime (runtime);
-			proj.AndroidManifest = proj.AndroidManifest.
-				Replace ("application android:label=\"${PROJECT_NAME}\"", "application android:label=\"${ph1}\" x='${ph2}' ").
-				Replace ("package=\"${PACKAGENAME}\"", "package=\"${Package}\"");
-			proj.SetProperty ("AndroidManifestPlaceholders", "ph2=a=b\\c;ph1=val1;Package=com.foo.bar");
-			proj.SetProperty ("AndroidManifestMergerExtraArgs", "--log VERBOSE");
-			using (var builder = CreateApkBuilder ()) {
-				builder.Build (proj);
-				var manifest = builder.Output.GetIntermediaryAsText (Root, Path.Combine ("android", "AndroidManifest.xml"));
-				Assert.IsTrue (manifest.Contains (" android:label=\"val1\""), "#1");
-				Assert.IsTrue (manifest.Contains (" x=\"a=b\\c\"".Replace ('\\', Path.DirectorySeparatorChar)), "#2");
-				Assert.IsTrue (manifest.Contains ("package=\"com.foo.bar\""), "PackageName should have been replaced with 'com.foo.bar'");
-				var apk = Path.Combine (Root, builder.ProjectDirectory, proj.OutputPath, $"com.foo.bar-Signed.apk");
-				FileAssert.Exists (apk, $"'{apk}' should have been created.");
-			}
+	[Test]
+	public void ManifestPlaceholders ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
+	{
+		const bool isRelease = true;
+		if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+			return;
 		}
-
-		[Test]
-		public void ManifestPlaceHolders2 ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
-		{
-			const bool isRelease = true;
-			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
-				return;
-			}
-			var proj = new XamarinAndroidApplicationProject () {
-				IsRelease = isRelease,
-			};
-			proj.SetRuntime (runtime);
-			var s = proj.AndroidManifest.Replace ("<application android:label=\"${PROJECT_NAME}\"", "<application android:label=\"${FOOBARNAME}\"");
-			Assert.AreNotEqual (proj.AndroidManifest, s, "#0");
-			proj.SetProperty ("AndroidManifestPlaceholders", "FOOBARNAME=AAAAAAAA");
-			proj.AndroidManifest = s;
-			using (var builder = CreateApkBuilder ()) {
-				Assert.IsTrue (builder.Build (proj), "Build should have succeeded.");
-				var manifest = builder.Output.GetIntermediaryAsText (Root, "android/AndroidManifest.xml");
-				Assert.IsTrue (manifest.Contains ("AAAAAAAA"), "#1");
-			}
+		var proj = new XamarinAndroidApplicationProject () {
+			IsRelease = isRelease,
+			JavaPackageName = "com.foo.bar",
+		};
+		proj.SetRuntime (runtime);
+		proj.AndroidManifest = proj.AndroidManifest.
+			Replace ("application android:label=\"${PROJECT_NAME}\"", "application android:label=\"${ph1}\" x='${ph2}' ").
+			Replace ("package=\"${PACKAGENAME}\"", "package=\"${Package}\"");
+		proj.SetProperty ("AndroidManifestPlaceholders", "ph2=a=b\\c;ph1=val1;Package=com.foo.bar");
+		proj.SetProperty ("AndroidManifestMergerExtraArgs", "--log VERBOSE");
+		using (var builder = CreateApkBuilder ()) {
+			builder.Build (proj);
+			var manifest = builder.Output.GetIntermediaryAsText (Root, Path.Combine ("android", "AndroidManifest.xml"));
+			Assert.IsTrue (manifest.Contains (" android:label=\"val1\""), "#1");
+			Assert.IsTrue (manifest.Contains (" x=\"a=b\\c\"".Replace ('\\', Path.DirectorySeparatorChar)), "#2");
+			Assert.IsTrue (manifest.Contains ("package=\"com.foo.bar\""), "PackageName should have been replaced with 'com.foo.bar'");
+			var apk = Path.Combine (Root, builder.ProjectDirectory, proj.OutputPath, $"com.foo.bar-Signed.apk");
+			FileAssert.Exists (apk, $"'{apk}' should have been created.");
 		}
+	}
 
-		[Test]
-		public void ManifestPlaceHoldersXA1010 ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
-		{
-			bool isRelease = runtime == AndroidRuntime.NativeAOT;
-			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
-				return;
-			}
-			var proj = new XamarinAndroidApplicationProject () {
-				IsRelease = isRelease,
-			};
-			proj.SetRuntime (runtime);
-			proj.AndroidManifest = proj.AndroidManifest.Replace ("application android:label=\"${PROJECT_NAME}\"", "application android:label=\"${ph1}\" x='${ph2}' ");
-			proj.SetProperty ("AndroidManifestPlaceholders", "ph2=a=b\\c;ph1");
-			using (var builder = CreateApkBuilder ()) {
-				builder.ThrowOnBuildFailure = false;
-				Assert.IsFalse (builder.Build (proj), "Build should have failed.");
-				var messages = builder.LastBuildOutput.SkipWhile (x => !x.StartsWith ("Build FAILED.", StringComparison.Ordinal));
-				string warning = messages.FirstOrDefault (x => x.Contains ("warning XA1010:"));
-				Assert.IsNotNull (warning, "Warning should be XA1010");
-				StringAssert.Contains ("AndroidManifestPlaceholders", warning, "Warning should mention AndroidManifestPlaceholders");
-				StringAssert.Contains ("ph1", warning, "Warning should mention invalid placeholder");
-			}
+	[Test]
+	public void ManifestPlaceHolders2 ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
+	{
+		const bool isRelease = true;
+		if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+			return;
 		}
-
-		[Test]
-		public void UnsupportedManifestMerger ([Values ("legacy", "other")] string manifestMerger)
-		{
-			var proj = new XamarinAndroidApplicationProject {
-				ManifestMerger = manifestMerger,
-			};
-			proj.SetRuntime (AndroidRuntime.CoreCLR);
-			using (var builder = CreateApkBuilder ()) {
-				builder.ThrowOnBuildFailure = false;
-				Assert.IsFalse (builder.Build (proj), "Build should reject an unsupported manifest merger.");
-				StringAssert.Contains ("error XA1038:", string.Join ("\n", builder.LastBuildOutput));
-				StringAssert.Contains ("AndroidManifestMerger", string.Join ("\n", builder.LastBuildOutput));
-			}
+		var proj = new XamarinAndroidApplicationProject () {
+			IsRelease = isRelease,
+		};
+		proj.SetRuntime (runtime);
+		var s = proj.AndroidManifest.Replace ("<application android:label=\"${PROJECT_NAME}\"", "<application android:label=\"${FOOBARNAME}\"");
+		Assert.AreNotEqual (proj.AndroidManifest, s, "#0");
+		proj.SetProperty ("AndroidManifestPlaceholders", "FOOBARNAME=AAAAAAAA");
+		proj.AndroidManifest = s;
+		using (var builder = CreateApkBuilder ()) {
+			Assert.IsTrue (builder.Build (proj), "Build should have succeeded.");
+			var manifest = builder.Output.GetIntermediaryAsText (Root, "android/AndroidManifest.xml");
+			Assert.IsTrue (manifest.Contains ("AAAAAAAA"), "#1");
 		}
+	}
 
-		[Test]
-		[TestCaseSource (nameof (Get_DebuggerAttributeCases_Data))]
-		public void DebuggerAttribute (string debugType, bool isRelease, bool expected, AndroidRuntime runtime)
-		{
-			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
-				return;
-			}
-			var proj = new XamarinAndroidApplicationProject () {
-				IsRelease = isRelease,
-			};
-			proj.SetRuntime (runtime);
-			proj.SetProperty (isRelease ? proj.ReleaseProperties : proj.DebugProperties, "DebugType", debugType);
-			using (var builder = CreateApkBuilder (Path.Combine ("temp", $"DebuggerAttribute_{debugType}_{isRelease}_{expected}"), false, false)) {
-				Assert.IsTrue (builder.Build (proj), "Build should have succeeded");
-				var manifest = builder.Output.GetIntermediaryAsText (Root, Path.Combine ("android", "AndroidManifest.xml"));
-				Assert.AreEqual (expected, manifest.Contains ("android:debuggable=\"true\""), $"Manifest  {(expected ? "should" : "should not")} contain the andorid:debuggable attribute");
-			}
+	[Test]
+	public void ManifestPlaceHoldersXA1010 ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
+	{
+		bool isRelease = runtime == AndroidRuntime.NativeAOT;
+		if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+			return;
 		}
+		var proj = new XamarinAndroidApplicationProject () {
+			IsRelease = isRelease,
+		};
+		proj.SetRuntime (runtime);
+		proj.AndroidManifest = proj.AndroidManifest.Replace ("application android:label=\"${PROJECT_NAME}\"", "application android:label=\"${ph1}\" x='${ph2}' ");
+		proj.SetProperty ("AndroidManifestPlaceholders", "ph2=a=b\\c;ph1");
+		using (var builder = CreateApkBuilder ()) {
+			builder.ThrowOnBuildFailure = false;
+			Assert.IsFalse (builder.Build (proj), "Build should have failed.");
+			var messages = builder.LastBuildOutput.SkipWhile (x => !x.StartsWith ("Build FAILED.", StringComparison.Ordinal));
+			string warning = messages.FirstOrDefault (x => x.Contains ("warning XA1010:"));
+			Assert.IsNotNull (warning, "Warning should be XA1010");
+			StringAssert.Contains ("AndroidManifestPlaceholders", warning, "Warning should mention AndroidManifestPlaceholders");
+			StringAssert.Contains ("ph1", warning, "Warning should mention invalid placeholder");
+		}
+	}
 
-		[Test]
-		public void ModifyManifest ([ValueSource (typeof (BaseTest), nameof (BaseTest.ValidRuntimeConfigurations))] (bool isRelease, AndroidRuntime runtime) configuration)
-		{
-			var (isRelease, runtime) = configuration;
-			var proj = new XamarinAndroidApplicationProject () {
-				IsRelease = isRelease,
-				Imports = {
-					new Import ("foo.targets") {
-				TextContent = () => @"<?xml version=""1.0"" encoding=""utf-16""?>
+	[Test]
+	public void UnsupportedManifestMerger ([Values ("legacy", "other")] string manifestMerger)
+	{
+		var proj = new XamarinAndroidApplicationProject {
+			ManifestMerger = manifestMerger,
+		};
+		proj.SetRuntime (AndroidRuntime.CoreCLR);
+		using (var builder = CreateApkBuilder ()) {
+			builder.ThrowOnBuildFailure = false;
+			Assert.IsFalse (builder.Build (proj), "Build should reject an unsupported manifest merger.");
+			StringAssert.Contains ("error XA1038:", string.Join ("\n", builder.LastBuildOutput));
+			StringAssert.Contains ("AndroidManifestMerger", string.Join ("\n", builder.LastBuildOutput));
+		}
+	}
+
+	[Test]
+	[TestCaseSource (nameof (Get_DebuggerAttributeCases_Data))]
+	public void DebuggerAttribute (string debugType, bool isRelease, bool expected, AndroidRuntime runtime)
+	{
+		if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+			return;
+		}
+		var proj = new XamarinAndroidApplicationProject () {
+			IsRelease = isRelease,
+		};
+		proj.SetRuntime (runtime);
+		proj.SetProperty (isRelease ? proj.ReleaseProperties : proj.DebugProperties, "DebugType", debugType);
+		using (var builder = CreateApkBuilder (Path.Combine ("temp", $"DebuggerAttribute_{debugType}_{isRelease}_{expected}"), false, false)) {
+			Assert.IsTrue (builder.Build (proj), "Build should have succeeded");
+			var manifest = builder.Output.GetIntermediaryAsText (Root, Path.Combine ("android", "AndroidManifest.xml"));
+			Assert.AreEqual (expected, manifest.Contains ("android:debuggable=\"true\""), $"Manifest  {(expected ? "should" : "should not")} contain the andorid:debuggable attribute");
+		}
+	}
+
+	[Test]
+	public void ModifyManifest ([ValueSource (typeof (BaseTest), nameof (BaseTest.ValidRuntimeConfigurations))] (bool isRelease, AndroidRuntime runtime) configuration)
+	{
+		var (isRelease, runtime) = configuration;
+		var proj = new XamarinAndroidApplicationProject () {
+			IsRelease = isRelease,
+			Imports = {
+				new Import ("foo.targets") {
+			TextContent = () => @"<?xml version=""1.0"" encoding=""utf-16""?>
 <Project ToolsVersion=""4.0"" xmlns=""http://schemas.microsoft.com/developer/msbuild/2003"">
 <PropertyGroup>
 	<AfterGenerateAndroidManifest>
@@ -839,80 +839,80 @@ namespace Bug12935
 </Target>
 </Project>
 "
-					},
 				},
-			};
-			proj.SetRuntime (runtime);
-			using (var builder = CreateApkBuilder ()) {
-				Assert.IsTrue (builder.Build (proj), "Build should have succeeded");
-				var manifest = builder.Output.GetIntermediaryAsText (Root, Path.Combine ("android", "AndroidManifest.xml"));
-				Assert.IsTrue (manifest.Contains ("READ_CONTACTS"), $"Manifest should contain the READ_CONTACTS");
-			}
+			},
+		};
+		proj.SetRuntime (runtime);
+		using (var builder = CreateApkBuilder ()) {
+			Assert.IsTrue (builder.Build (proj), "Build should have succeeded");
+			var manifest = builder.Output.GetIntermediaryAsText (Root, Path.Combine ("android", "AndroidManifest.xml"));
+			Assert.IsTrue (manifest.Contains ("READ_CONTACTS"), $"Manifest should contain the READ_CONTACTS");
+		}
+	}
+
+	[Test]
+	public void MergeLibraryManifest ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
+	{
+		bool isRelease = runtime == AndroidRuntime.NativeAOT;
+		if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+			return;
 		}
 
-		[Test]
-		public void MergeLibraryManifest ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
-		{
-			bool isRelease = runtime == AndroidRuntime.NativeAOT;
-			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
-				return;
-			}
-
-			byte [] classesJar = XamarinAndroidCommonProject.GetResourceContents ("Xamarin.ProjectTools.Resources.Base.classes.jar");
-			byte [] data;
-			using (var ms = new MemoryStream ()) {
-				using (var zip = new ZipArchive (ms, ZipArchiveMode.Create, leaveOpen: true)) {
-					using (var writer = new StreamWriter (zip.CreateEntry ("AndroidManifest.xml").Open ())) {
-						writer.Write (
-							"""
-							<?xml version='1.0'?>
-							<manifest xmlns:android='http://schemas.android.com/apk/res/android' package='com.xamarin.test'>
-							    <uses-sdk android:minSdkVersion='16'/>
-							    <permission android:name='${applicationId}.permission.C2D_MESSAGE' android:protectionLevel='signature' />
-							    <application>
-							        <activity android:name='.signin.internal.SignInHubActivity' />
-							        <provider
-							            android:authorities='${applicationId}.FacebookInitProvider'
-							            android:name='.internal.FacebookInitProvider'
-							            android:exported='false' />
-							        <meta-data android:name='android.support.VERSION' android:value='25.4.0' />
-							    </application>
-							</manifest>
-							""");
-					}
-					zip.CreateEntry ("res/");
-					using (var entryStream = zip.CreateEntry ("classes.jar").Open ())
-						entryStream.Write (classesJar, 0, classesJar.Length);
-					using (var writer = new StreamWriter (zip.CreateEntry ("R.txt").Open ()))
-						writer.Write (" ");
+		byte [] classesJar = XamarinAndroidCommonProject.GetResourceContents ("Xamarin.ProjectTools.Resources.Base.classes.jar");
+		byte [] data;
+		using (var ms = new MemoryStream ()) {
+			using (var zip = new ZipArchive (ms, ZipArchiveMode.Create, leaveOpen: true)) {
+				using (var writer = new StreamWriter (zip.CreateEntry ("AndroidManifest.xml").Open ())) {
+					writer.Write (
+						"""
+						<?xml version='1.0'?>
+						<manifest xmlns:android='http://schemas.android.com/apk/res/android' package='com.xamarin.test'>
+						    <uses-sdk android:minSdkVersion='16'/>
+						    <permission android:name='${applicationId}.permission.C2D_MESSAGE' android:protectionLevel='signature' />
+						    <application>
+						        <activity android:name='.signin.internal.SignInHubActivity' />
+						        <provider
+						            android:authorities='${applicationId}.FacebookInitProvider'
+						            android:name='.internal.FacebookInitProvider'
+						            android:exported='false' />
+						        <meta-data android:name='android.support.VERSION' android:value='25.4.0' />
+						    </application>
+						</manifest>
+						""");
 				}
-				data = ms.ToArray ();
+				zip.CreateEntry ("res/");
+				using (var entryStream = zip.CreateEntry ("classes.jar").Open ())
+					entryStream.Write (classesJar, 0, classesJar.Length);
+				using (var writer = new StreamWriter (zip.CreateEntry ("R.txt").Open ()))
+					writer.Write (" ");
 			}
-			var path = Path.Combine ("temp", TestName);
-			var lib = new XamarinAndroidBindingProject () {
-				IsRelease = isRelease,
-				ProjectName = "Binding1",
-				AndroidClassParser = "class-parse",
-				Jars = {
-					new AndroidItem.LibraryProjectZip ("Jars\\foo.aar") {
-						BinaryContent = () => data,
-					}
-				},
-			};
-			lib.SetRuntime (runtime);
-			var proj = new XamarinAndroidApplicationProject () {
-				IsRelease = isRelease,
-				PackageName = "com.xamarin.manifest",
-				References = {
-					new BuildItem.ProjectReference ("..\\Binding1\\Binding1.csproj", lib.ProjectGuid)
-				},
-				PackageReferences = {
-					KnownPackages.AndroidXAppCompat,
-				},
-			};
-			proj.SetRuntime (runtime);
-			proj.Sources.Add (new BuildItem.Source ("TestActivity1.cs") {
-				TextContent = () => @"using System;
+			data = ms.ToArray ();
+		}
+		var path = Path.Combine ("temp", TestName);
+		var lib = new XamarinAndroidBindingProject () {
+			IsRelease = isRelease,
+			ProjectName = "Binding1",
+			AndroidClassParser = "class-parse",
+			Jars = {
+				new AndroidItem.LibraryProjectZip ("Jars\\foo.aar") {
+					BinaryContent = () => data,
+				}
+			},
+		};
+		lib.SetRuntime (runtime);
+		var proj = new XamarinAndroidApplicationProject () {
+			IsRelease = isRelease,
+			PackageName = "com.xamarin.manifest",
+			References = {
+				new BuildItem.ProjectReference ("..\\Binding1\\Binding1.csproj", lib.ProjectGuid)
+			},
+			PackageReferences = {
+				KnownPackages.AndroidXAppCompat,
+			},
+		};
+		proj.SetRuntime (runtime);
+		proj.Sources.Add (new BuildItem.Source ("TestActivity1.cs") {
+			TextContent = () => @"using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -930,9 +930,9 @@ using Android.Util;
 public class TestActivity1 : FragmentActivity {
 }
 				",
-			});
-			proj.Sources.Add (new BuildItem.Source ("TestActivity2.cs") {
-				TextContent = () => @"using System;
+		});
+		proj.Sources.Add (new BuildItem.Source ("TestActivity2.cs") {
+			TextContent = () => @"using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -950,52 +950,52 @@ using Android.Util;
 public class TestActivity2 : FragmentActivity {
 }
 				",
-			});
-			using (var libbuilder = CreateDllBuilder (Path.Combine (path, "Binding1"))) {
-				Assert.IsTrue (libbuilder.Build (lib), "Build should have succeeded.");
-				using (var builder = CreateApkBuilder (Path.Combine (path, "App1"))) {
-					Assert.IsTrue (builder.Build (proj), "Build should have succeeded.");
-					var manifest = builder.Output.GetIntermediaryAsText (Root, "android/AndroidManifest.xml");
-					Assert.IsTrue (manifest.Contains ("com.xamarin.manifest.permission.C2D_MESSAGE"),
-						"${applicationId}.permission.C2D_MESSAGE was not replaced with com.xamarin.manifest.permission.C2D_MESSAGE");
-					Assert.IsTrue (manifest.Contains ("com.xamarin.test.signin.internal.SignInHubActivity"),
-						".signin.internal.SignInHubActivity was not replaced with com.xamarin.test.signin.internal.SignInHubActivity");
-					Assert.IsTrue (manifest.Contains ("com.xamarin.manifest.FacebookInitProvider"),
-						"${applicationId}.FacebookInitProvider was not replaced with com.xamarin.manifest.FacebookInitProvider");
-					Assert.IsTrue (manifest.Contains ("com.xamarin.test.internal.FacebookInitProvider"),
-						".internal.FacebookInitProvider was not replaced with com.xamarin.test.internal.FacebookInitProvider");
-					Assert.AreEqual (manifest.IndexOf ("android.support.VERSION", StringComparison.OrdinalIgnoreCase),
-					                 manifest.LastIndexOf ("android.support.VERSION", StringComparison.OrdinalIgnoreCase), "There should be only one android.support.VERSION meta-data element");
+		});
+		using (var libbuilder = CreateDllBuilder (Path.Combine (path, "Binding1"))) {
+			Assert.IsTrue (libbuilder.Build (lib), "Build should have succeeded.");
+			using (var builder = CreateApkBuilder (Path.Combine (path, "App1"))) {
+				Assert.IsTrue (builder.Build (proj), "Build should have succeeded.");
+				var manifest = builder.Output.GetIntermediaryAsText (Root, "android/AndroidManifest.xml");
+				Assert.IsTrue (manifest.Contains ("com.xamarin.manifest.permission.C2D_MESSAGE"),
+					"${applicationId}.permission.C2D_MESSAGE was not replaced with com.xamarin.manifest.permission.C2D_MESSAGE");
+				Assert.IsTrue (manifest.Contains ("com.xamarin.test.signin.internal.SignInHubActivity"),
+					".signin.internal.SignInHubActivity was not replaced with com.xamarin.test.signin.internal.SignInHubActivity");
+				Assert.IsTrue (manifest.Contains ("com.xamarin.manifest.FacebookInitProvider"),
+					"${applicationId}.FacebookInitProvider was not replaced with com.xamarin.manifest.FacebookInitProvider");
+				Assert.IsTrue (manifest.Contains ("com.xamarin.test.internal.FacebookInitProvider"),
+					".internal.FacebookInitProvider was not replaced with com.xamarin.test.internal.FacebookInitProvider");
+				Assert.AreEqual (manifest.IndexOf ("android.support.VERSION", StringComparison.OrdinalIgnoreCase),
+				                 manifest.LastIndexOf ("android.support.VERSION", StringComparison.OrdinalIgnoreCase), "There should be only one android.support.VERSION meta-data element");
 
-					var doc = XDocument.Parse (manifest);
-					var ns = XNamespace.Get ("http://schemas.android.com/apk/res/android");
+				var doc = XDocument.Parse (manifest);
+				var ns = XNamespace.Get ("http://schemas.android.com/apk/res/android");
 
-					var activities = doc.Element ("manifest")?.Element ("application")?.Elements ("activity");
-					var e = activities.FirstOrDefault (x => x.Attribute (ns.GetName ("label"))?.Value == "TestActivity2");
-					Assert.IsNotNull (e, "Manifest should contain an activity for TestActivity2");
-					Assert.IsNotNull (e.Element ("intent-filter"), "TestActivity2 should have an intent-filter");
-					Assert.IsNotNull (e.Element ("intent-filter").Element ("action"), "TestActivity2 should have an intent-filter/action");
-				}
+				var activities = doc.Element ("manifest")?.Element ("application")?.Elements ("activity");
+				var e = activities.FirstOrDefault (x => x.Attribute (ns.GetName ("label"))?.Value == "TestActivity2");
+				Assert.IsNotNull (e, "Manifest should contain an activity for TestActivity2");
+				Assert.IsNotNull (e.Element ("intent-filter"), "TestActivity2 should have an intent-filter");
+				Assert.IsNotNull (e.Element ("intent-filter").Element ("action"), "TestActivity2 should have an intent-filter/action");
 			}
 		}
+	}
 
-		[Test]
-		public void AllActivityAttributeProperties ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
-		{
-			bool isRelease = runtime == AndroidRuntime.NativeAOT;
-			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
-				return;
-			}
-			var proj = new XamarinAndroidApplicationProject {
-				IsRelease = isRelease,
-			};
-			proj.SetRuntime (runtime);
+	[Test]
+	public void AllActivityAttributeProperties ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
+	{
+		bool isRelease = runtime == AndroidRuntime.NativeAOT;
+		if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+			return;
+		}
+		var proj = new XamarinAndroidApplicationProject {
+			IsRelease = isRelease,
+		};
+		proj.SetRuntime (runtime);
 
-			string expectedOutput =
-				$"android:name=\"com.contoso.TestActivity\" android:allowEmbedded=\"true\" android:allowTaskReparenting=\"true\" android:alwaysRetainTaskState=\"true\" android:autoRemoveFromRecents=\"true\" android:banner=\"@drawable/icon\" android:clearTaskOnLaunch=\"true\" android:colorMode=\"hdr\" android:configChanges=\"mcc\" android:description=\"@string/app_name\" android:directBootAware=\"true\" android:documentLaunchMode=\"never\" android:enableVrMode=\"foo\" android:enabled=\"true\" android:excludeFromRecents=\"true\" android:exported=\"true\" android:finishOnCloseSystemDialogs=\"true\" android:finishOnTaskLaunch=\"true\" android:hardwareAccelerated=\"true\" android:icon=\"@drawable/icon\" android:immersive=\"true\" android:label=\"TestActivity\" android:launchMode=\"singleTop\" android:lockTaskMode=\"normal\" android:logo=\"@drawable/icon\" android:maxAspectRatio=\"1.2\" android:maxRecents=\"1\" android:multiprocess=\"true\" android:noHistory=\"true\" android:parentActivityName=\"{proj.PackageName}.MainActivity\" android:permission=\"com.contoso.permission.TEST_ACTIVITY\" android:persistableMode=\"persistNever\" android:process=\"com.contoso.process.testactivity_process\" android:recreateOnConfigChanges=\"mcc\" android:relinquishTaskIdentity=\"true\" android:resizeableActivity=\"true\" android:resumeWhilePausing=\"true\" android:rotationAnimation=\"crossfade\" android:roundIcon=\"@drawable/icon\" android:screenOrientation=\"portrait\" android:showForAllUsers=\"true\" android:showOnLockScreen=\"true\" android:showWhenLocked=\"true\" android:singleUser=\"true\" android:stateNotNeeded=\"true\" android:supportsPictureInPicture=\"true\" android:taskAffinity=\"com.contoso\" android:theme=\"@android:style/Theme.Light\" android:turnScreenOn=\"true\" android:uiOptions=\"splitActionBarWhenNarrow\" android:visibleToInstantApps=\"true\" android:windowSoftInputMode=\"stateUnchanged|adjustUnspecified\"";
+		string expectedOutput =
+			$"android:name=\"com.contoso.TestActivity\" android:allowEmbedded=\"true\" android:allowTaskReparenting=\"true\" android:alwaysRetainTaskState=\"true\" android:autoRemoveFromRecents=\"true\" android:banner=\"@drawable/icon\" android:clearTaskOnLaunch=\"true\" android:colorMode=\"hdr\" android:configChanges=\"mcc\" android:description=\"@string/app_name\" android:directBootAware=\"true\" android:documentLaunchMode=\"never\" android:enableVrMode=\"foo\" android:enabled=\"true\" android:excludeFromRecents=\"true\" android:exported=\"true\" android:finishOnCloseSystemDialogs=\"true\" android:finishOnTaskLaunch=\"true\" android:hardwareAccelerated=\"true\" android:icon=\"@drawable/icon\" android:immersive=\"true\" android:label=\"TestActivity\" android:launchMode=\"singleTop\" android:lockTaskMode=\"normal\" android:logo=\"@drawable/icon\" android:maxAspectRatio=\"1.2\" android:maxRecents=\"1\" android:multiprocess=\"true\" android:noHistory=\"true\" android:parentActivityName=\"{proj.PackageName}.MainActivity\" android:permission=\"com.contoso.permission.TEST_ACTIVITY\" android:persistableMode=\"persistNever\" android:process=\"com.contoso.process.testactivity_process\" android:recreateOnConfigChanges=\"mcc\" android:relinquishTaskIdentity=\"true\" android:resizeableActivity=\"true\" android:resumeWhilePausing=\"true\" android:rotationAnimation=\"crossfade\" android:roundIcon=\"@drawable/icon\" android:screenOrientation=\"portrait\" android:showForAllUsers=\"true\" android:showOnLockScreen=\"true\" android:showWhenLocked=\"true\" android:singleUser=\"true\" android:stateNotNeeded=\"true\" android:supportsPictureInPicture=\"true\" android:taskAffinity=\"com.contoso\" android:theme=\"@android:style/Theme.Light\" android:turnScreenOn=\"true\" android:uiOptions=\"splitActionBarWhenNarrow\" android:visibleToInstantApps=\"true\" android:windowSoftInputMode=\"stateUnchanged|adjustUnspecified\"";
 
-			proj.Sources.Add (new BuildItem.Source ("TestActivity.cs") {
-				TextContent = () => @"using Android.App;
+		proj.Sources.Add (new BuildItem.Source ("TestActivity.cs") {
+			TextContent = () => @"using Android.App;
 using Android.Content.PM;
 using Android.Views;
 [Activity (
@@ -1052,53 +1052,53 @@ using Android.Views;
 	VisibleToInstantApps       = true,
 	WindowSoftInputMode        = Android.Views.SoftInput.StateUnchanged)]
 class TestActivity : Activity { }"
+		});
+
+		using (ProjectBuilder builder = CreateDllBuilder ()) {
+			Assert.IsTrue (builder.Build (proj), "Build should have succeeded");
+
+			string manifest = builder.Output.GetIntermediaryAsText (Path.Combine ("android", "AndroidManifest.xml"));
+			var doc = XDocument.Parse (manifest);
+			var ns = XNamespace.Get ("http://schemas.android.com/apk/res/android");
+			IEnumerable<XElement> activities = doc.Element ("manifest")?.Element ("application")?.Elements ("activity");
+			XElement e = activities.FirstOrDefault (x => x.Attribute (ns.GetName ("label"))?.Value == "TestActivity");
+			Assert.IsNotNull (e, "Manifest should contain an activity labeled TestActivity");
+			Assert.AreEqual (expectedOutput, string.Join (" ", e.Attributes ()));
+		}
+	}
+
+	static IEnumerable<object[]> Get_AllForegroundServiceTypes_Data ()
+	{
+		var ret = new List<object[]> ();
+
+		AddTestData ("Android.Content.PM.ForegroundService.TypeSpecialUse", "specialUse", AndroidRuntime.CoreCLR);
+		AddTestData ("Android.Content.PM.ForegroundService.TypeConnectedDevice", "connectedDevice", AndroidRuntime.CoreCLR);
+		AddTestData ("Android.Content.PM.ForegroundService.TypeCamera|Android.Content.PM.ForegroundService.TypeMicrophone", "camera|microphone", AndroidRuntime.CoreCLR);
+
+		return ret;
+
+		void AddTestData (string serviceType, string expected, AndroidRuntime runtime)
+		{
+			ret.Add (new object[] {
+				serviceType,
+				expected,
+				runtime,
 			});
-
-			using (ProjectBuilder builder = CreateDllBuilder ()) {
-				Assert.IsTrue (builder.Build (proj), "Build should have succeeded");
-
-				string manifest = builder.Output.GetIntermediaryAsText (Path.Combine ("android", "AndroidManifest.xml"));
-				var doc = XDocument.Parse (manifest);
-				var ns = XNamespace.Get ("http://schemas.android.com/apk/res/android");
-				IEnumerable<XElement> activities = doc.Element ("manifest")?.Element ("application")?.Elements ("activity");
-				XElement e = activities.FirstOrDefault (x => x.Attribute (ns.GetName ("label"))?.Value == "TestActivity");
-				Assert.IsNotNull (e, "Manifest should contain an activity labeled TestActivity");
-				Assert.AreEqual (expectedOutput, string.Join (" ", e.Attributes ()));
-			}
 		}
+	}
 
-		static IEnumerable<object[]> Get_AllForegroundServiceTypes_Data ()
-		{
-			var ret = new List<object[]> ();
-
-			AddTestData ("Android.Content.PM.ForegroundService.TypeSpecialUse", "specialUse", AndroidRuntime.CoreCLR);
-			AddTestData ("Android.Content.PM.ForegroundService.TypeConnectedDevice", "connectedDevice", AndroidRuntime.CoreCLR);
-			AddTestData ("Android.Content.PM.ForegroundService.TypeCamera|Android.Content.PM.ForegroundService.TypeMicrophone", "camera|microphone", AndroidRuntime.CoreCLR);
-
-			return ret;
-
-			void AddTestData (string serviceType, string expected, AndroidRuntime runtime)
-			{
-				ret.Add (new object[] {
-					serviceType,
-					expected,
-					runtime,
-				});
-			}
+	[Test]
+	[TestCaseSource (nameof (Get_AllForegroundServiceTypes_Data))]
+	public void AllForegroundServiceTypes (string serviceType, string expected, AndroidRuntime runtime)
+	{
+		bool isRelease = runtime == AndroidRuntime.NativeAOT;
+		if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+			return;
 		}
-
-		[Test]
-		[TestCaseSource (nameof (Get_AllForegroundServiceTypes_Data))]
-		public void AllForegroundServiceTypes (string serviceType, string expected, AndroidRuntime runtime)
-		{
-			bool isRelease = runtime == AndroidRuntime.NativeAOT;
-			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
-				return;
-			}
-			var proj = new XamarinAndroidApplicationProject {
-				IsRelease = isRelease,
-			};
-			proj.SetRuntime (runtime);
+		var proj = new XamarinAndroidApplicationProject {
+			IsRelease = isRelease,
+		};
+		proj.SetRuntime (runtime);
 
  			proj.Sources.Add (new BuildItem.Source ("TestActivity.cs") {
  				TextContent = () => $@"using Android.App;
@@ -1107,31 +1107,31 @@ class TestActivity : Activity { }"
  [Service (ForegroundServiceType      = {serviceType})]
  class TestService : Service {{ public override Android.OS.IBinder OnBind (Android.Content.Intent intent) {{ return null; }} }}"
  			});
-			using (ProjectBuilder builder = CreateApkBuilder ()) {
+		using (ProjectBuilder builder = CreateApkBuilder ()) {
  				Assert.IsTrue (builder.Build (proj), "Build should have succeeded");
-				string manifest = builder.Output.GetIntermediaryAsText (Path.Combine ("android", "AndroidManifest.xml"));
+			string manifest = builder.Output.GetIntermediaryAsText (Path.Combine ("android", "AndroidManifest.xml"));
  				var doc = XDocument.Parse (manifest);
  				var ns = XNamespace.Get ("http://schemas.android.com/apk/res/android");
  				IEnumerable<XElement> services = doc.Element ("manifest")?.Element ("application")?.Elements ("service");
  				XElement e = services.FirstOrDefault (x => x.Attribute (ns.GetName ("foregroundServiceType"))?.Value == expected);
  				Assert.IsNotNull (e, $"Manifest should contain an service with a foregroundServiceType of {expected}");
-			}
+		}
+	}
+
+	[Test]
+	public void AllServiceAttributeProperties ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
+ 		{
+		bool isRelease = runtime == AndroidRuntime.NativeAOT;
+		if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+			return;
 		}
 
-		[Test]
-		public void AllServiceAttributeProperties ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
- 		{
-			bool isRelease = runtime == AndroidRuntime.NativeAOT;
-			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
-				return;
-			}
+		string expectedOutput = "android:name=\"com.contoso.TestActivity\" android:directBootAware=\"true\" android:enabled=\"true\" android:exported=\"true\" android:foregroundServiceType=\"connectedDevice\" android:icon=\"@drawable/icon\" android:isolatedProcess=\"true\" android:label=\"TestActivity\" android:permission=\"com.contoso.permission.TEST_ACTIVITY\" android:process=\"com.contoso.process.testactivity_process\" android:roundIcon=\"@drawable/icon\"";
 
-			string expectedOutput = "android:name=\"com.contoso.TestActivity\" android:directBootAware=\"true\" android:enabled=\"true\" android:exported=\"true\" android:foregroundServiceType=\"connectedDevice\" android:icon=\"@drawable/icon\" android:isolatedProcess=\"true\" android:label=\"TestActivity\" android:permission=\"com.contoso.permission.TEST_ACTIVITY\" android:process=\"com.contoso.process.testactivity_process\" android:roundIcon=\"@drawable/icon\"";
-
-			var proj = new XamarinAndroidApplicationProject {
-				IsRelease = isRelease,
-			};
-			proj.SetRuntime (runtime);
+		var proj = new XamarinAndroidApplicationProject {
+			IsRelease = isRelease,
+		};
+		proj.SetRuntime (runtime);
 
  			proj.Sources.Add (new BuildItem.Source ("TestActivity.cs") {
  				TextContent = () => @"using Android.App;
@@ -1165,382 +1165,381 @@ class TestActivity : Activity { }"
  			}
  		}
 
-		/// <summary>
-		/// Based on missing [Service(Exported=true)] here:
-		/// https://github.com/microsoft/dotnet-podcasts/blob/09b733b406ecb128f026645ef4c7e69c773f8a4b/src/Mobile/Platforms/Android/Services/MediaPlayerService.cs#L15-L16
-		/// </summary>
-		[Test]
-		public void ExportedErrorMessage ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
-		{
-			bool isRelease = runtime == AndroidRuntime.NativeAOT;
-			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
-				return;
-			}
-			var proj = new XamarinAndroidApplicationProject {
-				IsRelease = isRelease,
-				ManifestMerger = "manifestmerger.jar"
-			};
-			proj.SetRuntime (runtime);
+	/// <summary>
+	/// Based on missing [Service(Exported=true)] here:
+	/// https://github.com/microsoft/dotnet-podcasts/blob/09b733b406ecb128f026645ef4c7e69c773f8a4b/src/Mobile/Platforms/Android/Services/MediaPlayerService.cs#L15-L16
+	/// </summary>
+	[Test]
+	public void ExportedErrorMessage ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
+	{
+		bool isRelease = runtime == AndroidRuntime.NativeAOT;
+		if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+			return;
+		}
+		var proj = new XamarinAndroidApplicationProject {
+			IsRelease = isRelease,
+			ManifestMerger = "manifestmerger.jar"
+		};
+		proj.SetRuntime (runtime);
 
-			proj.Sources.Add (new BuildItem.Source ("TestActivity.cs") {
-				TextContent = () => $@"using Android.App;
+		proj.Sources.Add (new BuildItem.Source ("TestActivity.cs") {
+			TextContent = () => $@"using Android.App;
  using Android.Content.PM;
  using Android.Views;
  [Service]
 [IntentFilter(new[] {{ ""{proj.PackageName}.PLAY"" }})]
  class TestService : Service {{ public override Android.OS.IBinder OnBind (Android.Content.Intent intent) {{ return null; }} }}"
+		});
+
+		using var b = CreateDllBuilder ();
+		b.ThrowOnBuildFailure = false;
+		Assert.IsFalse (b.Build (proj), "Build should have failed");
+		Assert.IsTrue (b.LastBuildOutput.ContainsText ("error AMM0000:"), "Should receive AMM0000 error");
+		Assert.IsTrue (b.LastBuildOutput.ContainsText ("Apps targeting Android 12 and higher are required to specify an explicit value for `android:exported`"), "Should receive AMM0000 error");
+	}
+
+	static object [] SupportedOSTestSources = new object [] {
+		new object[] {
+			/* minSdkVersion */		"",
+			/* removeUsesSdk */		true,
+		},
+		new object[] {
+			/* minSdkVersion */		"",
+			/* removeUsesSdk */		false,
+		},
+		new object[] {
+			/* minSdkVersion */		"24.0",
+			/* removeUsesSdk */		true,
+		},
+		new object[] {
+			/* minSdkVersion */		"31",
+			/* removeUsesSdk */		false,
+		},
+		new object[] {
+			/* minSdkVersion */		$"{XABuildConfig.AndroidDefaultTargetDotnetApiLevel}.0",
+			/* removeUsesSdk */		false,
+		},
+	};
+
+	static IEnumerable<object[]> Get_SupportedOSTestSources_Data ()
+	{
+		var ret = new List<object[]> ();
+
+		foreach (AndroidRuntime runtime in new[] { AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT }) {
+			AddTestData (
+				minSdkVersion: "",
+				removeUsesSdkElement: true,
+				runtime: runtime
+			);
+
+			// Run fewer NativeAOT cases to reduce CI time.
+			if (runtime == AndroidRuntime.NativeAOT) {
+				continue;
+			}
+
+			AddTestData (
+				minSdkVersion: "",
+				removeUsesSdkElement: false,
+				runtime: runtime
+			);
+
+			AddTestData (
+				minSdkVersion: "24.0",
+				removeUsesSdkElement: true,
+				runtime: runtime
+			);
+
+			AddTestData (
+				minSdkVersion: "31",
+				removeUsesSdkElement: false,
+				runtime: runtime
+			);
+
+			AddTestData (
+				minSdkVersion: $"{XABuildConfig.AndroidLatestStableApiLevel}",
+				removeUsesSdkElement: false,
+				runtime: runtime
+			);
+		}
+
+		return ret;
+
+		void AddTestData (string minSdkVersion, bool removeUsesSdkElement, AndroidRuntime runtime)
+		{
+			ret.Add (new object[] {
+				minSdkVersion,
+				removeUsesSdkElement,
+				runtime,
 			});
-
-			using var b = CreateDllBuilder ();
-			b.ThrowOnBuildFailure = false;
-			Assert.IsFalse (b.Build (proj), "Build should have failed");
-			Assert.IsTrue (b.LastBuildOutput.ContainsText ("error AMM0000:"), "Should receive AMM0000 error");
-			Assert.IsTrue (b.LastBuildOutput.ContainsText ("Apps targeting Android 12 and higher are required to specify an explicit value for `android:exported`"), "Should receive AMM0000 error");
 		}
+	}
 
-		static object [] SupportedOSTestSources = new object [] {
-			new object[] {
-				/* minSdkVersion */		"",
-				/* removeUsesSdk */		true,
-			},
-			new object[] {
-				/* minSdkVersion */		"",
-				/* removeUsesSdk */		false,
-			},
-			new object[] {
-				/* minSdkVersion */		"24.0",
-				/* removeUsesSdk */		true,
-			},
-			new object[] {
-				/* minSdkVersion */		"31",
-				/* removeUsesSdk */		false,
-			},
-			new object[] {
-				/* minSdkVersion */		$"{XABuildConfig.AndroidDefaultTargetDotnetApiLevel}.0",
-				/* removeUsesSdk */		false,
-			},
+	[Test]
+	[TestCaseSource(nameof (Get_SupportedOSTestSources_Data))]
+	public void SupportedOSPlatformVersion (string minSdkVersion, bool removeUsesSdkElement, AndroidRuntime runtime)
+	{
+		bool isRelease = runtime == AndroidRuntime.NativeAOT;
+		if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+			return;
+		}
+		var proj = new XamarinAndroidApplicationProject {
+			IsRelease = isRelease,
+			EnableDefaultItems = true,
+			SupportedOSPlatformVersion = minSdkVersion,
 		};
+		proj.SetRuntime (runtime);
 
-		static IEnumerable<object[]> Get_SupportedOSTestSources_Data ()
-		{
-			var ret = new List<object[]> ();
-
-			foreach (AndroidRuntime runtime in new[] { AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT }) {
-				AddTestData (
-					minSdkVersion: "",
-					removeUsesSdkElement: true,
-					runtime: runtime
-				);
-
-				// Run fewer NativeAOT cases to reduce CI time.
-				if (runtime == AndroidRuntime.NativeAOT) {
-					continue;
-				}
-
-				AddTestData (
-					minSdkVersion: "",
-					removeUsesSdkElement: false,
-					runtime: runtime
-				);
-
-				AddTestData (
-					minSdkVersion: "24.0",
-					removeUsesSdkElement: true,
-					runtime: runtime
-				);
-
-				AddTestData (
-					minSdkVersion: "31",
-					removeUsesSdkElement: false,
-					runtime: runtime
-				);
-
-				AddTestData (
-					minSdkVersion: $"{XABuildConfig.AndroidLatestStableApiLevel}",
-					removeUsesSdkElement: false,
-					runtime: runtime
-				);
-			}
-
-			return ret;
-
-			void AddTestData (string minSdkVersion, bool removeUsesSdkElement, AndroidRuntime runtime)
-			{
-				ret.Add (new object[] {
-					minSdkVersion,
-					removeUsesSdkElement,
-					runtime,
-				});
-			}
+		// An empty SupportedOSPlatformVersion property will default to AndroidMinimumDotNetApiLevel
+		if (string.IsNullOrEmpty (minSdkVersion)) {
+			minSdkVersion = XABuildConfig.AndroidMinimumDotNetApiLevel.ToString ();
 		}
 
-		[Test]
-		[TestCaseSource(nameof (Get_SupportedOSTestSources_Data))]
-		public void SupportedOSPlatformVersion (string minSdkVersion, bool removeUsesSdkElement, AndroidRuntime runtime)
-		{
-			bool isRelease = runtime == AndroidRuntime.NativeAOT;
-			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
-				return;
-			}
-			var proj = new XamarinAndroidApplicationProject {
-				IsRelease = isRelease,
-				EnableDefaultItems = true,
-				SupportedOSPlatformVersion = minSdkVersion,
-			};
-			proj.SetRuntime (runtime);
-
-			// An empty SupportedOSPlatformVersion property will default to AndroidMinimumDotNetApiLevel
-			if (string.IsNullOrEmpty (minSdkVersion)) {
-				minSdkVersion = XABuildConfig.AndroidMinimumDotNetApiLevel.ToString ();
-			}
-
-			if (removeUsesSdkElement) {
-				proj.AndroidManifest = $@"<?xml version=""1.0"" encoding=""utf-8""?>
+		if (removeUsesSdkElement) {
+			proj.AndroidManifest = $@"<?xml version=""1.0"" encoding=""utf-8""?>
 <manifest xmlns:android=""http://schemas.android.com/apk/res/android"" android:versionCode=""1"" android:versionName=""1.0"" package=""{proj.PackageName}"">
 	<application android:label=""{proj.ProjectName}"">
 	</application>
 </manifest>";
-			}
+		}
 
-			// Call AccessibilityTraversalAfter from API level 22
-			// https://developer.android.com/reference/android/view/View#getAccessibilityTraversalAfter()
-			proj.MainActivity = proj.DefaultMainActivity.Replace ("button!.Click", "button!.AccessibilityTraversalAfter.ToString ();\nbutton!.Click");
+		// Call AccessibilityTraversalAfter from API level 22
+		// https://developer.android.com/reference/android/view/View#getAccessibilityTraversalAfter()
+		proj.MainActivity = proj.DefaultMainActivity.Replace ("button!.Click", "button!.AccessibilityTraversalAfter.ToString ();\nbutton!.Click");
 
-			using var builder = CreateApkBuilder ();
-			Assert.IsTrue (builder.Build (proj), "`dotnet build` should succeed");
+		using var builder = CreateApkBuilder ();
+		Assert.IsTrue (builder.Build (proj), "`dotnet build` should succeed");
 
-			var minSdkVersionInt = MonoAndroidHelper.ConvertSupportedOSPlatformVersionToApiLevel (minSdkVersion);
-			if (minSdkVersionInt < 22) {
-				StringAssertEx.Contains ("warning CA1416", builder.LastBuildOutput, "Should get warning about Android 22 API");
+		var minSdkVersionInt = MonoAndroidHelper.ConvertSupportedOSPlatformVersionToApiLevel (minSdkVersion);
+		if (minSdkVersionInt < 22) {
+			StringAssertEx.Contains ("warning CA1416", builder.LastBuildOutput, "Should get warning about Android 22 API");
+		} else {
+			if (runtime == AndroidRuntime.NativeAOT) {
+				// Up to 2 of: warning IL3053: Assembly 'Mono.Android' produced AOT analysis warnings.
+				// Historically, IL2104 (Mono.Android produced trim warnings) was also reported.
+				builder.AssertHasAtMostWarnings (2);
 			} else {
-				if (runtime == AndroidRuntime.NativeAOT) {
-					// Up to 2 of: warning IL3053: Assembly 'Mono.Android' produced AOT analysis warnings.
-					// Historically, IL2104 (Mono.Android produced trim warnings) was also reported.
-					builder.AssertHasAtMostWarnings (2);
-				} else {
-					builder.AssertHasNoWarnings ();
-				}
+				builder.AssertHasNoWarnings ();
 			}
-
-			var manifestPath = Path.Combine (Root, builder.ProjectDirectory, proj.IntermediateOutputPath, "android", "AndroidManifest.xml");
-			FileAssert.Exists (manifestPath);
-			var manifest = XDocument.Load (manifestPath);
-			XNamespace ns = "http://schemas.android.com/apk/res/android";
-			Assert.AreEqual (minSdkVersionInt.ToString (), manifest.Root.Element ("uses-sdk").Attribute (ns + "minSdkVersion").Value);
 		}
 
-		static object [] SupportedOSErrorsTestSources = new object [] {
-			new object[] {
-				/* minSdkVersion       */		"",
-				/* supportedOSPlatVers */		"",
-			},
-			new object[] {
-				/* minSdkVersion       */		"19",
-				/* supportedOSPlatVers */		"",
-			},
-			new object[] {
-				/* minSdkVersion       */		$"{XABuildConfig.AndroidDefaultTargetDotnetApiLevel}",
-				/* supportedOSPlatVers */		"",
-			},
-			new object[] {
-				/* minSdkVersion       */		"",
-				/* supportedOSPlatVers */		"19.0",
-			},
-			new object[] {
-				/* minSdkVersion       */		"19",
-				/* supportedOSPlatVers */		"19",
-			},
-			new object[] {
-				/* minSdkVersion       */		"29",
-				/* supportedOSPlatVers */		$"{XABuildConfig.AndroidDefaultTargetDotnetApiLevel}.0",
-			},
+		var manifestPath = Path.Combine (Root, builder.ProjectDirectory, proj.IntermediateOutputPath, "android", "AndroidManifest.xml");
+		FileAssert.Exists (manifestPath);
+		var manifest = XDocument.Load (manifestPath);
+		XNamespace ns = "http://schemas.android.com/apk/res/android";
+		Assert.AreEqual (minSdkVersionInt.ToString (), manifest.Root.Element ("uses-sdk").Attribute (ns + "minSdkVersion").Value);
+	}
+
+	static object [] SupportedOSErrorsTestSources = new object [] {
+		new object[] {
+			/* minSdkVersion       */		"",
+			/* supportedOSPlatVers */		"",
+		},
+		new object[] {
+			/* minSdkVersion       */		"19",
+			/* supportedOSPlatVers */		"",
+		},
+		new object[] {
+			/* minSdkVersion       */		$"{XABuildConfig.AndroidDefaultTargetDotnetApiLevel}",
+			/* supportedOSPlatVers */		"",
+		},
+		new object[] {
+			/* minSdkVersion       */		"",
+			/* supportedOSPlatVers */		"19.0",
+		},
+		new object[] {
+			/* minSdkVersion       */		"19",
+			/* supportedOSPlatVers */		"19",
+		},
+		new object[] {
+			/* minSdkVersion       */		"29",
+			/* supportedOSPlatVers */		$"{XABuildConfig.AndroidDefaultTargetDotnetApiLevel}.0",
+		},
+	};
+
+	static IEnumerable<object[]> Get_SupportedOSErrorsTestSources_Data ()
+	{
+		var ret = new List<object[]> ();
+
+		foreach (AndroidRuntime runtime in new[] { AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT }) {
+			AddTestData (
+				minSdkVersion: "",
+				supportedOSPlatVers: "",
+				runtime: runtime
+			);
+
+			AddTestData (
+				minSdkVersion: "19",
+				supportedOSPlatVers: "",
+				runtime: runtime
+			);
+
+			AddTestData (
+				minSdkVersion: $"{XABuildConfig.AndroidDefaultTargetDotnetApiLevel}",
+				supportedOSPlatVers: "",
+				runtime: runtime
+			);
+
+			AddTestData (
+				minSdkVersion: "",
+				supportedOSPlatVers: "19.0",
+				runtime: runtime
+			);
+
+			AddTestData (
+				minSdkVersion: "19",
+				supportedOSPlatVers: "19",
+				runtime: runtime
+			);
+
+			AddTestData (
+				minSdkVersion: "29",
+				supportedOSPlatVers: $"{XABuildConfig.AndroidDefaultTargetDotnetApiLevel}.0",
+				runtime: runtime
+			);
+		}
+
+		return ret;
+
+		void AddTestData (string minSdkVersion, string supportedOSPlatVers, AndroidRuntime runtime)
+		{
+			ret.Add (new object[] {
+				minSdkVersion,
+				supportedOSPlatVers,
+				runtime,
+			});
+		}
+	}
+
+	[Test]
+	[TestCaseSource(nameof (Get_SupportedOSErrorsTestSources_Data))]
+	public void SupportedOSPlatformVersionErrors (string minSdkVersion, string supportedOSPlatVers, AndroidRuntime runtime)
+	{
+		bool isRelease = runtime == AndroidRuntime.NativeAOT;
+		if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+			return;
+		}
+
+		var proj = new XamarinAndroidApplicationProject {
+			IsRelease = isRelease,
+			EnableDefaultItems = true,
+			MinSdkVersion = minSdkVersion,
+			SupportedOSPlatformVersion = supportedOSPlatVers,
 		};
+		proj.SetRuntime (runtime);
 
-		static IEnumerable<object[]> Get_SupportedOSErrorsTestSources_Data ()
-		{
-			var ret = new List<object[]> ();
+		// Mismatch error can only occur when minSdkVersion is set in the manifest
+		bool wasMinSdkVersionEmpty = false;
 
-			foreach (AndroidRuntime runtime in new[] { AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT }) {
-				AddTestData (
-					minSdkVersion: "",
-					supportedOSPlatVers: "",
-					runtime: runtime
-				);
+		// Empty values will default to AndroidMinimumDotNetApiLevel
+		var minDotnetApiLevel = XABuildConfig.AndroidMinimumDotNetApiLevel;
+		if (string.IsNullOrEmpty (minSdkVersion)) {
+			wasMinSdkVersionEmpty = true;
+			minSdkVersion = minDotnetApiLevel.ToString ();
+		}
+		if (string.IsNullOrEmpty (supportedOSPlatVers)) {
+			supportedOSPlatVers = minDotnetApiLevel.ToString ();
+		}
+		var minSdkVersionInt = MonoAndroidHelper.ConvertSupportedOSPlatformVersionToApiLevel (minSdkVersion);
+		var supportedOSPlatVersInt = MonoAndroidHelper.ConvertSupportedOSPlatformVersionToApiLevel (supportedOSPlatVers);
+		var builder = CreateApkBuilder ();
+		builder.ThrowOnBuildFailure = false;
+		var buildResult = builder.Build (proj);
 
-				AddTestData (
-					minSdkVersion: "19",
-					supportedOSPlatVers: "",
-					runtime: runtime
-				);
-
-				AddTestData (
-					minSdkVersion: $"{XABuildConfig.AndroidDefaultTargetDotnetApiLevel}",
-					supportedOSPlatVers: "",
-					runtime: runtime
-				);
-
-				AddTestData (
-					minSdkVersion: "",
-					supportedOSPlatVers: "19.0",
-					runtime: runtime
-				);
-
-				AddTestData (
-					minSdkVersion: "19",
-					supportedOSPlatVers: "19",
-					runtime: runtime
-				);
-
-				AddTestData (
-					minSdkVersion: "29",
-					supportedOSPlatVers: $"{XABuildConfig.AndroidDefaultTargetDotnetApiLevel}.0",
-					runtime: runtime
-				);
-			}
-
-			return ret;
-
-			void AddTestData (string minSdkVersion, string supportedOSPlatVers, AndroidRuntime runtime)
-			{
-				ret.Add (new object[] {
-					minSdkVersion,
-					supportedOSPlatVers,
-					runtime,
-				});
-			}
+		if (supportedOSPlatVersInt < minDotnetApiLevel.Major) {
+			Assert.IsFalse (buildResult, "SupportedOSPlatformVersion version too low, build should fail.");
+			StringAssertEx.Contains ("error XA4216", builder.LastBuildOutput, "Should get error XA4216.");
+			StringAssertEx.Contains ("Please increase the $(SupportedOSPlatformVersion) property value in your project file",
+				builder.LastBuildOutput, "Should get error about SupportedOSPlatformVersion being too low.");
 		}
 
-		[Test]
-		[TestCaseSource(nameof (Get_SupportedOSErrorsTestSources_Data))]
-		public void SupportedOSPlatformVersionErrors (string minSdkVersion, string supportedOSPlatVers, AndroidRuntime runtime)
-		{
-			bool isRelease = runtime == AndroidRuntime.NativeAOT;
-			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
-				return;
-			}
-
-			var proj = new XamarinAndroidApplicationProject {
-				IsRelease = isRelease,
-				EnableDefaultItems = true,
-				MinSdkVersion = minSdkVersion,
-				SupportedOSPlatformVersion = supportedOSPlatVers,
-			};
-			proj.SetRuntime (runtime);
-
-			// Mismatch error can only occur when minSdkVersion is set in the manifest
-			bool wasMinSdkVersionEmpty = false;
-
-			// Empty values will default to AndroidMinimumDotNetApiLevel
-			var minDotnetApiLevel = XABuildConfig.AndroidMinimumDotNetApiLevel;
-			if (string.IsNullOrEmpty (minSdkVersion)) {
-				wasMinSdkVersionEmpty = true;
-				minSdkVersion = minDotnetApiLevel.ToString ();
-			}
-			if (string.IsNullOrEmpty (supportedOSPlatVers)) {
-				supportedOSPlatVers = minDotnetApiLevel.ToString ();
-			}
-			var minSdkVersionInt = MonoAndroidHelper.ConvertSupportedOSPlatformVersionToApiLevel (minSdkVersion);
-			var supportedOSPlatVersInt = MonoAndroidHelper.ConvertSupportedOSPlatformVersionToApiLevel (supportedOSPlatVers);
-			var builder = CreateApkBuilder ();
-			builder.ThrowOnBuildFailure = false;
-			var buildResult = builder.Build (proj);
-
-			if (supportedOSPlatVersInt < minDotnetApiLevel.Major) {
-				Assert.IsFalse (buildResult, "SupportedOSPlatformVersion version too low, build should fail.");
-				StringAssertEx.Contains ("error XA4216", builder.LastBuildOutput, "Should get error XA4216.");
-				StringAssertEx.Contains ("Please increase the $(SupportedOSPlatformVersion) property value in your project file",
-					builder.LastBuildOutput, "Should get error about SupportedOSPlatformVersion being too low.");
-			}
-
-			if (minSdkVersionInt < minDotnetApiLevel.Major) {
-				Assert.IsFalse (buildResult, "minSdkVersion too low, build should fail.");
-				StringAssertEx.Contains ("error XA4216", builder.LastBuildOutput, "Should get error XA4216.");
-				StringAssertEx.Contains ("Please increase (or remove) the //uses-sdk/@android:minSdkVersion value in your AndroidManifest.xml",
-					builder.LastBuildOutput, "Should get error about minSdkVersion being too low.");
-			}
-
-			if (minSdkVersionInt != supportedOSPlatVersInt && !wasMinSdkVersionEmpty) {
-				Assert.IsFalse (buildResult, $"Min version mismatch {minSdkVersionInt} != {supportedOSPlatVersInt}, build should fail.");
-				StringAssertEx.Contains ("error XA1036", builder.LastBuildOutput, "Should get error about min version mismatch.");
-			}
-
-			if (minSdkVersionInt == supportedOSPlatVersInt &&
-					minSdkVersionInt >= minDotnetApiLevel.Major &&
-					supportedOSPlatVersInt >= minDotnetApiLevel.Major) {
-				Assert.IsTrue (buildResult, "compatible min versions, build should succeed");
-			}
+		if (minSdkVersionInt < minDotnetApiLevel.Major) {
+			Assert.IsFalse (buildResult, "minSdkVersion too low, build should fail.");
+			StringAssertEx.Contains ("error XA4216", builder.LastBuildOutput, "Should get error XA4216.");
+			StringAssertEx.Contains ("Please increase (or remove) the //uses-sdk/@android:minSdkVersion value in your AndroidManifest.xml",
+				builder.LastBuildOutput, "Should get error about minSdkVersion being too low.");
 		}
 
-		[Test]
-		public void UsesPermissionFlagsAttribute ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
-		{
-			bool isRelease = runtime == AndroidRuntime.NativeAOT;
-			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
-				return;
-			}
+		if (minSdkVersionInt != supportedOSPlatVersInt && !wasMinSdkVersionEmpty) {
+			Assert.IsFalse (buildResult, $"Min version mismatch {minSdkVersionInt} != {supportedOSPlatVersInt}, build should fail.");
+			StringAssertEx.Contains ("error XA1036", builder.LastBuildOutput, "Should get error about min version mismatch.");
+		}
 
-			var proj = new XamarinAndroidApplicationProject {
-				IsRelease = isRelease,
-			};
-			proj.SetRuntime (runtime);
+		if (minSdkVersionInt == supportedOSPlatVersInt &&
+				minSdkVersionInt >= minDotnetApiLevel.Major &&
+				supportedOSPlatVersInt >= minDotnetApiLevel.Major) {
+			Assert.IsTrue (buildResult, "compatible min versions, build should succeed");
+		}
+	}
 
-			proj.Sources.Add (new BuildItem.Source ("GlobalAssemblyInfo.cs") {
-				TextContent = () => @"using Android.App;
+	[Test]
+	public void UsesPermissionFlagsAttribute ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
+	{
+		bool isRelease = runtime == AndroidRuntime.NativeAOT;
+		if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
+			return;
+		}
+
+		var proj = new XamarinAndroidApplicationProject {
+			IsRelease = isRelease,
+		};
+		proj.SetRuntime (runtime);
+
+		proj.Sources.Add (new BuildItem.Source ("GlobalAssemblyInfo.cs") {
+			TextContent = () => @"using Android.App;
 
 [assembly: UsesPermission (Name = ""android.permission.BLUETOOTH_SCAN"", UsesPermissionFlags = ""neverForLocation"")]"
-			});
+		});
 
-			using (ProjectBuilder builder = CreateDllBuilder ()) {
-				Assert.IsTrue (builder.Build (proj), "Build should have succeeded");
+		using (ProjectBuilder builder = CreateDllBuilder ()) {
+			Assert.IsTrue (builder.Build (proj), "Build should have succeeded");
 
-				string manifest = builder.Output.GetIntermediaryAsText (Path.Combine ("android", "AndroidManifest.xml"));
-				var doc = XDocument.Parse (manifest);
-				var ns = XNamespace.Get ("http://schemas.android.com/apk/res/android");
-				IEnumerable<XElement> usesPermissions = doc.Element ("manifest")?.Elements ("uses-permission");
-				XElement e = usesPermissions?.FirstOrDefault (x => x.Attribute (ns.GetName ("name"))?.Value == "android.permission.BLUETOOTH_SCAN");
-				Assert.IsNotNull (e, "Manifest should contain a uses-permission for android.permission.BLUETOOTH_SCAN");
-				Assert.AreEqual ("neverForLocation", e.Attribute (ns.GetName ("usesPermissionFlags"))?.Value, "uses-permission should have usesPermissionFlags='neverForLocation'");
-			}
+			string manifest = builder.Output.GetIntermediaryAsText (Path.Combine ("android", "AndroidManifest.xml"));
+			var doc = XDocument.Parse (manifest);
+			var ns = XNamespace.Get ("http://schemas.android.com/apk/res/android");
+			IEnumerable<XElement> usesPermissions = doc.Element ("manifest")?.Elements ("uses-permission");
+			XElement e = usesPermissions?.FirstOrDefault (x => x.Attribute (ns.GetName ("name"))?.Value == "android.permission.BLUETOOTH_SCAN");
+			Assert.IsNotNull (e, "Manifest should contain a uses-permission for android.permission.BLUETOOTH_SCAN");
+			Assert.AreEqual ("neverForLocation", e.Attribute (ns.GetName ("usesPermissionFlags"))?.Value, "uses-permission should have usesPermissionFlags='neverForLocation'");
+		}
+	}
+
+	/// <summary>
+	/// Regression test: when AndroidApiLevel is "36.1", the manifest must have targetSdkVersion="36".
+	/// GetIdFromApiLevel(36) can return "36.1" when multiple versions share the same ApiLevel,
+	/// so TargetSdkVersionName must not round-trip through it.
+	/// </summary>
+	[Test]
+	public void TargetSdkVersion_361In_36Out ()
+	{
+		// Manifest generation strips "36.1" to "36" before setting TargetSdkVersion.
+		string targetSdkVersion = "36.1";
+		if (MonoAndroidHelper.TryParseApiLevel (targetSdkVersion, out var version)) {
+			targetSdkVersion = version.Major.ToString ();
 		}
 
-		/// <summary>
-		/// Regression test: when AndroidApiLevel is "36.1", the manifest must have targetSdkVersion="36".
-		/// GetIdFromApiLevel(36) can return "36.1" when multiple versions share the same ApiLevel,
-		/// so TargetSdkVersionName must not round-trip through it.
-		/// </summary>
-		[Test]
-		public void TargetSdkVersion_361In_36Out ()
-		{
-			// Manifest generation strips "36.1" to "36" before setting TargetSdkVersion.
-			string targetSdkVersion = "36.1";
-			if (MonoAndroidHelper.TryParseApiLevel (targetSdkVersion, out var version)) {
-				targetSdkVersion = version.Major.ToString ();
-			}
+		var templateFile = Path.GetTempFileName ();
+		try {
+			File.WriteAllText (templateFile, string.Format (TargetSdkManifest, "36"));
 
-			var templateFile = Path.GetTempFileName ();
-			try {
-				File.WriteAllText (templateFile, string.Format (TargetSdkManifest, "36"));
+			var manifest = new ManifestDocument (templateFile) {
+				PackageName = "com.test.targetsdkversion",
+				TargetSdkVersion = targetSdkVersion,
+				MinSdkVersion = "21",
+			};
 
-				var manifest = new ManifestDocument (templateFile) {
-					PackageName = "com.test.targetsdkversion",
-					TargetSdkVersion = targetSdkVersion,
-					MinSdkVersion = "21",
-				};
+			var sb = new StringWriter ();
+			manifest.Save (null, sb);
 
-				var sb = new StringWriter ();
-				manifest.Save (null, sb);
+			var doc = XDocument.Parse (sb.ToString ());
+			var ns = XNamespace.Get ("http://schemas.android.com/apk/res/android");
+			var usesSdk = doc.Root.Element ("uses-sdk");
+			Assert.IsNotNull (usesSdk, "uses-sdk element should exist");
 
-				var doc = XDocument.Parse (sb.ToString ());
-				var ns = XNamespace.Get ("http://schemas.android.com/apk/res/android");
-				var usesSdk = doc.Root.Element ("uses-sdk");
-				Assert.IsNotNull (usesSdk, "uses-sdk element should exist");
-
-				var targetSdkAttr = usesSdk.Attribute (ns + "targetSdkVersion");
-				Assert.IsNotNull (targetSdkAttr, "targetSdkVersion attribute should exist");
-				Assert.AreEqual ("36", targetSdkAttr.Value, "targetSdkVersion should be '36', not '36.1'");
-			} finally {
-				File.Delete (templateFile);
-			}
+			var targetSdkAttr = usesSdk.Attribute (ns + "targetSdkVersion");
+			Assert.IsNotNull (targetSdkAttr, "targetSdkVersion attribute should exist");
+			Assert.AreEqual ("36", targetSdkAttr.Value, "targetSdkVersion should be '36', not '36.1'");
+		} finally {
+			File.Delete (templateFile);
 		}
 	}
 }

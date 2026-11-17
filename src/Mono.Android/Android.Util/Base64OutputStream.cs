@@ -1,4 +1,4 @@
-namespace Android.Util {
+namespace Android.Util; 
 
 	partial class Base64OutputStream {
 
@@ -9,4 +9,3 @@ namespace Android.Util {
 		}
 #endif
 	}
-}

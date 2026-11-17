@@ -6,38 +6,37 @@ using System.Threading.Tasks;
 using MonoDroid.Generation;
 using Xamarin.SourceWriter;
 
-namespace generator.SourceWriters
+namespace generator.SourceWriters;
+
+public class BoundMethodExtensionStringOverload : MethodWriter
 {
-	public class BoundMethodExtensionStringOverload : MethodWriter
+	readonly Method method;
+	readonly CodeGenerationOptions opt;
+	readonly string self_type;
+
+	public BoundMethodExtensionStringOverload (Method method, CodeGenerationOptions opt, string selfType)
 	{
-		readonly Method method;
-		readonly CodeGenerationOptions opt;
-		readonly string self_type;
+		this.method = method;
+		this.opt = opt;
+		self_type = selfType;
 
-		public BoundMethodExtensionStringOverload (Method method, CodeGenerationOptions opt, string selfType)
-		{
-			this.method = method;
-			this.opt = opt;
-			self_type = selfType;
+		Name = method.Name;
+		IsStatic = true;
 
-			Name = method.Name;
-			IsStatic = true;
+		SetVisibility (method.Visibility);
+		ReturnType = new TypeReferenceWriter (opt.GetTypeReferenceName (method.RetVal).Replace ("Java.Lang.ICharSequence", "string").Replace ("global::string", "string"));
 
-			SetVisibility (method.Visibility);
-			ReturnType = new TypeReferenceWriter (opt.GetTypeReferenceName (method.RetVal).Replace ("Java.Lang.ICharSequence", "string").Replace ("global::string", "string"));
+		SourceWriterExtensions.AddObsolete (Attributes, method.Deprecated, opt, deprecatedSince: method.DeprecatedSince);
+		SourceWriterExtensions.AddRestrictToWarning (Attributes, method.AnnotatedVisibility, false, opt);
 
-			SourceWriterExtensions.AddObsolete (Attributes, method.Deprecated, opt, deprecatedSince: method.DeprecatedSince);
-			SourceWriterExtensions.AddRestrictToWarning (Attributes, method.AnnotatedVisibility, false, opt);
+		SourceWriterExtensions.AddSupportedOSPlatform (Attributes, method, opt);
 
-			SourceWriterExtensions.AddSupportedOSPlatform (Attributes, method, opt);
+		Parameters.Add (new MethodParameterWriter ("self", new TypeReferenceWriter (selfType)) { IsExtension = true });
+		this.AddMethodParametersStringOverloads (method.Parameters, opt);
+	}
 
-			Parameters.Add (new MethodParameterWriter ("self", new TypeReferenceWriter (selfType)) { IsExtension = true });
-			this.AddMethodParametersStringOverloads (method.Parameters, opt);
-		}
-
-		protected override void WriteBody (CodeWriter writer)
-		{
-			SourceWriterExtensions.WriteMethodStringOverloadBody (writer, method, opt, true);
-		}
+	protected override void WriteBody (CodeWriter writer)
+	{
+		SourceWriterExtensions.WriteMethodStringOverloadBody (writer, method, opt, true);
 	}
 }

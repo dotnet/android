@@ -1,4 +1,4 @@
-﻿//
+//
 // IDependencyRecorder.cs
 //
 // Copyright (C) 2017 Microsoft Corporation (http://www.microsoft.com)
@@ -23,8 +23,8 @@
 // WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 //
 
-namespace Mono.Linker
-{
+namespace Mono.Linker;
+
 	/// <summary>
 	/// Abstraction exposed by the linker (mostly MarkStep, but not only) - it will call this interface
 	/// every time it finds a dependency between two parts of the dependency graph.
@@ -41,4 +41,3 @@ namespace Mono.Linker
 		/// but they can also be the linker steps or really any other object.</remarks>
 		void RecordDependency (object source, object target, bool marked);
 	}
-}

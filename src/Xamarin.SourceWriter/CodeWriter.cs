@@ -3,81 +3,80 @@ using System.Collections.Generic;
 using System.IO;
 using System.Text;
 
-namespace Xamarin.SourceWriter
+namespace Xamarin.SourceWriter;
+
+public class CodeWriter : IDisposable
 {
-	public class CodeWriter : IDisposable
+	TextWriter stream;
+	bool owns_stream;
+	int indent;
+	bool need_indent = true;
+	string base_indent;
+
+	public CodeWriter (string filename)
 	{
-		TextWriter stream;
-		bool owns_stream;
-		int indent;
-		bool need_indent = true;
-		string base_indent;
+		stream = File.CreateText (filename);
+		owns_stream = true;
+	}
 
-		public CodeWriter (string filename)
-		{
-			stream = File.CreateText (filename);
-			owns_stream = true;
-		}
+	public CodeWriter (TextWriter streamWriter, string baseIndent = "")
+	{
+		stream = streamWriter;
+		base_indent = baseIndent;
+	}
 
-		public CodeWriter (TextWriter streamWriter, string baseIndent = "")
-		{
-			stream = streamWriter;
-			base_indent = baseIndent;
-		}
+	public void Write (string value)
+	{
+		WriteIndent ();
+		stream.Write (value);
+	}
 
-		public void Write (string value)
-		{
+	public void WriteLine ()
+	{
+		stream.WriteLine ();
+		need_indent = true;
+	}
+
+	public void WriteLine (string value)
+	{
+		if (value?.Length > 0)
 			WriteIndent ();
-			stream.Write (value);
-		}
 
-		public void WriteLine ()
-		{
-			stream.WriteLine ();
-			need_indent = true;
-		}
+		stream.WriteLine (value);
+		need_indent = true;
+	}
 
-		public void WriteLine (string value)
-		{
-			if (value?.Length > 0)
-				WriteIndent ();
+	public void WriteLine (string format, params object[] args)
+	{
+		if (format?.Length > 0)
+			WriteIndent ();
 
-			stream.WriteLine (value);
-			need_indent = true;
-		}
+		stream.WriteLine (format, args);
+		need_indent = true;
+	}
 
-		public void WriteLine (string format, params object[] args)
-		{
-			if (format?.Length > 0)
-				WriteIndent ();
+	public void WriteLineNoIndent (string value)
+	{
+		stream.WriteLine (value);
+		need_indent = true;
+	}
 
-			stream.WriteLine (format, args);
-			need_indent = true;
-		}
+	public void Indent (int count = 1) => indent += count;
+	public void Unindent (int count = 1) => indent -= count;
 
-		public void WriteLineNoIndent (string value)
-		{
-			stream.WriteLine (value);
-			need_indent = true;
-		}
+	private void WriteIndent ()
+	{
+		if (!need_indent)
+			return;
 
-		public void Indent (int count = 1) => indent += count;
-		public void Unindent (int count = 1) => indent -= count;
+		stream.Write (base_indent + new string ('\t', indent));
 
-		private void WriteIndent ()
-		{
-			if (!need_indent)
-				return;
+		need_indent = false;
+	}
 
-			stream.Write (base_indent + new string ('\t', indent));
-
-			need_indent = false;
-		}
-
-		public void Dispose ()
-		{
-			if (owns_stream)
-				stream?.Dispose ();
-		}
+	public void Dispose ()
+	{
+		if (owns_stream)
+			stream?.Dispose ();
 	}
 }

@@ -7,8 +7,8 @@ using System.Linq;
 using System.IO;
 using Microsoft.Android.Build.Tasks;
 
-namespace Xamarin.Android.Tasks
-{
+namespace Xamarin.Android.Tasks;
+
 	[MSBuildMultiThreadableTask]
 	public class DetermineJavaLibrariesToCompile : MultithreadedAndroidTask
 	{
@@ -89,4 +89,3 @@ namespace Xamarin.Android.Tasks
 			return value.ItemSpec.GetHashCode ();
 		}
 	}
-}

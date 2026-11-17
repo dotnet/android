@@ -1,6 +1,6 @@
 using System;
 
-namespace Java.Interop {
+namespace Java.Interop; 
 
 	[Serializable]
 	[AttributeUsage (AttributeTargets.Method | AttributeTargets.Constructor, 
@@ -26,5 +26,4 @@ namespace Java.Interop {
 		internal string []?           ThrownNames             {get; set;} // msbuild internal use
 
 	}
-}
 

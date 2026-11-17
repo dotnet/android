@@ -2,9 +2,8 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace Xamarin.SourceWriter
+namespace Xamarin.SourceWriter;
+
+public class InterfaceWriter : TypeWriter
 {
-	public class InterfaceWriter : TypeWriter
-	{
-	}
 }

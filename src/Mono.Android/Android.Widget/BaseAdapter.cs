@@ -4,7 +4,7 @@ using Android.Runtime;
 
 using Java.Interop;
 
-namespace Android.Widget {
+namespace Android.Widget; 
 
 	[Register ("android/widget/BaseAdapter", DoNotGenerateAcw=true)]
 	public abstract partial class BaseAdapter<T> : BaseAdapter {
@@ -44,4 +44,3 @@ namespace Android.Widget {
 		public abstract T this [int position] { [Register ("getItem", "(I)Ljava/lang/Object;", "GetGetItem_IHandler")] get; }
 
 	}
-}

@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 using Microsoft.Build.Framework;
 using Microsoft.Android.Build.Tasks;
 
-namespace Xamarin.Android.Tasks {
+namespace Xamarin.Android.Tasks; 
 	[MSBuildMultiThreadableTask]
 	public class WaitForAppDetection : MultithreadedAndroidTask, ICancelableTask
 	{
@@ -36,4 +36,3 @@ namespace Xamarin.Android.Tasks {
 			return !Log.HasLoggedErrors;
 		}
 	}
-}

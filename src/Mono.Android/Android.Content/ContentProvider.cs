@@ -1,5 +1,5 @@
-namespace Android.Content
-{
+namespace Android.Content;
+
 	public partial class ContentProvider
 	{
 		protected void SetReadPermission (string permission)
@@ -16,4 +16,3 @@ namespace Android.Content
 #pragma warning restore CS0618
 		}
 	}
-}

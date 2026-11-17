@@ -6,86 +6,85 @@ using System.Text;
 using System.Xml;
 using MonoDroid.Generation.Utilities;
 
-namespace MonoDroid.Generation
+namespace MonoDroid.Generation;
+
+public class Property
 {
-	public class Property
+	private Method setter;
+
+	public Property (string name)
 	{
-		private Method setter;
+		Name = name;
+	}
 
-		public Property (string name)
-		{
-			Name = name;
+	public Method Getter {get; set;}
+
+	public Method Setter {
+		get => setter;
+		set {
+			setter = value;
+
+			if (Getter?.RetVal?.NotNull == true)
+				Setter.Parameters.First ().NotNull = true;
 		}
+	}
 
-		public Method Getter {get; set;}
+	public bool IsGeneric => Getter.IsGeneric;
 
-		public Method Setter {
-			get => setter;
-			set {
-				setter = value;
+	// This is a workaround for generaing compatibility for Android.Graphics.Drawables.ColorDrawable.SetColor (wrt bug #4288).
+	public bool GenerateDispatchingSetter { get; set; }
 
-				if (Getter?.RetVal?.NotNull == true)
-					Setter.Parameters.First ().NotNull = true;
+	internal string AdjustedName =>
+		Getter.ReturnType.StartsWith ("Java.Lang.ICharSequence", StringComparison.Ordinal) ? Name + "Formatted" : Name;
+
+	public string Name { get; set; }
+
+	public string Type => Setter != null ? Setter.Parameters [0].Type : Getter.ReturnType;
+
+	public void AutoDetectEnumifiedOverrideProperties (AncestorDescendantCache cache)
+	{
+		if (Type != "int")
+			return;
+
+		var classes = cache.GetAncestorsAndDescendants (Getter.DeclaringType);
+		classes = classes.Concat (classes.SelectMany (x => x.GetAllImplementedInterfaces ()));
+
+		foreach (var t in classes) {
+			foreach (var candidate in t.Properties.Where (p => p.Name == Name)) {
+				if (Getter.JniSignature != candidate.Getter.JniSignature)
+					continue;
+				if (candidate.Getter.IsReturnEnumified)
+					Getter.RetVal.SetGeneratedEnumType (candidate.Getter.RetVal.FullName);
 			}
 		}
+	}
 
-		public bool IsGeneric => Getter.IsGeneric;
+	public string ExplicitInterface => Getter?.ExplicitInterface ?? Setter?.ExplicitInterface;
 
-		// This is a workaround for generaing compatibility for Android.Graphics.Drawables.ColorDrawable.SetColor (wrt bug #4288).
-		public bool GenerateDispatchingSetter { get; set; }
+	public bool IsWholePropertyDeprecated {
+		get {
+			// If the getter isn't deprecated then the property isn't
+			if (Getter?.Deprecated is null)
+				return false;
 
-		internal string AdjustedName =>
-			Getter.ReturnType.StartsWith ("Java.Lang.ICharSequence", StringComparison.Ordinal) ? Name + "Formatted" : Name;
-
-		public string Name { get; set; }
-
-		public string Type => Setter != null ? Setter.Parameters [0].Type : Getter.ReturnType;
-
-		public void AutoDetectEnumifiedOverrideProperties (AncestorDescendantCache cache)
-		{
-			if (Type != "int")
-				return;
-
-			var classes = cache.GetAncestorsAndDescendants (Getter.DeclaringType);
-			classes = classes.Concat (classes.SelectMany (x => x.GetAllImplementedInterfaces ()));
-
-			foreach (var t in classes) {
-				foreach (var candidate in t.Properties.Where (p => p.Name == Name)) {
-					if (Getter.JniSignature != candidate.Getter.JniSignature)
-						continue;
-					if (candidate.Getter.IsReturnEnumified)
-						Getter.RetVal.SetGeneratedEnumType (candidate.Getter.RetVal.FullName);
-				}
-			}
-		}
-
-		public string ExplicitInterface => Getter?.ExplicitInterface ?? Setter?.ExplicitInterface;
-
-		public bool IsWholePropertyDeprecated {
-			get {
-				// If the getter isn't deprecated then the property isn't
-				if (Getter?.Deprecated is null)
-					return false;
-
-				// If the getter is deprecated and there is no setter then the property is deprecated
-				if (Setter is null)
-					return true;
-
-				// If the setter isn't deprecated then the property isn't
-				if (Setter.Deprecated is null)
-					return false;
-
-				// If the getter/setter deprecation messages differ, don't use whole property deprecation
-				if (Getter.Deprecated != Setter.Deprecated)
-					return false;
-
-				// If the getter/setter deprecation versions differ, don't use whole property deprecation
-				if (Getter.DeprecatedSince != Setter.DeprecatedSince)
-					return false;
-
-				// Getter/Setter deprecation is the same, use whole property deprecation
+			// If the getter is deprecated and there is no setter then the property is deprecated
+			if (Setter is null)
 				return true;
-			}
+
+			// If the setter isn't deprecated then the property isn't
+			if (Setter.Deprecated is null)
+				return false;
+
+			// If the getter/setter deprecation messages differ, don't use whole property deprecation
+			if (Getter.Deprecated != Setter.Deprecated)
+				return false;
+
+			// If the getter/setter deprecation versions differ, don't use whole property deprecation
+			if (Getter.DeprecatedSince != Setter.DeprecatedSince)
+				return false;
+
+			// Getter/Setter deprecation is the same, use whole property deprecation
+			return true;
 		}
 	}
 }

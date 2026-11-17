@@ -10,8 +10,8 @@ using Microsoft.Build.Framework;
 using Xamarin.Android.Tools;
 using Microsoft.Android.Build.Tasks;
 
-namespace Xamarin.Android.Tasks
-{
+namespace Xamarin.Android.Tasks;
+
 	public class CreateAar : AndroidTask
 	{
 		public override string TaskPrefix => "CAAR";
@@ -164,4 +164,3 @@ namespace Xamarin.Android.Tasks
 		static string GetHashedFileName (ITaskItem item) =>
 			Files.HashString (item.ItemSpec.Replace ('\\', '/'));
 	}
-}

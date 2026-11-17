@@ -5,7 +5,7 @@ using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 
-namespace Java.Interop {
+namespace Java.Interop; 
 
 	static class JniBoolean {
 		internal    const   string  JniTypeName = "java/lang/Boolean";
@@ -1045,4 +1045,3 @@ namespace Java.Interop {
 			state   = new JniValueMarshalerState ();
 		}
 	}
-}

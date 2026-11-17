@@ -3,8 +3,8 @@
 using System;
 using System.Runtime.InteropServices;
 
-namespace Java.Interop
-{
+namespace Java.Interop;
+
 	public sealed class JniMethodInfo
 	{
 		public      IntPtr  ID      {get; private set;}
@@ -152,4 +152,3 @@ namespace Java.Interop
 					ID.ToString ("x"));
 		}
 	}
-}
