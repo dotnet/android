@@ -2,6 +2,8 @@
 #include <limits>
 #include <string_view>
 
+#include <unistd.h>
+
 #include <constants.hh>
 #include <xamarin-app.hh>
 #include <host/host-environment-clr.hh>

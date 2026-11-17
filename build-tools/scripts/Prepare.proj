@@ -28,7 +28,7 @@
         Command="&quot;$(DotNetPreviewTool)&quot; build &quot;$(_TopDir)\src\workloads\workloads.csproj&quot; -p:Configuration=$(Configuration) -bl:$(_BinlogPathPrefix)-workloads.binlog"
         WorkingDirectory="$(_TopDir)"
     />
-    <CallTarget Targets="PrepareJavaInterop" />
+    <CallTarget Targets="PrepareOpenJDK" />
     <MSBuild
         Projects="$(_TopDir)\build-tools\build-tools-inventory\build-tools-inventory.proj"
         Properties="Configuration=$(Configuration)"

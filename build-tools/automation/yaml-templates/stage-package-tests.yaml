@@ -48,15 +48,15 @@ stages:
     - template: /build-tools/automation/yaml-templates/run-dotnet-preview.yaml
       parameters:
         project: Microsoft.Android.slnx
-        arguments: -t:PrepareJavaInterop -c Debug --no-restore
-        displayName: prepare java.interop Debug
+        arguments: -t:PrepareOpenJDK -c Debug --no-restore
+        displayName: prepare OpenJDK Debug
         continueOnError: false
 
     - template: /build-tools/automation/yaml-templates/run-dotnet-preview.yaml
       parameters:
         project: Microsoft.Android.slnx
-        arguments: -t:PrepareJavaInterop -c $(XA.Build.Configuration) --no-restore
-        displayName: prepare java.interop $(XA.Build.Configuration)
+        arguments: -t:PrepareOpenJDK -c $(XA.Build.Configuration) --no-restore
+        displayName: prepare OpenJDK $(XA.Build.Configuration)
         continueOnError: false
 
     - template: /build-tools/automation/yaml-templates/start-stop-emulator.yaml
@@ -142,15 +142,15 @@ stages:
     - template: /build-tools/automation/yaml-templates/run-dotnet-preview.yaml
       parameters:
         project: Microsoft.Android.slnx
-        arguments: -t:PrepareJavaInterop -c Debug --no-restore
-        displayName: prepare java.interop Debug
+        arguments: -t:PrepareOpenJDK -c Debug --no-restore
+        displayName: prepare OpenJDK Debug
         continueOnError: false
 
     - template: /build-tools/automation/yaml-templates/run-dotnet-preview.yaml
       parameters:
         project: Microsoft.Android.slnx
-        arguments: -t:PrepareJavaInterop -c $(XA.Build.Configuration) --no-restore
-        displayName: prepare java.interop $(XA.Build.Configuration)
+        arguments: -t:PrepareOpenJDK -c $(XA.Build.Configuration) --no-restore
+        displayName: prepare OpenJDK $(XA.Build.Configuration)
         continueOnError: false
 
     - template: /build-tools/automation/yaml-templates/start-stop-emulator.yaml

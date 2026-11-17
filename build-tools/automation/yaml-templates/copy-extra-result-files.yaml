@@ -22,7 +22,6 @@ steps:
       **/config.h
       **/android-*.config.cache
       CMakeFiles/*.log
-      external/Java.Interop/bin/Build${{ parameters.configuration }}/*.props
     targetFolder: $(Build.StagingDirectory)/Build${{ parameters.configuration }}
     flattenFolders: false
 
@@ -47,7 +46,6 @@ steps:
       bin/Build${{ parameters.configuration }}/*.targets
       bin/Build${{ parameters.configuration }}/CMakeCache.txt
       bin/Build${{ parameters.configuration }}/.ninja_log
-      bin/Build${{ parameters.configuration }}/clang-tidy*.log
     targetFolder: $(Build.StagingDirectory)/Build${{ parameters.configuration }}
     flattenFolders: true
 

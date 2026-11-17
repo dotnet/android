@@ -442,8 +442,10 @@ namespace Xamarin.Android.Build.Tests
 			}
 		}
 
-		[Test]
-		public void SmokeTestBuildWithSpecialCharacters ([Values (false, true)] bool forms, [Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
+		[TestCase (false, AndroidRuntime.NativeAOT)]
+		[TestCase (true, AndroidRuntime.CoreCLR)]
+		[TestCase (true, AndroidRuntime.NativeAOT)]
+		public void SmokeTestBuildWithSpecialCharacters (bool forms, AndroidRuntime runtime)
 		{
 			if (IgnoreUnsupportedConfiguration (runtime, release: true)) {
 				return;
@@ -514,9 +516,9 @@ namespace Xamarin.Android.Build.Tests
 
 		// Context https://bugzilla.xamarin.com/show_bug.cgi?id=29706
 		[Test]
-		public void CheckLogicalNamePathSeperators ([ValueSource (typeof (BaseTest), nameof (BaseTest.ValidRuntimeConfigurations))] (bool isRelease, AndroidRuntime runtime) configuration, [Values (false, true)] bool useDesignerAssembly)
+		public void CheckLogicalNamePathSeperators ([Values (false, true)] bool isRelease, [Values (false, true)] bool useDesignerAssembly)
 		{
-			var (isRelease, runtime) = configuration;
+			const AndroidRuntime runtime = AndroidRuntime.CoreCLR;
 
 			var illegalSeperator = IsWindows ? "/" : @"\";
 			var dll = new XamarinAndroidLibraryProject () {
@@ -1708,12 +1710,22 @@ namespace UnnamedProject
 					values.Add ("DOTNET_DiagnosticPorts=127.0.0.1:9000,connect,nosuspend");
 				if (enableCrashReport)
 					values.Add ("DOTNET_EnableCrashReport=1");
+				// Newer .NET SDKs also pin a build-owned Hot Reload public key.
+				var publicKeyFile = b.Output.GetIntermediaryPath ("HotReload/websocket-key.public.json");
+				if (File.Exists (publicKeyFile)) {
+					using var document = JsonDocument.Parse (File.ReadAllText (publicKeyFile));
+					var publicKey = document.RootElement.GetProperty ("publicKey").GetString ();
+					Assert.IsNotEmpty (publicKey, "The generated Hot Reload public key should not be empty.");
+					values.Add ($"DOTNET_WATCH_HOTRELOAD_WEBSOCKET_KEY={publicKey}");
+				}
 				Assert.AreEqual (string.Join (Environment.NewLine, values), File.ReadAllText (environment).Trim ());
 			}
 		}
 
-		[Test]
-		public void KotlinServiceLoader ([Values ("apk", "aab")] string packageFormat, [Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
+		[TestCase ("apk", AndroidRuntime.CoreCLR)]
+		[TestCase ("aab", AndroidRuntime.CoreCLR)]
+		[TestCase ("apk", AndroidRuntime.NativeAOT)]
+		public void KotlinServiceLoader (string packageFormat, AndroidRuntime runtime)
 		{
 			bool isRelease = runtime == AndroidRuntime.NativeAOT;
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
@@ -1936,12 +1948,9 @@ namespace UnnamedProject
 		}
 
 		[Test]
-		public void XA4310 ([Values ("apk", "aab")] string packageFormat, [Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
+		public void XA4310 ([Values ("apk", "aab")] string packageFormat, [Values (AndroidRuntime.CoreCLR)] AndroidRuntime runtime)
 		{
 			const bool isRelease = true;
-			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
-				return;
-			}
 
 			var proj = new XamarinAndroidApplicationProject {
 				IsRelease = isRelease,

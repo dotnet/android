@@ -43,7 +43,7 @@ namespace Android.Runtime {
 		/// <paramref name="jnienv"/> must be a live JNI environment for the current thread and current runtime, with readable matching JNI table storage.
 		/// It and its VM must remain usable through transition disposal, including if transition setup throws.
 		/// </safety>
-		public static unsafe void CheckHandle (IntPtr jnienv)
+		public static void CheckHandle (IntPtr jnienv)
 		{
 			new JniTransition (jnienv).Dispose ();
 		}
@@ -65,7 +65,7 @@ namespace Android.Runtime {
 		{
 			if (t == null) {
 				Logger.Log (LogLevel.Warn,
-				               "monodroid",
+				               "DOTNET",
 				               $"ShouldWrapJavaException was not passed a valid `Java.Lang.Throwable` instance. Called from method `{caller}`");
 				return false;
 			}
@@ -74,7 +74,7 @@ namespace Android.Runtime {
 			if (!wrap) {
 				Logger.Log (
 					LogLevel.Warn,
-					"monodroid",
+					"DOTNET",
 					$"Not wrapping exception of type {t.GetType().FullName} from method `{caller}`. This will change in a future release."
 				);
 			}
@@ -103,12 +103,12 @@ namespace Android.Runtime {
 					var jltp = javaException as JavaProxyThrowable;
 					Exception? innerException = jltp?.InnerException;
 
-					Logger.Log (LogLevel.Info, "MonoDroid", "UNHANDLED EXCEPTION:");
-					Logger.Log (LogLevel.Info, "MonoDroid", javaException.ToString ());
+					Logger.Log (LogLevel.Info, "DOTNET", "UNHANDLED EXCEPTION:");
+					Logger.Log (LogLevel.Info, "DOTNET", javaException.ToString ());
 
 					ExceptionHandling.RaiseAppDomainUnhandledExceptionEvent (innerException ?? javaException);
 				} catch (Exception e) {
-					Logger.Log (LogLevel.Error, "monodroid", "Exception thrown while raising AppDomain.UnhandledException event: " + e.ToString ());
+					Logger.Log (LogLevel.Error, "DOTNET", "Exception thrown while raising AppDomain.UnhandledException event: " + e.ToString ());
 				}
 			}
 		}
@@ -151,11 +151,32 @@ namespace Android.Runtime {
 			}
 		}
 
+		/// <summary>Allocates a Java object without invoking its constructor, using a modified UTF-8 class name.</summary>
+		/// <safety>
+		/// jniClassName must have readable, unchanged NUL-terminated backing storage through this call,
+		/// including failure. Complete ASCII u8 literals satisfy this contract; copies and slices may not.
+		/// The span is not retained.
+		/// </safety>
+		public static unsafe IntPtr AllocObject (ReadOnlySpan<byte> jniClassName)
+		{
+			// SAFETY: The caller supplies terminated bytes; FindClass returns the owned class reference used through allocation.
+			IntPtr jniClass = unsafe (FindClass (jniClassName));
+			try {
+				// SAFETY: The class reference is live until the finally releases it; AllocObject returns a new local reference.
+				return unsafe (AllocObject (jniClass));
+			} finally {
+				unsafe {
+					// SAFETY: This call owns the global class reference returned by FindClass.
+					DeleteGlobalRef (jniClass);
+				}
+			}
+		}
+
 		/// <safety>
 		/// <paramref name="jclass"/> must be a live allocatable JNI class from this VM, usable on the current thread
 		/// until allocation returns or throws. No constructor ID or argument is read in this phase.
 		/// </safety>
-		public static unsafe IntPtr StartCreateInstance (IntPtr jclass, IntPtr constructorId, JValue* constructorParameters)
+		public static IntPtr StartCreateInstance (IntPtr jclass, IntPtr constructorId, JValue* constructorParameters)
 		{
 			// SAFETY: only jclass is consumed by AllocObject; constructorId and constructorParameters are deliberately unused in this allocation-only phase.
 			return unsafe(AllocObject (jclass));
@@ -165,7 +186,7 @@ namespace Android.Runtime {
 		/// <paramref name="jclass"/> must be a live allocatable JNI class from this VM, usable on the current thread
 		/// until allocation returns or throws. No constructor ID or argument is read in this phase.
 		/// </safety>
-		public static unsafe IntPtr StartCreateInstance (IntPtr jclass, IntPtr constructorId, params JValue[] constructorParameters)
+		public static IntPtr StartCreateInstance (IntPtr jclass, IntPtr constructorId, params JValue[] constructorParameters)
 		{
 			unsafe {
 				// SAFETY: constructorParameters stays pinned while forwarding, but the allocation-only pointer overload never reads it or constructorId; only jclass must be live.
@@ -181,7 +202,7 @@ namespace Android.Runtime {
 		/// <paramref name="constructorParameters"/> must supply every constructor argument in the declared JNI order and types; all referenced objects must stay live.
 		/// The pointer storage in <paramref name="constructorParameters"/> must remain readable for that argument count throughout the call.
 		/// </safety>
-		public static unsafe void FinishCreateInstance (IntPtr instance, IntPtr jclass, IntPtr constructorId, JValue* constructorParameters)
+		public static void FinishCreateInstance (IntPtr instance, IntPtr jclass, IntPtr constructorId, JValue* constructorParameters)
 		{
 			unsafe {
 				// SAFETY: the caller supplies instance/jclass and the void constructor ABI; constructorParameters is forwarded without a copy or any extension of its lifetime.
@@ -195,7 +216,7 @@ namespace Android.Runtime {
 		/// <paramref name="constructorId"/> must be a live instance constructor ID for the supplied class with the matching JNI argument signature and void return ABI.
 		/// <paramref name="constructorParameters"/> must supply every constructor argument in the declared JNI order and types; all referenced objects must stay live.
 		/// </safety>
-		public static unsafe void FinishCreateInstance (IntPtr instance, IntPtr jclass, IntPtr constructorId, params JValue[] constructorParameters)
+		public static void FinishCreateInstance (IntPtr instance, IntPtr jclass, IntPtr constructorId, params JValue[] constructorParameters)
 		{
 			unsafe {
 				// SAFETY: fixed pins constructorParameters until FinishCreateInstance returns or throws; the caller supplies its count, constructor ABI and referenced-object lifetimes.
@@ -238,7 +259,7 @@ namespace Android.Runtime {
 		/// <paramref name="constructorParameters"/> must supply every constructor argument in the declared JNI order and types; all referenced objects must stay live.
 		/// The pointer storage in <paramref name="constructorParameters"/> must remain readable for that argument count throughout the call.
 		/// </safety>
-		public static unsafe void FinishCreateInstance (IntPtr instance, string jniCtorSignature, JValue* constructorParameters)
+		public static void FinishCreateInstance (IntPtr instance, string jniCtorSignature, JValue* constructorParameters)
 		{
 			unsafe {
 				// SAFETY: InvokeConstructor consumes the caller's live instance and matching constructor arguments synchronously; forwarding neither validates nor retains the raw storage.
@@ -251,10 +272,37 @@ namespace Android.Runtime {
 		/// <paramref name="jniCtorSignature"/> must describe the supplied arguments and a void-returning instance constructor of the requested class.
 		/// <paramref name="constructorParameters"/> must supply every constructor argument in the declared JNI order and types; all referenced objects must stay live.
 		/// </safety>
-		public static unsafe void FinishCreateInstance (IntPtr instance, string jniCtorSignature, params JValue[] constructorParameters)
+		public static void FinishCreateInstance (IntPtr instance, string jniCtorSignature, params JValue[] constructorParameters)
 		{
 			unsafe {
 				// SAFETY: fixed pins constructorParameters through InvokeConstructor; the caller retains instance and all referenced arguments with the declared constructor ABI.
+				fixed (JValue* cp = constructorParameters)
+					FinishCreateInstance (instance, jniCtorSignature, cp);
+			}
+		}
+
+		/// <summary>Invokes the allocated peer's constructor using a modified UTF-8 descriptor.</summary>
+		/// <safety>
+		/// jniCtorSignature must have readable, unchanged NUL-terminated backing storage through this call,
+		/// including failure. Complete ASCII u8 literals satisfy this contract; copies and slices may not.
+		/// instance must be a live allocated peer compatible with the constructor. constructorParameters must
+		/// address initialized JNI slots matching the descriptor, or be null for a zero-argument constructor.
+		/// Keep argument storage and referenced objects live and unchanged through the call.
+		/// Local references must belong to the calling thread. The span and arguments are not retained.
+		/// </safety>
+		public static unsafe void FinishCreateInstance (IntPtr instance, ReadOnlySpan<byte> jniCtorSignature, JValue* constructorParameters)
+		{
+			unsafe {
+				// SAFETY: The caller keeps the constructor-compatible peer, descriptor and argument slots live through invocation.
+				InvokeConstructor (instance, jniCtorSignature, constructorParameters);
+			}
+		}
+
+		/// <inheritdoc cref="FinishCreateInstance(IntPtr, ReadOnlySpan{byte}, JValue*)"/>
+		public static unsafe void FinishCreateInstance (IntPtr instance, ReadOnlySpan<byte> jniCtorSignature, params ReadOnlySpan<JValue> constructorParameters)
+		{
+			unsafe {
+				// SAFETY: The span's backing storage is pinned through invocation; the caller supplies the matching descriptor and live peer/references.
 				fixed (JValue* cp = constructorParameters)
 					FinishCreateInstance (instance, jniCtorSignature, cp);
 			}
@@ -266,7 +314,7 @@ namespace Android.Runtime {
 		/// <paramref name="constructorParameters"/> must supply every constructor argument in the declared JNI order and types; all referenced objects must stay live.
 		/// The pointer storage in <paramref name="constructorParameters"/> must remain readable for that argument count throughout the call.
 		/// </safety>
-		public static unsafe void InvokeConstructor (IntPtr instance, string jniCtorSignature, JValue* constructorParameters)
+		public static void InvokeConstructor (IntPtr instance, string jniCtorSignature, JValue* constructorParameters)
 		{
 			unsafe {
 				// SAFETY: the caller retains instance and its constructor arguments; GetObjectClass supplies the owned class used for lookup and released in finally.
@@ -288,10 +336,40 @@ namespace Android.Runtime {
 		/// <paramref name="jniCtorSignature"/> must describe the supplied arguments and a void-returning instance constructor of the requested class.
 		/// <paramref name="constructorParameters"/> must supply every constructor argument in the declared JNI order and types; all referenced objects must stay live.
 		/// </safety>
-		public static unsafe void InvokeConstructor (IntPtr instance, string jniCtorSignature, params JValue[] constructorParameters)
+		public static void InvokeConstructor (IntPtr instance, string jniCtorSignature, params JValue[] constructorParameters)
 		{
 			unsafe {
 				// SAFETY: constructorParameters remains pinned until InvokeConstructor returns or throws; its entries and instance are the caller's matching constructor inputs.
+				fixed (JValue* cp = constructorParameters)
+					InvokeConstructor (instance, jniCtorSignature, cp);
+			}
+		}
+
+		/// <inheritdoc cref="FinishCreateInstance(IntPtr, ReadOnlySpan{byte}, JValue*)"/>
+		public static unsafe void InvokeConstructor (IntPtr instance, ReadOnlySpan<byte> jniCtorSignature, JValue* constructorParameters)
+		{
+			// SAFETY: The caller keeps the compatible peer live; GetObjectClass returns an owned local class reference.
+			IntPtr lrefClass = unsafe (GetObjectClass (instance));
+			try {
+				// SAFETY: The class reference is live; the caller supplies a terminated descriptor and the literal supplies the name terminator.
+				var ctor = unsafe (JniEnvironment.InstanceMethods.GetMethodID (new JniObjectReference (lrefClass), "<init>"u8, jniCtorSignature));
+				unsafe {
+					// SAFETY: The resolved constructor matches the peer and caller-supplied argument ABI; all storage/references remain live.
+					CallNonvirtualVoidMethod (instance, lrefClass, ctor.ID, constructorParameters);
+				}
+			} finally {
+				unsafe {
+					// SAFETY: This call owns the current-thread local class reference returned by GetObjectClass.
+					DeleteLocalRef (lrefClass);
+				}
+			}
+		}
+
+		/// <inheritdoc cref="FinishCreateInstance(IntPtr, ReadOnlySpan{byte}, JValue*)"/>
+		public static unsafe void InvokeConstructor (IntPtr instance, ReadOnlySpan<byte> jniCtorSignature, params JValue[] constructorParameters)
+		{
+			unsafe {
+				// SAFETY: The array is pinned through invocation; the caller supplies the matching descriptor and live peer/references.
 				fixed (JValue* cp = constructorParameters)
 					InvokeConstructor (instance, jniCtorSignature, cp);
 			}
@@ -303,7 +381,7 @@ namespace Android.Runtime {
 		/// <paramref name="constructorParameters"/> must supply every constructor argument in the declared JNI order and types; all referenced objects must stay live.
 		/// The pointer storage in <paramref name="constructorParameters"/> must remain readable for that argument count throughout the call.
 		/// </safety>
-		public static unsafe IntPtr CreateInstance (IntPtr jniClass, string signature, JValue* constructorParameters)
+		public static IntPtr CreateInstance (IntPtr jniClass, string signature, JValue* constructorParameters)
 		{
 			unsafe {
 				// SAFETY: the caller retains jniClass; GetMethodID resolves <init> with signature, and NewObject consumes the caller's matching argument count/storage synchronously.
@@ -320,7 +398,7 @@ namespace Android.Runtime {
 		/// <paramref name="signature"/> must describe the supplied arguments and a void-returning instance constructor of the requested class.
 		/// <paramref name="constructorParameters"/> must supply every constructor argument in the declared JNI order and types; all referenced objects must stay live.
 		/// </safety>
-		public static unsafe IntPtr CreateInstance (IntPtr jniClass, string signature, params JValue[] constructorParameters)
+		public static IntPtr CreateInstance (IntPtr jniClass, string signature, params JValue[] constructorParameters)
 		{
 			unsafe {
 				// SAFETY: fixed pins constructorParameters through CreateInstance; jniClass, signature and referenced argument lifetimes remain the caller's contract.
@@ -334,7 +412,7 @@ namespace Android.Runtime {
 		/// <paramref name="constructorParameters"/> must supply every constructor argument in the declared JNI order and types; all referenced objects must stay live.
 		/// The pointer storage in <paramref name="constructorParameters"/> must remain readable for that argument count throughout the call.
 		/// </safety>
-		public static unsafe IntPtr CreateInstance (string jniClassName, string signature, JValue* constructorParameters)
+		public static IntPtr CreateInstance (string jniClassName, string signature, JValue* constructorParameters)
 		{
 			unsafe {
 				// SAFETY: FindClass supplies an owned global class released in finally; the caller retains the matching constructor argument storage until NewObject returns or throws.
@@ -352,7 +430,7 @@ namespace Android.Runtime {
 		/// <paramref name="signature"/> must describe the supplied arguments and a void-returning instance constructor of the requested class.
 		/// <paramref name="constructorParameters"/> must supply every constructor argument in the declared JNI order and types; all referenced objects must stay live.
 		/// </safety>
-		public static unsafe IntPtr CreateInstance (string jniClassName, string signature, params JValue[] constructorParameters)
+		public static IntPtr CreateInstance (string jniClassName, string signature, params JValue[] constructorParameters)
 		{
 			unsafe {
 				// SAFETY: fixed pins constructorParameters while forwarding the caller's signature and arguments; FindClass owns the class used by the pointer overload.
@@ -366,7 +444,7 @@ namespace Android.Runtime {
 		/// <paramref name="constructorParameters"/> must supply every constructor argument in the declared JNI order and types; all referenced objects must stay live.
 		/// The pointer storage in <paramref name="constructorParameters"/> must remain readable for that argument count throughout the call.
 		/// </safety>
-		public static unsafe IntPtr CreateInstance (Type type, string signature, JValue* constructorParameters)
+		public static IntPtr CreateInstance (Type type, string signature, JValue* constructorParameters)
 		{
 			unsafe {
 				// SAFETY: FindClass supplies type's owned global class released in finally; the caller retains the argument buffer and references for the matching constructor ABI.
@@ -384,7 +462,7 @@ namespace Android.Runtime {
 		/// <paramref name="signature"/> must describe the supplied arguments and a void-returning instance constructor of the requested class.
 		/// <paramref name="constructorParameters"/> must supply every constructor argument in the declared JNI order and types; all referenced objects must stay live.
 		/// </safety>
-		public static unsafe IntPtr CreateInstance (Type type, string signature, params JValue[] constructorParameters)
+		public static IntPtr CreateInstance (Type type, string signature, params JValue[] constructorParameters)
 		{
 			unsafe {
 				// SAFETY: fixed pins constructorParameters while forwarding the caller's signature and arguments; the pointer overload owns its FindClass result.
@@ -407,7 +485,7 @@ namespace Android.Runtime {
 			} catch (Java.Lang.Throwable e) {
 				if (!((e is Java.Lang.NoClassDefFoundError) || (e is Java.Lang.ClassNotFoundException)))
 					throw;
-				Logger.Log (LogLevel.Warn, "monodroid", $"JNIEnv.FindClass(Type) caught unexpected exception: {e}");
+				Logger.Log (LogLevel.Warn, "DOTNET", $"JNIEnv.FindClass(Type) caught unexpected exception: {e}");
 				var jni = JavaNativeTypeManager.ToJniNameFromAttributes (type);
 				if (jni != null) {
 					e.Dispose ();
@@ -461,7 +539,7 @@ namespace Android.Runtime {
 		/// A nonzero <paramref name="obj"/> must be a live JNI Throwable reference from this VM on the current
 		/// thread, retained until JNI returns or throws. Zero is rejected before the JNI call.
 		/// </safety>
-		public static unsafe void Throw (IntPtr obj)
+		public static void Throw (IntPtr obj)
 		{
 			if (obj == IntPtr.Zero)
 				throw new ArgumentException ("'obj' must not be IntPtr.Zero.", "obj");
@@ -473,7 +551,7 @@ namespace Android.Runtime {
 		/// <paramref name="clazz"/> must be a live class reference for Throwable or a subclass with a String
 		/// constructor, usable on this thread until JNI returns or throws. Retain the class during exception creation.
 		/// </safety>
-		public static unsafe void ThrowNew (IntPtr clazz, string message)
+		public static void ThrowNew (IntPtr clazz, string message)
 		{
 			if (message == null)
 				throw new ArgumentNullException ("message");
@@ -537,7 +615,7 @@ namespace Android.Runtime {
 		/// <safety>
 		/// <paramref name="jobject"/> must be null where supported, or a live JNI object reference of the required type usable on the current thread for the call.
 		/// </safety>
-		public static unsafe IntPtr NewGlobalRef (IntPtr jobject)
+		public static IntPtr NewGlobalRef (IntPtr jobject)
 		{
 			var r = new JniObjectReference (jobject);
 			return r.NewGlobalRef ().Handle;
@@ -548,7 +626,7 @@ namespace Android.Runtime {
 		/// Exclude concurrent release/use through aliases during deletion and stop using this reference afterward;
 		/// an exception does not prove the handle is still valid. Deleting it does not delete other JNI references to the same object.
 		/// </safety>
-		public static unsafe void DeleteGlobalRef (IntPtr jobject)
+		public static void DeleteGlobalRef (IntPtr jobject)
 		{
 			var r = new JniObjectReference (jobject, JniObjectReferenceType.Global);
 			JniObjectReference.Dispose (ref r);
@@ -557,7 +635,7 @@ namespace Android.Runtime {
 		/// <safety>
 		/// <paramref name="jobject"/> must be null where supported, or a live JNI object reference of the required type usable on the current thread for the call.
 		/// </safety>
-		public static unsafe IntPtr NewLocalRef (IntPtr jobject)
+		public static IntPtr NewLocalRef (IntPtr jobject)
 		{
 			return new JniObjectReference (jobject).NewLocalRef ().Handle;
 		}
@@ -567,7 +645,7 @@ namespace Android.Runtime {
 		/// Exclude alias access while deleting and do not reuse this local handle afterward, including on failure.
 		/// Other references to the same Java object retain their independent lifetimes.
 		/// </safety>
-		public static unsafe void DeleteLocalRef (IntPtr jobject)
+		public static void DeleteLocalRef (IntPtr jobject)
 		{
 			var r = new JniObjectReference (jobject, JniObjectReferenceType.Local);
 			JniObjectReference.Dispose (ref r);
@@ -577,7 +655,7 @@ namespace Android.Runtime {
 		/// <paramref name="jobject"/> must be null or a live JNI weak-global reference whose release the caller owns.
 		/// Exclude concurrent release/use of aliases and do not reuse this weak handle afterward, including on failure.
 		/// </safety>
-		public static unsafe void DeleteWeakGlobalRef (IntPtr jobject)
+		public static void DeleteWeakGlobalRef (IntPtr jobject)
 		{
 			var r = new JniObjectReference (jobject, JniObjectReferenceType.WeakGlobal);
 			JniObjectReference.Dispose (ref r);
@@ -588,7 +666,7 @@ namespace Android.Runtime {
 		/// its live instance constructor ID with the exact zero-argument <c>()V</c> JNI signature.
 		/// Both must remain usable on the current thread for the call.
 		/// </safety>
-		public static unsafe IntPtr NewObject (IntPtr jclass, IntPtr jmethod)
+		public static IntPtr NewObject (IntPtr jclass, IntPtr jmethod)
 		{
 			unsafe {
 				// SAFETY: the caller supplies the live class and a constructor ID with the zero-argument constructor ABI.
@@ -603,7 +681,7 @@ namespace Android.Runtime {
 		/// <paramref name="parms"/> must supply every constructor argument in the declared JNI order and types; all referenced objects must stay live.
 		/// The pointer storage in <paramref name="parms"/> must remain readable for that argument count throughout the call.
 		/// </safety>
-		public static unsafe IntPtr NewObject (IntPtr jclass, IntPtr jmethod, JValue* parms)
+		public static IntPtr NewObject (IntPtr jclass, IntPtr jmethod, JValue* parms)
 		{
 			unsafe {
 				// SAFETY: jclass/jmethod and the matching argument buffer are caller-owned for this call; JValue and JniArgumentValue use the same JNI union layout.
@@ -617,7 +695,7 @@ namespace Android.Runtime {
 		/// <paramref name="jmethod"/> must be a live instance constructor ID for the supplied class with the matching JNI argument signature and void return ABI.
 		/// <paramref name="parms"/> must supply every constructor argument in the declared JNI order and types; all referenced objects must stay live.
 		/// </safety>
-		public static unsafe IntPtr NewObject (IntPtr jclass, IntPtr jmethod, params JValue[] parms)
+		public static IntPtr NewObject (IntPtr jclass, IntPtr jmethod, params JValue[] parms)
 		{
 			unsafe {
 				// SAFETY: fixed pins parms for NewObject; the caller supplies the constructor's complete argument count/types and retains all referenced objects.
@@ -629,7 +707,7 @@ namespace Android.Runtime {
 		/// <safety>
 		/// <paramref name="jobject"/> must be null where supported, or a live JNI object reference of the required type usable on the current thread for the call.
 		/// </safety>
-		public static unsafe string? GetClassNameFromInstance (IntPtr jobject)
+		public static string? GetClassNameFromInstance (IntPtr jobject)
 		{
 			return JniEnvironment.Types.GetJniTypeNameFromInstance (new JniObjectReference (jobject));
 		}
@@ -686,7 +764,7 @@ namespace Android.Runtime {
 		/// This implementation does not consume <paramref name="transfer"/> or release the input handle.
 		/// Retain it through Object.toString and copying the returned String, including exception unwinding.
 		/// </safety>
-		public static unsafe string? GetCharSequence (IntPtr jobject, JniHandleOwnership transfer)
+		public static string? GetCharSequence (IntPtr jobject, JniHandleOwnership transfer)
 		{
 			if (jobject == IntPtr.Zero)
 				return null;
@@ -700,7 +778,7 @@ namespace Android.Runtime {
 		/// <paramref name="transfer"/> must describe ownership the caller holds. On successful conversion the requested
 		/// reference is released; do not access aliases during or after release. A conversion exception occurs before that release.
 		/// </safety>
-		public static unsafe string? GetString (IntPtr value, JniHandleOwnership transfer)
+		public static string? GetString (IntPtr value, JniHandleOwnership transfer)
 		{
 			if (value == IntPtr.Zero)
 				return null;
@@ -775,7 +853,7 @@ namespace Android.Runtime {
 
 		static void AssertArrayConversionType (IntPtr sourceArray, Type? elementType)
 		{
-			if (elementType != null && (elementType.IsValueType || elementType == typeof (string) ||
+			if (elementType != null && (elementType.IsValueType || elementType == typeof (string) || elementType == typeof (Array) ||
 					elementType.IsArray || typeof (IJavaObject).IsAssignableFrom (elementType))) {
 				AssertCompatibleArrayTypes (sourceArray,
 					destElementType: elementType.IsValueType ? elementType : typeof (Java.Lang.Object));
@@ -851,7 +929,7 @@ namespace Android.Runtime {
 		/// <paramref name="src"/> must be null where supported, or a live JNI array reference of the required type usable on the current thread for the call.
 		/// The JNI array element type must match the requested managed conversion and all requested element ranges must lie within the live array.
 		/// </safety>
-		public static unsafe void CopyArray (IntPtr src, bool[] dest)
+		public static void CopyArray (IntPtr src, bool[] dest)
 		{
 			if (dest == null)
 				throw new ArgumentNullException ("dest");
@@ -869,7 +947,7 @@ namespace Android.Runtime {
 		/// <paramref name="dest"/>.Length elements. Retain it and exclude conflicting mutation or release
 		/// until return or throw. Each element is checked for null or java.lang.String before string access.
 		/// </safety>
-		public static unsafe void CopyArray (IntPtr src, string[] dest)
+		public static void CopyArray (IntPtr src, string[] dest)
 		{
 			if (dest == null)
 				throw new ArgumentNullException ("dest");
@@ -1201,7 +1279,7 @@ namespace Android.Runtime {
 		/// <paramref name="src"/> must be null where supported, or a live JNI array reference of the required type usable on the current thread for the call.
 		/// The JNI array element type must match the requested managed conversion and all requested element ranges must lie within the live array.
 		/// </safety>
-		public static unsafe void CopyArray (IntPtr src, Array dest, Type? elementType = null)
+		public static void CopyArray (IntPtr src, Array dest, Type? elementType = null)
 #pragma warning restore RS0027 // API with optional parameter(s) should have the most parameters amongst its public overloads
 		{
 			if (dest == null)
@@ -1245,7 +1323,7 @@ namespace Android.Runtime {
 		/// <paramref name="src"/> must be null where supported, or a live JNI array reference of the required type usable on the current thread for the call.
 		/// The JNI array element type must match the requested managed conversion and all requested element ranges must lie within the live array.
 		/// </safety>
-		public static unsafe void CopyArray<T> (IntPtr src, T[] dest)
+		public static void CopyArray<T> (IntPtr src, T[] dest)
 		{
 			if (dest == null)
 				throw new ArgumentNullException ("dest");
@@ -1271,7 +1349,7 @@ namespace Android.Runtime {
 		/// <paramref name="dest"/> must be null where supported, or a live JNI array reference of the required type usable on the current thread for the call.
 		/// The JNI array element type must match the requested managed conversion and all requested element ranges must lie within the live array.
 		/// </safety>
-		public static unsafe void CopyArray (bool[] src, IntPtr dest)
+		public static void CopyArray (bool[] src, IntPtr dest)
 		{
 			if (src == null)
 				throw new ArgumentNullException ("src");
@@ -1289,7 +1367,7 @@ namespace Android.Runtime {
 		/// <paramref name="dest"/> must be null where supported, or a live JNI array reference of the required type usable on the current thread for the call.
 		/// The JNI array element type must match the requested managed conversion and all requested element ranges must lie within the live array.
 		/// </safety>
-		public static unsafe void CopyArray (string[] src, IntPtr dest)
+		public static void CopyArray (string[] src, IntPtr dest)
 		{
 			if (src == null)
 				throw new ArgumentNullException ("src");
@@ -1308,7 +1386,7 @@ namespace Android.Runtime {
 		/// <paramref name="dest"/> must be null where supported, or a live JNI array reference of the required type usable on the current thread for the call.
 		/// The JNI array element type must match the requested managed conversion and all requested element ranges must lie within the live array.
 		/// </safety>
-		public static unsafe void CopyArray (IJavaObject[] src, IntPtr dest)
+		public static void CopyArray (IJavaObject[] src, IntPtr dest)
 		{
 			if (src == null)
 				throw new ArgumentNullException ("src");
@@ -1466,7 +1544,7 @@ namespace Android.Runtime {
 		/// <paramref name="dest"/> must be null where supported, or a live JNI array reference of the required type usable on the current thread for the call.
 		/// The JNI array element type must match the requested managed conversion and all requested element ranges must lie within the live array.
 		/// </safety>
-		public static unsafe void CopyArray (Array source, Type elementType, IntPtr dest)
+		public static void CopyArray (Array source, Type elementType, IntPtr dest)
 		{
 			if (source == null)
 				throw new ArgumentNullException ("source");
@@ -1485,7 +1563,7 @@ namespace Android.Runtime {
 		/// <paramref name="dest"/> must be null where supported, or a live JNI array reference of the required type usable on the current thread for the call.
 		/// The JNI array element type must match the requested managed conversion and all requested element ranges must lie within the live array.
 		/// </safety>
-		public static unsafe void CopyArray<T> (T[] src, IntPtr dest)
+		public static void CopyArray<T> (T[] src, IntPtr dest)
 		{
 			if (src == null)
 				throw new ArgumentNullException ("src");
@@ -1501,13 +1579,16 @@ namespace Android.Runtime {
 		/// <paramref name="transfer"/> must describe reference ownership the caller holds; transferred handles must not be used after their release.
 		/// The JNI array element type must match the requested managed conversion and all requested element ranges must lie within the live array.
 		/// </safety>
-		public static unsafe Array? GetArray (IntPtr array_ptr, JniHandleOwnership transfer, Type? element_type = null)
+		public static Array? GetArray (IntPtr array_ptr, JniHandleOwnership transfer, Type? element_type = null)
 		{
 			try {
 				return _GetArray (array_ptr, element_type);
 			}
 			finally {
-				DeleteRef (array_ptr, transfer);
+				unsafe {
+					// SAFETY: the caller's transfer contract covers array_ptr; it is released once after conversion.
+					DeleteRef (array_ptr, transfer);
+				}
 			}
 		}
 
@@ -1702,7 +1783,7 @@ namespace Android.Runtime {
 		/// <paramref name="array_ptr"/> must be null where supported, or a live JNI array reference of the required type usable on the current thread for the call.
 		/// The JNI array element type must match the requested managed conversion and all requested element ranges must lie within the live array.
 		/// </safety>
-		public static unsafe object?[]? GetObjectArray (IntPtr array_ptr, Type[] element_types)
+		public static object?[]? GetObjectArray (IntPtr array_ptr, Type[] element_types)
 		{
 			if (array_ptr == IntPtr.Zero)
 				return null;
@@ -1735,7 +1816,7 @@ namespace Android.Runtime {
 		/// that kind, including when their values are boxed. Retain the reference and exclude conflicting
 		/// mutation or release until conversion returns or throws.
 		/// </safety>
-		public static unsafe T[]? GetArray<T> (IntPtr array_ptr)
+		public static T[]? GetArray<T> (IntPtr array_ptr)
 		{
 			if (array_ptr == IntPtr.Zero)
 				return null;
@@ -1769,7 +1850,7 @@ namespace Android.Runtime {
 		/// <paramref name="array_ptr"/> must be null where supported, or a live JNI array reference of the required type usable on the current thread for the call.
 		/// The JNI array element type must match the requested managed conversion and all requested element ranges must lie within the live array.
 		/// </safety>
-		public static unsafe T GetArrayItem<T> (IntPtr array_ptr, int index)
+		public static T GetArrayItem<T> (IntPtr array_ptr, int index)
 		{
 			if (array_ptr == IntPtr.Zero)
 				throw new ArgumentException ("array_ptr");
@@ -1787,7 +1868,7 @@ namespace Android.Runtime {
 		/// <safety>
 		/// <paramref name="array_ptr"/> must be null where supported, or a live JNI array reference of the required type usable on the current thread for the call.
 		/// </safety>
-		public static unsafe int GetArrayLength (IntPtr array_ptr)
+		public static int GetArrayLength (IntPtr array_ptr)
 		{
 			if (array_ptr == IntPtr.Zero)
 				return 0;
@@ -1836,7 +1917,7 @@ namespace Android.Runtime {
 		/// <safety>
 		/// <paramref name="elementClass"/> must be null where supported, or a live JNI class reference of the required type usable on the current thread for the call.
 		/// </safety>
-		public static unsafe IntPtr NewObjectArray (int length, IntPtr elementClass)
+		public static IntPtr NewObjectArray (int length, IntPtr elementClass)
 		{
 			// SAFETY: the caller retains elementClass as a live class; the three-argument overload initializes each new element with the JNI null reference.
 			return unsafe(NewObjectArray (length, elementClass, IntPtr.Zero));
@@ -1846,7 +1927,7 @@ namespace Android.Runtime {
 		/// <paramref name="elementClass"/> must be null where supported, or a live JNI class reference of the required type usable on the current thread for the call.
 		/// <paramref name="initialElement"/> must be null where supported, or a live JNI object reference of the required type usable on the current thread for the call.
 		/// </safety>
-		public static unsafe IntPtr NewObjectArray (int length, IntPtr elementClass, IntPtr initialElement)
+		public static IntPtr NewObjectArray (int length, IntPtr elementClass, IntPtr initialElement)
 		{
 			return JniEnvironment.Arrays.NewObjectArray (length, new JniObjectReference (elementClass), new JniObjectReference (initialElement)).Handle;
 		}
@@ -1903,7 +1984,7 @@ namespace Android.Runtime {
 		/// <paramref name="source"/> must be null where supported, or a live JNI array reference of the required type usable on the current thread for the call.
 		/// The JNI array element type must match the requested managed conversion and all requested element ranges must lie within the live array.
 		/// </safety>
-		public static unsafe void CopyObjectArray<
+		public static void CopyObjectArray<
 				[DynamicallyAccessedMembers (Constructors)]
 				T
 		>(IntPtr source, T[] destination)
@@ -1927,7 +2008,7 @@ namespace Android.Runtime {
 		/// <paramref name="destination"/> must be null where supported, or a live JNI array reference of the required type usable on the current thread for the call.
 		/// The JNI array element type must match the requested managed conversion and all requested element ranges must lie within the live array.
 		/// </safety>
-		public static unsafe void CopyObjectArray<T>(T[]? source, IntPtr destination)
+		public static void CopyObjectArray<T>(T[]? source, IntPtr destination)
 		{
 			if (source == null)
 				return;
@@ -2357,7 +2438,7 @@ namespace Android.Runtime {
 		/// <paramref name="array_ptr"/> must be null where supported, or a live JNI array reference of the required type usable on the current thread for the call.
 		/// The JNI array element type must match the requested managed conversion and all requested element ranges must lie within the live array.
 		/// </safety>
-		public static unsafe void SetArrayItem<T> (IntPtr array_ptr, int index, T value)
+		public static void SetArrayItem<T> (IntPtr array_ptr, int index, T value)
 		{
 			if (array_ptr == IntPtr.Zero)
 				throw new ArgumentException ("array_ptr");
@@ -2387,7 +2468,7 @@ namespace Android.Runtime {
 		/// <paramref name="src"/> must be null where supported, or a live JNI array reference of the required type usable on the current thread for the call.
 		/// The JNI array element type must match the requested managed conversion and all requested element ranges must lie within the live array.
 		/// </safety>
-		public static unsafe void CopyArray (IntPtr src, uint[] dest)
+		public static void CopyArray (IntPtr src, uint[] dest)
 		{
 			if (src == IntPtr.Zero)
 				return;
@@ -2402,7 +2483,7 @@ namespace Android.Runtime {
 		/// <paramref name="src"/> must be null where supported, or a live JNI array reference of the required type usable on the current thread for the call.
 		/// The JNI array element type must match the requested managed conversion and all requested element ranges must lie within the live array.
 		/// </safety>
-		public static unsafe void CopyArray (IntPtr src, ushort[] dest)
+		public static void CopyArray (IntPtr src, ushort[] dest)
 		{
 			if (src == IntPtr.Zero)
 				return;
@@ -2417,7 +2498,7 @@ namespace Android.Runtime {
 		/// <paramref name="src"/> must be null where supported, or a live JNI array reference of the required type usable on the current thread for the call.
 		/// The JNI array element type must match the requested managed conversion and all requested element ranges must lie within the live array.
 		/// </safety>
-		public static unsafe void CopyArray (IntPtr src, ulong[] dest)
+		public static void CopyArray (IntPtr src, ulong[] dest)
 		{
 			if (src == IntPtr.Zero)
 				return;

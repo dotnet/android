@@ -7,16 +7,16 @@ using Android.Runtime;
 
 using Java.Interop;
 
-using NUnit.Framework;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Java.InteropTests
 {
-	[TestFixture]
-	[NonParallelizable]
-	[Category ("VirtualCallbackConstructorParity")]
+	[TestClass]
+	[DoNotParallelize]
+	[TestCategory ("VirtualCallbackConstructorParity")]
 	public class VirtualCallbackConstructorTests
 	{
-		[Test]
+		[TestMethod]
 		public void ManagedFirstConstructionUsesFinalPeerThroughoutCallback ()
 		{
 			VirtualCallbackConstructorDerived.Reset ();
@@ -38,7 +38,7 @@ namespace Java.InteropTests
 			VirtualCallbackConstructorDerived.ClearReferences ();
 		}
 
-		[Test]
+		[TestMethod]
 		public void JavaFirstConstructionPromotesOneProvisionalPeer ()
 		{
 			VirtualCallbackConstructorDerived.Reset ();
@@ -60,14 +60,14 @@ namespace Java.InteropTests
 			VirtualCallbackConstructorDerived.ClearReferences ();
 		}
 
-		[Test]
+		[TestMethod]
 		public void JavaFirstVirtualCallbackExceptionAbortsConstruction ()
 		{
 			VirtualCallbackConstructorDerived.Reset ();
 			VirtualCallbackConstructorDerived.ThrowFromCallback = true;
 
 			try {
-				var exception = Assert.Catch<Exception> (() => CreateFromJavaExpectingException (42));
+				var exception = Assert.Throws<Exception> (() => CreateFromJavaExpectingException (42));
 
 				Assert.IsNotNull (exception);
 				Assert.IsTrue (exception.ToString ().Contains (VirtualCallbackConstructorDerived.CallbackExceptionMessage));
@@ -86,7 +86,7 @@ namespace Java.InteropTests
 		{
 			using var javaClass = VirtualCallbackConstructorDerived.GetJavaClass ();
 			var constructor = JNIEnv.GetMethodID (javaClass.Handle, "<init>", "(I)V");
-			var instance = JNIEnv.StartCreateInstance (javaClass.Handle, constructor, new JValue (value));
+			var instance = JNIEnv.AllocObject (javaClass.Handle);
 			JNIEnv.FinishCreateInstance (instance, javaClass.Handle, constructor, new JValue (value));
 			var result = Java.Lang.Object.GetObject<VirtualCallbackConstructorDerived> (
 				instance,
@@ -101,7 +101,7 @@ namespace Java.InteropTests
 			try {
 				using var javaClass = VirtualCallbackConstructorDerived.GetJavaClass ();
 				var constructor = JNIEnv.GetMethodID (javaClass.Handle, "<init>", "(I)V");
-				instance = JNIEnv.StartCreateInstance (javaClass.Handle, constructor, new JValue (value));
+				instance = JNIEnv.AllocObject (javaClass.Handle);
 				JNIEnv.FinishCreateInstance (instance, javaClass.Handle, constructor, new JValue (value));
 			} finally {
 				if (instance != IntPtr.Zero) {

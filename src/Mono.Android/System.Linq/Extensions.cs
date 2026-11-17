@@ -38,8 +38,7 @@ namespace System.Linq {
 		/// <exception cref="System.ArgumentNullException"><paramref name="source" /> is <see langword="null" />.</exception>
 		public static IEnumerable ToEnumerable (this Java.Lang.IIterable source)
 		{
-			if (source == null)
-				throw new ArgumentNullException ("source");
+			ArgumentNullException.ThrowIfNull (source);
 			using (var iterator = source.Iterator ())
 				while (iterator.HasNext) {
 					// SAFETY: iterator is retained by using and id_next is the matching zero-argument Object-returning member.
@@ -76,8 +75,7 @@ namespace System.Linq {
 				T
 		> (this Java.Lang.IIterable source)
 		{
-			if (source == null)
-				throw new ArgumentNullException ("source");
+			ArgumentNullException.ThrowIfNull (source);
 			using (var iterator = source.Iterator ())
 				while (iterator.HasNext) {
 					// SAFETY: iterator is retained by using and id_next is the matching zero-argument Object-returning member.

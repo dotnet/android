@@ -68,7 +68,7 @@ namespace Xamarin.Android.Tasks
 								string [] aliases = aliasMetaData.Split (new [] {','}, StringSplitOptions.RemoveEmptyEntries);
 								foreach (var alias in aliases) {
 									string aliasName = alias.Trim ();
-									if (string.Compare ("global", aliasName, StringComparison.Ordinal) == 0)
+									if (string.Equals ("global", aliasName, StringComparison.Ordinal))
 										continue;
 									declaringTypeName = $"{aliasName}::{declaringTypeName}";
 									break;

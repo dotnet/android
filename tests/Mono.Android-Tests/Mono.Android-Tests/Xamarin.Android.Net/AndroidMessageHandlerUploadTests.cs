@@ -9,22 +9,23 @@ using System.Net.Http;
 using System.Net.Sockets;
 using System.Threading;
 using System.Threading.Tasks;
-using NUnit.Framework;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Xamarin.Android.Net;
 
 namespace Xamarin.Android.NetTests;
 
-[TestFixture]
-[Category ("AndroidMessageHandlerUpload")]
-[Category ("AndroidMessageHandlerExceptions")]
+[TestClass]
+[TestCategory ("AndroidMessageHandlerUpload")]
+[TestCategory ("AndroidMessageHandlerExceptions")]
 public class AndroidMessageHandlerUploadTests
 {
-	[TestCase (true, false, false)]
-	[TestCase (false, false, false)]
-	[TestCase (true, true, false)]
-	[TestCase (false, true, false)]
-	[TestCase (true, false, true)]
-	[TestCase (true, true, true)]
+	[TestMethod]
+	[DataRow (true, false, false)]
+	[DataRow (false, false, false)]
+	[DataRow (true, true, false)]
+	[DataRow (false, true, false)]
+	[DataRow (true, false, true)]
+	[DataRow (true, true, true)]
 	public async Task ContentFailurePreservesOriginalException (bool ioFailure, bool streamAcquisitionFailure, bool cancelRequest)
 	{
 		var listener = new TcpListener (IPAddress.Loopback, 0);
@@ -41,13 +42,13 @@ public class AndroidMessageHandlerUploadTests
 		};
 		var connectionTask = listener.AcceptTcpClientAsync (serverCts.Token).AsTask ();
 		try {
-			var ex = Assert.CatchAsync (async () => await client.SendAsync (request, requestCts.Token));
+			var ex = await Assert.ThrowsAsync<global::System.Exception> (async () => await client.SendAsync (request, requestCts.Token));
 			await connectionTask;
 			if (cancelRequest) {
 				Assert.IsTrue (requestCts.IsCancellationRequested);
-				Assert.IsInstanceOf<OperationCanceledException> (ex, "Cancellation must take precedence over I/O translation.");
+				Assert.IsInstanceOfType<OperationCanceledException> (ex, "Cancellation must take precedence over I/O translation.");
 			} else if (ioFailure) {
-				Assert.IsInstanceOf<HttpRequestException> (ex);
+				Assert.IsInstanceOfType<HttpRequestException> (ex);
 				var compatibilityException = ex?.InnerException as WebException;
 				Assert.IsNotNull (compatibilityException);
 				Assert.AreEqual (WebExceptionStatus.UnknownError, compatibilityException?.Status);
@@ -117,20 +118,21 @@ public class AndroidMessageHandlerUploadTests
 		}
 	}
 
-	[TestCase (1, false, true, false)]
-	[TestCase (2, false, true, false)]
-	[TestCase (1, false, true, true)]
-	[TestCase (1, false, false, false)]
-	[TestCase (0, false, true, false)]
-	[TestCase (0, false, false, false)]
-	[TestCase (0, false, true, true)]
-	[TestCase (1, true, true, false)]
-	[TestCase (2, true, true, false)]
-	[TestCase (1, true, true, true)]
-	[TestCase (1, true, false, false)]
-	[TestCase (0, true, true, false)]
-	[TestCase (0, true, false, false)]
-	[TestCase (0, true, true, true)]
+	[TestMethod]
+	[DataRow (1, false, true, false)]
+	[DataRow (2, false, true, false)]
+	[DataRow (1, false, true, true)]
+	[DataRow (1, false, false, false)]
+	[DataRow (0, false, true, false)]
+	[DataRow (0, false, false, false)]
+	[DataRow (0, false, true, true)]
+	[DataRow (1, true, true, false)]
+	[DataRow (2, true, true, false)]
+	[DataRow (1, true, true, true)]
+	[DataRow (1, true, false, false)]
+	[DataRow (0, true, true, false)]
+	[DataRow (0, true, false, false)]
+	[DataRow (0, true, true, true)]
 	public async Task RewindFailurePreservesOriginalException (int uploadFailureKind, bool canSeekFailure, bool rewindIoFailure, bool cancelRequest)
 	{
 		var listener = new TcpListener (IPAddress.Loopback, 0);
@@ -152,16 +154,16 @@ public class AndroidMessageHandlerUploadTests
 		};
 		var connectionTask = listener.AcceptTcpClientAsync (serverCts.Token).AsTask ();
 		try {
-			var ex = Assert.CatchAsync (async () => await client.SendAsync (request, requestCts.Token));
+			var ex = await Assert.ThrowsAsync<global::System.Exception> (async () => await client.SendAsync (request, requestCts.Token));
 			await connectionTask;
 			Assert.IsTrue (body.RewindAttempted, "The test must exercise rewind after copying.");
 			Exception expectedFailure = uploadFailure ?? rewindFailure;
 			if (cancelRequest) {
 				Assert.IsTrue (requestCts.IsCancellationRequested);
-				Assert.IsInstanceOf<OperationCanceledException> (ex);
+				Assert.IsInstanceOfType<OperationCanceledException> (ex);
 				Assert.AreSame (expectedFailure, ex?.GetBaseException (), "Rewind must not replace the cancellation cause.");
 			} else if (expectedFailure is IOException) {
-				Assert.IsInstanceOf<HttpRequestException> (ex);
+				Assert.IsInstanceOfType<HttpRequestException> (ex);
 				var compatibilityException = ex?.InnerException as WebException;
 				Assert.IsNotNull (compatibilityException);
 				Assert.AreEqual (WebExceptionStatus.UnknownError, compatibilityException?.Status);
@@ -237,10 +239,16 @@ public class AndroidMessageHandlerUploadTests
 		}
 	}
 
-	[TestCase (HttpCompletionOption.ResponseHeadersRead)]
-	[TestCase (HttpCompletionOption.ResponseContentRead)]
-	[Repeat (3)]
+	[TestMethod]
+	[DataRow (HttpCompletionOption.ResponseHeadersRead)]
+	[DataRow (HttpCompletionOption.ResponseContentRead)]
 	public async Task UploadConnectionResetThrowsHttpRequestException (HttpCompletionOption completionOption)
+	{
+		for (int iteration = 0; iteration < 3; iteration++)
+			await UploadConnectionResetThrowsHttpRequestExceptionCore (completionOption);
+	}
+
+	static async Task UploadConnectionResetThrowsHttpRequestExceptionCore (HttpCompletionOption completionOption)
 	{
 		var listener = new TcpListener (IPAddress.Loopback, 0);
 		listener.Start ();
@@ -256,19 +264,19 @@ public class AndroidMessageHandlerUploadTests
 		bool bodyReceived = false;
 		Task serverTask = ResetUpload ();
 		try {
-			var ex = Assert.CatchAsync (async () =>
+			var ex = await Assert.ThrowsAsync<global::System.Exception> (async () =>
 				await client.SendAsync (request, completionOption, requestCts.Token));
 			await serverTask;
 			Assert.IsTrue (bodyReceived, "The server must reset an upload already in progress.");
 			Assert.IsFalse (requestCts.IsCancellationRequested, "The upload must fail without caller cancellation.");
-			Assert.IsInstanceOf<HttpRequestException> (ex);
+			Assert.IsInstanceOfType<HttpRequestException> (ex);
 			var compatibilityException = ex?.InnerException as WebException;
 			Assert.IsNotNull (compatibilityException);
 			if (compatibilityException == null)
 				throw new InvalidOperationException ("The compatibility exception was not preserved.");
 			Assert.AreEqual (WebExceptionStatus.UnknownError, compatibilityException.Status);
-			Assert.IsInstanceOf<IOException> (compatibilityException.InnerException);
-			Assert.IsInstanceOf<Java.IO.IOException> (compatibilityException.InnerException?.InnerException);
+			Assert.IsInstanceOfType<IOException> (compatibilityException.InnerException);
+			Assert.IsInstanceOfType<Java.IO.IOException> (compatibilityException.InnerException?.InnerException);
 			Assert.AreEqual (0, body.Position, "The content stream must be rewound after failure.");
 		} finally {
 			serverCts.Cancel ();
@@ -285,7 +293,7 @@ public class AndroidMessageHandlerUploadTests
 			int headerBytes = 0;
 			byte[] terminator = [13, 10, 13, 10];
 			while (headerEnd < terminator.Length) {
-				Assert.Less (++headerBytes, 64 * 1024, "Request headers exceeded the test limit.");
+				Assert.IsLessThan (64 * 1024, ++headerBytes, "Request headers exceeded the test limit.");
 				Assert.AreEqual (1, await stream.ReadAsync (buffer, serverCts.Token), "Request ended before headers.");
 				headerEnd = buffer [0] == terminator [headerEnd] ? headerEnd + 1 : (buffer [0] == 13 ? 1 : 0);
 			}

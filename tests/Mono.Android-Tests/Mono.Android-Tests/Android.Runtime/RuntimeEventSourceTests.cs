@@ -13,15 +13,15 @@ using System.Threading;
 using Android.Runtime;
 using Java.Interop;
 using Microsoft.Android.Runtime;
-using NUnit.Framework;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Android.RuntimeTests
 {
-	[TestFixture]
+	[TestClass]
 	public class RuntimeEventSourceTests
 	{
-		[Test]
-		[Category ("GCBridge")]
+		[TestMethod]
+		[TestCategory ("GCBridge")]
 		[DynamicDependency (DynamicallyAccessedMemberTypes.All, "Microsoft.Android.Runtime.RuntimeEventSource", "Mono.Android")]
 		public void ProviderContractAndEmission ()
 		{
@@ -97,8 +97,8 @@ namespace Android.RuntimeTests
 				javaToManagedDirection);
 		}
 
-		[Test]
-		[Category ("TypeMap")]
+		[TestMethod]
+		[TestCategory ("TypeMap")]
 		public void JavaToManagedTypeMapLookup_EmitsOnlyForCachePopulation ()
 		{
 			const string jniName = "net/dot/android/test/RuntimeEventSourceMappedPeer";
@@ -123,8 +123,8 @@ namespace Android.RuntimeTests
 			AssertTypeMapPair (events, 0, startEventId, stopEventId, keyword, task, direction);
 		}
 
-		[Test]
-		[Category ("TypeMap")]
+		[TestMethod]
+		[TestCategory ("TypeMap")]
 		public void ManagedToJavaTypeMapLookup_EmitsOnlyForCachePopulation ()
 		{
 			var managedType = typeof (RuntimeEventSourceMappedPeer);
@@ -149,8 +149,8 @@ namespace Android.RuntimeTests
 			AssertTypeMapPair (events, 0, startEventId, stopEventId, keyword, task, direction);
 		}
 
-		[Test]
-		[Category ("TypeMap")]
+		[TestMethod]
+		[TestCategory ("TypeMap")]
 		public void FailedTypeMapLookups_EmitMatchedPairs ()
 		{
 			const string missingJniName = "net/dot/android/test/RuntimeEventSourceMissingType";
@@ -179,8 +179,8 @@ namespace Android.RuntimeTests
 			AssertTypeMapPair (events, 2, startEventId, stopEventId, keyword, task, managedToJava);
 		}
 
-		[Test]
-		[Category ("TypeMap")]
+		[TestMethod]
+		[TestCategory ("TypeMap")]
 		public void ThrowingTypeMapLookups_EmitMatchedPairsAndPropagate ()
 		{
 			var instance = CreateTrimmableTypeMap (new ThrowingTypeMap ());
@@ -193,10 +193,10 @@ namespace Android.RuntimeTests
 			var managedToJava = GetConstant<string> (eventSourceType, "ManagedToJavaTypeMapDirection");
 
 			using var listener = new CapturingEventListener ();
-			var javaException = Assert.Throws<InvalidOperationException> (() =>
+			var javaException = Assert.ThrowsExactly<InvalidOperationException> (() =>
 				instance.TryGetTargetType ("net/dot/android/test/ThrowingType", out _));
 			Assert.AreEqual (ThrowingTypeMap.ExceptionMessage, javaException?.Message);
-			var managedException = Assert.Throws<InvalidOperationException> (() =>
+			var managedException = Assert.ThrowsExactly<InvalidOperationException> (() =>
 				instance.TryGetJniNameForManagedType (typeof (RuntimeEventSourceTests), out _));
 			Assert.AreEqual (ThrowingTypeMap.ExceptionMessage, managedException?.Message);
 
@@ -206,13 +206,13 @@ namespace Android.RuntimeTests
 			AssertTypeMapPair (events, 2, startEventId, stopEventId, keyword, task, managedToJava);
 		}
 
-		[Test]
-		[Category ("GCBridge")]
+		[TestMethod]
+		[TestCategory ("GCBridge")]
 		[DynamicDependency (DynamicallyAccessedMemberTypes.All, "Microsoft.Android.Runtime.RuntimeEventSource", "Mono.Android")]
 		public void GCBridgeRoundEmission ()
 		{
 			if (!Microsoft.Android.Runtime.RuntimeFeature.IsCoreClrRuntime) {
-				Assert.Ignore ("This test exercises the managed CoreCLR GC bridge.");
+				Assert.Inconclusive ("This test exercises the managed CoreCLR GC bridge.");
 			}
 
 			var eventSourceType = Type.GetType ("Microsoft.Android.Runtime.RuntimeEventSource, Mono.Android", throwOnError: true)
@@ -231,7 +231,7 @@ namespace Android.RuntimeTests
 				Thread.Sleep (10);
 			} while (JNIEnv.BridgeProcessingGeneration == initialBridgeGeneration && stopwatch.Elapsed < timeout);
 
-			Assert.Greater (JNIEnv.BridgeProcessingGeneration, initialBridgeGeneration,
+			Assert.IsGreaterThan (initialBridgeGeneration, JNIEnv.BridgeProcessingGeneration,
 				"A GC bridge round should complete after forcing a full collection.");
 
 			CapturedEvent startEvent = default;
@@ -374,6 +374,7 @@ namespace Android.RuntimeTests
 
 		sealed class CapturingEventListener : EventListener
 		{
+			readonly Lock eventsLock = new ();
 			readonly List<CapturedEvent> events = new ();
 
 			public bool ProviderCreated { get; private set; }
@@ -381,7 +382,7 @@ namespace Android.RuntimeTests
 			public IReadOnlyList<CapturedEvent> GetEvents (params int [] eventIds)
 			{
 				int managedThreadId = Environment.CurrentManagedThreadId;
-				lock (events) {
+				lock (eventsLock) {
 					if (eventIds.Length == 0) {
 						return events.FindAll (captured => captured.ManagedThreadId == managedThreadId);
 					}
@@ -402,7 +403,7 @@ namespace Android.RuntimeTests
 				out CapturedEvent startEvent,
 				out CapturedEvent stopEvent)
 			{
-				lock (events) {
+				lock (eventsLock) {
 					for (int i = 0; i + 1 < events.Count; i++) {
 						if (events [i].Id == startEventId && events [i + 1].Id == stopEventId) {
 							startEvent = events [i];
@@ -428,7 +429,7 @@ namespace Android.RuntimeTests
 			protected override void OnEventWritten (EventWrittenEventArgs eventData)
 			{
 				if (eventData.EventName is not null) {
-					lock (events) {
+					lock (eventsLock) {
 						events.Add (new CapturedEvent (eventData));
 					}
 				}

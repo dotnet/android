@@ -20,9 +20,17 @@ namespace Xamarin.Android.Tasks;
 ///
 /// Parsing and merging logic is delegated to <see cref="AdbRunner"/> in Xamarin.Android.Tools.AndroidSdk.
 /// </summary>
-public class GetAvailableAndroidDevices : AndroidAdb
+public class GetAvailableAndroidDevices : AndroidToolTask
 {
     readonly List<string> output = [];
+
+    public override string TaskPrefix => "GAAD";
+
+    protected override string ToolName => OS.IsWindows ? "adb.exe" : "adb";
+
+    protected override string GenerateFullPathToTool () => Path.Combine (ToolPath, ToolExe);
+
+    protected override string GenerateCommandLineCommands () => "devices -l";
 
     /// <summary>
     /// Path to the emulator tool directory.
@@ -36,12 +44,6 @@ public class GetAvailableAndroidDevices : AndroidAdb
 
     [Output]
     public ITaskItem [] Devices { get; set; } = [];
-
-    public GetAvailableAndroidDevices ()
-    {
-        Command = "devices";
-        Arguments = "-l";
-    }
 
     protected override void LogEventsFromTextOutput (string singleLine, MessageImportance messageImportance)
     {

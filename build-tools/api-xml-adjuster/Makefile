@@ -3,7 +3,6 @@ CONFIGURATION=Debug
 SHELL = /bin/bash
 
 TOP=../../
-JAVA_INTEROP_PATH=../../external/Java.Interop
 
 ANDROID_SDK_PATH=$(shell find ~/ -maxdepth 1 -name android-sdk-*)
 
@@ -29,7 +28,7 @@ ANDROID_JAR = $(ANDROID_SDK_PATH)/platforms/android-$(LEVEL)/android.jar
 
 DOCS_DIR_CUR_LEVEL = $(DOCS_DIR)/docs-api-$(LEVEL)
 
-XBUILD = JAVA_INTEROP_PATH=$(JAVA_INTEROP_PATH) msbuild
+XBUILD = msbuild
 
 all:
 	for level in $(API_LEVELS) ; do \
@@ -41,8 +40,8 @@ clean:
 		make LEVEL=$$level clean-api-xml || exit 1; \
 	done
 	rm -f $(CLASS_PARSE)
-	cd $(JAVA_INTEROP_PATH)/tools/class-parse && $(XBUILD) /t:Clean
-	cd $(JAVA_INTEROP_PATH)/src/Xamarin.Android.Tools.Bytecode && $(XBUILD) /t:Clean
+	cd $(TOP)/src/class-parse && $(XBUILD) /t:Clean
+	cd $(TOP)/src/Xamarin.Android.Tools.Bytecode && $(XBUILD) /t:Clean
 
 api-xml: $(ANALYZED_XML)
 
@@ -59,7 +58,7 @@ $(ANALYZED_XML): $(API_XML_TOOL) $(CLASS_PARSE_XML)
 	$(RUN_API_XML_TOOL) $(CLASS_PARSE_XML) $(ANALYZED_XML) || rm -f $(ANALYZED_XML)
 
 $(CLASS_PARSE):
-	cd $(JAVA_INTEROP_PATH)/tools/class-parse && $(XBUILD) /p:OutputPath=$(TOP)/out/lib/xamarin.android/xbuild/Xamarin.Android/
+	cd $(TOP)/src/class-parse && $(XBUILD) /p:OutputPath=$(TOP)/out/lib/xamarin.android/xbuild/Xamarin.Android/
 
 $(API_XML_TOOL):
 	$(XBUILD)

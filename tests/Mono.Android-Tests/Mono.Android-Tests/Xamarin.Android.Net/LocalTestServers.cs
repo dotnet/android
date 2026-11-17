@@ -21,6 +21,7 @@ namespace Xamarin.Android.NetTests {
 		protected const string LoopbackHost = "127.0.0.1";
 
 		readonly string name;
+		readonly Lock handlerExceptionsLock = new ();
 		readonly List<Exception> handlerExceptions = new List<Exception> ();
 
 		protected LocalTestServer (string name)
@@ -33,7 +34,7 @@ namespace Xamarin.Android.NetTests {
 		public void AssertNoUnhandledExceptions ()
 		{
 			Exception exception;
-			lock (handlerExceptions) {
+			lock (handlerExceptionsLock) {
 				if (handlerExceptions.Count == 0) {
 					return;
 				}
@@ -46,7 +47,7 @@ namespace Xamarin.Android.NetTests {
 
 		protected void AddHandlerException (Exception ex)
 		{
-			lock (handlerExceptions) {
+			lock (handlerExceptionsLock) {
 				handlerExceptions.Add (ex);
 			}
 		}
@@ -310,11 +311,11 @@ namespace Xamarin.Android.NetTests {
 
 		static Stream CreateCompressionStream (Stream stream, string encoding)
 		{
-			if (String.Compare (encoding, "gzip", StringComparison.OrdinalIgnoreCase) == 0) {
+			if (string.Equals (encoding, "gzip", StringComparison.OrdinalIgnoreCase)) {
 				return new GZipStream (stream, CompressionLevel.Fastest, leaveOpen: true);
 			}
 #if !NETSTANDARD2_0
-			if (String.Compare (encoding, "br", StringComparison.OrdinalIgnoreCase) == 0) {
+			if (string.Equals (encoding, "br", StringComparison.OrdinalIgnoreCase)) {
 				return new BrotliStream (stream, CompressionLevel.Fastest, leaveOpen: true);
 			}
 #endif

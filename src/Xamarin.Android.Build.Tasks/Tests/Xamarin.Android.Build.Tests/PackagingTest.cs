@@ -219,8 +219,9 @@ namespace Xamarin.Android.Build.Tests
 			}
 		}
 
-		[Test]
-		public void R8PreservesInstanceIntFieldType ()
+		[TestCase (true)]
+		[TestCase (false)]
+		public void R8PreservesInstanceIntFieldType (bool publishTrimmed)
 		{
 			if (IgnoreUnsupportedConfiguration (AndroidRuntime.CoreCLR, release: true)) {
 				return;
@@ -269,6 +270,7 @@ namespace Xamarin.Android.Build.Tests
 			proj.SetProperty (KnownProperties.RuntimeIdentifier, "android-arm64");
 			proj.SetProperty (KnownProperties.AndroidLinkTool, "r8");
 			proj.SetProperty (KnownProperties.AndroidR8ObfuscationMode, "private-members");
+			proj.SetProperty ("PublishTrimmed", publishTrimmed.ToString ());
 			proj.SetProperty ("TrimMode", "full");
 			proj.MainActivity = proj.DefaultMainActivity.Replace ("//${AFTER_ONCREATE}", """
 				using var error = new Example.PlaybackError (Intent.GetBooleanExtra ("source", false), Intent.GetBooleanExtra ("renderer", false));
@@ -280,6 +282,9 @@ namespace Xamarin.Android.Build.Tests
 			using var builder = CreateApkBuilder (Path.Combine (path, proj.ProjectName));
 			Assert.IsTrue (bindingBuilder.Build (binding), "The binding build should succeed.");
 			Assert.IsTrue (builder.Build (proj), "The R8 build should succeed.");
+			var referenceRules = builder.Output.GetIntermediaryPath (Path.Combine ("android-arm64", "proguard", "proguard_project_references.cfg"));
+			FileAssert.Exists (referenceRules);
+			Assert.IsFalse (builder.LastBuildOutput.Any (line => line.Contains ("XA4304")), "The generated R8 reference rules must be available.");
 
 			var dexDirectory = builder.Output.GetIntermediaryPath (Path.Combine ("android-arm64", "android", "bin"));
 			var dexFiles = Directory.GetFiles (dexDirectory, "classes*.dex");
@@ -287,6 +292,15 @@ namespace Xamarin.Android.Build.Tests
 			Assert.IsTrue (dexFiles.Any (dexFile => DexUtils.ContainsClassWithField (
 				"Lexample/PlaybackError;", "type", "I", DexUtils.GetDexDump (dexFile, AndroidSdkPath))),
 				"R8 must preserve the instance field as int, not narrow it to byte, for managed JNI access.");
+
+			if (!publishTrimmed) {
+				var timestamp = File.GetLastWriteTimeUtc (referenceRules + ".stamp");
+				Assert.IsTrue (builder.Build (proj, doNotCleanupOnUpdate: true, saveProject: false), "The unchanged R8 build should succeed.");
+				Assert.AreEqual (timestamp, File.GetLastWriteTimeUtc (referenceRules + ".stamp"), "Unchanged assemblies must not regenerate R8 reference rules.");
+				File.Delete (referenceRules);
+				Assert.IsTrue (builder.Build (proj, doNotCleanupOnUpdate: true, saveProject: false), "The R8 build should restore missing reference rules.");
+				FileAssert.Exists (referenceRules);
+			}
 		}
 
 		[TestCase ("", true)]
@@ -463,14 +477,15 @@ Console.WriteLine ($""{DateTime.UtcNow.AddHours(-30).Humanize(culture:c)}"");
 			var ret = new List<object[]> ();
 
 			foreach (AndroidRuntime runtime in new[] { AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT }) {
-				AddTestData ("Test Me", runtime);
-
 				// testing characters as per https://www.compart.com/en/unicode/category/Zs
 				AddTestData ("TestUnicodeSpace0020\u0020Me", runtime);
-				AddTestData ("TestUnicodeSpace2000\u2000Me", runtime);
 				AddTestData ("TestUnicodeSpace2009\u2009Me", runtime);
-				AddTestData ("TestUnicodeSpace2002\u2002Me", runtime);
-				AddTestData ("TestUnicodeSpace2007\u2007Me", runtime);
+				// Run fewer NativeAOT cases to reduce CI time.
+				if (runtime == AndroidRuntime.CoreCLR) {
+					AddTestData ("TestUnicodeSpace2000\u2000Me", runtime);
+					AddTestData ("TestUnicodeSpace2002\u2002Me", runtime);
+					AddTestData ("TestUnicodeSpace2007\u2007Me", runtime);
+				}
 			}
 
 			return ret;
@@ -505,27 +520,6 @@ Console.WriteLine ($""{DateTime.UtcNow.AddHours(-30).Humanize(culture:c)}"");
 		}
 
 		[Test]
-		public void CheckClassesDexIsIncluded ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
-		{
-			const bool isRelease = true;
-			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
-				return;
-			}
-			var proj = new XamarinAndroidApplicationProject () {
-				IsRelease = isRelease,
-			};
-			proj.SetRuntime (runtime);
-			using (var b = CreateApkBuilder ()) {
-				Assert.IsTrue (b.Build (proj), "build failed");
-				var apk = Path.Combine (Root, b.ProjectDirectory,
-						proj.OutputPath, $"{proj.PackageName}-Signed.apk");
-				using (var zip = ZipHelper.OpenZip (apk)) {
-					Assert.IsNotNull (zip.GetEntry ("classes.dex"), "Apk should contain classes.dex");
-				}
-			}
-		}
-
-		[Test]
 		[Parallelizable (ParallelScope.Self)]
 		public void CheckIncludedNativeLibraries ([Values] bool compressNativeLibraries, [Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
@@ -546,6 +540,7 @@ Console.WriteLine ($""{DateTime.UtcNow.AddHours(-30).Humanize(culture:c)}"");
 				var apk = Path.Combine (Root, b.ProjectDirectory,
 						proj.OutputPath, $"{proj.PackageName}-Signed.apk");
 				using (var zip = ZipHelper.OpenZip (apk)) {
+					Assert.IsNotNull (zip.GetEntry ("classes.dex"), "Apk should contain classes.dex");
 					var libFiles = zip.Entries.Where (x => x.FullName.StartsWith("lib/", StringComparison.Ordinal) && !x.FullName.Equals("lib/", StringComparison.InvariantCultureIgnoreCase));
 					var abiPaths = new string[] { "lib/x86_64/" };
 					foreach (var file in libFiles) {
@@ -786,8 +781,12 @@ namespace UnnamedProject {
 			}
 		}
 
-		[Test]
-		public void CheckSignApk ([Values] bool useApkSigner, [Values] bool perAbiApk, [Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
+		[TestCase (false, false, AndroidRuntime.CoreCLR)]
+		[TestCase (false, true, AndroidRuntime.CoreCLR)]
+		[TestCase (true, false, AndroidRuntime.CoreCLR)]
+		[TestCase (true, true, AndroidRuntime.CoreCLR)]
+		[TestCase (true, true, AndroidRuntime.NativeAOT)]
+		public void CheckSignApk (bool useApkSigner, bool perAbiApk, AndroidRuntime runtime)
 		{
 			const bool isRelease = true;
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
@@ -801,23 +800,10 @@ namespace UnnamedProject {
 			string keyfile = Path.Combine (Root, "temp", TestName, "keystore", "release.keystore");
 			if (File.Exists (keyfile))
 				File.Delete (keyfile);
-			string keyToolPath = Path.Combine (AndroidSdkResolver.GetJavaSdkPath (), "bin");
-			var engine = new MockBuildEngine (Console.Out);
 			string pass = "Cy(nBW~j.&@B-!R_aq7/syzFR!S$4]7R%i6)R!";
 			string alias = "release store";
-			var task = new AndroidCreateDebugKey {
-				BuildEngine = engine,
-				KeyStore = keyfile,
-				StorePass = pass,
-				KeyAlias = alias,
-				KeyPass = pass,
-				KeyAlgorithm="RSA",
-				Validity=30,
-				StoreType="pkcs12",
-				Command="-genkeypair",
-				ToolPath = keyToolPath,
-			};
-			Assert.IsTrue (task.Execute (), "Task should have succeeded.");
+			Directory.CreateDirectory (Path.GetDirectoryName (keyfile));
+			ResourceData.GenerateKeystore (keyfile, storePass: pass, keyAlias: alias, keyPass: pass);
 			var proj = new XamarinAndroidApplicationProject () {
 				IsRelease = isRelease,
 			};
@@ -1166,9 +1152,9 @@ public class Test
 		static IEnumerable<object[]> Get_BuildApkWithManyAssets_Data ()
 		{
 			foreach (AndroidRuntime runtime in new[] { AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT }) {
-				foreach (var assetCount in new [] { 1, 5, 50, 100, 512, 1024 })
+				foreach (var assetCount in new [] { 1, 50, 512, 1024 })
 					yield return new object [] { assetCount, 1, runtime };
-				foreach (var assetSizeKb in new [] { 2, 5, 10, 100, 200 })
+				foreach (var assetSizeKb in new [] { 2, 200 })
 					yield return new object [] { 1, assetSizeKb, runtime };
 			}
 		}

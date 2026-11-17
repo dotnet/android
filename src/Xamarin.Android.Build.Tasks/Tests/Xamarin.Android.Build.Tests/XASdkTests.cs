@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
-using System.Runtime.InteropServices;
 using System.Text;
 using NUnit.Framework;
 using Xamarin.Android.Tools;
@@ -53,7 +52,7 @@ namespace Xamarin.Android.Build.Tests
 			var standalone = GetTaskCounts ();
 			Assert.AreEqual (1, standalone ["ResolveSdks"]);
 			Assert.AreEqual (1, standalone ["ResolveAndroidTooling"]);
-			Assert.AreEqual (1, standalone ["ValidateJavaVersion"]);
+			Assert.AreEqual (1, standalone ["_ValidateJavaVersion"]);
 			Assert.IsFalse (dotnet.Build (parameters: parameters.Concat (["LatestSupportedJavaVersion=1.0"]).ToArray (), msbuildArguments: arguments),
 				"A changed Java limit must still be validated.");
 			StringAssertEx.Contains ("error XA0030", dotnet.LastBuildOutput);
@@ -63,7 +62,7 @@ namespace Xamarin.Android.Build.Tests
 				var counts = GetTaskCounts ();
 				Assert.AreEqual (1, counts ["ResolveSdks"], "Only the outer build should discover SDKs.");
 				Assert.AreEqual (1, counts ["ResolveAndroidTooling"], "Only the outer build should resolve Android tooling.");
-				Assert.AreEqual (1, counts ["ValidateJavaVersion"], "Only the outer build should validate Java.");
+				Assert.AreEqual (1, counts ["_ValidateJavaVersion"], "Only the outer build should validate Java.");
 				Assert.GreaterOrEqual (counts ["RuntimeIdentifierToAbi"], 3, "Both RID-specific target bodies must still execute.");
 			}
 
@@ -72,12 +71,12 @@ namespace Xamarin.Android.Build.Tests
 				var counts = new Dictionary<string, int> {
 					["ResolveSdks"] = 0,
 					["ResolveAndroidTooling"] = 0,
-					["ValidateJavaVersion"] = 0,
 					["RuntimeIdentifierToAbi"] = 0,
 				};
 				foreach (var task in counts.Keys.ToArray ()) {
-					counts [task] = dotnet.LastBuildOutput.Count (line => line.Contains ($"Task \"{task}\" (TaskId:", StringComparison.Ordinal));
+					counts [task] = CountTask (dotnet.LastBuildOutput, task);
 				}
+				counts ["_ValidateJavaVersion"] = CountTarget (dotnet.LastBuildOutput, "_ValidateJavaVersion");
 				return counts;
 			}
 		}
@@ -116,7 +115,7 @@ namespace Xamarin.Android.Build.Tests
 			Assert.IsTrue (builder.Build (project));
 			Assert.AreEqual (1, CountTask (builder.LastBuildOutput, "ResolveSdks"));
 			Assert.AreEqual (1, CountTask (builder.LastBuildOutput, "ResolveAndroidTooling"));
-			Assert.AreEqual (1, CountTask (builder.LastBuildOutput, "ValidateJavaVersion"));
+			Assert.AreEqual (1, CountTarget (builder.LastBuildOutput, "_ValidateJavaVersion"));
 			Assert.GreaterOrEqual (CountTask (builder.LastBuildOutput, "RuntimeIdentifierToAbi"), 2);
 			builder.Output.AssertTargetIsNotSkipped ("_ResolveImplementationAssembliesForTypeMap");
 			builder.Output.AssertTargetIsNotSkipped (runtime == AndroidRuntime.CoreCLR ?
@@ -154,7 +153,7 @@ namespace Xamarin.Android.Build.Tests
 			builder.Target = "_TestNestedTooling";
 			builder.Verbosity = Microsoft.Build.Framework.LoggerVerbosity.Diagnostic;
 			Assert.IsTrue (builder.Build (project, parameters: [$"_TestInnerProperties={innerProperties}"]));
-			Assert.AreEqual (javaCalls, CountTask (builder.LastBuildOutput, "ValidateJavaVersion"));
+			Assert.AreEqual (javaCalls, CountTarget (builder.LastBuildOutput, "_ValidateJavaVersion"));
 			Assert.AreEqual (2, CountTask (builder.LastBuildOutput, "ResolveAndroidTooling"));
 			Assert.AreEqual (innerProperties.StartsWith ("AndroidSdkBuildToolsVersion", StringComparison.Ordinal) ? 1 : 2,
 				CountTask (builder.LastBuildOutput, "ResolveSdks"));
@@ -193,7 +192,7 @@ namespace Xamarin.Android.Build.Tests
 			Assert.IsTrue (builder.Build (project, parameters: [$"AndroidNdkDirectory=\"{ndkPath}\""]));
 			Assert.AreEqual (1, CountTask (builder.LastBuildOutput, "ResolveSdks"));
 			Assert.AreEqual (1, CountTask (builder.LastBuildOutput, "ResolveAndroidTooling"));
-			Assert.AreEqual (1, CountTask (builder.LastBuildOutput, "ValidateJavaVersion"));
+			Assert.AreEqual (1, CountTarget (builder.LastBuildOutput, "_ValidateJavaVersion"));
 		}
 
 		[Test]
@@ -223,11 +222,16 @@ namespace Xamarin.Android.Build.Tests
 			Assert.IsTrue (builder.Build (project));
 			Assert.AreEqual (2, CountTask (builder.LastBuildOutput, "ResolveSdks"));
 			Assert.AreEqual (2, CountTask (builder.LastBuildOutput, "ResolveAndroidTooling"));
-			Assert.AreEqual (2, CountTask (builder.LastBuildOutput, "ValidateJavaVersion"));
+			Assert.AreEqual (2, CountTarget (builder.LastBuildOutput, "_ValidateJavaVersion"));
 		}
 
 		static int CountTask (IEnumerable<string> output, string task) =>
 			output.Count (line => line.Contains ($"Task \"{task}\" (TaskId:", StringComparison.Ordinal));
+
+		// Executed targets log `Target "Name: (TargetId:N)" in file ...`; skipped ones do not.
+		static int CountTarget (IEnumerable<string> output, string target) =>
+			output.Count (line => line.Contains ($"Target \"{target}: (TargetId:", StringComparison.Ordinal) &&
+				line.Contains ("\" in file \"", StringComparison.Ordinal));
 
 		[Test]
 		public void DotNetWorkloadSearchUsesEnglishDescription ()
@@ -260,7 +264,7 @@ namespace Xamarin.Android.Build.Tests
 		[Test]
 		public void DotNetNewFramework (
 			[Values ("android", "androidlib", "android-bindinglib", "androidwear", "androidtest")] string template,
-			[Values (null, "net11.0-android", "net10.0-android")] string framework)
+			[Values (null, "net12.0-android", "net11.0-android")] string framework)
 		{
 			var templateName = TestName.Replace ("-", "");
 			var templatePath = Path.Combine (Root, "temp", templateName);
@@ -273,7 +277,7 @@ namespace Xamarin.Android.Build.Tests
 			Assert.IsTrue (dotnet.New (template, noRestore: true, framework: framework), $"`dotnet new {template}` should succeed with framework '{framework}'");
 
 			var project = System.Xml.Linq.XDocument.Load (projectFile);
-			Assert.AreEqual (framework ?? "net11.0-android", project.Root.Element ("PropertyGroup").Element ("TargetFramework").Value);
+			Assert.AreEqual (framework ?? $"{XABuildConfig.LatestDotNetTargetFramework}-android", project.Root.Element ("PropertyGroup").Element ("TargetFramework").Value);
 		}
 
 		[Test]
@@ -332,13 +336,13 @@ namespace Xamarin.Android.Build.Tests
 				AddTestData (
 					dotnetVersion: XABuildConfig.PreviousDotNetTargetFramework,
 					platform: "android",
-					apiLevel: new Version (36, 0),
+					apiLevel: new Version (37, 0),
 					runtime: runtime);
 
 				AddTestData (
 					dotnetVersion: XABuildConfig.PreviousDotNetTargetFramework,
-					platform: "android36",
-					apiLevel: new Version (36, 0),
+					platform: "android37",
+					apiLevel: new Version (37, 0),
 					runtime: runtime);
 
 				AddTestData (
@@ -483,7 +487,7 @@ public class JavaSourceTest {
 				AddTestData (
 					dotnetVersion: XABuildConfig.PreviousDotNetTargetFramework,
 					platform: "android",
-					apiLevel: new Version (36, 0),
+					apiLevel: new Version (37, 0),
 					runtime: runtime
 				);
 
@@ -704,17 +708,6 @@ public abstract class Foo<TVirtualView, TNativeView> : ViewHandler<TVirtualView,
 			if (!preview) {
 				builder.AssertHasNoWarnings ();
 			}
-		}
-
-		static string GetPreviousWorkloadJavaSdkPath ()
-		{
-			var architecture = RuntimeInformation.ProcessArchitecture.ToString ().ToUpperInvariant ();
-			var variableName = $"JAVA_HOME_21_{architecture}";
-			var javaSdkPath = Environment.GetEnvironmentVariable (variableName);
-			if (string.IsNullOrEmpty (javaSdkPath)) {
-				Assert.Ignore ($"The previous Android workload requires JDK 21, but {variableName} is not set.");
-			}
-			return javaSdkPath;
 		}
 	}
 }

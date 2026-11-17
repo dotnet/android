@@ -30,10 +30,6 @@
       <Project>{E34BCFA0-CAA4-412C-AA1C-75DB8D67D157}</Project>
       <Name>Xamarin.Android.Tools.AndroidSdk</Name>
     </ProjectReference>
-    <ProjectReference Include="..\..\..\..\tools\vswhere\vswhere.csproj">
-      <Project>{dbdc804f-8406-4f5e-83c6-720cb0cb6c6f}</Project>
-      <Name>vswhere</Name>
-    </ProjectReference>
     <ProjectReference Include="..\..\..\AndroidBuildConfig\AndroidBuildConfig.csproj" />
   </ItemGroup>
 </Project>

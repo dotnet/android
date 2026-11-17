@@ -12,10 +12,16 @@ import android.os.Build;
 import android.util.Log;
 
 public final class NativeLibraryHelper {
-	static final String TAG = "monodroid";
+	static final String TAG = "DOTNET";
 
 	private NativeLibraryHelper ()
 	{
+	}
+
+	// Called through JNI so System.loadLibrary observes an application-owned Java caller.
+	public static void loadLibrary (String libraryName)
+	{
+		System.loadLibrary (libraryName);
 	}
 
 	public static void loadLibrary (String libraryName, Context context)

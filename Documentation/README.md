@@ -12,6 +12,7 @@
   * [Submitting Bugs, Feature Requests, and Pull Requests][bugs]
   * [Directory Structure](project-docs/ExploringSources.md)
   * [Assembly store format](project-docs/AssemblyStores.md)
+  * [Java.Interop](Java.Interop/README.md)
 
 [bugs]: https://github.com/dotnet/android/wiki/Submitting-Bugs,-Feature-Requests,-and-Pull-Requests
 

@@ -12,6 +12,8 @@ namespace xamarin::android {
 	{
 	public:
 #if defined(DEBUG)
+		// Returns borrowed, process-lifetime data. Repeated successful probes of the same name
+		// return the first snapshot; neither callers nor CoreCLR may free it.
 		static auto open_assembly (std::string_view const& name, int64_t &size) noexcept -> void*;
 
 		// Builds the `TRUSTED_PLATFORM_ASSEMBLIES` list from the override directory. Returns a

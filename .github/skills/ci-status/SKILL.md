@@ -95,7 +95,7 @@ For ETA, failed-test details, run→job mapping, previous attempts, and crash lo
 
 ### 3. Analyze and classify every red build
 
-Run the helper in JSON mode; this is the structured source for the report:
+Run the helper in JSON mode; this is the structured source for the report. It requires a .NET 11 SDK and `az login`:
 
 ```bash
 az account show >/dev/null || {

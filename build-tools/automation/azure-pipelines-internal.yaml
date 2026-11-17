@@ -80,7 +80,7 @@ variables:
 - name: NetCoreInternalPoolName
   value: NetCore1ESPool-Internal
 - name: WindowsPoolImageNetCoreInternal
-  value: windows.vs2022.amd64
+  value: windows.vs2026.amd64
 - name: LinuxPoolImageNetCoreInternal
   value: build.ubuntu.2204.amd64
 # Skip tests when explicitly requested; otherwise run full test matrix.
@@ -168,6 +168,7 @@ extends:
         displayName: Windows > Build & Smoke Test
         pool:
           name: $(NetCoreInternalPoolName)
+          # The build runs a .NET TaskHost test that requires MSBuild 18.7 or later.
           image: $(WindowsPoolImageNetCoreInternal)
           os: windows
         timeoutInMinutes: 240
@@ -384,7 +385,7 @@ extends:
             - task: UseDotNet@2
               displayName: Install .NET SDK for Arcade signing
               inputs:
-                version: $(DotNetSdkVersion).x
+                version: $(DotNetSdkVersion)
                 includePreviewVersions: true
 
             - pwsh: |
@@ -658,7 +659,7 @@ extends:
       jobs:
       - job: mac_msbuild_tests
         strategy:
-          parallel: 10
+          parallel: 9
         displayName: macOS > Tests > MSBuild
         # dnceng/internal has no AcesShared pool, so use hosted macOS images
         pool:
@@ -705,7 +706,7 @@ extends:
 
       - job: win_msbuild_tests
         strategy:
-          parallel: 8
+          parallel: 7
         displayName: Windows > Tests > MSBuild
         pool:
           name: $(NetCoreInternalPoolName)
@@ -763,7 +764,7 @@ extends:
       jobs:
       - job: mac_dotnetdevice_tests
         strategy:
-          parallel: 12
+          parallel: ${{ variables.MSBuildEmulatorTestAgentCount }}
         displayName: "macOS > Tests > MSBuild+Emulator"
         # Emulator jobs need the hosted image that can boot Android emulators
         pool:
@@ -793,8 +794,8 @@ extends:
         - template: /build-tools/automation/yaml-templates/run-dotnet-preview.yaml@self
           parameters:
             project: Microsoft.Android.slnx
-            arguments: -t:PrepareJavaInterop -c $(XA.Build.Configuration) --no-restore
-            displayName: prepare java.interop $(XA.Build.Configuration)
+            arguments: -t:PrepareOpenJDK -c $(XA.Build.Configuration) --no-restore
+            displayName: prepare OpenJDK $(XA.Build.Configuration)
             continueOnError: false
 
         - template: /build-tools/automation/yaml-templates/start-stop-emulator.yaml@self
@@ -861,7 +862,6 @@ extends:
             xaSourcePath: $(Build.SourcesDirectory)/android
             androidSdkPlatforms: $(DefaultTestSdkPlatforms)
             dotnetVersion: $(DotNetSdkVersion)
-            dotnetQuality: $(DotNetSdkQuality)
             jdkMajorVersion: $(DefaultJavaSdkMajorVersion)
             useAgentJdkPath: true
             use1ESTemplate: true

@@ -2,14 +2,14 @@ using System;
 using System.Net;
 using System.Net.NetworkInformation;
 
-using NUnit.Framework;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace System.NetTests {
 
-	[TestFixture]
+	[TestClass]
 	public class NetworkChangeTest
 	{
-		[Test]
+		[TestMethod]
 		public void NetworkAvailabilityChanged ()
 		{
 			NetworkAvailabilityChangedEventHandler h = (o, e) => {

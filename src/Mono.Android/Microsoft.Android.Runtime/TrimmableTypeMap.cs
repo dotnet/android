@@ -298,14 +298,10 @@ public class TrimmableTypeMap
 	{
 		proxy = null;
 		// App peers can use class loaders which differ from the runtime fallback loader.
+		// The generator marks only sealed Mono.Android targets as safe for this lookup.
 		if (targetType is null ||
 				!targetType.IsSealed ||
-				targetType.Assembly != typeof (Java.Lang.Object).Assembly) {
-			return false;
-		}
-
-		var targetProxy = GetProxyForManagedType (targetType);
-		if (targetProxy is null) {
+				GetProxyForManagedType (targetType) is not { IsSealed: true } targetProxy) {
 			return false;
 		}
 
@@ -378,7 +374,8 @@ public class TrimmableTypeMap
 	// so we recurse into super-interfaces to find the matching TypeMap entry.
 	JavaPeerProxy? TryMatchInterfaces (JniObjectReference jniClass, Type targetType)
 	{
-		var interfaces = JniEnvironment.InstanceMethods.CallObjectMethod (jniClass, GetClassGetInterfacesMethod ());
+		// SAFETY: jniClass is a live java.lang.Class and the method ID is Class.getInterfaces(), which takes no arguments.
+		var interfaces = unsafe (JniEnvironment.InstanceMethods.CallObjectMethod (jniClass, GetClassGetInterfacesMethod ()));
 		try {
 			if (!interfaces.IsValid) {
 				return null;
@@ -421,7 +418,8 @@ public class TrimmableTypeMap
 
 		var classClass = JniEnvironment.Types.FindClass ("java/lang/Class");
 		try {
-			method = JniEnvironment.InstanceMethods.GetMethodID (classClass, "getInterfaces", "()[Ljava/lang/Class;");
+			// SAFETY: classClass is a live java.lang.Class reference until the finally block below.
+			method = unsafe (JniEnvironment.InstanceMethods.GetMethodID (classClass, "getInterfaces", "()[Ljava/lang/Class;"));
 		} finally {
 			JniObjectReference.Dispose (ref classClass);
 		}

@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Threading;
 
 using Java.Interop;
 
@@ -7,6 +8,7 @@ namespace Android.Runtime {
 
 	public class XAPeerMembers : JniPeerMembers {
 
+		static readonly Lock LegacyPeerMembersLock = new ();
 		static readonly Dictionary<string, JniPeerMembers> LegacyPeerMembers = new Dictionary<string, JniPeerMembers> (StringComparer.Ordinal);
 
 		public XAPeerMembers (string jniPeerTypeName, Type managedPeerType)
@@ -45,7 +47,7 @@ namespace Android.Runtime {
 			// SAFETY: the managed peer's threshold class is the retained JNI class used by its member cache.
 			var jniClass = unsafe(JniEnvironment.Types.GetJniTypeNameFromClass (new JniObjectReference (GetThresholdClass (value)))
 				?? throw new InvalidOperationException ("Could not obtain the JNI name of the threshold class."));
-			lock (LegacyPeerMembers) {
+			lock (LegacyPeerMembersLock) {
 				if (!LegacyPeerMembers.TryGetValue (jniClass, out var members)) {
 					members = new XAPeerMembers (jniClass, peerType);
 					LegacyPeerMembers.Add (jniClass, members);

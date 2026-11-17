@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Text;
@@ -81,16 +82,16 @@ public class ExtractTypeMapKeysFromNativeAotObject : AsyncTask
 
 	protected virtual async Task<string> ReadObjectMetadataAsync (string objectFile)
 	{
-		using var stdout = new StringWriter (CultureInfo.InvariantCulture);
-		using var stderr = new StringWriter (CultureInfo.InvariantCulture);
 		var startInfo = ProcessUtils.CreateProcessStartInfo (LlvmReadObjPath,
 			"--elf-output-style=JSON", "--file-headers", "--sections", Path.GetFullPath (objectFile));
-		int exitCode = await ProcessUtils.StartProcess (startInfo, stdout, stderr, CancellationToken).ConfigureAwait (false);
-		if (exitCode != 0) {
-			throw new InvalidOperationException ($"llvm-readobj exited with code {exitCode}: {stderr}");
+		startInfo.RedirectStandardOutput = true;
+		startInfo.RedirectStandardError = true;
+		var readobj = await Process.RunAndCaptureTextAsync (startInfo, CancellationToken).ConfigureAwait (false);
+		if (readobj.ExitStatus.ExitCode != 0) {
+			throw new InvalidOperationException ($"llvm-readobj exited with code {readobj.ExitStatus.ExitCode}: {readobj.StandardError}");
 		}
 
-		using var document = JsonDocument.Parse (stdout.ToString ());
+		using var document = JsonDocument.Parse (readobj.StandardOutput);
 		if (document.RootElement.ValueKind != JsonValueKind.Array || document.RootElement.GetArrayLength () != 1) {
 			throw new BadImageFormatException ("Expected llvm-readobj metadata for one native object.");
 		}
@@ -176,11 +177,13 @@ public class ExtractTypeMapKeysFromNativeAotObject : AsyncTask
 		if (!File.Exists (objdump)) {
 			throw new FileNotFoundException ("llvm-objdump is required alongside llvm-readobj.", objdump);
 		}
-		using var stderr = new StringWriter (CultureInfo.InvariantCulture);
 		var startInfo = ProcessUtils.CreateProcessStartInfo (objdump, arguments);
-		int exitCode = await ProcessUtils.StartProcess (startInfo, stdout, stderr, CancellationToken).ConfigureAwait (false);
-		if (exitCode != 0) {
-			throw new InvalidOperationException ($"llvm-objdump exited with code {exitCode}: {stderr}");
+		startInfo.RedirectStandardOutput = true;
+		startInfo.RedirectStandardError = true;
+		var result = await Process.RunAndCaptureTextAsync (startInfo, CancellationToken).ConfigureAwait (false);
+		stdout.Write (result.StandardOutput);
+		if (result.ExitStatus.ExitCode != 0) {
+			throw new InvalidOperationException ($"llvm-objdump exited with code {result.ExitStatus.ExitCode}: {result.StandardError}");
 		}
 	}
 

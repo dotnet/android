@@ -17,8 +17,10 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 
 <Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
 
-<UsingTask TaskName="Xamarin.Android.Tasks.Aapt2Compile" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
-<UsingTask TaskName="Xamarin.Android.Tasks.Aapt2Link" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
+<UsingTask TaskName="Microsoft.Android.Tasks.Aapt2Compile" AssemblyFile="$(_MicrosoftAndroidBuildTasksAssembly)" Runtime="NET" TaskFactory="TaskHostFactory" Condition=" '$(MSBuildRuntimeType)' == 'Full' " />
+<UsingTask TaskName="Microsoft.Android.Tasks.Aapt2Compile" AssemblyFile="$(_MicrosoftAndroidBuildTasksAssembly)" Runtime="NET" Condition=" '$(MSBuildRuntimeType)' == 'Core' " />
+<UsingTask TaskName="Microsoft.Android.Tasks.Aapt2Link" AssemblyFile="$(_MicrosoftAndroidBuildTasksAssembly)" Runtime="NET" TaskFactory="TaskHostFactory" Condition=" '$(MSBuildRuntimeType)' == 'Full' " />
+<UsingTask TaskName="Microsoft.Android.Tasks.Aapt2Link" AssemblyFile="$(_MicrosoftAndroidBuildTasksAssembly)" Runtime="NET" Condition=" '$(MSBuildRuntimeType)' == 'Core' " />
 
 <PropertyGroup>
   <Aapt2DaemonMaxInstanceCount Condition=" '$(Aapt2DaemonMaxInstanceCount)' == '' " >0</Aapt2DaemonMaxInstanceCount>
@@ -98,6 +100,7 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
   <MakeDir Directories="$(_AndroidLibraryFlatFilesDirectory)" Condition="!Exists('$(_AndroidLibraryFlatFilesDirectory)')" />
   <!-- Change cases so we support mixed case resource names -->
   <ConvertResourcesCases
+      ResourceCaseMap="@(_AndroidResourceCaseMap)"
       ContinueOnError="$(DesignTimeBuild)"
       AndroidConversionFlagFile="$(_AndroidStampDirectory)_ConvertResourcesCases.stamp"
       CustomViewMapFile="$(_CustomViewMapFile)"
@@ -121,6 +124,7 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
     DependsOnTargets="$(_BeforeCompileResources);_ConvertResourcesCases;_CalculateResourceFileName"
   >
   <Aapt2Compile
+      ResourceCaseMap="@(_AndroidResourceCaseMap)"
       ContinueOnError="$(DesignTimeBuild)"
       DaemonMaxInstanceCount="$(Aapt2DaemonMaxInstanceCount)"
       DaemonKeepInDomain="$(_Aapt2DaemonKeepInDomain)"
@@ -154,6 +158,7 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
     <AndroidAapt2LinkExtraArgs Condition=" $(AndroidResgenExtraArgs.Contains('--no-version-vectors')) And !($(AndroidAapt2LinkExtraArgs.Contains('--no-version-vectors'))) ">--no-version-vectors $(AndroidAapt2LinkExtraArgs) </AndroidAapt2LinkExtraArgs>
   </PropertyGroup>
   <Aapt2Link
+      ResourceCaseMap="@(_AndroidResourceCaseMap)"
       ReferenceAssemblyPaths="@(_AndroidApiInfoDirectories)"
       Condition=" '$(_AndroidResourceDesignerFile)' != '' Or '$(AndroidUseDesignerAssembly)' == 'True' "
       ContinueOnError="$(DesignTimeBuild)"
@@ -190,6 +195,7 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
     <_ItemsToFixup Include="@(_CompileResourcesInputs)" Condition=" '@(_ProcessedCustomViews->'%(Identity)')' == '%(Identity)' "/>
   </ItemGroup>
   <Aapt2Compile
+      ResourceCaseMap="@(_AndroidResourceCaseMap)"
       Condition=" '@(_ItemsToFixup->Count())' != '0' "
       ContinueOnError="$(DesignTimeBuild)"
       DaemonMaxInstanceCount="$(Aapt2DaemonMaxInstanceCount)"
@@ -214,6 +220,7 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
   </PropertyGroup>
   <MakeDir Directories="$(_OutputFileDir)" Condition=" !Exists ('$(_OutputFileDir)') " />
   <Aapt2Link
+      ResourceCaseMap="@(_AndroidResourceCaseMap)"
       ReferenceAssemblyPaths="@(_AndroidApiInfoDirectories)"
       SupportedOSPlatformVersion="$(SupportedOSPlatformVersion)"
       AndroidManifestFile="$(_AndroidManifestAbs)"

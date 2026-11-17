@@ -7,12 +7,12 @@ using System.Threading;
 
 using Java.Interop;
 
-using NUnit.Framework;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Java.InteropTests {
 
-	[TestFixture]
-	[Category ("PeerControlBlock")]
+	[TestClass]
+	[TestCategory ("PeerControlBlock")]
 	public class JavaPeerControlBlockTests {
 
 		public enum ReferenceState {
@@ -22,14 +22,15 @@ namespace Java.InteropTests {
 			NoBlock,
 		}
 
-		[TestCase (false, ReferenceState.Global)]
-		[TestCase (true, ReferenceState.Global)]
-		[TestCase (false, ReferenceState.Local)]
-		[TestCase (true, ReferenceState.Local)]
-		[TestCase (false, ReferenceState.Invalid)]
-		[TestCase (true, ReferenceState.Invalid)]
-		[TestCase (false, ReferenceState.NoBlock)]
-		[TestCase (true, ReferenceState.NoBlock)]
+		[TestMethod]
+		[DataRow (false, ReferenceState.Global)]
+		[DataRow (true, ReferenceState.Global)]
+		[DataRow (false, ReferenceState.Local)]
+		[DataRow (true, ReferenceState.Local)]
+		[DataRow (false, ReferenceState.Invalid)]
+		[DataRow (true, ReferenceState.Invalid)]
+		[DataRow (false, ReferenceState.NoBlock)]
+		[DataRow (true, ReferenceState.NoBlock)]
 		public unsafe void FinalizePeer_ReleasesControlBlock (bool exception, ReferenceState state)
 		{
 			using var type = new JniType (exception ? "java/lang/Throwable" : "java/lang/Object");
@@ -63,8 +64,9 @@ namespace Java.InteropTests {
 			}
 		}
 
-		[TestCase (false)]
-		[TestCase (true)]
+		[TestMethod]
+		[DataRow (false)]
+		[DataRow (true)]
 		public unsafe void FinalizePeer_AfterExplicitDisposeDoesNotDoubleFree (bool exception)
 		{
 			using var type = new JniType (exception ? "java/lang/Throwable" : "java/lang/Object");
@@ -83,38 +85,62 @@ namespace Java.InteropTests {
 			}
 		}
 
-		[TestCase (false)]
-		[TestCase (true)]
-		public void FinalizePeer_ThrowingCallbackReleasesControlBlock (bool exception)
+		[TestMethod]
+		[DataRow (false, ReferenceState.Global)]
+		[DataRow (true, ReferenceState.Global)]
+		[DataRow (false, ReferenceState.Local)]
+		[DataRow (true, ReferenceState.Local)]
+		[DataRow (false, ReferenceState.Invalid)]
+		[DataRow (true, ReferenceState.Invalid)]
+		[DataRow (false, ReferenceState.NoBlock)]
+		[DataRow (true, ReferenceState.NoBlock)]
+		public unsafe void FinalizePeer_ThrowingCallbackReleasesControlBlock (bool exception, ReferenceState state)
 		{
+			using var type = new JniType (exception ? "java/lang/Throwable" : "java/lang/Object");
+			var local = type.NewObject (type.GetConstructor ("()V"), null);
 			var observation = new FinalizationObservation { ThrowOnFinalize = true };
-			var reference = default (JniObjectReference);
-			var peer = CreatePeer (exception, ref reference, JniObjectReferenceOptions.None, observation);
-			peer.SetPeerReference (default);
+			var reference = state == ReferenceState.Global ? local : default;
+			var options = state == ReferenceState.Global ? JniObjectReferenceOptions.Copy : JniObjectReferenceOptions.None;
+			var peer = CreatePeer (exception, ref reference, options, observation);
 			try {
-				Assert.Throws<InvalidOperationException> (() => JniEnvironment.Runtime.ValueManager.FinalizePeer (peer));
+				if (state == ReferenceState.Local)
+					peer.SetPeerReference (local);
+				else if (state == ReferenceState.Invalid)
+					peer.SetPeerReference (default);
+
+				Assert.ThrowsExactly<InvalidOperationException> (() => JniEnvironment.Runtime.ValueManager.FinalizePeer (peer));
 				Assert.AreEqual (1, observation.FinalizedCount);
 				Assert.IsFalse (observation.ReferenceWasValid);
+				Assert.AreNotEqual (IntPtr.Zero, observation.ControlBlockDuringCallback);
+				Assert.IsFalse (peer.PeerReference.IsValid);
 				Assert.AreEqual (IntPtr.Zero, peer.JniObjectReferenceControlBlock);
+				Assert.IsNull (JniEnvironment.Runtime.ValueManager.PeekPeer (local));
 			} finally {
 				Cleanup (peer);
+				JniObjectReference.Dispose (ref local);
 			}
 		}
 
-		[TestCase (false, false)]
-		[TestCase (true, false)]
-		[TestCase (false, true)]
-		[TestCase (true, true)]
-		public unsafe void FinalizePeer_RetainsReferenceReattachedByCallback (bool exception, bool throwingCallback)
+		[TestMethod]
+		[DataRow (false, false, false)]
+		[DataRow (true, false, false)]
+		[DataRow (false, true, false)]
+		[DataRow (true, true, false)]
+		[DataRow (false, false, true)]
+		[DataRow (true, false, true)]
+		[DataRow (false, true, true)]
+		[DataRow (true, true, true)]
+		public unsafe void FinalizePeer_RetainsReferenceReattachedByCallback (bool exception, bool throwingCallback, bool registered)
 		{
 			using var type = new JniType (exception ? "java/lang/Throwable" : "java/lang/Object");
 			var local = type.NewObject (type.GetConstructor ("()V"), null);
 			var observation = new FinalizationObservation { Reattach = local, ThrowOnFinalize = throwingCallback };
-			var reference = default (JniObjectReference);
-			var peer = CreatePeer (exception, ref reference, JniObjectReferenceOptions.None, observation);
+			var reference = registered ? local : default;
+			var options = registered ? JniObjectReferenceOptions.Copy : JniObjectReferenceOptions.None;
+			var peer = CreatePeer (exception, ref reference, options, observation);
 			try {
 				if (throwingCallback)
-					Assert.Throws<InvalidOperationException> (() => JniEnvironment.Runtime.ValueManager.FinalizePeer (peer));
+					Assert.ThrowsExactly<InvalidOperationException> (() => JniEnvironment.Runtime.ValueManager.FinalizePeer (peer));
 				else
 					JniEnvironment.Runtime.ValueManager.FinalizePeer (peer);
 				Assert.AreEqual (1, observation.FinalizedCount);
@@ -133,14 +159,15 @@ namespace Java.InteropTests {
 			}
 		}
 
-		[TestCase (false, false, false)]
-		[TestCase (true, false, false)]
-		[TestCase (false, true, false)]
-		[TestCase (true, true, false)]
-		[TestCase (false, false, true)]
-		[TestCase (true, false, true)]
-		[TestCase (false, true, true)]
-		[TestCase (true, true, true)]
+		[TestMethod]
+		[DataRow (false, false, false)]
+		[DataRow (true, false, false)]
+		[DataRow (false, true, false)]
+		[DataRow (true, true, false)]
+		[DataRow (false, false, true)]
+		[DataRow (true, false, true)]
+		[DataRow (false, true, true)]
+		[DataRow (true, true, true)]
 		public void ActualFinalizer_ReleasesControlBlock (bool exception, bool invalid, bool throwingConstructor)
 		{
 			var observation = new FinalizationObservation ();
@@ -170,8 +197,9 @@ namespace Java.InteropTests {
 			}
 		}
 
-		[TestCase (false)]
-		[TestCase (true)]
+		[TestMethod]
+		[DataRow (false)]
+		[DataRow (true)]
 		public unsafe void ExplicitDispose_PreservesCallbackAndReleasesControlBlock (bool exception)
 		{
 			using var type = new JniType (exception ? "java/lang/Throwable" : "java/lang/Object");
@@ -191,12 +219,116 @@ namespace Java.InteropTests {
 			}
 		}
 
-		[TestCase (false, false)]
-		[TestCase (true, false)]
-		[TestCase (false, true)]
-		[TestCase (true, true)]
-		[Category ("JniReferenceLeak")]
-		public unsafe void ReleasePeer_ReleasesGlobalReference (bool exception, bool finalize)
+		[TestMethod]
+		[DataRow (false, false)]
+		[DataRow (true, false)]
+		[DataRow (false, true)]
+		[DataRow (true, true)]
+		public unsafe void DisposeUnlessReferenced_UnregisteredPeerReleasesControlBlock (bool exception, bool alias)
+		{
+			using var type = new JniType (exception ? "java/lang/Throwable" : "java/lang/Object");
+			var local = type.NewObject (type.GetConstructor ("()V"), null);
+			var registeredObservation = new FinalizationObservation ();
+			var registered = CreatePeer (exception, ref local, JniObjectReferenceOptions.Copy, registeredObservation);
+			var observation = alias ? new FinalizationObservation () : registeredObservation;
+			var peer = registered;
+			try {
+				var registeredBlock = registered.JniObjectReferenceControlBlock;
+				registered.DisposeUnlessReferenced ();
+				Assert.IsTrue (registered.PeerReference.IsValid);
+				Assert.AreEqual (registeredBlock, registered.JniObjectReferenceControlBlock);
+				Assert.AreEqual (0, registeredObservation.DisposedCount);
+				Assert.AreSame (registered, JniEnvironment.Runtime.ValueManager.PeekPeer (local));
+
+				if (alias)
+					peer = CreatePeer (exception, ref local, JniObjectReferenceOptions.Copy, observation);
+				else
+					peer.UnregisterFromRuntime ();
+
+				var block = peer.JniObjectReferenceControlBlock;
+				Assert.AreNotEqual (IntPtr.Zero, block);
+				peer.DisposeUnlessReferenced ();
+				Assert.AreEqual (1, observation.DisposedCount);
+				Assert.AreEqual (0, observation.FinalizedCount);
+				Assert.IsTrue (observation.ReferenceWasValid, "Dispose(true) must enter with the unregistered peer's valid reference.");
+				Assert.AreEqual (block, observation.ControlBlockDuringCallback);
+				Assert.IsFalse (peer.PeerReference.IsValid);
+				Assert.AreEqual (IntPtr.Zero, peer.JniObjectReferenceControlBlock);
+
+				peer.DisposeUnlessReferenced ();
+				peer.Dispose ();
+				Assert.AreEqual (1, observation.DisposedCount);
+				Assert.AreEqual (IntPtr.Zero, peer.JniObjectReferenceControlBlock);
+				if (alias) {
+					Assert.IsTrue (registered.PeerReference.IsValid);
+					Assert.AreEqual (registeredBlock, registered.JniObjectReferenceControlBlock);
+					Assert.AreEqual (0, registeredObservation.DisposedCount);
+					Assert.AreSame (registered, JniEnvironment.Runtime.ValueManager.PeekPeer (local));
+				} else {
+					Assert.IsNull (JniEnvironment.Runtime.ValueManager.PeekPeer (local));
+				}
+			} finally {
+				Cleanup (peer);
+				if (!ReferenceEquals (peer, registered))
+					Cleanup (registered);
+				JniObjectReference.Dispose (ref local);
+			}
+		}
+
+		[TestMethod]
+		[DataRow (false)]
+		[DataRow (true)]
+		public unsafe void DisposeUnlessReferenced_ThrowingCallbackCanRetry (bool exception)
+		{
+			using var type = new JniType (exception ? "java/lang/Throwable" : "java/lang/Object");
+			var local = type.NewObject (type.GetConstructor ("()V"), null);
+			var observation = new FinalizationObservation { ThrowOnDispose = true };
+			var peer = CreatePeer (exception, ref local, JniObjectReferenceOptions.Copy, observation);
+			try {
+				peer.UnregisterFromRuntime ();
+				var reference = peer.PeerReference;
+				var block = peer.JniObjectReferenceControlBlock;
+				Assert.ThrowsExactly<InvalidOperationException> (() => peer.DisposeUnlessReferenced ());
+				Assert.AreEqual (1, observation.DisposedCount);
+				Assert.AreEqual (0, observation.FinalizedCount);
+				Assert.IsTrue (observation.ReferenceWasValid);
+				Assert.AreEqual (reference.Handle, peer.PeerReference.Handle);
+				Assert.AreEqual (block, peer.JniObjectReferenceControlBlock);
+				Assert.IsNull (JniEnvironment.Runtime.ValueManager.PeekPeer (local));
+
+				observation.ThrowOnDispose = false;
+				peer.DisposeUnlessReferenced ();
+				Assert.AreEqual (2, observation.DisposedCount);
+				Assert.IsFalse (peer.PeerReference.IsValid);
+				Assert.AreEqual (IntPtr.Zero, peer.JniObjectReferenceControlBlock);
+			} finally {
+				observation.ThrowOnDispose = false;
+				Cleanup (peer);
+				JniObjectReference.Dispose (ref local);
+			}
+		}
+
+		[TestMethod]
+		public void DisposeUnlessReferenced_UnregisteredRectReleasesControlBlock ()
+		{
+			using var rectangle = new Android.Graphics.Rect (1, 2, 3, 4);
+			IJavaPeerable peer = rectangle;
+			Assert.AreNotEqual (IntPtr.Zero, peer.JniObjectReferenceControlBlock);
+			rectangle.UnregisterFromRuntime ();
+			rectangle.DisposeUnlessReferenced ();
+			Assert.IsFalse (peer.PeerReference.IsValid);
+			Assert.AreEqual (IntPtr.Zero, peer.JniObjectReferenceControlBlock);
+		}
+
+		[TestMethod]
+		[DataRow (false, false, false)]
+		[DataRow (true, false, false)]
+		[DataRow (false, true, false)]
+		[DataRow (true, true, false)]
+		[DataRow (false, false, true)]
+		[DataRow (true, false, true)]
+		[TestCategory ("JniReferenceLeak")]
+		public unsafe void ReleasePeer_ReleasesGlobalReference (bool exception, bool finalize, bool unregister)
 		{
 			using var type = new JniType (exception ? "java/lang/Throwable" : "java/lang/Object");
 			var constructor = type.GetConstructor ("()V");
@@ -222,7 +354,10 @@ namespace Java.InteropTests {
 				var peer = CreatePeer (exception, ref local, JniObjectReferenceOptions.CopyAndDispose, observation);
 				try {
 					int globals = JniEnvironment.Runtime.GlobalReferenceCount;
-					if (finalize)
+					if (unregister) {
+						peer.UnregisterFromRuntime ();
+						peer.DisposeUnlessReferenced ();
+					} else if (finalize)
 						JniEnvironment.Runtime.ValueManager.FinalizePeer (peer);
 					else
 						peer.Dispose ();
@@ -275,17 +410,23 @@ namespace Java.InteropTests {
 			public volatile IJavaPeerable? Peer;
 			public WeakReference<IJavaPeerable>? WeakPeer;
 			public IntPtr ControlBlockDuringCallback;
+			public int DisposedCount;
 			public int FinalizedCount;
 			public bool ReferenceWasValid;
+			public bool ThrowOnDispose;
 			public bool ThrowOnFinalize;
 			public JniObjectReference Reattach;
 
 			public void Observe (IJavaPeerable peer, bool disposing)
 			{
 				ReferenceWasValid = peer.PeerReference.IsValid;
-				if (disposing)
-					return;
 				ControlBlockDuringCallback = peer.JniObjectReferenceControlBlock;
+				if (disposing) {
+					Interlocked.Increment (ref DisposedCount);
+					if (ThrowOnDispose)
+						throw new InvalidOperationException ("Disposal callback failed.");
+					return;
+				}
 				Interlocked.Increment (ref FinalizedCount);
 				Peer = peer;
 				if (Reattach.IsValid) {

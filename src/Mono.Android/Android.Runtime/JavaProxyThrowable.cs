@@ -21,9 +21,7 @@ namespace Android.Runtime {
 
 		public static JavaProxyThrowable Create (Exception innerException)
 		{
-			if (innerException == null) {
-				throw new ArgumentNullException (nameof (innerException));
-			}
+			ArgumentNullException.ThrowIfNull (innerException);
 
 			// We prepend managed exception type to message since Java will see `JavaProxyThrowable` instead.
 			var proxy = new JavaProxyThrowable ($"[{innerException.GetType ()}]: {innerException.Message}", innerException);

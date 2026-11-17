@@ -4,26 +4,10 @@ This is the sample for using NativeAOT with .NET for Android.
 
 ## Debugging
 
-If you are using [Visual Studio Code](https://code.visualstudio.com) and have opened the
-[dotnet/android](https://github.com/dotnet/android/) repo, you can:
-
- 1. Install the [LLDB DAP](https://marketplace.visualstudio.com/items?itemName=llvm-vs-code-extensions.lldb-dap) VSCode extension.
- 2. Start your emulator or attach your device.
- 3. Open the ["Run and Debug" Badge](https://code.visualstudio.com/docs/debugtest/debugging#_start-a-debugging-session).
- 4. Select "Debug NativeAOT" from the drop down.
- 5. Click the "Play button" ▶️  next to "Debug NativeAOT".
- 6. Wait a bit for the debugger to attach (roughly 30 seconds).
-
-    If a "Waiting For Debugger" dialog remains present on your Android device,
-    switch to the **DEBUG CONSOLE** tab and re-enter `clearjdb` at the lldb `> ` prompt.
-
-The **DEBUG CONSOLE** tab contains the lldb REPL
-
-Note it will take some time to build and install the NativeAOT sample. VSCode will probably
-give you an option to cancel or wait, you can just ignore this dialog.
-
-If you want to to use `lldb` directly then you can use the `runwithdebugger.sh`/`runwithdebugger.ps1` scripts to run all the steps you need to setup the debugger manually.
-What follows is an explanation of what that script does.
+Start your emulator or attach your device, then use the
+`runwithdebugger.sh`/`runwithdebugger.ps1` scripts to build and install the sample
+and set up the device for debugging with `lldb`.
+What follows is an explanation of what those scripts do and how to attach `lldb`.
 
 ## How `runwithdebugger.*` scripts work
 
@@ -69,11 +53,10 @@ The script then uses `awk` or and `regex` to extract the process id.
 It then adds an `adb` port forward for port `8700` to this process id. This is so we can easily
 attach the java debugger (`jdb`) to the app to clear the debugger dialog box.
 
-## What does the launch.json do?
+## Attaching LLDB
 
-In addition to the script above, there are a number of commands in `launch.json` which are
-run when launching via VSCode. If you want to run these manually rather than using VSCode
-you will need to use `lldb` from the command line it execute the following commands.
+After running the script above, start `lldb` from the repository root and execute
+the following commands, replacing `<processid>` with the app PID reported by the script.
 
 ```shell
 lldb
@@ -81,9 +64,9 @@ lldb
 > platform connect connect://localhost:5039 
 > settings set target.process.thread.step-in-avoid-nodebug true
 > settings set target.process.thread.step-out-avoid-nodebug true
-> command script import samples/NativeAOT/lldb_commands.py,
+> command script import samples/NativeAOT/lldb_commands.py
 > command script add -f lldb_commands.clearjdb clearjdb
-> target create samples/NativeAOT/bin/Debug/net11.0-android/android-arm64/native/NativeAOT.so
+> target create samples/NativeAOT/bin/Debug/net12.0-android/android-arm64/native/NativeAOT.so
 > target select 0
 > process attach --pid <processid>
 ```
@@ -95,7 +78,7 @@ Debugger dialog you get when you launch your app.
 If your symbols are in a separate `.dbg` file, you can use the following.
 
 ```shell
-> target symbols add samples/NativeAOT/bin/Debug/net11.0-android/android-arm64/native/NativeAOT.so.dbg
+> target symbols add samples/NativeAOT/bin/Debug/net12.0-android/android-arm64/native/NativeAOT.so.dbg
 ```
 
 Next you need to attach the java debugger to clear the dialog which is currently blocking the application execution. You can skip this step if you omitted the `-D` when

@@ -69,7 +69,7 @@ and merge conflicts.
 
 ---
 
-## JNI Interop Patterns (`external/Java.Interop/`, `src/Mono.Android/`)
+## JNI Interop Patterns (`src/Java.Interop/`, `src/Mono.Android/`)
 
 | Check | What to look for |
 |-------|-----------------|
@@ -85,8 +85,8 @@ and merge conflicts.
 
 | Check | What to look for |
 |-------|-----------------|
-| **Shared types affect every consumer** | Changes to `JniPeerMembers`, `JavaObject`, `JniRuntime`, `JniTypeManager`, and other types under `external/Java.Interop/src/` affect Mono.Android and every downstream .NET Android app. Validate API-shape changes and keep binary-compatibility in mind. |
-| **Port, don't rewrite** | If working code for the same task already exists in `external/Java.Interop/` (or vice versa in `src/Mono.Android/`), port it rather than writing new logic. Existing code has real-world edge cases already handled. |
+| **Shared types affect every consumer** | Changes to `JniPeerMembers`, `JavaObject`, `JniRuntime`, `JniTypeManager`, and other types under `src/` affect Mono.Android and every downstream .NET Android app. Validate API-shape changes and keep binary-compatibility in mind. |
+| **Port, don't rewrite** | If working code for the same task already exists in `src/Java.Interop/` (or vice versa in `src/Mono.Android/`), port it rather than writing new logic. Existing code has real-world edge cases already handled. |
 | **Consider startup-time impact** | Java.Interop core runs during every app startup. Extra allocations, type loading, or reflection in hot startup paths are expensive across billions of app launches. |
 
 ---

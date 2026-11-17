@@ -189,14 +189,15 @@ namespace Android.Runtime {
 				// SAFETY: java.util.Map.<init>.()V matches this peer's JNI ABI. Result locals transfer to conversion.
 				if (GetType () == typeof (JavaDictionary)) {
 					SetHandle (
-							JNIEnv.StartCreateInstance ("java/util/HashMap", "()V"),
+							// SAFETY: The complete ASCII literal supplies stable, NUL-terminated JNI class-name bytes.
+							unsafe (JNIEnv.AllocObject ("java/util/HashMap"u8)),
 							JniHandleOwnership.TransferLocalRef);
-					JNIEnv.FinishCreateInstance (Handle, "()V");
+					JNIEnv.FinishCreateInstance (Handle, "()V"u8);
 				} else {
 					SetHandle (
-							JNIEnv.StartCreateInstance (GetType (), "()V"),
+							JNIEnv.AllocObject (GetType ()),
 							JniHandleOwnership.TransferLocalRef);
-					JNIEnv.FinishCreateInstance (Handle, "()V");
+					JNIEnv.FinishCreateInstance (Handle, "()V"u8);
 				}
 			}
 		}
@@ -404,7 +405,7 @@ namespace Android.Runtime {
 		/// <paramref name="transfer"/> must describe ownership the caller holds. Do not race reference
 		/// release or reuse aliases after ownership is consumed, including when conversion later fails.
 		/// </safety>
-		public static unsafe IDictionary? FromJniHandle (IntPtr handle, JniHandleOwnership transfer)
+		public static IDictionary? FromJniHandle (IntPtr handle, JniHandleOwnership transfer)
 		{
 			if (handle == IntPtr.Zero)
 				return null;
@@ -413,7 +414,10 @@ namespace Android.Runtime {
 			if (inst == null)
 				inst = new JavaDictionary (handle, transfer);
 			else
-				JNIEnv.DeleteRef (handle, transfer);
+				unsafe {
+					// SAFETY: the caller's transfer contract covers this reference; the cached peer replaces it.
+					JNIEnv.DeleteRef (handle, transfer);
+				}
 
 			return (IDictionary) inst;
 		}
@@ -462,14 +466,15 @@ namespace Android.Runtime {
 				// SAFETY: java.util.Map.<init>.()V matches this peer's JNI ABI. Result locals transfer to conversion.
 				if (GetType () == typeof (JavaDictionary<K, V>)) {
 					SetHandle (
-							JNIEnv.StartCreateInstance ("java/util/HashMap", "()V"),
+							// SAFETY: The complete ASCII literal supplies stable, NUL-terminated JNI class-name bytes.
+							unsafe (JNIEnv.AllocObject ("java/util/HashMap"u8)),
 							JniHandleOwnership.TransferLocalRef);
 				} else {
 					SetHandle (
-							JNIEnv.StartCreateInstance (GetType (), "()V"),
+							JNIEnv.AllocObject (GetType ()),
 							JniHandleOwnership.TransferLocalRef);
 				}
-				JNIEnv.FinishCreateInstance (Handle, "()V");
+				JNIEnv.FinishCreateInstance (Handle, "()V"u8);
 			}
 		}
 
@@ -721,7 +726,7 @@ namespace Android.Runtime {
 		/// <paramref name="transfer"/> must describe ownership the caller holds. Do not race reference
 		/// release or reuse aliases after ownership is consumed, including when conversion later fails.
 		/// </safety>
-		public new static unsafe IDictionary<K, V>? FromJniHandle (IntPtr handle, JniHandleOwnership transfer)
+		public new static IDictionary<K, V>? FromJniHandle (IntPtr handle, JniHandleOwnership transfer)
 		{
 			if (handle == IntPtr.Zero)
 				return null;
@@ -730,7 +735,10 @@ namespace Android.Runtime {
 			if (inst == null)
 				inst = new JavaDictionary<K, V> (handle, transfer);
 			else
-				JNIEnv.DeleteRef (handle, transfer);
+				unsafe {
+					// SAFETY: the caller's transfer contract covers this reference; the cached peer replaces it.
+					JNIEnv.DeleteRef (handle, transfer);
+				}
 
 			return (IDictionary<K, V>) inst;
 		}

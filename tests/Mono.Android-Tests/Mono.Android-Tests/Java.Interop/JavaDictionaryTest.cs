@@ -4,39 +4,42 @@ using System.Diagnostics.CodeAnalysis;
 
 using Android.Runtime;
 
-using NUnit.Framework;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Java.InteropTests
 {
-	[TestFixture]
-	[Category ("JavaDictionary")]
+	[TestClass]
+	[TestCategory ("JavaDictionary")]
 	public class JavaDictionaryTest
 	{
-		[TestCase ("a", "value", "other")]
-		[TestCase ("a", "value", null)]
-		[TestCase ("a", null, "other")]
-		[TestCase (null, "value", "other")]
-		[TestCase (null, null, "other")]
+		[TestMethod]
+		[DataRow ("a", "value", "other")]
+		[DataRow ("a", "value", null)]
+		[DataRow ("a", null, "other")]
+		[DataRow (null, "value", "other")]
+		[DataRow (null, null, "other")]
 		public void PairOperationsCompareStringValues (string key, string value, string mismatch)
 		{
 			AssertPairOperations (key, value, value == null ? null : new string (value.ToCharArray ()), mismatch);
 		}
 
-		[TestCase (1, 2)]
-		[TestCase (0, 1)]
+		[TestMethod]
+		[DataRow (1, 2)]
+		[DataRow (0, 1)]
 		public void PairOperationsCompareValueTypes (int value, int mismatch)
 		{
 			AssertPairOperations ("a", value, value, mismatch);
 		}
 
-		[TestCase (1, null)]
-		[TestCase (null, 1)]
+		[TestMethod]
+		[DataRow (1, null)]
+		[DataRow (null, 1)]
 		public void PairOperationsCompareNullableValueTypes (int? value, int? mismatch)
 		{
 			AssertPairOperations ("a", value, value, mismatch);
 		}
 
-		[Test]
+		[TestMethod]
 		public void PairOperationsCompareManagedValues ()
 		{
 			var value = new EquatableValue (1);
@@ -47,7 +50,7 @@ namespace Java.InteropTests
 			AssertPairOperations ("a", value, equalValue, mismatch);
 		}
 
-		[Test]
+		[TestMethod]
 		public void PairOperationsUseManagedEqualityForJavaPeersWithoutDisposingThem ()
 		{
 			using var value = new Java.Lang.String ("value");
@@ -61,8 +64,9 @@ namespace Java.InteropTests
 			Assert.AreEqual ("value", equalValue.ToString ());
 		}
 
-		[TestCase ("a")]
-		[TestCase (null)]
+		[TestMethod]
+		[DataRow ("a")]
+		[DataRow ((string) null)]
 		public void KeyOnlyRemovalStillIgnoresValue (string key)
 		{
 			using var dictionary = new JavaDictionary<string, string> ();

@@ -6,7 +6,7 @@ namespace Xamarin.Android.Benchmarks;
 
 [MemoryDiagnoser]
 [InvocationCount (OperationsPerIteration)]
-public unsafe class UriParseAllocationBenchmarks
+public class UriParseAllocationBenchmarks
 {
 	const int OperationsPerIteration = 512;
 	const string UriValue = "https://example.com/benchmark?q=android";
@@ -58,7 +58,8 @@ public unsafe class UriParseAllocationBenchmarks
 	[Benchmark]
 	public int RawJniParseWithCachedString ()
 	{
-		IntPtr result = ParseUri (uriString);
+		// SAFETY: Setup owns uriString as a global reference until Cleanup.
+		IntPtr result = unsafe (ParseUri (uriString));
 		JNIEnv.DeleteLocalRef (result);
 		return result == IntPtr.Zero ? 0 : 1;
 	}
@@ -69,7 +70,8 @@ public unsafe class UriParseAllocationBenchmarks
 		IntPtr localString = JNIEnv.NewString (UriValue);
 		IntPtr result = IntPtr.Zero;
 		try {
-			result = ParseUri (localString);
+			// SAFETY: localString remains live until the finally block below.
+			result = unsafe (ParseUri (localString));
 			return result == IntPtr.Zero ? 0 : 1;
 		} finally {
 			JNIEnv.DeleteLocalRef (result);
@@ -82,7 +84,8 @@ public unsafe class UriParseAllocationBenchmarks
 	{
 		activationIndex = 0;
 		for (int i = 0; i < parsedReferences.Length; i++) {
-			IntPtr localReference = ParseUri (uriString);
+			// SAFETY: Setup owns uriString as a global reference until Cleanup.
+			IntPtr localReference = unsafe (ParseUri (uriString));
 			try {
 				parsedReferences [i] = JNIEnv.NewGlobalRef (localReference);
 			} finally {
@@ -108,15 +111,21 @@ public unsafe class UriParseAllocationBenchmarks
 			JniHandleOwnership.DoNotTransfer);
 	}
 
-	IntPtr ParseUri (IntPtr stringReference)
+	/// <safety>
+	/// <paramref name="stringReference"/> must be a live JNI reference to a Java string
+	/// for the duration of the synchronous call.
+	/// </safety>
+	unsafe IntPtr ParseUri (IntPtr stringReference)
 	{
 		JniMethodInfo methodInfo = parseMethodInfo
 			?? throw new InvalidOperationException ("The URI parse method is unavailable.");
 		JniArgumentValue argument = new JniArgumentValue (stringReference);
-		return JniEnvironment.StaticMethods.CallStaticObjectMethod (
+		// SAFETY: Setup resolves Uri.parse(String); argument is live on the stack and
+		// the caller supplies the live string reference required by its signature.
+		return unsafe (JniEnvironment.StaticMethods.CallStaticObjectMethod (
 			new JniObjectReference (uriClass),
 			methodInfo,
-			&argument).Handle;
+			&argument)).Handle;
 	}
 
 	static void DisposeAll (global::Android.Net.Uri? [] values)

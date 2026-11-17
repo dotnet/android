@@ -28,10 +28,6 @@ namespace Java.Lang {
 			}
 		}
 
-		~Object ()
-		{
-		}
-
 		/// <safety>
 		/// A nonzero <paramref name="handle"/> must be a live JNI object reference compatible
 		/// with this peer's Java type and VM throughout construction and cleanup, including failure.
@@ -41,7 +37,7 @@ namespace Java.Lang {
 		/// an earlier base-constructor failure does not enter that cleanup. DoNotTransfer retains
 		/// the caller's ownership. Zero is accepted and does not supply a new Java peer.
 		/// </safety>
-		public unsafe Object (IntPtr handle, JniHandleOwnership transfer)
+		public Object (IntPtr handle, JniHandleOwnership transfer)
 			: base (JniObjectReferenceOptions.None)
 		{
 			// SAFETY: The caller supplies the reference and transfer rights described above.
@@ -59,9 +55,9 @@ namespace Java.Lang {
 			unsafe {
 				// SAFETY: StartCreateInstance supplies this peer's owned handle; FinishCreateInstance invokes the ()V constructor with the matching arguments before this constructor returns.
 				SetHandle (
-						JNIEnv.StartCreateInstance (GetType (), "()V"),
+						JNIEnv.AllocObject (GetType ()),
 						JniHandleOwnership.TransferLocalRef);
-				JNIEnv.FinishCreateInstance (Handle, "()V");
+				JNIEnv.FinishCreateInstance (Handle, "()V"u8);
 			}
 		}
 
@@ -132,7 +128,10 @@ namespace Java.Lang {
 						ref reference,
 						value == IntPtr.Zero ? JniObjectReferenceOptions.None : options);
 			} finally {
-				JNIEnv.DeleteRef (value, transfer);
+				unsafe {
+					// SAFETY: the caller's transfer contract covers value; it is released once, even on failure.
+					JNIEnv.DeleteRef (value, transfer);
+				}
 			}
 		}
 
@@ -156,7 +155,7 @@ namespace Java.Lang {
 		/// <paramref name="handle"/> must be null or a live object reference usable by that environment
 		/// for the call; <paramref name="transfer"/> must match reference ownership the caller holds.
 		/// </safety>
-		public static unsafe T? GetObject<[DynamicallyAccessedMembers (Constructors)] T> (
+		public static T? GetObject<[DynamicallyAccessedMembers (Constructors)] T> (
 			IntPtr jnienv, IntPtr handle, JniHandleOwnership transfer)
 			where T : class, IJavaObject
 		{
@@ -195,7 +194,10 @@ namespace Java.Lang {
 			try {
 				return JniEnvironment.Runtime.ValueManager.GetPeer (new JniObjectReference (handle), type);
 			} finally {
-				JNIEnv.DeleteRef (handle, transfer);
+				unsafe {
+					// SAFETY: the caller's transfer contract covers handle; it is released once, even on failure.
+					JNIEnv.DeleteRef (handle, transfer);
+				}
 			}
 		}
 

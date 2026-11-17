@@ -260,7 +260,7 @@ server and `DOTNET_DiagnosticPorts`. `$(AndroidEnableProfiler)` remains
 supported as a legacy synonym for `$(EnableDiagnostics)`.
 
 ```sh
-$ dotnet build -f net11.0-android -t:Run -c Release -p:EnableDiagnostics=true
+$ dotnet build -f net12.0-android -t:Run -c Release -p:EnableDiagnostics=true
 ```
 
 Setting any of the `$(DiagnosticAddress)`, `$(DiagnosticPort)`,
@@ -268,7 +268,7 @@ Setting any of the `$(DiagnosticAddress)`, `$(DiagnosticPort)`,
 enables Android diagnostics, so `-p:EnableDiagnostics=true` is not needed
 with the `dotnet-dsrouter` commands shown above.
 
-*NOTE: `-f net11.0-android` is only needed for projects with multiple `$(TargetFrameworks)`.*
+*NOTE: `-f net12.0-android` is only needed for projects with multiple `$(TargetFrameworks)`.*
 
 Once the application is installed and started, `dotnet-trace` should show something similar to:
 

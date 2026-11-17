@@ -180,12 +180,8 @@ sealed class TypeMapAssemblyEmitter
 	/// </param>
 	internal void Emit (TypeMapAssemblyData model, Stream stream, bool useSharedTypemapUniverse, byte []? contentFingerprint)
 	{
-		if (model is null) {
-			throw new ArgumentNullException (nameof (model));
-		}
-		if (stream is null) {
-			throw new ArgumentNullException (nameof (stream));
-		}
+		ArgumentNullException.ThrowIfNull (model);
+		ArgumentNullException.ThrowIfNull (stream);
 
 		EmitCore (model, useSharedTypemapUniverse, contentFingerprint);
 		_pe.WritePE (stream);
@@ -198,9 +194,7 @@ sealed class TypeMapAssemblyEmitter
 	/// </summary>
 	internal Stream EmitToStream (TypeMapAssemblyData model, bool useSharedTypemapUniverse, byte []? contentFingerprint)
 	{
-		if (model is null) {
-			throw new ArgumentNullException (nameof (model));
-		}
+		ArgumentNullException.ThrowIfNull (model);
 
 		EmitCore (model, useSharedTypemapUniverse, contentFingerprint);
 		return _pe.CreatePEStream ();
@@ -675,20 +669,20 @@ sealed class TypeMapAssemblyEmitter
 		// open generic definitions (whose T isn't available via the TypeMapLazyDictionary loader),
 		// and interfaces (which have no constructors). Peers are activated from their generated
 		// CreateInstance / InvokerType, never by reflecting over the target type.
-		var proxyBaseType = (EntityHandle) _javaPeerProxyRef;
 		var baseCtorRef = _pe.AddMemberRef (_javaPeerProxyRef, ".ctor",
-			sig => sig.MethodSignature (isInstanceMethod: true).Parameters (2,
+			sig => sig.MethodSignature (isInstanceMethod: true).Parameters (3,
 				rt => rt.Void (),
 				p => {
 					p.AddParameter ().Type ().String ();
 					p.AddParameter ().Type ().Type (_systemTypeRef, false);
+					p.AddParameter ().Type ().Boolean ();
 				}));
 
 		var typeDefHandle = metadata.AddTypeDefinition (
 			TypeAttributes.Public | TypeAttributes.Sealed | TypeAttributes.Class,
 			metadata.GetOrAddString (proxy.Namespace),
 			metadata.GetOrAddString (proxy.TypeName),
-			proxyBaseType,
+			_javaPeerProxyRef,
 			MetadataTokens.FieldDefinitionHandle (metadata.GetRowCount (TableIndex.Field) + 1),
 			MetadataTokens.MethodDefinitionHandle (metadata.GetRowCount (TableIndex.MethodDef) + 1));
 
@@ -705,7 +699,8 @@ sealed class TypeMapAssemblyEmitter
 				encoder.LoadString (metadata.GetOrAddUserString (proxy.JniName));
 				encoder.LoadToken (targetTypeRef);
 				encoder.Call (_getTypeFromHandleRef, parameterCount: 1, returnsValue: true);
-				encoder.Call (baseCtorRef, parameterCount: 2, isInstance: true);
+				encoder.LoadConstantI4 (proxy.CanResolveFromSealedTargetType ? 1 : 0);
+				encoder.Call (baseCtorRef, parameterCount: 3, isInstance: true);
 				encoder.Return ();
 			});
 
@@ -1325,11 +1320,13 @@ sealed class TypeMapAssemblyEmitter
 		Action<TrackedInstructionEncoder> emitActivation,
 		Action<BlobBuilder> encodeLocals)
 	{
-		return _pe.EmitBody (wrapperName,
+		var handle = _pe.EmitBody (wrapperName,
 			MethodAttributes.Public | MethodAttributes.Static | MethodAttributes.HideBySig,
 			encodeSig,
 			(encoder, cfb) => EmitUcoConstructorBodyWithMarshal (encoder, cfb, emitActivation),
 			encodeLocals);
+		_pe.AddDebuggerDisableUserUnhandledExceptionsAttribute (handle);
+		return handle;
 	}
 
 	void EmitManagedConstructorActivation (

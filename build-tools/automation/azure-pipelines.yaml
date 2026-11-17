@@ -104,6 +104,7 @@ extends:
 
     - template: /build-tools/automation/yaml-templates/stage-msbuild-emulator-tests.yaml@self
       parameters:
+        agent_count: ${{ variables.MSBuildEmulatorTestAgentCount }}
         usesCleanImages: ${{ parameters.macTestAgentsUseCleanImages }}
 
     - template: /build-tools/automation/yaml-templates/stage-xamarin-android-tools-tests.yaml@self
@@ -151,7 +152,6 @@ extends:
             xaSourcePath: $(Build.SourcesDirectory)/android
             androidSdkPlatforms: $(DefaultTestSdkPlatforms)
             dotnetVersion: $(DotNetSdkVersion)
-            dotnetQuality: $(DotNetSdkQuality)
 
         - task: NuGetAuthenticate@1
           displayName: authenticate with azure artifacts
@@ -380,7 +380,6 @@ extends:
         - template: /build-tools/automation/yaml-templates/use-dot-net.yaml@self
           parameters:
             version: $(DotNetSdkVersion)
-            quality: $(DotNetSdkQuality)
 
         # Download symbols to be published to the symbols artifact drop declared above
         - task: DownloadPipelineArtifact@2

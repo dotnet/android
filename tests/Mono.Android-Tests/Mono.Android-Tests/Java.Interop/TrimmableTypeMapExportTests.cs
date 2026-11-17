@@ -6,18 +6,62 @@ using Android.Views;
 
 using Java.Interop;
 
-using NUnit.Framework;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 using static Java.InteropTests.TrimmableTypeMapTestHelpers;
 
 namespace Java.InteropTests
 {
-	[TestFixture]
-	[Category ("Export")]
-	[Category ("TrimmableTypeMapRuntimeCoverage")]
+	[TestClass]
+	[TestCategory ("Export")]
+	[TestCategory ("TrimmableTypeMapRuntimeCoverage")]
+	[TestCategory ("GeneratedJniDebuggerBoundary")]
 	public class TrimmableTypeMapExportTests
 	{
-		[Test]
+		[TestMethod]
+		public void HandledExportExceptionsReturnAbiDefaultsAndDeliverPolicyOnce ()
+		{
+			using var peer = new GeneratedJniDebuggerBoundaryExportPeer ();
+			int notifications = 0;
+			int unexpectedExceptions = 0;
+			EventHandler<RaiseThrowableEventArgs> handler = (sender, args) => {
+				if (!ReferenceEquals (peer.Exception, args.Exception)) {
+					unexpectedExceptions++;
+				}
+				notifications++;
+				args.Handled = true;
+			};
+			AndroidEnvironment.UnhandledExceptionRaiser += handler;
+			try {
+				var boolMethod = GetRequiredMethodID (peer.Class.Handle, "throwBoolean", "()Z");
+				var intMethod = GetRequiredMethodID (peer.Class.Handle, "throwInt", "()I");
+				var longMethod = GetRequiredMethodID (peer.Class.Handle, "throwLong", "()J");
+				var floatMethod = GetRequiredMethodID (peer.Class.Handle, "throwFloat", "()F");
+				var doubleMethod = GetRequiredMethodID (peer.Class.Handle, "throwDouble", "()D");
+				var objectMethod = GetRequiredMethodID (peer.Class.Handle, "throwString", "()Ljava/lang/String;");
+				Assert.IsFalse (JNIEnv.CallBooleanMethod (peer.Handle, boolMethod));
+				Assert.AreEqual (1, notifications, "The boolean export must deliver policy once.");
+				Assert.AreEqual (0, JNIEnv.CallIntMethod (peer.Handle, intMethod));
+				Assert.AreEqual (2, notifications, "The int export must deliver policy once.");
+				Assert.AreEqual (0L, JNIEnv.CallLongMethod (peer.Handle, longMethod));
+				Assert.AreEqual (3, notifications, "The long export must deliver policy once.");
+				Assert.AreEqual (0f, JNIEnv.CallFloatMethod (peer.Handle, floatMethod));
+				Assert.AreEqual (4, notifications, "The float export must deliver policy once.");
+				Assert.AreEqual (0d, JNIEnv.CallDoubleMethod (peer.Handle, doubleMethod));
+				Assert.AreEqual (5, notifications, "The double export must deliver policy once.");
+				Assert.AreEqual (IntPtr.Zero, JNIEnv.CallObjectMethod (peer.Handle, objectMethod));
+				Assert.AreEqual (6, notifications, "The object export must deliver policy once.");
+				Assert.AreEqual (0, unexpectedExceptions, "Policy must receive the original managed exception.");
+			} finally {
+				AndroidEnvironment.UnhandledExceptionRaiser -= handler;
+			}
+
+			var success = GetRequiredMethodID (peer.Class.Handle, "succeed", "()I");
+			Assert.AreEqual (42, JNIEnv.CallIntMethod (peer.Handle, success),
+				"Handled exceptions must not leak JNI pending state into the next call.");
+		}
+
+		[TestMethod]
 		public void OverloadedAndRenamedExports_DispatchByJniNameAndSignature ()
 		{
 			using var peer = new TrimmableExportOverloadPeer ();
@@ -37,7 +81,7 @@ namespace Java.InteropTests
 			Assert.AreEqual (99, JNIEnv.CallIntMethod (peer.Handle, renamedMethod));
 		}
 
-		[Test]
+		[TestMethod]
 		public void InheritedVirtualExport_DispatchesToManagedOverride ()
 		{
 			using var peer = new TrimmableExportDerivedPeer ();
@@ -46,7 +90,7 @@ namespace Java.InteropTests
 			Assert.AreEqual (42, JNIEnv.CallIntMethod (peer.Handle, method));
 		}
 
-		[Test]
+		[TestMethod]
 		public void RenamedInterfaceExport_AndInterfaceCallback_ReachManagedMethod ()
 		{
 			using var listener = new TrimmableExportClickListener ();
@@ -62,7 +106,7 @@ namespace Java.InteropTests
 			Assert.AreEqual (view.Handle, listener.LastViewHandle);
 		}
 
-		[Test]
+		[TestMethod]
 		public void EnumExports_MarshalPrimitiveArgumentsAndReturns ()
 		{
 			using var peer = new TrimmableExportEnumPeer ();
@@ -74,7 +118,7 @@ namespace Java.InteropTests
 			Assert.AreEqual (long.MaxValue, JNIEnv.CallLongMethod (peer.Handle, longMethod, new JValue (1L)));
 		}
 
-		[Test]
+		[TestMethod]
 		public void CharSequenceAndCollectionExports_MarshalReferenceTypes ()
 		{
 			using var peer = new TrimmableExportReferencePeer ();
@@ -96,7 +140,7 @@ namespace Java.InteropTests
 			Assert.AreEqual ("alpha", list [0]);
 		}
 
-		[Test]
+		[TestMethod]
 		public void UserPeerArrayExport_UsesGeneratedElementNameAndRoundTrips ()
 		{
 			using var peer = new TrimmableExportUserArrayPeer ();
@@ -107,7 +151,7 @@ namespace Java.InteropTests
 			try {
 				var arrayName = JNIEnv.GetClassNameFromInstance (input);
 				Assert.IsNotNull (arrayName);
-				StringAssert.EndsWith ("/TrimmableExportUserPeer;", arrayName);
+				StringAssert.EndsWith (arrayName, "/TrimmableExportUserPeer;");
 
 				var method = GetRequiredMethodID (peer.Class.Handle, "echoUserPeers", $"({arrayName}){arrayName}");
 				var output = JNIEnv.CallObjectMethod (peer.Handle, method, new JValue (input));
@@ -138,7 +182,7 @@ namespace Java.InteropTests
 			}
 		}
 
-		[Test]
+		[TestMethod]
 		public void StreamExport_MarshalsJavaInputStream ()
 		{
 			using var peer = new TrimmableExportStreamPeer ();
@@ -148,7 +192,7 @@ namespace Java.InteropTests
 			Assert.AreEqual (42, JNIEnv.CallIntMethod (peer.Handle, method, new JValue (input.Handle)));
 		}
 
-		[Test]
+		[TestMethod]
 		public void NonPublicExports_DispatchFromJava ()
 		{
 			using var peer = new TrimmableExportNonPublicPeer ();
@@ -161,14 +205,15 @@ namespace Java.InteropTests
 			Assert.AreEqual (2, peer.Invocations);
 		}
 
-		[Test]
+		[TestMethod]
+		[TestCategory ("JniUtf8Construction")]
 		public void ExportConstructor_ForwardsSuperArgumentsToJavaBase ()
 		{
 			TrimmableExportSuperArgsPeer.ConstructorInvocations = 0;
 
-			var handle = JNIEnv.StartCreateInstance (typeof (TrimmableExportSuperArgsPeer), "(I)V", new JValue (42));
+			var handle = JNIEnv.AllocObject (typeof (TrimmableExportSuperArgsPeer));
 			try {
-				JNIEnv.FinishCreateInstance (handle, "(I)V", new JValue (42));
+				JNIEnv.FinishCreateInstance (handle, "(I)V"u8, new JValue (42));
 				using var peer = Java.Lang.Object.GetObject<TrimmableExportSuperArgsPeer> (handle, JniHandleOwnership.DoNotTransfer);
 				Assert.IsNotNull (peer);
 
@@ -191,6 +236,32 @@ namespace Java.InteropTests
 
 		[Export ("javaSideName")]
 		public int ManagedName () => 99;
+	}
+
+	class GeneratedJniDebuggerBoundaryExportPeer : Java.Lang.Object
+	{
+		public readonly InvalidOperationException Exception = new InvalidOperationException ("generated export boundary");
+
+		[Export ("throwBoolean")]
+		public bool ThrowBoolean () => throw Exception;
+
+		[Export ("throwInt")]
+		public int ThrowInt () => throw Exception;
+
+		[Export ("throwLong")]
+		public long ThrowLong () => throw Exception;
+
+		[Export ("throwFloat")]
+		public float ThrowFloat () => throw Exception;
+
+		[Export ("throwDouble")]
+		public double ThrowDouble () => throw Exception;
+
+		[Export ("throwString")]
+		public string ThrowString () => throw Exception;
+
+		[Export ("succeed")]
+		public int Succeed () => 42;
 	}
 
 	class TrimmableExportBasePeer : Java.Lang.Object

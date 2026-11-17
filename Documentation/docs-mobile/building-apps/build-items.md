@@ -414,6 +414,12 @@ proper initialization. However, in some cases it might not be the desired
 behavior and this item group allows exclusion of libraries from this process
 on an individual basis.
 
+When an exempted JNI library is later loaded on demand, its `JNI_OnLoad`
+function runs synchronously on the thread that triggered the load. Libraries
+whose `JNI_OnLoad` implementation requires the main thread (for example,
+because it expects a prepared main-thread `Looper` or `ALooper`) must remain
+preloaded at startup and should not be added to this item group.
+
 Some framework libraries which must be loaded at application startup will not
 be affected if included in this item group.
 

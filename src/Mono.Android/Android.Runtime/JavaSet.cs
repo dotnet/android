@@ -55,14 +55,15 @@ namespace Android.Runtime {
 				// SAFETY: java.util.Set.<init>.()V matches this peer's JNI ABI. Result locals transfer to conversion.
 				if (GetType () == typeof (JavaSet)) {
 					SetHandle (
-							JNIEnv.StartCreateInstance ("java/util/HashSet", "()V"),
+							// SAFETY: The complete ASCII literal supplies stable, NUL-terminated JNI class-name bytes.
+							unsafe (JNIEnv.AllocObject ("java/util/HashSet"u8)),
 							JniHandleOwnership.TransferLocalRef);
 				} else {
 					SetHandle (
-							JNIEnv.StartCreateInstance (GetType (), "()V"),
+							JNIEnv.AllocObject (GetType ()),
 							JniHandleOwnership.TransferLocalRef);
 				}
-				JNIEnv.FinishCreateInstance (Handle, "()V");
+				JNIEnv.FinishCreateInstance (Handle, "()V"u8);
 			}
 		}
 
@@ -274,7 +275,7 @@ namespace Android.Runtime {
 		/// <paramref name="transfer"/> must describe ownership the caller holds. Do not race reference
 		/// release or reuse aliases after ownership is consumed, including when conversion later fails.
 		/// </safety>
-		public static unsafe ICollection? FromJniHandle (IntPtr handle, JniHandleOwnership transfer)
+		public static ICollection? FromJniHandle (IntPtr handle, JniHandleOwnership transfer)
 		{
 			if (handle == IntPtr.Zero)
 				return null;
@@ -283,7 +284,10 @@ namespace Android.Runtime {
 			if (inst == null)
 				inst = new JavaSet (handle, transfer);
 			else
-				JNIEnv.DeleteRef (handle, transfer);
+				unsafe {
+					// SAFETY: the caller's transfer contract covers this reference; the cached peer replaces it.
+					JNIEnv.DeleteRef (handle, transfer);
+				}
 
 			return (ICollection) inst;
 		}
@@ -330,14 +334,15 @@ namespace Android.Runtime {
 				// SAFETY: java.util.Set.<init>.()V matches this peer's JNI ABI. Result locals transfer to conversion.
 				if (GetType () == typeof (JavaSet<T>)) {
 					SetHandle (
-							JNIEnv.StartCreateInstance ("java/util/HashSet", "()V"),
+							// SAFETY: The complete ASCII literal supplies stable, NUL-terminated JNI class-name bytes.
+							unsafe (JNIEnv.AllocObject ("java/util/HashSet"u8)),
 							JniHandleOwnership.TransferLocalRef);
 				} else {
 					SetHandle (
-							JNIEnv.StartCreateInstance (GetType (), "()V"),
+							JNIEnv.AllocObject (GetType ()),
 							JniHandleOwnership.TransferLocalRef);
 				}
-				JNIEnv.FinishCreateInstance (Handle, "()V");
+				JNIEnv.FinishCreateInstance (Handle, "()V"u8);
 			}
 		}
 
@@ -486,7 +491,7 @@ namespace Android.Runtime {
 		/// <paramref name="transfer"/> must describe ownership the caller holds. Do not race reference
 		/// release or reuse aliases after ownership is consumed, including when conversion later fails.
 		/// </safety>
-		public new static unsafe ICollection<T>? FromJniHandle (IntPtr handle, JniHandleOwnership transfer)
+		public new static ICollection<T>? FromJniHandle (IntPtr handle, JniHandleOwnership transfer)
 		{
 			if (handle == IntPtr.Zero)
 				return null;
@@ -495,7 +500,10 @@ namespace Android.Runtime {
 			if (inst == null)
 				inst = new JavaSet<T> (handle, transfer);
 			else
-				JNIEnv.DeleteRef (handle, transfer);
+				unsafe {
+					// SAFETY: the caller's transfer contract covers this reference; the cached peer replaces it.
+					JNIEnv.DeleteRef (handle, transfer);
+				}
 
 			return (ICollection<T>) inst;
 		}

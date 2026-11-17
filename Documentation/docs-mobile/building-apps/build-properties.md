@@ -642,6 +642,12 @@ will be loaded by the runtime early during application startup in order to
 assure their proper initialization. However, in some cases it might not be the
 desired behavior and this property allows you to effectively disable it.
 
+When JNI preloading is disabled, each exempted library's `JNI_OnLoad` function
+runs synchronously on the thread that first loads the library. Libraries whose
+`JNI_OnLoad` implementation requires the main thread (for example, because it
+expects a prepared main-thread `Looper` or `ALooper`) must be preloaded on the
+main thread instead of relying on on-demand worker-thread loading.
+
 Some framework libraries which must be loaded at application startup will not
 be affected by this property.
 
@@ -938,33 +944,15 @@ If you want detailed output from the tool you can add the following to the
 
 ## AndroidManifestType
 
-An enum-style property with valid values of `Xamarin` or `GoogleV2`.
-This controls which repository is used by the
-[`InstallAndroidDependencies`](build-targets.md#installandroiddependencies)
-target to determine which Android packages and package versions are
-available and can be installed.
-
-`Xamarin` is the **Approved List (Recommended)** repository within the
-[Visual Studio SDK Manager](/xamarin/android/get-started/installation/android-sdk?tabs=windows#repository-selection).
-
-`GoogleV2` is the **Full List (Unsupported)** repository within the
-[Visual Studio SDK Manager](/xamarin/android/get-started/installation/android-sdk?tabs=windows#repository-selection).
-
-If `$(AndroidManifestType)` is not set, then `Xamarin` is used.
+This property was removed in .NET 12 and has no effect.
+The [`InstallAndroidDependencies`](build-targets.md#installandroiddependencies)
+target now uses the Android CLI to install Android SDK packages.
 
 ## AndroidManifestSource
 
-A string property that specifies an absolute URI or an existing local file path
-for the repository manifest used by the
-[`InstallAndroidDependencies`](build-targets.md#installandroiddependencies)
-target. When this property is not set, the default repository manifest selected
-by `$(AndroidManifestType)` is used.
-
-For example:
-
-```xml
-<AndroidManifestSource>https://example.com/AndroidManifestFeed.xml</AndroidManifestSource>
-```
+This property was removed in .NET 12 and has no effect.
+The [`InstallAndroidDependencies`](build-targets.md#installandroiddependencies)
+target now uses the Android CLI to install Android SDK packages.
 
 ## AndroidManifestPlaceholders
 
@@ -1023,7 +1011,7 @@ configured Android development environment.
 In .NET 11 and later, NativeAOT builds require an installed Android NDK.
 The final native link uses the NDK's `ld.lld`, `llvm-objcopy`, CRT objects,
 sysroot libraries, and compiler runtime. CoreCLR builds do not require an NDK
-unless native library stripping or a checked build is enabled.
+unless native library stripping is enabled.
 
 ## AndroidPackageFormat
 

@@ -10,16 +10,16 @@ using Android.Graphics;
 using Android.Runtime;
 using Android.Views;
 
-using NUnit.Framework;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 using Java.LangTests;
 
 namespace Android.RuntimeTests {
 
-	[TestFixture]
+	[TestClass]
 	public class JnienvArrayMarshaling {
 
-		[Test]
+		[TestMethod]
 		public void MarshalInt32ArrayArray ()
 		{
 			var states = new []{
@@ -32,7 +32,7 @@ namespace Android.RuntimeTests {
 			Assert.AreEqual (8, list.GetColorForState (states [1], Color.Transparent));
 		}
 
-		[Test]
+		[TestMethod]
 		public void CopyArray_JavaToSystemByteArray ()
 		{
 			using (var byteArray = new Java.Lang.Object (JNIEnv.NewArray (new byte[]{1,2,3}), JniHandleOwnership.TransferLocalRef)) {
@@ -42,7 +42,7 @@ namespace Android.RuntimeTests {
 			}
 		}
 
-		[Test]
+		[TestMethod]
 		public void CopyArray_Byte_JavaToGenericArrayT ()
 		{
 			using (var byteArray = new Java.Lang.Object (JNIEnv.NewArray (new byte[]{1,2,3}), JniHandleOwnership.TransferLocalRef)) {
@@ -52,7 +52,7 @@ namespace Android.RuntimeTests {
 			}
 		}
 
-		[Test]
+		[TestMethod]
 		public void CopyArray_JavaToSystemArray ()
 		{
 			using (var byteArray = new Java.Lang.Object (JNIEnv.NewArray (new byte[]{1,2,3}), JniHandleOwnership.TransferLocalRef)) {
@@ -62,7 +62,7 @@ namespace Android.RuntimeTests {
 			}
 		}
 
-		[Test]
+		[TestMethod]
 		public void CopyArray_SystemByteArrayToJava ()
 		{
 			using (var byteArray = new Java.Lang.Object (JNIEnv.NewArray (new byte[]{1,2,3}), JniHandleOwnership.TransferLocalRef)) {
@@ -73,7 +73,7 @@ namespace Android.RuntimeTests {
 			}
 		}
 		
-		[Test]
+		[TestMethod]
 		public void CopyArray_GenericByteArrayToJava ()
 		{
 			using (var byteArray = new Java.Lang.Object (JNIEnv.NewArray (new byte[]{1,2,3}), JniHandleOwnership.TransferLocalRef)) {
@@ -84,7 +84,7 @@ namespace Android.RuntimeTests {
 			}
 		}
 
-		[Test]
+		[TestMethod]
 		public void CopyArray_JavaLangStringArrayArrayToSystemStringArrayArray ()
 		{
 			using (var stringArray = new Java.Lang.Object (JNIEnv.NewArray (new[]{new[]{"a", "b"}, new[]{"c", "d"}}), JniHandleOwnership.TransferLocalRef)) {
@@ -94,7 +94,7 @@ namespace Android.RuntimeTests {
 			}
 		}
 
-		[Test]
+		[TestMethod]
 		public void CopyArray_JavaLangObjectArrayToJavaLangStringArray ()
 		{
 			using (var stringArray = new Java.Lang.Object (JNIEnv.NewArray (new[]{"a", "b"}), JniHandleOwnership.TransferLocalRef)) {
@@ -102,11 +102,11 @@ namespace Android.RuntimeTests {
 				values [0] = new Java.Lang.String ("c");
 				JNIEnv.CopyArray (values, stringArray.Handle);
 				Assert.AreEqual ("c", JNIEnv.GetArrayItem<string> (stringArray.Handle, 0));
-				Assert.AreEqual ("c", JNIEnv.GetArrayItem<Java.Lang.String> (stringArray.Handle, 0));
+				Assert.AreEqual ("c", JNIEnv.GetArrayItem<Java.Lang.String> (stringArray.Handle, 0).ToString ());
 			}
 		}
 
-		[Test]
+		[TestMethod]
 		public void ByteArrayArray_IsConvertibleTo_JavaLangObjectArray ()
 		{
 			/*
@@ -128,7 +128,7 @@ namespace Android.RuntimeTests {
 			AssertArrays ("CopyArray<byte>", bytes, (byte) 11, (byte) 12);
 		}
 
-		[Test]
+		[TestMethod]
 		public void NewArray_JavaLangString()
 		{
 			using (var stringArray = new Java.Lang.Object (JNIEnv.NewArray (new[] { new Java.Lang.String ("a"), new Java.Lang.String ("b") }), JniHandleOwnership.TransferLocalRef)) {
@@ -136,7 +136,7 @@ namespace Android.RuntimeTests {
 			}
 		}
 
-		[Test]
+		[TestMethod]
 		public void CopyObjectArray ()
 		{
 			IntPtr p = JNIEnv.NewObjectArray (new byte[]{1, 2, 3});
@@ -152,7 +152,7 @@ namespace Android.RuntimeTests {
 			JNIEnv.DeleteLocalRef (p);
 		}
 
-		[Test]
+		[TestMethod]
 		public void GetArray_Byte ()
 		{
 			using (var byteArray = new Java.Lang.Object (JNIEnv.NewArray (new byte[]{1,2,3}), JniHandleOwnership.TransferLocalRef)) {
@@ -161,7 +161,7 @@ namespace Android.RuntimeTests {
 			}
 		}
 
-		[Test]
+		[TestMethod]
 		public void GetArray_ByteArrayArray ()
 		{
 			byte[][] data = new byte[][]{
@@ -172,15 +172,16 @@ namespace Android.RuntimeTests {
 			using (var byteArrayArray = new Java.Lang.Object (JNIEnv.NewArray (data), JniHandleOwnership.TransferLocalRef)) {
 				Assert.AreEqual ("[[B", JNIEnv.GetClassNameFromInstance (byteArrayArray.Handle));
 				byte[][] data2 = JNIEnv.GetArray<byte[]> (byteArrayArray.Handle);
-				Assert.AreEqual (data, data2);
+				Assert.IsTrue (global::Java.Interop.JniMarshal.RecursiveEquals (data, data2));
 				byte[][] data3 = (byte[][]) JNIEnv.GetArray (byteArrayArray.Handle, JniHandleOwnership.DoNotTransfer, typeof (byte[]));
-				Assert.AreEqual (data, data3);
+				Assert.IsTrue (global::Java.Interop.JniMarshal.RecursiveEquals (data, data3));
 				JNIEnv.CopyArray (data3, byteArrayArray.Handle);
 			}
 		}
 
-		[TestCase (false)]
-		[TestCase (true)]
+		[TestMethod]
+		[DataRow (false)]
+		[DataRow (true)]
 		public void NewAndGetArray_SByteJaggedArrays (bool generic)
 		{
 			AssertArrayRoundTrip (
@@ -215,8 +216,9 @@ namespace Android.RuntimeTests {
 			}, generic);
 		}
 
-		[TestCase (false)]
-		[TestCase (true)]
+		[TestMethod]
+		[DataRow (false)]
+		[DataRow (true)]
 		public void NewAndGetArray_ByteJaggedArraysPreserveHighBits (bool generic)
 		{
 			AssertArrayRoundTrip (
@@ -267,7 +269,7 @@ namespace Android.RuntimeTests {
 				Array actual = generic
 					? JNIEnv.GetArray<T> (array)
 					: JNIEnv.GetArray (array, JniHandleOwnership.DoNotTransfer, typeof (T));
-				Assert.AreEqual (created, actual);
+				Assert.IsTrue (global::Java.Interop.JniMarshal.RecursiveEquals (created, actual));
 
 				if (generic)
 					JNIEnv.CopyArray<T> (copied, array);
@@ -276,13 +278,13 @@ namespace Android.RuntimeTests {
 				actual = generic
 					? JNIEnv.GetArray<T> (array)
 					: JNIEnv.GetArray (array, JniHandleOwnership.DoNotTransfer, typeof (T));
-				Assert.AreEqual (copied, actual);
+				Assert.IsTrue (global::Java.Interop.JniMarshal.RecursiveEquals (copied, actual));
 			} finally {
 				JNIEnv.DeleteLocalRef (array);
 			}
 		}
 
-		[Test]
+		[TestMethod]
 		public void GetArray_JavaLangByteArrayToSystemByteArray ()
 		{
 			var byteObjectArray = new Java.Lang.Byte[]{
@@ -296,7 +298,7 @@ namespace Android.RuntimeTests {
 			AssertArrays ("GetArray: Java.Lang.Byte[]->byte[]", byteArray, (byte) 1, (byte) 2, (byte) 3);
 		}
 
-		[Test]
+		[TestMethod]
 		public void GetArray_JavaLangStringArrayArrayToSystemStringArrayArray ()
 		{
 			using (var stringArray = new Java.Lang.Object (JNIEnv.NewArray (new[]{new[]{"a", "b"}, new[]{"c", "d"}}), JniHandleOwnership.TransferLocalRef)) {
@@ -305,7 +307,7 @@ namespace Android.RuntimeTests {
 			}
 		}
 
-		[Test]
+		[TestMethod]
 		public void GetArray_KeycodeEnum ()
 		{
 			using (var enumArray = new Java.Lang.Object (JNIEnv.NewArray (new[]{Keycode.A}), JniHandleOwnership.TransferLocalRef)) {
@@ -314,7 +316,7 @@ namespace Android.RuntimeTests {
 			}
 		}
 
-		[Test]
+		[TestMethod]
 		public void GetArray_NullableInt32 ()
 		{
 			var values = new int? [] { 1, null, 3 };
@@ -330,7 +332,7 @@ namespace Android.RuntimeTests {
 			}
 		}
 
-		[Test]
+		[TestMethod]
 		public void GetArray_NullableByte ()
 		{
 			var values = new byte? [] { 1, null, 200 };
@@ -350,7 +352,7 @@ namespace Android.RuntimeTests {
 			}
 		}
 
-		[Test]
+		[TestMethod]
 		public void GetArray_NullableByteArrayArray ()
 		{
 			var values = new [] {
@@ -368,7 +370,7 @@ namespace Android.RuntimeTests {
 			}
 		}
 
-		[Test]
+		[TestMethod]
 		public void GetArray_NullableByteArrayArrayArray ()
 		{
 			var values = new [] {
@@ -394,7 +396,7 @@ namespace Android.RuntimeTests {
 			}
 		}
 
-		[Test]
+		[TestMethod]
 		public void GetArray_JavaLangStringArrayToJavaLangObjectArray ()
 		{
 			using (var stringArray = new Java.Lang.Object (JNIEnv.NewArray (new[]{"a", "b"}), JniHandleOwnership.TransferLocalRef)) {
@@ -407,7 +409,7 @@ namespace Android.RuntimeTests {
 			}
 		}
 
-		[Test]
+		[TestMethod]
 		public void GetArrayItem ()
 		{
 			using (var byteArray = new Java.Lang.Object (JNIEnv.NewArray (new byte[]{1,2,3}), JniHandleOwnership.TransferLocalRef)) {
@@ -417,7 +419,7 @@ namespace Android.RuntimeTests {
 			}
 		}
 
-		[Test]
+		[TestMethod]
 		public void GetArrayItem_Int32ArrayArray ()
 		{
 			IntPtr array = JNIEnv.NewObjectArray (1, Java.Lang.Class.Object);
@@ -429,7 +431,7 @@ namespace Android.RuntimeTests {
 			JNIEnv.DeleteLocalRef (array);
 		}
 
-		[Test]
+		[TestMethod]
 		public void SetArrayItem ()
 		{
 			using (var byteArray = new Java.Lang.Object (JNIEnv.NewArray (new byte[]{1,2,3}), JniHandleOwnership.TransferLocalRef)) {
@@ -441,7 +443,7 @@ namespace Android.RuntimeTests {
 			}
 		}
 
-		[Test]
+		[TestMethod]
 		public void SetArrayItem_JavaLangString ()
 		{
 			using (var stringArray = new Java.Lang.Object (JNIEnv.NewArray (new[]{"a", "b"}), JniHandleOwnership.TransferLocalRef)) {
@@ -451,13 +453,13 @@ namespace Android.RuntimeTests {
 			}
 		}
 
-		[Test]
-		[Category ("JNIObjectArray")]
+		[TestMethod]
+		[TestCategory ("JNIObjectArray")]
 		public void GetObjectArray ()
 		{
 			using (var byteArray = new Java.Lang.Object (JNIEnv.NewArray (new byte[]{1,2,3}), JniHandleOwnership.TransferLocalRef)) {
 				object[] data = JNIEnv.GetObjectArray (byteArray.Handle, new[]{typeof (byte), typeof (byte), typeof (byte)});
-				AssertArrays ("GetObjectArray", data, (object) 1, (object) 2, (object) 3);
+				AssertArrays ("GetObjectArray", data, (object) (byte) 1, (object) (byte) 2, (object) (byte) 3);
 			}
 			var context = Application.Context;
 			using (var objectArray =
@@ -469,14 +471,14 @@ namespace Android.RuntimeTests {
 				object[] values = JNIEnv.GetObjectArray (objectArray.Handle, new[]{typeof(Context), typeof (int)});
 				Assert.AreEqual (3, values.Length);
 				Assert.AreSame (context, values [0], $"Expected existing Context peer, got {values [0]?.GetType ()}.");
-				Assert.IsInstanceOf<int> (values [1], $"Expected converted Int32, got {values [1]?.GetType ()}: {values [1]}.");
+				Assert.IsInstanceOfType<int> (values [1], $"Expected converted Int32, got {values [1]?.GetType ()}: {values [1]}.");
 				Assert.AreEqual (42, (int)values [1]);
 				Assert.AreEqual ("string", values [2].ToString ());
 			}
 		}
 
-		[Test]
-		[Category ("JNIObjectArray")]
+		[TestMethod]
+		[TestCategory ("JNIObjectArray")]
 		public void GetObjectArray_AfterStalePeerLookup ()
 		{
 			var manager = Java.Interop.JniRuntime.CurrentRuntime.ValueManager;
@@ -513,8 +515,8 @@ namespace Android.RuntimeTests {
 			}
 		}
 
-		[Test]
-		[Category ("JNIObjectArray")]
+		[TestMethod]
+		[TestCategory ("JNIObjectArray")]
 		public async Task GetPeer_ConcurrentLookup_ReturnsRegisteredPeer ()
 		{
 			var manager = Java.Interop.JniRuntime.CurrentRuntime.ValueManager;
@@ -575,8 +577,8 @@ namespace Android.RuntimeTests {
 			}
 		}
 
-		[Test]
-		[Category ("JNIObjectArray")]
+		[TestMethod]
+		[TestCategory ("JNIObjectArray")]
 		public async Task GetObjectArray_DuringConcurrentPeerLookup ()
 		{
 			Java.InteropTests.TrimmableRuntimeJavaInteropPeer.Reset ();
@@ -652,7 +654,7 @@ namespace Android.RuntimeTests {
 			return reference;
 		}
 
-		[Test]
+		[TestMethod]
 		public void NewArray_Int32ArrayArray ()
 		{
 			IntPtr x = JNIEnv.NewArray<int[]>(new int[][]{new[]{11, 12}, new []{21, 22}});
@@ -661,7 +663,7 @@ namespace Android.RuntimeTests {
 			Assert.AreEqual ("[[I", t);
 		}
 
-		[Test]
+		[TestMethod]
 		public void NewArray_Int32ArrayArray_ArrayOverload ()
 		{
 			Array array = new int[][]{new[]{11, 12}, new []{21, 22}};
@@ -672,7 +674,7 @@ namespace Android.RuntimeTests {
 		}
 
 		// http://bugzilla.xamarin.com/show_bug.cgi?id=12479
-		[Test]
+		[TestMethod]
 		public void NewArray_Int32ArrayArray_ShouldNotLeak ()
 		{
 			int[][] array = new int[][]{
@@ -687,7 +689,7 @@ namespace Android.RuntimeTests {
 			}
 		}
 
-		[Test]
+		[TestMethod]
 		public void NewArray_UseJcwTypeWhenRenamed ()
 		{
 			IntPtr lref = JNIEnv.NewArray<CreateInstance_OverrideAbsListView_Adapter>(new CreateInstance_OverrideAbsListView_Adapter[0]);
@@ -697,7 +699,7 @@ namespace Android.RuntimeTests {
 			JNIEnv.DeleteLocalRef (lref);
 		}
 
-		[Test]
+		[TestMethod]
 		public void NewObjectArray_SystemByteArrayToJavaLangByteArray ()
 		{
 			IntPtr p = JNIEnv.NewObjectArray (new byte[]{1, 2, 3});
@@ -707,7 +709,7 @@ namespace Android.RuntimeTests {
 		}
 
 		// http://bugzilla.xamarin.com/show_bug.cgi?id=360
-		[Test]
+		[TestMethod]
 		public void BoundArrayPropertiesHaveSetters ()
 		{
 			using (var opt = new BitmapFactory.Options ()) {
@@ -715,7 +717,7 @@ namespace Android.RuntimeTests {
 				var inTempStorage = opt.InTempStorage;
 				Assert.AreEqual (3, inTempStorage.Count);
 				AssertArrays ("BoundArrayPropertiesHaveSetters", inTempStorage, (byte) 1, (byte) 3, (byte) 5);
-				Assert.DoesNotThrow (() => ((IDisposable)inTempStorage).Dispose ());
+				global::Xamarin.Android.UnitTests.AndroidTestAssert.DoesNotThrow (() => ((IDisposable)inTempStorage).Dispose ());
 			}
 		}
 
@@ -723,7 +725,7 @@ namespace Android.RuntimeTests {
 		{
 			Assert.AreEqual (expected.Length, actual.Count, message);
 			for (int i = 0; i < expected.Length; ++i)
-				Assert.AreEqual (expected [i], actual [i], message);
+				Assert.IsTrue (global::Java.Interop.JniMarshal.RecursiveEquals (expected [i], actual [i]), message);
 		}
 	}
 }

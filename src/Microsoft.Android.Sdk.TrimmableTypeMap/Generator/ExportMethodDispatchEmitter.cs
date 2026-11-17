@@ -55,6 +55,7 @@ sealed class ExportMethodDispatchEmitter
 			exportMethodDispatchLocals.EncodeLocals);
 
 		AddUnmanagedCallersOnlyAttribute (handle);
+		_pe.AddDebuggerDisableUserUnhandledExceptionsAttribute (handle);
 		return handle;
 	}
 

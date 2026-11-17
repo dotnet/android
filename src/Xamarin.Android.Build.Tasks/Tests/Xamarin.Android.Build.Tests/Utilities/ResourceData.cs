@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using Xamarin.Android.Tasks;
 using Xamarin.ProjectTools;
@@ -42,8 +43,6 @@ namespace Xamarin.Android.Build.Tests
 		public  static  string JavaSourceTestInterface => Encoding.ASCII.GetString (javaSourceTestInterface.Value);
 		public  static  string RemapActivityJava => Encoding.UTF8.GetString (remapActivityJava.Value);
 		public  static  string RemapActivityXml => Encoding.UTF8.GetString (remapActivityXml.Value);
-		public static  string RemapMamJson => Encoding.UTF8.GetString (GetResourceData ("mam.json"));
-		public static  string RemapMamXml => Encoding.UTF8.GetString (GetResourceData ("mam.xml"));
 		public static string InterfaceMethods => Encoding.UTF8.GetString (interfaceMethods.Value);
 		public static string InterfaceMethodPeer => Encoding.UTF8.GetString (interfaceMethodPeer.Value);
 		public static string ConcreteInterfaceMethodPeer => Encoding.UTF8.GetString (concreteInterfaceMethodPeer.Value);
@@ -63,7 +62,7 @@ namespace Xamarin.Android.Build.Tests
 			return m.ToArray ();
 		}
 
-		static readonly object keystoreLock = new object ();
+		static readonly Lock keystoreLock = new Lock ();
 		static byte [] cachedKeystore;
 
 		public static byte [] GetKeystore ()
@@ -87,7 +86,7 @@ namespace Xamarin.Android.Build.Tests
 		{
 			var keytoolName = TestEnvironment.IsWindows ? "keytool.exe" : "keytool";
 			var keytoolPath = Path.Combine (AndroidSdkResolver.GetJavaSdkPath (), "bin", keytoolName);
-			var arguments = $"-genkeypair -v -storetype pkcs12 -keystore \"{keystorePath}\" -alias {keyAlias} -keyalg RSA -keysize 2048 -validity 10000 -storepass {storePass} -keypass {keyPass} -dname \"CN=Test, OU=Test, O=Test, L=Test, ST=Test, C=US\"";
+			var arguments = $"-genkeypair -v -storetype pkcs12 -keystore \"{keystorePath}\" -alias \"{keyAlias}\" -keyalg RSA -keysize 2048 -validity 10000 -storepass \"{storePass}\" -keypass \"{keyPass}\" -dname \"CN=Test, OU=Test, O=Test, L=Test, ST=Test, C=US\"";
 			var stderr = new List<string> ();
 			int exitCode = MonoAndroidHelper.RunProcess (
 				keytoolPath, arguments,

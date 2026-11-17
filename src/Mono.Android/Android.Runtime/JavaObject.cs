@@ -63,12 +63,13 @@ namespace Android.Runtime {
 
 		public JavaObject (object inst)
 			: base (
-					JNIEnv.StartCreateInstance ("mono/android/runtime/JavaObject", "()V"),
+					// SAFETY: The complete ASCII literal supplies stable, NUL-terminated JNI class-name bytes.
+					unsafe (JNIEnv.AllocObject ("mono/android/runtime/JavaObject"u8)),
 					JniHandleOwnership.TransferLocalRef)
 		{
 			unsafe {
 				// SAFETY: this peer owns the allocated handle; ()V supplies the zero-argument instance-constructor ABI.
-				JNIEnv.FinishCreateInstance (Handle, "()V");
+				JNIEnv.FinishCreateInstance (Handle, "()V"u8);
 			}
 
 			this.inst = inst;

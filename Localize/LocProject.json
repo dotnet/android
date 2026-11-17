@@ -5,6 +5,12 @@
       "LocItems": [
         {
           "CopyOption": "LangIDOnName",
+          "SourceFile": ".\\src\\Java.Interop.Localization\\Resources.resx",
+          "OutputPath": ".\\src\\Java.Interop.Localization",
+          "LclFile": "Localize\\loc\\{Lang}\\src\\Java.Interop.Localization\\Resources.resx.lcl"
+        },
+        {
+          "CopyOption": "LangIDOnName",
           "SourceFile": ".\\src\\Xamarin.Android.Build.Tasks\\Properties\\Resources.resx",
           "OutputPath": ".\\src\\Xamarin.Android.Build.Tasks\\Properties\\"
         },

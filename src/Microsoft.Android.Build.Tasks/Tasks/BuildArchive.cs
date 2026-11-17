@@ -39,7 +39,7 @@ public class BuildArchive : AndroidTask
 
 	public override bool RunTask ()
 	{
-		var is_aab = string.Compare (AndroidPackageFormat, "aab", true) == 0;
+		var is_aab = string.Equals (AndroidPackageFormat, "aab", StringComparison.CurrentCultureIgnoreCase);
 
 		// Nothing needs to be compressed with app bundles. BundleConfig.json specifies the final compression mode.
 		if (is_aab)
@@ -176,7 +176,7 @@ public class BuildArchive : AndroidTask
 		// Clean up Removed files.
 		foreach (var entry in existingEntries) {
 			// Never remove an AndroidManifest. It may be renamed when using aab.
-			if (string.Compare (Path.GetFileName (entry), "AndroidManifest.xml", StringComparison.OrdinalIgnoreCase) == 0)
+			if (string.Equals (Path.GetFileName (entry), "AndroidManifest.xml", StringComparison.OrdinalIgnoreCase))
 				continue;
 
 			Log.LogDebugMessage ($"Removing {entry} as it is no longer required.");

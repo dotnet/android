@@ -1,0 +1,1090 @@
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Text;
+
+namespace Xamarin.Java.Interop
+{
+	partial class Generator
+	{
+		static string jnienv_g_c;
+		static string jnienv_g_h;
+		static string jnienv_g_cs;
+
+		public static int Main (string [] args)
+		{
+			jnienv_g_c  = "JniEnvironment.g.c";
+			jnienv_g_h  = "JniEnvironment.g.h";
+			jnienv_g_cs = "JniEnvironment.g.cs";
+			if (args.Length > 0)
+				jnienv_g_cs = args [0];
+			if (args.Length > 1) {
+				jnienv_g_c = args [1];
+				if (jnienv_g_c != "-") {
+					jnienv_g_h = Path.Combine (Path.GetDirectoryName (jnienv_g_c), $"{Path.GetFileNameWithoutExtension(jnienv_g_c)}-api.h");
+				} else {
+					jnienv_g_h = "-";
+				}
+			}
+			if (args.Length > 2) {
+				jnienv_g_h = args [2];
+			}
+
+			try {
+				using (TextWriter w = new StringWriter ()) {
+					w.NewLine = Environment.NewLine;
+					GenerateFile (w);
+					string content = w.ToString ();
+					if (jnienv_g_cs == "-")
+						Console.WriteLine (content);
+					else
+						File.WriteAllText (jnienv_g_cs, content);
+				}
+				using (TextWriter sw = new StringWriter ()) {
+				using (TextWriter hw = new StringWriter ()) {
+					sw.NewLine = Environment.NewLine;
+					GenerateNativeLibSource (sw, hw, jnienv_g_h);
+					string sourceContent = sw.ToString ();
+					string headerContent = hw.ToString ();
+					if (jnienv_g_c == "-" || jnienv_g_cs == "-") {
+						Console.WriteLine (headerContent);
+						Console.WriteLine ();
+						Console.WriteLine (sourceContent);
+					} else {
+						File.WriteAllText (jnienv_g_h, headerContent);
+						File.WriteAllText (jnienv_g_c, sourceContent);
+					}
+				}}
+				return 0;
+			} catch (Exception ex) {
+				Console.WriteLine (ex);
+				return 1;
+			}
+		}
+
+		static string Escape (string value)
+		{
+			switch (value) {
+			case "object":
+			case "string":
+			case "ref":
+				return "@" + value;
+			default: return value;
+			}
+		}
+
+		static void GenerateFile (TextWriter o)
+		{
+			o.WriteLine ("// Generated file; DO NOT EDIT!");
+			o.WriteLine ("//");
+			o.WriteLine ("// To make changes, edit monodroid/tools/jnienv-gen-interop and rerun");
+			o.WriteLine ("#nullable enable");
+			o.WriteLine ();
+			o.WriteLine ("using System;");
+			o.WriteLine ("using System.Linq;");
+			o.WriteLine ("using System.Runtime.ExceptionServices;");
+			o.WriteLine ("using System.Runtime.InteropServices;");
+			o.WriteLine ("using System.Threading;");
+			o.WriteLine ();
+			o.WriteLine ("using Java.Interop;");
+			o.WriteLine ();
+			o.WriteLine ("\tusing jinstanceFieldID   = System.IntPtr;");
+			o.WriteLine ("\tusing jstaticFieldID     = System.IntPtr;");
+			o.WriteLine ("\tusing jinstanceMethodID  = System.IntPtr;");
+			o.WriteLine ("\tusing jstaticMethodID    = System.IntPtr;");
+			o.WriteLine ("\tusing jobject            = System.IntPtr;");
+			o.WriteLine ();
+			o.WriteLine ("namespace Java.Interop {");
+			GenerateJniNativeInterface (o);
+			o.WriteLine ("}");
+			WriteSection (o);
+		}
+
+		static void WriteSection (TextWriter o)
+		{
+			o.WriteLine ("namespace Java.Interop {");
+			o.WriteLine ();
+			GenerateTypes (o);
+			o.WriteLine ();
+			o.WriteLine ("}");
+		}
+
+		static void GenerateJniNativeInterface (TextWriter o)
+		{
+			o.WriteLine ("#pragma warning disable 0649	// Field is assigned to, and will always have its default value `null`; ignore as it'll be set in native code.");
+			o.WriteLine ("#pragma warning disable 0169	// Field never used; ignore since these fields make the structure have the right layout.");
+			o.WriteLine ();
+
+			int maxName = JNIEnvEntries.Max (e => e.Name.Length);
+
+			o.WriteLine ("\t[ExtendedLayout (ExtendedLayoutKind.CStruct)]");
+			o.WriteLine ("\tpartial struct JNIEnv {");
+			o.WriteLine ("\t\t// SAFETY: Fields store non-overlapping addresses; native access and invocation remain in caller-validated unsafe contexts.");
+
+			for (int i = 0; i < 4; i++)
+				o.WriteLine ("\t\tprivate safe IntPtr  reserved{0};                      // void*", i);
+
+			foreach (var e in JNIEnvEntries) {
+				if (e.Parameters.Length > 0 &&
+						"va_list" == e.Parameters [e.Parameters.Length-1].Type.GetManagedType (isReturn: false, isPinvoke: true)) {
+					o.WriteLine ("\t\tpublic safe IntPtr  {0};{1}  // {2}", e.Name, new string (' ', maxName - e.Name.Length), e.Prototype);
+					continue;
+				}
+				o.Write ("\t\tpublic safe delegate* unmanaged <IntPtr /* env */");
+				foreach (var p in e.Parameters) {
+					o.Write (", ");
+					o.Write (p.Type.GetMarshalType (isReturn: false, isPinvoke: true));
+					o.Write ($" /* {p.Name} */");
+				}
+				o.Write (", ");
+				o.Write (e.ReturnType.GetMarshalType (isReturn: true, isPinvoke: true));
+				o.WriteLine ($"> {e.Name};");
+			}
+			o.WriteLine ("\t}");
+
+			o.WriteLine ();
+			o.WriteLine ("#pragma warning restore 0169");
+			o.WriteLine ("#pragma warning restore 0649");
+		}
+
+		static void GenerateTypes (TextWriter o)
+		{
+			GenerateJniNativeMethods (o);
+
+			var visibilities = new Dictionary<string, string> {
+				{ ArrayOperationsCategory,      "public" },
+				{ ClassesCategory,              "public" },
+				{ ExceptionsCategory,           "public" },
+				{ InstanceFieldsCategory,       "public" },
+				{ InstanceMethodsCategory,      "public" },
+				{ MonitorOperationsCategory,    "public" },
+				{ NIOSupportCategory,           "public" },
+				{ ObjectOperationsCategory,     "public" },
+				{ ReferencesCatgeory,           "public" },
+				{ StaticFieldsCategory,         "public" },
+				{ StaticMethodsCategory,        "public" },
+				{ StringOperationsCategory,     "public" },
+			};
+			o.WriteLine ("\tpartial class JniEnvironment {");
+			foreach (var t in JNIEnvEntries
+					.Select (e => e.DeclaringType ?? "JniEnvironment")
+					.Distinct ()
+					.OrderBy (t => t)) {
+				string visibility;
+				if (!visibilities.TryGetValue (t, out visibility))
+					visibility = "internal";
+				GenerateJniEnv (o, t, visibility);
+			}
+			o.WriteLine ("\t}");
+		}
+
+		static void GenerateJniNativeMethods (TextWriter o)
+		{
+			o.WriteLine ("\t/// <safety>");
+			o.WriteLine ("\t/// Supply the calling attached thread's live JNIEnv with the JNI vtable ABI.");
+			o.WriteLine ("\t/// Handles and IDs must match the selected JNI operation. Borrowed pointers must have");
+			o.WriteLine ("\t/// the required bounds, access and termination, with stable storage and live references");
+			o.WriteLine ("\t/// through return or failure. Pin managed storage and prevent conflicting alias access.");
+			o.WriteLine ("\t/// Individual operations may require a longer lifetime, as documented on their methods.");
+			o.WriteLine ("\t/// </safety>");
+			o.WriteLine ("\tstatic partial class JniNativeMethods {");
+			o.WriteLine ();
+			foreach (var entry in JNIEnvEntries) {
+				if (entry.Parameters == null)
+					continue;
+				if (entry.IsPrivate || entry.CustomWrapper)
+					continue;
+
+				var returnType = entry.ReturnType.GetMarshalType (isReturn: true, isPinvoke: true);
+				o.WriteLine ();
+				WriteCallerSafetyRequirements (o, entry, isRaw: true);
+				o.WriteLine ("\t\t[System.Runtime.CompilerServices.MethodImpl (System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]");
+				o.Write ("\t\tinternal static unsafe ");
+				o.Write (entry.ReturnType.GetMarshalType (isReturn: true, isPinvoke: true));
+				o.Write ($" {entry.Name} (IntPtr env");
+				foreach (var p in entry.Parameters) {
+					o.Write (", ");
+					o.Write (p.Type.GetMarshalType (isReturn: false, isPinvoke: true));
+					o.Write ($" {Escape (p.Name)}");
+				}
+				o.WriteLine (")");
+				o.WriteLine ("\t\t{");
+				o.WriteLine ("\t\t\tunsafe {");
+				o.WriteLine ("\t\t\t\t// SAFETY: The caller supplies this thread's live JNIEnv and arguments matching the {0} JNI slot.", entry.Name);
+				o.Write ("\t\t\t\t");
+				if (returnType != "void") {
+					o.Write ("return ");
+				}
+				o.Write ($"(*((JNIEnv**)env))->{entry.Name} (env");
+				foreach (var p in entry.Parameters) {
+					o.Write (", ");
+					o.Write (Escape (p.Name));
+				}
+				o.WriteLine (");");
+				o.WriteLine ("\t\t\t}");
+				o.WriteLine ("\t\t}");
+			}
+			o.WriteLine ("\t}");
+			o.WriteLine ();
+		}
+
+		static void GenerateJniEnv (TextWriter o, string type, string visibility)
+		{
+			o.WriteLine ();
+
+			o.WriteLine ("\t{0} static partial class {1} {{", visibility, type);
+			foreach (JniFunction entry in JNIEnvEntries) {
+				if ((entry.DeclaringType ?? "JniEnvironment") != type)
+					continue;
+				if (entry.Parameters == null)
+					continue;
+				if (entry.IsPrivate || entry.CustomWrapper)
+					continue;
+
+				o.WriteLine ();
+				WriteCallerSafetyRequirements (o, entry);
+				// Nonzero IDs do not validate invocation signatures, including constructors.
+				bool requiresUnsafe = type == InstanceMethodsCategory || type == StaticMethodsCategory ||
+					entry.RequiresUnsafe ||
+					entry.Parameters.Any (p => p.Type.GetManagedType (isReturn: false).IndexOf ('*') >= 0);
+				o.Write ("\t\t{2} static {3}{0} {1} (", entry.GetManagedReturnType (), entry.ApiName, entry.Visibility, requiresUnsafe ? "unsafe " : "");
+				switch (entry.ApiName) {
+				default:
+					bool is_void = entry.ReturnType.JniType == "void";
+					for (int i = 0; i < entry.Parameters.Length; i++) {
+						if (i > 0)
+							o.Write (", ");
+						o.Write ("{0} {1}", entry.Parameters [i].Type.GetManagedType (isReturn: false), Escape (entry.Parameters [i].Name));
+					}
+					o.WriteLine (")");
+					o.WriteLine ("\t\t{");
+					NullCheckParameters (o, entry.Parameters);
+					PrepareParameters (o, entry.Parameters);
+					o.WriteLine ($"\t\t\tIntPtr __env = JniEnvironment.EnvironmentPointer;");
+					if (!is_void)
+						o.WriteLine ($"\t\t\t{entry.ReturnType.GetMarshalType (isReturn: true, isPinvoke: true)} tmp;");
+					if (entry.Throws)
+						o.WriteLine ("\t\t\tIntPtr thrown;");
+					o.WriteLine ("\t\t\tunsafe {");
+					o.WriteLine ("\t\t\t\t// SAFETY: {0} uses this thread's JNIEnv; owned buffers and caller-provided JNI arguments remain valid through this call.", entry.Name);
+					o.Write ("\t\t\t\t");
+					if (!is_void)
+						o.Write ("tmp = ");
+					o.Write ($"JniNativeMethods.{entry.Name} (__env");
+					for (int i = 0; i < entry.Parameters.Length; i++) {
+						var p = entry.Parameters [i];
+						o.Write (", ");
+						var needOut = p.Type.GetManagedType (isReturn: false).StartsWith ("out ", StringComparison.Ordinal);
+						if (needOut)
+							o.Write ("&");
+						o.Write (p.Type.GetManagedToMarshalExpression (Escape (entry.Parameters [i].Name)));
+					}
+					o.WriteLine (");");
+					if (entry.Throws)
+						o.WriteLine ("\t\t\t\tthrown = JniNativeMethods.ExceptionOccurred (__env);");
+					o.WriteLine ("\t\t\t}");
+					CleanupParameters (o, entry.Parameters);
+					RaiseException (o, entry);
+					if (is_void) {
+					} else {
+						foreach (var line in entry.ReturnType.GetHandleCreationLogStatements (entry.Name, "tmp"))
+							o.WriteLine ("\t\t\t{0}", line);
+						foreach (var line in entry.ReturnType.GetMarshalToManagedStatements ("tmp", entry))
+							o.WriteLine ("\t\t\t{0}", line);
+					}
+					break;
+				}
+
+				o.WriteLine ("\t\t}");
+			}
+			o.WriteLine ("\t}");
+		}
+
+		static void WriteCallerSafetyRequirements (TextWriter o, JniFunction entry, bool isRaw = false)
+		{
+			if (!isRaw && entry.CallerSafetyRequirements.Length == 0)
+				return;
+
+			o.WriteLine ("\t\t/// <safety>");
+			if (isRaw)
+				o.WriteLine ("\t\t/// The raw JNI caller contract on <see cref=\"JniNativeMethods\"/> applies.");
+			foreach (var requirement in entry.CallerSafetyRequirements)
+				o.WriteLine ("\t\t/// {0}", requirement);
+			o.WriteLine ("\t\t/// </safety>");
+		}
+
+		static string GetPinvokeName (string name)
+		{
+			var sb = new StringBuilder ("java_interop_jnienv_".Length + name.Length * 2);
+			sb.Append ("java_interop_jnienv");
+			var uc = false;
+			foreach (var c in name) {
+				if (!uc && char.IsUpper (c)) {
+					sb.Append ("_");
+					uc = true;
+				} else {
+					uc = false;
+				}
+				sb.Append (char.ToLower (c));
+			}
+			return sb.ToString ();
+		}
+
+		static void NullCheckParameters (TextWriter o, ParamInfo[] ps)
+		{
+			bool haveChecks = false;
+			for (int i = 0; i < ps.Length; i++) {
+				var p = ps [i];
+				if (p.CanBeNull)
+					continue;
+				var pn = Escape (p.Name);
+				foreach (var line in p.Type.VerifyParameter (pn)) {
+					haveChecks  = true;
+					o.WriteLine ("\t\t\t{0}", line);
+				}
+			}
+			if (haveChecks)
+				o.WriteLine ();
+		}
+
+		static void PrepareParameters (TextWriter o, ParamInfo[] ps)
+		{
+			bool haveChecks = false;
+			foreach (var e in ps) {
+				foreach (var s in e.Type.GetManagedToMarshalPrepareStatements (Escape (e.Name))) {
+					haveChecks = true;
+					o.WriteLine ($"\t\t\t{s}");
+				}
+			}
+			if (haveChecks)
+				o.WriteLine ();
+		}
+
+		static void CleanupParameters (TextWriter o, ParamInfo[] ps)
+		{
+			foreach (var e in ps) {
+				foreach (var s in e.Type.GetManagedToMarshalCleanupStatements (Escape (e.Name))) {
+					o.WriteLine ($"\t\t\t{s}");
+				}
+			}
+		}
+
+		static void RaiseException (TextWriter o, JniFunction entry)
+		{
+			if (!entry.Throws)
+				return;
+
+			o.WriteLine ();
+			o.WriteLine ("\t\t\tException? __e = JniEnvironment.GetExceptionForLastThrowable (thrown);");
+			o.WriteLine ("\t\t\tif (__e != null)");
+			o.WriteLine ("\t\t\t\tExceptionDispatchInfo.Capture (__e).Throw ();");
+			o.WriteLine ();
+		}
+
+		static void WriteNativeFileHeader (TextWriter o)
+		{
+			o.WriteLine ("/*");
+			o.WriteLine (" * Generated file; DO NOT EDIT!");
+			o.WriteLine (" *");
+			o.WriteLine (" * To make changes, edit Java.Interop/build-tools/jnienv-gen and rerun");
+			o.WriteLine (" */");
+			o.WriteLine ();
+		}
+
+		static void GenerateNativeLibSource (TextWriter source, TextWriter header, string headerName)
+		{
+			WriteNativeFileHeader (source);
+			WriteNativeFileHeader (header);
+
+			header.WriteLine ("#if !defined (__JAVA_INTEROP_NATIVE_H)");
+			header.WriteLine ("#define __JAVA_INTEROP_NATIVE_H");
+			header.WriteLine ();
+			header.WriteLine ("#include <jni.h>");
+			header.WriteLine ();
+			header.WriteLine ("typedef jmethodID jstaticmethodID;");
+			header.WriteLine ("typedef jfieldID  jstaticfieldID;");
+			header.WriteLine ("typedef jobject   jglobal;");
+			header.WriteLine ();
+			header.WriteLine ("#if !defined(JI_NO_VISIBILITY)");
+			header.WriteLine ("\t/* VS 2010 and later have stdint.h */");
+			header.WriteLine ("\t#if defined(_MSC_VER)");
+			header.WriteLine ();
+			header.WriteLine ("\t\t#define JI_API_EXPORT __declspec(dllexport)");
+			header.WriteLine ("\t\t#define JI_API_IMPORT __declspec(dllimport)");
+			header.WriteLine ();
+			header.WriteLine ("\t#else   /* defined(_MSC_VER */");
+			header.WriteLine ();
+			header.WriteLine ("\t\t#define JI_API_EXPORT __attribute__ ((visibility (\"default\")))");
+			header.WriteLine ("\t\t#define JI_API_IMPORT");
+			header.WriteLine ();
+			header.WriteLine ("\t#endif  /* !defined(_MSC_VER) */");
+			header.WriteLine ();
+			header.WriteLine ("\t#if defined(JI_DLL_EXPORT)");
+			header.WriteLine ("\t\t#define JI_API JI_API_EXPORT");
+			header.WriteLine ("\t#elif defined(JI_DLL_IMPORT)");
+			header.WriteLine ("\t\t#define JI_API JI_API_IMPORT");
+			header.WriteLine ("\t#else   /* !defined(JI_DLL_IMPORT) && !defined(JI_API_IMPORT) */");
+			header.WriteLine ("\t\t#define JI_API");
+			header.WriteLine ("\t#endif  /* JI_DLL_EXPORT... */");
+			header.WriteLine ("#else // JI_NO_VISIBILITY");
+			header.WriteLine ("\t#define JI_API");
+			header.WriteLine ("#endif // JI_NO_VISIBILITY");
+			header.WriteLine ();
+
+			if (headerName != "-") {
+				source.WriteLine ($"#include \"{Path.GetFileName(headerName)}\"");
+			}
+
+			foreach (JniFunction entry in JNIEnvEntries) {
+				if (entry.IsPrivate || entry.CustomWrapper)
+					continue;
+
+				header.WriteLine (
+					"JI_API {0} {1} (JNIEnv *env{2}{3}{4});",
+					entry.ReturnType.JniType,
+					GetPinvokeName (entry.Name),
+					entry.Throws ? ", jthrowable *_thrown" : "",
+					entry.Parameters.Length != 0 ? ", " : "",
+					string.Join (", ", entry.Parameters.Select (p => string.Format ("{0} {1}", p.Type.JniType, p.Name)))
+				);
+
+				source.WriteLine ();
+				source.WriteLine ("JI_API {0}", entry.ReturnType.JniType);
+				source.WriteLine ("{0} (JNIEnv *env{1}{2}{3})",
+					GetPinvokeName (entry.Name),
+					entry.Throws ? ", jthrowable *_thrown" : "",
+					entry.Parameters.Length != 0 ? ", " : "",
+					string.Join (", ", entry.Parameters.Select (p => string.Format ("{0} {1}", p.Type.JniType, p.Name))));
+				source.WriteLine ("{");
+				bool isVoid = entry.ReturnType.JniType == "void";
+				if (entry.Throws)
+					source.WriteLine ("\t*_thrown = 0;");
+				source.Write ("\t");
+				if (!isVoid)
+					source.Write ("{0} _r_ = ", entry.ReturnType.JniType);
+				source.WriteLine ("(*env)->{0} (env{1}{2});",
+					entry.Name,
+					entry.Parameters.Length != 0 ? ", " : "",
+					string.Join (", ", entry.Parameters.Select (p => p.Name)));
+				if (entry.Throws)
+					source.WriteLine ("\t*_thrown = (*env)->ExceptionOccurred (env);");
+				if (!isVoid)
+					source.WriteLine ("\treturn _r_;");
+				source.WriteLine ("}");
+			}
+
+			header.WriteLine ();
+			header.WriteLine ("#endif // __JAVA_INTEROP_NATIVE_H");
+		}
+	}
+
+	class JniFunction {
+
+		public string DeclaringType;
+
+		// The java name
+		public string Name;
+
+		// The name of the property/method we will generate. Defaults to the (java) name.
+		private string api_name;
+		public string ApiName
+		{
+			get { return api_name ?? Name; }
+			set { api_name = value; }
+		}
+		
+		// The C prototype that we are binding (for diagnostic purposes)
+		public string Prototype;
+		
+		public TypeInfo ReturnType;
+		public ParamInfo [] Parameters;
+
+		public bool RequiresUnsafe;
+		public string[] CallerSafetyRequirements = [];
+
+		// If there is a custom wrapper in JNIEnv (so an automatic one shouldn't be generated)
+		public bool CustomWrapper = false;
+
+		// If the JNI function can throw an exception (ExceptionOccurred needs to be invoked)
+		public bool Throws;
+
+		private string visibility;
+		public string Visibility {
+			get {
+				if (visibility == null)
+					return "public";
+				return visibility;
+			}
+			set {
+				visibility = value;
+			}
+		}
+
+		public bool IsPublic { get { return Visibility == "public"; } }
+		public bool IsPrivate { get { return visibility == "private"; } }
+		
+		public string GetManagedReturnType ()
+		{
+			if (ReturnType == null)
+				return "void";
+			return ReturnType.GetManagedType (isReturn:true);
+		}
+
+	}
+
+	abstract class TypeInfo
+	{
+		static readonly Dictionary<string, TypeInfo> types = new Dictionary<string, TypeInfo> () {
+			{ "jvalue*",                    new BuiltinTypeInfo ("jvalue*",                 "JniArgumentValue*") },
+			{ "jbyte",                      new BuiltinTypeInfo ("jbyte",                   "sbyte") },
+			{ "jchar",                      new CharTypeInfo ("jchar") },
+			{ "jchar*",                     new BuiltinTypeInfo ("jchar*",                  "char*") },
+			{ "jshort",                     new BuiltinTypeInfo ("jshort",                  "short") },
+			{ "jsize",                      new BuiltinTypeInfo ("jsize",                   "int") },
+			{ "jint",                       new BuiltinTypeInfo ("jint",                    "int") },
+			{ "jlong",                      new BuiltinTypeInfo ("jlong",                   "long") },
+			{ "jfloat",                     new BuiltinTypeInfo ("jfloat",                  "float") },
+			{ "jdouble",                    new BuiltinTypeInfo ("jdouble",                 "double") },
+			{ "jboolean",                   new BooleanTypeInfo ("jboolean") },
+			{ "void*",                      new BuiltinTypeInfo ("void*",                   "IntPtr") },
+			{ "const jchar*",               new StringTypeInfo ("const jchar*") },
+			{ "const char*",                new StringTypeInfo ("const char*") },
+			{ "const JNINativeMethod*",     new BuiltinTypeInfo ("const JNINativeMethod*",  "JniNativeMethodRegistration []") },
+			{ "jobjectRefType",             new BuiltinTypeInfo ("jobjectRefType",          "JniObjectReferenceType") },
+			{ "jfieldID",                   new InstanceFieldTypeInfo ("jfieldID") },
+			{ "jstaticfieldID",             new StaticFieldTypeInfo ("jstaticfieldID") },
+			{ "jmethodID",                  new InstanceMethodTypeInfo ("jmethodID") },
+			{ "jstaticmethodID",            new StaticMethodTypeInfo ("jstaticmethodID") },
+			{ "jstring",                    new LocalReferenceTypeInfo ("jstring") },
+			{ "jarray",                     new LocalReferenceTypeInfo ("jarray") },
+			{ "jobject",                    new LocalReferenceTypeInfo ("jobject") },
+			{ "jthrowable",                 new LocalReferenceTypeInfo ("jthrowable") },
+			{ "jclass",                     new LocalReferenceTypeInfo ("jclass") },
+			{ "jweak",                      new WeakGlobalReferenceTypeInfo ("jweak") },
+			{ "jglobal",                    new GlobalReferenceTypeInfo ("jglobal") },
+			{ "JavaVM**",                   new JavaVMPointerTypeInfo ("JavaVM**") },
+			{ "JniReleaseArrayElementsMode",    new JniReleaseArrayElementsModeTypeInfo () },
+		};
+
+		static readonly Dictionary<string, string> pointerMapping = new Dictionary<string, string> {
+			{ "jboolean*",  "bool*" },
+			{ "jbyte*",     "sbyte*" },
+			{ "jchar*",     "char*" },
+			{ "jdouble*",   "double*" },
+			{ "jfloat*",    "float*" },
+			{ "jint*",      "int*" },
+			{ "jlong*",     "long*" },
+			{ "jshort*",    "short*" },
+		};
+
+		public static TypeInfo Create (string type, string managedType = null)
+		{
+			if (managedType != null)
+				return new BuiltinTypeInfo (type, managedType);
+			TypeInfo t;
+			if (types.TryGetValue (type, out t))
+				return t;
+			if (type.EndsWith ("Array", StringComparison.Ordinal))
+				return new ArrayTypeInfo (type);
+			string p;
+			if (pointerMapping.TryGetValue (type, out p))
+				return new BuiltinTypeInfo (type, p);
+			if (type.EndsWith ("*", StringComparison.Ordinal))
+				return new BuiltinTypeInfo (type, "IntPtr");
+			return new BuiltinTypeInfo (type, type);
+		}
+
+		public static implicit operator TypeInfo (string jniType)
+		{
+			return Create (jniType);
+		}
+
+		public readonly string JniType;
+
+		protected TypeInfo (string jniType)
+		{
+			JniType = jniType;
+		}
+
+		public  abstract    string      GetMarshalType (bool isReturn, bool isPinvoke = false);
+		public  abstract    string      GetManagedType (bool isReturn, bool isPinvoke = false);
+
+		public  virtual     string[]    GetHandleCreationLogStatements (string method, string variable)
+		{
+			return new string [0];
+		}
+
+		public  virtual     string      GetManagedToMarshalExpression (string variable)
+		{
+			return variable;
+		}
+
+		public  virtual     string[]    GetMarshalToManagedStatements (string variable, JniFunction entry)
+		{
+			return new[] {
+				string.Format ("return {0};", variable),
+			};
+		}
+
+		public virtual string[] VerifyParameter (string variable)
+		{
+			return new string [0];
+		}
+
+		public virtual string[] GetManagedToMarshalPrepareStatements (string variable) => Array.Empty<string> ();
+		public virtual string[] GetManagedToMarshalCleanupStatements (string variable) => Array.Empty<string> ();
+	}
+
+	class BuiltinTypeInfo : TypeInfo {
+
+		/// <summary>
+		/// NOTE: .NET framework can't marshal this
+		/// </summary>
+		const string JniArgumentValue = "JniArgumentValue*";
+		string managed;
+
+		public BuiltinTypeInfo (string jni, string managed)
+			: base (jni)
+		{
+			this.managed    = managed;
+		}
+
+		public override string GetMarshalType (bool isReturn, bool isPinvoke)
+		{
+			if (isPinvoke && managed == JniArgumentValue) {
+				return "IntPtr";
+			}
+			return managed;
+		}
+
+		public override string GetManagedType (bool isReturn, bool isPinvoke)
+		{
+			if (isPinvoke && managed == JniArgumentValue) {
+				return "IntPtr";
+			}
+			return managed;
+		}
+
+		public override string GetManagedToMarshalExpression (string variable)
+		{
+			var value = base.GetManagedToMarshalExpression (variable);
+			if (managed == JniArgumentValue) {
+				value = "(IntPtr) " + value;
+			}
+			return value;
+		}
+
+		public override string[] VerifyParameter (string variable)
+		{
+			if (managed != "IntPtr")
+				return new string [0];
+			var variableName = variable.StartsWith ("@", StringComparison.Ordinal)
+				? variable.Substring (1)
+				: variable;
+			return new[] {
+				string.Format ("if ({0} == IntPtr.Zero)", variable),
+				string.Format ("\tthrow new ArgumentException (\"'{0}' must not be IntPtr.Zero.\", \"{0}\");", variableName),
+			};
+		}
+	}
+
+	class BooleanTypeInfo : TypeInfo {
+
+		public BooleanTypeInfo (string jni)
+			: base (jni)
+		{
+		}
+
+		public override string GetMarshalType (bool isReturn, bool isPinvoke)
+		{
+			return "byte";
+		}
+
+		public override string GetManagedType (bool isReturn, bool isPinvoke)
+		{
+			return "bool";
+		}
+
+		public override string[] GetMarshalToManagedStatements (string variable, JniFunction entry)
+		{
+			return new string[] {
+				string.Format ("return ({0} != 0) ? true : false;", variable),
+			};
+		}
+
+		public override string GetManagedToMarshalExpression (string variable)
+		{
+			return string.Format ("({0} ? (byte) 1 : (byte) 0)", variable);
+		}
+	}
+
+	class CharTypeInfo : TypeInfo {
+
+		public CharTypeInfo (string jni)
+			: base (jni)
+		{
+		}
+
+		public override string GetMarshalType (bool isReturn, bool isPinvoke)
+		{
+			return isPinvoke ? "ushort" : "char";
+		}
+
+		public override string GetManagedType (bool isReturn, bool isPinvoke)
+		{
+			return "char";
+		}
+
+		public override string GetManagedToMarshalExpression (string variable)
+		{
+			return $"(ushort) {variable}";
+		}
+
+		public override string[] GetMarshalToManagedStatements (string variable, JniFunction entry)
+		{
+			return [$"return (char) {variable};"];
+		}
+	}
+
+	class StringTypeInfo : TypeInfo {
+
+		public StringTypeInfo (string jni)
+			: base (jni)
+		{
+		}
+
+		public override string GetMarshalType (bool isReturn, bool isPinvoke)
+		{
+			if (isPinvoke) {
+				return "IntPtr";
+			}
+			return "string";
+		}
+
+		public override string GetManagedType (bool isReturn, bool isPinvoke)
+		{
+			return "string";
+		}
+
+		public override string GetManagedToMarshalExpression (string variable)
+		{
+			return $"_{variable}_ptr";
+		}
+
+		public override string[] GetMarshalToManagedStatements (string variable, JniFunction entry)
+		{
+			return new [] {
+				string.Format ("JniEnvironment.LogCreateLocalRef ({0});", variable),
+				string.Format ("return new JniObjectReference ({0}, JniObjectReferenceType.Local);", variable),
+			};
+		}
+
+		public override string[] VerifyParameter (string variable)
+		{
+			var variableName = variable.StartsWith ("@", StringComparison.Ordinal)
+				? variable.Substring (1)
+				: variable;
+			return new[] {
+				string.Format ("if ({0} == null)", variable),
+				string.Format ("\tthrow new ArgumentNullException (\"{0}\");", variableName),
+			};
+		}
+
+		public override string[] GetManagedToMarshalPrepareStatements (string variable)
+		{
+			return new[]{
+				$"var _{variable}_ptr = Marshal.StringToCoTaskMemUTF8 ({variable});",
+			};
+		}
+
+		public override string[] GetManagedToMarshalCleanupStatements (string variable)
+		{
+			return new[]{
+				"unsafe {",
+				$"\t// SAFETY: _{variable}_ptr is owned here and freed after its last native use; earlier failures do not reach this cleanup.",
+				$"\tMarshal.ZeroFreeCoTaskMemUTF8 (_{variable}_ptr);",
+				"}",
+			};
+		}
+	}
+
+	class JniReleaseArrayElementsModeTypeInfo : TypeInfo {
+
+		public JniReleaseArrayElementsModeTypeInfo ()
+			: base ("jint")
+		{
+		}
+
+		public override string GetMarshalType (bool isReturn, bool isPinvoke)
+		{
+			return "int";
+		}
+
+		public override string GetManagedType (bool isReturn, bool isPinvoke)
+		{
+			return "JniReleaseArrayElementsMode";
+		}
+
+		public override string[] GetMarshalToManagedStatements (string variable, JniFunction entry)
+		{
+			return new string[] {
+				string.Format ("return (JniReleaseArrayElementsMode) {0};", variable),
+			};
+		}
+
+		public override string GetManagedToMarshalExpression (string variable)
+		{
+			return string.Format ("((int) {0})", variable);
+		}
+	}
+
+	class ArrayTypeInfo : LocalReferenceTypeInfo {
+
+		public ArrayTypeInfo (string jni)
+			: base (jni)
+		{
+		}
+	}
+
+	class IdTypeInfo : TypeInfo {
+
+		string  type;
+
+		public IdTypeInfo (string jni, string type)
+			: base (jni)
+		{
+			this.type   = type;
+		}
+
+		public override string GetMarshalType (bool isReturn, bool isPinvoke)
+		{
+			return "IntPtr";
+		}
+
+		public override string GetManagedType (bool isReturn, bool isPinvoke)
+		{
+			return type;
+		}
+
+		public override string GetManagedToMarshalExpression (string variable)
+		{
+			return string.Format ("{0}.ID", variable);
+		}
+
+		public override string[] VerifyParameter (string variable)
+		{
+			var variableName = variable.StartsWith ("@", StringComparison.Ordinal)
+				? variable.Substring (1)
+				: variable;
+			return new [] {
+				string.Format ("if ({0} == null)", variable),
+				string.Format ("\tthrow new ArgumentNullException (\"{0}\");", variableName),
+				string.Format ("if (!{0}.IsValid)", variable),
+				string.Format ("\tthrow new ArgumentException (\"Handle value is not valid.\", \"{0}\");", variableName),
+				string.Format ("System.Diagnostics.Debug.Assert ({0}{1}.IsStatic);", IsStatic ? "" : "!", variableName),
+			};
+		}
+
+		public override string[] GetMarshalToManagedStatements (string variable, JniFunction entry)
+		{
+			return new[] {
+				string.Format ("if ({0} == IntPtr.Zero)", variable),
+				string.Format ($"\tthrow new InvalidOperationException (\"Should not be reached; `{entry.Name}` should have thrown!\");"),
+				string.Format ("return new {0} ({1}, {2}, {3}, isStatic: {4});", type, entry.Parameters [1].Name, entry.Parameters [2].Name, variable, IsStatic ? "true" : "false"),
+			};
+		}
+
+		protected virtual bool IsStatic {
+			get {return false;}
+		}
+	}
+
+	class InstanceFieldTypeInfo : IdTypeInfo {
+
+		public InstanceFieldTypeInfo (string jni)
+			: base (jni, "JniFieldInfo")
+		{
+		}
+	}
+
+	class InstanceMethodTypeInfo : IdTypeInfo {
+
+		public InstanceMethodTypeInfo (string jni)
+			: base (jni, "JniMethodInfo")
+		{
+		}
+	}
+
+	class StaticFieldTypeInfo : IdTypeInfo {
+
+		public StaticFieldTypeInfo (string jni)
+			: base (jni, "JniFieldInfo")
+		{
+		}
+
+		protected override bool IsStatic {
+			get {return true;}
+		}
+	}
+
+	class StaticMethodTypeInfo : IdTypeInfo {
+
+		public StaticMethodTypeInfo (string jni)
+			: base (jni, "JniMethodInfo")
+		{
+		}
+
+		protected override bool IsStatic {
+			get {return true;}
+		}
+	}
+
+	abstract class ObjectReferenceTypeInfo : TypeInfo {
+
+		string  refType;
+
+		public ObjectReferenceTypeInfo (string jni, string refType)
+			: base (jni)
+		{
+			this.refType    = refType;
+		}
+
+		public override string GetMarshalType (bool isReturn, bool isPinvoke)
+		{
+			return "jobject";
+		}
+
+		public override string GetManagedType (bool isReturn, bool isPinvoke)
+		{
+			return "JniObjectReference";
+		}
+
+		public override string GetManagedToMarshalExpression (string variable)
+		{
+			return string.Format ("{0}.Handle", variable);
+		}
+
+		public override string[] GetMarshalToManagedStatements (string variable, JniFunction entry)
+		{
+			return new [] {
+				string.Format ("return new JniObjectReference ({0}, {1});", variable, refType),
+			};
+		}
+
+		public override string[] VerifyParameter (string variable)
+		{
+			var variableName = variable.StartsWith ("@", StringComparison.Ordinal)
+				? variable.Substring (1)
+				: variable;
+			return new [] {
+				string.Format ("if (!{0}.IsValid)", variable),
+				string.Format ("\tthrow new ArgumentException (\"Handle must be valid.\", \"{0}\");", variableName),
+			};
+		}
+	}
+
+	class LocalReferenceTypeInfo : ObjectReferenceTypeInfo {
+
+		public LocalReferenceTypeInfo (string jni)
+			: base (jni, "JniObjectReferenceType.Local")
+		{
+		}
+
+		public override string[] GetHandleCreationLogStatements (string method, string variable)
+		{
+			if (method == "NewLocalRef" || method == "ExceptionOccurred")
+				return base.GetHandleCreationLogStatements (method, variable);
+			return new[] {
+				string.Format ("JniEnvironment.LogCreateLocalRef ({0});", variable),
+			};
+		}
+	}
+
+	class WeakGlobalReferenceTypeInfo : ObjectReferenceTypeInfo {
+
+		public WeakGlobalReferenceTypeInfo (string jni)
+			: base (jni, "JniObjectReferenceType.WeakGlobal")
+		{
+		}
+	}
+
+	class GlobalReferenceTypeInfo : ObjectReferenceTypeInfo {
+
+		public GlobalReferenceTypeInfo (string jni)
+			: base (jni, "JniObjectReferenceType.Global")
+		{
+		}
+	}
+
+	class JavaVMPointerTypeInfo : TypeInfo {
+
+		public JavaVMPointerTypeInfo (string jni)
+			: base (jni)
+		{
+		}
+
+		public override string GetMarshalType (bool isReturn, bool isPinvoke)
+		{
+			if (isPinvoke) {
+				return "IntPtr*";
+			}
+			return "out IntPtr";
+		}
+
+		public override string GetManagedType (bool isReturn, bool isPinvoke)
+		{
+			return "out IntPtr";
+		}
+
+		public override string GetManagedToMarshalExpression (string variable)
+		{
+			return $"_{variable}_ptr";
+		}
+
+		public override string[] GetManagedToMarshalPrepareStatements (string variable)
+		{
+			return new[]{
+				$"IntPtr _{variable}_ptr = IntPtr.Zero;",
+			};
+		}
+
+		public override string[] GetManagedToMarshalCleanupStatements (string variable)
+		{
+			return new[]{
+				$"{variable} = _{variable}_ptr;",
+			};
+		}
+	}
+
+	class ParamInfo
+	{
+		public TypeInfo Type;
+		public string Name;
+		public bool IsParamArray;
+		public bool CanBeNull;
+
+		public ParamInfo (TypeInfo Type, string Name, bool IsParamArray)
+		{
+			this.Type = Type;
+			this.Name = Name;
+			this.IsParamArray = IsParamArray;
+		}
+
+		public ParamInfo (TypeInfo Type, string Name = null, Modifier m = 0)
+		{
+			this.Type = Type;
+			this.Name = Name;
+			IsParamArray  = (m & Modifier.Params) != 0;
+			CanBeNull     = (m & Modifier.CanBeNull) != 0;
+		}
+	}
+
+	[Flags]
+	enum Modifier {
+		None      = 0,
+		Params    = 1,
+		CanBeNull = 2,
+	}
+
+}

@@ -8,6 +8,8 @@
     <RootNamespace>Microsoft.Android.Sdk.TrimmableTypeMap</RootNamespace>
     <SignAssembly>true</SignAssembly>
     <AssemblyOriginatorKeyFile>..\..\product.snk</AssemblyOriginatorKeyFile>
+    <LangVersion>preview</LangVersion>
+    <MemorySafetyRulesVersion>2</MemorySafetyRulesVersion>
   </PropertyGroup>
 
   <ItemGroup>
@@ -17,8 +19,7 @@
 
   <ItemGroup>
     <Compile Include="..\Microsoft.Android.Build.BaseTasks\HexUtilities.cs" Link="HexUtilities.cs" />
-    <Compile Include="..\..\external\Java.Interop\src\Java.Interop.Tools.JavaCallableWrappers\Java.Interop.Tools.JavaCallableWrappers\Crc64Helper.cs" Link="Crc64Helper.cs" />
-    <Compile Include="..\..\external\Java.Interop\src\Java.Interop.Tools.JavaCallableWrappers\Java.Interop.Tools.JavaCallableWrappers\Crc64.Table.cs" Link="Crc64.Table.cs" />
+    <Compile Include="..\Java.Interop.Tools.JavaCallableWrappers\Java.Interop.Tools.JavaCallableWrappers\Crc64Helper.cs" Link="Crc64Helper.cs" />
   </ItemGroup>
 
 </Project>

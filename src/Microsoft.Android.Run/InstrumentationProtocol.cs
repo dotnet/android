@@ -25,9 +25,13 @@ static class InstrumentationProtocol
 	public const string KeyResultsPath = "resultsPath";
 	public const string KeyError = "error";
 
+	// 'am instrument -e list-tests true' requests test discovery only.
+	public const string ArgListTests = "list-tests";
+
 	// "event" values.
 	public const string EventStart = "start";
 	public const string EventFinish = "finish";
+	public const string EventDiscovered = "discovered";
 
 	// "outcome" values.
 	public const string OutcomePassed = "passed";

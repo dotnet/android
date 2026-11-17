@@ -52,7 +52,7 @@ steps:
   - bash: |
       set -e
       sudo apt-get update
-      sudo apt-get install -y p7zip-full cmake ninja-build ccache
+      sudo apt-get install -y cmake ninja-build ccache
     displayName: Install build dependencies on Linux
 
 - template: /build-tools/automation/yaml-templates/setup-jdk-variables.yaml

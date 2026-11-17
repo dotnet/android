@@ -3,7 +3,6 @@
   <UsingTask AssemblyFile="$(BootstrapTasksAssembly)" TaskName="Xamarin.Android.Tools.BootstrapTasks.Adb" TaskFactory="TaskHostFactory" Runtime="NET" />
   <UsingTask AssemblyFile="$(BootstrapTasksAssembly)" TaskName="Xamarin.Android.Tools.BootstrapTasks.CheckAdbTarget" TaskFactory="TaskHostFactory" Runtime="NET" />
   <UsingTask AssemblyFile="$(BootstrapTasksAssembly)" TaskName="Xamarin.Android.Tools.BootstrapTasks.CreateAndroidEmulator" TaskFactory="TaskHostFactory" Runtime="NET" />
-  <UsingTask AssemblyFile="$(BootstrapTasksAssembly)" TaskName="Xamarin.Android.Tools.BootstrapTasks.RunAndroidEmulatorCheckBootTimes" TaskFactory="TaskHostFactory" Runtime="NET" />
   <UsingTask AssemblyFile="$(BootstrapTasksAssembly)" TaskName="Xamarin.Android.Tools.BootstrapTasks.StartAndroidEmulator" TaskFactory="TaskHostFactory" Runtime="NET" />
   <UsingTask AssemblyFile="$(BootstrapTasksAssembly)" TaskName="Xamarin.Android.Tools.BootstrapTasks.KillProcess" TaskFactory="TaskHostFactory" Runtime="NET" />
   <UsingTask AssemblyFile="$(BootstrapTasksAssembly)" TaskName="Xamarin.Android.Tools.BootstrapTasks.WaitForAndroidEmulator" TaskFactory="TaskHostFactory" Runtime="NET" />
@@ -149,16 +148,6 @@
         ContinueOnError="WarnAndContinue"
         IgnoreStandardErrorWarningFormat="true"
         Command="kill -KILL $(_EmuPid)"
-    />
-  </Target>
-
-  <Target Name="CheckBootTimes"
-      DependsOnTargets="AcquireAndroidTarget;ReleaseAndroidTarget">
-    <RunAndroidEmulatorCheckBootTimes
-        AndroidSdkDirectory="$(AndroidSdkDirectory)"
-        AvdManagerHome="$(AvdManagerHome)"
-        DeviceName="$(TestAvdName)"
-        CheckBootTimesPath="$(MSBuildThisFileDirectory)..\..\bin\Build$(Configuration)\check-boot-times.exe"
     />
   </Target>
 

@@ -4,6 +4,7 @@
 using System;
 using System.Diagnostics;
 using System.IO;
+using System.Threading;
 
 using NUnit.Framework;
 
@@ -88,6 +89,58 @@ namespace Xamarin.Android.Tools.Tests
 
 			Assert.Throws<DirectoryNotFoundException> (() => FileUtil.MoveWithRollback (source, target, logger));
 			Assert.IsFalse (Directory.Exists (target));
+		}
+
+		[Test]
+		public void MoveWithRollback_CancelledAfterValidation_RestoresBackup ()
+		{
+			var source = Path.Combine (tempDir, "source");
+			var target = Path.Combine (tempDir, "target");
+			Directory.CreateDirectory (source);
+			File.WriteAllText (Path.Combine (source, "new.txt"), "new");
+			Directory.CreateDirectory (target);
+			File.WriteAllText (Path.Combine (target, "old.txt"), "old");
+			using var cts = new CancellationTokenSource ();
+			Action validate = () => {
+				Assert.IsTrue (File.Exists (Path.Combine (target, "new.txt")));
+				var backups = Directory.GetDirectories (tempDir, "target.old-*");
+				Assert.That (backups, Has.Length.EqualTo (1), "Backup must survive through validation");
+				Assert.AreEqual ("old", File.ReadAllText (Path.Combine (backups [0], "old.txt")));
+				cts.Cancel ();
+			};
+
+			Assert.Throws<OperationCanceledException> (() => FileUtil.MoveWithRollback (source, target, logger, validate, cts.Token));
+
+			Assert.AreEqual ("old", File.ReadAllText (Path.Combine (target, "old.txt")));
+			Assert.IsFalse (File.Exists (Path.Combine (target, "new.txt")));
+			Assert.IsEmpty (Directory.GetDirectories (tempDir, "target.old-*"));
+		}
+
+		[Test]
+		public void MoveWithRollback_RollbackFailure_PreservesBackupAndBothErrors ()
+		{
+			var source = Path.Combine (tempDir, "source");
+			var target = Path.Combine (tempDir, "target");
+			Directory.CreateDirectory (source);
+			Directory.CreateDirectory (target);
+			File.WriteAllText (Path.Combine (target, "old.txt"), "old");
+			var validationError = new InvalidOperationException ("Validation failed");
+
+			var error = Assert.Throws<AggregateException> (() => FileUtil.MoveWithRollback (source, target, logger, validate: () => {
+				Directory.Delete (target);
+				File.WriteAllText (target, "blocking file");
+				throw validationError;
+			}));
+
+			Assert.IsNotNull (error);
+			if (error is null)
+				throw new InvalidOperationException ("Expected rollback failure");
+			Assert.That (error.InnerExceptions, Has.Count.EqualTo (2));
+			Assert.AreSame (validationError, error.InnerExceptions [0]);
+			var backups = Directory.GetDirectories (tempDir, "target.old-*");
+			Assert.That (backups, Has.Length.EqualTo (1));
+			Assert.AreEqual ("old", File.ReadAllText (Path.Combine (backups [0], "old.txt")));
+			Assert.AreEqual ("blocking file", File.ReadAllText (target));
 		}
 
 		[Test]

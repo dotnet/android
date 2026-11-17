@@ -7,9 +7,9 @@ using System.Text;
 
 namespace Xamarin.Android.Tools {
 
-	class AzulJdkLocations : JdkLocations {
+	partial class JdkLocations {
 
-		internal static IEnumerable<JdkInfo> GetAzulJdks (Action<TraceLevel, string> logger)
+		internal IEnumerable<JdkInfo> GetAzulJdks (Action<TraceLevel, string> logger)
 		{
 			return GetMacOSSystemJdks ("zulu-*.jdk", logger)
 				.Concat (GetWindowsFileSystemJdks (Path.Combine ("Zulu", "zulu-*"), logger))

@@ -6,6 +6,7 @@ using System.Text;
 using System.Text.Json;
 using System.Text.RegularExpressions;
 using System.Threading;
+using System.Threading.Tasks;
 using System.Xml.Linq;
 using System.Xml.XPath;
 using Microsoft.VisualStudio.TestPlatform.Utilities;
@@ -94,8 +95,9 @@ namespace Xamarin.Android.Build.Tests
 			StartActivityAndAssert (proj);
 		}
 
-		[Test]
-		public void CoreCLRAssemblyStoreConcurrentLoads ()
+		[TestCase (true)]
+		[TestCase (false)]
+		public void CoreCLRAssemblyStoreConcurrentLoads (bool compressed)
 		{
 			if (IgnoreUnsupportedConfiguration (AndroidRuntime.CoreCLR, release: true)) {
 				return;
@@ -112,7 +114,7 @@ namespace Xamarin.Android.Build.Tests
 			proj.SetProperty ("PublishReadyToRun", "false");
 			proj.SetProperty ("TrimMode", "full");
 			proj.SetProperty ("AndroidUseAssemblyStore", "true");
-			proj.SetProperty ("AndroidEnableAssemblyCompression", "true");
+			proj.SetProperty ("AndroidEnableAssemblyCompression", compressed.ToString ());
 
 			foreach (string name in new [] { "AssemblyStoreDeferredOne", "AssemblyStoreDeferredTwo" }) {
 				var library = new XamarinAndroidLibraryProject {
@@ -192,6 +194,7 @@ namespace Xamarin.Android.Build.Tests
 			var assemblies = store.Assemblies ?? throw new InvalidOperationException ("The packaged assembly store is empty.");
 			var compressedIndices = new HashSet<uint> ();
 			var compressedNames = new HashSet<string> (StringComparer.Ordinal);
+			var uncompressedNames = new HashSet<string> (StringComparer.Ordinal);
 			foreach (var assembly in assemblies) {
 				if (assembly.Ignore || assembly.DataSize < 3 * sizeof (uint)) {
 					continue;
@@ -201,19 +204,24 @@ namespace Xamarin.Android.Build.Tests
 				if (reader.ReadUInt32 () == 0x535A4158u) {
 					Assert.IsTrue (compressedIndices.Add (reader.ReadUInt32 ()), "Packaged compression identities must be unique.");
 					compressedNames.Add (assembly.Name);
+				} else {
+					uncompressedNames.Add (assembly.Name);
 				}
 			}
-			Assert.That (compressedNames, Is.SupersetOf (new [] { "AssemblyStoreDeferredOne.dll", "AssemblyStoreDeferredTwo.dll" }),
-				"Both concurrent first-load fixtures must actually be compressed in the installed package.");
-			Assert.That (compressedIndices.Max () + 1, Is.GreaterThan (store.AssemblyCount),
-				"The installed package must exercise sparse pre-trim compression indices beyond its trimmed entry count.");
+			Assert.That (compressed ? compressedNames : uncompressedNames,
+				Is.SupersetOf (new [] { "AssemblyStoreDeferredOne.dll", "AssemblyStoreDeferredTwo.dll" }),
+				$"Both concurrent first-load fixtures must actually be {(compressed ? "compressed" : "uncompressed")} in the installed package.");
+			if (compressed) {
+				Assert.That (compressedIndices.Max () + 1, Is.GreaterThan (store.AssemblyCount),
+					"The installed package must exercise sparse pre-trim compression indices beyond its trimmed entry count.");
+			}
 			StartActivityAndAssert (proj);
 			Assert.IsTrue (
 				MonitorAdbLogcat (
 					line => line.Contains (success, StringComparison.Ordinal),
 					Path.Combine (Root, appBuilder.ProjectDirectory, "assembly-store-logcat.log"),
 					ActivityStartTimeoutInSeconds),
-				"Concurrent first loads of compressed assemblies should complete.");
+				$"Concurrent first loads of {(compressed ? "compressed" : "uncompressed")} assemblies should complete.");
 		}
 
 		[TestCase (AndroidRuntime.CoreCLR)]
@@ -257,13 +265,13 @@ namespace Xamarin.Android.Build.Tests
 					"//${AFTER_ONCREATE}",
 					"""
 					Android.Util.Log.Info ("UnicodeJavaIdentifiers", $"UNICODE_JCW_ACTIVATED={constructorInvocations}");
-					var currencyHandle = Android.Runtime.JNIEnv.StartCreateInstance (typeof (CurrencyIdentifierPeer), "()V");
-					Android.Runtime.JNIEnv.FinishCreateInstance (currencyHandle, "()V");
+					var currencyHandle = Android.Runtime.JNIEnv.AllocObject (typeof (CurrencyIdentifierPeer));
+					Android.Runtime.JNIEnv.FinishCreateInstance (currencyHandle, "()V"u8);
 					using (var currency = Java.Lang.Object.GetObject<CurrencyIdentifierPeer> (
 						currencyHandle, Android.Runtime.JniHandleOwnership.TransferLocalRef)) {
 					}
-					var connectorHandle = Android.Runtime.JNIEnv.StartCreateInstance (typeof (ConnectorIdentifierPeer), "()V");
-					Android.Runtime.JNIEnv.FinishCreateInstance (connectorHandle, "()V");
+					var connectorHandle = Android.Runtime.JNIEnv.AllocObject (typeof (ConnectorIdentifierPeer));
+					Android.Runtime.JNIEnv.FinishCreateInstance (connectorHandle, "()V"u8);
 					using (var connector = Java.Lang.Object.GetObject<ConnectorIdentifierPeer> (
 						connectorHandle, Android.Runtime.JniHandleOwnership.TransferLocalRef)) {
 					}
@@ -605,41 +613,30 @@ static int InvokeIntMethod (Java.Lang.Object instance, string methodName)
 			// Start dotnet run with WaitForExit=true, which uses Microsoft.Android.Run
 			using var process = dotnet.StartRun ();
 
-			var locker = new Lock ();
 			var output = new StringBuilder ();
+			using var readerCts = new CancellationTokenSource ();
 			var outputReceived = new ManualResetEventSlim (false);
 			bool foundMessage = false;
 
-			process.OutputDataReceived += (sender, e) => {
-				if (e.Data != null) {
-					lock (locker) {
-						output.AppendLine (e.Data);
-						if (e.Data.Contains (logcatMessage)) {
+			var reader = Task.Run (async () => {
+				await foreach (var line in process.ReadAllLinesAsync (readerCts.Token)) {
+					if (line.StandardError) {
+						output.AppendLine ($"STDERR: {line.Content}");
+					} else {
+						output.AppendLine (line.Content);
+						if (line.Content.Contains (logcatMessage)) {
 							foundMessage = true;
 							outputReceived.Set ();
 						}
 					}
 				}
-			};
-			process.ErrorDataReceived += (sender, e) => {
-				if (e.Data != null) {
-					lock (locker) {
-						output.AppendLine ($"STDERR: {e.Data}");
-					}
-				}
-			};
-
-			process.BeginOutputReadLine ();
-			process.BeginErrorReadLine ();
+			});
 
 			// Wait for the expected message or timeout
 			bool messageFound = outputReceived.Wait (TimeSpan.FromSeconds (ActivityStartTimeoutInSeconds));
 
-			// Kill the process (simulating Ctrl+C)
-			if (!process.HasExited) {
-				process.Kill (entireProcessTree: true);
-				process.WaitForExit ();
-			}
+			// Kill the process (simulating Ctrl+C) and drain its output.
+			process.StopAndDrainOutput (readerCts, reader);
 
 			// Write the output to a log file for debugging
 			string outputText = output.ToString ();
@@ -684,30 +681,22 @@ static int InvokeIntMethod (Java.Lang.Object instance, string methodName)
 			// Start dotnet run with WaitForExit=true, which uses Microsoft.Android.Run
 			using var process = dotnet.StartRun ();
 
-			var locker = new Lock ();
 			var output = new StringBuilder ();
+			using var readerCts = new CancellationTokenSource ();
 			var appLaunched = new ManualResetEventSlim (false);
 
-			process.OutputDataReceived += (sender, e) => {
-				if (e.Data != null) {
-					lock (locker) {
-						output.AppendLine (e.Data);
-						if (e.Data.Contains (logcatMessage)) {
+			var reader = Task.Run (async () => {
+				await foreach (var line in process.ReadAllLinesAsync (readerCts.Token)) {
+					if (line.StandardError) {
+						output.AppendLine ($"STDERR: {line.Content}");
+					} else {
+						output.AppendLine (line.Content);
+						if (line.Content.Contains (logcatMessage)) {
 							appLaunched.Set ();
 						}
 					}
 				}
-			};
-			process.ErrorDataReceived += (sender, e) => {
-				if (e.Data != null) {
-					lock (locker) {
-						output.AppendLine ($"STDERR: {e.Data}");
-					}
-				}
-			};
-
-			process.BeginOutputReadLine ();
-			process.BeginErrorReadLine ();
+			});
 
 			// Wait for the app to start and produce logcat output
 			bool launched = appLaunched.Wait (TimeSpan.FromSeconds (ActivityStartTimeoutInSeconds));
@@ -727,6 +716,7 @@ static int InvokeIntMethod (Java.Lang.Object instance, string methodName)
 				// Wait for the process to exit gracefully
 				bool exited = process.WaitForExit (30_000);
 				Assert.IsTrue (exited, "dotnet run process should have exited after SIGINT");
+				process.StopAndDrainOutput (readerCts, reader);
 				Assert.AreEqual (130, process.ExitCode, "dotnet run process should report user cancellation after SIGINT");
 
 				// Verify the output contains the "Stopping application..." message from Microsoft.Android.Run
@@ -741,11 +731,8 @@ static int InvokeIntMethod (Java.Lang.Object instance, string methodName)
 				Assert.IsTrue (string.IsNullOrEmpty (pidOutput),
 					$"App should not be running on the device after Ctrl+C. pidof output: '{pidOutput}'");
 			} finally {
-				// Ensure the process is killed if it's still running
-				if (!process.HasExited) {
-					process.Kill (entireProcessTree: true);
-					process.WaitForExit ();
-				}
+				// Ensure the process is stopped and its output reader has exited.
+				process.StopAndDrainOutput (readerCts, reader);
 
 				File.WriteAllText (logPath, output.ToString ());
 				TestContext.AddTestAttachment (logPath);
@@ -778,46 +765,35 @@ static int InvokeIntMethod (Java.Lang.Object instance, string methodName)
 			// Start dotnet run with Device parameter, which should set $(AdbTarget)
 			using var process = dotnet.StartRun (waitForExit: true, parameters: [$"/p:Device={serial}"]);
 
-			var locker = new Lock ();
 			var output = new StringBuilder ();
+			using var readerCts = new CancellationTokenSource ();
 			var outputReceived = new ManualResetEventSlim (false);
 			bool foundMessage = false;
 			bool foundAdbTarget = false;
 
-			process.OutputDataReceived += (sender, e) => {
-				if (e.Data != null) {
-					lock (locker) {
-						output.AppendLine (e.Data);
-						// Check for the --adb-target argument in verbose output
-						if (e.Data.Contains ($"Target: -s {serial}")) {
-							foundAdbTarget = true;
-						}
-						if (e.Data.Contains (logcatMessage)) {
-							foundMessage = true;
-							outputReceived.Set ();
-						}
+			var reader = Task.Run (async () => {
+				await foreach (var line in process.ReadAllLinesAsync (readerCts.Token)) {
+					if (line.StandardError) {
+						output.AppendLine ($"STDERR: {line.Content}");
+						continue;
+					}
+					output.AppendLine (line.Content);
+					// Check for the --adb-target argument in verbose output
+					if (line.Content.Contains ($"Target: -s {serial}")) {
+						foundAdbTarget = true;
+					}
+					if (line.Content.Contains (logcatMessage)) {
+						foundMessage = true;
+						outputReceived.Set ();
 					}
 				}
-			};
-			process.ErrorDataReceived += (sender, e) => {
-				if (e.Data != null) {
-					lock (locker) {
-						output.AppendLine ($"STDERR: {e.Data}");
-					}
-				}
-			};
-
-			process.BeginOutputReadLine ();
-			process.BeginErrorReadLine ();
+			});
 
 			// Wait for the expected message or timeout
 			bool messageFound = outputReceived.Wait (TimeSpan.FromSeconds (ActivityStartTimeoutInSeconds));
 
-			// Kill the process (simulating Ctrl+C)
-			if (!process.HasExited) {
-				process.Kill (entireProcessTree: true);
-				process.WaitForExit ();
-			}
+			// Kill the process (simulating Ctrl+C) and drain its output.
+			process.StopAndDrainOutput (readerCts, reader);
 
 			// Write the output to a log file for debugging
 			string logPath = Path.Combine (Root, builder.ProjectDirectory, "dotnet-run-device-output.log");
@@ -862,37 +838,22 @@ static int InvokeIntMethod (Java.Lang.Object instance, string methodName)
 			// Start dotnet watch which will build, deploy, and watch for changes
 			using var process = dotnet.StartWatch ();
 
-			var locker = new Lock ();
 			var output = new StringBuilder ();
+			using var readerCts = new CancellationTokenSource ();
 			var initialMessageEvent = new ManualResetEventSlim ();
 			var hotReloadAppliedEvent = new ManualResetEventSlim ();
 
-			process.OutputDataReceived += (sender, e) => {
-				if (e.Data != null) {
-					lock (locker) {
-						output.AppendLine (e.Data);
-						if (e.Data.Contains (initialMessage)) {
-							initialMessageEvent.Set ();
-						}
-						if (e.Data.Contains (hotReloadMessage)) {
-							hotReloadAppliedEvent.Set ();
-						}
+			var reader = Task.Run (async () => {
+				await foreach (var line in process.ReadAllLinesAsync (readerCts.Token)) {
+					output.AppendLine (line.StandardError ? $"STDERR: {line.Content}" : line.Content);
+					if (!line.StandardError && line.Content.Contains (initialMessage)) {
+						initialMessageEvent.Set ();
+					}
+					if (line.Content.Contains (hotReloadMessage)) {
+						hotReloadAppliedEvent.Set ();
 					}
 				}
-			};
-			process.ErrorDataReceived += (sender, e) => {
-				if (e.Data != null) {
-					lock (locker) {
-						output.AppendLine ($"STDERR: {e.Data}");
-						if (e.Data.Contains (hotReloadMessage)) {
-							hotReloadAppliedEvent.Set ();
-						}
-					}
-				}
-			};
-
-			process.BeginOutputReadLine ();
-			process.BeginErrorReadLine ();
+			});
 
 			string logPath = Path.Combine (Root, builder.ProjectDirectory, "dotnet-watch-output.log");
 
@@ -918,11 +879,8 @@ static int InvokeIntMethod (Java.Lang.Object instance, string methodName)
 				Assert.IsTrue (hotReloadAppliedEvent.Wait (TimeSpan.FromMinutes (2)),
 					$"Hot reload message '{hotReloadMessage}' was not found in output. See {logPath} for details.");
 			} finally {
-				// Kill the process
-				if (!process.HasExited) {
-					process.Kill (entireProcessTree: true);
-					process.WaitForExit ();
-				}
+				// Ensure the process is stopped and its output reader has exited.
+				process.StopAndDrainOutput (readerCts, reader);
 
 				// Write the output to a log file for debugging
 				File.WriteAllText (logPath, output.ToString ());
@@ -2400,37 +2358,36 @@ namespace UnnamedProject
 		}
 
 		[Test]
-		[Ignore ("FIXME: https://github.com/dotnet/android/issues/12880")]
-		public void DotNetInstallAndRunPreviousSdk (
-				[Values] bool isRelease,
-				[Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
+		public void DotNetInstallAndRunPreviousSdk ([ValueSource (typeof (BaseTest), nameof (BaseTest.ValidRuntimeConfigurations))] (bool isRelease, AndroidRuntime runtime) configuration)
 		{
-			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
-				return;
-			}
-
-			var proj = new XamarinFormsAndroidApplicationProject (packageName: PackageUtils.MakePackageName (runtime)) {
+			var (isRelease, runtime) = configuration;
+			var proj = new XamarinAndroidApplicationProject (packageName: PackageUtils.MakePackageName (runtime)) {
 				TargetFramework = $"{XABuildConfig.PreviousDotNetTargetFramework}-android",
 				IsRelease = isRelease,
 				EnableDefaultItems = true,
 			};
 			proj.SetRuntime (runtime);
-			proj.SetRuntimeIdentifiers (new[] { "arm64-v8a", "x86_64" });
+			proj.SetRuntimeIdentifiers ([DeviceAbi]);
+			proj.SetDefaultTargetDevice ();
+			string [] parameters = [$"JavaSdkDirectory=\"{GetPreviousWorkloadJavaSdkPath ()}\""];
+			// The .NET 11 crossgen2 does not support --targetos android (#11719).
+			proj.SetProperty ("PublishReadyToRun", "false");
+			const string started = "Previous SDK activity started.";
+			proj.MainActivity = proj.DefaultMainActivity.Replace ("//${AFTER_ONCREATE}", $"Console.WriteLine (\"{started}\");");
 
-			var builder = CreateApkBuilder ();
-			Assert.IsTrue (builder.Build (proj), "`dotnet build` should succeed");
-			RunProjectAndAssert (proj, builder);
+			using var builder = CreateApkBuilder ();
+			Assert.IsTrue (builder.Build (proj, parameters: parameters), "`dotnet build` should succeed");
+			RunProjectAndAssert (proj, builder, parameters: parameters);
 
-			WaitForPermissionActivity (Path.Combine (Root, builder.ProjectDirectory, "permission-logcat.log"));
-			bool didLaunch = WaitForActivityToStart (proj.PackageName, "MainActivity",
-				Path.Combine (Root, builder.ProjectDirectory, "logcat.log"), ActivityStartTimeoutInSeconds);
-			Assert.IsTrue(didLaunch, "Activity should have started.");
+			Assert.IsTrue (MonitorAdbLogcat (line => line.Contains (started),
+				Path.Combine (Root, builder.ProjectDirectory, "logcat.log"), ActivityStartTimeoutInSeconds),
+				"MainActivity should have run managed code.");
 		}
 
 		[Test]
 		public void DotNetInstallAndRunPreviewAPILevels (
 				[Values (false, true)] bool isRelease,
-				[Values ("net11.0-android37.1", "net11.0-android37.2")] string targetFramework)
+				[Values ("net12.0-android37.1", "net12.0-android37.2")] string targetFramework)
 		{
 			var apiLevel = targetFramework.EndsWith ("37.1", StringComparison.Ordinal) ? "37.1" : "37.2";
 			var apiMinorVersion = apiLevel == "37.1" ? "1" : "2";
@@ -2448,20 +2405,7 @@ namespace UnnamedProject
 				proj.SetProperty ("EnablePreviewFeatures", "true");
 			}
 
-			proj.Imports.Add (new Import (() => "Directory.Build.targets") {
-				TextContent = () => $"""
-<Project>
-	<Target Name="_AssertAndroidTargetingPack" BeforeTargets="ResolveFrameworkReferences">
-		<ItemGroup>
-			<_AndroidKnownFrameworkReference Include="@(KnownFrameworkReference)" Condition=" '%(Identity)' == 'Microsoft.Android' " />
-		</ItemGroup>
-		<Error
-			Condition=" '%(_AndroidKnownFrameworkReference.TargetingPackName)' != 'Microsoft.Android.Ref.{apiLevel}' "
-			Text="Expected Microsoft.Android.Ref.{apiLevel}, but selected '%(_AndroidKnownFrameworkReference.TargetingPackName)'." />
-	</Target>
-</Project>
-"""
-			});
+			proj.Imports.Add (CreateAndroidTargetingPackAssertion (apiLevel));
 
 			// TODO: update on new minor API levels to use an introduced minor API
 			proj.MainActivity = proj.DefaultMainActivity
@@ -2497,19 +2441,19 @@ namespace UnnamedProject
 		}
 
 		[Test]
-		// .NET 10 NativeAOT was experimental and is not covered by previous-version compatibility tests.
 		public void DotNetInstallAndRunMinorAPILevels (
 				[Values] bool isRelease,
-				[Values ("net10.0-android36.1")] string targetFramework,
+				[Values ("net11.0-android37.1", "net11.0-android37.2")] string targetFramework,
 				[Values (AndroidRuntime.CoreCLR)] AndroidRuntime runtime)
 		{
-			if (isRelease && targetFramework == "net10.0-android36.1" && runtime == AndroidRuntime.CoreCLR) {
-				Assert.Ignore ("https://github.com/dotnet/android/issues/12923");
-			}
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
 				return;
 			}
 
+			var apiLevel = targetFramework.EndsWith ("37.1", StringComparison.Ordinal) ? "37.1" : "37.2";
+			var apiMinorVersion = apiLevel == "37.1" ? "1" : "2";
+			var permission = apiLevel == "37.1" ? "AccessHid" : "BindContentSafetyService";
+			var enablePreviewFeatures = apiLevel == "37.2";
 			var proj = new XamarinAndroidApplicationProject (packageName: PackageUtils.MakePackageName (runtime)) {
 				TargetFramework = targetFramework,
 				IsRelease = isRelease,
@@ -2518,6 +2462,11 @@ namespace UnnamedProject
 				}
 			};
 			proj.SetRuntime (runtime);
+			proj.Imports.Add (CreateAndroidTargetingPackAssertion (apiLevel));
+
+			if (enablePreviewFeatures) {
+				proj.SetProperty ("EnablePreviewFeatures", "true");
+			}
 
 			// https://github.com/dotnet/android/issues/11719 - PublishReadyToRun
 			// fails on Release+CoreCLR because crossgen2 does not yet accept
@@ -2526,36 +2475,46 @@ namespace UnnamedProject
 				proj.SetProperty ("PublishReadyToRun", "false");
 			}
 
-			// TODO: update on new minor API levels to use an introduced minor API
 			proj.MainActivity = proj.DefaultMainActivity
-				.Replace ("//${USINGS}", "using Android.Telecom;\nusing Android.Graphics.Pdf.Component;")
 				.Replace ("//${AFTER_ONCREATE}", """
-					if (OperatingSystem.IsAndroidVersionAtLeast (36, 1)) {
-						Console.WriteLine ($"TelecomManager.ActionCallBack={TelecomManager.ActionCallBack}");
+					if (OperatingSystem.IsAndroidVersionAtLeast (37, ${ANDROID_API_MINOR_VERSION})) {
+						Console.WriteLine ($"Android.Manifest.Permission.${ANDROID_PERMISSION}={(global::Android.Manifest.Permission.${ANDROID_PERMISSION})}");
 					} else {
-						Console.WriteLine ("TelecomManager.ActionCallBack not available");
+						Console.WriteLine ("Android.Manifest.Permission.${ANDROID_PERMISSION} not available");
 					}
 				""")
-				.Replace ("//${AFTER_MAINACTIVITY}", """
-					#pragma warning disable CA1416 // Type only available on Android 36.1 and later
-					class MyTextObjectFont : PdfPageTextObjectFont
-					{
-						public MyTextObjectFont (PdfPageTextObjectFont font) : base (font)
-						{
-						}
-					}
-					#pragma warning restore CA1416 // Type only available on Android 36.1 and later
-				""");
+				.Replace ("${ANDROID_API_MINOR_VERSION}", apiMinorVersion)
+				.Replace ("${ANDROID_PERMISSION}", permission);
 
 			var builder = CreateApkBuilder ();
 			Assert.IsTrue (builder.Build (proj), "`dotnet build` should succeed");
-			builder.AssertHasNoWarnings ();
+			if (!enablePreviewFeatures) {
+				builder.AssertHasNoWarnings ();
+			}
 			RunProjectAndAssert (proj, builder);
 
 			WaitForPermissionActivity (Path.Combine (Root, builder.ProjectDirectory, "permission-logcat.log"));
 			bool didLaunch = WaitForActivityToStart (proj.PackageName, "MainActivity",
 				Path.Combine (Root, builder.ProjectDirectory, "logcat.log"), ActivityStartTimeoutInSeconds);
 			Assert.IsTrue(didLaunch, "Activity should have started.");
+		}
+
+		static Import CreateAndroidTargetingPackAssertion (string apiLevel)
+		{
+			return new Import (() => "Directory.Build.targets") {
+				TextContent = () => $"""
+<Project>
+	<Target Name="_AssertAndroidTargetingPack" BeforeTargets="ResolveFrameworkReferences">
+		<ItemGroup>
+			<_AndroidKnownFrameworkReference Include="@(KnownFrameworkReference)" Condition=" '%(Identity)' == 'Microsoft.Android' " />
+		</ItemGroup>
+		<Error
+			Condition=" '%(_AndroidKnownFrameworkReference.TargetingPackName)' != 'Microsoft.Android.Ref.{apiLevel}' "
+			Text="Expected Microsoft.Android.Ref.{apiLevel}, but selected '%(_AndroidKnownFrameworkReference.TargetingPackName)'." />
+	</Target>
+</Project>
+"""
+			};
 		}
 
 		[Test]
@@ -3301,7 +3260,9 @@ Facebook.FacebookSdk.LogEvent(""TestFacebook"");
 </manifest>";
 
 			using var builder = CreateApkBuilder ();
-			Assert.IsTrue (builder.Build (proj));
+			Assert.IsTrue (builder.Build (proj, environmentVariables: new Dictionary<string, string> {
+				{ "GRADLE_OPTS", $"{Environment.GetEnvironmentVariable ("GRADLE_OPTS")} -Dorg.gradle.logging.level=info -Dorg.gradle.logging.stacktrace=all" },
+			}));
 			RunProjectAndAssert (proj, builder);
 		}
 
@@ -3399,6 +3360,7 @@ Facebook.FacebookSdk.LogEvent(""TestFacebook"");
 		[TestCase ("run", MSTestPackageChannel.Nightly)]
 		[TestCase ("test", MSTestPackageChannel.Stable)]
 		[TestCase ("test", MSTestPackageChannel.Nightly)]
+		[TestCase ("list", MSTestPackageChannel.Stable)]
 		public void DotNetNewAndroidTest (string mode, MSTestPackageChannel msTestPackageChannel)
 		{
 			var templateName = $"DotNetNewAndroidTest_{mode}_{msTestPackageChannel}";
@@ -3434,36 +3396,15 @@ Facebook.FacebookSdk.LogEvent(""TestFacebook"");
 			var runParameters = buildParameters.Select (p => $"/p:{p}").ToList ();
 			if (mode == "test")
 				runParameters.Add ("--report-trx");
+			else if (mode == "list")
+				runParameters.Add ("--list-tests");
 
 			using var process = mode == "run"
 				? dotnet.StartRun (waitForExit: true, parameters: runParameters.ToArray ())
 				: dotnet.StartTest (parameters: runParameters.ToArray ());
 
-			var locker = new Lock ();
 			var output = new StringBuilder ();
-
-			process.OutputDataReceived += (sender, e) => {
-				if (e.Data != null)
-					lock (locker)
-						output.AppendLine (e.Data);
-			};
-			process.ErrorDataReceived += (sender, e) => {
-				if (e.Data != null)
-					lock (locker)
-						output.AppendLine ($"STDERR: {e.Data}");
-			};
-
-			process.BeginOutputReadLine ();
-			process.BeginErrorReadLine ();
-
-			// Wait for the process to complete (instrumentation should finish on its own)
-			bool completed = process.WaitForExit ((int) TimeSpan.FromMinutes (5).TotalMilliseconds);
-			if (!completed) {
-				try { process.Kill (entireProcessTree: true); } catch { }
-			} else {
-				// Ensure async output events are fully drained
-				process.WaitForExit ();
-			}
+			bool completed = process.WaitForExitAndOutput (output, TimeSpan.FromMinutes (5));
 
 			// Write the output to a log file for debugging
 			string logPath = Path.Combine (projectDirectory, $"dotnet-{mode}-output.log");
@@ -3483,6 +3424,9 @@ Facebook.FacebookSdk.LogEvent(""TestFacebook"");
 				Assert.AreEqual (1, passed, $"Expected 1 passed test, got {passed}. See {logPath} for details.");
 				Assert.AreEqual (1, failed, $"Expected 1 failed test, got {failed}. See {logPath} for details.");
 				Assert.AreEqual (1, skipped, $"Expected 1 skipped test, got {skipped}. See {logPath} for details.");
+			} else if (mode == "list") {
+				Assert.AreEqual (0, process.ExitCode, $"`dotnet test --list-tests` should succeed. See {logPath} for details.");
+				StringAssert.Contains ("Discovered 3 tests", outputText, $"Output should list 3 tests. See {logPath} for details.");
 			} else {
 				// dotnet test reports results via MTP protocol
 				// Verify non-zero exit code (there is a failing test) and stable summary counts
@@ -3619,30 +3563,8 @@ Facebook.FacebookSdk.LogEvent(""TestFacebook"");
 			// collected into a single `-e args "..."` extra.
 			using var process = dotnet.StartRun (waitForExit: true, parameters: new [] { "--", "greeting=hello", "--custom-flag" });
 
-			var locker = new Lock ();
 			var output = new StringBuilder ();
-
-			process.OutputDataReceived += (sender, e) => {
-				if (e.Data != null)
-					lock (locker)
-						output.AppendLine (e.Data);
-			};
-			process.ErrorDataReceived += (sender, e) => {
-				if (e.Data != null)
-					lock (locker)
-						output.AppendLine ($"STDERR: {e.Data}");
-			};
-
-			process.BeginOutputReadLine ();
-			process.BeginErrorReadLine ();
-
-			bool completed = process.WaitForExit ((int) TimeSpan.FromMinutes (10).TotalMilliseconds);
-			if (!completed) {
-				try { process.Kill (entireProcessTree: true); } catch { }
-			} else {
-				// Ensure async output events are fully drained
-				process.WaitForExit ();
-			}
+			bool completed = process.WaitForExitAndOutput (output, TimeSpan.FromMinutes (10));
 
 			string logPath = Path.Combine (Root, builder.ProjectDirectory, "dotnet-run-benchmarkdotnet.log");
 			File.WriteAllText (logPath, output.ToString ());

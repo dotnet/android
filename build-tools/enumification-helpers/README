@@ -47,7 +47,7 @@ The results are to be saved as "map.ext.csv" and "methodmap.ext.csv" that are to
 	
 	The result is printed to stdout, stored as intermediary-enum-list.txt by Makefile.
 
-*** generate-intermediary-doc-enum-mapping.exe
+*** generate-intermediary-doc-enum-mapping.cs
 
 	This tool generates "which documents mention the value" mappings.
 
@@ -56,7 +56,18 @@ The results are to be saved as "map.ext.csv" and "methodmap.ext.csv" that are to
 
 	It takes reference doc and intermediary-enum-list.txt.
 	
-	The result is printed to stdout, stored as intermediary-doc-enum-mapping.tsv by Makefile.
+	This helper requires a .NET 11 SDK and xmllint. Run it from this directory:
+
+		dotnet run --file generate-intermediary-doc-enum-mapping.cs -- <reference-doc-directory> <intermediary-enum-list.txt>
+
+	The result is printed to stdout; redirect it to intermediary-doc-enum-mapping.tsv.
+
+*** generate-intermediary-method-mapping.cs
+
+	This helper also requires a .NET 11 SDK and xmllint. It maps documentation links
+	to the methods that reference each enum value:
+
+		dotnet run --file generate-intermediary-method-mapping.cs -- <intermediary-mapping.txt> <enum-list.xml> <reference-doc-directory>
 
 *** generate-intermediary-enum-candidates.exe
 

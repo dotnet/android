@@ -1,4 +1,4 @@
-﻿using NUnit.Framework;
+﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
 using System.Net.WebSockets;
 using System.Threading;
@@ -8,10 +8,10 @@ using Xamarin.Android.NetTests;
 
 namespace System.NetTests
 {
-	[TestFixture]
+	[TestClass]
 	public class WebSocketTests
 	{
-		[Test, Category ("InetAccess")]
+		[TestMethod, TestCategory ("InetAccess")]
 		public void TestSocketConnection()
 		{
 			string testMessage = "This is a test!";
@@ -28,7 +28,7 @@ namespace System.NetTests
 	{
 		static string ResponseMessage { get; set; }
 		public static int BytesSize { get; set; }
-		static object consoleLock = new object ();
+		static readonly Lock consoleLock = new ();
 		static readonly TimeSpan delay = TimeSpan.FromMilliseconds (1000);
 
 		public static async Task<string> Connect (string uri, byte[] message)
@@ -41,6 +41,11 @@ namespace System.NetTests
 			if (clientWebSocket != null)
 				clientWebSocket.Dispose ();
 
+			return GetResponse ();
+		}
+
+		static string GetResponse ()
+		{
 			lock (consoleLock)
 			{
 				Console.WriteLine ("Client WebSocket closed");

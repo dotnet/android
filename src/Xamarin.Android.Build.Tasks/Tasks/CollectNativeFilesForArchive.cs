@@ -24,8 +24,6 @@ public class CollectNativeFilesForArchive : AndroidTask
 
 	public override string TaskPrefix => "CNF";
 
-	public string AndroidNdkDirectory { get; set; } = "";
-
 	[Required]
 	public string ApkOutputPath { get; set; } = "";
 
@@ -47,8 +45,6 @@ public class CollectNativeFilesForArchive : AndroidTask
 	public string [] SupportedAbis { get; set; } = [];
 
 	public bool IncludeWrapSh { get; set; }
-
-	public string CheckedBuild { get; set; } = "";
 
 	public int ZipAlignmentPages { get; set; } = AndroidZipAlign.DefaultZipAlignment64Bit;
 
@@ -163,7 +159,7 @@ public class CollectNativeFilesForArchive : AndroidTask
 			path = path.Replace ('\\', '/');
 		}
 
-		if (string.Compare (Path.GetFileName (path), "wrap.sh", StringComparison.Ordinal) == 0) {
+		if (string.Equals (Path.GetFileName (path), "wrap.sh", StringComparison.Ordinal)) {
 			return true;
 		}
 
@@ -175,7 +171,7 @@ public class CollectNativeFilesForArchive : AndroidTask
 			link = link!.Replace ('\\', '/');
 		}
 
-		return string.Compare (Path.GetFileName (link), "wrap.sh", StringComparison.Ordinal) == 0;
+		return string.Equals (Path.GetFileName (link), "wrap.sh", StringComparison.Ordinal);
 	}
 
 	bool IncludeNativeLibrary (ITaskItem item)
@@ -223,58 +219,6 @@ public class CollectNativeFilesForArchive : AndroidTask
 			);
 
 		AddNativeLibraries (files, supportedAbis, libs);
-
-		if (CheckedBuild.IsNullOrWhiteSpace ())
-			return;
-
-		string mode = CheckedBuild;
-		string sanitizerName;
-		if (string.Compare ("asan", mode, StringComparison.Ordinal) == 0) {
-			sanitizerName = "asan";
-		} else if (string.Compare ("ubsan", mode, StringComparison.Ordinal) == 0) {
-			sanitizerName = "ubsan_standalone";
-		} else {
-			LogSanitizerWarning ($"Unknown checked build mode '{CheckedBuild}'");
-			return;
-		}
-
-		if (!IncludeWrapSh) {
-			LogSanitizerError ("Checked builds require the wrapper script to be packaged. Please set the `$(AndroidIncludeWrapSh)` MSBuild property to `true` in your project.");
-			return;
-		}
-
-		if (!libs.Any (info => IsWrapperScript (info.Path, info.Link))) {
-			LogSanitizerError ($"Checked builds require the wrapper script to be packaged. Please add `wrap.sh` appropriate for the {CheckedBuild} checker to your project.");
-			return;
-		}
-
-		var ndk = AndroidNdkTools.Create (AndroidNdkDirectory, Log);
-		if (ndk == null) {
-			return;
-		}
-
-		string? clangDir = ndk.GetClangDeviceLibraryPath ();
-		if (clangDir.IsNullOrEmpty ()) {
-			LogSanitizerError ($"Unable to find the clang compiler directory. Is NDK installed?");
-			return;
-		}
-
-		foreach (string abi in supportedAbis) {
-			string? clangAbi = MonoAndroidHelper.MapAndroidAbiToClang (abi);
-			if (clangAbi.IsNullOrEmpty ()) {
-				LogSanitizerError ($"Unable to map Android ABI {abi} to clang ABI");
-				return;
-			}
-
-			string sanitizerLib = $"libclang_rt.{sanitizerName}-{clangAbi}-android.so";
-			string sanitizerLibPath = Path.Combine (clangDir, sanitizerLib);
-			if (!File.Exists (sanitizerLibPath)) {
-				LogSanitizerError ($"Unable to find sanitizer runtime for the {CheckedBuild} checker at {sanitizerLibPath}");
-				return;
-			}
-
-			AddNativeLibrary (files, sanitizerLibPath, abi, sanitizerLib);
-		}
 	}
 
 	string? GetNativeLibraryAbi (ITaskItem lib)
@@ -344,18 +288,6 @@ public class CollectNativeFilesForArchive : AndroidTask
 			item.filePath = strippedPath;
 			files.Add (item);
 		}
-	}
-
-	// This method is used only for internal warnings which will never be shown to the end user, therefore there's
-	// no need to use coded warnings. (They are only used when the internal property $(_AndroidCheckedBuild) is set.)
-	void LogSanitizerWarning (string message)
-	{
-		Log.LogWarning (message);
-	}
-
-	void LogSanitizerError (string message)
-	{
-		Log.LogError (message);
 	}
 
 	static string MakeArchiveLibPath (string abi, string fileName) => MonoAndroidHelper.MakeZipArchivePath (ArchiveLibPath, abi, fileName);

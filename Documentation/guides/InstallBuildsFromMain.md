@@ -49,7 +49,7 @@ On Windows, if your Android SDK is located in `C:\Program Files
 administrator to run:
 
 ```dotnetcli
-> dotnet build -t:InstallAndroidDependencies -p:AndroidManifestType=GoogleV2 -p:AcceptAndroidSDKLicenses=true
+> dotnet build -t:InstallAndroidDependencies -p:AcceptAndroidSDKLicenses=true
 ```
 
 *On macOS, you might not even need `sudo` for this command.*

@@ -225,6 +225,7 @@ namespace Xamarin.Android.Tasks
 				WriteArg (response, "--no-minification");
 				// Rules to turn off optimizations
 				var temp = Path.GetTempFileName ();
+				tempFiles.Add (temp);
 				var lines = new List<string> {
 					"-dontoptimize",
 					"-dontpreverify",
@@ -239,7 +240,6 @@ namespace Xamarin.Android.Tasks
 					lines.Add ($"-printmapping \"{Path.GetFullPath (ProguardMappingFileOutput)}\"");
 				}
 				File.WriteAllLines (temp, lines);
-				tempFiles.Add (temp);
 				WriteArg (response, "--pg-conf");
 				WriteArg (response, temp);
 			}

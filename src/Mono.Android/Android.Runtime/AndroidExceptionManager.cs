@@ -27,8 +27,7 @@ namespace Android.Runtime
 
 		internal static void RaisePendingException (Exception pendingException)
 		{
-			if (pendingException == null)
-				throw new ArgumentNullException (nameof (pendingException));
+			ArgumentNullException.ThrowIfNull (pendingException);
 
 			var throwable = pendingException as JavaException ?? JavaProxyThrowable.Create (pendingException);
 			JniEnvironment.Exceptions.Throw (throwable.PeerReference);

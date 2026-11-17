@@ -21,13 +21,10 @@
   </ItemGroup>
 
   <Import Project="Sdk.targets" Sdk="Microsoft.NET.Sdk" />
-  <Import Project="$(XamarinAndroidSourcePath)build-tools\scripts\MonoUnixNative.targets" />
 
   <PropertyGroup>
-    <BuildDependsOn>
-      $(BuildDependsOn);
-      _MakeMonoUnixFatBinariesOSX;
-    </BuildDependsOn>
+    <LangVersion>preview</LangVersion>
+    <MemorySafetyRulesVersion>2</MemorySafetyRulesVersion>
   </PropertyGroup>
 
 </Project>

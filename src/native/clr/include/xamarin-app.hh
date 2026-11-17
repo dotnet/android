@@ -128,6 +128,7 @@ struct AssemblyStoreRuntimeData final
 struct AssemblyStoreSingleAssemblyRuntimeData final
 {
 	const uint8_t       *image_data;
+	uint8_t             *writable_image_data;
 	const uint8_t       *debug_info_data;
 	const uint8_t       *config_data;
 	const AssemblyStoreEntryDescriptor *descriptor;
@@ -155,6 +156,7 @@ struct DSOCacheEntry
 	const bool      ignore;
 	const bool      is_jni_library;
 	const uint32_t  name_index;
+	const uint32_t  alias_index;
 	void           *handle;
 };
 

@@ -13,7 +13,7 @@ namespace Microsoft.Android.Tasks;
 /// <summary>
 /// Minimal reference-assembly detection for <see cref="CompressAssemblies"/>. This mirrors
 /// <c>MonoAndroidHelper.LogIfReferenceAssembly</c> in Xamarin.Android.Build.Tasks, but is
-/// duplicated here to keep this net11.0 assembly self-contained.
+/// duplicated here to keep this net12.0 assembly self-contained.
 /// </summary>
 static class ReferenceAssemblyChecker
 {

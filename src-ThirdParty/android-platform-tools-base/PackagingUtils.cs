@@ -108,7 +108,7 @@ namespace Xamarin.Android.Tasks
 
 		static bool EqualsIgnoreCase (string a, string b)
 		{
-			return string.Compare (a, b, StringComparison.OrdinalIgnoreCase) == 0;
+			return string.Equals (a, b, StringComparison.OrdinalIgnoreCase);
 		}
 	}
 }

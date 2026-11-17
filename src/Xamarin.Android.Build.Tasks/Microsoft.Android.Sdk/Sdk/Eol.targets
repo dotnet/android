@@ -2,7 +2,7 @@
 ***********************************************************************************************
 Eol.targets
 
-Imported only by .NET 6 EOL projects, contains settings to force the error:
+Imported by .NET 10 and earlier EOL projects, contains settings to force the error:
 
 error NETSDK1202: The workload 'android' is out of support and will not receive security updates in the future. Please refer to https://aka.ms/maui-support-policy for more information about the support policy.
 

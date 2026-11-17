@@ -137,10 +137,12 @@ static class JniRemappingLookup
 		public uint                              fields;
 	}
 
+	[ExtendedLayout (ExtendedLayoutKind.CStruct)]
 	readonly struct NativeBinaryBlobPayload
 	{
-		public readonly IntPtr data;
-		public readonly uint size;
+		// SAFETY: Descriptor fields copy scalar values; reading the native body retains Initialize's caller contract.
+		public safe readonly IntPtr data;
+		public safe readonly uint size;
 
 		public bool IsValid () => data != IntPtr.Zero && size >= HeaderSize && size <= 256 * 1024 * 1024;
 	}
@@ -295,7 +297,7 @@ static class JniRemappingLookup
 
 		if (useReplacementTypes && Logger.LogAssembly) {
 			var message = $"Remapping type `{jniSimpleReference}` to one of {{ `{replacements [0]}`, `{replacements [1]}` }}";
-			Logger.Log (LogLevel.Debug, "monodroid-assembly", message);
+			Logger.Log (LogLevel.Debug, "DOTNET-assembly", message);
 		}
 
 		return replacements;
@@ -458,7 +460,7 @@ static class JniRemappingLookup
 				var message = $"Remapping method `{sourceType}.{jniMethodName}{jniMethodSignature}` to " +
 					$"`{targetType}.{targetName}{effectiveTargetSignature}`; " +
 					$"param-count: {paramCount}; instance-to-static? {isStatic}";
-				Logger.Log (LogLevel.Debug, "monodroid-assembly", message);
+				Logger.Log (LogLevel.Debug, "DOTNET-assembly", message);
 			}
 
 			return ret;
@@ -498,7 +500,7 @@ static class JniRemappingLookup
 			if (Logger.LogAssembly) {
 				var message = $"Remapping field `{jniSourceType}.{jniFieldName}:{jniFieldSignature}` to " +
 					$"`{targetType}.{targetName}:{targetSignature}`";
-				Logger.Log (LogLevel.Debug, "monodroid-assembly", message);
+				Logger.Log (LogLevel.Debug, "DOTNET-assembly", message);
 			}
 
 			return new JniRuntime.ReplacementFieldInfo {

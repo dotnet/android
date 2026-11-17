@@ -117,6 +117,7 @@
     </ItemGroup>
 
     <ItemGroup Condition=" '$(CMakeRuntimeFlavor)' == 'CoreCLR' ">
+      <_RuntimeSources Include="clr\include\runtime\*.h" Condition=" '$(CLRLocalRuntimePath)' == '' " />
       <_RuntimeSources Include="clr\include\**\*.hh" />
       <_RuntimeSources Include="clr\host\*.cc;clr\host\*.hh" />
       <_RuntimeSources Include="clr\pinvoke-override\*.cc" />

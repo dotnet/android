@@ -8,15 +8,16 @@ using System.Runtime.CompilerServices;
 using Android.Runtime;
 using Java.Interop;
 
-using NUnit.Framework;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Xamarin.Android.RuntimeTests {
 
-	[TestFixture]
+	[TestClass]
 	public class ExceptionTest {
 
-		[TestCase (false)]
-		[TestCase (true)]
+		[TestMethod]
+		[DataRow (false)]
+		[DataRow (true)]
 		public void ExceptionProxyLookupPreservesRequestedType (bool generic)
 		{
 			var expected = new InvalidOperationException ("proxy value");
@@ -45,8 +46,9 @@ namespace Xamarin.Android.RuntimeTests {
 			}
 		}
 
-		[TestCase (false)]
-		[TestCase (true)]
+		[TestMethod]
+		[DataRow (false)]
+		[DataRow (true)]
 		public void ExceptionProxyCreateValueReturnsOriginalManagedException (bool generic)
 		{
 			var expected = new InvalidOperationException ("created proxy value");
@@ -64,7 +66,7 @@ namespace Xamarin.Android.RuntimeTests {
 			}
 		}
 
-		[Test]
+		[TestMethod]
 		public void ThrowableArrayLookupPreservesProxyPeer ()
 		{
 			var expected = new InvalidOperationException ("array proxy value");
@@ -74,8 +76,9 @@ namespace Xamarin.Android.RuntimeTests {
 			Assert.AreSame (proxy, peers [0]);
 		}
 
-		[TestCase (false)]
-		[TestCase (true)]
+		[TestMethod]
+		[DataRow (false)]
+		[DataRow (true)]
 		public void ManagedExceptionRoundTripPreservesIdentity (bool directThrow)
 		{
 			var expected = new InvalidOperationException ("original managed exception");
@@ -94,8 +97,9 @@ namespace Xamarin.Android.RuntimeTests {
 			}
 		}
 
-		[TestCase (false)]
-		[TestCase (true)]
+		[TestMethod]
+		[DataRow (false)]
+		[DataRow (true)]
 		public void JavaThrowableRoundTripPreservesIdentity (bool directThrow)
 		{
 			using var expected = new Java.Lang.IllegalStateException ("original Java exception");
@@ -110,7 +114,7 @@ namespace Xamarin.Android.RuntimeTests {
 			}
 		}
 
-		[Test]
+		[TestMethod]
 		public unsafe void UnregisteredJavaThrowableCreatesAndroidException ()
 		{
 			using var type = new JniType ("java/lang/IllegalStateException");
@@ -124,9 +128,9 @@ namespace Xamarin.Android.RuntimeTests {
 				var actual = JniEnvironment.Runtime.GetExceptionForThrowable (
 					ref reference, JniObjectReferenceOptions.CopyAndDispose);
 				Assert.IsFalse (reference.IsValid);
-				Assert.IsInstanceOf<Java.Lang.IllegalStateException> (actual);
+				Assert.IsInstanceOfType<Java.Lang.IllegalStateException> (actual);
 				if (actual is not Java.Lang.IllegalStateException throwable)
-					throw new AssertionException ("The Java throwable should use its Android exception binding.");
+					throw new AssertFailedException ("The Java throwable should use its Android exception binding.");
 				using (throwable) {
 					Assert.AreEqual ("unregistered throwable", throwable.Message);
 				}
@@ -136,7 +140,7 @@ namespace Xamarin.Android.RuntimeTests {
 			}
 		}
 
-		[Test]
+		[TestMethod]
 		public void InnerExceptionIsNotAProxy ()
 		{
 			var expected = new InvalidOperationException ("managed cause");
@@ -150,7 +154,7 @@ namespace Xamarin.Android.RuntimeTests {
 				using var cause = outer.Cause;
 				Assert.IsNotNull (cause);
 				if (cause == null)
-					throw new AssertionException ("The Java cause is missing.");
+					throw new AssertFailedException ("The Java cause is missing.");
 				var causeReference = cause.PeerReference.NewLocalRef ();
 				try {
 					Assert.AreSame (expected, JniEnvironment.Runtime.GetExceptionForThrowable (
@@ -176,8 +180,8 @@ namespace Xamarin.Android.RuntimeTests {
 			}
 		}
 
-		[Test]
-		[Category ("NativeAOTIgnore")] // NativeAOT has very limited stack traces
+		[TestMethod]
+		[TestCategory ("NativeAOTIgnore")] // NativeAOT has very limited stack traces
 		[RequiresUnreferencedCode ("Tests trimming unsafe features")]
 		public void InnerExceptionIsSet ()
 		{
@@ -192,7 +196,7 @@ namespace Xamarin.Android.RuntimeTests {
 			Assert.AreSame (ex, alias.InnerException);
 		}
 
-		[Test]
+		[TestMethod]
 		public void ManagedExceptionProxyContainsManagedStackTrace ()
 		{
 			var exception = CreateThrownException ();
@@ -201,10 +205,10 @@ namespace Xamarin.Android.RuntimeTests {
 			try {
 				Assert.IsNotNull (frames);
 				if (frames == null)
-					throw new AssertionException ("The proxy stack trace is missing.");
+					throw new AssertFailedException ("The proxy stack trace is missing.");
 				Assert.IsTrue (frames.Length > 0);
-				Assert.That (frames [0].MethodName, Does.Contain (nameof (CreateThrownException)));
-				Assert.That (frames [0].ClassName, Does.Contain (nameof (ExceptionTest)));
+				StringAssert.Contains (frames [0].MethodName, nameof (CreateThrownException));
+				StringAssert.Contains (frames [0].ClassName, nameof (ExceptionTest));
 			} finally {
 				if (frames != null) {
 					foreach (var frame in frames)
@@ -248,14 +252,14 @@ namespace Xamarin.Android.RuntimeTests {
 				var managedMethod = mf.GetMethod ();
 				var managedDeclaringType = managedMethod?.DeclaringType;
 				if (managedMethod != null && managedDeclaringType == null)
-					throw new AssertionException ($"Frame {i}: managed declaring type is missing");
+					throw new AssertFailedException ($"Frame {i}: managed declaring type is missing");
 				var javaMethodName = jf.MethodName;
 				if (managedLine > 0) {
 					Assert.AreEqual (managedMethod?.Name,                    javaMethodName, $"Frame {i}: method names differ");
 				} else {
 					string managedMethodName = managedMethod?.Name ?? "";
 					if (javaMethodName == null)
-						throw new AssertionException ($"Frame {i}: Java method name is missing");
+						throw new AssertFailedException ($"Frame {i}: Java method name is missing");
 					Assert.IsTrue (javaMethodName.StartsWith ($"{managedMethodName} + 0x"),
 						$"Frame {i}: method name should start with: '{managedMethodName} + 0x'; was `{javaMethodName}`; ");
 				}

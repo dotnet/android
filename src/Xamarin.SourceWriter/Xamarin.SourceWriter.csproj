@@ -1,0 +1,15 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <Import Project="..\..\Configuration.props" />
+
+  <PropertyGroup>
+    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+    <Version>11.0.0</Version>
+    <LangVersion>preview</LangVersion>
+    <OutputPath>$(BuildOutputDirectory)$(DotNetStableTargetFramework)\</OutputPath>
+
+    <TargetFramework>$(DotNetStableTargetFramework)</TargetFramework>
+    <MemorySafetyRulesVersion>2</MemorySafetyRulesVersion>
+  </PropertyGroup>
+
+</Project>

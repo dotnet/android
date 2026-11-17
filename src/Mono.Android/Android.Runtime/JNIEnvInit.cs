@@ -17,20 +17,22 @@ namespace Android.Runtime
 	{
 #pragma warning disable 0649
 		// NOTE: Keep this in sync with the native side in src/native/common/include/managed-interface.hh
+		[ExtendedLayout (ExtendedLayoutKind.CStruct)]
 		internal struct JnienvInitializeArgs {
-			public IntPtr          javaVm;
-			public IntPtr          env;
-			public IntPtr          grefLoader;
-			public uint            logCategories;
-			public int             grefGcThreshold;
-			public IntPtr          grefIGCUserPeer;
-			public byte            brokenExceptionTransitions;
-			public int             packageNamingPolicy;
-			public byte            ioExceptionType;
-			public IntPtr          jniRemappingData;
-			public IntPtr          propagateUncaughtExceptionFn;
-			public int             maxGrefCount;
-			public delegate* unmanaged<delegate* unmanaged<MarkCrossReferencesArgs*, void>, delegate* unmanaged<MarkCrossReferencesArgs*, void>> initializeGCBridge;
+			// SAFETY: Fields copy non-overlapping scalar values and addresses; native use keeps its existing unsafe contracts.
+			public safe IntPtr          javaVm;
+			public safe IntPtr          env;
+			public safe IntPtr          grefLoader;
+			public safe uint            logCategories;
+			public safe int             grefGcThreshold;
+			public safe IntPtr          grefIGCUserPeer;
+			public safe byte            brokenExceptionTransitions;
+			public safe int             packageNamingPolicy;
+			public safe byte            ioExceptionType;
+			public safe IntPtr          jniRemappingData;
+			public safe IntPtr          propagateUncaughtExceptionFn;
+			public safe int             maxGrefCount;
+			public safe delegate* unmanaged<delegate* unmanaged<MarkCrossReferencesArgs*, void>, delegate* unmanaged<MarkCrossReferencesArgs*, void>> initializeGCBridge;
 		}
 #pragma warning restore 0649
 
@@ -183,7 +185,7 @@ namespace Android.Runtime
 
 			var type = typeof(object).Assembly.GetType (typeName, throwOnError: false);
 			if (type is null) {
-				Logger.Log (LogLevel.Warn, "monodroid",
+				Logger.Log (LogLevel.Warn, "DOTNET",
 					$"Could not load type '{typeName}'. Skipping startup hooks.");
 				return;
 			}
@@ -191,7 +193,7 @@ namespace Android.Runtime
 			var method = type.GetMethod (methodName, 
 				BindingFlags.NonPublic | BindingFlags.Static, null, [ typeof(string) ], null);
 			if (method is null) {
-				Logger.Log (LogLevel.Warn, "monodroid",
+				Logger.Log (LogLevel.Warn, "DOTNET",
 					$"Could not load method '{typeName}.{methodName}'. Skipping startup hooks.");
 				return;
 			}

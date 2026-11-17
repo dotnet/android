@@ -6,7 +6,7 @@ native runtime, or TrimmableTypeMap paths.
 
 ---
 
-## JNI Interop Checks (`external/Java.Interop/`, `src/Mono.Android/`)
+## JNI Interop Checks (`src/Java.Interop/`, `src/Mono.Android/`)
 
 | Check | What to look for |
 |-------|-----------------|

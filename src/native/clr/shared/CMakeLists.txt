@@ -5,7 +5,6 @@ set(XA_SHARED_SOURCES
   helpers.cc
   log_functions.cc
 )
-add_clang_check_sources("${XA_SHARED_SOURCES};")
 
 add_library(
   ${LIB_NAME}

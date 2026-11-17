@@ -142,6 +142,9 @@ void CoreClrBootstrap::initialize () noexcept
 	}
 	BootstrapHeader header;
 	std::memcpy (&header, body, sizeof (header));
+	if (header.magic != 0x47464358 || header.version != 2 || header.size != body_size || header.flags > 3) {
+		invalid ("unsupported header or version");
+	}
 	preload_count = header.preload_count;
 	preload_stride = header.preload_stride;
 	env_offset = header.env_offset;
@@ -170,11 +173,12 @@ void CoreClrBootstrap::initialize () noexcept
 		invalid ("out of memory allocating DSO cache");
 	}
 	for (uint32_t i = 0; i < header.dso_count; i++) {
-		uint64_t offset = static_cast<uint64_t> (header.dso_offset) + static_cast<uint64_t> (i) * 12;
+		uint64_t offset = static_cast<uint64_t> (header.dso_offset) + static_cast<uint64_t> (i) * 16;
 		uint32_t hash = read (offset);
 		uint32_t flags = read (offset + 4);
 		uint32_t name = read (offset + 8);
-		new (&dso_cache [i]) DSOCacheEntry { hash, (flags & 0xff) != 0, (flags & 0xff00) != 0, name, nullptr };
+		uint32_t alias = read (offset + 12);
+		new (&dso_cache [i]) DSOCacheEntry { hash, (flags & 0xff) != 0, (flags & 0xff00) != 0, name, alias, nullptr };
 	}
 	property_names = static_cast<const char**> (std::calloc (header.prop_count, sizeof (const char*)));
 	property_values = static_cast<char**> (std::calloc (header.prop_count, sizeof (char*)));

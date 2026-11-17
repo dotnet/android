@@ -82,12 +82,8 @@ public sealed class RootTypeMapAssemblyGenerator
 		string? moduleName = null,
 		bool includeBuiltInValueTypeUniverses = false)
 	{
-		if (perAssemblyTypeMapNames is null) {
-			throw new ArgumentNullException (nameof (perAssemblyTypeMapNames));
-		}
-		if (stream is null) {
-			throw new ArgumentNullException (nameof (stream));
-		}
+		ArgumentNullException.ThrowIfNull (perAssemblyTypeMapNames);
+		ArgumentNullException.ThrowIfNull (stream);
 
 		CreatePEBuilder (
 			perAssemblyTypeMapNames,
@@ -122,9 +118,7 @@ public sealed class RootTypeMapAssemblyGenerator
 		string? moduleName,
 		bool includeBuiltInValueTypeUniverses)
 	{
-		if (perAssemblyTypeMapNames is null) {
-			throw new ArgumentNullException (nameof (perAssemblyTypeMapNames));
-		}
+		ArgumentNullException.ThrowIfNull (perAssemblyTypeMapNames);
 
 		assemblyName ??= DefaultAssemblyName;
 		moduleName ??= assemblyName + ".dll";

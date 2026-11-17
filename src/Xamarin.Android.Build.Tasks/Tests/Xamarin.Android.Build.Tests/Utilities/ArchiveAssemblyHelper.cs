@@ -44,11 +44,11 @@ namespace Xamarin.Android.Build.Tests
 			haveMultipleRids = rids != null && rids.Length > 1;
 
 			string extension = Path.GetExtension (archivePath) ?? String.Empty;
-			if (String.Compare (".aab", extension, StringComparison.OrdinalIgnoreCase) == 0) {
+			if (string.Equals (".aab", extension, StringComparison.OrdinalIgnoreCase)) {
 				assembliesRootDir = "base/lib/";
-			} else if (String.Compare (".apk", extension, StringComparison.OrdinalIgnoreCase) == 0) {
+			} else if (string.Equals (".apk", extension, StringComparison.OrdinalIgnoreCase)) {
 				assembliesRootDir = "lib/";
-			} else if (String.Compare (".zip", extension, StringComparison.OrdinalIgnoreCase) == 0) {
+			} else if (string.Equals (".zip", extension, StringComparison.OrdinalIgnoreCase)) {
 				assembliesRootDir = "lib/";
 			} else {
 				assembliesRootDir = String.Empty;
@@ -424,7 +424,7 @@ namespace Xamarin.Android.Build.Tests
 			foreach (string wantedEntry in potentialEntries) {
 				Console.WriteLine ($"Wanted entry: {wantedEntry}");
 				foreach (string existingEntry in archiveContents) {
-					if (String.Compare (existingEntry, wantedEntry, StringComparison.Ordinal) == 0) {
+					if (string.Equals (existingEntry, wantedEntry, StringComparison.Ordinal)) {
 						return true;
 					}
 				}
