@@ -1,15 +1,15 @@
-using NUnit.Framework;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
 using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 
 namespace SystemTests
 {
-	[TestFixture]
-	[Category ("RuntimeConfig")] //TODO: https://github.com/dotnet/android/issues/10069
+	[TestClass]
+	[TestCategory ("RuntimeConfig")] //TODO: https://github.com/dotnet/android/issues/10069
 	public class AppContextTests
 	{
-		static readonly object [] GetDataSource = new object [] {
+		public static readonly object [][] GetDataSource = {
 			new object [] {
 				/* name */     "test_bool",
 				/* expected */ "true",
@@ -24,14 +24,14 @@ namespace SystemTests
 			},
 		};
 
-		[Test]
-		[TestCaseSource (nameof (GetDataSource))]
+		[TestMethod]
+		[DynamicData (nameof (GetDataSource))]
 		public void GetData (string name, string expected)
 		{
 			Assert.AreEqual (expected, AppContext.GetData (name));
 		}
 
-		static readonly object [] TestPrivateSwitchesSource = new object [] {
+		public static readonly object [][] TestPrivateSwitchesSource = {
 			new object [] {
 				/* className */    "System.LocalAppContextSwitches, System.Private.CoreLib",
 				/* propertyName */ "ForceInterpretedInvoke",
@@ -48,11 +48,11 @@ namespace SystemTests
 			},
 		};
 
-		[Test]
-		[Category ("NativeAOTIgnore")] // These switches only exist in Mono & CoreCLR BCL assemblies
+		[TestMethod]
+		[TestCategory ("NativeAOTIgnore")] // These switches only exist in Mono & CoreCLR BCL assemblies
 		[DynamicDependency (DynamicallyAccessedMemberTypes.All, "System.LocalAppContextSwitches", "System.Private.CoreLib")]
 		[DynamicDependency (DynamicallyAccessedMemberTypes.All, "System.Diagnostics.Metrics.Meter", "System.Diagnostics.DiagnosticSource")]
-		[TestCaseSource (nameof (TestPrivateSwitchesSource))]
+		[DynamicData (nameof (TestPrivateSwitchesSource))]
 		public void TestPrivateSwitches (
 				[DynamicallyAccessedMembers (DynamicallyAccessedMemberTypes.All)]
 				string className,
@@ -76,7 +76,7 @@ namespace SystemTests
 		// `AppContext.GetBaseDirectoryCore()` fallback returns something useless on Android:
 		// the empty string on CoreCLR (assemblies are embedded, so `Assembly.Location` is empty)
 		// and `/system/bin/` on NativeAOT (that is where `app_process64` lives).
-		[Test]
+		[TestMethod]
 		public void BaseDirectoryIsFilesDir ()
 		{
 			var filesDir = Android.App.Application.Context.FilesDir;

@@ -25,30 +25,6 @@ namespace Xamarin.Android.Tasks
 {
 	public partial class MonoAndroidHelper
 	{
-		static Lazy<string> uname = new Lazy<string> (GetOSBinDirName, System.Threading.LazyThreadSafetyMode.PublicationOnly);
-
-		internal static XAAssemblyResolver MakeResolver (TaskLoggingHelper log, AndroidTargetArch targetArch, Dictionary<string, ITaskItem> assemblies, bool loadDebugSymbols = true)
-		{
-			var readerParams = new ReaderParameters ();
-
-			var res = new XAAssemblyResolver (targetArch, log, loadDebugSymbols: loadDebugSymbols, loadReaderParameters: readerParams);
-			var uniqueDirs = new HashSet<string> (StringComparer.OrdinalIgnoreCase);
-
-			log.LogDebugMessage ($"Adding search directories to new architecture {targetArch} resolver:");
-			foreach (var kvp in assemblies) {
-				string assemblyDir = Path.GetDirectoryName (kvp.Value.ItemSpec);
-				if (uniqueDirs.Contains (assemblyDir)) {
-					continue;
-				}
-
-				uniqueDirs.Add (assemblyDir);
-				res.SearchDirectories.Add (assemblyDir);
-				log.LogDebugMessage ($"  {assemblyDir}");
-			}
-
-			return res;
-		}
-
 		public static StringBuilder MergeStdoutAndStderrMessages (List<string> stdout, List<string> stderr)
 		{
 			var sb = new StringBuilder ();
@@ -145,42 +121,20 @@ namespace Xamarin.Android.Tasks
 			}
 		}
 
-		static string GetOSBinDirName ()
-		{
-			if (OS.IsWindows)
-				return "";
-			string os = null;
-			DataReceivedEventHandler output = (o, e) => {
-				if (string.IsNullOrWhiteSpace (e.Data))
-					return;
-				os = e.Data.Trim ();
-			};
-			DataReceivedEventHandler error = (o, e) => {};
-
-			string uname = "/usr/bin/uname";
-			if (!File.Exists (uname)) {
-				uname = "uname";
-			}
-
-			int r = RunProcess (uname, "-s", output, error);
-			if (r == 0)
-				return os;
-			return null;
-		}
-
 		// Path which contains OS-specific binaries; formerly known as $prefix/bin
 		internal static string GetOSBinPath ()
 		{
 			var toolsDir = Path.GetDirectoryName (typeof (MonoAndroidHelper).Assembly.Location);
-			var os = RuntimeInformation.IsOSPlatform (OSPlatform.Windows) ? "" :
-				RuntimeInformation.IsOSPlatform (OSPlatform.OSX) ? "Darwin" : "Linux";
-			return Path.Combine (toolsDir, os);
+			return Path.Combine (toolsDir, GetOSBinDirName ());
 		}
+
+		static string GetOSBinDirName () => RuntimeInformation.IsOSPlatform (OSPlatform.Windows) ? "" :
+			RuntimeInformation.IsOSPlatform (OSPlatform.OSX) ? "Darwin" : "Linux";
 
 		internal static string GetOSLibPath ()
 		{
-			var toolsDir = Path.GetFullPath (Path.GetDirectoryName (typeof (MonoAndroidHelper).Assembly.Location));
-			return Path.Combine (toolsDir, "lib", $"host-{uname.Value}");
+			var toolsDir = Path.GetDirectoryName (typeof (MonoAndroidHelper).Assembly.Location);
+			return Path.Combine (toolsDir, "lib", $"host-{GetOSBinDirName ()}");
 		}
 
 		class SizeAndContentFileComparer : IEqualityComparer<FileInfo>

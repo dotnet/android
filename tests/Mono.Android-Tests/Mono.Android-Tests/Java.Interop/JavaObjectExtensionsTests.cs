@@ -1,4 +1,6 @@
-﻿using System;
+﻿extern alias JavaInteropTests;
+
+using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -8,14 +10,14 @@ using Android.Runtime;
 
 using Java.Interop;
 
-using NUnit.Framework;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Java.InteropTests {
 
-	[TestFixture]
+	[TestClass]
 	public class JavaObjectExtensionsTests {
 
-		[Test]
+		[TestMethod]
 		public void JavaCast_BaseToGenericWrapper ()
 		{
 			using (var list = new JavaList (new[]{ 1, 2, 3 }))
@@ -25,7 +27,7 @@ namespace Java.InteropTests {
 			}
 		}
 
-		[Test]
+		[TestMethod]
 		public void JavaCast_InterfaceCast ()
 		{
 			IntPtr g;
@@ -41,13 +43,13 @@ namespace Java.InteropTests {
 			}
 		}
 
-		[Test]
+		[TestMethod]
 		public void JavaCast_BadInterfaceCast ()
 		{
 #pragma warning disable CA1422 // Integer(int) constructor is obsolete since API 33.
 			using var n = new Java.Lang.Integer (42);
 #pragma warning restore CA1422
-			var e = Assert.Catch<Exception>(() => JavaObjectExtensions.JavaCast<Java.Lang.IAppendable> (n));
+			var e = Assert.Throws<Exception>(() => JavaObjectExtensions.JavaCast<Java.Lang.IAppendable> (n));
 			if (e is System.Reflection.TargetInvocationException tie) {
 				// .NET 8 behavior
 				Assert.IsTrue (tie.InnerException is InvalidCastException);
@@ -58,7 +60,7 @@ namespace Java.InteropTests {
 			}
 		}
 
-		[Test]
+		[TestMethod]
 		public void JavaCast_ObtainOriginalInstance ()
 		{
 			using var list = new Java.Util.ArrayList ();
@@ -69,26 +71,26 @@ namespace Java.InteropTests {
 			Assert.AreSame (list, al);
 		}
 
-		[Test]
+		[TestMethod]
 		public void JavaCast_InvalidTypeCastThrows ()
 		{
 			using (var s = new Java.Lang.String ("value")) {
-				Assert.Throws<InvalidCastException> (() => JavaObjectExtensions.JavaCast<Java.Lang.Integer> (s));
+				Assert.ThrowsExactly<InvalidCastException> (() => JavaObjectExtensions.JavaCast<Java.Lang.Integer> (s));
 			}
 		}
 
-		[Test]
+		[TestMethod]
 		public void JavaCast_CheckForManagedSubclasses ()
 		{
 			using (var o = CreateObject ()) {
-				Assert.Throws<InvalidCastException> (() => JavaObjectExtensions.JavaCast<MyObject> (o));
+				Assert.ThrowsExactly<InvalidCastException> (() => JavaObjectExtensions.JavaCast<MyObject> (o));
 			}
 		}
 
-		[Test]
+		[TestMethod]
 		public void JavaAs ()
 		{
-			using var v     = new Java.InteropTests.MyJavaInterfaceImpl ();
+			using var v     = new JavaInteropTests::Java.InteropTests.MyJavaInterfaceImpl ();
 			using var c     = v.JavaAs<Java.Lang.ICloneable>();
 			Assert.IsNotNull (c);
 		}

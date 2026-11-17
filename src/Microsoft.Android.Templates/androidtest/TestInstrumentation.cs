@@ -1,8 +1,7 @@
 using Android.Runtime;
 using Microsoft.Testing.Extensions;
 using Microsoft.Testing.Platform.Builder;
-using Microsoft.Testing.Platform.Extensions;
-using Microsoft.Testing.Platform.Extensions.Messages;
+using Microsoft.Testing.Platform.ServerMode.Client;
 
 [assembly: Parallelize(Scope = ExecutionScope.MethodLevel)]
 
@@ -11,12 +10,17 @@ namespace AndroidTest1;
 [Instrumentation(Name = "com.companyname.AndroidTest1.TestInstrumentation")]
 public class TestInstrumentation : Instrumentation
 {
+    bool _listTests;
+    int _passed, _failed, _skipped;
+
     protected TestInstrumentation(IntPtr handle, JniHandleOwnership ownership)
         : base(handle, ownership) { }
 
     public override void OnCreate(Bundle? arguments)
     {
         base.OnCreate(arguments);
+        // Set by 'dotnet test --list-tests'
+        _listTests = arguments?.GetString("list-tests") == "true";
         Start();
     }
 
@@ -24,27 +28,42 @@ public class TestInstrumentation : Instrumentation
     {
         base.OnStart();
 
-        var consumer = new ResultConsumer(this);
         var bundle = new Bundle();
         try
         {
             var writeablePath = Application.Context.GetExternalFilesDir(null)?.AbsolutePath ?? Path.GetTempPath();
             var resultsPath = Path.Combine(writeablePath, "TestResults");
-            var builder = await TestApplication.CreateBuilderAsync([
-                "--results-directory", resultsPath,
-                "--report-trx"
-            ]);
-            builder.AddMSTest(() => [GetType().Assembly]);
-            builder.AddTrxReportProvider();
-            builder.TestHost.AddDataConsumer(_ => consumer);
+            using var client = await MtpServerClient.LaunchInProcessAsync(async (serverArgs, cancellationToken) =>
+            {
+                var builder = await TestApplication.CreateBuilderAsync(_listTests
+                    ? [.. serverArgs, "--results-directory", resultsPath]
+                    : [.. serverArgs, "--results-directory", resultsPath, "--report-trx"]);
+                builder.AddMSTest(() => [GetType().Assembly]);
+                builder.AddTrxReportProvider();
+                using ITestApplication app = await builder.BuildAsync();
+                return await app.RunAsync();
+            });
+            client.TestNodesUpdated += (_, e) =>
+            {
+                foreach (var node in e.Changes)
+                    ReportStatus(node);
+            };
 
-            using ITestApplication app = await builder.BuildAsync();
-            await app.RunAsync();
-
-            bundle.PutInt("passed", consumer.Passed);
-            bundle.PutInt("failed", consumer.Failed);
-            bundle.PutInt("skipped", consumer.Skipped);
-            bundle.PutString("resultsPath", consumer.TrxReportPath);
+            await client.InitializeAsync();
+            if (_listTests)
+            {
+                await client.DiscoverTestsAsync();
+            }
+            else
+            {
+                var result = await client.RunTestsAsync();
+                bundle.PutInt("passed", _passed);
+                bundle.PutInt("failed", _failed);
+                bundle.PutInt("skipped", _skipped);
+                bundle.PutString("resultsPath", result.Artifacts.FirstOrDefault(a => a.Uri?.EndsWith(".trx") == true)?.Uri);
+            }
+            await client.ExitAsync();
+            await client.ShutdownAsync();
             Finish(Result.Ok, bundle);
         }
         catch (Exception ex)
@@ -54,51 +73,42 @@ public class TestInstrumentation : Instrumentation
         }
     }
 
-    class ResultConsumer(Instrumentation instrumentation) : IDataConsumer
+    void ReportStatus(MtpTestNodeUpdate node)
     {
-        int _passed, _failed, _skipped;
-        public int Passed => _passed;
-        public int Failed => _failed;
-        public int Skipped => _skipped;
-        public string? TrxReportPath;
+        if (node.NodeType != "action")
+            return;
 
-        public string Uid => nameof(ResultConsumer);
-        public string DisplayName => nameof(ResultConsumer);
-        public string Description => "";
-        public string Version => "1.0";
-        public Task<bool> IsEnabledAsync() => Task.FromResult(true);
-
-        public Type[] DataTypesConsumed => [typeof(TestNodeUpdateMessage), typeof(SessionFileArtifact)];
-
-        public Task ConsumeAsync(IDataProducer dataProducer, IData value, CancellationToken cancellationToken)
+        (string? eventName, string? outcome) = node.ExecutionState switch
         {
-            if (value is SessionFileArtifact artifact)
-            {
-                TrxReportPath = artifact.FileInfo.FullName;
-            }
-            else if (value is TestNodeUpdateMessage { TestNode: var node })
-            {
-                var state = node.Properties.SingleOrDefault<TestNodeStateProperty>();
-                string? outcome = state switch
-                {
-                    PassedTestNodeStateProperty => "passed",
-                    FailedTestNodeStateProperty or ErrorTestNodeStateProperty
-                        or TimeoutTestNodeStateProperty => "failed",
-                    SkippedTestNodeStateProperty => "skipped",
-                    _ => null
-                };
-                if (outcome is null)
-                    return Task.CompletedTask;
+            "discovered" => ("discovered", null),
+            "in-progress" => ("start", null),
+            "passed" => ("finish", "passed"),
+            "skipped" => ("finish", "skipped"),
+            "failed" or "error" or "timed-out" or "canceled" => ("finish", "failed"),
+            _ => (null, null),
+        };
+        if (eventName is null)
+            return;
 
-                _ = outcome switch { "passed" => Interlocked.Increment(ref _passed), "failed" => Interlocked.Increment(ref _failed), _ => Interlocked.Increment(ref _skipped) };
+        if (outcome == "passed")
+            Interlocked.Increment(ref _passed);
+        else if (outcome == "failed")
+            Interlocked.Increment(ref _failed);
+        else if (outcome == "skipped")
+            Interlocked.Increment(ref _skipped);
 
-                var id = node.Properties.SingleOrDefault<TestMethodIdentifierProperty>();
-                var b = new Bundle();
-                b.PutString("test", id is not null ? $"{id.Namespace}.{id.TypeName}.{id.MethodName}" : node.DisplayName);
-                b.PutString("outcome", outcome);
-                instrumentation.SendStatus(0, b);
-            }
-            return Task.CompletedTask;
-        }
+        var b = new Bundle();
+        b.PutString("event", eventName);
+        b.PutString("test", node.Uid);
+        b.PutString("name", node.DisplayName);
+        if (node.Node.GetValueOrDefault("location.type") is string className)
+            b.PutString("class", className);
+        if (outcome is not null)
+            b.PutString("outcome", outcome);
+        if (node.ErrorMessage is { } message)
+            b.PutString("message-b64", Convert.ToBase64String(System.Text.Encoding.UTF8.GetBytes(message)));
+        if (node.ErrorStackTrace is { } stack)
+            b.PutString("stack-b64", Convert.ToBase64String(System.Text.Encoding.UTF8.GetBytes(stack)));
+        SendStatus(0, b);
     }
 }

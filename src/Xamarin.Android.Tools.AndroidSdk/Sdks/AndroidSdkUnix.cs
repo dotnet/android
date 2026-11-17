@@ -14,25 +14,8 @@ namespace Xamarin.Android.Tools
 {
 	class AndroidSdkUnix : AndroidSdkBase
 	{
-		// See comments above UnixConfigPath for explanation on why these are needed
-		static readonly string? sudo_user;
-		static readonly string? user;
-		static readonly bool need_chown;
-
-		static AndroidSdkUnix ()
-		{
-			sudo_user = Environment.GetEnvironmentVariable ("SUDO_USER");
-			if (String.IsNullOrEmpty (sudo_user))
-				return;
-
-			user = Environment.GetEnvironmentVariable ("USER");
-			if (String.IsNullOrEmpty (user) || string.Equals (user, sudo_user, StringComparison.Ordinal))
-				return;
-			need_chown = true;
-		}
-
-		public AndroidSdkUnix (Action<TraceLevel, string> logger, IDictionary<string, string>? environmentVariables = null)
-			: base (logger, environmentVariables)
+		public AndroidSdkUnix (Action<TraceLevel, string> logger, IDictionary<string, string>? environmentVariables = null, string? workingDirectory = null)
+			: base (logger, environmentVariables, workingDirectory)
 		{
 		}
 
@@ -45,11 +28,11 @@ namespace Xamarin.Android.Tools
 
 		public override string? PreferedAndroidSdkPath {
 			get {
-				var config_file = GetUnixConfigFile (Logger, EnvironmentVariables);
+				var config_file = GetUnixConfigFile (Logger, EnvironmentVariables, WorkingDirectory);
 				var androidEl = config_file.Element ("android-sdk");
 
 				if (androidEl != null) {
-					var path = (string?)androidEl.Attribute ("path");
+					var path = ResolvePath ((string?)androidEl.Attribute ("path"));
 
 					if (ValidateAndroidSdkLocation ("preferred path", path))
 						return path;
@@ -60,11 +43,11 @@ namespace Xamarin.Android.Tools
 
 		public override string? PreferedAndroidNdkPath {
 			get {
-				var config_file = GetUnixConfigFile (Logger, EnvironmentVariables);
+				var config_file = GetUnixConfigFile (Logger, EnvironmentVariables, WorkingDirectory);
 				var androidEl = config_file.Element ("android-ndk");
 
 				if (androidEl != null) {
-					var path = (string?)androidEl.Attribute ("path");
+					var path = ResolvePath ((string?)androidEl.Attribute ("path"));
 
 					if (ValidateAndroidNdkLocation ("preferred path", path))
 						return path;
@@ -75,11 +58,11 @@ namespace Xamarin.Android.Tools
 
 		public override string? PreferedJavaSdkPath {
 			get {
-				var config_file = GetUnixConfigFile (Logger, EnvironmentVariables);
+				var config_file = GetUnixConfigFile (Logger, EnvironmentVariables, WorkingDirectory);
 				var javaEl = config_file.Element ("java-sdk");
 
 				if (javaEl != null) {
-					var path = (string?)javaEl.Attribute ("path");
+					var path = ResolvePath ((string?)javaEl.Attribute ("path"));
 
 					if (ValidateJavaSdkLocation ("preferred path", path))
 						return path;
@@ -99,7 +82,7 @@ namespace Xamarin.Android.Tools
 			}
 
 			// Look in PATH
-			foreach (var adb in ProcessUtils.FindExecutablesInPath (Adb, EnvironmentVariables)) {
+			foreach (var adb in ProcessUtils.FindExecutablesInPath (Adb, EnvironmentVariables, WorkingDirectory)) {
 				var path = Path.GetDirectoryName (adb);
 				// Strip off "platform-tools"
 				var dir = Path.GetDirectoryName (path);
@@ -111,7 +94,7 @@ namespace Xamarin.Android.Tools
 			}
 
 			// Check some hardcoded paths for good measure
-			var home = ProcessUtils.GetUnixHome (EnvironmentVariables);
+			var home = ResolvePath (ProcessUtils.GetUnixHome (EnvironmentVariables));
 			if (home is not { Length: > 0 })
 				yield break;
 			// macOS: ~/Library/Android/sdk
@@ -241,18 +224,25 @@ namespace Xamarin.Android.Tools
 			}
 		}
 
-		internal static XElement GetUnixConfigFile (Action<TraceLevel, string> logger, IDictionary<string, string>? environmentVariables = null)
+		internal static XElement GetUnixConfigFile (Action<TraceLevel, string> logger, IDictionary<string, string>? environmentVariables = null, string? workingDirectory = null)
 		{
 			var home = ProcessUtils.GetUnixHome (environmentVariables);
 			var file = environmentVariables == null ? UnixConfigPath :
 				home is { Length: > 0 } ? Path.Combine (home, ".config", "xbuild", "monodroid-config.xml") : null;
+			if (file != null)
+				file = ProcessUtils.ResolvePath (file, workingDirectory);
 			XDocument? doc = null;
 			if (File.Exists (file)) {
 				try {
 					doc = XDocument.Load (file);
 				} catch (Exception ex) {
-					logger (TraceLevel.Error, string.Format (Resources.InvalidMonodroidConfigFile_path_message, file, ex.Message));
+					bool readOnly = environmentVariables != null || workingDirectory != null;
+					logger (readOnly ? TraceLevel.Warning : TraceLevel.Error, string.Format (Resources.InvalidMonodroidConfigFile_path_message, file, ex.Message));
 					logger (TraceLevel.Verbose, ex.ToString ());
+
+					// Discovery from a task snapshot must not modify shared preferences.
+					if (readOnly)
+						return new XElement ("monodroid");
 
 					// move out of the way and create a new one
 					doc = new XDocument (new XElement ("monodroid"));
@@ -273,13 +263,18 @@ namespace Xamarin.Android.Tools
 
 		void FixOwnership (List<string>? paths)
 		{
-			if (!need_chown || paths == null || paths.Count == 0)
+			if (paths == null || paths.Count == 0)
+				return;
+			// Only preference writers need the process's sudo ownership information.
+			var sudo_user = Environment.GetEnvironmentVariable ("SUDO_USER");
+			var user = Environment.GetEnvironmentVariable ("USER");
+			if (string.IsNullOrEmpty (sudo_user) || string.IsNullOrEmpty (user) || string.Equals (user, sudo_user, StringComparison.Ordinal))
 				return;
 
 			var stdout = new StringWriter ();
 			var stderr = new StringWriter ();
 			var args = new List <string> {
-				QuoteString (sudo_user!)
+				QuoteString (sudo_user)
 			};
 
 			foreach (string p in paths)

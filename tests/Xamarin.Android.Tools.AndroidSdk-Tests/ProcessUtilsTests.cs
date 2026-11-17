@@ -3,6 +3,7 @@
 
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
 using System.Text;
 
 using NUnit.Framework;
@@ -12,6 +13,31 @@ namespace Xamarin.Android.Tools.Tests
 	[TestFixture]
 	public class ProcessUtilsTests
 	{
+		[TestCase (@"\sdk", @"D:\sdk")]
+		[TestCase (@"D:sdk", @"D:\project\sdk")]
+		[TestCase (@"E:sdk", @"E:\sdk")]
+		[Platform ("Win")]
+		public void ResolvePath_UsesWorkingDirectory (string path, string expected)
+		{
+			const string project = @"D:\project";
+			Assert.AreEqual (expected, ProcessUtils.ResolvePath (path, project));
+		}
+
+		[Test]
+		[Platform ("Win")]
+		public void FindExecutablesInPath_IgnoresInvalidEntries ()
+		{
+			var directory = Path.Combine (Path.GetTempPath (), Path.GetRandomFileName ());
+			Directory.CreateDirectory (directory);
+			try {
+				File.WriteAllText (Path.Combine (directory, "java.exe"), "");
+				var environment = new Dictionary<string, string> { ["PATH"] = "\"C:\\invalid\\\"; ", ["PATHEXT"] = ".EXE" };
+				Assert.IsEmpty (ProcessUtils.FindExecutablesInPath ("java", environment, directory));
+			} finally {
+				Directory.Delete (directory, recursive: true);
+			}
+		}
+
 		[Test]
 		public void CreateProcessStartInfo_SetsFileName ()
 		{

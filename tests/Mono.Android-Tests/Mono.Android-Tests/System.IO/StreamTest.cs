@@ -1,14 +1,14 @@
 using System;
 using System.IO;
-using NUnit.Framework;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 using JavaStreamTest = global::Net.Dot.Android.Test.StreamTest;
 
 namespace System.IOTests;
 
-[TestFixture]
+[TestClass]
 public class StreamTest
 {
-	[Test]
+	[TestMethod]
 	public void InputStreamAdapter_Read ()
 	{
 		using var stream = new MemoryStream (new byte [JavaStreamTest.BufferSize]);
@@ -16,7 +16,7 @@ public class StreamTest
 		Assert.AreEqual (0, result); // First byte is 0
 	}
 
-	[Test]
+	[TestMethod]
 	public void InputStreamAdapter_Read_bytes ()
 	{
 		using var stream = new MemoryStream (new byte [JavaStreamTest.BufferSize]);
@@ -24,7 +24,7 @@ public class StreamTest
 		Assert.AreEqual (JavaStreamTest.BufferSize, result);
 	}
 
-	[Test]
+	[TestMethod]
 	public void InputStreamAdapter_Read_bytes_int_int ()
 	{
 		using var stream = new MemoryStream (new byte [JavaStreamTest.BufferSize]);

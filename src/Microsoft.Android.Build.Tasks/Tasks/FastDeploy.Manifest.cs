@@ -9,6 +9,9 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 
+using Microsoft.Android.Build.Tasks;
+using Microsoft.Build.Framework;
+
 namespace Microsoft.Android.Tasks
 {
 	public partial class FastDeploy
@@ -85,9 +88,9 @@ namespace Microsoft.Android.Tasks
 
 			foreach (var file in files) {
 				if (changedFiles.Contains (file.RelativePath)) {
-					LogDebugMessage ($"NotifySync CopyFile {file.RelativePath}.");
+					Log.LogDebugMessage ($"NotifySync CopyFile {file.RelativePath}.");
 				} else if (DiagnosticLogging) {
-					LogDebugMessage ($"NotifySync SkipCopyFile {file.RelativePath} file is up to date.");
+					Log.LogDebugMessage ($"NotifySync SkipCopyFile {file.RelativePath} file is up to date.");
 				}
 			}
 
@@ -295,7 +298,7 @@ namespace Microsoft.Android.Tasks
 				Files = new Dictionary<string, ManifestEntry> (StringComparer.Ordinal),
 			};
 			foreach (var file in files) {
-				var info = new FileInfo (file.LocalPath);
+				var info = new FileInfo (TaskEnvironment.GetAbsolutePath (file.LocalPath));
 				manifest.Files [file.RelativePath] = new ManifestEntry {
 					RelativePath = file.RelativePath,
 					Size = info.Length,
@@ -498,7 +501,7 @@ namespace Microsoft.Android.Tasks
 
 		ManifestData LoadPreviousManifest ()
 		{
-			string manifestFile = GetManifestFilePath ();
+			var manifestFile = GetManifestFilePath ();
 			if (!File.Exists (manifestFile)) {
 				return null;
 			}
@@ -514,8 +517,8 @@ namespace Microsoft.Android.Tasks
 
 		void WriteManifest (ManifestData manifest)
 		{
-			string manifestFile = GetManifestFilePath ();
-			Directory.CreateDirectory (Path.GetDirectoryName (manifestFile));
+			var manifestFile = GetManifestFilePath ();
+			Directory.CreateDirectory (TaskEnvironment.GetAbsolutePath (Path.GetDirectoryName (manifestFile)));
 			File.WriteAllText (manifestFile, JsonSerializer.Serialize (manifest, typeof (ManifestData), FastDeployJsonSerializerContext.Default));
 		}
 
@@ -553,16 +556,16 @@ namespace Microsoft.Android.Tasks
 			return builder.ToString ();
 		}
 
-		string GetManifestFilePath ()
+		AbsolutePath GetManifestFilePath ()
 		{
-			return Path.Combine (
+			return TaskEnvironment.GetAbsolutePath (Path.Combine (
 				GetFullPath (IntermediateOutputPath),
 				"fastdeploy",
 				GetSafeFileName (GetDeviceId ()),
 				GetSafeFileName (PackageName),
 				GetSafeFileName (GetUserId ()),
 				GetSafeFileName (PrimaryCpuAbi),
-				"manifest.json");
+				"manifest.json"));
 		}
 
 		static string GetSafeFileName (string value)

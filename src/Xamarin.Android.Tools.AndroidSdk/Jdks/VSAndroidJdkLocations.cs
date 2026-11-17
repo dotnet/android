@@ -20,14 +20,14 @@ namespace Xamarin.Android.Tools {
 			var valueName   = "JavaHome";
 
 			foreach (var wow in wows) {
-				if (!RegistryEx.CheckRegistryKeyForExecutable (root, subKey, valueName, wow, "bin", "java.exe", environmentVariables)) {
+				if (!RegistryEx.CheckRegistryKeyForExecutable (root, subKey, valueName, wow, "bin", "java.exe", environmentVariables, workingDirectory)) {
 					continue;
 				}
 				var path    = RegistryEx.GetValueString (root, subKey, valueName, wow) ?? "";
 				if (string.IsNullOrEmpty (path)) {
 					continue;
 				}
-				var jdk     = JdkInfo.TryGetJdkInfo (path, logger, subKey, environmentVariables);
+				var jdk     = JdkInfo.TryGetJdkInfo (path, logger, subKey, environmentVariables, workingDirectory);
 				if (jdk == null) {
 					continue;
 				}

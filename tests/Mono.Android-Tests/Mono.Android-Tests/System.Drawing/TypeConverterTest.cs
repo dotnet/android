@@ -3,14 +3,14 @@ using System.ComponentModel;
 using System.Diagnostics.CodeAnalysis;
 using System.Drawing;
 
-using NUnit.Framework;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace System.Drawing {
 
-	[TestFixture]
+	[TestClass]
 	public class TypeConverterTest {
 
-		[Test]
+		[TestMethod]
 		[RequiresUnreferencedCode ("Tests trimming unsafe features")]
 		public void ColorConverter ()
 		{
@@ -23,7 +23,7 @@ namespace System.Drawing {
 			Assert.AreEqual (0xEE, color.B, "B");
 		}
 
-		[Test]
+		[TestMethod]
 		[RequiresUnreferencedCode ("Tests trimming unsafe features")]
 		public void RectangleConverter ()
 		{
@@ -36,7 +36,7 @@ namespace System.Drawing {
 			Assert.AreEqual (40, rect.Height, "Height");
 		}
 
-		[Test]
+		[TestMethod]
 		[RequiresUnreferencedCode ("Tests trimming unsafe features")]
 		public void PointConverter ()
 		{
@@ -47,7 +47,7 @@ namespace System.Drawing {
 			Assert.AreEqual (20, point.Y, "Y");
 		}
 
-		[Test]
+		[TestMethod]
 		[RequiresUnreferencedCode ("Tests trimming unsafe features")]
 		public void SizeConverter ()
 		{
@@ -58,7 +58,7 @@ namespace System.Drawing {
 			Assert.AreEqual (20, size.Height, "Height");
 		}
 
-		[Test]
+		[TestMethod]
 		[RequiresUnreferencedCode ("Tests trimming unsafe features")]
 		public void SizeFConverter ()
 		{

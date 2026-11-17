@@ -4,24 +4,24 @@ using System.Runtime.InteropServices;
 
 using Java.Interop;
 
-using NUnit.Framework;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Java.InteropTests
 {
-	[TestFixture]
+	[TestClass]
 	public class JniEnvironmentTests
 	{
-		[Test]
-		[Category ("ManagedConstruction")]
+		[TestMethod]
+		[TestCategory ("ManagedConstruction")]
 		public void Transition_RejectsNullEnvironmentPointer ()
 		{
 			var environmentPointer = JniEnvironment.EnvironmentPointer;
 			// SAFETY: Zero is rejected before JNI dispatch; do not substitute a fabricated nonzero address.
-			Assert.Throws<ArgumentNullException> (() => new JniTransition (IntPtr.Zero));
+			Assert.ThrowsExactly<ArgumentNullException> (() => new JniTransition (IntPtr.Zero));
 			Assert.AreEqual (environmentPointer, JniEnvironment.EnvironmentPointer);
 		}
 
-		[Test]
+		[TestMethod]
 		public unsafe void Types_IsSameObject ()
 		{
 			using (var t = new JniType ("java/lang/Object")) {
@@ -38,7 +38,7 @@ namespace Java.InteropTests
 
 		}
 
-		[Test]
+		[TestMethod]
 		public void Types_GetJniTypeNameFromInstance ()
 		{
 			using (var o = new JavaObject ())
@@ -47,7 +47,7 @@ namespace Java.InteropTests
 				Assert.AreEqual ("[I", JniEnvironment.Types.GetJniTypeNameFromInstance (o.PeerReference));
 		}
 
-		[Test]
+		[TestMethod]
 		public unsafe void Handles_NewReturnToJniRef ()
 		{
 			using (var t = new JniType ("java/lang/Object")) {
@@ -66,7 +66,7 @@ namespace Java.InteropTests
 			}
 		}
 
-		[Test]
+		[TestMethod]
 		public void References_CreatedReference_InvalidRef ()
 		{
 			var c = JniEnvironment.LocalReferenceCount;
@@ -75,12 +75,12 @@ namespace Java.InteropTests
 			Assert.AreEqual (c, JniEnvironment.LocalReferenceCount);
 		}
 
-		[Test]
+		[TestMethod]
 		public void References_CreatedReference_LocalRef ()
 		{
 			var NewLocalRef = GetNewRefFunc ("java_interop_jnienv_new_local_ref");
 			if (NewLocalRef == null) {
-				Assert.Ignore ("This version of Java.Interop.dll doesn't use P/Invoke-based JNI invokes.");
+				Assert.Inconclusive ("This version of Java.Interop.dll doesn't use P/Invoke-based JNI invokes.");
 				return;
 			}
 			using (var t = new JniType ("java/lang/Object")) {
@@ -129,12 +129,12 @@ namespace Java.InteropTests
 					throwOnBindFailure: true);
 		}
 
-		[Test]
+		[TestMethod]
 		public void References_CreatedReference_GlobalRef ()
 		{
 			var NewGlobalRef = GetNewRefFunc ("java_interop_jnienv_new_global_ref");
 			if (NewGlobalRef == null) {
-				Assert.Ignore ("This version of Java.Interop.dll doesn't use P/Invoke-based JNI invokes.");
+				Assert.Inconclusive ("This version of Java.Interop.dll doesn't use P/Invoke-based JNI invokes.");
 				return;
 			}
 			using (var t = new JniType ("java/lang/Object")) {
@@ -146,7 +146,7 @@ namespace Java.InteropTests
 				Assert.AreEqual (c, JniEnvironment.Runtime.GlobalReferenceCount);
 
 				var o = new JniObjectReference (r, JniObjectReferenceType.Global);
-				Assert.Throws<ArgumentException> (() => JniEnvironment.References.CreatedReference (o));
+				Assert.ThrowsExactly<ArgumentException> (() => JniEnvironment.References.CreatedReference (o));
 
 				Assert.AreEqual (c, JniEnvironment.Runtime.GlobalReferenceCount);
 
