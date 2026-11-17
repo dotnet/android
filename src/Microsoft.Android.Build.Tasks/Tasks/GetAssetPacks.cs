@@ -8,16 +8,19 @@ using System.Linq;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
 using Microsoft.Android.Build.Tasks;
-using Irony;
 using System.Text.RegularExpressions;
+using Xamarin.Android.Tasks;
+using Properties = Xamarin.Android.Tasks.Properties;
 
-namespace Xamarin.Android.Tasks
+namespace Microsoft.Android.Tasks
 {
 	// We have a list of files, we want to get the
 	// ones that actually exist on disk.
-	public class GetAssetPacks : AndroidTask
+	public partial class GetAssetPacks : AndroidTask
 	{
-		readonly Regex validAssetPackName = new Regex ("^[A-Z0-9_]+$", RegexOptions.Compiled | RegexOptions.IgnoreCase);
+		[GeneratedRegex ("^[A-Za-z0-9_]+$")]
+		static partial Regex ValidAssetPackName { get; }
+
 		public override string TaskPrefix => "GAP";
 
 		[Required]
@@ -39,11 +42,11 @@ namespace Xamarin.Android.Tasks
 				var assetPack = asset.GetMetadata ("AssetPack");
 				if (assetPack.IsNullOrEmpty () || string.Equals (assetPack, "base", StringComparison.OrdinalIgnoreCase))
 					continue;
-				if (!IsAssetPackNameValid (assetPack)) {
-					Log.LogCodedError ("XA0140", string.Format (Properties.Resources.XA0140, asset.ItemSpec, assetPack));
+				if (!ValidAssetPackName.IsMatch (assetPack)) {
+					Log.LogCodedError ("XA0140", Properties.Resources.XA0140, asset.ItemSpec, assetPack);
 					continue;
 				}
-				if (!assetPacks.TryGetValue (assetPack, out ITaskItem item)) {
+				if (!assetPacks.TryGetValue (assetPack, out ITaskItem? item)) {
 					item = new TaskItem (assetPack);
 					item.SetMetadata ("AssetPack", assetPack);
 					item.SetMetadata ("AssetPackCacheFile", Path.Combine (IntermediateDir.ItemSpec, assetPack, "assetpack.cache"));
@@ -91,11 +94,6 @@ namespace Xamarin.Android.Tasks
 					return false;
 				}
 			return true;
-		}
-
-		bool IsAssetPackNameValid (string assetPackName)
-		{
-			return validAssetPackName.IsMatch (assetPackName);
 		}
 	}
 }
