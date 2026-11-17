@@ -65,6 +65,10 @@ codes and file-lock diagnostics without capturing the process working
 directory. It implements `IMultiThreadableTask` so the engine supplies the
 `TaskEnvironment` used to resolve paths in exception messages. Its default
 `TaskEnvironment.Fallback` also supports direct task instantiation.
+For tasks that run an external tool, use `MultithreadedAndroidToolTask`.
+MSBuild's `ToolTask` already implements `IMultiThreadableTask` and
+`ICancelableTask`, and starts the tool with `TaskEnvironment`. Unlike
+`AndroidToolTask`, this base does not capture the process working directory.
 Keep other tasks on their existing base until all their code paths are safe.
 
 `FilterAssemblies` resolves input file paths through `TaskEnvironment` but
