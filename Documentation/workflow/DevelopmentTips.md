@@ -17,7 +17,7 @@ running them all can take a significant amount of time.
 If you need to run only *one* `[TestMethod]` method, you can use
 [`dotnet test --filter`](https://docs.microsoft.com/dotnet/core/testing/selective-unit-tests?pivots=mstest):
 
-    ./dotnet-local.sh test bin/TestDebug/MSBuildDeviceIntegration/net6.0/MSBuildDeviceIntegration.dll --filter "Name~TypeAndMemberRemapping"
+    ./dotnet-local.sh test --test-modules bin/TestDebug/MSBuildDeviceIntegration/net6.0/MSBuildDeviceIntegration.dll --filter "Name~TypeAndMemberRemapping"
 
 # Update directory
 

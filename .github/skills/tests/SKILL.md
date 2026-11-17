@@ -79,17 +79,17 @@ dotnet test <project>.csproj -v minimal --filter "Name~TestName"
 
 ### Host-side MSBuild tests (full-build)
 ```bash
-./dotnet-local.sh test bin/TestDebug/${TFM}/Xamarin.Android.Build.Tests.dll
-./dotnet-local.sh test bin/TestDebug/${TFM}/Xamarin.Android.Build.Tests.dll --filter "Name~BuildBasicApplication"
-./dotnet-local.sh test bin/TestDebug/${TFM}/Xamarin.Android.Build.Tests.dll --filter "FullyQualifiedName~NativeAotBuildTests"
+./dotnet-local.sh test --test-modules bin/TestDebug/${TFM}/Xamarin.Android.Build.Tests.dll
+./dotnet-local.sh test --test-modules bin/TestDebug/${TFM}/Xamarin.Android.Build.Tests.dll --filter "Name~BuildBasicApplication"
+./dotnet-local.sh test --test-modules bin/TestDebug/${TFM}/Xamarin.Android.Build.Tests.dll --filter "FullyQualifiedName~NativeAotBuildTests"
 ```
 
 ### Device integration tests (full-build + device)
 ```bash
-./dotnet-local.sh test bin/TestDebug/MSBuildDeviceIntegration/${TFM}/MSBuildDeviceIntegration.dll
-./dotnet-local.sh test bin/TestDebug/MSBuildDeviceIntegration/${TFM}/MSBuildDeviceIntegration.dll --filter "Name~InstallAndRunTests"
+./dotnet-local.sh test --test-modules bin/TestDebug/MSBuildDeviceIntegration/${TFM}/MSBuildDeviceIntegration.dll
+./dotnet-local.sh test --test-modules bin/TestDebug/MSBuildDeviceIntegration/${TFM}/MSBuildDeviceIntegration.dll --filter "Name~InstallAndRunTests"
 # With more than one device attached:
-ADB_TARGET='-s emulator-5554' ./dotnet-local.sh test bin/TestDebug/MSBuildDeviceIntegration/${TFM}/MSBuildDeviceIntegration.dll --filter "Name~InstallAndRunTests"
+ADB_TARGET='-s emulator-5554' ./dotnet-local.sh test --test-modules bin/TestDebug/MSBuildDeviceIntegration/${TFM}/MSBuildDeviceIntegration.dll --filter "Name~InstallAndRunTests"
 ```
 
 CI runs these assemblies with Microsoft Testing Platform, and splits them across jobs with

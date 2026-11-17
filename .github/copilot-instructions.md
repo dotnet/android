@@ -16,8 +16,8 @@
 ## Essential Commands
 - **Build the local SDK:** `make prepare && make leeroy` (not `make all`) or `build.cmd`; see the `local-build` skill
 - **Test with local build:** `dotnet-local.sh`/`dotnet-local.cmd` (prefers `bin/Release` when present)
-- **Run tests:** `dotnet-local.cmd test bin/TestDebug/net11.0/Xamarin.Android.Build.Tests.dll --filter Name~TestName`
-- **Device tests:** `dotnet-local.cmd test bin/TestDebug/MSBuildDeviceIntegration/net11.0/MSBuildDeviceIntegration.dll` (`android-devices` skill)
+- **Run tests:** `dotnet-local.cmd test --test-modules bin/TestDebug/net11.0/Xamarin.Android.Build.Tests.dll --filter Name~TestName`
+- **Device tests:** `dotnet-local.cmd test --test-modules bin/TestDebug/MSBuildDeviceIntegration/net11.0/MSBuildDeviceIntegration.dll` (`android-devices` skill)
 
 The test assembly framework comes from `DotNetStableTargetFramework` in `Directory.Build.props`. On macOS/Linux, use `./dotnet-local.sh` instead of `dotnet-local.cmd`.
 

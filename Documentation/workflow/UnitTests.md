@@ -61,13 +61,13 @@ To run ALL the [MSBuild Integration Tests](#msbuild-integration-tests) *and*
 all the [MSBuild Task Unit Tests](#msbuild-task-tests), run:
 
 ```sh
-./dotnet-local.sh test bin/TestDebug/net7.0/Xamarin.Android.Build.Tests.dll
+./dotnet-local.sh test --test-modules bin/TestDebug/net7.0/Xamarin.Android.Build.Tests.dll
 ```
 
 To run ALL the supported [Device Integration Tests](#devive-integration-tests), run:
 
 ```sh
-./dotnet-local.sh test bin/TestDebug/MSBuildDeviceIntegration/net7.0/MSBuildDeviceIntegration.dll
+./dotnet-local.sh test --test-modules bin/TestDebug/MSBuildDeviceIntegration/net7.0/MSBuildDeviceIntegration.dll
 ```
 
 If no Android device is attached, then the emulator will be created.
@@ -77,20 +77,20 @@ Android device should be used when running Device Integration Tests.
 To run a specific test you can use the `Name=Value` argument for `--filter`,
 
 ```sh
-./dotnet-local.sh test bin/TestDebug/net7.0/Xamarin.Android.Build.Tests.dll --filter=Name=BuildBasicApplication
+./dotnet-local.sh test --test-modules bin/TestDebug/net7.0/Xamarin.Android.Build.Tests.dll --filter=Name=BuildBasicApplication
 ```
 
 If the test has arguments then the `=` will not match the name. Instead use the `~`,
 this does a "Contains" check for the Name.
 
 ```sh
-./dotnet-local.sh test bin/TestDebug/net7.0/Xamarin.Android.Build.Tests.dll --filter=Name~BuildBasicApplication
+./dotnet-local.sh test --test-modules bin/TestDebug/net7.0/Xamarin.Android.Build.Tests.dll --filter=Name~BuildBasicApplication
 ```
 
 To list all the available tests use the `--list-tests` argument
 
 ```sh
-./dotnet-local.sh test bin/TestDebug/net7.0/Xamarin.Android.Build.Tests.dll --list-tests
+./dotnet-local.sh test --test-modules bin/TestDebug/net7.0/Xamarin.Android.Build.Tests.dll --list-tests
 ```
 
 ## Running on Windows
@@ -101,13 +101,13 @@ To run ALL the [MSBuild Integration Tests](#msbuild-integration-tests) *and*
 all the [MSBuild Task Unit Tests](#msbuild-task-tests), run:
 
 ```cmd
-dotnet-local.cmd test bin\TestDebug\net7.0\Xamarin.Android.Build.Tests.dll
+dotnet-local.cmd test --test-modules bin\TestDebug\net7.0\Xamarin.Android.Build.Tests.dll
 ```
 
 To run ALL the supported [Device Integration Tests](#devive-integration-tests), runs:
 
 ```cmd
-dotnet-local.cmd test bin\TestDebug\MSBuildDeviceIntegration\net7.0\MSBuildDeviceIntegration.dll
+dotnet-local.cmd test --test-modules bin\TestDebug\MSBuildDeviceIntegration\net7.0\MSBuildDeviceIntegration.dll
 ```
 
 If no Android device is attached, then the emulator will be created.
@@ -117,20 +117,20 @@ Android device should be used when running Device Integration Tests.
 To run a specific test you can use the `Name=Value` argument for the `--filter`,
 
 ```cmd
-dotnet-local.cmd test bin\TestDebug\net7.0\Xamarin.Android.Build.Tests.dll --filter=Name=BuildBasicApplication
+dotnet-local.cmd test --test-modules bin\TestDebug\net7.0\Xamarin.Android.Build.Tests.dll --filter=Name=BuildBasicApplication
 ```
 
 If the test has arguments then the `=` will not match the name. Instead use the `~`,
 this does a "Contains" check for the Name.
 
 ```sh
-./dotnet-local.cmd test bin\TestDebug\net7.0\Xamarin.Android.Build.Tests.dll --filter=Name~BuildBasicApplication
+./dotnet-local.cmd test --test-modules bin\TestDebug\net7.0\Xamarin.Android.Build.Tests.dll --filter=Name~BuildBasicApplication
 ```
 
 To list all the available tests use the `--list-tests` argument
 
 ```cmd
-dotnet-local.cmd test bin\TestDebug\net7.0\Xamarin.Android.Build.Tests.dll --list-tests
+dotnet-local.cmd test --test-modules bin\TestDebug\net7.0\Xamarin.Android.Build.Tests.dll --list-tests
 ```
 
 # Writing Tests
