@@ -683,9 +683,6 @@ namespace Java.InteropTests
 		// Keep the expected wrapper types open so NativeAOT must construct the closed reference-type
 		// wrappers through SafeJavaCollectionFactory's rooted canonical templates.
 		[TestMethod]
-
-		// Keep the expected wrapper types open so NativeAOT must construct the closed reference-type
-		// wrappers through SafeJavaCollectionFactory's rooted canonical templates.
 		[DataRow (typeof (IList<string>), typeof (JavaList<>), false)]
 		[DataRow (typeof (ICollection<string>), typeof (JavaCollection<>), false)]
 		[DataRow (typeof (IDictionary<string, string>), typeof (JavaDictionary<,>), true)]

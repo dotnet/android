@@ -2,14 +2,14 @@ using System;
 using System.IO;
 using System.Linq;
 using System.Xml.Linq;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+using NUnit.Framework;
 
 namespace Xamarin.SourceWriter.Tests
 {
-	[TestClass]
+	[TestFixture]
 	public class EventWriterTests
 	{
-		[TestMethod]
+		[Test]
 		public void Basics ()
 		{
 			var ev = new EventWriter { Name = "MyEvent", IsPublic = true, EventType = new TypeReferenceWriter ("EventHandler") };

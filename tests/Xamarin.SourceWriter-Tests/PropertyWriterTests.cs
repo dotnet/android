@@ -2,14 +2,14 @@ using System;
 using System.IO;
 using System.Linq;
 using System.Xml.Linq;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+using NUnit.Framework;
 
 namespace Xamarin.SourceWriter.Tests
 {
-	[TestClass]
+	[TestFixture]
 	public class PropertyWriterTests
 	{
-		[TestMethod]
+		[Test]
 		public void Basics ()
 		{
 			var property = new PropertyWriter { Name = "MyProperty", IsPublic = true, PropertyType = TypeReferenceWriter.IntPtr, HasGet = true, HasSet = true };

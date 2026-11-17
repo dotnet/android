@@ -25,7 +25,7 @@ These tests can be run immediately with `dotnet test` on the `.csproj`, even if 
 | **package manager Java generation** | `src/Microsoft.Android.Build.Tasks/Tests/Microsoft.Android.Build.Tasks.Tests/` | `dotnet test src/Microsoft.Android.Build.Tasks/Tests/Microsoft.Android.Build.Tasks.Tests/Microsoft.Android.Build.Tasks.Tests.csproj -v minimal --filter FullyQualifiedName~GeneratePackageManagerJavaTests` |
 | **Gradle targets command quoting/environment** | `src/Microsoft.Android.Build.Tasks/Tests/Microsoft.Android.Build.Tasks.Tests/` | `dotnet test src/Microsoft.Android.Build.Tasks/Tests/Microsoft.Android.Build.Tasks.Tests/Microsoft.Android.Build.Tasks.Tests.csproj -v minimal --filter FullyQualifiedName~AndroidGradleTargetsTests` |
 | **aidl** | `tests/Xamarin.Android.Tools.Aidl-Tests/` | `dotnet test tests/Xamarin.Android.Tools.Aidl-Tests/Xamarin.Android.Tools.Aidl-Tests.csproj -v minimal` |
-| **source writer (MSTest/MTP pilot)** | `tests/Xamarin.SourceWriter-Tests/` | `DOTNET_TEST_RUNNER=Microsoft.Testing.Platform dotnet test --project tests/Xamarin.SourceWriter-Tests/Xamarin.SourceWriter-Tests.csproj -c Debug --report-trx` — .NET SDK 11 Preview 6+; [details](../../../../tests/Xamarin.SourceWriter-Tests/README.md) |
+| **source writer** | `tests/Xamarin.SourceWriter-Tests/` | `dotnet test tests/Xamarin.SourceWriter-Tests/Xamarin.SourceWriter-Tests.csproj -v minimal` |
 | **java source** | `tests/Java.Interop.Tools.JavaSource-Tests/` | `dotnet test tests/Java.Interop.Tools.JavaSource-Tests/Java.Interop.Tools.JavaSource-Tests.csproj -v minimal` |
 | **maven** | `tests/Java.Interop.Tools.Maven-Tests/` | `dotnet test tests/Java.Interop.Tools.Maven-Tests/Java.Interop.Tools.Maven-Tests.csproj -v minimal` |
 | **api xml adjuster** | `tests/Xamarin.Android.Tools.ApiXmlAdjuster-Tests/` | `dotnet test tests/Xamarin.Android.Tools.ApiXmlAdjuster-Tests/Xamarin.Android.Tools.ApiXmlAdjuster-Tests.csproj -v minimal` |
@@ -142,10 +142,7 @@ architecture. Local workload setup installs the previous Android SDK.
 
 ## On-Device Runtime Tests (full-build — requires local SDK + device)
 
-`Mono.Android.NET-Tests`, its referenced Java.Interop fixtures, and
-`Xamarin.Android.JcwGen-Tests` use native MSTest with `MSTest.SourceGeneration`
-through Microsoft Testing Platform (MTP). Other NUnit consumers keep their
-existing runner; do not select a mixed solution with the native host adapter.
+`Mono.Android.NET-Tests` (including the Java.Interop fixtures) and `Xamarin.Android.JcwGen-Tests` use MSTest with `MSTest.SourceGeneration` through Microsoft Testing Platform (MTP).
 
 Build/install with `-t:Install`, then run `dotnet test --no-build --report-trx` from the test project's directory so the project-local `global.json` selects the MTP runner.
 
@@ -171,18 +168,11 @@ Device: **Yes**
 
 The `Mono.Android.NET-Tests.csproj` dynamically excludes categories based on runtime:
 - **CoreCLR runtime**: Excludes `CoreCLRIgnore`, `NTLM`
-- **NativeAOT runtime**: Also excludes `NativeAOTIgnore`, `SSL`
-- **Both runtimes**: Excludes `JniReferenceLeak` unless it is the only explicitly included category
+- **NativeAOT runtime**: Excludes `NativeAOTIgnore`, `SSL`, `NTLM`
 
 Other categories: `SSL`, `InetAccess`, `JavaList`, `RuntimeConfig`, `Intune`, `NTLM`
 
-Pass `-p:IncludeCategories=JniReferenceLeak` on **both** install and test to
-exercise the dedicated six-case Mono JNI lane; the JCW project has its own
-one-case JNI lane using the same property. Includes are compiled into the
-app's runtime configuration, not forwarded as arbitrary host name filters.
-The project-mode Android CLI does not support `--filter`; direct
-instrumentation accepts `include`, `exclude`, and `noexclusions` extras.
-Standalone instrumentation listing (`-e list`) is explicitly unsupported.
+To run a subset, pass `-p:IncludeCategories=<Category>` to **both** install and test; `--filter` is not supported.
 
 Command:
 ```bash
@@ -195,13 +185,6 @@ Command:
 
 Results are `.trx` files under `bin/TestDebug/TestResults/` and are published as VSTest results in CI. Always pass the same configuration and MSBuild properties to the install and `dotnet test --no-build` commands (for example, `-c Release -p:PublishAot=true`).
 
-The Android CI `apk-instrumentation.yaml` template uses this project-local MTP
-entry point and the existing Android streaming protocol. It does not use the
-host-only SourceWriter UID slicer or NUnit runsettings. Native TRX,
-`NativeTestNodes.xml`, and arbitrary attachments remain in the app's external
-`TestResults` directory; pull that directory separately when validating
-attachment contents, since the host does not automatically copy every file.
-
 For `Xamarin.Android.JcwGen-Tests`, use the same pattern from `tests/CodeGen-Binding/Xamarin.Android.JcwGen-Tests/`:
 ```bash
 ./dotnet-local.sh build -t:Install -c Debug tests/CodeGen-Binding/Xamarin.Android.JcwGen-Tests/Xamarin.Android.JcwGen-Tests.csproj
@@ -210,19 +193,6 @@ For `Xamarin.Android.JcwGen-Tests`, use the same pattern from `tests/CodeGen-Bin
   ../../../dotnet-local.sh test Xamarin.Android.JcwGen-Tests.csproj --no-build -c Debug --report-trx --results-directory ../../../bin/TestDebug/TestResults
 )
 ```
-
-Case counts change whenever tests are added on `main`, so there is no fixed
-expected total. To validate a migration, compare the MSTest run against the
-original NUnit runner on the **same source commit**: test identities, category
-sets and duplicate (data-row) multiplicity must match, not just totals. Also
-check native UID/TRX agreement and the installed APK's runtime contents.
-Generated descriptors retain bounded reflection fallback.
-JCW retains its whole-app root: both original NUnit and migrated MSTest
-NativeAOT abort in `JavaAbstractMethodTest` at `ic.NewMethod()` (`RhFailFast`);
-do not exclude/weaken that test or claim completed JCW NativeAOT coverage.
-A run only covers the runtimes and ABIs it exercised; it does not certify others.
-See [on-device unit tests](../../../../Documentation/workflow/UnitTests.md#on-device-unit-tests)
-for trimming root boundaries.
 
 ## Java.Interop Tests — Mixed Tiers
 

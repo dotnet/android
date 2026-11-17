@@ -417,15 +417,9 @@ For example:
 
 Pass the same `-c` and `-p:` properties to both commands. After running the
 tests, `.trx` result files will be created under `bin/TestDebug/TestResults`.
-Run from the project directory: its `global.json` selects MTP.
+To run a subset, pass `-p:IncludeCategories=<Category>` to both commands;
+`--filter` is not supported.
 
-To run a subset, pass `-p:IncludeCategories=<Category>` to **both** the install
-and test commands; the value is compiled into the app's runtime configuration.
-`--filter` is not supported. When invoking the instrumentation directly,
-`-e include <Category>`, `-e exclude <Category>` and `-e noexclusions true` are
-also accepted.
-
-The instrumentation runner lives in `tests/TestRunner.MSTest.Android`.
 `MSTest.SourceGeneration` registers the tests at build time, so test assemblies
 don't need to be rooted for test discovery. Use `TrimmerRoots.xml` only for code
 the tests reach via reflection, Java, or native code.
