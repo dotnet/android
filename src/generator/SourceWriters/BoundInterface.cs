@@ -75,7 +75,7 @@ namespace generator.SourceWriters
 				return;
 
 			if (!iface.AssemblyQualifiedName.Contains ('/')) {
-				if (iface.Methods.Any (m => m.CanHaveStringOverload) || iface.Methods.Any (m => m.Asyncify))
+				if (iface.Methods.Any (m => m.CanHaveStringOverload) || iface.Methods.Any (m => m.Asyncify || (!m.IsStatic && m.KotlinSuspendReturnType != null)))
 					post_sibling_types.Add (new InterfaceExtensionsClass (iface, null, opt));
 			}
 
@@ -249,6 +249,9 @@ namespace generator.SourceWriters
 
 				if (method.Asyncify)
 					Methods.Add (new MethodAsyncWrapper (method, opt));
+
+				if (method.IsStatic && KotlinSuspendMethodWrapper.ShouldGenerate (method, iface))
+					Methods.Add (new KotlinSuspendMethodWrapper (method, opt));
 			}
 		}
 

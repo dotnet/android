@@ -10693,3 +10693,6 @@ virtual Javax.Net.Ssl.SSLParameters.SetNamedGroups(string![]? namedGroups) -> vo
 *REMOVED*override Android.Graphics.ColorValueMarshaler.CreateReturnValueFromManagedExpression(Java.Interop.Expressions.JniValueMarshalerContext! context, System.Linq.Expressions.ParameterExpression! sourceValue) -> System.Linq.Expressions.Expression!
 *REMOVED*override Android.Graphics.ColorValueMarshaler.DestroyGenericArgumentState(Android.Graphics.Color value, ref Java.Interop.JniValueMarshalerState state, System.Reflection.ParameterAttributes synchronize) -> void
 *REMOVED*override Android.Graphics.ColorValueMarshaler.MarshalType.get -> System.Type!
+Android.Runtime.KotlinCoroutines
+static Android.Runtime.KotlinCoroutines.InvokeAsync(System.Func<Android.Runtime.IJavaObject!, Java.Lang.Object?>! invoke, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
+static Android.Runtime.KotlinCoroutines.InvokeAsync<T>(System.Func<Android.Runtime.IJavaObject!, Java.Lang.Object?>! invoke, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<T>!

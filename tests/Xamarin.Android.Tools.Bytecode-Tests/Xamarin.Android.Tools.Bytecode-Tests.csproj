@@ -37,6 +37,7 @@
     <EmbeddedResource Include="$(IntermediateOutputPath)kotlin-gradle\classes\xat\bytecode\tests\MyDp.class" LogicalName="Xamarin.Android.Tools.BytecodeTests.kotlin-gradle.MyDp.class" />
     <EmbeddedResource Include="$(IntermediateOutputPath)kotlin-gradle\classes\xat\bytecode\tests\Nullability.class" LogicalName="Xamarin.Android.Tools.BytecodeTests.kotlin-gradle.Nullability.class" />
     <EmbeddedResource Include="$(IntermediateOutputPath)kotlin-gradle\classes\xat\bytecode\tests\AmbiguousOverloads.class" LogicalName="Xamarin.Android.Tools.BytecodeTests.kotlin-gradle.AmbiguousOverloads.class" />
+    <EmbeddedResource Include="$(IntermediateOutputPath)kotlin-gradle\classes\xat\bytecode\tests\SuspendFunctions.class" LogicalName="Xamarin.Android.Tools.BytecodeTests.kotlin-gradle.SuspendFunctions.class" />
 
     <EmbeddedResource Include="$(IntermediateOutputPath)classes\com\xamarin\NotNullClass.class" />
     <EmbeddedResource Include="$(IntermediateOutputPath)classes\com\xamarin\IJavaInterface.class" />

@@ -82,7 +82,7 @@ namespace generator.SourceWriters
 			// Sibling classes
 			if (!klass.AssemblyQualifiedName.Contains ('/')) {
 				foreach (InterfaceExtensionInfo nestedIface in klass.GetNestedInterfaceTypes ())
-					if (nestedIface.Type.Methods.Any (m => m.CanHaveStringOverload) || nestedIface.Type.Methods.Any (m => m.Asyncify))
+					if (nestedIface.Type.Methods.Any (m => m.CanHaveStringOverload) || nestedIface.Type.Methods.Any (m => m.Asyncify || (!m.IsStatic && m.KotlinSuspendReturnType != null)))
 						sibling_types.Add (new InterfaceExtensionsClass (nestedIface.Type, nestedIface.DeclaringType, opt));
 			}
 
@@ -308,6 +308,9 @@ namespace generator.SourceWriters
 
 			if (method.Asyncify)
 				Methods.Add (new MethodAsyncWrapper (method, opt));
+
+			if (KotlinSuspendMethodWrapper.ShouldGenerate (method, klass))
+				Methods.Add (new KotlinSuspendMethodWrapper (method, opt));
 		}
 
 		void AddMethod (GenBase klass, Method method, CodeGenerationOptions opt)
@@ -325,6 +328,9 @@ namespace generator.SourceWriters
 
 			if (method.Asyncify)
 				Methods.Add (new MethodAsyncWrapper (method, opt));
+
+			if (KotlinSuspendMethodWrapper.ShouldGenerate (method, klass))
+				Methods.Add (new KotlinSuspendMethodWrapper (method, opt));
 		}
 
 		void AddProperties (ClassGen klass, CodeGenerationOptions opt)
