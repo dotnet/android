@@ -129,11 +129,11 @@ Host test projects are MSTest apps on Microsoft.Testing.Platform; the
 repository `global.json` selects it for `dotnet test`. Run a built test
 assembly with `dotnet-local.cmd`:
 
-    dotnet-local.cmd test bin\TestRelease\net11.0\Xamarin.Android.Build.Tests.dll
+    dotnet-local.cmd test --test-modules bin\TestRelease\net11.0\Xamarin.Android.Build.Tests.dll
 
 List the tests with `--list-tests`, and select tests with `--filter`:
 
-    dotnet-local.cmd test bin\TestRelease\net11.0\Xamarin.Android.Build.Tests.dll --filter "FullyQualifiedName~Xamarin.Android.Build.Tests.Aapt2Tests.Aapt2Compile"
+    dotnet-local.cmd test --test-modules bin\TestRelease\net11.0\Xamarin.Android.Build.Tests.dll --filter "FullyQualifiedName~Xamarin.Android.Build.Tests.Aapt2Tests.Aapt2Compile"
 
 ## Running On-Device Tests
 
