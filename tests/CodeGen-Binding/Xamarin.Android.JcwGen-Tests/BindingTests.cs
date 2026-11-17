@@ -5,7 +5,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.Reflection.Metadata;
 using System.Reflection.PortableExecutable;
 
-using NUnit.Framework;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 using Android.Graphics;
 using Android.Runtime;
@@ -14,37 +14,38 @@ using Com.Xamarin.Android;
 
 namespace Xamarin.Android.JcwGenTests {
 
-	[TestFixture]
+	[TestClass]
 	public class BindingTests {
 
 		const string JniReferenceLeakCategory = "JniReferenceLeak";
+		public TestContext? TestContext { get; set; }
 
-		[Test]
+		[TestMethod]
 		public void TestTimingCreateTimingIsCorrectType ()
 		{
 			var t = Com.Xamarin.Android.Timing.CreateTiming ();
 			Assert.IsTrue (t is Com.Xamarin.Android.Timing);
 		}
 
-		[Test]
+		[TestMethod]
 		public void TestResourceId ()
 		{
 			Assert.AreEqual (Resource.Id.action_settings, Com.Example.Javalib.MainActivity.ActionSettings);
 		}
 
-		[Test]
+		[TestMethod]
 		public void TestNativeLibDllImport ()
 		{
 			Assert.AreEqual (TestNativeLib.Binding.SampleFunction (), 0xf00);
 		}
 
-		[Test]
+		[TestMethod]
 		public void TestNativeLibDllImportInEmbeddedArchive ()
 		{
 			Assert.AreEqual (TestNativeLib.Binding.SampleFunction2 (), 0xf200);
 		}
 
-		[Test]
+		[TestMethod]
 		public void NamespaceTransforms ()
 		{
 			// Really the only test here is that the type exists in the binding.
@@ -53,7 +54,7 @@ namespace Xamarin.Android.JcwGenTests {
 			Assert.IsNotNull (t);
 		}
 
-		[Test]
+		[TestMethod]
 		public void TestBxc4288 ()
 		{
 			var t = new Com.Xamarin.Android.Bxc4288 ();
@@ -61,14 +62,14 @@ namespace Xamarin.Android.JcwGenTests {
 			Assert.AreEqual (Color.Gray, c);
 		}
 
-		[Test]
+		[TestMethod]
 		public void Hello ()
 		{
 			using (var v = new HélloÊncodingIssues ()) {
 			}
 		}
 
-		[Test]
+		[TestMethod]
 		public void EnsureTypesAreBound ()
 		{
 #pragma warning disable 0219
@@ -76,7 +77,7 @@ namespace Xamarin.Android.JcwGenTests {
 #pragma warning restore 0219
 		}
 
-		[Test]
+		[TestMethod]
 		public void Arrays ()
 		{
 			using (var dh = new Com.Xamarin.Android.DataHandler ()) {
@@ -98,11 +99,12 @@ namespace Xamarin.Android.JcwGenTests {
 			}
 		}
 
-		[Test]
-		[Explicit ("Run only in isolated JniReferenceLeak test runs.")]
-		[Category (JniReferenceLeakCategory)]
+		[TestMethod]
+		[TestCategory (JniReferenceLeakCategory)]
 		public void JavaSideActivation ()
 		{
+			if (!Xamarin.Android.UnitTests.MSTestInstrumentation.IsCategoryExplicitlyIncluded (JniReferenceLeakCategory))
+				Assert.Inconclusive ("Run only in isolated JniReferenceLeak test runs.");
 			using (var c = Java.Lang.Class.FromType (typeof (ConstructorTest))) {
 				// `CallMethodFromCtor`'s peer type and JCW registration each take a one-time
 				// GREF on first instantiation. Construct and release one instance first so
@@ -124,9 +126,10 @@ namespace Xamarin.Android.JcwGenTests {
 			}
 		}
 
-		static void AssertNoSustainedGlobalReferenceGrowth (Action action)
+		void AssertNoSustainedGlobalReferenceGrowth (Action action)
 		{
-			Java.InteropTests.JniReferenceLeakMeasurement.AssertNoSustainedGlobalReferenceGrowth (action);
+			var context = TestContext ?? throw new InvalidOperationException ("The runner did not initialize TestContext.");
+			Java.InteropTests.JniReferenceLeakMeasurement.AssertNoSustainedGlobalReferenceGrowth (action, context.WriteLine);
 		}
 
 		//
@@ -172,7 +175,7 @@ namespace Xamarin.Android.JcwGenTests {
 		//  Aside: in Bug #17630 terms, CallNonvirtualBase is ContextWrapper,
 		//  CallNonvirtualDerived is Activity, and CallNonvirtualDerived2 is
 		//  an Android Callable Wrapper/user subclass
-		[Test]
+		[TestMethod]
 		public void VirtualMethodBinding ()
 		{
 			using (var d = new CallNonvirtualDerived ()) {
@@ -195,7 +198,7 @@ namespace Xamarin.Android.JcwGenTests {
 			}
 		}
 
-		[Test]
+		[TestMethod]
 		public void LegacyVirtualMethodBinding ()
 		{
 			using (var b = new LegacyThresholdBinding.LegacyThresholdBase ()) {
@@ -214,7 +217,7 @@ namespace Xamarin.Android.JcwGenTests {
 			}
 		}
 
-		[Test]
+		[TestMethod]
 		public void LegacyCustomThresholdTargetsBaseClass ()
 		{
 			using (var d = new LegacyCustomThresholdDerived ()) {
@@ -224,7 +227,7 @@ namespace Xamarin.Android.JcwGenTests {
 			}
 		}
 
-		[Test]
+		[TestMethod]
 		public void LegacyThrowableVirtualMethodBinding ()
 		{
 			using (var b = new LegacyThresholdBinding.LegacyThresholdThrowable ()) {
@@ -243,7 +246,7 @@ namespace Xamarin.Android.JcwGenTests {
 			}
 		}
 
-		[Test]
+		[TestMethod]
 		public void PrecompiledConsumerReferencesRemovedConcreteThresholdGetters ()
 		{
 			using var stream = typeof (BindingTests).Assembly.GetManifestResourceStream ("Xamarin.Android.JcwGenTests.LegacyThresholdConsumer.dll")
@@ -262,7 +265,7 @@ namespace Xamarin.Android.JcwGenTests {
 					getterNames.Add (metadata.GetString (member.Name));
 			}
 
-			Assert.That (getterNames, Is.SupersetOf (new [] { "get_ThresholdType", "get_ThresholdClass" }));
+			CollectionAssert.IsSubsetOf (new [] { "get_ThresholdType", "get_ThresholdClass" }, getterNames.ToArray ());
 			const BindingFlags declaredInstanceGetters = BindingFlags.DeclaredOnly | BindingFlags.Instance | BindingFlags.NonPublic;
 			Assert.IsNull (typeof (global::Android.App.Activity).GetMethod ("get_ThresholdType", declaredInstanceGetters));
 			Assert.IsNull (typeof (global::Android.App.Activity).GetMethod ("get_ThresholdClass", declaredInstanceGetters));
@@ -271,7 +274,7 @@ namespace Xamarin.Android.JcwGenTests {
 		// A binding generated *after* the threshold overrides were removed, deriving from a
 		// binding generated before. The derived type inherits the base's `ThresholdType`, so
 		// honoring it would dispatch nonvirtually to the Java base and skip `ModernThresholdDerived.method()`.
-		[Test]
+		[TestMethod]
 		public void ModernDerivedFromLegacyBinding ()
 		{
 			using (var d = new ModernThresholdDerived ()) {
@@ -288,7 +291,7 @@ namespace Xamarin.Android.JcwGenTests {
 			}
 		}
 
-		[Test]
+		[TestMethod]
 		[RequiresUnreferencedCode ("Tests trimming unsafe features")]
 		public void JavaAbstractMethodTest ()
 		{
@@ -315,14 +318,14 @@ namespace Xamarin.Android.JcwGenTests {
 		}
 
 		// Context https://bugzilla.xamarin.com/show_bug.cgi?id=36036
-		[Test]
+		[TestMethod]
 		public void NestedClassTest ()
 		{
 			using (var v = new Default.A.B ()) {
 			}
 		}
 
-		[Test]
+		[TestMethod]
 		public void BindingInterractionTest ()
 		{
 			var e = new Com.Xamarin.Android.Bxc37706Throwable ();
@@ -330,7 +333,7 @@ namespace Xamarin.Android.JcwGenTests {
 			Assert.IsTrue (e.GetMessageInvoked);
 		}
 
-		[Test]
+		[TestMethod]
 		public void GenericBoolListMarshaling ()
 		{
 			var list = new List<bool[]> {
@@ -339,10 +342,10 @@ namespace Xamarin.Android.JcwGenTests {
 			};
 
 			var retval = Com.Xamarin.Android.Gxa4098.GenericBoolListMarshaling (list);
-			Assert.AreEqual (list, retval);
+			Assert.IsTrue (global::Java.Interop.JniMarshal.RecursiveEquals (list, retval));
 		}
 
-		[Test]
+		[TestMethod]
 		public void GenericByteListMarshaling ()
 		{
 			var list = new List<byte[]> {
@@ -351,10 +354,10 @@ namespace Xamarin.Android.JcwGenTests {
 			};
 
 			var retval = Com.Xamarin.Android.Gxa4098.GenericByteListMarshaling (list);
-			Assert.AreEqual (list, retval);
+			Assert.IsTrue (global::Java.Interop.JniMarshal.RecursiveEquals (list, retval));
 		}
 
-		[Test]
+		[TestMethod]
 		public void GenericCharListMarshaling ()
 		{
 			var list = new List<char[]> {
@@ -363,10 +366,10 @@ namespace Xamarin.Android.JcwGenTests {
 			};
 
 			var retval = Com.Xamarin.Android.Gxa4098.GenericCharListMarshaling (list);
-			Assert.AreEqual (list, retval);
+			Assert.IsTrue (global::Java.Interop.JniMarshal.RecursiveEquals (list, retval));
 		}
 
-		[Test]
+		[TestMethod]
 		public void GenericShortListMarshaling ()
 		{
 			var list = new List<short[]> {
@@ -375,10 +378,10 @@ namespace Xamarin.Android.JcwGenTests {
 			};
 
 			var retval = Com.Xamarin.Android.Gxa4098.GenericShortListMarshaling (list);
-			Assert.AreEqual (list, retval);
+			Assert.IsTrue (global::Java.Interop.JniMarshal.RecursiveEquals (list, retval));
 		}
 
-		[Test]
+		[TestMethod]
 		public void GenericIntListMarshaling ()
 		{
 			var list = new List<int[]> {
@@ -387,10 +390,10 @@ namespace Xamarin.Android.JcwGenTests {
 			};
 
 			var retval = Com.Xamarin.Android.Gxa4098.GenericIntListMarshaling (list);
-			Assert.AreEqual (list, retval);
+			Assert.IsTrue (global::Java.Interop.JniMarshal.RecursiveEquals (list, retval));
 		}
 
-		[Test]
+		[TestMethod]
 		public void GenericLongListMarshaling ()
 		{
 			var list = new List<long[]> {
@@ -399,10 +402,10 @@ namespace Xamarin.Android.JcwGenTests {
 			};
 
 			var retval = Com.Xamarin.Android.Gxa4098.GenericLongListMarshaling (list);
-			Assert.AreEqual (list, retval);
+			Assert.IsTrue (global::Java.Interop.JniMarshal.RecursiveEquals (list, retval));
 		}
 
-		[Test]
+		[TestMethod]
 		public void GenericFloatListMarshaling ()
 		{
 			var list = new List<float[]> {
@@ -411,10 +414,10 @@ namespace Xamarin.Android.JcwGenTests {
 			};
 
 			var retval = Com.Xamarin.Android.Gxa4098.GenericFloatListMarshaling (list);
-			Assert.AreEqual (list, retval);
+			Assert.IsTrue (global::Java.Interop.JniMarshal.RecursiveEquals (list, retval));
 		}
 
-		[Test]
+		[TestMethod]
 		public void GenericDoubleListMarshaling ()
 		{
 			var list = new List<double[]> {
@@ -423,10 +426,10 @@ namespace Xamarin.Android.JcwGenTests {
 			};
 
 			var retval = Com.Xamarin.Android.Gxa4098.GenericDoubleListMarshaling (list);
-			Assert.AreEqual (list, retval);
+			Assert.IsTrue (global::Java.Interop.JniMarshal.RecursiveEquals (list, retval));
 		}
 
-		[Test]
+		[TestMethod]
 		public void GenericStringListMarshaling()
 		{
 			var list = new List<string[]> {
@@ -435,10 +438,10 @@ namespace Xamarin.Android.JcwGenTests {
 			};
 
 			var retval = Com.Xamarin.Android.Gxa4098.GenericStringListMarshaling (list);
-			Assert.AreEqual(list, retval);
+			Assert.IsTrue (global::Java.Interop.JniMarshal.RecursiveEquals (list, retval));
 		}
 
-		[Test]
+		[TestMethod]
 		public void GenericObjectListMarshaling ()
 		{
 			var list = new List<EmptyOverrideClass []> {
@@ -447,10 +450,10 @@ namespace Xamarin.Android.JcwGenTests {
 			};
 
 			var retval = Com.Xamarin.Android.Gxa4098.GenericObjectListMarshaling (list);
-			Assert.AreEqual (list, retval);
+			Assert.IsTrue (global::Java.Interop.JniMarshal.RecursiveEquals (list, retval));
 		}
 
-		[Test]
+		[TestMethod]
 		public void HigherOrderArrayMarshaling ()
 		{
 			var list = new List<int[][]> {
@@ -459,7 +462,7 @@ namespace Xamarin.Android.JcwGenTests {
 			};
 
 			var retval = Com.Xamarin.Android.Gxa4098.GenericIntIntListMarshaling (list);
-			Assert.AreEqual (list, retval);
+			Assert.IsTrue (global::Java.Interop.JniMarshal.RecursiveEquals (list, retval));
 		}
 	}
 

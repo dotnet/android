@@ -8,17 +8,17 @@ using Android.Runtime;
 
 using Java.Interop;
 
-using NUnit.Framework;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Java.InteropTests
 {
-	[TestFixture]
-	[NonParallelizable]
-	[Category ("JNIObjectArray")]
+	[TestClass]
+	[DoNotParallelize]
+	[TestCategory ("JNIObjectArray")]
 	public class PeerIdentityTests
 	{
-		[Test]
-		[Category ("PeerIdentityRepro")]
+		[TestMethod]
+		[TestCategory ("PeerIdentityRepro")]
 		public void GetObject_ReentrantActivation_PreservesRoundtripIdentity ()
 		{
 			var manager = JniRuntime.CurrentRuntime.ValueManager;
@@ -69,7 +69,7 @@ namespace Java.InteropTests
 			}
 		}
 
-		[Test]
+		[TestMethod]
 		public void GetObject_NewPeer_RemainsRegisteredAndUsable ()
 		{
 			var handle = JNIEnv.CreateInstance (ReentrantLookupPeer.JniName, "()V");
@@ -85,7 +85,7 @@ namespace Java.InteropTests
 			}
 		}
 
-		[Test]
+		[TestMethod]
 		public void GetObject_IncompatibleRegisteredPeer_PreservesRequestedType ()
 		{
 			var handle = JNIEnv.CreateInstance (ReentrantLookupPeer.JniName, "()V");
@@ -103,9 +103,10 @@ namespace Java.InteropTests
 			}
 		}
 
-		[TestCase (false)]
-		[TestCase (true)]
-		[Category ("PeerManagerLifetime")]
+		[TestMethod]
+		[DataRow (false)]
+		[DataRow (true)]
+		[TestCategory ("PeerManagerLifetime")]
 		public void PeekPeer_DisposedManager_Throws (bool registered)
 		{
 			// Create an isolated manager without disposing the process-wide manager.
@@ -120,8 +121,8 @@ namespace Java.InteropTests
 
 				manager.Dispose ();
 
-				Assert.Throws<ObjectDisposedException> (() => manager.PeekPeer (reference));
-				Assert.Throws<ObjectDisposedException> (() => manager.PeekPeer (default));
+				Assert.ThrowsExactly<ObjectDisposedException> (() => manager.PeekPeer (reference));
+				Assert.ThrowsExactly<ObjectDisposedException> (() => manager.PeekPeer (default));
 				Assert.AreSame (peer, Java.Lang.Object.GetObject<Java.Lang.Object> (peer.Handle, JniHandleOwnership.DoNotTransfer),
 					"Disposing the isolated manager must not affect the active runtime.");
 			} finally {

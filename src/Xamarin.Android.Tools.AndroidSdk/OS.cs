@@ -22,7 +22,7 @@ namespace Xamarin.Android.Tools
 		static OS ()
 		{
 			IsWindows = Path.DirectorySeparatorChar == '\\';
-			IsMac = !IsWindows && IsRunningOnMac ();
+			IsMac = !IsWindows && RuntimeInformation.IsOSPlatform (OSPlatform.OSX);
 			IsLinux = !IsWindows && !IsMac;
 
 			if (IsWindows)
@@ -32,38 +32,6 @@ namespace Xamarin.Android.Tools
 			if (IsLinux)
 				NativeLibraryFormat = "lib{0}.so";
 		}
-
-		//From Managed.Windows.Forms/XplatUI
-		static bool IsRunningOnMac ()
-		{
-			IntPtr buf = IntPtr.Zero;
-			try {
-				buf = Marshal.AllocHGlobal (8192);
-				// This is a hacktastic way of getting sysname from uname ()
-				// SAFETY: The live 8192-byte allocation exceeds the platform's utsname size.
-				if (unsafe (uname (buf)) == 0) {
-					// SAFETY: Successful uname supplies a NUL-terminated sysname in the live allocation.
-					string? os = unsafe (System.Runtime.InteropServices.Marshal.PtrToStringAnsi (buf));
-					if (os == "Darwin")
-						return true;
-				}
-			} catch {
-			} finally {
-				if (buf != IntPtr.Zero) {
-					unsafe {
-						// SAFETY: This finally block releases our still-live allocation exactly once.
-						System.Runtime.InteropServices.Marshal.FreeHGlobal (buf);
-					}
-				}
-			}
-			return false;
-		}
-
-		/// <safety>
-		/// The buffer must be writable and large enough for the platform's utsname structure.
-		/// </safety>
-		[DllImport ("libc")]
-		static unsafe extern int uname (IntPtr buf);
 
 		static string GetProgramFilesX86 ()
 		{
@@ -210,7 +178,7 @@ namespace Xamarin.Android.Tools
 		static safe extern int RegCloseKey (UIntPtr hKey);
 
 		internal static bool CheckRegistryKeyForExecutable (UIntPtr key, string subkey, string valueName, RegistryEx.Wow64 wow64, string subdir, string exe,
-			System.Collections.Generic.IDictionary<string, string>? environmentVariables = null)
+			System.Collections.Generic.IDictionary<string, string>? environmentVariables = null, string? workingDirectory = null)
 		{
 			try {
 				var path = AndroidSdkBase.NullIfEmpty (RegistryEx.GetValueString (key, subkey, valueName, wow64));
@@ -219,7 +187,7 @@ namespace Xamarin.Android.Tools
 					return false;
 				}
 
-				if (!ProcessUtils.FindExecutablesInDirectory (Path.Combine (path, subdir), exe, environmentVariables).Any ()) {
+				if (!ProcessUtils.FindExecutablesInDirectory (Path.Combine (path, subdir), exe, environmentVariables, workingDirectory).Any ()) {
 					return false;
 				}
 

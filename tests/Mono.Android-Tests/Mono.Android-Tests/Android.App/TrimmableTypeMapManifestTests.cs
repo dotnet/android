@@ -6,18 +6,18 @@ using Android.Content;
 
 using Mono.Android_Test.Library;
 
-using NUnit.Framework;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Android.AppTests
 {
-	[TestFixture]
-	[Category ("TrimmableTypeMapRuntimeCoverage")]
+	[TestClass]
+	[TestCategory ("TrimmableTypeMapRuntimeCoverage")]
 	public class TrimmableTypeMapManifestTests
 	{
 		// A type reference here would root the library Activity independently of the manifest.
 		const string ActivityName = "net.dot.android.test.TrimmableManifestOnlyActivity";
 
-		[Test]
+		[TestMethod]
 		public void ManifestOnlyLibraryActivity_SurvivesTrimmingAndRunsManagedOnCreate ()
 		{
 			Interlocked.Exchange (ref TrimmableManifestActivityState.OnCreateCount, 0);

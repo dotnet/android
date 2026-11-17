@@ -10,14 +10,14 @@ using Android.Widget;
 
 using Java.Interop;
 
-using NUnit.Framework;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Java.LangTests
 {
-	[TestFixture]
+	[TestClass]
 	public class ObjectTest
 	{
-		[Test]
+		[TestMethod]
 		public void GetObject_ReturnsMostDerivedType ()
 		{
 			IntPtr lref = JNIEnv.NewString ("Hello, world!");
@@ -31,7 +31,7 @@ namespace Java.LangTests
 			}
 		}
 
-		[Test]
+		[TestMethod]
 		public void JavaConvert_FromJavaObject_ShouldNotBreakExistingReferences ()
 		{
 			Func<IJavaObject, int> toInt = JavaConvert.FromJavaObject<int>;
@@ -50,7 +50,7 @@ namespace Java.LangTests
 			}
 		}
 
-		[Test]
+		[TestMethod]
 		public void JnienvCreateInstance_RegistersMultipleInstances ()
 		{
 			using (var adapter = new CreateInstance_OverrideAbsListView_Adapter (Application.Context)) {
@@ -63,7 +63,7 @@ namespace Java.LangTests
 			}
 		}
 
-		[Test]
+		[TestMethod]
 		public void NestedDisposeInvocations ()
 		{
 			var value = new MyDisposableObject ();
@@ -73,11 +73,11 @@ namespace Java.LangTests
 
 		// TODO: fix on CoreCLR once new managed type maps are implemented. Currently fails with
 		//       java/lang/Object is typemap'd to Java.InteropTests.JavaLangRemappingTestObject, not Java.Lang.Object, Mono.Android!
-		[Test]
+		[TestMethod]
 		public void java_lang_Object_Is_Java_Lang_Object ()
 		{
 			if (AppContext.TryGetSwitch ("Microsoft.Android.Runtime.RuntimeFeature.IsCoreClrRuntime", out bool isCoreCLR) && isCoreCLR) {
-				Assert.Ignore ("Currently broken on CoreCLR");
+				Assert.Inconclusive ("Currently broken on CoreCLR");
 				return;
 			}
 

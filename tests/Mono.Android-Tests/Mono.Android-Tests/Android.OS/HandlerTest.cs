@@ -2,14 +2,14 @@ using System;
 using System.Threading;
 using Android.OS;
 
-using NUnit.Framework;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Xamarin.Android.RuntimeTests {
 
-	[TestFixture]
+	[TestClass]
 	public class HandlerTest {
 
-		[Test]
+		[TestMethod]
 		public void RemoveDisposedInstance ()
 		{
       using (var t = new HandlerThread ("RemoveDisposedInstance")) {
