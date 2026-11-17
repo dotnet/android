@@ -231,6 +231,7 @@ Either change the value in the AndroidManifest.xml to match the $(SupportedOSPla
 + [XA4263](xa4263.md): The exported member '{member}' has unsupported signature type '{type}'. Use a Java peer type, a supported managed-to-Java mapping, or [ExportParameter].
 + [XA4264](xa4264.md): No longer emitted by current SDKs.
 + [XA4266](xa4266.md): Assembly '{assembly}' has different Java peer callback metadata across runtime-specific implementations.
++ [XA4268](xa4268.md): The Kotlin metadata for Java method '{method}' matches more than one Kotlin function: {functions}. The Kotlin fixups for this method are skipped.
 + XA4300: No longer emitted by current SDKs.
 + [XA4301](xa4301.md): Apk already contains the item `xxx`.
 + [XA4302](xa4302.md): Unhandled exception merging \`AndroidManifest.xml\`: {ex}
