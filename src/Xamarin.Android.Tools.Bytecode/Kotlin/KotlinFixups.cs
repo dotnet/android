@@ -44,8 +44,10 @@ namespace Xamarin.Android.Tools.Bytecode
 						if (class_metadata.Constructors == null)
 							continue;
 
-						foreach (var con in class_metadata.Constructors)
-							FixupConstructor (FindJavaConstructor (class_metadata, con, c), con);
+						foreach (var con in class_metadata.Constructors) {
+							var java_constructors = FindJavaConstructors (class_metadata, con, c);
+							FixupConstructor (java_constructors.FirstOrDefault (), con, java_constructors.Count == 1);
+						}
 					}
 
 					// Do fixups valid for both classes and modules
@@ -280,7 +282,7 @@ namespace Xamarin.Android.Tools.Bytecode
 				FixupExtensionMethod (method);
 		}
 
-		static void FixupConstructor (MethodInfo? method, KotlinConstructor metadata)
+		static void FixupConstructor (MethodInfo? method, KotlinConstructor metadata, bool isOnlyMatch)
 		{
 			if (method is null)
 				return;
@@ -290,6 +292,11 @@ namespace Xamarin.Android.Tools.Bytecode
 				Log.Debug ($"Kotlin: Hiding internal constructor {method.DeclaringType?.ThisClass.Name.Value} - {metadata.GetSignature ()}");
 				method.AccessFlags = SetVisibility (method.AccessFlags, MethodAccessFlags.Internal);
 			}
+
+			// Nullability is only safe when one Java constructor matches
+			// (e.g. a Java `Object` parameter matches any Kotlin type)
+			if (!isOnlyMatch)
+				return;
 
 			var java_parameters = method.GetFilteredParameters ();
 			var kotlin_parameters = metadata.ValueParameters;
@@ -450,7 +457,8 @@ namespace Xamarin.Android.Tools.Bytecode
 			if (getter != null) {
 				getter.KotlinReturnType = GetKotlinType (getter.ReturnType.TypeSignature, metadata.ReturnType?.ClassName);
 				getter.KotlinInlineClassReturnJniType = GetInlineClassJniType (metadata.ReturnType?.ClassName, getter.ReturnType.TypeSignature, inlineClasses);
-				getter.KotlinReturnNotNull = IsNotNullReference (metadata.ReturnType, getter.ReturnType.BinaryName);
+				if (IsExactAccessor (getter, metadata.GetterJvmName, metadata))
+					getter.KotlinReturnNotNull = IsNotNullReference (metadata.ReturnType, getter.ReturnType.BinaryName);
 			}
 
 			if (setter != null) {
@@ -464,9 +472,16 @@ namespace Xamarin.Android.Tools.Bytecode
 				// Handle erasure of Kotlin unsigned types
 				setter_parameter.KotlinType = GetKotlinType (setter_parameter.Type.TypeSignature, metadata.ReturnType?.ClassName);
 				setter_parameter.KotlinInlineClassJniType = GetInlineClassJniType (metadata.ReturnType?.ClassName, setter_parameter.Type.TypeSignature, inlineClasses);
-				setter_parameter.KotlinNotNull = IsNotNullReference (metadata.ReturnType, setter_parameter.Type.BinaryName);
+				if (IsExactAccessor (setter, metadata.SetterJvmName, metadata))
+					setter_parameter.KotlinNotNull = IsNotNullReference (metadata.ReturnType, setter_parameter.Type.BinaryName);
 			}
 		}
+
+		// FindJavaPropertyGetter/Setter match by name pattern only, so an unrelated
+		// `fun getX(): String?` can match. An extension property accessor also has
+		// a receiver parameter, so a match without one is the wrong method.
+		static bool IsExactAccessor (MethodInfo method, string? jvmName, KotlinProperty metadata)
+			=> metadata.ReceiverType is null && method.Name == jvmName;
 
 		static void FixupField (FieldInfo? field, KotlinProperty metadata)
 		{
@@ -486,7 +501,7 @@ namespace Xamarin.Android.Tools.Bytecode
 			field.KotlinType = GetKotlinType (field.Descriptor, metadata.ReturnType?.ClassName);
 
 			// A `lateinit` field is null until it is set
-			if (!metadata.Flags.HasFlag (KotlinPropertyFlags.IsLateInit))
+			if (field.Name == metadata.FieldJvmName && !metadata.Flags.HasFlag (KotlinPropertyFlags.IsLateInit))
 				field.KotlinNotNull = IsNotNullReference (metadata.ReturnType, field.Descriptor);
 		}
 
@@ -507,17 +522,12 @@ namespace Xamarin.Android.Tools.Bytecode
 			return KotlinUtilities.ConvertKotlinTypeSignature (type) == jvmDescriptor;
 		}
 
-		static MethodInfo? FindJavaConstructor (KotlinClass kotlinClass, KotlinConstructor constructor, ClassFile klass)
+		static List<MethodInfo> FindJavaConstructors (KotlinClass kotlinClass, KotlinConstructor constructor, ClassFile klass)
 		{
 			var all_constructors = klass.Methods.Where (method => method.Name == "<init>" || method.Name == "<clinit>");
 			var possible_constructors = all_constructors.Where (method => method.GetFilteredParameters ().Length == constructor.ValueParameters?.Count);
 
-			foreach (var method in possible_constructors) {
-				if (ParametersMatch (kotlinClass, method, constructor.ValueParameters!))
-					return method;
-			}
-
-			return null;
+			return possible_constructors.Where (method => ParametersMatch (kotlinClass, method, constructor.ValueParameters ?? [])).ToList ();
 		}
 
 		static KotlinFunction? FindKotlinFunctionMetadata (KotlinFile? kotlinFile, MethodInfo javaMethod)

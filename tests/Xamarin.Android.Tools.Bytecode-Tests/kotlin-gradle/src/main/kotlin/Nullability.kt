@@ -28,6 +28,23 @@ class Nullability(val name: String, val nickname: String?) {
     suspend fun fetch(text: String): String = text
 
     val platform = System.getProperty("x")
+
+    // Java `Object` matches any Kotlin type, so two Java constructors match
+    // the primary constructor
+    constructor(name: String?, other: Any) : this(name ?: "", null)
+
+    // Unrelated methods with the same names as property accessors and fields
+    @get:JvmName("fetchX")
+    val x: String = ""
+    fun getX(): String? = null
+
+    val String.label: String get() = this
+    fun getLabel(): String? = null
+    @JvmField
+    val label: String? = null
+
+    val isReady: String = ""
+    fun getIsReady(): String? = null
 }
 
 @JvmInline

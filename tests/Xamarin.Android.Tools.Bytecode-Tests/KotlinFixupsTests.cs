@@ -483,10 +483,14 @@ namespace Xamarin.Android.Tools.BytecodeTests
 			string ReturnNotNull (XElement e) => e.Attribute ("return-not-null")?.Value;
 			string NotNull (XElement e) => e.Attribute ("not-null")?.Value;
 
-			// Constructor
-			var ctor = xml.Elements ("constructor").Single ().Elements ("parameter").ToList ();
-			Assert.AreEqual ("true", NotNull (ctor [0]));
-			Assert.IsNull (NotNull (ctor [1]));
+			// Constructors
+			List<XElement> CtorParameters (string jni) => xml.Elements ("constructor").Single (e => e.Attribute ("jni-signature").Value == jni).Elements ("parameter").ToList ();
+			var primary = CtorParameters ("(Ljava/lang/String;Ljava/lang/String;)V");
+			Assert.IsNull (NotNull (primary [0]), "Two Java constructors match the primary constructor.");
+			Assert.IsNull (NotNull (primary [1]));
+			var secondary = CtorParameters ("(Ljava/lang/String;Ljava/lang/Object;)V");
+			Assert.IsNull (NotNull (secondary [0]));
+			Assert.AreEqual ("true", NotNull (secondary [1]));
 
 			// Properties
 			Assert.AreEqual ("true", ReturnNotNull (Method ("getName")));
@@ -529,6 +533,12 @@ namespace Xamarin.Android.Tools.BytecodeTests
 			var fetch = Method ("fetch");
 			Assert.IsNull (ReturnNotNull (fetch));
 			Assert.AreEqual ("true", NotNull (fetch.Elements ("parameter").First ()));
+
+			// Unrelated methods and fields with the same names as property accessors
+			Assert.IsNull (ReturnNotNull (Method ("getX")));
+			Assert.IsNull (ReturnNotNull (xml.Elements ("method").Single (e => e.Attribute ("name").Value == "getLabel" && !e.Elements ("parameter").Any ())));
+			Assert.IsNull (NotNull (Field ("label")));
+			Assert.IsNull (ReturnNotNull (Method ("getIsReady")));
 		}
 
 		static void RemoveInvisibleAnnotations (AttributeCollection attributes)
