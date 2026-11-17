@@ -211,18 +211,16 @@ For `Xamarin.Android.JcwGen-Tests`, use the same pattern from `tests/CodeGen-Bin
 )
 ```
 
-For Release full-trim validation on API 35 arm64, the accepted exact matrices
-are Mono CoreCLR 1,043 rows (1,035 passed/eight skipped), Mono actual NativeAOT
-980 rows (972 passed/eight skipped), and JCW CoreCLR 47 rows (46 passed/one
-skipped). Check identities, category sets, duplicate multiplicity, native
-UID/TRX agreement, and installed APK runtime contents, not totals or flags
-alone. Generated descriptors retain bounded reflection fallback.
+Case counts change whenever tests are added on `main`, so there is no fixed
+expected total. To validate a migration, compare the MSTest run against the
+original NUnit runner on the **same source commit**: test identities, category
+sets and duplicate (data-row) multiplicity must match, not just totals.
+Generated descriptors retain bounded reflection fallback.
 JCW retains its whole-app root: both original NUnit and migrated MSTest
 NativeAOT abort in `JavaAbstractMethodTest` at `ic.NewMethod()` (`RhFailFast`);
 do not exclude/weaken that test or claim completed JCW NativeAOT coverage.
-These results do not certify other ABIs or the Mono runtime, whose import is
-absent from the selected SDK. See [runtime migration details](../../../../Documentation/workflow/UnitTests.md#native-metadata-and-trimming)
-for root boundaries and retained historical failures.
+See [on-device unit tests](../../../../Documentation/workflow/UnitTests.md#on-device-unit-tests)
+for trimming root boundaries.
 
 ## Java.Interop Tests — Mixed Tiers
 
