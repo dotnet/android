@@ -68,6 +68,8 @@ jobs:
         build-root-directory: ${{ fromJSON(needs.setup.outputs.directories) }}
     steps:
       - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
 
       - uses: actions/setup-java@v6
         with:
