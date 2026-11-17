@@ -22,6 +22,7 @@ concurrency:
 
 jobs:
   setup:
+    if: github.repository_owner == 'dotnet'
     runs-on: ubuntu-latest
     permissions:
       contents: read
