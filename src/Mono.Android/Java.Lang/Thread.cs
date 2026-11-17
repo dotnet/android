@@ -47,9 +47,10 @@ namespace Java.Lang {
 			{
 				public JniObjectReference Reference = reference;
 				public readonly ConditionalWeakTable<Action, RunnableImplementor> Runnables = new ();
-				// Drawable runnables a View scheduled via View.ScheduleDrawable (who, Action, long),
-				// so that View.RemoveCallbacks (Action) also cancels them.
-				public readonly ConditionalWeakTable<Action, List<RunnableImplementor>> Scheduled = new ();
+				// Drawable runnables a View scheduled via View.ScheduleDrawable (who, Action, long), so that
+				// View.RemoveCallbacks (Action) also cancels them. Held weakly: each runnable is owned by its
+				// drawable's entry (or the Java queue), so transient drawables do not accumulate here.
+				public readonly ConditionalWeakTable<Action, ConditionalWeakTable<RunnableImplementor, object?>> Scheduled = new ();
 			}
 
 			const int MinimumSweepThreshold = 256;
@@ -74,11 +75,7 @@ namespace Java.Lang {
 			public static RunnableImplementor GetOrCreateScheduled (Java.Lang.Object view, Java.Lang.Object who, Action handler)
 			{
 				var runnable = GetOrCreate (who, handler);
-				var scheduled = GetOwner (view).Scheduled.GetValue (handler, static _ => []);
-				lock (scheduled) {
-					if (!scheduled.Contains (runnable))
-						scheduled.Add (runnable);
-				}
+				GetOwner (view).Scheduled.GetValue (handler, static _ => new ()).TryAdd (runnable, null);
 				return runnable;
 			}
 
@@ -86,8 +83,10 @@ namespace Java.Lang {
 			{
 				if (FindOwner (view) is not { } entry || !entry.Scheduled.TryGetValue (handler, out var scheduled))
 					return [];
-				lock (scheduled)
-					return scheduled.ToArray ();
+				var runnables = new List<RunnableImplementor> ();
+				foreach (var (runnable, _) in scheduled)
+					runnables.Add (runnable);
+				return runnables.ToArray ();
 			}
 
 			static Owner GetOwner (Java.Lang.Object owner) =>

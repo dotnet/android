@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -106,6 +107,66 @@ namespace Xamarin.Android.RuntimeTests {
 					content.AddView (view);
 			});
 			Assert.AreEqual (1, calls);
+		}
+
+		static int scheduledCalls;
+		static readonly Action rootedScheduledAction = () => Interlocked.Increment (ref scheduledCalls);
+
+		[Test]
+		public async Task ScheduledDrawableRunnablesDoNotAccumulateOnView ()
+		{
+			scheduledCalls = 0;
+			CapturingView view = null;
+			await OnMainThread (() => {
+				view = new CapturingView (Application.Context) { Background = new ColorDrawable () };
+				long now = SystemClock.UptimeMillis ();
+				// Detached: these stay in the View's run queue until it is attached.
+				view.ScheduleDrawable (view.Background, rootedScheduledAction, now);
+				view.ScheduleDrawable (view.Background, rootedScheduledAction, now);
+			});
+
+			// A long-lived View and a rooted Action must not keep runnables of transient drawables alive.
+			var runnables = new List<WeakReference> ();
+			for (int round = 0; round < 40 && (runnables.Count == 0 || runnables.Exists (r => r.IsAlive)); round++) {
+				await OnMainThread (() => ScheduleTransientDrawables (view, 100, round == 0 ? runnables : null));
+				GC.Collect ();
+				GC.WaitForPendingFinalizers ();
+				Java.Lang.Runtime.GetRuntime ().Gc ();
+				Java.Interop.JniEnvironment.Runtime.ValueManager.CollectPeers ();
+				await Task.Delay (50);
+			}
+			Assert.AreEqual (100, runnables.Count);
+			Assert.IsFalse (runnables.Exists (r => r.IsAlive), "A View must not retain runnables of collected drawables.");
+
+			await WithActivity (content => {
+				Assert.IsTrue (view.RemoveCallbacks (rootedScheduledAction));
+				content.AddView (view);
+			});
+			Assert.AreEqual (0, scheduledCalls, "The surviving drawable's callbacks must stay cancelable.");
+		}
+
+		[MethodImpl (MethodImplOptions.NoInlining)]
+		static void ScheduleTransientDrawables (CapturingView view, int count, List<WeakReference> runnables)
+		{
+			for (int i = 0; i < count; i++) {
+				using var drawable = new ColorDrawable ();
+				view.ScheduleDrawable (drawable, rootedScheduledAction, 0);
+				view.UnscheduleDrawable (drawable, rootedScheduledAction);
+				runnables?.Add (new WeakReference (view.Captured));
+				view.Captured = null;
+			}
+		}
+
+		sealed class CapturingView : View {
+			public Java.Lang.IRunnable Captured;
+
+			public CapturingView (Context context) : base (context) {}
+
+			public override void ScheduleDrawable (Drawable who, Java.Lang.IRunnable what, long when)
+			{
+				Captured = what;
+				base.ScheduleDrawable (who, what, when);
+			}
 		}
 
 		[Test]
