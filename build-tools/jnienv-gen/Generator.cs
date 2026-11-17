@@ -102,7 +102,7 @@ namespace Xamarin.Android.JniEnv
 				case "CopyArray":
 					WriteSafetyRequirements (o, entry.CallerSafetyRequirements);
 					o.Write ("\t\t{2} static {3}{0} {1} (", entry.ReturnType.ManagedType, entry.ApiName, entry.Visibility,
-						entry.RequiresUnsafe ? "unsafe " : "");
+						DeclarationModifier (entry));
 					if (entry.Name.StartsWith ("G", StringComparison.Ordinal)) {
 						o.WriteLine ("IntPtr src, {0} dest)", entry.Parameters [3].Type.ManagedType);
 						o.WriteLine ("\t\t{");
@@ -182,7 +182,7 @@ namespace Xamarin.Android.JniEnv
 						entry.Visibility,
 						entry.ReturnType.ManagedType,
 						entry.ApiName,
-						entry.RequiresUnsafe ? "unsafe " : "");
+						DeclarationModifier (entry));
 			bool is_void = entry.ReturnType.ManagedType == "void";
 			WriteJniFunctionParameters (o, entry, generateParamsOverload);
 			o.WriteLine ("\t\t{");
@@ -242,7 +242,7 @@ namespace Xamarin.Android.JniEnv
 			o.WriteLine ();
 			WriteSafetyRequirements (o, entry.CallerSafetyRequirements);
 			o.Write ("\t\t{0} static {1}{2} {3} ",
-					entry.Visibility, entry.RequiresUnsafe ? "unsafe " : "", entry.ReturnType.ManagedType, entry.ApiName);
+					entry.Visibility, DeclarationModifier (entry), entry.ReturnType.ManagedType, entry.ApiName);
 			WriteJniFunctionParameters (o, entry, false);
 			o.WriteLine ("\t\t{");
 			o.WriteLine ("\t\t\tunsafe {");
@@ -256,6 +256,10 @@ namespace Xamarin.Android.JniEnv
 			o.WriteLine ("\t\t\t}");
 			o.WriteLine ("\t\t}");
 		}
+
+		// Public JNIEnv members shipped before memory-safety rules v2 remain safe-callable for compatibility.
+		static string DeclarationModifier (JniFunction entry) =>
+			entry.RequiresUnsafe && entry.Visibility != "public" ? "unsafe " : "";
 
 		static void WriteSafetyRequirements (TextWriter o, string [] requirements)
 		{

@@ -14,8 +14,7 @@ namespace generator.SourceWriters
 		public JavaLangObjectConstructor (ClassGen klass, CodeGenerationOptions opt, string callPartialMethod)
 		{
 			Name = klass.Name;
-			IsUnsafe = SourceWriterExtensions.IsThrowable (klass);
-			if (IsUnsafe) {
+			if (SourceWriterExtensions.IsThrowable (klass)) {
 				Comments.Add ("/// <safety>");
 				Comments.Add ("/// javaReference must be zero or a live compatible JNI object. Use an attached thread");
 				Comments.Add ("/// (locals: creating thread), with no concurrent deletion through aliases during construction.");
