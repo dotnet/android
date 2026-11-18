@@ -1,4 +1,4 @@
-﻿// Copyright (C) 2011 Xamarin, Inc. All rights reserved.
+// Copyright (C) 2011 Xamarin, Inc. All rights reserved.
 
 #nullable enable
 
