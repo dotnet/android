@@ -404,8 +404,8 @@ int xml myxml 0x7f140000
 			using (var s1 = new MemoryStream (Encoding.UTF8.GetBytes (content1)))
 			using (var s2 = new MemoryStream (Encoding.UTF8.GetBytes (content2))) {
 				if (!StreamCompare (s1, s2)) {
-					TestContext.AddTestAttachment (file1, Path.GetFileName (file1));
-					TestContext.AddTestAttachment (file2, Path.GetFileName (file2));
+					TestContext.AddResultFile (file1);
+					TestContext.AddResultFile (file2);
 					Assert.Fail ($"{file1} and {file2} do not match.");
 				}
 			}

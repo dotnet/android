@@ -21,6 +21,8 @@ using SR = System.Reflection;
 
 namespace Xamarin.Android.Build.Tests
 {
+	[TestClass]
+	[DoNotParallelize]
 	public class LinkerTests : BaseTest
 	{
 		void Logger (TraceLevel level, string message) =>

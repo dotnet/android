@@ -16,6 +16,8 @@ using TPL = System.Threading.Tasks;
 
 namespace Xamarin.Android.Build.Tests
 {
+	[TestClass]
+	[DoNotParallelize]
 	public class Aapt2Tests : BaseTest
 	{
 		void CallAapt2Compile (IBuildEngine engine, string dir, string outputPath, string flatFilePath, List<ITaskItem> output = null, int maxInstances = 0, bool keepInDomain = false)
@@ -288,7 +290,7 @@ namespace Xamarin.Android.Build.Tests
 			Assert.IsTrue (engine.MetadataAccessBeforeYield, "Resolve API metadata on the calling thread before yielding.");
 			Assert.IsTrue (engine.Yielded);
 			Assert.IsNotNull (engine.Versions);
-			CollectionAssert.Contains (engine.Versions.FrameworkDirectories, referencePath);
+			CollectionAssert.Contains (engine.Versions.FrameworkDirectories.ToArray (), referencePath);
 			Assert.IsTrue (File.Exists (outputFile + "-arm64-v8a"));
 			Assert.IsTrue (File.Exists (outputFile + "-x86_64"));
 			Assert.AreEqual (0, errors.Count, "There should be no errors.");

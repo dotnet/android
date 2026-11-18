@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -8,6 +9,8 @@ using Xamarin.Android.Tasks;
 
 namespace Xamarin.Android.Build.Tests
 {
+	[TestClass]
+	[DoNotParallelize]
 	public class CollectNonEmptyDirectoriesTests : BaseTest
 	{
 		[TestMethod]
