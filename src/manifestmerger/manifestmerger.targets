@@ -12,7 +12,7 @@
   <Target Name="_BuildManifestMerger"
       BeforeTargets="Build"
       DependsOnTargets="_BuildManifestMergerInputs"
-      Inputs="$(MSBuildThisFile);build.gradle;settings.gradle;gradle.properties;proguard.pro;@(_AndroidManifestMergerSource)"
+      Inputs="$(MSBuildThisFile);build.gradle;settings.gradle;gradle.properties;proguard.pro;$(MSBuildThisFileDirectory)..\..\eng\gradle\dependency-constraints.gradle;@(_AndroidManifestMergerSource)"
       Outputs="$(_Destination)">
     <Exec
         Command="&quot;$(GradleWPath)&quot; build $(GradleArgs) -PjavaSourceVer=$(JavacSourceVersion) -PjavaTargetVer=$(JavacTargetVersion)"
