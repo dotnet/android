@@ -2,17 +2,18 @@ using System;
 
 using Java.Interop;
 
-using NUnit.Framework;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Java.InteropTests;
 
-[TestFixture]
-[Category ("JniUtf8Remapping")]
+[TestClass]
+[TestCategory ("JniUtf8Remapping")]
 public class JniUtf8RemappingTests {
 
-	[TestCase (0)]
-	[TestCase (1)]
-	[TestCase (-1)]
+	[TestMethod]
+	[DataRow (0)]
+	[DataRow (1)]
+	[DataRow (-1)]
 	public void RemappingDiagnosticsDoNotReadBorrowedPointers (int address)
 	{
 		var pointer = new IntPtr (address);
@@ -28,9 +29,9 @@ public class JniUtf8RemappingTests {
 
 		var text = info.ToString ();
 		var formatted = $"\"0x{pointer:x}\"";
-		Assert.That (text, Does.Contain ($"TargetJniTypeUtf8 = {formatted}"));
-		Assert.That (text, Does.Contain ($"TargetJniMethodNameUtf8 = {formatted}"));
-		Assert.That (text, Does.Contain ($"TargetJniMethodSignatureUtf8 = {formatted}"));
-		Assert.That (text, Does.Contain ("TargetJniType = \"example/Target\""));
+		StringAssert.Contains (text, $"TargetJniTypeUtf8 = {formatted}");
+		StringAssert.Contains (text, $"TargetJniMethodNameUtf8 = {formatted}");
+		StringAssert.Contains (text, $"TargetJniMethodSignatureUtf8 = {formatted}");
+		StringAssert.Contains (text, "TargetJniType = \"example/Target\"");
 	}
 }

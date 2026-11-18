@@ -1,14 +1,14 @@
 ﻿using System.Globalization;
 using System.Threading;
-using NUnit.Framework;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Xamarin.Android.RuntimeTests
 {
-	[TestFixture]
+	[TestClass]
 	public class LocalizationTests
 	{
 		// https://bugzilla.xamarin.com/show_bug.cgi?id=31705
-		[Test]
+		[TestMethod]
 		public void EmbeddedResources_ShouldBeLocalized ()
 		{
 			CultureInfo culture = Thread.CurrentThread.CurrentCulture;

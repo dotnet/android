@@ -582,6 +582,21 @@ namespace Microsoft.Android.Build.BaseTasks.Tests
 		}
 
 		[Test]
+		public void CopyIfChanged_ProjectScopedRetries ()
+		{
+			var environment = TaskEnvironment.CreateWithProjectDirectoryAndEnvironment (tempDir, new Dictionary<string, string> {
+				["DOTNET_ANDROID_FILE_WRITE_RETRY_ATTEMPTS"] = "0",
+				["DOTNET_ANDROID_FILE_WRITE_RETRY_DELAY_MS"] = "0",
+			});
+			var dest = NewFile (contents: "foo", fileName: "foo_locked");
+			var src = NewFile (contents: "foo0", fileName: "foo");
+			using var locked = new FileStream (dest, FileMode.Open, FileAccess.ReadWrite, FileShare.None);
+			var stopwatch = Stopwatch.StartNew ();
+			Assert.Throws<IOException> (() => Files.CopyIfChanged (src, dest, environment));
+			Assert.Less (stopwatch.Elapsed, TimeSpan.FromSeconds (2), "The project's retry limit must be used.");
+		}
+
+		[Test]
 		public void ExtractAll ()
 		{
 			using (var zip = new ZipArchive (stream, ZipArchiveMode.Create, leaveOpen: true)) {

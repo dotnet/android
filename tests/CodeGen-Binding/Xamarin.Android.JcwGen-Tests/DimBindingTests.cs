@@ -1,14 +1,14 @@
 using System;
 using Com.Xamarin.Android;
 using Java.Lang;
-using NUnit.Framework;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Xamarin.Android.JcwGenTests
 {
-	[TestFixture]
+	[TestClass]
 	public class DimTest
 	{
-		[Test]
+		[TestMethod]
 		public void TestDefaultInterfaceMethods ()
 		{
 			var empty = new EmptyOverrideClass ();
@@ -16,14 +16,14 @@ namespace Xamarin.Android.JcwGenTests
 
 			Assert.AreEqual (0, iface.Foo ());
 			Assert.AreEqual (2, iface.Bar);
-			Assert.DoesNotThrow (() => iface.Bar = 5);
+			global::Xamarin.Android.UnitTests.AndroidTestAssert.DoesNotThrow (() => iface.Bar = 5);
 
 			Assert.AreEqual (0, iface.InvokeFoo ());
 
-			Assert.Throws<UnsupportedOperationException> (() => iface.ToImplement ());
+			Assert.ThrowsExactly<UnsupportedOperationException> (() => iface.ToImplement ());
 		}
 
-		[Test]
+		[TestMethod]
 		public void TestOverriddenDefaultInterfaceMethods ()
 		{
 			var over = new ImplementedOverrideClass ();
@@ -31,12 +31,12 @@ namespace Xamarin.Android.JcwGenTests
 
 			Assert.AreEqual (6, over.Foo ());
 			Assert.AreEqual (100, over.Bar);
-			Assert.DoesNotThrow (() => over.Bar = 5);
+			global::Xamarin.Android.UnitTests.AndroidTestAssert.DoesNotThrow (() => over.Bar = 5);
 
 			Assert.AreEqual (6, iface.InvokeFoo ());
 		}
 
-		[Test]
+		[TestMethod]
 		public void TestManagedEmptyDefaultInterfaceMethods ()
 		{
 			// Test using empty C# implementing interface
@@ -48,7 +48,7 @@ namespace Xamarin.Android.JcwGenTests
 			Assert.AreEqual (0, iface.InvokeFoo ());
 		}
 
-		[Test]
+		[TestMethod]
 		public void TestManagedOverriddenDefaultInterfaceMethods ()
 		{
 			// Test using method overridden in C#
@@ -61,16 +61,16 @@ namespace Xamarin.Android.JcwGenTests
 			Assert.AreEqual (15, iface.InvokeFoo ());
 		}
 
-		[Test]
+		[TestMethod]
 		public void TestStaticMethods ()
 		{
 			Assert.AreEqual (10, IStaticMethodsInterface.Foo ());
 
 			Assert.AreEqual (3, IStaticMethodsInterface.Value);
-			Assert.DoesNotThrow (() => IStaticMethodsInterface.Value = 5);
+			global::Xamarin.Android.UnitTests.AndroidTestAssert.DoesNotThrow (() => IStaticMethodsInterface.Value = 5);
 		}
 
-		[Test]
+		[TestMethod]
 		public void TestChainedDefaultInterfaceMethods ()
 		{
 			var over = new ImplementedChainOverrideClass ();
@@ -78,12 +78,12 @@ namespace Xamarin.Android.JcwGenTests
 
 			Assert.AreEqual (6, over.Foo ());
 			Assert.AreEqual (100, over.Bar);
-			Assert.DoesNotThrow (() => over.Bar = 5);
+			global::Xamarin.Android.UnitTests.AndroidTestAssert.DoesNotThrow (() => over.Bar = 5);
 
 			Assert.AreEqual (6, iface.InvokeFoo ());
 		}
 
-		[Test]
+		[TestMethod]
 		public void TestStaticInterfaceMethods ()
 		{
 			Assert.AreEqual (0, IDefaultMethodsInterface.StaticFoo ());

@@ -99,17 +99,18 @@ namespace generator.SourceWriters
 				}
 
 				var prop = target.Properties.FirstOrDefault (p => p.Setter == method);
+				var eventCount = tw.Events.Count;
 
 				if (prop != null) {
 					var setter = "__Set" + prop.Name;
 					props.Add (prop.Name);
-					refs.Add (setter);
 
 					AddInterfaceListenerEventsAndProperties (tw, iface, target, name, setter,
 						string.Format ("__v => {0} = __v", prop.Name),
 						string.Format ("__v => {0} = null", prop.Name), opt, prop.Getter);
+					if (tw.Events.Count > eventCount)
+						refs.Add (setter);
 				} else {
-					refs.Add (method.Name);
 					string rm = null;
 					string remove;
 
@@ -126,6 +127,8 @@ namespace generator.SourceWriters
 					AddInterfaceListenerEventsAndProperties (tw, iface, target, name, method.Name,
 						method.Name,
 						remove, opt, method);
+					if (tw.Events.Count > eventCount)
+						refs.Add (method.Name);
 				}
 			}
 
@@ -178,7 +181,10 @@ namespace generator.SourceWriters
 					Report.LogCodedWarning (0, Report.WarningInvalidEventName2, method, iface.FullName, name);
 					return;
 				} else {
-					var mt = target.Methods.FirstOrDefault (method => string.Equals (method.Name, connector_fmt, StringComparison.OrdinalIgnoreCase) && method.IsListenerConnector);
+					var mt = target.Methods
+						.Where (method => string.Equals (method.Name, connector_fmt, StringComparison.OrdinalIgnoreCase) && method.IsListenerConnector && method.ListenerType == iface)
+						.OrderBy (method => method.Parameters.Count)
+						.FirstOrDefault ();
 					var hasHandlerArgument = mt != null && mt.IsListenerConnector && mt.Parameters.Count == 2 && mt.Parameters [1].Type == "Android.OS.Handler";
 
 					tw.Events.Add (new InterfaceListenerEvent (iface, setListenerMethod, name, nameSpec, full_delegate_name, connector_fmt, add, remove, hasHandlerArgument, opt));
@@ -394,7 +400,11 @@ namespace generator.SourceWriters
 				if (invokeType == "Object") {
 					r += ".Handle";
 				}
-				body.Add ($"{indentation}{(deferReturn ? "var __result = " : "return ")}{method.RetVal.ReturnCast}{method.RetVal.FromNative (opt, r, true, false) + opt.GetNullForgiveness (method.RetVal)};");
+				var returnCheck = opt.SupportNullableReferenceTypes && method.IsInterfaceDefaultMethod &&
+					method.OverriddenInterfaceMethod != null && method.RetVal.NotNull && invokeType == "Object"
+						? " ?? throw new global::Java.Lang.NullPointerException ()"
+						: opt.GetNullForgiveness (method.RetVal);
+				body.Add ($"{indentation}{(deferReturn ? "var __result = " : "return ")}{method.RetVal.ReturnCast}{method.RetVal.FromNative (opt, r, true, false) + returnCheck};");
 			}
 		}
 

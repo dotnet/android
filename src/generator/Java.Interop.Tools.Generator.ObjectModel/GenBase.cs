@@ -306,12 +306,25 @@ namespace MonoDroid.Generation
 		{
 			// Process regular methods (non-static, non-interface default methods)
 			foreach (var m in Methods.Where (m => !m.IsStatic && !m.IsInterfaceDefaultMethod)) {
+				bool Matches (Method mm) =>
+					mm.Name == m.Name &&
+					mm.Visibility == m.Visibility &&
+					mm.RetVal.FullName == m.RetVal.FullName && // if return type is different, it could be still "new", not "override".
+					ParameterList.Equals (mm.Parameters, m.Parameters);
+
 				for (var bt = GetBaseGen (opt); bt != null; bt = bt.GetBaseGen (opt)) {
-					var bm = bt.Methods.FirstOrDefault (mm =>
-						mm.Name == m.Name &&
-						mm.Visibility == m.Visibility &&
-						mm.RetVal.FullName == m.RetVal.FullName && // if return type is different, it could be still "new", not "override".
-						ParameterList.Equals (mm.Parameters, m.Parameters));
+					var bm = bt.Methods.FirstOrDefault (Matches);
+					if (bm == null && bt is ClassGen { IsAbstract: true } abstractBase &&
+							!bt.ContainsMethod (m, false, false)) {
+						// These abstract slots are emitted from interfaces later, during class generation.
+						// Skip methods that BoundClass emits as explicit implementations instead.
+						bm = bt.GetAllDerivedInterfaces ().SelectMany (iface => iface.Methods).FirstOrDefault (mm =>
+							!mm.IsInterfaceDefaultMethod && !mm.IsStatic && !mm.IsGeneric && !mm.RetVal.IsGeneric &&
+							string.IsNullOrEmpty (mm.ExplicitInterface) &&
+							!abstractBase.SkippedInterfaceMethods.Contains (mm.GetSkipInvokerSignature ()) &&
+							!abstractBase.IsCovariantMethod (mm) &&
+							Matches (mm));
+					}
 					if (bm == null) {
 						continue;
 					}
@@ -458,12 +471,27 @@ namespace MonoDroid.Generation
 			foreach (var m in Methods) {
 				if (m.Name == Name || ContainsProperty (m.Name, true) || HasNestedType (m.Name))
 					m.Name = "Invoke" + m.Name;
-				if ((m.Name == "ToString" && m.Parameters.Count == 0) || (BaseGen != null && BaseGen.ContainsMethod (m, true)))
+				if ((m.Name == "ToString" && m.Parameters.Count == 0) || (BaseGen != null && BaseGen.ContainsMethod (m, false, false)))
 					m.IsOverride = true;
 			}
 
 			foreach (var nt in NestedTypes)
 				nt.FixupMethodOverrides (opt);
+		}
+
+		internal void FixupInterfaceMethodNullability ()
+		{
+			if (this is InterfaceGen) {
+				foreach (var method in Methods.Where (m => m.IsInterfaceDefaultMethod && m.OverriddenInterfaceMethod != null)) {
+					for (var contract = method.OverriddenInterfaceMethod; contract != null; contract = contract.OverriddenInterfaceMethod) {
+						method.ReturnNotNull = method.RetVal.NotNull = method.RetVal.NotNull || contract.RetVal.NotNull;
+						for (int i = 0; i < method.Parameters.Count; i++)
+							method.Parameters [i].NotNull &= contract.Parameters [i].NotNull;
+					}
+				}
+			}
+			foreach (var nested in NestedTypes)
+				nested.FixupInterfaceMethodNullability ();
 		}
 
 		public abstract string FromNative (CodeGenerationOptions opt, string varname, bool owned);
@@ -842,7 +870,7 @@ namespace MonoDroid.Generation
 					m.Name = "GetHashCode";
 				}
 				jni_sig_hash [m.JavaName + m.JniSignature] = m;
-				if ((m.Name == "ToString" && m.Parameters.Count == 0) || (BaseSymbol != null && BaseSymbol.ContainsMethod (m, true)))
+				if ((m.Name == "ToString" && m.Parameters.Count == 0) || (BaseSymbol != null && BaseSymbol.ContainsMethod (m, false, false)))
 					m.IsOverride = true;
 			}
 			return true;

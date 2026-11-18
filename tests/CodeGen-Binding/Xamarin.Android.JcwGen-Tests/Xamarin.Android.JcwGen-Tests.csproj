@@ -1,6 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <Import Project="..\..\..\Configuration.props" />
+  <Import Project="..\..\TestRunner.MSTest.Android\MSTest.Android.props" />
 
   <PropertyGroup>
     <TargetFramework>$(DotNetAndroidTargetFramework)</TargetFramework>
@@ -36,14 +37,14 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="NUnit" Version="$(NUnitVersion)" />
     <RuntimeHostConfigurationOption Include="IncludeCategories" Value="$(IncludeCategories)" Condition=" '$(IncludeCategories)' != '' " />
-    <!-- NUnit discovers fixtures through reflection, not through the application's call graph. -->
+    <!-- Retained until exact rootless NativeAOT execution is possible: JavaAbstractMethodTest
+         already aborts in ic.NewMethod() with both the original NUnit and native MSTest runners. -->
     <TrimmerRootAssembly Include="$(AssemblyName)" RootMode="All" />
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\TestRunner.Core\TestRunner.Core.NET.csproj" />
+    <ProjectReference Include="..\..\TestRunner.MSTest.Android\TestRunner.MSTest.Android.csproj" />
     <ProjectReference Include="..\Xamarin.Android.LegacyThresholdBinding\Xamarin.Android.LegacyThresholdBinding.csproj" />
     <ProjectReference Include="..\Xamarin.Android.FixJavaAbstractMethod-APIv2Binding\Xamarin.Android.FixJavaAbstractMethod-APIv2Binding.csproj" />
     <ProjectReference Include="..\Xamarin.Android.FixJavaAbstractMethod-Library\Xamarin.Android.FixJavaAbstractMethod-Library.csproj" />
@@ -59,6 +60,7 @@
     <_PackageName>$(ApplicationId)</_PackageName>
     <AndroidInstrumentation>xamarin.android.jcwgentests.TestInstrumentation</AndroidInstrumentation>
     <IsTestingPlatformApplication>true</IsTestingPlatformApplication>
+    <EnableMSTestRunner>true</EnableMSTestRunner>
     <GenerateTestingPlatformEntryPoint>false</GenerateTestingPlatformEntryPoint>
   </PropertyGroup>
 

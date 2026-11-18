@@ -178,23 +178,12 @@
     <_ExtraPackageTarget Include="$(OutputPath)\Mono.Cecil.pdb" />
     <_ExtraPackageSource Include="$(PkgMono_Cecil)\lib\$(TargetFrameworkNETStandard)\Mono.Cecil.Mdb.pdb" />
     <_ExtraPackageTarget Include="$(OutputPath)\Mono.Cecil.Mdb.pdb" />
-    <_ExtraPackageSource Include="$(PkgMono_Unix)\lib\$(TargetFrameworkNETStandard)\Mono.Unix.pdb" />
-    <_ExtraPackageTarget Include="$(OutputPath)\Mono.Unix.pdb" />
-
-    <_ExtraPackageSource Include="$(MSBuildThisFileDirectory)\Resources\Mono.Unix.dll.config" />
-    <_ExtraPackageTarget Include="$(OutputPath)\Mono.Unix.dll.config" />
-
-    <_ExtraPackageSource Include="$(PkgMono_Unix)\lib\$(TargetFrameworkNETStandard)\Mono.Unix.dll" />
-    <_ExtraPackageTarget Include="$(OutputPath)\Mono.Unix.dll" />
   </ItemGroup>
-
-  <Import Project="$(XamarinAndroidSourcePath)build-tools\scripts\MonoUnixNative.targets" />
 
   <!-- Copy package ref symbols for our installers. '$(Pkg*)' props are set during NuGet restore when GeneratePathProperty="true" -->
   <Target Name="_CopyExtraPackageContent"
       Inputs="@(_ExtraPackageSource)"
-      Outputs="@(_ExtraPackageTarget)"
-      DependsOnTargets="_MakeMonoUnixFatBinariesOSX">
+      Outputs="@(_ExtraPackageTarget)">
     <Copy
         SourceFiles="@(_ExtraPackageSource)"
         DestinationFolder="$(OutputPath)"

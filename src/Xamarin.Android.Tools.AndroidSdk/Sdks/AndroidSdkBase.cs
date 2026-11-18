@@ -26,7 +26,8 @@ namespace Xamarin.Android.Tools
 					var dirs = new List<string?> ();
 					dirs.Add (AndroidSdkPath);
 					dirs.AddRange (GetAllAvailableAndroidSdks ());
-					allAndroidSdks = dirs.Where (d => ValidateAndroidSdkLocation ("AllAndroidSdks", d))
+					allAndroidSdks = dirs.Select (ResolvePath)
+						.Where (d => ValidateAndroidSdkLocation ("AllAndroidSdks", d))
 						.OfType<string> ()
 						.Distinct ()
 						.ToArray ();
@@ -35,12 +36,18 @@ namespace Xamarin.Android.Tools
 			}
 		}
 
-		public readonly Action<TraceLevel, string> Logger;
+		public    readonly Action<TraceLevel, string>   Logger;
+		protected readonly IDictionary<string, string>? EnvironmentVariables;
+		protected readonly string? WorkingDirectory;
 
-		public AndroidSdkBase (Action<TraceLevel, string> logger)
+		public AndroidSdkBase (Action<TraceLevel, string> logger, IDictionary<string, string>? environmentVariables = null, string? workingDirectory = null)
 		{
-			Logger  = logger;
+			Logger               = logger;
+			EnvironmentVariables = environmentVariables;
+			WorkingDirectory     = workingDirectory;
 		}
+
+		protected string? GetEnvironmentVariable (string name) => ProcessUtils.GetEnvironmentVariable (name, EnvironmentVariables);
 
 		public  string?     AndroidSdkPath                  { get; private set; }
 		public  string?     AndroidNdkPath                  { get; private set; }
@@ -67,7 +74,7 @@ namespace Xamarin.Android.Tools
 		{
 			AndroidSdkPath = GetValidPath (ValidateAndroidSdkLocation,  androidSdkPath, () => PreferedAndroidSdkPath,   () => GetAllAvailableAndroidSdks ());
 			JavaSdkPath    = GetValidPath (ValidateJavaSdkLocation,     javaSdkPath,    () => PreferedJavaSdkPath,      () => GetJavaSdkPaths (),
-				() => Environment.GetEnvironmentVariable (EnvironmentVariableNames.JiJavaHome));
+				() => GetEnvironmentVariable (EnvironmentVariableNames.JiJavaHome));
 
 			AndroidNdkPath = GetValidNdkPath (androidNdkPath);
 
@@ -103,19 +110,24 @@ namespace Xamarin.Android.Tools
 			NdkStack = GetExecutablePath (AndroidNdkPath, NdkStack);
 		}
 
-		static string? GetValidPath (Func<string, string?, bool> pathValidator, string? ctorParam, Func<string?> getPreferredPath, Func<IEnumerable<string>> getAllPaths, Func<string?>? getOverridePath = null)
+		protected string? ResolvePath (string? path)
+			=> path is not { Length: > 0 } ? path : ProcessUtils.ResolvePath (path, WorkingDirectory);
+
+		string? GetValidPath (Func<string, string?, bool> pathValidator, string? ctorParam, Func<string?> getPreferredPath, Func<IEnumerable<string>> getAllPaths, Func<string?>? getOverridePath = null)
 		{
+			ctorParam = ResolvePath (ctorParam);
 			if (pathValidator ("constructor param", ctorParam))
 				return ctorParam;
 			if (getOverridePath != null) {
-				ctorParam = getOverridePath ();
+				ctorParam = ResolvePath (getOverridePath ());
 				if (pathValidator ("environment override", ctorParam))
 					return ctorParam;
 			}
-			ctorParam = getPreferredPath ();
+			ctorParam = ResolvePath (getPreferredPath ());
 			if (pathValidator ("preferred path", ctorParam))
 				return ctorParam;
-			foreach (var path in getAllPaths ()) {
+			foreach (var candidate in getAllPaths ()) {
+				var path = ResolvePath (candidate);
 				if (pathValidator ("all paths", path)) {
 					return path;
 				}
@@ -125,6 +137,7 @@ namespace Xamarin.Android.Tools
 
 		string? GetValidNdkPath (string? ctorParam)
 		{
+			ctorParam = ResolvePath (ctorParam);
 			if (ValidateAndroidNdkLocation ("constructor param", ctorParam))
 				return ctorParam;
 			if (AndroidSdkPath != null) {
@@ -132,10 +145,11 @@ namespace Xamarin.Android.Tools
 				if (Directory.Exists (bundle) && ValidateAndroidNdkLocation ("within Android SDK", bundle))
 					return bundle;
 			}
-			ctorParam = PreferedAndroidNdkPath;
+			ctorParam = ResolvePath (PreferedAndroidNdkPath);
 			if (ValidateAndroidNdkLocation ("preferred path", ctorParam))
 				return ctorParam;
-			foreach (var path in GetAllAvailableAndroidNdks ()) {
+			foreach (var candidate in GetAllAvailableAndroidNdks ()) {
+				var path = ResolvePath (candidate);
 				if (ValidateAndroidNdkLocation ("all paths", path))
 					return path;
 			}
@@ -148,8 +162,8 @@ namespace Xamarin.Android.Tools
 		protected IEnumerable<string> GetSdkFromEnvironmentVariables ()
 		{
 			foreach (string envVar in AndroidSdkEnvVars) {
-				var ev = Environment.GetEnvironmentVariable (envVar);
-				if (String.IsNullOrEmpty (ev)) {
+				var ev = GetEnvironmentVariable (envVar);
+				if (ev is not { Length: > 0 }) {
 					continue;
 				}
 
@@ -160,7 +174,7 @@ namespace Xamarin.Android.Tools
 		protected virtual IEnumerable<string> GetAllAvailableAndroidNdks ()
 		{
 			// Look in PATH
-			foreach (var ndkStack in ProcessUtils.FindExecutablesInPath (NdkStack)) {
+			foreach (var ndkStack in ProcessUtils.FindExecutablesInPath (NdkStack, EnvironmentVariables, WorkingDirectory)) {
 				var ndkDir  = Path.GetDirectoryName (ndkStack);
 				if (string.IsNullOrEmpty (ndkDir))
 					continue;
@@ -180,13 +194,14 @@ namespace Xamarin.Android.Tools
 
 		string FindBestNDK (string androidSdkPath)
 		{
-			if (!Directory.Exists (androidSdkPath)) {
+			var directory = ProcessUtils.ResolvePath (androidSdkPath, WorkingDirectory);
+			if (directory == null || !Directory.Exists (directory)) {
 				return String.Empty;
 			}
 
 			var ndkInstances = new SortedDictionary<Version, string> (Comparer<Version>.Create ((Version l, Version r) => r.CompareTo (l)));
 
-			foreach (string ndkPath in Directory.EnumerateDirectories (androidSdkPath, "ndk*", SearchOption.TopDirectoryOnly)) {
+			foreach (string ndkPath in Directory.EnumerateDirectories (directory, "ndk*", SearchOption.TopDirectoryOnly)) {
 				if (string.Equals ("ndk-bundle", Path.GetFileName (ndkPath), StringComparison.OrdinalIgnoreCase)) {
 					LoadNDKVersion (ndkPath);
 					continue;
@@ -243,7 +258,7 @@ namespace Xamarin.Android.Tools
 
 		protected virtual IEnumerable<string> GetJavaSdkPaths ()
 		{
-			return JdkInfo.GetKnownSystemJdkInfos (Logger)
+			return JdkInfo.GetKnownSystemJdkInfos (Logger, EnvironmentVariables, WorkingDirectory)
 				.Select (jdk => jdk.HomePath);
 		}
 
@@ -252,10 +267,11 @@ namespace Xamarin.Android.Tools
 		/// </summary>
 		public bool ValidateAndroidSdkLocation (string locator, [NotNullWhen (true)] string? loc)
 		{
+			loc = ResolvePath (loc);
 			bool result = !string.IsNullOrEmpty (loc);
 			if (result) {
 				bool foundAdb = false;
-				foreach (var p in ProcessUtils.FindExecutablesInDirectory (Path.Combine (loc!, "platform-tools"), Adb)) {
+				foreach (var p in ProcessUtils.FindExecutablesInDirectory (Path.Combine (loc!, "platform-tools"), Adb, EnvironmentVariables)) {
 					Logger (TraceLevel.Verbose, $"{nameof (ValidateAndroidSdkLocation)}: for locator={locator}, path=`{loc}`, found adb `{p}`");
 					foundAdb = true;
 				}
@@ -270,10 +286,11 @@ namespace Xamarin.Android.Tools
 		/// </summary>
 		public virtual bool ValidateJavaSdkLocation (string locator, [NotNullWhen (true)] string? loc)
 		{
+			loc = ResolvePath (loc);
 			bool result = !string.IsNullOrEmpty (loc);
 			if (result) {
 				bool foundSigner = false;
-				foreach (var p in ProcessUtils.FindExecutablesInDirectory (Path.Combine (loc!, "bin"), JarSigner)) {
+				foreach (var p in ProcessUtils.FindExecutablesInDirectory (Path.Combine (loc!, "bin"), JarSigner, EnvironmentVariables)) {
 					Logger (TraceLevel.Verbose, $"{nameof (ValidateJavaSdkLocation)}: for locator={locator}, path=`{loc}`, found jarsigner `{p}`");
 					foundSigner = true;
 				}
@@ -288,8 +305,9 @@ namespace Xamarin.Android.Tools
 		/// </summary>
 		public bool ValidateAndroidNdkLocation (string locator, [NotNullWhen (true)] string? loc)
 		{
+			loc = ResolvePath (loc);
 			bool result = !string.IsNullOrEmpty (loc) &&
-				ProcessUtils.FindExecutablesInDirectory (loc!, NdkStack).Any ();
+				ProcessUtils.FindExecutablesInDirectory (loc!, NdkStack, EnvironmentVariables).Any ();
 			Logger (TraceLevel.Verbose, $"{nameof (ValidateAndroidNdkLocation)}: for locator={locator}, path=`{loc}`, result={result}");
 			return result;
 		}
@@ -302,12 +320,12 @@ namespace Xamarin.Android.Tools
 			return null;
 		}
 
-		static string GetExecutablePath (string? dir, string exe)
+		string GetExecutablePath (string? dir, string exe)
 		{
 			if (string.IsNullOrEmpty (dir))
 				return exe;
 
-			foreach (var e in ProcessUtils.ExecutableFiles (exe)) {
+			foreach (var e in ProcessUtils.ExecutableFiles (exe, EnvironmentVariables)) {
 				try {
 					if (File.Exists (Path.Combine (dir, e)))
 						return e;
