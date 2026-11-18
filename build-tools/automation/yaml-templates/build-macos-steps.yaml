@@ -59,16 +59,16 @@ steps:
         -v:n
     workingDirectory: ${{ parameters.xaSourcePath }}
     displayName: Generate local workload lists for main build cache
-    condition: and(succeeded(), eq(variables['Build.Reason'], 'Schedule'), eq(variables['Build.SourceBranch'], 'refs/heads/main'), eq(variables['XA.Build.Configuration'], 'Release'))
+    condition: and(succeeded(), eq(variables['XA.Build.Configuration'], 'Release'))
 
   - script: bin/$(XA.Build.Configuration)/dotnet/dotnet build-tools/scripts/main-build-cache.cs create "$(Agent.TempDirectory)/azdo-main-build-cache"
     workingDirectory: ${{ parameters.xaSourcePath }}
     displayName: Create main build cache
-    condition: and(succeeded(), eq(variables['Build.Reason'], 'Schedule'), eq(variables['Build.SourceBranch'], 'refs/heads/main'), eq(variables['XA.Build.Configuration'], 'Release'))
+    condition: and(succeeded(), eq(variables['XA.Build.Configuration'], 'Release'))
 
   - task: PublishPipelineArtifact@1
     displayName: Upload main build cache
-    condition: and(succeeded(), eq(variables['Build.Reason'], 'Schedule'), eq(variables['Build.SourceBranch'], 'refs/heads/main'), eq(variables['XA.Build.Configuration'], 'Release'))
+    condition: and(succeeded(), eq(variables['XA.Build.Configuration'], 'Release'))
     inputs:
       artifactName: azdo-main-build-cache-macos-$(Agent.OSArchitecture)-$(XA.Build.Configuration)
       targetPath: $(Agent.TempDirectory)/azdo-main-build-cache
