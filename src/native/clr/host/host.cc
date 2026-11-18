@@ -92,7 +92,7 @@ void Host::load_assembly_store_from_filesystem () noexcept
 			std::source_location::current (),
 			"Unable to locate assembly store '%s': %s",
 			store_path,
-			std::strerror (errno)
+			ErrorMessage (errno).c_str ()
 		);
 	} else {
 		log_debugf (LOG_ASSEMBLY, "Assembly store '%s' not found", store_path);

@@ -71,7 +71,7 @@ Util::create_public_directory (const char *dir)
 			// Try to change the mode, just in case
 			chmod (dir, 0777);
 		} else {
-			log_warnf (LOG_DEFAULT, "Failed to create directory '%s'. %s", dir, std::strerror (errno));
+			log_warnf (LOG_DEFAULT, "Failed to create directory '%s'. %s", dir, ErrorMessage (errno).c_str ());
 		}
 	}
 	umask (m);

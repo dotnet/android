@@ -90,7 +90,7 @@ AndroidSystem::setup_environment (const char *name, const char *value) noexcept
 
 	if (isupper (name [0]) || name [0] == '_') {
 		if (setenv (name, v, 1) < 0) {
-			log_warnf (LOG_DEFAULT, "(Debug) Failed to set environment variable: %s", strerror (errno));
+			log_warnf (LOG_DEFAULT, "(Debug) Failed to set environment variable: %s", ErrorMessage (errno).c_str ());
 		}
 		return;
 	}
@@ -105,20 +105,20 @@ AndroidSystem::setup_environment_from_override_file (const char *path) noexcept
 
 	struct stat sbuf;
 	if (::stat (path, &sbuf) < 0) {
-		log_warnf (LOG_DEFAULT, "Failed to stat the environment override file %s: %s", path, strerror (errno));
+		log_warnf (LOG_DEFAULT, "Failed to stat the environment override file %s: %s", path, ErrorMessage (errno).c_str ());
 		return;
 	}
 
 	int fd = open (path, O_RDONLY);
 	if (fd < 0) {
-		log_warnf (LOG_DEFAULT, "Failed to open the environment override file %s: %s", path, strerror (errno));
+		log_warnf (LOG_DEFAULT, "Failed to open the environment override file %s: %s", path, ErrorMessage (errno).c_str ());
 		return;
 	}
 
 	if (sbuf.st_size < 0 || static_cast<uintmax_t>(sbuf.st_size) > static_cast<uintmax_t>(std::numeric_limits<size_t>::max ())) {
 		log_warnf (LOG_DEFAULT, "Failed to read the environment override file %s: invalid file size", path);
 		if (close (fd) < 0) {
-			log_warnf (LOG_DEFAULT, "Failed to close the environment override file %s: %s", path, strerror (errno));
+			log_warnf (LOG_DEFAULT, "Failed to close the environment override file %s: %s", path, ErrorMessage (errno).c_str ());
 		}
 		return;
 	}
@@ -127,7 +127,7 @@ AndroidSystem::setup_environment_from_override_file (const char *path) noexcept
 	if (file_size == 0) {
 		log_warnf (LOG_DEFAULT, "Failed to read the environment override file %s: file is empty", path);
 		if (close (fd) < 0) {
-			log_warnf (LOG_DEFAULT, "Failed to close the environment override file %s: %s", path, strerror (errno));
+			log_warnf (LOG_DEFAULT, "Failed to close the environment override file %s: %s", path, ErrorMessage (errno).c_str ());
 		}
 		return;
 	}
@@ -163,11 +163,11 @@ AndroidSystem::setup_environment_from_override_file (const char *path) noexcept
 	}
 
 	if (close (fd) < 0) {
-		log_warnf (LOG_DEFAULT, "Failed to close the environment override file %s: %s", path, strerror (errno));
+		log_warnf (LOG_DEFAULT, "Failed to close the environment override file %s: %s", path, ErrorMessage (errno).c_str ());
 	}
 
 	if (read_errno != 0) {
-		log_warnf (LOG_DEFAULT, "Failed to read the environment override file %s: %s", path, strerror (read_errno));
+		log_warnf (LOG_DEFAULT, "Failed to read the environment override file %s: %s", path, ErrorMessage (read_errno).c_str ());
 		std::free (buf);
 		return;
 	}

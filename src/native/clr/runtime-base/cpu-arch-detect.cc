@@ -21,7 +21,7 @@ find_in_maps (const char *str)
 	char  buf [BUF_SIZE];
 
 	if (!maps) {
-		log_warnf (LOG_DEFAULT, "Failed to open /proc/self/maps for CPU detection: %s", strerror (errno));
+		log_warnf (LOG_DEFAULT, "Failed to open /proc/self/maps for CPU detection: %s", ErrorMessage (errno).c_str ());
 		return -1;
 	}
 
@@ -34,11 +34,11 @@ find_in_maps (const char *str)
 	}
 
 	if (ferror (maps)) {
-		log_warnf (LOG_DEFAULT, "Failed to read /proc/self/maps for CPU detection: %s", strerror (errno));
+		log_warnf (LOG_DEFAULT, "Failed to read /proc/self/maps for CPU detection: %s", ErrorMessage (errno).c_str ());
 		found = -1;
 	}
 	if (fclose (maps) != 0) {
-		log_warnf (LOG_DEFAULT, "Failed to close /proc/self/maps after CPU detection: %s", strerror (errno));
+		log_warnf (LOG_DEFAULT, "Failed to close /proc/self/maps after CPU detection: %s", ErrorMessage (errno).c_str ());
 	}
 
 	return found;

@@ -100,7 +100,7 @@ namespace xamarin::android {
 		{
 			struct stat sbuf;
 			if (fstatat (dirfd, file_name, &sbuf, 0) == -1) {
-				log_warnf (LOG_ASSEMBLY, "Failed to stat file '%s': %s", optional_string (file_name), std::strerror (errno));
+				log_warnf (LOG_ASSEMBLY, "Failed to stat file '%s': %s", optional_string (file_name), ErrorMessage (errno).c_str ());
 				return std::nullopt;
 			}
 
@@ -122,7 +122,7 @@ namespace xamarin::android {
 		{
 			log_debugf (LOG_DEFAULT, "Setting environment variable %s = '%s'", optional_string (name), optional_string (value));
 			if (::setenv (name, value, 1) < 0) {
-				log_warnf (LOG_DEFAULT, "Failed to set environment variable '%s': %s", optional_string (name), ::strerror (errno));
+				log_warnf (LOG_DEFAULT, "Failed to set environment variable '%s': %s", optional_string (name), ErrorMessage (errno).c_str ());
 			}
 		}
 
@@ -142,7 +142,7 @@ namespace xamarin::android {
 					"Failed to set environment variable '%.*s': %s",
 					static_cast<int>(name.length ()),
 					name.data (),
-					::strerror (errno)
+					ErrorMessage (errno).c_str ()
 				);
 			}
 		}
@@ -171,7 +171,7 @@ namespace xamarin::android {
 						optional_string (value.get_cstr ()),
 						static_cast<int>(name.length ()),
 						name.data (),
-						strerror (errno)
+						ErrorMessage (errno).c_str ()
 					);
 				}
 			}

@@ -93,7 +93,7 @@ void NativeAOT_InitializeEnvironment () noexcept
 	for (const auto &variable : AppSystemProperties::environment ()) {
 		if (::setenv (variable.name, variable.value, 1) != 0) {
 			Helpers::abort_applicationf (LOG_DEFAULT, std::source_location::current (),
-				"Unable to set NativeAOT environment variable '%s': %s", variable.name, std::strerror (errno));
+				"Unable to set NativeAOT environment variable '%s': %s", variable.name, ErrorMessage (errno).c_str ());
 		}
 	}
 }
