@@ -12,6 +12,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Mono.AndroidTools;
 using System.Diagnostics;
+using System.Runtime.ExceptionServices;
 using Xamarin.AndroidTools.Debugging.Java;
 
 namespace Xamarin.AndroidTools.Debugging
@@ -60,9 +61,10 @@ namespace Xamarin.AndroidTools.Debugging
 				configuration.LogWiter(configuration.RunCommand.ToString());
 			}
 
+			var logcatCapture = await JavaDebuggingLogcatCapture.StartAsync (androidDevice, configuration, javaDebugging, token).ConfigureAwait (false);
 			await androidDevice.ExecuteIntentCommandAsync(configuration.RunCommand, configuration.LogWiter, token).ConfigureAwait(false);
 			if (javaDebugging)
-				await androidDevice.ConnectJdwpAsync (configuration, token).ConfigureAwait(false);
+				await ConnectJdwpAsync (androidDevice, configuration, logcatCapture, token).ConfigureAwait(false);
 		}
 
 		/// <summary>
@@ -168,7 +170,12 @@ namespace Xamarin.AndroidTools.Debugging
 				model.Equals ("Subsystem for Android(TM)", StringComparison.InvariantCultureIgnoreCase);
 		}
 
-		public static async Task ConnectJdwpAsync(this AndroidDevice androidDevice, ExecutionConfiguration config, CancellationToken token)
+		public static Task ConnectJdwpAsync(this AndroidDevice androidDevice, ExecutionConfiguration config, CancellationToken token)
+		{
+			return ConnectJdwpAsync (androidDevice, config, null, token);
+		}
+
+		internal static async Task ConnectJdwpAsync (AndroidDevice androidDevice, ExecutionConfiguration config, JavaDebuggingLogcatCapture logcatCapture, CancellationToken token)
 		{
 			if (config.RunCommand is AmStartCommand amStartCommand && amStartCommand.EnableDebugging)
 			{
@@ -200,7 +207,8 @@ namespace Xamarin.AndroidTools.Debugging
 							break;
 						}
 						return true;
-					}, config.LogWiter, new InvalidOperationException ($"Could not find process for package '{packageName}'."), token).ConfigureAwait (false);
+					}, config.LogWiter, new InvalidOperationException ($"Could not find process for package '{packageName}'."), token,
+						logcatCapture == null ? null : (Func<CancellationToken, Task>) (cancellationToken => logcatCapture.CaptureAsync (pid, cancellationToken))).ConfigureAwait (false);
 				} finally {
 					if (jdwpClient != null) {
 						jdwpClient.Dispose ();
@@ -219,7 +227,7 @@ namespace Xamarin.AndroidTools.Debugging
 			KillForward,
 		}
 
-		internal static async Task ConnectJdwpAsync (Func<JdwpOperation, CancellationToken, Task<bool>> execute, Action<string> logWriter, Exception missingProcess, CancellationToken token)
+		internal static async Task ConnectJdwpAsync (Func<JdwpOperation, CancellationToken, Task<bool>> execute, Action<string> logWriter, Exception missingProcess, CancellationToken token, Func<CancellationToken, Task> logcatSnapshot = null)
 		{
 			var startTime = DateTimeOffset.UtcNow;
 			var stopwatch = Stopwatch.StartNew ();
@@ -245,13 +253,30 @@ namespace Xamarin.AndroidTools.Debugging
 
 			await RunOperation (JdwpOperation.PidLookup, "pid-lookup", token).ConfigureAwait (false);
 			await RunOperation (JdwpOperation.Forward, "forward", token).ConfigureAwait (false);
+			ExceptionDispatchInfo failure = null;
 			try {
 				await RunOperation (JdwpOperation.ClientConnect, "client-connect", token).ConfigureAwait (false);
 				await RunOperation (JdwpOperation.Hold, "hold", token).ConfigureAwait (false);
 				await RunOperation (JdwpOperation.Disconnect, "disconnect", token).ConfigureAwait (false);
-			} finally {
-				await RunOperation (JdwpOperation.KillForward, "killforward", CancellationToken.None).ConfigureAwait (false);
+			} catch (Exception ex) {
+				failure = ExceptionDispatchInfo.Capture (ex);
 			}
+			await RunOperation (JdwpOperation.KillForward, "killforward", CancellationToken.None).ConfigureAwait (false);
+
+			// The optional snapshot runs only after the forward is removed, never inside the fixed hold.
+			// Its own failures are ignored so they cannot replace the launch outcome; build cancellation still propagates.
+			if (logcatSnapshot != null && !token.IsCancellationRequested) {
+				try {
+					logWriter?.Invoke ($"JDWP logcat-snapshot-begin elapsedMs={stopwatch.ElapsedMilliseconds}");
+					await logcatSnapshot (token).ConfigureAwait (false);
+					logWriter?.Invoke ($"JDWP logcat-snapshot-end elapsedMs={stopwatch.ElapsedMilliseconds}");
+				} catch (OperationCanceledException) when (token.IsCancellationRequested && failure == null) {
+					throw;
+				} catch (Exception ex) {
+					JavaDebuggingLogcatCapture.LogFailure (logWriter, "snapshot", ex);
+				}
+			}
+			failure?.Throw ();
 		}
 	}
 }

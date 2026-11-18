@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading;
@@ -189,5 +190,149 @@ public class AndroidDeviceExtensionsTests
 		}, null, new InvalidOperationException ("missing"), CancellationToken.None);
 
 		Assert.That (operations.Last (), Is.EqualTo (DebuggingExtensions.JdwpOperation.KillForward));
+	}
+
+	[Test]
+	public async Task ConnectJdwpRunsLogcatSnapshotOnlyAfterKillForward ()
+	{
+		var messages = new List<string> ();
+		var events = new List<string> ();
+
+		await DebuggingExtensions.ConnectJdwpAsync ((operation, token) => {
+			events.Add (operation.ToString ());
+			return Task.FromResult (true);
+		}, messages.Add, new InvalidOperationException ("missing"), CancellationToken.None, token => {
+			events.Add ("snapshot");
+			return Task.CompletedTask;
+		});
+
+		CollectionAssert.AreEqual (new [] { "PidLookup", "Forward", "ClientConnect", "Hold", "Disconnect", "KillForward", "snapshot" }, events);
+		Assert.That (messages [messages.Count - 3], Does.StartWith ("JDWP killforward-end "));
+		Assert.That (messages [messages.Count - 2], Does.Match (@"^JDWP logcat-snapshot-begin elapsedMs=\d+$"));
+		Assert.That (messages [messages.Count - 1], Does.Match (@"^JDWP logcat-snapshot-end elapsedMs=\d+$"));
+	}
+
+	[Test]
+	public void ConnectJdwpSnapshotFailureDoesNotMaskOriginalFailure ()
+	{
+		var failure = new InvalidOperationException ("connect");
+		var snapshotRan = false;
+		var messages = new List<string> ();
+
+		var thrown = Assert.ThrowsAsync<InvalidOperationException> (async () =>
+			await DebuggingExtensions.ConnectJdwpAsync ((operation, token) => {
+				if (operation == DebuggingExtensions.JdwpOperation.ClientConnect)
+					throw failure;
+				return Task.FromResult (true);
+			}, messages.Add, new InvalidOperationException ("missing"), CancellationToken.None, token => {
+				snapshotRan = true;
+				throw new IOException ("secret-message com.secret.app");
+			}));
+
+		Assert.That (thrown, Is.SameAs (failure));
+		Assert.That (snapshotRan, Is.True);
+		Assert.That (messages.Last (), Is.EqualTo ("JDWP logcat-failed phase=snapshot exception-type=IOException"));
+		Assert.That (messages.Any (message => message.Contains ("secret-message") || message.Contains ("com.secret.app")), Is.False);
+		Assert.That (messages.Any (message => message.StartsWith ("JDWP logcat-snapshot-end ")), Is.False);
+	}
+
+	[Test]
+	public async Task ConnectJdwpReportsSnapshotFailureWithoutChangingSuccess ()
+	{
+		var messages = new List<string> ();
+
+		await DebuggingExtensions.ConnectJdwpAsync ((operation, token) => Task.FromResult (true),
+			messages.Add, new InvalidOperationException ("missing"), CancellationToken.None,
+			token => throw new IOException ("secret-message com.secret.app"));
+
+		Assert.That (messages.Last (), Is.EqualTo ("JDWP logcat-failed phase=snapshot exception-type=IOException"));
+		Assert.That (messages.Any (message => message.Contains ("secret-message") || message.Contains ("com.secret.app")), Is.False);
+		Assert.That (messages.Any (message => message.StartsWith ("JDWP logcat-snapshot-end ")), Is.False);
+	}
+
+	[Test]
+	public void ConnectJdwpKeepsOriginalFailureWhenSnapshotCancels ()
+	{
+		using var cancellation = new CancellationTokenSource ();
+		var failure = new InvalidOperationException ("connect");
+		var messages = new List<string> ();
+
+		var thrown = Assert.ThrowsAsync<InvalidOperationException> (async () =>
+			await DebuggingExtensions.ConnectJdwpAsync ((operation, token) => {
+				if (operation == DebuggingExtensions.JdwpOperation.ClientConnect)
+					throw failure;
+				return Task.FromResult (true);
+			}, messages.Add, new InvalidOperationException ("missing"), cancellation.Token, token => {
+				cancellation.Cancel ();
+				throw new OperationCanceledException (token);
+			}));
+
+		Assert.That (thrown, Is.SameAs (failure));
+		Assert.That (messages.Last (), Is.EqualTo ("JDWP logcat-failed phase=snapshot exception-type=OperationCanceledException"));
+	}
+
+	[Test]
+	public async Task ConnectJdwpSnapshotAndLoggerFailuresDoNotChangeSuccess ()
+	{
+		await DebuggingExtensions.ConnectJdwpAsync ((operation, token) => Task.FromResult (true),
+			message => {
+				if (message.StartsWith ("JDWP logcat-", StringComparison.Ordinal))
+					throw new InvalidOperationException ("logger");
+			}, new InvalidOperationException ("missing"), CancellationToken.None, token => throw new IOException ("snapshot"));
+	}
+
+	[Test]
+	public void ConnectJdwpSkipsSnapshotWhenKillForwardFails ()
+	{
+		var failure = new InvalidOperationException ("killforward");
+		var snapshotRan = false;
+
+		var thrown = Assert.ThrowsAsync<InvalidOperationException> (async () =>
+			await DebuggingExtensions.ConnectJdwpAsync ((operation, token) => {
+				if (operation == DebuggingExtensions.JdwpOperation.KillForward)
+					throw failure;
+				return Task.FromResult (true);
+			}, null, new InvalidOperationException ("missing"), CancellationToken.None, token => {
+				snapshotRan = true;
+				return Task.CompletedTask;
+			}));
+
+		Assert.That (thrown, Is.SameAs (failure));
+		Assert.That (snapshotRan, Is.False);
+	}
+
+	[Test]
+	public void ConnectJdwpPropagatesCancellationDuringSnapshot ()
+	{
+		using var cancellation = new CancellationTokenSource ();
+
+		Assert.CatchAsync<OperationCanceledException> (async () =>
+			await DebuggingExtensions.ConnectJdwpAsync ((operation, token) => Task.FromResult (true),
+				null, new InvalidOperationException ("missing"), cancellation.Token, token => {
+					cancellation.Cancel ();
+					token.ThrowIfCancellationRequested ();
+					return Task.CompletedTask;
+				}));
+	}
+
+	[Test]
+	public void ConnectJdwpSkipsSnapshotAfterBuildCancellation ()
+	{
+		using var cancellation = new CancellationTokenSource ();
+		var snapshotRan = false;
+
+		Assert.CatchAsync<OperationCanceledException> (async () =>
+			await DebuggingExtensions.ConnectJdwpAsync ((operation, token) => {
+				if (operation == DebuggingExtensions.JdwpOperation.Hold) {
+					cancellation.Cancel ();
+					token.ThrowIfCancellationRequested ();
+				}
+				return Task.FromResult (true);
+			}, null, new InvalidOperationException ("missing"), cancellation.Token, token => {
+				snapshotRan = true;
+				return Task.CompletedTask;
+			}));
+
+		Assert.That (snapshotRan, Is.False);
 	}
 }

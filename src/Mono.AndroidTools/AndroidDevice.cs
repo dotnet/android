@@ -414,6 +414,56 @@ namespace Mono.AndroidTools
 				.Cleanup (client, cancellationToken);
 		}
 
+		/// <summary>
+		/// Runs a shell command with a deadline that starts before the ADB connection and with byte and line
+		/// limits on its output. The command is not logged. Timeouts, limits and transport or callback failures
+		/// are reported through the returned status; only cancellation of <paramref name="cancellationToken"/> throws.
+		/// </summary>
+		internal async Task<BoundedShellCommandResult> RunBoundedShellCommandAsync (string command, int maxBytes, int maxLines, TimeSpan timeout, Action<string> outputLine, CancellationToken cancellationToken)
+		{
+			if (string.IsNullOrEmpty (command))
+				throw new ArgumentException ("A command is required.", nameof (command));
+			if (maxBytes < 1)
+				throw new ArgumentOutOfRangeException (nameof (maxBytes));
+			if (maxLines < 1)
+				throw new ArgumentOutOfRangeException (nameof (maxLines));
+			if (timeout <= TimeSpan.Zero)
+				throw new ArgumentOutOfRangeException (nameof (timeout));
+			if (outputLine == null)
+				throw new ArgumentNullException (nameof (outputLine));
+			cancellationToken.ThrowIfCancellationRequested ();
+
+			var reader = new AdbBoundedLineReader (maxBytes, maxLines, outputLine);
+			BoundedShellCommandStatus status;
+			using (var timeoutSource = new CancellationTokenSource ())
+			using (var linkedSource = CancellationTokenSource.CreateLinkedTokenSource (cancellationToken, timeoutSource.Token)) {
+				var client = adb.CreateClient (CancellationToken.None);
+				// Disposing the client is what interrupts a pending connect or read. The registration is
+				// disposed (waiting for a running callback) before the final Dispose, so the two never race.
+				var registration = linkedSource.Token.Register (() => client.Dispose (linkedSource.Token));
+				try {
+					timeoutSource.CancelAfter (timeout);
+					await client.ConnectTransportAsync (ID).ConfigureAwait (false);
+					await client.WriteCommandWithStatusAsync ("shell:" + command).ConfigureAwait (false);
+					status = await reader.ReadAsync (client.Stream, linkedSource.Token).ConfigureAwait (false);
+				} catch (Exception) when (cancellationToken.IsCancellationRequested) {
+					throw new OperationCanceledException (cancellationToken);
+				} catch (Exception) when (timeoutSource.IsCancellationRequested) {
+					status = BoundedShellCommandStatus.Timeout;
+				} catch (Exception) {
+					status = BoundedShellCommandStatus.ReadFailure;
+				} finally {
+					registration.Dispose ();
+					client.Dispose ();
+				}
+				// An EOF callback can cancel without throwing, so normal read completion is not sufficient.
+				cancellationToken.ThrowIfCancellationRequested ();
+				if (timeoutSource.IsCancellationRequested)
+					status = BoundedShellCommandStatus.Timeout;
+			}
+			return new BoundedShellCommandResult (status, reader.Bytes, reader.Lines);
+		}
+
 		const string DefaultPackagesFile = "/data/system/packages.xml";
 		const string BackupPackagesFile = "/dbdata/system/packages.xml";
 

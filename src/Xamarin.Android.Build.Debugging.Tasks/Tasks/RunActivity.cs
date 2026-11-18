@@ -64,6 +64,12 @@ namespace Xamarin.Android.Tasks
 		/// </summary>
 		public bool AllowJavaDebugging { get; set; } = true;
 
+		/// <summary>
+		/// Gets or sets a value indicating whether bounded Java debugger wait diagnostics are read from logcat.
+		/// Defaults to false; enabled via -p:_AndroidCaptureJavaDebuggingLogcat=true.
+		/// </summary>
+		public bool CaptureJavaDebuggingLogcat { get; set; }
+
 		AndroidDevice? Device;
 
 		public RunActivity ()
@@ -99,6 +105,7 @@ namespace Xamarin.Android.Tasks
 
 			var startConfiguration = new ExecutionConfiguration (PackageName, amStartCommand);
 			startConfiguration.AllowJavaDebugging = AllowJavaDebugging;
+			startConfiguration.CaptureJavaDebuggingLogcat = CaptureJavaDebuggingLogcat;
 			startConfiguration.LogWiter = (s) => LogDebugMessage (s);
 
 			if (AttachDebugger) {

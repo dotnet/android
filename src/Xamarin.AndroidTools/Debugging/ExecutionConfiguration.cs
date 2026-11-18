@@ -49,6 +49,13 @@ namespace Xamarin.AndroidTools.Debugging
 		public bool AllowJavaDebugging { get; set; } = true;
 
 		/// <summary>
+		/// Gets or sets a value indicating whether Java debugger wait markers are captured from logcat. Defaults to false.
+		/// When enabled together with Java debugging and <see cref="LogWiter"/>, this adds a guest clock read of at most
+		/// one second before launch and one logcat snapshot of at most three seconds after the JDWP forward is removed.
+		/// </summary>
+		public bool CaptureJavaDebuggingLogcat { get; set; }
+
+		/// <summary>
 		/// Gets or sets the adb command to execute prior to executing the RunCommand
 		/// </summary>
 		public string? BeforeRunCommand { get; set; }
