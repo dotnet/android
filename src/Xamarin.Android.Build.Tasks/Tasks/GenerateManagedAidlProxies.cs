@@ -1,7 +1,6 @@
-// Copyright (C) 2011 Xamarin, Inc. All rights reserved.
+﻿// Copyright (C) 2011 Xamarin, Inc. All rights reserved.
 #nullable enable
 using System;
-using System.Globalization;
 using System.CodeDom;
 using System.CodeDom.Compiler;
 using System.Collections.Generic;
@@ -100,7 +99,7 @@ namespace Xamarin.Android.Tasks
 			if (File.Exists (name))
 				opts.InputFiles.Add (name);
 			else
-				throw new InvalidOperationException (String.Format (CultureInfo.CurrentCulture, "File {0} not exist", name));
+				throw new InvalidOperationException (String.Format ("File {0} not exist", name));
 		}
 		
 		internal static void AddReference (this ConverterOptions opts, string name)
@@ -108,7 +107,7 @@ namespace Xamarin.Android.Tasks
 			if (File.Exists (name))
 				opts.References.Add (name);
 			else
-				throw new InvalidOperationException (String.Format (CultureInfo.CurrentCulture, "File {0} not exist", name));
+				throw new InvalidOperationException (String.Format ("File {0} not exist", name));
 		}
 	}
 }

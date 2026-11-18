@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Globalization;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -528,7 +528,7 @@ namespace Xamarin.Android.Build.Tests
 				AndroidResources = {
 					new AndroidItem.AndroidResource (() => "Resources\\Test\\Test2.png") {
 						BinaryContent = () => XamarinAndroidApplicationProject.icon_binary_mdpi,
-						MetadataValues = string.Format (CultureInfo.CurrentCulture, "LogicalName=drawable{0}foo2.png", illegalSeperator)
+						MetadataValues = string.Format ("LogicalName=drawable{0}foo2.png", illegalSeperator)
 					},
 				},
 			};
@@ -540,7 +540,7 @@ namespace Xamarin.Android.Build.Tests
 				AndroidResources = {
 					new AndroidItem.AndroidResource (() => "Resources\\Test\\Test.png") {
 						BinaryContent = () => XamarinAndroidApplicationProject.icon_binary_mdpi,
-						MetadataValues = string.Format (CultureInfo.CurrentCulture, "LogicalName=drawable{0}foo.png", illegalSeperator)
+						MetadataValues = string.Format ("LogicalName=drawable{0}foo.png", illegalSeperator)
 					},
 				},
 				References = {

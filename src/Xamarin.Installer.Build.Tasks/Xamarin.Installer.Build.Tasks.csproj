@@ -1,6 +1,8 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <Import Project="$(MSBuildThisFileDirectory)..\..\Configuration.props" />
   <PropertyGroup>
+    <!-- Preserve historical installer formatting and localized message behavior. -->
+    <NoWarn>$(NoWarn);CA1305</NoWarn>
     <TargetFramework>netstandard2.0</TargetFramework>
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
     <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>

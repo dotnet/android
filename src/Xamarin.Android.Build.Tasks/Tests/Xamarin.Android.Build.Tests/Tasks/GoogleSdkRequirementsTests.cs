@@ -1,5 +1,4 @@
-using System;
-using System.Globalization;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -51,7 +50,7 @@ public class GoogleSdkRequirementsTests
 		foreach (var warning in logger.Warnings) {
 			string first = instance.GetPropertyValue (warning.Code == "XA1007" ? "_AndroidManifestMinimumSdkVersion" : "_AndroidManifestCompileSdkVersion");
 			string second = instance.GetPropertyValue ("_AndroidManifestTargetSdkVersion");
-			Assert.AreEqual (string.Format (CultureInfo.CurrentCulture, Resources.ResourceManager.GetString (warning.Code), first, second), warning.Message);
+			Assert.AreEqual (string.Format (Resources.ResourceManager.GetString (warning.Code), first, second), warning.Message);
 		}
 	}
 

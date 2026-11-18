@@ -1,6 +1,8 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <Import Project="..\..\Configuration.props" />
   <PropertyGroup>
+    <!-- Preserve historical formatting behavior in generated AIDL source. -->
+    <NoWarn>$(NoWarn);CA1305</NoWarn>
     <TargetFramework>netstandard2.0</TargetFramework>
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
     <OutputPath>$(MicrosoftAndroidSdkOutDir)</OutputPath>

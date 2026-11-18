@@ -18,6 +18,11 @@
   <PropertyGroup>
     <DefineConstants Condition=" '$(ExtraConstants)' != '' ">$(DefineConstants);$(ExtraConstants)</DefineConstants>
   </PropertyGroup>
+
+  <!-- Preserve historical NativeAOT warning policy for the CodeBehind fixture on CI. -->
+  <PropertyGroup Condition=" '$(RunningOnCI)' == 'true' And '$(_AndroidRuntime)' == 'NativeAOT' ">
+    <NoWarn>IL3053</NoWarn>
+  </PropertyGroup>
   <ItemGroup>
     <Compile Include="MainActivity.cs" />
     <Compile Include="MainMergeActivity.cs" />

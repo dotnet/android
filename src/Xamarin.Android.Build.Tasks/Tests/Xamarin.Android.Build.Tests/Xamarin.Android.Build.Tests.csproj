@@ -1,6 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
+    <NoWarn>$(NoWarn);CA1305</NoWarn>
     <TargetFramework>$(DotNetStableTargetFramework)</TargetFramework>
     <OutputType>Exe</OutputType>
     <EnableNUnitRunner>true</EnableNUnitRunner>

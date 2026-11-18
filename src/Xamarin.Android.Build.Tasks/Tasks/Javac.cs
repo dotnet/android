@@ -1,4 +1,4 @@
-// Copyright (C) 2011 Xamarin, Inc. All rights reserved.
+﻿// Copyright (C) 2011 Xamarin, Inc. All rights reserved.
 
 #nullable enable
 
@@ -42,7 +42,7 @@ namespace Xamarin.Android.Tasks
 
 			cmd.AppendSwitchIfNotNull ("-J-Dfile.encoding=", "UTF8");
 
-			cmd.AppendFileNameIfNotNull (string.Format (CultureInfo.CurrentCulture, "@{0}", TemporarySourceListFile));
+			cmd.AppendFileNameIfNotNull (string.Format ("@{0}", TemporarySourceListFile));
 
 			if (int.TryParse (JavacSourceVersion, out int sourceVersion) &&
 					int.TryParse (JavacTargetVersion, out int targetVersion) &&

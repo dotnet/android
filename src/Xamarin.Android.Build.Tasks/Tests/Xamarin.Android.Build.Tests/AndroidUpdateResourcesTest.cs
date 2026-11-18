@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Globalization;
 using System.Collections.Generic;
 using System.IO;
@@ -262,7 +262,7 @@ namespace Xamarin.Android.Build.Tests
 				// The AndroidGenerateLayoutBindings=false property is necessary because otherwise build
 				// will fail in code-behind generator instead of in aapt
 				Assert.IsFalse (b.Build (proj, parameters: new[] { "AndroidGenerateLayoutBindings=false" }), "Build should have failed.");
-				Assert.IsTrue (b.LastBuildOutput.Any (s => s.Contains (string.Format (CultureInfo.CurrentCulture, "Resources{0}layout{0}Main.axml", Path.DirectorySeparatorChar)) && s.Contains (": error ")), "error with expected file name is not found");
+				Assert.IsTrue (b.LastBuildOutput.Any (s => s.Contains (string.Format ("Resources{0}layout{0}Main.axml", Path.DirectorySeparatorChar)) && s.Contains (": error ")), "error with expected file name is not found");
 				Assert.IsTrue (b.Clean (proj), "Clean should have succeeded.");
 			}
 		}
@@ -1720,7 +1720,7 @@ $@"<?xml version=""1.0"" encoding=""utf-8""?>
 				// Add usage of Lib0.Resource.String.library_name0
 				var builder = new StringBuilder ();
 				for (int i = 0; i < libraryCount; i++) {
-					builder.AppendLine (CultureInfo.CurrentCulture, $"int library_name{i} = Lib{i}.Resource.String.library_name{i};");
+					builder.AppendLine ($"int library_name{i} = Lib{i}.Resource.String.library_name{i};");
 				}
 				foreach (var app in apps) {
 					app.Sources.Add (new BuildItem.Source ("Foo.cs") {
