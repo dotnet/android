@@ -1,7 +1,6 @@
 #nullable enable
 
 using System;
-using System.Globalization;
 using System.IO;
 using Microsoft.Android.Build.Tasks;
 using Microsoft.Build.Framework;
@@ -64,7 +63,7 @@ namespace Xamarin.Android.Tasks
 			cmd.AppendSwitchIfNotNull ("-keystore ", TaskEnvironment.GetAbsolutePath (KeyStore).Value);
 			cmd.AppendSwitch ("-dname \"CN=Android Debug,O=Android,C=US\"");
 			cmd.AppendSwitchIfNotNull ("-keyalg ", KeyAlgorithm);
-			cmd.AppendSwitchIfNotNull ("-validity ", Validity.ToString(CultureInfo.CurrentCulture));
+			cmd.AppendSwitchIfNotNull ("-validity ", Validity.ToString ());
 			cmd.AppendSwitchIfNotNull ("-storetype ", StoreType);
 			return cmd.ToString ();
 		}

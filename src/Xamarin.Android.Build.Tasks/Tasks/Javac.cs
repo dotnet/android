@@ -3,7 +3,6 @@
 #nullable enable
 
 using System;
-using System.Globalization;
 using System.Linq;
 using System.IO;
 using Microsoft.Build.Framework;
@@ -47,7 +46,7 @@ namespace Xamarin.Android.Tasks
 			if (int.TryParse (JavacSourceVersion, out int sourceVersion) &&
 					int.TryParse (JavacTargetVersion, out int targetVersion) &&
 					JavacSupportsRelease ()) {
-				cmd.AppendSwitchIfNotNull ("--release ", Math.Max (sourceVersion, targetVersion).ToString (CultureInfo.CurrentCulture));
+				cmd.AppendSwitchIfNotNull ("--release ", Math.Max (sourceVersion, targetVersion).ToString ());
 			} else {
 				cmd.AppendSwitchIfNotNull ("-target ", JavacTargetVersion);
 				cmd.AppendSwitchIfNotNull ("-source ", JavacSourceVersion);

@@ -3,7 +3,6 @@
 #nullable enable
 
 using System;
-using System.Globalization;
 using System.IO;
 using System.Xml;
 using System.Xml.Linq;
@@ -114,7 +113,7 @@ namespace Xamarin.Android.Tasks
 			JavaPlatformJarPath =  MonoAndroidHelper.TryGetAndroidJarPath (Log, platform, supportedVersions,
 				designTimeBuild: DesignTimeBuild, buildingInsideVisualStudio: BuildingInsideVisualStudio,
 				targetFramework: TargetFramework, androidSdkDirectory: AndroidSdkDirectory.IsNullOrEmpty () ? AndroidSdkDirectory : TaskEnvironment.GetAbsolutePath (AndroidSdkDirectory));
-			TargetSdkVersion = supportedVersions.GetApiLevelFromId (platform)?.ToString (CultureInfo.CurrentCulture) ?? "";
+			TargetSdkVersion = supportedVersions.GetApiLevelFromId (platform)?.ToString () ?? "";
 			if (JavaPlatformJarPath == null)
 				return !Log.HasLoggedErrors;
 
