@@ -1,5 +1,4 @@
 using System;
-using System.Globalization;
 using System.Collections.Generic;
 
 namespace MonoDroid.Generation {
@@ -70,7 +69,7 @@ namespace MonoDroid.Generation {
 
 		public string FromNative (CodeGenerationOptions opt, string varname, bool owned)
 		{
-			return String.Format (CultureInfo.CurrentCulture, "{0}.FromJniHandle ({1}, {2})",
+			return String.Format ("{0}.FromJniHandle ({1}, {2})",
 					GetManagedTypeName (opt),
 					opt.GetSafeIdentifier (varname),
 					owned ? "JniHandleOwnership.TransferLocalRef" : "JniHandleOwnership.DoNotTransfer");
@@ -86,7 +85,7 @@ namespace MonoDroid.Generation {
 
 		public string ToNative (CodeGenerationOptions opt, string varname, Dictionary<string, string> mappings = null)
 		{
-			return string.Format (CultureInfo.CurrentCulture, "{0}.ToLocalJniHandle ({1})",
+			return string.Format ("{0}.ToLocalJniHandle ({1})",
 					GetManagedTypeName (opt),
 					opt.GetSafeIdentifier (varname));
 		}
@@ -99,7 +98,7 @@ namespace MonoDroid.Generation {
 		public string[] PreCallback (CodeGenerationOptions opt, string var_name, bool owned)
 		{
 			return new string[]{
-				string.Format (CultureInfo.CurrentCulture, "var {0} = {1}.FromJniHandle ({2}, {3});",
+				string.Format ("var {0} = {1}.FromJniHandle ({2}, {3});",
 						opt.GetSafeIdentifier (var_name),
 						GetManagedTypeName (opt),
 						opt.GetSafeIdentifier (TypeNameUtilities.GetNativeName (var_name)),
@@ -116,7 +115,7 @@ namespace MonoDroid.Generation {
 		public string[] PreCall (CodeGenerationOptions opt, string var_name)
 		{
 			return new string[] {
-				string.Format (CultureInfo.CurrentCulture, "IntPtr {0} = {1}.ToLocalJniHandle ({2});",
+				string.Format ("IntPtr {0} = {1}.ToLocalJniHandle ({2});",
 						opt.GetSafeIdentifier (TypeNameUtilities.GetNativeName (var_name)),
 						GetManagedTypeName (opt),
 						opt.GetSafeIdentifier (var_name)),
@@ -131,7 +130,7 @@ namespace MonoDroid.Generation {
 		public string[] PostCall (CodeGenerationOptions opt, string var_name)
 		{
 			return new string[]{
-				string.Format (CultureInfo.CurrentCulture, "JNIEnv.DeleteLocalRef ({0});",
+				string.Format ("JNIEnv.DeleteLocalRef ({0});",
 						opt.GetSafeIdentifier (TypeNameUtilities.GetNativeName (var_name))),
 			};
 		}

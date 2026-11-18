@@ -1,5 +1,4 @@
 using System;
-using System.Globalization;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -81,7 +80,7 @@ namespace generator.SourceWriters
 			if (!iface.Methods.Any (m => m.EventName != string.Empty) || handlers.Count == 0)
 				is_empty_method.Body.Add ("return true;");
 			else
-				is_empty_method.Body.Add ($"return {string.Join (" && ", handlers.Select (e => string.Format (CultureInfo.CurrentCulture, "value.{0}Handler == null", e)))};");
+				is_empty_method.Body.Add ($"return {string.Join (" && ", handlers.Select (e => string.Format ("value.{0}Handler == null", e)))};");
 
 			Methods.Add (is_empty_method);
 		}
