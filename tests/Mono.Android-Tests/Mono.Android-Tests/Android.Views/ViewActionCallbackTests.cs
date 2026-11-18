@@ -64,8 +64,9 @@ namespace Xamarin.Android.RuntimeTests {
 			Assert.AreEqual (1, calls);
 		}
 
-		[Test]
-		public async Task RemoveCallbacksPreservesDrawableCallbacks ()
+		[TestCase (false)]
+		[TestCase (true)]
+		public async Task RemoveCallbacksPreservesDrawableCallbacks (bool primeViewSchedule)
 		{
 			int calls = 0;
 			Action action = () => Interlocked.Increment (ref calls);
@@ -74,10 +75,39 @@ namespace Xamarin.Android.RuntimeTests {
 				var background = new ColorDrawable ();
 				view.Background = background;
 				content.AddView (view);
+				long now = SystemClock.UptimeMillis ();
+				if (primeViewSchedule) {
+					// An earlier, already-cancelled View.ScheduleDrawable must not widen later cancellations.
+					view.ScheduleDrawable (background, action, now);
+					view.RemoveCallbacks (action);
+				}
 				// View.removeCallbacks() removes Choreographer callbacks with any token.
-				background.ScheduleSelf (action, SystemClock.UptimeMillis ());
+				background.ScheduleSelf (action, now);
 				Assert.IsTrue (view.Post (action));
 				Assert.IsTrue (view.RemoveCallbacks (action));
+			});
+			Assert.AreEqual (1, calls);
+		}
+
+		[TestCase (false)]
+		[TestCase (true)]
+		public async Task UnscheduleCancelsViewScheduledDrawable (bool unscheduleSelf)
+		{
+			int calls = 0;
+			Action action = () => Interlocked.Increment (ref calls);
+			await WithActivity (content => {
+				var view = new View (content.Context);
+				var background = new ColorDrawable ();
+				view.Background = background;
+				content.AddView (view);
+				long now = SystemClock.UptimeMillis ();
+				view.ScheduleDrawable (background, action, now);
+				background.ScheduleSelf (action, now);
+				Assert.IsTrue (view.Post (action));                      // runs: not a drawable callback
+				if (unscheduleSelf)
+					background.UnscheduleSelf (action);
+				else
+					view.UnscheduleDrawable (background, action);
 			});
 			Assert.AreEqual (1, calls);
 		}
