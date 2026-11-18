@@ -19,6 +19,7 @@ using System.Text.RegularExpressions;
 const string ORG = "https://dev.azure.com/dnceng-public";
 const string PROJECT = "public";
 const string RES = "499b84ac-1321-427f-aa17-267ca6975798";
+var AzCli = OperatingSystem.IsWindows () ? "az.cmd" : "az";
 
 string? buildId = null;
 string? pr = null;
@@ -994,7 +995,7 @@ string [] Lines (string value)
 
 JsonNode? AzJson (string url)
 {
-	var (code, stdout, stderr) = Run ("az", "rest", "--method", "get", "--resource", RES, "--url", url, "-o", "json");
+	var (code, stdout, stderr) = Run (AzCli, "rest", "--method", "get", "--resource", RES, "--url", url, "-o", "json");
 	if (code != 0) {
 		Console.Error.WriteLine ($"az error {url}\n{Trunc (stderr, 500)}");
 		fetchErrors.Add ($"Azure request failed: {url}");
@@ -1028,7 +1029,7 @@ JsonArray AzPagedArray (string baseUrl)
 
 string AzText (string url)
 {
-	var (code, stdout, stderr) = Run ("az", "rest", "--method", "get", "--resource", RES, "--url", url, "-o", "json");
+	var (code, stdout, stderr) = Run (AzCli, "rest", "--method", "get", "--resource", RES, "--url", url, "-o", "json");
 	if (code != 0) {
 		Console.Error.WriteLine ($"az log error {url}\n{Trunc (stderr, 300)}");
 		return "";
@@ -1051,8 +1052,14 @@ static (int code, string stdout, string stderr) Run (string file, params string 
 		UseShellExecute = false,
 		InheritedHandles = [],
 	};
-	foreach (var arg in cliArgs)
-		psi.ArgumentList.Add (arg);
+	if (file.EndsWith (".cmd")) {
+		// Quote the args so cmd.exe does not treat & in URLs as an operator.
+		psi.FileName = "cmd.exe";
+		psi.Arguments = $"/d /c {file} " + string.Join (" ", cliArgs.Select (arg => $"\"{arg}\""));
+	} else {
+		foreach (var arg in cliArgs)
+			psi.ArgumentList.Add (arg);
+	}
 	var timeout = TimeSpan.FromMinutes (5);
 	var timer = Stopwatch.StartNew ();
 	using var process = Process.Start (psi) ?? throw new InvalidOperationException ($"Could not start '{file}'.");
