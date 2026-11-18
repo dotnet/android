@@ -93,7 +93,9 @@ namespace Xamarin.Java.Interop
 			o.WriteLine ("\tusing jstaticFieldID     = System.IntPtr;");
 			o.WriteLine ("\tusing jinstanceMethodID  = System.IntPtr;");
 			o.WriteLine ("\tusing jstaticMethodID    = System.IntPtr;");
+			o.WriteLine ("#pragma warning disable CS8981 // `jobject` intentionally matches the JNI typedef spelling.");
 			o.WriteLine ("\tusing jobject            = System.IntPtr;");
+			o.WriteLine ("#pragma warning restore CS8981");
 			o.WriteLine ();
 			o.WriteLine ("namespace Java.Interop {");
 			GenerateJniNativeInterface (o);
