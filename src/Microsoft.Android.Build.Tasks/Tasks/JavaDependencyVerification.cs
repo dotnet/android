@@ -362,11 +362,13 @@ partial class MicrosoftNuGetPackageFinder
 	}
 }
 
-public class NuGetPackageVersionFinder
+public partial class NuGetPackageVersionFinder
 {
 	readonly Dictionary<string, Dictionary<NuGetVersion, Package>> libraries = new (StringComparer.OrdinalIgnoreCase);
 	readonly string [] package_folders;
-	readonly static Regex tag = new Regex (@"artifact(?:_versioned)?=(?<GroupId>[^:\s;,]+):(?<ArtifactId>[^:\s;,]+):(?<Version>[^:\s;,]+)", RegexOptions.Compiled, TimeSpan.FromSeconds (5));
+
+	[GeneratedRegex (@"artifact(?:_versioned)?=(?<GroupId>[^:\s;,]+):(?<ArtifactId>[^:\s;,]+):(?<Version>[^:\s;,]+)", RegexOptions.Compiled, 5000)]
+	static partial Regex TagRegex { get; }
 
 	NuGetPackageVersionFinder (JsonElement lockFile)
 	{
@@ -480,7 +482,7 @@ public class NuGetPackageVersionFinder
 	{
 		// Try the first tag format
 		try {
-			var matches = tag.Matches (tags);
+			var matches = TagRegex.Matches (tags);
 
 			if (matches is null || matches.Count == 0)
 				return;
