@@ -1,6 +1,5 @@
 #nullable disable
 using System;
-using System.Globalization;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -552,8 +551,8 @@ namespace Microsoft.Android.Tasks
 
 			using (var stream = new MemoryStream ())
 			using (var binaryWriter = new BinaryWriter (stream, Encoding.ASCII)) {
-				binaryWriter.Write (Encoding.ASCII.GetBytes ("0x" + maxKeyLength.ToString ("X8", CultureInfo.InvariantCulture) + '\0'));
-				binaryWriter.Write (Encoding.ASCII.GetBytes ("0x" + maxValueLength.ToString ("X8", CultureInfo.InvariantCulture) + '\0'));
+				binaryWriter.Write (Encoding.ASCII.GetBytes ("0x" + maxKeyLength.ToString ("X8", System.Globalization.CultureInfo.CurrentCulture) + '\0'));
+				binaryWriter.Write (Encoding.ASCII.GetBytes ("0x" + maxValueLength.ToString ("X8", System.Globalization.CultureInfo.CurrentCulture) + '\0'));
 				foreach (var kvp in data) {
 					binaryWriter.Write (Encoding.ASCII.GetBytes (kvp.Key.PadRight (maxKeyLength, '\0')));
 					binaryWriter.Write (Encoding.ASCII.GetBytes (kvp.Value.PadRight (maxValueLength, '\0')));

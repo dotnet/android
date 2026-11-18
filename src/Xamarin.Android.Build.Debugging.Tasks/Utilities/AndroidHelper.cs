@@ -1,6 +1,5 @@
 #nullable disable
 using System;
-using System.Globalization;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -136,7 +135,7 @@ namespace Xamarin.Android.Tasks
 				if (target != null && target.Length > 0 && !target.StartsWith ("-e", StringComparison.Ordinal) &&
 					!target.StartsWith ("-d", StringComparison.Ordinal) && !target.StartsWith ("-s", StringComparison.Ordinal)) {
 					if (logErrors)
-						logError (DefaultErrorCode, string.Format (CultureInfo.CurrentCulture, Resources.XA0010_AdbTarget, target));
+						logError (DefaultErrorCode, string.Format (System.Globalization.CultureInfo.CurrentCulture, Resources.XA0010_AdbTarget, target));
 				} else {
 					NoDeviceFound (target, key, logError, logErrors, engine4);
 				}
@@ -145,9 +144,9 @@ namespace Xamarin.Android.Tasks
 			} catch (Exception ex) {
 				RegisterDevice (engine4, key, null);
 				if (logErrors)
-					logError (DefaultErrorCode, string.Format (CultureInfo.CurrentCulture, Resources.XA0010_Adb, ex));
+					logError (DefaultErrorCode, string.Format (System.Globalization.CultureInfo.CurrentCulture, Resources.XA0010_Adb, ex));
 				else
-					logMessage (string.Format (CultureInfo.CurrentCulture, Resources.XA0010_Adb, ex));
+					logMessage (string.Format (System.Globalization.CultureInfo.CurrentCulture, Resources.XA0010_Adb, ex));
 			}
 			return null;
 		}

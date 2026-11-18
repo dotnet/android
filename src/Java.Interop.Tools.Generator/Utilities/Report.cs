@@ -1,5 +1,4 @@
 using System;
-using System.Globalization;
 using System.Diagnostics;
 using System.Xml;
 using System.Xml.Linq;
@@ -89,7 +88,7 @@ namespace Java.Interop.Tools.Generator
 			LogCodedError (message, node, args);
 
 			// Throwing a BindingGeneratorException will cause generator to terminate
-			throw new BindingGeneratorException (message.Code, string.Format (CultureInfo.CurrentCulture, message.Value, args), innerException);
+			throw new BindingGeneratorException (message.Code, string.Format (message.Value, args), innerException);
 		}
 
 		public static void LogCodedError (LocalizedMessage message, XNode? node, params string? [] args)
@@ -146,7 +145,7 @@ namespace Java.Interop.Tools.Generator
 		{
 			var origin = FormatOrigin (sourceFile, line, column);
 
-			return $"{origin}{(error ? "error" : "warning")} BG{errorCode:X04}: " + string.Format (CultureInfo.CurrentCulture, format, args);
+			return $"{origin}{(error ? "error" : "warning")} BG{errorCode:X04}: " + string.Format (format, args);
 		}
 
 		static string? FormatOrigin (string? sourceFile, int line, int column)
@@ -180,7 +179,7 @@ namespace Java.Interop.Tools.Generator
 		{
 			// Write to overridden output if requested
 			if (OutputDelegate != null) {
-				OutputDelegate (traceLevel, string.Format (CultureInfo.CurrentCulture, format, args));
+				OutputDelegate (traceLevel, string.Format (format, args));
 				return;
 			}
 

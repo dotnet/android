@@ -1,5 +1,4 @@
 using System;
-using System.Globalization;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
@@ -230,7 +229,7 @@ namespace Xamarin.Android.Tools.Bytecode {
 
 		public override string ToString ()
 		{
-			return string.Format (CultureInfo.CurrentCulture, "ConstantValue({0})", Constant);
+			return string.Format ("ConstantValue({0})", Constant);
 		}
 	}
 
@@ -334,7 +333,7 @@ namespace Xamarin.Android.Tools.Bytecode {
 
 		public override string ToString ()
 		{
-			return string.Format (CultureInfo.CurrentCulture, "InnerClasses(Count={0}{1}{2})",
+			return string.Format ("InnerClasses(Count={0}{1}{2})",
 					Classes.Count,
 					Classes.Count == 0 ? "" : ", ",
 					string.Join (", ", Classes));
@@ -378,7 +377,7 @@ namespace Xamarin.Android.Tools.Bytecode {
 
 		public override string ToString ()
 		{
-			return string.Format (CultureInfo.CurrentCulture, "InnerClass(InnerClass='{0}', OuterClass='{1}', InnerName='{2}', InnerClassAccessFlags={3})",
+			return string.Format ("InnerClass(InnerClass='{0}', OuterClass='{1}', InnerName='{2}', InnerClassAccessFlags={3})",
 				InnerClass?.Name?.Value, OuterClass?.Name?.Value, InnerName, InnerClassAccessFlags);
 		}
 	}
@@ -470,7 +469,7 @@ namespace Xamarin.Android.Tools.Bytecode {
 
 		public override string ToString ()
 		{
-			return string.Format (CultureInfo.CurrentCulture, "MethodParameterInfo(Name='{0}', AccessFlags={1})", Name, AccessFlags);
+			return string.Format ("MethodParameterInfo(Name='{0}', AccessFlags={1})", Name, AccessFlags);
 		}
 	}
 
@@ -791,7 +790,7 @@ namespace Xamarin.Android.Tools.Bytecode {
 
 		public override string ToString ()
 		{
-			return string.Format (CultureInfo.CurrentCulture, "Signature({0})", Value);
+			return string.Format ("Signature({0})", Value);
 		}
 	}
 
@@ -850,7 +849,7 @@ namespace Xamarin.Android.Tools.Bytecode {
 
 		public override string ToString ()
 		{
-			return string.Format (CultureInfo.CurrentCulture, "Unknown[{0}]({1})", Name, Data.Length);
+			return string.Format ("Unknown[{0}]({1})", Name, Data.Length);
 		}
 	}
 }
