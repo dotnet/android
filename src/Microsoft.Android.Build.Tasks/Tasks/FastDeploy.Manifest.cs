@@ -551,7 +551,7 @@ namespace Microsoft.Android.Tasks
 				builder.Append (entry.Key).Append ('\t')
 					.Append (entry.Value.RelativePath).Append ('\t')
 					.Append (entry.Value.Size).Append ('\t')
-					.AppendLine (entry.Value.LastWriteTimeUtcTicks.ToString (CultureInfo.CurrentCulture));
+					.AppendLine (entry.Value.LastWriteTimeUtcTicks.ToString (System.Globalization.CultureInfo.CurrentCulture));
 			}
 			return builder.ToString ();
 		}
