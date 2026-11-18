@@ -1,5 +1,6 @@
 #if !NATIVEAOT
 using System;
+using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
@@ -68,6 +69,7 @@ namespace Java.InteropTests {
 		#endif
 
 		[TestMethod]
+		[RequiresDynamicCode ("Tests delegate-based native registration.")]
 		public void RegistrationFailurePropagatesJavaException ()
 		{
 			using (var type = new JniType (ClassName)) {
@@ -199,6 +201,7 @@ namespace Java.InteropTests {
 		}
 
 		[MethodImpl (MethodImplOptions.NoInlining)]
+		[RequiresDynamicCode ("Tests delegate-based native registration.")]
 		static (WeakReference Methods, WeakReference Callback) RegisterCapturedDelegate (JniType type, int offset)
 		{
 			if (!RuntimeFeature.IsDynamicCodeSupported)
@@ -214,6 +217,7 @@ namespace Java.InteropTests {
 		}
 
 		[MethodImpl (MethodImplOptions.NoInlining)]
+		[RequiresDynamicCode ("Tests delegate-based native registration.")]
 		static (WeakReference Methods, WeakReference Callback) RegisterInvalidMethods (JniType type)
 		{
 			int offset = 1;
