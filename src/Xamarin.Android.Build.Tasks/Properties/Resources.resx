@@ -1107,6 +1107,12 @@ To use a custom JDK path for a command line build, set the 'JavaSdkDirectory' MS
 {0} - The name of the embedded environment resource (such as __AndroidEnvironment__abc123).
 {1} - The full path to the assembly that contains the environment resource.</comment>
   </data>
+  <data name="XA0150" xml:space="preserve">
+    <value>Assembly '{0}' from '{1}' required the deprecated GC.KeepAlive compatibility fixup. This fixup will no longer be applied in the next .NET for Android release. Update to a library version built with the current .NET for Android toolchain, or contact the library author.</value>
+    <comment>The following are literal names and should not be translated: GC.KeepAlive, .NET for Android.
+{0} - The assembly name.
+{1} - The path to the assembly that required the fixup.</comment>
+  </data>
   <data name="XAGCA7009_UnsupportedRuntime" xml:space="preserve">
     <value>GenerateNativeApplicationConfigSources only supports CoreCLR bootstrap configuration. The supplied AndroidRuntime value was '{0}'.</value>
     <comment>The following are literal names and should not be translated: GenerateNativeApplicationConfigSources, CoreCLR, AndroidRuntime.
