@@ -251,7 +251,10 @@ auto FastDevAssemblies::build_tpa_list () noexcept -> char*
 			break;
 		}
 
-		if (std::fprintf (stream, "%s%s/%s", count > 0 ? ":" : "", override_dir_path, e->d_name) < 0) {
+		if ((count > 0 && std::fputc (':', stream) == EOF) ||
+		    std::fputs (override_dir_path, stream) == EOF ||
+		    std::fputc ('/', stream) == EOF ||
+		    std::fputs (e->d_name, stream) == EOF) {
 			log_warnf (LOG_ASSEMBLY, "FastDev: unable to write the TPA list. %s", ErrorMessage (errno).c_str ());
 			write_failed = true;
 			break;
