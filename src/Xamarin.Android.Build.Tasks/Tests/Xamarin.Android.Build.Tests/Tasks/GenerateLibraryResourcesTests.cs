@@ -1,4 +1,4 @@
-﻿using NUnit.Framework;
+using NUnit.Framework;
 using Microsoft.Build.Framework;
 using System;
 using System.Collections.Generic;
