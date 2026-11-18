@@ -1,3 +1,6 @@
+#include <fcntl.h>
+#include <unistd.h>
+
 #include <cerrno>
 #include <cstdio>
 #include <cstring>
@@ -16,12 +19,17 @@ find_in_maps (const char *str)
 {
 	abort_if_invalid_pointer_argument (str, "str");
 
-	FILE *maps = fopen ("/proc/self/maps", "r");
+	int fd = open ("/proc/self/maps", O_RDONLY);
+	FILE *maps = fd == -1 ? nullptr : fdopen (fd, "r");
 	char *line;
 	char  buf [BUF_SIZE];
 
 	if (!maps) {
 		log_warnf (LOG_DEFAULT, "Failed to open /proc/self/maps for CPU detection: %s", ErrorMessage (errno).c_str ());
+		if (fd != -1) {
+			// `fdopen` failed, we still own the file descriptor
+			close (fd);
+		}
 		return -1;
 	}
 
