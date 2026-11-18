@@ -1,5 +1,4 @@
 using System;
-using System.Globalization;
 using System.Linq;
 using Irony.Parsing;
 
@@ -99,7 +98,7 @@ namespace Xamarin.Android.Tools.Aidl
 			if (identifiers.Any (i => i == null))
 				throw new ArgumentException ($"'identifiers' contain one or more null values: {String.Concat (identifiers)}", "identifiers");
 			if (genericArguments != null && genericArguments.Any (g => g == null))
-				throw new ArgumentException (String.Format (CultureInfo.CurrentCulture, "With {0} elementType, 'genericArguments' contain one or more null values", String.Concat (".", identifiers)));
+				throw new ArgumentException (String.Format ("With {0} elementType, 'genericArguments' contain one or more null values", String.Concat (".", identifiers)));
 			this.Identifiers = identifiers;
 			this.GenericArguments = genericArguments;
 		}

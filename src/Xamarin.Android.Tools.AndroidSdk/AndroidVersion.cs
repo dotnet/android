@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Globalization;
 using System.Collections.Generic;
 using System.IO;
 using System.Xml.Linq;
@@ -56,14 +55,14 @@ namespace Xamarin.Android.Tools
 
 			ApiLevel                = versionCodeFull.Major;
 			VersionCodeFull         = versionCodeFull;
-			Id                      = id ?? (versionCodeFull.Minor != 0 ? versionCodeFull.ToString () : ApiLevel.ToString (CultureInfo.InvariantCulture));
+			Id                      = id ?? (versionCodeFull.Minor != 0 ? versionCodeFull.ToString () : ApiLevel.ToString ());
 			CodeName                = codeName;
 			OSVersion               = osVersion;
 			TargetFrameworkVersion  = Version.Parse (osVersion);
 			FrameworkVersion        = "v" + osVersion;
 			Stable                  = stable;
 
-			Ids.Add (ApiLevel.ToString (CultureInfo.InvariantCulture));
+			Ids.Add (ApiLevel.ToString ());
 			Ids.Add (VersionCodeFull.ToString ());
 			Ids.Add (Id);
 		}

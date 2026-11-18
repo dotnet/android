@@ -1,5 +1,4 @@
 using System;
-using System.Globalization;
 using System.Linq;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -238,7 +237,7 @@ namespace Xamarin.Android.Tools
 					doc = XDocument.Load (file);
 				} catch (Exception ex) {
 					bool readOnly = environmentVariables != null || workingDirectory != null;
-					logger (readOnly ? TraceLevel.Warning : TraceLevel.Error, string.Format (CultureInfo.CurrentCulture, Resources.InvalidMonodroidConfigFile_path_message, file, ex.Message));
+					logger (readOnly ? TraceLevel.Warning : TraceLevel.Error, string.Format (Resources.InvalidMonodroidConfigFile_path_message, file, ex.Message));
 					logger (TraceLevel.Verbose, ex.ToString ());
 
 					// Discovery from a task snapshot must not modify shared preferences.
