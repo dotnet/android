@@ -77,15 +77,15 @@ namespace MonoDroid.Generation {
 			var defines = new StringBuilder ()
 				.Append ("$(DefineConstants);ANDROID_1");
 			for (int i = 2; i <= level.ApiLevel; ++i) {
-				defines.AppendFormat (CultureInfo.InvariantCulture, ";ANDROID_{0}", i.ToString (CultureInfo.InvariantCulture));
+				defines.AppendFormat (CultureInfo.CurrentCulture, ";ANDROID_{0}", i.ToString (CultureInfo.CurrentCulture));
 			}
 			// ASSUME one minor release per major release starting with API-36.1
 			for (int i = 36; i < level.ApiLevel; ++i) {
-				defines.Append (CultureInfo.InvariantCulture, $";ANDROID_{i}_1");
+				defines.Append (CultureInfo.CurrentCulture, $";ANDROID_{i}_1");
 			}
 			if (level.MinorRelease != 0) {
 				for (int i = 1; i < level.MinorRelease + 1; ++i) {
-					defines.Append (CultureInfo.InvariantCulture, $";ANDROID_{level.ApiLevel}_{i}");
+					defines.Append (CultureInfo.CurrentCulture, $";ANDROID_{level.ApiLevel}_{i}");
 				}
 			}
 			return new XElement (

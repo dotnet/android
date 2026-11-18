@@ -248,7 +248,7 @@ namespace Xamarin.ProjectTools
 
 			var logger = buildLogFullPath == null
 				? string.Empty
-				: string.Format (CultureInfo.InvariantCulture, "/noconsolelogger \"/flp1:LogFile={0};Encoding=UTF-8;Verbosity={1}\"",
+				: string.Format (CultureInfo.CurrentCulture, "/noconsolelogger \"/flp1:LogFile={0};Encoding=UTF-8;Verbosity={1}\"",
 					buildLogFullPath, Verbosity.ToString ().ToLower ());
 
 			var start = DateTime.UtcNow;
@@ -262,7 +262,7 @@ namespace Xamarin.ProjectTools
 				psi.SetEnvironmentVariable ("DOTNETSDK_WORKLOAD_PACK_ROOTS", TestEnvironment.WorkloadPackOverridePath);
 			}
 
-			args.AppendFormat (CultureInfo.InvariantCulture, "{0} /t:{1} {2}",
+			args.AppendFormat (CultureInfo.CurrentCulture, "{0} /t:{1} {2}",
 					QuoteFileName (Path.Combine (XABuildPaths.TestOutputDirectory, projectOrSolution)), target, logger);
 
 			if (!AutomaticNuGetRestore) {
@@ -272,9 +272,9 @@ namespace Xamarin.ProjectTools
 			args.Append (" -nodeReuse:false"); // Disable the MSBuild daemon everywhere!
 
 			if (MaxCpuCount != null) {
-				args.Append (CultureInfo.InvariantCulture, $" /maxCpuCount:{MaxCpuCount}");
+				args.Append (CultureInfo.CurrentCulture, $" /maxCpuCount:{MaxCpuCount}");
 			}
-			args.Append (CultureInfo.InvariantCulture, $" @\"{responseFile}\"");
+			args.Append (CultureInfo.CurrentCulture, $" @\"{responseFile}\"");
 			using (var sw = new StreamWriter (responseFile, append: false, encoding: Encoding.UTF8)) {
 				sw.WriteLine ("/p:_DisableParallelAot=true");
 				sw.WriteLine ($"/p:BuildingInsideVisualStudio={BuildingInsideVisualStudio}");
@@ -398,7 +398,7 @@ namespace Xamarin.ProjectTools
 						if (line.StartsWith ("Time Elapsed", StringComparison.OrdinalIgnoreCase)) {
 							var match = timeElapsedRegEx.Match (line);
 							if (match.Success) {
-								LastBuildTime = TimeSpan.Parse (match.Groups ["TimeSpan"].Value, CultureInfo.InvariantCulture);
+								LastBuildTime = TimeSpan.Parse (match.Groups ["TimeSpan"].Value, CultureInfo.CurrentCulture);
 								Console.WriteLine ($"Found Time Elapsed {LastBuildTime}");
 							}
 						}

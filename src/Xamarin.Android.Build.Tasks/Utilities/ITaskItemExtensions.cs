@@ -34,7 +34,7 @@ namespace Xamarin.Android.Tasks
 			if (value.IsNullOrWhiteSpace ())
 				return defaultValue;
 
-			return (T?)Convert.ChangeType (value, typeof (T), CultureInfo.InvariantCulture);
+			return (T?)Convert.ChangeType (value, typeof (T), CultureInfo.CurrentCulture);
 		}
 
 		public static string? GetRequiredMetadata (this ITaskItem item, string itemName, string name, TaskLoggingHelper log)

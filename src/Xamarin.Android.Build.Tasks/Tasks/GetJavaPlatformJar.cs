@@ -114,7 +114,7 @@ namespace Xamarin.Android.Tasks
 			JavaPlatformJarPath =  MonoAndroidHelper.TryGetAndroidJarPath (Log, platform, supportedVersions,
 				designTimeBuild: DesignTimeBuild, buildingInsideVisualStudio: BuildingInsideVisualStudio,
 				targetFramework: TargetFramework, androidSdkDirectory: AndroidSdkDirectory.IsNullOrEmpty () ? AndroidSdkDirectory : TaskEnvironment.GetAbsolutePath (AndroidSdkDirectory));
-			TargetSdkVersion = supportedVersions.GetApiLevelFromId (platform)?.ToString (CultureInfo.InvariantCulture) ?? "";
+			TargetSdkVersion = supportedVersions.GetApiLevelFromId (platform)?.ToString (CultureInfo.CurrentCulture) ?? "";
 			if (JavaPlatformJarPath == null)
 				return !Log.HasLoggedErrors;
 

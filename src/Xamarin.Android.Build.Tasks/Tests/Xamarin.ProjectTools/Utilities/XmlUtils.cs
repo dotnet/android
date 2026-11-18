@@ -15,18 +15,18 @@ namespace Xamarin.ProjectTools
 				if (string.IsNullOrEmpty (pg.Condition)) {
 					sb.AppendLine ("\t<PropertyGroup>");
 				} else {
-					sb.AppendLine (CultureInfo.InvariantCulture, $"\t<PropertyGroup Condition=\"{pg.Condition}\">");
+					sb.AppendLine (CultureInfo.CurrentCulture, $"\t<PropertyGroup Condition=\"{pg.Condition}\">");
 				}
 				foreach (var p in pg.Properties) {
 					var conditon = string.IsNullOrEmpty (p.Condition) ? "" : $" Condition=\"{p.Condition}\"";
-					sb.AppendLine (CultureInfo.InvariantCulture, $"\t\t<{p.Name}{conditon}>{p.Value ()}</{p.Name}>");
+					sb.AppendLine (CultureInfo.CurrentCulture, $"\t\t<{p.Name}{conditon}>{p.Value ()}</{p.Name}>");
 				}
 				sb.AppendLine ("\t</PropertyGroup>");
 			}
 			if (project.PackageReferences.Count > 0) {
 				sb.AppendLine ("\t<ItemGroup>");
 				foreach (var pr in project.PackageReferences) {
-					sb.AppendLine (CultureInfo.InvariantCulture, $"\t\t<PackageReference Include=\"{pr.Id}\" Version=\"{pr.Version}\"/>");
+					sb.AppendLine (CultureInfo.CurrentCulture, $"\t\t<PackageReference Include=\"{pr.Id}\" Version=\"{pr.Version}\"/>");
 				}
 				sb.AppendLine ("\t</ItemGroup>");
 			}
@@ -63,7 +63,7 @@ namespace Xamarin.ProjectTools
 			foreach (var import in project.Imports) {
 				var projectName = import.Project ();
 				if (projectName != "Directory.Build.props" && projectName != "Directory.Build.targets")
-					sb.AppendLine (CultureInfo.InvariantCulture, $"\t<Import Project=\"{projectName}\" />");
+					sb.AppendLine (CultureInfo.CurrentCulture, $"\t<Import Project=\"{projectName}\" />");
 			}
 			return $"<Project Sdk=\"{project.Sdk}\">\r\n{sb}\r\n</Project>";
 		}
@@ -72,22 +72,22 @@ namespace Xamarin.ProjectTools
 		{
 			if (bi.Deleted)
 				return;
-			sb.Append (CultureInfo.InvariantCulture, $"\t\t<{bi.BuildAction} ");
-			if (bi.Include != null) sb.Append (CultureInfo.InvariantCulture, $"Include=\"{bi.Include ()}\" ");
-			if (bi.Update != null) sb.Append (CultureInfo.InvariantCulture, $"Update=\"{bi.Update ()}\" ");
-			if (bi.Remove != null) sb.Append (CultureInfo.InvariantCulture, $"Remove=\"{bi.Remove ()}\" ");
-			if (bi.Generator != null) sb.Append (CultureInfo.InvariantCulture, $"Generator=\"{bi.Generator ()}\" ");
-			if (bi.DependentUpon != null) sb.Append (CultureInfo.InvariantCulture, $"DependentUpon=\"{bi.DependentUpon ()}\" ");
-			if (bi.Version != null) sb.Append (CultureInfo.InvariantCulture, $"Version=\"{bi.Version ()}\" ");
-			if (bi.SubType != null) sb.Append (CultureInfo.InvariantCulture, $"SubType=\"{bi.SubType ()}\" ");
+			sb.Append (CultureInfo.CurrentCulture, $"\t\t<{bi.BuildAction} ");
+			if (bi.Include != null) sb.Append (CultureInfo.CurrentCulture, $"Include=\"{bi.Include ()}\" ");
+			if (bi.Update != null) sb.Append (CultureInfo.CurrentCulture, $"Update=\"{bi.Update ()}\" ");
+			if (bi.Remove != null) sb.Append (CultureInfo.CurrentCulture, $"Remove=\"{bi.Remove ()}\" ");
+			if (bi.Generator != null) sb.Append (CultureInfo.CurrentCulture, $"Generator=\"{bi.Generator ()}\" ");
+			if (bi.DependentUpon != null) sb.Append (CultureInfo.CurrentCulture, $"DependentUpon=\"{bi.DependentUpon ()}\" ");
+			if (bi.Version != null) sb.Append (CultureInfo.CurrentCulture, $"Version=\"{bi.Version ()}\" ");
+			if (bi.SubType != null) sb.Append (CultureInfo.CurrentCulture, $"SubType=\"{bi.SubType ()}\" ");
 			if (!bi.Metadata.Any ()) {
 				sb.AppendLine ($"\t\t/>");
 			} else {
 				sb.AppendLine ($">");
 				foreach (var kvp in bi.Metadata) {
-					sb.AppendLine (CultureInfo.InvariantCulture, $"\t\t\t<{kvp.Key}>{kvp.Value}</{kvp.Key}>");
+					sb.AppendLine (CultureInfo.CurrentCulture, $"\t\t\t<{kvp.Key}>{kvp.Value}</{kvp.Key}>");
 				}
-				sb.AppendLine (CultureInfo.InvariantCulture, $"\t\t</{bi.BuildAction}>");
+				sb.AppendLine (CultureInfo.CurrentCulture, $"\t\t</{bi.BuildAction}>");
 			}
 		}
 	}

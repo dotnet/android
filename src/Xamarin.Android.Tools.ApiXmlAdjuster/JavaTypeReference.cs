@@ -120,7 +120,7 @@ namespace Xamarin.Android.Tools.ApiXmlAdjuster
 			else if (ReferencedTypeParameter != null)
 				return ReferencedTypeParameter.ToString () + ArrayPart;
 			else
-				return string.Format (CultureInfo.InvariantCulture, "{0}{1}{2}{3}{4}",
+				return string.Format (CultureInfo.CurrentCulture, "{0}{1}{2}{3}{4}",
 					ReferencedType?.Parent?.Name,
 					string.IsNullOrEmpty (ReferencedType?.Parent?.Name) ? string.Empty : ".",
 					ReferencedType?.Name,
