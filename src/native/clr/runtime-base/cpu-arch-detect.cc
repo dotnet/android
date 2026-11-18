@@ -8,6 +8,7 @@
 #include <shared/cpp-util.hh>
 #include <shared/log_functions.hh>
 #include <runtime-base/cpu-arch.hh>
+#include <runtime-base/util.hh>
 
 using namespace xamarin::android;
 

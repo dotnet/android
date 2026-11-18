@@ -19,6 +19,32 @@
 #include <shared/log_types.hh>
 
 namespace xamarin::android {
+	// Gets the message for an `errno` value without `strerror ()`. The message is stored in the object, so
+	// `c_str ()` stays valid for as long as the object does. Create it in the expression that uses the message:
+	//
+	//   log_warnf (LOG_DEFAULT, "Failed: %s", ErrorMessage (errno).c_str ());
+	//
+	// `strerror_r` returns the message only in its GNU variant, which Android has since API level 23.
+	class ErrorMessage final
+	{
+	public:
+		explicit ErrorMessage (int error_number) noexcept
+			: message { strerror_r (error_number, buffer, sizeof (buffer)) }
+		{}
+
+		ErrorMessage (ErrorMessage const&) = delete;
+		auto operator= (ErrorMessage const&) -> ErrorMessage& = delete;
+
+		auto c_str () const noexcept -> const char*
+		{
+			return message;
+		}
+
+	private:
+		char buffer [128];
+		const char *message;
+	};
+
 	class Util
 	{
 	public:

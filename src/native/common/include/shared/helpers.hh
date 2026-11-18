@@ -1,7 +1,6 @@
 #pragma once
 
 #include <cstdlib>
-#include <cstring>
 #include <source_location>
 #include <string>
 #include <string_view>
@@ -106,28 +105,4 @@ namespace xamarin::android
 
 		return replacement == nullptr ? "<null>" : replacement;
 	}
-
-	// A thread-safe replacement for `strerror ()`. The message lives in a buffer owned by the object, so
-	// `c_str ()` stays valid for as long as the object does. Create it in the expression which uses the message:
-	//
-	//   log_warnf (LOG_DEFAULT, "Failed: %s", ErrorMessage (errno).c_str ());
-	class ErrorMessage final
-	{
-	public:
-		explicit ErrorMessage (int error_number) noexcept
-			: message { strerror_r (error_number, buffer, sizeof (buffer)) }
-		{}
-
-		ErrorMessage (ErrorMessage const&) = delete;
-		auto operator= (ErrorMessage const&) -> ErrorMessage& = delete;
-
-		auto c_str () const noexcept -> const char*
-		{
-			return message;
-		}
-
-	private:
-		char buffer [128];
-		const char *message;
-	};
 }
