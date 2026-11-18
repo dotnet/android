@@ -39,5 +39,12 @@ if [[ ! -f "$install_script" ]]; then
   mv "$install_script_tmp" "$install_script"
 fi
 
+if [[ -x "$install_dir/dotnet" ]] &&
+   "$install_dir/dotnet" --list-sdks 2>/dev/null |
+       awk -v version="$sdk_version" '$1 == version { found = 1 } END { exit !found }'; then
+  echo ".NET SDK $sdk_version is already installed in $install_dir"
+  exit 0
+fi
+
 echo "Installing .NET SDK $sdk_version into $install_dir"
 bash "$install_script" --version "$sdk_version" --install-dir "$install_dir" --no-path
