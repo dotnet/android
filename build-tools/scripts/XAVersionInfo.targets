@@ -1,73 +1,19 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-  <!-- NOTE: Do NOT use TaskFactory="TaskHostFactory" Runtime="NET" on these UsingTask elements.
-       MSBuild 18+ (dotnet/msbuild#13175) added app host support which changed how TaskHostFactory
-       spawns .NET task hosts. The MetadataLoadContext used to inspect task assemblies is disposed
-       before output validation completes, causing MSB4027. TaskHostFactory without Runtime="NET"
-       still infers .NET on .NET Core MSBuild, so it must be removed entirely. These tasks only
-       run git commands and don't need out-of-proc isolation. -->
-  <UsingTask AssemblyFile="$(PrepTasksAssembly)"  TaskName="Xamarin.Android.BuildTools.PrepTasks.GitBlame" />
-  <UsingTask AssemblyFile="$(PrepTasksAssembly)"  TaskName="Xamarin.Android.BuildTools.PrepTasks.GitBranch" />
-  <UsingTask AssemblyFile="$(PrepTasksAssembly)"  TaskName="Xamarin.Android.BuildTools.PrepTasks.GitCommitHash" />
-  <UsingTask AssemblyFile="$(PrepTasksAssembly)"  TaskName="Xamarin.Android.BuildTools.PrepTasks.GitCommitsInRange" />
-  <!-- Java.Interop and the Android tools projects live in-tree and their commit
-       is the dotnet/android commit. No submodules contribute version info
-       anymore, so there is no _GetSubmodulesVersionInfo target. -->
   <Target Name="GetXAVersionInfo">
     <PropertyGroup>
-      <_AndroidAllowMissingGitStartCommit>false</_AndroidAllowMissingGitStartCommit>
-      <_AndroidAllowMissingGitStartCommit Condition=" '$(SYSTEM_PULLREQUEST_PULLREQUESTNUMBER)' != '' ">true</_AndroidAllowMissingGitStartCommit>
-    </PropertyGroup>
-    <GitBlame
-        FileName="Directory.Build.props"
-        LineFilter="&lt;ProductVersion&gt;"
-        WorkingDirectory="$(XamarinAndroidSourcePath)"
-        ToolPath="$(GitToolPath)"
-        ToolExe="$(GitToolExe)">
-      <Output TaskParameter="Commits"                 ItemName="_XAVersionCommit" />
-    </GitBlame>
-    <GitCommitsInRange
-        AllowMissingStartCommit="$(_AndroidAllowMissingGitStartCommit)"
-        ContinueOnError="true"
-        StartCommit="%(_XAVersionCommit.CommitHash)"
-        WorkingDirectory="$(XamarinAndroidSourcePath)"
-        ToolPath="$(GitToolPath)"
-        ToolExe="$(GitToolExe)">
-      <Output TaskParameter="CommitCount"             PropertyName="XAVersionCommitCount"   Condition=" '$(XAVersionCommitCount)' == '' " />
-    </GitCommitsInRange>
-    <GitBlame
-        FileName="eng/Versions.props"
-        LineFilter="&lt;AndroidPackVersion&gt;"
-        WorkingDirectory="$(XamarinAndroidSourcePath)"
-        ToolPath="$(GitToolPath)"
-        ToolExe="$(GitToolExe)">
-      <Output TaskParameter="Commits"                 ItemName="_PackVersionCommit" />
-    </GitBlame>
-    <GitCommitsInRange
-        AllowMissingStartCommit="$(_AndroidAllowMissingGitStartCommit)"
-        ContinueOnError="true"
-        StartCommit="%(_PackVersionCommit.CommitHash)"
-        WorkingDirectory="$(XamarinAndroidSourcePath)"
-        ToolPath="$(GitToolPath)"
-        ToolExe="$(GitToolExe)">
-      <Output TaskParameter="CommitCount"             PropertyName="PackVersionCommitCount"   Condition=" '$(PackVersionCommitCount)' == '' " />
-    </GitCommitsInRange>
-    <GitCommitHash
-        WorkingDirectory="$(XamarinAndroidSourcePath)"
-        ToolPath="$(GitToolPath)"
-        ToolExe="$(GitToolExe)">
-      <Output TaskParameter="AbbreviatedCommitHash"   PropertyName="XAVersionHash"          Condition=" '$(XAVersionHash)' == '' " />
-    </GitCommitHash>
-    <GitBranch
-        WorkingDirectory="$(XamarinAndroidSourcePath)"
-        ToolPath="$(GitToolPath)"
-        ToolExe="$(GitToolExe)">
-      <Output TaskParameter="Branch"                  PropertyName="XAVersionBranch"        Condition=" '$(XAVersionBranch)' == '' " />
-    </GitBranch>
-    <PropertyGroup>
+      <XAVersionCommitHash Condition=" '$(XAVersionCommitHash)' == '' ">local</XAVersionCommitHash>
+      <XAVersionBranch Condition=" '$(XAVersionBranch)' == '' ">local</XAVersionBranch>
+      <XAVersionCommitCount Condition=" '$(XAVersionCommitCount)' == '' ">0</XAVersionCommitCount>
+      <PackVersionCommitCount Condition=" '$(PackVersionCommitCount)' == '' ">0</PackVersionCommitCount>
+      <XAVersionHash Condition=" '$(XAVersionHash)' == '' and '$(XAVersionCommitHash)' == 'local' ">local</XAVersionHash>
+      <XAVersionHash Condition=" '$(XAVersionHash)' == '' ">$(XAVersionCommitHash.Substring(0, 7))</XAVersionHash>
       <XARepositoryName Condition=" '$(XARepositoryName)' == '' ">dotnet/android</XARepositoryName>
+      <_AndroidUseLocalVersion Condition=" '$(XAVersionCommitHash)' == 'local' and '$(XAVersionBranch)' == 'local' ">true</_AndroidUseLocalVersion>
+      <XAVersionBuildDate Condition=" '$(_AndroidUseLocalVersion)' == 'true' and '$(XAVersionBuildDate)' == '' ">$([System.DateTime]::UtcNow.ToString('yyyyMMdd'))</XAVersionBuildDate>
       <!-- See Azure Pipelines predefined variables. -->
       <_AndroidPackLabel Condition=" '$(SYSTEM_PULLREQUEST_PULLREQUESTNUMBER)' != '' ">ci.pr.gh$(SYSTEM_PULLREQUEST_PULLREQUESTNUMBER).$(PackVersionCommitCount)</_AndroidPackLabel>
+      <_AndroidPackLabel Condition=" '$(_AndroidPackLabel)' == '' and '$(_AndroidUseLocalVersion)' == 'true' ">local.$(XAVersionBuildDate)</_AndroidPackLabel>
       <_AndroidPackBranch>$([System.Text.RegularExpressions.Regex]::Replace('$(XAVersionBranch)', '[^a-zA-Z0-9-]', '-'))</_AndroidPackBranch>
       <_AndroidPackLabel Condition=" '$(_AndroidPackLabel)' == '' and ('$(XAVersionBranch)' == 'main' or $(XAVersionBranch.StartsWith('release/')))">$(AndroidPackVersionSuffix).$(PackVersionCommitCount)</_AndroidPackLabel>
       <_AndroidPackLabel Condition=" '$(_AndroidPackLabel)' == '' ">ci.$(_AndroidPackBranch).$(PackVersionCommitCount)</_AndroidPackLabel>

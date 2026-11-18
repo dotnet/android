@@ -43,6 +43,10 @@ steps:
   parameters:
     xaSourcePath: ${{ parameters.xaSourcePath }}
 
+- template: /build-tools/automation/yaml-templates/set-xaversion-properties.yaml
+  parameters:
+    xaSourcePath: ${{ parameters.xaSourcePath }}
+
 # Prepare and Build everything
 - script: make jenkins CONFIGURATION=$(XA.Build.Configuration) MSBUILD_ARGS='${{ parameters.makeMSBuildArgs }}'
   workingDirectory: ${{ parameters.xaSourcePath }}

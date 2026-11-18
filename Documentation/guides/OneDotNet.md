@@ -265,6 +265,9 @@ see the [net6-samples][net6-samples] repo.
 
 ## Package Versioning Scheme
 
+`XAVersionInfo.targets` consumes Git-derived properties exported by CI; local
+builds default to zero commit counts, `local` provenance, and the UTC build date.
+
 This is the package version scheme: `OS-Major.OS-Minor.InternalRelease[-prereleaseX].CommitDistance`.
 
 * Major: The highest stable API level, such as 30. On Apple platforms, this is the major OS version.

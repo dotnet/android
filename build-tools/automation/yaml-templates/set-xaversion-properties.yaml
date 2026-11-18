@@ -1,0 +1,30 @@
+parameters:
+  xaSourcePath: $(System.DefaultWorkingDirectory)
+
+steps:
+- pwsh: |
+    $ErrorActionPreference = 'Stop'
+
+    function Get-Commit($file, $marker) {
+      (git blame -- $file | Select-String -SimpleMatch $marker).Line.Split()[0]
+    }
+    function Get-Count($commit) {
+      if ($commit.StartsWith('^') -or $commit -match '^0+$') { 0 } else { git rev-list --count "$commit..HEAD" }
+    }
+
+    $productCommit = Get-Commit 'Directory.Build.props' '<ProductVersion>'
+    $packCommit = Get-Commit 'eng/Versions.props' '<AndroidPackVersion>'
+    $branch = $env:BUILD_SOURCEBRANCH
+    if ([string]::IsNullOrEmpty($branch) -or $branch -match '(?i)merge') {
+      $branch = & git symbolic-ref --quiet HEAD
+      if ($LASTEXITCODE -eq 1) { $branch = & git name-rev --name-only '--exclude=tags/*' HEAD }
+    }
+    $branch = ($branch -replace '^refs/heads/', '') -replace '^remotes/origin/', ''
+    $branch = $branch -replace '~.+$', ''
+
+    Write-Host "##vso[task.setvariable variable=XAVersionCommitHash]$(git rev-parse HEAD)"
+    Write-Host "##vso[task.setvariable variable=XAVersionBranch]$branch"
+    Write-Host "##vso[task.setvariable variable=XAVersionCommitCount]$(Get-Count $productCommit)"
+    Write-Host "##vso[task.setvariable variable=PackVersionCommitCount]$(Get-Count $packCommit)"
+  workingDirectory: ${{ parameters.xaSourcePath }}
+  displayName: Set version properties

@@ -28,8 +28,7 @@
   </ItemGroup>
 
   <UsingTask AssemblyFile="$(PrepTasksAssembly)" TaskName="Xamarin.Android.BuildTools.PrepTasks.ReplaceFileContents" TaskFactory="TaskHostFactory" Runtime="NET" />
-  <UsingTask AssemblyFile="$(PrepTasksAssembly)" TaskName="Xamarin.Android.BuildTools.PrepTasks.GitCommitHash"      TaskFactory="TaskHostFactory" Runtime="NET" />
-  <UsingTask AssemblyFile="$(PrepTasksAssembly)" TaskName="Xamarin.Android.BuildTools.PrepTasks.GitBranch"          TaskFactory="TaskHostFactory" Runtime="NET" />
+  <Import Project="..\..\build-tools\scripts\XAVersionInfo.targets" />
 
   <PropertyGroup>
     <_XABuildConfigTemplate>$(MSBuildThisFileDirectory)XABuildConfig.cs.in</_XABuildConfigTemplate>
@@ -37,6 +36,7 @@
 
   <Target Name="_GenerateXABuildConfig"
           BeforeTargets="BeforeCompile;CoreCompile"
+          DependsOnTargets="GetXAVersionInfo"
           Inputs="$(MSBuildThisFileFullPath);$(_XABuildConfigTemplate);$(XamarinAndroidSourcePath)Configuration.props;$(XamarinAndroidSourcePath)Directory.Build.props"
           Outputs="$(IntermediateOutputPath)XABuildConfig.cs">
     <!--
@@ -73,14 +73,6 @@
       <_UnstableApiMinor Condition=" $(AndroidLatestUnstableApiLevel.Contains('.')) ">$(AndroidLatestUnstableApiLevel.Split('.')[1])</_UnstableApiMinor>
     </PropertyGroup>
 
-    <GitCommitHash WorkingDirectory="$(XamarinAndroidSourcePath)">
-      <Output TaskParameter="CommitHash" PropertyName="_XACommitHash" />
-    </GitCommitHash>
-
-    <GitBranch WorkingDirectory="$(XamarinAndroidSourcePath)">
-      <Output TaskParameter="Branch" PropertyName="_XABranch" />
-    </GitBranch>
-
     <ItemGroup>
       <_XABuildConfigReplacement Include="@NDK_REVISION@=$(_XAAndroidNdkPkgRevision)" />
       <_XABuildConfigReplacement Include="@NDK_RELEASE@=$(_XAAndroidNdkRelease)" />
@@ -102,8 +94,8 @@
       <_XABuildConfigReplacement Include="@ANDROID_LATEST_UNSTABLE_API_LEVEL@=$(_UnstableApiMajor)" />
       <_XABuildConfigReplacement Include="@ANDROID_LATEST_UNSTABLE_API_LEVEL_MINOR@=$(_UnstableApiMinor)" />
       <_XABuildConfigReplacement Include="@XAMARIN_ANDROID_VERSION@=$(ProductVersion)" />
-      <_XABuildConfigReplacement Include="@XAMARIN_ANDROID_COMMIT_HASH@=$(_XACommitHash)" />
-      <_XABuildConfigReplacement Include="@XAMARIN_ANDROID_BRANCH@=$(_XABranch)" />
+      <_XABuildConfigReplacement Include="@XAMARIN_ANDROID_COMMIT_HASH@=$(XAVersionCommitHash)" />
+      <_XABuildConfigReplacement Include="@XAMARIN_ANDROID_BRANCH@=$(XAVersionBranch)" />
     </ItemGroup>
 
     <MakeDir Directories="$(IntermediateOutputPath)" />

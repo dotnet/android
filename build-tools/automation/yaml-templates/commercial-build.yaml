@@ -26,6 +26,10 @@ steps:
 #  https://learn.microsoft.com/en-us/azure/devops/pipelines/repos/multi-repo-checkout?view=azure-devops#checkout-path
 - checkout: macios-devtools
 
+- template: /build-tools/automation/yaml-templates/set-xaversion-properties.yaml
+  parameters:
+    xaSourcePath: ${{ parameters.xaSourcePath }}
+
 - task: CodeQL3000Init@0
   displayName: CodeQL 3000 Init
   condition: and(succeeded(), eq(variables['Codeql.Enabled'], 'true'), eq(variables['Build.SourceBranch'], 'refs/heads/main'))
