@@ -292,7 +292,7 @@ namespace MonoDroid.Generation
 				if (short_file_names.TryGetValue (fullName, out var s))
 					return s;
 
-				s = short_file_names.Count.ToString (CultureInfo.CurrentCulture);
+				s = short_file_names.Count.ToString (CultureInfo.InvariantCulture);
 				short_file_names [fullName] = s;
 
 				return s;

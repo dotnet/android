@@ -89,12 +89,12 @@ namespace MonoDroid.Generation {
 
 		public string FromNative (CodeGenerationOptions opt, string var_name, bool owned)
 		{
-			return String.Format (CultureInfo.CurrentCulture, "({0}[]{4}) JNIEnv.GetArray ({1}, {2}, typeof ({3}))", opt.GetOutputName (ElementType), var_name, owned ? "JniHandleOwnership.TransferLocalRef" : "JniHandleOwnership.DoNotTransfer", opt.GetOutputName (sym.FullName), opt.NullableOperator);
+			return String.Format (CultureInfo.InvariantCulture, "({0}[]{4}) JNIEnv.GetArray ({1}, {2}, typeof ({3}))", opt.GetOutputName (ElementType), var_name, owned ? "JniHandleOwnership.TransferLocalRef" : "JniHandleOwnership.DoNotTransfer", opt.GetOutputName (sym.FullName), opt.NullableOperator);
 		}
 
 		public string ToNative (CodeGenerationOptions opt, string var_name, Dictionary<string, string> mappings = null)
 		{
-			return String.Format (CultureInfo.CurrentCulture, "JNIEnv.NewArray ({0})", var_name);
+			return String.Format (CultureInfo.InvariantCulture, "JNIEnv.NewArray ({0})", var_name);
 		}
 
 		public bool Validate (CodeGenerationOptions opt, GenericParameterDefinitionList type_params, CodeGeneratorContext context)
@@ -131,12 +131,12 @@ namespace MonoDroid.Generation {
 
 		public string[] PreCallback (CodeGenerationOptions opt, string var_name, bool owned)
 		{
-			return new string[] { String.Format (CultureInfo.CurrentCulture, "var {1} = ({0}[]{4}) JNIEnv.GetArray ({2}, JniHandleOwnership.DoNotTransfer, typeof ({3}));", opt.GetOutputName (ElementType), opt.GetSafeIdentifier (var_name), opt.GetSafeIdentifier (TypeNameUtilities.GetNativeName (var_name)), opt.GetOutputName (sym.FullName), opt.NullableOperator) };
+			return new string[] { String.Format (CultureInfo.InvariantCulture, "var {1} = ({0}[]{4}) JNIEnv.GetArray ({2}, JniHandleOwnership.DoNotTransfer, typeof ({3}));", opt.GetOutputName (ElementType), opt.GetSafeIdentifier (var_name), opt.GetSafeIdentifier (TypeNameUtilities.GetNativeName (var_name)), opt.GetOutputName (sym.FullName), opt.NullableOperator) };
 		}
 
 		public string[] PreCall (CodeGenerationOptions opt, string var_name)
 		{
-			return new string[] { String.Format (CultureInfo.CurrentCulture, "IntPtr {0} = JNIEnv.NewArray ({1});", opt.GetSafeIdentifier (TypeNameUtilities.GetNativeName (var_name)), opt.GetSafeIdentifier (var_name)) };
+			return new string[] { String.Format (CultureInfo.InvariantCulture, "IntPtr {0} = JNIEnv.NewArray ({1});", opt.GetSafeIdentifier (TypeNameUtilities.GetNativeName (var_name)), opt.GetSafeIdentifier (var_name)) };
 		}
 
 		public bool NeedsPrep { get { return true; } }

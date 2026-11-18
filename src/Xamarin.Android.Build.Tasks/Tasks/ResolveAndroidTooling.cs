@@ -82,7 +82,7 @@ namespace Xamarin.Android.Tasks
 					AndroidApiLevel = v.ToString ();
 				}
 			} else {
-				AndroidApiLevel = GetMaxStableApiLevel ().ToString (CultureInfo.CurrentCulture);
+				AndroidApiLevel = GetMaxStableApiLevel ().ToString (CultureInfo.InvariantCulture);
 			}
 
 			if (AndroidSdkPath.IsNullOrEmpty () || !Directory.Exists (TaskEnvironment.GetAbsolutePath (AndroidSdkPath))) {

@@ -220,7 +220,7 @@ namespace Xamarin.Android.Tasks
 						value = Convert.ToInt32 (element?.Attribute ("id")?.Value ?? "0x0", fromBase: 16);
 					} else {
 						CodePrimitiveExpression initExpression = fields [i].InitExpression as CodePrimitiveExpression;
-						value = Convert.ToInt32 (initExpression.Value, CultureInfo.CurrentCulture);
+						value = Convert.ToInt32 (initExpression.Value, CultureInfo.InvariantCulture);
 					}
 					arrayValues.Add ((Key: value, Value: fields [i]));
 				}
@@ -395,7 +395,7 @@ namespace Xamarin.Android.Tasks
 			};
 			if (value != -1) {
 				f.InitExpression = new CodePrimitiveExpression (value);
-				string valueName = parentType.Name == "Styleable" ? value.ToString (CultureInfo.CurrentCulture) : $"0x{value.ToString ("X", CultureInfo.InvariantCulture)}";
+				string valueName = parentType.Name == "Styleable" ? value.ToString (CultureInfo.InvariantCulture) : $"0x{value.ToString ("X", CultureInfo.InvariantCulture)}";
 				f.Comments.Add (new CodeCommentStatement ($"aapt resource value: {valueName}"));
 			}
 			parentType.Members.Add (f);

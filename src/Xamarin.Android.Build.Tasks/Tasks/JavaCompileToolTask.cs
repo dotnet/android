@@ -63,7 +63,7 @@ namespace Xamarin.Android.Tasks
 				// Include any user .java files
 				if (JavaSourceFiles != null)
 					foreach (var file in JavaSourceFiles.Where (p => Path.GetExtension (p.ItemSpec) == ".java"))
-						sw.WriteLine (string.Format (CultureInfo.CurrentCulture, "\"{0}\"", file.ItemSpec.Replace (@"\", @"\\")));
+						sw.WriteLine (string.Format (CultureInfo.InvariantCulture, "\"{0}\"", file.ItemSpec.Replace (@"\", @"\\")));
 
 				WriteJavaSourcesFromDirectory (sw, StubSourceDirectory);
 
@@ -102,7 +102,7 @@ namespace Xamarin.Android.Tasks
 				// Solution:
 				//    Since '\' is an escape character, we need to escape it.
 				// [0] http://download.oracle.com/javase/1.4.2/docs/api/java/io/StreamTokenizer.html#quoteChar(int)
-				sw.WriteLine (string.Format (CultureInfo.CurrentCulture, "\"{0}\"",
+				sw.WriteLine (string.Format (CultureInfo.InvariantCulture, "\"{0}\"",
 							file.Replace (@"\", @"\\").Normalize (NormalizationForm.FormC)));
 			}
 		}

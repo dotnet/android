@@ -81,7 +81,7 @@ namespace generator.SourceWriters
 			var indirect = field.IsStatic ? "StaticFields" : "InstanceFields";
 			var invoke = "Get{0}Value";
 
-			invoke = string.Format (CultureInfo.CurrentCulture, invoke, invokeType);
+			invoke = string.Format (CultureInfo.InvariantCulture, invoke, invokeType);
 
 			writer.WriteLine ($"var __v = {field.Symbol.ReturnCast}_members.{indirect}.{invoke} (__id{(field.IsStatic ? "" : ", this")});");
 

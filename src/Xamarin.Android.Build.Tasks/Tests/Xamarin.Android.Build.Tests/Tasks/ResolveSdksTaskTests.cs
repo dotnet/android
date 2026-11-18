@@ -333,7 +333,7 @@ namespace Xamarin.Android.Build.Tests {
 					var environment = TaskEnvironment.CreateWithProjectDirectoryAndEnvironment (
 						Path.Combine (Root, projectPath), new Dictionary<string, string> {
 							["PATHEXT"] = $".MT{project}{Path.PathSeparator}.CMD",
-							["ANDROID_TOOLING_TEST_VERSION"] = (2 + project).ToString (CultureInfo.CurrentCulture),
+							["ANDROID_TOOLING_TEST_VERSION"] = (2 + project).ToString (CultureInfo.InvariantCulture),
 						});
 					File.WriteAllText (Path.Combine (toolPath, $"probe.MT{project}"), "");
 					Assert.AreEqual ($"probe.MT{project}", MonoAndroidHelper.GetExecutablePath (Path.Combine ("sdk", "build-tools", "36.0.0"), "probe.exe", environment));
@@ -348,7 +348,7 @@ namespace Xamarin.Android.Build.Tests {
 						};
 						Assert.IsTrue (tooling.Execute ());
 						Assert.AreEqual ($"{2 + project}.{10 + project}", tooling.Aapt2Version);
-						Assert.AreEqual ((100 + project).ToString (CultureInfo.CurrentCulture), tooling.AndroidApiLevel);
+						Assert.AreEqual ((100 + project).ToString (CultureInfo.InvariantCulture), tooling.AndroidApiLevel);
 						Assert.AreEqual ($"Project{project}", tooling.AndroidApiLevelName);
 						Assert.AreEqual (Path.Combine (sdkPath, "build-tools", "36.0.0"), tooling.AndroidSdkBuildToolsPath);
 						Assert.AreEqual (Path.Combine (sdkPath, "build-tools", "36.0.0"), tooling.ZipAlignPath);
@@ -480,7 +480,7 @@ namespace Xamarin.Android.Build.Tests {
 						SupportedOSPlatformVersion = "24.0",
 					};
 					Assert.IsTrue (task.Execute ());
-					Assert.AreEqual ((127 + context).ToString (CultureInfo.CurrentCulture), task.TargetSdkVersion);
+					Assert.AreEqual ((127 + context).ToString (CultureInfo.InvariantCulture), task.TargetSdkVersion);
 					Assert.AreEqual (Path.Combine (sdkPaths [context], "platforms", "android-Z", "android.jar"), task.JavaPlatformJarPath);
 				});
 			} finally {
@@ -683,7 +683,7 @@ namespace Xamarin.Android.Build.Tests {
 					};
 					CreateFauxReferencesDirectory (Path.Combine (projectPath, "references"), apis);
 					var sdk = CreateFauxAndroidSdkDirectory (Path.Combine (projectPath, "sdk"), "36.0.0",
-						[new ApiInfo { Id = (127 + i).ToString (CultureInfo.CurrentCulture) }]);
+						[new ApiInfo { Id = (127 + i).ToString (CultureInfo.InvariantCulture) }]);
 					var optionalPath = Path.Combine (sdk, "platforms", $"android-{127 + i}", "optional");
 					Directory.CreateDirectory (optionalPath);
 					File.WriteAllText (Path.Combine (optionalPath, "present.jar"), "");
