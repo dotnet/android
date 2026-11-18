@@ -61,7 +61,7 @@ namespace Android.Views {
 			if (runnable != null)
 				removed = RemoveCallbacks (runnable);
 			// Also cancel drawable callbacks scheduled through this View's ScheduleDrawable (who, Action, long).
-			foreach (var scheduled in Java.Lang.Thread.RunnableImplementor.FindScheduled (this, action))
+			foreach (var scheduled in Java.Lang.Thread.RunnableImplementor.FindAllScheduled (this, action))
 				removed |= RemoveCallbacks (scheduled);
 			return removed;
 		}
@@ -73,10 +73,12 @@ namespace Android.Views {
 
 		public void UnscheduleDrawable (Android.Graphics.Drawables.Drawable who, Action what)
 		{
+			var scheduled = Java.Lang.Thread.RunnableImplementor.FindScheduled (this, who, what);
+			if (scheduled != null)
+				UnscheduleDrawable (who, scheduled);
 			var runnable = Java.Lang.Thread.RunnableImplementor.Find (who, what);
-			if (runnable == null)
-				return;
-			UnscheduleDrawable (who, runnable);
+			if (runnable != null)
+				UnscheduleDrawable (who, runnable);
 		}
 
 #if ANDROID_11

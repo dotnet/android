@@ -47,10 +47,10 @@ namespace Java.Lang {
 			{
 				public JniObjectReference Reference = reference;
 				public readonly ConditionalWeakTable<Action, RunnableImplementor> Runnables = new ();
-				// Drawable runnables a View scheduled via View.ScheduleDrawable (who, Action, long), so that
-				// View.RemoveCallbacks (Action) also cancels them. Held weakly: each runnable is owned by its
-				// drawable's entry (or the Java queue), so transient drawables do not accumulate here.
-				public readonly ConditionalWeakTable<Action, ConditionalWeakTable<RunnableImplementor, object?>> Scheduled = new ();
+				// Runnables of View.ScheduleDrawable (who, Action, long), keyed by the drawable's entry. Only that
+				// helper queues them, so View.RemoveCallbacks (Action) can cancel them without touching the
+				// drawable's own ScheduleSelf posts. Entries go away once the drawable's entry is swept.
+				public readonly ConditionalWeakTable<Action, ConditionalWeakTable<Owner, RunnableImplementor>> Scheduled = new ();
 			}
 
 			const int MinimumSweepThreshold = 256;
@@ -71,20 +71,31 @@ namespace Java.Lang {
 			public static RunnableImplementor? Find (Java.Lang.Object owner, Action handler) =>
 				FindOwner (owner) is { } entry && entry.Runnables.TryGetValue (handler, out var runnable) ? runnable : null;
 
-			// Returns the runnable for (who, handler) and remembers it on view, for View.ScheduleDrawable.
+			// The runnable View.ScheduleDrawable (who, Action, long) uses for (view, who, handler).
 			public static RunnableImplementor GetOrCreateScheduled (Java.Lang.Object view, Java.Lang.Object who, Action handler)
 			{
-				var runnable = GetOrCreate (who, handler);
-				GetOwner (view).Scheduled.GetValue (handler, static _ => new ()).TryAdd (runnable, null);
-				return runnable;
+				var drawable = GetOwner (who);
+				var scheduled = GetOwner (view).Scheduled.GetValue (handler, static _ => new ());
+				if (scheduled.TryGetValue (drawable, out var runnable))
+					return runnable;
+				var created = new RunnableImplementor (handler, removable: true);
+				if (scheduled.TryAdd (drawable, created))
+					return created;
+				created.Dispose ();
+				return scheduled.TryGetValue (drawable, out runnable) ? runnable : throw new InvalidOperationException ();
 			}
 
-			public static RunnableImplementor[] FindScheduled (Java.Lang.Object view, Action handler)
+			public static RunnableImplementor? FindScheduled (Java.Lang.Object view, Java.Lang.Object who, Action handler) =>
+				FindOwner (view) is { } entry && entry.Scheduled.TryGetValue (handler, out var scheduled) &&
+				FindOwner (who) is { } drawable && scheduled.TryGetValue (drawable, out var runnable) ? runnable : null;
+
+			// Concurrent View.ScheduleDrawable calls may or may not be included.
+			public static RunnableImplementor[] FindAllScheduled (Java.Lang.Object view, Action handler)
 			{
 				if (FindOwner (view) is not { } entry || !entry.Scheduled.TryGetValue (handler, out var scheduled))
 					return [];
 				var runnables = new List<RunnableImplementor> ();
-				foreach (var (runnable, _) in scheduled)
+				foreach (var (_, runnable) in scheduled)
 					runnables.Add (runnable);
 				return runnables.ToArray ();
 			}
