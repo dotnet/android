@@ -10,7 +10,18 @@
     <RootNamespace>Android</RootNamespace>
     <SignAssembly>true</SignAssembly>
     <AssemblyOriginatorKeyFile>..\..\product.snk</AssemblyOriginatorKeyFile>
-    <!-- Keep released binding, obsolete-API, generated-code, and public-API compatibility baselines. -->
+    <!--
+      0618   - Generated bindings intentionally reference released Android APIs that are obsolete.
+      0809   - Android metadata can deprecate an overriding member while its base member remains non-obsolete.
+      0108   - Generated derived bindings intentionally hide inherited members with matching managed names.
+      0114   - Generated bindings preserve existing hiding slots rather than changing them to overrides.
+      0465   - Android's Java Finalize method is a normal member and is not a C# destructor.
+      8764   - Generated return nullability historically differs from overridden Java/C# base members.
+      8765   - Generated parameter nullability historically differs from overridden Java/C# base members.
+      8766   - Generated return nullability historically differs from implemented interfaces.
+      8767   - Generated parameter nullability historically differs from implemented interfaces.
+      RS0041 - Hand-bound/generated public APIs retain their established oblivious nullable annotations.
+    -->
     <NoWarn>0618;0809;0108;0114;0465;8764;8765;8766;8767;RS0041</NoWarn>
     <WarningsAsErrors>$(WarningsAsErrors);CS2002</WarningsAsErrors>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
@@ -40,6 +51,15 @@
   <PropertyGroup Condition=" '$(IncludeAndroidJavadoc)' == 'True' ">
     <AndroidJavadocVerbosity Condition=" '$(AndroidJavadocVerbosity)' == '' ">full</AndroidJavadocVerbosity>
     <DocumentationFile>$(OutputPath)Mono.Android.xml</DocumentationFile>
+    <!--
+      CS1572 - Imported Android Javadoc can name parameters not present in the managed projection.
+      CS1573 - Generated or hand-bound members may not document every projected parameter.
+      CS1574 - Java signature/type links are not always resolvable C# cref targets.
+      CS1584 - Imported Javadoc can contain cref syntax that is not valid C# documentation XML.
+      CS1587 - Imported/generated documentation comments are not all attached to C# language elements.
+      CS1591 - The generated Android binding surface is not completely XML-documented.
+      CS1658 - Some generated Javadoc warning overrides cannot be represented by C#'s warning pragma model.
+    -->
     <NoWarn>$(NoWarn);CS1572;CS1573;CS1574;CS1584;CS1587;CS1591;CS1658;</NoWarn>
   </PropertyGroup>
 

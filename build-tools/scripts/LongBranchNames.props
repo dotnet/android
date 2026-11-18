@@ -1,6 +1,8 @@
 <Project>
   <PropertyGroup>
-    <!-- Allow NU5123 for pull requests, which will run on the Xamarin.Android-PR pipeline. -->
+    <!--
+      NU5123 - PR branch names can make generated NuGet package paths exceed the packer's supported path length.
+    -->
     <NoWarn Condition=" '$(BUILD_DEFINITIONNAME)' == 'Xamarin.Android-PR' ">$(NoWarn);NU5123</NoWarn>
   </PropertyGroup>
 </Project>
