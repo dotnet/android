@@ -475,7 +475,7 @@ namespace Xamarin.Android.Tasks
 		public static int ConvertSupportedOSPlatformVersionToApiLevel (string version)
 		{
 			int apiLevel = 0;
-			if (version?.IndexOf ('.') == -1) {
+			if (version.IndexOf ('.') == -1) {
 				version += ".0";
 			}
 			if (Version.TryParse (version, out var parsedVersion)) {
