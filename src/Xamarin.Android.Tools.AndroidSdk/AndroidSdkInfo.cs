@@ -1,5 +1,4 @@
 using System;
-using System.Globalization;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -134,7 +133,7 @@ namespace Xamarin.Android.Tools
 
 		public string GetPlatformDirectory (int apiLevel)
 		{
-			return GetPlatformDirectoryFromId (apiLevel.ToString (CultureInfo.InvariantCulture));
+			return GetPlatformDirectoryFromId (apiLevel.ToString ());
 		}
 
 		public string GetPlatformDirectoryFromId (string id)

@@ -1,5 +1,4 @@
 using System;
-using System.Globalization;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
 using System.IO;
@@ -288,7 +287,7 @@ namespace Xamarin.Android.Tools
 				// SAFETY: The byte count describes the marshalled UTF-16 string and its terminator.
 				var result = unsafe (RegSetValueExW (regKeyHandle, valueName, 0, type, value, lenBytesPlusNull));
 				if (result != 0)
-					throw new Exception (string.Format (CultureInfo.CurrentCulture, "Error {0} setting registry key '{1}{2}@{3}'='{4}'",
+					throw new Exception (string.Format ("Error {0} setting registry key '{1}{2}@{3}'='{4}'",
 						result, key, subkey, valueName, value));
 			} finally {
 				RegCloseKey (regKeyHandle);
