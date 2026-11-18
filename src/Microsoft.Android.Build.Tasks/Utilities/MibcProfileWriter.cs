@@ -560,8 +560,8 @@ class MibcProfileWriter
 	/// </param>
 	static BlobContentId ContentId (string fingerprint)
 	{
-		using var sha256 = SHA256.Create ();
-		byte[] hash = sha256.ComputeHash (Encoding.UTF8.GetBytes (fingerprint));
+		byte[] hash = new byte [SHA256.HashSizeInBytes];
+		HashingHelper.Sha256Utf8 (fingerprint, hash);
 		return BlobContentId.FromHash (hash);
 	}
 }

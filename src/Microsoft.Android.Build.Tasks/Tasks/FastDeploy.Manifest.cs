@@ -534,10 +534,10 @@ namespace Microsoft.Android.Tasks
 
 		static string ComputeManifestHash (ManifestData manifest)
 		{
-			using (var hash = SHA256.Create ()) {
-				byte [] bytes = Encoding.UTF8.GetBytes (GetCanonicalManifestText (manifest));
-				return BitConverter.ToString (hash.ComputeHash (bytes)).Replace ("-", "").ToLowerInvariant ();
-			}
+			string text = GetCanonicalManifestText (manifest);
+			Span<byte> hash = stackalloc byte [SHA256.HashSizeInBytes];
+			HashingHelper.Sha256Utf8 (text, hash);
+			return Convert.ToHexStringLower (hash);
 		}
 
 		static string GetCanonicalManifestText (ManifestData manifest)
