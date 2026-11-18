@@ -192,8 +192,8 @@ namespace xamarin::android {
 		{
 			abort_unless (buffer != nullptr, "Primary override directory buffer must not be null");
 
-			// `jstring_wrapper::get_cstr()` returns `nullptr` for a null `jstring`, and passing that
-			// to `%s` is undefined behaviour. An app without a files directory cannot work anyway.
+			// `jstring_wrapper::get_cstr()` returns `nullptr` for a null `jstring`, and building a
+			// `std::string_view` from that is undefined behaviour. An app without a files directory cannot work anyway.
 			const char *home_path = home.get_cstr ();
 			abort_unless (home_path != nullptr, "Application home directory must not be null");
 
