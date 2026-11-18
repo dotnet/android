@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Globalization;
 using System.Text;
 
 using Mono.Cecil.Cil;
@@ -19,9 +18,9 @@ namespace Java.Interop.Tools.Diagnostics {
 		{
 			var m = new StringBuilder ();
 			m.Append ("error ");
-			m.AppendFormat (CultureInfo.InvariantCulture, "XA{0:0000}", code);
+			m.AppendFormat ("XA{0:0000}", code);
 			m.Append (": ");
-			m.AppendFormat (CultureInfo.CurrentCulture, message, args);
+			m.AppendFormat (message, args);
 			return m.ToString ();
 		}
 
@@ -29,7 +28,7 @@ namespace Java.Interop.Tools.Diagnostics {
 			: base (GetMessage (code, message, args), innerException)
 		{
 			Code = code;
-			MessageWithoutCode = string.Format (CultureInfo.CurrentCulture, message, args);
+			MessageWithoutCode = string.Format (message, args);
 		}
 
 		public string MessageWithoutCode { get; private set; }
