@@ -79,8 +79,6 @@ namespace Java.InteropTests {
 				};
 				try {
 					var error = Assert.ThrowsExactly<Java.Lang.NoSuchMethodError> (() => {
-						if (!RuntimeFeature.IsDynamicCodeSupported)
-							throw new PlatformNotSupportedException ("Delegate registration requires dynamic code.");
 						unsafe {
 							// SAFETY: Callback matches JNI; the caller keeps methods rooted through fixture cleanup.
 							type.RegisterNativeMethods (methods);
@@ -203,8 +201,6 @@ namespace Java.InteropTests {
 		[RequiresDynamicCode ("Tests delegate-based native registration.")]
 		static (WeakReference Methods, WeakReference Callback) RegisterCapturedDelegate (JniType type, int offset)
 		{
-			if (!RuntimeFeature.IsDynamicCodeSupported)
-				throw new PlatformNotSupportedException ("Delegate registration requires dynamic code.");
 			var callback = new AddCallback ((env, self, a, b) => a + b + offset);
 			var registration = new JniNativeMethodRegistration ("add", "(II)I", callback);
 			var methods = new [] { registration };
@@ -226,8 +222,6 @@ namespace Java.InteropTests {
 				default (JniNativeMethodRegistration),
 			};
 			var error = Assert.ThrowsExactly<ArgumentException> (() => {
-				if (!RuntimeFeature.IsDynamicCodeSupported)
-					throw new PlatformNotSupportedException ("Delegate registration requires dynamic code.");
 				unsafe {
 					// SAFETY: The valid callback matches JNI; the null marshaler must be rejected before JNI.
 					type.RegisterNativeMethods (methods);
