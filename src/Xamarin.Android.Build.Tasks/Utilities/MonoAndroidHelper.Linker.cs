@@ -9,16 +9,8 @@ namespace Xamarin.Android.Tasks
 {
 	public partial class MonoAndroidHelper
 	{
-		static readonly HashSet<string> KnownAssemblyNames = new (StringComparer.OrdinalIgnoreCase) {
-			"Mono.Android",
-			"Java.Interop",
-		};
-
 		public static bool IsFrameworkAssembly (AssemblyDefinition assembly) =>
-			KnownAssemblyNames.Contains (assembly.Name.Name);
-
-		public static bool IsFrameworkAssembly (string assembly) =>
-			KnownAssemblyNames.Contains (Path.GetFileNameWithoutExtension (assembly));
+			IsFrameworkAssemblyName (assembly.Name.Name);
 
 		// Is this assembly a .NET for Android assembly?
 		public static bool IsDotNetAndroidAssembly (AssemblyDefinition assembly)

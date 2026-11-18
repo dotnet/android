@@ -4,6 +4,8 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Text;
+using Microsoft.Android.Build.Tasks;
+using Microsoft.Build.Framework;
 
 namespace Xamarin.Android.Tasks
 {
@@ -11,12 +13,14 @@ namespace Xamarin.Android.Tasks
 	{
 		List<string> map = new List<string> ();
 
-		public void Load (string mapFile)
+		public void Load (string mapFile) => Load (mapFile, TaskEnvironment.Fallback);
+
+		public void Load (string mapFile, TaskEnvironment taskEnvironment)
 		{
 			map.Clear ();
-			if (mapFile.IsNullOrWhiteSpace () || !File.Exists (mapFile))
+			if (mapFile.IsNullOrWhiteSpace () || !File.Exists (taskEnvironment.GetAbsolutePath (mapFile)))
 				return;
-			foreach (var s in File.ReadLines (mapFile)) {
+			foreach (var s in File.ReadLines (taskEnvironment.GetAbsolutePath (mapFile))) {
 				if (!map.Contains (s))
 					map.Add (s);
 			}
@@ -49,7 +53,9 @@ namespace Xamarin.Android.Tasks
 			return map [index];
 		}
 
-		public void Save (string mapFile)
+		public void Save (string mapFile) => Save (mapFile, TaskEnvironment.Fallback);
+
+		public void Save (string mapFile, TaskEnvironment taskEnvironment)
 		{
 			if (map.Count == 0)
 				return;
@@ -57,7 +63,7 @@ namespace Xamarin.Android.Tasks
 			foreach (var item in map) {
 				sb.AppendLine (item);
 			}
-			File.WriteAllText (mapFile, sb.ToString ());
+			File.WriteAllText (taskEnvironment.GetAbsolutePath (mapFile), sb.ToString ());
 		}
 	}
 }

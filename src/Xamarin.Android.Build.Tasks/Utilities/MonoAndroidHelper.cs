@@ -171,53 +171,13 @@ namespace Xamarin.Android.Tasks
 
 			// Check for assemblies which may not be built against the Android profile (`netXX-android`)
 			// but could still contain Android binding code (like Mono.Android).
-			if (KnownAssemblyNames.Contains (name))
+			if (IsFrameworkAssemblyName (name))
 				return true;
 
 			return IsMonoAndroidAssembly (source);
 		}
 
-		public static bool IsMonoAndroidAssembly (ITaskItem assembly)
-		{
-			// NOTE: look for both MonoAndroid and Android
-			var tfi = assembly.GetMetadata ("TargetFrameworkIdentifier");
-			if (tfi.IndexOf ("Android", StringComparison.OrdinalIgnoreCase) != -1)
-				return true;
-
-			var tpi = assembly.GetMetadata ("TargetPlatformIdentifier");
-			if (tpi.IndexOf ("Android", StringComparison.OrdinalIgnoreCase) != -1)
-				return true;
-
-			var hasReference = assembly.GetMetadata ("HasMonoAndroidReference");
-			return bool.TryParse (hasReference, out bool value) && value;
-		}
-
-		public static bool HasMonoAndroidReference (ITaskItem assembly, TaskEnvironment taskEnvironment)
-		{
-			// Check item metadata and return early
-			if (IsMonoAndroidAssembly (assembly))
-				return true;
-
-			using var pe = new PEReader (File.OpenRead (taskEnvironment.GetAbsolutePath (assembly.ItemSpec)));
-			if (!pe.HasMetadata) {
-				return false; // not a .NET assembly (no CLI metadata)
-			}
-			var reader = pe.GetMetadataReader ();
-			return HasMonoAndroidReference (reader);
-		}
 #endif
-
-		public static bool HasMonoAndroidReference (MetadataReader reader)
-		{
-			foreach (var handle in reader.AssemblyReferences) {
-				var reference = reader.GetAssemblyReference (handle);
-				var name = reader.GetString (reference.Name);
-				if ("Mono.Android" == name) {
-					return true;
-				}
-			}
-			return false;
-		}
 
 		public static bool IsReferenceAssembly (string assembly, TaskLoggingHelper log)
 		{
@@ -275,32 +235,6 @@ namespace Xamarin.Android.Tasks
 		}
 
 #if MSBUILD
-		public static bool IsFrameworkAssembly (ITaskItem assembly)
-		{
-			// Known assembly names: Mono.Android, Java.Interop, etc.
-			if (IsFrameworkAssembly (assembly.ItemSpec))
-				return true;
-
-			// Known %(FrameworkReferenceName)
-			var frameworkReferenceName = assembly.GetMetadata ("FrameworkReferenceName") ?? "";
-			if (frameworkReferenceName == "Microsoft.Android") {
-				return true; // Microsoft.Android assemblies
-			}
-			if (frameworkReferenceName.StartsWith ("Microsoft.NETCore.", StringComparison.OrdinalIgnoreCase)) {
-				return true; // BCL assemblies
-			}
-
-			// Known %(NuGetPackageId) runtime pack names
-			return IsFromAKnownRuntimePack (assembly);
-		}
-
-		public static bool IsFromAKnownRuntimePack (ITaskItem assembly)
-		{
-			string packageId = assembly.GetMetadata ("NuGetPackageId") ?? "";
-			return packageId.StartsWith ("Microsoft.NETCore.App.Runtime.", StringComparison.OrdinalIgnoreCase) ||
-				packageId.StartsWith ("Microsoft.Android.Runtime.", StringComparison.OrdinalIgnoreCase);
-		}
-
 		public static bool SaveMapFile (IBuildEngine4 engine, string mapFile, Dictionary<string, string> map)
 		{
 			engine?.RegisterTaskObjectAssemblyLocal (mapFile, map, RegisteredTaskObjectLifetime.Build);

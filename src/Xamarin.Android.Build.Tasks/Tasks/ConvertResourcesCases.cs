@@ -39,10 +39,10 @@ namespace Xamarin.Android.Tasks
 
 			// Look in the resource xml's for capitalized stuff and fix them
 			foreach (var dir in ResourceDirectories) {
-				var skipResourceProcessing = dir.GetMetadata (ResolveLibraryProjectImports.AndroidSkipResourceProcessing);
+				var skipResourceProcessing = dir.GetMetadata (LibraryProjectImportsMetadata.AndroidSkipResourceProcessing);
 				if (skipResourceProcessing != null && skipResourceProcessing.Equals ("true", StringComparison.OrdinalIgnoreCase)) {
-					var originalFile = dir.GetMetadata (ResolveLibraryProjectImports.OriginalFile);
-					Log.LogDebugMessage ($"Skipping: `{dir.ItemSpec}` via `{ResolveLibraryProjectImports.AndroidSkipResourceProcessing}`, original file: `{originalFile}`...");
+					var originalFile = dir.GetMetadata (LibraryProjectImportsMetadata.OriginalFile);
+					Log.LogDebugMessage ($"Skipping: `{dir.ItemSpec}` via `{LibraryProjectImportsMetadata.AndroidSkipResourceProcessing}`, original file: `{originalFile}`...");
 					continue;
 				}
 

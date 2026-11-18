@@ -8,15 +8,19 @@ using System.Linq;
 using System.Text;
 using Xamarin.Android.Tools;
 using Microsoft.Android.Build.Tasks;
+using Xamarin.Android.Tasks;
 
-namespace Xamarin.Android.Tasks
+namespace Microsoft.Android.Tasks
 {
 	/// <summary>
 	/// We used to invoke aapt/aapt2 per library (many times!), this task does the work to generate R.java for libraries without calling aapt/aapt2.
 	/// </summary>
-	public partial class GenerateLibraryResources : AsyncTask
+	[MSBuildMultiThreadableTask]
+	public partial class GenerateLibraryResources : AsyncTask, IMultiThreadableTask
 	{
 		public override string TaskPrefix => "GLR";
+
+		public TaskEnvironment TaskEnvironment { get; set; } = TaskEnvironment.Fallback;
 
 		/// <summary>
 		/// The main R.txt for the app
@@ -50,8 +54,7 @@ namespace Xamarin.Android.Tasks
 		public override bool RunTask ()
 		{
 			if (LibraryTextFiles?.Length > 0 && ManifestFiles != null) {
-				var paths = ReferenceAssemblyPaths?.Select (path => Path.GetFullPath (Path.Combine (WorkingDirectory, path))).ToArray ();
-				supportedVersions = MonoAndroidHelper.GetSupportedVersions (BuildEngine4, paths);
+				supportedVersions = MonoAndroidHelper.GetSupportedVersions (BuildEngine4, ReferenceAssemblyPaths, TaskEnvironment);
 			}
 			return base.RunTask ();
 		}
@@ -66,39 +69,38 @@ namespace Xamarin.Android.Tasks
 			var versions = supportedVersions ?? throw new InvalidOperationException ("API metadata must be resolved before generating library resources.");
 
 			// Load the "main" R.txt file into a dictionary
-			main_r_txt = Path.GetFullPath (ResourceSymbolsTextFile);
+			main_r_txt = GetFullPath (ResourceSymbolsTextFile);
 			r_txt_mapping = new Dictionary<string, string> ();
-			using (var reader = File.OpenText (main_r_txt)) {
+			using (var reader = File.OpenText (TaskEnvironment.GetAbsolutePath (main_r_txt))) {
 				foreach (var line in ParseFile (reader)) {
 					var key = line [Index.Class] + " " + line [Index.Name];
 					r_txt_mapping [key] = line [Index.Value];
 				}
 			}
 
-			Directory.CreateDirectory (OutputDirectory);
-			output_directory = Path.GetFullPath (OutputDirectory);
+			Directory.CreateDirectory (TaskEnvironment.GetAbsolutePath (output_directory = GetFullPath (OutputDirectory)));
 
 			var libraries = new Dictionary<string, Package> ();
 			for (int i = 0; i < LibraryTextFiles.Length; i++) {
-				var libraryTextFile = LibraryTextFiles [i];
-				var manifestFile = ManifestFiles [i];
-				if (!File.Exists (manifestFile)) {
+				var libraryTextFile = GetFullPath (LibraryTextFiles [i]);
+				var manifestFile = GetFullPath (ManifestFiles [i]);
+				if (!File.Exists (TaskEnvironment.GetAbsolutePath (manifestFile))) {
 					LogDebugMessage ($"Skipping, AndroidManifest.xml does not exist: {manifestFile}");
 					continue;
 				}
 
-				var manifest = AndroidAppManifest.Load (Path.GetFullPath (manifestFile), versions);
+				var manifest = AndroidAppManifest.Load (manifestFile, versions);
 				var packageName = manifest.PackageName;
 				if (packageName.IsNullOrEmpty ()) {
 					LogDebugMessage ($"Skipping, AndroidManifest.xml does not have a packageName: {manifestFile}");
 					continue;
 				}
-				if (!libraries.TryGetValue (packageName, out Package library)) {
+				if (!libraries.TryGetValue (packageName, out Package? library)) {
 					libraries.Add (packageName, library = new Package {
 						Name = packageName,
 					});
 				}
-				library.TextFiles.Add (Path.GetFullPath (libraryTextFile));
+				library.TextFiles.Add (libraryTextFile);
 			}
 			await this.WhenAll (libraries.Values, GenerateJava);
 		}
@@ -127,7 +129,7 @@ namespace Xamarin.Android.Tasks
 		{
 			var dictionary = new Dictionary<string, string []> ();
 			foreach (var r_txt in library.TextFiles) {
-				using (var reader = File.OpenText (r_txt)) {
+				using (var reader = File.OpenText (TaskEnvironment.GetAbsolutePath (r_txt))) {
 					foreach (var line in ParseFile (reader)) {
 						var type = line [Index.Type];
 						var clazz = line [Index.Class];
@@ -165,6 +167,8 @@ namespace Xamarin.Android.Tasks
 			}
 			return false;
 		}
+		string GetFullPath (string path) => TaskEnvironment.GetAbsolutePath (path).GetCanonicalForm ().Value;
+
 		static readonly char [] Delimiter = new [] { ' ' };
 
 		class Index
@@ -185,6 +189,8 @@ namespace Xamarin.Android.Tasks
 		{
 			while (!reader.EndOfStream) {
 				var line = reader.ReadLine ();
+				if (line == null)
+					continue;
 				var items = line.Split (Delimiter, 4);
 				if (items.Length == 4)
 					yield return items;

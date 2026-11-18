@@ -9,8 +9,9 @@ using System.Reflection.PortableExecutable;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
 using Microsoft.Android.Build.Tasks;
+using Xamarin.Android.Tasks;
 
-namespace Xamarin.Android.Tasks
+namespace Microsoft.Android.Tasks
 {
 	/// <summary>
 	/// Processes .dll files coming from @(ResolvedFileToPublish). Removes duplicate .NET assemblies by MVID.
@@ -74,7 +75,7 @@ namespace Xamarin.Android.Tasks
 				if (!AndroidIncludeDebugSymbols) {
 					var shrunkAssemblies = new List<ITaskItem> (OutputAssemblies.Length);
 					foreach (var assembly in OutputAssemblies) {
-						var dir = Path.GetDirectoryName (assembly.ItemSpec);
+						var dir = Path.GetDirectoryName (assembly.ItemSpec) ?? throw new InvalidOperationException ($"Unable to determine the directory for assembly '{assembly.ItemSpec}'.");
 						var file = Path.GetFileName (assembly.ItemSpec);
 						shrunkAssemblies.Add (new TaskItem (assembly) {
 							ItemSpec = Path.Combine (dir, "shrunk", file),
@@ -92,9 +93,7 @@ namespace Xamarin.Android.Tasks
 					if (!MonoAndroidHelper.IsFromAKnownRuntimePack (item))
 						continue;
 					var name = Path.GetFileNameWithoutExtension(item.ItemSpec);
-					if (!javaLibraries.ContainsKey (name)) {
-						javaLibraries [name] = item;
-					}
+					javaLibraries.TryAdd (name, item);
 				}
 				OutputJavaLibraries = javaLibraries.Values.ToArray ();
 			}

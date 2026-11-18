@@ -519,6 +519,7 @@ public class TypeMapProguardTargetsTests : BaseTest
 			<Project>
 			  <PropertyGroup>
 			    <_XamarinAndroidBuildTasksAssembly>unused.dll</_XamarinAndroidBuildTasksAssembly>
+			    <_MicrosoftAndroidBuildTasksAssembly>unused.dll</_MicrosoftAndroidBuildTasksAssembly>
 			    <_ComputeFilesToPublishForRuntimeIdentifiers>true</_ComputeFilesToPublishForRuntimeIdentifiers>
 			    <_AndroidRuntime>{runtime}</_AndroidRuntime>
 			    <PublishTrimmed>{publishTrimmed}</PublishTrimmed>
