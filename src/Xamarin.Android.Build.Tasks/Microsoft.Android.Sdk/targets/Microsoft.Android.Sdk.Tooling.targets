@@ -18,12 +18,10 @@ This file contains .NET 6+ Java version validation and calls to the
       <_AndroidToolingInput Include="AndroidApiLevel" />
       <_AndroidToolingInput Include="AndroidApplication" />
       <_AndroidToolingInput Include="AndroidSdkBuildToolsVersion" />
-      <_AndroidToolingInput Include="AndroidCommandLineToolsVersion" />
       <_AndroidToolingInput Include="AndroidSdkBuildToolsPath" />
       <_AndroidToolingInput Include="AndroidSdkBuildToolsBinPath" />
       <_AndroidToolingInput Include="Aapt2ToolPath" />
       <_AndroidToolingInput Include="ZipAlignToolPath" />
-      <_AndroidToolingInput Include="LintToolPath" />
       <_AndroidToolingInput Include="ApkSignerJar" />
       <_AndroidToolingInput Include="AndroidUseApkSigner" />
       <_AndroidToolingInput Include="JavaToolExe" />
@@ -52,7 +50,6 @@ This file contains .NET 6+ Java version validation and calls to the
       <AndroidSdkBuildToolsPath Condition=" '$(AndroidSdkBuildToolsPath)' == '' ">$(_AndroidOuterBuildToolsPath)</AndroidSdkBuildToolsPath>
       <AndroidSdkBuildToolsBinPath Condition=" '$(AndroidSdkBuildToolsBinPath)' == '' ">$(_AndroidOuterBuildToolsBinPath)</AndroidSdkBuildToolsBinPath>
       <ZipAlignToolPath Condition=" '$(ZipAlignToolPath)' == '' ">$(_AndroidOuterZipAlignToolPath)</ZipAlignToolPath>
-      <LintToolPath Condition=" '$(LintToolPath)' == '' ">$(_AndroidOuterLintToolPath)</LintToolPath>
       <ApkSignerJar Condition=" '$(ApkSignerJar)' == '' ">$(_AndroidOuterApkSignerJar)</ApkSignerJar>
       <AndroidUseApkSigner Condition=" '$(AndroidUseApkSigner)' == '' ">$(_AndroidOuterUseApkSigner)</AndroidUseApkSigner>
       <_Aapt2Version>$(_AndroidOuterAapt2Version)</_Aapt2Version>
@@ -140,15 +137,12 @@ This file contains .NET 6+ Java version validation and calls to the
         AndroidSdkPath="$(_AndroidSdkDirectory)"
         AndroidSdkBuildToolsVersion="$(AndroidSdkBuildToolsVersion)"
         Aapt2ToolPath="$(Aapt2ToolPath)"
-        CommandLineToolsVersion="$(AndroidCommandLineToolsVersion)"
-        LintToolPath="$(LintToolPath)"
         ZipAlignPath="$(ZipAlignToolPath)">
       <Output TaskParameter="AndroidApiLevel"             PropertyName="_AndroidApiLevel"            Condition="'$(_AndroidApiLevel)' == ''" />
       <Output TaskParameter="AndroidApiLevelName"         PropertyName="_AndroidApiLevelName" />
       <Output TaskParameter="AndroidSdkBuildToolsPath"    PropertyName="AndroidSdkBuildToolsPath"    Condition="'$(AndroidSdkBuildToolsPath)' == ''" />
       <Output TaskParameter="AndroidSdkBuildToolsBinPath" PropertyName="AndroidSdkBuildToolsBinPath" Condition="'$(AndroidSdkBuildToolsBinPath)' == ''" />
       <Output TaskParameter="ZipAlignPath"                PropertyName="ZipAlignToolPath"            Condition="'$(ZipAlignToolPath)' == ''" />
-      <Output TaskParameter="LintToolPath"                PropertyName="LintToolPath"                Condition="'$(LintToolPath)' == ''" />
       <Output TaskParameter="ApkSignerJar"                PropertyName="ApkSignerJar"                Condition="'$(ApkSignerJar)' == ''" />
       <Output TaskParameter="AndroidUseApkSigner"         PropertyName="AndroidUseApkSigner"         Condition="'$(AndroidUseApkSigner)' == ''" />
       <Output TaskParameter="Aapt2Version"                PropertyName="_Aapt2Version" />
@@ -172,7 +166,6 @@ This file contains .NET 6+ Java version validation and calls to the
         ;_AndroidOuterBuildToolsPath=$([MSBuild]::Escape('$(AndroidSdkBuildToolsPath)'))
         ;_AndroidOuterBuildToolsBinPath=$([MSBuild]::Escape('$(AndroidSdkBuildToolsBinPath)'))
         ;_AndroidOuterZipAlignToolPath=$([MSBuild]::Escape('$(ZipAlignToolPath)'))
-        ;_AndroidOuterLintToolPath=$([MSBuild]::Escape('$(LintToolPath)'))
         ;_AndroidOuterApkSignerJar=$([MSBuild]::Escape('$(ApkSignerJar)'))
         ;_AndroidOuterUseApkSigner=$(AndroidUseApkSigner)
         ;_AndroidOuterAapt2Version=$(_Aapt2Version)

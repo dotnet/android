@@ -137,16 +137,31 @@ namespace generator.SourceWriters
 			// has a parameter requiring post-call cleanup, so the `__ret` dance is unnecessary.
 			var useRetTemporary = typed_shape == null && method.Parameters.HasCleanup;
 			string ToReturn (string call) => typed_shape != null && typed_shape.ReturnsPeer ? call : method.RetVal.ToNative (opt, call);
+			var arguments = method.Parameters.GetCall (opt);
+			if (opt.SupportNullableReferenceTypes && method.IsInterfaceDefaultMethod && method.OverriddenInterfaceMethod != null) {
+				var contract = method.OverriddenInterfaceMethod;
+				while (contract.OverriddenInterfaceMethod != null)
+					contract = contract.OverriddenInterfaceMethod;
+				arguments = string.Join (", ", method.Parameters.Select ((p, index) => {
+					var argument = opt.GetSafeIdentifier (p.Name);
+					if (p.NativeType != "IntPtr" || p.Type == "IntPtr" || p.Symbol.IsEnum)
+						return argument;
+					// Dispatch binds to the original interface signature, but a DIM may explicitly accept null.
+					return argument + (p.NotNull
+						? " ?? throw new global::Java.Lang.NullPointerException ()"
+						: opt.GetNullForgiveness (contract.Parameters [index]));
+				}));
+			}
 
 			if (string.IsNullOrEmpty (property_name)) {
-				var call = "__this." + method.Name + (is_formatted ? "Formatted" : string.Empty) + " (" + method.Parameters.GetCall (opt) + ")";
+				var call = "__this." + method.Name + (is_formatted ? "Formatted" : string.Empty) + " (" + arguments + ")";
 				if (method.IsVoid)
 					writer.WriteLine (call + ";");
 				else
 					writer.WriteLine ("{0} {1};", useRetTemporary ? method.RetVal.NativeType + " __ret =" : "return", ToReturn (call));
 			} else {
 				if (method.IsVoid)
-					writer.WriteLine ("__this.{0} = {1};", property_name, method.Parameters.GetCall (opt));
+					writer.WriteLine ("__this.{0} = {1};", property_name, arguments);
 				else
 					writer.WriteLine ("{0} {1};", useRetTemporary ? method.RetVal.NativeType + " __ret =" : "return", ToReturn ("__this." + property_name));
 			}

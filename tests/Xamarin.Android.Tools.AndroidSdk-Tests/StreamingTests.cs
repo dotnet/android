@@ -261,6 +261,7 @@ public class StreamingTests
 		var results = XDocument.Load (Path.Combine (directory, "results.trx")).Descendants (ns + "UnitTestResult")
 			.ToDictionary (e => e.Attribute ("testName")?.Value ?? "", e => e.Attribute ("outcome")?.Value);
 		Assert.That (results, Is.EquivalentTo (new Dictionary<string, string?> { ["One"] = "Passed", ["Two"] = "Failed" }));
+		Assert.That (Path.Combine (Path.GetTempPath (), "AndroidTestResults", "tests", "device.trx"), Does.Not.Exist);
 	}
 
 	async Task<ITestApplication> CreateApplication (string transcript, bool reportFailure = false, int exitCode = 0, bool missingAdb = false,

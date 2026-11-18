@@ -177,11 +177,13 @@ public class ExtractTypeMapKeysFromNativeAotObject : AsyncTask
 		if (!File.Exists (objdump)) {
 			throw new FileNotFoundException ("llvm-objdump is required alongside llvm-readobj.", objdump);
 		}
-		using var stderr = new StringWriter (CultureInfo.InvariantCulture);
 		var startInfo = ProcessUtils.CreateProcessStartInfo (objdump, arguments);
-		int exitCode = await ProcessUtils.StartProcess (startInfo, stdout, stderr, CancellationToken).ConfigureAwait (false);
-		if (exitCode != 0) {
-			throw new InvalidOperationException ($"llvm-objdump exited with code {exitCode}: {stderr}");
+		startInfo.RedirectStandardOutput = true;
+		startInfo.RedirectStandardError = true;
+		var result = await Process.RunAndCaptureTextAsync (startInfo, CancellationToken).ConfigureAwait (false);
+		stdout.Write (result.StandardOutput);
+		if (result.ExitStatus.ExitCode != 0) {
+			throw new InvalidOperationException ($"llvm-objdump exited with code {result.ExitStatus.ExitCode}: {result.StandardError}");
 		}
 	}
 

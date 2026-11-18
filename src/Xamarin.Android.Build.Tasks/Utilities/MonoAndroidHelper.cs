@@ -180,15 +180,6 @@ namespace Xamarin.Android.Tasks
 #endif  // MSBUILD
 		}
 
-		internal static bool LogInternalExceptions {
-			get {
-				return string.Equals (
-						"icanhaz",
-						Environment.GetEnvironmentVariable ("__XA_LOG_ERRORS__"),
-						StringComparison.OrdinalIgnoreCase);
-			}
-		}
-
 #if MSBUILD
 		public static IEnumerable<string> ExpandFiles (ITaskItem[] libraryProjectJars)
 		{
@@ -340,18 +331,18 @@ namespace Xamarin.Android.Tasks
 			return false;
 		}
 
-		public static bool CopyAssemblyAndSymbols (string source, string destination)
+		public static bool CopyAssemblyAndSymbols (string source, string destination, TaskEnvironment taskEnvironment)
 		{
-			bool changed = Files.CopyIfChanged (source, destination);
+			bool changed = Files.CopyIfChanged (source, destination, taskEnvironment);
 			var mdb = source + ".mdb";
 			if (File.Exists (mdb)) {
 				var mdbDestination = destination + ".mdb";
-				Files.CopyIfChanged (mdb, mdbDestination);
+				Files.CopyIfChanged (mdb, mdbDestination, taskEnvironment);
 			}
 			var pdb = Path.ChangeExtension (source, "pdb");
 			if (File.Exists (pdb) && Files.IsPortablePdb (pdb)) {
 				var pdbDestination = Path.ChangeExtension (destination, "pdb");
-				Files.CopyIfChanged (pdb, pdbDestination);
+				Files.CopyIfChanged (pdb, pdbDestination, taskEnvironment);
 			}
 			return changed;
 		}

@@ -18,6 +18,8 @@
     <TestKotlinGradleOutput Include="$(IntermediateOutputPath)kotlin-gradle\classes\xat\bytecode\tests\MyColor.class" />
     <TestKotlinGradleOutput Include="$(IntermediateOutputPath)kotlin-gradle\classes\xat\bytecode\tests\MyAlpha.class" />
     <TestKotlinGradleOutput Include="$(IntermediateOutputPath)kotlin-gradle\classes\xat\bytecode\tests\MyDp.class" />
+    <TestKotlinGradleOutput Include="$(IntermediateOutputPath)kotlin-gradle\classes\xat\bytecode\tests\Nullability.class" />
+    <TestKotlinGradleOutput Include="$(IntermediateOutputPath)kotlin-gradle\classes\xat\bytecode\tests\AmbiguousOverloads.class" />
   </ItemGroup>
 
   <PropertyGroup>

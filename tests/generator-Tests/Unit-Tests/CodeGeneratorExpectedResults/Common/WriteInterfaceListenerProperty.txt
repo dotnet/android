@@ -8,7 +8,7 @@ public MyFullDelegateName MyName {
 		if (impl == null) {
 			impl = new java.code.IMyInterfaceImplementor (this);
 			ImplMyName = impl;
-		} else
+		}
 			impl.MyNameSpecHandler = value;
 	}
 }

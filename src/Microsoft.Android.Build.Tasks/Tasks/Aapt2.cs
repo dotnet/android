@@ -2,6 +2,7 @@
 #nullable enable
 
 using System;
+using System.Globalization;
 using System.IO;
 using System.Threading;
 using System.Text;
@@ -11,8 +12,10 @@ using System.Collections.Generic;
 using System.Collections.Concurrent;
 using Xamarin.Android.Tools;
 using Microsoft.Android.Build.Tasks;
+using Xamarin.Android.Tasks;
+using Properties = Xamarin.Android.Tasks.Properties;
 
-namespace Xamarin.Android.Tasks {
+namespace Microsoft.Android.Tasks {
 
 	public abstract class Aapt2 : AsyncTask {
 
@@ -45,12 +48,6 @@ namespace Xamarin.Android.Tasks {
 		public string? ToolExe { get; set; }
 
 		/// <summary>
-		/// Returns true if a filename starts with a . character.
-		/// </summary>
-		public static bool IsInvalidFilename (string path) =>
-			Path.GetFileName (path).StartsWith (".", StringComparison.Ordinal);
-
-		/// <summary>
 		/// Returns <see langword="true"/> if <paramref name="c"/> is an ASCII
 		/// character ([ U+0000..U+007F ]).
 		/// </summary>
@@ -73,7 +70,7 @@ namespace Xamarin.Android.Tasks {
 
 		protected string GenerateFullPathToTool ()
 		{
-			return Path.Combine (ToolPath, ToolExe.IsNullOrEmpty () ? ToolName : ToolExe);
+			return Path.Combine (ToolPath ?? "", ToolExe.IsNullOrEmpty () ? ToolName : ToolExe);
 		}
 
 		protected virtual int GetRequiredDaemonInstances ()
@@ -97,7 +94,7 @@ namespace Xamarin.Android.Tasks {
 				DaemonMaxInstanceCount = Math.Min (DaemonMaxInstanceCount, maxInstances);
 			daemon  = Aapt2Daemon.GetInstance (BuildEngine4, LogDebugMessage, GenerateFullPathToTool (),
 				DaemonMaxInstanceCount, GetRequiredDaemonInstances (), registerInDomain: DaemonKeepInDomain);
-			return base.Execute ();
+			return base.Execute () && !CancellationToken.IsCancellationRequested;
 		}
 
 		ConcurrentBag<long> jobs = new ConcurrentBag<long> ();
@@ -113,6 +110,7 @@ namespace Xamarin.Android.Tasks {
 		protected void ProcessOutput ()
 		{
 			Aapt2Daemon.Job[] completedJobs = Daemon.WaitForJobsToComplete (jobs);
+			CancellationToken.ThrowIfCancellationRequested ();
 			foreach (var job in completedJobs) {
 				foreach (var line in job.Output) {
 					if (!LogAapt2EventsFromOutput (line.Line, MessageImportance.Normal, job.Succeeded)) {
@@ -134,7 +132,7 @@ namespace Xamarin.Android.Tasks {
 				file = match.Groups ["file"].Value;
 				int line = 0;
 				if (!match.Groups ["line"]?.Value.IsNullOrEmpty () == true)
-					line = int.Parse (match.Groups ["line"].Value.Trim ()) + 1;
+					line = int.Parse (match.Groups ["line"].Value.Trim (), CultureInfo.InvariantCulture) + 1;
 				var level = match.Groups ["level"].Value.ToLowerInvariant ();
 				var message = match.Groups ["message"].Value;
 
@@ -188,7 +186,7 @@ namespace Xamarin.Android.Tasks {
 				if (level.Contains ("error") || (line != 0 && !file.IsNullOrEmpty ())) {
 					var errorCode = GetErrorCodeForFile (message, file);
 					if (manifestError)
-						LogCodedError (errorCode, AndroidManifestFile?.ItemSpec ?? "", 0, string.Format (Xamarin.Android.Tasks.Properties.Resources.AAPTManifestError, message.TrimEnd('.')));
+						LogCodedError (errorCode, AndroidManifestFile?.ItemSpec ?? "", 0, string.Format (CultureInfo.CurrentCulture, Xamarin.Android.Tasks.Properties.Resources.AAPTManifestError, message.TrimEnd('.')));
 					else
 						LogCodedError (errorCode, file, line, AddAdditionalErrorText (errorCode, message));
 					return true;
@@ -196,7 +194,7 @@ namespace Xamarin.Android.Tasks {
 			}
 
 			if (!apptResult) {
-				var message = string.Format ("{0} \"{1}\".", singleLine.Trim (), singleLine.Substring (singleLine.LastIndexOfAny (new char [] { '\\', '/' }) + 1));
+				var message = string.Format (CultureInfo.InvariantCulture, "{0} \"{1}\".", singleLine.Trim (), singleLine.Substring (singleLine.LastIndexOfAny (new char [] { '\\', '/' }) + 1));
 				if (LogNotesOrWarnings (message, singleLine, messageImportance))
 					return true;
 				var errorCode = GetErrorCodeForFile (message, file);

@@ -266,11 +266,11 @@ namespace Xamarin.Android.Tasks.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Could not get version from &apos;{0}&apos;. Defaulting to 1.0.
+        ///   Looks up a localized string similar to The &apos;AndroidLintEnabled&apos; MSBuild property is no longer supported. Remove it. If needed, run the Android &apos;lint&apos; tool directly..
         /// </summary>
-        public static string XA0108 {
+        public static string XA0108_LintEnabled {
             get {
-                return ResourceManager.GetString("XA0108", resourceCulture);
+                return ResourceManager.GetString("XA0108_LintEnabled", resourceCulture);
             }
         }
         
@@ -334,15 +334,6 @@ namespace Xamarin.Android.Tasks.Properties {
         public static string XA0121 {
             get {
                 return ResourceManager.GetString("XA0121", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Removing {0} from {1}. Lint {2} does not support this check..
-        /// </summary>
-        public static string XA0123 {
-            get {
-                return ResourceManager.GetString("XA0123", resourceCulture);
             }
         }
         
@@ -1621,15 +1612,6 @@ namespace Xamarin.Android.Tasks.Properties {
         public static string XA5205 {
             get {
                 return ResourceManager.GetString("XA5205", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Cannot find `{0}` in the Android SDK. Please set its path via /p:LintToolPath..
-        /// </summary>
-        public static string XA5205_Lint {
-            get {
-                return ResourceManager.GetString("XA5205_Lint", resourceCulture);
             }
         }
         

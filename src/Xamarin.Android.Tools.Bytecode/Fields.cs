@@ -34,6 +34,8 @@ namespace Xamarin.Android.Tools.Bytecode {
 		public  AttributeCollection Attributes      {get; private set;}
 		public  string?             KotlinType      {get; set;}
 
+		public  bool                KotlinNotNull   {get; set;}
+
 		public FieldInfo (ConstantPool constantPool, ClassFile declaringType, Stream stream)
 		{
 			ConstantPool    = constantPool;

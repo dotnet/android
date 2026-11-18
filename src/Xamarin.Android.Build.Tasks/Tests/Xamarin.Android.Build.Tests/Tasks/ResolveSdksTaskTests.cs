@@ -77,7 +77,6 @@ namespace Xamarin.Android.Build.Tests {
 					Assert.AreEqual (Path.Combine (directory, "ndk"), task.AndroidNdkPath);
 					Assert.AreEqual (Path.Combine (directory, "jdk"), task.JavaSdkPath);
 					Assert.AreEqual (Path.Combine (directory, "tools"), task.MonoAndroidToolsPath);
-					Assert.AreEqual (Path.Combine (directory, "sdk", "tools"), task.CommandLineToolsPath);
 				});
 			} finally {
 				Directory.Delete (Path.Combine (Root, path), recursive: true);
@@ -293,8 +292,6 @@ namespace Xamarin.Android.Build.Tests {
 			Assert.AreEqual (androidTooling.AndroidSdkBuildToolsPath, expected, $"AndroidSdkBuildToolsPath should be {expected}");
 			Assert.AreEqual (androidTooling.AndroidSdkBuildToolsBinPath, expected, "AndroidSdkBuildToolsBinPath should be {expected}");
 			Assert.AreEqual (androidTooling.ZipAlignPath, expected, "ZipAlignPath should be {expected}");
-			expected = Path.Combine (androidSdkPath, "tools");
-			Assert.AreEqual (androidTooling.LintToolPath, expected, $"LintToolPath should be {expected}");
 			expected = Path.Combine (androidSdkPath, "build-tools", "26.0.3", "lib", "apksigner.jar");
 			Assert.AreEqual (androidTooling.ApkSignerJar, expected, $"ApkSignerJar should be {expected}");
 			Assert.AreEqual (androidTooling.AndroidUseApkSigner, false, "AndroidUseApkSigner should be false");
@@ -397,8 +394,8 @@ namespace Xamarin.Android.Build.Tests {
 			var changedItemName = tooling ? "_AndroidChangedToolingInput" : "_AndroidChangedSdkInput";
 			var inputGroups = document.Descendants ().Where (e => e.Name.LocalName == "ItemGroup" &&
 				e.Elements ().Any (i => i.Name.LocalName == itemName || i.Name.LocalName == changedItemName));
-			var input = tooling ? "LintToolPath" : "AndroidSdkDirectory";
-			var outerInput = tooling ? "_AndroidOuterToolingInputLintToolPath" : "_AndroidOuterSdkInputAndroidSdkDirectory";
+			var input = tooling ? "ZipAlignToolPath" : "AndroidSdkDirectory";
+			var outerInput = tooling ? "_AndroidOuterToolingInputZipAlignToolPath" : "_AndroidOuterSdkInputAndroidSdkDirectory";
 			const string value = "O'Brien/sdk;a=b";
 			var globals = new Dictionary<string, string> {
 				[input] = value,
@@ -633,7 +630,7 @@ namespace Xamarin.Android.Build.Tests {
 		}
 
 		[Test]
-		public void ResolveSdksReturnsAbsolutePaths ([Values (false, true)] bool discoverNdk, [Values (false, true)] bool commandLineTools)
+		public void ResolveSdksReturnsAbsolutePaths ([Values (false, true)] bool discoverNdk)
 		{
 			var path = Path.Combine ("temp", TestName);
 			var sdkPath = CreateFauxAndroidSdkDirectory (Path.Combine (path, "android-sdk"), "37.0.0");
@@ -641,8 +638,6 @@ namespace Xamarin.Android.Build.Tests {
 			var javaPath = CreateFauxJavaSdkDirectory (Path.Combine (path, "jdk"), "1.8.0", out _, out _);
 			try {
 				File.WriteAllText (Path.Combine (ndkPath, "source.properties"), "Pkg.Revision = 21.0.6113669");
-				var toolsPath = Path.Combine (sdkPath, commandLineTools ? Path.Combine ("cmdline-tools", "21.0") : "tools");
-				Directory.CreateDirectory (toolsPath);
 				var resolveSdks = new ResolveSdks {
 					BuildEngine = new MockBuildEngine (TestContext.Out),
 					AndroidSdkPath = Path.GetRelativePath (Environment.CurrentDirectory, sdkPath),
@@ -650,13 +645,11 @@ namespace Xamarin.Android.Build.Tests {
 					JavaSdkPath = Path.GetRelativePath (Environment.CurrentDirectory, javaPath),
 					MinimumSupportedJavaVersion = MinimumSupportedJavaVersion,
 					LatestSupportedJavaVersion = LatestSupportedJavaVersion,
-					CommandLineToolsVersion = "21.0",
 				};
 				Assert.IsTrue (resolveSdks.Execute ());
 				Assert.AreEqual (sdkPath, resolveSdks.AndroidSdkPath);
 				Assert.AreEqual (ndkPath, resolveSdks.AndroidNdkPath);
 				Assert.AreEqual (javaPath, resolveSdks.JavaSdkPath);
-				Assert.AreEqual (toolsPath, resolveSdks.CommandLineToolsPath);
 			} finally {
 				Directory.Delete (Path.Combine (Root, path), recursive: true);
 			}
@@ -745,7 +738,6 @@ namespace Xamarin.Android.Build.Tests {
 				};
 				Assert.IsTrue (tooling.Execute ());
 				Assert.AreEqual (Path.Combine (secondSdk, "build-tools", "36.0.0"), tooling.AndroidSdkBuildToolsPath);
-				Assert.AreEqual (Path.Combine (secondSdk, "tools"), tooling.LintToolPath);
 
 				var proj = new XamarinAndroidApplicationProject {
 					AndroidManifest = """

@@ -78,7 +78,7 @@ namespace Android.Graphics {
 		/// aliases before unlocking, and exclude concurrent disposal or another unlock until this call returns
 		/// or throws. An exception does not prove that previously borrowed pixel addresses remain usable.
 		/// </safety>
-		public unsafe void UnlockPixels ()
+		public void UnlockPixels ()
 		{
 			unsafe {
 				// SAFETY: the caller owns this Bitmap's matching lock and has stopped pixel-alias access;

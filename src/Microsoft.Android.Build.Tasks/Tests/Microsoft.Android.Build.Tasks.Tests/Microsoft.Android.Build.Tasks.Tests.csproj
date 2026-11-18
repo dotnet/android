@@ -26,6 +26,7 @@
     <AssemblyMetadata Include="ILLinkPath" Value="$([MSBuild]::NormalizePath('$(PkgMicrosoft_NET_ILLink_Tasks)', 'tools', 'net', 'illink.dll'))" />
     <AssemblyMetadata Include="NativeAotLlvmReadObjPath" Value="$(_NativeAotLlvmReadObjPath)" />
     <AssemblyMetadata Include="AndroidNdkDirectory" Value="$(AndroidNdkDirectory)" />
+    <AssemblyMetadata Include="AndroidSdkDirectory" Value="$(AndroidSdkDirectory)" />
     <AssemblyMetadata Include="NetCoreSdkRoot" Value="$(MSBuildBinPath)" />
     <AssemblyMetadata Include="DotNetHostPath" Value="$(DOTNET_HOST_PATH)" />
   </ItemGroup>

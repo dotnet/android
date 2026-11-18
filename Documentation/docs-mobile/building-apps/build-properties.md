@@ -861,41 +861,20 @@ used for Java code. The default value is an empty string, or
 
 ## AndroidLintEnabled
 
-A bool property that allows the developer to
-run the android `lint` tool as part of the packaging process.
-
-When `$(AndroidLintEnabled)`=True, the following properties are used:
-
-- [`$(AndroidLintEnabledIssues)`](#androidlintenabledissues):
-- [`$(AndroidLintDisabledIssues)`](#androidlintdisabledissues):
-- [`$(AndroidLintCheckIssues)`](#androidlintcheckissues):
-
-The following build actions may also be used:
-
-- [`@(AndroidLintConfig)`](build-items.md#androidlintconfig):
-
-See [Lint Help](https://developer.android.com/studio/write/lint) for more details on
-the android `lint` tooling.
+This property was removed in .NET 12 and has no effect.
+Setting it to `True` emits warning [XA0108](../messages/xa0108.md).
 
 ## AndroidLintEnabledIssues
 
-A string property that is a comma-separated list of lint issues to enable.
-
-Only used when [`$(AndroidLintEnabled)`](#androidlintenabled)=True.
+This property was removed in .NET 12 and has no effect.
 
 ## AndroidLintDisabledIssues
 
-A string property that is a comma-separated list of lint issues to disable.
-
-Only used when [`$(AndroidLintEnabled)`](#androidlintenabled)=True.
+This property was removed in .NET 12 and has no effect.
 
 ## AndroidLintCheckIssues
 
-A string property that is a comma-separated list of lint issues to check.
-
-Only used when [`$(AndroidLintEnabled)`](#androidlintenabled)=True.
-
-Note: only these issues will be checked.
+This property was removed in .NET 12 and has no effect.
 
 ## AndroidManagedSymbols
 

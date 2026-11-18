@@ -19,7 +19,8 @@ namespace Xamarin.Android.Tasks;
 /// are run *after* the linker has run. Additionally, this task is run by
 /// LinkAssembliesNoShrink to modify assemblies when ILLink is not used.
 /// </summary>
-public class AssemblyModifierPipeline : AndroidTask
+[MSBuildMultiThreadableTask]
+public class AssemblyModifierPipeline : MultithreadedAndroidTask
 {
 	public override string TaskPrefix => "AMP";
 
@@ -89,7 +90,7 @@ public class AssemblyModifierPipeline : AndroidTask
 				// Add SearchDirectories for the current architecture's ResolvedAssemblies
 				foreach (var kvp in perArchAssemblies [sourceArch]) {
 					ITaskItem assembly = kvp.Value;
-					var path = Path.GetFullPath (Path.GetDirectoryName (assembly.ItemSpec));
+					string path = TaskEnvironment.GetAbsolutePath (Path.GetDirectoryName (assembly.ItemSpec)).GetCanonicalForm ().Value;
 					if (!resolver.SearchDirectories.Contains (path)) {
 						resolver.SearchDirectories.Add (path);
 					}
@@ -102,7 +103,7 @@ public class AssemblyModifierPipeline : AndroidTask
 				BuildPipeline (pipeline, context);
 			}
 
-			Directory.CreateDirectory (Path.GetDirectoryName (destination.ItemSpec));
+			Directory.CreateDirectory (TaskEnvironment.GetAbsolutePath (Path.GetDirectoryName (destination.ItemSpec)));
 
 			RunPipeline (pipeline!, source, destination);
 		}
@@ -119,7 +120,7 @@ public class AssemblyModifierPipeline : AndroidTask
 			DeterministicMvid = Deterministic,
 		};
 
-		var saveChangedAssemblyStep = new SaveChangedAssemblyStep (Log, writerParameters);
+		var saveChangedAssemblyStep = new SaveChangedAssemblyStep (Log, writerParameters, TaskEnvironment);
 		pipeline.Steps.Add (saveChangedAssemblyStep);
 	}
 
@@ -128,7 +129,7 @@ public class AssemblyModifierPipeline : AndroidTask
 		// Use Load with the exact ItemSpec path to ensure the correct TFM version
 		// is loaded, rather than GetAssembly which strips the path and resolves by
 		// name through search directories (which may find wrong-TFM copies).
-		var assembly = pipeline.Resolver.Load (source.ItemSpec)
+		var assembly = pipeline.Resolver.Load (TaskEnvironment.GetAbsolutePath (source.ItemSpec).Value)
 			?? throw new FileNotFoundException ($"Could not load assembly '{source.ItemSpec}'.", source.ItemSpec);
 
 		var context = new StepContext (source, destination) {
@@ -149,19 +150,23 @@ class SaveChangedAssemblyStep : IAssemblyModifierPipelineStep
 
 	public WriterParameters WriterParameters { get; set; }
 
-	public SaveChangedAssemblyStep (TaskLoggingHelper log, WriterParameters writerParameters)
+	readonly TaskEnvironment taskEnvironment;
+
+	public SaveChangedAssemblyStep (TaskLoggingHelper log, WriterParameters writerParameters, TaskEnvironment taskEnvironment)
 	{
 		Log = log;
 		WriterParameters = writerParameters;
+		this.taskEnvironment = taskEnvironment;
 	}
 
 	public void ProcessAssembly (AssemblyDefinition assembly, StepContext context)
 	{
 		if (context.IsAssemblyModified) {
 			Log.LogDebugMessage ($"Saving modified assembly: {context.Destination.ItemSpec}");
-			Directory.CreateDirectory (Path.GetDirectoryName (context.Destination.ItemSpec));
+			string destination = taskEnvironment.GetAbsolutePath (context.Destination.ItemSpec).Value;
+			Directory.CreateDirectory (Path.GetDirectoryName (destination));
 			WriterParameters.WriteSymbols = assembly.MainModule.HasSymbols;
-			assembly.Write (context.Destination.ItemSpec, WriterParameters);
+			assembly.Write (destination, WriterParameters);
 		} else {
 			// If we didn't write a modified file, copy the original to the destination
 			CopyIfChanged (context.Source, context.Destination);
@@ -173,13 +178,14 @@ class SaveChangedAssemblyStep : IAssemblyModifierPipelineStep
 
 	void CopyIfChanged (ITaskItem source, ITaskItem destination)
 	{
-		if (MonoAndroidHelper.CopyAssemblyAndSymbols (source.ItemSpec, destination.ItemSpec)) {
+		string destinationPath = taskEnvironment.GetAbsolutePath (destination.ItemSpec).Value;
+		if (MonoAndroidHelper.CopyAssemblyAndSymbols (taskEnvironment.GetAbsolutePath (source.ItemSpec).Value, destinationPath, taskEnvironment)) {
 			Log.LogDebugMessage ($"Copied: {destination.ItemSpec}");
 		} else {
 			Log.LogDebugMessage ($"Skipped unchanged file: {destination.ItemSpec}");
 
 			// NOTE: We still need to update the timestamp on this file, or this target would run again
-			File.SetLastWriteTimeUtc (destination.ItemSpec, DateTime.UtcNow);
+			File.SetLastWriteTimeUtc (destinationPath, DateTime.UtcNow);
 		}
 	}
 }
