@@ -1,8 +1,7 @@
-#nullable disable
+﻿#nullable disable
 #nullable enable annotations
 
 using System;
-using System.Globalization;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
@@ -235,7 +234,7 @@ namespace Xamarin.Android.Tasks
 			}
 			var action = log as Action<string>;
 			if (action != null) {
-				action (string.Format (CultureInfo.CurrentCulture, msg, args));
+				action (string.Format (msg, args));
 				return;
 			}
 #else
@@ -441,9 +440,9 @@ namespace Xamarin.Android.Tasks
 			if (platformPath == null) {
 				var expectedPath = Path.Combine (androidSdkDirectory, "platforms", "android-" + platform, "android.jar");
 				var sdkManagerMenuPath = buildingInsideVisualStudio ? Properties.Resources.XA5207_SDK_Manager_Windows : Properties.Resources.XA5207_SDK_Manager_CLI;
-				var details = string.Format (CultureInfo.CurrentCulture, sdkManagerMenuPath, targetFramework, androidSdkDirectory);
+				var details = string.Format (sdkManagerMenuPath, targetFramework, androidSdkDirectory);
 				if (designTimeBuild) {
-					log.LogDebugMessage (string.Format(CultureInfo.CurrentCulture, Properties.Resources.XA5207, platform, expectedPath, details));
+					log.LogDebugMessage (string.Format(Properties.Resources.XA5207, platform, expectedPath, details));
 				} else {
 					log.LogCodedError ("XA5207", Properties.Resources.XA5207, platform, expectedPath, details);
 				}

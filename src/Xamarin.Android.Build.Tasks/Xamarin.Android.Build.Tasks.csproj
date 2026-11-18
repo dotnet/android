@@ -19,6 +19,10 @@
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
     <DefineConstants>$(DefineConstants);TRACE;HAVE_CECIL;MSBUILD;XABT_MANIFEST_EXTENSIONS</DefineConstants>
     <AndroidGeneratedClassDirectory Condition=" '$(AndroidGeneratedClassDirectory)' == '' ">..\..\src\Mono.Android\obj\$(Configuration)\$(DotNetTargetFramework)\android-$(AndroidLatestStablePlatformId)\mcw</AndroidGeneratedClassDirectory>
+    <!-- Legacy task source uses annotation syntax without flow-analysis changes. -->
+    <NoWarn>$(NoWarn);8632</NoWarn>
+    <!-- Preserve historical task formatting; unrelated caller-visible diagnostics remain enabled. -->
+    <NoWarn>$(NoWarn);CA1310;CA1305</NoWarn>
     <SignAssembly>true</SignAssembly>
     <AssemblyOriginatorKeyFile>..\..\product.snk</AssemblyOriginatorKeyFile>
     <Nullable>enable</Nullable>

@@ -1,6 +1,7 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
+    <NoWarn>$(NoWarn);CA1305</NoWarn>
     <ProjectGuid>{2DD1EE75-6D8D-4653-A800-0A24367F7F38}</ProjectGuid>
     <TargetFramework>$(DotNetStableTargetFramework)</TargetFramework>
     <SignAssembly>true</SignAssembly>

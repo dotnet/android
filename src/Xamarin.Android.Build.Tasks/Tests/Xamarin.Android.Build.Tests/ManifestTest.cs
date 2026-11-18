@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Globalization;
 using System.Collections.Generic;
 using System.IO;
@@ -93,7 +93,7 @@ namespace Bug12935
 			proj.MainActivity = ScreenOrientationActivity;
 			using (var builder = CreateApkBuilder ()) {
 
-				proj.AndroidManifest = string.Format (CultureInfo.CurrentCulture, TargetSdkManifest, "17");
+				proj.AndroidManifest = string.Format (TargetSdkManifest, "17");
 				Assert.IsTrue (builder.Build (proj), "Build for TargetFrameworkVersion 17 should have succeeded");
 				var manifestFile = Path.Combine (Root, builder.ProjectDirectory, proj.IntermediateOutputPath, "android", "AndroidManifest.xml");
 
@@ -114,7 +114,7 @@ namespace Bug12935
 				Assert.AreEqual ("sensorPortrait", screenOrientation.Value, "screenOrientation should have been sensorPortrait");
 
 				builder.Cleanup ();
-				proj.AndroidManifest = string.Format (CultureInfo.CurrentCulture, TargetSdkManifest, "16");
+				proj.AndroidManifest = string.Format (TargetSdkManifest, "16");
 				Assert.IsTrue (builder.Build (proj), "Build for TargetFrameworkVersion 16 should have succeeded");
 
 				doc = XDocument.Load (manifestFile);
@@ -129,7 +129,7 @@ namespace Bug12935
 
 				builder.Cleanup ();
 				builder.ThrowOnBuildFailure = false;
-				proj.AndroidManifest = string.Format (CultureInfo.CurrentCulture, TargetSdkManifest, "15");
+				proj.AndroidManifest = string.Format (TargetSdkManifest, "15");
 				Assert.IsFalse (builder.Build (proj), "Build for TargetFrameworkVersion 15 should have failed");
 				StringAssertEx.Contains ("APT2259: ", builder.LastBuildOutput);
 				StringAssertEx.Contains ("APT2067", builder.LastBuildOutput);
@@ -1532,7 +1532,7 @@ class TestActivity : Activity { }"
 
 			var templateFile = Path.GetTempFileName ();
 			try {
-				File.WriteAllText (templateFile, string.Format (CultureInfo.CurrentCulture, TargetSdkManifest, "36"));
+				File.WriteAllText (templateFile, string.Format (TargetSdkManifest, "36"));
 
 				var manifest = new ManifestDocument (templateFile) {
 					PackageName = "com.test.targetsdkversion",

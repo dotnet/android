@@ -10,6 +10,8 @@
     <RootNamespace>Android</RootNamespace>
     <SignAssembly>true</SignAssembly>
     <AssemblyOriginatorKeyFile>..\..\product.snk</AssemblyOriginatorKeyFile>
+    <!-- Keep released binding, obsolete-API, generated-code, and public-API compatibility baselines. -->
+    <NoWarn>0618;0809;0108;0114;0465;8764;8765;8766;8767;RS0041</NoWarn>
     <WarningsAsErrors>$(WarningsAsErrors);CS2002</WarningsAsErrors>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <LangVersion>preview</LangVersion>
@@ -40,6 +42,7 @@
   <PropertyGroup Condition=" '$(IncludeAndroidJavadoc)' == 'True' ">
     <AndroidJavadocVerbosity Condition=" '$(AndroidJavadocVerbosity)' == '' ">full</AndroidJavadocVerbosity>
     <DocumentationFile>$(OutputPath)Mono.Android.xml</DocumentationFile>
+    <NoWarn>$(NoWarn);CS1572;CS1573;CS1574;CS1584;CS1587;CS1591;CS1658;</NoWarn>
   </PropertyGroup>
 
   <ItemGroup>

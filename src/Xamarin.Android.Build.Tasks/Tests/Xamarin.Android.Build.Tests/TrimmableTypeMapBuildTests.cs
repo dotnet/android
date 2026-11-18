@@ -1,5 +1,4 @@
-using System;
-using System.Globalization;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.IO.Compression;
@@ -2959,7 +2958,7 @@ namespace Xamarin.Android.Build.Tests {
 				var maxMappingIndex = File.ReadLines (manifestFile)
 					.Select (line => Regex.Match (line, @"\bmi:(\d+)\b"))
 					.Where (match => match.Success)
-					.Select (match => int.Parse (match.Groups [1].Value, CultureInfo.CurrentCulture))
+					.Select (match => int.Parse (match.Groups [1].Value))
 					.Max ();
 
 				Assert.That (

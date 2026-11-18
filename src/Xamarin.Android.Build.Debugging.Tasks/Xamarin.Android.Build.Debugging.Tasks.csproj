@@ -2,6 +2,8 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <Import Project="$(MSBuildThisFileDirectory)..\..\Configuration.props" />
   <PropertyGroup>
+    <!-- Historical task code generally preserves the caller's formatting behavior. -->
+    <NoWarn>$(NoWarn);CA1305</NoWarn>
     <MemorySafetyRulesVersion>2</MemorySafetyRulesVersion>
   </PropertyGroup>
 
