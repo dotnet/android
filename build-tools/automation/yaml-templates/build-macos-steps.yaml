@@ -8,6 +8,7 @@ parameters:
   nugetArtifactName: $(NuGetArtifactName)
   testAssembliesArtifactName: $(TestAssembliesArtifactName)
   buildResultArtifactName: Build Results - macOS
+  publishMainBuildCache: false
   use1ESTemplate: true
 
 steps:
@@ -48,6 +49,29 @@ steps:
   workingDirectory: ${{ parameters.xaSourcePath }}
   displayName: make jenkins
   retryCountOnTaskFailure: 1
+
+- ${{ if eq(parameters.publishMainBuildCache, true) }}:
+  - script: |
+      bin/$(XA.Build.Configuration)/dotnet/dotnet build \
+        -p:Configuration=$(XA.Build.Configuration) \
+        '-t:CreateLocalFrameworkLists;CreateLocalRuntimeLists' \
+        build-tools/create-packs/Microsoft.Android.Sdk.proj \
+        -v:n
+    workingDirectory: ${{ parameters.xaSourcePath }}
+    displayName: Generate local workload lists for main build cache
+    condition: and(succeeded(), eq(variables['Build.Reason'], 'Schedule'), eq(variables['Build.SourceBranch'], 'refs/heads/main'), eq(variables['XA.Build.Configuration'], 'Release'))
+
+  - script: bin/$(XA.Build.Configuration)/dotnet/dotnet build-tools/scripts/main-build-cache.cs create "$(Agent.TempDirectory)/azdo-main-build-cache"
+    workingDirectory: ${{ parameters.xaSourcePath }}
+    displayName: Create main build cache
+    condition: and(succeeded(), eq(variables['Build.Reason'], 'Schedule'), eq(variables['Build.SourceBranch'], 'refs/heads/main'), eq(variables['XA.Build.Configuration'], 'Release'))
+
+  - task: PublishPipelineArtifact@1
+    displayName: Upload main build cache
+    condition: and(succeeded(), eq(variables['Build.Reason'], 'Schedule'), eq(variables['Build.SourceBranch'], 'refs/heads/main'), eq(variables['XA.Build.Configuration'], 'Release'))
+    inputs:
+      artifactName: azdo-main-build-cache-macos-$(Agent.OSArchitecture)-$(XA.Build.Configuration)
+      targetPath: $(Agent.TempDirectory)/azdo-main-build-cache
 
 - template: /build-tools/automation/yaml-templates/generate-cgmanifest.yaml
   parameters:

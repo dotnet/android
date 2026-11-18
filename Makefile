@@ -43,6 +43,13 @@ pack-dotnet::
 
 topdir  := $(shell pwd)
 
+# Written by `make prepare USE_MAIN_BUILD_CACHE=1` so restored compiler outputs stay up to date
+# and version properties stay pinned to the snapshot;
+# MSBuild only imports it when the file exists.
+ifeq ($(origin CustomAfterMicrosoftCommonTargets),undefined)
+export CustomAfterMicrosoftCommonTargets = $(topdir)/obj/azdo-main-build-cache/MainBuildCache.targets
+endif
+
 include build-tools/scripts/BuildEverything.mk
 
 # Must be after BuildEverything.mk - it uses variables defined there
@@ -80,8 +87,20 @@ prepare: install-dotnet
 	$(call SYSTEM_DOTNET_BINLOG,prepare) build-tools/scripts/Prepare.proj -t:Prepare
 
 .PHONY: install-dotnet
+ifeq ($(USE_MAIN_BUILD_CACHE),1)
+install-dotnet: main-build-cache-apply
+endif
 install-dotnet:
 	CONFIGURATION=$(CONFIGURATION) bash ./eng/install-dotnet.sh
+
+# Hydrates bin/ and obj/ of a fresh checkout from a scheduled main build; see
+# .github/skills/azdo-main-build-cache/SKILL.md. Must run before anything writes to bin/.
+.PHONY: main-build-cache-apply
+main-build-cache-apply:
+ifneq ($(CONFIGURATION),Release)
+	$(error USE_MAIN_BUILD_CACHE=1 requires CONFIGURATION=Release)
+endif
+	dotnet build-tools/scripts/main-build-cache.cs apply $(MAIN_BUILD_CACHE_SNAPSHOT)
 
 update-api-docs:
 		$(call DOTNET_BINLOG,update-api-docs) -t:UpdateExternalDocumentation src/Mono.Android/Mono.Android.csproj
