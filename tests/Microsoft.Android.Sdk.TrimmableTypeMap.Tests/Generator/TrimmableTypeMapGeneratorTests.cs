@@ -678,6 +678,57 @@ public class TrimmableTypeMapGeneratorTests : FixtureTestBase
 		Assert.Empty (second);
 	}
 
+	[Theory]
+	[InlineData (false)]
+	[InlineData (true)]
+	public void GenerateTypeMapAssemblies_ChangedFrameworkSealednessRegeneratesAssembly (bool isSealed)
+	{
+		var peer = CreatePeer ("Mono.Android", "Java.Lang.String", "java/lang/String") with {
+			IsSealed = isSealed,
+		};
+		var peers = new List<JavaPeerInfo> { peer };
+		var fingerprints = new Dictionary<string, byte []> (StringComparer.Ordinal);
+		var generator = CreateGenerator ();
+		var first = generator.GenerateTypeMapAssemblies (
+			peers,
+			new Version (11, 0),
+			useSharedTypemapUniverse: true,
+			(name, fingerprint) => {
+				fingerprints.Add (name, fingerprint);
+				return true;
+			});
+		var original = Assert.Single (first, assembly => assembly.Name == "_Mono.Android.TypeMap");
+		original.Content.Position = 0;
+		Guid originalMvid;
+		using (var pe = new PEReader (original.Content, PEStreamOptions.LeaveOpen)) {
+			var reader = pe.GetMetadataReader ();
+			originalMvid = reader.GetGuid (reader.GetModuleDefinition ().Mvid);
+		}
+		DisposeGeneratedAssemblies (first);
+
+		var unchanged = generator.GenerateTypeMapAssemblies (
+			peers,
+			new Version (11, 0),
+			useSharedTypemapUniverse: true,
+			(name, fingerprint) => !fingerprints [name].SequenceEqual (fingerprint));
+		Assert.Empty (unchanged);
+
+		peers [0] = peer with { IsSealed = !isSealed };
+		var regenerated = generator.GenerateTypeMapAssemblies (
+			peers,
+			new Version (11, 0),
+			useSharedTypemapUniverse: true,
+			(name, fingerprint) => !fingerprints [name].SequenceEqual (fingerprint));
+		var changed = Assert.Single (regenerated);
+		Assert.Equal ("_Mono.Android.TypeMap", changed.Name);
+		changed.Content.Position = 0;
+		using (var pe = new PEReader (changed.Content, PEStreamOptions.LeaveOpen)) {
+			var reader = pe.GetMetadataReader ();
+			Assert.NotEqual (originalMvid, reader.GetGuid (reader.GetModuleDefinition ().Mvid));
+		}
+		DisposeGeneratedAssemblies (regenerated);
+	}
+
 	[Fact]
 	public void Execute_IncrementalCallbackPreservesGeneratedBytes ()
 	{

@@ -2,6 +2,7 @@
 - [Introduction](#introduction)
 - [Java <-> Managed interoperability overview](#java-managed-interoperability-overview)
   - [Java Callable Wrappers (JCW)](#java-callable-wrappers-jcw)
+  - [Trimmable type maps](#trimmable-type-maps)
 - [Registration](#registration)
   - [Dynamic registration](#dynamic-registration)
     - [Dynamic Java Callable Wrappers registration code](#dynamic-java-callable-wrappers-registration-code)
@@ -147,6 +148,18 @@ mechanisms described in sections found later in this document.  The
 [Dynamic registration](#dynamic-registration) section will expand on
 this example in order to explain the details of how the Managed type
 and its methods are registered with the Java VM.
+
+## Trimmable type maps
+
+When the trimmable type map is enabled, generated proxies for sealed
+managed types defined in `Mono.Android` pass `isSealed: true` to the
+`JavaPeerProxy` constructor.  The resulting `JavaPeerProxy.IsSealed`
+property lets target-type lookups use `FindClass` and `IsInstanceOf`
+without inspecting `Type.Assembly` at runtime.  Other peers pass
+`isSealed: false` and still use the object's actual Java class
+hierarchy, even for sealed app and library types: these classes can use
+a different class loader, so resolving their class by name could
+incorrectly reject a valid object.
 
 # Registration
 

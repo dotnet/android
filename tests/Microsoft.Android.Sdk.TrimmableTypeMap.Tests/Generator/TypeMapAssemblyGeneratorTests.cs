@@ -97,6 +97,79 @@ public class TypeMapAssemblyGeneratorTests : FixtureTestBase
 		Assert.Contains ("System.Runtime.InteropServices", asmRefs);
 	}
 
+	[Theory]
+	[InlineData ("Mono.Android", false)]
+	[InlineData ("Mono.Android", true)]
+	[InlineData ("Other", false)]
+	[InlineData ("Other", true)]
+	public void Generate_ProxyConstructor_PassesSealedFrameworkEligibility (string assemblyName, bool isSealed)
+	{
+		foreach (bool alias in new [] { false, true }) {
+			foreach (bool generic in new [] { false, true }) {
+				var peer = MakePeerWithActivation (
+					"example/Peer", generic ? "Example.Peer`1" : "Example.Peer", assemblyName) with {
+					IsFrameworkAssembly = true,
+					IsSealed = isSealed,
+					IsGenericDefinition = generic,
+					DoNotGenerateAcw = true,
+				};
+				var peers = new List<JavaPeerInfo> { peer };
+				if (alias) {
+					peers.Add (MakePeerWithActivation ("example/Peer", "Example.OtherPeer", assemblyName) with {
+						IsFrameworkAssembly = true,
+						DoNotGenerateAcw = true,
+					});
+				}
+
+				var generator = new TypeMapAssemblyGenerator (new Version (11, 0));
+				var model = generator.CreateModel (peers, "_Example.TypeMap");
+				using var stream = new MemoryStream ();
+				generator.Generate (model, stream, useSharedTypemapUniverse: true);
+				stream.Position = 0;
+				using var pe = new PEReader (stream);
+				var reader = pe.GetMetadataReader ();
+				var baseConstructors = FindCtorMemberRefs (
+					reader, "Java.Interop", "JavaPeerProxy", "System.String", "System.Type", "System.Boolean");
+				Assert.NotEmpty (baseConstructors);
+				Assert.Equal (alias ? 2 : 1, model.ProxyTypes.Count);
+
+				foreach (var proxy in model.ProxyTypes) {
+					bool eligible = assemblyName == "Mono.Android" && isSealed &&
+						proxy.TargetType.ManagedTypeName == peer.ManagedTypeName;
+					Assert.Equal (eligible, proxy.CanResolveFromSealedTargetType);
+					var type = reader.TypeDefinitions
+						.Select (reader.GetTypeDefinition)
+						.Single (type => reader.GetString (type.Namespace) == proxy.Namespace &&
+							reader.GetString (type.Name) == proxy.TypeName);
+					Assert.Equal (HandleKind.TypeReference, type.BaseType.Kind);
+					var baseType = reader.GetTypeReference ((TypeReferenceHandle) type.BaseType);
+					Assert.Equal ("Java.Interop", reader.GetString (baseType.Namespace));
+					Assert.Equal ("JavaPeerProxy", reader.GetString (baseType.Name));
+					Assert.DoesNotContain (type.GetProperties (),
+						handle => reader.GetString (reader.GetPropertyDefinition (handle).Name) == "IsSealed");
+
+					var constructor = type.GetMethods ()
+						.Select (reader.GetMethodDefinition)
+						.Single (method => reader.GetString (method.Name) == ".ctor");
+					var il = pe.GetMethodBody (constructor.RelativeVirtualAddress).GetILBytes ();
+					Assert.NotNull (il);
+					bool callsBaseWithExpectedValue = false;
+					foreach (var handle in baseConstructors) {
+						int token = MetadataTokens.GetToken (handle);
+						byte [] call = [
+							(byte) (eligible ? ILOpCode.Ldc_i4_1 : ILOpCode.Ldc_i4_0),
+							(byte) ILOpCode.Call,
+							(byte) token, (byte) (token >> 8), (byte) (token >> 16), (byte) (token >> 24),
+						];
+						callsBaseWithExpectedValue |= il.AsSpan ().IndexOf (call) >= 0;
+					}
+					Assert.True (callsBaseWithExpectedValue,
+						$"{proxy.TypeName}: assembly={assemblyName}, sealed={isSealed}, alias={alias}, generic={generic}");
+				}
+			}
+		}
+	}
+
 	[Fact]
 	public void Generate_InheritedGenericBaseCallback_UsesValueTypeGenericArgument ()
 	{

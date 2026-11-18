@@ -11,9 +11,9 @@ namespace Microsoft.Android.Sdk.TrimmableTypeMap.Tests;
 /// <summary>
 /// The fingerprints are computed by streaming model fields straight into SHA-256 instead of
 /// buffering a <see cref="BinaryWriter"/> serialisation in a <see cref="MemoryStream"/>. These
-/// tests pin that rewrite to the previous byte stream: the content fingerprint seeds the emitted
-/// assembly's deterministic MVID and the incremental fingerprint is an incremental-build contract,
-/// so neither may drift.
+/// tests compare the streaming output with an independent buffered serializer. The content
+/// fingerprint seeds the emitted assembly's deterministic MVID, and the incremental fingerprint
+/// is an incremental-build contract.
 /// </summary>
 public class FingerprintWriterTests : FixtureTestBase
 {
@@ -116,15 +116,24 @@ public class FingerprintWriterTests : FixtureTestBase
 	[Theory]
 	[InlineData (true)]
 	[InlineData (false)]
-	public void ComputeFingerprints_MatchesLegacyBufferedSerialization (bool useSharedTypemapUniverse)
+	public void ComputeFingerprints_MatchesBufferedSerialization (bool useSharedTypemapUniverse)
 	{
 		var systemRuntimeVersion = new Version (11, 0, 0, 0);
+		var peers = new List<JavaPeerInfo> (ScanFixtures ()) {
+			MakePeerWithActivation ("example/SealedPeer", "Example.SealedPeer", "Mono.Android") with {
+				IsFrameworkAssembly = true,
+				IsSealed = true,
+				DoNotGenerateAcw = true,
+			},
+		};
 		var model = new TypeMapAssemblyGenerator (systemRuntimeVersion)
-			.CreateModel (ScanFixtures (), "_TestFixtures.TypeMap");
+			.CreateModel (peers, "_TestFixtures.TypeMap");
 
 		// The fixtures must exercise every part of the walk that the two fingerprints share.
 		Assert.NotEmpty (model.Entries);
 		Assert.NotEmpty (model.ProxyTypes);
+		Assert.Contains (model.ProxyTypes, proxy => proxy.CanResolveFromSealedTargetType);
+		Assert.Contains (model.ProxyTypes, proxy => !proxy.CanResolveFromSealedTargetType);
 
 		var fingerprints = MetadataHelper.ComputeFingerprints (model, systemRuntimeVersion, useSharedTypemapUniverse, includeIncremental: true);
 
@@ -215,9 +224,8 @@ public class FingerprintWriterTests : FixtureTestBase
 		return sha.ComputeHash (bytes);
 	}
 
-	// The implementations below are the buffered BinaryWriter serialisation used before the
-	// streaming rewrite. They are intentionally verbatim copies so the tests fail if the new
-	// walk changes the byte stream in any way.
+	// Buffered reference serializers, based on the implementations used before the streaming
+	// rewrite and updated when the fingerprint format intentionally changes.
 
 	static byte [] LegacyContentFingerprint (TypeMapAssemblyData data) => Sha256 (BinaryWriterBytes (writer => {
 		foreach (var entry in data.Entries) {
@@ -228,6 +236,7 @@ public class FingerprintWriterTests : FixtureTestBase
 		foreach (var proxy in data.ProxyTypes) {
 			writer.Write (proxy.TypeName);
 			LegacyWriteTypeRef (writer, proxy.TargetType);
+			writer.Write (proxy.CanResolveFromSealedTargetType);
 			writer.Write ((byte) (proxy.ActivationCtor?.Style ?? 0));
 			if (proxy.ActivationCtor is not null) {
 				LegacyWriteTypeRef (writer, proxy.ActivationCtor.DeclaringType);
@@ -271,6 +280,7 @@ public class FingerprintWriterTests : FixtureTestBase
 				writer.Write (proxy.JniName);
 				writer.Write (proxy.Namespace);
 				LegacyWriteTypeRef (writer, proxy.TargetType);
+				writer.Write (proxy.CanResolveFromSealedTargetType);
 				LegacyWriteOptionalTypeRef (writer, proxy.InvokerType);
 				writer.Write (proxy.InvokerActivationCtorStyle.HasValue);
 				if (proxy.InvokerActivationCtorStyle.HasValue) {
