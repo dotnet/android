@@ -1,7 +1,6 @@
 #nullable enable
 
 using System;
-using System.Globalization;
 using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 
@@ -23,7 +22,7 @@ namespace Java.Interop {
 			ArgumentNullException.ThrowIfNull (marshalerType);
 			if (!typeof (JniValueMarshaler).IsAssignableFrom (marshalerType))
 				throw new ArgumentException (
-						string.Format (CultureInfo.CurrentCulture, "`{0}` must inherit from JniValueMarshaler!", marshalerType.FullName),
+						string.Format ("`{0}` must inherit from JniValueMarshaler!", marshalerType.FullName),
 						nameof (marshalerType));
 
 			MarshalerType   = marshalerType;

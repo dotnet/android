@@ -1,7 +1,6 @@
 #nullable enable
 
 using System;
-using System.Globalization;
 
 namespace Java.Interop
 {
@@ -64,12 +63,12 @@ namespace Java.Interop
 			bool haveName   = false;
 			bool haveSig    = false;
 #endif  // DEBUG
-			return string.Format (CultureInfo.CurrentCulture, "JniFieldInfo({0}{1}{2}{3}ID=0x{4})",
+			return string.Format ("JniFieldInfo({0}{1}{2}{3}ID=0x{4})",
 					haveName ? "Name=" + Name : string.Empty,
 					haveName ? ", " : string.Empty,
 					haveSig  ? "Signature=" + Signature : string.Empty,
 					haveName || haveSig ? ", " : string.Empty,
-					ID.ToString ("x", CultureInfo.InvariantCulture));
+					ID.ToString ("x"));
 		}
 	}
 }

@@ -1,7 +1,6 @@
 #nullable enable
 
 using System;
-using System.Globalization;
 using System.Runtime.InteropServices;
 
 namespace Java.Interop
@@ -129,8 +128,8 @@ namespace Java.Interop
 
 		public override string ToString ()
 		{
-			return string.Format (CultureInfo.CurrentCulture, "JniArgumentValue(z={0},b={1},c={2},s={3},i={4},j={5},f={6},d={7},l=0x{8})",
-					z, b, c, s, i, j, f, d, l.ToString ("x", CultureInfo.InvariantCulture));
+			return string.Format ("JniArgumentValue(z={0},b={1},c={2},s={3},i={4},j={5},f={6},d={7},l=0x{8})",
+					z, b, c, s, i, j, f, d, l.ToString ("x"));
 		}
 	}
 }
