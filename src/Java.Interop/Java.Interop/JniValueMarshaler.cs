@@ -1,7 +1,6 @@
 #nullable enable
 
 using System;
-using System.Globalization;
 using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 using System.Runtime.CompilerServices;
@@ -76,10 +75,10 @@ namespace Java.Interop {
 
 		public override string ToString ()
 		{
-			return string.Format (CultureInfo.CurrentCulture, "JniValueMarshalerState({0}, ReferenceValue={1}, PeerableValue=0x{2}, Extra={3})",
+			return string.Format ("JniValueMarshalerState({0}, ReferenceValue={1}, PeerableValue=0x{2}, Extra={3})",
 					JniArgumentValue.ToString (),
 					ReferenceValue.ToString (),
-					RuntimeHelpers.GetHashCode (PeerableValue!).ToString ("x", CultureInfo.InvariantCulture),
+					RuntimeHelpers.GetHashCode (PeerableValue!).ToString ("x"),
 					Extra);
 		}
 	}

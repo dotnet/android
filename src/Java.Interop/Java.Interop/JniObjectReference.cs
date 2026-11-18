@@ -1,7 +1,6 @@
 #nullable enable
 
 using System;
-using System.Globalization;
 using System.Runtime.CompilerServices;
 
 namespace Java.Interop
@@ -99,7 +98,7 @@ namespace Java.Interop
 
 		public override string ToString ()
 		{
-			return "0x" + Handle.ToString ("x", CultureInfo.InvariantCulture) + "/" + ToString (Type);
+			return "0x" + Handle.ToString ("x") + "/" + ToString (Type);
 		}
 
 

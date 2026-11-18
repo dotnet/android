@@ -1,7 +1,6 @@
 ﻿#nullable enable
 
 using System;
-using System.Globalization;
 using System.Runtime.ExceptionServices;
 
 namespace Java.Interop {
@@ -14,7 +13,7 @@ namespace Java.Interop {
 			{
 				int r = _MonitorEnter (instance);
 				if (r != 0) {
-					throw new InvalidOperationException (string.Format (CultureInfo.CurrentCulture, "Could not enter monitor; JNIEnv::MonitorEnter() returned {0}.", r));
+					throw new InvalidOperationException (string.Format ("Could not enter monitor; JNIEnv::MonitorEnter() returned {0}.", r));
 				}
 			}
 
@@ -26,7 +25,7 @@ namespace Java.Interop {
 					if (e != null) {
 						ExceptionDispatchInfo.Capture (e).Throw ();
 					}
-					throw new InvalidOperationException (string.Format (CultureInfo.CurrentCulture, "Could not exit monitor; JNIEnv::MonitorExit() returned {0}.", r));
+					throw new InvalidOperationException (string.Format ("Could not exit monitor; JNIEnv::MonitorExit() returned {0}.", r));
 				}
 			}
 		}
