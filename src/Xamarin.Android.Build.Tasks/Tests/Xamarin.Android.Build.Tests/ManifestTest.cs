@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Globalization;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -1339,7 +1338,7 @@ class TestActivity : Activity { }"
 			FileAssert.Exists (manifestPath);
 			var manifest = XDocument.Load (manifestPath);
 			XNamespace ns = "http://schemas.android.com/apk/res/android";
-			Assert.AreEqual (minSdkVersionInt.ToString (CultureInfo.CurrentCulture), manifest.Root.Element ("uses-sdk").Attribute (ns + "minSdkVersion").Value);
+			Assert.AreEqual (minSdkVersionInt.ToString (), manifest.Root.Element ("uses-sdk").Attribute (ns + "minSdkVersion").Value);
 		}
 
 		static object [] SupportedOSErrorsTestSources = new object [] {
@@ -1527,7 +1526,7 @@ class TestActivity : Activity { }"
 			// Manifest generation strips "36.1" to "36" before setting TargetSdkVersion.
 			string targetSdkVersion = "36.1";
 			if (MonoAndroidHelper.TryParseApiLevel (targetSdkVersion, out var version)) {
-				targetSdkVersion = version.Major.ToString (CultureInfo.CurrentCulture);
+				targetSdkVersion = version.Major.ToString ();
 			}
 
 			var templateFile = Path.GetTempFileName ();

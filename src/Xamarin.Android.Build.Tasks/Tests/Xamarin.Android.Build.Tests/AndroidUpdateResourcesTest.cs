@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Globalization;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -527,7 +526,7 @@ namespace UnnamedProject
 				var packaged_resources = Path.Combine (intermediate, "android", "bin", "packaged_resources");
 				FileAssert.Exists (packaged_resources);
 				var assemblyIdentityMap = b.Output.GetAssemblyMapCache ();
-				var assemblyIndex = assemblyIdentityMap.IndexOf ($"{lib.ProjectName}.aar").ToString (CultureInfo.CurrentCulture);
+				var assemblyIndex = assemblyIdentityMap.IndexOf ($"{lib.ProjectName}.aar").ToString ();
 				using (var zip = ZipHelper.OpenZip (packaged_resources)) {
 					CheckCustomView (zip, intermediate, "lp", assemblyIndex, "jl", "res", "layout", "custom_text_lib.xml");
 					CheckCustomView (zip, intermediate, "res", "layout", "custom_text_app.xml");
