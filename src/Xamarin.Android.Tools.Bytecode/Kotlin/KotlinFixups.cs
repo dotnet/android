@@ -167,8 +167,14 @@ namespace Xamarin.Android.Tools.Bytecode
 		{
 			if (kotlinTypeClassName is null || jvmDescriptor is null)
 				return null;
-			if (!inlineClasses.TryGetValue (kotlinTypeClassName, out var underlying))
+			if (!inlineClasses.TryGetValue (kotlinTypeClassName, out var underlying)) {
+				// A value class from another library: only value classes and Kotlin built-in
+				// types are erased to a JVM primitive. The generator projects it only when a
+				// referenced binding assembly has the matching value-class struct.
+				if (IsJvmPrimitiveDescriptor (jvmDescriptor) && !kotlinTypeClassName.StartsWith ("kotlin/", StringComparison.Ordinal))
+					return "L" + kotlinTypeClassName;
 				return null;
+			}
 			if (jvmDescriptor != underlying)
 				return null;
 			return "L" + kotlinTypeClassName;
@@ -326,7 +332,7 @@ namespace Xamarin.Android.Tools.Bytecode
 					continue;
 
 				// Kotlin provides actual parameter names
-				if (TypesMatch (java_p.Type, kotlin_p.Type, kotlinClass) && java_p.IsUnnamedParameter () && !kotlin_p.IsUnnamedParameter ()) {
+				if (TypesMatch (java_p.Type, kotlin_p.Type, kotlinClass, inlineClasses) && java_p.IsUnnamedParameter () && !kotlin_p.IsUnnamedParameter ()) {
 					Log.Debug ($"Kotlin: Renaming parameter {method.DeclaringType?.ThisClass.Name.Value} - {method.Name} - {java_p.Name} -> {kotlin_p.Name}");
 					java_p.Name = kotlin_p.Name;
 				}
@@ -347,9 +353,11 @@ namespace Xamarin.Android.Tools.Bytecode
 				java_p.KotlinNotNull = IsNotNullReference (kotlin_p.Type, java_p.Type.BinaryName);
 			}
 
-			// The extension receiver is the first Java parameter
-			if (metadata.ReceiverType != null && start > 0)
+			// The extension receiver (e.g. `fun Dp.coerceAtLeast()`) is the first Java parameter
+			if (metadata.ReceiverType != null && start > 0) {
 				java_parameters [0].KotlinNotNull = IsNotNullReference (metadata.ReceiverType, java_parameters [0].Type.BinaryName);
+				java_parameters [0].KotlinInlineClassJniType = GetInlineClassJniType (metadata.ReceiverType.ClassName, java_parameters [0].Type.TypeSignature, inlineClasses);
+			}
 
 			method.KotlinReturnNotNull = IsNotNullReference (metadata.ReturnType, method.ReturnType.BinaryName);
 
@@ -661,16 +669,8 @@ namespace Xamarin.Android.Tools.Bytecode
 			if (javaType.BinaryName == "Ljava/lang/Object;")
 				return true;
 
-			// dotnet/java-interop#1431 (Phase 2): the JVM erases @JvmInline value
-			// class types to their underlying primitive descriptor, so e.g. a
-			// `MyColor` property (ULong-backed) appears in the bytecode as `()J`
-			// even though the Kotlin metadata still says `MyColor`. Accept the
-			// match when the JVM primitive matches the inline class's recorded
-			// underlying-primitive descriptor.
-			if (inlineClasses != null && IsJvmPrimitiveDescriptor (javaType.BinaryName) &&
-					kotlinType.ClassName != null &&
-					inlineClasses.TryGetValue (kotlinType.ClassName, out var underlying) &&
-					underlying == javaType.BinaryName)
+			// The JVM erases a @JvmInline value class to its underlying primitive.
+			if (inlineClasses != null && GetInlineClassJniType (kotlinType.ClassName, javaType.BinaryName, inlineClasses) != null)
 				return true;
 
 			// Sometimes Kotlin keeps its native types rather than converting them to Java native types

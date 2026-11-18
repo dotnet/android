@@ -38,6 +38,9 @@ namespace MonoDroid.Generation {
 		// with the wrapper struct's full name so the C# parameter signature uses the
 		// struct, while JNI marshaling stays on the underlying primitive (the `type`).
 		public string KotlinInlineClassJniType { get; set; }
+
+		// A Kotlin value class projected as a struct, either unboxed (`Foo`) or boxed (`Foo?`).
+		public bool IsKotlinInlineClass => sym is KotlinInlineClassBoxedSymbol || !string.IsNullOrEmpty (KotlinInlineClassJniType);
 		public string JniTypeOverride { get; set; }
 
 		public Parameter Clone ()
@@ -234,6 +237,9 @@ namespace MonoDroid.Generation {
 				return new string [0];
 			else if (NeedsPrep)
 				return sym.PreCallback (opt, Name, false);
+			else if (!string.IsNullOrEmpty (KotlinInlineClassJniType) && managed_type != null)
+				// Construct the value-class struct explicitly: an implicit conversion can be ambiguous between overloads.
+				return new string[] { "var " + opt.GetSafeIdentifier (Name) + " = new " + opt.GetOutputName (managed_type) + " (" + FromNative (opt, false) + ");" };
 			else
 				return new string[] { "var " + opt.GetSafeIdentifier (Name) + " = " + FromNative (opt, false) + ";" };
 		}
@@ -302,13 +308,17 @@ namespace MonoDroid.Generation {
 		// for JNI marshaling.
 		void ApplyKotlinInlineClassProjection (CodeGenerationOptions opt, GenericParameterDefinitionList type_params)
 		{
-			if (string.IsNullOrEmpty (KotlinInlineClassJniType))
+			if (string.IsNullOrEmpty (KotlinInlineClassJniType)) {
+				// The JVM passes a nullable value class (Kotlin `Foo?`) boxed; project it as the struct `Foo?`.
+				if (sym is ClassGen { IsKotlinInlineClass: true } gen)
+					sym = new KotlinInlineClassBoxedSymbol (gen);
 				return;
+			}
 			var javaName = TypeNameUtilities.JniSignatureToJavaTypeName (KotlinInlineClassJniType);
 			if (javaName == null)
 				return;
 			var wrapper = opt.SymbolTable.Lookup (javaName, type_params) as ClassGen;
-			if (wrapper == null || !wrapper.IsKotlinInlineClass)
+			if (wrapper == null || !wrapper.IsKotlinInlineClass || wrapper.KotlinInlineClassUnderlyingJniType != sym.JniName)
 				return;
 			managed_type = wrapper.FullName;
 			NotNull = true;
@@ -325,7 +335,7 @@ namespace MonoDroid.Generation {
 			// which wouldn't match any case below and would fall through to
 			// `true`, generating an unnecessary GC.KeepAlive call for what is
 			// ultimately a value-type holding a primitive.
-			if (!string.IsNullOrEmpty (KotlinInlineClassJniType))
+			if (IsKotlinInlineClass)
 				return false;
 
 			return Type switch {

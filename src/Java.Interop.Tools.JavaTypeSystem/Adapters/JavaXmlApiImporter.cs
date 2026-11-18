@@ -121,6 +121,7 @@ namespace Java.Interop.Tools.JavaTypeSystem
 				model.PropertyBag.Add ("merge.SourceFile", source);
 			if (element.XGetAttribute ("deprecated-since") is string dep && dep.HasValue ())
 				model.PropertyBag.Add ("deprecated-since", dep);
+			CopyAttributes (element, model.PropertyBag, KotlinClassAttributes);
 
 			if (element.Element ("typeParameters") is XElement tp)
 				ParseTypeParameters (model.TypeParameters, tp);
@@ -215,6 +216,7 @@ namespace Java.Interop.Tools.JavaTypeSystem
 				method.PropertyBag.Add ("merge.SourceFile", source);
 			if (element.XGetAttribute ("deprecated-since") is string dep && dep.HasValue ())
 				method.PropertyBag.Add ("deprecated-since", dep);
+			CopyAttributes (element, method.PropertyBag, KotlinMethodAttributes);
 
 			return method;
 		}
@@ -309,8 +311,21 @@ namespace Java.Interop.Tools.JavaTypeSystem
 				jniType: element.XGetAttribute ("jni-type"),
 				isNotNull: element.XGetAttributeAsBool ("not-null")
 			);
+			CopyAttributes (element, parameter.PropertyBag, KotlinParameterAttributes);
 
 			return parameter;
+		}
+
+		// class-parse attributes for Kotlin value classes that the generator reads.
+		internal static readonly string [] KotlinClassAttributes = { "kotlin-inline-class", "kotlin-inline-class-underlying-jni-type" };
+		internal static readonly string [] KotlinMethodAttributes = { "managedName", "kotlin-inline-class-return-jni-type" };
+		internal static readonly string [] KotlinParameterAttributes = { "kotlin-inline-class-jni-type" };
+
+		static void CopyAttributes (XElement element, Dictionary<string, string> bag, string [] names)
+		{
+			foreach (var name in names)
+				if (element.XGetAttribute (name) is string value && value.HasValue ())
+					bag [name] = value;
 		}
 
 		public static void ParseTypeParameters (JavaTypeParameters parameters, XElement element)

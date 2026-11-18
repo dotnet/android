@@ -38,4 +38,18 @@ object Widgets {
     // KotlinInlineClassJniType must both be stamped so the generator emits
     // `public static MyColor TintColor { get; set; }` instead of long.
     var tintColor: MyColor = MyColor(0u)
+
+    // Positions where the JVM passes the boxed value class instead of the
+    // underlying primitive: a nullable value class, and a generic type argument.
+    fun maybeColor(color: MyColor?): MyColor? = color
+    fun colors(colors: List<MyColor>): List<MyColor> = colors
+
+    // Extension receiver typed as a value class.
+    fun MyDp.twice(): MyDp = MyDp(value * 2)
+}
+
+// Java calls back into C# with a boxed value class.
+interface ColorCallback {
+    fun onColor(color: MyColor?): MyColor?
+    fun onDp(dp: MyDp): Int
 }

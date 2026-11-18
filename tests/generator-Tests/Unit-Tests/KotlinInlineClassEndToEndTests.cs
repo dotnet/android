@@ -12,7 +12,7 @@ namespace generatortests
 {
 	// dotnet/java-interop#1431 (Phase 2): end-to-end test that drives real
 	// Kotlin .class files (compiled by tests/Xamarin.Android.Tools.Bytecode-Tests/
-	// kotlin-gradle/) through KotlinFixups -> XmlClassDeclarationBuilder ->
+	// kotlin-gradle/) through KotlinFixups -> XmlClassDeclarationBuilder -> JavaTypeSystem adjuster ->
 	// XmlApiImporter -> JavaInteropCodeGenerator and asserts the projected C#
 	// output uses the generated `readonly partial struct` wrapper types in
 	// method signatures while keeping the JNI marshaling on the underlying
@@ -80,7 +80,71 @@ namespace generatortests
 				$"Expected at least 3 inline-class ClassGens, generator output was:\n{output}");
 		}
 
-		// Run the four kotlin-gradle .class files through KotlinFixups and
+		[Test]
+		public void GeneratorMarshalsBoxedKotlinInlineClasses ()
+		{
+			var output = GenerateCSharp (BuildApiXmlFromKotlinFixture (), out _, nullableReferenceTypes: true);
+
+			StringAssert.Contains ("\"constructor-impl\", \"(J)J\"", output);
+			StringAssert.Contains ("\"box-impl\", \"(J)Lxat/bytecode/tests/MyColor;\"", output);
+			StringAssert.Contains ("\"unbox-impl\", \"()J\"", output);
+
+			// Kotlin `MyColor?` is passed boxed.
+			StringAssert.Contains ("Xat.Bytecode.Tests.MyColor? MaybeColor (Xat.Bytecode.Tests.MyColor? color)", output);
+			StringAssert.Contains ("Xat.Bytecode.Tests.MyColor.ToLocalJniHandle (color)", output);
+			StringAssert.DoesNotContain ("color!", output);
+			StringAssert.Contains ("Xat.Bytecode.Tests.MyColor.FromJniHandle (__rm.Handle, JniHandleOwnership.TransferLocalRef);", output);
+
+			// Java calls back into C# with a boxed value.
+			StringAssert.Contains ("Xat.Bytecode.Tests.MyColor.ToLocalJniHandle (__this.OnColor (color))", output);
+			StringAssert.Contains ("var dp = new Xat.Bytecode.Tests.MyDp (native_dp);", output);
+			StringAssert.Contains ("return __this.OnDp (dp);", output);
+
+			// JavaList<T> can't hold a struct, so `List<MyColor>` keeps the boxed Java objects.
+			StringAssert.Contains ("IList<Java.Lang.Object> Colors (System.Collections.Generic.IList<Java.Lang.Object> colors)", output);
+		}
+
+		[Test]
+		public void GeneratorHandlesNestedFieldAndArrayKotlinInlineClasses ()
+		{
+			var output = GenerateCSharp ("""
+				<api>
+				  <package name='java.lang' jni-name='java/lang'>
+				    <class abstract='false' deprecated='not deprecated' final='false' name='Object' static='false' visibility='public' jni-signature='Ljava/lang/Object;' />
+				  </package>
+				  <package name='com.example' jni-name='com/example'>
+				    <class abstract='false' deprecated='not deprecated' extends='java.lang.Object' extends-generic-aware='java.lang.Object' jni-extends='Ljava/lang/Object;' final='true' name='Outer' static='false' visibility='public' jni-signature='Lcom/example/Outer;'>
+				      <field deprecated='not deprecated' final='false' name='color' jni-signature='Lcom/example/Outer$Value;' static='false' transient='false' type='com.example.Outer.Value' visibility='public' volatile='false' />
+				      <method abstract='false' deprecated='not deprecated' final='true' name='maybe' jni-signature='(Lcom/example/Outer$Value;)Lcom/example/Outer$Value;' native='false' return='com.example.Outer.Value' jni-return='Lcom/example/Outer$Value;' static='false' synchronized='false' visibility='public'>
+				        <parameter name='value' type='com.example.Outer.Value' jni-type='Lcom/example/Outer$Value;' />
+				      </method>
+				      <method abstract='false' deprecated='not deprecated' final='true' name='all' jni-signature='([Lcom/example/Outer$Value;)V' native='false' return='void' jni-return='V' static='false' synchronized='false' visibility='public'>
+				        <parameter name='values' type='com.example.Outer.Value[]' jni-type='[Lcom/example/Outer$Value;' />
+				      </method>
+				      <method abstract='false' deprecated='not deprecated' final='true' name='companion' jni-signature='()Lcom/example/Outer$Value$Companion;' native='false' return='com.example.Outer.Value.Companion' jni-return='Lcom/example/Outer$Value$Companion;' static='false' synchronized='false' visibility='public' />
+				    </class>
+				    <class abstract='false' deprecated='not deprecated' extends='java.lang.Object' extends-generic-aware='java.lang.Object' jni-extends='Ljava/lang/Object;' final='true' name='Outer.Value' static='true' visibility='public' jni-signature='Lcom/example/Outer$Value;' kotlin-inline-class='true' kotlin-inline-class-underlying-jni-type='I' />
+				    <class abstract='false' deprecated='not deprecated' extends='java.lang.Object' extends-generic-aware='java.lang.Object' jni-extends='Ljava/lang/Object;' final='true' name='Outer.Value.Companion' static='true' visibility='public' jni-signature='Lcom/example/Outer$Value$Companion;' />
+				  </package>
+				</api>
+				""", out _, nullableReferenceTypes: true);
+
+			// A nested value class is a struct too.
+			StringAssert.Contains ("readonly partial struct Value", output);
+			StringAssert.Contains ("Com.Example.Outer.Value? Maybe (Com.Example.Outer.Value? value)", output);
+
+			// A Java field of a value-class type is marshaled through the boxing helpers.
+			StringAssert.Contains ("Com.Example.Outer.Value.FromJniHandle (__v.Handle, JniHandleOwnership.TransferLocalRef);", output);
+			StringAssert.DoesNotContain ("GetObject<Com.Example.Outer.Value>", output);
+
+			// Arrays of value classes can't be marshaled, so the member is skipped.
+			StringAssert.DoesNotContain (" All (", output);
+
+			// The struct writer emits no nested types, so members that use them are skipped.
+			StringAssert.DoesNotContain ("Companion", output);
+		}
+
+		// Run the kotlin-gradle .class files through KotlinFixups and
 		// XmlClassDeclarationBuilder to produce the same api.xml the generator
 		// would normally consume off disk.
 		static string BuildApiXmlFromKotlinFixture ()
@@ -90,6 +154,7 @@ namespace generatortests
 				LoadClassFile ("MyAlpha.class"),
 				LoadClassFile ("MyDp.class"),
 				LoadClassFile ("Widgets.class"),
+				LoadClassFile ("ColorCallback.class"),
 			};
 			Xamarin.Android.Tools.Bytecode.KotlinFixups.Fixup (classes);
 
@@ -109,7 +174,23 @@ namespace generatortests
 				"<package name='java.lang' jni-name='java/lang'>" +
 				"<class abstract='false' deprecated='not deprecated' final='false' name='Object' static='false' visibility='public' jni-signature='Ljava/lang/Object;' />" +
 				"</package>"));
-			return doc.ToString ();
+
+			// Like CodeGenerator, run class-parse output through the JavaTypeSystem adjuster.
+			// `java.util.List` comes from the reference API in a real build.
+			var references = Java.Interop.Tools.JavaTypeSystem.JavaXmlApiImporter.ParseString (
+				"<api><package name='java.util' jni-name='java/util'>" +
+				"<interface deprecated='not deprecated' name='List' static='false' visibility='public' jni-signature='Ljava/util/List;'>" +
+				"<typeParameters><typeParameter name='E' /></typeParameters>" +
+				"</interface></package></api>");
+			var types = new Java.Interop.Tools.JavaTypeSystem.Models.JavaTypeCollection ();
+			foreach (var reference in references.TypesFlattened.Values)
+				types.AddReferencedType (reference);
+			Java.Interop.Tools.JavaTypeSystem.JavaXmlApiImporter.ParseString (doc.ToString (), types);
+			types.ResolveCollection ();
+			var adjusted = new StringWriter ();
+			using (var xw = System.Xml.XmlWriter.Create (adjusted))
+				Java.Interop.Tools.JavaTypeSystem.JavaXmlApiExporter.Save (types, xw);
+			return adjusted.ToString ();
 		}
 
 		static ClassFile LoadClassFile (string resource)
@@ -124,9 +205,9 @@ namespace generatortests
 
 		// Drive the parsed api.xml through XmlApiImporter + Validate + the
 		// JavaInteropCodeGenerator to produce the C# binding text.
-		static string GenerateCSharp (string apiXml, out List<GenBase> gens)
+		static string GenerateCSharp (string apiXml, out List<GenBase> gens, bool nullableReferenceTypes = false)
 		{
-			var options = new CodeGenerationOptions ();
+			var options = new CodeGenerationOptions { SupportNullableReferenceTypes = nullableReferenceTypes };
 			var sb = new System.Text.StringBuilder ();
 			var writer = new StringWriter (sb);
 			var generator = new JavaInteropCodeGenerator (writer, options);
@@ -134,8 +215,15 @@ namespace generatortests
 			var doc = XDocument.Parse (apiXml);
 			gens = XmlApiImporter.Parse (doc, options);
 
-			foreach (var gen in gens)
+			// Like CodeGenerator.AddTypeToTable, include nested types.
+			void AddType (GenBase gen)
+			{
 				options.SymbolTable.AddType (gen);
+				foreach (var nested in gen.NestedTypes)
+					AddType (nested);
+			}
+			foreach (var gen in gens)
+				AddType (gen);
 
 			foreach (var gen in gens)
 				gen.FixupAccessModifiers (options);

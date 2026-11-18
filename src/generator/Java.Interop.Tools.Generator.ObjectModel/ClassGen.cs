@@ -212,6 +212,13 @@ namespace MonoDroid.Generation
 
 		public string KotlinInlineClassUnderlyingJniType { get; set; }
 
+		// The value-class struct writer emits no nested types (e.g. `Companion`), so members that use them are skipped.
+		public override void AddNestedType (GenBase gen)
+		{
+			if (!IsKotlinInlineClass)
+				base.AddNestedType (gen);
+		}
+
 		public bool NeedsNew { get; set; }
 
 		public string PeerConstructorPartialMethod { get; set; }

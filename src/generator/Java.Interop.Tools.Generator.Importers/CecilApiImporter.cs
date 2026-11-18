@@ -21,6 +21,15 @@ namespace MonoDroid.Generation
 					!m.CustomAttributes.Any (a => a.AttributeType.FullName == "System.Diagnostics.CodeAnalysis.RequiresUnsafeAttribute")),
 			};
 
+			// A struct with [Register] is a Kotlin value class from another binding assembly.
+			if (t.IsValueType && klass.IsAcw) {
+				klass.BaseType = "Java.Lang.Object";
+				klass.IsKotlinInlineClass = true;
+				var value = t.Fields.FirstOrDefault (f => f.Name == "Value" && !f.IsStatic);
+				klass.KotlinInlineClassUnderlyingJniType = value == null ? null : (opt.SymbolTable.Lookup (value.FieldType.FullName, null) as SimpleSymbol)?.JniName;
+				return klass;
+			}
+
 			foreach (var ifaceImpl in t.Interfaces) {
 				var iface = ifaceImpl.InterfaceType;
 				var def = opt.TypeCache.Resolve (iface);
@@ -86,7 +95,7 @@ namespace MonoDroid.Generation
 			if (ctor.IsNonStaticNestedType)
 				ctor.Parameters.AddFirst (CreateParameter (m.DeclaringType.DeclaringType.FullName, ctor.DeclaringType.JavaName));
 
-			foreach (var p in m.GetParameters (reg_attr))
+			foreach (var p in m.GetParameters (reg_attr, opt))
 				ctor.Parameters.Add (p);
 
 			return ctor;
@@ -209,20 +218,28 @@ namespace MonoDroid.Generation
 				Visibility = m.Visibility ()
 			};
 
-			foreach (var p in m.GetParameters (reg_attr))
+			foreach (var p in m.GetParameters (reg_attr, opt))
 				method.Parameters.Add (p);
 
+			string valueClass = null;
 			if (reg_attr != null) {
 				var jnisig = (string) (reg_attr.ConstructorArguments.Count > 1 ? reg_attr.ConstructorArguments [1].Value : reg_attr.Properties.First (p => p.Name == "JniSignature").Argument.Value);
 				var rt = JavaNativeTypeManager.ReturnTypeFromSignature (jnisig);
 				if (rt?.Type != null)
 					method.Return = rt.Type;
+				valueClass = rt != null ? GetKotlinValueClassJniName (m.ReturnType, opt) : null;
+				if (valueClass != null) {
+					// A Kotlin value-class struct (`Foo` or `Foo?`) is bound from its JNI type, like class-parse output.
+					method.ManagedReturn = null;
+					if (rt.IsKeyword)
+						method.KotlinInlineClassReturnJniType = $"L{valueClass};";
+				}
 			}
 
 			method.FillReturnType ();
 
 			// Strip "Formatted" from ICharSequence-based method.
-			var name_base = method.IsReturnCharSequence ? m.Name.Substring (0, m.Name.Length - "Formatted".Length) : m.Name;
+			var name_base = valueClass == null && method.IsReturnCharSequence ? m.Name.Substring (0, m.Name.Length - "Formatted".Length) : m.Name;
 
 			method.Name = m.IsGetter ? (m.Name.StartsWith ("get_Is", StringComparison.Ordinal) && m.Name.Length > 6 && char.IsUpper (m.Name [6]) ? string.Empty : "Get") + name_base.Substring (4) : m.IsSetter ? (m.Name.StartsWith ("set_Is", StringComparison.Ordinal) && m.Name.Length > 6 && char.IsUpper (m.Name [6]) ? string.Empty : "Set") + name_base.Substring (4) : name_base;
 
@@ -240,6 +257,19 @@ namespace MonoDroid.Generation
 		public static Parameter CreateParameter (string managedType, string javaType)
 		{
 			return new Parameter ("__self", javaType ?? managedType, managedType, false);
+		}
+
+		// The [Register] JNI name of a Kotlin value-class struct `Foo` or `Foo?`, or null.
+		internal static string GetKotlinValueClassJniName (TypeReference type, CodeGenerationOptions opt)
+		{
+			if (type.IsPrimitive || !type.IsValueType)
+				return null;
+			if (type is GenericInstanceType nullable && nullable.ElementType.FullName == "System.Nullable`1")
+				type = nullable.GenericArguments [0];
+			var def = opt.TypeCache.Resolve (type);
+			if (def == null || !def.IsValueType)
+				return null;
+			return GetRegisterAttribute (def.CustomAttributes, opt)?.ConstructorArguments [0].Value as string;
 		}
 
 		static CustomAttribute GetJavaDefaultInterfaceMethodAttribute (Collection<CustomAttribute> attributes) =>
