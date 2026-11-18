@@ -323,14 +323,7 @@ AndroidSystem::add_apk_libdir (std::string_view const& apk, size_t &index, std::
 		Helpers::abort_application (LOG_ASSEMBLY, "Unable to allocate memory for an application library directory");
 	}
 
-	int result = snprintf (
-		dir,
-		capacity,
-		"%.*s%.*s%.*s",
-		static_cast<int>(apk.length ()), apk.data (),
-		static_cast<int>(lib_prefix.length ()), lib_prefix.data (),
-		static_cast<int>(abi.length ()), abi.data ()
-	);
+	ssize_t result = Util::format_concatenated (dir, capacity, { apk, lib_prefix, abi });
 	abort_unless (result >= 0 && static_cast<size_t>(result) == dir_length, "Failed to format the application library directory path");
 
 	app_lib_directories [index] = dir;

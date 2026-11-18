@@ -7,6 +7,7 @@
 #include <cstdlib>
 #include <cstdio>
 #include <cstring>
+#include <initializer_list>
 #include <limits>
 #include <optional>
 #include <string_view>
@@ -256,6 +257,32 @@ namespace xamarin::android {
 			buffer [path_length] = '\0';
 
 			return static_cast<ssize_t>(path_length);
+		}
+
+		// Returns the length of the concatenated parts excluding NUL, or the negative required capacity including NUL.
+		static auto format_concatenated (char *buffer, size_t buffer_size, std::initializer_list<std::string_view> parts) noexcept -> ssize_t
+		{
+			size_t length = 0uz;
+			for (std::string_view const& part : parts) {
+				length = Helpers::add_with_overflow_check<size_t> (length, part.length ());
+			}
+
+			size_t required_capacity = Helpers::add_with_overflow_check<size_t> (length, 1uz);
+			abort_unless (required_capacity <= static_cast<size_t>(std::numeric_limits<ssize_t>::max ()), "Concatenated string is too long");
+			if (buffer == nullptr || buffer_size < required_capacity) {
+				return -static_cast<ssize_t>(required_capacity);
+			}
+
+			char *destination = buffer;
+			for (std::string_view const& part : parts) {
+				if (!part.empty ()) {
+					memcpy (destination, part.data (), part.length ());
+					destination += part.length ();
+				}
+			}
+			*destination = '\0';
+
+			return static_cast<ssize_t>(length);
 		}
 
 		// Formats a string that usually fits in a stack buffer, falling back to the heap when it

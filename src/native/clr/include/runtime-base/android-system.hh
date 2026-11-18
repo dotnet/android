@@ -197,23 +197,11 @@ namespace xamarin::android {
 			const char *home_path = home.get_cstr ();
 			abort_unless (home_path != nullptr, "Application home directory must not be null");
 
-			int length = snprintf (
+			return Util::format_concatenated (
 				buffer,
 				buffer_size,
-				"%s/%.*s/%.*s",
-				home_path,
-				static_cast<int>(Constants::OVERRIDE_DIRECTORY_NAME.length ()),
-				Constants::OVERRIDE_DIRECTORY_NAME.data (),
-				static_cast<int>(Constants::android_lib_abi.length ()),
-				Constants::android_lib_abi.data ()
+				{ home_path, "/", Constants::OVERRIDE_DIRECTORY_NAME, "/", Constants::android_lib_abi }
 			);
-			abort_unless (length >= 0, "Failed to format primary override directory path");
-			size_t required_capacity = Helpers::add_with_overflow_check<size_t> (static_cast<size_t>(length), 1uz);
-			abort_unless (required_capacity <= static_cast<size_t>(std::numeric_limits<ssize_t>::max ()), "Primary override directory path is too long");
-			if (buffer_size < required_capacity) {
-				return -static_cast<ssize_t>(required_capacity);
-			}
-			return static_cast<ssize_t>(length);
 		}
 
 	private:
