@@ -177,6 +177,8 @@ $@"<Project>
 	<PropertyGroup>
 		<Configuration>{Configuration}</Configuration>
 		<DisableTransitiveFrameworkReferenceDownloads>true</DisableTransitiveFrameworkReferenceDownloads>
+		<!-- Test projects may live inside a git checkout; don't let SourceLink pick it up. -->
+		<EnableSourceControlManagerQueries>false</EnableSourceControlManagerQueries>
 	</PropertyGroup>
 </Project>"
 			});
