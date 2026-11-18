@@ -1,7 +1,6 @@
 #nullable enable
 
 using System;
-using System.Globalization;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
@@ -163,7 +162,7 @@ namespace Java.Interop
 					return c!;
 				}
 				if (count > 1)
-					throw new NotSupportedException (string.Format (CultureInfo.CurrentCulture, "Found {0} known Java Runtime instances. Don't know which to use. Use JniRuntime.SetCurrent().", count));
+					throw new NotSupportedException (string.Format ("Found {0} known Java Runtime instances. Don't know which to use. Use JniRuntime.SetCurrent().", count));
 				Debug.Assert (count == 0);
 				throw new NotSupportedException ("No available Java runtime to attach to. Please create one.");
 			}
@@ -321,7 +320,7 @@ namespace Java.Interop
 
 		public override string ToString ()
 		{
-			return string.Format (CultureInfo.CurrentCulture, "{0}(0x{1})", GetType ().FullName, InvocationPointer.ToString ("x", CultureInfo.InvariantCulture));
+			return string.Format ("{0}(0x{1})", GetType ().FullName, InvocationPointer.ToString ("x"));
 		}
 
 		public void Dispose ()
@@ -388,7 +387,7 @@ namespace Java.Interop
 				// SAFETY: threadArgs is local; its optional name allocation and supplied group stay live through attachment.
 				int r = unsafe (Invoker.AttachCurrentThread (InvocationPointer, out jnienv, ref threadArgs));
 				if (r != JNI_OK)
-					throw new NotSupportedException ("AttachCurrentThread returned " + r.ToString (CultureInfo.CurrentCulture));
+					throw new NotSupportedException ("AttachCurrentThread returned " + r.ToString ());
 				return jnienv;
 			} finally {
 				unsafe {

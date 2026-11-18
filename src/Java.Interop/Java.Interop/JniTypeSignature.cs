@@ -1,7 +1,6 @@
 #nullable enable
 
 using System;
-using System.Globalization;
 using System.Diagnostics.CodeAnalysis;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -81,7 +80,7 @@ namespace Java.Interop
 			case "F": return new JniTypeSignature ("java/lang/Float",       ArrayRank);
 			case "D": return new JniTypeSignature ("java/lang/Double",      ArrayRank);
 			default:
-				throw new InvalidOperationException (string.Format (CultureInfo.CurrentCulture, "SimpleReference '{0}' isn't a known keyword reference, yet is a keyword.", SimpleReference));
+				throw new InvalidOperationException (string.Format ("SimpleReference '{0}' isn't a known keyword reference, yet is a keyword.", SimpleReference));
 			}
 		}
 
@@ -139,7 +138,7 @@ namespace Java.Interop
 				int s = signature.IndexOf (';', i);
 				if (s >= i && s != signature.Length-1)
 					return new ArgumentException (
-							string.Format (CultureInfo.CurrentCulture, "Malformed JNI type reference: trailing text after ';' in '{0}'.", signature),
+							string.Format ("Malformed JNI type reference: trailing text after ';' in '{0}'.", signature),
 							nameof (signature));
 				if (i == 0) {
 					n   = s > i
@@ -148,11 +147,11 @@ namespace Java.Interop
 				} else {
 					if (s < i)
 						return new ArgumentException (
-								string.Format (CultureInfo.CurrentCulture, "Malformed JNI type reference; no terminating ';' for type ref: '{0}'.", signature.Substring (i)),
+								string.Format ("Malformed JNI type reference; no terminating ';' for type ref: '{0}'.", signature.Substring (i)),
 								nameof (signature));
 					if (s != signature.Length - 1)
 						return new ArgumentException (
-								string.Format (CultureInfo.CurrentCulture, "Malformed jNI type reference: invalid trailing text: '{0}'.", signature.Substring (i)),
+								string.Format ("Malformed jNI type reference: invalid trailing text: '{0}'.", signature.Substring (i)),
 								nameof (signature));
 					n   = signature.Substring (i + 1, s - i - 1);
 				}
@@ -160,7 +159,7 @@ namespace Java.Interop
 			default:
 				if (i != 0)
 					return new ArgumentException (
-							string.Format (CultureInfo.CurrentCulture, "Malformed JNI type reference: found unrecognized char '{0}' in '{1}'.",
+							string.Format ("Malformed JNI type reference: found unrecognized char '{0}' in '{1}'.",
 								signature [i], signature),
 							nameof (signature));
 				n   = signature;
@@ -169,7 +168,7 @@ namespace Java.Interop
 			int bad = n.IndexOfAny (new[]{ '.', ';' });
 			if (bad >= 0)
 				return new ArgumentException (
-						string.Format (CultureInfo.CurrentCulture, "Malformed JNI type reference: contains '{0}': {1}", n [bad], signature),
+						string.Format ("Malformed JNI type reference: contains '{0}': {1}", n [bad], signature),
 						nameof (signature));
 			result  = new JniTypeSignature (n, r, k);
 			return null;
@@ -197,7 +196,7 @@ namespace Java.Interop
 
 		public override string ToString ()
 		{
-			return string.Format (CultureInfo.CurrentCulture, "JniTypeSignature(TypeName={0} ArrayRank={1} Keyword={2})", SimpleReference, ArrayRank, IsKeyword);
+			return string.Format ("JniTypeSignature(TypeName={0} ArrayRank={1} Keyword={2})", SimpleReference, ArrayRank, IsKeyword);
 		}
 
 		public static bool operator== (JniTypeSignature lhs, JniTypeSignature rhs)

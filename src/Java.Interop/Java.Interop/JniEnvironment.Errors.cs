@@ -1,7 +1,6 @@
 ﻿#nullable enable
 
 using System;
-using System.Globalization;
 
 namespace Java.Interop {
 	partial class JniEnvironment {
@@ -15,7 +14,7 @@ namespace Java.Interop {
 
 				int r = _Throw (toThrow);
 				if (r != 0)
-					throw new InvalidOperationException (string.Format (CultureInfo.CurrentCulture, "Could not raise an exception; JNIEnv::Throw() returned {0}.", r));
+					throw new InvalidOperationException (string.Format ("Could not raise an exception; JNIEnv::Throw() returned {0}.", r));
 			}
 
 
@@ -27,7 +26,7 @@ namespace Java.Interop {
 
 				int r = _ThrowNew (klass, message);
 				if (r != 0)
-					throw new InvalidOperationException (string.Format (CultureInfo.CurrentCulture, "Could not raise an exception; JNIEnv::ThrowNew() returned {0}.", r));
+					throw new InvalidOperationException (string.Format ("Could not raise an exception; JNIEnv::ThrowNew() returned {0}.", r));
 			}
 
 			public static void Throw (Exception e)
