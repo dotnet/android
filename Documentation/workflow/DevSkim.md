@@ -86,8 +86,8 @@ A clean scan doesn't prove that the product has no banned APIs:
 ## Fixing a finding
 
 Fix the code rather than excluding it. DevSkim matches function names, so a
-finding isn't always a bug, and some fixes only change what the code calls. The
-native code uses these replacements:
+finding isn't always a bug, and some fixes only swap one function for another.
+The native code uses these replacements:
 
 | Finding                            | Replacement                                    |
 |------------------------------------|------------------------------------------------|
