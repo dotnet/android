@@ -1223,6 +1223,7 @@ VNZXRob2RzLmphdmFQSwUGAAAAAAcABwDOAQAAVgMAAAAA
 
 		[TestMethod]
 		[CombinatorialData]
+		[DoNotParallelize] // All tests download androidx.core:core into the same Maven cache
 		public void AndroidMavenLibrary_FailsDueToUnverifiedDependency ([CombinatorialValues (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			bool isRelease = runtime == AndroidRuntime.NativeAOT;
@@ -1253,6 +1254,7 @@ VNZXRob2RzLmphdmFQSwUGAAAAAAcABwDOAQAAVgMAAAAA
 
 		[TestMethod]
 		[CombinatorialData]
+		[DoNotParallelize] // All tests download androidx.core:core into the same Maven cache
 		public void AndroidMavenLibrary_IgnoreDependencyVerification ([CombinatorialValues (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			bool isRelease = runtime == AndroidRuntime.NativeAOT;
@@ -1281,6 +1283,7 @@ VNZXRob2RzLmphdmFQSwUGAAAAAAcABwDOAQAAVgMAAAAA
 
 		[TestMethod]
 		[CombinatorialData]
+		[DoNotParallelize] // All tests download androidx.core:core into the same Maven cache
 		public void AndroidMavenLibrary_AllDependenciesAreVerified ([CombinatorialValues (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			bool isRelease = runtime == AndroidRuntime.NativeAOT;
