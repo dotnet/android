@@ -31,7 +31,6 @@ using System;
 using System.Diagnostics;
 using System.Collections;
 using System.Collections.Generic;
-using System.Globalization;
 using System.IO;
 using System.IO.MemoryMappedFiles;
 using System.Linq;
@@ -284,13 +283,13 @@ namespace Java.Interop.Tools.Cecil {
 					return assembly;
 
 			throw new System.IO.FileNotFoundException (
-				string.Format (CultureInfo.CurrentCulture, "Could not load assembly '{0}, Version={1}, Culture={2}, PublicKeyToken={3}'. Perhaps it doesn't exist in the Mono for Android profile?",
+				string.Format ("Could not load assembly '{0}, Version={1}, Culture={2}, PublicKeyToken={3}'. Perhaps it doesn't exist in the Mono for Android profile?",
 						name,
 						reference.Version,
 						string.IsNullOrEmpty (reference.Culture) ? "neutral" : reference.Culture,
 						reference.PublicKeyToken == null
 						? "null"
-						: string.Join ("", reference.PublicKeyToken.Select(b => b.ToString ("x2", CultureInfo.InvariantCulture)))),
+						: string.Join ("", reference.PublicKeyToken.Select(b => b.ToString ("x2")))),
 				name + ".dll");
 		}
 
@@ -326,13 +325,13 @@ namespace Java.Interop.Tools.Cecil {
 		static FileNotFoundException CreateLoadException (AssemblyNameReference reference)
 		{
 			return new System.IO.FileNotFoundException (
-					string.Format (CultureInfo.CurrentCulture, "Could not load assembly '{0}, Version={1}, Culture={2}, PublicKeyToken={3}'. Perhaps it doesn't exist in the Mono for Android profile?",
+					string.Format ("Could not load assembly '{0}, Version={1}, Culture={2}, PublicKeyToken={3}'. Perhaps it doesn't exist in the Mono for Android profile?",
 						reference.Name,
 						reference.Version,
 						string.IsNullOrEmpty (reference.Culture) ? "neutral" : reference.Culture,
 						reference.PublicKeyToken == null
 						? "null"
-						: string.Join ("", reference.PublicKeyToken.Select (b => b.ToString ("x2", CultureInfo.InvariantCulture)))),
+						: string.Join ("", reference.PublicKeyToken.Select (b => b.ToString ("x2")))),
 					reference.Name + ".dll");
 		}
 
