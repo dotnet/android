@@ -72,9 +72,9 @@ namespace Xamarin.Android.Tasks
 			var document = XDocument.Load (TaskEnvironment.GetAbsolutePath (ManifestFile));
 			var usesSdk = document.Root?.Element ("uses-sdk");
 			int? compileSdk = MonoAndroidHelper.TryParseApiLevel (AndroidApiLevel, out var version) ? version.Major : null;
-			CompileSdkVersion = compileSdk?.ToString (CultureInfo.CurrentCulture) ?? "";
+			CompileSdkVersion = compileSdk?.ToString (CultureInfo.InvariantCulture) ?? "";
 			var minSdkValue = usesSdk?.Attribute (androidNs + "minSdkVersion")?.Value
-				?? XABuildConfig.AndroidMinimumDotNetApiLevel.Major.ToString (CultureInfo.CurrentCulture);
+				?? XABuildConfig.AndroidMinimumDotNetApiLevel.Major.ToString (CultureInfo.InvariantCulture);
 			MinimumSdkVersion = int.TryParse (minSdkValue, out var minSdk) ? minSdk : 1;
 			TargetSdkVersion = int.TryParse (usesSdk?.Attribute (androidNs + "targetSdkVersion")?.Value, out var targetSdk)
 				? targetSdk : compileSdk ?? 21;

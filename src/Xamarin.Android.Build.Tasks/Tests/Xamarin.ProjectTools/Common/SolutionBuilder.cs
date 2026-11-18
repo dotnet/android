@@ -32,10 +32,10 @@ namespace Xamarin.ProjectTools
 			}
 			// write a sln.
 			var sb = new StringBuilder ();
-			sb.AppendFormat (CultureInfo.CurrentCulture, "Microsoft Visual Studio Solution File, Format Version {0}\r\n", "12.00");
-			sb.AppendFormat (CultureInfo.CurrentCulture, "# Visual Studio {0}\r\n", "2012");
+			sb.AppendFormat (CultureInfo.InvariantCulture, "Microsoft Visual Studio Solution File, Format Version {0}\r\n", "12.00");
+			sb.AppendFormat (CultureInfo.InvariantCulture, "# Visual Studio {0}\r\n", "2012");
 			foreach (var p in Projects) {
-				sb.AppendFormat (CultureInfo.CurrentCulture, "Project(\"{{{0}}}\") = \"{1}\", \"{2}\", \"{{{3}}}\"\r\n", p.ProjectTypeGuid, p.ProjectName,
+				sb.AppendFormat (CultureInfo.InvariantCulture, "Project(\"{{{0}}}\") = \"{1}\", \"{2}\", \"{{{3}}}\"\r\n", p.ProjectTypeGuid, p.ProjectName,
 					Path.Combine(p.ProjectName,p.ProjectFilePath), p.ProjectGuid);
 				sb.Append ("EndProject\r\n");
 			}
@@ -46,14 +46,14 @@ namespace Xamarin.ProjectTools
 			sb.Append ("\tEndGlobalSection\r\n");
 			sb.Append ("\tGlobalSection(ProjectConfigurationPlatforms) = postSolution\r\n");
 			foreach (var p in Projects) {
-				sb.AppendFormat (CultureInfo.CurrentCulture, "\t\t{{{0}}}.Debug|AnyCPU.ActiveCfg = Debug|Any CPU\r\n", p.ProjectGuid);
-				sb.AppendFormat (CultureInfo.CurrentCulture, "\t\t{{{0}}}.Debug|AnyCPU.Build.0 = Debug|Any CPU\r\n", p.ProjectGuid);
+				sb.AppendFormat (CultureInfo.InvariantCulture, "\t\t{{{0}}}.Debug|AnyCPU.ActiveCfg = Debug|Any CPU\r\n", p.ProjectGuid);
+				sb.AppendFormat (CultureInfo.InvariantCulture, "\t\t{{{0}}}.Debug|AnyCPU.Build.0 = Debug|Any CPU\r\n", p.ProjectGuid);
 				if (p is XamarinAndroidApplicationProject)
-					sb.AppendFormat (CultureInfo.CurrentCulture, "\t\t{{{0}}}.Debug|AnyCPU.Deploy.0 = Debug|Any CPU\r\n", p.ProjectGuid);
-				sb.AppendFormat (CultureInfo.CurrentCulture, "\t\t{{{0}}}.Release|AnyCPU.ActiveCfg = Release|Any CPU\r\n", p.ProjectGuid);
-				sb.AppendFormat (CultureInfo.CurrentCulture, "\t\t{{{0}}}.Release|AnyCPU.Build.0 = Release|Any CPU\r\n", p.ProjectGuid);
+					sb.AppendFormat (CultureInfo.InvariantCulture, "\t\t{{{0}}}.Debug|AnyCPU.Deploy.0 = Debug|Any CPU\r\n", p.ProjectGuid);
+				sb.AppendFormat (CultureInfo.InvariantCulture, "\t\t{{{0}}}.Release|AnyCPU.ActiveCfg = Release|Any CPU\r\n", p.ProjectGuid);
+				sb.AppendFormat (CultureInfo.InvariantCulture, "\t\t{{{0}}}.Release|AnyCPU.Build.0 = Release|Any CPU\r\n", p.ProjectGuid);
 				if (p is XamarinAndroidApplicationProject)
-					sb.AppendFormat (CultureInfo.CurrentCulture, "\t\t{{{0}}}.Release|AnyCPU.Deploy.0 = Release|Any CPU\r\n", p.ProjectGuid);
+					sb.AppendFormat (CultureInfo.InvariantCulture, "\t\t{{{0}}}.Release|AnyCPU.Deploy.0 = Release|Any CPU\r\n", p.ProjectGuid);
 
 			}
 			sb.Append ("\tEndGlobalSection\r\n");

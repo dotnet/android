@@ -183,7 +183,7 @@ namespace Java.Interop.Tools.JavaTypeSystem.Models
 		// Content of this value is not stable.
 		public string ToStringHelper (string? returnType, string? name, JavaTypeParameters? typeParameters)
 		{
-			return string.Format (CultureInfo.CurrentCulture, "{0}{1}{2}{3}{4}{5}({6})",
+			return string.Format (CultureInfo.InvariantCulture, "{0}{1}{2}{3}{4}{5}({6})",
 				returnType,
 				returnType == null ? null : " ",
 				name,
