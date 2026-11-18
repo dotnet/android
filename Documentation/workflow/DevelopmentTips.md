@@ -472,12 +472,12 @@ exits or you press Ctrl+C:
 $ dotnet run
 ```
 
-`dotnet run` hides the `monodroid-assembly` logcat tag by default, so
+`dotnet run` hides the `DOTNET-assembly` logcat tag by default, so
 messages from the `assembly` category are not shown. To include them,
 override the logcat filter:
 
 ```bash
-$ dotnet run -p:_AndroidRunLogcatArgs=monodroid-assembly:V
+$ dotnet run -p:_AndroidRunLogcatArgs=DOTNET-assembly:V
 ```
 
 Alternatively, capture the complete device log in a separate terminal:
