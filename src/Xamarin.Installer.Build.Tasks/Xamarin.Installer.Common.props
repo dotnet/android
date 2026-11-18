@@ -7,7 +7,7 @@
     <AndroidSdkEmulatorVersion Condition="'$(AndroidSdkEmulatorVersion)' == ''"></AndroidSdkEmulatorVersion>
     <AndroidSdkPlatformVersion Condition="'$(AndroidSdkPlatformVersion)' == ''">android-37.0</AndroidSdkPlatformVersion>
     <AndroidNdkVersion Condition="'$(AndroidNdkVersion)' == ''">27.2.12479018</AndroidNdkVersion>
-    <JavaSdkVersion Condition="'$(JavaSdkVersion)' == ''">21.0.8</JavaSdkVersion>
+    <JavaSdkVersion Condition="'$(JavaSdkVersion)' == ''">21.0.13.1</JavaSdkVersion>
     <AndroidManifestFeedVersion Condition=" '$(AndroidManifestFeedVersion)' == '' ">18.0</AndroidManifestFeedVersion>
   </PropertyGroup>
 </Project>
