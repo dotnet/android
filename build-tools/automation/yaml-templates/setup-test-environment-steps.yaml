@@ -6,7 +6,6 @@ parameters:
   xaSourcePath: $(System.DefaultWorkingDirectory)
   jdkMajorVersion: $(DefaultJavaSdkMajorVersion)
   useAgentJdkPath: true
-  remove_dotnet: false
   dotnetVersion: $(DotNetSdkVersion)
   installTestSlicer: false
   installApkDiff: true
@@ -19,49 +18,32 @@ steps:
     jdkMajorVersion: ${{ parameters.jdkMajorVersion }}
     useAgentJdkPath: ${{ parameters.useAgentJdkPath }}
 
-# Install the pinned .NET SDK
-- template: /build-tools/automation/yaml-templates/use-dot-net.yaml
+# Install the repository SDK and the runtime needed by host-side tests.
+- template: /build-tools/automation/yaml-templates/install-repository-sdk.yaml
   parameters:
-    version: ${{ parameters.dotnetVersion }}
-    remove_dotnet: ${{ parameters.remove_dotnet }}
+    xaSourcePath: ${{ parameters.xaSourcePath }}
+    toolingSdkVersion: ${{ parameters.dotnetVersion }}
 
-- task: DotNetCoreCLI@2
+- pwsh: dotnetup dotnet build-server shutdown
   displayName: shut down existing build daemons
-  inputs:
-    command: custom
-    custom: build-server
-    arguments: shutdown
+  workingDirectory: ${{ parameters.xaSourcePath }}
 
 - template: /build-tools/automation/yaml-templates/cache-android-archives.yaml
   parameters:
     xaSourcePath: ${{ parameters.xaSourcePath }}
     condition: and(succeeded(), eq(variables['agent.os'], 'Darwin'))
 
-- pwsh: |
-    & "${{ parameters.xaSourcePath }}/eng/install-dotnet.ps1" -configuration ${{ parameters.configuration }}
-    if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-  displayName: install .NET SDK to bin/${{ parameters.configuration }}/dotnet
-  condition: and(succeeded(), eq(variables['agent.os'], 'Windows_NT'))
-
-- bash: |
-    set -e
-    bash "${{ parameters.xaSourcePath }}/eng/install-dotnet.sh"
-  displayName: install .NET SDK to bin/${{ parameters.configuration }}/dotnet
-  condition: and(succeeded(), ne(variables['agent.os'], 'Windows_NT'))
-  env:
-    CONFIGURATION: ${{ parameters.configuration }}
-
-- task: DotNetCoreCLI@2
+- pwsh: >-
+    dotnetup dotnet build "${{ parameters.xaSourcePath }}/src/workloads/workloads.csproj"
+    -c ${{ parameters.configuration }} -bl:${{ parameters.xaSourcePath }}/bin/Test${{ parameters.configuration }}/workloads.binlog
   displayName: restore CoreCLR Android runtime packs
-  inputs:
-    projects: ${{ parameters.xaSourcePath }}/src/workloads/workloads.csproj
-    arguments: -c ${{ parameters.configuration }} -bl:${{ parameters.xaSourcePath }}/bin/Test${{ parameters.configuration }}/workloads.binlog
+  workingDirectory: ${{ parameters.xaSourcePath }}
 
-- task: DotNetCoreCLI@2
+- pwsh: >-
+    dotnetup dotnet build "${{ parameters.xaSourcePath }}/build-tools/Xamarin.Android.Tools.BootstrapTasks/Xamarin.Android.Tools.BootstrapTasks.csproj"
+    -c ${{ parameters.configuration }} -bl:${{ parameters.xaSourcePath }}/bin/Test${{ parameters.configuration }}/BootstrapTasks.binlog
   displayName: build Xamarin.Android.Tools.BootstrapTasks.csproj
-  inputs:
-    projects: ${{ parameters.xaSourcePath }}/build-tools/Xamarin.Android.Tools.BootstrapTasks/Xamarin.Android.Tools.BootstrapTasks.csproj
-    arguments: -c ${{ parameters.configuration }} -bl:${{ parameters.xaSourcePath }}/bin/Test${{ parameters.configuration }}/BootstrapTasks.binlog
+  workingDirectory: ${{ parameters.xaSourcePath }}
 
 - template: /build-tools/automation/yaml-templates/run-dotnet-preview.yaml
   parameters:
@@ -100,9 +82,11 @@ steps:
     parameters:
       toolName: apkdiff
       version: $(ApkDiffToolVersion)
+      xaSourcePath: ${{ parameters.xaSourcePath }}
 
 - ${{ if eq(parameters.installTestSlicer, true) }}:
   - template: /build-tools/automation/yaml-templates/install-dotnet-tool.yaml
     parameters:
       toolName: dotnet-test-slicer
       version: $(TestSlicerToolVersion)
+      xaSourcePath: ${{ parameters.xaSourcePath }}

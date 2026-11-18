@@ -29,7 +29,7 @@ steps:
     if ($env:TEST_FILTER) {
       $sliceArgs += "--test-filter=$env:TEST_FILTER"
     }
-    $output = & "${{ parameters.xaSourcePath }}/bin/$(XA.Build.Configuration)/dotnet/dotnet" "$(TestSlicerDll)" @sliceArgs
+    $output = & dotnetup dotnet -- "$(TestSlicerDll)" @sliceArgs
     $exitCode = $LASTEXITCODE
     $output | Write-Host
     if ($exitCode -ne 0) {
@@ -41,6 +41,7 @@ steps:
   displayName: Slice unit tests
   failOnStderr: true
   condition: ${{ parameters.condition }}
+  workingDirectory: ${{ parameters.xaSourcePath }}
   env:
     TEST_FILTER: ${{ parameters.testFilter }}
 
@@ -57,7 +58,7 @@ steps:
 - ${{ if eq(parameters.retryFailedTests, 'true') }}:
   # We need a custom dotnet test invocation here that does not trigger a task failure on failed tests
   - pwsh: |
-      dotnet `
+      dotnetup dotnet -- `
         test `
         ${{ parameters.testAssembly }} `
         --settings "${{ parameters.testAssembly }}.runsettings" `
@@ -71,7 +72,7 @@ steps:
   - template: /build-tools/automation/yaml-templates/diagnose-hanging-processes.yaml
 
   - pwsh: |
-      & "${{ parameters.xaSourcePath }}/bin/$(XA.Build.Configuration)/dotnet/dotnet" "$(TestSlicerDll)" `
+      & dotnetup dotnet -- "$(TestSlicerDll)" `
         retry `
         --trx="$(Agent.TempDirectory)" `
         --outfile="${{ parameters.testAssembly }}.runsettings"
@@ -87,12 +88,9 @@ steps:
       testRunTitle: ${{ parameters.testRunTitle }}-$(System.JobPositionInPhase)
     condition: ${{ parameters.condition }}
 
-  - task: DotNetCoreCLI@2
+  - pwsh: dotnetup dotnet build-server shutdown
     displayName: Shut down existing dotnet daemons
-    inputs:
-      command: custom
-      custom: build-server
-      arguments: shutdown
+    workingDirectory: ${{ parameters.xaSourcePath }}
     condition: ${{ parameters.condition }}
 
   - pwsh: |

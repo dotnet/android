@@ -1,5 +1,6 @@
 parameters:
   configuration: $(XA.Build.Configuration)
+  useLocalWorkload: false
   xaSourcePath: $(System.DefaultWorkingDirectory)
   command: build
   project: ''
@@ -14,16 +15,15 @@ parameters:
 
 steps:
 - powershell: |
-    if ([Environment]::OSVersion.Platform -eq "Unix") {
-        $DOTNET_ROOT = "${{ parameters.xaSourcePath }}/bin/${{ parameters.configuration }}/dotnet"
-        $env:PATH = "${DOTNET_ROOT}:$env:PATH"
-        $dotnetPath = "${DOTNET_ROOT}/dotnet"
-    } else {
-        $DOTNET_ROOT = "${{ parameters.xaSourcePath }}\bin\${{ parameters.configuration }}\dotnet"
-        $env:PATH = "${DOTNET_ROOT};$env:PATH"
-        $dotnetPath = "${DOTNET_ROOT}\dotnet.exe"
+    $dotnet = 'dotnetup'
+    $dotnetArguments = @('dotnet', '--')
+    if ([System.Convert]::ToBoolean("${{ parameters.useLocalWorkload }}")) {
+        $wrapper = if ($env:OS -eq 'Windows_NT') { 'dotnet-local.cmd' } else { 'dotnet-local.sh' }
+        $dotnet = Join-Path "${{ parameters.xaSourcePath }}" $wrapper
+        $dotnetArguments = @()
     }
-    & $dotnetPath ${{ parameters.command }} ${{ parameters.project }} ${{ parameters.arguments }}
+    Set-Location "${{ parameters.xaSourcePath }}"
+    & $dotnet @dotnetArguments ${{ parameters.command }} ${{ parameters.project }} ${{ parameters.arguments }}
     if ([System.Convert]::ToBoolean("${{ parameters.useExitCodeForErrors }}") -and $LASTEXITCODE -ne 0) {
         Write-Host "##vso[task.logissue type=error]Test suite had $LASTEXITCODE failure(s)."
         Write-Host "##vso[task.complete result=Failed;]"
@@ -34,5 +34,8 @@ steps:
   continueOnError: ${{ parameters.continueOnError }}
   retryCountOnTaskFailure: ${{ parameters.retryCountOnTaskFailure }}
   timeoutInMinutes: ${{ parameters.taskTimeoutInMinutes }}
-  ${{ if parameters.env }}:
-    env: ${{ parameters.env }}
+  env:
+    ${{ if eq(parameters.useLocalWorkload, true) }}:
+      CONFIGURATION: ${{ parameters.configuration }}
+    ${{ each variable in parameters.env }}:
+      ${{ variable.key }}: ${{ variable.value }}

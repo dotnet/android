@@ -73,16 +73,18 @@ jobs:
         ls -la /mnt
         df -h /mnt
 
-    - name: Setup .NET
-      uses: actions/setup-dotnet@v4
-      with:
-        dotnet-version: '11.0.100-rc.3.26522.148'
+    - name: Install dotnetup and the repository SDK
+      run: |
+        curl -fsSL https://aka.ms/dotnetup/get-dotnetup.sh -o "$RUNNER_TEMP/get-dotnetup.sh"
+        bash "$RUNNER_TEMP/get-dotnetup.sh"
+        echo "$HOME/.dotnetup" >> "$GITHUB_PATH"
+        "$HOME/.dotnetup/dotnetup" sdk install --no-progress
 
     - name: Run android build
       id: android-build
       continue-on-error: true
       run: |
-        make jenkins CONFIGURATION=Debug
+        dotnetup dotnet build Microsoft.Android.slnx -c Debug
       timeout-minutes: 60
 
     - name: Log disk space (after android build)

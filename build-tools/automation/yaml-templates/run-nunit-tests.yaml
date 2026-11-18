@@ -6,21 +6,27 @@ parameters:
   condition: succeeded()
   timeoutInMinutes: 180
   retryCountOnTaskFailure: 0
+  xaSourcePath: $(System.DefaultWorkingDirectory)
 
 steps:
-- task: DotNetCoreCLI@2
-  inputs:
-    command: test
-    projects: ${{ parameters.testAssembly }}
-    arguments: >-
-      ${{ parameters.dotNetTestExtraArgs }} -- NUnit.NumberOfTestWorkers=${{ parameters.workers }}
-    publishTestResults: true
-    testRunTitle: ${{ parameters.testRunTitle }}
+- pwsh: >-
+    dotnetup dotnet -- test "${{ parameters.testAssembly }}" --logger trx
+    --results-directory "$(Agent.TempDirectory)/${{ parameters.testRunTitle }}"
+    ${{ parameters.dotNetTestExtraArgs }} -- NUnit.NumberOfTestWorkers=${{ parameters.workers }}
+  workingDirectory: ${{ parameters.xaSourcePath }}
   displayName: run ${{ parameters.testRunTitle }}
   condition: ${{ parameters.condition }}
   continueOnError: true
   timeoutInMinutes: ${{ parameters.timeoutInMinutes }}
   retryCountOnTaskFailure: ${{ parameters.retryCountOnTaskFailure }}
+
+- task: PublishTestResults@2
+  displayName: publish ${{ parameters.testRunTitle }}
+  condition: ${{ parameters.condition }}
+  inputs:
+    testResultsFormat: VSTest
+    testResultsFiles: $(Agent.TempDirectory)/${{ parameters.testRunTitle }}/*.trx
+    testRunTitle: ${{ parameters.testRunTitle }}
 
 - template: /build-tools/automation/yaml-templates/diagnose-hanging-processes.yaml
 

@@ -1,22 +1,14 @@
 @echo off
 SETLOCAL
 
-SET ROOT=%~dp0
-
-IF EXIST "%ROOT%\bin\Release\dotnet\dotnet.exe" (
-    SET XA_CONFIG=Release
-) ELSE IF EXIST "%ROOT%\bin\Debug\dotnet\dotnet.exe" (
-    SET XA_CONFIG=Debug
-) ELSE (
-    echo "You need to run 'msbuild Microsoft.Android.slnx /t:Prepare' first."
-    goto :exit
+IF NOT DEFINED CONFIGURATION SET CONFIGURATION=Debug
+SET "DOTNETSDK_WORKLOAD_PACK_ROOTS=%~dp0bin\%CONFIGURATION%\lib"
+IF EXIST "%~dp0bin\%CONFIGURATION%\workload\sdk-manifests" SET "DOTNETSDK_WORKLOAD_PACK_ROOTS=%~dp0bin\%CONFIGURATION%\workload"
+SET "DOTNETSDK_WORKLOAD_MANIFEST_ROOTS=%DOTNETSDK_WORKLOAD_PACK_ROOTS%\sdk-manifests"
+SET DOTNET_CLI_USE_MSBUILD_SERVER=0
+IF NOT EXIST "%DOTNETSDK_WORKLOAD_MANIFEST_ROOTS%" (
+    echo Build the local workload first: dotnetup dotnet build Microsoft.Android.slnx -c %CONFIGURATION% 1>&2
+    EXIT /B 1
 )
-
-SET XA_DOTNET_ROOT=%ROOT%\bin\%XA_CONFIG%\dotnet
-SET PATH=%XA_DOTNET_ROOT%;%PATH%
-SET DOTNETSDK_WORKLOAD_MANIFEST_ROOTS=%ROOT%\bin\%XA_CONFIG%\lib\sdk-manifests
-SET DOTNETSDK_WORKLOAD_PACK_ROOTS=%ROOT%\bin\%XA_CONFIG%\lib
-
-call "%XA_DOTNET_ROOT%\dotnet.exe" %*
-
-:exit
+dotnetup dotnet -- %*
+EXIT /B %ERRORLEVEL%

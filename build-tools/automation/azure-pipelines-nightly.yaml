@@ -298,7 +298,7 @@ stages:
       displayName: Collect Files for APIScan
       inputs:
         Contents: |
-          $(System.DefaultWorkingDirectory)\bin\$(XA.Build.Configuration)\dotnet\packs\Microsoft.Android*\**\?(*.dll|*.exe|*.pdb)
+          $(System.DefaultWorkingDirectory)\bin\$(XA.Build.Configuration)\workload\packs\Microsoft.Android*\**\?(*.dll|*.exe|*.pdb)
         TargetFolder: $(Agent.TempDirectory)\T
         OverWrite: true
         flattenFolders: true
