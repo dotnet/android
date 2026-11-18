@@ -7,6 +7,7 @@
 // Copyright (c) 2016 Xamarin Inc
 //
 using System;
+using System.Globalization;
 using System.Threading;
 using System.Threading.Tasks;
 using Mono.AndroidTools;
@@ -172,25 +173,84 @@ namespace Xamarin.AndroidTools.Debugging
 			if (config.RunCommand is AmStartCommand amStartCommand && amStartCommand.EnableDebugging)
 			{
 				var packageName = amStartCommand.PackageName;
-				var pid = await androidDevice.GetProcessIDAsync (packageName, GET_PID_RETRY_COUNT, WAIT_BEFORE_RETRY_GET_PID, token).ConfigureAwait (false);
-
-				if (pid <= 0)
-					throw new InvalidOperationException ($"Could not find process for package '{packageName}'.");
-
-				using (var jdwpClient = new JdwpClient (config.Debugger.JdwpHostName, config.Debugger.JdwpPort)) {
-					await AdbServer.Default.ForwardPort (androidDevice, "tcp", jdwpClient.Port, "jdwp", pid, token).ConfigureAwait (false);
-					try {
-						await jdwpClient.ConnectAsync (token).ConfigureAwait (false);
-
-						// Keep the Connection for 1300 milliseconds, otherwise the Android OS ignores the connection!
-						// https://github.com/aosp-mirror/platform_frameworks_base/blob/6b28a227400749f4f8ad1f56799370e7c2cab149/core/java/android/os/Debug.java#L101C50-L101C54
-						await Task.Delay (WAIT_FOR_DEBUGGER_TO_ATTACH_MS, token).ConfigureAwait (false);
-
-						await jdwpClient.DisconnectAsync ().ConfigureAwait (false);
-					} finally {
-						await AdbServer.Default.KillForward (androidDevice, "tcp", jdwpClient.Port, CancellationToken.None).ConfigureAwait (false);
+				int pid = 0;
+				JdwpClient jdwpClient = null;
+				try {
+					await ConnectJdwpAsync (async (operation, cancellationToken) => {
+						switch (operation) {
+						case JdwpOperation.PidLookup:
+							pid = await androidDevice.GetProcessIDAsync (packageName, GET_PID_RETRY_COUNT, WAIT_BEFORE_RETRY_GET_PID, cancellationToken).ConfigureAwait (false);
+							return pid > 0;
+						case JdwpOperation.Forward:
+							jdwpClient = new JdwpClient (config.Debugger.JdwpHostName, config.Debugger.JdwpPort);
+							await AdbServer.Default.ForwardPort (androidDevice, "tcp", jdwpClient.Port, "jdwp", pid, cancellationToken).ConfigureAwait (false);
+							break;
+						case JdwpOperation.ClientConnect:
+							await jdwpClient.ConnectAsync (cancellationToken).ConfigureAwait (false);
+							break;
+						case JdwpOperation.Hold:
+							// This fixed hold does not confirm that the guest has left its debugger wait.
+							await Task.Delay (WAIT_FOR_DEBUGGER_TO_ATTACH_MS, cancellationToken).ConfigureAwait (false);
+							break;
+						case JdwpOperation.Disconnect:
+							await jdwpClient.DisconnectAsync ().ConfigureAwait (false);
+							break;
+						case JdwpOperation.KillForward:
+							await AdbServer.Default.KillForward (androidDevice, "tcp", jdwpClient.Port, cancellationToken).ConfigureAwait (false);
+							break;
+						}
+						return true;
+					}, config.LogWiter, new InvalidOperationException ($"Could not find process for package '{packageName}'."), token).ConfigureAwait (false);
+				} finally {
+					if (jdwpClient != null) {
+						jdwpClient.Dispose ();
 					}
 				}
+			}
+		}
+
+		internal enum JdwpOperation
+		{
+			PidLookup,
+			Forward,
+			ClientConnect,
+			Hold,
+			Disconnect,
+			KillForward,
+		}
+
+		internal static async Task ConnectJdwpAsync (Func<JdwpOperation, CancellationToken, Task<bool>> execute, Action<string> logWriter, Exception missingProcess, CancellationToken token)
+		{
+			var startTime = DateTimeOffset.UtcNow;
+			var stopwatch = Stopwatch.StartNew ();
+			logWriter?.Invoke ($"JDWP start utc={startTime.ToString ("O", CultureInfo.InvariantCulture)} elapsedMs=0");
+
+			async Task RunOperation (JdwpOperation operation, string name, CancellationToken operationToken)
+			{
+				logWriter?.Invoke ($"JDWP {name}-begin elapsedMs={stopwatch.ElapsedMilliseconds}");
+				try {
+					bool result = await execute (operation, operationToken).ConfigureAwait (false);
+					var details = operation == JdwpOperation.PidLookup ? $" found={result.ToString ().ToLowerInvariant ()}" : "";
+					if (operation == JdwpOperation.Hold)
+						details = $" duration-ms={WAIT_FOR_DEBUGGER_TO_ATTACH_MS}";
+					var completion = operation == JdwpOperation.ClientConnect ? "completed" : "end";
+					logWriter?.Invoke ($"JDWP {name}-{completion} elapsedMs={stopwatch.ElapsedMilliseconds}{details}");
+					if (operation == JdwpOperation.PidLookup && !result)
+						throw missingProcess;
+				} catch (Exception ex) {
+					logWriter?.Invoke ($"JDWP {name}-failed elapsedMs={stopwatch.ElapsedMilliseconds} exception-type={ex.GetType ().Name}");
+					throw;
+				}
+			}
+
+			await RunOperation (JdwpOperation.PidLookup, "pid-lookup", token).ConfigureAwait (false);
+			await RunOperation (JdwpOperation.Forward, "forward", token).ConfigureAwait (false);
+			try {
+				await RunOperation (JdwpOperation.ClientConnect, "client-connect", token).ConfigureAwait (false);
+				await RunOperation (JdwpOperation.Hold, "hold", token).ConfigureAwait (false);
+				await RunOperation (JdwpOperation.Disconnect, "disconnect", token).ConfigureAwait (false);
+			} finally {
+				await RunOperation (JdwpOperation.KillForward, "killforward", CancellationToken.None).ConfigureAwait (false);
 			}
 		}
 	}

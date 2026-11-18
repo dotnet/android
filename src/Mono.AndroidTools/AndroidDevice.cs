@@ -722,6 +722,7 @@ namespace Mono.AndroidTools
 			}
 			else {
 				// we timed out
+				logWiter?.Invoke ("Intent command did not complete within 5000 ms; continuing.");
 			}
 
 			if (logWiter != null) {
