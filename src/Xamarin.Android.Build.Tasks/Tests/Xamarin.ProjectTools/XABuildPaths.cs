@@ -85,7 +85,7 @@ namespace Xamarin.ProjectTools
 			if (!Directory.Exists (rootDir)) {
 				_testOutputDirectory = TestAssemblyOutputDirectory;
 			} else {
-				var timeStamp = DateTime.UtcNow.ToString ("MM-dd_HH.mm.ss", CultureInfo.InvariantCulture);
+				var timeStamp = DateTime.UtcNow.ToString ("MM-dd_HH.mm.ss", CultureInfo.CurrentCulture);
 				_testOutputDirectory = Path.Combine (rootDir, $"Test{Configuration}", timeStamp);
 			}
 

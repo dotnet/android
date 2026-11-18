@@ -64,7 +64,7 @@ namespace MonoDroid.Generation {
 				return c;
 			var h = sym.GetObjectHandleProperty (opt, c);
 			if (sym.PreCall (opt, Name).Length == 0) {
-				return string.Format (CultureInfo.InvariantCulture, "({0} == null) ? IntPtr.Zero : {1}", c, h);
+				return string.Format (CultureInfo.CurrentCulture, "({0} == null) ? IntPtr.Zero : {1}", c, h);
 			}
 			return c;
 		}
@@ -273,12 +273,12 @@ namespace MonoDroid.Generation {
 			if (string.IsNullOrEmpty (targetType))
 				return name;
 			if (targetType == "string")
-				return string.Format (CultureInfo.InvariantCulture, "{0}?.ToString ()", name);
+				return string.Format (CultureInfo.CurrentCulture, "{0}?.ToString ()", name);
 			if (targetType.EndsWith ("[]", StringComparison.Ordinal)) {
-				return string.Format (CultureInfo.InvariantCulture, "{0}.ToArray<{1}> ()", name, targetType.Replace ("[]",""));
+				return string.Format (CultureInfo.CurrentCulture, "{0}.ToArray<{1}> ()", name, targetType.Replace ("[]",""));
 			}
 			var rgm = opt.SymbolTable.Lookup (targetType) as IRequireGenericMarshal;
-			return string.Format (CultureInfo.InvariantCulture, "global::Java.Interop.JavaObjectExtensions.JavaCast<{0}>({1}){2}",
+			return string.Format (CultureInfo.CurrentCulture, "global::Java.Interop.JavaObjectExtensions.JavaCast<{0}>({1}){2}",
 					opt.GetOutputName (rgm != null ? (rgm.GetGenericJavaObjectTypeOverride () ?? targetType) : targetType),
 					name,
 					opt.NullForgivingOperator); 

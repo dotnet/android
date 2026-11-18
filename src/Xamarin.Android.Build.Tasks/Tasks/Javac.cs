@@ -42,12 +42,12 @@ namespace Xamarin.Android.Tasks
 
 			cmd.AppendSwitchIfNotNull ("-J-Dfile.encoding=", "UTF8");
 
-			cmd.AppendFileNameIfNotNull (string.Format (CultureInfo.InvariantCulture, "@{0}", TemporarySourceListFile));
+			cmd.AppendFileNameIfNotNull (string.Format (CultureInfo.CurrentCulture, "@{0}", TemporarySourceListFile));
 
 			if (int.TryParse (JavacSourceVersion, out int sourceVersion) &&
 					int.TryParse (JavacTargetVersion, out int targetVersion) &&
 					JavacSupportsRelease ()) {
-				cmd.AppendSwitchIfNotNull ("--release ", Math.Max (sourceVersion, targetVersion).ToString (CultureInfo.InvariantCulture));
+				cmd.AppendSwitchIfNotNull ("--release ", Math.Max (sourceVersion, targetVersion).ToString (CultureInfo.CurrentCulture));
 			} else {
 				cmd.AppendSwitchIfNotNull ("-target ", JavacTargetVersion);
 				cmd.AppendSwitchIfNotNull ("-source ", JavacSourceVersion);

@@ -65,7 +65,7 @@ namespace MonoDroid.Generation
 
 			if (!SetParameters.Validate (opt, type_params, context))
 				throw new NotSupportedException (
-					string.Format (CultureInfo.InvariantCulture, "Unable to generate setter parameter list {0}", context.ContextString));
+					string.Format (CultureInfo.CurrentCulture, "Unable to generate setter parameter list {0}", context.ContextString));
 
 			return true;
 		}

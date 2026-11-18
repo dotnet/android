@@ -114,7 +114,7 @@ namespace Xamarin.Android.Tasks
 				if (doc.MinSdkVersion.HasValue) {
 					MinSdkVersion = doc.MinSdkVersion.Value;
 					WriteArg (response, "--min-api");
-					WriteArg (response, MinSdkVersion.ToString (CultureInfo.InvariantCulture));
+					WriteArg (response, MinSdkVersion.ToString (CultureInfo.CurrentCulture));
 				}
 			}
 
