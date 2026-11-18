@@ -495,8 +495,21 @@ AVAILABLE UPDATES:
 	}
 
 	[Test]
+	[TestCase ("")]
+	[TestCase ("build-tools&whoami")]
+	[TestCase ("build-tools%PATH%")]
+	[TestCase ("build tools")]
+	public void InstallAsync_InvalidPackageId_ThrowsBeforeSdkLookup (string package)
+	{
+		Assert.ThrowsAsync<ArgumentException> (
+			async () => await manager.InstallAsync (new [] { package }));
+	}
+
+	[Test]
 	[Platform ("Win")]
-	public async Task InstallAsync_WindowsBatch_PreservesSemicolonPackageId ()
+	[TestCase ("build-tools;37.0.0")]
+	[TestCase ("build-tools/37.0.0")]
+	public async Task InstallAsync_WindowsBatch_PreservesPackageId (string package)
 	{
 		var sdkDir = Path.Combine (Path.GetTempPath (), $"sdk manager test {Guid.NewGuid ()}");
 		var binDir = Path.Combine (sdkDir, "cmdline-tools", "latest", "bin");
@@ -509,9 +522,9 @@ AVAILABLE UPDATES:
 
 		try {
 			manager.AndroidSdkPath = sdkDir;
-			await manager.InstallAsync (new [] { "build-tools;37.0.0" }, acceptLicenses: false);
+			await manager.InstallAsync (new [] { package }, acceptLicenses: false);
 
-			Assert.AreEqual ("build-tools;37.0.0", File.ReadAllText (argumentsPath).Trim ());
+			Assert.AreEqual (package, File.ReadAllText (argumentsPath).Trim ());
 		} finally {
 			Directory.Delete (sdkDir, recursive: true);
 		}
