@@ -19,12 +19,6 @@
     <DefineConstants Condition=" '$(ExtraConstants)' != '' ">$(DefineConstants);$(ExtraConstants)</DefineConstants>
   </PropertyGroup>
 
-  <!--
-    IL3053 - The CodeBehind CI fixture has a historical aggregate AOT-analysis warning baseline.
-  -->
-  <PropertyGroup Condition=" '$(RunningOnCI)' == 'true' And '$(_AndroidRuntime)' == 'NativeAOT' ">
-    <NoWarn>IL3053</NoWarn>
-  </PropertyGroup>
   <ItemGroup>
     <Compile Include="MainActivity.cs" />
     <Compile Include="MainMergeActivity.cs" />
