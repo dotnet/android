@@ -1,5 +1,4 @@
 using System;
-using System.Globalization;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
@@ -302,7 +301,7 @@ namespace MonoDroid.Generation
 				if (short_file_names.TryGetValue (fullName, out var s))
 					return s;
 
-				s = short_file_names.Count.ToString (CultureInfo.CurrentCulture);
+				s = short_file_names.Count.ToString ();
 				short_file_names [fullName] = s;
 
 				return s;
