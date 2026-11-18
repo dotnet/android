@@ -4,8 +4,7 @@ The `DevSkim` stage of the CI and PR pipelines runs
 [DevSkim](https://github.com/microsoft/DevSkim) over the source code and build
 tooling of the product, and fails when it finds a banned API, such as a banned C
 function. It supports the Microsoft.Security.SystemsADM.10082 requirement.
-Running the scanner is only part of meeting that requirement: each finding has to
-be fixed, or approved as an exception by the responsible security team.
+A clean scan is only part of meeting that requirement. See [Limits](#limits).
 
 CodeQL runs separately, in the nightly pipeline, and isn't affected.
 
@@ -73,6 +72,34 @@ Before the scan, the stage runs DevSkim with the same settings over a generated 
 file that calls `strcpy`, and requires DevSkim to report it. Without this check, a
 clean scan could mean that the scanner or its rules don't work, rather than that
 the code is clean.
+
+## Limits
+
+A clean scan doesn't prove that the product has no banned APIs:
+
+  * DevSkim has banned-API rules only for C, C++ and Objective-C, so the stage
+    doesn't check C#, Java or Kotlin for banned APIs.
+  * DevSkim 1.0.100 reports `strlen` as a problematic function (`DS140021`), and
+    that hides the banned-function rule for `strlen` (`DS154192`). `strlen` calls
+    don't fail the stage.
+
+## Fixing a finding
+
+Fix the code rather than excluding it. DevSkim matches function names, so a
+finding isn't always a bug, and some fixes only change what the code calls. The
+native code uses these replacements:
+
+| Finding                            | Replacement                                    |
+|------------------------------------|------------------------------------------------|
+| `strerror`                         | `ErrorMessage`                                 |
+| `snprintf` of a number             | `std::to_chars`                                |
+| `snprintf` of strings              | `Util::format_concatenated`                    |
+| `fprintf` into a stream            | `fputs` and `fputc`                            |
+| `fopen`                            | `open` and `fdopen`                            |
+| `printf` in `format (printf, ...)` | `format (__printf__, ...)`: the same attribute |
+
+`ErrorMessage` and `Util::format_concatenated` are in
+`src/native/clr/include/runtime-base/util.hh`.
 
 ## Reports
 
