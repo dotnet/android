@@ -231,8 +231,13 @@
     <ApiCompatibilityFiles Include="$(ApiCompatibilityDir)/acceptable-breakages-v*.txt" />
     <ApiCompatibilityFiles Include="$(ApiCompatibilityDir)/reference/*.*" />
   </ItemGroup>
-  <!-- The opt-out also changes during evaluation for experimental callbacks.
-       Limit it to API analyzers, without disabling safety/globalization checks. -->
+  <!--
+    DisableApiCompatibilityCheck can be set late during target evaluation by the experimental
+    UnmanagedCallersOnly callback mode.  The ApiCompat task below is skipped by its own Condition,
+    but the compile-time Microsoft.CodeAnalysis.PublicApiAnalyzers package must also be removed
+    before CoreCompile.  Removing only analyzers with that NuGetPackageId preserves the SDK, safety,
+    globalization, and other analyzers; setting RunAnalyzers=false would disable all of them.
+  -->
   <Target Name="_AndroidDisableApiCompatibilityAnalyzers"
       BeforeTargets="CoreCompile"
       Condition=" '$(DisableApiCompatibilityCheck)' == 'True' ">
