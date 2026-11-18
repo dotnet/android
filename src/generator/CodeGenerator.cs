@@ -1,5 +1,4 @@
 using System;
-using System.Globalization;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -381,7 +380,7 @@ namespace Xamarin.Android.Binder
 					continue;
 				string annotation = null;
 				foreach (var value in cx.Values)
-					annotation += string.Format (CultureInfo.CurrentCulture, "[global::Android.Runtime.RequiresPermission (\"{0}\")]", value);
+					annotation += string.Format ("[global::Android.Runtime.RequiresPermission (\"{0}\")]", value);
 
 				AddAnnotationTo (item, annotation);
 			}

@@ -1,5 +1,4 @@
 using System;
-using System.Globalization;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
@@ -893,7 +892,7 @@ namespace MonoDroid.Generation
 			string doNotTransfer = "JniHandleOwnership.DoNotTransfer";
 
 			return new string []{
-				string.Format (CultureInfo.CurrentCulture, format,
+				string.Format (format,
 					       "var",
 					       opt.GetSafeIdentifier (var_name),
 					       opt.GetSafeIdentifier (TypeNameUtilities.GetNativeName (var_name)),

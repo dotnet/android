@@ -1,5 +1,4 @@
 using System;
-using System.Globalization;
 using System.Xml;
 using System.Collections.Generic;
 
@@ -61,7 +60,7 @@ namespace MonoDroid.Generation {
 
 		public string FromNative (CodeGenerationOptions opt, string varname, bool owned)
 		{
-			return String.Format (CultureInfo.CurrentCulture, "({0}) {1}", opt.GetOutputName (type), varname);
+			return String.Format ("({0}) {1}", opt.GetOutputName (type), varname);
 		}
 
 		public string ToNative (CodeGenerationOptions opt, string varname, Dictionary<string, string> mappings = null)
@@ -76,27 +75,27 @@ namespace MonoDroid.Generation {
 
 		public string[] PreCallback (CodeGenerationOptions opt, string var_name, bool owned)
 		{
-			throw new NotSupportedException (string.Format (CultureInfo.CurrentCulture, "{0} does not support PreCallback", this.GetType ().Name));
+			throw new NotSupportedException (string.Format ("{0} does not support PreCallback", this.GetType ().Name));
 		}
 
 		public string[] PostCallback (CodeGenerationOptions opt, string var_name)
 		{
-			throw new NotSupportedException (string.Format (CultureInfo.CurrentCulture, "{0} does not support PostCallback", this.GetType ().Name));
+			throw new NotSupportedException (string.Format ("{0} does not support PostCallback", this.GetType ().Name));
 		}
 
 		public string[] PreCall (CodeGenerationOptions opt, string var_name)
 		{
-			throw new NotSupportedException (string.Format (CultureInfo.CurrentCulture, "{0} does not support PreCall", this.GetType ().Name));
+			throw new NotSupportedException (string.Format ("{0} does not support PreCall", this.GetType ().Name));
 		}
 
 		public string Call (CodeGenerationOptions opt, string var_name)
 		{
-			throw new NotSupportedException (string.Format (CultureInfo.CurrentCulture, "{0} does not support Call", this.GetType ().Name));
+			throw new NotSupportedException (string.Format ("{0} does not support Call", this.GetType ().Name));
 		}
 
 		public string[] PostCall (CodeGenerationOptions opt, string var_name)
 		{
-			throw new NotSupportedException (string.Format (CultureInfo.CurrentCulture, "{0} does not support PostCall", this.GetType ().Name));
+			throw new NotSupportedException (string.Format ("{0} does not support PostCall", this.GetType ().Name));
 		}
 
 		public bool NeedsPrep { get { return false; } }

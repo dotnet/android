@@ -1,5 +1,4 @@
 using System;
-using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Xml;
@@ -60,7 +59,7 @@ namespace MonoDroid.Generation {
 		static string GetMandatoryAttribute (XElement e, string name)
 		{
 			if (e.Attribute (name) == null) {
-				throw new InvalidOperationException (String.Format (CultureInfo.CurrentCulture, "Mandatory attribute '{0}' is missing on a mapping element: {1}", name, e.ToString ()));
+				throw new InvalidOperationException (String.Format ("Mandatory attribute '{0}' is missing on a mapping element: {1}", name, e.ToString ()));
 			}
 			return e.XGetAttribute (name);
 		}
