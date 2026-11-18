@@ -1,5 +1,4 @@
 ﻿#nullable disable
-#nullable enable annotations
 
 using System;
 using System.Collections.Generic;
@@ -182,7 +181,7 @@ namespace Xamarin.Android.Tasks
 		}
 
 #if MSBUILD
-		public static IEnumerable<string> ExpandFiles (ITaskItem[]? libraryProjectJars)
+		public static IEnumerable<string> ExpandFiles (ITaskItem[] libraryProjectJars)
 		{
 			libraryProjectJars  = libraryProjectJars ?? [];
 			return (from path in libraryProjectJars
@@ -215,7 +214,7 @@ namespace Xamarin.Android.Tasks
 			return filePaths.Select (p => new FileInfo (p)).ToArray ().Distinct (new MonoAndroidHelper.SizeAndContentFileComparer ()).Select (f => f.FullName).ToArray ();
 		}
 
-		public static IEnumerable<string> GetDuplicateFileNames (IEnumerable<string> fullPaths, string []? excluded)
+		public static IEnumerable<string> GetDuplicateFileNames (IEnumerable<string> fullPaths, string [] excluded)
 		{
 			var files = fullPaths.Select (full => Path.GetFileName (full)).Where (f => excluded == null || !excluded.Contains (f, StringComparer.OrdinalIgnoreCase)).ToArray ();
 			for (int i = 0; i < files.Length; i++)
@@ -430,7 +429,7 @@ namespace Xamarin.Android.Tasks
 		}
 
 #if MSBUILD
-		public static string? TryGetAndroidJarPath (TaskLoggingHelper log, string platform, AndroidVersions supportedVersions, bool designTimeBuild = false, bool buildingInsideVisualStudio = false, string? targetFramework = "", string? androidSdkDirectory = "")
+		public static string TryGetAndroidJarPath (TaskLoggingHelper log, string platform, AndroidVersions supportedVersions, bool designTimeBuild = false, bool buildingInsideVisualStudio = false, string targetFramework = "", string androidSdkDirectory = "")
 		{
 			if (string.IsNullOrEmpty (androidSdkDirectory)) {
 				log.LogCodedError ("XA5300", Properties.Resources.XA5300_Android_SDK);
@@ -473,7 +472,7 @@ namespace Xamarin.Android.Tasks
 		/// </summary>
 		/// <param name="version">The version to parse</param>
 		/// <returns>The API level that corresponds to $(SupportedOSPlatformVersion), or 0 if parsing fails.</returns>
-		public static int ConvertSupportedOSPlatformVersionToApiLevel (string? version)
+		public static int ConvertSupportedOSPlatformVersionToApiLevel (string version)
 		{
 			int apiLevel = 0;
 			if (version?.IndexOf ('.') == -1) {
