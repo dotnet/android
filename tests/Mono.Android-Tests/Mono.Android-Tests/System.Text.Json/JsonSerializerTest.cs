@@ -11,6 +11,7 @@ namespace System.Text.JsonTests {
 	public class JsonSerializerTest {
 
 		[TestMethod]
+		[RequiresDynamicCode ("Tests reflection-based JSON serialization.")]
 		[RequiresUnreferencedCode ("Tests trimming unsafe features")]
 		public void Serialize ()
 		{
@@ -18,11 +19,12 @@ namespace System.Text.JsonTests {
 				string text = JsonSerializer.Serialize (42);
 				Assert.AreEqual ("42", text);
 			} else {
-				Assert.Ignore ("Reflection-based JSON serialization requires dynamic code.");
+				Assert.Inconclusive ("Reflection-based JSON serialization requires dynamic code.");
 			}
 		}
 
 		[TestMethod]
+		[RequiresDynamicCode ("Tests reflection-based JSON deserialization.")]
 		[RequiresUnreferencedCode ("Tests trimming unsafe features")]
 		public void Deserialize ()
 		{
@@ -30,7 +32,7 @@ namespace System.Text.JsonTests {
 				object value = JsonSerializer.Deserialize ("42", typeof (int));
 				Assert.AreEqual (42, value);
 			} else {
-				Assert.Ignore ("Reflection-based JSON deserialization requires dynamic code.");
+				Assert.Inconclusive ("Reflection-based JSON deserialization requires dynamic code.");
 			}
 		}
 	}
