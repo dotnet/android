@@ -1,5 +1,4 @@
-using System;
-using System.Globalization;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -219,7 +218,7 @@ namespace Xamarin.Android.Build.Tests
 				builder.ThrowOnBuildFailure = false;
 				builder.Target = "GetAndroidDependencies";
 				Assert.True (builder.Build (proj, parameters: parameters),
-					string.Format (CultureInfo.CurrentCulture, "First Build should have succeeded"));
+					string.Format ("First Build should have succeeded"));
 				var apiLevel = XABuildConfig.AndroidDefaultTargetDotnetApiLevel;
 				StringAssertEx.Contains (
 						anyOf: new [] { $"platforms/android-{apiLevel}", $"platforms/android-{apiLevel.Major}" },
@@ -265,7 +264,7 @@ namespace Xamarin.Android.Build.Tests
 				builder.ThrowOnBuildFailure = false;
 				builder.Target = "GetAndroidDependencies";
 				Assert.True (builder.Build (proj, parameters: parameters),
-					string.Format (CultureInfo.CurrentCulture, "First Build should have succeeded"));
+					string.Format ("First Build should have succeeded"));
 				var apiLevel = XABuildConfig.AndroidDefaultTargetDotnetApiLevel;
 				StringAssertEx.Contains (
 						anyOf: new [] { $"platforms/android-{apiLevel}", $"platforms/android-{apiLevel.Major}" },

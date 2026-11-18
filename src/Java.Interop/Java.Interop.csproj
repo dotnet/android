@@ -8,14 +8,17 @@
     <TargetFramework>$(DotNetStableTargetFramework)</TargetFramework>
   </PropertyGroup>
   <PropertyGroup>
-    <!-- Lowercase JNI typedef aliases predate C# naming analyzers and mirror the native API. -->
-    <NoWarn>$(NoWarn);CS8981</NoWarn>
+    <!-- Historical lowercase JNI typedef aliases and legacy public XML documentation baseline. -->
+    <NoWarn>$(NoWarn);1591;CS8981</NoWarn>
     <SignAssembly>true</SignAssembly>
     <AssemblyOriginatorKeyFile>..\..\product.snk</AssemblyOriginatorKeyFile>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <Nullable>enable</Nullable>
     <ProduceReferenceAssembly>true</ProduceReferenceAssembly>
     <MSBuildWarningsAsMessages>NU1702</MSBuildWarningsAsMessages>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
+    <DefineConstants>DEBUG;$(DefineConstants)</DefineConstants>
   </PropertyGroup>
   <Import Project="..\..\build-tools\trim-analyzers\trim-analyzers.props" />
   <PropertyGroup>

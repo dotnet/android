@@ -1,6 +1,5 @@
-#nullable enable
+﻿#nullable enable
 using System;
-using System.Globalization;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -144,7 +143,7 @@ public class MavenDownload : AsyncTask
 		if (resolver.UnresolvedArtifact is not Artifact unresolved_artifact || resolver.UnresolvedPomUrl is not string unresolved_pom)
 			return message;
 
-		return string.Format (CultureInfo.CurrentCulture, Properties.Resources.XA4237_Details, unresolved_artifact, unresolved_pom, message);
+		return string.Format (Properties.Resources.XA4237_Details, unresolved_artifact, unresolved_pom, message);
 	}
 
 	/// <summary>

@@ -1,7 +1,6 @@
-using NUnit.Framework;
+﻿using NUnit.Framework;
 using Microsoft.Build.Framework;
 using System;
-using System.Globalization;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -198,7 +197,7 @@ public final class R {
 			for (int i = 0; i < count; i++) {
 				var path = r_txt.Replace ("R.txt", $"R{i}.txt");
 				File.WriteAllText (path, $"int id foo_id_{i} 0x00000000");
-				builder.AppendLine (CultureInfo.CurrentCulture, $"int id foo_id_{i} 0x{(i + 1).ToString ("X8", CultureInfo.InvariantCulture)}");
+				builder.AppendLine ($"int id foo_id_{i} 0x{(i + 1).ToString ("X8")}");
 				r_txt_files.Add (path);
 			}
 			File.WriteAllText (main_r_txt, builder.ToString ());
