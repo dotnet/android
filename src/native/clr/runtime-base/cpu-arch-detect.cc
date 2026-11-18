@@ -28,7 +28,7 @@ find_in_maps (const char *str)
 	if (!maps) {
 		log_warnf (LOG_DEFAULT, "Failed to open /proc/self/maps for CPU detection: %s", ErrorMessage (errno).c_str ());
 		if (fd != -1) {
-			// `fdopen` failed, we still own the file descriptor
+			// `fdopen` failed, so we still own the file descriptor
 			close (fd);
 		}
 		return -1;
