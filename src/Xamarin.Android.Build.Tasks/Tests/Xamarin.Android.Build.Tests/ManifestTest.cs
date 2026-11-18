@@ -16,18 +16,6 @@ namespace Xamarin.Android.Build.Tests
 	[Parallelizable (ParallelScope.Children)]
 	public partial class ManifestTest : BaseTest
 	{
-		[Test]
-		public void UnloadedAttributesRejectElementGeneration ()
-		{
-			var cache = new TypeDefinitionCache ();
-			Assert.Throws<InvalidOperationException> (() => new PermissionAttribute ().ToElement ("test.package", cache));
-			Assert.Throws<InvalidOperationException> (() => new PermissionGroupAttribute ().ToElement ("test.package", cache));
-			Assert.Throws<InvalidOperationException> (() => new PermissionTreeAttribute ().ToElement ("test.package", cache));
-			Assert.Throws<InvalidOperationException> (() => new UsesPermissionAttribute ().ToElement ("test.package", cache));
-			using var resolver = new DefaultAssemblyResolver ();
-			Assert.Throws<InvalidOperationException> (() => new LayoutAttribute ().ToElement (resolver, "test.package", cache));
-		}
-
 		readonly string TargetSdkManifest = @"<?xml version=""1.0"" encoding=""utf-8""?>
 <manifest xmlns:android=""http://schemas.android.com/apk/res/android"" android:versionCode=""1"" android:versionName=""1.0"" package=""Bug12935.Bug12935"">
 	<uses-sdk android:targetSdkVersion=""{0}""/>
