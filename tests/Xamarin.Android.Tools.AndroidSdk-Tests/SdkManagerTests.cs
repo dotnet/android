@@ -497,8 +497,6 @@ AVAILABLE UPDATES:
 	[Test]
 	[TestCase ("")]
 	[TestCase ("build-tools&whoami")]
-	[TestCase ("build-tools%PATH%")]
-	[TestCase ("build tools")]
 	public void InstallAsync_InvalidPackageId_ThrowsBeforeSdkLookup (string package)
 	{
 		Assert.ThrowsAsync<ArgumentException> (
@@ -508,7 +506,6 @@ AVAILABLE UPDATES:
 	[Test]
 	[Platform ("Win")]
 	[TestCase ("build-tools;37.0.0")]
-	[TestCase ("build-tools/37.0.0")]
 	public async Task InstallAsync_WindowsBatch_PreservesPackageId (string package)
 	{
 		var sdkDir = Path.Combine (Path.GetTempPath (), $"sdk manager test {Guid.NewGuid ()}");

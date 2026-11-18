@@ -79,7 +79,7 @@ public partial class SdkManager
 
 		foreach (var package in array) {
 			if (package is null || package.Length == 0 || package.Any (c =>
-				!IsAsciiLetterOrDigit (c) && c != '.' && c != '-' && c != '_' && c != ';' && c != '/'))
+				!IsAsciiLetterOrDigit (c) && c != '.' && c != '-' && c != '_' && c != ';'))
 				throw new ArgumentException ($"Invalid Android SDK package ID: '{package}'.", nameof (packages));
 		}
 

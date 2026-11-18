@@ -82,14 +82,12 @@ public partial class SdkManager
 
 	static ProcessStartInfo CreateWindowsSdkManagerStartInfo (string sdkManagerPath, string[] arguments)
 	{
-		if (!sdkManagerPath.EndsWith (".bat", StringComparison.OrdinalIgnoreCase))
-			return ProcessUtils.CreateProcessStartInfo (sdkManagerPath, arguments);
-
 		var psi = new ProcessStartInfo {
 			FileName = Path.Combine (Environment.SystemDirectory, "cmd.exe"),
 			UseShellExecute = false,
 			CreateNoWindow = true,
 		};
+		// Avoid cmd.exe expanding metacharacters such as '%' in the SDK path.
 		psi.EnvironmentVariables ["XA_SDK_MANAGER_PATH"] = sdkManagerPath;
 
 		// Arguments are fixed switches or validated package IDs. cmd.exe does not preserve
