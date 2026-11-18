@@ -51,16 +51,11 @@ namespace Xamarin.Android.Tasks
 		/// </summary>
 		public string []? ReferenceAssemblyPaths { get; set; }
 
-		public string? CommandLineToolsVersion { get; set; }
-
 		[Required]
 		public string MinimumSupportedJavaVersion   { get; set; } = "";
 
 		[Required]
 		public string LatestSupportedJavaVersion    { get; set; } = "";
-
-		[Output]
-		public string? CommandLineToolsPath { get; set; }
 
 		[Output]
 		public string? AndroidNdkPath { get; set; }
@@ -122,10 +117,6 @@ namespace Xamarin.Android.Tasks
 			AndroidNdkPath = androidSdk.AndroidNdkPath;
 			AndroidSdkPath = androidSdk.AndroidSdkPath;
 			JavaSdkPath    = androidSdk.JavaSdkPath;
-
-			CommandLineToolsPath    = AndroidSdkInfo.GetCommandLineToolsPaths (AndroidSdkPath, CommandLineToolsVersion ?? "")
-				.FirstOrDefault () ??
-				Path.Combine (AndroidSdkPath, "tools");
 
 			//note: this task does not error out if it doesn't find all things. that's the job of the targets
 			return !Log.HasLoggedErrors;
