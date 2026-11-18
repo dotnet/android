@@ -82,6 +82,8 @@ stages:
       clean: all
     steps:
     - checkout: self
+      # Package versions depend on git blame and commit-range history.
+      fetchDepth: 0
       path: s/android
       submodules: recursive
       persistCredentials: false
@@ -116,6 +118,7 @@ stages:
     timeoutInMinutes: 240
     steps:
     - checkout: self
+      fetchDepth: 0
       submodules: recursive
       persistCredentials: false
 
@@ -143,6 +146,7 @@ stages:
       CC: gcc-10
     steps:
     - checkout: self
+      fetchDepth: 0
       path: s/android
       submodules: recursive
       persistCredentials: false
