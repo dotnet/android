@@ -203,7 +203,7 @@ namespace Xamarin.Android.Build.Tests
 			Assert.ThrowsExactly<OperationCanceledException> (() => Verify (archiveBytes, Sign (), cancellationToken: new CancellationToken (true)));
 			using (var client = new HttpClient (new SignatureHandler ([], []))) {
 				var task = new InstallAndroidDependencies { SkipSignCheck = skip };
-				await Assert.ThrowsExactlyAsync<OperationCanceledException> (async () => await task.VerifyJavaArchiveAsync (client, new Archive (), new CancellationToken (true)));
+				await Assert.ThrowsAsync<OperationCanceledException> (async () => await task.VerifyJavaArchiveAsync (client, new Archive (), new CancellationToken (true)));
 			}
 		}
 
@@ -249,7 +249,7 @@ namespace Xamarin.Android.Build.Tests
 					var engine = CreateBuildEngine ();
 					var task = new InstallAndroidDependencies { BuildEngine = engine };
 					var archive = new Archive () { Url = new Uri ("https://example.test/jdk.zip") };
-					await Assert.ThrowsExactlyAsync<OperationCanceledException> (async () => await task.VerifyJavaArchiveAsync (client, archive, source.Token));
+					await Assert.ThrowsAsync<OperationCanceledException> (async () => await task.VerifyJavaArchiveAsync (client, archive, source.Token));
 					Assert.IsTrue (handler.Blocked);
 					Assert.IsTrue (source.IsCancellationRequested);
 					Assert.IsEmpty (engine.Errors);
