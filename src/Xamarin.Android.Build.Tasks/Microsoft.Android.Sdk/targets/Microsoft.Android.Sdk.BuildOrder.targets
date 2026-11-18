@@ -230,7 +230,6 @@ properties that determine build ordering.
       _ExtractAar;
     </_ResolveLibraryProjectsDependsOn>
     <_CompileBindingJavaDependsOnTargets>
-      _AdjustJavacVersionArguments;
       _GetLibraryImports;
       _DetermineBindingJavaLibrariesToCompile;
       _GetJavaPlatformJar;
