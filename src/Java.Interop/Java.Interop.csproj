@@ -8,6 +8,8 @@
     <TargetFramework>$(DotNetStableTargetFramework)</TargetFramework>
   </PropertyGroup>
   <PropertyGroup>
+    <!-- Lowercase JNI typedef aliases predate C# naming analyzers and mirror the native API. -->
+    <NoWarn>$(NoWarn);CS8981</NoWarn>
     <SignAssembly>true</SignAssembly>
     <AssemblyOriginatorKeyFile>..\..\product.snk</AssemblyOriginatorKeyFile>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
