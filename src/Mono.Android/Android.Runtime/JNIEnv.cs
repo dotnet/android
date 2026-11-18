@@ -1076,10 +1076,9 @@ namespace Android.Runtime {
 						return GetObject (elem, type);
 					}
 
-					// The converter dictionary erases the peer constructor requirements.
-					// Resolving this released marshaling contract is deferred; see #8724.
-					[UnconditionalSuppressMessage ("Trimming", "IL2067",
-						Justification = "Deferred compatibility debt: the converter dictionary does not carry the peer constructor requirements; preservation is not statically proven.")]
+					// FIXME: Since a Dictionary<Type, Func> is used here, the trimmer will not be able to properly analyze `Type t`
+					// error IL2111: Method 'lambda expression' with parameters or return value with `DynamicallyAccessedMembersAttribute` is accessed via reflection. Trimmer can't guarantee availability of the requirements of the method.
+					[UnconditionalSuppressMessage ("Trimming", "IL2067", Justification = "FIXME: https://github.com/dotnet/android/issues/8724")]
 					static object? GetObject (IntPtr e, Type? t) =>
 						Java.Lang.Object.GetObject (e, JniHandleOwnership.TransferLocalRef, t);
 				} },

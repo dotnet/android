@@ -100,9 +100,9 @@ namespace Java.Interop {
 			return null;
 
 			[UnconditionalSuppressMessage ("ReflectionAnalysis", "IL2055:RequiresUnreferencedCode",
-				Justification = "Deferred compatibility debt: arbitrary closed collection types are not statically rooted; preserve existing CoreCLR marshaling until its trimming contract is resolved.")]
+				Justification = "The target generic type is expected to be preserved by the trimmer as the target type in marshaling.")]
 			[UnconditionalSuppressMessage ("Trimming", "IL2067:UnrecognizedReflectionPattern",
-				Justification = "Deferred compatibility debt: preservation of the closed wrapper's public FromJniHandle method is not statically proven.")]
+				Justification = "This method is used only when dynamic code is supported. The target closed generic collection type is preserved by the marshaling call site, including its public FromJniHandle method.")]
 			[RequiresDynamicCode ("This API uses reflection to create generic types at runtime, which is not supported in AOT scenarios.")]
 			static Func<IntPtr, JniHandleOwnership, object?>? TryMakeGenericCollectionTypeFactory (Type target)
 			{
