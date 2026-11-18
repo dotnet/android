@@ -17,7 +17,7 @@ namespace Xamarin.Android.Build.Tests.Tasks
 		[TestCase ("invalid", 0)]
 		[TestCase ("35", 35)]
 		[TestCase ("35.1", 35)]
-		public void ConvertSupportedPlatformVersion (string? version, int expected)
+		public void ConvertSupportedPlatformVersion (string version, int expected)
 		{
 			Assert.AreEqual (expected, MonoAndroidHelper.ConvertSupportedOSPlatformVersionToApiLevel (version));
 		}

@@ -53,9 +53,9 @@ partial class MonoAndroidHelper
 	/// Expands `dir/pattern` items. Results keep the item's directory spelling so that
 	/// <see cref="IsEmbeddedReferenceJar"/> still recognizes relative `__reference__` paths.
 	/// </summary>
-	public static IEnumerable<string> ExpandFiles (ITaskItem []? libraryProjectJars, TaskEnvironment taskEnvironment)
+	public static IEnumerable<string> ExpandFiles (ITaskItem [] libraryProjectJars, TaskEnvironment taskEnvironment)
 	{
-		foreach (var item in libraryProjectJars ?? []) {
+		foreach (var item in libraryProjectJars) {
 			string? directory = Path.GetDirectoryName (item.ItemSpec);
 			if (directory.IsNullOrEmpty ())
 				continue;
