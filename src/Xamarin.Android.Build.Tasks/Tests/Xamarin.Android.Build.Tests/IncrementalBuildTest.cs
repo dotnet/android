@@ -1,4 +1,4 @@
-﻿using Microsoft.Build.Framework;
+using Microsoft.Build.Framework;
 using Mono.Cecil;
 using NUnit.Framework;
 using System;

@@ -1,4 +1,4 @@
-﻿// Copyright (C) 2018 Microsoft, Inc. All rights reserved.
+// Copyright (C) 2018 Microsoft, Inc. All rights reserved.
 
 #nullable enable
 
