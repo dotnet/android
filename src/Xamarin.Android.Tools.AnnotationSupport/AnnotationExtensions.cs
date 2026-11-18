@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Globalization;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -9,7 +8,7 @@ namespace Xamarin.AndroidTools.AnnotationSupport
 	{
 		public static string FormatMember (this AnnotatedItem a)
 		{
-			return string.Format (CultureInfo.CurrentCulture, "  [{0}] {1} {2} {3}",
+			return string.Format ("  [{0}] {1} {2} {3}",
 			                      a.Arguments == null ? "F" : a.ParameterIndex >= 0 ? ("P" + a.ParameterIndex) : a.MemberName == "#ctor" ? "C" : "M",
 			                      a.MemberType,
 			                      a.MemberName,

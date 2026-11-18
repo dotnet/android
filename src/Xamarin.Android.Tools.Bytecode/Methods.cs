@@ -1,5 +1,4 @@
 using System;
-using System.Globalization;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
@@ -116,9 +115,9 @@ namespace Xamarin.Android.Tools.Bytecode {
 		static IEnumerable<string> ExtractTypesFromSignature (string signature)
 		{
 			if (signature == null || signature.Length < "()V".Length)
-				throw new InvalidOperationException (string.Format (CultureInfo.CurrentCulture, "Invalid method descriptor '{0}'.", signature));
+				throw new InvalidOperationException (string.Format ("Invalid method descriptor '{0}'.", signature));
 			if (signature [0] != '(')
-				throw new InvalidOperationException (string.Format (CultureInfo.CurrentCulture, "Invalid method descriptor '{0}'; expected '(' at index 0.", signature));
+				throw new InvalidOperationException (string.Format ("Invalid method descriptor '{0}'; expected '(' at index 0.", signature));
 
 			int index   = 1;
 
@@ -131,9 +130,9 @@ namespace Xamarin.Android.Tools.Bytecode {
 		{
 			var signature   = Descriptor;
 			if (signature == null || signature.Length < "()V".Length)
-				throw new InvalidOperationException (string.Format (CultureInfo.CurrentCulture, "Invalid method descriptor '{0}'.", signature));
+				throw new InvalidOperationException (string.Format ("Invalid method descriptor '{0}'.", signature));
 			if (signature [0] != '(')
-				throw new InvalidOperationException (string.Format (CultureInfo.CurrentCulture, "Invalid method descriptor '{0}'; expected '(' at index 0.", signature));
+				throw new InvalidOperationException (string.Format ("Invalid method descriptor '{0}'; expected '(' at index 0.", signature));
 
 			int index   = 1;
 
@@ -386,8 +385,8 @@ namespace Xamarin.Android.Tools.Bytecode {
 		public override string ToString ()
 		{
 			if (TypeSignature != null)
-				return string.Format (CultureInfo.CurrentCulture, "TypeInfo({0}={1})", BinaryName, TypeSignature);
-			return string.Format (CultureInfo.CurrentCulture, "TypeInfo({0})", BinaryName);
+				return string.Format ("TypeInfo({0}={1})", BinaryName, TypeSignature);
+			return string.Format ("TypeInfo({0})", BinaryName);
 		}
 	}
 
