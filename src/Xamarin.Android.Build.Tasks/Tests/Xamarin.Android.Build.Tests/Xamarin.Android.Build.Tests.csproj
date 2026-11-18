@@ -1,7 +1,9 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <!-- CA1305 - Test fixtures intentionally preserve historical formatting of embedded projects and diagnostics. -->
+    <!--
+      CA1305 - Test fixtures intentionally preserve historical formatting of embedded projects and diagnostics.
+    -->
     <NoWarn>$(NoWarn);CA1305</NoWarn>
     <TargetFramework>$(DotNetStableTargetFramework)</TargetFramework>
     <OutputType>Exe</OutputType>
