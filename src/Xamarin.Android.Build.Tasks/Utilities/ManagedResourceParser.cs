@@ -1,7 +1,6 @@
 ﻿#nullable disable
 
 using System;
-using System.Globalization;
 using System.CodeDom;
 using System.Collections.Generic;
 using System.IO;
@@ -395,7 +394,7 @@ namespace Xamarin.Android.Tasks
 			};
 			if (value != -1) {
 				f.InitExpression = new CodePrimitiveExpression (value);
-				string valueName = parentType.Name == "Styleable" ? value.ToString (CultureInfo.CurrentCulture) : $"0x{value.ToString ("X", CultureInfo.InvariantCulture)}";
+				string valueName = parentType.Name == "Styleable" ? value.ToString () : $"0x{value.ToString ("X")}";
 				f.Comments.Add (new CodeCommentStatement ($"aapt resource value: {valueName}"));
 			}
 			parentType.Members.Add (f);

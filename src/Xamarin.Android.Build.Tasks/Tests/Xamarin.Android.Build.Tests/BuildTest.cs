@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Globalization;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -168,7 +167,7 @@ namespace Xamarin.Android.Build.Tests
 			XNamespace ns = "http://schemas.android.com/apk/res/android";
 			var uses_sdk = manifest.Root.Element ("uses-sdk");
 			Assert.AreEqual ("24", uses_sdk.Attribute (ns + "minSdkVersion").Value);
-			Assert.AreEqual (XABuildConfig.AndroidDefaultTargetDotnetApiLevel.Major.ToString (CultureInfo.CurrentCulture),
+			Assert.AreEqual (XABuildConfig.AndroidDefaultTargetDotnetApiLevel.Major.ToString (),
 				uses_sdk.Attribute (ns + "targetSdkVersion").Value);
 
 			bool expectEmbeddedAssembies = isRelease;
@@ -623,7 +622,7 @@ namespace Xamarin.Android.Build.Tests
 				Assert.IsTrue (File.Exists (cache), $"{cache} should exist.");
 				var assemblyIdentityMap = builder.Output.GetAssemblyMapCache ();
 				var libraryProjects = Path.Combine (Root, builder.ProjectDirectory, proj.IntermediateOutputPath, "lp");
-				FileAssert.Exists (Path.Combine (libraryProjects, assemblyIdentityMap.IndexOf ("android-crop-1.0.1.aar").ToString (CultureInfo.CurrentCulture), "jl", "classes.jar"),
+				FileAssert.Exists (Path.Combine (libraryProjects, assemblyIdentityMap.IndexOf ("android-crop-1.0.1.aar").ToString (), "jl", "classes.jar"),
 					"classes.jar was not extracted from the aar.");
 				Assert.IsTrue (builder.Build (proj), "Build should have succeeded");
 				Assert.IsTrue (builder.Output.IsTargetSkipped ("_ResolveLibraryProjectImports"),
