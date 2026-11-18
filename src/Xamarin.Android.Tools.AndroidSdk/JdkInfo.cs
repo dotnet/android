@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Globalization;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
@@ -158,7 +157,7 @@ namespace Xamarin.Android.Tools
 		{
 			if (!Directory.Exists (dir))
 				return Enumerable.Empty<string> ();
-			var library = string.Format (CultureInfo.InvariantCulture, OS.NativeLibraryFormat, libraryName);
+			var library = string.Format (OS.NativeLibraryFormat, libraryName);
 			return Directory.EnumerateFiles (dir, library, SearchOption.AllDirectories);
 		}
 
@@ -199,11 +198,11 @@ namespace Xamarin.Android.Tools
 				if (versionParts.Length < 2)
 					return null;
 				if (versionParts.Length == 2)
-					return new Version (major: int.Parse (versionParts [0], CultureInfo.InvariantCulture), minor: int.Parse (versionParts [1], CultureInfo.InvariantCulture));
+					return new Version (major: int.Parse (versionParts [0]), minor: int.Parse (versionParts [1]));
 				if (versionParts.Length == 3)
-					return new Version (major: int.Parse (versionParts [0], CultureInfo.InvariantCulture), minor: int.Parse (versionParts [1], CultureInfo.InvariantCulture), build: int.Parse (versionParts [2], CultureInfo.InvariantCulture));
+					return new Version (major: int.Parse (versionParts [0]), minor: int.Parse (versionParts [1]), build: int.Parse (versionParts [2]));
 				// We just ignore elements 4+
-				return new Version (major: int.Parse (versionParts [0], CultureInfo.InvariantCulture), minor: int.Parse (versionParts [1], CultureInfo.InvariantCulture), build: int.Parse (versionParts [2], CultureInfo.InvariantCulture), revision: int.Parse (versionParts [3], CultureInfo.InvariantCulture));
+				return new Version (major: int.Parse (versionParts [0]), minor: int.Parse (versionParts [1]), build: int.Parse (versionParts [2]), revision: int.Parse (versionParts [3]));
 			}
 			catch (Exception) {
 				return null;
@@ -405,7 +404,7 @@ namespace Xamarin.Android.Tools
 				jdk = new JdkInfo (path, locator, logger: null, environmentVariables, workingDirectory);
 			}
 			catch (Exception e) {
-				logger (TraceLevel.Warning, string.Format (CultureInfo.CurrentCulture, Resources.InvalidJdkDirectory_path_locator_message, path, locator, e.Message));
+				logger (TraceLevel.Warning, string.Format (Resources.InvalidJdkDirectory_path_locator_message, path, locator, e.Message));
 				logger (TraceLevel.Verbose, e.ToString ());
 			}
 			return jdk;
@@ -458,7 +457,7 @@ namespace Xamarin.Android.Tools
 			try {
 				plist = XElement.Parse (xml.ToString ());
 			} catch (XmlException e) {
-				logger (TraceLevel.Warning, string.Format (CultureInfo.CurrentCulture, Resources.InvalidXmlLibExecJdk_path_args_message, jhp.FileName, jhp.Arguments, e.Message));
+				logger (TraceLevel.Warning, string.Format (Resources.InvalidXmlLibExecJdk_path_args_message, jhp.FileName, jhp.Arguments, e.Message));
 				yield break;
 			}
 			foreach (var info in plist.Elements ("array").Elements ("dict")) {

@@ -1,5 +1,4 @@
 using System;
-using System.Globalization;
 using System.Linq;
 using System.Xml;
 using System.Collections.Generic;
@@ -173,12 +172,12 @@ namespace Xamarin.Android.Tools
 
 		public int? MinSdkVersion {
 			get { return ParseSdkVersion (usesSdk.Attribute (aNS + "minSdkVersion")); }
-			set { usesSdk.SetAttributeValue (aNS + "minSdkVersion", value?.ToString (CultureInfo.InvariantCulture)); }
+			set { usesSdk.SetAttributeValue (aNS + "minSdkVersion", value == null ? null : value.ToString ()); }
 		}
 
 		public int? TargetSdkVersion {
 			get { return ParseSdkVersion (usesSdk.Attribute (aNS + "targetSdkVersion")); }
-			set { usesSdk.SetAttributeValue (aNS + "targetSdkVersion", value?.ToString (CultureInfo.InvariantCulture)); }
+			set { usesSdk.SetAttributeValue (aNS + "targetSdkVersion", value == null ? null : value.ToString ()); }
 		}
 
 		int? ParseSdkVersion (XAttribute? attribute)
@@ -258,9 +257,9 @@ namespace Xamarin.Android.Tools
 			switch (permission) {
 			case "READ_HISTORY_BOOKMARKS":
 			case "WRITE_HISTORY_BOOKMARKS":
-				return string.Format (CultureInfo.InvariantCulture, "com.android.browser.permission.{0}", permission);
+				return string.Format ("com.android.browser.permission.{0}", permission);
 			default:
-				return string.Format (CultureInfo.InvariantCulture, "android.permission.{0}", permission);
+				return string.Format ("android.permission.{0}", permission);
 			}
 		}
 
