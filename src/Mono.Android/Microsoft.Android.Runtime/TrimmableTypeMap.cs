@@ -3,6 +3,7 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 using System.Runtime.InteropServices;
@@ -17,6 +18,10 @@ namespace Microsoft.Android.Runtime;
 /// and provides peer creation, invoker resolution, and native
 /// method registration. All proxy attribute access is encapsulated here.
 /// </summary>
+/// <remarks>
+/// This type is not intended for direct use outside generated trimmable typemap code.
+/// </remarks>
+[EditorBrowsable (EditorBrowsableState.Never)]
 public class TrimmableTypeMap
 {
 	static readonly Lock s_initLock = new ();
