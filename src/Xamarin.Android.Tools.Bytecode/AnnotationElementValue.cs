@@ -61,13 +61,13 @@ namespace Xamarin.Android.Tools.Bytecode
 						var value = poolItem.ToString ();
 
 						if (poolItem is ConstantPoolDoubleItem d)
-							value = d.Value.ToString ();
+							value = d.Value.ToString (CultureInfo.InvariantCulture);
 						else if (poolItem is ConstantPoolFloatItem f)
-							value = f.Value.ToString ();
+							value = f.Value.ToString (CultureInfo.InvariantCulture);
 						else if (poolItem is ConstantPoolIntegerItem i)
-							value = i.Value.ToString ();
+							value = i.Value.ToString (CultureInfo.InvariantCulture);
 						else if (poolItem is ConstantPoolLongItem l)
-							value = l.Value.ToString ();
+							value = l.Value.ToString (CultureInfo.InvariantCulture);
 						else if (poolItem is ConstantPoolStringItem s)
 							return new AnnotationStringElementConstant { Value = s.StringData.Value.ToString () };
 						else if (poolItem is ConstantPoolUtf8Item u)

@@ -52,7 +52,7 @@ public struct AndroidSdkVersion : IComparable, IComparable<AndroidSdkVersion>, I
 
 	public override string ToString ()
 		=> MinorRelease == 0
-		? ApiLevel.ToString ()
+		? ApiLevel.ToString (CultureInfo.InvariantCulture)
 		: $"{ApiLevel}.{MinorRelease}";
 
 	//	public static implicit operator ApiLevel (int value)

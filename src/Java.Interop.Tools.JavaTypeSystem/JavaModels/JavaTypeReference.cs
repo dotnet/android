@@ -101,7 +101,7 @@ namespace Java.Interop.Tools.JavaTypeSystem.Models
 			else if (ReferencedTypeParameter != null)
 				return ReferencedTypeParameter.Name + ArrayPart;
 			else
-				return string.Format (CultureInfo.CurrentCulture, "{0}{1}{2}",
+				return string.Format (CultureInfo.InvariantCulture, "{0}{1}{2}",
 					ReferencedType?.FullName.Replace ('$', '.'),
 					TypeParameters?.Any () == true ? '<' + string.Join (", ", TypeParameters.Select (_ => _.ToString ())) + '>' : null,
 					ArrayPart);

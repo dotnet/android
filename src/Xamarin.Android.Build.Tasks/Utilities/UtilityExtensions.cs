@@ -15,7 +15,7 @@ static class UtilityExtensions
 		if (value.IsNullOrWhiteSpace ())
 			return defaultValue;
 
-		return (T) Convert.ChangeType (value, typeof (T), CultureInfo.CurrentCulture);
+		return (T) Convert.ChangeType (value, typeof (T), CultureInfo.InvariantCulture);
 	}
 
 	public static string GetRequiredAttribute (this XElement xml, string name)
