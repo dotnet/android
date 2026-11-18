@@ -11,16 +11,16 @@
     <SignAssembly>true</SignAssembly>
     <AssemblyOriginatorKeyFile>..\..\product.snk</AssemblyOriginatorKeyFile>
     <!--
-      0618   - Generated bindings intentionally reference released Android APIs that are obsolete.
-      0809   - Android metadata can deprecate an overriding member while its base member remains non-obsolete.
-      0465   - Android's Java Finalize method is a normal member and is not a C# destructor.
-      8764   - Generated return nullability historically differs from overridden Java/C# base members.
-      8765   - Generated parameter nullability historically differs from overridden Java/C# base members.
-      8766   - Generated return nullability historically differs from implemented interfaces.
-      8767   - Generated parameter nullability historically differs from implemented interfaces.
+      CS0618 - Generated bindings intentionally reference released Android APIs that are obsolete.
+      CS0809 - Android metadata can deprecate an overriding member while its base member remains non-obsolete.
+      CS0465 - Android's Java Finalize method is a normal member and is not a C# destructor.
+      CS8764 - Generated return nullability historically differs from overridden Java/C# base members.
+      CS8765 - Generated parameter nullability historically differs from overridden Java/C# base members.
+      CS8766 - Generated return nullability historically differs from implemented interfaces.
+      CS8767 - Generated parameter nullability historically differs from implemented interfaces.
       RS0041 - Hand-bound/generated public APIs retain their established oblivious nullable annotations.
     -->
-    <NoWarn>0618;0809;0465;8764;8765;8766;8767;RS0041</NoWarn>
+    <NoWarn>CS0618;CS0809;CS0465;CS8764;CS8765;CS8766;CS8767;RS0041</NoWarn>
     <WarningsAsErrors>$(WarningsAsErrors);CS2002</WarningsAsErrors>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <IntermediateOutputPath>$(BaseIntermediateOutputPath)$(Configuration)\$(TargetFramework)\android-$(AndroidPlatformId)\</IntermediateOutputPath>
