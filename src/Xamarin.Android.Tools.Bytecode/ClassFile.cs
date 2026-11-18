@@ -56,10 +56,10 @@ namespace Xamarin.Android.Tools.Bytecode {
 			int e = stream.ReadByte ();
 			if (e >= 0) {
 				var trailing    = new System.Text.StringBuilder ();
-				trailing.AppendFormat (CultureInfo.InvariantCulture, "{0:x2}", (byte) e);
+				trailing.AppendFormat (CultureInfo.CurrentCulture, "{0:x2}", (byte) e);
 				while ((e = stream.ReadByte ()) >= 0) {
 					trailing.Append (" ");
-					trailing.AppendFormat (CultureInfo.InvariantCulture, "{0:x2}", (byte) e);
+					trailing.AppendFormat (CultureInfo.CurrentCulture, "{0:x2}", (byte) e);
 				}
 				throw new BadImageFormatException ($"Stream has trailing data?! {{{trailing}}}");
 			}

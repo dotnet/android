@@ -142,7 +142,7 @@ namespace {{libraryName}} {
 """;
 				solution.Projects.Add (library);
 				app.References.Add (new BuildItem.ProjectReference ($"..\\{libraryName}\\{libraryName}.csproj", libraryName, library.ProjectGuid));
-				code.AppendLine (CultureInfo.InvariantCulture, $"\t\t\t{libraryName}.{libraryName}.Foo ();");
+				code.AppendLine (CultureInfo.CurrentCulture, $"\t\t\t{libraryName}.{libraryName}.Foo ();");
 			}
 			code.AppendLine ("\t\t}");
 			code.AppendLine ("\t}");

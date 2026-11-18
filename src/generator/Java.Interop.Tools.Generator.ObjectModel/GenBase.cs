@@ -899,7 +899,7 @@ namespace MonoDroid.Generation
 			string doNotTransfer = "JniHandleOwnership.DoNotTransfer";
 
 			return new string []{
-				string.Format (CultureInfo.InvariantCulture, format,
+				string.Format (CultureInfo.CurrentCulture, format,
 					       "var",
 					       opt.GetSafeIdentifier (var_name),
 					       opt.GetSafeIdentifier (TypeNameUtilities.GetNativeName (var_name)),

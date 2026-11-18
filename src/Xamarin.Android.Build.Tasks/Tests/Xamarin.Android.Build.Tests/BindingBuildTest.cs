@@ -504,12 +504,12 @@ namespace Xamarin.Android.Build.Tests
 					var libraryProjects = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath, "lp");
 					var assemblyIdentityMap = b.Output.GetAssemblyMapCache ();
 					var assemblyIdentityName = "mylibrary.aar";
-					var assemblyIdentity = assemblyIdentityMap.IndexOf (assemblyIdentityName).ToString (CultureInfo.InvariantCulture);
+					var assemblyIdentity = assemblyIdentityMap.IndexOf (assemblyIdentityName).ToString (CultureInfo.CurrentCulture);
 					var dsStorePath = Path.Combine (libraryProjects, assemblyIdentity, "jl");
 					DirectoryAssert.Exists (dsStorePath);
 					FileAssert.DoesNotExist (Path.Combine (dsStorePath, ".DS_Store"));
 					DirectoryAssert.DoesNotExist (Path.Combine (dsStorePath, "_MACOSX"));
-					var svgJarDir = Path.Combine (libraryProjects, assemblyIdentityMap.IndexOf ($"{binding.ProjectName}.aar").ToString (CultureInfo.InvariantCulture), "jl", "libs");
+					var svgJarDir = Path.Combine (libraryProjects, assemblyIdentityMap.IndexOf ($"{binding.ProjectName}.aar").ToString (CultureInfo.CurrentCulture), "jl", "libs");
 					DirectoryAssert.Exists (svgJarDir);
 					var jarFiles = Directory.GetFiles (svgJarDir, "*.jar");
 					Assert.AreEqual (1, jarFiles.Length, $"Expected 1 .jar file in {svgJarDir}");

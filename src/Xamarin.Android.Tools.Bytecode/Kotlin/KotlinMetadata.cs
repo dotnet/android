@@ -147,7 +147,7 @@ namespace Xamarin.Android.Tools.Bytecode
 		{
 			value = value.Replace ("Integer", "").Trim ('(', ')', ' ');
 
-			return int.Parse (value, CultureInfo.InvariantCulture);
+			return int.Parse (value, CultureInfo.CurrentCulture);
 		}
 	}
 

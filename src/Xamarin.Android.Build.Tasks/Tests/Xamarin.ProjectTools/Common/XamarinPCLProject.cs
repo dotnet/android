@@ -35,7 +35,7 @@ namespace Xamarin.ProjectTools
 		public override Microsoft.Build.Construction.ProjectRootElement Construct ()
 		{
 			var root = base.Construct ();
-			root.AddImport (string.Format (CultureInfo.InvariantCulture, "$(MSBuildExtensionsPath32)\\Microsoft\\Portable\\{0}\\Microsoft.Portable.CSharp.targets", TargetFrameworkVersion ));
+			root.AddImport (string.Format (CultureInfo.CurrentCulture, "$(MSBuildExtensionsPath32)\\Microsoft\\Portable\\{0}\\Microsoft.Portable.CSharp.targets", TargetFrameworkVersion ));
 			return root;
 		}
 	}

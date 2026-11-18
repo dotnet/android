@@ -40,7 +40,7 @@ namespace Xamarin.AndroidTools.AnnotationSupport
 		{
 			if (ArrayItemCommonPrefix == null)
 				return Name + " = " + Val;
-			return string.Format (CultureInfo.InvariantCulture, "{0} = {1}[{2}]", Name, ArrayItemCommonPrefix, string.Join (",", ValueAsArray));
+			return string.Format (CultureInfo.CurrentCulture, "{0} = {1}[{2}]", Name, ArrayItemCommonPrefix, string.Join (",", ValueAsArray));
 		}
 	}
 }

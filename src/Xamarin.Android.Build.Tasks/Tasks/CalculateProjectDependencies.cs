@@ -75,8 +75,8 @@ namespace Xamarin.Android.Tasks
 			// Use the platform Id (e.g. "36.1") for the directory name when the target has a minor version,
 			// since Google ships platforms/android-36.1 as a separate SDK platform from platforms/android-36.
 			var platformId = sdkVersion == targetVersion.Major
-				? (supportedVersions.GetIdFromVersionCodeFull (targetVersion) ?? sdkVersion.ToString (CultureInfo.InvariantCulture))
-				: sdkVersion.ToString (CultureInfo.InvariantCulture);
+				? (supportedVersions.GetIdFromVersionCodeFull (targetVersion) ?? sdkVersion.ToString (CultureInfo.CurrentCulture))
+				: sdkVersion.ToString (CultureInfo.CurrentCulture);
 			dependencies.Add (CreateAndroidDependency ($"platforms/android-{platformId}", ""));
 			dependencies.Add (CreateAndroidDependency ($"build-tools/{BuildToolsVersion}", BuildToolsVersion));
 			if (!PlatformToolsVersion.IsNullOrEmpty ()) {
