@@ -104,9 +104,7 @@ namespace generator.SourceWriters
 
 		void AddBindingInfrastructure (ClassGen klass, CodeGenerationOptions opt)
 		{
-			Fields.Add (new PeerMembersField (opt, klass.RawJniName, klass.Name, false) {
-				IsShadow = klass.EnclosingBaseTypes ().Any (),
-			});
+			Fields.Add (new PeerMembersField (opt, klass.RawJniName, klass.Name, false));
 
 			if (klass.BaseGen != null && klass.InheritsObject) {
 				Properties.Add (new JniPeerMembersGetter ());
@@ -164,9 +162,7 @@ namespace generator.SourceWriters
 		{
 			if (klass.Interfaces.Any (p => p.FullName == "Java.Lang.ICharSequence")) {
 				Methods.Add (new CharSequenceEnumeratorMethod ());
-				Methods.Add (new CharSequenceGenericEnumeratorMethod {
-					IsShadow = klass.InheritsCharSequenceEnumerator (),
-				});
+				Methods.Add (new CharSequenceGenericEnumeratorMethod ());
 			}
 		}
 

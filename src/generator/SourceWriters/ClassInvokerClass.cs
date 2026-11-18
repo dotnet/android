@@ -111,9 +111,7 @@ namespace generator.SourceWriters
 					Methods.Add (new ExplicitInterfaceInvokerMethod (gen, m, opt));
 				} else {
 					m.IsOverride = true;
-					var method = new BoundMethod (klass, m, opt, false);
-					method.IsShadow |= !method.IsOverride && !method.ExplicitInterfaceImplementation.HasValue ();
-					Methods.Add (method);
+					Methods.Add (new BoundMethod (klass, m, opt, false));
 
 					if (m.Asyncify)
 						Methods.Add (new MethodAsyncWrapper (m, opt));

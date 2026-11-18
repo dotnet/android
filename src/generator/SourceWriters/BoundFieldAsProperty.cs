@@ -44,7 +44,6 @@ namespace generator.SourceWriters
 			UseExplicitPrivateKeyword = true;
 
 			IsStatic = field.IsStatic;
-			IsShadow = type.RequiresNew (field, opt);
 
 			HasGet = true;
 

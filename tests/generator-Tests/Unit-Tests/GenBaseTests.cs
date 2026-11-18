@@ -5,7 +5,6 @@ using System.Text;
 using System.Threading.Tasks;
 using MonoDroid.Generation;
 using NUnit.Framework;
-using generator.SourceWriters;
 
 namespace generatortests
 {
@@ -13,92 +12,6 @@ namespace generatortests
 	public class GenBaseTests
 	{
 		CodeGenerationOptions options = new CodeGenerationOptions ();
-
-		[Test]
-		public void InheritedFieldsAndPropertiesRequireNew ()
-		{
-			var parent = SupportTypeBuilder.CreateClass ("java.Base", options);
-			var derived = new DerivedTestClass (parent);
-			var field = SupportTypeBuilder.CreateField ("Count", options, "int");
-
-			Assert.True (new BoundFieldAsProperty (derived, field, options).IsShadow);
-			Assert.True (new BoundField (derived, field.SetConstant ("1"), options).IsShadow);
-		}
-
-		[Test]
-		public void HiddenVirtualMethodRetainsNewSlot ()
-		{
-			var parent = SupportTypeBuilder.CreateClass ("java.Base", options);
-			parent.Methods.Add (SupportTypeBuilder.CreateMethod (parent, "DoWork", options));
-			var derived = new DerivedTestClass (parent);
-			var method = SupportTypeBuilder.CreateMethod (derived, "DoWork", options);
-			var writer = new BoundMethod (derived, method, options, generateCallbacks: false);
-
-			Assert.True (writer.IsShadow);
-			Assert.True (writer.IsVirtual);
-			Assert.False (writer.IsOverride);
-		}
-
-		[Test]
-		public void InheritedInterfaceMethodRequiresNew ()
-		{
-			var parent = SupportTypeBuilder.CreateEmptyInterface ("java.Parent");
-			parent.Methods.Add (SupportTypeBuilder.CreateMethod (parent, "Close", options));
-			var derived = SupportTypeBuilder.CreateEmptyInterface ("java.Derived");
-			derived.Interfaces.Add (parent);
-			var method = SupportTypeBuilder.CreateMethod (derived, "Close", options);
-
-			Assert.True (new BoundInterfaceMethodDeclaration (derived, method, "", options).IsShadow);
-		}
-
-		[Test]
-		public void NestedCallbackHidesEnclosingBaseCallback ()
-		{
-			var parent = SupportTypeBuilder.CreateClass ("java.Base", options);
-			parent.Methods.Add (SupportTypeBuilder.CreateMethod (parent, "DoWork", options));
-			var nested = new DerivedTestClass (parent, "java.Base.Nested");
-			var method = SupportTypeBuilder.CreateMethod (nested, "DoWork", options);
-
-			Assert.True (new MethodCallback (nested, method, options, null, false).IsShadow);
-		}
-
-		[Test]
-		public void HandBoundBasePropertyRetainsDerivedVirtualSlot ()
-		{
-			var parent = SupportTypeBuilder.CreateClass ("java.Base", options);
-			var derived = new DerivedTestClass (parent);
-			var property = SupportTypeBuilder.CreateClassWithProperty ("Derived", "java.Derived", "Value", "int", options).Properties.Single ();
-			property.Getter.ManagedOverride = "new";
-			property.Getter.IsVirtual = true;
-			var writer = new BoundProperty (derived, property, options);
-
-			Assert.True (writer.IsShadow);
-			Assert.True (writer.IsVirtual);
-			Assert.False (writer.IsOverride);
-		}
-
-		[Test]
-		public void DifferentOverloadDoesNotRequireNew ()
-		{
-			var parent = SupportTypeBuilder.CreateClass ("java.Base", options);
-			parent.Methods.Add (SupportTypeBuilder.CreateMethod (parent, "DoWork", options));
-			var derived = new DerivedTestClass (parent);
-			var method = SupportTypeBuilder.CreateMethod (derived, "DoWork", options, parameters: new Parameter ("value", "int", "int", false));
-
-			Assert.False (derived.RequiresNew (method.AdjustedName, method));
-		}
-
-		sealed class DerivedTestClass : TestClass
-		{
-			readonly ClassGen parent;
-
-			public DerivedTestClass (ClassGen parent, string name = "java.Derived") : base (parent.FullName, name)
-			{
-				this.parent = parent;
-			}
-
-			public override ClassGen BaseGen => parent;
-		}
 
 		[Test]
 		public void PropertyRequiresNew ()

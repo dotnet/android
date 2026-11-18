@@ -20,7 +20,6 @@ namespace generator.SourceWriters
 
 			Name = method.Name;
 			IsStatic = method.IsStatic;
-			IsShadow = method.DeclaringType.RequiresNewStringOverload (method);
 
 			SetVisibility (method.Visibility);
 			ReturnType = new TypeReferenceWriter (opt.GetTypeReferenceName (method.RetVal).Replace ("Java.Lang.ICharSequence", "string").Replace ("global::string", "string"));

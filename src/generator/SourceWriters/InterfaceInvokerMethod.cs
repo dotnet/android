@@ -22,10 +22,6 @@ namespace generator.SourceWriters
 
 			IsPublic = true;
 			IsStatic = method.IsStatic;
-			var objectType = opt.SymbolTable.Lookup ("java.lang.Object") as GenBase;
-			IsShadow = objectType?.RequiresNew (Name, method) == true ||
-				objectType?.Methods.Any (m => m.Visibility != "private" && m.AdjustedName == Name &&
-					ParameterList.Equals (m.Parameters, method.Parameters)) == true;
 
 			method_callback = new MethodCallback (iface, method, opt, null, method.IsReturnCharSequence, iface.FullName + "Invoker");
 			SourceWriterExtensions.AddSupportedOSPlatform (Attributes, method, opt);

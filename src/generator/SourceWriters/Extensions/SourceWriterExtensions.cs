@@ -35,12 +35,10 @@ namespace generator.SourceWriters
 
 		public static void AddField (TypeWriter tw, GenBase type, Field field, CodeGenerationOptions opt)
 		{
-			var hidingType = tw is InterfaceConstsClass ? opt.SymbolTable.Lookup ("java.lang.Object") as GenBase : type;
-			var isShadow = hidingType?.RequiresNew (field, opt) == true;
 			if (field.NeedsProperty)
-				tw.Properties.Add (new BoundFieldAsProperty (type, field, opt) { IsShadow = isShadow });
+				tw.Properties.Add (new BoundFieldAsProperty (type, field, opt));
 			else
-				tw.Fields.Add (new BoundField (type, field, opt) { IsShadow = isShadow });
+				tw.Fields.Add (new BoundField (type, field, opt));
 		}
 
 		public static bool AddFields (TypeWriter tw, GenBase gen, List<Field> fields, HashSet<string> seen, CodeGenerationOptions opt, CodeGeneratorContext context)

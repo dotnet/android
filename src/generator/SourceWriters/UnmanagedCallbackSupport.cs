@@ -389,12 +389,12 @@ namespace generator.SourceWriters
 			return $"{UnmanagedCallbackSupport.TypedMarshalerType}.{HelperName}<{typeArgs}> ({args})";
 		}
 
-		public string GetTargetSignature (string thisType, string targetName, string nullableOperator, bool isShadow = false)
+		public string GetTargetSignature (string thisType, string targetName, string nullableOperator)
 		{
 			var parameters = new StringBuilder ($"{thisType} __this");
 			foreach (var p in TargetParameters)
 				parameters.Append (", ").Append (p);
-			return $"private {(isShadow ? "new " : "")}static {TargetReturnType} {targetName} ({parameters})";
+			return $"private static {TargetReturnType} {targetName} ({parameters})";
 		}
 	}
 }

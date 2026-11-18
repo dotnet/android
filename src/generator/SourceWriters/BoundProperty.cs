@@ -28,6 +28,7 @@ namespace generator.SourceWriters
 
 			if (is_virtual && withCallbacks) {
 				IsVirtual = true;
+				IsShadow = gen.RequiresNew (property);
 
 				getter_callback = new MethodCallback (gen, property.Getter, opt, property.AdjustedName, false);
 
@@ -66,8 +67,6 @@ namespace generator.SourceWriters
 				IsVirtual = false;
 				IsOverride = false;
 			}
-
-			IsShadow = !IsOverride && !ExplicitInterfaceImplementation.HasValue () && gen.RequiresNew (property, opt);
 
 			// Add [Obsolete] or [ObsoletedOSPlatform]
 			if (property.IsWholePropertyDeprecated) {

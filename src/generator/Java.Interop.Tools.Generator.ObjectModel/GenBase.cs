@@ -176,12 +176,6 @@ namespace MonoDroid.Generation
 				yield return g;
 		}
 
-		internal IEnumerable<GenBase> EnclosingBaseTypes () =>
-			Ancestors ().Where (g => FullName.StartsWith (g.FullName + ".", StringComparison.Ordinal));
-
-		internal bool InheritsCharSequenceEnumerator () =>
-			Ancestors ().Any (g => g.Interfaces.Any (i => i.FullName == "Java.Lang.ICharSequence"));
-
 		public string AnnotatedVisibility => support.AnnotatedVisibility;
 
 		// not: not currently assembly qualified, but it uses needed
@@ -916,36 +910,9 @@ namespace MonoDroid.Generation
 
 		public string RawVisibility => support.Visibility;
 
-		public bool RequiresNew (Property property) => RequiresNew (property, null);
-
-		internal bool RequiresNew (Property property, CodeGenerationOptions options) =>
-			property.Getter.ManagedOverride == "new" || RequiresNew (property.AdjustedName, options);
-
-		public bool RequiresNew (Field field) => RequiresNew (field, null);
-
-		internal bool RequiresNew (Field field, CodeGenerationOptions options) => RequiresNew (field.Name, options);
-
-		internal bool RequiresNewStringOverload (Method method) =>
-			Ancestors ().Any (a => a.Methods.Any (m => m.Visibility != "private" && m.Name == method.Name &&
-				(m.GenericArguments?.Count ?? 0) == (method.GenericArguments?.Count ?? 0) &&
-				m.Parameters.Select (p => p.Type.Replace ("Java.Lang.ICharSequence", "string"))
-					.SequenceEqual (method.Parameters.Select (p => p.Type.Replace ("Java.Lang.ICharSequence", "string")))));
-
-		internal bool RequiresNewEventArgs (string name) =>
-			Ancestors ().SelectMany (a => a.NestedTypes).OfType<InterfaceGen> ().Where (i => i.IsListener).Any (i =>
-				i.Methods.Any (m => m.EventName != string.Empty &&
-					(m.RetVal.IsVoid || m.IsEventHandlerWithHandledProperty) &&
-					(!m.IsSimpleEventHandler || m.IsEventHandlerWithHandledProperty) && i.GetArgsName (m) == name));
-
-		bool RequiresNew (string memberName, CodeGenerationOptions options)
+		public bool RequiresNew (Property property)
 		{
-			if (HidesBaseMember (memberName, null, options))
-				return true;
-
-			if (this is InterfaceGen)
-				return memberName == "Handle";
-
-			switch (memberName.ToLowerInvariant ()) {
+			switch (property.AdjustedName.ToLowerInvariant ()) {
 				case "handle":
 				case "gethashcode":
 				case "gettype":
@@ -955,20 +922,11 @@ namespace MonoDroid.Generation
 					return true;
 			}
 
-			return IsThrowable () && ThrowableRequiresNew.Contains (memberName);
+			return IsThrowable () && ThrowableRequiresNew.Contains (property.AdjustedName);
 		}
 
 		public bool RequiresNew (string memberName, Method method)
-			=> RequiresNew (memberName, method, null);
-
-		internal bool RequiresNew (string memberName, Method method, CodeGenerationOptions options)
 		{
-			if (HidesBaseMember (memberName, method, options))
-				return true;
-
-			if (this is InterfaceGen)
-				return memberName == "Handle";
-
 			switch (memberName.ToLowerInvariant ()) {
 				case "handle":
 					// The same name as a property always requires new, no matter the parameters
@@ -993,38 +951,6 @@ namespace MonoDroid.Generation
 
 			return IsThrowable () && ThrowableRequiresNew.Contains (memberName);
 		}
-
-		bool HidesBaseMember (string memberName, Method method, CodeGenerationOptions options)
-		{
-			IEnumerable<GenBase> ancestors = this is InterfaceGen
-				? GetAllDerivedInterfaces ().Where (i => i.RawVisibility == "public" && (options == null || !i.IsConstSugar (options)))
-				: Ancestors ();
-			foreach (var ancestor in ancestors) {
-				if (ancestor.Fields.Any (f => f.Visibility != "private" && f.Name == memberName) ||
-						ancestor.Properties.Any (p => p.Getter.Visibility != "private" && p.AdjustedName == memberName) ||
-						ancestor.NestedTypes.Any (t => t.Visibility != "private" && t.Name == memberName))
-					return true;
-
-				var methods = ancestor.Methods.AsEnumerable ();
-				if (ancestor is ClassGen klass && klass.IsAbstract)
-					methods = methods.Concat (klass.GetAllDerivedInterfaces ().SelectMany (i => i.Methods).Where (m =>
-						!m.IsStatic && !m.IsInterfaceDefaultMethod && !klass.ExplicitlyImplementedInterfaceMethods.Contains (m.GetSignature ()) &&
-						!klass.SkippedInterfaceMethods.Contains (m.GetSkipInvokerSignature ())));
-
-				if (methods.Any (m => m.Visibility != "private" &&
-						(m.AdjustedName == memberName && (method == null || HasMatchingParameters (m, method)) ||
-						(m.IsReturnCharSequence || m.Parameters.HasCharSequence) && m.Name == memberName &&
-						(method == null || HasMatchingParameters (m, method, baseStringOverload: true)))))
-					return true;
-			}
-			return false;
-		}
-
-		static bool HasMatchingParameters (Method ancestor, Method method, bool baseStringOverload = false) =>
-			(ancestor.GenericArguments?.Count ?? 0) == (method.GenericArguments?.Count ?? 0) &&
-			ancestor.Parameters.Count == method.Parameters.Count &&
-			ancestor.Parameters.Zip (method.Parameters, (p, other) => p.Equals (other) ||
-				(baseStringOverload ? p.Type.Replace ("Java.Lang.ICharSequence", "string") : p.Type) == other.Type).All (same => same);
 
 		public virtual void ResetValidation ()
 		{

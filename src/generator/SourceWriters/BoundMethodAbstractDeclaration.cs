@@ -37,14 +37,13 @@ namespace generator.SourceWriters
 			ExplicitInterfaceImplementation = method.ExplicitInterface;
 
 			IsAbstract = true;
+			IsShadow = impl.RequiresNew (method.Name, method);
 			SetVisibility (method.Visibility);
 
 			NewFirst = true;
 
 			if (string.Equals (method.ManagedOverride, "override", StringComparison.OrdinalIgnoreCase))
 				IsOverride = true;
-
-			IsShadow = !IsOverride && !ExplicitInterfaceImplementation.HasValue () && impl.RequiresNew (Name, method, opt);
 
 			method_callback = new MethodCallback (impl, method, opt, null, method.IsReturnCharSequence);
 
