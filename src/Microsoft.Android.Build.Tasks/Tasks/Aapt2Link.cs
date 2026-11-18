@@ -18,8 +18,10 @@ using Properties = Xamarin.Android.Tasks.Properties;
 namespace Microsoft.Android.Tasks {
 
 	//aapt2 link -o resources.apk.bk --manifest Foo.xml --java . --custom-package com.infinitespace_studios.blankforms -R foo2 -v --auto-add-overlay
-	public class Aapt2Link : Aapt2 {
-		static readonly Regex exraArgSplitRegEx = new Regex (@"[\""].+?[\""]|[\''].+?[\'']|[^ ]+", RegexOptions.Compiled | RegexOptions.IgnoreCase | RegexOptions.Multiline);
+	public partial class Aapt2Link : Aapt2 {
+		[GeneratedRegex (@"[\""].+?[\""]|[\''].+?[\'']|[^ ]+", RegexOptions.Compiled | RegexOptions.IgnoreCase | RegexOptions.Multiline)]
+		static partial Regex ExtraArgSplitRegex { get; }
+
 		public override string TaskPrefix => "A2L";
 
 		[Required]
@@ -280,7 +282,7 @@ namespace Microsoft.Android.Tasks {
 				cmd.Add ("--proto-format");
 
 			if (!ExtraArgs.IsNullOrWhiteSpace ()) {
-				foreach (Match match in exraArgSplitRegEx.Matches (ExtraArgs)) {
+				foreach (Match match in ExtraArgSplitRegex.Matches (ExtraArgs)) {
 					string value = match.Value.Trim (' ', '"', '\'');
 					if (!value.IsNullOrEmpty ())
 						cmd.Add (value);
