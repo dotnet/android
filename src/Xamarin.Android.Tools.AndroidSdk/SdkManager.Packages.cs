@@ -77,7 +77,20 @@ public partial class SdkManager
 		if (array.Length == 0)
 			throw new ArgumentException ("At least one package must be specified.", nameof (packages));
 
+		foreach (var package in array) {
+			if (package is null || package.Length == 0 || package.Any (c =>
+				!IsAsciiLetterOrDigit (c) && c != '.' && c != '-' && c != '_' && c != ';' && c != '/'))
+				throw new ArgumentException ($"Invalid Android SDK package ID: '{package}'.", nameof (packages));
+		}
+
 		return array;
+	}
+
+	static bool IsAsciiLetterOrDigit (char value)
+	{
+		return value >= '0' && value <= '9' ||
+			value >= 'A' && value <= 'Z' ||
+			value >= 'a' && value <= 'z';
 	}
 
 	internal static (IReadOnlyList<SdkPackage> Installed, IReadOnlyList<SdkPackage> Available) ParseSdkManagerList (string output)
