@@ -19,7 +19,9 @@
     <DefineConstants Condition=" '$(ExtraConstants)' != '' ">$(DefineConstants);$(ExtraConstants)</DefineConstants>
   </PropertyGroup>
 
-  <!-- Preserve historical NativeAOT warning policy for the CodeBehind fixture on CI. -->
+  <!--
+    IL3053 - The CodeBehind CI fixture has a historical aggregate AOT-analysis warning baseline.
+  -->
   <PropertyGroup Condition=" '$(RunningOnCI)' == 'true' And '$(_AndroidRuntime)' == 'NativeAOT' ">
     <NoWarn>IL3053</NoWarn>
   </PropertyGroup>

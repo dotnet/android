@@ -5,7 +5,9 @@
   <Import Project="..\..\build-tools\scripts\Xamarin.Android.Tools.Versioning.targets" />
 
   <PropertyGroup>
-    <!-- Preserve historical SDK/JDK formatting and message behavior. -->
+    <!--
+      CA1305 - SDK/JDK discovery and user-facing messages preserve historical formatting.
+    -->
     <NoWarn>$(NoWarn);CA1305</NoWarn>
     <AndroidToolsDisableMultiTargeting Condition=" '$(AndroidToolsDisableMultiTargeting)' == '' ">true</AndroidToolsDisableMultiTargeting>
     <TargetFrameworks>netstandard2.0</TargetFrameworks>

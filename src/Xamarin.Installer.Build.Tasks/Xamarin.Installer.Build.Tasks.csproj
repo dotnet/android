@@ -1,7 +1,9 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <Import Project="$(MSBuildThisFileDirectory)..\..\Configuration.props" />
   <PropertyGroup>
-    <!-- Preserve historical installer formatting and localized message behavior. -->
+    <!--
+      CA1305 - Installer messages and progress formatting preserve historical localization behavior.
+    -->
     <NoWarn>$(NoWarn);CA1305</NoWarn>
     <MemorySafetyRulesVersion>2</MemorySafetyRulesVersion>
   </PropertyGroup>

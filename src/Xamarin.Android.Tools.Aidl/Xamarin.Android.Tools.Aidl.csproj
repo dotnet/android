@@ -1,7 +1,9 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <Import Project="..\..\Configuration.props" />
   <PropertyGroup>
-    <!-- Preserve historical formatting behavior in generated AIDL source. -->
+    <!--
+      CA1305 - Generated AIDL source preserves the established formatting behavior.
+    -->
     <NoWarn>$(NoWarn);CA1305</NoWarn>
     <TargetFramework>netstandard2.0</TargetFramework>
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
