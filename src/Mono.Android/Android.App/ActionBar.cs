@@ -4,102 +4,101 @@ using System;
 
 using Android.Runtime;
 
-namespace Android.App {
+namespace Android.App; 
 
-	partial class ActionBar {
+partial class ActionBar {
 
-		public class TabEventArgs : EventArgs {
+	public class TabEventArgs : EventArgs {
 
-			public TabEventArgs (FragmentTransaction? fragmentTransaction)
-			{
-				FragmentTransaction = fragmentTransaction;
-			}
-
-			public FragmentTransaction? FragmentTransaction {get; private set;}
+		public TabEventArgs (FragmentTransaction? fragmentTransaction)
+		{
+			FragmentTransaction = fragmentTransaction;
 		}
 
-		partial class Tab {
+		public FragmentTransaction? FragmentTransaction {get; private set;}
+	}
 
-			WeakReference? dispatcher;
-			TabEventDispatcher Dispatcher {
-				get {
-					if (dispatcher == null || !dispatcher.IsAlive) {
-						dispatcher = new WeakReference (new TabEventDispatcher ());
-						SetTabListener ((TabEventDispatcher) dispatcher.Target!);
-					}
-					return (TabEventDispatcher) dispatcher.Target!;
+	partial class Tab {
+
+		WeakReference? dispatcher;
+		TabEventDispatcher Dispatcher {
+			get {
+				if (dispatcher == null || !dispatcher.IsAlive) {
+					dispatcher = new WeakReference (new TabEventDispatcher ());
+					SetTabListener ((TabEventDispatcher) dispatcher.Target!);
 				}
+				return (TabEventDispatcher) dispatcher.Target!;
 			}
+		}
 
-			public event EventHandler<TabEventArgs> TabReselected {
-				add {
-					Dispatcher.TabReselected += value;
-				}
-				remove {
-					Dispatcher.TabReselected -= value;
-				}
+		public event EventHandler<TabEventArgs> TabReselected {
+			add {
+				Dispatcher.TabReselected += value;
 			}
-
-			public event EventHandler<TabEventArgs> TabSelected {
-				add {
-					Dispatcher.TabSelected += value;
-				}
-				remove {
-					Dispatcher.TabSelected -= value;
-				}
+			remove {
+				Dispatcher.TabReselected -= value;
 			}
+		}
 
-			public event EventHandler<TabEventArgs> TabUnselected {
-				add {
-					Dispatcher.TabUnselected += value;
-				}
-				remove {
-					Dispatcher.TabUnselected -= value;
-				}
+		public event EventHandler<TabEventArgs> TabSelected {
+			add {
+				Dispatcher.TabSelected += value;
+			}
+			remove {
+				Dispatcher.TabSelected -= value;
+			}
+		}
+
+		public event EventHandler<TabEventArgs> TabUnselected {
+			add {
+				Dispatcher.TabUnselected += value;
+			}
+			remove {
+				Dispatcher.TabUnselected -= value;
 			}
 		}
 	}
+}
 
-	[Obsolete ("This class is obsoleted in this android platform")]
-	[Register ("mono/android/app/TabEventDispatcher")]
-	internal sealed class TabEventDispatcher : Java.Lang.Object, ActionBar.ITabListener {
+[Obsolete ("This class is obsoleted in this android platform")]
+[Register ("mono/android/app/TabEventDispatcher")]
+internal sealed class TabEventDispatcher : Java.Lang.Object, ActionBar.ITabListener {
 
-		public TabEventDispatcher ()
-			: base (
-					// SAFETY: The complete ASCII literal supplies stable, NUL-terminated JNI class-name bytes.
-					unsafe (JNIEnv.AllocObject ("mono/android/app/TabEventDispatcher"u8)),
-					JniHandleOwnership.TransferLocalRef)
-		{
-			unsafe {
-				// SAFETY: this peer owns the allocated handle; ()V supplies the zero-argument instance-constructor ABI.
-				JNIEnv.FinishCreateInstance (Handle, "()V"u8);
-			}
+	public TabEventDispatcher ()
+		: base (
+				// SAFETY: The complete ASCII literal supplies stable, NUL-terminated JNI class-name bytes.
+				unsafe (JNIEnv.AllocObject ("mono/android/app/TabEventDispatcher"u8)),
+				JniHandleOwnership.TransferLocalRef)
+	{
+		unsafe {
+			// SAFETY: this peer owns the allocated handle; ()V supplies the zero-argument instance-constructor ABI.
+			JNIEnv.FinishCreateInstance (Handle, "()V"u8);
 		}
+	}
 
-		public EventHandler<ActionBar.TabEventArgs>? TabReselected;
-		public EventHandler<ActionBar.TabEventArgs>? TabSelected;
-		public EventHandler<ActionBar.TabEventArgs>? TabUnselected;
+	public EventHandler<ActionBar.TabEventArgs>? TabReselected;
+	public EventHandler<ActionBar.TabEventArgs>? TabSelected;
+	public EventHandler<ActionBar.TabEventArgs>? TabUnselected;
 
-		public void OnTabReselected (ActionBar.Tab? tab, FragmentTransaction? ft)
-		{
-			var h = TabReselected;
-			if (h != null)
-				h (tab, new ActionBar.TabEventArgs (ft));
-		}
+	public void OnTabReselected (ActionBar.Tab? tab, FragmentTransaction? ft)
+	{
+		var h = TabReselected;
+		if (h != null)
+			h (tab, new ActionBar.TabEventArgs (ft));
+	}
 
-		public void OnTabSelected (ActionBar.Tab? tab, FragmentTransaction? ft)
-		{
-			var h = TabSelected;
-			if (h != null)
-				h (tab, new ActionBar.TabEventArgs (ft));
-		}
+	public void OnTabSelected (ActionBar.Tab? tab, FragmentTransaction? ft)
+	{
+		var h = TabSelected;
+		if (h != null)
+			h (tab, new ActionBar.TabEventArgs (ft));
+	}
 
-		public void OnTabUnselected (ActionBar.Tab? tab, FragmentTransaction? ft)
-		{
-			var h = TabUnselected;
-			if (h != null)
-				h (tab, new ActionBar.TabEventArgs (ft));
-		}
+	public void OnTabUnselected (ActionBar.Tab? tab, FragmentTransaction? ft)
+	{
+		var h = TabUnselected;
+		if (h != null)
+			h (tab, new ActionBar.TabEventArgs (ft));
 	}
 }
 

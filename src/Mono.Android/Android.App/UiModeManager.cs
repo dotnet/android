@@ -4,14 +4,13 @@ using Android.Content;
 
 #if ANDROID_8
 
-namespace Android.App {
+namespace Android.App; 
 
-	public partial class UiModeManager {
+public partial class UiModeManager {
 
-		public static UiModeManager? FromContext (Context context)
-		{
-			return context.GetSystemService (Context.UiModeService!) as UiModeManager;
-		}
+	public static UiModeManager? FromContext (Context context)
+	{
+		return context.GetSystemService (Context.UiModeService!) as UiModeManager;
 	}
 }
 

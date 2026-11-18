@@ -2,8 +2,8 @@ using System;
 using Android.Runtime;
 
 #if ANDROID_23
-namespace Android.Hardware.Camera2 
-{
+namespace Android.Hardware.Camera2; 
+
     // This was converted to an enum in .NET 8
     partial class CameraAccessException
     {
@@ -11,5 +11,4 @@ namespace Android.Hardware.Camera2
         [Register ("MAX_CAMERAS_IN_USE", ApiSince=23)]
         public const int MaxCamerasInUse = 5;
     }
-}
 #endif // ANDROID_23

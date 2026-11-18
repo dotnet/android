@@ -62,7 +62,7 @@ Reference official Android documentation where helpful:
 
 **MSBuild Tasks:** ALL NEW MSBuild tasks must support multithreaded execution and declare `[MSBuildMultiThreadableTask]` directly on each concrete task class. The attribute is not inherited; implementing `IMultiThreadableTask` alone does not enable in-process MT execution.
 
-- Use `MultithreadedAndroidTask` for new managed tasks. Do not derive new tasks from `AndroidTask`, `AsyncTask`, or `AndroidToolTask`, whose constructors capture the process working directory.
+- Use `MultithreadedAndroidTask` for new managed tasks, or `MultithreadedAndroidToolTask` for tasks that run an external tool. Do not derive new tasks from `AndroidTask`, `AsyncTask`, or `AndroidToolTask`, whose constructors capture the process working directory.
 - Use the engine-supplied `TaskEnvironment` for project-relative paths, environment access, and child processes. Keep constructors free of process-state dependencies; initialize `TaskEnvironment` to `Fallback` when implementing the interface directly so direct instantiation also works.
 - Before adding wrappers or workarounds, check the public APIs in the pinned dependency's reference assembly. XML documentation can include internal methods.
 - `TaskEnvironment.GetAbsolutePath (path)` roots a path but does not collapse `.` or `..`. When canonicalization is needed, call `.GetCanonicalForm ()` on the returned `AbsolutePath`; use `.Value` for string operations. Do not construct `FileInfo` or `DirectoryInfo` just to normalize paths.

@@ -32,7 +32,7 @@ namespace Java.IO {
 		/// transfer must match ownership; transferred references cannot be used again,
 		/// even if construction throws.
 		/// </safety>
-		protected unsafe IOException (IntPtr javaReference, JniHandleOwnership transfer) : base (javaReference, transfer)
+		protected IOException (IntPtr javaReference, JniHandleOwnership transfer) : base (javaReference, transfer)
 		{
 		}
 
@@ -108,7 +108,7 @@ namespace Java.IO {
 		/// transfer must match ownership; transferred references cannot be used again,
 		/// even if construction throws.
 		/// </safety>
-		public unsafe IOExceptionInvoker (IntPtr handle, JniHandleOwnership transfer) : base (handle, transfer)
+		public IOExceptionInvoker (IntPtr handle, JniHandleOwnership transfer) : base (handle, transfer)
 		{
 		}
 

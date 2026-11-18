@@ -2,10 +2,10 @@
 
 using System;
 
-namespace Java.Nio.Channels
+namespace Java.Nio.Channels;
+
+public partial class FileChannel
 {
-	public partial class FileChannel
-	{
 /*
 This had to be added for API compatibility with earlier API Levels.
 
@@ -18,15 +18,14 @@ So they were first changed in the metadata fixup first, but then it resulted
 in the API breakage. Therefore, I'm reverting the changes in metadata
 and adding explicit interface methods here instead.
 */
-		ISeekableByteChannel? ISeekableByteChannel.Position (long newPosition)
-		{
-			return Position (newPosition);
-		}
+	ISeekableByteChannel? ISeekableByteChannel.Position (long newPosition)
+	{
+		return Position (newPosition);
+	}
 
-		ISeekableByteChannel? ISeekableByteChannel.Truncate (long size)
-		{
-			return Truncate (size);
-		}
+	ISeekableByteChannel? ISeekableByteChannel.Truncate (long size)
+	{
+		return Truncate (size);
 	}
 }
 

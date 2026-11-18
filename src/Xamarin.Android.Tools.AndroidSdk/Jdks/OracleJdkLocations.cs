@@ -15,7 +15,7 @@ partial class JdkLocations {
 			yield break;
 		}
 		foreach (var path in GetOracleJdkPaths ()) {
-			var jdk = JdkInfo.TryGetJdkInfo (path, logger, "Oracle Registry", environmentVariables);
+			var jdk = JdkInfo.TryGetJdkInfo (path, logger, "Oracle Registry", environmentVariables, workingDirectory);
 			if (jdk == null) {
 				continue;
 			}
@@ -32,7 +32,7 @@ partial class JdkLocations {
 
 			if (!string.IsNullOrEmpty (currentVersion)) {
 
-				if (RegistryEx.CheckRegistryKeyForExecutable (RegistryEx.LocalMachine, subkey + "\\" + "1.8", "JavaHome", wow64, "bin", "java.exe", environmentVariables))
+				if (RegistryEx.CheckRegistryKeyForExecutable (RegistryEx.LocalMachine, subkey + "\\" + "1.8", "JavaHome", wow64, "bin", "java.exe", environmentVariables, workingDirectory))
 					yield return RegistryEx.GetValueString (RegistryEx.LocalMachine, subkey + "\\" + "1.8", "JavaHome", wow64) ?? "";
 			}
 		}

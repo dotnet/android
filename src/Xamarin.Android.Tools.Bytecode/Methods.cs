@@ -52,6 +52,8 @@ public sealed class MethodInfo {
 	// See dotnet/java-interop#1431 (Phase 2).
 	public  string?             KotlinName { get; set; }
 
+	public  bool                KotlinReturnNotNull { get; set; }
+
 	public MethodInfo (ConstantPool constantPool, ClassFile declaringType, Stream stream)
 	{
 		ConstantPool    = constantPool;
@@ -402,6 +404,8 @@ public sealed class ParameterInfo : IEquatable<ParameterInfo> {
 	// whose JVM type is `J`. null when no projection applies.
 	// See dotnet/java-interop#1431 (Phase 2).
 	public  string?     KotlinInlineClassJniType;
+
+	public  bool        KotlinNotNull;
 
 	public  MethodParameterAccessFlags      AccessFlags;
 

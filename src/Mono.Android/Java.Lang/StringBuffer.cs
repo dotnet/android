@@ -5,14 +5,13 @@
 
 using System;
 
-namespace Java.Lang
+namespace Java.Lang;
+
+public partial class StringBuffer
 {
-	public partial class StringBuffer
+	public new IAppendable Append (string s, int start, int end)
 	{
-		public new IAppendable Append (string s, int start, int end)
-		{
-			return Append (new Java.Lang.String (s), start, end);
-		}
+		return Append (new Java.Lang.String (s), start, end);
 	}
 }
 

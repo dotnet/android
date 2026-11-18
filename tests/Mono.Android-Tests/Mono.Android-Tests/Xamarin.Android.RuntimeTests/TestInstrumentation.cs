@@ -1,5 +1,7 @@
 #nullable enable
 
+extern alias JavaInteropTests;
+
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
@@ -12,7 +14,7 @@ using Xamarin.Android.UnitTests;
 namespace Xamarin.Android.RuntimeTests;
 
 [Instrumentation (Name = "xamarin.android.runtimetests.TestInstrumentation")]
-public class TestInstrumentation : Xamarin.Android.UnitTests.TestInstrumentation
+public class TestInstrumentation : MSTestInstrumentation
 {
 	const string JniReferenceLeakCategory = "JniReferenceLeak";
 
@@ -61,12 +63,6 @@ public class TestInstrumentation : Xamarin.Android.UnitTests.TestInstrumentation
 		}
 	}
 
-	static bool IsOnlyIncludedCategory (string category)
-	{
-		var categories = GetIncludedCategories ();
-		return categories.Length == 1 && string.Equals (categories [0], category, StringComparison.Ordinal);
-	}
-
 	static string [] GetIncludedCategories ()
 	{
 		var value = AppContext.GetData ("IncludeCategories") as string;
@@ -90,7 +86,7 @@ public class TestInstrumentation : Xamarin.Android.UnitTests.TestInstrumentation
 	{
 		return [
 			Assembly.GetExecutingAssembly (),
-			typeof (Java.InteropTests.JavaInterop_Tests_Reference).Assembly,
+			typeof (JavaInteropTests::Java.InteropTests.JavaInterop_Tests_Reference).Assembly,
 		];
 	}
 }

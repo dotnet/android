@@ -44,8 +44,10 @@ public static class KotlinFixups
 					if (class_metadata.Constructors == null)
 						continue;
 
-					foreach (var con in class_metadata.Constructors)
-						FixupConstructor (FindJavaConstructor (class_metadata, con, c), con);
+					foreach (var con in class_metadata.Constructors) {
+						var java_constructors = FindJavaConstructors (class_metadata, con, c);
+						FixupConstructor (java_constructors.FirstOrDefault (), con, java_constructors.Count == 1);
+					}
 				}
 
 				// Do fixups valid for both classes and modules
@@ -280,7 +282,7 @@ public static class KotlinFixups
 			FixupExtensionMethod (method);
 	}
 
-	static void FixupConstructor (MethodInfo? method, KotlinConstructor metadata)
+	static void FixupConstructor (MethodInfo? method, KotlinConstructor metadata, bool isOnlyMatch)
 	{
 		if (method is null)
 			return;
@@ -290,6 +292,15 @@ public static class KotlinFixups
 			Log.Debug ($"Kotlin: Hiding internal constructor {method.DeclaringType?.ThisClass.Name.Value} - {metadata.GetSignature ()}");
 			method.AccessFlags = SetVisibility (method.AccessFlags, MethodAccessFlags.Internal);
 		}
+
+		// Nullability is only safe when one Java constructor matches
+		// (e.g. a Java `Object` parameter matches any Kotlin type)
+		if (!isOnlyMatch || metadata.ValueParameters is not List<KotlinValueParameter> kotlin_parameters)
+			return;
+
+		var java_parameters = method.GetFilteredParameters ();
+		for (var i = 0; i < java_parameters.Length; i++)
+			java_parameters [i].KotlinNotNull = IsNotNullReference (kotlin_parameters [i].Type, java_parameters [i].Type.BinaryName);
 	}
 
 	static void FixupFunction (MethodInfo? method, KotlinFunction metadata, KotlinClass? kotlinClass, IDictionary<string, string> inlineClasses)
@@ -332,7 +343,15 @@ public static class KotlinFixups
 			// underlying primitive. Boxed positions are skipped.
 			// See dotnet/java-interop#1431 (Phase 2).
 			java_p.KotlinInlineClassJniType = GetInlineClassJniType (kotlin_p.Type.ClassName, java_p.Type.TypeSignature, inlineClasses);
+
+			java_p.KotlinNotNull = IsNotNullReference (kotlin_p.Type, java_p.Type.BinaryName);
 		}
+
+		// The extension receiver is the first Java parameter
+		if (metadata.ReceiverType != null && start > 0)
+			java_parameters [0].KotlinNotNull = IsNotNullReference (metadata.ReceiverType, java_parameters [0].Type.BinaryName);
+
+		method.KotlinReturnNotNull = IsNotNullReference (metadata.ReturnType, method.ReturnType.BinaryName);
 
 		// Handle erasure of Kotlin unsigned types
 		method.KotlinReturnType = GetKotlinType (method.ReturnType.TypeSignature, metadata.ReturnType?.ClassName);
@@ -434,6 +453,8 @@ public static class KotlinFixups
 		if (getter != null) {
 			getter.KotlinReturnType = GetKotlinType (getter.ReturnType.TypeSignature, metadata.ReturnType?.ClassName);
 			getter.KotlinInlineClassReturnJniType = GetInlineClassJniType (metadata.ReturnType?.ClassName, getter.ReturnType.TypeSignature, inlineClasses);
+			if (IsExactAccessor (getter, metadata.GetterJvmName, metadata))
+				getter.KotlinReturnNotNull = IsNotNullReference (metadata.ReturnType, getter.ReturnType.BinaryName);
 		}
 
 		if (setter != null) {
@@ -447,8 +468,16 @@ public static class KotlinFixups
 			// Handle erasure of Kotlin unsigned types
 			setter_parameter.KotlinType = GetKotlinType (setter_parameter.Type.TypeSignature, metadata.ReturnType?.ClassName);
 			setter_parameter.KotlinInlineClassJniType = GetInlineClassJniType (metadata.ReturnType?.ClassName, setter_parameter.Type.TypeSignature, inlineClasses);
+			if (IsExactAccessor (setter, metadata.SetterJvmName, metadata))
+				setter_parameter.KotlinNotNull = IsNotNullReference (metadata.ReturnType, setter_parameter.Type.BinaryName);
 		}
 	}
+
+	// FindJavaPropertyGetter/Setter match by name pattern only, so an unrelated
+	// `fun getX(): String?` can match. An extension property accessor also has
+	// a receiver parameter, so a match without one is the wrong method.
+	static bool IsExactAccessor (MethodInfo method, string? jvmName, KotlinProperty metadata)
+		=> metadata.ReceiverType is null && method.Name == jvmName;
 
 	static void FixupField (FieldInfo? field, KotlinProperty metadata)
 	{
@@ -466,19 +495,32 @@ public static class KotlinFixups
 
 		// Handle erasure of Kotlin unsigned types
 		field.KotlinType = GetKotlinType (field.Descriptor, metadata.ReturnType?.ClassName);
+
+		// A `lateinit` field is null until it is set
+		if (field.Name == metadata.FieldJvmName && !metadata.Flags.HasFlag (KotlinPropertyFlags.IsLateInit))
+			field.KotlinNotNull = IsNotNullReference (metadata.ReturnType, field.Descriptor);
 	}
 
-	static MethodInfo? FindJavaConstructor (KotlinClass kotlinClass, KotlinConstructor constructor, ClassFile klass)
+	// kotlinc writes @NotNull annotations, but R8 can remove them, so use the
+	// Kotlin metadata. Type parameters, platform types and unboxed value classes
+	// (e.g. `value class Maybe(val value: String?)`) can be null in Java, so the
+	// Kotlin type must be a non-null class that maps to the JVM reference type.
+	static bool IsNotNullReference (KotlinType? type, string jvmDescriptor)
+	{
+		if (type is null || type.Nullable || type.ClassName is null)
+			return false;
+		if (type.FlexibleUpperBound != null || type.FlexibleTypeCapabilitiesId != null)
+			return false;
+		// Primitive descriptors such as "I" are one character
+		return jvmDescriptor.Length > 1 && KotlinUtilities.ConvertKotlinTypeSignature (type) == jvmDescriptor;
+	}
+
+	static List<MethodInfo> FindJavaConstructors (KotlinClass kotlinClass, KotlinConstructor constructor, ClassFile klass)
 	{
 		var all_constructors = klass.Methods.Where (method => method.Name == "<init>" || method.Name == "<clinit>");
 		var possible_constructors = all_constructors.Where (method => method.GetFilteredParameters ().Length == constructor.ValueParameters?.Count);
 
-		foreach (var method in possible_constructors) {
-			if (ParametersMatch (kotlinClass, method, constructor.ValueParameters!))
-				return method;
-		}
-
-		return null;
+		return possible_constructors.Where (method => ParametersMatch (kotlinClass, method, constructor.ValueParameters ?? [])).ToList ();
 	}
 
 	static KotlinFunction? FindKotlinFunctionMetadata (KotlinFile? kotlinFile, MethodInfo javaMethod)

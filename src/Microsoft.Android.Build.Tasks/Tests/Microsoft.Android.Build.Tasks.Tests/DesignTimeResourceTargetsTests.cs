@@ -26,8 +26,9 @@ public class DesignTimeResourceTargetsTests : BaseTest
 		var update = LoadTarget (Path.Combine (tasks, "Xamarin.Android.Common.targets"), "UpdateAndroidResources");
 		var aapt = LoadTarget (Path.Combine (tasks, "MSBuild", "Xamarin", "Android", "Xamarin.Android.Aapt2.targets"), "_InjectAaptDependencies");
 		var tooling = LoadTarget (Path.Combine (tasks, "Microsoft.Android.Sdk", "targets", "Microsoft.Android.Sdk.Tooling.targets"), "_ResolveAndroidTooling");
-		var validation = tooling.Element ("ValidateJavaVersion") ?? throw new InvalidOperationException ("Missing Java version validation.");
+		var validation = LoadTarget (Path.Combine (tasks, "Microsoft.Android.Sdk", "targets", "Microsoft.Android.Sdk.Tooling.targets"), "_ValidateJavaVersion");
 		var validationCondition = validation.Attribute ("Condition") ?? throw new InvalidOperationException ("Missing Java version validation condition.");
+		tooling.Attribute ("DependsOnTargets")?.Remove ();
 		tooling.RemoveNodes ();
 		tooling.Add (new XElement ("PropertyGroup", new XAttribute (validationCondition), new XElement ("JavaValidation", "true")));
 

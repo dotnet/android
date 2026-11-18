@@ -1,13 +1,13 @@
 using Com.Xamarin.Android;
-using NUnit.Framework;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Xamarin.Android.JcwGenTests;
 
-[TestFixture]
-[Category ("ArrayMutation")]
+[TestClass]
+[TestCategory ("ArrayMutation")]
 public class ArrayMutationTests
 {
-	[Test]
+	[TestMethod]
 	public void UpdateInt32Array ()
 	{
 		using var peer = new ArrayMutation ();
@@ -16,14 +16,14 @@ public class ArrayMutationTests
 
 		int [] invalid = [0];
 		Assert.AreEqual (1, peer.UpdateInt32Array (invalid));
-		Assert.That (invalid, Is.EqualTo (new int [] { 0 }));
+		CollectionAssert.AreEqual (new int [] { 0 }, invalid);
 
 		int [] value = [1, 2, 3];
 		Assert.AreEqual (0, peer.UpdateInt32Array (value));
-		Assert.That (value, Is.EqualTo (new int [] { 2, 4, 6 }));
+		CollectionAssert.AreEqual (new int [] { 2, 4, 6 }, value);
 	}
 
-	[Test]
+	[TestMethod]
 	public void UpdateInt32ArrayArray ()
 	{
 		using var peer = new ArrayMutation ();
@@ -33,7 +33,7 @@ public class ArrayMutationTests
 		int [][] invalid = [[0]];
 		Assert.AreEqual (1, peer.UpdateInt32ArrayArray (invalid));
 		int [][] expectedInvalid = [[0]];
-		Assert.That (invalid, Is.EqualTo (expectedInvalid));
+		CollectionAssert.AreEqual (expectedInvalid, invalid);
 
 		int [][] value = [
 			[11, 12, 13],
@@ -44,10 +44,10 @@ public class ArrayMutationTests
 			[22, 24, 26],
 			[42, 44, 46],
 		];
-		Assert.That (value, Is.EqualTo (expected));
+		CollectionAssert.AreEqual (expected, value);
 	}
 
-	[Test]
+	[TestMethod]
 	public void UpdateInt32ArrayArrayArray ()
 	{
 		using var peer = new ArrayMutation ();
@@ -57,7 +57,7 @@ public class ArrayMutationTests
 		int [][][] invalid = [[[1]]];
 		Assert.AreEqual (1, peer.UpdateInt32ArrayArrayArray (invalid));
 		int [][][] expectedInvalid = [[[1]]];
-		Assert.That (invalid, Is.EqualTo (expectedInvalid));
+		CollectionAssert.AreEqual (expectedInvalid, invalid);
 
 		int [][][] value = [
 			[
@@ -80,6 +80,6 @@ public class ArrayMutationTests
 				[442, 444, 446],
 			],
 		];
-		Assert.That (value, Is.EqualTo (expected));
+		CollectionAssert.AreEqual (expected, value);
 	}
 }

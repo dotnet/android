@@ -106,7 +106,7 @@ Same assembly as above. These test individual MSBuild tasks in isolation with `M
 | **d8/dex** | `--filter "FullyQualifiedName~D8Tests"` | D8 dexing task |
 | **filter assemblies** | `--filter "FullyQualifiedName~FilterAssembliesTests"` | Assembly filtering |
 | **resource generation** | `--filter "FullyQualifiedName~GenerateResourceCaseMapTests"` | Resource case map generation |
-| **key tool** | `--filter "FullyQualifiedName~KeyToolTests"` | Keystore/signing tasks |
+| **debug key** | `--filter "FullyQualifiedName~AndroidCreateDebugKeyTests"` | Debug keystore creation task |
 | **bundletool commands** | `--filter "FullyQualifiedName~BundleToolTaskTests"` | Command-line generation only; no project builds or device |
 | **ndk** | `--filter "FullyQualifiedName~AndroidNdkToolsTests"` | Canonical NDK tools and Clang runtime discovery |
 
@@ -142,7 +142,7 @@ architecture. Local workload setup installs the previous Android SDK.
 
 ## On-Device Runtime Tests (full-build — requires local SDK + device)
 
-Mono.Android device tests use stock NUnit through Microsoft Testing Platform (MTP), not NUnitLite. This changed in dotnet/android#11224.
+`Mono.Android.NET-Tests` (including the Java.Interop fixtures) and `Xamarin.Android.JcwGen-Tests` use MSTest with `MSTest.SourceGeneration` through Microsoft Testing Platform (MTP).
 
 Build/install with `-t:Install`, then run `dotnet test --no-build --report-trx` from the test project's directory so the project-local `global.json` selects the MTP runner.
 
@@ -171,6 +171,8 @@ The `Mono.Android.NET-Tests.csproj` dynamically excludes categories based on run
 - **NativeAOT runtime**: Excludes `NativeAOTIgnore`, `SSL`, `NTLM`
 
 Other categories: `SSL`, `InetAccess`, `JavaList`, `RuntimeConfig`, `Intune`, `NTLM`
+
+To run a subset, pass `-p:IncludeCategories=<Category>` to **both** install and test; `--filter` is not supported.
 
 Command:
 ```bash

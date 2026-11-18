@@ -296,15 +296,21 @@ public class KotlinProperty : KotlinMethodBase
 	public KotlinValueParameter? SetterValueParameter { get; set; }
 	public int GetterFlags { get; set; }
 	public int SetterFlags { get; set; }
+	public string? GetterJvmName { get; set; }
+	public string? SetterJvmName { get; set; }
+	public string? FieldJvmName { get; set; }
 
 	internal static KotlinProperty? FromProtobuf (Property p, JvmNameResolver resolver)
 	{
 		if (p is null)
 			return null;
 
+		var name = resolver.GetString (p.Name);
+		var sig = p.GetPropertySignature ();
+
 		return new KotlinProperty {
 			Flags = (KotlinPropertyFlags)p.Flags,
-			Name = resolver.GetString (p.Name),
+			Name = name,
 			ReturnTypeId = p.ReturnTypeId,
 			ReturnType = KotlinType.FromProtobuf (p.ReturnType, resolver),
 			ReceiverType = KotlinType.FromProtobuf (p.ReceiverType, resolver),
@@ -312,6 +318,10 @@ public class KotlinProperty : KotlinMethodBase
 			SetterValueParameter = KotlinValueParameter.FromProtobuf (p.SetterValueParameter, resolver),
 			GetterFlags = p.GetterFlags,
 			SetterFlags = p.SetterFlags,
+			GetterJvmName = sig?.Getter is null || !sig.Getter.ShouldSerializeName () ? null : resolver.GetString (sig.Getter.Name),
+			SetterJvmName = sig?.Setter is null || !sig.Setter.ShouldSerializeName () ? null : resolver.GetString (sig.Setter.Name),
+			// kotlinc omits the field name when it is the property name
+			FieldJvmName = sig?.Field is null ? null : sig.Field.ShouldSerializeName () ? resolver.GetString (sig.Field.Name) : name,
 			TypeParameters = p.TypeParameters.ToList (resolver, KotlinTypeParameter.FromProtobuf),
 			VersionRequirements = p.VersionRequirements
 		};

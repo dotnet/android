@@ -3,12 +3,11 @@ using System;
 using Android.Runtime;
 using Java.Time.Chrono;
 
-namespace Java.Time
+namespace Java.Time;
+
+public sealed partial class LocalDate
 {
-	public sealed partial class LocalDate
-	{
-		public int CompareTo (Java.Lang.Object obj) => CompareTo (obj.JavaCast<IChronoLocalDate> ());
-	}
+	public int CompareTo (Java.Lang.Object obj) => CompareTo (obj.JavaCast<IChronoLocalDate> ());
 }
 #endif
 

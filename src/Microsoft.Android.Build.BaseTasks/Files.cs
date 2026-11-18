@@ -168,9 +168,20 @@ public static class Files
 
 	public static bool CopyIfChanged (string source, string destination)
 	{
+		return CopyIfChanged (source, destination, GetFileWriteRetryAttempts (), GetFileWriteRetryDelay ());
+	}
+
+	public static bool CopyIfChanged (string source, string destination, TaskEnvironment taskEnvironment)
+	{
+		if (taskEnvironment == null)
+			throw new ArgumentNullException (nameof (taskEnvironment));
+
+		return CopyIfChanged (source, destination, GetFileWriteRetryAttempts (taskEnvironment), GetFileWriteRetryDelay (taskEnvironment));
+	}
+
+	static bool CopyIfChanged (string source, string destination, int attempts, int delay)
+	{
 		int retryCount = 0;
-		int attempts = GetFileWriteRetryAttempts ();
-		int delay = GetFileWriteRetryDelay ();
 		while (retryCount <= attempts) {
 			try {
 				return CopyIfChangedOnce (source, destination);
@@ -249,12 +260,16 @@ public static class Files
 		if (taskEnvironment == null)
 			throw new ArgumentNullException (nameof (taskEnvironment));
 
-		int attempts = int.TryParse (taskEnvironment.GetEnvironmentVariable ("DOTNET_ANDROID_FILE_WRITE_RETRY_ATTEMPTS"),
-			NumberStyles.Integer, CultureInfo.InvariantCulture, out var retries) ? retries : DEFAULT_FILE_WRITE_RETRY_ATTEMPTS;
-		int delay = int.TryParse (taskEnvironment.GetEnvironmentVariable ("DOTNET_ANDROID_FILE_WRITE_RETRY_DELAY_MS"),
-			NumberStyles.Integer, CultureInfo.InvariantCulture, out var milliseconds) ? milliseconds : DEFAULT_FILE_WRITE_RETRY_DELAY_MS;
-		return CopyIfStreamChanged (stream, destination, attempts, delay);
+		return CopyIfStreamChanged (stream, destination, GetFileWriteRetryAttempts (taskEnvironment), GetFileWriteRetryDelay (taskEnvironment));
 	}
+
+	static int GetFileWriteRetryAttempts (TaskEnvironment taskEnvironment) =>
+		int.TryParse (taskEnvironment.GetEnvironmentVariable ("DOTNET_ANDROID_FILE_WRITE_RETRY_ATTEMPTS"),
+			NumberStyles.Integer, CultureInfo.InvariantCulture, out var retries) ? retries : DEFAULT_FILE_WRITE_RETRY_ATTEMPTS;
+
+	static int GetFileWriteRetryDelay (TaskEnvironment taskEnvironment) =>
+		int.TryParse (taskEnvironment.GetEnvironmentVariable ("DOTNET_ANDROID_FILE_WRITE_RETRY_DELAY_MS"),
+			NumberStyles.Integer, CultureInfo.InvariantCulture, out var milliseconds) ? milliseconds : DEFAULT_FILE_WRITE_RETRY_DELAY_MS;
 
 	public static bool CopyIfStreamChanged (Stream stream, AbsolutePath destination, TaskEnvironment taskEnvironment)
 	{

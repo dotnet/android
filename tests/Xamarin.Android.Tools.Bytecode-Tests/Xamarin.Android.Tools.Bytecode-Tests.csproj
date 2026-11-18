@@ -35,6 +35,7 @@
     <EmbeddedResource Include="$(IntermediateOutputPath)kotlin-gradle\classes\xat\bytecode\tests\MyColor.class" LogicalName="Xamarin.Android.Tools.BytecodeTests.kotlin-gradle.MyColor.class" />
     <EmbeddedResource Include="$(IntermediateOutputPath)kotlin-gradle\classes\xat\bytecode\tests\MyAlpha.class" LogicalName="Xamarin.Android.Tools.BytecodeTests.kotlin-gradle.MyAlpha.class" />
     <EmbeddedResource Include="$(IntermediateOutputPath)kotlin-gradle\classes\xat\bytecode\tests\MyDp.class" LogicalName="Xamarin.Android.Tools.BytecodeTests.kotlin-gradle.MyDp.class" />
+    <EmbeddedResource Include="$(IntermediateOutputPath)kotlin-gradle\classes\xat\bytecode\tests\Nullability.class" LogicalName="Xamarin.Android.Tools.BytecodeTests.kotlin-gradle.Nullability.class" />
 
     <EmbeddedResource Include="$(IntermediateOutputPath)classes\com\xamarin\NotNullClass.class" />
     <EmbeddedResource Include="$(IntermediateOutputPath)classes\com\xamarin\IJavaInterface.class" />

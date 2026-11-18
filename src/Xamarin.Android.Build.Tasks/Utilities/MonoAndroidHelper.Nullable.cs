@@ -56,22 +56,5 @@ public partial class MonoAndroidHelper
 		return exe;
 	}
 
-	public static AndroidVersions GetSupportedVersions (IBuildEngine4 engine, string[]? referenceAssemblyPaths)
-		=> GetSupportedVersions (engine, referenceAssemblyPaths?.Select (Path.GetFullPath).ToArray (), TaskEnvironment.Fallback);
-
-	public static AndroidVersions GetSupportedVersions (IBuildEngine4 engine, string[]? referenceAssemblyPaths, TaskEnvironment taskEnvironment)
-	{
-		// GetAbsolutePath roots paths but does not collapse ".." for the cache key.
-		var paths = (referenceAssemblyPaths ?? []).Select (path => new DirectoryInfo (taskEnvironment.GetAbsolutePath (path)).FullName).ToArray ();
-		// Share immutable API metadata by input, never a process-wide "current SDK".
-		var key = (typeof (MonoAndroidHelper).Assembly.Location, nameof (AndroidVersions), string.Join ("\0", paths));
-		var cached = engine.GetRegisteredTaskObjectAssemblyLocal<AndroidVersions> (key, RegisteredTaskObjectLifetime.Build);
-		if (cached != null)
-			return cached;
-
-		var versions = new AndroidVersions (paths);
-		engine.RegisterTaskObjectAssemblyLocal (key, versions, RegisteredTaskObjectLifetime.Build);
-		return versions;
-	}
 #endif  // MSBUILD
 }

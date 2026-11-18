@@ -5,112 +5,111 @@ using Java.Interop;
 
 #if ANDROID_30
 
-namespace Android.Telephony {
+namespace Android.Telephony; 
 
-	public partial class CellInfo {
+public partial class CellInfo {
 
-		static Delegate? cb_getCellIdentity;
+	static Delegate? cb_getCellIdentity;
 #pragma warning disable 0169
-		// Added in API 30: https://developer.android.com/reference/android/telephony/CellInfo#getCellIdentity()
-		[global::System.Runtime.Versioning.SupportedOSPlatform ("android30.0")]
-		static Delegate GetGetCellIdentityHandler ()
-		{
-			return cb_getCellIdentity ??= new _JniMarshal_PP_L (n_GetCellIdentity);
-		}
+	// Added in API 30: https://developer.android.com/reference/android/telephony/CellInfo#getCellIdentity()
+	[global::System.Runtime.Versioning.SupportedOSPlatform ("android30.0")]
+	static Delegate GetGetCellIdentityHandler ()
+	{
+		return cb_getCellIdentity ??= new _JniMarshal_PP_L (n_GetCellIdentity);
+	}
 
-		[global::System.Diagnostics.DebuggerDisableUserUnhandledExceptions]
-		// Added in API 30: https://developer.android.com/reference/android/telephony/CellInfo#getCellIdentity()
-		[global::System.Runtime.Versioning.SupportedOSPlatform ("android30.0")]
-		static IntPtr n_GetCellIdentity (IntPtr jnienv, IntPtr native__this)
-		{
-			unsafe {
-				// SAFETY: JNI supplies this thread's environment and borrowed CellInfo receiver;
-				// the rooted callback returns a new CellIdentity local to the calling JNI frame, or default after a reported exception.
-				if (!global::Java.Interop.JniEnvironment.BeginMarshalMethod (jnienv, out var __envp, out var __r))
-					return default;
+	[global::System.Diagnostics.DebuggerDisableUserUnhandledExceptions]
+	// Added in API 30: https://developer.android.com/reference/android/telephony/CellInfo#getCellIdentity()
+	[global::System.Runtime.Versioning.SupportedOSPlatform ("android30.0")]
+	static IntPtr n_GetCellIdentity (IntPtr jnienv, IntPtr native__this)
+	{
+		unsafe {
+			// SAFETY: JNI supplies this thread's environment and borrowed CellInfo receiver;
+			// the rooted callback returns a new CellIdentity local to the calling JNI frame, or default after a reported exception.
+			if (!global::Java.Interop.JniEnvironment.BeginMarshalMethod (jnienv, out var __envp, out var __r))
+				return default;
 
-				try {
-					var __this = global::Java.Lang.Object.GetObject<Android.Telephony.CellInfo> (jnienv, native__this, JniHandleOwnership.DoNotTransfer)!;
-					return JNIEnv.ToLocalJniHandle (__this.CellIdentity);
-				} catch (global::System.Exception __e) {
-					__r.OnUserUnhandledException (ref __envp, __e);
-					return default;
-				} finally {
-					global::Java.Interop.JniEnvironment.EndMarshalMethod (ref __envp);
-				}
+			try {
+				var __this = global::Java.Lang.Object.GetObject<Android.Telephony.CellInfo> (jnienv, native__this, JniHandleOwnership.DoNotTransfer)!;
+				return JNIEnv.ToLocalJniHandle (__this.CellIdentity);
+			} catch (global::System.Exception __e) {
+				__r.OnUserUnhandledException (ref __envp, __e);
+				return default;
+			} finally {
+				global::Java.Interop.JniEnvironment.EndMarshalMethod (ref __envp);
 			}
 		}
+	}
 #pragma warning restore 0169
 
-		// Added in API 30: https://developer.android.com/reference/android/telephony/CellInfo#getCellIdentity()
-		[global::System.Runtime.Versioning.SupportedOSPlatform ("android30.0")]
-		public virtual Android.Telephony.CellIdentity CellIdentity {
-			// Metadata.xml XPath method reference: path="/api/package[@name='android.telephony']/class[@name='CellInfo']/method[@name='getCellIdentity' and count(parameter)=0]"
-			[Register ("getCellIdentity", "()Landroid/telephony/CellIdentity;", "GetGetCellIdentityHandler", ApiSince = 30)]
-			get {
-				const string __id = "getCellIdentity.()Landroid/telephony/CellIdentity;";
-				unsafe {
-					// SAFETY: the parameterless CellInfo getter returns the declared peer type and transfers its local reference to the managed wrapper.
-					try {
-						var __rm = _members.InstanceMethods.InvokeVirtualObjectMethod (__id, this, null);
-						return global::Java.Lang.Object.GetObject<Android.Telephony.CellIdentity> (__rm.Handle, JniHandleOwnership.TransferLocalRef)!;
-					}
-			                catch (Java.Lang.NoSuchMethodError) {
-						throw new Java.Lang.AbstractMethodError (__id);
-					}
-				}
-			}
-		}
-
-		static Delegate? cb_getCellSignalStrength;
-#pragma warning disable 0169
-		// Added in API 30: https://developer.android.com/reference/android/telephony/CellInfo#getCellSignalStrength()
-		[global::System.Runtime.Versioning.SupportedOSPlatform ("android30.0")]
-		static Delegate GetGetCellSignalStrengthHandler ()
-		{
-			return cb_getCellSignalStrength ??= new _JniMarshal_PP_L (n_GetCellSignalStrength);
-		}
-
-		[global::System.Diagnostics.DebuggerDisableUserUnhandledExceptions]
-		// Added in API 30: https://developer.android.com/reference/android/telephony/CellInfo#getCellSignalStrength()
-		[global::System.Runtime.Versioning.SupportedOSPlatform ("android30.0")]
-		static IntPtr n_GetCellSignalStrength (IntPtr jnienv, IntPtr native__this)
-		{
+	// Added in API 30: https://developer.android.com/reference/android/telephony/CellInfo#getCellIdentity()
+	[global::System.Runtime.Versioning.SupportedOSPlatform ("android30.0")]
+	public virtual Android.Telephony.CellIdentity CellIdentity {
+		// Metadata.xml XPath method reference: path="/api/package[@name='android.telephony']/class[@name='CellInfo']/method[@name='getCellIdentity' and count(parameter)=0]"
+		[Register ("getCellIdentity", "()Landroid/telephony/CellIdentity;", "GetGetCellIdentityHandler", ApiSince = 30)]
+		get {
+			const string __id = "getCellIdentity.()Landroid/telephony/CellIdentity;";
 			unsafe {
-				// SAFETY: JNI supplies this thread's environment and borrowed CellInfo receiver;
-				// the rooted callback returns a new CellSignalStrength local to the calling JNI frame, or default after a reported exception.
-				if (!global::Java.Interop.JniEnvironment.BeginMarshalMethod (jnienv, out var __envp, out var __r))
-					return default;
-
+				// SAFETY: the parameterless CellInfo getter returns the declared peer type and transfers its local reference to the managed wrapper.
 				try {
-					var __this = global::Java.Lang.Object.GetObject<Android.Telephony.CellInfo> (jnienv, native__this, JniHandleOwnership.DoNotTransfer)!;
-					return JNIEnv.ToLocalJniHandle (__this.CellSignalStrength);
-				} catch (global::System.Exception __e) {
-					__r.OnUserUnhandledException (ref __envp, __e);
-					return default;
-				} finally {
-					global::Java.Interop.JniEnvironment.EndMarshalMethod (ref __envp);
+					var __rm = _members.InstanceMethods.InvokeVirtualObjectMethod (__id, this, null);
+					return global::Java.Lang.Object.GetObject<Android.Telephony.CellIdentity> (__rm.Handle, JniHandleOwnership.TransferLocalRef)!;
+				}
+		                catch (Java.Lang.NoSuchMethodError) {
+					throw new Java.Lang.AbstractMethodError (__id);
 				}
 			}
 		}
+	}
+
+	static Delegate? cb_getCellSignalStrength;
+#pragma warning disable 0169
+	// Added in API 30: https://developer.android.com/reference/android/telephony/CellInfo#getCellSignalStrength()
+	[global::System.Runtime.Versioning.SupportedOSPlatform ("android30.0")]
+	static Delegate GetGetCellSignalStrengthHandler ()
+	{
+		return cb_getCellSignalStrength ??= new _JniMarshal_PP_L (n_GetCellSignalStrength);
+	}
+
+	[global::System.Diagnostics.DebuggerDisableUserUnhandledExceptions]
+	// Added in API 30: https://developer.android.com/reference/android/telephony/CellInfo#getCellSignalStrength()
+	[global::System.Runtime.Versioning.SupportedOSPlatform ("android30.0")]
+	static IntPtr n_GetCellSignalStrength (IntPtr jnienv, IntPtr native__this)
+	{
+		unsafe {
+			// SAFETY: JNI supplies this thread's environment and borrowed CellInfo receiver;
+			// the rooted callback returns a new CellSignalStrength local to the calling JNI frame, or default after a reported exception.
+			if (!global::Java.Interop.JniEnvironment.BeginMarshalMethod (jnienv, out var __envp, out var __r))
+				return default;
+
+			try {
+				var __this = global::Java.Lang.Object.GetObject<Android.Telephony.CellInfo> (jnienv, native__this, JniHandleOwnership.DoNotTransfer)!;
+				return JNIEnv.ToLocalJniHandle (__this.CellSignalStrength);
+			} catch (global::System.Exception __e) {
+				__r.OnUserUnhandledException (ref __envp, __e);
+				return default;
+			} finally {
+				global::Java.Interop.JniEnvironment.EndMarshalMethod (ref __envp);
+			}
+		}
+	}
 #pragma warning restore 0169
 
-		// Added in API 30: https://developer.android.com/reference/android/telephony/CellInfo#getCellSignalStrength()
-		[global::System.Runtime.Versioning.SupportedOSPlatform ("android30.0")]
-		public virtual Android.Telephony.CellSignalStrength CellSignalStrength {
-			// Metadata.xml XPath method reference: path="/api/package[@name='android.telephony']/class[@name='CellInfo']/method[@name='getCellSignalStrength' and count(parameter)=0]"
-			[Register ("getCellSignalStrength", "()Landroid/telephony/CellSignalStrength;", "GetGetCellSignalStrengthHandler", ApiSince = 30)]
-			get {
-				const string __id = "getCellSignalStrength.()Landroid/telephony/CellSignalStrength;";
-				unsafe {
-					// SAFETY: the parameterless CellInfo getter returns the declared peer type and transfers its local reference to the managed wrapper.
-					try {
-						var __rm = _members.InstanceMethods.InvokeVirtualObjectMethod (__id, this, null);
-						return global::Java.Lang.Object.GetObject<Android.Telephony.CellSignalStrength> (__rm.Handle, JniHandleOwnership.TransferLocalRef)!;
-					}
-					catch (Java.Lang.NoSuchMethodError) {
-						throw new Java.Lang.AbstractMethodError (__id);
-					}
+	// Added in API 30: https://developer.android.com/reference/android/telephony/CellInfo#getCellSignalStrength()
+	[global::System.Runtime.Versioning.SupportedOSPlatform ("android30.0")]
+	public virtual Android.Telephony.CellSignalStrength CellSignalStrength {
+		// Metadata.xml XPath method reference: path="/api/package[@name='android.telephony']/class[@name='CellInfo']/method[@name='getCellSignalStrength' and count(parameter)=0]"
+		[Register ("getCellSignalStrength", "()Landroid/telephony/CellSignalStrength;", "GetGetCellSignalStrengthHandler", ApiSince = 30)]
+		get {
+			const string __id = "getCellSignalStrength.()Landroid/telephony/CellSignalStrength;";
+			unsafe {
+				// SAFETY: the parameterless CellInfo getter returns the declared peer type and transfers its local reference to the managed wrapper.
+				try {
+					var __rm = _members.InstanceMethods.InvokeVirtualObjectMethod (__id, this, null);
+					return global::Java.Lang.Object.GetObject<Android.Telephony.CellSignalStrength> (__rm.Handle, JniHandleOwnership.TransferLocalRef)!;
+				}
+				catch (Java.Lang.NoSuchMethodError) {
+					throw new Java.Lang.AbstractMethodError (__id);
 				}
 			}
 		}

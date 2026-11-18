@@ -1,13 +1,12 @@
 #if ANDROID_18
 
-namespace Android.Bluetooth
+namespace Android.Bluetooth;
+
+public partial class BluetoothGattServer
 {
-	public partial class BluetoothGattServer
+	public bool SendResponse (BluetoothDevice device, int requestId, Android.Bluetooth.GattStatus status, int offset, byte [] value)
 	{
-		public bool SendResponse (BluetoothDevice device, int requestId, Android.Bluetooth.GattStatus status, int offset, byte [] value)
-		{
-			return SendResponse (device, requestId, (ProfileState) status, offset, value);
-		}
+		return SendResponse (device, requestId, (ProfileState) status, offset, value);
 	}
 }
 

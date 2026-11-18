@@ -5,15 +5,15 @@ using System.Linq;
 using Android.Runtime;
 
 using Net.Dot.Android.Test;
-using NUnit.Framework;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Java.InteropTests;
 
-[TestFixture]
-[Category ("InterfaceCollections")]
+[TestClass]
+[TestCategory ("InterfaceCollections")]
 public class InterfaceCollectionMarshallingTests
 {
-	[Test]
+	[TestMethod]
 	public void JavaList_InterfaceElementsPreserveIdentityAndRoundTrip ()
 	{
 		using var holder = new RawInterfaceCollectionHolder ();
@@ -41,7 +41,7 @@ public class InterfaceCollectionMarshallingTests
 			Assert.AreSame (second, list [4], "added list reference");
 			CollectionAssert.AreEqual (
 				new [] { 11, 11, 22, 22 },
-				list.Where (value => value != null).Select (value => value.Value),
+				list.Where (value => value != null).Select (value => value.Value).ToArray (),
 				"list enumeration");
 
 			var roundTrip = holder.RoundTripList (list);
@@ -62,7 +62,7 @@ public class InterfaceCollectionMarshallingTests
 		}
 	}
 
-	[Test]
+	[TestMethod]
 	public void JavaList_InheritedInterfaceUsesExplicitInvoker ()
 	{
 		using var holder = new RawInterfaceCollectionHolder ();
@@ -77,7 +77,7 @@ public class InterfaceCollectionMarshallingTests
 		}
 	}
 
-	[Test]
+	[TestMethod]
 	public void JavaCollection_InterfaceElementsSupportOperationsAndRoundTrip ()
 	{
 		using var holder = new RawInterfaceCollectionHolder ();
@@ -117,7 +117,7 @@ public class InterfaceCollectionMarshallingTests
 		}
 	}
 
-	[Test]
+	[TestMethod]
 	public void JavaDictionary_InterfaceKeysSupportOperationsAndRoundTrip ()
 	{
 		using var holder = new RawInterfaceCollectionHolder ();
@@ -154,7 +154,7 @@ public class InterfaceCollectionMarshallingTests
 		}
 	}
 
-	[Test]
+	[TestMethod]
 	public void JavaDictionary_InterfaceValuesPreserveDuplicatesAndRoundTrip ()
 	{
 		using var holder = new RawInterfaceCollectionHolder ();
@@ -174,7 +174,7 @@ public class InterfaceCollectionMarshallingTests
 			Assert.IsNull (dictionary ["null"], "null dictionary value");
 			CollectionAssert.AreEqual (
 				new IValueProvider [] { first, duplicate, second, null },
-				dictionary.Select (entry => entry.Value),
+				dictionary.Select (entry => entry.Value).ToArray (),
 				"dictionary value enumeration");
 
 			dictionary.Add ("added", second);
@@ -196,7 +196,7 @@ public class InterfaceCollectionMarshallingTests
 		}
 	}
 
-	[Test]
+	[TestMethod]
 	public void JavaDictionary_InterfaceKeysAndValuesPreserveIdentityAndRoundTrip ()
 	{
 		using var holder = new RawInterfaceCollectionHolder ();

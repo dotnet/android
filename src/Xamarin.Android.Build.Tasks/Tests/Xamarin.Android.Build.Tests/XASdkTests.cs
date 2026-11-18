@@ -52,7 +52,7 @@ public class XASdkTests : BaseTest
 		var standalone = GetTaskCounts ();
 		Assert.AreEqual (1, standalone ["ResolveSdks"]);
 		Assert.AreEqual (1, standalone ["ResolveAndroidTooling"]);
-		Assert.AreEqual (1, standalone ["ValidateJavaVersion"]);
+		Assert.AreEqual (1, standalone ["_ValidateJavaVersion"]);
 		Assert.IsFalse (dotnet.Build (parameters: parameters.Concat (["LatestSupportedJavaVersion=1.0"]).ToArray (), msbuildArguments: arguments),
 			"A changed Java limit must still be validated.");
 		StringAssertEx.Contains ("error XA0030", dotnet.LastBuildOutput);
@@ -62,7 +62,7 @@ public class XASdkTests : BaseTest
 			var counts = GetTaskCounts ();
 			Assert.AreEqual (1, counts ["ResolveSdks"], "Only the outer build should discover SDKs.");
 			Assert.AreEqual (1, counts ["ResolveAndroidTooling"], "Only the outer build should resolve Android tooling.");
-			Assert.AreEqual (1, counts ["ValidateJavaVersion"], "Only the outer build should validate Java.");
+			Assert.AreEqual (1, counts ["_ValidateJavaVersion"], "Only the outer build should validate Java.");
 			Assert.GreaterOrEqual (counts ["RuntimeIdentifierToAbi"], 3, "Both RID-specific target bodies must still execute.");
 		}
 
@@ -71,12 +71,12 @@ public class XASdkTests : BaseTest
 			var counts = new Dictionary<string, int> {
 				["ResolveSdks"] = 0,
 				["ResolveAndroidTooling"] = 0,
-				["ValidateJavaVersion"] = 0,
 				["RuntimeIdentifierToAbi"] = 0,
 			};
 			foreach (var task in counts.Keys.ToArray ()) {
-				counts [task] = dotnet.LastBuildOutput.Count (line => line.Contains ($"Task \"{task}\" (TaskId:", StringComparison.Ordinal));
+				counts [task] = CountTask (dotnet.LastBuildOutput, task);
 			}
+			counts ["_ValidateJavaVersion"] = CountTarget (dotnet.LastBuildOutput, "_ValidateJavaVersion");
 			return counts;
 		}
 	}
@@ -115,7 +115,7 @@ public class XASdkTests : BaseTest
 		Assert.IsTrue (builder.Build (project));
 		Assert.AreEqual (1, CountTask (builder.LastBuildOutput, "ResolveSdks"));
 		Assert.AreEqual (1, CountTask (builder.LastBuildOutput, "ResolveAndroidTooling"));
-		Assert.AreEqual (1, CountTask (builder.LastBuildOutput, "ValidateJavaVersion"));
+		Assert.AreEqual (1, CountTarget (builder.LastBuildOutput, "_ValidateJavaVersion"));
 		Assert.GreaterOrEqual (CountTask (builder.LastBuildOutput, "RuntimeIdentifierToAbi"), 2);
 		builder.Output.AssertTargetIsNotSkipped ("_ResolveImplementationAssembliesForTypeMap");
 		builder.Output.AssertTargetIsNotSkipped (runtime == AndroidRuntime.CoreCLR ?
@@ -153,7 +153,7 @@ public class XASdkTests : BaseTest
 		builder.Target = "_TestNestedTooling";
 		builder.Verbosity = Microsoft.Build.Framework.LoggerVerbosity.Diagnostic;
 		Assert.IsTrue (builder.Build (project, parameters: [$"_TestInnerProperties={innerProperties}"]));
-		Assert.AreEqual (javaCalls, CountTask (builder.LastBuildOutput, "ValidateJavaVersion"));
+		Assert.AreEqual (javaCalls, CountTarget (builder.LastBuildOutput, "_ValidateJavaVersion"));
 		Assert.AreEqual (2, CountTask (builder.LastBuildOutput, "ResolveAndroidTooling"));
 		Assert.AreEqual (innerProperties.StartsWith ("AndroidSdkBuildToolsVersion", StringComparison.Ordinal) ? 1 : 2,
 			CountTask (builder.LastBuildOutput, "ResolveSdks"));
@@ -192,7 +192,7 @@ public class XASdkTests : BaseTest
 		Assert.IsTrue (builder.Build (project, parameters: [$"AndroidNdkDirectory=\"{ndkPath}\""]));
 		Assert.AreEqual (1, CountTask (builder.LastBuildOutput, "ResolveSdks"));
 		Assert.AreEqual (1, CountTask (builder.LastBuildOutput, "ResolveAndroidTooling"));
-		Assert.AreEqual (1, CountTask (builder.LastBuildOutput, "ValidateJavaVersion"));
+		Assert.AreEqual (1, CountTarget (builder.LastBuildOutput, "_ValidateJavaVersion"));
 	}
 
 	[Test]
@@ -222,11 +222,16 @@ public class XASdkTests : BaseTest
 		Assert.IsTrue (builder.Build (project));
 		Assert.AreEqual (2, CountTask (builder.LastBuildOutput, "ResolveSdks"));
 		Assert.AreEqual (2, CountTask (builder.LastBuildOutput, "ResolveAndroidTooling"));
-		Assert.AreEqual (2, CountTask (builder.LastBuildOutput, "ValidateJavaVersion"));
+		Assert.AreEqual (2, CountTarget (builder.LastBuildOutput, "_ValidateJavaVersion"));
 	}
 
 	static int CountTask (IEnumerable<string> output, string task) =>
 		output.Count (line => line.Contains ($"Task \"{task}\" (TaskId:", StringComparison.Ordinal));
+
+	// Executed targets log `Target "Name: (TargetId:N)" in file ...`; skipped ones do not.
+	static int CountTarget (IEnumerable<string> output, string target) =>
+		output.Count (line => line.Contains ($"Target \"{target}: (TargetId:", StringComparison.Ordinal) &&
+			line.Contains ("\" in file \"", StringComparison.Ordinal));
 
 	[Test]
 	public void DotNetWorkloadSearchUsesEnglishDescription ()
