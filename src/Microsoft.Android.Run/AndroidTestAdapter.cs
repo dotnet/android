@@ -359,7 +359,13 @@ class AndroidTestAdapter(
 		if (localTrxPath == null)
 			throw new InvalidOperationException ($"Failed to pull TRX file from device: {bundleResults.ResultsPath}");
 
-		var testResults = ParseTrxFile (localTrxPath);
+		List<TrxTestResult> testResults;
+		try {
+			testResults = ParseTrxFile (localTrxPath);
+		} finally {
+			// Do not leave a copy in the temp directory, where CI may publish it as an extra test run.
+			File.Delete (localTrxPath);
+		}
 		foreach (var result in testResults) {
 			// Build the failure message including stack trace for non-TRX consumers
 			var failureMessage = result.ErrorMessage ?? "Test failed";
