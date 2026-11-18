@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -451,6 +452,58 @@ namespace Xamarin.Android.Tools.BytecodeTests
 			// Ensure the fixup "fixed" the parameter "element" type to "ubyte"
 			Assert.AreEqual ("ubyte", java_methods.ElementAt (0).GetParameters ().Single (p => p.Name == "element").KotlinType);
 			Assert.AreEqual ("ubyte", java_methods.ElementAt (1).GetParameters ().Single (p => p.Name == "element").KotlinType);
+		}
+
+		[Test]
+		public void AmbiguousFunctionMetadata_SyntheticBridgeIsSkippedWithoutWarning ()
+		{
+			var klass = LoadClassFile ("AmbiguousOverloads.class");
+			var bridge = klass.Methods.Single (m => m.Name == "put" && m.Descriptor == "(Ljava/lang/Object;)V");
+
+			var warnings = FixupAndCaptureWarnings (klass);
+
+			// Both `put` functions match the bridge. The first match, the internal `put(count: Int)`, would hide it.
+			Assert.IsTrue (bridge.AccessFlags.HasFlag (MethodAccessFlags.Public));
+			Assert.IsEmpty (warnings);
+		}
+
+		[Test]
+		public void AmbiguousFunctionMetadata_ReportsWarning ()
+		{
+			var klass = LoadClassFile ("AmbiguousOverloads.class");
+			var method = klass.Methods.Single (m => m.Name == "put" && m.Descriptor == "(Ljava/lang/Object;)V");
+
+			// Make the bridge look like a public API method.
+			method.AccessFlags = MethodAccessFlags.Public;
+
+			var warnings = FixupAndCaptureWarnings (klass);
+
+			Assert.IsTrue (method.AccessFlags.HasFlag (MethodAccessFlags.Public));
+			Assert.AreEqual (1, warnings.Count, string.Join (Environment.NewLine, warnings));
+			StringAssert.StartsWith ("class-parse: warning XA4268: ", warnings [0]);
+			StringAssert.Contains ("'xat/bytecode/tests/AmbiguousOverloads.put(Ljava/lang/Object;)V'", warnings [0]);
+			StringAssert.Contains ("put(I)V, put(Ljava/lang/String;)V", warnings [0]);
+		}
+
+		[Test]
+		public void JvmNameOnlySignatureHasNoJvmSignature ()
+		{
+			var klass = LoadClassFile ("AmbiguousOverloads.class");
+			var function = GetClassMetadataForClass (klass).Functions.Single (f => f.Name == "original");
+
+			Assert.AreEqual ("renamed", function.JvmName);
+			Assert.IsNull (function.JvmSignature);
+		}
+
+		static List<string> FixupAndCaptureWarnings (ClassFile klass)
+		{
+			var warnings = new List<string> ();
+			Log.OnLog = (level, verbosity, format, args) => {
+				if (level == TraceLevel.Warning)
+					warnings.Add (string.Format (format, args));
+			};
+			KotlinFixups.Fixup (new [] { klass });
+			return warnings;
 		}
 
 		[Test]
