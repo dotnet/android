@@ -19,7 +19,7 @@ namespace System.Text.JsonTests {
 				string text = JsonSerializer.Serialize (42);
 				Assert.AreEqual ("42", text);
 			} else {
-				Assert.Ignore ("Reflection-based JSON serialization requires dynamic code.");
+				Assert.Inconclusive ("Reflection-based JSON serialization requires dynamic code.");
 			}
 		}
 
@@ -32,7 +32,7 @@ namespace System.Text.JsonTests {
 				object value = JsonSerializer.Deserialize ("42", typeof (int));
 				Assert.AreEqual (42, value);
 			} else {
-				Assert.Ignore ("Reflection-based JSON deserialization requires dynamic code.");
+				Assert.Inconclusive ("Reflection-based JSON deserialization requires dynamic code.");
 			}
 		}
 	}
