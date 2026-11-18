@@ -144,9 +144,9 @@
     <XABundleToolVersion Condition="'$(XABundleToolVersion)' == ''">1.18.3</XABundleToolVersion>
     <XABundleToolHash Condition="'$(XABundleToolHash)' == ''">A099CFA1543F55593BC2ED16A70A7C67FE54B1747BB7301F37FDFD6D91028E29</XABundleToolHash>
     <!-- Microsoft OpenJDK: https://learn.microsoft.com/en-us/java/openjdk/download -->
-    <MicrosoftOpenJDKVersion Condition="'$(MicrosoftOpenJDKVersion)' == ''">25.0.4.1</MicrosoftOpenJDKVersion>
+    <MicrosoftOpenJDKVersion Condition="'$(MicrosoftOpenJDKVersion)' == ''">25.0.5.1</MicrosoftOpenJDKVersion>
     <MicrosoftOpenJDKFolder Condition="'$(MicrosoftOpenJDKFolder)' == ''">jdk-25</MicrosoftOpenJDKFolder>
-    <MicrosoftOpenJDKRootDirName Condition="'$(MicrosoftOpenJDKRootDirName)' == ''">jdk-25.0.4.1+1</MicrosoftOpenJDKRootDirName>
+    <MicrosoftOpenJDKRootDirName Condition="'$(MicrosoftOpenJDKRootDirName)' == ''">jdk-25.0.5.1+2</MicrosoftOpenJDKRootDirName>
     <JavaSdkVersion Condition=" '$(JavaSdkVersion)' == '' ">$(MicrosoftOpenJDKVersion)</JavaSdkVersion>
     <MinimumSupportedJavaSdkVersion Condition=" '$(MinimumSupportedJavaSdkVersion)' == '' ">21.0</MinimumSupportedJavaSdkVersion>
     <JavaSdkDirectory Condition=" '$(JavaSdkDirectory)' == '' ">$(AndroidToolchainDirectory)\$(MicrosoftOpenJDKFolder)</JavaSdkDirectory>
