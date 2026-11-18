@@ -21,5 +21,6 @@
   </PropertyGroup>
 
   <Import Project="..\..\Configuration.props" />
+  <Import Project="..\..\build-tools\scripts\LongBranchNames.props" />
 
 </Project>
