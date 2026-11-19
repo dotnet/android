@@ -11,7 +11,7 @@ namespace Java.InteropTests
 	[TestClass]
 	public class JniEnvironmentTests
 	{
-		[DataTestMethod]
+		[TestMethod]
 		[DataRow (false, "toThrow")]
 		[DataRow (true, "klass")]
 		[TestCategory ("ManagedConstruction")]
