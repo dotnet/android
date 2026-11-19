@@ -215,6 +215,11 @@ namespace MonoDroid.Generation
 		// The value class has an `init` block, so the struct constructor calls `constructor-impl`.
 		public bool KotlinInlineClassHasInit { get; set; }
 
+		// True when `underlying` is the struct's `Value` type, so the struct can replace it.
+		public bool IsKotlinInlineClassOf (CodeGenerationOptions opt, ISymbol underlying) =>
+			IsKotlinInlineClass &&
+			opt.SymbolTable.Lookup (Java.Interop.Tools.JavaTypeSystem.Models.JniTypeName.ParseExact (KotlinInlineClassUnderlyingJniType).Type)?.FullName == underlying.FullName;
+
 		// The value-class struct writer emits no nested types (e.g. `Companion`), so members that use them are skipped.
 		public override void AddNestedType (GenBase gen)
 		{

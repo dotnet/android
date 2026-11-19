@@ -130,6 +130,7 @@ namespace generatortests
 				      <method abstract='false' deprecated='not deprecated' final='true' name='all' jni-signature='([Lcom/example/Outer$Value;)V' native='false' return='void' jni-return='V' static='false' synchronized='false' visibility='public'>
 				        <parameter name='values' type='com.example.Outer.Value[]' jni-type='[Lcom/example/Outer$Value;' />
 				      </method>
+				      <method abstract='false' deprecated='not deprecated' final='true' name='unsigned' jni-signature='()I' native='false' return='uint' jni-return='I' static='false' synchronized='false' visibility='public' kotlin-inline-class-return-jni-type='Lcom/example/Outer$Value;' />
 				      <method abstract='false' deprecated='not deprecated' final='true' name='companion' jni-signature='()Lcom/example/Outer$Value$Companion;' native='false' return='com.example.Outer.Value.Companion' jni-return='Lcom/example/Outer$Value$Companion;' static='false' synchronized='false' visibility='public' />
 				    </class>
 				    <class abstract='false' deprecated='not deprecated' extends='java.lang.Object' extends-generic-aware='java.lang.Object' jni-extends='Ljava/lang/Object;' final='true' name='Outer.Value' static='true' visibility='public' jni-signature='Lcom/example/Outer$Value;' kotlin-inline-class='true' kotlin-inline-class-underlying-jni-type='I' />
@@ -148,6 +149,9 @@ namespace generatortests
 
 			// Arrays of value classes can't be marshaled, so the member is skipped.
 			StringAssert.DoesNotContain (" All (", output);
+
+			// A `uint` (for example from Metadata.xml) is not the struct's `int`, so it is not projected.
+			StringAssert.Contains ("uint Unsigned ()", output);
 
 			// The struct writer emits no nested types, so members that use them are skipped.
 			StringAssert.DoesNotContain ("Companion", output);

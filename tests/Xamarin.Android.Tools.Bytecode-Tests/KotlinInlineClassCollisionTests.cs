@@ -87,7 +87,7 @@ namespace Xamarin.Android.Tools.BytecodeTests
 			// MyDp is Float-backed -> JNI primitive `F`.
 			Assert.AreEqual ("F", byName ["xat/bytecode/tests/MyDp"].KotlinInlineClassUnderlyingJniType);
 
-			// Only MyDp has an `init` block.
+			// Only MyDp has an `init` block. MyColor's secondary constructor is not the primary `constructor-impl`.
 			Assert.IsTrue (byName ["xat/bytecode/tests/MyDp"].KotlinInlineClassHasInit);
 			Assert.IsFalse (byName ["xat/bytecode/tests/MyColor"].KotlinInlineClassHasInit);
 

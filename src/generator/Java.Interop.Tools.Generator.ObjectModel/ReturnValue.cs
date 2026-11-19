@@ -34,7 +34,9 @@ namespace MonoDroid.Generation {
 
 		public ReturnValue Clone (Method owner)
 		{
-			return new ReturnValue (owner, java_type, managed_type, is_enumified, NotNull);
+			return new ReturnValue (owner, java_type, managed_type, is_enumified, NotNull) {
+				unboxed_kotlin_inline_class = unboxed_kotlin_inline_class,
+			};
 		}
 
 		public string DefaultValue {
@@ -162,7 +164,7 @@ namespace MonoDroid.Generation {
 			if (javaName == null)
 				return;
 			var wrapper = opt.SymbolTable.Lookup (javaName, type_params) as ClassGen;
-			if (wrapper == null || !wrapper.IsKotlinInlineClass || wrapper.KotlinInlineClassUnderlyingJniType != sym.JniName)
+			if (wrapper == null || !wrapper.IsKotlinInlineClassOf (opt, sym))
 				return;
 			managed_type = wrapper.FullName;
 			unboxed_kotlin_inline_class = true;

@@ -8,7 +8,10 @@ package xat.bytecode.tests
 // that Jetpack Compose triggers with Color/TextUnit/etc. and is the case
 // step (1) of dotnet/java-interop#1431 must handle.
 @JvmInline
-value class MyColor(val value: ULong)
+value class MyColor(val value: ULong) {
+    // Also compiles to `constructor-impl`, with another signature.
+    constructor(value: Int) : this(value.toULong())
+}
 
 @JvmInline
 value class MyAlpha(val value: ULong)

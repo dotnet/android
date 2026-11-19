@@ -136,8 +136,10 @@ namespace Xamarin.Android.Tools.Bytecode
 
 					c.KotlinInlineClassUnderlyingJniType = backing.Descriptor;
 
-					// Without an `init` block, kotlinc writes `constructor-impl` as "load the argument, return it" (2 bytes).
-					c.KotlinInlineClassHasInit = c.Methods.FirstOrDefault (m => m.Name == "constructor-impl")?.Attributes.Get<CodeAttribute> ()?.ByteCode is { Length: not 2 };
+					// Without an `init` block, kotlinc writes the primary `constructor-impl` as "load the argument, return it" (2 bytes).
+					// Secondary constructors also compile to `constructor-impl`, with other signatures.
+					var primary = $"({backing.Descriptor}){backing.Descriptor}";
+					c.KotlinInlineClassHasInit = c.Methods.FirstOrDefault (m => m.Name == "constructor-impl" && m.Descriptor == primary)?.Attributes.Get<CodeAttribute> ()?.ByteCode is { Length: > 2 };
 
 					// Kotlin's `KotlinType.ClassName` strings are stored without the
 					// leading `L` but with a trailing `;` (e.g. `com/example/MyColor;`).
