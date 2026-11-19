@@ -82,7 +82,7 @@ namespace xamarin::android {
 		static constexpr std::string_view base_apk_name = { "/base.apk" };
 
 		//
-		// Indexes must match these of trhe `appDirs` array in src/java-runtime/mono/android/MonoPackageManager.java
+		// Indexes must match these of trhe `appDirs` array in src/java-runtime/java/net/dot/android/CoreClrPackageManager.java
 		//
 		static constexpr size_t APP_DIRS_FILES_DIR_INDEX = 0uz;
 		static constexpr size_t APP_DIRS_CACHE_DIR_INDEX = 1uz;

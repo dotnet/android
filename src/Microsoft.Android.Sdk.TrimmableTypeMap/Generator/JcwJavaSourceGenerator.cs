@@ -142,7 +142,7 @@ public sealed class JcwJavaSourceGenerator
 		// Application and Instrumentation types cannot call registerNatives in their
 		// static initializer — the runtime isn't ready yet at that point. Instead we
 		// rely on ApplicationRegistration.registerApplications() (invoked from
-		// MonoPackageManager.LoadApplication, which runs from MonoRuntimeProvider.attachInfo)
+		// CoreClrPackageManager.LoadApplication, which runs from MonoRuntimeProvider.attachInfo)
 		// to register natives for these classes. However, Application.attachBaseContext
 		// fires *before* ContentProvider.attachInfo, so an override of attachBaseContext
 		// on a user Application subclass can invoke a native callback before

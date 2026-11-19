@@ -173,4 +173,35 @@ public class TrimmableTypeMapManifestAliasTests
 			() => manifestGenerator.Generate (manifest, [], assemblyInfo));
 		Assert.AreEqual ("There can be only one [assembly:Application] attribute defined.", exception.Message);
 	}
+
+	[TestCase ("", "net.dot.android.CoreClrAppComponentFactory", "android:appComponentFactory")]
+	[TestCase ("tools:replace=\"android:label\"", "net.dot.android.CoreClrAppComponentFactory", "android:label,android:appComponentFactory")]
+	[TestCase ("android:appComponentFactory=\"my.app.Factory\"", "my.app.Factory", null)]
+	public void AppComponentFactoryIsAddedUnlessTemplateDeclaresOne (string applicationAttributes, string expectedFactory, string? expectedReplace)
+	{
+		var manifest = XDocument.Parse ($$"""
+			<manifest xmlns:android="http://schemas.android.com/apk/res/android" xmlns:tools="http://schemas.android.com/tools" package="my.app">
+			  <application {{applicationAttributes}} />
+			</manifest>
+			""");
+		if (applicationAttributes.Length == 0) {
+			manifest.Root?.Attribute (XNamespace.Xmlns + "tools")?.Remove ();
+		}
+		var manifestGenerator = new ManifestGenerator {
+			PackageName = "my.app",
+			MinSdkVersion = "24",
+			TargetSdkVersion = "35",
+			RuntimeProviderJavaName = "mono.MonoRuntimeProvider",
+			AppComponentFactoryJavaName = "net.dot.android.CoreClrAppComponentFactory",
+		};
+
+		var (document, _) = manifestGenerator.Generate (manifest, [], new AssemblyManifestInfo ());
+		XNamespace android = "http://schemas.android.com/apk/res/android";
+		XNamespace tools = "http://schemas.android.com/tools";
+		var application = document.Root?.Element ("application");
+		Assert.IsNotNull (application);
+		Assert.AreEqual (expectedFactory, (string?) application.Attribute (android + "appComponentFactory"));
+		Assert.AreEqual (expectedReplace, (string?) application.Attribute (tools + "replace"));
+		StringAssert.Contains ("xmlns:tools=\"http://schemas.android.com/tools\"", document.ToString ());
+	}
 }

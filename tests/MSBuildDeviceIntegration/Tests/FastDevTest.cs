@@ -28,7 +28,7 @@ namespace Xamarin.Android.Build.Tests
 					Assert.IsTrue (DexUtils.ContainsClass (className, dexFile, AndroidSdkPath), $"`{dexFile}` should include `{className}`!");
 					className = "Lmono/MonoRuntimeProvider;";
 					Assert.IsTrue (DexUtils.ContainsClass (className, dexFile, AndroidSdkPath), $"`{dexFile}` should include `{className}`!");
-					className = "Lmono/MonoPackageManager;";
+					className = "Lnet/dot/android/CoreClrPackageManager;";
 					Assert.IsTrue (DexUtils.ContainsClass (className, dexFile, AndroidSdkPath), $"`{dexFile}` should include `{className}`!");
 				} finally {
 					File.Delete (dexFile);
