@@ -188,7 +188,7 @@ namespace Xamarin.Android.Build.Tests
 					helper.AssertContainsEntry ($"lib/{abi}/lib{proj.ProjectName}.so");
 					continue; // NOTE: NativeAOT will not include the other files below
 				}
-				helper.AssertContainsEntry ($"lib/{abi}/libnet-android.so");
+				helper.AssertContainsEntry ($"lib/{abi}/libdotnet-android.so");
 				if (rids.Length > 1) {
 					helper.AssertContainsEntry ($"assemblies/{abi}/System.Private.CoreLib.dll",        shouldContainEntry: expectEmbeddedAssembies);
 				} else {

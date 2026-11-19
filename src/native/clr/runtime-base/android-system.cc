@@ -445,9 +445,9 @@ AndroidSystem::detect_embedded_dso_mode (jstring_array_wrapper& appDirs) noexcep
 	// appDirs[Constants::APP_DIRS_DATA_DIR_INDEX] points to the native library directory
 	const char *app_data_dir = appDirs[Constants::APP_DIRS_DATA_DIR_INDEX].get_cstr ();
 	char stack_buffer [Util::LocalPathBufferSize];
-	char *runtime_library_path = Util::join_paths (stack_buffer, sizeof (stack_buffer), app_data_dir, "libnet-android.so"sv);
+	char *runtime_library_path = Util::join_paths (stack_buffer, sizeof (stack_buffer), app_data_dir, "libdotnet-android.so"sv);
 
-	log_debugf (LOG_ASSEMBLY, "Checking if libnet-android was unpacked to %s", runtime_library_path);
+	log_debugf (LOG_ASSEMBLY, "Checking if libdotnet-android was unpacked to %s", runtime_library_path);
 	if (!Util::file_exists (runtime_library_path)) {
 		log_debugf (LOG_ASSEMBLY, "%s not found, assuming application/android:extractNativeLibs == false", runtime_library_path);
 		set_embedded_dso_mode_enabled (true);

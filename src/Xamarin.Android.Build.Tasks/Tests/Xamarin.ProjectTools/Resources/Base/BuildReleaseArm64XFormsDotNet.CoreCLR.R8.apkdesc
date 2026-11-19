@@ -40,7 +40,7 @@
     "lib/arm64-v8a/libcoreclr.so": {
       "Size": 4669832
     },
-    "lib/arm64-v8a/libnet-android.so": {
+    "lib/arm64-v8a/libdotnet-android.so": {
       "Size": 111152
     },
     "lib/arm64-v8a/libSystem.Globalization.Native.so": {

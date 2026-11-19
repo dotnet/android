@@ -1574,8 +1574,8 @@ because xbuild doesn't support framework reference assemblies.
 
     <!-- Android for .NET native runtime. Always loaded by the Java startup code. Note that this is the
          "generic" name of the runtime library - the actual name of the file might be different. If
-         this is the case, the `ArchiveFileName` will be set to `libnet-android.so` -->
-    <_AndroidNativeLibraryNeverJniPreload Include="libnet-android.so" />
+         this is the case, the `ArchiveFileName` will be set to `libdotnet-android.so` -->
+    <_AndroidNativeLibraryNeverJniPreload Include="libdotnet-android.so" />
   </ItemGroup>
 
   <ItemGroup Condition=" '$(AndroidIgnoreAllJniPreload)' == 'true' ">

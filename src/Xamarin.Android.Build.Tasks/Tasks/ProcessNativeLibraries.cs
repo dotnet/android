@@ -11,7 +11,7 @@ namespace Xamarin.Android.Tasks
 	/// <summary>
 	/// Processes .so files coming from @(ResolvedFileToPublish).
 	/// * Checks if ABI is valid
-	/// * Fixes up libnet-android.so based on $(AndroidIncludeDebugSymbols)
+	/// * Fixes up libdotnet-android.so based on $(AndroidIncludeDebugSymbols)
 	/// </summary>
 	[MSBuildMultiThreadableTask]
 	public class ProcessNativeLibraries : MultithreadedAndroidTask
@@ -59,15 +59,15 @@ namespace Xamarin.Android.Tasks
 					continue;
 				}
 
-				if (fileName.StartsWith ("libmono-android", StringComparison.Ordinal) || fileName.StartsWith ("libnet-android", StringComparison.Ordinal)) {
+				if (fileName.StartsWith ("libmono-android", StringComparison.Ordinal) || fileName.StartsWith ("libdotnet-android", StringComparison.Ordinal)) {
 					if (fileName.EndsWith (".debug", StringComparison.Ordinal)) {
 						if (!IncludeDebugSymbols)
 							continue;
-						library.SetMetadata ("ArchiveFileName", "libnet-android.so");
+						library.SetMetadata ("ArchiveFileName", "libdotnet-android.so");
 					} else if (fileName.EndsWith (".release", StringComparison.Ordinal)) {
 						if (IncludeDebugSymbols)
 							continue;
-						library.SetMetadata ("ArchiveFileName", "libnet-android.so");
+						library.SetMetadata ("ArchiveFileName", "libdotnet-android.so");
 					}
 					Log.LogDebugMessage ($"Including runtime: {library}");
 				} else if (DebugNativeLibraries.Contains (fileName)) {

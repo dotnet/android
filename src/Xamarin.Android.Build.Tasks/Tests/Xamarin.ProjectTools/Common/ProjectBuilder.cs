@@ -222,7 +222,7 @@ namespace Xamarin.ProjectTools
 			}
 
 			foreach (var runtimeDir in runtimeDirs) {
-				foreach (var file in Directory.EnumerateFiles (runtimeDir, "libnet-android.*.so", SearchOption.AllDirectories)) {
+				foreach (var file in Directory.EnumerateFiles (runtimeDir, "libdotnet-android.*.so", SearchOption.AllDirectories)) {
 					string fullFilePath = Path.GetFullPath (file);
 					DirectoryInfo parentDir = Directory.GetParent (fullFilePath);
 					if (parentDir == null)
@@ -232,7 +232,7 @@ namespace Xamarin.ProjectTools
 						continue;
 					var fi = new FileInfo (fullFilePath);
 					runtimeInfo.Add (new RuntimeInfo () {
-						Name = "libnet-android.so",
+						Name = "libdotnet-android.so",
 						Runtime = items [1], // release|debug
 						Abi = parentDir.Name, // armaebi|x86|arm64-v8a
 						Size = (int)fi.Length, // int

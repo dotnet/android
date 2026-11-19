@@ -185,7 +185,7 @@ public partial class BuildTest3 : BaseTest
 			EnvironmentHelper.JniPreloadsEntry entry = preloads.Entries[i];
 			Assert.AreEqual (preloads.Entries [i - i % expectedStride].LibraryName, entry.LibraryName,
 				"A JNI preload group must not assign its handle to another library's aliases.");
-			Assert.IsFalse (entry.LibraryName == "libnet-android.so", $"JNI preloads entry at index {i} refers to the .NET for Android native runtime. It must never be preloaded. Source file: {preloads.SourceFile}");
+			Assert.IsFalse (entry.LibraryName == "libdotnet-android.so", $"JNI preloads entry at index {i} refers to the .NET for Android native runtime. It must never be preloaded. Source file: {preloads.SourceFile}");
 			Assert.IsTrue (expectedLibNames.ContainsKey (entry.LibraryName), $"JNI preloads entry at index {i}, referring to library at DSO cache index {entry.Index} has unexpected name '{entry.LibraryName}';  Source file: {preloads.SourceFile}");
 			expectedLibNames[entry.LibraryName]++;
 		}

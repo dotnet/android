@@ -450,7 +450,7 @@ namespace Xamarin.Android.Build.Tests
 		[TestCase ("aab", true)]
 		public void BuildCoreClrWithNativeLibraryStripping (string packageFormat, bool isRelease)
 		{
-			string fixture = GetInstalledRuntimePackFile ("libnet-android.debug.so");
+			string fixture = GetInstalledRuntimePackFile ("libdotnet-android.debug.so");
 			byte [] original = File.ReadAllBytes (fixture);
 			byte [] wrapper = Encoding.UTF8.GetBytes ("#!/system/bin/sh\nexec \"$@\"\n");
 			const string nativeLibrary = "native/arm64-v8a/libstrip-input.so";
@@ -683,7 +683,7 @@ namespace Xamarin.Android.Build.Tests
 			string [] retainedLibraries = runtime == AndroidRuntime.NativeAOT ? [
 				"libnaot-android.debug-static-debug.a",
 				"libnaot-android.release-static-release.a",
-			] : ["libnet-android.release.so"];
+			] : ["libdotnet-android.release.so"];
 			foreach (var directory in runtimeDirectories) {
 				Directory.CreateDirectory (directory.Native);
 				Directory.CreateDirectory (directory.Output);

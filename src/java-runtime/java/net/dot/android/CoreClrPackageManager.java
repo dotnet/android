@@ -76,7 +76,7 @@ public class CoreClrPackageManager {
 				};
 				boolean haveSplitApks = runtimePackage.splitSourceDirs != null && runtimePackage.splitSourceDirs.length > 0;
 
-				NativeLibraryHelper.loadLibrary ("net-android", runtimePackage, apks);
+				NativeLibraryHelper.loadLibrary ("dotnet-android", runtimePackage, apks);
 
 				Runtime.initInternal (
 					language,
