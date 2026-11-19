@@ -1,5 +1,5 @@
 #:property TargetFramework=net12.0-android
-#:property RootNamespace=Benchmarks
+#:property RootNamespace=BenchmarksApp
 #:property PublishAot=false
 #:package BenchmarkDotNet@0.15.*
 

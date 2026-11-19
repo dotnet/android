@@ -158,7 +158,7 @@ namespace Xamarin.ProjectTools
 			}
 		}
 
-		public bool New (string template, string output = null, bool noRestore = false, string framework = null)
+		public bool New (string template, string output = null, bool noRestore = false, string framework = null, string name = null)
 		{
 			Directory.CreateDirectory (ProjectDirectory);
 			var nugetConfig = Path.Combine (ProjectDirectory, "NuGet.config");
@@ -177,6 +177,10 @@ namespace Xamarin.ProjectTools
 			if (!string.IsNullOrEmpty (framework)) {
 				arguments.Add ("--framework");
 				arguments.Add (framework);
+			}
+			if (!string.IsNullOrEmpty (name)) {
+				arguments.Add ("--name");
+				arguments.Add ($"\"{name}\"");
 			}
 			return Execute (arguments.ToArray ());
 		}

@@ -297,6 +297,19 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
+		public void DotNetNewBenchmarkNamedBenchmarkBuilds ()
+		{
+			var templatePath = Path.Combine (Root, "temp", TestName);
+			if (Directory.Exists (templatePath))
+				Directory.Delete (templatePath, recursive: true);
+
+			TestOutputDirectories [TestContext.CurrentContext.Test.ID] = templatePath;
+			var dotnet = new DotNetCLI (Path.Combine (templatePath, "Benchmark.cs"));
+			Assert.IsTrue (dotnet.New ("android-benchmark", name: "Benchmark"), "`dotnet new android-benchmark -n Benchmark` should succeed.");
+			Assert.IsTrue (dotnet.Build (), $"The generated benchmark should build. See {dotnet.BuildLogFile}.");
+		}
+
+		[Test]
 		public void DotNetNew ([Values ("android", "androidlib", "android-bindinglib", "androidwear")] string template)
 		{
 			var templateName = TestName.Replace ("-", "");

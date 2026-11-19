@@ -3806,10 +3806,14 @@ Facebook.FacebookSdk.LogEvent(""TestFacebook"");
 			proj.PackageReferences.Add (new Package { Id = "BenchmarkDotNet", Version = "0.15.8" });
 			proj.Sources.Add (new BuildItem.Source ("Program.cs") {
 				TextContent = () => """
+					using System.Linq;
 					using BenchmarkDotNet.Attributes;
 					using BenchmarkDotNet.Running;
 
-					BenchmarkRunner.Run<SampleBenchmarks> ();
+					var summary = BenchmarkRunner.Run<SampleBenchmarks> ();
+					return summary.Reports.Length == 1 &&
+						summary.Reports [0].Success &&
+						!summary.ValidationErrors.Any (error => error.IsCritical) ? 0 : 1;
 
 					[InProcess]
 					public class SampleBenchmarks
