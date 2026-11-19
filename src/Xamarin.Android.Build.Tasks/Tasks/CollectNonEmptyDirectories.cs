@@ -12,7 +12,8 @@ using Microsoft.Android.Build.Tasks;
 
 namespace Xamarin.Android.Tasks {
 
-	public class CollectNonEmptyDirectories : AndroidTask {
+	[MSBuildMultiThreadableTask]
+	public class CollectNonEmptyDirectories : MultithreadedAndroidTask {
 		public override string TaskPrefix => "CNE";
 
 		List<ITaskItem> output = new List<ITaskItem> ();
@@ -35,59 +36,64 @@ namespace Xamarin.Android.Tasks {
 
 		public override bool RunTask ()
 		{
-			var libraryProjectDir = Path.GetFullPath (LibraryProjectIntermediatePath);
+			string libraryProjectDir = TaskEnvironment.GetAbsolutePath (LibraryProjectIntermediatePath).GetCanonicalForm ();
 			foreach (var directory in Directories) {
-				if (!Directory.Exists (directory.ItemSpec)) {
+				var directoryPath = TaskEnvironment.GetAbsolutePath (directory.ItemSpec).GetCanonicalForm ();
+				if (!Directory.Exists (directoryPath)) {
 					Log.LogDebugMessage ($"Directory does not exist, skipping: {directory.ItemSpec}");
 					continue;
 				}
 				string stampFile = directory.GetMetadata ("StampFile");
 				string directoryHash = Files.HashString (directory.ItemSpec);
+				bool isLibraryProject = directoryPath.Value.StartsWith (libraryProjectDir, StringComparison.OrdinalIgnoreCase);
 				if (stampFile.IsNullOrEmpty ()) {
-					if (Path.GetFullPath (directory.ItemSpec).StartsWith (libraryProjectDir, StringComparison.OrdinalIgnoreCase)) {
+					if (isLibraryProject) {
 						// If inside the `lp` directory
-						stampFile = Path.GetFullPath (Path.Combine (directory.ItemSpec, "..", "..")) + ".stamp";
+						stampFile = TaskEnvironment.GetAbsolutePath (Path.Combine (directory.ItemSpec, "..", "..")).GetCanonicalForm ().Value + ".stamp";
 					} else {
 						// Otherwise use a hashed stamp file
 						stampFile = Path.Combine (StampDirectory, $"{directoryHash}.stamp");
 					}
 				}
 
-				bool generateArchive = false;
-				bool.TryParse (directory.GetMetadata (ResolveLibraryProjectImports.AndroidSkipResourceProcessing), out generateArchive);
+				bool.TryParse (directory.GetMetadata (ResolveLibraryProjectImports.AndroidSkipResourceProcessing), out bool generateArchive);
 
-				IEnumerable<string> files;
+				string [] files;
 				string filesCache = directory.GetMetadata ("FilesCache");
 				if (filesCache.IsNullOrEmpty ()) {
-					if (Path.GetFullPath (directory.ItemSpec).StartsWith (libraryProjectDir, StringComparison.OrdinalIgnoreCase)) {
+					if (isLibraryProject) {
 						filesCache = Path.Combine (directory.ItemSpec, "..", "files.cache");
 					} else {
 						filesCache = Path.Combine (directory.ItemSpec, "..", $"{directoryHash}-files.cache");
 					}
 				}
-				DateTime lastwriteTime = File.Exists (stampFile) ? File.GetLastWriteTimeUtc (stampFile) : DateTime.MinValue;
-				DateTime cacheLastWriteTime = File.Exists (filesCache) ? File.GetLastWriteTimeUtc (filesCache) : DateTime.MinValue;
+				var stampPath = TaskEnvironment.GetAbsolutePath (stampFile);
+				var cachePath = TaskEnvironment.GetAbsolutePath (filesCache);
+				DateTime lastwriteTime = File.Exists (stampPath) ? File.GetLastWriteTimeUtc (stampPath) : DateTime.MinValue;
+				DateTime cacheLastWriteTime = File.Exists (cachePath) ? File.GetLastWriteTimeUtc (cachePath) : DateTime.MinValue;
 
-				if (File.Exists (filesCache) && cacheLastWriteTime >= lastwriteTime) {
+				if (File.Exists (cachePath) && cacheLastWriteTime >= lastwriteTime) {
 					Log.LogDebugMessage ($"Reading cached Library resources list from  {filesCache}");
-					files = File.ReadAllLines (filesCache);
+					files = File.ReadAllLines (cachePath);
 				} else {
-					if (!File.Exists (filesCache))
+					if (!File.Exists (cachePath))
 						Log.LogDebugMessage ($"Cached Library resources list {filesCache} does not exist.");
 					else
 						Log.LogDebugMessage ($"Cached Library resources list {filesCache} is out of date.");
 					if (generateArchive) {
-						files = new string[1] { stampFile };
+						files = [stampFile];
 					} else {
-						files = Directory.EnumerateFiles(directory.ItemSpec, "*.*", SearchOption.AllDirectories);
+						files = Directory.EnumerateFiles (directoryPath, "*.*", SearchOption.AllDirectories)
+							.Select (file => Path.Combine (directory.ItemSpec, file.Substring (directoryPath.Value.Length).TrimStart (Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar)))
+							.ToArray ();
 					}
 				}
 
-				if (files.Any ()) {
-					if (!File.Exists (filesCache) || cacheLastWriteTime < lastwriteTime)
-						File.WriteAllLines (filesCache, files, Encoding.UTF8);
+				if (files.Length > 0) {
+					if (!File.Exists (cachePath) || cacheLastWriteTime < lastwriteTime)
+						File.WriteAllLines (cachePath, files, Encoding.UTF8);
 					var taskItem = new TaskItem (directory.ItemSpec, new Dictionary<string, string> () {
-						{"FileFound", files.First () },
+						{"FileFound", files [0] },
 					});
 					directory.CopyMetadataTo (taskItem);
 
