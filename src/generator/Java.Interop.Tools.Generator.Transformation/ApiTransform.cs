@@ -1,8 +1,11 @@
+#nullable enable
+
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.IO;
+using Java.Interop.Tools.Generator;
 
 namespace MonoDroid.Generation
 {
@@ -29,11 +32,11 @@ namespace MonoDroid.Generation
 
 		public void WriteTransform (StreamWriter sw)
 		{
-			string preserveAttr = PreserveType ? " preserveType=\"true\"" : null;
+			string? preserveAttr = PreserveType ? " preserveType=\"true\"" : null;
 
 			string cls = Class.StartsWith ("[Interface]", StringComparison.Ordinal) ? Class.Substring ("[Interface]".Length) : Class;
 
-			if (string.IsNullOrEmpty (Parameter)) {
+			if (!Parameter.HasValue ()) {
 				// This is a field
 				sw.WriteLine ("  <attr path=\"/api/package[@name='{0}']/*[@name='{1}']/field[@name='{2}']\" name=\"enumType\"{4}>{3}</attr>", Package, Class, Member, Enum, preserveAttr);		
 			} else if (Parameter == "return") {
