@@ -1076,9 +1076,10 @@ namespace Android.Runtime {
 						return GetObject (elem, type);
 					}
 
-					// FIXME: Since a Dictionary<Type, Func> is used here, the trimmer will not be able to properly analyze `Type t`
-					// error IL2111: Method 'lambda expression' with parameters or return value with `DynamicallyAccessedMembersAttribute` is accessed via reflection. Trimmer can't guarantee availability of the requirements of the method.
-					[UnconditionalSuppressMessage ("Trimming", "IL2067", Justification = "FIXME: https://github.com/dotnet/android/issues/8724")]
+					// The element type flows through a Dictionary<Type, Func<…>>, so the trimmer cannot see its constructor requirements.
+					[UnconditionalSuppressMessage ("Trimming", "IL2067", Justification = "TrimmableTypeMap.CreateInstance () activates Java peers through their " +
+						"generated JavaPeerProxy. It reflects over the (IntPtr, JniHandleOwnership) constructor only for closed generic Java peers, and the " +
+						"generated proxy for the open generic definition keeps that constructor with [DynamicDependency].")]
 					static object? GetObject (IntPtr e, Type? t) =>
 						Java.Lang.Object.GetObject (e, JniHandleOwnership.TransferLocalRef, t);
 				} },
