@@ -181,6 +181,11 @@ async Task<int> RunAsync (string[] args)
 		return 1;
 	}
 
+	if (consoleMode && !waitForExit) {
+		Console.Error.WriteLine ("Error: --console cannot be used with --no-wait.");
+		return 1;
+	}
+
 	if (isInstrumentMode && !string.IsNullOrEmpty (activity)) {
 		Console.Error.WriteLine ("Error: --activity and --instrument cannot be used together.");
 		Console.Error.WriteLine ($"Try '{Name} --help' for more information.");
@@ -385,8 +390,7 @@ async Task<int> RunConsoleAsync (List<string> programArgs)
 			} else if (content.StartsWith (ExitCodePrefix, StringComparison.Ordinal)) {
 				if (int.TryParse (content.AsSpan (ExitCodePrefix.Length).Trim (), System.Globalization.NumberStyles.Integer, System.Globalization.CultureInfo.InvariantCulture, out int parsed))
 					exitCode = parsed;
-			} else if (!content.StartsWith ("INSTRUMENTATION_STATUS_CODE: ", StringComparison.Ordinal) &&
-					!content.StartsWith ("INSTRUMENTATION_CODE: ", StringComparison.Ordinal)) {
+			} else if (!content.StartsWith ("INSTRUMENTATION_STATUS_CODE: ", StringComparison.Ordinal)) {
 				unrecognized.AppendLine (content);
 			}
 		}

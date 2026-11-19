@@ -7,6 +7,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Text;
 using Xamarin.Android.Tasks;
 using Xamarin.ProjectTools;
 
@@ -171,6 +172,87 @@ namespace Xamarin.Android.Build.Tests
 			Assert.That (result.ExitStatus.Canceled, Is.False);
 			Assert.That (result.ExitStatus.ExitCode, Is.Zero, result.StandardError);
 			Assert.That (result.StandardOutput, Is.EqualTo ("closed\n"));
+		}
+
+		[Test]
+		public void ConsoleRunnerRejectsNoWait ()
+		{
+			var startInfo = new ProcessStartInfo (Path.Combine (TestEnvironment.DotNetPreviewDirectory, "dotnet")) {
+				RedirectStandardOutput = true,
+				RedirectStandardError = true,
+				ArgumentList = {
+					Path.Combine (TestEnvironment.AndroidMSBuildDirectory, "Microsoft.Android.Run.dll"),
+					"--package", "test", "--instrument", "test", "--console", "--no-wait",
+				},
+			};
+			var result = Process.RunAndCaptureText (startInfo, TimeSpan.FromSeconds (15));
+			Assert.That (result.ExitStatus.ExitCode, Is.Not.Zero);
+			Assert.That (result.StandardError, Does.Contain ("--console cannot be used with --no-wait"));
+		}
+
+		[TestCase ("INSTRUMENTATION_CODE: 0", "The instrumentation reported failure")]
+		[TestCase ("INSTRUMENTATION_CODE: -1", "The application did not report an exit code")]
+		[TestCase ("", "The instrumentation did not complete")]
+		public void ConsoleRunnerReportsMissingExitCode (string terminalCode, string expected)
+		{
+			if (OperatingSystem.IsWindows ())
+				Assert.Ignore ("The fake adb is a Unix shell executable.");
+			var outputDirectory = Path.Combine (Root, "temp", TestName);
+			Directory.CreateDirectory (outputDirectory);
+			TestOutputDirectories [TestContext.CurrentContext.Test.ID] = outputDirectory;
+			string adb = Path.Combine (outputDirectory, "adb");
+			File.WriteAllText (adb, $"#!/bin/sh\necho '{terminalCode}'\n");
+			File.SetUnixFileMode (adb, UnixFileMode.UserRead | UnixFileMode.UserWrite | UnixFileMode.UserExecute);
+			var startInfo = new ProcessStartInfo (Path.Combine (TestEnvironment.DotNetPreviewDirectory, "dotnet")) {
+				RedirectStandardOutput = true,
+				RedirectStandardError = true,
+				ArgumentList = {
+					Path.Combine (TestEnvironment.AndroidMSBuildDirectory, "Microsoft.Android.Run.dll"),
+					"--adb", adb, "--package", "test", "--instrument", "test", "--console",
+				},
+			};
+			var result = Process.RunAndCaptureText (startInfo, TimeSpan.FromSeconds (15));
+			Assert.That (result.ExitStatus.ExitCode, Is.Not.Zero);
+			Assert.That (result.StandardError, Does.Contain (expected));
+			if (terminalCode.Length > 0)
+				Assert.That (result.StandardError, Does.Contain (terminalCode));
+		}
+
+		[Test]
+		public void ConsoleRunnerEncodesArguments ()
+		{
+			if (OperatingSystem.IsWindows ())
+				Assert.Ignore ("The fake adb is a Unix shell executable.");
+			var outputDirectory = Path.Combine (Root, "temp", TestName);
+			Directory.CreateDirectory (outputDirectory);
+			TestOutputDirectories [TestContext.CurrentContext.Test.ID] = outputDirectory;
+			string adb = Path.Combine (outputDirectory, "adb");
+			string argumentsFile = Path.Combine (outputDirectory, "arguments");
+			File.WriteAllText (adb, """
+				#!/bin/sh
+				printf '%s\n' "$@" > "$ADB_ARGUMENTS_FILE"
+				echo 'INSTRUMENTATION_RESULT: exitCode=0'
+				""");
+			File.SetUnixFileMode (adb, UnixFileMode.UserRead | UnixFileMode.UserWrite | UnixFileMode.UserExecute);
+			string[] args = ["", "with spaces", "single' and \"double\"", "Héllo 🌍", "--no-wait"];
+			var startInfo = new ProcessStartInfo (Path.Combine (TestEnvironment.DotNetPreviewDirectory, "dotnet")) {
+				RedirectStandardOutput = true,
+				RedirectStandardError = true,
+				ArgumentList = {
+					Path.Combine (TestEnvironment.AndroidMSBuildDirectory, "Microsoft.Android.Run.dll"),
+					"--adb", adb, "--package", "test", "--instrument", "test", "--console", "--",
+				},
+			};
+			foreach (var arg in args)
+				startInfo.ArgumentList.Add (arg);
+			startInfo.Environment ["ADB_ARGUMENTS_FILE"] = argumentsFile;
+			var result = Process.RunAndCaptureText (startInfo, TimeSpan.FromSeconds (15));
+			Assert.That (result.ExitStatus.ExitCode, Is.Zero, result.StandardError);
+			var expected = new List<string> { "shell", "am", "instrument", "-w", "-r", "-e", "argc", args.Length.ToString () };
+			for (int i = 0; i < args.Length; i++)
+				expected.AddRange (["-e", $"arg{i}", $"'{Convert.ToBase64String (Encoding.UTF8.GetBytes (args [i]))}'"]);
+			expected.Add ("test/test");
+			CollectionAssert.AreEqual (expected, File.ReadAllLines (argumentsFile));
 		}
 	}
 
