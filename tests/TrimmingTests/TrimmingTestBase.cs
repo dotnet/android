@@ -207,7 +207,12 @@ public abstract class TrimmingTestBase : DeviceTest
 		}, logcat, timeout: ActivityStartTimeoutInSeconds, onMonitoringStarted: () => {
 			var started = RunAdbCommand ($"shell am start -W -n {activity}", timeout: ActivityStartTimeoutInSeconds);
 			StringAssert.Contains ("Complete", started, $"{caseFile} should start on {configuration}.");
-			pid = RunAdbCommand ($"shell pidof {packageName}").Split (' ', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries).FirstOrDefault ();
+			// `am start -W` can return before the app's process exists, so give it a moment to appear.
+			var deadline = DateTime.UtcNow.AddSeconds (10);
+			while ((pid = RunAdbCommand ($"shell pidof {packageName}").Split (' ', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries).FirstOrDefault ()) is null &&
+					DateTime.UtcNow < deadline) {
+				Thread.Sleep (200);
+			}
 			if (string.IsNullOrEmpty (pid)) {
 				Assert.Fail ($"{caseFile} is not running after launch on {configuration}; it probably crashed. See {logcat}");
 			}
