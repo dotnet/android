@@ -118,7 +118,7 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Include="Resources\LayoutBinding.cs">
-      <Link>LayoutBinding.cs</Link>
+      <Link>%(Filename)%(Extension)</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Include="Resources\MonoRuntimeProvider.Bundled.java;Resources\NativeAotRuntimeProvider.java;Resources\net.android.init.gradle.kts">

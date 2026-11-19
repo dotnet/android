@@ -1,0 +1,19 @@
+{
+  "$schema": "http://json.schemastore.org/template",
+  "author": "Microsoft",
+  "classifications": [ "Android", "Mobile", "Console" ],
+  "identity": "Microsoft.Android.AndroidConsole",
+  "name": "Android Console App",
+  "description": "A file-based .NET for Android console application",
+  "shortName": "android-console",
+  "tags": {
+    "language": "C#",
+    "type": "item"
+  },
+  "sourceName": "Program",
+  "preferDefaultName": true,
+  "primaryOutputs": [
+    { "path": "Program.cs" }
+  ],
+  "defaultName": "AndroidConsole"
+}

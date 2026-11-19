@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -3608,6 +3609,127 @@ Facebook.FacebookSdk.LogEvent(""TestFacebook"");
 			Assert.AreEqual (1, successfulReports, $"BenchmarkDotNet should produce 1 successful report, got {successfulReports}. See {logPath} for details.");
 			Assert.AreEqual (0, criticalValidationErrors,
 				$"BenchmarkDotNet should have no critical validation errors, got {criticalValidationErrors}. See {logPath} for details.");
+		}
+
+		[Test]
+		public void DotNetRunConsoleMain (
+			[Values ("void", "int", "Task", "Task<int>")] string returnType, [Values (false, true)] bool hasArguments,
+			[Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
+		{
+			bool returnsExitCode = returnType == "int" || returnType == "Task<int>";
+			bool isAsync = returnType.StartsWith ("Task", StringComparison.Ordinal);
+			string parameters = hasArguments ? "string[] args" : "";
+			string arguments = hasArguments ? "args" : """new [] { "return", "42" }""";
+			var proj = new DotNetStandard {
+				ProjectName = "ConsoleMain",
+				Sdk = "Microsoft.NET.Sdk",
+				TargetFramework = $"{XABuildConfig.LatestDotNetTargetFramework}-android",
+				IsRelease = runtime == AndroidRuntime.NativeAOT,
+			};
+			proj.SetProperty ("OutputType", "Exe");
+			proj.SetRuntime (runtime);
+			proj.SetRuntimeIdentifiers ([DeviceAbi]);
+			proj.Sources.Add (new BuildItem.Source ("Program.cs") {
+				TextContent = () => $$"""
+					using System;
+					using System.Globalization;
+					using System.Runtime.CompilerServices;
+					using System.Threading;
+					using System.Threading.Tasks;
+
+					class Program
+					{
+						public static {{(isAsync ? "async " : "")}}{{returnType}} Main ({{parameters}})
+						{
+							{{(isAsync ? "await Task.Delay (50).ConfigureAwait (false);" : "")}}
+							{{(returnsExitCode ? "return " : "")}}Run ({{arguments}});
+						}
+
+						static int Run (string[] args)
+						{
+							Console.WriteLine ($"MAIN_STARTED {args [0]} {args [1]}");
+							Console.WriteLine ($"DYNAMIC_CODE={RuntimeFeature.IsDynamicCodeSupported}");
+							Console.Error.WriteLine ("CONSOLE_STDERR");
+							int exitCode = int.Parse (args [1], CultureInfo.InvariantCulture);
+							switch (args [0]) {
+							case "return":
+								break;
+							case "exit-code":
+								Environment.ExitCode = exitCode;
+								exitCode = 0;
+								break;
+							case "exit":
+								Environment.Exit (exitCode);
+								break;
+							case "throw":
+								Environment.ExitCode = 99;
+								throw new InvalidOperationException ("CONSOLE_MAIN_EXCEPTION");
+							case "thread-throw":
+								Environment.ExitCode = 99;
+								var thread = new Thread (() => throw new InvalidOperationException ("CONSOLE_THREAD_EXCEPTION"));
+								thread.Start ();
+								thread.Join ();
+								break;
+							default:
+								throw new ArgumentException ($"Unknown scenario: {args [0]}");
+							}
+							Console.WriteLine ("MAIN_COMPLETED");
+							return exitCode;
+						}
+					}
+					""",
+			});
+
+			// R8 interprets angle brackets in output paths as property references.
+			using var builder = CreateApkBuilder (Path.Combine ("temp", TestName.Replace ("<", "").Replace (">", "")));
+			builder.Save (proj);
+			var dotnet = new DotNetCLI (Path.Combine (Root, builder.ProjectDirectory, proj.ProjectFilePath));
+			Assert.IsTrue (dotnet.Build (parameters: [$"Configuration={proj.Configuration}"]),
+				$"`dotnet build` should succeed. See {dotnet.BuildLogFile}.");
+			string serial = RunAdbCommand ("get-serialno").Trim ();
+			var scenarios = new List<(string Mode, int Value, int ExitCode)> {
+				("return", 42, returnsExitCode ? 42 : 0),
+			};
+			if (hasArguments) {
+				scenarios.AddRange ([
+					("return", 0, 0),
+					("exit-code", 43, returnsExitCode ? 0 : 43),
+					("exit", 45, 45),
+					("exit", -1, IsWindows ? -1 : 255),
+					("return", 256, returnsExitCode && IsWindows ? 256 : 0),
+					("throw", 0, 134),
+					("thread-throw", 0, 134),
+				]);
+			}
+
+			foreach (var scenario in scenarios) {
+				string value = scenario.Value.ToString (CultureInfo.InvariantCulture);
+				using var process = dotnet.StartRun (parameters: [
+					"--configuration", proj.Configuration, "--device", serial, "--", scenario.Mode, value,
+				]);
+				var output = new StringBuilder ();
+				bool completed = process.WaitForExitAndOutput (output, TimeSpan.FromMinutes (3));
+				string outputText = output.ToString ();
+				string logPath = Path.Combine (Root, builder.ProjectDirectory, $"run-{scenario.Mode}-{value}.log");
+				File.WriteAllText (logPath, outputText);
+				TestContext.AddTestAttachment (logPath);
+
+				Assert.IsTrue (completed, $"`dotnet run` did not complete in time. See {logPath}.");
+				Assert.AreEqual (scenario.ExitCode, process.ExitCode,
+					$"{returnType} Main, scenario {scenario.Mode} {value}: incorrect exit code. See {logPath}.");
+				StringAssert.Contains ($"MAIN_STARTED {scenario.Mode} {value}", outputText);
+				StringAssert.Contains ($"DYNAMIC_CODE={runtime == AndroidRuntime.CoreCLR}", outputText);
+				StringAssert.Contains ("STDERR: CONSOLE_STDERR", outputText);
+				if (scenario.Mode == "throw" || scenario.Mode == "thread-throw") {
+					string message = scenario.Mode == "throw" ? "CONSOLE_MAIN_EXCEPTION" : "CONSOLE_THREAD_EXCEPTION";
+					StringAssert.Contains ($"STDERR: Unhandled exception. System.InvalidOperationException: {message}", outputText);
+					StringAssert.DoesNotContain ("TargetInvocationException", outputText);
+					StringAssert.DoesNotContain ("MAIN_COMPLETED", outputText);
+				} else if (scenario.Mode != "exit") {
+					StringAssert.Contains ("MAIN_COMPLETED", outputText);
+				}
+				TestContext.Out.WriteLine ($"{returnType} Main, {runtime}, args={hasArguments}, {scenario.Mode} {value}: exit {process.ExitCode}");
+			}
 		}
 
 		static int ParseInstrumentationResult (string output, string key)

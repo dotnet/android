@@ -280,6 +280,22 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
+		[TestCase ("android-console", "AndroidConsole.cs")]
+		public void DotNetNewFileBasedApplication (string template, string fileName)
+		{
+			var templatePath = Path.Combine (Root, "temp", TestName);
+			if (Directory.Exists (templatePath))
+				Directory.Delete (templatePath, recursive: true);
+
+			TestOutputDirectories [TestContext.CurrentContext.Test.ID] = templatePath;
+			var dotnet = new DotNetCLI (Path.Combine (templatePath, fileName));
+			Assert.IsTrue (dotnet.New (template), $"`dotnet new {template}` should succeed.");
+			CollectionAssert.AreEqual (new [] { fileName }, Directory.GetFiles (templatePath, "*.cs").Select (Path.GetFileName));
+			Assert.IsEmpty (Directory.GetFiles (templatePath, "*.csproj", SearchOption.AllDirectories),
+				"The template should generate a file-based app, not a project.");
+		}
+
+		[Test]
 		public void DotNetNew ([Values ("android", "androidlib", "android-bindinglib", "androidwear")] string template)
 		{
 			var templateName = TestName.Replace ("-", "");

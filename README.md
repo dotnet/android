@@ -43,6 +43,15 @@ See the [.NET workload documentation][workload-documentation] for additional ins
 
 While no longer supported, Classic Xamarin.Android installers are still available [here](Documentation/previous-releases.md).
 
+# File-based apps
+
+With .NET 12, create and run a console-style Android app from a single C# file:
+
+```sh
+dotnet new android-console -n HelloAndroid
+dotnet run --file HelloAndroid.cs
+```
+
 # Contributing
 
 If you are interested in fixing issues and contributing directly to the code base, please see the following:

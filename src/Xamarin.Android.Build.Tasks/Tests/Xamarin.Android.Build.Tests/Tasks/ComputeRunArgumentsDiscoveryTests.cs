@@ -115,6 +115,46 @@ public class ComputeRunArgumentsDiscoveryTests
 		StringAssert.Contains (expectedArgument, instance.GetPropertyValue ("RunArguments"));
 	}
 
+	[Test]
+	public void ConsoleApplicationRunsEntryPointInstrumentation ()
+	{
+		File.WriteAllText (ManifestFile, "not XML");
+		var (logger, instance) = Build (properties: new Dictionary<string, string> {
+			["_AndroidConsoleApplication"] = "true",
+			["_AndroidRunExtraArgs"] = "--verbose",
+		});
+		Assert.AreEqual (0, ManifestReadCount (logger));
+		Assert.AreEqual ("net.dot.android.ConsoleInstrumentation", instance.GetPropertyValue ("AndroidInstrumentation"));
+		StringAssert.Contains ("--instrument \"net.dot.android.ConsoleInstrumentation\"", instance.GetPropertyValue ("RunArguments"));
+		StringAssert.EndsWith ("--verbose --console --", instance.GetPropertyValue ("RunArguments"));
+	}
+
+	[TestCase ("", false, "Exe", "true")]
+	[TestCase ("<ApplicationId>com.example.app</ApplicationId>", false, "Library", "")]
+	[TestCase ("<EnableMSTestRunner>true</EnableMSTestRunner>", false, "Library", "")]
+	[TestCase ("<_AndroidConsoleApplication>false</_AndroidConsoleApplication>", false, "Library", "false")]
+	[TestCase ("", true, "Library", "")]
+	public void ConsoleApplicationDetection (string properties, bool hasManifest, string expectedOutputType, string expectedConsoleApplication)
+	{
+		if (hasManifest)
+			File.WriteAllText (Path.Combine (directory, "AndroidManifest.xml"), Manifest ("", ""));
+		string projectFile = Path.Combine (directory, "App.csproj");
+		File.WriteAllText (projectFile, $"""
+			<Project>
+			  <PropertyGroup>
+			    <OutputType>Exe</OutputType>
+			    {properties}
+			  </PropertyGroup>
+			  <Import Project="{Path.Combine (TasksDirectory, "Microsoft.Android.Sdk", "targets", "Microsoft.Android.Sdk.DefaultProperties.targets")}" />
+			</Project>
+			""");
+		using var collection = CreateProjectCollection ();
+		var project = collection.LoadProject (projectFile);
+		Assert.AreEqual (expectedOutputType, project.GetPropertyValue ("OutputType"));
+		Assert.AreEqual (expectedConsoleApplication, project.GetPropertyValue ("_AndroidConsoleApplication"));
+		Assert.AreEqual ("true", project.GetPropertyValue ("AndroidApplication"));
+	}
+
 	[TestCase (false)]
 	[TestCase (true)]
 	public void ParallelProjectsUseTheirOwnRelativeManifests (bool multithreaded)
@@ -199,10 +239,7 @@ public class ComputeRunArgumentsDiscoveryTests
 		var project = new XElement (MSBuildNamespace + "Project", propertyGroup);
 		AddTargets (project);
 		using var reader = project.CreateReader ();
-		using var collection = new ProjectCollection ();
-		string toolsPath = Directory.EnumerateDirectories (Path.Combine (TestEnvironment.DotNetPreviewDirectory, "sdk"))
-			.First (path => File.Exists (Path.Combine (path, "Microsoft.Common.tasks")));
-		collection.AddToolset (new Toolset ("Current", toolsPath, collection, ""));
+		using var collection = CreateProjectCollection ();
 		var root = ProjectRootElement.Create (reader, collection);
 		root.FullPath = Path.Combine (directory, "Run.proj");
 		var instance = new ProjectInstance (root, globalProperties: null, toolsVersion: null, collection);
@@ -211,6 +248,15 @@ public class ComputeRunArgumentsDiscoveryTests
 		Assert.AreEqual (expectedSuccess, success,
 			string.Join (Environment.NewLine, logger.Errors.Select (error => $"{error.Code}: {error.Message}")));
 		return (logger, instance);
+	}
+
+	static ProjectCollection CreateProjectCollection ()
+	{
+		var collection = new ProjectCollection ();
+		string toolsPath = Directory.EnumerateDirectories (Path.Combine (TestEnvironment.DotNetPreviewDirectory, "sdk"))
+			.First (path => File.Exists (Path.Combine (path, "Microsoft.Common.tasks")));
+		collection.AddToolset (new Toolset ("Current", toolsPath, collection, ""));
+		return collection;
 	}
 
 	sealed class RunLogger : Logger

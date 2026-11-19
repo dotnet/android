@@ -101,8 +101,14 @@
   <PropertyGroup>
     <AndroidApplication Condition=" '$(AndroidApplication)' == '' And '$(OutputType)' == 'Exe' ">true</AndroidApplication>
     <AndroidApplication Condition=" '$(AndroidApplication)' == '' ">false</AndroidApplication>
-    <!-- We don't ever need a `static void Main` method, so switch to Library here-->
-    <OutputType Condition=" '$(OutputType)' == 'Exe' ">Library</OutputType>
+    <!--
+      A console-style C# project (e.g. `dotnet new console` or a file-based app retargeted to
+      net*-android) has no AndroidManifest.xml and no $(ApplicationId). Keep OutputType=Exe so its
+      `Main` / top-level statements compile as the entry point, and run it via an instrumentation.
+    -->
+    <_AndroidConsoleApplication Condition=" '$(_AndroidConsoleApplication)' == '' and '$(OutputType)' == 'Exe' and '$(MSBuildProjectExtension)' == '.csproj' and '$(ApplicationId)' == '' and '$(AndroidManifest)' == '' and !Exists ('AndroidManifest.xml') and !Exists ('Properties\AndroidManifest.xml') and '$(EnableMSTestRunner)' != 'true' and '$(AndroidUseInstrumentation)' != 'true' ">true</_AndroidConsoleApplication>
+    <!-- Other Android applications don't need a `static void Main` method, so switch to Library here -->
+    <OutputType Condition=" '$(OutputType)' == 'Exe' and '$(_AndroidConsoleApplication)' != 'true' ">Library</OutputType>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(AndroidApplication)' == 'true' ">
     <UseAppHost>false</UseAppHost>
