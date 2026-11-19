@@ -32,7 +32,7 @@
     <MSBuild
          Condition=" '%(AndroidBuildApiLevel.Identity)' != '$(AndroidApiLevel)' "
          Projects="$(_Root)src\Mono.Android\Mono.Android.csproj"
-         Properties="AndroidApiLevel=%(AndroidBuildApiLevel.Identity);AndroidPlatformId=%(AndroidBuildApiLevel.PlatformId);AndroidFrameworkVersion=%(AndroidBuildApiLevel.FrameworkVersion);IsUnstableVersion=%(AndroidBuildApiLevel.Unstable)"
+         Properties="AndroidApiLevel=%(AndroidBuildApiLevel.Identity);AndroidPlatformId=%(AndroidBuildApiLevel.PlatformId);AndroidFrameworkVersion=%(AndroidBuildApiLevel.FrameworkVersion)"
     />
   </Target>
 

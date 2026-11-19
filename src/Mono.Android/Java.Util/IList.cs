@@ -3,7 +3,6 @@ using Android.Runtime;
 
 namespace Java.Util;
 
-#if ANDROID_35
 public partial interface IList
 {
 	private static Delegate? cb_reversed;
@@ -55,4 +54,3 @@ public partial interface IList
 		}
 	}
 }
-#endif

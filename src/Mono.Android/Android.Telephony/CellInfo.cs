@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using Android.Runtime;
 using Java.Interop;
 
-#if ANDROID_30
 
 namespace Android.Telephony {
 
@@ -116,5 +115,3 @@ namespace Android.Telephony {
 		}
 	}
 }
-
-#endif  // ANDROID_30

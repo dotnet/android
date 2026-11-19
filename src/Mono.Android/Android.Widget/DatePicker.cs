@@ -13,7 +13,6 @@ namespace Android.Widget {
 			get { return new DateTime (Year, Month + 1, DayOfMonth); }
 			set { UpdateDate (value.Year, value.Month - 1, value.Day); }
 		}
-#if ANDROID_11
 		/// <summary>Gets the minimum selectable date supported by this picker.</summary>
 		/// <value>The minimum date converted from Android's millisecond value (milliseconds since January 1, 1970 00:00:00 in the device's default time zone).</value>
 		/// <seealso href="https://developer.android.com/reference/android/widget/DatePicker#getMinDate()">Android documentation for <c>android.widget.DatePicker.getMinDate</c></seealso>
@@ -26,6 +25,5 @@ namespace Android.Widget {
 		public DateTime MaxDateTime {
 			get { return new DateTime (1970, 1, 1).AddMilliseconds (MaxDate); }
 		}
-#endif
 	}
 }

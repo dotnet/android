@@ -1,6 +1,5 @@
 namespace Android.Content.PM;
 
-#if ANDROID_34
 public abstract partial class PackageManager
 {
 	public sealed partial class PackageInfoFlags
@@ -85,4 +84,3 @@ public enum PackageInfoFlagsLong : long
 	[global::System.Runtime.Versioning.SupportedOSPlatformAttribute ("android34.0")]
 	GetAttributionsLong = 2147483648,
 }
-#endif // ANDROID_34

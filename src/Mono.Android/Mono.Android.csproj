@@ -26,12 +26,6 @@
   </PropertyGroup>
 
   <PropertyGroup>
-    <IsUnstableVersion Condition=" '$(IsUnstableVersion)' == ''
-        And $([MSBuild]::VersionGreaterThan($(AndroidApiLevel), $(AndroidLatestStableApiLevel)))
-        And ( '$(AndroidLatestStableApiLevel2)' == '' Or $([MSBuild]::VersionGreaterThan($(AndroidApiLevel), $(AndroidLatestStableApiLevel2))) )
-        "
-    >true</IsUnstableVersion>
-    <DefineConstants Condition=" '$(IsUnstableVersion)' == 'True' ">$(DefineConstants);ANDROID_UNSTABLE</DefineConstants>
     <OutputPath>$(_MonoAndroidNETDefaultOutDir)</OutputPath>
 
     <!-- Allow PublicApiAnalyzers to be turned off -->
@@ -258,7 +252,6 @@
     <Compile Include="Android.Telephony\PhoneNumberUtils.cs" />
     <Compile Include="Android.Telephony\TelephonyManager.cs" />
     <Compile Include="Android.Telephony.Mbms\IGroupCallCallback.cs" />
-    <Compile Include="Android.Test\MoreAsserts.cs" />
     <Compile Include="Android.Text\ClipboardManager.cs" />
     <Compile Include="Android.Text\ITextWatcher.cs" />
     <Compile Include="Android.Text.Format\DateUtils.cs" />

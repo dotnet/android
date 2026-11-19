@@ -7,7 +7,6 @@ namespace Android.Graphics {
 
 	partial class Bitmap {
 
-#if ANDROID_8
 		enum NdkError {
 			Success           = 0,
 			BadParameter      = -1,
@@ -87,13 +86,10 @@ namespace Android.Graphics {
 				CheckNdkError ("AndroidBitmap_unlockPixels", r);
 			}
 		}
-#endif  // ANDROID_8
-#if ANDROID_19
 		[Obsolete ("Use the IsPremultiplied property getter or the SetPremultiplied(bool) method.")]
 		public bool Premultiplied {
 			get {return IsPremultiplied;}
 			set {SetPremultiplied (value);}
 		}
-#endif
 	}
 }

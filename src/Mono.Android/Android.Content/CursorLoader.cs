@@ -1,4 +1,3 @@
-#if ANDROID_11
 using System;
 using Android.Runtime;
 
@@ -22,5 +21,3 @@ namespace Android.Content
 		}
 	}
 }
-
-#endif

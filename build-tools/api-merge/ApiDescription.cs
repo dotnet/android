@@ -1,4 +1,3 @@
-#define KEEP_OLD_WRONG_COMPATIBILITY
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -53,10 +52,6 @@ namespace Xamarin.Android.ApiMerge {
 
 		public void Merge (XDocument n, string apiLocation)
 		{
-#if ADD_OBSOLETE_ON_DISAPPEARANCE
-			var filename = Path.GetFileName (apiLocation);
-			int apiLevel = int.Parse (filename.Substring (4, filename.IndexOf ('.', 4) - 4));
-#endif
 			string platform = null;
 			XElement api = GetRoot (n, apiLocation, out platform);
 			if (!String.IsNullOrEmpty (platform) && contentsPlatform != null) {
@@ -82,7 +77,6 @@ namespace Xamarin.Android.ApiMerge {
 					foreach (var a in ntype.Attributes ()) {
 						var sattr = stype.Attribute (a.Name);
 						switch (a.Name.LocalName) {
-#if KEEP_OLD_WRONG_COMPATIBILITY
 						case "extends":
 							sattr.Value = a.Value;
 							break;
@@ -97,7 +91,6 @@ namespace Xamarin.Android.ApiMerge {
 								sattr.Value = "false";
 							//sattr.Value = a.Value;
 							break;
-#endif
 						default:
 							var sa = stype.Attribute (a.Name);
 							if (sa == null)
@@ -107,20 +100,6 @@ namespace Xamarin.Android.ApiMerge {
 							break;
 						}
 					}
-#if ADD_OBSOLETE_ON_DISAPPEARANCE
-					foreach (var smember in stype.Elements ()) {
-						var nmember = GetMember (ntype, smember);
-						if (nmember == null) {
-							var deprecated = smember.Attribute ("deprecated");
-							if (deprecated != null) {
-								if (!deprecated.Value.StartsWith ("This member has disappeared"))
-									deprecated.Value = "This member has disappeared at API Level " + apiLevel;
-							}
-							else
-								smember.Add (new XAttribute (XName.Get ("deprecated"), "This member has disappeared at API Level " + apiLevel));
-						}
-					}
-#endif
 					foreach (var smember in stype.Elements ()) {
 						var nmember = GetMember (ntype, smember);
 
@@ -136,28 +115,15 @@ namespace Xamarin.Android.ApiMerge {
 						}
 
 						if (nmember.Name.LocalName == "field") {
-							// FIXME: enable this to get the latest field attributes precisely.
-							/*
-							foreach (var a in nmember.Attributes ()) {
-								var sa = smember.Attribute (a.Name);
-								if (sa == null)
-									smember.Add (a);
-								else if (sa.Value != a.Value)
-									sa.SetValue (a.Value);
-							}
-							*/
-
 							// Yes, "constant" values can change between API levels.
 							smember.SetAttributeValue ("value", nmember.Attribute ("value")?.Value);
 
 							UpdateDeprecatedSince (smember, nmember, platform);
 
-#if KEEP_OLD_WRONG_COMPATIBILITY
 							var isDeprecatedS = smember.Attribute ("deprecated");
 							var isDeprecatedN = nmember.Attribute ("deprecated");
 							if (isDeprecatedS != null && isDeprecatedN != null)
 								isDeprecatedS.Value = isDeprecatedN.Value;
-#endif
 							continue;
 						}
 						if (nmember.Name.LocalName == "method" || nmember.Name.LocalName == "constructor") {
@@ -179,10 +145,8 @@ namespace Xamarin.Android.ApiMerge {
 									// explicitly implemented in older API versions, they should be non-default.
 									// So, do not change this attribute if it is an interface method.
 									if (sa.Name.LocalName == "abstract") {
-#if KEEP_OLD_WRONG_COMPATIBILITY
 										if (stype.Name.LocalName != "interface")
 											sa.Value = a.Value;
-#endif
 									}
 									else if (sa.Value != a.Value)
 										sa.SetValue (a.Value);
