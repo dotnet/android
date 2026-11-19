@@ -202,7 +202,8 @@ namespace Xamarin.Android.Build.Tests
 			TestOutputDirectories [TestContext.CurrentContext.Test.ID] = outputDirectory;
 			string adb = Path.Combine (outputDirectory, "adb");
 			File.WriteAllText (adb, $"#!/bin/sh\necho '{terminalCode}'\n");
-			File.SetUnixFileMode (adb, UnixFileMode.UserRead | UnixFileMode.UserWrite | UnixFileMode.UserExecute);
+			if (!OperatingSystem.IsWindows ())
+				File.SetUnixFileMode (adb, UnixFileMode.UserRead | UnixFileMode.UserWrite | UnixFileMode.UserExecute);
 			var startInfo = new ProcessStartInfo (Path.Combine (TestEnvironment.DotNetPreviewDirectory, "dotnet")) {
 				RedirectStandardOutput = true,
 				RedirectStandardError = true,
@@ -233,7 +234,8 @@ namespace Xamarin.Android.Build.Tests
 				printf '%s\n' "$@" > "$ADB_ARGUMENTS_FILE"
 				echo 'INSTRUMENTATION_RESULT: exitCode=0'
 				""");
-			File.SetUnixFileMode (adb, UnixFileMode.UserRead | UnixFileMode.UserWrite | UnixFileMode.UserExecute);
+			if (!OperatingSystem.IsWindows ())
+				File.SetUnixFileMode (adb, UnixFileMode.UserRead | UnixFileMode.UserWrite | UnixFileMode.UserExecute);
 			string[] args = ["", "with spaces", "single' and \"double\"", "Héllo 🌍", "--no-wait"];
 			var startInfo = new ProcessStartInfo (Path.Combine (TestEnvironment.DotNetPreviewDirectory, "dotnet")) {
 				RedirectStandardOutput = true,
