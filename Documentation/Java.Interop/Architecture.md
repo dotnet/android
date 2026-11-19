@@ -194,14 +194,21 @@ They preserve existing zero/`DoNotTransfer` base initializers without adding a
 general initialization API, changing the Throwable internal `None` route, or
 relaxing Java.Interop's raw VM, reference, option, buffer or callback contracts.
 
-Mono.Android's existing public JNI and typed marshal methods likewise preserve
-their public member metadata without adding `RequiresUnsafeAttribute`.
+JNI entry points retained as compatibility exceptions and typed marshal methods
+do not add `RequiresUnsafeAttribute`.
 Implementation-only operations remain inside local unsafe contexts. Under the
 updated rules, pointer and function-pointer parameters no longer require a
 checked caller to enter an unsafe context for these methods. This broadens
 compiler-accepted calls; it does not validate or remove the documented JNI
 reference, buffer, ABI, thread, ownership or lifetime obligations. Java.Interop's
 independently enforced raw contracts are unchanged.
+
+The five new UTF-8 allocation and construction overloads are not covered by this
+compatibility exception. They retain caller-unsafe declarations because a
+`ReadOnlySpan<byte>` does not guarantee NUL-terminated backing storage. JNI reads
+the class name or constructor descriptor through its terminator, not the span's
+length. Callers must acknowledge and satisfy the documented storage, JNI and
+ownership obligations; the declaration does not validate them.
 
 ## Naming conventions
 
