@@ -30,7 +30,10 @@ public class MainActivity : Activity
 		base.OnCreate (savedInstanceState);
 		try {
 			var list = new Java.Util.ArrayList ();
-			list.Add (Java.Lang.Integer.ValueOf (42));
+			// Dispose the wrapper the app created, so ArrayList.get () has to activate a new one.
+			using (var boxed = Java.Lang.Integer.ValueOf (42)) {
+				list.Add (boxed);
+			}
 			var item = list.Get (0);
 			if (item is not Java.Lang.Integer value || item.GetType () != typeof (Java.Lang.Integer) || value.IntValue () != 42) {
 				throw new InvalidOperationException ($"ArrayList.get returned {item?.GetType ()}.");
