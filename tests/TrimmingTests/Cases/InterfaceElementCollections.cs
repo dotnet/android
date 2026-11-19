@@ -4,14 +4,17 @@
 #:property SupportedOSPlatformVersion=24
 #:project TrimmingTests.Expectations/TrimmingTests.Expectations.csproj
 
-// Regression test for https://github.com/dotnet/android/issues/11770: Java collections whose element type is a bound
-// interface (JavaList<ICharSequence>) need a container factory from the interface's proxy; without one the runtime
-// fell back to MakeGenericType, which NativeAOT doesn't support.
+// Regression test for https://github.com/dotnet/android/issues/11770: converting a Java list to a list of a bound interface
+// type (IList<ICharSequence>) needs a container factory for that element type; without one the runtime fell back to
+// MakeGenericType, which NativeAOT doesn't support. Bindings such as Bundle.GetCharSequenceArrayList () construct
+// JavaList<ICharSequence> themselves, so this case lets JavaConvert find the converter: the elements of a
+// JavaList<IList<ICharSequence>> are converted from a runtime Type.
 
 using System;
 using System.Collections.Generic;
 using Android.App;
 using Android.OS;
+using Android.Runtime;
 using Java.Lang;
 
 [Activity (Label = "InterfaceElementCollections", MainLauncher = true)]
@@ -21,11 +24,14 @@ public class MainActivity : Activity
 	{
 		base.OnCreate (savedInstanceState);
 		try {
-			var bundle = new Bundle ();
-			bundle.PutCharSequenceArrayList ("key", new List<ICharSequence> { new Java.Lang.String ("value") });
-			var list = bundle.GetCharSequenceArrayList ("key") ?? throw new InvalidOperationException ("The list is missing.");
+			using var inner = new Java.Util.ArrayList ();
+			inner.Add (new Java.Lang.String ("value"));
+			using var outer = new Java.Util.ArrayList ();
+			outer.Add (inner);
+			using var lists = new JavaList<IList<ICharSequence>> (outer.Handle, JniHandleOwnership.DoNotTransfer);
+			var list = lists [0] ?? throw new InvalidOperationException ("The inner list is missing.");
 			if (list.Count != 1 || list [0]?.ToString () != "value") {
-				throw new InvalidOperationException ($"The list round-tripped as [{string.Join (", ", list)}].");
+				throw new InvalidOperationException ($"The list was converted as [{string.Join (", ", list)}].");
 			}
 			Android.Util.Log.Info ("TrimmingTests", "TRIMMING_TEST_RESULT: PASS");
 		} catch (System.Exception e) {

@@ -33,9 +33,10 @@ public class MainActivity : Activity
 				throw new InvalidOperationException ($"Android did not run the custom application's OnCreate (); the application is {Application?.Class.Name}.");
 			}
 			var packageManager = PackageManager ?? throw new InvalidOperationException ("No PackageManager.");
+			var packageName = PackageName ?? throw new InvalidOperationException ("The activity has no package name.");
 			var info = OperatingSystem.IsAndroidVersionAtLeast (33)
-				? packageManager.GetApplicationInfo (PackageName!, PackageManager.ApplicationInfoFlags.Of ((long) PackageInfoFlags.MetaData))
-				: packageManager.GetApplicationInfo (PackageName!, PackageInfoFlags.MetaData);
+				? packageManager.GetApplicationInfo (packageName, PackageManager.ApplicationInfoFlags.Of ((long) PackageInfoFlags.MetaData))
+				: packageManager.GetApplicationInfo (packageName, PackageInfoFlags.MetaData);
 			var value = info.MetaData?.GetString (MetaDataKey);
 			if (value != "present") {
 				throw new InvalidOperationException ($"The {MetaDataKey} meta-data is '{value}'.");

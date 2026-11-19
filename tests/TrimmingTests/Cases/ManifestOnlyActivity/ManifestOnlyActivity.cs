@@ -23,7 +23,8 @@ public class MainActivity : Activity
 		base.OnCreate (savedInstanceState);
 		try {
 			// The started activity reports the result.
-			StartActivity (new Intent ().SetClassName (PackageName!, "net.dot.trimmingtests.ManifestDeclaredActivity"));
+			var packageName = PackageName ?? throw new InvalidOperationException ("The activity has no package name.");
+			StartActivity (new Intent ().SetClassName (packageName, "net.dot.trimmingtests.ManifestDeclaredActivity"));
 		} catch (Exception e) {
 			Android.Util.Log.Error ("TrimmingTests", $"TRIMMING_TEST_RESULT: FAIL {e}");
 		}

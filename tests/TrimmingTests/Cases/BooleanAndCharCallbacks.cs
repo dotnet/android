@@ -24,7 +24,9 @@ public class MainActivity : Activity
 		try {
 			// Handler.Callback.handleMessage () returns a JNI boolean.
 			var callback = new MessageCallback ();
-			new Handler (Looper.MainLooper!, callback).DispatchMessage (Message.Obtain ()!);
+			var looper = Looper.MainLooper ?? throw new InvalidOperationException ("There is no main looper.");
+			var message = Message.Obtain () ?? throw new InvalidOperationException ("Message.Obtain () returned null.");
+			new Handler (looper, callback).DispatchMessage (message);
 			if (!callback.Handled) {
 				throw new InvalidOperationException ("Java did not call Handler.Callback.handleMessage ().");
 			}

@@ -48,10 +48,11 @@ public class JavaCallableWrapperTests : TrimmingTestBase
 		AssertTrimmingExpectations (app);
 	}
 
-	// A Java peer whose constructors and type map proxy were trimmed doesn't keep its Java callable wrapper either.
+	// A Java peer whose constructors and type map proxy were trimmed doesn't keep its Java callable wrapper either. Partial
+	// trimming keeps the app assembly whole, so the peer stays activatable there; other cases cover activation from Java.
 	[Test]
 	[Ignore ("https://github.com/dotnet/android/issues/13650: D8 builds and NativeAOT keep every Java callable wrapper.")]
-	public void OrphanedJavaCallableWrapperIsRemovedWithoutWarnings ([TrimmingConfigurations] TrimmingConfiguration configuration)
+	public void OrphanedJavaCallableWrapperIsRemovedWithoutWarnings ([TrimmingConfigurations (TrimmingConfiguration.CoreClrFullTrimming, TrimmingConfiguration.NativeAot)] TrimmingConfiguration configuration)
 	{
 		var app = BuildAndRun ("Cases/OrphanedJavaCallableWrapper.cs", configuration);
 		AssertTrimmingExpectations (app);

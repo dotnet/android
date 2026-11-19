@@ -23,7 +23,8 @@ public class MainActivity : Activity
 		base.OnCreate (savedInstanceState);
 		try {
 			// The receiver starts the service, and the service reports the result.
-			SendBroadcast (new Intent ().SetClassName (PackageName!, "net.dot.trimmingtests.ByNameReceiver"));
+			var packageName = PackageName ?? throw new InvalidOperationException ("The activity has no package name.");
+			SendBroadcast (new Intent ().SetClassName (packageName, "net.dot.trimmingtests.ByNameReceiver"));
 		} catch (Exception e) {
 			Android.Util.Log.Error ("TrimmingTests", $"TRIMMING_TEST_RESULT: FAIL {e}");
 		}
@@ -38,7 +39,11 @@ class ByNameReceiver : BroadcastReceiver
 	[Kept]
 	public override void OnReceive (Context? context, Intent? intent)
 	{
-		context?.StartService (new Intent ().SetClassName (context.PackageName!, "net.dot.trimmingtests.ByNameService"));
+		if (context?.PackageName is not { } packageName) {
+			Android.Util.Log.Error ("TrimmingTests", "TRIMMING_TEST_RESULT: FAIL The receiver got no context package name.");
+			return;
+		}
+		context.StartService (new Intent ().SetClassName (packageName, "net.dot.trimmingtests.ByNameService"));
 	}
 }
 

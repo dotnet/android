@@ -55,9 +55,9 @@ public class JavaPeerActivationTests : TrimmingTestBase
 		AssertTrimmingExpectations (app);
 	}
 
-	// A Java list of a bound interface type round-trips through a Bundle.
+	// A Java list is converted to a list of a bound interface type from a runtime Type.
 	[Test]
-	public void InterfaceElementCollectionsRoundTripWithoutWarnings ([TrimmingConfigurations] TrimmingConfiguration configuration)
+	public void InterfaceElementCollectionsAreConvertedWithoutWarnings ([TrimmingConfigurations] TrimmingConfiguration configuration)
 	{
 		var app = BuildAndRun ("Cases/InterfaceElementCollections.cs", configuration);
 		AssertTrimmingExpectations (app);
