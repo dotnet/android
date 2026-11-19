@@ -3788,6 +3788,62 @@ Facebook.FacebookSdk.LogEvent(""TestFacebook"");
 			StringAssert.Contains ("Hello, edited Android!", RunFile ());
 		}
 
+		[Test]
+		public void DotNetRunConsoleBenchmarkDotNet ()
+		{
+			if (IgnoreUnsupportedConfiguration (AndroidRuntime.CoreCLR, release: true))
+				return;
+
+			var proj = new DotNetStandard {
+				ProjectName = nameof (DotNetRunConsoleBenchmarkDotNet),
+				Sdk = "Microsoft.NET.Sdk",
+				TargetFramework = $"{XABuildConfig.LatestDotNetTargetFramework}-android",
+				IsRelease = true,
+			};
+			proj.SetProperty ("OutputType", "Exe");
+			proj.SetRuntime (AndroidRuntime.CoreCLR);
+			proj.SetRuntimeIdentifiers ([DeviceAbi]);
+			proj.PackageReferences.Add (new Package { Id = "BenchmarkDotNet", Version = "0.15.8" });
+			proj.Sources.Add (new BuildItem.Source ("Program.cs") {
+				TextContent = () => """
+					using BenchmarkDotNet.Attributes;
+					using BenchmarkDotNet.Running;
+
+					BenchmarkRunner.Run<SampleBenchmarks> ();
+
+					[InProcess]
+					public class SampleBenchmarks
+					{
+						[Benchmark]
+						public int Sum ()
+						{
+							int total = 0;
+							for (int i = 0; i < 1000; i++)
+								total += i;
+							return total;
+						}
+					}
+					""",
+			});
+
+			using var builder = CreateApkBuilder ();
+			builder.Save (proj);
+			var dotnet = new DotNetCLI (Path.Combine (Root, builder.ProjectDirectory, proj.ProjectFilePath));
+			Assert.IsTrue (dotnet.Build (parameters: ["Configuration=Release"]), $"`dotnet build` should succeed. See {dotnet.BuildLogFile}.");
+			using var process = dotnet.StartRun (parameters: [
+				"--configuration", "Release", "--device", RunAdbCommand ("get-serialno").Trim (),
+			]);
+			var output = new StringBuilder ();
+			bool completed = process.WaitForExitAndOutput (output, TimeSpan.FromMinutes (5));
+			string logPath = Path.Combine (Root, builder.ProjectDirectory, "dotnet-run-console-benchmarkdotnet.log");
+			File.WriteAllText (logPath, output.ToString ());
+			TestContext.AddTestAttachment (logPath);
+
+			Assert.IsTrue (completed, $"`dotnet run` did not complete in time. See {logPath}.");
+			Assert.AreEqual (0, process.ExitCode, $"`dotnet run` should succeed. See {logPath}.");
+			StringAssert.Contains ("| Sum", output.ToString (), $"The benchmark summary should reach stdout. See {logPath}.");
+		}
+
 		static int ParseInstrumentationResult (string output, string key)
 		{
 			var value = ParseInstrumentationStringResult (output, key);

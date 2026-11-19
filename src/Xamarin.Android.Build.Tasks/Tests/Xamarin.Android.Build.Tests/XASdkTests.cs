@@ -281,6 +281,7 @@ namespace Xamarin.Android.Build.Tests
 
 		[Test]
 		[TestCase ("android-console", "AndroidConsole.cs")]
+		[TestCase ("android-benchmark", "Benchmarks.cs")]
 		public void DotNetNewFileBasedApplication (string template, string fileName)
 		{
 			var templatePath = Path.Combine (Root, "temp", TestName);
