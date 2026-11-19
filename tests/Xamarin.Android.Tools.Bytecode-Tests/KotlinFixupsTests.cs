@@ -1,8 +1,10 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Xml.Linq;
 using NUnit.Framework;
 using Xamarin.Android.Tools.Bytecode;
 
@@ -453,6 +455,58 @@ namespace Xamarin.Android.Tools.BytecodeTests
 		}
 
 		[Test]
+		public void AmbiguousFunctionMetadata_SyntheticBridgeIsSkippedWithoutWarning ()
+		{
+			var klass = LoadClassFile ("AmbiguousOverloads.class");
+			var bridge = klass.Methods.Single (m => m.Name == "put" && m.Descriptor == "(Ljava/lang/Object;)V");
+
+			var warnings = FixupAndCaptureWarnings (klass);
+
+			// Both `put` functions match the bridge. The first match, the internal `put(count: Int)`, would hide it.
+			Assert.IsTrue (bridge.AccessFlags.HasFlag (MethodAccessFlags.Public));
+			Assert.IsEmpty (warnings);
+		}
+
+		[Test]
+		public void AmbiguousFunctionMetadata_ReportsWarning ()
+		{
+			var klass = LoadClassFile ("AmbiguousOverloads.class");
+			var method = klass.Methods.Single (m => m.Name == "put" && m.Descriptor == "(Ljava/lang/Object;)V");
+
+			// Make the bridge look like a public API method.
+			method.AccessFlags = MethodAccessFlags.Public;
+
+			var warnings = FixupAndCaptureWarnings (klass);
+
+			Assert.IsTrue (method.AccessFlags.HasFlag (MethodAccessFlags.Public));
+			Assert.AreEqual (1, warnings.Count, string.Join (Environment.NewLine, warnings));
+			StringAssert.StartsWith ("class-parse: warning XA4268: ", warnings [0]);
+			StringAssert.Contains ("'xat/bytecode/tests/AmbiguousOverloads.put(Ljava/lang/Object;)V'", warnings [0]);
+			StringAssert.Contains ("put(I)V, put(Ljava/lang/String;)V", warnings [0]);
+		}
+
+		[Test]
+		public void JvmNameOnlySignatureHasNoJvmSignature ()
+		{
+			var klass = LoadClassFile ("AmbiguousOverloads.class");
+			var function = GetClassMetadataForClass (klass).Functions.Single (f => f.Name == "original");
+
+			Assert.AreEqual ("renamed", function.JvmName);
+			Assert.IsNull (function.JvmSignature);
+		}
+
+		static List<string> FixupAndCaptureWarnings (ClassFile klass)
+		{
+			var warnings = new List<string> ();
+			Log.OnLog = (level, verbosity, format, args) => {
+				if (level == TraceLevel.Warning)
+					warnings.Add (string.Format (format, args));
+			};
+			KotlinFixups.Fixup (new [] { klass });
+			return warnings;
+		}
+
+		[Test]
 		public void GetMethodNameWithoutUnsignedSuffix ()
 		{
 			// Just a few quick tests to ensure the various cases are covered
@@ -460,6 +514,90 @@ namespace Xamarin.Android.Tools.BytecodeTests
 			Assert.AreEqual ("setFoo", KotlinUtilities.GetMethodNameWithoutUnsignedSuffix ("setFoo-7apg3OU"));
 			Assert.AreEqual ("setFoo$main", KotlinUtilities.GetMethodNameWithoutUnsignedSuffix ("setFoo-7apg3OU$main"));
 			Assert.AreEqual ("setFoo$main", KotlinUtilities.GetMethodNameWithoutUnsignedSuffix ("setFoo$main"));
+		}
+
+		[Test]
+		public void NullabilityFromKotlinMetadata ()
+		{
+			var klass = LoadClassFile ("Nullability.class");
+
+			// Remove the @NotNull/@Nullable annotations (as R8 can do), so only Kotlin metadata is left
+			foreach (var m in klass.Methods)
+				RemoveInvisibleAnnotations (m.Attributes);
+			foreach (var f in klass.Fields)
+				RemoveInvisibleAnnotations (f.Attributes);
+
+			KotlinFixups.Fixup (new [] { klass });
+
+			var xml = new XmlClassDeclarationBuilder (klass).ToXElement ();
+
+			XElement Method (string name) => xml.Elements ("method").Single (e => e.Attribute ("name").Value == name);
+			XElement Field (string name) => xml.Elements ("field").Single (e => e.Attribute ("name").Value == name);
+			string ReturnNotNull (XElement e) => e.Attribute ("return-not-null")?.Value;
+			string NotNull (XElement e) => e.Attribute ("not-null")?.Value;
+
+			// Constructors
+			List<XElement> CtorParameters (string jni) => xml.Elements ("constructor").Single (e => e.Attribute ("jni-signature").Value == jni).Elements ("parameter").ToList ();
+			var primary = CtorParameters ("(Ljava/lang/String;Ljava/lang/String;)V");
+			Assert.IsNull (NotNull (primary [0]), "Two Java constructors match the primary constructor.");
+			Assert.IsNull (NotNull (primary [1]));
+			var secondary = CtorParameters ("(Ljava/lang/String;Ljava/lang/Object;)V");
+			Assert.IsNull (NotNull (secondary [0]));
+			Assert.AreEqual ("true", NotNull (secondary [1]));
+
+			// Properties
+			Assert.AreEqual ("true", ReturnNotNull (Method ("getName")));
+			Assert.IsNull (ReturnNotNull (Method ("getNickname")));
+			Assert.AreEqual ("true", ReturnNotNull (Method ("getTitle")));
+			Assert.AreEqual ("true", NotNull (Method ("setTitle").Element ("parameter")));
+			Assert.IsNull (ReturnNotNull (Method ("getSubtitle")));
+			Assert.IsNull (NotNull (Method ("setSubtitle").Element ("parameter")));
+
+			// Fields
+			Assert.AreEqual ("true", NotNull (Field ("field")));
+			Assert.IsNull (NotNull (Field ("nullableField")));
+			Assert.IsNull (NotNull (Field ("late")), "A lateinit field is null until it is set.");
+
+			// Functions
+			var join = Method ("join");
+			var join_parameters = join.Elements ("parameter").ToList ();
+			Assert.AreEqual ("true", ReturnNotNull (join));
+			Assert.AreEqual ("true", NotNull (join_parameters [0]));
+			Assert.IsNull (NotNull (join_parameters [1]));
+			Assert.IsNull (NotNull (join_parameters [2]), "A primitive type is not a reference.");
+
+			var find = Method ("find");
+			Assert.IsNull (ReturnNotNull (find));
+			Assert.AreEqual ("true", NotNull (find.Element ("parameter")));
+
+			var generic = Method ("generic");
+			Assert.IsNull (ReturnNotNull (generic), "A type parameter can be null.");
+			Assert.IsNull (NotNull (generic.Element ("parameter")));
+
+			var extension = Method ("extension");
+			Assert.AreEqual ("true", ReturnNotNull (extension));
+			Assert.AreEqual ("true", NotNull (extension.Element ("parameter")), "The extension receiver is not null.");
+
+			Assert.IsNull (ReturnNotNull (xml.Elements ("method").Single (e => e.Attribute ("name").Value.StartsWith ("produce", StringComparison.Ordinal))),
+				"An unboxed value class can be null in Java.");
+			Assert.IsNull (ReturnNotNull (Method ("getPlatform")), "A platform type can be null.");
+
+			// The JVM return type is Object, not String
+			var fetch = Method ("fetch");
+			Assert.IsNull (ReturnNotNull (fetch));
+			Assert.AreEqual ("true", NotNull (fetch.Elements ("parameter").First ()));
+
+			// Unrelated methods and fields with the same names as property accessors
+			Assert.IsNull (ReturnNotNull (Method ("getX")));
+			Assert.IsNull (ReturnNotNull (xml.Elements ("method").Single (e => e.Attribute ("name").Value == "getLabel" && !e.Elements ("parameter").Any ())));
+			Assert.IsNull (NotNull (Field ("label")));
+			Assert.IsNull (ReturnNotNull (Method ("getIsReady")));
+		}
+
+		static void RemoveInvisibleAnnotations (AttributeCollection attributes)
+		{
+			foreach (var a in attributes.Where (a => a.GetType ().Name.StartsWith ("RuntimeInvisible", StringComparison.Ordinal)).ToList ())
+				attributes.Remove (a);
 		}
 	}
 }

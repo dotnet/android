@@ -61,7 +61,6 @@ used by all .NET Android projects.
       <_AndroidSdkInput Include="AndroidSdkDirectory" />
       <_AndroidSdkInput Include="AndroidNdkDirectory" />
       <_AndroidSdkInput Include="JavaSdkDirectory" />
-      <_AndroidSdkInput Include="AndroidCommandLineToolsVersion" />
       <_AndroidSdkInput Include="MinimumSupportedJavaVersion" />
       <_AndroidSdkInput Include="LatestSupportedJavaVersion" />
       <_AndroidSdkInput Include="AndroidApiInfoDirectories" PropertyName="_AndroidApiInfoDirectoryPaths" />
@@ -83,7 +82,6 @@ used by all .NET Android projects.
       <_AndroidUseResolvedSdk Condition=" '$(_ComputeFilesToPublishForRuntimeIdentifiers)' == 'true' and '$(_OuterIntermediateOutputPath)' != '' and '$(DesignTimeBuild)' != 'true' and '$(_AndroidAllowMissingSdkTooling)' != 'true' and '$(_SkipNdkResolution)' != 'true' and '@(_AndroidChangedSdkInput->Count())' == '0' and '$(_AndroidOuterSdkDirectory)' != '' and '$(_AndroidOuterJavaSdkDirectory)' != '' ">true</_AndroidUseResolvedSdk>
     </PropertyGroup>
     <PropertyGroup Condition=" '$(_AndroidUseResolvedSdk)' == 'true' ">
-      <_AndroidToolsDirectory>$(_AndroidOuterToolsDirectory)</_AndroidToolsDirectory>
       <AndroidSdkDirectory Condition=" '$(AndroidSdkDirectory)' == '' ">$(_AndroidOuterSdkDirectory)</AndroidSdkDirectory>
       <JavaSdkDirectory Condition=" '$(JavaSdkDirectory)' == '' ">$(_AndroidOuterJavaSdkDirectory)</JavaSdkDirectory>
       <_AndroidNdkDirectory>$(_AndroidOuterNdkDirectory)</_AndroidNdkDirectory>
@@ -96,14 +94,12 @@ used by all .NET Android projects.
     <ResolveSdks
         Condition=" '$(_AndroidUseResolvedSdk)' != 'true' "
         ContinueOnError="$(_AndroidAllowMissingSdkTooling)"
-        CommandLineToolsVersion="$(AndroidCommandLineToolsVersion)"
         AndroidSdkPath="$(AndroidSdkDirectory)"
         AndroidNdkPath="$(AndroidNdkDirectory)"
         JavaSdkPath="$(JavaSdkDirectory)"
         MinimumSupportedJavaVersion="$(MinimumSupportedJavaVersion)"
         LatestSupportedJavaVersion="$(LatestSupportedJavaVersion)"
         ReferenceAssemblyPaths="@(_AndroidApiInfoDirectories)">
-      <Output TaskParameter="CommandLineToolsPath"      PropertyName="_AndroidToolsDirectory" />
       <Output TaskParameter="AndroidSdkPath"            PropertyName="AndroidSdkDirectory" Condition=" '$(AndroidSdkDirectory)' == '' " />
       <Output TaskParameter="JavaSdkPath"               PropertyName="JavaSdkDirectory"    Condition=" '$(JavaSdkDirectory)' == '' " />
       <Output TaskParameter="AndroidNdkPath"            PropertyName="_AndroidNdkDirectory" />
@@ -123,7 +119,6 @@ used by all .NET Android projects.
     <PropertyGroup Condition=" '$(DesignTimeBuild)' != 'true' and '$(_AndroidAllowMissingSdkTooling)' != 'true' and '$(_SkipNdkResolution)' != 'true' ">
       <_AndroidResolvedSdkProperties>
         @(_AndroidSdkInput->'_AndroidOuterSdkInput%(Identity)=%(EscapedValue)')
-        ;_AndroidOuterToolsDirectory=$([MSBuild]::Escape('$(_AndroidToolsDirectory)'))
         ;_AndroidOuterSdkDirectory=$([MSBuild]::Escape('$(_AndroidSdkDirectory)'))
         ;_AndroidOuterNdkDirectory=$([MSBuild]::Escape('$(_AndroidNdkDirectory)'))
         ;_AndroidOuterJavaSdkDirectory=$([MSBuild]::Escape('$(_JavaSdkDirectory)'))

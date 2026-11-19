@@ -80,7 +80,7 @@ variables:
 - name: NetCoreInternalPoolName
   value: NetCore1ESPool-Internal
 - name: WindowsPoolImageNetCoreInternal
-  value: windows.vs2022.amd64
+  value: windows.vs2026.amd64
 - name: LinuxPoolImageNetCoreInternal
   value: build.ubuntu.2204.amd64
 # Skip tests when explicitly requested; otherwise run full test matrix.
@@ -168,6 +168,7 @@ extends:
         displayName: Windows > Build & Smoke Test
         pool:
           name: $(NetCoreInternalPoolName)
+          # The build runs a .NET TaskHost test that requires MSBuild 18.7 or later.
           image: $(WindowsPoolImageNetCoreInternal)
           os: windows
         timeoutInMinutes: 240
@@ -658,7 +659,7 @@ extends:
       jobs:
       - job: mac_msbuild_tests
         strategy:
-          parallel: 10
+          parallel: 9
         displayName: macOS > Tests > MSBuild
         # dnceng/internal has no AcesShared pool, so use hosted macOS images
         pool:
@@ -670,7 +671,6 @@ extends:
         steps:
         - template: /build-tools/automation/yaml-templates/setup-test-environment-public.yaml@self
           parameters:
-            installTestSlicer: true
             remove_dotnet: true
             use1ESTemplate: true
 
@@ -705,7 +705,7 @@ extends:
 
       - job: win_msbuild_tests
         strategy:
-          parallel: 8
+          parallel: 7
         displayName: Windows > Tests > MSBuild
         pool:
           name: $(NetCoreInternalPoolName)
@@ -723,7 +723,6 @@ extends:
         - template: /build-tools/automation/yaml-templates/setup-test-environment-public.yaml@self
           parameters:
             useAgentJdkPath: false
-            installTestSlicer: true
             use1ESTemplate: true
 
         # AndroidGradleProjectTests run the Gradle wrapper, which downloads the
@@ -779,7 +778,6 @@ extends:
           parameters:
             jdkMajorVersion: $(DefaultJavaSdkMajorVersion)
             useAgentJdkPath: true
-            installTestSlicer: true
             installApkDiff: false
             remove_dotnet: true
             use1ESTemplate: true
@@ -802,7 +800,7 @@ extends:
         - template: /build-tools/automation/yaml-templates/run-sliced-nunit-tests.yaml@self
           parameters:
             testAssembly: $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/MSBuildDeviceIntegration/$(DotNetStableTargetFramework)/MSBuildDeviceIntegration.dll
-            testFilter: $(ExcludedNightlyNUnitCategories)
+            testFilter: $(ExcludedNightlyTestCategories)
             testRunTitle: MSBuildDeviceIntegration On Device - macOS
 
         - template: /build-tools/automation/yaml-templates/upload-results.yaml@self

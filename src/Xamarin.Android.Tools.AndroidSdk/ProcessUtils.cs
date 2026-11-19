@@ -14,15 +14,11 @@ namespace Xamarin.Android.Tools
 {
 	public static class ProcessUtils
 	{
-		static string[] ExecutableFileExtensions;
-
-		static ProcessUtils ()
-		{
+		static readonly Lazy<string[]> ExecutableFileExtensions = new Lazy<string[]> (() => {
 			var pathExt     = Environment.GetEnvironmentVariable (EnvironmentVariableNames.PathExt);
 			var pathExts    = pathExt?.Split (new char [] { Path.PathSeparator }, StringSplitOptions.RemoveEmptyEntries) ?? new string [0];
-
-			ExecutableFileExtensions    = pathExts;
-		}
+			return pathExts;
+		});
 
 		/// Backward-compatible overload matching the original shipped API (without environmentVariables).
 #pragma warning disable RS0027 // Public API with optional parameter(s) should have the most parameters amongst its public overloads
@@ -321,26 +317,27 @@ namespace Xamarin.Android.Tools
 				logger: logger)?.Path;
 		}
 
-		internal static IEnumerable<string> FindExecutablesInPath (string executable)
+		internal static IEnumerable<string> FindExecutablesInPath (string executable, IDictionary<string, string>? environmentVariables = null, string? workingDirectory = null)
 		{
-			var path        = Environment.GetEnvironmentVariable (EnvironmentVariableNames.Path) ?? "";
+			var path        = GetEnvironmentVariable (EnvironmentVariableNames.Path, environmentVariables) ?? "";
 			var pathDirs    = path.Split (new char[] { Path.PathSeparator }, StringSplitOptions.RemoveEmptyEntries);
 
 			foreach (var dir in pathDirs) {
-				foreach (var exe in FindExecutablesInDirectory (dir, executable)) {
+				foreach (var exe in FindExecutablesInDirectory (dir, executable, environmentVariables, workingDirectory)) {
 					yield return exe;
 				}
 			}
 		}
 
-		internal static IEnumerable<string> FindExecutablesInDirectory (string dir, string executable)
+		internal static IEnumerable<string> FindExecutablesInDirectory (string dir, string executable, IDictionary<string, string>? environmentVariables = null, string? workingDirectory = null)
 		{
-			if (!Directory.Exists (dir))
+			var directory = ResolvePath (dir, workingDirectory);
+			if (directory == null || !Directory.Exists (directory))
 				yield break;
-			foreach (var exe in ExecutableFiles (executable)) {
+			foreach (var exe in ExecutableFiles (executable, environmentVariables)) {
 				string exePath;
 				try {
-					exePath = Path.Combine (dir, exe);
+					exePath = Path.Combine (directory, exe);
 				} catch (ArgumentException) {
 					continue;
 				}
@@ -349,14 +346,65 @@ namespace Xamarin.Android.Tools
 			}
 		}
 
-		internal static IEnumerable<string> ExecutableFiles (string executable)
+		internal static string? ResolvePath (string path, string? workingDirectory)
 		{
-			if (ExecutableFileExtensions == null || ExecutableFileExtensions.Length == 0) {
+			if (workingDirectory == null)
+				return path;
+			var baseRoot = Path.GetPathRoot (workingDirectory);
+			if (string.IsNullOrEmpty (baseRoot) || (OS.IsWindows && baseRoot.Length < 3))
+				throw new ArgumentException ("The working directory must be an absolute path.", nameof (workingDirectory));
+			if (path.Length == 0 || (OS.IsWindows && string.IsNullOrWhiteSpace (path)) || path.IndexOfAny (Path.GetInvalidPathChars ()) >= 0)
+				return null;
+			try {
+				if (OS.IsWindows) {
+					var root = Path.GetPathRoot (path);
+					if (root?.Length == 1) {
+						path = Path.Combine (baseRoot, path.Substring (1));
+					} else if (root?.Length == 2 && root [1] == ':') {
+						// Drive-relative paths use the project's directory on the same drive.
+						path = string.Equals (root, baseRoot.Substring (0, 2), StringComparison.OrdinalIgnoreCase)
+							? path.Substring (2)
+							: root + Path.DirectorySeparatorChar + path.Substring (2);
+					}
+				}
+				return Path.GetFullPath (Path.Combine (workingDirectory, path));
+			} catch (ArgumentException) {
+				return null;
+			} catch (NotSupportedException) {
+				return null;
+			} catch (PathTooLongException) {
+				return null;
+			}
+		}
+
+		internal static string? GetEnvironmentVariable (string name, IDictionary<string, string>? environmentVariables)
+		{
+			if (environmentVariables == null)
+				return Environment.GetEnvironmentVariable (name);
+			if (environmentVariables.TryGetValue (name, out var value))
+				return value;
+			if (OS.IsWindows)
+				foreach (var pair in environmentVariables)
+					if (string.Equals (pair.Key, name, StringComparison.OrdinalIgnoreCase))
+						return pair.Value;
+			return null;
+		}
+
+		internal static string? GetUnixHome (IDictionary<string, string>? environmentVariables)
+			=> environmentVariables == null
+				? Environment.GetFolderPath (Environment.SpecialFolder.UserProfile)
+				: GetEnvironmentVariable ("HOME", environmentVariables);
+
+		internal static IEnumerable<string> ExecutableFiles (string executable, IDictionary<string, string>? environmentVariables = null)
+		{
+			var extensions = environmentVariables == null ? ExecutableFileExtensions.Value :
+				GetEnvironmentVariable (EnvironmentVariableNames.PathExt, environmentVariables)?.Split (new [] { Path.PathSeparator }, StringSplitOptions.RemoveEmptyEntries);
+			if (extensions == null || extensions.Length == 0) {
 				yield return executable;
 				yield break;
 			}
 
-			foreach (var ext in ExecutableFileExtensions)
+			foreach (var ext in extensions)
 				yield return Path.ChangeExtension (executable, ext);
 			yield return executable;
 		}
@@ -376,10 +424,10 @@ namespace Xamarin.Android.Tools
 #if !NET5_0_OR_GREATER
 		[DllImport ("shell32.dll")]
 		[return: MarshalAs (UnmanagedType.Bool)]
-		static extern bool IsUserAnAdmin ();
+		static safe extern bool IsUserAnAdmin ();
 
 		[DllImport ("libc", SetLastError = true)]
-		static extern uint geteuid ();
+		static safe extern uint geteuid ();
 #endif
 	}
 }

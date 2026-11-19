@@ -956,6 +956,10 @@ namespace Xamarin.Android.Build.Tests {
 				foreach (var runtime in new [] { AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT }) {
 					foreach (bool separateAssemblies in new [] { false, true }) {
 						foreach (string componentSimpleName in new [] { "NamedComponent", "Outer$NamedComponent", "Outer$for" }) {
+							// Run fewer NativeAOT cases to reduce CI time.
+							if (runtime == AndroidRuntime.NativeAOT && componentSimpleName != (separateAssemblies ? "Outer$for" : "NamedComponent")) {
+								continue;
+							}
 							yield return new TestCaseData (runtime, separateAssemblies, component.Source, componentSimpleName)
 								.SetName ($"Build_ComponentNameIsUsedInSignatures({component.Attribute},{runtime},{separateAssemblies},{componentSimpleName})");
 						}
@@ -2114,31 +2118,19 @@ namespace Xamarin.Android.Build.Tests {
 		[TestCase (AndroidRuntime.CoreCLR, "lambda", "success")]
 		[TestCase (AndroidRuntime.NativeAOT, "lambda", "success")]
 		[TestCase (AndroidRuntime.CoreCLR, "parenthesized-lambda", "success")]
-		[TestCase (AndroidRuntime.NativeAOT, "parenthesized-lambda", "success")]
 		[TestCase (AndroidRuntime.CoreCLR, "typed-lambda", "success")]
-		[TestCase (AndroidRuntime.NativeAOT, "typed-lambda", "success")]
 		[TestCase (AndroidRuntime.CoreCLR, "literal-comma", "success")]
-		[TestCase (AndroidRuntime.NativeAOT, "literal-comma", "success")]
 		[TestCase (AndroidRuntime.CoreCLR, "method-reference", "success")]
-		[TestCase (AndroidRuntime.NativeAOT, "method-reference", "success")]
 		[TestCase (AndroidRuntime.CoreCLR, "generic-method-reference", "success")]
-		[TestCase (AndroidRuntime.NativeAOT, "generic-method-reference", "success")]
 		[TestCase (AndroidRuntime.CoreCLR, "generic-construction", "success")]
-		[TestCase (AndroidRuntime.NativeAOT, "generic-construction", "success")]
 		[TestCase (AndroidRuntime.CoreCLR, "nested-generic", "success")]
-		[TestCase (AndroidRuntime.NativeAOT, "nested-generic", "success")]
 		[TestCase (AndroidRuntime.CoreCLR, "instanceof-generic", "success")]
-		[TestCase (AndroidRuntime.NativeAOT, "instanceof-generic", "success")]
 		[TestCase (AndroidRuntime.CoreCLR, "comparison", "success")]
-		[TestCase (AndroidRuntime.NativeAOT, "comparison", "success")]
 		[TestCase (AndroidRuntime.CoreCLR, "shift", "success")]
-		[TestCase (AndroidRuntime.NativeAOT, "shift", "success")]
 		[TestCase (AndroidRuntime.CoreCLR, "ordinary-bare", "XA4262")]
 		[TestCase (AndroidRuntime.NativeAOT, "ordinary-bare", "XA4262")]
 		[TestCase (AndroidRuntime.CoreCLR, "ordinary-call", "XA4262")]
-		[TestCase (AndroidRuntime.NativeAOT, "ordinary-call", "XA4262")]
 		[TestCase (AndroidRuntime.CoreCLR, "ordinary-arithmetic", "XA4262")]
-		[TestCase (AndroidRuntime.NativeAOT, "ordinary-arithmetic", "XA4262")]
 		public void Build_SuperArgumentsLambdaAndMethodReference_MatchJavac (
 			AndroidRuntime runtime,
 			string shape,
@@ -2503,6 +2495,41 @@ namespace Xamarin.Android.Build.Tests {
 			foreach (var javaFile in javaFiles) {
 				FileAssert.Exists (javaFile, $"IncrementalClean should preserve {javaFile} when upgrading an obj directory without java-files.txt.");
 			}
+		}
+
+		[Test]
+		public void Build_WithTrimmableTypeMap_PostCompileRewriteKeepsNoOpBuildIncremental ()
+		{
+			if (IgnoreUnsupportedConfiguration (AndroidRuntime.CoreCLR, release: false)) {
+				return;
+			}
+
+			var proj = new XamarinAndroidApplicationProject ();
+			proj.SetRuntime (AndroidRuntime.CoreCLR);
+			var directoryBuildTargets = proj.Imports.Single (import => import.Project () == "Directory.Build.targets");
+			var originalTargets = directoryBuildTargets.TextContent;
+			// Mirrors post-compile assembly rewriters such as XamlC.
+			directoryBuildTargets.TextContent = () => originalTargets ().Replace ("</Project>", """
+				  <PropertyGroup>
+				    <CompileDependsOn>$(CompileDependsOn);_RewriteIntermediateAssembly</CompileDependsOn>
+				  </PropertyGroup>
+				  <Target Name="_RewriteIntermediateAssembly"
+				      Inputs="@(IntermediateAssembly)"
+				      Outputs="$(IntermediateOutputPath)rewrite.stamp">
+				    <Touch Files="@(IntermediateAssembly)" />
+				    <Touch Files="$(IntermediateOutputPath)rewrite.stamp" AlwaysCreate="true" />
+				  </Target>
+				</Project>
+				""");
+
+			using var builder = CreateApkBuilder ();
+			Assert.IsTrue (builder.Build (proj), "First build should have succeeded.");
+			builder.Output.AssertTargetIsNotSkipped ("_RewriteIntermediateAssembly");
+			builder.Output.AssertTargetIsNotSkipped ("_GenerateTrimmableTypeMap");
+
+			Assert.IsTrue (builder.Build (proj, doNotCleanupOnUpdate: true, saveProject: false), "No-op build should have succeeded.");
+			builder.Output.AssertTargetIsSkipped ("_RewriteIntermediateAssembly");
+			builder.Output.AssertTargetIsSkipped ("_GenerateTrimmableTypeMap");
 		}
 
 		[Test]

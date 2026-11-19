@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading;
+using Java.Interop.Tools.Cecil;
 using Java.Interop.Tools.Generator;
 using Java.Interop.Tools.JavaCallableWrappers;
 
@@ -55,6 +56,8 @@ namespace MonoDroid.Generation
 		public bool UseObsoletedOSPlatformAttributes { get; set; }
 		public bool UseRestrictToAttributes { get; set; }
 		public bool FixObsoleteOverrides { get; set; }
+
+		internal TypeDefinitionCache TypeCache { get; } = new TypeDefinitionCache ();
 
 		// Experimental: emit each supported non-generic `n_*` binding callback as an
 		// [UnmanagedCallersOnly] method which forwards to a shared typed marshaling helper,

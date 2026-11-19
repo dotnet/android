@@ -149,31 +149,5 @@ namespace Xamarin.Android.Build.Tests
 				"Only outer builds with Device should check it, once, before the ABI query.");
 		}
 
-		[Test]
-		public void RunWithLoggingEnablesManagedTimingLogger ()
-		{
-			var setupTargets = new Import (() => "SetupRunWithLogging.targets") {
-				TextContent = () => """
-<Project>
-  <Target Name="ReportRunWithLoggingProperties" DependsOnTargets="_PrepareRunWithLogging">
-    <Message Text="RuntimeLogProperty=$(_AndroidRuntimeLogProperty)" Importance="high" />
-    <Message Text="RuntimeLog=$(_AndroidRuntimeLog)" Importance="high" />
-  </Target>
-</Project>
-"""
-			};
-			var proj = new XamarinAndroidApplicationProject {
-				Imports = { setupTargets },
-			};
-			proj.SetRuntime (AndroidRuntime.CoreCLR);
-
-			using var builder = CreateApkBuilder ();
-			builder.Target = "ReportRunWithLoggingProperties";
-			builder.Verbosity = LoggerVerbosity.Detailed;
-			Assert.IsTrue (builder.Build (proj), "ReportRunWithLoggingProperties should succeed.");
-			StringAssertEx.Contains ("RuntimeLogProperty=debug.dotnet.log", builder.LastBuildOutput);
-			StringAssertEx.Contains ("RuntimeLog=default,assembly,timing", builder.LastBuildOutput);
-		}
-
 	}
 }

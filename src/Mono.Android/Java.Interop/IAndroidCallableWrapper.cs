@@ -1,6 +1,6 @@
 #nullable enable
 
-using System;
+using System.ComponentModel;
 
 namespace Java.Interop
 {
@@ -9,6 +9,11 @@ namespace Java.Interop
 	/// ACW types are .NET types that have a corresponding generated Java class
 	/// which calls back into .NET via JNI native methods.
 	/// </summary>
+	/// <remarks>
+	/// This interface is not intended to be implemented or used directly outside
+	/// generated trimmable typemap code.
+	/// </remarks>
+	[EditorBrowsable (EditorBrowsableState.Never)]
 	public interface IAndroidCallableWrapper
 	{
 		/// <summary>

@@ -70,6 +70,15 @@ namespace Java.Interop.Localization {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to The Kotlin metadata for Java method &apos;{0}&apos; matches more than one Kotlin function: {1}. The Kotlin fixups for this method are skipped..
+        /// </summary>
+        public static string ClassParse_XA4268 {
+            get {
+                return ResourceManager.GetString("ClassParse_XA4268", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Failed to remove old constants: {0}..
         /// </summary>
         public static string Generator_BG4000 {

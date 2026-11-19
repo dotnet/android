@@ -30,7 +30,8 @@ namespace generator.SourceWriters
 			SetBody.Add ($"if (impl == null) {{");
 			SetBody.Add ($"\timpl = new {opt.GetOutputName (iface.FullName)}Implementor ({(iface.NeedsSender ? "this" : string.Empty)});");
 			SetBody.Add ($"\tImpl{name} = impl;");
-			SetBody.Add ($"}} else");
+			SetBody.Add ("}");
+			// Assign after the branch so a newly created implementor receives the first handler too.
 			SetBody.Add ($"impl.{nameSpec}Handler = value;");
 		}
 	}

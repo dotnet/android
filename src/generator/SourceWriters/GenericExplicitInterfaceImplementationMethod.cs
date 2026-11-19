@@ -39,7 +39,13 @@ namespace generator.SourceWriters
 			for (var i = 0; i < gen.TypeParams.Length; i++)
 				mappings [gen.Gen.TypeParameters [i].Name] = gen.TypeParams [i].FullName;
 
-			var call = method.Name + " (" + method.Parameters.GetGenericCall (opt, mappings) + ")";
+			var arguments = method.Parameters.Select (parameter => {
+				var value = parameter.GetGenericCall (opt, mappings);
+				return parameter.NotNull && parameter.GetGenericType (mappings) == "string"
+					? value + " ?? throw new global::Java.Lang.NullPointerException ()"
+					: value;
+			});
+			var call = method.Name + " (" + string.Join (", ", arguments) + ")";
 			writer.WriteLine ($"{(method.IsVoid ? string.Empty : "return ")}{method.RetVal.GetGenericReturn (opt, call, mappings)};");
 		}
 	}

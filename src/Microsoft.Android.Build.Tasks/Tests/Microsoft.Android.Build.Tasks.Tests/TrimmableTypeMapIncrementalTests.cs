@@ -11,6 +11,29 @@ namespace Xamarin.Android.Build.Tests;
 [TestFixture]
 public class TrimmableTypeMapIncrementalTests
 {
+	[TestCase (false)]
+	[TestCase (true)]
+	public void ChangingFrameworkSealednessRegeneratesTypeMap (bool isSealed)
+	{
+		var peer = CreatePeer ("Mono.Android", "Java.Lang.String", "java/lang/String") with {
+			IsSealed = isSealed,
+		};
+		var changedPeer = peer with { IsSealed = !isSealed };
+
+		CollectionAssert.AreEqual (
+			new [] { "_Mono.Android.TypeMap" },
+			GetChangedAssemblyNames ([peer], [changedPeer]));
+
+		var version = new Version (12, 0);
+		var generator = new TypeMapAssemblyGenerator (version);
+		var initial = generator.CreateModel ([peer], "_Mono.Android.TypeMap");
+		var changed = generator.CreateModel ([changedPeer], "_Mono.Android.TypeMap");
+		CollectionAssert.AreNotEqual (
+			MetadataHelper.ComputeFingerprints (initial, version, useSharedTypemapUniverse: true, includeIncremental: false).Content,
+			MetadataHelper.ComputeFingerprints (changed, version, useSharedTypemapUniverse: true, includeIncremental: false).Content,
+			"Changing the emitted base class must also change the deterministic MVID.");
+	}
+
 	[Test]
 	public void ChangedCrossAssemblyAliasRegeneratesOwner ()
 	{

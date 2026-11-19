@@ -1,3 +1,17 @@
 M:Mono.Cecil.FieldReference.Resolve();Use IMetadataResolver.Resolve() instead, so future calls can be cached
 M:Mono.Cecil.MethodReference.Resolve();Use IMetadataResolver.Resolve() instead, so future calls can be cached.
 M:Mono.Cecil.TypeReference.Resolve();Use IMetadataResolver.Resolve() instead, so future calls can be cached.
+P:Java.Interop.Tools.TypeNameMappings.JavaNativeTypeManager.PackageNamingPolicy;Pass naming policy explicitly; build tools must not access process-wide naming state.
+M:Java.Interop.Tools.TypeNameMappings.JavaNativeTypeManager.ToJniName(System.Type);Use an explicit-policy naming overload.
+M:Java.Interop.Tools.TypeNameMappings.JavaNativeTypeManager.ToJniName(Mono.Cecil.TypeDefinition,Java.Interop.Tools.Cecil.TypeDefinitionCache);Pass naming policy explicitly.
+M:Java.Interop.Tools.TypeNameMappings.JavaNativeTypeManager.ToJniName(Mono.Cecil.TypeDefinition,Mono.Cecil.IMetadataResolver);Pass naming policy explicitly.
+M:Java.Interop.Tools.TypeNameMappings.JavaNativeTypeManager.GetPackageName(System.Type);Use an explicit-policy naming overload.
+M:Java.Interop.Tools.TypeNameMappings.JavaNativeTypeManager.GetPackageName(System.String,System.String);Pass naming policy explicitly.
+M:Java.Interop.Tools.TypeNameMappings.JavaNativeTypeManager.GetPackageName(Mono.Cecil.TypeDefinition,Java.Interop.Tools.Cecil.TypeDefinitionCache);Pass naming policy explicitly.
+M:Java.Interop.Tools.TypeNameMappings.JavaNativeTypeManager.GetPackageName(Mono.Cecil.TypeDefinition,Mono.Cecil.IMetadataResolver);Pass naming policy explicitly.
+M:Java.Interop.Tools.TypeNameMappings.JavaNativeTypeManager.GetJniTypeName(System.Type);This overload reads process-wide naming state.
+M:Java.Interop.Tools.TypeNameMappings.JavaNativeTypeManager.GetJniTypeName(Mono.Cecil.TypeReference,Java.Interop.Tools.Cecil.TypeDefinitionCache);This overload reads process-wide naming state.
+M:Java.Interop.Tools.TypeNameMappings.JavaNativeTypeManager.GetJniTypeName(Mono.Cecil.TypeReference,Mono.Cecil.IMetadataResolver);This overload reads process-wide naming state.
+M:Java.Interop.Tools.TypeNameMappings.JavaNativeTypeManager.GetJniSignature(System.Reflection.MethodInfo);This overload reads process-wide naming state.
+M:Java.Interop.Tools.TypeNameMappings.JavaNativeTypeManager.GetJniSignature(Mono.Cecil.MethodDefinition,Java.Interop.Tools.Cecil.TypeDefinitionCache);This overload reads process-wide naming state.
+M:Java.Interop.Tools.TypeNameMappings.JavaNativeTypeManager.GetJniSignature(Mono.Cecil.MethodDefinition,Mono.Cecil.IMetadataResolver);This overload reads process-wide naming state.

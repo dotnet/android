@@ -39,7 +39,7 @@ namespace Xamarin.Android.Tools.BootstrapTasks
 			var dirs = string.IsNullOrEmpty (ToolPath)
 				? null
 				: new [] { ToolPath };
-			var path = Which.GetProgramLocation (ToolExe ?? ToolName, out var filename, dirs);
+			var path = PathToolTask.GetProgramLocation (ToolExe ?? ToolName, out var filename, dirs);
 			if (path == null) {
 				Log.LogError ($"Could not find `avdmanager`. Please set the `{nameof (CreateAndroidEmulator)}.{nameof (ToolPath)}` property appropriately.");
 				return false;

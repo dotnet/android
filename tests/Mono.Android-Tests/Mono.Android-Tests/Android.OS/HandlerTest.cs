@@ -6,14 +6,14 @@ using Android.OS;
 using Android.Runtime;
 using Java.Interop;
 
-using NUnit.Framework;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Xamarin.Android.RuntimeTests {
 
-	[TestFixture]
+	[TestClass]
 	public class HandlerTest {
 
-		[Test]
+		[TestMethod]
 		public void RemoveDisposedInstance ()
 		{
       using (var t = new HandlerThread ("RemoveDisposedInstance")) {
@@ -33,7 +33,7 @@ namespace Xamarin.Android.RuntimeTests {
       }
 		}
 
-		[Test]
+		[TestMethod]
 		public void RemoveCallbacksCancelsEveryPendingPost ()
 		{
 			using var t = new HandlerThread ("RemoveCallbacksCancelsEveryPendingPost");
@@ -77,7 +77,7 @@ namespace Xamarin.Android.RuntimeTests {
 			}
 		}
 
-		[Test]
+		[TestMethod]
 		public void RemoveCallbacksThroughReplacementWrapper ()
 		{
 			using var t = new HandlerThread ("RemoveCallbacksThroughReplacementWrapper");
@@ -113,7 +113,7 @@ namespace Xamarin.Android.RuntimeTests {
 			}
 		}
 
-		[Test]
+		[TestMethod]
 		public void ExecutedActionCallbacksAreCollectible ()
 		{
 			using var t = new HandlerThread ("ExecutedActionCallbacksAreCollectible");
@@ -137,7 +137,7 @@ namespace Xamarin.Android.RuntimeTests {
 		static int sweepCalls;
 		static readonly Action rootedAction = () => Interlocked.Increment (ref sweepCalls);
 
-		[Test]
+		[TestMethod]
 		public void CollectedOwnersReleaseRunnablesOfRootedActions ()
 		{
 			using var t = new HandlerThread ("CollectedOwnersReleaseRunnablesOfRootedActions");

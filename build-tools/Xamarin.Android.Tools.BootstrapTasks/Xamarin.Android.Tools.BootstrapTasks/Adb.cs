@@ -11,6 +11,9 @@ using Microsoft.Build.Utilities;
 
 using Xamarin.Android.BuildTools.PrepTasks;
 
+using Tasks = System.Threading.Tasks;
+using static System.Threading.Tasks.TaskAsyncEnumerableExtensions;
+
 namespace Xamarin.Android.Tools.BootstrapTasks
 {
 	public class Adb : Task
@@ -213,71 +216,49 @@ namespace Xamarin.Android.Tools.BootstrapTasks
 
 			CustomizeProcessStartInfo (si);
 
-			ManualResetEvent stdout_completed = null;
 			if (!si.RedirectStandardError)
 				si.StandardErrorEncoding = null;
-			else
-				stdout_completed = new ManualResetEvent (false);
 
-			ManualResetEvent stderr_completed = null;
 			if (!si.RedirectStandardOutput)
 				si.StandardOutputEncoding = null;
-			else
-				stderr_completed = new ManualResetEvent (false);
 
-			var p = new Process {
+			using var p = new Process {
 				StartInfo = si
 			};
 			p.Start ();
 
-			var outputLock = new Object ();
-
-			if (si.RedirectStandardOutput) {
-				p.OutputDataReceived += (sender, e) => {
-					if (e.Data != null)
-						OnOutput (e.Data, true, info);
-					else
-						stdout_completed.Set ();
-				};
-				p.BeginOutputReadLine ();
-			}
-
-			if (si.RedirectStandardError) {
-				p.ErrorDataReceived += (sender, e) => {
-					if (e.Data != null)
-						OnOutput (e.Data, false, info);
-					else
-						stderr_completed.Set ();
-				};
-				p.BeginErrorReadLine ();
-			}
-
-			bool needToWait = true;
-			bool exited = true;
-			if (Timeout > 0) {
-				exited = p.WaitForExit (Timeout);
-				if (!exited) {
+			using var readCancellation = new CancellationTokenSource ();
+			var output = ReadOutputAsync ();
+			try {
+				var status = Timeout > 0
+					? p.SafeHandle.WaitForExitOrKillOnTimeout (TimeSpan.FromMilliseconds (Timeout))
+					: p.SafeHandle.WaitForExit ();
+				if (status.Canceled)
 					Log.LogWarning ($"  Process '{commandPath} {si.Arguments}' failed to exit within the timeout of {Timeout}ms, killing the process");
-					p.Kill ();
+				output.Wait (TimeSpan.FromSeconds (OutputTimeout));
+				return status.Canceled ? -1 : status.ExitCode;
+			} finally {
+				readCancellation.Cancel ();
+				try {
+					output.GetAwaiter ().GetResult ();
+				} catch (OperationCanceledException) when (readCancellation.IsCancellationRequested) {
+				} finally {
+					using var stdout = si.RedirectStandardOutput ? p.StandardOutput : null;
+					using var stderr = si.RedirectStandardError ? p.StandardError : null;
 				}
-
-				// We need to call the parameter-less WaitForExit only if any of the standard output
-				// streams have been redirected (see
-				// https://docs.microsoft.com/en-us/dotnet/api/system.diagnostics.process.waitforexit?view=netframework-4.7.2#System_Diagnostics_Process_WaitForExit)
-				//
-				if (!si.RedirectStandardOutput && !si.RedirectStandardError)
-					needToWait = false;
 			}
 
-			if (needToWait)
-				p.WaitForExit ();
-
-			if (si.RedirectStandardError && stderr_completed != null)
-				stderr_completed.WaitOne (TimeSpan.FromSeconds (OutputTimeout));
-			if (si.RedirectStandardOutput && stdout_completed != null)
-				stdout_completed.WaitOne (TimeSpan.FromSeconds (OutputTimeout));
-
-			return exited? p.ExitCode : -1;
+			async Tasks.Task ReadOutputAsync ()
+			{
+				if (si.RedirectStandardOutput && si.RedirectStandardError) {
+					await foreach (var line in p.ReadAllLinesAsync (readCancellation.Token).ConfigureAwait (false))
+						OnOutput (line.Content, !line.StandardError, info);
+				} else if (si.RedirectStandardOutput || si.RedirectStandardError) {
+					var reader = si.RedirectStandardOutput ? p.StandardOutput : p.StandardError;
+					while (await reader.ReadLineAsync (readCancellation.Token).ConfigureAwait (false) is string line)
+						OnOutput (line, si.RedirectStandardOutput, info);
+				}
+			}
 		}
 
 	}

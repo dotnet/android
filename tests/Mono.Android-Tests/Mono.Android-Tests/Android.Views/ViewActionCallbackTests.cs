@@ -11,14 +11,14 @@ using Android.OS;
 using Android.Views;
 using Android.Widget;
 
-using NUnit.Framework;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Xamarin.Android.RuntimeTests {
 
-	[TestFixture]
+	[TestClass]
 	public class ViewActionCallbackTests {
 
-		[Test]
+		[TestMethod]
 		public async Task RemoveCallbacksPreservesSiblingViewPosts ()
 		{
 			int calls = 0;
@@ -37,8 +37,9 @@ namespace Xamarin.Android.RuntimeTests {
 			Assert.AreEqual (1, calls);
 		}
 
-		[TestCase (false)]
-		[TestCase (true)]
+		[TestMethod]
+		[DataRow (false)]
+		[DataRow (true)]
 		public async Task UnscheduleSelfPreservesOtherDrawablesOnView (bool attachFirst)
 		{
 			int calls = 0;
@@ -64,8 +65,9 @@ namespace Xamarin.Android.RuntimeTests {
 			Assert.AreEqual (1, calls);
 		}
 
-		[TestCase (false)]
-		[TestCase (true)]
+		[TestMethod]
+		[DataRow (false)]
+		[DataRow (true)]
 		public async Task RemoveCallbacksPreservesDrawableCallbacks (bool primeViewSchedule)
 		{
 			int calls = 0;
@@ -89,8 +91,9 @@ namespace Xamarin.Android.RuntimeTests {
 			Assert.AreEqual (1, calls);
 		}
 
-		[TestCase (false)]
-		[TestCase (true)]
+		[TestMethod]
+		[DataRow (false)]
+		[DataRow (true)]
 		public async Task UnscheduleCancelsViewScheduledDrawable (bool unscheduleSelf)
 		{
 			int calls = 0;
@@ -112,8 +115,9 @@ namespace Xamarin.Android.RuntimeTests {
 			Assert.AreEqual (1, calls);
 		}
 
-		[TestCase (false)]
-		[TestCase (true)]
+		[TestMethod]
+		[DataRow (false)]
+		[DataRow (true)]
 		public async Task RemoveCallbacksCancelsScheduledDrawable (bool attachFirst)
 		{
 			int calls = 0;
@@ -142,7 +146,7 @@ namespace Xamarin.Android.RuntimeTests {
 		static int scheduledCalls;
 		static readonly Action rootedScheduledAction = () => Interlocked.Increment (ref scheduledCalls);
 
-		[Test]
+		[TestMethod]
 		public async Task ScheduledDrawableRunnablesDoNotAccumulateOnView ()
 		{
 			scheduledCalls = 0;
@@ -199,7 +203,7 @@ namespace Xamarin.Android.RuntimeTests {
 			}
 		}
 
-		[Test]
+		[TestMethod]
 		public void UnscheduleSelfPreservesNestedSiblings ()
 		{
 			using var first = new ColorDrawable ();
@@ -240,7 +244,7 @@ namespace Xamarin.Android.RuntimeTests {
 
 		static Task OnMainThread (Action action)
 		{
-			// The UI thread does not inherit NUnit's AsyncLocal test context.
+			// The UI thread does not inherit the test's execution context.
 			var context = ExecutionContext.Capture ();
 			var done = new TaskCompletionSource (TaskCreationOptions.RunContinuationsAsynchronously);
 			using var handler = new Handler (Looper.MainLooper);
