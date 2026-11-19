@@ -11,7 +11,6 @@ namespace Java.InteropTests
 	[TestClass]
 	public class JavaObjectTest
 	{
-#if !NO_GC_BRIDGE_SUPPORT
 		[TestMethod]
 		public void JavaReferencedInstanceSurvivesCollection ()
 		{
@@ -41,7 +40,6 @@ namespace Java.InteropTests
 				array.Dispose ();
 			}
 		}
-#endif  // !NO_GC_BRIDGE_SUPPORT
 
 		[TestMethod]
 		[Ignore ("Frequently failing: https://github.com/dotnet/android/issues/12031")]
@@ -74,7 +72,6 @@ namespace Java.InteropTests
 			}
 		}
 
-#if !NO_GC_BRIDGE_SUPPORT
 		[TestMethod]
 		public async Task UnreferencedInstanceIsCollected ()
 		{
@@ -94,7 +91,6 @@ namespace Java.InteropTests
 			Assert.IsNull (JniRuntime.CurrentRuntime.ValueManager.PeekValue (oldHandle));
 			JniObjectReference.Dispose (ref oldHandle);
 		}
-#endif  // !NO_GC_BRIDGE_SUPPORT
 
 		[TestMethod]
 		public void Dispose ()
@@ -107,7 +103,6 @@ namespace Java.InteropTests
 			Assert.IsFalse (f);
 		}
 
-#if !NO_GC_BRIDGE_SUPPORT
 		[TestMethod]
 		public async Task Dispose_Finalized ()
 		{
@@ -129,7 +124,6 @@ namespace Java.InteropTests
 			Assert.IsFalse (disposed.Task.IsCompleted);
 			Assert.IsTrue (finalized.Task.IsCompleted);
 		}
-#endif  // !NO_GC_BRIDGE_SUPPORT
 
 		static async Task WaitForGC (Func<bool> predicate, string message, int timeoutMilliseconds = 2000)
 		{

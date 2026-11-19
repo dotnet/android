@@ -7,13 +7,11 @@ using System.Net.Sockets;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-#if !NETSTANDARD2_0
 using System.Net.Security;
 using System.Net.WebSockets;
 using System.Security.Authentication;
 using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
-#endif
 
 namespace Xamarin.Android.NetTests {
 	abstract class LocalTestServer : IDisposable
@@ -244,10 +242,8 @@ namespace Xamarin.Android.NetTests {
 		protected virtual Task HandleRequest (Stream stream, LocalHttpRequest request)
 		{
 			switch (request.Path) {
-#if !NETSTANDARD2_0
 				case "/brotli":
 					return WriteCompressedStringAsync (stream, "br", "{ \"brotli\": true }", "application/json");
-#endif
 				case "/gzip":
 					return WriteCompressedStringAsync (stream, "gzip", "{ \"gzipped\": true }", "application/json");
 				case "/ok":
@@ -314,11 +310,9 @@ namespace Xamarin.Android.NetTests {
 			if (string.Equals (encoding, "gzip", StringComparison.OrdinalIgnoreCase)) {
 				return new GZipStream (stream, CompressionLevel.Fastest, leaveOpen: true);
 			}
-#if !NETSTANDARD2_0
 			if (string.Equals (encoding, "br", StringComparison.OrdinalIgnoreCase)) {
 				return new BrotliStream (stream, CompressionLevel.Fastest, leaveOpen: true);
 			}
-#endif
 
 			throw new ArgumentOutOfRangeException (nameof (encoding), encoding, "Unsupported compression encoding.");
 		}
@@ -408,7 +402,6 @@ namespace Xamarin.Android.NetTests {
 		}
 	}
 
-#if !NETSTANDARD2_0
 	sealed class LocalHttpsServer : LocalHttpServer
 	{
 		readonly RSA certificateKey;
@@ -662,5 +655,4 @@ namespace Xamarin.Android.NetTests {
 			}
 		}
 	}
-#endif
 }

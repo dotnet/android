@@ -103,9 +103,7 @@ static class JniReferenceLeakMeasurement
 		var message = $"JNI leak measurement: Runtime={RuntimeInformation.FrameworkDescription}, " +
 			$"Architecture={RuntimeInformation.ProcessArchitecture}, Before=({before}), After=({after})";
 		writeLine (message);
-#if __ANDROID__
 		Android.Util.Log.Info ("JniReferenceLeak", message);
-#endif
 		Assert.IsLessThanOrEqualTo (before.Global, after.Global,
 			$"Operation should not leak global references after {Iterations} iterations. " +
 			$"Before=({before}), After=({after}), Delta={after.Global - before.Global}");
@@ -120,7 +118,6 @@ static class JniReferenceLeakMeasurement
 
 	static Sample CollectAndSample ()
 	{
-#if __ANDROID__
 		bool asynchronousBridge =
 			(AppContext.TryGetSwitch ("Microsoft.Android.Runtime.RuntimeFeature.IsCoreClrRuntime", out bool coreClr) && coreClr) ||
 			(AppContext.TryGetSwitch ("Microsoft.Android.Runtime.RuntimeFeature.IsNativeAotRuntime", out bool nativeAot) && nativeAot);
@@ -132,12 +129,6 @@ static class JniReferenceLeakMeasurement
 		// The original witness can finalize just before a retry starts. Give that
 		// request its own unreachable cycle so it still has bridge work to notify.
 		Action prepareRetry = () => { CreateCollectionWitness (); };
-#else
-		Func<int?> generation = () => null;
-		Func<bool> finalized = () => true;
-		Action prepareRetry = () => {};
-		int? initialGeneration = null;
-#endif
 		var round = new CollectionRound ();
 		return WaitForCollection (initialGeneration,
 			() => round.HasCompletedOutcome (collector, finalized, generation),
@@ -203,7 +194,6 @@ static class JniReferenceLeakMeasurement
 		throw new InvalidOperationException ("Unreachable after Assert.Fail.");
 	}
 
-#if __ANDROID__
 	[MethodImpl (MethodImplOptions.NoInlining)]
 	static CollectionState CreateCollectionWitness ()
 	{
@@ -239,5 +229,4 @@ static class JniReferenceLeakMeasurement
 				State?.MarkFinalized ();
 		}
 	}
-#endif
 }
