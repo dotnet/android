@@ -24,7 +24,6 @@ namespace Xamarin.Android.Build.Tests
 	{
 		[Test]
 		[NonParallelizable] // Do not run environment modifying tests in parallel.
-		[Ignore ("Flaky: https://github.com/dotnet/android/issues/13644")]
 		public void InstallAndroidDependenciesTest ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			bool isRelease = runtime == AndroidRuntime.NativeAOT;
