@@ -50,7 +50,7 @@ if (format != "markdown" && format != "json") {
 	return 1;
 }
 
-if (string.IsNullOrEmpty (buildId)) {
+if (string.IsNullOrEmpty (buildId) || !buildId.All (char.IsAsciiDigit)) {
 	Console.Error.WriteLine ("usage: dotnet run ci_failures.cs -- --build-id N [--pr N] [--repo dotnet/android] [--format markdown|json]");
 	return 1;
 }
@@ -1051,6 +1051,7 @@ static (int code, string stdout, string stderr) Run (string file, params string 
 		RedirectStandardError = true,
 		UseShellExecute = false,
 		InheritedHandles = [],
+		KillOnParentExit = true,
 	};
 	if (file.EndsWith (".cmd")) {
 		// Quote the args so cmd.exe does not treat & in URLs as an operator.
@@ -1060,54 +1061,11 @@ static (int code, string stdout, string stderr) Run (string file, params string 
 		foreach (var arg in cliArgs)
 			psi.ArgumentList.Add (arg);
 	}
-	var timeout = TimeSpan.FromMinutes (5);
-	var timer = Stopwatch.StartNew ();
-	using var process = Process.Start (psi) ?? throw new InvalidOperationException ($"Could not start '{file}'.");
-	using var readCancellation = new CancellationTokenSource ();
-	var stdout = new StringBuilder ();
-	var stderr = new StringBuilder ();
-	// ReadAllText cannot return the captured prefix when EOF times out.
-	var readers = Task.WhenAll (
-		ReadOutputAsync (process.StandardOutput, stdout),
-		ReadOutputAsync (process.StandardError, stderr));
-	int exitCode = -1;
-	bool timedOut = false;
 	try {
-		var remaining = timeout - timer.Elapsed;
-		if (process.SafeHandle.TryWaitForExit (remaining > TimeSpan.Zero ? remaining : TimeSpan.Zero, out var status)) {
-			exitCode = status.ExitCode;
-			remaining = timeout - timer.Elapsed;
-			readers.WaitAsync (remaining > TimeSpan.Zero ? remaining : TimeSpan.Zero).GetAwaiter ().GetResult ();
-		} else {
-			timedOut = true;
-		}
+		var result = Process.RunAndCaptureText (psi, TimeSpan.FromMinutes (5));
+		return (result.ExitStatus.ExitCode, result.StandardOutput, result.StandardError);
 	} catch (TimeoutException) {
-		timedOut = true;
-	} finally {
-		try {
-			if (!process.HasExited) {
-				process.Kill (entireProcessTree: true);
-				process.SafeHandle.WaitForExitOrKillOnTimeout (TimeSpan.FromSeconds (5));
-			}
-		} finally {
-			readCancellation.Cancel ();
-			try {
-				readers.WaitAsync (TimeSpan.FromSeconds (5)).GetAwaiter ().GetResult ();
-			} catch (OperationCanceledException) when (readCancellation.IsCancellationRequested) {
-			}
-		}
-	}
-	return timedOut
-		? (-1, stdout.ToString (), $"{stderr}\n{file} timed out after 5 minutes.")
-		: (exitCode, stdout.ToString (), stderr.ToString ());
-
-	async Task ReadOutputAsync (StreamReader reader, StringBuilder output)
-	{
-		var buffer = new char [4096];
-		int count;
-		while ((count = await reader.ReadAsync (buffer.AsMemory (), readCancellation.Token).ConfigureAwait (false)) > 0) {
-			output.Append (buffer, 0, count);
-		}
+		return (-1, "", $"{file} timed out after 5 minutes.");
 	}
 }
 
