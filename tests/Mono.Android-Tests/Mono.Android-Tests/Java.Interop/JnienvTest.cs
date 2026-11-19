@@ -190,6 +190,40 @@ namespace Java.InteropTests
 		}
 
 		[TestMethod]
+		[TestCategory ("ConstructorParity")]
+		public void GetArrayActivatesClosedGenericPeerElement ()
+		{
+			AssertGetArrayActivatesElement<JniEnvGenericArrayElement<string>> ();
+		}
+
+		[TestMethod]
+		[TestCategory ("ConstructorParity")]
+		public void GetArrayActivatesClosedGenericPeerElementWithValueTypeArgument ()
+		{
+			AssertGetArrayActivatesElement<JniEnvGenericArrayElement<int>> ();
+		}
+
+		static void AssertGetArrayActivatesElement<T> ()
+			where T : Java.Lang.Object, new ()
+		{
+			// The element type only reaches the runtime as a Type through GetArray<T>, so nothing statically keeps
+			// its (IntPtr, JniHandleOwnership) constructor: the generated proxy for the open generic definition must.
+			IntPtr array;
+			using (var element = new T ()) {
+				array = JNIEnv.NewObjectArray (1, element.Class.Handle, element.Handle);
+			}
+			try {
+				var items = JNIEnv.GetArray<T> (array);
+				Assert.IsNotNull (items);
+				Assert.AreEqual (1, items.Length);
+				Assert.IsNotNull (items [0]);
+				items [0].Dispose ();
+			} finally {
+				JNIEnv.DeleteLocalRef (array);
+			}
+		}
+
+		[TestMethod]
 		[DataRow (false)]
 		[DataRow (true)]
 		[TestCategory ("JniUtf8Construction")]
@@ -802,6 +836,18 @@ namespace Java.InteropTests
 
 		public T? Value {get; set;}
 
+	}
+
+	class JniEnvGenericArrayElement<T> : Java.Lang.Object {
+
+		public JniEnvGenericArrayElement ()
+		{
+		}
+
+		protected JniEnvGenericArrayElement (IntPtr handle, JniHandleOwnership transfer)
+			: base (handle, transfer)
+		{
+		}
 	}
 
 	#region BXC_374

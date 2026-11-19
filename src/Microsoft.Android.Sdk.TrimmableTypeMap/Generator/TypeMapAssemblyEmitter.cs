@@ -140,6 +140,7 @@ sealed class TypeMapAssemblyEmitter
 	// across emitter instances.
 	BlobHandle _activationCtorSignature;
 	BlobHandle _createInstanceSignature;
+	MemberReferenceHandle _dynamicDependencyAttrCtorRef;
 
 	EntityHandle _anchorTypeHandle;
 
@@ -668,7 +669,8 @@ sealed class TypeMapAssemblyEmitter
 		// as a ctor parameter. This keeps TargetType correct for every shape: concrete peers,
 		// open generic definitions (whose T isn't available via the TypeMapLazyDictionary loader),
 		// and interfaces (which have no constructors). Peers are activated from their generated
-		// CreateInstance / InvokerType, never by reflecting over the target type.
+		// CreateInstance / InvokerType; only closed instantiations of open generic definitions are
+		// activated by reflection (see EmitCreateInstanceGenericDefinition).
 		var baseCtorRef = _pe.AddMemberRef (_javaPeerProxyRef, ".ctor",
 			sig => sig.MethodSignature (isInstanceMethod: true).Parameters (3,
 				rt => rt.Void (),
@@ -802,7 +804,7 @@ sealed class TypeMapAssemblyEmitter
 		}
 
 		if (proxy.IsGenericDefinition) {
-			EmitCreateInstanceGenericDefinition ();
+			EmitCreateInstanceGenericDefinition (proxy);
 			return;
 		}
 
@@ -852,13 +854,40 @@ sealed class TypeMapAssemblyEmitter
 		});
 	}
 
-	void EmitCreateInstanceGenericDefinition ()
+	void EmitCreateInstanceGenericDefinition (JavaPeerProxyData proxy)
 	{
-		EmitCreateInstanceBody (encoder => {
+		var createInstance = EmitCreateInstanceBody (encoder => {
 			encoder.LoadString (_pe.Metadata.GetOrAddUserString ("Cannot create instance of open generic type."));
 			encoder.NewObject (_notSupportedExceptionCtorRef, parameterCount: 1);
 			encoder.Throw ();
 		});
+
+		// TrimmableTypeMap.CreateInstance () activates closed instantiations of an open generic peer by reflecting
+		// over the leaf type's (IntPtr, JniHandleOwnership) constructor. Nothing references that constructor
+		// statically, so keep it alive for as long as this proxy is kept, for both ILLink and ILC.
+		if (proxy.ActivationCtor is { IsOnLeafType: true, Style: ActivationCtorStyle.XamarinAndroid }) {
+			_pe.Metadata.AddCustomAttribute (createInstance, GetDynamicDependencyAttrCtorRef (),
+				_pe.BuildAttributeBlob (
+					"#ctor(System.IntPtr,Android.Runtime.JniHandleOwnership)",
+					$"{proxy.TargetType.ManagedTypeName}, {proxy.TargetType.AssemblyName}"));
+		}
+	}
+
+	MemberReferenceHandle GetDynamicDependencyAttrCtorRef ()
+	{
+		if (_dynamicDependencyAttrCtorRef.IsNil) {
+			var metadata = _pe.Metadata;
+			var attrRef = metadata.AddTypeReference (_pe.SystemRuntimeRef,
+				metadata.GetOrAddString ("System.Diagnostics.CodeAnalysis"), metadata.GetOrAddString ("DynamicDependencyAttribute"));
+			_dynamicDependencyAttrCtorRef = _pe.AddMemberRef (attrRef, ".ctor",
+				sig => sig.MethodSignature (isInstanceMethod: true).Parameters (2,
+					rt => rt.Void (),
+					p => {
+						p.AddParameter ().Type ().String ();
+						p.AddParameter ().Type ().Type (_systemTypeRef, false);
+					}));
+		}
+		return _dynamicDependencyAttrCtorRef;
 	}
 
 	void EmitCreateInstanceViaNewobj (EntityHandle typeRef)
@@ -961,9 +990,9 @@ sealed class TypeMapAssemblyEmitter
 				}));
 	}
 
-	void EmitCreateInstanceBody (Action<TrackedInstructionEncoder> emitIL)
+	MethodDefinitionHandle EmitCreateInstanceBody (Action<TrackedInstructionEncoder> emitIL)
 	{
-		_pe.EmitBody ("CreateInstance",
+		return _pe.EmitBody ("CreateInstance",
 			MethodAttributes.Public | MethodAttributes.Virtual | MethodAttributes.HideBySig,
 			GetCreateInstanceSignature (),
 			emitIL);
