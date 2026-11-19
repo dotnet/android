@@ -3670,6 +3670,12 @@ Facebook.FacebookSdk.LogEvent(""TestFacebook"");
 								thread.Start ();
 								thread.Join ();
 								break;
+							case "output":
+								for (int i = 2; i < args.Length; i++)
+									Console.WriteLine ($"ARG{i}={Convert.ToBase64String (System.Text.Encoding.UTF8.GetBytes (args [i]))}");
+								Console.Write (new string ('x', 4095) + "\U0001F30D" + new string ('x', 1_000_000));
+								Console.WriteLine ("END_LARGE_OUTPUT");
+								break;
 							default:
 								throw new ArgumentException ($"Unknown scenario: {args [0]}");
 							}
@@ -3700,13 +3706,16 @@ Facebook.FacebookSdk.LogEvent(""TestFacebook"");
 					("throw", 0, 134),
 					("thread-throw", 0, 134),
 				]);
+				if (returnType == "void" && runtime == AndroidRuntime.CoreCLR)
+					scenarios.Add (("output", 0, 0));
 			}
 
 			foreach (var scenario in scenarios) {
 				string value = scenario.Value.ToString (CultureInfo.InvariantCulture);
-				using var process = dotnet.StartRun (parameters: [
-					"--configuration", proj.Configuration, "--device", serial, "--", scenario.Mode, value,
-				]);
+				var runArgs = new List<string> { "--configuration", proj.Configuration, "--device", serial, "--", scenario.Mode, value };
+				if (scenario.Mode == "output")
+					runArgs.AddRange (["\"\"", "\"with spaces\"", "\"single' and \\\"double\\\"\"", "\"H\u00e9llo \U0001F30D\"", "--no-wait"]);
+				using var process = dotnet.StartRun (parameters: runArgs.ToArray ());
 				var output = new StringBuilder ();
 				bool completed = process.WaitForExitAndOutput (output, TimeSpan.FromMinutes (3));
 				string outputText = output.ToString ();
@@ -3720,6 +3729,12 @@ Facebook.FacebookSdk.LogEvent(""TestFacebook"");
 				StringAssert.Contains ($"MAIN_STARTED {scenario.Mode} {value}", outputText);
 				StringAssert.Contains ($"DYNAMIC_CODE={runtime == AndroidRuntime.CoreCLR}", outputText);
 				StringAssert.Contains ("STDERR: CONSOLE_STDERR", outputText);
+				if (scenario.Mode == "output") {
+					string[] expectedArgs = ["", "with spaces", "single' and \"double\"", "H\u00e9llo \U0001F30D", "--no-wait"];
+					for (int i = 0; i < expectedArgs.Length; i++)
+						StringAssert.Contains ($"ARG{i + 2}={Convert.ToBase64String (Encoding.UTF8.GetBytes (expectedArgs [i]))}", outputText);
+					StringAssert.Contains (new string ('x', 4095) + "\U0001F30D" + new string ('x', 1_000_000) + "END_LARGE_OUTPUT", outputText);
+				}
 				if (scenario.Mode == "throw" || scenario.Mode == "thread-throw") {
 					string message = scenario.Mode == "throw" ? "CONSOLE_MAIN_EXCEPTION" : "CONSOLE_THREAD_EXCEPTION";
 					StringAssert.Contains ($"STDERR: Unhandled exception. System.InvalidOperationException: {message}", outputText);
@@ -3730,6 +3745,47 @@ Facebook.FacebookSdk.LogEvent(""TestFacebook"");
 				}
 				TestContext.Out.WriteLine ($"{returnType} Main, {runtime}, args={hasArguments}, {scenario.Mode} {value}: exit {process.ExitCode}");
 			}
+		}
+
+		[Test]
+		public void DotNetRunFileBasedConsoleInstallAndEdit ()
+		{
+			string directory = Path.Combine ("temp", TestName);
+			string absoluteDirectory = Path.Combine (Root, directory);
+			string sourcePath = Path.Combine (absoluteDirectory, "AndroidConsole.cs");
+			var dotnet = new DotNetCLI (sourcePath);
+			Assert.IsTrue (dotnet.New ("android-console"), "`dotnet new android-console` should succeed.");
+			dotnet.EnvironmentVariables ["ANDROID_SERIAL"] = RunAdbCommand ("get-serialno").Trim ();
+
+			string source = File.ReadAllText (sourcePath) + "\nConsole.WriteLine ($\"PACKAGE_ID={Android.App.Application.Context.PackageName}\");\n";
+			var project = new DotNetStandard ();
+			project.Sources.Add (new BuildItem.Source ("AndroidConsole.cs") { TextContent = () => source });
+			using var builder = CreateApkBuilder (directory);
+			builder.BuiltBefore = true;
+			project.Touch ("AndroidConsole.cs");
+			builder.Save (project, doNotCleanupOnUpdate: true, saveProject: false);
+
+			string RunFile ()
+			{
+				using var process = dotnet.StartFileBasedRun ();
+				var output = new StringBuilder ();
+				bool completed = process.WaitForExitAndOutput (output, TimeSpan.FromMinutes (5));
+				Assert.IsTrue (completed, $"`dotnet run --file` timed out: {output}");
+				Assert.AreEqual (0, process.ExitCode, $"`dotnet run --file` failed: {output}");
+				return output.ToString ();
+			}
+
+			string first = RunFile ();
+			StringAssert.Contains ("Hello, Android!", first);
+			string packageLine = first.Split ('\n').First (line => line.StartsWith ("PACKAGE_ID=", StringComparison.Ordinal));
+			string package = packageLine.Substring ("PACKAGE_ID=".Length).Trim ();
+			StringAssert.Contains ("Success", RunAdbCommand ($"uninstall {package}"));
+			StringAssert.Contains ("Hello, Android!", RunFile ());
+
+			source = source.Replace ("Hello, Android!", "Hello, edited Android!");
+			project.Touch ("AndroidConsole.cs");
+			builder.Save (project, doNotCleanupOnUpdate: true, saveProject: false);
+			StringAssert.Contains ("Hello, edited Android!", RunFile ());
 		}
 
 		static int ParseInstrumentationResult (string output, string key)

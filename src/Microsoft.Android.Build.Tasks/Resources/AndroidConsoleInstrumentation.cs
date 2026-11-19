@@ -138,9 +138,11 @@ sealed class AndroidConsoleInstrumentation : global::Android.App.Instrumentation
 			if (string.IsNullOrEmpty (value))
 				return;
 			lock (buffer) {
-				buffer.Append (value);
-				if (value.IndexOf ('\n') >= 0 || (buffer.Length >= MaxBufferedChars && !char.IsHighSurrogate (value [value.Length - 1])))
-					FlushBuffer ();
+				foreach (char c in value) {
+					buffer.Append (c);
+					if (c == '\n' || (buffer.Length >= MaxBufferedChars && !char.IsHighSurrogate (c)))
+						FlushBuffer ();
+				}
 			}
 		}
 
