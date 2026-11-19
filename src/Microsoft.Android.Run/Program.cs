@@ -25,6 +25,7 @@ string? logcatArgs = null;
 bool isDotnetTestMode = false;
 string? dotnetTestPipe = null;
 bool waitForExit = true;
+bool consoleMode = false;
 List<PortMapping> forwardPorts = [];
 List<PortMapping> reversePorts = [];
 
@@ -70,6 +71,11 @@ async Task<int> RunAsync (string[] args)
 			"The instrumentation {RUNNER} class name (e.g., com.example.myapp.TestInstrumentation). " +
 			"When specified, runs 'am instrument' instead of 'am start'.",
 			v => instrumentation = v },
+		{ "console",
+			"Run a console application through the --instrument host injected by the SDK: " +
+			"remaining arguments are passed to its entry point, its Console output is " +
+			"relayed to this process, and its exit code is returned.",
+			v => consoleMode = v != null },
 		{ "server=",
 			"The test {SERVER} protocol to use (e.g., 'dotnettestcli'). Used by 'dotnet test'.",
 			v => { if (v == "dotnettestcli") isDotnetTestMode = true; } },
@@ -142,6 +148,9 @@ async Task<int> RunAsync (string[] args)
 		Console.WriteLine ("'am instrument' as extras: KEY=VALUE becomes '-e KEY VALUE', and everything");
 		Console.WriteLine ("else is joined into a single '-e args \"...\"' extra.");
 		Console.WriteLine ();
+		Console.WriteLine ("When --console is used, the remaining arguments are passed unchanged to the");
+		Console.WriteLine ("application's entry point. Use '--' to stop option parsing before them.");
+		Console.WriteLine ();
 		Console.WriteLine ("Press Ctrl+C while running to stop the Android application and exit.");
 		return 0;
 	}
@@ -162,6 +171,12 @@ async Task<int> RunAsync (string[] args)
 
 	if (isDotnetTestMode && !isInstrumentMode) {
 		Console.Error.WriteLine ("Error: --instrument is required when using dotnet test mode.");
+		Console.Error.WriteLine ($"Try '{Name} --help' for more information.");
+		return 1;
+	}
+
+	if (consoleMode && (!isInstrumentMode || isDotnetTestMode)) {
+		Console.Error.WriteLine ("Error: --console requires --instrument and cannot be used with dotnet test mode.");
 		Console.Error.WriteLine ($"Try '{Name} --help' for more information.");
 		return 1;
 	}
@@ -212,6 +227,8 @@ async Task<int> RunAsync (string[] args)
 	try {
 		if (isDotnetTestMode)
 			exitCode = await RunDotnetTestAsync (remaining);
+		else if (consoleMode)
+			exitCode = await RunConsoleAsync (remaining);
 		else if (isInstrumentMode)
 			exitCode = await RunInstrumentationAsync (remaining);
 		else
@@ -320,6 +337,88 @@ async Task<int> RunInstrumentationAsync (List<string> instrumentationArgs)
 	}
 
 	return 0;
+}
+
+/// <summary>
+/// Runs a console application via the `AndroidConsoleInstrumentation` the SDK injects
+/// into it. Each argument is passed base64-encoded as an `argN` extra so it reaches
+/// `Main` unchanged. The instrumentation reports Console output as `stdout-b64` /
+/// `stderr-b64` status entries and the exit code as the `exitCode` result entry.
+/// </summary>
+async Task<int> RunConsoleAsync (List<string> programArgs)
+{
+	const string StdoutPrefix = "INSTRUMENTATION_STATUS: stdout-b64=";
+	const string StderrPrefix = "INSTRUMENTATION_STATUS: stderr-b64=";
+	const string ExitCodePrefix = "INSTRUMENTATION_RESULT: exitCode=";
+
+	var cmdArgs = new List<string> { "shell", "am", "instrument", "-w", "-r" };
+	if (!string.IsNullOrEmpty (deviceUserId)) {
+		cmdArgs.Add ("--user");
+		cmdArgs.Add (deviceUserId);
+	}
+	cmdArgs.Add ("-e");
+	cmdArgs.Add ("argc");
+	cmdArgs.Add (programArgs.Count.ToString (System.Globalization.CultureInfo.InvariantCulture));
+	for (int i = 0; i < programArgs.Count; i++) {
+		cmdArgs.Add ("-e");
+		cmdArgs.Add ($"arg{i}");
+		cmdArgs.Add (QuoteForDeviceShell (Convert.ToBase64String (Encoding.UTF8.GetBytes (programArgs [i]))));
+	}
+	cmdArgs.Add ($"{package}/{instrumentation}");
+
+	if (verbose)
+		Console.WriteLine ($"Running console application: adb {string.Join (" ", cmdArgs)}");
+
+	var psi = AdbHelper.CreateStartInfo (adbPath, adbTarget, cmdArgs);
+	psi.InheritedHandles = [];
+	using var instrumentProcess = Process.Start (psi) ?? throw new InvalidOperationException ("Failed to start adb");
+
+	int? exitCode = null;
+	var unrecognized = new StringBuilder ();
+	try {
+		await foreach (var line in instrumentProcess.ReadAllLinesAsync (cts.Token)) {
+			var content = line.Content;
+			if (content.StartsWith (StdoutPrefix, StringComparison.Ordinal)) {
+				WriteDecoded (Console.Out, content.Substring (StdoutPrefix.Length));
+			} else if (content.StartsWith (StderrPrefix, StringComparison.Ordinal)) {
+				WriteDecoded (Console.Error, content.Substring (StderrPrefix.Length));
+			} else if (content.StartsWith (ExitCodePrefix, StringComparison.Ordinal)) {
+				if (int.TryParse (content.AsSpan (ExitCodePrefix.Length).Trim (), System.Globalization.NumberStyles.Integer, System.Globalization.CultureInfo.InvariantCulture, out int parsed))
+					exitCode = parsed;
+			} else if (!content.StartsWith ("INSTRUMENTATION_STATUS_CODE: ", StringComparison.Ordinal) &&
+					!content.StartsWith ("INSTRUMENTATION_CODE: ", StringComparison.Ordinal)) {
+				unrecognized.AppendLine (content);
+			}
+		}
+		await instrumentProcess.WaitForExitAsync (cts.Token);
+	} catch (OperationCanceledException) when (cts.IsCancellationRequested) {
+		return 1;
+	} finally {
+		try {
+			if (!instrumentProcess.HasExited) {
+				instrumentProcess.Kill ();
+				await instrumentProcess.WaitForExitAsync ();
+			}
+		} catch (InvalidOperationException) when (instrumentProcess.HasExited) {
+		}
+	}
+
+	if (exitCode is int code)
+		return code;
+
+	// The application never reported an exit code: show what `am instrument` printed instead.
+	Console.Error.Write (unrecognized.ToString ());
+	if (instrumentProcess.ExitCode != 0)
+		Console.Error.WriteLine ($"Error: adb instrument exited with code {instrumentProcess.ExitCode}");
+	else
+		Console.Error.WriteLine ($"Error: {GetInstrumentationFailure (unrecognized.ToString ()) ?? "The application did not report an exit code."}");
+	return 1;
+
+	static void WriteDecoded (TextWriter writer, string base64)
+	{
+		writer.Write (Encoding.UTF8.GetString (Convert.FromBase64String (base64.Trim ())));
+		writer.Flush ();
+	}
 }
 
 /// <summary>
