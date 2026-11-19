@@ -232,7 +232,7 @@ namespace Xamarin.ProjectTools
 						continue;
 					var fi = new FileInfo (fullFilePath);
 					runtimeInfo.Add (new RuntimeInfo () {
-						Name = "libmonodroid.so",
+						Name = "libnet-android.so",
 						Runtime = items [1], // release|debug
 						Abi = parentDir.Name, // armaebi|x86|arm64-v8a
 						Size = (int)fi.Length, // int

@@ -434,7 +434,7 @@ class ManifestGenerator
 		if (!app.Elements ("provider").Any (p => {
 			var name = (string?)p.Attribute (ManifestConstants.AttName);
 			return name == runtimeProviderName ||
-				((string?)p.Attribute (AndroidNs.GetName ("authorities")))?.EndsWith (".__mono_init__", StringComparison.Ordinal) == true;
+				((string?)p.Attribute (AndroidNs.GetName ("authorities")))?.EndsWith (".__dotnet_init__", StringComparison.Ordinal) == true;
 		})) {
 			app.Add (CreateRuntimeProvider (runtimeProviderName, null, --appInitOrder, directBootAware));
 		}
@@ -454,7 +454,7 @@ class ManifestGenerator
 			switch (el.Name.LocalName) {
 			case "provider":
 				var autho = el.Attribute (AndroidNs.GetName ("authorities"));
-				if (autho is not null && autho.Value.EndsWith (".__mono_init__", StringComparison.Ordinal)) {
+				if (autho is not null && autho.Value.EndsWith (".__dotnet_init__", StringComparison.Ordinal)) {
 					continue;
 				}
 				goto case "activity";
@@ -503,7 +503,7 @@ class ManifestGenerator
 			new XAttribute (AndroidNs + "initOrder", initOrder),
 			directBootAware ? new XAttribute (AndroidNs + "directBootAware", "true") : null,
 			processName is not null ? new XAttribute (AndroidNs + "process", processName) : null,
-			new XAttribute (AndroidNs + "authorities", PackageName + "." + name + ".__mono_init__"));
+			new XAttribute (AndroidNs + "authorities", PackageName + "." + name + ".__dotnet_init__"));
 	}
 
 	/// <summary>

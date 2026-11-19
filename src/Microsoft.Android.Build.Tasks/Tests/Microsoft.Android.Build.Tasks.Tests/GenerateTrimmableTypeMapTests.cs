@@ -334,7 +334,7 @@ namespace Xamarin.Android.Build.Tests {
 			var java = writer.ToString ();
 			StringAssert.Contains ("public Peer ()", java);
 			StringAssert.Contains ("super ();", java);
-			StringAssert.Contains ("mono.android.IGCUserPeer", java);
+			StringAssert.Contains ("net.dot.android.IGCUserPeer", java);
 			StringAssert.Contains ("private java.util.ArrayList refList;", java);
 			StringAssert.DoesNotContain ("__md_methods", java);
 
@@ -423,7 +423,7 @@ namespace Xamarin.Android.Build.Tests {
 				first.PackageName = $"com.project{i}";
 				first.AndroidApiLevel = "35";
 				first.SupportedOSPlatformVersion = "24";
-				first.RuntimeProviderJavaName = "mono.MonoRuntimeProvider";
+				first.RuntimeProviderJavaName = "net.dot.android.CoreClrRuntimeProvider";
 
 				Assert.IsTrue (first.Execute ());
 				CollectionAssert.AreEqual (first.GeneratedAssemblies.Select (item => item.ItemSpec),
@@ -842,15 +842,15 @@ namespace Xamarin.Android.Build.Tests {
 			task.PackageName = "android.app";
 			task.AndroidApiLevel = "35";
 			task.SupportedOSPlatformVersion = "24";
-			task.RuntimeProviderJavaName = "mono.MonoRuntimeProvider";
+			task.RuntimeProviderJavaName = "net.dot.android.CoreClrRuntimeProvider";
 			task.ManifestPlaceholders = "applicationId=android.app";
 
 			Assert.IsTrue (task.Execute (), "Task should succeed.");
 			FileAssert.Exists (applicationRegistration);
 
 			var registrationText = File.ReadAllText (applicationRegistration);
-			StringAssert.Contains ("mono.android.Runtime.registerNatives (android.app.Application.class);", registrationText);
-			StringAssert.Contains ("mono.android.Runtime.registerNatives (android.app.Instrumentation.class);", registrationText);
+			StringAssert.Contains ("net.dot.android.Runtime.registerNatives (android.app.Application.class);", registrationText);
+			StringAssert.Contains ("net.dot.android.Runtime.registerNatives (android.app.Instrumentation.class);", registrationText);
 			StringAssert.DoesNotContain ("android.test.InstrumentationTestRunner.class", registrationText);
 			StringAssert.DoesNotContain ("android.test.mock.MockApplication.class", registrationText);
 			Assert.IsFalse (warnings.Any (w => w.Code == "XA4250"), "Resolved placeholder-based manifest references should not log XA4250.");

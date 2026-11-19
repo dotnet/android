@@ -65,10 +65,10 @@ namespace Xamarin.Android.Tools.ApiXmlAdjuster
 				.FirstOrDefault (t => t.FullName == name);
 
 			if (ret == null) {
-				// We moved this type to "mono.android.app.IntentService" which makes this
+				// We moved this type to "net.dot.android.app.IntentService" which makes this
 				// type resolution fail if a user tries to reference it in Java.
 				if (name == "android.app.IntentService")
-					return FindNonGenericType (api, "mono.android.app.IntentService");
+					return FindNonGenericType (api, "net.dot.android.app.IntentService");
 
 				throw new JavaTypeResolutionException (string.Format ("Type '{0}' was not found.", name));
 			}

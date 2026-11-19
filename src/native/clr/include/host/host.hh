@@ -16,7 +16,7 @@ namespace xamarin::android {
 	class Host : public HostCommon
 	{
 	public:
-		static void Java_mono_android_Runtime_initInternal (JNIEnv *env, jclass klass, jstring lang, jobjectArray runtimeApksJava,
+		static void Java_net_dot_android_Runtime_initInternal (JNIEnv *env, jclass klass, jstring lang, jobjectArray runtimeApksJava,
 			jobjectArray appDirs, jint localDateTimeOffset, jobject loader, jboolean isEmulator, jboolean haveSplitApks) noexcept;
 		static void propagate_uncaught_exception (JNIEnv *env, jobject javaThread, jthrowable javaException) noexcept;
 

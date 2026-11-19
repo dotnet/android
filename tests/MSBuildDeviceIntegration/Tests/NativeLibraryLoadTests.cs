@@ -679,10 +679,10 @@ public class NativeLibraryLoadTests : DeviceTest
 			<FrameworkNativeLibrary Remove=""@(FrameworkNativeLibrary)""
 				Condition="" '%(FrameworkNativeLibrary.ArchiveFileName)' == '{libraryName}' or '%(FrameworkNativeLibrary.FileName)%(FrameworkNativeLibrary.Extension)' == '{libraryName}' "" />";
 		} else {
-			libraryName = "libmonodroid.so";
+			libraryName = "libnet-android.so";
 			removeLibraryItems = @"
 			<FrameworkNativeLibrary Remove=""@(FrameworkNativeLibrary)""
-				Condition="" '%(FrameworkNativeLibrary.ArchiveFileName)' == 'libmonodroid.so' or '%(FrameworkNativeLibrary.FileName)%(FrameworkNativeLibrary.Extension)' == 'libmonodroid.so' "" />";
+				Condition="" '%(FrameworkNativeLibrary.ArchiveFileName)' == 'libnet-android.so' or '%(FrameworkNativeLibrary.FileName)%(FrameworkNativeLibrary.Extension)' == 'libnet-android.so' "" />";
 		}
 
 		proj.Imports.Add (new Import (() => "Directory.Build.targets") {

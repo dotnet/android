@@ -184,7 +184,7 @@ public class NativeAotBootstrapTargetsTests : BaseTest
 			<manifest xmlns:android="http://schemas.android.com/apk/res/android" xmlns:alias="http://schemas.android.com/apk/res/android" xmlns:other="urn:other">
 			  <application>
 			    <provider android:name="net.dot.jni.nativeaot.NativeAotRuntimeProvider" />
-			    <provider android:name="mono.MonoRuntimeProvider_1" />
+			    <provider android:name="net.dot.android.CoreClrRuntimeProvider_1" />
 			    <provider alias:name="net.dot.jni.nativeaot.NativeAotRuntimeProvider_12" />
 			    <provider android:name="net.dot.jni.nativeaot.NativeAotRuntimeProvider_1" />
 			    <provider android:name="net.dot.jni.nativeaot.NativeAotRuntimeProvider_12" />

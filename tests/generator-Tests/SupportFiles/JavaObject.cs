@@ -3,7 +3,7 @@ using System;
 
 namespace Android.Runtime {
 
-	[Register ("mono/android/runtime/JavaObject")]
+	[Register ("net/dot/android/runtime/JavaObject")]
 	internal sealed class JavaObject : Java.Lang.Object {
 
 		public static IntPtr GetHandle (object obj)
@@ -24,7 +24,7 @@ namespace Android.Runtime {
 
 		public JavaObject (object inst)
 			//: base (
-			//		JNIEnv.StartCreateInstance ("mono/android/runtime/JavaObject", "()V"),
+			//		JNIEnv.StartCreateInstance ("net/dot/android/runtime/JavaObject", "()V"),
 			//		JniHandleOwnership.TransferLocalRef)
 		{
 			throw new NotImplementedException ();

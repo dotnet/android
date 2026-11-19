@@ -1,16 +1,16 @@
-package mono.android;
+package net.dot.android;
 
 class GCUserPeer implements IGCUserPeer {
 	private java.util.ArrayList refList = null;
 
-	public void monodroidAddReference (java.lang.Object obj)
+	public void dotnetAddReference (java.lang.Object obj)
 	{
 		if (refList == null)
 			refList = new java.util.ArrayList ();
 		refList.add (obj);
 	}
 
-	public void monodroidClearReferences ()
+	public void dotnetClearReferences ()
 	{
 		if (refList != null)
 			refList.clear ();

@@ -5,7 +5,7 @@ using System.Diagnostics.CodeAnalysis;
 
 namespace Android.Runtime {
 
-	[Register ("mono/android/runtime/JavaArray", DoNotGenerateAcw=true)]
+	[Register ("net/dot/android/runtime/JavaArray", DoNotGenerateAcw=true)]
 	public sealed class JavaArray<
 			[DynamicallyAccessedMembers (Constructors)]
 			T

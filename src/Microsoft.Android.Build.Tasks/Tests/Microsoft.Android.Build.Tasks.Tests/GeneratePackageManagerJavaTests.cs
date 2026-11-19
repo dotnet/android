@@ -47,14 +47,14 @@ namespace Xamarin.Android.Build.Tests
 				var packageManagerTask = new GeneratePackageManagerJava {
 					BuildEngine = new MockBuildEngine (TestContext.Out),
 					MainAssembly = "linked/HelloAndroid.dll",
-					OutputDirectory = Path.Combine (path, "src", "mono"),
+					OutputDirectory = Path.Combine (path, "src", "net", "dot", "android"),
 				};
 
 				Assert.IsTrue (packageManagerTask.Execute (), "GeneratePackageManagerJava task should have executed.");
 
 				Assert.AreEqual (
 					File.ReadAllText (Path.Combine (TestContext.CurrentContext.TestDirectory, "Expected", "CheckPackageManagerAssemblyOrder.java")).Replace ("\r\n", "\n"),
-					File.ReadAllText (Path.Combine (path, "src", "mono", "MonoPackageManager_Resources.java")).Replace ("\r\n", "\n"));
+					File.ReadAllText (Path.Combine (path, "src", "net", "dot", "android", "CoreClrPackageManager_Resources.java")).Replace ("\r\n", "\n"));
 			} finally {
 				Directory.Delete (path, recursive: true);
 			}

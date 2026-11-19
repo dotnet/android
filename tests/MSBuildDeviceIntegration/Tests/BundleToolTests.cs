@@ -174,7 +174,7 @@ namespace Xamarin.Android.Build.Tests
 				expectedFiles.Add ($"{blobEntryPrefix}{abi}/lib-es{MonoAndroidHelper.SATELLITE_CULTURE_END_MARKER_CHAR}Localization.resources.dll.so");
 				expectedFiles.Add ($"{blobEntryPrefix}{abi}/lib_UnnamedProject.dll.so");
 
-				expectedFiles.Add ($"lib/{abi}/libmonodroid.so");
+				expectedFiles.Add ($"lib/{abi}/libnet-android.so");
 				expectedFiles.Add ($"{blobEntryPrefix}{abi}/lib_System.Private.CoreLib.dll.so");
 				expectedFiles.Add ($"lib/{abi}/libSystem.IO.Compression.Native.so");
 				expectedFiles.Add ($"lib/{abi}/libSystem.Native.so");
@@ -224,7 +224,7 @@ namespace Xamarin.Android.Build.Tests
 				expectedFiles.Add ($"{blobEntryPrefix}{abi}/lib-es{MonoAndroidHelper.SATELLITE_CULTURE_END_MARKER_CHAR}Localization.resources.dll.so");
 				expectedFiles.Add ($"{blobEntryPrefix}{abi}/lib_UnnamedProject.dll.so");
 
-				expectedFiles.Add ($"base/lib/{abi}/libmonodroid.so");
+				expectedFiles.Add ($"base/lib/{abi}/libnet-android.so");
 				expectedFiles.Add ($"{blobEntryPrefix}{abi}/lib_System.Private.CoreLib.dll.so");
 				expectedFiles.Add ($"base/lib/{abi}/libSystem.IO.Compression.Native.so");
 				expectedFiles.Add ($"base/lib/{abi}/libSystem.Native.so");

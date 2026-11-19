@@ -22,14 +22,14 @@ internal static class RuntimeProviderSourceGenerator
 			return [];
 		}
 
-		string providerName = isCoreCLR ? "MonoRuntimeProvider" : "NativeAotRuntimeProvider";
-		string template = ReadResource (isCoreCLR ? "MonoRuntimeProvider.Bundled.java" : "NativeAotRuntimeProvider.java");
+		string providerName = isCoreCLR ? "CoreClrRuntimeProvider" : "NativeAotRuntimeProvider";
+		string template = ReadResource (isCoreCLR ? "CoreClrRuntimeProvider.Bundled.java" : "NativeAotRuntimeProvider.java");
 		var files = new string [additionalProviderSources.Length];
 		for (int i = 0; i < additionalProviderSources.Length; i++) {
 			string provider = additionalProviderSources [i];
 			string contents = template.Replace (providerName, provider);
 			string path = isCoreCLR ?
-				Path.Combine (outputDirectory, "src", "mono", provider + ".java") :
+				Path.Combine (outputDirectory, "src", "net", "dot", "android", provider + ".java") :
 				Path.Combine (outputDirectory, "src", "net", "dot", "jni", "nativeaot", provider + ".java");
 			string absolutePath = taskEnvironment.GetAbsolutePath (path);
 			if (preserveTimestamp) {

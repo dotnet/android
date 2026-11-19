@@ -188,7 +188,7 @@ namespace Xamarin.Android.Build.Tests
 					helper.AssertContainsEntry ($"lib/{abi}/lib{proj.ProjectName}.so");
 					continue; // NOTE: NativeAOT will not include the other files below
 				}
-				helper.AssertContainsEntry ($"lib/{abi}/libmonodroid.so");
+				helper.AssertContainsEntry ($"lib/{abi}/libnet-android.so");
 				if (rids.Length > 1) {
 					helper.AssertContainsEntry ($"assemblies/{abi}/System.Private.CoreLib.dll",        shouldContainEntry: expectEmbeddedAssembies);
 				} else {
@@ -833,7 +833,7 @@ AAMMAAABzYW1wbGUvSGVsbG8uY2xhc3NQSwUGAAAAAAMAAwC9AAAA1gEAAAAA") });
 
 				var className = runtime switch {
 					AndroidRuntime.NativeAOT => "Lnet/dot/jni/nativeaot/NativeAotRuntimeProvider;",
-					_ => "Lmono/MonoRuntimeProvider;"
+					_ => "Lnet/dot/android/CoreClrRuntimeProvider;"
 				};
 				var dexFile = b.Output.GetIntermediaryPath (Path.Combine ("android", "bin", "classes.dex"));
 				FileAssert.Exists (dexFile);
@@ -1206,14 +1206,14 @@ AAAAAAAAAAAAPQAAAE1FVEEtSU5GL01BTklGRVNULk1GUEsBAhQAFAAICAgAJZFnS7uHtAn+AQAA
 
 				var className = runtime switch {
 					AndroidRuntime.NativeAOT => "Lnet/dot/jni/nativeaot/NativeAotRuntimeProvider;",
-					_ => "Lmono/MonoRuntimeProvider;"
+					_ => "Lnet/dot/android/CoreClrRuntimeProvider;"
 				};
 				var dexFile = builder.Output.GetIntermediaryPath (Path.Combine ("android", "bin", "classes.dex"));
 				FileAssert.Exists (dexFile);
 				Assert.IsTrue (DexUtils.ContainsClass (className, dexFile, AndroidSdkPath), $"`{dexFile}` should include `{className}`!");
 				className = runtime switch {
 					AndroidRuntime.NativeAOT => "Lnet/dot/jni/nativeaot/NativeAotRuntimeProvider_1;",
-					_ => "Lmono/MonoRuntimeProvider_1;"
+					_ => "Lnet/dot/android/CoreClrRuntimeProvider_1;"
 				};
 				Assert.IsTrue (DexUtils.ContainsClass (className, dexFile, AndroidSdkPath), $"`{dexFile}` should include `{className}`!");
 			}
@@ -1408,7 +1408,7 @@ AAAAAAAAAAAAPQAAAE1FVEEtSU5GL01BTklGRVNULk1GUEsBAhQAFAAICAgAJZFnS7uHtAn+AQAA
 		[Test]
 		public void RemoveOldMonoPackageManager ([Values (AndroidRuntime.CoreCLR)] AndroidRuntime runtime)
 		{
-			// TODO: fix the test for NativeAOT. It currently fails on the assertion that MonoPackageManager_Resources.java exists
+			// TODO: fix the test for NativeAOT. It currently fails on the assertion that CoreClrPackageManager_Resources.java exists
 			bool isRelease = false; //runtime == AndroidRuntime.NativeAOT;
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
 				return;
@@ -1429,6 +1429,7 @@ AAAAAAAAAAAAPQAAAE1FVEEtSU5GL01BTklGRVNULk1GUEsBAhQAFAAICAgAJZFnS7uHtAn+AQAA
 				var intermediate = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath);
 				var oldMonoPackageManager = Path.Combine (intermediate, "android", "src", "mono", "MonoPackageManager.java");
 				var notifyTimeZoneChanges = Path.Combine (intermediate, "android", "src", "net", "dot", "android", "NotifyTimeZoneChanges.java");
+				Directory.CreateDirectory (Path.GetDirectoryName (oldMonoPackageManager));
 				Directory.CreateDirectory (Path.GetDirectoryName (notifyTimeZoneChanges));
 				File.WriteAllText (oldMonoPackageManager, @"package mono;
 public class MonoPackageManager { }
@@ -1436,6 +1437,7 @@ class MonoPackageManager_Resources { }");
 				File.WriteAllText (notifyTimeZoneChanges, @"package net.dot.android;
 public class ApplicationRegistration { }");
 				var oldMonoPackageManagerClass = Path.Combine (intermediate, "android", "bin", "classes" , "mono", "MonoPackageManager.class");
+				Directory.CreateDirectory (Path.GetDirectoryName (oldMonoPackageManagerClass));
 				File.WriteAllText (oldMonoPackageManagerClass, "");
 				// Change $(AndroidNETSdkVersion) to trigger _CleanIntermediateIfNeeded
 				Assert.IsTrue (b.Build (proj, parameters: new [] { "AndroidNETSdkVersion=99.99" }, doNotCleanupOnUpdate: true), "Build should have succeeded.");
@@ -1447,10 +1449,10 @@ public class ApplicationRegistration { }");
 				FileAssert.DoesNotExist (oldMonoPackageManagerClass);
 				FileAssert.DoesNotExist (notifyTimeZoneChanges);
 				// New files that should exist
-				var monoPackageManager_Resources = Path.Combine (intermediate, "android", "src", "mono", "MonoPackageManager_Resources.java");
-				var monoPackageManager_ResourcesClass = Path.Combine (intermediate, "android", "bin", "classes", "mono", "MonoPackageManager_Resources.class");
-				FileAssert.Exists (monoPackageManager_Resources);
-				FileAssert.Exists (monoPackageManager_ResourcesClass);
+				var packageManager_Resources = Path.Combine (intermediate, "android", "src", "net", "dot", "android", "CoreClrPackageManager_Resources.java");
+				var packageManager_ResourcesClass = Path.Combine (intermediate, "android", "bin", "classes", "net", "dot", "android", "CoreClrPackageManager_Resources.class");
+				FileAssert.Exists (packageManager_Resources);
+				FileAssert.Exists (packageManager_ResourcesClass);
 			}
 		}
 

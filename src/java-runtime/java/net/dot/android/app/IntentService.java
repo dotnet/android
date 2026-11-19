@@ -1,4 +1,4 @@
-package mono.android.app;
+package net.dot.android.app;
 
 public abstract class IntentService extends android.app.IntentService {
 	public IntentService ()
@@ -12,14 +12,14 @@ public abstract class IntentService extends android.app.IntentService {
 	}
 
 	java.util.ArrayList refList;
-	public void monodroidAddReference (java.lang.Object obj)
+	public void dotnetAddReference (java.lang.Object obj)
 	{
 		if (refList == null)
 			refList = new java.util.ArrayList ();
 		refList.add (obj);
 	}
 
-	public void monodroidClearReferences ()
+	public void dotnetClearReferences ()
 	{
 		if (refList != null)
 			refList.clear ();

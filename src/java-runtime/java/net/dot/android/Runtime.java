@@ -1,11 +1,11 @@
-package mono.android;
+package net.dot.android;
 
 import java.lang.Thread;
 import java.lang.Throwable;
 
 public class Runtime {
-	static java.lang.Class mono_NativeLibraryHelper = mono.NativeLibraryHelper.class;
-	static java.lang.Class mono_android_IGCUserPeer = mono.android.IGCUserPeer.class;
+	static java.lang.Class nativeLibraryHelperClass = net.dot.android.NativeLibraryHelper.class;
+	static java.lang.Class igcUserPeerClass = net.dot.android.IGCUserPeer.class;
 
 	static {
 		Thread.setDefaultUncaughtExceptionHandler (new XamarinUncaughtExceptionHandler (Thread.getDefaultUncaughtExceptionHandler ()));

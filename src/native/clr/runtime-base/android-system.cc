@@ -445,19 +445,19 @@ AndroidSystem::detect_embedded_dso_mode (jstring_array_wrapper& appDirs) noexcep
 	// appDirs[Constants::APP_DIRS_DATA_DIR_INDEX] points to the native library directory
 	const char *app_data_dir = appDirs[Constants::APP_DIRS_DATA_DIR_INDEX].get_cstr ();
 	char stack_buffer [Util::LocalPathBufferSize];
-	char *libmonodroid_path = Util::join_paths (stack_buffer, sizeof (stack_buffer), app_data_dir, "libmonodroid.so"sv);
+	char *runtime_library_path = Util::join_paths (stack_buffer, sizeof (stack_buffer), app_data_dir, "libnet-android.so"sv);
 
-	log_debugf (LOG_ASSEMBLY, "Checking if libmonodroid was unpacked to %s", libmonodroid_path);
-	if (!Util::file_exists (libmonodroid_path)) {
-		log_debugf (LOG_ASSEMBLY, "%s not found, assuming application/android:extractNativeLibs == false", libmonodroid_path);
+	log_debugf (LOG_ASSEMBLY, "Checking if libnet-android was unpacked to %s", runtime_library_path);
+	if (!Util::file_exists (runtime_library_path)) {
+		log_debugf (LOG_ASSEMBLY, "%s not found, assuming application/android:extractNativeLibs == false", runtime_library_path);
 		set_embedded_dso_mode_enabled (true);
 	} else {
 		log_debugf (LOG_ASSEMBLY, "Native libs extracted to %s, assuming application/android:extractNativeLibs == true", app_data_dir);
 		set_embedded_dso_mode_enabled (false);
 		native_libraries_dir = Util::duplicate_string (app_data_dir);
 	}
-	if (libmonodroid_path != stack_buffer) {
-		std::free (libmonodroid_path);
+	if (runtime_library_path != stack_buffer) {
+		std::free (runtime_library_path);
 	}
 }
 

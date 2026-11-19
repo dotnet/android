@@ -12,7 +12,8 @@ namespace generator.SourceWriters
 	{
 		public InterfaceEventHandlerImplClass (InterfaceGen iface, CodeGenerationOptions opt, CodeGeneratorContext context)
 		{
-			var jni_class = "mono/" + iface.RawJniName.Replace ('$', '_') + "Implementor";
+			var raw_jni_name = iface.RawJniName.Replace ('$', '_');
+			var jni_class = (raw_jni_name.StartsWith ("android/", StringComparison.Ordinal) ? "net/dot/" : "net/dot/android/") + raw_jni_name + "Implementor";
 
 			Name = iface.Name + "Implementor";
 			Inherits = "global::Java.Lang.Object";

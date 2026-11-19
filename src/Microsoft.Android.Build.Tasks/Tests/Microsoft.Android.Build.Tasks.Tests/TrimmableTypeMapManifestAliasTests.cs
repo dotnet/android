@@ -52,7 +52,7 @@ public class TrimmableTypeMapManifestAliasTests
 			PackageName = "my.app",
 			MinSdkVersion = "24",
 			TargetSdkVersion = "35",
-			RuntimeProviderJavaName = "mono.MonoRuntimeProvider",
+			RuntimeProviderJavaName = "net.dot.android.CoreClrRuntimeProvider",
 			ManifestPlaceholders = "targetPackage=myapp",
 		};
 		var (document, _) = manifestGenerator.Generate (manifest, peers, new AssemblyManifestInfo ());
@@ -96,7 +96,7 @@ public class TrimmableTypeMapManifestAliasTests
 			PackageName = "my.app",
 			MinSdkVersion = "24",
 			TargetSdkVersion = "35",
-			RuntimeProviderJavaName = "mono.MonoRuntimeProvider",
+			RuntimeProviderJavaName = "net.dot.android.CoreClrRuntimeProvider",
 		};
 
 		var (document, _) = manifestGenerator.Generate (manifest, [provider], assemblyInfo);
@@ -135,7 +135,7 @@ public class TrimmableTypeMapManifestAliasTests
 			PackageName = "my.app",
 			MinSdkVersion = "24",
 			TargetSdkVersion = "35",
-			RuntimeProviderJavaName = "mono.MonoRuntimeProvider",
+			RuntimeProviderJavaName = "net.dot.android.CoreClrRuntimeProvider",
 		};
 
 		var (document, _) = manifestGenerator.Generate (null, [peer], new AssemblyManifestInfo ());
@@ -158,7 +158,7 @@ public class TrimmableTypeMapManifestAliasTests
 			PackageName = "my.app",
 			MinSdkVersion = "24",
 			TargetSdkVersion = "35",
-			RuntimeProviderJavaName = "mono.MonoRuntimeProvider",
+			RuntimeProviderJavaName = "net.dot.android.CoreClrRuntimeProvider",
 		};
 		var manifest = XDocument.Parse ("""
 			<manifest xmlns:android="http://schemas.android.com/apk/res/android" package="my.app">
@@ -191,7 +191,7 @@ public class TrimmableTypeMapManifestAliasTests
 			PackageName = "my.app",
 			MinSdkVersion = "24",
 			TargetSdkVersion = "35",
-			RuntimeProviderJavaName = "mono.MonoRuntimeProvider",
+			RuntimeProviderJavaName = "net.dot.android.CoreClrRuntimeProvider",
 			AppComponentFactoryJavaName = "net.dot.android.CoreClrAppComponentFactory",
 		};
 

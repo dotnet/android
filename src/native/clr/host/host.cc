@@ -236,7 +236,7 @@ void Host::preload_jni_libraries () noexcept
 	}
 }
 
-void Host::Java_mono_android_Runtime_initInternal (
+void Host::Java_net_dot_android_Runtime_initInternal (
 	JNIEnv *env, jclass runtimeClass, jstring lang, jobjectArray runtimeApksJava,
 	jobjectArray appDirs, jint localDateTimeOffset, jobject loader,
 	jboolean isEmulator, jboolean haveSplitApks) noexcept
@@ -387,7 +387,7 @@ void Host::Java_mono_android_Runtime_initInternal (
 
 	DsoLoader::init (
 		env,
-		RuntimeUtil::get_class_from_runtime_field (env, runtimeClass, "mono_NativeLibraryHelper", true)
+		RuntimeUtil::get_class_from_runtime_field (env, runtimeClass, "nativeLibraryHelperClass", true)
 	);
 
 	preload_jni_libraries ();
@@ -409,7 +409,7 @@ void Host::Java_mono_android_Runtime_initInternal (
 	init.initializeGCBridge                            = &GCBridge::initialize_callback;
 
 	init.grefLoader                                     = env->NewGlobalRef (loader);
-	init.grefIGCUserPeer                                = RuntimeUtil::get_class_from_runtime_field (env, runtimeClass, "mono_android_IGCUserPeer"sv, true);
+	init.grefIGCUserPeer                                = RuntimeUtil::get_class_from_runtime_field (env, runtimeClass, "igcUserPeerClass"sv, true);
 
 	log_infof (LOG_GC, "GREF GC Threshold: %d", init.grefGcThreshold);
 

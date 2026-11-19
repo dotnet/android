@@ -64,7 +64,7 @@
 
   <ItemGroup>
     <EmbeddedResource Include="..\Xamarin.Android.Build.Tasks\Resources\Resource.Designer.snk" LogicalName="Resource.Designer.snk" />
-    <EmbeddedResource Include="..\Xamarin.Android.Build.Tasks\Resources\JavaInteropRuntime.java;..\Xamarin.Android.Build.Tasks\Resources\NativeAotAppComponentFactory.java;..\Xamarin.Android.Build.Tasks\Resources\NativeAotRuntimeProvider.java;..\Xamarin.Android.Build.Tasks\Resources\MonoRuntimeProvider.Bundled.java">
+    <EmbeddedResource Include="..\Xamarin.Android.Build.Tasks\Resources\JavaInteropRuntime.java;..\Xamarin.Android.Build.Tasks\Resources\NativeAotAppComponentFactory.java;..\Xamarin.Android.Build.Tasks\Resources\NativeAotRuntimeProvider.java;..\Xamarin.Android.Build.Tasks\Resources\CoreClrRuntimeProvider.Bundled.java">
       <LogicalName>%(Filename)%(Extension)</LogicalName>
     </EmbeddedResource>
     <Compile Include="..\Xamarin.Android.Build.Tasks\Utilities\AndroidRuntime.cs" Link="Utilities\AndroidRuntime.cs" />

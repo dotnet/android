@@ -56,7 +56,7 @@ the manifest and runtime providers.
 
 CoreCLR bootstrap generation has its own inputs fingerprint and completion stamp,
 independent of `_GeneratePackageManagerJava`, which writes only the entry assembly's
-`MonoPackageManager_Resources.java`. The bootstrap fingerprint tracks environment,
+`CoreClrPackageManager_Resources.java`. The bootstrap fingerprint tracks environment,
 runtime configuration, assembly and native library membership, and JNI preload
 settings. Missing bootstrap data invalidates its stamp; unchanged payload bytes
 retain their timestamps. NativeAOT continues to generate its linked data objects

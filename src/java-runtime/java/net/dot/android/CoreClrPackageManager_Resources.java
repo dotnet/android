@@ -1,10 +1,10 @@
-package mono;
+package net.dot.android;
 
 import java.lang.String;
 import java.util.Arrays;
 
 
-public class MonoPackageManager_Resources {
+public class CoreClrPackageManager_Resources {
 	public static String[] Assemblies = new String[]{
 	};
 }
