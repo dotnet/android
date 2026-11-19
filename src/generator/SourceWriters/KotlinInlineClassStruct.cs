@@ -62,7 +62,6 @@ namespace generator.SourceWriters
 			var q = nullable;
 
 			var has_init = klass.KotlinInlineClassHasInit;
-
 			writer.WriteLine ($"public readonly {t} Value;");
 			writer.WriteLine ();
 			if (has_init) {
@@ -74,7 +73,7 @@ namespace generator.SourceWriters
 				writer.WriteLine ($"public {n} ({t} value) {{ Value = value; }}");
 			}
 			writer.WriteLine ();
-			writer.WriteLine ("// Wraps a value from Java, which already ran any `init` block checks.");
+			writer.WriteLine ("// For values from Java, which already ran the `init` block.");
 			writer.WriteLine ("[global::System.ComponentModel.EditorBrowsable (global::System.ComponentModel.EditorBrowsableState.Never)]");
 			writer.WriteLine ($"public static {n} FromJniValue ({t} value) => new {n} (value{(has_init ? ", raw: true" : "")});");
 			writer.WriteLine ();
@@ -105,14 +104,13 @@ namespace generator.SourceWriters
 
 			writer.WriteLine ();
 			writer.WriteLine ($"static global::Java.Interop.JniType{q} __jniType;");
-			if (klass.KotlinInlineClassHasInit)
-				writer.WriteLine ($"static global::Java.Interop.JniMethodInfo{q} __constructorImpl;");
 			writer.WriteLine ($"static global::Java.Interop.JniMethodInfo{q} __boxImpl;");
 			writer.WriteLine ($"static global::Java.Interop.JniMethodInfo{q} __unboxImpl;");
 			writer.WriteLine ($"static global::Java.Interop.JniType __GetJniType () => global::Java.Interop.JniType.GetCachedJniType (ref __jniType, \"{klass.RawJniName}\");");
 
 			if (klass.KotlinInlineClassHasInit) {
 				writer.WriteLine ();
+				writer.WriteLine ($"static global::Java.Interop.JniMethodInfo{q} __constructorImpl;");
 				writer.WriteLine ($"static {t} ConstructorImpl ({t} value)");
 				writer.WriteLine ("{");
 				writer.WriteLine ("\tunsafe {");

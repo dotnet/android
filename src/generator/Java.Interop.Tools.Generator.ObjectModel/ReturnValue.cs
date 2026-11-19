@@ -170,3 +170,4 @@ namespace MonoDroid.Generation {
 		}
 	}
 }
+
