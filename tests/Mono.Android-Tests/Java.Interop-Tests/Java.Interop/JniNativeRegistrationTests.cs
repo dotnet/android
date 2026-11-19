@@ -45,8 +45,6 @@ namespace Java.InteropTests {
 				Assert.IsFalse (replacement.Callback.IsAlive);
 			}
 		}
-		#endif
-
 		[TestMethod]
 		[RequiresDynamicCode ("Tests delegate-based native registration.")]
 		public void RuntimeRetainsOwnerAfterSuccessfulRegistration ()
@@ -68,6 +66,7 @@ namespace Java.InteropTests {
 				Assert.IsFalse (references.Callback.IsAlive);
 			}
 		}
+		#endif
 
 		[TestMethod]
 		[RequiresDynamicCode ("Tests delegate-based native registration.")]
