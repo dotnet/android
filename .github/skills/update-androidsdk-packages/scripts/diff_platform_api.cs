@@ -123,8 +123,10 @@ static Dictionary<string, HashSet<string>> Javap(string jar, IEnumerable<string>
 	string? javaHome = Environment.GetEnvironmentVariable("JAVA_HOME");
 	string javap = string.IsNullOrEmpty(javaHome) ? "javap" : Path.Combine(javaHome, "bin", "javap");
 	var result = new Dictionary<string, HashSet<string>>();
-	foreach (var chunk in classes.Chunk(200)) {
-		var output = Process.RunAndCaptureText(javap, ["-protected", "-cp", jar, .. chunk]);
+	// Use jar: URLs; with -cp, javap reads java.* classes from the host JDK instead of android.jar.
+	string jarUrl = "jar:" + new Uri(jar).AbsoluteUri + "!/";
+	foreach (var chunk in classes.Chunk(100)) {
+		var output = Process.RunAndCaptureText(javap, ["-protected", "-constants", .. chunk.Select(c => jarUrl + c.Replace('.', '/') + ".class")]);
 		if (output.ExitStatus.ExitCode != 0)
 			throw new InvalidOperationException($"javap exited with code {output.ExitStatus.ExitCode}: {output.StandardError}");
 
