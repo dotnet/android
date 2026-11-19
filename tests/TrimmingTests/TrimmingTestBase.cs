@@ -78,8 +78,23 @@ public abstract class TrimmingTestBase : DeviceTest
 	const string ResultTag = "TRIMMING_TEST_RESULT:";
 	const string ExpectationsProject = "TrimmingTests.Expectations";
 
+	// Tests share the device, so check it once per fixture, where restarting it can't disrupt a running test.
 	[OneTimeSetUp]
-	public void AssertDeviceAttached () => AssertHasDevices ();
+	public void AssertDeviceAttached ()
+	{
+		if (!IsDeviceAttached (refreshCachedValue: true)) {
+			RestartDevice ();
+			DeviceSetup ();
+		}
+		AssertHasDevices ();
+		AssertPackageManagerResponsive ();
+	}
+
+	// DeviceTest checks (and may restart) the device and clears logcat before every test, which would discard the output of
+	// apps that tests running in parallel are waiting for.
+	public override void SetupTest ()
+	{
+	}
 
 	/// <summary>Builds the case without unexpected warnings, then installs and launches it and requires it to report PASS.</summary>
 	/// <param name="casePath">The case file relative to the test project, e.g. <c>Cases/GenericPeerArrayElement.cs</c>.</param>
@@ -87,6 +102,8 @@ public abstract class TrimmingTestBase : DeviceTest
 	{
 		var caseFile = Path.GetFileName (casePath);
 		var directory = Path.Combine (Root, "temp", TestName);
+		// BaseTest deletes it after a passing test and attaches its logs and binlogs to a failing one.
+		TestOutputDirectories [TestContext.CurrentContext.Test.ID] = directory;
 		var source = CopyCase (casePath, directory);
 		// Each configuration gets its own package, so concurrent tests can install and run their apps side by side.
 		var packageName = $"{GetApplicationId (source)}.{configuration.ToString ().ToLowerInvariant ()}";
@@ -181,8 +198,8 @@ public abstract class TrimmingTestBase : DeviceTest
 		Assert.IsEmpty (missing, $"Expected build warnings were not reported. See {binlog}");
 	}
 
-	// Streams logcat from before the launch, because the device's log buffer can drop the app's output before a later
-	// `logcat -d` reads it. Matches only this app's process ID and never clears logcat, so tests can share the device.
+	// Streams logcat from before the launch, so none of the app's output is missed. Matches only this app's process ID and
+	// never clears logcat, so tests can share the device.
 	static void AssertLaunchReportsPass (string caseFile, TrimmingConfiguration configuration, string packageName, string directory)
 	{
 		var activity = RunAdbCommand ($"shell cmd package resolve-activity --brief {packageName}")
