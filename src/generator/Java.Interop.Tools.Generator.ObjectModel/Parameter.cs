@@ -238,8 +238,8 @@ namespace MonoDroid.Generation {
 			else if (NeedsPrep)
 				return sym.PreCallback (opt, Name, false);
 			else if (!string.IsNullOrEmpty (KotlinInlineClassJniType) && managed_type != null)
-				// Construct the value-class struct explicitly: an implicit conversion can be ambiguous between overloads.
-				return new string[] { "var " + opt.GetSafeIdentifier (Name) + " = new " + opt.GetOutputName (managed_type) + " (" + FromNative (opt, false) + ");" };
+				// Wrap the Java value explicitly: an implicit conversion can be ambiguous between overloads.
+				return new string[] { "var " + opt.GetSafeIdentifier (Name) + " = " + opt.GetOutputName (managed_type) + ".FromJniValue (" + FromNative (opt, false) + ");" };
 			else
 				return new string[] { "var " + opt.GetSafeIdentifier (Name) + " = " + FromNative (opt, false) + ";" };
 		}

@@ -61,12 +61,26 @@ namespace generator.SourceWriters
 			var n = Name;
 			var q = nullable;
 
+			var has_init = klass.KotlinInlineClassHasInit;
+
 			writer.WriteLine ($"public readonly {t} Value;");
 			writer.WriteLine ();
-			writer.WriteLine ($"public {n} ({t} value) {{ Value = value; }}");
+			if (has_init) {
+				writer.WriteLine ("// Calls Kotlin's `constructor-impl`, which runs the `init` block checks.");
+				writer.WriteLine ($"public {n} ({t} value) {{ Value = ConstructorImpl (value); }}");
+				writer.WriteLine ();
+				writer.WriteLine ($"{n} ({t} value, bool raw) {{ Value = value; }}");
+			} else {
+				writer.WriteLine ($"public {n} ({t} value) {{ Value = value; }}");
+			}
+			writer.WriteLine ();
+			writer.WriteLine ("// Wraps a value from Java, which already ran any `init` block checks.");
+			writer.WriteLine ("[global::System.ComponentModel.EditorBrowsable (global::System.ComponentModel.EditorBrowsableState.Never)]");
+			writer.WriteLine ($"public static {n} FromJniValue ({t} value) => new {n} (value{(has_init ? ", raw: true" : "")});");
 			writer.WriteLine ();
 			writer.WriteLine ($"public static implicit operator {t} ({n} value) => value.Value;");
-			writer.WriteLine ($"public static implicit operator {n} ({t} value) => new {n} (value);");
+			// Implicit conversions must not throw, and the `init` block can.
+			writer.WriteLine ($"public static {(has_init ? "explicit" : "implicit")} operator {n} ({t} value) => new {n} (value);");
 			writer.WriteLine ();
 			writer.WriteLine ($"public static bool operator == ({n} left, {n} right) => left.Equals (right);");
 			writer.WriteLine ($"public static bool operator != ({n} left, {n} right) => !left.Equals (right);");
@@ -91,23 +105,25 @@ namespace generator.SourceWriters
 
 			writer.WriteLine ();
 			writer.WriteLine ($"static global::Java.Interop.JniType{q} __jniType;");
-			writer.WriteLine ($"static global::Java.Interop.JniMethodInfo{q} __constructorImpl;");
+			if (klass.KotlinInlineClassHasInit)
+				writer.WriteLine ($"static global::Java.Interop.JniMethodInfo{q} __constructorImpl;");
 			writer.WriteLine ($"static global::Java.Interop.JniMethodInfo{q} __boxImpl;");
 			writer.WriteLine ($"static global::Java.Interop.JniMethodInfo{q} __unboxImpl;");
 			writer.WriteLine ($"static global::Java.Interop.JniType __GetJniType () => global::Java.Interop.JniType.GetCachedJniType (ref __jniType, \"{klass.RawJniName}\");");
 
-			writer.WriteLine ();
-			writer.WriteLine ("// Calls Kotlin's `constructor-impl`, which runs the `init` block checks.");
-			writer.WriteLine ($"public static {n} Create ({t} value)");
-			writer.WriteLine ("{");
-			writer.WriteLine ("\tunsafe {");
-			writer.WriteLine ("\t\t// SAFETY: The cached method ID matches the one-argument signature, and the stack argument stays live for the synchronous call.");
-			writer.WriteLine ($"\t\tvar __m = __GetJniType ().GetCachedStaticMethod (ref __constructorImpl, \"constructor-impl\", \"({u}){u}\");");
-			writer.WriteLine ("\t\tglobal::Java.Interop.JniArgumentValue* __args = stackalloc global::Java.Interop.JniArgumentValue [1];");
-			writer.WriteLine ("\t\t__args [0] = new global::Java.Interop.JniArgumentValue (value);");
-			writer.WriteLine ($"\t\treturn new {n} (global::Java.Interop.JniEnvironment.StaticMethods.CallStatic{underlying_call_type}Method (__GetJniType ().PeerReference, __m, __args));");
-			writer.WriteLine ("\t}");
-			writer.WriteLine ("}");
+			if (klass.KotlinInlineClassHasInit) {
+				writer.WriteLine ();
+				writer.WriteLine ($"static {t} ConstructorImpl ({t} value)");
+				writer.WriteLine ("{");
+				writer.WriteLine ("\tunsafe {");
+				writer.WriteLine ("\t\t// SAFETY: The cached method ID matches the one-argument signature, and the stack argument stays live for the synchronous call.");
+				writer.WriteLine ($"\t\tvar __m = __GetJniType ().GetCachedStaticMethod (ref __constructorImpl, \"constructor-impl\", \"({u}){u}\");");
+				writer.WriteLine ("\t\tglobal::Java.Interop.JniArgumentValue* __args = stackalloc global::Java.Interop.JniArgumentValue [1];");
+				writer.WriteLine ("\t\t__args [0] = new global::Java.Interop.JniArgumentValue (value);");
+				writer.WriteLine ($"\t\treturn global::Java.Interop.JniEnvironment.StaticMethods.CallStatic{underlying_call_type}Method (__GetJniType ().PeerReference, __m, __args);");
+				writer.WriteLine ("\t}");
+				writer.WriteLine ("}");
+			}
 
 			writer.WriteLine ();
 			writer.WriteLine ("// Calls Kotlin's `box-impl`. The caller owns the returned JNI local reference.");
@@ -134,7 +150,7 @@ namespace generator.SourceWriters
 			writer.WriteLine ("\t\t// SAFETY: `handle` is a live reference to the boxed value class, released at most once below.");
 			writer.WriteLine ("\t\ttry {");
 			writer.WriteLine ($"\t\t\tvar __m = __GetJniType ().GetCachedInstanceMethod (ref __unboxImpl, \"unbox-impl\", \"(){u}\");");
-			writer.WriteLine ($"\t\t\treturn new {n} (global::Java.Interop.JniEnvironment.InstanceMethods.Call{underlying_call_type}Method (new global::Java.Interop.JniObjectReference (handle), __m));");
+			writer.WriteLine ($"\t\t\treturn FromJniValue (global::Java.Interop.JniEnvironment.InstanceMethods.Call{underlying_call_type}Method (new global::Java.Interop.JniObjectReference (handle), __m));");
 			writer.WriteLine ("\t\t} finally {");
 			writer.WriteLine ("\t\t\tif (transfer == global::Android.Runtime.JniHandleOwnership.TransferLocalRef)");
 			writer.WriteLine ("\t\t\t\tglobal::Android.Runtime.JNIEnv.DeleteLocalRef (handle);");

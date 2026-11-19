@@ -57,10 +57,10 @@ namespace Java.InteropTests {
 		}
 
 		[TestMethod]
-		public void CreateRunsInitBlock ()
+		public void ConstructorRunsInitBlock ()
 		{
-			Assert.AreEqual (new Meters (2), Meters.Create (2));
-			Assert.ThrowsExactly<IllegalArgumentException> (() => Meters.Create (-1));
+			Assert.AreEqual (2.0, new Meters (2).Value);
+			Assert.ThrowsExactly<IllegalArgumentException> (() => new Meters (-1));
 		}
 	}
 }

@@ -87,6 +87,10 @@ namespace Xamarin.Android.Tools.BytecodeTests
 			// MyDp is Float-backed -> JNI primitive `F`.
 			Assert.AreEqual ("F", byName ["xat/bytecode/tests/MyDp"].KotlinInlineClassUnderlyingJniType);
 
+			// Only MyDp has an `init` block.
+			Assert.IsTrue (byName ["xat/bytecode/tests/MyDp"].KotlinInlineClassHasInit);
+			Assert.IsFalse (byName ["xat/bytecode/tests/MyColor"].KotlinInlineClassHasInit);
+
 			// Non-inline classes must NOT be stamped.
 			Assert.IsNull (byName ["xat/bytecode/tests/Widgets"].KotlinInlineClassUnderlyingJniType);
 		}

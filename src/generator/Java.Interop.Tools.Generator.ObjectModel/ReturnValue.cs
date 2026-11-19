@@ -16,6 +16,7 @@ namespace MonoDroid.Generation {
 		string raw_type;
 		bool is_enumified;
 		Method owner;
+		bool unboxed_kotlin_inline_class;
 
 		public ReturnValue (Method owner, string java_type, string managed_type, bool isEnumified, bool notNull)
 		{
@@ -102,6 +103,8 @@ namespace MonoDroid.Generation {
 
 		public string FromNative (CodeGenerationOptions opt, string var_name, bool owned, bool isMarshal = false)
 		{
+			if (unboxed_kotlin_inline_class)
+				return $"{opt.GetOutputName (managed_type)}.FromJniValue ({sym.FromNative (opt, var_name, owned, isMarshal)})";
 			if (!string.IsNullOrEmpty (managed_type) && (sym is ClassGen || sym is InterfaceGen)) {
 				return string.Format ("global::Java.Lang.Object.GetObject<{0}> ({1}, {2})", 
 				                      opt.GetOutputName (managed_type), var_name, owned ? "JniHandleOwnership.TransferLocalRef" : "JniHandleOwnership.DoNotTransfer");
@@ -162,8 +165,8 @@ namespace MonoDroid.Generation {
 			if (wrapper == null || !wrapper.IsKotlinInlineClass || wrapper.KotlinInlineClassUnderlyingJniType != sym.JniName)
 				return;
 			managed_type = wrapper.FullName;
+			unboxed_kotlin_inline_class = true;
 			NotNull = true;
 		}
 	}
 }
-

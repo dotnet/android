@@ -42,7 +42,6 @@ namespace generatortests
 			StringAssert.Contains ("public static implicit operator long (MyColor", output);
 			StringAssert.Contains ("public static implicit operator MyColor (long", output);
 			StringAssert.Contains ("public static implicit operator float (MyDp", output);
-			StringAssert.Contains ("public static implicit operator MyDp (float", output);
 
 			// Widgets.tint(MyColor) / tint(MyAlpha) / tint(MyDp) overloads must
 			// project the inline-class param in the C# signature. The Kotlin
@@ -85,9 +84,19 @@ namespace generatortests
 		{
 			var output = GenerateCSharp (BuildApiXmlFromKotlinFixture (), out _, nullableReferenceTypes: true);
 
-			StringAssert.Contains ("\"constructor-impl\", \"(J)J\"", output);
 			StringAssert.Contains ("\"box-impl\", \"(J)Lxat/bytecode/tests/MyColor;\"", output);
 			StringAssert.Contains ("\"unbox-impl\", \"()J\"", output);
+
+			// Only MyDp has an `init` block, so only its constructor calls `constructor-impl`,
+			// and its conversion from the primitive is explicit.
+			StringAssert.Contains ("public MyDp (float value) { Value = ConstructorImpl (value); }", output);
+			StringAssert.Contains ("\"constructor-impl\", \"(F)F\"", output);
+			StringAssert.Contains ("public static explicit operator MyDp (float value)", output);
+			StringAssert.Contains ("public MyColor (long value) { Value = value; }", output);
+			StringAssert.DoesNotContain ("\"constructor-impl\", \"(J)J\"", output);
+
+			// Values from Java skip the `init` block, which Kotlin already ran.
+			StringAssert.Contains ("return Xat.Bytecode.Tests.MyDp.FromJniValue (__rm);", output);
 
 			// Kotlin `MyColor?` is passed boxed.
 			StringAssert.Contains ("Xat.Bytecode.Tests.MyColor? MaybeColor (Xat.Bytecode.Tests.MyColor? color)", output);
@@ -97,7 +106,7 @@ namespace generatortests
 
 			// Java calls back into C# with a boxed value.
 			StringAssert.Contains ("Xat.Bytecode.Tests.MyColor.ToLocalJniHandle (__this.OnColor (color))", output);
-			StringAssert.Contains ("var dp = new Xat.Bytecode.Tests.MyDp (native_dp);", output);
+			StringAssert.Contains ("var dp = Xat.Bytecode.Tests.MyDp.FromJniValue (native_dp);", output);
 			StringAssert.Contains ("return __this.OnDp (dp);", output);
 
 			// JavaList<T> can't hold a struct, so `List<MyColor>` keeps the boxed Java objects.

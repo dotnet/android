@@ -317,7 +317,7 @@ namespace Java.Interop.Tools.JavaTypeSystem
 		}
 
 		// class-parse attributes for Kotlin value classes that the generator reads.
-		internal static readonly string [] KotlinClassAttributes = { "kotlin-inline-class", "kotlin-inline-class-underlying-jni-type" };
+		internal static readonly string [] KotlinClassAttributes = { "kotlin-inline-class", "kotlin-inline-class-underlying-jni-type", "kotlin-inline-class-has-init" };
 		internal static readonly string [] KotlinMethodAttributes = { "managedName", "kotlin-inline-class-return-jni-type" };
 		internal static readonly string [] KotlinParameterAttributes = { "kotlin-inline-class-jni-type" };
 

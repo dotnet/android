@@ -16,7 +16,9 @@ value class MyAlpha(val value: ULong)
 // A second inline class with a different backing primitive, so we can verify
 // that *non*-colliding hash siblings still survive.
 @JvmInline
-value class MyDp(val value: Float)
+value class MyDp(val value: Float) {
+    init { require(value >= 0f) }
+}
 
 object Widgets {
 
