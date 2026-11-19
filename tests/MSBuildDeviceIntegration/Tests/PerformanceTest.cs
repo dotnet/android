@@ -286,6 +286,7 @@ namespace Xamarin.Android.Build.Tests
 		[Test]
 		[Category ("UsesDevice")]
 		[Retry (Retry)]
+		[Ignore ("Flaky: https://github.com/dotnet/android/issues/13636")]
 		public void Build_XAML_Change ([Values (true, false)] bool install)
 		{
 			var path = Path.Combine ("temp", TestName);

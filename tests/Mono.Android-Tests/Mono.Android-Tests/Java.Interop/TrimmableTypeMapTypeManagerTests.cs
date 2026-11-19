@@ -349,6 +349,7 @@ namespace Java.InteropTests
 		}
 
 		[TestMethod]
+		[Ignore ("Flaky: https://github.com/dotnet/android/issues/13639")]
 		public async Task RegisteredPeer_Dispose_Finalized ()
 		{
 			var disposed = new TaskCompletionSource<bool> (TaskCreationOptions.RunContinuationsAsynchronously);

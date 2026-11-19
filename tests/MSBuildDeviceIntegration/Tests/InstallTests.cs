@@ -448,6 +448,7 @@ namespace Xamarin.Android.Build.Tests
 		[Test]
 		[TestCase ("apk")]
 		[TestCase ("aab")]
+		[Ignore ("Flaky: https://github.com/dotnet/android/issues/13641")]
 		public void IncrementalFastDeployment (string packageFormat)
 		{
 			var class1src = new BuildItem.Source ("Class1.cs") {

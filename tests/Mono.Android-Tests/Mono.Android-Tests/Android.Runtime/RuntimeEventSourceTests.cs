@@ -209,6 +209,7 @@ namespace Android.RuntimeTests
 		[TestMethod]
 		[TestCategory ("GCBridge")]
 		[DynamicDependency (DynamicallyAccessedMemberTypes.All, "Microsoft.Android.Runtime.RuntimeEventSource", "Mono.Android")]
+		[Ignore ("Flaky: https://github.com/dotnet/android/issues/13645")]
 		public void GCBridgeRoundEmission ()
 		{
 			if (!Microsoft.Android.Runtime.RuntimeFeature.IsCoreClrRuntime) {

@@ -76,6 +76,7 @@ namespace Java.InteropTests
 
 #if !NO_GC_BRIDGE_SUPPORT
 		[TestMethod]
+		[Ignore ("Flaky: https://github.com/dotnet/android/issues/13275")]
 		public async Task UnreferencedInstanceIsCollected ()
 		{
 			JniObjectReference  oldHandle = new JniObjectReference ();
@@ -109,6 +110,7 @@ namespace Java.InteropTests
 
 #if !NO_GC_BRIDGE_SUPPORT
 		[TestMethod]
+		[Ignore ("Flaky: https://github.com/dotnet/android/issues/13638")]
 		public async Task Dispose_Finalized ()
 		{
 			var disposed  = new TaskCompletionSource<bool> (TaskCreationOptions.RunContinuationsAsynchronously);

@@ -3140,6 +3140,7 @@ CUSTOM_ENVIRONMENT_VALUE=custom",
 		}
 
 		[Test]
+		[Ignore ("Flaky: https://github.com/dotnet/android/issues/13640")]
 		public void GradleFBProj ([ValueSource (typeof (BaseTest), nameof (BaseTest.ValidRuntimeConfigurations))] (bool isRelease, AndroidRuntime runtime) configuration)
 		{
 			var (isRelease, runtime) = configuration;
@@ -3361,6 +3362,7 @@ Facebook.FacebookSdk.LogEvent(""TestFacebook"");
 		[TestCase ("test", MSTestPackageChannel.Stable)]
 		[TestCase ("test", MSTestPackageChannel.Nightly)]
 		[TestCase ("list", MSTestPackageChannel.Stable)]
+		[Ignore ("Flaky: https://github.com/dotnet/android/issues/13643")]
 		public void DotNetNewAndroidTest (string mode, MSTestPackageChannel msTestPackageChannel)
 		{
 			var templateName = $"DotNetNewAndroidTest_{mode}_{msTestPackageChannel}";

@@ -8,6 +8,7 @@ namespace System.NetTests {
 	public class PingTest
 	{
 		[TestMethod]
+		[Ignore ("Flaky: https://github.com/dotnet/android/issues/13642")]
 		public void PingLocalhost ()
 		{
 			using var ping = new Ping ();

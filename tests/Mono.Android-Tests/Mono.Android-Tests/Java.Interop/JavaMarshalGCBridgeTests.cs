@@ -140,6 +140,7 @@ public class JavaMarshalGCBridgeTests
 	[TestMethod]
 	[TestCategory ("GCBridge")]
 	[TestCategory ("ReferenceTracing")]
+	[Ignore ("Flaky: https://github.com/dotnet/android/issues/13637")]
 	public void ManagedPeerCycleSurvivesJavaRootAndIsCollectedAfterRelease ()
 	{
 		if (!Microsoft.Android.Runtime.RuntimeFeature.IsCoreClrRuntime && !Microsoft.Android.Runtime.RuntimeFeature.IsNativeAotRuntime)
