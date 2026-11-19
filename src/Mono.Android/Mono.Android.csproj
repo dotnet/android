@@ -26,6 +26,12 @@
   </PropertyGroup>
 
   <PropertyGroup>
+    <IsUnstableVersion Condition=" '$(IsUnstableVersion)' == ''
+        And $([MSBuild]::VersionGreaterThan($(AndroidApiLevel), $(AndroidLatestStableApiLevel)))
+        And ( '$(AndroidLatestStableApiLevel2)' == '' Or $([MSBuild]::VersionGreaterThan($(AndroidApiLevel), $(AndroidLatestStableApiLevel2))) )
+        "
+    >true</IsUnstableVersion>
+    <DefineConstants Condition=" '$(IsUnstableVersion)' == 'True' ">$(DefineConstants);ANDROID_UNSTABLE</DefineConstants>
     <OutputPath>$(_MonoAndroidNETDefaultOutDir)</OutputPath>
 
     <!-- Allow PublicApiAnalyzers to be turned off -->
