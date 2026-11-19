@@ -131,6 +131,8 @@ public class ComputeRunArgumentsDiscoveryTests
 
 	[TestCase ("", false, "Exe", "true")]
 	[TestCase ("<ApplicationId>com.example.app</ApplicationId>", false, "Library", "")]
+	[TestCase ("<ApplicationId>com.example.app</ApplicationId><AndroidConsoleApplication>true</AndroidConsoleApplication>", false, "Exe", "true")]
+	[TestCase ("<AndroidConsoleApplication>false</AndroidConsoleApplication>", false, "Library", "false")]
 	[TestCase ("<EnableMSTestRunner>true</EnableMSTestRunner>", false, "Library", "")]
 	[TestCase ("<_AndroidConsoleApplication>false</_AndroidConsoleApplication>", false, "Library", "false")]
 	[TestCase ("", true, "Library", "")]
