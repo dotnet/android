@@ -1,0 +1,62 @@
+# Reports the `dotnet-android-gate` commit status: infrastructure-only
+# failures of the `dotnet-android` Azure DevOps build are reported as
+# inconclusive (pending) and retried instead of failing the PR.
+# See .github/workflows/ci-gate/README.md.
+name: CI gate
+
+on:
+  check_run:
+    types: [completed]
+  workflow_dispatch:
+    inputs:
+      sha:
+        description: Commit to evaluate
+        required: true
+
+permissions:
+  checks: read
+  contents: read
+  id-token: write
+  statuses: write
+
+concurrency:
+  group: ci-gate-${{ github.event.check_run.head_sha || inputs.sha }}
+  cancel-in-progress: false
+
+jobs:
+  gate:
+    if: >-
+      github.repository == 'dotnet/android' &&
+      (github.event_name == 'workflow_dispatch' ||
+       (github.event.check_run.name == 'dotnet-android' &&
+        github.event.check_run.app.slug == 'azure-pipelines'))
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+          sparse-checkout: .github/workflows/ci-gate
+
+      - name: Get Azure DevOps token
+        if: vars.CI_GATE_AZURE_CLIENT_ID != '' && vars.CI_GATE_AZURE_TENANT_ID != ''
+        env:
+          CLIENT_ID: ${{ vars.CI_GATE_AZURE_CLIENT_ID }}
+          TENANT_ID: ${{ vars.CI_GATE_AZURE_TENANT_ID }}
+        run: |
+          set -euo pipefail
+          oidc=$(curl -sSf -H "Authorization: Bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" \
+            "$ACTIONS_ID_TOKEN_REQUEST_URL&audience=api://AzureADTokenExchange" | jq -r .value)
+          echo "::add-mask::$oidc"
+          az login --service-principal -u "$CLIENT_ID" --tenant "$TENANT_ID" \
+            --federated-token "$oidc" --allow-no-subscriptions --output none
+          token=$(az account get-access-token --resource 499b84ac-1321-427f-aa17-267ca6975798 \
+            --query accessToken -o tsv)
+          echo "::add-mask::$token"
+          echo "AZDO_TOKEN=$token" >> "$GITHUB_ENV"
+
+      - name: Report gate status
+        env:
+          GH_TOKEN: ${{ github.token }}
+          SHA: ${{ github.event.check_run.head_sha || inputs.sha }}
+        run: python3 .github/workflows/ci-gate/ci_gate.py --sha "$SHA"
