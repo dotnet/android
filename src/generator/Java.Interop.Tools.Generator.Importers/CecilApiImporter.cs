@@ -23,6 +23,7 @@ namespace MonoDroid.Generation
 
 			// A struct with [Register] is a Kotlin value class from another binding assembly.
 			if (t.IsValueType && klass.IsAcw) {
+				klass.IsShallow = false;
 				klass.BaseType = "Java.Lang.Object";
 				klass.IsKotlinInlineClass = true;
 				var value = t.Fields.FirstOrDefault (f => f.Name == "Value" && !f.IsStatic);

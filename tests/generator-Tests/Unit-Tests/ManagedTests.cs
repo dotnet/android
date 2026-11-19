@@ -162,9 +162,11 @@ namespace generatortests
 		[Test]
 		public void KotlinValueClassStructMembers ()
 		{
-			var dp = CecilApiImporter.CreateClass (module.GetType ("Com.Mypackage.MyDp"), options);
-			options.SymbolTable.AddType (dp);
-			var @class = CecilApiImporter.CreateClass (module.GetType ("Com.Mypackage.DpUser"), options);
+			// Like a real build, which imports referenced types lazily.
+			options.UseShallowReferencedTypes = true;
+			options.SymbolTable.AddType (CecilApiImporter.CreateClass (module.GetType ("Com.Mypackage.MyDp"), options));
+			options.SymbolTable.AddType (CecilApiImporter.CreateClass (module.GetType ("Com.Mypackage.DpUser"), options));
+			var @class = (ClassGen) options.SymbolTable.Lookup ("com.mypackage.DpUser");
 			Assert.IsTrue (@class.Validate (options, new GenericParameterDefinitionList (), new CodeGeneratorContext ()), "@class.Validate failed!");
 
 			// `MyDp` is passed as its underlying `float`.
