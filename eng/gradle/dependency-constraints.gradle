@@ -4,6 +4,7 @@
 def constraints = [
     'org.bouncycastle:bcprov-jdk18on:1.87',
     'org.bouncycastle:bcpkix-jdk18on:1.87',
+    'com.google.guava:guava:33.7.2-jre',
 ]
 
 gradle.beforeProject { project ->
