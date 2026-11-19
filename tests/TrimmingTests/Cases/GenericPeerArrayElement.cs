@@ -6,6 +6,8 @@
 
 // JNIEnv.GetArray<T> () reaches TrimmableTypeMap.CreateInstance () with only a runtime Type. For a closed generic
 // peer the runtime reflects over the (IntPtr, JniHandleOwnership) constructor, which nothing else in this app keeps.
+// The generated proxy of the open generic definition keeps that constructor with [DynamicDependency]; that must not
+// keep generic peers the app doesn't use, nor make NativeAOT compile instantiations the app doesn't use.
 
 using System;
 using System.Collections.Generic;
@@ -13,6 +15,13 @@ using Android.App;
 using Android.OS;
 using Android.Runtime;
 using Microsoft.Android.TrimmingTests.Expectations;
+
+// ILLink keeps or removes generic definitions, so only NativeAOT can check instantiations.
+[assembly: KeptTypeInAssembly ("GenericPeerArrayElement", "GenericArrayElement`1<System.Int32>", By = Tool.NativeAot)]
+[assembly: KeptTypeInAssembly ("GenericPeerArrayElement", "GenericArrayElement`1<System.String>", By = Tool.NativeAot)]
+[assembly: RemovedTypeInAssembly ("GenericPeerArrayElement", "GenericArrayElement`1<System.Int64>", By = Tool.NativeAot)]
+[assembly: RemovedTypeInAssembly ("GenericPeerArrayElement", "GenericArrayElement`1<System.Object>", By = Tool.NativeAot)]
+[assembly: RemovedTypeInAssembly ("GenericPeerArrayElement", "GenericArrayElement`1<MainActivity>", By = Tool.NativeAot)]
 
 [Activity (Label = "GenericPeerArrayElement", MainLauncher = true)]
 public class MainActivity : Activity
@@ -62,6 +71,22 @@ public class GenericArrayElement<T> : Java.Lang.Object
 
 	[Kept]
 	protected GenericArrayElement (IntPtr handle, JniHandleOwnership transfer)
+		: base (handle, transfer)
+	{
+	}
+
+	public T? Value { get; set; }
+}
+
+// A generic peer the app never uses, with the same shape: its proxy, and so its [DynamicDependency], must not keep it.
+[Removed]
+public class UnusedGenericElement<T> : Java.Lang.Object
+{
+	public UnusedGenericElement ()
+	{
+	}
+
+	protected UnusedGenericElement (IntPtr handle, JniHandleOwnership transfer)
 		: base (handle, transfer)
 	{
 	}
