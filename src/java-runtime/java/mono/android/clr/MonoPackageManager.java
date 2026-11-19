@@ -1,4 +1,4 @@
-package net.dot.android;
+package mono;
 
 import java.io.*;
 import java.lang.String;
@@ -14,11 +14,11 @@ import android.content.pm.ApplicationInfo;
 import android.content.res.AssetManager;
 import android.os.Build;
 import android.util.Log;
-import mono.MonoPackageManager_Resources;
-import mono.NativeLibraryHelper;
 import mono.android.Runtime;
+import net.dot.android.ApplicationRegistration;
+import net.dot.android.RuntimeDirectories;
 
-public class CoreClrPackageManager {
+public class MonoPackageManager {
 
 	static Object lock = new Object ();
 	static boolean initialized;

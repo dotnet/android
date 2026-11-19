@@ -16,7 +16,7 @@ public class MonoRuntimeProvider
 	@Override
 	public void attachInfo (android.content.Context context, android.content.pm.ProviderInfo info)
 	{
-		net.dot.android.CoreClrPackageManager.LoadApplication (context);
+		mono.MonoPackageManager.LoadApplication (context);
 		super.attachInfo (context, info);
 	}
 

@@ -3561,7 +3561,7 @@ namespace Xamarin.Android.Build.Tests {
 				"mono/android/Runtime.class",
 				"mono/android/IGCUserPeer.class",
 				"mono/android/GCUserPeer.class",
-				"net/dot/android/CoreClrPackageManager.class",
+				"mono/MonoPackageManager.class",
 				"mono/NativeLibraryHelper.class",
 			}) {
 				Assert.IsNotNull (runtimeJar.GetEntry (entry), $"{entry} must remain in the runtime JAR.");
