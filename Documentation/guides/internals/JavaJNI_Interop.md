@@ -161,6 +161,10 @@ hierarchy, even for sealed app and library types: these classes can use
 a different class loader, so resolving their class by name could
 incorrectly reject a valid object.
 
+`JavaPeerProxy`, `JavaPeerAliasesAttribute`, `IAndroidCallableWrapper`,
+and `TrimmableTypeMap` remain public for generated assemblies but are
+hidden from IntelliSense for application developers.
+
 # Registration
 
 Both mechanisms of method registration rely on generation of [Java
