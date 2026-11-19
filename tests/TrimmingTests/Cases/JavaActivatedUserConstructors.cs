@@ -41,7 +41,8 @@ public class MainActivity : Activity
 			}
 
 			// Java runs the posted Action through Java.Lang.Thread.RunnableImplementor; the callback reports the result.
-			if (!new Handler (Looper.MainLooper!).Post (() => Android.Util.Log.Info ("TrimmingTests", "TRIMMING_TEST_RESULT: PASS"))) {
+			var looper = Looper.MainLooper ?? throw new InvalidOperationException ("There is no main looper.");
+			if (!new Handler (looper).Post (() => Android.Util.Log.Info ("TrimmingTests", "TRIMMING_TEST_RESULT: PASS"))) {
 				throw new InvalidOperationException ("Handler.Post () failed.");
 			}
 		} catch (Exception e) {
