@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -20,7 +21,7 @@ public partial class SdkManager
 		// concatenates individually-quoted arguments. Pass as a single Arguments
 		// string so the script receives them correctly.
 		var psi = OS.IsWindows
-			? ProcessUtils.CreateProcessStartInfo (sdkManagerPath, arguments)
+			? CreateWindowsSdkManagerStartInfo (sdkManagerPath, arguments)
 			: new ProcessStartInfo {
 				FileName = sdkManagerPath,
 				Arguments = argumentsStr,
@@ -77,6 +78,26 @@ public partial class SdkManager
 		}
 
 		return (exitCode, stdoutStr, stderrStr);
+	}
+
+	static ProcessStartInfo CreateWindowsSdkManagerStartInfo (string sdkManagerPath, string[] arguments)
+	{
+		var psi = new ProcessStartInfo {
+			FileName = Path.Combine (Environment.SystemDirectory, "cmd.exe"),
+			UseShellExecute = false,
+			CreateNoWindow = true,
+		};
+		// Avoid cmd.exe expanding metacharacters such as '%' in the SDK path.
+		psi.EnvironmentVariables ["XA_SDK_MANAGER_PATH"] = sdkManagerPath;
+
+		// Arguments are fixed switches or validated package IDs. cmd.exe does not preserve
+		// ArgumentList boundaries for batch files, so quote each argument explicitly.
+		var command = new StringBuilder ("/d /s /v:off /c \"\"%XA_SDK_MANAGER_PATH%\"");
+		foreach (var argument in arguments)
+			command.Append (" \"").Append (argument).Append ('"');
+		command.Append ('"');
+		psi.Arguments = command.ToString ();
+		return psi;
 	}
 
 	async Task DownloadFileAsync (string url, string destinationPath, long expectedSize, IProgress<SdkBootstrapProgress> progress, CancellationToken cancellationToken)
