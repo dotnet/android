@@ -306,7 +306,7 @@ namespace Xamarin.Android.Build.Tests
 			TestOutputDirectories [TestContext.CurrentContext.Test.ID] = templatePath;
 			var dotnet = new DotNetCLI (Path.Combine (templatePath, "Benchmark.cs"));
 			Assert.IsTrue (dotnet.New ("android-benchmark", name: "Benchmark"), "`dotnet new android-benchmark -n Benchmark` should succeed.");
-			Assert.IsTrue (dotnet.Build (), $"The generated benchmark should build. See {dotnet.BuildLogFile}.");
+			Assert.IsTrue (dotnet.BuildFileBased (), $"The generated benchmark should build. See {dotnet.ProcessLogFile}.");
 		}
 
 		[Test]

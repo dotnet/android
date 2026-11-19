@@ -197,6 +197,8 @@ namespace Xamarin.ProjectTools
 			return Execute (arguments.ToArray ());
 		}
 
+		public bool BuildFileBased () => Execute ("build", $"\"{projectOrSolution}\"");
+
 		public bool Pack (string target = null, string runtimeIdentifier = null, string [] parameters = null, string [] msbuildArguments = null)
 		{
 			var arguments = GetDefaultCommandLineArgs ("pack", target, runtimeIdentifier, parameters, msbuildArguments);
