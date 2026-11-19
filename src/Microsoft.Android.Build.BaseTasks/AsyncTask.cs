@@ -19,7 +19,7 @@ namespace Microsoft.Android.Build.Tasks
 	/// Base class for tasks that need long-running cancellable asynchronous tasks
 	/// that don't block the UI thread in the IDE.
 	/// </summary>
-	public abstract class AsyncTask : Task, ICancelableTask
+	public abstract class AsyncTaskBase : Task, ICancelableTask
 	{
 		public abstract string TaskPrefix { get; }
 
@@ -50,22 +50,15 @@ namespace Microsoft.Android.Build.Tasks
 		/// </summary>
 		public CancellationToken CancellationToken => cts.Token;
 
-		/// <summary>
-		/// Gets the current working directory for the task, which is captured at task 
-		/// creation time from <see cref="Directory.GetCurrentDirectory"/>.
-		/// </summary>
-		protected string WorkingDirectory { get; private set; }
-
 		[Obsolete ("Do not use the Log.LogXXXX from within your Async task as it will Lock the Visual Studio UI. Use the this.LogXXXX methods instead.")]
 		private new TaskLoggingHelper Log => base.Log;
 
 		/// <summary>
 		/// Initializes the task.
 		/// </summary>
-		protected AsyncTask ()
+		protected AsyncTaskBase ()
 		{
 			YieldDuringToolExecution = false;
-			WorkingDirectory = Directory.GetCurrentDirectory ();
 			uiThreadId = Thread.CurrentThread.ManagedThreadId;
 		}
 
@@ -76,7 +69,7 @@ namespace Microsoft.Android.Build.Tasks
 		{
 			if (task.Exception != null) {
 				var ex = task.Exception.GetBaseException ();
-				this.LogUnhandledException (TaskPrefix, ex);
+				LogUnhandledExceptionCore (ex);
 			}
 			Complete ();
 		}
@@ -397,7 +390,7 @@ namespace Microsoft.Android.Build.Tasks
 			try {
 				return RunTask ();
 			} catch (Exception ex) {
-				this.LogUnhandledException (TaskPrefix, ex);
+				LogUnhandledExceptionCore (ex);
 				return false;
 			}
 		}
@@ -435,7 +428,7 @@ namespace Microsoft.Android.Build.Tasks
 		/// </summary>
 		public virtual System.Threading.Tasks.Task RunTaskAsync () => System.Threading.Tasks.Task.CompletedTask;
 
-		protected object ProjectSpecificTaskObjectKey (object key) => (key, WorkingDirectory);
+		protected abstract void LogUnhandledExceptionCore (Exception ex);
 
 		private enum WaitHandleIndex
 		{
@@ -447,5 +440,37 @@ namespace Microsoft.Android.Build.Tasks
 			TaskCancelled,
 			Completed,
 		}
+	}
+
+	public abstract class AsyncTask : AsyncTaskBase
+	{
+		/// <summary>
+		/// Gets the current working directory for the task, which is captured at task
+		/// creation time from <see cref="Directory.GetCurrentDirectory"/>.
+		/// </summary>
+		protected string WorkingDirectory { get; private set; }
+
+		protected AsyncTask ()
+		{
+			WorkingDirectory = Directory.GetCurrentDirectory ();
+		}
+
+		protected override void LogUnhandledExceptionCore (Exception ex) =>
+			this.LogUnhandledException (TaskPrefix, ex);
+
+		protected object ProjectSpecificTaskObjectKey (object key) => (key, WorkingDirectory);
+	}
+
+	// Each concrete task must also declare MSBuildMultiThreadableTaskAttribute.
+	// Unlike AsyncTask, this base does not capture the process working directory.
+	public abstract class MultithreadedAsyncTask : AsyncTaskBase, IMultiThreadableTask
+	{
+		public TaskEnvironment TaskEnvironment { get; set; } = TaskEnvironment.Fallback;
+
+		protected override void LogUnhandledExceptionCore (Exception ex) =>
+			this.LogUnhandledException (TaskPrefix, ex);
+
+		protected object ProjectSpecificTaskObjectKey (object key) =>
+			(key, TaskEnvironment.ProjectDirectory.Value);
 	}
 }

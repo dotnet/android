@@ -17,6 +17,11 @@ namespace Microsoft.Android.Build.Tasks
 			LogUnhandledException ((code, message) => task.LogCodedError (code, message), prefix, ex);
 		}
 
+		public static void LogUnhandledException (this MultithreadedAsyncTask task, string prefix, Exception ex)
+		{
+			LogUnhandledException ((code, message) => task.LogCodedError (code, message), prefix, ex, task.TaskEnvironment);
+		}
+
 		public static void LogUnhandledException (this TaskLoggingHelper log, string prefix, Exception ex)
 		{
 			LogUnhandledException ((code, message) => log.LogCodedError (code, message), prefix, ex);

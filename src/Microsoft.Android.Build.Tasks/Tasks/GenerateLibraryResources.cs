@@ -16,11 +16,9 @@ namespace Microsoft.Android.Tasks
 	/// We used to invoke aapt/aapt2 per library (many times!), this task does the work to generate R.java for libraries without calling aapt/aapt2.
 	/// </summary>
 	[MSBuildMultiThreadableTask]
-	public partial class GenerateLibraryResources : AsyncTask, IMultiThreadableTask
+	public partial class GenerateLibraryResources : MultithreadedAsyncTask
 	{
 		public override string TaskPrefix => "GLR";
-
-		public TaskEnvironment TaskEnvironment { get; set; } = TaskEnvironment.Fallback;
 
 		/// <summary>
 		/// The main R.txt for the app
