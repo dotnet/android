@@ -1,0 +1,6 @@
+<Project>
+  <!-- A user TrimmerRootAssembly item without RootMode metadata, as users add it. -->
+  <ItemGroup>
+    <TrimmerRootAssembly Include="TrimmingTests.Expectations" />
+  </ItemGroup>
+</Project>

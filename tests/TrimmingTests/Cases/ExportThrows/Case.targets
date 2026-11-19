@@ -1,0 +1,6 @@
+<Project>
+  <!-- R8 (used by NativeAOT builds) drops the `Exceptions` attribute that reflection reads `throws` clauses from. -->
+  <ItemGroup>
+    <ProguardConfiguration Include="$(MSBuildThisFileDirectory)proguard.cfg" />
+  </ItemGroup>
+</Project>
