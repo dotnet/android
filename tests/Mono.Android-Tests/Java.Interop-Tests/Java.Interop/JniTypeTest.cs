@@ -42,6 +42,7 @@ namespace Java.InteropTests
 			Assert.ThrowsExactly<Java.Lang.ClassNotFoundException> (() => new JniType ("__this__/__type__/__had__/__better__/__not__/__Exist__")).Dispose ();
 		}
 
+#if !NATIVEAOT
 		[TestMethod]
 		[RequiresDynamicCode ("Exercises JniType.RegisterNativeMethods.")]
 		public void Dispose_Exceptions ()
@@ -78,6 +79,7 @@ namespace Java.InteropTests
 			JniMethodInfo   jsm = null;
 			Assert.ThrowsExactly<ObjectDisposedException> (() => t.GetCachedStaticMethod (ref jsm, (string) null, (string) null));
 		}
+#endif
 
 		[TestMethod]
 		public void GetSuperclass ()
@@ -184,6 +186,7 @@ namespace Java.InteropTests
 			}
 		}
 
+#if !NATIVEAOT
 		[TestMethod]
 		[RequiresDynamicCode ("Exercises JniType.RegisterNativeMethods.")]
 		public void RegisterNativeMethods ()
@@ -197,6 +200,7 @@ namespace Java.InteropTests
 				Assert.AreEqual (JniObjectReferenceType.Global, TestType_class.PeerReference.Type);
 			}
 		}
+#endif
 
 		[TestMethod]
 		public void RegisterNativeMethods_JniNativeMethod ()

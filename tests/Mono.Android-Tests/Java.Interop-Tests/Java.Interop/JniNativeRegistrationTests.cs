@@ -1,3 +1,4 @@
+#if !NATIVEAOT
 using System;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
@@ -44,6 +45,7 @@ namespace Java.InteropTests {
 				Assert.IsFalse (replacement.Callback.IsAlive);
 			}
 		}
+		#endif
 
 		[TestMethod]
 		[RequiresDynamicCode ("Tests delegate-based native registration.")]
