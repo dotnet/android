@@ -468,7 +468,7 @@ namespace Microsoft.Android.Build.Tasks
 		public TaskEnvironment TaskEnvironment { get; set; } = TaskEnvironment.Fallback;
 
 		protected override void LogUnhandledExceptionCore (Exception ex) =>
-			this.LogUnhandledException (TaskPrefix, ex);
+			this.LogUnhandledException (TaskPrefix, ex, TaskEnvironment);
 
 		protected object ProjectSpecificTaskObjectKey (object key) =>
 			(key, TaskEnvironment.ProjectDirectory.Value);
