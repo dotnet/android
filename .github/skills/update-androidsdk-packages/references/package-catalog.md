@@ -16,7 +16,7 @@ drift as the skill is used.
 | m2repository | `extras;android;m2repository` in `addon2-3.xml` | (embedded in filename, e.g. `_r47`) | `XAAndroidM2RepositoryHash` | `android_m2repository_r47.zip`, host-agnostic |
 | docs | `docs` (legacy `<doc>` entry) in `repository-12.xml` | (embedded in filename, e.g. `-24_r01`) | `XAAndroidDocsHash` | `docs-24_r01.zip`, host-agnostic |
 | sources | `sources;android-NN.N` (one per stable shipped platform) | (embedded in filename) | Version-specific, e.g. `XAAndroidSourcesHash37_0` | One `source-NN.N_r0M.zip` entry per `IsLatestStable` platform; preserve each distinct `Destination` (`37.0` historically uses `sources\android-37`, while `37.1` uses `sources\android-37.1`) |
-| platform APIs | `platforms;android-NN` | n/a — `_PlatformPackage` item's `Include` *is* the version string | `Hash` metadata per `_PlatformPackage` item | `_PlatformPackage` item group near the top of the file; every `IsLatestStable="true"` entry drives default install and requires a corresponding sources package |
+| platform APIs | `platforms;android-NN` | n/a — `_PlatformPackage` item's `Include` *is* the version string | `Hash` metadata per `_PlatformPackage` item | `_PlatformPackage` item group near the top of the file; every `IsLatestStable="true"` entry drives default install and requires a corresponding sources package; every revision bump needs `scripts/diff_platform_api.cs` (hard rule 8) |
 | **Android NDK — OUT OF SCOPE** | `ndk` | `_XAAndroidNdkRelease`, `_XAAndroidNdkPkgRevision` | `XAAndroidNdkHashMacOS/Linux/Windows` | `android-ndk-r$(_XAAndroidNdkRelease)-$(_NdkHostTag).zip` — **never edit as part of this skill** |
 
 Manifest filenames above are relative to `https://dl.google.com/android/repository/`.
