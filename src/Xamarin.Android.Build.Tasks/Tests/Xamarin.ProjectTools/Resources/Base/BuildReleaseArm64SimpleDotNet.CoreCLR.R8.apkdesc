@@ -8,7 +8,7 @@
       "Size": 16704
     },
     "lib/arm64-v8a/libassembly-store.so": {
-      "Size": 2268200
+      "Size": 2268248
     },
     "lib/arm64-v8a/libbinary_blobs.so": {
       "Size": 21168
@@ -20,7 +20,7 @@
       "Size": 4669832
     },
     "lib/arm64-v8a/libmonodroid.so": {
-      "Size": 92992
+      "Size": 94224
     },
     "lib/arm64-v8a/libSystem.Globalization.Native.so": {
       "Size": 72256
