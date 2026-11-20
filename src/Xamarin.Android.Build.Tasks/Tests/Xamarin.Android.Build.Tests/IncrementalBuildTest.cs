@@ -1007,7 +1007,6 @@ namespace Lib2
 
 		//https://github.com/dotnet/android/issues/2247
 		[Test]
-		[NonParallelizable] // Do not run timing sensitive tests in parallel
 		public void AppProjectTargetsDoNotBreak ([Values (AndroidRuntime.CoreCLR)] AndroidRuntime runtime)
 		{
 			bool isRelease = runtime == AndroidRuntime.NativeAOT;
@@ -1030,9 +1029,9 @@ namespace Lib2
 				}
 			};
 			proj.SetRuntime (runtime);
+			proj.SetRuntimeIdentifiers (["x86_64"]);
 			using (var b = CreateApkBuilder ()) {
 				Assert.IsTrue (b.Build (proj), "first build should succeed");
-				var firstBuildTime = b.LastBuildTime;
 				foreach (var target in targets) {
 					Assert.IsFalse (b.Output.IsTargetSkipped (target.target), $"`{target}` should *not* be skipped!");
 				}
@@ -1062,14 +1061,12 @@ namespace Lib2
 
 				//NOTE: second build, targets will run because inputs changed
 				Assert.IsTrue (b.Build (proj, doNotCleanupOnUpdate: true, saveProject: false), "second build should succeed");
-				var secondBuildTime = b.LastBuildTime;
 				foreach (var target in targets) {
 					b.Output.AssertTargetIsNotSkipped (target.target);
 				}
 
 				//NOTE: third build, targets should certainly *not* run! there are no changes
 				Assert.IsTrue (b.Build (proj, doNotCleanupOnUpdate: true, saveProject: false), "third build should succeed");
-				var thirdBuildTime = b.LastBuildTime;
 				foreach (var target in targets) {
 					if (runtime == AndroidRuntime.NativeAOT && target.ignoreOnNAOT) {
 						continue;
@@ -1077,10 +1074,7 @@ namespace Lib2
 
 					b.Output.AssertTargetIsSkipped (target.target);
 				}
-				if (runtime != AndroidRuntime.NativeAOT) {
-					Assert.IsTrue (thirdBuildTime < firstBuildTime, $"Third unchanged build: '{thirdBuildTime}' should be faster than clean build: '{firstBuildTime}'.");
-					Assert.IsTrue (thirdBuildTime < secondBuildTime, $"Third unchanged build: '{thirdBuildTime}' should be faster than partially incremental second build: '{secondBuildTime}'.");
-				}
+				b.Output.AssertTargetIsSkipped ("CoreCompile");
 			}
 		}
 
