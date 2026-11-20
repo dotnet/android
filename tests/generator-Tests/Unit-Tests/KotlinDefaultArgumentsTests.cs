@@ -13,7 +13,7 @@ namespace generatortests
 		{
 			// The helper runs class-parse output through the JavaTypeSystem adjuster, like CodeGenerator,
 			// which removes the synthetic $default helpers and must keep the kotlin-default-* attributes.
-			var apiXml = KotlinInlineClassEndToEndTests.BuildApiXmlFromKotlinFixture ("DefaultArguments.class", "DefaultArgumentsKt.class", "DefaultArgumentsInterface.class");
+			var apiXml = KotlinInlineClassEndToEndTests.BuildApiXmlFromKotlinFixture ("DefaultArguments.class", "DefaultArgumentsKt.class", "DefaultArgumentsInterface.class", "DefaultArgumentsChild.class");
 
 			StringAssert.Contains ("kotlin-default-jni-signature=\"(Lxat/bytecode/tests/DefaultArguments;Ljava/lang/String;IZILjava/lang/Object;)Ljava/lang/String;\"", apiXml);
 			StringAssert.Contains ("kotlin-default-jni-signature=\"(Ljava/lang/String;IILkotlin/jvm/internal/DefaultConstructorMarker;)V\"", apiXml);
@@ -46,6 +46,11 @@ namespace generatortests
 
 			// interface: fun send (message: String, retries: Int = 3)
 			StringAssert.Contains ("void Send (string message)", output);
+
+			// interface DefaultArgumentsChild : DefaultArgumentsInterface { fun send (message: String, retries: Int, urgent: Boolean = false) }
+			// does not hide the inherited Send (string, int).
+			StringAssert.Contains ("void Send (string message, int retries, bool urgent);", output);
+			StringAssert.DoesNotContain ("send$default.(Lxat/bytecode/tests/DefaultArgumentsChild;", output);
 			StringAssert.Contains ("_members_kotlin_default_xat_bytecode_tests_DefaultArgumentsInterface.StaticMethods.InvokeVoidMethod (__id, __args);", output);
 		}
 	}

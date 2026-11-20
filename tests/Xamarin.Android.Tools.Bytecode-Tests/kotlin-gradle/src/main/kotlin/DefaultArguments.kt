@@ -16,3 +16,8 @@ fun createDefaultArguments (name: String = "bob"): DefaultArguments = DefaultArg
 interface DefaultArgumentsInterface {
     fun send (message: String, retries: Int = 3)
 }
+
+interface DefaultArgumentsChild : DefaultArgumentsInterface {
+    // Its overload without `urgent` would hide the inherited `send (String, Int)`.
+    fun send (message: String, retries: Int, urgent: Boolean = false)
+}
