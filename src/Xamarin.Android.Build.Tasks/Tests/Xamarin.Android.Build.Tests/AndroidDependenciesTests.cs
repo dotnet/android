@@ -32,13 +32,15 @@ namespace Xamarin.Android.Build.Tests
 			}
 
 			var oldSdkPath = Environment.GetEnvironmentVariable ("TEST_ANDROID_SDK_PATH");
-			var oldJdkPath = Environment.GetEnvironmentVariable ("TEST_ANDROID_JDK_PATH");
+
+			// Reuse the provisioned JDK so the task takes its "already installed" path. Downloading the
+			// ~200 MB JDK from aka.ms made this test flaky (https://github.com/dotnet/android/issues/13644);
+			// InstallJdkExtractsArchive covers JDK installation and OpenJdkSignatureTests covers verification.
+			string jdkPath = AndroidSdkResolver.GetJavaSdkPath ().TrimEnd ('\\', '/');
 
 			try {
 				string sdkPath = Path.Combine (Root, "temp", TestName, "android-sdk");
-				string jdkPath = Path.Combine (Root, "temp", TestName, "android-jdk");
 				Environment.SetEnvironmentVariable ("TEST_ANDROID_SDK_PATH", sdkPath);
-				Environment.SetEnvironmentVariable ("TEST_ANDROID_JDK_PATH", jdkPath);
 
 				var proj = new XamarinAndroidApplicationProject {
 					IsRelease = isRelease,
@@ -61,7 +63,6 @@ namespace Xamarin.Android.Build.Tests
 
 					if (runtime == AndroidRuntime.NativeAOT) {
 						Directory.CreateDirectory (sdkPath);
-						Directory.CreateDirectory (jdkPath);
 						var timeoutArgs = buildArgs
 							.Where (arg => !arg.StartsWith ("AndroidDependencyInstallationTimeout=", StringComparison.Ordinal))
 							.Concat (["AndroidDependencyInstallationTimeout=0"])
@@ -71,19 +72,16 @@ namespace Xamarin.Android.Build.Tests
 							"Timeout must be diagnosed before callers try to use missing installed files.");
 					}
 
-					// InstallAndroidDependencies downloads the Android SDK and JDK over the network, which
+					// InstallAndroidDependencies downloads the Android CLI and SDK packages over the network, which
 					// can fail intermittently in CI. Retry a few times before giving up, starting from a
-					// clean SDK/JDK directory each attempt so a partial download does not affect the next.
+					// clean SDK directory each attempt so a partial download does not affect the next.
 					// See https://github.com/dotnet/android/issues/11973
 					const int maxInstallAttempts = 3;
 					bool installSucceeded = false;
 					for (int attempt = 1; attempt <= maxInstallAttempts; attempt++) {
-						foreach (var path in new [] { sdkPath, jdkPath }) {
-							if (Directory.Exists (path))
-								Directory.Delete (path, recursive: true);
-							Directory.CreateDirectory (path);
-						}
-
+						if (Directory.Exists (sdkPath))
+							Directory.Delete (sdkPath, recursive: true);
+						Directory.CreateDirectory (sdkPath);
 
 						if (b.Build (proj, parameters: buildArgs.ToArray ())) {
 							installSucceeded = true;
@@ -97,6 +95,8 @@ namespace Xamarin.Android.Build.Tests
 					Assert.IsTrue (installSucceeded, $"InstallAndroidDependencies should have succeeded within {maxInstallAttempts} attempts.");
 
 					FileAssert.Exists (Path.Combine (sdkPath, "cmdline-tools", "21.0", "source.properties"));
+					Assert.IsTrue (b.LastBuildOutput.ContainsText ($"is already installed at '{jdkPath}'"),
+						$"The provisioned JDK at `{jdkPath}` should have been accepted. Please check the task output in 'install-deps.log'.");
 
 					// When a package is not installed, a warning is present in the build output:
 					//    The Android CLI did not install Android SDK package `platform-tools` into `...`.
@@ -123,7 +123,6 @@ namespace Xamarin.Android.Build.Tests
 				}
 			} finally {
 				Environment.SetEnvironmentVariable ("TEST_ANDROID_SDK_PATH", oldSdkPath);
-				Environment.SetEnvironmentVariable ("TEST_ANDROID_JDK_PATH", oldJdkPath);
 			}
 		}
 
@@ -298,6 +297,50 @@ namespace Xamarin.Android.Build.Tests
 				var archive = await new JavaDependencyInstaller ().GetFirstValidJdkArchiveWithVersion (client, "21.0.99", CancellationToken.None);
 				Assert.IsNull (archive);
 			}
+		}
+
+		[Test]
+		public async System.Threading.Tasks.Task InstallJdkExtractsArchive ()
+		{
+			var root = Path.Combine (Root, "temp", TestName);
+			if (Directory.Exists (root))
+				Directory.Delete (root, recursive: true);
+
+			// Lay out a fake archive like the Microsoft OpenJDK one: a single top-level directory,
+			// with the JDK under Contents/Home on macOS.
+			var contents = Path.Combine (root, "contents");
+			var home = Path.Combine (contents, "jdk-21.0.8+9");
+			if (OperatingSystem.IsMacOS ())
+				home = Path.Combine (home, "Contents", "Home");
+			Directory.CreateDirectory (Path.Combine (home, "bin"));
+			File.WriteAllText (Path.Combine (home, "release"), "JAVA_VERSION=\"21.0.8\"\n");
+
+			string archivePath;
+			if (OperatingSystem.IsWindows ()) {
+				archivePath = Path.Combine (root, "jdk.zip");
+				System.IO.Compression.ZipFile.CreateFromDirectory (contents, archivePath);
+			} else {
+				archivePath = Path.Combine (root, "jdk.tar.gz");
+				var tar = new System.Diagnostics.ProcessStartInfo ("/usr/bin/tar", ["-czf", archivePath, "-C", contents, "."]);
+				using (var p = System.Diagnostics.Process.Start (tar)) {
+					p.WaitForExit ();
+					Assert.AreEqual (0, p.ExitCode, "tar failed");
+				}
+			}
+
+			// An existing older JDK must be replaced.
+			var jdkPath = Path.Combine (root, "jdk");
+			Directory.CreateDirectory (jdkPath);
+			File.WriteAllText (Path.Combine (jdkPath, "release"), "JAVA_VERSION=\"17.0.1\"\n");
+
+			var installer = new JavaDependencyInstaller { JdkPath = jdkPath };
+			await installer.InstallJdk (new Archive { DownloadedFilePath = archivePath }, CancellationToken.None);
+
+			Assert.IsTrue (installer.GetJdkRevision (out var version), "release file should be readable");
+			Assert.AreEqual (new Version (21, 0, 8), version);
+			DirectoryAssert.Exists (Path.Combine (jdkPath, "bin"));
+			CollectionAssert.AreEquivalent (new [] { contents, jdkPath }, Directory.GetDirectories (root),
+				"The temporary extraction directory should have been removed.");
 		}
 
 		sealed class HtmlHandler : HttpMessageHandler
