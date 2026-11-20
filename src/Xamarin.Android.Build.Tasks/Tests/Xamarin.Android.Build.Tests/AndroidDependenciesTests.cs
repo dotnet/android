@@ -37,7 +37,8 @@ namespace Xamarin.Android.Build.Tests
 			// ~200 MB JDK from aka.ms made this test flaky (https://github.com/dotnet/android/issues/13644);
 			// InstallJdkExtractsArchive covers JDK installation and OpenJdkSignatureTests covers verification.
 			string jdkPath = AndroidSdkResolver.GetJavaSdkPath ().TrimEnd ('\\', '/');
-			DirectoryAssert.Exists (jdkPath, "A provisioned JDK is required for this integration test.");
+			if (!Directory.Exists (jdkPath))
+				Assert.Inconclusive ($"A provisioned JDK is required for this integration test; '{jdkPath}' does not exist.");
 
 			try {
 				string sdkPath = Path.Combine (Root, "temp", TestName, "android-sdk");
