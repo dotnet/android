@@ -48,7 +48,7 @@ namespace Xamarin.Android.Tools.Bytecode
 							var java_constructors = FindJavaConstructors (class_metadata, con, c);
 							FixupConstructor (java_constructors.FirstOrDefault (), con, java_constructors.Count == 1);
 							if (java_constructors.Count == 1)
-								FixupDefaultArguments (java_constructors [0], con.ValueParameters, classes);
+								FixupDefaultArguments (java_constructors [0], con.ValueParameters);
 						}
 					}
 
@@ -63,7 +63,7 @@ namespace Xamarin.Android.Tools.Bytecode
 						foreach (var java_method in c.Methods)
 							if (FindKotlinFunctionMetadata (metadata, java_method) is KotlinFunction function_metadata) {
 								FixupFunction (java_method, function_metadata, class_metadata, inlineClasses);
-								FixupDefaultArguments (java_method, function_metadata.ValueParameters, classes);
+								FixupDefaultArguments (java_method, function_metadata.ValueParameters);
 							}
 					}
 
@@ -391,7 +391,7 @@ namespace Xamarin.Android.Tools.Bytecode
 		//   fun f(a: Int = 1)        ->  static f$default(Owner, int, int mask, Object)
 		//   constructor(a: Int = 1)  ->  <init>(int, int mask, DefaultConstructorMarker)
 		// If the exact helper does not exist, keep the full-argument API.
-		static void FixupDefaultArguments (MethodInfo? method, List<KotlinValueParameter>? valueParameters, IList<ClassFile> classes)
+		static void FixupDefaultArguments (MethodInfo? method, List<KotlinValueParameter>? valueParameters)
 		{
 			if (method is null || !method.IsPubliclyVisible || valueParameters is null)
 				return;
@@ -423,18 +423,13 @@ namespace Xamarin.Android.Tools.Bytecode
 			var receiver = method.AccessFlags.HasFlag (MethodAccessFlags.Static) ? "" : owner.FullJniName;
 			var helper_signature = "(" + receiver + parameters + masks + "Ljava/lang/Object;)" + method.Descriptor.Substring (close + 1);
 			var helper_name = method.Name + "$default";
-			// Interface helpers are on the interface or on its $DefaultImpls class.
-			var default_impls = owner.ThisClass.Name.Value + "$DefaultImpls";
-			var candidates = new [] { owner }.Concat (classes.Where (c => c.ThisClass.Name.Value == default_impls));
-
-			foreach (var candidate in candidates) {
-				if (candidate.Methods.Any (m => m.Name == helper_name && m.Descriptor == helper_signature && m.AccessFlags.HasFlag (MethodAccessFlags.Static))) {
-					method.KotlinDefaultJniSignature = helper_signature;
-					method.KotlinDefaultOwner = candidate.ThisClass.Name.Value;
-					method.KotlinDefaultParameters = defaults;
-					return;
-				}
-			}
+			// Older Kotlin puts interface helpers only on `$DefaultImpls`. That class has no
+			// managed peer, so R8 can remove it; do not use it.
+			if (!owner.Methods.Any (m => m.Name == helper_name && m.Descriptor == helper_signature && m.AccessFlags.HasFlag (MethodAccessFlags.Static)))
+				return;
+			method.KotlinDefaultJniSignature = helper_signature;
+			method.KotlinDefaultOwner = owner.ThisClass.Name.Value;
+			method.KotlinDefaultParameters = defaults;
 		}
 
 		static string PascalCase (string name)

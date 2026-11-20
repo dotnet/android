@@ -24,10 +24,11 @@ namespace generator.SourceWriters
 		public static void AddMethods (TypeWriter writer, GenBase type, CodeGenerationOptions opt, CodeGeneratorContext context)
 		{
 			// Do not add an overload that already exists, including string overloads,
-			// abstract interface members and inherited methods.
-			var signatures = new HashSet<string> (writer.Methods.Select (m => GetSignature (m.Name, m.Parameters)));
+			// inherited methods and methods of implemented or inherited interfaces.
+			var existing = type.Methods.Concat (type.GetAllDerivedInterfaces ().SelectMany (i => i.Methods));
 			for (var b = (type as ClassGen)?.BaseGen; b != null; b = b.BaseGen)
-				signatures.UnionWith (b.Methods.Where (m => m.IsValid).Select (m => GetSignature (m.AdjustedName, m.Parameters, m.Parameters.Count, opt)));
+				existing = existing.Concat (b.Methods);
+			var signatures = GetSignatures (existing.Where (m => m.IsValid).Select (m => (m.AdjustedName, m.Parameters)), opt);
 
 			foreach (var method in type.Methods) {
 				if (!method.IsValid || method.KotlinDefaultOwner is null || !IsSupported (method) || method.IsReturnEnumified)
@@ -64,7 +65,7 @@ namespace generator.SourceWriters
 			if (!klass.IsFinal)
 				return;
 
-			var signatures = new HashSet<string> (writer.Constructors.Select (c => GetSignature (c.Name, c.Parameters)));
+			var signatures = GetSignatures (klass.Ctors.Where (c => c.IsValid).Select (c => (klass.Name, c.Parameters)), opt);
 
 			foreach (var ctor in klass.Ctors) {
 				// C# does not allow protected constructors in sealed classes.
@@ -114,14 +115,21 @@ namespace generator.SourceWriters
 			return count;
 		}
 
+		static HashSet<string> GetSignatures (IEnumerable<(string Name, ParameterList Parameters)> members, CodeGenerationOptions opt)
+		{
+			var signatures = new HashSet<string> ();
+			foreach (var (name, parameters) in members) {
+				var signature = GetSignature (name, parameters, parameters.Count, opt);
+				signatures.Add (signature);
+				// The string overload of a Java.Lang.ICharSequence member.
+				signatures.Add (signature.Replace ("Java.Lang.ICharSequence", "string"));
+			}
+			return signatures;
+		}
+
+		// `p.Type` keeps the `?` of a boxed Kotlin value class, but not nullable reference annotations.
 		static string GetSignature (string name, ParameterList parameters, int count, CodeGenerationOptions opt)
-			=> GetSignature (name, parameters.Take (count).Select (p => opt.GetTypeReferenceName (p)));
-
-		static string GetSignature (string name, IEnumerable<MethodParameterWriter> parameters)
-			=> GetSignature (name, parameters.Select (p => !string.IsNullOrEmpty (p.Type.Namespace) ? p.Type.Namespace + "." + p.Type.Name : p.Type.Name));
-
-		static string GetSignature (string name, IEnumerable<string> types)
-			=> name + "(" + string.Join (",", types.Select (t => t.Replace ("params ", "").Replace ("global::", "").TrimEnd ('?'))) + ")";
+			=> name + "(" + string.Join (",", parameters.Take (count).Select (p => opt.GetOutputName (p.Type).Replace ("global::", ""))) + ")";
 		static void AddMaskParameters (ParameterList parameters, int count)
 		{
 			for (var i = 0; i < (count + 31) / 32; i++)
