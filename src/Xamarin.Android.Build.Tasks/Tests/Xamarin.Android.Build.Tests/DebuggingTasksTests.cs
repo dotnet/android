@@ -255,8 +255,10 @@ namespace Xamarin.Android.Build.Tests
 			if (!IsWindows)
 				Assert.Ignore ("This test reproduces a Windows child process inheriting redirected output.");
 
+			string childPidFile = Path.Combine (TestContext.CurrentContext.WorkDirectory, $"inherited-pipes-{Guid.NewGuid ():N}.pid");
+			string quotedChildPidFile = childPidFile.Replace ("'", "''");
 			var psi = new ProcessStartInfo (Environment.GetEnvironmentVariable ("ComSpec") ?? "cmd.exe",
-				"/c start \"\" /b powershell -NoProfile -Command \"Start-Sleep -Seconds 8\"") {
+				$"/c start \"\" /b powershell -NoProfile -Command \"[IO.File]::WriteAllText('{quotedChildPidFile}', [string]$PID); [Console]::WriteLine('CHILD_PID=' + $PID); Start-Sleep -Seconds 300\"") {
 				UseShellExecute = false,
 				RedirectStandardOutput = true,
 				RedirectStandardError = true,
@@ -265,24 +267,62 @@ namespace Xamarin.Android.Build.Tests
 			using var process = new Process { StartInfo = psi };
 			var outputDone = new TaskCompletionSource<bool> (TaskCreationOptions.RunContinuationsAsynchronously);
 			var errorDone = new TaskCompletionSource<bool> (TaskCreationOptions.RunContinuationsAsynchronously);
+			var childPid = new TaskCompletionSource<int> (TaskCreationOptions.RunContinuationsAsynchronously);
 			process.OutputDataReceived += (_, e) => {
 				if (e.Data == null)
 					outputDone.TrySetResult (true);
+				else if (e.Data.StartsWith ("CHILD_PID=", StringComparison.Ordinal) && int.TryParse (e.Data.Substring ("CHILD_PID=".Length), out var pid))
+					childPid.TrySetResult (pid);
 			};
 			process.ErrorDataReceived += (_, e) => {
 				if (e.Data == null)
 					errorDone.TrySetResult (true);
 			};
-			Assert.IsTrue (process.Start ());
-			process.BeginOutputReadLine ();
-			process.BeginErrorReadLine ();
-			Assert.IsTrue (process.WaitForExit (5000), "The parent process should exit promptly.");
-
-			var stopwatch = Stopwatch.StartNew ();
-			Assert.IsFalse (Builder.WaitForRedirectedOutput (outputDone.Task, errorDone.Task));
-			Assert.Less (stopwatch.Elapsed, TimeSpan.FromSeconds (6), "Inherited output handles must not hold the test runner indefinitely.");
-			Assert.IsTrue (outputDone.Task.Wait (TimeSpan.FromSeconds (10)));
-			Assert.IsTrue (errorDone.Task.Wait (TimeSpan.FromSeconds (10)));
+			Process? child = null;
+			bool processStarted = false;
+			try {
+				processStarted = process.Start ();
+				Assert.IsTrue (processStarted);
+				process.BeginOutputReadLine ();
+				process.BeginErrorReadLine ();
+				Assert.IsTrue (childPid.Task.Wait (TimeSpan.FromSeconds (30)), "The pipe-holding child should start.");
+				child = Process.GetProcessById (childPid.Task.Result);
+				Assert.IsTrue (process.WaitForExit (30000), "The parent process should exit.");
+				var drain = Task.Run (() => Builder.WaitForRedirectedOutput (outputDone.Task, errorDone.Task));
+				Assert.IsTrue (drain.Wait (TimeSpan.FromSeconds (30)), "Inherited handles must not block output draining indefinitely.");
+				Assert.IsFalse (drain.Result);
+				Assert.IsFalse (child.HasExited, "The child must still be holding the inherited handles.");
+				Assert.IsFalse (outputDone.Task.IsCompleted && errorDone.Task.IsCompleted, "At least one redirected pipe must still be open.");
+			} finally {
+				if (child is null && childPid.Task.IsCompletedSuccessfully) {
+					try {
+						child = Process.GetProcessById (childPid.Task.Result);
+					} catch (ArgumentException) {
+					}
+				}
+				if (child is null && File.Exists (childPidFile)) {
+					if (int.TryParse (File.ReadAllText (childPidFile), out int pid)) {
+						try {
+							child = Process.GetProcessById (pid);
+						} catch (ArgumentException) {
+						}
+					}
+				}
+				if (child is not null) {
+					using (child) {
+						if (!child.HasExited)
+							child.Kill ();
+						Assert.IsTrue (child.WaitForExit (30000), "The pipe-holding child should exit.");
+					}
+				} else if (processStarted && !process.HasExited) {
+					process.Kill (entireProcessTree: true);
+					Assert.IsTrue (process.WaitForExit (30000), "The process tree should exit.");
+				}
+				if (File.Exists (childPidFile))
+					File.Delete (childPidFile);
+			}
+			Assert.IsTrue (outputDone.Task.Wait (TimeSpan.FromSeconds (30)));
+			Assert.IsTrue (errorDone.Task.Wait (TimeSpan.FromSeconds (30)));
 		}
 
 	}
