@@ -31,9 +31,7 @@ namespace generator.SourceWriters
 			var signatures = GetSignatures (existing.Where (m => m.IsValid).Select (m => (m.AdjustedName, m.Parameters)), opt);
 
 			foreach (var method in type.Methods) {
-				if (!method.IsValid || method.KotlinDefaultOwner is null || !IsSupported (method) || method.IsReturnEnumified)
-					continue;
-				if (type is ClassGen && method.KotlinDefaultOwner != type.RawJniName)
+				if (!method.IsValid || !IsSupported (method) || method.IsReturnEnumified)
 					continue;
 
 				var trailing = GetTrailingDefaultCount (method);
@@ -44,16 +42,13 @@ namespace generator.SourceWriters
 				if (helper is null)
 					continue;
 
-				var members = type is InterfaceGen
-					? "_members_kotlin_default_" + method.KotlinDefaultOwner.Replace ('/', '_').Replace ('$', '_')
-					: "_members";
-
 				for (var count = method.Parameters.Count - 1; count >= method.Parameters.Count - trailing; count--) {
 					if (!signatures.Add (GetSignature (method.AdjustedName, method.Parameters, count, opt)))
 						continue;
-					if (type is InterfaceGen && !writer.Fields.Any (f => f.Name == members))
-						writer.Fields.Add (new PeerMembersField (opt, method.KotlinDefaultOwner, type.Name, method.KotlinDefaultOwner == type.RawJniName, members) { IsPrivate = true });
-					writer.Methods.Add (new KotlinDefaultMethod (type, method, helper, count, members, opt));
+					// Interfaces only have `_members` when they have default or static methods.
+					if (type is InterfaceGen && !writer.Fields.Any (f => f.Name == "_members"))
+						writer.Fields.Add (new PeerMembersField (opt, type.RawJniName, type.Name, isInterface: true));
+					writer.Methods.Add (new KotlinDefaultMethod (type, method, helper, count, opt));
 				}
 			}
 		}
@@ -130,6 +125,7 @@ namespace generator.SourceWriters
 		// `p.Type` keeps the `?` of a boxed Kotlin value class, but not nullable reference annotations.
 		static string GetSignature (string name, ParameterList parameters, int count, CodeGenerationOptions opt)
 			=> name + "(" + string.Join (",", parameters.Take (count).Select (p => opt.GetOutputName (p.Type).Replace ("global::", ""))) + ")";
+
 		static void AddMaskParameters (ParameterList parameters, int count)
 		{
 			for (var i = 0; i < (count + 31) / 32; i++)
@@ -193,14 +189,14 @@ namespace generator.SourceWriters
 
 	public class KotlinDefaultMethod : MethodWriter
 	{
-		public KotlinDefaultMethod (GenBase type, Method method, Method helper, int count, string members, CodeGenerationOptions opt)
+		public KotlinDefaultMethod (GenBase type, Method method, Method helper, int count, CodeGenerationOptions opt)
 		{
 			Name = method.AdjustedName;
 			IsStatic = method.IsStatic;
 			SetVisibility (type is InterfaceGen ? string.Empty : method.Visibility);
 			ReturnType = new TypeReferenceWriter (opt.GetTypeReferenceName (method.RetVal));
 
-			Comments.Add ($"// Kotlin default arguments: calls '{method.KotlinDefaultOwner}.{helper.JavaName}' to compute the omitted parameters.");
+			Comments.Add ($"// Kotlin default arguments: calls '{helper.JavaName}' to compute the omitted parameters.");
 
 			SourceWriterExtensions.AddObsolete (Attributes, method.Deprecated, opt, deprecatedSince: method.DeprecatedSince);
 			SourceWriterExtensions.AddRestrictToWarning (Attributes, method.AnnotatedVisibility, false, opt);
@@ -216,7 +212,7 @@ namespace generator.SourceWriters
 			IsShadow = type.RequiresNew (Name, shape);
 
 			KotlinDefaultArguments.AddLocals (Body, method, count, !method.IsStatic, opt);
-			SourceWriterExtensions.AddMethodBody (Body, helper, opt, members);
+			SourceWriterExtensions.AddMethodBody (Body, helper, opt);
 		}
 	}
 

@@ -30,7 +30,6 @@ namespace MonoDroid.Generation
 
 		// Kotlin default arguments, see Xamarin.Android.Tools.Bytecode.KotlinFixups.FixupDefaultArguments ()
 		public string KotlinDefaultJniSignature { get; set; }
-		public string KotlinDefaultOwner { get; set; }
 		public int [] KotlinDefaultParameters { get; set; }
 
 		public int LineNumber { get; set; } = -1;
