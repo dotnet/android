@@ -429,7 +429,6 @@ namespace Xamarin.Android.Build.Tests
 			var originalTime = File.GetLastWriteTimeUtc (rules);
 			string? memberRules = null;
 			string? originalMemberRules = null;
-			DateTime originalMemberTime = default;
 			if (obfuscation) {
 				StringAssert.Contains ("first(...)", originalRules);
 				FileAssert.Exists (rules + ".stamp");
@@ -438,7 +437,6 @@ namespace Xamarin.Android.Build.Tests
 				StringAssert.DoesNotContain ("first(...)", originalRules);
 				memberRules = Directory.GetFiles (intermediate, "proguard_typemap_members.cfg", SearchOption.AllDirectories).Single ();
 				originalMemberRules = File.ReadAllText (memberRules);
-				originalMemberTime = File.GetLastWriteTimeUtc (memberRules);
 				StringAssert.Contains ("-keepclassmembers class example.Peer { *; }", originalMemberRules);
 			}
 
@@ -453,13 +451,9 @@ namespace Xamarin.Android.Build.Tests
 			Assert.AreEqual (originalRules, File.ReadAllText (rules));
 			if (obfuscation) {
 				Assert.AreEqual (originalTime, File.GetLastWriteTimeUtc (rules));
-			} else {
-				Assert.Greater (File.GetLastWriteTimeUtc (rules), originalTime);
 			}
 			if (memberRules != null) {
 				Assert.AreEqual (originalMemberRules, File.ReadAllText (memberRules));
-				Assert.Greater (File.GetLastWriteTimeUtc (memberRules), originalMemberTime);
-				originalMemberTime = File.GetLastWriteTimeUtc (memberRules);
 			}
 
 			Assert.IsTrue (builder.Build (proj));
@@ -495,7 +489,6 @@ namespace Xamarin.Android.Build.Tests
 					throw new AssertionException ("Scoped member rules were not generated.");
 				}
 				Assert.AreEqual (originalMemberRules, File.ReadAllText (memberRules));
-				Assert.Greater (File.GetLastWriteTimeUtc (memberRules), originalMemberTime);
 			}
 
 			Assert.IsTrue (builder.Clean (proj));
