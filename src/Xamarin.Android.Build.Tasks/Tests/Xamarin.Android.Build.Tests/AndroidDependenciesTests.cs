@@ -277,13 +277,14 @@ namespace Xamarin.Android.Build.Tests
 					new TaskItem ("platform-tools", new Dictionary<string, string> { { "Version", "37.0.3" } }),
 					new TaskItem ("ndk-bundle", new Dictionary<string, string> { { "Version", "27.2.12479018" } }),
 					new TaskItem ("platforms/android-37.0"),
+					new TaskItem ("cmdline-tools/latest", new Dictionary<string, string> { { "Version", "latest" } }),
 				],
 			};
 			Assert.IsTrue (task.Execute (), string.Join (Environment.NewLine, errors.Select (e => e.Message)));
 
 			var args = File.ReadAllText (Path.Combine (root, "args.txt")).Trim ();
 			StringAssert.Contains ($"--no-metrics --sdk={Path.Combine (root, "sdk")} sdk install", args);
-			StringAssert.EndsWith ("build-tools/37.0.0 platform-tools@37.0.10 ndk/27.2.12479018 platforms/android-37.0", args);
+			StringAssert.EndsWith ("build-tools/37.0.0 platform-tools@37.0.10 ndk/27.2.12479018 platforms/android-37.0 cmdline-tools/latest", args);
 			StringAssert.EndsWith ("sdk list --all --all-versions platform-tools",
 				File.ReadAllText (Path.Combine (root, "list-args.txt")).Trim ());
 		}

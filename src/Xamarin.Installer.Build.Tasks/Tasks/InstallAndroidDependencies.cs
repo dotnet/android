@@ -645,9 +645,11 @@ namespace Xamarin.Installer.Build.Tasks
 					path = "ndk/" + version;
 				directory = path;
 				this.version = ParseVersion (version);
-				HasInvalidVersion = !string.IsNullOrEmpty (version) && this.version == null;
-				if (path == "platform-tools")
+				if (path == "platform-tools") {
+					// Other packages, such as `cmdline-tools/latest`, can use nonnumeric versions.
+					HasInvalidVersion = !string.IsNullOrEmpty (version) && this.version == null;
 					RollForwardMinimum = this.version;
+				}
 
 				var lastSegment = path.Substring (path.LastIndexOf ('/') + 1);
 				InstallArgument = string.IsNullOrEmpty (version) || lastSegment == version ? path : $"{path}@{version}";
