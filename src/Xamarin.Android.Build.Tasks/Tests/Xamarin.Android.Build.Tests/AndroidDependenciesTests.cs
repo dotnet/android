@@ -401,7 +401,9 @@ namespace Xamarin.Android.Build.Tests
 				cli = Path.Combine (root, "android.cmd");
 				File.WriteAllText (cli, $"""
 					@echo off
-					if "%4"=="list" (
+					rem cmd.exe splits --sdk=PATH at '=', so search for the "list" token instead of using a fixed position.
+					echo %* | findstr /c:" list " >nul
+					if not errorlevel 1 (
 					  echo %* > "%~dp0list-args.txt"
 					  type "%~dp0catalog.txt"
 					  echo catalog failed 1>&2
@@ -413,12 +415,14 @@ namespace Xamarin.Android.Build.Tests
 				cli = Path.Combine (root, "android");
 				File.WriteAllText (cli, $$"""
 					#!/bin/sh
-					if [ "$4" = "list" ]; then
+					case " $* " in
+					*" list "*)
 					  echo "$@" > "$(dirname "$0")/list-args.txt"
 					  cat "$(dirname "$0")/catalog.txt"
 					  echo "catalog failed" >&2
 					  exit {{listExitCode}}
-					fi
+					  ;;
+					esac
 					echo "$@" > "$(dirname "$0")/args.txt"
 					""" + "\n");
 				File.SetUnixFileMode (cli, UnixFileMode.UserRead | UnixFileMode.UserWrite | UnixFileMode.UserExecute);
