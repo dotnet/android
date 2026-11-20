@@ -1662,11 +1662,9 @@ using System.Runtime.Serialization.Json;
 			}
 
 			if (testOnly && runtime == AndroidRuntime.NativeAOT) {
-				// ADB install error:
-				//   SplitApkInstallerBase: Failed to commit install session 75895528 with command package install-commit 75895528. Error: INSTALL_FAILED_TEST_ONLY
-				//
-				// TODO: investigate, it's odd it doesn't work
-				Assert.Ignore ("NativeAOT doesn't currently work in test-only applications.");
+				// TODO: NativeAOT Release deploys an app bundle through InstallApkSet, which does not pass
+				// bundletool's `--allow-test-only`, so installing a test-only bundle fails with INSTALL_FAILED_TEST_ONLY.
+				Assert.Ignore ("Installing a test-only app bundle fails with INSTALL_FAILED_TEST_ONLY.");
 			}
 
 			var proj = new XamarinAndroidApplicationProject (packageName: PackageUtils.MakePackageName (runtime)) {
@@ -1691,29 +1689,6 @@ using System.Runtime.Serialization.Json;
 		public void AppWithStyleableUsageRuns ([ValueSource (typeof (BaseTest), nameof (BaseTest.ValidRuntimeConfigurations))] (bool isRelease, AndroidRuntime runtime) configuration, [Values] bool linkResources)
 		{
 			var (isRelease, runtime) = configuration;
-
-			// TODO: fix this for NativeAOT
-			if (runtime == AndroidRuntime.NativeAOT && isRelease) {
-				// This configuration currently fails with a long stack trace, the gist of it is:
-				//
-				//  AndroidRuntime: java.lang.RuntimeException: Unable to start activity ComponentInfo{com.xamarin.appwithstyleableusageruns_nativeaot/com.xamarin.appwithstyleableusageruns_nativeaot.MainActivity}
-				//  AndroidRuntime: Caused by: android.view.InflateException: Binary XML file line #1 in com.xamarin.appwithstyleableusageruns_nativeaot:layout/main: Binary XML file line #1 in com.xamarin.appwithstyleableusageruns_nativeaot:layout/main: Error inflating class crc64f75eeacfa0ca1368.MyLayout
-				//  AndroidRuntime: Caused by: android.view.InflateException: Binary XML file line #1 in com.xamarin.appwithstyleableusageruns_nativeaot:layout/main: Error inflating class crc64f75eeacfa0ca1368.MyLayout
-				//  AndroidRuntime: Caused by: java.lang.reflect.InvocationTargetException
-				//  AndroidRuntime: Caused by: net.dot.jni.internal.JavaProxyThrowable: System.NotSupportedException: Could not activate { PeerReference=0x7fe9706698/I IdentityHashCode=0xd12aeee Java.Type=crc64f75eeacfa0ca1368/MyLayout } for managed type 'UnnamedProject.MyLayout'.
-				//  AndroidRuntime:  ---> System.Reflection.TargetInvocationException: Arg_TargetInvocationException
-				//  AndroidRuntime:  ---> System.IO.FileNotFoundException: IO_FileNotFound_FileName, _Microsoft.Android.Resource.Designer
-				//  AndroidRuntime: IO_FileName_Name, _Microsoft.Android.Resource.Designer
-				//  DOTNET  : FATAL UNHANDLED EXCEPTION: Java.Lang.Exception: Unable to start activity ComponentInfo{com.xamarin.appwithstyleableusageruns_nativeaot/com.xamarin.appwithstyleableusageruns_nativeaot.MainActivity}
-				//  DOTNET  :  ---> Java.Lang.Exception: Binary XML file line #1 in com.xamarin.appwithstyleableusageruns_nativeaot:layout/main: Binary XML file line #1 in com.xamarin.appwithstyleableusageruns_nativeaot:layout/main: Error inflating class crc64f75eeacfa0ca1368.MyLayout
-				//  DOTNET  :  ---> Java.Lang.Exception: Binary XML file line #1 in com.xamarin.appwithstyleableusageruns_nativeaot:layout/main: Error inflating class crc64f75eeacfa0ca1368.MyLayout
-				//  DOTNET  :  ---> Java.Lang.ReflectiveOperationException: Exception_WasThrown, Java.Lang.ReflectiveOperationException
-				//  DOTNET  :  ---> System.NotSupportedException: Could not activate { PeerReference=0x7fe9706698/I IdentityHashCode=0xd12aeee Java.Type=crc64f75eeacfa0ca1368/MyLayout } for managed type 'UnnamedProject.MyLayout'.
-				//  DOTNET  :  ---> System.Reflection.TargetInvocationException: Arg_TargetInvocationException
-				//  DOTNET  :  ---> System.IO
-				//  eruns_nativeaot: No implementation found for void mono.android.Runtime.propagateUncaughtException(java.lang.Thread, java.lang.Throwable) (tried Java_mono_android_Runtime_propagateUncaughtException and Java_mono_android_Runtime_propagateUncaughtException__Ljava_lang_Thread_2Ljava_lang_Throwable_2) - is the library loaded, e.g. System.loadLibrary?
-				Assert.Ignore ("NativeAOT type mapping fails");
-			}
 
 			var rootPath = Path.Combine (Root, "temp", TestName);
 			var lib = new XamarinAndroidLibraryProject () {
@@ -2522,9 +2497,10 @@ namespace UnnamedProject
 		{
 			var (isRelease, runtime) = configuration;
 
-			// TODO: fix for NativeAOT, if possible
+			// TODO: NativeAOT crashes with ClassNotFoundException: example.ViewHelper. The class is in the
+			// input JAR but R8 removes it from the DEX; the CoreCLR Release build keeps it.
 			if (runtime == AndroidRuntime.NativeAOT) {
-				Assert.Ignore ("Type and member mapping is currently unsupported under NativeAOT");
+				Assert.Ignore ("R8 removes the remapped example.ViewHelper class under NativeAOT.");
 			}
 
 			var proj = new XamarinAndroidApplicationProject (packageName: PackageUtils.MakePackageName (runtime)) {
