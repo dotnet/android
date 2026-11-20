@@ -76,15 +76,9 @@ namespace Java.Interop {
 				return (h, t) => unsafe(JNIEnv.GetArray (h, t, target.GetElementType ()));
 
 			if (target.IsGenericType && !target.IsGenericTypeDefinition) {
-				if (RuntimeFeature.UseTypeMapAttributesForJavaDictionaryValueTypeLookups ||
-						!System.Runtime.CompilerServices.RuntimeFeature.IsDynamicCodeSupported) {
-					if (SafeJavaCollectionFactory.TryGetFromJniHandleConverter (target, out var collectionConverter))
-						return collectionConverter;
-				} else {
-					var factoryConverter = TryMakeGenericCollectionTypeFactory (target);
-					if (factoryConverter != null)
-						return factoryConverter;
-				}
+				var collectionConverter = GetGenericCollectionConverter (target);
+				if (collectionConverter != null)
+					return collectionConverter;
 			}
 
 			if (typeof (IDictionary).IsAssignableFrom (target))
@@ -98,36 +92,56 @@ namespace Java.Interop {
 				return (h, t) => unsafe(JavaCollection.FromJniHandle (h, t));
 
 			return null;
+		}
 
-			[UnconditionalSuppressMessage ("ReflectionAnalysis", "IL2055:RequiresUnreferencedCode",
-				Justification = "The target generic type is expected to be preserved by the trimmer as the target type in marshaling.")]
-			[UnconditionalSuppressMessage ("Trimming", "IL2067:UnrecognizedReflectionPattern",
-				Justification = "This method is used only when dynamic code is supported. The target closed generic collection type is preserved by the marshaling call site, including its public FromJniHandle method.")]
-			[RequiresDynamicCode ("This API uses reflection to create generic types at runtime, which is not supported in AOT scenarios.")]
-			static Func<IntPtr, JniHandleOwnership, object?>? TryMakeGenericCollectionTypeFactory (Type target)
-			{
-				var genericDefinition = target.GetGenericTypeDefinition ();
-				if (genericDefinition == typeof (IDictionary<,>) || genericDefinition == typeof (JavaDictionary<,>)) {
-					Type t = genericDefinition == typeof (JavaDictionary<,>)
-						? target
-						: typeof (JavaDictionary<,>).MakeGenericType (target.GetGenericArguments ());
-					return GetJniHandleConverterForType (t);
-				}
-				if (genericDefinition == typeof (IList<>) || genericDefinition == typeof (JavaList<>)) {
-					Type t = genericDefinition == typeof (JavaList<>)
-						? target
-						: typeof (JavaList<>).MakeGenericType (target.GetGenericArguments ());
-					return GetJniHandleConverterForType (t);
-				}
-				if (genericDefinition == typeof (ICollection<>) || genericDefinition == typeof (JavaCollection<>)) {
-					Type t = genericDefinition == typeof (JavaCollection<>)
-						? target
-						: typeof (JavaCollection<>).MakeGenericType (target.GetGenericArguments ());
-					return GetJniHandleConverterForType (t);
-				}
-
-				return null;
+		static Func<IntPtr, JniHandleOwnership, object?>? GetGenericCollectionConverter (Type target)
+		{
+			// ILC treats IsDynamicCodeSupported as a guard only when it is tested on its own: combined with && or ||,
+			// NativeAOT apps get IL3050 for TryMakeGenericCollectionTypeFactory ().
+			if (System.Runtime.CompilerServices.RuntimeFeature.IsDynamicCodeSupported) {
+				if (!RuntimeFeature.UseTypeMapAttributesForJavaDictionaryValueTypeLookups)
+					return TryMakeGenericCollectionTypeFactory (target);
 			}
+			return SafeJavaCollectionFactory.TryGetFromJniHandleConverter (target, out var converter) ? converter : null;
+		}
+
+		// ILLink keeps or removes members on the generic type definition, so these keep FromJniHandle on every
+		// closed JavaList<T>/JavaCollection<T>/JavaDictionary<K,V> that GetJniHandleConverterForType () reflects over.
+		[DynamicDependency ("FromJniHandle", typeof (JavaList<>))]
+		[DynamicDependency ("FromJniHandle", typeof (JavaCollection<>))]
+		[DynamicDependency ("FromJniHandle", typeof (JavaDictionary<,>))]
+		[UnconditionalSuppressMessage ("ReflectionAnalysis", "IL2055:RequiresUnreferencedCode",
+			Justification = "MakeGenericType () cannot prove that the runtime element types satisfy the DynamicallyAccessedMembers(Constructors) requirement " +
+				"on the wrapper's element parameters. The wrapper only consumes it when TrimmableTypeMap.CreateInstance () activates a closed generic Java peer " +
+				"element by reflection, and the generated proxy for its open generic definition keeps that constructor with [DynamicDependency]; " +
+				"other elements are activated by their generated JavaPeerProxy.")]
+		[UnconditionalSuppressMessage ("Trimming", "IL2067:UnrecognizedReflectionPattern",
+			Justification = "GetJniHandleConverterForType () only reflects over FromJniHandle on JavaList<T>, JavaCollection<T>, or JavaDictionary<K,V>, " +
+				"which the DynamicDependency attributes above keep.")]
+		[RequiresDynamicCode ("This API uses reflection to create generic types at runtime, which is not supported in AOT scenarios.")]
+		static Func<IntPtr, JniHandleOwnership, object?>? TryMakeGenericCollectionTypeFactory (Type target)
+		{
+			var genericDefinition = target.GetGenericTypeDefinition ();
+			if (genericDefinition == typeof (IDictionary<,>) || genericDefinition == typeof (JavaDictionary<,>)) {
+				Type t = genericDefinition == typeof (JavaDictionary<,>)
+					? target
+					: typeof (JavaDictionary<,>).MakeGenericType (target.GetGenericArguments ());
+				return GetJniHandleConverterForType (t);
+			}
+			if (genericDefinition == typeof (IList<>) || genericDefinition == typeof (JavaList<>)) {
+				Type t = genericDefinition == typeof (JavaList<>)
+					? target
+					: typeof (JavaList<>).MakeGenericType (target.GetGenericArguments ());
+				return GetJniHandleConverterForType (t);
+			}
+			if (genericDefinition == typeof (ICollection<>) || genericDefinition == typeof (JavaCollection<>)) {
+				Type t = genericDefinition == typeof (JavaCollection<>)
+					? target
+					: typeof (JavaCollection<>).MakeGenericType (target.GetGenericArguments ());
+				return GetJniHandleConverterForType (t);
+			}
+
+			return null;
 		}
 
 		static Func<IntPtr, JniHandleOwnership, object> GetJniHandleConverterForType ([DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicMethods)] Type t)
