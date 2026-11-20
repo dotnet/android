@@ -1102,15 +1102,12 @@ $@"button.ViewTreeObserver.GlobalLayout += Button_ViewTreeObserver_GlobalLayout;
 				return;
 			}
 
-			if (runtime == AndroidRuntime.NativeAOT) {
-				Assert.Ignore ("AppDomain.CurrentDomain.UnhandledException doesn't work in NativeAOT");
-			}
-
 			var proj = new XamarinAndroidApplicationProject (packageName: PackageUtils.MakePackageName (runtime)) {
 				IsRelease = isRelease,
 			};
 			proj.SetRuntime (runtime);
 			proj.SetRuntimeIdentifiers (new [] {"arm64-v8a", "x86_64"});
+			proj.SetDefaultTargetDevice ();
 
 			proj.MainActivity = proj.DefaultMainActivity.Replace ("//${AFTER_ONCREATE}",
 @"			AppDomain.CurrentDomain.UnhandledException += (sender, e) => {
@@ -1125,7 +1122,7 @@ $@"button.ViewTreeObserver.GlobalLayout += Button_ViewTreeObserver_GlobalLayout;
 
 			string? expectedSender = runtime switch
 			{
-				AndroidRuntime.CoreCLR => null, // CoreCLR explicitly passes a `null` sender
+				AndroidRuntime.CoreCLR or AndroidRuntime.NativeAOT => null,
 				_ => throw new NotImplementedException($"Test does not support runtime {runtime}"),
 			};
 			string expectedLogcatOutput = $"# Unhandled Exception: sender={expectedSender}; e.IsTerminating=True; e.ExceptionObject=System.Exception: CRASH";
