@@ -375,6 +375,8 @@ namespace Xamarin.Android.Build.Tests
 		public void PlatformToolsCatalogFailureStopsInstallation ()
 		{
 			var root = Path.Combine (Root, "temp", TestName);
+			if (Directory.Exists (root))
+				Directory.Delete (root, recursive: true);
 			Directory.CreateDirectory (root);
 			var errors = new List<BuildErrorEventArgs> ();
 			var task = new InstallAndroidDependencies {
