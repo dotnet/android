@@ -299,6 +299,8 @@ namespace Xamarin.Android.Build.Tests
 		[TestCase ("", null, "37.0.3", "platform-tools", null, TestName = "PlatformToolsUnversionedNotInstalled")]
 		[TestCase ("", "36.0.0", "37.0.3", null, null, TestName = "PlatformToolsUnversionedInstalled")]
 		[TestCase ("latest", null, "37.0.3", null, "XA5311", TestName = "PlatformToolsMalformedVersion")]
+		[TestCase ("37.0.3oops", null, "37.0.3", null, "XA5311", TestName = "PlatformToolsMalformedVersionSuffix")]
+		[TestCase ("37.0.3...", null, "37.0.3", null, "XA5311", TestName = "PlatformToolsMalformedVersionTrailingDots")]
 		public void PlatformToolsRollForward (string requested, string installed, string available, string expectedInstall, string expectedError)
 		{
 			var root = Path.Combine (Root, "temp", TestName);

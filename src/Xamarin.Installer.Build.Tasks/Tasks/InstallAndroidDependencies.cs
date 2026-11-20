@@ -608,6 +608,23 @@ namespace Xamarin.Installer.Build.Tasks
 			return Version.TryParse (text, out var version) ? version : null;
 		}
 
+		static bool IsValidPlatformToolsVersion (string value)
+		{
+			if (string.IsNullOrEmpty (value))
+				return false;
+
+			value = value.Trim ();
+			if (value.Length == 0 || value [0] == '.' || value [value.Length - 1] == '.' || value.Contains (".."))
+				return false;
+
+			foreach (char c in value) {
+				if ((c < '0' || c > '9') && c != '.')
+					return false;
+			}
+
+			return ParseVersion (value) != null;
+		}
+
 		internal static string ReadProperty (string path, string name)
 		{
 			if (!File.Exists (path))
@@ -647,7 +664,7 @@ namespace Xamarin.Installer.Build.Tasks
 				this.version = ParseVersion (version);
 				if (path == "platform-tools") {
 					// Other packages, such as `cmdline-tools/latest`, can use nonnumeric versions.
-					HasInvalidVersion = !string.IsNullOrEmpty (version) && this.version == null;
+					HasInvalidVersion = !string.IsNullOrEmpty (version) && !IsValidPlatformToolsVersion (version);
 					RollForwardMinimum = this.version;
 				}
 
