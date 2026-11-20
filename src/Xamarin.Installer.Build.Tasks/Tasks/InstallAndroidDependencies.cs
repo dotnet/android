@@ -157,7 +157,7 @@ namespace Xamarin.Installer.Build.Tasks
 			foreach (var dependency in Dependencies)
 			{
 				var component = new AndroidPackage (dependency.ItemSpec, dependency.GetMetadata("Version"));
-				if (!component.IsInstalled (path)) {
+				if (component.RollForwardMajor.HasValue || !component.IsInstalled (path)) {
 					Debug ($"Adding dependency '{component.InstallArgument}'.");
 					components.Add (component);
 				} else {
@@ -181,15 +181,43 @@ namespace Xamarin.Installer.Build.Tasks
 
 			if (components.Count > 0)
 			{
+				var cli = await GetAndroidCliAsync (installationContext.HttpClient, cancellationToken);
+				if (string.IsNullOrEmpty (cli))
+					return false;
+
+				for (int i = 0; i < components.Count; i++) {
+					var major = components [i].RollForwardMajor;
+					if (!major.HasValue)
+						continue;
+
+					// Stable is the CLI default. Include all versions so a newer major cannot hide this band.
+					var list = ProcessUtils.CreateProcessStartInfo (cli,
+						"--no-metrics", "--sdk=" + sdkPath, "sdk", "list", "--all", "--all-versions", "platform-tools");
+					using (var stdout = new StringWriter ()) {
+						var stderr = new OutputTail ();
+						int listExitCode = await ProcessUtils.StartProcess (list, stdout, stderr, cancellationToken);
+						cancellationToken.ThrowIfCancellationRequested ();
+						if (listExitCode != 0) {
+							LogCodedError ("XA5309", Resources.XA5309, listExitCode, stderr);
+							return false;
+						}
+						var selected = SelectPlatformToolsVersion (stdout.ToString (), major.Value);
+						if (selected == null) {
+							LogCodedError ("XA5310", Resources.XA5310, major.Value);
+							return false;
+						}
+						components [i] = new AndroidPackage ("platform-tools", selected);
+					}
+				}
+				components.RemoveAll (c => c.IsInstalled (sdkPath));
+				if (components.Count == 0) {
+					Debug ("No Android SDK components need to be installed.");
+					return true;
+				}
+
 				if (!AcceptAndroidSDKLicenses)
 				{
 					Error(Resources.License_Not_Accepted);
-					return false;
-				}
-
-				var cli = await GetAndroidCliAsync (installationContext.HttpClient, cancellationToken);
-				if (string.IsNullOrEmpty (cli))
-				{
 					return false;
 				}
 
@@ -223,6 +251,17 @@ namespace Xamarin.Installer.Build.Tasks
 			}
 
 			return true;
+		}
+
+		internal static string SelectPlatformToolsVersion (string output, int major)
+		{
+			var (installed, available) = SdkPackageListParser.Parse (output);
+			// The CLI can move an available package into the installed section when it is already present.
+			return installed.Concat (available)
+				.Where (p => p.Path == "platform-tools" && Version.TryParse (p.Version, out var version) && version.Major == major)
+				.OrderByDescending (p => Version.Parse (p.Version))
+				.Select (p => p.Version)
+				.FirstOrDefault ();
 		}
 
 		async Task<bool> InstallJavaSDKAsync(InstallationContext installationContext, CancellationToken cancellationToken)
@@ -582,6 +621,8 @@ namespace Xamarin.Installer.Build.Tasks
 
 			public string InstallArgument { get; }
 
+			public int? RollForwardMajor { get; }
+
 			public AndroidPackage (string path, string version)
 			{
 				path = path.Replace (';', '/');
@@ -590,6 +631,8 @@ namespace Xamarin.Installer.Build.Tasks
 					path = "ndk/" + version;
 				directory = path;
 				this.version = ParseVersion (version);
+				if (path == "platform-tools")
+					RollForwardMajor = Version.Parse (version).Major;
 
 				var lastSegment = path.Substring (path.LastIndexOf ('/') + 1);
 				InstallArgument = string.IsNullOrEmpty (version) || lastSegment == version ? path : $"{path}@{version}";
