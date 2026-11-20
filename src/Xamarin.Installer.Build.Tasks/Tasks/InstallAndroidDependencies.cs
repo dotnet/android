@@ -3,7 +3,9 @@ using System.Buffers;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Net;
 using System.Net.Http;
+using System.Net.Http.Headers;
 using System.Runtime.InteropServices;
 using System.Security.Cryptography;
 using System.Text;
@@ -346,40 +348,109 @@ namespace Xamarin.Installer.Build.Tasks
 			}
 		}
 
-		async Task DownloadAsync(HttpClient httpClient, Archive archive, CancellationToken cancellationToken)
+		internal const int MaxDownloadAttempts = 4;
+
+		/// <summary>
+		/// The delay before the first download retry. It doubles before each later retry.
+		/// </summary>
+		internal TimeSpan DownloadRetryDelay { get; set; } = TimeSpan.FromSeconds (5);
+
+		/// <summary>
+		/// Downloads <paramref name="archive"/> to a temporary file. Connections that fail or end early
+		/// (for example `The response ended prematurely`) are retried, resuming with an HTTP Range request
+		/// when the server supports it. Large downloads from CDNs such as aka.ms fail like this from time to time.
+		/// </summary>
+		internal async Task DownloadAsync (HttpClient httpClient, Archive archive, CancellationToken cancellationToken)
 		{
 			Info ("Downloading archive from '{0}'", archive.Url);
-			using (var response = await httpClient.GetAsync (archive.Url, HttpCompletionOption.ResponseHeadersRead, cancellationToken)) {
-				response.EnsureSuccessStatusCode();
-				var fileLength = response.Content.Headers.ContentLength.Value;
-				var path = Path.GetTempFileName ();
-				temporaryFiles.Add (path);
-				using (var fileStream = File.OpenWrite (path)) {
-					using (var httpStream = await response.Content.ReadAsStreamAsync ()) {
-						const int bufferSize = 16 * 1024;
-						var buffer = ArrayPool<byte>.Shared.Rent (bufferSize);
-						try {
-							int bytesRead;
-							double bytesWritten = 0;
-							double previousProgress = 0;
-							while ((bytesRead = await httpStream.ReadAsync (buffer, 0, buffer.Length, cancellationToken).ConfigureAwait (false)) > 0) {
-								fileStream.Write (buffer, 0, bytesRead);
-								bytesWritten += bytesRead;
-								// Log download progress roughly every 10%.
-								var progress = bytesWritten / fileLength;
-								if (progress - previousProgress > .10) {
-									Info ($"Downloaded {progress:P0} of {Path.GetFileName (archive.Url.AbsolutePath)}");
-									previousProgress = progress;
-								}
-							}
-							fileStream.Flush ();
-						} finally {
-							ArrayPool<byte>.Shared.Return (buffer);
+			var path = Path.GetTempFileName ();
+			temporaryFiles.Add (path);
+			var delay = DownloadRetryDelay;
+			for (int attempt = 1; ; attempt++) {
+				// The file holds the bytes that the previous attempts downloaded.
+				long offset = new FileInfo (path).Length;
+				HttpStatusCode? failedStatus = null;
+				try {
+					failedStatus = await DownloadAttemptAsync (httpClient, archive.Url, path, offset, cancellationToken).ConfigureAwait (false);
+					if (failedStatus == null)
+						break;
+				} catch (Exception ex) when (attempt < MaxDownloadAttempts && !cancellationToken.IsCancellationRequested &&
+						(ex is IOException || ex is HttpRequestException || ex is OperationCanceledException)) {
+					Info ("Downloading '{0}' failed after {1} bytes (attempt {2} of {3}): {4} Retrying in {5}s.",
+						archive.Url, new FileInfo (path).Length, attempt, MaxDownloadAttempts, ex.Message, delay.TotalSeconds);
+				}
+				if (failedStatus != null) {
+					if (!IsTransientStatusCode (failedStatus.Value) || attempt == MaxDownloadAttempts)
+						throw new HttpRequestException ($"Downloading '{archive.Url}' failed with HTTP status code {(int) failedStatus.Value} ({failedStatus.Value}).");
+					Info ("Downloading '{0}' failed with HTTP status code {1} (attempt {2} of {3}). Retrying in {4}s.",
+						archive.Url, (int) failedStatus.Value, attempt, MaxDownloadAttempts, delay.TotalSeconds);
+				}
+				await Task.Delay (delay, cancellationToken).ConfigureAwait (false);
+				delay = TimeSpan.FromTicks (delay.Ticks * 2);
+			}
+			Info ("Wrote '{0}' to '{1}'", archive.Url, path);
+			archive.DownloadedFilePath = path;
+		}
+
+		static bool IsTransientStatusCode (HttpStatusCode statusCode) =>
+			statusCode == HttpStatusCode.RequestTimeout || (int) statusCode == 429 || (int) statusCode >= 500;
+
+		/// <summary>
+		/// Appends the bytes after <paramref name="offset"/> to <paramref name="path"/>.
+		/// Returns the HTTP status code of an unsuccessful response, or null on success.
+		/// </summary>
+		async Task<HttpStatusCode?> DownloadAttemptAsync (HttpClient httpClient, Uri url, string path, long offset, CancellationToken cancellationToken)
+		{
+			using (var request = new HttpRequestMessage (HttpMethod.Get, url)) {
+				if (offset > 0)
+					request.Headers.Range = new RangeHeaderValue (offset, null);
+				using (var response = await httpClient.SendAsync (request, HttpCompletionOption.ResponseHeadersRead, cancellationToken).ConfigureAwait (false)) {
+					if (!response.IsSuccessStatusCode)
+						return response.StatusCode;
+					if (offset > 0) {
+						if (response.StatusCode != HttpStatusCode.PartialContent) {
+							Debug ("The server did not resume the download of '{0}'. Downloading it again.", url);
+							offset = 0;
+						} else if (response.Content.Headers.ContentRange?.From != offset) {
+							// Start the next attempt from the beginning.
+							File.WriteAllBytes (path, []);
+							throw new IOException ($"The server resumed the download of '{url}' at an unexpected position.");
 						}
 					}
+					long? contentLength = response.Content.Headers.ContentLength;
+					long? fileLength = offset + contentLength;
+					using (var fileStream = new FileStream (path, FileMode.OpenOrCreate, FileAccess.Write)) {
+						fileStream.SetLength (offset);
+						fileStream.Seek (offset, SeekOrigin.Begin);
+						using (var httpStream = await response.Content.ReadAsStreamAsync ().ConfigureAwait (false)) {
+							const int bufferSize = 16 * 1024;
+							var buffer = ArrayPool<byte>.Shared.Rent (bufferSize);
+							try {
+								int bytesRead;
+								long bytesWritten = offset;
+								double previousProgress = fileLength > 0 ? (double) offset / fileLength.Value : 0;
+								while ((bytesRead = await httpStream.ReadAsync (buffer, 0, buffer.Length, cancellationToken).ConfigureAwait (false)) > 0) {
+									fileStream.Write (buffer, 0, bytesRead);
+									bytesWritten += bytesRead;
+									if (fileLength == null)
+										continue;
+									// Log download progress roughly every 10%.
+									var progress = (double) bytesWritten / fileLength.Value;
+									if (progress - previousProgress > .10) {
+										Info ($"Downloaded {progress:P0} of {Path.GetFileName (url.AbsolutePath)}");
+										previousProgress = progress;
+									}
+								}
+								fileStream.Flush ();
+								if (fileLength != null && bytesWritten != fileLength)
+									throw new IOException ($"The response ended prematurely: received {bytesWritten} of {fileLength} bytes of '{url}'.");
+							} finally {
+								ArrayPool<byte>.Shared.Return (buffer);
+							}
+						}
+					}
+					return null;
 				}
-				Info ("Wrote '{0}' to '{1}'", archive.Url, path);
-				archive.DownloadedFilePath = path;
 			}
 		}
 
