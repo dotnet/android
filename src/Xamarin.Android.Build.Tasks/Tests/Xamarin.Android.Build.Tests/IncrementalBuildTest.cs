@@ -1,4 +1,5 @@
 using Microsoft.Build.Framework;
+using Microsoft.Build.Logging;
 using Mono.Cecil;
 using NUnit.Framework;
 using System;
@@ -281,7 +282,6 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		[Ignore ("Flaky timing-based test. Disabled while investigating incremental build regressions. See: https://github.com/dotnet/android/issues/11792")]
 		public void BasicApplicationRepetitiveBuild ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			bool isRelease = runtime == AndroidRuntime.NativeAOT;
@@ -293,30 +293,66 @@ namespace Xamarin.Android.Build.Tests
 			};
 			proj.SetRuntime (runtime);
 
-			using (var b = CreateApkBuilder ()) {
-				b.ThrowOnBuildFailure = false;
-				Assert.IsTrue (b.Build (proj), "first build failed");
-				var firstBuildTime = b.LastBuildTime;
-				Assert.IsTrue (b.Build (proj), "second build failed");
-				if (runtime != AndroidRuntime.NativeAOT) {
-					Assert.IsTrue (
-						firstBuildTime > b.LastBuildTime, "Second build ({0}) should have been faster than the first ({1})",
-						b.LastBuildTime, firstBuildTime
-					);
+			using var builder = CreateApkBuilder ();
+			builder.BuildLogFile = "initial-build.log";
+			Assert.IsTrue (builder.Build (proj), "Initial build should succeed.");
+			string outputDirectory = Path.Combine (Root, builder.ProjectDirectory, proj.OutputPath);
+			string [] packageFormats = isRelease ? ["aab", "apk"] : ["apk"];
+			var packages = packageFormats.Select (format => Path.Combine (outputDirectory, $"{proj.PackageName}-Signed.{format}")).ToArray ();
+			var originalResourceTables = packages.Select (ReadPackagedResourceTable).ToArray ();
+			AssertUnchangedBuild ("unchanged-build.log");
+
+			var item = proj.AndroidResources.First (x => x.Include () == "Resources\\values\\Strings.xml");
+			item.TextContent = () => proj.StringsXml.Replace ("${PROJECT_NAME}", "Foo");
+			proj.Touch ("Resources\\values\\Strings.xml");
+			builder.BuildLogFile = "resource-change-build.log";
+			Assert.IsTrue (builder.Build (proj, doNotCleanupOnUpdate: true, saveProject: false), "Build after a resource change should succeed.");
+			builder.Output.AssertTargetIsNotSkipped ("_Sign");
+			for (int i = 0; i < packages.Length; i++) {
+				var updatedResourceTable = ReadPackagedResourceTable (packages [i]);
+				Assert.IsFalse (originalResourceTables [i].SequenceEqual (updatedResourceTable),
+					$"Changing resources should update the packaged resource table in {packages [i]}.");
+			}
+			AssertUnchangedBuild ("unchanged-after-resource-change-build.log");
+
+			byte [] ReadPackagedResourceTable (string package)
+			{
+				using var archive = ZipFile.OpenRead (package);
+				string entryName = Path.GetExtension (package) == ".aab" ? "base/resources.pb" : "resources.arsc";
+				var entry = archive.GetEntry (entryName) ?? throw new InvalidOperationException ($"Missing {entryName} in {package}.");
+				using var stream = entry.Open ();
+				using var contents = new MemoryStream ();
+				stream.CopyTo (contents);
+				return contents.ToArray ();
+			}
+
+			void AssertUnchangedBuild (string logFile)
+			{
+				var hashes = packages.Select (Files.HashFile).ToArray ();
+				var writeTimes = packages.Select (File.GetLastWriteTimeUtc).ToArray ();
+				builder.BuildLogFile = logFile;
+				Assert.IsTrue (builder.Build (proj, doNotCleanupOnUpdate: true, saveProject: false), "Unchanged build should succeed.");
+				foreach (var target in new [] { "CoreCompile", "_CompileJava", "_CompileToDalvik", "_Sign" }) {
+					builder.Output.AssertTargetIsSkipped (target);
 				}
-				Assert.IsTrue (
-					b.Output.IsTargetSkipped ("_Sign"),
-					"the _Sign target should not run");
-				if (runtime != AndroidRuntime.NativeAOT) {
-					b.Output.AssertTargetIsSkipped ("_AddTypeManagerResources");
+				if (runtime == AndroidRuntime.NativeAOT) {
+					builder.Output.AssertTargetIsSkipped ("IlcCompile");
+				} else {
+					builder.Output.AssertTargetIsSkipped ("_GeneratePackageManagerJava");
+					builder.Output.AssertTargetIsSkipped ("_AndroidGenerateCoreClrBootstrap");
 				}
-				var item = proj.AndroidResources.First (x => x.Include () == "Resources\\values\\Strings.xml");
-				item.TextContent = () => proj.StringsXml.Replace ("${PROJECT_NAME}", "Foo");
-				item.Timestamp = null;
-				Assert.IsTrue (b.Build (proj), "third build failed");
-				Assert.IsFalse (
-					b.Output.IsTargetSkipped ("_Sign"),
-					"the _Sign target should run");
+				var binlog = Path.ChangeExtension (Path.Combine (Root, builder.ProjectDirectory, builder.BuildLogFile), ".binlog");
+				FileAssert.Exists (binlog);
+				var tasks = new HashSet<string> ();
+				var replay = new BinaryLogReplayEventSource ();
+				replay.TaskStarted += (_, task) => tasks.Add (task.TaskName);
+				replay.Replay (binlog);
+				foreach (var task in new [] { "Csc", "Aapt2Compile", "Aapt2Link", "D8", "R8", "GenerateTrimmableTypeMap",
+					"BuildApk", "BuildAppBundle", "AndroidApkSigner", "AndroidSignPackage" }) {
+					CollectionAssert.DoesNotContain (tasks, task, $"An unchanged build should not execute {task}.");
+				}
+				CollectionAssert.AreEqual (hashes, packages.Select (Files.HashFile), "An unchanged build should preserve package contents.");
+				CollectionAssert.AreEqual (writeTimes, packages.Select (File.GetLastWriteTimeUtc), "An unchanged build should not rewrite packages.");
 			}
 		}
 
