@@ -2137,7 +2137,7 @@ public class ToolbarEx {
 		[Test]
 		[TestCase (true, AndroidRuntime.CoreCLR)]
 		[TestCase (false, AndroidRuntime.CoreCLR)]
-		// TODO: [TestCase (false, AndroidRuntime.NativeAOT)]
+		[TestCase (true, AndroidRuntime.NativeAOT)]
 		public void SimilarAndroidXAssemblyNames (bool publishTrimmed, AndroidRuntime runtime)
 		{
 			var proj = new XamarinAndroidApplicationProject {

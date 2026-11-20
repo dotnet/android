@@ -13,7 +13,7 @@ using Xamarin.ProjectTools;
 
 namespace Xamarin.Android.Build.Tests
 {
-	// TODO: update for NativeAOT and CoreCLR
+	// TODO: add NativeAOT performance coverage; these tests use the default CoreCLR runtime.
 	[TestFixture]
 	[Category ("Performance")]
 	public class PerformanceTest : DeviceTest

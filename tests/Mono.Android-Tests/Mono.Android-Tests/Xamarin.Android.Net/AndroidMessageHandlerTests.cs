@@ -18,7 +18,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 namespace Xamarin.Android.NetTests
 {
 	[TestClass]
-	[TestCategory ("SSL")] // TODO: https://github.com/dotnet/android/issues/10069
+	[TestCategory ("SSL")] // TODO: https://github.com/dotnet/android/issues/10079
 	public class AndroidMessageHandlerTests : AndroidHandlerTestBase
 	{
 		protected override HttpMessageHandler CreateHandler ()

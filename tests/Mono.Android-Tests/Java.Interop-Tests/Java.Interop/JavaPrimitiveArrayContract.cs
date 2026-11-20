@@ -71,14 +71,7 @@ namespace Java.InteropTests
 			a.Dispose ();
 		}
 
-		// TODO: http://developer.android.com/training/articles/perf-jni.html#arrays
-		//       "Also, if the Get call fails, you must ensure that your code doesn't
-		//        try to Release a NULL pointer later."
-		//  This implies that JNIEnv::Get<Type>ArrayElements() can return NULL; how/when?
-		//  Theory: this happens if the array is empty (kinda like what C# `fixed` does?).
-		//  Try to test this.
-		//  (Alas, on OpenJDK JNIEnv::Get<Type>ArrayElements() returns a non-NULL pointer
-		//   when the array is empty, so we'll need to run this on Android.)
+		// Even an empty array can return a non-null elements pointer, which must still be released.
 		[TestMethod]
 		[TestCategory ("JniPrimitiveArrayBounds")]
 		public void GetElements_EmptyArray ()

@@ -1333,17 +1333,9 @@ $@"button.ViewTreeObserver.GlobalLayout += Button_ViewTreeObserver_GlobalLayout;
 				return;
 			}
 
-			// TODO: fix NativeAOT builds. Despite the .so library being preset in the apk (and named correctly)
-			//       all the tests fail with one of:
-			//
-			//  java.lang.UnsatisfiedLinkError: dlopen failed: library "libテスト.so" not found
-			//  java.lang.UnsatisfiedLinkError: dlopen failed: library "lib中国.so" not found
-			//  java.lang.UnsatisfiedLinkError: dlopen failed: library "lib随机生成器.so" not found
-			//
-			// It might be an issue with the Android shared library loader or name encoding in the archive. It might
-			// be a good idea to limit .so names to ASCII.
 			if (runtime == AndroidRuntime.NativeAOT) {
-				Assert.Ignore ("NativeAOT doesn't work well with diacritics in the application library name");
+				// TODO: NativeAOT cannot load non-ASCII library names from split APKs.
+				Assert.Ignore ("NativeAOT fails to load non-ASCII application libraries.");
 			}
 
 			var rootPath = Path.Combine (Root, "temp", TestName);
@@ -1362,26 +1354,6 @@ $@"button.ViewTreeObserver.GlobalLayout += Button_ViewTreeObserver_GlobalLayout;
 			}
 		}
 
-		// TODO: fix/review it for CoreCLR. It currently fails with the following exception:
-		//
-		// System.TypeInitializationException: TypeInitialization_Type, SQLite.SQLiteConnection
-		//  ---> System.MissingMethodException: .ctor
-		//    at System.Runtime.InteropServices.Marshal.GetDelegateForFunctionPointerInternal(IntPtr, RuntimeType)
-		//    at SQLitePCL.SQLite3Provider_dynamic_cdecl.NativeMethods.Setup(IGetFunctionPointer)
-		//    at SQLitePCL.Batteries_V2.DoDynamic_cdecl(String, Int32)
-		//    Exception_EndOfInnerExceptionStack
-		//    at SQLite.SQLiteConnection..ctor(SQLiteConnectionString)
-		//    at SQLite.SQLiteConnectionPool.Entry..ctor(SQLiteConnectionString)
-		//    at SQLite.SQLiteConnectionPool.GetConnectionAndTransactionLock(SQLiteConnectionString, Object& )
-		//    at SQLite.SQLiteAsyncConnection.<>c__DisplayClass33_0`1.<WriteAsync>b__0()
-		//    at System.Threading.Tasks.Task`1.InnerInvoke()
-		//    at System.Threading.ExecutionContext.RunFromThreadPoolDispatchLoop(Thread, ExecutionContext, ContextCallback, Object)
-		// --- End of stack trace from previous location ---
-		//    at System.Threading.ExecutionContext.RunFromThreadPoolDispatchLoop(Thread, ExecutionContext, ContextCallback, Object)
-		//    at System.Threading.Tasks.Task.ExecuteWithThreadLocal(Task&, Thread )
-		// --- End of stack trace from previous location ---
-		//    at LinkTestLib.Bug35195.AttemptCreateTable()
-		//
 		[Test]
 		public void CustomLinkDescriptionPreserve (
 		  [Values (AndroidLinkMode.SdkOnly, AndroidLinkMode.Full)] AndroidLinkMode linkMode,
@@ -1393,16 +1365,13 @@ $@"button.ViewTreeObserver.GlobalLayout += Button_ViewTreeObserver_GlobalLayout;
 				return;
 			}
 
-			if (runtime == AndroidRuntime.CoreCLR) {
-				Assert.Ignore ("Currently broken on CoreCLR");
+			if (linkMode == AndroidLinkMode.Full && runtime == AndroidRuntime.CoreCLR) {
+				// TODO: SQLite's dynamic provider throws MissingMethodException (.ctor) with full trimming.
+				Assert.Ignore ("SQLite's dynamic provider fails under CoreCLR full trimming.");
 			}
-
-			// TODO: NativeAOT perhaps should work here (ignoring all the MonoAOT settings?), but for now it fails with
-			//
-			//  Microsoft.NET.Sdk.FrameworkReferenceResolution.targets(120,5): error NETSDK1207: Ahead-of-time compilation is not supported for the target framework.
-			//
-			if (runtime == AndroidRuntime.NativeAOT) {
-				Assert.Ignore ("NativeAOT is currently broken here");
+			if (linkMode == AndroidLinkMode.Full && runtime == AndroidRuntime.NativeAOT) {
+				// TODO: SQLite cannot see the TodoTask columns with NativeAOT full trimming.
+				Assert.Ignore ("SQLite cannot find TodoTask columns under NativeAOT full trimming.");
 			}
 
 			var lib1 = new XamarinAndroidLibraryProject () {
@@ -1466,7 +1435,6 @@ namespace Library1 {
 					},
 				},
 			};
-			lib2.SetRuntime (runtime);
 			lib2.SetProperty ("LangVersion", "8.0");
 
 			var proj = new XamarinFormsAndroidApplicationProject (packageName: PackageUtils.MakePackageName (runtime)) {
@@ -1662,11 +1630,9 @@ using System.Runtime.Serialization.Json;
 			}
 
 			if (testOnly && runtime == AndroidRuntime.NativeAOT) {
-				// ADB install error:
-				//   SplitApkInstallerBase: Failed to commit install session 75895528 with command package install-commit 75895528. Error: INSTALL_FAILED_TEST_ONLY
-				//
-				// TODO: investigate, it's odd it doesn't work
-				Assert.Ignore ("NativeAOT doesn't currently work in test-only applications.");
+				// TODO: NativeAOT Release deploys an app bundle through InstallApkSet, which does not pass
+				// bundletool's `--allow-test-only`, so installing a test-only bundle fails with INSTALL_FAILED_TEST_ONLY.
+				Assert.Ignore ("Installing a test-only app bundle fails with INSTALL_FAILED_TEST_ONLY.");
 			}
 
 			var proj = new XamarinAndroidApplicationProject (packageName: PackageUtils.MakePackageName (runtime)) {
@@ -1691,29 +1657,6 @@ using System.Runtime.Serialization.Json;
 		public void AppWithStyleableUsageRuns ([ValueSource (typeof (BaseTest), nameof (BaseTest.ValidRuntimeConfigurations))] (bool isRelease, AndroidRuntime runtime) configuration, [Values] bool linkResources)
 		{
 			var (isRelease, runtime) = configuration;
-
-			// TODO: fix this for NativeAOT
-			if (runtime == AndroidRuntime.NativeAOT && isRelease) {
-				// This configuration currently fails with a long stack trace, the gist of it is:
-				//
-				//  AndroidRuntime: java.lang.RuntimeException: Unable to start activity ComponentInfo{com.xamarin.appwithstyleableusageruns_nativeaot/com.xamarin.appwithstyleableusageruns_nativeaot.MainActivity}
-				//  AndroidRuntime: Caused by: android.view.InflateException: Binary XML file line #1 in com.xamarin.appwithstyleableusageruns_nativeaot:layout/main: Binary XML file line #1 in com.xamarin.appwithstyleableusageruns_nativeaot:layout/main: Error inflating class crc64f75eeacfa0ca1368.MyLayout
-				//  AndroidRuntime: Caused by: android.view.InflateException: Binary XML file line #1 in com.xamarin.appwithstyleableusageruns_nativeaot:layout/main: Error inflating class crc64f75eeacfa0ca1368.MyLayout
-				//  AndroidRuntime: Caused by: java.lang.reflect.InvocationTargetException
-				//  AndroidRuntime: Caused by: net.dot.jni.internal.JavaProxyThrowable: System.NotSupportedException: Could not activate { PeerReference=0x7fe9706698/I IdentityHashCode=0xd12aeee Java.Type=crc64f75eeacfa0ca1368/MyLayout } for managed type 'UnnamedProject.MyLayout'.
-				//  AndroidRuntime:  ---> System.Reflection.TargetInvocationException: Arg_TargetInvocationException
-				//  AndroidRuntime:  ---> System.IO.FileNotFoundException: IO_FileNotFound_FileName, _Microsoft.Android.Resource.Designer
-				//  AndroidRuntime: IO_FileName_Name, _Microsoft.Android.Resource.Designer
-				//  DOTNET  : FATAL UNHANDLED EXCEPTION: Java.Lang.Exception: Unable to start activity ComponentInfo{com.xamarin.appwithstyleableusageruns_nativeaot/com.xamarin.appwithstyleableusageruns_nativeaot.MainActivity}
-				//  DOTNET  :  ---> Java.Lang.Exception: Binary XML file line #1 in com.xamarin.appwithstyleableusageruns_nativeaot:layout/main: Binary XML file line #1 in com.xamarin.appwithstyleableusageruns_nativeaot:layout/main: Error inflating class crc64f75eeacfa0ca1368.MyLayout
-				//  DOTNET  :  ---> Java.Lang.Exception: Binary XML file line #1 in com.xamarin.appwithstyleableusageruns_nativeaot:layout/main: Error inflating class crc64f75eeacfa0ca1368.MyLayout
-				//  DOTNET  :  ---> Java.Lang.ReflectiveOperationException: Exception_WasThrown, Java.Lang.ReflectiveOperationException
-				//  DOTNET  :  ---> System.NotSupportedException: Could not activate { PeerReference=0x7fe9706698/I IdentityHashCode=0xd12aeee Java.Type=crc64f75eeacfa0ca1368/MyLayout } for managed type 'UnnamedProject.MyLayout'.
-				//  DOTNET  :  ---> System.Reflection.TargetInvocationException: Arg_TargetInvocationException
-				//  DOTNET  :  ---> System.IO
-				//  eruns_nativeaot: No implementation found for void mono.android.Runtime.propagateUncaughtException(java.lang.Thread, java.lang.Throwable) (tried Java_mono_android_Runtime_propagateUncaughtException and Java_mono_android_Runtime_propagateUncaughtException__Ljava_lang_Thread_2Ljava_lang_Throwable_2) - is the library loaded, e.g. System.loadLibrary?
-				Assert.Ignore ("NativeAOT type mapping fails");
-			}
 
 			var rootPath = Path.Combine (Root, "temp", TestName);
 			var lib = new XamarinAndroidLibraryProject () {
@@ -2101,11 +2044,9 @@ namespace Styleable.Library {
 				return;
 			}
 
-			// TODO: fix for NativeAOT. Currently fails with:
-			//
-			//  DOTNET  : FATAL UNHANDLED EXCEPTION: System.InvalidCastException: Unable to convert instance of type 'AndroidX.AppCompat.Widget.AppCompatImageButton' to type 'AndroidX.AppCompat.Widget.Toolbar'.
 			if (runtime == AndroidRuntime.NativeAOT) {
-				Assert.Ignore ("NativeAOT type mapping fails");
+				// TODO: Xamarin.Forms startup cannot find the ResourcesProvider constructor under NativeAOT.
+				Assert.Ignore ("NativeAOT Xamarin.Forms startup throws MissingMethodException.");
 			}
 
 			string packageName = PackageUtils.MakePackageName (runtime);
@@ -2407,7 +2348,6 @@ namespace UnnamedProject
 
 			proj.Imports.Add (CreateAndroidTargetingPackAssertion (apiLevel));
 
-			// TODO: update on new minor API levels to use an introduced minor API
 			proj.MainActivity = proj.DefaultMainActivity
 				.Replace ("//${AFTER_ONCREATE}", """
 				// The value `ignore` is not used.
@@ -2522,9 +2462,10 @@ namespace UnnamedProject
 		{
 			var (isRelease, runtime) = configuration;
 
-			// TODO: fix for NativeAOT, if possible
+			// TODO: NativeAOT crashes with ClassNotFoundException: example.ViewHelper. The class is in the
+			// input JAR but R8 removes it from the DEX; the CoreCLR Release build keeps it.
 			if (runtime == AndroidRuntime.NativeAOT) {
-				Assert.Ignore ("Type and member mapping is currently unsupported under NativeAOT");
+				Assert.Ignore ("R8 removes the remapped example.ViewHelper class under NativeAOT.");
 			}
 
 			var proj = new XamarinAndroidApplicationProject (packageName: PackageUtils.MakePackageName (runtime)) {
