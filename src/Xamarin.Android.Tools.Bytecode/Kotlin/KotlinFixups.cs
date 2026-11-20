@@ -47,6 +47,8 @@ namespace Xamarin.Android.Tools.Bytecode
 						foreach (var con in class_metadata.Constructors) {
 							var java_constructors = FindJavaConstructors (class_metadata, con, c);
 							FixupConstructor (java_constructors.FirstOrDefault (), con, java_constructors.Count == 1);
+							if (java_constructors.Count == 1)
+								FixupDefaultArguments (java_constructors [0], con.ValueParameters);
 						}
 					}
 
@@ -59,8 +61,10 @@ namespace Xamarin.Android.Tools.Bytecode
 						// We work from Java methods to Kotlin metadata because they aren't a 1:1 relation
 						// and we need to find the "best" match for each Java method.
 						foreach (var java_method in c.Methods)
-							if (FindKotlinFunctionMetadata (metadata, java_method) is KotlinFunction function_metadata)
+							if (FindKotlinFunctionMetadata (metadata, java_method) is KotlinFunction function_metadata) {
 								FixupFunction (java_method, function_metadata, class_metadata, inlineClasses);
+								FixupDefaultArguments (java_method, function_metadata.ValueParameters);
+							}
 					}
 
 					if (metadata.Properties != null) {
@@ -380,6 +384,49 @@ namespace Xamarin.Android.Tools.Bytecode
 			// target. See dotnet/java-interop#1431 (Phase 2).
 			if (metadata.Name != null && metadata.JvmName != null && metadata.Name != metadata.JvmName)
 				method.KotlinName = PascalCase (metadata.Name);
+		}
+
+		// Records the helper that computes Kotlin default arguments, so the generator can
+		// create overloads that omit trailing defaulted parameters:
+		//   fun f(a: Int = 1)        ->  static f$default(Owner, int, int mask, Object)
+		//   constructor(a: Int = 1)  ->  <init>(int, int mask, DefaultConstructorMarker)
+		// If the exact helper does not exist, keep the full-argument API.
+		static void FixupDefaultArguments (MethodInfo? method, List<KotlinValueParameter>? valueParameters)
+		{
+			if (method is null || !method.IsPubliclyVisible || valueParameters is null)
+				return;
+
+			var defaults = Enumerable.Range (0, valueParameters.Count)
+				.Where (i => valueParameters [i].Flags.HasFlag (KotlinParameterFlags.DeclaresDefaultValue))
+				.ToArray ();
+			if (defaults.Length == 0)
+				return;
+
+			// Receivers, continuations and outer-class parameters move the mask bits.
+			if (method.GetParameters ().Length != valueParameters.Count)
+				return;
+
+			var owner = method.DeclaringType;
+			var masks = new string ('I', (valueParameters.Count + 31) / 32);
+			var close = method.Descriptor.IndexOf (')');
+			var parameters = method.Descriptor.Substring (1, close - 1);
+
+			string helper_name, helper_signature;
+			if (method.IsConstructor) {
+				helper_name = "<init>";
+				helper_signature = "(" + parameters + masks + "Lkotlin/jvm/internal/DefaultConstructorMarker;)V";
+			} else {
+				var receiver = method.AccessFlags.HasFlag (MethodAccessFlags.Static) ? "" : owner.FullJniName;
+				helper_name = method.Name + "$default";
+				helper_signature = "(" + receiver + parameters + masks + "Ljava/lang/Object;)" + method.Descriptor.Substring (close + 1);
+			}
+
+			// Older Kotlin puts interface helpers only on `$DefaultImpls`. That class has no
+			// managed peer, so R8 can remove it; do not use it.
+			if (!owner.Methods.Any (m => m.Name == helper_name && m.Descriptor == helper_signature))
+				return;
+			method.KotlinDefaultJniSignature = helper_signature;
+			method.KotlinDefaultParameters = defaults;
 		}
 
 		static string PascalCase (string name)
