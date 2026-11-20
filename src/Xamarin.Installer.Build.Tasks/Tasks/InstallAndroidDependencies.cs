@@ -156,8 +156,13 @@ namespace Xamarin.Installer.Build.Tasks
 			var components = new List<AndroidPackage>();
 			foreach (var dependency in Dependencies)
 			{
-				var component = new AndroidPackage (dependency.ItemSpec, dependency.GetMetadata("Version"));
-				if (component.RollForwardMajor.HasValue || !component.IsInstalled (path)) {
+				var versionText = dependency.GetMetadata ("Version");
+				var component = new AndroidPackage (dependency.ItemSpec, versionText);
+				if (component.HasInvalidVersion) {
+					LogCodedError ("XA5311", Resources.XA5311, versionText, dependency.ItemSpec);
+					return null;
+				}
+				if (component.RollForwardMinimum != null || !component.IsInstalled (path)) {
 					Debug ($"Adding dependency '{component.InstallArgument}'.");
 					components.Add (component);
 				} else {
@@ -186,8 +191,8 @@ namespace Xamarin.Installer.Build.Tasks
 					return false;
 
 				for (int i = 0; i < components.Count; i++) {
-					var major = components [i].RollForwardMajor;
-					if (!major.HasValue)
+					var minimum = components [i].RollForwardMinimum;
+					if (minimum == null)
 						continue;
 
 					// Stable is the CLI default. Include all versions so a newer major cannot hide this band.
@@ -201,9 +206,9 @@ namespace Xamarin.Installer.Build.Tasks
 							LogCodedError ("XA5309", Resources.XA5309, listExitCode, stderr);
 							return false;
 						}
-						var selected = SelectPlatformToolsVersion (stdout.ToString (), major.Value);
+						var selected = SelectPlatformToolsVersion (stdout.ToString (), minimum);
 						if (selected == null) {
-							LogCodedError ("XA5310", Resources.XA5310, major.Value);
+							LogCodedError ("XA5310", Resources.XA5310, minimum, minimum.Major);
 							return false;
 						}
 						components [i] = new AndroidPackage ("platform-tools", selected);
@@ -253,12 +258,16 @@ namespace Xamarin.Installer.Build.Tasks
 			return true;
 		}
 
-		internal static string SelectPlatformToolsVersion (string output, int major)
+		/// <summary>
+		/// Selects the newest stable catalog version that is at least <paramref name="minimum"/> and in the same major version.
+		/// </summary>
+		internal static string SelectPlatformToolsVersion (string output, Version minimum)
 		{
-			var (installed, available) = SdkPackageListParser.Parse (output);
-			// The CLI can move an available package into the installed section when it is already present.
-			return installed.Concat (available)
-				.Where (p => p.Path == "platform-tools" && Version.TryParse (p.Version, out var version) && version.Major == major)
+			// The CLI lists installed packages under available packages too, so the installed section is not needed.
+			var (_, available) = SdkPackageListParser.Parse (output);
+			return available
+				.Where (p => p.Path == "platform-tools" && Version.TryParse (p.Version, out var version) &&
+					version.Major == minimum.Major && version >= minimum)
 				.OrderByDescending (p => Version.Parse (p.Version))
 				.Select (p => p.Version)
 				.FirstOrDefault ();
@@ -621,7 +630,12 @@ namespace Xamarin.Installer.Build.Tasks
 
 			public string InstallArgument { get; }
 
-			public int? RollForwardMajor { get; }
+			/// <summary>
+			/// The minimum platform-tools version; the newest catalog version in its major version is installed.
+			/// </summary>
+			public Version RollForwardMinimum { get; }
+
+			public bool HasInvalidVersion { get; }
 
 			public AndroidPackage (string path, string version)
 			{
@@ -631,8 +645,9 @@ namespace Xamarin.Installer.Build.Tasks
 					path = "ndk/" + version;
 				directory = path;
 				this.version = ParseVersion (version);
+				HasInvalidVersion = !string.IsNullOrEmpty (version) && this.version == null;
 				if (path == "platform-tools")
-					RollForwardMajor = Version.Parse (version).Major;
+					RollForwardMinimum = this.version;
 
 				var lastSegment = path.Substring (path.LastIndexOf ('/') + 1);
 				InstallArgument = string.IsNullOrEmpty (version) || lastSegment == version ? path : $"{path}@{version}";

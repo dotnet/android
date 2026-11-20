@@ -288,14 +288,17 @@ namespace Xamarin.Android.Build.Tests
 				File.ReadAllText (Path.Combine (root, "list-args.txt")).Trim ());
 		}
 
-		[TestCase ("37.0.3", "37.0.3", true)]
-		[TestCase ("37.0.1", "37.0.3", false)]
-		[TestCase ("38.0.0", "37.0.3", true)]
-		[TestCase ("37.0.3", null, true)]
-		[TestCase (null, null, false)]
-		[TestCase ("38.0.0", null, false)]
-		[TestCase (null, "38.0.2", false, "38.0.0")]
-		public void PlatformToolsRollForward (string installed, string available, bool alreadyInstalled, string requested = "37.0")
+		[TestCase ("37.0", "37.0.3", "37.0.3", null, null, TestName = "PlatformToolsLatestAlreadyInstalled")]
+		[TestCase ("37.0", "37.0.1", "37.0.3", "platform-tools@37.0.3", null, TestName = "PlatformToolsRollsForwardWithinMajor")]
+		[TestCase ("37.0", "38.0.0", "37.0.3", null, null, TestName = "PlatformToolsNewerMajorInstalled")]
+		[TestCase ("37.0", null, null, null, "XA5310", TestName = "PlatformToolsNoCompatibleVersion")]
+		[TestCase ("37.0", "37.0.3", null, null, "XA5310", TestName = "PlatformToolsInstalledButNotInCatalog")]
+		[TestCase ("37.5", null, "37.0.3", null, "XA5310", TestName = "PlatformToolsNoSufficientVersion")]
+		[TestCase ("38.0.0", null, "38.0.2", "platform-tools@38.0.2", null, TestName = "PlatformToolsRequestedMajor")]
+		[TestCase ("", null, "37.0.3", "platform-tools", null, TestName = "PlatformToolsUnversionedNotInstalled")]
+		[TestCase ("", "36.0.0", "37.0.3", null, null, TestName = "PlatformToolsUnversionedInstalled")]
+		[TestCase ("latest", null, "37.0.3", null, "XA5311", TestName = "PlatformToolsMalformedVersion")]
+		public void PlatformToolsRollForward (string requested, string installed, string available, string expectedInstall, string expectedError)
 		{
 			var root = Path.Combine (Root, "temp", TestName);
 			if (Directory.Exists (root))
@@ -307,9 +310,10 @@ namespace Xamarin.Android.Build.Tests
 				Directory.CreateDirectory (directory);
 				File.WriteAllText (Path.Combine (directory, "source.properties"), $"Pkg.Revision={installed}\n");
 			}
+			// The installed section is ignored: only versions available in the catalog can be selected.
 			var catalog = $"""
 				Installed packages:
-				  platform-tools  {installed ?? "invalid"}  Android SDK Platform-Tools
+				  platform-tools  {installed ?? "unknown"}  Android SDK Platform-Tools
 				Available packages:
 				  platform-tools  38.0.0  Android SDK Platform-Tools
 				  platform-tools  {available ?? "37.1.0-rc1"}  Android SDK Platform-Tools
@@ -318,23 +322,27 @@ namespace Xamarin.Android.Build.Tests
 			var task = new InstallAndroidDependencies {
 				BuildEngine = new MockBuildEngine (TestContext.Out, errors, [], []),
 				AndroidSdkPath = sdkPath,
-				AcceptAndroidSDKLicenses = !alreadyInstalled,
+				AcceptAndroidSDKLicenses = true,
 				InstallJavaDependencies = false,
 				AndroidCliPath = CreateCatalogCli (root, catalog),
 				JavaDependencies = [],
 				Dependencies = [new TaskItem ("platform-tools", new Dictionary<string, string> { { "Version", requested } })],
 			};
-			var major = Version.Parse (requested).Major;
-			bool noCompatibleVersion = available == null && (installed == null || Version.Parse (installed).Major != major);
-			Assert.AreEqual (!noCompatibleVersion, task.Execute (), string.Join (Environment.NewLine, errors.Select (e => e.Message)));
-			if (noCompatibleVersion) {
-				Assert.AreEqual ("XA5310", errors.Single ().Code);
-				StringAssert.Contains ($"supported {major}.x", errors.Single ().Message);
+			Assert.AreEqual (expectedError == null, task.Execute (), string.Join (Environment.NewLine, errors.Select (e => e.Message)));
+			if (expectedError != null) {
+				var error = errors.Single ();
+				Assert.AreEqual (expectedError, error.Code);
+				if (expectedError == "XA5310")
+					StringAssert.Contains ($"version {requested} or later in the supported {requested.Split ('.') [0]}.x", error.Message);
+				else
+					StringAssert.Contains ($"'{requested}'", error.Message);
 			}
 			var argsPath = Path.Combine (root, "args.txt");
-			Assert.AreEqual (!alreadyInstalled && !noCompatibleVersion, File.Exists (argsPath));
-			if (File.Exists (argsPath))
-				StringAssert.EndsWith ($"sdk install platform-tools@{available}", File.ReadAllText (argsPath).Trim ());
+			Assert.AreEqual (expectedInstall != null, File.Exists (argsPath));
+			if (expectedInstall != null)
+				StringAssert.EndsWith ($"sdk install {expectedInstall}", File.ReadAllText (argsPath).Trim ());
+			// Unversioned or invalid requests never query the catalog.
+			Assert.AreEqual (requested.Length > 0 && expectedError != "XA5311", File.Exists (Path.Combine (root, "list-args.txt")));
 		}
 
 		[TestCase (false)]
@@ -343,7 +351,7 @@ namespace Xamarin.Android.Build.Tests
 		{
 			var catalog = """
 				Installed packages:
-				  platform-tools | 37.0.1 | Android SDK Platform-Tools
+				  platform-tools | 37.9.0 | Android SDK Platform-Tools
 				Available packages:
 				  platform-tools | 38.0.0 | Android SDK Platform-Tools
 				  platform-tools | 37.0.3 | Android SDK Platform-Tools
@@ -355,7 +363,9 @@ namespace Xamarin.Android.Build.Tests
 				""";
 			if (!pipes)
 				catalog = catalog.Replace (" | ", "  ");
-			Assert.AreEqual ("37.2.0", InstallAndroidDependencies.SelectPlatformToolsVersion (catalog, 37));
+			Assert.AreEqual ("37.2.0", InstallAndroidDependencies.SelectPlatformToolsVersion (catalog, new Version (37, 0)));
+			Assert.AreEqual ("37.2.0", InstallAndroidDependencies.SelectPlatformToolsVersion (catalog, new Version (37, 2, 0)));
+			Assert.IsNull (InstallAndroidDependencies.SelectPlatformToolsVersion (catalog, new Version (37, 2, 1)));
 		}
 
 		[Test]

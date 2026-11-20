@@ -188,8 +188,15 @@ Please update your Java SDK to version `{2}`, or set `$(JavaSdkDirectory)` to a 
     <comment>{0} - Exit code. {1} - The end of the Android CLI error output.</comment>
   </data>
   <data name="XA5310" xml:space="preserve">
-    <value>The Android CLI catalog contains no stable platform-tools package in the supported {0}.x major version. A different major version will not be installed automatically.</value>
+    <value>The Android CLI catalog contains no stable platform-tools package with version {0} or later in the supported {1}.x major version. A different major version will not be installed automatically.</value>
     <comment>The following are literal names and should not be translated: `Android CLI`, `platform-tools`
-{0} - The supported platform-tools major version.</comment>
+{0} - The minimum platform-tools version.
+{1} - The supported platform-tools major version.</comment>
+  </data>
+  <data name="XA5311" xml:space="preserve">
+    <value>The version '{0}' of Android SDK dependency '{1}' is not a valid version.</value>
+    <comment>The following are literal names and should not be translated: `Android SDK`
+{0} - The invalid version.
+{1} - The Android SDK package path, such as `platform-tools`.</comment>
   </data>
 </root>

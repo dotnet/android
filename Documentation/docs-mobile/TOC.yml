@@ -442,6 +442,8 @@
         href: messages/xa5309.md
       - name: XA5310
         href: messages/xa5310.md
+      - name: XA5311
+        href: messages/xa5311.md
     - name: "XA6xxx: Internal tools"
       href: "messages/index.md#xa6xxx-internal-tools"
     - name: "XAccc7xxx: Unhandled MSBuild exceptions"

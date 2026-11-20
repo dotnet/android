@@ -169,5 +169,11 @@ namespace Xamarin.Installer.Build.Tasks.Properties {
                 return ResourceManager.GetString("XA5310", resourceCulture);
             }
         }
+
+        internal static string XA5311 {
+            get {
+                return ResourceManager.GetString("XA5311", resourceCulture);
+            }
+        }
     }
 }
