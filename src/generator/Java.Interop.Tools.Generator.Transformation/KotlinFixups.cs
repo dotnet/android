@@ -53,9 +53,9 @@ namespace Java.Interop.Tools.Generator.Transformation
 
 		// After the rename above, hash-mangled siblings can collide with each
 		// other AND with pre-existing non-mangled overloads. Both cases produce
-		// CS0111 in the generated code. Until step 2 of dotnet/java-interop#1431
-		// projects inline-class params as strongly-typed wrappers, drop the
-		// mangled duplicate deterministically and warn so the user can override
+		// CS0111 in the generated code. Parameters of different value classes
+		// do not collide (see MethodBase.Matches). For the other collisions, drop
+		// the mangled duplicate deterministically and warn so the user can override
 		// via Metadata.xml if desired. Non-mangled methods are always kept; only
 		// mangled methods are ever removed.
 		private static void RemoveCollidingSiblings (GenBase gen, List<Method> renamed, CodeGenerationOptions opt)
