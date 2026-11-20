@@ -62,10 +62,6 @@ namespace Xamarin.Android.Tasks
 			NativeLibraries = doc.GetPathsAsTaskItems ("NativeLibraries", "NativeLibrary");
 			ManifestDocuments = doc.GetPathsAsTaskItems ("ManifestDocuments", "ManifestDocument");
 
-			Log.LogDebugTaskItems ("  NativeLibraries: ", NativeLibraries);
-			Log.LogDebugTaskItems ("  Jars: ", Jars);
-			Log.LogDebugTaskItems ("  ManifestDocuments: ", ManifestDocuments);
-
 			return !Log.HasLoggedErrors;
 		}
 	}

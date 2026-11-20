@@ -39,8 +39,6 @@ namespace Xamarin.Android.BuildTools.PrepTasks
 				return true;
 			}
 
-			Log.LogMessage (MessageImportance.Low, $"  [Output] {nameof (CommitCount)}: {CommitCount}");
-
 			return !Log.HasLoggedErrors;
 		}
 

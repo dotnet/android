@@ -48,10 +48,6 @@ namespace Xamarin.Android.Tasks
 			if (!ValidateJava ())
 				return false;
 
-			Log.LogDebugMessage ($"{nameof (ValidateJavaVersion)} Outputs:");
-			Log.LogDebugMessage ($"  {nameof (JdkVersion)}: {JdkVersion}");
-			Log.LogDebugMessage ($"  {nameof (MinimumRequiredJdkVersion)}: {MinimumRequiredJdkVersion}");
-
 			return !Log.HasLoggedErrors;
 		}
 

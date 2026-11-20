@@ -80,14 +80,6 @@ namespace Xamarin.Android.Tasks
 			ProguardConfigFiles = doc.GetPathsAsTaskItems ("ProguardConfigFiles", "ProguardConfigFile");
 			ExtractedDirectories = doc.GetPathsAsTaskItems ("ExtractedDirectories", "ExtractedDirectory");
 
-			Log.LogDebugTaskItems ("  Jars: ", Jars);
-			Log.LogDebugTaskItems ("  ResolvedAssetDirectories: ", ResolvedAssetDirectories);
-			Log.LogDebugTaskItems ("  ResolvedResourceDirectories: ", ResolvedResourceDirectories);
-			Log.LogDebugTaskItems ("  ResolvedEnvironmentFiles: ", ResolvedEnvironmentFiles);
-			Log.LogDebugTaskItems ("  ResolvedResourceDirectoryStamps: ", ResolvedResourceDirectoryStamps);
-			Log.LogDebugTaskItems ("  ProguardConfigFiles: ", ProguardConfigFiles);
-			Log.LogDebugTaskItems ("  ExtractedDirectories: ", ExtractedDirectories);
-
 			return !Log.HasLoggedErrors;
 		}
 	}
