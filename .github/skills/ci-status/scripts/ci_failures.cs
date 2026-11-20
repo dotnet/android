@@ -1051,8 +1051,9 @@ static (int code, string stdout, string stderr) Run (string file, params string 
 		RedirectStandardError = true,
 		UseShellExecute = false,
 		InheritedHandles = [],
-		KillOnParentExit = true,
 	};
+	if (OperatingSystem.IsWindows () || OperatingSystem.IsLinux ())
+		psi.KillOnParentExit = true;
 	if (file.EndsWith (".cmd")) {
 		// Quote the args so cmd.exe does not treat & in URLs as an operator.
 		psi.FileName = "cmd.exe";
