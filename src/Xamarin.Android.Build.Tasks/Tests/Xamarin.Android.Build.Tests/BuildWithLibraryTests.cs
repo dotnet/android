@@ -1260,5 +1260,24 @@ namespace MultiTfmLib
 				"The Android-TFM MyReceiver JCW should be compiled into classes.dex.");
 		}
 
+		[Test]
+		public void LocalTestServersBuildsForNetStandard ()
+		{
+			var library = new DotNetStandard {
+				ProjectName = "LocalTestServers",
+				Sdk = "Microsoft.NET.Sdk",
+				TargetFramework = "netstandard2.0",
+				Sources = {
+					new BuildItem.Source ("LocalTestServers.cs") {
+						TextContent = () => File.ReadAllText (Path.Combine (XABuildPaths.TopDirectory, "tests", "Mono.Android-Tests", "Mono.Android-Tests", "Xamarin.Android.Net", "LocalTestServers.cs")),
+					},
+				},
+			};
+			library.SetProperty ("LangVersion", "8.0");
+
+			using var builder = CreateDllBuilder (Path.Combine ("temp", TestName));
+			Assert.IsTrue (builder.Build (library), "The shared test server should build for netstandard2.0.");
+		}
+
 	}
 }

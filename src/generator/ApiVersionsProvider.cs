@@ -64,9 +64,6 @@ namespace Xamarin.AndroidTools.AnnotationSupport
 			public AndroidSdkVersion Deprecated;
 
 			string method;
-#if !GENERATOR
-			string [] args;
-#endif  // !GENERATOR
 
 			public string MethodName {
 				get {
@@ -77,11 +74,7 @@ namespace Xamarin.AndroidTools.AnnotationSupport
 			public string [] Args {
 				get {
 					EnsureParsed ();
-#if GENERATOR
-						throw new NotSupportedException ("Not supported as embedded in generator.");
-#else   // !GENERATOR
-					return args;
-#endif  // !GENERATOR
+					throw new NotSupportedException ("Not supported as embedded in generator.");
 				}
 			}
 
@@ -91,9 +84,6 @@ namespace Xamarin.AndroidTools.AnnotationSupport
 				int braceAt = Name.IndexOf ('(');
 				method = Name.Substring (0, braceAt);
 				string jni = Name.Substring (braceAt);
-#if !GENERATOR
-				args = ManagedTypeFinder.ParseJniMethodArgumentsSignature (jni);
-#endif
 			}
 		}
 

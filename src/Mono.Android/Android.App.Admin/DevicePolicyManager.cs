@@ -4,7 +4,6 @@ using Android.Content;
 
 namespace Android.App.Admin {
 
-#if ANDROID_8
 
 	public partial class DevicePolicyManager {
 
@@ -14,7 +13,6 @@ namespace Android.App.Admin {
 		}
 	}
 
-#endif
 
 }
 

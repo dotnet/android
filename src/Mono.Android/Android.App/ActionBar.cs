@@ -1,4 +1,3 @@
-#if ANDROID_11
 
 using System;
 
@@ -102,5 +101,3 @@ namespace Android.App {
 		}
 	}
 }
-
-#endif // ANDROID_11

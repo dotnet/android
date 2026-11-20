@@ -22,9 +22,6 @@
     <ProduceReferenceAssembly>true</ProduceReferenceAssembly>
     <MSBuildWarningsAsMessages>NU1702</MSBuildWarningsAsMessages>
   </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
-    <DefineConstants>DEBUG;$(DefineConstants)</DefineConstants>
-  </PropertyGroup>
   <Import Project="..\..\build-tools\trim-analyzers\trim-analyzers.props" />
   <PropertyGroup>
     <IntermediateOutputPath>$(BaseIntermediateOutputPath)$(Configuration)\$(TargetFramework.ToLowerInvariant())\</IntermediateOutputPath>

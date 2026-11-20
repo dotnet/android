@@ -15,11 +15,9 @@ using Xamarin.Android.Tools;
 using Mono.Cecil;
 
 
-#if MSBUILD
 using Microsoft.Android.Build.Tasks;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
-#endif
 
 namespace Xamarin.Android.Tasks
 {
@@ -148,7 +146,6 @@ namespace Xamarin.Android.Tasks
 
 		public static void LogWarning (object log, string msg, params object [] args)
 		{
-#if MSBUILD
 			var helper = log as TaskLoggingHelper;
 			if (helper != null) {
 				helper.LogWarning (msg, args);
@@ -159,12 +156,8 @@ namespace Xamarin.Android.Tasks
 				action (string.Format (msg, args));
 				return;
 			}
-#else
-			Console.Error.WriteLine (msg, args);
-#endif
 		}
 
-#if MSBUILD
 		public static bool IsAndroidAssembly (ITaskItem source)
 		{
 			string name = Path.GetFileNameWithoutExtension (source.ItemSpec);
@@ -205,7 +198,6 @@ namespace Xamarin.Android.Tasks
 			var reader = pe.GetMetadataReader ();
 			return HasMonoAndroidReference (reader);
 		}
-#endif
 
 		public static bool HasMonoAndroidReference (MetadataReader reader)
 		{
@@ -274,7 +266,6 @@ namespace Xamarin.Android.Tasks
 			}
 		}
 
-#if MSBUILD
 		public static bool IsFrameworkAssembly (ITaskItem assembly)
 		{
 			// Known assembly names: Mono.Android, Java.Interop, etc.
@@ -338,7 +329,6 @@ namespace Xamarin.Android.Tasks
 				return Files.CopyIfStreamChanged (writer.BaseStream, mapFile);
 			}
 		}
-#endif // MSBUILD
 
 		public static string [] GetProguardEnvironmentVaribles (string proguardHome)
 		{
@@ -351,7 +341,6 @@ namespace Xamarin.Android.Tasks
 				new string [] { proguardHomeVariable, "JAVA_TOOL_OPTIONS=-Dfile.encoding=UTF8" };
 		}
 
-#if MSBUILD
 		public static string TryGetAndroidJarPath (TaskLoggingHelper log, string platform, AndroidVersions supportedVersions, bool designTimeBuild = false, bool buildingInsideVisualStudio = false, string targetFramework = "", string androidSdkDirectory = "")
 		{
 			if (string.IsNullOrEmpty (androidSdkDirectory)) {
@@ -372,9 +361,7 @@ namespace Xamarin.Android.Tasks
 			}
 			return Path.Combine (platformPath, "android.jar");
 		}
-#endif // MSBUILD
 		static readonly char [] DirectorySeparators = new [] { Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar };
-#if MSBUILD
 		/// <summary>
 		/// Returns the relative path that should be used for an @(AndroidAsset) item
 		/// </summary>
@@ -386,7 +373,6 @@ namespace Xamarin.Android.Tasks
 			path = head.Length == path.Length ? path : path.Substring ((head.Length == 0 ? 0 : head.Length + 1) + assetsDirectory.Length).TrimStart (DirectorySeparators);
 			return path;
 		}
-#endif // MSBUILD
 
 
 
@@ -407,7 +393,6 @@ namespace Xamarin.Android.Tasks
 			return apiLevel;
 		}
 
-#if MSBUILD
 		public static string GetAssemblyRid (ITaskItem asmItem)
 		{
 			string? abi = asmItem.GetMetadata ("RuntimeIdentifier");
@@ -428,7 +413,6 @@ namespace Xamarin.Android.Tasks
 
 			return ret;
 		}
-#endif // MSBUILD
 
 		public static uint ZipAlignmentToPageSize (int alignment) => ZipAlignmentToMaskOrPageSize (alignment, needMask: false);
 
