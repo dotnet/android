@@ -1621,12 +1621,6 @@ using System.Runtime.Serialization.Json;
 				return;
 			}
 
-			if (testOnly && runtime == AndroidRuntime.NativeAOT) {
-				// TODO: NativeAOT Release deploys an app bundle through InstallApkSet, which does not pass
-				// bundletool's `--allow-test-only`, so installing a test-only bundle fails with INSTALL_FAILED_TEST_ONLY.
-				Assert.Ignore ("Installing a test-only app bundle fails with INSTALL_FAILED_TEST_ONLY.");
-			}
-
 			var proj = new XamarinAndroidApplicationProject (packageName: PackageUtils.MakePackageName (runtime)) {
 				IsRelease = isRelease,
 			};
