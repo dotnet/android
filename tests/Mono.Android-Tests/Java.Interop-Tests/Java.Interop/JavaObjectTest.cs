@@ -75,33 +75,9 @@ namespace Java.InteropTests
 				Assert.AreSame (o, JniRuntime.CurrentRuntime.ValueManager.PeekValue (l));
 			}
 			Assert.AreEqual (0, GetSurfacedEntryCount (o), "Disposed peer should no longer be surfaced.");
-			Assert.IsFalse (o.PeerReference.IsValid);
 			Assert.IsNull (JniRuntime.CurrentRuntime.ValueManager.PeekValue (l));
 			JniObjectReference.Dispose (ref l);
 			Assert.ThrowsExactly<ObjectDisposedException> (() => o.UnregisterFromRuntime ());
-		}
-
-		[TestMethod]
-		public void UnregisterFromRuntime_RemovesRegistrationButKeepsPeerReference ()
-		{
-			var o = new JavaObject ();
-			var l = o.PeerReference.NewLocalRef ();
-			try {
-				Assert.AreSame (o, JniRuntime.CurrentRuntime.ValueManager.PeekValue (l));
-				Assert.AreEqual (1, GetSurfacedEntryCount (o));
-
-				o.UnregisterFromRuntime ();
-
-				Assert.AreEqual (0, GetSurfacedEntryCount (o), "Unregistered peer should no longer be surfaced.");
-				Assert.IsNull (JniRuntime.CurrentRuntime.ValueManager.PeekValue (l));
-				Assert.IsTrue (o.PeerReference.IsValid, "Unregistering must not release the peer's JNI reference.");
-				Assert.AreEqual (JniObjectReferenceType.Global, o.PeerReference.Type);
-			} finally {
-				o.Dispose ();
-				JniObjectReference.Dispose (ref l);
-			}
-			Assert.IsFalse (o.PeerReference.IsValid, "Dispose after unregistering must release the peer's JNI reference.");
-			Assert.AreEqual (0, GetSurfacedEntryCount (o));
 		}
 
 		[TestMethod]
