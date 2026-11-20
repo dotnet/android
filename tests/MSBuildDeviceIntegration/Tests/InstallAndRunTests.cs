@@ -1333,17 +1333,9 @@ $@"button.ViewTreeObserver.GlobalLayout += Button_ViewTreeObserver_GlobalLayout;
 				return;
 			}
 
-			// TODO: fix NativeAOT builds. Despite the .so library being preset in the apk (and named correctly)
-			//       all the tests fail with one of:
-			//
-			//  java.lang.UnsatisfiedLinkError: dlopen failed: library "libテスト.so" not found
-			//  java.lang.UnsatisfiedLinkError: dlopen failed: library "lib中国.so" not found
-			//  java.lang.UnsatisfiedLinkError: dlopen failed: library "lib随机生成器.so" not found
-			//
-			// It might be an issue with the Android shared library loader or name encoding in the archive. It might
-			// be a good idea to limit .so names to ASCII.
 			if (runtime == AndroidRuntime.NativeAOT) {
-				Assert.Ignore ("NativeAOT doesn't work well with diacritics in the application library name");
+				// TODO: NativeAOT cannot load non-ASCII library names from split APKs.
+				Assert.Ignore ("NativeAOT fails to load non-ASCII application libraries.");
 			}
 
 			var rootPath = Path.Combine (Root, "temp", TestName);
@@ -1362,26 +1354,6 @@ $@"button.ViewTreeObserver.GlobalLayout += Button_ViewTreeObserver_GlobalLayout;
 			}
 		}
 
-		// TODO: fix/review it for CoreCLR. It currently fails with the following exception:
-		//
-		// System.TypeInitializationException: TypeInitialization_Type, SQLite.SQLiteConnection
-		//  ---> System.MissingMethodException: .ctor
-		//    at System.Runtime.InteropServices.Marshal.GetDelegateForFunctionPointerInternal(IntPtr, RuntimeType)
-		//    at SQLitePCL.SQLite3Provider_dynamic_cdecl.NativeMethods.Setup(IGetFunctionPointer)
-		//    at SQLitePCL.Batteries_V2.DoDynamic_cdecl(String, Int32)
-		//    Exception_EndOfInnerExceptionStack
-		//    at SQLite.SQLiteConnection..ctor(SQLiteConnectionString)
-		//    at SQLite.SQLiteConnectionPool.Entry..ctor(SQLiteConnectionString)
-		//    at SQLite.SQLiteConnectionPool.GetConnectionAndTransactionLock(SQLiteConnectionString, Object& )
-		//    at SQLite.SQLiteAsyncConnection.<>c__DisplayClass33_0`1.<WriteAsync>b__0()
-		//    at System.Threading.Tasks.Task`1.InnerInvoke()
-		//    at System.Threading.ExecutionContext.RunFromThreadPoolDispatchLoop(Thread, ExecutionContext, ContextCallback, Object)
-		// --- End of stack trace from previous location ---
-		//    at System.Threading.ExecutionContext.RunFromThreadPoolDispatchLoop(Thread, ExecutionContext, ContextCallback, Object)
-		//    at System.Threading.Tasks.Task.ExecuteWithThreadLocal(Task&, Thread )
-		// --- End of stack trace from previous location ---
-		//    at LinkTestLib.Bug35195.AttemptCreateTable()
-		//
 		[Test]
 		public void CustomLinkDescriptionPreserve (
 		  [Values (AndroidLinkMode.SdkOnly, AndroidLinkMode.Full)] AndroidLinkMode linkMode,
@@ -1393,16 +1365,13 @@ $@"button.ViewTreeObserver.GlobalLayout += Button_ViewTreeObserver_GlobalLayout;
 				return;
 			}
 
-			if (runtime == AndroidRuntime.CoreCLR) {
-				Assert.Ignore ("Currently broken on CoreCLR");
+			if (linkMode == AndroidLinkMode.Full && runtime == AndroidRuntime.CoreCLR) {
+				// TODO: SQLite's dynamic provider throws MissingMethodException (.ctor) with full trimming.
+				Assert.Ignore ("SQLite's dynamic provider fails under CoreCLR full trimming.");
 			}
-
-			// TODO: NativeAOT perhaps should work here (ignoring all the MonoAOT settings?), but for now it fails with
-			//
-			//  Microsoft.NET.Sdk.FrameworkReferenceResolution.targets(120,5): error NETSDK1207: Ahead-of-time compilation is not supported for the target framework.
-			//
-			if (runtime == AndroidRuntime.NativeAOT) {
-				Assert.Ignore ("NativeAOT is currently broken here");
+			if (linkMode == AndroidLinkMode.Full && runtime == AndroidRuntime.NativeAOT) {
+				// TODO: SQLite cannot see the TodoTask columns with NativeAOT full trimming.
+				Assert.Ignore ("SQLite cannot find TodoTask columns under NativeAOT full trimming.");
 			}
 
 			var lib1 = new XamarinAndroidLibraryProject () {
@@ -1466,7 +1435,6 @@ namespace Library1 {
 					},
 				},
 			};
-			lib2.SetRuntime (runtime);
 			lib2.SetProperty ("LangVersion", "8.0");
 
 			var proj = new XamarinFormsAndroidApplicationProject (packageName: PackageUtils.MakePackageName (runtime)) {
@@ -2076,11 +2044,9 @@ namespace Styleable.Library {
 				return;
 			}
 
-			// TODO: fix for NativeAOT. Currently fails with:
-			//
-			//  DOTNET  : FATAL UNHANDLED EXCEPTION: System.InvalidCastException: Unable to convert instance of type 'AndroidX.AppCompat.Widget.AppCompatImageButton' to type 'AndroidX.AppCompat.Widget.Toolbar'.
 			if (runtime == AndroidRuntime.NativeAOT) {
-				Assert.Ignore ("NativeAOT type mapping fails");
+				// TODO: Xamarin.Forms startup cannot find the ResourcesProvider constructor under NativeAOT.
+				Assert.Ignore ("NativeAOT Xamarin.Forms startup throws MissingMethodException.");
 			}
 
 			string packageName = PackageUtils.MakePackageName (runtime);
@@ -2382,7 +2348,6 @@ namespace UnnamedProject
 
 			proj.Imports.Add (CreateAndroidTargetingPackAssertion (apiLevel));
 
-			// TODO: update on new minor API levels to use an introduced minor API
 			proj.MainActivity = proj.DefaultMainActivity
 				.Replace ("//${AFTER_ONCREATE}", """
 				// The value `ignore` is not used.

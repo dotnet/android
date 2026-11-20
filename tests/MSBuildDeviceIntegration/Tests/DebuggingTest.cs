@@ -65,16 +65,9 @@ namespace Xamarin.Android.Build.Tests
 		{
 			var (isRelease, runtime) = configuration;
 
-			// TODO: NativeAOT fails with the following exception:
-			//
-			// FATAL UNHANDLED EXCEPTION: System.InvalidCastException: Unable to convert instance of type 'AndroidX.AppCompat.Widget.AppCompatImageButton' to type 'AndroidX.AppCompat.Widget.Toolbar'.
-			//    at Java.Interop.JavaObjectExtensions._JavaCast[TResult](IJavaObject) + 0x190
-			//    at Android.Runtime.Extensions.JavaCast[TResult](IJavaObject) + 0x18
-			//    at Xamarin.Forms.Platform.Android.FormsAppCompatActivity.OnCreate(Bundle, ActivationFlags) + 0x5bc
-			//    at UnnamedProject.MainActivity.OnCreate(Bundle savedInstanceState) + 0x4c
-			//    at Android.App.Activity.n_OnCreate_Landroid_os_Bundle_(IntPtr jnienv, IntPtr native__this, IntPtr native_savedInstanceState) + 0x7c
 			if (runtime == AndroidRuntime.NativeAOT) {
-				Assert.Ignore ("NativeAOT currently crashes with an exception.");
+				// TODO: Xamarin.Forms startup cannot find the ResourcesProvider constructor under NativeAOT.
+				Assert.Ignore ("NativeAOT Xamarin.Forms startup throws MissingMethodException.");
 			}
 
 			SwitchUser ();
