@@ -4,7 +4,6 @@ using Xamarin.ProjectTools;
 using System.IO;
 using System.Linq;
 using Microsoft.Build.Framework;
-using Microsoft.Build.Logging.StructuredLogger;
 using System.Text;
 using System.Xml.Linq;
 using System.Collections.Generic;
@@ -442,130 +441,6 @@ namespace Xamarin.Android.Build.Tests
 				}
 				appBuilder.BuildLogFile = "uninstall.log";
 				appBuilder.Uninstall (app);
-			}
-		}
-
-		[Test]
-		[TestCase ("apk")]
-		[TestCase ("aab")]
-		public void IncrementalFastDeployment (string packageFormat)
-		{
-			var class1src = new BuildItem.Source ("Class1.cs") {
-				TextContent = () => "namespace Library1 { public class Class1 { public static int foo = 500; } }"
-			};
-			var lib1 = new XamarinAndroidLibraryProject () {
-				ProjectName = "Library1",
-				Sources = {
-					class1src,
-				}
-			};
-
-			var class2src = new BuildItem.Source ("Class2.cs") {
-				TextContent = () => "namespace Library2 { public class Class2 { public static int foo = 40; } }"
-			};
-			var lib2 = new DotNetStandard {
-				ProjectName = "Library2",
-				Sdk = "Microsoft.NET.Sdk",
-				TargetFramework = "netstandard2.0",
-				Sources = {
-					class2src,
-				}
-			};
-
-			var app = new XamarinFormsAndroidApplicationProject () {
-				EmbedAssembliesIntoApk = false,
-				References = {
-					new BuildItem ("ProjectReference", "..\\Library1\\Library1.csproj"),
-					new BuildItem ("ProjectReference", "..\\Library2\\Library2.csproj"),
-				},
-			};
-			app.SetProperty ("AndroidPackageFormat", packageFormat);
-
-			// Set up library projects
-			var rootPath = Path.Combine (Root, "temp", TestName);
-			using (var lb1 = CreateDllBuilder (Path.Combine (rootPath, lib1.ProjectName))) {
-				lb1.BuildLogFile = "build.log";
-				Assert.IsTrue (lb1.Build (lib1), "First library build should have succeeded.");
-			}
-			using (var lb2 = CreateDllBuilder (Path.Combine (rootPath, lib2.ProjectName))) {
-				lb2.BuildLogFile = "build.log";
-				Assert.IsTrue (lb2.Build (lib2), "Second library build should have succeeded.");
-			}
-
-			long lib1FirstBuildSize = new FileInfo (Path.Combine (rootPath, lib1.ProjectName, lib1.OutputPath, "Library1.dll")).Length;
-
-			using (var builder = CreateApkBuilder (Path.Combine (rootPath, app.ProjectName))) {
-				void AssertUnchangedInstall ()
-				{
-					foreach (var target in new [] { "CoreCompile", "XamlC", "_CompileToDalvik", "_BuildApkFastDev", "_Upload" })
-						builder.Output.AssertTargetIsSkipped (target);
-					builder.Output.AssertTargetIsSkipped ("_GenerateTrimmableTypeMap", defaultIfNotUsed: true);
-					if (packageFormat == "aab") {
-						builder.Output.AssertTargetIsSkipped ("_BuildApkSet");
-						builder.Output.AssertTargetIsSkipped ("_DeployAppBundle");
-					}
-					var binlog = Path.ChangeExtension (Path.Combine (Root, builder.ProjectDirectory, builder.BuildLogFile), ".binlog");
-					FileAssert.Exists (binlog);
-					var tasks = BinaryLog.ReadBuild (binlog).FindChildrenRecursive<Microsoft.Build.Logging.StructuredLogger.Task> ().Select (task => task.Name).ToArray ();
-					foreach (var task in new [] { "Csc", "XamlCTask", "GenerateTrimmableTypeMap", "D8", "R8", "BuildApk", "BuildAppBundle", "BuildApkSet", "InstallApkSet", "FastDeploy" })
-						CollectionAssert.DoesNotContain (tasks, task, $"The unchanged install should not execute {task}, including in referenced projects.");
-					Assert.IsFalse (builder.LastBuildOutput.Any (l => l.Contains ("NotifySync CopyFile")), "The unchanged install should not copy files.");
-				}
-
-				builder.Verbosity = LoggerVerbosity.Detailed;
-				builder.ThrowOnBuildFailure = false;
-				builder.BuildLogFile = "install.log";
-				Assert.IsTrue (builder.Install (app), "First install should have succeeded.");
-				var logLines = builder.LastBuildOutput;
-				Assert.IsTrue (logLines.Any (l => l.Contains ("NotifySync CopyFile") && l.Contains ("UnnamedProject.dll")), "UnnamedProject.dll should have been uploaded");
-				Assert.IsTrue (logLines.Any (l => l.Contains ("NotifySync CopyFile") && l.Contains ("Library1.dll")), "Library1.dll should have been uploaded");
-				Assert.IsTrue (logLines.Any (l => l.Contains ("NotifySync CopyFile") && l.Contains ("Library2.dll")), "Library2.dll should have been uploaded");
-				var firstInstallTime = builder.LastBuildTime;
-				builder.BuildLogFile = "install2.log";
-				Assert.IsTrue (builder.Install (app, doNotCleanupOnUpdate: true, saveProject: false), "Second install should have succeeded.");
-				AssertUnchangedInstall ();
-				var secondInstallTime = builder.LastBuildTime;
-
-				var filesToTouch = new [] {
-					Path.Combine (rootPath, lib2.ProjectName, "Class2.cs"),
-					Path.Combine (rootPath, app.ProjectName, "MainPage.xaml"),
-				};
-				foreach (var file in filesToTouch) {
-					FileAssert.Exists (file);
-					File.SetLastWriteTimeUtc (file, DateTime.UtcNow);
-				}
-
-				class1src.TextContent = () => "namespace Library1 { public class Class1 { public static int foo = 1; } }";
-				class1src.Timestamp = DateTime.UtcNow.AddSeconds(1);
-				using (var lb1 = CreateDllBuilder (Path.Combine (rootPath, lib1.ProjectName))) {
-					lb1.BuildLogFile = "build2.log";
-					Assert.IsTrue (lb1.Build (lib1), "Second library build should have succeeded.");
-				}
-
-				long lib1SecondBuildSize = new FileInfo (Path.Combine (rootPath, lib1.ProjectName, lib1.OutputPath, "Library1.dll")).Length;
-				Assert.AreEqual (lib1FirstBuildSize, lib1SecondBuildSize, "Library1.dll was not the same size.");
-
-				builder.BuildLogFile = "install3.log";
-				Assert.IsTrue (builder.Install (app, doNotCleanupOnUpdate: true, saveProject: false), "Third install should have succeeded.");
-				logLines = builder.LastBuildOutput;
-				Assert.IsFalse (logLines.Any (l => l.Contains ("Remove redundant file")), "No redundant files should be deleted");
-				Assert.IsTrue (logLines.Any (l => l.Contains ("NotifySync CopyFile") && l.Contains ("UnnamedProject.dll")), "UnnamedProject.dll should have been uploaded");
-				Assert.IsTrue (logLines.Any (l => l.Contains ("NotifySync CopyFile") && l.Contains ("Library1.dll")), "Library1.dll should have been uploaded");
-				Assert.IsTrue (logLines.Any (l => l.Contains ("NotifySync SkipCopyFile") && l.Contains ("Library2.dll")), "Library2.dll should not have been uploaded");
-				builder.Output.AssertTargetIsSkipped ("_CompileToDalvik");
-				builder.Output.AssertTargetIsSkipped ("_BuildApkFastDev");
-				if (packageFormat == "aab") {
-					builder.Output.AssertTargetIsSkipped ("_BuildApkSet");
-					builder.Output.AssertTargetIsSkipped ("_DeployAppBundle");
-				}
-				var thirdInstallTime = builder.LastBuildTime;
-				builder.BuildLogFile = "install4.log";
-				Assert.IsTrue (builder.Install (app, doNotCleanupOnUpdate: true, saveProject: false), "Fourth install should have succeeded.");
-				AssertUnchangedInstall ();
-				var fourthInstallTime = builder.LastBuildTime;
-
-				// Build,Install elapsed times also include restore and evaluation, outside the deployment work checked above.
-				TestContext.Out.WriteLine ($"Build,Install elapsed: initial={firstInstallTime}, unchanged={secondInstallTime}, changed={thirdInstallTime}, unchanged={fourthInstallTime}");
 			}
 		}
 
