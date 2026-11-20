@@ -57,7 +57,12 @@ namespace Xamarin.Android.Build.Tests
 			Directory.CreateDirectory (directory);
 			bool windows = OperatingSystem.IsWindows ();
 			string tool = Path.Combine (directory, windows ? "keytool.cmd" : "keytool");
-			File.WriteAllText (tool, windows ? "@ping -n 60 127.0.0.1 > nul\r\n" : "#!/bin/sh\nsleep 60\n");
+			string started = Path.Combine (directory, "keytool-started");
+			File.Delete (started);
+			string quotedStarted = windows ? "\"%~dp0keytool-started\"" : $"'{started.Replace ("'", "'\\''")}'";
+			File.WriteAllText (tool, windows
+				? $"@echo started > {quotedStarted}\r\n@ping -n 60 127.0.0.1 > nul\r\n"
+				: $"#!/bin/sh\nprintf started > {quotedStarted}\nsleep 60\n");
 			if (!windows)
 				File.SetUnixFileMode (tool, UnixFileMode.UserRead | UnixFileMode.UserWrite | UnixFileMode.UserExecute);
 
@@ -65,10 +70,11 @@ namespace Xamarin.Android.Build.Tests
 			task.ToolPath = directory;
 			task.ToolExe = Path.GetFileName (tool);
 			var execute = Task.Run (task.Execute);
-			Thread.Sleep (1000);
+			bool toolStarted = SpinWait.SpinUntil (() => File.Exists (started) || execute.IsCompleted, TimeSpan.FromSeconds (30)) && File.Exists (started);
 			task.Cancel ();
 
 			Assert.IsTrue (execute.Wait (TimeSpan.FromSeconds (30)), "Cancel should stop keytool.");
+			Assert.IsTrue (toolStarted, "Keytool should start before it is canceled.");
 			Assert.IsFalse (execute.Result, "A canceled task should fail.");
 		}
 	}
