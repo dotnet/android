@@ -319,7 +319,7 @@ namespace Java.Interop.Tools.JavaTypeSystem
 
 		// class-parse attributes for Kotlin value classes and default arguments that the generator reads.
 		internal static readonly string [] KotlinClassAttributes = { "kotlin-inline-class", "kotlin-inline-class-underlying-jni-type", "kotlin-inline-class-has-init" };
-		internal static readonly string [] KotlinMethodAttributes = { "managedName", "kotlin-inline-class-return-jni-type", "kotlin-default-jni-signature", "kotlin-default-owner", "kotlin-default-parameters" };
+		internal static readonly string [] KotlinMethodAttributes = { "managedName", "kotlin-inline-class-return-jni-type", "kotlin-default-jni-signature", "kotlin-default-parameters" };
 		internal static readonly string [] KotlinParameterAttributes = { "kotlin-inline-class-jni-type" };
 
 		static void CopyAttributes (XElement element, Dictionary<string, string> bag, string [] names)

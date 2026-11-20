@@ -454,8 +454,6 @@ namespace Xamarin.Android.Tools.Bytecode {
 			if (method.KotlinDefaultJniSignature is null || method.KotlinDefaultParameters is null)
 				yield break;
 			yield return new XAttribute ("kotlin-default-jni-signature", method.KotlinDefaultJniSignature);
-			if (method.KotlinDefaultOwner != null)
-				yield return new XAttribute ("kotlin-default-owner", method.KotlinDefaultOwner);
 			yield return new XAttribute ("kotlin-default-parameters", string.Join (",", method.KotlinDefaultParameters));
 		}
 

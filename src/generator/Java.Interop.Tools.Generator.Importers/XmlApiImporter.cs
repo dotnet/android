@@ -453,7 +453,6 @@ namespace MonoDroid.Generation
 			if (string.IsNullOrEmpty (signature) || string.IsNullOrEmpty (parameters))
 				return;
 			method.KotlinDefaultJniSignature = signature;
-			method.KotlinDefaultOwner = elem.Attribute ("kotlin-default-owner")?.Value;
 			method.KotlinDefaultParameters = parameters.Split (',').Select (p => int.Parse (p, System.Globalization.CultureInfo.InvariantCulture)).ToArray ();
 		}
 

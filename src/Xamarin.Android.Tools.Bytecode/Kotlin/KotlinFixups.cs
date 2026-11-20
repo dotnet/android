@@ -411,24 +411,21 @@ namespace Xamarin.Android.Tools.Bytecode
 			var close = method.Descriptor.IndexOf (')');
 			var parameters = method.Descriptor.Substring (1, close - 1);
 
+			string helper_name, helper_signature;
 			if (method.IsConstructor) {
-				var expected = "(" + parameters + masks + "Lkotlin/jvm/internal/DefaultConstructorMarker;)V";
-				if (!owner.Methods.Any (m => m.IsConstructor && m.Descriptor == expected))
-					return;
-				method.KotlinDefaultJniSignature = expected;
-				method.KotlinDefaultParameters = defaults;
-				return;
+				helper_name = "<init>";
+				helper_signature = "(" + parameters + masks + "Lkotlin/jvm/internal/DefaultConstructorMarker;)V";
+			} else {
+				var receiver = method.AccessFlags.HasFlag (MethodAccessFlags.Static) ? "" : owner.FullJniName;
+				helper_name = method.Name + "$default";
+				helper_signature = "(" + receiver + parameters + masks + "Ljava/lang/Object;)" + method.Descriptor.Substring (close + 1);
 			}
 
-			var receiver = method.AccessFlags.HasFlag (MethodAccessFlags.Static) ? "" : owner.FullJniName;
-			var helper_signature = "(" + receiver + parameters + masks + "Ljava/lang/Object;)" + method.Descriptor.Substring (close + 1);
-			var helper_name = method.Name + "$default";
 			// Older Kotlin puts interface helpers only on `$DefaultImpls`. That class has no
 			// managed peer, so R8 can remove it; do not use it.
-			if (!owner.Methods.Any (m => m.Name == helper_name && m.Descriptor == helper_signature && m.AccessFlags.HasFlag (MethodAccessFlags.Static)))
+			if (!owner.Methods.Any (m => m.Name == helper_name && m.Descriptor == helper_signature))
 				return;
 			method.KotlinDefaultJniSignature = helper_signature;
-			method.KotlinDefaultOwner = owner.ThisClass.Name.Value;
 			method.KotlinDefaultParameters = defaults;
 		}
 

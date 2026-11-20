@@ -54,11 +54,9 @@ namespace Xamarin.Android.Tools.Bytecode {
 
 		public  bool                KotlinReturnNotNull { get; set; }
 		// Kotlin default arguments: JNI signature of the `$default` helper (or of the
-		// `DefaultConstructorMarker` constructor), the JNI name of the class that declares
-		// the helper (null for constructors), and the indexes of the parameters that
-		// declare a default value.
+		// `DefaultConstructorMarker` constructor) on the declaring type, and the indexes
+		// of the parameters that declare a default value.
 		public  string?             KotlinDefaultJniSignature { get; set; }
-		public  string?             KotlinDefaultOwner { get; set; }
 		public  int[]?              KotlinDefaultParameters { get; set; }
 
 		public MethodInfo (ConstantPool constantPool, ClassFile declaringType, Stream stream)

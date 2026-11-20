@@ -51,7 +51,6 @@ namespace generatortests
 			// does not hide the inherited Send (string, int).
 			StringAssert.Contains ("void Send (string message, int retries, bool urgent);", output);
 			StringAssert.DoesNotContain ("send$default.(Lxat/bytecode/tests/DefaultArgumentsChild;", output);
-			StringAssert.Contains ("_members_kotlin_default_xat_bytecode_tests_DefaultArgumentsInterface.StaticMethods.InvokeVoidMethod (__id, __args);", output);
 		}
 	}
 }
