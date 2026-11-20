@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Text.RegularExpressions;
 using System.Xml.Linq;
 using Java.Interop.Tools.Generator;
 using MonoDroid.Generation;
@@ -111,6 +112,11 @@ namespace generatortests
 
 			// JavaList<T> can't hold a struct, so `List<MyColor>` keeps the boxed Java objects.
 			StringAssert.Contains ("IList<Java.Lang.Object> Colors (System.Collections.Generic.IList<Java.Lang.Object> colors)", output);
+
+			// @JvmName: C# uses the Kotlin name, and JNI uses the @JvmName.
+			StringAssert.IsMatch (@"Register \(""computeUInt"", ""\(I\)V"", """"\)\]\s+public void Compute \(uint x\)", output);
+			StringAssert.IsMatch (@"Register \(""compute"", ""\(I\)V"", """"\)\]\s+public void Compute \(int x\)", output);
+			StringAssert.IsMatch (@"Register \(""tintColor"", ""\(J\)V"", """"\)\]\s+public void TintWith \(Xat.Bytecode.Tests.MyColor color\)", output);
 		}
 
 		[Test]
@@ -123,29 +129,29 @@ namespace generatortests
 				  </package>
 				  <package name='com.example' jni-name='com/example'>
 				    <class abstract='false' deprecated='not deprecated' extends='java.lang.Object' extends-generic-aware='java.lang.Object' jni-extends='Ljava/lang/Object;' final='true' name='Outer' static='false' visibility='public' jni-signature='Lcom/example/Outer;'>
-				      <field deprecated='not deprecated' final='false' name='color' jni-signature='Lcom/example/Outer$Value;' static='false' transient='false' type='com.example.Outer.Value' visibility='public' volatile='false' />
-				      <method abstract='false' deprecated='not deprecated' final='true' name='maybe' jni-signature='(Lcom/example/Outer$Value;)Lcom/example/Outer$Value;' native='false' return='com.example.Outer.Value' jni-return='Lcom/example/Outer$Value;' static='false' synchronized='false' visibility='public'>
-				        <parameter name='value' type='com.example.Outer.Value' jni-type='Lcom/example/Outer$Value;' />
+				      <field deprecated='not deprecated' final='false' name='color' jni-signature='Lcom/example/Outer$Inner;' static='false' transient='false' type='com.example.Outer.Inner' visibility='public' volatile='false' />
+				      <method abstract='false' deprecated='not deprecated' final='true' name='maybe' jni-signature='(Lcom/example/Outer$Inner;)Lcom/example/Outer$Inner;' native='false' return='com.example.Outer.Inner' jni-return='Lcom/example/Outer$Inner;' static='false' synchronized='false' visibility='public'>
+				        <parameter name='value' type='com.example.Outer.Inner' jni-type='Lcom/example/Outer$Inner;' />
 				      </method>
-				      <method abstract='false' deprecated='not deprecated' final='true' name='all' jni-signature='([Lcom/example/Outer$Value;)V' native='false' return='void' jni-return='V' static='false' synchronized='false' visibility='public'>
-				        <parameter name='values' type='com.example.Outer.Value[]' jni-type='[Lcom/example/Outer$Value;' />
+				      <method abstract='false' deprecated='not deprecated' final='true' name='all' jni-signature='([Lcom/example/Outer$Inner;)V' native='false' return='void' jni-return='V' static='false' synchronized='false' visibility='public'>
+				        <parameter name='values' type='com.example.Outer.Inner[]' jni-type='[Lcom/example/Outer$Inner;' />
 				      </method>
-				      <method abstract='false' deprecated='not deprecated' final='true' name='unsigned' jni-signature='()I' native='false' return='uint' jni-return='I' static='false' synchronized='false' visibility='public' kotlin-inline-class-return-jni-type='Lcom/example/Outer$Value;' />
-				      <method abstract='false' deprecated='not deprecated' final='true' name='companion' jni-signature='()Lcom/example/Outer$Value$Companion;' native='false' return='com.example.Outer.Value.Companion' jni-return='Lcom/example/Outer$Value$Companion;' static='false' synchronized='false' visibility='public' />
+				      <method abstract='false' deprecated='not deprecated' final='true' name='unsigned' jni-signature='()I' native='false' return='uint' jni-return='I' static='false' synchronized='false' visibility='public' kotlin-inline-class-return-jni-type='Lcom/example/Outer$Inner;' />
+				      <method abstract='false' deprecated='not deprecated' final='true' name='companion' jni-signature='()Lcom/example/Outer$Inner$Companion;' native='false' return='com.example.Outer.Inner.Companion' jni-return='Lcom/example/Outer$Inner$Companion;' static='false' synchronized='false' visibility='public' />
 				    </class>
-				    <class abstract='false' deprecated='not deprecated' extends='java.lang.Object' extends-generic-aware='java.lang.Object' jni-extends='Ljava/lang/Object;' final='true' name='Outer.Value' static='true' visibility='public' jni-signature='Lcom/example/Outer$Value;' kotlin-inline-class='true' kotlin-inline-class-underlying-jni-type='I' />
-				    <class abstract='false' deprecated='not deprecated' extends='java.lang.Object' extends-generic-aware='java.lang.Object' jni-extends='Ljava/lang/Object;' final='true' name='Outer.Value.Companion' static='true' visibility='public' jni-signature='Lcom/example/Outer$Value$Companion;' />
+				    <class abstract='false' deprecated='not deprecated' extends='java.lang.Object' extends-generic-aware='java.lang.Object' jni-extends='Ljava/lang/Object;' final='true' name='Outer.Inner' static='true' visibility='public' jni-signature='Lcom/example/Outer$Inner;' kotlin-inline-class='true' kotlin-inline-class-underlying-jni-type='I' />
+				    <class abstract='false' deprecated='not deprecated' extends='java.lang.Object' extends-generic-aware='java.lang.Object' jni-extends='Ljava/lang/Object;' final='true' name='Outer.Inner.Companion' static='true' visibility='public' jni-signature='Lcom/example/Outer$Inner$Companion;' />
 				  </package>
 				</api>
 				""", out _, nullableReferenceTypes: true);
 
 			// A nested value class is a struct too.
-			StringAssert.Contains ("readonly partial struct Value", output);
-			StringAssert.Contains ("Com.Example.Outer.Value? Maybe (Com.Example.Outer.Value? value)", output);
+			StringAssert.Contains ("readonly partial struct Inner", output);
+			StringAssert.Contains ("Com.Example.Outer.Inner? Maybe (Com.Example.Outer.Inner? value)", output);
 
 			// A Java field of a value-class type is marshaled through the boxing helpers.
-			StringAssert.Contains ("Com.Example.Outer.Value.FromJniHandle (__v.Handle, JniHandleOwnership.TransferLocalRef);", output);
-			StringAssert.DoesNotContain ("GetObject<Com.Example.Outer.Value>", output);
+			StringAssert.Contains ("Com.Example.Outer.Inner.FromJniHandle (__v.Handle, JniHandleOwnership.TransferLocalRef);", output);
+			StringAssert.DoesNotContain ("GetObject<Com.Example.Outer.Inner>", output);
 
 			// Arrays of value classes can't be marshaled, so the member is skipped.
 			StringAssert.DoesNotContain (" All (", output);
@@ -155,6 +161,50 @@ namespace generatortests
 
 			// The struct writer emits no nested types, so members that use them are skipped.
 			StringAssert.DoesNotContain ("Companion", output);
+
+			AssertCompiles (output);
+		}
+
+		[Test]
+		public void GeneratorFallsBackWhenKotlinInlineClassCannotBeProjected ()
+		{
+			var output = GenerateCSharp ("""
+				<api>
+				  <package name='java.lang' jni-name='java/lang'>
+				    <class abstract='false' deprecated='not deprecated' final='false' name='Object' static='false' visibility='public' jni-signature='Ljava/lang/Object;' />
+				  </package>
+				  <package name='com.example' jni-name='com/example'>
+				    <class abstract='false' deprecated='not deprecated' extends='java.lang.Object' extends-generic-aware='java.lang.Object' jni-extends='Ljava/lang/Object;' final='true' name='Value' static='false' visibility='public' jni-signature='Lcom/example/Value;' kotlin-inline-class='true' kotlin-inline-class-underlying-jni-type='I' />
+				    <class abstract='false' deprecated='not deprecated' extends='java.lang.Object' extends-generic-aware='java.lang.Object' jni-extends='Ljava/lang/Object;' final='true' name='Color' static='false' visibility='public' jni-signature='Lcom/example/Color;' />
+				    <class abstract='false' deprecated='not deprecated' extends='java.lang.Object' extends-generic-aware='java.lang.Object' jni-extends='Ljava/lang/Object;' final='true' name='Alpha' static='false' visibility='public' jni-signature='Lcom/example/Alpha;' />
+				    <class abstract='false' deprecated='not deprecated' extends='java.lang.Object' extends-generic-aware='java.lang.Object' jni-extends='Ljava/lang/Object;' final='true' name='Widgets' static='false' visibility='public' jni-signature='Lcom/example/Widgets;'>
+				      <method abstract='false' deprecated='not deprecated' final='true' name='tint-aaaaaaa' jni-signature='(J)V' native='false' return='void' jni-return='V' static='false' synchronized='false' visibility='public'>
+				        <parameter name='color' type='long' jni-type='J' kotlin-inline-class-jni-type='Lcom/example/Color;' />
+				      </method>
+				      <method abstract='false' deprecated='not deprecated' final='true' name='tint-bbbbbbb' jni-signature='(J)V' native='false' return='void' jni-return='V' static='false' synchronized='false' visibility='public'>
+				        <parameter name='alpha' type='long' jni-type='J' kotlin-inline-class-jni-type='Lcom/example/Alpha;' />
+				      </method>
+				    </class>
+				  </package>
+				</api>
+				""", out _, nullableReferenceTypes: true);
+
+			// A struct named `Value` cannot have a `Value` field (CS0542), so it stays a class.
+			StringAssert.Contains ("public sealed partial class Value", output);
+
+			// `Color` and `Alpha` are classes, as from an older binding, so the parameters stay
+			// `long`, and the colliding mangled overload is removed as without value classes.
+			Assert.AreEqual (1, Regex.Matches (output, @"void Tint \(long").Count, output);
+
+			AssertCompiles (output);
+		}
+
+		// The test output has no file headers, so add what generated files start with.
+		static void AssertCompiles (string output)
+		{
+			var source = "#nullable enable\nusing System;\nusing Android.Runtime;\nusing Java.Interop;\nnamespace Com.Example {\n" + output + "\n}";
+			Compiler.CompileSources (new [] { source }, out bool hasErrors, out string errors);
+			Assert.IsFalse (hasErrors, errors);
 		}
 
 		// Run the kotlin-gradle .class files through KotlinFixups and
@@ -247,7 +297,7 @@ namespace generatortests
 			// (including RemoveCollidingSiblings) before Validate. Without
 			// this, the test would mask the interaction between Phase 1's
 			// mangled-name dedup and Phase 2's inline-class projection.
-			Java.Interop.Tools.Generator.Transformation.KotlinFixups.Fixup (gens);
+			Java.Interop.Tools.Generator.Transformation.KotlinFixups.Fixup (gens, options);
 
 			foreach (var gen in gens)
 				gen.Validate (options, new GenericParameterDefinitionList (), generator.Context);

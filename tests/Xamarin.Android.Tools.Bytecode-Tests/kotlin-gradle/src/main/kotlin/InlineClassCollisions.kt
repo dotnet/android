@@ -51,6 +51,13 @@ object Widgets {
 
     // Extension receiver typed as a value class.
     fun MyDp.twice(): MyDp = MyDp(value * 2)
+
+    // @JvmName replaces the mangled JVM name; C# uses the Kotlin name.
+    @JvmName("computeUInt")
+    fun compute(x: UInt) { }
+    fun compute(x: Int) { }
+    @JvmName("tintColor")
+    fun tintWith(color: MyColor) { }
 }
 
 // Java calls back into C# with a boxed value class.

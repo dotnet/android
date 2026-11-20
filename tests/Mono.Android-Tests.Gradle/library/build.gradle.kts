@@ -4,9 +4,9 @@ plugins {
 
 android {
     namespace = "net.dot.android.test"
-    compileSdk = 36
+    compileSdk = 37
 
     defaultConfig {
-        minSdk = 21
+        minSdk = 24
     }
 }
