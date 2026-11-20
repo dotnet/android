@@ -145,17 +145,20 @@ public class NativeLibraryLoadTests : DeviceTest
 		proj.SetRuntimeIdentifiers ([DeviceAbi]);
 		proj.SetDefaultTargetDevice ();
 		proj.MainActivity = proj.DefaultMainActivity
-			.Replace ("//${USINGS}", "using System;\nusing System.Runtime.InteropServices;\nusing System.Threading.Tasks;")
+			.Replace ("//${USINGS}", "using System;\nusing System.Runtime.InteropServices;\nusing System.Threading;\nusing System.Threading.Tasks;")
 			.Replace (
 				"//${AFTER_ONCREATE}",
 				$$"""
 			// Blocking the main thread here verifies CoreCLR directly loads libraries missing from the
 			// build-time DSO cache instead of dispatching System.loadLibrary to the main thread.
+			var mainThread = Thread.CurrentThread;
 			var loadTask = Task.Run (() => {
-				System.Threading.Thread.Sleep (TimeSpan.FromMilliseconds (250));
+				if (!SpinWait.SpinUntil (() => (mainThread.ThreadState & ThreadState.WaitSleepJoin) != 0, TimeSpan.FromSeconds (20))) {
+					throw new InvalidOperationException ("The main thread did not enter the wait.");
+				}
 				return NativeMethods.GetError ();
 			});
-			if (!loadTask.Wait (TimeSpan.FromSeconds (2))) {
+			if (!loadTask.Wait (TimeSpan.FromSeconds (30))) {
 				Android.Util.Log.Error ("NativeLibraryLoadTest", "{{timeoutMessage}}");
 				return;
 			}
@@ -184,7 +187,7 @@ public class NativeLibraryLoadTests : DeviceTest
 				return loadTimedOut || line.Contains (completedMessage, StringComparison.Ordinal);
 			},
 			Path.Combine (Root, builder.ProjectDirectory, "unknown-system-library-load.log"),
-			timeout: 30,
+			timeout: 60,
 			onMonitoringStarted: () => StartActivityAndAssert (proj)
 		);
 
@@ -439,9 +442,6 @@ public class NativeLibraryLoadTests : DeviceTest
 							if (NativeMethods.ConcurrentOuterException != null) {
 								throw NativeMethods.ConcurrentOuterException;
 							}
-							if (NativeMethods.ConcurrentCompletedDuringOnLoad) {
-								throw new InvalidOperationException ("Concurrent reader observed a provisionally published handle before JNI_OnLoad finished.");
-							}
 							if (NativeMethods.CompetingInnerThread == null || !NativeMethods.CompetingInnerThread.Join (TimeSpan.FromSeconds (5))) {
 								throw new TimeoutException ("Competing inner reader thread did not finish.");
 							}
@@ -469,14 +469,14 @@ public class NativeLibraryLoadTests : DeviceTest
 								throw new InvalidOperationException ("Subsequent P/Invoke to library with failing JNI_OnLoad should throw DllNotFoundException.");
 							}
 						} catch (Exception ex) {
-							workerException = ex;
+							workerException = NativeMethods.CallbackError == null ? ex : new InvalidOperationException (NativeMethods.CallbackError, ex);
 						}
 					}) {
 						IsBackground = true,
 						Name = "WorkerJniLoader",
 					};
 					worker.Start ();
-					if (!worker.Join (TimeSpan.FromSeconds (10))) {
+					if (!worker.Join (TimeSpan.FromSeconds (60))) {
 						Android.Util.Log.Error ("NativeLibraryLoadTest", "{{failedMessage}}TimedOut");
 						return;
 					}
@@ -504,7 +504,7 @@ public class NativeLibraryLoadTests : DeviceTest
 					public static volatile int ProvisionalFailValue;
 					public static volatile int ConcurrentOuterValue;
 					public static volatile int CompetingInnerValue;
-					public static volatile bool ConcurrentCompletedDuringOnLoad;
+					public static volatile string? CallbackError;
 					public static volatile Exception? ConcurrentOuterException;
 					public static volatile Exception? CompetingInnerException;
 					public static Thread? ConcurrentOuterThread;
@@ -518,9 +518,14 @@ public class NativeLibraryLoadTests : DeviceTest
 						ProvisionalOuterValue = GetOuterValueProvisional ();
 
 						using var started = new ManualResetEventSlim (false);
+						Java.Lang.Thread? outerJavaThread = null;
 						ConcurrentOuterThread = new Thread (() => {
 							try {
-								started.Set ();
+								try {
+									outerJavaThread = Java.Lang.Thread.CurrentThread ();
+								} finally {
+									started.Set ();
+								}
 								ConcurrentOuterValue = GetOuterValueConcurrent ();
 							} catch (Exception ex) {
 								ConcurrentOuterException = ex;
@@ -531,16 +536,22 @@ public class NativeLibraryLoadTests : DeviceTest
 						};
 						ConcurrentOuterThread.Start ();
 						started.Wait ();
-						if (ConcurrentOuterThread.Join (TimeSpan.FromMilliseconds (150))) {
-							ConcurrentCompletedDuringOnLoad = true;
+						if (!WaitForJavaLoadBlock (outerJavaThread, ConcurrentOuterThread)) {
+							CallbackError ??= "Concurrent outer reader did not block in Java while JNI_OnLoad was active.";
+							return -1;
 						}
 
 						// Start a competing caller for cold library B while this thread holds the Java Runtime
 						// loadLibrary0 monitor inside A's JNI_OnLoad, then P/Invoke B from A's callback.
 						using var innerStarted = new ManualResetEventSlim (false);
+						Java.Lang.Thread? innerJavaThread = null;
 						CompetingInnerThread = new Thread (() => {
 							try {
-								innerStarted.Set ();
+								try {
+									innerJavaThread = Java.Lang.Thread.CurrentThread ();
+								} finally {
+									innerStarted.Set ();
+								}
 								CompetingInnerValue = GetInnerValueConcurrent ();
 							} catch (Exception ex) {
 								CompetingInnerException = ex;
@@ -551,9 +562,36 @@ public class NativeLibraryLoadTests : DeviceTest
 						};
 						CompetingInnerThread.Start ();
 						innerStarted.Wait ();
-						Thread.Sleep (TimeSpan.FromMilliseconds (100));
+						if (!WaitForJavaLoadBlock (innerJavaThread, CompetingInnerThread)) {
+							CallbackError ??= "Competing inner reader did not block in Java while JNI_OnLoad was active.";
+							return -1;
+						}
 
 						return GetInnerValue ();
+					}
+
+					static bool WaitForJavaLoadBlock (Java.Lang.Thread? javaThread, Thread managedThread)
+					{
+						if (javaThread == null) {
+							return false;
+						}
+						try {
+							bool observed = SpinWait.SpinUntil (
+								() => !managedThread.IsAlive || javaThread.GetState ().Equals (Java.Lang.Thread.State.Blocked),
+								TimeSpan.FromSeconds (20));
+							if (!observed || !managedThread.IsAlive || !javaThread.GetState ().Equals (Java.Lang.Thread.State.Blocked)) {
+								return false;
+							}
+							foreach (var frame in javaThread.GetStackTrace ()) {
+								if (frame.ClassName == "java.lang.Runtime" && frame.MethodName == "loadLibrary0") {
+									return true;
+								}
+							}
+							return false;
+						} catch (Exception ex) {
+							CallbackError = "Could not observe the Java loader: " + ex;
+							return false;
+						}
 					}
 
 					[UnmanagedCallersOnly]
@@ -603,7 +641,7 @@ public class NativeLibraryLoadTests : DeviceTest
 				return line.Contains (completedMessage, StringComparison.Ordinal);
 			},
 			Path.Combine (Root, builder.ProjectDirectory, "worker-jni-library-load.log"),
-			timeout: 45,
+			timeout: 90,
 			onMonitoringStarted: () => StartActivityAndAssert (proj)
 		);
 
