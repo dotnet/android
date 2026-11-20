@@ -182,6 +182,7 @@ Xamarin.Android.Tools.EmulatorBootResult.Serial.init -> void
 Xamarin.Android.Tools.EmulatorBootResult.Success.get -> bool
 Xamarin.Android.Tools.EmulatorBootResult.Success.init -> void
 Xamarin.Android.Tools.EmulatorRunner
+static Xamarin.Android.Tools.EmulatorRunner.CreateWithProcessEnvironment(string! emulatorPath, System.Diagnostics.ProcessStartInfo! processStartInfo, System.Action<System.Diagnostics.TraceLevel, string!>? logger = null) -> Xamarin.Android.Tools.EmulatorRunner!
 Xamarin.Android.Tools.EmulatorRunner.BootEmulatorAsync(string! deviceOrAvdName, Xamarin.Android.Tools.AdbRunner! adbRunner, Xamarin.Android.Tools.EmulatorBootOptions? options = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<Xamarin.Android.Tools.EmulatorBootResult!>!
 Xamarin.Android.Tools.EmulatorRunner.EmulatorRunner(string! emulatorPath, System.Collections.Generic.IDictionary<string!, string!>? environmentVariables = null, System.Action<System.Diagnostics.TraceLevel, string!>? logger = null) -> void
 Xamarin.Android.Tools.EmulatorRunner.ListAvdNamesAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<System.Collections.Generic.IReadOnlyList<string!>!>!
