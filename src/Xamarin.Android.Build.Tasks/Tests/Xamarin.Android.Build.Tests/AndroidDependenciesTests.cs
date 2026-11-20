@@ -49,6 +49,7 @@ namespace Xamarin.Android.Build.Tests
 				proj.SetRuntime (runtime);
 				var buildArgs = new List<string> {
 					"AcceptAndroidSDKLicenses=true",
+					$"AndroidSdkDirectory=\"{sdkPath}\"",
 					$"JavaSdkDirectory=\"{jdkPath}\"",
 					"AndroidInstallJavaDependencies=false",
 
