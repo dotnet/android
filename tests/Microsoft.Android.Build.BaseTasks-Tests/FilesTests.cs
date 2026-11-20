@@ -4,14 +4,12 @@
 using NUnit.Framework;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.IO.Compression;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading;
-using System.Threading.Tasks;
 using System.Xml.Linq;
 using Microsoft.Build.Framework;
 using Microsoft.Android.Build.Tasks;
@@ -67,7 +65,7 @@ namespace Microsoft.Android.Build.BaseTasks.Tests
 			var environment = TaskEnvironment.CreateWithProjectDirectoryAndEnvironment (
 				Path.GetFullPath (tempDir), new Dictionary<string, string> {
 					["DOTNET_ANDROID_FILE_WRITE_RETRY_ATTEMPTS"] = "0",
-					["DOTNET_ANDROID_FILE_WRITE_RETRY_DELAY_MS"] = "0",
+					["DOTNET_ANDROID_FILE_WRITE_RETRY_DELAY_MS"] = "-2",
 				});
 			var doc = new XDocument (new XElement ("Devices"));
 			Assert.IsTrue (doc.SaveIfChanged ("devices.cache", environment));
@@ -78,9 +76,12 @@ namespace Microsoft.Android.Build.BaseTasks.Tests
 			Assert.IsFalse (doc.SaveIfChanged (path), "The existing overload must produce the same XML.");
 			Assert.IsFalse (doc.SaveIfChanged (path, null), "A null environment must use the fallback.");
 			using var locked = new FileStream (path, FileMode.Open, FileAccess.ReadWrite, FileShare.None);
-			var stopwatch = Stopwatch.StartNew ();
 			Assert.Throws<IOException> (() => doc.SaveIfChanged ("devices.cache", environment));
-			Assert.Less (stopwatch.Elapsed, TimeSpan.FromSeconds (2), "The project's retry limit must be used.");
+			if (IsWindows) {
+				// An invalid delay makes a retry observable without sleeping.
+				environment.SetEnvironmentVariable ("DOTNET_ANDROID_FILE_WRITE_RETRY_ATTEMPTS", "1");
+				Assert.Throws<ArgumentOutOfRangeException> (() => doc.SaveIfChanged ("devices.cache", environment));
+			}
 		}
 
 		[Test]
@@ -554,7 +555,7 @@ namespace Microsoft.Android.Build.BaseTasks.Tests
 		}
 
 		[Test]
-		public async Task CopyIfChanged_LockedFile ()
+		public void CopyIfChanged_LockedFile ()
 		{
 			var dest = NewFile (contents: "foo", fileName: "foo_locked");
 			var src = NewFile (contents: "foo0", fileName: "foo");
@@ -565,20 +566,44 @@ namespace Microsoft.Android.Build.BaseTasks.Tests
 			Assert.IsTrue (Files.CopyIfChanged (src, dest));
 			src = NewFile (contents: "foo2", fileName: "foo");
 			dest = NewFile (contents: "foo", fileName: "foo_locked2");
-			var ev = new ManualResetEvent (false);
-			var task = Task.Run (async () => {
-				var file = File.Open (dest, FileMode.OpenOrCreate, FileAccess.Write, FileShare.Read);
-				try {
-					ev.Set ();
-					await Task.Delay (2500);
-				} finally {
-					file.Close();
-					file.Dispose ();
-				}
+			if (!IsWindows) {
+				// Unix permits replacing an open file; Windows retries the sharing violation.
+				using var openFile = File.Open (dest, FileMode.OpenOrCreate, FileAccess.Write, FileShare.Read);
+				Assert.IsTrue (Files.CopyIfChanged (src, dest));
+				return;
+			}
+			var environment = TaskEnvironment.CreateWithProjectDirectoryAndEnvironment (tempDir, new Dictionary<string, string> {
+				["DOTNET_ANDROID_FILE_WRITE_RETRY_ATTEMPTS"] = "300",
+				["DOTNET_ANDROID_FILE_WRITE_RETRY_DELAY_MS"] = "100",
 			});
-			ev.WaitOne ();
-			Assert.IsTrue (Files.CopyIfChanged (src, dest));
-			await task;
+			using var started = new ManualResetEventSlim ();
+			using var lockedFile = File.Open (dest, FileMode.OpenOrCreate, FileAccess.Write, FileShare.None);
+			bool copied = false;
+			Exception error = null;
+			var thread = new Thread (() => {
+				try {
+					started.Set ();
+					copied = Files.CopyIfChanged (src, dest, environment);
+				} catch (Exception ex) {
+					error = ex;
+				}
+			}) {
+				IsBackground = true,
+			};
+			thread.Start ();
+			bool enteredRetry;
+			try {
+				Assert.IsTrue (started.Wait (TimeSpan.FromSeconds (30)), "Copy thread did not start.");
+				enteredRetry = SpinWait.SpinUntil (
+					() => !thread.IsAlive || (thread.ThreadState & ThreadState.WaitSleepJoin) != 0,
+					TimeSpan.FromSeconds (30)) && thread.IsAlive;
+			} finally {
+				lockedFile.Dispose ();
+				Assert.IsTrue (thread.Join (TimeSpan.FromSeconds (30)), "Copy thread did not finish after releasing the lock.");
+			}
+			Assert.IsTrue (enteredRetry, $"Copy should wait to retry while the destination is locked. Error: {error}; copied: {copied}.");
+			Assert.IsNull (error);
+			Assert.IsTrue (copied);
 		}
 
 		[Test]
@@ -586,14 +611,17 @@ namespace Microsoft.Android.Build.BaseTasks.Tests
 		{
 			var environment = TaskEnvironment.CreateWithProjectDirectoryAndEnvironment (tempDir, new Dictionary<string, string> {
 				["DOTNET_ANDROID_FILE_WRITE_RETRY_ATTEMPTS"] = "0",
-				["DOTNET_ANDROID_FILE_WRITE_RETRY_DELAY_MS"] = "0",
+				["DOTNET_ANDROID_FILE_WRITE_RETRY_DELAY_MS"] = "-2",
 			});
 			var dest = NewFile (contents: "foo", fileName: "foo_locked");
 			var src = NewFile (contents: "foo0", fileName: "foo");
 			using var locked = new FileStream (dest, FileMode.Open, FileAccess.ReadWrite, FileShare.None);
-			var stopwatch = Stopwatch.StartNew ();
 			Assert.Throws<IOException> (() => Files.CopyIfChanged (src, dest, environment));
-			Assert.Less (stopwatch.Elapsed, TimeSpan.FromSeconds (2), "The project's retry limit must be used.");
+			if (IsWindows) {
+				// An invalid delay makes a retry observable without sleeping.
+				environment.SetEnvironmentVariable ("DOTNET_ANDROID_FILE_WRITE_RETRY_ATTEMPTS", "1");
+				Assert.Throws<ArgumentOutOfRangeException> (() => Files.CopyIfChanged (src, dest, environment));
+			}
 		}
 
 		[Test]
