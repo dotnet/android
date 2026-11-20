@@ -3077,126 +3077,109 @@ CUSTOM_ENVIRONMENT_VALUE=custom",
 		{
 			var (isRelease, runtime) = configuration;
 
-			const string facebookVersion = "18.3.0";
-			var moduleName = "Library";
+			// Use self-contained Gradle modules so the test does not depend on a large
+			// remote Maven/NuGet dependency graph; AGP itself still comes from the feed.
+			const string libraryModuleName = "Library";
+			const string dependencyModuleName = "Dependency";
+			const string expectedLogcatOutput = "GradleFBProj: Hello dotnet from Gradle dependency";
 			var gradleTestProjectDir = Path.Combine (Root, "temp", "gradle", TestName);
-			var gradleModule = new AndroidGradleModule (Path.Combine (gradleTestProjectDir, moduleName));
-			gradleModule.PackageName = "com.microsoft.mauifacebook";
-			gradleModule.BuildGradleFileContent = $@"
-plugins {{
-    id(""com.android.library"")
-}}
-android {{
-    namespace = ""{gradleModule.PackageName}""
-    compileSdk = {XABuildConfig.AndroidDefaultTargetDotnetApiLevel.Major}
-    defaultConfig {{
-        minSdk = {XABuildConfig.AndroidMinimumDotNetApiLevel.Major}
-    }}
-}}
-dependencies {{
-    implementation(""androidx.appcompat:appcompat:1.7.0"")
-    implementation(""com.google.android.material:material:1.11.0"")
-    implementation(""com.facebook.android:facebook-android-sdk:{facebookVersion}"")
-}}
-";
-			gradleModule.JavaSources.Add (new AndroidItem.AndroidJavaSource ("FacebookSdk.java") {
-				TextContent = () => $@"
-package com.microsoft.mauifacebook;
-public class FacebookSdk {{
-    static com.facebook.appevents.AppEventsLogger _logger;
-    public static void initializeSDK(android.app.Activity activity, Boolean isDebug) {{
-        android.app.Application application = activity.getApplication();
-        com.facebook.FacebookSdk.sdkInitialize(application);
-        com.facebook.FacebookSdk.addLoggingBehavior(com.facebook.LoggingBehavior.APP_EVENTS);
-        com.facebook.appevents.AppEventsLogger.activateApp(application);
-        _logger = com.facebook.appevents.AppEventsLogger.newLogger(activity);
-    }}
-    public static void logEvent(String eventName) {{
-        _logger.logEvent(eventName);
-    }}
-}}
-",
+
+			var dependencyModule = new AndroidGradleModule (Path.Combine (gradleTestProjectDir, dependencyModuleName)) {
+				PackageName = "com.example.gradledependency",
+			};
+			dependencyModule.BuildGradleFileContent = GetGradleLibraryBuildFile (dependencyModule.PackageName, "");
+			dependencyModule.JavaSources.Add (new AndroidItem.AndroidJavaSource ("DependencyMessages.java") {
+				TextContent = () => $$"""
+package {{dependencyModule.PackageName}};
+public class DependencyMessages {
+    public static String format(android.content.Context context, String name) {
+        return context.getString(R.string.gradle_dependency_greeting, name);
+    }
+}
+""",
+			});
+
+			var libraryModule = new AndroidGradleModule (Path.Combine (gradleTestProjectDir, libraryModuleName)) {
+				PackageName = "com.example.gradlelibrary",
+			};
+			libraryModule.BuildGradleFileContent = GetGradleLibraryBuildFile (libraryModule.PackageName, $"implementation(project(\":{dependencyModuleName}\"))");
+			libraryModule.JavaSources.Add (new AndroidItem.AndroidJavaSource ("Greeter.java") {
+				TextContent = () => $$"""
+package {{libraryModule.PackageName}};
+public class Greeter {
+    public static String greet(android.content.Context context, String name) {
+        return {{dependencyModule.PackageName}}.DependencyMessages.format(context, name);
+    }
+}
+""",
 			});
 
 			var gradleProject = new AndroidGradleProject (gradleTestProjectDir) {
 				Modules = {
-					gradleModule,
+					dependencyModule,
+					libraryModule,
 				},
 			};
 			gradleProject.Create ();
+
+			var dependencyValuesDir = Path.Combine (dependencyModule.ModuleDirectory, "src", "main", "res", "values");
+			Directory.CreateDirectory (dependencyValuesDir);
+			File.WriteAllText (Path.Combine (dependencyValuesDir, "strings.xml"), """
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="gradle_dependency_greeting">Hello %1$s from Gradle dependency</string>
+</resources>
+""");
 
 			var proj = new XamarinAndroidApplicationProject (packageName: PackageUtils.MakePackageName (runtime)) {
 				IsRelease = isRelease,
 				OtherBuildItems = {
 					new AndroidItem.TransformFile ("Transforms\\Metadata.xml") {
-						TextContent = () => $@"<metadata><attr path=""/api/package[@name='{gradleModule.PackageName}']"" name=""managedName"">Facebook</attr></metadata>",
+						TextContent = () => $@"<metadata><attr path=""/api/package[@name='{libraryModule.PackageName}']"" name=""managedName"">GradleLibrary</attr></metadata>",
 					},
 					new BuildItem (KnownProperties.AndroidGradleProject, gradleProject.BuildFilePath) {
 						Metadata = {
-							{ "ModuleName", moduleName },
+							{ "ModuleName", libraryModuleName },
 						},
 					},
-					new BuildItem ("AndroidMavenLibrary", "com.facebook.android:facebook-core") {
+					// The bound library's runtime dependency is supplied separately, without bindings.
+					new BuildItem (KnownProperties.AndroidGradleProject, gradleProject.BuildFilePath) {
 						Metadata = {
-							{ "Version", facebookVersion },
+							{ "ModuleName", dependencyModuleName },
 							{ "Bind", "false" },
-							{ "Repository", TestEnvironment.DotNetPublicMaven },
 						},
-					},
-					new BuildItem ("AndroidMavenLibrary", "com.facebook.android:facebook-bolts") {
-						Metadata = {
-							{ "Version", facebookVersion },
-							{ "Bind", "false" },
-							{ "Repository", TestEnvironment.DotNetPublicMaven },
-						},
-					},
-				},
-				PackageReferences = {
-					new Package {
-						Id = "Xamarin.AndroidX.AppCompat",
-						Version = "1.7.0.3",
-					},
-					new Package {
-						Id = "Xamarin.AndroidX.Annotation",
-						Version = "1.8.2.1",
-					},
-					new Package {
-						Id = "Xamarin.AndroidX.Legacy.Support.Core.Utils",
-						Version = "1.0.0.29",
-					},
-					new Package {
-						Id = "Xamarin.Google.Android.InstallReferrer",
-						// Facebook SDK 18.3.0 requires com.android.installreferrer:installreferrer:2.2.
-						Version = "2.2.0.8",
-					},
-					new Package {
-						Id = "Xamarin.AndroidX.Core.Core.Ktx",
-						Version = "1.13.1.5",
-					},
-					new Package {
-						Id = "Xamarin.Kotlin.StdLib",
-						Version = "2.0.21",
 					},
 				},
 			};
 			proj.SetRuntime (runtime);
-			proj.MainActivity = proj.DefaultMainActivity.Replace ("//${AFTER_ONCREATE}", @"
-Facebook.FacebookSdk.InitializeSDK(this, Java.Lang.Boolean.True);
-Facebook.FacebookSdk.LogEvent(""TestFacebook"");
-");
-			proj.AndroidManifest =@"<?xml version=""1.0"" encoding=""utf-8""?>
-<manifest xmlns:android=""http://schemas.android.com/apk/res/android"" xmlns:tools=""http://schemas.android.com/tools"" android:versionCode=""1"" android:versionName=""1.0"" package=""com.xamarin.gradleproj"">
-  <application android:label=""UnnamedProject"">
-    <meta-data android:name=""com.facebook.sdk.ApplicationId"" android:value=""appid""/>
-    <meta-data android:name=""com.facebook.sdk.ClientToken"" android:value=""token""/>
-  </application>
-</manifest>";
+			proj.MainActivity = proj.DefaultMainActivity.Replace ("//${AFTER_ONCREATE}", """
+Android.Util.Log.Info ("GradleFBProj", GradleLibrary.Greeter.Greet (this, "dotnet"));
+""");
 
 			using var builder = CreateApkBuilder ();
 			Assert.IsTrue (builder.Build (proj, environmentVariables: new Dictionary<string, string> {
 				{ "GRADLE_OPTS", $"{Environment.GetEnvironmentVariable ("GRADLE_OPTS")} -Dorg.gradle.logging.level=info -Dorg.gradle.logging.stacktrace=all" },
-			}));
+			}), "Build should have succeeded.");
+			ClearAdbLogcat ();
 			RunProjectAndAssert (proj, builder);
+			Assert.IsTrue (MonitorAdbLogcat (line => line.Contains (expectedLogcatOutput),
+				Path.Combine (Root, builder.ProjectDirectory, "logcat.log"), ActivityStartTimeoutInSeconds), $"Output did not contain {expectedLogcatOutput}!");
+
+			static string GetGradleLibraryBuildFile (string packageName, string dependencies) => $$"""
+plugins {
+    id("com.android.library")
+}
+android {
+    namespace = "{{packageName}}"
+    compileSdk = {{XABuildConfig.AndroidDefaultTargetDotnetApiLevel.Major}}
+    defaultConfig {
+        minSdk = {{XABuildConfig.AndroidMinimumDotNetApiLevel.Major}}
+    }
+}
+dependencies {
+    {{dependencies}}
+}
+""";
 		}
 
 		[Test]
