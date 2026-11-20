@@ -43,7 +43,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Xamarin.Android.NetTests {
 	[TestCategory ("InetAccess")]
-	[TestCategory ("SSL")] // TODO: https://github.com/dotnet/android/issues/10069
+	[TestCategory ("SSL")] // TODO: https://github.com/dotnet/android/issues/10079
 	public abstract class HttpClientHandlerTestBase
 	{
 		protected abstract HttpMessageHandler CreateHandler ();

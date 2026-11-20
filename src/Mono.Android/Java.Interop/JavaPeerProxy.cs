@@ -1,6 +1,7 @@
 #nullable enable
 
 using System;
+using System.ComponentModel;
 using Android.Runtime;
 
 namespace Java.Interop
@@ -16,8 +17,10 @@ namespace Java.Interop
 	/// The alias holder is NOT a <see cref="JavaPeerProxy"/> subclass — this ensures
 	/// <c>GetCustomAttribute&lt;JavaPeerProxy&gt;()</c> returns null for alias entries,
 	/// keeping the fast path (non-alias types) free of alias checks.
+	/// This attribute is not intended for direct use outside generated trimmable typemap code.
 	/// </remarks>
 	[AttributeUsage (AttributeTargets.Class, Inherited = false, AllowMultiple = false)]
+	[EditorBrowsable (EditorBrowsableState.Never)]
 	public sealed class JavaPeerAliasesAttribute : Attribute
 	{
 		/// <summary>
@@ -37,8 +40,10 @@ namespace Java.Interop
 	/// Proxy attributes are generated at build time and applied to the proxy type itself
 	/// (self-application pattern). The .NET runtime's <c>GetCustomAttribute&lt;JavaPeerProxy&gt;()</c>
 	/// instantiates the proxy in an AOT-safe manner — no <c>Activator.CreateInstance()</c> needed.
+	/// This attribute is not intended for direct use outside generated trimmable typemap code.
 	/// </remarks>
 	[AttributeUsage (AttributeTargets.Class | AttributeTargets.Interface, Inherited = false, AllowMultiple = false)]
+	[EditorBrowsable (EditorBrowsableState.Never)]
 	public abstract class JavaPeerProxy : Attribute
 	{
 		protected JavaPeerProxy (string jniName, Type targetType)

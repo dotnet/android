@@ -284,10 +284,6 @@ namespace Java.Interop.Tools.JavaTypeSystem
 				bool? extBridge, string? jniReturn, bool? extSynthetic, bool? notNull, string? annotatedVisibility)
 		{
 			// If any of the parameters contain reference to non-public type, it cannot be generated.
-			// TODO
-			//if (parameters != null && parameters.Any (p => p.ResolvedType?.ReferencedType != null && string.IsNullOrEmpty (p.ResolvedType.ReferencedType.Visibility)))
-			//	return;
-
 			if (parameters != null && parameters.Any (p => p.TypeModel != null && p.TypeModel.ReferencedType?.Visibility.HasValue () == false))
 				return;
 

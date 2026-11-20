@@ -28,7 +28,6 @@ jobs:
       contents: read
     outputs:
       directories: ${{ steps.inputs.outputs.directories }}
-      java: ${{ steps.inputs.outputs.java }}
       source: ${{ steps.inputs.outputs.source }}
       target: ${{ steps.inputs.outputs.target }}
       gradle: ${{ steps.inputs.outputs.gradle }}
@@ -45,7 +44,7 @@ jobs:
           "directories=$pathsJson" >> $env:GITHUB_OUTPUT
 
           $config = Get-Content Configuration.props -Raw
-          foreach ($property in @{ java = 'MicrosoftOpenJDKVersion'; source = 'JavacSourceVersion'; target = 'JavacTargetVersion' }.GetEnumerator()) {
+          foreach ($property in @{ source = 'JavacSourceVersion'; target = 'JavacTargetVersion' }.GetEnumerator()) {
             if ($config -notmatch "<$($property.Value)\b[^>]*>([^<$]+)<") {
               throw "Cannot read $($property.Value) from Configuration.props."
             }
@@ -75,7 +74,8 @@ jobs:
       - uses: actions/setup-java@v6
         with:
           distribution: microsoft
-          java-version: ${{ needs.setup.outputs.java }}
+          java-version: '25'
+          check-latest: true
 
       - uses: gradle/actions/dependency-submission@v6
         with:

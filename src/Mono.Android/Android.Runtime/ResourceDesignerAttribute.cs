@@ -1,10 +1,12 @@
 using System;
+using System.ComponentModel;
 using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 
 namespace Android.Runtime
 {
 	[AttributeUsage (AttributeTargets.Assembly)]
+	[EditorBrowsable (EditorBrowsableState.Never)]
 	public class ResourceDesignerAttribute : Attribute
 	{
 		public ResourceDesignerAttribute (

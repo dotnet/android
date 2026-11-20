@@ -106,10 +106,10 @@
     <XABuildToolsHashMacOS>B5B1AC529028A49F11B596B89D9B34252E0F39388EE7DBD16AE3110F1C9C5722</XABuildToolsHashMacOS>
     <XABuildToolsHashLinux>01AF179347CBCD9C208B7F8171F7B21F6DD1D2F85BCD15E88CAA51D5D7B86060</XABuildToolsHashLinux>
     <XABuildToolsHashWindows>68075AA319ED8A01CF1A565ED1E61A3C1A801DD49191C35851248DC293C33B1A</XABuildToolsHashWindows>
-    <XAPlatformToolsVersion>37.0.1</XAPlatformToolsVersion>
-    <XAPlatformToolsHashMacOS>EE39AD5967E95C2A07F04DBCBDE96B1A0C916BA376096DB5D2F498B7727A5D1D</XAPlatformToolsHashMacOS>
-    <XAPlatformToolsHashLinux>D230F13842F60F782A8645F9C813F8F845BF36089EA7289F28C48F17979313F1</XAPlatformToolsHashLinux>
-    <XAPlatformToolsHashWindows>45F4D63113E895EBDE0C90F194099A4676B6AC653BD28D54314A9E022BBC1A99</XAPlatformToolsHashWindows>
+    <XAPlatformToolsVersion>37.0.3</XAPlatformToolsVersion>
+    <XAPlatformToolsHashMacOS>DF21339B9371FEF9B19264404338DC686F59A88A1DCE634B963DA344909001D6</XAPlatformToolsHashMacOS>
+    <XAPlatformToolsHashLinux>214548146CADB2CA3508143D8A1D4BE4C59DE5BB837253E3EDE89ED74CF450D1</XAPlatformToolsHashLinux>
+    <XAPlatformToolsHashWindows>89D108360A3BF2924D3BEA837239EDACCC22FD6FF5BEFD3787C4348A9FE4F09D</XAPlatformToolsHashWindows>
     <XACmdlineToolsHashMacOS>7E601C04E7173754B3D051A87BB4C3A8243C65A9D7BFA9356ED6499FB8953FA3</XACmdlineToolsHashMacOS>
     <XACmdlineToolsHashMacOSArm64>58DA8F215781CC0208743E88B65AE259780C55E7EB40E50373D377CF369232D6</XACmdlineToolsHashMacOSArm64>
     <XACmdlineToolsHashLinux>0877A1D048FE4A24EFE2EFF536CA4223F7ADEB58648BB81909D33C446918CFA8</XACmdlineToolsHashLinux>
@@ -144,9 +144,9 @@
     <XABundleToolVersion Condition="'$(XABundleToolVersion)' == ''">1.18.3</XABundleToolVersion>
     <XABundleToolHash Condition="'$(XABundleToolHash)' == ''">A099CFA1543F55593BC2ED16A70A7C67FE54B1747BB7301F37FDFD6D91028E29</XABundleToolHash>
     <!-- Microsoft OpenJDK: https://learn.microsoft.com/en-us/java/openjdk/download -->
-    <MicrosoftOpenJDKVersion Condition="'$(MicrosoftOpenJDKVersion)' == ''">25.0.4.1</MicrosoftOpenJDKVersion>
+    <MicrosoftOpenJDKVersion Condition="'$(MicrosoftOpenJDKVersion)' == ''">25.0.5.1</MicrosoftOpenJDKVersion>
     <MicrosoftOpenJDKFolder Condition="'$(MicrosoftOpenJDKFolder)' == ''">jdk-25</MicrosoftOpenJDKFolder>
-    <MicrosoftOpenJDKRootDirName Condition="'$(MicrosoftOpenJDKRootDirName)' == ''">jdk-25.0.4.1+1</MicrosoftOpenJDKRootDirName>
+    <MicrosoftOpenJDKRootDirName Condition="'$(MicrosoftOpenJDKRootDirName)' == ''">jdk-25.0.5.1+2</MicrosoftOpenJDKRootDirName>
     <JavaSdkVersion Condition=" '$(JavaSdkVersion)' == '' ">$(MicrosoftOpenJDKVersion)</JavaSdkVersion>
     <MinimumSupportedJavaSdkVersion Condition=" '$(MinimumSupportedJavaSdkVersion)' == '' ">21.0</MinimumSupportedJavaSdkVersion>
     <JavaSdkDirectory Condition=" '$(JavaSdkDirectory)' == '' ">$(AndroidToolchainDirectory)\$(MicrosoftOpenJDKFolder)</JavaSdkDirectory>

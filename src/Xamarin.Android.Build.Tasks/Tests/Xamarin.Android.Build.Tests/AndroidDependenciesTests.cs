@@ -278,7 +278,7 @@ namespace Xamarin.Android.Build.Tests
 				JavaDependencies = [],
 				Dependencies = [
 					new TaskItem ("build-tools/37.0.0", new Dictionary<string, string> { { "Version", "37.0.0" } }),
-					new TaskItem ("platform-tools", new Dictionary<string, string> { { "Version", "37.0.1" } }),
+					new TaskItem ("platform-tools", new Dictionary<string, string> { { "Version", "37.0.3" } }),
 					new TaskItem ("ndk-bundle", new Dictionary<string, string> { { "Version", "27.2.12479018" } }),
 					new TaskItem ("platforms/android-37.0"),
 				],
@@ -287,7 +287,7 @@ namespace Xamarin.Android.Build.Tests
 
 			var args = File.ReadAllText (Path.Combine (root, "args.txt")).Trim ();
 			StringAssert.Contains ($"--no-metrics --sdk={Path.Combine (root, "sdk")} sdk install", args);
-			StringAssert.EndsWith ("build-tools/37.0.0 platform-tools@37.0.1 ndk/27.2.12479018 platforms/android-37.0", args);
+			StringAssert.EndsWith ("build-tools/37.0.0 platform-tools@37.0.3 ndk/27.2.12479018 platforms/android-37.0", args);
 		}
 
 		[Test]

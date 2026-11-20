@@ -66,6 +66,19 @@ rootProject.name = "<project>"
 
 `build.gradle` files must not declare their own `repositories { ... }`.
 
+## Transitive dependency versions
+
+To raise a transitive dependency that no direct dependency bump can update,
+add it to **`eng/gradle/dependency-constraints.gradle`** and apply that file
+from the project's `settings.gradle`:
+
+```groovy
+apply from: "${rootDir}/../../eng/gradle/dependency-constraints.gradle"
+```
+
+It also covers plugin dependencies, such as those of the Android Gradle Plugin.
+Dependabot does not read this file, so update its versions manually.
+
 ## CI vs local
 
 Both files switch on `System.getenv('RUNNINGONCI')`. Azure DevOps exports the

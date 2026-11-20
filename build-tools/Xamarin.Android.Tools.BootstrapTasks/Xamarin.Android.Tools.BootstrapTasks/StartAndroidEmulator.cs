@@ -83,7 +83,7 @@ namespace Xamarin.Android.Tools.BootstrapTasks
 				? null
 				: new [] { ToolPath };
 			string filename;
-			var path = Which.GetProgramLocation (ToolExe, out filename, dirs);
+			var path = PathToolTask.GetProgramLocation (ToolExe, out filename, dirs);
 			if (path == null) {
 				Log.LogError ($"Could not find `emulator`. Please set the `{nameof (StartAndroidEmulator)}.{nameof (ToolExe)}` property appropriately.");
 				return null;

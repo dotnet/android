@@ -495,6 +495,39 @@ AVAILABLE UPDATES:
 	}
 
 	[Test]
+	[TestCase ("")]
+	[TestCase ("build-tools&whoami")]
+	public void InstallAsync_InvalidPackageId_ThrowsBeforeSdkLookup (string package)
+	{
+		Assert.ThrowsAsync<ArgumentException> (
+			async () => await manager.InstallAsync (new [] { package }));
+	}
+
+	[Test]
+	[Platform ("Win")]
+	[TestCase ("build-tools;37.0.0")]
+	public async Task InstallAsync_WindowsBatch_PreservesPackageId (string package)
+	{
+		var sdkDir = Path.Combine (Path.GetTempPath (), $"sdk manager test {Guid.NewGuid ()}");
+		var binDir = Path.Combine (sdkDir, "cmdline-tools", "latest", "bin");
+		var sdkManagerPath = Path.Combine (binDir, "sdkmanager.bat");
+		var argumentsPath = Path.Combine (sdkDir, "arguments.txt");
+		Directory.CreateDirectory (binDir);
+		File.WriteAllText (sdkManagerPath,
+			"@echo off\r\n" +
+			">\"%ANDROID_HOME%\\arguments.txt\" echo(%~1\r\n");
+
+		try {
+			manager.AndroidSdkPath = sdkDir;
+			await manager.InstallAsync (new [] { package }, acceptLicenses: false);
+
+			Assert.AreEqual (package, File.ReadAllText (argumentsPath).Trim ());
+		} finally {
+			Directory.Delete (sdkDir, recursive: true);
+		}
+	}
+
+	[Test]
 	public void UninstallAsync_NoSdkManager_Throws ()
 	{
 		manager.AndroidSdkPath = Path.Combine (Path.GetTempPath (), "nonexistent");
