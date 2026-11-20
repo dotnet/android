@@ -30,6 +30,9 @@ namespace Xamarin.Android.Tools.Bytecode {
 		// See dotnet/java-interop#1431 (Phase 2).
 		public string? KotlinInlineClassUnderlyingJniType { get; set; }
 
+		// True when the value class has an `init` block, so construction must call `constructor-impl`.
+		public bool KotlinInlineClassHasInit { get; set; }
+
 		ClassSignature?             signature;
 
 

@@ -8,7 +8,10 @@ package xat.bytecode.tests
 // that Jetpack Compose triggers with Color/TextUnit/etc. and is the case
 // step (1) of dotnet/java-interop#1431 must handle.
 @JvmInline
-value class MyColor(val value: ULong)
+value class MyColor(val value: ULong) {
+    // Also compiles to `constructor-impl`, with another signature.
+    constructor(value: Int) : this(value.toULong())
+}
 
 @JvmInline
 value class MyAlpha(val value: ULong)
@@ -16,7 +19,9 @@ value class MyAlpha(val value: ULong)
 // A second inline class with a different backing primitive, so we can verify
 // that *non*-colliding hash siblings still survive.
 @JvmInline
-value class MyDp(val value: Float)
+value class MyDp(val value: Float) {
+    init { require(value >= 0f) }
+}
 
 object Widgets {
 
@@ -38,4 +43,25 @@ object Widgets {
     // KotlinInlineClassJniType must both be stamped so the generator emits
     // `public static MyColor TintColor { get; set; }` instead of long.
     var tintColor: MyColor = MyColor(0u)
+
+    // Positions where the JVM passes the boxed value class instead of the
+    // underlying primitive: a nullable value class, and a generic type argument.
+    fun maybeColor(color: MyColor?): MyColor? = color
+    fun colors(colors: List<MyColor>): List<MyColor> = colors
+
+    // Extension receiver typed as a value class.
+    fun MyDp.twice(): MyDp = MyDp(value * 2)
+
+    // @JvmName replaces the mangled JVM name; C# uses the Kotlin name.
+    @JvmName("computeUInt")
+    fun compute(x: UInt) { }
+    fun compute(x: Int) { }
+    @JvmName("tintColor")
+    fun tintWith(color: MyColor) { }
+}
+
+// Java calls back into C# with a boxed value class.
+interface ColorCallback {
+    fun onColor(color: MyColor?): MyColor?
+    fun onDp(dp: MyDp): Int
 }

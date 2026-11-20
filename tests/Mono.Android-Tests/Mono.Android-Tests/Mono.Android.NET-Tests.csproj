@@ -126,6 +126,7 @@
     <Compile Include="Java.Interop\JavaObjectExtensionsTests.cs" />
     <Compile Include="Java.Interop\JniRemappingLookupTests.cs" />
     <Compile Include="Java.Interop\JniRuntimeExceptionPolicyTests.cs" />
+    <Compile Include="Java.Interop\KotlinValueClassTests.cs" />
     <Compile Include="Java.Interop\ManagedObjectProxyTests.cs" />
     <Compile Include="Java.Interop\JavaMarshalGCBridgeTests.cs" />
     <Compile Include="Java.Interop\PeerIdentityTests.cs" />
@@ -181,6 +182,14 @@
     <Compile Include="Xamarin.Android.RuntimeTests\MyIntent.cs" />
     <Compile Include="Xamarin.Android.RuntimeTests\NonJavaObject.cs" />
     <Compile Include="Xamarin.Android.RuntimeTests\TestInstrumentation.cs" />
+  </ItemGroup>
+
+  <PropertyGroup>
+    <_AndroidGradleWrapperDirectory>$(GradleHome)</_AndroidGradleWrapperDirectory>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <AndroidGradleProject Include="..\..\Mono.Android-Tests.Gradle\build.gradle.kts" ModuleName="library" />
   </ItemGroup>
 
   <ItemGroup>

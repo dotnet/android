@@ -112,6 +112,7 @@ namespace MonoDroid.Generation
 				IsFinal = elem.XGetAttribute ("final") == "true",
 				IsKotlinInlineClass = elem.XGetAttribute ("kotlin-inline-class") == "true",
 				KotlinInlineClassUnderlyingJniType = elem.XGetAttribute ("kotlin-inline-class-underlying-jni-type"),
+				KotlinInlineClassHasInit = elem.XGetAttribute ("kotlin-inline-class-has-init") == "true",
 				PeerConstructorPartialMethod = elem.XGetAttribute ("peerConstructorPartialMethod"),
 				// Only use an explicitly set XML attribute
 				Unnest = elem.XGetAttribute ("unnest") == "true" ? true :

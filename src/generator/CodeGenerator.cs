@@ -203,7 +203,7 @@ namespace Xamarin.Android.Binder
 			}
 
 			// Apply fixups
-			KotlinFixups.Fixup (gens);
+			KotlinFixups.Fixup (gens, opt);
 
 			Validate (gens, opt, new CodeGeneratorContext ());
 
