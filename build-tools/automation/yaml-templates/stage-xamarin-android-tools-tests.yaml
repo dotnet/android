@@ -80,6 +80,7 @@ stages:
       inputs:
         command: build
         projects: |
+          $(System.DefaultWorkingDirectory)/src/Microsoft.Android.Run/Microsoft.Android.Run.csproj
           $(System.DefaultWorkingDirectory)/src/Xamarin.Android.Tools.AndroidSdk/Xamarin.Android.Tools.AndroidSdk.csproj
           $(System.DefaultWorkingDirectory)/tests/Xamarin.Android.Tools.Benchmarks/Xamarin.Android.Tools.Benchmarks.csproj
           $(System.DefaultWorkingDirectory)/tools/ls-jdks/ls-jdks.csproj
@@ -90,6 +91,7 @@ stages:
       inputs:
         command: test
         projects: |
+          $(System.DefaultWorkingDirectory)/tests/Microsoft.Android.Run-Tests/Microsoft.Android.Run-Tests.csproj
           $(System.DefaultWorkingDirectory)/tests/Microsoft.Android.Build.BaseTasks-Tests/Microsoft.Android.Build.BaseTasks-Tests.csproj
           $(System.DefaultWorkingDirectory)/tests/Xamarin.Android.Tools.AndroidSdk-Tests/Xamarin.Android.Tools.AndroidSdk-Tests.csproj
         arguments: -c Debug $(XatBuildProperties)
@@ -132,6 +134,7 @@ stages:
       inputs:
         command: build
         projects: |
+          $(System.DefaultWorkingDirectory)/src/Microsoft.Android.Run/Microsoft.Android.Run.csproj
           $(System.DefaultWorkingDirectory)/src/Xamarin.Android.Tools.AndroidSdk/Xamarin.Android.Tools.AndroidSdk.csproj
           $(System.DefaultWorkingDirectory)/tests/Xamarin.Android.Tools.Benchmarks/Xamarin.Android.Tools.Benchmarks.csproj
           $(System.DefaultWorkingDirectory)/tools/ls-jdks/ls-jdks.csproj
@@ -142,6 +145,7 @@ stages:
       inputs:
         command: test
         projects: |
+          $(System.DefaultWorkingDirectory)/tests/Microsoft.Android.Run-Tests/Microsoft.Android.Run-Tests.csproj
           $(System.DefaultWorkingDirectory)/tests/Microsoft.Android.Build.BaseTasks-Tests/Microsoft.Android.Build.BaseTasks-Tests.csproj
           $(System.DefaultWorkingDirectory)/tests/Xamarin.Android.Tools.AndroidSdk-Tests/Xamarin.Android.Tools.AndroidSdk-Tests.csproj
         arguments: -c Debug $(XatBuildProperties)

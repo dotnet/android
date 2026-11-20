@@ -105,6 +105,24 @@ Once `dotnet msbuild Microsoft.Android.slnx -t:Prepare` is complete,
 
 Several `.nupkg` files will be output in `.\bin\Build$(Configuration)\nuget-unsigned`.
 
+### Unsigned Windows CI packages
+
+The public `dotnet-android` pipeline can retain the Windows job's workload
+packages by setting the boolean queue parameter `publishWindowsPackages` to
+`true` (default: `false`). After the Windows build, tests, and `PackDotNet`
+succeed, it publishes that directory as `nuget-windows-unsigned`.
+
+This is an additional unsigned artifact, not a signed release or a replacement
+for the macOS-produced `nuget-unsigned` and `nuget-unsigned-symbols` artifacts.
+It does not include the Darwin SDK pack. Build and test jobs, their package
+downloads, and `skipTests` remain unchanged.
+
+Consumers must explicitly select `nuget-windows-unsigned` and verify the build
+and full source commit, package hashes, and the manifest's Windows package
+closure (SDK, references, managed and native runtimes, including Java.Interop)
+before installation. Do not mix packages from other producers or infer full
+CI success from this artifact's availability.
+
 ## Building Unit Tests
 
 Once `dotnet-local.cmd build Microsoft.Android.slnx` has completed, the unit tests may
