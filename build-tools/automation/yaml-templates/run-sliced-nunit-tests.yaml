@@ -8,15 +8,19 @@ parameters:
 
 steps:
 # Run with the SDK installed during test setup, so the net11.0 test assembly can load.
-- pwsh: >-
-    & "${{ parameters.xaSourcePath }}/bin/$(XA.Build.Configuration)/dotnet/dotnet"
-    run build-tools/automation/scripts/RunSlicedTests.cs --
-    --test-assembly "${{ parameters.testAssembly }}"
-    --results-directory "$(Agent.TempDirectory)/TestResults"
-    --slice $(System.JobPositionInPhase)
-    --total-slices $(System.TotalJobsInPhase)
-    --filter "$env:TEST_FILTER"
-    --workers $(NUnit.NumberOfTestWorkers)
+- pwsh: |
+    $filterArgs = @()
+    if ($env:TEST_FILTER) {
+      $filterArgs = @('--filter', $env:TEST_FILTER)
+    }
+    & "${{ parameters.xaSourcePath }}/bin/$(XA.Build.Configuration)/dotnet/dotnet" `
+    run build-tools/automation/scripts/RunSlicedTests.cs -- `
+    --test-assembly "${{ parameters.testAssembly }}" `
+    --results-directory "$(Agent.TempDirectory)/TestResults" `
+    --slice $(System.JobPositionInPhase) `
+    --total-slices $(System.TotalJobsInPhase) `
+    @filterArgs `
+    --workers $(NUnit.NumberOfTestWorkers) `
     --retry ${{ parameters.retryFailedTests }}
   displayName: run ${{ parameters.testRunTitle }}
   workingDirectory: ${{ parameters.xaSourcePath }}
