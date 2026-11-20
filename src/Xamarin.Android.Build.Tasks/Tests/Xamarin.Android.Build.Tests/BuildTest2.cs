@@ -1297,7 +1297,6 @@ namespace UnamedProject
 		{
 			var (isRelease, runtime) = configuration;
 
-			var start = DateTime.UtcNow.AddSeconds (-1);
 			var proj = new XamarinFormsAndroidApplicationProject {
 				IsRelease = isRelease,
 
@@ -1309,6 +1308,11 @@ namespace UnamedProject
 				var projectDir = Path.Combine (Root, b.ProjectDirectory);
 				if (Directory.Exists (projectDir))
 					Directory.Delete (projectDir, true);
+				Directory.CreateDirectory (projectDir);
+				var sentinel = Path.Combine (projectDir, "timestamp-sentinel");
+				File.WriteAllText (sentinel, "");
+				var start = File.GetLastWriteTimeUtc (sentinel);
+				File.Delete (sentinel);
 
 				var intermediate = Path.Combine (projectDir, proj.IntermediateOutputPath);
 				Assert.IsTrue (b.Build (proj), "first build should have succeeded.");
@@ -1322,13 +1326,18 @@ namespace UnamedProject
 						continue;
 					}
 					var info = new FileInfo (file);
-					Assert.IsTrue (info.LastWriteTimeUtc > start, $"`{file}` is older than `{start}`, with a timestamp of `{info.LastWriteTimeUtc}`!");
+					Assert.IsTrue (info.LastWriteTimeUtc >= start, $"`{file}` is older than `{start}`, with a timestamp of `{info.LastWriteTimeUtc}`!");
 				}
 
 				//Build again after a code change (renamed Java.Lang.Object subclass), checking a few files
+				var oldTimestamp = new DateTime (2000, 1, 1, 0, 0, 0, DateTimeKind.Utc);
+				foreach (var file in new [] { "typemap.mj", "typemap.jm" }) {
+					var path = Path.Combine (intermediate, "android", file);
+					if (File.Exists (path))
+						File.SetLastWriteTimeUtc (path, oldTimestamp);
+				}
 				proj.MainActivity = proj.DefaultMainActivity.Replace ("MainActivity", "MainActivity2");
 				proj.Touch ("MainActivity.cs");
-				start = DateTime.UtcNow;
 				Assert.IsTrue (b.Build (proj), "second build should have succeeded.");
 
 				// These files won't exist in OSS .NET for Android, thus the existence check and
@@ -1337,7 +1346,7 @@ namespace UnamedProject
 				foreach (var file in new [] { "typemap.mj", "typemap.jm" }) {
 					var info = new FileInfo (Path.Combine (intermediate, "android", file));
 					if (info.Exists) {
-						Assert.IsTrue (info.LastWriteTimeUtc > start, $"`{file}` is older than `{start}`, with a timestamp of `{info.LastWriteTimeUtc}`!");
+						Assert.IsTrue (info.LastWriteTimeUtc > oldTimestamp, $"`{file}` was not regenerated; its timestamp is `{info.LastWriteTimeUtc}`.");
 					}
 				}
 
