@@ -33,10 +33,11 @@ namespace Xamarin.Android.Build.Tests
 
 			var oldSdkPath = Environment.GetEnvironmentVariable ("TEST_ANDROID_SDK_PATH");
 
-			// Reuse the provisioned JDK so the task takes its "already installed" path. Downloading the
+			// Reuse the provisioned JDK without allowing the installer to modify it. Downloading the
 			// ~200 MB JDK from aka.ms made this test flaky (https://github.com/dotnet/android/issues/13644);
 			// InstallJdkExtractsArchive covers JDK installation and OpenJdkSignatureTests covers verification.
 			string jdkPath = AndroidSdkResolver.GetJavaSdkPath ().TrimEnd ('\\', '/');
+			DirectoryAssert.Exists (jdkPath, "A provisioned JDK is required for this integration test.");
 
 			try {
 				string sdkPath = Path.Combine (Root, "temp", TestName, "android-sdk");
@@ -48,8 +49,10 @@ namespace Xamarin.Android.Build.Tests
 				proj.SetRuntime (runtime);
 				var buildArgs = new List<string> {
 					"AcceptAndroidSDKLicenses=true",
+					$"JavaSdkDirectory=\"{jdkPath}\"",
+					"AndroidInstallJavaDependencies=false",
 
-					// This integration test downloads the SDK, JDK and (for NativeAOT) NDK from scratch.
+					// This integration test downloads the SDK and (for NativeAOT) NDK from scratch.
 					"AndroidDependencyInstallationTimeout=30",
 				};
 
@@ -95,8 +98,8 @@ namespace Xamarin.Android.Build.Tests
 					Assert.IsTrue (installSucceeded, $"InstallAndroidDependencies should have succeeded within {maxInstallAttempts} attempts.");
 
 					FileAssert.Exists (Path.Combine (sdkPath, "cmdline-tools", "21.0", "source.properties"));
-					Assert.IsTrue (b.LastBuildOutput.ContainsText ($"is already installed at '{jdkPath}'"),
-						$"The provisioned JDK at `{jdkPath}` should have been accepted. Please check the task output in 'install-deps.log'.");
+					Assert.IsTrue (b.LastBuildOutput.ContainsText ("Skipping Java SDK installation."),
+						"The shared provisioned JDK must not be installed or replaced.");
 
 					// When a package is not installed, a warning is present in the build output:
 					//    The Android CLI did not install Android SDK package `platform-tools` into `...`.
@@ -113,7 +116,7 @@ namespace Xamarin.Android.Build.Tests
 
 					b.Target = defaultTarget;
 					b.BuildLogFile = "build.log";
-					Assert.IsTrue (b.Build (proj, true), "build should have succeeded.");
+					Assert.IsTrue (b.Build (proj, true, parameters: buildArgs.ToArray ()), "build should have succeeded.");
 					Assert.IsTrue ( b.LastBuildOutput.ContainsText ($"Output Property: _AndroidSdkDirectory={sdkPath}"),
 						$"_AndroidSdkDirectory was not set to new SDK path `{sdkPath}`. Please check the task output in 'install-deps.log'");
 					Assert.IsTrue (b.LastBuildOutput.ContainsText ($"Output Property: _JavaSdkDirectory={jdkPath}"),
