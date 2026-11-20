@@ -2766,6 +2766,7 @@ because xbuild doesn't support framework reference assemblies.
       AdbToolPath="$(AdbToolPath)"
       AdbTarget="$(AdbTarget)"
       ApkSet="$(_ApkSetIntermediate)"
+      IsTestOnly="$(_AndroidIsTestOnlyPackage)"
       Modules="@(AndroidInstallModules)"
   />
   <Touch Files="$(_AndroidAppBundleInstallFlag)" AlwaysCreate="true" />
