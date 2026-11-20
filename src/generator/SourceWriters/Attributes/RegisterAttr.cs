@@ -14,9 +14,10 @@ namespace generator.SourceWriters
 		public string Connector { get; set; }
 		public bool DoNotGenerateAcw { get; set; }
 		public string AdditionalProperties { get; set; }
-		public bool UseGlobal { get; set; }	// TODO: Temporary for matching existing unit tests
-		public bool UseShortForm { get; set; }  // TODO: Temporary for matching existing unit tests
-		public bool AcwLast { get; set; }       // TODO: Temporary for matching existing unit tests
+		// Preserve attribute spelling and argument ordering in existing generated source.
+		public bool UseGlobal { get; set; }
+		public bool UseShortForm { get; set; }
+		public bool AcwLast { get; set; }
 
 		public RegisterAttr (string name, string signature = null, string connector = null, bool noAcw = false, string additionalProperties = null)
 		{

@@ -13,7 +13,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Xamarin.Android.NetTests;
 
 namespace System.NetTests {
-	// TODO: https://github.com/dotnet/android/issues/10069
+	// TODO: https://github.com/dotnet/android/issues/10079
 	[TestClass, TestCategory ("InetAccess"), TestCategory ("SSL")]
 	public class SslTest
 	{

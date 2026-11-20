@@ -543,15 +543,6 @@ public class JavaSourceTest {
 		{
 			var (isRelease, runtime) = configuration;
 
-			// TODO: fix NativeAOT build. It currently fails with
-			//
-			//  error MSB3030: Could not copy the file "bin/Release/native/UnnamedProject.so" because it was not found.
-			//
-			// The file exists in bin/Release/{RID}/native/UnnamedProject.so
-			if (runtime == AndroidRuntime.NativeAOT) {
-				Assert.Ignore ("NativeAOT publish support is broken atm");
-			}
-
 			var proj = new XamarinAndroidApplicationProject {
 				IsRelease = isRelease
 			};

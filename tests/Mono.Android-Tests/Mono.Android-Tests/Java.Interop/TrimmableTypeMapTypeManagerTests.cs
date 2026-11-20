@@ -18,6 +18,13 @@ namespace Java.InteropTests
 	[TestClass]
 	public class TrimmableTypeMapTypeManagerTests
 	{
+		readonly TestContext testContext;
+
+		public TrimmableTypeMapTypeManagerTests (TestContext testContext)
+		{
+			this.testContext = testContext;
+		}
+
 		// Test subclass that allows instantiation without full TrimmableTypeMap initialization.
 		// Built-in type-signature and static-method fallback lookups do not use
 		// TrimmableTypeMap.Instance, so those tests can run without an initialized singleton.
@@ -349,6 +356,7 @@ namespace Java.InteropTests
 		}
 
 		[TestMethod]
+		[Timeout (60_000, CooperativeCancellation = true)]
 		public async Task RegisteredPeer_Dispose_Finalized ()
 		{
 			var disposed = new TaskCompletionSource<bool> (TaskCreationOptions.RunContinuationsAsynchronously);
@@ -364,13 +372,10 @@ namespace Java.InteropTests
 				});
 				JniEnvironment.Runtime.ValueManager.CollectPeers ();
 			});
-			JniEnvironment.Runtime.ValueManager.CollectPeers ();
-
-			await WaitForGC (() => disposed.Task.IsCompleted || finalized.Task.IsCompleted,
-				"Expected TrimmableRegisteredDisposedObject.Dispose(disposing: false) to run.");
+			await GCBridgeTestHelpers.CollectUnreachablePeersAsync (testContext.CancellationToken);
 
 			Assert.IsFalse (disposed.Task.IsCompleted);
-			Assert.IsTrue (finalized.Task.IsCompleted);
+			Assert.IsTrue (finalized.Task.IsCompleted, "Expected TrimmableRegisteredDisposedObject.Dispose(disposing: false) to run.");
 		}
 
 		[TestMethod]
@@ -568,20 +573,6 @@ namespace Java.InteropTests
 			var fallbacks = manager.GetStaticMethodFallbackTypes (jniSimpleReference);
 			Assert.IsNotNull (fallbacks);
 			return fallbacks ?? throw new InvalidOperationException ("Expected fallback types.");
-		}
-
-
-		static async Task WaitForGC (Func<bool> predicate, string message, int timeoutMilliseconds = 2000)
-		{
-			var timeout = TimeSpan.FromMilliseconds (timeoutMilliseconds);
-			var start = DateTime.UtcNow;
-			while (!predicate () && DateTime.UtcNow - start < timeout) {
-				GC.Collect (generation: 2, mode: GCCollectionMode.Forced, blocking: true);
-				GC.WaitForPendingFinalizers ();
-				JniEnvironment.Runtime.ValueManager.CollectPeers ();
-				await Task.Yield ();
-			}
-			Assert.IsTrue (predicate (), message);
 		}
 
 		static IntPtr noPinActionPointer;

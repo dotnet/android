@@ -408,11 +408,6 @@ namespace Xamarin.Android.Build.Tests
 				return;
 			}
 
-			// TODO: NativeAOT fails with: 'classlibrary1.CustomTextView should have been replaced with an $(Hash).CustomTextView'
-			if (runtime == AndroidRuntime.NativeAOT) {
-				Assert.Ignore ("NativeAOT fails here atm");
-			}
-
 			var projectPath = Path.Combine ("temp", TestName);
 
 			var layout =  @"<?xml version=""1.0"" encoding=""utf-8"" ?>

@@ -7,6 +7,9 @@ using System.Net.Sockets;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+#if NETSTANDARD2_0
+using Lock = System.Object;
+#endif
 #if !NETSTANDARD2_0
 using System.Net.Security;
 using System.Net.WebSockets;
@@ -21,7 +24,7 @@ namespace Xamarin.Android.NetTests {
 		protected const string LoopbackHost = "127.0.0.1";
 
 		readonly string name;
-		readonly Lock handlerExceptionsLock = new ();
+		readonly Lock handlerExceptionsLock = new Lock ();
 		readonly List<Exception> handlerExceptions = new List<Exception> ();
 
 		protected LocalTestServer (string name)

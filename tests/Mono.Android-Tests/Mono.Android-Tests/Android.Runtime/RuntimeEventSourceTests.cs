@@ -3,15 +3,15 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Diagnostics.Tracing;
 using System.Reflection;
-using System.Runtime.CompilerServices;
 using System.Threading;
+using System.Threading.Tasks;
 
 using Android.Runtime;
 using Java.Interop;
+using Java.InteropTests;
 using Microsoft.Android.Runtime;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
@@ -20,6 +20,13 @@ namespace Android.RuntimeTests
 	[TestClass]
 	public class RuntimeEventSourceTests
 	{
+		readonly TestContext testContext;
+
+		public RuntimeEventSourceTests (TestContext testContext)
+		{
+			this.testContext = testContext;
+		}
+
 		[TestMethod]
 		[TestCategory ("GCBridge")]
 		[DynamicDependency (DynamicallyAccessedMemberTypes.All, "Microsoft.Android.Runtime.RuntimeEventSource", "Mono.Android")]
@@ -207,9 +214,10 @@ namespace Android.RuntimeTests
 		}
 
 		[TestMethod]
+		[Timeout (60_000, CooperativeCancellation = true)]
 		[TestCategory ("GCBridge")]
 		[DynamicDependency (DynamicallyAccessedMemberTypes.All, "Microsoft.Android.Runtime.RuntimeEventSource", "Mono.Android")]
-		public void GCBridgeRoundEmission ()
+		public async Task GCBridgeRoundEmission ()
 		{
 			if (!Microsoft.Android.Runtime.RuntimeFeature.IsCoreClrRuntime) {
 				Assert.Inconclusive ("This test exercises the managed CoreCLR GC bridge.");
@@ -221,36 +229,15 @@ namespace Android.RuntimeTests
 			int stopEventId = GetConstant<int> (eventSourceType, "GCBridgeStopEventId");
 
 			using var listener = new CapturingEventListener ();
-			int initialBridgeGeneration = JNIEnv.BridgeProcessingGeneration;
-			var timeout = TimeSpan.FromSeconds (5);
-			var stopwatch = Stopwatch.StartNew ();
-			do {
-				CreateCollectibleJavaPeer ();
-				GC.Collect (generation: 2, mode: GCCollectionMode.Forced, blocking: true);
-				GC.WaitForPendingFinalizers ();
-				Thread.Sleep (10);
-			} while (JNIEnv.BridgeProcessingGeneration == initialBridgeGeneration && stopwatch.Elapsed < timeout);
+			// A round decides whether to write its events when it starts, so wait for one that started after the listener was enabled.
+			await GCBridgeTestHelpers.WaitForBridgeRoundsAsync (testContext.CancellationToken);
 
-			Assert.IsGreaterThan (initialBridgeGeneration, JNIEnv.BridgeProcessingGeneration,
-				"A GC bridge round should complete after forcing a full collection.");
-
-			CapturedEvent startEvent = default;
-			CapturedEvent stopEvent = default;
-			Assert.IsTrue (
-				SpinWait.SpinUntil (
-					() => listener.TryGetEventPair (startEventId, stopEventId, out startEvent, out stopEvent),
-					timeout),
+			Assert.IsTrue (listener.TryGetEventPair (startEventId, stopEventId, out var startEvent, out var stopEvent),
 				"GC bridge Start and Stop events should be emitted as matched pairs.");
 			Assert.AreEqual (startEventId, startEvent.Id);
 			Assert.AreEqual (0, startEvent.Payload.Count);
 			Assert.AreEqual (stopEventId, stopEvent.Id);
 			Assert.AreEqual (0, stopEvent.Payload.Count);
-		}
-
-		[MethodImpl (MethodImplOptions.NoInlining)]
-		static void CreateCollectibleJavaPeer ()
-		{
-			_ = new Java.Lang.String ("bridge");
 		}
 
 		[return: DynamicallyAccessedMembers (DynamicallyAccessedMemberTypes.NonPublicFields | DynamicallyAccessedMemberTypes.NonPublicMethods)]
@@ -404,10 +391,15 @@ namespace Android.RuntimeTests
 				out CapturedEvent stopEvent)
 			{
 				lock (eventsLock) {
-					for (int i = 0; i + 1 < events.Count; i++) {
-						if (events [i].Id == startEventId && events [i + 1].Id == stopEventId) {
-							startEvent = events [i];
-							stopEvent = events [i + 1];
+					// TypeMap events from other threads can be written between a pair's Start and Stop.
+					bool started = false;
+					startEvent = default;
+					foreach (var captured in events) {
+						if (captured.Id == startEventId) {
+							startEvent = captured;
+							started = true;
+						} else if (captured.Id == stopEventId && started) {
+							stopEvent = captured;
 							return true;
 						}
 					}

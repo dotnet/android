@@ -1,5 +1,4 @@
 using System;
-using System.Diagnostics;
 using System.Threading.Tasks;
 
 using Java.Interop;
@@ -11,6 +10,13 @@ namespace Java.InteropTests
 	[TestClass]
 	public class JavaObjectTest
 	{
+		readonly TestContext testContext;
+
+		public JavaObjectTest (TestContext testContext)
+		{
+			this.testContext = testContext;
+		}
+
 #if !NO_GC_BRIDGE_SUPPORT
 		[TestMethod]
 		public void JavaReferencedInstanceSurvivesCollection ()
@@ -76,6 +82,7 @@ namespace Java.InteropTests
 
 #if !NO_GC_BRIDGE_SUPPORT
 		[TestMethod]
+		[Timeout (60_000, CooperativeCancellation = true)]
 		public async Task UnreferencedInstanceIsCollected ()
 		{
 			JniObjectReference  oldHandle = new JniObjectReference ();
@@ -85,11 +92,8 @@ namespace Java.InteropTests
 					oldHandle = v.PeerReference.NewWeakGlobalRef ();
 					r         = new WeakReference (v);
 			});
-			JniEnvironment.Runtime.ValueManager.CollectPeers ();
-			await WaitForGC (
-					() => !r.IsAlive && JniRuntime.CurrentRuntime.ValueManager.PeekValue (oldHandle) == null,
-					"Expected the unreferenced instance to be collected.");
-			Assert.IsFalse (r.IsAlive);
+			await GCBridgeTestHelpers.CollectUnreachablePeersAsync (testContext.CancellationToken);
+			Assert.IsFalse (r.IsAlive, "Expected the unreferenced instance to be collected.");
 			Assert.IsNull (r.Target);
 			Assert.IsNull (JniRuntime.CurrentRuntime.ValueManager.PeekValue (oldHandle));
 			JniObjectReference.Dispose (ref oldHandle);
@@ -109,6 +113,7 @@ namespace Java.InteropTests
 
 #if !NO_GC_BRIDGE_SUPPORT
 		[TestMethod]
+		[Timeout (60_000, CooperativeCancellation = true)]
 		public async Task Dispose_Finalized ()
 		{
 			var disposed  = new TaskCompletionSource<bool> (TaskCreationOptions.RunContinuationsAsynchronously);
@@ -122,27 +127,11 @@ namespace Java.InteropTests
 				});
 				JniEnvironment.Runtime.ValueManager.CollectPeers ();
 			});
-			JniEnvironment.Runtime.ValueManager.CollectPeers ();
-			await WaitForGC (
-					() => disposed.Task.IsCompleted || finalized.Task.IsCompleted,
-					"Expected JavaDisposedObject.Dispose(disposing: false) to run.");
+			await GCBridgeTestHelpers.CollectUnreachablePeersAsync (testContext.CancellationToken);
 			Assert.IsFalse (disposed.Task.IsCompleted);
-			Assert.IsTrue (finalized.Task.IsCompleted);
+			Assert.IsTrue (finalized.Task.IsCompleted, "Expected JavaDisposedObject.Dispose(disposing: false) to run.");
 		}
 #endif  // !NO_GC_BRIDGE_SUPPORT
-
-		static async Task WaitForGC (Func<bool> predicate, string message, int timeoutMilliseconds = 2000)
-		{
-			var timeout   = TimeSpan.FromMilliseconds (timeoutMilliseconds);
-			var stopwatch = Stopwatch.StartNew ();
-			while (!predicate () && stopwatch.Elapsed < timeout) {
-				GC.Collect (generation: 2, mode: GCCollectionMode.Forced, blocking: true);
-				GC.WaitForPendingFinalizers ();
-				JniEnvironment.Runtime.ValueManager.CollectPeers ();
-				await Task.Yield ();
-			}
-			Assert.IsTrue (predicate (), message);
-		}
 
 		[TestMethod]
 		public void ObjectDisposed ()

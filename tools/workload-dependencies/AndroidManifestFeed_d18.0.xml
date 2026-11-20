@@ -100,6 +100,13 @@
 			<url host-os="linux" host-bits="0" host-arch="x64" size="193808535" checksum-type="sha1" checksum="D55978EDEEC613357789D8CE13732117F59D053B" payloadFileName="microsoft-jdk-11.0.19-linux-x64.tar.gz">https://aka.ms/download-jdk/microsoft-jdk-11.0.19-linux-x64.tar.gz</url>
 		</urls>
 	</jdk>
+	<platform-tools revision="37.0.3" path="platform-tools" filesystem-path="platform-tools" manifest-url="https://dl.google.com/android/repository/repository2-3.xml" description="Android SDK Platform-Tools" obsolete="False" preview="False" license="android-sdk-license" original-type="generic:genericDetailsType">
+		<urls>
+			<url host-os="linux" host-bits="0" size="9571024" checksum-type="sha1" checksum="e1579b288a7ae4e9bc28dedec6a154d78b3c04ed">https://dl.google.com/android/repository/platform-tools_r37.0.3-linux.zip</url>
+			<url host-os="macosx" host-bits="0" size="16597626" checksum-type="sha1" checksum="d48920e2650321710b4d15d3acd9e277d59cd55b">https://dl.google.com/android/repository/platform-tools_r37.0.3-darwin.zip</url>
+			<url host-os="windows" host-bits="0" size="8188601" checksum-type="sha1" checksum="7fea85bc18d0480bc81d3603952d666f49496e5a">https://dl.google.com/android/repository/platform-tools_r37.0.3-win.zip</url>
+		</urls>
+	</platform-tools>
 	<platform-tools revision="37.0.1" path="platform-tools" filesystem-path="platform-tools" manifest-url="https://dl.google.com/android/repository/repository2-3.xml" description="Android SDK Platform-Tools" obsolete="False" preview="False" license="android-sdk-license" original-type="generic:genericDetailsType">
 		<urls>
 			<url host-os="linux" host-bits="0" size="9054187" checksum-type="sha1" checksum="477254aa5f903c15cf51001717bdf347fb6b53e0">https://dl.google.com/android/repository/platform-tools_r37.0.1-linux.zip</url>

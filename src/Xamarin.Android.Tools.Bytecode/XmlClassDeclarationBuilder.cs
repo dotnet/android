@@ -172,8 +172,9 @@ namespace Xamarin.Android.Tools.Bytecode {
 				return "protected";
 			if ((accessFlags & ClassAccessFlags.Private) != 0)
 				return "private";
+			// Preserve binding compatibility; GetAnnotatedVisibility records module-info restrictions.
 			if (accessFlags.HasFlag (ClassAccessFlags.Internal))
-				return "public";    // TODO: `kotlin-internal` at some point?  See also GetAnnotatedVisibility()
+				return "public";
 			return "";
 		}
 
