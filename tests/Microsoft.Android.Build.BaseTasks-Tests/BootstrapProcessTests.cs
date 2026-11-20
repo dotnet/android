@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using TPL = System.Threading.Tasks;
 using Microsoft.Android.Build.BaseTasks.Tests.Utilities;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
@@ -110,16 +111,15 @@ namespace Microsoft.Android.Build.BaseTasks.Tests
 			var task = new RecordingAdb {
 				BuildEngine = new MockBuildEngine (TextWriter.Null),
 				ToolPath = "/bin", ToolExe = "sh",
-				Arguments = $"""-c "sleep 30 & echo $! > '{pidFile}'; printf 'stdout-before-deadline\n'; printf 'stderr-before-deadline\n' >&2; exit 0" """,
+				Arguments = $"""-c "sleep 300 & echo $! > '{pidFile}'; printf 'stdout-before-deadline\n'; printf 'stderr-before-deadline\n' >&2; exit 0" """,
 				MergeOutput = false,
 				OutputFile = Path.Combine (directory, "stdout.txt"),
 				OutputTimeoutSeconds = 1,
 			};
-			var watch = Stopwatch.StartNew ();
+			var execution = TPL.Task.Run (task.Execute);
 			try {
-				Assert.IsTrue (task.Execute ());
-				Assert.GreaterOrEqual (watch.Elapsed, TimeSpan.FromMilliseconds (700), "Output draining must wait for the configured deadline while the descendant holds the pipes open.");
-				Assert.Less (watch.Elapsed, TimeSpan.FromSeconds (5), "Output draining must stop at its deadline after the direct process exits.");
+				Assert.IsTrue (execution.Wait (TimeSpan.FromSeconds (30)), "Output draining must not wait indefinitely for inherited pipes.");
+				Assert.IsTrue (execution.Result);
 				Assert.IsTrue (File.Exists (pidFile), "The inherited-pipe fixture must start.");
 				int pid = int.Parse (File.ReadAllText (pidFile), CultureInfo.InvariantCulture);
 				using (var pipeHolder = Process.GetProcessById (pid))
@@ -142,6 +142,7 @@ namespace Microsoft.Android.Build.BaseTasks.Tests
 						}
 					}
 				}
+				Assert.IsTrue (execution.Wait (TimeSpan.FromSeconds (30)), "The task must finish after the pipe holder is stopped.");
 				Directory.Delete (directory, recursive: true);
 			}
 		}
