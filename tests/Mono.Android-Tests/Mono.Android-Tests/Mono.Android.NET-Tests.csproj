@@ -160,7 +160,6 @@
     <Compile Include="System.Net\NetworkInterfaces.cs" />
     <Compile Include="System.Net\WebSocketTests.cs" />
     <Compile Include="System.Net.NetworkInformation\NetworkChangeTest.cs" />
-    <Compile Include="System.Net.NetworkInformation\PingTest.cs" />
     <Compile Include="System.Runtime.InteropServices\DllImportTest.cs" />
     <Compile Include="System.Runtime.InteropServices\RuntimeInformationTest.cs" />
     <Compile Include="System.Security.Cryptography\CryptographyTest.cs" />
