@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Linq;
@@ -55,6 +56,7 @@ namespace Xamarin.Android.Build.Tests
 				IsRelease = isRelease,
 			};
 			proj.SetRuntime (runtime);
+			proj.SetDefaultTargetDevice ();
 
 			proj.PackageReferences.Add (new Package {
 				Id = "Humanizer",
@@ -245,30 +247,72 @@ using System.Globalization;");
 			string deviceLocale = RunAdbCommand ("shell getprop persist.sys.locale")?.Trim ();
 			TestContext.Out.WriteLine ($"test value:{locale}, prop value:{deviceLocale}");
 
+			bool bootCompleted = false;
 			for (int attempt = 0; attempt < 5; attempt++) {
 				TestContext.Out.WriteLine ($"{nameof(CheckLocalizationIsCorrect)}: Setting Locale to {locale}, attempt {attempt}...");
 				ClearAdbLogcat ();
 				var rebootLogcatFile = Path.Combine (Root, builder.ProjectDirectory, $"reboot{attempt}-logcat-{locale.Replace ("/", "-")}.log");
 
 				// https://developer.android.com/guide/topics/resources/localization#changing-the-emulator-locale-from-the-adb-shell
-				RunAdbCommand ($"shell \"su root setprop persist.sys.locale {locale};su root stop;sleep 5;su root start;\"");
+				RunAdbCommand ($"shell su root setprop persist.sys.locale {locale}");
+				bool servicesStopped = false;
+				try {
+					var stopResult = RunAdbCommandWithExitCode ("shell su root stop");
+					if (stopResult.code == 0) {
+						var timeout = TimeSpan.FromSeconds (30);
+						var watch = Stopwatch.StartNew ();
+						var services = new [] { "netd", "surfaceflinger", "audioserver", "zygote", "zygote_secondary" };
+						while (watch.Elapsed < timeout) {
+							bool allStopped = true;
+							foreach (var service in services) {
+								var remaining = timeout - watch.Elapsed;
+								if (remaining <= TimeSpan.Zero) {
+									allStopped = false;
+									break;
+								}
+								int commandTimeout = Math.Max (1, (int) Math.Ceiling (remaining.TotalSeconds));
+								var result = RunAdbCommandWithExitCode ($"shell getprop init.svc.{service}", timeout: commandTimeout);
+								if (result.code != 0) {
+									allStopped = false;
+									break;
+								}
+								var state = result.stdOutput.Trim ();
+								if (state != "" && state != "stopped") {
+									allStopped = false;
+									break;
+								}
+							}
+							if (allStopped) {
+								servicesStopped = true;
+								break;
+							}
+							var remainingTime = timeout - watch.Elapsed;
+							if (remainingTime > TimeSpan.Zero)
+								Thread.Sleep (remainingTime < TimeSpan.FromMilliseconds (100) ? remainingTime : TimeSpan.FromMilliseconds (100));
+						}
+					}
+				} finally {
+					RunAdbCommand ("shell su root start");
+				}
+				Assert.IsTrue (servicesStopped, "Android services did not stop before restarting.");
 
-				if (!MonitorAdbLogcat ((l) => {
+				bootCompleted = MonitorAdbLogcat ((l) => {
 					if (l.Contains ("ActivityManager: Finished processing BOOT_COMPLETED"))
 						return true;
 					return false;
-				}, rebootLogcatFile, timeout: 60)) {
+				}, rebootLogcatFile, timeout: 60);
+				if (!bootCompleted) {
 					TestContext.Out.WriteLine ($"{nameof(CheckLocalizationIsCorrect)}: wating for boot to complete failed or timed out.");
 				}
 				deviceLocale = RunAdbCommand ("shell getprop persist.sys.locale")?.Trim ();
-				if (deviceLocale == locale) {
+				if (bootCompleted && deviceLocale == locale) {
 					break;
 				}
 			}
 
+			Assert.IsTrue (bootCompleted, "The device must finish booting before starting the locale test.");
 			Assert.AreEqual (locale, deviceLocale, $"The command to set the device locale to {locale} failed. Current device locale is {deviceLocale}");
 			ClearAdbLogcat ();
-			Thread.Sleep (1000);
 			StartActivityAndAssert (proj);
 
 			string logcatSearchString = "Strings.SomeString=";
