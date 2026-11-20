@@ -286,6 +286,7 @@ extends:
       - template: nuget-msi-convert/job/v4.yml@yaml-templates
         parameters:
           yamlResourceName: yaml-templates
+          reportReleaseDropStatus: false
           dependsOn: sign_net_mac_win
           artifactName: nuget-signed
           artifactPatterns: |
