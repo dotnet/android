@@ -3,7 +3,6 @@
   <PropertyGroup>
     <AndroidSdkBuildToolsVersion Condition="'$(AndroidSdkBuildToolsVersion)' == ''">37.0.0</AndroidSdkBuildToolsVersion>
     <AndroidCommandLineToolsVersion Condition="'$(AndroidCommandLineToolsVersion)' == ''">21.0</AndroidCommandLineToolsVersion>
-    <!-- Workload generation uses this revision; the dependency installer rolls forward within its major band. -->
     <AndroidSdkPlatformToolsVersion Condition="'$(AndroidSdkPlatformToolsVersion)' == ''">37.0.3</AndroidSdkPlatformToolsVersion>
     <AndroidSdkEmulatorVersion Condition="'$(AndroidSdkEmulatorVersion)' == ''"></AndroidSdkEmulatorVersion>
     <AndroidSdkPlatformVersion Condition="'$(AndroidSdkPlatformVersion)' == ''">android-37.0</AndroidSdkPlatformVersion>

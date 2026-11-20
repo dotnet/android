@@ -156,13 +156,8 @@ namespace Xamarin.Installer.Build.Tasks
 			var components = new List<AndroidPackage>();
 			foreach (var dependency in Dependencies)
 			{
-				var versionText = dependency.GetMetadata ("Version");
-				var component = new AndroidPackage (dependency.ItemSpec, versionText);
-				if (component.HasInvalidVersion) {
-					LogCodedError ("XA5311", Resources.XA5311, versionText, dependency.ItemSpec);
-					return null;
-				}
-				if (component.RollForwardMinimum != null || !component.IsInstalled (path)) {
+				var component = new AndroidPackage (dependency.ItemSpec, dependency.GetMetadata("Version"));
+				if (!component.IsInstalled (path)) {
 					Debug ($"Adding dependency '{component.InstallArgument}'.");
 					components.Add (component);
 				} else {
@@ -186,43 +181,15 @@ namespace Xamarin.Installer.Build.Tasks
 
 			if (components.Count > 0)
 			{
-				var cli = await GetAndroidCliAsync (installationContext.HttpClient, cancellationToken);
-				if (string.IsNullOrEmpty (cli))
-					return false;
-
-				for (int i = 0; i < components.Count; i++) {
-					var minimum = components [i].RollForwardMinimum;
-					if (minimum == null)
-						continue;
-
-					// Stable is the CLI default. Include all versions so a newer major cannot hide this band.
-					var list = ProcessUtils.CreateProcessStartInfo (cli,
-						"--no-metrics", "--sdk=" + sdkPath, "sdk", "list", "--all", "--all-versions", "platform-tools");
-					using (var stdout = new StringWriter ()) {
-						var stderr = new OutputTail ();
-						int listExitCode = await ProcessUtils.StartProcess (list, stdout, stderr, cancellationToken);
-						cancellationToken.ThrowIfCancellationRequested ();
-						if (listExitCode != 0) {
-							LogCodedError ("XA5309", Resources.XA5309, listExitCode, stderr);
-							return false;
-						}
-						var selected = SelectPlatformToolsVersion (stdout.ToString (), minimum);
-						if (selected == null) {
-							LogCodedError ("XA5310", Resources.XA5310, minimum, minimum.Major);
-							return false;
-						}
-						components [i] = new AndroidPackage ("platform-tools", selected);
-					}
-				}
-				components.RemoveAll (c => c.IsInstalled (sdkPath));
-				if (components.Count == 0) {
-					Debug ("No Android SDK components need to be installed.");
-					return true;
-				}
-
 				if (!AcceptAndroidSDKLicenses)
 				{
 					Error(Resources.License_Not_Accepted);
+					return false;
+				}
+
+				var cli = await GetAndroidCliAsync (installationContext.HttpClient, cancellationToken);
+				if (string.IsNullOrEmpty (cli))
+				{
 					return false;
 				}
 
@@ -256,21 +223,6 @@ namespace Xamarin.Installer.Build.Tasks
 			}
 
 			return true;
-		}
-
-		/// <summary>
-		/// Selects the newest stable catalog version that is at least <paramref name="minimum"/> and in the same major version.
-		/// </summary>
-		internal static string SelectPlatformToolsVersion (string output, Version minimum)
-		{
-			// The CLI lists installed packages under available packages too, so the installed section is not needed.
-			var (_, available) = SdkPackageListParser.Parse (output);
-			return available
-				.Where (p => p.Path == "platform-tools" && Version.TryParse (p.Version, out var version) &&
-					version.Major == minimum.Major && version >= minimum)
-				.OrderByDescending (p => Version.Parse (p.Version))
-				.Select (p => p.Version)
-				.FirstOrDefault ();
 		}
 
 		async Task<bool> InstallJavaSDKAsync(InstallationContext installationContext, CancellationToken cancellationToken)
@@ -608,23 +560,6 @@ namespace Xamarin.Installer.Build.Tasks
 			return Version.TryParse (text, out var version) ? version : null;
 		}
 
-		static bool IsValidPlatformToolsVersion (string value)
-		{
-			if (string.IsNullOrEmpty (value))
-				return false;
-
-			value = value.Trim ();
-			if (value.Length == 0 || value [0] == '.' || value [value.Length - 1] == '.' || value.Contains (".."))
-				return false;
-
-			foreach (char c in value) {
-				if ((c < '0' || c > '9') && c != '.')
-					return false;
-			}
-
-			return ParseVersion (value) != null;
-		}
-
 		internal static string ReadProperty (string path, string name)
 		{
 			if (!File.Exists (path))
@@ -647,13 +582,6 @@ namespace Xamarin.Installer.Build.Tasks
 
 			public string InstallArgument { get; }
 
-			/// <summary>
-			/// The minimum platform-tools version; the newest catalog version in its major version is installed.
-			/// </summary>
-			public Version RollForwardMinimum { get; }
-
-			public bool HasInvalidVersion { get; }
-
 			public AndroidPackage (string path, string version)
 			{
 				path = path.Replace (';', '/');
@@ -662,11 +590,6 @@ namespace Xamarin.Installer.Build.Tasks
 					path = "ndk/" + version;
 				directory = path;
 				this.version = ParseVersion (version);
-				if (path == "platform-tools") {
-					// Other packages, such as `cmdline-tools/latest`, can use nonnumeric versions.
-					HasInvalidVersion = !string.IsNullOrEmpty (version) && !IsValidPlatformToolsVersion (version);
-					RollForwardMinimum = this.version;
-				}
 
 				var lastSegment = path.Substring (path.LastIndexOf ('/') + 1);
 				InstallArgument = string.IsNullOrEmpty (version) || lastSegment == version ? path : $"{path}@{version}";

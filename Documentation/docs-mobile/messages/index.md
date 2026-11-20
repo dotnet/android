@@ -286,9 +286,6 @@ Either change the value in the AndroidManifest.xml to match the $(SupportedOSPla
 + [XA5306](xa5306.md): The Android CLI is not available for this operating system and architecture.
 + [XA5307](xa5307.md): The SHA-256 hash of the downloaded Android CLI is not correct.
 + [XA5308](xa5308.md): The Android CLI failed while it installed Android SDK packages.
-+ [XA5309](xa5309.md): The Android CLI failed while it listed Android SDK packages.
-+ [XA5310](xa5310.md): No stable platform-tools package satisfies the requested version in the supported major version.
-+ [XA5311](xa5311.md): An Android SDK dependency has an invalid version.
 
 ## XA6xxx: Internal tools
 

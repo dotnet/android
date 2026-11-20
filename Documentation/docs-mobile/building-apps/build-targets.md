@@ -165,20 +165,6 @@ makes sure that the SHA-256 hash of the file is the same as the hash included wi
 the .NET for Android SDK. The Android CLI is available for Windows x64, macOS (x64
 and Arm64), and Linux (x64 and Arm64).
 
-For `platform-tools`, the target queries the CLI's stable package catalog and
-selects the newest version in the supported 37.x major band that is at least
-the requested `$(AndroidSdkPlatformToolsVersion)`. It does not automatically
-install 38.x or preview releases. An older installed 37.x package is updated; an
-equal or newer installed version is left alone. If the catalog contains no
-such stable package, installation fails with [XA5310](../messages/xa5310.md),
-rather than crossing major versions.
-The Android CLI downloads SDK archives using its HTTPS catalog and the checksums
-published there; these dynamically selected archives do not have independently
-pinned hashes in the .NET for Android SDK.
-The major band comes from `$(AndroidSdkPlatformToolsVersion)`: an explicit
-override selects a different major band, not an exact point release. Workload
-dependency generation still uses that property's exact revision.
-
 The Android CLI accepts the Android SDK licenses without a prompt. Thus, if Android SDK
 packages must be installed, this target fails unless you set `$(AcceptAndroidSDKLicenses)`
 to `true`. Before you set this
