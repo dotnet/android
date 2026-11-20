@@ -91,6 +91,61 @@ namespace Xamarin.Android.Build.Tests {
 		}
 
 		[Test]
+		public void OpenGenericProxiesKeepTheReflectionActivationConstructor (
+			[Values] bool generic,
+			[Values] bool inherited,
+			[Values (ActivationCtorStyle.XamarinAndroid, ActivationCtorStyle.JavaInterop)] ActivationCtorStyle style)
+		{
+			// TrimmableTypeMap.CreateInstance () activates closed instantiations of an open generic peer by reflecting
+			// over the leaf type's (IntPtr, JniHandleOwnership) constructor, so the generated proxy must keep it.
+			string managedTypeName = generic ? "Example.Peer`1" : "Example.Peer";
+			string declaringTypeName = inherited ? "Example.BasePeer" : managedTypeName;
+			var peer = new JavaPeerInfo {
+				JavaName = "example/Peer",
+				CompatJniName = "example/Peer",
+				ManagedTypeName = managedTypeName,
+				ManagedTypeNamespace = "Example",
+				ManagedTypeShortName = generic ? "Peer`1" : "Peer",
+				AssemblyName = "Example",
+				IsGenericDefinition = generic,
+				DoNotGenerateAcw = true,
+				ActivationCtor = new ActivationCtorInfo {
+					DeclaringTypeName = declaringTypeName,
+					DeclaringAssemblyName = "Example",
+					DeclaringType = new TypeRefData {
+						ManagedTypeName = declaringTypeName,
+						AssemblyName = "Example",
+					},
+					Style = style,
+				},
+				JavaConstructors = [new JavaConstructorInfo { JniSignature = "()V", ConstructorIndex = 0 }],
+			};
+
+			var generator = new TypeMapAssemblyGenerator (new Version (12, 0));
+			var model = generator.CreateModel ([peer], "_Example.TypeMap");
+			using var stream = new MemoryStream ();
+			generator.Generate (model, stream, useSharedTypemapUniverse: true);
+			stream.Position = 0;
+			using var assembly = Mono.Cecil.AssemblyDefinition.ReadAssembly (stream);
+
+			var proxyType = assembly.MainModule.Types.Single (type => type.Name == model.ProxyTypes.Single ().TypeName);
+			var dependencies = proxyType.Methods.Single (method => method.Name == "CreateInstance").CustomAttributes
+				.Where (attribute => attribute.AttributeType.FullName == "System.Diagnostics.CodeAnalysis.DynamicDependencyAttribute")
+				.ToList ();
+			if (!generic || inherited || style != ActivationCtorStyle.XamarinAndroid) {
+				Assert.IsEmpty (dependencies, "Only leaf activation constructors of open generic peers are activated by reflection.");
+				return;
+			}
+
+			Assert.AreEqual (1, dependencies.Count, "CreateInstance must keep the open generic peer's activation constructor.");
+			var dependency = dependencies [0];
+			Assert.AreEqual ("#ctor(System.IntPtr,Android.Runtime.JniHandleOwnership)", dependency.ConstructorArguments [0].Value);
+			var target = (Mono.Cecil.TypeReference) dependency.ConstructorArguments [1].Value;
+			Assert.AreEqual ("Example.Peer`1", target.FullName);
+			Assert.AreEqual ("Example", target.Scope.Name);
+		}
+
+		[Test]
 		public void AssemblyQualifiedApplicationTypeReferencesSelectCorrectPeer ()
 		{
 			var wrongPeer = new JavaPeerInfo {

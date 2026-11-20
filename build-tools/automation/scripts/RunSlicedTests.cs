@@ -31,7 +31,10 @@ int totalSlices = int.Parse (options ["--total-slices"]);
 // Use the same dotnet that runs this file
 string dotnet = Path.Combine (RuntimeEnvironment.GetRuntimeDirectory (), "..", "..", "..", "dotnet");
 
-var list = Process.Start (new ProcessStartInfo (dotnet, [testAssembly, "--list-tests", "json", "--filter", options ["--filter"], "--no-banner"]) {
+List<string> listArguments = [testAssembly, "--list-tests", "json", "--no-banner"];
+if (!string.IsNullOrEmpty (options ["--filter"]))
+	listArguments.AddRange (["--filter", options ["--filter"]]);
+var list = Process.Start (new ProcessStartInfo (dotnet, listArguments) {
 	RedirectStandardOutput = true,
 }) ?? throw new InvalidOperationException ($"Could not start {dotnet}");
 string json = list.StandardOutput.ReadToEnd ();

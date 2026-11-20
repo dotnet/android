@@ -1,5 +1,4 @@
 using System;
-using System.Diagnostics;
 using System.Globalization;
 using System.Runtime.CompilerServices;
 using System.Runtime.ExceptionServices;
@@ -17,6 +16,13 @@ namespace Java.InteropTests
 	[TestCategory ("ManagedObjectProxy")]
 	public class ManagedObjectProxyTests
 	{
+		readonly TestContext testContext;
+
+		public ManagedObjectProxyTests (TestContext testContext)
+		{
+			this.testContext = testContext;
+		}
+
 		static IntPtr noPinActionPointer;
 
 		[TestMethod]
@@ -246,14 +252,14 @@ namespace Java.InteropTests
 		}
 
 		[TestMethod]
+		[Timeout (60_000, CooperativeCancellation = true)]
 		public async Task JavaObjectArrayRetainsManagedValueUntilReleased ()
 		{
 			WeakReference<ManagedValue> weakValue;
 			var values = CreateJavaRootedValue (out weakValue);
 
 			try {
-				await WaitForGC (() => IsAlive (weakValue),
-					"A Java array reference should retain its managed value.");
+				await GCBridgeTestHelpers.WaitForBridgeRoundsAsync (testContext.CancellationToken);
 				AssertJavaRootRetainsValue (values, weakValue);
 			} finally {
 				try {
@@ -264,7 +270,8 @@ namespace Java.InteropTests
 				values = null;
 			}
 
-			await WaitForGC (() => !IsAlive (weakValue),
+			await GCBridgeTestHelpers.CollectUnreachablePeersAsync (testContext.CancellationToken);
+			Assert.IsFalse (IsAlive (weakValue),
 				"The managed value should be collectible after its Java collection reference is cleared and disposed.");
 		}
 
@@ -314,29 +321,6 @@ namespace Java.InteropTests
 				Assert.AreSame (value, values [0]);
 				GC.KeepAlive (value);
 			});
-		}
-
-		static async Task WaitForGC (Func<bool> predicate, string message, int timeoutMilliseconds = 5000)
-		{
-			int initialBridgeGeneration = JNIEnv.BridgeProcessingGeneration;
-			var timeout = TimeSpan.FromMilliseconds (timeoutMilliseconds);
-			var stopwatch = Stopwatch.StartNew ();
-			do {
-				GC.Collect (generation: 2, mode: GCCollectionMode.Forced, blocking: true);
-				GC.WaitForPendingFinalizers ();
-				JNIEnv.WaitForBridgeProcessing ();
-				JniEnvironment.Runtime.ValueManager.CollectPeers ();
-				JNIEnv.WaitForBridgeProcessing ();
-				await Task.Yield ();
-			} while ((!predicate () ||
-					JNIEnv.BridgeProcessingGeneration == initialBridgeGeneration) &&
-				stopwatch.Elapsed < timeout);
-
-			int finalBridgeGeneration = JNIEnv.BridgeProcessingGeneration;
-			Assert.IsGreaterThan (initialBridgeGeneration, finalBridgeGeneration,
-				$"A JNI bridge-processing cycle did not complete within {timeoutMilliseconds}ms. " +
-				$"Initial generation: {initialBridgeGeneration}; final generation: {finalBridgeGeneration}.");
-			Assert.IsTrue (predicate (), message);
 		}
 
 		[MethodImpl (MethodImplOptions.NoInlining)]

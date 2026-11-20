@@ -273,11 +273,9 @@ namespace Xamarin.Android.Build.Tests
 				},
 			};
 
-			// TODO: for some reason the tests no longer produce both aab and apk packages, at least locally? Fine? Bug?
 			produced_binaries = new List <string> {
 				$"{ProjectName}.dll",
 				"CommonSampleLibrary.dll",
-//				$"{PackageName}-Signed.apk",
 				$"{PackageName}.aab",
 				$"{PackageName}-Signed.aab",
 			};

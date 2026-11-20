@@ -130,7 +130,9 @@ Then update the following files:
     should be `False` for preview API levels and `True` once the API level is
     stable.
 
-    TODO: what should be done for the "mid-year" updates, as is the case for API-CANARY?
+    For minor API updates, add a separate entry with the same integer `Level`
+    and the new `VersionCodeFull` and platform `Id`, as in the `36.1` example
+    above and the existing `37.1` entry in `Mono.Android.Apis.projitems`.
 
   - Add a new `<_PlatformPackage>` entry to the platform catalog in
     [`/src/androidsdk/androidsdk.targets`](../../src/androidsdk/androidsdk.targets):
@@ -215,8 +217,6 @@ You should search-and-replace instances of your local directory name with `..\..
 
 - Add level to `/build-tools/Xamarin.Android.Tools.BootstrapTasks/Xamarin.Android.Tools.BootstrapTasks/CheckApiCompatibility.cs`
   to enable running ApiCompat against the new level. (ex: `{ "v11.0.99", "v11.0" }`)
-- Add level to `/build-tools/api-xml-adjuster/Makefile`
-  [TODO: remove? `$(API_LEVELS)` was last touched for API-34!]
 - Add level to `DefaultTestSdkPlatforms` in `/build-tools/automation/yaml-templates/variables.yaml`
 - Update `WorkloadManifest.in.json` with the `Microsoft.Android.Ref.*` and
   `Microsoft.Android.Runtime.*.android` packs for the new API level.
@@ -271,7 +271,7 @@ cp src/Mono.Android/PublicAPI/API-36/* src/Mono.Android/PublicAPI/API-36.1
 To build *just* `src/Mono.Android/Mono.Android.csproj`:
 
 ```dotnetcli
-./dotnet-local.sh build -bl src/Mono.Android/*.csproj -p:AndroidApiLevel=36.1 -p:AndroidPlatformId=CANARY -p:AndroidFrameworkVersion=v16.1
+./dotnet-local.sh build -bl src/Mono.Android/*.csproj -p:AndroidApiLevel=36.1 -p:AndroidPlatformId=CANARY -p:AndroidFrameworkVersion=v16.1 -p:IsUnstableVersion=true
 ```
 
 ### New AndroidManifest.xml Elements

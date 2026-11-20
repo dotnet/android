@@ -109,7 +109,7 @@
     <Touch Files="@(_ConfigureRuntimesOutputs)" />
   </Target>
 
-  <!-- TODO: update for the changes -->
+  <!-- TODO: Include all shared NativeAOT sources and headers, such as clr/host/gc-bridge.cc and clr/runtime-base/util.cc. -->
   <Target Name="_FindRuntimeSources">
     <ItemGroup>
       <_RuntimeSources Include="common\include\**\*.hh" />
