@@ -212,6 +212,7 @@ Copyright (C) 2016 Xamarin. All rights reserved.
 		<AndroidDebuggerServer Condition="'$(AndroidDebuggerServer)' == ''">True</AndroidDebuggerServer>
 		<_AndroidRunForceStop Condition="'$(_AndroidRunForceStop)' == ''">True</_AndroidRunForceStop>
 		<_AndroidAllowJavaDebugging Condition="'$(_AndroidAllowJavaDebugging)' == ''">False</_AndroidAllowJavaDebugging>
+		<_AndroidCaptureJavaDebuggingLogcat Condition="'$(_AndroidCaptureJavaDebuggingLogcat)' == ''">False</_AndroidCaptureJavaDebuggingLogcat>
 	</PropertyGroup>
 	<Exec Command="&quot;$(_AndroidPlatformToolsDirectory)adb&quot; $(AdbTarget) forward tcp:$(AndroidSdbTargetPort) tcp:$(AndroidSdbHostPort)"
 		Condition="'$(AndroidAttachDebugger)' == 'True' And '$(AndroidDebuggerServer)' == 'True'" />
@@ -230,6 +231,7 @@ Copyright (C) 2016 Xamarin. All rights reserved.
 			Server="$(AndroidDebuggerServer)"
 			ForceStop="$(_AndroidRunForceStop)"
 			AllowJavaDebugging="$(_AndroidAllowJavaDebugging)"
+			CaptureJavaDebuggingLogcat="$(_AndroidCaptureJavaDebuggingLogcat)"
 	/>
 </Target>
 
