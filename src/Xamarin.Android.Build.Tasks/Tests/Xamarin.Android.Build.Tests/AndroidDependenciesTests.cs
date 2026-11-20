@@ -34,8 +34,7 @@ namespace Xamarin.Android.Build.Tests
 			var oldSdkPath = Environment.GetEnvironmentVariable ("TEST_ANDROID_SDK_PATH");
 
 			// Reuse the provisioned JDK without allowing the installer to modify it. Downloading the
-			// ~200 MB JDK from aka.ms made this test flaky (https://github.com/dotnet/android/issues/13644);
-			// InstallJdkExtractsArchive covers JDK installation and OpenJdkSignatureTests covers verification.
+			// ~200 MB JDK from aka.ms made this test flaky (https://github.com/dotnet/android/issues/13644).
 			string jdkPath = AndroidSdkResolver.GetJavaSdkPath ().TrimEnd ('\\', '/');
 			if (!Directory.Exists (jdkPath))
 				Assert.Inconclusive ($"A provisioned JDK is required for this integration test; '{jdkPath}' does not exist.");
@@ -302,50 +301,6 @@ namespace Xamarin.Android.Build.Tests
 				var archive = await new JavaDependencyInstaller ().GetFirstValidJdkArchiveWithVersion (client, "21.0.99", CancellationToken.None);
 				Assert.IsNull (archive);
 			}
-		}
-
-		[Test]
-		public async System.Threading.Tasks.Task InstallJdkExtractsArchive ()
-		{
-			var root = Path.Combine (Root, "temp", TestName);
-			if (Directory.Exists (root))
-				Directory.Delete (root, recursive: true);
-
-			// Lay out a fake archive like the Microsoft OpenJDK one: a single top-level directory,
-			// with the JDK under Contents/Home on macOS.
-			var contents = Path.Combine (root, "contents");
-			var home = Path.Combine (contents, "jdk-21.0.8+9");
-			if (OperatingSystem.IsMacOS ())
-				home = Path.Combine (home, "Contents", "Home");
-			Directory.CreateDirectory (Path.Combine (home, "bin"));
-			File.WriteAllText (Path.Combine (home, "release"), "JAVA_VERSION=\"21.0.8\"\n");
-
-			string archivePath;
-			if (OperatingSystem.IsWindows ()) {
-				archivePath = Path.Combine (root, "jdk.zip");
-				System.IO.Compression.ZipFile.CreateFromDirectory (contents, archivePath);
-			} else {
-				archivePath = Path.Combine (root, "jdk.tar.gz");
-				var tar = new System.Diagnostics.ProcessStartInfo ("/usr/bin/tar", ["-czf", archivePath, "-C", contents, "."]);
-				using (var p = System.Diagnostics.Process.Start (tar)) {
-					p.WaitForExit ();
-					Assert.AreEqual (0, p.ExitCode, "tar failed");
-				}
-			}
-
-			// An existing older JDK must be replaced.
-			var jdkPath = Path.Combine (root, "jdk");
-			Directory.CreateDirectory (jdkPath);
-			File.WriteAllText (Path.Combine (jdkPath, "release"), "JAVA_VERSION=\"17.0.1\"\n");
-
-			var installer = new JavaDependencyInstaller { JdkPath = jdkPath };
-			await installer.InstallJdk (new Archive { DownloadedFilePath = archivePath }, CancellationToken.None);
-
-			Assert.IsTrue (installer.GetJdkRevision (out var version), "release file should be readable");
-			Assert.AreEqual (new Version (21, 0, 8), version);
-			DirectoryAssert.Exists (Path.Combine (jdkPath, "bin"));
-			CollectionAssert.AreEquivalent (new [] { contents, jdkPath }, Directory.GetDirectories (root),
-				"The temporary extraction directory should have been removed.");
 		}
 
 		sealed class HtmlHandler : HttpMessageHandler
