@@ -120,6 +120,11 @@ namespace Xamarin.Android.Build.Tests
 			messages.Clear ();
 
 			Assert.IsTrue (validateJavaVersion.Execute (), "second Execute should succeed!");
+			Assert.AreEqual ("1.8.0", validateJavaVersion.JdkVersion);
+			Assert.AreEqual ("1.8.0", validateJavaVersion.MinimumRequiredJdkVersion);
+			Assert.IsFalse (messages.Any (m => m.Message == "ValidateJavaVersion Outputs:" ||
+				m.Message.StartsWith ("  JdkVersion:", StringComparison.Ordinal) ||
+				m.Message.StartsWith ("  MinimumRequiredJdkVersion:", StringComparison.Ordinal)));
 			var javaFullPath = Path.Combine (javaPath, "bin", javaExe);
 			var javacFullPath = Path.Combine (javaPath, "bin", javacExe);
 			Assert.IsTrue (messages.Any (m => m.Message == $"Using cached value for `{javaFullPath} -version`: 1.8.0"), "`java -version` should be cached!");
@@ -176,6 +181,11 @@ SOURCE="".:git:6171c19d2c18""
 				UseJavaExeVersion = false,
 			};
 			Assert.IsTrue (validateJavaVersion.Execute (), "Execute should succeed!");
+			Assert.AreEqual ("11.0.19", validateJavaVersion.JdkVersion);
+			Assert.AreEqual ("11.0.0", validateJavaVersion.MinimumRequiredJdkVersion);
+			Assert.IsFalse (messages.Any (m => m.Message == "ValidateJavaVersion Outputs:" ||
+				m.Message.StartsWith ("  JdkVersion:", StringComparison.Ordinal) ||
+				m.Message.StartsWith ("  MinimumRequiredJdkVersion:", StringComparison.Ordinal)));
 			Assert.IsTrue (messages.Any (m => m.Message.Contains ("contains JAVA_VERSION")), "contains JAVA_VERSION should be found");
 		}
 

@@ -34,8 +34,6 @@ namespace Xamarin.Android.BuildTools.PrepTasks
 
 			base.Execute ();
 
-			Log.LogMessage (MessageImportance.Low, $"  [Output] {nameof (AbbreviatedCommitHash)}: {AbbreviatedCommitHash}");
-
 			return !Log.HasLoggedErrors;
 		}
 

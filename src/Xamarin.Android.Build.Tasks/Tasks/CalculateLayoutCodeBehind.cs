@@ -144,9 +144,6 @@ namespace Xamarin.Android.Tasks
 			if (LayoutBindingFiles.Length == 0)
 				LogDebugMessage ("  No layout file qualifies for code-behind generation");
 			LayoutPartialClassFiles = layoutPartialClassFiles?.ToArray () ?? [];
-
-			LogDebugTaskItems ("  LayoutBindingFiles:", LayoutBindingFiles);
-			LogDebugTaskItems ("  LayoutPartialClassFiles:", LayoutPartialClassFiles);
 		}
 
 		void ParseAndLoadGroup (Dictionary <string, LayoutGroup> groupIndex, string groupName, List<ITaskItem>? items, ref List<ITaskItem>? layoutBindingFiles, ref List<ITaskItem>? layoutPartialClassFiles)

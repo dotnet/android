@@ -101,10 +101,6 @@ namespace Xamarin.Android.Tasks
 				document.SaveIfChanged (CacheFile);
 			}
 
-			Log.LogDebugTaskItems ("  NativeLibraries: ", NativeLibraries);
-			Log.LogDebugTaskItems ("  Jars: ", Jars);
-			Log.LogDebugTaskItems ("  ManifestDocuments: ", ManifestDocuments);
-
 			return true;
 		}
 	}

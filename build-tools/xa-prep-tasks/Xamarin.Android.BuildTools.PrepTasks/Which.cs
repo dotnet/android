@@ -109,8 +109,6 @@ namespace Xamarin.Android.BuildTools.PrepTasks
 				Log.LogError ("Could not find required program '{0}'.", Program.ItemSpec);
 			}
 
-			Log.LogMessage (MessageImportance.Low, $"  [Output] {nameof (Location)}: {Location?.ItemSpec}");
-
 			return !Log.HasLoggedErrors;
 		}
 

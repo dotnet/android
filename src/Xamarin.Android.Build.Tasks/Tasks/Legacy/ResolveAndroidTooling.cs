@@ -57,8 +57,6 @@ namespace Xamarin.Android.Tasks.Legacy
 		protected override void LogOutputs ()
 		{
 			base.LogOutputs ();
-
-			Log.LogDebugMessage ($"  {nameof (TargetFrameworkVersion)}: {TargetFrameworkVersion}");
 		}
 
 		bool ValidateApiLevels ()
