@@ -21,10 +21,8 @@
 
 parameters:
   xaSourcePath: $(System.DefaultWorkingDirectory)/android
-  # Optional file (relative to xaSourcePath) that replaces the build files in the
-  # dependency cache key. Cache@2 only saves on an exact-key miss, so a test job
-  # sharing the build job's key never saves the dependencies its tests download.
-  dependencyCacheKeyFile: ''
+  # Override the dependency key for jobs with different Gradle inputs.
+  dependencyCacheKey: ''
 
 steps:
 - pwsh: |
@@ -42,10 +40,10 @@ steps:
 - task: Cache@2
   displayName: cache Gradle dependencies
   inputs:
-    ${{ if eq(parameters.dependencyCacheKeyFile, '') }}:
+    ${{ if eq(parameters.dependencyCacheKey, '') }}:
       key: '"gradle" | "v2" | "$(Agent.OS)" | ${{ parameters.xaSourcePath }}/build-tools/gradle/gradle/wrapper/gradle-wrapper.properties | ${{ parameters.xaSourcePath }}/src/**/build.gradle | ${{ parameters.xaSourcePath }}/tests/Xamarin.Android.Tools.Bytecode-Tests/kotlin-gradle/*.gradle.kts'
     ${{ else }}:
-      key: '"gradle" | "v2" | "$(Agent.OS)" | ${{ parameters.xaSourcePath }}/build-tools/gradle/gradle/wrapper/gradle-wrapper.properties | ${{ parameters.xaSourcePath }}/${{ parameters.dependencyCacheKeyFile }}'
+      key: ${{ parameters.dependencyCacheKey }}
     restoreKeys: |
       "gradle" | "v2" | "$(Agent.OS)"
     path: $(GRADLE_USER_HOME)/caches/modules-2
