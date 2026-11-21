@@ -16,6 +16,7 @@ import android.os.Build;
 import android.util.Log;
 import mono.android.Runtime;
 import net.dot.android.ApplicationRegistration;
+import net.dot.android.RuntimeDirectories;
 
 public class MonoPackageManager {
 
@@ -25,7 +26,24 @@ public class MonoPackageManager {
 	public static void LoadApplication (Context context)
 	{
 		synchronized (lock) {
-			android.content.pm.ApplicationInfo runtimePackage = context.getApplicationInfo ();
+			if (initialized) {
+				if (context instanceof android.app.Application) {
+					ApplicationRegistration.Context = context;
+				}
+				return;
+			}
+			LoadApplication (
+				context.getApplicationInfo (),
+				context.getClassLoader (),
+				context
+			);
+		}
+	}
+
+	// Shared by MonoRuntimeProvider (API < 29) and CoreClrAppComponentFactory (API 29+); must not reference AppComponentFactory types.
+	public static void LoadApplication (ApplicationInfo runtimePackage, ClassLoader loader, Context context)
+	{
+		synchronized (lock) {
 			String[] apks = null;
 			String[] splitApks = runtimePackage.splitSourceDirs;
 			if (splitApks != null && splitApks.length > 0) {
@@ -42,10 +60,7 @@ public class MonoPackageManager {
 			if (!initialized) {
 				Locale locale       = Locale.getDefault ();
 				String language     = locale.getLanguage () + "-" + locale.getCountry ();
-				String filesDir     = context.getFilesDir ().getAbsolutePath ();
-				String cacheDir     = context.getCacheDir ().getAbsolutePath ();
-				String dataDir      = getNativeLibraryPath (context);
-				ClassLoader loader  = context.getClassLoader ();
+				String dataDir      = getNativeLibraryPath (runtimePackage);
 				int localDateTimeOffset;
 
 				if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
@@ -57,7 +72,11 @@ public class MonoPackageManager {
 				//
 				// Should the order change here, src/native/clr/include/constants.hh must be updated accordingly
 				//
-				String[] appDirs = new String[] {filesDir, cacheDir, dataDir};
+				String[] appDirs = new String[] {
+					RuntimeDirectories.getFilesDir (runtimePackage, context),
+					RuntimeDirectories.getCacheDir (runtimePackage, context),
+					dataDir
+				};
 				boolean haveSplitApks = runtimePackage.splitSourceDirs != null && runtimePackage.splitSourceDirs.length > 0;
 
 				NativeLibraryHelper.loadLibrary ("monodroid", runtimePackage, apks);

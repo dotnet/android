@@ -102,6 +102,7 @@ This file contains the NativeAOT-specific MSBuild logic for .NET for Android.
         WriteOnlyWhenDifferent="true" />
     <ItemGroup>
       <_AndroidNativeAotBootstrapSource Include="$(_AndroidNativeAotBootstrapDirectory)/src/net/dot/jni/nativeaot/JavaInteropRuntime.java" />
+      <_AndroidNativeAotBootstrapSource Include="$(_AndroidNativeAotBootstrapDirectory)/src/net/dot/jni/nativeaot/NativeAotAppComponentFactory.java" />
       <_AndroidNativeAotBootstrapSource Include="@(_AndroidNativeAotRuntimeProvider->'$(_AndroidNativeAotBootstrapDirectory)/src/net/dot/jni/nativeaot/%(Identity).java')" />
     </ItemGroup>
   </Target>

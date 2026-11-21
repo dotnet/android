@@ -253,6 +253,7 @@
         AndroidApiLevel="$(_AndroidApiLevel)"
         SupportedOSPlatformVersion="$(SupportedOSPlatformVersion)"
         RuntimeProviderJavaName="$(_TrimmableRuntimeProviderJavaName)"
+        AppComponentFactoryJavaName="$(_TrimmableAppComponentFactoryJavaName)"
         Debug="$(AndroidIncludeDebugSymbols)"
         NeedsInternet="$(AndroidNeedsInternetPermission)"
         EmbedAssemblies="$(EmbedAssembliesIntoApk)"

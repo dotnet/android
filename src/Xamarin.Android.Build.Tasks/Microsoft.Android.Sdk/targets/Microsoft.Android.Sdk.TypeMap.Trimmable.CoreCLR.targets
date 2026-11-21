@@ -8,6 +8,7 @@
 
   <PropertyGroup>
     <_TrimmableRuntimeProviderJavaName Condition=" '$(_TrimmableRuntimeProviderJavaName)' == '' ">mono.MonoRuntimeProvider</_TrimmableRuntimeProviderJavaName>
+    <_TrimmableAppComponentFactoryJavaName Condition=" '$(_TrimmableAppComponentFactoryJavaName)' == '' ">net.dot.android.CoreClrAppComponentFactory</_TrimmableAppComponentFactoryJavaName>
   </PropertyGroup>
 
   <!-- Repair opted-in legacy bindings before ILLink so it sees injected method

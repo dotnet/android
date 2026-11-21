@@ -26,7 +26,11 @@ public final class NativeLibraryHelper {
 
 	public static void loadLibrary (String libraryName, Context context)
 	{
-		ApplicationInfo applicationInfo = context.getApplicationInfo ();
+		loadLibrary (libraryName, context.getApplicationInfo ());
+	}
+
+	public static void loadLibrary (String libraryName, ApplicationInfo applicationInfo)
+	{
 		String[] splitApks = applicationInfo.splitSourceDirs;
 		String[] apks;
 		if (splitApks != null && splitApks.length > 0) {

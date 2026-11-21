@@ -278,7 +278,7 @@ namespace Xamarin.Android.Build.Tests
 				Path.GetFullPath (Path.Combine (intermediate, "..", "project.assets.json")),
 			];
 			var inputTimestamps = inputs.Select (File.GetLastWriteTimeUtc).ToArray ();
-			StringAssert.Contains ("NativeLibraryHelper.loadLibrary(\"BootstrapOriginal\", context);", File.ReadAllText (sourceFile));
+			StringAssert.Contains ("NativeLibraryHelper.loadLibrary(\"BootstrapOriginal\", applicationInfo);", File.ReadAllText (sourceFile));
 			string nativeObject = Path.Combine (intermediate, "android-arm64", "native", "BootstrapOriginal.o");
 			DateTime nativeObjectTimestamp = File.GetLastWriteTimeUtc (nativeObject);
 			DateTime bootstrapSourceTimestamp = File.GetLastWriteTimeUtc (sourceFile);
@@ -315,7 +315,7 @@ namespace Xamarin.Android.Build.Tests
 			}
 
 			Assert.IsTrue (builder.Build (proj, doNotCleanupOnUpdate: true, parameters: renamedParameters, saveProject: false));
-			StringAssert.Contains ("NativeLibraryHelper.loadLibrary(\"BootstrapRenamed\", context);", File.ReadAllText (sourceFile));
+			StringAssert.Contains ("NativeLibraryHelper.loadLibrary(\"BootstrapRenamed\", applicationInfo);", File.ReadAllText (sourceFile));
 			builder.Output.AssertTargetIsNotSkipped ("_AndroidGenerateNativeAotBootstrapSources");
 			CollectionAssert.AreEqual (inputTimestamps, inputs.Select (File.GetLastWriteTimeUtc),
 				"The manifest, environment and project must stay unchanged during the command-line AssemblyName change.");

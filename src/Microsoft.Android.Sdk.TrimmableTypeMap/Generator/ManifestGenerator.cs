@@ -26,6 +26,7 @@ class ManifestGenerator
 	public string MinSdkVersion { get; set; } = "";
 	public string TargetSdkVersion { get; set; } = "";
 	public string RuntimeProviderJavaName { get; set; } = "";
+	public string? AppComponentFactoryJavaName { get; set; }
 	public bool Debug { get; set; }
 	public bool NeedsInternet { get; set; }
 	public bool EmbedAssemblies { get; set; }
@@ -129,6 +130,7 @@ class ManifestGenerator
 		}
 
 		// Add runtime provider
+		AddAppComponentFactory (manifest, app);
 		var providerNames = AddRuntimeProviders (app);
 
 		// Set ApplicationJavaClass
@@ -160,6 +162,31 @@ class ManifestGenerator
 		RemoveNodes (doc);
 
 		return (doc, providerNames);
+	}
+
+	// The factory initializes the runtime on API 29+ before the Application is created, including in
+	// restricted backup processes where Android skips the runtime provider. On API < 29, or when the
+	// template declares its own factory (which is preserved), the runtime provider initializes it;
+	// otherwise the provider's initialization is a no-op.
+	void AddAppComponentFactory (XElement manifest, XElement app)
+	{
+		if (AppComponentFactoryJavaName.IsNullOrEmpty () || app.Attribute (AndroidNs + "appComponentFactory") is not null) {
+			return;
+		}
+
+		app.SetAttributeValue (AndroidNs + "appComponentFactory", AppComponentFactoryJavaName);
+
+		// Library manifests (e.g. androidx.core) also declare a factory; ours must win the merge.
+		if (manifest.Attribute (XNamespace.Xmlns + "tools") is null) {
+			manifest.SetAttributeValue (XNamespace.Xmlns + "tools", ToolsNs.NamespaceName);
+		}
+		const string replacedAttribute = "android:appComponentFactory";
+		string? replace = app.Attribute (ToolsNs + "replace")?.Value;
+		if (replace.IsNullOrWhiteSpace ()) {
+			app.SetAttributeValue (ToolsNs + "replace", replacedAttribute);
+		} else if (!replace.Split (',').Any (a => a.Trim () == replacedAttribute)) {
+			app.SetAttributeValue (ToolsNs + "replace", replace + "," + replacedAttribute);
+		}
 	}
 
 	internal static void ValidateApplicationDeclarations (
