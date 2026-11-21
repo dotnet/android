@@ -95,7 +95,6 @@ namespace UnnamedProject
 			});
 			proj.MainActivity = """"
 using System;
-using System.Threading;
 using System.Threading.Tasks;
 using Android.App;
 using Android.OS;
@@ -141,13 +140,11 @@ managedBridge.completeTestForIssue12542();
 				SetContentView (webView);
 				webView.LoadDataWithBaseURL ("https://localhost/", html, "text/html", "UTF-8", null);
 
-				using var timeout = new CancellationTokenSource (TimeSpan.FromSeconds (15));
-				string result = await bridge.Result.WaitAsync (timeout.Token);
+				// The host bounds the test, including cold WebView renderer startup.
+				string result = await bridge.Result;
 				completion = result == expectedResult
 					? successMarker + result
 					: failureMarker + "unexpected-result:" + result;
-			} catch (System.OperationCanceledException) {
-				completion = failureMarker + "timeout";
 			} catch (Exception ex) {
 				completion = failureMarker + ex.GetType ().FullName + ":" + ex.Message;
 			} finally {
@@ -172,15 +169,13 @@ managedBridge.completeTestForIssue12542();
 				Assert.IsTrue (installed, "Project should have installed.");
 
 				ClearAdbLogcat ();
-				RunProjectAndAssert (proj, builder, doNotCleanupOnUpdate: true);
-				Assert.IsTrue (WaitForActivityToStart (proj.PackageName, "MainActivity",
-					Path.Combine (Root, builder.ProjectDirectory, "activity-logcat.log"), ActivityStartTimeoutInSeconds), "Activity should have started.");
-
 				var resultLog = Path.Combine (Root, builder.ProjectDirectory, "javascript-interface-logcat.log");
 				Assert.IsTrue (MonitorAdbLogcat (
 					line => line.Contains (SuccessMarker, StringComparison.Ordinal) || line.Contains (FailureMarker, StringComparison.Ordinal),
 					resultLog,
-					timeout: 30), "WebView did not report a JavaScript interface result.");
+					timeout: ActivityStartTimeoutInSeconds,
+					onMonitoringStarted: () => RunProjectAndAssert (proj, builder, doNotCleanupOnUpdate: true)),
+					"WebView did not report a JavaScript interface result.");
 				var logcat = File.ReadAllText (resultLog);
 				StringAssert.Contains (SuccessMarker + SuccessResult, logcat, "The JavaScript report callback should invoke the exact managed bridge instance once.");
 				StringAssert.DoesNotContain (FailureMarker, logcat, "WebView reported a JavaScript interface failure.");
