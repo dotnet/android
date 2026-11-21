@@ -16,4 +16,58 @@ public class JavaPeerActivationTests : TrimmingTestBase
 		var app = BuildAndRun ("Cases/GenericPeerArrayElement.cs", configuration);
 		AssertTrimmingExpectations (app);
 	}
+
+	// A bound type that the app uses only in a type check of an Android-created object is still activated.
+	[Test]
+	public void TypeCheckOnJavaCreatedPeerSucceedsWithoutWarnings ([TrimmingConfigurations] TrimmingConfiguration configuration)
+	{
+		if (configuration == TrimmingConfiguration.CoreClrPartialTrimming) {
+			Assert.Ignore ("https://github.com/dotnet/android/issues/13286: ILLink doesn't keep the type map entry of an isinst target in a copied assembly.");
+		}
+		var app = BuildAndRun ("Cases/TypeCheckOnJavaCreatedPeer.cs", configuration);
+		AssertTrimmingExpectations (app);
+	}
+
+	// A bound type that the app uses only in a cast of an Android-created object is still activated.
+	[Test]
+	public void CastToJavaCreatedPeerSucceedsWithoutWarnings ([TrimmingConfigurations] TrimmingConfiguration configuration)
+	{
+		if (configuration != TrimmingConfiguration.NativeAot) {
+			Assert.Ignore ("https://github.com/dotnet/android/issues/13286: ILLink doesn't keep the type map entry of a castclass target.");
+		}
+		var app = BuildAndRun ("Cases/CastClassToBoundType.cs", configuration);
+		AssertTrimmingExpectations (app);
+	}
+
+	// JavaAs<T> () returns the interface of a Java object whose most derived binding was trimmed.
+	[Test]
+	public void JavaAsReturnsInterfaceOfTrimmedClassWithoutWarnings ([TrimmingConfigurations] TrimmingConfiguration configuration)
+	{
+		var app = BuildAndRun ("Cases/JavaAsInterfaceOfTrimmedClass.cs", configuration);
+		AssertTrimmingExpectations (app);
+	}
+
+	// A Java object is activated through its Java interfaces when its Java superclasses' bindings are trimmed.
+	[Test]
+	public void InterfaceThroughTrimmedSuperclassIsActivatedWithoutWarnings ([TrimmingConfigurations] TrimmingConfiguration configuration)
+	{
+		var app = BuildAndRun ("Cases/InterfaceThroughTrimmedSuperclass.cs", configuration);
+		AssertTrimmingExpectations (app);
+	}
+
+	// A Java list is converted to a list of a bound interface type from a runtime Type.
+	[Test]
+	public void InterfaceElementCollectionsAreConvertedWithoutWarnings ([TrimmingConfigurations] TrimmingConfiguration configuration)
+	{
+		var app = BuildAndRun ("Cases/InterfaceElementCollections.cs", configuration);
+		AssertTrimmingExpectations (app);
+	}
+
+	// Java creates managed peers through their user constructors: an exception with a cause, and Handler.Post ()'s runnable.
+	[Test]
+	public void JavaActivatesUserConstructorsWithoutWarnings ([TrimmingConfigurations] TrimmingConfiguration configuration)
+	{
+		var app = BuildAndRun ("Cases/JavaActivatedUserConstructors.cs", configuration);
+		AssertTrimmingExpectations (app);
+	}
 }
