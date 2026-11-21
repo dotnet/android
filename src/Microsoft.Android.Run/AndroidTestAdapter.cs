@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Channels;
@@ -259,7 +260,7 @@ class AndroidTestAdapter(
 			Console.WriteLine (output);
 		}
 
-		var result = ParseInstrumentationBundle (output, stderr.ToString ());
+		var result = ParseInstrumentationBundle (output, discover && exitCode == 0 ? "" : stderr.ToString ());
 
 		// The final bundle (with resultsPath) is only emitted if Finish() ran to
 		// completion. Its absence — or a non-zero exit / an explicit crash marker —
