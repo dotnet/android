@@ -1,18 +1,19 @@
 ﻿Xamarin.Installer.Build.Tasks
 =================================================
 
-Xamarin.Installer.Build.Tasks contains the build tasks and targets that support the 
-`InstallAndroidDependencies` target that ships with the .NET for Android SDK.
+This directory contains the targets, properties, and localized messages for the
+`InstallAndroidDependencies` target that ships with the .NET for Android SDK. The
+`InstallAndroidDependencies` task itself is compiled into `Microsoft.Android.Build.Tasks.dll`
+(`src/Microsoft.Android.Build.Tasks`) and runs on .NET.
 
 
 ### Testing
 
-`OpenJdkSignatureTests` in `Xamarin.Android.Build.Tests` covers signature
-verification and task diagnostics. Build the local SDK and test assembly first,
-then run the focused tests from the repository root:
+`OpenJdkSignatureTests` in `Microsoft.Android.Build.Tasks.Tests` covers signature
+verification and task diagnostics. Run the focused tests from the repository root:
 
 ```text
-dotnet-local.cmd test bin\TestDebug\net10.0\Xamarin.Android.Build.Tests.dll --filter FullyQualifiedName~OpenJdkSignatureTests
+dotnet test src/Microsoft.Android.Build.Tasks/Tests/Microsoft.Android.Build.Tasks.Tests/Microsoft.Android.Build.Tasks.Tests.csproj --filter FullyQualifiedName~OpenJdkSignatureTests
 ```
 
 The explicit integration tests download a Microsoft JDK archive, verify its
@@ -20,7 +21,7 @@ signature, reject changed archive contents, and install the JDK through the
 production dependency task:
 
 ```text
-dotnet-local.cmd test bin\TestDebug\net10.0\Xamarin.Android.Build.Tests.dll --filter "FullyQualifiedName~OpenJdkSignatureTests.PublishedMicrosoftArchive|FullyQualifiedName~OpenJdkSignatureTests.InstallMicrosoftJdk"
+dotnet test src/Microsoft.Android.Build.Tasks/Tests/Microsoft.Android.Build.Tasks.Tests/Microsoft.Android.Build.Tasks.Tests.csproj --filter "FullyQualifiedName~OpenJdkSignatureTests.PublishedMicrosoftArchive|FullyQualifiedName~OpenJdkSignatureTests.InstallMicrosoftJdk"
 ```
 
 ### OpenJDK signing-key maintenance
@@ -76,16 +77,16 @@ _without_ building dotnet/android, though it does require a dotnet/android check
     ````
 
 Alternatively, follow build instructions in the README to build from scratch.
-After setting up this sandbox environment, you can drag over your custom Xamarin.Installer.Build.Tasks outputs.
+After setting up this sandbox environment, you can drag over your custom task outputs.
 
-* Build your custom branch of Xamarin.Installer.Build.Tasks
+* Build your custom branch of Microsoft.Android.Build.Tasks
     ```
-    dotnet build Xamarin.Installer.Build.Tasks.csproj
+    dotnet build src/Microsoft.Android.Build.Tasks/Microsoft.Android.Build.Tasks.csproj
     ```
 
-* Copy the relevant `Xamarin.Installer` outputs to the sandboxed .NET preview set up earlier:
+* Copy the `tools/net` outputs to the sandboxed .NET preview set up earlier:
     ```
-    cp /path/to/android-sdk-installer/Xamarin.Installer.Build.Tasks/bin/Debug/*.dll bin/Debug/dotnet/packs/Microsoft.Android.Sdk.Darwin/34.99.0-preview.7.346/tools
+    cp bin/Debug/lib/packs/Microsoft.Android.Sdk.Darwin/*/tools/net/*.dll bin/Debug/dotnet/packs/Microsoft.Android.Sdk.Darwin/34.99.0-preview.7.346/tools/net
     ```
 
 * Create and build a test project that will run against your sandboxed .NET preview:
