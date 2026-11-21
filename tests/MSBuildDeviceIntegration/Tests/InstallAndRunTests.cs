@@ -3155,13 +3155,36 @@ Android.Util.Log.Info ("GradleFBProj", "{{successMarker}} " + GradleLibrary.Gree
 """);
 
 			using var builder = CreateApkBuilder ();
-			Assert.IsTrue (builder.Build (proj, environmentVariables: new Dictionary<string, string> {
+			builder.ThrowOnBuildFailure = false;
+			if (!builder.Build (proj, environmentVariables: new Dictionary<string, string> {
 				{ "GRADLE_OPTS", $"{Environment.GetEnvironmentVariable ("GRADLE_OPTS")} -Dorg.gradle.logging.level=info -Dorg.gradle.logging.stacktrace=all" },
-			}), "Build should have succeeded.");
+			})) {
+				// CI retries discard the first attempt's build.log, so keep the cause in the failure message.
+				Assert.Fail ($"Build should have succeeded:{Environment.NewLine}{GetBuildFailureSummary (builder.LastBuildOutput)}");
+			}
 			ClearAdbLogcat ();
 			Assert.IsTrue (MonitorAdbLogcat (line => line.Contains (expectedLogcatOutput),
 				Path.Combine (Root, builder.ProjectDirectory, "logcat.log"), ActivityStartTimeoutInSeconds,
 				onMonitoringStarted: () => RunProjectAndAssert (proj, builder)), $"Output did not contain {expectedLogcatOutput}!");
+		}
+
+		static string GetBuildFailureSummary (IEnumerable<string> output)
+		{
+			const int gradleFailureLines = 20;
+			var summary = new List<string> ();
+			int gradleLinesRemaining = 0;
+			foreach (var line in output) {
+				if (line.Contains ("FAILURE:", StringComparison.Ordinal)) {
+					gradleLinesRemaining = gradleFailureLines;
+				}
+				if (gradleLinesRemaining > 0) {
+					gradleLinesRemaining--;
+					summary.Add (line);
+				} else if (line.Contains (": error ", StringComparison.Ordinal)) {
+					summary.Add (line);
+				}
+			}
+			return string.Join (Environment.NewLine, summary.Distinct ().Take (50));
 		}
 
 		[Test]
