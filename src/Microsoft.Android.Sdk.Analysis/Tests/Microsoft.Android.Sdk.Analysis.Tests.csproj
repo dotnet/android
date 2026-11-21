@@ -1,5 +1,6 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <Import Project="..\..\..\Configuration.props" />
+  <Import Project="..\..\..\build-tools\scripts\MSTestReferences.projitems" />
   <PropertyGroup>
     <TargetFramework>$(DotNetStableTargetFramework)</TargetFramework>
     <OutputPath>..\..\..\bin\Test$(Configuration)</OutputPath>
@@ -23,7 +24,9 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
   </ItemGroup>
-  <Import Project="..\..\..\build-tools\scripts\NUnitReferences.projitems" />
+  <PropertyGroup>
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
   <ItemGroup>
     <None Include="$(PkgMicrosoft_CodeAnalysis_CSharp_CodeStyle)\analyzers\dotnet\cs\*.dll">
       <Visible>False</Visible>

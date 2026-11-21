@@ -2,7 +2,7 @@ using System;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
 
-using NUnit.Framework;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -11,7 +11,8 @@ using Xamarin.ProjectTools;
 
 namespace Xamarin.Android.Build.Tests
 {
-	[TestFixture]
+	[TestClass]
+	[DoNotParallelize]
 	public class AndroidDotnetToolTests : BaseTest
 	{
 		MockBuildEngine engine;
@@ -19,16 +20,16 @@ namespace Xamarin.Android.Build.Tests
 		List<BuildWarningEventArgs> warnings;
 		List<BuildMessageEventArgs> messages;
 
-		[SetUp]
+		[TestInitialize]
 		public void Setup ()
 		{
-			engine = new MockBuildEngine (TestContext.Out,
+			engine = new MockBuildEngine (Console.Out,
 				errors: errors = new List<BuildErrorEventArgs> (),
 				warnings: warnings = new List<BuildWarningEventArgs> (),
 				messages: messages = new List<BuildMessageEventArgs> ());
 		}
 
-		[Test]
+		[TestMethod]
 		public void ShouldUseFullToolPath ()
 		{
 			var dotnetDir = TestEnvironment.DotNetPreviewDirectory;
@@ -40,16 +41,16 @@ namespace Xamarin.Android.Build.Tests
 				ToolExe = "class-parse.dll",
 			};
 
-			Assert.True (classParseTask.Execute (), "Task should have succeeded.");
+			Assert.IsTrue (classParseTask.Execute (), "Task should have succeeded.");
 			Assert.IsTrue (messages.Any (m => m.Message.StartsWith (dotnetPath)), "Task did not use expected tool path.");
 		}
 
-		[Test]
+		[TestMethod]
 		public void ClassParseWritesReferenceArguments ()
 		{
 			var outputDirectory = Path.Combine (Root, "temp", TestName);
 			Directory.CreateDirectory (outputDirectory);
-			TestOutputDirectories [TestContext.CurrentContext.Test.ID] = outputDirectory;
+			TestOutputDirectories [TestId] = outputDirectory;
 			var output = Path.Combine (outputDirectory, "api.xml");
 			var referenceOutput = Path.Combine (outputDirectory, "reference-api.xml");
 			var sourceJar = Path.Combine (outputDirectory, "source.jar");
@@ -65,9 +66,9 @@ namespace Xamarin.Android.Build.Tests
 			task.GenerateArguments ();
 
 			var responseFile = File.ReadAllLines (Path.Combine (outputDirectory, "class-parse.rsp"));
-			Assert.That (responseFile, Does.Contain ($"--reference-output=\"{referenceOutput}\""));
-			Assert.That (responseFile, Does.Contain ($"--reference=\"{referenceJar}\""));
-			Assert.That (responseFile, Does.Contain ($"\"{sourceJar}\""));
+			Assert.Contains ($"--reference-output=\"{referenceOutput}\"", responseFile);
+			Assert.Contains ($"--reference=\"{referenceJar}\"", responseFile);
+			Assert.Contains ($"\"{sourceJar}\"", responseFile);
 		}
 	}
 

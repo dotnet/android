@@ -3,23 +3,23 @@ using System.Linq;
 using System.Text;
 using System.Xml;
 using Java.Interop.Tools.JavaTypeSystem.Models;
-using NUnit.Framework;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Java.Interop.Tools.JavaTypeSystem.Tests
 {
-	[TestFixture]
+	[TestClass]
 	public class BaseMethodTests
 	{
-		JavaTypeCollection api;
+		static JavaTypeCollection api;
 
-		[OneTimeSetUp]
-		public void SetupFixture ()
+		[ClassInitialize]
+		public static void SetupFixture (TestContext context)
 		{
 			api = JavaApiTestHelper.GetLoadedApi ();
 			api.ResolveCollection ();
 		}
 
-		[Test]
+		[TestMethod]
 		public void InstantiatedGenericArgumentName ()
 		{
 			var kls = api.FindType ("android.database.ContentObservable") as JavaClassModel;
@@ -32,7 +32,7 @@ namespace Java.Interop.Tools.JavaTypeSystem.Tests
 			Assert.AreEqual ("T", para.InstantiatedGenericArgumentName, "InstantiatedGenericArgumentName mismatch");
 		}
 
-		[Test]
+		[TestMethod]
 		public void AncestralOverrides ()
 		{
 			string xml = @"<api>
@@ -59,7 +59,7 @@ namespace Java.Interop.Tools.JavaTypeSystem.Tests
 			Assert.IsNotNull (m.BaseMethod, "base method not found");
 		}
 
-		[Test]
+		[TestMethod]
 		public void GenericConstructors ()
 		{
 			string xml = @"<api>
@@ -86,7 +86,7 @@ namespace Java.Interop.Tools.JavaTypeSystem.Tests
 			Assert.IsNotNull (m.TypeParameters, "constructor not found");
 		}
 
-		[Test]
+		[TestMethod]
 		public void PreferRealApi ()
 		{
 			// Our base method is abstract, and our derived method is not.  However their is also a "matching" non-abstract

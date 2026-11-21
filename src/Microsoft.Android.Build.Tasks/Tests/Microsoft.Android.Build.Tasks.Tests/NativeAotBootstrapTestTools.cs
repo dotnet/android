@@ -2,7 +2,7 @@ using System;
 using System.Diagnostics;
 using System.IO;
 
-using NUnit.Framework;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Xamarin.Android.Build.Tests;
 
@@ -10,7 +10,7 @@ internal static class NativeAotBootstrapTestTools
 {
 	internal static string FindRepositoryRoot ()
 	{
-		var directory = new DirectoryInfo (TestContext.CurrentContext.TestDirectory);
+		var directory = new DirectoryInfo (AppContext.BaseDirectory);
 		while (directory != null) {
 			if (File.Exists (Path.Combine (directory.FullName, "src", "native", "native.targets"))) {
 				return directory.FullName;

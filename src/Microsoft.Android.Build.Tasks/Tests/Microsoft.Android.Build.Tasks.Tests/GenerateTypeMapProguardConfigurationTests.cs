@@ -4,16 +4,15 @@ using System.IO;
 using System.Text;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
-using NUnit.Framework;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Microsoft.Android.Tasks;
 
 namespace Xamarin.Android.Build.Tests;
 
-[TestFixture]
-[Parallelizable (ParallelScope.Children)]
+[TestClass]
 public class GenerateTypeMapProguardConfigurationTests : BaseTest
 {
-	[Test]
+	[TestMethod]
 	public void UnionsClassNamesWithoutMemberOrGlobalRules ()
 	{
 		var path = Path.Combine (Root, "temp", TestName);
@@ -23,7 +22,7 @@ public class GenerateTypeMapProguardConfigurationTests : BaseTest
 		File.WriteAllText (first, "test/Outer$Inner\r\nandroid/app/Activity\r\n\r\ntest/Caf\u00e9\n", new UTF8Encoding (false));
 		File.WriteAllText (second, "test/Outer$Inner\nandroid/app/Activity\ntest/\U00010428Peer\n", new UTF8Encoding (false));
 		var task = new GenerateTypeMapProguardConfiguration {
-			BuildEngine = new MockBuildEngine (TestContext.Out),
+			BuildEngine = new MockBuildEngine (Console.Out),
 			TypeMapKeyFiles = [new TaskItem (second), new TaskItem (first)],
 			OutputFile = Path.Combine (path, "proguard", "classes.cfg"),
 		};
@@ -37,21 +36,22 @@ public class GenerateTypeMapProguardConfigurationTests : BaseTest
 		CollectionAssert.AreEqual (new UTF8Encoding (false).GetBytes (expected), File.ReadAllBytes (task.OutputFile));
 	}
 
-	[TestCase ("test/*", TestName = "RejectsInvalidRecord_Wildcard")]
-	[TestCase ("test/Foo { *; }", TestName = "RejectsInvalidRecord_ProguardBlock")]
-	[TestCase ("test/Foo[1]", TestName = "RejectsInvalidRecord_AliasSuffix")]
-	[TestCase ("test.Foo", TestName = "RejectsInvalidRecord_DottedName")]
-	[TestCase ("test//Foo", TestName = "RejectsInvalidRecord_DoubleSlash")]
-	[TestCase ("/test/Foo", TestName = "RejectsInvalidRecord_LeadingSlash")]
-	[TestCase ("test/Foo/", TestName = "RejectsInvalidRecord_TrailingSlash")]
-	[TestCase ("test/1Foo", TestName = "RejectsInvalidRecord_LeadingDigit")]
-	[TestCase ("test/Foo;", TestName = "RejectsInvalidRecord_DescriptorTerminator")]
-	[TestCase ("test/Foo #comment", TestName = "RejectsInvalidRecord_InlineComment")]
-	[TestCase ("-dontshrink", TestName = "RejectsInvalidRecord_Directive")]
-	[TestCase ("test/Foo\n-keep class **", TestName = "RejectsInvalidRecord_LineFeedInjection")]
-	[TestCase ("test/Foo\r-dontobfuscate", TestName = "RejectsInvalidRecord_CarriageReturnInjection")]
-	[TestCase ("\ufefftest/Foo", TestName = "RejectsInvalidRecord_Bom")]
-	[TestCase ("test/Foo\u0000", TestName = "RejectsInvalidRecord_NullCharacter")]
+	[TestMethod]
+	[DataRow ("test/*", DisplayName = "RejectsInvalidRecord_Wildcard")]
+	[DataRow ("test/Foo { *; }", DisplayName = "RejectsInvalidRecord_ProguardBlock")]
+	[DataRow ("test/Foo[1]", DisplayName = "RejectsInvalidRecord_AliasSuffix")]
+	[DataRow ("test.Foo", DisplayName = "RejectsInvalidRecord_DottedName")]
+	[DataRow ("test//Foo", DisplayName = "RejectsInvalidRecord_DoubleSlash")]
+	[DataRow ("/test/Foo", DisplayName = "RejectsInvalidRecord_LeadingSlash")]
+	[DataRow ("test/Foo/", DisplayName = "RejectsInvalidRecord_TrailingSlash")]
+	[DataRow ("test/1Foo", DisplayName = "RejectsInvalidRecord_LeadingDigit")]
+	[DataRow ("test/Foo;", DisplayName = "RejectsInvalidRecord_DescriptorTerminator")]
+	[DataRow ("test/Foo #comment", DisplayName = "RejectsInvalidRecord_InlineComment")]
+	[DataRow ("-dontshrink", DisplayName = "RejectsInvalidRecord_Directive")]
+	[DataRow ("test/Foo\n-keep class **", DisplayName = "RejectsInvalidRecord_LineFeedInjection")]
+	[DataRow ("test/Foo\r-dontobfuscate", DisplayName = "RejectsInvalidRecord_CarriageReturnInjection")]
+	[DataRow ("\ufefftest/Foo", DisplayName = "RejectsInvalidRecord_Bom")]
+	[DataRow ("test/Foo\u0000", DisplayName = "RejectsInvalidRecord_NullCharacter")]
 	public void RejectsInvalidRecordsWithoutOverwritingOutput (string content)
 	{
 		var path = Path.Combine (Root, "temp", TestName);
@@ -66,7 +66,7 @@ public class GenerateTypeMapProguardConfigurationTests : BaseTest
 		Assert.AreEqual ("previous output", File.ReadAllText (output));
 	}
 
-	[Test]
+	[TestMethod]
 	public void EmptyInputOverwritesOutputAndRefreshesTimestamp ()
 	{
 		var path = Path.Combine (Root, "temp", TestName);
@@ -81,16 +81,16 @@ public class GenerateTypeMapProguardConfigurationTests : BaseTest
 
 		Assert.IsTrue (task.Execute ());
 		Assert.AreEqual (0, new FileInfo (output).Length);
-		Assert.Greater (File.GetLastWriteTimeUtc (output), old);
+		Assert.IsGreaterThan (old, File.GetLastWriteTimeUtc (output));
 		File.SetLastWriteTimeUtc (output, old);
 		Assert.IsTrue (task.Execute ());
-		Assert.Greater (File.GetLastWriteTimeUtc (output), old, "Unchanged output must still be a real incremental output.");
+		Assert.IsGreaterThan (old, File.GetLastWriteTimeUtc (output), "Unchanged output must still be a real incremental output.");
 		File.Delete (output);
 		Assert.IsTrue (task.Execute ());
-		FileAssert.Exists (output);
+		Assert.IsTrue (File.Exists (output));
 	}
 
-	[Test]
+	[TestMethod]
 	public void MissingInputIsNotAnEmptyMap ()
 	{
 		var path = Path.Combine (Root, "temp", TestName);
@@ -100,10 +100,11 @@ public class GenerateTypeMapProguardConfigurationTests : BaseTest
 		Assert.IsFalse (File.Exists (task.OutputFile));
 	}
 
-	[TestCase (false, false)]
-	[TestCase (false, true)]
-	[TestCase (true, false)]
-	[TestCase (true, true)]
+	[TestMethod]
+	[DataRow (false, false)]
+	[DataRow (false, true)]
+	[DataRow (true, false)]
+	[DataRow (true, true)]
 	public void FailedWriteCannotPublishPartialConfiguration (bool members, bool existingOutput)
 	{
 		var path = Path.Combine (Root, "temp", TestName);
@@ -119,7 +120,7 @@ public class GenerateTypeMapProguardConfigurationTests : BaseTest
 		}
 		var errors = new List<BuildErrorEventArgs> ();
 		GenerateTypeMapProguardConfiguration failing = members ? new FailingMemberWriter () : new FailingClassWriter ();
-		failing.BuildEngine = new MockBuildEngine (TestContext.Out, errors);
+		failing.BuildEngine = new MockBuildEngine (Console.Out, errors);
 		failing.TypeMapKeyFiles = [new TaskItem (input)];
 		failing.OutputFile = output;
 
@@ -130,19 +131,19 @@ public class GenerateTypeMapProguardConfigurationTests : BaseTest
 			Assert.AreEqual ("previous output", File.ReadAllText (output));
 			Assert.AreEqual (old, File.GetLastWriteTimeUtc (output));
 		} else {
-			FileAssert.DoesNotExist (output);
+			Assert.IsFalse (File.Exists (output));
 		}
 		Assert.IsEmpty (Directory.GetFiles (path, "*.tmp"));
 
 		GenerateTypeMapProguardConfiguration retry = members ? new GenerateTypeMapMemberProguardConfiguration () : new GenerateTypeMapProguardConfiguration ();
-		retry.BuildEngine = new MockBuildEngine (TestContext.Out);
+		retry.BuildEngine = new MockBuildEngine (Console.Out);
 		retry.TypeMapKeyFiles = failing.TypeMapKeyFiles;
 		retry.OutputFile = output;
 		Assert.IsTrue (retry.Execute ());
 		Assert.AreEqual (members
 			? "-keepclassmembers class test.Live { *; }\n-keepclassmembers interface test.Live { *; }\n"
 			: "-keep class test.Live\n-keep interface test.Live\n", File.ReadAllText (output));
-		Assert.Greater (File.GetLastWriteTimeUtc (output), old);
+		Assert.IsGreaterThan (old, File.GetLastWriteTimeUtc (output));
 	}
 
 	sealed class FailingClassWriter : GenerateTypeMapProguardConfiguration
@@ -163,7 +164,7 @@ public class GenerateTypeMapProguardConfigurationTests : BaseTest
 		}
 	}
 
-	[Test]
+	[TestMethod]
 	public void RejectsInvalidUtf8 ()
 	{
 		var path = Path.Combine (Root, "temp", TestName);
@@ -175,14 +176,14 @@ public class GenerateTypeMapProguardConfigurationTests : BaseTest
 		Assert.IsFalse (File.Exists (task.OutputFile));
 	}
 
-	[Test]
+	[TestMethod]
 	public void NoInputsReportsOutputPath ()
 	{
 		var path = Path.Combine (Root, "temp", TestName);
 		Directory.CreateDirectory (path);
 		var output = Path.Combine (path, "classes.cfg");
 		var errors = new List<BuildErrorEventArgs> ();
-		var engine = new MockBuildEngine (TestContext.Out, errors);
+		var engine = new MockBuildEngine (Console.Out, errors);
 		var task = new GenerateTypeMapProguardConfiguration {
 			BuildEngine = engine,
 			OutputFile = output,
@@ -191,10 +192,10 @@ public class GenerateTypeMapProguardConfigurationTests : BaseTest
 		Assert.IsFalse (task.Execute ());
 		Assert.AreEqual (1, errors.Count);
 		Assert.AreEqual ("XA4328", errors [0].Code);
-		StringAssert.Contains (output, errors [0].Message);
+		Assert.Contains (output, errors [0].Message);
 	}
 
-	[Test]
+	[TestMethod]
 	public void InvalidOutputPathReportsGenerationError ()
 	{
 		var path = Path.Combine (Root, "temp", TestName);
@@ -202,7 +203,7 @@ public class GenerateTypeMapProguardConfigurationTests : BaseTest
 		var input = Path.Combine (path, "input.keys");
 		File.WriteAllText (input, "test/Foo");
 		var errors = new List<BuildErrorEventArgs> ();
-		var engine = new MockBuildEngine (TestContext.Out, errors);
+		var engine = new MockBuildEngine (Console.Out, errors);
 		var task = new GenerateTypeMapProguardConfiguration {
 			BuildEngine = engine,
 			TypeMapKeyFiles = [new TaskItem (input)],
@@ -214,7 +215,7 @@ public class GenerateTypeMapProguardConfigurationTests : BaseTest
 		Assert.AreEqual ("XA4328", errors [0].Code);
 	}
 
-	[Test]
+	[TestMethod]
 	public void MemberGeneratorScopesRulesToCanonicalKeys ()
 	{
 		var path = Path.Combine (Root, "temp", TestName);
@@ -224,7 +225,7 @@ public class GenerateTypeMapProguardConfigurationTests : BaseTest
 		File.WriteAllText (first, "test/Peer\ntest/Contract\n");
 		File.WriteAllText (second, "test/Peer\ntest/Base\n");
 		var task = new GenerateTypeMapMemberProguardConfiguration {
-			BuildEngine = new MockBuildEngine (TestContext.Out),
+			BuildEngine = new MockBuildEngine (Console.Out),
 			TypeMapKeyFiles = [new TaskItem (first), new TaskItem (second)],
 			OutputFile = Path.Combine (path, "members.cfg"),
 		};
@@ -237,7 +238,7 @@ public class GenerateTypeMapProguardConfigurationTests : BaseTest
 			File.ReadAllText (task.OutputFile));
 	}
 
-	[Test]
+	[TestMethod]
 	public void MemberGeneratorRejectsInvalidKeysWithoutOverwritingOutput ()
 	{
 		var path = Path.Combine (Root, "temp", TestName);
@@ -248,7 +249,7 @@ public class GenerateTypeMapProguardConfigurationTests : BaseTest
 		File.WriteAllText (output, "previous output");
 		var errors = new List<BuildErrorEventArgs> ();
 		var task = new GenerateTypeMapMemberProguardConfiguration {
-			BuildEngine = new MockBuildEngine (TestContext.Out, errors),
+			BuildEngine = new MockBuildEngine (Console.Out, errors),
 			TypeMapKeyFiles = [new TaskItem (input)],
 			OutputFile = output,
 		};
@@ -260,7 +261,7 @@ public class GenerateTypeMapProguardConfigurationTests : BaseTest
 	}
 
 	static GenerateTypeMapProguardConfiguration CreateTask (string input, string output) => new () {
-		BuildEngine = new MockBuildEngine (TestContext.Out),
+		BuildEngine = new MockBuildEngine (Console.Out),
 		TypeMapKeyFiles = [new TaskItem (input)],
 		OutputFile = output,
 	};

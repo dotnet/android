@@ -3,14 +3,14 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using Microsoft.Android.Build.Tasks;
-using NUnit.Framework;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Microsoft.Android.Build.BaseTasks.Tests
 {
-	[TestFixture]
+	[TestClass]
 	public class HexUtilitiesTests
 	{
-		[Test]
+		[TestMethod]
 		public void GetHexValue_UpperCase ()
 		{
 			const string expected = "0123456789ABCDEF";
@@ -19,7 +19,7 @@ namespace Microsoft.Android.Build.BaseTasks.Tests
 			}
 		}
 
-		[Test]
+		[TestMethod]
 		public void GetHexValue_LowerCase ()
 		{
 			const string expected = "0123456789abcdef";
@@ -28,7 +28,7 @@ namespace Microsoft.Android.Build.BaseTasks.Tests
 			}
 		}
 
-		[Test]
+		[TestMethod]
 		public void WriteHex_Span_LowerCase ()
 		{
 			Span<char> chars = stackalloc char [2];
@@ -36,7 +36,7 @@ namespace Microsoft.Android.Build.BaseTasks.Tests
 			Assert.AreEqual ("ab", chars.ToString ());
 		}
 
-		[Test]
+		[TestMethod]
 		public void WriteHex_Span_WritesExactlyTwoChars ()
 		{
 			Span<char> chars = stackalloc char [4];
@@ -45,7 +45,7 @@ namespace Microsoft.Android.Build.BaseTasks.Tests
 			Assert.AreEqual ("_0F_", chars.ToString ());
 		}
 
-		[Test]
+		[TestMethod]
 		public void WriteHex_Span_EveryByteValue ()
 		{
 			Span<char> chars = stackalloc char [2];
@@ -55,7 +55,7 @@ namespace Microsoft.Android.Build.BaseTasks.Tests
 			}
 		}
 
-		[Test]
+		[TestMethod]
 		public void WriteHex_TextWriter_UpperCase ()
 		{
 			var writer = new StringWriter ();
@@ -65,7 +65,7 @@ namespace Microsoft.Android.Build.BaseTasks.Tests
 			Assert.AreEqual ("000FFF", writer.ToString ());
 		}
 
-		[Test]
+		[TestMethod]
 		public void WriteHex_TextWriter_LowerCase ()
 		{
 			var writer = new StringWriter ();
@@ -75,7 +75,7 @@ namespace Microsoft.Android.Build.BaseTasks.Tests
 			Assert.AreEqual ("000fff", writer.ToString ());
 		}
 
-		[Test]
+		[TestMethod]
 		public void WriteHex_TextWriter_EveryByteValue ()
 		{
 			var writer = new StringWriter ();
@@ -86,13 +86,13 @@ namespace Microsoft.Android.Build.BaseTasks.Tests
 			Assert.AreEqual (expected, writer.ToString ());
 		}
 
-		[Test]
+		[TestMethod]
 		public void WriteHex_TextWriter_NullThrows ()
 		{
-			Assert.Throws<ArgumentNullException> (() => HexUtilities.WriteHex (writer: null, value: 0x00));
+			Assert.ThrowsExactly<ArgumentNullException> (() => HexUtilities.WriteHex (writer: null, value: 0x00));
 		}
 
-		[Test]
+		[TestMethod]
 		public void WriteHex_StringBuilder_UInt16 ()
 		{
 			var builder = new StringBuilder ("_");
@@ -101,21 +101,22 @@ namespace Microsoft.Android.Build.BaseTasks.Tests
 			Assert.AreEqual ("_ABCD012f", builder.ToString ());
 		}
 
-		[Test]
+		[TestMethod]
 		public void WriteHex_StringBuilder_NullThrows ()
 		{
-			Assert.Throws<ArgumentNullException> (() => HexUtilities.WriteHex (builder: null, value: 0x0000));
+			Assert.ThrowsExactly<ArgumentNullException> (() => HexUtilities.WriteHex (builder: null, value: 0x0000));
 		}
 
-		[TestCase (0)]
-		[TestCase (1)]
+		[TestMethod]
+		[DataRow (0)]
+		[DataRow (1)]
 		public void WriteHex_Span_TooShortThrows (int length)
 		{
 			var destination = new char [length];
-			Assert.Throws<ArgumentException> (() => HexUtilities.WriteHex (destination.AsSpan (), 0xAB));
+			Assert.ThrowsExactly<ArgumentException> (() => HexUtilities.WriteHex (destination.AsSpan (), 0xAB));
 		}
 
-		[Test]
+		[TestMethod]
 		public void WriteHex_Span_LongerThanTwoOnlyWritesTwo ()
 		{
 			var destination = new char [] { 'x', 'x', 'x', 'x' };
@@ -123,27 +124,27 @@ namespace Microsoft.Android.Build.BaseTasks.Tests
 			Assert.AreEqual ("ABxx", new string (destination));
 		}
 
-		[Test]
+		[TestMethod]
 		public void ToHexString_Empty ()
 		{
 			Assert.AreEqual ("", HexUtilities.ToHexString (ReadOnlySpan<byte>.Empty));
 		}
 
-		[Test]
+		[TestMethod]
 		public void ToHexString_UpperCase ()
 		{
 			var bytes = new byte [] { 0x00, 0x01, 0x0f, 0x10, 0x7f, 0x80, 0xab, 0xff };
 			Assert.AreEqual ("00010F107F80ABFF", HexUtilities.ToHexString (bytes));
 		}
 
-		[Test]
+		[TestMethod]
 		public void ToHexString_LowerCase ()
 		{
 			var bytes = new byte [] { 0x00, 0x01, 0x0f, 0x10, 0x7f, 0x80, 0xab, 0xff };
 			Assert.AreEqual ("00010f107f80abff", HexUtilities.ToHexString (bytes, upperCase: false));
 		}
 
-		[Test]
+		[TestMethod]
 		public void ToHexString_EveryByteValue ()
 		{
 			var bytes = Enumerable.Range (0, 256).Select (i => (byte) i).ToArray ();
@@ -153,10 +154,11 @@ namespace Microsoft.Android.Build.BaseTasks.Tests
 		}
 
 		// The implementation stackallocs up to 128 chars (64 bytes) and heap allocates beyond that
-		[TestCase (63)]
-		[TestCase (64)]
-		[TestCase (65)]
-		[TestCase (1024)]
+		[TestMethod]
+		[DataRow (63)]
+		[DataRow (64)]
+		[DataRow (65)]
+		[DataRow (1024)]
 		public void ToHexString_CrossesStackallocThreshold (int length)
 		{
 			var bytes = new byte [length];

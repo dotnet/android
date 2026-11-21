@@ -1,0 +1,77 @@
+parameters:
+  testRunTitle: Xamarin Android Tests
+  testAssembly: ''        # MSTest (Microsoft.Testing.Platform) test assembly to run
+  testFilter: ''          # MSTest filter expression, e.g. 'TestCategory=SmokeTests'
+  sliceTests: false       # Run only this job's share of the tests, based on $(System.JobPositionInPhase) and $(System.TotalJobsInPhase)
+  retryFailedTests: 0     # Number of times to retry failed tests
+  xaSourcePath: $(System.DefaultWorkingDirectory)
+  condition: succeeded()
+  timeoutInMinutes: 180
+  retryCountOnTaskFailure: 0
+
+steps:
+- pwsh: |
+    $assembly = "${{ parameters.testAssembly }}"
+    $filter = "${{ parameters.testFilter }}"
+    $resultsDirectory = Join-Path "$(Agent.TempDirectory)" "TestResults-$([guid]::NewGuid())"
+    Write-Host "##vso[task.setvariable variable=MSTestResultsDirectory]$resultsDirectory"
+
+    $testArgs = @()
+    if ($filter) {
+      $testArgs += "--filter", $filter
+    }
+    if ([System.Convert]::ToBoolean("${{ parameters.sliceTests }}")) {
+      $slice = [int] "$(System.JobPositionInPhase)" - 1
+      $totalSlices = [int] "$(System.TotalJobsInPhase)"
+      $listOutput = @(& dotnet $assembly --list-tests json @testArgs)
+      if ($LASTEXITCODE -ne 0) {
+        Write-Host "##vso[task.logissue type=error]Listing tests failed with exit code $LASTEXITCODE."
+        exit $LASTEXITCODE
+      }
+      # Test data sources may write to stdout during discovery, before the JSON document.
+      $jsonStart = [array]::IndexOf($listOutput, "{")
+      $tests = @(($listOutput[$jsonStart..($listOutput.Count - 1)] | Out-String | ConvertFrom-Json).tests | Sort-Object -Property uid)
+      $uids = @(for ($i = $slice; $i -lt $tests.Count; $i += $totalSlices) { $tests[$i].uid })
+      Write-Host "Running $($uids.Count) of $($tests.Count) tests in slice $($slice + 1) of $totalSlices"
+      if ($uids.Count -eq 0) {
+        exit 0
+      }
+      $responseFile = Join-Path "$(Agent.TempDirectory)" "slice-$([guid]::NewGuid()).rsp"
+      Set-Content -Path $responseFile -Value (@("--filter-uid") + $uids)
+      $testArgs = @("@$responseFile")
+    }
+    if (${{ parameters.retryFailedTests }} -gt 0) {
+      $testArgs += "--retry-failed-tests", "${{ parameters.retryFailedTests }}"
+    }
+
+    & dotnet $assembly @testArgs --report-trx --results-directory $resultsDirectory --progress off
+    if ($LASTEXITCODE -ne 0) {
+      Write-Host "##vso[task.logissue type=error]Test run failed with exit code $LASTEXITCODE."
+      exit $LASTEXITCODE
+    }
+  displayName: run ${{ parameters.testRunTitle }}
+  workingDirectory: ${{ parameters.xaSourcePath }}
+  condition: ${{ parameters.condition }}
+  continueOnError: true
+  timeoutInMinutes: ${{ parameters.timeoutInMinutes }}
+  retryCountOnTaskFailure: ${{ parameters.retryCountOnTaskFailure }}
+
+- task: PublishTestResults@2
+  displayName: publish ${{ parameters.testRunTitle }} results
+  inputs:
+    testResultsFormat: VSTest
+    searchFolder: $(MSTestResultsDirectory)
+    ${{ if gt(parameters.retryFailedTests, 0) }}:
+      testResultsFiles: Retries/**/*.trx
+    ${{ else }}:
+      testResultsFiles: '*.trx'
+    mergeTestResults: true
+    ${{ if eq(parameters.sliceTests, true) }}:
+      testRunTitle: ${{ parameters.testRunTitle }}-$(System.JobPositionInPhase)
+    ${{ else }}:
+      testRunTitle: ${{ parameters.testRunTitle }}
+  condition: and(${{ parameters.condition }}, ne(variables['MSTestResultsDirectory'], ''))
+
+- template: /build-tools/automation/yaml-templates/diagnose-hanging-processes.yaml
+
+- template: /build-tools/automation/yaml-templates/kill-processes.yaml

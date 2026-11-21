@@ -30,11 +30,11 @@ stages:
         artifactName: $(TestAssembliesArtifactName)
         downloadPath: $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)
 
-    - template: /build-tools/automation/yaml-templates/run-nunit-tests.yaml
+    - template: /build-tools/automation/yaml-templates/run-mstest-tests.yaml
       parameters:
         testRunTitle: Xamarin.Android.Build.Tests - Linux BuildTest
         testAssembly: $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/$(DotNetStableTargetFramework)/Xamarin.Android.Build.Tests.dll
-        dotNetTestExtraArgs: --filter "Name = BuildTest"
+        testFilter: ClassName=Xamarin.Android.Build.Tests.BuildTest
 
     - template: /build-tools/automation/yaml-templates/upload-results.yaml
       parameters:
@@ -60,23 +60,23 @@ stages:
         artifactName: $(TestAssembliesArtifactName)
         downloadPath: $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)
 
-    - template: /build-tools/automation/yaml-templates/run-nunit-tests.yaml
+    - template: /build-tools/automation/yaml-templates/run-mstest-tests.yaml
       parameters:
         testRunTitle: Xamarin.Android.Build.Tests - Linux PackagingTest
         testAssembly: $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/$(DotNetStableTargetFramework)/Xamarin.Android.Build.Tests.dll
-        dotNetTestExtraArgs: --filter "Name = PackagingTest"
+        testFilter: ClassName=Xamarin.Android.Build.Tests.PackagingTest
 
-    - template: /build-tools/automation/yaml-templates/run-nunit-tests.yaml
+    - template: /build-tools/automation/yaml-templates/run-mstest-tests.yaml
       parameters:
         testRunTitle: Xamarin.Android.Build.Tests - Linux XASdkTests
         testAssembly: $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/$(DotNetStableTargetFramework)/Xamarin.Android.Build.Tests.dll
-        dotNetTestExtraArgs: --filter "Name = XASdkTests & Name != XamarinLegacySdk"
+        testFilter: ClassName=Xamarin.Android.Build.Tests.XASdkTests
 
-    - template: /build-tools/automation/yaml-templates/run-nunit-tests.yaml
+    - template: /build-tools/automation/yaml-templates/run-mstest-tests.yaml
       parameters:
         testRunTitle: Xamarin.Android.Build.Tests - Linux AndroidDependenciesTests
         testAssembly: $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/$(DotNetStableTargetFramework)/Xamarin.Android.Build.Tests.dll
-        dotNetTestExtraArgs: --filter "Name = AndroidDependenciesTests"
+        testFilter: ClassName=Xamarin.Android.Build.Tests.AndroidDependenciesTests
 
     - task: ShellScript@2
       displayName: Test dotnet-local.sh

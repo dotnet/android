@@ -3,7 +3,7 @@ using System;
 using System.IO;
 using System.Linq;
 using System.Reflection;
-using NUnit.Framework;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Xamarin.Android.Tasks;
 using Xamarin.Android.Tools;
 
@@ -28,7 +28,7 @@ static class AndroidSdkTestHelper
 				directory = buildDirectory;
 			}
 		}
-		DirectoryAssert.Exists (directory, "The configured Android SDK must exist on the executing test host.");
+		Assert.IsTrue (Directory.Exists (directory), "The configured Android SDK must exist on the executing test host.");
 		return directory;
 	}
 

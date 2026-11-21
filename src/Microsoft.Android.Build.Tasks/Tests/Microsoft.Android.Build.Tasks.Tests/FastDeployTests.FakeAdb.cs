@@ -1,19 +1,21 @@
 using System.Linq;
-using NUnit.Framework;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Microsoft.VisualStudio.TestTools.UnitTesting.Combinatorial;
 
 namespace Xamarin.Android.Build.Tests
 {
 	public partial class FastDeployTests
 	{
-		[Test]
+		[TestMethod]
+		[CombinatorialData]
 		public void FastDeployRejectsFailedOverrideCommand (
-			[Values (
+			[CombinatorialValues (
 				"'-c' 'find ",
 				"rm -f files/.__override__/stale.dll",
 				"rm -f files/.__override__/arm64-v8a/Foo.dll",
 				"mkdir -p files/.__override__",
 				"cp -p")] string command,
-			[Values ("", "error: closed")] string output)
+			[CombinatorialValues ("", "error: closed")] string output)
 		{
 			using var device = new FakeAdbDevice ();
 			device.FailCommand (command, output);
@@ -22,10 +24,10 @@ namespace Xamarin.Android.Build.Tests
 			Assert.AreEqual ("XA0129", device.Errors.Single ().Code);
 			Assert.IsFalse (device.HasManifest);
 			Assert.IsFalse (device.Commands.Any (c => c.Contains ("printf %s")));
-			Assert.That (device.Commands.Last (), Does.Contain (command), "Stop at the failed command.");
+			Assert.Contains (command, device.Commands.Last (), "Stop at the failed command.");
 		}
 
-		[Test]
+		[TestMethod]
 		public void FastDeployRejectsFailedOverrideRemoval ()
 		{
 			using var device = new FakeAdbDevice ();
@@ -35,8 +37,9 @@ namespace Xamarin.Android.Build.Tests
 			Assert.AreEqual ("XA0129", device.Errors.Single ().Code);
 		}
 
-		[TestCase ("cp: write failed", "XA0129")]
-		[TestCase ("run-as: package not debuggable", "XA0134")]
+		[TestMethod]
+		[DataRow ("cp: write failed", "XA0129")]
+		[DataRow ("run-as: package not debuggable", "XA0134")]
 		public void FastDeployRecognizesLegacyShellErrors (string output, string code)
 		{
 			using var device = new FakeAdbDevice ();
@@ -47,8 +50,9 @@ namespace Xamarin.Android.Build.Tests
 			Assert.IsFalse (device.HasManifest);
 		}
 
-		[TestCase (false, "")]
-		[TestCase (true, "error: closed")]
+		[TestMethod]
+		[DataRow (false, "")]
+		[DataRow (true, "error: closed")]
 		public void FastDeployRejectsFailedPackageQuery (bool readlink, string output)
 		{
 			using var device = new FakeAdbDevice ();
@@ -60,11 +64,12 @@ namespace Xamarin.Android.Build.Tests
 
 			Assert.IsFalse (device.RunFastDeploy ());
 			Assert.AreEqual ("XA0129", device.Errors.Single ().Code);
-			Assert.That (device.Commands.Last (), Does.Contain (command));
+			Assert.Contains (command, device.Commands.Last ());
 		}
 
-		[TestCase (false, "")]
-		[TestCase (true, "error: closed")]
+		[TestMethod]
+		[DataRow (false, "")]
+		[DataRow (true, "error: closed")]
 		public void FastDeployFallsBackToCopyAfterSymlinkFailure (bool incremental, string output)
 		{
 			using var device = new FakeAdbDevice ();
@@ -77,12 +82,12 @@ namespace Xamarin.Android.Build.Tests
 			Assert.IsTrue (device.RunFastDeploy (symlink: true));
 			Assert.IsEmpty (device.Errors);
 			Assert.IsTrue (device.HasManifest);
-			Assert.That (device.Commands, Has.Some.Contain ("cp -p"));
+			Assert.IsTrue (device.Commands.Any (c => c.Contains ("cp -p")), string.Join ("\n", device.Commands));
 			var failedCommand = device.Commands.Last (c => c.Contains ("ln -sf"));
 			Assert.AreEqual (!incremental, failedCommand.Contains ("for f in"));
 		}
 
-		[Test]
+		[TestMethod]
 		public void FastDeployRejectsFailedFallbackCleanup ()
 		{
 			using var device = new FakeAdbDevice ();
@@ -92,11 +97,12 @@ namespace Xamarin.Android.Build.Tests
 			Assert.IsFalse (device.RunFastDeploy (symlink: true));
 			Assert.AreEqual ("XA0129", device.Errors.Single ().Code);
 			Assert.IsFalse (device.HasManifest);
-			Assert.That (device.Commands.Last (), Does.Contain ("rm -rf files/.__override__"));
+			Assert.Contains ("rm -rf files/.__override__", device.Commands.Last ());
 		}
 
-		[TestCase (0, "")]
-		[TestCase (1, "find: 'files/.__override__': No such file or directory")]
+		[TestMethod]
+		[DataRow (0, "")]
+		[DataRow (1, "find: 'files/.__override__': No such file or directory")]
 		public void FastDeployAllowsMissingOrEmptyOverrideDirectory (int exitCode, string output)
 		{
 			using var device = new FakeAdbDevice ();
@@ -105,10 +111,10 @@ namespace Xamarin.Android.Build.Tests
 			Assert.IsTrue (device.RunFastDeploy ());
 			Assert.IsEmpty (device.Errors);
 			Assert.IsTrue (device.HasManifest);
-			Assert.That (device.Commands, Has.Some.Contain ("cp -p"));
+			Assert.IsTrue (device.Commands.Any (c => c.Contains ("cp -p")), string.Join ("\n", device.Commands));
 		}
 
-		[Test]
+		[TestMethod]
 		public void FastDeployFallsBackToReadlink ()
 		{
 			using var device = new FakeAdbDevice ();
@@ -116,11 +122,12 @@ namespace Xamarin.Android.Build.Tests
 
 			Assert.IsTrue (device.RunFastDeploy ());
 			Assert.IsEmpty (device.Errors);
-			Assert.That (device.Commands, Has.Some.Contain ("readlink -f ."));
+			Assert.IsTrue (device.Commands.Any (c => c.Contains ("readlink -f .")), string.Join ("\n", device.Commands));
 		}
 
-		[TestCase ("run-as: unknown package: com.example.app")]
-		[TestCase ("run-as: package not debuggable: com.example.app")]
+		[TestMethod]
+		[DataRow ("run-as: unknown package: com.example.app")]
+		[DataRow ("run-as: package not debuggable: com.example.app")]
 		public void FastDeployInstallsAfterRecoverablePackageQuery (string output)
 		{
 			using var device = new FakeAdbDevice ();
@@ -129,11 +136,11 @@ namespace Xamarin.Android.Build.Tests
 
 			Assert.IsTrue (device.RunFastDeploy (embedded: true, install: true));
 			Assert.IsEmpty (device.Errors);
-			Assert.That (device.Commands, Has.Some.Contain (" install "));
+			Assert.IsTrue (device.Commands.Any (c => c.Contains (" install ")), string.Join ("\n", device.Commands));
 			Assert.IsFalse (device.Commands.Any (c => c.Contains ("rm -rf files/.__override__")));
 		}
 
-		[Test]
+		[TestMethod]
 		public void FastDeployUsesTaskEnvironment ()
 		{
 			using var device = new FakeAdbDevice ();
@@ -141,12 +148,13 @@ namespace Xamarin.Android.Build.Tests
 			Assert.IsTrue (device.RunFastDeploy (projectRelative: true));
 			Assert.IsEmpty (device.Errors);
 			Assert.IsTrue (device.HasManifest, "Relative paths must resolve against the project directory.");
-			Assert.That (device.Commands, Has.Some.Contain ("cp -p"));
+			Assert.IsTrue (device.Commands.Any (c => c.Contains ("cp -p")), string.Join ("\n", device.Commands));
 			Assert.AreEqual ("from-task", device.TaskEnvironmentVariable);
 		}
 
-		[TestCase ("devices -l")]
-		[TestCase (" install ")]
+		[TestMethod]
+		[DataRow ("devices -l")]
+		[DataRow (" install ")]
 		public void FastDeployCancellationIsNotLoggedAsTaskFailure (string command)
 		{
 			using var device = new FakeAdbDevice ();
@@ -162,11 +170,12 @@ namespace Xamarin.Android.Build.Tests
 			Assert.IsTrue (device.IsHanging, command);
 			Assert.IsEmpty (device.Errors);
 			Assert.IsFalse (device.HasManifest);
-			Assert.Less (stopwatch.Elapsed.TotalSeconds, 30, "Cancellation must stop the hung adb command.");
+			Assert.IsLessThan (30, stopwatch.Elapsed.TotalSeconds, "Cancellation must stop the hung adb command.");
 		}
 
-		[TestCase ("rm")]
-		[TestCase ("ln")]
+		[TestMethod]
+		[DataRow ("rm")]
+		[DataRow ("ln")]
 		public void FastDeployStopsGlobOnIntermediateFailure (string command)
 		{
 			using var device = new FakeAdbDevice ();

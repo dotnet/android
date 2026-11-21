@@ -6,28 +6,28 @@ using System.Threading.Tasks;
 using Java.Interop.Tools.Cecil;
 using Java.Interop.Tools.TypeNameMappings;
 using Mono.Cecil;
-using NUnit.Framework;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Java.Interop.Tools.JavaCallableWrappersTests
 {
-	[TestFixture]
+	[TestClass]
 	public class JavaNativeTypeManagerTests
 	{
 		PackageNamingPolicy existingValue;
 
-		[SetUp]
+		[TestInitialize]
 		public void SetUp ()
 		{
 			existingValue = JavaNativeTypeManager.PackageNamingPolicy;
 		}
 
-		[TearDown]
+		[TestCleanup]
 		public void TearDown ()
 		{
 			JavaNativeTypeManager.PackageNamingPolicy = existingValue;
 		}
 
-		[Test]
+		[TestMethod]
 		public void Crc64 ()
 		{
 			JavaNativeTypeManager.PackageNamingPolicy = PackageNamingPolicy.LowercaseCrc64;
@@ -35,14 +35,14 @@ namespace Java.Interop.Tools.JavaCallableWrappersTests
 			Assert.AreEqual ("crc64d04135c992393d83", JavaNativeTypeManager.GetPackageName (typeof (string)));
 		}
 
-		[Test]
+		[TestMethod]
 		public void Lowercase ()
 		{
 			JavaNativeTypeManager.PackageNamingPolicy = PackageNamingPolicy.Lowercase;
 			Assert.AreEqual ("system", JavaNativeTypeManager.GetPackageName (typeof (string)));
 		}
 
-		[Test]
+		[TestMethod]
 		public void LowercaseWithAssemblyName ()
 		{
 			JavaNativeTypeManager.PackageNamingPolicy = PackageNamingPolicy.LowercaseWithAssemblyName;
@@ -50,7 +50,7 @@ namespace Java.Interop.Tools.JavaCallableWrappersTests
 			Assert.AreEqual ("assembly_system_private_corelib.system", JavaNativeTypeManager.GetPackageName (typeof (string)));
 		}
 
-		[Test]
+		[TestMethod]
 		public void ExplicitPolicyIgnoresGlobalPolicy ()
 		{
 			using var assembly = AssemblyDefinition.CreateAssembly (
@@ -74,9 +74,9 @@ namespace Java.Interop.Tools.JavaCallableWrappersTests
 			Assert.AreEqual (PackageNamingPolicy.LowercaseWithAssemblyName, JavaNativeTypeManager.PackageNamingPolicy);
 		}
 
-		[Test]
-		[TestCase (typeof (string), "java/lang/String")]
-		[TestCase (typeof (Type),   "java/lang/Object")]
+		[TestMethod]
+		[DataRow (typeof (string), "java/lang/String")]
+		[DataRow (typeof (Type),   "java/lang/Object")]
 		public void ToJniName (Type type, string expected)
 		{
 			string actual = JavaNativeTypeManager.ToJniName (type);

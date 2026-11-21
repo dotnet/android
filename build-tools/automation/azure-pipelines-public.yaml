@@ -20,6 +20,10 @@ pr:
     - '*'
 
 parameters:
+- name: runNativeMtpHostTests
+  displayName: Run opt-in SourceWriter MSTest (Microsoft.Testing.Platform) host tests
+  type: boolean
+  default: false
 - name: macTestAgentsUseCleanImages   # Test agents we do not need to clean up when finished because they are not reused
   default: true
 - name: skipTests                      # Skip all test stages (builds only). Default 'false' so PRs run the full test matrix.
@@ -65,6 +69,45 @@ variables:
 
 # Public builds don't use 1ES templates - just plain stages
 stages:
+- ${{ if eq(parameters.runNativeMtpHostTests, true) }}:
+  - stage: native_mtp_host_tests
+    displayName: MSTest host tests
+    dependsOn: []
+    condition: and(succeeded(), ne(variables['SkipTestStages'], 'true'))
+    jobs:
+    - job: sourcewriter_mstest
+      displayName: SourceWriter MSTest
+      pool:
+        name: $(NetCorePublicPoolName)
+        demands:
+        - ImageOverride -equals $(LinuxPoolImageNetCorePublic)
+      steps:
+      - checkout: self
+        submodules: false
+      - task: UseDotNet@2
+        displayName: Install MSTest host SDK
+        inputs:
+          packageType: sdk
+          version: $(DotNetSdkVersion)
+          includePreviewVersions: true
+          installationPath: $(Agent.TempDirectory)/native-mtp-dotnet
+      - script: >-
+          dotnet test
+          --project tests/Xamarin.SourceWriter-Tests/Xamarin.SourceWriter-Tests.csproj
+          -c Debug
+          --report-trx
+          --results-directory $(Agent.TempDirectory)/TestResults
+        displayName: Run SourceWriter MSTest
+      - task: PublishTestResults@2
+        displayName: Publish SourceWriter MSTest results
+        condition: succeededOrFailed()
+        inputs:
+          testResultsFormat: VSTest
+          searchFolder: $(Agent.TempDirectory)/TestResults
+          testResultsFiles: '**/*.trx'
+          testRunTitle: SourceWriter MSTest
+          failTaskOnMissingResultsFile: true
+
 # macOS Build Stage
 - stage: mac_build
   displayName: Mac
@@ -199,11 +242,11 @@ stages:
         artifactName: $(TestAssembliesArtifactName)
         downloadPath: $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)
 
-    - template: /build-tools/automation/yaml-templates/run-nunit-tests.yaml
+    - template: /build-tools/automation/yaml-templates/run-mstest-tests.yaml
       parameters:
         testRunTitle: Xamarin.Android.Build.Tests - Linux BuildTest
         testAssembly: $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/$(DotNetStableTargetFramework)/Xamarin.Android.Build.Tests.dll
-        dotNetTestExtraArgs: --filter "Name = BuildTest"
+        testFilter: ClassName=Xamarin.Android.Build.Tests.BuildTest
 
     - template: /build-tools/automation/yaml-templates/upload-results.yaml
       parameters:
@@ -233,23 +276,23 @@ stages:
         artifactName: $(TestAssembliesArtifactName)
         downloadPath: $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)
 
-    - template: /build-tools/automation/yaml-templates/run-nunit-tests.yaml
+    - template: /build-tools/automation/yaml-templates/run-mstest-tests.yaml
       parameters:
         testRunTitle: Xamarin.Android.Build.Tests - Linux PackagingTest
         testAssembly: $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/$(DotNetStableTargetFramework)/Xamarin.Android.Build.Tests.dll
-        dotNetTestExtraArgs: --filter "Name = PackagingTest"
+        testFilter: ClassName=Xamarin.Android.Build.Tests.PackagingTest
 
-    - template: /build-tools/automation/yaml-templates/run-nunit-tests.yaml
+    - template: /build-tools/automation/yaml-templates/run-mstest-tests.yaml
       parameters:
         testRunTitle: Xamarin.Android.Build.Tests - Linux XASdkTests
         testAssembly: $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/$(DotNetStableTargetFramework)/Xamarin.Android.Build.Tests.dll
-        dotNetTestExtraArgs: --filter "Name = XASdkTests & Name != XamarinLegacySdk"
+        testFilter: ClassName=Xamarin.Android.Build.Tests.XASdkTests
 
-    - template: /build-tools/automation/yaml-templates/run-nunit-tests.yaml
+    - template: /build-tools/automation/yaml-templates/run-mstest-tests.yaml
       parameters:
         testRunTitle: Xamarin.Android.Build.Tests - Linux AndroidDependenciesTests
         testAssembly: $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/$(DotNetStableTargetFramework)/Xamarin.Android.Build.Tests.dll
-        dotNetTestExtraArgs: --filter "Name = AndroidDependenciesTests"
+        testFilter: ClassName=Xamarin.Android.Build.Tests.AndroidDependenciesTests
 
     - task: ShellScript@2
       displayName: Test dotnet-local.sh
@@ -302,13 +345,12 @@ stages:
         artifactName: $(TestAssembliesArtifactName)
         downloadPath: $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)
 
-    - template: /build-tools/automation/yaml-templates/run-sliced-nunit-tests.yaml
+    - template: /build-tools/automation/yaml-templates/run-mstest-tests.yaml
       parameters:
         testAssembly: $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/$(DotNetStableTargetFramework)/Xamarin.Android.Build.Tests.dll
-        testFilter: ''
         testRunTitle: Xamarin.Android.Build.Tests - macOS
-        retryFailedTests: false
         xaSourcePath: $(System.DefaultWorkingDirectory)
+        sliceTests: true
 
     - template: /build-tools/automation/yaml-templates/upload-results.yaml
       parameters:
@@ -353,13 +395,12 @@ stages:
         artifactName: $(TestAssembliesArtifactName)
         downloadPath: $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)
 
-    - template: /build-tools/automation/yaml-templates/run-sliced-nunit-tests.yaml
+    - template: /build-tools/automation/yaml-templates/run-mstest-tests.yaml
       parameters:
         testAssembly: $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/$(DotNetStableTargetFramework)/Xamarin.Android.Build.Tests.dll
-        testFilter: ''
         testRunTitle: Xamarin.Android.Build.Tests - Windows
-        retryFailedTests: false
         xaSourcePath: $(System.DefaultWorkingDirectory)
+        sliceTests: true
 
     - template: /build-tools/automation/yaml-templates/upload-results.yaml
       parameters:
@@ -413,11 +454,13 @@ stages:
 
     - template: /build-tools/automation/yaml-templates/start-stop-emulator.yaml
 
-    - template: /build-tools/automation/yaml-templates/run-sliced-nunit-tests.yaml
+    - template: /build-tools/automation/yaml-templates/run-mstest-tests.yaml
       parameters:
         testAssembly: $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/MSBuildDeviceIntegration/$(DotNetStableTargetFramework)/MSBuildDeviceIntegration.dll
         testFilter: $(ExcludedNightlyTestCategories)
         testRunTitle: MSBuildDeviceIntegration On Device - macOS
+        sliceTests: true
+        retryFailedTests: 1
 
     - template: /build-tools/automation/yaml-templates/upload-results.yaml
       parameters:

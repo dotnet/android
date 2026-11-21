@@ -1,13 +1,13 @@
 using System;
-using NUnit.Framework;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace generatortests
 {
-	[TestFixture]
+	[TestClassAttribute]
 	public class Core_Jar2Xml : BaseGeneratorTest
 	{
 
-		[Test]
+		[TestMethodAttribute]
 		public void GeneratedOK ()
 		{
 			AllowWarnings = true;

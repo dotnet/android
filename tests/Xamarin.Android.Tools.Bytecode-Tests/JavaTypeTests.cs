@@ -4,16 +4,16 @@ using System.Linq;
 
 using Xamarin.Android.Tools.Bytecode;
 
-using NUnit.Framework;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 using Assembly = System.Reflection.Assembly;
 
 namespace Xamarin.Android.Tools.BytecodeTests {
 
-	[TestFixture]
+	[TestClass]
 	public class JavaTypeTests : ClassFileFixture {
 
-		[Test]
+		[TestMethod]
 		public void ClassFile_WithJavaType_class ()
 		{
 			var c   = LoadClassFile ("JavaType.class");
@@ -346,7 +346,7 @@ namespace Xamarin.Android.Tools.BytecodeTests {
 			}.Assert (c);
 		}
 
-		[Test]
+		[TestMethod]
 		public void XmlDeclaration_WithJavaType_class ()
 		{
 			AssertXmlDeclaration ("JavaType.class", "JavaType.xml");

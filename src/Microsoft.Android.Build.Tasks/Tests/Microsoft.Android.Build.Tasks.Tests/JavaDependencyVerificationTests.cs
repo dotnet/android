@@ -9,29 +9,31 @@ using System.Text.Json;
 using System.Xml;
 using Java.Interop.Tools.Maven.Models;
 using Microsoft.Build.Utilities;
-using NUnit.Framework;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Microsoft.Android.Tasks;
 using Xamarin.Android.Tasks;
 
 namespace Xamarin.Android.Build.Tests;
 
+[TestClass]
+[DoNotParallelize]
 public class JavaDependencyVerificationTests
 {
-	[Test]
+	[TestMethod]
 	public void NoManifestsSpecified ()
 	{
-		var engine = new MockBuildEngine (TestContext.Out, []);
+		var engine = new MockBuildEngine (Console.Out, []);
 		var task = new JavaDependencyVerification {
 			BuildEngine = engine,
 		};
 
-		Assert.True (task.RunTask ());
+		Assert.IsTrue (task.RunTask ());
 	}
 
-	[Test]
+	[TestMethod]
 	public void MissingPom ()
 	{
-		var engine = new MockBuildEngine (TestContext.Out, []);
+		var engine = new MockBuildEngine (Console.Out, []);
 		var task = new JavaDependencyVerification {
 			BuildEngine = engine,
 			AndroidLibraries = [CreateAndroidLibraryTaskItem ("com.google.android.material.jar", "missing.pom")],
@@ -39,17 +41,17 @@ public class JavaDependencyVerificationTests
 
 		var result = task.RunTask ();
 
-		Assert.False (result);
+		Assert.IsFalse (result);
 		Assert.AreEqual (1, engine.Errors.Count);
 		Assert.AreEqual ("Specified POM file 'missing.pom' does not exist.", engine.Errors [0].Message);
 	}
 
-	[Test]
+	[TestMethod]
 	public void MalformedPom ()
 	{
 		using var pom = new TemporaryFile ("this is not valid XML");
 
-		var engine = new MockBuildEngine (TestContext.Out, []);
+		var engine = new MockBuildEngine (Console.Out, []);
 		var task = new JavaDependencyVerification {
 			BuildEngine = engine,
 			AndroidLibraries = [CreateAndroidLibraryTaskItem ("com.google.android.material.jar", pom.FilePath)],
@@ -57,17 +59,17 @@ public class JavaDependencyVerificationTests
 
 		var result = task.RunTask ();
 
-		Assert.False (result);
+		Assert.IsFalse (result);
 		Assert.AreEqual (1, engine.Errors.Count);
-		Assert.True (engine.Errors [0].Message?.StartsWith ("Could not parse POM file"));
+		Assert.IsTrue (engine.Errors [0].Message?.StartsWith ("Could not parse POM file"));
 	}
 
-	[Test]
+	[TestMethod]
 	public void NoSpecifiedDependencies ()
 	{
 		using var pom = new PomBuilder ("com.google.android", "material", "1.0").BuildTemporary ();
 
-		var engine = new MockBuildEngine (TestContext.Out, []);
+		var engine = new MockBuildEngine (Console.Out, []);
 		var task = new JavaDependencyVerification {
 			BuildEngine = engine,
 			AndroidLibraries = [CreateAndroidLibraryTaskItem ("com.google.android.material.jar", pom.FilePath)],
@@ -75,18 +77,18 @@ public class JavaDependencyVerificationTests
 
 		var result = task.RunTask ();
 
-		Assert.True (result);
+		Assert.IsTrue (result);
 		Assert.AreEqual (0, engine.Errors.Count);
 	}
 
-	[Test]
+	[TestMethod]
 	public void MissingSpecifiedDependency ()
 	{
 		using var pom = new PomBuilder ("com.google.android", "material", "1.0")
 			.WithDependency ("com.google.android", "missing", "1.0")
 			.BuildTemporary ();
 
-		var engine = new MockBuildEngine (TestContext.Out, []);
+		var engine = new MockBuildEngine (Console.Out, []);
 		var task = new JavaDependencyVerification {
 			BuildEngine = engine,
 			AndroidLibraries = [CreateAndroidLibraryTaskItem ("com.google.android.material.jar", pom.FilePath)],
@@ -94,12 +96,12 @@ public class JavaDependencyVerificationTests
 
 		var result = task.RunTask ();
 
-		Assert.False (result);
+		Assert.IsFalse (result);
 		Assert.AreEqual (1, engine.Errors.Count);
 		Assert.AreEqual ("Java dependency 'com.google.android:missing:1.0' is not satisfied.", engine.Errors [0].Message);
 	}
 
-	[Test]
+	[TestMethod]
 	public void MissingParentSpecifiedDependency ()
 	{
 		using var parent_pom = new PomBuilder ("com.google.android", "material-parent", "1.0")
@@ -111,7 +113,7 @@ public class JavaDependencyVerificationTests
 			.WithDependency ("com.google.android", "missing", "")
 			.BuildTemporary ();
 
-		var engine = new MockBuildEngine (TestContext.Out, []);
+		var engine = new MockBuildEngine (Console.Out, []);
 		var task = new JavaDependencyVerification {
 			BuildEngine = engine,
 			AndroidLibraries = [CreateAndroidLibraryTaskItem ("com.google.android.material.jar", pom.FilePath)],
@@ -120,12 +122,12 @@ public class JavaDependencyVerificationTests
 
 		var result = task.RunTask ();
 
-		Assert.False (result);
+		Assert.IsFalse (result);
 		Assert.AreEqual (1, engine.Errors.Count);
 		Assert.AreEqual ("Java dependency 'com.google.android:missing:2.0' is not satisfied.", engine.Errors [0].Message);
 	}
 
-	[Test]
+	[TestMethod]
 	public void MissingSpecifiedDependencyWithNugetSuggestion ()
 	{
 		using var pom = new PomBuilder ("com.google.android", "material", "1.0")
@@ -134,7 +136,7 @@ public class JavaDependencyVerificationTests
 
 		using var package_finder = CreateMicrosoftNuGetPackageFinder ("com.google.android:material-core", "Xamarin.Google.Material.Core");
 
-		var engine = new MockBuildEngine (TestContext.Out, []);
+		var engine = new MockBuildEngine (Console.Out, []);
 		var task = new JavaDependencyVerification {
 			BuildEngine = engine,
 			AndroidLibraries = [CreateAndroidLibraryTaskItem ("com.google.android.material.jar", pom.FilePath)],
@@ -143,12 +145,12 @@ public class JavaDependencyVerificationTests
 
 		var result = task.RunTask ();
 
-		Assert.False (result);
+		Assert.IsFalse (result);
 		Assert.AreEqual (1, engine.Errors.Count);
 		Assert.AreEqual ("Java dependency 'com.google.android:material-core:1.0' is not satisfied. Microsoft maintains the NuGet package 'Xamarin.Google.Material.Core' that could fulfill this dependency.", engine.Errors [0].Message);
 	}
 
-	[Test]
+	[TestMethod]
 	public void MalformedMicrosoftPackagesJson ()
 	{
 		using var pom = new PomBuilder ("com.google.android", "material", "1.0")
@@ -157,7 +159,7 @@ public class JavaDependencyVerificationTests
 
 		using var package_finder = new TemporaryFile ("This is not valid json!", "microsoft-packages.json");
 
-		var engine = new MockBuildEngine (TestContext.Out, []);
+		var engine = new MockBuildEngine (Console.Out, []);
 		var task = new JavaDependencyVerification {
 			BuildEngine = engine,
 			AndroidLibraries = [
@@ -169,11 +171,11 @@ public class JavaDependencyVerificationTests
 
 		var result = task.RunTask ();
 
-		Assert.True (result);
+		Assert.IsTrue (result);
 		Assert.AreEqual (0, engine.Errors.Count);
 	}
 
-	[Test]
+	[TestMethod]
 	public void DependencyFulfilledByAndroidLibrary ()
 	{
 		using var pom = new PomBuilder ("com.google.android", "material", "1.0")
@@ -181,7 +183,7 @@ public class JavaDependencyVerificationTests
 			.WithDependency ("com.google.android", "material-foo", "1.0")
 			.BuildTemporary ();
 
-		var engine = new MockBuildEngine (TestContext.Out, []);
+		var engine = new MockBuildEngine (Console.Out, []);
 		var task = new JavaDependencyVerification {
 			BuildEngine = engine,
 			AndroidLibraries = [
@@ -193,11 +195,11 @@ public class JavaDependencyVerificationTests
 
 		var result = task.RunTask ();
 
-		Assert.True (result);
+		Assert.IsTrue (result);
 		Assert.AreEqual (0, engine.Errors.Count);
 	}
 
-	[Test]
+	[TestMethod]
 	public void DependencyFulfilledByProjectReferenceExplicitMetadata ()
 	{
 		using var pom = new PomBuilder ("com.google.android", "material", "1.0")
@@ -205,7 +207,7 @@ public class JavaDependencyVerificationTests
 			.WithDependency ("com.google.android", "material-foo", "1.0")
 			.BuildTemporary ();
 
-		var engine = new MockBuildEngine (TestContext.Out, []);
+		var engine = new MockBuildEngine (Console.Out, []);
 		var task = new JavaDependencyVerification {
 			BuildEngine = engine,
 			AndroidLibraries = [
@@ -219,11 +221,11 @@ public class JavaDependencyVerificationTests
 
 		var result = task.RunTask ();
 
-		Assert.True (result);
+		Assert.IsTrue (result);
 		Assert.AreEqual (0, engine.Errors.Count);
 	}
 
-	[Test]
+	[TestMethod]
 	public void DependencyFulfilledByPackageReferenceExplicitMetadata ()
 	{
 		using var pom = new PomBuilder ("com.google.android", "material", "1.0")
@@ -231,7 +233,7 @@ public class JavaDependencyVerificationTests
 			.WithDependency ("com.google.android", "material-foo", "1.0")
 			.BuildTemporary ();
 
-		var engine = new MockBuildEngine (TestContext.Out, []);
+		var engine = new MockBuildEngine (Console.Out, []);
 		var task = new JavaDependencyVerification {
 			BuildEngine = engine,
 			AndroidLibraries = [
@@ -245,11 +247,11 @@ public class JavaDependencyVerificationTests
 
 		var result = task.RunTask ();
 
-		Assert.True (result);
+		Assert.IsTrue (result);
 		Assert.AreEqual (0, engine.Errors.Count);
 	}
 
-	[Test]
+	[TestMethod]
 	public void DependencyIgnored ()
 	{
 		using var pom = new PomBuilder ("com.google.android", "material", "1.0")
@@ -257,7 +259,7 @@ public class JavaDependencyVerificationTests
 			.WithDependency ("com.google.android", "material-foo", "1.0")
 			.BuildTemporary ();
 
-		var engine = new MockBuildEngine (TestContext.Out, []);
+		var engine = new MockBuildEngine (Console.Out, []);
 		var task = new JavaDependencyVerification {
 			BuildEngine = engine,
 			AndroidLibraries = [
@@ -271,11 +273,11 @@ public class JavaDependencyVerificationTests
 
 		var result = task.RunTask ();
 
-		Assert.True (result);
+		Assert.IsTrue (result);
 		Assert.AreEqual (0, engine.Errors.Count);
 	}
 
-	[Test]
+	[TestMethod]
 	public void DependencyWithoutVersionFulfilled ()
 	{
 		// The dependency is fulfilled but the version isn't checked
@@ -283,7 +285,7 @@ public class JavaDependencyVerificationTests
 			.WithDependency ("com.google.android", "material-core", null)
 			.BuildTemporary ();
 
-		var engine = new MockBuildEngine (TestContext.Out, [], []);
+		var engine = new MockBuildEngine (Console.Out, [], []);
 		var task = new JavaDependencyVerification {
 			BuildEngine = engine,
 			AndroidLibraries = [
@@ -294,19 +296,19 @@ public class JavaDependencyVerificationTests
 
 		var result = task.RunTask ();
 
-		Assert.True (result);
+		Assert.IsTrue (result);
 		Assert.AreEqual (0, engine.Errors.Count);
 		Assert.AreEqual (0, engine.Warnings.Count);
 	}
 
-	[Test]
+	[TestMethod]
 	public void DependencyWithoutVersionNotFulfilled ()
 	{
 		using var pom = new PomBuilder ("com.google.android", "material", "1.0")
 			.WithDependency ("com.google.android", "material-core", null)
 			.BuildTemporary ();
 
-		var engine = new MockBuildEngine (TestContext.Out, [], []);
+		var engine = new MockBuildEngine (Console.Out, [], []);
 		var task = new JavaDependencyVerification {
 			BuildEngine = engine,
 			AndroidLibraries = [
@@ -316,17 +318,18 @@ public class JavaDependencyVerificationTests
 
 		var result = task.RunTask ();
 
-		Assert.False (result);
+		Assert.IsFalse (result);
 		Assert.AreEqual (1, engine.Errors.Count);
 		Assert.AreEqual ("Java dependency 'com.google.android:material-core' is not satisfied.", engine.Errors [0].Message);
 	}
 
-	[TestCase ("artifact_versioned=androidx.core:core:1.2.0", "androidx.core:core:1.2.0")]
-	[TestCase ("artifact_versioned=androidx.core:core", "")] // Invalid specification
-	[TestCase ("artifact_versioned=androidx.core:core:1.2.0 artifact_versioned=androidx.core:core:1.2.0", "androidx.core:core:1.2.0")]  // Duplicates are ignored
-	[TestCase ("artifact_versioned=androidx.core:core:1.2.0 artifact_versioned=androidx.window.extensions.core:core:1.0.0", "androidx.core:core:1.2.0|androidx.window.extensions.core:core:1.0.0")]
-	[TestCase ("artifact_versioned=androidx.core:core:1.2.0 artifact=androidx.window.extensions.core:core:1.13.1", "androidx.core:core:1.2.0|androidx.window.extensions.core:core:1.13.1")]
-	[TestCase ("artifact=androidx.core:core:1.2.0 artifact=androidx.window.extensions.core:core:1.13.1", "androidx.core:core:1.2.0|androidx.window.extensions.core:core:1.13.1")]
+	[TestMethod]
+	[DataRow ("artifact_versioned=androidx.core:core:1.2.0", "androidx.core:core:1.2.0")]
+	[DataRow ("artifact_versioned=androidx.core:core", "")] // Invalid specification
+	[DataRow ("artifact_versioned=androidx.core:core:1.2.0 artifact_versioned=androidx.core:core:1.2.0", "androidx.core:core:1.2.0")]  // Duplicates are ignored
+	[DataRow ("artifact_versioned=androidx.core:core:1.2.0 artifact_versioned=androidx.window.extensions.core:core:1.0.0", "androidx.core:core:1.2.0|androidx.window.extensions.core:core:1.0.0")]
+	[DataRow ("artifact_versioned=androidx.core:core:1.2.0 artifact=androidx.window.extensions.core:core:1.13.1", "androidx.core:core:1.2.0|androidx.window.extensions.core:core:1.13.1")]
+	[DataRow ("artifact=androidx.core:core:1.2.0 artifact=androidx.window.extensions.core:core:1.13.1", "androidx.core:core:1.2.0|androidx.window.extensions.core:core:1.13.1")]
 	public void AddArtifactsFromNuspecTagsTests (string tags, string expected)
 	{
 		var results = new List<Artifact> ();

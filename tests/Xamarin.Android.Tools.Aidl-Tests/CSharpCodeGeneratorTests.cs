@@ -3,7 +3,7 @@ using System.IO;
 using System.Linq;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
-using NUnit.Framework;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Xamarin.Android.Tools.Aidl;
 
 namespace Xamarin.Android.Tools.Aidl_Tests
@@ -11,39 +11,39 @@ namespace Xamarin.Android.Tools.Aidl_Tests
 	// Tests targeting specific code paths of Xamarin.Android.Tools.Aidl.CSharpCodeGenerator.
 	// These exist so we don't need to go through the MSBuild integration tests in AidlTest.cs
 	// to validate generator behavior.
-	[TestFixture]
+	[TestClass]
 	public class CSharpCodeGeneratorTests : AidlCompilerTestBase
 	{
-		[Test]
+		[TestMethod]
 		public void ParcelableIgnore () => RunTest (nameof (ParcelableIgnore), ParcelableHandling.Ignore);
 
-		[Test]
+		[TestMethod]
 		public void ParcelableStub () => RunTest (nameof (ParcelableStub), ParcelableHandling.Stub);
 
-		[Test]
+		[TestMethod]
 		public void ParcelableError ()
 		{
 			const string input = @"package com.xamarin.test;
 parcelable MyData;
 ";
 			var compiler = new AidlCompiler ();
-			Assert.Throws<InvalidOperationException> (() =>
+			Assert.ThrowsExactly<InvalidOperationException> (() =>
 				compiler.Run (input, out _, parcelableHandling: ParcelableHandling.Error));
 		}
 
-		[Test]
+		[TestMethod]
 		public void MultipleInterfaces () => RunTest (nameof (MultipleInterfaces));
 
-		[Test]
+		[TestMethod]
 		public void OnewayMethods () => RunTest (nameof (OnewayMethods));
 
-		[Test]
+		[TestMethod]
 		public void IBinderTypes () => RunTest (nameof (IBinderTypes));
 
-		[Test]
+		[TestMethod]
 		public void CharSequenceType () => RunTest (nameof (CharSequenceType));
 
-		[Test]
+		[TestMethod]
 		public void NullableEnabled ()
 		{
 			var compiler = new AidlCompiler ();
@@ -118,7 +118,7 @@ parcelable MyData;
 			Assert.IsTrue (result.Success, string.Join (Environment.NewLine, result.Diagnostics));
 		}
 
-		[Test]
+		[TestMethod]
 		public void ParseErrorIsReported ()
 		{
 			const string input = "this is not valid aidl @@@";

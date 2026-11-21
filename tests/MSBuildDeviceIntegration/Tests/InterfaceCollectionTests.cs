@@ -2,7 +2,7 @@ using System;
 using System.IO;
 using System.Text;
 
-using NUnit.Framework;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 using Xamarin.Android.Tasks;
 using Xamarin.Android.Tools;
@@ -10,13 +10,13 @@ using Xamarin.ProjectTools;
 
 namespace Xamarin.Android.Build.Tests
 {
-	[TestFixture]
-	[Category ("UsesDevice")]
+	[TestClass]
+	[TestCategory ("UsesDevice")]
 	public class InterfaceCollectionTests : DeviceTest
 	{
 		const string ResultPrefix = "INTERFACE_COLLECTION_ROOTING_RESULT";
 
-		[Test]
+		[TestMethod]
 		public void InterfaceCollectionFactoryRootsCanonicalWrappers ()
 		{
 			var proj = new XamarinAndroidApplicationProject (packageName: PackageUtils.MakePackageName (AndroidRuntime.NativeAOT, "interfacecollectionrooting")) {
@@ -61,7 +61,7 @@ namespace Xamarin.Android.Build.Tests
 					return true;
 				}, logcatPath, ActivityStartTimeoutInSeconds, onMonitoringStarted: () => StartActivityAndAssert (proj));
 				Assert.IsTrue (resultFound, $"The focused app did not report a result. See '{logcatPath}'.");
-				StringAssert.Contains ($"{ResultPrefix} PASS {resultToken}", resultLine);
+				Assert.Contains ($"{ResultPrefix} PASS {resultToken}", resultLine);
 			} finally {
 				RunAdbCommand ($"uninstall {proj.PackageName}");
 			}
@@ -83,8 +83,8 @@ namespace Xamarin.Android.Build.Tests
 		{
 			var projectDirectory = Path.Combine (Root, builder.ProjectDirectory);
 			var generatedSourceDirectory = Path.Combine (projectDirectory, proj.IntermediateOutputPath, "generated", "src");
-			FileAssert.Exists (Path.Combine (generatedSourceDirectory, "Net.Dot.Android.Test.IValueProvider.cs"));
-			FileAssert.Exists (Path.Combine (generatedSourceDirectory, "Net.Dot.Android.Test.IExtendedValueProvider.cs"));
+			Assert.IsTrue (File.Exists (Path.Combine (generatedSourceDirectory, "Net.Dot.Android.Test.IValueProvider.cs")));
+			Assert.IsTrue (File.Exists (Path.Combine (generatedSourceDirectory, "Net.Dot.Android.Test.IExtendedValueProvider.cs")));
 			Assert.IsEmpty (
 				Directory.GetFiles (generatedSourceDirectory, "*InterfaceCollection*.cs", SearchOption.TopDirectoryOnly),
 				"The raw JNI holder and concrete peers must not produce managed bindings that can root closed collection wrappers.");

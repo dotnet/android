@@ -4,20 +4,20 @@ using System.Reflection;
 
 using Xamarin.Android.Tools.Bytecode;
 
-using NUnit.Framework;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Xamarin.Android.Tools.BytecodeTests {
 
-	[TestFixture]
+	[TestClass]
 	public class ClassFileTests {
 
-		[Test]
+		[TestMethod]
 		public void Constructor_Exceptions ()
 		{
-			Assert.Throws<ArgumentNullException> (() => new ClassFile (null));
+			Assert.ThrowsExactly<ArgumentNullException> (() => new ClassFile (null));
 		}
 
-		[Test]
+		[TestMethod]
 		public void ModifiedUtf8_DecodesUtf16CodeUnits ()
 		{
 			using var poolStream = new MemoryStream (new byte [] { 0, 1 });
@@ -39,7 +39,7 @@ namespace Xamarin.Android.Tools.BytecodeTests {
 			);
 		}
 
-		[Test]
+		[TestMethod]
 		public void ModifiedUtf8_RejectsMalformedEncodings ()
 		{
 			using var poolStream = new MemoryStream (new byte [] { 0, 1 });
@@ -50,7 +50,7 @@ namespace Xamarin.Android.Tools.BytecodeTests {
 				new byte [] { 0xc1, 0xbf },
 				new byte [] { 0xe0, 0x81, 0x81 },
 			}) {
-				Assert.Throws<InvalidDataException> (() => Decode (pool, bytes));
+				Assert.ThrowsExactly<InvalidDataException> (() => Decode (pool, bytes));
 			}
 		}
 

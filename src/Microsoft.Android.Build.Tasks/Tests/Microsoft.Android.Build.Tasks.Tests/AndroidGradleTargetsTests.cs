@@ -3,19 +3,21 @@ using System.IO;
 using System.Linq;
 using System.Xml.Linq;
 
-using NUnit.Framework;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Xamarin.Android.Build.Tests;
 
-[TestFixture]
+[TestClass]
+[DoNotParallelize]
 public class AndroidGradleTargetsTests : BaseTest
 {
-	[TestCase ("")]
-	[TestCase ("feature$HOME")]
+	[TestMethod]
+	[DataRow ("")]
+	[DataRow ("feature$HOME")]
 	public void CleanThenBuildPassesLiteralPathsAndResolvedSdkEnvironment (string moduleName)
 	{
 		if (OperatingSystem.IsWindows ()) {
-			Assert.Ignore ("The fake Gradle wrapper is a POSIX shell script.");
+			Assert.Inconclusive ("The fake Gradle wrapper is a POSIX shell script.");
 			return;
 		}
 
@@ -84,7 +86,7 @@ public class AndroidGradleTargetsTests : BaseTest
 		var result = NativeAotBootstrapTestTools.Run (dotnet, "msbuild", project, "-t:Clean;Build", "-v:normal", "-nr:false");
 		Assert.AreEqual (0, result.ExitCode, result.Output + result.Error);
 
-		FileAssert.Exists (log, "The wrapper path must reach the shell literally.\n" + result.Output);
+		Assert.IsTrue (File.Exists (log), "The wrapper path must reach the shell literally.\n" + result.Output);
 		var invocations = File.ReadAllText (log).Split ("END\n", StringSplitOptions.RemoveEmptyEntries)
 			.Select (i => i.Split ('\n', StringSplitOptions.RemoveEmptyEntries))
 			.ToArray ();
@@ -107,8 +109,8 @@ public class AndroidGradleTargetsTests : BaseTest
 				return;
 			}
 			Assert.AreEqual (5, args.Length, string.Join ("\n", lines));
-			StringAssert.StartsWith ($"-PnetAndroidBuildDirOverride={intermediate}gradle/{moduleName}Release-", args [1]);
-			StringAssert.EndsWith ("/.", args [1]);
+			Assert.StartsWith ($"-PnetAndroidBuildDirOverride={intermediate}gradle/{moduleName}Release-", args [1]);
+			Assert.EndsWith ("/.", args [1]);
 			Assert.AreEqual ("--init-script", args [2]);
 			Assert.AreEqual (initScript, args [3]);
 			Assert.AreEqual ("--no-daemon", args [4]);

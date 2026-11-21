@@ -1,23 +1,23 @@
 ﻿using System;
 using System.Linq;
-using NUnit.Framework;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Xamarin.Android.Tools.ApiXmlAdjuster.Tests
 {
-	[TestFixture]
+	[TestClass]
 	public class GenericInheritanceMappingTest
 	{
-		JavaApi api;
+		static JavaApi api;
 		
-		[OneTimeSetUp]
-		public void SetupFixture ()
+		[ClassInitialize]
+		public static void SetupFixture (TestContext context)
 		{
 			api = JavaApiTestHelper.GetLoadedApi ();
 			api.Resolve ();
 			api.CreateGenericInheritanceMapping ();
 		}
 		
-		[Test]
+		[TestMethod]
 		public void GenericInheritanceMappings ()
 		{
 			var obj = api.FindNonGenericType ("java.lang.Object") as JavaClass;
@@ -42,7 +42,7 @@ namespace Xamarin.Android.Tools.ApiXmlAdjuster.Tests
 			Assert.AreEqual ("android.database.ContentObserver", mapped.ReferencedType.FullName, "unexpected resolved type");
 		}
 		
-		[Test]
+		[TestMethod]
 		public void GenericDerivation ()
 		{
 			var dic = api.FindNonGenericType ("java.util.Dictionary") as JavaClass;
@@ -65,7 +65,7 @@ namespace Xamarin.Android.Tools.ApiXmlAdjuster.Tests
 			Assert.AreEqual ("java.lang.Object", props.GenericInheritanceMapping [v].ReferencedType.FullName, "Properties: mapping for K is not to java.lang.Object.");
 		}
 		
-		[Test]
+		[TestMethod]
 		public void NonGenericDerivation ()
 		{
 			var viewGroup = api.FindNonGenericType ("android.view.ViewGroup") as JavaClass;

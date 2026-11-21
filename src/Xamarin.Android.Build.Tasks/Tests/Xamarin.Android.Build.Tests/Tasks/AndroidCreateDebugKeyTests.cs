@@ -4,20 +4,21 @@ using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Build.Framework;
-using NUnit.Framework;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Xamarin.Android.Tasks;
 using Xamarin.ProjectTools;
 
 namespace Xamarin.Android.Build.Tests
 {
-	[TestFixture]
+	[TestClass]
+	[DoNotParallelize]
 	public class AndroidCreateDebugKeyTests : BaseTest
 	{
 		AndroidCreateDebugKey CreateTask (string keyStore, List<BuildErrorEventArgs> errors, List<BuildWarningEventArgs> warnings)
 		{
 			const string pass = "Cy(nBW~j.&@B-!R_aq7^/syzFR!S$4]7R%i6)R!";
 			return new AndroidCreateDebugKey {
-				BuildEngine = new MockBuildEngine (TestContext.Out, errors, warnings),
+				BuildEngine = new MockBuildEngine (Console.Out, errors, warnings),
 				KeyStore = keyStore,
 				KeyAlias = "androiddebugkey",
 				KeyPass = pass,
@@ -26,7 +27,7 @@ namespace Xamarin.Android.Build.Tests
 			};
 		}
 
-		[Test]
+		[TestMethod]
 		public void CreateDebugKey ()
 		{
 			string directory = Path.Combine (Root, "temp", TestName);
@@ -38,7 +39,7 @@ namespace Xamarin.Android.Build.Tests
 			var warnings = new List<BuildWarningEventArgs> ();
 
 			Assert.IsTrue (CreateTask (keyStore, errors, warnings).Execute (), "First run should succeed.");
-			FileAssert.Exists (keyStore);
+			Assert.IsTrue (File.Exists (keyStore));
 			Assert.AreEqual (0, errors.Count, "First run should have no errors.");
 			Assert.AreEqual (0, warnings.Count, "First run should have no warnings.");
 
@@ -47,10 +48,10 @@ namespace Xamarin.Android.Build.Tests
 			Assert.AreEqual (0, errors.Count, "Second run should have no errors.");
 			Assert.AreEqual (1, warnings.Count, "Second run should have one warning.");
 			Assert.AreEqual ("ANDKT0000", warnings [0].Code);
-			StringAssert.Contains ("alias <androiddebugkey> already exists", warnings [0].Message);
+			Assert.Contains ("alias <androiddebugkey> already exists", warnings [0].Message);
 		}
 
-		[Test]
+		[TestMethod]
 		public void CancelStopsKeytool ()
 		{
 			string directory = Path.Combine (Root, "temp", TestName);

@@ -1,14 +1,16 @@
+using System;
 using System.IO;
 using Microsoft.Android.Build.Tasks;
 using Microsoft.Android.Tasks;
-using NUnit.Framework;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Xamarin.Android.Build.Tests
 {
-	[TestFixture]
+	[TestClass]
+	[DoNotParallelize]
 	public class GeneratePackageManagerJavaTests
 	{
-		static object [] CheckPackageManagerAssemblyOrderChecks () => new object [] {
+		static object [] [] CheckPackageManagerAssemblyOrderChecks () => new object [] [] {
 			new object[] {
 				/* resolvedUserAssemblies */ new string [] {
 					"linked/Xamarin.AndroidX.SavedState.dll",
@@ -35,17 +37,17 @@ namespace Xamarin.Android.Build.Tests
 			},
 		};
 
-		[Test]
-		[TestCaseSource (nameof (CheckPackageManagerAssemblyOrderChecks))]
+		[TestMethod]
+		[DynamicData (nameof (CheckPackageManagerAssemblyOrderChecks))]
 		public void CheckPackageManagerAssemblyOrder (string [] resolvedUserAssemblies, string [] resolvedAssemblies)
 		{
 			// avoid a PathTooLongException because using the TestName will include ALL the arguments.
 			var testHash = Files.HashString (string.Join ("", resolvedUserAssemblies) + string.Join ("", resolvedAssemblies));
-			var path = Path.Combine (TestContext.CurrentContext.WorkDirectory, "temp", $"CheckPackageManagerAssemblyOrder{testHash}");
+			var path = Path.Combine (AppContext.BaseDirectory, "temp", $"CheckPackageManagerAssemblyOrder{testHash}");
 			Directory.CreateDirectory (path);
 			try {
 				var packageManagerTask = new GeneratePackageManagerJava {
-					BuildEngine = new MockBuildEngine (TestContext.Out),
+					BuildEngine = new MockBuildEngine (Console.Out),
 					MainAssembly = "linked/HelloAndroid.dll",
 					OutputDirectory = Path.Combine (path, "src", "mono"),
 				};
@@ -53,7 +55,7 @@ namespace Xamarin.Android.Build.Tests
 				Assert.IsTrue (packageManagerTask.Execute (), "GeneratePackageManagerJava task should have executed.");
 
 				Assert.AreEqual (
-					File.ReadAllText (Path.Combine (TestContext.CurrentContext.TestDirectory, "Expected", "CheckPackageManagerAssemblyOrder.java")).Replace ("\r\n", "\n"),
+					File.ReadAllText (Path.Combine (AppContext.BaseDirectory, "Expected", "CheckPackageManagerAssemblyOrder.java")).Replace ("\r\n", "\n"),
 					File.ReadAllText (Path.Combine (path, "src", "mono", "MonoPackageManager_Resources.java")).Replace ("\r\n", "\n"));
 			} finally {
 				Directory.Delete (path, recursive: true);

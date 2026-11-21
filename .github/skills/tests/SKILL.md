@@ -3,7 +3,7 @@ name: tests
 description: >-
   Runs, discovers, or recommends dotnet/android tests. Handles standalone tests
   (plain dotnet test), full-build tests (local SDK required), and on-device
-  MTP/NUnit tests. Maps source files to relevant test suites. Trigger on test
+  MTP tests. Maps source files to relevant test suites. Trigger on test
   execution requests, questions about available tests, or "which tests should I
   run for this change?"
 ---
@@ -79,17 +79,17 @@ dotnet test <project>.csproj -v minimal --filter "Name~TestName"
 
 ### Host-side MSBuild tests (full-build)
 ```bash
-./dotnet-local.sh test bin/TestDebug/${TFM}/Xamarin.Android.Build.Tests.dll
-./dotnet-local.sh test bin/TestDebug/${TFM}/Xamarin.Android.Build.Tests.dll --filter "Name~BuildBasicApplication"
-./dotnet-local.sh test bin/TestDebug/${TFM}/Xamarin.Android.Build.Tests.dll --filter "FullyQualifiedName~NativeAotBuildTests"
+./dotnet-local.sh test --test-modules bin/TestDebug/${TFM}/Xamarin.Android.Build.Tests.dll
+./dotnet-local.sh test --test-modules bin/TestDebug/${TFM}/Xamarin.Android.Build.Tests.dll --filter "Name~BuildBasicApplication"
+./dotnet-local.sh test --test-modules bin/TestDebug/${TFM}/Xamarin.Android.Build.Tests.dll --filter "FullyQualifiedName~NativeAotBuildTests"
 ```
 
 ### Device integration tests (full-build + device)
 ```bash
-./dotnet-local.sh test bin/TestDebug/MSBuildDeviceIntegration/${TFM}/MSBuildDeviceIntegration.dll
-./dotnet-local.sh test bin/TestDebug/MSBuildDeviceIntegration/${TFM}/MSBuildDeviceIntegration.dll --filter "Name~InstallAndRunTests"
+./dotnet-local.sh test --test-modules bin/TestDebug/MSBuildDeviceIntegration/${TFM}/MSBuildDeviceIntegration.dll
+./dotnet-local.sh test --test-modules bin/TestDebug/MSBuildDeviceIntegration/${TFM}/MSBuildDeviceIntegration.dll --filter "Name~InstallAndRunTests"
 # With more than one device attached:
-ADB_TARGET='-s emulator-5554' ./dotnet-local.sh test bin/TestDebug/MSBuildDeviceIntegration/${TFM}/MSBuildDeviceIntegration.dll --filter "Name~InstallAndRunTests"
+ADB_TARGET='-s emulator-5554' ./dotnet-local.sh test --test-modules bin/TestDebug/MSBuildDeviceIntegration/${TFM}/MSBuildDeviceIntegration.dll --filter "Name~InstallAndRunTests"
 ```
 
 CI runs these assemblies with Microsoft Testing Platform, and splits them across jobs with

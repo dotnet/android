@@ -297,10 +297,6 @@ namespace Xamarin.ProjectTools
 						sw.WriteLine ("/p:{0}", param);
 					}
 				}
-				var msbuildArgs = Environment.GetEnvironmentVariable ("NUNIT_MSBUILD_ARGS");
-				if (!string.IsNullOrEmpty (msbuildArgs)) {
-					sw.WriteLine (msbuildArgs);
-				}
 
 				psi.SetEnvironmentVariable ("MSBUILD", "msbuild");
 				sw.WriteLine ($"/bl:\"{Path.GetFullPath (Path.Combine (XABuildPaths.TestOutputDirectory, Path.GetDirectoryName (projectOrSolution), $"{binlogName}.binlog"))}\"");

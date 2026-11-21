@@ -7,12 +7,12 @@ using System.Linq;
 using Microsoft.Android.Build.BaseTasks.Tests.Utilities;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
-using NUnit.Framework;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Xamarin.Android.Tools.BootstrapTasks;
 
 namespace Microsoft.Android.Build.BaseTasks.Tests
 {
-	[TestFixture]
+	[TestClass]
 	public class BootstrapProcessTests
 	{
 		class RecordingAdb : Adb
@@ -38,15 +38,16 @@ namespace Microsoft.Android.Build.BaseTasks.Tests
 			protected override void ProcessStderr (string line) => ParsedError.Add (line);
 		}
 
-		[SetUp]
+		[TestInitialize]
 		public void SetUp ()
 		{
 			if (OperatingSystem.IsWindows ())
-				Assert.Ignore ("These command fixtures require a POSIX shell.");
+				Assert.Inconclusive ("These command fixtures require a POSIX shell.");
 		}
 
-		[TestCase (false)]
-		[TestCase (true)]
+		[TestMethod]
+		[DataRow (false)]
+		[DataRow (true)]
 		public void AdbPreservesLineRoutingAndFiles (bool merge)
 		{
 			string path = Path.GetTempFileName ();
@@ -75,8 +76,9 @@ namespace Microsoft.Android.Build.BaseTasks.Tests
 			}
 		}
 
-		[TestCase (false)]
-		[TestCase (true)]
+		[TestMethod]
+		[DataRow (false)]
+		[DataRow (true)]
 		public void AdbPreservesIgnoredExitCodes (bool ignore)
 		{
 			var task = new Adb {
@@ -89,7 +91,7 @@ namespace Microsoft.Android.Build.BaseTasks.Tests
 			CollectionAssert.AreEqual (new [] { "diagnostic" }, task.Output);
 		}
 
-		[Test]
+		[TestMethod]
 		public void AdbPreservesProcessTimeout ()
 		{
 			var task = new Adb {
@@ -101,10 +103,10 @@ namespace Microsoft.Android.Build.BaseTasks.Tests
 			Assert.IsFalse (task.Execute ());
 		}
 
-		[Test]
+		[TestMethod]
 		public void AdbBoundsOutputDrainWhenExitedProcessLeavesInheritedPipesOpen ()
 		{
-			string directory = Path.Combine (TestContext.CurrentContext.WorkDirectory, "bootstrap-output-timeout-" + Guid.NewGuid ().ToString ("N"));
+			string directory = Path.Combine (AppContext.BaseDirectory, "bootstrap-output-timeout-" + Guid.NewGuid ().ToString ("N"));
 			Directory.CreateDirectory (directory);
 			string pidFile = Path.Combine (directory, "pipe-holder.pid");
 			var task = new RecordingAdb {
@@ -118,8 +120,8 @@ namespace Microsoft.Android.Build.BaseTasks.Tests
 			var watch = Stopwatch.StartNew ();
 			try {
 				Assert.IsTrue (task.Execute ());
-				Assert.GreaterOrEqual (watch.Elapsed, TimeSpan.FromMilliseconds (700), "Output draining must wait for the configured deadline while the descendant holds the pipes open.");
-				Assert.Less (watch.Elapsed, TimeSpan.FromSeconds (5), "Output draining must stop at its deadline after the direct process exits.");
+				Assert.IsGreaterThanOrEqualTo (TimeSpan.FromMilliseconds (700), watch.Elapsed, "Output draining must wait for the configured deadline while the descendant holds the pipes open.");
+				Assert.IsLessThan (TimeSpan.FromSeconds (5), watch.Elapsed, "Output draining must stop at its deadline after the direct process exits.");
 				Assert.IsTrue (File.Exists (pidFile), "The inherited-pipe fixture must start.");
 				int pid = int.Parse (File.ReadAllText (pidFile), CultureInfo.InvariantCulture);
 				using (var pipeHolder = Process.GetProcessById (pid))
@@ -146,8 +148,9 @@ namespace Microsoft.Android.Build.BaseTasks.Tests
 			}
 		}
 
-		[TestCase (0)]
-		[TestCase (7)]
+		[TestMethod]
+		[DataRow (0)]
+		[DataRow (7)]
 		public void ParallelCommandsPreserveCaptureAndExitCode (int exitCode)
 		{
 			const int lineCount = 10000;
@@ -164,14 +167,14 @@ namespace Microsoft.Android.Build.BaseTasks.Tests
 			string capturedOutput = messages.Single (e => e.Message.StartsWith ("Output: " + Environment.NewLine, StringComparison.Ordinal)).Message
 				.Substring (("Output: " + Environment.NewLine).Length);
 			CollectionAssert.AreEqual (
-				Enumerable.Range (0, lineCount).Select (i => "stdout-" + i),
+				Enumerable.Range (0, lineCount).Select (i => "stdout-" + i).ToArray (),
 				capturedOutput.Split (new [] { Environment.NewLine }, StringSplitOptions.None));
 			if (exitCode != 0) {
 				string errorPrefix = "Error output: " + Environment.NewLine;
 				string capturedError = errors.Single (e => e.Message.Contains (errorPrefix)).Message;
 				capturedError = capturedError.Substring (capturedError.IndexOf (errorPrefix, StringComparison.Ordinal) + errorPrefix.Length);
 				CollectionAssert.AreEqual (
-					Enumerable.Range (0, lineCount).Select (i => "stderr-" + i),
+					Enumerable.Range (0, lineCount).Select (i => "stderr-" + i).ToArray (),
 					capturedError.Split (new [] { Environment.NewLine }, StringSplitOptions.None));
 			}
 		}

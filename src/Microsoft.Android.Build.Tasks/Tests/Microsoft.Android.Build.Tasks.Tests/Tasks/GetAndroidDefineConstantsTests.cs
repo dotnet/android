@@ -6,17 +6,19 @@ using System.Linq;
 using System.Reflection;
 using System.Xml.Linq;
 using Microsoft.Build.Framework;
-using NUnit.Framework;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Microsoft.Android.Tasks;
 
 namespace Xamarin.Android.Build.Tests
 {
-	[TestFixture]
+	[TestClass]
+	[DoNotParallelize]
 	public class GetAndroidDefineConstantsTests : BaseTest
 	{
-		[TestCase ("36", null, 36, "")]
-		[TestCase ("36.1", null, 36, "__ANDROID_36_1__")]
-		[TestCase ("38.2", "11.0-rc+test", 38, "__ANDROID_36_1__;__ANDROID_37_1__;__ANDROID_37_2__;__ANDROID_37_3__;__ANDROID_37_4__;__ANDROID_38_1__;__ANDROID_38_2__")]
+		[TestMethod]
+		[DataRow ("36", null, 36, "")]
+		[DataRow ("36.1", null, 36, "__ANDROID_36_1__")]
+		[DataRow ("38.2", "11.0-rc+test", 38, "__ANDROID_36_1__;__ANDROID_37_1__;__ANDROID_37_2__;__ANDROID_37_3__;__ANDROID_37_4__;__ANDROID_38_1__;__ANDROID_38_2__")]
 		public void Constants (string apiLevel, string? productVersion, int major, string minorConstants)
 		{
 			var task = new GetAndroidDefineConstants {
@@ -31,37 +33,40 @@ namespace Xamarin.Android.Build.Tests
 			expected.AddRange (["__MOBILE__", "__ANDROID__"]);
 			expected.AddRange (Enumerable.Range (1, major).Select (i => $"__ANDROID_{i}__"));
 			expected.AddRange (minorConstants.Split (';', StringSplitOptions.RemoveEmptyEntries));
-			CollectionAssert.AreEqual (expected, constants.Select (i => i.ItemSpec));
+			CollectionAssert.AreEqual (expected, constants.Select (i => i.ItemSpec).ToArray ());
 		}
 
-		[TestCase ("")]
-		[TestCase ("invalid")]
+		[TestMethod]
+		[DataRow ("")]
+		[DataRow ("invalid")]
 		public void InvalidApiLevel (string apiLevel)
 		{
 			var errors = new List<BuildErrorEventArgs> ();
 			var task = new GetAndroidDefineConstants {
 				AndroidApiLevel = apiLevel,
-				BuildEngine = new MockBuildEngine (TestContext.Out, errors: errors),
+				BuildEngine = new MockBuildEngine (Console.Out, errors: errors),
 			};
 			Assert.IsFalse (task.Execute ());
 			Assert.IsNull (task.AndroidDefineConstants);
 			Assert.IsEmpty (errors);
 		}
 
-		[TestCase ("GetAndroidDefineConstants")]
-		[TestCase ("Microsoft.Android.Tasks.GetAndroidDefineConstants")]
+		[TestMethod]
+		[DataRow ("GetAndroidDefineConstants")]
+		[DataRow ("Microsoft.Android.Tasks.GetAndroidDefineConstants")]
 		public void RegisteredTaskNamesExecute (string taskName)
 		{
 			string dotnet = Environment.GetEnvironmentVariable ("DOTNET_HOST_PATH") ?? "dotnet";
 			RegisteredTaskNamesExecute (taskName, "Core", dotnet, "msbuild");
 		}
 
-		[Platform ("Win")]
-		[TestCase ("GetAndroidDefineConstants")]
-		[TestCase ("Microsoft.Android.Tasks.GetAndroidDefineConstants")]
+		[TestMethod]
+		[OSCondition (OperatingSystems.Windows)]
+		[DataRow ("GetAndroidDefineConstants")]
+		[DataRow ("Microsoft.Android.Tasks.GetAndroidDefineConstants")]
 		public void RegisteredTaskNamesExecuteWithFullMSBuild (string taskName)
 		{
-			string msbuild = Path.GetFullPath (Path.Combine (TestContext.CurrentContext.TestDirectory, "..", "FullMSBuild", "MSBuild.exe"));
+			string msbuild = Path.GetFullPath (Path.Combine (AppContext.BaseDirectory, "..", "FullMSBuild", "MSBuild.exe"));
 			Assert.IsTrue (File.Exists (msbuild), $"Full-framework MSBuild not found: {msbuild}");
 			RegisteredTaskNamesExecute (taskName, "Full", msbuild);
 		}

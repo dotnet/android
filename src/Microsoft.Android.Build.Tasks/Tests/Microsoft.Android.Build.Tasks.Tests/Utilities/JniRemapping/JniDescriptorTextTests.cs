@@ -1,15 +1,14 @@
-using NUnit.Framework;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Microsoft.Android.Tasks.JniRemapping;
 
 namespace Xamarin.Android.Build.Tests
 {
-	[TestFixture]
-	[Parallelizable (ParallelScope.Children)]
+	[TestClass]
 	public class JniDescriptorTextTests : BaseTest
 	{
 		static string? Rename (string cls) => cls == "acme/orig/MyView" ? "a/b/C" : null;
 
-		[Test]
+		[TestMethod]
 		public void RewritesObjectParameterAndReturnTypes ()
 		{
 			bool changed = JniDescriptorText.TryRewriteDescriptor ("(Lacme/orig/MyView;I)Lacme/orig/MyView;", Rename, out string rewritten);
@@ -18,7 +17,7 @@ namespace Xamarin.Android.Build.Tests
 			Assert.AreEqual ("(La/b/C;I)La/b/C;", rewritten);
 		}
 
-		[Test]
+		[TestMethod]
 		public void RewritesArrayOfObjectType ()
 		{
 			bool changed = JniDescriptorText.TryRewriteDescriptor ("[Lacme/orig/MyView;", Rename, out string rewritten);
@@ -27,7 +26,7 @@ namespace Xamarin.Android.Build.Tests
 			Assert.AreEqual ("[La/b/C;", rewritten);
 		}
 
-		[Test]
+		[TestMethod]
 		public void LeavesUnrelatedTypesAndPrimitivesAlone ()
 		{
 			bool changed = JniDescriptorText.TryRewriteDescriptor ("(Landroid/view/View;[I)V", Rename, out string rewritten);
@@ -36,24 +35,25 @@ namespace Xamarin.Android.Build.Tests
 			Assert.AreEqual ("(Landroid/view/View;[I)V", rewritten);
 		}
 
-		[TestCase ("()V", true)]
-		[TestCase ("(Ljava/lang/Object;)Z", true)]
-		[TestCase ("(I)I", true)]
-		[TestCase ("(V)V", false)]
-		[TestCase ("()[V", false)]
-		[TestCase ("(L;)V", false)]
-		[TestCase ("(Ljava.lang.Object;)V", false)]
-		[TestCase ("(Lfoo[Bar;)V", false)]
-		[TestCase ("(Lfoo//Bar;)V", false)]
-		[TestCase ("I", false)]
-		[TestCase ("Ljava/lang/Object;", false)]
-		[TestCase ("not a descriptor", false)]
+		[TestMethod]
+		[DataRow ("()V", true)]
+		[DataRow ("(Ljava/lang/Object;)Z", true)]
+		[DataRow ("(I)I", true)]
+		[DataRow ("(V)V", false)]
+		[DataRow ("()[V", false)]
+		[DataRow ("(L;)V", false)]
+		[DataRow ("(Ljava.lang.Object;)V", false)]
+		[DataRow ("(Lfoo[Bar;)V", false)]
+		[DataRow ("(Lfoo//Bar;)V", false)]
+		[DataRow ("I", false)]
+		[DataRow ("Ljava/lang/Object;", false)]
+		[DataRow ("not a descriptor", false)]
 		public void ValidatesMethodDescriptors (string descriptor, bool expected)
 		{
 			Assert.AreEqual (expected, JniDescriptorText.IsValidMethodDescriptor (descriptor));
 		}
 
-		[Test]
+		[TestMethod]
 		public void ConvertsMethodDescriptorToJavaTypes ()
 		{
 			JniDescriptorText.MethodDescriptorToJavaTypes ("(Landroid/os/Bundle;I[Ljava/lang/String;)Z",

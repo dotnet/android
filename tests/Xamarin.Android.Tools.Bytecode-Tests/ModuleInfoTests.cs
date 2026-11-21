@@ -2,16 +2,16 @@
 
 using Xamarin.Android.Tools.Bytecode;
 
-using NUnit.Framework;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Xamarin.Android.Tools.BytecodeTests {
 
-	[TestFixture]
+	[TestClass]
 	public class ModuleInfoTests : ClassFileFixture {
 
 		const string JavaType = "module-info";
 
-		[Test]
+		[TestMethod]
 		public void ClassFile ()
 		{
 			var c   = LoadClassFile (JavaType + ".class");
@@ -23,7 +23,7 @@ namespace Xamarin.Android.Tools.BytecodeTests {
 			}.Assert (c);
 
 			// Newer javac versions include the java.base module version in the constant pool.
-			Assert.That (c.ConstantPool.Count, Is.EqualTo (12).Or.EqualTo (13));
+			Assert.IsTrue (c.ConstantPool.Count == 12 || c.ConstantPool.Count == 13);
 			Assert.AreEqual (2, c.Attributes.Count);
 
 			Assert.AreEqual ("SourceFile",          c.Attributes [0].Name);
@@ -35,7 +35,7 @@ namespace Xamarin.Android.Tools.BytecodeTests {
 			var moduleAttr = c.Attributes [1] as ModuleAttribute;
 			Assert.IsTrue (moduleAttr != null);
 			Assert.AreEqual ("com.xamarin",         moduleAttr.ModuleName);
-			Assert.AreEqual (null,                  moduleAttr.ModuleVersion);
+			Assert.IsNull (moduleAttr.ModuleVersion);
 			Assert.AreEqual (1,                     moduleAttr.Requires.Count);
 			Assert.AreEqual ("java.base",           moduleAttr.Requires [0].Requires);
 			Assert.AreEqual (1,                     moduleAttr.Exports.Count);

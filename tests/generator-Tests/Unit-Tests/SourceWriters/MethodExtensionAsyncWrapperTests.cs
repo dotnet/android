@@ -1,14 +1,14 @@
 using System.Linq;
 using generator.SourceWriters;
 using MonoDroid.Generation;
-using NUnit.Framework;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace generatortests.SourceWriters
 {
-	[TestFixture]
+	[TestClassAttribute]
 	public class MethodExtensionAsyncWrapperTests : SourceWritersTestBase
 	{
-		[Test]
+		[TestMethodAttribute]
 		public void MethodExtensionAsyncWrapper ()
 		{
 			var opt = new CodeGenerationOptions ();
@@ -25,7 +25,7 @@ namespace generatortests.SourceWriters
 			Assert.AreEqual (expected, GetOutput (wrapper).Trim ());
 		}
 
-		[Test]
+		[TestMethodAttribute]
 		public void MethodExtensionAsyncWrapper_VoidReturnType ()
 		{
 			var opt = new CodeGenerationOptions ();

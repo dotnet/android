@@ -2,7 +2,7 @@ using System;
 using System.Linq;
 using System.Xml.Linq;
 
-using NUnit.Framework;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 using Java.Interop.Tools.JavaSource;
 
@@ -11,10 +11,10 @@ using Irony.Parsing;
 
 namespace Java.Interop.Tools.JavaSource.Tests
 {
-	[TestFixture]
+	[TestClass]
 	public class SourceJavadocToXmldocGrammarBlockTagsBnfTermsTests : SourceJavadocToXmldocGrammarFixture {
 
-		[Test]
+		[TestMethod]
 		public void ApiSinceDeclaration ()
 		{
 			var p = CreateParser (g => g.BlockTagsTerms.ApiSinceDeclaration);
@@ -24,7 +24,7 @@ namespace Java.Interop.Tools.JavaSource.Tests
 			Assert.AreEqual ("<para>Added in API level 3.</para>", r.Root.AstNode.ToString ());
 		}
 
-		[Test]
+		[TestMethod]
 		public void DeprecatedDeclaration ()
 		{
 			var p = CreateParser (g => g.BlockTagsTerms.DeprecatedDeclaration);
@@ -34,7 +34,7 @@ namespace Java.Interop.Tools.JavaSource.Tests
 			Assert.AreEqual ("<para>This member is deprecated. Insert reason here.</para>", r.Root.AstNode.ToString ());
 		}
 
-		[Test]
+		[TestMethod]
 		public void DeprecatedSinceDeclaration ()
 		{
 			var p = CreateParser (g => g.BlockTagsTerms.DeprecatedSinceDeclaration);
@@ -44,7 +44,7 @@ namespace Java.Interop.Tools.JavaSource.Tests
 			Assert.AreEqual ("<para>This member was deprecated in API level 3.</para>", r.Root.AstNode.ToString ());
 		}
 
-		[Test]
+		[TestMethod]
 		public void ExceptionDeclaration ()
 		{
 			var p = CreateParser (g => g.BlockTagsTerms.ExceptionDeclaration);
@@ -56,7 +56,7 @@ namespace Java.Interop.Tools.JavaSource.Tests
 			//Assert.AreEqual ("<exception cref=\"Throwable\">Just Because.</exception>", r.Root.AstNode.ToString ());
 		}
 
-		[Test]
+		[TestMethod]
 		public void InheritDocDeclaration ()
 		{
 			var p = CreateParser (g => g.BlockTagsTerms.InheritDocDeclaration);
@@ -72,7 +72,7 @@ namespace Java.Interop.Tools.JavaSource.Tests
 			Assert.IsNull (r.Root.AstNode, "@inheritDoc with trailing content should be ignored, but node was not null.");
 		}
 
-		[Test]
+		[TestMethod]
 		public void HideDeclaration ()
 		{
 			var p = CreateParser (g => g.BlockTagsTerms.HideDeclaration);
@@ -85,7 +85,7 @@ namespace Java.Interop.Tools.JavaSource.Tests
 			Assert.IsNull (r.Root.AstNode, "@hide with trailing content should be ignored, but node was not null.");
 		}
 
-		[Test]
+		[TestMethod]
 		public void ParamDeclaration ()
 		{
 			var p = CreateParser (g => g.BlockTagsTerms.ParamDeclaration);
@@ -99,7 +99,7 @@ namespace Java.Interop.Tools.JavaSource.Tests
 			Assert.AreEqual ("<param name=\"b\">b</param>", r.Root.AstNode.ToString ());
 		}
 
-		[Test]
+		[TestMethod]
 		public void ReturnDeclaration ()
 		{
 			var p = CreateParser (g => g.BlockTagsTerms.ReturnDeclaration);
@@ -114,7 +114,7 @@ namespace Java.Interop.Tools.JavaSource.Tests
 					r.Root.AstNode.ToString ());
 		}
 
-		[Test]
+		[TestMethod]
 		public void ReturnDeclaration_WithInlineTags ()
 		{
 			var p = CreateParser (g => g.BlockTagsTerms.ReturnDeclaration);
@@ -125,7 +125,7 @@ namespace Java.Interop.Tools.JavaSource.Tests
 					r.Root.AstNode.ToString ());
 		}
 
-		[Test]
+		[TestMethod]
 		public void SeeDeclaration ()
 		{
 			var p = CreateParser (g => g.BlockTagsTerms.SeeDeclaration);
@@ -137,7 +137,7 @@ namespace Java.Interop.Tools.JavaSource.Tests
 			//Assert.AreEqual ("<seealso cref=\"&quot;Insert Book Name Here&quot;\" />", r.Root.AstNode.ToString ());
 		}
 
-		[Test]
+		[TestMethod]
 		public void SinceDeclaration ()
 		{
 			var p = CreateParser (g => g.BlockTagsTerms.SinceDeclaration);
@@ -147,7 +147,7 @@ namespace Java.Interop.Tools.JavaSource.Tests
 			Assert.AreEqual ("<para>Added in Insert Version Here.</para>", r.Root.AstNode.ToString ());
 		}
 
-		[Test]
+		[TestMethod]
 		public void ThrowsDeclaration ()
 		{
 			var p = CreateParser (g => g.BlockTagsTerms.ThrowsDeclaration);
@@ -170,18 +170,18 @@ namespace Java.Interop.Tools.JavaSource.Tests
 			Assert.IsNull (r.Root.AstNode, "@throws should be ignored, but name only node was not null.");
 		}
 
-		[Test]
+		[TestMethod]
 		public void UnknownTagDeclaration ()
 		{
 			var p = CreateParser (g => g.BlockTagsTerms.UnknownTagDeclaration);
 
 			var r = p.Parse ("@this-is-not-supported something {@code foo} else.");
 			Assert.IsFalse (r.HasErrors (), "@this-is-not-supported: " + DumpMessages (r, p));
-			Assert.AreEqual (null, r.Root.AstNode);
+			Assert.IsNull (r.Root.AstNode);
 
 			r = p.Parse ("@standalonetag");
 			Assert.IsFalse (r.HasErrors (), "@standalonetag: " + DumpMessages (r, p));
-			Assert.AreEqual (null, r.Root.AstNode);
+			Assert.IsNull (r.Root.AstNode);
 		}
 	}
 }

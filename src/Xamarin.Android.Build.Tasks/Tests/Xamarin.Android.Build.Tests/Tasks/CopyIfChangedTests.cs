@@ -2,25 +2,26 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using NUnit.Framework;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Microsoft.Build.Framework;
 using Xamarin.Android.Tasks;
 using Microsoft.Build.Utilities;
 
 namespace Xamarin.Android.Build.Tests
 {
-	[TestFixture]
+	[TestClass]
+	[DoNotParallelize]
 	public class CopyIfChangedTests
 	{
 		string tempDirectory;
 
-		[SetUp]
+		[TestInitialize]
 		public void Setup ()
 		{
 			tempDirectory = Path.Combine (Path.GetTempPath (), Path.GetRandomFileName ());
 		}
 
-		[TearDown]
+		[TestCleanup]
 		public void TearDown ()
 		{
 			Directory.Delete (tempDirectory, recursive: true);
@@ -44,7 +45,7 @@ namespace Xamarin.Android.Build.Tests
 			return new [] { new TaskItem (path) };
 		}
 
-		[Test]
+		[TestMethod]
 		public void DestinationNoExist ()
 		{
 			var src = NewFile ("foo");
@@ -52,7 +53,7 @@ namespace Xamarin.Android.Build.Tests
 			var messages = new List<BuildMessageEventArgs> ();
 
 			var task = new CopyIfChanged {
-				BuildEngine = new MockBuildEngine (TestContext.Out, messages: messages),
+				BuildEngine = new MockBuildEngine (Console.Out, messages: messages),
 				SourceFiles = ToArray (src),
 				DestinationFiles = ToArray (dest),
 			};
@@ -60,10 +61,10 @@ namespace Xamarin.Android.Build.Tests
 			Assert.AreEqual (1, task.ModifiedFiles.Length, "Changes should have been made.");
 			Assert.AreEqual (dest, task.ModifiedFiles [0].ItemSpec);
 			Assert.IsEmpty (messages, "ModifiedFiles should not be dumped to the log.");
-			FileAssert.AreEqual (src, dest);
+			CollectionAssert.AreEqual (File.ReadAllBytes (src), File.ReadAllBytes (dest));
 		}
 
-		[Test]
+		[TestMethod]
 		public void NoChange ()
 		{
 			var src = NewFile ("foo");
@@ -74,7 +75,7 @@ namespace Xamarin.Android.Build.Tests
 			var messages = new List<BuildMessageEventArgs> ();
 
 			var task = new CopyIfChanged {
-				BuildEngine = new MockBuildEngine (TestContext.Out, messages: messages),
+				BuildEngine = new MockBuildEngine (Console.Out, messages: messages),
 				SourceFiles = ToArray (src),
 				DestinationFiles = ToArray (dest),
 			};
@@ -84,7 +85,7 @@ namespace Xamarin.Android.Build.Tests
 			Assert.IsFalse (messages.Any (m => m.Message == " ModifiedFiles:"));
 		}
 
-		[Test]
+		[TestMethod]
 		public void DestinationOlder ()
 		{
 			var src = NewFile ("foo");
@@ -94,16 +95,16 @@ namespace Xamarin.Android.Build.Tests
 			File.SetLastWriteTimeUtc (dest, now.AddSeconds (-1)); // destination is older
 
 			var task = new CopyIfChanged {
-				BuildEngine = new MockBuildEngine (TestContext.Out),
+				BuildEngine = new MockBuildEngine (Console.Out),
 				SourceFiles = ToArray (src),
 				DestinationFiles = ToArray (dest),
 			};
 			Assert.IsTrue (task.Execute (), "task.Execute() should have succeeded.");
 			Assert.AreEqual (1, task.ModifiedFiles.Length, "Changes should have been made.");
-			FileAssert.AreEqual (src, dest);
+			CollectionAssert.AreEqual (File.ReadAllBytes (src), File.ReadAllBytes (dest));
 		}
 
-		[Test]
+		[TestMethod]
 		public void DestinationOlderNoLengthCheck ()
 		{
 			var src = NewFile ("foo");
@@ -113,17 +114,17 @@ namespace Xamarin.Android.Build.Tests
 			File.SetLastWriteTimeUtc (dest, now.AddSeconds (-1)); // destination is older
 
 			var task = new CopyIfChanged {
-				BuildEngine = new MockBuildEngine (TestContext.Out),
+				BuildEngine = new MockBuildEngine (Console.Out),
 				SourceFiles = ToArray (src),
 				DestinationFiles = ToArray (dest),
 				CompareFileLengths = false,
 			};
 			Assert.IsTrue (task.Execute (), "task.Execute() should have succeeded.");
 			Assert.AreEqual (1, task.ModifiedFiles.Length, "Changes should have been made.");
-			FileAssert.AreEqual (src, dest);
+			CollectionAssert.AreEqual (File.ReadAllBytes (src), File.ReadAllBytes (dest));
 		}
 
-		[Test]
+		[TestMethod]
 		public void SourceOlder ()
 		{
 			var src = NewFile ("foo");
@@ -133,7 +134,7 @@ namespace Xamarin.Android.Build.Tests
 			File.SetLastWriteTimeUtc (dest, now);
 
 			var task = new CopyIfChanged {
-				BuildEngine = new MockBuildEngine (TestContext.Out),
+				BuildEngine = new MockBuildEngine (Console.Out),
 				SourceFiles = ToArray (src),
 				DestinationFiles = ToArray (dest),
 			};
@@ -141,7 +142,7 @@ namespace Xamarin.Android.Build.Tests
 			Assert.AreEqual (0, task.ModifiedFiles.Length, "No changes should have been made.");
 		}
 
-		[Test]
+		[TestMethod]
 		public void SourceOlderSameLengthDifferentContent ()
 		{
 			var src = NewFile ("foo");
@@ -151,7 +152,7 @@ namespace Xamarin.Android.Build.Tests
 			var timestamp = File.GetLastWriteTimeUtc (dest);
 
 			var task = new CopyIfChanged {
-				BuildEngine = new MockBuildEngine (TestContext.Out),
+				BuildEngine = new MockBuildEngine (Console.Out),
 				SourceFiles = ToArray (src),
 				DestinationFiles = ToArray (dest),
 			};
@@ -161,8 +162,9 @@ namespace Xamarin.Android.Build.Tests
 			Assert.AreEqual (timestamp, File.GetLastWriteTimeUtc (dest));
 		}
 
-		[TestCase ("bar", true)]
-		[TestCase ("foo", false)]
+		[TestMethod]
+		[DataRow ("bar", true)]
+		[DataRow ("foo", false)]
 		public void VerifyContentWithNewerDestination (string destinationContent, bool expectCopy)
 		{
 			var src = NewFile ("foo");
@@ -172,13 +174,13 @@ namespace Xamarin.Android.Build.Tests
 			var timestamp = File.GetLastWriteTimeUtc (dest);
 
 			var task = new CopyIfChanged {
-				BuildEngine = new MockBuildEngine (TestContext.Out),
+				BuildEngine = new MockBuildEngine (Console.Out),
 				SourceFiles = ToArray (src),
 				DestinationFiles = ToArray (dest),
 				VerifyContent = true,
 			};
 			Assert.IsTrue (task.Execute (), "task.Execute() should have succeeded.");
-			FileAssert.AreEqual (src, dest);
+			CollectionAssert.AreEqual (File.ReadAllBytes (src), File.ReadAllBytes (dest));
 			if (expectCopy) {
 				Assert.AreEqual (1, task.ModifiedFiles.Length, "Different content should be copied despite the newer destination timestamp.");
 				Assert.AreEqual (dest, task.ModifiedFiles [0].ItemSpec);
@@ -188,7 +190,7 @@ namespace Xamarin.Android.Build.Tests
 			}
 		}
 
-		[Test]
+		[TestMethod]
 		public void SourceOlderDifferentLength ()
 		{
 			var src = NewFile ("foo");
@@ -198,16 +200,16 @@ namespace Xamarin.Android.Build.Tests
 			File.SetLastWriteTimeUtc (dest, now);
 
 			var task = new CopyIfChanged {
-				BuildEngine = new MockBuildEngine (TestContext.Out),
+				BuildEngine = new MockBuildEngine (Console.Out),
 				SourceFiles = ToArray (src),
 				DestinationFiles = ToArray (dest),
 			};
 			Assert.IsTrue (task.Execute (), "task.Execute() should have succeeded.");
 			Assert.AreEqual (1, task.ModifiedFiles.Length, "Changes should have been made.");
-			FileAssert.AreEqual (src, dest);
+			CollectionAssert.AreEqual (File.ReadAllBytes (src), File.ReadAllBytes (dest));
 		}
 
-		[Test]
+		[TestMethod]
 		public void SourceOlderDifferentLengthButNoLengthCheck ()
 		{
 			var src = NewFile ("foo");
@@ -217,17 +219,17 @@ namespace Xamarin.Android.Build.Tests
 			File.SetLastWriteTimeUtc (dest, now);
 
 			var task = new CopyIfChanged {
-				BuildEngine = new MockBuildEngine (TestContext.Out),
+				BuildEngine = new MockBuildEngine (Console.Out),
 				SourceFiles = ToArray (src),
 				DestinationFiles = ToArray (dest),
 				CompareFileLengths = false,
 			};
 			Assert.IsTrue (task.Execute (), "task.Execute() should have succeeded.");
 			Assert.AreEqual (0, task.ModifiedFiles.Length, "Changes should not have been made.");
-			FileAssert.AreNotEqual (src, dest);
+			CollectionAssert.AreNotEqual (File.ReadAllBytes (src), File.ReadAllBytes (dest));
 		}
 
-		[Test]
+		[TestMethod]
 		public void CaseChanges ()
 		{
 			var src = NewFile (contents: "Foo");
@@ -238,13 +240,13 @@ namespace Xamarin.Android.Build.Tests
 
 			dest = dest.Replace ("foo", "Foo");
 			var task = new CopyIfChanged {
-				BuildEngine = new MockBuildEngine (TestContext.Out),
+				BuildEngine = new MockBuildEngine (Console.Out),
 				SourceFiles = ToArray (src),
 				DestinationFiles = ToArray (dest),
 			};
 			Assert.IsTrue (task.Execute (), "task.Execute() should have succeeded.");
 			Assert.AreEqual (1, task.ModifiedFiles.Length, "Changes should have been made.");
-			FileAssert.AreEqual (src, dest);
+			CollectionAssert.AreEqual (File.ReadAllBytes (src), File.ReadAllBytes (dest));
 
 			var files = Directory.GetFiles (Path.GetDirectoryName (dest), "Foo");
 			Assert.AreEqual ("Foo", Path.GetFileName (files [0]), "File name should match");
