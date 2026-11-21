@@ -1,0 +1,22 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <Import Project="..\..\Configuration.props" />
+
+  <PropertyGroup>
+    <TargetFramework>$(DotNetStableTargetFramework)</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <IsPackable>false</IsPackable>
+    <!-- The file-based script under test provides its own Main and #: directives. -->
+    <GenerateProgramFile>false</GenerateProgramFile>
+    <Features>$(Features);FileBasedProgram</Features>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="NUnit" Version="$(NUnitVersion)" />
+    <PackageReference Include="NUnit3TestAdapter" Version="6.2.0" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="18.7.0" />
+    <Compile Include="..\..\build-tools\scripts\main-build-cache.cs" Link="main-build-cache.cs" />
+  </ItemGroup>
+
+</Project>

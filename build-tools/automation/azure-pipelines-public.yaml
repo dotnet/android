@@ -99,6 +99,7 @@ stages:
         nugetArtifactName: $(NuGetArtifactName)
         testAssembliesArtifactName: $(TestAssembliesArtifactName)
         buildResultArtifactName: Build Results - macOS
+        publishMainBuildCache: true
         use1ESTemplate: false
 
 # Windows Build Stage
