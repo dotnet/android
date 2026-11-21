@@ -572,9 +572,10 @@ namespace Microsoft.Android.Build.BaseTasks.Tests
 				Assert.IsTrue (Files.CopyIfChanged (src, dest));
 				return;
 			}
+			const int retryDelayMs = 100;
 			var environment = TaskEnvironment.CreateWithProjectDirectoryAndEnvironment (tempDir, new Dictionary<string, string> {
 				["DOTNET_ANDROID_FILE_WRITE_RETRY_ATTEMPTS"] = "300",
-				["DOTNET_ANDROID_FILE_WRITE_RETRY_DELAY_MS"] = "100",
+				["DOTNET_ANDROID_FILE_WRITE_RETRY_DELAY_MS"] = retryDelayMs.ToString (CultureInfo.InvariantCulture),
 			});
 			using var started = new ManualResetEventSlim ();
 			using var lockedFile = File.Open (dest, FileMode.OpenOrCreate, FileAccess.Write, FileShare.None);
@@ -594,8 +595,19 @@ namespace Microsoft.Android.Build.BaseTasks.Tests
 			bool enteredRetry;
 			try {
 				Assert.IsTrue (started.Wait (TimeSpan.FromSeconds (30)), "Copy thread did not start.");
+				// A single retry delay lasts retryDelayMs. Still waiting more than two delays after the first
+				// observed wait, while the lock is held, means the copy woke, failed again, and waited again.
+				var stopwatch = System.Diagnostics.Stopwatch.StartNew ();
+				TimeSpan? firstWait = null;
 				enteredRetry = SpinWait.SpinUntil (
-					() => !thread.IsAlive || (thread.ThreadState & ThreadState.WaitSleepJoin) != 0,
+					() => {
+						if (!thread.IsAlive)
+							return true;
+						if ((thread.ThreadState & ThreadState.WaitSleepJoin) == 0)
+							return false;
+						firstWait ??= stopwatch.Elapsed;
+						return stopwatch.Elapsed - firstWait.Value > TimeSpan.FromMilliseconds (2 * retryDelayMs);
+					},
 					TimeSpan.FromSeconds (30)) && thread.IsAlive;
 			} finally {
 				lockedFile.Dispose ();

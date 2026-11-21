@@ -524,15 +524,22 @@ namespace Xamarin.Android.NetTests
 				foreach (var pair in threads) {
 					bool socketFrame = false;
 					bool nativeFrame = false;
-					foreach (var frame in pair.Value.Thread.GetStackTrace ()) {
-						string? name = frame.ClassName;
-						string? method = frame.MethodName;
-						if (name == null || method == null)
-							continue;
-						if (method == operation && (name == "libcore.io.IoBridge" || name.EndsWith (".SocketInputStream", StringComparison.Ordinal) || name.EndsWith (".SocketOutputStream", StringComparison.Ordinal)))
-							socketFrame = true;
-						if (frame.IsNativeMethod && method.IndexOf (operation, StringComparison.OrdinalIgnoreCase) >= 0)
-							nativeFrame = true;
+					var frames = pair.Value.Thread.GetStackTrace ();
+					try {
+						foreach (var frame in frames) {
+							string? name = frame.ClassName;
+							string? method = frame.MethodName;
+							if (name == null || method == null)
+								continue;
+							if (method == operation && (name == "libcore.io.IoBridge" || name.EndsWith (".SocketInputStream", StringComparison.Ordinal) || name.EndsWith (".SocketOutputStream", StringComparison.Ordinal)))
+								socketFrame = true;
+							if (frame.IsNativeMethod && method.IndexOf (operation, StringComparison.OrdinalIgnoreCase) >= 0)
+								nativeFrame = true;
+						}
+					} finally {
+						// This is polled frequently; release the frame peers' global references promptly.
+						foreach (var frame in frames)
+							frame.Dispose ();
 					}
 					if (socketFrame && nativeFrame) {
 						lock (gate) {
