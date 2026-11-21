@@ -2903,6 +2903,7 @@ CUSTOM_ENVIRONMENT_VALUE=custom",
 				EnableDefaultItems = true,
 			};
 			proj.SetRuntime (runtime);
+			proj.SetDefaultTargetDevice ();
 			proj.MainActivity = proj.DefaultMainActivity.Replace ("//${AFTER_ONCREATE}", """
 		Console.WriteLine ("#STACKTRACE-BEGIN#");
 		Console.WriteLine (Environment.StackTrace);
@@ -2913,12 +2914,15 @@ CUSTOM_ENVIRONMENT_VALUE=custom",
 			RunProjectAndAssert (proj, builder);
 
 			var appStartupLogcatFile = Path.Combine (Root, builder.ProjectDirectory, "stacktrace-logcat.log");
-			Assert.IsTrue (
-				MonitorAdbLogcat (line => line.Contains ("#STACKTRACE-END#"), appStartupLogcatFile, timeout: 60),
-				"Stack trace end marker not found in logcat (output may be missing or truncated)."
-			);
-
+			bool didFinish = MonitorAdbLogcat (
+				line => line.Contains ("#STACKTRACE-END#"), appStartupLogcatFile, timeout: 60);
 			var logcatOutput = File.ReadAllText (appStartupLogcatFile);
+			if (!didFinish) {
+				// Distinguish an app that never launched from one whose output is missing.
+				var appPid = RunAdbCommand ($"shell pidof {proj.PackageName}").Trim ();
+				Assert.Fail ($"Stack trace end marker not found in logcat. App process id: '{appPid}'. Logcat:\n{logcatOutput}");
+			}
+
 			StringAssert.Contains ("#STACKTRACE-BEGIN#", logcatOutput, "Stack trace start marker not found in logcat");
 			StringAssert.Contains ("FastDev: Found ", logcatOutput, "FastDev assembly discovery should be logged.");
 			StringAssert.Contains ("Loading assemblies from disk is normal during Fast Deployment.", logcatOutput, "FastDev disk loading should be described as normal.");
