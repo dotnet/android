@@ -20,7 +20,7 @@ namespace Xamarin.ProjectTools
 			  Superclass        : 'Ljava/lang/Object;'
 			  Interfaces        -
 				#0              : 'Ljava/lang/Thread$UncaughtExceptionHandler;'
-				#1              : 'Lmono/android/IGCUserPeer;'
+				#1              : 'Lnet/dot/android/IGCUserPeer;'
 			  Static fields     -
 				#0              : (in Landroid/runtime/UncaughtExceptionHandler;)
 				  name          : '__md_methods'

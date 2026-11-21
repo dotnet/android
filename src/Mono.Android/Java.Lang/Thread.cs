@@ -10,7 +10,7 @@ namespace Java.Lang {
 
 	public partial class Thread {
 
-		[Register ("mono/java/lang/RunnableImplementor")]
+		[Register ("net/dot/android/java/lang/RunnableImplementor")]
 		internal sealed class RunnableImplementor : Java.Lang.Object, IRunnable {
 
 			public Action Handler;
@@ -21,7 +21,7 @@ namespace Java.Lang {
 			public RunnableImplementor (Action handler, bool removable)
 				: base (
 						// SAFETY: The complete ASCII literal supplies stable, NUL-terminated JNI class-name bytes.
-						unsafe (JNIEnv.AllocObject ("mono/java/lang/RunnableImplementor"u8)),
+						unsafe (JNIEnv.AllocObject ("net/dot/android/java/lang/RunnableImplementor"u8)),
 						JniHandleOwnership.TransferLocalRef)
 			{
 				unsafe {

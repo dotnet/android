@@ -52,8 +52,8 @@ projects that use the Microsoft.Android.Runtimes framework in .NET 6+.
     </PropertyGroup>
 
     <ItemGroup Condition=" '$(AndroidRuntime)' == 'CoreCLR' ">
-      <NativeRuntimeAsset Condition=" Exists('$(NativeRuntimeOutputRootDir)$(_RuntimeFlavorDirName)\$(AndroidRID)\libnet-android.debug.so') " Include="$(NativeRuntimeOutputRootDir)$(_RuntimeFlavorDirName)\$(AndroidRID)\libnet-android.debug.so" />
-      <NativeRuntimeAsset Condition=" Exists('$(NativeRuntimeOutputRootDir)$(_RuntimeFlavorDirName)\$(AndroidRID)\libnet-android.release.so') " Include="$(NativeRuntimeOutputRootDir)$(_RuntimeFlavorDirName)\$(AndroidRID)\libnet-android.release.so" />
+      <NativeRuntimeAsset Condition=" Exists('$(NativeRuntimeOutputRootDir)$(_RuntimeFlavorDirName)\$(AndroidRID)\libdotnet-android.debug.so') " Include="$(NativeRuntimeOutputRootDir)$(_RuntimeFlavorDirName)\$(AndroidRID)\libdotnet-android.debug.so" />
+      <NativeRuntimeAsset Condition=" Exists('$(NativeRuntimeOutputRootDir)$(_RuntimeFlavorDirName)\$(AndroidRID)\libdotnet-android.release.so') " Include="$(NativeRuntimeOutputRootDir)$(_RuntimeFlavorDirName)\$(AndroidRID)\libdotnet-android.release.so" />
     </ItemGroup>
 
     <!-- System lib stubs needed by all runtimes -->

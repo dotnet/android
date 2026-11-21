@@ -56,13 +56,13 @@ namespace Android.Animation {
 		}
 	}
 
-	[Register ("mono/android/animation/AnimatorEventDispatcher")]
+	[Register ("net/dot/android/animation/AnimatorEventDispatcher")]
 	internal class AnimatorEventDispatcher : Java.Lang.Object, Animator.IAnimatorListener {
 
 		public AnimatorEventDispatcher ()
 			: base (
 					// SAFETY: The complete ASCII literal supplies stable, NUL-terminated JNI class-name bytes.
-					unsafe (JNIEnv.AllocObject ("mono/android/animation/AnimatorEventDispatcher"u8)),
+					unsafe (JNIEnv.AllocObject ("net/dot/android/animation/AnimatorEventDispatcher"u8)),
 					JniHandleOwnership.TransferLocalRef)
 		{
 			unsafe {

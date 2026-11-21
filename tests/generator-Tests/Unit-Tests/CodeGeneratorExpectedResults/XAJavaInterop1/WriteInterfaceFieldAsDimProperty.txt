@@ -1,4 +1,4 @@
-[Register ("mono/internal/com/xamarin/android/MyInterface", DoNotGenerateAcw=true)]
+[Register ("net/dot/android/internal/com/xamarin/android/MyInterface", DoNotGenerateAcw=true)]
 public abstract class MyInterface : Java.Lang.Object {
 	internal MyInterface ()
 	{
@@ -29,7 +29,7 @@ public abstract class MyInterface : Java.Lang.Object {
 
 }
 
-[Register ("mono/internal/com/xamarin/android/MyInterface", DoNotGenerateAcw=true)]
+[Register ("net/dot/android/internal/com/xamarin/android/MyInterface", DoNotGenerateAcw=true)]
 [global::System.Obsolete (@"Use the 'MyInterface' type. This type will be removed in a future release.", error: true)]
 public abstract class MyInterfaceConsts : MyInterface {
 	private MyInterfaceConsts ()

@@ -6,7 +6,7 @@ using System.Linq;
 
 namespace Android.Runtime {
 
-	[Register ("mono/android/runtime/JavaArray", DoNotGenerateAcw=true)]
+	[Register ("net/dot/android/runtime/JavaArray", DoNotGenerateAcw=true)]
 	public sealed class JavaArray<T> : Java.Lang.Object, IList<T> {
 
 		public JavaArray (IntPtr handle, JniHandleOwnership transfer)

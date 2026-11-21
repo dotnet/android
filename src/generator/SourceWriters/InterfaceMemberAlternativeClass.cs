@@ -40,7 +40,7 @@ namespace generator.SourceWriters
 			SourceWriterExtensions.AddSupportedOSPlatform (Attributes, iface, opt);
 
 			// Place this class in a dummy package that won't conflict the actual interface
-			Attributes.Add (new RegisterAttr ("mono/internal/" + iface.RawJniName, noAcw: true, additionalProperties: iface.AdditionalAttributeString ()) { AcwLast = true });
+			Attributes.Add (new RegisterAttr ("net/dot/android/internal/" + iface.RawJniName, noAcw: true, additionalProperties: iface.AdditionalAttributeString ()) { AcwLast = true });
 
 			if (should_obsolete)
 				SourceWriterExtensions.AddObsolete (Attributes, $"Use the '{iface.FullName}' type. This class will be removed in a future release.", opt);
@@ -181,7 +181,7 @@ namespace generator.SourceWriters
 			IsAbstract = true;
 
 			// Place this class in a dummy package that won't conflict the actual interface
-			Attributes.Add (new RegisterAttr ("mono/internal/" + iface.RawJniName, noAcw: true, additionalProperties: iface.AdditionalAttributeString ()));
+			Attributes.Add (new RegisterAttr ("net/dot/android/internal/" + iface.RawJniName, noAcw: true, additionalProperties: iface.AdditionalAttributeString ()));
 
 			SourceWriterExtensions.AddObsolete (Attributes, $"Use the '{iface.Name.Substring (1)}' type. This type will be removed in a future release.", opt, isError: true);
 

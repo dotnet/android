@@ -17,11 +17,11 @@ namespace Microsoft.Android.Sdk.TrimmableTypeMap;
 /// public class MainActivity
 ///     extends android.app.Activity
 ///     implements
-///         mono.android.IGCUserPeer,
+///         net.dot.android.IGCUserPeer,
 ///         android.view.View.OnClickListener
 /// {
 ///     static {
-///         mono.android.Runtime.registerNatives (MainActivity.class);
+///         net.dot.android.Runtime.registerNatives (MainActivity.class);
 ///     }
 ///
 ///     public MainActivity (android.content.Context p0)
@@ -125,7 +125,7 @@ public sealed class JcwJavaSourceGenerator
 		}
 
 		// implements clause — always includes IGCUserPeer, plus any implemented interfaces
-		writer.Write ("\timplements\n\t\tmono.android.IGCUserPeer");
+		writer.Write ("\timplements\n\t\tnet.dot.android.IGCUserPeer");
 
 		foreach (var iface in type.JavaCallableWrapperInterfaceJavaNames ?? type.ImplementedInterfaceJavaNames) {
 			writer.Write ($",\n\t\t{JniSignatureHelper.JniNameToJavaName (iface, generatedPeerNames)}");
@@ -142,7 +142,7 @@ public sealed class JcwJavaSourceGenerator
 		// Application and Instrumentation types cannot call registerNatives in their
 		// static initializer — the runtime isn't ready yet at that point. Instead we
 		// rely on ApplicationRegistration.registerApplications() (invoked from
-		// MonoPackageManager.LoadApplication, which runs from MonoRuntimeProvider.attachInfo)
+		// CoreClrPackageManager.LoadApplication, which runs from CoreClrRuntimeProvider.attachInfo)
 		// to register natives for these classes. However, Application.attachBaseContext
 		// fires *before* ContentProvider.attachInfo, so an override of attachBaseContext
 		// on a user Application subclass can invoke a native callback before
@@ -158,7 +158,7 @@ public sealed class JcwJavaSourceGenerator
 	private static synchronized void __md_registerNatives ()
 	{
 		if (!__md_natives_registered) {
-			mono.android.Runtime.registerNatives ({{className}}.class);
+			net.dot.android.Runtime.registerNatives ({{className}}.class);
 			__md_natives_registered = true;
 		}
 	}
@@ -170,7 +170,7 @@ public sealed class JcwJavaSourceGenerator
 
 		writer.Write ($$"""
 	static {
-		mono.android.Runtime.registerNatives ({{className}}.class);
+		net.dot.android.Runtime.registerNatives ({{className}}.class);
 	}
 
 
@@ -329,14 +329,14 @@ public sealed class JcwJavaSourceGenerator
 		writer.Write ("""
 
 	private java.util.ArrayList refList;
-	public void monodroidAddReference (java.lang.Object obj)
+	public void dotnetAddReference (java.lang.Object obj)
 	{
 		if (refList == null)
 			refList = new java.util.ArrayList ();
 		refList.add (obj);
 	}
 
-	public void monodroidClearReferences ()
+	public void dotnetClearReferences ()
 	{
 		if (refList != null)
 			refList.clear ();

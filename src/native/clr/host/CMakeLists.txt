@@ -9,7 +9,7 @@ endif()
 
 # Sources
 string(TOLOWER ${CMAKE_BUILD_TYPE} XAMARIN_NET_ANDROID_SUFFIX)
-set(XAMARIN_NET_ANDROID_LIB "net-android.${XAMARIN_NET_ANDROID_SUFFIX}")
+set(XAMARIN_NET_ANDROID_LIB "dotnet-android.${XAMARIN_NET_ANDROID_SUFFIX}")
 
 set(XAMARIN_MONODROID_SOURCES
   assembly-store.cc
@@ -114,6 +114,6 @@ xa_add_include_directories(${XAMARIN_NET_ANDROID_LIB})
 
 target_link_options(${XAMARIN_NET_ANDROID_LIB}
   PRIVATE
-  -Wl,--version-script,${CMAKE_SOURCE_DIR}/clr/libnet-android.map.txt
+  -Wl,--version-script,${CMAKE_SOURCE_DIR}/clr/libdotnet-android.map.txt
   -Wl,--no-undefined-version
 )

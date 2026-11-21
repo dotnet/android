@@ -37,7 +37,7 @@ public class JavaRuntimeTargetsTests : BaseTest
 			"java_runtime_clr.jar", "java_runtime_clr.dex",
 			"java_runtime_fastdev_clr.jar", "java_runtime_fastdev_clr.dex",
 		];
-		string [] retained = ["java_runtime_trimmable.jar", "java_runtime_trimmable.dex", "mono_android_Runtime.h", "custom-runtime.jar"];
+		string [] retained = ["java_runtime_trimmable.jar", "java_runtime_trimmable.dex", "net_dot_android_Runtime.h", "custom-runtime.jar"];
 		DateTime timestamp = new [] { File.GetLastWriteTimeUtc (project), File.GetLastWriteTimeUtc (targets) }.Max ().AddSeconds (2);
 		foreach (string name in retained) {
 			string file = Path.Combine (output, name);

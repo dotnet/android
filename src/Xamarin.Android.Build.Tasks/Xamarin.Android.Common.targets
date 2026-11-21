@@ -1303,9 +1303,9 @@ because xbuild doesn't support framework reference assemblies.
 <Target Name="_AddStaticResourcesInputs"
 		DependsOnTargets="_CollectRuntimeJarFilenames;$(_BeforeAddStaticResources)">
   <PropertyGroup>
-    <_AndroidRuntimeProviderSource>$(_AndroidIntermediateJavaSourceDirectory)mono\MonoRuntimeProvider.java</_AndroidRuntimeProviderSource>
+    <_AndroidRuntimeProviderSource>$(_AndroidIntermediateJavaSourceDirectory)net\dot\android\CoreClrRuntimeProvider.java</_AndroidRuntimeProviderSource>
     <_AndroidRuntimeProviderSource Condition=" '$(_AndroidRuntime)' == 'NativeAOT' ">$(_AndroidIntermediateJavaSourceDirectory)net\dot\jni\nativeaot\NativeAotRuntimeProvider.java</_AndroidRuntimeProviderSource>
-    <_AndroidRuntimeProviderTemplate>$(MSBuildThisFileDirectory)MonoRuntimeProvider.Bundled.java</_AndroidRuntimeProviderTemplate>
+    <_AndroidRuntimeProviderTemplate>$(MSBuildThisFileDirectory)CoreClrRuntimeProvider.Bundled.java</_AndroidRuntimeProviderTemplate>
     <_AndroidRuntimeProviderTemplate Condition=" '$(_AndroidRuntime)' == 'NativeAOT' ">$(MSBuildThisFileDirectory)NativeAotRuntimeProvider.java</_AndroidRuntimeProviderTemplate>
   </PropertyGroup>
 </Target>
@@ -1498,7 +1498,7 @@ because xbuild doesn't support framework reference assemblies.
 
 <Target Name="_GetGeneratePackageManagerJavaInputs">
   <PropertyGroup>
-    <_AndroidPackageManagerJavaFile>$(_AndroidIntermediateJavaSourceDirectory)mono/MonoPackageManager_Resources.java</_AndroidPackageManagerJavaFile>
+    <_AndroidPackageManagerJavaFile>$(_AndroidIntermediateJavaSourceDirectory)net/dot/android/CoreClrPackageManager_Resources.java</_AndroidPackageManagerJavaFile>
     <_AndroidPackageManagerJavaInputsFile>$(IntermediateOutputPath)package-manager-java.inputs</_AndroidPackageManagerJavaInputsFile>
     <_AndroidPackageManagerJavaTaskAssembly>$([MSBuild]::NormalizePath('$(MSBuildThisFileDirectory)', '$(_MicrosoftAndroidBuildTasksAssembly)'))</_AndroidPackageManagerJavaTaskAssembly>
   </PropertyGroup>
@@ -1523,7 +1523,7 @@ because xbuild doesn't support framework reference assemblies.
 
   <Microsoft.Android.Tasks.GeneratePackageManagerJava
       MainAssembly="$(TargetPath)"
-      OutputDirectory="$(_AndroidIntermediateJavaSourceDirectory)mono">
+      OutputDirectory="$(_AndroidIntermediateJavaSourceDirectory)net\dot\android">
   </Microsoft.Android.Tasks.GeneratePackageManagerJava>
 
   <Touch Files="$(_AndroidStampDirectory)_GeneratePackageManagerJava.stamp" AlwaysCreate="True" />
@@ -1574,8 +1574,8 @@ because xbuild doesn't support framework reference assemblies.
 
     <!-- Android for .NET native runtime. Always loaded by the Java startup code. Note that this is the
          "generic" name of the runtime library - the actual name of the file might be different. If
-         this is the case, the `ArchiveFileName` will be set to `libmonodroid.so` -->
-    <_AndroidNativeLibraryNeverJniPreload Include="libmonodroid.so" />
+         this is the case, the `ArchiveFileName` will be set to `libdotnet-android.so` -->
+    <_AndroidNativeLibraryNeverJniPreload Include="libdotnet-android.so" />
   </ItemGroup>
 
   <ItemGroup Condition=" '$(AndroidIgnoreAllJniPreload)' == 'true' ">

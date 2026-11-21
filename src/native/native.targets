@@ -150,8 +150,8 @@
     </ItemGroup>
 
     <ItemGroup Condition=" '$(CMakeRuntimeFlavor)' == 'CoreCLR' ">
-      <_BuildAndroidRuntimesOutputs Include="@(AndroidSupportedTargetJitAbi->'$(OutputPath)\%(AndroidRID)\libnet-android.debug.so')" />
-      <_BuildAndroidRuntimesOutputs Include="@(AndroidSupportedTargetJitAbi->'$(OutputPath)\%(AndroidRID)\libnet-android.release.so')" />
+      <_BuildAndroidRuntimesOutputs Include="@(AndroidSupportedTargetJitAbi->'$(OutputPath)\%(AndroidRID)\libdotnet-android.debug.so')" />
+      <_BuildAndroidRuntimesOutputs Include="@(AndroidSupportedTargetJitAbi->'$(OutputPath)\%(AndroidRID)\libdotnet-android.release.so')" />
     </ItemGroup>
 
     <ItemGroup Condition=" '$(CMakeRuntimeFlavor)' == 'NativeAOT' ">

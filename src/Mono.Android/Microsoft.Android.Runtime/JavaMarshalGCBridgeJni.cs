@@ -31,12 +31,12 @@ sealed class JavaMarshalGCBridgeJni
 				throw new InvalidOperationException ("Failed to obtain the Java Runtime instance.");
 			runtimeGc = runtimeType.GetInstanceMethod ("gc"u8, "()V"u8);
 
-			gcUserPeerType = new JniType ("mono/android/GCUserPeer"u8);
+			gcUserPeerType = new JniType ("net/dot/android/GCUserPeer"u8);
 			gcUserPeerConstructor = gcUserPeerType.GetConstructor ("()V"u8);
 
-			igcUserPeerType = new JniType ("mono/android/IGCUserPeer"u8);
-			addReferenceMethod = igcUserPeerType.GetInstanceMethod ("monodroidAddReference"u8, "(Ljava/lang/Object;)V"u8);
-			clearReferencesMethod = igcUserPeerType.GetInstanceMethod ("monodroidClearReferences"u8, "()V"u8);
+			igcUserPeerType = new JniType ("net/dot/android/IGCUserPeer"u8);
+			addReferenceMethod = igcUserPeerType.GetInstanceMethod ("dotnetAddReference"u8, "(Ljava/lang/Object;)V"u8);
+			clearReferencesMethod = igcUserPeerType.GetInstanceMethod ("dotnetClearReferences"u8, "()V"u8);
 		}
 	}
 
@@ -44,17 +44,17 @@ sealed class JavaMarshalGCBridgeJni
 	{
 		unsafe {
 			// SAFETY: the bridge supplies live source/destination references; source is checked for IGCUserPeer
-			// unless already known, and the one stack argument matches monodroidAddReference.(Ljava/lang/Object;)V.
+			// unless already known, and the one stack argument matches dotnetAddReference.(Ljava/lang/Object;)V.
 			if (!source.IsValid)
 				throw new InvalidOperationException ("A GC bridge reference source is invalid.");
 			if (!destination.IsValid)
 				throw new InvalidOperationException ("A GC bridge reference destination is invalid.");
 
 			if (!knownGCUserPeer && !JNIEnv.IsInstanceOf (source.Handle, igcUserPeerType.PeerReference.Handle)) {
-				Logger.Log (LogLevel.Error, "DOTNET", "Failed to find monodroidAddReference method.");
+				Logger.Log (LogLevel.Error, "DOTNET", "Failed to find dotnetAddReference method.");
 				if (RuntimeFeature.GCBridgeLogging && Logger.LogGC) {
 					string? className = JniEnvironment.Types.GetJniTypeNameFromInstance (source);
-					Logger.Log (LogLevel.Error, "DOTNET-gc", $"Missing monodroidAddReference method for object of class {className ?? "[unknown]"}.");
+					Logger.Log (LogLevel.Error, "DOTNET-gc", $"Missing dotnetAddReference method for object of class {className ?? "[unknown]"}.");
 				}
 				return false;
 			}
@@ -83,7 +83,7 @@ sealed class JavaMarshalGCBridgeJni
 	{
 		unsafe {
 			// SAFETY: the bridge supplies a live global IGCUserPeer reference; clearReferencesMethod is
-			// monodroidClearReferences.()V from the retained IGCUserPeer class, with no arguments.
+			// dotnetClearReferences.()V from the retained IGCUserPeer class, with no arguments.
 			JniEnvironment.InstanceMethods.CallVoidMethod (reference, clearReferencesMethod);
 		}
 	}

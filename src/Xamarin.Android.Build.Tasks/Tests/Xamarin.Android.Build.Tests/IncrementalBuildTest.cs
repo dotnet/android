@@ -543,7 +543,7 @@ namespace Xamarin.Android.Build.Tests
 			Assert.IsTrue (builder.Build (proj));
 			builder.Output.AssertTargetIsNotSkipped ("_GeneratePackageManagerJava");
 			StringAssert.Contains ("RenamedBootstrapApp.dll", File.ReadAllText (
-				Directory.GetFiles (intermediate, "MonoPackageManager_Resources.java", SearchOption.AllDirectories).Single ()));
+				Directory.GetFiles (intermediate, "CoreClrPackageManager_Resources.java", SearchOption.AllDirectories).Single ()));
 		}
 
 		[Test]

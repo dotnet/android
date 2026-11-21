@@ -89,7 +89,7 @@ namespace Xamarin.Android.Build.Tests
 			StringAssert.DoesNotContain ("-dontobfuscate", rules);
 			StringAssert.Contains ("-keepclassmembernames interface * { *; }", rules);
 			StringAssert.Contains ("-keepclassmembernames,includedescriptorclasses class * { native <methods>; }", rules);
-			StringAssert.Contains ("-keep class mono.android.Runtime { *; }", rules);
+			StringAssert.Contains ("-keep class net.dot.android.Runtime { *; }", rules);
 			StringAssert.Contains ("-keepclassmembernames class * { <fields>; }", rules);
 		}
 
@@ -168,15 +168,15 @@ namespace Xamarin.Android.Build.Tests
 				var common = File.ReadAllText (task.ProguardCommonXamarinConfiguration);
 				StringAssert.Contains ("-dontobfuscate", common);
 				StringAssert.DoesNotContain ("-keep,allowshrinking,allowoptimization class **", common);
-				StringAssert.DoesNotContain ("-keep class mono.android.**", common);
+				StringAssert.DoesNotContain ("-keep class net.dot.android.**", common);
 				StringAssert.DoesNotContain ("net.dot.jni.ManagedPeer", common);
 				StringAssert.DoesNotContain ("net.dot.jni.GCUserPeerable", common);
 				StringAssert.DoesNotContain ("net.dot.jni.internal.JavaProxyObject", common);
 				StringAssert.DoesNotContain ("net.dot.jni.internal.JavaProxyThrowable", common);
 				if (scopedMembers) {
 					StringAssert.DoesNotContain ("-keepclassmembers class * {", common);
-					StringAssert.Contains ("-keep class mono.android.Runtime { *; }", common);
-					StringAssert.Contains ("-keep interface mono.android.IGCUserPeer { *; }", common);
+					StringAssert.Contains ("-keep class net.dot.android.Runtime { *; }", common);
+					StringAssert.Contains ("-keep interface net.dot.android.IGCUserPeer { *; }", common);
 					StringAssert.Contains ("-keep,allowshrinking class * implements **", common);
 				} else {
 					StringAssert.Contains ("-keepclassmembers class * {", common);

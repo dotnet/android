@@ -3,7 +3,7 @@ using System.IO;
 
 namespace Android.Runtime
 {
-	[Register ("mono/android/runtime/OutputStreamAdapter")]
+	[Register ("net/dot/android/runtime/OutputStreamAdapter")]
 	public class OutputStreamAdapter : Java.IO.OutputStream
 	{
 		public Stream BaseStream {get; private set;}
@@ -11,7 +11,7 @@ namespace Android.Runtime
 		[Register (".ctor", "()V", "")]
 		public OutputStreamAdapter (System.IO.Stream stream)
 			: base (
-					JNIEnv.StartCreateInstance ("mono/android/runtime/OutputStreamAdapter", "()V"),
+					JNIEnv.StartCreateInstance ("net/dot/android/runtime/OutputStreamAdapter", "()V"),
 					JniHandleOwnership.TransferLocalRef)
 		{
 			throw new NotImplementedException ();

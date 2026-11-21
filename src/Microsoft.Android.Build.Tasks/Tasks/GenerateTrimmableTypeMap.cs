@@ -571,7 +571,7 @@ public class GenerateTrimmableTypeMap : AndroidTask
 		sb.AppendLine ("\tpublic static void registerApplications ()");
 		sb.AppendLine ("\t{");
 		foreach (var javaClassName in registrationTypes) {
-			sb.AppendLine (CultureInfo.InvariantCulture, $"\t\tmono.android.Runtime.registerNatives ({javaClassName}.class);");
+			sb.AppendLine (CultureInfo.InvariantCulture, $"\t\tnet.dot.android.Runtime.registerNatives ({javaClassName}.class);");
 		}
 		sb.AppendLine ("\t}");
 		sb.AppendLine ("}");

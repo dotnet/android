@@ -1,9 +1,9 @@
-package mono;
+package net.dot.android;
 
-public class MonoRuntimeProvider
+public class CoreClrRuntimeProvider
 	extends android.content.ContentProvider
 {
-	public MonoRuntimeProvider ()
+	public CoreClrRuntimeProvider ()
 	{
 	}
 
@@ -16,7 +16,7 @@ public class MonoRuntimeProvider
 	@Override
 	public void attachInfo (android.content.Context context, android.content.pm.ProviderInfo info)
 	{
-		mono.MonoPackageManager.LoadApplication (context);
+		net.dot.android.CoreClrPackageManager.LoadApplication (context);
 		super.attachInfo (context, info);
 	}
 

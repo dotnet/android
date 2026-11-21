@@ -2,7 +2,7 @@ package net.dot.jni.test;
 
 import java.util.ArrayList;
 
-import mono.android.IGCUserPeer;
+import net.dot.android.IGCUserPeer;
 
 // Android constructs the managed peer through its runtime. IGCUserPeer
 // keeps managed references alive for JavaObjectTest.DisposeAccessesThis.
@@ -17,12 +17,12 @@ public class GetThis implements IGCUserPeer {
 		return this;
 	}
 
-	public void monodroidAddReference (java.lang.Object obj)
+	public void dotnetAddReference (java.lang.Object obj)
 	{
 		managedReferences.add (obj);
 	}
 
-	public void monodroidClearReferences ()
+	public void dotnetClearReferences ()
 	{
 		managedReferences.clear ();
 	}

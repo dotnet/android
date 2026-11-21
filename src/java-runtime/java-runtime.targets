@@ -21,7 +21,7 @@
 <Target Name="_BuildJavaRuntimeJar"
       BeforeTargets="Build"
       Inputs="@(AllRuntimeSource);$(MSBuildProjectFullPath);$(MSBuildThisFileFullPath)"
-      Outputs="%(_RuntimeOutput.OutputJar);$(OutputPath)mono_android_Runtime.h"
+      Outputs="%(_RuntimeOutput.OutputJar);$(OutputPath)net_dot_android_Runtime.h"
 >
   <RemoveDir Directories="%(_RuntimeOutput.IntermediateRuntimeOutputPath)" />
   <MakeDir Directories="%(_RuntimeOutput.IntermediateRuntimeOutputPath)" />
@@ -42,11 +42,11 @@
       Command="&quot;$(JavaCPath)&quot; $(_Target) -d %(_RuntimeOutput.IntermediateRuntimeOutputPath) -h %(_RuntimeOutput.IntermediateRuntimeOutputPath) -classpath $(_AndroidJar)$(PathSeparator)&quot;%(_RuntimeOutput.OutputJar)&quot; @%(_RuntimeOutput.IntermediateRuntimeClassesTxt)"
   />
   <Copy
-      SourceFiles="%(_RuntimeOutput.IntermediateRuntimeOutputPath)/mono_android_Runtime.h"
+      SourceFiles="%(_RuntimeOutput.IntermediateRuntimeOutputPath)/net_dot_android_Runtime.h"
       DestinationFolder="$(OutputPath)"
   />
   <!-- These files are auto generated at app build time so should be removed from the runtime.jar -->
-  <Delete Files="%(_RuntimeOutput.IntermediateRuntimeOutputPath)\mono\MonoPackageManager_Resources.class" />
+  <Delete Files="%(_RuntimeOutput.IntermediateRuntimeOutputPath)\net\dot\android\CoreClrPackageManager_Resources.class" />
   <Delete Files="%(_RuntimeOutput.IntermediateRuntimeOutputPath)\net\dot\android\ApplicationRegistration.class" />
   <Exec
       Command="&quot;$(JarPath)&quot; cf &quot;%(_RuntimeOutput.OutputJar)&quot; -C &quot;%(_RuntimeOutput.IntermediateRuntimeOutputPath)&quot; ."
