@@ -244,6 +244,13 @@ namespace Xamarin.ProjectTools
 			string processLog = !string.IsNullOrEmpty (BuildLogFile)
 				? Path.Combine (Path.GetDirectoryName (buildLogFullPath), "process.log")
 				: null;
+			// build.log only receives this build's process output, so failure messages don't report stale errors.
+			if (processLog != null) {
+				foreach (var path in new [] { processLog, processLog + ".bak" }) {
+					if (File.Exists (path))
+						File.Delete (path);
+				}
+			}
 
 			var logger = buildLogFullPath == null
 				? string.Empty
@@ -452,7 +459,7 @@ namespace Xamarin.ProjectTools
 		// MSBuild prefixes inline messages with the node ID (e.g. `1>`), but not the summary copies.
 		static readonly Regex buildNodePrefixRegex = new Regex (@"^\s*\d+>", RegexOptions.Compiled);
 
-		static void AppendBuildErrors (StringBuilder message, IEnumerable<string> buildOutput)
+		public static void AppendBuildErrors (StringBuilder message, IEnumerable<string> buildOutput)
 		{
 			var errors = new HashSet<string> (StringComparer.Ordinal);
 			foreach (var line in buildOutput) {
