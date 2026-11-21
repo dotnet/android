@@ -30,7 +30,7 @@ static class FakeAdb
 			return 0;
 		if (args.Contains (InstrumentationProtocol.TestUidsDirectoryRequest)) {
 			if (response.FilterDirectory == null) {
-				Console.Write ("INSTRUMENTATION_RESULT: error=File filters are unsupported\nINSTRUMENTATION_CODE: 0\n");
+				Console.Write ("INSTRUMENTATION_STATUS: event=discovered\nINSTRUMENTATION_STATUS: test=Tests.Fixture.Test\nINSTRUMENTATION_STATUS_CODE: 0\nINSTRUMENTATION_CODE: -1\n");
 				return 0;
 			}
 			Console.Write ($"INSTRUMENTATION_RESULT: {InstrumentationProtocol.KeyTestUidsDirectory}={response.FilterDirectory}\nINSTRUMENTATION_CODE: -1\n");

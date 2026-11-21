@@ -84,9 +84,9 @@ class AndroidTestAdapter(
 			throw new InvalidOperationException ($"Android test discovery failed: {result.Error ?? "The instrumentation process crashed."}");
 		if (result.InstrumentationCode != -1)
 			throw new InvalidOperationException ($"Android test discovery did not finish successfully (instrumentation code: {result.InstrumentationCode}).");
-		if (result.DiscoveredCount == null)
+		if (testUids != null && result.DiscoveredCount == null)
 			throw new InvalidOperationException ("The installed instrumentation does not support test discovery. Rebuild and install a test application with discovery support.");
-		if (result.DiscoveredCount != state.DiscoveredCount)
+		if (result.DiscoveredCount != null && result.DiscoveredCount != state.DiscoveredCount)
 			throw new InvalidOperationException ($"Android test discovery reported {result.DiscoveredCount} tests, but received {state.DiscoveredCount} test nodes.");
 	}
 
@@ -137,7 +137,11 @@ class AndroidTestAdapter(
 	async Task<InstrumentationBundleResult> RunInstrumentationOnDeviceAsync (ExecuteRequestContext context, SessionUid sessionUid, StreamingState state, CancellationToken cancellationToken, bool discover, string[]? testUids)
 	{
 		var encodedUids = testUids == null ? null : InstrumentationProtocol.EncodeTestUids (testUids);
-		if (encodedUids == null || encodedUids.Length <= MaxInlineTestUidsLength)
+		if (encodedUids == null)
+			return await RunInstrumentationAsync (context, sessionUid, state, cancellationToken, discover, encodedUids);
+
+		var directory = await GetTestUidsDirectoryAsync (cancellationToken);
+		if (encodedUids.Length <= MaxInlineTestUidsLength)
 			return await RunInstrumentationAsync (context, sessionUid, state, cancellationToken, discover, encodedUids);
 
 		var token = Guid.NewGuid ().ToString ("N");
@@ -145,7 +149,6 @@ class AndroidTestAdapter(
 		string? devicePath = null;
 		try {
 			await File.WriteAllTextAsync (localPath, encodedUids, cancellationToken);
-			var directory = await GetTestUidsDirectoryAsync (cancellationToken);
 			devicePath = $"{directory.TrimEnd ('/')}/{InstrumentationProtocol.GetTestUidsFileName (token)}";
 			var (exitCode, output, error) = await AdbHelper.RunAsync (adbPath, adbTarget,
 				["push", localPath, devicePath], cancellationToken, verbose);
@@ -177,14 +180,13 @@ class AndroidTestAdapter(
 
 	async Task<string> GetTestUidsDirectoryAsync (CancellationToken cancellationToken)
 	{
-		// The invalid-Base64 request makes older instrumentation fail rather than
-		// accidentally running the complete suite.
 		var (exitCode, output, error) = await AdbHelper.RunAsync (adbPath, adbTarget, [
 			"shell", "am", "instrument", "-w", "-r",
+			"-e", InstrumentationProtocol.ArgListTests, "true",
 			"-e", InstrumentationProtocol.ExtraTestUids, InstrumentationProtocol.TestUidsDirectoryRequest,
 			$"{package}/{instrumentation}",
 		], cancellationToken, verbose);
-		var result = ParseInstrumentationBundle (output, error);
+		var result = ParseInstrumentationBundle (output, exitCode != 0 ? error : "");
 		if (exitCode != 0 || result.Error != null || result.InstrumentationCode != -1 ||
 			output.Contains ("INSTRUMENTATION_FAILED", StringComparison.Ordinal))
 			throw new InvalidOperationException ($"Could not determine the device test-filter directory: {result.Error ?? $"instrumentation exited with code {exitCode} and result {result.InstrumentationCode}."}");
@@ -200,7 +202,7 @@ class AndroidTestAdapter(
 		// '-w' waits for the run to complete.
 		var cmdArgs = new List<string> { "shell", "am", "instrument", "-w", "-r" };
 		if (discover)
-			cmdArgs.AddRange (["-e", InstrumentationProtocol.ExtraDiscover, "true"]);
+			cmdArgs.AddRange (["-e", InstrumentationProtocol.ArgListTests, "true"]);
 		if (encodedUids != null)
 			cmdArgs.AddRange (["-e", InstrumentationProtocol.ExtraTestUids, encodedUids]);
 		cmdArgs.Add ($"{package}/{instrumentation}");
@@ -226,7 +228,7 @@ class AndroidTestAdapter(
 					await PublishStatusAsync (context, sessionUid, status, state, discover);
 				} catch (OperationCanceledException) {
 					throw;
-				} catch (Exception ex) {
+				} catch (Exception ex) when (!discover) {
 					// One malformed/unreportable status block must not abort
 					// reporting for the rest of the run.
 					Console.Error.WriteLine ($"[AndroidTestAdapter] Failed to report a streamed test result: {ex}");
@@ -301,7 +303,7 @@ class AndroidTestAdapter(
 		status.Values.TryGetValue (InstrumentationProtocol.KeyClass, out var className);
 
 		if (discover) {
-			if (eventKind != InstrumentationProtocol.EventDiscover)
+			if (eventKind != InstrumentationProtocol.EventDiscovered)
 				return;
 			var discoveryProperties = new List<IProperty> { DiscoveredTestNodeStateProperty.CachedInstance };
 			AddMethodIdentifier (status.Values, discoveryProperties);

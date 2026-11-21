@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using System.Text;
 using System.Xml.Linq;
@@ -34,7 +33,7 @@ static class InstrumentationProtocol
 
 	// Instrumentation extras. Base64 XML preserves parameterized test IDs,
 	// including quotes, whitespace and shell metacharacters.
-	public const string ExtraDiscover = "list-tests";
+	public const string ArgListTests = "list-tests";
 	public const string ExtraTestUids = "test-uids";
 	public const string TestUidsDirectoryRequest = "file-location";
 	public const string TestUidsFilePrefix = "file:";
@@ -51,7 +50,7 @@ static class InstrumentationProtocol
 	// "event" values.
 	public const string EventStart = "start";
 	public const string EventFinish = "finish";
-	public const string EventDiscover = "discover";
+	public const string EventDiscovered = "discovered";
 
 	// "outcome" values.
 	public const string OutcomePassed = "passed";
@@ -64,7 +63,7 @@ static class InstrumentationProtocol
 
 	public static string[] DecodeTestUids (string encoded)
 		=> XElement.Parse (Encoding.UTF8.GetString (Convert.FromBase64String (encoded)))
-			.Elements ("test").Select (test => (string?) test.Attribute ("uid")
+			.Elements ("test").Select (test => test.Attribute ("uid")?.Value
 				?? throw new FormatException ("Missing test UID in the instrumentation filter.")).ToArray ();
 
 	public static string GetTestUidsFileName (string token)
@@ -72,15 +71,5 @@ static class InstrumentationProtocol
 		if (!Guid.TryParseExact (token, "N", out _))
 			throw new FormatException ("Invalid instrumentation filter file token.");
 		return $"test-uids-{token}.txt";
-	}
-
-	public static string ReadTestUidsArgument (string argument, string? externalFilesPath)
-	{
-		if (!argument.StartsWith (TestUidsFilePrefix, StringComparison.Ordinal))
-			return argument;
-		if (externalFilesPath == null)
-			throw new InvalidOperationException ("The app's external files directory is unavailable.");
-		var fileName = GetTestUidsFileName (argument.Substring (TestUidsFilePrefix.Length));
-		return File.ReadAllText (Path.Combine (externalFilesPath, fileName));
 	}
 }

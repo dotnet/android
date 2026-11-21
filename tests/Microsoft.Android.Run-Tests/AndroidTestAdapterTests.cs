@@ -112,7 +112,7 @@ public class AndroidTestAdapterTests
 	[Test]
 	public async Task DiscoveryPublishesMetadataWithoutExecutingTests ()
 	{
-		Respond (Status ("discover") + """
+		Respond (Status ("discovered") + """
 			INSTRUMENTATION_RESULT: discovered=1
 			INSTRUMENTATION_CODE: -1
 			""", error: "* daemon started successfully\n");
@@ -123,7 +123,22 @@ public class AndroidTestAdapterTests
 		Assert.That (nodes [0].ExecutionState, Is.EqualTo ("discovered"));
 		Assert.That (nodes [0].Node ["location.type"], Is.EqualTo ("Tests.Fixture"));
 		Assert.That (nodes [0].Node ["location.method"], Is.EqualTo ("Test"));
-		Assert.That (ReadAdbArguments (), Does.Contain (InstrumentationProtocol.ExtraDiscover));
+		Assert.That (ReadAdbArguments (), Does.Contain (InstrumentationProtocol.ArgListTests));
+	}
+
+	[Test]
+	public async Task ExistingInstrumentationDiscoversWithoutCount ()
+	{
+		Respond (Status ("discovered") + "INSTRUMENTATION_CODE: -1\n");
+		var nodes = await DiscoverAsync ();
+		Assert.That (nodes.Select (node => node.Uid), Is.EqualTo (new [] { "Tests.Fixture.Test" }));
+	}
+
+	[Test]
+	public void InvalidDiscoveryMetadataIsNotSilentlyDropped ()
+	{
+		Respond (Status ("discovered").Replace ("method-arity=0", "method-arity=invalid") + "INSTRUMENTATION_CODE: -1\n");
+		Assert.ThrowsAsync<FormatException> (() => RunAsync ("--list-tests"));
 	}
 
 	[Test]
@@ -135,7 +150,6 @@ public class AndroidTestAdapterTests
 	}
 
 	[TestCase ("INSTRUMENTATION_RESULT: discovered=1\nINSTRUMENTATION_CODE: -1\n")]
-	[TestCase ("INSTRUMENTATION_RESULT: passed=1\nINSTRUMENTATION_CODE: -1\n")]
 	[TestCase ("INSTRUMENTATION_RESULT: error=Discovery failed\nINSTRUMENTATION_CODE: 0\n")]
 	[TestCase ("INSTRUMENTATION_RESULT: discovered=0\nINSTRUMENTATION_RESULT: error=Discovery failed\nINSTRUMENTATION_CODE: -1\n")]
 	[TestCase ("INSTRUMENTATION_RESULT: discovered=0\nINSTRUMENTATION_CODE: 0\n")]
@@ -147,7 +161,6 @@ public class AndroidTestAdapterTests
 		Assert.ThrowsAsync<InvalidOperationException> (() => RunAsync ("--list-tests"));
 	}
 
-	[TestCase ("INSTRUMENTATION_RESULT: passed=1\nINSTRUMENTATION_CODE: -1\n", "does not support test discovery")]
 	[TestCase ("INSTRUMENTATION_RESULT: error=Discovery failed\nINSTRUMENTATION_CODE: 0\n", "Android test discovery failed")]
 	public void ServerDiscoveryFailureIsReportedToTheClient (string output, string message)
 	{
@@ -173,7 +186,7 @@ public class AndroidTestAdapterTests
 		int filterIndex = Array.IndexOf (args, InstrumentationProtocol.ExtraTestUids);
 		Assert.That (filterIndex, Is.GreaterThanOrEqualTo (0));
 		Assert.That (InstrumentationProtocol.DecodeTestUids (args [filterIndex + 1]), Is.EqualTo (new [] { uid }));
-		Assert.That (args, Does.Not.Contain (InstrumentationProtocol.ExtraDiscover));
+		Assert.That (args, Does.Not.Contain (InstrumentationProtocol.ArgListTests));
 	}
 
 	[Test]
@@ -231,8 +244,19 @@ public class AndroidTestAdapterTests
 		var uids = Enumerable.Range (0, 2_000).Select (i => $"Tests.Fixture.TestWithLongName_{i:D5}").ToArray ();
 		Respond ("", filterDirectory: null);
 		var error = Assert.ThrowsAsync<InvalidOperationException> (() => RunAsync (["--filter-uid", .. uids]));
-		Assert.That (error?.Message, Does.Contain ("File filters are unsupported"));
+		Assert.That (error?.Message, Does.Contain ("did not provide a valid test-filter directory"));
 		Assert.That (ReadAdbCalls (), Has.Length.EqualTo (1));
+		Assert.That (File.Exists (responsePath + ".args"), Is.False);
+	}
+
+	[Test]
+	public void OlderInstrumentationRejectsSmallSelectionsWithoutRunningTests ()
+	{
+		Respond ("", filterDirectory: null);
+		var error = Assert.ThrowsAsync<InvalidOperationException> (() => RunAsync ("--filter-uid", "Tests.Fixture.Test"));
+		Assert.That (error?.Message, Does.Contain ("did not provide a valid test-filter directory"));
+		Assert.That (ReadAdbCalls (), Has.Length.EqualTo (1));
+		Assert.That (ReadAdbCalls () [0], Does.Contain (InstrumentationProtocol.ArgListTests));
 		Assert.That (File.Exists (responsePath + ".args"), Is.False);
 	}
 
@@ -259,22 +283,11 @@ public class AndroidTestAdapterTests
 	}
 
 	[Test]
-	public void FileFilterArgumentsAreValidatedAndDecoded ()
+	public void FileFilterNamesRequireValidTokens ()
 	{
 		var token = Guid.NewGuid ().ToString ("N");
-		var file = Path.Combine (TestContext.CurrentContext.WorkDirectory, InstrumentationProtocol.GetTestUidsFileName (token));
-		string[] uids = ["Test(\"a b; 'quoted' & <xml>\")", "unicode-\u00e9"];
-		try {
-			File.WriteAllText (file, InstrumentationProtocol.EncodeTestUids (uids));
-			var encoded = InstrumentationProtocol.ReadTestUidsArgument (InstrumentationProtocol.TestUidsFilePrefix + token, TestContext.CurrentContext.WorkDirectory);
-			Assert.That (InstrumentationProtocol.DecodeTestUids (encoded), Is.EqualTo (uids));
-			Assert.Throws<FormatException> (() => InstrumentationProtocol.ReadTestUidsArgument ("file:../other", TestContext.CurrentContext.WorkDirectory));
-			Assert.Throws<InvalidOperationException> (() => InstrumentationProtocol.ReadTestUidsArgument ("file:" + token, null));
-			File.Delete (file);
-			Assert.Throws<FileNotFoundException> (() => InstrumentationProtocol.ReadTestUidsArgument ("file:" + token, TestContext.CurrentContext.WorkDirectory));
-		} finally {
-			File.Delete (file);
-		}
+		Assert.That (InstrumentationProtocol.GetTestUidsFileName (token), Is.EqualTo ($"test-uids-{token}.txt"));
+		Assert.Throws<FormatException> (() => InstrumentationProtocol.GetTestUidsFileName ("../other"));
 	}
 
 	[Test]
@@ -308,7 +321,7 @@ public class AndroidTestAdapterTests
 	public async Task JsonRpcServerCanDiscoverRepeatedlyAndRunSelectedTests (string serverArguments)
 	{
 		const string selectedUid = "Tests.Fixture.Test(\"a b; 'quoted' & <xml>\")";
-		Respond (Status ("discover") + Status ("discover", selectedUid) + """
+		Respond (Status ("discovered") + Status ("discovered", selectedUid) + """
 			INSTRUMENTATION_RESULT: discovered=2
 			INSTRUMENTATION_CODE: -1
 			""");
@@ -380,7 +393,7 @@ public class AndroidTestAdapterTests
 			Assert.That (largeCalls [3] [2..4], Is.EqualTo (new [] { "shell", "rm" }));
 			Assert.That (largeCalls.All (call => call.Sum (argument => argument.Length + 3) < 32_767), Is.True);
 
-			Respond (Status ("discover", largeSelection [0]) + """
+			Respond (Status ("discovered", largeSelection [0]) + """
 				INSTRUMENTATION_RESULT: discovered=1
 				INSTRUMENTATION_CODE: -1
 				""");
@@ -390,7 +403,7 @@ public class AndroidTestAdapterTests
 			Assert.That (InstrumentationProtocol.DecodeTestUids (File.ReadAllText (responsePath + ".uids")), Is.EqualTo (largeSelection));
 			largeCalls = ReadAdbCalls ().TakeLast (4).ToArray ();
 			Assert.That (largeCalls [0], Does.Contain (InstrumentationProtocol.TestUidsDirectoryRequest));
-			Assert.That (largeCalls [2], Does.Contain (InstrumentationProtocol.ExtraDiscover));
+			Assert.That (largeCalls [2], Does.Contain (InstrumentationProtocol.ArgListTests));
 			Assert.That (largeCalls [3] [2..4], Is.EqualTo (new [] { "shell", "rm" }));
 
 			File.Delete (responsePath + ".args");

@@ -1,7 +1,6 @@
 using Android.Runtime;
 using Microsoft.Testing.Extensions;
 using Microsoft.Testing.Platform.Builder;
-using Microsoft.Testing.Platform.Extensions;
 using Microsoft.Testing.Platform.Extensions.Messages;
 using Microsoft.Testing.Platform.ServerMode.Client;
 using System.Diagnostics.CodeAnalysis;
@@ -15,15 +14,20 @@ namespace AndroidTest1;
 [Instrumentation(Name = "com.companyname.AndroidTest1.TestInstrumentation")]
 public class TestInstrumentation : Instrumentation
 {
-    Bundle? instrumentationArguments;
+    bool _listTests;
+    string? _encodedTestUids;
+    int _discovered;
+    int _passed, _failed, _skipped;
 
     protected TestInstrumentation(IntPtr handle, JniHandleOwnership ownership)
         : base(handle, ownership) { }
 
     public override void OnCreate(Bundle? arguments)
     {
-        instrumentationArguments = arguments;
         base.OnCreate(arguments);
+        // Set by 'dotnet test --list-tests'
+        _listTests = arguments?.GetString("list-tests") == "true";
+        _encodedTestUids = arguments?.GetString("test-uids");
         Start();
     }
 
@@ -31,7 +35,6 @@ public class TestInstrumentation : Instrumentation
     {
         base.OnStart();
 
-        var consumer = new ResultConsumer(this);
         var bundle = new Bundle();
         try
         {
@@ -39,7 +42,7 @@ public class TestInstrumentation : Instrumentation
             var writeablePath = externalFilesPath ?? Path.GetTempPath();
             var resultsPath = Path.Combine(writeablePath, "TestResults");
             string[]? testUids = null;
-            if (instrumentationArguments?.GetString("test-uids") is string encodedUids)
+            if (_encodedTestUids is string encodedUids)
             {
                 if (encodedUids == "file-location")
                 {
@@ -64,34 +67,59 @@ public class TestInstrumentation : Instrumentation
                 if (testUids.Length == 0)
                     throw new ArgumentException("The selected-test filter must not be empty.");
             }
-            bool discover = instrumentationArguments?.GetString("list-tests") == "true";
-            if (discover)
+            using var client = await MtpServerClient.LaunchInProcessAsync(async (serverArgs, cancellationToken) =>
             {
-                bundle.PutInt("discovered", await DiscoverTestsAsync(resultsPath, testUids));
-                Finish(Result.Ok, bundle);
-                return;
-            }
-            var args = new List<string> {
-                "--results-directory", resultsPath,
-                "--report-trx"
+                var builder = await TestApplication.CreateBuilderAsync(_listTests
+                    ? [.. serverArgs, "--results-directory", resultsPath]
+                    : [.. serverArgs, "--results-directory", resultsPath, "--report-trx"]);
+                builder.AddMSTest(() => [GetType().Assembly]);
+                builder.AddTrxReportProvider();
+                using ITestApplication app = await builder.BuildAsync();
+                return await app.RunAsync();
+            });
+            Exception? reportingError = null;
+            client.TestNodesUpdated += (_, e) =>
+            {
+                try
+                {
+                    foreach (var node in e.Changes)
+                        ReportStatus(node);
+                }
+                catch (Exception ex)
+                {
+                    reportingError = ex;
+                }
             };
-            if (testUids is not null)
+
+            try
             {
-                args.Add("--filter-uid");
-                args.AddRange(testUids);
+                await client.InitializeAsync();
+                if (_listTests)
+                {
+                    if (testUids is null)
+                        await client.DiscoverTestsAsync();
+                    else
+                        await client.DiscoverTestsAsync(testUids);
+                    bundle.PutInt("discovered", _discovered);
+                }
+                else
+                {
+                    var result = testUids is null ? await client.RunTestsAsync() : await client.RunTestsAsync(testUids);
+                    bundle.PutInt("passed", _passed);
+                    bundle.PutInt("failed", _failed);
+                    bundle.PutInt("skipped", _skipped);
+                    bundle.PutString("resultsPath", result.Artifacts.FirstOrDefault(a => a.Uri?.EndsWith(".trx") == true)?.Uri);
+                }
+                await client.ExitAsync();
             }
-            var builder = await TestApplication.CreateBuilderAsync(args.ToArray());
-            builder.AddMSTest(() => [GetType().Assembly]);
-            builder.AddTrxReportProvider();
-            builder.TestHost.AddDataConsumer(_ => consumer);
-
-            using ITestApplication app = await builder.BuildAsync();
-            await app.RunAsync();
-
-            bundle.PutInt("passed", consumer.Passed);
-            bundle.PutInt("failed", consumer.Failed);
-            bundle.PutInt("skipped", consumer.Skipped);
-            bundle.PutString("resultsPath", consumer.TrxReportPath);
+            finally
+            {
+                await client.ShutdownAsync();
+            }
+            if (_listTests && client.ServerExitCode is not 0)
+                throw new InvalidOperationException($"Test discovery server exited with code {client.ServerExitCode}.");
+            if (reportingError is not null)
+                throw new InvalidOperationException("Failed to report test results.", reportingError);
             Finish(Result.Ok, bundle);
         }
         catch (Exception ex)
@@ -101,80 +129,56 @@ public class TestInstrumentation : Instrumentation
         }
     }
 
-    async Task<int> DiscoverTestsAsync(string resultsPath, string[]? testUids)
+    void ReportStatus(MtpTestNodeUpdate node)
     {
-        // MTP does not activate ordinary data consumers during discovery.
-        // Use its embedded server client to receive discovery notifications.
-        using var client = await MtpServerClient.LaunchInProcessAsync(async (serverArgs, cancellationToken) =>
+        if (node.NodeType != "action")
+            return;
+
+        (string? eventName, string? outcome) = node.ExecutionState switch
         {
-            var builder = await TestApplication.CreateBuilderAsync([
-                .. serverArgs, "--results-directory", resultsPath
-            ]);
-            builder.AddMSTest(() => [GetType().Assembly]);
-            using var app = await builder.BuildAsync();
-            return await app.RunAsync();
-        });
-        int discovered = 0;
-        Exception? discoveryError = null;
-        client.TestNodesUpdated += (_, update) =>
-        {
-            // Notification-handler exceptions are logged, not propagated by the client.
-            try
-            {
-                foreach (var node in update.Changes)
-                {
-                    if (node.ExecutionState != "discovered")
-                        continue;
-                    if (string.IsNullOrEmpty(node.Uid))
-                        throw new InvalidOperationException("A discovered test has no UID.");
-                    var status = new Bundle();
-                    status.PutString("event", "discover");
-                    status.PutString("test", node.Uid);
-                    status.PutString("name", node.DisplayName ?? node.Uid);
-                    WriteMethodIdentifier(status, GetDiscoveryMethodIdentifier(node));
-                    SendStatus(0, status);
-                    Interlocked.Increment(ref discovered);
-                }
-            }
-            catch (Exception ex)
-            {
-                discoveryError = ex;
-            }
+            "discovered" => ("discovered", null),
+            "in-progress" => ("start", null),
+            "passed" => ("finish", "passed"),
+            "skipped" => ("finish", "skipped"),
+            "failed" or "error" or "timed-out" or "canceled" => ("finish", "failed"),
+            _ => (null, null),
         };
-        try
-        {
-            await client.InitializeAsync();
-            if (testUids is not null)
-            {
-                await client.DiscoverTestsAsync(testUids);
-            }
-            else
-            {
-                await client.DiscoverTestsAsync();
-            }
-            await client.ExitAsync();
-        }
-        finally
-        {
-            await client.ShutdownAsync();
-        }
-        if (client.ServerExitCode is not 0)
-            throw new InvalidOperationException($"Test discovery server exited with code {client.ServerExitCode}.");
-        if (discoveryError is not null)
-            throw new InvalidOperationException("Failed to report discovered tests.", discoveryError);
-        return discovered;
+        if (eventName is null)
+            return;
+
+        if (eventName == "discovered")
+            Interlocked.Increment(ref _discovered);
+        else if (outcome == "passed")
+            Interlocked.Increment(ref _passed);
+        else if (outcome == "failed")
+            Interlocked.Increment(ref _failed);
+        else if (outcome == "skipped")
+            Interlocked.Increment(ref _skipped);
+
+        var b = new Bundle();
+        b.PutString("event", eventName);
+        b.PutString("test", node.Uid);
+        b.PutString("name", node.DisplayName);
+        WriteMethodIdentifier(b, GetMethodIdentifier(node));
+        if (node.Node.GetValueOrDefault("location.type") is string className)
+            b.PutString("class", className);
+        if (outcome is not null)
+            b.PutString("outcome", outcome);
+        if (node.ErrorMessage is { } message)
+            b.PutString("message-b64", Convert.ToBase64String(System.Text.Encoding.UTF8.GetBytes(message)));
+        if (node.ErrorStackTrace is { } stack)
+            b.PutString("stack-b64", Convert.ToBase64String(System.Text.Encoding.UTF8.GetBytes(stack)));
+        SendStatus(0, b);
     }
 
     [UnconditionalSuppressMessage("Trimming", "IL2026", Justification = "MSTest.SourceGeneration preserves the discovered test types and their members.")]
     [UnconditionalSuppressMessage("Trimming", "IL2075", Justification = "MSTest.SourceGeneration preserves the methods on each discovered test class.")]
-    TestMethodIdentifierProperty? GetDiscoveryMethodIdentifier(MtpTestNodeUpdate node)
+    TestMethodIdentifierProperty? GetMethodIdentifier(MtpTestNodeUpdate node)
     {
         if (!node.Node.TryGetValue("location.type", out var typeValue) || typeValue is not string typeName ||
             !node.Node.TryGetValue("location.method", out var methodValue) || methodValue is not string signature)
             return null;
 
-        // Server notifications omit the assembly, return type, and separate parameter types.
-        // Resolve only discovered test members, preserved by MSTest.SourceGeneration.
         var type = GetType().Assembly.GetType(typeName, throwOnError: true)
             ?? throw new InvalidOperationException($"Discovered test type '{typeName}' could not be resolved.");
         var arity = node.Node.TryGetValue("location.method-arity", out var arityValue)
@@ -202,78 +206,5 @@ public class TestInstrumentation : Instrumentation
         status.PutString("parameter-types", Convert.ToBase64String(Encoding.UTF8.GetBytes(
             new XElement("tests", id.ParameterTypeFullNames.Select(type => new XElement("test", new XAttribute("uid", type)))).ToString(SaveOptions.DisableFormatting))));
         status.PutString("return-type", id.ReturnTypeFullName);
-    }
-
-    class ResultConsumer(Instrumentation instrumentation) : IDataConsumer
-    {
-        int _passed, _failed, _skipped;
-        public int Passed => _passed;
-        public int Failed => _failed;
-        public int Skipped => _skipped;
-        public string? TrxReportPath;
-
-        public string Uid => nameof(ResultConsumer);
-        public string DisplayName => nameof(ResultConsumer);
-        public string Description => "";
-        public string Version => "1.0";
-        public Task<bool> IsEnabledAsync() => Task.FromResult(true);
-
-        public Type[] DataTypesConsumed => [typeof(TestNodeUpdateMessage), typeof(SessionFileArtifact)];
-
-        public Task ConsumeAsync(IDataProducer dataProducer, IData value, CancellationToken cancellationToken)
-        {
-            if (value is SessionFileArtifact artifact)
-            {
-                TrxReportPath = artifact.FileInfo.FullName;
-            }
-            else if (value is TestNodeUpdateMessage { TestNode: var node })
-            {
-                var state = node.Properties.SingleOrDefault<TestNodeStateProperty>();
-                string? eventKind = state switch
-                {
-                    InProgressTestNodeStateProperty => "start",
-                    PassedTestNodeStateProperty or FailedTestNodeStateProperty
-                        or ErrorTestNodeStateProperty or TimeoutTestNodeStateProperty
-                        or SkippedTestNodeStateProperty => "finish",
-                    _ => null
-                };
-                if (eventKind is null)
-                    return Task.CompletedTask;
-
-                string? outcome = state switch
-                {
-                    PassedTestNodeStateProperty => "passed",
-                    FailedTestNodeStateProperty or ErrorTestNodeStateProperty
-                        or TimeoutTestNodeStateProperty => "failed",
-                    SkippedTestNodeStateProperty => "skipped",
-                    _ => null
-                };
-                if (outcome is not null)
-                    _ = outcome switch { "passed" => Interlocked.Increment(ref _passed), "failed" => Interlocked.Increment(ref _failed), _ => Interlocked.Increment(ref _skipped) };
-
-                var id = node.Properties.SingleOrDefault<TestMethodIdentifierProperty>();
-                var b = new Bundle();
-                b.PutString("event", eventKind);
-                b.PutString("test", node.Uid.Value);
-                b.PutString("name", node.DisplayName);
-                if (outcome is not null)
-                    b.PutString("outcome", outcome);
-                WriteMethodIdentifier(b, id);
-                var exception = state switch
-                {
-                    FailedTestNodeStateProperty failed => failed.Exception,
-                    ErrorTestNodeStateProperty error => error.Exception,
-                    TimeoutTestNodeStateProperty timeout => timeout.Exception,
-                    _ => null
-                };
-                var message = state?.Explanation ?? exception?.Message;
-                if (message is not null)
-                    b.PutString("message-b64", Convert.ToBase64String(Encoding.UTF8.GetBytes(message)));
-                if (exception?.StackTrace is string stackTrace)
-                    b.PutString("stack-b64", Convert.ToBase64String(Encoding.UTF8.GetBytes(stackTrace)));
-                instrumentation.SendStatus(0, b);
-            }
-            return Task.CompletedTask;
-        }
     }
 }

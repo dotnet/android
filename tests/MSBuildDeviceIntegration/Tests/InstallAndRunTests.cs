@@ -3516,7 +3516,8 @@ Facebook.FacebookSdk.LogEvent(""TestFacebook"");
 				StringAssert.Contains ("skipped: 0", outputText);
 			} else if (mode is "discover" or "generic") {
 				Assert.AreEqual (0, process.ExitCode, $"Discovery should succeed. See {logPath} for details.");
-				StringAssert.Contains ("Discovered 3 tests", outputText, $"Output should list 3 tests. See {logPath} for details.");
+				int expectedCount = mode == "generic" ? 4 : 3;
+				StringAssert.Contains ($"Discovered {expectedCount} tests", outputText, $"Output should list {expectedCount} tests. See {logPath} for details.");
 				StringAssert.Contains ("TestMethod1", outputText);
 				StringAssert.Contains ("TestMethod2", outputText);
 				StringAssert.Contains ("TestMethod3", outputText);

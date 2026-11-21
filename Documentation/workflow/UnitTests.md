@@ -44,7 +44,7 @@ There are five types of unit tests within this repo:
 
 # Running Tests
 
-Android instrumentation test applications support Microsoft.Testing.Platform
+New `androidtest` instrumentation projects support Microsoft.Testing.Platform
 [server mode](https://learn.microsoft.com/dotnet/core/testing/microsoft-testing-platform-server-mode)
 for discovery and execution by compatible IDE clients. The host runner accepts
 `--server` or `--server jsonrpc`, in addition to the `dotnet test` protocol.
@@ -56,11 +56,10 @@ mode to preserve test metadata and invokers under trimming without rooting
 the entire test assembly. Apply `[TestClass]` directly to each test class;
 inheriting the attribute is not supported by MSTest's source generator.
 
-Build and install an updated test APK on a connected device or emulator before
-discovering tests. Both the NUnit instrumentation in this repository and newly
-generated `androidtest` projects support discovery; older installed APKs must
-be rebuilt and reinstalled. IDE support depends on the client's MTP integration;
-server-mode support alone does not configure deployment or device selection.
+Build and install an updated `androidtest` APK on a connected device or emulator
+before discovering or selecting tests. Older installed APKs must be rebuilt and
+reinstalled for selected-test execution. IDE support depends on the client's MTP
+integration; server mode alone does not configure deployment or device selection.
 
 To discover tests from the command line, run `dotnet test --list-tests` from the
 test project directory, after building and installing the APK.

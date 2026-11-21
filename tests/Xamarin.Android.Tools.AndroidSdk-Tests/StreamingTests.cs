@@ -221,7 +221,7 @@ public class StreamingTests
 	public async Task ListTestsReportsDiscoveredTests (string resultCode, bool finished)
 	{
 		using var application = await CreateApplication ($"""
-			INSTRUMENTATION_STATUS: event=discover
+			INSTRUMENTATION_STATUS: event=discovered
 			INSTRUMENTATION_STATUS: test=Tests.One
 			INSTRUMENTATION_STATUS_CODE: 0
 			INSTRUMENTATION_RESULT: discovered=1
