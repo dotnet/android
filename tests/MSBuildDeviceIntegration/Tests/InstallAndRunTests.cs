@@ -3077,38 +3077,40 @@ CUSTOM_ENVIRONMENT_VALUE=custom",
 		{
 			var (isRelease, runtime) = configuration;
 
-			// Use self-contained Gradle modules so the test does not depend on a large
-			// remote Maven/NuGet dependency graph; AGP itself still comes from the feed.
+			// Use an embedded dependency instead of Facebook's remote Maven/NuGet graph;
+			// the Android Gradle Plugin itself still comes from the feed.
 			const string libraryModuleName = "Library";
-			const string dependencyModuleName = "Dependency";
-			const string expectedLogcatOutput = "GradleFBProj: Hello dotnet from Gradle dependency";
+			const string dependencyJar = "gson-2.7.jar";
+			var successMarker = $"GradleFBProj-{Guid.NewGuid ():N}";
+			var expectedLogcatOutput = $"{successMarker} Hello dotnet from Gradle dependency";
 			var gradleTestProjectDir = Path.Combine (Root, "temp", "gradle", TestName);
-
-			var dependencyModule = new AndroidGradleModule (Path.Combine (gradleTestProjectDir, dependencyModuleName)) {
-				PackageName = "com.example.gradledependency",
-			};
-			dependencyModule.BuildGradleFileContent = GetGradleLibraryBuildFile (dependencyModule.PackageName, "");
-			dependencyModule.JavaSources.Add (new AndroidItem.AndroidJavaSource ("DependencyMessages.java") {
-				TextContent = () => $$"""
-package {{dependencyModule.PackageName}};
-public class DependencyMessages {
-    public static String format(android.content.Context context, String name) {
-        return context.getString(R.string.gradle_dependency_greeting, name);
-    }
-}
-""",
-			});
 
 			var libraryModule = new AndroidGradleModule (Path.Combine (gradleTestProjectDir, libraryModuleName)) {
 				PackageName = "com.example.gradlelibrary",
 			};
-			libraryModule.BuildGradleFileContent = GetGradleLibraryBuildFile (libraryModule.PackageName, $"implementation(project(\":{dependencyModuleName}\"))");
+			libraryModule.BuildGradleFileContent = $$"""
+plugins {
+    id("com.android.library")
+}
+android {
+    namespace = "{{libraryModule.PackageName}}"
+    compileSdk = {{XABuildConfig.AndroidDefaultTargetDotnetApiLevel.Major}}
+    defaultConfig {
+        minSdk = {{XABuildConfig.AndroidMinimumDotNetApiLevel.Major}}
+    }
+}
+dependencies {
+    compileOnly(files("libs/{{dependencyJar}}"))
+}
+""";
 			libraryModule.JavaSources.Add (new AndroidItem.AndroidJavaSource ("Greeter.java") {
 				TextContent = () => $$"""
 package {{libraryModule.PackageName}};
 public class Greeter {
     public static String greet(android.content.Context context, String name) {
-        return {{dependencyModule.PackageName}}.DependencyMessages.format(context, name);
+        com.google.gson.JsonObject value = new com.google.gson.JsonObject();
+        value.addProperty("greeting", context.getString(R.string.gradle_dependency_greeting, name));
+        return value.get("greeting").getAsString();
     }
 }
 """,
@@ -3116,24 +3118,22 @@ public class Greeter {
 
 			var gradleProject = new AndroidGradleProject (gradleTestProjectDir) {
 				Modules = {
-					dependencyModule,
 					libraryModule,
 				},
 			};
 			gradleProject.Create ();
 
-			var dependencyValuesDir = Path.Combine (dependencyModule.ModuleDirectory, "src", "main", "res", "values");
-			Directory.CreateDirectory (dependencyValuesDir);
-			File.WriteAllText (Path.Combine (dependencyValuesDir, "strings.xml"), """
+			var proj = new XamarinAndroidApplicationProject (packageName: PackageUtils.MakePackageName (runtime)) {
+				IsRelease = isRelease,
+				OtherBuildItems = {
+					new BuildItem (BuildActions.None, Path.Combine (libraryModule.ModuleDirectory, "src", "main", "res", "values", "strings.xml")) {
+						TextContent = () => """
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="gradle_dependency_greeting">Hello %1$s from Gradle dependency</string>
 </resources>
-""");
-
-			var proj = new XamarinAndroidApplicationProject (packageName: PackageUtils.MakePackageName (runtime)) {
-				IsRelease = isRelease,
-				OtherBuildItems = {
+""",
+					},
 					new AndroidItem.TransformFile ("Transforms\\Metadata.xml") {
 						TextContent = () => $@"<metadata><attr path=""/api/package[@name='{libraryModule.PackageName}']"" name=""managedName"">GradleLibrary</attr></metadata>",
 					},
@@ -3143,17 +3143,15 @@ public class Greeter {
 						},
 					},
 					// The bound library's runtime dependency is supplied separately, without bindings.
-					new BuildItem (KnownProperties.AndroidGradleProject, gradleProject.BuildFilePath) {
-						Metadata = {
-							{ "ModuleName", dependencyModuleName },
-							{ "Bind", "false" },
-						},
+					new BuildItem (AndroidBuildActions.AndroidJavaLibrary, Path.Combine (libraryModule.ModuleDirectory, "libs", dependencyJar)) {
+						TestResourceFileName = dependencyJar,
 					},
 				},
 			};
 			proj.SetRuntime (runtime);
-			proj.MainActivity = proj.DefaultMainActivity.Replace ("//${AFTER_ONCREATE}", """
-Android.Util.Log.Info ("GradleFBProj", GradleLibrary.Greeter.Greet (this, "dotnet"));
+			proj.SetDefaultTargetDevice ();
+			proj.MainActivity = proj.DefaultMainActivity.Replace ("//${AFTER_ONCREATE}", $$"""
+Android.Util.Log.Info ("GradleFBProj", "{{successMarker}} " + GradleLibrary.Greeter.Greet (this, "dotnet"));
 """);
 
 			using var builder = CreateApkBuilder ();
@@ -3161,25 +3159,9 @@ Android.Util.Log.Info ("GradleFBProj", GradleLibrary.Greeter.Greet (this, "dotne
 				{ "GRADLE_OPTS", $"{Environment.GetEnvironmentVariable ("GRADLE_OPTS")} -Dorg.gradle.logging.level=info -Dorg.gradle.logging.stacktrace=all" },
 			}), "Build should have succeeded.");
 			ClearAdbLogcat ();
-			RunProjectAndAssert (proj, builder);
 			Assert.IsTrue (MonitorAdbLogcat (line => line.Contains (expectedLogcatOutput),
-				Path.Combine (Root, builder.ProjectDirectory, "logcat.log"), ActivityStartTimeoutInSeconds), $"Output did not contain {expectedLogcatOutput}!");
-
-			static string GetGradleLibraryBuildFile (string packageName, string dependencies) => $$"""
-plugins {
-    id("com.android.library")
-}
-android {
-    namespace = "{{packageName}}"
-    compileSdk = {{XABuildConfig.AndroidDefaultTargetDotnetApiLevel.Major}}
-    defaultConfig {
-        minSdk = {{XABuildConfig.AndroidMinimumDotNetApiLevel.Major}}
-    }
-}
-dependencies {
-    {{dependencies}}
-}
-""";
+				Path.Combine (Root, builder.ProjectDirectory, "logcat.log"), ActivityStartTimeoutInSeconds,
+				onMonitoringStarted: () => RunProjectAndAssert (proj, builder)), $"Output did not contain {expectedLogcatOutput}!");
 		}
 
 		[Test]
