@@ -49,36 +49,42 @@ public class NativeLibraryLoadTests : DeviceTest
 			.Replace (
 				"//${AFTER_ONCREATE}",
 				"""
-				var intent = Intent ?? throw new InvalidOperationException ("The loader test intent is missing.");
-				int length = intent.GetIntExtra ("expected-store-length", 0);
-				string expectedHash = intent.GetStringExtra ("expected-store-sha256")
-					?? throw new InvalidOperationException ("The expected store digest is missing.");
-				if (length <= 0 || Environment.Is64BitProcess != intent.GetBooleanExtra ("expected-64-bit", false)) {
-					throw new InvalidOperationException ("The payload length or process ABI is incorrect.");
-				}
-
-				// Match Host::map_assembly_store_via_dlopen: RTLD_NOW | RTLD_LOCAL and the sole payload export.
-				IntPtr handle = AssemblyStoreNativeMethods.dlopen ("libassembly-store.so", 2);
-				if (handle == IntPtr.Zero) {
-					throw new InvalidOperationException ("dlopen: " + Marshal.PtrToStringAnsi (AssemblyStoreNativeMethods.dlerror ()));
-				}
+				Android.Util.Log.Info ("AssemblyStoreLoader", "ASSEMBLY_STORE_PAYLOAD_CHECK_STARTED");
 				try {
-					IntPtr address = AssemblyStoreNativeMethods.dlsym (handle, "_assembly_store");
-					if (address == IntPtr.Zero) {
-						throw new InvalidOperationException ("dlsym: " + Marshal.PtrToStringAnsi (AssemblyStoreNativeMethods.dlerror ()));
+					var intent = Intent ?? throw new InvalidOperationException ("The loader test intent is missing.");
+					int length = intent.GetIntExtra ("expected-store-length", 0);
+					string expectedHash = intent.GetStringExtra ("expected-store-sha256")
+						?? throw new InvalidOperationException ("The expected store digest is missing.");
+					if (length <= 0 || Environment.Is64BitProcess != intent.GetBooleanExtra ("expected-64-bit", false)) {
+						throw new InvalidOperationException ("The payload length or process ABI is incorrect.");
 					}
-					byte [] payload = new byte [length];
-					Marshal.Copy (address, payload, 0, payload.Length);
-					string actualHash = Convert.ToHexString (SHA256.HashData (payload));
-					if (actualHash != expectedHash) {
-						throw new InvalidDataException ($"Loaded assembly-store digest {actualHash} differs from {expectedHash}.");
+
+					// Match Host::map_assembly_store_via_dlopen: RTLD_NOW | RTLD_LOCAL and the sole payload export.
+					IntPtr handle = AssemblyStoreNativeMethods.dlopen ("libassembly-store.so", 2);
+					if (handle == IntPtr.Zero) {
+						throw new InvalidOperationException ("dlopen: " + Marshal.PtrToStringAnsi (AssemblyStoreNativeMethods.dlerror ()));
 					}
-				} finally {
-					if (AssemblyStoreNativeMethods.dlclose (handle) != 0) {
-						throw new InvalidOperationException ("dlclose: " + Marshal.PtrToStringAnsi (AssemblyStoreNativeMethods.dlerror ()));
+					try {
+						IntPtr address = AssemblyStoreNativeMethods.dlsym (handle, "_assembly_store");
+						if (address == IntPtr.Zero) {
+							throw new InvalidOperationException ("dlsym: " + Marshal.PtrToStringAnsi (AssemblyStoreNativeMethods.dlerror ()));
+						}
+						byte [] payload = new byte [length];
+						Marshal.Copy (address, payload, 0, payload.Length);
+						string actualHash = Convert.ToHexString (SHA256.HashData (payload));
+						if (actualHash != expectedHash) {
+							throw new InvalidDataException ($"Loaded assembly-store digest {actualHash} differs from {expectedHash}.");
+						}
+					} finally {
+						if (AssemblyStoreNativeMethods.dlclose (handle) != 0) {
+							throw new InvalidOperationException ("dlclose: " + Marshal.PtrToStringAnsi (AssemblyStoreNativeMethods.dlerror ()));
+						}
 					}
+					Android.Util.Log.Info ("AssemblyStoreLoader", $"ASSEMBLY_STORE_PAYLOAD_MATCH:{expectedHash}");
+				} catch (Exception ex) {
+					Android.Util.Log.Error ("AssemblyStoreLoader", "ASSEMBLY_STORE_PAYLOAD_FAILED:" + ex);
+					throw;
 				}
-				Android.Util.Log.Info ("AssemblyStoreLoader", $"ASSEMBLY_STORE_PAYLOAD_MATCH:{expectedHash}");
 				""")
 			.Replace (
 				"//${AFTER_MAINACTIVITY}",
@@ -108,11 +114,22 @@ public class NativeLibraryLoadTests : DeviceTest
 		Assert.Greater (expected.Length, 0);
 		string expectedHash = Convert.ToHexString (SHA256.HashData (expected));
 		string successMarker = $"ASSEMBLY_STORE_PAYLOAD_MATCH:{expectedHash}";
+		const string failedMarker = "ASSEMBLY_STORE_PAYLOAD_FAILED:";
+		bool payloadCheckStarted = false;
+		string payloadFailure = null;
+		string logcatFile = Path.Combine (Root, builder.ProjectDirectory, "assembly-store-loader.log");
 
 		ClearAdbLogcat ();
-		Assert.IsTrue (MonitorAdbLogcat (
-			line => line.Contains (successMarker, StringComparison.Ordinal),
-			Path.Combine (Root, builder.ProjectDirectory, "assembly-store-loader.log"),
+		bool payloadCheckCompleted = MonitorAdbLogcat (
+			line => {
+				payloadCheckStarted |= line.Contains ("ASSEMBLY_STORE_PAYLOAD_CHECK_STARTED", StringComparison.Ordinal);
+				if (line.Contains (failedMarker, StringComparison.Ordinal)) {
+					payloadFailure = line;
+					return true;
+				}
+				return line.Contains (successMarker, StringComparison.Ordinal);
+			},
+			logcatFile,
 			ActivityStartTimeoutInSeconds,
 			onMonitoringStarted: () => {
 				var (code, output, error) = RunAdbCommandWithExitCode ([
@@ -123,8 +140,20 @@ public class NativeLibraryLoadTests : DeviceTest
 				]);
 				Assert.AreEqual (0, code, $"The loader test activity should start: {output}\n{error}");
 				StringAssert.Contains ("Starting: Intent {", output);
-			}),
-			"Android dlopen/dlsym must expose every byte of the generated assembly-store payload.");
+			});
+		if (!payloadCheckCompleted) {
+			// Successful auto-retry removes failed TRX results; keep startup/crash evidence in the task log.
+			var diagnostics = File.ReadLines (logcatFile)
+				.Where (line => line.Contains ("AssemblyStoreLoader", StringComparison.Ordinal) ||
+					line.Contains (proj.PackageName, StringComparison.Ordinal) ||
+					Regex.IsMatch (line, @"\s[EF]\s|^[EF]/"))
+				.Take (200);
+			TestContext.Out.WriteLine ("Assembly-store loader logcat (first 200 error, fatal, package or probe lines):\n" +
+				string.Join ("\n", diagnostics));
+		}
+		Assert.IsNull (payloadFailure, $"The assembly-store payload check failed: {payloadFailure}");
+		Assert.IsTrue (payloadCheckCompleted,
+			$"Android dlopen/dlsym must expose every byte of the generated assembly-store payload. Payload check started: {payloadCheckStarted}.");
 	}
 
 	[Test]
