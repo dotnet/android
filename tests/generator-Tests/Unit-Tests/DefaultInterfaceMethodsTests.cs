@@ -34,6 +34,67 @@ namespace generatortests
 		}
 
 		[TestMethodAttribute]
+		public void DefaultInterfaceNullabilityPreservesNullableOverridesAcrossLevels ()
+		{
+			options.SupportNullableReferenceTypes = true;
+			var gens = ParseApiDefinition ("""
+				<api>
+				  <package name='com.example'>
+				    <interface name='Argument' visibility='public' abstract='true' deprecated='not deprecated' />
+				    <interface name='Root' visibility='public' abstract='true' deprecated='not deprecated'>
+				      <method name='transform' return='java.lang.String' return-not-null='false' visibility='public' abstract='false' static='false' final='false' deprecated='not deprecated'>
+				        <parameter name='value' type='com.example.Argument' not-null='true' />
+				        <parameter name='required' type='java.lang.String' not-null='true' />
+				      </method>
+				    </interface>
+				    <interface name='Middle' visibility='public' abstract='true' deprecated='not deprecated'>
+				      <implements name='com.example.Root' name-generic-aware='com.example.Root' />
+				      <method name='transform' return='java.lang.String' return-not-null='true' visibility='public' abstract='false' static='false' final='false' deprecated='not deprecated'>
+				        <parameter name='value' type='com.example.Argument' not-null='false' />
+				        <parameter name='required' type='java.lang.String' not-null='true' />
+				      </method>
+				    </interface>
+				    <interface name='Leaf' visibility='public' abstract='true' deprecated='not deprecated'>
+				      <implements name='com.example.Middle' name-generic-aware='com.example.Middle' />
+				      <method name='transform' return='java.lang.String' return-not-null='false' visibility='public' abstract='false' static='false' final='false' deprecated='not deprecated'>
+				        <parameter name='value' type='com.example.Argument' not-null='true' />
+				        <parameter name='required' type='java.lang.String' not-null='true' />
+				      </method>
+				    </interface>
+				  </package>
+				</api>
+				""");
+			var middle = gens.Single (g => g.Name == "IMiddle").Methods.Single ();
+			var leaf = gens.Single (g => g.Name == "ILeaf").Methods.Single ();
+
+			Assert.IsFalse (middle.Parameters [0].NotNull);
+			Assert.IsFalse (leaf.Parameters [0].NotNull);
+			Assert.IsTrue (leaf.Parameters [1].NotNull);
+			Assert.IsTrue (leaf.RetVal.NotNull);
+
+			foreach (var gen in gens)
+				GetGeneratedTypeOutput (gen);
+			var source = writer.ToString ();
+			Assert.Contains ("Com.Example.IArgument? value, string required", source);
+			Assert.DoesNotContain ("value ?? throw", source);
+			Assert.Contains ("required ?? throw new global::Java.Lang.NullPointerException ()", source);
+			Assert.Contains ("TransferLocalRef) ?? throw new global::Java.Lang.NullPointerException ()", source);
+
+			var support = $$"""
+				using System;
+				delegate IntPtr {{middle.GetDelegateType (options)}} (IntPtr env, IntPtr self, IntPtr value, IntPtr required);
+				namespace Java.Lang {
+					public class NullPointerException : Exception { }
+				}
+				""";
+			Compiler.CompileSources ([
+				"#nullable enable\nusing System; using Android.Runtime; using Java.Interop; namespace Com.Example {\n" + source + "\n}",
+				support,
+			], out var hasErrors, out var output, out _, allowWarnings: false);
+			Assert.IsFalse (hasErrors, output + "\n" + source);
+		}
+
+		[TestMethodAttribute]
 		public void WriteInterfaceRedeclaredDefaultMethod ()
 		{
 			// Create an interface with a default method

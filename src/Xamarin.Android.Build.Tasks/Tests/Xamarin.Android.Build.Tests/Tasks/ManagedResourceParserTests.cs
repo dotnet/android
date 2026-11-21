@@ -484,13 +484,6 @@ int xml myxml 0x7f140000
 		[CombinatorialData]
 		public void GenerateDesignerFileFromRtxt (bool withLibraryReference, [CombinatorialValues (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
-			// TODO: fix NativeAOT, it currently fails with:
-			//
-			//  bin/TestDebug/temp/GenerateDesignerFileFromRtxtTrueNativeAOT Some Space/Resource.designer.cs and bin/TestDebug/Expected/GenerateDesignerFileWithLibraryReferenceExpected.cs do not match.
-			if (runtime == AndroidRuntime.NativeAOT) {
-				Assert.Inconclusive ("NativeAOT currently doesn't work with this test.");
-			}
-
 			var path = Path.Combine ("temp", TestName + " Some Space");
 			CreateResourceDirectory (path);
 			var mapTask = CreateCaseMapTask (path);
@@ -502,7 +495,7 @@ int xml myxml 0x7f140000
 				var libraryPath = Path.Combine (path, "Library");
 				BuildLibraryWithResources (libraryPath, runtime);
 				task.References = new TaskItem [] {
-					new TaskItem (Path.Combine (Root, libraryPath, "bin", "Debug", "Library.dll"))
+					new TaskItem (Path.Combine (Root, libraryPath, "bin", runtime == AndroidRuntime.NativeAOT ? "Release" : "Debug", "Library.dll"))
 				};
 			}
 			Assert.IsTrue (task.Execute (), "Task should have executed successfully.");

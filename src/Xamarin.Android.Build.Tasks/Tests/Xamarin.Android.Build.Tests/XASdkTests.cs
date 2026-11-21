@@ -38,7 +38,6 @@ namespace Xamarin.Android.Build.Tests
 			Assert.IsTrue (dotnet.New ("android", noRestore: true), "Creating the Android project should succeed.");
 			var parameters = new [] {
 				"EmbedAssembliesIntoApk=true",
-				$"LintToolPath=\"{Path.Combine (testPath, "O'Brien", "lint")}\"",
 			};
 			var arguments = multithreaded ? new [] { "-m:2", "-mt" } : new [] { "-m:1" };
 			dotnet.EnvironmentVariables ["DOTNET_CLI_USE_MSBUILD_SERVER"] = "0";
@@ -96,7 +95,7 @@ namespace Xamarin.Android.Build.Tests
 			project.SetProperty ("AndroidLinkTool", "r8");
 			project.SetProperty ("AndroidR8ObfuscationMode", "runtime-remapping");
 			project.SetProperty ("AndroidEnableAssemblyCompression", "true");
-			project.SetProperty ("LintToolPath", Path.Combine (Root, "temp", TestName, "O'Brien;tag=1"));
+			project.SetProperty ("ZipAlignToolPath", Path.Combine (Root, "temp", TestName, "O'Brien;tag=1"));
 			var imports = project.Imports.Single (import => import.Project () == "Directory.Build.targets");
 			imports.TextContent = () => """
 				<Project>
@@ -104,8 +103,8 @@ namespace Xamarin.Android.Build.Tests
 				      Condition=" '$(_OuterIntermediateOutputPath)' != '' ">
 				    <Error Condition=" '$(_AndroidUseResolvedSdk)' != 'true' or '$(_AndroidUseResolvedTooling)' != 'true' "
 				        Text="Escaped tooling paths must not disable reuse." />
-				    <Error Condition=" '$(_AndroidOuterLintToolPath)' != '$(LintToolPath)' or '$(_AndroidOuterToolingInputLintToolPath)' != '$(LintToolPath)' "
-				        Text="The lint path changed during forwarding." />
+				    <Error Condition=" '$(_AndroidOuterZipAlignToolPath)' != '$(ZipAlignToolPath)' or '$(_AndroidOuterToolingInputZipAlignToolPath)' != '$(ZipAlignToolPath)' "
+				        Text="The zipalign path changed during forwarding." />
 				    <Error Condition=" '$(tag)' != '' " Text="The path was split into a separate property." />
 				  </Target>
 				</Project>
@@ -547,15 +546,6 @@ public class JavaSourceTest {
 		public void DotNetPublishDefaultValues ([ValidRuntimeConfigurations] (bool isRelease, AndroidRuntime runtime) configuration)
 		{
 			var (isRelease, runtime) = configuration;
-
-			// TODO: fix NativeAOT build. It currently fails with
-			//
-			//  error MSB3030: Could not copy the file "bin/Release/native/UnnamedProject.so" because it was not found.
-			//
-			// The file exists in bin/Release/{RID}/native/UnnamedProject.so
-			if (runtime == AndroidRuntime.NativeAOT) {
-				Assert.Inconclusive ("NativeAOT publish support is broken atm");
-			}
 
 			var proj = new XamarinAndroidApplicationProject {
 				IsRelease = isRelease

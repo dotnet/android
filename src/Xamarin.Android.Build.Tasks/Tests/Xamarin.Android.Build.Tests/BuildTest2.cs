@@ -1765,11 +1765,6 @@ namespace UnamedProject
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
 				return;
 			}
-			// TODO: NativeAOT doesn't properly quote arguments when calling `clang`
-			if (runtime == AndroidRuntime.NativeAOT) {
-				Assert.Inconclusive ("NativeAOT doesn't properly quote arguments when calling clang");
-			}
-
 			var proj = CreateMultiDexRequiredApplication (releaseConfigurationName: "Test Config");
 			proj.SetRuntime (runtime);
 			proj.IsRelease = isRelease;
@@ -2217,11 +2212,6 @@ namespace App1
 			bool isRelease = runtime == AndroidRuntime.NativeAOT;
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
 				return;
-			}
-
-			// TODO: investigate why NativeAOT doesn't contain `crc64467b05f37239e7a6/StreamMediaDataSource` (or any `StreamMediaDataSource` for that matter)
-			if (runtime == AndroidRuntime.NativeAOT) {
-				Assert.Inconclusive ("NativeAOT build doesn't contain crc64467b05f37239e7a6/StreamMediaDataSource");
 			}
 
 			var proj = new XamarinAndroidApplicationProject {

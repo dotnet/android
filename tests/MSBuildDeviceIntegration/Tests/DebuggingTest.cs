@@ -67,16 +67,9 @@ namespace Xamarin.Android.Build.Tests
 		{
 			var (isRelease, runtime) = configuration;
 
-			// TODO: NativeAOT fails with the following exception:
-			//
-			// FATAL UNHANDLED EXCEPTION: System.InvalidCastException: Unable to convert instance of type 'AndroidX.AppCompat.Widget.AppCompatImageButton' to type 'AndroidX.AppCompat.Widget.Toolbar'.
-			//    at Java.Interop.JavaObjectExtensions._JavaCast[TResult](IJavaObject) + 0x190
-			//    at Android.Runtime.Extensions.JavaCast[TResult](IJavaObject) + 0x18
-			//    at Xamarin.Forms.Platform.Android.FormsAppCompatActivity.OnCreate(Bundle, ActivationFlags) + 0x5bc
-			//    at UnnamedProject.MainActivity.OnCreate(Bundle savedInstanceState) + 0x4c
-			//    at Android.App.Activity.n_OnCreate_Landroid_os_Bundle_(IntPtr jnienv, IntPtr native__this, IntPtr native_savedInstanceState) + 0x7c
 			if (runtime == AndroidRuntime.NativeAOT) {
-				Assert.Inconclusive ("NativeAOT currently crashes with an exception.");
+				// TODO: Xamarin.Forms startup cannot find the ResourcesProvider constructor under NativeAOT.
+				Assert.Inconclusive ("NativeAOT Xamarin.Forms startup throws MissingMethodException.");
 			}
 
 			SwitchUser ();
@@ -115,28 +108,6 @@ namespace Xamarin.Android.Build.Tests
 			bool isRelease = runtime == AndroidRuntime.NativeAOT;
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
 				return;
-			}
-
-			// TODO: NativeAOT currently dies with a Java android.os.DeadObjectException exception (GC issue?):
-			//
-			// Exception thrown during dispatchAppVisibility Window{74689fa u0 com.xamarin.classlibrarymainlauncherruns/com.xamarin.classlibrarymainlauncherruns.MainActivity EXITING}
-			// android.os.DeadObjectException
-			//         at android.os.BinderProxy.transactNative(Native Method)
-			//         at android.os.BinderProxy.transact(BinderProxy.java:592)
-			//         at android.view.IWindow$Stub$Proxy.dispatchAppVisibility(IWindow.java:538)
-			//         at com.android.server.wm.WindowState.sendAppVisibilityToClients(WindowState.java:3183)
-			//         at com.android.server.wm.WindowContainer.sendAppVisibilityToClients(WindowContainer.java:1233)
-			//         at com.android.server.wm.WindowToken.setClientVisible(WindowToken.java:394)
-			//         at com.android.server.wm.ActivityRecord.commitVisibility(ActivityRecord.java:5546)
-			//         at com.android.server.wm.Transition.finishTransition(Transition.java:1485)
-			//         at com.android.server.wm.TransitionController.finishTransition(TransitionController.java:1048)
-			//         at com.android.server.wm.WindowOrganizerController.finishTransition(WindowOrganizerController.java:514)
-			//         at android.window.IWindowOrganizerController$Stub.onTransact(IWindowOrganizerController.java:270)
-			//         at com.android.server.wm.WindowOrganizerController.onTransact(WindowOrganizerController.java:230)
-			//         at android.os.Binder.execTransactInternal(Binder.java:1446)
-			//         at android.os.Binder.execTransact(Binder.java:1385)
-			if (runtime == AndroidRuntime.NativeAOT) {
-				Assert.Inconclusive ("NativeAOT currently dies at startup with a Java android.os.DeadObjectException exception");
 			}
 
 			SwitchUser ();

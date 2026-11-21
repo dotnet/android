@@ -618,12 +618,6 @@ namespace Xamarin.Android.Build.Tests
 				return;
 			}
 
-			// TODO: NativeAOT fails the App1.csproj.FileListAbsolute.txt contents check. It adds some entries, needs verification
-			//       if it's a correct behavior or not.
-			if (runtime == AndroidRuntime.NativeAOT) {
-				Assert.Inconclusive ("NativeAOT fails the App1.csproj.FileListAbsolute.txt contents check");
-			}
-
 			var path = Path.Combine ("temp", TestName);
 			var proj = new XamarinAndroidApplicationProject () {
 				ProjectName = "App1",
@@ -1485,6 +1479,7 @@ namespace Lib2
 				IsRelease = isRelease,
 			};
 			proj.SetRuntime (runtime);
+			proj.SetRuntimeIdentifiers (["arm64-v8a"]);
 
 			using (var b = CreateApkBuilder ()) {
 				Assert.IsTrue (b.Build (proj), "build should have succeeded.");
@@ -1503,9 +1498,7 @@ namespace Lib2
 
 				// No changes
 				Assert.IsTrue (b.Build (proj, doNotCleanupOnUpdate: true), "build should have succeeded.");
-				if (runtime != AndroidRuntime.NativeAOT) { // TODO: review if NativeAOT should skip it
-					b.Output.AssertTargetIsSkipped (KnownTargets.LinkAssembliesNoShrink);
-				}
+				b.Output.AssertTargetIsSkipped (KnownTargets.LinkAssembliesNoShrink);
 			}
 		}
 
@@ -1865,14 +1858,9 @@ namespace Lib2
 		public void GenerateJavaStubsAndAssembly ([ValidRuntimeConfigurations] (bool isRelease, AndroidRuntime runtime) configuration)
 		{
 			var (isRelease, runtime) = configuration;
-			// TODO: NativeAOT build doesn't add android/environment.arm64-v8a.o to file writes
-			if (runtime == AndroidRuntime.NativeAOT) {
-				Assert.Inconclusive ("NativeAOT doesn't currently add android/environment.arm64-v8a.o to file writes");
-			}
-
 			var targets = new [] {
 				"_GenerateJavaStubs",
-				"_AndroidGenerateCoreClrBootstrap",
+				runtime == AndroidRuntime.NativeAOT ? "_AndroidGenerateNativeAotBootstrapObject" : "_AndroidGenerateCoreClrBootstrap",
 			};
 			var proj = new XamarinAndroidApplicationProject {
 				IsRelease = isRelease,
@@ -2209,10 +2197,7 @@ namespace Lib2
 
 				builder.Output.AssertTargetIsSkipped ("_ResolveLibraryProjectImports");
 
-				// TODO: NativeAOT doesn't skip this target
-				if (runtime != AndroidRuntime.NativeAOT) {
-					builder.Output.AssertTargetIsSkipped ("_GenerateJavaStubs");
-				}
+				builder.Output.AssertTargetIsSkipped ("_GenerateJavaStubs");
 				builder.Output.AssertTargetIsSkipped ("_CompileJava");
 				builder.Output.AssertTargetIsSkipped ("_CompileToDalvik");
 				if (runtime == AndroidRuntime.NativeAOT) {

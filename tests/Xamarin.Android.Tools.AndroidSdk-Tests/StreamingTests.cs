@@ -255,6 +255,7 @@ public class StreamingTests
 		var results = XDocument.Load (Path.Combine (directory, "results.trx")).Descendants (ns + "UnitTestResult")
 			.ToDictionary (e => e.Attribute ("testName")?.Value ?? "", e => e.Attribute ("outcome")?.Value);
 		CollectionAssert.AreEquivalent (new Dictionary<string, string?> { ["One"] = "Passed", ["Two"] = "Failed" }, results);
+		Assert.IsFalse (File.Exists (Path.Combine (Path.GetTempPath (), "AndroidTestResults", "tests", "device.trx")));
 	}
 
 	static readonly string MicrosoftAndroidRunPath = typeof (StreamingTests).Assembly
