@@ -566,56 +566,11 @@ namespace Microsoft.Android.Build.BaseTasks.Tests
 			Assert.IsTrue (Files.CopyIfChanged (src, dest));
 			src = NewFile (contents: "foo2", fileName: "foo");
 			dest = NewFile (contents: "foo", fileName: "foo_locked2");
-			if (!IsWindows) {
-				// Unix permits replacing an open file; Windows retries the sharing violation.
-				using var openFile = File.Open (dest, FileMode.OpenOrCreate, FileAccess.Write, FileShare.Read);
-				Assert.IsTrue (Files.CopyIfChanged (src, dest));
+			if (IsWindows)
 				return;
-			}
-			const int retryDelayMs = 100;
-			var environment = TaskEnvironment.CreateWithProjectDirectoryAndEnvironment (tempDir, new Dictionary<string, string> {
-				["DOTNET_ANDROID_FILE_WRITE_RETRY_ATTEMPTS"] = "300",
-				["DOTNET_ANDROID_FILE_WRITE_RETRY_DELAY_MS"] = retryDelayMs.ToString (CultureInfo.InvariantCulture),
-			});
-			using var started = new ManualResetEventSlim ();
-			using var lockedFile = File.Open (dest, FileMode.OpenOrCreate, FileAccess.Write, FileShare.None);
-			bool copied = false;
-			Exception error = null;
-			var thread = new Thread (() => {
-				try {
-					started.Set ();
-					copied = Files.CopyIfChanged (src, dest, environment);
-				} catch (Exception ex) {
-					error = ex;
-				}
-			}) {
-				IsBackground = true,
-			};
-			thread.Start ();
-			bool enteredRetry;
-			try {
-				Assert.IsTrue (started.Wait (TimeSpan.FromSeconds (30)), "Copy thread did not start.");
-				// A single retry delay lasts retryDelayMs. Still waiting more than two delays after the first
-				// observed wait, while the lock is held, means the copy woke, failed again, and waited again.
-				var stopwatch = System.Diagnostics.Stopwatch.StartNew ();
-				TimeSpan? firstWait = null;
-				enteredRetry = SpinWait.SpinUntil (
-					() => {
-						if (!thread.IsAlive)
-							return true;
-						if ((thread.ThreadState & ThreadState.WaitSleepJoin) == 0)
-							return false;
-						firstWait ??= stopwatch.Elapsed;
-						return stopwatch.Elapsed - firstWait.Value > TimeSpan.FromMilliseconds (2 * retryDelayMs);
-					},
-					TimeSpan.FromSeconds (30)) && thread.IsAlive;
-			} finally {
-				lockedFile.Dispose ();
-				Assert.IsTrue (thread.Join (TimeSpan.FromSeconds (30)), "Copy thread did not finish after releasing the lock.");
-			}
-			Assert.IsTrue (enteredRetry, $"Copy should wait to retry while the destination is locked. Error: {error}; copied: {copied}.");
-			Assert.IsNull (error);
-			Assert.IsTrue (copied);
+			// Unix permits replacing an open file; Windows retry coverage is in CopyIfChanged_ProjectScopedRetries.
+			using var openFile = File.Open (dest, FileMode.OpenOrCreate, FileAccess.Write, FileShare.Read);
+			Assert.IsTrue (Files.CopyIfChanged (src, dest));
 		}
 
 		[Test]
@@ -634,6 +589,10 @@ namespace Microsoft.Android.Build.BaseTasks.Tests
 				environment.SetEnvironmentVariable ("DOTNET_ANDROID_FILE_WRITE_RETRY_ATTEMPTS", "1");
 				Assert.Throws<ArgumentOutOfRangeException> (() => Files.CopyIfChanged (src, dest, environment));
 			}
+			locked.Dispose ();
+			environment.SetEnvironmentVariable ("DOTNET_ANDROID_FILE_WRITE_RETRY_DELAY_MS", "0");
+			Assert.IsTrue (Files.CopyIfChanged (src, dest, environment));
+			Assert.AreEqual ("foo0", File.ReadAllText (dest));
 		}
 
 		[Test]
