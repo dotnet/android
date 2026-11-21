@@ -135,7 +135,7 @@ namespace Xamarin.Android.Tasks
 			return Path.Combine (toolsDir, "lib", $"host-{GetOSBinDirName ()}");
 		}
 
-		public static IEnumerable<string> GetDuplicateFileNames (IEnumerable<string> fullPaths, string []? excluded)
+		public static IEnumerable<string> GetDuplicateFileNames (IEnumerable<string> fullPaths, string [] excluded)
 		{
 			var files = fullPaths.Select (full => Path.GetFileName (full)).Where (f => excluded == null || !excluded.Contains (f, StringComparer.OrdinalIgnoreCase)).ToArray ();
 			for (int i = 0; i < files.Length; i++)
