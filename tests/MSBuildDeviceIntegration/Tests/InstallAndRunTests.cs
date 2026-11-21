@@ -1047,6 +1047,7 @@ $@"button.ViewTreeObserver.GlobalLayout += Button_ViewTreeObserver_GlobalLayout;
 		public void TabLayoutOnTabSelectedListener2_ShouldFire_OnActivityLaunch ()
 		{
 			const string expectedLogcatOutput = "OnTabSelected called!";
+			var resultToken = Guid.NewGuid ().ToString ("N");
 
 			var proj = new XamarinAndroidApplicationProject {
 				PackageReferences = {
@@ -1073,6 +1074,8 @@ $@"button.ViewTreeObserver.GlobalLayout += Button_ViewTreeObserver_GlobalLayout;
 
 		public void OnTabSelected (TabLayout.Tab tab)
 		{
+			var filesDir = FilesDir ?? throw new System.InvalidOperationException ("App files directory is unavailable.");
+			System.IO.File.WriteAllText (System.IO.Path.Combine (filesDir.AbsolutePath, "tab-selected.txt"), "${RESULT_TOKEN}");
 			Android.Util.Log.Debug ("TabLayoutTest", "OnTabSelected called!");
 		}
 
@@ -1082,16 +1085,27 @@ $@"button.ViewTreeObserver.GlobalLayout += Button_ViewTreeObserver_GlobalLayout;
 
 		public void OnTabReselected (TabLayout.Tab tab)
 		{
-""");
+""")
+				.Replace ("${RESULT_TOKEN}", resultToken, StringComparison.Ordinal);
 
 			builder = CreateApkBuilder (Path.Combine ("temp", "TabLayoutOnTabSelectedListener2"));
 			Assert.IsTrue (builder.Install (proj), "Install should have succeeded.");
+			var manifest = XDocument.Load (builder.Output.GetIntermediaryPath (Path.Combine ("android", "AndroidManifest.xml")));
+			XNamespace android = "http://schemas.android.com/apk/res/android";
+			Assert.AreEqual ("true", (string) manifest.Root?.Element ("application")?.Attribute (android + "debuggable"),
+				"The app must be debuggable so run-as can read the callback result.");
 			ClearAdbLogcat ();
 			RunProjectAndAssert (proj, builder);
-			Assert.IsTrue (WaitForActivityToStart (proj.PackageName, "MainActivity",
-				Path.Combine (Root, builder.ProjectDirectory, "startup-logcat.log"), ActivityStartTimeoutInSeconds), "Activity should have started.");
-			Assert.IsTrue (MonitorAdbLogcat (line => line.Contains (expectedLogcatOutput),
-				Path.Combine (Root, builder.ProjectDirectory, "tab-selected-logcat.log"), 60), $"Output did not contain {expectedLogcatOutput}!");
+			(int code, string stdOutput, string stdError) result = (-1, "", "");
+			WaitFor (TimeSpan.FromSeconds (ActivityStartTimeoutInSeconds), () => {
+				result = RunAdbCommandWithExitCode ($"shell run-as {proj.PackageName} cat files/tab-selected.txt", timeout: 5);
+				if (result.code != 0 && !result.stdError.Contains ("No such file or directory", StringComparison.Ordinal)) {
+					Assert.Fail ($"Could not read the callback result: {result}\n{RunAdbCommand ("logcat -d -s TabLayoutTest:V AndroidRuntime:V *:F")}");
+				}
+				return result.code == 0 && result.stdOutput.Trim () == resultToken;
+			}, intervalInMS: 1000);
+			Assert.AreEqual (resultToken, result.stdOutput.Trim (),
+				$"{expectedLogcatOutput} was not recorded for this launch. run-as result: {result}\n{RunAdbCommand ("logcat -d -s TabLayoutTest:V AndroidRuntime:V *:F")}");
 		}
 
 		[Test]
