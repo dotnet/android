@@ -87,3 +87,7 @@ variables:
   value: 'true'
 - name: NuGetAudit
   value: 'false'
+# CodeQL fails the Kotlin build of tests/Xamarin.Android.Tools.Bytecode-Tests/kotlin-gradle when the
+# Kotlin version is newer than the CodeQL release supports. We don't need Kotlin analyzed.
+- name: CODEQL_EXTRACTOR_JAVA_AGENT_DISABLE_KOTLIN
+  value: 'true'

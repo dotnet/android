@@ -24,6 +24,8 @@ resources:
 parameters:
 - name: ApiScanSourceBranch
   default: 'refs/heads/main'
+- name: CodeQLSourceBranch
+  default: 'refs/heads/main'
 
 # Global variables
 variables:
@@ -63,6 +65,81 @@ stages:
       parameters:
         xaSourcePath: $(System.DefaultWorkingDirectory)/android
         artifactName: Build Results - Nightly macOS
+        includeBuildResults: true
+        use1ESTemplate: false
+
+# CodeQL has to trace a build to analyze C#, C++ and Java, and its language detection drops these
+# languages on macOS. The macOS job above therefore only gets the interpreted languages, so trace
+# the Linux build here. Tracing makes the build much slower, which is why this is not in the CI pipeline.
+- stage: linux_codeql
+  displayName: CodeQL
+  dependsOn: []
+  # Gate on the branch ourselves. CodeQL only warns when it runs on another branch, and the default
+  # branch check of the 1ES templates is always true for GitHub repositories: the lookup of the
+  # default branch fails with a 404 and falls back to the branch being built.
+  # See https://dev.azure.com/mseng/1ES/_workitems/edit/2479329
+  condition: eq(variables['Build.SourceBranch'], '${{ parameters.CodeQLSourceBranch }}')
+  jobs:
+  - job: linux_codeql_build
+    displayName: Linux > CodeQL
+    pool:
+      name: MAUI-1ESPT
+      demands: ImageOverride -equals $(LinuxPoolImage1ESPT)
+    timeoutInMinutes: 360
+    workspace:
+      clean: all
+    variables:
+    - name: CC
+      value: gcc-10
+    - name: CXX
+      value: g++-10
+    # ccache can skip the compiler, and then CodeQL does not see the compile.
+    - name: CCACHE_DISABLE
+      value: 1
+    - name: Codeql.Language
+      value: csharp,cpp,java
+    steps:
+    - checkout: self
+      submodules: recursive
+
+    - template: /build-tools/automation/yaml-templates/setup-jdk-variables.yaml
+      parameters:
+        useAgentJdkPath: false
+        jdkMajorVersion: $(LatestJavaSdkMajorVersion)
+
+    - template: /build-tools/automation/yaml-templates/use-dot-net.yaml
+      parameters:
+        remove_dotnet: true
+
+    - task: NuGetAuthenticate@1
+      displayName: authenticate with azure artifacts
+      inputs:
+        forceReinstallCredentialProvider: true
+
+    - template: /build-tools/automation/yaml-templates/cache-gradle.yaml
+      parameters:
+        xaSourcePath: $(System.DefaultWorkingDirectory)
+
+    - template: /build-tools/automation/yaml-templates/cache-android-archives.yaml
+      parameters:
+        xaSourcePath: $(System.DefaultWorkingDirectory)
+
+    # CodeQL scans each language at most every 72 hours. On the other nights the Init task does
+    # nothing, and this is just a regular Linux build.
+    - task: CodeQL3000Init@0
+      displayName: CodeQL 3000 Init
+
+    - script: make jenkins CONFIGURATION=$(XA.Build.Configuration)
+      displayName: make jenkins
+      retryCountOnTaskFailure: 1
+
+    - task: CodeQL3000Finalize@0
+      displayName: CodeQL 3000 Finalize
+      condition: succeededOrFailed()
+
+    - template: /build-tools/automation/yaml-templates/upload-results.yaml
+      parameters:
+        artifactName: Build Results - Nightly Linux CodeQL
         includeBuildResults: true
         use1ESTemplate: false
 
@@ -286,6 +363,10 @@ stages:
       value: VS
     - name: ApiScanSoftwareVersion
       value: 17.10
+    # Nothing is built in this job, so the CodeQL tasks injected by default can only
+    # produce failed C#, C++ and Java databases. Limit them to the interpreted languages.
+    - name: Codeql.LanguageDetectorFilter
+      value: interpreted
     steps:
     - template: /build-tools/automation/yaml-templates/setup-test-environment.yaml
       parameters:
