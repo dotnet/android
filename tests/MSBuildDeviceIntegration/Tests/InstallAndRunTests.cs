@@ -2913,12 +2913,14 @@ CUSTOM_ENVIRONMENT_VALUE=custom",
 			RunProjectAndAssert (proj, builder);
 
 			var appStartupLogcatFile = Path.Combine (Root, builder.ProjectDirectory, "stacktrace-logcat.log");
+			bool didFinish = MonitorAdbLogcat (
+				line => line.Contains ("#STACKTRACE-END#"), appStartupLogcatFile, timeout: ActivityStartTimeoutInSeconds);
+			var logcatOutput = File.ReadAllText (appStartupLogcatFile);
 			Assert.IsTrue (
-				MonitorAdbLogcat (line => line.Contains ("#STACKTRACE-END#"), appStartupLogcatFile, timeout: 60),
-				"Stack trace end marker not found in logcat (output may be missing or truncated)."
+				didFinish,
+				$"Stack trace end marker not found in logcat (output may be missing or truncated). Logcat:\n{logcatOutput}"
 			);
 
-			var logcatOutput = File.ReadAllText (appStartupLogcatFile);
 			StringAssert.Contains ("#STACKTRACE-BEGIN#", logcatOutput, "Stack trace start marker not found in logcat");
 			StringAssert.Contains ("FastDev: Found ", logcatOutput, "FastDev assembly discovery should be logged.");
 			StringAssert.Contains ("Loading assemblies from disk is normal during Fast Deployment.", logcatOutput, "FastDev disk loading should be described as normal.");
