@@ -43,6 +43,7 @@
   * [Development tips and native debugging](workflow/DevelopmentTips.md)
   * [Localization](workflow/Localization.md)
   * [Custom system properties](workflow/SystemProperties.md)
+  * [DevSkim banned-API analysis](workflow/DevSkim.md)
 
 
 # Coding Guidelines

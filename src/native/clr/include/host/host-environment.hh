@@ -55,7 +55,7 @@ namespace xamarin::android {
 			log_debugf (LOG_DEFAULT, "Creating XDG directory: %s", stack_buffer);
 			int rv = Util::create_directory (stack_buffer, Constants::DEFAULT_DIRECTORY_MODE);
 			if (rv < 0 && errno != EEXIST) {
-				log_warnf (LOG_DEFAULT, "Failed to create XDG directory %s. %s", stack_buffer, strerror (errno));
+				log_warnf (LOG_DEFAULT, "Failed to create XDG directory %s. %s", stack_buffer, ErrorMessage (errno).c_str ());
 			}
 
 			if (!environment_variable_name.empty ()) {

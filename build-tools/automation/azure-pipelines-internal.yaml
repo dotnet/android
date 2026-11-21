@@ -991,3 +991,12 @@ extends:
             use1ESTemplate: true
 
         - template: /build-tools/automation/yaml-templates/fail-on-issue.yaml@self
+
+    # DevSkim Banned API Stage
+    - template: /build-tools/automation/yaml-templates/stage-devskim.yaml@self
+      parameters:
+        use1ESTemplate: true
+        pool:
+          name: $(NetCoreInternalPoolName)
+          image: $(LinuxPoolImageNetCoreInternal)
+          os: linux

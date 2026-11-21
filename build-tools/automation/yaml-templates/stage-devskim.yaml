@@ -1,0 +1,113 @@
+# DevSkim banned-API stage
+#
+# Runs DevSkim over the source trees of the product and fails on every result
+# tagged API.DangerousAPI.BannedFunction. See Documentation/workflow/DevSkim.md.
+#
+# The scan doesn't need a build, so the stage has no dependencies. Add it as the
+# last stage of a pipeline: a stage without an explicit `dependsOn` waits for the
+# stage before it, so any stage after this one would wait for it.
+#
+# Referenced from:
+#   - build-tools/automation/azure-pipelines.yaml          (official / 1ES)
+#   - build-tools/automation/azure-pipelines-internal.yaml (dnceng internal / 1ES)
+#   - build-tools/automation/azure-pipelines-public.yaml   (public PR validation and nightly)
+
+parameters:
+- name: pool
+  type: object
+- name: use1ESTemplate
+  type: boolean
+  default: false
+
+stages:
+- stage: devskim
+  displayName: DevSkim
+  dependsOn: []
+  jobs:
+  # Check - "Xamarin.Android (DevSkim Scan for banned APIs)"
+  - job: devskim
+    displayName: Scan for banned APIs
+    pool: ${{ parameters.pool }}
+    timeoutInMinutes: 30
+    workspace:
+      clean: all
+    variables:
+      DevSkimReports: $(Build.ArtifactStagingDirectory)/devskim
+      DevSkimTool: $(Agent.TempDirectory)/devskim-tool
+    steps:
+    - checkout: self
+      clean: true
+      persistCredentials: false
+
+    # Create the reports directory first, so that the publish step always finds it.
+    - bash: mkdir -p "$(DevSkimReports)"
+      displayName: Create DevSkim reports directory
+
+    - bash: python3 -B -m unittest discover -s build-tools/automation/scripts -p test_devskim.py
+      displayName: Test DevSkim report gate
+      workingDirectory: $(Build.SourcesDirectory)
+
+    - task: UseDotNet@2
+      displayName: Install .NET SDK for DevSkim
+      inputs:
+        version: 10.0.x
+
+    # 1ES agents can't reach nuget.org, so install from the Azure Artifacts feeds in the repository's NuGet.config, which mirror it.
+    # Run from outside the checkout, so that global.json doesn't ask for the repository's SDK.
+    - bash: |
+        set -euo pipefail
+        dotnet tool install Microsoft.CST.DevSkim.CLI \
+          --version $(DevSkimVersion) \
+          --tool-path "$(DevSkimTool)" \
+          --configfile "$(Build.SourcesDirectory)/NuGet.config" \
+          2>&1 | tee "$(DevSkimReports)/install.log"
+      displayName: Install DevSkim $(DevSkimVersion)
+      workingDirectory: $(Agent.TempDirectory)
+
+    # DevSkim exits with 0 when it reports findings, so check the SARIF reports instead.
+    # The reports are written outside the source trees, so that they aren't scanned.
+    - bash: |
+        set -euo pipefail
+
+        # DevSkim opens all the files of a scan at once, which needs more than the usual default limit of 1024.
+        ulimit -n "$(ulimit -Hn)" || ulimit -n 65536
+        echo "Open file limit: $(ulimit -n)"
+
+        scan () {  # scan <directory> <base path> <report name>
+          "$(DevSkimTool)/devskim" analyze \
+            --source-code "$1" \
+            --base-path "$2" \
+            --output-file "$(DevSkimReports)/$3.sarif" \
+            --file-format sarif \
+            --severity Critical,Important,Moderate,BestPractice,ManualReview \
+            --confidence High,Medium,Low \
+            --disable-supression \
+            --disable-parallel \
+            --options-json build-tools/automation/scripts/devskim-options.json \
+            2>&1 | tee "$(DevSkimReports)/$3.log"
+        }
+
+        # First check that DevSkim detects a known banned function. Otherwise a clean scan proves nothing.
+        canary="$(Agent.TempDirectory)/devskim-canary"
+        mkdir -p "$canary"
+        printf '%s\n' '#include <string.h>' 'void canary (char *dst, const char *src) { strcpy(dst, src); }' > "$canary/canary.c"
+        scan "$canary" "$canary" canary
+        python3 build-tools/automation/scripts/check_devskim.py --expect-findings "$(DevSkimReports)/canary.sarif"
+
+        # One scan per source tree keeps each report, and the number of open files, small.
+        reports=()
+        for source in build-tools eng external src tools; do
+          reports+=("$(DevSkimReports)/$source.sarif")
+          scan "$PWD/$source" "$PWD" "$source"
+        done
+        # The native code is in src, so DevSkim must report something there: it exits with 0 when it analyzes nothing.
+        python3 build-tools/automation/scripts/check_devskim.py --require-results "$(DevSkimReports)/src.sarif" "${reports[@]}"
+      displayName: Run DevSkim and fail on banned APIs
+      workingDirectory: $(Build.SourcesDirectory)
+
+    - template: /build-tools/automation/yaml-templates/publish-artifact.yaml
+      parameters:
+        displayName: Publish DevSkim reports
+        artifactName: DevSkim
+        targetPath: $(DevSkimReports)
+        use1ESTemplate: ${{ parameters.use1ESTemplate }}

@@ -57,7 +57,7 @@ namespace xamarin::android
 		static void abort_application (LogCategories category, const char *message, bool log_location = true, std::source_location sloc = std::source_location::current ()) noexcept;
 
 		[[noreturn]]
-		static void abort_applicationf (LogCategories category, std::source_location sloc, const char *format, ...) noexcept __attribute__ ((format (printf, 3, 4)));
+		static void abort_applicationf (LogCategories category, std::source_location sloc, const char *format, ...) noexcept __attribute__ ((format (__printf__, 3, 4)));
 
 		[[noreturn]]
 		static void abort_application (LogCategories category, std::string const& message, bool log_location = true, std::source_location sloc = std::source_location::current ()) noexcept

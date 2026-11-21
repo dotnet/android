@@ -1,0 +1,8 @@
+{
+  "Globs": [
+    "**/.git",
+    "**/.git/**",
+    "**/src/*/Tests/**",
+    "**/external/android-api-docs/**"
+  ]
+}
