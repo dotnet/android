@@ -158,11 +158,16 @@ public class NativeLibraryLoadTests : DeviceTest
 			// Successful auto-retry removes failed TRX results; keep startup/crash evidence in the task log.
 			var diagnostics = File.ReadLines (logcatFile)
 				.Where (line => line.Contains ("AssemblyStoreLoader", StringComparison.Ordinal) ||
-					line.Contains (proj.PackageName, StringComparison.Ordinal) ||
-					Regex.IsMatch (line, @"\s[EF]\s|^[EF]/"))
-				.Take (200);
-			TestContext.Out.WriteLine ("Assembly-store loader logcat (first 200 error, fatal, package or probe lines):\n" +
+					line.Contains (proj.PackageName, StringComparison.Ordinal));
+			TestContext.Out.WriteLine ("Assembly-store loader logcat (all package and probe lines):\n" +
 				string.Join ("\n", diagnostics));
+			var errors = File.ReadLines (logcatFile)
+				.Where (line => !line.Contains ("AssemblyStoreLoader", StringComparison.Ordinal) &&
+					!line.Contains (proj.PackageName, StringComparison.Ordinal) &&
+					Regex.IsMatch (line, @"\s[EF]\s|^[EF]/"))
+				.TakeLast (200);
+			TestContext.Out.WriteLine ("Assembly-store loader logcat (last 200 other error and fatal lines):\n" +
+				string.Join ("\n", errors));
 		}
 		Assert.IsNull (payloadFailure, $"The assembly-store payload check failed: {payloadFailure}");
 		Assert.IsTrue (payloadCheckCompleted,
