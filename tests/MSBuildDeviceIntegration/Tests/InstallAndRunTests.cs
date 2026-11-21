@@ -2904,10 +2904,14 @@ CUSTOM_ENVIRONMENT_VALUE=custom",
 			};
 			proj.SetRuntime (runtime);
 			proj.SetDefaultTargetDevice ();
-			proj.MainActivity = proj.DefaultMainActivity.Replace ("//${AFTER_ONCREATE}", """
-		Console.WriteLine ("#STACKTRACE-BEGIN#");
+			// Ignore markers from earlier app launches even if logcat clearing leaves buffered output.
+			var markerId = Guid.NewGuid ().ToString ("N");
+			var beginMarker = $"#STACKTRACE-BEGIN#{markerId}";
+			var endMarker = $"#STACKTRACE-END#{markerId}";
+			proj.MainActivity = proj.DefaultMainActivity.Replace ("//${AFTER_ONCREATE}", $$"""
+		Console.WriteLine ("{{beginMarker}}");
 		Console.WriteLine (Environment.StackTrace);
-		Console.WriteLine ("#STACKTRACE-END#");
+		Console.WriteLine ("{{endMarker}}");
 		""");
 			using var builder = CreateApkBuilder ();
 			Assert.IsTrue (builder.Install (proj), "App should have installed.");
@@ -2915,7 +2919,7 @@ CUSTOM_ENVIRONMENT_VALUE=custom",
 
 			var appStartupLogcatFile = Path.Combine (Root, builder.ProjectDirectory, "stacktrace-logcat.log");
 			bool didFinish = MonitorAdbLogcat (
-				line => line.Contains ("#STACKTRACE-END#"), appStartupLogcatFile, timeout: 60);
+				line => line.Contains (endMarker), appStartupLogcatFile, timeout: 60);
 			var logcatOutput = File.ReadAllText (appStartupLogcatFile);
 			if (!didFinish) {
 				// Distinguish an app that never launched from one whose output is missing.
@@ -2923,7 +2927,7 @@ CUSTOM_ENVIRONMENT_VALUE=custom",
 				Assert.Fail ($"Stack trace end marker not found in logcat. App process id: '{appPid}'. Logcat:\n{logcatOutput}");
 			}
 
-			StringAssert.Contains ("#STACKTRACE-BEGIN#", logcatOutput, "Stack trace start marker not found in logcat");
+			StringAssert.Contains (beginMarker, logcatOutput, "Stack trace start marker not found in logcat");
 			StringAssert.Contains ("FastDev: Found ", logcatOutput, "FastDev assembly discovery should be logged.");
 			StringAssert.Contains ("Loading assemblies from disk is normal during Fast Deployment.", logcatOutput, "FastDev disk loading should be described as normal.");
 			StringAssert.DoesNotContain ("not found in FastDev override directory", logcatOutput, "Deferring to CoreCLR's disk loader should not report missing FastDev assemblies.");
