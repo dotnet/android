@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using System.Threading.Tasks;
 
 using Java.Interop;
@@ -52,14 +53,8 @@ namespace Java.InteropTests
 		// The surfaced-peer registry is process-wide, so other threads can add or
 		// remove unrelated peers while a test runs. Count only entries for this peer.
 		static int GetSurfacedEntryCount (IJavaPeerable peer)
-		{
-			int count = 0;
-			foreach (var info in JniRuntime.CurrentRuntime.ValueManager.GetSurfacedPeers ()) {
-				if (info.SurfacedPeer.TryGetTarget (out var target) && ReferenceEquals (target, peer))
-					count++;
-			}
-			return count;
-		}
+			=> JniRuntime.CurrentRuntime.ValueManager.GetSurfacedPeers ().Count (
+				info => info.SurfacedPeer.TryGetTarget (out var target) && ReferenceEquals (target, peer));
 
 		[TestMethod]
 		public void UnregisterFromRuntime ()
