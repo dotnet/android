@@ -21,8 +21,9 @@ namespace Xamarin.Android.Build.Tests;
 [Category ("UsesDevice")]
 public class NativeLibraryLoadTests : DeviceTest
 {
-	// Launching the JIT-only extractNativeLibs=false APK on the CI x86_64 API 29 emulator
-	// routinely takes 40-90s and occasionally exceeds ActivityStartTimeoutInSeconds (150s).
+	// Mitigation for an unconfirmed hypothesis: passing CI launches of the JIT-only
+	// extractNativeLibs=false APK on the x86_64 API 29 emulator took up to ~90s, so some
+	// timeouts may be slow launches beyond ActivityStartTimeoutInSeconds (150s).
 	const int PayloadCheckTimeoutInSeconds = 300;
 
 	[Test]
