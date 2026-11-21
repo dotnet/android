@@ -336,6 +336,7 @@ namespace Xamarin.ProjectTools
 			bool nativeCrashDetected = false;
 			bool result = false;
 			bool ranToCompletion = false;
+			int? exitCode = null;
 			int attempts = 1;
 			var errorDone = new TaskCompletionSource<bool> (TaskCreationOptions.RunContinuationsAsynchronously);
 			var outputDone = new TaskCompletionSource<bool> (TaskCreationOptions.RunContinuationsAsynchronously);
@@ -380,6 +381,7 @@ namespace Xamarin.ProjectTools
 					// ADB can leave a server process holding the build's redirected handles after dotnet exits.
 					if (!WaitForRedirectedOutput (outputDone.Task, errorDone.Task))
 						Console.WriteLine ($"Build process {p.Id} exited or timed out with redirected output still open after {OutputDrainTimeoutSeconds} seconds.");
+					exitCode = ranToCompletion ? p.ExitCode : null;
 					result = ranToCompletion && p.ExitCode == 0;
 					if (processLog != null) {
 						if (ranToCompletion) {
@@ -422,12 +424,56 @@ namespace Xamarin.ProjectTools
 					File.AppendAllText (buildLogFullPath, File.ReadAllText (processLog));
 			}
 			if (!result && ThrowOnBuildFailure) {
-				string message = "Build failure: " + Path.GetFileName (projectOrSolution) + (BuildLogFile != null && File.Exists (buildLogFullPath) ? "Build log recorded at " + buildLogFullPath : null);
-				//NOTE: enormous logs will lock up IDE's UI. Build result files should be appended to the TestResult on failure.
-				throw new FailedBuildException (message);
+				var message = new StringBuilder ($"Build failure: {Path.GetFileName (projectOrSolution)}");
+				if (!ranToCompletion) {
+					message.Append ($" (timed out after {DefaultBuildTimeOut} minutes)");
+				} else if (exitCode.HasValue) {
+					message.Append ($" (exit code {exitCode.Value})");
+				}
+				if (BuildLogFile != null && File.Exists (buildLogFullPath)) {
+					message.AppendLine ().Append ($"Build log recorded at {buildLogFullPath}");
+					//NOTE: enormous logs will lock up IDE's UI, so only include a bounded number of error lines.
+					AppendBuildErrors (message, LastBuildOutput);
+				}
+				throw new FailedBuildException (message.ToString ());
 			}
 
 			return result;
+		}
+
+		const int MaxReportedBuildErrors = 20;
+		const int MaxReportedBuildErrorLength = 1000;
+
+		static readonly Regex buildErrorRegex = new Regex (
+			@"(:\s*(fatal )?error( [A-Za-z]+\d+)?\s*:)|(^\s*error( [A-Za-z]+\d+)?\s*:)",
+			RegexOptions.Compiled
+		);
+
+		// MSBuild prefixes inline messages with the node ID (e.g. `1>`), but not the summary copies.
+		static readonly Regex buildNodePrefixRegex = new Regex (@"^\s*\d+>", RegexOptions.Compiled);
+
+		static void AppendBuildErrors (StringBuilder message, IEnumerable<string> buildOutput)
+		{
+			var errors = new HashSet<string> (StringComparer.Ordinal);
+			foreach (var line in buildOutput) {
+				if (!buildErrorRegex.IsMatch (line)) {
+					continue;
+				}
+				var error = buildNodePrefixRegex.Replace (line, "").Trim ();
+				if (error.Length > MaxReportedBuildErrorLength) {
+					error = error.Substring (0, MaxReportedBuildErrorLength) + "...";
+				}
+				if (!errors.Add (error) || errors.Count > MaxReportedBuildErrors) {
+					continue;
+				}
+				if (errors.Count == 1) {
+					message.AppendLine ().Append ("Build errors:");
+				}
+				message.AppendLine ().Append ("  ").Append (error);
+			}
+			if (errors.Count > MaxReportedBuildErrors) {
+				message.AppendLine ().Append ($"  ... {errors.Count - MaxReportedBuildErrors} more error(s) omitted.");
+			}
 		}
 
 		bool IsRunningInIDE {
