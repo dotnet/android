@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -1097,14 +1098,20 @@ $@"button.ViewTreeObserver.GlobalLayout += Button_ViewTreeObserver_GlobalLayout;
 			ClearAdbLogcat ();
 			RunProjectAndAssert (proj, builder);
 			(int code, string stdOutput, string stdError) result = (-1, "", "");
-			WaitFor (TimeSpan.FromSeconds (ActivityStartTimeoutInSeconds), () => {
-				result = RunAdbCommandWithExitCode ($"shell run-as {proj.PackageName} cat files/tab-selected.txt", timeout: 5);
-				if (result.code != 0 && !result.stdError.Contains ("No such file or directory", StringComparison.Ordinal)) {
+			var timeout = TimeSpan.FromSeconds (ActivityStartTimeoutInSeconds);
+			var stopwatch = Stopwatch.StartNew ();
+			WaitFor (timeout, () => {
+				int remainingSeconds = (int) (timeout - stopwatch.Elapsed).TotalSeconds;
+				if (remainingSeconds <= 0) {
+					return true;
+				}
+				result = RunAdbCommandWithExitCode ($"shell run-as {proj.PackageName} cat files/tab-selected.txt", timeout: Math.Min (5, remainingSeconds));
+				if (result.code != 0 && result.stdError != null && !result.stdError.Contains ("No such file or directory", StringComparison.Ordinal)) {
 					Assert.Fail ($"Could not read the callback result: {result}\n{RunAdbCommand ("logcat -d -s TabLayoutTest:V AndroidRuntime:V *:F")}");
 				}
-				return result.code == 0 && result.stdOutput.Trim () == resultToken;
+				return result.code == 0 && result.stdOutput?.Trim () == resultToken;
 			}, intervalInMS: 1000);
-			Assert.AreEqual (resultToken, result.stdOutput.Trim (),
+			Assert.AreEqual (resultToken, result.code == 0 ? result.stdOutput?.Trim () : null,
 				$"{expectedLogcatOutput} was not recorded for this launch. run-as result: {result}\n{RunAdbCommand ("logcat -d -s TabLayoutTest:V AndroidRuntime:V *:F")}");
 		}
 
