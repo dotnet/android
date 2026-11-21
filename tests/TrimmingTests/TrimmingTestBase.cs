@@ -162,6 +162,8 @@ public abstract class TrimmingTestBase : DeviceTest
 		foreach (var file in Directory.GetFiles (cases, "Directory.Build.*")) {
 			File.Copy (file, Path.Combine (directory, Path.GetFileName (file)));
 		}
+		// On CI the test directory is outside the repository, so bring the repository's package feeds along.
+		File.Copy (Path.Combine (XABuildPaths.TopDirectory, "NuGet.config"), Path.Combine (directory, "NuGet.config"));
 		CopyDirectory (Path.Combine (cases, ExpectationsProject), Path.Combine (directory, ExpectationsProject));
 		// A case in its own directory (Cases/<Case>/<Case>.cs) brings the files next to it, such as Android resources,
 		// AndroidManifest.xml, or a Case.targets with MSBuild items.
