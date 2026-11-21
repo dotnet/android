@@ -1,0 +1,19 @@
+{
+  "$schema": "http://json.schemastore.org/template",
+  "author": "Microsoft",
+  "classifications": [ "Android", "Mobile", "Benchmark" ],
+  "identity": "Microsoft.Android.AndroidBenchmark",
+  "name": "Android Benchmark App",
+  "description": "A file-based .NET for Android application running BenchmarkDotNet in-process",
+  "shortName": "android-benchmark",
+  "tags": {
+    "language": "C#",
+    "type": "item"
+  },
+  "sourceName": "Benchmarks",
+  "preferDefaultName": true,
+  "primaryOutputs": [
+    { "path": "Benchmarks.cs" }
+  ],
+  "defaultName": "Benchmarks"
+}

@@ -281,6 +281,7 @@ namespace Xamarin.Android.Build.Tests
 
 		[Test]
 		[TestCase ("android-console", "AndroidConsole.cs")]
+		[TestCase ("android-benchmark", "Benchmarks.cs")]
 		public void DotNetNewFileBasedApplication (string template, string fileName)
 		{
 			var templatePath = Path.Combine (Root, "temp", TestName);
@@ -293,6 +294,19 @@ namespace Xamarin.Android.Build.Tests
 			CollectionAssert.AreEqual (new [] { fileName }, Directory.GetFiles (templatePath, "*.cs").Select (Path.GetFileName));
 			Assert.IsEmpty (Directory.GetFiles (templatePath, "*.csproj", SearchOption.AllDirectories),
 				"The template should generate a file-based app, not a project.");
+		}
+
+		[Test]
+		public void DotNetNewBenchmarkNamedBenchmarkBuilds ()
+		{
+			var templatePath = Path.Combine (Root, "temp", TestName);
+			if (Directory.Exists (templatePath))
+				Directory.Delete (templatePath, recursive: true);
+
+			TestOutputDirectories [TestContext.CurrentContext.Test.ID] = templatePath;
+			var dotnet = new DotNetCLI (Path.Combine (templatePath, "Benchmark.cs"));
+			Assert.IsTrue (dotnet.New ("android-benchmark", name: "Benchmark"), "`dotnet new android-benchmark -n Benchmark` should succeed.");
+			Assert.IsTrue (dotnet.BuildFileBased (), $"The generated benchmark should build. See {dotnet.ProcessLogFile}.");
 		}
 
 		[Test]

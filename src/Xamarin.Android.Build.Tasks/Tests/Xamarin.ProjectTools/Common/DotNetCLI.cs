@@ -158,7 +158,7 @@ namespace Xamarin.ProjectTools
 			}
 		}
 
-		public bool New (string template, string output = null, bool noRestore = false, string framework = null)
+		public bool New (string template, string output = null, bool noRestore = false, string framework = null, string name = null)
 		{
 			Directory.CreateDirectory (ProjectDirectory);
 			var nugetConfig = Path.Combine (ProjectDirectory, "NuGet.config");
@@ -178,6 +178,10 @@ namespace Xamarin.ProjectTools
 				arguments.Add ("--framework");
 				arguments.Add (framework);
 			}
+			if (!string.IsNullOrEmpty (name)) {
+				arguments.Add ("--name");
+				arguments.Add ($"\"{name}\"");
+			}
 			return Execute (arguments.ToArray ());
 		}
 
@@ -192,6 +196,8 @@ namespace Xamarin.ProjectTools
 			var arguments = GetDefaultCommandLineArgs ("build", target, runtimeIdentifier, parameters, msbuildArguments);
 			return Execute (arguments.ToArray ());
 		}
+
+		public bool BuildFileBased () => Execute ("build", $"\"{projectOrSolution}\"");
 
 		public bool Pack (string target = null, string runtimeIdentifier = null, string [] parameters = null, string [] msbuildArguments = null)
 		{
