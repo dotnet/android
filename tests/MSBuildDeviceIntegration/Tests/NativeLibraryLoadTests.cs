@@ -145,17 +145,20 @@ public class NativeLibraryLoadTests : DeviceTest
 		proj.SetRuntimeIdentifiers ([DeviceAbi]);
 		proj.SetDefaultTargetDevice ();
 		proj.MainActivity = proj.DefaultMainActivity
-			.Replace ("//${USINGS}", "using System;\nusing System.Runtime.InteropServices;\nusing System.Threading.Tasks;")
+			.Replace ("//${USINGS}", "using System;\nusing System.Runtime.InteropServices;\nusing System.Threading;\nusing System.Threading.Tasks;")
 			.Replace (
 				"//${AFTER_ONCREATE}",
 				$$"""
 			// Blocking the main thread here verifies CoreCLR directly loads libraries missing from the
 			// build-time DSO cache instead of dispatching System.loadLibrary to the main thread.
+			var mainThread = Thread.CurrentThread;
 			var loadTask = Task.Run (() => {
-				System.Threading.Thread.Sleep (TimeSpan.FromMilliseconds (250));
+				if (!SpinWait.SpinUntil (() => (mainThread.ThreadState & ThreadState.WaitSleepJoin) != 0, TimeSpan.FromSeconds (20))) {
+					throw new InvalidOperationException ("The main thread did not enter the wait.");
+				}
 				return NativeMethods.GetError ();
 			});
-			if (!loadTask.Wait (TimeSpan.FromSeconds (2))) {
+			if (!loadTask.Wait (TimeSpan.FromSeconds (30))) {
 				Android.Util.Log.Error ("NativeLibraryLoadTest", "{{timeoutMessage}}");
 				return;
 			}
@@ -184,7 +187,7 @@ public class NativeLibraryLoadTests : DeviceTest
 				return loadTimedOut || line.Contains (completedMessage, StringComparison.Ordinal);
 			},
 			Path.Combine (Root, builder.ProjectDirectory, "unknown-system-library-load.log"),
-			timeout: 30,
+			timeout: 60,
 			onMonitoringStarted: () => StartActivityAndAssert (proj)
 		);
 
@@ -201,6 +204,7 @@ public class NativeLibraryLoadTests : DeviceTest
 
 		const string completedMessage = "WORKER_JNI_LIBRARY_LOAD_COMPLETED:115:115:73:10:99:1:1:1";
 		const string failedMessage = "WORKER_JNI_LIBRARY_LOAD_FAILED:";
+		const string progressMessage = "WORKER_JNI_LIBRARY_LOAD_PROGRESS:";
 		string packageName = PackageUtils.MakePackageName (
 			AndroidRuntime.CoreCLR, $"workerjniload{(extractNativeLibs ? "extracted" : "embedded")}");
 		var proj = new XamarinAndroidApplicationProject (packageName: packageName) {
@@ -383,6 +387,42 @@ public class NativeLibraryLoadTests : DeviceTest
 					failOnLoadCount++;
 					return invokeFailFromManaged ();
 				}
+
+				// Diagnostics only: Java stacks remain available even if managed code cannot run.
+				static volatile boolean finished;
+
+				public static void startWatchdog (final long delayMillis) {
+					Thread watchdog = new Thread (new Runnable () {
+						public void run () {
+							try {
+								Thread.sleep (delayMillis);
+							} catch (InterruptedException e) {
+								return;
+							}
+							if (!finished) {
+								dumpThreads ("Watchdog");
+							}
+						}
+					}, "JniLoadWatchdog");
+					watchdog.setDaemon (true);
+					watchdog.start ();
+				}
+
+				public static void finish () {
+					finished = true;
+				}
+
+				public static void dumpThreads (String reason) {
+					String prefix = "WORKER_JNI_LIBRARY_LOAD_DIAGNOSTIC:" + reason + ":";
+					for (java.util.Map.Entry<Thread, StackTraceElement[]> entry : Thread.getAllStackTraces ().entrySet ()) {
+						Thread thread = entry.getKey ();
+						android.util.Log.w ("NativeLibraryLoadTest", prefix + "thread '" + thread.getName () + "' " + thread.getState ());
+						for (StackTraceElement frame : entry.getValue ()) {
+							android.util.Log.w ("NativeLibraryLoadTest", prefix + "  at " + frame);
+						}
+					}
+					android.util.Log.w ("NativeLibraryLoadTest", prefix + "end");
+				}
 			}
 			""",
 		});
@@ -405,8 +445,12 @@ public class NativeLibraryLoadTests : DeviceTest
 				"//${AFTER_ONCREATE}",
 				$$"""
 				try {
+					NativeMethods.Progress ("OnCreate");
 					using var probeType = new JniType ("com/xamarin/jniloadertest/JniLoadProbe");
 					unsafe {
+						var watchdogArgs = stackalloc JniArgumentValue [1];
+						watchdogArgs [0] = new JniArgumentValue (65_000L);
+						JniEnvironment.StaticMethods.CallStaticVoidMethod (probeType.PeerReference, probeType.GetStaticMethod ("startWatchdog", "(J)V"), watchdogArgs);
 						Span<JniNativeMethod> methods = stackalloc JniNativeMethod [2];
 						fixed (byte* innerNamePtr = "invokeInnerFromManaged"u8)
 						fixed (byte* failNamePtr = "invokeFailFromManaged"u8)
@@ -416,6 +460,7 @@ public class NativeLibraryLoadTests : DeviceTest
 							JniEnvironment.Types.RegisterNatives (probeType.PeerReference, methods);
 						}
 					}
+					NativeMethods.Progress ("NativesRegistered");
 
 					var outerCountField = probeType.GetStaticField ("outerOnLoadCount", "I");
 					var innerCountField = probeType.GetStaticField ("innerOnLoadCount", "I");
@@ -432,15 +477,14 @@ public class NativeLibraryLoadTests : DeviceTest
 					Exception? workerException = null;
 					var worker = new Thread (() => {
 						try {
+							NativeMethods.Progress ("OuterPInvokeStarting");
 							workerValue = NativeMethods.GetOuterValue ();
+							NativeMethods.Progress ("OuterPInvokeReturned");
 							if (NativeMethods.ConcurrentOuterThread == null || !NativeMethods.ConcurrentOuterThread.Join (TimeSpan.FromSeconds (5))) {
 								throw new TimeoutException ("Concurrent outer reader thread did not finish.");
 							}
 							if (NativeMethods.ConcurrentOuterException != null) {
 								throw NativeMethods.ConcurrentOuterException;
-							}
-							if (NativeMethods.ConcurrentCompletedDuringOnLoad) {
-								throw new InvalidOperationException ("Concurrent reader observed a provisionally published handle before JNI_OnLoad finished.");
 							}
 							if (NativeMethods.CompetingInnerThread == null || !NativeMethods.CompetingInnerThread.Join (TimeSpan.FromSeconds (5))) {
 								throw new TimeoutException ("Competing inner reader thread did not finish.");
@@ -448,6 +492,7 @@ public class NativeLibraryLoadTests : DeviceTest
 							if (NativeMethods.CompetingInnerException != null) {
 								throw NativeMethods.CompetingInnerException;
 							}
+							NativeMethods.Progress ("ReadersJoined");
 
 							bool firstFailThrew = false;
 							try {
@@ -468,15 +513,18 @@ public class NativeLibraryLoadTests : DeviceTest
 							if (!secondFailThrew) {
 								throw new InvalidOperationException ("Subsequent P/Invoke to library with failing JNI_OnLoad should throw DllNotFoundException.");
 							}
+							NativeMethods.Progress ("FailingPInvokesCompleted");
 						} catch (Exception ex) {
-							workerException = ex;
+							workerException = NativeMethods.CallbackError == null ? ex : new InvalidOperationException (NativeMethods.CallbackError, ex);
 						}
 					}) {
 						IsBackground = true,
 						Name = "WorkerJniLoader",
 					};
 					worker.Start ();
-					if (!worker.Join (TimeSpan.FromSeconds (10))) {
+					NativeMethods.Progress ("WorkerStarted");
+					if (!worker.Join (TimeSpan.FromSeconds (60))) {
+						NativeMethods.DumpJavaThreads ("WorkerJoinTimedOut");
 						Android.Util.Log.Error ("NativeLibraryLoadTest", "{{failedMessage}}TimedOut");
 						return;
 					}
@@ -493,6 +541,8 @@ public class NativeLibraryLoadTests : DeviceTest
 						$"WORKER_JNI_LIBRARY_LOAD_COMPLETED:{workerValue}:{NativeMethods.ConcurrentOuterValue}:{NativeMethods.CompetingInnerValue}:{NativeMethods.ProvisionalOuterValue}:{NativeMethods.ProvisionalFailValue}:{finalOuterCount}:{finalInnerCount}:{finalFailCount}");
 				} catch (Exception ex) {
 					Android.Util.Log.Error ("NativeLibraryLoadTest", "{{failedMessage}}" + ex);
+				} finally {
+					NativeMethods.FinishDiagnostics ();
 				}
 				""")
 			.Replace (
@@ -504,7 +554,7 @@ public class NativeLibraryLoadTests : DeviceTest
 					public static volatile int ProvisionalFailValue;
 					public static volatile int ConcurrentOuterValue;
 					public static volatile int CompetingInnerValue;
-					public static volatile bool ConcurrentCompletedDuringOnLoad;
+					public static volatile string? CallbackError;
 					public static volatile Exception? ConcurrentOuterException;
 					public static volatile Exception? CompetingInnerException;
 					public static Thread? ConcurrentOuterThread;
@@ -513,15 +563,23 @@ public class NativeLibraryLoadTests : DeviceTest
 					[UnmanagedCallersOnly]
 					public static int InvokeInnerFromManaged (IntPtr jnienv, IntPtr klass)
 					{
+						Progress ("OuterOnLoadCallback");
 						// Use a distinct P/Invoke declaration so CoreCLR resolves through PinvokeOverride::load_symbol ->
 						// MonodroidDl::monodroid_dlopen during JNI_OnLoad and exercises same-thread provisional handle lookup.
 						ProvisionalOuterValue = GetOuterValueProvisional ();
 
 						using var started = new ManualResetEventSlim (false);
+						Java.Lang.Thread? outerJavaThread = null;
 						ConcurrentOuterThread = new Thread (() => {
 							try {
-								started.Set ();
+								try {
+									outerJavaThread = Java.Lang.Thread.CurrentThread ();
+								} finally {
+									started.Set ();
+								}
+								Progress ("ConcurrentOuterPInvokeStarting");
 								ConcurrentOuterValue = GetOuterValueConcurrent ();
+								Progress ("ConcurrentOuterPInvokeReturned");
 							} catch (Exception ex) {
 								ConcurrentOuterException = ex;
 							}
@@ -531,17 +589,26 @@ public class NativeLibraryLoadTests : DeviceTest
 						};
 						ConcurrentOuterThread.Start ();
 						started.Wait ();
-						if (ConcurrentOuterThread.Join (TimeSpan.FromMilliseconds (150))) {
-							ConcurrentCompletedDuringOnLoad = true;
+						if (!WaitForJavaLoadBlock (outerJavaThread, ConcurrentOuterThread)) {
+							CallbackError ??= "Concurrent outer reader did not block in Java while JNI_OnLoad was active.";
+							return -1;
 						}
+						Progress ("ConcurrentOuterBlocked");
 
 						// Start a competing caller for cold library B while this thread holds the Java Runtime
 						// loadLibrary0 monitor inside A's JNI_OnLoad, then P/Invoke B from A's callback.
 						using var innerStarted = new ManualResetEventSlim (false);
+						Java.Lang.Thread? innerJavaThread = null;
 						CompetingInnerThread = new Thread (() => {
 							try {
-								innerStarted.Set ();
+								try {
+									innerJavaThread = Java.Lang.Thread.CurrentThread ();
+								} finally {
+									innerStarted.Set ();
+								}
+								Progress ("CompetingInnerPInvokeStarting");
 								CompetingInnerValue = GetInnerValueConcurrent ();
+								Progress ("CompetingInnerPInvokeReturned");
 							} catch (Exception ex) {
 								CompetingInnerException = ex;
 							}
@@ -551,14 +618,77 @@ public class NativeLibraryLoadTests : DeviceTest
 						};
 						CompetingInnerThread.Start ();
 						innerStarted.Wait ();
-						Thread.Sleep (TimeSpan.FromMilliseconds (100));
+						if (!WaitForJavaLoadBlock (innerJavaThread, CompetingInnerThread)) {
+							CallbackError ??= "Competing inner reader did not block in Java while JNI_OnLoad was active.";
+							return -1;
+						}
+						Progress ("CompetingInnerBlocked");
 
-						return GetInnerValue ();
+						int innerValue = GetInnerValue ();
+						Progress ("InnerPInvokeReturned");
+						return innerValue;
+					}
+
+					public static void Progress (string step)
+					{
+						Android.Util.Log.Info ("NativeLibraryLoadTest", "WORKER_JNI_LIBRARY_LOAD_PROGRESS:" + step);
+					}
+
+					public static unsafe void DumpJavaThreads (string reason)
+					{
+						try {
+							using var probeType = new JniType ("com/xamarin/jniloadertest/JniLoadProbe");
+							var reasonReference = JniEnvironment.Strings.NewString (reason);
+							try {
+								var args = stackalloc JniArgumentValue [1];
+								args [0] = new JniArgumentValue (reasonReference);
+								JniEnvironment.StaticMethods.CallStaticVoidMethod (probeType.PeerReference, probeType.GetStaticMethod ("dumpThreads", "(Ljava/lang/String;)V"), args);
+							} finally {
+								JniObjectReference.Dispose (ref reasonReference);
+							}
+						} catch (Exception ex) {
+							Android.Util.Log.Warn ("NativeLibraryLoadTest", "WORKER_JNI_LIBRARY_LOAD_DIAGNOSTIC:Could not dump Java threads: " + ex);
+						}
+					}
+
+					public static void FinishDiagnostics ()
+					{
+						try {
+							using var probeType = new JniType ("com/xamarin/jniloadertest/JniLoadProbe");
+							JniEnvironment.StaticMethods.CallStaticVoidMethod (probeType.PeerReference, probeType.GetStaticMethod ("finish", "()V"));
+						} catch (Exception ex) {
+							Android.Util.Log.Warn ("NativeLibraryLoadTest", "WORKER_JNI_LIBRARY_LOAD_DIAGNOSTIC:Could not stop the watchdog: " + ex);
+						}
+					}
+
+					static bool WaitForJavaLoadBlock (Java.Lang.Thread? javaThread, Thread managedThread)
+					{
+						if (javaThread == null) {
+							return false;
+						}
+						try {
+							bool observed = SpinWait.SpinUntil (
+								() => !managedThread.IsAlive || javaThread.GetState ().Equals (Java.Lang.Thread.State.Blocked),
+								TimeSpan.FromSeconds (20));
+							if (!observed || !managedThread.IsAlive || !javaThread.GetState ().Equals (Java.Lang.Thread.State.Blocked)) {
+								return false;
+							}
+							foreach (var frame in javaThread.GetStackTrace ()) {
+								if (frame.ClassName == "java.lang.Runtime" && frame.MethodName == "loadLibrary0") {
+									return true;
+								}
+							}
+							return false;
+						} catch (Exception ex) {
+							CallbackError = "Could not observe the Java loader: " + ex;
+							return false;
+						}
 					}
 
 					[UnmanagedCallersOnly]
 					public static int InvokeFailFromManaged (IntPtr jnienv, IntPtr klass)
 					{
+						Progress ("FailOnLoadCallback");
 						ProvisionalFailValue = GetFailValueProvisional ();
 						return ProvisionalFailValue;
 					}
@@ -594,8 +724,12 @@ public class NativeLibraryLoadTests : DeviceTest
 
 		ClearAdbLogcat ();
 		string? failureLine = null;
+		string? lastProgressLine = null;
 		bool completed = MonitorAdbLogcat (
 			line => {
+				if (line.Contains (progressMessage, StringComparison.Ordinal)) {
+					lastProgressLine = line;
+				}
 				if (line.Contains (failedMessage, StringComparison.Ordinal)) {
 					failureLine = line;
 					return true;
@@ -603,12 +737,96 @@ public class NativeLibraryLoadTests : DeviceTest
 				return line.Contains (completedMessage, StringComparison.Ordinal);
 			},
 			Path.Combine (Root, builder.ProjectDirectory, "worker-jni-library-load.log"),
-			timeout: 45,
+			timeout: 90,
 			onMonitoringStarted: () => StartActivityAndAssert (proj)
 		);
 
-		Assert.IsNull (failureLine, $"Worker JNI library load failed: {failureLine}");
-		Assert.IsTrue (completed, $"Output did not contain {completedMessage}.");
+		string progress = "";
+		if (failureLine != null || !completed) {
+			progress = $" Last progress marker: {lastProgressLine ?? "<none>"}.";
+			TestContext.Out.WriteLine (CaptureWorkerJniLibraryLoadDiagnostics (proj.PackageName, Path.Combine (Root, builder.ProjectDirectory)));
+		}
+		Assert.IsNull (failureLine, $"Worker JNI library load failed: {failureLine}{progress}");
+		Assert.IsTrue (completed, $"Output did not contain {completedMessage}.{progress}");
+	}
+
+	// Best-effort and bounded: failures of individual commands are reported rather than thrown, so they
+	// cannot mask the original assertion. The output goes to the test's standard output because CI task
+	// logs keep it for failed first attempts, even when an automatic retry later passes.
+	static string CaptureWorkerJniLibraryLoadDiagnostics (string packageName, string outputDirectory)
+	{
+		const int MaxLogcatLines = 400;
+		var sb = new StringBuilder ();
+		sb.AppendLine ("===== Worker JNI library load diagnostics =====");
+
+		string? pidOutput = RunDiagnosticAdbCommand (sb, $"shell pidof {packageName}", timeout: 10);
+		string pid = pidOutput?.Trim () ?? "";
+		if (int.TryParse (pid, NumberStyles.None, CultureInfo.InvariantCulture, out _)) {
+			AppendCommandOutput (sb, RunDiagnosticAdbCommand (sb, $"shell ps -T -p {pid} -o TID,S,WCHAN,CMD", timeout: 10));
+		} else {
+			sb.AppendLine ($"Process {packageName} is not running.");
+		}
+
+		string? activities = RunDiagnosticAdbCommand (sb, "shell dumpsys activity activities", timeout: 20);
+		if (activities != null) {
+			AppendCommandOutput (sb, string.Join (Environment.NewLine, activities.Split ('\n')
+				.Where (line => line.Contains (packageName, StringComparison.Ordinal))
+				.Take (40)
+				.Select (line => line.TrimEnd ())));
+		}
+
+		string? logcat = RunDiagnosticAdbCommand (sb, "logcat -d", timeout: 30);
+		if (logcat != null) {
+			string logcatPath = Path.Combine (outputDirectory, "worker-jni-library-load-diagnostics.log");
+			try {
+				File.WriteAllText (logcatPath, logcat);
+				TestContext.AddTestAttachment (logcatPath);
+			} catch (Exception ex) {
+				sb.AppendLine ($"Could not save {logcatPath}: {ex.Message}");
+			}
+
+			string [] relevant = logcat.Split ('\n')
+				.Select (line => line.TrimEnd ())
+				.Where (line => line.Contains ("NativeLibraryLoadTest", StringComparison.Ordinal) ||
+					line.Contains (packageName, StringComparison.Ordinal) ||
+					(pid.Length > 0 && line.Contains ($" {pid} ", StringComparison.Ordinal)) ||
+					line.Contains ("Fatal signal", StringComparison.Ordinal) ||
+					line.Contains (" F DEBUG", StringComparison.Ordinal) ||
+					line.Contains (" E AndroidRuntime", StringComparison.Ordinal))
+				.ToArray ();
+			sb.AppendLine ($"----- relevant logcat lines ({Math.Min (relevant.Length, MaxLogcatLines)} of {relevant.Length}, most recent) -----");
+			foreach (string line in relevant.Skip (Math.Max (0, relevant.Length - MaxLogcatLines))) {
+				sb.AppendLine (line);
+			}
+		}
+		sb.AppendLine ("===== End worker JNI library load diagnostics =====");
+		return sb.ToString ();
+	}
+
+	static string? RunDiagnosticAdbCommand (StringBuilder sb, string command, int timeout)
+	{
+		sb.AppendLine ($"----- adb {command} -----");
+		try {
+			var (code, stdOutput, stdError) = RunAdbCommandWithExitCode (command, timeout);
+			if (stdOutput == null) {
+				sb.AppendLine ($"Diagnostic command timed out after {timeout}s.");
+				return null;
+			}
+			if (code != 0 || !string.IsNullOrWhiteSpace (stdError)) {
+				sb.AppendLine ($"Diagnostic command exited with code {code}: {stdError?.Trim ()}");
+			}
+			return stdOutput;
+		} catch (Exception ex) {
+			sb.AppendLine ($"Diagnostic command failed: {ex.Message}");
+			return null;
+		}
+	}
+
+	static void AppendCommandOutput (StringBuilder sb, string? output)
+	{
+		if (!string.IsNullOrWhiteSpace (output)) {
+			sb.AppendLine (output.TrimEnd ());
+		}
 	}
 
 	byte [] CompileJniFixtureLibrary (string directory, string libraryFileName, string source)

@@ -7,8 +7,6 @@ using NUnit.Framework;
 using Xamarin.Android.Tasks;
 using Xamarin.Android.Tools;
 using Microsoft.Android.Build.Tasks;
-using TPL = System.Threading.Tasks;
-using System.Threading;
 
 namespace Xamarin.Android.Build.Tests
 {
@@ -141,26 +139,11 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test, Category ("SmokeTests")]
-		public async TPL.Task DirectoryInUseWithRetry ()
+		public void DirectoryInUseWithRetry ()
 		{
-			if (OS.IsMac) {
-				Assert.Ignore ("This is not an issue on macos.");
-				return;
-			}
-			var file = NewFile ();
 			var task = CreateTask ();
-			var ev = new ManualResetEvent (false);
-			var t = TPL.Task.Run (async () => {
-				using (var f = File.OpenWrite (file)) {
-					ev.Set ();
-					await TPL.Task.Delay (2500);
-				}
-			});
-			ev.WaitOne ();
-			Assert.IsTrue (task.Execute (), "task.Execute() should have succeeded.");
-			Assert.AreEqual (1, task.RemovedDirectories.Length, "Changes should have been made.");
-			DirectoryAssert.DoesNotExist (tempDirectory);
-			await t;
+			task.RetryDelayMs = 0;
+			AssertRetriesLockedDirectory (task);
 		}
 
 		[Test]
@@ -185,27 +168,52 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		public async TPL.Task DirectoryInUseWithCustomRetry ()
+		public void DirectoryInUseWithCustomRetry ()
 		{
-			if (!OS.IsWindows) {
-				Assert.Ignore ("This is not an issue on non-Windows platforms.");
-				return;
-			}
+			AssertRetriesLockedDirectory (CreateTaskWithRetry (retryAttempts: 3, retryDelayMs: 0));
+		}
+
+		[Test]
+		public void DirectoryInUseWithNoRetry ()
+		{
+			AssertRetriesLockedDirectory (CreateTaskWithRetry (retryAttempts: 0, retryDelayMs: 0));
+		}
+
+		void AssertRetriesLockedDirectory (RemoveDirFixed task)
+		{
 			var file = NewFile ();
-			// Test with default retry behavior 
-			var task = CreateTask ();
-			var ev = new ManualResetEvent (false);
-			var t = TPL.Task.Run (async () => {
-				using (var f = File.OpenWrite (file)) {
-					ev.Set ();
-					await TPL.Task.Delay (800); // Should succeed on first retry with default timing
+			using var locked = File.OpenWrite (file);
+			int retryAttempts = task.RetryAttempts >= 0 ? task.RetryAttempts : Files.GetFileWriteRetryAttempts ();
+			int attempts = 0;
+			task.DeleteDirectory = (path, recursive) => {
+				attempts++;
+				if (attempts <= retryAttempts || retryAttempts == 0) {
+					try {
+						if (!IsWindows)
+							throw new IOException ("Simulated locked directory on Unix.", unchecked ((int) 0x80070020));
+						Directory.Delete (path, recursive);
+						Assert.Fail ("Deleting a directory containing a locked file should fail.");
+					} catch (IOException) {
+						if (attempts == retryAttempts)
+							locked.Dispose ();
+						throw;
+					}
 				}
-			});
-			ev.WaitOne ();
-			Assert.IsTrue (task.Execute (), "task.Execute() should have succeeded.");
-			Assert.AreEqual (1, task.RemovedDirectories.Length, "Changes should have been made.");
-			DirectoryAssert.DoesNotExist (tempDirectory);
-			await t;
+				Directory.Delete (path, recursive);
+			};
+			bool deleted = task.Execute ();
+			Assert.AreEqual (retryAttempts + 1, attempts, "Deletion should use exactly the configured number of retries.");
+			if (retryAttempts == 0) {
+				Assert.IsFalse (deleted, "Deleting a locked directory without retries should fail.");
+				Assert.AreEqual (0, task.RemovedDirectories.Length, "No directories should have been removed.");
+				DirectoryAssert.Exists (tempDirectory);
+				locked.Dispose ();
+				Directory.Delete (tempDirectory, recursive: true);
+			} else {
+				Assert.IsTrue (deleted, "task.Execute() should have succeeded.");
+				Assert.AreEqual (1, task.RemovedDirectories.Length, "Changes should have been made.");
+				DirectoryAssert.DoesNotExist (tempDirectory);
+			}
 		}
 	}
 }

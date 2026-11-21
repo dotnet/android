@@ -363,33 +363,32 @@ public class EmulatorRunnerTests
 	[Test]
 	public async Task CancellationToken_AbortsBoot ()
 	{
-		// Verify that cancelling the token during the polling phase causes
-		// BootEmulatorAsync to return promptly rather than blocking for the
-		// full BootTimeout duration.
 		var (tempDir, emuPath) = CreateFakeEmulatorSdk ();
 
 		try {
 			var devices = new List<AdbDeviceInfo> ();
 			var mockAdb = new MockAdbRunner (devices);
+			var pollingStarted = new TaskCompletionSource<bool> (TaskCreationOptions.RunContinuationsAsynchronously);
+			int deviceQueries = 0;
+			mockAdb.OnListDevices = () => {
+				if (Interlocked.Increment (ref deviceQueries) == 2)
+					pollingStarted.TrySetResult (true);
+			};
 
 			var runner = new EmulatorRunner (emuPath);
 			var options = new EmulatorBootOptions {
-				BootTimeout = TimeSpan.FromSeconds (30),
+				BootTimeout = TimeSpan.FromMinutes (5),
 				PollInterval = TimeSpan.FromMilliseconds (50),
 			};
 
 			using var cts = new CancellationTokenSource ();
-			cts.CancelAfter (TimeSpan.FromMilliseconds (300));
-
-			var sw = Stopwatch.StartNew ();
+			var boot = runner.BootEmulatorAsync ("Nonexistent_AVD", mockAdb, options, cts.Token);
 			try {
-				await runner.BootEmulatorAsync ("Nonexistent_AVD", mockAdb, options, cts.Token);
-				Assert.Fail ("Should have thrown OperationCanceledException");
-			} catch (OperationCanceledException) {
-				sw.Stop ();
-				// Should abort well before the 30s BootTimeout
-				Assert.That (sw.Elapsed.TotalSeconds, Is.LessThan (5),
-					"Cancellation should abort within a few seconds, not wait for full timeout");
+				await pollingStarted.Task.WaitAsync (TimeSpan.FromSeconds (30));
+				cts.Cancel ();
+				Assert.CatchAsync<OperationCanceledException> (async () => await boot.WaitAsync (TimeSpan.FromSeconds (30)));
+			} finally {
+				cts.Cancel ();
 			}
 		} finally {
 			DeleteDirectoryWithRetry (tempDir);
