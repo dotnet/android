@@ -8,8 +8,9 @@ using System.Linq;
 using System.Text;
 using Xamarin.Android.Tools;
 using Microsoft.Android.Build.Tasks;
+using Xamarin.Android.Tasks;
 
-namespace Xamarin.Android.Tasks
+namespace Microsoft.Android.Tasks
 {
 	public partial class GenerateLibraryResources
 	{
@@ -21,7 +22,7 @@ namespace Xamarin.Android.Tasks
 			// In some cases (such as ancient support libraries), R.txt does not exist.
 			// We can just use the main app's R.txt file and write *all fields* in this case.
 			foreach (var r_txt in package.TextFiles) {
-				if (!File.Exists (r_txt)) {
+				if (!File.Exists (TaskEnvironment.GetAbsolutePath (r_txt))) {
 					LogDebugMessage ($"Using main R.txt, R.txt does not exist: {r_txt}");
 					package.TextFiles.Clear ();
 					package.TextFiles.Add (main_r_txt);
@@ -88,7 +89,7 @@ namespace Xamarin.Android.Tasks
 
 				writer.Flush ();
 				var r_java = Path.Combine (output_directory, package.Name.Replace ('.', Path.DirectorySeparatorChar), "R.java");
-				if (Files.CopyIfStreamChanged (writer.BaseStream, r_java)) {
+				if (Files.CopyIfStreamChanged (writer.BaseStream, r_java, TaskEnvironment)) {
 					LogDebugMessage ($"Writing: {r_java}");
 				} else {
 					LogDebugMessage ($"Up to date: {r_java}");

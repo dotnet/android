@@ -5,7 +5,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
-using Xamarin.Android.Tasks;
+using Microsoft.Android.Tasks;
 
 namespace Xamarin.Android.Build.Tests
 {
@@ -61,9 +61,10 @@ int styleable Foo_styleable_baz 1";
 			File.WriteAllText (main_r_txt, app_r_txt_contents);
 			File.WriteAllText (manifest, AndroidManifest);
 
-			var references = CreateFauxReferencesDirectory (Path.Combine (tempDirectoryName, "references"), new [] {
-				new ApiInfo { Id = "28", Level = 28, Name = "Pie", FrameworkVersion = "v9.0",  Stable = true },
-			});
+			var references = Path.Combine (Root, tempDirectoryName, "references");
+			Directory.CreateDirectory (Path.Combine (references, "MonoAndroid", "v9.0"));
+			File.WriteAllText (Path.Combine (references, "MonoAndroid", "v9.0", "AndroidApiInfo.xml"),
+				"<AndroidApiInfo><Id>28</Id><Level>28</Level><Name>Pie</Name><Version>v9.0</Version><Stable>true</Stable></AndroidApiInfo>");
 			referenceAssemblyPaths = new [] {
 				Path.Combine (references, "MonoAndroid"),
 			};
@@ -197,7 +198,7 @@ public final class R {
 			for (int i = 0; i < count; i++) {
 				var path = r_txt.Replace ("R.txt", $"R{i}.txt");
 				File.WriteAllText (path, $"int id foo_id_{i} 0x00000000");
-				builder.AppendLine ($"int id foo_id_{i} 0x{(i + 1).ToString ("X8")}");
+				builder.AppendLine (FormattableString.Invariant ($"int id foo_id_{i} 0x{(i + 1):X8}"));
 				r_txt_files.Add (path);
 			}
 			File.WriteAllText (main_r_txt, builder.ToString ());

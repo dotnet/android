@@ -597,6 +597,21 @@ namespace Microsoft.Android.Build.Tasks
 		public static bool ExtractAll (ZipArchive zip, string destination, Action<int, int>? progressCallback = null, Func<string, string>? modifyCallback = null,
 			Func<string, bool>? deleteCallback = null, Func<string, bool>? skipCallback = null, TaskLoggingHelper? log = null)
 		{
+			return ExtractAllCore (zip, destination, progressCallback, modifyCallback, deleteCallback, skipCallback, log, taskEnvironment: null);
+		}
+
+		public static bool ExtractAll (TaskEnvironment taskEnvironment, ZipArchive zip, string destination, Action<int, int>? progressCallback = null,
+			Func<string, string>? modifyCallback = null, Func<string, bool>? deleteCallback = null, Func<string, bool>? skipCallback = null, TaskLoggingHelper? log = null)
+		{
+			if (taskEnvironment == null)
+				throw new ArgumentNullException (nameof (taskEnvironment));
+
+			return ExtractAllCore (zip, destination, progressCallback, modifyCallback, deleteCallback, skipCallback, log, taskEnvironment);
+		}
+
+		static bool ExtractAllCore (ZipArchive zip, string destination, Action<int, int>? progressCallback, Func<string, string>? modifyCallback,
+			Func<string, bool>? deleteCallback, Func<string, bool>? skipCallback, TaskLoggingHelper? log, TaskEnvironment? taskEnvironment)
+		{
 			int i = 0;
 			int total = zip.Entries.Count;
 			bool updated = false;
@@ -630,7 +645,9 @@ namespace Microsoft.Android.Build.Tasks
 						entryStream.CopyTo (memoryStream);
 					memoryStream.Position = 0;
 					try {
-						updated |= CopyIfStreamChanged (memoryStream, outfile);
+						updated |= taskEnvironment == null
+							? CopyIfStreamChanged (memoryStream, outfile)
+							: CopyIfStreamChanged (memoryStream, outfile, taskEnvironment);
 					} catch (PathTooLongException) {
 						throw new PathTooLongException ($"Could not extract \"{entry.FullName}\" to \"{outfile}\". Path is too long.");
 					}

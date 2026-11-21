@@ -21,7 +21,8 @@ This file is used by all project types, including binding projects.
   <UsingTask TaskName="Xamarin.Android.Tasks.GetImportedLibraries"                AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
   <UsingTask TaskName="Xamarin.Android.Tasks.ReadImportedLibrariesCache"          AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
   <UsingTask TaskName="Xamarin.Android.Tasks.ReadLibraryProjectImportsCache"      AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
-  <UsingTask TaskName="Xamarin.Android.Tasks.ResolveLibraryProjectImports"        AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
+  <UsingTask TaskName="Microsoft.Android.Tasks.ResolveLibraryProjectImports" AssemblyFile="$(_MicrosoftAndroidBuildTasksAssembly)" Runtime="NET" TaskFactory="TaskHostFactory" Condition=" '$(MSBuildRuntimeType)' == 'Full' " />
+  <UsingTask TaskName="Microsoft.Android.Tasks.ResolveLibraryProjectImports" AssemblyFile="$(_MicrosoftAndroidBuildTasksAssembly)" Runtime="NET" Condition=" '$(MSBuildRuntimeType)' == 'Core' " />
 
   <PropertyGroup>
     <_LibraryProjectImportsDirectoryName Condition=" '$(_LibraryProjectImportsDirectoryName)' == '' ">jl</_LibraryProjectImportsDirectoryName>

@@ -8,6 +8,25 @@ namespace Microsoft.Android.Build.Tasks
 {
 	public static class AsyncTaskExtensions
 	{
+		public static Task WhenAll<TSource> (this AsyncTaskBase asyncTask, IEnumerable<TSource> source, Action<TSource> body) =>
+			asyncTask.WhenAll (source, body, maxConcurrencyLevel: DefaultMaxConcurrencyLevel);
+
+		public static Task WhenAll<TSource> (this AsyncTaskBase asyncTask, IEnumerable<TSource> source, Action<TSource> body, int maxConcurrencyLevel, TaskCreationOptions creationOptions = TaskCreationOptions.LongRunning)
+		{
+			var scheduler = GetTaskScheduler (maxConcurrencyLevel);
+			var tasks = new List<Task> ();
+			foreach (var s in source) {
+				tasks.Add (Task.Factory.StartNew (() => {
+					try {
+						body (s);
+					} catch (Exception exc) {
+						LogErrorAndCancel (asyncTask, exc);
+					}
+				}, asyncTask.CancellationToken, creationOptions, scheduler));
+			}
+			return Task.WhenAll (tasks);
+		}
+
 		/// <summary>
 		/// Creates a collection of Task with proper CancellationToken and error handling and waits via Task.WhenAll
 		/// </summary>
@@ -119,11 +138,35 @@ namespace Microsoft.Android.Build.Tasks
 
 		static int DefaultMaxConcurrencyLevel => Math.Max (1, Environment.ProcessorCount - 1);
 
-		static void LogErrorAndCancel (AsyncTask asyncTask, Exception exc)
+		static void LogErrorAndCancel (AsyncTaskBase asyncTask, Exception exc)
 		{
 			asyncTask.LogCodedError ("XA0000", Properties.Resources.XA0000_Exception, exc);
 			asyncTask.Cancel ();
 		}
+
+		/// <summary>
+		/// Calls Task.Factory.StartNew() with a proper CancellationToken, TaskScheduler, and TaskCreationOptions.LongRunning.
+		/// </summary>
+		public static Task RunTask (this AsyncTaskBase asyncTask, Action body) =>
+			asyncTask.RunTask (body, maxConcurrencyLevel: DefaultMaxConcurrencyLevel);
+
+		/// <summary>
+		/// Calls Task.Factory.StartNew() with a proper CancellationToken
+		/// </summary>
+		public static Task RunTask (this AsyncTaskBase asyncTask, Action body, int maxConcurrencyLevel, TaskCreationOptions creationOptions = TaskCreationOptions.LongRunning) =>
+			Task.Factory.StartNew (body, asyncTask.CancellationToken, creationOptions, GetTaskScheduler (maxConcurrencyLevel));
+
+		/// <summary>
+		/// Calls Task.Factory.StartNew<T>() with a proper CancellationToken, TaskScheduler, and TaskCreationOptions.LongRunning.
+		/// </summary>
+		public static Task<TSource> RunTask<TSource> (this AsyncTaskBase asyncTask, Func<TSource> body) =>
+			asyncTask.RunTask (body, maxConcurrencyLevel: DefaultMaxConcurrencyLevel);
+
+		/// <summary>
+		/// Calls Task.Factory.StartNew<T>() with a proper CancellationToken.
+		/// </summary>
+		public static Task<TSource> RunTask<TSource> (this AsyncTaskBase asyncTask, Func<TSource> body, int maxConcurrencyLevel, TaskCreationOptions creationOptions = TaskCreationOptions.LongRunning) =>
+			Task.Factory.StartNew (body, asyncTask.CancellationToken, creationOptions, GetTaskScheduler (maxConcurrencyLevel));
 
 		/// <summary>
 		/// Calls Task.Factory.StartNew() with a proper CancellationToken, TaskScheduler, and TaskCreationOptions.LongRunning.

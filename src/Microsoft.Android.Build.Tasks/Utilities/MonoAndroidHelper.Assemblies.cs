@@ -2,6 +2,8 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Reflection.Metadata;
+using System.Reflection.PortableExecutable;
 
 using Microsoft.Android.Build.Tasks;
 using Microsoft.Build.Framework;
@@ -12,6 +14,70 @@ namespace Xamarin.Android.Tasks;
 // Linked into the legacy tasks as well: keep these assembly-list helpers netstandard2.0 compatible.
 partial class MonoAndroidHelper
 {
+	public static bool IsFrameworkAssembly (string assembly)
+	{
+		return IsFrameworkAssemblyName (Path.GetFileNameWithoutExtension (assembly));
+	}
+
+	internal static bool IsFrameworkAssemblyName (string name) =>
+		name.Equals ("Mono.Android", StringComparison.OrdinalIgnoreCase) ||
+		name.Equals ("Java.Interop", StringComparison.OrdinalIgnoreCase);
+
+	public static bool IsMonoAndroidAssembly (ITaskItem assembly)
+	{
+		var tfi = assembly.GetMetadata ("TargetFrameworkIdentifier");
+		if (tfi.IndexOf ("Android", StringComparison.OrdinalIgnoreCase) != -1)
+			return true;
+
+		var tpi = assembly.GetMetadata ("TargetPlatformIdentifier");
+		if (tpi.IndexOf ("Android", StringComparison.OrdinalIgnoreCase) != -1)
+			return true;
+
+		return bool.TryParse (assembly.GetMetadata ("HasMonoAndroidReference"), out bool value) && value;
+	}
+
+	public static bool HasMonoAndroidReference (ITaskItem assembly, TaskEnvironment taskEnvironment)
+	{
+		if (IsMonoAndroidAssembly (assembly))
+			return true;
+
+		using var pe = new PEReader (File.OpenRead (taskEnvironment.GetAbsolutePath (assembly.ItemSpec)));
+		if (!pe.HasMetadata)
+			return false;
+		return HasMonoAndroidReference (pe.GetMetadataReader ());
+	}
+
+	public static bool HasMonoAndroidReference (MetadataReader reader)
+	{
+		foreach (var handle in reader.AssemblyReferences) {
+			var reference = reader.GetAssemblyReference (handle);
+			if (reader.GetString (reference.Name) == "Mono.Android")
+				return true;
+		}
+		return false;
+	}
+
+	public static bool IsFrameworkAssembly (ITaskItem assembly)
+	{
+		if (IsFrameworkAssembly (assembly.ItemSpec))
+			return true;
+
+		var frameworkReferenceName = assembly.GetMetadata ("FrameworkReferenceName") ?? "";
+		if (frameworkReferenceName == "Microsoft.Android")
+			return true;
+		if (frameworkReferenceName.StartsWith ("Microsoft.NETCore.", StringComparison.OrdinalIgnoreCase))
+			return true;
+
+		return IsFromAKnownRuntimePack (assembly);
+	}
+
+	public static bool IsFromAKnownRuntimePack (ITaskItem assembly)
+	{
+		string packageId = assembly.GetMetadata ("NuGetPackageId") ?? "";
+		return packageId.StartsWith ("Microsoft.NETCore.App.Runtime.", StringComparison.OrdinalIgnoreCase) ||
+			packageId.StartsWith ("Microsoft.Android.Runtime.", StringComparison.OrdinalIgnoreCase);
+	}
+
 	public static string GetAssemblyAbi (ITaskItem asmItem)
 	{
 		string? abi = asmItem.GetMetadata ("Abi");

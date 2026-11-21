@@ -44,24 +44,24 @@ namespace Xamarin.Android.Tasks
 				if (!Directory.Exists (extractedDirectory.ItemSpec)) {
 					continue;
 				}
-				string originalFile = extractedDirectory.GetMetadata (ResolveLibraryProjectImports.OriginalFile);
-				string nuGetPackageId = extractedDirectory.GetMetadata (ResolveLibraryProjectImports.NuGetPackageId);
-				string nuGetPackageVersion = extractedDirectory.GetMetadata (ResolveLibraryProjectImports.NuGetPackageVersion);
+				string originalFile = extractedDirectory.GetMetadata (LibraryProjectImportsMetadata.OriginalFile);
+				string nuGetPackageId = extractedDirectory.GetMetadata (LibraryProjectImportsMetadata.NuGetPackageId);
+				string nuGetPackageVersion = extractedDirectory.GetMetadata (LibraryProjectImportsMetadata.NuGetPackageVersion);
 				foreach (var file in Directory.EnumerateFiles (extractedDirectory.ItemSpec, "*", SearchOption.AllDirectories)) {
 					if (file.EndsWith (".so", StringComparison.OrdinalIgnoreCase)) {
 						if (AndroidRidAbiHelper.GetNativeLibraryAbi (file) != null)
 							nativeLibraries.Add (new TaskItem (file, new Dictionary<string, string> {
-								[ResolveLibraryProjectImports.OriginalFile] = originalFile,
-								[ResolveLibraryProjectImports.NuGetPackageId] = nuGetPackageId,
-								[ResolveLibraryProjectImports.NuGetPackageVersion] = nuGetPackageVersion,
+								[LibraryProjectImportsMetadata.OriginalFile] = originalFile,
+								[LibraryProjectImportsMetadata.NuGetPackageId] = nuGetPackageId,
+								[LibraryProjectImportsMetadata.NuGetPackageVersion] = nuGetPackageVersion,
 							}));
 						continue;
 					}
 					if (file.EndsWith (".jar", StringComparison.OrdinalIgnoreCase)) {
 						jarFiles.Add (new TaskItem (file, new Dictionary<string, string> {
-								[ResolveLibraryProjectImports.OriginalFile] = originalFile,
-								[ResolveLibraryProjectImports.NuGetPackageId] = nuGetPackageId,
-								[ResolveLibraryProjectImports.NuGetPackageVersion] = nuGetPackageVersion,
+								[LibraryProjectImportsMetadata.OriginalFile] = originalFile,
+								[LibraryProjectImportsMetadata.NuGetPackageId] = nuGetPackageId,
+								[LibraryProjectImportsMetadata.NuGetPackageVersion] = nuGetPackageVersion,
 							}));
 						continue;
 					}
@@ -78,9 +78,9 @@ namespace Xamarin.Android.Tasks
 							continue;
 						}
 						manifestDocuments.Add (new TaskItem (file, new Dictionary<string, string> {
-							[ResolveLibraryProjectImports.OriginalFile] = originalFile,
-							[ResolveLibraryProjectImports.NuGetPackageId] = nuGetPackageId,
-							[ResolveLibraryProjectImports.NuGetPackageVersion] = nuGetPackageVersion,
+							[LibraryProjectImportsMetadata.OriginalFile] = originalFile,
+							[LibraryProjectImportsMetadata.NuGetPackageId] = nuGetPackageId,
+							[LibraryProjectImportsMetadata.NuGetPackageVersion] = nuGetPackageVersion,
 						}));
 					}
 				}
@@ -94,9 +94,9 @@ namespace Xamarin.Android.Tasks
 				var document = new XDocument (
 							new XDeclaration ("1.0", "UTF-8", null),
 							new XElement ("Paths",
-									new XElement ("ManifestDocuments", ManifestDocuments.ToXElements ("ManifestDocument", ResolveLibraryProjectImports.KnownMetadata)),
-									new XElement ("NativeLibraries", NativeLibraries.ToXElements ("NativeLibrary", ResolveLibraryProjectImports.KnownMetadata)),
-									new XElement ("Jars", Jars.ToXElements ("Jar", ResolveLibraryProjectImports.KnownMetadata))
+									new XElement ("ManifestDocuments", ManifestDocuments.ToXElements ("ManifestDocument", LibraryProjectImportsMetadata.KnownMetadata)),
+									new XElement ("NativeLibraries", NativeLibraries.ToXElements ("NativeLibrary", LibraryProjectImportsMetadata.KnownMetadata)),
+									new XElement ("Jars", Jars.ToXElements ("Jar", LibraryProjectImportsMetadata.KnownMetadata))
 						));
 				document.SaveIfChanged (CacheFile);
 			}
