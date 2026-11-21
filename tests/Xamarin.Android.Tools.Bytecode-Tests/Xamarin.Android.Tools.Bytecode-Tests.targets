@@ -14,6 +14,8 @@
   <ItemGroup>
     <_BuildClassOutputs Include="@(TestJar->'$(IntermediateOutputPath)classes\%(RecursiveDir)%(Filename).class')" />
     <_BuildClassOutputs Include="@(TestJarNoParameters->'$(IntermediateOutputPath)classes\%(RecursiveDir)%(Filename).class')" />
+    <_BuildClassOutputs Remove="$(IntermediateOutputPath)classes\com\xamarin\module-info.class" />
+    <_BuildClassOutputs Include="$(IntermediateOutputPath)classes\module-info.class" Condition="Exists('java/com/xamarin/module-info.java')" />
   </ItemGroup>
 
   <Target Name="BuildClasses"

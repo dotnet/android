@@ -39,15 +39,16 @@
     />
   </Target>
 
-  <Target Name="GenerateWorkloadDependencies"
+  <Target Name="_GenerateWorkloadDependenciesInputs"
       DependsOnTargets="_CheckDeps">
-
     <PropertyGroup>
       <_AndroidManifestFeed>$(MSBuildThisFileDirectory)AndroidManifestFeed_d18.0.xml</_AndroidManifestFeed>
       <_Feed Condition=" Exists('$(_AndroidManifestFeed)') ">$(_AndroidManifestFeed)</_Feed>
       <_Feed Condition=" '$(_Feed)' == '' ">https://aka.ms/AndroidManifestFeed/d18-0</_Feed>
       <_Project>$(MSBuildThisFileDirectory)workload-dependencies.csproj</_Project>
       <WorkloadDependenciesPath Condition=" '$(WorkloadDependenciesPath)' == '' ">$(OutputPath)workload-manifest\WorkloadDependencies.json</WorkloadDependenciesPath>
+      <_WorkloadDependenciesTool>$(MSBuildThisFileDirectory)bin/$(Configuration)/$(DotNetStableTargetFramework)/workload-dependencies.dll</_WorkloadDependenciesTool>
+      <_WorkloadDependenciesStateFile>$(MSBuildThisFileDirectory)obj/$(Configuration)/$(DotNetStableTargetFramework)/WorkloadDependencies.inputs</_WorkloadDependenciesStateFile>
     </PropertyGroup>
 
     <ItemGroup>
@@ -55,10 +56,6 @@
           Include="$(AndroidPreviewPlatformIds.Split(','))"
           Condition=" '$(AndroidPreviewPlatformIds)' != '' "
       />
-      <_WorkloadDeps Include="--project &quot;$(_Project)&quot;" />
-      <_WorkloadDeps Include="-p:DotNetStableTargetFramework=$(DotNetStableTargetFramework)" />
-      <_WorkloadDeps Include="-p:MonoOptionsVersion=$(MonoOptionsVersion)" />
-      <_WorkloadDeps Include="--" />
       <_WorkloadDeps Include="&quot;--feed=$(_Feed)&quot;" />
       <_WorkloadDeps Include="-o &quot;$(WorkloadDependenciesPath)&quot;" />
       <_WorkloadDeps Include="--build-tools-version=$(AndroidSdkBuildToolsVersion)" />
@@ -73,10 +70,61 @@
           Condition=" '%(_AndroidPreviewPlatformId.Identity)' != '' "
       />
       <_WorkloadDeps Include="--workload-version=$(WorkloadVersion)" />
+      <_WorkloadDependenciesState Include="Configuration=$(Configuration)" />
+      <_WorkloadDependenciesState Include="DotNetPreviewTool=$(DotNetPreviewTool)" />
+      <_WorkloadDependenciesState Include="DotNetStableTargetFramework=$(DotNetStableTargetFramework)" />
+      <_WorkloadDependenciesState Include="MonoOptionsVersion=$(MonoOptionsVersion)" />
+      <_WorkloadDependenciesState Include="WorkloadDependenciesPath=$(WorkloadDependenciesPath)" />
+      <_WorkloadDependenciesState Include="@(_WorkloadDeps)" />
+      <_WorkloadDependenciesInput Include="$(MSBuildProjectFullPath)" />
+      <_WorkloadDependenciesInput Include="$(_Project)" />
+      <_WorkloadDependenciesInput Include="$(MSBuildThisFileDirectory)Directory.Build.props" />
+      <_WorkloadDependenciesInput Include="$(MSBuildThisFileDirectory)../../Directory.Build.targets" Condition="Exists('$(MSBuildThisFileDirectory)../../Directory.Build.targets')" />
+      <_WorkloadDependenciesInput Include="$(MSBuildThisFileDirectory)Program.cs" />
+      <_WorkloadDependenciesInput Include="$(MSBuildThisFileDirectory)obj/project.assets.json" />
+      <_WorkloadDependenciesInput Include="$(_WorkloadDependenciesTool)" />
+      <_WorkloadDependenciesInput Include="$(MSBuildThisFileDirectory)bin/$(Configuration)/$(DotNetStableTargetFramework)/workload-dependencies.deps.json" />
+      <_WorkloadDependenciesInput Include="$(MSBuildThisFileDirectory)bin/$(Configuration)/$(DotNetStableTargetFramework)/workload-dependencies.runtimeconfig.json" />
+      <_WorkloadDependenciesInput Include="$(MSBuildThisFileDirectory)bin/$(Configuration)/$(DotNetStableTargetFramework)/Mono.Options.dll" />
+      <_WorkloadDependenciesInput Include="$(MSBuildThisFileDirectory)../../NuGet.config" Condition="Exists('$(MSBuildThisFileDirectory)../../NuGet.config')" />
+      <_WorkloadDependenciesInput Include="$(MSBuildThisFileDirectory)../../global.json" Condition="Exists('$(MSBuildThisFileDirectory)../../global.json')" />
+      <_WorkloadDependenciesInput Include="$(_Feed)" Condition="Exists('$(_Feed)')" />
       <!-- $(AndroidSdkEmulatorVersion) is unversioned, so skip -->
     </ItemGroup>
 
-    <Exec Command="dotnet run @(_WorkloadDeps, ' ')" />
+    <MakeDir Directories="$([System.IO.Path]::GetDirectoryName('$(_WorkloadDependenciesStateFile)'))" />
+    <WriteLinesToFile
+        File="$(_WorkloadDependenciesStateFile)"
+        Lines="@(_WorkloadDependenciesState)"
+        Overwrite="true"
+        WriteOnlyWhenDifferent="true"
+        Condition="Exists('$(_Feed)')"
+    />
+    <WriteLinesToFile
+        File="$(_WorkloadDependenciesStateFile)"
+        Lines="@(_WorkloadDependenciesState)"
+        Overwrite="true"
+        Condition="!Exists('$(_Feed)')"
+    />
+
+    <ItemGroup>
+      <_WorkloadDependenciesInput Include="$(_WorkloadDependenciesStateFile)" />
+      <FileWrites Include="$(_WorkloadDependenciesStateFile)" />
+    </ItemGroup>
+  </Target>
+
+  <Target Name="GenerateWorkloadDependencies"
+      DependsOnTargets="_GenerateWorkloadDependenciesInputs"
+      Inputs="@(_WorkloadDependenciesInput)"
+      Outputs="$(WorkloadDependenciesPath)">
+    <MSBuild
+        Projects="$(_Project)"
+        Targets="Restore;Build"
+        Properties="Configuration=$(Configuration);DotNetStableTargetFramework=$(DotNetStableTargetFramework);MonoOptionsVersion=$(MonoOptionsVersion)"
+    />
+    <Exec
+        Command="&quot;$(DotNetPreviewTool)&quot; &quot;$(_WorkloadDependenciesTool)&quot; @(_WorkloadDeps, ' ')"
+    />
   </Target>
 
 </Project>
