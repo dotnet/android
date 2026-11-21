@@ -1500,9 +1500,12 @@ namespace Library1 {
 			RunProjectAndAssert (proj, builder);
 
 			var logcatPath = Path.Combine (Root, builder.ProjectDirectory, "logcat.log");
-			Assert.IsTrue (MonitorAdbLogcat ((line) => {
+			bool completed = MonitorAdbLogcat ((line) => {
 				return line.Contains ("All regression tests completed.");
-			}, logcatPath, 90), "Linker test app did not run successfully.");
+			}, logcatPath, 90);
+			if (!completed) {
+				Assert.Fail ($"Linker test app did not run successfully.{getLinkerTestAppDiagnostics ()}");
+			}
 
 			var logcatOutput = File.ReadAllText (logcatPath);
 			StringAssert.Contains ("[PASS]", logcatOutput);
@@ -1516,6 +1519,35 @@ namespace Library1 {
 			{
 				using (var sr = new StreamReader (typeof (InstallAndRunTests).Assembly.GetManifestResourceStream ($"Xamarin.Android.Build.Tests.Resources.LinkDescTest.{name}.cs")))
 					return sr.ReadToEnd ();
+			}
+
+			// CI does not upload logcat files when the auto-retry passes, so surface enough
+			// to tell a launch failure, crash, ANR, or a hung regression test apart.
+			string getLinkerTestAppDiagnostics ()
+			{
+				const int MaxLines = 60;
+				const int MaxLineLength = 1000;
+				var lines = File.ReadLines (logcatPath)
+					.Where (l => l.Contains ("XALINKERTESTS", StringComparison.Ordinal) ||
+						l.Contains (proj.PackageName, StringComparison.Ordinal) ||
+						l.Contains ("AndroidRuntime", StringComparison.Ordinal) ||
+						l.Contains (" F DEBUG", StringComparison.Ordinal))
+					.ToList ();
+				if (lines.Count == 0) {
+					return $"{Environment.NewLine}No app, crash, or ANR lines found in {logcatPath}.";
+				}
+				var sb = new StringBuilder ();
+				sb.AppendLine ();
+				sb.Append ($"Relevant logcat lines from {logcatPath}");
+				if (lines.Count > MaxLines) {
+					sb.Append ($" (last {MaxLines} of {lines.Count})");
+				}
+				sb.Append (':');
+				foreach (var line in lines.Skip (Math.Max (0, lines.Count - MaxLines))) {
+					sb.AppendLine ();
+					sb.Append (line.Length > MaxLineLength ? line.Substring (0, MaxLineLength) + "..." : line);
+				}
+				return sb.ToString ();
 			}
 		}
 
