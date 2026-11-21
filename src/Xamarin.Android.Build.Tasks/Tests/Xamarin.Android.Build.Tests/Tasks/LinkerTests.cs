@@ -7,6 +7,7 @@ using System.Security;
 using System.Text;
 using System.Text.Json;
 using Java.Interop.Tools.Cecil;
+using Microsoft.Build.Logging;
 using Microsoft.Build.Utilities;
 using Mono.Cecil;
 using Mono.Cecil.Cil;
@@ -880,8 +881,11 @@ $@"			var myButton = new AttributedButtonStub (this);
 				// Debug configuration
 				AddTestData (isRelease: false, setAndroidAddKeepAlivesTrue: false, setLinkModeNone: false, shouldAddKeepAlives: false, runtime);
 
-				// The default trimmable path does not run legacy assembly fixups without trimming.
-				AddTestData (isRelease: false, setAndroidAddKeepAlivesTrue: true,  setLinkModeNone: false, shouldAddKeepAlives: false, runtime);
+				// Modern .NET for Android assemblies are skipped even when the compatibility path runs.
+				AddTestData (isRelease: false, setAndroidAddKeepAlivesTrue: true,  setLinkModeNone: false,
+					shouldAddKeepAlives: false, runtime,
+					enableLegacyCompatibilityAssemblyFixups: true,
+					hasModernTargetPlatformAttribute: true);
 
 				// Release configuration
 				AddTestData (isRelease: true,  setAndroidAddKeepAlivesTrue: false, setLinkModeNone: false, shouldAddKeepAlives: true,  runtime);
@@ -892,12 +896,14 @@ $@"			var myButton = new AttributedButtonStub (this);
 
 			AddTestData (isRelease: false, setAndroidAddKeepAlivesTrue: true, setLinkModeNone: false,
 				shouldAddKeepAlives: true, AndroidRuntime.CoreCLR,
-				enableLegacyCompatibilityAssemblyFixups: true);
+				enableLegacyCompatibilityAssemblyFixups: true,
+				useMultipleRids: true);
 
 			return ret;
 
 			void AddTestData (bool isRelease, bool setAndroidAddKeepAlivesTrue, bool setLinkModeNone,
-				bool shouldAddKeepAlives, AndroidRuntime runtime, bool enableLegacyCompatibilityAssemblyFixups = false)
+				bool shouldAddKeepAlives, AndroidRuntime runtime, bool enableLegacyCompatibilityAssemblyFixups = false,
+				bool hasModernTargetPlatformAttribute = false, bool useMultipleRids = false)
 			{
 				ret.Add (new object[] {
 					isRelease,
@@ -906,6 +912,8 @@ $@"			var myButton = new AttributedButtonStub (this);
 					shouldAddKeepAlives,
 					runtime,
 					enableLegacyCompatibilityAssemblyFixups,
+					hasModernTargetPlatformAttribute,
+					useMultipleRids,
 				});
 			}
 		}
@@ -913,7 +921,8 @@ $@"			var myButton = new AttributedButtonStub (this);
 		[Test]
 		[TestCaseSource (nameof (Get_AndroidAddKeepAlivesData))]
 		public void AndroidAddKeepAlives (bool isRelease, bool setAndroidAddKeepAlivesTrue, bool setLinkModeNone,
-			bool shouldAddKeepAlives, AndroidRuntime runtime, bool enableLegacyCompatibilityAssemblyFixups)
+			bool shouldAddKeepAlives, AndroidRuntime runtime, bool enableLegacyCompatibilityAssemblyFixups,
+			bool hasModernTargetPlatformAttribute, bool useMultipleRids)
 		{
 			var proj = new XamarinAndroidApplicationProject {
 				IsRelease = isRelease,
@@ -945,10 +954,12 @@ namespace UnnamedProject {
 			};
 
 			proj.SetRuntime (runtime);
-			proj.SetRuntimeIdentifiers (["arm64-v8a"]);
+			proj.SetRuntimeIdentifiers (useMultipleRids ? ["arm64-v8a", "x86_64"] : ["arm64-v8a"]);
 			proj.SetProperty ("AllowUnsafeBlocks", "True");
-			// We don't want `[TargetPlatform ("android35")]` to get set because we don't do AddKeepAlives on .NET for Android assemblies
-			proj.SetProperty ("GenerateAssemblyInfo", "False");
+			if (!hasModernTargetPlatformAttribute) {
+				// Avoid the target-platform marker because the fixup skips modern .NET for Android assemblies.
+				proj.SetProperty ("GenerateAssemblyInfo", "False");
+			}
 
 			if (setAndroidAddKeepAlivesTrue)
 				proj.SetProperty ("AndroidAddKeepAlives", "True");
@@ -961,18 +972,31 @@ namespace UnnamedProject {
 
 			using (var b = CreateApkBuilder ()) {
 				Assert.IsTrue (b.Build (proj), "Building a project should have succeded.");
+				var keepAliveWarnings = GetBuildWarnings (b, "XA0150");
+				Assert.AreEqual (shouldAddKeepAlives ? 1 : 0, keepAliveWarnings.Length,
+					"The build should warn exactly once only when the KeepAlive fixup changes an assembly.");
+				if (shouldAddKeepAlives) {
+					StringAssert.Contains ("UnnamedProject", keepAliveWarnings [0]);
+				}
 
 				string projectDir = Path.Combine (proj.Root, b.ProjectDirectory);
 				var assemblyFile = "UnnamedProject.dll";
 				if (!isRelease || setLinkModeNone) {
+					int checkedAssemblies = 0;
 					foreach (string abi in proj.GetRuntimeIdentifiersAsAbis ()) {
 						string assemblyDir = runtime switch {
 							AndroidRuntime.NativeAOT => Path.Combine (MonoAndroidHelper.AbiToRid (abi), "linked"),
 							_ => Path.Combine ("android", "assets", abi)
 						};
+						string assemblyPath = b.Output.GetIntermediaryPath (Path.Combine (assemblyDir, assemblyFile));
+						if (!File.Exists (assemblyPath)) {
+							continue;
+						}
 
-						CheckAssembly (b.Output.GetIntermediaryPath (Path.Combine (assemblyDir, assemblyFile)), projectDir);
+						CheckAssembly (assemblyPath, projectDir);
+						checkedAssemblies++;
 					}
+					Assert.Greater (checkedAssemblies, 0, "At least one untrimmed assembly output should be checked.");
 				} else {
 					CheckAssembly (BuildTest.GetLinkedPath (b,  true, assemblyFile), projectDir);
 				}
@@ -1009,6 +1033,25 @@ namespace UnnamedProject {
 				string not = shouldAddKeepAlives ? String.Empty : " not";
 				Assert.IsTrue (hasKeepAliveCall == shouldAddKeepAlives, $"KeepAlive call should{not} have been found (assembly '{shortAssemblyPath}')");
 			}
+		}
+
+		static string [] GetBuildWarnings (ProjectBuilder builder, string code)
+		{
+			string binlog = Path.Combine (
+				builder.Root,
+				builder.ProjectDirectory,
+				$"{Path.GetFileNameWithoutExtension (builder.BuildLogFile)}.binlog");
+			Assert.IsTrue (File.Exists (binlog), $"Build log '{binlog}' should exist.");
+
+			var warnings = new List<string> ();
+			var replay = new BinaryLogReplayEventSource ();
+			replay.WarningRaised += (_, warning) => {
+				if (warning.Code == code) {
+					warnings.Add (warning.Message);
+				}
+			};
+			replay.Replay (binlog);
+			return warnings.ToArray ();
 		}
 
 		[Test]

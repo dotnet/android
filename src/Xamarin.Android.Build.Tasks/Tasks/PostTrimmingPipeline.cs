@@ -84,6 +84,8 @@ public class PostTrimmingPipeline : AndroidTask
 		}
 
 		if (AddKeepAlives) {
+			var reporter = new KeepAliveFixupReporter (
+				(message, args) => Log.LogCodedWarning ("XA0150", message, args));
 			// Memoize the corlib resolution so the attempt (and any error logging) happens at most once,
 			// regardless of how many assemblies/methods need KeepAlive injection.
 			AssemblyDefinition? corlibAssembly = null;
@@ -100,7 +102,8 @@ public class PostTrimmingPipeline : AndroidTask
 					}
 					return corlibAssembly;
 				},
-				(msg) => Log.LogDebugMessage (msg)));
+				(msg) => Log.LogDebugMessage (msg),
+				reporter));
 		}
 
 		foreach (var (item, assembly) in loadedAssemblies) {

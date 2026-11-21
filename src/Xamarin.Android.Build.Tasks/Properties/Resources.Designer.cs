@@ -437,6 +437,15 @@ namespace Xamarin.Android.Tasks.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Assembly &apos;{0}&apos; from &apos;{1}&apos; required the deprecated GC.KeepAlive compatibility fixup. This fixup will no longer be applied in the next .NET for Android release. Update to a library version built with the current .NET for Android toolchain, or contact the library author..
+        /// </summary>
+        public static string XA0150 {
+            get {
+                return ResourceManager.GetString("XA0150", resourceCulture);
+            }
+        }
+
+        /// <summary>
         ///   Looks up a localized string similar to There was a problem parsing {0}. This is likely due to incomplete or invalid XML. Exception: {1}.
         /// </summary>
         public static string XA1000 {
