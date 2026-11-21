@@ -21,6 +21,7 @@ namespace Android.AppTests
 		public void ManifestOnlyLibraryActivity_SurvivesTrimmingAndRunsManagedOnCreate ()
 		{
 			Interlocked.Exchange (ref TrimmableManifestActivityState.OnCreateCount, 0);
+			TrimmableManifestActivityState.OnCreateCompleted.Reset ();
 
 			var context = Application.Context;
 			using var component = new ComponentName (context.PackageName, ActivityName);
@@ -29,11 +30,8 @@ namespace Android.AppTests
 			intent.AddFlags (ActivityFlags.NewTask);
 			context.StartActivity (intent);
 
-			var deadline = DateTime.UtcNow.AddSeconds (10);
-			while (Volatile.Read (ref TrimmableManifestActivityState.OnCreateCount) == 0 && DateTime.UtcNow < deadline) {
-				Thread.Sleep (100);
-			}
-
+			Assert.IsTrue (TrimmableManifestActivityState.OnCreateCompleted.Wait (TimeSpan.FromSeconds (30)),
+				$"Managed OnCreate did not run for manifest-only component '{ActivityName}'.");
 			Assert.AreEqual (1, Volatile.Read (ref TrimmableManifestActivityState.OnCreateCount),
 				$"Managed OnCreate did not run exactly once for manifest-only component '{ActivityName}'.");
 		}
