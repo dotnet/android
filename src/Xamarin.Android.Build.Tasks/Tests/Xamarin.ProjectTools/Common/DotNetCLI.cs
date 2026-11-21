@@ -24,6 +24,8 @@ namespace Xamarin.ProjectTools
 
 		readonly string projectOrSolution;
 
+		bool IsFileBasedApp => projectOrSolution.EndsWith (".cs", StringComparison.OrdinalIgnoreCase);
+
 		public DotNetCLI (string projectOrSolution)
 		{
 			this.projectOrSolution = projectOrSolution;
@@ -315,13 +317,17 @@ namespace Xamarin.ProjectTools
 			var arguments = new List<string> {
 				verb,
 				$"\"{projectOrSolution}\"",
-				"/noconsolelogger",
-				$"/flp1:LogFile=\"{BuildLogFile}\";Encoding=UTF-8;Verbosity={Verbosity}",
-				$"/bl:\"{Path.Combine (testDir, $"{(string.IsNullOrEmpty (target) ? "msbuild" : target)}.binlog")}\"",
-				"-m:1",
-				"-nodeReuse:false",
-				"/p:_DisableParallelAot=true",
 			};
+			// File-based apps (`dotnet build App.cs`) reject file loggers and node options; their console output
+			// goes to ProcessLogFile instead of BuildLogFile.
+			if (!IsFileBasedApp) {
+				arguments.Add ("/noconsolelogger");
+				arguments.Add ($"/flp1:LogFile=\"{BuildLogFile}\";Encoding=UTF-8;Verbosity={Verbosity}");
+				arguments.Add ("-m:1");
+				arguments.Add ("-nodeReuse:false");
+			}
+			arguments.Add ($"/bl:\"{Path.Combine (testDir, $"{(string.IsNullOrEmpty (target) ? "msbuild" : target)}.binlog")}\"");
+			arguments.Add ("/p:_DisableParallelAot=true");
 			if (!string.IsNullOrEmpty (target)) {
 				arguments.Add ($"/t:{target}");
 			}
