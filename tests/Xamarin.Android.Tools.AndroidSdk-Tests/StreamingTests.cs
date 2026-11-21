@@ -224,6 +224,7 @@ public class StreamingTests
 			INSTRUMENTATION_STATUS: event=discovered
 			INSTRUMENTATION_STATUS: test=Tests.One
 			INSTRUMENTATION_STATUS_CODE: 0
+			INSTRUMENTATION_RESULT: discovered=1
 			{resultCode}
 			""", listTests: true, stderr: "* daemon started successfully");
 		if (finished) {
@@ -231,7 +232,7 @@ public class StreamingTests
 			Assert.That (await application.RunAsync (), Is.Zero);
 		} else {
 			var ex = Assert.ThrowsAsync<InvalidOperationException> (async () => { await application.RunAsync (); });
-			Assert.That (ex?.Message, Does.Contain ("Instrumentation did not finish"));
+			Assert.That (ex?.Message, Does.Contain ("did not finish successfully"));
 		}
 	}
 
