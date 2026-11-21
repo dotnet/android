@@ -21,9 +21,7 @@ namespace Xamarin.Android.Build.Tests;
 [Category ("UsesDevice")]
 public class NativeLibraryLoadTests : DeviceTest
 {
-	// Mitigation for an unconfirmed hypothesis: passing CI launches of the JIT-only
-	// extractNativeLibs=false APK on the x86_64 API 29 emulator took up to ~90s, so some
-	// timeouts may be slow launches beyond ActivityStartTimeoutInSeconds (150s).
+	// The missing CI marker may be caused by slow startup, but the root cause is unknown.
 	const int PayloadCheckTimeoutInSeconds = 300;
 
 	[Test]
@@ -36,7 +34,7 @@ public class NativeLibraryLoadTests : DeviceTest
 			return;
 		}
 
-		// Android package names are lowercase; DeviceTearDown uninstalls this exact name.
+		// The project lowercases package names; DeviceTearDown uninstalls this exact name.
 		string packageName = PackageUtils.MakePackageName (
 			AndroidRuntime.CoreCLR, $"assemblystore{(is64Bit ? 64 : 32)}{extractNativeLibs}".ToLowerInvariant ());
 		var proj = new XamarinAndroidApplicationProject (packageName: packageName) {
@@ -125,7 +123,7 @@ public class NativeLibraryLoadTests : DeviceTest
 		bool payloadCheckStarted = false;
 		string payloadFailure = null;
 		var launchTimer = new Stopwatch ();
-		TimeSpan? probeStartedAt = null;
+		TimeSpan? probeObservedAt = null;
 		string logcatFile = Path.Combine (Root, builder.ProjectDirectory, "assembly-store-loader.log");
 
 		ClearAdbLogcat ();
@@ -133,7 +131,7 @@ public class NativeLibraryLoadTests : DeviceTest
 			line => {
 				if (!payloadCheckStarted && line.Contains ("ASSEMBLY_STORE_PAYLOAD_CHECK_STARTED", StringComparison.Ordinal)) {
 					payloadCheckStarted = true;
-					probeStartedAt = launchTimer.Elapsed;
+					probeObservedAt = launchTimer.Elapsed;
 				}
 				if (line.Contains (failedMarker, StringComparison.Ordinal)) {
 					payloadFailure = line;
@@ -154,8 +152,8 @@ public class NativeLibraryLoadTests : DeviceTest
 				Assert.AreEqual (0, code, $"The loader test activity should start: {output}\n{error}");
 				StringAssert.Contains ("Starting: Intent {", output);
 			});
-		TestContext.Out.WriteLine ($"Assembly-store payload check: started after {probeStartedAt?.TotalSeconds.ToString ("F1", CultureInfo.InvariantCulture) ?? "-"}s, " +
-			$"{(payloadCheckCompleted ? "completed" : "timed out")} after {launchTimer.Elapsed.TotalSeconds.ToString ("F1", CultureInfo.InvariantCulture)}s.");
+		TestContext.Out.WriteLine ($"Assembly-store payload check: probe observed after {probeObservedAt?.TotalSeconds.ToString ("F1", CultureInfo.InvariantCulture) ?? "-"}s, " +
+			$"result {(payloadCheckCompleted ? "observed" : "not observed")} after {launchTimer.Elapsed.TotalSeconds.ToString ("F1", CultureInfo.InvariantCulture)}s.");
 		if (!payloadCheckCompleted) {
 			// Successful auto-retry removes failed TRX results; keep startup/crash evidence in the task log.
 			var diagnostics = File.ReadLines (logcatFile)
