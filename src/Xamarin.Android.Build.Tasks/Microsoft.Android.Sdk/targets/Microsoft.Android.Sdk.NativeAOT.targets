@@ -32,6 +32,9 @@ This file contains the NativeAOT-specific MSBuild logic for .NET for Android.
     <!-- ILC only sets this for NativeLib=Shared, but we need [UnmanagedCallersOnly] methods
          exported as native symbols so JNI can find them via dlsym. -->
     <IlcExportUnmanagedEntrypoints>true</IlcExportUnmanagedEntrypoints>
+    <!-- Console applications keep OutputType=Exe so ILC compiles their entry point; the
+         injected AndroidConsoleInstrumentation calls it instead of a native `main`. -->
+    <CustomNativeMain Condition=" '$(_AndroidConsoleApplication)' == 'true' ">true</CustomNativeMain>
   </PropertyGroup>
 
   <!-- Default property values for NativeAOT Debug configuration -->
