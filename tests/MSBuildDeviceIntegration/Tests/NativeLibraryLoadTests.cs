@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Linq;
@@ -20,6 +21,10 @@ namespace Xamarin.Android.Build.Tests;
 [Category ("UsesDevice")]
 public class NativeLibraryLoadTests : DeviceTest
 {
+	// Launching the JIT-only extractNativeLibs=false APK on the CI x86_64 API 29 emulator
+	// routinely takes 40-90s and occasionally exceeds ActivityStartTimeoutInSeconds (150s).
+	const int PayloadCheckTimeoutInSeconds = 300;
+
 	[Test]
 	public void AssemblyStoreDlopenResolvesOriginalPayload ([Values] bool is64Bit, [Values] bool extractNativeLibs)
 	{
@@ -30,8 +35,9 @@ public class NativeLibraryLoadTests : DeviceTest
 			return;
 		}
 
+		// Android package names are lowercase; DeviceTearDown uninstalls this exact name.
 		string packageName = PackageUtils.MakePackageName (
-			AndroidRuntime.CoreCLR, $"assemblystore{(is64Bit ? 64 : 32)}{extractNativeLibs}");
+			AndroidRuntime.CoreCLR, $"assemblystore{(is64Bit ? 64 : 32)}{extractNativeLibs}".ToLowerInvariant ());
 		var proj = new XamarinAndroidApplicationProject (packageName: packageName) {
 			IsRelease = true,
 		};
@@ -117,12 +123,17 @@ public class NativeLibraryLoadTests : DeviceTest
 		const string failedMarker = "ASSEMBLY_STORE_PAYLOAD_FAILED:";
 		bool payloadCheckStarted = false;
 		string payloadFailure = null;
+		var launchTimer = new Stopwatch ();
+		TimeSpan? probeStartedAt = null;
 		string logcatFile = Path.Combine (Root, builder.ProjectDirectory, "assembly-store-loader.log");
 
 		ClearAdbLogcat ();
 		bool payloadCheckCompleted = MonitorAdbLogcat (
 			line => {
-				payloadCheckStarted |= line.Contains ("ASSEMBLY_STORE_PAYLOAD_CHECK_STARTED", StringComparison.Ordinal);
+				if (!payloadCheckStarted && line.Contains ("ASSEMBLY_STORE_PAYLOAD_CHECK_STARTED", StringComparison.Ordinal)) {
+					payloadCheckStarted = true;
+					probeStartedAt = launchTimer.Elapsed;
+				}
 				if (line.Contains (failedMarker, StringComparison.Ordinal)) {
 					payloadFailure = line;
 					return true;
@@ -130,8 +141,9 @@ public class NativeLibraryLoadTests : DeviceTest
 				return line.Contains (successMarker, StringComparison.Ordinal);
 			},
 			logcatFile,
-			ActivityStartTimeoutInSeconds,
+			PayloadCheckTimeoutInSeconds,
 			onMonitoringStarted: () => {
+				launchTimer.Start ();
 				var (code, output, error) = RunAdbCommandWithExitCode ([
 					"shell", "am", "start", "-S", "-n", $"{proj.PackageName}/{proj.JavaPackageName}.MainActivity",
 					"--es", "expected-store-sha256", expectedHash,
@@ -141,6 +153,8 @@ public class NativeLibraryLoadTests : DeviceTest
 				Assert.AreEqual (0, code, $"The loader test activity should start: {output}\n{error}");
 				StringAssert.Contains ("Starting: Intent {", output);
 			});
+		TestContext.Out.WriteLine ($"Assembly-store payload check: started after {probeStartedAt?.TotalSeconds.ToString ("F1", CultureInfo.InvariantCulture) ?? "-"}s, " +
+			$"{(payloadCheckCompleted ? "completed" : "timed out")} after {launchTimer.Elapsed.TotalSeconds.ToString ("F1", CultureInfo.InvariantCulture)}s.");
 		if (!payloadCheckCompleted) {
 			// Successful auto-retry removes failed TRX results; keep startup/crash evidence in the task log.
 			var diagnostics = File.ReadLines (logcatFile)
