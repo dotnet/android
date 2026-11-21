@@ -6,7 +6,8 @@
 
 // Regression test for https://github.com/dotnet/android/issues/13286: `(PowerManager) GetSystemService (...)` throws
 // InvalidCastException on CoreCLR, because ILLink keeps the type map entry of a bound type for `isinst` but not for
-// `castclass`, so Android's object is activated as Java.Lang.Object. The app references PowerManager only in a cast.
+// `castclass`, so Android's object is activated as Java.Lang.Object. The app never creates or type-checks a
+// PowerManager: it casts the object Android returns and calls a member through the result.
 
 using System;
 using Android.App;

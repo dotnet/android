@@ -6,7 +6,8 @@
 
 // Regression test for https://github.com/dotnet/android/issues/8775 and https://github.com/dotnet/android/issues/10758
 // (fixed by https://github.com/dotnet/android/pull/10759): a user TrimmerRootAssembly item without RootMode metadata broke
-// the build with MSB4096, because our targets batched over its metadata. Case.targets adds such an item.
+// the build with MSB4096, because our targets batched over its metadata. Case.targets adds such an item. The CoreCLR
+// build is covered by BuildTest.TrimmerRootAssemblyWithoutRootMode, so this case runs only with NativeAOT.
 
 using System;
 using Android.App;

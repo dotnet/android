@@ -16,9 +16,10 @@ public class BuildIntegrationTests : TrimmingTestBase
 		AssertTrimmingExpectations (app);
 	}
 
-	// A user TrimmerRootAssembly item without RootMode metadata builds.
+	// A user TrimmerRootAssembly item without RootMode metadata builds. BuildTest.TrimmerRootAssemblyWithoutRootMode covers
+	// CoreCLR Release builds, so this only adds NativeAOT.
 	[Test]
-	public void TrimmerRootAssemblyWithoutRootModeBuildsWithoutWarnings ([TrimmingConfigurations] TrimmingConfiguration configuration)
+	public void TrimmerRootAssemblyWithoutRootModeBuildsWithoutWarnings ([TrimmingConfigurations (TrimmingConfiguration.NativeAot)] TrimmingConfiguration configuration)
 	{
 		var app = BuildAndRun ("Cases/TrimmerRootAssemblyWithoutRootMode/TrimmerRootAssemblyWithoutRootMode.cs", configuration);
 		AssertTrimmingExpectations (app);

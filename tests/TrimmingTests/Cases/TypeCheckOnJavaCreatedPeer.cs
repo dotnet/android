@@ -6,8 +6,8 @@
 
 // Regression test for https://github.com/dotnet/android/issues/9399 (fixed by https://github.com/dotnet/android/pull/9435):
 // `FindPreference (...) as SwitchPreferenceCompat` returned null in Release. Java creates the object, so the app never
-// instantiates the bound type, and the trimmer folded the type check to false. Here the app references
-// Android.Content.ClipboardManager only in a type check of an object that Android creates.
+// instantiates the bound type, and the trimmer folded the type check to false. Here the app never creates an
+// Android.Content.ClipboardManager: it gets one from Android, type-checks it, and calls a member through the result.
 
 using System;
 using Android.App;
