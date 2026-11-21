@@ -59,6 +59,15 @@
         "The API 29 image query explicitly selects sys-img/android/sys-img2-3.xml.",
         "No package is removed or skipped because it is absent from the default manifest."
       ]
+    },
+    {
+      "id": 10,
+      "prompt": "The manifest now lists platforms;android-37.2 rev 2 (platform-37.2_r02.zip) and androidsdk.targets still pins platform-37.2_r01. Refresh it and open the PR.",
+      "expected_output": "platform-37.2_r01 is updated in place to platform-37.2_r02 with the SHA-256 from diff_platform_api.cs. The script reports 88 removed types and removed members on Notification, Notification.Builder, StatusBarManager, and NotificationListenerService.Ranking. The PR opens, starts with the Do not merge warning about src/Mono.Android/Profiles/api-37.2.xml, and contains the full script output.",
+      "assertions": [
+        "diff_platform_api.cs runs with the old pinned SHA-256 and the new manifest SHA-1 and size.",
+        "The PR description starts with the Do not merge warning and contains the full API diff."
+      ]
     }
   ]
 }
