@@ -32,13 +32,16 @@ namespace Xamarin.Android.Build.Tests
 			}
 
 			var oldSdkPath = Environment.GetEnvironmentVariable ("TEST_ANDROID_SDK_PATH");
-			var oldJdkPath = Environment.GetEnvironmentVariable ("TEST_ANDROID_JDK_PATH");
+
+			// Reuse the provisioned JDK without allowing the installer to modify it. Downloading the
+			// ~200 MB JDK from aka.ms made this test flaky (https://github.com/dotnet/android/issues/13644).
+			string jdkPath = AndroidSdkResolver.GetJavaSdkPath ().TrimEnd ('\\', '/');
+			if (!Directory.Exists (jdkPath))
+				Assert.Inconclusive ($"A provisioned JDK is required for this integration test; '{jdkPath}' does not exist.");
 
 			try {
 				string sdkPath = Path.Combine (Root, "temp", TestName, "android-sdk");
-				string jdkPath = Path.Combine (Root, "temp", TestName, "android-jdk");
 				Environment.SetEnvironmentVariable ("TEST_ANDROID_SDK_PATH", sdkPath);
-				Environment.SetEnvironmentVariable ("TEST_ANDROID_JDK_PATH", jdkPath);
 
 				var proj = new XamarinAndroidApplicationProject {
 					IsRelease = isRelease,
@@ -46,8 +49,11 @@ namespace Xamarin.Android.Build.Tests
 				proj.SetRuntime (runtime);
 				var buildArgs = new List<string> {
 					"AcceptAndroidSDKLicenses=true",
+					$"AndroidSdkDirectory=\"{sdkPath}\"",
+					$"JavaSdkDirectory=\"{jdkPath}\"",
+					"AndroidInstallJavaDependencies=false",
 
-					// This integration test downloads the SDK, JDK and (for NativeAOT) NDK from scratch.
+					// This integration test downloads the SDK and (for NativeAOT) NDK from scratch.
 					"AndroidDependencyInstallationTimeout=30",
 				};
 
@@ -61,7 +67,6 @@ namespace Xamarin.Android.Build.Tests
 
 					if (runtime == AndroidRuntime.NativeAOT) {
 						Directory.CreateDirectory (sdkPath);
-						Directory.CreateDirectory (jdkPath);
 						var timeoutArgs = buildArgs
 							.Where (arg => !arg.StartsWith ("AndroidDependencyInstallationTimeout=", StringComparison.Ordinal))
 							.Concat (["AndroidDependencyInstallationTimeout=0"])
@@ -71,19 +76,16 @@ namespace Xamarin.Android.Build.Tests
 							"Timeout must be diagnosed before callers try to use missing installed files.");
 					}
 
-					// InstallAndroidDependencies downloads the Android SDK and JDK over the network, which
+					// InstallAndroidDependencies downloads the Android CLI and SDK packages over the network, which
 					// can fail intermittently in CI. Retry a few times before giving up, starting from a
-					// clean SDK/JDK directory each attempt so a partial download does not affect the next.
+					// clean SDK directory each attempt so a partial download does not affect the next.
 					// See https://github.com/dotnet/android/issues/11973
 					const int maxInstallAttempts = 3;
 					bool installSucceeded = false;
 					for (int attempt = 1; attempt <= maxInstallAttempts; attempt++) {
-						foreach (var path in new [] { sdkPath, jdkPath }) {
-							if (Directory.Exists (path))
-								Directory.Delete (path, recursive: true);
-							Directory.CreateDirectory (path);
-						}
-
+						if (Directory.Exists (sdkPath))
+							Directory.Delete (sdkPath, recursive: true);
+						Directory.CreateDirectory (sdkPath);
 
 						if (b.Build (proj, parameters: buildArgs.ToArray ())) {
 							installSucceeded = true;
@@ -97,6 +99,8 @@ namespace Xamarin.Android.Build.Tests
 					Assert.IsTrue (installSucceeded, $"InstallAndroidDependencies should have succeeded within {maxInstallAttempts} attempts.");
 
 					FileAssert.Exists (Path.Combine (sdkPath, "cmdline-tools", "21.0", "source.properties"));
+					Assert.IsTrue (b.LastBuildOutput.ContainsText ("Skipping Java SDK installation."),
+						"The shared provisioned JDK must not be installed or replaced.");
 
 					// When a package is not installed, a warning is present in the build output:
 					//    The Android CLI did not install Android SDK package `platform-tools` into `...`.
@@ -113,7 +117,7 @@ namespace Xamarin.Android.Build.Tests
 
 					b.Target = defaultTarget;
 					b.BuildLogFile = "build.log";
-					Assert.IsTrue (b.Build (proj, true), "build should have succeeded.");
+					Assert.IsTrue (b.Build (proj, true, parameters: buildArgs.ToArray ()), "build should have succeeded.");
 					Assert.IsTrue ( b.LastBuildOutput.ContainsText ($"Output Property: _AndroidSdkDirectory={sdkPath}"),
 						$"_AndroidSdkDirectory was not set to new SDK path `{sdkPath}`. Please check the task output in 'install-deps.log'");
 					Assert.IsTrue (b.LastBuildOutput.ContainsText ($"Output Property: _JavaSdkDirectory={jdkPath}"),
@@ -123,7 +127,6 @@ namespace Xamarin.Android.Build.Tests
 				}
 			} finally {
 				Environment.SetEnvironmentVariable ("TEST_ANDROID_SDK_PATH", oldSdkPath);
-				Environment.SetEnvironmentVariable ("TEST_ANDROID_JDK_PATH", oldJdkPath);
 			}
 		}
 
