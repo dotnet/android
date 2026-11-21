@@ -43,9 +43,11 @@ stages:
         use1ESTemplate: ${{ parameters.use1ESTemplate }}
 
     # Gradle tests download the wrapper distribution and Android Gradle Plugin; reuse them across runs.
+    # Key on the file pinning the test AGP version so this job saves what its tests download.
     - template: /build-tools/automation/yaml-templates/cache-gradle.yaml
       parameters:
         xaSourcePath: ${{ parameters.xaSourcePath }}
+        dependencyCacheKeyFile: src/Xamarin.Android.Build.Tasks/Tests/Xamarin.ProjectTools/Android/AndroidGradleProject.cs
 
     - task: DownloadPipelineArtifact@2
       inputs:
