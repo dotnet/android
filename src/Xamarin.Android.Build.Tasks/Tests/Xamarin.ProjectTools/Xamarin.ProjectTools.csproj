@@ -1,11 +1,12 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
+    <!-- CA1305 - Project test utilities intentionally preserve existing generated project and command formatting. -->
+    <NoWarn>$(NoWarn);CA1305</NoWarn>
     <ProjectGuid>{2DD1EE75-6D8D-4653-A800-0A24367F7F38}</ProjectGuid>
     <TargetFramework>$(DotNetStableTargetFramework)</TargetFramework>
     <SignAssembly>true</SignAssembly>
     <AssemblyOriginatorKeyFile>..\..\..\..\product.snk</AssemblyOriginatorKeyFile>
-    <NoWarn>$(NoWarn);CA1305</NoWarn>
     <_IncludeMicrosoftBuildPackage>true</_IncludeMicrosoftBuildPackage>
     <Nullable>annotations</Nullable>
   </PropertyGroup>

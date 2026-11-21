@@ -1,3 +1,4 @@
+#if !NATIVEAOT
 using System;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
@@ -18,6 +19,7 @@ namespace Java.InteropTests {
 		const string ClassName = "net/dot/jni/test/RegisterNativesTestType";
 
 		[TestMethod]
+		[RequiresDynamicCode ("Tests delegate-based native registration.")]
 		public void RetainsTransferredArrayUntilUnregistration ()
 		{
 			using (var type = new JniType (ClassName)) {
@@ -43,8 +45,8 @@ namespace Java.InteropTests {
 				Assert.IsFalse (replacement.Callback.IsAlive);
 			}
 		}
-
 		[TestMethod]
+		[RequiresDynamicCode ("Tests delegate-based native registration.")]
 		public void RuntimeRetainsOwnerAfterSuccessfulRegistration ()
 		{
 			var references = RegisterWithoutKeepingOwner ();
@@ -64,9 +66,10 @@ namespace Java.InteropTests {
 				Assert.IsFalse (references.Callback.IsAlive);
 			}
 		}
+		#endif
 
 		[TestMethod]
-		[UnconditionalSuppressMessage ("AOT", "IL3050", Justification = "Delegate registration tests run only on runtimes supporting dynamic code.")]
+		[RequiresDynamicCode ("Tests delegate-based native registration.")]
 		public void RegistrationFailurePropagatesJavaException ()
 		{
 			using (var type = new JniType (ClassName)) {
@@ -99,6 +102,7 @@ namespace Java.InteropTests {
 		[TestMethod]
 		[DataRow (false)]
 		[DataRow (true)]
+		[RequiresDynamicCode ("Tests delegate-based native registration.")]
 		public void PreparationFailureAllowsValidRetry (bool alreadyTracked)
 		{
 			using (var type = new JniType (ClassName)) {
@@ -118,6 +122,7 @@ namespace Java.InteropTests {
 		}
 
 		[TestMethod]
+		[RequiresDynamicCode ("Tests delegate-based native registration.")]
 		public void PreparationFailurePreservesPreviousRegistration ()
 		{
 			using (var type = new JniType (ClassName)) {
@@ -133,6 +138,7 @@ namespace Java.InteropTests {
 		}
 
 		[TestMethod]
+		[RequiresDynamicCode ("Tests delegate-based native registration.")]
 		public void DisposingAfterPreparationFailurePreservesOtherOwner ()
 		{
 			using (var owner = new JniType (ClassName)) {
@@ -148,6 +154,7 @@ namespace Java.InteropTests {
 		}
 
 		[TestMethod]
+		[RequiresDynamicCode ("Tests delegate-based native registration.")]
 		public void DisposeUnregistersMethodsAndReleasesOwner ()
 		{
 			var references = RegisterAndDispose ();
@@ -158,6 +165,7 @@ namespace Java.InteropTests {
 		}
 
 		[MethodImpl (MethodImplOptions.NoInlining)]
+		[RequiresDynamicCode ("Tests delegate-based native registration.")]
 		static (WeakReference Owner, WeakReference Methods, WeakReference Callback) RegisterAndDispose ()
 		{
 			using (var owner = new JniType (ClassName))
@@ -182,6 +190,7 @@ namespace Java.InteropTests {
 		}
 
 		[MethodImpl (MethodImplOptions.NoInlining)]
+		[RequiresDynamicCode ("Tests delegate-based native registration.")]
 		static (WeakReference Owner, WeakReference Methods, WeakReference Callback) RegisterWithoutKeepingOwner ()
 		{
 			var type = new JniType (ClassName);
@@ -190,7 +199,7 @@ namespace Java.InteropTests {
 		}
 
 		[MethodImpl (MethodImplOptions.NoInlining)]
-		[UnconditionalSuppressMessage ("AOT", "IL3050", Justification = "Delegate registration tests run only on runtimes supporting dynamic code.")]
+		[RequiresDynamicCode ("Tests delegate-based native registration.")]
 		static (WeakReference Methods, WeakReference Callback) RegisterCapturedDelegate (JniType type, int offset)
 		{
 			var callback = new AddCallback ((env, self, a, b) => a + b + offset);
@@ -204,7 +213,7 @@ namespace Java.InteropTests {
 		}
 
 		[MethodImpl (MethodImplOptions.NoInlining)]
-		[UnconditionalSuppressMessage ("AOT", "IL3050", Justification = "Delegate registration tests run only on runtimes supporting dynamic code.")]
+		[RequiresDynamicCode ("Tests delegate-based native registration.")]
 		static (WeakReference Methods, WeakReference Callback) RegisterInvalidMethods (JniType type)
 		{
 			int offset = 1;

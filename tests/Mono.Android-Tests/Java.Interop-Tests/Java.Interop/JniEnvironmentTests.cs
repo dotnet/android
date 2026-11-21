@@ -12,6 +12,21 @@ namespace Java.InteropTests
 	public class JniEnvironmentTests
 	{
 		[TestMethod]
+		[DataRow (false, "toThrow")]
+		[DataRow (true, "klass")]
+		[TestCategory ("ManagedConstruction")]
+		public void Exceptions_RejectInvalidReference (bool createException, string parameterName)
+		{
+			var exception = Assert.Throws<ArgumentException> (() => {
+				if (createException)
+					JniEnvironment.Exceptions.ThrowNew (default, "test");
+				else
+					JniEnvironment.Exceptions.Throw (default (JniObjectReference));
+			});
+			Assert.AreEqual (parameterName, exception?.ParamName);
+		}
+
+		[TestMethod]
 		[TestCategory ("ManagedConstruction")]
 		public void Transition_RejectsNullEnvironmentPointer ()
 		{

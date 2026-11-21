@@ -10,6 +10,8 @@
     <MemorySafetyRulesVersion>2</MemorySafetyRulesVersion>
     <OutputPath>..\..\bin\Build$(Configuration)</OutputPath>
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <MSBuildTreatWarningsAsErrors>true</MSBuildTreatWarningsAsErrors>
   </PropertyGroup>
   
   <Import Project="..\..\Configuration.props" />

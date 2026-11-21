@@ -6,6 +6,8 @@
     <LangVersion>13.0</LangVersion>
     <TargetFramework>$(DotNetStableTargetFramework)</TargetFramework>
     <IsPackable>False</IsPackable>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <MSBuildTreatWarningsAsErrors>true</MSBuildTreatWarningsAsErrors>
   </PropertyGroup>
 
   <Import Project="..\..\Configuration.props" />

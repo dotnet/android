@@ -9,6 +9,8 @@
     <TargetFramework>$(DotNetStableTargetFramework)</TargetFramework>
     <Nullable>enable</Nullable>
     <MemorySafetyRulesVersion>2</MemorySafetyRulesVersion>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <MSBuildTreatWarningsAsErrors>true</MSBuildTreatWarningsAsErrors>
   </PropertyGroup>
 
   <PropertyGroup>

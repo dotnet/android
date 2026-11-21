@@ -10,7 +10,7 @@ namespace Java.Interop {
 			public static void Throw (JniObjectReference toThrow)
 			{
 				if (!toThrow.IsValid)
-					throw new ArgumentException (nameof (toThrow));
+					throw new ArgumentException ("The JNI reference must be valid.", nameof (toThrow));
 
 				int r = _Throw (toThrow);
 				if (r != 0)
@@ -21,7 +21,7 @@ namespace Java.Interop {
 			public static void ThrowNew (JniObjectReference klass, string message)
 			{
 				if (!klass.IsValid)
-					throw new ArgumentException (nameof (klass));
+					throw new ArgumentException ("The JNI reference must be valid.", nameof (klass));
 				ArgumentNullException.ThrowIfNull (message);
 
 				int r = _ThrowNew (klass, message);

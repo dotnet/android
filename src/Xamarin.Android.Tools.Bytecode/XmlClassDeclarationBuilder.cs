@@ -866,7 +866,7 @@ namespace Xamarin.Android.Tools.Bytecode {
 				if (field.Descriptor == "Z")
 					value = ((ConstantPoolIntegerItem) constant).Value == 1 ? bool.TrueString.ToLower () : bool.FalseString.ToLower ();
 				else
-					value = ((ConstantPoolIntegerItem) constant).Value.ToString (); 
+					value = ((ConstantPoolIntegerItem) constant).Value.ToString ();
 				break;
 			case ConstantPoolItemType.String:
 				value = '"' + EscapeLiteral (((ConstantPoolStringItem) constant).StringData.Value) + '"';

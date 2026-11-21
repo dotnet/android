@@ -9,6 +9,8 @@
     <OutputPath>$(TestOutputDirectory)</OutputPath>
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
     <RollForward>Major</RollForward>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <MSBuildTreatWarningsAsErrors>true</MSBuildTreatWarningsAsErrors>
   </PropertyGroup>
 
   <Import Project="..\..\src\Microsoft.Android.Build.BaseTasks\MSBuildReferences.projitems" />

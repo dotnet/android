@@ -1,6 +1,8 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
+    <!-- CA1305 - Test fixtures intentionally preserve historical formatting of embedded projects and diagnostics. -->
+    <NoWarn>$(NoWarn);CA1305</NoWarn>
     <TargetFramework>$(DotNetStableTargetFramework)</TargetFramework>
     <OutputType>Exe</OutputType>
     <EnableNUnitRunner>true</EnableNUnitRunner>
@@ -9,7 +11,6 @@
     <AssemblyOriginatorKeyFile>..\..\..\..\product.snk</AssemblyOriginatorKeyFile>
     <DebugSymbols>True</DebugSymbols>
     <DebugType>portable</DebugType>
-    <NoWarn>$(NoWarn);CA1305</NoWarn>
     <Nullable>annotations</Nullable>
   </PropertyGroup>
 

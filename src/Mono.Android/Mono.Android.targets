@@ -112,7 +112,7 @@
   <Target Name="_GenerateBinding"
       BeforeTargets="CoreCompile"
       DependsOnTargets="_CopyXmlLocal"
-      Inputs="$(MSBuildThisFileFullPath);metadata;enumflags;map.csv;methodmap.csv;$(IntermediateOutputPath)mcw\api-$(AndroidPlatformId).xml;$(MicrosoftAndroidSdkOutDir)generator.dll"
+      Inputs="$(MSBuildThisFileFullPath);$(MicrosoftAndroidSdkOutDir)generator.dll;$(MicrosoftAndroidSdkOutDir)Xamarin.SourceWriter.dll;metadata;enumflags;map.csv;methodmap.csv;$(IntermediateOutputPath)mcw\api-$(AndroidPlatformId).xml"
       Outputs="$(IntermediateOutputPath)mcw\Mono.Android.projitems;$(_MonoAndroidUnmanagedCallersOnlyCallbacksStamp)">
     <PropertyGroup>
       <_PlatformIdVersions>$(AndroidSdkDirectory)\platforms\android-$(AndroidPlatformId)\data\api-versions.xml</_PlatformIdVersions>
@@ -231,6 +231,21 @@
     <ApiCompatibilityFiles Include="$(ApiCompatibilityDir)/acceptable-breakages-v*.txt" />
     <ApiCompatibilityFiles Include="$(ApiCompatibilityDir)/reference/*.*" />
   </ItemGroup>
+  <!--
+    DisableApiCompatibilityCheck can be set late during target evaluation by the experimental
+    UnmanagedCallersOnly callback mode.  The ApiCompat task below is skipped by its own Condition,
+    but the compile-time Microsoft.CodeAnalysis.PublicApiAnalyzers package must also be removed
+    before CoreCompile.  Removing only analyzers with that NuGetPackageId preserves the SDK, safety,
+    globalization, and other analyzers; setting RunAnalyzers=false would disable all of them.
+  -->
+  <Target Name="_AndroidDisableApiCompatibilityAnalyzers"
+      BeforeTargets="CoreCompile"
+      Condition=" '$(DisableApiCompatibilityCheck)' == 'True' ">
+    <ItemGroup>
+      <Analyzer Remove="@(Analyzer)" Condition=" '%(Analyzer.NuGetPackageId)' == 'Microsoft.CodeAnalysis.PublicApiAnalyzers' " />
+    </ItemGroup>
+  </Target>
+
   <Target
       Name="_CheckApiCompatibility"
       Condition=" '$(DisableApiCompatibilityCheck)' != 'True' "

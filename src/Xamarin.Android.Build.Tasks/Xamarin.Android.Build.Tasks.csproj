@@ -17,13 +17,20 @@
     <MemorySafetyRulesVersion>2</MemorySafetyRulesVersion>
     <OutputPath>$(MicrosoftAndroidSdkOutDir)</OutputPath>
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
-    <DefineConstants>$(DefineConstants);TRACE;HAVE_CECIL;MSBUILD</DefineConstants>
-    <NoWarn>8632</NoWarn>
+    <DefineConstants>$(DefineConstants);TRACE;HAVE_CECIL;MSBUILD;XABT_MANIFEST_EXTENSIONS</DefineConstants>
+    <AndroidGeneratedClassDirectory Condition=" '$(AndroidGeneratedClassDirectory)' == '' ">..\..\src\Mono.Android\obj\$(Configuration)\$(DotNetTargetFramework)\android-$(AndroidLatestStablePlatformId)\mcw</AndroidGeneratedClassDirectory>
+    <!--
+      CS8632 - Legacy task source uses nullable annotations while flow analysis remains in the historical context.
+    -->
+    <NoWarn>$(NoWarn);CS8632</NoWarn>
+    <!--
+      CA1310 - Imported/linker task code retains the established culture-sensitive comparison overloads.
+      CA1305 - Legacy task and generated-source formatting preserves existing behavior.
+    -->
+    <NoWarn>$(NoWarn);CA1310;CA1305</NoWarn>
     <SignAssembly>true</SignAssembly>
     <AssemblyOriginatorKeyFile>..\..\product.snk</AssemblyOriginatorKeyFile>
     <Nullable>enable</Nullable>
-    <!-- Causes issues with linker files imported from Mono -->
-    <NoWarn>$(NoWarn);CA1310;CA1305</NoWarn>
     <WarningsAsErrors>$(WarningsAsErrors);Nullable</WarningsAsErrors>
   </PropertyGroup>
 
