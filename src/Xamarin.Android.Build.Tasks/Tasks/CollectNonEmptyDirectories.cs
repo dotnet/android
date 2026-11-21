@@ -56,8 +56,7 @@ namespace Xamarin.Android.Tasks {
 					}
 				}
 
-				bool generateArchive = false;
-				bool.TryParse (directory.GetMetadata (LibraryProjectImportsMetadata.AndroidSkipResourceProcessing), out generateArchive);
+				bool.TryParse (directory.GetMetadata (LibraryProjectImportsMetadata.AndroidSkipResourceProcessing), out bool generateArchive);
 
 				string [] files;
 				string filesCache = directory.GetMetadata ("FilesCache");
