@@ -3073,15 +3073,14 @@ CUSTOM_ENVIRONMENT_VALUE=custom",
 		}
 
 		[Test]
-		public void GradleFBProj ([ValueSource (typeof (BaseTest), nameof (BaseTest.ValidRuntimeConfigurations))] (bool isRelease, AndroidRuntime runtime) configuration)
+		public void GradleLibrary ([ValueSource (typeof (BaseTest), nameof (BaseTest.ValidRuntimeConfigurations))] (bool isRelease, AndroidRuntime runtime) configuration)
 		{
 			var (isRelease, runtime) = configuration;
 
-			// Use an embedded dependency instead of Facebook's remote Maven/NuGet graph;
-			// the Android Gradle Plugin itself still comes from the feed.
+			// Keep the Java dependency local; the Android Gradle Plugin still comes from the feed.
 			const string libraryModuleName = "Library";
 			const string dependencyJar = "gson-2.7.jar";
-			var successMarker = $"GradleFBProj-{Guid.NewGuid ():N}";
+			var successMarker = $"GradleLibrary-{Guid.NewGuid ():N}";
 			var expectedLogcatOutput = $"{successMarker} Hello dotnet from Gradle dependency";
 			var gradleTestProjectDir = Path.Combine (Root, "temp", "gradle", TestName);
 
@@ -3151,7 +3150,7 @@ public class Greeter {
 			proj.SetRuntime (runtime);
 			proj.SetDefaultTargetDevice ();
 			proj.MainActivity = proj.DefaultMainActivity.Replace ("//${AFTER_ONCREATE}", $$"""
-Android.Util.Log.Info ("GradleFBProj", "{{successMarker}} " + GradleLibrary.Greeter.Greet (this, "dotnet"));
+Android.Util.Log.Info ("GradleLibrary", "{{successMarker}} " + GradleLibrary.Greeter.Greet (this, "dotnet"));
 """);
 
 			using var builder = CreateApkBuilder ();
