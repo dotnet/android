@@ -5,6 +5,7 @@ using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading;
 using System.Xml.Linq;
 using NUnit.Framework;
@@ -32,16 +33,13 @@ namespace Xamarin.Android.Build.Tests
 			}
 
 			var oldSdkPath = Environment.GetEnvironmentVariable ("TEST_ANDROID_SDK_PATH");
-
-			// Reuse the provisioned JDK without allowing the installer to modify it. Downloading the
-			// ~200 MB JDK from aka.ms made this test flaky (https://github.com/dotnet/android/issues/13644).
-			string jdkPath = AndroidSdkResolver.GetJavaSdkPath ().TrimEnd ('\\', '/');
-			if (!Directory.Exists (jdkPath))
-				Assert.Inconclusive ($"A provisioned JDK is required for this integration test; '{jdkPath}' does not exist.");
+			var oldJdkPath = Environment.GetEnvironmentVariable ("TEST_ANDROID_JDK_PATH");
 
 			try {
 				string sdkPath = Path.Combine (Root, "temp", TestName, "android-sdk");
+				string jdkPath = Path.Combine (Root, "temp", TestName, "android-jdk");
 				Environment.SetEnvironmentVariable ("TEST_ANDROID_SDK_PATH", sdkPath);
+				Environment.SetEnvironmentVariable ("TEST_ANDROID_JDK_PATH", jdkPath);
 
 				var proj = new XamarinAndroidApplicationProject {
 					IsRelease = isRelease,
@@ -49,11 +47,11 @@ namespace Xamarin.Android.Build.Tests
 				proj.SetRuntime (runtime);
 				var buildArgs = new List<string> {
 					"AcceptAndroidSDKLicenses=true",
+					// Saving the project can delete these directories, so never let the build fall back to a shared SDK/JDK.
 					$"AndroidSdkDirectory=\"{sdkPath}\"",
 					$"JavaSdkDirectory=\"{jdkPath}\"",
-					"AndroidInstallJavaDependencies=false",
 
-					// This integration test downloads the SDK and (for NativeAOT) NDK from scratch.
+					// This integration test downloads the SDK, JDK and (for NativeAOT) NDK from scratch.
 					"AndroidDependencyInstallationTimeout=30",
 				};
 
@@ -67,6 +65,7 @@ namespace Xamarin.Android.Build.Tests
 
 					if (runtime == AndroidRuntime.NativeAOT) {
 						Directory.CreateDirectory (sdkPath);
+						Directory.CreateDirectory (jdkPath);
 						var timeoutArgs = buildArgs
 							.Where (arg => !arg.StartsWith ("AndroidDependencyInstallationTimeout=", StringComparison.Ordinal))
 							.Concat (["AndroidDependencyInstallationTimeout=0"])
@@ -76,31 +75,40 @@ namespace Xamarin.Android.Build.Tests
 							"Timeout must be diagnosed before callers try to use missing installed files.");
 					}
 
-					// InstallAndroidDependencies downloads the Android CLI and SDK packages over the network, which
+					// InstallAndroidDependencies downloads the Android SDK and JDK over the network, which
 					// can fail intermittently in CI. Retry a few times before giving up, starting from a
-					// clean SDK directory each attempt so a partial download does not affect the next.
-					// See https://github.com/dotnet/android/issues/11973
+					// clean SDK/JDK directory each attempt so a partial download does not affect the next.
+					// See https://github.com/dotnet/android/issues/11973 and https://github.com/dotnet/android/issues/13644
 					const int maxInstallAttempts = 3;
 					bool installSucceeded = false;
+					var networkFailures = new List<string> ();
 					for (int attempt = 1; attempt <= maxInstallAttempts; attempt++) {
-						if (Directory.Exists (sdkPath))
-							Directory.Delete (sdkPath, recursive: true);
-						Directory.CreateDirectory (sdkPath);
+						foreach (var path in new [] { sdkPath, jdkPath }) {
+							if (Directory.Exists (path))
+								Directory.Delete (path, recursive: true);
+							Directory.CreateDirectory (path);
+						}
 
+						b.BuildLogFile = $"install-deps-{attempt}.log";
 						if (b.Build (proj, parameters: buildArgs.ToArray ())) {
 							installSucceeded = true;
 							break;
 						}
 
-						TestContext.WriteLine ($"InstallAndroidDependencies attempt {attempt} of {maxInstallAttempts} failed. Please check the task output in 'install-deps.log'.");
+						TestContext.WriteLine ($"InstallAndroidDependencies attempt {attempt} of {maxInstallAttempts} failed. Please check the task output in '{b.BuildLogFile}'.");
+						var networkFailure = FindTransientNetworkFailure (b.LastBuildOutput);
+						if (networkFailure != null)
+							networkFailures.Add ($"{b.BuildLogFile}: {networkFailure}");
 						if (attempt < maxInstallAttempts)
 							Thread.Sleep (TimeSpan.FromSeconds (10));
 					}
-					Assert.IsTrue (installSucceeded, $"InstallAndroidDependencies should have succeeded within {maxInstallAttempts} attempts.");
+					if (!installSucceeded && networkFailures.Count == maxInstallAttempts) {
+						Assert.Inconclusive ($"InstallAndroidDependencies could not download its dependencies in {maxInstallAttempts} attempts because of transient network failures:\n{string.Join ("\n", networkFailures)}");
+					}
+					Assert.IsTrue (installSucceeded, $"InstallAndroidDependencies should have succeeded within {maxInstallAttempts} attempts. Please check the task output in 'install-deps-*.log'.");
+					string installLog = b.BuildLogFile;
 
 					FileAssert.Exists (Path.Combine (sdkPath, "cmdline-tools", "21.0", "source.properties"));
-					Assert.IsTrue (b.LastBuildOutput.ContainsText ("Skipping Java SDK installation."),
-						"The shared provisioned JDK must not be installed or replaced.");
 
 					// When a package is not installed, a warning is present in the build output:
 					//    The Android CLI did not install Android SDK package `platform-tools` into `...`.
@@ -112,22 +120,41 @@ namespace Xamarin.Android.Build.Tests
 								sb.AppendLine (line);
 							}
 						}
-						Assert.Fail ($"A required dependency was not installed, warnings are listed below. Please check the task output in 'install-deps.log'.\n{sb.ToString ()}");
+						Assert.Fail ($"A required dependency was not installed, warnings are listed below. Please check the task output in '{installLog}'.\n{sb.ToString ()}");
 					}
 
 					b.Target = defaultTarget;
 					b.BuildLogFile = "build.log";
 					Assert.IsTrue (b.Build (proj, true, parameters: buildArgs.ToArray ()), "build should have succeeded.");
 					Assert.IsTrue ( b.LastBuildOutput.ContainsText ($"Output Property: _AndroidSdkDirectory={sdkPath}"),
-						$"_AndroidSdkDirectory was not set to new SDK path `{sdkPath}`. Please check the task output in 'install-deps.log'");
+						$"_AndroidSdkDirectory was not set to new SDK path `{sdkPath}`. Please check the task output in '{installLog}'");
 					Assert.IsTrue (b.LastBuildOutput.ContainsText ($"Output Property: _JavaSdkDirectory={jdkPath}"),
-						$"_JavaSdkDirectory was not set to new JDK path `{jdkPath}`. Please check the task output in 'install-deps.log'");
+						$"_JavaSdkDirectory was not set to new JDK path `{jdkPath}`. Please check the task output in '{installLog}'");
 					Assert.IsTrue (b.LastBuildOutput.ContainsText ($"JavaPlatformJarPath={sdkPath}"),
-						$"JavaPlatformJarPath did not contain new SDK path `{sdkPath}`. Please check the task output in 'install-deps.log'");
+						$"JavaPlatformJarPath did not contain new SDK path `{sdkPath}`. Please check the task output in '{installLog}'");
 				}
 			} finally {
 				Environment.SetEnvironmentVariable ("TEST_ANDROID_SDK_PATH", oldSdkPath);
+				Environment.SetEnvironmentVariable ("TEST_ANDROID_JDK_PATH", oldJdkPath);
 			}
+		}
+
+		// Match only the HTTP transport failures that InstallAndroidDependencies reports as errors, e.g.
+		//   error XAIAD7000: System.Net.Http.HttpRequestException: nodename nor servname provided, or not known (aka.ms:443)
+		//   error XAIAD7024: System.Net.Http.HttpIOException: The response ended prematurely, ...
+		// HTTP status code failures (for example 404) indicate a broken URL rather than a transient outage.
+		static string? FindTransientNetworkFailure (IEnumerable<string> output)
+		{
+			foreach (var line in output) {
+				var match = Regex.Match (line, @"error XAIAD\d+: System\.Net\.Http\.(HttpRequestException|HttpIOException): (?<message>[^\[]*)");
+				if (!match.Success)
+					continue;
+				string message = match.Groups ["message"].Value.Trim ();
+				if (message.StartsWith ("Response status code does not indicate success", StringComparison.Ordinal))
+					return null;
+				return match.Value.Trim ();
+			}
+			return null;
 		}
 
 		[TestCase (AndroidRuntime.CoreCLR, false, false, false)]
