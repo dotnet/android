@@ -244,9 +244,9 @@ namespace Xamarin.ProjectTools
 			string processLog = !string.IsNullOrEmpty (BuildLogFile)
 				? Path.Combine (Path.GetDirectoryName (buildLogFullPath), "process.log")
 				: null;
-			// build.log only receives this build's process output, so failure messages don't report stale errors.
+			// MSBuild may fail before its file logger initializes, so discard the previous build log too.
 			if (processLog != null) {
-				foreach (var path in new [] { processLog, processLog + ".bak" }) {
+				foreach (var path in new [] { buildLogFullPath, processLog, processLog + ".bak" }) {
 					if (File.Exists (path))
 						File.Delete (path);
 				}
