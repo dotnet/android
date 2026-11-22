@@ -273,7 +273,7 @@ Consult this table for skill-specific context that supplements (never overrides)
 
 | Skill | SKILL.md | Notes for this workflow |
 |---|---|---|
-| `update-androidsdk-packages` | `.github/skills/update-androidsdk-packages/SKILL.md` | Refreshes stable Android SDK package pins in `Configuration.props` / `src/androidsdk/androidsdk.targets` for `androidsdk.csproj`. Hard rules: never touch the NDK; never add a new platform API level to `_PlatformPackage`, but **always** report in the tracking issue when a newer stable platform level exists upstream (e.g. platform 37.1), whether or not anything else changed. Validation must build `build-tools/Xamarin.Android.Tools.BootstrapTasks/Xamarin.Android.Tools.BootstrapTasks.csproj` before `src/androidsdk/androidsdk.csproj` — already done by the bootstrap step above. |
+| `update-androidsdk-packages` | `.github/skills/update-androidsdk-packages/SKILL.md` | Refreshes stable Android SDK package pins in `Configuration.props` / `src/androidsdk/androidsdk.targets` for `androidsdk.csproj`. Hard rules: never touch the NDK; never add a new platform API level to `_PlatformPackage`, but **always** report in the tracking issue when a newer stable platform level exists upstream (e.g. platform 37.1), whether or not anything else changed. Each platform revision bump needs the API diff in the PR description (hard rule 8). Validation must build `build-tools/Xamarin.Android.Tools.BootstrapTasks/Xamarin.Android.Tools.BootstrapTasks.csproj` before `src/androidsdk/androidsdk.csproj` — already done by the bootstrap step above. |
 
 ## Phase 1: Follow the Selected Skill
 
@@ -317,11 +317,13 @@ go straight to Phase 4 and report the failure instead.
    structure:
 
    ```markdown
+   [Warning required by the skill, if any]
+
    > AI-generated update. Produced by the `skill-runner` agentic workflow running the `<skill-name>` skill.
 
    ### Changes
 
-   [What changed, following the selected skill's own summary format]
+   [What changed, following the selected skill's own summary format, including any report it requires]
 
    ### Validation
 
@@ -347,7 +349,8 @@ Always include, in every report:
   regardless of outcome (see the Known Skills table above — for `update-androidsdk-packages` this is
   the platform-catalog check: state explicitly whether a newer stable platform level exists upstream
   beyond the highest one already in `_PlatformPackage`, or that none does). Never omit this, even on a
-  pure no-op or failed run where you got far enough to check.
+  pure no-op or failed run where you got far enough to check. Repeat any "Do not merge" warning from
+  the PR.
 - **Errors**, if any occurred. Include enough detail (command, error text) for a human to act on it.
 
 ## Rules
