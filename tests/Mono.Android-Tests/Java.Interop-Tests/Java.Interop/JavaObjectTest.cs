@@ -59,19 +59,22 @@ namespace Java.InteropTests
 		[TestMethod]
 		public void UnregisterFromRuntime ()
 		{
-			JniObjectReference l;
+			JniObjectReference l = default;
 			JavaObject o;
-			using (o = new JavaObject ()) {
-				l   = o.PeerReference.NewLocalRef ();
-				Assert.AreEqual (JniObjectReferenceType.Global, o.PeerReference.Type);
-				Assert.AreEqual (1, GetSurfacedEntryCount (o), "Constructed peer should be surfaced exactly once.");
-				Assert.IsNotNull (JniRuntime.CurrentRuntime.ValueManager.PeekValue (l));
-				Assert.AreNotEqual (l, o.PeerReference);
-				Assert.AreSame (o, JniRuntime.CurrentRuntime.ValueManager.PeekValue (l));
+			try {
+				using (o = new JavaObject ()) {
+					l   = o.PeerReference.NewLocalRef ();
+					Assert.AreEqual (JniObjectReferenceType.Global, o.PeerReference.Type);
+					Assert.AreEqual (1, GetSurfacedEntryCount (o), "Constructed peer should be surfaced exactly once.");
+					Assert.IsNotNull (JniRuntime.CurrentRuntime.ValueManager.PeekValue (l));
+					Assert.AreNotEqual (l, o.PeerReference);
+					Assert.AreSame (o, JniRuntime.CurrentRuntime.ValueManager.PeekValue (l));
+				}
+				Assert.AreEqual (0, GetSurfacedEntryCount (o), "Disposed peer should no longer be surfaced.");
+				Assert.IsNull (JniRuntime.CurrentRuntime.ValueManager.PeekValue (l));
+			} finally {
+				JniObjectReference.Dispose (ref l);
 			}
-			Assert.AreEqual (0, GetSurfacedEntryCount (o), "Disposed peer should no longer be surfaced.");
-			Assert.IsNull (JniRuntime.CurrentRuntime.ValueManager.PeekValue (l));
-			JniObjectReference.Dispose (ref l);
 			Assert.ThrowsExactly<ObjectDisposedException> (() => o.UnregisterFromRuntime ());
 		}
 
