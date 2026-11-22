@@ -154,8 +154,21 @@ public class NativeLibraryLoadTests : DeviceTest
 			});
 		TestContext.Out.WriteLine ($"Assembly-store payload check: probe observed after {probeObservedAt?.TotalSeconds.ToString ("F1", CultureInfo.InvariantCulture) ?? "-"}s, " +
 			$"result {(payloadCheckCompleted ? "observed" : "not observed")} after {launchTimer.Elapsed.TotalSeconds.ToString ("F1", CultureInfo.InvariantCulture)}s.");
-		if (!payloadCheckCompleted) {
+		if (!payloadCheckCompleted || payloadFailure != null) {
 			// Successful auto-retry removes failed TRX results; keep startup/crash evidence in the task log.
+			if (payloadFailure != null) {
+				var (code, output, error) = RunAdbCommandWithExitCode ("logcat -d");
+				if (code == 0) {
+					// Keep the monitored lines and append only later snapshot lines when possible.
+					int markerIndex = output.IndexOf (payloadFailure, StringComparison.Ordinal);
+					if (markerIndex >= 0) {
+						output = output.Substring (markerIndex + payloadFailure.Length);
+					}
+					File.AppendAllText (logcatFile, output);
+				} else {
+					TestContext.Out.WriteLine ($"Failed to capture logcat after the payload failure (exit code {code}): {output}\n{error}");
+				}
+			}
 			var diagnostics = File.ReadLines (logcatFile)
 				.Where (line => line.Contains ("AssemblyStoreLoader", StringComparison.Ordinal) ||
 					line.Contains (proj.PackageName, StringComparison.Ordinal));
