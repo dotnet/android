@@ -836,7 +836,8 @@ static int InvokeIntMethod (Java.Lang.Object instance, string methodName)
 			var dotnet = new DotNetCLI (Path.Combine (Root, builder.ProjectDirectory, proj.ProjectFilePath));
 
 			// Start dotnet watch which will build, deploy, and watch for changes
-			using var process = dotnet.StartWatch ();
+			var serial = RunAdbCommand ("get-serialno").Trim ();
+			using var process = dotnet.StartWatch (["--device", serial]);
 
 			var output = new StringBuilder ();
 			using var readerCts = new CancellationTokenSource ();
@@ -862,21 +863,20 @@ static int InvokeIntMethod (Java.Lang.Object instance, string methodName)
 				Assert.IsTrue (initialMessageEvent.Wait (TimeSpan.FromMinutes (5)),
 					$"Initial message '{initialMessage}' was not found in output. See {logPath} for details.");
 
-				// Give dotnet watch time to finish post-deploy setup and start its file watcher.
-				// There is no explicit "ready" signal from dotnet watch after deploy completes.
-				Thread.Sleep (5000);
-
-				// Modify the vanilla C# helper class (not the Java-interop MainActivity)
-				appHelperBody = $"""
-					Console.WriteLine ("{initialMessage}");
-					Console.WriteLine ("MODIFIED_LINE");
-					""";
-				proj.Touch ("AppHelper.cs");
 				builder.BuiltBefore = true; // dotnet watch will build, not builder.Build()
-				builder.Save (proj, doNotCleanupOnUpdate: true, saveProject: false);
+				// Watch may not be ready when the app launches. Retry the edit until it observes one.
+				for (int attempt = 0; attempt < 24 && !hotReloadAppliedEvent.IsSet; attempt++) {
+					appHelperBody = $"""
+						Console.WriteLine ("{initialMessage}");
+						Console.WriteLine ("MODIFIED_LINE_{attempt}");
+						""";
+					proj.Touch ("AppHelper.cs");
+					builder.Save (proj, doNotCleanupOnUpdate: true, saveProject: false);
+					hotReloadAppliedEvent.Wait (TimeSpan.FromSeconds (5));
+				}
 
 				// Wait for hot reload to apply (MetadataUpdateHandler fires Console.WriteLine)
-				Assert.IsTrue (hotReloadAppliedEvent.Wait (TimeSpan.FromMinutes (2)),
+				Assert.IsTrue (hotReloadAppliedEvent.IsSet,
 					$"Hot reload message '{hotReloadMessage}' was not found in output. See {logPath} for details.");
 			} finally {
 				// Ensure the process is stopped and its output reader has exited.
