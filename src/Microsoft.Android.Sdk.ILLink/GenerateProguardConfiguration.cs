@@ -65,8 +65,20 @@ namespace Mono.Linker.Steps {
 			writer.WriteLine ("-keepclassmembers class " + jtype + " {");
 			foreach (var m in type.Methods)
 				ProcessMethod (m);
+			// Bound Java fields are exposed as managed properties, except for constants.
+			foreach (var property in type.Properties)
+				ProcessField (property);
+			foreach (var field in type.Fields)
+				ProcessField (field);
 			writer.WriteLine ("}");
 			writer.WriteLine ();
+		}
+
+		void ProcessField (ICustomAttributeProvider member)
+		{
+			var ra = member.CustomAttributes.FirstOrDefault (a => a.AttributeType.FullName == "Android.Runtime.RegisterAttribute");
+			if (ra != null && ra.ConstructorArguments.Count > 0 && ra.ConstructorArguments [0].Value is string jname)
+				writer.WriteLine ("   *** {0};", jname);
 		}
 
 		void ProcessMethod (MethodDefinition method)
