@@ -9,7 +9,7 @@ namespace Xamarin.Android.RuntimeTests {
 	public class DllImportTest {
 
 		[DllImport ("libdl")]
-		static extern IntPtr dlopen (string libName, int flags);
+		static safe extern IntPtr dlopen (string libName, int flags);
 
 		[TestMethod]
 		public void PInvokeDlopenSucceeds ()

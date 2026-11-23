@@ -366,7 +366,10 @@ namespace Java.InteropTests
 			where T : Java.Lang.Object
 		{
 			var instance = JNIEnv.AllocObject (typeof (T));
-			JNIEnv.FinishCreateInstance (instance, "()V"u8);
+			// SAFETY: The literal is terminated and the allocated local peer takes no arguments.
+			unsafe {
+				JNIEnv.FinishCreateInstance (instance, "()V"u8);
+			}
 			var result = Java.Lang.Object.GetObject<T> (instance, JniHandleOwnership.TransferLocalRef);
 			Assert.IsNotNull (result);
 			return result;
@@ -439,9 +442,10 @@ namespace Java.InteropTests
 			return JNINativeWrapper.CreateDelegate (new Func<IntPtr, IntPtr, int> (n_GetHashCode));
 		}
 
-		static unsafe int n_GetHashCode (IntPtr jnienv, IntPtr nativeThis)
+		static int n_GetHashCode (IntPtr jnienv, IntPtr nativeThis)
 		{
-			return JniMarshal.SafeInvokeFunc (jnienv, nativeThis, &InvokeCallback);
+			// SAFETY: JNI supplies the current-thread environment and live receiver for this matching connector.
+			return unsafe (JniMarshal.SafeInvokeFunc (jnienv, nativeThis, &InvokeCallback));
 		}
 
 		static int InvokeCallback (IntPtr jnienv, IntPtr nativeThis)

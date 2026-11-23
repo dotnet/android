@@ -213,7 +213,10 @@ namespace Java.InteropTests
 
 			var handle = JNIEnv.AllocObject (typeof (TrimmableExportSuperArgsPeer));
 			try {
-				JNIEnv.FinishCreateInstance (handle, "(I)V"u8, new JValue (42));
+				// SAFETY: The literal is terminated; the live allocated peer and one argument match (I)V.
+				unsafe {
+					JNIEnv.FinishCreateInstance (handle, "(I)V"u8, new JValue (42));
+				}
 				using var peer = Java.Lang.Object.GetObject<TrimmableExportSuperArgsPeer> (handle, JniHandleOwnership.DoNotTransfer);
 				Assert.IsNotNull (peer);
 

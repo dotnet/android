@@ -799,7 +799,8 @@ namespace Java.InteropTests
 			[DynamicallyAccessedMembers (DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.NonPublicConstructors)]
 			Type targetType, IntPtr handle, JniHandleOwnership transfer)
 		{
-			var value = JavaConvert.FromJniHandle (handle, transfer, targetType);
+			// SAFETY: Each test retains its source wrapper in a using scope and passes DoNotTransfer.
+			var value = unsafe (JavaConvert.FromJniHandle (handle, transfer, targetType));
 			Assert.IsNotNull (value);
 			return value;
 		}

@@ -70,13 +70,16 @@ namespace Java.InteropTests
 #pragma warning restore CA1422
 		}
 
+		/// <safety>
+		/// class_loader must remain a live JNI global reference until the native worker has joined.
+		/// </safety>
 		[DllImport ("reuse-threads")]
-		static extern int rt_register_type_on_new_thread (string java_type_namem, IntPtr class_loader);
+		static unsafe extern int rt_register_type_on_new_thread (string java_type_namem, IntPtr class_loader);
 
 		delegate void CB (IntPtr jnienv, IntPtr java_instance);
 
 		[DllImport ("reuse-threads")]
-		static extern int rt_invoke_callback_on_new_thread (CB cb);
+		static safe extern int rt_invoke_callback_on_new_thread (CB cb);
 
 		[TestMethod]
 		public void RegisterTypeOnNewNativeThread ()
@@ -84,7 +87,8 @@ namespace Java.InteropTests
 			var classLoader = Application.Context.ClassLoader;
 			if (classLoader == null)
 				throw new AssertFailedException ("Application context has no class loader");
-			int ret = rt_register_type_on_new_thread ("from.NewNativeThreadOne", classLoader.Handle);
+			// SAFETY: classLoader owns the global reference through the synchronous native worker join.
+			int ret = unsafe (rt_register_type_on_new_thread ("from.NewNativeThreadOne", classLoader.Handle));
 			GC.KeepAlive (classLoader);
 			Assert.AreEqual (0, ret, $"Java type registration on a new thread failed with code {ret}");
 		}
@@ -184,7 +188,10 @@ namespace Java.InteropTests
 		{
 			try {
 				var lrefInstance = JNIEnv.AllocObject (typeof (JniEnvGenericHolder<>));
-				JNIEnv.FinishCreateInstance (lrefInstance, "()V"u8);
+				// SAFETY: The literal is terminated and the allocated local peer takes no arguments.
+				unsafe {
+					JNIEnv.FinishCreateInstance (lrefInstance, "()V"u8);
+				}
 				Assert.Fail ("SHOULD NOT BE REACHED: creation of open generic types is not supported");
 			} catch (NotSupportedException) {
 			}

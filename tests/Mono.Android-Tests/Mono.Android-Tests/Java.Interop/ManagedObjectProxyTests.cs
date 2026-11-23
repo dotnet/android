@@ -331,10 +331,13 @@ namespace Java.InteropTests
 			return isAlive;
 		}
 
-		static unsafe void NoPinActionHelper (int depth, Action action)
+		static void NoPinActionHelper (int depth, Action action)
 		{
-			int* values = stackalloc int [20];
-			noPinActionPointer = new IntPtr (values);
+			// SAFETY: Only the address is retained for conservative-stack testing; it is never dereferenced.
+			unsafe {
+				int* values = stackalloc int [20];
+				noPinActionPointer = new IntPtr (values);
+			}
 
 			if (depth <= 0) {
 				new object ();

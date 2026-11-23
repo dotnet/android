@@ -5,6 +5,8 @@
 
   <PropertyGroup>
     <TargetFramework>$(DotNetAndroidTargetFramework)</TargetFramework>
+    <LangVersion>preview</LangVersion>
+    <MemorySafetyRulesVersion>2</MemorySafetyRulesVersion>
     <SupportedOSPlatformVersion>$(AndroidMinimumDotNetApiLevel)</SupportedOSPlatformVersion>
     <RootNamespace>Xamarin.Android.RuntimeTests</RootNamespace>
     <OutputType>Exe</OutputType>

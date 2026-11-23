@@ -59,7 +59,8 @@ public class JniRuntimeExceptionPolicyTests {
 		AndroidEnvironment.UnhandledExceptionRaiser += notification.OnException;
 		JniObjectReference pending = default;
 		try {
-			Assert.AreEqual (0, InvokeManagedInt (JniEnvironment.EnvironmentPointer, IntPtr.Zero));
+			// SAFETY: This is the current-thread environment; the callback does not use klass.
+			Assert.AreEqual (0, unsafe (InvokeManagedInt (JniEnvironment.EnvironmentPointer, IntPtr.Zero)));
 			pending = JniEnvironment.Exceptions.ExceptionOccurred ();
 			JniEnvironment.Exceptions.ExceptionClear ();
 			Assert.AreEqual (!handled, pending.IsValid);
@@ -174,40 +175,56 @@ public class JniRuntimeExceptionPolicyTests {
 	static int GetCounter (JniType type, string name)
 		=> JniEnvironment.StaticFields.GetStaticIntField (type.PeerReference, type.GetStaticField (name, "I"));
 
-	static unsafe int InvokeJava (JniType type, bool action, bool swallow)
+	static int InvokeJava (JniType type, bool action, bool swallow)
 	{
-		JniArgumentValue* args = stackalloc JniArgumentValue [2];
-		args [0] = new JniArgumentValue (action);
-		args [1] = new JniArgumentValue (swallow);
-		return JniEnvironment.StaticMethods.CallStaticIntMethod (
-			type.PeerReference, type.GetStaticMethod ("invoke", "(ZZ)I"), args);
+		// SAFETY: The live type's (ZZ)I method synchronously consumes these two initialized arguments.
+		unsafe {
+			JniArgumentValue* args = stackalloc JniArgumentValue [2];
+			args [0] = new JniArgumentValue (action);
+			args [1] = new JniArgumentValue (swallow);
+			return JniEnvironment.StaticMethods.CallStaticIntMethod (
+				type.PeerReference, type.GetStaticMethod ("invoke", "(ZZ)I"), args);
+		}
 	}
 
-	static unsafe JniType RegisterCallbacks ()
+	static JniType RegisterCallbacks ()
 	{
 		var type = new JniType ("net/dot/android/test/JniRuntimeExceptionPolicy");
-		fixed (byte* callbackName = "callback\0"u8)
-		fixed (byte* callbackSignature = "()I\0"u8)
-		fixed (byte* actionName = "action\0"u8)
-		fixed (byte* actionSignature = "()V\0"u8) {
-			JniNativeMethod* methods = stackalloc JniNativeMethod [2];
-			methods [0] = new JniNativeMethod (callbackName, callbackSignature,
-				(IntPtr) (delegate* unmanaged<IntPtr, IntPtr, int>) &InvokeInt);
-			methods [1] = new JniNativeMethod (actionName, actionSignature,
-				(IntPtr) (delegate* unmanaged<IntPtr, IntPtr, void>) &InvokeVoid);
-			JniEnvironment.Types.RegisterNatives (type.PeerReference, new ReadOnlySpan<JniNativeMethod> (methods, 2));
+		// SAFETY: Terminated names stay pinned during registration; the static callbacks have matching JNI ABIs.
+		unsafe {
+			fixed (byte* callbackName = "callback\0"u8)
+			fixed (byte* callbackSignature = "()I\0"u8)
+			fixed (byte* actionName = "action\0"u8)
+			fixed (byte* actionSignature = "()V\0"u8) {
+				JniNativeMethod* methods = stackalloc JniNativeMethod [2];
+				methods [0] = new JniNativeMethod (callbackName, callbackSignature,
+					(IntPtr) (delegate* unmanaged<IntPtr, IntPtr, int>) &InvokeInt);
+				methods [1] = new JniNativeMethod (actionName, actionSignature,
+					(IntPtr) (delegate* unmanaged<IntPtr, IntPtr, void>) &InvokeVoid);
+				JniEnvironment.Types.RegisterNatives (type.PeerReference, new ReadOnlySpan<JniNativeMethod> (methods, 2));
+			}
 		}
 		return type;
 	}
 
+	/// <safety>
+	/// env must be the current thread's live JNIEnv; Callback does not inspect klass.
+	/// </safety>
 	static unsafe int InvokeManagedInt (IntPtr env, IntPtr klass)
-		=> JniMarshal.SafeInvokeFunc<int> (env, klass, &Callback);
+		// SAFETY: The caller supplies the current-thread environment and Callback has the matching signature.
+		=> unsafe (JniMarshal.SafeInvokeFunc<int> (env, klass, &Callback));
 
 	[UnmanagedCallersOnly]
 	static int InvokeInt (IntPtr env, IntPtr klass)
-		=> InvokeManagedInt (env, klass);
+		// SAFETY: JNI invokes this signature-matched callback with the current-thread environment.
+		=> unsafe (InvokeManagedInt (env, klass));
 
 	[UnmanagedCallersOnly]
 	static unsafe void InvokeVoid (IntPtr env, IntPtr klass)
-		=> JniMarshal.SafeInvokeAction (env, klass, &Action);
+	{
+		// SAFETY: JNI supplies the current-thread environment and Action has the matching signature.
+		unsafe {
+			JniMarshal.SafeInvokeAction (env, klass, &Action);
+		}
+	}
 }
