@@ -14,11 +14,14 @@ namespace Java.InteropTests
 	{
 		private static IntPtr aptr;
 
-		private static unsafe void NoPinActionHelper (int depth, Action act)
+		private static void NoPinActionHelper (int depth, Action act)
 		{
 			// Avoid tail calls
-			int* values = stackalloc int [20];
-			aptr = new IntPtr (values);
+			// SAFETY: Only the address is retained for conservative-stack testing; it is never dereferenced.
+			unsafe {
+				int* values = stackalloc int [20];
+				aptr = new IntPtr (values);
+			}
 
 			if (depth <= 0) {
 				//

@@ -66,13 +66,16 @@ public class MyJavaInterfaceImpl : JavaObject {
 		get {return _members;}
 	}
 
-	public unsafe MyJavaInterfaceImpl ()
-		: base (ref *InvalidJniObjectReference, JniObjectReferenceOptions.None)
+	public MyJavaInterfaceImpl ()
+		: base (JniObjectReferenceOptions.None)
 	{
 		const   string  id  = "()V";
 		var peer = _members.InstanceMethods.StartCreateInstance (id, GetType (), null);
 		Construct (ref peer, JniObjectReferenceOptions.CopyAndDispose);
-		_members.InstanceMethods.FinishCreateInstance (id, this, null);
+		// SAFETY: The ()V constructor takes no arguments; this owns the new peer.
+		unsafe {
+			_members.InstanceMethods.FinishCreateInstance (id, this, null);
+		}
 	}
 }
 
@@ -100,10 +103,11 @@ internal class IJavaInterfaceInvoker : JavaObject, IJavaInterface {
 	{
 	}
 
-	public unsafe string Value {
+	public string Value {
 		get {
 			const string id = "getValue.()Ljava/lang/String;";
-			var r = JniPeerMembers.InstanceMethods.InvokeVirtualObjectMethod (id, this, null);
+			// SAFETY: getValue takes no arguments and this owns the receiver peer.
+			var r = unsafe (JniPeerMembers.InstanceMethods.InvokeVirtualObjectMethod (id, this, null));
 			return JniEnvironment.Strings.ToString (ref r, JniObjectReferenceOptions.CopyAndDispose);
 		}
 	}

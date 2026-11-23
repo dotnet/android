@@ -151,11 +151,12 @@ namespace Java.InteropTests
 		}
 
 		[TestMethod]
-		public unsafe void Ctor ()
+		public void Ctor ()
 		{
 			using (var t = new JniType ("java/lang/Object")) {
 				var c = t.GetConstructor ("()V");
-				var lref = t.NewObject (c, null);
+				// SAFETY: c is the ()V constructor of the live type, so no arguments are required.
+				var lref = unsafe (t.NewObject (c, null));
 				Assert.IsTrue (lref.IsValid);
 				using (var o = new JavaObject (ref lref, JniObjectReferenceOptions.Copy)) {
 					Assert.IsTrue (lref.IsValid);

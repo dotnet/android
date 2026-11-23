@@ -8,7 +8,7 @@ namespace Java.InteropTests {
 	static class JniPeerMembersExtensions {
 		const DynamicallyAccessedMemberTypes Constructors = DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.NonPublicConstructors;
 
-		public static unsafe JniObjectReference StartGenericCreateInstance<T> (
+		public static JniObjectReference StartGenericCreateInstance<T> (
 			this    JniPeerMembers.JniInstanceMethods peer,
 			string  constructorSignature,
 			Type    declaringType,
@@ -21,7 +21,7 @@ namespace Java.InteropTests {
 			return peer.StartCreateInstance (constructorSignature, declaringType, null);
 		}
 
-		public static unsafe void FinishGenericCreateInstance<
+		public static void FinishGenericCreateInstance<
 				[DynamicallyAccessedMembers (Constructors)]
 				T> (
 			this          JniPeerMembers.JniInstanceMethods peer,
@@ -37,17 +37,19 @@ namespace Java.InteropTests {
 			var __vm = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T> ();
 			var arg = __vm.CreateGenericArgumentState (value);
 
-			var args = stackalloc JniArgumentValue [1];
-			args [0] = arg.JniArgumentValue;
-
 			try {
-				peer.FinishCreateInstance (constructorSignature, self, args);
+				// SAFETY: The typed marshaler owns the single argument through this synchronous constructor call.
+				unsafe {
+					var args = stackalloc JniArgumentValue [1];
+					args [0] = arg.JniArgumentValue;
+					peer.FinishCreateInstance (constructorSignature, self, args);
+				}
 			} finally {
 				__vm.DestroyGenericArgumentState (value, ref arg);
 			}
 		}
 
-		public static unsafe void InvokeGenericVirtualVoidMethod<
+		public static void InvokeGenericVirtualVoidMethod<
 				[DynamicallyAccessedMembers (Constructors)]
 				T> (
 			this          JniPeerMembers.JniInstanceMethods peer,
@@ -63,17 +65,19 @@ namespace Java.InteropTests {
 			var __vm = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T> ();
 			var arg = __vm.CreateGenericArgumentState (value);
 
-			var args = stackalloc JniArgumentValue [1];
-			args [0] = arg.JniArgumentValue;
-
 			try {
-				peer.InvokeVirtualVoidMethod (encodedMember, self, args);
+				// SAFETY: The typed marshaler owns the single argument through this synchronous method call.
+				unsafe {
+					var args = stackalloc JniArgumentValue [1];
+					args [0] = arg.JniArgumentValue;
+					peer.InvokeVirtualVoidMethod (encodedMember, self, args);
+				}
 			} finally {
 				__vm.DestroyGenericArgumentState (value, ref arg);
 			}
 		}
 
-		public static unsafe int InvokeGenericVirtualInt32Method<
+		public static int InvokeGenericVirtualInt32Method<
 				[DynamicallyAccessedMembers (Constructors)]
 				T> (
 			this          JniPeerMembers.JniInstanceMethods peer,
@@ -89,17 +93,19 @@ namespace Java.InteropTests {
 			var __vm = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T> ();
 			var arg = __vm.CreateGenericArgumentState (value);
 
-			var args = stackalloc JniArgumentValue [1];
-			args [0] = arg.JniArgumentValue;
-
 			try {
-				return peer.InvokeVirtualInt32Method (encodedMember, self, args);
+				// SAFETY: The typed marshaler owns the single argument through this synchronous method call.
+				unsafe {
+					var args = stackalloc JniArgumentValue [1];
+					args [0] = arg.JniArgumentValue;
+					return peer.InvokeVirtualInt32Method (encodedMember, self, args);
+				}
 			} finally {
 				__vm.DestroyGenericArgumentState (value, ref arg);
 			}
 		}
 
-		public static unsafe int InvokeGenericInt32Method<
+		public static int InvokeGenericInt32Method<
 				[DynamicallyAccessedMembers (Constructors)]
 				T> (
 			this    JniPeerMembers.JniStaticMethods peer,
@@ -112,11 +118,13 @@ namespace Java.InteropTests {
 			var __vm = JniEnvironment.Runtime.ValueManager.GetValueMarshaler<T> ();
 			var arg = __vm.CreateGenericArgumentState (value);
 
-			var args = stackalloc JniArgumentValue [1];
-			args [0] = arg.JniArgumentValue;
-
 			try {
-				return peer.InvokeInt32Method (encodedMember, args);
+				// SAFETY: The typed marshaler owns the single argument through this synchronous method call.
+				unsafe {
+					var args = stackalloc JniArgumentValue [1];
+					args [0] = arg.JniArgumentValue;
+					return peer.InvokeInt32Method (encodedMember, args);
+				}
 			} finally {
 				__vm.DestroyGenericArgumentState (value, ref arg);
 			}

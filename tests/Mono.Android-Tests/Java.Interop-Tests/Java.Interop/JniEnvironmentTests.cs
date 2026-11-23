@@ -22,11 +22,12 @@ namespace Java.InteropTests
 		}
 
 		[TestMethod]
-		public unsafe void Types_IsSameObject ()
+		public void Types_IsSameObject ()
 		{
 			using (var t = new JniType ("java/lang/Object")) {
 				var c = t.GetConstructor ("()V");
-				var o = t.NewObject (c, null);
+				// SAFETY: c is the ()V constructor of the live type, so no arguments are required.
+				var o = unsafe (t.NewObject (c, null));
 				try {
 					using (var ot = JniEnvironment.Types.GetTypeFromInstance (o)) {
 						Assert.IsTrue (JniEnvironment.Types.IsSameObject (t.PeerReference, ot.PeerReference));
@@ -48,11 +49,12 @@ namespace Java.InteropTests
 		}
 
 		[TestMethod]
-		public unsafe void Handles_NewReturnToJniRef ()
+		public void Handles_NewReturnToJniRef ()
 		{
 			using (var t = new JniType ("java/lang/Object")) {
 				var c = t.GetConstructor ("()V");
-				var o = t.NewObject (c, null);
+				// SAFETY: c is the ()V constructor of the live type, so no arguments are required.
+				var o = unsafe (t.NewObject (c, null));
 				try {
 					var n = o.NewLocalRef ();
 					JniObjectReference.Dispose (ref n);
