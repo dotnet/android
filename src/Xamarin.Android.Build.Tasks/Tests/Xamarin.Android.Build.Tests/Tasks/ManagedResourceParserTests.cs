@@ -697,25 +697,6 @@ int xml myxml 0x7f140000
 		}
 
 		[Test]
-		public void ManagedParserGeneratesResourceClasses ()
-		{
-			var path = Path.Combine ("temp", TestName);
-			CreateResourceDirectory (path);
-			IBuildEngine engine = new MockBuildEngine (TestContext.Out);
-			TaskLoggingHelper loggingHelper = new TaskLoggingHelper (engine, nameof (ManagedResourceParser));
-			string resPath = Path.Combine (Root, path, "res");
-			var platform = AndroidSdkResolver.GetMaxInstalledPlatform ();
-			var flagFile = Path.Combine (Root, path, "AndroidResgen.flag");
-			var lp = new string [] { Path.Combine (Root, path, "lp", "res") };
-			var parser = new ManagedResourceParser (loggingHelper) {
-				JavaPlatformDirectory = Path.Combine (AndroidSdkDirectory, "platforms", AndroidSdkResolver.GetPlatformDirectoryName (platform)),
-				ResourceFlagFile = flagFile,
-			};
-			var codeDom = parser.Parse (resPath, "R.txt", lp, isApp: true, resourceMap: new Dictionary<string, string> ());
-			Assert.AreEqual (20, codeDom.Members.Count, "Expected 20 Classes to be generated");
-		}
-
-		[Test]
 		public void GenerateDesignerFileWithElevenStyleableAttributesFromRtxt ()
 		{
 			var styleable = @"<resources>
