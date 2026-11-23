@@ -2507,7 +2507,6 @@ namespace Android.Runtime {
 					JniEnvironment.Arrays.GetLongArrayRegion (new JniObjectReference (src), 0, dest.Length, (long*) __p);
 			}
 		}
-#if ANDROID_8
 		/// <safety>
 		/// <paramref name="env"/> must be the current thread's live JNI environment; <paramref name="jbitmap"/>
 		/// must be a live Bitmap reference for the call. The native output layout must match <paramref name="info"/>.
@@ -2561,6 +2560,5 @@ namespace Android.Runtime {
 			// SAFETY: Handle is this thread's environment; the caller owns the matching lock and has stopped pixel access.
 			return unsafe(AndroidBitmap_unlockPixels (Handle, jbitmap));
 		}
-#endif  // ANDROID_8
 	}
 }

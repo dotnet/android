@@ -6,7 +6,6 @@ using System.Linq;
 
 namespace MonoDroid.Generation
 {
-#if HAVE_CECIL
 	internal static class ManagedExtensions
 	{
 		public static string FullNameCorrected (this TypeReference t) => t.FullName.Replace ('/', '.');
@@ -94,5 +93,4 @@ namespace MonoDroid.Generation
 			};
 		}
 	}
-#endif
 }

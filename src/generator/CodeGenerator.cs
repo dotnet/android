@@ -333,7 +333,6 @@ namespace Xamarin.Android.Binder
 			} while (removed.Count > 0);
 		}
 
-#if HAVE_CECIL
 		internal static void ProcessReferencedType (TypeDefinition td, CodeGenerationOptions opt)
 		{
 			if (!td.IsPublic && !td.IsNested)
@@ -363,7 +362,6 @@ namespace Xamarin.Android.Binder
 			foreach (var nt in td.NestedTypes)
 				ProcessReferencedType (nt, opt);
 		}
-#endif  // HAVE_CECIL
 
 		static void GenerateAnnotationAttributes (List<GenBase> gens, IEnumerable<string> zips)
 		{

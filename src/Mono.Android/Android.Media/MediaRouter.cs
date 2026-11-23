@@ -1,7 +1,6 @@
 using System;
 using Android.Runtime;
 
-#if ANDROID_16
 namespace Android.Media {
 
 	partial class MediaRouter {
@@ -16,5 +15,4 @@ namespace Android.Media {
 		}
 	}
 }
-#endif  // ANDROID_16
 

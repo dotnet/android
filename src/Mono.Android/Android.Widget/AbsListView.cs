@@ -70,7 +70,6 @@ namespace Android.Widget {
 		}
 #pragma warning restore CS8764
 
-#if ANDROID_12
 		[Obsolete ("Please use the Adapter property setter")]
 		[Register ("setAdapter", "(Landroid/widget/ListAdapter;)V", "GetSetAdapter_Landroid_widget_ListAdapter_Handler")]
 		public virtual void SetAdapter (Android.Widget.IListAdapter adapter)
@@ -88,7 +87,6 @@ namespace Android.Widget {
 				}
 			}
 		}
-#endif
 	}
 
 	internal partial class AbsListViewInvoker {

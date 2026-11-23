@@ -2,7 +2,6 @@ using System;
 
 using Android.Content;
 
-#if ANDROID_33
 namespace Android.Icu.Text
 {
 	public partial class ListFormatter
@@ -23,4 +22,3 @@ namespace Android.Icu.Text
 		}
 	}
 }
-#endif

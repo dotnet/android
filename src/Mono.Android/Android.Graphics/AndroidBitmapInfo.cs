@@ -2,7 +2,6 @@ using System;
 
 namespace Android.Graphics {
 
-#if ANDROID_8
 	/// <summary>
 	/// Provides information about the pixel buffer of an Android <see cref="Android.Graphics.Bitmap"/>.
 	/// This struct corresponds to the native <c>AndroidBitmapInfo</c> type from the Android NDK.
@@ -79,5 +78,4 @@ namespace Android.Graphics {
 				value.flags == flags;
 		}
 	}
-#endif
 }

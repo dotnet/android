@@ -2,7 +2,6 @@ using Android.OS;
 using Android.Runtime;
 using System.Diagnostics.CodeAnalysis;
 
-#if ANDROID_11
 namespace Android.App {
 	public partial class FragmentManager {
 		/// <summary>
@@ -67,4 +66,3 @@ namespace Android.App {
 		}
 	}
 }
-#endif

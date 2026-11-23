@@ -15,13 +15,8 @@ namespace MonoDroid.Generation {
 			if (parm == null)
 				throw new ArgumentNullException ("parm");
 			this.parm = parm;
-#if false // FIXME: we want to enable generic type constraints to get valid JNI output. So far we "remove" any method that involves generic parameter constraints.
-			type = parm.Constraints != null ? parm.Constraints [0].FullName : "Java.Lang.Object";
-			java_type = parm != null && parm.Constraints != null && parm.Constraints [0] != null ? parm.Constraints [0].JavaName : "java.lang.Object";
-#else
 			type = "Java.Lang.Object";
 			java_type = parm != null && parm.Constraints != null && parm.Constraints [0] != null ? parm.Constraints [0].JavaName : "java.lang.Object";
-#endif
 			// some unknown types could result in "null" constraints items. So far we treat this as JLO.
 			jni_type = parm.Constraints != null && parm.Constraints [0] != null ? parm.Constraints [0].JniName : "Ljava/lang/Object;";
 		}

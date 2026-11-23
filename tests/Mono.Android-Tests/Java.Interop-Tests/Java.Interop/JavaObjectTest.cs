@@ -18,7 +18,6 @@ namespace Java.InteropTests
 			this.testContext = testContext;
 		}
 
-#if !NO_GC_BRIDGE_SUPPORT
 		[TestMethod]
 		public void JavaReferencedInstanceSurvivesCollection ()
 		{
@@ -48,7 +47,6 @@ namespace Java.InteropTests
 				array.Dispose ();
 			}
 		}
-#endif  // !NO_GC_BRIDGE_SUPPORT
 
 		// The surfaced-peer registry is process-wide, so other threads can add or
 		// remove unrelated peers while a test runs. Count only entries for this peer.
@@ -88,7 +86,6 @@ namespace Java.InteropTests
 			}
 		}
 
-#if !NO_GC_BRIDGE_SUPPORT
 		[TestMethod]
 		[Timeout (60_000, CooperativeCancellation = true)]
 		public async Task UnreferencedInstanceIsCollected ()
@@ -106,7 +103,6 @@ namespace Java.InteropTests
 			Assert.IsNull (JniRuntime.CurrentRuntime.ValueManager.PeekValue (oldHandle));
 			JniObjectReference.Dispose (ref oldHandle);
 		}
-#endif  // !NO_GC_BRIDGE_SUPPORT
 
 		[TestMethod]
 		public void Dispose ()
@@ -119,7 +115,6 @@ namespace Java.InteropTests
 			Assert.IsFalse (f);
 		}
 
-#if !NO_GC_BRIDGE_SUPPORT
 		[TestMethod]
 		[Timeout (60_000, CooperativeCancellation = true)]
 		public async Task Dispose_Finalized ()
@@ -139,7 +134,6 @@ namespace Java.InteropTests
 			Assert.IsFalse (disposed.Task.IsCompleted);
 			Assert.IsTrue (finalized.Task.IsCompleted, "Expected JavaDisposedObject.Dispose(disposing: false) to run.");
 		}
-#endif  // !NO_GC_BRIDGE_SUPPORT
 
 		[TestMethod]
 		public void ObjectDisposed ()

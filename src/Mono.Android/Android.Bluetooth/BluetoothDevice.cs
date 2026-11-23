@@ -1,4 +1,3 @@
-#if ANDROID_26
 
 namespace Android.Bluetooth
 {
@@ -18,6 +17,3 @@ namespace Android.Bluetooth
 			=> ConnectGatt (context, autoConnect, @callback, transport, (Android.Bluetooth.BluetoothPhy) phy, handler);
 	}
 }
-
-#endif
-

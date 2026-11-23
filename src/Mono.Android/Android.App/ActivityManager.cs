@@ -11,12 +11,10 @@ namespace Android.App {
 			return context.GetSystemService (Context.ActivityService) as ActivityManager;
 		}
 
-#if ANDROID_11
 		public void MoveTaskToFront (int taskId, int flags)
 		{
 			MoveTaskToFront (taskId, (MoveTaskFlags) flags);
 		}
-#endif
 	}
 }
 

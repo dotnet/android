@@ -1,4 +1,3 @@
-#if ANDROID_18
 using System;
 using Android.Runtime;
 
@@ -51,4 +50,3 @@ namespace Android.Bluetooth
 #pragma warning restore 0169
 	}
 }
-#endif
