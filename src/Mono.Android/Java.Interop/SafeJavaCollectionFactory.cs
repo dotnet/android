@@ -2,7 +2,6 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
-using System.Globalization;
 using System.Reflection;
 
 using Android.Runtime;
@@ -27,8 +26,9 @@ namespace Java.Interop;
 /// </para>
 /// <list type="bullet">
 /// <item><description>reference element arguments ride the <c>__Canon</c> template: the wrapper definition is
-/// reflectively closed and its activation constructor invoked, kept alive by a concrete-literal
-/// <c>IJavaPeerable</c> rooting branch in the same method;</description></item>
+/// reflectively closed and its activation constructor mapped from the statically known open definition.
+/// A concrete-literal <c>IJavaPeerable</c> rooting branch in the same method keeps the native template
+/// available;</description></item>
 /// <item><description>primitive/nullable value-type arguments go through <see cref="ValueTypeFactory"/>,
 /// which roots the exact instantiation with a direct <c>new</c>;</description></item>
 /// <item><description>other value types use the corresponding untyped collection wrapper because
@@ -138,7 +138,7 @@ static class SafeJavaCollectionFactory
 	}
 
 	[UnconditionalSuppressMessage ("AOT", "IL3050:RequiresDynamicCode",
-		Justification = "MakeGenericType () and Activator.CreateInstance () are annotated because arbitrary constructed generics can lack a runtime template. " +
+		Justification = "MakeGenericType () is annotated because arbitrary constructed generics can lack a runtime template. " +
 			"elementType is always a reference type here (value types are diverted to ValueTypeFactory above), so JavaList<elementType> canonicalizes to the " +
 			"JavaList<__Canon> template whose activation constructor is rooted by the direct JavaList<IJavaPeerable> construction in the other branch.")]
 	[UnconditionalSuppressMessage ("Trimming", "IL2071:MakeGenericType",
@@ -146,9 +146,6 @@ static class SafeJavaCollectionFactory
 			"requirement that JavaList<[DAM(Constructors)] TElement> places on its element parameter. That requirement exists only for the dynamic-code path, where the wrapper " +
 			"reflectively activates element peers from their constructors. On the trimmable typemap path the wrapper never activates its elements — element peer creation goes " +
 			"through JavaConvert and the typemap's registered activation constructors — so the unsatisfied element requirement is never exercised.")]
-	[UnconditionalSuppressMessage ("Trimming", "IL2072:UnrecognizedReflectionPattern",
-		Justification = "The dynamically constructed JavaList<elementType> rides the JavaList<IJavaPeerable> canonical template whose activation constructor is rooted by the " +
-			"concrete-literal branch. Only the known JavaList<T> activation constructor is invoked here.")]
 	static object? CreateReferenceListFromJniHandle (Type elementType, IntPtr handle, JniHandleOwnership transfer)
 	{
 		if (handle == IntPtr.Zero) {
@@ -164,15 +161,15 @@ static class SafeJavaCollectionFactory
 		}
 
 		var listType = typeof (JavaList<>).MakeGenericType (elementType);
-		var result = Activator.CreateInstance (listType, ActivationConstructorBinding, binder: null, args: [handle, transfer], culture: CultureInfo.InvariantCulture);
-		if (result == null) {
-			throw new InvalidOperationException ($"Unable to create a JavaList instance for element type '{elementType}'.");
-		}
-		return result;
+		var definitionConstructor = typeof (JavaList<>).GetConstructor (
+			ActivationConstructorBinding, binder: null, types: [typeof (IntPtr), typeof (JniHandleOwnership)], modifiers: null)
+			?? throw new MissingMethodException (typeof (JavaList<>).FullName, ".ctor(IntPtr, JniHandleOwnership)");
+		var constructor = (ConstructorInfo) listType.GetMemberWithSameMetadataDefinitionAs (definitionConstructor);
+		return constructor.Invoke ([handle, transfer]);
 	}
 
 	[UnconditionalSuppressMessage ("AOT", "IL3050:RequiresDynamicCode",
-		Justification = "MakeGenericType () and Activator.CreateInstance () are annotated because arbitrary constructed generics can lack a runtime template. " +
+		Justification = "MakeGenericType () is annotated because arbitrary constructed generics can lack a runtime template. " +
 			"elementType is always a reference type here (value types are diverted to ValueTypeFactory above), so JavaCollection<elementType> canonicalizes to the " +
 			"JavaCollection<__Canon> template whose activation constructor is rooted by the direct JavaCollection<IJavaPeerable> construction in the other branch.")]
 	[UnconditionalSuppressMessage ("Trimming", "IL2071:MakeGenericType",
@@ -180,9 +177,6 @@ static class SafeJavaCollectionFactory
 			"requirement that JavaCollection<[DAM(Constructors)] TElement> places on its element parameter. That requirement exists only for the dynamic-code path, where the " +
 			"wrapper reflectively activates element peers from their constructors. On the trimmable typemap path the wrapper never activates its elements — element peer creation " +
 			"goes through JavaConvert and the typemap's registered activation constructors — so the unsatisfied element requirement is never exercised.")]
-	[UnconditionalSuppressMessage ("Trimming", "IL2072:UnrecognizedReflectionPattern",
-		Justification = "The dynamically constructed JavaCollection<elementType> rides the JavaCollection<IJavaPeerable> canonical template whose activation constructor is rooted " +
-			"by the concrete-literal branch. Only the known JavaCollection<T> activation constructor is invoked here.")]
 	static object? CreateReferenceCollectionFromJniHandle (Type elementType, IntPtr handle, JniHandleOwnership transfer)
 	{
 		if (handle == IntPtr.Zero) {
@@ -198,15 +192,15 @@ static class SafeJavaCollectionFactory
 		}
 
 		var collectionType = typeof (JavaCollection<>).MakeGenericType (elementType);
-		var result = Activator.CreateInstance (collectionType, ActivationConstructorBinding, binder: null, args: [handle, transfer], culture: CultureInfo.InvariantCulture);
-		if (result == null) {
-			throw new InvalidOperationException ($"Unable to create a JavaCollection instance for element type '{elementType}'.");
-		}
-		return result;
+		var definitionConstructor = typeof (JavaCollection<>).GetConstructor (
+			ActivationConstructorBinding, binder: null, types: [typeof (IntPtr), typeof (JniHandleOwnership)], modifiers: null)
+			?? throw new MissingMethodException (typeof (JavaCollection<>).FullName, ".ctor(IntPtr, JniHandleOwnership)");
+		var constructor = (ConstructorInfo) collectionType.GetMemberWithSameMetadataDefinitionAs (definitionConstructor);
+		return constructor.Invoke ([handle, transfer]);
 	}
 
 	[UnconditionalSuppressMessage ("AOT", "IL3050:RequiresDynamicCode",
-		Justification = "MakeGenericType () and Activator.CreateInstance () are annotated because arbitrary constructed generics can lack a runtime template. " +
+		Justification = "MakeGenericType () is annotated because arbitrary constructed generics can lack a runtime template. " +
 			"The reflective branch is reached only when both arguments are reference types, so JavaDictionary<keyType,valueType> canonicalizes to the " +
 			"JavaDictionary<__Canon,__Canon> template whose activation constructor is rooted by the direct JavaDictionary<IJavaPeerable,IJavaPeerable> construction in the other branch.")]
 	[UnconditionalSuppressMessage ("Trimming", "IL2071:MakeGenericType",
@@ -214,9 +208,6 @@ static class SafeJavaCollectionFactory
 			"requirement that JavaDictionary<[DAM(Constructors)] TKey, [DAM(Constructors)] TValue> places on its element parameters. That requirement exists only for the " +
 			"dynamic-code path, where the wrapper reflectively activates key/value peers from their constructors. On the trimmable typemap path the wrapper never activates its " +
 			"elements — element peer creation goes through JavaConvert and the typemap's registered activation constructors — so the unsatisfied element requirement is never exercised.")]
-	[UnconditionalSuppressMessage ("Trimming", "IL2072:UnrecognizedReflectionPattern",
-		Justification = "The dynamically constructed JavaDictionary<keyType,valueType> rides the JavaDictionary<IJavaPeerable,IJavaPeerable> canonical template whose activation " +
-			"constructor is rooted by the concrete-literal branch. Only the known JavaDictionary<TKey,TValue> activation constructor is invoked here.")]
 	static object? CreateReferenceDictionaryFromJniHandle (Type keyType, Type valueType, IntPtr handle, JniHandleOwnership transfer)
 	{
 		if (handle == IntPtr.Zero) {
@@ -233,10 +224,10 @@ static class SafeJavaCollectionFactory
 		}
 
 		var dictionaryType = typeof (JavaDictionary<,>).MakeGenericType (keyType, valueType);
-		var result = Activator.CreateInstance (dictionaryType, ActivationConstructorBinding, binder: null, args: [handle, transfer], culture: CultureInfo.InvariantCulture);
-		if (result == null) {
-			throw new InvalidOperationException ($"Unable to create a JavaDictionary instance for key type '{keyType}' and value type '{valueType}'.");
-		}
-		return result;
+		var definitionConstructor = typeof (JavaDictionary<,>).GetConstructor (
+			ActivationConstructorBinding, binder: null, types: [typeof (IntPtr), typeof (JniHandleOwnership)], modifiers: null)
+			?? throw new MissingMethodException (typeof (JavaDictionary<,>).FullName, ".ctor(IntPtr, JniHandleOwnership)");
+		var constructor = (ConstructorInfo) dictionaryType.GetMemberWithSameMetadataDefinitionAs (definitionConstructor);
+		return constructor.Invoke ([handle, transfer]);
 	}
 }
