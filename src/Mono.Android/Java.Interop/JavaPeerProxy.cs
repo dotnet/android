@@ -100,8 +100,8 @@ namespace Java.Interop
 		/// closed instantiations of its target type.
 		/// </returns>
 		/// <remarks>
-		/// Generated proxies for open generic peer types override this method; for all other proxies
-		/// <see cref="CreateInstance"/> creates the peer directly.
+		/// Generated proxies override this method only when the open generic peer declares an
+		/// <c>(IntPtr, JniHandleOwnership)</c> activation constructor.
 		/// </remarks>
 		[return: DynamicallyAccessedMembers (Constructors)]
 		protected virtual Type? GetGenericTargetTypeDefinition () => null;
