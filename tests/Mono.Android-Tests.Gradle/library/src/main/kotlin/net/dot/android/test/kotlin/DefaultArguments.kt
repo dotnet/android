@@ -2,8 +2,7 @@
 
 package net.dot.android.test.kotlin
 
-// Kotlin computes these default values in `$default` helpers. Only Int is used,
-// so the test app does not need the Kotlin standard library.
+// Kotlin computes these default values in `$default` helpers.
 
 fun scale(value: Int, factor: Int = 2, offset: Int = factor + 1): Int = value * factor + offset
 
