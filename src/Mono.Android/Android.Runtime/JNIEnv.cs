@@ -16,6 +16,11 @@ using Microsoft.Android.Runtime;
 using RuntimeFeature = Microsoft.Android.Runtime.RuntimeFeature;
 
 namespace Android.Runtime {
+	/// <remarks>
+	/// Released JNI entry points remain safe-callable for compatibility; the compiler does not enforce
+	/// their documented reference, buffer, ABI, thread or ownership obligations.
+	/// The new UTF-8 allocation and construction overloads retain caller-unsafe declarations.
+	/// </remarks>
 	public static partial class JNIEnv {
 		const DynamicallyAccessedMemberTypes Constructors = DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.NonPublicConstructors;
 

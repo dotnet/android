@@ -421,10 +421,11 @@ public class TrimmableTypeMap
 			return method;
 		}
 
-		var classClass = JniEnvironment.Types.FindClass ("java/lang/Class");
+		// SAFETY: the complete UTF-8 literal provides immutable NUL-terminated storage for the synchronous lookup.
+		var classClass = unsafe (JniEnvironment.Types.FindClass ("java/lang/Class"u8));
 		try {
-			// SAFETY: classClass is a live java.lang.Class reference until the finally block below.
-			method = unsafe (JniEnvironment.InstanceMethods.GetMethodID (classClass, "getInterfaces", "()[Ljava/lang/Class;"));
+			// SAFETY: FindClass supplies the live receiver; complete UTF-8 literals retain their terminators through this fixed-signature lookup.
+			method = unsafe (JniEnvironment.InstanceMethods.GetMethodID (classClass, "getInterfaces"u8, "()[Ljava/lang/Class;"u8));
 		} finally {
 			JniObjectReference.Dispose (ref classClass);
 		}
