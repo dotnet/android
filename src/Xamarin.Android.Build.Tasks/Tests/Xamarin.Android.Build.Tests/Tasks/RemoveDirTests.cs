@@ -25,6 +25,13 @@ namespace Xamarin.Android.Build.Tests
 			Directory.CreateDirectory (tempDirectory);
 		}
 
+		[TearDown]
+		public void TearDown ()
+		{
+			if (Directory.Exists (tempDirectory))
+				Directory.Delete (tempDirectory, recursive: true);
+		}
+
 		string NewFile (string fileName = "")
 		{
 			if (string.IsNullOrEmpty (fileName)) {
@@ -222,7 +229,6 @@ namespace Xamarin.Android.Build.Tests
 			Assert.AreEqual (1, attempts, "Deletion should not be retried.");
 			Assert.AreEqual (0, task.RemovedDirectories.Length, "Changes should not have been made.");
 			DirectoryAssert.Exists (tempDirectory);
-			Directory.Delete (tempDirectory, recursive: true);
 		}
 
 		static IOException SharingViolation () =>
