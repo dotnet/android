@@ -198,14 +198,16 @@ public class TrimmableTypeMap
 	/// When targetType is available, finds the proxy whose TargetType matches.
 	/// When targetType is null, returns the first available proxy.
 	/// </summary>
-	JavaPeerProxy? GetProxyForJniClass (string className, Type? targetType)
+	JavaPeerProxy? GetProxyForJniClass (string className, Type? targetType, bool exactMatch = false)
 	{
 		if (RuntimeFeature.JniRemapping) {
 			className = JniRemappingLookup.GetReverseType (className) ?? className;
 		}
 		var cacheEntry = GetProxyCacheEntryForJniName (className);
 		if (cacheEntry is JavaPeerProxy singleProxy) {
-			return targetType is null || TargetTypeMatches (targetType, singleProxy.TargetType)
+			return targetType is null || (exactMatch
+				? targetType == singleProxy.TargetType
+				: TargetTypeMatches (targetType, singleProxy.TargetType))
 				? singleProxy
 				: null;
 		}
@@ -218,7 +220,7 @@ public class TrimmableTypeMap
 			return proxies [0];
 		}
 		foreach (var proxy in proxies) {
-			if (TargetTypeMatches (targetType, proxy.TargetType)) {
+			if (exactMatch ? targetType == proxy.TargetType : TargetTypeMatches (targetType, proxy.TargetType)) {
 				return proxy;
 			}
 		}
@@ -328,7 +330,7 @@ public class TrimmableTypeMap
 		}
 	}
 
-	JavaPeerProxy? TryGetProxyFromHierarchy (IntPtr handle, Type? targetType)
+	JavaPeerProxy? TryGetProxyFromHierarchy (IntPtr handle, Type? targetType, Type? exactProxyTargetType = null)
 	{
 		var selfRef = new JniObjectReference (handle);
 		var jniClass = JniEnvironment.Types.GetObjectClass (selfRef);
@@ -337,7 +339,8 @@ public class TrimmableTypeMap
 			while (jniClass.IsValid) {
 				var className = JniEnvironment.Types.GetJniTypeNameFromClass (jniClass);
 				if (className is not null) {
-					var proxy = GetProxyForJniClass (className, targetType);
+					var proxy = GetProxyForJniClass (
+						className, exactProxyTargetType ?? targetType, exactMatch: exactProxyTargetType is not null);
 					if (proxy is not null) {
 						return proxy;
 					}
@@ -349,8 +352,14 @@ public class TrimmableTypeMap
 				// This handles the case where an intermediate class entry (e.g.,
 				// X509ExtendedTrustManager) was trimmed but the Java interface
 				// entry (e.g., X509TrustManager) survives.
-				if (targetType is { IsInterface: true } && className != null) {
-					var result = GetProxyForJavaInterfaces (jniClass, className, targetType);
+				// An exact generic peer can also represent a Java interface as a managed class.
+				if (className is not null) {
+					JavaPeerProxy? result = null;
+					if (exactProxyTargetType is not null) {
+						result = TryMatchInterfaces (jniClass, exactProxyTargetType, exactMatch: true);
+					} else if (targetType is { IsInterface: true }) {
+						result = GetProxyForJavaInterfaces (jniClass, className, targetType);
+					}
 					if (result != null) {
 						return result;
 					}
@@ -377,7 +386,7 @@ public class TrimmableTypeMap
 
 	// getInterfaces() returns only directly declared interfaces (not transitive),
 	// so we recurse into super-interfaces to find the matching TypeMap entry.
-	JavaPeerProxy? TryMatchInterfaces (JniObjectReference jniClass, Type targetType)
+	JavaPeerProxy? TryMatchInterfaces (JniObjectReference jniClass, Type targetType, bool exactMatch = false)
 	{
 		// SAFETY: jniClass is a live java.lang.Class and the method ID is Class.getInterfaces(), which takes no arguments.
 		var interfaces = unsafe (JniEnvironment.InstanceMethods.CallObjectMethod (jniClass, GetClassGetInterfacesMethod ()));
@@ -392,14 +401,14 @@ public class TrimmableTypeMap
 				try {
 					var ifaceName = JniEnvironment.Types.GetJniTypeNameFromClass (iface);
 					if (ifaceName is not null) {
-						var proxy = GetProxyForJniClass (ifaceName, targetType);
+						var proxy = GetProxyForJniClass (ifaceName, targetType, exactMatch);
 						if (proxy is not null) {
 							return proxy;
 						}
 					}
 
 					// Recurse into super-interfaces
-					var result = TryMatchInterfaces (iface, targetType);
+					var result = TryMatchInterfaces (iface, targetType, exactMatch);
 					if (result is not null) {
 						return result;
 					}
@@ -474,16 +483,22 @@ public class TrimmableTypeMap
 		}
 	}
 
-	internal IJavaPeerable? CreateInstance (
-		IntPtr handle,
-		[DynamicallyAccessedMembers (Constructors)]
-		Type? targetType = null)
+	internal IJavaPeerable? CreateInstance (IntPtr handle, Type? targetType = null)
 	{
 		var proxy = GetProxyForJavaObject (handle, targetType);
 
 		IJavaPeerable? peer;
 		if (ShouldActivateClosedGenericTarget (proxy, targetType)) {
-			peer = ActivateUsingReflection (targetType, handle, ImplicitPeerOwnership);
+			var targetDefinition = targetType.GetGenericTypeDefinition ();
+			if (proxy.TargetType != targetDefinition) {
+				// A compatible base alias cannot provide the requested type's constructor.
+				var exactProxy = TryGetProxyFromHierarchy (handle, targetType, targetDefinition)
+					?? TryGetProxyFromTargetType (handle, targetType);
+				if (exactProxy?.TargetType == targetDefinition) {
+					proxy = exactProxy;
+				}
+			}
+			peer = proxy.CreateClosedGenericInstance (targetType, handle, ImplicitPeerOwnership);
 		} else {
 			peer = proxy?.CreateInstance (handle, ImplicitPeerOwnership);
 		}
@@ -496,12 +511,7 @@ public class TrimmableTypeMap
 		return RegisterCreatedPeer (peer);
 	}
 
-	const DynamicallyAccessedMemberTypes Constructors = DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.NonPublicConstructors;
 	const JniHandleOwnership ImplicitPeerOwnership = JniHandleOwnership.DoNotTransfer | JniHandleOwnership.DoNotRegister;
-
-	const BindingFlags ActivationConstructorBindingFlags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance;
-
-	static  readonly    Type[]  XAConstructorSignature  = new Type [] { typeof (IntPtr), typeof (JniHandleOwnership) };
 
 	static bool ShouldActivateClosedGenericTarget (
 			[NotNullWhen (true)] JavaPeerProxy? proxy,
@@ -512,20 +522,6 @@ public class TrimmableTypeMap
 			targetType is not null &&
 			targetType.IsGenericType &&
 			!targetType.IsGenericTypeDefinition;
-	}
-
-	static IJavaPeerable? ActivateUsingReflection (
-			[DynamicallyAccessedMembers (Constructors)]
-			Type closedType,
-			IntPtr handle,
-			JniHandleOwnership transfer)
-	{
-		var ctor = closedType.GetConstructor (ActivationConstructorBindingFlags, null, XAConstructorSignature, null);
-		if (ctor is null) {
-			return null;
-		}
-
-		return (IJavaPeerable) ctor.Invoke ([handle, transfer]);
 	}
 
 	static void MarkCreatedPeer (IJavaPeerable peer)

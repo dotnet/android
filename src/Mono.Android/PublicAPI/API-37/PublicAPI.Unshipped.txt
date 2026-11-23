@@ -10682,6 +10682,7 @@ virtual Android.Views.WindowManagerLayoutParams.SetKeyboardCaptureEnabled(bool e
 virtual Android.Webkit.WebChromeClient.FileChooserParams.PermissionMode.get -> int
 virtual Android.Widget.RemoteViews.SetAppWidgetEventTag(int viewId, int tag) -> void
 virtual Android.Widget.RemoteViews.SetViewPadding(int viewId, float left, float top, float right, float bottom, int units) -> void
+virtual Java.Interop.JavaPeerProxy.GetGenericTargetTypeDefinition() -> System.Type?
 virtual Java.Nio.CharBuffer.GetChars(int srcBegin, int srcEnd, char[]! dst, int dstBegin) -> void
 virtual Javax.Net.Ssl.ExtendedSSLSession.StatusResponses.get -> System.Collections.Generic.IList<byte[]!>?
 virtual Javax.Net.Ssl.SSLParameters.GetNamedGroups() -> string![]?

@@ -1078,14 +1078,8 @@ namespace Android.Runtime {
 						IntPtr elem = type == typeof (Java.Lang.String)
 							? GetStringArrayElement (source, index)
 							: GetObjectArrayElement (source, index);
-						return GetObject (elem, type);
+						return Java.Lang.Object.GetObject (elem, JniHandleOwnership.TransferLocalRef, type);
 					}
-
-					// FIXME: Since a Dictionary<Type, Func> is used here, the trimmer will not be able to properly analyze `Type t`
-					// error IL2111: Method 'lambda expression' with parameters or return value with `DynamicallyAccessedMembersAttribute` is accessed via reflection. Trimmer can't guarantee availability of the requirements of the method.
-					[UnconditionalSuppressMessage ("Trimming", "IL2067", Justification = "FIXME: https://github.com/dotnet/android/issues/8724")]
-					static object? GetObject (IntPtr e, Type? t) =>
-						Java.Lang.Object.GetObject (e, JniHandleOwnership.TransferLocalRef, t);
 				} },
 				{ typeof (Array), (type, source, index) => {
 					unsafe {

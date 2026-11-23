@@ -603,8 +603,26 @@ namespace Java.InteropTests
 
 		class OpenT<T> { }
 		class OpenT2<T1, T2> { }
+		class DerivedOpenT<T> : OpenT<T> { }
 		class ClosedOfIntOpenT : OpenT<int> { }
 		class DeepClosedOfOpenT : ClosedOfIntOpenT { }
+
+		[TestMethod]
+		[TestCategory ("TrimmableTypeMapRuntimeCoverage")]
+		public void TryGetProxyType_GenericAlias_PrefersExactTarget ()
+		{
+			var typeMap = new SingleUniverseTypeMap (
+				new Dictionary<string, Type> {
+					["base"] = typeof (BaseGenericAliasProxy),
+					["derived"] = typeof (DerivedGenericAliasProxy),
+				},
+				new Dictionary<Type, Type> {
+					[typeof (DerivedOpenT<>)] = typeof (GenericAliasHolder),
+				});
+
+			Assert.IsTrue (typeMap.TryGetProxyType (typeof (DerivedOpenT<>), out var proxyType));
+			Assert.AreEqual (typeof (DerivedGenericAliasProxy), proxyType);
+		}
 
 		[TestMethod]
 		public void TargetTypeMatches_DirectAssignable_ReturnsTrue ()
@@ -646,6 +664,25 @@ namespace Java.InteropTests
 		public void TargetTypeMatches_UnrelatedNonGeneric_ReturnsFalse ()
 		{
 			Assert.IsFalse (TrimmableTypeMap.TargetTypeMatches (typeof (string), typeof (int)));
+		}
+
+		[JavaPeerAliases ("base", "derived")]
+		sealed class GenericAliasHolder { }
+
+		[BaseGenericAliasProxy]
+		sealed class BaseGenericAliasProxy : JavaPeerProxy
+		{
+			public BaseGenericAliasProxy () : base ("test", typeof (OpenT<>)) { }
+
+			public override IJavaPeerable? CreateInstance (IntPtr handle, JniHandleOwnership transfer) => null;
+		}
+
+		[DerivedGenericAliasProxy]
+		sealed class DerivedGenericAliasProxy : JavaPeerProxy
+		{
+			public DerivedGenericAliasProxy () : base ("test", typeof (DerivedOpenT<>)) { }
+
+			public override IJavaPeerable? CreateInstance (IntPtr handle, JniHandleOwnership transfer) => null;
 		}
 	}
 
