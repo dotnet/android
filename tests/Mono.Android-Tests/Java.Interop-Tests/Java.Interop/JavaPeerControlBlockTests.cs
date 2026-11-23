@@ -31,10 +31,11 @@ namespace Java.InteropTests {
 		[DataRow (true, ReferenceState.Invalid)]
 		[DataRow (false, ReferenceState.NoBlock)]
 		[DataRow (true, ReferenceState.NoBlock)]
-		public unsafe void FinalizePeer_ReleasesControlBlock (bool exception, ReferenceState state)
+		public void FinalizePeer_ReleasesControlBlock (bool exception, ReferenceState state)
 		{
 			using var type = new JniType (exception ? "java/lang/Throwable" : "java/lang/Object");
-			var local = type.NewObject (type.GetConstructor ("()V"), null);
+			// SAFETY: The live type supplies its own no-argument constructor.
+			var local = unsafe (type.NewObject (type.GetConstructor ("()V"), null));
 			var observation = new FinalizationObservation ();
 			var reference = state == ReferenceState.Global ? local : default;
 			var options = state == ReferenceState.Global ? JniObjectReferenceOptions.Copy : JniObjectReferenceOptions.None;
@@ -67,10 +68,11 @@ namespace Java.InteropTests {
 		[TestMethod]
 		[DataRow (false)]
 		[DataRow (true)]
-		public unsafe void FinalizePeer_AfterExplicitDisposeDoesNotDoubleFree (bool exception)
+		public void FinalizePeer_AfterExplicitDisposeDoesNotDoubleFree (bool exception)
 		{
 			using var type = new JniType (exception ? "java/lang/Throwable" : "java/lang/Object");
-			var local = type.NewObject (type.GetConstructor ("()V"), null);
+			// SAFETY: The live type supplies its own no-argument constructor.
+			var local = unsafe (type.NewObject (type.GetConstructor ("()V"), null));
 			var observation = new FinalizationObservation ();
 			var peer = CreatePeer (exception, ref local, JniObjectReferenceOptions.CopyAndDispose, observation);
 			try {
@@ -94,10 +96,11 @@ namespace Java.InteropTests {
 		[DataRow (true, ReferenceState.Invalid)]
 		[DataRow (false, ReferenceState.NoBlock)]
 		[DataRow (true, ReferenceState.NoBlock)]
-		public unsafe void FinalizePeer_ThrowingCallbackReleasesControlBlock (bool exception, ReferenceState state)
+		public void FinalizePeer_ThrowingCallbackReleasesControlBlock (bool exception, ReferenceState state)
 		{
 			using var type = new JniType (exception ? "java/lang/Throwable" : "java/lang/Object");
-			var local = type.NewObject (type.GetConstructor ("()V"), null);
+			// SAFETY: The live type supplies its own no-argument constructor.
+			var local = unsafe (type.NewObject (type.GetConstructor ("()V"), null));
 			var observation = new FinalizationObservation { ThrowOnFinalize = true };
 			var reference = state == ReferenceState.Global ? local : default;
 			var options = state == ReferenceState.Global ? JniObjectReferenceOptions.Copy : JniObjectReferenceOptions.None;
@@ -130,10 +133,11 @@ namespace Java.InteropTests {
 		[DataRow (true, false, true)]
 		[DataRow (false, true, true)]
 		[DataRow (true, true, true)]
-		public unsafe void FinalizePeer_RetainsReferenceReattachedByCallback (bool exception, bool throwingCallback, bool registered)
+		public void FinalizePeer_RetainsReferenceReattachedByCallback (bool exception, bool throwingCallback, bool registered)
 		{
 			using var type = new JniType (exception ? "java/lang/Throwable" : "java/lang/Object");
-			var local = type.NewObject (type.GetConstructor ("()V"), null);
+			// SAFETY: The live type supplies its own no-argument constructor.
+			var local = unsafe (type.NewObject (type.GetConstructor ("()V"), null));
 			var observation = new FinalizationObservation { Reattach = local, ThrowOnFinalize = throwingCallback };
 			var reference = registered ? local : default;
 			var options = registered ? JniObjectReferenceOptions.Copy : JniObjectReferenceOptions.None;
@@ -200,10 +204,11 @@ namespace Java.InteropTests {
 		[TestMethod]
 		[DataRow (false)]
 		[DataRow (true)]
-		public unsafe void ExplicitDispose_PreservesCallbackAndReleasesControlBlock (bool exception)
+		public void ExplicitDispose_PreservesCallbackAndReleasesControlBlock (bool exception)
 		{
 			using var type = new JniType (exception ? "java/lang/Throwable" : "java/lang/Object");
-			var local = type.NewObject (type.GetConstructor ("()V"), null);
+			// SAFETY: The live type supplies its own no-argument constructor.
+			var local = unsafe (type.NewObject (type.GetConstructor ("()V"), null));
 			var observation = new FinalizationObservation ();
 			var peer = CreatePeer (exception, ref local, JniObjectReferenceOptions.CopyAndDispose, observation);
 			try {
@@ -224,10 +229,11 @@ namespace Java.InteropTests {
 		[DataRow (true, false)]
 		[DataRow (false, true)]
 		[DataRow (true, true)]
-		public unsafe void DisposeUnlessReferenced_UnregisteredPeerReleasesControlBlock (bool exception, bool alias)
+		public void DisposeUnlessReferenced_UnregisteredPeerReleasesControlBlock (bool exception, bool alias)
 		{
 			using var type = new JniType (exception ? "java/lang/Throwable" : "java/lang/Object");
-			var local = type.NewObject (type.GetConstructor ("()V"), null);
+			// SAFETY: The live type supplies its own no-argument constructor.
+			var local = unsafe (type.NewObject (type.GetConstructor ("()V"), null));
 			var registeredObservation = new FinalizationObservation ();
 			var registered = CreatePeer (exception, ref local, JniObjectReferenceOptions.Copy, registeredObservation);
 			var observation = alias ? new FinalizationObservation () : registeredObservation;
@@ -278,10 +284,11 @@ namespace Java.InteropTests {
 		[TestMethod]
 		[DataRow (false)]
 		[DataRow (true)]
-		public unsafe void DisposeUnlessReferenced_ThrowingCallbackCanRetry (bool exception)
+		public void DisposeUnlessReferenced_ThrowingCallbackCanRetry (bool exception)
 		{
 			using var type = new JniType (exception ? "java/lang/Throwable" : "java/lang/Object");
-			var local = type.NewObject (type.GetConstructor ("()V"), null);
+			// SAFETY: The live type supplies its own no-argument constructor.
+			var local = unsafe (type.NewObject (type.GetConstructor ("()V"), null));
 			var observation = new FinalizationObservation { ThrowOnDispose = true };
 			var peer = CreatePeer (exception, ref local, JniObjectReferenceOptions.Copy, observation);
 			try {
@@ -328,7 +335,7 @@ namespace Java.InteropTests {
 		[DataRow (false, false, true)]
 		[DataRow (true, false, true)]
 		[TestCategory ("JniReferenceLeak")]
-		public unsafe void ReleasePeer_ReleasesGlobalReference (bool exception, bool finalize, bool unregister)
+		public void ReleasePeer_ReleasesGlobalReference (bool exception, bool finalize, bool unregister)
 		{
 			using var type = new JniType (exception ? "java/lang/Throwable" : "java/lang/Object");
 			var constructor = type.GetConstructor ("()V");
@@ -349,7 +356,8 @@ namespace Java.InteropTests {
 
 			void ReleasePeer (bool checkReferenceCount)
 			{
-				var local = type.NewObject (constructor, null);
+				// SAFETY: constructor is the live type's ()V constructor; no arguments are required.
+				var local = unsafe (type.NewObject (constructor, null));
 				var observation = new FinalizationObservation ();
 				var peer = CreatePeer (exception, ref local, JniObjectReferenceOptions.CopyAndDispose, observation);
 				try {
@@ -374,10 +382,11 @@ namespace Java.InteropTests {
 		}
 
 		[MethodImpl (MethodImplOptions.NoInlining)]
-		static unsafe void CreateCollectiblePeer (bool exception, bool invalid, bool throwingConstructor, FinalizationObservation observation)
+		static void CreateCollectiblePeer (bool exception, bool invalid, bool throwingConstructor, FinalizationObservation observation)
 		{
 			using var type = new JniType (exception ? "java/lang/Throwable" : "java/lang/Object");
-			var local = invalid ? default : type.NewObject (type.GetConstructor ("()V"), null);
+			// SAFETY: The live type supplies its own no-argument constructor.
+			var local = invalid ? default : unsafe (type.NewObject (type.GetConstructor ("()V"), null));
 			try {
 				var options = invalid ? JniObjectReferenceOptions.None : JniObjectReferenceOptions.Copy;
 				try {
