@@ -1,9 +1,10 @@
 using System;
-using System.Diagnostics.CodeAnalysis;
-using System.Runtime.InteropServices;
+using System.Collections.Generic;
+using System.Diagnostics.Tracing;
 
 using Java.Interop;
 
+using Microsoft.Android.Runtime;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Java.InteropTests
@@ -78,79 +79,100 @@ namespace Java.InteropTests
 		[TestMethod]
 		public void References_CreatedReference_LocalRef ()
 		{
-			var NewLocalRef = GetNewRefFunc ("java_interop_jnienv_new_local_ref");
-			if (NewLocalRef == null) {
-				Assert.Inconclusive ("This version of Java.Interop.dll doesn't use P/Invoke-based JNI invokes.");
-				return;
-			}
 			using (var t = new JniType ("java/lang/Object")) {
 				var c = JniEnvironment.LocalReferenceCount;
-				var r = NewLocalRef (JniEnvironment.EnvironmentPointer, t.PeerReference.Handle);
+				var r = JniEnvironment.References.NewLocalRef (t.PeerReference);
+				bool accounted = false;
+				try {
+					Assert.IsTrue (r.IsValid);
+					Assert.AreEqual (JniObjectReferenceType.Local, r.Type);
+					Assert.AreEqual (c, JniEnvironment.LocalReferenceCount);
 
-				// This is the "problem": direct use of JNI functions don't contribute to
-				// our reference count accounting
-				Assert.AreEqual (c, JniEnvironment.LocalReferenceCount);
-
-				var o = new JniObjectReference (r, JniObjectReferenceType.Local);
-				JniEnvironment.References.CreatedReference (o);
-
-				Assert.AreEqual (c + 1, JniEnvironment.LocalReferenceCount);
-				JniObjectReference.Dispose (ref o);
+					JniEnvironment.References.CreatedReference (r);
+					accounted = true;
+					Assert.AreEqual (c + 1, JniEnvironment.LocalReferenceCount);
+				} finally {
+					if (accounted)
+						JniObjectReference.Dispose (ref r);
+					else if (r.IsValid)
+						JniEnvironment.References.DeleteLocalRef (r.Handle);
+				}
 				Assert.AreEqual (c, JniEnvironment.LocalReferenceCount);
 			}
-		}
-
-		[DynamicallyAccessedMembers (DynamicallyAccessedMemberTypes.All)]
-		static readonly Type NativeMethods_type =
-			Type.GetType ("Java.Interop.NativeMethods, Java.Interop", throwOnError: false) ??
-			Type.GetType ("Java.Interop.JIPinvokes.NativeMethods, Java.Interop", throwOnError: false);
-
-		static Func<IntPtr, IntPtr, IntPtr> GetNewRefFunc (string method)
-		{
-			if (NativeMethods_type == null)
-				return null;
-			return (Func<IntPtr, IntPtr, IntPtr>)Delegate.CreateDelegate (
-					typeof (Func<IntPtr, IntPtr, IntPtr>),
-					NativeMethods_type,
-					method,
-					ignoreCase: false,
-					throwOnBindFailure: true);
-		}
-
-		static Action<IntPtr, IntPtr> GetDeleteRefFunc (string method)
-		{
-			if (NativeMethods_type == null)
-				return null;
-			return (Action<IntPtr, IntPtr>)Delegate.CreateDelegate (
-					typeof (Action<IntPtr, IntPtr>),
-					NativeMethods_type,
-					method,
-					ignoreCase: false,
-					throwOnBindFailure: true);
 		}
 
 		[TestMethod]
 		public void References_CreatedReference_GlobalRef ()
 		{
-			var NewGlobalRef = GetNewRefFunc ("java_interop_jnienv_new_global_ref");
-			if (NewGlobalRef == null) {
-				Assert.Inconclusive ("This version of Java.Interop.dll doesn't use P/Invoke-based JNI invokes.");
-				return;
-			}
 			using (var t = new JniType ("java/lang/Object")) {
-				var c = JniEnvironment.Runtime.GlobalReferenceCount;
-				var r = NewGlobalRef (JniEnvironment.EnvironmentPointer, t.PeerReference.Handle);
+				using var events = new GlobalReferenceEvents ();
+				var raw = JniEnvironment.References.NewGlobalRef (t.PeerReference);
+				var rawHandle = raw.Handle;
+				try {
+					Assert.IsTrue (raw.IsValid);
+					Assert.AreEqual (JniObjectReferenceType.Global, raw.Type);
+					Assert.IsFalse (events.Contains (RuntimeEventSource.GlobalReferenceCreatedEventId, rawHandle),
+						"A direct JNI reference must not be accounted for.");
+					Assert.ThrowsExactly<ArgumentException> (() => JniEnvironment.References.CreatedReference (raw));
+					Assert.IsFalse (events.Contains (RuntimeEventSource.GlobalReferenceCreatedEventId, rawHandle),
+						"Rejecting a global reference must not account for it.");
+					Assert.IsFalse (events.Contains (RuntimeEventSource.GlobalReferenceDeletedEventId, rawHandle));
+					Assert.IsTrue (JniEnvironment.Types.IsSameObject (t.PeerReference, raw));
+				} finally {
+					JniEnvironment.References.DeleteGlobalRef (rawHandle);
+				}
+				Assert.IsFalse (events.Contains (RuntimeEventSource.GlobalReferenceDeletedEventId, rawHandle),
+					"Deleting a direct JNI reference must not change accounting.");
 
-				// This is the "problem": direct use of JNI functions don't contribute to
-				// our reference count accounting
-				Assert.AreEqual (c, JniEnvironment.Runtime.GlobalReferenceCount);
+				var tracked = t.PeerReference.NewGlobalRef ();
+				var trackedHandle = tracked.Handle;
+				try {
+					Assert.IsTrue (tracked.IsValid);
+					Assert.IsTrue (events.Contains (RuntimeEventSource.GlobalReferenceCreatedEventId, trackedHandle),
+						"A tracked reference must produce an accounting event.");
+				} finally {
+					JniObjectReference.Dispose (ref tracked);
+				}
+				Assert.IsTrue (events.Contains (RuntimeEventSource.GlobalReferenceDeletedEventId, trackedHandle));
+			}
+		}
 
-				var o = new JniObjectReference (r, JniObjectReferenceType.Global);
-				Assert.ThrowsExactly<ArgumentException> (() => JniEnvironment.References.CreatedReference (o));
+		sealed class GlobalReferenceEvents : EventListener
+		{
+			readonly int threadId = Environment.CurrentManagedThreadId;
+			readonly List<(int Id, ulong Handle)> events = new ();
 
-				Assert.AreEqual (c, JniEnvironment.Runtime.GlobalReferenceCount);
+			public GlobalReferenceEvents ()
+			{
+				RuntimeEventSource.Initialize ();
+				foreach (var source in EventSource.GetSources ()) {
+					if (source.Name == RuntimeEventSource.ProviderName)
+						EnableEvents (source, EventLevel.Verbose, RuntimeEventSource.GlobalReferenceKeyword);
+				}
+				events.Clear ();
+			}
 
-				GetDeleteRefFunc ("java_interop_jnienv_delete_global_ref")?.Invoke (JniEnvironment.EnvironmentPointer, o.Handle);
+			public bool Contains (int id, IntPtr handle)
+			{
+				var value = unchecked((ulong)(nuint)handle);
+				foreach (var entry in events) {
+					if (entry.Id == id && entry.Handle == value)
+						return true;
+				}
+				return false;
+			}
+
+			protected override void OnEventWritten (EventWrittenEventArgs eventData)
+			{
+				if (Environment.CurrentManagedThreadId != threadId || eventData.Payload == null)
+					return;
+				int index = eventData.EventId switch {
+					RuntimeEventSource.GlobalReferenceCreatedEventId => 1,
+					RuntimeEventSource.GlobalReferenceDeletedEventId => 0,
+					_ => -1,
+				};
+				if (index >= 0 && eventData.Payload.Count > index && eventData.Payload [index] is ulong handle)
+					events.Add ((eventData.EventId, handle));
 			}
 		}
 	}

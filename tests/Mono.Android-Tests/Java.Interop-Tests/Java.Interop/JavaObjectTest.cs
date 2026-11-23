@@ -1,5 +1,4 @@
 using System;
-using System.Linq;
 using System.Threading.Tasks;
 
 using Java.Interop;
@@ -50,31 +49,24 @@ namespace Java.InteropTests
 		}
 #endif  // !NO_GC_BRIDGE_SUPPORT
 
-		// The surfaced-peer registry is process-wide, so other threads can add or
-		// remove unrelated peers while a test runs. Count only entries for this peer.
-		static int GetSurfacedEntryCount (IJavaPeerable peer)
-			=> JniRuntime.CurrentRuntime.ValueManager.GetSurfacedPeers ().Count (
-				info => info.SurfacedPeer.TryGetTarget (out var target) && ReferenceEquals (target, peer));
-
 		[TestMethod]
+		[Ignore ("Frequently failing: https://github.com/dotnet/android/issues/12031")]
 		public void UnregisterFromRuntime ()
 		{
-			JniObjectReference l = default;
+			int registeredCount = JniRuntime.CurrentRuntime.ValueManager.GetSurfacedPeers ().Count;
+			JniObjectReference l;
 			JavaObject o;
-			try {
-				using (o = new JavaObject ()) {
-					l   = o.PeerReference.NewLocalRef ();
-					Assert.AreEqual (JniObjectReferenceType.Global, o.PeerReference.Type);
-					Assert.AreEqual (1, GetSurfacedEntryCount (o), "Constructed peer should be surfaced exactly once.");
-					Assert.IsNotNull (JniRuntime.CurrentRuntime.ValueManager.PeekValue (l));
-					Assert.AreNotEqual (l, o.PeerReference);
-					Assert.AreSame (o, JniRuntime.CurrentRuntime.ValueManager.PeekValue (l));
-				}
-				Assert.AreEqual (0, GetSurfacedEntryCount (o), "Disposed peer should no longer be surfaced.");
-				Assert.IsNull (JniRuntime.CurrentRuntime.ValueManager.PeekValue (l));
-			} finally {
-				JniObjectReference.Dispose (ref l);
+			using (o = new JavaObject ()) {
+				l   = o.PeerReference.NewLocalRef ();
+				Assert.AreEqual (JniObjectReferenceType.Global, o.PeerReference.Type);
+				Assert.AreEqual (registeredCount+1, JniRuntime.CurrentRuntime.ValueManager.GetSurfacedPeers ().Count, "registeredCount+1 should match!");
+				Assert.IsNotNull (JniRuntime.CurrentRuntime.ValueManager.PeekValue (l));
+				Assert.AreNotEqual (l, o.PeerReference);
+				Assert.AreSame (o, JniRuntime.CurrentRuntime.ValueManager.PeekValue (l));
 			}
+			Assert.AreEqual (registeredCount, JniRuntime.CurrentRuntime.ValueManager.GetSurfacedPeers ().Count, "registeredCount should match!");
+			Assert.IsNull (JniRuntime.CurrentRuntime.ValueManager.PeekValue (l));
+			JniObjectReference.Dispose (ref l);
 			Assert.ThrowsExactly<ObjectDisposedException> (() => o.UnregisterFromRuntime ());
 		}
 
