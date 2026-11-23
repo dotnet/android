@@ -10,11 +10,18 @@ This directory contains the targets, properties, and localized messages for the
 ### Testing
 
 `OpenJdkSignatureTests` in `Microsoft.Android.Build.Tasks.Tests` covers signature
-verification and task diagnostics. Run the focused tests from the repository root:
+verification and task diagnostics. `InstallAndroidDependenciesTests` covers CLI
+arguments, cancellation, failure output, and offline JDK extraction (including
+Unix permissions, symlinks, and trailing directory separators). Run the focused
+tests from the repository root:
 
 ```text
-dotnet test src/Microsoft.Android.Build.Tasks/Tests/Microsoft.Android.Build.Tasks.Tests/Microsoft.Android.Build.Tasks.Tests.csproj --filter FullyQualifiedName~OpenJdkSignatureTests
+dotnet test src/Microsoft.Android.Build.Tasks/Tests/Microsoft.Android.Build.Tasks.Tests/Microsoft.Android.Build.Tasks.Tests.csproj --filter "FullyQualifiedName~OpenJdkSignatureTests|FullyQualifiedName~InstallAndroidDependenciesTests"
 ```
+
+The task uses `Process.ReadAllLinesAsync()` to drain stdout and stderr together,
+retaining only the last 4,096 characters for failures rather than capturing all
+CLI progress output. Cancellation kills and waits for the CLI before returning.
 
 The explicit integration tests download a Microsoft JDK archive, verify its
 signature, reject changed archive contents, and install the JDK through the

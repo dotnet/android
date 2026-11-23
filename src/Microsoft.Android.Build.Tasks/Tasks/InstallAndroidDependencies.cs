@@ -1,10 +1,8 @@
 ﻿#nullable disable
 using System;
 using System.Buffers;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Net.Http;
@@ -30,7 +28,6 @@ namespace Xamarin.Installer.Build.Tasks
 		public override string TaskPrefix => "IAD";
 
 		readonly CancellationTokenSource cancellation = new CancellationTokenSource ();
-		BlockingCollection<Action> logQueue;
 
 		public void Cancel () => cancellation.Cancel ();
 
@@ -77,44 +74,16 @@ namespace Xamarin.Installer.Build.Tasks
 		/// </summary>
 		public string AndroidCliPath { get; set; } = "";
 
-		// The installation runs on thread-pool continuations, so forward each message to the
-		// thread that called Execute () instead of calling TaskLoggingHelper concurrently.
 		public override bool RunTask ()
 		{
-			var queue = new BlockingCollection<Action> ();
-			logQueue = queue;
-			var work = Task.Run (RunTaskAsync);
-			work.ContinueWith (_ => queue.CompleteAdding (), TaskScheduler.Default);
-			foreach (var log in queue.GetConsumingEnumerable ())
-				log ();
-			work.GetAwaiter ().GetResult ();
-			return !Log.HasLoggedErrors;
-		}
-
-		void Post (Action log)
-		{
-			var queue = logQueue;
-			if (queue == null) {
-				log ();
-				return;
-			}
+			var engine = BuildEngine as IBuildEngine3;
+			engine?.Yield ();
 			try {
-				queue.Add (log);
-			} catch (InvalidOperationException) {
-				// Execute () has returned; MSBuild no longer accepts messages from this task.
+				Task.Run (RunTaskAsync).GetAwaiter ().GetResult ();
+			} finally {
+				engine?.Reacquire ();
 			}
-		}
-
-		static string Format (string format, object [] parms) =>
-			parms == null || parms.Length == 0 ? format : string.Format (CultureInfo.CurrentCulture, format, parms);
-
-		void LogMessage (string message, MessageImportance importance = MessageImportance.Normal) =>
-			Post (() => Log.LogMessage (importance, message));
-
-		void LogCodedError (string code, string format, params object [] parms)
-		{
-			var message = Format (format, parms);
-			Post (() => Log.LogError (null, code, null, null, 0, 0, 0, 0, message));
+			return !Log.HasLoggedErrors;
 		}
 
 		protected virtual async Task RunTaskAsync ()
@@ -259,7 +228,8 @@ namespace Xamarin.Installer.Build.Tasks
 				foreach (var arg in args)
 					psi.ArgumentList.Add (arg);
 				Debug ("{0} {1}", psi.FileName, string.Join (" ", psi.ArgumentList));
-				var output = new OutputTail ();
+				const int maximumOutputLength = 4096;
+				var output = new StringBuilder ();
 				int exitCode;
 				// psi comes from TaskEnvironment.GetProcessStartInfo (), so it carries the project's environment and directory.
 #pragma warning disable MSBuildTask0002
@@ -267,18 +237,22 @@ namespace Xamarin.Installer.Build.Tasks
 #pragma warning restore MSBuildTask0002
 					try {
 						// Stream the output so progress output does not use a lot of memory.
-						await foreach (var line in process.ReadAllLinesAsync (cancellationToken))
-							output.WriteLine (line.Content);
+						await foreach (var line in process.ReadAllLinesAsync (cancellationToken)) {
+							output.AppendLine (line.Content);
+							if (output.Length > maximumOutputLength)
+								output.Remove (0, output.Length - maximumOutputLength);
+						}
 						await process.WaitForExitAsync (cancellationToken);
 					} catch {
 						process.Kill (entireProcessTree: true);
+						await process.WaitForExitAsync ();
 						throw;
 					}
 					exitCode = process.ExitCode;
 				}
 				if (exitCode != 0)
 				{
-					LogCodedError ("XA5308", Resources.XA5308, exitCode, output);
+					Log.LogCodedError ("XA5308", Resources.XA5308, messageArgs: [exitCode, output.ToString ().Trim ()]);
 					return false;
 				}
 			}
@@ -368,7 +342,7 @@ namespace Xamarin.Installer.Build.Tasks
 		{
 			cancellationToken.ThrowIfCancellationRequested ();
 			if (SkipSignCheck) {
-				LogMessage ($"Microsoft OpenJDK signature verification was skipped for '{archive.Url}' because _SkipSignCheck=true. Use this workaround only if you have independently verified the archive.", MessageImportance.High);
+				Log.LogMessage (MessageImportance.High, $"Microsoft OpenJDK signature verification was skipped for '{archive.Url}' because _SkipSignCheck=true. Use this workaround only if you have independently verified the archive.");
 				return true;
 			}
 
@@ -391,7 +365,7 @@ namespace Xamarin.Installer.Build.Tasks
 				throw;
 			} catch (Exception ex) when (ex is HttpRequestException || ex is IOException || ex is InvalidDataException ||
 				ex is System.Security.Cryptography.CryptographicException || ex is FormatException || ex is OperationCanceledException) {
-				LogCodedError ("XA5305", Resources.XA5305, archive.Url, ex.Message);
+				Log.LogCodedError ("XA5305", Resources.XA5305, archive.Url, ex.Message);
 				return false;
 			}
 		}
@@ -461,7 +435,7 @@ namespace Xamarin.Installer.Build.Tasks
 
 		public void Debug (string format, params object [] parms)
 		{
-			LogMessage (Format (format, parms), MessageImportance.Low);
+			Log.LogDebugMessage (format, parms);
 		}
 
 		public void Debug (string format, Exception ex, params object [] parms)
@@ -472,25 +446,23 @@ namespace Xamarin.Installer.Build.Tasks
 
 		public void Error (string format, params object [] parms)
 		{
-			var message = Format (format, parms);
-			Post (() => Log.LogError (message));
+			Log.LogError (format, parms);
 		}
 
 		public void Exception (string format, Exception ex, params object [] parms)
 		{
 			Error (format, parms);
-			Post (() => Log.LogUnhandledException (TaskPrefix, ex, TaskEnvironment));
+			Log.LogUnhandledException (TaskPrefix, ex, TaskEnvironment);
 		}
 
 		public void Info (string format, params object [] parms)
 		{
-			LogMessage (Format (format, parms));
+			Log.LogMessage (format, parms);
 		}
 
 		public void Warning (string format, params object [] parms)
 		{
-			var message = Format (format, parms);
-			Post (() => Log.LogWarning (message));
+			Log.LogWarning (format, parms);
 		}
 
 		string CombineWithEnvironmentDirectory (string variable, params string [] paths)
@@ -563,7 +535,7 @@ namespace Xamarin.Installer.Build.Tasks
 			var url = package?.GetMetadata ("Url");
 			var expectedSha256 = package?.GetMetadata ("Sha256");
 			if (string.IsNullOrEmpty (url) || string.IsNullOrEmpty (expectedSha256) || string.IsNullOrEmpty (AndroidCliDirectory)) {
-				LogCodedError ("XA5306", Resources.XA5306, RuntimeInformation.OSDescription, RuntimeInformation.OSArchitecture);
+				Log.LogCodedError ("XA5306", Resources.XA5306, RuntimeInformation.OSDescription, RuntimeInformation.OSArchitecture);
 				return null;
 			}
 
@@ -580,7 +552,7 @@ namespace Xamarin.Installer.Build.Tasks
 
 			var actualSha256 = ComputeSha256 (TaskEnvironment.GetAbsolutePath (archive.DownloadedFilePath));
 			if (!string.Equals (actualSha256, expectedSha256, StringComparison.OrdinalIgnoreCase)) {
-				LogCodedError ("XA5307", Resources.XA5307, url, expectedSha256, actualSha256);
+				Log.LogCodedError ("XA5307", Resources.XA5307, url, expectedSha256, actualSha256);
 				return null;
 			}
 
@@ -687,46 +659,6 @@ namespace Xamarin.Installer.Build.Tasks
 					return true;
 				var installed = ParseVersion (ReadProperty (properties, "Pkg.Revision"));
 				return installed != null && installed >= version;
-			}
-		}
-
-		/// <summary>
-		/// Keeps only the end of the process output, so that progress output does not use a lot of memory.
-		/// </summary>
-		internal sealed class OutputTail : TextWriter
-		{
-			const int MaximumLength = 4096;
-			readonly StringBuilder text = new StringBuilder ();
-			readonly object textLock = new object ();
-
-			public override Encoding Encoding => Encoding.UTF8;
-
-			public override void Write (char value)
-			{
-				lock (textLock) {
-					text.Append (value);
-					Trim ();
-				}
-			}
-
-			public override void Write (char [] buffer, int index, int count)
-			{
-				lock (textLock) {
-					text.Append (buffer, index, count);
-					Trim ();
-				}
-			}
-
-			void Trim ()
-			{
-				if (text.Length > MaximumLength)
-					text.Remove (0, text.Length - MaximumLength);
-			}
-
-			public override string ToString ()
-			{
-				lock (textLock)
-					return text.ToString ().Trim ();
 			}
 		}
 	}
