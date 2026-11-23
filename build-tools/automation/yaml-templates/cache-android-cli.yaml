@@ -1,0 +1,34 @@
+# Caches the Android CLI that `InstallAndroidDependencies` downloads into its
+# per-user cache directory, so tests reuse it without code changes.
+#
+# The task re-downloads the CLI whenever the cached file fails its SHA-256
+# check. Android SDK packages and the JDK are still downloaded live: the CLI
+# deletes package archives after extraction, and the JDK is downloaded to a
+# temporary file.
+#
+# See: https://learn.microsoft.com/azure/devops/pipelines/release/caching
+
+parameters:
+  xaSourcePath: $(System.DefaultWorkingDirectory)
+  condition: succeeded()
+
+steps:
+- pwsh: |
+    if ($IsWindows) {
+      $dir = Join-Path $env:LOCALAPPDATA 'dotnet-android/AndroidCli'
+    } elseif ($IsMacOS) {
+      $dir = Join-Path $env:HOME 'Library/Caches/dotnet-android/AndroidCli'
+    } else {
+      $dir = Join-Path $env:HOME '.cache/dotnet-android/AndroidCli'
+    }
+    Write-Host "##vso[task.setvariable variable=ANDROID_CLI_CACHE_DIR]$dir"
+  displayName: prepare Android CLI cache variables
+  condition: ${{ parameters.condition }}
+
+# Xamarin.Installer.Common.targets defines the Android CLI version and hashes.
+- task: Cache@2
+  displayName: cache Android CLI
+  condition: ${{ parameters.condition }}
+  inputs:
+    key: '"android-cli" | "v1" | "$(Agent.OS)" | ${{ parameters.xaSourcePath }}/src/Xamarin.Installer.Build.Tasks/Xamarin.Installer.Common.targets'
+    path: $(ANDROID_CLI_CACHE_DIR)

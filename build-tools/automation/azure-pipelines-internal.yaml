@@ -302,6 +302,8 @@ extends:
             testAssembly: $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/$(DotNetStableTargetFramework)/Xamarin.Android.Build.Tests.dll
             dotNetTestExtraArgs: --filter "Name = XASdkTests & Name != XamarinLegacySdk"
 
+        - template: /build-tools/automation/yaml-templates/cache-android-cli.yaml@self
+
         - template: /build-tools/automation/yaml-templates/run-nunit-tests.yaml@self
           parameters:
             testRunTitle: Xamarin.Android.Build.Tests - Linux AndroidDependenciesTests
