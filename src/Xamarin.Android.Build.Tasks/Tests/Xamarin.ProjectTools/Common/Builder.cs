@@ -459,7 +459,7 @@ namespace Xamarin.ProjectTools
 		// MSBuild prefixes inline messages with the node ID (e.g. `1>`), but not the summary copies.
 		static readonly Regex buildNodePrefixRegex = new Regex (@"^\s*\d+>", RegexOptions.Compiled);
 
-		public static void AppendBuildErrors (StringBuilder message, IEnumerable<string> buildOutput)
+		static void AppendBuildErrors (StringBuilder message, IEnumerable<string> buildOutput)
 		{
 			var errors = new HashSet<string> (StringComparer.Ordinal);
 			foreach (var line in buildOutput) {
