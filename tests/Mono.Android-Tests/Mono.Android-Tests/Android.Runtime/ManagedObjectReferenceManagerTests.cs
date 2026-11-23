@@ -191,6 +191,10 @@ namespace Xamarin.Android.RuntimeTests {
 			for (int i = 0; i < 100; i++) {
 				ExerciseReferences ();
 			}
+			// A blocking GC retires this thread's allocation context. Otherwise a concurrent
+			// background GC can void it and inflate GetAllocatedBytesForCurrentThread by its
+			// unused remainder without this thread allocating anything.
+			GC.Collect ();
 			long before = GC.GetAllocatedBytesForCurrentThread ();
 			for (int i = 0; i < 1000; i++) {
 				ExerciseReferences ();
