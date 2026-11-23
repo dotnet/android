@@ -311,9 +311,11 @@ namespace Xamarin.Android.Tasks
 			foreach (var group in debugEntries.GroupBy (ent => ent.JavaName).Where (g => g.Count () > 1)) {
 				// We need to sort:
 				// - Types in Mono.Android come first
+				// - Types that are not generic come first, generic types can't be activated from Java
 				// - Types that are not invokers come first
 				var entries = group
 					.OrderBy (e => e.IsMonoAndroid ? 0 : 1)
+					.ThenBy (e => IsGenericType (e) ? 1 : 0)
 					.ThenBy (e => e.IsInvoker ? 1 : 0)
 					.ToList ();
 
@@ -321,6 +323,8 @@ namespace Xamarin.Android.Tasks
 					entries [i].DuplicateForJavaToManaged = entries [0];
 			}
 		}
+
+		static bool IsGenericType (TypeMapDebugEntry entry) => entry.ManagedName.IndexOf ('`') >= 0;
 
 		public ReleaseGenerationState GetReleaseGenerationState ()
 		{
