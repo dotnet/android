@@ -77,6 +77,7 @@ namespace Xamarin.Android.RuntimeTests {
 		}
 
 		[TestMethod]
+		[TestCategory ("JniLocalReferenceAccounting")]
 		[DataRow (false)]
 		[DataRow (true)]
 		public void ManagedExceptionRoundTripPreservesIdentity (bool directThrow)
@@ -98,6 +99,7 @@ namespace Xamarin.Android.RuntimeTests {
 		}
 
 		[TestMethod]
+		[TestCategory ("JniLocalReferenceAccounting")]
 		[DataRow (false)]
 		[DataRow (true)]
 		public void JavaThrowableRoundTripPreservesIdentity (bool directThrow)
