@@ -224,21 +224,36 @@ namespace Xamarin.Android.RuntimeTests {
 		static async Task WithActivity (Action<ViewGroup> test)
 		{
 			var ready = new TaskCompletionSource<ViewActionCallbackActivity> (TaskCreationOptions.RunContinuationsAsynchronously);
+			var handlerDone = new TaskCompletionSource (TaskCreationOptions.RunContinuationsAsynchronously);
+			var animationDone = new TaskCompletionSource (TaskCreationOptions.RunContinuationsAsynchronously);
 			ViewActionCallbackActivity.Ready = a => ready.TrySetResult (a);
 			using var intent = new Intent (Application.Context, typeof (ViewActionCallbackActivity));
 			intent.AddFlags (ActivityFlags.NewTask);
 			ViewActionCallbackActivity activity = null;
+			Java.Lang.Runnable animationSentinel = null;
 			try {
 				Application.Context.StartActivity (intent);
 				activity = await ready.Task.WaitAsync (TimeSpan.FromSeconds (10));
-				await OnMainThread (() => test (activity.Content));
-				// Let posted runnables and the next animation frames run.
-				await Task.Delay (500);
-				await OnMainThread (() => {});
+				await OnMainThread (() => {
+					Assert.IsTrue (activity.Content.IsAttachedToWindow);
+					test (activity.Content);
+					// Detached View queues are transferred to the Handler when added; attached
+					// drawable callbacks use the animation queue. Wait for both queues.
+					Assert.IsTrue (activity.Content.Post (() => handlerDone.TrySetResult ()));
+					animationSentinel = new Java.Lang.Runnable (() => animationDone.TrySetResult ());
+					activity.Content.PostOnAnimation (animationSentinel);
+				});
+				await Task.WhenAll (handlerDone.Task, animationDone.Task).WaitAsync (TimeSpan.FromSeconds (30));
 			} finally {
 				ViewActionCallbackActivity.Ready = null;
 				if (activity != null)
-					await OnMainThread (activity.Finish);
+					await OnMainThread (() => {
+						if (animationSentinel != null) {
+							activity.Content.RemoveCallbacks (animationSentinel);
+							animationSentinel.Dispose ();
+						}
+						activity.Finish ();
+					});
 			}
 		}
 

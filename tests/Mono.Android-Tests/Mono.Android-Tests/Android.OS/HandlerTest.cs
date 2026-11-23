@@ -121,17 +121,37 @@ namespace Xamarin.Android.RuntimeTests {
 			using var h = new Handler (t.Looper);
 			try {
 				var actions = PostAndRun (h, 100);
-				for (int i = 0; i < 50 && actions.Exists (a => a.IsAlive); i++) {
-					GC.Collect ();
-					GC.WaitForPendingFinalizers ();
-					Java.Lang.Runtime.GetRuntime ().Gc ();
-					JniEnvironment.Runtime.ValueManager.CollectPeers ();
-					Thread.Sleep (100);
-				}
-				Assert.IsFalse (actions.Exists (a => a.IsAlive), "Executed callbacks must not keep their Action alive.");
+				AssertActionsCollectible (actions, "Executed callbacks must not keep their Action alive.");
 			} finally {
 				Quit (t);
 			}
+		}
+
+		[TestMethod]
+		public void CancelledActionCallbacksAreCollectible ()
+		{
+			using var t = new HandlerThread ("CancelledActionCallbacksAreCollectible");
+			t.Start ();
+			using var h = new Handler (t.Looper);
+			try {
+				var actions = PostAndCancel (h, 100);
+				AssertActionsCollectible (actions, "Canceled callbacks must not keep their Action alive.");
+			} finally {
+				GC.KeepAlive (h);
+				Quit (t);
+			}
+		}
+
+		static void AssertActionsCollectible (List<WeakReference> actions, string message)
+		{
+			for (int i = 0; i < 100 && actions.Exists (a => a.IsAlive); i++) {
+				GC.Collect ();
+				GC.WaitForPendingFinalizers ();
+				Java.Lang.Runtime.GetRuntime ().Gc ();
+				JniEnvironment.Runtime.ValueManager.CollectPeers ();
+				Thread.Sleep (100);
+			}
+			Assert.IsFalse (actions.Exists (a => a.IsAlive), message);
 		}
 
 		static int sweepCalls;
@@ -224,6 +244,21 @@ namespace Xamarin.Android.RuntimeTests {
 				Assert.IsTrue (h.Post (action));
 			}
 			Assert.IsTrue (done.Wait (TimeSpan.FromSeconds (10)));
+			return actions;
+		}
+
+		[MethodImpl (MethodImplOptions.NoInlining)]
+		static List<WeakReference> PostAndCancel (Handler h, int count)
+		{
+			var actions = new List<WeakReference> ();
+			for (int i = 0; i < count; i++) {
+				var payload = new object ();
+				Action action = () => GC.KeepAlive (payload);
+				actions.Add (new WeakReference (action));
+				Assert.IsTrue (h.PostDelayed (action, 3_600_000));
+				Assert.IsTrue (h.PostDelayed (action, 3_600_000));
+				h.RemoveCallbacks (action);
+			}
 			return actions;
 		}
 	}
