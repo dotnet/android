@@ -64,9 +64,6 @@ namespace Xamarin.Android.Tasks
 			JavaLibrariesToCompile = javaLibrariesToCompile.ToArray ();
 			ReferenceJavaLibraries = referenceJavaLibraries.ToArray ();
 
-			Log.LogDebugTaskItems ("  JavaLibrariesToCompile:", JavaLibrariesToCompile);
-			Log.LogDebugTaskItems ("  ReferenceJavaLibraries:", ReferenceJavaLibraries);
-
 			return true;
 		}
 

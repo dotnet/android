@@ -60,7 +60,6 @@ namespace Xamarin.Android.Tasks
 			LayoutsToBind = layouts.Values.ToArray ();
 			if (layouts.Count == 0)
 				Log.LogDebugMessage ("No layout file qualifies for binding code generation");
-			Log.LogDebugTaskItems ("   LayoutsToBind:", LayoutsToBind, true);
 			return !Log.HasLoggedErrors;
 		}
 

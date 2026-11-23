@@ -82,8 +82,6 @@ namespace Xamarin.Android.Tasks
 
 			RemovedFiles = removedFiles.ToArray ();
 			RemovedDirectories = removedDirectories.ToArray ();
-			Log.LogDebugTaskItems ("[Output] RemovedFiles", RemovedFiles);
-			Log.LogDebugTaskItems ("[Output] RemovedDirectories", RemovedDirectories);
 			return true;
 		}
 

@@ -50,12 +50,6 @@ namespace Xamarin.Android.BuildTools.PrepTasks
 
 			Output  = Lines?.ToArray ();
 
-			if (LogTaskMessages) {
-				Log.LogMessage (MessageImportance.Low, $"  [Output] {nameof (Output)}:");
-				foreach (var line in (Output ?? Array.Empty<string> ()))
-					Log.LogMessage (MessageImportance.Low, $"    {line}");
-			}
-
 			return !Log.HasLoggedErrors;
 		}
 

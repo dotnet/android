@@ -45,8 +45,6 @@ namespace Xamarin.Android.Tasks
 			// so far we only need the package's R.java for GenerateResourceDesigner input.
 			PrimaryJavaResgenFile = list.FirstOrDefault ();
 
-			Log.LogDebugMessage ("Output PrimaryJavaResgenFile: {0}", PrimaryJavaResgenFile);
-
 			return true;
 		}
 
