@@ -4,6 +4,8 @@
 
   <PropertyGroup>
     <TargetFramework>$(DotNetAndroidTargetFramework)</TargetFramework>
+    <LangVersion>preview</LangVersion>
+    <MemorySafetyRulesVersion>2</MemorySafetyRulesVersion>
     <Nullable>enable</Nullable>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>

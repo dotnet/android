@@ -2,6 +2,8 @@
   <Import Sdk="Microsoft.NET.Sdk" Project="Sdk.props" />
   <PropertyGroup>
     <TargetFramework>$(DotNetAndroidTargetFramework)</TargetFramework>
+    <LangVersion>preview</LangVersion>
+    <MemorySafetyRulesVersion>2</MemorySafetyRulesVersion>
     <RootNamespace>Xamarin.Android.LibraryProjectZip.LibBinding</RootNamespace>
     <AssemblyName>AndroidLibBinding</AssemblyName>
   </PropertyGroup>
