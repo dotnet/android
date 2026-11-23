@@ -236,6 +236,20 @@ builder.Save (proj, doNotCleanupOnUpdate: true, saveProject: false);
 
 This pattern ensures proper encoding, timestamps, and file attributes are handled correctly. The `Touch` + `Save` pattern is used throughout the test suite for incremental builds and file modifications.
 
+### Writing reliable tests
+
+New tests must not fail without a product bug. CI flakes in this repository came repeatedly from the patterns below; avoid them (full checklist: `.github/skills/code-review/references/testing-rules.md`):
+
+- **No timing thresholds.** Don't assert that a build, install, or operation finished within N ms. Assert behavior instead, such as a skipped target or changed output.
+- **No sleeps as synchronization.** Wait for an explicit condition (process exit, readiness property, unique log marker, `TaskCompletionSource`) with a generous deadline, and print diagnostics on timeout. Order concurrency and cancellation tests with gates, not delays.
+- **Isolate every case.** Give each parameterized row its own directory, including all distinguishing parameters. Don't share caches, environment variables, the current directory, or fixed `%TEMP%` paths between tests.
+- **Avoid the network.** Prefer small in-repo fixtures to third-party SDKs or large remote dependency graphs.
+- **Assert on the current run only.** Delete old logs before each build, and scope logcat to the current run with a marker or a fresh dump.
+- **Don't rely on file timestamps.** Use content hashes or target-skip evidence.
+- **Bound process I/O.** Don't wait indefinitely for redirected output from processes whose children may inherit the pipes.
+- **Keep device matrices representative,** not exhaustive, and await device readiness after changing device state.
+- **Don't hide flakes.** No `[Retry]`, rerun loops, or swallowed assertions. Narrow, logged retries are allowed only for specific external transient errors (e.g. Windows sharing violations). `[Ignore]` for flakiness needs a tracking issue. If a flaky test adds no unique coverage, delete it rather than patching it.
+
 ## Error Patterns
 - **MSBuild Errors:** `XA####` (errors), `XA####` (warnings), `APT####` (Android tools)
 - **Error messages:** Must come from `Properties.Resources` (e.g., `Properties.Resources.XA0143`) for localization support. Add new messages to the English `Resources.resx` file.
