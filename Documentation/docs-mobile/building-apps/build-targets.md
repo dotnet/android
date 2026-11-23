@@ -169,7 +169,8 @@ For `platform-tools`, the target queries the CLI's stable package catalog and
 selects the newest version in the supported 37.x major band that is at least
 the requested `$(AndroidSdkPlatformToolsVersion)`. It does not automatically
 install 38.x or preview releases. An older installed 37.x package is updated; an
-equal or newer installed version is left alone. If the catalog contains no
+equal or newer installed version is left alone. An installed preview, such as
+37.0.3-rc1, does not satisfy the stable release with the same number. If the catalog contains no
 such stable package, installation fails with [XA5310](../messages/xa5310.md),
 rather than crossing major versions.
 The Android CLI downloads SDK archives using its HTTPS catalog and the checksums

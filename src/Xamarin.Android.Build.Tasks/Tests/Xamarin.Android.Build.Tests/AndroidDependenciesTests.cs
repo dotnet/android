@@ -292,6 +292,7 @@ namespace Xamarin.Android.Build.Tests
 		[TestCase ("37.0", "37.0.3", "37.0.3", null, null, TestName = "PlatformToolsLatestAlreadyInstalled")]
 		[TestCase ("37.0", "37.0.1", "37.0.3", "platform-tools@37.0.3", null, TestName = "PlatformToolsRollsForwardWithinMajor")]
 		[TestCase ("37.0", "38.0.0", "37.0.3", null, null, TestName = "PlatformToolsNewerMajorInstalled")]
+		[TestCase ("37.0", "37.0.3-rc1", "37.0.3", "platform-tools@37.0.3", null, TestName = "PlatformToolsPreviewInstalled")]
 		[TestCase ("37.0", null, null, null, "XA5310", TestName = "PlatformToolsNoCompatibleVersion")]
 		[TestCase ("37.0", "37.0.3", null, null, "XA5310", TestName = "PlatformToolsInstalledButNotInCatalog")]
 		[TestCase ("37.5", null, "37.0.3", null, "XA5310", TestName = "PlatformToolsNoSufficientVersion")]
@@ -392,6 +393,34 @@ namespace Xamarin.Android.Build.Tests
 			Assert.AreEqual ("XA5309", errors.Single ().Code);
 			StringAssert.Contains ("7", errors.Single ().Message);
 			StringAssert.Contains ("catalog failed", errors.Single ().Message);
+			StringAssert.Contains ("Available packages:", errors.Single ().Message);
+			Assert.IsFalse (File.Exists (Path.Combine (root, "args.txt")));
+		}
+
+		[TestCase ("37.0.3", true, TestName = "PlatformToolsInstalledWithoutLicenses")]
+		[TestCase ("37.0.1", false, TestName = "PlatformToolsUpgradeRequiresLicenses")]
+		public void PlatformToolsLicenses (string installed, bool expectedSuccess)
+		{
+			var root = Path.Combine (Root, "temp", TestName);
+			if (Directory.Exists (root))
+				Directory.Delete (root, recursive: true);
+			var sdkPath = Path.Combine (root, "sdk");
+			var directory = Path.Combine (sdkPath, "platform-tools");
+			Directory.CreateDirectory (directory);
+			File.WriteAllText (Path.Combine (directory, "source.properties"), $"Pkg.Revision={installed}\n");
+			var errors = new List<BuildErrorEventArgs> ();
+			var task = new InstallAndroidDependencies {
+				BuildEngine = new MockBuildEngine (TestContext.Out, errors, [], []),
+				AndroidSdkPath = sdkPath,
+				AcceptAndroidSDKLicenses = false,
+				InstallJavaDependencies = false,
+				AndroidCliPath = CreateCatalogCli (root, "Available packages:\n  platform-tools  37.0.3  Android SDK Platform-Tools"),
+				JavaDependencies = [],
+				Dependencies = [new TaskItem ("platform-tools", new Dictionary<string, string> { { "Version", "37.0" } })],
+			};
+			Assert.AreEqual (expectedSuccess, task.Execute (), string.Join (Environment.NewLine, errors.Select (e => e.Message)));
+			if (!expectedSuccess)
+				StringAssert.Contains ("AcceptAndroidSDKLicenses", errors.Single ().Message);
 			Assert.IsFalse (File.Exists (Path.Combine (root, "args.txt")));
 		}
 

@@ -203,7 +203,10 @@ namespace Xamarin.Installer.Build.Tasks
 						int listExitCode = await ProcessUtils.StartProcess (list, stdout, stderr, cancellationToken);
 						cancellationToken.ThrowIfCancellationRequested ();
 						if (listExitCode != 0) {
-							LogCodedError ("XA5309", Resources.XA5309, listExitCode, stderr);
+							var listOutput = new OutputTail ();
+							listOutput.WriteLine (stdout.ToString ());
+							listOutput.Write (stderr.ToString ());
+							LogCodedError ("XA5309", Resources.XA5309, listExitCode, listOutput);
 							return false;
 						}
 						var selected = SelectPlatformToolsVersion (stdout.ToString (), minimum);
@@ -679,8 +682,14 @@ namespace Xamarin.Installer.Build.Tasks
 					return false;
 				if (version == null)
 					return true;
-				var installed = ParseVersion (ReadProperty (properties, "Pkg.Revision"));
-				return installed != null && installed >= version;
+				var revision = ReadProperty (properties, "Pkg.Revision");
+				var installed = ParseVersion (revision);
+				if (installed == null)
+					return false;
+				// A platform-tools preview, such as 37.0.3-rc1, does not satisfy the stable 37.0.3 release.
+				if (RollForwardMinimum != null && installed == version && !IsValidPlatformToolsVersion (revision))
+					return false;
+				return installed >= version;
 			}
 		}
 
