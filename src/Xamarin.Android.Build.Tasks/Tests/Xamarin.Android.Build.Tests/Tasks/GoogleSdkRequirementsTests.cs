@@ -1,9 +1,7 @@
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using System.Text.RegularExpressions;
 using System.Xml.Linq;
 using Microsoft.Build.Construction;
 using Microsoft.Build.Evaluation;
@@ -70,27 +68,11 @@ public class GoogleSdkRequirementsTests
 	[Test]
 	public void ReusesExistingManifestRead ()
 	{
-		string extension = OperatingSystem.IsWindows () ? ".exe" : "";
-		string jvm = OperatingSystem.IsWindows () ? Path.Combine ("bin", "server", "jvm.dll")
-			: Path.Combine ("lib", OperatingSystem.IsMacOS () ? "libjli.dylib" : "libjvm.so");
-		foreach (string file in new [] {
-			Path.Combine ("platform-tools", "adb" + extension),
-			Path.Combine ("bin", "jar" + extension),
-			Path.Combine ("bin", "java" + extension),
-			Path.Combine ("bin", "javac" + extension),
-			Path.Combine ("bin", "jarsigner" + extension),
-			"ndk-stack" + extension,
-			jvm,
-		}) {
-			string path = Path.Combine (directory, file);
-			Directory.CreateDirectory (Path.GetDirectoryName (path));
-			File.WriteAllText (path, "");
-		}
-
 		WriteManifest ("29", "27");
-		string output = BuildReusingManifest ("28");
-		var codes = Regex.Matches (output, @"\bXA\d{4}\b").Select (match => match.Value);
-		CollectionAssert.AreEqual (new [] { "XA1006", "XA1007" }, codes, output);
+		var (logger, _) = Build ("28", reuseRead: true);
+		CollectionAssert.AreEqual (new [] { "XA1006", "XA1007" }, logger.Warnings.Select (warning => warning.Code),
+			string.Join (Environment.NewLine, logger.Warnings.Select (warning => warning.Message)));
+		Assert.AreEqual (1, logger.Tasks.Count (task => task == "ReadAndroidManifest"), "The check must not parse the manifest again.");
 	}
 
 	[Test]
@@ -115,10 +97,9 @@ public class GoogleSdkRequirementsTests
 			.Save (ManifestFile);
 	}
 
-	ProjectRootElement CreateProject (ProjectCollection collection, string compile, bool enabled = true, bool reuseRead = false, bool warningsAsErrors = false)
+	(CheckLogger Logger, ProjectInstance Instance) Build (string compile, bool enabled = true, bool reuseRead = false, bool warningsAsErrors = false)
 	{
 		string tasksDirectory = Path.Combine (XABuildPaths.TopDirectory, "src", "Xamarin.Android.Build.Tasks");
-		string taskAssembly = typeof (ReadAndroidManifest).Assembly.Location;
 		XNamespace ns = "http://schemas.microsoft.com/developer/msbuild/2003";
 		var project = new XElement (ns + "Project");
 		if (reuseRead) {
@@ -128,6 +109,7 @@ public class GoogleSdkRequirementsTests
 			project.Add (read);
 		}
 		using var reader = project.CreateReader ();
+		using var collection = new ProjectCollection ();
 		string toolsPath = Directory.EnumerateDirectories (Path.Combine (TestEnvironment.DotNetPreviewDirectory, "sdk"))
 			.First (path => File.Exists (Path.Combine (path, "Microsoft.Common.tasks")));
 		collection.AddToolset (new Toolset ("Current", toolsPath, collection, ""));
@@ -145,68 +127,19 @@ public class GoogleSdkRequirementsTests
 		root.AddProperty ("SupportedOSPlatformVersion", "1");
 		root.AddProperty ("TargetPlatformVersion", "99");
 		root.AddProperty ("MSBuildWarningsAsErrors", warningsAsErrors ? "XA1006;XA1007" : "");
-		root.AddProperty ("_XamarinAndroidBuildTasksAssembly", taskAssembly);
+		root.AddProperty ("_XamarinAndroidBuildTasksAssembly", typeof (ReadAndroidManifest).Assembly.Location);
 		foreach (string name in new [] { "ReadAndroidManifest", "AndroidWarning" }) {
-			root.AddUsingTask ("Xamarin.Android.Tasks." + name, taskAssembly, null);
-		}
-		if (reuseRead) {
-			root.AddUsingTask ("Xamarin.Android.Tasks.ResolveSdks", taskAssembly, null);
-			var resolve = root.AddTarget ("InitializeSdk").AddTask ("ResolveSdks");
-			resolve.SetParameter ("AndroidSdkPath", directory);
-			resolve.SetParameter ("AndroidNdkPath", directory);
-			resolve.SetParameter ("JavaSdkPath", directory);
-			resolve.SetParameter ("MinimumSupportedJavaVersion", "1.0");
-			resolve.SetParameter ("LatestSupportedJavaVersion", "99.0");
-			// A second manifest read must fail after the first read has completed.
-			var invalidate = root.AddTarget ("InvalidateManifest").AddTask ("WriteLinesToFile");
-			invalidate.SetParameter ("File", ManifestFile);
-			invalidate.SetParameter ("Lines", "not XML");
-			invalidate.SetParameter ("Overwrite", "true");
+			root.AddUsingTask ("Xamarin.Android.Tasks." + name, typeof (ReadAndroidManifest).Assembly.Location, null);
 		}
 		root.AddImport (Path.Combine (tasksDirectory, "Microsoft.Android.Sdk", "targets", "Microsoft.Android.Sdk.Tooling.targets"));
 		var check = root.AddTarget ("Check");
-		check.DependsOnTargets = reuseRead ? "InitializeSdk;_ReadAndroidManifest;InvalidateManifest;_CheckGoogleSdkRequirements" : "_CheckGoogleSdkRequirements";
+		check.DependsOnTargets = reuseRead ? "_ReadAndroidManifest;_CheckGoogleSdkRequirements" : "_CheckGoogleSdkRequirements";
 		check.AddPropertyGroup ().AddProperty ("CheckCompleted", "true");
-		return root;
-	}
-
-	(CheckLogger Logger, ProjectInstance Instance) Build (string compile, bool enabled = true, bool warningsAsErrors = false)
-	{
-		using var collection = new ProjectCollection ();
-		var root = CreateProject (collection, compile, enabled, warningsAsErrors: warningsAsErrors);
 		var instance = new ProjectInstance (root, globalProperties: null, toolsVersion: null, collection);
 		var logger = new CheckLogger ();
 		bool result = instance.Build ("Check", new [] { logger });
 		Assert.AreEqual (!warningsAsErrors, result, string.Join (Environment.NewLine, logger.Errors.Select (error => error.Message)));
 		return (logger, instance);
-	}
-
-	string BuildReusingManifest (string compile)
-	{
-		using var collection = new ProjectCollection ();
-		var root = CreateProject (collection, compile, reuseRead: true);
-		// ResolveSdks changes process-wide state, so isolate it from the test runner.
-		root.Save ();
-		var startInfo = new ProcessStartInfo (Path.Combine (TestEnvironment.DotNetPreviewDirectory, "dotnet")) {
-			WorkingDirectory = directory,
-			UseShellExecute = false,
-			CreateNoWindow = true,
-			RedirectStandardOutput = true,
-			RedirectStandardError = true,
-		};
-		startInfo.ArgumentList.Add ("msbuild");
-		startInfo.ArgumentList.Add (root.FullPath);
-		startInfo.ArgumentList.Add ("-target:Check");
-		startInfo.ArgumentList.Add ("-nologo");
-		startInfo.ArgumentList.Add ("-verbosity:minimal");
-		startInfo.ArgumentList.Add ("-nodeReuse:false");
-		using var process = Process.Start (startInfo) ?? throw new InvalidOperationException ("Could not start MSBuild.");
-		var standardOutput = process.StandardOutput.ReadToEndAsync ();
-		var standardError = process.StandardError.ReadToEndAsync ();
-		process.WaitForExit ();
-		string output = standardOutput.GetAwaiter ().GetResult () + standardError.GetAwaiter ().GetResult ();
-		Assert.AreEqual (0, process.ExitCode, output);
-		return output;
 	}
 
 	sealed class CheckLogger : Logger
