@@ -3,11 +3,9 @@
   <Import Project="$(MSBuildThisFileDirectory)..\..\Configuration.props" />
   <PropertyGroup>
     <NoWarn>$(NoWarn);CA1305</NoWarn>
-    <MemorySafetyRulesVersion>2</MemorySafetyRulesVersion>
   </PropertyGroup>
 
   <PropertyGroup>
-    <LangVersion>preview</LangVersion>
     <TargetFramework>netstandard2.0</TargetFramework>
     <OutputPath>$(MicrosoftAndroidSdkOutDir)</OutputPath>
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>

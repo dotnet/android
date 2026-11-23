@@ -8,8 +8,6 @@
     <RootNamespace>Microsoft.Android.Sdk.TrimmableTypeMap</RootNamespace>
     <SignAssembly>true</SignAssembly>
     <AssemblyOriginatorKeyFile>..\..\product.snk</AssemblyOriginatorKeyFile>
-    <LangVersion>preview</LangVersion>
-    <MemorySafetyRulesVersion>2</MemorySafetyRulesVersion>
   </PropertyGroup>
 
   <ItemGroup>

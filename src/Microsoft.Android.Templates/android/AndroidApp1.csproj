@@ -1,6 +1,8 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <TargetFramework>net12.0-android</TargetFramework>
+    <MemorySafetyRulesVersion>2</MemorySafetyRulesVersion>
+    <LangVersion>preview</LangVersion>
     <SupportedOSPlatformVersion>SUPPORTED_OS_PLATFORM_VERSION</SupportedOSPlatformVersion>
     <RootNamespace Condition="'$(name)' != '$(name{-VALUE-FORMS-}safe_namespace)'">AndroidApp1</RootNamespace>
     <OutputType>Exe</OutputType>

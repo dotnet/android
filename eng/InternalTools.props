@@ -1,0 +1,7 @@
+<Project>
+  <PropertyGroup>
+    <!-- eng/common/internal deliberately does not import the repository's Directory.Build.props. -->
+    <MemorySafetyRulesVersion>2</MemorySafetyRulesVersion>
+    <LangVersion>preview</LangVersion>
+  </PropertyGroup>
+</Project>

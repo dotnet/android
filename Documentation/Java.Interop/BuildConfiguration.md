@@ -13,6 +13,14 @@ Projects use the repository's shared
 MSBuild properties may be placed in the repository-root
 `Configuration.Override.props` or passed with `-p:Name=Value`.
 
+The repository defaults to C# preview and `MemorySafetyRulesVersion=2` in
+`Directory.Build.props`, including test projects. Use the compiler provisioned
+by `make prepare`; older language modes do not support these rules.
+The isolated workload-dependency and Arcade internal-tools builds opt in
+separately because they do not import the root props. Android project templates
+also carry the settings explicitly so generated projects retain them outside
+the repository.
+
 Overridable MSBuild properties include:
 
 * `$(Configuration)`: Build configuration, normally `Debug` or `Release`.

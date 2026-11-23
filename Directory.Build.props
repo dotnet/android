@@ -4,6 +4,11 @@
 
   <PropertyGroup>
     <DirectoryBuildPropsImported>true</DirectoryBuildPropsImported>
+    <!-- Updated memory-safety rules require preview. Use the property instead of Features:
+         satellite compilation forwards Features but not LangVersion.
+         https://github.com/dotnet/sdk/issues/56839 -->
+    <MemorySafetyRulesVersion>2</MemorySafetyRulesVersion>
+    <LangVersion Condition=" '$(LangVersion)' == '' ">preview</LangVersion>
     <DotNetTargetFrameworkVersion>12.0</DotNetTargetFrameworkVersion>
     <DotNetTargetFramework>net$(DotNetTargetFrameworkVersion)</DotNetTargetFramework>
     <DotNetAndroidTargetFramework>$(DotNetTargetFramework)-android</DotNetAndroidTargetFramework>
