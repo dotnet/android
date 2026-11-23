@@ -1291,7 +1291,7 @@ VNZXRob2RzLmphdmFQSwUGAAAAAAcABwDOAQAAVgMAAAAA
 			FileAssert.Exists (cs_file);
 			var code = File.ReadAllText (cs_file);
 			StringAssert.Contains ("public static global::System.Threading.Tasks.Task<global::Androidx.Datastore.Preferences.Core.Preferences> EditAsync (global::AndroidX.DataStore.Core.IDataStore obj, global::Kotlin.Jvm.Functions.IFunction2 transform, global::System.Threading.CancellationToken cancellationToken = default)", code);
-			StringAssert.Contains ("global::Android.Runtime.KotlinCoroutines.InvokeAsync<global::Androidx.Datastore.Preferences.Core.Preferences> (__continuation => Edit (", code);
+			StringAssert.Contains ("global::Android.Runtime.KotlinCoroutines.CallSuspendFunctionAsync<global::Androidx.Datastore.Preferences.Core.Preferences> (__continuation => Edit (", code);
 		}
 
 		[Test]

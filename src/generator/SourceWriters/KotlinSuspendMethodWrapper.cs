@@ -51,11 +51,13 @@ namespace generator.SourceWriters
 			var target = selfType != null ? "self." + method.AdjustedName : method.AdjustedName;
 			var invoke = $"__continuation => {target} ({args})";
 
+			// A `kotlin/Unit` result is a non-generic `Task`, which `Task<Java.Lang.Object?>` is.
 			var result = GetResultType (method.KotlinSuspendReturnType, opt);
-			var generic = result == null ? "" : $"<{result}>";
-			var nullable = method.KotlinSuspendReturnType.EndsWith ("?", StringComparison.Ordinal);
-			ReturnType = new TypeReferenceWriter ("global::System.Threading.Tasks.Task" + generic);
-			Body.Add ($"return {Runtime}.{(nullable ? "InvokeNullableAsync" : "InvokeAsync")}{generic} ({invoke}, {token});");
+			var call = result == null || method.KotlinSuspendReturnType.EndsWith ("?", StringComparison.Ordinal)
+				? "CallNullableSuspendFunctionAsync"
+				: "CallSuspendFunctionAsync";
+			ReturnType = new TypeReferenceWriter ("global::System.Threading.Tasks.Task" + (result == null ? "" : $"<{result}>"));
+			Body.Add ($"return {Runtime}.{call}<{result ?? "global::Java.Lang.Object"}> ({invoke}, {token});");
 		}
 
 		// Maps the Kotlin result type (e.g. `kotlin/Int?`) to a C# type.

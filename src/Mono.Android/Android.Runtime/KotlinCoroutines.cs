@@ -1,5 +1,6 @@
 #nullable enable
 using System;
+using System.ComponentModel;
 using System.Diagnostics.CodeAnalysis;
 using System.Threading;
 using System.Threading.Tasks;
@@ -20,19 +21,14 @@ namespace Android.Runtime {
 	/// build-time dependency on Kotlin. When <c>kotlinx.coroutines</c> is in the app, the continuation context
 	/// is a <c>kotlinx.coroutines.Job</c>, and cancellation of the token also cancels that job.
 	/// </remarks>
+	[EditorBrowsable (EditorBrowsableState.Never)]
 	public static class KotlinCoroutines {
 		const DynamicallyAccessedMemberTypes Constructors = DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.NonPublicConstructors;
-
-		/// <summary>Runs a Kotlin <c>suspend</c> function that returns <c>Unit</c>.</summary>
-		/// <param name="invoke">Calls the bound method with the supplied <c>kotlin.coroutines.Continuation</c>.</param>
-		/// <param name="cancellationToken">Cancels the operation.</param>
-		public static Task InvokeAsync (Func<IJavaObject, Java.Lang.Object?> invoke, CancellationToken cancellationToken = default) =>
-			InvokeCoreAsync (invoke, cancellationToken);
 
 		/// <summary>Runs a Kotlin <c>suspend</c> function with a non-null result and converts the result to <typeparamref name="T" />.</summary>
 		/// <param name="invoke">Calls the bound method with the supplied <c>kotlin.coroutines.Continuation</c>.</param>
 		/// <param name="cancellationToken">Cancels the operation.</param>
-		public static async Task<T> InvokeAsync<
+		public static async Task<T> CallSuspendFunctionAsync<
 				[DynamicallyAccessedMembers (Constructors)]
 				T
 		> (Func<IJavaObject, Java.Lang.Object?> invoke, CancellationToken cancellationToken = default)
@@ -47,7 +43,7 @@ namespace Android.Runtime {
 		/// <remarks>For a nullable value type, use a <see cref="Nullable{T}" /> type argument, for example <c>int?</c>.</remarks>
 		/// <param name="invoke">Calls the bound method with the supplied <c>kotlin.coroutines.Continuation</c>.</param>
 		/// <param name="cancellationToken">Cancels the operation.</param>
-		public static async Task<T?> InvokeNullableAsync<
+		public static async Task<T?> CallNullableSuspendFunctionAsync<
 				[DynamicallyAccessedMembers (Constructors)]
 				T
 		> (Func<IJavaObject, Java.Lang.Object?> invoke, CancellationToken cancellationToken = default)
