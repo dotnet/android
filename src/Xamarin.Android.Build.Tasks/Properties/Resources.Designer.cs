@@ -331,6 +331,15 @@ namespace Xamarin.Android.Tasks.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to @(Content) build action is not supported.
+        /// </summary>
+        public static string XA0101 {
+            get {
+                return ResourceManager.GetString("XA0101", resourceCulture);
+            }
+        }
+
+        /// <summary>
         ///   Looks up a localized string similar to Invalid value for `$(AndroidSequencePointsMode)`: {0}.
         /// </summary>
         public static string XA0104 {
