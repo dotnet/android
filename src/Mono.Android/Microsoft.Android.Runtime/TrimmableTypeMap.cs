@@ -473,16 +473,13 @@ public class TrimmableTypeMap
 		}
 	}
 
-	internal IJavaPeerable? CreateInstance (
-		IntPtr handle,
-		[DynamicallyAccessedMembers (Constructors)]
-		Type? targetType = null)
+	internal IJavaPeerable? CreateInstance (IntPtr handle, Type? targetType = null)
 	{
 		var proxy = GetProxyForJavaObject (handle, targetType);
 
 		IJavaPeerable? peer;
 		if (ShouldActivateClosedGenericTarget (proxy, targetType)) {
-			peer = ActivateUsingReflection (targetType, handle, ImplicitPeerOwnership);
+			peer = proxy.CreateClosedGenericInstance (targetType, handle, ImplicitPeerOwnership);
 		} else {
 			peer = proxy?.CreateInstance (handle, ImplicitPeerOwnership);
 		}
@@ -495,12 +492,7 @@ public class TrimmableTypeMap
 		return RegisterCreatedPeer (peer);
 	}
 
-	const DynamicallyAccessedMemberTypes Constructors = DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.NonPublicConstructors;
 	const JniHandleOwnership ImplicitPeerOwnership = JniHandleOwnership.DoNotTransfer | JniHandleOwnership.DoNotRegister;
-
-	const BindingFlags ActivationConstructorBindingFlags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance;
-
-	static  readonly    Type[]  XAConstructorSignature  = new Type [] { typeof (IntPtr), typeof (JniHandleOwnership) };
 
 	static bool ShouldActivateClosedGenericTarget (
 			[NotNullWhen (true)] JavaPeerProxy? proxy,
@@ -511,20 +503,6 @@ public class TrimmableTypeMap
 			targetType is not null &&
 			targetType.IsGenericType &&
 			!targetType.IsGenericTypeDefinition;
-	}
-
-	static IJavaPeerable? ActivateUsingReflection (
-			[DynamicallyAccessedMembers (Constructors)]
-			Type closedType,
-			IntPtr handle,
-			JniHandleOwnership transfer)
-	{
-		var ctor = closedType.GetConstructor (ActivationConstructorBindingFlags, null, XAConstructorSignature, null);
-		if (ctor is null) {
-			return null;
-		}
-
-		return (IJavaPeerable) ctor.Invoke ([handle, transfer]);
 	}
 
 	static void MarkCreatedPeer (IJavaPeerable peer)

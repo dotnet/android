@@ -182,11 +182,7 @@ namespace Java.Lang {
 			return (T?) GetObject (handle, transfer, typeof (T));
 		}
 
-		internal static IJavaPeerable? GetObject (
-				IntPtr handle,
-				JniHandleOwnership transfer,
-				[DynamicallyAccessedMembers (Constructors)]
-				Type? type = null)
+		internal static IJavaPeerable? GetObject (IntPtr handle, JniHandleOwnership transfer, Type? type = null)
 		{
 			if (handle == IntPtr.Zero)
 				return null;
