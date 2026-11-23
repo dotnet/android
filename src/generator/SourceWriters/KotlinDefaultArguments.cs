@@ -32,22 +32,18 @@ namespace generator.SourceWriters
 				.SelectMany (m => new [] { (m.AdjustedName, m.Parameters), (m.Name, m.Parameters) });
 			var signatures = GetSignatures (members, opt);
 			foreach (var m in inherited.Where (m => m.IsValid && IsSupported (m)))
-				for (var count = m.Parameters.Count - GetTrailingDefaultCount (m); count < m.Parameters.Count; count++)
+				foreach (var count in GetParameterCounts (m))
 					signatures.Add (GetSignature (m.AdjustedName, m.Parameters, count, opt));
 
 			foreach (var method in type.Methods) {
-				if (!method.IsValid || !IsSupported (method) || method.IsReturnEnumified)
-					continue;
-
-				var trailing = GetTrailingDefaultCount (method);
-				if (trailing == 0)
+				if (!method.IsValid || !IsSupported (method) || !GetParameterCounts (method).Any ())
 					continue;
 
 				var helper = CreateHelperMethod (type, method, opt, context);
 				if (helper is null)
 					continue;
 
-				for (var count = method.Parameters.Count - 1; count >= method.Parameters.Count - trailing; count--) {
+				foreach (var count in GetParameterCounts (method)) {
 					if (!signatures.Add (GetSignature (method.AdjustedName, method.Parameters, count, opt)))
 						continue;
 					// Interfaces only have `_members` when they have default or static methods.
@@ -69,11 +65,7 @@ namespace generator.SourceWriters
 
 			foreach (var ctor in klass.Ctors) {
 				// C# does not allow protected constructors in sealed classes.
-				if (!ctor.IsValid || ctor.IsNonStaticNestedType || ctor.Visibility == "protected" || !IsSupported (ctor))
-					continue;
-
-				var trailing = GetTrailingDefaultCount (ctor);
-				if (trailing == 0)
+				if (!ctor.IsValid || ctor.IsNonStaticNestedType || ctor.Visibility == "protected" || !IsSupported (ctor) || !GetParameterCounts (ctor).Any ())
 					continue;
 
 				var helper = new Ctor (klass) {
@@ -95,7 +87,7 @@ namespace generator.SourceWriters
 				if (!helper.Validate (opt, klass.TypeParameters, context) || helper.JniSignature != ctor.KotlinDefaultJniSignature)
 					continue;
 
-				for (var count = ctor.Parameters.Count - 1; count >= ctor.Parameters.Count - trailing; count--) {
+				foreach (var count in GetParameterCounts (ctor)) {
 					if (!signatures.Add (GetSignature (klass.Name, ctor.Parameters, count, opt)))
 						continue;
 					writer.Constructors.Add (new KotlinDefaultConstructor (klass, ctor, helper, count, opt, context));
@@ -103,16 +95,17 @@ namespace generator.SourceWriters
 			}
 		}
 
-		// The helper clones the parameters, which loses generated enum types.
+		// The helper clones the parameters and return type, which loses generated enum types.
 		static bool IsSupported (MethodBase method)
-			=> !string.IsNullOrEmpty (method.KotlinDefaultJniSignature) && !method.Parameters.Any (p => p.IsEnumified);
+			=> !string.IsNullOrEmpty (method.KotlinDefaultJniSignature) &&
+				!method.Parameters.Any (p => p.IsEnumified) &&
+				method is not Method { IsReturnEnumified: true };
 
-		static int GetTrailingDefaultCount (MethodBase method)
+		// The parameter counts of the overloads: one for each trailing parameter with a default value.
+		static IEnumerable<int> GetParameterCounts (MethodBase method)
 		{
-			var count = 0;
-			for (var i = method.Parameters.Count - 1; i >= 0 && method.KotlinDefaultParameters.Contains (i); i--)
-				count++;
-			return count;
+			for (var count = method.Parameters.Count - 1; count >= 0 && method.KotlinDefaultParameters.Contains (count); count--)
+				yield return count;
 		}
 
 		static HashSet<string> GetSignatures (IEnumerable<(string Name, ParameterList Parameters)> members, CodeGenerationOptions opt)
@@ -187,13 +180,6 @@ namespace generator.SourceWriters
 			body.Add ($"var {Marker} = default (global::Java.Lang.Object);");
 		}
 
-		internal static ParameterList Take (ParameterList parameters, int count)
-		{
-			var result = new ParameterList ();
-			foreach (var p in parameters.Take (count))
-				result.Add (p);
-			return result;
-		}
 	}
 
 	public class KotlinDefaultMethod : MethodWriter
@@ -211,14 +197,13 @@ namespace generator.SourceWriters
 			SourceWriterExtensions.AddRestrictToWarning (Attributes, method.AnnotatedVisibility, false, opt);
 			SourceWriterExtensions.AddSupportedOSPlatform (Attributes, method, opt);
 
-			var parameters = KotlinDefaultArguments.Take (method.Parameters, count);
-			this.AddMethodParameters (parameters, opt);
+			var overload = new Method (type);
+			foreach (var p in method.Parameters.Take (count))
+				overload.Parameters.Add (p);
+			this.AddMethodParameters (overload.Parameters, opt);
 
 			// For example, `toString (indent: Int = 0)` makes `ToString ()`, which hides `object.ToString ()`.
-			var shape = new Method (type);
-			foreach (var p in parameters)
-				shape.Parameters.Add (p);
-			IsShadow = type.RequiresNew (Name, shape);
+			IsShadow = type.RequiresNew (Name, overload);
 
 			KotlinDefaultArguments.AddLocals (Body, method, count, !method.IsStatic, opt);
 			SourceWriterExtensions.AddMethodBody (Body, helper, opt);
@@ -243,7 +228,10 @@ namespace generator.SourceWriters
 			Attributes.RemoveAll (a => a is RegisterAttr);
 
 			Parameters.Clear ();
-			this.AddMethodParameters (KotlinDefaultArguments.Take (original.Parameters, count), opt);
+			var parameters = new ParameterList ();
+			foreach (var p in original.Parameters.Take (count))
+				parameters.Add (p);
+			this.AddMethodParameters (parameters, opt);
 		}
 
 		protected override void WriteBody (CodeWriter writer)
