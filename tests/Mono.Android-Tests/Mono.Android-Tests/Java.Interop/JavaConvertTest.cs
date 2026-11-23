@@ -598,6 +598,31 @@ namespace Java.InteropTests
 			}
 		}
 
+		// Mirrors FromJniHandle_IDictionaryNullableInt32String for the reference-key direction:
+		// NativeAOT must root the JavaDictionary<__Canon, int> template through ValueTypeFactory's mixed-key exemplar.
+		[TestMethod]
+		[TestCategory ("NativeAOTTrimmable")]
+		public void FromJniHandle_IDictionaryStringInt32 ()
+		{
+			using (var source = new JavaDictionary ()) {
+				source.Add ("one", 1);
+				source.Add ("two", 2);
+
+				var converted = InvokeJavaConvertFromJniHandle (typeof (IDictionary<string, int>), source.Handle, JniHandleOwnership.DoNotTransfer);
+				try {
+					var convertedType = converted.GetType ();
+					Assert.AreEqual (typeof (JavaDictionary<,>), convertedType.GetGenericTypeDefinition ());
+					CollectionAssert.AreEqual (new [] { typeof (string), typeof (int) }, convertedType.GetGenericArguments ());
+
+					var dictionary = (IDictionary<string, int>) converted;
+					Assert.AreEqual (1, dictionary ["one"]);
+					Assert.AreEqual (2, dictionary ["two"]);
+				} finally {
+					(converted as IDisposable)?.Dispose ();
+				}
+			}
+		}
+
 		// The non-generic source and assertions intentionally avoid referencing
 		// JavaDictionary<int, long>, so NativeAOT must root that exact wrapper through
 		// the hand-written value-type dictionary universe.
