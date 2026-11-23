@@ -12,6 +12,63 @@ namespace Java.InteropTests
 	public class JniEnvironmentTests
 	{
 		[TestMethod]
+		[TestCategory ("JniLocalReferenceAccounting")]
+		[DataRow (false)]
+		[DataRow (true)]
+		public void Exceptions_ExceptionOccurredTracksLocalReferences (bool pendingException)
+		{
+			using var type = new JniType ("java/lang/IllegalStateException");
+			var count = JniEnvironment.LocalReferenceCount;
+			JniObjectReference first = default;
+			JniObjectReference second = default;
+			try {
+				if (pendingException)
+					JniEnvironment.Exceptions.ThrowNew (type.PeerReference, "reference accounting");
+				first = JniEnvironment.Exceptions.ExceptionOccurred ();
+				Assert.AreEqual (pendingException, first.IsValid);
+				Assert.AreEqual (count + (pendingException ? 1 : 0), JniEnvironment.LocalReferenceCount);
+				second = JniEnvironment.Exceptions.ExceptionOccurred ();
+				Assert.AreEqual (pendingException, second.IsValid);
+				Assert.AreEqual (count + (pendingException ? 2 : 0), JniEnvironment.LocalReferenceCount);
+				Assert.AreEqual (pendingException, JniEnvironment.Exceptions.ExceptionCheck ());
+				JniEnvironment.Exceptions.ExceptionClear ();
+				if (pendingException) {
+					Assert.AreEqual (JniObjectReferenceType.Local, first.Type);
+					Assert.AreEqual (JniObjectReferenceType.Local, second.Type);
+					Assert.IsTrue (JniEnvironment.Types.IsSameObject (first, second));
+				}
+				JniObjectReference.Dispose (ref first);
+				Assert.AreEqual (count + (pendingException ? 1 : 0), JniEnvironment.LocalReferenceCount);
+				JniObjectReference.Dispose (ref second);
+				Assert.AreEqual (count, JniEnvironment.LocalReferenceCount);
+			} finally {
+				JniEnvironment.Exceptions.ExceptionClear ();
+				JniObjectReference.Dispose (ref first);
+				JniObjectReference.Dispose (ref second);
+			}
+		}
+
+		[TestMethod]
+		[TestCategory ("JniLocalReferenceAccounting")]
+		[DataRow (false)]
+		[DataRow (true)]
+		public void Exceptions_GetExceptionForLastThrowableTracksLocalReferences (bool pendingException)
+		{
+			var expected = new InvalidOperationException ("reference accounting");
+			try {
+				if (pendingException)
+					JniEnvironment.Exceptions.Throw (expected);
+				var count = JniEnvironment.LocalReferenceCount;
+				var actual = JniEnvironment.GetExceptionForLastThrowable ();
+				Assert.AreSame (pendingException ? expected : null, actual);
+				Assert.AreEqual (count, JniEnvironment.LocalReferenceCount);
+				Assert.IsFalse (JniEnvironment.Exceptions.ExceptionCheck ());
+			} finally {
+				JniEnvironment.Exceptions.ExceptionClear ();
+			}
+		}
+
+		[TestMethod]
 		[TestCategory ("ManagedConstruction")]
 		public void Transition_RejectsNullEnvironmentPointer ()
 		{

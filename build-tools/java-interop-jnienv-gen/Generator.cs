@@ -993,7 +993,7 @@ namespace Xamarin.Java.Interop
 
 		public override string[] GetHandleCreationLogStatements (string method, string variable)
 		{
-			if (method == "NewLocalRef" || method == "ExceptionOccurred")
+			if (method == "NewLocalRef")
 				return base.GetHandleCreationLogStatements (method, variable);
 			return new[] {
 				string.Format ("JniEnvironment.LogCreateLocalRef ({0});", variable),

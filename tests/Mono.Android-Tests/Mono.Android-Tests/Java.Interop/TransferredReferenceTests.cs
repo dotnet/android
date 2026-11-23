@@ -295,7 +295,6 @@ namespace Java.InteropTests
 							JniEnvironment.Runtime.RaisePendingException (escaped);
 							pending = JniEnvironment.Exceptions.ExceptionOccurred ();
 							JniEnvironment.Exceptions.ExceptionClear ();
-							JniEnvironment.References.CreatedReference (pending);
 							Assert.IsTrue (pending.IsValid);
 							Assert.AreSame (escaped, JniEnvironment.Runtime.GetExceptionForThrowable (
 								ref pending, JniObjectReferenceOptions.CopyAndDispose));
