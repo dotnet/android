@@ -37,6 +37,7 @@ public class GenerateMainAndroidManifest : AndroidTask
 	public string []? MergedManifestDocuments { get; set; }
 	public bool NeedsInternet { get; set; }
 	public string? PackageName { get; set; }
+	public string []? ReferenceAssemblyPaths { get; set; }
 	[Required]
 	public ITaskItem [] ResolvedUserAssemblies { get; set; } = [];
 	[Required]
@@ -103,7 +104,7 @@ public class GenerateMainAndroidManifest : AndroidTask
 			targetSdkVersion = version.Major.ToString (CultureInfo.InvariantCulture);
 		}
 
-		var manifest = new ManifestDocument (ManifestTemplate) {
+		var manifest = new ManifestDocument (ManifestTemplate, MonoAndroidHelper.GetSupportedVersions (BuildEngine4, ReferenceAssemblyPaths)) {
 			PackageName = PackageName,
 			VersionName = VersionName,
 			ApplicationLabel = ApplicationLabel ?? PackageName,

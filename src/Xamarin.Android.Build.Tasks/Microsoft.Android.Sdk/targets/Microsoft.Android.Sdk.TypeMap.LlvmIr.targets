@@ -121,6 +121,7 @@
         MergedManifestDocuments="@(_MergedManifestDocuments)"
         NeedsInternet="$(AndroidNeedsInternetPermission)"
         PackageName="$(_AndroidPackage)"
+        ReferenceAssemblyPaths="@(_AndroidApiInfoDirectories)"
         ResolvedUserAssemblies="@(_ResolvedUserMonoAndroidAssemblies)"
         SupportedAbis="@(_BuildTargetAbis)"
         SupportedOSPlatformVersion="$(SupportedOSPlatformVersion)"
