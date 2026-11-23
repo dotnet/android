@@ -10,7 +10,6 @@ namespace Xamarin.AndroidTools.AnnotationSupport
 {
 	public class AndroidAnnotationsSupport
 	{
-		#region static members
 
 		public static IList<AnnotatedItem> ParseArchive (string file)
 		{
@@ -33,9 +32,7 @@ namespace Xamarin.AndroidTools.AnnotationSupport
 			}
 			return doc.Root.Elements ("item").Select (e => new AnnotatedItem (e));
 		}
-		#endregion
 
-		#region data loader
 
 		public void Load (string annotationsZipFile)
 		{
@@ -64,6 +61,5 @@ namespace Xamarin.AndroidTools.AnnotationSupport
 			get { return data; }
 		}
 
-		#endregion
 	}
 }
