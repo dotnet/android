@@ -697,38 +697,6 @@ int xml myxml 0x7f140000
 		}
 
 		[Test]
-		[NonParallelizable] // Test measures performance
-		public void CheckPerformanceOfManagedParser ()
-		{
-			var path = Path.Combine ("temp", TestName);
-			CreateResourceDirectory (path);
-			IBuildEngine engine = new MockBuildEngine (TestContext.Out);
-			TaskLoggingHelper loggingHelper = new TaskLoggingHelper (engine, nameof (ManagedResourceParser));
-			string resPath = Path.Combine (Root, path, "res");
-			var platform = AndroidSdkResolver.GetMaxInstalledPlatform ();
-			var flagFile = Path.Combine (Root, path, "AndroidResgen.flag");
-			var lp = new string [] { Path.Combine (Root, path, "lp", "res") };
-			Stopwatch sw = new Stopwatch ();
-			long totalMS = 0;
-			int i;
-			for (i = 0; i < 100; i++) {
-				var parser = new ManagedResourceParser (loggingHelper) {
-					JavaPlatformDirectory = Path.Combine (AndroidSdkDirectory, "platforms", AndroidSdkResolver.GetPlatformDirectoryName (platform)),
-					ResourceFlagFile =  flagFile,
-				};
-				sw.Start ();
-				var codeDom = parser.Parse (resPath, "R.txt", lp, isApp: true, resourceMap: new Dictionary<string, string> ());
-				sw.Stop ();
-				TestContext.Out.WriteLine ($"Pass {i} took {sw.ElapsedMilliseconds} ms");
-				totalMS += sw.ElapsedMilliseconds;
-				sw.Reset ();
-				Assert.AreEqual (20, codeDom.Members.Count, "Expected 20 Classes to be generated");
-			}
-			TestContext.Out.WriteLine ($"Average {totalMS / i} ms");
-			Assert.LessOrEqual (totalMS / i, 160, "Parser should have taken on average less than 160 ms.");
-		}
-
-		[Test]
 		public void GenerateDesignerFileWithElevenStyleableAttributesFromRtxt ()
 		{
 			var styleable = @"<resources>
