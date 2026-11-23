@@ -249,7 +249,7 @@ New tests must not fail without a product bug. CI flakes in this repository came
 - **Don't rely on file timestamps.** Use content hashes or target-skip evidence.
 - **Bound process I/O.** Don't wait indefinitely for redirected output from processes whose children may inherit the pipes.
 - **Keep device matrices representative,** not exhaustive, and await device readiness after changing device state.
-- **Don't hide flakes.** No `[Retry]`, rerun loops, or swallowed assertions. Narrow, logged retries are allowed only for specific external transient errors (e.g. Windows sharing violations). `[Ignore]` for flakiness needs a tracking issue. If a flaky test adds no unique coverage, delete it rather than patching it.
+- **Don't hide flakes.** No `[Retry]`, rerun loops, or swallowed assertions. Don't add a retry until evidence identifies what holds the lock or causes the error and shows the condition is external and transient; fix the holder when it is ours. `[Ignore]` for flakiness needs a tracking issue. If a flaky test adds no unique coverage, delete it rather than patching it.
 
 ## Error Patterns
 - **MSBuild Errors:** `XA####` (errors), `XA####` (warnings), `APT####` (Android tools)
