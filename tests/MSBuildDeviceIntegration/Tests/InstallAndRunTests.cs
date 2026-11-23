@@ -1091,28 +1091,23 @@ $@"button.ViewTreeObserver.GlobalLayout += Button_ViewTreeObserver_GlobalLayout;
 
 			builder = CreateApkBuilder (Path.Combine ("temp", "TabLayoutOnTabSelectedListener2"));
 			Assert.IsTrue (builder.Install (proj), "Install should have succeeded.");
-			var manifest = XDocument.Load (builder.Output.GetIntermediaryPath (Path.Combine ("android", "AndroidManifest.xml")));
-			XNamespace android = "http://schemas.android.com/apk/res/android";
-			Assert.AreEqual ("true", (string) manifest.Root?.Element ("application")?.Attribute (android + "debuggable"),
-				"The app must be debuggable so run-as can read the callback result.");
 			ClearAdbLogcat ();
 			RunProjectAndAssert (proj, builder);
-			(int code, string stdOutput, string stdError) result = (-1, "", "");
 			var timeout = TimeSpan.FromSeconds (ActivityStartTimeoutInSeconds);
 			var stopwatch = Stopwatch.StartNew ();
+			string output = "";
 			WaitFor (timeout, () => {
 				int remainingSeconds = (int) (timeout - stopwatch.Elapsed).TotalSeconds;
 				if (remainingSeconds <= 0) {
 					return true;
 				}
-				result = RunAdbCommandWithExitCode ($"shell run-as {proj.PackageName} cat files/tab-selected.txt", timeout: Math.Min (5, remainingSeconds));
-				if (result.code != 0 && result.stdError != null && !result.stdError.Contains ("No such file or directory", StringComparison.Ordinal)) {
-					Assert.Fail ($"Could not read the callback result: {result}\n{RunAdbCommand ("logcat -d -s TabLayoutTest:V AndroidRuntime:V *:F")}");
-				}
-				return result.code == 0 && result.stdOutput?.Trim () == resultToken;
+				output = RunAdbCommand ($"shell run-as {proj.PackageName} cat files/tab-selected.txt", timeout: Math.Min (5, remainingSeconds)).Trim ();
+				return output == resultToken;
 			}, intervalInMS: 1000);
-			Assert.AreEqual (resultToken, result.code == 0 ? result.stdOutput?.Trim () : null,
-				$"{expectedLogcatOutput} was not recorded for this launch. run-as result: {result}\n{RunAdbCommand ("logcat -d -s TabLayoutTest:V AndroidRuntime:V *:F")}");
+			if (output != resultToken) {
+				Assert.AreEqual (resultToken, output,
+					$"{expectedLogcatOutput} was not recorded for this launch. run-as output: {output}\n{RunAdbCommand ("logcat -d -s TabLayoutTest:V AndroidRuntime:V *:F")}");
+			}
 		}
 
 		[Test]
