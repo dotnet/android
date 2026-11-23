@@ -243,6 +243,7 @@ New tests must not fail without a product bug. CI flakes in this repository came
 - **No timing thresholds.** Don't assert that a build, install, or operation finished within N ms. Assert behavior instead, such as a skipped target or changed output.
 - **No sleeps as synchronization.** Wait for an explicit condition (process exit, readiness property, unique log marker, `TaskCompletionSource`) with a generous deadline, and print diagnostics on timeout. Order concurrency and cancellation tests with gates, not delays.
 - **Isolate every case.** Give each parameterized row its own directory, including all distinguishing parameters. Don't share caches, environment variables, the current directory, or fixed `%TEMP%` paths between tests.
+- **Avoid crosstalk in process-wide runtime state.** Other tests, framework threads, and pending finalizers also change global reference counts, peer/object maps, GC counts, and thread-pool state. Don't assert exact process-wide deltas; establish a quiescent baseline, observe only objects the test owns (for example a specific handle or weak reference), and use `[NonParallelizable]` when global state can't be avoided.
 - **Avoid the network.** Prefer small in-repo fixtures to third-party SDKs or large remote dependency graphs.
 - **Assert on the current run only.** Delete old logs before each build, and scope logcat to the current run with a marker or a fresh dump.
 - **Don't rely on file timestamps.** Use content hashes or target-skip evidence.
