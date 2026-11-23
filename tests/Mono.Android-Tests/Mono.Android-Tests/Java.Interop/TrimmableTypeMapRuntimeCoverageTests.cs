@@ -200,6 +200,39 @@ namespace Java.InteropTests
 		}
 
 		[TestMethod]
+		public void JavaListAliasGroup_ActivatesDerivedGenericType ()
+		{
+			AssertGenericListAlias<TrimmableDerivedJavaList<string>> ();
+			AssertGenericListAlias<TrimmableDerivedJavaList<int>> ();
+		}
+
+		[TestMethod]
+		public void JavaListSuperclassAlias_ActivatesDerivedGenericType ()
+		{
+			AssertGenericListAlias<TrimmableDerivedAbstractList<string>> ();
+		}
+
+		[TestMethod]
+		public void JavaListInterfaceAlias_ActivatesDerivedGenericType ()
+		{
+			AssertGenericListAlias<TrimmableDerivedListInterface<string>> ();
+		}
+
+		[TestMethod]
+		public void JavaListAlias_RejectsIncompatibleJavaObject ()
+		{
+			using var value = new Java.Util.ArrayList ();
+			Assert.IsTrue (TrimmableTypeMap.Instance.TryGetJniNameForManagedType (typeof (TrimmableDerivedLinkedList<string>), out var jniName));
+			Assert.AreEqual ("java/util/LinkedList", jniName);
+			var peer = TrimmableTypeMap.Instance.CreateInstance (value.Handle, typeof (TrimmableDerivedLinkedList<string>));
+			try {
+				Assert.IsNull (peer);
+			} finally {
+				peer?.Dispose ();
+			}
+		}
+
+		[TestMethod]
 		public void JavaCreatedHandle_UsesJavaInteropStyleActivationConstructor ()
 		{
 			TrimmableRuntimeJavaInteropPeer.Reset ();
@@ -306,6 +339,27 @@ namespace Java.InteropTests
 			JNIEnv.CallBooleanMethod (arrayList.Handle, add, new JValue (handle));
 		}
 
+		static void AssertGenericListAlias<
+			[DynamicallyAccessedMembers (DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.NonPublicConstructors)]
+			T> ()
+			where T : Java.Lang.Object
+		{
+			var arrayListClass = JniEnvironment.Types.FindClass ("java/util/ArrayList");
+			try {
+				var constructor = JNIEnv.GetMethodID (arrayListClass.Handle, "<init>", "()V");
+				var handle = JNIEnv.NewObject (arrayListClass.Handle, constructor);
+				try {
+					using var peer = Java.Lang.Object.GetObject<T> (handle, JniHandleOwnership.DoNotTransfer);
+					Assert.IsNotNull (peer);
+					Assert.AreEqual (typeof (T), peer.GetType ());
+				} finally {
+					JNIEnv.DeleteLocalRef (handle);
+				}
+			} finally {
+				JniObjectReference.Dispose (ref arrayListClass);
+			}
+		}
+
 		static T CreateFromJava<
 			[DynamicallyAccessedMembers (DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.NonPublicConstructors)]
 			T> ()
@@ -316,6 +370,56 @@ namespace Java.InteropTests
 			var result = Java.Lang.Object.GetObject<T> (instance, JniHandleOwnership.TransferLocalRef);
 			Assert.IsNotNull (result);
 			return result;
+		}
+	}
+
+	[Register ("java/util/ArrayList", DoNotGenerateAcw = true)]
+	class TrimmableDerivedJavaList<
+		[DynamicallyAccessedMembers (DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.NonPublicConstructors)]
+		T> : JavaList<T>
+	{
+		public TrimmableDerivedJavaList (IntPtr handle, JniHandleOwnership transfer) : base (handle, transfer)
+		{
+		}
+	}
+
+	[Register ("java/util/AbstractList", DoNotGenerateAcw = true)]
+	class TrimmableDerivedAbstractList<
+		[DynamicallyAccessedMembers (DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.NonPublicConstructors)]
+		T> : JavaList<T>
+	{
+		public TrimmableDerivedAbstractList (IntPtr handle, JniHandleOwnership transfer) : base (handle, transfer)
+		{
+		}
+	}
+
+	[Register ("java/util/LinkedList", DoNotGenerateAcw = true)]
+	class TrimmableDerivedLinkedList<
+		[DynamicallyAccessedMembers (DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.NonPublicConstructors)]
+		T> : JavaList<T>
+	{
+		public TrimmableDerivedLinkedList (IntPtr handle, JniHandleOwnership transfer) : base (handle, transfer)
+		{
+		}
+	}
+
+	[Register ("java/util/List", DoNotGenerateAcw = true)]
+	class TrimmableBaseListInterface<
+		[DynamicallyAccessedMembers (DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.NonPublicConstructors)]
+		T> : JavaList<T>
+	{
+		public TrimmableBaseListInterface (IntPtr handle, JniHandleOwnership transfer) : base (handle, transfer)
+		{
+		}
+	}
+
+	[Register ("java/util/List", DoNotGenerateAcw = true)]
+	class TrimmableDerivedListInterface<
+		[DynamicallyAccessedMembers (DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.NonPublicConstructors)]
+		T> : TrimmableBaseListInterface<T>
+	{
+		public TrimmableDerivedListInterface (IntPtr handle, JniHandleOwnership transfer) : base (handle, transfer)
+		{
 		}
 	}
 
