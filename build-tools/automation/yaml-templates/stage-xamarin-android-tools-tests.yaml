@@ -54,6 +54,8 @@ stages:
     displayName: Windows - .NET
     pool: ${{ parameters.windowsPool }}
     timeoutInMinutes: 30
+    variables:
+      NUGET_PACKAGES: $(Pipeline.Workspace)/.nuget/packages
     workspace:
       clean: all
     ${{ if eq(parameters.use1ESTemplate, true) }}:
@@ -74,6 +76,17 @@ stages:
       inputs:
         version: $(DotNetSdkVersion)
         includePreviewVersions: true
+
+    # Keep restore enabled to generate project.assets.json. An exact key avoids
+    # accumulating old package versions when dependency declarations change.
+    - task: Cache@2
+      displayName: cache Android tools NuGet packages
+      inputs:
+        key: >-
+          "nuget-android-tools" | "v1" | "$(Agent.OS)" | "$(Agent.OSArchitecture)" |
+          "$(DotNetSdkVersion)" | "$(XatBuildProperties)" | global.json | NuGet.config |
+          **/*.csproj,**/*.proj,**/*.props,**/*.targets,**/*.projitems,!**/bin/**,!**/obj/**
+        path: $(NUGET_PACKAGES)
 
     - task: DotNetCoreCLI@2
       displayName: Build Android tools projects
