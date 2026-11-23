@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -141,9 +142,34 @@ namespace Xamarin.Android.Build.Tests
 		[Test, Category ("SmokeTests")]
 		public void DirectoryInUseWithRetry ()
 		{
+			if (!IsWindows) {
+				Assert.Ignore ("An open file only prevents directory deletion on Windows.");
+				return;
+			}
+			using var locked = File.OpenWrite (NewFile ());
 			var task = CreateTask ();
 			task.RetryDelayMs = 0;
-			AssertRetriesLockedDirectory (task);
+			int attempts = 0;
+			bool firstAttemptFailed = false;
+			task.DeleteDirectory = (path, recursive) => {
+				attempts++;
+				if (attempts > 1) {
+					Directory.Delete (path, recursive);
+					return;
+				}
+				try {
+					Directory.Delete (path, recursive);
+				} catch (Exception e) when (e is IOException || e is UnauthorizedAccessException) {
+					firstAttemptFailed = true;
+					locked.Dispose ();
+					throw;
+				}
+			};
+			Assert.IsTrue (task.Execute (), "task.Execute() should have succeeded.");
+			Assert.IsTrue (firstAttemptFailed, "The first attempt should fail because the file is locked.");
+			Assert.AreEqual (2, attempts, "Deletion should succeed on the first retry after the lock is released.");
+			Assert.AreEqual (1, task.RemovedDirectories.Length, "Changes should have been made.");
+			DirectoryAssert.DoesNotExist (tempDirectory);
 		}
 
 		[Test]
@@ -170,50 +196,36 @@ namespace Xamarin.Android.Build.Tests
 		[Test]
 		public void DirectoryInUseWithCustomRetry ()
 		{
-			AssertRetriesLockedDirectory (CreateTaskWithRetry (retryAttempts: 3, retryDelayMs: 0));
+			var task = CreateTaskWithRetry (retryAttempts: 3, retryDelayMs: 0);
+			int attempts = 0;
+			task.DeleteDirectory = (path, recursive) => {
+				if (++attempts <= 3)
+					throw SharingViolation ();
+				Directory.Delete (path, recursive);
+			};
+			Assert.IsTrue (task.Execute (), "task.Execute() should have succeeded.");
+			Assert.AreEqual (4, attempts, "Deletion should be retried three times.");
+			Assert.AreEqual (1, task.RemovedDirectories.Length, "Changes should have been made.");
+			DirectoryAssert.DoesNotExist (tempDirectory);
 		}
 
 		[Test]
 		public void DirectoryInUseWithNoRetry ()
 		{
-			AssertRetriesLockedDirectory (CreateTaskWithRetry (retryAttempts: 0, retryDelayMs: 0));
-		}
-
-		void AssertRetriesLockedDirectory (RemoveDirFixed task)
-		{
-			var file = NewFile ();
-			using var locked = File.OpenWrite (file);
-			int retryAttempts = task.RetryAttempts >= 0 ? task.RetryAttempts : Files.GetFileWriteRetryAttempts ();
+			var task = CreateTaskWithRetry (retryAttempts: 0, retryDelayMs: 0);
 			int attempts = 0;
 			task.DeleteDirectory = (path, recursive) => {
 				attempts++;
-				if (attempts <= retryAttempts || retryAttempts == 0) {
-					try {
-						if (!IsWindows)
-							throw new IOException ("Simulated locked directory on Unix.", unchecked ((int) 0x80070020));
-						Directory.Delete (path, recursive);
-						Assert.Fail ("Deleting a directory containing a locked file should fail.");
-					} catch (IOException) {
-						if (attempts == retryAttempts)
-							locked.Dispose ();
-						throw;
-					}
-				}
-				Directory.Delete (path, recursive);
+				throw SharingViolation ();
 			};
-			bool deleted = task.Execute ();
-			Assert.AreEqual (retryAttempts + 1, attempts, "Deletion should use exactly the configured number of retries.");
-			if (retryAttempts == 0) {
-				Assert.IsFalse (deleted, "Deleting a locked directory without retries should fail.");
-				Assert.AreEqual (0, task.RemovedDirectories.Length, "No directories should have been removed.");
-				DirectoryAssert.Exists (tempDirectory);
-				locked.Dispose ();
-				Directory.Delete (tempDirectory, recursive: true);
-			} else {
-				Assert.IsTrue (deleted, "task.Execute() should have succeeded.");
-				Assert.AreEqual (1, task.RemovedDirectories.Length, "Changes should have been made.");
-				DirectoryAssert.DoesNotExist (tempDirectory);
-			}
+			Assert.IsFalse (task.Execute (), "task.Execute() should have failed.");
+			Assert.AreEqual (1, attempts, "Deletion should not be retried.");
+			Assert.AreEqual (0, task.RemovedDirectories.Length, "Changes should not have been made.");
+			DirectoryAssert.Exists (tempDirectory);
+			Directory.Delete (tempDirectory, recursive: true);
 		}
+
+		static IOException SharingViolation () =>
+			new IOException ("Simulated sharing violation.", unchecked ((int) 0x80070020));
 	}
 }
