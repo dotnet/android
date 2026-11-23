@@ -3081,54 +3081,51 @@ CUSTOM_ENVIRONMENT_VALUE=custom",
 		}
 
 		[Test]
-		public void GradleFBProj ([ValueSource (typeof (BaseTest), nameof (BaseTest.ValidRuntimeConfigurations))] (bool isRelease, AndroidRuntime runtime) configuration)
+		public void GradleLibrary ([ValueSource (typeof (BaseTest), nameof (BaseTest.ValidRuntimeConfigurations))] (bool isRelease, AndroidRuntime runtime) configuration)
 		{
 			var (isRelease, runtime) = configuration;
 
-			const string facebookVersion = "18.3.0";
-			var moduleName = "Library";
+			// Keep the Java dependency local; the Android Gradle Plugin still comes from the feed.
+			const string libraryModuleName = "Library";
+			const string dependencyJar = "gson-2.7.jar";
+			var successMarker = $"GradleLibrary-{Guid.NewGuid ():N}";
+			var expectedLogcatOutput = $"{successMarker} Hello dotnet from Gradle dependency";
 			var gradleTestProjectDir = Path.Combine (Root, "temp", "gradle", TestName);
-			var gradleModule = new AndroidGradleModule (Path.Combine (gradleTestProjectDir, moduleName));
-			gradleModule.PackageName = "com.microsoft.mauifacebook";
-			gradleModule.BuildGradleFileContent = $@"
-plugins {{
-    id(""com.android.library"")
-}}
-android {{
-    namespace = ""{gradleModule.PackageName}""
-    compileSdk = {XABuildConfig.AndroidDefaultTargetDotnetApiLevel.Major}
-    defaultConfig {{
-        minSdk = {XABuildConfig.AndroidMinimumDotNetApiLevel.Major}
-    }}
-}}
-dependencies {{
-    implementation(""androidx.appcompat:appcompat:1.7.0"")
-    implementation(""com.google.android.material:material:1.11.0"")
-    implementation(""com.facebook.android:facebook-android-sdk:{facebookVersion}"")
-}}
-";
-			gradleModule.JavaSources.Add (new AndroidItem.AndroidJavaSource ("FacebookSdk.java") {
-				TextContent = () => $@"
-package com.microsoft.mauifacebook;
-public class FacebookSdk {{
-    static com.facebook.appevents.AppEventsLogger _logger;
-    public static void initializeSDK(android.app.Activity activity, Boolean isDebug) {{
-        android.app.Application application = activity.getApplication();
-        com.facebook.FacebookSdk.sdkInitialize(application);
-        com.facebook.FacebookSdk.addLoggingBehavior(com.facebook.LoggingBehavior.APP_EVENTS);
-        com.facebook.appevents.AppEventsLogger.activateApp(application);
-        _logger = com.facebook.appevents.AppEventsLogger.newLogger(activity);
-    }}
-    public static void logEvent(String eventName) {{
-        _logger.logEvent(eventName);
-    }}
-}}
-",
+
+			var libraryModule = new AndroidGradleModule (Path.Combine (gradleTestProjectDir, libraryModuleName)) {
+				PackageName = "com.example.gradlelibrary",
+			};
+			libraryModule.BuildGradleFileContent = $$"""
+plugins {
+    id("com.android.library")
+}
+android {
+    namespace = "{{libraryModule.PackageName}}"
+    compileSdk = {{XABuildConfig.AndroidDefaultTargetDotnetApiLevel.Major}}
+    defaultConfig {
+        minSdk = {{XABuildConfig.AndroidMinimumDotNetApiLevel.Major}}
+    }
+}
+dependencies {
+    compileOnly(files("libs/{{dependencyJar}}"))
+}
+""";
+			libraryModule.JavaSources.Add (new AndroidItem.AndroidJavaSource ("Greeter.java") {
+				TextContent = () => $$"""
+package {{libraryModule.PackageName}};
+public class Greeter {
+    public static String greet(android.content.Context context, String name) {
+        com.google.gson.JsonObject value = new com.google.gson.JsonObject();
+        value.addProperty("greeting", context.getString(R.string.gradle_dependency_greeting, name));
+        return value.get("greeting").getAsString();
+    }
+}
+""",
 			});
 
 			var gradleProject = new AndroidGradleProject (gradleTestProjectDir) {
 				Modules = {
-					gradleModule,
+					libraryModule,
 				},
 			};
 			gradleProject.Create ();
@@ -3136,75 +3133,65 @@ public class FacebookSdk {{
 			var proj = new XamarinAndroidApplicationProject (packageName: PackageUtils.MakePackageName (runtime)) {
 				IsRelease = isRelease,
 				OtherBuildItems = {
+					new BuildItem (BuildActions.None, Path.Combine (libraryModule.ModuleDirectory, "src", "main", "res", "values", "strings.xml")) {
+						TextContent = () => """
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="gradle_dependency_greeting">Hello %1$s from Gradle dependency</string>
+</resources>
+""",
+					},
 					new AndroidItem.TransformFile ("Transforms\\Metadata.xml") {
-						TextContent = () => $@"<metadata><attr path=""/api/package[@name='{gradleModule.PackageName}']"" name=""managedName"">Facebook</attr></metadata>",
+						TextContent = () => $@"<metadata><attr path=""/api/package[@name='{libraryModule.PackageName}']"" name=""managedName"">GradleLibrary</attr></metadata>",
 					},
 					new BuildItem (KnownProperties.AndroidGradleProject, gradleProject.BuildFilePath) {
 						Metadata = {
-							{ "ModuleName", moduleName },
+							{ "ModuleName", libraryModuleName },
 						},
 					},
-					new BuildItem ("AndroidMavenLibrary", "com.facebook.android:facebook-core") {
-						Metadata = {
-							{ "Version", facebookVersion },
-							{ "Bind", "false" },
-							{ "Repository", TestEnvironment.DotNetPublicMaven },
-						},
-					},
-					new BuildItem ("AndroidMavenLibrary", "com.facebook.android:facebook-bolts") {
-						Metadata = {
-							{ "Version", facebookVersion },
-							{ "Bind", "false" },
-							{ "Repository", TestEnvironment.DotNetPublicMaven },
-						},
-					},
-				},
-				PackageReferences = {
-					new Package {
-						Id = "Xamarin.AndroidX.AppCompat",
-						Version = "1.7.0.3",
-					},
-					new Package {
-						Id = "Xamarin.AndroidX.Annotation",
-						Version = "1.8.2.1",
-					},
-					new Package {
-						Id = "Xamarin.AndroidX.Legacy.Support.Core.Utils",
-						Version = "1.0.0.29",
-					},
-					new Package {
-						Id = "Xamarin.Google.Android.InstallReferrer",
-						// Facebook SDK 18.3.0 requires com.android.installreferrer:installreferrer:2.2.
-						Version = "2.2.0.8",
-					},
-					new Package {
-						Id = "Xamarin.AndroidX.Core.Core.Ktx",
-						Version = "1.13.1.5",
-					},
-					new Package {
-						Id = "Xamarin.Kotlin.StdLib",
-						Version = "2.0.21",
+					// The bound library's runtime dependency is supplied separately, without bindings.
+					new BuildItem (AndroidBuildActions.AndroidJavaLibrary, Path.Combine (libraryModule.ModuleDirectory, "libs", dependencyJar)) {
+						TestResourceFileName = dependencyJar,
 					},
 				},
 			};
 			proj.SetRuntime (runtime);
-			proj.MainActivity = proj.DefaultMainActivity.Replace ("//${AFTER_ONCREATE}", @"
-Facebook.FacebookSdk.InitializeSDK(this, Java.Lang.Boolean.True);
-Facebook.FacebookSdk.LogEvent(""TestFacebook"");
-");
-			proj.AndroidManifest =@"<?xml version=""1.0"" encoding=""utf-8""?>
-<manifest xmlns:android=""http://schemas.android.com/apk/res/android"" xmlns:tools=""http://schemas.android.com/tools"" android:versionCode=""1"" android:versionName=""1.0"" package=""com.xamarin.gradleproj"">
-  <application android:label=""UnnamedProject"">
-    <meta-data android:name=""com.facebook.sdk.ApplicationId"" android:value=""appid""/>
-    <meta-data android:name=""com.facebook.sdk.ClientToken"" android:value=""token""/>
-  </application>
-</manifest>";
+			proj.SetDefaultTargetDevice ();
+			proj.MainActivity = proj.DefaultMainActivity.Replace ("//${AFTER_ONCREATE}", $$"""
+Android.Util.Log.Info ("GradleLibrary", "{{successMarker}} " + GradleLibrary.Greeter.Greet (this, "dotnet"));
+""");
 
 			using var builder = CreateApkBuilder ();
-			Assert.IsTrue (builder.Build (proj, environmentVariables: new Dictionary<string, string> {
+			builder.ThrowOnBuildFailure = false;
+			if (!builder.Build (proj, environmentVariables: new Dictionary<string, string> {
 				{ "GRADLE_OPTS", $"{Environment.GetEnvironmentVariable ("GRADLE_OPTS")} -Dorg.gradle.logging.level=info -Dorg.gradle.logging.stacktrace=all" },
-			}));
-			RunProjectAndAssert (proj, builder);
+			})) {
+				// CI retries discard the first attempt's build.log, so keep the cause in the failure message.
+				Assert.Fail ($"Build should have succeeded:{Environment.NewLine}{GetBuildFailureSummary (builder.LastBuildOutput)}");
+			}
+			ClearAdbLogcat ();
+			Assert.IsTrue (MonitorAdbLogcat (line => line.Contains (expectedLogcatOutput),
+				Path.Combine (Root, builder.ProjectDirectory, "logcat.log"), ActivityStartTimeoutInSeconds,
+				onMonitoringStarted: () => RunProjectAndAssert (proj, builder)), $"Output did not contain {expectedLogcatOutput}!");
+		}
+
+		static string GetBuildFailureSummary (IEnumerable<string> output)
+		{
+			const int gradleFailureLines = 20;
+			var summary = new List<string> ();
+			int gradleLinesRemaining = 0;
+			foreach (var line in output) {
+				if (line.Contains ("FAILURE:", StringComparison.Ordinal)) {
+					gradleLinesRemaining = gradleFailureLines;
+				}
+				if (gradleLinesRemaining > 0) {
+					gradleLinesRemaining--;
+					summary.Add (line);
+				} else if (line.Contains (": error ", StringComparison.Ordinal)) {
+					summary.Add (line);
+				}
+			}
+			return string.Join (Environment.NewLine, summary.Distinct ().Take (50));
 		}
 
 		[Test]
