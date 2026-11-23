@@ -61,7 +61,7 @@ namespace Xamarin.Android.Tasks
 
 		public string []? ReferenceAssemblyPaths { get; set; }
 
-		AndroidVersions SupportedVersions => MonoAndroidHelper.GetSupportedVersions (BuildEngine4, ReferenceAssemblyPaths);
+		AndroidVersions? supportedVersions;
 
 		[Required, Output]
 		public ITaskItem [] ResolvedAssemblies { get; set; } = [];
@@ -85,6 +85,12 @@ namespace Xamarin.Android.Tasks
 		protected SequencePointsMode SequencePointsMode;
 		protected string SdkBinDirectory = "";
 		protected bool UseAndroidNdk => !AndroidNdkDirectory.IsNullOrWhiteSpace ();
+
+		public override bool RunTask ()
+		{
+			supportedVersions = MonoAndroidHelper.GetSupportedVersions (BuildEngine4, ReferenceAssemblyPaths);
+			return base.RunTask ();
+		}
 
 		public static bool GetAndroidAotMode(string androidAotMode, out AotMode aotMode)
 		{
@@ -142,9 +148,10 @@ namespace Xamarin.Android.Tasks
 
 		int GetNdkApiLevel (NdkTools ndk, AndroidTargetArch arch)
 		{
+			var versions = supportedVersions ?? throw new InvalidOperationException ("API metadata must be resolved before AOT compilation.");
 			AndroidAppManifest? manifest = null;
 			if (!ManifestFile.IsNullOrEmpty ()) {
-				manifest = AndroidAppManifest.Load (ManifestFile, SupportedVersions);
+				manifest = AndroidAppManifest.Load (ManifestFile, versions);
 			}
 
 			int level;
@@ -156,7 +163,7 @@ namespace Xamarin.Android.Tasks
 				level = version.Major;
 			} else {
 				// Probably not ideal!
-				level       = SupportedVersions.MaxStableVersion?.ApiLevel ?? 21;
+				level       = versions.MaxStableVersion?.ApiLevel ?? 21;
 			}
 
 			// Some Android API levels do not exist on the NDK level. Workaround this my mapping them to the
