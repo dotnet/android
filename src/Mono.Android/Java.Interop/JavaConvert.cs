@@ -96,6 +96,8 @@ namespace Java.Interop {
 
 		static Func<IntPtr, JniHandleOwnership, object?>? GetGenericCollectionConverter (Type target)
 		{
+			// Normal CoreCLR builds close the wrapper types by reflection, so they don't keep the statically generated
+			// converter universe. PublishAot=true builds, including Debug CoreCLR ones, use the AOT-safe path. See #12793.
 			// ILC treats IsDynamicCodeSupported as a guard only when it is tested on its own: combined with && or ||,
 			// NativeAOT apps get IL3050 for TryMakeGenericCollectionTypeFactory ().
 			if (System.Runtime.CompilerServices.RuntimeFeature.IsDynamicCodeSupported) {
@@ -105,19 +107,15 @@ namespace Java.Interop {
 			return SafeJavaCollectionFactory.TryGetFromJniHandleConverter (target, out var converter) ? converter : null;
 		}
 
-		// ILLink keeps or removes members on the generic type definition, so these keep FromJniHandle on every
-		// closed JavaList<T>/JavaCollection<T>/JavaDictionary<K,V> that GetJniHandleConverterForType () reflects over.
-		[DynamicDependency ("FromJniHandle", typeof (JavaList<>))]
-		[DynamicDependency ("FromJniHandle", typeof (JavaCollection<>))]
-		[DynamicDependency ("FromJniHandle", typeof (JavaDictionary<,>))]
 		[UnconditionalSuppressMessage ("ReflectionAnalysis", "IL2055:RequiresUnreferencedCode",
 			Justification = "MakeGenericType () cannot prove that the runtime element types satisfy the DynamicallyAccessedMembers(Constructors) requirement " +
 				"on the wrapper's element parameters. The wrapper only consumes it when TrimmableTypeMap.CreateInstance () activates a closed generic Java peer " +
 				"element by reflection, and the generated proxy for its open generic definition keeps that constructor with [DynamicDependency]; " +
 				"other elements are activated by their generated JavaPeerProxy.")]
 		[UnconditionalSuppressMessage ("Trimming", "IL2067:UnrecognizedReflectionPattern",
-			Justification = "GetJniHandleConverterForType () only reflects over FromJniHandle on JavaList<T>, JavaCollection<T>, or JavaDictionary<K,V>, " +
-				"which the DynamicDependency attributes above keep.")]
+			Justification = "The warning is for passing an already closed JavaList<T>, JavaCollection<T>, or JavaDictionary<K,V> target. " +
+				"The typeof (X<>).MakeGenericType () results in the same branches are tracked as their generic type definitions, so ILLink keeps " +
+				"the public methods, including FromJniHandle, that GetJniHandleConverterForType () reflects over on every instantiation.")]
 		[RequiresDynamicCode ("This API uses reflection to create generic types at runtime, which is not supported in AOT scenarios.")]
 		static Func<IntPtr, JniHandleOwnership, object?>? TryMakeGenericCollectionTypeFactory (Type target)
 		{
