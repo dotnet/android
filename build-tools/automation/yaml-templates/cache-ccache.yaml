@@ -1,0 +1,48 @@
+# Persists the ccache directory used by the native runtime build between
+# pipeline runs. src/native/CMakeLists.txt launches the NDK compilers through
+# ccache whenever it is on PATH.
+#
+# Cache entries are immutable, so every run saves a new entry keyed on the
+# commit and restores the most recent entry for the same OS and architecture.
+#
+# The NDK is extracted fresh in every job, which changes the compiler's mtime;
+# `CCACHE_COMPILERCHECK=content` hashes the compiler binary instead so cached
+# objects remain usable. `CCACHE_BASEDIR` rewrites absolute source paths so a
+# different agent work directory does not cause misses.
+#
+# See: https://learn.microsoft.com/azure/devops/pipelines/release/caching
+
+parameters:
+  xaSourcePath: $(System.DefaultWorkingDirectory)/android
+  condition: succeeded()
+
+steps:
+- bash: |
+    set -euo pipefail
+    dir='$(Pipeline.Workspace)/ccache'
+    mkdir -p "$dir"
+    echo "##vso[task.setvariable variable=CCACHE_DIR]$dir"
+    echo "##vso[task.setvariable variable=CCACHE_BASEDIR]${{ parameters.xaSourcePath }}"
+    echo "##vso[task.setvariable variable=CCACHE_COMPILERCHECK]content"
+    echo "##vso[task.setvariable variable=CCACHE_MAXSIZE]2G"
+  displayName: prepare ccache variables
+  condition: ${{ parameters.condition }}
+
+- task: Cache@2
+  displayName: cache ccache
+  condition: ${{ parameters.condition }}
+  inputs:
+    key: '"ccache" | "v1" | "$(Agent.OS)" | "$(Agent.OSArchitecture)" | "$(Build.SourceVersion)"'
+    restoreKeys: |
+      "ccache" | "v1" | "$(Agent.OS)" | "$(Agent.OSArchitecture)"
+    path: $(CCACHE_DIR)
+
+- bash: |
+    if command -v ccache >/dev/null; then
+      ccache --zero-stats
+      ccache --show-stats
+    else
+      echo "ccache is not installed; native objects will not be cached."
+    fi
+  displayName: reset ccache statistics
+  condition: ${{ parameters.condition }}

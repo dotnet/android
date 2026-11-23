@@ -79,11 +79,19 @@ steps:
   parameters:
     xaSourcePath: ${{ parameters.xaSourcePath }}
 
+- template: /build-tools/automation/yaml-templates/cache-ccache.yaml
+  parameters:
+    xaSourcePath: ${{ parameters.xaSourcePath }}
+
 - script: make jenkins CONFIGURATION=$(XA.Build.Configuration) MSBUILD_ARGS='${{ parameters.makeMSBuildArgs }}'
   workingDirectory: ${{ parameters.xaSourcePath }}
   displayName: make jenkins
   retryCountOnTaskFailure: 1
   condition: and(succeeded(), or(ne(variables['AlreadyBuiltLinuxSdk'], 'true'), ne(variables['AlreadyBuiltLinuxSdkSymbols'], 'true')))
+
+- bash: command -v ccache >/dev/null && ccache --show-stats --verbose || true
+  displayName: show ccache statistics
+  condition: always()
 
 - template: /build-tools/automation/yaml-templates/generate-cgmanifest.yaml
   parameters:
