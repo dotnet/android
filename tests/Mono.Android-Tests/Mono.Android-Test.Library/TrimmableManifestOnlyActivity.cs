@@ -25,6 +25,7 @@ namespace Mono.Android_Test.Library
 			base.OnCreate (savedInstanceState);
 
 			Interlocked.Increment (ref TrimmableManifestActivityState.OnCreateCount);
+			TrimmableManifestActivityState.OnCreateCompleted.Set ();
 			Finish ();
 		}
 	}
