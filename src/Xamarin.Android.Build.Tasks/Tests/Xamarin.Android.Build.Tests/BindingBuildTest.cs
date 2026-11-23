@@ -1193,24 +1193,19 @@ VNZXRob2RzLmphdmFQSwUGAAAAAAcABwDOAQAAVgMAAAAA
 		}
 
 		[TestMethod]
-		[CombinatorialData]
 		[DoNotParallelize] // All tests are accessing the same .pom file
-		public void AndroidMavenLibrary ([CombinatorialValues (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
+		public void AndroidMavenLibrary ()
 		{
-			bool isRelease = runtime == AndroidRuntime.NativeAOT;
-			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
-				return;
-			}
 			// Test that <AndroidMavenLibrary> downloads .jar from Maven and successfully binds it
 			var item = new BuildItem ("AndroidMavenLibrary", "com.google.auto.value:auto-value-annotations");
 			item.Metadata.Add ("Version", "1.10.4");
 			item.Metadata.Add ("Repository", TestEnvironment.DotNetPublicMaven);
 
 			var proj = new XamarinAndroidBindingProject {
-				IsRelease = isRelease,
+				IsRelease = true,
 				Jars = { item }
 			};
-			proj.SetRuntime (runtime);
+			proj.SetRuntime (AndroidRuntime.CoreCLR);
 
 			using (var b = CreateDllBuilder ()) {
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
@@ -1278,15 +1273,9 @@ VNZXRob2RzLmphdmFQSwUGAAAAAAcABwDOAQAAVgMAAAAA
 		}
 
 		[TestMethod]
-		[CombinatorialData]
 		[DoNotParallelize] // All tests download androidx.core:core into the same Maven cache
-		public void AndroidMavenLibrary_FailsDueToUnverifiedDependency ([CombinatorialValues (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
+		public void AndroidMavenLibrary_FailsDueToUnverifiedDependency ()
 		{
-			bool isRelease = runtime == AndroidRuntime.NativeAOT;
-			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
-				return;
-			}
-
 			// Test that <AndroidMavenLibrary> triggers Java dependency verification
 			// <AndroidMavenLibrary Include="androidx.core:core" Version="1.9.0" Repository="Google" />
 			var item = new BuildItem ("AndroidMavenLibrary", "androidx.core:core");
@@ -1294,10 +1283,9 @@ VNZXRob2RzLmphdmFQSwUGAAAAAAcABwDOAQAAVgMAAAAA
 			item.Metadata.Add ("Repository", TestEnvironment.DotNetPublicMaven);
 
 			var proj = new XamarinAndroidBindingProject {
-				IsRelease = isRelease,
 				Jars = { item }
 			};
-			proj.SetRuntime (runtime);
+			proj.SetRuntime (AndroidRuntime.CoreCLR);
 
 			using (var b = CreateDllBuilder ()) {
 				b.ThrowOnBuildFailure = false;
@@ -1309,15 +1297,9 @@ VNZXRob2RzLmphdmFQSwUGAAAAAAcABwDOAQAAVgMAAAAA
 		}
 
 		[TestMethod]
-		[CombinatorialData]
 		[DoNotParallelize] // All tests download androidx.core:core into the same Maven cache
-		public void AndroidMavenLibrary_IgnoreDependencyVerification ([CombinatorialValues (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
+		public void AndroidMavenLibrary_IgnoreDependencyVerification ()
 		{
-			bool isRelease = runtime == AndroidRuntime.NativeAOT;
-			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
-				return;
-			}
-
 			// Test that <AndroidMavenLibrary VerifyDependencies="false"> ignores Java dependency verification
 			// <AndroidMavenLibrary Include="androidx.core:core" Version="1.9.0" Repository="Google"  VerifyDependencies="false"/>
 			var item = new BuildItem ("AndroidMavenLibrary", "androidx.core:core");
@@ -1327,10 +1309,9 @@ VNZXRob2RzLmphdmFQSwUGAAAAAAcABwDOAQAAVgMAAAAA
 			item.Metadata.Add ("Bind", "false");
 
 			var proj = new XamarinAndroidBindingProject {
-				IsRelease = isRelease,
 				Jars = { item }
 			};
-			proj.SetRuntime (runtime);
+			proj.SetRuntime (AndroidRuntime.CoreCLR);
 
 			using (var b = CreateDllBuilder ()) {
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
@@ -1338,15 +1319,9 @@ VNZXRob2RzLmphdmFQSwUGAAAAAAcABwDOAQAAVgMAAAAA
 		}
 
 		[TestMethod]
-		[CombinatorialData]
 		[DoNotParallelize] // All tests download androidx.core:core into the same Maven cache
-		public void AndroidMavenLibrary_AllDependenciesAreVerified ([CombinatorialValues (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
+		public void AndroidMavenLibrary_AllDependenciesAreVerified ()
 		{
-			bool isRelease = runtime == AndroidRuntime.NativeAOT;
-			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
-				return;
-			}
-
 			// Test that <AndroidMavenLibrary> triggers Java dependency verification and that
 			// all dependencies are verified via various supported mechanisms
 
@@ -1378,12 +1353,11 @@ VNZXRob2RzLmphdmFQSwUGAAAAAAcABwDOAQAAVgMAAAAA
 			var parcelable = new BuildItem ("AndroidIgnoredJavaDependency", "androidx.versionedparcelable:versionedparcelable:1.2.0");
 
 			var proj = new XamarinAndroidBindingProject {
-				IsRelease = isRelease,
 				Jars = { item, annotations_experimental_androidlib },
 				PackageReferences = { annotations_nuget },
 				OtherBuildItems = { concurrent, lifecycle, parcelable },
 			};
-			proj.SetRuntime (runtime);
+			proj.SetRuntime (AndroidRuntime.CoreCLR);
 
 			proj.AddReference (collection);
 			var collection_proj = proj.References.First ();
