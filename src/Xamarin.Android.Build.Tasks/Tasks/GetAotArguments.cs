@@ -59,6 +59,10 @@ namespace Xamarin.Android.Tasks
 
 		public int ZipAlignmentPages { get; set; } = AndroidZipAlign.DefaultZipAlignment64Bit;
 
+		public string []? ReferenceAssemblyPaths { get; set; }
+
+		AndroidVersions SupportedVersions => MonoAndroidHelper.GetSupportedVersions (BuildEngine4, ReferenceAssemblyPaths);
+
 		[Required, Output]
 		public ITaskItem [] ResolvedAssemblies { get; set; } = [];
 
@@ -140,7 +144,7 @@ namespace Xamarin.Android.Tasks
 		{
 			AndroidAppManifest? manifest = null;
 			if (!ManifestFile.IsNullOrEmpty ()) {
-				manifest = AndroidAppManifest.Load (ManifestFile, MonoAndroidHelper.SupportedVersions);
+				manifest = AndroidAppManifest.Load (ManifestFile, SupportedVersions);
 			}
 
 			int level;
@@ -152,7 +156,7 @@ namespace Xamarin.Android.Tasks
 				level = version.Major;
 			} else {
 				// Probably not ideal!
-				level       = MonoAndroidHelper.SupportedVersions.MaxStableVersion?.ApiLevel ?? 21;
+				level       = SupportedVersions.MaxStableVersion?.ApiLevel ?? 21;
 			}
 
 			// Some Android API levels do not exist on the NDK level. Workaround this my mapping them to the
