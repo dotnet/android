@@ -23,12 +23,17 @@ namespace generator.SourceWriters
 
 		public static void AddMethods (TypeWriter writer, GenBase type, CodeGenerationOptions opt, CodeGeneratorContext context)
 		{
-			// Do not add an overload that already exists, including string overloads,
-			// inherited methods and methods of implemented or inherited interfaces.
-			var existing = type.Methods.Concat (type.GetAllDerivedInterfaces ().SelectMany (i => i.Methods));
+			// Do not add an overload that already exists: string overloads, inherited methods,
+			// interface methods, and the default-argument overloads of base types.
+			var inherited = type.GetAllDerivedInterfaces ().SelectMany (i => i.Methods);
 			for (var b = (type as ClassGen)?.BaseGen; b != null; b = b.BaseGen)
-				existing = existing.Concat (b.Methods);
-			var signatures = GetSignatures (existing.Where (m => m.IsValid).Select (m => (m.AdjustedName, m.Parameters)), opt);
+				inherited = inherited.Concat (b.Methods).Concat (b.GetAllDerivedInterfaces ().SelectMany (i => i.Methods));
+			var members = type.Methods.Concat (inherited).Where (m => m.IsValid)
+				.SelectMany (m => new [] { (m.AdjustedName, m.Parameters), (m.Name, m.Parameters) });
+			var signatures = GetSignatures (members, opt);
+			foreach (var m in inherited.Where (m => m.IsValid && IsSupported (m)))
+				for (var count = m.Parameters.Count - GetTrailingDefaultCount (m); count < m.Parameters.Count; count++)
+					signatures.Add (GetSignature (m.AdjustedName, m.Parameters, count, opt));
 
 			foreach (var method in type.Methods) {
 				if (!method.IsValid || !IsSupported (method) || method.IsReturnEnumified)
@@ -122,9 +127,16 @@ namespace generator.SourceWriters
 			return signatures;
 		}
 
-		// `p.Type` keeps the `?` of a boxed Kotlin value class, but not nullable reference annotations.
 		static string GetSignature (string name, ParameterList parameters, int count, CodeGenerationOptions opt)
-			=> name + "(" + string.Join (",", parameters.Take (count).Select (p => opt.GetOutputName (p.Type).Replace ("global::", ""))) + ")";
+			=> name + "(" + string.Join (",", parameters.Take (count).Select (p => GetTypeName (p, opt).Replace ("global::", ""))) + ")";
+
+		// Keeps the `?` of a boxed Kotlin value class (`Nullable<T>`), but not nullable reference
+		// annotations. `params` is not part of a C# signature.
+		static string GetTypeName (Parameter p, CodeGenerationOptions opt)
+		{
+			var type = opt.GetOutputName (p.Type);
+			return type.StartsWith ("params ", StringComparison.Ordinal) ? type.Substring ("params ".Length) : type;
+		}
 
 		static void AddMaskParameters (ParameterList parameters, int count)
 		{
@@ -162,10 +174,7 @@ namespace generator.SourceWriters
 
 			for (var i = count; i < method.Parameters.Count; i++) {
 				var p = method.Parameters [i];
-				var type = opt.GetTypeReferenceName (p);
-				if (type.StartsWith ("params ", StringComparison.Ordinal))
-					type = type.Substring ("params ".Length);
-				body.Add ($"var {opt.GetSafeIdentifier (p.Name)} = default ({type.TrimEnd ('?')});");
+				body.Add ($"var {opt.GetSafeIdentifier (p.Name)} = default ({GetTypeName (p, opt)});");
 			}
 
 			for (var mask = 0; mask < (method.Parameters.Count + 31) / 32; mask++) {

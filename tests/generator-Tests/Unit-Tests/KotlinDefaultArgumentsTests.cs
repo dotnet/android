@@ -1,3 +1,4 @@
+using System.Text.RegularExpressions;
 using NUnit.Framework;
 
 namespace generatortests
@@ -36,6 +37,12 @@ namespace generatortests
 			// fun toString (indent: Int = 0): the overload hides object.ToString ().
 			StringAssert.Contains ("public new string ToString ()", output);
 
+			// fun format (): CharSequence already has a string Format () overload.
+			Assert.AreEqual (1, Regex.Matches (output, @"public string Format \(\)").Count);
+
+			// fun log (vararg items: String) is Log (params string[] items).
+			StringAssert.DoesNotContain ("public void Log (string[] items)", output);
+
 			// constructor (name: String, count: Int = 1)
 			StringAssert.Contains ("public DefaultArguments (string name) :", output);
 			StringAssert.Contains ("const string __id = \"(Ljava/lang/String;IILkotlin/jvm/internal/DefaultConstructorMarker;)V\";", output);
@@ -47,9 +54,9 @@ namespace generatortests
 			// interface: fun send (message: String, retries: Int = 3)
 			StringAssert.Contains ("void Send (string message)", output);
 
-			// interface DefaultArgumentsChild : DefaultArgumentsInterface { fun send (message: String, retries: Int, urgent: Boolean = false) }
-			// does not hide the inherited Send (string, int).
+			// DefaultArgumentsChild does not hide the inherited Send (string, int) and Send (string).
 			StringAssert.Contains ("void Send (string message, int retries, bool urgent);", output);
+			StringAssert.Contains ("void Send (string message, bool urgent);", output);
 			StringAssert.DoesNotContain ("send$default.(Lxat/bytecode/tests/DefaultArgumentsChild;", output);
 		}
 	}
