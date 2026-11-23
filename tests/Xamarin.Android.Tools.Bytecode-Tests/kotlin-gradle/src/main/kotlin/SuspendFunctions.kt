@@ -12,3 +12,8 @@ class SuspendFunctions {
     // Not `suspend`: it only looks like the suspend ABI.
     fun notSuspend(continuation: Continuation<Int>): Any? = null
 }
+
+// Parameter names that the generated extension method also uses.
+interface SuspendCallback {
+    suspend fun merge(self: Boolean, cancellationToken: Int): Int
+}

@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using MonoDroid.Generation;
 using Xamarin.SourceWriter;
@@ -32,24 +33,34 @@ namespace generator.SourceWriters
 			SourceWriterExtensions.AddObsolete (Attributes, method.Deprecated, opt, deprecatedSince: method.DeprecatedSince);
 			SourceWriterExtensions.AddRestrictToWarning (Attributes, method.AnnotatedVisibility, false, opt);
 
-			if (selfType != null)
-				Parameters.Add (new MethodParameterWriter ("self", new TypeReferenceWriter (selfType)) { IsExtension = true });
-
 			var parameters = new ParameterList ();
 			foreach (var p in method.Parameters.Take (method.Parameters.Count - 1))
 				parameters.Add (p);
-			this.AddMethodParameters (parameters, opt);
 
-			var token = parameters.Any (p => opt.GetSafeIdentifier (p.Name) == "cancellationToken") ? "__cancellationToken" : "cancellationToken";
+			// The generated names must not collide with Kotlin parameter names.
+			var names = new HashSet<string> (parameters.Select (p => opt.GetSafeIdentifier (p.Name)));
+			string GetFreeName (string name)
+			{
+				while (!names.Add (name))
+					name = "_" + name;
+				return name;
+			}
+			var self = GetFreeName ("self");
+			var token = GetFreeName ("cancellationToken");
+			var continuation = GetFreeName ("__continuation");
+
+			if (selfType != null)
+				Parameters.Add (new MethodParameterWriter (self, new TypeReferenceWriter (selfType)) { IsExtension = true });
+			this.AddMethodParameters (parameters, opt);
 			Parameters.Add (new MethodParameterWriter (token, new TypeReferenceWriter ("global::System.Threading.CancellationToken")) { DefaultValue = "default" });
 
 			var continuation_type = opt.GetOutputName (method.Parameters [method.Parameters.Count - 1].Type);
 			var args = parameters.GetCall (opt);
 			if (args.Length > 0)
 				args += ", ";
-			args += $"global::Android.Runtime.Extensions.JavaCast<{continuation_type}> (__continuation)";
-			var target = selfType != null ? "self." + method.AdjustedName : method.AdjustedName;
-			var invoke = $"__continuation => {target} ({args})";
+			args += $"global::Android.Runtime.Extensions.JavaCast<{continuation_type}> ({continuation})";
+			var target = selfType != null ? $"{self}.{method.AdjustedName}" : method.AdjustedName;
+			var invoke = $"{continuation} => {target} ({args})";
 
 			// A `kotlin/Unit` result is a non-generic `Task`, which `Task<Java.Lang.Object?>` is.
 			var result = GetResultType (method.KotlinSuspendReturnType, opt);

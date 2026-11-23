@@ -16,7 +16,7 @@ namespace generatortests
 		public void GeneratesTaskWrappersForSuspendFunctions ()
 		{
 			// In a real build, `Continuation` comes from the Kotlin.StdLib reference assembly.
-			var api = XDocument.Parse (KotlinInlineClassEndToEndTests.BuildApiXmlFromKotlinFixture ("SuspendFunctions.class"));
+			var api = XDocument.Parse (KotlinInlineClassEndToEndTests.BuildApiXmlFromKotlinFixture ("SuspendFunctions.class", "SuspendCallback.class"));
 			api.Root.AddFirst (XElement.Parse (
 				"<package name='kotlin.coroutines' jni-name='kotlin/coroutines'>" +
 				"<interface abstract='true' deprecated='not deprecated' final='false' name='Continuation' static='false' visibility='public' jni-signature='Lkotlin/coroutines/Continuation;' />" +
@@ -42,6 +42,10 @@ namespace generatortests
 			StringAssert.Contains ("public global::System.Threading.Tasks.Task<global::Java.Lang.Object> EchoAsync (Java.Lang.Object value, ", output);
 
 			StringAssert.DoesNotContain ("NotSuspendAsync", output);
+
+			// Generated names do not collide with Kotlin parameter names.
+			StringAssert.Contains ("MergeAsync (this Xat.Bytecode.Tests.ISuspendCallback _self, bool self, int cancellationToken, global::System.Threading.CancellationToken _cancellationToken = default)", output);
+			StringAssert.Contains ("(__continuation => _self.Merge (self, cancellationToken, ", output);
 		}
 	}
 }

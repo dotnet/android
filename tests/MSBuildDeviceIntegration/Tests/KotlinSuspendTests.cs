@@ -38,7 +38,15 @@ class SuspendFunctions {
     suspend fun fail(message: String): Int = suspendCoroutine { c ->
         Thread { c.resumeWith(Result.failure(IllegalStateException(message))) }.start()
     }
-    suspend fun waitForCancel() = delay(Long.MAX_VALUE)
+    @Volatile var stopped = false
+        private set
+    suspend fun waitForCancel() {
+        try {
+            delay(Long.MAX_VALUE)
+        } finally {
+            stopped = true
+        }
+    }
 }
 """,
 					},
@@ -99,12 +107,17 @@ dependencies {
 				} catch (Java.Lang.IllegalStateException e) {
 					failure = e.Message;
 				}
+				// Cancel after the coroutine suspends, and check that the Kotlin code stops too.
 				bool canceled = false;
-				using var cts = new System.Threading.CancellationTokenSource (100);
+				using var cts = new System.Threading.CancellationTokenSource ();
+				var wait = kotlin.WaitForCancelAsync (cts.Token);
+				cts.Cancel ();
 				try {
-					await kotlin.WaitForCancelAsync (cts.Token);
+					await wait;
 				} catch (System.OperationCanceledException) {
-					canceled = true;
+					for (int i = 0; i < 50 && !kotlin.Stopped; i++)
+						await System.Threading.Tasks.Task.Delay (100);
+					canceled = kotlin.Stopped;
 				}
 				Android.Util.Log.Info ("KotlinSuspend", $"KotlinSuspend: sum={sum} greeting={greeting} nothing={nothing == null} failure={failure} canceled={canceled}");
 			} catch (System.Exception e) {
