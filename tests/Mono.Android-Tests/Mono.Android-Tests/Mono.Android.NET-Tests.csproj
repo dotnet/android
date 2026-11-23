@@ -127,6 +127,7 @@
     <Compile Include="Java.Interop\JavaObjectExtensionsTests.cs" />
     <Compile Include="Java.Interop\JniRemappingLookupTests.cs" />
     <Compile Include="Java.Interop\JniRuntimeExceptionPolicyTests.cs" />
+    <Compile Include="Java.Interop\KotlinDefaultArgumentTests.cs" />
     <Compile Include="Java.Interop\KotlinValueClassTests.cs" />
     <Compile Include="Java.Interop\ManagedObjectProxyTests.cs" />
     <Compile Include="Java.Interop\JavaMarshalGCBridgeTests.cs" />
@@ -190,6 +191,10 @@
 
   <ItemGroup>
     <AndroidGradleProject Include="..\..\Mono.Android-Tests.Gradle\build.gradle.kts" ModuleName="library" />
+    <!-- Kotlin default-argument constructors take a kotlin.jvm.internal.DefaultConstructorMarker parameter. -->
+    <AndroidMavenLibrary Include="org.jetbrains.kotlin:kotlin-stdlib" Version="2.4.21" Bind="false" Repository="https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-public-maven/maven/v1" />
+    <!-- Only compile-time annotations. -->
+    <AndroidIgnoredJavaDependency Include="org.jetbrains:annotations:13.0" />
   </ItemGroup>
 
   <ItemGroup>
