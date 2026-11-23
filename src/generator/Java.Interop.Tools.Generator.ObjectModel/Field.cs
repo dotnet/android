@@ -52,6 +52,9 @@ namespace MonoDroid.Generation
 				return false;
 			}
 
+			if (Symbol is ClassGen { IsKotlinInlineClass: true } gen)
+				Symbol = new KotlinInlineClassBoxedSymbol (gen);
+
 			if (!string.IsNullOrEmpty (Value) && Symbol != null && Symbol.FullName == "char" && !Value.StartsWith ("(char)", StringComparison.Ordinal))
 				Value = "(char)" + Value;
 

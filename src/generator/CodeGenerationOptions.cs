@@ -126,6 +126,8 @@ namespace MonoDroid.Generation
 
 		public string GetNullForgiveness (Field field)
 		{
+			if (field.Symbol is KotlinInlineClassBoxedSymbol)
+				return string.Empty;
 			if (field.NotNull || field.Symbol.IsEnum)
 				return NullForgivingOperator;
 
@@ -134,6 +136,8 @@ namespace MonoDroid.Generation
 
 		public string GetNullForgiveness (ReturnValue symbol)
 		{
+			if (symbol.IsKotlinInlineClass)
+				return string.Empty;
 			if (symbol.NotNull || symbol.Symbol.IsEnum)
 				return NullForgivingOperator;
 
@@ -142,6 +146,8 @@ namespace MonoDroid.Generation
 
 		public string GetNullForgiveness (Parameter symbol)
 		{
+			if (symbol.IsKotlinInlineClass)
+				return string.Empty;
 			if (symbol.NotNull || symbol.Symbol.IsEnum)
 				return NullForgivingOperator;
 
@@ -150,6 +156,10 @@ namespace MonoDroid.Generation
 
 		string GetNullable (string s)
 		{
+			// Already nullable, e.g. a boxed Kotlin value class `Foo?`.
+			if (s.EndsWith ("?", StringComparison.Ordinal))
+				return string.Empty;
+
 			switch (s) {
 				case "void":
 				case "int":

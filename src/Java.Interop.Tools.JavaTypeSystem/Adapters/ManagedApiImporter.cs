@@ -303,6 +303,10 @@ namespace Java.Interop.Tools.JavaTypeSystem
 
 		static string GetBaseTypeJni (TypeDefinition type, ApiImporterOptions options)
 		{
+			// A [Register] struct is a Kotlin value class.
+			if (type.IsValueType)
+				return "java/lang/Object";
+
 			// Find a Java base type, ignoring generic types, if nothing else it will be Java.Lang.Object
 			TypeDefinition? base_type = type;
 

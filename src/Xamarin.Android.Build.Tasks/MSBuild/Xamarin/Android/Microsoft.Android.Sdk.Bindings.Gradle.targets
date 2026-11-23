@@ -88,7 +88,9 @@ This file contains MSBuild targets that support building and operating on Androi
     <!-- OutputPath has a trailing separator; the final dot prevents it from escaping the closing quote on Windows. -->
     <ItemGroup>
       <AndroidGradleProject>
-        <_AndroidGradleWrapperPath>%(RootDir)%(Directory)$(_AndroidGradleToolName)</_AndroidGradleWrapperPath>
+        <!-- $(_AndroidGradleWrapperDirectory) can point to a shared Gradle wrapper; Gradle still runs in the project directory. -->
+        <_AndroidGradleWrapperPath Condition=" '$(_AndroidGradleWrapperDirectory)' == '' ">%(RootDir)%(Directory)$(_AndroidGradleToolName)</_AndroidGradleWrapperPath>
+        <_AndroidGradleWrapperPath Condition=" '$(_AndroidGradleWrapperDirectory)' != '' ">$([MSBuild]::EnsureTrailingSlash('$(_AndroidGradleWrapperDirectory)'))$(_AndroidGradleToolName)</_AndroidGradleWrapperPath>
         <_AndroidGradleBuildDirOverride>-PnetAndroidBuildDirOverride=%(OutputPath).</_AndroidGradleBuildDirOverride>
         <_AndroidGradleModule Condition=" '%(ModuleName)' != '' ">%(ModuleName):</_AndroidGradleModule>
       </AndroidGradleProject>
@@ -129,7 +131,7 @@ This file contains MSBuild targets that support building and operating on Androi
 
     <!-- Run assemble task for project outputs, android app and library project outputs are currently supported -->
     <AndroidError
-        Condition=" !Exists('%(AndroidGradleProject.RootDir)%(AndroidGradleProject.Directory)$(_AndroidGradleToolName)') "
+        Condition=" !Exists('%(AndroidGradleProject._AndroidGradleWrapperPath)') "
         Code="XAGRDL1000"
         ResourceName="XAGRDL1000"
         FormatArguments="%(AndroidGradleProject.RootDir)%(AndroidGradleProject.Directory)"
@@ -183,7 +185,7 @@ This file contains MSBuild targets that support building and operating on Androi
       Condition=" '@(AndroidGradleProject->Count())' != '0' "
       DependsOnTargets="_CalculateAndroidGradleProjectOutputPath;_AndroidPrepareGradleProjects" >
     <AndroidError
-        Condition=" !Exists('%(AndroidGradleProject.RootDir)%(AndroidGradleProject.Directory)$(_AndroidGradleToolName)') "
+        Condition=" !Exists('%(AndroidGradleProject._AndroidGradleWrapperPath)') "
         Code="XAGRDL1000"
         ResourceName="XAGRDL1000"
         FormatArguments="%(AndroidGradleProject.RootDir)%(AndroidGradleProject.Directory)"
