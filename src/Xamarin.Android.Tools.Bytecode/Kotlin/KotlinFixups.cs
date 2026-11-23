@@ -434,12 +434,14 @@ namespace Xamarin.Android.Tools.Bytecode
 		}
 
 		// Type parameters have no class name, so they become `kotlin/Any?`.
+		// Platform types (`T!`) from Java can be null.
 		static string GetSuspendReturnType (KotlinType? type)
 		{
 			var name = type?.ClassName?.TrimEnd (';');
 			if (type is null || name is null || name.Length == 0)
 				return "kotlin/Any?";
-			return type.Nullable ? name + "?" : name;
+			var nullable = type.Nullable || type.FlexibleUpperBound != null || type.FlexibleTypeCapabilitiesId != null;
+			return nullable ? name + "?" : name;
 		}
 
 		static string PascalCase (string name)

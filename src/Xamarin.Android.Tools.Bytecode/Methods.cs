@@ -59,9 +59,7 @@ namespace Xamarin.Android.Tools.Bytecode {
 		public  string?             KotlinDefaultJniSignature { get; set; }
 		public  int[]?              KotlinDefaultParameters { get; set; }
 
-		// Kotlin result type of a `suspend` function, e.g. `kotlin/Int` or
-		// `com/example/Foo?`. The JVM signature erases it to `Object` and adds a
-		// trailing `Continuation` parameter. null when the method is not `suspend`.
+		// Kotlin result type of a `suspend` function (e.g. `kotlin/Int?`), which the JVM erases to `Object`.
 		public  string?             KotlinSuspendReturnType { get; set; }
 
 		public MethodInfo (ConstantPool constantPool, ClassFile declaringType, Stream stream)

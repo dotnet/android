@@ -30,6 +30,7 @@ namespace generator.SourceWriters
 
 			SourceWriterExtensions.AddSupportedOSPlatform (Attributes, method, opt);
 			SourceWriterExtensions.AddObsolete (Attributes, method.Deprecated, opt, deprecatedSince: method.DeprecatedSince);
+			SourceWriterExtensions.AddRestrictToWarning (Attributes, method.AnnotatedVisibility, false, opt);
 
 			if (selfType != null)
 				Parameters.Add (new MethodParameterWriter ("self", new TypeReferenceWriter (selfType)) { IsExtension = true });
@@ -52,8 +53,9 @@ namespace generator.SourceWriters
 
 			var result = GetResultType (method.KotlinSuspendReturnType, opt);
 			var generic = result == null ? "" : $"<{result}>";
+			var nullable = method.KotlinSuspendReturnType.EndsWith ("?", StringComparison.Ordinal);
 			ReturnType = new TypeReferenceWriter ("global::System.Threading.Tasks.Task" + generic);
-			Body.Add ($"return {Runtime}.InvokeAsync{generic} ({invoke}, {token});");
+			Body.Add ($"return {Runtime}.{(nullable ? "InvokeNullableAsync" : "InvokeAsync")}{generic} ({invoke}, {token});");
 		}
 
 		// Maps the Kotlin result type (e.g. `kotlin/Int?`) to a C# type.
@@ -83,8 +85,8 @@ namespace generator.SourceWriters
 			string reference;
 			if (name == "kotlin/String")
 				reference = "string";
-			// Inline classes are boxed in this position; invalid or non-public types are not generated.
-			else if (opt.SymbolTable.Lookup (name.Replace ('/', '.')) is GenBase { IsValid: true, RawVisibility: "public" } gen && gen is not ClassGen { IsKotlinInlineClass: true })
+			// Inline classes are boxed in this position; generic, invalid or non-public types are not generated.
+			else if (opt.SymbolTable.Lookup (name.Replace ('/', '.')) is GenBase { IsValid: true, IsGeneric: false, RawVisibility: "public" } gen && gen is not ClassGen { IsKotlinInlineClass: true })
 				reference = opt.GetOutputName (gen.FullName);
 			else
 				reference = "global::Java.Lang.Object";

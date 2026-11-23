@@ -29,19 +29,31 @@ namespace Android.Runtime {
 		public static Task InvokeAsync (Func<IJavaObject, Java.Lang.Object?> invoke, CancellationToken cancellationToken = default) =>
 			InvokeCoreAsync (invoke, cancellationToken);
 
-		/// <summary>Runs a Kotlin <c>suspend</c> function and converts its result to <typeparamref name="T" />.</summary>
+		/// <summary>Runs a Kotlin <c>suspend</c> function with a non-null result and converts the result to <typeparamref name="T" />.</summary>
 		/// <param name="invoke">Calls the bound method with the supplied <c>kotlin.coroutines.Continuation</c>.</param>
 		/// <param name="cancellationToken">Cancels the operation.</param>
 		public static async Task<T> InvokeAsync<
 				[DynamicallyAccessedMembers (Constructors)]
 				T
 		> (Func<IJavaObject, Java.Lang.Object?> invoke, CancellationToken cancellationToken = default)
+			where T : notnull
 		{
 			var value = await InvokeCoreAsync (invoke, cancellationToken).ConfigureAwait (false);
-			// Kotlin metadata makes T nullable when the result can be null.
-#pragma warning disable CS8603
+			return JavaConvert.FromJavaObject<T> (value) ??
+				throw new InvalidOperationException ("Kotlin returned null for a non-null result.");
+		}
+
+		/// <summary>Runs a Kotlin <c>suspend</c> function with a nullable result and converts the result to <typeparamref name="T" />.</summary>
+		/// <remarks>For a nullable value type, use a <see cref="Nullable{T}" /> type argument, for example <c>int?</c>.</remarks>
+		/// <param name="invoke">Calls the bound method with the supplied <c>kotlin.coroutines.Continuation</c>.</param>
+		/// <param name="cancellationToken">Cancels the operation.</param>
+		public static async Task<T?> InvokeNullableAsync<
+				[DynamicallyAccessedMembers (Constructors)]
+				T
+		> (Func<IJavaObject, Java.Lang.Object?> invoke, CancellationToken cancellationToken = default)
+		{
+			var value = await InvokeCoreAsync (invoke, cancellationToken).ConfigureAwait (false);
 			return JavaConvert.FromJavaObject<T> (value);
-#pragma warning restore CS8603
 		}
 
 		static Task<Java.Lang.Object?> InvokeCoreAsync (Func<IJavaObject, Java.Lang.Object?> invoke, CancellationToken cancellationToken)
@@ -104,9 +116,12 @@ namespace Android.Runtime {
 			void Cancel ()
 			{
 				// With kotlinx.coroutines, also cancel the Kotlin work. Not all suspend functions observe the Job.
-				if (job != null)
-					types.CancelJob?.Invoke (job, new Java.Lang.Object [1]);
-				completion.TrySetCanceled (cancellationToken);
+				try {
+					if (job != null)
+						types.CancelJob?.Invoke (job, new Java.Lang.Object [1]);
+				} finally {
+					completion.TrySetCanceled (cancellationToken);
+				}
 			}
 
 			public Java.Lang.Object? Invoke (Java.Lang.Object? proxy, Method? method, Java.Lang.Object []? args)
@@ -135,9 +150,11 @@ namespace Android.Runtime {
 					SetResult (value);
 					return;
 				}
-				var reference = types.FailureException.Get (value)?.PeerReference ?? default;
-				SetException (JniEnvironment.Runtime.GetExceptionForThrowable (ref reference, JniObjectReferenceOptions.Copy) ??
-					new InvalidOperationException ("Kotlin returned an invalid failure."));
+				var throwable = types.FailureException.Get (value);
+				var reference = throwable?.PeerReference ?? default;
+				var exception = JniEnvironment.Runtime.GetExceptionForThrowable (ref reference, JniObjectReferenceOptions.Copy);
+				GC.KeepAlive (throwable);
+				SetException (exception ?? new InvalidOperationException ("Kotlin returned an invalid failure."));
 			}
 		}
 
@@ -165,7 +182,7 @@ namespace Android.Runtime {
 					var job = Class.ForName ("kotlinx.coroutines.Job", false, Loader);
 					CreateJob = Class.ForName ("kotlinx.coroutines.JobKt", false, Loader).GetMethod ("Job", job);
 					CancelJob = job.GetMethod ("cancel", Class.FromType (typeof (Java.Util.Concurrent.CancellationException)));
-				} catch (ReflectiveOperationException) {
+				} catch (Throwable) {
 					CreateJob = CancelJob = null;
 				}
 			}

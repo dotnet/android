@@ -10382,3 +10382,4 @@ virtual Java.Util.IdentityHashMap.Replace(Java.Lang.Object? key, Java.Lang.Objec
 Android.Runtime.KotlinCoroutines
 static Android.Runtime.KotlinCoroutines.InvokeAsync(System.Func<Android.Runtime.IJavaObject!, Java.Lang.Object?>! invoke, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
 static Android.Runtime.KotlinCoroutines.InvokeAsync<T>(System.Func<Android.Runtime.IJavaObject!, Java.Lang.Object?>! invoke, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<T>!
+static Android.Runtime.KotlinCoroutines.InvokeNullableAsync<T>(System.Func<Android.Runtime.IJavaObject!, Java.Lang.Object?>! invoke, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<T?>!
