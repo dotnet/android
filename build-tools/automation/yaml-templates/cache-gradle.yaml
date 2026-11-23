@@ -21,8 +21,6 @@
 
 parameters:
   xaSourcePath: $(System.DefaultWorkingDirectory)/android
-  # Override the dependency key for jobs with different Gradle inputs.
-  dependencyCacheKey: ''
 
 steps:
 - pwsh: |
@@ -40,10 +38,7 @@ steps:
 - task: Cache@2
   displayName: cache Gradle dependencies
   inputs:
-    ${{ if eq(parameters.dependencyCacheKey, '') }}:
-      key: '"gradle" | "v2" | "$(Agent.OS)" | ${{ parameters.xaSourcePath }}/build-tools/gradle/gradle/wrapper/gradle-wrapper.properties | ${{ parameters.xaSourcePath }}/src/**/build.gradle | ${{ parameters.xaSourcePath }}/tests/Xamarin.Android.Tools.Bytecode-Tests/kotlin-gradle/*.gradle.kts'
-    ${{ else }}:
-      key: ${{ parameters.dependencyCacheKey }}
+    key: '"gradle" | "v2" | "$(Agent.OS)" | ${{ parameters.xaSourcePath }}/build-tools/gradle/gradle/wrapper/gradle-wrapper.properties | ${{ parameters.xaSourcePath }}/src/**/build.gradle | ${{ parameters.xaSourcePath }}/tests/Xamarin.Android.Tools.Bytecode-Tests/kotlin-gradle/*.gradle.kts'
     restoreKeys: |
       "gradle" | "v2" | "$(Agent.OS)"
     path: $(GRADLE_USER_HOME)/caches/modules-2
