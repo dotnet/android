@@ -66,8 +66,6 @@ namespace Java.InteropTests {
 				Assert.IsFalse (references.Callback.IsAlive);
 			}
 		}
-		#endif
-
 		[TestMethod]
 		[RequiresDynamicCode ("Tests delegate-based native registration.")]
 		public void RegistrationFailurePropagatesJavaException ()
@@ -96,6 +94,7 @@ namespace Java.InteropTests {
 						GC.KeepAlive (callback);
 					}
 				}
+				#endif
 			}
 		}
 
