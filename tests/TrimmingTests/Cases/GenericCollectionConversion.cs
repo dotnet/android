@@ -4,7 +4,7 @@
 #:property SupportedOSPlatformVersion=24
 #:project TrimmingTests.Expectations/TrimmingTests.Expectations.csproj
 
-// JNIEnv.GetArray<T> () converts each element through JavaConvert with only a runtime Type. For IList<T>,
+// JNIEnv.CopyObjectArray<T> () converts each element through JavaConvert with only a runtime Type. For IList<T>,
 // ICollection<T>, and IDictionary<K,V>, CoreCLR closes JavaList<T>, JavaCollection<T>, or JavaDictionary<K,V> with
 // MakeGenericType () and maps FromJniHandle from the open definition onto it; NativeAOT uses SafeJavaCollectionFactory.
 // The app never names the wrappers or calls their FromJniHandle (), so only JavaConvert's mapping can keep them.
@@ -12,6 +12,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using Android.App;
 using Android.OS;
 using Android.Runtime;
@@ -73,12 +74,15 @@ public class MainActivity : Activity
 	}
 
 	// Names the expected wrapper by string so the check doesn't root it.
-	static T ConvertSingle<T> (Java.Lang.Object source, string expectedDefinition) where T : class
+	static T ConvertSingle<
+		[DynamicallyAccessedMembers (DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.NonPublicConstructors)]
+		T> (Java.Lang.Object source, string expectedDefinition) where T : class
 	{
 		IntPtr array = JNIEnv.NewObjectArray (1, source.Class.Handle, source.Handle);
 		try {
-			var items = JNIEnv.GetArray<T> (array);
-			if (items is not { Length: 1 } || items [0] is not { } item) {
+			var items = new T [1];
+			JNIEnv.CopyObjectArray (array, items);
+			if (items [0] is not { } item) {
 				throw new InvalidOperationException ($"Unable to convert the Java array element to {typeof (T)}.");
 			}
 			var type = item.GetType ();
