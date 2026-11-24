@@ -1046,7 +1046,8 @@ $@"button.ViewTreeObserver.GlobalLayout += Button_ViewTreeObserver_GlobalLayout;
 		[Test]
 		public void TabLayoutOnTabSelectedListener2_ShouldFire_OnActivityLaunch ()
 		{
-			const string expectedLogcatOutput = "OnTabSelected called!";
+			// The monitor checks buffered logcat before launching, so use a per-run marker.
+			var expectedLogcatOutput = $"OnTabSelected called! {Guid.NewGuid ():N}";
 
 			var proj = new XamarinAndroidApplicationProject {
 				PackageReferences = {
@@ -1073,7 +1074,7 @@ $@"button.ViewTreeObserver.GlobalLayout += Button_ViewTreeObserver_GlobalLayout;
 
 		public void OnTabSelected (TabLayout.Tab tab)
 		{
-			Android.Util.Log.Debug ("TabLayoutTest", "OnTabSelected called!");
+			Android.Util.Log.Info ("TabLayoutTest", "${EXPECTED_LOGCAT_OUTPUT}");
 		}
 
 		public void OnTabUnselected (TabLayout.Tab tab)
@@ -1082,16 +1083,19 @@ $@"button.ViewTreeObserver.GlobalLayout += Button_ViewTreeObserver_GlobalLayout;
 
 		public void OnTabReselected (TabLayout.Tab tab)
 		{
-""");
+""")
+				.Replace ("${EXPECTED_LOGCAT_OUTPUT}", expectedLogcatOutput, StringComparison.Ordinal);
 
 			builder = CreateApkBuilder (Path.Combine ("temp", "TabLayoutOnTabSelectedListener2"));
 			Assert.IsTrue (builder.Install (proj), "Install should have succeeded.");
 			ClearAdbLogcat ();
-			RunProjectAndAssert (proj, builder);
+			if (!MonitorAdbLogcat (line => line.Contains (expectedLogcatOutput, StringComparison.Ordinal),
+				Path.Combine (Root, builder.ProjectDirectory, "tab-selected-logcat.log"), ActivityStartTimeoutInSeconds,
+				onMonitoringStarted: () => RunProjectAndAssert (proj, builder, doNotCleanupOnUpdate: true))) {
+				Assert.Fail ($"Output did not contain {expectedLogcatOutput}!\n{RunAdbCommand ("logcat -d -s TabLayoutTest:I AndroidRuntime:V *:F")}");
+			}
 			Assert.IsTrue (WaitForActivityToStart (proj.PackageName, "MainActivity",
 				Path.Combine (Root, builder.ProjectDirectory, "startup-logcat.log"), ActivityStartTimeoutInSeconds), "Activity should have started.");
-			Assert.IsTrue (MonitorAdbLogcat (line => line.Contains (expectedLogcatOutput),
-				Path.Combine (Root, builder.ProjectDirectory, "tab-selected-logcat.log"), 60), $"Output did not contain {expectedLogcatOutput}!");
 		}
 
 		[Test]
