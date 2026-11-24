@@ -218,14 +218,13 @@ You should search-and-replace instances of your local directory name with `..\..
 - Add level to `/build-tools/Xamarin.Android.Tools.BootstrapTasks/Xamarin.Android.Tools.BootstrapTasks/CheckApiCompatibility.cs`
   to enable running ApiCompat against the new level. (ex: `{ "v11.0.99", "v11.0" }`)
 - Add level to `DefaultTestSdkPlatforms` in `/build-tools/automation/yaml-templates/variables.yaml`
-- Update `WorkloadManifest.in.json` with the `Microsoft.Android.Ref.*` and
-  `Microsoft.Android.Runtime.*.android` packs for the new API level.
 - Update `DotNetInstallAndRunPreviewAPILevels` in `InstallAndRunTests.cs` to
   retain the existing preview API levels and try to access a member added in
   each one.
 - Add the API level to `@(AndroidBuildApiLevel)` in `Configuration.props`.
-  This list drives binding builds, targeting-pack selection, pack creation,
-  local workload setup, and workload dependency installation:
+  This list drives binding builds, the `Microsoft.Android.net*.Ref.*` packages,
+  the `Microsoft.Android` dependency groups, the workload manifest, local
+  workload setup, and workload dependency installation:
     ```xml
     <AndroidBuildApiLevel Include="36.1">
       <PlatformId>CANARY</PlatformId>

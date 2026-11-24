@@ -40,6 +40,7 @@ namespace Xamarin.ProjectTools
 		{
 			Id = other.Id;
 			Version = other.Version;
+			Condition = other.Condition;
 			TargetFramework = other.TargetFramework;
 			AutoAddReferences = audoAddReferences;
 			References = new List<BuildItem.Reference> (other.References);
@@ -59,6 +60,11 @@ namespace Xamarin.ProjectTools
 		/// Gets or sets the package version (e.g., "1.8.0").
 		/// </summary>
 		public string Version { get; set; }
+
+		/// <summary>
+		/// Gets or sets an optional MSBuild condition for the PackageReference item.
+		/// </summary>
+		public string Condition { get; set; }
 		
 		/// <summary>
 		/// Gets or sets the target framework for this package reference (used in packages.config format).

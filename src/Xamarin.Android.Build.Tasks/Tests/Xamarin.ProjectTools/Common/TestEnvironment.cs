@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.IO.Compression;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Runtime.Versioning;
@@ -92,127 +93,89 @@ namespace Xamarin.ProjectTools
 			string.Equals (Environment.GetEnvironmentVariable ("RUNNINGONCI"), "true", StringComparison.OrdinalIgnoreCase);
 
 		/// <summary>
-		/// The MonoAndroid reference assemblies directory within a local build tree, e.g. bin/Debug/lib/packs/Microsoft.Android.Ref.34/34.99.0/ref/net8.0/<br/>
-		/// If a local build tree can not be found, or if it is empty, this will return the system installation location instead:<br/>
-		///    bin/Debug/dotnet/packs/Microsoft.Android.Ref.34/$(Latest)/ref/net$(Latest)/
+		/// The MonoAndroid reference assemblies directory in the installed Microsoft.Android.[net].Ref.[API] library pack, e.g.
+		///    microsoft.android.net12.0.ref.37.0.37.99.0/ref/net12.0-android37.0/
 		/// </summary>
 		public static string MonoAndroidFrameworkDirectory {
 			get {
 				var targetPlatform = XABuildConfig.AndroidDefaultTargetDotnetApiLevel;
-				var versionString = targetPlatform.Minor == 0 ? $"{targetPlatform.Major}" : $"{targetPlatform.Major}.{targetPlatform.Minor}";
-				var rootRefDir = Directory.GetDirectories (Path.Combine (DotNetPreviewPacksDirectory, $"Microsoft.Android.Ref.{versionString}")).LastOrDefault ();
-				if (!Directory.Exists (rootRefDir)) {
-					throw new DirectoryNotFoundException ($"Unable to locate Microsoft.Android.Ref.");
+				var platformId = $"{targetPlatform.Major}.{targetPlatform.Minor}";
+				var targetFramework = XABuildConfig.LatestDotNetTargetFramework;
+				var refDir = Path.Combine (GetLibraryPackDirectory ($"Microsoft.Android.{targetFramework}.Ref.{platformId}"), "ref", $"{targetFramework}-android{platformId}");
+				if (!File.Exists (Path.Combine (refDir, "Mono.Android.dll"))) {
+					throw new DirectoryNotFoundException ($"Unable to locate Mono.Android.dll in '{refDir}'.");
 				}
-
-				var maDll = Directory.GetFiles (rootRefDir, "Mono.Android.dll", SearchOption.AllDirectories).LastOrDefault ();
-				var refDir = Path.GetDirectoryName(maDll);
-				if (!Directory.Exists (refDir)) {
-					throw new DirectoryNotFoundException ($"Unable to locate Mono.Android.dll inside Microsoft.Android.Ref.");
-				}
-
 				return refDir;
 			}
 		}
 
 		/// <summary>
-		/// The MonoAndroidTools directory within a local build tree, e.g. bin/Debug/lib/packs/Microsoft.Android.Sdk.Darwin/34.99.0/tools/<br/>
-		/// If a local build tree can not be found, or if it is empty, this will return the .NET sandbox location instead:<br/>
-		///	Windows:  bin\Debug\dotnet\packs\Microsoft.Android.Sdk.Windows\$(Latest)\tools<br/>
-		///	macOS:    bin/Debug/dotnet/packs/Microsoft.Android.Sdk.Darwin/$(Latest)/tools
+		/// The tools directory of the installed Microsoft.Android.[net] library pack, which contains the MSBuild tasks.
 		/// </summary>
-		public static string AndroidMSBuildDirectory {
-			get {
-				if (!Directory.Exists (DotNetPreviewAndroidSdkDirectory)) {
-					throw new DirectoryNotFoundException ($"Unable to locate a Microsoft.Android.Sdk in either '{DefaultPacksDir}' or '{LocalPacksDir}'.");
-				}
-				return Path.Combine (DotNetPreviewAndroidSdkDirectory, "tools");
-			}
-		}
+		public static string AndroidMSBuildDirectory => Path.Combine (DotNetPreviewAndroidSdkDirectory, "tools");
 
 		public static string DotNetPreviewDirectory => Path.Combine (XABuildPaths.PrefixDirectory, "dotnet");
 
-		public static string DotNetPreviewPacksDirectory => UseLocalBuildOutput ? LocalPacksDir : DefaultPacksDir;
-
-		public static string DotNetPreviewAndroidSdkDirectory => UseLocalBuildOutput ? LocalDotNetAndroidSdkDirectory : DefaultDotNetAndroidSdkDirectory;
+		/// <summary>
+		/// The installed Microsoft.Android.[net] library pack, which contains the MSBuild targets, tasks, and native runtimes.
+		/// </summary>
+		public static string DotNetPreviewAndroidSdkDirectory => GetLibraryPackDirectory ($"Microsoft.Android.{XABuildConfig.LatestDotNetTargetFramework}");
 
 		public static string WorkloadPackOverridePath => Path.Combine (XABuildPaths.PrefixDirectory, "lib");
 
 		public static string WorkloadManifestOverridePath => Path.Combine (WorkloadPackOverridePath, "sdk-manifests");
 
-		static string DefaultPacksDir => Path.Combine (DotNetPreviewDirectory, "packs");
+		static string LibraryPacksDirectory => Path.Combine (DotNetPreviewDirectory, "library-packs");
 
-		static string LocalPacksDir => Path.Combine (WorkloadPackOverridePath, "packs");
+		static readonly object libraryPacksLock = new object ();
 
-		static string _defaultDotNetAndroidSdkDirectory;
-		static string DefaultDotNetAndroidSdkDirectory {
-			get {
-				if (!string.IsNullOrEmpty (_defaultDotNetAndroidSdkDirectory)) {
-					return _defaultDotNetAndroidSdkDirectory;
-				}
-				return _defaultDotNetAndroidSdkDirectory = GetDotNetAndroidSdkDir (DefaultPacksDir);
-			}
-		}
-
-		static string _localDotNetAndroidSdkDirectory;
-		static string LocalDotNetAndroidSdkDirectory {
-			get {
-				if (!string.IsNullOrEmpty (_localDotNetAndroidSdkDirectory)) {
-					return _localDotNetAndroidSdkDirectory;
-				}
-				return _localDotNetAndroidSdkDirectory = GetDotNetAndroidSdkDir (LocalPacksDir);
-			}
-		}
-
-		static string GetDotNetAndroidSdkDir (string packsDirectory)
+		/// <summary>
+		/// Extracts an installed library pack, dotnet/library-packs/[id].[version].nupkg, and returns its directory.
+		/// </summary>
+		public static string GetLibraryPackDirectory (string packageId)
 		{
-			var sdkName = IsMacOS ? "Microsoft.Android.Sdk.Darwin" :
-				IsWindows ? "Microsoft.Android.Sdk.Windows" :
-				"Microsoft.Android.Sdk.Linux";
-
-			var sdkDir = Path.Combine (packsDirectory, sdkName);
-			if (!Directory.Exists (sdkDir))
-				return string.Empty;
-
-			var dirs = from d in Directory.GetDirectories (sdkDir)
-				   let version = ParseVersion (d)
-				   orderby version descending
-				   select d;
-
-			return dirs.FirstOrDefault ();
+			var prefix = packageId.ToLowerInvariant () + ".";
+			var nupkg = Directory.EnumerateFiles (LibraryPacksDirectory, prefix + "*.nupkg")
+				.SingleOrDefault (path => {
+					var fileName = Path.GetFileName (path);
+					return fileName.Length > prefix.Length && char.IsDigit (fileName [prefix.Length]);
+				});
+			if (nupkg == null) {
+				throw new FileNotFoundException ($"Unable to locate the '{packageId}' library pack in '{LibraryPacksDirectory}'.");
+			}
+			// Local builds reinstall library packs with the same version, so include the file time.
+			var directory = Path.Combine (XABuildPaths.TestOutputDirectory, "library-packs", $"{Path.GetFileNameWithoutExtension (nupkg)}-{File.GetLastWriteTimeUtc (nupkg).Ticks}");
+			var marker = Path.Combine (directory, ".extracted");
+			lock (libraryPacksLock) {
+				if (!File.Exists (marker)) {
+					if (Directory.Exists (directory)) {
+						FileSystemUtils.DeleteDirectoryWithRetry (directory);
+					}
+					ZipFile.ExtractToDirectory (nupkg, directory);
+					File.WriteAllText (marker, "");
+				}
+			}
+			return directory;
 		}
 
 		/// <summary>
-		/// Tests will attempt to run against local build output directories by default,
-		///  and fall back to `dotnet/packs` if a local build does not exist.
+		/// Tests use the workload manifest from a local build tree by default, see dotnet-local.sh.
 		/// This will always return false for our tests running in CI.
 		/// </summary>
-		public static bool UseLocalBuildOutput {
-			get {
-				var msbuildDir = Path.Combine (LocalDotNetAndroidSdkDirectory, "tools");
-				return Directory.Exists (msbuildDir) && File.Exists (Path.Combine (msbuildDir, "Xamarin.Android.Build.Tasks.dll"));
-			}
-		}
+		public static bool UseLocalBuildOutput =>
+			Directory.Exists (WorkloadManifestOverridePath) &&
+			Directory.EnumerateDirectories (WorkloadManifestOverridePath, "microsoft.net.sdk.android", SearchOption.AllDirectories).Any ();
 
+		/// <summary>
+		/// The directory with aapt2, in the installed Microsoft.Android.Tools.[OS] library pack.
+		/// </summary>
 		public static string OSBinDirectory {
 			get {
-				var osSubdirName = IsMacOS ? "Darwin" :
+				var hostOS = IsMacOS ? "Darwin" :
 					IsLinux ? "Linux" :
-					string.Empty;
-				return Path.Combine (AndroidMSBuildDirectory, osSubdirName);
+					"Windows";
+				return Path.Combine (GetLibraryPackDirectory ($"Microsoft.Android.Tools.{hostOS}"), "tools");
 			}
-		}
-
-		static Version ParseVersion (string path)
-		{
-			var folderName = Path.GetFileName (path);
-			var index = folderName.IndexOf ('-');
-			if (index != -1) {
-				folderName = folderName.Substring (0, index);
-			}
-			if (Version.TryParse (folderName, out var v))
-				return v;
-			return new Version (0, 0);
 		}
 
 		public static bool IsUsingJdk8 => AndroidSdkResolver.GetJavaSdkVersionString ().Contains ("1.8.0");

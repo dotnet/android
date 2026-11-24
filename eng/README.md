@@ -67,7 +67,7 @@ darc add-default-channel --channel ".NET 6.0.1xx SDK Preview 4" --branch "releas
 
 Other products/tools can consume our package version info in the following way:
 ```
-darc add-dependency -n Microsoft.Android.Sdk.Windows -t product -r https://github.com/dotnet/android -v 1.2.3
+darc add-dependency -n Microsoft.Android -t product -r https://github.com/dotnet/android -v 1.2.3
 ```
 
 

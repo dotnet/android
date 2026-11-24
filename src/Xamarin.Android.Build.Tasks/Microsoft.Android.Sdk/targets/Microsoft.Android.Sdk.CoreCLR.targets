@@ -10,10 +10,6 @@ This file contains the CoreCLR-specific MSBuild logic for .NET for Android.
   <UsingTask TaskName="Microsoft.Android.Tasks.GenerateMibcProfile" AssemblyFile="$(_MicrosoftAndroidBuildTasksAssembly)" Runtime="NET" TaskFactory="TaskHostFactory" Condition=" '$(MSBuildRuntimeType)' == 'Full' " />
   <UsingTask TaskName="Microsoft.Android.Tasks.GenerateMibcProfile" AssemblyFile="$(_MicrosoftAndroidBuildTasksAssembly)" Runtime="NET" Condition=" '$(MSBuildRuntimeType)' == 'Core' " />
 
-  <!-- Default property values for CoreCLR -->
-  <PropertyGroup>
-    <_AndroidRuntimePackRuntime>CoreCLR</_AndroidRuntimePackRuntime>
-  </PropertyGroup>
   <!-- Properties for $(OutputType)=Exe (Android Applications) -->
   <PropertyGroup Condition=" '$(AndroidApplication)' == 'true' ">
     <!-- Default PublishReadyToRun to true for CoreCLR Release mode and publish builds without debug symbols -->

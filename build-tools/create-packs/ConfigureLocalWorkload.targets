@@ -1,64 +1,13 @@
 <Project>
 
-  <!-- https://stackoverflow.com/questions/15914145/cross-join-itemgroups-in-msbuild -->
-  <Target Name="_CreateAndroidBuildInfo">
+  <Target Name="_CreateLocalTemplatesItems">
     <ItemGroup>
-      <_AndroidBuildInfo Include="@(AndroidBuildApiLevel)">
-        <AndroidRuntime>%(AndroidAbiAndRuntimeFlavor.AndroidRuntime)</AndroidRuntime>
-        <AndroidRID>%(AndroidAbiAndRuntimeFlavor.AndroidRID)</AndroidRID>
-      </_AndroidBuildInfo>
-    </ItemGroup>
-  </Target>
-
-  <Target Name="_CreateLocalFrameworkLists">
-    <ItemGroup>
-      <_FrameworkListInputs Include="$(BuildOutputDirectory)lib\packs\Microsoft.Android.Ref.%(AndroidBuildApiLevel.Identity)\$(AndroidPackVersion)\ref\**" />
-      <_FrameworkListInputs Include="$(MicrosoftAndroidSdkAnalysisOutDir)Microsoft.Android.Sdk.Analysis.dll" />
-      <_FrameworkListOutputs Include="$(BuildOutputDirectory)lib\packs\Microsoft.Android.Ref.%(AndroidBuildApiLevel.Identity)\$(AndroidPackVersion)\data\FrameworkList.xml">
-        <AndroidApiLevel>%(AndroidBuildApiLevel.Identity)</AndroidApiLevel>
-      </_FrameworkListOutputs>
       <_TemplatesInputs Include="$(XamarinAndroidSourcePath)src\Microsoft.Android.Templates\**" />
       <_TemplatesOutputs Include="$(BuildOutputDirectory)lib\template-packs\microsoft.android.templates.$(AndroidPackVersion).nupkg" />
     </ItemGroup>
   </Target>
-
-  <Target Name="_CreateLocalRuntimeListsInputs"
-      DependsOnTargets="_CreateLocalFrameworkLists;_CreateAndroidBuildInfo">
-    <ItemGroup>
-      <_RuntimeListInputs
-          Include="$(BuildOutputDirectory)lib\packs\Microsoft.Android.Runtime.%(_AndroidBuildInfo.AndroidRuntime).%(_AndroidBuildInfo.Identity).%(_AndroidBuildInfo.AndroidRID)\$(AndroidPackVersion)\runtimes\%(_AndroidBuildInfo.AndroidRID)\**"
-          AndroidApiLevel="%(_AndroidBuildInfo.Identity)"
-          AndroidRID="%(_AndroidBuildInfo.AndroidRID)"
-          AndroidRuntime="%(_AndroidBuildInfo.AndroidRuntime)" />
-      <_RuntimeListOutputs
-          Include="$(BuildOutputDirectory)lib\packs\Microsoft.Android.Runtime.%(_AndroidBuildInfo.AndroidRuntime).%(_AndroidBuildInfo.Identity).%(_AndroidBuildInfo.AndroidRID)\$(AndroidPackVersion)\data\RuntimeList.xml"
-          AndroidApiLevel="%(_AndroidBuildInfo.Identity)"
-          AndroidRID="%(_AndroidBuildInfo.AndroidRID)"
-          AndroidRuntime="%(_AndroidBuildInfo.AndroidRuntime)"
-      />
-      <_ManagedRuntimeListOutputs
-          Include="$(BuildOutputDirectory)lib\packs\Microsoft.Android.Runtime.%(AndroidBuildApiLevel.Identity).android\$(AndroidPackVersion)\data\RuntimeList.xml"
-          AndroidApiLevel="%(AndroidBuildApiLevel.Identity)"
-      />
-    </ItemGroup>
-  </Target>
-
-  <Target Name="CreateLocalRuntimeLists"
-      DependsOnTargets="_CreateLocalRuntimeListsInputs"
-      Inputs="$(MSBuildAllProjects);@(_RuntimeListInputs)"
-      Outputs="@(_RuntimeListOutputs);@(_ManagedRuntimeListOutputs)">
-    <Exec Command="&quot;$(DotNetPreviewTool)&quot; build -t:_GenerateFrameworkList -p:IntermediateOutputPath=%(_RuntimeListOutputs.RelativeDir) -p:AndroidApiLevel=%(_RuntimeListOutputs.AndroidApiLevel) -p:AndroidRID=%(_RuntimeListOutputs.AndroidRID) -p:AndroidRuntime=%(_RuntimeListOutputs.AndroidRuntime) -p:Configuration=$(Configuration) &quot;$(MSBuildThisFileDirectory)Microsoft.Android.Runtime.proj&quot;" />
-    <Exec Command="&quot;$(DotNetPreviewTool)&quot; build -t:_GenerateFrameworkList -p:IntermediateOutputPath=%(_ManagedRuntimeListOutputs.RelativeDir) -p:AndroidApiLevel=%(_ManagedRuntimeListOutputs.AndroidApiLevel) -p:Configuration=$(Configuration) &quot;$(MSBuildThisFileDirectory)Microsoft.Android.Runtime.Managed.proj&quot;" />
-  </Target>
-
-  <Target Name="CreateLocalFrameworkLists"
-      DependsOnTargets="_CreateLocalFrameworkLists"
-      Inputs="$(MSBuildAllProjects);@(_FrameworkListInputs)"
-      Outputs="@(_FrameworkListOutputs)">
-    <Exec Command="&quot;$(DotNetPreviewTool)&quot; build -t:_GenerateFrameworkList -p:IntermediateOutputPath=%(_FrameworkListOutputs.RelativeDir) -p:AndroidApiLevel=%(_FrameworkListOutputs.AndroidApiLevel) -p:Configuration=$(Configuration) &quot;$(MSBuildThisFileDirectory)Microsoft.Android.Ref.proj&quot;" />
-  </Target>
-
   <Target Name="PackLocalTemplates"
+      DependsOnTargets="_CreateLocalTemplatesItems"
       Inputs="@(_TemplatesInputs)"
       Outputs="@(_TemplatesOutputs)">
     <ItemGroup>
@@ -150,9 +99,30 @@
     <RemoveDir Directories="$(_EmptyWorkloadDir)" />
   </Target>
 
+  <Target Name="_SetLocalLibraryPackArguments">
+    <PropertyGroup>
+      <_LibraryPackVersion>$(AndroidPackVersion)</_LibraryPackVersion>
+      <_LocalLibraryPacksOutputPath>$(BootstrapOutputDirectory)nuget-local</_LocalLibraryPacksOutputPath>
+      <_LibraryPackArguments>&quot;-p:PackageOutputPath=$(_LocalLibraryPacksOutputPath)&quot;</_LibraryPackArguments>
+    </PropertyGroup>
+    <RemoveDir Directories="$(_LocalLibraryPacksOutputPath)" />
+  </Target>
+
+  <!-- Pack the library packs with $(AndroidPackVersion) and install them where restore finds them, see Microsoft.NET.NuGetOfflineCache.targets -->
+  <Target Name="PackLocalLibraryPacks"
+      DependsOnTargets="_SetLocalLibraryPackArguments;_CreateLibraryPacks">
+    <ItemGroup>
+      <_LocalLibraryPack Include="$(_LocalLibraryPacksOutputPath)\*.nupkg" Exclude="$(_LocalLibraryPacksOutputPath)\*.symbols.nupkg" />
+    </ItemGroup>
+    <Copy
+        SourceFiles="@(_LocalLibraryPack)"
+        DestinationFiles="@(_LocalLibraryPack->'$(DotNetPreviewPath)library-packs\$([System.String]::Copy('%(Filename)').ToLowerInvariant())%(Extension)')"
+    />
+  </Target>
+
   <PropertyGroup>
     <!-- Clean before installing the previous Android SDK. -->
-    <ConfigureLocalWorkloadDependsOn Condition="'$(RunningOnCI)' != 'true'">CreateLocalFrameworkLists;CreateLocalRuntimeLists;DeleteExtractedWorkloadPacks;InstallManifestAndDependencies;PackLocalTemplates</ConfigureLocalWorkloadDependsOn>
+    <ConfigureLocalWorkloadDependsOn Condition="'$(RunningOnCI)' != 'true'">DeleteExtractedWorkloadPacks;InstallManifestAndDependencies;PackLocalLibraryPacks;PackLocalTemplates</ConfigureLocalWorkloadDependsOn>
   </PropertyGroup>
   <Target Name="ConfigureLocalWorkload" DependsOnTargets="$(ConfigureLocalWorkloadDependsOn)" />
 

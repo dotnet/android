@@ -1,5 +1,10 @@
 <Project>
 
+  <!-- The android workload sets $(MicrosoftAndroidPackageVersion) for the current .NET version -->
+  <ItemGroup Condition=" '$(MicrosoftAndroidPackageVersion)' != '' ">
+    <PackageReference Include="Microsoft.Android" Version="$(MicrosoftAndroidPackageVersion)" />
+  </ItemGroup>
+
   <Target Name="BuildNativeLibs"
       BeforeTargets="CoreBuild"
       DependsOnTargets="AndroidPrepareForBuild"

@@ -4,16 +4,13 @@
     "android": {
       "description": ".NET SDK Workload for building Android applications.",
       "packs": [
-        "Microsoft.Android.Sdk.net12",
+        "Microsoft.Android",
+        "@MICROSOFT_ANDROID_SDK_PACKAGE_ID@",
+        @MICROSOFT_ANDROID_REF_PACKAGE_IDS@
+        "Microsoft.Android.Tools.Darwin",
+        "Microsoft.Android.Tools.Linux",
+        "Microsoft.Android.Tools.Windows",
         "Microsoft.Android.Sdk.net11",
-        "Microsoft.Android.Ref.37",
-        "Microsoft.Android.Runtime.37.android",
-        "Microsoft.Android.Runtime.CoreCLR.37.android-arm",
-        "Microsoft.Android.Runtime.CoreCLR.37.android-arm64",
-        "Microsoft.Android.Runtime.CoreCLR.37.android-x64",
-        "Microsoft.Android.Runtime.NativeAOT.37.android-arm",
-        "Microsoft.Android.Runtime.NativeAOT.37.android-arm64",
-        "Microsoft.Android.Runtime.NativeAOT.37.android-x64",
         "Microsoft.Android.Templates"
       ],
       "platforms": [ "win-x64", "win-arm64", "linux-x64", "linux-arm64", "osx-x64", "osx-arm64" ],
@@ -24,18 +21,26 @@
     }
   },
   "packs": {
-    "Microsoft.Android.Sdk.net12": {
-      "kind": "sdk",
-      "version": "@WORKLOAD_VERSION@",
-      "alias-to": {
-        "osx-x64": "Microsoft.Android.Sdk.Darwin",
-        "osx-arm64": "Microsoft.Android.Sdk.Darwin",
-        "win-x86": "Microsoft.Android.Sdk.Windows",
-        "win-x64": "Microsoft.Android.Sdk.Windows",
-        "win-arm64": "Microsoft.Android.Sdk.Windows",
-        "linux-x64": "Microsoft.Android.Sdk.Linux",
-        "linux-arm64": "Microsoft.Android.Sdk.Linux"
-      }
+    "Microsoft.Android": {
+      "kind": "library",
+      "version": "@WORKLOAD_VERSION@"
+    },
+    "@MICROSOFT_ANDROID_SDK_PACKAGE_ID@": {
+      "kind": "library",
+      "version": "@WORKLOAD_VERSION@"
+    },
+    @MICROSOFT_ANDROID_REF_PACKS@
+    "Microsoft.Android.Tools.Darwin": {
+      "kind": "library",
+      "version": "@WORKLOAD_VERSION@"
+    },
+    "Microsoft.Android.Tools.Linux": {
+      "kind": "library",
+      "version": "@WORKLOAD_VERSION@"
+    },
+    "Microsoft.Android.Tools.Windows": {
+      "kind": "library",
+      "version": "@WORKLOAD_VERSION@"
     },
     "Microsoft.Android.Sdk.net11": {
       "kind": "sdk",
@@ -49,54 +54,6 @@
         "linux-x64": "Microsoft.Android.Sdk.Linux",
         "linux-arm64": "Microsoft.Android.Sdk.Linux"
       }
-    },
-    "Microsoft.Android.Ref.37.2": {
-      "kind": "framework",
-      "version": "@WORKLOAD_VERSION@"
-    },
-    "Microsoft.Android.Runtime.37.2.android": {
-      "kind": "framework",
-      "version": "@WORKLOAD_VERSION@"
-    },
-    "Microsoft.Android.Ref.37.1": {
-      "kind": "framework",
-      "version": "@WORKLOAD_VERSION@"
-    },
-    "Microsoft.Android.Runtime.37.1.android": {
-      "kind": "framework",
-      "version": "@WORKLOAD_VERSION@"
-    },
-    "Microsoft.Android.Ref.37": {
-      "kind": "framework",
-      "version": "@WORKLOAD_VERSION@"
-    },
-    "Microsoft.Android.Runtime.37.android": {
-      "kind": "framework",
-      "version": "@WORKLOAD_VERSION@"
-    },
-    "Microsoft.Android.Runtime.CoreCLR.37.android-arm": {
-      "kind": "framework",
-      "version": "@WORKLOAD_VERSION@"
-    },
-    "Microsoft.Android.Runtime.CoreCLR.37.android-arm64": {
-      "kind": "framework",
-      "version": "@WORKLOAD_VERSION@"
-    },
-    "Microsoft.Android.Runtime.CoreCLR.37.android-x64": {
-      "kind": "framework",
-      "version": "@WORKLOAD_VERSION@"
-    },
-    "Microsoft.Android.Runtime.NativeAOT.37.android-arm": {
-      "kind": "framework",
-      "version": "@WORKLOAD_VERSION@"
-    },
-    "Microsoft.Android.Runtime.NativeAOT.37.android-arm64": {
-      "kind": "framework",
-      "version": "@WORKLOAD_VERSION@"
-    },
-    "Microsoft.Android.Runtime.NativeAOT.37.android-x64": {
-      "kind": "framework",
-      "version": "@WORKLOAD_VERSION@"
     },
     "Microsoft.Android.Templates": {
       "kind": "template",

@@ -4,6 +4,14 @@ namespace Xamarin.ProjectTools
 {
 	public static class KnownPackages
 	{
+		/// <summary>
+		/// The workload sets $(MicrosoftAndroidPackageVersion) only for the current .NET version.
+		/// </summary>
+		public static Package MicrosoftAndroid = new Package {
+			Id = "Microsoft.Android",
+			Version = "$(MicrosoftAndroidPackageVersion)",
+			Condition = "'$(MicrosoftAndroidPackageVersion)' != ''",
+		};
 		public static Package XamarinAndroidXWear = new Package {
 			Id = "Xamarin.AndroidX.Wear",
 			Version = "1.2.0.5"

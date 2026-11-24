@@ -13,22 +13,6 @@
     <AfterMicrosoftNETSdkTargets>$(AfterMicrosoftNETSdkTargets);$(MSBuildThisFileDirectory)Microsoft.Android.Sdk.After.targets</AfterMicrosoftNETSdkTargets>
   </PropertyGroup>
 
-  <!-- Default References -->
-  <ItemGroup Condition=" '$(DisableImplicitFrameworkReferences)' != 'true' ">
-    <FrameworkReference
-        Include="Microsoft.Android"
-        IsImplicitlyDefined="true"
-        Pack="false"
-        PrivateAssets="All"
-    />
-    <FrameworkReference
-        Include="Microsoft.Android.Runtimes"
-        IsImplicitlyDefined="true"
-        Pack="false"
-        PrivateAssets="All"
-    />
-  </ItemGroup>
-
   <Import Project="Microsoft.Android.Sdk.SupportedPlatforms.targets" />
   <Import Project="Microsoft.Android.Sdk.BundledVersions.targets" />
   <Import Project="Microsoft.Android.Sdk.DefaultProperties.targets" />

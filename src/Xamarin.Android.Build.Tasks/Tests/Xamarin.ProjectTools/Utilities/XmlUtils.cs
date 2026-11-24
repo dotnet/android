@@ -25,7 +25,8 @@ namespace Xamarin.ProjectTools
 			if (project.PackageReferences.Count > 0) {
 				sb.AppendLine ("\t<ItemGroup>");
 				foreach (var pr in project.PackageReferences) {
-					sb.AppendLine ($"\t\t<PackageReference Include=\"{pr.Id}\" Version=\"{pr.Version}\"/>");
+					var condition = string.IsNullOrEmpty (pr.Condition) ? "" : $" Condition=\"{pr.Condition}\"";
+					sb.AppendLine ($"\t\t<PackageReference Include=\"{pr.Id}\" Version=\"{pr.Version}\"{condition}/>");
 				}
 				sb.AppendLine ("\t</ItemGroup>");
 			}

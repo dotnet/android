@@ -1,0 +1,15 @@
+<!--
+***********************************************************************************************
+Microsoft.Android.Sdk.props
+
+Packed as buildTransitive/$(PackageId).props in the Microsoft.Android.$(DotNetTargetFramework)
+NuGet. NuGet imports it for projects that reference the Microsoft.Android NuGet.
+***********************************************************************************************
+-->
+<Project>
+  <Import Project="..\Sdk\AutoImport.props" />
+  <PropertyGroup>
+    <!-- Import the Android targets right after the target framework is parsed, before the .NET SDK computes runtime identifiers. -->
+    <AfterTargetFrameworkInferenceTargets>$(AfterTargetFrameworkInferenceTargets);$(MSBuildThisFileDirectory)..\Sdk\Sdk.targets</AfterTargetFrameworkInferenceTargets>
+  </PropertyGroup>
+</Project>

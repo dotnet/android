@@ -24,7 +24,7 @@ about the various Microsoft.Android workloads.
   </PropertyGroup>
 
   <Target Name="_GenerateXAWorkloadContent"
-      DependsOnTargets="_GetDefaultPackageVersion;_GetLicense">
+      DependsOnTargets="_GetDefaultPackageVersion;_GetLicense;_CreateItemGroups">
     <PropertyGroup>
       <WorkloadDependenciesPath Condition="'$(WorkloadDependenciesPath)' == ''">$(OutputPath)workload-manifest\WorkloadDependencies.json</WorkloadDependenciesPath>
       <WorkloadManifestJsonPath Condition="'$(WorkloadManifestJsonPath)' == ''">$(OutputPath)workload-manifest\WorkloadManifest.json</WorkloadManifestJsonPath>
@@ -32,17 +32,37 @@ about the various Microsoft.Android workloads.
       <WorkloadManifestTargetsPath Condition="'$(WorkloadManifestTargetsPath)' == ''">$(OutputPath)workload-manifest\WorkloadManifest.targets</WorkloadManifestTargetsPath>
       <WorkloadVersion Condition="'$(WorkloadVersion)' == ''">$(AndroidPackVersionLong)</WorkloadVersion>
     </PropertyGroup>
+    <ItemGroup>
+      <_DefaultAndroidApiLevel Include="@(AndroidBuildApiLevel)" Condition=" '%(Identity)' == '$(AndroidDefaultTargetDotnetApiLevel)' " />
+    </ItemGroup>
+    <PropertyGroup>
+      <_DefaultTargetPlatformVersion>@(_DefaultAndroidApiLevel->'%(PlatformId)')</_DefaultTargetPlatformVersion>
+      <_RefPackageIds>@(_AndroidPackageApiLevel->'&quot;$(MicrosoftAndroidSdkPackageId).Ref.%(PlatformId)&quot;,', ' ')</_RefPackageIds>
+      <_RefPacks>@(_AndroidPackageApiLevel->'&quot;$(MicrosoftAndroidSdkPackageId).Ref.%(PlatformId)&quot;: { &quot;kind&quot;: &quot;library&quot;, &quot;version&quot;: &quot;$(WorkloadVersion)&quot; },', ' ')</_RefPacks>
+    </PropertyGroup>
+    <ItemGroup>
+      <_WorkloadManifestJsonReplacement Include="@WORKLOAD_VERSION@=$(WorkloadVersion)" />
+      <_WorkloadManifestJsonReplacement Include="@NET_PREVIOUS_VERSION@=$(AndroidNetPreviousVersion)" />
+      <_WorkloadManifestJsonReplacement Include="@MICROSOFT_ANDROID_SDK_PACKAGE_ID@=$(MicrosoftAndroidSdkPackageId)" />
+      <_WorkloadManifestJsonReplacement Include="@MICROSOFT_ANDROID_REF_PACKAGE_IDS@=$(_RefPackageIds)" />
+      <_WorkloadManifestJsonReplacement Include="@MICROSOFT_ANDROID_REF_PACKS@=$(_RefPacks)" />
+      <_WorkloadManifestTargetsReplacement Include="@WORKLOAD_VERSION@=$(WorkloadVersion)" />
+      <_WorkloadManifestTargetsReplacement Include="@NET_PREVIOUS_VERSION@=$(AndroidNetPreviousVersion)" />
+      <_WorkloadManifestTargetsReplacement Include="@NET_PREVIOUS_ILLINK_VERSION@=$(AndroidNetPreviousILLinkVersion)" />
+      <_WorkloadManifestTargetsReplacement Include="@DOTNET_TARGET_FRAMEWORK_VERSION@=$(DotNetTargetFrameworkVersion)" />
+      <_WorkloadManifestTargetsReplacement Include="@DEFAULT_TARGET_PLATFORM_VERSION@=$(_DefaultTargetPlatformVersion)" />
+    </ItemGroup>
 
     <MakeDir Directories="$(OutputPath)workload-manifest;$(_AndroidWorkloadManifestLocalizationPath)" />
     <ReplaceFileContents
         SourceFile="$(XamarinAndroidSourcePath)src\Xamarin.Android.Build.Tasks\Microsoft.NET.Sdk.Android\WorkloadManifest.in.json"
         DestinationFile="$(WorkloadManifestJsonPath)"
-        Replacements="@WORKLOAD_VERSION@=$(WorkloadVersion);@NET_PREVIOUS_VERSION@=$(AndroidNetPreviousVersion)">
+        Replacements="@(_WorkloadManifestJsonReplacement)">
     </ReplaceFileContents>
     <ReplaceFileContents
         SourceFile="$(XamarinAndroidSourcePath)src\Xamarin.Android.Build.Tasks\Microsoft.NET.Sdk.Android\WorkloadManifest.in.targets"
         DestinationFile="$(WorkloadManifestTargetsPath)"
-        Replacements="@NET_PREVIOUS_VERSION@=$(AndroidNetPreviousVersion);@NET_PREVIOUS_ILLINK_VERSION@=$(AndroidNetPreviousILLinkVersion)">
+        Replacements="@(_WorkloadManifestTargetsReplacement)">
     </ReplaceFileContents>
     <ItemGroup>
       <_AndroidWorkloadManifestLocalizationFiles Include="$(XamarinAndroidSourcePath)src\Xamarin.Android.Build.Tasks\Microsoft.NET.Sdk.Android\localize\WorkloadManifest.*.json" />

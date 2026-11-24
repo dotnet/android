@@ -31,4 +31,9 @@
     <Compile Include="$(MSBuildThisFileDirectory)src\utils\NullableAttributes.cs" Visible="false" />
   </ItemGroup>
 
+  <!-- The android workload sets $(MicrosoftAndroidPackageVersion) for the current .NET version -->
+  <ItemGroup Condition=" '$(TargetPlatformIdentifier)' == 'android' and '$(MicrosoftAndroidPackageVersion)' != '' and '@(PackageReference->WithMetadataValue('Identity', 'Microsoft.Android'))' == '' ">
+    <PackageReference Include="Microsoft.Android" Version="$(MicrosoftAndroidPackageVersion)" />
+  </ItemGroup>
+
 </Project>

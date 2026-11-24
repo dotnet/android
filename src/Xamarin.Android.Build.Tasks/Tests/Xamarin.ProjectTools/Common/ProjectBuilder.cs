@@ -213,31 +213,22 @@ namespace Xamarin.ProjectTools
 		public RuntimeInfo [] GetSupportedRuntimes ()
 		{
 			var runtimeInfo = new List<RuntimeInfo> ();
-			var runtimeDirs = new HashSet<string> ();
-			var targetPlatform = XABuildConfig.AndroidDefaultTargetDotnetApiLevel;
-			var versionString = targetPlatform.Minor == 0 ? $"{targetPlatform.Major}" : $"{targetPlatform.Major}.{targetPlatform.Minor}";
-			var rootRuntimeDirs = Directory.GetDirectories (TestEnvironment.DotNetPreviewPacksDirectory, $"Microsoft.Android.Runtime.CoreCLR.{versionString}.*");
-			foreach (var dir in rootRuntimeDirs) {
-				runtimeDirs.Add (Directory.GetDirectories (dir).LastOrDefault ());
-			}
-
-			foreach (var runtimeDir in runtimeDirs) {
-				foreach (var file in Directory.EnumerateFiles (runtimeDir, "libnet-android.*.so", SearchOption.AllDirectories)) {
-					string fullFilePath = Path.GetFullPath (file);
-					DirectoryInfo parentDir = Directory.GetParent (fullFilePath);
-					if (parentDir == null)
-						continue;
-					string[] items = Path.GetFileName (fullFilePath).Split ('.' );
-					if (items.Length != 3)
-						continue;
-					var fi = new FileInfo (fullFilePath);
-					runtimeInfo.Add (new RuntimeInfo () {
-						Name = "libmonodroid.so",
-						Runtime = items [1], // release|debug
-						Abi = parentDir.Name, // armaebi|x86|arm64-v8a
-						Size = (int)fi.Length, // int
-					});
-				}
+			var runtimeDir = Path.Combine (TestEnvironment.DotNetPreviewAndroidSdkDirectory, "native", "CoreCLR");
+			foreach (var file in Directory.EnumerateFiles (runtimeDir, "libnet-android.*.so", SearchOption.AllDirectories)) {
+				string fullFilePath = Path.GetFullPath (file);
+				DirectoryInfo parentDir = Directory.GetParent (fullFilePath);
+				if (parentDir == null)
+					continue;
+				string[] items = Path.GetFileName (fullFilePath).Split ('.' );
+				if (items.Length != 3)
+					continue;
+				var fi = new FileInfo (fullFilePath);
+				runtimeInfo.Add (new RuntimeInfo () {
+					Name = "libmonodroid.so",
+					Runtime = items [1], // release|debug
+					Abi = parentDir.Name, // android-arm64|android-x64
+					Size = (int)fi.Length, // int
+				});
 			}
 			return runtimeInfo.ToArray ();
 		}

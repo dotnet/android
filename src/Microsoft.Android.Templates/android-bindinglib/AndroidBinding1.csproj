@@ -15,4 +15,9 @@
       To learn more, see: https://learn.microsoft.com/dotnet/maui/migration/android-binding-projects
     -->
   </PropertyGroup>
+  <!--#if (Framework != "net11.0-android") -->
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Android" Version="MICROSOFT_ANDROID_PACKAGE_VERSION" />
+  </ItemGroup>
+  <!--#endif -->
 </Project>

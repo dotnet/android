@@ -156,6 +156,7 @@ Either change the value in the AndroidManifest.xml to match the $(SupportedOSPla
 + [XA1049](xa1049.md): The 'AndroidEnableMarshalMethods' MSBuild property is no longer supported.
 + [XA1050](xa1050.md): The 'AndroidR8ObfuscationMode' MSBuild property has an invalid value.
 + [XA1051](xa1051.md): The AndroidStaticJniInitFunction MSBuild item is not supported with NativeAOT.
++ [XA1052](xa1052.md): The 'Microsoft.Android' NuGet package is required to build 'net12.0-android' projects.
 
 ## XA2xxx: Linker
 

@@ -14,6 +14,8 @@
       DependsOnTargets="GetXAVersionInfo" >
     <PropertyGroup>
       <PackageVersion>$(AndroidPackVersionLong)</PackageVersion>
+      <!-- Set by _CreateLibraryPacks; local builds use $(AndroidPackVersion), see ConfigureLocalWorkload.targets -->
+      <PackageVersion Condition=" '$(_LibraryPackVersion)' != '' ">$(_LibraryPackVersion)</PackageVersion>
     </PropertyGroup>
   </Target>
 
@@ -32,43 +34,29 @@
 
   <Target Name="_CreateItemGroups">
     <ItemGroup>
-      <_AndroidRIDs
-          Include="%(AndroidSupportedTargetJitAbi.AndroidRID)"
-          Condition="'%(AndroidSupportedTargetJitAbi.SupportNativeAOT)' == 'true'"
-          Runtime="NativeAOT"
-      />
-      <_AndroidRIDs
-          Include="%(AndroidSupportedTargetJitAbi.AndroidRID)"
-          Condition="'%(AndroidSupportedTargetJitAbi.SupportCoreCLR)' == 'true'"
-          Runtime="CoreCLR"
-      />
-      <_AndroidAdditionalApiLevel
+      <_AndroidPackageApiLevel
           Include="@(AndroidBuildApiLevel)"
-          Condition=" '%(AndroidBuildApiLevel.Identity)' != '$(AndroidLatestStableApiLevel)' and Exists('$(_MonoAndroidNETOutputRoot)%(AndroidBuildApiLevel.Identity)\Mono.Android.dll') "
+          Condition=" Exists('$(_MonoAndroidNETOutputRoot)%(AndroidBuildApiLevel.Identity)\Mono.Android.dll') "
       />
+      <_AndroidToolsHostOS Include="Darwin;Linux;Windows" />
     </ItemGroup>
   </Target>
 
-  <Target Name="_CreateDefaultRefPack"
-      Condition=" '$(AndroidLatestStableApiLevel)' != '$(AndroidDefaultTargetDotnetApiLevel)' and Exists('$(_MonoAndroidNETOutputRoot)$(AndroidDefaultTargetDotnetApiLevel)\Mono.Android.dll') ">
-    <Exec Command="&quot;$(DotNetPreviewTool)&quot; build @(_GlobalProperties, ' ') &quot;$(_BinlogPrefix)Microsoft.Android.Ref.$(AndroidDefaultTargetDotnetApiLevel).binlog&quot; -p:AndroidApiLevel=$(AndroidDefaultTargetDotnetApiLevel) &quot;$(MSBuildThisFileDirectory)Microsoft.Android.Ref.proj&quot;" />
-  </Target>
-
-  <Target Name="_CreateAdditionalApiLevelPacks"
-      DependsOnTargets="_CreateItemGroups">
-    <!-- Native runtime packs are API-independent and are created once for AndroidLatestStableApiLevel. -->
-    <Exec Command="&quot;$(DotNetPreviewTool)&quot; build @(_GlobalProperties, ' ') &quot;$(_BinlogPrefix)Microsoft.Android.Runtime.Managed.%(_AndroidAdditionalApiLevel.Identity).binlog&quot; -p:AndroidApiLevel=%(_AndroidAdditionalApiLevel.Identity) &quot;$(MSBuildThisFileDirectory)Microsoft.Android.Runtime.Managed.proj&quot;" />
-    <Exec Command="&quot;$(DotNetPreviewTool)&quot; build @(_GlobalProperties, ' ') &quot;$(_BinlogPrefix)Microsoft.Android.Ref.%(_AndroidAdditionalApiLevel.Identity).binlog&quot; -p:AndroidApiLevel=%(_AndroidAdditionalApiLevel.Identity) &quot;$(MSBuildThisFileDirectory)Microsoft.Android.Ref.proj&quot;" />
+  <Target Name="_CreateLibraryPacks"
+      DependsOnTargets="_SetGlobalProperties;_CreateItemGroups;GetXAVersionInfo">
+    <PropertyGroup>
+      <_LibraryPackVersion Condition=" '$(_LibraryPackVersion)' == '' ">$(AndroidPackVersionLong)</_LibraryPackVersion>
+      <_LibraryPackArguments>$(_LibraryPackArguments) -p:_LibraryPackVersion=$(_LibraryPackVersion)</_LibraryPackArguments>
+      <_AndroidPlatformIds>@(_AndroidPackageApiLevel->'%(PlatformId)', ' ')</_AndroidPlatformIds>
+    </PropertyGroup>
+    <Exec Command="&quot;$(DotNetPreviewTool)&quot; build @(_GlobalProperties, ' ') $(_LibraryPackArguments) &quot;$(_BinlogPrefix)$(MicrosoftAndroidSdkPackageId).Ref.%(_AndroidPackageApiLevel.PlatformId).binlog&quot; -p:AndroidApiLevel=%(_AndroidPackageApiLevel.Identity) -p:AndroidPlatformId=%(_AndroidPackageApiLevel.PlatformId) &quot;$(MSBuildThisFileDirectory)Microsoft.Android.Ref.proj&quot;" />
+    <Exec Command="&quot;$(DotNetPreviewTool)&quot; build @(_GlobalProperties, ' ') $(_LibraryPackArguments) &quot;$(_BinlogPrefix)$(MicrosoftAndroidSdkPackageId).binlog&quot; &quot;$(MSBuildThisFileDirectory)Microsoft.Android.Sdk.proj&quot;" />
+    <Exec Command="&quot;$(DotNetPreviewTool)&quot; build @(_GlobalProperties, ' ') $(_LibraryPackArguments) &quot;$(_BinlogPrefix)Microsoft.Android.Tools.%(_AndroidToolsHostOS.Identity).binlog&quot; -p:HostOS=%(_AndroidToolsHostOS.Identity) &quot;$(MSBuildThisFileDirectory)Microsoft.Android.Tools.proj&quot;" />
+    <Exec Command="&quot;$(DotNetPreviewTool)&quot; pack @(_GlobalProperties, ' ') $(_LibraryPackArguments) &quot;$(_BinlogPrefix)Microsoft.Android.binlog&quot; &quot;-p:AndroidPlatformIds=$(_AndroidPlatformIds)&quot; &quot;$(MSBuildThisFileDirectory)Microsoft.Android.proj&quot;" />
   </Target>
 
   <Target Name="CreateAllPacks"
-      DependsOnTargets="DeleteExtractedWorkloadPacks;_SetGlobalProperties;GetXAVersionInfo;_CleanNuGetDirectory;_CreateItemGroups;_CreateAdditionalApiLevelPacks;_CreateDefaultRefPack">
-    <Exec Command="&quot;$(DotNetPreviewTool)&quot; build @(_GlobalProperties, ' ') &quot;$(_BinlogPrefix)Microsoft.Android.Runtime.%(_AndroidRIDs.Runtime).$(AndroidLatestStableApiLevel).%(_AndroidRIDs.Identity).binlog&quot; -p:AndroidRID=%(_AndroidRIDs.Identity) -p:AndroidRuntime=%(_AndroidRIDs.Runtime) &quot;$(MSBuildThisFileDirectory)Microsoft.Android.Runtime.proj&quot;" />
-    <Exec Command="&quot;$(DotNetPreviewTool)&quot; build @(_GlobalProperties, ' ') &quot;$(_BinlogPrefix)Microsoft.Android.Runtime.Managed.$(AndroidLatestStableApiLevel).binlog&quot; &quot;$(MSBuildThisFileDirectory)Microsoft.Android.Runtime.Managed.proj&quot;" />
-    <Exec Command="&quot;$(DotNetPreviewTool)&quot; build @(_GlobalProperties, ' ') &quot;$(_BinlogPrefix)Microsoft.Android.Ref.$(AndroidLatestStableApiLevel).binlog&quot; &quot;$(MSBuildThisFileDirectory)Microsoft.Android.Ref.proj&quot;" />
-    <Exec Command="&quot;$(DotNetPreviewTool)&quot; build @(_GlobalProperties, ' ') &quot;$(_BinlogPrefix)Microsoft.Android.Sdk.Linux.binlog&quot; -p:HostOS=Linux   &quot;$(MSBuildThisFileDirectory)Microsoft.Android.Sdk.proj&quot;" Condition=" '$(HostOS)' == 'Linux' " />
-    <Exec Command="&quot;$(DotNetPreviewTool)&quot; build @(_GlobalProperties, ' ') &quot;$(_BinlogPrefix)Microsoft.Android.Sdk.Darwin.binlog&quot; -p:HostOS=Darwin  &quot;$(MSBuildThisFileDirectory)Microsoft.Android.Sdk.proj&quot;" Condition=" '$(HostOS)' == 'Darwin' " />
-    <Exec Command="&quot;$(DotNetPreviewTool)&quot; build @(_GlobalProperties, ' ') &quot;$(_BinlogPrefix)Microsoft.Android.Sdk.Windows.binlog&quot; -p:HostOS=Windows &quot;$(MSBuildThisFileDirectory)Microsoft.Android.Sdk.proj&quot;" Condition=" '$(HostOS)' != 'Linux' " /> <!-- Windows pack should be built both Windows and macOS -->
+      DependsOnTargets="DeleteExtractedWorkloadPacks;_SetGlobalProperties;GetXAVersionInfo;_CleanNuGetDirectory;_CreateItemGroups;_CreateLibraryPacks">
     <Exec Command="&quot;$(DotNetPreviewTool)&quot; pack @(_GlobalProperties, ' ') &quot;$(_BinlogPrefix)Microsoft.NET.Sdk.Android.binlog&quot; &quot;$(MSBuildThisFileDirectory)Microsoft.NET.Sdk.Android.proj&quot;" />
     <Exec Command="&quot;$(DotNetPreviewTool)&quot; pack @(_GlobalProperties, ' ') &quot;$(_BinlogPrefix)Microsoft.Android.Templates.binlog&quot; &quot;$(XamarinAndroidSourcePath)src\Microsoft.Android.Templates\Microsoft.Android.Templates.csproj&quot;" />
     <Exec Command="&quot;$(DotNetPreviewTool)&quot; pack @(_GlobalProperties, ' ') -p:IsPacking=true &quot;$(_BinlogPrefix)Xamarin.Android.Tools.AndroidSdk.binlog&quot; &quot;$(XamarinAndroidSourcePath)src\Xamarin.Android.Tools.AndroidSdk\Xamarin.Android.Tools.AndroidSdk.csproj&quot;" />
@@ -128,10 +116,6 @@
     </PropertyGroup>
     <ItemGroup>
       <_NuGetSources Include="$(OutputPath.TrimEnd('\'))" />
-      <_PreviewPacks
-          Include="$(XamarinAndroidSourcePath)bin\Build$(Configuration)\nuget-unsigned\Microsoft.Android.Ref.%(AndroidBuildApiLevel.Identity).*.nupkg"
-          Condition=" '%(AndroidBuildApiLevel.Unstable)' == 'true' "
-      />
       <_InstallArguments Include="android" />
       <_InstallArguments Include="--skip-manifest-update" />
       <_InstallArguments Include="--skip-sign-check" />
@@ -149,18 +133,17 @@
 
   <Target Name="DeleteExtractedWorkloadPacks" >
     <ItemGroup>
-      <_PackApiLevels Include="$(AndroidDefaultTargetDotnetApiLevel)" />
-      <_PackApiLevels Include="@(AndroidBuildApiLevel)" />
-    </ItemGroup>
-    <ItemGroup>
       <_PackFoldersToDelete Include="$(DotNetPreviewPath)metadata" />
       <_PackFoldersToDelete Include="$(DotNetPreviewPath)sdk-manifests\$(DotNetSdkManifestsFolder)\workloadsets" />
       <_PackFoldersToDelete Include="$(DotNetPreviewPath)sdk-manifests\$(DotNetSdkManifestsFolder)\microsoft.net.sdk.android" />
-      <_PackFoldersToDelete Include="$(DotNetPreviewPath)packs\Microsoft.Android.Ref.%(_PackApiLevels.Identity)" />
-      <_PackFoldersToDelete Include="$(DotNetPreviewPath)packs\Microsoft.Android.Sdk.Darwin" />
-      <_PackFoldersToDelete Include="$(DotNetPreviewPath)packs\Microsoft.Android.Sdk.Linux" />
-      <_PackFoldersToDelete Include="$(DotNetPreviewPath)packs\Microsoft.Android.Sdk.Windows" />
+      <_PackFoldersToDelete Include="$(DotNetPreviewPath)library-packs" />
       <_PackFoldersToDelete Include="$(DotNetPreviewPath)template-packs" />
+    </ItemGroup>
+    <!-- Local builds reuse the same package version, so remove the extracted copies NuGet would otherwise reuse. -->
+    <ItemGroup Condition=" Exists('$(NuGetPackageRoot)') ">
+      <_PackFoldersToDelete Include="$(NuGetPackageRoot)microsoft.android" />
+      <_PackFoldersToDelete Include="$([System.IO.Directory]::GetDirectories('$(NuGetPackageRoot)', 'microsoft.android.net*'))" />
+      <_PackFoldersToDelete Include="$([System.IO.Directory]::GetDirectories('$(NuGetPackageRoot)', 'microsoft.android.tools.*'))" />
     </ItemGroup>
     <RemoveDir Directories="@(_PackFoldersToDelete)" />
   </Target>

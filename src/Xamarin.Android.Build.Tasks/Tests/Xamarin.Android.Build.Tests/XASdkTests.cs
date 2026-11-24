@@ -606,12 +606,11 @@ public class JavaSourceTest {
 			// Only check latest TFM, as previous or preview TFMs will come from NuGet
 			if (dotnetVersion == XABuildConfig.LatestDotNetTargetFramework && !preview) {
 				var buildOutput = dotnet.LastBuildOutput.ToArray ();
-				var versionString = apiLevel.Minor == 0 ? $"{apiLevel.Major}" : $"{apiLevel.Major}.{apiLevel.Minor}";
-				AssertUsingPack (buildOutput, $"Microsoft.Android.Ref.{versionString}", "ref", dotnetVersion, "Mono.Android.dll");
-
-				var runtimeApiLevel = (apiLevel == XABuildConfig.AndroidDefaultTargetDotnetApiLevel && apiLevel < XABuildConfig.AndroidLatestStableApiLevel) ? XABuildConfig.AndroidLatestStableApiLevel : apiLevel;
-				versionString = runtimeApiLevel.Minor == 0 ? $"{runtimeApiLevel.Major}" : $"{runtimeApiLevel.Major}.{runtimeApiLevel.Minor}";
-				AssertUsingPack (buildOutput, $"Microsoft.Android.Runtime.{versionString}.android", "runtimes", "android", "lib", dotnetVersion, "Mono.Android.dll");
+				var platformId = $"{apiLevel.Major}.{apiLevel.Minor}";
+				var packageId = $"Microsoft.Android.{dotnetVersion}.Ref.{platformId}";
+				var androidTargetFramework = $"{dotnetVersion}-android{platformId}";
+				AssertUsingPackage (buildOutput, packageId, "ref", androidTargetFramework, "Mono.Android.dll");
+				AssertUsingPackage (buildOutput, packageId, "runtimes", "android", "lib", androidTargetFramework, "Mono.Android.dll");
 			}
 
 			var publishDirectory = Path.Combine (Root, projBuilder.ProjectDirectory, proj.OutputPath, runtimeIdentifier, "publish");
@@ -632,15 +631,13 @@ public class JavaSourceTest {
 			}
 		}
 
-		static void AssertUsingPack (IEnumerable<string> buildOutput, string packName, params string [] assemblyPath)
+		static void AssertUsingPackage (IEnumerable<string> buildOutput, string packageId, params string [] assemblyPath)
 		{
-			var packDirectory = Path.Combine (TestEnvironment.DotNetPreviewPacksDirectory, packName);
 			var assemblyPathSuffix = Path.Combine (assemblyPath);
-			var assemblyFileName = Path.GetFileName (assemblyPathSuffix);
-			Assert.That (Directory.EnumerateFiles (packDirectory, assemblyFileName, SearchOption.AllDirectories),
-				Has.Exactly (1).Matches<string> (path =>
-					path.EndsWith (assemblyPathSuffix, StringComparison.OrdinalIgnoreCase) && buildOutput.ContainsText (path)),
-				$"Build should use exactly one installed '{packName}' pack.");
+			Assert.IsTrue (buildOutput.Any (line =>
+					line.IndexOf (packageId, StringComparison.OrdinalIgnoreCase) >= 0 &&
+					line.IndexOf (assemblyPathSuffix, StringComparison.OrdinalIgnoreCase) >= 0),
+				$"Build should use '{assemblyPathSuffix}' from the '{packageId}' package.");
 		}
 
 		[Test]

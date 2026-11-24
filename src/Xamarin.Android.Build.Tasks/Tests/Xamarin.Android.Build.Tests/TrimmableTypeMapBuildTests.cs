@@ -1093,7 +1093,7 @@ namespace Xamarin.Android.Build.Tests {
 				      Condition=" '$(_ComputeFilesToPublishForRuntimeIdentifiers)' == 'true' and '$(RuntimeIdentifier)' != '' "
 				      AfterTargets="ResolveReferences">
 				    <ItemGroup>
-				      <_MonoAndroidRuntimePack Include="@(RuntimePackAsset)" Condition=" '%(Filename)' == 'Mono.Android' " />
+				      <_MonoAndroidRuntimePack Include="@(RuntimeCopyLocalItems)" Condition=" '%(Filename)' == 'Mono.Android' " />
 				    </ItemGroup>
 				    <PropertyGroup>
 				      <_RidSpecificTypeMapImplementation>$(IntermediateOutputPath)rid-specific\$(RuntimeIdentifier)\RidSpecific.dll</_RidSpecificTypeMapImplementation>
@@ -1109,7 +1109,7 @@ namespace Xamarin.Android.Build.Tests {
 				    <ItemGroup>
 				      <_MonoAndroidImplementation
 				          Include="@(_AndroidTrimmableTypeMapExtraFrameworkAssembly)"
-				          Condition=" '%(Filename)' == 'Mono.Android' and $([System.String]::Copy('%(FullPath)').Contains('Microsoft.Android.Runtime.')) " />
+				          Condition=" '%(Filename)' == 'Mono.Android' and $([System.String]::Copy('%(FullPath)').Contains('runtimes')) " />
 				    </ItemGroup>
 				    <Error
 				        Condition=" '@(_MonoAndroidImplementation->Count())' == '0' "
