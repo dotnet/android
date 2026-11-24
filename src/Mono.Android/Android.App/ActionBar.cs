@@ -22,11 +22,12 @@ namespace Android.App {
 			WeakReference? dispatcher;
 			TabEventDispatcher Dispatcher {
 				get {
-					if (dispatcher == null || !dispatcher.IsAlive) {
-						dispatcher = new WeakReference (new TabEventDispatcher ());
-						SetTabListener ((TabEventDispatcher) dispatcher.Target!);
-					}
-					return (TabEventDispatcher) dispatcher.Target!;
+					if (dispatcher?.Target is TabEventDispatcher d)
+						return d;
+					d = new TabEventDispatcher ();
+					dispatcher = new WeakReference (d);
+					SetTabListener (d);
+					return d;
 				}
 			}
 

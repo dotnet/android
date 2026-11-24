@@ -10,11 +10,12 @@ namespace Android.Animation {
 		WeakReference? dispatcher;
 		AnimatorEventDispatcher Dispatcher {
 			get {
-				if (dispatcher == null || !dispatcher.IsAlive) {
-					dispatcher = new WeakReference (new AnimatorEventDispatcher ());
-					AddListener ((AnimatorEventDispatcher) dispatcher.Target!);
-				}
-				return (AnimatorEventDispatcher) dispatcher.Target!;
+				if (dispatcher?.Target is AnimatorEventDispatcher d)
+					return d;
+				d = new AnimatorEventDispatcher ();
+				dispatcher = new WeakReference (d);
+				AddListener (d);
+				return d;
 			}
 		}
 
