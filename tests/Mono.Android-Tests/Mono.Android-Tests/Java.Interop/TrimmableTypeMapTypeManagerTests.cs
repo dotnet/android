@@ -77,6 +77,12 @@ namespace Java.InteropTests
 				result = manager.GetType (signature);
 			}
 
+			// CoreCLR and NativeAOT share a GC whose GetAllocatedBytesForCurrentThread subtracts
+			// the unused tail of the thread's allocation context. A concurrent background GC can
+			// void that context without accounting for the tail, inflating the counter even though
+			// this thread allocated nothing. A blocking GC retires the context first.
+			// See https://github.com/dotnet/android/issues/13726
+			GC.Collect (GC.MaxGeneration, GCCollectionMode.Forced, blocking: true);
 			long before = GC.GetAllocatedBytesForCurrentThread ();
 			for (int i = 0; i < iterationCount; i++) {
 				result = manager.GetType (signature);
