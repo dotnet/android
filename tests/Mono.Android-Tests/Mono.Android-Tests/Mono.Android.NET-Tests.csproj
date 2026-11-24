@@ -24,6 +24,9 @@
     <WarningsNotAsErrors>$(WarningsNotAsErrors);IL2026;IL2062;IL2111;IL3050</WarningsNotAsErrors>
     <ILLinkTreatWarningsAsErrors>false</ILLinkTreatWarningsAsErrors>
     <IlcTreatWarningsAsErrors>false</IlcTreatWarningsAsErrors>
+    <!-- Bindings of the Kotlin test library generate `_JniMarshal_*` delegates that Mono.Android
+         also has as internal types. This project sees them through InternalsVisibleTo. -->
+    <NoWarn>$(NoWarn);CS0436</NoWarn>
     <AndroidUseNegotiateAuthentication>true</AndroidUseNegotiateAuthentication>
     <EventSourceSupport>true</EventSourceSupport>
     <AndroidNdkDirectory></AndroidNdkDirectory>
