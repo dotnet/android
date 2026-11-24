@@ -37,13 +37,13 @@ namespace Xamarin.Android.JcwGenTests {
 		[TestMethod]
 		public void TestNativeLibDllImport ()
 		{
-			Assert.AreEqual (TestNativeLib.Binding.SampleFunction (), 0xf00);
+			Assert.AreEqual (0xf00, TestNativeLib.Binding.SampleFunction ());
 		}
 
 		[TestMethod]
 		public void TestNativeLibDllImportInEmbeddedArchive ()
 		{
-			Assert.AreEqual (TestNativeLib.Binding.SampleFunction2 (), 0xf200);
+			Assert.AreEqual (0xf200, TestNativeLib.Binding.SampleFunction2 ());
 		}
 
 		[TestMethod]
