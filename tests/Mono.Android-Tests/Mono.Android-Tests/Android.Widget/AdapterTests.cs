@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Generic;
 
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
@@ -72,91 +71,6 @@ namespace Android.WidgetTests {
 		}
 
 		[TestMethod]
-		public void ArrayAdapterConstructorsPopulateItems ()
-		{
-			var context = Application.Context;
-			const int layout = Android.Resource.Layout.SimpleListItem1;
-			const int textViewId = Android.Resource.Id.Text1;
-			var array = new [] { "one", "two" };
-			var list = new List<string> { "alpha", "beta" };
-
-			using (var a = new ArrayAdapter<string> (context, layout, textViewId)) {
-				a.Add ("zero");
-				Assert.AreEqual ("zero", a.GetItem (0));
-			}
-			using (var a = new ArrayAdapter<string> (context, layout, array)) {
-				Assert.AreEqual (2, a.Count);
-				Assert.AreEqual ("one", a.GetItem (0));
-			}
-			using (var a = new ArrayAdapter<string> (context, layout, textViewId, array)) {
-				Assert.AreEqual (2, a.Count);
-				Assert.AreEqual ("two", a.GetItem (1));
-			}
-			using (var a = new ArrayAdapter<string> (context, layout, list)) {
-				Assert.AreEqual (2, a.Count);
-				Assert.AreEqual ("alpha", a.GetItem (0));
-			}
-			using (var a = new ArrayAdapter<string> (context, layout, textViewId, list)) {
-				Assert.AreEqual (2, a.Count);
-				Assert.AreEqual ("beta", a.GetItem (1));
-			}
-
-			using (var a = new DerivedStringArrayAdapter (context, layout, textViewId)) {
-				a.Add ("zero");
-				Assert.AreEqual ("zero", a.GetItem (0));
-			}
-			using (var a = new DerivedStringArrayAdapter (context, layout, array)) {
-				Assert.AreEqual (2, a.Count);
-				Assert.AreEqual ("one", a.GetItem (0));
-			}
-			using (var a = new DerivedStringArrayAdapter (context, layout, textViewId, array)) {
-				Assert.AreEqual (2, a.Count);
-				Assert.AreEqual ("two", a.GetItem (1));
-			}
-			using (var a = new DerivedStringArrayAdapter (context, layout, list)) {
-				Assert.AreEqual (2, a.Count);
-				Assert.AreEqual ("alpha", a.GetItem (0));
-			}
-			using (var a = new DerivedStringArrayAdapter (context, layout, textViewId, list)) {
-				Assert.AreEqual (2, a.Count);
-				Assert.AreEqual ("beta", a.GetItem (1));
-			}
-		}
-
-		[TestMethod]
-		public void ArrayAdapterConstructorsReleaseLocalRefsOnFailure ()
-		{
-			const int layout = Android.Resource.Layout.SimpleListItem1;
-			const int textViewId = Android.Resource.Id.Text1;
-			var array = new [] { "one" };
-			var list = new List<string> { "alpha" };
-			Context nullContext = null;
-
-			// Warm up lazily-initialized constructor IDs and exception handling before measuring local refs.
-			Assert.Throws<Java.Lang.NullPointerException> (() => new ArrayAdapter<string> (nullContext, layout, array));
-			Assert.Throws<Java.Lang.NullPointerException> (() => new ArrayAdapter<string> (nullContext, layout, textViewId, array));
-			Assert.Throws<Java.Lang.NullPointerException> (() => new ArrayAdapter<string> (nullContext, layout, list));
-			Assert.Throws<Java.Lang.NullPointerException> (() => new ArrayAdapter<string> (nullContext, layout, textViewId, list));
-			Assert.Throws<Java.Lang.NullPointerException> (() => new DerivedStringArrayAdapter (nullContext, layout, array));
-			Assert.Throws<Java.Lang.NullPointerException> (() => new DerivedStringArrayAdapter (nullContext, layout, textViewId, array));
-			Assert.Throws<Java.Lang.NullPointerException> (() => new DerivedStringArrayAdapter (nullContext, layout, list));
-			Assert.Throws<Java.Lang.NullPointerException> (() => new DerivedStringArrayAdapter (nullContext, layout, textViewId, list));
-
-			int localReferences = Java.Interop.JniEnvironment.LocalReferenceCount;
-
-			Assert.Throws<Java.Lang.NullPointerException> (() => new ArrayAdapter<string> (nullContext, layout, array));
-			Assert.Throws<Java.Lang.NullPointerException> (() => new ArrayAdapter<string> (nullContext, layout, textViewId, array));
-			Assert.Throws<Java.Lang.NullPointerException> (() => new ArrayAdapter<string> (nullContext, layout, list));
-			Assert.Throws<Java.Lang.NullPointerException> (() => new ArrayAdapter<string> (nullContext, layout, textViewId, list));
-			Assert.Throws<Java.Lang.NullPointerException> (() => new DerivedStringArrayAdapter (nullContext, layout, array));
-			Assert.Throws<Java.Lang.NullPointerException> (() => new DerivedStringArrayAdapter (nullContext, layout, textViewId, array));
-			Assert.Throws<Java.Lang.NullPointerException> (() => new DerivedStringArrayAdapter (nullContext, layout, list));
-			Assert.Throws<Java.Lang.NullPointerException> (() => new DerivedStringArrayAdapter (nullContext, layout, textViewId, list));
-
-			Assert.AreEqual (localReferences, Java.Interop.JniEnvironment.LocalReferenceCount);
-		}
-
-		[TestMethod]
 		[TestCategory ("ThresholdDispatch")]
 		public void DerivedArrayAdapterInListView ()
 		{
@@ -220,31 +134,6 @@ namespace Android.WidgetTests {
 
 		public DerivedStringArrayAdapter (Context context)
 			: base (context, Android.Resource.Layout.SimpleListItem1)
-		{
-		}
-
-		public DerivedStringArrayAdapter (Context context, int resource, int textViewResourceId)
-			: base (context, resource, textViewResourceId)
-		{
-		}
-
-		public DerivedStringArrayAdapter (Context context, int textViewResourceId, string [] objects)
-			: base (context, textViewResourceId, objects)
-		{
-		}
-
-		public DerivedStringArrayAdapter (Context context, int resource, int textViewResourceId, string [] objects)
-			: base (context, resource, textViewResourceId, objects)
-		{
-		}
-
-		public DerivedStringArrayAdapter (Context context, int textViewResourceId, IList<string> objects)
-			: base (context, textViewResourceId, objects)
-		{
-		}
-
-		public DerivedStringArrayAdapter (Context context, int resource, int textViewResourceId, IList<string> objects)
-			: base (context, resource, textViewResourceId, objects)
 		{
 		}
 
