@@ -132,9 +132,6 @@
     <Error Condition="'$(_VSInstallDirectory)' == ''" Text="Could not locate a Visual Studio installation with MSBuild." />
     <Error Condition="!Exists('$(_DesktopMSBuildPath)')" Text="Desktop MSBuild was not found at '$(_DesktopMSBuildPath)'." />
     <MakeDir Directories="$(WorkloadMsiLogDirectory)" />
-    <Exec
-        Command="&quot;$(_DesktopMSBuildPath)&quot; &quot;$(VsmanProject)&quot; /nologo /v:minimal /nr:false /t:Restore /p:SwixBuildTargets=&quot;$(SwixTargetsPath)&quot; /p:WorkloadMsiGenProps=&quot;$(WorkloadMsiGenProps)&quot; /p:RestoreConfigFile=&quot;$(RestoreConfigFile)&quot; -bl:&quot;$(WorkloadMsiLogDirectory)\vsman-restore.binlog&quot;"
-        WorkingDirectory="$(MSBuildThisFileDirectory)vsman" />
   </Target>
 
   <Target Name="_GenerateAndSignMsis"

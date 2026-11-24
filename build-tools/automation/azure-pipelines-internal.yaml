@@ -379,16 +379,13 @@ extends:
                 artifactName: $(LinuxNuGetArtifactName)
                 downloadPath: $(Build.StagingDirectory)\unsigned\linux
 
-            - task: UseDotNet@2
-              displayName: Install .NET 8 SDK for SwixBuild
-              inputs:
-                version: 8.0.x
+            - template: /build-tools/automation/yaml-templates/install-repository-sdk.yaml
+              parameters:
+                xaSourcePath: $(Build.SourcesDirectory)/android
 
-            - task: UseDotNet@2
-              displayName: Install .NET SDK for Arcade signing
-              inputs:
-                version: $(DotNetSdkVersion)
-                includePreviewVersions: true
+            - pwsh: dotnetup runtime install 8.0 --no-progress
+              displayName: Install .NET 8 runtime for SwixBuild
+              workingDirectory: $(Build.SourcesDirectory)/android
 
             - pwsh: |
                 $unsigned = "$(Build.StagingDirectory)\unsigned"
@@ -502,12 +499,19 @@ extends:
                 Copy-Item "$(Build.SourcesDirectory)\android\build-tools\automation\dnceng\arcade" $adapter -Recurse
                 Copy-Item "$(Build.SourcesDirectory)\android\eng\common" "$adapter\eng\common" -Recurse
 
-                $globalJson = Get-Content "$(Build.SourcesDirectory)\android\global.json" -Raw | ConvertFrom-Json -AsHashtable
-                $globalJson["tools"] = [ordered]@{
-                  dotnet = (& dotnet --version)
-                }
-                $globalJson | ConvertTo-Json -Depth 5 | Set-Content "$adapter\global.json"
+                Copy-Item "$(Build.SourcesDirectory)\android\global.json" "$adapter\global.json"
 
+                Set-Location $adapter
+                $sdkDirectory = & dotnetup dotnet -- msbuild "$adapter\Workloads.proj" -nologo -getProperty:MSBuildToolsPath
+                if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+                $dotnetRoot = Split-Path -Parent (Split-Path -Parent $sdkDirectory)
+                $globalJson = Get-Content "$adapter\global.json" -Raw | ConvertFrom-Json -AsHashtable
+                if (-not (Test-Path (Join-Path $dotnetRoot "sdk\$($globalJson.sdk.version)"))) {
+                  throw "The shared dotnet installation does not contain the pinned SDK."
+                }
+
+                Write-Host "##vso[task.setvariable variable=DOTNET_INSTALL_DIR]$dotnetRoot"
+                Write-Host "##vso[task.setvariable variable=DOTNET_ROOT]$dotnetRoot"
                 Write-Host "##vso[task.setvariable variable=ArcadeAdapterRoot]$adapter"
               displayName: Prepare isolated Arcade adapter
 
@@ -537,6 +541,7 @@ extends:
                   -binaryLogName "$(Build.StagingDirectory)\signing-logs\sign-nugets.binlog" `
                   @properties
               displayName: Sign prebuilt NuGet packages with Arcade
+              workingDirectory: $(ArcadeAdapterRoot)
               env:
                 BUILD_REPOSITORY_NAME: dotnet/android
                 BUILD_REPOSITORY_URI: https://github.com/dotnet/android
@@ -571,6 +576,7 @@ extends:
                   -binaryLogName "$(Build.StagingDirectory)\signing-logs\workload-msis.binlog" `
                   @properties
               displayName: Build and sign workload MSIs with Arcade
+              workingDirectory: $(ArcadeAdapterRoot)
               env:
                 BUILD_REPOSITORY_NAME: dotnet/android
                 BUILD_REPOSITORY_URI: https://github.com/dotnet/android
@@ -603,6 +609,7 @@ extends:
                   -binaryLogName "$(Build.StagingDirectory)\signing-logs\sign-msi-nugets.binlog" `
                   @properties
               displayName: Sign workload MSI NuGet packages with Arcade
+              workingDirectory: $(ArcadeAdapterRoot)
               env:
                 BUILD_REPOSITORY_NAME: dotnet/android
                 BUILD_REPOSITORY_URI: https://github.com/dotnet/android
@@ -858,7 +865,7 @@ extends:
           parameters:
             xaSourcePath: $(Build.SourcesDirectory)/android
             androidSdkPlatforms: $(DefaultTestSdkPlatforms)
-            dotnetVersion: $(DotNetSdkVersion)
+            dotnetRuntimeVersion: $(DotNetRuntimeVersion)
             jdkMajorVersion: $(DefaultJavaSdkMajorVersion)
             useAgentJdkPath: true
             use1ESTemplate: true

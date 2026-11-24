@@ -48,8 +48,11 @@ dotnetup sdk install
 
 Use `dotnetup dotnet` to launch the managed installation without changing the
 shell's SDK `PATH` or `DOTNET_ROOT`. CI bootstraps dotnetup using Microsoft's
-official scripts, then installs the pinned SDK and the older tooling SDK needed
-by host-side tests. Only dotnetup is added to the job's `PATH`.
+official scripts, then installs the pinned SDK and the older runtime needed
+by host-side tests. `DotNetRuntimeVersion` pins that runtime, independently of
+`DotNetStableTargetFrameworkVersion`, which selects the host tooling's target
+framework. Older target frameworks do not require older SDKs.
+Only dotnetup is added to the job's `PATH`.
 Local workload resolution uses the running SDK's version rather than the SDK
 dependency's package version, which may differ after dependency updates or SDK
 stabilization.
@@ -62,6 +65,12 @@ The `run-dotnet-preview.yaml` template opts into that behavior with
 independently of the application's `-c` argument.
 The wrappers disable the MSBuild server so workload resolution does not reuse
 manifests cached by a build outside the wrapper.
+
+Internal signing uses the same pinned SDK and an additional .NET 8 runtime for
+SwixBuild. The isolated Arcade adapter copies `global.json` unchanged and points
+Arcade at the shared dotnet installation rather than bootstrapping another SDK.
+Visual Studio's desktop MSBuild runs the SDK-free Swix manifest projects; these
+do not compile managed code or need a separate restore.
 
 Build and packaging commands are documented for [Unix](../Documentation/building/unix/instructions.md)
 and [Windows](../Documentation/building/windows/instructions.md).

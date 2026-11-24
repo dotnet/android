@@ -1,6 +1,6 @@
 parameters:
   xaSourcePath: $(System.DefaultWorkingDirectory)
-  toolingSdkVersion: $(DotNetSdkVersion)
+  toolingRuntimeVersion: $(DotNetRuntimeVersion)
   retryCountOnTaskFailure: 3
 
 steps:
@@ -30,8 +30,8 @@ steps:
     & dotnetup sdk install --no-progress
     if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
     # Older host-side test/tool assemblies still need their runtime.
-    & dotnetup sdk install "${{ parameters.toolingSdkVersion }}" --no-progress
+    & dotnetup runtime install "${{ parameters.toolingRuntimeVersion }}" --no-progress
     if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
     & dotnetup dotnet -- --info
-  displayName: install shared repository and tooling SDKs with dotnetup
+  displayName: install shared repository SDK and tooling runtime with dotnetup
   retryCountOnTaskFailure: ${{ parameters.retryCountOnTaskFailure }}

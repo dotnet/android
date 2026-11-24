@@ -46,7 +46,7 @@ stages:
   dependsOn: ${{ parameters.dependsOn }}
   condition: ${{ parameters.condition }}
   variables:
-    XatBuildProperties: -p:AndroidToolsDisableMultiTargeting=false -p:DotNetTargetFrameworkVersion=$(DotNetSdkChannel)
+    XatBuildProperties: -p:AndroidToolsDisableMultiTargeting=false -p:DotNetTargetFrameworkVersion=$(DotNetStableTargetFrameworkVersion)
   jobs:
 
   # Check - "Xamarin.Android (Android Tools Tests Windows - .NET)"
