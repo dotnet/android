@@ -11,9 +11,9 @@ namespace Microsoft.Android.TrimmingTests.Expectations;
 //   * types: "Namespace.Name", e.g. "Android.Runtime.JavaDictionary`2", with '/' for nested types; *TypeInAssembly also
 //     takes a generic instantiation, e.g. "Android.Runtime.JavaDictionary`2<System.Int32,System.Int64>", which only
 //     NativeAOT can check (By = Tool.NativeAot): ILLink keeps or removes the generic definition;
-//   * methods: "Name(ParameterType,ParameterType)" with parameter types in the same form, generic instances as
-//     "System.Collections.Generic.IList`1<System.Int32>" and generic parameters by name, e.g.
-//     ".ctor(System.IntPtr,Android.Runtime.JniHandleOwnership)";
+//   * methods: "Name(ParameterType,ParameterType)" with parameter types in the same form, generic methods include their
+//     arity (e.g. "Name``1()"), generic instances as "System.Collections.Generic.IList`1<System.Int32>" and generic parameters
+//     by name, e.g. ".ctor(System.IntPtr,Android.Runtime.JniHandleOwnership)";
 //   * fields, properties and events: their name.
 
 /// <summary>The trimming configurations an expectation applies to.</summary>

@@ -271,7 +271,9 @@ sealed class IlcCompiledOutput : ITrimmedOutput
 				break;
 			}
 			var signature = member.DecodeMethodSignature (provider, GenericContext.Empty);
-			methods.Add ($"{declaringType}::{reader.GetString (member.Name)}({string.Join (",", signature.ParameterTypes.Select (p => p.CanonicalName))})");
+			var methodSignature = MethodMetadata.FormatSignature (reader.GetString (member.Name), signature.GenericParameterCount,
+				signature.ParameterTypes.Select (p => p.CanonicalName));
+			methods.Add ($"{declaringType}::{methodSignature}");
 			// A type whose code was compiled survives even without a runtime type (for example a static class).
 			types.Add (declaringType);
 			AddInstantiation (reader, provider, member.Parent);
@@ -309,7 +311,7 @@ sealed class IlcCompiledOutput : ITrimmedOutput
 		if (member is not MethodMetadata method) {
 			throw new NotSupportedException ("only types and methods are visible in ILC's compiled output; use By = Tool.Trimmer.");
 		}
-		return methods.Contains ($"[{method.DeclaringType.AssemblyName}]{method.DeclaringType.FullName}::{method.Name}({string.Join (",", method.Parameters.Select (p => p.CanonicalName))})");
+		return methods.Contains ($"[{method.DeclaringType.AssemblyName}]{method.DeclaringType.FullName}::{method.CanonicalSignature}");
 	}
 }
 
@@ -516,7 +518,11 @@ sealed class MethodMetadata : MemberMetadata
 
 	public ImmutableArray<SignatureType> Parameters { get; }
 	public string [] GenericParameters { get; }
-	public override string Signature => $"{Name}({string.Join (",", Parameters.Select (p => p.FullName))})";
+	public override string Signature => FormatSignature (Name, GenericParameters.Length, Parameters.Select (p => p.FullName));
+	public string CanonicalSignature => FormatSignature (Name, GenericParameters.Length, Parameters.Select (p => p.CanonicalName));
+
+	public static string FormatSignature (string name, int genericParameterCount, IEnumerable<string> parameterTypes)
+		=> $"{name}{(genericParameterCount == 0 ? "" : $"``{genericParameterCount}")}({string.Join (",", parameterTypes)})";
 }
 
 /// <summary>A type in a method signature.</summary>
