@@ -115,7 +115,9 @@ static class JavaMarshalRegisteredPeers
 		replacement = default;
 		if (registered.Target is not IJavaPeerable target)
 			return PeerReconciliationResult.NoMatch;
-		if (!JniEnvironment.Types.IsSameObject (target.PeerReference, value.PeerReference))
+		bool same = JniEnvironment.Types.IsSameObject (target.PeerReference, value.PeerReference);
+		GC.KeepAlive (target);
+		if (!same)
 			return PeerReconciliationResult.NoMatch;
 
 		// JNIEnv.NewObject/JNIEnv.CreateInstance() compatibility.
