@@ -72,6 +72,7 @@ and [exception-handling guide](../../Documentation/project-docs/exception-handli
 ### Memory management
 - **Local references** — cleaned up at JNI frame boundaries, but explicit cleanup prevents local-reference-table exhaustion in loops.
 - **Owned global references** — must be explicitly freed via `JniObjectReference.Dispose (ref reference)`.
+- **Borrowed peer references (`GC.KeepAlive`)** — `JniObjectReference` and `JniArgumentValue` hold raw handles without rooting their `IJavaPeerable` owner. Any method that reads `PeerReference` (or `Handle`) and passes it into JNI must keep the managed owner(s) alive with `GC.KeepAlive` past the JNI call (including `this`, both operands in `Equals`, and `value` in `NewLocalRef ()` wrappers). Read `PeerReference` once into a local before testing `IsValid`. Objects that retain a borrowed `JniObjectReference` across calls (such as `JniArrayElements`) must hold a strong reference to the owning peer until final release.
 - Use `using` for disposable managed peers and `try`/`finally` for JNI reference cleanup.
 
 ### Threading

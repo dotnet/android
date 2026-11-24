@@ -90,6 +90,17 @@ Follow [Unsafe code best practices](https://learn.microsoft.com/dotnet/standard/
 - Under the new rules, caller-unsafe members still need body contexts. Keep `// SAFETY:` proofs adjacent; use multiline `/// <safety>` for caller obligations.
 - Respect producer/consumer language modes, including generated code. Inline expressions need pinned-compiler preview; never enable preview just for syntax. Preserve behavior and lifetimes.
 
+### JNI Peer Lifetimes (`GC.KeepAlive`)
+
+Reading `.Handle`, `.PeerReference`, or constructing `new JValue (peer)` / `new JniArgumentValue (peer)` copies a raw JNI handle without rooting its managed peer. In optimized builds, a peer (including `this`) can be collected immediately after its last managed use — while JNI or a native P/Invoke is still executing. On CoreCLR and NativeAOT, **Java-side reachability does not protect an already-copied handle**: `JavaMarshalGCBridge` deletes and replaces the global reference of any managed-unreachable peer (even an immortal `java.lang.Class`), causing ART CheckJNI `use of deleted global reference` aborts.
+
+- **Prefer owner-retaining APIs:** Use `JniPeerMembers.InstanceMethods.Invoke*` / `JniInstanceFields.*` (which retain `self`) and `JNIEnv.ToLocalJniHandle` / `JavaConvert.WithLocalJniHandle` rather than raw `JNIEnv.Call*Method (Handle, ...)` or `JNIEnv.FinishCreateInstance (Handle, ...)`.
+- **Keep every borrowed owner alive after the native call:** Call `GC.KeepAlive (owner)` after the JNI/P/Invoke call for `this` and every peer argument whose raw handle was extracted (including both operands in `Equals` and peer owners across `NewLocalRef ()`). Read `PeerReference` once into a local before checking `.IsValid` and calling `.NewLocalRef ()`.
+- **Placement:** Straight-line `GC.KeepAlive (owner)` after the call is sufficient when there is no exception-path cleanup; put it in `finally` when a `try`/`finally` block already exists or when loops/multiple exits require it.
+- **Common traps:** `JavaConvert.WithLocalJniHandle (arg, lref => ... Handle ...)` keeps `arg` alive, **not** `this`; `fixed (T* p = array)` pins the managed array, **not** `this`; `ConditionalWeakTable` proxies must keep the proxy itself alive; never store a new peer only in a `WeakReference` before registering it in Java; never chain temporary `.Class.Handle` in tests (use `using var klass = peer.Class;`).
+- **Multi-call native acquisitions:** Objects that hold a native buffer or borrowed `JniObjectReference` across calls (such as `JniArrayElements`) must retain a strong reference to the owning peer until final release.
+- **Not needed for:** Locally owned references deleted in `finally` (`NewString`, `NewArray`, `ToLocalJniHandle`), `this` inside `JniPeerMembers.InstanceMethods.Invoke*` / `JniInstanceFields.*`, non-finalizable `JniType` / static `class_ref` handles, or peers already covered by `using` / `lock` across the entire native call.
+
 ## Nullable Reference Types
 
 When opting C# code into nullable reference types:
