@@ -9,7 +9,8 @@ using Microsoft.Build.Utilities;
 using Microsoft.Android.Build.Tasks;
 
 namespace Xamarin.Android.Tasks {
-	public class AppendCustomMetadataToItemGroup : AndroidTask {
+	[MSBuildMultiThreadableTask]
+	public class AppendCustomMetadataToItemGroup : MultithreadedAndroidTask {
 		public override string TaskPrefix => "ACM";
 
 		[Required]
