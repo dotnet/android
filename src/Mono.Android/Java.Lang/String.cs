@@ -43,7 +43,8 @@ namespace Java.Lang {
 
 		public override string ToString ()
 		{
-			// SAFETY: this String peer supplies the live CharSequence reference during ToString, retained by GC.KeepAlive (this); the JNI result is marshaled synchronously.
+			// SAFETY: this String peer supplies the live CharSequence reference during ToString,
+			// retained by GC.KeepAlive (this); the JNI result is marshaled synchronously.
 			string result = unsafe (JNIEnv.GetCharSequence (Handle, JniHandleOwnership.DoNotTransfer)!);
 			GC.KeepAlive (this);
 			return result;

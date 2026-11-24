@@ -18,14 +18,13 @@ namespace Android.App {
 		public long[] Vibrate {
 			get {
 				unsafe {
-					// SAFETY: vibrate is the long-array instance field; GC.KeepAlive (this) retains the peer across field access and the returned local reference transfers to GetArray.
+					// SAFETY: vibrate is the long-array instance field; GC.KeepAlive (this) retains
+					// the peer across field access and the returned local reference transfers to GetArray.
 					if (vibrate_jfieldId == IntPtr.Zero)
 						vibrate_jfieldId = JNIEnv.GetFieldID (_members.GetPeerTypeHandle (), "vibrate", "[J");
-					try {
-						return (long[]) JNIEnv.GetArray (JNIEnv.GetObjectField (Handle, vibrate_jfieldId), JniHandleOwnership.TransferLocalRef, typeof (long))!;
-					} finally {
-						GC.KeepAlive (this);
-					}
+					IntPtr lref = JNIEnv.GetObjectField (Handle, vibrate_jfieldId);
+					GC.KeepAlive (this);
+					return (long[]) JNIEnv.GetArray (lref, JniHandleOwnership.TransferLocalRef, typeof (long))!;
 				}
 			}
 			set {

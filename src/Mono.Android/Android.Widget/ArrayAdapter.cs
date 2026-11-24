@@ -204,7 +204,8 @@ namespace Android.Widget {
 		public void Add (T @object)
 		{
 			unsafe {
-				// SAFETY: ArrayAdapter.add.(Ljava/lang/Object;)V matches this peer's JNI ABI. GC.KeepAlive retains this peer and WithLocalJniHandle retains borrowed arguments.
+				// SAFETY: ArrayAdapter.add.(Ljava/lang/Object;)V matches this peer's JNI ABI.
+				// GC.KeepAlive retains this peer and WithLocalJniHandle retains borrowed arguments.
 				if (id_add_Ljava_lang_Object_ == IntPtr.Zero)
 					id_add_Ljava_lang_Object_ = JNIEnv.GetMethodID (GetPeerMembers (null).GetPeerTypeHandle (), "add", "(Ljava/lang/Object;)V");
 				JavaConvert.WithLocalJniHandle (@object, lref => {
@@ -236,7 +237,8 @@ namespace Android.Widget {
 		public new T? GetItem (int position)
 		{
 			unsafe {
-				// SAFETY: ArrayAdapter.getItem.(I)Ljava/lang/Object; matches this peer's JNI ABI. GC.KeepAlive retains this peer and result locals transfer to conversion.
+				// SAFETY: ArrayAdapter.getItem.(I)Ljava/lang/Object; matches this peer's JNI ABI.
+				// GC.KeepAlive retains this peer and result locals transfer to conversion.
 				if (id_getItem_I == IntPtr.Zero)
 					id_getItem_I = JNIEnv.GetMethodID (GetPeerMembers (null).GetPeerTypeHandle (), "getItem", "(I)Ljava/lang/Object;");
 				IntPtr lref = JNIEnv.CallNonvirtualObjectMethod (Handle, GetPeerMembers (null).GetPeerTypeHandle (), id_getItem_I, new JValue (position));
@@ -250,7 +252,8 @@ namespace Android.Widget {
 		public int GetPosition (T item)
 		{
 			unsafe {
-				// SAFETY: ArrayAdapter.getPosition.(Ljava/lang/Object;)I matches this peer's JNI ABI. GC.KeepAlive retains this peer and WithLocalJniHandle retains borrowed arguments.
+				// SAFETY: ArrayAdapter.getPosition.(Ljava/lang/Object;)I matches this peer's JNI ABI.
+				// GC.KeepAlive retains this peer and WithLocalJniHandle retains borrowed arguments.
 				if (id_getPosition_Ljava_lang_Object_ == IntPtr.Zero)
 					id_getPosition_Ljava_lang_Object_ = JNIEnv.GetMethodID (GetPeerMembers (null).GetPeerTypeHandle (), "getPosition", "(Ljava/lang/Object;)I");
 				int result = JavaConvert.WithLocalJniHandle (item,
@@ -265,7 +268,8 @@ namespace Android.Widget {
 		public void Insert (T @object, int index)
 		{
 			unsafe {
-				// SAFETY: ArrayAdapter.insert.(Ljava/lang/Object;I)V matches this peer's JNI ABI. GC.KeepAlive retains this peer and WithLocalJniHandle retains borrowed arguments.
+				// SAFETY: ArrayAdapter.insert.(Ljava/lang/Object;I)V matches this peer's JNI ABI.
+				// GC.KeepAlive retains this peer and WithLocalJniHandle retains borrowed arguments.
 				if (id_insert_Ljava_lang_Object_I == IntPtr.Zero)
 					id_insert_Ljava_lang_Object_I = JNIEnv.GetMethodID (GetPeerMembers (null).GetPeerTypeHandle (), "insert", "(Ljava/lang/Object;I)V");
 				JavaConvert.WithLocalJniHandle (@object, lref => {
@@ -281,7 +285,8 @@ namespace Android.Widget {
 		public void Remove (T @object)
 		{
 			unsafe {
-				// SAFETY: ArrayAdapter.remove.(Ljava/lang/Object;)V matches this peer's JNI ABI. GC.KeepAlive retains this peer and WithLocalJniHandle retains borrowed arguments.
+				// SAFETY: ArrayAdapter.remove.(Ljava/lang/Object;)V matches this peer's JNI ABI.
+				// GC.KeepAlive retains this peer and WithLocalJniHandle retains borrowed arguments.
 				if (id_remove_Ljava_lang_Object_ == IntPtr.Zero)
 					id_remove_Ljava_lang_Object_ = JNIEnv.GetMethodID (GetPeerMembers (null).GetPeerTypeHandle (), "remove", "(Ljava/lang/Object;)V");
 				JavaConvert.WithLocalJniHandle (@object, lref => {

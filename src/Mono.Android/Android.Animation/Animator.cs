@@ -66,8 +66,10 @@ namespace Android.Animation {
 					JniHandleOwnership.TransferLocalRef)
 		{
 			unsafe {
-				// SAFETY: this peer owns the allocated handle; ()V supplies the zero-argument instance-constructor ABI.
+				// SAFETY: this peer owns the allocated handle, retained by GC.KeepAlive (this) across FinishCreateInstance;
+				// ()V supplies the zero-argument instance-constructor ABI.
 				JNIEnv.FinishCreateInstance (Handle, "()V"u8);
+				GC.KeepAlive (this);
 			}
 		}
 
