@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using Android.Runtime;
 using Java.Interop;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -155,7 +156,7 @@ namespace Java.InteropTests
 				collection.Add ("foo");
 
 			Assert.IsTrue (list.RemoveAll (collection));
-			CollectionAssert.AreEqual (new [] { "bar", "baz" }, list);
+			Assert.AreSequenceEqual (new [] { "bar", "baz" }, list.Cast<object> ().Select (value => value?.ToString ()));
 			Assert.AreEqual (removalCount, collection.Count);
 			Assert.IsFalse (list.RemoveAll (collection));
 		}
@@ -167,7 +168,7 @@ namespace Java.InteropTests
 			using var collection = new JavaList (new [] { "bar" });
 
 			Assert.IsFalse (list.RemoveAll (collection));
-			CollectionAssert.AreEqual (new [] { "foo" }, list);
+			Assert.AreSequenceEqual (new [] { "foo" }, list.Cast<object> ().Select (value => value?.ToString ()));
 		}
 
 		[TestMethod]
@@ -244,7 +245,7 @@ namespace Java.InteropTests
 
 			list.Add ("foo");
 			Assert.IsFalse (list.RemoveAll (collection));
-			CollectionAssert.AreEqual (new [] { "foo" }, list);
+			Assert.AreSequenceEqual (new [] { "foo" }, list.Cast<object> ().Select (value => value?.ToString ()));
 
 			list.Clear ();
 			collection.Add ("foo");
@@ -262,7 +263,7 @@ namespace Java.InteropTests
 			collection.Add ((object) null);
 
 			Assert.IsTrue (list.RemoveAll (collection));
-			CollectionAssert.AreEqual (new [] { "foo" }, list);
+			Assert.AreSequenceEqual (new [] { "foo" }, list.Cast<object> ().Select (value => value?.ToString ()));
 			Assert.IsFalse (list.RemoveAll (collection));
 		}
 
@@ -307,7 +308,7 @@ namespace Java.InteropTests
 			Assert.AreEqual (allowRemoval, destination.RemoveAll (collection));
 			Assert.AreEqual (3, collection.ContainsCalls);
 			Assert.AreEqual (2, destination.RemoveCalls);
-			CollectionAssert.AreEqual (allowRemoval ? new [] { "bar" } : new [] { "foo", "foo", "bar" }, destination);
+			Assert.AreSequenceEqual (allowRemoval ? new [] { "bar" } : new [] { "foo", "foo", "bar" }, destination.Cast<object> ().Select (value => value?.ToString ()));
 		}
 
 		[TestMethod]

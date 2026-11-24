@@ -151,7 +151,7 @@ namespace Java.InteropTests
 			try {
 				var arrayName = JNIEnv.GetClassNameFromInstance (input);
 				Assert.IsNotNull (arrayName);
-				StringAssert.EndsWith (arrayName, "/TrimmableExportUserPeer;");
+				Assert.EndsWith ("/TrimmableExportUserPeer;", arrayName);
 
 				var method = GetRequiredMethodID (peer.Class.Handle, "echoUserPeers", $"({arrayName}){arrayName}");
 				var output = JNIEnv.CallObjectMethod (peer.Handle, method, new JValue (input));

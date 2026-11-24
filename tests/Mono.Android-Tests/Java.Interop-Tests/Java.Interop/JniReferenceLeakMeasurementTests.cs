@@ -192,7 +192,7 @@ public class JniReferenceLeakMeasurementTests
 				}, worker.ObserveCompletion, () => {}, TimeSpan.Zero, worker.MarkTimedOut));
 			Assert.AreEqual ("Late collection failure.", error?.Message);
 			var reuse = Assert.ThrowsExactly<InvalidOperationException> (worker.EnsureAvailable);
-			StringAssert.Contains (reuse?.Message, "previously timed out");
+			Assert.Contains ("previously timed out", reuse?.Message);
 		} finally {
 			release.Set ();
 			Assert.IsTrue (SpinWait.SpinUntil (() => worker.IsCompleted, TimeSpan.FromSeconds (5)));
@@ -222,7 +222,7 @@ public class JniReferenceLeakMeasurementTests
 			() => {}, () => {}, TimeSpan.Zero));
 
 		Assert.IsNotNull (error);
-		StringAssert.Contains (error?.Message, "InitialGeneration=7");
-		StringAssert.Contains (error?.Message, $"Weak={weak}");
+		Assert.Contains ("InitialGeneration=7", error?.Message);
+		Assert.Contains ($"Weak={weak}", error?.Message);
 	}
 }

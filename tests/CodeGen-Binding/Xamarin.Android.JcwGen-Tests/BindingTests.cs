@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using System.Reflection;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
@@ -265,7 +266,7 @@ namespace Xamarin.Android.JcwGenTests {
 					getterNames.Add (metadata.GetString (member.Name));
 			}
 
-			CollectionAssert.IsSubsetOf (new [] { "get_ThresholdType", "get_ThresholdClass" }, getterNames.ToArray ());
+			Assert.ContainsAll ((IEnumerable) new [] { "get_ThresholdType", "get_ThresholdClass" }, getterNames.ToArray ());
 			const BindingFlags declaredInstanceGetters = BindingFlags.DeclaredOnly | BindingFlags.Instance | BindingFlags.NonPublic;
 			Assert.IsNull (typeof (global::Android.App.Activity).GetMethod ("get_ThresholdType", declaredInstanceGetters));
 			Assert.IsNull (typeof (global::Android.App.Activity).GetMethod ("get_ThresholdClass", declaredInstanceGetters));

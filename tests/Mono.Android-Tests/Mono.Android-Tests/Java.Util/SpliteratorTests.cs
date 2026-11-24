@@ -42,7 +42,7 @@ public class SpliteratorTests
 			}
 			Assert.AreEqual (localReferences, Java.Interop.Runtime.LocalReferenceCount,
 				"TryAdvance must release its temporary Consumer local reference.");
-			CollectionAssert.AreEqual (new [] { "first", "second" }, consumer.Values);
+			Assert.AreSequenceEqual (new [] { "first", "second" }, consumer.Values);
 			Assert.ThrowsExactly<Java.Lang.NullPointerException> (() => iterator.TryAdvance (null));
 		}
 	}

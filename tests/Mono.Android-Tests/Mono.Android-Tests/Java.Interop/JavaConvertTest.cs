@@ -161,7 +161,7 @@ namespace Java.InteropTests
 				var reference = values.PeerReference;
 				var converted = JniEnvironment.Runtime.ValueManager.GetValue<IList<bool>> (ref reference, JniObjectReferenceOptions.Copy);
 
-				CollectionAssert.AreEqual (new [] { true, false }, converted.ToArray ());
+				Assert.AreSequenceEqual (new [] { true, false }, converted.ToArray ());
 			}
 		}
 
@@ -194,7 +194,7 @@ namespace Java.InteropTests
 			var reference = new JniObjectReference (JNIEnv.NewArray (new [] { true, false }), JniObjectReferenceType.Local);
 			var converted = JniEnvironment.Runtime.ValueManager.GetValue<IList<bool>> (ref reference, JniObjectReferenceOptions.CopyAndDispose);
 
-			CollectionAssert.AreEqual (new [] { true, false }, converted.ToArray ());
+			Assert.AreSequenceEqual (new [] { true, false }, converted.ToArray ());
 		}
 
 		[TestMethod]
@@ -588,7 +588,7 @@ namespace Java.InteropTests
 				try {
 					var convertedType = converted.GetType ();
 					Assert.AreEqual (typeof (JavaDictionary<,>), convertedType.GetGenericTypeDefinition ());
-					CollectionAssert.AreEqual (new [] { typeof (int?), typeof (string) }, convertedType.GetGenericArguments ());
+					Assert.AreSequenceEqual (new [] { typeof (int?), typeof (string) }, convertedType.GetGenericArguments ());
 
 					var dictionary = (IDictionary<int?, string>) converted;
 					Assert.AreEqual ("one", dictionary [1]);
@@ -698,7 +698,7 @@ namespace Java.InteropTests
 				try {
 					var convertedType = converted.GetType ();
 					Assert.AreEqual (expectedWrapperDefinition, convertedType.GetGenericTypeDefinition ());
-					CollectionAssert.AreEqual (targetType.GetGenericArguments (), convertedType.GetGenericArguments ());
+					Assert.AreSequenceEqual (targetType.GetGenericArguments (), convertedType.GetGenericArguments ());
 					Assert.IsTrue (targetType.IsInstanceOfType (converted));
 				} finally {
 					(converted as IDisposable)?.Dispose ();

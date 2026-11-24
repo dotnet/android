@@ -28,7 +28,7 @@ namespace Java.InteropTests
 			var exception = Assert.ThrowsExactly<TargetInvocationException> (() => connector.Invoke (null, null));
 
 			Assert.IsInstanceOfType<NotSupportedException> (exception?.InnerException);
-			StringAssert.Contains (exception?.InnerException?.Message, "Trimmable typemaps");
+			Assert.Contains ("Trimmable typemaps", exception?.InnerException?.Message);
 		}
 
 		[TestMethod]
@@ -169,8 +169,8 @@ namespace Java.InteropTests
 				targetTypes.Add (targetType);
 			}
 			Assert.IsNotEmpty (targetTypes, "The java/util/ArrayList alias group was not generated.");
-			CollectionAssert.Contains (targetTypes, typeof (JavaList));
-			CollectionAssert.Contains (targetTypes, typeof (JavaList<>));
+			Assert.Contains (typeof (JavaList), targetTypes);
+			Assert.Contains (typeof (JavaList<>), targetTypes);
 			Assert.IsTrue (TrimmableTypeMap.Instance.TryGetTargetType ("java/util/ArrayList", out var firstTargetType));
 			Assert.AreEqual (targetTypes [0], firstTargetType);
 

@@ -105,7 +105,7 @@ namespace Java.InteropTests
 			var values = new byte? [] { 1, null, 127, 128, 200, 255 };
 			using (var array = new JavaObjectArray<byte?> (values)) {
 				Assert.AreEqual ("[Ljava/lang/Byte;", array.GetJniTypeName ());
-				CollectionAssert.AreEqual (values, array.ToArray ());
+				Assert.AreSequenceEqual (values, array.ToArray ());
 			}
 		}
 	}

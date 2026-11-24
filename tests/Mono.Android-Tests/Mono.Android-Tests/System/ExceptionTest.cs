@@ -209,8 +209,8 @@ namespace Xamarin.Android.RuntimeTests {
 				if (frames == null)
 					throw new AssertFailedException ("The proxy stack trace is missing.");
 				Assert.IsTrue (frames.Length > 0);
-				StringAssert.Contains (frames [0].MethodName, nameof (CreateThrownException));
-				StringAssert.Contains (frames [0].ClassName, nameof (ExceptionTest));
+				Assert.Contains (nameof (CreateThrownException), frames [0].MethodName);
+				Assert.Contains (nameof (ExceptionTest), frames [0].ClassName);
 			} finally {
 				if (frames != null) {
 					foreach (var frame in frames)

@@ -55,7 +55,7 @@ namespace Java.InteropTests
 				Assert.IsTrue (JniEnvironment.Types.IsSameObject (reference, instance.PeerReference));
 				Assert.AreEqual (JniObjectReferenceType.Global, instance.PeerReference.Type);
 				Assert.IsNotEmpty (instance.StackAtConstruction, "The base constructor must capture the preinstalled peer's stack.");
-				StringAssert.Contains (instance.JavaStackTrace, ConstructorActivationJavaException.JavaName.Replace ('/', '.'));
+				Assert.Contains (ConstructorActivationJavaException.JavaName.Replace ('/', '.'), instance.JavaStackTrace);
 				Assert.AreEqual (instance.StackAtConstruction, instance.JavaStackTrace);
 			} finally {
 				JNIEnv.DeleteLocalRef (handle);
@@ -453,7 +453,7 @@ namespace Java.InteropTests
 					"([I)V",
 					JNIEnv.NewArray (new [] { 1, 2, 3, 5 }))) {
 				Assert.AreEqual (1, ConstructorActivationMarshalObject.ConstructorInvocations);
-				CollectionAssert.AreEqual (new [] { 1, 2, 3, 5 }, instance.IntArrayValue);
+				Assert.AreSequenceEqual (new [] { 1, 2, 3, 5 }, instance.IntArrayValue);
 			}
 		}
 
@@ -497,7 +497,7 @@ namespace Java.InteropTests
 							new JValue (array))) {
 						Assert.AreEqual (1, ConstructorActivationMarshalObject.ConstructorInvocations);
 						Assert.AreEqual ("string-array", instance.StringArrayLabel);
-						CollectionAssert.AreEqual (new [] { 8, 13, 21 }, instance.StringArrayValues);
+						Assert.AreSequenceEqual (new [] { 8, 13, 21 }, instance.StringArrayValues);
 					}
 				} finally {
 					JNIEnv.DeleteLocalRef (array);
@@ -514,7 +514,7 @@ namespace Java.InteropTests
 					"([Z)V",
 					JNIEnv.NewArray (new [] { true, false, true }))) {
 				Assert.AreEqual (1, ConstructorActivationMarshalObject.ConstructorInvocations);
-				CollectionAssert.AreEqual (new [] { true, false, true }, instance.BooleanArrayValue);
+				Assert.AreSequenceEqual (new [] { true, false, true }, instance.BooleanArrayValue);
 			}
 		}
 
@@ -527,7 +527,7 @@ namespace Java.InteropTests
 					"([B)V",
 					JNIEnv.NewArray (new byte [] { 1, 127, 255 }))) {
 				Assert.AreEqual (1, ConstructorActivationMarshalObject.ConstructorInvocations);
-				CollectionAssert.AreEqual (new byte [] { 1, 127, 255 }, instance.ByteArrayValue);
+				Assert.AreSequenceEqual (new byte [] { 1, 127, 255 }, instance.ByteArrayValue);
 			}
 		}
 
@@ -540,7 +540,7 @@ namespace Java.InteropTests
 					"([Ljava/lang/String;)V",
 					JNIEnv.NewArray (new [] { "red", "green", "blue" }))) {
 				Assert.AreEqual (1, ConstructorActivationMarshalObject.ConstructorInvocations);
-				CollectionAssert.AreEqual (new [] { "red", "green", "blue" }, instance.StringArrayValue);
+				Assert.AreSequenceEqual (new [] { "red", "green", "blue" }, instance.StringArrayValue);
 			}
 		}
 
@@ -553,7 +553,7 @@ namespace Java.InteropTests
 					"([Ljava/lang/String;)V",
 					JNIEnv.NewArray (new [] { "red", null, "blue" }))) {
 				Assert.AreEqual (1, ConstructorActivationMarshalObject.ConstructorInvocations);
-				CollectionAssert.AreEqual (new [] { "red", null, "blue" }, instance.StringArrayValue);
+				Assert.AreSequenceEqual (new [] { "red", null, "blue" }, instance.StringArrayValue);
 			}
 		}
 
@@ -609,8 +609,8 @@ namespace Java.InteropTests
 					}))) {
 				Assert.AreEqual (1, ConstructorActivationMarshalObject.ConstructorInvocations);
 				Assert.IsNotNull (instance.NestedIntArrayValue);
-				CollectionAssert.AreEqual (new [] { 1, 2 }, instance.NestedIntArrayValue [0]);
-				CollectionAssert.AreEqual (new [] { 3, 4, 5 }, instance.NestedIntArrayValue [1]);
+				Assert.AreSequenceEqual (new [] { 1, 2 }, instance.NestedIntArrayValue [0]);
+				Assert.AreSequenceEqual (new [] { 3, 4, 5 }, instance.NestedIntArrayValue [1]);
 			}
 		}
 

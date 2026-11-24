@@ -195,7 +195,7 @@ namespace Xamarin.Android.NetTests
 				Assert.AreEqual (8, stream.FirstWriteLength, "The first destination write should use the requested copy buffer size.");
 				Assert.AreEqual (8, stream.Position, "The controlled stream should advance only by the bytes written before its gate.");
 				Assert.AreEqual (1, firstDestination.FlushCount, "The first destination write should be flushed before the progress gate is signaled.");
-				CollectionAssert.AreEqual (new byte [] { 0, 1, 2, 3, 4, 5, 6, 7 }, firstDestination.ToArray (),
+				Assert.AreSequenceEqual (new byte [] { 0, 1, 2, 3, 4, 5, 6, 7 }, firstDestination.ToArray (),
 					"The flushed destination should expose the complete first write.");
 
 				cancellationTokenSource.Cancel ();
@@ -210,7 +210,7 @@ namespace Xamarin.Android.NetTests
 				await stream.CopyToAsync (retryDestination, 8, CancellationToken.None).ConfigureAwait (false);
 
 				Assert.AreEqual (2, stream.CopyCount, "The retry should perform a second content copy.");
-				CollectionAssert.AreEqual (content, retryDestination.ToArray (), "The ungated retry should copy the complete stream.");
+				Assert.AreSequenceEqual (content, retryDestination.ToArray (), "The ungated retry should copy the complete stream.");
 			} finally {
 				cancellationTokenSource.Cancel ();
 				stream.ReleaseFirstCopy ();
@@ -263,7 +263,7 @@ namespace Xamarin.Android.NetTests
 					Assert.IsGreaterThan (0, bytesRead, "The partial request ended before the body prefix was received.");
 					totalBytesRead += bytesRead;
 				}
-				CollectionAssert.AreEqual (bodyPrefix, receivedPrefix, "The listener received an unexpected request body prefix.");
+				Assert.AreSequenceEqual (bodyPrefix, receivedPrefix, "The listener received an unexpected request body prefix.");
 
 				var pendingReadBuffer = new byte [1];
 				pendingReadTask = context.Request.InputStream.ReadAsync (pendingReadBuffer, 0, pendingReadBuffer.Length);

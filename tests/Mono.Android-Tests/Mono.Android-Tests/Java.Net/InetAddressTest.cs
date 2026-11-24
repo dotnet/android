@@ -13,7 +13,7 @@ namespace Java.NetTests {
 			using var address = Java.Net.InetAddress.GetByAddress (expected);
 
 			Assert.IsInstanceOfType<Java.Net.Inet4Address> (address);
-			CollectionAssert.AreEqual (expected, address.GetAddress ());
+			Assert.AreSequenceEqual (expected, address.GetAddress ());
 		}
 	}
 }
