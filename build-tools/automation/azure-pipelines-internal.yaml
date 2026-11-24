@@ -387,7 +387,7 @@ extends:
               parameters:
                 xaSourcePath: $(Build.SourcesDirectory)/android
 
-            - pwsh: dotnetup runtime install 8.0 --no-progress
+            - pwsh: dotnetup runtime install 8.0 --no-progress --interactive false
               displayName: Install .NET 8 runtime for SwixBuild
               workingDirectory: $(Build.SourcesDirectory)/android
 
