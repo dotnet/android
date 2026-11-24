@@ -121,7 +121,6 @@ namespace Java.Interop {
 				return null;
 			// JniEnvironment.Errors.ExceptionDescribe ();
 			JniEnvironment.Exceptions.ExceptionClear ();
-			JniEnvironment.LogCreateLocalRef (e);
 			return Runtime.GetExceptionForThrowable (ref e, JniObjectReferenceOptions.CopyAndDispose);
 		}
 
