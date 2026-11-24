@@ -94,7 +94,6 @@ namespace Java.InteropTests {
 						GC.KeepAlive (callback);
 					}
 				}
-				#endif
 			}
 		}
 
@@ -119,6 +118,7 @@ namespace Java.InteropTests {
 				Assert.AreEqual (57, InvokeAdd (type));
 			}
 		}
+		#endif
 
 		[TestMethod]
 		[RequiresDynamicCode ("Tests delegate-based native registration.")]
