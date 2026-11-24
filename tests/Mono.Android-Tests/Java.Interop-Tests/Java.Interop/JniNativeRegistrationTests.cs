@@ -133,8 +133,6 @@ namespace Java.InteropTests {
 				Assert.AreEqual (67, InvokeAdd (type));
 			}
 		}
-		#endif
-
 		[TestMethod]
 		[RequiresDynamicCode ("Tests delegate-based native registration.")]
 		public void DisposingAfterPreparationFailurePreservesOtherOwner ()
@@ -150,6 +148,7 @@ namespace Java.InteropTests {
 				Assert.AreEqual (67, InvokeAdd (owner));
 			}
 		}
+		#endif
 
 		[TestMethod]
 		[RequiresDynamicCode ("Tests delegate-based native registration.")]
