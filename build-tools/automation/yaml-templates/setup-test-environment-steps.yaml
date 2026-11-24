@@ -6,7 +6,7 @@ parameters:
   xaSourcePath: $(System.DefaultWorkingDirectory)
   jdkMajorVersion: $(DefaultJavaSdkMajorVersion)
   useAgentJdkPath: true
-  dotnetVersion: $(DotNetSdkVersion)
+  dotnetRuntimeVersion: $(DotNetRuntimeVersion)
   installApkDiff: true
   androidSdkPlatforms: $(DefaultTestSdkPlatforms)
   use1ESTemplate: true
@@ -21,7 +21,7 @@ steps:
 - template: /build-tools/automation/yaml-templates/install-repository-sdk.yaml
   parameters:
     xaSourcePath: ${{ parameters.xaSourcePath }}
-    toolingSdkVersion: ${{ parameters.dotnetVersion }}
+    toolingRuntimeVersion: ${{ parameters.dotnetRuntimeVersion }}
 
 - pwsh: dotnetup dotnet build-server shutdown
   displayName: shut down existing build daemons
