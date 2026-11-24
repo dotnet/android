@@ -58,7 +58,8 @@ namespace Java.Lang {
 				return;
 
 			unsafe {
-				// SAFETY: StartCreateInstance supplies this peer's owned handle; FinishCreateInstance invokes the ()V constructor with the matching arguments before this constructor returns.
+				// SAFETY: AllocObject supplies this peer's owned handle; FinishCreateInstance invokes
+				// the ()V constructor while GC.KeepAlive retains this.
 				SetHandle (
 						JNIEnv.AllocObject (GetType ()),
 						JniHandleOwnership.TransferLocalRef);

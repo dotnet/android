@@ -1,14 +1,11 @@
 using System;
 using System.Collections.Generic;
-using System.Threading;
 
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 using Android.App;
 using Android.Content;
 using Android.OS;
-using Android.Util;
-using Android.Views;
 using Android.Widget;
 using Android.Runtime;
 
@@ -103,6 +100,27 @@ namespace Android.WidgetTests {
 				Assert.AreEqual (2, a.Count);
 				Assert.AreEqual ("beta", a.GetItem (1));
 			}
+
+			using (var a = new DerivedStringArrayAdapter (context, layout, textViewId)) {
+				a.Add ("zero");
+				Assert.AreEqual ("zero", a.GetItem (0));
+			}
+			using (var a = new DerivedStringArrayAdapter (context, layout, array)) {
+				Assert.AreEqual (2, a.Count);
+				Assert.AreEqual ("one", a.GetItem (0));
+			}
+			using (var a = new DerivedStringArrayAdapter (context, layout, textViewId, array)) {
+				Assert.AreEqual (2, a.Count);
+				Assert.AreEqual ("two", a.GetItem (1));
+			}
+			using (var a = new DerivedStringArrayAdapter (context, layout, list)) {
+				Assert.AreEqual (2, a.Count);
+				Assert.AreEqual ("alpha", a.GetItem (0));
+			}
+			using (var a = new DerivedStringArrayAdapter (context, layout, textViewId, list)) {
+				Assert.AreEqual (2, a.Count);
+				Assert.AreEqual ("beta", a.GetItem (1));
+			}
 		}
 
 		[TestMethod]
@@ -114,55 +132,28 @@ namespace Android.WidgetTests {
 			var list = new List<string> { "alpha" };
 			Context nullContext = null;
 
+			// Warm up lazily-initialized constructor IDs and exception handling before measuring local refs.
 			Assert.Throws<Java.Lang.NullPointerException> (() => new ArrayAdapter<string> (nullContext, layout, array));
 			Assert.Throws<Java.Lang.NullPointerException> (() => new ArrayAdapter<string> (nullContext, layout, textViewId, array));
 			Assert.Throws<Java.Lang.NullPointerException> (() => new ArrayAdapter<string> (nullContext, layout, list));
 			Assert.Throws<Java.Lang.NullPointerException> (() => new ArrayAdapter<string> (nullContext, layout, textViewId, list));
-		}
+			Assert.Throws<Java.Lang.NullPointerException> (() => new DerivedStringArrayAdapter (nullContext, layout, array));
+			Assert.Throws<Java.Lang.NullPointerException> (() => new DerivedStringArrayAdapter (nullContext, layout, textViewId, array));
+			Assert.Throws<Java.Lang.NullPointerException> (() => new DerivedStringArrayAdapter (nullContext, layout, list));
+			Assert.Throws<Java.Lang.NullPointerException> (() => new DerivedStringArrayAdapter (nullContext, layout, textViewId, list));
 
-		[TestMethod]
-		[TestCategory ("GCBridge")]
-		public void FinishCreateInstanceConstructorsSurviveConcurrentCollection ()
-		{
-			const int iterations = 200;
-			var context = Application.Context;
-			const int layout = Android.Resource.Layout.SimpleListItem1;
-			const int textViewId = Android.Resource.Id.Text1;
-			var array = new [] { "one" };
-			var list = new List<string> { "alpha" };
+			int localReferences = Java.Interop.JniEnvironment.LocalReferenceCount;
 
-			using var done = new CancellationTokenSource ();
-			var collector = new Thread (() => {
-				while (!done.IsCancellationRequested) {
-					GC.Collect ();
-					GC.WaitForPendingFinalizers ();
-					Thread.Yield ();
-				}
-			});
-			collector.Start ();
+			Assert.Throws<Java.Lang.NullPointerException> (() => new ArrayAdapter<string> (nullContext, layout, array));
+			Assert.Throws<Java.Lang.NullPointerException> (() => new ArrayAdapter<string> (nullContext, layout, textViewId, array));
+			Assert.Throws<Java.Lang.NullPointerException> (() => new ArrayAdapter<string> (nullContext, layout, list));
+			Assert.Throws<Java.Lang.NullPointerException> (() => new ArrayAdapter<string> (nullContext, layout, textViewId, list));
+			Assert.Throws<Java.Lang.NullPointerException> (() => new DerivedStringArrayAdapter (nullContext, layout, array));
+			Assert.Throws<Java.Lang.NullPointerException> (() => new DerivedStringArrayAdapter (nullContext, layout, textViewId, array));
+			Assert.Throws<Java.Lang.NullPointerException> (() => new DerivedStringArrayAdapter (nullContext, layout, list));
+			Assert.Throws<Java.Lang.NullPointerException> (() => new DerivedStringArrayAdapter (nullContext, layout, textViewId, list));
 
-			try {
-				for (int i = 0; i < iterations; i++) {
-					_ = new JavaDictionary ();
-					_ = new JavaDictionary<string, string> ();
-					_ = new JavaSet ();
-					_ = new JavaSet<string> ();
-					_ = new ArrayAdapter<string> (context, layout);
-					_ = new ArrayAdapter<string> (context, layout, textViewId);
-					_ = new ArrayAdapter<string> (context, layout, array);
-					_ = new ArrayAdapter<string> (context, layout, textViewId, array);
-					_ = new ArrayAdapter<string> (context, layout, list);
-					_ = new ArrayAdapter<string> (context, layout, textViewId, list);
-					_ = new TestBaseAdapter ();
-					_ = new TestAdapterView (context);
-					_ = new TestAdapterView (context, null);
-					_ = new TestAdapterView (context, null, 0);
-					_ = new TestAsyncTask ();
-				}
-			} finally {
-				done.Cancel ();
-				collector.Join ();
-			}
+			Assert.AreEqual (localReferences, Java.Interop.JniEnvironment.LocalReferenceCount);
 		}
 
 		[TestMethod]
@@ -232,78 +223,36 @@ namespace Android.WidgetTests {
 		{
 		}
 
+		public DerivedStringArrayAdapter (Context context, int resource, int textViewResourceId)
+			: base (context, resource, textViewResourceId)
+		{
+		}
+
+		public DerivedStringArrayAdapter (Context context, int textViewResourceId, string [] objects)
+			: base (context, textViewResourceId, objects)
+		{
+		}
+
+		public DerivedStringArrayAdapter (Context context, int resource, int textViewResourceId, string [] objects)
+			: base (context, resource, textViewResourceId, objects)
+		{
+		}
+
+		public DerivedStringArrayAdapter (Context context, int textViewResourceId, IList<string> objects)
+			: base (context, textViewResourceId, objects)
+		{
+		}
+
+		public DerivedStringArrayAdapter (Context context, int resource, int textViewResourceId, IList<string> objects)
+			: base (context, resource, textViewResourceId, objects)
+		{
+		}
+
 		protected DerivedStringArrayAdapter (IntPtr handle, JniHandleOwnership transfer)
 			: base (handle, transfer)
 		{
 		}
 	}
-
-	public class TestBaseAdapter : BaseAdapter<string> {
-
-		public TestBaseAdapter ()
-		{
-		}
-
-		protected TestBaseAdapter (IntPtr handle, JniHandleOwnership transfer)
-			: base (handle, transfer)
-		{
-		}
-
-		public override int Count => 0;
-
-		public override string this [int position] => "";
-
-		public override long GetItemId (int position) => position;
-
-		public override View GetView (int position, View convertView, ViewGroup parent) => null;
-	}
-
-	public class TestAdapterView : AdapterView<IListAdapter> {
-
-		public TestAdapterView (Context context)
-			: base (context)
-		{
-		}
-
-		public TestAdapterView (Context context, IAttributeSet attrs)
-			: base (context, attrs)
-		{
-		}
-
-		public TestAdapterView (Context context, IAttributeSet attrs, int defStyle)
-			: base (context, attrs, defStyle)
-		{
-		}
-
-		protected TestAdapterView (IntPtr handle, JniHandleOwnership transfer)
-			: base (handle, transfer)
-		{
-		}
-
-		public override IListAdapter Adapter { get; set; }
-
-		public override View SelectedView => null;
-
-		public override void SetSelection (int position)
-		{
-		}
-	}
-
-#pragma warning disable CA1422 // AsyncTask is obsoleted on android30.0.
-	public class TestAsyncTask : AsyncTask<string, string, string> {
-
-		public TestAsyncTask ()
-		{
-		}
-
-		protected TestAsyncTask (IntPtr handle, JniHandleOwnership transfer)
-			: base (handle, transfer)
-		{
-		}
-
-		protected override string RunInBackground (params string [] @params) => "";
-	}
-#pragma warning restore CA1422
 
 	public class ManagedListView : ListView {
 

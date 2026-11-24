@@ -38,7 +38,8 @@ namespace Android.Widget {
 				return;
 
 			unsafe {
-				// SAFETY: ArrayAdapter.<init>.(Landroid/content/Context;I)V matches this peer's JNI ABI. Result locals transfer to conversion.
+				// SAFETY: AllocObject supplies this peer's owned handle; FinishCreateInstance runs
+				// ArrayAdapter.<init>.(Landroid/content/Context;I)V while GC.KeepAlive retains context and this.
 				if (GetType () == typeof (ArrayAdapter<T>)) {
 					if (id_ctor_Landroid_content_Context_I == IntPtr.Zero)
 						id_ctor_Landroid_content_Context_I = JNIEnv.GetMethodID (GetPeerMembers (null).GetPeerTypeHandle (), "<init>", "(Landroid/content/Context;I)V");
@@ -66,7 +67,8 @@ namespace Android.Widget {
 				return;
 
 			unsafe {
-				// SAFETY: ArrayAdapter.<init>.(Landroid/content/Context;II)V matches this peer's JNI ABI. Result locals transfer to conversion.
+				// SAFETY: AllocObject supplies this peer's owned handle; FinishCreateInstance runs
+				// ArrayAdapter.<init>.(Landroid/content/Context;II)V while GC.KeepAlive retains context and this.
 				if (GetType () == typeof (ArrayAdapter<T>)) {
 					if (id_ctor_Landroid_content_Context_II == IntPtr.Zero)
 						id_ctor_Landroid_content_Context_II = JNIEnv.GetMethodID (GetPeerMembers (null).GetPeerTypeHandle (), "<init>", "(Landroid/content/Context;II)V");
@@ -94,7 +96,8 @@ namespace Android.Widget {
 				return;
 
 			unsafe {
-				// SAFETY: ArrayAdapter.<init>.(Landroid/content/Context;I[Ljava/lang/Object;)V matches this peer's JNI ABI. Result locals transfer to conversion.
+				// SAFETY: AllocObject supplies this peer's owned handle; finally deletes the temporary
+				// array local and keeps context and this alive across FinishCreateInstance.
 				IntPtr native_objects = JNIEnv.NewObjectArray (objects);
 				try {
 					if (GetType () == typeof (ArrayAdapter<T>)) {
@@ -127,7 +130,8 @@ namespace Android.Widget {
 				return;
 
 			unsafe {
-				// SAFETY: ArrayAdapter.<init>.(Landroid/content/Context;II[Ljava/lang/Object;)V matches this peer's JNI ABI. Result locals transfer to conversion.
+				// SAFETY: AllocObject supplies this peer's owned handle; finally deletes the temporary
+				// array local and keeps context and this alive across FinishCreateInstance.
 				IntPtr native_objects = JNIEnv.NewObjectArray<T> (objects);
 				try {
 					if (GetType () == typeof (ArrayAdapter<T>)) {
@@ -160,7 +164,8 @@ namespace Android.Widget {
 				return;
 
 			unsafe {
-				// SAFETY: ArrayAdapter.<init>.(Landroid/content/Context;ILjava/util/List;)V matches this peer's JNI ABI. Result locals transfer to conversion.
+				// SAFETY: AllocObject supplies this peer's owned handle; finally deletes the temporary
+				// list local and keeps context and this alive across FinishCreateInstance.
 				IntPtr lrefObjects = JavaList<T>.ToLocalJniHandle (objects);
 				try {
 					if (GetType () == typeof (ArrayAdapter<T>)) {
@@ -193,7 +198,8 @@ namespace Android.Widget {
 				return;
 
 			unsafe {
-				// SAFETY: ArrayAdapter.<init>.(Landroid/content/Context;IILjava/util/List;)V matches this peer's JNI ABI. Result locals transfer to conversion.
+				// SAFETY: AllocObject supplies this peer's owned handle; finally deletes the temporary
+				// list local and keeps context and this alive across FinishCreateInstance.
 				IntPtr lrefObjects = JavaList<T>.ToLocalJniHandle (objects);
 				try {
 					if (GetType () == typeof (ArrayAdapter<T>)) {
