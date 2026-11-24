@@ -110,7 +110,6 @@ sealed partial class TrimmableTypeMapValueManager : JniRuntime.JniValueManager
 	public override IJavaPeerable? CreatePeer (
 		ref JniObjectReference reference,
 		JniObjectReferenceOptions transfer,
-		[DynamicallyAccessedMembers (Constructors)]
 		Type? targetType)
 	{
 		EnsureNotDisposed ();
@@ -127,8 +126,7 @@ sealed partial class TrimmableTypeMapValueManager : JniRuntime.JniValueManager
 			JniObjectReference.Dispose (ref reference, transfer);
 		}
 
-		[return: DynamicallyAccessedMembers (Constructors)]
-		static Type? ResolvePeerType ([DynamicallyAccessedMembers (Constructors)] Type? type)
+		static Type? ResolvePeerType (Type? type)
 		{
 			if (type is null) {
 				return null;

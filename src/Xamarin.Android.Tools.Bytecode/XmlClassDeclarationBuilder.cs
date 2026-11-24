@@ -109,6 +109,8 @@ namespace Xamarin.Android.Tools.Bytecode {
 				yield break;
 			yield return new XAttribute ("kotlin-inline-class", "true");
 			yield return new XAttribute ("kotlin-inline-class-underlying-jni-type", underlying);
+			if (classFile.KotlinInlineClassHasInit)
+				yield return new XAttribute ("kotlin-inline-class-has-init", "true");
 		}
 
 		string GetElementName ()

@@ -1,4 +1,3 @@
-#if ANDROID_24
 using System;
 using Android.Runtime;
 using Java.Interop;
@@ -37,4 +36,3 @@ namespace Java.Util
 		}
 	}
 }
-#endif

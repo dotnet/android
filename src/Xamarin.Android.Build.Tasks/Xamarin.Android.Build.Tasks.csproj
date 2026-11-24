@@ -17,7 +17,7 @@
     <MemorySafetyRulesVersion>2</MemorySafetyRulesVersion>
     <OutputPath>$(MicrosoftAndroidSdkOutDir)</OutputPath>
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
-    <DefineConstants>$(DefineConstants);TRACE;HAVE_CECIL;MSBUILD</DefineConstants>
+    <DefineConstants>$(DefineConstants);HAVE_CECIL</DefineConstants>
     <NoWarn>8632</NoWarn>
     <SignAssembly>true</SignAssembly>
     <AssemblyOriginatorKeyFile>..\..\product.snk</AssemblyOriginatorKeyFile>

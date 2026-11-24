@@ -6,11 +6,9 @@ using System.IO;
 using System.Linq;
 using Xamarin.Android.Tools;
 
-#if MSBUILD
 using Microsoft.Android.Build.Tasks;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
-#endif
 
 namespace Xamarin.Android.Tasks;
 
@@ -41,7 +39,6 @@ public partial class MonoAndroidHelper
 	public static JdkInfo? GetJdkInfo (Action<TraceLevel, string> logger, string? javaSdkPath, Version minSupportedVersion, Version maxSupportedVersion)
 		=> JdkInfo.FindJdk (logger, javaSdkPath, minSupportedVersion, maxSupportedVersion, null);
 
-#if MSBUILD
 	public static string GetExecutablePath (string? dir, string exe, TaskEnvironment taskEnvironment)
 	{
 		if (dir is not { Length: > 0 })
@@ -56,5 +53,4 @@ public partial class MonoAndroidHelper
 		return exe;
 	}
 
-#endif  // MSBUILD
 }

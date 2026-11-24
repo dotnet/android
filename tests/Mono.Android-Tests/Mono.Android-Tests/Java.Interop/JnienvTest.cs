@@ -5,6 +5,7 @@ using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Threading;
+using System.Threading.Tasks;
 
 using Android.App;
 using Android.Graphics;
@@ -21,6 +22,13 @@ namespace Java.InteropTests
 	[TestClass]
 	public class JnienvTest
 	{
+		readonly TestContext testContext;
+
+		public JnienvTest (TestContext testContext)
+		{
+			this.testContext = testContext;
+		}
+
 		[TestMethod]
 		[TestCategory ("JniStringLength")]
 		public void NewStringValidatesLengthAndSupportsPrefix ()
@@ -678,50 +686,44 @@ namespace Java.InteropTests
 		}
 
 		[TestMethod, TestCategory ("GCBridge")]
-		[Ignore ("Failing in NativeAOT: https://github.com/dotnet/android/issues/11690")]
-#pragma warning disable CS0618 // The wrapper filters live peers and creates weak-reference snapshots; this GC test intentionally retains its existing semantics.
-		public void DoNotLeakWeakReferences ()
+		[Timeout (60_000, CooperativeCancellation = true)]
+#pragma warning disable CS0618 // Exercise the weak-reference snapshots returned by this legacy API.
+		public async Task DoNotLeakWeakReferences ()
 		{
-			GC.Collect ();
-			GC.WaitForPendingFinalizers ();
-
-			var surfaced    = Runtime.GetSurfacedObjects ();
-			int startCount  = surfaced.Count;
-
-			Assert.IsTrue (surfaced.All (s => s.Target != null), "#1");
-
-			// `Runtime.GetSurfacedObjects()` is process-global: NUnit/MTP
-			// infrastructure (per-test TestExecutionContext, listeners, Console
-			// capture, etc.) creates and releases transient Java.Lang.Object
-			// peers around every test, so the count drifts by a few entries
-			// between the snapshots below. Allow a small tolerance instead of
-			// requiring an exact count -- a real leak would dwarf this.
-			const int tolerance = 10;
-
-			WeakReference? r = null;
+			WeakReference? surfacedPeer = null;
+			JniObjectReference weakPeer = default;
 			Exception? threadException = null;
 			var t = new Thread (() => {
+				MyCb? peer = null;
 				try {
-					var c = new MyCb ();
-					Assert.AreEqual ((double) (startCount + 1), (double) (Runtime.GetSurfacedObjects ().Count), (double) (tolerance), "#2");
-					r = new WeakReference (c);
+					peer = new MyCb ();
+					foreach (var reference in Runtime.GetSurfacedObjects ()) {
+						if (ReferenceEquals (reference.Target, peer)) {
+							Assert.IsNull (surfacedPeer, "The peer should be surfaced only once.");
+							surfacedPeer = reference;
+						}
+					}
+					Assert.IsNotNull (surfacedPeer, "The new peer should be surfaced.");
+					weakPeer = peer.PeerReference.NewWeakGlobalRef ();
+					GC.KeepAlive (peer);
 				} catch (Exception e) {
+					peer?.Dispose ();
 					threadException = e;
 				}
 			});
-			t.Start ();
-			t.Join ();
-			if (threadException != null)
-				throw new Exception ("Worker thread failed", threadException);
+			try {
+				t.Start ();
+				t.Join ();
+				if (threadException != null)
+					throw new Exception ("Worker thread failed", threadException);
 
-			GC.Collect ();
-			GC.WaitForPendingFinalizers ();
-			GC.Collect ();
-			GC.WaitForPendingFinalizers ();
-
-			surfaced  = Runtime.GetSurfacedObjects ();
-			Assert.AreEqual ((double) (startCount), (double) (surfaced.Count), (double) (tolerance), "#3");
-			Assert.IsTrue (surfaced.All (s => s.Target != null), "#4");
+				var reference = surfacedPeer ?? throw new AssertFailedException ("The peer was not surfaced.");
+				await GCBridgeTestHelpers.CollectUnreachablePeersAsync (testContext.CancellationToken);
+				Assert.IsNull (reference.Target, "The surfaced weak reference must not keep the peer alive.");
+				Assert.IsNull (JniEnvironment.Runtime.ValueManager.PeekPeer (weakPeer), "The collected peer must not be returned by the registry.");
+			} finally {
+				JniObjectReference.Dispose (ref weakPeer);
+			}
 		}
 #pragma warning restore CS0618
 	}

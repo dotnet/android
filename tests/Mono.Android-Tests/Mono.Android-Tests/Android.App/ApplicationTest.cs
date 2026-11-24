@@ -60,9 +60,6 @@ namespace Android.AppTests
 		}
 	}
 
-#if ANDROID_30
-	[Application (Debuggable=true)]
-#endif
 	public class App : Application {
 
 		public static bool            Created;

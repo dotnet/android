@@ -2,7 +2,6 @@ namespace Android.Preferences {
 
 	partial class CheckBoxPreference {
 
-#if ANDROID_14
 		public new string? SummaryOff {
 			get {return base.SummaryOff;}
 			set {base.SummaryOff = value;}
@@ -12,6 +11,5 @@ namespace Android.Preferences {
 			get {return base.SummaryOn;}
 			set {base.SummaryOn = value;}
 		}
-#endif  // ANDROID_14
 	}
 }

@@ -2,7 +2,6 @@ namespace Android.Media {
 
 	partial class MediaMetadataRetriever {
 
-#if ANDROID_10
 		public string? ExtractMetadata (int keyCode)
 		{
 			return ExtractMetadata ((MetadataKey) keyCode);
@@ -12,6 +11,5 @@ namespace Android.Media {
 		{
 			return GetFrameAtTime (timeUs, (Option) option);
 		}
-#endif
 	}
 }

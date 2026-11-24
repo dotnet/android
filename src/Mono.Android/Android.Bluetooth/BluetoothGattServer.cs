@@ -1,4 +1,3 @@
-#if ANDROID_18
 
 namespace Android.Bluetooth
 {
@@ -10,6 +9,3 @@ namespace Android.Bluetooth
 		}
 	}
 }
-
-#endif
-

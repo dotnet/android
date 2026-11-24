@@ -4,7 +4,6 @@ using Android.Content;
 
 namespace Android.OS {
 
-#if ANDROID_8
 
 	public partial class DropBoxManager {
 
@@ -14,7 +13,6 @@ namespace Android.OS {
 		}
 	}
 
-#endif  // ANDROID_8
 }
 
 

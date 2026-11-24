@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using System.Threading.Tasks;
 
 using Java.Interop;
@@ -17,7 +18,6 @@ namespace Java.InteropTests
 			this.testContext = testContext;
 		}
 
-#if !NO_GC_BRIDGE_SUPPORT
 		[TestMethod]
 		public void JavaReferencedInstanceSurvivesCollection ()
 		{
@@ -47,26 +47,32 @@ namespace Java.InteropTests
 				array.Dispose ();
 			}
 		}
-#endif  // !NO_GC_BRIDGE_SUPPORT
+
+		// The surfaced-peer registry is process-wide, so other threads can add or
+		// remove unrelated peers while a test runs. Count only entries for this peer.
+		static int GetSurfacedEntryCount (IJavaPeerable peer)
+			=> JniRuntime.CurrentRuntime.ValueManager.GetSurfacedPeers ().Count (
+				info => info.SurfacedPeer.TryGetTarget (out var target) && ReferenceEquals (target, peer));
 
 		[TestMethod]
-		[Ignore ("Frequently failing: https://github.com/dotnet/android/issues/12031")]
 		public void UnregisterFromRuntime ()
 		{
-			int registeredCount = JniRuntime.CurrentRuntime.ValueManager.GetSurfacedPeers ().Count;
-			JniObjectReference l;
+			JniObjectReference l = default;
 			JavaObject o;
-			using (o = new JavaObject ()) {
-				l   = o.PeerReference.NewLocalRef ();
-				Assert.AreEqual (JniObjectReferenceType.Global, o.PeerReference.Type);
-				Assert.AreEqual (registeredCount+1, JniRuntime.CurrentRuntime.ValueManager.GetSurfacedPeers ().Count, "registeredCount+1 should match!");
-				Assert.IsNotNull (JniRuntime.CurrentRuntime.ValueManager.PeekValue (l));
-				Assert.AreNotEqual (l, o.PeerReference);
-				Assert.AreSame (o, JniRuntime.CurrentRuntime.ValueManager.PeekValue (l));
+			try {
+				using (o = new JavaObject ()) {
+					l   = o.PeerReference.NewLocalRef ();
+					Assert.AreEqual (JniObjectReferenceType.Global, o.PeerReference.Type);
+					Assert.AreEqual (1, GetSurfacedEntryCount (o), "Constructed peer should be surfaced exactly once.");
+					Assert.IsNotNull (JniRuntime.CurrentRuntime.ValueManager.PeekValue (l));
+					Assert.AreNotEqual (l, o.PeerReference);
+					Assert.AreSame (o, JniRuntime.CurrentRuntime.ValueManager.PeekValue (l));
+				}
+				Assert.AreEqual (0, GetSurfacedEntryCount (o), "Disposed peer should no longer be surfaced.");
+				Assert.IsNull (JniRuntime.CurrentRuntime.ValueManager.PeekValue (l));
+			} finally {
+				JniObjectReference.Dispose (ref l);
 			}
-			Assert.AreEqual (registeredCount, JniRuntime.CurrentRuntime.ValueManager.GetSurfacedPeers ().Count, "registeredCount should match!");
-			Assert.IsNull (JniRuntime.CurrentRuntime.ValueManager.PeekValue (l));
-			JniObjectReference.Dispose (ref l);
 			Assert.ThrowsExactly<ObjectDisposedException> (() => o.UnregisterFromRuntime ());
 		}
 
@@ -80,7 +86,6 @@ namespace Java.InteropTests
 			}
 		}
 
-#if !NO_GC_BRIDGE_SUPPORT
 		[TestMethod]
 		[Timeout (60_000, CooperativeCancellation = true)]
 		public async Task UnreferencedInstanceIsCollected ()
@@ -98,7 +103,6 @@ namespace Java.InteropTests
 			Assert.IsNull (JniRuntime.CurrentRuntime.ValueManager.PeekValue (oldHandle));
 			JniObjectReference.Dispose (ref oldHandle);
 		}
-#endif  // !NO_GC_BRIDGE_SUPPORT
 
 		[TestMethod]
 		public void Dispose ()
@@ -111,7 +115,6 @@ namespace Java.InteropTests
 			Assert.IsFalse (f);
 		}
 
-#if !NO_GC_BRIDGE_SUPPORT
 		[TestMethod]
 		[Timeout (60_000, CooperativeCancellation = true)]
 		public async Task Dispose_Finalized ()
@@ -131,7 +134,6 @@ namespace Java.InteropTests
 			Assert.IsFalse (disposed.Task.IsCompleted);
 			Assert.IsTrue (finalized.Task.IsCompleted, "Expected JavaDisposedObject.Dispose(disposing: false) to run.");
 		}
-#endif  // !NO_GC_BRIDGE_SUPPORT
 
 		[TestMethod]
 		public void ObjectDisposed ()
@@ -151,11 +153,12 @@ namespace Java.InteropTests
 		}
 
 		[TestMethod]
-		public unsafe void Ctor ()
+		public void Ctor ()
 		{
 			using (var t = new JniType ("java/lang/Object")) {
 				var c = t.GetConstructor ("()V");
-				var lref = t.NewObject (c, null);
+				// SAFETY: c is the ()V constructor of the live type, so no arguments are required.
+				var lref = unsafe (t.NewObject (c, null));
 				Assert.IsTrue (lref.IsValid);
 				using (var o = new JavaObject (ref lref, JniObjectReferenceOptions.Copy)) {
 					Assert.IsTrue (lref.IsValid);

@@ -98,6 +98,9 @@ namespace MonoDroid.Generation {
 
 		public bool Validate (CodeGenerationOptions opt, GenericParameterDefinitionList type_params, CodeGeneratorContext context)
 		{
+			// JNIEnv.NewArray/GetArray can't marshal Kotlin value-class structs, so the member is skipped.
+			if (sym is ClassGen gen && gen.IsKotlinInlineClass)
+				return false;
 			return sym.Validate (opt, type_params, context);
 		}
 

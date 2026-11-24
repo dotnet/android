@@ -36,11 +36,7 @@ using Mono.Collections.Generic;
 
 namespace Mono.Linker {
 
-#if FEATURE_ILLINK
-	public class AssemblyResolver : DirectoryAssemblyResolver {
-#else
 	public class AssemblyResolver : BaseAssemblyResolver {
-#endif
 
 		readonly Dictionary<string, AssemblyDefinition> _assemblies;
 		HashSet<string> _unresolvedAssemblies;
@@ -74,8 +70,6 @@ namespace Mono.Linker {
 			set { _context = value; }
 		}
 
-#if !FEATURE_ILLINK
-		// The base class's definition of GetAssembly is visible when using DirectoryAssemblyResolver.
 		AssemblyDefinition GetAssembly (string file, ReaderParameters parameters)
 		{
 			if (parameters.AssemblyResolver == null)
@@ -83,7 +77,6 @@ namespace Mono.Linker {
 
 			return ModuleDefinition.ReadModule (file, parameters).Assembly;
 		}
-#endif
 
 		AssemblyDefinition ResolveFromReferences (AssemblyNameReference name, Collection<string> references, ReaderParameters parameters)
 		{
