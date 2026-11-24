@@ -55,7 +55,7 @@ stages:
       submodules: recursive
       path: s/android
 
-    - template: /build-tools/automation/yaml-templates/commercial-build.yaml
+    - template: /build-tools/automation/yaml-templates/build-macos-nightly-steps.yaml
       parameters:
         use1ESTemplate: false
 

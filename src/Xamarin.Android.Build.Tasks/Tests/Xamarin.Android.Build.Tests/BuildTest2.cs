@@ -1331,9 +1331,7 @@ namespace UnamedProject
 				start = DateTime.UtcNow;
 				Assert.IsTrue (b.Build (proj), "second build should have succeeded.");
 
-				// These files won't exist in OSS .NET for Android, thus the existence check and
-				// Assert.Ignore below. They will also not exist in the commercial version of
-				// .NET for Android unless fastdev is enabled.
+				// These typemap files are not produced by every build configuration.
 				foreach (var file in new [] { "typemap.mj", "typemap.jm" }) {
 					var info = new FileInfo (Path.Combine (intermediate, "android", file));
 					if (info.Exists) {

@@ -1319,7 +1319,6 @@ namespace Lib2
 			var app = new XamarinAndroidApplicationProject {
 				IsRelease = isRelease,
 				ProjectName = "MyApp",
-				//NOTE: so _BuildApkEmbed runs in commercial tests
 				EmbedAssembliesIntoApk = true,
 				Sources = {
 					new BuildItem.Source ("Foo.cs") {
@@ -1528,7 +1527,6 @@ namespace Lib2
 			var app = new XamarinAndroidApplicationProject {
 				IsRelease = isRelease,
 				ProjectName = "MyApp",
-				//NOTE: so _BuildApkEmbed runs in commercial tests
 				EmbedAssembliesIntoApk = true,
 				Sources = {
 					new BuildItem.Source ("Foo.cs") {
@@ -1925,7 +1923,6 @@ namespace Lib2
 			var proj = new XamarinAndroidApplicationProject {
 				IsRelease = isRelease,
 				Deterministic = deterministic,
-				//NOTE: so _BuildApkEmbed runs in commercial tests
 				EmbedAssembliesIntoApk = true,
 			};
 			proj.SetRuntime (runtime);

@@ -216,6 +216,9 @@ added to `Documentation/release-notes/images/`.
 
 ## Publication workflow
 
+The steps below document the historical Xamarin.Android release process. They
+are not instructions for publishing current .NET for Android releases.
+
 ### Every week or so
 
 1. Gather the new release notes from the master branch in reverse commit order.
@@ -355,7 +358,7 @@ added to `Documentation/release-notes/images/`.
    release.  See the internal [_Release Process_][release-process] guide for
    additional details on how to complete this step.
 
-   There are two styles of links to update. One style says _preview_ or
+   The former installer links used two styles. One style says _preview_ or
    _release_, like:
 
    ```
