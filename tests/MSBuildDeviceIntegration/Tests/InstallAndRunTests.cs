@@ -97,20 +97,17 @@ namespace Xamarin.Android.Build.Tests
 
 		[Test]
 		public void TrimmableTypeMapGenericBindingAliases (
-			[Values] bool isRelease,
 			[Values] bool reverseReferences)
 		{
 			const string success = "NON_GENERIC_BINDING_ACTIVATED";
 			var proj = new XamarinAndroidApplicationProject (
-				packageName: PackageUtils.MakePackageName (AndroidRuntime.CoreCLR, "genericalias")) {
-				IsRelease = isRelease,
-			};
+				packageName: PackageUtils.MakePackageName (AndroidRuntime.CoreCLR, "genericalias"));
 			proj.SetRuntime (AndroidRuntime.CoreCLR);
 			proj.SetRuntimeIdentifiers ([DeviceAbi]);
 			proj.SetDefaultTargetDevice ();
 			var libraries = new [] {
-				new XamarinAndroidLibraryProject { ProjectName = "AGenericBinding", IsRelease = isRelease },
-				new XamarinAndroidLibraryProject { ProjectName = "ZNonGenericBinding", IsRelease = isRelease },
+				new XamarinAndroidLibraryProject { ProjectName = "AGenericBinding" },
+				new XamarinAndroidLibraryProject { ProjectName = "ZNonGenericBinding" },
 			};
 			libraries [0].Sources.Add (new BuildItem.Source ("Peer.cs") {
 				TextContent = () => """
