@@ -53,6 +53,7 @@ namespace Android.Widget {
 					JNIEnv.FinishCreateInstance (Handle, "(Landroid/content/Context;I)V"u8, new JValue (context), new JValue (textViewResourceId));
 				}
 				GC.KeepAlive (context);
+				GC.KeepAlive (this);
 			}
 		}
 
@@ -80,6 +81,7 @@ namespace Android.Widget {
 					JNIEnv.FinishCreateInstance (Handle, "(Landroid/content/Context;II)V"u8, new JValue (context), new JValue (resource), new JValue (textViewResourceId));
 				}
 				GC.KeepAlive (context);
+				GC.KeepAlive (this);
 			}
 		}
 
@@ -94,21 +96,25 @@ namespace Android.Widget {
 			unsafe {
 				// SAFETY: ArrayAdapter.<init>.(Landroid/content/Context;I[Ljava/lang/Object;)V matches this peer's JNI ABI. Result locals transfer to conversion.
 				IntPtr native_objects = JNIEnv.NewObjectArray (objects);
-				if (GetType () == typeof (ArrayAdapter<T>)) {
-					if (id_ctor_Landroid_content_Context_IarrayLjava_lang_Object_ == IntPtr.Zero)
-						id_ctor_Landroid_content_Context_IarrayLjava_lang_Object_ = JNIEnv.GetMethodID (GetPeerMembers (null).GetPeerTypeHandle (), "<init>", "(Landroid/content/Context;I[Ljava/lang/Object;)V");
-					SetHandle (
-							JNIEnv.AllocObject (GetPeerMembers (null).GetPeerTypeHandle ()),
-							JniHandleOwnership.TransferLocalRef);
-					JNIEnv.FinishCreateInstance (Handle, GetPeerMembers (null).GetPeerTypeHandle (), id_ctor_Landroid_content_Context_IarrayLjava_lang_Object_, new JValue (context), new JValue (textViewResourceId), new JValue (native_objects));
-				} else {
-					SetHandle (
-							JNIEnv.AllocObject (GetType ()),
-							JniHandleOwnership.TransferLocalRef);
-					JNIEnv.FinishCreateInstance (Handle, "(Landroid/content/Context;I[Ljava/lang/Object;)V"u8, new JValue (context), new JValue (textViewResourceId), new JValue (native_objects));
+				try {
+					if (GetType () == typeof (ArrayAdapter<T>)) {
+						if (id_ctor_Landroid_content_Context_IarrayLjava_lang_Object_ == IntPtr.Zero)
+							id_ctor_Landroid_content_Context_IarrayLjava_lang_Object_ = JNIEnv.GetMethodID (GetPeerMembers (null).GetPeerTypeHandle (), "<init>", "(Landroid/content/Context;I[Ljava/lang/Object;)V");
+						SetHandle (
+								JNIEnv.AllocObject (GetPeerMembers (null).GetPeerTypeHandle ()),
+								JniHandleOwnership.TransferLocalRef);
+						JNIEnv.FinishCreateInstance (Handle, GetPeerMembers (null).GetPeerTypeHandle (), id_ctor_Landroid_content_Context_IarrayLjava_lang_Object_, new JValue (context), new JValue (textViewResourceId), new JValue (native_objects));
+					} else {
+						SetHandle (
+								JNIEnv.AllocObject (GetType ()),
+								JniHandleOwnership.TransferLocalRef);
+						JNIEnv.FinishCreateInstance (Handle, "(Landroid/content/Context;I[Ljava/lang/Object;)V"u8, new JValue (context), new JValue (textViewResourceId), new JValue (native_objects));
+					}
+				} finally {
+					JNIEnv.DeleteLocalRef (native_objects);
+					GC.KeepAlive (context);
+					GC.KeepAlive (this);
 				}
-				JNIEnv.DeleteLocalRef (native_objects);
-				GC.KeepAlive (context);
 			}
 		}
 
@@ -122,22 +128,26 @@ namespace Android.Widget {
 
 			unsafe {
 				// SAFETY: ArrayAdapter.<init>.(Landroid/content/Context;II[Ljava/lang/Object;)V matches this peer's JNI ABI. Result locals transfer to conversion.
-				IntPtr native_objects = JNIEnv.NewObjectArray<T> (objects);;
-				if (GetType () == typeof (ArrayAdapter<T>)) {
-					if (id_ctor_Landroid_content_Context_IIarrayLjava_lang_Object_ == IntPtr.Zero)
-						id_ctor_Landroid_content_Context_IIarrayLjava_lang_Object_ = JNIEnv.GetMethodID (GetPeerMembers (null).GetPeerTypeHandle (), "<init>", "(Landroid/content/Context;II[Ljava/lang/Object;)V");
-					SetHandle (
-							JNIEnv.AllocObject (GetPeerMembers (null).GetPeerTypeHandle ()),
-							JniHandleOwnership.TransferLocalRef);
-					JNIEnv.FinishCreateInstance (Handle, GetPeerMembers (null).GetPeerTypeHandle (), id_ctor_Landroid_content_Context_IIarrayLjava_lang_Object_, new JValue (context), new JValue (resource), new JValue (textViewResourceId), new JValue (native_objects));
-				} else {
-					SetHandle (
-							JNIEnv.AllocObject (GetType ()),
-							JniHandleOwnership.TransferLocalRef);
-					JNIEnv.FinishCreateInstance (Handle, "(Landroid/content/Context;II[Ljava/lang/Object;)V"u8, new JValue (context), new JValue (resource), new JValue (textViewResourceId), new JValue (native_objects));
+				IntPtr native_objects = JNIEnv.NewObjectArray<T> (objects);
+				try {
+					if (GetType () == typeof (ArrayAdapter<T>)) {
+						if (id_ctor_Landroid_content_Context_IIarrayLjava_lang_Object_ == IntPtr.Zero)
+							id_ctor_Landroid_content_Context_IIarrayLjava_lang_Object_ = JNIEnv.GetMethodID (GetPeerMembers (null).GetPeerTypeHandle (), "<init>", "(Landroid/content/Context;II[Ljava/lang/Object;)V");
+						SetHandle (
+								JNIEnv.AllocObject (GetPeerMembers (null).GetPeerTypeHandle ()),
+								JniHandleOwnership.TransferLocalRef);
+						JNIEnv.FinishCreateInstance (Handle, GetPeerMembers (null).GetPeerTypeHandle (), id_ctor_Landroid_content_Context_IIarrayLjava_lang_Object_, new JValue (context), new JValue (resource), new JValue (textViewResourceId), new JValue (native_objects));
+					} else {
+						SetHandle (
+								JNIEnv.AllocObject (GetType ()),
+								JniHandleOwnership.TransferLocalRef);
+						JNIEnv.FinishCreateInstance (Handle, "(Landroid/content/Context;II[Ljava/lang/Object;)V"u8, new JValue (context), new JValue (resource), new JValue (textViewResourceId), new JValue (native_objects));
+					}
+				} finally {
+					JNIEnv.DeleteLocalRef (native_objects);
+					GC.KeepAlive (context);
+					GC.KeepAlive (this);
 				}
-				JNIEnv.DeleteLocalRef (native_objects);
-				GC.KeepAlive (context);
 			}
 		}
 
@@ -152,21 +162,25 @@ namespace Android.Widget {
 			unsafe {
 				// SAFETY: ArrayAdapter.<init>.(Landroid/content/Context;ILjava/util/List;)V matches this peer's JNI ABI. Result locals transfer to conversion.
 				IntPtr lrefObjects = JavaList<T>.ToLocalJniHandle (objects);
-				if (GetType () == typeof (ArrayAdapter<T>)) {
-					if (id_ctor_Landroid_content_Context_ILjava_util_List_ == IntPtr.Zero)
-						id_ctor_Landroid_content_Context_ILjava_util_List_ = JNIEnv.GetMethodID (GetPeerMembers (null).GetPeerTypeHandle (), "<init>", "(Landroid/content/Context;ILjava/util/List;)V");
-					SetHandle (
-							JNIEnv.AllocObject (GetPeerMembers (null).GetPeerTypeHandle ()),
-							JniHandleOwnership.TransferLocalRef);
-					JNIEnv.FinishCreateInstance (Handle, GetPeerMembers (null).GetPeerTypeHandle (), id_ctor_Landroid_content_Context_ILjava_util_List_, new JValue (context), new JValue (textViewResourceId), new JValue (lrefObjects));
-				} else {
-					SetHandle (
-							JNIEnv.AllocObject (GetType ()),
-							JniHandleOwnership.TransferLocalRef);
-					JNIEnv.FinishCreateInstance (Handle, "(Landroid/content/Context;ILjava/util/List;)V"u8, new JValue (context), new JValue (textViewResourceId), new JValue (lrefObjects));
+				try {
+					if (GetType () == typeof (ArrayAdapter<T>)) {
+						if (id_ctor_Landroid_content_Context_ILjava_util_List_ == IntPtr.Zero)
+							id_ctor_Landroid_content_Context_ILjava_util_List_ = JNIEnv.GetMethodID (GetPeerMembers (null).GetPeerTypeHandle (), "<init>", "(Landroid/content/Context;ILjava/util/List;)V");
+						SetHandle (
+								JNIEnv.AllocObject (GetPeerMembers (null).GetPeerTypeHandle ()),
+								JniHandleOwnership.TransferLocalRef);
+						JNIEnv.FinishCreateInstance (Handle, GetPeerMembers (null).GetPeerTypeHandle (), id_ctor_Landroid_content_Context_ILjava_util_List_, new JValue (context), new JValue (textViewResourceId), new JValue (lrefObjects));
+					} else {
+						SetHandle (
+								JNIEnv.AllocObject (GetType ()),
+								JniHandleOwnership.TransferLocalRef);
+						JNIEnv.FinishCreateInstance (Handle, "(Landroid/content/Context;ILjava/util/List;)V"u8, new JValue (context), new JValue (textViewResourceId), new JValue (lrefObjects));
+					}
+				} finally {
+					JNIEnv.DeleteLocalRef (lrefObjects);
+					GC.KeepAlive (context);
+					GC.KeepAlive (this);
 				}
-				JNIEnv.DeleteLocalRef (lrefObjects);
-				GC.KeepAlive (context);
 			}
 		}
 
@@ -181,21 +195,25 @@ namespace Android.Widget {
 			unsafe {
 				// SAFETY: ArrayAdapter.<init>.(Landroid/content/Context;IILjava/util/List;)V matches this peer's JNI ABI. Result locals transfer to conversion.
 				IntPtr lrefObjects = JavaList<T>.ToLocalJniHandle (objects);
-				if (GetType () == typeof (ArrayAdapter<T>)) {
-					if (id_ctor_Landroid_content_Context_IILjava_util_List_ == IntPtr.Zero)
-						id_ctor_Landroid_content_Context_IILjava_util_List_ = JNIEnv.GetMethodID (GetPeerMembers (null).GetPeerTypeHandle (), "<init>", "(Landroid/content/Context;IILjava/util/List;)V");
-					SetHandle (
-							JNIEnv.AllocObject (GetPeerMembers (null).GetPeerTypeHandle ()),
-							JniHandleOwnership.TransferLocalRef);
-					JNIEnv.FinishCreateInstance (Handle, GetPeerMembers (null).GetPeerTypeHandle (), id_ctor_Landroid_content_Context_IILjava_util_List_, new JValue (context), new JValue (resource), new JValue (textViewResourceId), new JValue (lrefObjects));
-				} else {
-					SetHandle (
-							JNIEnv.AllocObject (GetType ()),
-							JniHandleOwnership.TransferLocalRef);
-					JNIEnv.FinishCreateInstance (Handle, "(Landroid/content/Context;IILjava/util/List;)V"u8, new JValue (context), new JValue (resource), new JValue (textViewResourceId), new JValue (lrefObjects));
+				try {
+					if (GetType () == typeof (ArrayAdapter<T>)) {
+						if (id_ctor_Landroid_content_Context_IILjava_util_List_ == IntPtr.Zero)
+							id_ctor_Landroid_content_Context_IILjava_util_List_ = JNIEnv.GetMethodID (GetPeerMembers (null).GetPeerTypeHandle (), "<init>", "(Landroid/content/Context;IILjava/util/List;)V");
+						SetHandle (
+								JNIEnv.AllocObject (GetPeerMembers (null).GetPeerTypeHandle ()),
+								JniHandleOwnership.TransferLocalRef);
+						JNIEnv.FinishCreateInstance (Handle, GetPeerMembers (null).GetPeerTypeHandle (), id_ctor_Landroid_content_Context_IILjava_util_List_, new JValue (context), new JValue (resource), new JValue (textViewResourceId), new JValue (lrefObjects));
+					} else {
+						SetHandle (
+								JNIEnv.AllocObject (GetType ()),
+								JniHandleOwnership.TransferLocalRef);
+						JNIEnv.FinishCreateInstance (Handle, "(Landroid/content/Context;IILjava/util/List;)V"u8, new JValue (context), new JValue (resource), new JValue (textViewResourceId), new JValue (lrefObjects));
+					}
+				} finally {
+					JNIEnv.DeleteLocalRef (lrefObjects);
+					GC.KeepAlive (context);
+					GC.KeepAlive (this);
 				}
-				JNIEnv.DeleteLocalRef (lrefObjects);
-				GC.KeepAlive (context);
 			}
 		}
 

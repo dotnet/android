@@ -64,6 +64,7 @@ namespace Android.Runtime {
 							JniHandleOwnership.TransferLocalRef);
 				}
 				JNIEnv.FinishCreateInstance (Handle, "()V"u8);
+				GC.KeepAlive (this);
 			}
 		}
 
@@ -343,6 +344,7 @@ namespace Android.Runtime {
 							JniHandleOwnership.TransferLocalRef);
 				}
 				JNIEnv.FinishCreateInstance (Handle, "()V"u8);
+				GC.KeepAlive (this);
 			}
 		}
 

@@ -63,6 +63,7 @@ namespace Java.Lang {
 						JNIEnv.AllocObject (GetType ()),
 						JniHandleOwnership.TransferLocalRef);
 				JNIEnv.FinishCreateInstance (Handle, "()V"u8);
+				GC.KeepAlive (this);
 			}
 		}
 

@@ -1,10 +1,14 @@
 using System;
+using System.Collections.Generic;
+using System.Threading;
 
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 using Android.App;
 using Android.Content;
 using Android.OS;
+using Android.Util;
+using Android.Views;
 using Android.Widget;
 using Android.Runtime;
 
@@ -68,6 +72,97 @@ namespace Android.WidgetTests {
 			adapter.Add ("first");
 
 			Assert.AreEqual ("first", adapter.GetItem (0));
+		}
+
+		[TestMethod]
+		public void ArrayAdapterConstructorsPopulateItems ()
+		{
+			var context = Application.Context;
+			const int layout = Android.Resource.Layout.SimpleListItem1;
+			const int textViewId = Android.Resource.Id.Text1;
+			var array = new [] { "one", "two" };
+			var list = new List<string> { "alpha", "beta" };
+
+			using (var a = new ArrayAdapter<string> (context, layout, textViewId)) {
+				a.Add ("zero");
+				Assert.AreEqual ("zero", a.GetItem (0));
+			}
+			using (var a = new ArrayAdapter<string> (context, layout, array)) {
+				Assert.AreEqual (2, a.Count);
+				Assert.AreEqual ("one", a.GetItem (0));
+			}
+			using (var a = new ArrayAdapter<string> (context, layout, textViewId, array)) {
+				Assert.AreEqual (2, a.Count);
+				Assert.AreEqual ("two", a.GetItem (1));
+			}
+			using (var a = new ArrayAdapter<string> (context, layout, list)) {
+				Assert.AreEqual (2, a.Count);
+				Assert.AreEqual ("alpha", a.GetItem (0));
+			}
+			using (var a = new ArrayAdapter<string> (context, layout, textViewId, list)) {
+				Assert.AreEqual (2, a.Count);
+				Assert.AreEqual ("beta", a.GetItem (1));
+			}
+		}
+
+		[TestMethod]
+		public void ArrayAdapterConstructorsReleaseLocalRefsOnFailure ()
+		{
+			const int layout = Android.Resource.Layout.SimpleListItem1;
+			const int textViewId = Android.Resource.Id.Text1;
+			var array = new [] { "one" };
+			var list = new List<string> { "alpha" };
+			Context nullContext = null;
+
+			Assert.Throws<Java.Lang.NullPointerException> (() => new ArrayAdapter<string> (nullContext, layout, array));
+			Assert.Throws<Java.Lang.NullPointerException> (() => new ArrayAdapter<string> (nullContext, layout, textViewId, array));
+			Assert.Throws<Java.Lang.NullPointerException> (() => new ArrayAdapter<string> (nullContext, layout, list));
+			Assert.Throws<Java.Lang.NullPointerException> (() => new ArrayAdapter<string> (nullContext, layout, textViewId, list));
+		}
+
+		[TestMethod]
+		[TestCategory ("GCBridge")]
+		public void FinishCreateInstanceConstructorsSurviveConcurrentCollection ()
+		{
+			const int iterations = 200;
+			var context = Application.Context;
+			const int layout = Android.Resource.Layout.SimpleListItem1;
+			const int textViewId = Android.Resource.Id.Text1;
+			var array = new [] { "one" };
+			var list = new List<string> { "alpha" };
+
+			using var done = new CancellationTokenSource ();
+			var collector = new Thread (() => {
+				while (!done.IsCancellationRequested) {
+					GC.Collect ();
+					GC.WaitForPendingFinalizers ();
+					Thread.Yield ();
+				}
+			});
+			collector.Start ();
+
+			try {
+				for (int i = 0; i < iterations; i++) {
+					_ = new JavaDictionary ();
+					_ = new JavaDictionary<string, string> ();
+					_ = new JavaSet ();
+					_ = new JavaSet<string> ();
+					_ = new ArrayAdapter<string> (context, layout);
+					_ = new ArrayAdapter<string> (context, layout, textViewId);
+					_ = new ArrayAdapter<string> (context, layout, array);
+					_ = new ArrayAdapter<string> (context, layout, textViewId, array);
+					_ = new ArrayAdapter<string> (context, layout, list);
+					_ = new ArrayAdapter<string> (context, layout, textViewId, list);
+					_ = new TestBaseAdapter ();
+					_ = new TestAdapterView (context);
+					_ = new TestAdapterView (context, null);
+					_ = new TestAdapterView (context, null, 0);
+					_ = new TestAsyncTask ();
+				}
+			} finally {
+				done.Cancel ();
+				collector.Join ();
+			}
 		}
 
 		[TestMethod]
@@ -142,6 +237,73 @@ namespace Android.WidgetTests {
 		{
 		}
 	}
+
+	public class TestBaseAdapter : BaseAdapter<string> {
+
+		public TestBaseAdapter ()
+		{
+		}
+
+		protected TestBaseAdapter (IntPtr handle, JniHandleOwnership transfer)
+			: base (handle, transfer)
+		{
+		}
+
+		public override int Count => 0;
+
+		public override string this [int position] => "";
+
+		public override long GetItemId (int position) => position;
+
+		public override View GetView (int position, View convertView, ViewGroup parent) => null;
+	}
+
+	public class TestAdapterView : AdapterView<IListAdapter> {
+
+		public TestAdapterView (Context context)
+			: base (context)
+		{
+		}
+
+		public TestAdapterView (Context context, IAttributeSet attrs)
+			: base (context, attrs)
+		{
+		}
+
+		public TestAdapterView (Context context, IAttributeSet attrs, int defStyle)
+			: base (context, attrs, defStyle)
+		{
+		}
+
+		protected TestAdapterView (IntPtr handle, JniHandleOwnership transfer)
+			: base (handle, transfer)
+		{
+		}
+
+		public override IListAdapter Adapter { get; set; }
+
+		public override View SelectedView => null;
+
+		public override void SetSelection (int position)
+		{
+		}
+	}
+
+#pragma warning disable CA1422 // AsyncTask is obsoleted on android30.0.
+	public class TestAsyncTask : AsyncTask<string, string, string> {
+
+		public TestAsyncTask ()
+		{
+		}
+
+		protected TestAsyncTask (IntPtr handle, JniHandleOwnership transfer)
+			: base (handle, transfer)
+		{
+		}
+
+		protected override string RunInBackground (params string [] @params) => "";
+	}
+#pragma warning restore CA1422
 
 	public class ManagedListView : ListView {
 
