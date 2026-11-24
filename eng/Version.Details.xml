@@ -56,5 +56,9 @@
       <Uri>https://github.com/microsoft/testfx</Uri>
       <Sha>4ab333fbf5fd008da87adb04bd7eca95b5637eff</Sha>
     </Dependency>
+    <Dependency Name="Microsoft.DotNet.Helix.Sdk" Version="11.0.0-beta.26565.102" SkipProperty="True">
+      <Uri>https://github.com/dotnet/dotnet</Uri>
+      <Sha>2900cad7b0526c64f7e6d3036b6c546782c9996a</Sha>
+    </Dependency>
   </ToolsetDependencies>
 </Dependencies>
