@@ -26,8 +26,10 @@ namespace Android.Runtime {
 
 		public int Count {
 			get {
-				// SAFETY: this managed array peer retains its JNI array, element conversion uses the matching T and checked indices, and marshaling completes synchronously.
-				return unsafe(JNIEnv.GetArrayLength (Handle));
+				// SAFETY: GC.KeepAlive (this) retains the managed array peer across the synchronous JNI array length lookup.
+				int count = unsafe(JNIEnv.GetArrayLength (Handle));
+				GC.KeepAlive (this);
+				return count;
 			}
 		}
 
@@ -39,13 +41,16 @@ namespace Android.Runtime {
 			get {
 				if (index < 0 || index >= Count)
 					throw new ArgumentOutOfRangeException ("index");
-				// SAFETY: this peer retains the T-compatible array and index was checked above.
-				return unsafe(JNIEnv.GetArrayItem<T> (Handle, index));
+				// SAFETY: GC.KeepAlive (this) retains the T-compatible array peer across the call, and index was checked above.
+				var item = unsafe(JNIEnv.GetArrayItem<T> (Handle, index));
+				GC.KeepAlive (this);
+				return item;
 			}
 			set {
 				unsafe {
-					// SAFETY: this managed array peer retains its JNI array, element conversion uses the matching T and checked indices, and marshaling completes synchronously.
+					// SAFETY: GC.KeepAlive (this) retains the managed array peer across the synchronous JNI element write.
 					JNIEnv.SetArrayItem<T> (Handle, index, value);
+					GC.KeepAlive (this);
 				}
 			}
 		}
@@ -82,17 +87,19 @@ namespace Android.Runtime {
 
 		public IEnumerator<T> GetEnumerator ()
 		{
-			// SAFETY: this array peer owns the live JNI array; marshaling completes before iterator suspension.
+			// SAFETY: GC.KeepAlive (this) retains this array peer across the synchronous JNI array conversion before iterator suspension.
 			var items = unsafe(JNIEnv.GetArray<T> (Handle));
-                        for (int i = 0; i < items!.Length; i++)
-                                yield return items [i];
+			GC.KeepAlive (this);
+			for (int i = 0; i < items!.Length; i++)
+				yield return items [i];
 		}
 
 		public int IndexOf (T item)
 		{
 			unsafe {
-				// SAFETY: this peer retains the JNI array during the synchronous T conversion.
+				// SAFETY: GC.KeepAlive (this) retains this peer across the synchronous T array conversion.
 				var items = JNIEnv.GetArray<T> (Handle)!;
+				GC.KeepAlive (this);
 				return Array.IndexOf (items, item);
 			}
 		}

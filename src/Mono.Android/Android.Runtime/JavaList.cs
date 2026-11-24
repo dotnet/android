@@ -525,6 +525,8 @@ namespace Android.Runtime {
 				throw new ArgumentException (ex.Message, ex);
 			} catch (Java.Lang.IndexOutOfBoundsException ex) when (JNIEnv.ShouldWrapJavaException (ex)) {
 				throw new ArgumentOutOfRangeException (ex.Message, ex);
+			} finally {
+				GC.KeepAlive (item);
 			}
 			return Java.Lang.Object.GetObject<Java.Lang.Object> (
 					obj.Handle,

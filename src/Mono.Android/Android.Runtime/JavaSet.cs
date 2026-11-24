@@ -25,8 +25,10 @@ namespace Android.Runtime {
 				// SAFETY: java.util.Set.iterator.()Ljava/util/Iterator; matches this peer's JNI ABI. Result locals transfer to conversion.
 				if (id_iterator == IntPtr.Zero)
 					id_iterator = JNIEnv.GetMethodID (set_class, "iterator", "()Ljava/util/Iterator;");
+				IntPtr lref = JNIEnv.CallObjectMethod (Handle, id_iterator);
+				GC.KeepAlive (this);
 				return Java.Lang.Object.GetObject<Java.Util.IIterator> (
-						JNIEnv.CallObjectMethod (Handle, id_iterator),
+						lref,
 						JniHandleOwnership.TransferLocalRef)!;
 			}
 		}
@@ -108,7 +110,9 @@ namespace Android.Runtime {
 					// SAFETY: java.util.Set.size.()I matches this peer's JNI ABI.
 					if (id_size == IntPtr.Zero)
 						id_size = JNIEnv.GetMethodID (set_class, "size", "()I");
-					return JNIEnv.CallIntMethod (Handle, id_size);
+					int count = JNIEnv.CallIntMethod (Handle, id_size);
+					GC.KeepAlive (this);
+					return count;
 				}
 			}
 		}
@@ -161,6 +165,7 @@ namespace Android.Runtime {
 					throw new ArgumentException (ex.Message, ex);
 				}
 			});
+			GC.KeepAlive (this);
 		}
 
 		static IntPtr id_clear;
@@ -189,6 +194,7 @@ namespace Android.Runtime {
 			} catch (Java.Lang.UnsupportedOperationException ex) when (JNIEnv.ShouldWrapJavaException (ex)) {
 				throw new NotSupportedException (ex.Message, ex);
 			}
+			GC.KeepAlive (this);
 		}
 
 		//
@@ -207,7 +213,7 @@ namespace Android.Runtime {
 			if (id_contains == IntPtr.Zero)
 				// SAFETY: contains.(Ljava/lang/Object;)Z is resolved from the retained collection class.
 				id_contains = unsafe(JNIEnv.GetMethodID (set_class, "contains", "(Ljava/lang/Object;)Z"));
-			return JavaConvert.WithLocalJniHandle (item, lref => {
+			bool result = JavaConvert.WithLocalJniHandle (item, lref => {
 				try {
 					// SAFETY: contains.(Ljava/lang/Object;)Z matches this peer; marshaling retains each borrowed argument for the call.
 					return unsafe(JNIEnv.CallBooleanMethod (Handle, id_contains, new JValue (lref)));
@@ -217,6 +223,8 @@ namespace Android.Runtime {
 					throw new NullReferenceException (ex.Message, ex);
 				}
 			});
+			GC.KeepAlive (this);
+			return result;
 		}
 
 		public void CopyTo (Array array, int array_index)
@@ -266,6 +274,7 @@ namespace Android.Runtime {
 					throw new NullReferenceException (ex.Message, ex);
 				}
 			});
+			GC.KeepAlive (this);
 		}
 
 		/// <safety>
@@ -400,6 +409,7 @@ namespace Android.Runtime {
 					throw new ArgumentException (ex.Message, ex);
 				}
 			});
+			GC.KeepAlive (this);
 		}
 
 		//
@@ -418,7 +428,7 @@ namespace Android.Runtime {
 			if (id_contains == IntPtr.Zero)
 				// SAFETY: contains.(Ljava/lang/Object;)Z is resolved from the retained collection class.
 				id_contains = unsafe(JNIEnv.GetMethodID (set_class, "contains", "(Ljava/lang/Object;)Z"));
-			return JavaConvert.WithLocalJniHandle (item, lref => {
+			bool result = JavaConvert.WithLocalJniHandle (item, lref => {
 				try {
 					// SAFETY: contains.(Ljava/lang/Object;)Z matches this peer; marshaling retains each borrowed argument for the call.
 					return unsafe(JNIEnv.CallBooleanMethod (Handle, id_contains, new JValue (lref)));
@@ -428,6 +438,8 @@ namespace Android.Runtime {
 					throw new NullReferenceException (ex.Message, ex);
 				}
 			});
+			GC.KeepAlive (this);
+			return result;
 		}
 
 		public void CopyTo (T[] array, int array_index)
@@ -470,7 +482,7 @@ namespace Android.Runtime {
 			if (id_remove == IntPtr.Zero)
 				// SAFETY: remove.(Ljava/lang/Object;)Z is resolved from the retained collection class.
 				id_remove = unsafe(JNIEnv.GetMethodID (set_class, "remove", "(Ljava/lang/Object;)Z"));
-			return JavaConvert.WithLocalJniHandle (item, lref => {
+			bool result = JavaConvert.WithLocalJniHandle (item, lref => {
 				try {
 					// SAFETY: remove.(Ljava/lang/Object;)Z matches this peer; marshaling retains each borrowed argument for the call.
 					return unsafe(JNIEnv.CallBooleanMethod (Handle, id_remove, new JValue (lref)));
@@ -482,6 +494,8 @@ namespace Android.Runtime {
 					throw new NullReferenceException (ex.Message, ex);
 				}
 			});
+			GC.KeepAlive (this);
+			return result;
 		}
 
 		/// <safety>
