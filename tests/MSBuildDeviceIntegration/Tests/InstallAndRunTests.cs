@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -1047,8 +1046,8 @@ $@"button.ViewTreeObserver.GlobalLayout += Button_ViewTreeObserver_GlobalLayout;
 		[Test]
 		public void TabLayoutOnTabSelectedListener2_ShouldFire_OnActivityLaunch ()
 		{
-			const string expectedLogcatOutput = "OnTabSelected called!";
-			var resultToken = Guid.NewGuid ().ToString ("N");
+			// The monitor checks buffered logcat before launching, so use a per-run marker.
+			var expectedLogcatOutput = $"OnTabSelected called! {Guid.NewGuid ():N}";
 
 			var proj = new XamarinAndroidApplicationProject {
 				PackageReferences = {
@@ -1075,9 +1074,7 @@ $@"button.ViewTreeObserver.GlobalLayout += Button_ViewTreeObserver_GlobalLayout;
 
 		public void OnTabSelected (TabLayout.Tab tab)
 		{
-			var filesDir = FilesDir ?? throw new System.InvalidOperationException ("App files directory is unavailable.");
-			System.IO.File.WriteAllText (System.IO.Path.Combine (filesDir.AbsolutePath, "tab-selected.txt"), "${RESULT_TOKEN}");
-			Android.Util.Log.Debug ("TabLayoutTest", "OnTabSelected called!");
+			Android.Util.Log.Info ("TabLayoutTest", "${EXPECTED_LOGCAT_OUTPUT}");
 		}
 
 		public void OnTabUnselected (TabLayout.Tab tab)
@@ -1087,27 +1084,18 @@ $@"button.ViewTreeObserver.GlobalLayout += Button_ViewTreeObserver_GlobalLayout;
 		public void OnTabReselected (TabLayout.Tab tab)
 		{
 """)
-				.Replace ("${RESULT_TOKEN}", resultToken, StringComparison.Ordinal);
+				.Replace ("${EXPECTED_LOGCAT_OUTPUT}", expectedLogcatOutput, StringComparison.Ordinal);
 
 			builder = CreateApkBuilder (Path.Combine ("temp", "TabLayoutOnTabSelectedListener2"));
 			Assert.IsTrue (builder.Install (proj), "Install should have succeeded.");
 			ClearAdbLogcat ();
-			RunProjectAndAssert (proj, builder);
-			var timeout = TimeSpan.FromSeconds (ActivityStartTimeoutInSeconds);
-			var stopwatch = Stopwatch.StartNew ();
-			string output = "";
-			WaitFor (timeout, () => {
-				int remainingSeconds = (int) (timeout - stopwatch.Elapsed).TotalSeconds;
-				if (remainingSeconds <= 0) {
-					return true;
-				}
-				output = RunAdbCommand ($"shell run-as {proj.PackageName} cat files/tab-selected.txt", timeout: Math.Min (5, remainingSeconds)).Trim ();
-				return output == resultToken;
-			}, intervalInMS: 1000);
-			if (output != resultToken) {
-				Assert.AreEqual (resultToken, output,
-					$"{expectedLogcatOutput} was not recorded for this launch. run-as output: {output}\n{RunAdbCommand ("logcat -d -s TabLayoutTest:V AndroidRuntime:V *:F")}");
+			if (!MonitorAdbLogcat (line => line.Contains (expectedLogcatOutput, StringComparison.Ordinal),
+				Path.Combine (Root, builder.ProjectDirectory, "tab-selected-logcat.log"), ActivityStartTimeoutInSeconds,
+				onMonitoringStarted: () => RunProjectAndAssert (proj, builder, doNotCleanupOnUpdate: true))) {
+				Assert.Fail ($"Output did not contain {expectedLogcatOutput}!\n{RunAdbCommand ("logcat -d -s TabLayoutTest:I AndroidRuntime:V *:F")}");
 			}
+			Assert.IsTrue (WaitForActivityToStart (proj.PackageName, "MainActivity",
+				Path.Combine (Root, builder.ProjectDirectory, "startup-logcat.log"), ActivityStartTimeoutInSeconds), "Activity should have started.");
 		}
 
 		[Test]
