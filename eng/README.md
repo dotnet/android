@@ -37,11 +37,16 @@ darc update-dependencies --channel ".NET 6"
 
 ## SDK selection and CI
 
-`global.json` selects the shared SDK. `tools.pinned` prevents Arcade's toolset
-updater from replacing the produced SDK pin with Arcade's bootstrap SDK.
-After SDK dependency updates (manual or Maestro), set `sdk.version` and
-`tools.dotnet` in `global.json` to the `Microsoft.NET.Sdk` version in
-`Version.Details.xml`, commit the updated file to the dependency PR, and install it:
+`global.json` selects the shared SDK. During Arcade dependency updates,
+darc/Maestro advances both `tools.dotnet` and the existing `sdk.version` to
+Arcade's bootstrap SDK version when it is newer than `tools.dotnet`.
+Keep both version fields in sync and leave `tools.pinned` unset so these
+automatic updates are enabled.
+
+This follows Arcade's bootstrap SDK, not the produced `Microsoft.NET.Sdk`
+dependency in `eng/Version.Details.xml`; the versions can differ. An older
+incoming bootstrap SDK does not downgrade the selected SDK. After an update
+changes `global.json`, install the selected SDK:
 ```
 dotnetup sdk install
 ```
