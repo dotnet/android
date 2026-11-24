@@ -28,7 +28,7 @@ public class JavaMarshalGCBridgeTests
 
 	// A static class cannot be used as the first parameter's type.
 	[UnsafeAccessor (UnsafeAccessorKind.StaticMethod, Name = nameof (JavaMarshalGCBridge.RequiresTemporaryPeer))]
-	static extern bool RequiresTemporaryPeer (
+	static safe extern bool RequiresTemporaryPeer (
 		[UnsafeAccessorType ("Microsoft.Android.Runtime.JavaMarshalGCBridge, Mono.Android")] object target,
 		nuint componentCount);
 
@@ -38,19 +38,20 @@ public class JavaMarshalGCBridgeTests
 		MarkCrossReferencesArgs* args);
 
 	[UnsafeAccessor (UnsafeAccessorKind.StaticMethod, Name = "get_BridgeJni")]
-	static extern JavaMarshalGCBridgeJni GetBridgeJni (
+	static safe extern JavaMarshalGCBridgeJni GetBridgeJni (
 		[UnsafeAccessorType ("Microsoft.Android.Runtime.JavaMarshalGCBridge, Mono.Android")] object target);
 
 	[TestMethod]
 	[DataRow ("net/dot/jni/test/GetThis")]
 	[DataRow ("net/dot/jni/test/CallNonvirtualBase")]
 	[DataRow ("net/dot/jni/test/CallNonvirtualDerived")]
-	public unsafe void HandwrittenPeersUseAndroidGCReferenceContract (string jniTypeName)
+	public void HandwrittenPeersUseAndroidGCReferenceContract (string jniTypeName)
 	{
 		using var peerType = new JniType (jniTypeName);
 		using var listType = new JniType ("java/util/ArrayList");
 		using var destination = new Java.Interop.JavaObject ();
-		var peer = peerType.NewObject (peerType.GetConstructor ("()V"), null);
+		// SAFETY: The live peer type supplies its own no-argument constructor.
+		var peer = unsafe (peerType.NewObject (peerType.GetConstructor ("()V"), null));
 		JniObjectReference references = default;
 		JniObjectReference retained = default;
 		try {
@@ -59,19 +60,25 @@ public class JavaMarshalGCBridgeTests
 			var field = peerType.GetInstanceField ("managedReferences", "Ljava/util/ArrayList;");
 			references = JniEnvironment.InstanceFields.GetObjectField (peer, field);
 			var size = listType.GetInstanceMethod ("size", "()I");
-			Assert.AreEqual (0, JniEnvironment.InstanceMethods.CallIntMethod (references, size));
+			// SAFETY: references is a live ArrayList and its ()I size method takes no arguments.
+			Assert.AreEqual (0, unsafe (JniEnvironment.InstanceMethods.CallIntMethod (references, size)));
 
 			var bridge = GetBridgeJni (null);
 			Assert.IsTrue (bridge.AddReference (peer, destination.PeerReference, knownGCUserPeer: false));
-			Assert.AreEqual (1, JniEnvironment.InstanceMethods.CallIntMethod (references, size));
-			JniArgumentValue* arguments = stackalloc JniArgumentValue [1];
-			arguments [0] = new JniArgumentValue (0);
-			retained = JniEnvironment.InstanceMethods.CallObjectMethod (
-				references, listType.GetInstanceMethod ("get", "(I)Ljava/lang/Object;"), arguments);
+			// SAFETY: references is still live and size takes no arguments.
+			Assert.AreEqual (1, unsafe (JniEnvironment.InstanceMethods.CallIntMethod (references, size)));
+			// SAFETY: The one-element stack buffer matches ArrayList.get(I); references remains live.
+			unsafe {
+				JniArgumentValue* arguments = stackalloc JniArgumentValue [1];
+				arguments [0] = new JniArgumentValue (0);
+				retained = JniEnvironment.InstanceMethods.CallObjectMethod (
+					references, listType.GetInstanceMethod ("get", "(I)Ljava/lang/Object;"), arguments);
+			}
 			Assert.IsTrue (JniEnvironment.Types.IsSameObject (destination.PeerReference, retained));
 
 			bridge.ClearReferences (peer);
-			Assert.AreEqual (0, JniEnvironment.InstanceMethods.CallIntMethod (references, size));
+			// SAFETY: Clearing the list does not dispose references; size still takes no arguments.
+			Assert.AreEqual (0, unsafe (JniEnvironment.InstanceMethods.CallIntMethod (references, size)));
 		} finally {
 			JniObjectReference.Dispose (ref retained);
 			JniObjectReference.Dispose (ref references);

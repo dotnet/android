@@ -429,8 +429,11 @@ namespace Java.InteropTests
 			} finally {
 				SetReferenceManager (runtime, originalManager);
 				if (observer.InputDeletions == 0) {
-					JNIEnv.DeleteRef (input, type == JniObjectReferenceType.Global
-						? JniHandleOwnership.TransferGlobalRef : JniHandleOwnership.TransferLocalRef);
+					// SAFETY: This scope owns the still-live input reference and records its exact JNI reference kind.
+					unsafe {
+						JNIEnv.DeleteRef (input, type == JniObjectReferenceType.Global
+							? JniHandleOwnership.TransferGlobalRef : JniHandleOwnership.TransferLocalRef);
+					}
 				}
 			}
 		}

@@ -242,7 +242,7 @@ namespace Java.InteropTests
 		public int remappedToStaticHashCode ()
 		{
 			const string id = "remappedToStaticHashCode.()I";
-			// SAFETY: The remapped method takes no arguments; this owns the live receiver.
+			// SAFETY: ()I has no source arguments; static redirection prepends this live receiver to its own buffer.
 			return unsafe (_members.InstanceMethods.InvokeVirtualInt32Method (id, this, null));
 		}
 
