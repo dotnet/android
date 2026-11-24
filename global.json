@@ -6,8 +6,7 @@
     "errorMessage": "Install the repository SDK with: dotnetup sdk install"
   },
   "tools": {
-    "dotnet": "12.0.100-alpha.1.26551.101",
-    "pinned": true
+    "dotnet": "12.0.100-alpha.1.26551.101"
   },
   "msbuild-sdks": {
     "Microsoft.Build.NoTargets": "3.7.134",
