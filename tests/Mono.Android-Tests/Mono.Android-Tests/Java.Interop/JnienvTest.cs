@@ -78,6 +78,7 @@ namespace Java.InteropTests
 
 		delegate void CB (IntPtr jnienv, IntPtr java_instance);
 
+		// The native fixture joins the worker before returning; the marshaled callback never outlives this call.
 		[DllImport ("reuse-threads")]
 		static safe extern int rt_invoke_callback_on_new_thread (CB cb);
 
