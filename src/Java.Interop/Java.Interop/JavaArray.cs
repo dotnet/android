@@ -318,16 +318,20 @@ namespace Java.Interop
 		void* elements;
 		int elementCount;
 		int sizeOfElement;
+		IJavaPeerable? owner;
 
 		/// <safety>
-		/// Supply a live JNI acquisition with a non-negative count within its extent and the matching
-		/// primitive element size; only null is checked. Keep its Java reference valid through release,
-		/// use this owner for release, and exclude conflicting alias access or concurrent disposal.
-		/// JNI operations require a thread attached to the same JVM. On construction failure,
-		/// the caller remains responsible for the acquisition.
+		/// Supply a live JNI acquisition with a non-negative count within its extent, the matching
+		/// primitive element size, and its owning peer wrapper; only null is checked. Keep the Java
+		/// array peer valid (not disposed externally) through release, use this owner for release,
+		/// and exclude conflicting alias access or concurrent disposal. This owner roots
+		/// <paramref name="owner"/> until <see cref="Release"/> succeeds. JNI operations require a
+		/// thread attached to the same JVM. On construction failure, the caller remains responsible
+		/// for the acquisition.
 		/// </safety>
-		internal unsafe JniArrayElements (void* elements, int elementCount, int sizeOfElement)
+		internal unsafe JniArrayElements (void* elements, int elementCount, int sizeOfElement, IJavaPeerable owner)
 		{
+			ArgumentNullException.ThrowIfNull (owner);
 			unsafe {
 				// SAFETY: The caller supplies the JNI extent and ABI; only the address is checked and stored.
 				if (elements == null)
@@ -336,6 +340,7 @@ namespace Java.Interop
 			}
 			this.elementCount = elementCount;
 			this.sizeOfElement = sizeOfElement;
+			this.owner = owner;
 		}
 
 		// SAFETY: Sentinel comparison does not read the buffer.
@@ -367,16 +372,26 @@ namespace Java.Interop
 
 		public void CopyToJava ()
 		{
-			Synchronize (JniReleaseArrayElementsMode.Commit);
+			try {
+				Synchronize (JniReleaseArrayElementsMode.Commit);
+			} finally {
+				GC.KeepAlive (owner);
+			}
 		}
 
 		public void Release (JniReleaseArrayElementsMode releaseMode)
 		{
 			ObjectDisposedException.ThrowIf (IsDisposed, this);
-			Synchronize (releaseMode);
-			unsafe {
-				// SAFETY: Synchronize succeeded; clearing the sentinel does not access the buffer.
-				elements = null;
+			var owner = this.owner;
+			try {
+				Synchronize (releaseMode);
+				unsafe {
+					// SAFETY: Synchronize succeeded; clearing the sentinel does not access the buffer.
+					elements = null;
+				}
+				this.owner = null;
+			} finally {
+				GC.KeepAlive (owner);
 			}
 		}
 

@@ -112,13 +112,10 @@ namespace Java.Interop
 		{
 			int len = Length;
 			var nullReference = new JniObjectReference ();
-			try {
-				for (int i = 0; i < len; i++) {
-					JniEnvironment.Arrays.SetObjectArrayElement (PeerReference, i, nullReference);
-				}
-			} finally {
-				GC.KeepAlive (this);
+			for (int i = 0; i < len; i++) {
+				JniEnvironment.Arrays.SetObjectArrayElement (PeerReference, i, nullReference);
 			}
+			GC.KeepAlive (this);
 		}
 
 		public override int IndexOf (T item)

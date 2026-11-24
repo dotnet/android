@@ -50,22 +50,20 @@ namespace Java.Interop {
 	public sealed class Jni<#= info.TypeModifier #>ArrayElements : JniArrayElements {
 
 		JniObjectReference      arrayHandle;
-		Java<#= info.TypeModifier #>Array? owner;
 
 		/// <safety>
-		/// Supply a live JNI <#= info.JniMarshalType #> array, its owning wrapper when applicable, and its
-		/// unreleased, aligned Get<#= info.JniMarshalType #>ArrayElements result in the current thread's JVM,
-		/// with a non-negative count within the array length. Keep the array reference valid through owner
-		/// release (not disposed externally) and exclude conflicting aliases or concurrent release/disposal.
-		/// This owner roots <paramref name="owner"/> until a non-Commit release completes; on construction
-		/// failure, the caller remains responsible for release.
+		/// Supply a live JNI <#= info.JniMarshalType #> array, its owning wrapper, and its unreleased,
+		/// aligned Get<#= info.JniMarshalType #>ArrayElements result in the current thread's JVM,
+		/// with a non-negative count within the array length. Keep the array peer valid (not disposed
+		/// externally) through release and exclude conflicting aliases or concurrent release/disposal.
+		/// This owner roots <paramref name="owner"/> until <see cref="JniArrayElements.Release"/> succeeds;
+		/// on construction failure, the caller remains responsible for release.
 		/// </safety>
-		internal unsafe Jni<#= info.TypeModifier #>ArrayElements (JniObjectReference arrayHandle, <#= info.ManagedType #>* elements, int elementCount, Java<#= info.TypeModifier #>Array? owner)
-			: base (elements, elementCount, sizeof (<#= info.ManagedType #>))
+		internal unsafe Jni<#= info.TypeModifier #>ArrayElements (JniObjectReference arrayHandle, <#= info.ManagedType #>* elements, int elementCount, Java<#= info.TypeModifier #>Array owner)
+			: base (elements, elementCount, sizeof (<#= info.ManagedType #>), owner)
 		{
-			// SAFETY: Retain the caller's matching JNI array handle and owning wrapper until release.
+			// SAFETY: Retain the caller's matching JNI array handle for release; base roots owner until release.
 			this.arrayHandle = arrayHandle;
-			this.owner       = owner;
 		}
 
 		// SAFETY: Cast the checked address only; no dereference or lifetime extension.
@@ -91,16 +89,9 @@ namespace Java.Interop {
 
 		protected override void Synchronize (JniReleaseArrayElementsMode releaseMode)
 		{
-			var owner = this.owner;
-			try {
-				unsafe {
-					// SAFETY: The owner pairs this acquired buffer with arrayHandle for the matching JNI release; finally keeps the owning wrapper alive.
-					JniEnvironment.Arrays.Release<#= info.JniMarshalType #>ArrayElements (arrayHandle, Elements, releaseMode);
-				}
-				if (releaseMode != JniReleaseArrayElementsMode.Commit)
-					this.owner = null;
-			} finally {
-				GC.KeepAlive (owner);
+			unsafe {
+				// SAFETY: The base class roots the owning wrapper while this acquired buffer is released with arrayHandle.
+				JniEnvironment.Arrays.Release<#= info.JniMarshalType #>ArrayElements (arrayHandle, Elements, releaseMode);
 			}
 		}
 	}
@@ -145,12 +136,13 @@ namespace Java.Interop {
 			var peerReference = PeerReference;
 			if (!peerReference.IsValid)
 				throw JniEnvironment.CreateObjectDisposedException (this);
+			int length = JniEnvironment.Arrays.GetArrayLength (peerReference);
 			unsafe {
 				// SAFETY: Pair JNI's non-null typed acquisition with its array, length, and owning wrapper.
 				var elements = JniEnvironment.Arrays.Get<#= info.JniMarshalType #>ArrayElements (peerReference, null);
 				if (elements == null)
 					throw new InvalidOperationException ("`JniEnvironment.Arrays.Get<#= info.JniMarshalType #>ArrayElements()` returned NULL!");
-				return new Jni<#= info.TypeModifier #>ArrayElements (peerReference, elements, Length, this);
+				return new Jni<#= info.TypeModifier #>ArrayElements (peerReference, elements, length, this);
 			}
 		}
 
