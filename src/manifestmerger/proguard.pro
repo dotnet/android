@@ -24,6 +24,9 @@
 -dontwarn org.objectweb.asm.**
 -dontwarn org.tukaani.xz.**
 -dontwarn org.apache.commons.compress.harmony.pack200.**
+# JSR 305 annotations; Guava no longer brings in com.google.code.findbugs:jsr305.
+-dontwarn javax.annotation.**
 
 # Signature-polymorphic calls have descriptors that differ from the JDK declaration.
 -dontwarn java.lang.invoke.MethodHandle
+-dontwarn java.lang.invoke.VarHandle

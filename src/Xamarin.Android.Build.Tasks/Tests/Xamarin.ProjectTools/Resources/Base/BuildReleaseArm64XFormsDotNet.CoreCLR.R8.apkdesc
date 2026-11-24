@@ -5,7 +5,7 @@
       "Size": 6768
     },
     "classes.dex": {
-      "Size": 2213720
+      "Size": 2201344
     },
     "kotlin/annotation/annotation.kotlin_builtins": {
       "Size": 928
@@ -29,31 +29,31 @@
       "Size": 2396
     },
     "lib/arm64-v8a/libassembly-store.so": {
-      "Size": 10737880
+      "Size": 10062336
     },
     "lib/arm64-v8a/libbinary_blobs.so": {
-      "Size": 20112
+      "Size": 21168
     },
     "lib/arm64-v8a/libclrjit.so": {
-      "Size": 2839808
+      "Size": 2856728
     },
     "lib/arm64-v8a/libcoreclr.so": {
-      "Size": 4679152
+      "Size": 4669832
     },
     "lib/arm64-v8a/libmonodroid.so": {
-      "Size": 111152
+      "Size": 94224
     },
     "lib/arm64-v8a/libSystem.Globalization.Native.so": {
       "Size": 72256
     },
     "lib/arm64-v8a/libSystem.IO.Compression.Native.so": {
-      "Size": 1259120
+      "Size": 1259296
     },
     "lib/arm64-v8a/libSystem.Native.so": {
-      "Size": 101128
+      "Size": 102792
     },
     "lib/arm64-v8a/libSystem.Security.Cryptography.Native.Android.so": {
-      "Size": 171584
+      "Size": 174568
     },
     "META-INF/androidx.activity_activity.version": {
       "Size": 6
@@ -2210,5 +2210,5 @@
       "Size": 794696
     }
   },
-  "PackageSize": 16841690
+  "PackageSize": 16169869
 }

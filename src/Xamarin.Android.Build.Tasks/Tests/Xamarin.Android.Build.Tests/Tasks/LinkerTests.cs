@@ -687,11 +687,9 @@ namespace Xamarin.Android.Build.Tests
 		public void WarnAboutAppDomains ([ValueSource (typeof (BaseTest), nameof (BaseTest.ValidRuntimeConfigurations))] (bool isRelease, AndroidRuntime runtime) configuration)
 		{
 			var (isRelease, runtime) = configuration;
-			if (isRelease) {
-				// NOTE: trimmer warnings are hidden by default in .NET 7 rc1
-				Assert.Ignore("https://github.com/dotnet/linker/issues/2982");
+			if (runtime == AndroidRuntime.NativeAOT) {
+				Assert.Ignore ("NativeAOT does not report AppDomain.CreateDomain usage.");
 			}
-
 			var path = Path.Combine (Root, "temp", TestName);
 			var lib = new XamarinAndroidLibraryProject {
 				IsRelease = isRelease,
@@ -716,9 +714,8 @@ namespace Xamarin.Android.Build.Tests
 			using var appBuilder = CreateApkBuilder (Path.Combine (path, app.ProjectName));
 			Assert.IsTrue (appBuilder.Build (app), "app build should have succeeded.");
 
-			// NOTE: in .NET 6, we only emit IL6200 for Release builds
 			if (isRelease) {
-				string code = "IL6200";
+				string code = "XA2000";
 				Assert.IsTrue (StringAssertEx.ContainsText (appBuilder.LastBuildOutput, "1 Warning(s)"), "MSBuild should count 1 warnings.");
 				Assert.IsTrue (StringAssertEx.ContainsText (appBuilder.LastBuildOutput, $"warning {code}: Use of AppDomain.CreateDomain()"), $"Should warn {code} about creating AppDomain.");
 			}

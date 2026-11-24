@@ -8,13 +8,16 @@ using System.Text;
 using System.Text.RegularExpressions;
 using Microsoft.Android.Build.Tasks;
 using Microsoft.Build.Framework;
+using Xamarin.Android.Tasks;
+using Properties = Xamarin.Android.Tasks.Properties;
 
-namespace Xamarin.Android.Tasks;
+namespace Microsoft.Android.Tasks;
 
 /// <summary>
 /// Collects extra files from inside Jar libraries to be added to the final archive.
 /// </summary>
-public class CollectJarContentFilesForArchive : AndroidTask
+[MSBuildMultiThreadableTask]
+public class CollectJarContentFilesForArchive : MultithreadedAndroidTask
 {
 	public override string TaskPrefix => "CJC";
 
@@ -62,17 +65,17 @@ public class CollectJarContentFilesForArchive : AndroidTask
 		else if (JavaLibraries != null)
 			jarFiles = JavaLibraries;
 
-		var libraryProjectJars = MonoAndroidHelper.ExpandFiles (LibraryProjectJars)
+		var libraryProjectJars = MonoAndroidHelper.ExpandFiles (LibraryProjectJars, TaskEnvironment)
 			.Where (jar => !MonoAndroidHelper.IsEmbeddedReferenceJar (jar));
 
 		var jarFilePaths = libraryProjectJars.Concat (jarFiles != null ? jarFiles.Select (j => j.ItemSpec) : Enumerable.Empty<string> ());
-		jarFilePaths = MonoAndroidHelper.DistinctFilesByContent (jarFilePaths);
+		jarFilePaths = MonoAndroidHelper.DistinctFilesByContent (jarFilePaths, TaskEnvironment);
 
 		// Find files in the .jar files that match our include patterns to be added to the archive
 		var files = new PackageFileListBuilder ();
 
 		foreach (var jarFile in jarFilePaths) {
-			using (var stream = File.OpenRead (jarFile))
+			using (var stream = File.OpenRead (TaskEnvironment.GetAbsolutePath (jarFile)))
 			using (var jar = new ZipArchive (stream, ZipArchiveMode.Read)) {
 				entries: foreach (var jarItem in jar.Entries) {
 					if (jarItem.IsDirectory ())

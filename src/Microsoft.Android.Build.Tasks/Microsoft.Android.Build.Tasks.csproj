@@ -82,6 +82,10 @@
     <Compile Include="..\Xamarin.Android.Build.Tasks\Utilities\ResourceIdentifier.cs" Link="Utilities\ResourceIdentifier.cs" />
     <Compile Include="..\Xamarin.Android.Build.Tasks\Utilities\RtxtParser.cs" Link="Utilities\RtxtParser.cs" />
     <Compile Include="..\Xamarin.Android.Build.Tasks\Utilities\PackageFileListBuilder.cs" Link="Utilities\PackageFileListBuilder.cs" />
+    <Compile Include="..\Xamarin.Android.Build.Tasks\Utilities\MonoAndroidHelper.JavaLibraries.cs" Link="Utilities\MonoAndroidHelper.JavaLibraries.cs" />
+    <Compile Include="..\Xamarin.Android.Build.Tasks\Utilities\ELFHelper.Shared.cs" Link="Utilities\ELFHelper.Shared.cs" />
+    <Compile Include="..\Xamarin.Android.Build.Tasks\Utilities\ZipArchiveEntryExtensions.cs" Link="Utilities\ZipArchiveEntryExtensions.cs" />
+    <Compile Include="..\..\src-ThirdParty\android-platform-tools-base\PackagingUtils.cs" Link="Utilities\PackagingUtils.cs" />
     <!-- BuildAppBundle: the legacy BundleToolAdbTask tasks still derive from these, so they remain shared sources. -->
     <Compile Include="..\Xamarin.Android.Build.Tasks\Tasks\JavaToolTask.cs" Link="Tasks\JavaToolTask.cs" />
     <Compile Include="..\Xamarin.Android.Build.Tasks\Tasks\BundleTool.cs" Link="Tasks\BundleTool.cs" />

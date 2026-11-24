@@ -38,7 +38,7 @@ namespace Xamarin.SourceWriter
 		public bool IsDeclaration { get; set; }
 
 		public string ExplicitInterfaceImplementation { get; set; }
-		public bool NewFirst { get; set; }           // TODO: Temporary to match unit tests
+		public bool NewFirst { get; set; }           // Preserve modifier ordering in existing generated source.
 
 		public void SetVisibility (string visibility)
 		{

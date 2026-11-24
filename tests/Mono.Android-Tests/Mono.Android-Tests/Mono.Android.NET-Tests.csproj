@@ -117,6 +117,7 @@
     <Compile Include="Android.Views\ViewActionCallbackTests.cs" />
     <Compile Include="Android.Widget\AdapterTests.cs" />
     <Compile Include="Android.Widget\CustomWidgetTests.cs" />
+    <Compile Include="..\Java.Interop-Tests\Java.Interop\GCBridgeTestHelpers.cs" Link="Java.Interop\GCBridgeTestHelpers.cs" />
     <Compile Include="Java.Interop\ConstructorActivationTests.cs" />
     <Compile Include="Java.Interop\ExportTests.cs" />
     <Compile Include="Java.Interop\InterfaceCollectionMarshallingTests.cs" />
