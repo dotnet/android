@@ -248,31 +248,11 @@ namespace Xamarin.Android.Tasks.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Java SDK {0} or above is required when using {1}.
-        ///Download the latest JDK at: https://aka.ms/msopenjdk
-        ///Note: the Android Designer is incompatible with Java SDK 11.0: https://aka.ms/vs2019-and-jdk-11.
-        /// </summary>
-        public static string XA0031 {
-            get {
-                return ResourceManager.GetString("XA0031", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Java SDK {0} or above is required when using .NET 6 or higher. Download the latest JDK at: https://aka.ms/msopenjdk.
         /// </summary>
         public static string XA0031_NET {
             get {
                 return ResourceManager.GetString("XA0031_NET", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Java SDK {0} or above is required when using Android SDK Build-Tools {1}..
-        /// </summary>
-        public static string XA0032 {
-            get {
-                return ResourceManager.GetString("XA0032", resourceCulture);
             }
         }
         
@@ -330,6 +310,15 @@ namespace Xamarin.Android.Tasks.Properties {
             }
         }
         
+        /// <summary>
+        ///   Looks up a localized string similar to @(Content) build action is not supported.
+        /// </summary>
+        public static string XA0101 {
+            get {
+                return ResourceManager.GetString("XA0101", resourceCulture);
+            }
+        }
+
         /// <summary>
         ///   Looks up a localized string similar to Invalid value for `$(AndroidSequencePointsMode)`: {0}.
         /// </summary>
