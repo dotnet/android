@@ -99,8 +99,8 @@ namespace Xamarin.Android.Build.Tests
 		[Test]
 		public void BasicApplicationPublishReadyToRunCustomConfiguration ([Values] bool isComposite, [Values ("android-x64", "android-arm64")] string rid)
 		{
-			// Use a non-standard release configuration name to validate PublishReadyToRun
-			// defaults on for publish builds, not just $(Configuration)=='Release'.
+			// Use a non-standard optimized configuration to validate that trimming and
+			// ReadyToRun defaults follow Optimize instead of $(Configuration).
 			var proj = new XamarinAndroidApplicationProject (releaseConfigurationName: "AppStore") {
 				IsRelease = true,
 			};
@@ -110,11 +110,8 @@ namespace Xamarin.Android.Build.Tests
 			proj.SetProperty ("AndroidEnableAssemblyCompression", "false");
 			proj.SetProperty ("Optimize", "true");
 			proj.SetProperty ("DebugType", "None");
-			proj.SetProperty ("PublishTrimmed", "true");
 			proj.SetProperty ("PublishReadyToRunComposite", isComposite.ToString ());
 
-			// Use `dotnet publish` rather than `msbuild /t:Publish`: only the `dotnet publish` CLI
-			// sets $(_IsPublishing)=true, which the CoreCLR R2R default (issue #11069) relies on.
 			var projBuilder = CreateDllBuilder ();
 			projBuilder.Save (proj);
 			var dotnet = new DotNetCLI (Path.Combine (Root, projBuilder.ProjectDirectory, proj.ProjectFilePath));

@@ -402,7 +402,8 @@ A boolean property that determines whether [Fast Deployment](build-process.md#Fa
 is enabled. Fast Deployment installs assemblies outside of the application
 package, which can reduce deployment and rebuild times.
 
-The default value is `True` for Debug builds and `False` for Release builds.
+The default value is `True` when `$(Optimize)` is not `true`, and `False`
+when `$(Optimize)` is `true`.
 Setting this property is equivalent to setting the inverse value of
 [`$(EmbedAssembliesIntoApk)`](#embedassembliesintoapk). If both properties
 are set, `$(EmbedAssembliesIntoApk)` takes precedence.
@@ -800,8 +801,9 @@ The Android activity to launch.
 Specifies which type of
 [linking](/xamarin/android/deploy-test/linker) should be
 performed on assemblies contained within the Android package. Only
-used in Android Application projects. The default value is
-*SdkOnly*. Valid values are:
+used in Android Application projects. The default value is *None* when
+`$(Optimize)` is not `true`, and *SdkOnly* when optimized builds are
+trimmed. NativeAOT builds default to *Full*. Valid values are:
 
 - **None**: No linking will be attempted.
 
@@ -880,7 +882,7 @@ This property was removed in .NET 12 and has no effect.
 
 A boolean property that controls
 whether sequence points are generated so that file name and line
-number information can be extracted from `Release` stack traces.
+number information can be extracted from optimized-build stack traces.
 
 ## AndroidManifest
 
@@ -1017,17 +1019,17 @@ the newer [`AndroidPackageFormats`](build-properties.md#androidpackageformats).
 A semi-colon delimited property with valid values of `apk` and `aab`.
 Indicates if you want to package the Android application as
 an [APK file][apk] or [Android App Bundle][bundle]. App Bundles
-are a new format for `Release` builds that are intended for
+are a new format for optimized builds that are intended for
 submission on Google Play.
 
-When building a Release build you might want to generate both
+When building an optimized build you might want to generate both
 and `aab` and an `apk` for distribution to various stores.
 
 Setting `AndroidPackageFormats` to `aab;apk` will result in both
 being generated. Setting `AndroidPackageFormats` to either `aab`
 or `apk` will generate only one file.
 
-The default value is `aab;apk` for `Release` builds only.
+The default value is `aab;apk` when `$(Optimize)` is `true`.
 Using `apk` for debugging is faster, but `aab` is also supported
 with fast deployment if needed (for example, when testing asset packs).
 
@@ -2005,9 +2007,8 @@ application startup time while retaining JIT compatibility, but
 increases application and download size.
 
 For Android applications that use CoreCLR, this property defaults to
-`true` in `Release` configuration and is not enabled by default in
-`Debug` configuration. ReadyToRun does not apply when using Mono or
-NativeAOT.
+`true` when `$(Optimize)` is `true`, or when publishing without debug
+symbols. ReadyToRun does not apply when using Mono or NativeAOT.
 
 ReadyToRun requires trimming. If `$(PublishTrimmed)` is not `true`,
 .NET for Android disables `PublishReadyToRun` and
