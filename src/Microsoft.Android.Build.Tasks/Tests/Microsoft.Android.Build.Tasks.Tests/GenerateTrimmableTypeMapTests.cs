@@ -91,6 +91,26 @@ namespace Xamarin.Android.Build.Tests {
 		}
 
 		[Test]
+		public void GeneratedTypeMapsAreMarkedTrimmableAndAotCompatible ([Values] bool root)
+		{
+			using var stream = new MemoryStream ();
+			if (root) {
+				new RootTypeMapAssemblyGenerator (new Version (12, 0)).Generate (["_Example.TypeMap"], useSharedTypemapUniverse: false, stream);
+			} else {
+				var generator = new TypeMapAssemblyGenerator (new Version (12, 0));
+				generator.Generate (generator.CreateModel ([], "_Example.TypeMap"), stream, useSharedTypemapUniverse: false);
+			}
+			stream.Position = 0;
+			using var assembly = Mono.Cecil.AssemblyDefinition.ReadAssembly (stream);
+
+			var metadata = assembly.CustomAttributes
+				.Where (attribute => attribute.AttributeType.FullName == "System.Reflection.AssemblyMetadataAttribute")
+				.Select (attribute => $"{attribute.ConstructorArguments [0].Value}={attribute.ConstructorArguments [1].Value}")
+				.ToArray ();
+			CollectionAssert.AreEquivalent (new [] { "IsTrimmable=True", "IsAotCompatible=True" }, metadata);
+		}
+
+		[Test]
 		public void OpenGenericProxiesKeepTheReflectionActivationConstructor (
 			[Values] bool generic,
 			[Values] bool inherited,
