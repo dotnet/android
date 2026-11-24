@@ -34,20 +34,23 @@ namespace generator.SourceWriters
 			ConstructorWriter ctor = new ConstructorWriter {
 				Name        = Name,
 				IsPublic    = true,
-				IsUnsafe    = SourceWriterExtensions.IsThrowable (klass),
 				BaseCall    = "base (handle, transfer)",
 				Parameters  = {
 					new MethodParameterWriter ("handle", TypeReferenceWriter.IntPtr),
 					new MethodParameterWriter ("transfer", new TypeReferenceWriter ("JniHandleOwnership")),
 				},
 			};
-			if (ctor.IsUnsafe) {
+			if (SourceWriterExtensions.IsThrowable (klass)) {
 				ctor.Comments.Add ("/// <safety>");
 				ctor.Comments.Add ("/// handle must be zero or a live compatible JNI object. Use an attached thread");
 				ctor.Comments.Add ("/// (locals: creating thread), with no concurrent deletion through aliases during construction.");
 				ctor.Comments.Add ("/// transfer must match ownership; transferred references cannot be used again,");
 				ctor.Comments.Add ("/// even if construction throws.");
 				ctor.Comments.Add ("/// </safety>");
+				ctor.Comments.Add ("/// <remarks>");
+				ctor.Comments.Add ("/// This raw-handle constructor is safe-callable as a compatibility exception.");
+				ctor.Comments.Add ("/// The compiler does not enforce these obligations or validate nonzero references.");
+				ctor.Comments.Add ("/// </remarks>");
 			}
 
 			Constructors.Add (ctor);

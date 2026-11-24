@@ -2,15 +2,15 @@ using System;
 using Android.App;
 using Android.Views;
 using Microsoft.Android.Runtime;
-using NUnit.Framework;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Android.ViewsTests;
 
-[TestFixture]
+[TestClass]
 public class LayoutInflaterTest
 {
-	[Test]
-	[Category ("Intune")]
+	[TestMethod]
+	[TestCategory ("Intune")]
 	public void From ()
 	{
 		Console.WriteLine ($"{nameof (LayoutInflaterTest)}: RuntimeFeature.IsAssignableFromCheck={RuntimeFeature.IsAssignableFromCheck}");

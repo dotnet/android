@@ -2,6 +2,8 @@
 
   <PropertyGroup>
     <TargetFramework>$(DotNetStableTargetFramework)</TargetFramework>
+    <OutputType>Exe</OutputType>
+    <EnableNUnitRunner>true</EnableNUnitRunner>
     <RootNamespace>Xamarin.Android.Build.Tests</RootNamespace>
     <OutputPath>..\..\bin\Test$(Configuration)\MSBuildDeviceIntegration\</OutputPath>
     <SignAssembly>true</SignAssembly>

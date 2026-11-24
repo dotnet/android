@@ -398,11 +398,6 @@
 	  )]/parameter[@type='int']"
 	  name="type">Android.Graphics.Color</attr>
 
-	<!-- TODO in 5.0!
-	s/int[] colors/Color[] colors/g
-	TextView.getTextColor() should return Color
-	-->
-
 	<!-- Color parameters... -->
 	<!-- cosmetic fix for non-conformant name
 	<attr path="/api/package[@name='android.view.animation']/class[@name='Animation']/method[@name='setBackgroundColor']/parameter[@name='bg']" name="type">Android.Graphics.Color</attr>
@@ -1989,9 +1984,7 @@
   <ns-replace source="privatecompute"       replacement="PrivateCompute" />
   <ns-replace source="voiceinteraction"     replacement="VoiceInteractions" />
   <ns-replace source="permissionui"         replacement="PermissionUI" />
-  <ns-replace source="agenticon"            replacement="AgentIcon" />
   <ns-replace source="contentsafety"        replacement="ContentSafety" />
-  <ns-replace source="personalcontext"      replacement="PersonalContext" />
   <ns-replace source="multisensory"         replacement="MultiSensory" />
   <ns-replace source="authenticationpolicy" replacement="AuthenticationPolicy" />
 

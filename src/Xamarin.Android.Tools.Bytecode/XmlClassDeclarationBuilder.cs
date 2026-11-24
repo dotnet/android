@@ -109,6 +109,8 @@ namespace Xamarin.Android.Tools.Bytecode {
 				yield break;
 			yield return new XAttribute ("kotlin-inline-class", "true");
 			yield return new XAttribute ("kotlin-inline-class-underlying-jni-type", underlying);
+			if (classFile.KotlinInlineClassHasInit)
+				yield return new XAttribute ("kotlin-inline-class-has-init", "true");
 		}
 
 		string GetElementName ()
@@ -172,8 +174,9 @@ namespace Xamarin.Android.Tools.Bytecode {
 				return "protected";
 			if ((accessFlags & ClassAccessFlags.Private) != 0)
 				return "private";
+			// Preserve binding compatibility; GetAnnotatedVisibility records module-info restrictions.
 			if (accessFlags.HasFlag (ClassAccessFlags.Internal))
-				return "public";    // TODO: `kotlin-internal` at some point?  See also GetAnnotatedVisibility()
+				return "public";
 			return "";
 		}
 
@@ -605,6 +608,8 @@ namespace Xamarin.Android.Tools.Bytecode {
 				ta => ta.TargetType == TypeAnnotationTargetType.MethodReturn);
 			if (typeNullness.HasValue)
 				return typeNullness;
+			if (method.KotlinReturnNotNull)
+				return true;
 			if (isNullMarked && IsReferenceTypeDescriptor (GetReturnDescriptor (method.Descriptor))
 					&& !IsTopLevelTypeVariableSignature (method.ReturnType.TypeSignature))
 				return true;
@@ -635,8 +640,11 @@ namespace Xamarin.Android.Tools.Bytecode {
 			if (typeNullness.HasValue)
 				return typeNullness;
 
+			var parameters = method.GetParameters ();
+			if (parameterIndex >= 0 && parameterIndex < parameters.Length && parameters [parameterIndex].KotlinNotNull)
+				return true;
+
 			if (isNullMarked) {
-				var parameters = method.GetParameters ();
 				if (parameterIndex >= 0 && parameterIndex < parameters.Length
 						&& IsReferenceTypeDescriptor (parameters [parameterIndex].Type.BinaryName)
 						&& !IsTopLevelTypeVariableSignature (parameters [parameterIndex].Type.TypeSignature))
@@ -655,6 +663,8 @@ namespace Xamarin.Android.Tools.Bytecode {
 				ta => ta.TargetType == TypeAnnotationTargetType.Field);
 			if (typeNullness.HasValue)
 				return typeNullness;
+			if (field.KotlinNotNull)
+				return true;
 			if (isNullMarked && IsReferenceTypeDescriptor (field.Descriptor)
 					&& !IsTopLevelTypeVariableSignature (field.GetSignature ()))
 				return true;

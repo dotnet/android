@@ -84,7 +84,6 @@ namespace Xamarin.Android.Tasks
 		void ProcessType (MetadataReader reader, TypeDefinition type, TextWriter writer)
 		{
 			// RegisterAttribute can be applied to interfaces, but proguard rules are only needed for classes.
-			// Structs don't need to be checked because RegisterAttribute cannot be applied to them.
 			if ((type.Attributes & System.Reflection.TypeAttributes.Interface) != 0)
 				return;
 
@@ -109,12 +108,26 @@ namespace Xamarin.Android.Tasks
 			writer.WriteLine ($"{keepOption} class {javaTypeName}");
 			writer.WriteLine ($"{keepMembersOption} class {javaTypeName} {{");
 
-			foreach (var methodHandle in type.GetMethods ()) {
-				ProcessMethod (reader, methodHandle, writer);
+			if (IsValueType (reader, type)) {
+				// Kotlin value-class structs call `box-impl`, `unbox-impl` and `constructor-impl` by name.
+				writer.WriteLine ("   *;");
+			} else {
+				foreach (var methodHandle in type.GetMethods ()) {
+					ProcessMethod (reader, methodHandle, writer);
+				}
 			}
 
 			writer.WriteLine ("}");
 			writer.WriteLine ();
+		}
+
+		static bool IsValueType (MetadataReader reader, TypeDefinition type)
+		{
+			if (type.BaseType.Kind != HandleKind.TypeReference) {
+				return false;
+			}
+			var baseType = reader.GetTypeReference ((TypeReferenceHandle) type.BaseType);
+			return reader.StringComparer.Equals (baseType.Namespace, "System") && reader.StringComparer.Equals (baseType.Name, "ValueType");
 		}
 
 		void ProcessMethod (MetadataReader reader, MethodDefinitionHandle methodHandle, TextWriter writer)

@@ -5,15 +5,15 @@ using Android.Content.Res;
 using Android.Graphics;
 using Android.Graphics.Drawables;
 using Android.Runtime;
-using NUnit.Framework;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Android.GraphicsTests
 {
 	// https://bugzilla.xamarin.com/show_bug.cgi?id=23823
-	[TestFixture]
+	[TestClass]
 	public class NinePatchTests
 	{
-		static object[] NinePatchDrawables = {
+		public static readonly object [][] NinePatchDrawables = {
 			new object[] {
 				Xamarin.Android.RuntimeTests.Resource.Drawable.image,
 				"image" // Drawable from App project.
@@ -24,7 +24,7 @@ namespace Android.GraphicsTests
 			}
 		};
 
-		[Test, TestCaseSource (nameof (NinePatchDrawables))]
+		[TestMethod, DynamicData (nameof (NinePatchDrawables))]
 		public void DrawableFromRes_ShouldBeTypeNinePatchDrawable (int resId, string name)
 		{
 #pragma warning disable CS0618 // Exercise the legacy resource-loading path for nine-patch images.
@@ -34,7 +34,7 @@ namespace Android.GraphicsTests
 			Assert.IsNotNull (d as NinePatchDrawable, $"The drawable created from resource `{name}` should be a NinePatchDrawable.");
 		}
 
-		[Test, TestCaseSource (nameof (NinePatchDrawables))]
+		[TestMethod, DynamicData (nameof (NinePatchDrawables))]
 		public void DrawableFromResStream_ShouldBeTypeNinePatchDrawable (int resId, string name)
 		{
 			var value = new Android.Util.TypedValue ();
@@ -46,7 +46,7 @@ namespace Android.GraphicsTests
 			Assert.IsNotNull (d as NinePatchDrawable, $"The drawable created from resource `{name}` should be a NinePatchDrawable.");
 		}
 
-		[Test, TestCaseSource (nameof (NinePatchDrawables))]
+		[TestMethod, DynamicData (nameof (NinePatchDrawables))]
 		public void BitmapFromDecodeRes_ShouldContainNinePatchChunk (int resId, string name)
 		{
 			Bitmap bm = BitmapFactory.DecodeResource (Application.Context.Resources, resId);
@@ -55,7 +55,7 @@ namespace Android.GraphicsTests
 				$"Bitmap decoded from resource `{name}` did not contain a valid NinePatch chunk.");
 		}
 
-		[Test, TestCaseSource (nameof (NinePatchDrawables))]
+		[TestMethod, DynamicData (nameof (NinePatchDrawables))]
 		public void BitmapFromDecodeResStream_ShouldContainNinePatchChunk (int resId, string name)
 		{
 			var value = new Android.Util.TypedValue();

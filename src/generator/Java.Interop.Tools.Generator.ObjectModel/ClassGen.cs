@@ -207,10 +207,30 @@ namespace MonoDroid.Generation
 		// Kotlin @JvmInline value class support.
 		// When IsKotlinInlineClass is true, the generator emits a `readonly struct`
 		// wrapper around KotlinInlineClassUnderlyingJniType instead of the usual
-		// peer-class binding.
-		public bool IsKotlinInlineClass { get; set; }
+		// peer-class binding. A type named `Value` keeps the peer-class binding,
+		// because the struct's `Value` field cannot have the type's name (CS0542).
+		bool is_kotlin_inline_class;
+		public bool IsKotlinInlineClass {
+			get => is_kotlin_inline_class && Name != "Value";
+			set => is_kotlin_inline_class = value;
+		}
 
 		public string KotlinInlineClassUnderlyingJniType { get; set; }
+
+		// The value class has an `init` block, so the struct constructor calls `constructor-impl`.
+		public bool KotlinInlineClassHasInit { get; set; }
+
+		// True when `underlying` is the struct's `Value` type, so the struct can replace it.
+		public bool IsKotlinInlineClassOf (CodeGenerationOptions opt, ISymbol underlying) =>
+			IsKotlinInlineClass &&
+			opt.SymbolTable.Lookup (Java.Interop.Tools.JavaTypeSystem.Models.JniTypeName.ParseExact (KotlinInlineClassUnderlyingJniType).Type)?.FullName == underlying.FullName;
+
+		// The value-class struct writer emits no nested types (e.g. `Companion`), so members that use them are skipped.
+		public override void AddNestedType (GenBase gen)
+		{
+			if (!IsKotlinInlineClass)
+				base.AddNestedType (gen);
+		}
 
 		public bool NeedsNew { get; set; }
 

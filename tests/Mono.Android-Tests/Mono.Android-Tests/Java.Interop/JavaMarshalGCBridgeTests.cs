@@ -1,23 +1,31 @@
 using System;
-using System.Diagnostics;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Runtime.InteropServices.Java;
 using System.Threading;
+using System.Threading.Tasks;
 using Android.Runtime;
 using Java.Interop;
+using Java.InteropTests;
 using Microsoft.Android.Runtime;
 
-using NUnit.Framework;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Xamarin.Android.RuntimeTests;
 
-[TestFixture]
-[Category ("RuntimeInitialization")]
+[TestClass]
+[TestCategory ("RuntimeInitialization")]
 public class JavaMarshalGCBridgeTests
 {
+	readonly TestContext testContext;
+
+	public JavaMarshalGCBridgeTests (TestContext testContext)
+	{
+		this.testContext = testContext;
+	}
+
 	// A static class cannot be used as the first parameter's type.
 	[UnsafeAccessor (UnsafeAccessorKind.StaticMethod, Name = nameof (JavaMarshalGCBridge.RequiresTemporaryPeer))]
 	static extern bool RequiresTemporaryPeer (
@@ -33,9 +41,10 @@ public class JavaMarshalGCBridgeTests
 	static extern JavaMarshalGCBridgeJni GetBridgeJni (
 		[UnsafeAccessorType ("Microsoft.Android.Runtime.JavaMarshalGCBridge, Mono.Android")] object target);
 
-	[TestCase ("net/dot/jni/test/GetThis")]
-	[TestCase ("net/dot/jni/test/CallNonvirtualBase")]
-	[TestCase ("net/dot/jni/test/CallNonvirtualDerived")]
+	[TestMethod]
+	[DataRow ("net/dot/jni/test/GetThis")]
+	[DataRow ("net/dot/jni/test/CallNonvirtualBase")]
+	[DataRow ("net/dot/jni/test/CallNonvirtualDerived")]
 	public unsafe void HandwrittenPeersUseAndroidGCReferenceContract (string jniTypeName)
 	{
 		using var peerType = new JniType (jniTypeName);
@@ -70,7 +79,7 @@ public class JavaMarshalGCBridgeTests
 		}
 	}
 
-	[Test]
+	[TestMethod]
 	public void OrdinaryJavaObjectsAreNotGCUserPeers ()
 	{
 		using var value = new Java.Interop.JavaObject ();
@@ -78,7 +87,7 @@ public class JavaMarshalGCBridgeTests
 		Assert.IsFalse (Java.Interop.Runtime.IsGCUserPeer (IntPtr.Zero));
 	}
 
-	[Test]
+	[TestMethod]
 	public void NativeAndManagedBridgeLayoutsMatch ()
 	{
 		Assert.AreEqual (IntPtr.Size * 4, Marshal.SizeOf<MarkCrossReferencesArgs> ());
@@ -97,15 +106,16 @@ public class JavaMarshalGCBridgeTests
 		Assert.AreEqual (IntPtr.Size + (2 * sizeof (int)), Marshal.SizeOf<HandleContext.JniObjectReferenceControlBlock> ());
 	}
 
-	[TestCase (0ul, true)]
-	[TestCase (1ul, false)]
-	[TestCase (2ul, false)]
+	[TestMethod]
+	[DataRow (0ul, true, DisplayName = "EmptyComponentsRequireTemporaryPeers(ulong.MinValue,True)")]
+	[DataRow (1ul, false, DisplayName = "EmptyComponentsRequireTemporaryPeers(1UL,False)")]
+	[DataRow (2ul, false, DisplayName = "EmptyComponentsRequireTemporaryPeers(2UL,False)")]
 	public void EmptyComponentsRequireTemporaryPeers (ulong count, bool expected)
 	{
 		Assert.AreEqual (expected, RequiresTemporaryPeer (null, new UIntPtr (count)));
 	}
 
-	[Test]
+	[TestMethod]
 	public void EmptyComponentsCanAddCrossReferenceWithoutLeakingLocalRefs ()
 	{
 		unsafe {
@@ -135,40 +145,32 @@ public class JavaMarshalGCBridgeTests
 		}
 	}
 
-	[Test]
-	[Category ("GCBridge")]
-	[Category ("ReferenceTracing")]
-	public void ManagedPeerCycleSurvivesJavaRootAndIsCollectedAfterRelease ()
+	[TestMethod]
+	[Timeout (60_000, CooperativeCancellation = true)]
+	[TestCategory ("GCBridge")]
+	[TestCategory ("ReferenceTracing")]
+	public async Task ManagedPeerCycleSurvivesJavaRootAndIsCollectedAfterRelease ()
 	{
 		if (!Microsoft.Android.Runtime.RuntimeFeature.IsCoreClrRuntime && !Microsoft.Android.Runtime.RuntimeFeature.IsNativeAotRuntime)
-			Assert.Ignore ("This test exercises the managed GC bridge.");
+			Assert.Inconclusive ("This test exercises the managed GC bridge.");
 
 		WeakReference<BridgeCyclePeer> first;
 		WeakReference<BridgeCyclePeer> second;
 		using var listener = new ManagedObjectReferenceManagerTests.ReferenceListener (RuntimeEventSource.GlobalReferenceKeyword);
-		ulong firstHandle = 0, secondHandle = 0;
 		var roots = new JavaObjectArray<Java.Lang.Object> (1);
 		try {
-			CreatePeerCycle (roots, out first, out second, out firstHandle, out secondHandle);
-			WaitForBridgeRound (() => first.TryGetTarget (out _) && second.TryGetTarget (out _),
-				"Both peers in the managed cycle should survive while Java roots one peer.");
-			var weakHandles = listener.GetEvents ()
-				.Where (e => e.Id == 13 && Equals (e.Payload [7], (int)GCBridgeReferenceOperation.GlobalToWeak) &&
-					(Equals (e.Payload [0], firstHandle) || Equals (e.Payload [0], secondHandle)))
-				.Select (e => e.Payload [1])
-				.ToArray ();
-			Assert.IsNotEmpty (weakHandles, "The Java-rooted cycle must participate in global-to-weak bridge processing.");
-			var survivingHandles = listener.GetEvents ()
-				.Where (e => e.Id == 11 && Equals (e.Payload [7], (int)GCBridgeReferenceOperation.WeakToGlobal) &&
-					weakHandles.Contains (e.Payload [0]))
-				.Select (e => e.Payload [1] is ulong handle ? handle : throw new InvalidOperationException ("A global reference handle must be an unsigned integer."))
-				.ToArray ();
-			Assert.IsNotEmpty (survivingHandles, "Java-rooted peers must be promoted back to global references.");
+			CreatePeerCycle (roots, out first, out second, out ulong firstHandle, out ulong secondHandle);
+			await GCBridgeTestHelpers.WaitForBridgeRoundsAsync (testContext.CancellationToken);
+
+			Assert.IsTrue (first.TryGetTarget (out _) && second.TryGetTarget (out _),
+				"All peers in the managed cycle should survive while Java roots one peer.");
+			AssertCycleSurvivedJavaCollection (listener, firstHandle, secondHandle);
 		} finally {
 			roots.Dispose ();
 		}
 
-		WaitForBridgeRound (() => !first.TryGetTarget (out _) && !second.TryGetTarget (out _),
+		await GCBridgeTestHelpers.CollectUnreachablePeersAsync (testContext.CancellationToken);
+		Assert.IsFalse (first.TryGetTarget (out _) || second.TryGetTarget (out _),
 			"Both peers should be collected after releasing the Java root.");
 	}
 
@@ -187,21 +189,23 @@ public class JavaMarshalGCBridgeTests
 		secondHandle = unchecked((ulong)(nuint)b.PeerReference.Handle);
 	}
 
-	static void WaitForBridgeRound (Func<bool> predicate, string message)
+	static void AssertCycleSurvivedJavaCollection (ManagedObjectReferenceManagerTests.ReferenceListener listener, params ulong [] globalHandles)
 	{
-		int generation = JNIEnv.BridgeProcessingGeneration;
-		var timeout = TimeSpan.FromSeconds (10);
-		var stopwatch = Stopwatch.StartNew ();
-		do {
-			GC.Collect (generation: 2, mode: GCCollectionMode.Forced, blocking: true);
-			GC.WaitForPendingFinalizers ();
-			JniEnvironment.Runtime.ValueManager.CollectPeers ();
-			if (JNIEnv.BridgeProcessingGeneration != generation && predicate ())
-				return;
-			Thread.Sleep (10);
-		} while (stopwatch.Elapsed < timeout);
+		var events = listener.GetEvents ();
+		var weakHandles = events
+			.Where (e => e.Id == RuntimeEventSource.WeakGlobalReferenceCreatedEventId &&
+				Equals (e.Payload [7], (int)GCBridgeReferenceOperation.GlobalToWeak) &&
+				globalHandles.Any (handle => Equals (e.Payload [0], handle)))
+			.Select (e => e.Payload [1])
+			.ToArray ();
+		Assert.IsNotEmpty (weakHandles, "The Java-rooted cycle must participate in global-to-weak bridge processing.");
 
-		Assert.Fail ($"{message} No bridge round completed with the expected outcome within {timeout}.");
+		var survivingHandles = events
+			.Where (e => e.Id == RuntimeEventSource.GlobalReferenceCreatedEventId &&
+				Equals (e.Payload [7], (int)GCBridgeReferenceOperation.WeakToGlobal) &&
+				weakHandles.Contains (e.Payload [0]))
+			.ToArray ();
+		Assert.IsNotEmpty (survivingHandles, "Java-rooted peers must be promoted back to global references.");
 	}
 
 	sealed class BridgeCyclePeer : Java.Lang.Object
@@ -209,7 +213,7 @@ public class JavaMarshalGCBridgeTests
 		public BridgeCyclePeer Next { get; set; }
 	}
 
-	[Test]
+	[TestMethod]
 	public void BridgeCallbackIsUnmanagedEntryPoint ()
 	{
 		Type bridge = typeof (JavaMarshalGCBridge);

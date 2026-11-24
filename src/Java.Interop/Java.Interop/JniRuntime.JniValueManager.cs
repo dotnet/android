@@ -173,7 +173,6 @@ namespace Java.Interop
 
 			public IJavaPeerable? GetPeer (
 				JniObjectReference reference,
-				[DynamicallyAccessedMembers (Constructors)]
 				Type? targetType = null)
 			{
 				EnsureNotDisposed ();
@@ -208,7 +207,6 @@ namespace Java.Interop
 			public abstract IJavaPeerable? CreatePeer (
 				ref JniObjectReference reference,
 				JniObjectReferenceOptions transfer,
-				[DynamicallyAccessedMembers (Constructors)]
 				Type? targetType);
 
 			public object? CreateValue (

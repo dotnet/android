@@ -1,0 +1,17 @@
+// Minimum versions for transitive dependencies, applied from settings.gradle.
+// Covers the buildscript classpath (plugins) and all project configurations.
+// Dependabot does not read this file, so update the versions manually.
+def constraints = [
+    'org.bouncycastle:bcprov-jdk18on:1.87',
+    'org.bouncycastle:bcpkix-jdk18on:1.87',
+    'com.google.guava:guava:33.7.2-jre',
+]
+
+gradle.beforeProject { project ->
+    constraints.each { project.buildscript.dependencies.constraints.add('classpath', it) }
+    project.configurations.configureEach { configuration ->
+        if (configuration.canBeDeclared) {
+            constraints.each { project.dependencies.constraints.add(configuration.name, it) }
+        }
+    }
+}

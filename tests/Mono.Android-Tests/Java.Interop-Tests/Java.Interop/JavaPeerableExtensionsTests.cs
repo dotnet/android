@@ -4,28 +4,28 @@ using System.Linq;
 
 using Java.Interop;
 
-using NUnit.Framework;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Java.InteropTests;
 
-[TestFixture]
+[TestClass]
 public class JavaPeerableExtensionsTests {
 
-	[Test]
+	[TestMethod]
 	public void JavaAs_Exceptions ()
 	{
 		using var v = new MyJavaInterfaceImpl ();
 
 		// The Java type corresponding to JavaObjectWithMissingJavaPeer doesn't exist
-		Assert.Throws<ArgumentException>(() => v.JavaAs<JavaObjectWithMissingJavaPeer>());
+		Assert.ThrowsExactly<ArgumentException>(() => v.JavaAs<JavaObjectWithMissingJavaPeer>());
 
 		var r = v.PeerReference;
 		using var o = new JavaObject (ref r, JniObjectReferenceOptions.Copy);
 		// MyJavaInterfaceImpl doesn't provide an activation constructor
-		Assert.Throws<NotSupportedException>(() => o.JavaAs<MyJavaInterfaceImpl>());
+		Assert.ThrowsExactly<NotSupportedException>(() => o.JavaAs<MyJavaInterfaceImpl>());
 	}
 
-	[Test]
+	[TestMethod]
 	public void JavaAs_NullSelfReturnsNull ()
 	{
 		Assert.AreEqual (null, JavaPeerableExtensions.JavaAs<IAndroidInterface> (null));
@@ -38,14 +38,14 @@ public class JavaPeerableExtensionsTests {
 		Assert.AreEqual (null, JavaPeerableExtensions.JavaAs<IJavaInterface> (v));
 	}
 
-	[Test]
+	[TestMethod]
 	public void JavaAs_InstanceThatDoesNotImplementInterfaceReturnsNull ()
 	{
 		using var v = new MyJavaInterfaceImpl ();
 		Assert.AreEqual (null, JavaPeerableExtensions.JavaAs<IAndroidInterface> (v));
 	}
 
-	[Test]
+	[TestMethod]
 	public void JavaAs ()
 	{
 		using var impl  = new MyJavaInterfaceImpl ();
@@ -66,13 +66,16 @@ public class MyJavaInterfaceImpl : JavaObject {
 		get {return _members;}
 	}
 
-	public unsafe MyJavaInterfaceImpl ()
-		: base (ref *InvalidJniObjectReference, JniObjectReferenceOptions.None)
+	public MyJavaInterfaceImpl ()
+		: base (JniObjectReferenceOptions.None)
 	{
 		const   string  id  = "()V";
 		var peer = _members.InstanceMethods.StartCreateInstance (id, GetType (), null);
 		Construct (ref peer, JniObjectReferenceOptions.CopyAndDispose);
-		_members.InstanceMethods.FinishCreateInstance (id, this, null);
+		// SAFETY: The ()V constructor takes no arguments; this owns the new peer.
+		unsafe {
+			_members.InstanceMethods.FinishCreateInstance (id, this, null);
+		}
 	}
 }
 
@@ -100,10 +103,11 @@ internal class IJavaInterfaceInvoker : JavaObject, IJavaInterface {
 	{
 	}
 
-	public unsafe string Value {
+	public string Value {
 		get {
 			const string id = "getValue.()Ljava/lang/String;";
-			var r = JniPeerMembers.InstanceMethods.InvokeVirtualObjectMethod (id, this, null);
+			// SAFETY: getValue takes no arguments and this owns the receiver peer.
+			var r = unsafe (JniPeerMembers.InstanceMethods.InvokeVirtualObjectMethod (id, this, null));
 			return JniEnvironment.Strings.ToString (ref r, JniObjectReferenceOptions.CopyAndDispose);
 		}
 	}

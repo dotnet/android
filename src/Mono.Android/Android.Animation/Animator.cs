@@ -1,4 +1,3 @@
-#if ANDROID_11
 
 using System;
 
@@ -105,5 +104,3 @@ namespace Android.Animation {
 		}
 	}
 }
-
-#endif

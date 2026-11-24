@@ -18,6 +18,10 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\Java.Interop.Localization\Java.Interop.Localization.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
     <!-- Always reference the netstandard2.0 version of protobuf-net as it is a shared dependency. -->
     <PackageReference Include="protobuf-net" Version="2.4.4" ExcludeAssets="Compile" GeneratePathProperty="true" />
     <Reference Include="protobuf-net">

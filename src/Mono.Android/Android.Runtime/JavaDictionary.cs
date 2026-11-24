@@ -405,7 +405,7 @@ namespace Android.Runtime {
 		/// <paramref name="transfer"/> must describe ownership the caller holds. Do not race reference
 		/// release or reuse aliases after ownership is consumed, including when conversion later fails.
 		/// </safety>
-		public static unsafe IDictionary? FromJniHandle (IntPtr handle, JniHandleOwnership transfer)
+		public static IDictionary? FromJniHandle (IntPtr handle, JniHandleOwnership transfer)
 		{
 			if (handle == IntPtr.Zero)
 				return null;
@@ -414,7 +414,10 @@ namespace Android.Runtime {
 			if (inst == null)
 				inst = new JavaDictionary (handle, transfer);
 			else
-				JNIEnv.DeleteRef (handle, transfer);
+				unsafe {
+					// SAFETY: the caller's transfer contract covers this reference; the cached peer replaces it.
+					JNIEnv.DeleteRef (handle, transfer);
+				}
 
 			return (IDictionary) inst;
 		}
@@ -609,7 +612,7 @@ namespace Android.Runtime {
 
 		public bool Contains (KeyValuePair<K, V> item)
 		{
-			return ContainsKey (item.Key);
+			return ContainsKey (item.Key) && EqualityComparer<V>.Default.Equals (Get (item.Key), item.Value);
 		}
 
 		//
@@ -669,7 +672,7 @@ namespace Android.Runtime {
 
 		public bool Remove (KeyValuePair<K, V> pair)
 		{
-			return Remove (pair.Key);
+			return Contains (pair) && Remove (pair.Key);
 		}
 
 		//
@@ -723,7 +726,7 @@ namespace Android.Runtime {
 		/// <paramref name="transfer"/> must describe ownership the caller holds. Do not race reference
 		/// release or reuse aliases after ownership is consumed, including when conversion later fails.
 		/// </safety>
-		public new static unsafe IDictionary<K, V>? FromJniHandle (IntPtr handle, JniHandleOwnership transfer)
+		public new static IDictionary<K, V>? FromJniHandle (IntPtr handle, JniHandleOwnership transfer)
 		{
 			if (handle == IntPtr.Zero)
 				return null;
@@ -732,7 +735,10 @@ namespace Android.Runtime {
 			if (inst == null)
 				inst = new JavaDictionary<K, V> (handle, transfer);
 			else
-				JNIEnv.DeleteRef (handle, transfer);
+				unsafe {
+					// SAFETY: the caller's transfer contract covers this reference; the cached peer replaces it.
+					JNIEnv.DeleteRef (handle, transfer);
+				}
 
 			return (IDictionary<K, V>) inst;
 		}

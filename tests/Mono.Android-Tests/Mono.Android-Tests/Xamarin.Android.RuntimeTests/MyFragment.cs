@@ -8,7 +8,6 @@ using Android.Widget;
 
 namespace Xamarin.Android.RuntimeTests
 {
-#if __ANDROID_11__
 	public class MyFragment : Fragment {
 		public override View OnCreateView (LayoutInflater? inflater, ViewGroup? container, Bundle? savedInstanceState)
 		{
@@ -20,5 +19,4 @@ namespace Xamarin.Android.RuntimeTests
 			};
 		}
 	}
-#endif  // __ANDROID_11__
 }

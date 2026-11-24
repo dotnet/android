@@ -313,16 +313,13 @@ namespace Xamarin.Android.Build.Tests
 				proj.AndroidResources.Add (image2);
 				b.ThrowOnBuildFailure = false;
 				Assert.IsTrue (b.Build (proj), "First build was supposed to build without errors");
-				var firstBuildTime = b.LastBuildTime;
 				Assert.IsTrue (b.Build (proj, doNotCleanupOnUpdate: true), "Second build was supposed to build without errors");
-				if (runtime != AndroidRuntime.NativeAOT) {
-					Assert.IsTrue (firstBuildTime > b.LastBuildTime, "Second build was supposed to be quicker than the first");
-				}
 				b.Output.AssertTargetIsSkipped ("_UpdateAndroidResgen");
 				b.Output.AssertTargetIsSkipped ("_GenerateAndroidResourceDir");
 				b.Output.AssertTargetIsSkipped ("_CompileJava");
 
 				if (runtime != AndroidRuntime.NativeAOT) {
+					b.Output.AssertTargetIsSkipped ("CoreCompile");
 					b.Output.AssertTargetIsSkipped (KnownTargets.LinkAssembliesNoShrink);
 				}
 
@@ -406,11 +403,6 @@ namespace Xamarin.Android.Build.Tests
 			bool isRelease = runtime == AndroidRuntime.NativeAOT;
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
 				return;
-			}
-
-			// TODO: NativeAOT fails with: 'classlibrary1.CustomTextView should have been replaced with an $(Hash).CustomTextView'
-			if (runtime == AndroidRuntime.NativeAOT) {
-				Assert.Ignore ("NativeAOT fails here atm");
 			}
 
 			var projectPath = Path.Combine ("temp", TestName);
@@ -1338,8 +1330,14 @@ namespace Lib1 {
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
 				return;
 			}
-			int maxBuildTimeMs = 10000;
 			var path = Path.Combine ("temp", TestName);
+			void AssertNoAndroidCompilation (ProjectBuilder builder)
+			{
+				foreach (var task in new [] { "Aapt2Compile", "Aapt2Link", "Javac", "D8", "R8" }) {
+					Assert.IsFalse (builder.LastBuildOutput.Any (line => line.TrimEnd ().EndsWith ($"Task \"{task}\"", StringComparison.Ordinal)),
+						$"Design-time build should not execute {task}.");
+				}
+			}
 			var theme = new AndroidItem.AndroidResource ("Resources\\values\\Theme.xml") {
 				TextContent = () => @"<?xml version=""1.0"" encoding=""utf-8""?>
 <resources>
@@ -1384,11 +1382,13 @@ namespace Lib1 {
 					Assert.IsTrue (appBuilder.RunTarget (appProj, "Restore"), "App project should have restored.");
 					appBuilder.ThrowOnBuildFailure = false;
 					Assert.IsTrue (libBuilder.DesignTimeBuild (libProj), "Library project should have built");
-					Assert.LessOrEqual (libBuilder.LastBuildTime.TotalMilliseconds, maxBuildTimeMs, $"DesignTime build should be less than {maxBuildTimeMs} milliseconds.");
+					Assert.IsTrue (libBuilder.LastBuildOutput.Any (line => line.TrimEnd ().EndsWith ("Task \"GenerateResourceDesignerAssembly\"", StringComparison.Ordinal)),
+						"The detailed log should contain the resource designer task.");
+					AssertNoAndroidCompilation (libBuilder);
 					Assert.IsFalse (libProj.CreateBuildOutput (libBuilder).IsTargetSkipped ("_GenerateResourceDesignerAssembly", defaultIfNotUsed: true),
 						"Target '_GenerateResourceDesignerAssembly' should have run.");
 					Assert.IsTrue (appBuilder.DesignTimeBuild (appProj), "Application project should have built");
-					Assert.LessOrEqual (appBuilder.LastBuildTime.TotalMilliseconds, maxBuildTimeMs, $"DesignTime build should be less than {maxBuildTimeMs} milliseconds.");
+					AssertNoAndroidCompilation (appBuilder);
 					Assert.IsFalse (appProj.CreateBuildOutput (appBuilder).IsTargetSkipped ("_GenerateResourceDesignerAssembly", defaultIfNotUsed: true),
 						"Target '_GenerateResourceDesignerAssembly' should have run.");
 					var designerFile = Path.Combine (Root, path, appProj.ProjectName, appProj.IntermediateOutputPath, "designtime", "_Microsoft.Android.Resource.Designer.dll");
@@ -1407,7 +1407,7 @@ namespace Lib1 {
 					Assert.IsTrue (libProj.CreateBuildOutput (libBuilder).IsTargetSkipped ("_GenerateResourceDesignerAssembly", defaultIfNotUsed: true),
 						"Target '_GenerateResourceDesignerAssembly' should not have run.");
 					Assert.IsTrue (appBuilder.DesignTimeBuild (appProj), "App project should have built");
-					Assert.LessOrEqual (appBuilder.LastBuildTime.TotalMilliseconds, maxBuildTimeMs, $"DesignTime build should be less than {maxBuildTimeMs} milliseconds.");
+					AssertNoAndroidCompilation (appBuilder);
 					FileAssert.Exists (designerFile, $"'{designerFile}' should have been created.");
 
 					designerContents = GetResourceDesignerText (appProj, designerFile);

@@ -48,5 +48,9 @@
       <Uri>https://github.com/microsoft/testfx</Uri>
       <Sha>b14bf5bdeb2bb2333bbb0dbb43fa4321a7226265</Sha>
     </Dependency>
+    <Dependency Name="Microsoft.Testing.Extensions.TrxReport" Version="3.0.0-preview.26571.1">
+      <Uri>https://github.com/microsoft/testfx</Uri>
+      <Sha>b14bf5bdeb2bb2333bbb0dbb43fa4321a7226265</Sha>
+    </Dependency>
   </ToolsetDependencies>
 </Dependencies>

@@ -364,6 +364,25 @@ public sealed class JavaPeerScanner : IDisposable
 				continue;
 			}
 
+			// Kotlin value-class structs are not Java peers. They get only a typemap entry,
+			// so R8 keeps the Kotlin class when the struct survives trimming.
+			if (IsValueType (index.Reader, typeDef)) {
+				if (index.RegisterInfoByType.TryGetValue (typeHandle, out var valueClassInfo)) {
+					var valueClassName = index.GetTypeFullName (typeHandle);
+					results [(valueClassName, index.AssemblyName)] = new JavaPeerInfo {
+						JavaName = valueClassInfo.JniName,
+						CompatJniName = valueClassInfo.JniName,
+						ManagedTypeName = valueClassName,
+						ManagedTypeNamespace = ExtractNamespace (valueClassName),
+						ManagedTypeShortName = ExtractShortName (valueClassName),
+						AssemblyName = index.AssemblyName,
+						DoNotGenerateAcw = true,
+						IsKotlinValueClass = true,
+					};
+				}
+				continue;
+			}
+
 			var fullName = index.GetTypeFullName (typeHandle);
 
 			// Determine the JNI name and whether this is a known Java peer.
@@ -428,6 +447,7 @@ public sealed class JavaPeerScanner : IDisposable
 			var isGenericDefinition = typeDef.GetGenericParameters ().Count > 0;
 			var isInterface = (typeDef.Attributes & TypeAttributes.Interface) != 0;
 			var isAbstract = (typeDef.Attributes & TypeAttributes.Abstract) != 0;
+			var isSealed = (typeDef.Attributes & TypeAttributes.Sealed) != 0;
 
 			var isFrameworkAssembly = frameworkAssemblyNames.Contains (index.AssemblyName);
 			var isUnconditional = !isFrameworkAssembly &&
@@ -483,6 +503,7 @@ public sealed class JavaPeerScanner : IDisposable
 				Annotations = annotationParser.Parse (typeDef.GetCustomAttributes (), index),
 				IsInterface = isInterface,
 				IsAbstract = isAbstract,
+				IsSealed = isSealed,
 				DoNotGenerateAcw = doNotGenerateAcw,
 				IsFromJniTypeSignature = registerInfo?.IsFromJniTypeSignature ?? false,
 				IsUnconditional = isUnconditional,
@@ -2557,6 +2578,15 @@ public sealed class JavaPeerScanner : IDisposable
 	const string IJavaObjectFullName = "Android.Runtime.IJavaObject";
 
 	readonly Dictionary<(string AssemblyName, int TypeRow), bool> implementsIJavaObjectCache = new ();
+
+	static bool IsValueType (MetadataReader reader, TypeDefinition typeDef)
+	{
+		if (typeDef.BaseType.Kind != HandleKind.TypeReference) {
+			return false;
+		}
+		var baseType = reader.GetTypeReference ((TypeReferenceHandle) typeDef.BaseType);
+		return reader.StringComparer.Equals (baseType.Namespace, "System") && reader.StringComparer.Equals (baseType.Name, "ValueType");
+	}
 
 	/// <summary>
 	/// Determines whether a type is a "custom" Java object: a managed class that implements

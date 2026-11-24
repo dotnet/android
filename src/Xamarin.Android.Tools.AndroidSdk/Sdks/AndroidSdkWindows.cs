@@ -22,8 +22,8 @@ namespace Xamarin.Android.Tools
 		const string XAMARIN_ANDROID_INSTALLER_KEY = "PrivateAndroidSdkPath";
 		const string MICROSOFT_OPENJDK_PATH         = @"SOFTWARE\Microsoft\JDK";
 
-		public AndroidSdkWindows (Action<TraceLevel, string> logger, IDictionary<string, string>? environmentVariables = null)
-			: base (logger, environmentVariables)
+		public AndroidSdkWindows (Action<TraceLevel, string> logger, IDictionary<string, string>? environmentVariables = null, string? workingDirectory = null)
+			: base (logger, environmentVariables, workingDirectory)
 		{
 		}
 
@@ -41,7 +41,7 @@ namespace Xamarin.Android.Tools
 			get {
 				var wow    = RegistryEx.Wow64.Key32;
 				var regKey = GetMDRegistryKey (EnvironmentVariables);
-				if (CheckRegistryKeyForExecutable (RegistryEx.CurrentUser, regKey, MDREG_ANDROID_SDK, wow, "platform-tools", Adb, EnvironmentVariables))
+				if (CheckRegistryKeyForExecutable (RegistryEx.CurrentUser, regKey, MDREG_ANDROID_SDK, wow, "platform-tools", Adb, EnvironmentVariables, WorkingDirectory))
 					return RegistryEx.GetValueString (RegistryEx.CurrentUser, regKey, MDREG_ANDROID_SDK, wow);
 				return null;
 			}
@@ -50,7 +50,7 @@ namespace Xamarin.Android.Tools
 			get {
 				var wow    = RegistryEx.Wow64.Key32;
 				var regKey = GetMDRegistryKey (EnvironmentVariables);
-				if (CheckRegistryKeyForExecutable (RegistryEx.CurrentUser, regKey, MDREG_ANDROID_NDK, wow, ".", NdkStack, EnvironmentVariables))
+				if (CheckRegistryKeyForExecutable (RegistryEx.CurrentUser, regKey, MDREG_ANDROID_NDK, wow, ".", NdkStack, EnvironmentVariables, WorkingDirectory))
 					return RegistryEx.GetValueString (RegistryEx.CurrentUser, regKey, MDREG_ANDROID_NDK, wow);
 				return null;
 			}
@@ -59,7 +59,7 @@ namespace Xamarin.Android.Tools
 			get {
 				var wow    = RegistryEx.Wow64.Key32;
 				var regKey = GetMDRegistryKey (EnvironmentVariables);
-				if (CheckRegistryKeyForExecutable (RegistryEx.CurrentUser, regKey, MDREG_JAVA_SDK, wow, "bin", JarSigner, EnvironmentVariables))
+				if (CheckRegistryKeyForExecutable (RegistryEx.CurrentUser, regKey, MDREG_JAVA_SDK, wow, "bin", JarSigner, EnvironmentVariables, WorkingDirectory))
 					return RegistryEx.GetValueString (RegistryEx.CurrentUser, regKey, MDREG_JAVA_SDK, wow);
 				return null;
 			}
@@ -81,28 +81,29 @@ namespace Xamarin.Android.Tools
 
 			// Check for the key the user gave us in the VS/addin options
 			foreach (var root in roots)
-				if (CheckRegistryKeyForExecutable (root, regKey, MDREG_ANDROID_SDK, wow, "platform-tools", Adb, EnvironmentVariables))
+				if (CheckRegistryKeyForExecutable (root, regKey, MDREG_ANDROID_SDK, wow, "platform-tools", Adb, EnvironmentVariables, WorkingDirectory))
 					yield return RegistryEx.GetValueString (root, regKey, MDREG_ANDROID_SDK, wow) ?? "";
 
 			// Check for the key written by the Xamarin installer
-			if (CheckRegistryKeyForExecutable (RegistryEx.CurrentUser, XAMARIN_ANDROID_INSTALLER_PATH, XAMARIN_ANDROID_INSTALLER_KEY, wow, "platform-tools", Adb, EnvironmentVariables))
+			if (CheckRegistryKeyForExecutable (RegistryEx.CurrentUser, XAMARIN_ANDROID_INSTALLER_PATH, XAMARIN_ANDROID_INSTALLER_KEY, wow, "platform-tools", Adb, EnvironmentVariables, WorkingDirectory))
 				yield return RegistryEx.GetValueString (RegistryEx.CurrentUser, XAMARIN_ANDROID_INSTALLER_PATH, XAMARIN_ANDROID_INSTALLER_KEY, wow) ?? "";
 
 			// Check for the key written by the Android SDK installer
 			foreach (var root in roots)
-				if (CheckRegistryKeyForExecutable (root, ANDROID_INSTALLER_PATH, ANDROID_INSTALLER_KEY, wow, "platform-tools", Adb, EnvironmentVariables))
+				if (CheckRegistryKeyForExecutable (root, ANDROID_INSTALLER_PATH, ANDROID_INSTALLER_KEY, wow, "platform-tools", Adb, EnvironmentVariables, WorkingDirectory))
 					yield return RegistryEx.GetValueString (root, ANDROID_INSTALLER_PATH, ANDROID_INSTALLER_KEY, wow) ?? "";
 
 			foreach (string dir in GetSdkFromEnvironmentVariables ())
 				yield return dir;
 
+			var programFiles = ResolvePath (GetEnvironmentVariable ("ProgramW6432"));
 			// Check some hardcoded paths for good measure
 			var paths = new string [] {
 				Path.Combine (Environment.GetFolderPath (Environment.SpecialFolder.LocalApplicationData), "Xamarin", "MonoAndroid", "android-sdk-windows"),
 				Path.Combine (Environment.GetFolderPath (Environment.SpecialFolder.ProgramFilesX86), "Android", "android-sdk"),
 				Path.Combine (Environment.GetFolderPath (Environment.SpecialFolder.ProgramFilesX86), "Android", "android-sdk-windows"),
-				!string.IsNullOrEmpty (GetEnvironmentVariable ("ProgramW6432"))
-					? Path.Combine (GetEnvironmentVariable ("ProgramW6432") ?? "", "Android", "android-sdk")
+				!string.IsNullOrEmpty (programFiles)
+					? Path.Combine (programFiles, "Android", "android-sdk")
 					: Path.Combine (Environment.GetFolderPath (Environment.SpecialFolder.ProgramFiles), "Android", "android-sdk"),
 				Path.Combine (Environment.GetFolderPath (Environment.SpecialFolder.LocalApplicationData), "Android", "android-sdk"),
 				Path.Combine (Environment.GetFolderPath (Environment.SpecialFolder.CommonApplicationData), "Android", "android-sdk"),
@@ -124,7 +125,7 @@ namespace Xamarin.Android.Tools
 
 			// Check for the key the user gave us in the VS/addin options
 			foreach (var root in roots)
-				if (CheckRegistryKeyForExecutable (root, regKey, MDREG_ANDROID_NDK, wow, ".", NdkStack, EnvironmentVariables))
+				if (CheckRegistryKeyForExecutable (root, regKey, MDREG_ANDROID_NDK, wow, ".", NdkStack, EnvironmentVariables, WorkingDirectory))
 					yield return RegistryEx.GetValueString (root, regKey, MDREG_ANDROID_NDK, wow) ?? "";
 
 			foreach (string dir in GetSdkFromEnvironmentVariables ()) {

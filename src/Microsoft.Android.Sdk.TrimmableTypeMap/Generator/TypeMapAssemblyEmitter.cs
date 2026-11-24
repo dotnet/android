@@ -140,6 +140,7 @@ sealed class TypeMapAssemblyEmitter
 	// across emitter instances.
 	BlobHandle _activationCtorSignature;
 	BlobHandle _createInstanceSignature;
+	MemberReferenceHandle _dynamicallyAccessedMembersAttrCtorRef;
 
 	EntityHandle _anchorTypeHandle;
 
@@ -668,21 +669,22 @@ sealed class TypeMapAssemblyEmitter
 		// as a ctor parameter. This keeps TargetType correct for every shape: concrete peers,
 		// open generic definitions (whose T isn't available via the TypeMapLazyDictionary loader),
 		// and interfaces (which have no constructors). Peers are activated from their generated
-		// CreateInstance / InvokerType, never by reflecting over the target type.
-		var proxyBaseType = (EntityHandle) _javaPeerProxyRef;
+		// CreateInstance / InvokerType; only closed instantiations of open generic definitions are
+		// activated by reflection (see EmitCodeForGenericType).
 		var baseCtorRef = _pe.AddMemberRef (_javaPeerProxyRef, ".ctor",
-			sig => sig.MethodSignature (isInstanceMethod: true).Parameters (2,
+			sig => sig.MethodSignature (isInstanceMethod: true).Parameters (3,
 				rt => rt.Void (),
 				p => {
 					p.AddParameter ().Type ().String ();
 					p.AddParameter ().Type ().Type (_systemTypeRef, false);
+					p.AddParameter ().Type ().Boolean ();
 				}));
 
 		var typeDefHandle = metadata.AddTypeDefinition (
 			TypeAttributes.Public | TypeAttributes.Sealed | TypeAttributes.Class,
 			metadata.GetOrAddString (proxy.Namespace),
 			metadata.GetOrAddString (proxy.TypeName),
-			proxyBaseType,
+			_javaPeerProxyRef,
 			MetadataTokens.FieldDefinitionHandle (metadata.GetRowCount (TableIndex.Field) + 1),
 			MetadataTokens.MethodDefinitionHandle (metadata.GetRowCount (TableIndex.MethodDef) + 1));
 
@@ -699,7 +701,8 @@ sealed class TypeMapAssemblyEmitter
 				encoder.LoadString (metadata.GetOrAddUserString (proxy.JniName));
 				encoder.LoadToken (targetTypeRef);
 				encoder.Call (_getTypeFromHandleRef, parameterCount: 1, returnsValue: true);
-				encoder.Call (baseCtorRef, parameterCount: 2, isInstance: true);
+				encoder.LoadConstantI4 (proxy.CanResolveFromSealedTargetType ? 1 : 0);
+				encoder.Call (baseCtorRef, parameterCount: 3, isInstance: true);
 				encoder.Return ();
 			});
 
@@ -801,7 +804,7 @@ sealed class TypeMapAssemblyEmitter
 		}
 
 		if (proxy.IsGenericDefinition) {
-			EmitCreateInstanceGenericDefinition ();
+			EmitCodeForGenericType (proxy);
 			return;
 		}
 
@@ -851,13 +854,58 @@ sealed class TypeMapAssemblyEmitter
 		});
 	}
 
-	void EmitCreateInstanceGenericDefinition ()
+	void EmitCodeForGenericType (JavaPeerProxyData proxy)
 	{
 		EmitCreateInstanceBody (encoder => {
 			encoder.LoadString (_pe.Metadata.GetOrAddUserString ("Cannot create instance of open generic type."));
 			encoder.NewObject (_notSupportedExceptionCtorRef, parameterCount: 1);
 			encoder.Throw ();
 		});
+
+		// JavaPeerProxy activates closed instantiations of an open generic peer through the leaf type's
+		// (IntPtr, JniHandleOwnership) constructor. Returning the definition from an annotated override
+		// lets ILLink and ILC keep that constructor for as long as this proxy is kept.
+		if (proxy.ActivationCtor is { IsOnLeafType: true, Style: ActivationCtorStyle.XamarinAndroid }) {
+			EmitGetGenericTargetTypeDefinition (_pe.ResolveTypeRef (proxy.TargetType));
+		}
+	}
+
+	void EmitGetGenericTargetTypeDefinition (EntityHandle targetTypeRef)
+	{
+		_pe.EmitBody ("GetGenericTargetTypeDefinition",
+			MethodAttributes.Family | MethodAttributes.Virtual | MethodAttributes.HideBySig,
+			sig => sig.MethodSignature (isInstanceMethod: true).Parameters (0,
+				rt => rt.Type ().Type (_systemTypeRef, false),
+				p => { }),
+			encoder => {
+				encoder.LoadToken (targetTypeRef);
+				encoder.Call (_getTypeFromHandleRef, parameterCount: 1, returnsValue: true);
+				encoder.Return (returnsValue: true);
+			});
+
+		// The override must match the base method's [return: DynamicallyAccessedMembers] annotation.
+		// The return value's Param row (sequence 0) belongs to the method definition emitted just above.
+		var returnParameter = _pe.Metadata.AddParameter (ParameterAttributes.None, default, sequenceNumber: 0);
+		const int PublicAndNonPublicConstructors = 0x0003 | 0x0004;
+		_pe.Metadata.AddCustomAttribute (returnParameter, GetDynamicallyAccessedMembersAttrCtorRef (),
+			_pe.BuildAttributeBlob (b => b.WriteInt32 (PublicAndNonPublicConstructors)));
+	}
+
+	MemberReferenceHandle GetDynamicallyAccessedMembersAttrCtorRef ()
+	{
+		if (_dynamicallyAccessedMembersAttrCtorRef.IsNil) {
+			var metadata = _pe.Metadata;
+			var codeAnalysis = metadata.GetOrAddString ("System.Diagnostics.CodeAnalysis");
+			var attrRef = metadata.AddTypeReference (_pe.SystemRuntimeRef,
+				codeAnalysis, metadata.GetOrAddString ("DynamicallyAccessedMembersAttribute"));
+			var memberTypesRef = metadata.AddTypeReference (_pe.SystemRuntimeRef,
+				codeAnalysis, metadata.GetOrAddString ("DynamicallyAccessedMemberTypes"));
+			_dynamicallyAccessedMembersAttrCtorRef = _pe.AddMemberRef (attrRef, ".ctor",
+				sig => sig.MethodSignature (isInstanceMethod: true).Parameters (1,
+					rt => rt.Void (),
+					p => p.AddParameter ().Type ().Type (memberTypesRef, true)));
+		}
+		return _dynamicallyAccessedMembersAttrCtorRef;
 	}
 
 	void EmitCreateInstanceViaNewobj (EntityHandle typeRef)
@@ -960,9 +1008,9 @@ sealed class TypeMapAssemblyEmitter
 				}));
 	}
 
-	void EmitCreateInstanceBody (Action<TrackedInstructionEncoder> emitIL)
+	MethodDefinitionHandle EmitCreateInstanceBody (Action<TrackedInstructionEncoder> emitIL)
 	{
-		_pe.EmitBody ("CreateInstance",
+		return _pe.EmitBody ("CreateInstance",
 			MethodAttributes.Public | MethodAttributes.Virtual | MethodAttributes.HideBySig,
 			GetCreateInstanceSignature (),
 			emitIL);

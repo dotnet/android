@@ -301,14 +301,8 @@ This simplification means you can use **AndroidLibrary** everywhere.
 
 ## AndroidLintConfig
 
-The Build action 'AndroidLintConfig' should be used in conjunction with the
-[`$(AndroidLintEnabled)`](/xamarin/android/deploy-test/building-apps/build-properties#androidlintenabled)
-property. Files with this build action will be merged together and passed to the
-android `lint` tooling. They should be XML files containing information on
-tests to enable and disable.
-
-See the [lint documentation](https://developer.android.com/studio/write/lint)
-for more details.
+This build action was removed in .NET 12 and has no effect.
+See [`$(AndroidLintEnabled)`](build-properties.md#androidlintenabled).
 
 ## AndroidManifestOverlay
 

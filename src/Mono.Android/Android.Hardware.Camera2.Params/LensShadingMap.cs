@@ -1,4 +1,3 @@
-#if ANDROID_21
 namespace Android.Hardware.Camera2.Params {
 
 	partial class LensShadingMap {
@@ -9,4 +8,3 @@ namespace Android.Hardware.Camera2.Params {
 		}
 	}
 }
-#endif // ANDROID_21

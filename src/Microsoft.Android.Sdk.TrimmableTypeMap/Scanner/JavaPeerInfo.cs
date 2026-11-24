@@ -76,12 +76,19 @@ public sealed record JavaPeerInfo
 
 	public bool IsInterface { get; init; }
 	public bool IsAbstract { get; init; }
+	public bool IsSealed { get; init; }
 
 	/// <summary>
 	/// If true, this is a Managed Callable Wrapper (MCW) binding type.
 	/// No JCW or RegisterNatives will be generated for it.
 	/// </summary>
 	public bool DoNotGenerateAcw { get; init; }
+
+	/// <summary>
+	/// True for a Kotlin value-class struct. It has no proxy; its typemap entry only lets
+	/// R8 keep the Kotlin class when the struct survives trimming.
+	/// </summary>
+	public bool IsKotlinValueClass { get; init; }
 
 	/// <summary>
 	/// True when the type was discovered via <c>[JniTypeSignatureAttribute]</c>

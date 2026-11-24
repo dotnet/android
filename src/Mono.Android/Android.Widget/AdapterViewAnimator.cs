@@ -1,4 +1,3 @@
-#if ANDROID_12
 using System;
 using System.Collections.Generic;
 using Android.Runtime;
@@ -114,5 +113,3 @@ namespace Android.Widget {
 		}
 	}
 }
-
-#endif

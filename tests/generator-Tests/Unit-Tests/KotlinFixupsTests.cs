@@ -19,7 +19,7 @@ namespace generatortests
 			var xml = XDocument.Parse ("<package name=\"com.example.test\" jni-name=\"com/example/test\"><class name=\"test\"><method name=\"add-impl\" final=\"false\" /></class></package>");
 			var klass = XmlApiImporter.CreateClass (xml.Root, xml.Root.Element ("class"), new CodeGenerationOptions ());
 
-			KotlinFixups.Fixup (new [] { (GenBase)klass }.ToList ());
+			KotlinFixups.Fixup (new [] { (GenBase)klass }.ToList (), new CodeGenerationOptions ());
 
 			Assert.AreEqual ("Add", klass.Methods [0].Name);
 			Assert.IsTrue (klass.Methods [0].IsFinal);
@@ -32,7 +32,7 @@ namespace generatortests
 			var xml = XDocument.Parse ("<package name=\"com.example.test\" jni-name=\"com/example/test\"><class name=\"test\"><method name=\"add-h-_1V8i\" final=\"false\" /></class></package>");
 			var klass = XmlApiImporter.CreateClass (xml.Root, xml.Root.Element ("class"), new CodeGenerationOptions ());
 
-			KotlinFixups.Fixup (new [] { (GenBase) klass }.ToList ());
+			KotlinFixups.Fixup (new [] { (GenBase) klass }.ToList (), new CodeGenerationOptions ());
 
 			Assert.AreEqual ("Add", klass.Methods [0].Name);
 			Assert.IsTrue (klass.Methods [0].IsFinal);
@@ -58,7 +58,7 @@ namespace generatortests
 			var klass = XmlApiImporter.CreateClass (xml.Root, xml.Root.Element ("class"), new CodeGenerationOptions ());
 
 			using var warnings = CaptureWarnings ();
-			KotlinFixups.Fixup (new [] { (GenBase) klass }.ToList ());
+			KotlinFixups.Fixup (new [] { (GenBase) klass }.ToList (), new CodeGenerationOptions ());
 
 			Assert.AreEqual (1, klass.Methods.Count, "Duplicate hash-mangled sibling should have been removed.");
 			Assert.AreEqual ("Add", klass.Methods [0].Name);
@@ -83,7 +83,7 @@ namespace generatortests
 			</package>");
 			var klass = XmlApiImporter.CreateClass (xml.Root, xml.Root.Element ("class"), new CodeGenerationOptions ());
 
-			KotlinFixups.Fixup (new [] { (GenBase) klass }.ToList ());
+			KotlinFixups.Fixup (new [] { (GenBase) klass }.ToList (), new CodeGenerationOptions ());
 
 			Assert.AreEqual (2, klass.Methods.Count);
 			Assert.IsTrue (klass.Methods.All (m => m.Name == "Add"));
@@ -109,7 +109,7 @@ namespace generatortests
 			</package>");
 			var klass = XmlApiImporter.CreateClass (xml.Root, xml.Root.Element ("class"), new CodeGenerationOptions ());
 
-			KotlinFixups.Fixup (new [] { (GenBase) klass }.ToList ());
+			KotlinFixups.Fixup (new [] { (GenBase) klass }.ToList (), new CodeGenerationOptions ());
 
 			Assert.AreEqual (2, klass.Methods.Count);
 			Assert.IsTrue (klass.Methods.All (m => m.Name == "Add"));
@@ -135,7 +135,7 @@ namespace generatortests
 			var klass = XmlApiImporter.CreateClass (xml.Root, xml.Root.Element ("class"), new CodeGenerationOptions ());
 
 			using var warnings = CaptureWarnings ();
-			KotlinFixups.Fixup (new [] { (GenBase) klass }.ToList ());
+			KotlinFixups.Fixup (new [] { (GenBase) klass }.ToList (), new CodeGenerationOptions ());
 
 			Assert.AreEqual (1, klass.Methods.Count, "Mangled duplicate should have been removed, leaving the pre-existing non-mangled method.");
 			Assert.AreEqual ("add", klass.Methods [0].JavaName, "The kept method should be the non-mangled one.");
@@ -160,7 +160,7 @@ namespace generatortests
 			var klass = XmlApiImporter.CreateClass (xml.Root, xml.Root.Element ("class"), new CodeGenerationOptions ());
 
 			using var warnings = CaptureWarnings ();
-			KotlinFixups.Fixup (new [] { (GenBase) klass }.ToList ());
+			KotlinFixups.Fixup (new [] { (GenBase) klass }.ToList (), new CodeGenerationOptions ());
 
 			Assert.AreEqual (1, klass.Methods.Count, "Mangled duplicate should have been removed regardless of source order.");
 			Assert.AreEqual ("add", klass.Methods [0].JavaName, "The non-mangled method should survive regardless of order.");

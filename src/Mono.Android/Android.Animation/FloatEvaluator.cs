@@ -1,4 +1,3 @@
-#if ANDROID_11
 
 using Java.Lang;
 using Android.Runtime;
@@ -13,5 +12,3 @@ namespace Android.Animation
 		}
 	}
 }
-
-#endif

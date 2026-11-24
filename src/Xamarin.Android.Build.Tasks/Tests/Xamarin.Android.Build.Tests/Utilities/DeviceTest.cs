@@ -357,13 +357,13 @@ namespace Xamarin.Android.Build.Tests
 			string adbTarget = Environment.GetEnvironmentVariable ("ADB_TARGET");
 			var info = new ProcessStartInfo (adb, $"{adbTarget} logcat") {
 				RedirectStandardOutput = true,
+				RedirectStandardError = true,
 				UseShellExecute = false,
 				CreateNoWindow = true,
 				WindowStyle = ProcessWindowStyle.Hidden,
 			};
 
 			bool didActionSucceed = false;
-			ManualResetEventSlim stdout_done = new ManualResetEventSlim ();
 			using (var sw = File.CreateText (logcatFilePath)) {
 				// Process already-buffered logcat lines first so startup messages emitted before
 				// this monitor starts are still visible to tests.
@@ -373,30 +373,20 @@ namespace Xamarin.Android.Build.Tests
 				}
 
 				using (var proc = Process.Start (info)) {
-					proc.OutputDataReceived += (sender, e) => {
-						if (e.Data != null) {
-							sw.WriteLine (e.Data);
-							if (!didActionSucceed && action (e.Data)) {
-								didActionSucceed = true;
-							}
-						} else {
-							stdout_done.Set ();
-						}
-					};
-					proc.BeginOutputReadLine ();
 					try {
 						onMonitoringStarted?.Invoke ();
-						TimeSpan time = TimeSpan.FromSeconds (timeout);
-						while (!stdout_done.IsSet && !didActionSucceed && time.TotalMilliseconds > 0) {
-							proc.WaitForExit (10);
-							time -= TimeSpan.FromMilliseconds (10);
+						using var cts = new CancellationTokenSource (TimeSpan.FromSeconds (timeout));
+						foreach (var line in proc.ReadAllLinesAsync (cts.Token).ToBlockingEnumerable ()) {
+							sw.WriteLine (line.Content);
+							if (action (line.Content)) {
+								didActionSucceed = true;
+								break;
+							}
 						}
+					} catch (OperationCanceledException) {
 					} finally {
-						if (!proc.HasExited) {
-							proc.Kill ();
-						}
+						proc.Kill ();
 						proc.WaitForExit ();
-						stdout_done.Wait ();
 						sw.Flush ();
 					}
 					return didActionSucceed;

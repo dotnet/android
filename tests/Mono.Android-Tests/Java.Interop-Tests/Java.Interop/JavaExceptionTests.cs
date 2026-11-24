@@ -2,14 +2,14 @@
 
 using Java.Interop;
 
-using NUnit.Framework;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Java.InteropTests
 {
-	[TestFixture]
+	[TestClass]
 	public class JavaExceptionTests
 	{
-		[Test]
+		[TestMethod]
 		public void StackTrace ()
 		{
 			void AssertMembers (string message, string stackTraceMember, string stackTrace) {
@@ -38,7 +38,7 @@ namespace Java.InteropTests
 			}
 		}
 
-		[Test]
+		[TestMethod]
 		public void InnerException ()
 		{
 			using (var t = new JniType ("java/lang/Throwable")) {
@@ -52,14 +52,17 @@ namespace Java.InteropTests
 			}
 		}
 
-		static unsafe JniObjectReference CreateThrowable (JniType type, string message)
+		static JniObjectReference CreateThrowable (JniType type, string message)
 		{
 			var c = type.GetConstructor ("(Ljava/lang/String;)V");
 			var s = JniEnvironment.Strings.NewString (message);
 			try {
-				var args = stackalloc JniArgumentValue [1];
-				args [0] = new JniArgumentValue (s);
-				return type.NewObject (c, args);
+				// SAFETY: The one-element buffer and live string reference match the constructor signature.
+				unsafe {
+					var args = stackalloc JniArgumentValue [1];
+					args [0] = new JniArgumentValue (s);
+					return type.NewObject (c, args);
+				}
 			} finally {
 				JniObjectReference.Dispose (ref s);
 			}
@@ -72,13 +75,16 @@ namespace Java.InteropTests
 			JniObjectReference.Dispose (ref cause);
 		}
 
-		static unsafe void SetThrowableCause (JniType type, JniObjectReference outer, JniObjectReference inner)
+		static void SetThrowableCause (JniType type, JniObjectReference outer, JniObjectReference inner)
 		{
-			var a = stackalloc JniArgumentValue [1];
-			a [0] = new JniArgumentValue (inner);
-
 			var i = type.GetInstanceMethod ("initCause", "(Ljava/lang/Throwable;)Ljava/lang/Throwable;");
-			var l = JniEnvironment.InstanceMethods.CallObjectMethod (outer, i, a);
+			JniObjectReference l;
+			// SAFETY: Both peers are live; the one-element buffer matches initCause's Throwable argument.
+			unsafe {
+				var a = stackalloc JniArgumentValue [1];
+				a [0] = new JniArgumentValue (inner);
+				l = JniEnvironment.InstanceMethods.CallObjectMethod (outer, i, a);
+			}
 			JniObjectReference.Dispose (ref l);
 		}
 

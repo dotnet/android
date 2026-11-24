@@ -6,6 +6,7 @@ using System.Text;
 using System.Text.Json;
 using System.Text.RegularExpressions;
 using System.Threading;
+using System.Threading.Tasks;
 using System.Xml.Linq;
 using System.Xml.XPath;
 using Microsoft.VisualStudio.TestPlatform.Utilities;
@@ -612,41 +613,30 @@ static int InvokeIntMethod (Java.Lang.Object instance, string methodName)
 			// Start dotnet run with WaitForExit=true, which uses Microsoft.Android.Run
 			using var process = dotnet.StartRun ();
 
-			var locker = new Lock ();
 			var output = new StringBuilder ();
+			using var readerCts = new CancellationTokenSource ();
 			var outputReceived = new ManualResetEventSlim (false);
 			bool foundMessage = false;
 
-			process.OutputDataReceived += (sender, e) => {
-				if (e.Data != null) {
-					lock (locker) {
-						output.AppendLine (e.Data);
-						if (e.Data.Contains (logcatMessage)) {
+			var reader = Task.Run (async () => {
+				await foreach (var line in process.ReadAllLinesAsync (readerCts.Token)) {
+					if (line.StandardError) {
+						output.AppendLine ($"STDERR: {line.Content}");
+					} else {
+						output.AppendLine (line.Content);
+						if (line.Content.Contains (logcatMessage)) {
 							foundMessage = true;
 							outputReceived.Set ();
 						}
 					}
 				}
-			};
-			process.ErrorDataReceived += (sender, e) => {
-				if (e.Data != null) {
-					lock (locker) {
-						output.AppendLine ($"STDERR: {e.Data}");
-					}
-				}
-			};
-
-			process.BeginOutputReadLine ();
-			process.BeginErrorReadLine ();
+			});
 
 			// Wait for the expected message or timeout
 			bool messageFound = outputReceived.Wait (TimeSpan.FromSeconds (ActivityStartTimeoutInSeconds));
 
-			// Kill the process (simulating Ctrl+C)
-			if (!process.HasExited) {
-				process.Kill (entireProcessTree: true);
-				process.WaitForExit ();
-			}
+			// Kill the process (simulating Ctrl+C) and drain its output.
+			process.StopAndDrainOutput (readerCts, reader);
 
 			// Write the output to a log file for debugging
 			string outputText = output.ToString ();
@@ -691,30 +681,22 @@ static int InvokeIntMethod (Java.Lang.Object instance, string methodName)
 			// Start dotnet run with WaitForExit=true, which uses Microsoft.Android.Run
 			using var process = dotnet.StartRun ();
 
-			var locker = new Lock ();
 			var output = new StringBuilder ();
+			using var readerCts = new CancellationTokenSource ();
 			var appLaunched = new ManualResetEventSlim (false);
 
-			process.OutputDataReceived += (sender, e) => {
-				if (e.Data != null) {
-					lock (locker) {
-						output.AppendLine (e.Data);
-						if (e.Data.Contains (logcatMessage)) {
+			var reader = Task.Run (async () => {
+				await foreach (var line in process.ReadAllLinesAsync (readerCts.Token)) {
+					if (line.StandardError) {
+						output.AppendLine ($"STDERR: {line.Content}");
+					} else {
+						output.AppendLine (line.Content);
+						if (line.Content.Contains (logcatMessage)) {
 							appLaunched.Set ();
 						}
 					}
 				}
-			};
-			process.ErrorDataReceived += (sender, e) => {
-				if (e.Data != null) {
-					lock (locker) {
-						output.AppendLine ($"STDERR: {e.Data}");
-					}
-				}
-			};
-
-			process.BeginOutputReadLine ();
-			process.BeginErrorReadLine ();
+			});
 
 			// Wait for the app to start and produce logcat output
 			bool launched = appLaunched.Wait (TimeSpan.FromSeconds (ActivityStartTimeoutInSeconds));
@@ -734,6 +716,7 @@ static int InvokeIntMethod (Java.Lang.Object instance, string methodName)
 				// Wait for the process to exit gracefully
 				bool exited = process.WaitForExit (30_000);
 				Assert.IsTrue (exited, "dotnet run process should have exited after SIGINT");
+				process.StopAndDrainOutput (readerCts, reader);
 				Assert.AreEqual (130, process.ExitCode, "dotnet run process should report user cancellation after SIGINT");
 
 				// Verify the output contains the "Stopping application..." message from Microsoft.Android.Run
@@ -748,11 +731,8 @@ static int InvokeIntMethod (Java.Lang.Object instance, string methodName)
 				Assert.IsTrue (string.IsNullOrEmpty (pidOutput),
 					$"App should not be running on the device after Ctrl+C. pidof output: '{pidOutput}'");
 			} finally {
-				// Ensure the process is killed if it's still running
-				if (!process.HasExited) {
-					process.Kill (entireProcessTree: true);
-					process.WaitForExit ();
-				}
+				// Ensure the process is stopped and its output reader has exited.
+				process.StopAndDrainOutput (readerCts, reader);
 
 				File.WriteAllText (logPath, output.ToString ());
 				TestContext.AddTestAttachment (logPath);
@@ -785,46 +765,35 @@ static int InvokeIntMethod (Java.Lang.Object instance, string methodName)
 			// Start dotnet run with Device parameter, which should set $(AdbTarget)
 			using var process = dotnet.StartRun (waitForExit: true, parameters: [$"/p:Device={serial}"]);
 
-			var locker = new Lock ();
 			var output = new StringBuilder ();
+			using var readerCts = new CancellationTokenSource ();
 			var outputReceived = new ManualResetEventSlim (false);
 			bool foundMessage = false;
 			bool foundAdbTarget = false;
 
-			process.OutputDataReceived += (sender, e) => {
-				if (e.Data != null) {
-					lock (locker) {
-						output.AppendLine (e.Data);
-						// Check for the --adb-target argument in verbose output
-						if (e.Data.Contains ($"Target: -s {serial}")) {
-							foundAdbTarget = true;
-						}
-						if (e.Data.Contains (logcatMessage)) {
-							foundMessage = true;
-							outputReceived.Set ();
-						}
+			var reader = Task.Run (async () => {
+				await foreach (var line in process.ReadAllLinesAsync (readerCts.Token)) {
+					if (line.StandardError) {
+						output.AppendLine ($"STDERR: {line.Content}");
+						continue;
+					}
+					output.AppendLine (line.Content);
+					// Check for the --adb-target argument in verbose output
+					if (line.Content.Contains ($"Target: -s {serial}")) {
+						foundAdbTarget = true;
+					}
+					if (line.Content.Contains (logcatMessage)) {
+						foundMessage = true;
+						outputReceived.Set ();
 					}
 				}
-			};
-			process.ErrorDataReceived += (sender, e) => {
-				if (e.Data != null) {
-					lock (locker) {
-						output.AppendLine ($"STDERR: {e.Data}");
-					}
-				}
-			};
-
-			process.BeginOutputReadLine ();
-			process.BeginErrorReadLine ();
+			});
 
 			// Wait for the expected message or timeout
 			bool messageFound = outputReceived.Wait (TimeSpan.FromSeconds (ActivityStartTimeoutInSeconds));
 
-			// Kill the process (simulating Ctrl+C)
-			if (!process.HasExited) {
-				process.Kill (entireProcessTree: true);
-				process.WaitForExit ();
-			}
+			// Kill the process (simulating Ctrl+C) and drain its output.
+			process.StopAndDrainOutput (readerCts, reader);
 
 			// Write the output to a log file for debugging
 			string logPath = Path.Combine (Root, builder.ProjectDirectory, "dotnet-run-device-output.log");
@@ -867,39 +836,25 @@ static int InvokeIntMethod (Java.Lang.Object instance, string methodName)
 			var dotnet = new DotNetCLI (Path.Combine (Root, builder.ProjectDirectory, proj.ProjectFilePath));
 
 			// Start dotnet watch which will build, deploy, and watch for changes
-			using var process = dotnet.StartWatch ();
+			var serial = RunAdbCommand ("get-serialno").Trim ();
+			using var process = dotnet.StartWatch (["--device", serial]);
 
-			var locker = new Lock ();
 			var output = new StringBuilder ();
+			using var readerCts = new CancellationTokenSource ();
 			var initialMessageEvent = new ManualResetEventSlim ();
 			var hotReloadAppliedEvent = new ManualResetEventSlim ();
 
-			process.OutputDataReceived += (sender, e) => {
-				if (e.Data != null) {
-					lock (locker) {
-						output.AppendLine (e.Data);
-						if (e.Data.Contains (initialMessage)) {
-							initialMessageEvent.Set ();
-						}
-						if (e.Data.Contains (hotReloadMessage)) {
-							hotReloadAppliedEvent.Set ();
-						}
+			var reader = Task.Run (async () => {
+				await foreach (var line in process.ReadAllLinesAsync (readerCts.Token)) {
+					output.AppendLine (line.StandardError ? $"STDERR: {line.Content}" : line.Content);
+					if (!line.StandardError && line.Content.Contains (initialMessage)) {
+						initialMessageEvent.Set ();
+					}
+					if (line.Content.Contains (hotReloadMessage)) {
+						hotReloadAppliedEvent.Set ();
 					}
 				}
-			};
-			process.ErrorDataReceived += (sender, e) => {
-				if (e.Data != null) {
-					lock (locker) {
-						output.AppendLine ($"STDERR: {e.Data}");
-						if (e.Data.Contains (hotReloadMessage)) {
-							hotReloadAppliedEvent.Set ();
-						}
-					}
-				}
-			};
-
-			process.BeginOutputReadLine ();
-			process.BeginErrorReadLine ();
+			});
 
 			string logPath = Path.Combine (Root, builder.ProjectDirectory, "dotnet-watch-output.log");
 
@@ -908,28 +863,24 @@ static int InvokeIntMethod (Java.Lang.Object instance, string methodName)
 				Assert.IsTrue (initialMessageEvent.Wait (TimeSpan.FromMinutes (5)),
 					$"Initial message '{initialMessage}' was not found in output. See {logPath} for details.");
 
-				// Give dotnet watch time to finish post-deploy setup and start its file watcher.
-				// There is no explicit "ready" signal from dotnet watch after deploy completes.
-				Thread.Sleep (5000);
-
-				// Modify the vanilla C# helper class (not the Java-interop MainActivity)
-				appHelperBody = $"""
-					Console.WriteLine ("{initialMessage}");
-					Console.WriteLine ("MODIFIED_LINE");
-					""";
-				proj.Touch ("AppHelper.cs");
 				builder.BuiltBefore = true; // dotnet watch will build, not builder.Build()
-				builder.Save (proj, doNotCleanupOnUpdate: true, saveProject: false);
+				// Watch may not be ready when the app launches. Retry the edit until it observes one.
+				for (int attempt = 0; attempt < 24 && !hotReloadAppliedEvent.IsSet; attempt++) {
+					appHelperBody = $"""
+						Console.WriteLine ("{initialMessage}");
+						Console.WriteLine ("MODIFIED_LINE_{attempt}");
+						""";
+					proj.Touch ("AppHelper.cs");
+					builder.Save (proj, doNotCleanupOnUpdate: true, saveProject: false);
+					hotReloadAppliedEvent.Wait (TimeSpan.FromSeconds (5));
+				}
 
 				// Wait for hot reload to apply (MetadataUpdateHandler fires Console.WriteLine)
-				Assert.IsTrue (hotReloadAppliedEvent.Wait (TimeSpan.FromMinutes (2)),
+				Assert.IsTrue (hotReloadAppliedEvent.IsSet,
 					$"Hot reload message '{hotReloadMessage}' was not found in output. See {logPath} for details.");
 			} finally {
-				// Kill the process
-				if (!process.HasExited) {
-					process.Kill (entireProcessTree: true);
-					process.WaitForExit ();
-				}
+				// Ensure the process is stopped and its output reader has exited.
+				process.StopAndDrainOutput (readerCts, reader);
 
 				// Write the output to a log file for debugging
 				File.WriteAllText (logPath, output.ToString ());
@@ -1151,15 +1102,12 @@ $@"button.ViewTreeObserver.GlobalLayout += Button_ViewTreeObserver_GlobalLayout;
 				return;
 			}
 
-			if (runtime == AndroidRuntime.NativeAOT) {
-				Assert.Ignore ("AppDomain.CurrentDomain.UnhandledException doesn't work in NativeAOT");
-			}
-
 			var proj = new XamarinAndroidApplicationProject (packageName: PackageUtils.MakePackageName (runtime)) {
 				IsRelease = isRelease,
 			};
 			proj.SetRuntime (runtime);
 			proj.SetRuntimeIdentifiers (new [] {"arm64-v8a", "x86_64"});
+			proj.SetDefaultTargetDevice ();
 
 			proj.MainActivity = proj.DefaultMainActivity.Replace ("//${AFTER_ONCREATE}",
 @"			AppDomain.CurrentDomain.UnhandledException += (sender, e) => {
@@ -1172,12 +1120,7 @@ $@"button.ViewTreeObserver.GlobalLayout += Button_ViewTreeObserver_GlobalLayout;
 			Assert.IsTrue (builder.Install (proj), "Install should have succeeded.");
 			RunProjectAndAssert (proj, builder);
 
-			string? expectedSender = runtime switch
-			{
-				AndroidRuntime.CoreCLR => null, // CoreCLR explicitly passes a `null` sender
-				_ => throw new NotImplementedException($"Test does not support runtime {runtime}"),
-			};
-			string expectedLogcatOutput = $"# Unhandled Exception: sender={expectedSender}; e.IsTerminating=True; e.ExceptionObject=System.Exception: CRASH";
+			string expectedLogcatOutput = "# Unhandled Exception: sender=; e.IsTerminating=True; e.ExceptionObject=System.Exception: CRASH";
 			Assert.IsTrue (
 				MonitorAdbLogcat (CreateLineChecker (expectedLogcatOutput),
 					logcatFilePath: Path.Combine (Root, builder.ProjectDirectory, "startup-logcat.log"), timeout: 60),
@@ -1382,17 +1325,9 @@ $@"button.ViewTreeObserver.GlobalLayout += Button_ViewTreeObserver_GlobalLayout;
 				return;
 			}
 
-			// TODO: fix NativeAOT builds. Despite the .so library being preset in the apk (and named correctly)
-			//       all the tests fail with one of:
-			//
-			//  java.lang.UnsatisfiedLinkError: dlopen failed: library "libテスト.so" not found
-			//  java.lang.UnsatisfiedLinkError: dlopen failed: library "lib中国.so" not found
-			//  java.lang.UnsatisfiedLinkError: dlopen failed: library "lib随机生成器.so" not found
-			//
-			// It might be an issue with the Android shared library loader or name encoding in the archive. It might
-			// be a good idea to limit .so names to ASCII.
 			if (runtime == AndroidRuntime.NativeAOT) {
-				Assert.Ignore ("NativeAOT doesn't work well with diacritics in the application library name");
+				// TODO: NativeAOT cannot load non-ASCII library names from split APKs.
+				Assert.Ignore ("NativeAOT fails to load non-ASCII application libraries.");
 			}
 
 			var rootPath = Path.Combine (Root, "temp", TestName);
@@ -1411,26 +1346,6 @@ $@"button.ViewTreeObserver.GlobalLayout += Button_ViewTreeObserver_GlobalLayout;
 			}
 		}
 
-		// TODO: fix/review it for CoreCLR. It currently fails with the following exception:
-		//
-		// System.TypeInitializationException: TypeInitialization_Type, SQLite.SQLiteConnection
-		//  ---> System.MissingMethodException: .ctor
-		//    at System.Runtime.InteropServices.Marshal.GetDelegateForFunctionPointerInternal(IntPtr, RuntimeType)
-		//    at SQLitePCL.SQLite3Provider_dynamic_cdecl.NativeMethods.Setup(IGetFunctionPointer)
-		//    at SQLitePCL.Batteries_V2.DoDynamic_cdecl(String, Int32)
-		//    Exception_EndOfInnerExceptionStack
-		//    at SQLite.SQLiteConnection..ctor(SQLiteConnectionString)
-		//    at SQLite.SQLiteConnectionPool.Entry..ctor(SQLiteConnectionString)
-		//    at SQLite.SQLiteConnectionPool.GetConnectionAndTransactionLock(SQLiteConnectionString, Object& )
-		//    at SQLite.SQLiteAsyncConnection.<>c__DisplayClass33_0`1.<WriteAsync>b__0()
-		//    at System.Threading.Tasks.Task`1.InnerInvoke()
-		//    at System.Threading.ExecutionContext.RunFromThreadPoolDispatchLoop(Thread, ExecutionContext, ContextCallback, Object)
-		// --- End of stack trace from previous location ---
-		//    at System.Threading.ExecutionContext.RunFromThreadPoolDispatchLoop(Thread, ExecutionContext, ContextCallback, Object)
-		//    at System.Threading.Tasks.Task.ExecuteWithThreadLocal(Task&, Thread )
-		// --- End of stack trace from previous location ---
-		//    at LinkTestLib.Bug35195.AttemptCreateTable()
-		//
 		[Test]
 		public void CustomLinkDescriptionPreserve (
 		  [Values (AndroidLinkMode.SdkOnly, AndroidLinkMode.Full)] AndroidLinkMode linkMode,
@@ -1442,16 +1357,13 @@ $@"button.ViewTreeObserver.GlobalLayout += Button_ViewTreeObserver_GlobalLayout;
 				return;
 			}
 
-			if (runtime == AndroidRuntime.CoreCLR) {
-				Assert.Ignore ("Currently broken on CoreCLR");
+			if (linkMode == AndroidLinkMode.Full && runtime == AndroidRuntime.CoreCLR) {
+				// TODO: SQLite's dynamic provider throws MissingMethodException (.ctor) with full trimming.
+				Assert.Ignore ("SQLite's dynamic provider fails under CoreCLR full trimming.");
 			}
-
-			// TODO: NativeAOT perhaps should work here (ignoring all the MonoAOT settings?), but for now it fails with
-			//
-			//  Microsoft.NET.Sdk.FrameworkReferenceResolution.targets(120,5): error NETSDK1207: Ahead-of-time compilation is not supported for the target framework.
-			//
-			if (runtime == AndroidRuntime.NativeAOT) {
-				Assert.Ignore ("NativeAOT is currently broken here");
+			if (linkMode == AndroidLinkMode.Full && runtime == AndroidRuntime.NativeAOT) {
+				// TODO: SQLite cannot see the TodoTask columns with NativeAOT full trimming.
+				Assert.Ignore ("SQLite cannot find TodoTask columns under NativeAOT full trimming.");
 			}
 
 			var lib1 = new XamarinAndroidLibraryProject () {
@@ -1515,7 +1427,6 @@ namespace Library1 {
 					},
 				},
 			};
-			lib2.SetRuntime (runtime);
 			lib2.SetProperty ("LangVersion", "8.0");
 
 			var proj = new XamarinFormsAndroidApplicationProject (packageName: PackageUtils.MakePackageName (runtime)) {
@@ -1711,11 +1622,9 @@ using System.Runtime.Serialization.Json;
 			}
 
 			if (testOnly && runtime == AndroidRuntime.NativeAOT) {
-				// ADB install error:
-				//   SplitApkInstallerBase: Failed to commit install session 75895528 with command package install-commit 75895528. Error: INSTALL_FAILED_TEST_ONLY
-				//
-				// TODO: investigate, it's odd it doesn't work
-				Assert.Ignore ("NativeAOT doesn't currently work in test-only applications.");
+				// TODO: NativeAOT Release deploys an app bundle through InstallApkSet, which does not pass
+				// bundletool's `--allow-test-only`, so installing a test-only bundle fails with INSTALL_FAILED_TEST_ONLY.
+				Assert.Ignore ("Installing a test-only app bundle fails with INSTALL_FAILED_TEST_ONLY.");
 			}
 
 			var proj = new XamarinAndroidApplicationProject (packageName: PackageUtils.MakePackageName (runtime)) {
@@ -1740,29 +1649,6 @@ using System.Runtime.Serialization.Json;
 		public void AppWithStyleableUsageRuns ([ValueSource (typeof (BaseTest), nameof (BaseTest.ValidRuntimeConfigurations))] (bool isRelease, AndroidRuntime runtime) configuration, [Values] bool linkResources)
 		{
 			var (isRelease, runtime) = configuration;
-
-			// TODO: fix this for NativeAOT
-			if (runtime == AndroidRuntime.NativeAOT && isRelease) {
-				// This configuration currently fails with a long stack trace, the gist of it is:
-				//
-				//  AndroidRuntime: java.lang.RuntimeException: Unable to start activity ComponentInfo{com.xamarin.appwithstyleableusageruns_nativeaot/com.xamarin.appwithstyleableusageruns_nativeaot.MainActivity}
-				//  AndroidRuntime: Caused by: android.view.InflateException: Binary XML file line #1 in com.xamarin.appwithstyleableusageruns_nativeaot:layout/main: Binary XML file line #1 in com.xamarin.appwithstyleableusageruns_nativeaot:layout/main: Error inflating class crc64f75eeacfa0ca1368.MyLayout
-				//  AndroidRuntime: Caused by: android.view.InflateException: Binary XML file line #1 in com.xamarin.appwithstyleableusageruns_nativeaot:layout/main: Error inflating class crc64f75eeacfa0ca1368.MyLayout
-				//  AndroidRuntime: Caused by: java.lang.reflect.InvocationTargetException
-				//  AndroidRuntime: Caused by: net.dot.jni.internal.JavaProxyThrowable: System.NotSupportedException: Could not activate { PeerReference=0x7fe9706698/I IdentityHashCode=0xd12aeee Java.Type=crc64f75eeacfa0ca1368/MyLayout } for managed type 'UnnamedProject.MyLayout'.
-				//  AndroidRuntime:  ---> System.Reflection.TargetInvocationException: Arg_TargetInvocationException
-				//  AndroidRuntime:  ---> System.IO.FileNotFoundException: IO_FileNotFound_FileName, _Microsoft.Android.Resource.Designer
-				//  AndroidRuntime: IO_FileName_Name, _Microsoft.Android.Resource.Designer
-				//  DOTNET  : FATAL UNHANDLED EXCEPTION: Java.Lang.Exception: Unable to start activity ComponentInfo{com.xamarin.appwithstyleableusageruns_nativeaot/com.xamarin.appwithstyleableusageruns_nativeaot.MainActivity}
-				//  DOTNET  :  ---> Java.Lang.Exception: Binary XML file line #1 in com.xamarin.appwithstyleableusageruns_nativeaot:layout/main: Binary XML file line #1 in com.xamarin.appwithstyleableusageruns_nativeaot:layout/main: Error inflating class crc64f75eeacfa0ca1368.MyLayout
-				//  DOTNET  :  ---> Java.Lang.Exception: Binary XML file line #1 in com.xamarin.appwithstyleableusageruns_nativeaot:layout/main: Error inflating class crc64f75eeacfa0ca1368.MyLayout
-				//  DOTNET  :  ---> Java.Lang.ReflectiveOperationException: Exception_WasThrown, Java.Lang.ReflectiveOperationException
-				//  DOTNET  :  ---> System.NotSupportedException: Could not activate { PeerReference=0x7fe9706698/I IdentityHashCode=0xd12aeee Java.Type=crc64f75eeacfa0ca1368/MyLayout } for managed type 'UnnamedProject.MyLayout'.
-				//  DOTNET  :  ---> System.Reflection.TargetInvocationException: Arg_TargetInvocationException
-				//  DOTNET  :  ---> System.IO
-				//  eruns_nativeaot: No implementation found for void mono.android.Runtime.propagateUncaughtException(java.lang.Thread, java.lang.Throwable) (tried Java_mono_android_Runtime_propagateUncaughtException and Java_mono_android_Runtime_propagateUncaughtException__Ljava_lang_Thread_2Ljava_lang_Throwable_2) - is the library loaded, e.g. System.loadLibrary?
-				Assert.Ignore ("NativeAOT type mapping fails");
-			}
 
 			var rootPath = Path.Combine (Root, "temp", TestName);
 			var lib = new XamarinAndroidLibraryProject () {
@@ -2150,11 +2036,9 @@ namespace Styleable.Library {
 				return;
 			}
 
-			// TODO: fix for NativeAOT. Currently fails with:
-			//
-			//  DOTNET  : FATAL UNHANDLED EXCEPTION: System.InvalidCastException: Unable to convert instance of type 'AndroidX.AppCompat.Widget.AppCompatImageButton' to type 'AndroidX.AppCompat.Widget.Toolbar'.
 			if (runtime == AndroidRuntime.NativeAOT) {
-				Assert.Ignore ("NativeAOT type mapping fails");
+				// TODO: Xamarin.Forms startup cannot find the ResourcesProvider constructor under NativeAOT.
+				Assert.Ignore ("NativeAOT Xamarin.Forms startup throws MissingMethodException.");
 			}
 
 			string packageName = PackageUtils.MakePackageName (runtime);
@@ -2456,7 +2340,6 @@ namespace UnnamedProject
 
 			proj.Imports.Add (CreateAndroidTargetingPackAssertion (apiLevel));
 
-			// TODO: update on new minor API levels to use an introduced minor API
 			proj.MainActivity = proj.DefaultMainActivity
 				.Replace ("//${AFTER_ONCREATE}", """
 				// The value `ignore` is not used.
@@ -2571,9 +2454,10 @@ namespace UnnamedProject
 		{
 			var (isRelease, runtime) = configuration;
 
-			// TODO: fix for NativeAOT, if possible
+			// TODO: NativeAOT crashes with ClassNotFoundException: example.ViewHelper. The class is in the
+			// input JAR but R8 removes it from the DEX; the CoreCLR Release build keeps it.
 			if (runtime == AndroidRuntime.NativeAOT) {
-				Assert.Ignore ("Type and member mapping is currently unsupported under NativeAOT");
+				Assert.Ignore ("R8 removes the remapped example.ViewHelper class under NativeAOT.");
 			}
 
 			var proj = new XamarinAndroidApplicationProject (packageName: PackageUtils.MakePackageName (runtime)) {
@@ -3019,23 +2903,31 @@ CUSTOM_ENVIRONMENT_VALUE=custom",
 				EnableDefaultItems = true,
 			};
 			proj.SetRuntime (runtime);
-			proj.MainActivity = proj.DefaultMainActivity.Replace ("//${AFTER_ONCREATE}", """
-		Console.WriteLine ("#STACKTRACE-BEGIN#");
+			proj.SetDefaultTargetDevice ();
+			// Ignore markers from earlier app launches even if logcat clearing leaves buffered output.
+			var markerId = Guid.NewGuid ().ToString ("N");
+			var beginMarker = $"#STACKTRACE-BEGIN#{markerId}";
+			var endMarker = $"#STACKTRACE-END#{markerId}";
+			proj.MainActivity = proj.DefaultMainActivity.Replace ("//${AFTER_ONCREATE}", $$"""
+		Console.WriteLine ("{{beginMarker}}");
 		Console.WriteLine (Environment.StackTrace);
-		Console.WriteLine ("#STACKTRACE-END#");
+		Console.WriteLine ("{{endMarker}}");
 		""");
 			using var builder = CreateApkBuilder ();
 			Assert.IsTrue (builder.Install (proj), "App should have installed.");
 			RunProjectAndAssert (proj, builder);
 
 			var appStartupLogcatFile = Path.Combine (Root, builder.ProjectDirectory, "stacktrace-logcat.log");
-			Assert.IsTrue (
-				MonitorAdbLogcat (line => line.Contains ("#STACKTRACE-END#"), appStartupLogcatFile, timeout: 60),
-				"Stack trace end marker not found in logcat (output may be missing or truncated)."
-			);
-
+			bool didFinish = MonitorAdbLogcat (
+				line => line.Contains (endMarker), appStartupLogcatFile, timeout: 60);
 			var logcatOutput = File.ReadAllText (appStartupLogcatFile);
-			StringAssert.Contains ("#STACKTRACE-BEGIN#", logcatOutput, "Stack trace start marker not found in logcat");
+			if (!didFinish) {
+				// Distinguish an app that never launched from one whose output is missing.
+				var appPid = RunAdbCommand ($"shell pidof {proj.PackageName}").Trim ();
+				Assert.Fail ($"Stack trace end marker not found in logcat. App process id: '{appPid}'. Logcat:\n{logcatOutput}");
+			}
+
+			StringAssert.Contains (beginMarker, logcatOutput, "Stack trace start marker not found in logcat");
 			StringAssert.Contains ("FastDev: Found ", logcatOutput, "FastDev assembly discovery should be logged.");
 			StringAssert.Contains ("Loading assemblies from disk is normal during Fast Deployment.", logcatOutput, "FastDev disk loading should be described as normal.");
 			StringAssert.DoesNotContain ("not found in FastDev override directory", logcatOutput, "Deferring to CoreCLR's disk loader should not report missing FastDev assemblies.");
@@ -3189,54 +3081,51 @@ CUSTOM_ENVIRONMENT_VALUE=custom",
 		}
 
 		[Test]
-		public void GradleFBProj ([ValueSource (typeof (BaseTest), nameof (BaseTest.ValidRuntimeConfigurations))] (bool isRelease, AndroidRuntime runtime) configuration)
+		public void GradleLibrary ([ValueSource (typeof (BaseTest), nameof (BaseTest.ValidRuntimeConfigurations))] (bool isRelease, AndroidRuntime runtime) configuration)
 		{
 			var (isRelease, runtime) = configuration;
 
-			const string facebookVersion = "18.3.0";
-			var moduleName = "Library";
+			// Keep the Java dependency local; the Android Gradle Plugin still comes from the feed.
+			const string libraryModuleName = "Library";
+			const string dependencyJar = "gson-2.7.jar";
+			var successMarker = $"GradleLibrary-{Guid.NewGuid ():N}";
+			var expectedLogcatOutput = $"{successMarker} Hello dotnet from Gradle dependency";
 			var gradleTestProjectDir = Path.Combine (Root, "temp", "gradle", TestName);
-			var gradleModule = new AndroidGradleModule (Path.Combine (gradleTestProjectDir, moduleName));
-			gradleModule.PackageName = "com.microsoft.mauifacebook";
-			gradleModule.BuildGradleFileContent = $@"
-plugins {{
-    id(""com.android.library"")
-}}
-android {{
-    namespace = ""{gradleModule.PackageName}""
-    compileSdk = {XABuildConfig.AndroidDefaultTargetDotnetApiLevel.Major}
-    defaultConfig {{
-        minSdk = {XABuildConfig.AndroidMinimumDotNetApiLevel.Major}
-    }}
-}}
-dependencies {{
-    implementation(""androidx.appcompat:appcompat:1.7.0"")
-    implementation(""com.google.android.material:material:1.11.0"")
-    implementation(""com.facebook.android:facebook-android-sdk:{facebookVersion}"")
-}}
-";
-			gradleModule.JavaSources.Add (new AndroidItem.AndroidJavaSource ("FacebookSdk.java") {
-				TextContent = () => $@"
-package com.microsoft.mauifacebook;
-public class FacebookSdk {{
-    static com.facebook.appevents.AppEventsLogger _logger;
-    public static void initializeSDK(android.app.Activity activity, Boolean isDebug) {{
-        android.app.Application application = activity.getApplication();
-        com.facebook.FacebookSdk.sdkInitialize(application);
-        com.facebook.FacebookSdk.addLoggingBehavior(com.facebook.LoggingBehavior.APP_EVENTS);
-        com.facebook.appevents.AppEventsLogger.activateApp(application);
-        _logger = com.facebook.appevents.AppEventsLogger.newLogger(activity);
-    }}
-    public static void logEvent(String eventName) {{
-        _logger.logEvent(eventName);
-    }}
-}}
-",
+
+			var libraryModule = new AndroidGradleModule (Path.Combine (gradleTestProjectDir, libraryModuleName)) {
+				PackageName = "com.example.gradlelibrary",
+			};
+			libraryModule.BuildGradleFileContent = $$"""
+plugins {
+    id("com.android.library")
+}
+android {
+    namespace = "{{libraryModule.PackageName}}"
+    compileSdk = {{XABuildConfig.AndroidDefaultTargetDotnetApiLevel.Major}}
+    defaultConfig {
+        minSdk = {{XABuildConfig.AndroidMinimumDotNetApiLevel.Major}}
+    }
+}
+dependencies {
+    compileOnly(files("libs/{{dependencyJar}}"))
+}
+""";
+			libraryModule.JavaSources.Add (new AndroidItem.AndroidJavaSource ("Greeter.java") {
+				TextContent = () => $$"""
+package {{libraryModule.PackageName}};
+public class Greeter {
+    public static String greet(android.content.Context context, String name) {
+        com.google.gson.JsonObject value = new com.google.gson.JsonObject();
+        value.addProperty("greeting", context.getString(R.string.gradle_dependency_greeting, name));
+        return value.get("greeting").getAsString();
+    }
+}
+""",
 			});
 
 			var gradleProject = new AndroidGradleProject (gradleTestProjectDir) {
 				Modules = {
-					gradleModule,
+					libraryModule,
 				},
 			};
 			gradleProject.Create ();
@@ -3244,75 +3133,65 @@ public class FacebookSdk {{
 			var proj = new XamarinAndroidApplicationProject (packageName: PackageUtils.MakePackageName (runtime)) {
 				IsRelease = isRelease,
 				OtherBuildItems = {
+					new BuildItem (BuildActions.None, Path.Combine (libraryModule.ModuleDirectory, "src", "main", "res", "values", "strings.xml")) {
+						TextContent = () => """
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="gradle_dependency_greeting">Hello %1$s from Gradle dependency</string>
+</resources>
+""",
+					},
 					new AndroidItem.TransformFile ("Transforms\\Metadata.xml") {
-						TextContent = () => $@"<metadata><attr path=""/api/package[@name='{gradleModule.PackageName}']"" name=""managedName"">Facebook</attr></metadata>",
+						TextContent = () => $@"<metadata><attr path=""/api/package[@name='{libraryModule.PackageName}']"" name=""managedName"">GradleLibrary</attr></metadata>",
 					},
 					new BuildItem (KnownProperties.AndroidGradleProject, gradleProject.BuildFilePath) {
 						Metadata = {
-							{ "ModuleName", moduleName },
+							{ "ModuleName", libraryModuleName },
 						},
 					},
-					new BuildItem ("AndroidMavenLibrary", "com.facebook.android:facebook-core") {
-						Metadata = {
-							{ "Version", facebookVersion },
-							{ "Bind", "false" },
-							{ "Repository", TestEnvironment.DotNetPublicMaven },
-						},
-					},
-					new BuildItem ("AndroidMavenLibrary", "com.facebook.android:facebook-bolts") {
-						Metadata = {
-							{ "Version", facebookVersion },
-							{ "Bind", "false" },
-							{ "Repository", TestEnvironment.DotNetPublicMaven },
-						},
-					},
-				},
-				PackageReferences = {
-					new Package {
-						Id = "Xamarin.AndroidX.AppCompat",
-						Version = "1.7.0.3",
-					},
-					new Package {
-						Id = "Xamarin.AndroidX.Annotation",
-						Version = "1.8.2.1",
-					},
-					new Package {
-						Id = "Xamarin.AndroidX.Legacy.Support.Core.Utils",
-						Version = "1.0.0.29",
-					},
-					new Package {
-						Id = "Xamarin.Google.Android.InstallReferrer",
-						// Facebook SDK 18.3.0 requires com.android.installreferrer:installreferrer:2.2.
-						Version = "2.2.0.8",
-					},
-					new Package {
-						Id = "Xamarin.AndroidX.Core.Core.Ktx",
-						Version = "1.13.1.5",
-					},
-					new Package {
-						Id = "Xamarin.Kotlin.StdLib",
-						Version = "2.0.21",
+					// The bound library's runtime dependency is supplied separately, without bindings.
+					new BuildItem (AndroidBuildActions.AndroidJavaLibrary, Path.Combine (libraryModule.ModuleDirectory, "libs", dependencyJar)) {
+						TestResourceFileName = dependencyJar,
 					},
 				},
 			};
 			proj.SetRuntime (runtime);
-			proj.MainActivity = proj.DefaultMainActivity.Replace ("//${AFTER_ONCREATE}", @"
-Facebook.FacebookSdk.InitializeSDK(this, Java.Lang.Boolean.True);
-Facebook.FacebookSdk.LogEvent(""TestFacebook"");
-");
-			proj.AndroidManifest =@"<?xml version=""1.0"" encoding=""utf-8""?>
-<manifest xmlns:android=""http://schemas.android.com/apk/res/android"" xmlns:tools=""http://schemas.android.com/tools"" android:versionCode=""1"" android:versionName=""1.0"" package=""com.xamarin.gradleproj"">
-  <application android:label=""UnnamedProject"">
-    <meta-data android:name=""com.facebook.sdk.ApplicationId"" android:value=""appid""/>
-    <meta-data android:name=""com.facebook.sdk.ClientToken"" android:value=""token""/>
-  </application>
-</manifest>";
+			proj.SetDefaultTargetDevice ();
+			proj.MainActivity = proj.DefaultMainActivity.Replace ("//${AFTER_ONCREATE}", $$"""
+Android.Util.Log.Info ("GradleLibrary", "{{successMarker}} " + GradleLibrary.Greeter.Greet (this, "dotnet"));
+""");
 
 			using var builder = CreateApkBuilder ();
-			Assert.IsTrue (builder.Build (proj, environmentVariables: new Dictionary<string, string> {
+			builder.ThrowOnBuildFailure = false;
+			if (!builder.Build (proj, environmentVariables: new Dictionary<string, string> {
 				{ "GRADLE_OPTS", $"{Environment.GetEnvironmentVariable ("GRADLE_OPTS")} -Dorg.gradle.logging.level=info -Dorg.gradle.logging.stacktrace=all" },
-			}));
-			RunProjectAndAssert (proj, builder);
+			})) {
+				// CI retries discard the first attempt's build.log, so keep the cause in the failure message.
+				Assert.Fail ($"Build should have succeeded:{Environment.NewLine}{GetBuildFailureSummary (builder.LastBuildOutput)}");
+			}
+			ClearAdbLogcat ();
+			Assert.IsTrue (MonitorAdbLogcat (line => line.Contains (expectedLogcatOutput),
+				Path.Combine (Root, builder.ProjectDirectory, "logcat.log"), ActivityStartTimeoutInSeconds,
+				onMonitoringStarted: () => RunProjectAndAssert (proj, builder)), $"Output did not contain {expectedLogcatOutput}!");
+		}
+
+		static string GetBuildFailureSummary (IEnumerable<string> output)
+		{
+			const int gradleFailureLines = 20;
+			var summary = new List<string> ();
+			int gradleLinesRemaining = 0;
+			foreach (var line in output) {
+				if (line.Contains ("FAILURE:", StringComparison.Ordinal)) {
+					gradleLinesRemaining = gradleFailureLines;
+				}
+				if (gradleLinesRemaining > 0) {
+					gradleLinesRemaining--;
+					summary.Add (line);
+				} else if (line.Contains (": error ", StringComparison.Ordinal)) {
+					summary.Add (line);
+				}
+			}
+			return string.Join (Environment.NewLine, summary.Distinct ().Take (50));
 		}
 
 		[Test]
@@ -3409,6 +3288,7 @@ Facebook.FacebookSdk.LogEvent(""TestFacebook"");
 		[TestCase ("run", MSTestPackageChannel.Nightly)]
 		[TestCase ("test", MSTestPackageChannel.Stable)]
 		[TestCase ("test", MSTestPackageChannel.Nightly)]
+		[TestCase ("list", MSTestPackageChannel.Stable)]
 		public void DotNetNewAndroidTest (string mode, MSTestPackageChannel msTestPackageChannel)
 		{
 			var templateName = $"DotNetNewAndroidTest_{mode}_{msTestPackageChannel}";
@@ -3444,36 +3324,15 @@ Facebook.FacebookSdk.LogEvent(""TestFacebook"");
 			var runParameters = buildParameters.Select (p => $"/p:{p}").ToList ();
 			if (mode == "test")
 				runParameters.Add ("--report-trx");
+			else if (mode == "list")
+				runParameters.Add ("--list-tests");
 
 			using var process = mode == "run"
 				? dotnet.StartRun (waitForExit: true, parameters: runParameters.ToArray ())
 				: dotnet.StartTest (parameters: runParameters.ToArray ());
 
-			var locker = new Lock ();
 			var output = new StringBuilder ();
-
-			process.OutputDataReceived += (sender, e) => {
-				if (e.Data != null)
-					lock (locker)
-						output.AppendLine (e.Data);
-			};
-			process.ErrorDataReceived += (sender, e) => {
-				if (e.Data != null)
-					lock (locker)
-						output.AppendLine ($"STDERR: {e.Data}");
-			};
-
-			process.BeginOutputReadLine ();
-			process.BeginErrorReadLine ();
-
-			// Wait for the process to complete (instrumentation should finish on its own)
-			bool completed = process.WaitForExit ((int) TimeSpan.FromMinutes (5).TotalMilliseconds);
-			if (!completed) {
-				try { process.Kill (entireProcessTree: true); } catch { }
-			} else {
-				// Ensure async output events are fully drained
-				process.WaitForExit ();
-			}
+			bool completed = process.WaitForExitAndOutput (output, TimeSpan.FromMinutes (5));
 
 			// Write the output to a log file for debugging
 			string logPath = Path.Combine (projectDirectory, $"dotnet-{mode}-output.log");
@@ -3493,6 +3352,9 @@ Facebook.FacebookSdk.LogEvent(""TestFacebook"");
 				Assert.AreEqual (1, passed, $"Expected 1 passed test, got {passed}. See {logPath} for details.");
 				Assert.AreEqual (1, failed, $"Expected 1 failed test, got {failed}. See {logPath} for details.");
 				Assert.AreEqual (1, skipped, $"Expected 1 skipped test, got {skipped}. See {logPath} for details.");
+			} else if (mode == "list") {
+				Assert.AreEqual (0, process.ExitCode, $"`dotnet test --list-tests` should succeed. See {logPath} for details.");
+				StringAssert.Contains ("Discovered 3 tests", outputText, $"Output should list 3 tests. See {logPath} for details.");
 			} else {
 				// dotnet test reports results via MTP protocol
 				// Verify non-zero exit code (there is a failing test) and stable summary counts
@@ -3629,30 +3491,8 @@ Facebook.FacebookSdk.LogEvent(""TestFacebook"");
 			// collected into a single `-e args "..."` extra.
 			using var process = dotnet.StartRun (waitForExit: true, parameters: new [] { "--", "greeting=hello", "--custom-flag" });
 
-			var locker = new Lock ();
 			var output = new StringBuilder ();
-
-			process.OutputDataReceived += (sender, e) => {
-				if (e.Data != null)
-					lock (locker)
-						output.AppendLine (e.Data);
-			};
-			process.ErrorDataReceived += (sender, e) => {
-				if (e.Data != null)
-					lock (locker)
-						output.AppendLine ($"STDERR: {e.Data}");
-			};
-
-			process.BeginOutputReadLine ();
-			process.BeginErrorReadLine ();
-
-			bool completed = process.WaitForExit ((int) TimeSpan.FromMinutes (10).TotalMilliseconds);
-			if (!completed) {
-				try { process.Kill (entireProcessTree: true); } catch { }
-			} else {
-				// Ensure async output events are fully drained
-				process.WaitForExit ();
-			}
+			bool completed = process.WaitForExitAndOutput (output, TimeSpan.FromMinutes (10));
 
 			string logPath = Path.Combine (Root, builder.ProjectDirectory, "dotnet-run-benchmarkdotnet.log");
 			File.WriteAllText (logPath, output.ToString ());

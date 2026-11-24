@@ -51,7 +51,6 @@
     <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)MULTIDEX_JAR_LICENSE" />
     <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)NativeAotRuntimeProvider.java" />
     <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)net.android.init.gradle.kts" />
-    <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)NuGet.Versioning.dll" />
     <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)r8.jar" />
     <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)bundletool.jar" />
     <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)java_runtime_trimmable.jar" />
@@ -79,6 +78,9 @@
     <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)Xamarin.Android.Build.Tasks.pdb" />
     <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)net\Microsoft.Android.Build.Tasks.dll" />
     <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)net\Microsoft.Android.Build.Tasks.pdb" />
+    <!-- Aapt2Link's manifest fallback loads AndroidBuildConfig from the .NET task directory. -->
+    <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)net\AndroidBuildConfig.dll" />
+    <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)net\AndroidBuildConfig.pdb" />
     <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)net\Microsoft.Android.Sdk.TrimmableTypeMap.dll" />
     <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)net\Microsoft.Android.Sdk.TrimmableTypeMap.pdb" />
     <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)net\ELFSharp.dll" />
@@ -87,6 +89,9 @@
     <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)net\Microsoft.Android.Build.BaseTasks.pdb" />
     <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)net\Java.Interop.Localization.dll" />
     <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)net\Java.Interop.Localization.pdb" />
+    <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)net\Java.Interop.Tools.Maven.dll" />
+    <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)net\Java.Interop.Tools.Maven.pdb" />
+    <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)net\NuGet.Versioning.dll" />
     <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)net\Xamarin.Android.Tools.AndroidSdk.dll" />
     <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)net\Xamarin.Android.Tools.AndroidSdk.pdb" />
     <_MSBuildFiles Include="@(_LocalizationLanguages->'$(MicrosoftAndroidSdkOutDir)net\%(Identity)\Microsoft.Android.Build.BaseTasks.resources.dll')" />

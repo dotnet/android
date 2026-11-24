@@ -568,23 +568,6 @@ namespace Android.Runtime {
 					throw new NotImplementedException ();
 			}
 		} 
-
-#if ANDROID_8
-		internal static int AndroidBitmap_getInfo (IntPtr jbitmap, out Android.Graphics.AndroidBitmapInfo info)
-		{
-			throw new NotImplementedException ();
-		}
-
-		internal static int AndroidBitmap_lockPixels (IntPtr jbitmap, out IntPtr addrPtr)
-		{
-			throw new NotImplementedException ();
-		}
-
-		internal static int AndroidBitmap_unlockPixels (IntPtr jbitmap)
-		{
-			throw new NotImplementedException ();
-		}
-#endif  // ANDROID_8
 	}
 
 	partial class JniNativeInterfaceInvoker {

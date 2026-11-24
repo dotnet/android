@@ -4,21 +4,21 @@ using System.Reflection;
 using System.Threading.Tasks;
 
 using Java.Interop;
-using NUnit.Framework;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Java.InteropTests
 {
-	[TestFixture]
+	[TestClass]
 	public class JniPeerMembersTests
 	{
-		[Test]
+		[TestMethod]
 		public void Ctor_CanReferenceNonexistentType ()
 		{
 			var members = new JniPeerMembers (JavaObjectWithMissingJavaPeer.JniTypeName, typeof(JavaObjectWithMissingJavaPeer));
 			JniPeerMembers.Dispose (members);
 		}
 
-		[Test]
+		[TestMethod]
 		public void PeerMemberCachesAreInitiallyNull ()
 		{
 			var members = new JniPeerMembers (CallNonvirtualBase.JniTypeName, typeof (CallNonvirtualBase));
@@ -33,7 +33,7 @@ namespace Java.InteropTests
 			}
 		}
 
-		[Test]
+		[TestMethod]
 		public void ConstructorTypeCacheIsAllocatedOnlyForManagedSubclasses ()
 		{
 			var members = new JniPeerMembers (CallNonvirtualBase.JniTypeName, typeof (CallNonvirtualBase));
@@ -50,7 +50,7 @@ namespace Java.InteropTests
 
 				methods.Dispose ();
 				Assert.IsNull (GetSubclassConstructors (methods));
-				Assert.Throws<InvalidOperationException> (() => {
+				Assert.ThrowsExactly<InvalidOperationException> (() => {
 					var type = derivedMethods.JniPeerType;
 				});
 			} finally {
@@ -58,7 +58,7 @@ namespace Java.InteropTests
 			}
 		}
 
-		[Test]
+		[TestMethod]
 		public void ConcurrentFirstUsePublishesSingleFieldAndStaticMethodCaches ()
 		{
 			var instanceMembers = new JniPeerMembers (CallNonvirtualBase.JniTypeName, typeof (CallNonvirtualBase));
@@ -131,7 +131,7 @@ namespace Java.InteropTests
 			return (ConcurrentDictionary<TKey, TValue>) field.GetValue (owner);
 		}
 
-		[Test]
+		[TestMethod]
 		public void MethodLookupForNonexistentStaticMethodWillTryFallbacks ()
 		{
 			try {
@@ -157,8 +157,8 @@ namespace Java.InteropTests
 		}
 
 
-		[Test]
-		[Category ("NativeAOTIgnore")]
+		[TestMethod]
+		[TestCategory ("NativeAOTIgnore")]
 		public void ReplaceInstanceMethodName ()
 		{
 			using var o = new JavaLangRemappingTestObject ();
@@ -167,8 +167,8 @@ namespace Java.InteropTests
 			JniObjectReference.Dispose (ref r);
 		}
 
-		[Test]
-		[Category ("NativeAOTIgnore")]
+		[TestMethod]
+		[TestCategory ("NativeAOTIgnore")]
 		public void ReplaceInstanceMethodWithUtf8Signature ()
 		{
 			using var o = new JavaLangRemappingTestObject ();
@@ -177,16 +177,16 @@ namespace Java.InteropTests
 			JniObjectReference.Dispose (ref r);
 		}
 
-		[Test]
-		[Category ("NativeAOTIgnore")]
+		[TestMethod]
+		[TestCategory ("NativeAOTIgnore")]
 		public void ReplaceStaticMethodName ()
 		{
 			var r = JavaLangRemappingTestRuntime.remappedToGetRuntime ();
 			JniObjectReference.Dispose (ref r);
 		}
 
-		[Test]
-		[Category ("NativeAOTIgnore")]
+		[TestMethod]
+		[TestCategory ("NativeAOTIgnore")]
 		public void ReplaceInstanceMethodWithStaticMethod ()
 		{
 			using var o = new JavaLangRemappingTestObject ();
@@ -194,7 +194,7 @@ namespace Java.InteropTests
 			o.remappedToStaticHashCode ();
 		}
 
-		[Test]
+		[TestMethod]
 		public void DesugarInterfaceStaticMethod ()
 		{
 			var s = IAndroidInterface.getClassName ();
@@ -216,28 +216,34 @@ namespace Java.InteropTests
 		{
 		}
 
-		public unsafe void doesNotExist ()
+		public void doesNotExist ()
 		{
 			const string id = "doesNotExist.()V";
-			_members.InstanceMethods.InvokeNonvirtualVoidMethod (id, this, null);
+			// SAFETY: The ()V signature has no arguments; lookup must fail before dispatch.
+			unsafe {
+				_members.InstanceMethods.InvokeNonvirtualVoidMethod (id, this, null);
+			}
 		}
 
-		public unsafe JniObjectReference remappedToToString ()
+		public JniObjectReference remappedToToString ()
 		{
 			const string id = "remappedToToString.()Ljava/lang/String;";
-			return _members.InstanceMethods.InvokeNonvirtualObjectMethod (id, this, null);
+			// SAFETY: The remapped method takes no arguments; this owns the live receiver.
+			return unsafe (_members.InstanceMethods.InvokeNonvirtualObjectMethod (id, this, null));
 		}
 
-		public unsafe JniObjectReference remappedToStringWithUtf8Signature ()
+		public JniObjectReference remappedToStringWithUtf8Signature ()
 		{
 			const string id = "remappedToStringWithUtf8Signature.()Ljava/lang/String;";
-			return _members.InstanceMethods.InvokeNonvirtualObjectMethod (id, this, null);
+			// SAFETY: The remapped method takes no arguments; this owns the live receiver.
+			return unsafe (_members.InstanceMethods.InvokeNonvirtualObjectMethod (id, this, null));
 		}
 
-		public unsafe int remappedToStaticHashCode ()
+		public int remappedToStaticHashCode ()
 		{
 			const string id = "remappedToStaticHashCode.()I";
-			return _members.InstanceMethods.InvokeVirtualInt32Method (id, this, null);
+			// SAFETY: The remapped method takes no arguments; this owns the live receiver.
+			return unsafe (_members.InstanceMethods.InvokeVirtualInt32Method (id, this, null));
 		}
 
 	}
@@ -247,16 +253,20 @@ namespace Java.InteropTests
 		internal    const    string         JniTypeName = "java/lang/Runtime";
 		static      readonly JniPeerMembers _members    = new JniPeerMembers (JniTypeName, typeof (JavaLangRemappingTestRuntime));
 
-		public static unsafe JniObjectReference remappedToGetRuntime()
+		public static JniObjectReference remappedToGetRuntime()
 		{
 			const string id = "remappedToGetRuntime.()Ljava/lang/Runtime;";
-			return _members.StaticMethods.InvokeObjectMethod (id, null);
+			// SAFETY: The remapped static method takes no arguments.
+			return unsafe (_members.StaticMethods.InvokeObjectMethod (id, null));
 		}
 
-		public static unsafe void doesNotExist ()
+		public static void doesNotExist ()
 		{
 			const string id = "doesNotExist.()V";
-			_members.StaticMethods.InvokeVoidMethod (id, null);
+			// SAFETY: The ()V signature has no arguments; lookup must fail before dispatch.
+			unsafe {
+				_members.StaticMethods.InvokeVoidMethod (id, null);
+			}
 		}
 	}
 
@@ -266,9 +276,10 @@ namespace Java.InteropTests
 
 		internal static JniPeerMembers _members = new JniPeerMembers (JniTypeName, typeof (IAndroidInterface), isInterface: true);
 
-		public static unsafe string getClassName ()
+		public static string getClassName ()
 		{
-			var s = _members.StaticMethods.InvokeObjectMethod ("getClassName.()Ljava/lang/String;", null);
+			// SAFETY: The interface's static getClassName method takes no arguments.
+			var s = unsafe (_members.StaticMethods.InvokeObjectMethod ("getClassName.()Ljava/lang/String;", null));
 			return JniEnvironment.Strings.ToString (ref s, JniObjectReferenceOptions.CopyAndDispose);
 		}
 	}

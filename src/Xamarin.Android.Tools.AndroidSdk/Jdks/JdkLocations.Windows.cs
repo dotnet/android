@@ -14,7 +14,7 @@ namespace Xamarin.Android.Tools {
 		{
 			var wow    = RegistryEx.Wow64.Key32;
 			var regKey = AndroidSdkWindows.GetMDRegistryKey (environmentVariables);
-			if (RegistryEx.CheckRegistryKeyForExecutable (RegistryEx.CurrentUser, regKey, AndroidSdkWindows.MDREG_JAVA_SDK, wow, "bin", "java.exe", environmentVariables))
+			if (RegistryEx.CheckRegistryKeyForExecutable (RegistryEx.CurrentUser, regKey, AndroidSdkWindows.MDREG_JAVA_SDK, wow, "bin", "java.exe", environmentVariables, workingDirectory))
 				return RegistryEx.GetValueString (RegistryEx.CurrentUser, regKey, AndroidSdkWindows.MDREG_JAVA_SDK, wow);
 			return null;
 
@@ -33,11 +33,12 @@ namespace Xamarin.Android.Tools {
 				Environment.GetFolderPath (Environment.SpecialFolder.ProgramFilesX86),
 			};
 			foreach (var root in roots) {
-				if (!Directory.Exists (root))
+				var directory = ProcessUtils.ResolvePath (root, workingDirectory);
+				if (directory == null || !Directory.Exists (directory))
 					continue;
 				IEnumerable<string> homes;
 				try {
-					homes = Directory.EnumerateDirectories (root, pattern);
+					homes = Directory.EnumerateDirectories (directory, pattern);
 				}
 				catch (IOException) {
 					continue;
@@ -46,7 +47,7 @@ namespace Xamarin.Android.Tools {
 					if (!File.Exists (Path.Combine (home, "bin", "java.exe")))
 						continue;
 					var loc = locator ?? $"{pattern} via {root}";
-					var jdk = JdkInfo.TryGetJdkInfo (home, logger, loc, environmentVariables);
+					var jdk = JdkInfo.TryGetJdkInfo (home, logger, loc, environmentVariables, workingDirectory);
 					if (jdk == null)
 						continue;
 					yield return jdk;
@@ -75,7 +76,7 @@ namespace Xamarin.Android.Tools {
 			}
 
 			foreach (var home in homes) {
-				var jdk = JdkInfo.TryGetJdkInfo (home, logger, @"%LocalAppData%\Android\*jdk*", environmentVariables);
+				var jdk = JdkInfo.TryGetJdkInfo (home, logger, @"%LocalAppData%\Android\*jdk*", environmentVariables, workingDirectory);
 				if (jdk == null)
 					continue;
 				yield return jdk;
@@ -110,7 +111,7 @@ namespace Xamarin.Android.Tools {
 					if (path == null) {
 						continue;
 					}
-					var jdk     = JdkInfo.TryGetJdkInfo (path, logger, locator ?? $"Windows Registry @ {parentKey}", environmentVariables);
+					var jdk     = JdkInfo.TryGetJdkInfo (path, logger, locator ?? $"Windows Registry @ {parentKey}", environmentVariables, workingDirectory);
 					if (jdk == null) {
 						continue;
 					}

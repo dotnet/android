@@ -130,6 +130,7 @@ namespace MonoDroid.Generation {
 				ISymbol psym = opt.SymbolTable.Lookup (tp, in_params);
 				if (psym == null || !psym.Validate (opt, in_params, context))
 					return false;
+				psym = KotlinInlineClassBoxedSymbol.ProjectTypeArgument (opt, psym);
 
 				if (psym is GenericSymbol && !(psym as GenericSymbol).IsConcrete)
 					is_concrete = false;

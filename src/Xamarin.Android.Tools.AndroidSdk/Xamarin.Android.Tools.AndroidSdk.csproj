@@ -12,8 +12,6 @@
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <MemorySafetyRulesVersion>2</MemorySafetyRulesVersion>
     <Nullable>enable</Nullable>
-    <DefineConstants>INTERNAL_NULLABLE_ATTRIBUTES</DefineConstants>
-    <UseProjectNullableAttributes>true</UseProjectNullableAttributes>
     <NoWarn>$(NoWarn);CA1305;CA5350</NoWarn>
     <SignAssembly>true</SignAssembly>
     <AssemblyOriginatorKeyFile>..\..\product.snk</AssemblyOriginatorKeyFile>
@@ -41,7 +39,6 @@
   </PropertyGroup>
 
   <ItemGroup Condition=" '$(TargetFramework)' != 'netstandard2.0' ">
-    <Compile Remove="NullableAttributes.cs" />
     <Compile Remove="IsExternalInit.cs" />
   </ItemGroup>
 

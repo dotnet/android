@@ -12,26 +12,26 @@ using Java.Interop;
 
 using Microsoft.Android.Runtime;
 
-using NUnit.Framework;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Java.InteropTests
 {
-	[TestFixture]
-	[Category ("TrimmableTypeMapRuntimeCoverage")]
+	[TestClass]
+	[TestCategory ("TrimmableTypeMapRuntimeCoverage")]
 	public class TrimmableTypeMapRuntimeCoverageTests
 	{
-		[Test]
+		[TestMethod]
 		public void LegacyConnector_ThrowsWhenInvokedDirectly ()
 		{
 			var connector = typeof (LegacyConnectorPeer).GetMethod ("GetGetHashCodeHandler", BindingFlags.NonPublic | BindingFlags.Static)
-				?? throw new AssertionException ("The legacy connector must remain available.");
-			var exception = Assert.Throws<TargetInvocationException> (() => connector.Invoke (null, null));
+				?? throw new AssertFailedException ("The legacy connector must remain available.");
+			var exception = Assert.ThrowsExactly<TargetInvocationException> (() => connector.Invoke (null, null));
 
-			Assert.IsInstanceOf<NotSupportedException> (exception?.InnerException);
-			Assert.That (exception?.InnerException?.Message, Does.Contain ("Trimmable typemaps"));
+			Assert.IsInstanceOfType<NotSupportedException> (exception?.InnerException);
+			StringAssert.Contains (exception?.InnerException?.Message, "Trimmable typemaps");
 		}
 
-		[Test]
+		[TestMethod]
 		public void LegacyConnector_IsBypassedByTrimmableTypeMap ()
 		{
 			using var peer = new LegacyConnectorPeer ();
@@ -40,13 +40,13 @@ namespace Java.InteropTests
 			Assert.AreEqual (42, JNIEnv.CallIntMethod (peer.Handle, method));
 		}
 
-		[Test]
+		[TestMethod]
 		public void RuntimeFeatureSwitchesAreDefinedInMonoAndroid ()
 		{
 			Assert.AreEqual (typeof (AndroidEnvironment).Assembly, typeof (RuntimeFeature).Assembly);
 		}
 
-		[Test]
+		[TestMethod]
 		public void JavaToManagedCallback_RaisesUnhandledExceptionFromMonoAndroid ()
 		{
 			using var peer = new TrimmableRuntimeThrowingPeer ();
@@ -60,14 +60,14 @@ namespace Java.InteropTests
 			AndroidEnvironment.UnhandledExceptionRaiser += handler;
 			try {
 				JNIEnv.CallVoidMethod (peer.Handle, method);
-				Assert.IsInstanceOf<InvalidOperationException> (exception);
+				Assert.IsInstanceOfType<InvalidOperationException> (exception);
 				Assert.AreEqual ("Callback failure", exception.Message);
 			} finally {
 				AndroidEnvironment.UnhandledExceptionRaiser -= handler;
 			}
 		}
 
-		[Test]
+		[TestMethod]
 		public void JavaToManagedTextWatcherCallback_MarshalsStringAndPrimitiveParameters ()
 		{
 			TrimmableRuntimeTextWatcher.Reset ();
@@ -91,7 +91,7 @@ namespace Java.InteropTests
 			Assert.AreEqual (4, watcher.CountValue);
 		}
 
-		[Test]
+		[TestMethod]
 		public void JavaToManagedClickCallback_MarshalsObjectParameter ()
 		{
 			TrimmableRuntimeClickListener.Reset ();
@@ -106,7 +106,7 @@ namespace Java.InteropTests
 			Assert.AreEqual (view.Handle, listener.ViewHandle);
 		}
 
-		[Test]
+		[TestMethod]
 		public void JavaToManagedLongClickCallback_MarshalsBooleanReturn ()
 		{
 			TrimmableRuntimeClickListener.Reset ();
@@ -122,7 +122,7 @@ namespace Java.InteropTests
 			Assert.AreEqual (view.Handle, listener.ViewHandle);
 		}
 
-		[Test]
+		[TestMethod]
 		public void JavaToManagedInvocationHandlerCallback_MarshalsObjectArrayParameter ()
 		{
 			TrimmableRuntimeInvocationHandler.Reset ();
@@ -146,7 +146,7 @@ namespace Java.InteropTests
 			}
 		}
 
-		[Test]
+		[TestMethod]
 		public void JavaActivatedPeer_DisposeCanAccessThisAndInvokeVirtualMember ()
 		{
 			TrimmableRuntimeDisposePeer.Reset ();
@@ -161,7 +161,7 @@ namespace Java.InteropTests
 			Assert.AreNotEqual (0, TrimmableRuntimeDisposePeer.DisposeIdentityHashCode);
 		}
 
-		[Test]
+		[TestMethod]
 		public void JavaListAliasGroup_TargetHintSelectsGenericAndNonGenericManagedTypes ()
 		{
 			var targetTypes = new List<Type> ();
@@ -192,14 +192,47 @@ namespace Java.InteropTests
 					Assert.AreEqual (typeof (JavaList), nonGenericList.GetType ());
 
 					nonGenericList.Add ("beta");
-					Assert.AreEqual ("beta", nonGenericList [0]);
+					Assert.AreEqual ("beta", nonGenericList [0]?.ToString ());
 				}
 			} finally {
 				JniObjectReference.Dispose (ref arrayListClass);
 			}
 		}
 
-		[Test]
+		[TestMethod]
+		public void JavaListAliasGroup_ActivatesDerivedGenericType ()
+		{
+			AssertGenericListAlias<TrimmableDerivedJavaList<string>> ();
+			AssertGenericListAlias<TrimmableDerivedJavaList<int>> ();
+		}
+
+		[TestMethod]
+		public void JavaListSuperclassAlias_ActivatesDerivedGenericType ()
+		{
+			AssertGenericListAlias<TrimmableDerivedAbstractList<string>> ();
+		}
+
+		[TestMethod]
+		public void JavaListInterfaceAlias_ActivatesDerivedGenericType ()
+		{
+			AssertGenericListAlias<TrimmableDerivedListInterface<string>> ();
+		}
+
+		[TestMethod]
+		public void JavaListAlias_RejectsIncompatibleJavaObject ()
+		{
+			using var value = new Java.Util.ArrayList ();
+			Assert.IsTrue (TrimmableTypeMap.Instance.TryGetJniNameForManagedType (typeof (TrimmableDerivedLinkedList<string>), out var jniName));
+			Assert.AreEqual ("java/util/LinkedList", jniName);
+			var peer = TrimmableTypeMap.Instance.CreateInstance (value.Handle, typeof (TrimmableDerivedLinkedList<string>));
+			try {
+				Assert.IsNull (peer);
+			} finally {
+				peer?.Dispose ();
+			}
+		}
+
+		[TestMethod]
 		public void JavaCreatedHandle_UsesJavaInteropStyleActivationConstructor ()
 		{
 			TrimmableRuntimeJavaInteropPeer.Reset ();
@@ -214,7 +247,7 @@ namespace Java.InteropTests
 			}
 		}
 
-		[Test]
+		[TestMethod]
 		public void NonGenericCollection_CopyTo_ViewArray_UsesTrimmableTypeMapForArrayElementConversion ()
 		{
 			using (var arrayList = new Java.Util.ArrayList ()) {
@@ -239,7 +272,7 @@ namespace Java.InteropTests
 			}
 		}
 
-		[Test]
+		[TestMethod]
 		public void NonGenericCollection_CopyTo_ObjectArray_PreservesNullElement ()
 		{
 			using (var arrayList = new Java.Util.ArrayList ()) {
@@ -258,7 +291,7 @@ namespace Java.InteropTests
 			}
 		}
 
-		[Test]
+		[TestMethod]
 		public void NonGenericCollection_CopyTo_StringArray_ConvertsJavaString ()
 		{
 			using (var arrayList = new Java.Util.ArrayList ()) {
@@ -272,6 +305,18 @@ namespace Java.InteropTests
 				CopyToJavaList (arrayList, values);
 				Assert.AreEqual ("alpha", values [0]);
 			}
+		}
+
+		[TestMethod]
+		public void JavaAnnotation_LongValueOutsideIntRange_UsesJavaLongLiteral ()
+		{
+			using var peer = new TrimmableRuntimeLongAnnotationPeer ();
+			using var annotationType = Java.Lang.Class.ForName ("net.dot.android.test.LongValueAnnotation", false, peer.Class.ClassLoader);
+			using var annotation = peer.Class.GetAnnotation (annotationType)
+				?? throw new AssertFailedException ("The generated Java type must have the runtime annotation.");
+			var value = JNIEnv.GetMethodID (annotationType.Handle, "value", "()J");
+
+			Assert.AreEqual (long.MaxValue, JNIEnv.CallLongMethod (annotation.Handle, value));
 		}
 
 		static void CopyToJavaCollection (Java.Util.ArrayList arrayList, Array values)
@@ -294,6 +339,27 @@ namespace Java.InteropTests
 			JNIEnv.CallBooleanMethod (arrayList.Handle, add, new JValue (handle));
 		}
 
+		static void AssertGenericListAlias<
+			[DynamicallyAccessedMembers (DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.NonPublicConstructors)]
+			T> ()
+			where T : Java.Lang.Object
+		{
+			var arrayListClass = JniEnvironment.Types.FindClass ("java/util/ArrayList");
+			try {
+				var constructor = JNIEnv.GetMethodID (arrayListClass.Handle, "<init>", "()V");
+				var handle = JNIEnv.NewObject (arrayListClass.Handle, constructor);
+				try {
+					using var peer = Java.Lang.Object.GetObject<T> (handle, JniHandleOwnership.DoNotTransfer);
+					Assert.IsNotNull (peer);
+					Assert.AreEqual (typeof (T), peer.GetType ());
+				} finally {
+					JNIEnv.DeleteLocalRef (handle);
+				}
+			} finally {
+				JniObjectReference.Dispose (ref arrayListClass);
+			}
+		}
+
 		static T CreateFromJava<
 			[DynamicallyAccessedMembers (DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.NonPublicConstructors)]
 			T> ()
@@ -304,6 +370,56 @@ namespace Java.InteropTests
 			var result = Java.Lang.Object.GetObject<T> (instance, JniHandleOwnership.TransferLocalRef);
 			Assert.IsNotNull (result);
 			return result;
+		}
+	}
+
+	[Register ("java/util/ArrayList", DoNotGenerateAcw = true)]
+	class TrimmableDerivedJavaList<
+		[DynamicallyAccessedMembers (DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.NonPublicConstructors)]
+		T> : JavaList<T>
+	{
+		public TrimmableDerivedJavaList (IntPtr handle, JniHandleOwnership transfer) : base (handle, transfer)
+		{
+		}
+	}
+
+	[Register ("java/util/AbstractList", DoNotGenerateAcw = true)]
+	class TrimmableDerivedAbstractList<
+		[DynamicallyAccessedMembers (DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.NonPublicConstructors)]
+		T> : JavaList<T>
+	{
+		public TrimmableDerivedAbstractList (IntPtr handle, JniHandleOwnership transfer) : base (handle, transfer)
+		{
+		}
+	}
+
+	[Register ("java/util/LinkedList", DoNotGenerateAcw = true)]
+	class TrimmableDerivedLinkedList<
+		[DynamicallyAccessedMembers (DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.NonPublicConstructors)]
+		T> : JavaList<T>
+	{
+		public TrimmableDerivedLinkedList (IntPtr handle, JniHandleOwnership transfer) : base (handle, transfer)
+		{
+		}
+	}
+
+	[Register ("java/util/List", DoNotGenerateAcw = true)]
+	class TrimmableBaseListInterface<
+		[DynamicallyAccessedMembers (DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.NonPublicConstructors)]
+		T> : JavaList<T>
+	{
+		public TrimmableBaseListInterface (IntPtr handle, JniHandleOwnership transfer) : base (handle, transfer)
+		{
+		}
+	}
+
+	[Register ("java/util/List", DoNotGenerateAcw = true)]
+	class TrimmableDerivedListInterface<
+		[DynamicallyAccessedMembers (DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.NonPublicConstructors)]
+		T> : TrimmableBaseListInterface<T>
+	{
+		public TrimmableDerivedListInterface (IntPtr handle, JniHandleOwnership transfer) : base (handle, transfer)
+		{
 		}
 	}
 
@@ -334,6 +450,20 @@ namespace Java.InteropTests
 				?? throw new InvalidOperationException ("The legacy callback peer was not found.");
 			return peer.GetHashCode ();
 		}
+	}
+
+	[Register ("net/dot/android/test/TrimmableRuntimeLongAnnotationPeer")]
+	[LongValueAnnotation (Value = long.MaxValue)]
+	class TrimmableRuntimeLongAnnotationPeer : Java.Lang.Object
+	{
+	}
+
+	[Annotation ("net.dot.android.test.LongValueAnnotation")]
+	[AttributeUsage (AttributeTargets.Class)]
+	sealed class LongValueAnnotationAttribute : Attribute
+	{
+		[Register ("value")]
+		public long Value { get; set; }
 	}
 
 	[Register ("net/dot/android/test/TrimmableRuntimeThrowingPeer")]
