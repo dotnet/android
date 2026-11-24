@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
@@ -103,7 +104,56 @@ namespace Xamarin.ProjectTools
 			return hasType;
 		}
 
-		static void DexDump (DataReceivedEventHandler handler, string dexFile, string androidSdkDirectory)
+		public static bool ContainsClassWithField (string className, string field, string type, IEnumerable<string> dexDump)
+		{
+			bool inClass = false;
+			bool hasName = false;
+			foreach (var line in dexDump) {
+				if (HasDexDumpName (line, "Class descriptor")) {
+					inClass = ContainsDexDumpValue (line, "Class descriptor", className);
+					hasName = false;
+				} else if (inClass && HasDexDumpName (line, "name")) {
+					hasName = ContainsDexDumpValue (line, "name", field);
+				} else if (hasName) {
+					if (ContainsDexDumpValue (line, "type", type))
+						return true;
+					hasName = false;
+				}
+			}
+			return false;
+		}
+
+		static bool HasDexDumpName (string line, string name)
+		{
+			var separator = line.IndexOf (':');
+			return separator >= 0 && line.Substring (0, separator).Trim () == name;
+		}
+
+		static bool ContainsDexDumpValue (string line, string name, string value)
+		{
+			var separator = line.IndexOf (':');
+			return separator >= 0 && line.Substring (0, separator).Trim () == name &&
+				line.Substring (separator + 1).Trim () == $"'{value}'";
+		}
+
+		public static IReadOnlyList<string> GetDexDump (string dexFile, string androidSdkDirectory)
+		{
+			var lines = new List<string> ();
+			DataReceivedEventHandler handler = (s, e) => {
+				if (e.Data != null) {
+					lock (lines)
+						lines.Add (e.Data);
+				}
+			};
+			DataReceivedEventHandler errorHandler = (s, e) => {
+				if (e.Data != null)
+					Console.Error.WriteLine (e.Data);
+			};
+			DexDump (handler, dexFile, androidSdkDirectory, errorHandler);
+			return lines;
+		}
+
+		static void DexDump (DataReceivedEventHandler handler, string dexFile, string androidSdkDirectory, DataReceivedEventHandler errorHandler = null)
 		{
 			var androidSdk = new AndroidSdkInfo ((l, m) => {
 				Console.WriteLine ($"{l}: {m}");
@@ -127,7 +177,7 @@ namespace Xamarin.ProjectTools
 				WorkingDirectory = Path.GetDirectoryName (dexFile),
 			};
 			using (var p = new Process { StartInfo = psi }) {
-				p.ErrorDataReceived += handler;
+				p.ErrorDataReceived += errorHandler ?? handler;
 				p.OutputDataReceived += handler;
 
 				p.Start ();
