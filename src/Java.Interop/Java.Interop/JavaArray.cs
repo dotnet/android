@@ -31,7 +31,11 @@ namespace Java.Interop
 		}
 
 		public int Length {
-			get {return JniEnvironment.Arrays.GetArrayLength (PeerReference);}
+			get {
+				int length = JniEnvironment.Arrays.GetArrayLength (PeerReference);
+				GC.KeepAlive (this);
+				return length;
+			}
 		}
 
 		[MaybeNull]

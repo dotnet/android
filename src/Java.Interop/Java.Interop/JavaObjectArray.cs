@@ -82,6 +82,7 @@ namespace Java.Interop
 		T GetElementAt (int index)
 		{
 			var lref = JniEnvironment.Arrays.GetObjectArrayElement (PeerReference, index);
+			GC.KeepAlive (this);
 			return JniEnvironment.Runtime.ValueManager.GetValue<T> (ref lref, JniObjectReferenceOptions.CopyAndDispose);
 		}
 
@@ -93,6 +94,7 @@ namespace Java.Interop
 				JniEnvironment.Arrays.SetObjectArrayElement (PeerReference, index, r);
 			} finally {
 				JniObjectReference.Dispose (ref r);
+				GC.KeepAlive (this);
 			}
 		}
 
@@ -110,8 +112,12 @@ namespace Java.Interop
 		{
 			int len = Length;
 			var nullReference = new JniObjectReference ();
-			for (int i = 0; i < len; i++) {
-				JniEnvironment.Arrays.SetObjectArrayElement (PeerReference, i, nullReference);
+			try {
+				for (int i = 0; i < len; i++) {
+					JniEnvironment.Arrays.SetObjectArrayElement (PeerReference, i, nullReference);
+				}
+			} finally {
+				GC.KeepAlive (this);
 			}
 		}
 

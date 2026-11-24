@@ -66,9 +66,14 @@ namespace Java.Interop
 
 			public static IntPtr NewReturnToJniRef (IJavaPeerable value)
 			{
-				if (value == null || !value.PeerReference.IsValid)
+				if (value == null)
 					return IntPtr.Zero;
-				return NewReturnToJniRef (value.PeerReference);
+				var r = value.PeerReference;
+				if (!r.IsValid)
+					return IntPtr.Zero;
+				IntPtr result = NewReturnToJniRef (r);
+				GC.KeepAlive (value);
+				return result;
 			}
 
 			public static IntPtr NewReturnToJniRef (JniObjectReference value)

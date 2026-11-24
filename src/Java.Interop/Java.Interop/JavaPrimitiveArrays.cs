@@ -30,19 +30,22 @@ namespace Java.Interop {
 	public sealed class JniBooleanArrayElements : JniArrayElements {
 
 		JniObjectReference      arrayHandle;
+		JavaBooleanArray? owner;
 
 		/// <safety>
-		/// Supply a live JNI Boolean array and its unreleased, aligned GetBooleanArrayElements
-		/// result in the current thread's JVM, with a non-negative count within the array length.
-		/// Keep the array reference valid through owner release and exclude conflicting aliases or
-		/// concurrent release/disposal. This owner does not root the wrapper; on construction failure,
-		/// the caller remains responsible for release.
+		/// Supply a live JNI Boolean array, its owning wrapper when applicable, and its
+		/// unreleased, aligned GetBooleanArrayElements result in the current thread's JVM,
+		/// with a non-negative count within the array length. Keep the array reference valid through owner
+		/// release (not disposed externally) and exclude conflicting aliases or concurrent release/disposal.
+		/// This owner roots <paramref name="owner"/> until a non-Commit release completes; on construction
+		/// failure, the caller remains responsible for release.
 		/// </safety>
-		internal unsafe JniBooleanArrayElements (JniObjectReference arrayHandle, Boolean* elements, int elementCount)
+		internal unsafe JniBooleanArrayElements (JniObjectReference arrayHandle, Boolean* elements, int elementCount, JavaBooleanArray? owner)
 			: base (elements, elementCount, sizeof (Boolean))
 		{
-			// SAFETY: Retain the caller's matching JNI array handle for release.
+			// SAFETY: Retain the caller's matching JNI array handle and owning wrapper until release.
 			this.arrayHandle = arrayHandle;
+			this.owner       = owner;
 		}
 
 		// SAFETY: Cast the checked address only; no dereference or lifetime extension.
@@ -68,9 +71,16 @@ namespace Java.Interop {
 
 		protected override void Synchronize (JniReleaseArrayElementsMode releaseMode)
 		{
-			unsafe {
-				// SAFETY: The owner pairs this acquired buffer with arrayHandle for the matching JNI release.
-				JniEnvironment.Arrays.ReleaseBooleanArrayElements (arrayHandle, Elements, releaseMode);
+			var owner = this.owner;
+			try {
+				unsafe {
+					// SAFETY: The owner pairs this acquired buffer with arrayHandle for the matching JNI release; finally keeps the owning wrapper alive.
+					JniEnvironment.Arrays.ReleaseBooleanArrayElements (arrayHandle, Elements, releaseMode);
+				}
+				if (releaseMode != JniReleaseArrayElementsMode.Commit)
+					this.owner = null;
+			} finally {
+				GC.KeepAlive (owner);
 			}
 		}
 	}
@@ -112,14 +122,15 @@ namespace Java.Interop {
 
 		public new JniBooleanArrayElements GetElements ()
 		{
-			if (!PeerReference.IsValid)
+			var peerReference = PeerReference;
+			if (!peerReference.IsValid)
 				throw JniEnvironment.CreateObjectDisposedException (this);
 			unsafe {
-				// SAFETY: Pair JNI's non-null typed acquisition with its array and length.
-				var elements = JniEnvironment.Arrays.GetBooleanArrayElements (PeerReference, null);
+				// SAFETY: Pair JNI's non-null typed acquisition with its array, length, and owning wrapper.
+				var elements = JniEnvironment.Arrays.GetBooleanArrayElements (peerReference, null);
 				if (elements == null)
 					throw new InvalidOperationException ("`JniEnvironment.Arrays.GetBooleanArrayElements()` returned NULL!");
-				return new JniBooleanArrayElements (PeerReference, elements, Length);
+				return new JniBooleanArrayElements (peerReference, elements, Length, this);
 			}
 		}
 
@@ -170,6 +181,7 @@ namespace Java.Interop {
 				fixed (Boolean* b = destinationArray)
 					JniEnvironment.Arrays.GetBooleanArrayRegion (PeerReference, sourceIndex, length, (b+destinationIndex));
 			}
+			GC.KeepAlive (this);
 		}
 
 		public override void CopyFrom (Boolean[] sourceArray, int sourceIndex, int destinationIndex, int length)
@@ -185,6 +197,7 @@ namespace Java.Interop {
 				fixed (Boolean* b = sourceArray)
 					JniEnvironment.Arrays.SetBooleanArrayRegion (PeerReference, destinationIndex, length, (b+sourceIndex));
 			}
+			GC.KeepAlive (this);
 		}
 
 		internal override bool TargetTypeIsCurrentType (Type? targetType)
@@ -255,19 +268,22 @@ namespace Java.Interop {
 	public sealed class JniSByteArrayElements : JniArrayElements {
 
 		JniObjectReference      arrayHandle;
+		JavaSByteArray? owner;
 
 		/// <safety>
-		/// Supply a live JNI Byte array and its unreleased, aligned GetByteArrayElements
-		/// result in the current thread's JVM, with a non-negative count within the array length.
-		/// Keep the array reference valid through owner release and exclude conflicting aliases or
-		/// concurrent release/disposal. This owner does not root the wrapper; on construction failure,
-		/// the caller remains responsible for release.
+		/// Supply a live JNI Byte array, its owning wrapper when applicable, and its
+		/// unreleased, aligned GetByteArrayElements result in the current thread's JVM,
+		/// with a non-negative count within the array length. Keep the array reference valid through owner
+		/// release (not disposed externally) and exclude conflicting aliases or concurrent release/disposal.
+		/// This owner roots <paramref name="owner"/> until a non-Commit release completes; on construction
+		/// failure, the caller remains responsible for release.
 		/// </safety>
-		internal unsafe JniSByteArrayElements (JniObjectReference arrayHandle, SByte* elements, int elementCount)
+		internal unsafe JniSByteArrayElements (JniObjectReference arrayHandle, SByte* elements, int elementCount, JavaSByteArray? owner)
 			: base (elements, elementCount, sizeof (SByte))
 		{
-			// SAFETY: Retain the caller's matching JNI array handle for release.
+			// SAFETY: Retain the caller's matching JNI array handle and owning wrapper until release.
 			this.arrayHandle = arrayHandle;
+			this.owner       = owner;
 		}
 
 		// SAFETY: Cast the checked address only; no dereference or lifetime extension.
@@ -293,9 +309,16 @@ namespace Java.Interop {
 
 		protected override void Synchronize (JniReleaseArrayElementsMode releaseMode)
 		{
-			unsafe {
-				// SAFETY: The owner pairs this acquired buffer with arrayHandle for the matching JNI release.
-				JniEnvironment.Arrays.ReleaseByteArrayElements (arrayHandle, Elements, releaseMode);
+			var owner = this.owner;
+			try {
+				unsafe {
+					// SAFETY: The owner pairs this acquired buffer with arrayHandle for the matching JNI release; finally keeps the owning wrapper alive.
+					JniEnvironment.Arrays.ReleaseByteArrayElements (arrayHandle, Elements, releaseMode);
+				}
+				if (releaseMode != JniReleaseArrayElementsMode.Commit)
+					this.owner = null;
+			} finally {
+				GC.KeepAlive (owner);
 			}
 		}
 	}
@@ -337,14 +360,15 @@ namespace Java.Interop {
 
 		public new JniSByteArrayElements GetElements ()
 		{
-			if (!PeerReference.IsValid)
+			var peerReference = PeerReference;
+			if (!peerReference.IsValid)
 				throw JniEnvironment.CreateObjectDisposedException (this);
 			unsafe {
-				// SAFETY: Pair JNI's non-null typed acquisition with its array and length.
-				var elements = JniEnvironment.Arrays.GetByteArrayElements (PeerReference, null);
+				// SAFETY: Pair JNI's non-null typed acquisition with its array, length, and owning wrapper.
+				var elements = JniEnvironment.Arrays.GetByteArrayElements (peerReference, null);
 				if (elements == null)
 					throw new InvalidOperationException ("`JniEnvironment.Arrays.GetByteArrayElements()` returned NULL!");
-				return new JniSByteArrayElements (PeerReference, elements, Length);
+				return new JniSByteArrayElements (peerReference, elements, Length, this);
 			}
 		}
 
@@ -395,6 +419,7 @@ namespace Java.Interop {
 				fixed (SByte* b = destinationArray)
 					JniEnvironment.Arrays.GetByteArrayRegion (PeerReference, sourceIndex, length, (b+destinationIndex));
 			}
+			GC.KeepAlive (this);
 		}
 
 		public override void CopyFrom (SByte[] sourceArray, int sourceIndex, int destinationIndex, int length)
@@ -410,6 +435,7 @@ namespace Java.Interop {
 				fixed (SByte* b = sourceArray)
 					JniEnvironment.Arrays.SetByteArrayRegion (PeerReference, destinationIndex, length, (b+sourceIndex));
 			}
+			GC.KeepAlive (this);
 		}
 
 		internal override bool TargetTypeIsCurrentType (Type? targetType)
@@ -480,19 +506,22 @@ namespace Java.Interop {
 	public sealed class JniCharArrayElements : JniArrayElements {
 
 		JniObjectReference      arrayHandle;
+		JavaCharArray? owner;
 
 		/// <safety>
-		/// Supply a live JNI Char array and its unreleased, aligned GetCharArrayElements
-		/// result in the current thread's JVM, with a non-negative count within the array length.
-		/// Keep the array reference valid through owner release and exclude conflicting aliases or
-		/// concurrent release/disposal. This owner does not root the wrapper; on construction failure,
-		/// the caller remains responsible for release.
+		/// Supply a live JNI Char array, its owning wrapper when applicable, and its
+		/// unreleased, aligned GetCharArrayElements result in the current thread's JVM,
+		/// with a non-negative count within the array length. Keep the array reference valid through owner
+		/// release (not disposed externally) and exclude conflicting aliases or concurrent release/disposal.
+		/// This owner roots <paramref name="owner"/> until a non-Commit release completes; on construction
+		/// failure, the caller remains responsible for release.
 		/// </safety>
-		internal unsafe JniCharArrayElements (JniObjectReference arrayHandle, Char* elements, int elementCount)
+		internal unsafe JniCharArrayElements (JniObjectReference arrayHandle, Char* elements, int elementCount, JavaCharArray? owner)
 			: base (elements, elementCount, sizeof (Char))
 		{
-			// SAFETY: Retain the caller's matching JNI array handle for release.
+			// SAFETY: Retain the caller's matching JNI array handle and owning wrapper until release.
 			this.arrayHandle = arrayHandle;
+			this.owner       = owner;
 		}
 
 		// SAFETY: Cast the checked address only; no dereference or lifetime extension.
@@ -518,9 +547,16 @@ namespace Java.Interop {
 
 		protected override void Synchronize (JniReleaseArrayElementsMode releaseMode)
 		{
-			unsafe {
-				// SAFETY: The owner pairs this acquired buffer with arrayHandle for the matching JNI release.
-				JniEnvironment.Arrays.ReleaseCharArrayElements (arrayHandle, Elements, releaseMode);
+			var owner = this.owner;
+			try {
+				unsafe {
+					// SAFETY: The owner pairs this acquired buffer with arrayHandle for the matching JNI release; finally keeps the owning wrapper alive.
+					JniEnvironment.Arrays.ReleaseCharArrayElements (arrayHandle, Elements, releaseMode);
+				}
+				if (releaseMode != JniReleaseArrayElementsMode.Commit)
+					this.owner = null;
+			} finally {
+				GC.KeepAlive (owner);
 			}
 		}
 	}
@@ -562,14 +598,15 @@ namespace Java.Interop {
 
 		public new JniCharArrayElements GetElements ()
 		{
-			if (!PeerReference.IsValid)
+			var peerReference = PeerReference;
+			if (!peerReference.IsValid)
 				throw JniEnvironment.CreateObjectDisposedException (this);
 			unsafe {
-				// SAFETY: Pair JNI's non-null typed acquisition with its array and length.
-				var elements = JniEnvironment.Arrays.GetCharArrayElements (PeerReference, null);
+				// SAFETY: Pair JNI's non-null typed acquisition with its array, length, and owning wrapper.
+				var elements = JniEnvironment.Arrays.GetCharArrayElements (peerReference, null);
 				if (elements == null)
 					throw new InvalidOperationException ("`JniEnvironment.Arrays.GetCharArrayElements()` returned NULL!");
-				return new JniCharArrayElements (PeerReference, elements, Length);
+				return new JniCharArrayElements (peerReference, elements, Length, this);
 			}
 		}
 
@@ -620,6 +657,7 @@ namespace Java.Interop {
 				fixed (Char* b = destinationArray)
 					JniEnvironment.Arrays.GetCharArrayRegion (PeerReference, sourceIndex, length, (b+destinationIndex));
 			}
+			GC.KeepAlive (this);
 		}
 
 		public override void CopyFrom (Char[] sourceArray, int sourceIndex, int destinationIndex, int length)
@@ -635,6 +673,7 @@ namespace Java.Interop {
 				fixed (Char* b = sourceArray)
 					JniEnvironment.Arrays.SetCharArrayRegion (PeerReference, destinationIndex, length, (b+sourceIndex));
 			}
+			GC.KeepAlive (this);
 		}
 
 		internal override bool TargetTypeIsCurrentType (Type? targetType)
@@ -705,19 +744,22 @@ namespace Java.Interop {
 	public sealed class JniInt16ArrayElements : JniArrayElements {
 
 		JniObjectReference      arrayHandle;
+		JavaInt16Array? owner;
 
 		/// <safety>
-		/// Supply a live JNI Short array and its unreleased, aligned GetShortArrayElements
-		/// result in the current thread's JVM, with a non-negative count within the array length.
-		/// Keep the array reference valid through owner release and exclude conflicting aliases or
-		/// concurrent release/disposal. This owner does not root the wrapper; on construction failure,
-		/// the caller remains responsible for release.
+		/// Supply a live JNI Short array, its owning wrapper when applicable, and its
+		/// unreleased, aligned GetShortArrayElements result in the current thread's JVM,
+		/// with a non-negative count within the array length. Keep the array reference valid through owner
+		/// release (not disposed externally) and exclude conflicting aliases or concurrent release/disposal.
+		/// This owner roots <paramref name="owner"/> until a non-Commit release completes; on construction
+		/// failure, the caller remains responsible for release.
 		/// </safety>
-		internal unsafe JniInt16ArrayElements (JniObjectReference arrayHandle, Int16* elements, int elementCount)
+		internal unsafe JniInt16ArrayElements (JniObjectReference arrayHandle, Int16* elements, int elementCount, JavaInt16Array? owner)
 			: base (elements, elementCount, sizeof (Int16))
 		{
-			// SAFETY: Retain the caller's matching JNI array handle for release.
+			// SAFETY: Retain the caller's matching JNI array handle and owning wrapper until release.
 			this.arrayHandle = arrayHandle;
+			this.owner       = owner;
 		}
 
 		// SAFETY: Cast the checked address only; no dereference or lifetime extension.
@@ -743,9 +785,16 @@ namespace Java.Interop {
 
 		protected override void Synchronize (JniReleaseArrayElementsMode releaseMode)
 		{
-			unsafe {
-				// SAFETY: The owner pairs this acquired buffer with arrayHandle for the matching JNI release.
-				JniEnvironment.Arrays.ReleaseShortArrayElements (arrayHandle, Elements, releaseMode);
+			var owner = this.owner;
+			try {
+				unsafe {
+					// SAFETY: The owner pairs this acquired buffer with arrayHandle for the matching JNI release; finally keeps the owning wrapper alive.
+					JniEnvironment.Arrays.ReleaseShortArrayElements (arrayHandle, Elements, releaseMode);
+				}
+				if (releaseMode != JniReleaseArrayElementsMode.Commit)
+					this.owner = null;
+			} finally {
+				GC.KeepAlive (owner);
 			}
 		}
 	}
@@ -787,14 +836,15 @@ namespace Java.Interop {
 
 		public new JniInt16ArrayElements GetElements ()
 		{
-			if (!PeerReference.IsValid)
+			var peerReference = PeerReference;
+			if (!peerReference.IsValid)
 				throw JniEnvironment.CreateObjectDisposedException (this);
 			unsafe {
-				// SAFETY: Pair JNI's non-null typed acquisition with its array and length.
-				var elements = JniEnvironment.Arrays.GetShortArrayElements (PeerReference, null);
+				// SAFETY: Pair JNI's non-null typed acquisition with its array, length, and owning wrapper.
+				var elements = JniEnvironment.Arrays.GetShortArrayElements (peerReference, null);
 				if (elements == null)
 					throw new InvalidOperationException ("`JniEnvironment.Arrays.GetShortArrayElements()` returned NULL!");
-				return new JniInt16ArrayElements (PeerReference, elements, Length);
+				return new JniInt16ArrayElements (peerReference, elements, Length, this);
 			}
 		}
 
@@ -845,6 +895,7 @@ namespace Java.Interop {
 				fixed (Int16* b = destinationArray)
 					JniEnvironment.Arrays.GetShortArrayRegion (PeerReference, sourceIndex, length, (b+destinationIndex));
 			}
+			GC.KeepAlive (this);
 		}
 
 		public override void CopyFrom (Int16[] sourceArray, int sourceIndex, int destinationIndex, int length)
@@ -860,6 +911,7 @@ namespace Java.Interop {
 				fixed (Int16* b = sourceArray)
 					JniEnvironment.Arrays.SetShortArrayRegion (PeerReference, destinationIndex, length, (b+sourceIndex));
 			}
+			GC.KeepAlive (this);
 		}
 
 		internal override bool TargetTypeIsCurrentType (Type? targetType)
@@ -930,19 +982,22 @@ namespace Java.Interop {
 	public sealed class JniInt32ArrayElements : JniArrayElements {
 
 		JniObjectReference      arrayHandle;
+		JavaInt32Array? owner;
 
 		/// <safety>
-		/// Supply a live JNI Int array and its unreleased, aligned GetIntArrayElements
-		/// result in the current thread's JVM, with a non-negative count within the array length.
-		/// Keep the array reference valid through owner release and exclude conflicting aliases or
-		/// concurrent release/disposal. This owner does not root the wrapper; on construction failure,
-		/// the caller remains responsible for release.
+		/// Supply a live JNI Int array, its owning wrapper when applicable, and its
+		/// unreleased, aligned GetIntArrayElements result in the current thread's JVM,
+		/// with a non-negative count within the array length. Keep the array reference valid through owner
+		/// release (not disposed externally) and exclude conflicting aliases or concurrent release/disposal.
+		/// This owner roots <paramref name="owner"/> until a non-Commit release completes; on construction
+		/// failure, the caller remains responsible for release.
 		/// </safety>
-		internal unsafe JniInt32ArrayElements (JniObjectReference arrayHandle, Int32* elements, int elementCount)
+		internal unsafe JniInt32ArrayElements (JniObjectReference arrayHandle, Int32* elements, int elementCount, JavaInt32Array? owner)
 			: base (elements, elementCount, sizeof (Int32))
 		{
-			// SAFETY: Retain the caller's matching JNI array handle for release.
+			// SAFETY: Retain the caller's matching JNI array handle and owning wrapper until release.
 			this.arrayHandle = arrayHandle;
+			this.owner       = owner;
 		}
 
 		// SAFETY: Cast the checked address only; no dereference or lifetime extension.
@@ -968,9 +1023,16 @@ namespace Java.Interop {
 
 		protected override void Synchronize (JniReleaseArrayElementsMode releaseMode)
 		{
-			unsafe {
-				// SAFETY: The owner pairs this acquired buffer with arrayHandle for the matching JNI release.
-				JniEnvironment.Arrays.ReleaseIntArrayElements (arrayHandle, Elements, releaseMode);
+			var owner = this.owner;
+			try {
+				unsafe {
+					// SAFETY: The owner pairs this acquired buffer with arrayHandle for the matching JNI release; finally keeps the owning wrapper alive.
+					JniEnvironment.Arrays.ReleaseIntArrayElements (arrayHandle, Elements, releaseMode);
+				}
+				if (releaseMode != JniReleaseArrayElementsMode.Commit)
+					this.owner = null;
+			} finally {
+				GC.KeepAlive (owner);
 			}
 		}
 	}
@@ -1012,14 +1074,15 @@ namespace Java.Interop {
 
 		public new JniInt32ArrayElements GetElements ()
 		{
-			if (!PeerReference.IsValid)
+			var peerReference = PeerReference;
+			if (!peerReference.IsValid)
 				throw JniEnvironment.CreateObjectDisposedException (this);
 			unsafe {
-				// SAFETY: Pair JNI's non-null typed acquisition with its array and length.
-				var elements = JniEnvironment.Arrays.GetIntArrayElements (PeerReference, null);
+				// SAFETY: Pair JNI's non-null typed acquisition with its array, length, and owning wrapper.
+				var elements = JniEnvironment.Arrays.GetIntArrayElements (peerReference, null);
 				if (elements == null)
 					throw new InvalidOperationException ("`JniEnvironment.Arrays.GetIntArrayElements()` returned NULL!");
-				return new JniInt32ArrayElements (PeerReference, elements, Length);
+				return new JniInt32ArrayElements (peerReference, elements, Length, this);
 			}
 		}
 
@@ -1070,6 +1133,7 @@ namespace Java.Interop {
 				fixed (Int32* b = destinationArray)
 					JniEnvironment.Arrays.GetIntArrayRegion (PeerReference, sourceIndex, length, (b+destinationIndex));
 			}
+			GC.KeepAlive (this);
 		}
 
 		public override void CopyFrom (Int32[] sourceArray, int sourceIndex, int destinationIndex, int length)
@@ -1085,6 +1149,7 @@ namespace Java.Interop {
 				fixed (Int32* b = sourceArray)
 					JniEnvironment.Arrays.SetIntArrayRegion (PeerReference, destinationIndex, length, (b+sourceIndex));
 			}
+			GC.KeepAlive (this);
 		}
 
 		internal override bool TargetTypeIsCurrentType (Type? targetType)
@@ -1155,19 +1220,22 @@ namespace Java.Interop {
 	public sealed class JniInt64ArrayElements : JniArrayElements {
 
 		JniObjectReference      arrayHandle;
+		JavaInt64Array? owner;
 
 		/// <safety>
-		/// Supply a live JNI Long array and its unreleased, aligned GetLongArrayElements
-		/// result in the current thread's JVM, with a non-negative count within the array length.
-		/// Keep the array reference valid through owner release and exclude conflicting aliases or
-		/// concurrent release/disposal. This owner does not root the wrapper; on construction failure,
-		/// the caller remains responsible for release.
+		/// Supply a live JNI Long array, its owning wrapper when applicable, and its
+		/// unreleased, aligned GetLongArrayElements result in the current thread's JVM,
+		/// with a non-negative count within the array length. Keep the array reference valid through owner
+		/// release (not disposed externally) and exclude conflicting aliases or concurrent release/disposal.
+		/// This owner roots <paramref name="owner"/> until a non-Commit release completes; on construction
+		/// failure, the caller remains responsible for release.
 		/// </safety>
-		internal unsafe JniInt64ArrayElements (JniObjectReference arrayHandle, Int64* elements, int elementCount)
+		internal unsafe JniInt64ArrayElements (JniObjectReference arrayHandle, Int64* elements, int elementCount, JavaInt64Array? owner)
 			: base (elements, elementCount, sizeof (Int64))
 		{
-			// SAFETY: Retain the caller's matching JNI array handle for release.
+			// SAFETY: Retain the caller's matching JNI array handle and owning wrapper until release.
 			this.arrayHandle = arrayHandle;
+			this.owner       = owner;
 		}
 
 		// SAFETY: Cast the checked address only; no dereference or lifetime extension.
@@ -1193,9 +1261,16 @@ namespace Java.Interop {
 
 		protected override void Synchronize (JniReleaseArrayElementsMode releaseMode)
 		{
-			unsafe {
-				// SAFETY: The owner pairs this acquired buffer with arrayHandle for the matching JNI release.
-				JniEnvironment.Arrays.ReleaseLongArrayElements (arrayHandle, Elements, releaseMode);
+			var owner = this.owner;
+			try {
+				unsafe {
+					// SAFETY: The owner pairs this acquired buffer with arrayHandle for the matching JNI release; finally keeps the owning wrapper alive.
+					JniEnvironment.Arrays.ReleaseLongArrayElements (arrayHandle, Elements, releaseMode);
+				}
+				if (releaseMode != JniReleaseArrayElementsMode.Commit)
+					this.owner = null;
+			} finally {
+				GC.KeepAlive (owner);
 			}
 		}
 	}
@@ -1237,14 +1312,15 @@ namespace Java.Interop {
 
 		public new JniInt64ArrayElements GetElements ()
 		{
-			if (!PeerReference.IsValid)
+			var peerReference = PeerReference;
+			if (!peerReference.IsValid)
 				throw JniEnvironment.CreateObjectDisposedException (this);
 			unsafe {
-				// SAFETY: Pair JNI's non-null typed acquisition with its array and length.
-				var elements = JniEnvironment.Arrays.GetLongArrayElements (PeerReference, null);
+				// SAFETY: Pair JNI's non-null typed acquisition with its array, length, and owning wrapper.
+				var elements = JniEnvironment.Arrays.GetLongArrayElements (peerReference, null);
 				if (elements == null)
 					throw new InvalidOperationException ("`JniEnvironment.Arrays.GetLongArrayElements()` returned NULL!");
-				return new JniInt64ArrayElements (PeerReference, elements, Length);
+				return new JniInt64ArrayElements (peerReference, elements, Length, this);
 			}
 		}
 
@@ -1295,6 +1371,7 @@ namespace Java.Interop {
 				fixed (Int64* b = destinationArray)
 					JniEnvironment.Arrays.GetLongArrayRegion (PeerReference, sourceIndex, length, (b+destinationIndex));
 			}
+			GC.KeepAlive (this);
 		}
 
 		public override void CopyFrom (Int64[] sourceArray, int sourceIndex, int destinationIndex, int length)
@@ -1310,6 +1387,7 @@ namespace Java.Interop {
 				fixed (Int64* b = sourceArray)
 					JniEnvironment.Arrays.SetLongArrayRegion (PeerReference, destinationIndex, length, (b+sourceIndex));
 			}
+			GC.KeepAlive (this);
 		}
 
 		internal override bool TargetTypeIsCurrentType (Type? targetType)
@@ -1380,19 +1458,22 @@ namespace Java.Interop {
 	public sealed class JniSingleArrayElements : JniArrayElements {
 
 		JniObjectReference      arrayHandle;
+		JavaSingleArray? owner;
 
 		/// <safety>
-		/// Supply a live JNI Float array and its unreleased, aligned GetFloatArrayElements
-		/// result in the current thread's JVM, with a non-negative count within the array length.
-		/// Keep the array reference valid through owner release and exclude conflicting aliases or
-		/// concurrent release/disposal. This owner does not root the wrapper; on construction failure,
-		/// the caller remains responsible for release.
+		/// Supply a live JNI Float array, its owning wrapper when applicable, and its
+		/// unreleased, aligned GetFloatArrayElements result in the current thread's JVM,
+		/// with a non-negative count within the array length. Keep the array reference valid through owner
+		/// release (not disposed externally) and exclude conflicting aliases or concurrent release/disposal.
+		/// This owner roots <paramref name="owner"/> until a non-Commit release completes; on construction
+		/// failure, the caller remains responsible for release.
 		/// </safety>
-		internal unsafe JniSingleArrayElements (JniObjectReference arrayHandle, Single* elements, int elementCount)
+		internal unsafe JniSingleArrayElements (JniObjectReference arrayHandle, Single* elements, int elementCount, JavaSingleArray? owner)
 			: base (elements, elementCount, sizeof (Single))
 		{
-			// SAFETY: Retain the caller's matching JNI array handle for release.
+			// SAFETY: Retain the caller's matching JNI array handle and owning wrapper until release.
 			this.arrayHandle = arrayHandle;
+			this.owner       = owner;
 		}
 
 		// SAFETY: Cast the checked address only; no dereference or lifetime extension.
@@ -1418,9 +1499,16 @@ namespace Java.Interop {
 
 		protected override void Synchronize (JniReleaseArrayElementsMode releaseMode)
 		{
-			unsafe {
-				// SAFETY: The owner pairs this acquired buffer with arrayHandle for the matching JNI release.
-				JniEnvironment.Arrays.ReleaseFloatArrayElements (arrayHandle, Elements, releaseMode);
+			var owner = this.owner;
+			try {
+				unsafe {
+					// SAFETY: The owner pairs this acquired buffer with arrayHandle for the matching JNI release; finally keeps the owning wrapper alive.
+					JniEnvironment.Arrays.ReleaseFloatArrayElements (arrayHandle, Elements, releaseMode);
+				}
+				if (releaseMode != JniReleaseArrayElementsMode.Commit)
+					this.owner = null;
+			} finally {
+				GC.KeepAlive (owner);
 			}
 		}
 	}
@@ -1462,14 +1550,15 @@ namespace Java.Interop {
 
 		public new JniSingleArrayElements GetElements ()
 		{
-			if (!PeerReference.IsValid)
+			var peerReference = PeerReference;
+			if (!peerReference.IsValid)
 				throw JniEnvironment.CreateObjectDisposedException (this);
 			unsafe {
-				// SAFETY: Pair JNI's non-null typed acquisition with its array and length.
-				var elements = JniEnvironment.Arrays.GetFloatArrayElements (PeerReference, null);
+				// SAFETY: Pair JNI's non-null typed acquisition with its array, length, and owning wrapper.
+				var elements = JniEnvironment.Arrays.GetFloatArrayElements (peerReference, null);
 				if (elements == null)
 					throw new InvalidOperationException ("`JniEnvironment.Arrays.GetFloatArrayElements()` returned NULL!");
-				return new JniSingleArrayElements (PeerReference, elements, Length);
+				return new JniSingleArrayElements (peerReference, elements, Length, this);
 			}
 		}
 
@@ -1520,6 +1609,7 @@ namespace Java.Interop {
 				fixed (Single* b = destinationArray)
 					JniEnvironment.Arrays.GetFloatArrayRegion (PeerReference, sourceIndex, length, (b+destinationIndex));
 			}
+			GC.KeepAlive (this);
 		}
 
 		public override void CopyFrom (Single[] sourceArray, int sourceIndex, int destinationIndex, int length)
@@ -1535,6 +1625,7 @@ namespace Java.Interop {
 				fixed (Single* b = sourceArray)
 					JniEnvironment.Arrays.SetFloatArrayRegion (PeerReference, destinationIndex, length, (b+sourceIndex));
 			}
+			GC.KeepAlive (this);
 		}
 
 		internal override bool TargetTypeIsCurrentType (Type? targetType)
@@ -1605,19 +1696,22 @@ namespace Java.Interop {
 	public sealed class JniDoubleArrayElements : JniArrayElements {
 
 		JniObjectReference      arrayHandle;
+		JavaDoubleArray? owner;
 
 		/// <safety>
-		/// Supply a live JNI Double array and its unreleased, aligned GetDoubleArrayElements
-		/// result in the current thread's JVM, with a non-negative count within the array length.
-		/// Keep the array reference valid through owner release and exclude conflicting aliases or
-		/// concurrent release/disposal. This owner does not root the wrapper; on construction failure,
-		/// the caller remains responsible for release.
+		/// Supply a live JNI Double array, its owning wrapper when applicable, and its
+		/// unreleased, aligned GetDoubleArrayElements result in the current thread's JVM,
+		/// with a non-negative count within the array length. Keep the array reference valid through owner
+		/// release (not disposed externally) and exclude conflicting aliases or concurrent release/disposal.
+		/// This owner roots <paramref name="owner"/> until a non-Commit release completes; on construction
+		/// failure, the caller remains responsible for release.
 		/// </safety>
-		internal unsafe JniDoubleArrayElements (JniObjectReference arrayHandle, Double* elements, int elementCount)
+		internal unsafe JniDoubleArrayElements (JniObjectReference arrayHandle, Double* elements, int elementCount, JavaDoubleArray? owner)
 			: base (elements, elementCount, sizeof (Double))
 		{
-			// SAFETY: Retain the caller's matching JNI array handle for release.
+			// SAFETY: Retain the caller's matching JNI array handle and owning wrapper until release.
 			this.arrayHandle = arrayHandle;
+			this.owner       = owner;
 		}
 
 		// SAFETY: Cast the checked address only; no dereference or lifetime extension.
@@ -1643,9 +1737,16 @@ namespace Java.Interop {
 
 		protected override void Synchronize (JniReleaseArrayElementsMode releaseMode)
 		{
-			unsafe {
-				// SAFETY: The owner pairs this acquired buffer with arrayHandle for the matching JNI release.
-				JniEnvironment.Arrays.ReleaseDoubleArrayElements (arrayHandle, Elements, releaseMode);
+			var owner = this.owner;
+			try {
+				unsafe {
+					// SAFETY: The owner pairs this acquired buffer with arrayHandle for the matching JNI release; finally keeps the owning wrapper alive.
+					JniEnvironment.Arrays.ReleaseDoubleArrayElements (arrayHandle, Elements, releaseMode);
+				}
+				if (releaseMode != JniReleaseArrayElementsMode.Commit)
+					this.owner = null;
+			} finally {
+				GC.KeepAlive (owner);
 			}
 		}
 	}
@@ -1687,14 +1788,15 @@ namespace Java.Interop {
 
 		public new JniDoubleArrayElements GetElements ()
 		{
-			if (!PeerReference.IsValid)
+			var peerReference = PeerReference;
+			if (!peerReference.IsValid)
 				throw JniEnvironment.CreateObjectDisposedException (this);
 			unsafe {
-				// SAFETY: Pair JNI's non-null typed acquisition with its array and length.
-				var elements = JniEnvironment.Arrays.GetDoubleArrayElements (PeerReference, null);
+				// SAFETY: Pair JNI's non-null typed acquisition with its array, length, and owning wrapper.
+				var elements = JniEnvironment.Arrays.GetDoubleArrayElements (peerReference, null);
 				if (elements == null)
 					throw new InvalidOperationException ("`JniEnvironment.Arrays.GetDoubleArrayElements()` returned NULL!");
-				return new JniDoubleArrayElements (PeerReference, elements, Length);
+				return new JniDoubleArrayElements (peerReference, elements, Length, this);
 			}
 		}
 
@@ -1745,6 +1847,7 @@ namespace Java.Interop {
 				fixed (Double* b = destinationArray)
 					JniEnvironment.Arrays.GetDoubleArrayRegion (PeerReference, sourceIndex, length, (b+destinationIndex));
 			}
+			GC.KeepAlive (this);
 		}
 
 		public override void CopyFrom (Double[] sourceArray, int sourceIndex, int destinationIndex, int length)
@@ -1760,6 +1863,7 @@ namespace Java.Interop {
 				fixed (Double* b = sourceArray)
 					JniEnvironment.Arrays.SetDoubleArrayRegion (PeerReference, destinationIndex, length, (b+sourceIndex));
 			}
+			GC.KeepAlive (this);
 		}
 
 		internal override bool TargetTypeIsCurrentType (Type? targetType)
