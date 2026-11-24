@@ -622,6 +622,31 @@ namespace Java.InteropTests
 			}
 		}
 
+		// JavaDictionaryTest independently roots the reference-key int template;
+		// keep the bool? wrapper open to exercise the mixed-key exemplar instead.
+		[TestMethod]
+		[TestCategory ("NativeAOTTrimmable")]
+		public void FromJniHandle_IDictionaryStringNullableBoolean ()
+		{
+			using (var source = new JavaDictionary ()) {
+				source.Add ("present", true);
+				source.Add ("null", null);
+
+				var converted = InvokeJavaConvertFromJniHandle (typeof (IDictionary<string, bool?>), source.Handle, JniHandleOwnership.DoNotTransfer);
+				try {
+					var convertedType = converted.GetType ();
+					Assert.AreEqual (typeof (JavaDictionary<,>), convertedType.GetGenericTypeDefinition ());
+					CollectionAssert.AreEqual (new [] { typeof (string), typeof (bool?) }, convertedType.GetGenericArguments ());
+
+					var dictionary = (IDictionary<string, bool?>) converted;
+					Assert.AreEqual ((bool?) true, dictionary ["present"]);
+					Assert.IsNull (dictionary ["null"]);
+				} finally {
+					(converted as IDisposable)?.Dispose ();
+				}
+			}
+		}
+
 		// The non-generic source and assertions intentionally avoid referencing
 		// JavaDictionary<int, long>, so NativeAOT must root that exact wrapper through
 		// the hand-written value-type dictionary universe.
