@@ -118,7 +118,12 @@ static class ModelBuilder
 
 	static int CompareAliasesForRuntimeResolution (JavaPeerInfo a, JavaPeerInfo b)
 	{
-		// Keep alias [0] aligned with the native java→managed map, which processes Mono.Android first.
+		// Java cannot supply type arguments for untyped peer activation.
+		if (a.IsGenericDefinition != b.IsGenericDefinition) {
+			return a.IsGenericDefinition ? 1 : -1;
+		}
+
+		// Prefer Mono.Android among equally activatable aliases.
 		bool aMonoAndroid = string.Equals (a.AssemblyName, "Mono.Android", StringComparison.Ordinal);
 		bool bMonoAndroid = string.Equals (b.AssemblyName, "Mono.Android", StringComparison.Ordinal);
 		if (aMonoAndroid != bMonoAndroid) {

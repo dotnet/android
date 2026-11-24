@@ -95,6 +95,109 @@ namespace Xamarin.Android.Build.Tests
 			StartActivityAndAssert (proj);
 		}
 
+		[Test]
+		public void TrimmableTypeMapGenericBindingAliases (
+			[Values] bool isRelease,
+			[Values] bool reverseReferences)
+		{
+			const string success = "NON_GENERIC_BINDING_ACTIVATED";
+			var proj = new XamarinAndroidApplicationProject (
+				packageName: PackageUtils.MakePackageName (AndroidRuntime.CoreCLR, "genericalias")) {
+				IsRelease = isRelease,
+			};
+			proj.SetRuntime (AndroidRuntime.CoreCLR);
+			proj.SetRuntimeIdentifiers ([DeviceAbi]);
+			proj.SetDefaultTargetDevice ();
+			var libraries = new [] {
+				new XamarinAndroidLibraryProject { ProjectName = "AGenericBinding", IsRelease = isRelease },
+				new XamarinAndroidLibraryProject { ProjectName = "ZNonGenericBinding", IsRelease = isRelease },
+			};
+			libraries [0].Sources.Add (new BuildItem.Source ("Peer.cs") {
+				TextContent = () => """
+					using System;
+					using Android.Runtime;
+
+					namespace A;
+
+					[Register ("example/AliasPeer", DoNotGenerateAcw = true)]
+					public class GenericPeer<T> : Java.Lang.Object
+					{
+						public GenericPeer (IntPtr handle, JniHandleOwnership transfer) : base (handle, transfer) { }
+					}
+					""",
+			});
+			libraries [1].Sources.Add (new BuildItem.Source ("Peer.cs") {
+				TextContent = () => """
+					using System;
+					using Android.Runtime;
+
+					namespace Z;
+
+					[Register ("example/AliasPeer", DoNotGenerateAcw = true)]
+					public class NonGenericPeer : Java.Lang.Object
+					{
+						public NonGenericPeer (IntPtr handle, JniHandleOwnership transfer) : base (handle, transfer) { }
+					}
+					""",
+			});
+			foreach (var library in reverseReferences ? libraries.Reverse () : libraries) {
+				library.AndroidResources.Clear ();
+				library.SetProperty ("AndroidGenerateResourceDesigner", "false");
+				proj.AddReference (library);
+				proj.OtherBuildItems.Add (new BuildItem ("TrimmerRootAssembly", library.ProjectName));
+				using var libraryBuilder = CreateDllBuilder (Path.Combine ("temp", TestName, library.ProjectName));
+				Assert.IsTrue (libraryBuilder.Build (library), $"{library.ProjectName} should build.");
+			}
+			proj.AndroidJavaSources.Add (new AndroidItem.AndroidJavaSource ("example/AliasPeer.java") {
+				TextContent = () => "package example; public class AliasPeer {}",
+				Metadata = { { "Bind", "False" } },
+			});
+			proj.MainActivity = proj.DefaultMainActivity.Replace ("//${AFTER_ONCREATE}", """
+				GC.KeepAlive (typeof (A.GenericPeer<Java.Lang.Object>));
+				GC.KeepAlive (typeof (Z.NonGenericPeer));
+				var runtime = Java.Interop.JniEnvironment.Runtime;
+				var mappedType = runtime.TypeManager.GetType (new Java.Interop.JniTypeSignature ("example/AliasPeer"));
+				Android.Util.Log.Info ("GenericAliases", $"JAVA_TO_MANAGED_TYPE={mappedType}");
+				var javaClass = Android.Runtime.JNIEnv.FindClass ("example/AliasPeer");
+				try {
+					var constructor = Android.Runtime.JNIEnv.GetMethodID (javaClass, "<init>", "()V");
+					var handle = Android.Runtime.JNIEnv.NewObject (javaClass, constructor);
+					try {
+						var reference = new Java.Interop.JniObjectReference (handle, Java.Interop.JniObjectReferenceType.Local);
+						using var peer = runtime.ValueManager.CreatePeer (
+							ref reference, Java.Interop.JniObjectReferenceOptions.Copy, targetType: null);
+						if (mappedType != typeof (Z.NonGenericPeer) || peer?.GetType () != typeof (Z.NonGenericPeer)) {
+							throw new InvalidOperationException ($"Wrong untyped peer: {mappedType}, {peer?.GetType ()}");
+						}
+					} finally {
+						Android.Runtime.JNIEnv.DeleteLocalRef (handle);
+					}
+					handle = Android.Runtime.JNIEnv.NewObject (javaClass, constructor);
+					using var genericPeer = Java.Lang.Object.GetObject<A.GenericPeer<Java.Lang.Object>> (
+						handle, Android.Runtime.JniHandleOwnership.TransferLocalRef);
+					if (genericPeer?.GetType () != typeof (A.GenericPeer<Java.Lang.Object>)) {
+						throw new InvalidOperationException ("The closed-generic binding was lost.");
+					}
+					Android.Util.Log.Info ("GenericAliases", "NON_GENERIC_BINDING_ACTIVATED");
+				} finally {
+					Android.Runtime.JNIEnv.DeleteGlobalRef (javaClass);
+				}
+				""");
+
+			using var builder = CreateApkBuilder (Path.Combine ("temp", TestName, "App"));
+			Assert.IsTrue (builder.Install (proj), "The two-library alias app should install.");
+			ClearAdbLogcat ();
+			AdbStartActivity ($"{proj.PackageName}/{proj.JavaPackageName}.MainActivity");
+			try {
+				Assert.IsTrue (MonitorAdbLogcat (line => line.Contains (success, StringComparison.Ordinal),
+					Path.Combine (Root, builder.ProjectDirectory, "generic-alias-logcat.log"),
+					ActivityStartTimeoutInSeconds),
+					"Untyped activation should use the non-generic binding and closed-generic activation should still work.");
+			} finally {
+				Assert.IsTrue (builder.Uninstall (proj), "The alias app should uninstall.");
+			}
+		}
+
 		[TestCase (true)]
 		[TestCase (false)]
 		public void CoreCLRAssemblyStoreConcurrentLoads (bool compressed)

@@ -634,6 +634,31 @@ namespace Java.InteropTests
 		}
 
 		[TestMethod]
+		[DataRow (false)]
+		[DataRow (true)]
+		[TestCategory ("TrimmableTypeMapRuntimeCoverage")]
+		[TestCategory ("NativeAOTTrimmable")]
+		public void JniProxyCacheBuilder_PrefersNonGenericAcrossUniverses (bool reverseOrder)
+		{
+			var genericUniverse = new SingleUniverseTypeMap (
+				new Dictionary<string, Type> { ["test"] = typeof (BaseGenericAliasProxy) },
+				new Dictionary<Type, Type> ());
+			var nonGenericUniverse = new SingleUniverseTypeMap (
+				new Dictionary<string, Type> { ["test"] = typeof (NonGenericAliasProxy) },
+				new Dictionary<Type, Type> ());
+			var typeMap = new AggregateTypeMap (reverseOrder
+				? [nonGenericUniverse, genericUniverse]
+				: [genericUniverse, nonGenericUniverse]);
+			var builder = new JniProxyCacheBuilder ();
+			typeMap.CollectProxyTypes ("test", ref builder);
+			var proxies = TrimmableTypeMap.GetProxyArrayCacheEntry (builder.Build ());
+
+			Assert.AreEqual (2, proxies.Length, "Both bindings must remain available.");
+			Assert.AreEqual (typeof (object), proxies [0].TargetType, "Untyped lookup must not select an open generic.");
+			Assert.AreEqual (typeof (OpenT<>), proxies [1].TargetType, "Closed-generic lookup still needs its proxy.");
+		}
+
+		[TestMethod]
 		public void TargetTypeMatches_DirectAssignable_ReturnsTrue ()
 		{
 			// Non-generic direct match: proxy target IS-A hint.
@@ -690,6 +715,14 @@ namespace Java.InteropTests
 		sealed class DerivedGenericAliasProxy : JavaPeerProxy
 		{
 			public DerivedGenericAliasProxy () : base ("test", typeof (DerivedOpenT<>)) { }
+
+			public override IJavaPeerable? CreateInstance (IntPtr handle, JniHandleOwnership transfer) => null;
+		}
+
+		[NonGenericAliasProxy]
+		sealed class NonGenericAliasProxy : JavaPeerProxy
+		{
+			public NonGenericAliasProxy () : base ("test", typeof (object)) { }
 
 			public override IJavaPeerable? CreateInstance (IntPtr handle, JniHandleOwnership transfer) => null;
 		}
