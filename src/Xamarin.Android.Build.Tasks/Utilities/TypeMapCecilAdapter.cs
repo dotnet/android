@@ -132,16 +132,25 @@ class TypeMapCecilAdapter
 			SkipInJavaToManaged = ShouldSkipInJavaToManaged (td),
 		};
 
-		if (moduleData.TypesScratch.ContainsKey (entry.JavaName)) {
+		if (moduleData.TypesScratch.TryGetValue (entry.JavaName, out TypeMapReleaseEntry? existing)) {
 			// This is disabled because it costs a lot of time (around 150ms per standard XF Integration app
 			// build) and has no value for the end user. The message is left here because it may be useful to us
 			// in our devloop at some point.
 			//log.LogDebugMessage ($"Warning: duplicate Java type name '{entry.JavaName}' in assembly '{moduleData.AssemblyName}' (new token: {entry.Token}).");
-			moduleData.DuplicateTypes.Add (entry);
+
+			// Prefer a non-generic class, generic types can't be activated from Java
+			if (IsGenericTypeName (existing.ManagedTypeName) && !td.HasGenericParameters && !td.IsInterface) {
+				moduleData.DuplicateTypes.Add (existing);
+				moduleData.TypesScratch [entry.JavaName] = entry;
+			} else {
+				moduleData.DuplicateTypes.Add (entry);
+			}
 		} else {
 			moduleData.TypesScratch.Add (entry.JavaName, entry);
 		}
 	}
+
+	static bool IsGenericTypeName (string managedTypeName) => managedTypeName.IndexOf ('`') >= 0;
 
 	static TypeMapDebugEntry GetDebugEntry (TypeDefinition td, TypeDefinitionCache cache)
 	{
@@ -243,12 +252,18 @@ class TypeMapCecilAdapter
 
 	static TypeMapDebugEntry GetDebugDuplicateTemplate (List<TypeMapDebugEntry> duplicates)
 	{
+		// Prefer a non-generic type in Mono.Android, generic types can't be activated from Java
+		TypeMapDebugEntry? genericTemplate = null;
 		foreach (TypeMapDebugEntry duplicate in duplicates) {
-			if (duplicate.AssemblyName == "Mono.Android") {
+			if (duplicate.AssemblyName != "Mono.Android") {
+				continue;
+			}
+			if (!duplicate.TypeDefinition.HasGenericParameters) {
 				return duplicate;
 			}
+			genericTemplate ??= duplicate;
 		}
-		return duplicates [0];
+		return genericTemplate ?? duplicates [0];
 	}
 
 	static void UpdateApplicationConfig (NativeCodeGenState state, TypeDefinition javaType)
