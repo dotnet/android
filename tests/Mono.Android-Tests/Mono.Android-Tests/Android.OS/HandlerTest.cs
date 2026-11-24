@@ -78,6 +78,47 @@ namespace Xamarin.Android.RuntimeTests {
 		}
 
 		[TestMethod]
+		public void ConcurrentPostsShareRunnable ()
+		{
+			using var t = new HandlerThread ("ConcurrentPostsShareRunnable");
+			t.Start ();
+			using var h = new CapturingHandler (t.Looper);
+			using var start = new ManualResetEventSlim ();
+			var threads = new Thread [8];
+			int failedPosts = 0;
+			Action action = () => {};
+			long later = SystemClock.UptimeMillis () + 3_600_000;
+
+			try {
+				for (int i = 0; i < threads.Length; i++) {
+					threads [i] = new Thread (() => {
+						start.Wait ();
+						for (int post = 0; post < 50; post++) {
+							if (!h.PostAtTime (action, later))
+								Interlocked.Increment (ref failedPosts);
+						}
+					});
+					threads [i].Start ();
+				}
+				start.Set ();
+				foreach (var thread in threads)
+					Assert.IsTrue (thread.Join (TimeSpan.FromSeconds (10)));
+				Assert.AreEqual (0, failedPosts);
+				Assert.AreEqual (threads.Length * 50, h.Runnables.Count);
+				var runnable = h.Runnables [0].Target;
+				Assert.IsNotNull (runnable);
+				foreach (var reference in h.Runnables)
+					Assert.AreSame (runnable, reference.Target, "Concurrent posts for one Action must share a runnable.");
+				h.RemoveCallbacks (action);
+			} finally {
+				start.Set ();
+				foreach (var thread in threads)
+					thread?.Join (TimeSpan.FromSeconds (10));
+				Quit (t);
+			}
+		}
+
+		[TestMethod]
 		public void RemoveCallbacksThroughReplacementWrapper ()
 		{
 			using var t = new HandlerThread ("RemoveCallbacksThroughReplacementWrapper");
@@ -121,14 +162,60 @@ namespace Xamarin.Android.RuntimeTests {
 			using var h = new Handler (t.Looper);
 			try {
 				var actions = PostAndRun (h, 100);
-				for (int i = 0; i < 50 && actions.Exists (a => a.IsAlive); i++) {
+				AssertActionsCollectible (actions, "Executed callbacks must not keep their Action alive.");
+			} finally {
+				Quit (t);
+			}
+		}
+
+		[TestMethod]
+		public void CancelledActionCallbacksAreCollectible ()
+		{
+			using var t = new HandlerThread ("CancelledActionCallbacksAreCollectible");
+			t.Start ();
+			using var h = new Handler (t.Looper);
+			try {
+				var actions = PostAndCancel (h, 100);
+				AssertActionsCollectible (actions, "Canceled callbacks must not keep their Action alive.");
+			} finally {
+				GC.KeepAlive (h);
+				Quit (t);
+			}
+		}
+
+		static void AssertActionsCollectible (List<WeakReference> actions, string message)
+		{
+			for (int i = 0; i < 100 && actions.Exists (a => a.IsAlive); i++) {
+				GC.Collect ();
+				GC.WaitForPendingFinalizers ();
+				Java.Lang.Runtime.GetRuntime ().Gc ();
+				JniEnvironment.Runtime.ValueManager.CollectPeers ();
+				Thread.Sleep (100);
+			}
+			Assert.IsFalse (actions.Exists (a => a.IsAlive), message);
+		}
+
+		[TestMethod]
+		public void CancelledActionCallbacksAreCollectibleWhileActionsAreRooted ()
+		{
+			using var t = new HandlerThread ("CancelledActionCallbacksAreCollectibleWhileActionsAreRooted");
+			t.Start ();
+			using var h = new CapturingHandler (t.Looper);
+			try {
+				var actions = PostAndCancel (h, 100);
+				Assert.AreEqual (200, h.Runnables.Count);
+				h.Runnable = null;
+
+				for (int round = 0; round < 50 && h.Runnables.Exists (r => r.IsAlive); round++) {
 					GC.Collect ();
 					GC.WaitForPendingFinalizers ();
 					Java.Lang.Runtime.GetRuntime ().Gc ();
 					JniEnvironment.Runtime.ValueManager.CollectPeers ();
 					Thread.Sleep (100);
 				}
-				Assert.IsFalse (actions.Exists (a => a.IsAlive), "Executed callbacks must not keep their Action alive.");
+				Assert.IsFalse (h.Runnables.Exists (r => r.IsAlive), "Canceled runnables must not be retained while their Actions remain rooted.");
+				Assert.AreEqual (100, actions.Count);
+				GC.KeepAlive (actions);
 			} finally {
 				Quit (t);
 			}
@@ -154,8 +241,8 @@ namespace Xamarin.Android.RuntimeTests {
 				Assert.IsTrue (survivor.Post (rootedAction));
 				Assert.IsTrue (survivor.PostDelayed (rootedAction, 0));
 
-				// Each transient Handler caches a runnable for the rooted Action; once the Handler's Java
-				// object is collected, sweeping its owner entry must release that runnable.
+				// Transient owners exercise the registry while canceled runnables should become
+				// collectible even though the Action stays rooted.
 				var runnables = new List<WeakReference> ();
 				for (int round = 0; round < 40 && (runnables.Count == 0 || runnables.Exists (r => r.IsAlive)); round++) {
 					CreateTransientOwners (t.Looper, 100, round == 0 ? runnables : null);
@@ -196,12 +283,17 @@ namespace Xamarin.Android.RuntimeTests {
 
 		sealed class CapturingHandler : Handler {
 			public Java.Lang.IRunnable Runnable;
+			public List<WeakReference> Runnables { get; } = new ();
 
 			public CapturingHandler (Looper looper) : base (looper) {}
 
 			public override bool SendMessageAtTime (Message msg, long uptimeMillis)
 			{
-				Runnable = msg.Callback;
+				lock (Runnables) {
+					Runnable = msg.Callback;
+					if (msg.Callback != null)
+						Runnables.Add (new WeakReference (msg.Callback));
+				}
 				return base.SendMessageAtTime (msg, uptimeMillis);
 			}
 		}
@@ -224,6 +316,37 @@ namespace Xamarin.Android.RuntimeTests {
 				Assert.IsTrue (h.Post (action));
 			}
 			Assert.IsTrue (done.Wait (TimeSpan.FromSeconds (10)));
+			return actions;
+		}
+
+		[MethodImpl (MethodImplOptions.NoInlining)]
+		static List<WeakReference> PostAndCancel (Handler h, int count)
+		{
+			var actions = new List<WeakReference> ();
+			for (int i = 0; i < count; i++) {
+				var payload = new object ();
+				Action action = () => GC.KeepAlive (payload);
+				actions.Add (new WeakReference (action));
+				Assert.IsTrue (h.PostDelayed (action, 3_600_000));
+				Assert.IsTrue (h.PostDelayed (action, 3_600_000));
+				h.RemoveCallbacks (action);
+			}
+			return actions;
+		}
+
+		[MethodImpl (MethodImplOptions.NoInlining)]
+		static List<Action> PostAndCancel (CapturingHandler h, int count)
+		{
+			var actions = new List<Action> (count);
+			long later = SystemClock.UptimeMillis () + 3_600_000;
+			for (int i = 0; i < count; i++) {
+				var payload = new object ();
+				Action action = () => GC.KeepAlive (payload);
+				actions.Add (action);
+				Assert.IsTrue (h.PostAtTime (action, later));
+				Assert.IsTrue (h.PostAtTime (action, later));
+				h.RemoveCallbacks (action);
+			}
 			return actions;
 		}
 	}

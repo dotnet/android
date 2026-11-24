@@ -1,5 +1,7 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
+using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
@@ -11,6 +13,7 @@ using Android.OS;
 using Android.Views;
 using Android.Widget;
 
+using Java.Interop;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Xamarin.Android.RuntimeTests {
@@ -179,6 +182,95 @@ namespace Xamarin.Android.RuntimeTests {
 			Assert.AreEqual (0, scheduledCalls, "The surviving drawable's callbacks must stay cancelable.");
 		}
 
+		[TestMethod]
+		public async Task RemoveCallbacksFindsScheduledDrawableAfterDrawableCollectionAndOwnerSweep ()
+		{
+			scheduledCalls = 0;
+			int controlCalls = 0;
+			CapturingView view = null;
+			WeakReference[] references = null;
+			object drawableOwner = null;
+			await OnMainThread (() => {
+				view = new CapturingView (Application.Context);
+				references = ScheduleAndDetachDrawable (view, out drawableOwner);
+				Assert.IsTrue (view.Post (() => Interlocked.Increment (ref controlCalls)));
+			});
+
+			bool swept = false;
+			for (int round = 0; round < 50 && !swept; round++) {
+				GC.Collect ();
+				GC.WaitForPendingFinalizers ();
+				Java.Lang.Runtime.GetRuntime ().Gc ();
+				JniEnvironment.Runtime.ValueManager.CollectPeers ();
+				swept = SweepDrawableOwner (drawableOwner);
+				await Task.Delay (50);
+			}
+			Assert.IsTrue (swept, "The collected drawable owner and its JNI weak reference should be swept.");
+			Assert.IsFalse (references [0].IsAlive, "The detached drawable should be collectible.");
+			Assert.IsTrue (references [1].IsAlive, "The View's run queue should keep the scheduled runnable alive.");
+
+			var ownerReference = new WeakReference (drawableOwner);
+			drawableOwner = null;
+			for (int round = 0; round < 50 && ownerReference.IsAlive; round++) {
+				GC.Collect ();
+				GC.WaitForPendingFinalizers ();
+				await Task.Delay (50);
+			}
+			Assert.IsFalse (ownerReference.IsAlive, "The swept drawable owner must no longer be rooted by the registry.");
+
+			await OnMainThread (() => Assert.IsTrue (view.RemoveCallbacks (rootedScheduledAction)));
+			await WithActivity (content => content.AddView (view));
+			Assert.AreEqual (1, controlCalls, "The detached View's queued callbacks must run after attachment.");
+			Assert.AreEqual (0, scheduledCalls, "RemoveCallbacks must cancel detached drawable work after its drawable owner is swept.");
+			GC.KeepAlive (references);
+		}
+
+		[MethodImpl (MethodImplOptions.NoInlining)]
+		[DynamicDependency ("FindOwner", typeof (Java.Lang.Thread.RunnableImplementor))]
+		static WeakReference[] ScheduleAndDetachDrawable (CapturingView view, out object drawableOwner)
+		{
+			var drawable = new ColorDrawable ();
+			view.ScheduleDrawable (drawable, rootedScheduledAction, 0);
+			var findOwner = typeof (Java.Lang.Thread.RunnableImplementor).GetMethod ("FindOwner", BindingFlags.Static | BindingFlags.NonPublic);
+			Assert.IsNotNull (findOwner);
+			drawableOwner = findOwner.Invoke (null, [drawable]);
+			Assert.IsNotNull (drawableOwner);
+			var references = new WeakReference [] {
+				new WeakReference (drawable),
+				new WeakReference (view.Captured, trackResurrection: true),
+			};
+			view.Captured = null;
+			drawable.Dispose ();
+			return references;
+		}
+
+		[DynamicDependency ("ownersLock", typeof (Java.Lang.Thread.RunnableImplementor))]
+		[DynamicDependency ("RemoveCollectedOwners", typeof (Java.Lang.Thread.RunnableImplementor))]
+		[DynamicDependency (DynamicallyAccessedMemberTypes.NonPublicNestedTypes, typeof (Java.Lang.Thread.RunnableImplementor))]
+		static bool SweepDrawableOwner (object drawableOwner)
+		{
+			var type = typeof (Java.Lang.Thread.RunnableImplementor);
+			var ownerType = type.GetNestedType ("Owner", BindingFlags.NonPublic);
+			Assert.IsNotNull (ownerType);
+			var referenceField = ownerType.GetField ("Reference", BindingFlags.Instance | BindingFlags.Public);
+			var lockField = type.GetField ("ownersLock", BindingFlags.Static | BindingFlags.NonPublic);
+			var sweep = type.GetMethod ("RemoveCollectedOwners", BindingFlags.Static | BindingFlags.NonPublic);
+			Assert.IsNotNull (referenceField);
+			Assert.IsNotNull (lockField);
+			Assert.IsNotNull (sweep);
+			var sync = lockField.GetValue (null) as Lock ?? throw new InvalidOperationException ("The owner registry lock is missing.");
+			// Run the registry's sweep under its normal lock so the test does not depend on its threshold.
+			lock (sync) {
+				var reference = (JniObjectReference) referenceField.GetValue (drawableOwner);
+				if (reference.IsValid && !JniEnvironment.Types.IsSameObject (reference, default))
+					return false;
+				sweep.Invoke (null, null);
+				reference = (JniObjectReference) referenceField.GetValue (drawableOwner);
+				Assert.IsFalse (reference.IsValid, "Sweeping must dispose the drawable owner's JNI weak reference.");
+				return true;
+			}
+		}
+
 		[MethodImpl (MethodImplOptions.NoInlining)]
 		static void ScheduleTransientDrawables (CapturingView view, int count, List<WeakReference> runnables)
 		{
@@ -195,6 +287,8 @@ namespace Xamarin.Android.RuntimeTests {
 			public Java.Lang.IRunnable Captured;
 
 			public CapturingView (Context context) : base (context) {}
+
+			protected override bool VerifyDrawable (Drawable who) => true;
 
 			public override void ScheduleDrawable (Drawable who, Java.Lang.IRunnable what, long when)
 			{
@@ -224,21 +318,36 @@ namespace Xamarin.Android.RuntimeTests {
 		static async Task WithActivity (Action<ViewGroup> test)
 		{
 			var ready = new TaskCompletionSource<ViewActionCallbackActivity> (TaskCreationOptions.RunContinuationsAsynchronously);
+			var handlerDone = new TaskCompletionSource (TaskCreationOptions.RunContinuationsAsynchronously);
+			var animationDone = new TaskCompletionSource (TaskCreationOptions.RunContinuationsAsynchronously);
 			ViewActionCallbackActivity.Ready = a => ready.TrySetResult (a);
 			using var intent = new Intent (Application.Context, typeof (ViewActionCallbackActivity));
 			intent.AddFlags (ActivityFlags.NewTask);
 			ViewActionCallbackActivity activity = null;
+			Java.Lang.Runnable animationSentinel = null;
 			try {
 				Application.Context.StartActivity (intent);
 				activity = await ready.Task.WaitAsync (TimeSpan.FromSeconds (10));
-				await OnMainThread (() => test (activity.Content));
-				// Let posted runnables and the next animation frames run.
-				await Task.Delay (500);
-				await OnMainThread (() => {});
+				await OnMainThread (() => {
+					Assert.IsTrue (activity.Content.IsAttachedToWindow);
+					test (activity.Content);
+					// Detached View queues are transferred to the Handler when added; attached
+					// drawable callbacks use the animation queue. Wait for both queues.
+					Assert.IsTrue (activity.Content.Post (() => handlerDone.TrySetResult ()));
+					animationSentinel = new Java.Lang.Runnable (() => animationDone.TrySetResult ());
+					activity.Content.PostOnAnimation (animationSentinel);
+				});
+				await Task.WhenAll (handlerDone.Task, animationDone.Task).WaitAsync (TimeSpan.FromSeconds (30));
 			} finally {
 				ViewActionCallbackActivity.Ready = null;
 				if (activity != null)
-					await OnMainThread (activity.Finish);
+					await OnMainThread (() => {
+						if (animationSentinel != null) {
+							activity.Content.RemoveCallbacks (animationSentinel);
+							animationSentinel.Dispose ();
+						}
+						activity.Finish ();
+					});
 			}
 		}
 
