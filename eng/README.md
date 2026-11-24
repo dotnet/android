@@ -53,6 +53,9 @@ by host-side tests. `DotNetRuntimeVersion` pins that runtime, independently of
 `DotNetStableTargetFrameworkVersion`, which selects the host tooling's target
 framework. Older target frameworks do not require older SDKs.
 Only dotnetup is added to the job's `PATH`.
+CI logs the selected dotnetup executable and version and disables interactive
+SDK/runtime installation. Keep dotnetup's metadata and SDK/runtime installation
+shared across worktrees; do not override `DOTNET_DOTNETUP_DATA_DIR` per checkout.
 Local workload resolution uses the running SDK's version rather than the SDK
 dependency's package version, which may differ after dependency updates or SDK
 stabilization.

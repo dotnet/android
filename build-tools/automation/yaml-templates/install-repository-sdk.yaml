@@ -24,14 +24,18 @@ steps:
       & pwsh -NoProfile -File $installer
       if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
     }
-    $dotnetupDirectory = Split-Path -Parent (Get-Command dotnetup -CommandType Application).Source
+    $dotnetup = (Get-Command dotnetup -CommandType Application | Select-Object -First 1).Source
+    $dotnetupDirectory = Split-Path -Parent $dotnetup
     Write-Host "##vso[task.prependpath]$dotnetupDirectory"
+    Write-Host "Using dotnetup: $dotnetup"
+    & $dotnetup --version
+    if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
     Set-Location "${{ parameters.xaSourcePath }}"
-    & dotnetup sdk install --no-progress
+    & $dotnetup sdk install --no-progress --interactive false
     if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
     # Older host-side test/tool assemblies still need their runtime.
-    & dotnetup runtime install "${{ parameters.toolingRuntimeVersion }}" --no-progress
+    & $dotnetup runtime install "${{ parameters.toolingRuntimeVersion }}" --no-progress --interactive false
     if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-    & dotnetup dotnet -- --info
+    & $dotnetup dotnet -- --info
   displayName: install shared repository SDK and tooling runtime with dotnetup
   retryCountOnTaskFailure: ${{ parameters.retryCountOnTaskFailure }}
