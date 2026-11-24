@@ -100,6 +100,8 @@ namespace Java.Interop {
 			// converter universe. PublishAot=true builds, including Debug CoreCLR ones, use the AOT-safe path. See #12793.
 			// ILC treats IsDynamicCodeSupported as a guard only when it is tested on its own: combined with && or ||,
 			// NativeAOT apps get IL3050 for TryMakeGenericCollectionTypeFactory ().
+			// The NativeAOT build in JavaPeerActivationTests.JavaConvertActivatesGenericCollectionWrappersWithoutWarnings
+			// checks for this warning (https://github.com/dotnet/android/pull/13657).
 			if (System.Runtime.CompilerServices.RuntimeFeature.IsDynamicCodeSupported) {
 				if (!RuntimeFeature.UseTypeMapAttributesForJavaDictionaryValueTypeLookups)
 					return TryMakeGenericCollectionTypeFactory (target);
