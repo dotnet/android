@@ -23,12 +23,10 @@
     <Exec
         Command="&quot;$(DotNetPreviewTool)&quot; build &quot;$(_TopDir)\build-tools\Xamarin.Android.Tools.BootstrapTasks\Xamarin.Android.Tools.BootstrapTasks.csproj&quot; -p:Configuration=$(Configuration) -bl:$(_BinlogPathPrefix)-bootstrap-tasks.binlog"
         WorkingDirectory="$(_TopDir)"
-        EnvironmentVariables="MSBuildSDKsPath=$(DotNetPreviewSdksPath)"
     />
     <Exec
         Command="&quot;$(DotNetPreviewTool)&quot; build &quot;$(_TopDir)\src\workloads\workloads.csproj&quot; -p:Configuration=$(Configuration) -bl:$(_BinlogPathPrefix)-workloads.binlog"
         WorkingDirectory="$(_TopDir)"
-        EnvironmentVariables="MSBuildSDKsPath=$(DotNetPreviewSdksPath)"
     />
     <CallTarget Targets="PrepareOpenJDK" />
     <MSBuild

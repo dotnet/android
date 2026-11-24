@@ -14,7 +14,6 @@
     <Exec
         Command="&quot;$(DotNetPreviewTool)&quot; build &quot;$(_Root)src\openjdk\openjdk.csproj&quot; -p:Configuration=$(Configuration) -bl:$(_BinlogPathPrefix)-openjdk.binlog"
         WorkingDirectory="$(_Root)"
-        EnvironmentVariables="MSBuildSDKsPath=$(DotNetPreviewSdksPath)"
     />
   </Target>
 
