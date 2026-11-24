@@ -144,9 +144,10 @@ static class SafeJavaCollectionFactory
 			"JavaList<__Canon> template whose activation constructor is rooted by the direct JavaList<IJavaPeerable> construction in the other branch.")]
 	[UnconditionalSuppressMessage ("Trimming", "IL2071:MakeGenericType",
 		Justification = "IL2071 fires because MakeGenericType () cannot statically prove the runtime elementType satisfies the DynamicallyAccessedMembers(Constructors) " +
-			"requirement that JavaList<[DAM(Constructors)] TElement> places on its element parameter. That requirement exists only for the dynamic-code path, where the wrapper " +
-			"reflectively activates element peers from their constructors. On the trimmable typemap path the wrapper never activates its elements — element peer creation goes " +
-			"through JavaConvert and the typemap's registered activation constructors — so the unsatisfied element requirement is never exercised.")]
+			"requirement that JavaList<[DAM(Constructors)] TElement> places on its element parameter. The wrapper only consumes that requirement when it converts an element: " +
+			"JavaConvert.FromJniHandle<T> () -> Java.Lang.Object.GetObject () -> TrimmableTypeMap.CreateInstance (), which reflects over the element type's " +
+			"(IntPtr, JniHandleOwnership) constructor only when it is a closed generic Java peer, and the generated proxy for its open generic definition keeps " +
+			"that constructor with [DynamicDependency]. Every other element type is activated by its generated JavaPeerProxy.")]
 	static object? CreateReferenceListFromJniHandle (Type elementType, IntPtr handle, JniHandleOwnership transfer)
 	{
 		if (handle == IntPtr.Zero) {
@@ -175,9 +176,10 @@ static class SafeJavaCollectionFactory
 			"JavaCollection<__Canon> template whose activation constructor is rooted by the direct JavaCollection<IJavaPeerable> construction in the other branch.")]
 	[UnconditionalSuppressMessage ("Trimming", "IL2071:MakeGenericType",
 		Justification = "IL2071 fires because MakeGenericType () cannot statically prove the runtime elementType satisfies the DynamicallyAccessedMembers(Constructors) " +
-			"requirement that JavaCollection<[DAM(Constructors)] TElement> places on its element parameter. That requirement exists only for the dynamic-code path, where the " +
-			"wrapper reflectively activates element peers from their constructors. On the trimmable typemap path the wrapper never activates its elements — element peer creation " +
-			"goes through JavaConvert and the typemap's registered activation constructors — so the unsatisfied element requirement is never exercised.")]
+			"requirement that JavaCollection<[DAM(Constructors)] TElement> places on its element parameter. The wrapper only consumes that requirement when it converts an element: " +
+			"JavaConvert.FromJniHandle<T> () -> Java.Lang.Object.GetObject () -> TrimmableTypeMap.CreateInstance (), which reflects over the element type's " +
+			"(IntPtr, JniHandleOwnership) constructor only when it is a closed generic Java peer, and the generated proxy for its open generic definition keeps " +
+			"that constructor with [DynamicDependency]. Every other element type is activated by its generated JavaPeerProxy.")]
 	static object? CreateReferenceCollectionFromJniHandle (Type elementType, IntPtr handle, JniHandleOwnership transfer)
 	{
 		if (handle == IntPtr.Zero) {
@@ -206,9 +208,10 @@ static class SafeJavaCollectionFactory
 			"JavaDictionary<__Canon,__Canon> template whose activation constructor is rooted by the direct JavaDictionary<IJavaPeerable,IJavaPeerable> construction in the other branch.")]
 	[UnconditionalSuppressMessage ("Trimming", "IL2071:MakeGenericType",
 		Justification = "IL2071 fires because MakeGenericType () cannot statically prove the runtime keyType/valueType satisfy the DynamicallyAccessedMembers(Constructors) " +
-			"requirement that JavaDictionary<[DAM(Constructors)] TKey, [DAM(Constructors)] TValue> places on its element parameters. That requirement exists only for the " +
-			"dynamic-code path, where the wrapper reflectively activates key/value peers from their constructors. On the trimmable typemap path the wrapper never activates its " +
-			"elements — element peer creation goes through JavaConvert and the typemap's registered activation constructors — so the unsatisfied element requirement is never exercised.")]
+			"requirement that JavaDictionary<[DAM(Constructors)] TKey, [DAM(Constructors)] TValue> places on its element parameters. The wrapper only consumes that requirement when it converts an element: " +
+			"JavaConvert.FromJniHandle<T> () -> Java.Lang.Object.GetObject () -> TrimmableTypeMap.CreateInstance (), which reflects over the element type's " +
+			"(IntPtr, JniHandleOwnership) constructor only when it is a closed generic Java peer, and the generated proxy for its open generic definition keeps " +
+			"that constructor with [DynamicDependency]. Every other element type is activated by its generated JavaPeerProxy.")]
 	static object? CreateReferenceDictionaryFromJniHandle (Type keyType, Type valueType, IntPtr handle, JniHandleOwnership transfer)
 	{
 		if (handle == IntPtr.Zero) {

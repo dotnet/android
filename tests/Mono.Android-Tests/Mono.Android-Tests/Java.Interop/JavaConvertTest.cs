@@ -16,6 +16,7 @@ using Xamarin.Android.RuntimeTests;
 namespace Java.InteropTests
 {
 	[TestClass]
+	[TestCategory ("JavaConvert")]
 	public class JavaConvertTest
 	{
 		[TestMethod]
