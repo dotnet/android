@@ -191,9 +191,13 @@ namespace Java.Interop
 
 			var methods = GetConstructorsForType (self.GetType ());
 			var ctor    = methods.GetConstructor (constructorSignature);
-			unsafe {
-				// SAFETY: The caller keeps constructor-compatible slots/references alive for the nonvirtual JNI call.
-				JniEnvironment.InstanceMethods.CallNonvirtualVoidMethod (self.PeerReference, methods.JniPeerType.PeerReference, ctor, parameters);
+			try {
+				unsafe {
+					// SAFETY: The caller keeps constructor-compatible slots/references alive for the nonvirtual JNI call; finally keeps self alive.
+					JniEnvironment.InstanceMethods.CallNonvirtualVoidMethod (self.PeerReference, methods.JniPeerType.PeerReference, ctor, parameters);
+				}
+			} finally {
+				GC.KeepAlive (self);
 			}
 		}
 	}
