@@ -801,9 +801,10 @@ The Android activity to launch.
 Specifies which type of
 [linking](/xamarin/android/deploy-test/linker) should be
 performed on assemblies contained within the Android package. Only
-used in Android Application projects. The default value is *None* when
-`$(Optimize)` is not `true`, and *SdkOnly* when optimized builds are
-trimmed. NativeAOT builds default to *Full*. Valid values are:
+used in Android Application projects. NativeAOT builds default to *Full*.
+Otherwise, the default is *SdkOnly* when `$(PublishTrimmed)` is `true`,
+and *None* when it is not. `$(PublishTrimmed)` defaults to `true` when
+`$(Optimize)` is `true`. Valid values are:
 
 - **None**: No linking will be attempted.
 

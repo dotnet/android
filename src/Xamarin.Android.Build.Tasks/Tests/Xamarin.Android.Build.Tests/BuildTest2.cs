@@ -97,7 +97,7 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		public void BasicApplicationPublishReadyToRunCustomConfiguration ([Values] bool isComposite, [Values ("android-x64", "android-arm64")] string rid)
+		public void BasicApplicationReadyToRunCustomConfiguration ([Values] bool publish, [Values] bool isComposite, [Values ("android-x64", "android-arm64")] string rid)
 		{
 			// Use a non-standard optimized configuration to validate that trimming and
 			// ReadyToRun defaults follow Optimize instead of $(Configuration).
@@ -115,13 +115,18 @@ namespace Xamarin.Android.Build.Tests
 			var projBuilder = CreateDllBuilder ();
 			projBuilder.Save (proj);
 			var dotnet = new DotNetCLI (Path.Combine (Root, projBuilder.ProjectDirectory, proj.ProjectFilePath));
-			// `dotnet publish` defaults $(Configuration) to Release unless told otherwise, which would
-			// override the project's own custom "AppStore" configuration default.
-			Assert.IsTrue (dotnet.Publish (parameters: new [] { $"Configuration={proj.Configuration}" }), "`dotnet publish` should have succeeded.");
+			var parameters = new [] { $"Configuration={proj.Configuration}" };
+			Assert.IsTrue (publish ? dotnet.Publish (parameters: parameters) : dotnet.Build (parameters: parameters),
+				$"`dotnet {(publish ? "publish" : "build")}` should have succeeded.");
 
 			var assemblyName = proj.ProjectName;
-			var apk = Path.Combine (Root, projBuilder.ProjectDirectory, proj.OutputPath, rid, "publish", $"{proj.PackageName}-Signed.apk");
+			var outputDirectory = Path.Combine (Root, projBuilder.ProjectDirectory, proj.OutputPath, rid);
+			if (publish) {
+				outputDirectory = Path.Combine (outputDirectory, "publish");
+			}
+			var apk = Path.Combine (outputDirectory, $"{proj.PackageName}-Signed.apk");
 			FileAssert.Exists (apk);
+			FileAssert.Exists (Path.Combine (outputDirectory, $"{proj.PackageName}-Signed.aab"));
 
 			var helper = new ArchiveAssemblyHelper (apk, true);
 			var abi = MonoAndroidHelper.RidToAbi (rid);
@@ -132,6 +137,23 @@ namespace Xamarin.Android.Build.Tests
 			using var peReader = new System.Reflection.PortableExecutable.PEReader (stream);
 			Assert.IsTrue (peReader.PEHeaders.CorHeader.ManagedNativeHeaderDirectory.Size > 0,
 				$"ReadyToRun image not found in {assemblyName}.dll! ManagedNativeHeaderDirectory should not be empty!");
+		}
+
+		[Test]
+		public void BuildPackageFormatsUnoptimizedCustomConfiguration ()
+		{
+			var proj = new XamarinAndroidApplicationProject (releaseConfigurationName: "Store") {
+				IsRelease = true,
+			};
+			proj.SetRuntime (AndroidRuntime.CoreCLR);
+			proj.SetProperty ("RuntimeIdentifier", "android-arm64");
+			proj.SetProperty ("Optimize", "false");
+
+			using var builder = CreateApkBuilder ();
+			Assert.IsTrue (builder.Build (proj), "Build should have succeeded.");
+			var outputDirectory = Path.Combine (Root, builder.ProjectDirectory, proj.OutputPath, "android-arm64");
+			FileAssert.Exists (Path.Combine (outputDirectory, $"{proj.PackageName}-Signed.apk"));
+			FileAssert.DoesNotExist (Path.Combine (outputDirectory, $"{proj.PackageName}-Signed.aab"));
 		}
 
 		[Test]
