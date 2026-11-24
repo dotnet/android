@@ -116,8 +116,9 @@ static class PrimitiveArrayInfo
 
 			var marshaledArray = createCopy (list);
 			try {
-				reference = marshaledArray.PeerReference.IsValid
-					? marshaledArray.PeerReference.NewLocalRef ()
+				var r = marshaledArray.PeerReference;
+				reference = r.IsValid
+					? r.NewLocalRef ()
 					: new JniObjectReference ();
 				return true;
 			} finally {

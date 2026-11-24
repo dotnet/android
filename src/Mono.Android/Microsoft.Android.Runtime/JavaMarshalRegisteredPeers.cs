@@ -90,8 +90,10 @@ static class JavaMarshalRegisteredPeers
 					RegisteredInstances [key] = peers;
 					return;
 				}
-				if (result == PeerReconciliationResult.Keep)
+				if (result == PeerReconciliationResult.Keep) {
+					GC.KeepAlive (value);
 					return;
+				}
 			}
 
 			peers.Add (new ReferenceTrackingHandle (value));
