@@ -19,6 +19,9 @@
     <DotNetPreviewPath Condition=" '$(DotNetPreviewPath)' == '' ">$(BuildOutputDirectory)dotnet\</DotNetPreviewPath>
     <DotNetPreviewTool Condition=" '$(DotNetPreviewTool)' == '' and Exists('$(DotNetPreviewPath)') ">$(DotNetPreviewPath)dotnet</DotNetPreviewTool>
     <DotNetPreviewTool Condition=" '$(DotNetPreviewTool)' == '' ">dotnet</DotNetPreviewTool>
+    <!-- Pass as MSBuildSDKsPath when another SDK runs <Exec/> on $(DotNetPreviewTool); the inherited value points at the other SDK -->
+    <DotNetPreviewSdksPath Condition=" '$(DotNetPreviewTool)' != 'dotnet' ">$(DotNetPreviewPath)sdk\$(MicrosoftNETSdkPackageVersion)\Sdks</DotNetPreviewSdksPath>
+    <DotNetPreviewSdksPath Condition=" '$(DotNetPreviewTool)' == 'dotnet' ">$(MSBuildSDKsPath)</DotNetPreviewSdksPath>
     <!-- Copy PackageReference content to OutputDir for our build tasks, tests, and installer creation logic. This no longer happens by default in short-form projects. -->
     <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
     <!-- Ensure reference assemblies copied to bin -->
