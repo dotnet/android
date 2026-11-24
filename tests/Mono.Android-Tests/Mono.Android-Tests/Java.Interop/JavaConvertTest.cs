@@ -598,8 +598,7 @@ namespace Java.InteropTests
 			}
 		}
 
-		// Mirrors FromJniHandle_IDictionaryNullableInt32String for the reference-key direction:
-		// NativeAOT must root the JavaDictionary<__Canon, int> template through ValueTypeFactory's mixed-key exemplar.
+		// Cover conversion and constructor mapping for a reference key and value-type value.
 		[TestMethod]
 		[TestCategory ("NativeAOTTrimmable")]
 		public void FromJniHandle_IDictionaryStringInt32 ()
