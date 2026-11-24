@@ -860,7 +860,6 @@ namespace Xamarin.Android.Build.Tests
 		public static void AssertValidEnvironmentSharedLibrary (string outputDirectoryRoot, string sdkDirectory, string ndkDirectory, string supportedAbis, AndroidRuntime runtime)
 		{
 			NdkTools ndk = NdkTools.Create (ndkDirectory);
-			MonoAndroidHelper.AndroidSdk = new AndroidSdkInfo ((arg1, arg2) => {}, sdkDirectory, ndkDirectory, AndroidSdkResolver.GetJavaSdkPath ());
 
 			AndroidTargetArch arch;
 
