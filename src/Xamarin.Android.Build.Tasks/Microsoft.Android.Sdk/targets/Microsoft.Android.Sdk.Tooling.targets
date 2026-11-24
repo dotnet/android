@@ -25,7 +25,6 @@ This file contains .NET 6+ calls to the <ValidateJavaVersion/> and
         JavaSdkPath="$(_JavaSdkDirectory)"
         JavaToolExe="$(JavaToolExe)"
         JavacToolExe="$(JavacToolExe)"
-        TargetPlatformVersion="$(TargetPlatformVersion)"
         LatestSupportedJavaVersion="$(LatestSupportedJavaVersion)"
         MinimumSupportedJavaVersion="$(MinimumSupportedJavaVersion)"
         UseJavaExeVersion="$(_AndroidUseJavaExeVersion)">
