@@ -41,14 +41,16 @@ namespace Android.Runtime {
 			get {
 				if (index < 0 || index >= Count)
 					throw new ArgumentOutOfRangeException ("index");
-				// SAFETY: GC.KeepAlive (this) retains the T-compatible array peer across the call, and index was checked above.
+				// SAFETY: the constructor contract guarantees a T-compatible array and index was checked above;
+				// GC.KeepAlive (this) retains this peer across the synchronous call.
 				var item = unsafe(JNIEnv.GetArrayItem<T> (Handle, index));
 				GC.KeepAlive (this);
 				return item;
 			}
 			set {
 				unsafe {
-					// SAFETY: GC.KeepAlive (this) retains the managed array peer across the synchronous JNI element write.
+					// SAFETY: the constructor contract guarantees a T-compatible array and SetArrayItem<T> bounds-checks index;
+					// GC.KeepAlive (this) retains this peer across the synchronous write.
 					JNIEnv.SetArrayItem<T> (Handle, index, value);
 					GC.KeepAlive (this);
 				}
@@ -87,7 +89,8 @@ namespace Android.Runtime {
 
 		public IEnumerator<T> GetEnumerator ()
 		{
-			// SAFETY: GC.KeepAlive (this) retains this array peer across the synchronous JNI array conversion before iterator suspension.
+			// SAFETY: the constructor contract guarantees a T-compatible array;
+			// GC.KeepAlive (this) retains this peer across the synchronous JNI array conversion before iterator suspension.
 			var items = unsafe(JNIEnv.GetArray<T> (Handle));
 			GC.KeepAlive (this);
 			for (int i = 0; i < items!.Length; i++)
@@ -97,7 +100,8 @@ namespace Android.Runtime {
 		public int IndexOf (T item)
 		{
 			unsafe {
-				// SAFETY: GC.KeepAlive (this) retains this peer across the synchronous T array conversion.
+				// SAFETY: the constructor contract guarantees a T-compatible array;
+				// GC.KeepAlive (this) retains this peer across the synchronous T array conversion.
 				var items = JNIEnv.GetArray<T> (Handle)!;
 				GC.KeepAlive (this);
 				return Array.IndexOf (items, item);
