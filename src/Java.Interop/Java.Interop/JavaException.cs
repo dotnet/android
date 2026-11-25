@@ -224,8 +224,12 @@ namespace Java.Interop
 			if (object.ReferenceEquals (obj, this))
 				return true;
 			var o = obj as IJavaPeerable;
-			if (o != null)
-				return JniEnvironment.Types.IsSameObject (PeerReference, o.PeerReference);
+			if (o != null) {
+				bool result = JniEnvironment.Types.IsSameObject (PeerReference, o.PeerReference);
+				GC.KeepAlive (this);
+				GC.KeepAlive (o);
+				return result;
+			}
 			return false;
 		}
 
