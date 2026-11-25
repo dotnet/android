@@ -46,11 +46,12 @@ namespace Java.InteropTests
 		[TestMethod]
 		public void TestMyPaintColor ()
 		{
-			using (var p = new MyPaint ()) {
-				var g = JNIEnv.GetMethodID(p.Class.Handle, "getColor", "()I");
-				int c = JNIEnv.CallIntMethod(p.Handle, g);
+			using (var p = new MyPaint ())
+			using (var klass = p.Class) {
+				var g = JNIEnv.GetMethodID (klass.Handle, "getColor", "()I");
+				int c = JNIEnv.CallIntMethod (p.Handle, g);
 				Assert.AreEqual (0x11223344, c);
-				var s = JNIEnv.GetMethodID(p.Class.Handle, "setColor", "(I)V");
+				var s = JNIEnv.GetMethodID (klass.Handle, "setColor", "(I)V");
 				JNIEnv.CallVoidMethod (p.Handle, s, new JValue (0x22331144));
 				Assert.AreEqual (0x22331144, p.LastSetColor.ToArgb ());
 			}
@@ -225,8 +226,9 @@ namespace Java.InteropTests
 			// The element type only reaches the runtime as a Type through GetArray<T>, so nothing statically keeps
 			// its (IntPtr, JniHandleOwnership) constructor: the generated proxy for the open generic definition must.
 			IntPtr array;
-			using (var element = new T ()) {
-				array = JNIEnv.NewObjectArray (1, element.Class.Handle, element.Handle);
+			using (var element = new T ())
+			using (var klass = element.Class) {
+				array = JNIEnv.NewObjectArray (1, klass.Handle, element.Handle);
 			}
 			try {
 				var items = JNIEnv.GetArray<T> (array);
@@ -399,8 +401,9 @@ namespace Java.InteropTests
 		[TestMethod]
 		public void SetField_PermitNullValues ()
 		{
-			using (var resource = new Intent.ShortcutIconResource ()) {
-				var f = JNIEnv.GetFieldID (resource.Class.Handle, "packageName", "Ljava/lang/String;");
+			using (var resource = new Intent.ShortcutIconResource ())
+			using (var klass = resource.Class) {
+				var f = JNIEnv.GetFieldID (klass.Handle, "packageName", "Ljava/lang/String;");
 				Console.WriteLine ("# f=0x{0}", f.ToString ("x"));
 				resource.PackageName = null;
 				Assert.AreEqual (null, resource.PackageName);
@@ -410,10 +413,11 @@ namespace Java.InteropTests
 		[TestMethod, TestCategory ("Export")]
 		public void CreateTypeWithExportedMethods ()
 		{
-			using (var e = new ContainsExportedMethods ()) {
+			using (var e = new ContainsExportedMethods ())
+			using (var klass = e.Class) {
 				e.Exported ();
 				Assert.AreEqual (1, e.Count);
-				IntPtr m = JNIEnv.GetMethodID (e.Class.Handle, "Exported", "()V");
+				IntPtr m = JNIEnv.GetMethodID (klass.Handle, "Exported", "()V");
 				JNIEnv.CallVoidMethod (e.Handle, m);
 				Assert.AreEqual (2, e.Count);
 			}
