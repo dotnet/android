@@ -12218,3 +12218,579 @@ virtual Java.Nio.CharBuffer.GetChars(int srcBegin, int srcEnd, char[]! dst, int 
 virtual Javax.Net.Ssl.ExtendedSSLSession.StatusResponses.get -> System.Collections.Generic.IList<byte[]!>?
 virtual Javax.Net.Ssl.SSLParameters.GetNamedGroups() -> string![]?
 virtual Javax.Net.Ssl.SSLParameters.SetNamedGroups(string![]? namedGroups) -> void
+*REMOVED*Android.App.Notification.CarExtender.Extend(Android.App.Notification.Builder? builder) -> Android.App.Notification.Builder?
+*REMOVED*Android.App.Notification.WearableExtender.Extend(Android.App.Notification.Builder? builder) -> Android.App.Notification.Builder?
+*REMOVED*Android.Bluetooth.BluetoothA2dp.GetDevicesMatchingConnectionStates(Android.Bluetooth.ProfileState[]! states) -> System.Collections.Generic.IList<Android.Bluetooth.BluetoothDevice!>?
+*REMOVED*Android.Bluetooth.BluetoothCsipSetCoordinator.GetDevicesMatchingConnectionStates(Android.Bluetooth.ProfileState[]! states) -> System.Collections.Generic.IList<Android.Bluetooth.BluetoothDevice!>!
+*REMOVED*Android.Bluetooth.BluetoothGatt.GetDevicesMatchingConnectionStates(Android.Bluetooth.ProfileState[]! states) -> System.Collections.Generic.IList<Android.Bluetooth.BluetoothDevice!>?
+*REMOVED*Android.Bluetooth.BluetoothGattServer.GetDevicesMatchingConnectionStates(Android.Bluetooth.ProfileState[]! states) -> System.Collections.Generic.IList<Android.Bluetooth.BluetoothDevice!>?
+*REMOVED*Android.Bluetooth.BluetoothHeadset.GetDevicesMatchingConnectionStates(Android.Bluetooth.ProfileState[]! states) -> System.Collections.Generic.IList<Android.Bluetooth.BluetoothDevice!>?
+*REMOVED*Android.Bluetooth.BluetoothHealth.GetDevicesMatchingConnectionStates(Android.Bluetooth.ProfileState[]! states) -> System.Collections.Generic.IList<Android.Bluetooth.BluetoothDevice!>?
+*REMOVED*Android.Bluetooth.BluetoothHearingAid.GetConnectionState(Android.Bluetooth.BluetoothDevice! device) -> Android.Bluetooth.ProfileState
+*REMOVED*Android.Bluetooth.BluetoothHearingAid.GetDevicesMatchingConnectionStates(Android.Bluetooth.ProfileState[]! states) -> System.Collections.Generic.IList<Android.Bluetooth.BluetoothDevice!>!
+*REMOVED*Android.Bluetooth.BluetoothHidDevice.GetDevicesMatchingConnectionStates(Android.Bluetooth.ProfileState[]! states) -> System.Collections.Generic.IList<Android.Bluetooth.BluetoothDevice!>?
+*REMOVED*Android.Bluetooth.BluetoothLeAudio.GetConnectionState(Android.Bluetooth.BluetoothDevice! device) -> Android.Bluetooth.ProfileState
+*REMOVED*Android.Bluetooth.BluetoothLeAudio.GetDevicesMatchingConnectionStates(Android.Bluetooth.ProfileState[]! states) -> System.Collections.Generic.IList<Android.Bluetooth.BluetoothDevice!>!
+*REMOVED*Android.Content.Res.IXmlResourceParser.GetAttributeName(int pos) -> string!
+*REMOVED*Android.Content.Res.IXmlResourceParser.GetAttributeValue(int pos) -> string!
+*REMOVED*Android.Content.Res.IXmlResourceParser.PositionDescription.get -> string!
+*REMOVED*Android.Icu.Number.FormattedNumber.SubSequence(int start, int end) -> string?
+*REMOVED*Android.Icu.Number.FormattedNumberRange.SubSequence(int start, int end) -> string?
+*REMOVED*Android.Icu.Text.AlphabeticIndex.ImmutableIndex.Iterator() -> Java.Util.IIterator?
+*REMOVED*Android.Icu.Text.AlphabeticIndex.Iterator() -> Java.Util.IIterator?
+*REMOVED*Android.Icu.Text.DateIntervalFormat.FormattedDateInterval.SubSequence(int start, int end) -> string?
+*REMOVED*Android.Icu.Text.DateIntervalFormat.FormattedDateInterval.SubSequenceFormatted(int start, int end) -> Java.Lang.ICharSequence?
+*REMOVED*Android.Icu.Text.IFormattedValue.ToString() -> string?
+*REMOVED*Android.Icu.Text.ListFormatter.FormattedList.SubSequence(int start, int end) -> string?
+*REMOVED*Android.Icu.Text.ListFormatter.FormattedList.SubSequenceFormatted(int start, int end) -> Java.Lang.ICharSequence?
+*REMOVED*Android.Icu.Text.RelativeDateTimeFormatter.FormattedRelativeDateTime.SubSequence(int start, int end) -> string?
+*REMOVED*Android.Test.Mock.MockPackageManager.GetApplicationLabel(Android.Content.PM.ApplicationInfo? info) -> string?
+*REMOVED*Android.Test.Mock.MockPackageManager.GetUserBadgedLabel(string? label, Android.OS.UserHandle? user) -> string?
+*REMOVED*Android.Text.AlteredCharSequence.SubSequence(int start, int end) -> string?
+*REMOVED*Android.Text.IEditable.Append(Java.Lang.ICharSequence? text) -> Java.Lang.IAppendable?
+*REMOVED*Android.Text.IEditable.Append(Java.Lang.ICharSequence? text, int start, int end) -> Java.Lang.IAppendable?
+*REMOVED*Android.Text.IEditable.Append(char text) -> Java.Lang.IAppendable?
+*REMOVED*Android.Text.SpannableString.SubSequence(int start, int end) -> string?
+*REMOVED*Android.Text.SpannableString.SubSequenceFormatted(int start, int end) -> Java.Lang.ICharSequence?
+*REMOVED*Android.Text.SpannableStringBuilder.Append(string? text) -> Java.Lang.IAppendable?
+*REMOVED*Android.Text.SpannableStringBuilder.Append(string? text, int start, int end) -> Java.Lang.IAppendable?
+*REMOVED*Android.Text.SpannableStringBuilder.SubSequence(int start, int end) -> string?
+*REMOVED*Android.Text.SpannedString.SubSequence(int start, int end) -> string?
+*REMOVED*Android.Text.SpannedString.SubSequenceFormatted(int start, int end) -> Java.Lang.ICharSequence?
+*REMOVED*Android.Text.Style.BulletSpan.DrawLeadingMargin(Android.Graphics.Canvas! canvas, Android.Graphics.Paint! paint, int x, int dir, int top, int baseline, int bottom, string! text, int start, int end, bool first, Android.Text.Layout? layout) -> void
+*REMOVED*Android.Text.Style.DrawableMarginSpan.ChooseHeight(string! text, int start, int end, int istartv, int v, Android.Graphics.Paint.FontMetricsInt! fm) -> void
+*REMOVED*Android.Text.Style.DrawableMarginSpan.DrawLeadingMargin(Android.Graphics.Canvas! c, Android.Graphics.Paint! p, int x, int dir, int top, int baseline, int bottom, string! text, int start, int end, bool first, Android.Text.Layout! layout) -> void
+*REMOVED*Android.Text.Style.LineHeightSpanStandard.ChooseHeight(string! text, int start, int end, int spanstartv, int lineHeight, Android.Graphics.Paint.FontMetricsInt! fm) -> void
+*REMOVED*Android.Text.Style.QuoteSpan.DrawLeadingMargin(Android.Graphics.Canvas! c, Android.Graphics.Paint! p, int x, int dir, int top, int baseline, int bottom, string! text, int start, int end, bool first, Android.Text.Layout! layout) -> void
+*REMOVED*Android.Util.ArrayMap.EntrySet() -> System.Collections.ICollection?
+*REMOVED*Android.Util.ArrayMap.KeySet() -> System.Collections.ICollection?
+*REMOVED*Android.Util.ArrayMap.Values() -> System.Collections.ICollection?
+*REMOVED*Android.Util.ArraySet.Iterator() -> Java.Util.IIterator?
+*REMOVED*Android.Util.ArraySet.ToArray() -> Java.Lang.Object![]?
+*REMOVED*Android.Util.ArraySet.ToArray(Java.Lang.Object![]? array) -> Java.Lang.Object![]?
+*REMOVED*Java.IO.PrintStream.Append(string? csq) -> Java.Lang.IAppendable?
+*REMOVED*Java.IO.PrintStream.Append(string? csq, int start, int end) -> Java.Lang.IAppendable?
+*REMOVED*Java.IO.PrintStream.AppendAsync(Java.Lang.ICharSequence? csq) -> System.Threading.Tasks.Task<Java.Lang.IAppendable?>!
+*REMOVED*Java.IO.PrintStream.AppendAsync(Java.Lang.ICharSequence? csq, int start, int end) -> System.Threading.Tasks.Task<Java.Lang.IAppendable?>!
+*REMOVED*Java.IO.PrintStream.AppendAsync(char c) -> System.Threading.Tasks.Task<Java.Lang.IAppendable?>!
+*REMOVED*Java.IO.Writer.Append(string? csq) -> Java.Lang.IAppendable?
+*REMOVED*Java.IO.Writer.Append(string? csq, int start, int end) -> Java.Lang.IAppendable?
+*REMOVED*Java.IO.Writer.AppendAsync(Java.Lang.ICharSequence? csq) -> System.Threading.Tasks.Task<Java.Lang.IAppendable?>!
+*REMOVED*Java.IO.Writer.AppendAsync(Java.Lang.ICharSequence? csq, int start, int end) -> System.Threading.Tasks.Task<Java.Lang.IAppendable?>!
+*REMOVED*Java.IO.Writer.AppendAsync(char c) -> System.Threading.Tasks.Task<Java.Lang.IAppendable?>!
+*REMOVED*Java.Lang.AbstractStringBuilder.Append(string? s) -> Java.Lang.IAppendable?
+*REMOVED*Java.Lang.AbstractStringBuilder.Append(string? s, int start, int end) -> Java.Lang.IAppendable?
+*REMOVED*Java.Lang.AbstractStringBuilder.SubSequence(int start, int end) -> string?
+*REMOVED*Java.Nio.CharBuffer.SubSequence(int start, int end) -> string?
+*REMOVED*Java.Nio.FileNio.IDirectoryStream.Iterator() -> Java.Util.IIterator?
+*REMOVED*Java.Nio.FileNio.IPath.Iterator() -> Java.Util.IIterator?
+*REMOVED*Java.Util.Concurrent.IBlockingDeque.Iterator() -> Java.Util.IIterator?
+*REMOVED*Java.Util.INavigableSet.Iterator() -> Java.Util.IIterator?
+*REMOVED*Java.Util.PriorityQueue.Spliterator() -> Java.Util.ISpliterator?
+*REMOVED*Java.Util.ServiceLoader.Iterator() -> Java.Util.IIterator?
+*REMOVED*abstract Android.Net.Uri.ToString() -> string?
+*REMOVED*abstract Android.Text.SpannableStringInternal.ToString() -> string?
+*REMOVED*abstract Java.Lang.AbstractStringBuilder.ToString() -> string?
+*REMOVED*abstract Java.Nio.CharBuffer.SubSequenceFormatted(int start, int end) -> Java.Lang.ICharSequence?
+*REMOVED*abstract Java.Security.Cert.CRL.ToString() -> string?
+*REMOVED*abstract Java.Security.Cert.Certificate.ToString() -> string?
+*REMOVED*abstract Java.Security.Cert.X509CRLEntry.ToString() -> string?
+*REMOVED*abstract Java.Util.Prefs.Preferences.ToString() -> string?
+*REMOVED*abstract Javax.Security.Cert.Certificate.ToString() -> string?
+*REMOVED*override Android.AdServices.OnDevicePersonalization.IsolatedService.OnBind(Android.Content.Intent! intent) -> Android.OS.IBinder?
+*REMOVED*override Android.App.Admin.DeviceAdminReceiver.OnReceive(Android.Content.Context! context, Android.Content.Intent! intent) -> void
+*REMOVED*override Android.App.MediaRouteActionProvider.OnCreateActionView() -> Android.Views.View?
+*REMOVED*override Android.Media.MediaRoute2ProviderService.OnBind(Android.Content.Intent! intent) -> Android.OS.IBinder?
+*REMOVED*override Android.Media.MediaSession2Service.OnBind(Android.Content.Intent! intent) -> Android.OS.IBinder?
+*REMOVED*override Android.Media.Midi.MidiUmpDeviceService.OnBind(Android.Content.Intent! intent) -> Android.OS.IBinder?
+*REMOVED*override Android.Service.Carrier.CarrierMessagingService.OnBind(Android.Content.Intent! intent) -> Android.OS.IBinder?
+*REMOVED*override Android.Service.QuickAccessWallet.QuickAccessWalletService.OnBind(Android.Content.Intent! intent) -> Android.OS.IBinder?
+*REMOVED*override Android.Test.Mock.MockPackageManager.DefaultActivityIcon.get -> Android.Graphics.Drawables.Drawable?
+*REMOVED*override Android.Test.Mock.MockPackageManager.GetActivityIcon(Android.Content.ComponentName? activityName) -> Android.Graphics.Drawables.Drawable?
+*REMOVED*override Android.Test.Mock.MockPackageManager.GetActivityIcon(Android.Content.Intent? intent) -> Android.Graphics.Drawables.Drawable?
+*REMOVED*override Android.Test.Mock.MockPackageManager.GetActivityInfo(Android.Content.ComponentName? className, Android.Content.PM.PackageInfoFlags flags) -> Android.Content.PM.ActivityInfo?
+*REMOVED*override Android.Test.Mock.MockPackageManager.GetAllPermissionGroups(Android.Content.PM.PackageInfoFlags flags) -> System.Collections.Generic.IList<Android.Content.PM.PermissionGroupInfo!>?
+*REMOVED*override Android.Test.Mock.MockPackageManager.GetApplicationIcon(Android.Content.PM.ApplicationInfo? info) -> Android.Graphics.Drawables.Drawable?
+*REMOVED*override Android.Test.Mock.MockPackageManager.GetApplicationIcon(string? packageName) -> Android.Graphics.Drawables.Drawable?
+*REMOVED*override Android.Test.Mock.MockPackageManager.GetApplicationInfo(string? packageName, Android.Content.PM.PackageInfoFlags flags) -> Android.Content.PM.ApplicationInfo?
+*REMOVED*override Android.Test.Mock.MockPackageManager.GetApplicationLabelFormatted(Android.Content.PM.ApplicationInfo? info) -> Java.Lang.ICharSequence?
+*REMOVED*override Android.Test.Mock.MockPackageManager.GetInstalledApplications(Android.Content.PM.PackageInfoFlags flags) -> System.Collections.Generic.IList<Android.Content.PM.ApplicationInfo!>?
+*REMOVED*override Android.Test.Mock.MockPackageManager.GetInstalledPackages(Android.Content.PM.PackageInfoFlags flags) -> System.Collections.Generic.IList<Android.Content.PM.PackageInfo!>?
+*REMOVED*override Android.Test.Mock.MockPackageManager.GetInstantAppCookie() -> byte[]?
+*REMOVED*override Android.Test.Mock.MockPackageManager.GetInstrumentationInfo(Android.Content.ComponentName? className, Android.Content.PM.PackageInfoFlags flags) -> Android.Content.PM.InstrumentationInfo?
+*REMOVED*override Android.Test.Mock.MockPackageManager.GetPackagesHoldingPermissions(string![]? permissions, Android.Content.PM.PackageInfoFlags flags) -> System.Collections.Generic.IList<Android.Content.PM.PackageInfo!>?
+*REMOVED*override Android.Test.Mock.MockPackageManager.GetPermissionGroupInfo(string? name, Android.Content.PM.PackageInfoFlags flags) -> Android.Content.PM.PermissionGroupInfo?
+*REMOVED*override Android.Test.Mock.MockPackageManager.GetPreferredPackages(Android.Content.PM.PackageInfoFlags flags) -> System.Collections.Generic.IList<Android.Content.PM.PackageInfo!>?
+*REMOVED*override Android.Test.Mock.MockPackageManager.GetProviderInfo(Android.Content.ComponentName? className, Android.Content.PM.PackageInfoFlags flags) -> Android.Content.PM.ProviderInfo?
+*REMOVED*override Android.Test.Mock.MockPackageManager.GetReceiverInfo(Android.Content.ComponentName? className, Android.Content.PM.PackageInfoFlags flags) -> Android.Content.PM.ActivityInfo?
+*REMOVED*override Android.Test.Mock.MockPackageManager.GetResourcesForActivity(Android.Content.ComponentName? activityName) -> Android.Content.Res.Resources?
+*REMOVED*override Android.Test.Mock.MockPackageManager.GetResourcesForApplication(Android.Content.PM.ApplicationInfo? app) -> Android.Content.Res.Resources?
+*REMOVED*override Android.Test.Mock.MockPackageManager.GetResourcesForApplication(string? appPackageName) -> Android.Content.Res.Resources?
+*REMOVED*override Android.Test.Mock.MockPackageManager.GetServiceInfo(Android.Content.ComponentName? className, Android.Content.PM.PackageInfoFlags flags) -> Android.Content.PM.ServiceInfo?
+*REMOVED*override Android.Test.Mock.MockPackageManager.GetSharedLibraries(Android.Content.PM.PackageInstallReason flags) -> System.Collections.Generic.IList<Android.Content.PM.SharedLibraryInfo!>?
+*REMOVED*override Android.Test.Mock.MockPackageManager.GetSystemAvailableFeatures() -> Android.Content.PM.FeatureInfo![]?
+*REMOVED*override Android.Test.Mock.MockPackageManager.GetUserBadgedDrawableForDensity(Android.Graphics.Drawables.Drawable? drawable, Android.OS.UserHandle? user, Android.Graphics.Rect? badgeLocation, int badgeDensity) -> Android.Graphics.Drawables.Drawable?
+*REMOVED*override Android.Test.Mock.MockPackageManager.GetUserBadgedIcon(Android.Graphics.Drawables.Drawable? icon, Android.OS.UserHandle? user) -> Android.Graphics.Drawables.Drawable?
+*REMOVED*override Android.Test.Mock.MockPackageManager.GetUserBadgedLabelFormatted(Java.Lang.ICharSequence? label, Android.OS.UserHandle? user) -> Java.Lang.ICharSequence?
+*REMOVED*override Android.Test.Mock.MockPackageManager.PackageInstaller.get -> Android.Content.PM.PackageInstaller?
+*REMOVED*override Android.Test.Mock.MockPackageManager.QueryBroadcastReceivers(Android.Content.Intent? intent, Android.Content.PM.PackageInfoFlags flags) -> System.Collections.Generic.IList<Android.Content.PM.ResolveInfo!>?
+*REMOVED*override Android.Test.Mock.MockPackageManager.QueryContentProviders(string? processName, int uid, Android.Content.PM.PackageInfoFlags flags) -> System.Collections.Generic.IList<Android.Content.PM.ProviderInfo!>?
+*REMOVED*override Android.Test.Mock.MockPackageManager.QueryInstrumentation(string? targetPackage, Android.Content.PM.PackageInfoFlags flags) -> System.Collections.Generic.IList<Android.Content.PM.InstrumentationInfo!>?
+*REMOVED*override Android.Test.Mock.MockPackageManager.QueryIntentActivities(Android.Content.Intent? intent, Android.Content.PM.PackageInfoFlags flags) -> System.Collections.Generic.IList<Android.Content.PM.ResolveInfo!>?
+*REMOVED*override Android.Test.Mock.MockPackageManager.QueryIntentActivityOptions(Android.Content.ComponentName? caller, Android.Content.Intent![]? specifics, Android.Content.Intent? intent, Android.Content.PM.PackageInfoFlags flags) -> System.Collections.Generic.IList<Android.Content.PM.ResolveInfo!>?
+*REMOVED*override Android.Test.Mock.MockPackageManager.QueryIntentContentProviders(Android.Content.Intent? intent, Android.Content.PM.PackageInfoFlags flags) -> System.Collections.Generic.IList<Android.Content.PM.ResolveInfo!>?
+*REMOVED*override Android.Test.Mock.MockPackageManager.QueryIntentServices(Android.Content.Intent? intent, Android.Content.PM.PackageInfoFlags flags) -> System.Collections.Generic.IList<Android.Content.PM.ResolveInfo!>?
+*REMOVED*override Android.Test.Mock.MockPackageManager.QueryPermissionsByGroup(string? group, Android.Content.PM.PackageInfoFlags flags) -> System.Collections.Generic.IList<Android.Content.PM.PermissionInfo!>?
+*REMOVED*override Android.Text.Method.DialerKeyListener.GetAcceptedChars() -> char[]?
+*REMOVED*override Android.Text.Method.DigitsKeyListener.GetAcceptedChars() -> char[]?
+*REMOVED*override Android.Text.SpannedString.ToString() -> string?
+*REMOVED*override Android.Text.Style.AbsoluteSizeSpan.UpdateDrawState(Android.Text.TextPaint! ds) -> void
+*REMOVED*override Android.Text.Style.BackgroundColorSpan.UpdateDrawState(Android.Text.TextPaint! textPaint) -> void
+*REMOVED*override Android.Text.Style.ClickableSpan.UpdateDrawState(Android.Text.TextPaint! ds) -> void
+*REMOVED*override Android.Text.Style.ForegroundColorSpan.UpdateDrawState(Android.Text.TextPaint! textPaint) -> void
+*REMOVED*override Android.Text.Style.RelativeSizeSpan.UpdateDrawState(Android.Text.TextPaint! ds) -> void
+*REMOVED*override Android.Text.Style.StrikethroughSpan.UpdateDrawState(Android.Text.TextPaint! ds) -> void
+*REMOVED*override Android.Text.Style.SubscriptSpan.UpdateDrawState(Android.Text.TextPaint! textPaint) -> void
+*REMOVED*override Android.Text.Style.SuggestionRangeSpan.UpdateDrawState(Android.Text.TextPaint! tp) -> void
+*REMOVED*override Android.Text.Style.SuperscriptSpan.UpdateDrawState(Android.Text.TextPaint! textPaint) -> void
+*REMOVED*override Android.Text.Style.TypefaceSpan.UpdateDrawState(Android.Text.TextPaint! ds) -> void
+*REMOVED*override Android.Text.Style.UnderlineSpan.UpdateDrawState(Android.Text.TextPaint! ds) -> void
+*REMOVED*override Android.Views.Accessibility.AccessibilityEvent.Text.get -> System.Collections.Generic.IList<Java.Lang.ICharSequence!>?
+*REMOVED*override Android.Widget.ArrayAdapter.GetView(int position, Android.Views.View? convertView, Android.Views.ViewGroup! parent) -> Android.Views.View!
+*REMOVED*override Android.Widget.RemoteViews.RemoteViewOutlineProvider.GetOutline(Android.Views.View! view, Android.Graphics.Outline! outline) -> void
+*REMOVED*override Android.Widget.ShareActionProvider.OnCreateActionView() -> Android.Views.View?
+*REMOVED*override Java.Lang.Reflect.Constructor.GetExceptionTypes() -> Java.Lang.Class![]?
+*REMOVED*override Java.Lang.Reflect.Constructor.GetGenericExceptionTypes() -> Java.Lang.Reflect.IType![]?
+*REMOVED*override Java.Lang.Reflect.Constructor.GetGenericParameterTypes() -> Java.Lang.Reflect.IType![]?
+*REMOVED*override Java.Lang.Reflect.Constructor.GetParameterAnnotations() -> Java.Lang.Annotation.IAnnotation![]![]?
+*REMOVED*override Java.Lang.Reflect.Constructor.GetTypeParameters() -> Java.Lang.Reflect.ITypeVariable![]?
+*REMOVED*override Java.Lang.Reflect.Method.GetGenericExceptionTypes() -> Java.Lang.Reflect.IType![]?
+*REMOVED*override Java.Lang.Reflect.Method.GetGenericParameterTypes() -> Java.Lang.Reflect.IType![]?
+*REMOVED*override Java.Lang.StringBuffer.IndexOf(string! str) -> int
+*REMOVED*override Java.Lang.StringBuffer.IndexOf(string! str, int fromIndex) -> int
+*REMOVED*override Java.Lang.StringBuffer.LastIndexOf(string! str) -> int
+*REMOVED*override Java.Lang.StringBuffer.LastIndexOf(string! str, int fromIndex) -> int
+*REMOVED*override Java.Lang.StringBuffer.ToString() -> string?
+*REMOVED*override Java.Lang.StringBuilder.IndexOf(string! str) -> int
+*REMOVED*override Java.Lang.StringBuilder.IndexOf(string! str, int fromIndex) -> int
+*REMOVED*override Java.Lang.StringBuilder.LastIndexOf(string! str) -> int
+*REMOVED*override Java.Lang.StringBuilder.LastIndexOf(string! str, int fromIndex) -> int
+*REMOVED*override Java.Lang.StringBuilder.ToString() -> string?
+*REMOVED*override Java.Nio.MappedByteBuffer.Compact() -> Java.Nio.ByteBuffer?
+*REMOVED*override Java.Nio.MappedByteBuffer.Duplicate() -> Java.Nio.ByteBuffer?
+*REMOVED*override Java.Nio.MappedByteBuffer.Slice() -> Java.Nio.ByteBuffer?
+*REMOVED*override Java.Nio.MappedByteBuffer.Slice(int index, int length) -> Java.Nio.MappedByteBuffer?
+*REMOVED*override Java.Security.Spec.ECGenParameterSpec.Name.get -> string?
+*REMOVED*override Java.Text.ChoiceFormat.Format(double number, Java.Lang.StringBuffer? toAppendTo, Java.Text.FieldPosition? status) -> Java.Lang.StringBuffer?
+*REMOVED*override Java.Text.ChoiceFormat.Format(long number, Java.Lang.StringBuffer? toAppendTo, Java.Text.FieldPosition? status) -> Java.Lang.StringBuffer?
+*REMOVED*override Java.Text.DateFormat.ParseObject(string! source, Java.Text.ParsePosition! pos) -> Java.Lang.Object?
+*REMOVED*override Java.Text.DecimalFormat.Format(double number, Java.Lang.StringBuffer? result, Java.Text.FieldPosition? fieldPosition) -> Java.Lang.StringBuffer?
+*REMOVED*override Java.Text.DecimalFormat.Format(long number, Java.Lang.StringBuffer? result, Java.Text.FieldPosition? fieldPosition) -> Java.Lang.StringBuffer?
+*REMOVED*override Java.Text.NumberFormat.Format(Java.Lang.Object! number, Java.Lang.StringBuffer! toAppendTo, Java.Text.FieldPosition! pos) -> Java.Lang.StringBuffer!
+*REMOVED*override Java.Text.SimpleDateFormat.Format(Java.Util.Date? date, Java.Lang.StringBuffer? toAppendTo, Java.Text.FieldPosition? pos) -> Java.Lang.StringBuffer?
+*REMOVED*override Java.Util.Concurrent.ArrayBlockingQueue.Iterator() -> Java.Util.IIterator?
+*REMOVED*override Java.Util.Concurrent.ConcurrentLinkedDeque.Iterator() -> Java.Util.IIterator?
+*REMOVED*override Java.Util.Concurrent.ConcurrentLinkedQueue.Iterator() -> Java.Util.IIterator?
+*REMOVED*override Java.Util.Concurrent.ConcurrentSkipListMap.EntrySet() -> System.Collections.ICollection?
+*REMOVED*override Java.Util.Concurrent.CopyOnWriteArraySet.Iterator() -> Java.Util.IIterator?
+*REMOVED*override Java.Util.Concurrent.DelayQueue.Iterator() -> Java.Util.IIterator?
+*REMOVED*override Java.Util.Concurrent.LinkedBlockingDeque.Iterator() -> Java.Util.IIterator?
+*REMOVED*override Java.Util.Concurrent.LinkedBlockingQueue.Iterator() -> Java.Util.IIterator?
+*REMOVED*override Java.Util.Concurrent.LinkedTransferQueue.Iterator() -> Java.Util.IIterator?
+*REMOVED*override Java.Util.Concurrent.PriorityBlockingQueue.Iterator() -> Java.Util.IIterator?
+*REMOVED*override Java.Util.Concurrent.SynchronousQueue.Iterator() -> Java.Util.IIterator?
+*REMOVED*override Java.Util.EnumMap.EntrySet() -> System.Collections.ICollection?
+*REMOVED*override Java.Util.IdentityHashMap.EntrySet() -> System.Collections.ICollection?
+*REMOVED*override Java.Util.Prefs.AbstractPreferences.ToString() -> string?
+*REMOVED*override Java.Util.PriorityQueue.Iterator() -> Java.Util.IIterator?
+*REMOVED*override Java.Util.TreeSet.Iterator() -> Java.Util.IIterator?
+*REMOVED*override sealed Android.App.Admin.DelegatedAdminReceiver.OnReceive(Android.Content.Context! context, Android.Content.Intent! intent) -> void
+*REMOVED*override sealed Android.Companion.CompanionDeviceService.OnBind(Android.Content.Intent! intent) -> Android.OS.IBinder?
+*REMOVED*override sealed Android.Media.TV.Interactive.TvInteractiveAppService.OnBind(Android.Content.Intent! intent) -> Android.OS.IBinder?
+*REMOVED*override sealed Android.Provider.CloudMediaProvider.AttachInfo(Android.Content.Context! context, Android.Content.PM.ProviderInfo! info) -> void
+*REMOVED*override sealed Android.Provider.CloudMediaProvider.Insert(Android.Net.Uri! uri, Android.Content.ContentValues! values) -> Android.Net.Uri!
+*REMOVED*override sealed Android.Provider.CloudMediaProvider.Update(Android.Net.Uri! uri, Android.Content.ContentValues! values, string? selection, string![]? selectionArgs) -> int
+*REMOVED*override sealed Android.Service.Controls.ControlsProviderService.OnBind(Android.Content.Intent! intent) -> Android.OS.IBinder!
+*REMOVED*override sealed Android.Service.Controls.ControlsProviderService.OnUnbind(Android.Content.Intent! intent) -> bool
+*REMOVED*override sealed Android.Service.Credentials.CredentialProviderService.OnBind(Android.Content.Intent! intent) -> Android.OS.IBinder!
+*REMOVED*override sealed Android.Telecom.CallRedirectionService.OnBind(Android.Content.Intent! intent) -> Android.OS.IBinder?
+*REMOVED*override sealed Android.Telecom.CallRedirectionService.OnUnbind(Android.Content.Intent! intent) -> bool
+*REMOVED*override sealed Android.Text.SpannableString.ToString() -> string?
+*REMOVED*override sealed Android.Util.LruCache.ToString() -> string?
+*REMOVED*override sealed Java.Lang.Invoke.VarHandle.ToString() -> string?
+*REMOVED*override sealed Java.Nio.Channels.FileLock.ToString() -> string?
+*REMOVED*override sealed Java.Nio.Charset.Charset.ToString() -> string?
+*REMOVED*override sealed Java.Security.AlgorithmParameters.ToString() -> string?
+*REMOVED*override sealed Java.Text.DateFormat.Format(Java.Lang.Object! obj, Java.Lang.StringBuffer! toAppendTo, Java.Text.FieldPosition! fieldPosition) -> Java.Lang.StringBuffer!
+*REMOVED*override sealed Java.Text.DecimalFormat.Format(Java.Lang.Object? number, Java.Lang.StringBuffer? toAppendTo, Java.Text.FieldPosition? pos) -> Java.Lang.StringBuffer?
+*REMOVED*override sealed Java.Text.NumberFormat.ParseObject(string! source, Java.Text.ParsePosition! pos) -> Java.Lang.Object?
+*REMOVED*override sealed Java.Util.Locale.ToString() -> string?
+*REMOVED*override sealed Org.Apache.Http.Conn.Routing.HttpRoute.ToString() -> string?
+*REMOVED*override sealed Org.Apache.Http.Conn.Routing.RouteTracker.ToString() -> string?
+*REMOVED*override sealed Org.Apache.Http.Conn.Schemes.Scheme.ToString() -> string?
+*REMOVED*override sealed Org.Apache.Http.Conn.Ssl.AllowAllHostnameVerifier.ToString() -> string?
+*REMOVED*override sealed Org.Apache.Http.Conn.Ssl.BrowserCompatHostnameVerifier.ToString() -> string?
+*REMOVED*override sealed Org.Apache.Http.Conn.Ssl.StrictHostnameVerifier.ToString() -> string?
+*REMOVED*static Android.Text.IEditableExtensions.Append(this Android.Text.IEditable! self, string? text) -> Java.Lang.IAppendable?
+*REMOVED*static Android.Text.IEditableExtensions.Append(this Android.Text.IEditable! self, string? text, int start, int end) -> Java.Lang.IAppendable?
+*REMOVED*virtual Android.App.DatePickerDialog.OnClick(Android.Content.IDialogInterface! dialog, int which) -> void
+*REMOVED*virtual Android.App.DatePickerDialog.OnDateChanged(Android.Widget.DatePicker! view, int year, int month, int dayOfMonth) -> void
+*REMOVED*virtual Android.App.Dialog.DispatchGenericMotionEvent(Android.Views.MotionEvent! ev) -> bool
+*REMOVED*virtual Android.App.Dialog.DispatchKeyEvent(Android.Views.KeyEvent! e) -> bool
+*REMOVED*virtual Android.App.Dialog.DispatchKeyShortcutEvent(Android.Views.KeyEvent! e) -> bool
+*REMOVED*virtual Android.App.Dialog.DispatchPopulateAccessibilityEvent(Android.Views.Accessibility.AccessibilityEvent! e) -> bool
+*REMOVED*virtual Android.App.Dialog.DispatchTouchEvent(Android.Views.MotionEvent! ev) -> bool
+*REMOVED*virtual Android.App.Dialog.DispatchTrackballEvent(Android.Views.MotionEvent! ev) -> bool
+*REMOVED*virtual Android.App.Dialog.OnKeyDown(Android.Views.Keycode keyCode, Android.Views.KeyEvent! e) -> bool
+*REMOVED*virtual Android.App.Dialog.OnKeyLongPress(Android.Views.Keycode keyCode, Android.Views.KeyEvent! e) -> bool
+*REMOVED*virtual Android.App.Dialog.OnKeyMultiple(Android.Views.Keycode keyCode, int repeatCount, Android.Views.KeyEvent! e) -> bool
+*REMOVED*virtual Android.App.Dialog.OnKeyUp(Android.Views.Keycode keyCode, Android.Views.KeyEvent! e) -> bool
+*REMOVED*virtual Android.App.Dialog.OnSearchRequested(Android.Views.SearchEvent! searchEvent) -> bool
+*REMOVED*virtual Android.Icu.Number.FormattedNumber.SubSequenceFormatted(int start, int end) -> Java.Lang.ICharSequence?
+*REMOVED*virtual Android.Icu.Number.FormattedNumberRange.SubSequenceFormatted(int start, int end) -> Java.Lang.ICharSequence?
+*REMOVED*virtual Android.Icu.Text.AlphabeticIndex.Bucket.Iterator() -> Java.Util.IIterator?
+*REMOVED*virtual Android.Icu.Text.RelativeDateTimeFormatter.FormattedRelativeDateTime.SubSequenceFormatted(int start, int end) -> Java.Lang.ICharSequence?
+*REMOVED*virtual Android.Media.TV.Interactive.TvInteractiveAppService.Session.OnKeyDown(Android.Views.Keycode keyCode, Android.Views.KeyEvent! e) -> bool
+*REMOVED*virtual Android.Media.TV.Interactive.TvInteractiveAppService.Session.OnKeyLongPress(Android.Views.Keycode keyCode, Android.Views.KeyEvent! e) -> bool
+*REMOVED*virtual Android.Media.TV.Interactive.TvInteractiveAppService.Session.OnKeyMultiple(Android.Views.Keycode keyCode, int count, Android.Views.KeyEvent! e) -> bool
+*REMOVED*virtual Android.Media.TV.Interactive.TvInteractiveAppService.Session.OnKeyUp(Android.Views.Keycode keyCode, Android.Views.KeyEvent! e) -> bool
+*REMOVED*virtual Android.Text.AlteredCharSequence.SubSequenceFormatted(int start, int end) -> Java.Lang.ICharSequence?
+*REMOVED*virtual Android.Text.SpannableStringBuilder.Append(Java.Lang.ICharSequence? text) -> Java.Lang.IAppendable?
+*REMOVED*virtual Android.Text.SpannableStringBuilder.Append(Java.Lang.ICharSequence? text, int start, int end) -> Java.Lang.IAppendable?
+*REMOVED*virtual Android.Text.SpannableStringBuilder.Append(char text) -> Java.Lang.IAppendable?
+*REMOVED*virtual Android.Text.SpannableStringBuilder.SubSequenceFormatted(int start, int end) -> Java.Lang.ICharSequence?
+*REMOVED*virtual Android.Text.Style.BulletSpan.DrawLeadingMargin(Android.Graphics.Canvas! canvas, Android.Graphics.Paint! paint, int x, int dir, int top, int baseline, int bottom, Java.Lang.ICharSequence! text, int start, int end, bool first, Android.Text.Layout? layout) -> void
+*REMOVED*virtual Android.Text.Style.DrawableMarginSpan.ChooseHeight(Java.Lang.ICharSequence! text, int start, int end, int istartv, int v, Android.Graphics.Paint.FontMetricsInt! fm) -> void
+*REMOVED*virtual Android.Text.Style.DrawableMarginSpan.DrawLeadingMargin(Android.Graphics.Canvas! c, Android.Graphics.Paint! p, int x, int dir, int top, int baseline, int bottom, Java.Lang.ICharSequence! text, int start, int end, bool first, Android.Text.Layout! layout) -> void
+*REMOVED*virtual Android.Text.Style.LineHeightSpanStandard.ChooseHeight(Java.Lang.ICharSequence! text, int start, int end, int spanstartv, int lineHeight, Android.Graphics.Paint.FontMetricsInt! fm) -> void
+*REMOVED*virtual Android.Text.Style.QuoteSpan.DrawLeadingMargin(Android.Graphics.Canvas! c, Android.Graphics.Paint! p, int x, int dir, int top, int baseline, int bottom, Java.Lang.ICharSequence! text, int start, int end, bool first, Android.Text.Layout! layout) -> void
+*REMOVED*virtual Android.Text.TextUtils.SimpleStringSplitter.Iterator() -> Java.Util.IIterator?
+*REMOVED*virtual Java.IO.PrintStream.Append(Java.Lang.ICharSequence? csq) -> Java.Lang.IAppendable?
+*REMOVED*virtual Java.IO.PrintStream.Append(Java.Lang.ICharSequence? csq, int start, int end) -> Java.Lang.IAppendable?
+*REMOVED*virtual Java.IO.PrintStream.Append(char c) -> Java.Lang.IAppendable?
+*REMOVED*virtual Java.IO.Writer.Append(Java.Lang.ICharSequence? csq) -> Java.Lang.IAppendable?
+*REMOVED*virtual Java.IO.Writer.Append(Java.Lang.ICharSequence? csq, int start, int end) -> Java.Lang.IAppendable?
+*REMOVED*virtual Java.IO.Writer.Append(char c) -> Java.Lang.IAppendable?
+*REMOVED*virtual Java.Lang.AbstractStringBuilder.Append(Java.Lang.ICharSequence? s) -> Java.Lang.IAppendable?
+*REMOVED*virtual Java.Lang.AbstractStringBuilder.Append(Java.Lang.ICharSequence? s, int start, int end) -> Java.Lang.IAppendable?
+*REMOVED*virtual Java.Lang.AbstractStringBuilder.Append(char c) -> Java.Lang.IAppendable?
+*REMOVED*virtual Java.Lang.AbstractStringBuilder.SubSequenceFormatted(int start, int end) -> Java.Lang.ICharSequence?
+*REMOVED*virtual Java.Lang.Package.GetAnnotations() -> Java.Lang.Annotation.IAnnotation![]?
+*REMOVED*virtual Java.Lang.Package.GetDeclaredAnnotations() -> Java.Lang.Annotation.IAnnotation![]?
+*REMOVED*virtual Java.Util.Concurrent.ArrayBlockingQueue.Spliterator() -> Java.Util.ISpliterator?
+*REMOVED*virtual Java.Util.Concurrent.ConcurrentHashMap.Compute(Java.Lang.Object! key, Java.Util.Functions.IBiFunction! remappingFunction) -> Java.Lang.Object?
+*REMOVED*virtual Java.Util.Concurrent.ConcurrentHashMap.ComputeIfAbsent(Java.Lang.Object! key, Java.Util.Functions.IFunction! mappingFunction) -> Java.Lang.Object?
+*REMOVED*virtual Java.Util.Concurrent.ConcurrentHashMap.ComputeIfPresent(Java.Lang.Object! key, Java.Util.Functions.IBiFunction! remappingFunction) -> Java.Lang.Object?
+*REMOVED*virtual Java.Util.Concurrent.ConcurrentHashMap.ForEach(Java.Util.Functions.IBiConsumer! action) -> void
+*REMOVED*virtual Java.Util.Concurrent.ConcurrentHashMap.GetOrDefault(Java.Lang.Object! key, Java.Lang.Object? defaultValue) -> Java.Lang.Object?
+*REMOVED*virtual Java.Util.Concurrent.ConcurrentHashMap.Merge(Java.Lang.Object! key, Java.Lang.Object! value, Java.Util.Functions.IBiFunction! remappingFunction) -> Java.Lang.Object?
+*REMOVED*virtual Java.Util.Concurrent.ConcurrentHashMap.PutIfAbsent(Java.Lang.Object! key, Java.Lang.Object! value) -> Java.Lang.Object?
+*REMOVED*virtual Java.Util.Concurrent.ConcurrentHashMap.Remove(Java.Lang.Object! key, Java.Lang.Object? value) -> bool
+*REMOVED*virtual Java.Util.Concurrent.ConcurrentHashMap.Replace(Java.Lang.Object! key, Java.Lang.Object! oldValue, Java.Lang.Object! newValue) -> bool
+*REMOVED*virtual Java.Util.Concurrent.ConcurrentHashMap.Replace(Java.Lang.Object! key, Java.Lang.Object! value) -> Java.Lang.Object?
+*REMOVED*virtual Java.Util.Concurrent.ConcurrentHashMap.ReplaceAll(Java.Util.Functions.IBiFunction! function) -> void
+*REMOVED*virtual Java.Util.Concurrent.ConcurrentLinkedDeque.DescendingIterator() -> Java.Util.IIterator?
+*REMOVED*virtual Java.Util.Concurrent.ConcurrentLinkedDeque.Spliterator() -> Java.Util.ISpliterator?
+*REMOVED*virtual Java.Util.Concurrent.ConcurrentLinkedQueue.Spliterator() -> Java.Util.ISpliterator?
+*REMOVED*virtual Java.Util.Concurrent.CopyOnWriteArraySet.Spliterator() -> Java.Util.ISpliterator?
+*REMOVED*virtual Java.Util.Concurrent.LinkedBlockingDeque.DescendingIterator() -> Java.Util.IIterator?
+*REMOVED*virtual Java.Util.Concurrent.LinkedBlockingDeque.Spliterator() -> Java.Util.ISpliterator?
+*REMOVED*virtual Java.Util.Concurrent.LinkedBlockingQueue.Spliterator() -> Java.Util.ISpliterator?
+*REMOVED*virtual Java.Util.Concurrent.LinkedTransferQueue.Spliterator() -> Java.Util.ISpliterator?
+*REMOVED*virtual Java.Util.Concurrent.PriorityBlockingQueue.Spliterator() -> Java.Util.ISpliterator?
+*REMOVED*virtual Java.Util.Concurrent.SynchronousQueue.Spliterator() -> Java.Util.ISpliterator?
+*REMOVED*virtual Java.Util.Hashtable.EntrySet() -> System.Collections.ICollection?
+*REMOVED*virtual Java.Util.Hashtable.KeySet() -> System.Collections.ICollection?
+*REMOVED*virtual Java.Util.Hashtable.Values() -> System.Collections.ICollection?
+*REMOVED*virtual Java.Util.Jar.Attributes.EntrySet() -> System.Collections.ICollection?
+*REMOVED*virtual Java.Util.Jar.Attributes.KeySet() -> System.Collections.ICollection?
+*REMOVED*virtual Java.Util.Jar.Attributes.Values() -> System.Collections.ICollection?
+*REMOVED*virtual Java.Util.TreeSet.Spliterator() -> Java.Util.ISpliterator?
+Android.App.Notification.CarExtender.Extend(Android.App.Notification.Builder? builder) -> Android.App.Notification.Builder!
+Android.App.Notification.WearableExtender.Extend(Android.App.Notification.Builder? builder) -> Android.App.Notification.Builder!
+Android.Bluetooth.BluetoothA2dp.GetDevicesMatchingConnectionStates(Android.Bluetooth.ProfileState[]? states) -> System.Collections.Generic.IList<Android.Bluetooth.BluetoothDevice!>?
+Android.Bluetooth.BluetoothCsipSetCoordinator.GetDevicesMatchingConnectionStates(Android.Bluetooth.ProfileState[]? states) -> System.Collections.Generic.IList<Android.Bluetooth.BluetoothDevice!>!
+Android.Bluetooth.BluetoothGatt.GetDevicesMatchingConnectionStates(Android.Bluetooth.ProfileState[]? states) -> System.Collections.Generic.IList<Android.Bluetooth.BluetoothDevice!>?
+Android.Bluetooth.BluetoothGattServer.GetDevicesMatchingConnectionStates(Android.Bluetooth.ProfileState[]? states) -> System.Collections.Generic.IList<Android.Bluetooth.BluetoothDevice!>?
+Android.Bluetooth.BluetoothHeadset.GetDevicesMatchingConnectionStates(Android.Bluetooth.ProfileState[]? states) -> System.Collections.Generic.IList<Android.Bluetooth.BluetoothDevice!>?
+Android.Bluetooth.BluetoothHealth.GetDevicesMatchingConnectionStates(Android.Bluetooth.ProfileState[]? states) -> System.Collections.Generic.IList<Android.Bluetooth.BluetoothDevice!>?
+Android.Bluetooth.BluetoothHearingAid.GetConnectionState(Android.Bluetooth.BluetoothDevice? device) -> Android.Bluetooth.ProfileState
+Android.Bluetooth.BluetoothHearingAid.GetDevicesMatchingConnectionStates(Android.Bluetooth.ProfileState[]? states) -> System.Collections.Generic.IList<Android.Bluetooth.BluetoothDevice!>!
+Android.Bluetooth.BluetoothHidDevice.GetDevicesMatchingConnectionStates(Android.Bluetooth.ProfileState[]? states) -> System.Collections.Generic.IList<Android.Bluetooth.BluetoothDevice!>?
+Android.Bluetooth.BluetoothLeAudio.GetConnectionState(Android.Bluetooth.BluetoothDevice? device) -> Android.Bluetooth.ProfileState
+Android.Bluetooth.BluetoothLeAudio.GetDevicesMatchingConnectionStates(Android.Bluetooth.ProfileState[]? states) -> System.Collections.Generic.IList<Android.Bluetooth.BluetoothDevice!>!
+Android.Content.Res.IXmlResourceParser.GetAttributeName(int pos) -> string?
+Android.Content.Res.IXmlResourceParser.GetAttributeValue(int pos) -> string?
+Android.Content.Res.IXmlResourceParser.PositionDescription.get -> string?
+Android.Icu.Number.FormattedNumber.SubSequence(int start, int end) -> string!
+Android.Icu.Number.FormattedNumberRange.SubSequence(int start, int end) -> string!
+Android.Icu.Text.AlphabeticIndex.ImmutableIndex.Iterator() -> Java.Util.IIterator!
+Android.Icu.Text.AlphabeticIndex.Iterator() -> Java.Util.IIterator!
+Android.Icu.Text.DateIntervalFormat.FormattedDateInterval.SubSequence(int start, int end) -> string!
+Android.Icu.Text.DateIntervalFormat.FormattedDateInterval.SubSequenceFormatted(int start, int end) -> Java.Lang.ICharSequence!
+Android.Icu.Text.IFormattedValue.ToString() -> string!
+Android.Icu.Text.ListFormatter.FormattedList.SubSequence(int start, int end) -> string!
+Android.Icu.Text.ListFormatter.FormattedList.SubSequenceFormatted(int start, int end) -> Java.Lang.ICharSequence!
+Android.Icu.Text.RelativeDateTimeFormatter.FormattedRelativeDateTime.SubSequence(int start, int end) -> string!
+Android.Test.Mock.MockPackageManager.GetApplicationLabel(Android.Content.PM.ApplicationInfo? info) -> string!
+Android.Test.Mock.MockPackageManager.GetUserBadgedLabel(string? label, Android.OS.UserHandle? user) -> string!
+Android.Text.AlteredCharSequence.SubSequence(int start, int end) -> string!
+Android.Text.IEditable.Append(Java.Lang.ICharSequence? text) -> Java.Lang.IAppendable!
+Android.Text.IEditable.Append(Java.Lang.ICharSequence? text, int start, int end) -> Java.Lang.IAppendable!
+Android.Text.IEditable.Append(char text) -> Java.Lang.IAppendable!
+Android.Text.SpannableString.SubSequence(int start, int end) -> string!
+Android.Text.SpannableString.SubSequenceFormatted(int start, int end) -> Java.Lang.ICharSequence!
+Android.Text.SpannableStringBuilder.Append(string? text) -> Java.Lang.IAppendable!
+Android.Text.SpannableStringBuilder.Append(string? text, int start, int end) -> Java.Lang.IAppendable!
+Android.Text.SpannableStringBuilder.SubSequence(int start, int end) -> string!
+Android.Text.SpannedString.SubSequence(int start, int end) -> string!
+Android.Text.SpannedString.SubSequenceFormatted(int start, int end) -> Java.Lang.ICharSequence!
+Android.Text.Style.BulletSpan.DrawLeadingMargin(Android.Graphics.Canvas? canvas, Android.Graphics.Paint? paint, int x, int dir, int top, int baseline, int bottom, string? text, int start, int end, bool first, Android.Text.Layout? layout) -> void
+Android.Text.Style.DrawableMarginSpan.ChooseHeight(string? text, int start, int end, int istartv, int v, Android.Graphics.Paint.FontMetricsInt? fm) -> void
+Android.Text.Style.DrawableMarginSpan.DrawLeadingMargin(Android.Graphics.Canvas? c, Android.Graphics.Paint? p, int x, int dir, int top, int baseline, int bottom, string? text, int start, int end, bool first, Android.Text.Layout? layout) -> void
+Android.Text.Style.LineHeightSpanStandard.ChooseHeight(string? text, int start, int end, int spanstartv, int lineHeight, Android.Graphics.Paint.FontMetricsInt? fm) -> void
+Android.Text.Style.QuoteSpan.DrawLeadingMargin(Android.Graphics.Canvas? c, Android.Graphics.Paint? p, int x, int dir, int top, int baseline, int bottom, string? text, int start, int end, bool first, Android.Text.Layout? layout) -> void
+Android.Util.ArrayMap.EntrySet() -> System.Collections.ICollection!
+Android.Util.ArrayMap.KeySet() -> System.Collections.ICollection!
+Android.Util.ArrayMap.Values() -> System.Collections.ICollection!
+Android.Util.ArraySet.Iterator() -> Java.Util.IIterator!
+Android.Util.ArraySet.ToArray() -> Java.Lang.Object![]!
+Android.Util.ArraySet.ToArray(Java.Lang.Object![]? array) -> Java.Lang.Object![]!
+Java.IO.PrintStream.Append(string? csq) -> Java.Lang.IAppendable!
+Java.IO.PrintStream.Append(string? csq, int start, int end) -> Java.Lang.IAppendable!
+Java.IO.PrintStream.AppendAsync(Java.Lang.ICharSequence? csq) -> System.Threading.Tasks.Task<Java.Lang.IAppendable!>!
+Java.IO.PrintStream.AppendAsync(Java.Lang.ICharSequence? csq, int start, int end) -> System.Threading.Tasks.Task<Java.Lang.IAppendable!>!
+Java.IO.PrintStream.AppendAsync(char c) -> System.Threading.Tasks.Task<Java.Lang.IAppendable!>!
+Java.IO.Writer.Append(string? csq) -> Java.Lang.IAppendable!
+Java.IO.Writer.Append(string? csq, int start, int end) -> Java.Lang.IAppendable!
+Java.IO.Writer.AppendAsync(Java.Lang.ICharSequence? csq) -> System.Threading.Tasks.Task<Java.Lang.IAppendable!>!
+Java.IO.Writer.AppendAsync(Java.Lang.ICharSequence? csq, int start, int end) -> System.Threading.Tasks.Task<Java.Lang.IAppendable!>!
+Java.IO.Writer.AppendAsync(char c) -> System.Threading.Tasks.Task<Java.Lang.IAppendable!>!
+Java.Lang.AbstractStringBuilder.Append(string? s) -> Java.Lang.IAppendable!
+Java.Lang.AbstractStringBuilder.Append(string? s, int start, int end) -> Java.Lang.IAppendable!
+Java.Lang.AbstractStringBuilder.SubSequence(int start, int end) -> string!
+Java.Nio.CharBuffer.SubSequence(int start, int end) -> string!
+Java.Nio.FileNio.IDirectoryStream.Iterator() -> Java.Util.IIterator!
+Java.Nio.FileNio.IPath.Iterator() -> Java.Util.IIterator!
+Java.Util.Concurrent.IBlockingDeque.Iterator() -> Java.Util.IIterator!
+Java.Util.INavigableSet.Iterator() -> Java.Util.IIterator!
+Java.Util.PriorityQueue.Spliterator() -> Java.Util.ISpliterator!
+Java.Util.ServiceLoader.Iterator() -> Java.Util.IIterator!
+abstract Android.Net.Uri.ToString() -> string!
+abstract Android.Text.SpannableStringInternal.ToString() -> string!
+abstract Java.Lang.AbstractStringBuilder.ToString() -> string!
+abstract Java.Nio.CharBuffer.SubSequenceFormatted(int start, int end) -> Java.Lang.ICharSequence!
+abstract Java.Security.Cert.CRL.ToString() -> string!
+abstract Java.Security.Cert.Certificate.ToString() -> string!
+abstract Java.Security.Cert.X509CRLEntry.ToString() -> string!
+abstract Java.Util.Prefs.Preferences.ToString() -> string!
+abstract Javax.Security.Cert.Certificate.ToString() -> string!
+override Android.AdServices.OnDevicePersonalization.IsolatedService.OnBind(Android.Content.Intent? intent) -> Android.OS.IBinder?
+override Android.App.Admin.DeviceAdminReceiver.OnReceive(Android.Content.Context? context, Android.Content.Intent? intent) -> void
+override Android.App.MediaRouteActionProvider.OnCreateActionView() -> Android.Views.View!
+override Android.Media.MediaRoute2ProviderService.OnBind(Android.Content.Intent? intent) -> Android.OS.IBinder?
+override Android.Media.MediaSession2Service.OnBind(Android.Content.Intent? intent) -> Android.OS.IBinder?
+override Android.Media.Midi.MidiUmpDeviceService.OnBind(Android.Content.Intent? intent) -> Android.OS.IBinder?
+override Android.Service.Carrier.CarrierMessagingService.OnBind(Android.Content.Intent? intent) -> Android.OS.IBinder?
+override Android.Service.QuickAccessWallet.QuickAccessWalletService.OnBind(Android.Content.Intent? intent) -> Android.OS.IBinder?
+override Android.Test.Mock.MockPackageManager.DefaultActivityIcon.get -> Android.Graphics.Drawables.Drawable!
+override Android.Test.Mock.MockPackageManager.GetActivityIcon(Android.Content.ComponentName? activityName) -> Android.Graphics.Drawables.Drawable!
+override Android.Test.Mock.MockPackageManager.GetActivityIcon(Android.Content.Intent? intent) -> Android.Graphics.Drawables.Drawable!
+override Android.Test.Mock.MockPackageManager.GetActivityInfo(Android.Content.ComponentName? className, Android.Content.PM.PackageInfoFlags flags) -> Android.Content.PM.ActivityInfo!
+override Android.Test.Mock.MockPackageManager.GetAllPermissionGroups(Android.Content.PM.PackageInfoFlags flags) -> System.Collections.Generic.IList<Android.Content.PM.PermissionGroupInfo!>!
+override Android.Test.Mock.MockPackageManager.GetApplicationIcon(Android.Content.PM.ApplicationInfo? info) -> Android.Graphics.Drawables.Drawable!
+override Android.Test.Mock.MockPackageManager.GetApplicationIcon(string? packageName) -> Android.Graphics.Drawables.Drawable!
+override Android.Test.Mock.MockPackageManager.GetApplicationInfo(string? packageName, Android.Content.PM.PackageInfoFlags flags) -> Android.Content.PM.ApplicationInfo!
+override Android.Test.Mock.MockPackageManager.GetApplicationLabelFormatted(Android.Content.PM.ApplicationInfo? info) -> Java.Lang.ICharSequence!
+override Android.Test.Mock.MockPackageManager.GetInstalledApplications(Android.Content.PM.PackageInfoFlags flags) -> System.Collections.Generic.IList<Android.Content.PM.ApplicationInfo!>!
+override Android.Test.Mock.MockPackageManager.GetInstalledPackages(Android.Content.PM.PackageInfoFlags flags) -> System.Collections.Generic.IList<Android.Content.PM.PackageInfo!>!
+override Android.Test.Mock.MockPackageManager.GetInstantAppCookie() -> byte[]!
+override Android.Test.Mock.MockPackageManager.GetInstrumentationInfo(Android.Content.ComponentName? className, Android.Content.PM.PackageInfoFlags flags) -> Android.Content.PM.InstrumentationInfo!
+override Android.Test.Mock.MockPackageManager.GetPackagesHoldingPermissions(string![]? permissions, Android.Content.PM.PackageInfoFlags flags) -> System.Collections.Generic.IList<Android.Content.PM.PackageInfo!>!
+override Android.Test.Mock.MockPackageManager.GetPermissionGroupInfo(string? name, Android.Content.PM.PackageInfoFlags flags) -> Android.Content.PM.PermissionGroupInfo!
+override Android.Test.Mock.MockPackageManager.GetPreferredPackages(Android.Content.PM.PackageInfoFlags flags) -> System.Collections.Generic.IList<Android.Content.PM.PackageInfo!>!
+override Android.Test.Mock.MockPackageManager.GetProviderInfo(Android.Content.ComponentName? className, Android.Content.PM.PackageInfoFlags flags) -> Android.Content.PM.ProviderInfo!
+override Android.Test.Mock.MockPackageManager.GetReceiverInfo(Android.Content.ComponentName? className, Android.Content.PM.PackageInfoFlags flags) -> Android.Content.PM.ActivityInfo!
+override Android.Test.Mock.MockPackageManager.GetResourcesForActivity(Android.Content.ComponentName? activityName) -> Android.Content.Res.Resources!
+override Android.Test.Mock.MockPackageManager.GetResourcesForApplication(Android.Content.PM.ApplicationInfo? app) -> Android.Content.Res.Resources!
+override Android.Test.Mock.MockPackageManager.GetResourcesForApplication(string? appPackageName) -> Android.Content.Res.Resources!
+override Android.Test.Mock.MockPackageManager.GetServiceInfo(Android.Content.ComponentName? className, Android.Content.PM.PackageInfoFlags flags) -> Android.Content.PM.ServiceInfo!
+override Android.Test.Mock.MockPackageManager.GetSharedLibraries(Android.Content.PM.PackageInstallReason flags) -> System.Collections.Generic.IList<Android.Content.PM.SharedLibraryInfo!>!
+override Android.Test.Mock.MockPackageManager.GetSystemAvailableFeatures() -> Android.Content.PM.FeatureInfo![]!
+override Android.Test.Mock.MockPackageManager.GetUserBadgedDrawableForDensity(Android.Graphics.Drawables.Drawable? drawable, Android.OS.UserHandle? user, Android.Graphics.Rect? badgeLocation, int badgeDensity) -> Android.Graphics.Drawables.Drawable!
+override Android.Test.Mock.MockPackageManager.GetUserBadgedIcon(Android.Graphics.Drawables.Drawable? icon, Android.OS.UserHandle? user) -> Android.Graphics.Drawables.Drawable!
+override Android.Test.Mock.MockPackageManager.GetUserBadgedLabelFormatted(Java.Lang.ICharSequence? label, Android.OS.UserHandle? user) -> Java.Lang.ICharSequence!
+override Android.Test.Mock.MockPackageManager.PackageInstaller.get -> Android.Content.PM.PackageInstaller!
+override Android.Test.Mock.MockPackageManager.QueryBroadcastReceivers(Android.Content.Intent? intent, Android.Content.PM.PackageInfoFlags flags) -> System.Collections.Generic.IList<Android.Content.PM.ResolveInfo!>!
+override Android.Test.Mock.MockPackageManager.QueryContentProviders(string? processName, int uid, Android.Content.PM.PackageInfoFlags flags) -> System.Collections.Generic.IList<Android.Content.PM.ProviderInfo!>!
+override Android.Test.Mock.MockPackageManager.QueryInstrumentation(string? targetPackage, Android.Content.PM.PackageInfoFlags flags) -> System.Collections.Generic.IList<Android.Content.PM.InstrumentationInfo!>!
+override Android.Test.Mock.MockPackageManager.QueryIntentActivities(Android.Content.Intent? intent, Android.Content.PM.PackageInfoFlags flags) -> System.Collections.Generic.IList<Android.Content.PM.ResolveInfo!>!
+override Android.Test.Mock.MockPackageManager.QueryIntentActivityOptions(Android.Content.ComponentName? caller, Android.Content.Intent![]? specifics, Android.Content.Intent? intent, Android.Content.PM.PackageInfoFlags flags) -> System.Collections.Generic.IList<Android.Content.PM.ResolveInfo!>!
+override Android.Test.Mock.MockPackageManager.QueryIntentContentProviders(Android.Content.Intent? intent, Android.Content.PM.PackageInfoFlags flags) -> System.Collections.Generic.IList<Android.Content.PM.ResolveInfo!>!
+override Android.Test.Mock.MockPackageManager.QueryIntentServices(Android.Content.Intent? intent, Android.Content.PM.PackageInfoFlags flags) -> System.Collections.Generic.IList<Android.Content.PM.ResolveInfo!>!
+override Android.Test.Mock.MockPackageManager.QueryPermissionsByGroup(string? group, Android.Content.PM.PackageInfoFlags flags) -> System.Collections.Generic.IList<Android.Content.PM.PermissionInfo!>!
+override Android.Text.Method.DialerKeyListener.GetAcceptedChars() -> char[]!
+override Android.Text.Method.DigitsKeyListener.GetAcceptedChars() -> char[]!
+override Android.Text.SpannedString.ToString() -> string!
+override Android.Text.Style.AbsoluteSizeSpan.UpdateDrawState(Android.Text.TextPaint? ds) -> void
+override Android.Text.Style.BackgroundColorSpan.UpdateDrawState(Android.Text.TextPaint? textPaint) -> void
+override Android.Text.Style.ClickableSpan.UpdateDrawState(Android.Text.TextPaint? ds) -> void
+override Android.Text.Style.ForegroundColorSpan.UpdateDrawState(Android.Text.TextPaint? textPaint) -> void
+override Android.Text.Style.RelativeSizeSpan.UpdateDrawState(Android.Text.TextPaint? ds) -> void
+override Android.Text.Style.StrikethroughSpan.UpdateDrawState(Android.Text.TextPaint? ds) -> void
+override Android.Text.Style.SubscriptSpan.UpdateDrawState(Android.Text.TextPaint? textPaint) -> void
+override Android.Text.Style.SuggestionRangeSpan.UpdateDrawState(Android.Text.TextPaint? tp) -> void
+override Android.Text.Style.SuperscriptSpan.UpdateDrawState(Android.Text.TextPaint? textPaint) -> void
+override Android.Text.Style.TypefaceSpan.UpdateDrawState(Android.Text.TextPaint? ds) -> void
+override Android.Text.Style.UnderlineSpan.UpdateDrawState(Android.Text.TextPaint? ds) -> void
+override Android.Views.Accessibility.AccessibilityEvent.Text.get -> System.Collections.Generic.IList<Java.Lang.ICharSequence!>!
+override Android.Widget.ArrayAdapter.GetView(int position, Android.Views.View? convertView, Android.Views.ViewGroup? parent) -> Android.Views.View!
+override Android.Widget.RemoteViews.RemoteViewOutlineProvider.GetOutline(Android.Views.View? view, Android.Graphics.Outline? outline) -> void
+override Android.Widget.ShareActionProvider.OnCreateActionView() -> Android.Views.View!
+override Java.Lang.Reflect.Constructor.GetExceptionTypes() -> Java.Lang.Class![]!
+override Java.Lang.Reflect.Constructor.GetGenericExceptionTypes() -> Java.Lang.Reflect.IType![]!
+override Java.Lang.Reflect.Constructor.GetGenericParameterTypes() -> Java.Lang.Reflect.IType![]!
+override Java.Lang.Reflect.Constructor.GetParameterAnnotations() -> Java.Lang.Annotation.IAnnotation![]![]!
+override Java.Lang.Reflect.Constructor.GetTypeParameters() -> Java.Lang.Reflect.ITypeVariable![]!
+override Java.Lang.Reflect.Method.GetGenericExceptionTypes() -> Java.Lang.Reflect.IType![]!
+override Java.Lang.Reflect.Method.GetGenericParameterTypes() -> Java.Lang.Reflect.IType![]!
+override Java.Lang.StringBuffer.IndexOf(string? str) -> int
+override Java.Lang.StringBuffer.IndexOf(string? str, int fromIndex) -> int
+override Java.Lang.StringBuffer.LastIndexOf(string? str) -> int
+override Java.Lang.StringBuffer.LastIndexOf(string? str, int fromIndex) -> int
+override Java.Lang.StringBuffer.ToString() -> string!
+override Java.Lang.StringBuilder.IndexOf(string? str) -> int
+override Java.Lang.StringBuilder.IndexOf(string? str, int fromIndex) -> int
+override Java.Lang.StringBuilder.LastIndexOf(string? str) -> int
+override Java.Lang.StringBuilder.LastIndexOf(string? str, int fromIndex) -> int
+override Java.Lang.StringBuilder.ToString() -> string!
+override Java.Nio.MappedByteBuffer.Compact() -> Java.Nio.ByteBuffer!
+override Java.Nio.MappedByteBuffer.Duplicate() -> Java.Nio.ByteBuffer!
+override Java.Nio.MappedByteBuffer.Slice() -> Java.Nio.ByteBuffer!
+override Java.Nio.MappedByteBuffer.Slice(int index, int length) -> Java.Nio.MappedByteBuffer!
+override Java.Security.Spec.ECGenParameterSpec.Name.get -> string!
+override Java.Text.ChoiceFormat.Format(double number, Java.Lang.StringBuffer? toAppendTo, Java.Text.FieldPosition? status) -> Java.Lang.StringBuffer!
+override Java.Text.ChoiceFormat.Format(long number, Java.Lang.StringBuffer? toAppendTo, Java.Text.FieldPosition? status) -> Java.Lang.StringBuffer!
+override Java.Text.DateFormat.ParseObject(string? source, Java.Text.ParsePosition? pos) -> Java.Lang.Object?
+override Java.Text.DecimalFormat.Format(double number, Java.Lang.StringBuffer? result, Java.Text.FieldPosition? fieldPosition) -> Java.Lang.StringBuffer!
+override Java.Text.DecimalFormat.Format(long number, Java.Lang.StringBuffer? result, Java.Text.FieldPosition? fieldPosition) -> Java.Lang.StringBuffer!
+override Java.Text.NumberFormat.Format(Java.Lang.Object? number, Java.Lang.StringBuffer? toAppendTo, Java.Text.FieldPosition? pos) -> Java.Lang.StringBuffer!
+override Java.Text.SimpleDateFormat.Format(Java.Util.Date? date, Java.Lang.StringBuffer? toAppendTo, Java.Text.FieldPosition? pos) -> Java.Lang.StringBuffer!
+override Java.Util.Concurrent.ArrayBlockingQueue.Iterator() -> Java.Util.IIterator!
+override Java.Util.Concurrent.ConcurrentLinkedDeque.Iterator() -> Java.Util.IIterator!
+override Java.Util.Concurrent.ConcurrentLinkedQueue.Iterator() -> Java.Util.IIterator!
+override Java.Util.Concurrent.ConcurrentSkipListMap.EntrySet() -> System.Collections.ICollection!
+override Java.Util.Concurrent.CopyOnWriteArraySet.Iterator() -> Java.Util.IIterator!
+override Java.Util.Concurrent.DelayQueue.Iterator() -> Java.Util.IIterator!
+override Java.Util.Concurrent.LinkedBlockingDeque.Iterator() -> Java.Util.IIterator!
+override Java.Util.Concurrent.LinkedBlockingQueue.Iterator() -> Java.Util.IIterator!
+override Java.Util.Concurrent.LinkedTransferQueue.Iterator() -> Java.Util.IIterator!
+override Java.Util.Concurrent.PriorityBlockingQueue.Iterator() -> Java.Util.IIterator!
+override Java.Util.Concurrent.SynchronousQueue.Iterator() -> Java.Util.IIterator!
+override Java.Util.EnumMap.EntrySet() -> System.Collections.ICollection!
+override Java.Util.IdentityHashMap.EntrySet() -> System.Collections.ICollection!
+override Java.Util.Prefs.AbstractPreferences.ToString() -> string!
+override Java.Util.PriorityQueue.Iterator() -> Java.Util.IIterator!
+override Java.Util.TreeSet.Iterator() -> Java.Util.IIterator!
+override sealed Android.App.Admin.DelegatedAdminReceiver.OnReceive(Android.Content.Context? context, Android.Content.Intent? intent) -> void
+override sealed Android.Companion.CompanionDeviceService.OnBind(Android.Content.Intent? intent) -> Android.OS.IBinder?
+override sealed Android.Media.TV.Interactive.TvInteractiveAppService.OnBind(Android.Content.Intent? intent) -> Android.OS.IBinder?
+override sealed Android.Provider.CloudMediaProvider.AttachInfo(Android.Content.Context? context, Android.Content.PM.ProviderInfo? info) -> void
+override sealed Android.Provider.CloudMediaProvider.Insert(Android.Net.Uri! uri, Android.Content.ContentValues? values) -> Android.Net.Uri!
+override sealed Android.Provider.CloudMediaProvider.Update(Android.Net.Uri! uri, Android.Content.ContentValues? values, string? selection, string![]? selectionArgs) -> int
+override sealed Android.Service.Controls.ControlsProviderService.OnBind(Android.Content.Intent? intent) -> Android.OS.IBinder!
+override sealed Android.Service.Controls.ControlsProviderService.OnUnbind(Android.Content.Intent? intent) -> bool
+override sealed Android.Service.Credentials.CredentialProviderService.OnBind(Android.Content.Intent? intent) -> Android.OS.IBinder!
+override sealed Android.Telecom.CallRedirectionService.OnBind(Android.Content.Intent? intent) -> Android.OS.IBinder?
+override sealed Android.Telecom.CallRedirectionService.OnUnbind(Android.Content.Intent? intent) -> bool
+override sealed Android.Text.SpannableString.ToString() -> string!
+override sealed Android.Util.LruCache.ToString() -> string!
+override sealed Java.Lang.Invoke.VarHandle.ToString() -> string!
+override sealed Java.Nio.Channels.FileLock.ToString() -> string!
+override sealed Java.Nio.Charset.Charset.ToString() -> string!
+override sealed Java.Security.AlgorithmParameters.ToString() -> string!
+override sealed Java.Text.DateFormat.Format(Java.Lang.Object? obj, Java.Lang.StringBuffer? toAppendTo, Java.Text.FieldPosition? fieldPosition) -> Java.Lang.StringBuffer!
+override sealed Java.Text.DecimalFormat.Format(Java.Lang.Object? number, Java.Lang.StringBuffer? toAppendTo, Java.Text.FieldPosition? pos) -> Java.Lang.StringBuffer!
+override sealed Java.Text.NumberFormat.ParseObject(string? source, Java.Text.ParsePosition? pos) -> Java.Lang.Object?
+override sealed Java.Util.Locale.ToString() -> string!
+override sealed Org.Apache.Http.Conn.Routing.HttpRoute.ToString() -> string!
+override sealed Org.Apache.Http.Conn.Routing.RouteTracker.ToString() -> string!
+override sealed Org.Apache.Http.Conn.Schemes.Scheme.ToString() -> string!
+override sealed Org.Apache.Http.Conn.Ssl.AllowAllHostnameVerifier.ToString() -> string!
+override sealed Org.Apache.Http.Conn.Ssl.BrowserCompatHostnameVerifier.ToString() -> string!
+override sealed Org.Apache.Http.Conn.Ssl.StrictHostnameVerifier.ToString() -> string!
+static Android.Text.IEditableExtensions.Append(this Android.Text.IEditable! self, string? text) -> Java.Lang.IAppendable!
+static Android.Text.IEditableExtensions.Append(this Android.Text.IEditable! self, string? text, int start, int end) -> Java.Lang.IAppendable!
+virtual Android.App.DatePickerDialog.OnClick(Android.Content.IDialogInterface? dialog, int which) -> void
+virtual Android.App.DatePickerDialog.OnDateChanged(Android.Widget.DatePicker? view, int year, int month, int dayOfMonth) -> void
+virtual Android.App.Dialog.DispatchGenericMotionEvent(Android.Views.MotionEvent? ev) -> bool
+virtual Android.App.Dialog.DispatchKeyEvent(Android.Views.KeyEvent? e) -> bool
+virtual Android.App.Dialog.DispatchKeyShortcutEvent(Android.Views.KeyEvent? e) -> bool
+virtual Android.App.Dialog.DispatchPopulateAccessibilityEvent(Android.Views.Accessibility.AccessibilityEvent? e) -> bool
+virtual Android.App.Dialog.DispatchTouchEvent(Android.Views.MotionEvent? ev) -> bool
+virtual Android.App.Dialog.DispatchTrackballEvent(Android.Views.MotionEvent? ev) -> bool
+virtual Android.App.Dialog.OnKeyDown(Android.Views.Keycode keyCode, Android.Views.KeyEvent? e) -> bool
+virtual Android.App.Dialog.OnKeyLongPress(Android.Views.Keycode keyCode, Android.Views.KeyEvent? e) -> bool
+virtual Android.App.Dialog.OnKeyMultiple(Android.Views.Keycode keyCode, int repeatCount, Android.Views.KeyEvent? e) -> bool
+virtual Android.App.Dialog.OnKeyUp(Android.Views.Keycode keyCode, Android.Views.KeyEvent? e) -> bool
+virtual Android.App.Dialog.OnSearchRequested(Android.Views.SearchEvent? searchEvent) -> bool
+virtual Android.Icu.Number.FormattedNumber.SubSequenceFormatted(int start, int end) -> Java.Lang.ICharSequence!
+virtual Android.Icu.Number.FormattedNumberRange.SubSequenceFormatted(int start, int end) -> Java.Lang.ICharSequence!
+virtual Android.Icu.Text.AlphabeticIndex.Bucket.Iterator() -> Java.Util.IIterator!
+virtual Android.Icu.Text.RelativeDateTimeFormatter.FormattedRelativeDateTime.SubSequenceFormatted(int start, int end) -> Java.Lang.ICharSequence!
+virtual Android.Media.TV.Interactive.TvInteractiveAppService.Session.OnKeyDown(Android.Views.Keycode keyCode, Android.Views.KeyEvent? e) -> bool
+virtual Android.Media.TV.Interactive.TvInteractiveAppService.Session.OnKeyLongPress(Android.Views.Keycode keyCode, Android.Views.KeyEvent? e) -> bool
+virtual Android.Media.TV.Interactive.TvInteractiveAppService.Session.OnKeyMultiple(Android.Views.Keycode keyCode, int count, Android.Views.KeyEvent? e) -> bool
+virtual Android.Media.TV.Interactive.TvInteractiveAppService.Session.OnKeyUp(Android.Views.Keycode keyCode, Android.Views.KeyEvent? e) -> bool
+virtual Android.Text.AlteredCharSequence.SubSequenceFormatted(int start, int end) -> Java.Lang.ICharSequence!
+virtual Android.Text.SpannableStringBuilder.Append(Java.Lang.ICharSequence? text) -> Java.Lang.IAppendable!
+virtual Android.Text.SpannableStringBuilder.Append(Java.Lang.ICharSequence? text, int start, int end) -> Java.Lang.IAppendable!
+virtual Android.Text.SpannableStringBuilder.Append(char text) -> Java.Lang.IAppendable!
+virtual Android.Text.SpannableStringBuilder.SubSequenceFormatted(int start, int end) -> Java.Lang.ICharSequence!
+virtual Android.Text.Style.BulletSpan.DrawLeadingMargin(Android.Graphics.Canvas? canvas, Android.Graphics.Paint? paint, int x, int dir, int top, int baseline, int bottom, Java.Lang.ICharSequence? text, int start, int end, bool first, Android.Text.Layout? layout) -> void
+virtual Android.Text.Style.DrawableMarginSpan.ChooseHeight(Java.Lang.ICharSequence? text, int start, int end, int istartv, int v, Android.Graphics.Paint.FontMetricsInt? fm) -> void
+virtual Android.Text.Style.DrawableMarginSpan.DrawLeadingMargin(Android.Graphics.Canvas? c, Android.Graphics.Paint? p, int x, int dir, int top, int baseline, int bottom, Java.Lang.ICharSequence? text, int start, int end, bool first, Android.Text.Layout? layout) -> void
+virtual Android.Text.Style.LineHeightSpanStandard.ChooseHeight(Java.Lang.ICharSequence? text, int start, int end, int spanstartv, int lineHeight, Android.Graphics.Paint.FontMetricsInt? fm) -> void
+virtual Android.Text.Style.QuoteSpan.DrawLeadingMargin(Android.Graphics.Canvas? c, Android.Graphics.Paint? p, int x, int dir, int top, int baseline, int bottom, Java.Lang.ICharSequence? text, int start, int end, bool first, Android.Text.Layout? layout) -> void
+virtual Android.Text.TextUtils.SimpleStringSplitter.Iterator() -> Java.Util.IIterator!
+virtual Java.IO.PrintStream.Append(Java.Lang.ICharSequence? csq) -> Java.Lang.IAppendable!
+virtual Java.IO.PrintStream.Append(Java.Lang.ICharSequence? csq, int start, int end) -> Java.Lang.IAppendable!
+virtual Java.IO.PrintStream.Append(char c) -> Java.Lang.IAppendable!
+virtual Java.IO.Writer.Append(Java.Lang.ICharSequence? csq) -> Java.Lang.IAppendable!
+virtual Java.IO.Writer.Append(Java.Lang.ICharSequence? csq, int start, int end) -> Java.Lang.IAppendable!
+virtual Java.IO.Writer.Append(char c) -> Java.Lang.IAppendable!
+virtual Java.Lang.AbstractStringBuilder.Append(Java.Lang.ICharSequence? s) -> Java.Lang.IAppendable!
+virtual Java.Lang.AbstractStringBuilder.Append(Java.Lang.ICharSequence? s, int start, int end) -> Java.Lang.IAppendable!
+virtual Java.Lang.AbstractStringBuilder.Append(char c) -> Java.Lang.IAppendable!
+virtual Java.Lang.AbstractStringBuilder.SubSequenceFormatted(int start, int end) -> Java.Lang.ICharSequence!
+virtual Java.Lang.Package.GetAnnotations() -> Java.Lang.Annotation.IAnnotation![]!
+virtual Java.Lang.Package.GetDeclaredAnnotations() -> Java.Lang.Annotation.IAnnotation![]!
+virtual Java.Util.Concurrent.ArrayBlockingQueue.Spliterator() -> Java.Util.ISpliterator!
+virtual Java.Util.Concurrent.ConcurrentHashMap.Compute(Java.Lang.Object? key, Java.Util.Functions.IBiFunction? remappingFunction) -> Java.Lang.Object?
+virtual Java.Util.Concurrent.ConcurrentHashMap.ComputeIfAbsent(Java.Lang.Object? key, Java.Util.Functions.IFunction? mappingFunction) -> Java.Lang.Object?
+virtual Java.Util.Concurrent.ConcurrentHashMap.ComputeIfPresent(Java.Lang.Object? key, Java.Util.Functions.IBiFunction? remappingFunction) -> Java.Lang.Object?
+virtual Java.Util.Concurrent.ConcurrentHashMap.ForEach(Java.Util.Functions.IBiConsumer? action) -> void
+virtual Java.Util.Concurrent.ConcurrentHashMap.GetOrDefault(Java.Lang.Object? key, Java.Lang.Object? defaultValue) -> Java.Lang.Object?
+virtual Java.Util.Concurrent.ConcurrentHashMap.Merge(Java.Lang.Object? key, Java.Lang.Object? value, Java.Util.Functions.IBiFunction? remappingFunction) -> Java.Lang.Object?
+virtual Java.Util.Concurrent.ConcurrentHashMap.PutIfAbsent(Java.Lang.Object? key, Java.Lang.Object? value) -> Java.Lang.Object?
+virtual Java.Util.Concurrent.ConcurrentHashMap.Remove(Java.Lang.Object? key, Java.Lang.Object? value) -> bool
+virtual Java.Util.Concurrent.ConcurrentHashMap.Replace(Java.Lang.Object? key, Java.Lang.Object? oldValue, Java.Lang.Object? newValue) -> bool
+virtual Java.Util.Concurrent.ConcurrentHashMap.Replace(Java.Lang.Object? key, Java.Lang.Object? value) -> Java.Lang.Object?
+virtual Java.Util.Concurrent.ConcurrentHashMap.ReplaceAll(Java.Util.Functions.IBiFunction? function) -> void
+virtual Java.Util.Concurrent.ConcurrentLinkedDeque.DescendingIterator() -> Java.Util.IIterator!
+virtual Java.Util.Concurrent.ConcurrentLinkedDeque.Spliterator() -> Java.Util.ISpliterator!
+virtual Java.Util.Concurrent.ConcurrentLinkedQueue.Spliterator() -> Java.Util.ISpliterator!
+virtual Java.Util.Concurrent.CopyOnWriteArraySet.Spliterator() -> Java.Util.ISpliterator!
+virtual Java.Util.Concurrent.LinkedBlockingDeque.DescendingIterator() -> Java.Util.IIterator!
+virtual Java.Util.Concurrent.LinkedBlockingDeque.Spliterator() -> Java.Util.ISpliterator!
+virtual Java.Util.Concurrent.LinkedBlockingQueue.Spliterator() -> Java.Util.ISpliterator!
+virtual Java.Util.Concurrent.LinkedTransferQueue.Spliterator() -> Java.Util.ISpliterator!
+virtual Java.Util.Concurrent.PriorityBlockingQueue.Spliterator() -> Java.Util.ISpliterator!
+virtual Java.Util.Concurrent.SynchronousQueue.Spliterator() -> Java.Util.ISpliterator!
+virtual Java.Util.Hashtable.EntrySet() -> System.Collections.ICollection!
+virtual Java.Util.Hashtable.KeySet() -> System.Collections.ICollection!
+virtual Java.Util.Hashtable.Values() -> System.Collections.ICollection!
+virtual Java.Util.Jar.Attributes.EntrySet() -> System.Collections.ICollection!
+virtual Java.Util.Jar.Attributes.KeySet() -> System.Collections.ICollection!
+virtual Java.Util.Jar.Attributes.Values() -> System.Collections.ICollection!
+virtual Java.Util.TreeSet.Spliterator() -> Java.Util.ISpliterator!
