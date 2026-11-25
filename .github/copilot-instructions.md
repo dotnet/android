@@ -93,97 +93,13 @@ Follow [Unsafe code best practices](https://learn.microsoft.com/dotnet/standard/
 
 ## Nullable Reference Types
 
-When opting C# code into nullable reference types:
+Enable NRT in new files. Don't convert existing code to NRT unless asked. When enabling:
 
-* Only make the following changes when asked to do so.
-
-* Add `#nullable enable` at the top of the file without any preceding blank lines.
-
-* Don't *ever* use `!` (null-forgiving operator) to handle `null`! Always check for null explicitly and throw appropriate exceptions.
-
-* **In test code**, avoid `!` too. Common workarounds:
-  - `[SetUp]`-initialized fields: declare as nullable (`MockBuildEngine? engine;`) instead of `MockBuildEngine engine = null!;`
-  - After `Assert.IsNotNull`: extract into a local variable (`var opts = task.Options; Assert.IsNotNull (opts); opts.Foo...`) instead of using `task.Options!.Foo`
-
-* Declare variables non-nullable, and check for `null` at entry points.
-
-* Use `throw new ArgumentNullException (nameof (parameter))` in `netstandard2.0` projects.
-
-* Use `ArgumentNullException.ThrowIfNull (parameter)` in Android projects that will be .NET 10+.
-
-* `[Required]` properties in MSBuild task classes should always be non-nullable with a default value.
-
-* Non-`[Required]` properties should be nullable and have null-checks in C# code using them.
-
-* For MSBuild task properties like:
-
-```csharp
-public string NonRequiredProperty { get; set; }
-public ITaskItem [] NonRequiredItemGroup { get; set; }
-
-[Output]
-public string OutputProperty { get; set; }
-[Output]
-public ITaskItem [] OutputItemGroup { get; set; }
-
-[Required]
-public string RequiredProperty { get; set; }
-[Required]
-public ITaskItem [] RequiredItemGroup { get; set; }
-```
-
-Fix them such as:
-
-```csharp
-public string? NonRequiredProperty { get; set; }
-public ITaskItem []? NonRequiredItemGroup { get; set; }
-
-[Output]
-public string? OutputProperty { get; set; }
-[Output]
-public ITaskItem []? OutputItemGroup { get; set; }
-
-[Required]
-public string RequiredProperty { get; set; } = "";
-[Required]
-public ITaskItem [] RequiredItemGroup { get; set; } = [];
-```
-
-If you see a `string.IsNullOrEmpty()` check:
-
-```csharp
-if (!string.IsNullOrEmpty (NonRequiredProperty)) {
-    // Code here
-}
-```
-
-Convert this to use the extension method:
-
-```csharp
-if (!NonRequiredProperty.IsNullOrEmpty ()) {
-    // Code here
-}
-```
-
-If you see a `string.IsNullOrWhiteSpace()` check:
-
-```csharp
-if (!string.IsNullOrWhiteSpace (UncompressedFileExtensions)) {
-    foreach (var ext in UncompressedFileExtensions.Split (new char [] { ';', ',' }, StringSplitOptions.RemoveEmptyEntries)) {
-        // Code here
-    }
-}
-```
-
-Convert this to use the extension method:
-
-```csharp
-if (!UncompressedFileExtensions.IsNullOrWhiteSpace ()) {
-    foreach (var ext in UncompressedFileExtensions.Split (new char [] { ';', ',' }, StringSplitOptions.RemoveEmptyEntries)) {
-        // Code here
-    }
-}
-```
+- Add `#nullable enable` as the first line (unless the project enables `Nullable`).
+- Never use `!` (null-forgiving), in tests too: make `[SetUp]` fields nullable, or copy to a local after `Assert.IsNotNull`.
+- Check `null` at entry points: `ArgumentNullException.ThrowIfNull` on .NET 10+, `throw new ArgumentNullException (nameof (x))` on `netstandard2.0`.
+- MSBuild tasks: `[Required]` properties are non-nullable with a default (`= ""`, `= []`); other and `[Output]` properties are nullable.
+- On `netstandard2.0`, use the `str.IsNullOrEmpty ()`/`str.IsNullOrWhiteSpace ()` extensions instead of the static `string` methods.
 
 ## Formatting
 
@@ -216,13 +132,11 @@ try {
 
 ### Validate locally before pushing
 
-**Build and test code changes locally before pushing or opening a PR.** Building the full SDK is a normal part of development, not something to avoid because it is assumed to be slow. CI provides additional coverage; it is not a substitute for local validation or the first place to discover whether a change builds.
+Build and test code changes locally before pushing; CI is not the first validation. Building the full SDK (`make prepare && make leeroy`, or `build.cmd`) is normal work: don't ask to skip it because of presumed build time. Run the relevant tests against the local SDK (`tests` skill), including on-device tests for runtime, JNI, and native changes. If blocked, report the exact command, failure, and what remains unvalidated. Report the commands and outcomes in the handoff. Documentation-only changes need no build.
 
-- **Prepare and build the SDK when needed.** On macOS/Linux, run `make prepare && make leeroy`; on Windows, run `build.cmd`. Use the configuration required by the affected tests (for example, `make prepare CONFIGURATION=Release && make leeroy CONFIGURATION=Release`). A missing local SDK is a reason to prepare and build it, not to offer skipping full-build tests. Rebuild after source changes so tests exercise the updated SDK, not stale binaries.
-- **Run the relevant tests against the locally built SDK.** Use `dotnet-local.sh`/`dotnet-local.cmd` for full-build tests; standalone tests can use plain `dotnet test`. Consult `.github/skills/tests/SKILL.md` and its test catalog for commands and coverage. Start with focused tests while iterating, then expand coverage for cross-cutting changes. Runtime, JNI, and native changes need the relevant on-device tests, not just host-side unit tests; exercise the affected runtime, ABI, and build properties.
-- **Do not ask whether to skip validation solely because of presumed build time.** Proceed with the required local build and tests unless the user explicitly limits validation or a concrete environment constraint prevents it. If blocked, report the exact command, failure or missing prerequisite, and what remains unvalidated. Do not push known regressions or use repeated CI runs to debug them.
-- **Record actual validation results.** Report the build/test commands and their outcomes when handing off code changes or preparing a PR. Documentation-only changes do not require SDK compilation or device tests.
-- **Parallel sessions:** run at most one or two full SDK builds per host, give each device run its own emulator or serial, never stop processes or `adb` you didn't start, and queue heavy work instead of inventing lease protocols.
+### Adding tests
+
+Add a test only for new behavior or a fixed bug that existing tests miss, and only if it would fail without the change. Don't add tests for refactors, moves, renames, removals, or trivial code, and don't test implementation details or that removed code is gone. Prefer extending an existing test; explain each new test in the PR.
 
 **Modifying project files in tests:** Never use `File.WriteAllText()` directly to update project source files. Instead, use the `Xamarin.ProjectTools` infrastructure:
 
@@ -257,19 +171,7 @@ This pattern ensures proper encoding, timestamps, and file attributes are handle
 
 When diagnosing runtime, build, or test failures, follow these practices. They exist because the .NET ↔ JNI ↔ C++ ↔ generated-native stack is loosely coupled and static reasoning alone is unreliable.
 
-- **Reproduce CI failures locally — do not iterate through CI.** A clean local test cycle is minutes; a CI iteration is hours. Run device tests the same way CI does:
-  ```bash
-  make prepare CONFIGURATION=Release && make leeroy CONFIGURATION=Release
-  ./dotnet-local.sh build -t:Install -c Release \
-      tests/Mono.Android-Tests/Mono.Android-Tests/Mono.Android.NET-Tests.csproj
-  (
-      cd tests/Mono.Android-Tests/Mono.Android-Tests
-      ../../../dotnet-local.sh test Mono.Android.NET-Tests.csproj --no-build -c Release \
-          --report-trx --results-directory ../../../bin/TestRelease/TestResults
-  )
-  ```
-  On Windows, use `build.cmd` and `dotnet-local.cmd` instead of `make`/`dotnet-local.sh`.
-  Results land in `.trx` files under `bin/TestRelease/TestResults`.
+- **Reproduce CI failures locally — do not iterate through CI.** A local cycle is minutes; a CI iteration is hours. Use the `tests` skill for the same commands CI runs (including `Mono.Android.NET-Tests` on device).
 
 - **When the build gets into a weird state, delete `bin/` and `obj/` and rebuild from scratch.** Stale incremental output causes phantom errors. See **Troubleshooting → Build** below.
 

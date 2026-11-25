@@ -100,7 +100,7 @@ For each changed file, check against the review rules. Record issues as:
 2. **Safety** — thread safety, resource leaks, security vulnerabilities
 3. **Performance** — O(n²) patterns, unnecessary allocations, missing caches, startup-time regressions
 4. **Trimmer/NativeAOT compatibility** — reflection without `[DynamicallyAccessedMembers]`, `Type.GetType()` misuse
-5. **Missing tests** — untested error paths, edge cases, missing regression tests for bug fixes
+5. **Tests** — a fixed bug or new behavior that no test covers; low-value new tests (see `testing-rules.md`)
 6. **Code duplication** — near-identical methods that should be consolidated
 7. **Consistency** — dedup patterns mixed within the same PR, API return types inconsistent with repo conventions
 8. **Documentation** — misleading comments, undocumented behavioral decisions

@@ -46,5 +46,5 @@ On Windows, run `build.cmd`.
 - Build the full SDK only when the change requires it (see the validation table in the `tests` skill).
 - Run at most one or two full builds at once; cap others with `MSBUILD_ARGS='-m:4'`.
 - Queue heavy builds and device runs; don't invent lease protocols between sessions.
-- Never kill processes you didn't start.
+- Never kill processes you didn't start, and never `Clean`/`Rebuild` toolchain projects (for example `java-runtime`): their Clean deletes the shared `~/android-toolchain/jdk-*`.
 - Before fanning out, check that no existing PR, branch, or session already covers the work.
