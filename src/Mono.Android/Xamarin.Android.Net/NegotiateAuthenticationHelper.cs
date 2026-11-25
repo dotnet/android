@@ -23,7 +23,9 @@ namespace Xamarin.Android.Net
 		}
 
 		internal static bool RequestNeedsNegotiateAuthentication (
+#pragma warning disable CS0618 // Internal authentication helper for obsolete AndroidMessageHandler.
 			AndroidMessageHandler handler,
+#pragma warning restore CS0618
 			HttpRequestMessage request,
 			[NotNullWhen (true)] out RequestedNegotiateAuthenticationData? requestedAuth)
 		{
@@ -51,7 +53,9 @@ namespace Xamarin.Android.Net
 		}
 
 		internal static async Task <HttpResponseMessage?> SendWithAuthAsync (
+#pragma warning disable CS0618 // Internal authentication helper for obsolete AndroidMessageHandler.
 			AndroidMessageHandler handler,
+#pragma warning restore CS0618
 			HttpRequestMessage request,
 			RequestedNegotiateAuthenticationData requestedAuth,
 			CancellationToken cancellationToken)
@@ -92,7 +96,9 @@ namespace Xamarin.Android.Net
 		}
 
 		static async Task <HttpResponseMessage?> DoSendWithAuthAsync (
+#pragma warning disable CS0618 // Internal authentication helper for obsolete AndroidMessageHandler.
 			AndroidMessageHandler handler,
+#pragma warning restore CS0618
 			HttpRequestMessage request,
 			NegotiateAuthentication authContext,
 			RequestedNegotiateAuthenticationData requestedAuth,
@@ -140,7 +146,9 @@ namespace Xamarin.Android.Net
 		}
 
 		static async Task<string> GetTargetName (
+#pragma warning disable CS0618 // Internal authentication helper for obsolete AndroidMessageHandler.
 			AndroidMessageHandler handler,
+#pragma warning restore CS0618
 			HttpRequestMessage request,
 			bool isProxyAuth,
 			CancellationToken cancellationToken)
@@ -150,7 +158,9 @@ namespace Xamarin.Android.Net
 		}
 
 		static async Task<string> GetHostName (
+#pragma warning disable CS0618 // Internal authentication helper for obsolete AndroidMessageHandler.
 			AndroidMessageHandler handler,
+#pragma warning restore CS0618
 			HttpRequestMessage request,
 			bool isProxyAuth,
 			CancellationToken cancellationToken)
