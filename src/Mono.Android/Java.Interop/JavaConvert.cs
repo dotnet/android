@@ -236,17 +236,9 @@ namespace Java.Interop {
 		{
 			bool consumed = false;
 			try {
-				if (elementType.IsGenericType) {
-					throw new NotSupportedException (
-						FormattableString.Invariant ($"Cannot convert Java collection elements to closed generic array element type '{elementType}'."));
-				}
-
-				// This path intentionally avoids the reflection fallback used by TrimmableTypeMap.CreateInstance ()
-				// because passing array element types there would require DAM annotations.  Closed generic element
-				// types cannot be supported without that fallback: creating a non-generic base peer would not be
-				// assignable to the requested closed generic array element type.  If the requested element type is
-				// already a non-generic base type, the typemap lookup can still select that base mapping.
-				var peer = TrimmableTypeMap.Instance.CreateInstanceWithoutReflectionFallback (handle, elementType);
+				// Closed generic element types are activated through the constructor that the generated proxy
+				// for their open generic definition preserves, so elementType needs no DAM annotation here.
+				var peer = TrimmableTypeMap.Instance.CreateInstance (handle, elementType);
 				if (peer != null) {
 					consumed = true;
 					unsafe {

@@ -220,6 +220,45 @@ namespace Java.InteropTests
 			AssertGetArrayActivatesElement<JniEnvGenericArrayElement<int>> ();
 		}
 
+		[TestMethod]
+		[TestCategory ("ConstructorParity")]
+		public void CollectionCopyToActivatesClosedGenericPeerElement ()
+		{
+			AssertCollectionCopyToActivatesElement<JniEnvGenericArrayElement<string>> ();
+			AssertCollectionCopyToActivatesElement<JniEnvGenericArrayElement<int>> ();
+		}
+
+		static void AssertCollectionCopyToActivatesElement<T> ()
+			where T : Java.Lang.Object, new ()
+		{
+			using var arrayList = new Java.Util.ArrayList ();
+			IntPtr elementHandle;
+			using (var element = new T ()) {
+				arrayList.Add (element);
+				elementHandle = JNIEnv.NewGlobalRef (element.Handle);
+			}
+			try {
+				// The managed element was disposed, so CopyTo must activate a new closed generic peer.
+				var values = new T [1];
+				using (var collection = new JavaCollection (arrayList.Handle, JniHandleOwnership.DoNotTransfer)) {
+					collection.CopyTo (values, 0);
+				}
+				Assert.IsNotNull (values [0]);
+				Assert.IsTrue (JNIEnv.IsSameObject (elementHandle, values [0].Handle));
+				values [0].Dispose ();
+
+				values = new T [1];
+				using (var list = new JavaList (arrayList.Handle, JniHandleOwnership.DoNotTransfer)) {
+					list.CopyTo (values, 0);
+				}
+				Assert.IsNotNull (values [0]);
+				Assert.IsTrue (JNIEnv.IsSameObject (elementHandle, values [0].Handle));
+				values [0].Dispose ();
+			} finally {
+				JNIEnv.DeleteGlobalRef (elementHandle);
+			}
+		}
+
 		static void AssertGetArrayActivatesElement<T> ()
 			where T : Java.Lang.Object, new ()
 		{
