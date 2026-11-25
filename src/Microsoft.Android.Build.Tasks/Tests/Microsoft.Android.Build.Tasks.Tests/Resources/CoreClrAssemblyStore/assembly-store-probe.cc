@@ -41,9 +41,10 @@ extern "C" void* assembly_store_probe_malloc (size_t size) noexcept
 	return std::malloc (size);
 }
 
-extern "C" size_t ZSTD_decompress (void*, size_t capacity, const void*, size_t) noexcept
+extern "C" size_t ZSTD_decompress (void *destination, size_t capacity, const void*, size_t) noexcept
 {
 	wait_for_second_call (decompressions);
+	std::memset (destination, 0x5a, capacity);
 	return capacity;
 }
 
@@ -130,8 +131,9 @@ int main (int argc, char **argv)
 		std::fprintf (stderr, "Expected one decompression, got %d\n", decompressions.load ());
 		return 1;
 	}
-	if (!is_compressed && static_cast<uint8_t*>(results [0]) [0] != 0x5a) {
-		std::fprintf (stderr, "Writable image has incorrect data\n");
+	auto image = static_cast<uint8_t*>(results [0]);
+	if (image [0] != 0x5a || image [image_size - 1] != 0x5a) {
+		std::fprintf (stderr, "Assembly image has incorrect data\n");
 		return 1;
 	}
 	return 0;
