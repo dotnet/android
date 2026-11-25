@@ -1,4 +1,6 @@
 #nullable enable
+*REMOVED*virtual Android.Locations.GnssNavigationMessage.Callback.OnStatusChanged(int status) -> Android.Locations.GnssNavigationStatus
+virtual Android.Locations.GnssNavigationMessage.Callback.OnStatusChanged(int status) -> void
 *REMOVED*Java.Lang.Object.~Object() -> void
 *REMOVED*Java.Lang.Throwable.~Throwable() -> void
 static unsafe Android.Runtime.JNIEnv.AllocObject(System.ReadOnlySpan<byte> jniClassName) -> nint

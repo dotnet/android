@@ -2042,7 +2042,6 @@
 24, android.location, GnssMeasurementsEvent.Callback, onStatusChanged, status, Android.Locations.GnssMeasurementCallbackStatus
 24, android.location, GnssNavigationMessage, getStatus, return, Android.Locations.GnssNavigationStatus
 24, android.location, GnssNavigationMessage, getType, return, Android.Locations.GnssNavigationType
-24, android.location, GnssNavigationMessage.Callback, onStatusChanged, return, Android.Locations.GnssNavigationStatus
 24, android.location, GnssStatus, getConstellationType, return, Android.Locations.GnssConstellationType
 
 24, android.media, AudioRecord, getTimestamp, timebase, Android.Media.AudioTimebase
