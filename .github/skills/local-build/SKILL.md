@@ -21,7 +21,6 @@ On Windows, run `build.cmd`.
 - Don't use `make all`. It skips `BuildExtraApiLevels`, so `ConfigureLocalWorkload` fails.
 - Pass extra flags via `MSBUILD_ARGS='...'`. Overriding `MSBUILD_FLAGS` drops `-p:Configuration`.
 - On failure, read `bin/Build<cfg>/msbuild-*.binlog` (for example `binlogtool search bin/Build<cfg>/msbuild-*.binlog "error"`; see "Analysis commands" in `.github/skills/ci-status/references/binlog-analysis.md`) rather than re-running verbosely.
-- If `ConfigureLocalWorkload` cannot find `Mono.Android.xml`, check `git submodule status -- external/android-api-docs`; if uninitialized, run `git submodule update --init external/android-api-docs` and rebuild the affected outputs.
 - `dotnet-local.sh` runs `bin/Release` whenever it exists, regardless of `CONFIGURATION`. To select another configuration, call `bin/<cfg>/dotnet/dotnet` directly with `PATH="$PWD/bin/<cfg>/dotnet:$PATH"` and the same workload roots the wrapper sets: `DOTNETSDK_WORKLOAD_MANIFEST_ROOTS="$PWD/bin/<cfg>/lib/sdk-manifests" DOTNETSDK_WORKLOAD_PACK_ROOTS="$PWD/bin/<cfg>/lib"`.
 - An existing `bin/<cfg>/dotnet` only means `make prepare` ran, not that the SDK was built.
 
