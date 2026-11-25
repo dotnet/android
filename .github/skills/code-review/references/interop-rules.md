@@ -17,31 +17,25 @@ native runtime, or TrimmableTypeMap paths.
 | **`JniTransition` for native callbacks** | Entry points from Java into managed code should use `JniTransition` to properly handle exception marshaling. Without it, managed exceptions propagate into the JVM as undefined behavior. |
 | **Exception checking after JNI calls** | After JNI calls that can throw (most of them), check for pending Java exceptions via `JniEnvironment.Errors.ExceptionOccurred()` or rely on the built-in checking in `JniPeerMembers` wrappers. Don't ignore JNI error return codes. |
 | **Thread-local JNI environments** | JNI environments are thread-local. Use `JniEnvironment.Current` to access the current thread's environment. Never cache a `JNIEnv*` across threads. |
-| **Retaining JNI handle owners (`GC.KeepAlive`)** | Reading `.Handle` / `.PeerReference` or passing a peer to `new JValue (peer)` / `new JniArgumentValue (peer)` does **not** keep the managed peer alive. On CoreCLR/NativeAOT, `JavaMarshalGCBridge` deletes and replaces the global ref of any managed-unreachable peer — even when the Java object is still alive (e.g., `java.lang.Class` or a receiver on the Java stack). Flag any borrowed handle passed to JNI/P/Invoke without a post-call `GC.KeepAlive` or enclosing `using`/`lock`. |
+| **Retaining JNI handle owners (`GC.KeepAlive`)** | `.Handle`/`.PeerReference`/`new JValue (peer)`/`new JniArgumentValue (peer)` copy raw handles without rooting peers. On CoreCLR/NativeAOT, Java reachability doesn't protect copied handles: `JavaMarshalGCBridge` deletes/replaces grefs of unreachable peers (even `java.lang.Class`), causing CheckJNI `use of deleted global reference` aborts. See checklist below. |
 
 ---
 
 ## JNI Peer Lifetimes (`GC.KeepAlive`) Review Checklist
 
-When reviewing `src/Java.Interop/`, `src/Mono.Android/`, `src/generator/`, or handwritten JNI bindings:
+Applies to `src/Java.Interop/`, `src/Mono.Android/`, `src/generator/`, and handwritten JNI:
 
 | Pattern | Severity | What to verify |
 |---------|----------|----------------|
-| **Raw `Handle` / `PeerReference` passed to JNI or P/Invoke** | ❌ error | Every borrowed owner (`this` and peer parameters) must remain reachable past the native call via `GC.KeepAlive (owner)` (or enclosing `using`/`lock`). Straight-line `GC.KeepAlive` after the call is fine when there is no exception cleanup; use `finally` when a `try`/`finally` block already exists or loops/multiple exits require it. |
-| **`WithLocalJniHandle` / `fixed` false sense of safety** | ❌ error | `JavaConvert.WithLocalJniHandle (arg, lref => ... Handle ...)` keeps `arg` alive, **not** `this` (closures die once `Handle` is read). `fixed (T* p = arr)` pins `arr`, **not** `this`. Require `GC.KeepAlive (this)` after the call. |
-| **`NewLocalRef ()` on a peer's `PeerReference`** | ❌ error | Reading `peer.PeerReference` (including `ConditionalWeakTable` proxies) and calling `.NewLocalRef ()` requires `GC.KeepAlive (peer)` afterward. Also read `PeerReference` once into a local before checking `.IsValid` to avoid double-read races. |
-| **`new JValue (peer)` / `new JniArgumentValue (peer)`** | ❌ error | Both copy the raw handle without rooting `peer`. Verify `GC.KeepAlive (peer)` follows the JNI call (e.g., `JavaList.Set`, handwritten constructors). |
-| **Handwritten `JNIEnv.FinishCreateInstance (Handle, ...)`** | ❌ error | Passes a raw `Handle` without retaining `this`. Require `GC.KeepAlive (this)` after the call. Note that `JniPeerMembers.InstanceMethods.FinishCreateInstance` does not retain `self` on `main` until #13758 lands, so migrating to it alone is not sufficient until that fix is merged. |
-| **Multi-call native wrappers holding `JniObjectReference`** | ❌ error | Types like `JniArrayElements` that retain a raw pointer or `JniObjectReference` across calls must hold a strong reference to the owning peer until final release — not just a copied `JniObjectReference`. |
-| **Unrooted new peer stored only in `WeakReference`** | ❌ error | Storing `new Foo ()` directly into `new WeakReference (new Foo ())` before passing `Target` to Java (`SetListener`/`AddListener`) allows GC to collect it before registration. Require a strong local across registration and return. |
-| **Inaccurate `// SAFETY:` lifetime claims** | ⚠️ warning | Flag comments like `"this peer retains its JNI handle"` when no `GC.KeepAlive (this)` or subsequent use actually enforces it. |
+| **Borrowed handles (`Handle`, `PeerReference`, `JValue`, `JniArgumentValue`)** | ❌ error | Keep every owner (`this`, peer args, `Equals`, all paths incl. unregistered `Keep` peers) alive via `GC.KeepAlive` right after JNI/P/Invoke, before error checks/conversions. Straight-line without exception cleanup; `finally` if `try`/`finally` exists (`DeleteLocalRef`) or loops/multiple exits require it. |
+| **`WithLocalJniHandle` / `fixed`** | ❌ error | `WithLocalJniHandle (arg, ...)` retains `arg`, **not** `this`; `fixed` pins array, **not** `this`. Require `GC.KeepAlive (this)`. |
+| **`NewLocalRef ()` on `PeerReference`** | ❌ error | Require `GC.KeepAlive (peer)` afterward (incl. `ConditionalWeakTable` proxies); read `PeerReference` once into a local before `.IsValid`/`.NewLocalRef ()`. |
+| **Handwritten `JNIEnv.FinishCreateInstance (Handle, ...)`** | ❌ error | Needs `GC.KeepAlive (this)`. `JniPeerMembers.InstanceMethods.FinishCreateInstance` doesn't retain `self` on `main` until #13758 lands. |
+| **Multi-call wrappers (`JniArrayElements`)** | ❌ error | Hold strong peer ref, keep local copy alive in `finally` across `Synchronize`, clear on every terminal `Release` (incl. `Release (Commit)`); avoid throwing between `Get*ArrayElements` and wrapper construction. |
+| **Unrooted peer / `WeakReference` race** | ❌ error | Don't pass `new WeakReference (new Foo ()).Target` to Java (`SetListener`/`AddListener`) or split `IsAlive`/`.Target`; bind strong local (`if (wref?.Target is Foo f)`) across registration and return. |
+| **`// SAFETY:` comments** | ⚠️ warning | Flag retention claims without `GC.KeepAlive`/later use, dropped ABI/type contracts, or lines > 180 cols. |
 
-**Do NOT flag (avoid false positives):**
-- Locally created owned references deleted in `finally` (`JNIEnv.NewString`, `JNIEnv.NewArray`, `ToLocalJniHandle`, `GetObjectClass`).
-- `this` in methods calling `JniPeerMembers.InstanceMethods.Invoke*` or `JniInstanceFields.*` (those helpers already retain `self`).
-- `JniType` (no finalizer; statically cached) and static `class_ref` / `IntPtr` handles.
-- Peers already retained by `using` or `lock` spanning the entire native call.
-- Low-level raw-`IntPtr` APIs (`JNIEnv.Call*Method (IntPtr, ...)`) whose caller owns handle liveness via `/// <safety>`.
+**Do NOT flag:** locally owned refs deleted in `finally` (`NewString`, `NewArray`, `ToLocalJniHandle`, `GetObjectClass`); `this` in `JniPeerMembers.InstanceMethods.Invoke*`/`JniInstanceFields.*`; non-finalizable `JniType`/static `class_ref`; enclosing `using`/`lock`; low-level raw-`IntPtr` APIs (`JNIEnv.Call*Method (IntPtr, ...)`) with `/// <safety>`.
 
 ---
 
