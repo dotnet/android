@@ -74,7 +74,8 @@ namespace Android.Runtime {
 
 					try {
 						unsafe {
-							// SAFETY: add.(Ljava/lang/Object;)Z matches this peer; marshaling retains each borrowed argument for the call.
+							// SAFETY: add.(Ljava/lang/Object;)Z matches this peer; WithLocalJniHandle retains the argument
+							// and GC.KeepAlive (this) retains this peer across the call.
 							JNIEnv.CallBooleanMethod (Handle, id_add, new JValue (lref));
 						}
 					} catch (Java.Lang.UnsupportedOperationException ex) when (JNIEnv.ShouldWrapJavaException (ex)) {
@@ -90,6 +91,7 @@ namespace Android.Runtime {
 					}
 					return IntPtr.Zero;
 			});
+			GC.KeepAlive (this);
 		}
 
 		//
@@ -104,11 +106,14 @@ namespace Android.Runtime {
 		internal Java.Util.IIterator Iterator ()
 		{
 			unsafe {
-				// SAFETY: java.util.Collection.iterator.()Ljava/util/Iterator; matches this peer's JNI ABI. Result locals transfer to conversion.
+				// SAFETY: java.util.Collection.iterator.()Ljava/util/Iterator; matches this peer's JNI ABI;
+				// GC.KeepAlive (this) retains this peer across the call, and the result local transfers to conversion.
 				if (id_iterator == IntPtr.Zero)
 					id_iterator = JNIEnv.GetMethodID (collection_class, "iterator", "()Ljava/util/Iterator;");
+				IntPtr lref = JNIEnv.CallObjectMethod (Handle, id_iterator);
+				GC.KeepAlive (this);
 				return Java.Lang.Object.GetObject<Java.Util.IIterator> (
-						JNIEnv.CallObjectMethod (Handle, id_iterator),
+						lref,
 						JniHandleOwnership.TransferLocalRef)!;
 			}
 		}
@@ -125,10 +130,12 @@ namespace Android.Runtime {
 		public int Count {
 			get {
 				unsafe {
-					// SAFETY: java.util.Collection.size.()I matches this peer's JNI ABI.
+					// SAFETY: java.util.Collection.size.()I matches this peer's JNI ABI; GC.KeepAlive (this) retains this peer across the call.
 					if (id_size == IntPtr.Zero)
 						id_size = JNIEnv.GetMethodID (collection_class, "size", "()I");
-					return JNIEnv.CallIntMethod (Handle, id_size);
+					int count = JNIEnv.CallIntMethod (Handle, id_size);
+					GC.KeepAlive (this);
+					return count;
 				}
 			}
 		}
@@ -155,10 +162,13 @@ namespace Android.Runtime {
 		internal Java.Lang.Object[] ToArray ()
 		{
 			unsafe {
-				// SAFETY: java.util.Collection.toArray.()[Ljava/lang/Object; matches this peer's JNI ABI. Result locals transfer to conversion.
+				// SAFETY: java.util.Collection.toArray.()[Ljava/lang/Object; matches this peer's JNI ABI;
+				// GC.KeepAlive (this) retains this peer across the call, and the result local transfers to conversion.
 				if (id_toArray == IntPtr.Zero)
 					id_toArray = JNIEnv.GetMethodID (collection_class, "toArray", "()[Ljava/lang/Object;");
-				using (var o = new Java.Lang.Object (JNIEnv.CallObjectMethod (Handle, id_toArray),
+				IntPtr lref = JNIEnv.CallObjectMethod (Handle, id_toArray);
+				GC.KeepAlive (this);
+				using (var o = new Java.Lang.Object (lref,
 						JniHandleOwnership.TransferLocalRef | JniHandleOwnership.DoNotRegister))
 					return ((Java.Lang.Object[]) o)!;
 			}
@@ -317,7 +327,8 @@ namespace Android.Runtime {
 			JavaConvert.WithLocalJniHandle (item, lref => {
 				try {
 					unsafe {
-						// SAFETY: add.(Ljava/lang/Object;)Z matches this peer; marshaling retains each borrowed argument for the call.
+						// SAFETY: add.(Ljava/lang/Object;)Z matches this peer; WithLocalJniHandle retains the argument
+						// and GC.KeepAlive (this) retains this peer across the call.
 						JNIEnv.CallBooleanMethod (Handle, id_add, new JValue (lref));
 					}
 				} catch (Java.Lang.UnsupportedOperationException ex) when (JNIEnv.ShouldWrapJavaException (ex)) {
@@ -333,6 +344,7 @@ namespace Android.Runtime {
 				}
 				return IntPtr.Zero;
 			});
+			GC.KeepAlive (this);
 		}
 
 		//
@@ -353,12 +365,13 @@ namespace Android.Runtime {
 				id_clear = unsafe(JNIEnv.GetMethodID (collection_class, "clear", "()V"));
 			try {
 				unsafe {
-					// SAFETY: clear.()V matches this peer; marshaling retains each borrowed argument for the call.
+					// SAFETY: clear.()V matches this peer; GC.KeepAlive (this) retains this peer across the call.
 					JNIEnv.CallVoidMethod (Handle, id_clear);
 				}
 			} catch (Java.Lang.UnsupportedOperationException ex) when (JNIEnv.ShouldWrapJavaException (ex)) {
 				throw new NotSupportedException (ex.Message, ex);
 			}
+			GC.KeepAlive (this);
 		}
 
 		//
@@ -377,9 +390,10 @@ namespace Android.Runtime {
 			if (id_contains == IntPtr.Zero)
 				// SAFETY: contains.(Ljava/lang/Object;)Z is resolved from the retained collection class.
 				id_contains = unsafe(JNIEnv.GetMethodID (collection_class, "contains", "(Ljava/lang/Object;)Z"));
-			return JavaConvert.WithLocalJniHandle (item, lref => {
+			bool result = JavaConvert.WithLocalJniHandle (item, lref => {
 				try {
-					// SAFETY: contains.(Ljava/lang/Object;)Z matches this peer; marshaling retains each borrowed argument for the call.
+					// SAFETY: contains.(Ljava/lang/Object;)Z matches this peer; WithLocalJniHandle retains the argument
+					// and GC.KeepAlive (this) retains this peer across the call.
 					return unsafe(JNIEnv.CallBooleanMethod (Handle, id_contains, new JValue (lref)));
 				} catch (Java.Lang.ClassCastException ex) when (JNIEnv.ShouldWrapJavaException (ex)) {
 					throw new InvalidCastException (ex.Message, ex);
@@ -387,6 +401,8 @@ namespace Android.Runtime {
 					throw new NullReferenceException (ex.Message, ex);
 				}
 			});
+			GC.KeepAlive (this);
+			return result;
 		}
 
 		//
@@ -438,9 +454,10 @@ namespace Android.Runtime {
 			if (id_remove == IntPtr.Zero)
 				// SAFETY: remove.(Ljava/lang/Object;)Z is resolved from the retained collection class.
 				id_remove = unsafe(JNIEnv.GetMethodID (collection_class, "remove", "(Ljava/lang/Object;)Z"));
-			return JavaConvert.WithLocalJniHandle (item, lref => {
+			bool result = JavaConvert.WithLocalJniHandle (item, lref => {
 				try {
-					// SAFETY: remove.(Ljava/lang/Object;)Z matches this peer; marshaling retains each borrowed argument for the call.
+					// SAFETY: remove.(Ljava/lang/Object;)Z matches this peer; WithLocalJniHandle retains the argument
+					// and GC.KeepAlive (this) retains this peer across the call.
 					return unsafe(JNIEnv.CallBooleanMethod (Handle, id_remove, new JValue (lref)));
 				} catch (Java.Lang.ClassCastException ex) when (JNIEnv.ShouldWrapJavaException (ex)) {
 					throw new InvalidCastException (ex.Message, ex);
@@ -450,6 +467,8 @@ namespace Android.Runtime {
 					throw new NotSupportedException (ex.Message, ex);
 				}
 			});
+			GC.KeepAlive (this);
+			return result;
 		}
 
 		System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator ()
