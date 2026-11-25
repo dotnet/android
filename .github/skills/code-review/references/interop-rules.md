@@ -27,7 +27,7 @@ Applies to `src/Java.Interop/`, `src/Mono.Android/`, `src/generator/`, and handw
 
 | Pattern | Severity | What to verify |
 |---------|----------|----------------|
-| **Borrowed handles (`Handle`, `PeerReference`, `JValue`, `JniArgumentValue`)** | ❌ error | Keep every owner (`this` and peer args) alive via `GC.KeepAlive` right after JNI/P/Invoke (before error checks/conversions) across all exit paths. Use straight-line `GC.KeepAlive` without exception cleanup; put it in `finally` when a `try`/`finally` already exists or loops/multiple exits require it. |
+| **Borrowed handles (`Handle`, `PeerReference`, `JValue`, `JniArgumentValue`)** | ❌ error | Prefer `JniPeerMembers.InstanceMethods.Invoke*`/`JniInstanceFields.*` and `ToLocalJniHandle` over raw `JNIEnv.Call*Method (Handle, ...)`. Otherwise keep every owner (`this` and peer args) alive via `GC.KeepAlive` right after JNI/P/Invoke (before error checks/conversions) across all exit paths — straight-line without exception cleanup, or in `finally` when `try`/`finally` exists or loops/multiple exits require it. |
 | **`WithLocalJniHandle` / `fixed`** | ❌ error | `WithLocalJniHandle (arg, ...)` retains `arg`, **not** `this`; `fixed` pins the array, **not** `this`. Require `GC.KeepAlive (this)`. |
 | **`NewLocalRef ()` on `PeerReference`** | ❌ error | Require `GC.KeepAlive (peer)` afterward (including `ConditionalWeakTable` proxies); read `PeerReference` once into a local before `.IsValid`/`.NewLocalRef ()`. |
 | **Handwritten `JNIEnv.FinishCreateInstance (Handle, ...)`** | ❌ error | Passes a raw `Handle` without retaining `this`; require `GC.KeepAlive (this)` afterward. |
