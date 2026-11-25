@@ -209,6 +209,7 @@
     <Compile Include="Android.Runtime\AndroidExceptionManager.cs" />
     <Compile Include="Android.Runtime\ManagedObjectReferenceManager.cs" />
     <Compile Include="Android.Runtime\AndroidRuntime.cs" />
+    <Compile Include="Android.Runtime\AndroidTelemetry.cs" />
     <Compile Include="Android.Runtime\AnnotationAttribute.cs" />
     <Compile Include="Android.Runtime\BoundExceptionType.cs" />
     <Compile Include="Android.Runtime\CharSequence.cs" />
@@ -351,6 +352,7 @@
     <Compile Include="Microsoft.Android.Runtime\PrimitiveArrayInfo.cs" />
     <Compile Include="Microsoft.Android.Runtime\RuntimeEventSource.cs" />
     <Compile Include="Microsoft.Android.Runtime\RuntimeFeature.cs" />
+    <Compile Include="Microsoft.Android.Runtime\RuntimeTelemetry.cs" />
     <Compile Include="Microsoft.Android.Runtime\SingleUniverseTypeMap.cs" />
     <Compile Include="Microsoft.Android.Runtime\TrimmableTypeMap.cs" />
     <Compile Include="Microsoft.Android.Runtime\TrimmableTypeMapTypeManager.cs" />

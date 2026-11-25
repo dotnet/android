@@ -1,4 +1,8 @@
 #nullable enable
+Android.Runtime.AndroidTelemetry
+const Android.Runtime.AndroidTelemetry.ActivitySourceName = "Microsoft.Android.Runtime" -> string!
+static Android.Runtime.AndroidTelemetry.EnableActivityLifecycleTracing(Android.App.Application! application) -> void
+static Android.Runtime.AndroidTelemetry.ReplayStartupActivities() -> int
 *REMOVED*Java.Lang.Object.~Object() -> void
 *REMOVED*Java.Lang.Throwable.~Throwable() -> void
 static unsafe Android.Runtime.JNIEnv.AllocObject(System.ReadOnlySpan<byte> jniClassName) -> nint

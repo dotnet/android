@@ -52,6 +52,7 @@
       want tests tagged [TestCategory("Intune")] to run.
     -->
     <RuntimeHostConfigurationOption Include="IncludeCategories" Value="$(IncludeCategories)" Condition=" '$(IncludeCategories)' != '' " />
+    <RuntimeHostConfigurationOption Include="Microsoft.Android.Runtime.RuntimeFeature.StartupTracing" Value="$(AndroidTelemetryStartupTracing)" Trim="true" Condition=" '$(AndroidTelemetryStartupTracing)' != '' " />
   </ItemGroup>
 
   <ItemGroup>
@@ -106,6 +107,7 @@
     <Compile Include="Android.OS\BundleTest.cs" />
     <Compile Include="Android.OS\AidlProxyTests.cs" />
     <Compile Include="Android.OS\HandlerTest.cs" />
+    <Compile Include="Android.Runtime\AndroidTelemetryTests.cs" />
     <Compile Include="Android.Runtime\CharSequenceTest.cs" />
     <Compile Include="Android.Runtime\ManagedObjectReferenceManagerTests.cs" />
     <Compile Include="Android.Runtime\InputStreamInvokerTest.cs" />
