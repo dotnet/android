@@ -18,4 +18,6 @@ clang++ -std=c++23 -D_JAVASOFT_JNI_H_ -include "$NDK_INCLUDE/jni.h" \
 tests/Java.Interop-ThreadAttachment-Tests/obj/runtime-environment-probe
 ```
 
+Cleanup ownership is tracked per OS thread, not per JNI attachment. If external native code detaches a runtime-owned attachment and then reattaches the same thread, the old cleanup key remains registered and can detach the replacement before the external owner's thread-exit cleanup. Reentering through a fresh `JniTransition` restores the cached environment but does not clear that key; comparing `JNIEnv*` values cannot reliably detect replacement because the VM can reuse the address.
+
 These host checks do not replace the `JniThreadAttachment` on-device tests for CoreCLR and NativeAOT.
