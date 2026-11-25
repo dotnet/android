@@ -114,6 +114,34 @@ namespace generatortests
 			primitive_uint.Validate (opt, null, null);
 
 			Assert.AreEqual ("uint", opt.GetTypeReferenceName (primitive_uint));
+
+			// Enum arrays are reference types and should remain nullable unless NotNull is set
+			var enum_array = new Parameter ("states", "int[]", null, false);
+			enum_array.SetGeneratedEnumType ("Android.Bluetooth.ProfileState[]");
+
+			Assert.AreEqual ("Android.Bluetooth.ProfileState[]?", opt.GetTypeReferenceName (enum_array));
+			Assert.AreEqual ("", opt.GetNullForgiveness (enum_array));
+
+			enum_array.NotNull = true;
+			Assert.AreEqual ("Android.Bluetooth.ProfileState[]", opt.GetTypeReferenceName (enum_array));
+			Assert.AreEqual ("!", opt.GetNullForgiveness (enum_array));
+
+			var non_null_string = new ReturnValue (null, "java.lang.String", "string", false, true);
+			non_null_string.Validate (opt, null, null);
+			var nullable_string = new ReturnValue (null, "java.lang.String", "string", false, false);
+			nullable_string.Validate (opt, null, null);
+			var non_null_int = new ReturnValue (null, "int", "int", false, true);
+			non_null_int.Validate (opt, null, null);
+			var non_null_enum = new ReturnValue (null, "int", null, false, true);
+			non_null_enum.SetGeneratedEnumType ("Android.Bluetooth.ProfileState");
+			var non_null_enum_array = new ReturnValue (null, "int[]", null, false, true);
+			non_null_enum_array.SetGeneratedEnumType ("Android.Bluetooth.ProfileState[]");
+
+			Assert.IsTrue (opt.IsNonNullableReferenceType (non_null_string));
+			Assert.IsFalse (opt.IsNonNullableReferenceType (nullable_string));
+			Assert.IsFalse (opt.IsNonNullableReferenceType (non_null_int));
+			Assert.IsFalse (opt.IsNonNullableReferenceType (non_null_enum));
+			Assert.IsTrue (opt.IsNonNullableReferenceType (non_null_enum_array));
 		}
 
 		[Test, TestCaseSource (nameof (ReservedKeywords))]

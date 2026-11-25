@@ -85,11 +85,20 @@ namespace MonoDroid.Generation
 
 		public List<NamespaceTransform> NamespaceTransforms { get; } = new List<NamespaceTransform> ();
 
+		static bool IsValueTypeEnum (ISymbol symbol) => symbol != null && symbol.IsEnum && !symbol.IsArray;
+
+		internal bool IsNonNullableReferenceType (ReturnValue symbol) =>
+			SupportNullableReferenceTypes &&
+			symbol.NotNull &&
+			!symbol.IsKotlinInlineClass &&
+			!IsValueTypeEnum (symbol.Symbol) &&
+			GetNullable (symbol.FullName).Length > 0;
+
 		public string GetTypeReferenceName (Field field)
 		{
 			var name = GetOutputName (field.Symbol.FullName);
 
-			if (field.NotNull || field.Symbol.IsEnum)
+			if (field.NotNull || IsValueTypeEnum (field.Symbol))
 				return name;
 
 			return name + GetNullable (field.Symbol.FullName);
@@ -99,7 +108,7 @@ namespace MonoDroid.Generation
 		{
 			var name = GetOutputName (symbol.Type);
 
-			if (symbol.NotNull || symbol.Symbol.IsEnum)
+			if (symbol.NotNull || IsValueTypeEnum (symbol.Symbol))
 				return name;
 
 			return name + GetNullable (symbol.Type);
@@ -109,7 +118,7 @@ namespace MonoDroid.Generation
 		{
 			var name = GetOutputName (symbol.FullName);
 
-			if (symbol.NotNull || symbol.Symbol.IsEnum)
+			if (symbol.NotNull || IsValueTypeEnum (symbol.Symbol))
 				return name;
 
 			return name + GetNullable (symbol.FullName);
@@ -128,7 +137,7 @@ namespace MonoDroid.Generation
 		{
 			if (field.Symbol is KotlinInlineClassBoxedSymbol)
 				return string.Empty;
-			if (field.NotNull || field.Symbol.IsEnum)
+			if (field.NotNull || IsValueTypeEnum (field.Symbol))
 				return NullForgivingOperator;
 
 			return string.Empty;
@@ -138,7 +147,7 @@ namespace MonoDroid.Generation
 		{
 			if (symbol.IsKotlinInlineClass)
 				return string.Empty;
-			if (symbol.NotNull || symbol.Symbol.IsEnum)
+			if (symbol.NotNull || IsValueTypeEnum (symbol.Symbol))
 				return NullForgivingOperator;
 
 			return string.Empty;
@@ -148,7 +157,7 @@ namespace MonoDroid.Generation
 		{
 			if (symbol.IsKotlinInlineClass)
 				return string.Empty;
-			if (symbol.NotNull || symbol.Symbol.IsEnum)
+			if (symbol.NotNull || IsValueTypeEnum (symbol.Symbol))
 				return NullForgivingOperator;
 
 			return string.Empty;

@@ -259,7 +259,7 @@ namespace generator.SourceWriters
 			}
 		}
 
-		public static void AddMethodBody (List<string> body, Method method, CodeGenerationOptions opt, string members = "_members")
+		public static void AddMethodBody (List<string> body, Method method, CodeGenerationOptions opt, string members = "_members", bool forceReturnNotNull = false)
 		{
 			body.Add ($"const string __id = \"{method.JavaName}.{method.JniSignature}\";");
 			body.Add ("unsafe {");
@@ -276,7 +276,7 @@ namespace generator.SourceWriters
 			if (needsTry)
 				body.Add ("try {");
 
-			AddMethodBodyTryBlock (body, method, opt, members, deferReturn: !needsFinally && hasKeepAlive, indent: needsTry);
+			AddMethodBodyTryBlock (body, method, opt, members, deferReturn: !needsFinally && hasKeepAlive, indent: needsTry, forceReturnNotNull: forceReturnNotNull);
 
 			if (method.IsCompatVirtualMethod) {
 				if (!needsFinally) {
@@ -375,7 +375,7 @@ namespace generator.SourceWriters
 			}
 		}
 
-		public static void AddMethodBodyTryBlock (List<string> body, Method method, CodeGenerationOptions opt, string members = "_members", bool deferReturn = false, bool indent = true)
+		public static void AddMethodBodyTryBlock (List<string> body, Method method, CodeGenerationOptions opt, string members = "_members", bool deferReturn = false, bool indent = true, bool forceReturnNotNull = false)
 		{
 			AddParameterListCallArgs (body, method.Parameters, opt, indent);
 			var indentation = indent ? "\t" : "";
@@ -406,7 +406,7 @@ namespace generator.SourceWriters
 				var returnCheck = opt.SupportNullableReferenceTypes && method.IsInterfaceDefaultMethod &&
 					method.OverriddenInterfaceMethod != null && method.RetVal.NotNull && invokeType == "Object"
 						? " ?? throw new global::Java.Lang.NullPointerException ()"
-						: opt.GetNullForgiveness (method.RetVal);
+						: (forceReturnNotNull ? opt.NullForgivingOperator : opt.GetNullForgiveness (method.RetVal));
 				body.Add ($"{indentation}{(deferReturn ? "var __result = " : "return ")}{method.RetVal.ReturnCast}{method.RetVal.FromNative (opt, r, true, false) + returnCheck};");
 			}
 		}

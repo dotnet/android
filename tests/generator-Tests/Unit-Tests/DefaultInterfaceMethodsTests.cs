@@ -95,6 +95,100 @@ namespace generatortests
 		}
 
 		[Test]
+		public void ClassAndInterfaceNullabilityVarianceReconciliation ()
+		{
+			options.SupportNullableReferenceTypes = true;
+			var gens = ParseApiDefinition ("""
+				<api>
+				  <package name="java.lang" jni-name="java/lang">
+				    <class abstract="false" deprecated="not deprecated" final="false" name="Object" static="false" visibility="public" jni-signature="Ljava/lang/Object;" />
+				  </package>
+				  <package name="com.example" jni-name="com/example">
+				    <interface abstract="true" deprecated="not deprecated" final="false" name="BaseContract" static="false" visibility="public" jni-signature="Lcom/example/BaseContract;">
+				      <method abstract="true" deprecated="not deprecated" final="false" name="getRequired" jni-signature="()Ljava/lang/String;" bridge="false" native="false" return="java.lang.String" jni-return="Ljava/lang/String;" return-not-null="true" static="false" synchronized="false" synthetic="false" visibility="public" />
+				      <method abstract="true" deprecated="not deprecated" final="false" name="acceptNullable" jni-signature="(Ljava/lang/String;)V" bridge="false" native="false" return="void" jni-return="V" static="false" synchronized="false" synthetic="false" visibility="public">
+				        <parameter name="arg" type="java.lang.String" jni-type="Ljava/lang/String;" />
+				      </method>
+				      <method abstract="true" deprecated="not deprecated" final="false" name="produce" jni-signature="()Ljava/lang/String;" bridge="false" native="false" return="java.lang.String" jni-return="Ljava/lang/String;" return-not-null="true" static="false" synchronized="false" synthetic="false" visibility="public" />
+				    </interface>
+				    <interface abstract="true" deprecated="not deprecated" final="false" name="DerivedContract" static="false" visibility="public" jni-signature="Lcom/example/DerivedContract;">
+				      <implements name="com.example.BaseContract" name-generic-aware="com.example.BaseContract" jni-type="Lcom/example/BaseContract;" />
+				      <method abstract="true" deprecated="not deprecated" final="false" name="produce" jni-signature="()Ljava/lang/String;" bridge="false" native="false" return="java.lang.String" jni-return="Ljava/lang/String;" static="false" synchronized="false" synthetic="false" visibility="public" />
+				    </interface>
+				    <class abstract="false" deprecated="not deprecated" extends="java.lang.Object" extends-generic-aware="java.lang.Object" jni-extends="Ljava/lang/Object;" final="false" name="BaseImpl" static="false" visibility="public" jni-signature="Lcom/example/BaseImpl;">
+				      <implements name="com.example.DerivedContract" name-generic-aware="com.example.DerivedContract" jni-type="Lcom/example/DerivedContract;" />
+				      <method abstract="false" deprecated="not deprecated" final="false" name="getRequired" jni-signature="()Ljava/lang/String;" bridge="false" native="false" return="java.lang.String" jni-return="Ljava/lang/String;" static="false" synchronized="false" synthetic="false" visibility="public" />
+				      <method abstract="false" deprecated="not deprecated" final="false" name="acceptNullable" jni-signature="(Ljava/lang/String;)V" bridge="false" native="false" return="void" jni-return="V" static="false" synchronized="false" synthetic="false" visibility="public">
+				        <parameter name="arg" type="java.lang.String" jni-type="Ljava/lang/String;" not-null="true" />
+				      </method>
+				      <method abstract="false" deprecated="not deprecated" final="false" name="produce" jni-signature="()Ljava/lang/String;" bridge="false" native="false" return="java.lang.String" jni-return="Ljava/lang/String;" static="false" synchronized="false" synthetic="false" visibility="public" />
+				      <method abstract="false" deprecated="not deprecated" final="false" name="self" jni-signature="()Lcom/example/BaseImpl;" bridge="false" native="false" return="com.example.BaseImpl" jni-return="Lcom/example/BaseImpl;" return-not-null="true" static="false" synchronized="false" synthetic="false" visibility="public" />
+				    </class>
+				    <class abstract="false" deprecated="not deprecated" extends="com.example.BaseImpl" extends-generic-aware="com.example.BaseImpl" jni-extends="Lcom/example/BaseImpl;" final="false" name="SubImpl" static="false" visibility="public" jni-signature="Lcom/example/SubImpl;">
+				      <method abstract="false" deprecated="not deprecated" final="false" name="getRequired" jni-signature="()Ljava/lang/String;" bridge="false" native="false" return="java.lang.String" jni-return="Ljava/lang/String;" static="false" synchronized="false" synthetic="false" visibility="public" />
+				      <method abstract="false" deprecated="not deprecated" final="false" name="acceptNullable" jni-signature="(Ljava/lang/String;)V" bridge="false" native="false" return="void" jni-return="V" static="false" synchronized="false" synthetic="false" visibility="public">
+				        <parameter name="arg" type="java.lang.String" jni-type="Ljava/lang/String;" not-null="true" />
+				      </method>
+				      <method abstract="false" deprecated="not deprecated" final="false" name="produce" jni-signature="()Ljava/lang/String;" bridge="false" native="false" return="java.lang.String" jni-return="Ljava/lang/String;" static="false" synchronized="false" synthetic="false" visibility="public" />
+				      <method abstract="false" deprecated="not deprecated" final="false" name="self" jni-signature="()Lcom/example/SubImpl;" bridge="false" native="false" return="com.example.SubImpl" jni-return="Lcom/example/SubImpl;" static="false" synchronized="false" synthetic="false" visibility="public" managedOverride="override" />
+				    </class>
+				  </package>
+				</api>
+				""");
+
+			var derivedIface = gens.Single (g => g.Name == "IDerivedContract");
+			Assert.True (derivedIface.Methods.Single (m => m.Name == "Produce").RetVal.NotNull);
+
+			var baseImpl = gens.Single (g => g.Name == "BaseImpl");
+			Assert.True (baseImpl.Properties.Single (p => p.Name == "Required").Getter.RetVal.NotNull);
+			Assert.True (baseImpl.Methods.Single (m => m.Name == "Produce").RetVal.NotNull);
+			Assert.False (baseImpl.Methods.Single (m => m.Name == "AcceptNullable").Parameters [0].NotNull);
+
+			var subImpl = gens.Single (g => g.Name == "SubImpl");
+			Assert.True (subImpl.Properties.Single (p => p.Name == "Required").Getter.RetVal.NotNull);
+			Assert.True (subImpl.Methods.Single (m => m.Name == "Produce").RetVal.NotNull);
+			Assert.False (subImpl.Methods.Single (m => m.Name == "AcceptNullable").Parameters [0].NotNull);
+			Assert.True (subImpl.Methods.Single (m => m.Name == "Self").RetVal.NotNull);
+		}
+
+		[Test]
+		public void InterfaceInvokerAndImplementorNullability ()
+		{
+			options.SupportNullableReferenceTypes = true;
+			var gens = ParseApiDefinition ("""
+				<api>
+				  <package name="java.lang" jni-name="java/lang">
+				    <class abstract="false" deprecated="not deprecated" final="false" name="Object" static="false" visibility="public" jni-signature="Ljava/lang/Object;">
+				      <method abstract="false" deprecated="not deprecated" final="false" name="toString" jni-signature="()Ljava/lang/String;" bridge="false" native="false" return="java.lang.String" jni-return="Ljava/lang/String;" return-not-null="true" static="false" synchronized="false" synthetic="false" visibility="public" />
+				    </class>
+				  </package>
+				  <package name="com.example" jni-name="com/example">
+				    <interface abstract="true" deprecated="not deprecated" final="false" name="OnStringListener" static="false" visibility="public" jni-signature="Lcom/example/OnStringListener;">
+				      <method abstract="true" deprecated="not deprecated" final="false" name="toString" jni-signature="()Ljava/lang/String;" bridge="false" native="false" return="java.lang.String" jni-return="Ljava/lang/String;" static="false" synchronized="false" synthetic="false" visibility="public" />
+				      <method abstract="true" deprecated="not deprecated" final="false" name="onRequired" jni-signature="()Ljava/lang/String;" bridge="false" native="false" return="java.lang.String" jni-return="Ljava/lang/String;" return-not-null="true" static="false" synchronized="false" synthetic="false" visibility="public" />
+				      <method abstract="true" deprecated="not deprecated" final="false" name="onOptional" jni-signature="()Ljava/lang/String;" bridge="false" native="false" return="java.lang.String" jni-return="Ljava/lang/String;" static="false" synchronized="false" synthetic="false" visibility="public" />
+				      <method abstract="true" deprecated="not deprecated" final="false" name="onCount" jni-signature="()I" bridge="false" native="false" return="int" jni-return="I" return-not-null="true" static="false" synchronized="false" synthetic="false" visibility="public" />
+				    </interface>
+				  </package>
+				</api>
+				""");
+
+			var iface = (InterfaceGen) gens.Single (g => g.Name == "IOnStringListener");
+			generator.WriteType (iface, string.Empty, new GenerationInfo (null, null, null));
+			var source = writer.ToString ();
+
+			// Public interface retains nullable ToString(), internal invoker overrides Java.Lang.Object's non-null ToString()
+			StringAssert.Contains ("string? ToString ();", source);
+			StringAssert.Contains ("public override string ToString ()", source);
+			StringAssert.Contains ("return JNIEnv.GetString (__rm.Handle, JniHandleOwnership.TransferLocalRef)!;", source);
+
+			// Implementor emits null-forgiveness only for non-null reference return types
+			StringAssert.Contains ("return __h != null ? __h () : default (string)!;", source);
+			StringAssert.Contains ("return __h != null ? __h () : default (string?);", source);
+			StringAssert.Contains ("return __h != null ? __h () : default (int);", source);
+		}
+
+		[Test]
 		public void WriteInterfaceRedeclaredDefaultMethod ()
 		{
 			// Create an interface with a default method
