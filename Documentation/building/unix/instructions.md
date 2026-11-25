@@ -45,6 +45,16 @@ The separator also forwards help options: `dotnetup dotnet -- build --help`.
 See [SDK selection and CI](../../../eng/README.md#sdk-selection-and-ci) for
 dependency-update and CI setup details.
 
+# Cleaning build outputs
+
+Clean the selected build configuration with:
+
+    dotnetup dotnet clean Microsoft.Android.slnx -c Debug
+
+Use `-c Release` to clean Release outputs. Native cleanup does not require
+a configured CMake tree or Ninja. Clean preserves shared .NET SDKs, the Android
+SDK/NDK, the JDK, and downloaded toolchain archives; it is not a full checkout reset.
+
 # Creating a local .NET for Android Workload
 
 Once `dotnetup dotnet build Microsoft.Android.slnx` has completed, your local

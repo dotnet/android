@@ -99,9 +99,4 @@
     />
   </Target>
 
-  <Target Name="_CleanOpenJDK" BeforeTargets="Clean">
-    <RemoveDir Directories="$(_OpenJDKInstallDir)" />
-    <Delete Files="$(_OpenJDKArchive);$(_OpenJDKHashFile)" />
-  </Target>
-
 </Project>
