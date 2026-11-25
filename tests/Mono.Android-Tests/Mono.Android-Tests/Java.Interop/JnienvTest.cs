@@ -298,6 +298,55 @@ namespace Java.InteropTests
 		}
 
 		[TestMethod]
+		[TestCategory ("JniLocalReferenceCleanup")]
+		[DataRow (false)]
+		[DataRow (true)]
+		public void ArrayFactoriesReleaseLocalWhenElementConversionThrows (bool generic)
+		{
+			IntPtr warmup = generic
+				? JNIEnv.NewObjectArray<object> ([])
+				: JNIEnv.NewArray ((IJavaObject []) []);
+			JNIEnv.DeleteLocalRef (warmup);
+
+			IJavaObject [] values = [new ThrowingJavaObject ()];
+			object [] genericValues = [values [0]];
+			void CreateArray ()
+			{
+				IntPtr result = generic ? JNIEnv.NewObjectArray (genericValues) : JNIEnv.NewArray (values);
+				JNIEnv.DeleteLocalRef (result);
+			}
+
+			int localReferences = JniEnvironment.LocalReferenceCount;
+			for (int i = 0; i < 4; i++) {
+				Assert.ThrowsExactly<InvalidOperationException> (CreateArray);
+				Assert.AreEqual (localReferences, JniEnvironment.LocalReferenceCount);
+			}
+		}
+
+		[TestMethod]
+		[TestCategory ("JniLocalReferenceCleanup")]
+		public void CopyNestedArrayReleasesLocalWhenSourceIsNull ()
+		{
+			int [] [] values = [[1]];
+			IntPtr destination = JNIEnv.NewArray (values);
+			try {
+				JNIEnv.CopyArray (values, destination);
+				int localReferences = JniEnvironment.LocalReferenceCount;
+				int []? [] source = [null];
+				Assert.ThrowsExactly<NullReferenceException> (() => JNIEnv.CopyArray (source, destination));
+				Assert.AreEqual (localReferences, JniEnvironment.LocalReferenceCount);
+			} finally {
+				JNIEnv.DeleteLocalRef (destination);
+			}
+		}
+
+		sealed class ThrowingJavaObject : IJavaObject
+		{
+			public IntPtr Handle => throw new InvalidOperationException ("Cannot obtain a JNI handle.");
+			public void Dispose () {}
+		}
+
+		[TestMethod]
 		public void NewObjectArrayWithObjectArray ()
 		{
 			var array = JNIEnv.NewObjectArray<Java.Lang.String> (new Java.Lang.String [0]);
