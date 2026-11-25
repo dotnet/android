@@ -17,6 +17,7 @@ make prepare CONFIGURATION=Debug && make leeroy CONFIGURATION=Debug   # = make j
 
 On Windows, run `build.cmd`.
 
+- In a new worktree, run `git submodule update --init` first; otherwise `make leeroy` fails late with `FileNotFoundException: .../Mono.Android.xml` (missing `external/android-api-docs`).
 - Don't use `make all`. It skips `BuildExtraApiLevels`, so `ConfigureLocalWorkload` fails.
 - Pass extra flags via `MSBUILD_ARGS='...'`. Overriding `MSBUILD_FLAGS` drops `-p:Configuration`.
 - On failure, read `bin/Build<cfg>/msbuild-*.binlog` (for example `binlogtool search bin/Build<cfg>/msbuild-*.binlog "error"`; see "Analysis commands" in `.github/skills/ci-status/references/binlog-analysis.md`) rather than re-running verbosely.
