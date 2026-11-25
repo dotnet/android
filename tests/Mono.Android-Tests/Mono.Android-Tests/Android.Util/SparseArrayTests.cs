@@ -18,8 +18,10 @@ namespace Android.UtilTests {
 			using var values = new SparseArray<string> ();
 
 			values.Put (1, "one");
+			values.Append (2, "two");
 
 			Assert.AreEqual ("one", values.Get (1));
+			Assert.AreEqual ("two", values.Get (2));
 		}
 
 		[TestMethod]
