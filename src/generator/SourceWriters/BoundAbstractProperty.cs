@@ -47,6 +47,7 @@ namespace generator.SourceWriters
 				GetterAttributes.Add (new GeneratedEnumAttr (true));
 
 			SourceWriterExtensions.AddSupportedOSPlatform (GetterAttributes, property.Getter, opt);
+			SourceWriterExtensions.AddAllowNull (Attributes, property, opt);
 
 			GetterAttributes.Add (new RegisterAttr (property.Getter.JavaName, property.Getter.JniSignature, UnmanagedCallbackSupport.GetPropertyConnectorNameFull (gen, property, property.Getter, opt), additionalProperties: property.Getter.AdditionalAttributeString ()));
 

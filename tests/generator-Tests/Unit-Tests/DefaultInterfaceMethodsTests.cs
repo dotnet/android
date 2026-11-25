@@ -1,5 +1,7 @@
 using System;
+using System.IO;
 using System.Linq;
+using Mono.Cecil;
 using MonoDroid.Generation;
 using NUnit.Framework;
 
@@ -186,6 +188,138 @@ namespace generatortests
 			StringAssert.Contains ("return __h != null ? __h () : default (string)!;", source);
 			StringAssert.Contains ("return __h != null ? __h () : default (string?);", source);
 			StringAssert.Contains ("return __h != null ? __h () : default (int);", source);
+		}
+
+		[Test]
+		public void PropertyNullabilityReconciliationWithAllowNullAndHiddenBase ()
+		{
+			options.SupportNullableReferenceTypes = true;
+			var gens = ParseApiDefinition ("""
+				<api>
+				  <package name="java.lang" jni-name="java/lang">
+				    <class abstract="false" deprecated="not deprecated" final="false" name="Object" static="false" visibility="public" jni-signature="Ljava/lang/Object;" />
+				  </package>
+				  <package name="com.example" jni-name="com/example">
+				    <interface abstract="true" deprecated="not deprecated" final="false" name="RequiredValue" static="false" visibility="public" jni-signature="Lcom/example/RequiredValue;">
+				      <method abstract="true" deprecated="not deprecated" final="false" name="getValue" jni-signature="()Ljava/lang/String;" bridge="false" native="false" return="java.lang.String" jni-return="Ljava/lang/String;" return-not-null="true" static="false" synchronized="false" synthetic="false" visibility="public" />
+				    </interface>
+				    <class abstract="false" deprecated="not deprecated" extends="java.lang.Object" extends-generic-aware="java.lang.Object" jni-extends="Ljava/lang/Object;" final="false" name="NullableBase" static="false" visibility="public" jni-signature="Lcom/example/NullableBase;">
+				      <method abstract="false" deprecated="not deprecated" final="false" name="getValue" jni-signature="()Ljava/lang/String;" bridge="false" native="false" return="java.lang.String" jni-return="Ljava/lang/String;" static="false" synchronized="false" synthetic="false" visibility="public" />
+				      <method abstract="false" deprecated="not deprecated" final="false" name="setValue" jni-signature="(Ljava/lang/String;)V" bridge="false" native="false" return="void" jni-return="V" static="false" synchronized="false" synthetic="false" visibility="public">
+				        <parameter name="value" type="java.lang.String" jni-type="Ljava/lang/String;" />
+				      </method>
+				    </class>
+				    <class abstract="false" deprecated="not deprecated" extends="com.example.NullableBase" extends-generic-aware="com.example.NullableBase" jni-extends="Lcom/example/NullableBase;" final="false" name="OverrideWithInterface" static="false" visibility="public" jni-signature="Lcom/example/OverrideWithInterface;">
+				      <implements name="com.example.RequiredValue" name-generic-aware="com.example.RequiredValue" jni-type="Lcom/example/RequiredValue;" />
+				      <method abstract="false" deprecated="not deprecated" final="false" name="getValue" jni-signature="()Ljava/lang/String;" bridge="false" native="false" return="java.lang.String" jni-return="Ljava/lang/String;" static="false" synchronized="false" synthetic="false" visibility="public" />
+				      <method abstract="false" deprecated="not deprecated" final="false" name="setValue" jni-signature="(Ljava/lang/String;)V" bridge="false" native="false" return="void" jni-return="V" static="false" synchronized="false" synthetic="false" visibility="public">
+				        <parameter name="value" type="java.lang.String" jni-type="Ljava/lang/String;" />
+				      </method>
+				    </class>
+				    <class abstract="false" deprecated="not deprecated" extends="com.example.OverrideWithInterface" extends-generic-aware="com.example.OverrideWithInterface" jni-extends="Lcom/example/OverrideWithInterface;" final="false" name="SubOverride" static="false" visibility="public" jni-signature="Lcom/example/SubOverride;">
+				      <method abstract="false" deprecated="not deprecated" final="false" name="getValue" jni-signature="()Ljava/lang/String;" bridge="false" native="false" return="java.lang.String" jni-return="Ljava/lang/String;" static="false" synchronized="false" synthetic="false" visibility="public" />
+				      <method abstract="false" deprecated="not deprecated" final="false" name="setValue" jni-signature="(Ljava/lang/String;)V" bridge="false" native="false" return="void" jni-return="V" static="false" synchronized="false" synthetic="false" visibility="public">
+				        <parameter name="value" type="java.lang.String" jni-type="Ljava/lang/String;" />
+				      </method>
+				    </class>
+				    <class abstract="false" deprecated="not deprecated" extends="com.example.NullableBase" extends-generic-aware="com.example.NullableBase" jni-extends="Lcom/example/NullableBase;" final="false" name="HiddenBase" static="false" visibility="public" jni-signature="Lcom/example/HiddenBase;">
+				      <implements name="com.example.RequiredValue" name-generic-aware="com.example.RequiredValue" jni-type="Lcom/example/RequiredValue;" />
+				      <method abstract="false" deprecated="not deprecated" final="false" name="getValue" jni-signature="()Ljava/lang/String;" bridge="false" native="false" return="java.lang.String" jni-return="Ljava/lang/String;" return-not-null="true" static="false" synchronized="false" synthetic="false" visibility="public" managedOverride="new" />
+				      <method abstract="false" deprecated="not deprecated" final="false" name="setValue" jni-signature="(Ljava/lang/String;)V" bridge="false" native="false" return="void" jni-return="V" static="false" synchronized="false" synthetic="false" visibility="public">
+				        <parameter name="value" type="java.lang.String" jni-type="Ljava/lang/String;" not-null="true" />
+				      </method>
+				    </class>
+				  </package>
+				</api>
+				""");
+
+			var overrideWithInterface = gens.Single (g => g.Name == "OverrideWithInterface");
+			var overrideProp = overrideWithInterface.Properties.Single (p => p.Name == "Value");
+			Assert.True (overrideProp.Getter.RetVal.NotNull);
+			Assert.False (overrideProp.Setter.Parameters [0].NotNull);
+
+			var subOverride = gens.Single (g => g.Name == "SubOverride");
+			var subProp = subOverride.Properties.Single (p => p.Name == "Value");
+			Assert.True (subProp.Getter.RetVal.NotNull);
+			Assert.False (subProp.Setter.Parameters [0].NotNull);
+
+			var hiddenBase = gens.Single (g => g.Name == "HiddenBase");
+			var hiddenProp = hiddenBase.Properties.Single (p => p.Name == "Value");
+			Assert.True (hiddenProp.Getter.RetVal.NotNull);
+			Assert.True (hiddenProp.Setter.Parameters [0].NotNull);
+
+			foreach (var gen in gens.Where (g => g.Namespace == "Com.Example"))
+				GetGeneratedTypeOutput (gen);
+			var source = writer.ToString ();
+			StringAssert.Contains ("[global::System.Diagnostics.CodeAnalysis.AllowNull]", source);
+			StringAssert.Contains ("public new string Value", source);
+
+			var support = $$"""
+				using System;
+				delegate IntPtr {{overrideProp.Getter.GetDelegateType (options)}} (IntPtr env, IntPtr self);
+				delegate void {{overrideProp.Setter.GetDelegateType (options)}} (IntPtr env, IntPtr self, IntPtr value);
+				""";
+			Compiler.CompileSources ([
+				"#nullable enable\nusing System; using Android.Runtime; using Java.Interop; namespace Com.Example {\n" + source + "\n}",
+				support,
+			], out var hasErrors, out var output, out _, allowWarnings: false);
+			Assert.False (hasErrors, output + "\n" + source);
+		}
+
+		[Test]
+		public void InterfaceInvokerToStringUsesImportedUnvalidatedJavaObject ()
+		{
+			options.SupportNullableReferenceTypes = true;
+			options.UseShallowReferencedTypes = true;
+
+			Compiler.CompileSources (["""
+				#nullable enable
+				namespace Java.Lang {
+					[Android.Runtime.Register ("java/lang/Object")]
+					public partial class Object {
+						[Android.Runtime.Register ("toString", "()Ljava/lang/String;", "GetToStringHandler")]
+						public override string ToString () => "";
+					}
+				}
+				"""], out var refHasErrors, out var refOutput, out var refImage, allowWarnings: true);
+			Assert.False (refHasErrors, refOutput);
+
+			using var ms = new MemoryStream (refImage);
+			using var module = ModuleDefinition.ReadModule (ms);
+			var jloType = module.GetType ("Java.Lang.Object");
+			Assert.NotNull (jloType);
+			var importedJlo = CecilApiImporter.CreateClass (jloType, options);
+			options.SymbolTable.AddType (importedJlo);
+
+			// Interface-only binding: nothing extends java.lang.Object, so importedJlo stays unvalidated until looked up.
+			var gens = ParseApiDefinition ("""
+				<api>
+				  <package name="com.example" jni-name="com/example">
+				    <interface abstract="true" deprecated="not deprecated" final="false" name="Describable" static="false" visibility="public" jni-signature="Lcom/example/Describable;">
+				      <method abstract="true" deprecated="not deprecated" final="false" name="toString" jni-signature="()Ljava/lang/String;" bridge="false" native="false" return="java.lang.String" jni-return="Ljava/lang/String;" static="false" synchronized="false" synthetic="false" visibility="public" />
+				    </interface>
+				  </package>
+				</api>
+				""");
+
+			var iface = (InterfaceGen) gens.Single (g => g.Name == "IDescribable");
+			GetGeneratedTypeOutput (iface);
+			var source = writer.ToString ();
+
+			StringAssert.Contains ("string? ToString ();", source);
+			StringAssert.Contains ("public override string ToString ()", source);
+			StringAssert.Contains ("return JNIEnv.GetString (__rm.Handle, JniHandleOwnership.TransferLocalRef)!;", source);
+
+			var toStringMethod = iface.Methods.Single (m => m.Name == "ToString");
+			var support = $$"""
+				using System;
+				delegate IntPtr {{toStringMethod.GetDelegateType (options)}} (IntPtr env, IntPtr self);
+				""";
+			Compiler.CompileSources ([
+				"#nullable enable\nusing System; using Android.Runtime; using Java.Interop; namespace Com.Example {\n" + source + "\n}",
+				support,
+			], out var hasErrors, out var output, out _, allowWarnings: false);
+			Assert.False (hasErrors, output + "\n" + source);
 		}
 
 		[Test]

@@ -96,6 +96,7 @@ namespace generator.SourceWriters
 			SourceWriterExtensions.AddRestrictToWarning (SetterAttributes, property.Setter?.AnnotatedVisibility, false, opt);
 
 			SourceWriterExtensions.AddSupportedOSPlatform (Attributes, property.Getter, opt);
+			SourceWriterExtensions.AddAllowNull (Attributes, property, opt);
 
 			SourceWriterExtensions.AddMethodCustomAttributes (GetterAttributes, property.Getter);
 

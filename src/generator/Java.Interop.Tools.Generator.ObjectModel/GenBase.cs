@@ -523,7 +523,8 @@ namespace MonoDroid.Generation
 				}
 			} else if (this is ClassGen) {
 				foreach (var method in Methods.Where (m => !m.IsStatic)) {
-					if (method.IsOverride || string.Equals (method.ManagedOverride, "override", StringComparison.OrdinalIgnoreCase)) {
+					if (!IsManagedOverrideDisabled (method) &&
+							(method.IsOverride || string.Equals (method.ManagedOverride, "override", StringComparison.OrdinalIgnoreCase))) {
 						var bm = FindOverriddenBaseMethod (method, opt);
 						if (bm != null)
 							ReconcileMethodNullability (method, bm);
@@ -541,7 +542,7 @@ namespace MonoDroid.Generation
 				}
 				foreach (var prop in Properties.Where (p => p.Getter != null && !p.Getter.IsStatic)) {
 					var contracts = new List<Property> ();
-					var baseProp = BaseSymbol?.GetPropertyByName (prop.Name, true);
+					var baseProp = IsManagedOverrideDisabled (prop.Getter) ? null : BaseSymbol?.GetPropertyByName (prop.Name, true);
 					if (baseProp != null && baseProp.Getter != null && !baseProp.Getter.IsInterfaceDefaultMethod &&
 							baseProp.Getter.RetVal.FullName == prop.Getter.RetVal.FullName) {
 						contracts.Add (baseProp);
@@ -563,6 +564,12 @@ namespace MonoDroid.Generation
 				nested.FixupInterfaceMethodNullability (opt);
 		}
 
+		static bool IsManagedOverrideDisabled (Method method) =>
+			!method.IsAbstract && (
+				string.Equals (method.ManagedOverride, "virtual", StringComparison.OrdinalIgnoreCase) ||
+				string.Equals (method.ManagedOverride, "none", StringComparison.OrdinalIgnoreCase) ||
+				string.Equals (method.ManagedOverride, "new", StringComparison.OrdinalIgnoreCase));
+
 		static void ReconcileMethodNullability (Method method, Method contract)
 		{
 			method.ReturnNotNull = method.RetVal.NotNull = method.RetVal.NotNull || contract.RetVal.NotNull;
@@ -572,23 +579,38 @@ namespace MonoDroid.Generation
 
 		static void ReconcilePropertyNullability (Property prop, IEnumerable<Property> contracts)
 		{
-			var notNull = prop.Getter.RetVal.NotNull;
+			var getterNotNull = prop.Getter.RetVal.NotNull;
+			var contractRequiresNonNullGetter = false;
 			var hasNullableSetterContract = false;
 
 			foreach (var contract in contracts) {
-				notNull |= contract.Getter.RetVal.NotNull;
-				if (prop.Setter != null && contract.Setter != null && !contract.Getter.RetVal.NotNull)
+				if (contract.Getter.RetVal.NotNull) {
+					getterNotNull = true;
+					contractRequiresNonNullGetter = true;
+				}
+				if (prop.Setter != null && contract.Setter != null &&
+						(!contract.Getter.RetVal.NotNull || !contract.Setter.Parameters [0].NotNull))
 					hasNullableSetterContract = true;
 			}
 
-			// A read-write property's setter parameter cannot narrow a nullable base/interface setter (CS8765),
-			// so setter contravariance wins regardless of contract enumeration order.
-			if (hasNullableSetterContract)
-				notNull = false;
-
-			prop.Getter.ReturnNotNull = prop.Getter.RetVal.NotNull = notNull;
-			if (prop.Setter != null)
-				prop.Setter.Parameters [0].NotNull = notNull;
+			if (hasNullableSetterContract) {
+				if (contractRequiresNonNullGetter) {
+					// Both a non-null getter contract (CS8764/CS8766) and a nullable setter
+					// contract (CS8765/CS8767) apply; keep the getter non-null and emit
+					// [AllowNull] on the property so its setter still accepts null.
+					prop.Getter.ReturnNotNull = prop.Getter.RetVal.NotNull = true;
+					prop.Setter.Parameters [0].NotNull = false;
+				} else {
+					// No contract requires a non-null getter; widen the property to nullable
+					// so setter contravariance (CS8765/CS8767) is satisfied cleanly.
+					prop.Getter.ReturnNotNull = prop.Getter.RetVal.NotNull = false;
+					prop.Setter.Parameters [0].NotNull = false;
+				}
+			} else {
+				prop.Getter.ReturnNotNull = prop.Getter.RetVal.NotNull = getterNotNull;
+				if (prop.Setter != null)
+					prop.Setter.Parameters [0].NotNull = getterNotNull;
+			}
 		}
 
 		internal Method FindOverriddenBaseMethod (Method m, CodeGenerationOptions opt)
@@ -1130,11 +1152,20 @@ namespace MonoDroid.Generation
 		internal static bool RequiresNewForSystemObject (string memberName, string [] paramTypes = null) =>
 			SystemObjectMembers.Matches (memberName, paramTypes);
 
+		static ClassGen GetValidatedJavaObject (CodeGenerationOptions opt)
+		{
+			if (opt?.SymbolTable?.Lookup ("java.lang.Object") is not ClassGen jlo)
+				return null;
+			if (!jlo.validated)
+				jlo.Validate (opt, null, new CodeGeneratorContext ());
+			return jlo;
+		}
+
 		internal static bool RequiresNewForJavaObject (string memberName, string [] paramTypes, CodeGenerationOptions opt)
 		{
 			if (SystemObjectMembers.Matches (memberName, paramTypes) || JavaObjectHandwrittenMembers.Matches (memberName, paramTypes))
 				return true;
-			if (opt?.SymbolTable?.Lookup ("java.lang.Object") is ClassGen jlo)
+			if (GetValidatedJavaObject (opt) is ClassGen jlo)
 				return jlo.HasEmittedMember (memberName, paramTypes, opt, includePrivate: false);
 			return false;
 		}
@@ -1144,7 +1175,7 @@ namespace MonoDroid.Generation
 
 		internal static Method FindOverriddenJavaObjectMethod (string memberName, Method method, CodeGenerationOptions opt)
 		{
-			if (method.IsStatic || opt?.SymbolTable?.Lookup ("java.lang.Object") is not ClassGen jlo)
+			if (method.IsStatic || GetValidatedJavaObject (opt) is not ClassGen jlo)
 				return null;
 
 			var paramTypes = GetParameterTypes (method.Parameters, opt, stringOverload: false);

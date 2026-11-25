@@ -203,6 +203,16 @@ namespace generator.SourceWriters
 			}
 		}
 
+		public static void AddAllowNull (List<AttributeWriter> attributes, Property property, CodeGenerationOptions opt)
+		{
+			if (opt.SupportNullableReferenceTypes &&
+					property.Getter != null &&
+					property.Setter != null &&
+					opt.IsNonNullableReferenceType (property.Getter.RetVal) &&
+					!property.Setter.Parameters [0].NotNull)
+				attributes.Add (new CustomAttr ("[global::System.Diagnostics.CodeAnalysis.AllowNull]"));
+		}
+
 		public static void AddMethodCustomAttributes (List<AttributeWriter> attributes, Method method)
 		{
 			if (method.GenericArguments != null && method.GenericArguments.Any ())
