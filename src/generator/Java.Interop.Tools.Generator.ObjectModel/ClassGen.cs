@@ -365,10 +365,18 @@ namespace MonoDroid.Generation
 			return entries;
 		}
 
-		bool HasInterfaceConsts () =>
-			GetAllImplementedInterfaces ()
+		bool HasInterfaceConsts ()
+		{
+			var seen = new HashSet<string> (StringComparer.Ordinal);
+			foreach (var f in Fields) {
+				if (!ContainsName (f.Name))
+					seen.Add (f.Name);
+			}
+
+			return GetAllImplementedInterfaces ()
 				.Except (BaseGen?.GetAllImplementedInterfaces () ?? [])
-				.Any (i => i.Fields.Any (f => !i.ContainsName (f.Name)));
+				.Any (i => i.Fields.Any (f => !i.ContainsName (f.Name) && !seen.Contains (f.Name)));
+		}
 
 		private protected override bool HidesInheritedMember (string memberName, string [] paramTypes, CodeGenerationOptions opt)
 		{
@@ -391,13 +399,19 @@ namespace MonoDroid.Generation
 
 		private protected override void PopulateEmittedMembers (EmittedMemberTable accessible, EmittedMemberTable privateOnly, CodeGenerationOptions opt)
 		{
-			EmittedMemberTable Target (string visibility) =>
-				string.Equals (visibility, "private", StringComparison.OrdinalIgnoreCase) ? privateOnly : accessible;
+			EmittedMemberTable Target (string visibility)
+			{
+				if (string.Equals (visibility, "private", StringComparison.OrdinalIgnoreCase))
+					return privateOnly;
+				if (!IsGeneratable && string.Equals (visibility, "internal", StringComparison.OrdinalIgnoreCase))
+					return null;
+				return accessible;
+			}
 
 			foreach (var f in Fields) {
 				if (ContainsName (f.Name))
 					continue;
-				Target (f.Visibility).AddNonMethod (f.Name);
+				Target (f.Visibility)?.AddNonMethod (f.Name);
 			}
 
 			if (HasInterfaceConsts ())
@@ -410,6 +424,8 @@ namespace MonoDroid.Generation
 					continue;
 				var vis = p.Getter.IsAbstract && p.Getter.RetVal.IsGeneric ? "protected" : (p.Setter ?? p.Getter).Visibility;
 				var target = Target (vis);
+				if (target == null)
+					continue;
 				target.AddNonMethod (p.AdjustedName);
 				if (p.Type.StartsWith ("Java.Lang.ICharSequence", StringComparison.Ordinal))
 					target.AddNonMethod (p.Name);
@@ -426,12 +442,12 @@ namespace MonoDroid.Generation
 			}
 
 			foreach (var nt in NestedTypes) {
-				var target = Target (nt.Visibility);
-				target.AddNonMethod (nt.Name);
+				Target (nt.Visibility)?.AddNonMethod (nt.Name);
 				if (nt is ClassGen nestedCls && nestedCls.IsAbstract) {
-					accessible.AddNonMethod (nestedCls.Name + "Invoker");
+					if (IsGeneratable)
+						accessible.AddNonMethod (nestedCls.Name + "Invoker");
 				} else if (nt is InterfaceGen nestedIface) {
-					if (opt == null || !nestedIface.IsConstSugar (opt))
+					if (IsGeneratable && (opt == null || !nestedIface.IsConstSugar (opt)))
 						accessible.AddNonMethod (nestedIface.Name + "Invoker");
 					if (!nestedIface.NoAlternatives && (nestedIface.Fields.Any () || nestedIface.Methods.Any (m => m.IsStatic))) {
 						var altName = nestedIface.HasManagedName ? nestedIface.Name.Substring (1) + "Consts" : nestedIface.Name.Substring (1);
@@ -491,14 +507,19 @@ namespace MonoDroid.Generation
 			foreach (var m in GetMethodsToDeclare (opt)) {
 				if (!m.IsValid || !string.IsNullOrEmpty (m.ExplicitInterface))
 					continue;
+				var target = Target (m.Visibility);
+				if (target == null)
+					continue;
 				bool isAbstractDecl = m.IsAbstract && m.OverriddenInterfaceMethod == null && (opt == null || opt.SupportDefaultInterfaceMethods || !m.IsInterfaceDefaultMethod);
-				AddEmittedMethod (m, isAbstractDecl, Target (m.Visibility));
+				AddEmittedMethod (m, isAbstractDecl, target);
 			}
 
 			foreach (var (_, m) in GetAbstractInterfaceMethods ()) {
 				if (!string.IsNullOrEmpty (m.ExplicitInterface))
 					continue;
-				AddEmittedMethod (m, isAbstractDecl: true, Target (m.Visibility));
+				var target = Target (m.Visibility);
+				if (target != null)
+					AddEmittedMethod (m, isAbstractDecl: true, target);
 			}
 		}
 

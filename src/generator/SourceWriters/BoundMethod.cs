@@ -62,6 +62,7 @@ namespace generator.SourceWriters
 			} else if (!forceOverride && string.Equals (method.ManagedOverride, "new", StringComparison.OrdinalIgnoreCase)) {
 				IsVirtual = false;
 				IsOverride = false;
+				IsSealed = false;
 				IsShadow = true;
 			}
 

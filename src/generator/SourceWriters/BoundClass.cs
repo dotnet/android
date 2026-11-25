@@ -348,7 +348,8 @@ namespace generator.SourceWriters
 
 		void AddAbstractPropertyDeclaration (ClassGen klass, Property property, CodeGenerationOptions opt)
 		{
-			var baseProp = klass.BaseSymbol?.GetPropertyByName (property.Name, true);
+			var isForcedNew = string.Equals ((property.Getter ?? property.Setter).ManagedOverride, "new", StringComparison.OrdinalIgnoreCase);
+			var baseProp = isForcedNew ? null : klass.BaseSymbol?.GetPropertyByName (property.Name, true);
 
 			if (baseProp != null) {
 				if (baseProp.Type != property.Getter.Return) {

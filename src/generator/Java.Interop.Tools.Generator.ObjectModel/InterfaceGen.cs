@@ -227,9 +227,28 @@ namespace MonoDroid.Generation
 			return true;
 		}
 
+		bool invoker_method_names_fixed;
+
+		// A method whose managed name would collide with the interface itself or with one of its
+		// properties is prefixed with "Invoke".
+		internal void FixupInvokerMethodNames ()
+		{
+			if (invoker_method_names_fixed)
+				return;
+			invoker_method_names_fixed = true;
+
+			foreach (var m in Methods) {
+				if (m.IsStatic || m.IsInterfaceDefaultMethod)
+					continue;
+				if (m.Name == Name || ContainsProperty (m.Name, true))
+					m.Name = "Invoke" + m.Name;
+			}
+		}
+
 		public override void ResetValidation ()
 		{
 			validated = false;
+			invoker_method_names_fixed = false;
 			base.ResetValidation ();
 		}
 
@@ -267,6 +286,8 @@ namespace MonoDroid.Generation
 
 		private protected override void PopulateEmittedMembers (EmittedMemberTable accessible, EmittedMemberTable privateOnly, CodeGenerationOptions opt)
 		{
+			FixupInvokerMethodNames ();
+
 			var fields = opt != null ? GetGeneratableFields (opt) : Fields;
 			foreach (var f in fields) {
 				if (!ContainsName (f.Name))

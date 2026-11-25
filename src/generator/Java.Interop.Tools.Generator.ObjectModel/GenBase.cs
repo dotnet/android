@@ -1094,6 +1094,8 @@ namespace MonoDroid.Generation
 		{
 			if (string.IsNullOrEmpty (typeName))
 				return "";
+			if (typeName.StartsWith ("params ", StringComparison.Ordinal))
+				typeName = typeName.Substring ("params ".Length);
 			if (typeName.StartsWith ("global::", StringComparison.Ordinal))
 				typeName = typeName.Substring ("global::".Length);
 			if (typeName.EndsWith ("[]", StringComparison.Ordinal))
