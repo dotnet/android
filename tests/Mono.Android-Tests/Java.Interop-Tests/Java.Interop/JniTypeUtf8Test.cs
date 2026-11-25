@@ -95,6 +95,49 @@ namespace Java.InteropTests
 		[TestCategory ("JniModifiedUtf8")]
 		public void FindClass_SupplementaryName ()
 		{
+			// ART's String-based Class.forName() cannot load classes whose names contain supplementary
+			// characters, so the lookup must use JNI FindClass() with the app class loader. ART selects
+			// that loader from the calling native method, so run the lookups inside a UnicodeNames native method.
+			using (var type = new JniType (UnicodeTypeName)) {
+				try {
+					unsafe {
+						// SAFETY: Literals remain pinned and terminated through registration; the callback has the matching JNI ABI.
+						fixed (byte* name = "native\U00010000"u8)
+						fixed (byte* signature = "(Lnet/dot/jni/test/UnicodeNames$Value\U00010000;)I"u8) {
+							var methods = new [] {
+								new JniNativeMethod (name, signature,
+									(IntPtr) (delegate* unmanaged<IntPtr, IntPtr, IntPtr, int>) &FindSupplementaryClassCallback),
+							};
+							JniEnvironment.Types.RegisterNatives (type.PeerReference, methods);
+						}
+					}
+					findSupplementaryClassFailure = "callback was not invoked";
+					var result = InvokeUnicodeNative (type);
+					Assert.AreEqual (1, result, findSupplementaryClassFailure);
+				} finally {
+					type.UnregisterNativeMethods ();
+				}
+			}
+		}
+
+		[ThreadStatic]
+		static string? findSupplementaryClassFailure;
+
+		[UnmanagedCallersOnly]
+		static int FindSupplementaryClassCallback (IntPtr env, IntPtr self, IntPtr value)
+		{
+			try {
+				AssertFindClassSupplementaryName ();
+				findSupplementaryClassFailure = null;
+				return 1;
+			} catch (Exception e) {
+				findSupplementaryClassFailure = e.ToString ();
+				return 0;
+			}
+		}
+
+		static void AssertFindClassSupplementaryName ()
+		{
 			const string className = "net/dot/jni/test/UnicodeNames$Value\U00010000";
 			byte [] modifiedName = [
 				.. "net/dot/jni/test/UnicodeNames$Value"u8,
