@@ -233,6 +233,83 @@ namespace MonoDroid.Generation
 			base.ResetValidation ();
 		}
 
+		internal IEnumerable<InterfaceGen> GetEmittedBaseInterfaces (CodeGenerationOptions opt)
+		{
+			var visited = new HashSet<string> (StringComparer.Ordinal);
+			var queue = new Queue<InterfaceGen> ();
+			queue.Enqueue (this);
+			while (queue.Count > 0) {
+				var cur = queue.Dequeue ();
+				foreach (var isym in cur.Interfaces) {
+					var igen = (isym is GenericSymbol gs ? gs.Gen : isym) as InterfaceGen;
+					if (igen is null || (opt != null && igen.IsConstSugar (opt)) || igen.RawVisibility != "public")
+						continue;
+					if (visited.Add (igen.FullName)) {
+						yield return igen;
+						queue.Enqueue (igen);
+					}
+				}
+			}
+		}
+
+		private protected override bool HidesInheritedMember (string memberName, string [] paramTypes, CodeGenerationOptions opt)
+		{
+			if ((opt == null || !IsConstSugar (opt)) && JavaInterfaceMembers.Matches (memberName, paramTypes))
+				return true;
+
+			foreach (var baseIface in GetEmittedBaseInterfaces (opt)) {
+				if (baseIface.HasEmittedMember (memberName, paramTypes, opt, includePrivate: false))
+					return true;
+			}
+
+			return false;
+		}
+
+		private protected override void PopulateEmittedMembers (EmittedMemberTable accessible, EmittedMemberTable privateOnly, CodeGenerationOptions opt)
+		{
+			var fields = opt != null ? GetGeneratableFields (opt) : Fields;
+			foreach (var f in fields) {
+				if (!ContainsName (f.Name))
+					accessible.AddNonMethod (f.Name);
+			}
+
+			bool supportDim = opt?.SupportDefaultInterfaceMethods ?? false;
+
+			foreach (var p in Properties) {
+				if (!string.IsNullOrEmpty (p.ExplicitInterface))
+					continue;
+				bool isDimOrStatic = p.Getter.IsStatic || p.Getter.IsInterfaceDefaultMethod;
+				if (isDimOrStatic && !supportDim)
+					continue;
+				accessible.AddNonMethod (p.AdjustedName);
+				if (isDimOrStatic && p.Type.StartsWith ("Java.Lang.ICharSequence", StringComparison.Ordinal))
+					accessible.AddNonMethod (p.Name);
+			}
+
+			foreach (var nt in NestedTypes) {
+				if (!nt.Unnest)
+					accessible.AddNonMethod (nt.Name);
+			}
+
+			foreach (var m in Methods) {
+				if (!m.IsValid || !string.IsNullOrEmpty (m.ExplicitInterface))
+					continue;
+				bool isDimOrStatic = m.IsStatic || m.IsInterfaceDefaultMethod;
+				if (isDimOrStatic) {
+					if (!supportDim || m.OverriddenInterfaceMethod != null)
+						continue;
+				}
+				var paramTypes = GetParameterTypes (m.Parameters, opt, stringOverload: false);
+				accessible.AddMethod (m.AdjustedName, paramTypes);
+				if (isDimOrStatic) {
+					if (MethodEmitsStringOverload (m))
+						accessible.AddMethod (m.Name, GetParameterTypes (m.Parameters, opt, stringOverload: true));
+					if (m.Asyncify)
+						accessible.AddMethod (m.AdjustedName + "Async", paramTypes);
+				}
+			}
+		}
+
 		public override string ToNative (CodeGenerationOptions opt, string varname, Dictionary<string, string> mappings = null)
 		{
 			return string.Format ("JNIEnv.ToLocalJniHandle ({0})", varname);

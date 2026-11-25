@@ -35,21 +35,13 @@ namespace generator.SourceWriters
 
 		public static void AddField (TypeWriter tw, GenBase type, Field field, CodeGenerationOptions opt)
 		{
-			if (field.NeedsProperty) {
-				var prop = new BoundFieldAsProperty (type, field, opt);
-				if (tw is InterfaceConstsClass)
-					prop.IsShadow = GenBase.RequiresNewForSystemObjectMember (field.Name);
-				else if (tw is InterfaceMemberAlternativeClass)
-					prop.IsShadow = GenBase.RequiresNewForJavaObjectMember (field.Name, opt);
-				tw.Properties.Add (prop);
-			} else {
-				var f = new BoundField (type, field, opt);
-				if (tw is InterfaceConstsClass)
-					f.IsShadow = GenBase.RequiresNewForSystemObjectMember (field.Name);
-				else if (tw is InterfaceMemberAlternativeClass)
-					f.IsShadow = GenBase.RequiresNewForJavaObjectMember (field.Name, opt);
-				tw.Fields.Add (f);
-			}
+			bool? isShadow = tw is InterfaceConstsClass
+				? GenBase.RequiresNewForSystemObject (field.Name)
+				: (bool?) null;
+			if (field.NeedsProperty)
+				tw.Properties.Add (new BoundFieldAsProperty (type, field, opt, isShadow));
+			else
+				tw.Fields.Add (new BoundField (type, field, opt, isShadow));
 		}
 
 		public static bool AddFields (TypeWriter tw, GenBase gen, List<Field> fields, HashSet<string> seen, CodeGenerationOptions opt, CodeGeneratorContext context)

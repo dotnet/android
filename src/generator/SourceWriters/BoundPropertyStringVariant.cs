@@ -32,7 +32,7 @@ namespace generator.SourceWriters
 			};
 
 			SetVisibility ((property.Setter ?? property.Getter).Visibility);
-			if ((declaringType ?? property.Getter?.DeclaringType)?.RequiresNewForMemberName (property.Name, opt) == true)
+			if (declaringType != null && declaringType.RequiresNewForMemberName (property.Name, opt))
 				IsShadow = true;
 
 			SourceWriterExtensions.AddSupportedOSPlatform (Attributes, property.Getter, opt);

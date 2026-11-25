@@ -118,7 +118,7 @@ namespace generator.SourceWriters
 					Methods.Add (new BoundMethod (klass, m, opt, false, forceOverride: true));
 
 					if (m.Asyncify)
-						Methods.Add (new MethodAsyncWrapper (m, opt, klass));
+						Methods.Add (new MethodAsyncWrapper (m, opt));
 
 					m.IsOverride = false;
 				}

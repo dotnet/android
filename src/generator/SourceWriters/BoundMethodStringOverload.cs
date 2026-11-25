@@ -13,7 +13,7 @@ namespace generator.SourceWriters
 		readonly Method method;
 		readonly CodeGenerationOptions opt;
 
-		public BoundMethodStringOverload (Method method, CodeGenerationOptions opt, GenBase declaringType = null)
+		public BoundMethodStringOverload (Method method, CodeGenerationOptions opt, GenBase declaringType, bool? isShadow = null)
 		{
 			this.method = method;
 			this.opt = opt;
@@ -22,8 +22,7 @@ namespace generator.SourceWriters
 			IsStatic = method.IsStatic;
 
 			SetVisibility (method.Visibility);
-			if ((declaringType ?? method.DeclaringType)?.RequiresNewStringOverload (method, opt) == true)
-				IsShadow = true;
+			IsShadow = isShadow ?? declaringType.RequiresNewStringOverload (method, opt);
 			ReturnType = new TypeReferenceWriter (opt.GetTypeReferenceName (method.RetVal).Replace ("Java.Lang.ICharSequence", "string").Replace ("global::string", "string"));
 
 			SourceWriterExtensions.AddObsolete (Attributes, method.Deprecated, opt, deprecatedSince: method.DeprecatedSince);

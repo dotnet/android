@@ -51,8 +51,8 @@ namespace generator.SourceWriters
 			bool hidesCallbackMethod = false;
 			bool hidesMarshalTarget = false;
 
-			if (declaringType == null && type is ClassGen && type.HasEnclosingAncestor (options)) {
-				foreach (var (ancOwner, ancMethod, ancPropName, ancIsFormatted) in type.GetEnclosingAncestorCallbackEntries (options)) {
+			if (declaringType == null && type is ClassGen cls && cls.HasEnclosingAncestor (options)) {
+				foreach (var (ancOwner, ancMethod, ancPropName, ancIsFormatted) in cls.GetEnclosingAncestorCallbackEntries (options)) {
 					var ancKind = UnmanagedCallbackSupport.GetCallbackKind (ancOwner, ancMethod, options, ancPropName, ancIsFormatted);
 					if (kind == UnmanagedCallbackKind.Legacy && ancKind == UnmanagedCallbackKind.Legacy) {
 						if (ancMethod.EscapedCallbackName == method.EscapedCallbackName)

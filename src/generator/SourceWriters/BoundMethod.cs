@@ -15,7 +15,7 @@ namespace generator.SourceWriters
 
 		public Method JavaMethod { get; }
 
-		public BoundMethod (GenBase type, Method method, CodeGenerationOptions opt, bool generateCallbacks, bool forceOverride = false)
+		public BoundMethod (GenBase type, Method method, CodeGenerationOptions opt, bool generateCallbacks, bool forceOverride = false, bool? isShadow = null)
 		{
 			JavaMethod = method;
 
@@ -65,7 +65,7 @@ namespace generator.SourceWriters
 				IsShadow = true;
 			}
 
-			if (!IsOverride && !ExplicitInterfaceImplementation.HasValue () && type.RequiresNew (method.AdjustedName, method, opt))
+			if (!IsOverride && !ExplicitInterfaceImplementation.HasValue () && (isShadow ?? type.RequiresNew (method.AdjustedName, method, opt)))
 				IsShadow = true;
 
 			ReturnType = new TypeReferenceWriter (opt.GetTypeReferenceName (method.RetVal));

@@ -43,6 +43,8 @@ namespace generator.SourceWriters
 
 			if (string.Equals (method.ManagedOverride, "override", StringComparison.OrdinalIgnoreCase))
 				IsOverride = true;
+			else if (string.Equals (method.ManagedOverride, "new", StringComparison.OrdinalIgnoreCase))
+				IsShadow = true;
 
 			if (!IsOverride && !ExplicitInterfaceImplementation.HasValue () && impl.RequiresNew (method.AdjustedName, method, opt))
 				IsShadow = true;

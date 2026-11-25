@@ -30,8 +30,9 @@ namespace generator.SourceWriters
 			if (baseProp != null) {
 				IsOverride = true;
 			} else {
-				if (!ExplicitInterfaceImplementation.HasValue ())
-					IsShadow = gen.RequiresNew (property, opt);
+				if (string.Equals ((property.Getter ?? property.Setter).ManagedOverride, "new", StringComparison.OrdinalIgnoreCase) ||
+						(!ExplicitInterfaceImplementation.HasValue () && gen.RequiresNew (property, opt)))
+					IsShadow = true;
 
 				getter_callback = new MethodCallback (gen, property.Getter, opt, property.AdjustedName, false);
 

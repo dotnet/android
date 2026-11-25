@@ -242,10 +242,7 @@ namespace generator.SourceWriters
 
 				Methods.Add (new BoundMethod (iface, method, opt, true));
 
-				var name_and_jnisig = method.JavaName + method.JniSignature.Replace ("java/lang/CharSequence", "java/lang/String");
-				var gen_string_overload = !method.IsOverride && method.Parameters.HasCharSequence && !iface.ContainsMethod (name_and_jnisig);
-
-				if (gen_string_overload || method.IsReturnCharSequence)
+				if (iface.MethodEmitsStringOverload (method))
 					Methods.Add (new BoundMethodStringOverload (method, opt, iface));
 
 				if (method.Asyncify)
