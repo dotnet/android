@@ -16,7 +16,6 @@ remotely.
 | **Document known leaks in commit messages** | If a small leak is deliberately accepted, say so in the commit message so reviewers don't rediscover it later. (Postmortem `#13`) |
 | **Watch for leaks in external APIs** | Functions like `mono_guid_to_string()` allocate memory that the caller must free. Check the docs for every external API call. (Postmortem `#14`) |
 | **Use RAII (`std::unique_ptr`, etc.)** | If a library can be unloaded or an object has a clear owner, use smart pointers or RAII to ensure cleanup. Don't rely on manual `delete`. (Postmortem `#15`) |
-| **Stack memory adds up on Android** | Android threads can have only 2–4 KB of stack. A struct with 88 bytes of wrappers is non-trivial on the stack. Make sentinel/invalid instances `static` to avoid per-instance overhead. (Postmortem `#43`) |
 
 ---
 

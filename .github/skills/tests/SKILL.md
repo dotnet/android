@@ -15,7 +15,7 @@ Consult `references/test-catalog.md` for the full mapping of test areas → asse
 ## Test categories
 
 - **Standalone** — `dotnet test <project>.csproj`. No local SDK needed.
-- **Full-build** — requires the local SDK at `bin/Debug/dotnet/dotnet` (or Release). Use `./dotnet-local.sh` (macOS/Linux) or `dotnet-local.cmd` (Windows).
+- **Full-build** — requires the local SDK at `bin/Debug/dotnet/dotnet` (or Release). Use `./dotnet-local.sh` (macOS/Linux) or `dotnet-local.cmd` (Windows); see `local-build` if the wrapper selects the wrong configuration.
 
 Check for the local SDK in the configuration needed by the tests:
 ```bash

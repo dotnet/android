@@ -9,14 +9,14 @@ Guidance for test code. The repo-specific conventions (e.g., `BaseTest`,
 
 | Check | What to look for |
 |-------|-----------------|
-| **Inherit from `BaseTest`** | Test fixtures should inherit from `BaseTest` (provides `Root`, `TestName`, SDK paths, platform helpers). |
-| **NUnit conventions** | Use `[TestFixture]`, `[Test]`, `[NonParallelizable]` (for tests that hang without it). |
-| **Test with `dotnet-local`** | Tests must run via `dotnet-local.cmd`/`dotnet-local.sh` to use the locally built SDK. |
-| **Tests must earn their place** | A fixed bug or new behavior needs a test only if existing tests miss it. Flag new tests that check implementation details, refactors/moves/removals, trivial code, or coverage that already exists, and ask to drop them. |
-| **Test assertions must be specific** | `Assert.IsNotNull(result)` or `Assert.IsTrue(success)` don't tell you what went wrong. Prefer `Assert.AreEqual(expected, actual)` or NUnit constraints (`Assert.That` with `Does.Contain`, `Is.EqualTo`, etc.) for richer failure messages. |
+| **`BaseTest`** | Build integration fixtures that need its project, SDK, or platform helpers can follow existing `BaseTest` patterns; standalone tooling fixtures need not inherit it. |
+| **Test framework** | Follow the fixture's NUnit or MSTest conventions; disable parallel execution only when needed. |
+| **Test command** | See the `tests` skill: standalone tooling uses `dotnet test`; full-build tests use the local SDK. |
+| **Tests must earn their place** | Prefer existing coverage and tests of meaningful behavior or regressions; refactors can need characterization tests. Avoid duplicates, brittle GC-timing tests, and tests that only assert trivial implementation details or removed code. |
+| **Test assertions** | Assert the relevant behavior and add diagnostic context when a failure would otherwise be ambiguous. |
 | **Deterministic test data** | Tests should not depend on system locale, timezone, or current date. Use explicit `CultureInfo.InvariantCulture` and hardcoded dates when testing formatting. |
 | **Android tools SDK/JDK fixtures** | Tests under `tests/Xamarin.Android.Tools.AndroidSdk-Tests/` commonly build isolated fake SDK/JDK layouts and platform-specific tool scripts (`.bat` on Windows, shell scripts on Unix). Keep these fixtures self-contained and cleaned up in setup/teardown rather than depending on the developer machine's installed SDK/JDK. |
-| **Generator tests must include Invoker types** | Tests for generated binding code (under `src/generator/` and related test projects) should verify both the interface/class output and the `*Invoker` type behavior. Invoker codegen has historically had subtle bugs with default interface methods and virtual dispatch. |
+| **Generator Invoker tests** | When a change affects invoker generation, cover the relevant interface and `*Invoker` behavior, including default methods or virtual dispatch where applicable. |
 | **JVM-dependent tests** | Tests that require a running JVM must be in projects that configure the JVM environment (e.g., `Java.Interop-Tests`). Verify that test classes requiring a JVM are not placed in unit-test-only projects, where they will silently skip or fail with obscure errors. |
 | **Expected codegen output tests** | Generator tests that compare against expected output files should be updated when the expected format changes. Stale expected-output files cause spurious test failures that mask real regressions. |
 | **Test nested Java/JNI names at boundaries** | Name-conversion tests must include a `$` nested type and assert the final manifest, map, rule, or generated-source output—not only the helper. |

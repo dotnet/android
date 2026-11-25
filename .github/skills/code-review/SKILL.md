@@ -20,7 +20,7 @@ Flag severity clearly in every comment:
 - ⚠️ **warning** — Should fix. Performance issues, missing validation, inconsistency with patterns.
 - 💡 **suggestion** — Consider changing. Style, readability, optional improvements.
 
-**Every review should produce at least one inline comment.** Even clean PRs have opportunities for improvement — code consolidation, missing edge-case tests, perf micro-optimizations, or documentation gaps. Use 💡 suggestions for these. A review with zero inline comments appears superficial and misses the chance to share knowledge. Only omit inline comments if the PR is truly trivial (e.g., a 1-line typo fix or dependency bump). **Do NOT summarize suggestions only in the review body — post them as inline comments on the relevant line.** If a suggestion cannot be posted inline (e.g., it's about pre-existing code or missing code), either find the closest relevant changed line to attach it to, or omit it entirely rather than burying it in the summary.
+Report only substantiated, actionable findings; a clean review may have no inline comments. Don't invent test or micro-optimization suggestions to fill a review.
 
 ## Workflow
 
@@ -43,7 +43,7 @@ gh pr diff {number} --repo {owner}/{repo}
 gh pr view {number} --repo {owner}/{repo} --json files
 ```
 
-For each changed file, read the **full source file** (not just the diff) to understand surrounding invariants, call patterns, and data flow. If the change modifies a public/internal API or utility, search for callers. Check whether sibling types need the same fix.
+Read relevant surrounding source and follow callers, invariants, and sibling types as needed; read a full file when the change requires it.
 
 **Form an independent assessment** of what the change does and what problems it has *before* reading the PR description.
 
@@ -100,7 +100,7 @@ For each changed file, check against the review rules. Record issues as:
 2. **Safety** — thread safety, resource leaks, security vulnerabilities
 3. **Performance** — O(n²) patterns, unnecessary allocations, missing caches, startup-time regressions
 4. **Trimmer/NativeAOT compatibility** — reflection without `[DynamicallyAccessedMembers]`, `Type.GetType()` misuse
-5. **Tests** — a fixed bug or new behavior that no test covers; low-value new tests (see `testing-rules.md`)
+5. **Tests** — unprotected behavior or regressions; redundant or brittle test additions (see `testing-rules.md`)
 6. **Code duplication** — near-identical methods that should be consolidated
 7. **Consistency** — dedup patterns mixed within the same PR, API return types inconsistent with repo conventions
 8. **Documentation** — misleading comments, undocumented behavioral decisions
@@ -121,7 +121,7 @@ Post your findings directly:
 - **Inline comments** on specific lines of the diff with the severity, category, and explanation.
 - **Review summary** with the overall verdict (✅ LGTM, ⚠️ Needs Changes, or ❌ Reject), issue counts by severity, and positive callouts.
 
-If no issues found **and CI is green**, submit with at most one or two 💡 suggestions and a positive summary. Truly trivial PRs (dependency bumps, 1-line typo fixes) may have no inline comments.
+If no issues are found **and CI is green**, give a positive summary; inline comments are optional.
 
 **Copilot-authored PRs:** If the PR author is `Copilot` (the GitHub Copilot coding agent) and the verdict is ⚠️ Needs Changes or ❌ Reject, prefix the review summary with `@copilot ` so the comment automatically triggers Copilot to address the feedback. Do NOT add the prefix for ✅ LGTM verdicts.
 
