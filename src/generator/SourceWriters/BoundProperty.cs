@@ -13,8 +13,9 @@ namespace generator.SourceWriters
 	{
 		readonly MethodCallback getter_callback;
 		readonly MethodCallback setter_callback;
+		List<string> disabled_warnings;
 
-		public BoundProperty (GenBase gen, Property property, CodeGenerationOptions opt, bool withCallbacks = true, bool forceOverride = false)
+		public BoundProperty (GenBase gen, Property property, CodeGenerationOptions opt, bool withCallbacks = true, bool forceOverride = false, bool omitObsolete = false, bool? isObsoleteContext = null)
 		{
 			Name = property.AdjustedName;
 			ExplicitInterfaceImplementation = property.ExplicitInterface;
@@ -75,17 +76,19 @@ namespace generator.SourceWriters
 				IsShadow = true;
 
 			// Add [Obsolete] or [ObsoletedOSPlatform]
-			if (property.IsWholePropertyDeprecated) {
-				// This case applies [Obsolete] to the entire property
-				SourceWriterExtensions.AddObsolete (Attributes, property.Getter.Deprecated.Trim (), opt, deprecatedSince: property.Getter.DeprecatedSince);
-			} else {
-				// This case applies [Obsolete] to just the getter
-				if (property.Getter?.Deprecated != null)
-					SourceWriterExtensions.AddObsolete (GetterAttributes, property.Getter.Deprecated.Trim (), opt, deprecatedSince: property.Getter?.DeprecatedSince);
+			if (!omitObsolete) {
+				if (property.IsWholePropertyDeprecated) {
+					// This case applies [Obsolete] to the entire property
+					SourceWriterExtensions.AddObsolete (Attributes, property.Getter.Deprecated.Trim (), opt, deprecatedSince: property.Getter.DeprecatedSince);
+				} else {
+					// This case applies [Obsolete] to just the getter
+					if (property.Getter?.Deprecated != null)
+						SourceWriterExtensions.AddObsolete (GetterAttributes, property.Getter.Deprecated.Trim (), opt, deprecatedSince: property.Getter?.DeprecatedSince);
 
-				// This case applies [Obsolete] to just the setter
-				if (property.Setter?.Deprecated != null)
-					SourceWriterExtensions.AddObsolete (SetterAttributes, property.Setter.Deprecated.Trim (), opt, deprecatedSince: property.Setter?.DeprecatedSince);
+					// This case applies [Obsolete] to just the setter
+					if (property.Setter?.Deprecated != null)
+						SourceWriterExtensions.AddObsolete (SetterAttributes, property.Setter.Deprecated.Trim (), opt, deprecatedSince: property.Setter?.DeprecatedSince);
+				}
 			}
 
 			SourceWriterExtensions.AddRestrictToWarning (GetterAttributes, property.Getter.AnnotatedVisibility, false, opt);
@@ -125,6 +128,17 @@ namespace generator.SourceWriters
 			}
 
 			AddJavadocs (property);
+
+			var hasObsoleteAttr = Attributes.OfType<ObsoleteAttr> ().Any ();
+			var hasAccessorObsoleteAttr = GetterAttributes.OfType<ObsoleteAttr> ().Any () || SetterAttributes.OfType<ObsoleteAttr> ().Any ();
+			var inObsoleteContext = isObsoleteContext ?? SourceWriterExtensions.IsTypeObsolete (gen, opt);
+
+			if (!inObsoleteContext && !hasObsoleteAttr && SourceWriterExtensions.ReferencesObsoleteType (property, opt))
+				SourceWriterExtensions.AddDisabledWarning (ref disabled_warnings, "0618");
+
+			if (IsOverride && string.IsNullOrEmpty (ExplicitInterfaceImplementation) && (hasObsoleteAttr || hasAccessorObsoleteAttr) &&
+					!SourceWriterExtensions.WillBasePropertyEmitObsolete (gen, property, opt))
+				SourceWriterExtensions.AddDisabledWarning (ref disabled_warnings, "0809");
 		}
 
 		public override void Write (CodeWriter writer)
@@ -133,7 +147,7 @@ namespace generator.SourceWriters
 			getter_callback?.Write (writer);
 			setter_callback?.Write (writer);
 
-			base.Write (writer);
+			SourceWriterExtensions.WriteWithWarningsDisabled (writer, disabled_warnings, () => base.Write (writer));
 		}
 
 		bool ShouldForceOverride (Property property)

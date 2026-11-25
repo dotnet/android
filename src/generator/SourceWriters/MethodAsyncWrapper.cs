@@ -12,8 +12,9 @@ namespace generator.SourceWriters
 	{
 		readonly Method method;
 		readonly CodeGenerationOptions opt;
+		readonly bool suppress_obsolete_warning;
 
-		public MethodAsyncWrapper (Method method, CodeGenerationOptions opt, GenBase declaringType = null, bool? isShadow = null)
+		public MethodAsyncWrapper (Method method, CodeGenerationOptions opt, GenBase declaringType = null, bool? isShadow = null, bool? isObsoleteContext = null)
 		{
 			this.method = method;
 			this.opt = opt;
@@ -34,6 +35,16 @@ namespace generator.SourceWriters
 			Body.Add ($"return global::System.Threading.Tasks.Task.Run (() => {method.AdjustedName} ({method.Parameters.GetCall (opt)}));");
 
 			this.AddMethodParameters (method.Parameters, opt);
+
+			var inObsoleteContext = isObsoleteContext ?? SourceWriterExtensions.IsTypeObsolete (declaringType ?? method.DeclaringType, opt);
+			suppress_obsolete_warning = !inObsoleteContext && (
+				SourceWriterExtensions.WillEmitObsolete (method.Deprecated, opt, deprecatedSince: method.DeprecatedSince) ||
+				SourceWriterExtensions.ReferencesObsoleteType (method, opt));
+		}
+
+		public override void Write (CodeWriter writer)
+		{
+			SourceWriterExtensions.WriteWithWarningsDisabled (writer, suppress_obsolete_warning, "0618", () => base.Write (writer));
 		}
 	}
 }

@@ -51,6 +51,8 @@ namespace MonoDroid.Generation {
 			get { return null; }
 		}
 
+		internal ISymbol [] TypeParams => parms?.TypeParams;
+
 		public bool MayHaveManagedGenericArguments {
 			get { return true; }
 		}

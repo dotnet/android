@@ -14,6 +14,7 @@ namespace generator.SourceWriters
 	{
 		readonly CodeGenerationOptions opt;
 		readonly List<TypeWriter> sibling_types = new List<TypeWriter> ();
+		bool suppress_obsolete_signature;
 
 		internal IReadOnlyList<TypeWriter> SiblingTypes => sibling_types;
 
@@ -69,6 +70,9 @@ namespace generator.SourceWriters
 
 			if (klass.InheritsObject && obj_type != null)
 				Inherits = obj_type;
+
+			if (!SourceWriterExtensions.IsTypeObsolete (klass, opt) && klass.InheritsObject && SourceWriterExtensions.IsSymbolObsolete (klass.base_symbol, opt))
+				suppress_obsolete_signature = true;
 
 			// Handle fields
 			var seen = new HashSet<string> ();
@@ -181,11 +185,14 @@ namespace generator.SourceWriters
 
 		void AddImplementedInterfaces (ClassGen klass)
 		{
+			var classIsObsolete = SourceWriterExtensions.IsTypeObsolete (klass, opt);
 			foreach (var isym in klass.Interfaces) {
 				if ((!(isym is GenericSymbol gs) ? isym : gs.Gen) is InterfaceGen gen && (gen.IsConstSugar (opt) || gen.RawVisibility != "public"))
 					continue;
 
 				Implements.Add (opt.GetOutputName (isym.FullName));
+				if (!classIsObsolete && SourceWriterExtensions.IsSymbolObsolete (isym, opt))
+					suppress_obsolete_signature = true;
 			}
 		}
 
@@ -396,6 +403,11 @@ namespace generator.SourceWriters
 
 				NestedTypes.Add (nestedWriter);
 			}
+		}
+
+		public override void WriteSignature (CodeWriter writer)
+		{
+			SourceWriterExtensions.WriteWithWarningsDisabled (writer, suppress_obsolete_signature, "0618", () => base.WriteSignature (writer));
 		}
 
 		public override void Write (CodeWriter writer)

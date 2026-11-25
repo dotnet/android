@@ -10,7 +10,9 @@ namespace generator.SourceWriters
 {
 	public class InterfaceListenerProperty : PropertyWriter
 	{
-		public InterfaceListenerProperty (InterfaceGen iface, string name, string nameSpec, string methodName, string fullDelegateName, CodeGenerationOptions opt)
+		readonly bool suppress_obsolete_warning;
+
+		public InterfaceListenerProperty (InterfaceGen iface, string name, string nameSpec, string methodName, string fullDelegateName, CodeGenerationOptions opt, ClassGen target = null)
 		{
 			Name = name;
 			PropertyType = new TypeReferenceWriter (opt.GetOutputName (fullDelegateName)) { Nullable = opt.SupportNullableReferenceTypes };
@@ -33,6 +35,13 @@ namespace generator.SourceWriters
 			SetBody.Add ("}");
 			// Assign after the branch so a newly created implementor receives the first handler too.
 			SetBody.Add ($"impl.{nameSpec}Handler = value;");
+
+			suppress_obsolete_warning = !SourceWriterExtensions.IsTypeObsolete (target, opt) && SourceWriterExtensions.IsTypeObsolete (iface, opt);
+		}
+
+		public override void Write (CodeWriter writer)
+		{
+			SourceWriterExtensions.WriteWithWarningsDisabled (writer, suppress_obsolete_warning, "0618", () => base.Write (writer));
 		}
 	}
 }
