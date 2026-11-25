@@ -10,6 +10,7 @@ namespace Android.Runtime;
 public static class AndroidTelemetry
 {
 	public const string ActivitySourceName = RuntimeTelemetry.ActivitySourceName;
+	public const string InteropActivitySourceName = RuntimeTelemetry.InteropActivitySourceName;
 
 	static readonly object lifecycleLock = new ();
 	static ActivityLifecycleCallbacks? lifecycleCallbacks;

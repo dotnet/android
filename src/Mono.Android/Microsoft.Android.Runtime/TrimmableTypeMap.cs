@@ -161,6 +161,15 @@ public class TrimmableTypeMap
 
 	static object CreateJniProxyCacheEntry (string name, TrimmableTypeMap self)
 	{
+		using var activity = RuntimeTelemetry.InteropSource.StartActivity (RuntimeTelemetry.TypeMapJavaToManaged);
+		activity?.SetTag (RuntimeTelemetry.JavaClassTag, name);
+		var entry = LookupJniProxyCacheEntry (name, self);
+		activity?.SetTag (RuntimeTelemetry.FoundTag, entry is not JavaPeerProxy[] { Length: 0 });
+		return entry;
+	}
+
+	static object LookupJniProxyCacheEntry (string name, TrimmableTypeMap self)
+	{
 		if (!RuntimeFeature.EventSourceSupport) {
 			return CreateJniProxyCacheEntryCore (name, self);
 		}
@@ -254,6 +263,20 @@ public class TrimmableTypeMap
 	}
 
 	static JavaPeerProxy CreateManagedProxyCacheEntry (Type type, TrimmableTypeMap self)
+	{
+		using var activity = RuntimeTelemetry.InteropSource.StartActivity (RuntimeTelemetry.TypeMapManagedToJava);
+		activity?.SetTag (RuntimeTelemetry.ManagedTypeTag, type.FullName);
+		var proxy = LookupManagedProxyCacheEntry (type, self);
+		if (activity != null) {
+			bool found = !ReferenceEquals (proxy, s_noPeerSentinel);
+			activity.SetTag (RuntimeTelemetry.FoundTag, found);
+			if (found)
+				activity.SetTag (RuntimeTelemetry.JavaClassTag, proxy.JniName);
+		}
+		return proxy;
+	}
+
+	static JavaPeerProxy LookupManagedProxyCacheEntry (Type type, TrimmableTypeMap self)
 	{
 		if (!RuntimeFeature.EventSourceSupport) {
 			return CreateManagedProxyCacheEntryCore (type, self);
@@ -608,6 +631,8 @@ public class TrimmableTypeMap
 				return;
 			}
 
+			using var activity = RuntimeTelemetry.InteropSource.StartActivity (RuntimeTelemetry.InteropRegisterNatives);
+			activity?.SetTag (RuntimeTelemetry.JavaClassTag, className);
 			if (RuntimeFeature.JniRemapping) {
 				className = JniRemappingLookup.GetReverseType (className) ?? className;
 			}

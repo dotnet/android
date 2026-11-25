@@ -1,6 +1,7 @@
 #nullable enable
 Android.Runtime.AndroidTelemetry
 const Android.Runtime.AndroidTelemetry.ActivitySourceName = "Microsoft.Android.Runtime" -> string!
+const Android.Runtime.AndroidTelemetry.InteropActivitySourceName = "Microsoft.Android.Runtime.Interop" -> string!
 static Android.Runtime.AndroidTelemetry.EnableActivityLifecycleTracing(Android.App.Application! application) -> void
 static Android.Runtime.AndroidTelemetry.ReplayStartupActivities() -> int
 *REMOVED*Java.Lang.Object.~Object() -> void

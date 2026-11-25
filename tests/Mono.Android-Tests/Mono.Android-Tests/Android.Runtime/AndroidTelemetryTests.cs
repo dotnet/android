@@ -21,8 +21,8 @@ namespace Android.RuntimeTests
 	[DoNotParallelize]
 	public class AndroidTelemetryTests
 	{
-		static ActivityListener CreateListener (ConcurrentQueue<System.Diagnostics.Activity> activities, ActivitySamplingResult sampling) => new () {
-			ShouldListenTo = source => source.Name == AndroidTelemetry.ActivitySourceName,
+		static ActivityListener CreateListener (ConcurrentQueue<System.Diagnostics.Activity> activities, ActivitySamplingResult sampling, string sourceName = AndroidTelemetry.ActivitySourceName) => new () {
+			ShouldListenTo = source => source.Name == sourceName,
 			Sample = (ref ActivityCreationOptions<ActivityContext> options) => sampling,
 			SampleUsingParentId = (ref ActivityCreationOptions<string> options) => sampling,
 			ActivityStopped = activities.Enqueue,
@@ -105,6 +105,69 @@ namespace Android.RuntimeTests
 			Assert.AreEqual (1, activities.Count (activity =>
 				activity.OperationName == "android.activity.created" &&
 				Equals (activity.GetTagItem ("android.activity.name"), activityName)));
+		}
+
+		[TestMethod]
+		public void InteropTracingEmitsPeerAndTypeMapActivities ()
+		{
+			var activities = new ConcurrentQueue<System.Diagnostics.Activity> ();
+			using var listener = CreateListener (activities, ActivitySamplingResult.AllDataAndRecorded, AndroidTelemetry.InteropActivitySourceName);
+			ActivitySource.AddActivityListener (listener);
+
+			using (var uuid = Java.Util.UUID.RandomUUID ()) {
+				Assert.IsNotNull (uuid);
+			}
+			using (var peer = new InteropTracingPeer ()) {
+				Assert.IsNotNull (peer);
+			}
+
+			var spans = activities.ToArray ();
+			var createPeer = spans.FirstOrDefault (activity =>
+				activity.OperationName == "android.runtime.interop.create_peer" &&
+				Equals (activity.GetTagItem ("android.java.class"), "java/util/UUID"));
+			Assert.IsNotNull (createPeer, "Expected a create_peer activity for java/util/UUID.");
+			Assert.AreEqual (typeof (Java.Util.UUID).FullName, createPeer.GetTagItem ("android.managed.type"));
+
+			var managedToJava = spans.FirstOrDefault (activity =>
+				activity.OperationName == "android.runtime.type_map.managed_to_java" &&
+				Equals (activity.GetTagItem ("android.managed.type"), typeof (InteropTracingPeer).FullName));
+			Assert.IsNotNull (managedToJava, "Expected a managed_to_java type map miss for a type not used before.");
+			Assert.AreEqual (true, managedToJava.GetTagItem ("android.type_map.found"));
+		}
+
+		[TestMethod]
+		public void GCBridgeProcessingEmitsActivity ()
+		{
+			var activities = new ConcurrentQueue<System.Diagnostics.Activity> ();
+			using var listener = CreateListener (activities, ActivitySamplingResult.AllDataAndRecorded);
+			ActivitySource.AddActivityListener (listener);
+
+			bool observed = SpinWait.SpinUntil (() => {
+				AllocateJavaPeers ();
+				GC.Collect ();
+				GC.WaitForPendingFinalizers ();
+				return activities.Any (activity => activity.OperationName == "android.runtime.gc_bridge.process");
+			}, TimeSpan.FromSeconds (15));
+			Assert.IsTrue (observed, "Expected a gc_bridge.process activity.");
+
+			var span = activities.First (activity => activity.OperationName == "android.runtime.gc_bridge.process");
+			Assert.AreEqual (default (ActivitySpanId), span.ParentSpanId);
+			Assert.IsTrue (span.Duration >= TimeSpan.Zero);
+			Assert.IsInstanceOfType (span.GetTagItem ("android.gc_bridge.components"), typeof (long));
+			Assert.IsInstanceOfType (span.GetTagItem ("android.gc_bridge.collected"), typeof (int));
+			Assert.IsTrue ((int) (span.GetTagItem ("android.gc_bridge.generation") ?? 0) > 0);
+		}
+
+		[System.Runtime.CompilerServices.MethodImpl (System.Runtime.CompilerServices.MethodImplOptions.NoInlining)]
+		static void AllocateJavaPeers ()
+		{
+			for (int i = 0; i < 100; i++) {
+				_ = new InteropTracingPeer ();
+			}
+		}
+
+		class InteropTracingPeer : Java.Lang.Object
+		{
 		}
 	}
 }

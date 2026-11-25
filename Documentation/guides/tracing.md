@@ -346,6 +346,32 @@ default; enable those separately if the consumer also needs those signals.
 `EventSourceSupport` and `EnableDiagnostics` are not required for this
 in-process `ActivitySource`.
 
+When a listener samples `Microsoft.Android.Runtime`, each managed GC bridge
+pass also emits a root `android.runtime.gc_bridge.process` activity tagged with
+`android.gc_bridge.components`, `android.gc_bridge.cross_references`,
+`android.gc_bridge.collected`, and `android.gc_bridge.generation`. It is
+emitted after bridge processing completes, so listener code never runs while
+the bridge is in progress.
+
+### Interop activities
+
+Fine-grained Java interop activities use a separate source,
+`Android.Runtime.AndroidTelemetry.InteropActivitySourceName`
+(`Microsoft.Android.Runtime.Interop`). Traces have no levels, so listening to
+this source is the opt-in for higher-volume data. It emits:
+
+| Activity | When | Tags |
+| --- | --- | --- |
+| `android.runtime.interop.register_natives` | A Java class registers its native methods | `android.java.class` |
+| `android.runtime.interop.create_peer` | The runtime creates a managed peer for a Java object | `android.managed.type`; when all data is requested, also `android.java.class` and `android.interop.target_type` |
+| `android.runtime.type_map.java_to_managed` | A Java-to-managed type-map cache miss | `android.java.class`, `android.type_map.found` |
+| `android.runtime.type_map.managed_to_java` | A managed-to-Java type-map cache miss | `android.managed.type`, `android.type_map.found`, and `android.java.class` when found |
+
+Type-map lookups that hit the cache are not traced. Interop activities are not
+buffered during startup, so activities occurring before a listener is
+registered are not recorded. A listener that itself creates Java peers will
+observe nested `create_peer` activities.
+
 ## .NET for Android runtime events
 
 Runtime interop timing and JNI reference events use the `Microsoft.Android.Runtime` provider.

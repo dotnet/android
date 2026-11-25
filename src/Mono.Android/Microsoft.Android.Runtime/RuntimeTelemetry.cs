@@ -12,12 +12,45 @@ static class RuntimeTelemetry
 	internal const string StartupGCBridge = "android.runtime.gc_bridge.initialize";
 	internal const string StartupNativeMethods = "android.runtime.jni.register_natives";
 	internal const string StartupHooks = "android.runtime.startup_hooks";
+	internal const string GCBridgeProcess = "android.runtime.gc_bridge.process";
+
+	// Fine-grained, potentially frequent operations use a separate source so consumers opt in to them independently.
+	internal const string InteropActivitySourceName = "Microsoft.Android.Runtime.Interop";
+	internal const string InteropRegisterNatives = "android.runtime.interop.register_natives";
+	internal const string InteropCreatePeer = "android.runtime.interop.create_peer";
+	internal const string TypeMapJavaToManaged = "android.runtime.type_map.java_to_managed";
+	internal const string TypeMapManagedToJava = "android.runtime.type_map.managed_to_java";
+
+	internal const string JavaClassTag = "android.java.class";
+	internal const string ManagedTypeTag = "android.managed.type";
+	internal const string FoundTag = "android.type_map.found";
+	internal const string TargetTypeTag = "android.interop.target_type";
 
 	internal static ActivitySource Source => ActivitySourceHolder.Source;
+
+	internal static ActivitySource InteropSource => InteropActivitySourceHolder.Source;
 
 	static class ActivitySourceHolder
 	{
 		internal static readonly ActivitySource Source = new (ActivitySourceName);
+	}
+
+	static class InteropActivitySourceHolder
+	{
+		internal static readonly ActivitySource Source = new (InteropActivitySourceName);
+	}
+
+	// Emitted after the GC bridge completes, so listeners never run while bridge processing is in progress.
+	internal static void RecordGCBridgeProcessing (long startTimestamp, long components, long crossReferences, int collected, int generation)
+	{
+		var startTime = DateTimeOffset.UtcNow - Stopwatch.GetElapsedTime (startTimestamp);
+		using var activity = Source.StartActivity (GCBridgeProcess, ActivityKind.Internal, default (ActivityContext), startTime: startTime);
+		if (activity == null)
+			return;
+		activity.SetTag ("android.gc_bridge.components", components);
+		activity.SetTag ("android.gc_bridge.cross_references", crossReferences);
+		activity.SetTag ("android.gc_bridge.collected", collected);
+		activity.SetTag ("android.gc_bridge.generation", generation);
 	}
 
 	internal static StartupOperation StartStartupOperation (string name) =>
