@@ -565,10 +565,10 @@ namespace MonoDroid.Generation
 		}
 
 		static bool IsManagedOverrideDisabled (Method method) =>
-			!method.IsAbstract && (
+			string.Equals (method.ManagedOverride, "new", StringComparison.OrdinalIgnoreCase) ||
+			(!method.IsAbstract && (
 				string.Equals (method.ManagedOverride, "virtual", StringComparison.OrdinalIgnoreCase) ||
-				string.Equals (method.ManagedOverride, "none", StringComparison.OrdinalIgnoreCase) ||
-				string.Equals (method.ManagedOverride, "new", StringComparison.OrdinalIgnoreCase));
+				string.Equals (method.ManagedOverride, "none", StringComparison.OrdinalIgnoreCase)));
 
 		static void ReconcileMethodNullability (Method method, Method contract)
 		{
