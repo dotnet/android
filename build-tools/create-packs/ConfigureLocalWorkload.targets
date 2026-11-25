@@ -17,7 +17,7 @@
       <_FrameworkListOutputs Include="$(BuildOutputDirectory)lib\packs\Microsoft.Android.Ref.%(AndroidBuildApiLevel.Identity)\$(AndroidPackVersion)\data\FrameworkList.xml">
         <AndroidApiLevel>%(AndroidBuildApiLevel.Identity)</AndroidApiLevel>
       </_FrameworkListOutputs>
-      <_TemplatesInputs Include="$(XamarinAndroidSourcePath)src\Microsoft.Android.Templates\**" />
+      <_TemplatesInputs Include="$(XamarinAndroidSourcePath)src\Microsoft.Android.Templates\**" Exclude="$(XamarinAndroidSourcePath)src\Microsoft.Android.Templates\bin\**;$(XamarinAndroidSourcePath)src\Microsoft.Android.Templates\obj\**" />
       <_TemplatesOutputs Include="$(BuildOutputDirectory)lib\template-packs\microsoft.android.templates.$(AndroidPackVersion).nupkg" />
     </ItemGroup>
   </Target>

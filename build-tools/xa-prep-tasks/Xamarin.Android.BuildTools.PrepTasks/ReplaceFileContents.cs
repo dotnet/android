@@ -19,6 +19,7 @@ namespace Xamarin.Android.BuildTools.PrepTasks
 
 		public  string[]    Replacements        { get; set; }
 		public  string      ReplacementFilePath { get; set; }
+		public  bool        WriteOnlyWhenDifferent { get; set; }
 
 		public override bool Execute ()
 		{
@@ -32,17 +33,14 @@ namespace Xamarin.Android.BuildTools.PrepTasks
 				}
 			}
 
-			if (File.Exists (DestinationFile.ItemSpec))
-				File.Delete (DestinationFile.ItemSpec);
-
 			string[] replacements;
 			if (!String.IsNullOrEmpty (ReplacementFilePath))
 				replacements = File.ReadAllLines (ReplacementFilePath);
 			else
 				replacements = Replacements;
 			var r   = GetReplacementInfo (replacements);
-			using (var i    = File.OpenText (SourceFile.ItemSpec))
-			using (var o    = File.CreateText (DestinationFile.ItemSpec)) {
+			var o   = new StringWriter ();
+			using (var i    = File.OpenText (SourceFile.ItemSpec)) {
 				string line;
 				while ((line = i.ReadLine ()) != null) {
 					foreach (var e in r) {
@@ -51,6 +49,16 @@ namespace Xamarin.Android.BuildTools.PrepTasks
 					o.WriteLine (line);
 				}
 			}
+
+			var contents    = o.ToString ();
+			if (WriteOnlyWhenDifferent && File.Exists (DestinationFile.ItemSpec) && File.ReadAllText (DestinationFile.ItemSpec) == contents) {
+				Log.LogMessage (MessageImportance.Low, $"  Skipping unchanged {DestinationFile.ItemSpec}");
+				return !Log.HasLoggedErrors;
+			}
+
+			if (File.Exists (DestinationFile.ItemSpec))
+				File.Delete (DestinationFile.ItemSpec);
+			File.WriteAllText (DestinationFile.ItemSpec, contents);
 
 			return !Log.HasLoggedErrors;
 		}

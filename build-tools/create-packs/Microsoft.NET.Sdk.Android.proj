@@ -37,11 +37,13 @@ about the various Microsoft.Android workloads.
     <ReplaceFileContents
         SourceFile="$(XamarinAndroidSourcePath)src\Xamarin.Android.Build.Tasks\Microsoft.NET.Sdk.Android\WorkloadManifest.in.json"
         DestinationFile="$(WorkloadManifestJsonPath)"
+        WriteOnlyWhenDifferent="true"
         Replacements="@WORKLOAD_VERSION@=$(WorkloadVersion);@NET_PREVIOUS_VERSION@=$(AndroidNetPreviousVersion)">
     </ReplaceFileContents>
     <ReplaceFileContents
         SourceFile="$(XamarinAndroidSourcePath)src\Xamarin.Android.Build.Tasks\Microsoft.NET.Sdk.Android\WorkloadManifest.in.targets"
         DestinationFile="$(WorkloadManifestTargetsPath)"
+        WriteOnlyWhenDifferent="true"
         Replacements="@NET_PREVIOUS_VERSION@=$(AndroidNetPreviousVersion);@NET_PREVIOUS_ILLINK_VERSION@=$(AndroidNetPreviousILLinkVersion)">
     </ReplaceFileContents>
     <ItemGroup>
