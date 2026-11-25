@@ -468,6 +468,31 @@ int xml myxml 0x7f140000
 		}
 
 		[Test]
+		[SetCulture ("tr-TR")]
+		public void CustomResourceTypesUseOrdinalOrdering ()
+		{
+			var directory = Path.Combine (Root, "temp", TestName);
+			TestOutputDirectories [TestContext.CurrentContext.Test.ID] = directory;
+			var resources = Path.Combine (directory, "res");
+			Directory.CreateDirectory (Path.Combine (resources, "layout"));
+			File.WriteAllText (Path.Combine (resources, "layout", "main.xml"), """
+				<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android">
+				  <TextView android:id="@+iBeta/first" />
+				  <TextView android:id="@+Alpha/second" />
+				  <TextView android:id="@+Zeta/third" />
+				</LinearLayout>
+				""");
+			var task = new GenerateResourceDesigner { BuildEngine = new MockBuildEngine (TestContext.Out) };
+			var parser = new ManagedResourceParser (task.Log);
+			var resourceClass = parser.Parse (resources, Path.Combine (directory, "R.txt"), [], isApp: true, resourceMap: null);
+			var customTypes = resourceClass.Members.OfType<System.CodeDom.CodeTypeDeclaration> ()
+				.Select (type => type.Name)
+				.Where (name => name == "Alpha" || name == "Zeta" || name == "IBeta");
+
+			CollectionAssert.AreEqual (new [] { "Alpha", "Zeta", "IBeta" }, customTypes);
+		}
+
+		[Test]
 		public void GenerateDesignerFileWithÜmläüts ()
 		{
 			var path = Path.Combine ("temp", TestName + " Some Space");
