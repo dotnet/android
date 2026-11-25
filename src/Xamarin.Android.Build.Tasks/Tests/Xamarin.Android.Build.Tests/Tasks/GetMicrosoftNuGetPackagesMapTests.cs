@@ -1,6 +1,7 @@
 #nullable enable
 
 using System;
+using System.Globalization;
 using System.IO;
 using System.Threading.Tasks;
 using NUnit.Framework;
@@ -10,12 +11,31 @@ namespace Xamarin.Android.Build.Tests
 {
 	public class GetMicrosoftNuGetPackagesMapTests
 	{
+		[TestCase ("ar-SA")]
+		[TestCase ("fa-IR")]
+		[TestCase ("th-TH")]
+		public void CacheFileNamesUseInvariantCulture (string cultureName)
+		{
+			var originalCulture = CultureInfo.CurrentCulture;
+			try {
+				CultureInfo.CurrentCulture = CultureInfo.GetCultureInfo (cultureName);
+				var date = new DateTime (2026, 11, 25);
+				var filename = PackagesFile.GetFileName (date);
+				Assert.AreEqual ("microsoft-packages-20261125.json", filename);
+				Assert.IsTrue (PackagesFile.TryParse (filename, out var file));
+				Assert.AreEqual (date, file?.DownloadDate);
+			} finally {
+				CultureInfo.CurrentCulture = originalCulture;
+			}
+		}
+
 		[Test]
+		[SetCulture ("fa-IR")]
 		public async Task NoCachedFile ()
 		{
 			var engine = new MockBuildEngine (TestContext.Out, []);
 			var temp_cache_dir = Path.Combine (Path.GetTempPath (), Guid.NewGuid ().ToString ());
-			var today_file = Path.Combine (temp_cache_dir, $"microsoft-packages-{DateTime.Today:yyyyMMdd}.json");
+			var today_file = Path.Combine (temp_cache_dir, FormattableString.Invariant ($"microsoft-packages-{DateTime.Today:yyyyMMdd}.json"));
 
 			try {
 				var task = new GetMicrosoftNuGetPackagesMap {
@@ -35,16 +55,19 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
+		[SetCulture ("fa-IR")]
 		public async Task CachedTodayFile ()
 		{
 			// If a file already exists for today, it should be used and nothing new should be downloaded
 			var engine = new MockBuildEngine (TestContext.Out, []);
 			var temp_cache_dir = Path.Combine (Path.GetTempPath (), Guid.NewGuid ().ToString ());
-			var today_file = Path.Combine (temp_cache_dir, $"microsoft-packages-{DateTime.Today:yyyyMMdd}.json");
+			var today_file = Path.Combine (temp_cache_dir, FormattableString.Invariant ($"microsoft-packages-{DateTime.Today:yyyyMMdd}.json"));
 
 			try {
 				Directory.CreateDirectory (temp_cache_dir);
 				File.WriteAllText (today_file, "dummy file");
+				Assert.IsTrue (PackagesFile.TryParse (today_file, out var cachedFile));
+				Assert.AreEqual (DateTime.Today, cachedFile?.DownloadDate);
 
 				var task = new GetMicrosoftNuGetPackagesMap {
 					BuildEngine = engine,
@@ -72,8 +95,8 @@ namespace Xamarin.Android.Build.Tests
 			// If a file only exists for yesterday, a new one should be downloaded and the old one should be deleted
 			var engine = new MockBuildEngine (TestContext.Out, []);
 			var temp_cache_dir = Path.Combine (Path.GetTempPath (), Guid.NewGuid ().ToString ());
-			var yesterday_file = Path.Combine (temp_cache_dir, $"microsoft-packages-{DateTime.Today.AddDays (-1):yyyyMMdd}.json");
-			var today_file = Path.Combine (temp_cache_dir, $"microsoft-packages-{DateTime.Today:yyyyMMdd}.json");
+			var yesterday_file = Path.Combine (temp_cache_dir, FormattableString.Invariant ($"microsoft-packages-{DateTime.Today.AddDays (-1):yyyyMMdd}.json"));
+			var today_file = Path.Combine (temp_cache_dir, FormattableString.Invariant ($"microsoft-packages-{DateTime.Today:yyyyMMdd}.json"));
 
 			try {
 				Directory.CreateDirectory (temp_cache_dir);
@@ -102,7 +125,7 @@ namespace Xamarin.Android.Build.Tests
 			var engine = new MockBuildEngine (TestContext.Out, []);
 			var temp_cache_dir = Path.Combine (Path.GetTempPath (), Guid.NewGuid ().ToString ());
 			var malformed_file = Path.Combine (temp_cache_dir, $"microsoft-packages-dummy.json");
-			var today_file = Path.Combine (temp_cache_dir, $"microsoft-packages-{DateTime.Today:yyyyMMdd}.json");
+			var today_file = Path.Combine (temp_cache_dir, FormattableString.Invariant ($"microsoft-packages-{DateTime.Today:yyyyMMdd}.json"));
 
 			try {
 				Directory.CreateDirectory (temp_cache_dir);
@@ -133,7 +156,7 @@ namespace Xamarin.Android.Build.Tests
 			// the old file and don't delete it
 			var engine = new MockBuildEngine (TestContext.Out, []);
 			var temp_cache_dir = Path.Combine (Path.GetTempPath (), Guid.NewGuid ().ToString ());
-			var yesterday_file = Path.Combine (temp_cache_dir, $"microsoft-packages-{DateTime.Today.AddDays (-1):yyyyMMdd}.json");
+			var yesterday_file = Path.Combine (temp_cache_dir, FormattableString.Invariant ($"microsoft-packages-{DateTime.Today.AddDays (-1):yyyyMMdd}.json"));
 
 			try {
 				Directory.CreateDirectory (temp_cache_dir);

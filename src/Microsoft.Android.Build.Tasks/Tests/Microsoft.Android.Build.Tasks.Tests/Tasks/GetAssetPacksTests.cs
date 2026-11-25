@@ -1,6 +1,8 @@
 #nullable enable
 
+using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using Microsoft.Android.Tasks;
@@ -49,6 +51,39 @@ namespace Xamarin.Android.Build.Tests.Tasks
 			StringAssert.StartsWith ($"{asset1}:", lines [0]);
 			StringAssert.StartsWith ($"{asset2}:", lines [1]);
 			Assert.AreEqual ("OnDemand", lines [2]);
+		}
+
+		[TestCase ("fa-IR")]
+		[TestCase ("th-TH")]
+		public void CacheFileIsCultureIndependent (string cultureName)
+		{
+			var dir = Path.Combine (Root, "temp", TestName);
+			Directory.CreateDirectory (dir);
+			var asset = Path.Combine (dir, "a.txt");
+			File.WriteAllText (asset, "a");
+			File.SetLastWriteTimeUtc (asset, new DateTime (2026, 11, 25, 10, 11, 12, DateTimeKind.Utc));
+
+			var task = new GetAssetPacks {
+				BuildEngine = new MockBuildEngine (TestContext.Out, []),
+				IntermediateDir = new TaskItem (Path.Combine (dir, "assetpacks")),
+				Assets = [Asset (asset, "My_Pack1", "OnDemand")],
+			};
+			var originalCulture = CultureInfo.CurrentCulture;
+			try {
+				CultureInfo.CurrentCulture = CultureInfo.GetCultureInfo ("en-US");
+				Assert.IsTrue (task.Execute ());
+				var cacheFile = Path.Combine (dir, "assetpacks", "My_Pack1", "assetpack.cache");
+				var originalContents = File.ReadAllText (cacheFile);
+				File.SetLastWriteTimeUtc (cacheFile, new DateTime (2020, 1, 1, 0, 0, 0, DateTimeKind.Utc));
+				var originalWriteTime = File.GetLastWriteTimeUtc (cacheFile);
+
+				CultureInfo.CurrentCulture = CultureInfo.GetCultureInfo (cultureName);
+				Assert.IsTrue (task.Execute ());
+				Assert.AreEqual (originalContents, File.ReadAllText (cacheFile));
+				Assert.AreEqual (originalWriteTime, File.GetLastWriteTimeUtc (cacheFile));
+			} finally {
+				CultureInfo.CurrentCulture = originalCulture;
+			}
 		}
 
 		[TestCase ("my-pack")]
