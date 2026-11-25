@@ -2338,7 +2338,7 @@ namespace UnnamedProject
 				proj.SetProperty ("EnablePreviewFeatures", "true");
 			}
 
-			proj.Imports.Add (CreateAndroidReferencePackageAssertion (apiLevel));
+			proj.Imports.Add (CreateAndroidReferencePackageAssertion (targetFramework, apiLevel));
 
 			proj.MainActivity = proj.DefaultMainActivity
 				.Replace ("//${AFTER_ONCREATE}", """
@@ -2394,7 +2394,7 @@ namespace UnnamedProject
 				}
 			};
 			proj.SetRuntime (runtime);
-			proj.Imports.Add (CreateAndroidReferencePackageAssertion (apiLevel));
+			proj.Imports.Add (CreateAndroidReferencePackageAssertion (targetFramework, apiLevel));
 
 			if (enablePreviewFeatures) {
 				proj.SetProperty ("EnablePreviewFeatures", "true");
@@ -2431,9 +2431,13 @@ namespace UnnamedProject
 			Assert.IsTrue(didLaunch, "Activity should have started.");
 		}
 
-		static Import CreateAndroidReferencePackageAssertion (string apiLevel)
+		static Import CreateAndroidReferencePackageAssertion (string targetFramework, string apiLevel)
 		{
-			string packageId = $"Microsoft.Android.{XABuildConfig.LatestDotNetTargetFramework}.Ref.{apiLevel}";
+			// Only the current .NET version uses the Microsoft.Android NuGet packages
+			string latest = XABuildConfig.LatestDotNetTargetFramework;
+			string packageId = targetFramework.StartsWith (latest, StringComparison.Ordinal) ?
+				$"Microsoft.Android.{latest}.Ref.{apiLevel}" :
+				$"Microsoft.Android.Ref.{apiLevel}";
 			return new Import (() => "Directory.Build.targets") {
 				TextContent = () => $"""
 <Project>

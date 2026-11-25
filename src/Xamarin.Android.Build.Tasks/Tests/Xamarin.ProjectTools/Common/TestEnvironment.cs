@@ -152,6 +152,12 @@ namespace Xamarin.ProjectTools
 						FileSystemUtils.DeleteDirectoryWithRetry (directory);
 					}
 					ZipFile.ExtractToDirectory (nupkg, directory);
+					// ZipFile does not keep the execute permission (for example tools/aapt2), so set it like NuGet does
+					if (!OperatingSystem.IsWindows ()) {
+						foreach (var file in Directory.EnumerateFiles (directory, "*", SearchOption.AllDirectories)) {
+							File.SetUnixFileMode (file, File.GetUnixFileMode (file) | UnixFileMode.UserExecute);
+						}
+					}
 					File.WriteAllText (marker, "");
 				}
 			}

@@ -316,7 +316,6 @@ namespace Xamarin.Android.Build.Tests
 			using var builder = CreateApkBuilder ();
 			builder.Target = "_ValidateAndroidR8ObfuscationMode";
 			builder.ThrowOnBuildFailure = false;
-			builder.AutomaticNuGetRestore = false;
 			Assert.AreEqual (expectedResult, builder.Build (proj), "Validation result should depend on whether R8 is enabled.");
 			if (!expectedResult) {
 				StringAssertEx.Contains ("error XA1050", builder.LastBuildOutput);

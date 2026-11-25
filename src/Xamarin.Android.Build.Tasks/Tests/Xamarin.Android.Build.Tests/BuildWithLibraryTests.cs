@@ -1187,6 +1187,7 @@ namespace MultiTfmLib
 				},
 			};
 			multiTfmLib.TargetFrameworks = $"{dotnetVersion};{dotnetVersion}-android";
+			multiTfmLib.PackageReferences.Add (KnownPackages.MicrosoftAndroid);
 			multiTfmLib.SetProperty ("Nullable", "enable");
 			multiTfmLib.SetProperty ("AndroidGenerateResourceDesigner", "false");
 			multiTfmLib.SetProperty ("SupportedOSPlatformVersion", "24",
