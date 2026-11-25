@@ -1,10 +1,10 @@
 using System;
-using System.Reflection;
 
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 using Android.Runtime;
 using Android.Util;
+using Java.Interop;
 
 namespace Android.UtilTests {
 
@@ -25,21 +25,49 @@ namespace Android.UtilTests {
 		[TestMethod]
 		public void AppendResolvesAppendMethod ()
 		{
-			using var values = new SparseArray<string> ();
+			using var values = new JavaSparseArray ();
 			values.Append (1, "one");
 
-			var sparseArrayClass = JNIEnv.FindClass ("android/util/SparseArray");
-			try {
-				var append = JNIEnv.GetMethodID (sparseArrayClass, "append", "(ILjava/lang/Object;)V");
-				var cachedMethod = typeof (SparseArray<string>).GetField (
-					"id_append_ILjava_lang_Object_", BindingFlags.Static | BindingFlags.NonPublic);
-				Assert.IsNotNull (cachedMethod);
-				Assert.AreEqual (append, cachedMethod?.GetValue (null));
-			} finally {
-				JNIEnv.DeleteGlobalRef (sparseArrayClass);
-			}
+			Assert.AreEqual ("append:1:one", values.LastCall);
+		}
 
-			Assert.AreEqual ("one", values.Get (1));
+		[TestMethod]
+		public void GenericMethodsDispatchToJavaOverrides ()
+		{
+			using var values = new JavaSparseArray ();
+			using var argument = new Java.Lang.String ("direct");
+			var type = values.Class;
+			var append = JNIEnv.GetMethodID (type.Handle, "append", "(ILjava/lang/Object;)V");
+			JNIEnv.CallVoidMethod (values.Handle, append, new JValue (9), new JValue (argument));
+			GC.KeepAlive (type);
+			GC.KeepAlive (argument);
+			Assert.AreEqual ("append:9:direct", values.LastCall);
+
+			Assert.AreEqual ("get:2", values.Get (2));
+			Assert.AreEqual ("getDefault:3:fallback", values.Get (3, "fallback"));
+			Assert.AreEqual (123, values.IndexOfValue ("needle"));
+			Assert.AreEqual ("indexOfValue:needle", values.LastCall);
+			values.Put (4, "put");
+			Assert.AreEqual ("put:4:put", values.LastCall);
+			values.SetValueAt (5, "set");
+			Assert.AreEqual ("setValueAt:5:set", values.LastCall);
+			Assert.AreEqual ("valueAt:6", values.ValueAt (6));
+		}
+
+		[TestMethod]
+		public void GenericManagedBaseCallUsesJavaBaseImplementation ()
+		{
+			using var values = new ManagedDerivedSparseArray ();
+			using var argument = new Java.Lang.String ("direct");
+			var type = values.Class;
+			var put = JNIEnv.GetMethodID (type.Handle, "put", "(ILjava/lang/Object;)V");
+			JNIEnv.CallVoidMethod (values.Handle, put, new JValue (1), new JValue (argument));
+			GC.KeepAlive (type);
+			GC.KeepAlive (argument);
+			Assert.AreEqual ("derivedPut:1:direct", values.LastCall);
+
+			values.Put (2, "base");
+			Assert.AreEqual ("put:2:base", values.LastCall);
 		}
 
 		// https://github.com/dotnet/android/issues/13674
@@ -64,6 +92,35 @@ namespace Android.UtilTests {
 				}
 			} finally {
 				JNIEnv.DeleteGlobalRef (sparseArrayClass);
+			}
+		}
+
+		[Register ("net/dot/android/test/VirtualSparseArray", DoNotGenerateAcw = true)]
+		class JavaSparseArray : SparseArray<string> {
+
+			static readonly JniPeerMembers members = new JniPeerMembers (
+				"net/dot/android/test/VirtualSparseArray", typeof (JavaSparseArray));
+
+			public override JniPeerMembers JniPeerMembers => members;
+
+			public string LastCall {
+				get {
+					var type = Class;
+					var method = JNIEnv.GetMethodID (type.Handle, "getLastCall", "()Ljava/lang/String;");
+					var result = JNIEnv.GetString (JNIEnv.CallObjectMethod (Handle, method), JniHandleOwnership.TransferLocalRef);
+					GC.KeepAlive (type);
+					GC.KeepAlive (this);
+					return result ?? throw new InvalidOperationException ("The Java fixture returned a null call record.");
+				}
+			}
+		}
+
+		[Register ("net/dot/android/test/VirtualSparseArray$Derived", DoNotGenerateAcw = true)]
+		sealed class ManagedDerivedSparseArray : JavaSparseArray {
+
+			public override void Put (int key, string value)
+			{
+				base.Put (key, value);
 			}
 		}
 	}
