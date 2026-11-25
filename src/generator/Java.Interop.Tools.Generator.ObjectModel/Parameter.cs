@@ -128,8 +128,8 @@ namespace MonoDroid.Generation {
 					return "Event";
 				string name = Name;
 				return (name [0] == '@')
-					? char.ToUpper (name [1]) + name.Substring (2)
-					: char.ToUpper (name [0]) + name.Substring (1);
+					? char.ToUpperInvariant (name [1]) + name.Substring (2)
+					: char.ToUpperInvariant (name [0]) + name.Substring (1);
 			}
 		}
 

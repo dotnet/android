@@ -33,7 +33,7 @@ namespace Xamarin.Android.Tasks
 		CodeTypeDeclaration layout, ids, drawable, strings, colors, dimension, raw, animator, animation, attrib, boolean, font, ints, interpolators, menu, mipmaps, plurals, styleable, style, arrays, xml, transition;
 		Dictionary<string, string> map;
 		bool app;
-		SortedDictionary<string, CodeTypeDeclaration> custom_types = new SortedDictionary<string, CodeTypeDeclaration> ();
+		SortedDictionary<string, CodeTypeDeclaration> custom_types = new SortedDictionary<string, CodeTypeDeclaration> (StringComparer.Ordinal);
 		List<CodeTypeDeclaration> declarationIds = new List<CodeTypeDeclaration> ();
 		List<CodeTypeDeclaration> typeIds = new List<CodeTypeDeclaration> ();
 		Dictionary<CodeMemberField, CodeMemberField []> arrayMapping = new Dictionary<CodeMemberField, CodeMemberField []> ();

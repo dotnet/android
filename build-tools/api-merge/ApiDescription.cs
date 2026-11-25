@@ -172,11 +172,11 @@ namespace Xamarin.Android.ApiMerge {
 							smember.ReplaceNodes (nmember.Nodes ());
 						}
 					}
-					var tordered = stype.Elements ().OrderBy (e => GetMemberSignature (e)).ToList ();
+					var tordered = stype.Elements ().OrderBy (e => GetMemberSignature (e), StringComparer.Ordinal).ToList ();
 					stype.RemoveNodes ();
 					stype.Add (tordered);
 				}
-				var pordered = spackage.Elements ().OrderBy (e => GetMemberSignature (e)).ToList ();
+				var pordered = spackage.Elements ().OrderBy (e => GetMemberSignature (e), StringComparer.Ordinal).ToList ();
 				spackage.RemoveNodes ();
 				spackage.Add (pordered);
 			}

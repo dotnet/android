@@ -110,7 +110,7 @@ namespace MonoDroid.Generation
 				if (c == '_' || c == '-')
 					raise = true;
 				else if (raise) {
-					builder.Append (Char.ToUpper (c));
+					builder.Append (Char.ToUpperInvariant (c));
 					raise = false;
 				} else
 					builder.Append (c);

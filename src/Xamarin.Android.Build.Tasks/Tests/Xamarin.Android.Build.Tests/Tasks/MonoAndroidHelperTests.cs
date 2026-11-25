@@ -1,6 +1,7 @@
 using NUnit.Framework;
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Security;
@@ -12,6 +13,37 @@ namespace Xamarin.Android.Build.Tests.Tasks
 	[TestFixture]
 	public class MonoAndroidHelperTests : BaseTest
 	{
+		[Test]
+		[SetCulture ("tr-TR")]
+		public void MapFilesUseOrdinalOrdering ()
+		{
+			var directory = Path.Combine (Root, "temp", TestName);
+			TestOutputDirectories [TestContext.CurrentContext.Test.ID] = directory;
+			Directory.CreateDirectory (directory);
+			var engine = new MockBuildEngine (TestContext.Out);
+			var mapFile = Path.Combine (directory, "map.txt");
+			var viewMapFile = Path.Combine (directory, "views.txt");
+			var map = new Dictionary<string, string> {
+				["i"] = "value",
+				["a"] = "value",
+				["I"] = "value",
+			};
+			var viewMap = new Dictionary<string, HashSet<string>> {
+				["i"] = new HashSet<string> { "i", "a", "I" },
+				["a"] = new HashSet<string> { "value" },
+				["I"] = new HashSet<string> { "value" },
+			};
+
+			Assert.IsTrue (MonoAndroidHelper.SaveMapFile (engine, mapFile, map));
+			Assert.IsTrue (MonoAndroidHelper.SaveCustomViewMapFile (engine, viewMapFile, viewMap));
+			CollectionAssert.AreEqual (new [] { "I;value", "a;value", "i;value" }, File.ReadAllLines (mapFile));
+			CollectionAssert.AreEqual (new [] { "I;value", "a;value", "i;I", "i;a", "i;i" }, File.ReadAllLines (viewMapFile));
+
+			CultureInfo.CurrentCulture = CultureInfo.GetCultureInfo ("en-US");
+			Assert.IsFalse (MonoAndroidHelper.SaveMapFile (engine, mapFile, map));
+			Assert.IsFalse (MonoAndroidHelper.SaveCustomViewMapFile (engine, viewMapFile, viewMap));
+		}
+
 		[TestCase (false)]
 		[TestCase (true)]
 		public void DetermineJavaLibrariesInSeparateProjects (bool multithreaded)

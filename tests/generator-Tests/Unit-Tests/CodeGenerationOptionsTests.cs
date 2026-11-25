@@ -116,6 +116,21 @@ namespace generatortests
 			Assert.AreEqual ("uint", opt.GetTypeReferenceName (primitive_uint));
 		}
 
+		[Test]
+		[SetCulture ("en-US")]
+		public void JniMarshalDelegatesUseOrdinalOrdering ()
+		{
+			var opt = new CodeGenerationOptions ();
+			var iface = SupportTypeBuilder.CreateEmptyInterface ("com.example.Example");
+			var signed = SupportTypeBuilder.CreateMethod (iface, "Signed", opt, "int");
+			var unsigned = SupportTypeBuilder.CreateMethod (iface, "Unsigned", opt, "uint");
+
+			opt.GetJniMarshalDelegate (unsigned);
+			opt.GetJniMarshalDelegate (signed);
+
+			CollectionAssert.AreEqual (new [] { "_JniMarshal_PP_I", "_JniMarshal_PP_i" }, opt.GetJniMarshalDelegates ());
+		}
+
 		[Test, TestCaseSource (nameof (ReservedKeywords))]
 		[SetCulture ("cs-CZ")]
 		public void GetSafeIdentifierCultureInvariant (string keyword)
