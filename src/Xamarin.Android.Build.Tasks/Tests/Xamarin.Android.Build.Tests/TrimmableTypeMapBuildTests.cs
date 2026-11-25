@@ -2840,6 +2840,54 @@ namespace Xamarin.Android.Build.Tests {
 		}
 
 		[Test]
+		public void Build_RemovesUnusedCoreClrRuntimeProviders ()
+		{
+			if (IgnoreUnsupportedConfiguration (AndroidRuntime.CoreCLR, release: false)) {
+				return;
+			}
+
+			var receiver = new BuildItem.Source ("RemoteReceiver.cs") {
+				TextContent = () => """
+					using Android.Content;
+
+					[BroadcastReceiver (Process = ":remote", Name = "example.RemoteReceiver")]
+					public class RemoteReceiver : BroadcastReceiver
+					{
+						public override void OnReceive (Context context, Intent intent) { }
+					}
+					""",
+			};
+			var proj = new XamarinAndroidApplicationProject {
+				Sources = { receiver },
+			};
+			proj.SetRuntime (AndroidRuntime.CoreCLR);
+			using var builder = CreateApkBuilder ();
+			Assert.IsTrue (builder.Build (proj), "The initial build should succeed.");
+			var provider = builder.Output.GetIntermediaryPath (Path.Combine ("android", "src", "mono", "MonoRuntimeProvider_1.java"));
+			var providerClass = builder.Output.GetIntermediaryPath (Path.Combine ("android", "bin", "classes", "mono", "MonoRuntimeProvider_1.class"));
+			FileAssert.Exists (provider);
+			FileAssert.Exists (providerClass);
+
+			receiver.TextContent = () => """
+				using Android.Content;
+
+				[BroadcastReceiver (Name = "example.RemoteReceiver")]
+				public class RemoteReceiver : BroadcastReceiver
+				{
+					public override void OnReceive (Context context, Intent intent) { }
+				}
+				""";
+			proj.Touch ("RemoteReceiver.cs");
+			Assert.IsTrue (builder.Build (proj, doNotCleanupOnUpdate: true, saveProject: false), "The incremental build should succeed.");
+			builder.Output.AssertTargetIsNotSkipped ("_CompileJava");
+			FileAssert.DoesNotExist (provider);
+			FileAssert.DoesNotExist (providerClass);
+
+			Assert.IsTrue (builder.Build (proj, doNotCleanupOnUpdate: true, saveProject: false), "The unchanged build should succeed.");
+			builder.Output.AssertTargetIsSkipped ("_CompileJava");
+		}
+
+		[Test]
 		public void Build_WithTrimmableTypeMap_PublishTrimmed_IncrementalChangesAvoidUnnecessaryJavaWork ()
 		{
 			if (IgnoreUnsupportedConfiguration (AndroidRuntime.CoreCLR, release: true)) {

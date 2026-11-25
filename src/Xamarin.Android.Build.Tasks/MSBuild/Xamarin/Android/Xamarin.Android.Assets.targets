@@ -112,6 +112,7 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
       <DeliveryType Condition=" '%(_AndroidAsset.DeliveryType)' == '' ">InstallTime</DeliveryType>
     </_AssetPacks>
     <FileWrites Include="@(_AssetPacks->'%(AssetPackCacheFile)')" />
+    <FileWrites Include="@(_AssetPacks->'%(ManifestFile)');@(_AssetPacks->'%(AssetPackOutput)')" />
   </ItemGroup>
 </Target>
 
@@ -193,7 +194,7 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
   />
   <ItemGroup>
     <AndroidAppBundleModules Include="%(_AssetPacks.AssetPackOutput)" Condition=" '$(AndroidIncludeAssetPacksInPackage)' == 'true' "/>
-    <FileWrites Include="$%(_AssetPacks.AssetPackOutput)" />
+    <FileWrites Include="%(_AssetPacks.AssetPackOutput)" />
   </ItemGroup>
 </Target>
 
