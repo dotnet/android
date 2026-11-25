@@ -4,8 +4,6 @@ using System.Runtime.InteropServices;
 
 namespace Android.Runtime {
 	internal static partial class Logger {
-		internal const string NetLogTag = "DOTNET-net";
-
 		static bool hasNoLibLog;
 
 		internal static LogCategories Categories;

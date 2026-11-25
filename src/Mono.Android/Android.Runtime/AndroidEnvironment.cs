@@ -202,9 +202,7 @@ namespace Android.Runtime {
 		// DO NOT REMOVE
 		static HttpMessageHandler GetHttpMessageHandler ()
 		{
-#pragma warning disable CS0618 // Preserve the legacy HttpClient default handler factory for System.Net.Http.
 			return new Xamarin.Android.Net.AndroidMessageHandler ();
-#pragma warning restore CS0618
 		}
 	}
 }
