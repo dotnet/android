@@ -68,7 +68,7 @@ namespace Android.RuntimeTests
 		public void CopyToReleasesArrayWhenConversionThrows (bool generic)
 		{
 			using var list = new Java.Util.ArrayList ();
-			using (var value = new Java.Lang.Integer (1))
+			using (var value = Java.Lang.Integer.ValueOf (1))
 				list.Add (value);
 			var destination = new Guid [1];
 
@@ -86,7 +86,7 @@ namespace Android.RuntimeTests
 		public void CopyToReleasesArrayWhenAssignmentThrows ()
 		{
 			using var list = new Java.Util.ArrayList ();
-			using (var value = new Java.Lang.Integer (1))
+			using (var value = Java.Lang.Integer.ValueOf (1))
 				list.Add (value);
 			using var collection = new JavaCollection<object> (list.Handle, JniHandleOwnership.DoNotTransfer);
 			object [] destination = new string [1];

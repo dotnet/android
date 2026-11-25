@@ -299,26 +299,44 @@ namespace Java.InteropTests
 
 		[TestMethod]
 		[TestCategory ("JniLocalReferenceCleanup")]
-		[DataRow (false)]
-		[DataRow (true)]
-		public void ArrayFactoriesReleaseLocalWhenElementConversionThrows (bool generic)
+		public void ObjectArrayFactoryReleasesLocalWhenHandleThrows ()
 		{
-			IntPtr warmup = generic
-				? JNIEnv.NewObjectArray<object> ([])
-				: JNIEnv.NewArray ((IJavaObject []) []);
+			IntPtr warmup = JNIEnv.NewArray ((IJavaObject []) []);
 			JNIEnv.DeleteLocalRef (warmup);
 
-			IJavaObject [] values = [new ThrowingJavaObject ()];
-			object [] genericValues = [values [0]];
+			using var value = new ThrowingJavaObject ();
+			IJavaObject [] values = [value];
 			void CreateArray ()
 			{
-				IntPtr result = generic ? JNIEnv.NewObjectArray (genericValues) : JNIEnv.NewArray (values);
+				IntPtr result = JNIEnv.NewArray (values);
 				JNIEnv.DeleteLocalRef (result);
 			}
 
+			AssertArrayFactoryThrowsWithoutLeaking<InvalidOperationException> (CreateArray);
+		}
+
+		[TestMethod]
+		[TestCategory ("JniLocalReferenceCleanup")]
+		public void GenericArrayFactoryReleasesLocalWhenElementConversionThrows ()
+		{
+			IntPtr warmup = JNIEnv.NewObjectArray<object> ([]);
+			JNIEnv.DeleteLocalRef (warmup);
+
+			object [] values = [new int []? [] { null }];
+			void CreateArray ()
+			{
+				IntPtr result = JNIEnv.NewObjectArray (values);
+				JNIEnv.DeleteLocalRef (result);
+			}
+
+			AssertArrayFactoryThrowsWithoutLeaking<ArgumentNullException> (CreateArray);
+		}
+
+		static void AssertArrayFactoryThrowsWithoutLeaking<TException> (Action createArray) where TException : Exception
+		{
 			int localReferences = JniEnvironment.LocalReferenceCount;
 			for (int i = 0; i < 4; i++) {
-				Assert.ThrowsExactly<InvalidOperationException> (CreateArray);
+				Assert.ThrowsExactly<TException> (createArray);
 				Assert.AreEqual (localReferences, JniEnvironment.LocalReferenceCount);
 			}
 		}
@@ -340,10 +358,10 @@ namespace Java.InteropTests
 			}
 		}
 
-		sealed class ThrowingJavaObject : IJavaObject
+		sealed class ThrowingJavaObject : Java.Lang.Object, IJavaObject
 		{
-			public IntPtr Handle => throw new InvalidOperationException ("Cannot obtain a JNI handle.");
-			public void Dispose () {}
+			public ThrowingJavaObject () : base (IntPtr.Zero, JniHandleOwnership.DoNotTransfer) {}
+			IntPtr IJavaObject.Handle => throw new InvalidOperationException ("Cannot obtain a JNI handle.");
 		}
 
 		[TestMethod]
