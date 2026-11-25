@@ -29,13 +29,13 @@ Applies to `src/Java.Interop/`, `src/Mono.Android/`, `src/generator/`, and handw
 |---------|----------|----------------|
 | **Borrowed handles (`Handle`, `PeerReference`, `JValue`, `JniArgumentValue`)** | ❌ error | Prefer `JniPeerMembers.InstanceMethods.Invoke*`/`JniInstanceFields.*` and `ToLocalJniHandle` over raw `JNIEnv.Call*Method (Handle, ...)`. Otherwise keep every owner (`this` and peer args) alive via `GC.KeepAlive` right after JNI/P/Invoke (before error checks/conversions) across all exit paths — straight-line without exception cleanup, or in `finally` when `try`/`finally` exists or loops/multiple exits require it. |
 | **`WithLocalJniHandle` / `fixed`** | ❌ error | `WithLocalJniHandle (arg, ...)` retains `arg`, **not** `this`; `fixed` pins the array, **not** `this`. Require `GC.KeepAlive (this)`. |
-| **`NewLocalRef ()` on `PeerReference`** | ❌ error | Require `GC.KeepAlive (peer)` afterward (including `ConditionalWeakTable` proxies); read `PeerReference` once into a local before `.IsValid`/`.NewLocalRef ()`. |
-| **Handwritten `JNIEnv.FinishCreateInstance (Handle, ...)`** | ❌ error | Passes a raw `Handle` without retaining `this`; require `GC.KeepAlive (this)` afterward. |
+| **`NewLocalRef ()` on `PeerReference`** | ❌ error | Require `GC.KeepAlive (peer)` afterward (including `ConditionalWeakTable` proxies); read `PeerReference` once into a local before `.IsValid`/`.NewLocalRef ()`. Note: this prevents early GC, not concurrent `Dispose ()`, which still requires synchronization or a caller contract. |
+| **Handwritten `JNIEnv.FinishCreateInstance (Handle, ...)`** | ❌ error | Passes a raw `Handle` without retaining `this`; require `GC.KeepAlive (this)` afterward (or use `JniPeerMembers.InstanceMethods.FinishCreateInstance`, which retains `self`). |
 | **Multi-call native wrappers** | ❌ error | Types retaining a native buffer or borrowed `JniObjectReference` across calls must hold a strong peer reference until final release, keep it alive across release calls, and clear it once disposed. |
 | **Unrooted peer / `WeakReference` race** | ❌ error | Don't store a new peer only in a `WeakReference` before Java holds it, or split `IsAlive` and `.Target` reads; bind a strong local (`if (wref?.Target is T x)`) across registration and return. |
 | **Inaccurate `// SAFETY:` lifetime claims** | ⚠️ warning | Flag comments claiming a peer is retained without `GC.KeepAlive` or a later use, or edits that drop existing ABI/type contracts. |
 
-**Do NOT flag:** locally owned refs deleted in `finally` (`NewString`, `NewArray`, `ToLocalJniHandle`, `GetObjectClass`); `this` in `JniPeerMembers.InstanceMethods.Invoke*`/`JniInstanceFields.*`; non-finalizable `JniType`/static `class_ref`; enclosing `using`/`lock`; low-level raw-`IntPtr` APIs (`JNIEnv.Call*Method (IntPtr, ...)`) with `/// <safety>`.
+**Do NOT flag:** locally owned refs deleted in `finally` (`NewString`, `NewArray`, `ToLocalJniHandle`, `GetObjectClass`); `this` in `JniPeerMembers.InstanceMethods.Invoke*`/`FinishCreateInstance`/`JniInstanceFields.*`; non-finalizable `JniType`/static `class_ref`; enclosing `using`/`lock`; low-level raw-`IntPtr` APIs (`JNIEnv.Call*Method (IntPtr, ...)`) with `/// <safety>`.
 
 ---
 
