@@ -38,6 +38,7 @@
 
     <!-- PublicApiAnalyzers warnings should be errors, but building in VS throws incorrect extra warnings -->
     <WarningsAsErrors Condition=" '$(BuildingInsideVisualStudio)' != 'True' ">$(WarningsAsErrors);RS0016,RS0017</WarningsAsErrors>
+    <WarningsNotAsErrors Condition=" '$(BuildingInsideVisualStudio)' == 'True' ">$(WarningsNotAsErrors);RS0016;RS0017</WarningsNotAsErrors>
   </PropertyGroup>
 
   <PropertyGroup Condition=" '$(IncludeAndroidJavadoc)' == 'True' ">
