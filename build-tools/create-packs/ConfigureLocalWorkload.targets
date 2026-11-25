@@ -97,7 +97,7 @@
     <MakeDir Directories="$(_LocalAndroidManifestFolder)" />
     <MSBuild
         Projects="$(MSBuildThisFileDirectory)Microsoft.NET.Sdk.Android.proj"
-        Properties="WorkloadManifestJsonPath=$(_LocalAndroidManifestFolder)WorkloadManifest.json;WorkloadManifestTargetsPath=$(_LocalAndroidManifestFolder)WorkloadManifest.targets;WorkloadVersion=$(AndroidPackVersion)"
+        Properties="WorkloadManifestJsonPath=$(_LocalAndroidManifestFolder)WorkloadManifest.json;WorkloadManifestTargetsPath=$(_LocalAndroidManifestFolder)WorkloadManifest.targets;WorkloadVersion=$(AndroidPackVersion);_AndroidSkipWorkloadDependencies=true"
         Targets="_GenerateXAWorkloadContent"
     />
 

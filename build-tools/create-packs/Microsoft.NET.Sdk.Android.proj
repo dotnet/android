@@ -73,6 +73,7 @@ about the various Microsoft.Android workloads.
     </ItemGroup>
 
     <MSBuild
+        Condition=" '$(_AndroidSkipWorkloadDependencies)' != 'true' "
         Projects="$(MSBuildThisFileDirectory)/../../tools/workload-dependencies/WorkloadDependencies.proj"
         Properties="@(_WorkloadDepProp)"
         Targets="GenerateWorkloadDependencies"
@@ -82,7 +83,7 @@ about the various Microsoft.Android workloads.
       <_PackageFiles Include="$(WorkloadManifestJsonPath)" PackagePath="data" />
       <_PackageFiles Include="$(_AndroidWorkloadManifestLocalizationPath)\WorkloadManifest.*.json" PackagePath="data\localize" />
       <_PackageFiles Include="$(WorkloadManifestTargetsPath)" PackagePath="data" />
-      <_PackageFiles Include="$(WorkloadDependenciesPath)" PackagePath="data" />
+      <_PackageFiles Include="$(WorkloadDependenciesPath)" PackagePath="data" Condition=" '$(_AndroidSkipWorkloadDependencies)' != 'true' " />
     </ItemGroup>
   </Target>
 
