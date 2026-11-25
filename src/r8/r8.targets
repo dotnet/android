@@ -22,11 +22,7 @@
 
   <Target Name="_CleanR8" BeforeTargets="Clean">
     <Delete Files="$(_Destination)" />
-    <Exec
-        Command="&quot;$(GradleWPath)&quot; clean $(GradleArgs)"
-        EnvironmentVariables="JAVA_HOME=$(JavaSdkDirectory);APP_HOME=$(GradleHome)"
-        WorkingDirectory="$(MSBuildThisFileDirectory)"
-    />
+    <RemoveDir Directories="$(MSBuildThisFileDirectory)build" />
   </Target>
 
 </Project>
