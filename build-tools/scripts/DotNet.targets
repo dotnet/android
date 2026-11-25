@@ -36,9 +36,12 @@
 
       <_ExtraApiLevelCurrentOutput Include="$(_MonoAndroidNETOutputRoot)%(AndroidBuildApiLevel.Identity)\**"
           Condition=" '%(AndroidBuildApiLevel.Identity)' != '$(AndroidApiLevel)' " />
+      <!-- Workload setup generates pack metadata and copies analyzers after the extra API-level build. -->
       <_ExtraApiLevelCurrentOutput Include="$(MicrosoftAndroidPacksRootDir)Microsoft.Android.Ref.%(AndroidBuildApiLevel.Identity)\$(AndroidPackVersion)\**"
+          Exclude="$(MicrosoftAndroidPacksRootDir)Microsoft.Android.Ref.*\$(AndroidPackVersion)\data\FrameworkList.xml;$(MicrosoftAndroidPacksRootDir)Microsoft.Android.Ref.*\$(AndroidPackVersion)\data\*.assets.cache;$(MicrosoftAndroidPacksRootDir)Microsoft.Android.Ref.*\$(AndroidPackVersion)\analyzers\dotnet\cs\Microsoft.Android.Sdk.Analysis.dll"
           Condition=" '%(AndroidBuildApiLevel.Identity)' != '$(AndroidApiLevel)' " />
       <_ExtraApiLevelCurrentOutput Include="$(MicrosoftAndroidPacksRootDir)Microsoft.Android.Runtime.%(AndroidBuildApiLevel.Identity).android\$(AndroidPackVersion)\**"
+          Exclude="$(MicrosoftAndroidPacksRootDir)Microsoft.Android.Runtime.*.android\$(AndroidPackVersion)\data\RuntimeList.xml;$(MicrosoftAndroidPacksRootDir)Microsoft.Android.Runtime.*.android\$(AndroidPackVersion)\data\*.assets.cache"
           Condition=" '%(AndroidBuildApiLevel.Identity)' != '$(AndroidApiLevel)' " />
       <_ExtraApiLevelCurrentOutput Include="$(MicrosoftAndroidSdkPackDir)data\$(DotNetAndroidTargetFramework)%(AndroidBuildApiLevel.Identity)\**"
           Condition=" '%(AndroidBuildApiLevel.Identity)' != '$(AndroidApiLevel)' " />
@@ -81,8 +84,10 @@
       <_ExtraApiLevelOutputAfterBuild Include="$(_MonoAndroidNETOutputRoot)%(AndroidBuildApiLevel.Identity)\**"
           Condition=" '%(AndroidBuildApiLevel.Identity)' != '$(AndroidApiLevel)' " />
       <_ExtraApiLevelOutputAfterBuild Include="$(MicrosoftAndroidPacksRootDir)Microsoft.Android.Ref.%(AndroidBuildApiLevel.Identity)\$(AndroidPackVersion)\**"
+          Exclude="$(MicrosoftAndroidPacksRootDir)Microsoft.Android.Ref.*\$(AndroidPackVersion)\data\FrameworkList.xml;$(MicrosoftAndroidPacksRootDir)Microsoft.Android.Ref.*\$(AndroidPackVersion)\data\*.assets.cache;$(MicrosoftAndroidPacksRootDir)Microsoft.Android.Ref.*\$(AndroidPackVersion)\analyzers\dotnet\cs\Microsoft.Android.Sdk.Analysis.dll"
           Condition=" '%(AndroidBuildApiLevel.Identity)' != '$(AndroidApiLevel)' " />
       <_ExtraApiLevelOutputAfterBuild Include="$(MicrosoftAndroidPacksRootDir)Microsoft.Android.Runtime.%(AndroidBuildApiLevel.Identity).android\$(AndroidPackVersion)\**"
+          Exclude="$(MicrosoftAndroidPacksRootDir)Microsoft.Android.Runtime.*.android\$(AndroidPackVersion)\data\RuntimeList.xml;$(MicrosoftAndroidPacksRootDir)Microsoft.Android.Runtime.*.android\$(AndroidPackVersion)\data\*.assets.cache"
           Condition=" '%(AndroidBuildApiLevel.Identity)' != '$(AndroidApiLevel)' " />
       <_ExtraApiLevelOutputAfterBuild Include="$(MicrosoftAndroidSdkPackDir)data\$(DotNetAndroidTargetFramework)%(AndroidBuildApiLevel.Identity)\**"
           Condition=" '%(AndroidBuildApiLevel.Identity)' != '$(AndroidApiLevel)' " />
