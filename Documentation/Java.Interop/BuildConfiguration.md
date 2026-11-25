@@ -17,9 +17,9 @@ The repository defaults to C# preview and `MemorySafetyRulesVersion=2` in
 `Directory.Build.props`, including test projects. Use the compiler provisioned
 by `make prepare`; older language modes do not support these rules.
 The isolated workload-dependency and Arcade internal-tools builds opt in
-separately because they do not import the root props. Android project templates
-also carry the settings explicitly so generated projects retain them outside
-the repository.
+separately because they do not import the root props. The template packaging
+project also uses these internal defaults, but generated Android projects leave
+compiler settings at the SDK defaults.
 
 Overridable MSBuild properties include:
 
