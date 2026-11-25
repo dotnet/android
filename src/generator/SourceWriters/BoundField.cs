@@ -35,6 +35,7 @@ namespace generator.SourceWriters
 				Attributes.Add (new CustomAttr (field.Annotation));
 
 			SetVisibility (field.Visibility);
+			IsShadow = type.RequiresNew (field, opt);
 			IsConst = true;
 
 			// the Value complication is due to constant enum from negative integer value (C# compiler requires explicit parenthesis).

@@ -43,6 +43,7 @@ namespace generator.SourceWriters
 			SetVisibility (field.Visibility);
 			UseExplicitPrivateKeyword = true;
 
+			IsShadow = type.RequiresNew (field, opt);
 			IsStatic = field.IsStatic;
 
 			HasGet = true;

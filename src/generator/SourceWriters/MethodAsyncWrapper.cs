@@ -13,7 +13,7 @@ namespace generator.SourceWriters
 		readonly Method method;
 		readonly CodeGenerationOptions opt;
 
-		public MethodAsyncWrapper (Method method, CodeGenerationOptions opt)
+		public MethodAsyncWrapper (Method method, CodeGenerationOptions opt, GenBase declaringType = null)
 		{
 			this.method = method;
 			this.opt = opt;
@@ -22,6 +22,8 @@ namespace generator.SourceWriters
 			IsStatic = method.IsStatic;
 
 			SetVisibility (method.Visibility);
+			if ((declaringType ?? method.DeclaringType)?.RequiresNew (Name, method, opt) == true)
+				IsShadow = true;
 
 			ReturnType = new TypeReferenceWriter ("global::System.Threading.Tasks.Task");
 

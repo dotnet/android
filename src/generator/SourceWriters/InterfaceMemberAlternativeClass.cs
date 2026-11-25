@@ -65,16 +65,24 @@ namespace generator.SourceWriters
 				if (shouldObsolete && string.IsNullOrWhiteSpace (method.Deprecated))
 					method.Deprecated = $"Use '{iface.FullName}.{method.AdjustedName}'. This class will be removed in a future release.";
 
-				Methods.Add (new BoundMethod (iface, method, opt, true));
+				var bm = new BoundMethod (iface, method, opt, true);
+				bm.IsShadow = GenBase.RequiresNewForJavaObjectMethod (method.AdjustedName, method, opt);
+				Methods.Add (bm);
 
 				var name_and_jnisig = method.JavaName + method.JniSignature.Replace ("java/lang/CharSequence", "java/lang/String");
 				var gen_string_overload = !method.IsOverride && method.Parameters.HasCharSequence && !iface.ContainsMethod (name_and_jnisig);
 
-				if (gen_string_overload || method.IsReturnCharSequence)
-					Methods.Add (new BoundMethodStringOverload (method, opt));
+				if (gen_string_overload || method.IsReturnCharSequence) {
+					var strOverload = new BoundMethodStringOverload (method, opt);
+					strOverload.IsShadow = GenBase.RequiresNewForJavaObjectMethod (method.Name, method, opt, stringOverload: true);
+					Methods.Add (strOverload);
+				}
 
-				if (method.Asyncify)
-					Methods.Add (new MethodAsyncWrapper (method, opt));
+				if (method.Asyncify) {
+					var asyncWrapper = new MethodAsyncWrapper (method, opt);
+					asyncWrapper.IsShadow = GenBase.RequiresNewForJavaObjectMethod (method.AdjustedName + "Async", method, opt);
+					Methods.Add (asyncWrapper);
+				}
 
 				method.Deprecated = original;
 			}
@@ -118,10 +126,15 @@ namespace generator.SourceWriters
 					seen.Add (f.Name);
 					needs_property = needs_property || f.NeedsProperty;
 
-					if (f.NeedsProperty)
-						Properties.Add (new BoundFieldAsProperty (iface, f, opt));
-					else
-						Fields.Add (new BoundField (iface, f, opt));
+					if (f.NeedsProperty) {
+						var prop = new BoundFieldAsProperty (iface, f, opt);
+						prop.IsShadow = GenBase.RequiresNewForJavaObjectMember (f.Name, opt);
+						Properties.Add (prop);
+					} else {
+						var field = new BoundField (iface, f, opt);
+						field.IsShadow = GenBase.RequiresNewForJavaObjectMember (f.Name, opt);
+						Fields.Add (field);
+					}
 				}
 			}
 

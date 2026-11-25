@@ -15,6 +15,9 @@ namespace generator.SourceWriters
 		readonly List<ISourceWriter> post_sibling_types = new List<ISourceWriter> ();
 		readonly bool dont_generate;
 
+		internal IReadOnlyList<TypeWriter> PreSiblingTypes => pre_sibling_types;
+		internal IReadOnlyList<ISourceWriter> PostSiblingTypes => post_sibling_types;
+
 		public BoundInterface (InterfaceGen iface, CodeGenerationOptions opt, CodeGeneratorContext context, GenerationInfo genInfo)
 		{
 			context.ContextTypes.Push (iface);
@@ -203,13 +206,13 @@ namespace generator.SourceWriters
 					Properties.Add (bound_property);
 
 					if (prop.Type.StartsWith ("Java.Lang.ICharSequence", StringComparison.Ordinal) && !bound_property.IsOverride)
-						Properties.Add (new BoundPropertyStringVariant (prop, opt, bound_property));
+						Properties.Add (new BoundPropertyStringVariant (prop, opt, bound_property, iface));
 				} else {
 					var bound_property = new BoundProperty (iface, prop, opt, true, false);
 					Properties.Add (bound_property);
 
 					if (prop.Type.StartsWith ("Java.Lang.ICharSequence", StringComparison.Ordinal) && !bound_property.IsOverride)
-						Properties.Add (new BoundPropertyStringVariant (prop, opt, bound_property));
+						Properties.Add (new BoundPropertyStringVariant (prop, opt, bound_property, iface));
 				}
 			}
 		}
@@ -243,10 +246,10 @@ namespace generator.SourceWriters
 				var gen_string_overload = !method.IsOverride && method.Parameters.HasCharSequence && !iface.ContainsMethod (name_and_jnisig);
 
 				if (gen_string_overload || method.IsReturnCharSequence)
-					Methods.Add (new BoundMethodStringOverload (method, opt));
+					Methods.Add (new BoundMethodStringOverload (method, opt, iface));
 
 				if (method.Asyncify)
-					Methods.Add (new MethodAsyncWrapper (method, opt));
+					Methods.Add (new MethodAsyncWrapper (method, opt, iface));
 			}
 		}
 
@@ -255,8 +258,12 @@ namespace generator.SourceWriters
 			// Generate nested types for supported nested types.  This is a new addition in C#8.
 			// Prior to this, types nested in an interface had to be generated as sibling types.
 			// The "Unnest" property is used to support backwards compatibility with pre-C#8 bindings.
-			foreach (var nest in iface.NestedTypes.Where (t => !t.Unnest))
-				NestedTypes.Add (SourceWriterExtensions.BuildManagedTypeModel (nest, opt, context, genInfo));
+			foreach (var nest in iface.NestedTypes.Where (t => !t.Unnest)) {
+				var nestedWriter = SourceWriterExtensions.BuildManagedTypeModel (nest, opt, context, genInfo);
+				if (iface.RequiresNewForMemberName (nestedWriter.Name, opt))
+					nestedWriter.IsShadow = true;
+				NestedTypes.Add (nestedWriter);
+			}
 		}
 
 		public override void Write (CodeWriter writer)

@@ -15,7 +15,7 @@ namespace generator.SourceWriters
 
 		public Method JavaMethod { get; }
 
-		public BoundMethod (GenBase type, Method method, CodeGenerationOptions opt, bool generateCallbacks)
+		public BoundMethod (GenBase type, Method method, CodeGenerationOptions opt, bool generateCallbacks, bool forceOverride = false)
 		{
 			JavaMethod = method;
 
@@ -31,13 +31,13 @@ namespace generator.SourceWriters
 
 			// TODO: Clean up this logic
 			var is_explicit = opt.SupportDefaultInterfaceMethods && type is InterfaceGen && method.OverriddenInterfaceMethod != null;
-			var virt_ov = is_explicit ? string.Empty : method.IsOverride ? (opt.SupportDefaultInterfaceMethods && method.OverriddenInterfaceMethod != null ? " virtual" : " override") : method.IsVirtual ? " virtual" : string.Empty;
+			var virt_ov = is_explicit ? string.Empty : forceOverride ? " override" : method.IsOverride ? (opt.SupportDefaultInterfaceMethods && method.OverriddenInterfaceMethod != null ? " virtual" : " override") : method.IsVirtual ? " virtual" : string.Empty;
 
 			IsVirtual = virt_ov.Trim () == "virtual";
 			IsOverride = virt_ov.Trim () == "override";
 
 			// When using DIM, don't generate "virtual sealed" methods, remove both modifiers instead
-			if (opt.SupportDefaultInterfaceMethods && method.OverriddenInterfaceMethod != null && IsVirtual && IsSealed) {
+			if (!forceOverride && opt.SupportDefaultInterfaceMethods && method.OverriddenInterfaceMethod != null && IsVirtual && IsSealed) {
 				IsVirtual = false;
 				IsSealed = false;
 			}
@@ -49,20 +49,24 @@ namespace generator.SourceWriters
 			if (method.ExplicitInterface.HasValue ())
 				ExplicitInterfaceImplementation = method.ExplicitInterface;
 
-			if ((IsVirtual || !IsOverride) && type.RequiresNew (method.AdjustedName, method))
-				IsShadow = true;
-
 			// Allow user to override our virtual/override logic
-			if (string.Equals (method.ManagedOverride, "virtual", StringComparison.OrdinalIgnoreCase)) {
+			if (!forceOverride && string.Equals (method.ManagedOverride, "virtual", StringComparison.OrdinalIgnoreCase)) {
 				IsVirtual = true;
 				IsOverride = false;
-			} else if (string.Equals (method.ManagedOverride, "override", StringComparison.OrdinalIgnoreCase)) {
+			} else if (!forceOverride && string.Equals (method.ManagedOverride, "override", StringComparison.OrdinalIgnoreCase)) {
 				IsVirtual = false;
 				IsOverride = true;
-			} else if (string.Equals (method.ManagedOverride, "none", StringComparison.OrdinalIgnoreCase)) {
+			} else if (!forceOverride && string.Equals (method.ManagedOverride, "none", StringComparison.OrdinalIgnoreCase)) {
 				IsVirtual = false;
 				IsOverride = false;
+			} else if (!forceOverride && string.Equals (method.ManagedOverride, "new", StringComparison.OrdinalIgnoreCase)) {
+				IsVirtual = false;
+				IsOverride = false;
+				IsShadow = true;
 			}
+
+			if (!IsOverride && !ExplicitInterfaceImplementation.HasValue () && type.RequiresNew (method.AdjustedName, method, opt))
+				IsShadow = true;
 
 			ReturnType = new TypeReferenceWriter (opt.GetTypeReferenceName (method.RetVal));
 
