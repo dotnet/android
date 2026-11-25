@@ -10,11 +10,11 @@
 // for package X" before hand-editing Configuration.props / androidsdk.targets.
 //
 // Usage:
-//   dotnet run fetch_repo_package.cs -- --path build-tools
-//   dotnet run fetch_repo_package.cs -- --path "platforms;android-37" --archives
-//   dotnet run fetch_repo_package.cs -- --path "extras;android;m2repository" --archives --manifest https://dl.google.com/android/repository/addon2-3.xml
-//   dotnet run fetch_repo_package.cs -- --path docs --archives --manifest https://dl.google.com/android/repository/repository-12.xml
-//   dotnet run fetch_repo_package.cs -- --path "system-images;android-29;default;" --archives --manifest https://dl.google.com/android/repository/sys-img/android/sys-img2-3.xml
+//   dotnetup dotnet run fetch_repo_package.cs -- --path build-tools
+//   dotnetup dotnet run fetch_repo_package.cs -- --path "platforms;android-37" --archives
+//   dotnetup dotnet run fetch_repo_package.cs -- --path "extras;android;m2repository" --archives --manifest https://dl.google.com/android/repository/addon2-3.xml
+//   dotnetup dotnet run fetch_repo_package.cs -- --path docs --archives --manifest https://dl.google.com/android/repository/repository-12.xml
+//   dotnetup dotnet run fetch_repo_package.cs -- --path "system-images;android-29;default;" --archives --manifest https://dl.google.com/android/repository/sys-img/android/sys-img2-3.xml
 //
 // Notes:
 // - Google's channelRef in repository2-3.xml is NOT a reliable stable/preview
@@ -119,7 +119,7 @@ return 0;
 
 static void PrintUsage()
 {
-	Console.Error.WriteLine("usage: dotnet run fetch_repo_package.cs -- --path <substring> [--manifest <url>] [--all] [--archives]");
+	Console.Error.WriteLine("usage: dotnetup dotnet run fetch_repo_package.cs -- --path <substring> [--manifest <url>] [--all] [--archives]");
 	Console.Error.WriteLine($"  --path      required substring to match against each package's `path` attribute (e.g. 'build-tools', 'platforms;android-37', 'emulator')");
 	Console.Error.WriteLine($"  --manifest  manifest URL (default: {DefaultManifest}); use addon2-3.xml for extras, repository-12.xml for docs, or a sys-img*.xml URL for system images");
 	Console.Error.WriteLine("  --all       show every match, including ones that look like previews (default: stable-looking only)");

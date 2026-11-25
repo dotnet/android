@@ -6,7 +6,7 @@
 // repository manifests only carry SHA-1). Never hand-guess a hash.
 //
 // Usage:
-//   dotnet run sha256_of_url.cs -- https://dl.google.com/android/repository/build-tools_r37.0.0_linux.zip --sha1 <manifest-sha1> --size <manifest-size>
+//   dotnetup dotnet run sha256_of_url.cs -- https://dl.google.com/android/repository/build-tools_r37.0.0_linux.zip --sha1 <manifest-sha1> --size <manifest-size>
 //
 // Deletes the downloaded file after hashing unless --keep is passed, so it
 // never leaves stray files behind for the diff/cache-cleanliness check.
@@ -41,7 +41,7 @@ for (int i = 0; i < args.Length; i++) {
 }
 
 if (string.IsNullOrEmpty(url) || string.IsNullOrEmpty(expectedSha1) || expectedSize is null) {
-	Console.Error.WriteLine("usage: dotnet run sha256_of_url.cs -- <url> --sha1 <manifest-sha1> --size <manifest-size> [--keep]");
+	Console.Error.WriteLine("usage: dotnetup dotnet run sha256_of_url.cs -- <url> --sha1 <manifest-sha1> --size <manifest-size> [--keep]");
 	return 1;
 }
 
