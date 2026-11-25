@@ -10,7 +10,6 @@ using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Runtime.ExceptionServices;
-using System.Text;
 using System.Threading;
 
 using Java.Interop;
@@ -21,6 +20,8 @@ namespace Java.Interop {
 	/// For overloads accepting UTF-8 spans, the caller must ensure each span has readable
 	/// NUL-terminated backing storage for the duration of the call. Complete C# UTF-8 literals
 	/// provide a terminator beyond their span length; copies and slices do not carry that guarantee.
+	/// Standard UTF-8 and JNI modified UTF-8 are accepted; supplementary characters in standard
+	/// UTF-8 are converted to modified UTF-8 for JNI.
 	/// </remarks>
 	public sealed class JniType : IDisposable {
 
@@ -356,22 +357,13 @@ namespace Java.Interop {
 
 		IntPtr RawGetMethodID (IntPtr env, string name, string signature, out IntPtr thrown)
 		{
-			var _name = Marshal.StringToCoTaskMemUTF8 (name);
-			var _sig  = Marshal.StringToCoTaskMemUTF8 (signature);
-			try {
-				unsafe {
-					// SAFETY: Both terminated buffers are allocated above and remain owned until the matching finally.
-					var id      = JniNativeMethods.GetMethodID (env, PeerReference.Handle, _name, _sig);
-					thrown      = JniNativeMethods.ExceptionOccurred (env);
-					return id;
-				}
-			}
-			finally {
-				unsafe {
-					// SAFETY: Free the two CoTaskMemUTF8 allocations once, after native lookup and exception capture.
-					Marshal.ZeroFreeCoTaskMemUTF8 (_name);
-					Marshal.ZeroFreeCoTaskMemUTF8 (_sig);
-				}
+			using var nativeName = new JniModifiedUtf8String (name);
+			using var nativeSignature = new JniModifiedUtf8String (signature);
+			unsafe {
+				// SAFETY: Both terminated buffers remain owned through lookup and exception capture.
+				var id      = JniNativeMethods.GetMethodID (env, PeerReference.Handle, nativeName.Pointer, nativeSignature.Pointer);
+				thrown      = JniNativeMethods.ExceptionOccurred (env);
+				return id;
 			}
 		}
 
@@ -420,22 +412,13 @@ namespace Java.Interop {
 
 		IntPtr RawGetStaticMethodID (IntPtr env, string name, string signature, out IntPtr thrown)
 		{
-			var _name = Marshal.StringToCoTaskMemUTF8 (name);
-			var _sig  = Marshal.StringToCoTaskMemUTF8 (signature);
-			try {
-				unsafe {
-					// SAFETY: This call owns both terminated CoTaskMem buffers through static lookup and exception capture.
-					var id      = JniNativeMethods.GetStaticMethodID (env, PeerReference.Handle, _name, _sig);
-					thrown      = JniNativeMethods.ExceptionOccurred (env);
-					return id;
-				}
-			}
-			finally {
-				unsafe {
-					// SAFETY: Release only the CoTaskMemUTF8 allocations created above, in their existing failure-safe order.
-					Marshal.ZeroFreeCoTaskMemUTF8 (_name);
-					Marshal.ZeroFreeCoTaskMemUTF8 (_sig);
-				}
+			using var nativeName = new JniModifiedUtf8String (name);
+			using var nativeSignature = new JniModifiedUtf8String (signature);
+			unsafe {
+				// SAFETY: Both terminated buffers remain owned through static lookup and exception capture.
+				var id      = JniNativeMethods.GetStaticMethodID (env, PeerReference.Handle, nativeName.Pointer, nativeSignature.Pointer);
+				thrown      = JniNativeMethods.ExceptionOccurred (env);
+				return id;
 			}
 		}
 
@@ -840,9 +823,7 @@ namespace Java.Interop {
 
 		IntPtr GetMemberID (ReadOnlySpan<char> name, ReadOnlySpan<char> signature, MemberKind kind, bool throwOnError = true)
 		{
-			// Match StringToCoTaskMemUTF8, including unpaired-surrogate replacement
-			// and embedded-NUL termination, rather than changing to JNI modified UTF-8.
-			int nameLength = checked (Encoding.UTF8.GetByteCount (name) + 1);
+			int nameLength = checked (JniModifiedUtf8.GetByteCount (name) + 1);
 			byte[]? rentedName = null;
 			try {
 				if (nameLength > 512)
@@ -851,7 +832,7 @@ namespace Java.Interop {
 				Span<byte> nameBuffer = rentedName == null
 					? stackalloc byte [nameLength]
 					: rentedName.AsSpan (0, nameLength);
-				Encoding.UTF8.GetBytes (name, nameBuffer);
+				JniModifiedUtf8.GetBytes (name, nameBuffer);
 				nameBuffer [nameLength - 1] = 0;
 
 				unsafe {
@@ -942,7 +923,7 @@ namespace Java.Interop {
 		/// </safety>
 		unsafe IntPtr GetMemberID (ReadOnlySpan<char> value, byte* otherValue, bool valueIsName, MemberKind kind, bool throwOnError)
 		{
-			int valueLength = checked (Encoding.UTF8.GetByteCount (value) + 1);
+			int valueLength = checked (JniModifiedUtf8.GetByteCount (value) + 1);
 			byte[]? rentedValue = null;
 			try {
 				if (valueLength > 512)
@@ -951,7 +932,7 @@ namespace Java.Interop {
 				Span<byte> valueBuffer = rentedValue == null
 					? stackalloc byte [valueLength]
 					: rentedValue.AsSpan (0, valueLength);
-				Encoding.UTF8.GetBytes (value, valueBuffer);
+				JniModifiedUtf8.GetBytes (value, valueBuffer);
 				valueBuffer [valueLength - 1] = 0;
 
 				unsafe {

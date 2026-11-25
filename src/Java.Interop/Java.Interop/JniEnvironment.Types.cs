@@ -143,8 +143,10 @@ namespace Java.Interop
 				IntPtr s;
 				unsafe {
 					// SAFETY: Pin the NUL-terminated name through NewStringUTF on this thread's live JNI environment.
-					fixed (byte* pJavaName = javaName)
-						s = (*((JNIEnv**) env))->NewStringUTF (env, (IntPtr) pJavaName);
+					fixed (byte* pJavaName = javaName) {
+						using var nativeName = new JniModifiedUtf8String (pJavaName);
+						s = (*((JNIEnv**) env))->NewStringUTF (env, nativeName.Pointer);
+					}
 				}
 				var e = JniEnvironment.GetExceptionForLastThrowable ();
 				if (e != null)
@@ -161,15 +163,11 @@ namespace Java.Interop
 			/// </safety>
 			static unsafe bool TryRawFindClass (IntPtr env, string classname, out IntPtr klass, out IntPtr thrown)
 			{
-				var _classname_ptr = Marshal.StringToCoTaskMemUTF8 (classname);
+				using var nativeName = new JniModifiedUtf8String (classname);
 				unsafe {
-					// SAFETY: This helper owns the UTF8 allocation until JNI and exception polling finish; env comes from the calling thread's JniEnvironmentInfo.
-					klass   = JniNativeMethods.FindClass (env, _classname_ptr);
+					// SAFETY: This helper owns the terminated allocation through lookup and exception polling; env belongs to this thread.
+					klass   = JniNativeMethods.FindClass (env, nativeName.Pointer);
 					thrown  = JniNativeMethods.ExceptionOccurred (env);
-				}
-				unsafe {
-					// SAFETY: Release only this call's CoTaskMemUTF8 allocation after JNI has finished reading it.
-					Marshal.ZeroFreeCoTaskMemUTF8 (_classname_ptr);
 				}
 				if (thrown == IntPtr.Zero) {
 					return true;
@@ -339,9 +337,9 @@ namespace Java.Interop
 						var m       = methods [i];
 						if (m.Marshaler == null)
 							throw new ArgumentException ($"JniNativeMethodRegistration[{i}] ({m.Name}{m.Signature}) has a null Marshaler delegate.", nameof (methods));
-						IntPtr name = Marshal.StringToCoTaskMemUTF8 (m.Name);
+						IntPtr name = JniModifiedUtf8.Alloc (m.Name);
 						unmanagedStrings [i * 2] = name;
-						IntPtr sig  = Marshal.StringToCoTaskMemUTF8 (m.Signature);
+						IntPtr sig  = JniModifiedUtf8.Alloc (m.Signature);
 						unmanagedStrings [i * 2 + 1] = sig;
 						// SAFETY: Descriptor stores tracked addresses; registration owns callback validity.
 						natives [i] = unsafe (new JniNativeMethod ((byte*) name, (byte*) sig, Marshal.GetFunctionPointerForDelegate (m.Marshaler)));
@@ -351,12 +349,8 @@ namespace Java.Interop
 						RegisterNatives (type, natives);
 					}
 				} finally {
-					unsafe {
-						// SAFETY: Free recorded allocations on paths entering this finally; keep delegates alive through cleanup.
-						for (int i = 0; i < unmanagedStrings.Length; ++i) {
-							if (unmanagedStrings [i] != IntPtr.Zero)
-								Marshal.ZeroFreeCoTaskMemUTF8 (unmanagedStrings [i]);
-						}
+					for (int i = 0; i < unmanagedStrings.Length; ++i) {
+						JniModifiedUtf8.Free (unmanagedStrings [i]);
 					}
 					GC.KeepAlive (methods);
 				}
@@ -366,6 +360,7 @@ namespace Java.Interop
 			/// Registers JNI native methods using blittable <see cref="JniNativeMethod"/> structs
 			/// with raw function pointers and UTF-8 name/signature pointers.
 			/// Calls the JNI RegisterNatives function directly without delegate marshaling.
+			/// Standard UTF-8 supplementary characters are converted to JNI modified UTF-8.
 			/// </summary>
 			/// <safety>
 			/// Each method's name and signature must address readable NUL-terminated UTF-8 memory
@@ -384,6 +379,61 @@ namespace Java.Interop
 				if (!type.IsValid)
 					throw new ArgumentException ("Handle must be valid.", nameof (type));
 
+				bool needsConversion = false;
+				unsafe {
+					// SAFETY: The caller keeps each name and signature terminated and unchanged through registration.
+					foreach (var method in methods) {
+						if (JniModifiedUtf8.RequiresConversion (method.name) || JniModifiedUtf8.RequiresConversion (method.signature)) {
+							needsConversion = true;
+							break;
+						}
+					}
+				}
+				if (!needsConversion) {
+					unsafe {
+						// SAFETY: The caller retains the original strings and callback storage through registration.
+						RegisterNativesCore (type, methods);
+					}
+					return;
+				}
+
+				const int MaxStackAllocatedNativeMethods = 32;
+				bool useStackAllocatedBuffers = methods.Length <= MaxStackAllocatedNativeMethods;
+				Span<JniNativeMethod> natives = useStackAllocatedBuffers
+					? stackalloc JniNativeMethod [methods.Length]
+					: new JniNativeMethod [methods.Length];
+				Span<IntPtr> unmanagedStrings = useStackAllocatedBuffers
+					? stackalloc IntPtr [methods.Length * 2]
+					: new IntPtr [checked (methods.Length * 2)];
+				unmanagedStrings.Clear ();
+				try {
+					unsafe {
+						// SAFETY: Caller-owned inputs remain readable; each allocated replacement is recorded before the next allocation.
+						for (int i = 0; i < methods.Length; ++i) {
+							var method = methods [i];
+							IntPtr name = JniModifiedUtf8.AllocConvertedUtf8 (method.name);
+							unmanagedStrings [i * 2] = name;
+							IntPtr signature = JniModifiedUtf8.AllocConvertedUtf8 (method.signature);
+							unmanagedStrings [i * 2 + 1] = signature;
+							natives [i] = new JniNativeMethod (
+								name == IntPtr.Zero ? method.name : (byte*) name,
+								signature == IntPtr.Zero ? method.signature : (byte*) signature,
+								method.functionPointer);
+						}
+						RegisterNativesCore (type, natives);
+					}
+				} finally {
+					for (int i = 0; i < unmanagedStrings.Length; ++i)
+						JniModifiedUtf8.Free (unmanagedStrings [i]);
+				}
+			}
+
+			/// <safety>
+			/// The caller must keep each method's terminated name and signature readable, and
+			/// must satisfy the callback ABI and lifetime requirements of RegisterNatives.
+			/// </safety>
+			static unsafe void RegisterNativesCore (JniObjectReference type, ReadOnlySpan<JniNativeMethod> methods)
+			{
 				IntPtr env = JniEnvironment.EnvironmentPointer;
 				int r;
 				fixed (JniNativeMethod* methodsPtr = methods) {
@@ -421,6 +471,7 @@ namespace Java.Interop
 			/// <summary>
 			/// Finds a Java class using a null-terminated UTF-8 class name span.
 			/// Use with <c>"java/lang/Object"u8</c> literals to avoid string marshalling overhead.
+			/// Standard UTF-8 supplementary characters are converted to JNI modified UTF-8.
 			/// </summary>
 			/// <safety>
 			/// The caller must ensure the backing storage remains readable and NUL-terminated
@@ -439,6 +490,7 @@ namespace Java.Interop
 			/// <summary>
 			/// Tries to find a Java class using a null-terminated UTF-8 class name span.
 			/// Returns <c>true</c> if the class was found, <c>false</c> otherwise.
+			/// Standard UTF-8 supplementary characters are converted to JNI modified UTF-8.
 			/// </summary>
 			/// <safety>
 			/// The caller must ensure the backing storage remains readable and NUL-terminated

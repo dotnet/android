@@ -13,6 +13,7 @@ namespace Java.Interop {
 			/// <summary>
 			/// Looks up a JNI instance field ID using null-terminated UTF-8 name and signature spans.
 			/// Use with <c>"fieldName"u8</c> literals to avoid string marshalling overhead.
+			/// Standard UTF-8 supplementary characters are converted to JNI modified UTF-8.
 			/// </summary>
 			/// <safety>
 			/// The caller must ensure <paramref name="name"/> and <paramref name="signature"/> have
@@ -52,6 +53,7 @@ namespace Java.Interop {
 			/// <summary>
 			/// Looks up a JNI instance method ID using null-terminated UTF-8 name and signature spans.
 			/// Use with <c>"methodName"u8</c> literals to avoid string marshalling overhead.
+			/// Standard UTF-8 supplementary characters are converted to JNI modified UTF-8.
 			/// </summary>
 			/// <safety>
 			/// The caller must ensure <paramref name="name"/> and <paramref name="signature"/> have
@@ -91,6 +93,7 @@ namespace Java.Interop {
 			/// <summary>
 			/// Looks up a JNI static field ID using null-terminated UTF-8 name and signature spans.
 			/// Use with <c>"fieldName"u8</c> literals to avoid string marshalling overhead.
+			/// Standard UTF-8 supplementary characters are converted to JNI modified UTF-8.
 			/// </summary>
 			/// <safety>
 			/// The caller must ensure <paramref name="name"/> and <paramref name="signature"/> have
@@ -130,6 +133,7 @@ namespace Java.Interop {
 			/// <summary>
 			/// Looks up a JNI static method ID using null-terminated UTF-8 name and signature spans.
 			/// Use with <c>"methodName"u8</c> literals to avoid string marshalling overhead.
+			/// Standard UTF-8 supplementary characters are converted to JNI modified UTF-8.
 			/// </summary>
 			/// <safety>
 			/// The caller must ensure <paramref name="name"/> and <paramref name="signature"/> have

@@ -30,14 +30,15 @@ namespace Java.Interop {
 	public struct JniNativeMethod
 	{
 		// SAFETY: Field access stores or copies addresses; pointee access and callback invocation have separate contracts.
-		safe byte* name;
-		safe byte* signature;
-		safe IntPtr functionPointer;
+		internal safe byte* name;
+		internal safe byte* signature;
+		internal safe IntPtr functionPointer;
 
 		/// <remarks>
 		/// This constructor stores addresses without reading their memory or invoking the callback.
 		/// When registering this descriptor, <paramref name="name"/> and <paramref name="signature"/>
-		/// must address readable NUL-terminated UTF-8 memory through registration. <paramref name="functionPointer"/>
+		/// must address readable NUL-terminated standard or JNI modified UTF-8 memory through registration.
+		/// <paramref name="functionPointer"/>
 		/// must have the JNI-compatible ABI for the signature, including the environment and
 		/// receiver arguments, and remain callable and rooted for as long as JNI can invoke it,
 		/// including after failed or partial registration. Prevent new calls to the registered
