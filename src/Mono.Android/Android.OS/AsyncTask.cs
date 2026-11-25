@@ -78,7 +78,7 @@ namespace Android.OS {
 		{
 			unsafe {
 				// SAFETY: execute.([Ljava/lang/Object;)Landroid/os/AsyncTask; receives the owned params
-				// array; its local survives invocation/copy-back and is released by the existing finally.
+				// array; this peer and its local survive invocation/copy-back until finally.
 				if (id_execute_arrayLjava_lang_Object_ == IntPtr.Zero)
 					id_execute_arrayLjava_lang_Object_ = JNIEnv.GetMethodID (GetPeerMembers (null).GetPeerTypeHandle (), "execute", "([Ljava/lang/Object;)Landroid/os/AsyncTask;");
 				IntPtr native__params = JNIEnv.NewObjectArray<TParams> (@params);
@@ -91,6 +91,7 @@ namespace Android.OS {
 					if (@params != null) {
 						JNIEnv.DeleteLocalRef (native__params);
 					}
+					GC.KeepAlive (this);
 				}
 			}
 		}
@@ -100,11 +101,13 @@ namespace Android.OS {
 		public TResult? GetResult ()
 		{
 			unsafe {
-				// SAFETY: get.()Ljava/lang/Object; is a zero-argument instance call on this AsyncTask;
-				// its returned local reference transfers to the synchronous TResult conversion.
+				// SAFETY: get.()Ljava/lang/Object; is a zero-argument instance call on this AsyncTask,
+				// retained by GC.KeepAlive (this); its returned local reference transfers to the synchronous TResult conversion.
 				if (id_get == IntPtr.Zero)
 					id_get = JNIEnv.GetMethodID (GetPeerMembers (null).GetPeerTypeHandle (), "get", "()Ljava/lang/Object;");
-				return JavaConvert.FromJniHandle<TResult>(JNIEnv.CallObjectMethod  (Handle, id_get), JniHandleOwnership.TransferLocalRef);
+				IntPtr lref = JNIEnv.CallObjectMethod (Handle, id_get);
+				GC.KeepAlive (this);
+				return JavaConvert.FromJniHandle<TResult> (lref, JniHandleOwnership.TransferLocalRef);
 			}
 		}
 

@@ -22,11 +22,12 @@ namespace Android.App {
 			WeakReference? dispatcher;
 			TabEventDispatcher Dispatcher {
 				get {
-					if (dispatcher == null || !dispatcher.IsAlive) {
-						dispatcher = new WeakReference (new TabEventDispatcher ());
-						SetTabListener ((TabEventDispatcher) dispatcher.Target!);
-					}
-					return (TabEventDispatcher) dispatcher.Target!;
+					if (dispatcher?.Target is TabEventDispatcher d)
+						return d;
+					d = new TabEventDispatcher ();
+					dispatcher = new WeakReference (d);
+					SetTabListener (d);
+					return d;
 				}
 			}
 
@@ -70,8 +71,10 @@ namespace Android.App {
 					JniHandleOwnership.TransferLocalRef)
 		{
 			unsafe {
-				// SAFETY: this peer owns the allocated handle; ()V supplies the zero-argument instance-constructor ABI.
+				// SAFETY: this peer owns the allocated handle, retained by GC.KeepAlive (this) across FinishCreateInstance;
+				// ()V supplies the zero-argument instance-constructor ABI.
 				JNIEnv.FinishCreateInstance (Handle, "()V"u8);
+				GC.KeepAlive (this);
 			}
 		}
 

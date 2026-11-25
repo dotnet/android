@@ -10,11 +10,12 @@ namespace Android.Animation {
 		WeakReference? dispatcher;
 		AnimatorEventDispatcher Dispatcher {
 			get {
-				if (dispatcher == null || !dispatcher.IsAlive) {
-					dispatcher = new WeakReference (new AnimatorEventDispatcher ());
-					AddListener ((AnimatorEventDispatcher) dispatcher.Target!);
-				}
-				return (AnimatorEventDispatcher) dispatcher.Target!;
+				if (dispatcher?.Target is AnimatorEventDispatcher d)
+					return d;
+				d = new AnimatorEventDispatcher ();
+				dispatcher = new WeakReference (d);
+				AddListener (d);
+				return d;
 			}
 		}
 
@@ -65,8 +66,10 @@ namespace Android.Animation {
 					JniHandleOwnership.TransferLocalRef)
 		{
 			unsafe {
-				// SAFETY: this peer owns the allocated handle; ()V supplies the zero-argument instance-constructor ABI.
+				// SAFETY: this peer owns the allocated handle, retained by GC.KeepAlive (this) across FinishCreateInstance;
+				// ()V supplies the zero-argument instance-constructor ABI.
 				JNIEnv.FinishCreateInstance (Handle, "()V"u8);
+				GC.KeepAlive (this);
 			}
 		}
 
