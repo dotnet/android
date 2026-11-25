@@ -9,8 +9,9 @@ namespace Xamarin.Android.Build.Tests;
 [Platform ("MacOsX,Linux")]
 public class CoreClrAssemblyStoreTests : BaseTest
 {
-	[Test]
-	public void ConcurrentProbesDuringStartupDecompressOnce ()
+	[TestCase (true)]
+	[TestCase (false)]
+	public void ConcurrentProbesDuringStartupShareImage (bool compressed)
 	{
 		string root = NativeAotBootstrapTestTools.FindRepositoryRoot ();
 		string sources = Path.Combine (root, "src", "Microsoft.Android.Build.Tasks", "Tests", "Microsoft.Android.Build.Tasks.Tests", "Resources", "CoreClrAssemblyStore");
@@ -28,7 +29,7 @@ public class CoreClrAssemblyStoreTests : BaseTest
 			"-o", probe);
 		Assert.AreEqual (0, compile.ExitCode, compile.Output + compile.Error);
 
-		var result = NativeAotBootstrapTestTools.Run (probe);
+		var result = NativeAotBootstrapTestTools.Run (probe, compressed ? "compressed" : "uncompressed");
 		Assert.AreEqual (0, result.ExitCode, result.Output + result.Error);
 	}
 }
