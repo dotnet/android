@@ -72,22 +72,35 @@ namespace Android.RuntimeTests
 				list.Add (value);
 			var destination = new Guid [1];
 
-			void CheckCopy (Action copy)
-			{
-				Assert.ThrowsExactly<InvalidCastException> (copy);
-				int localReferences = Java.Interop.JniEnvironment.LocalReferenceCount;
-				for (int i = 0; i < 4; i++) {
-					Assert.ThrowsExactly<InvalidCastException> (copy);
-					Assert.AreEqual (localReferences, Java.Interop.JniEnvironment.LocalReferenceCount);
-				}
-			}
-
 			if (generic) {
 				using var collection = new JavaCollection<Guid> (list.Handle, JniHandleOwnership.DoNotTransfer);
-				CheckCopy (() => collection.CopyTo (destination, 0));
+				AssertCopyThrowsWithoutLeaking<InvalidCastException> (() => collection.CopyTo (destination, 0));
 			} else {
 				using var collection = new JavaCollection (list.Handle, JniHandleOwnership.DoNotTransfer);
-				CheckCopy (() => collection.CopyTo (destination, 0));
+				AssertCopyThrowsWithoutLeaking<InvalidCastException> (() => collection.CopyTo (destination, 0));
+			}
+		}
+
+		[TestMethod]
+		[TestCategory ("JniLocalReferenceCleanup")]
+		public void CopyToReleasesArrayWhenAssignmentThrows ()
+		{
+			using var list = new Java.Util.ArrayList ();
+			using (var value = new Java.Lang.Integer (1))
+				list.Add (value);
+			using var collection = new JavaCollection<object> (list.Handle, JniHandleOwnership.DoNotTransfer);
+			object [] destination = new string [1];
+
+			AssertCopyThrowsWithoutLeaking<ArrayTypeMismatchException> (() => collection.CopyTo (destination, 0));
+		}
+
+		static void AssertCopyThrowsWithoutLeaking<TException> (Action copy) where TException : Exception
+		{
+			Assert.ThrowsExactly<TException> (copy);
+			int localReferences = Java.Interop.JniEnvironment.LocalReferenceCount;
+			for (int i = 0; i < 4; i++) {
+				Assert.ThrowsExactly<TException> (copy);
+				Assert.AreEqual (localReferences, Java.Interop.JniEnvironment.LocalReferenceCount);
 			}
 		}
 
