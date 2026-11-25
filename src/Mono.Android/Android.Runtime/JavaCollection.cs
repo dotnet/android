@@ -432,11 +432,14 @@ namespace Android.Runtime {
 					id_toArray = JNIEnv.GetMethodID (collection_class, "toArray", "()[Ljava/lang/Object;");
 
 				IntPtr lrefArray = JNIEnv.CallObjectMethod (Handle, id_toArray);
-				for (int i = 0; i < Count; i++)
-					array [array_index + i] = JavaConvert.FromJniHandle<T>(
-							JNIEnv.GetObjectArrayElement (lrefArray, i),
-							JniHandleOwnership.TransferLocalRef)!;
-				JNIEnv.DeleteLocalRef (lrefArray);
+				try {
+					for (int i = 0; i < Count; i++)
+						array [array_index + i] = JavaConvert.FromJniHandle<T>(
+								JNIEnv.GetObjectArrayElement (lrefArray, i),
+								JniHandleOwnership.TransferLocalRef)!;
+				} finally {
+					JNIEnv.DeleteLocalRef (lrefArray);
+				}
 			}
 		}
 
