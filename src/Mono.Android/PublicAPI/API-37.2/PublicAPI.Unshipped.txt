@@ -6138,3 +6138,9 @@ static Android.Runtime.JNIEnv.NewArray(float[]? array) -> nint
 static Android.Runtime.JNIEnv.NewArray(int[]? array) -> nint
 static Android.Runtime.JNIEnv.NewArray(long[]? array) -> nint
 static Android.Runtime.JNIEnv.NewArray(short[]? array) -> nint
+*REMOVED*static Android.Runtime.JNIEnv.NewArray(uint[]! array) -> nint
+static Android.Runtime.JNIEnv.NewArray(uint[]? array) -> nint
+*REMOVED*static Android.Runtime.JNIEnv.NewArray(ulong[]! array) -> nint
+static Android.Runtime.JNIEnv.NewArray(ulong[]? array) -> nint
+*REMOVED*static Android.Runtime.JNIEnv.NewArray(ushort[]! array) -> nint
+static Android.Runtime.JNIEnv.NewArray(ushort[]? array) -> nint
