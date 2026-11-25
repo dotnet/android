@@ -77,10 +77,14 @@ namespace Java.InteropTests
 		static unsafe extern int rt_register_type_on_new_thread (string java_type_namem, IntPtr class_loader);
 
 		delegate void CB (IntPtr jnienv, IntPtr java_instance);
+		delegate void ThreadCB ();
 
 		// The native fixture joins the worker before returning; the marshaled callback never outlives this call.
 		[DllImport ("reuse-threads")]
 		static safe extern int rt_invoke_callback_on_new_thread (CB cb);
+
+		[DllImport ("reuse-threads")]
+		static safe extern int rt_invoke_callback_on_detached_thread (ThreadCB cb, int preattach);
 
 		[TestMethod]
 		public void RegisterTypeOnNewNativeThread ()
@@ -118,6 +122,50 @@ namespace Java.InteropTests
 			thread.Start ();
 			thread.Join (5000);
 			Assert.IsNull (ex, $"Failed to register instance of a class on new thread: {ex}");
+		}
+
+		[TestMethod]
+		[TestCategory ("JniThreadAttachment")]
+		[DataRow (false, false)]
+		[DataRow (true, false)]
+		[DataRow (false, true)]
+		public void NativeThreadAttachmentIsReleasedOnExit (bool explicitAttach, bool preattach)
+		{
+			Exception? error = null;
+			ThreadCB callback = () => {
+				try {
+					if (explicitAttach)
+						JniRuntime.CurrentRuntime.AttachCurrentThread ();
+					using var peer = new Java.Lang.Object ();
+					Assert.AreNotEqual (IntPtr.Zero, JniEnvironment.EnvironmentPointer);
+				} catch (Exception e) {
+					Volatile.Write (ref error, e);
+				}
+			};
+
+			int result = rt_invoke_callback_on_detached_thread (callback, preattach ? 1 : 0);
+			GC.KeepAlive (callback);
+			Assert.IsNull (Volatile.Read (ref error), $"JNI use on the worker failed: {error}");
+			Assert.AreEqual (0, result, $"Native worker failed with code {result}");
+		}
+
+		[TestMethod]
+		[TestCategory ("JniThreadAttachment")]
+		public void ManagedThreadsExitAfterJniUse ()
+		{
+			for (int i = 0; i < 10; ++i) {
+				Exception? error = null;
+				var thread = new Thread (() => {
+					try {
+						using var peer = new Java.Lang.Object ();
+					} catch (Exception e) {
+						Volatile.Write (ref error, e);
+					}
+				});
+				thread.Start ();
+				Assert.IsTrue (thread.Join (5000), "Managed JNI worker did not exit");
+				Assert.IsNull (Volatile.Read (ref error), $"JNI use on the worker failed: {error}");
+			}
 		}
 
 		[TestMethod]
