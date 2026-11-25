@@ -124,7 +124,8 @@
         Properties="_WorkloadPackRoot=$(_WorkloadPackRoot);_WorkloadToInstall=$(_WorkloadToInstall);_LocalAndroidManifestFolder=$(_LocalAndroidManifestFolder)" />
   </Target>
 
-  <Target Name="DeleteExtractedWorkloadPacks" >
+  <Target Name="DeleteExtractedWorkloadPacks"
+      Condition=" '$(_AndroidSolutionPack)' != 'true' ">
     <RemoveDir Directories="$(BuildOutputDirectory)workload" />
   </Target>
 
