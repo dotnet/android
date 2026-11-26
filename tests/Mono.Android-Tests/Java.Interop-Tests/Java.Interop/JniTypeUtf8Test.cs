@@ -193,15 +193,21 @@ namespace Java.InteropTests
 				AssertRejected ("name", () => { _ = unsafe (Object_class.GetInstanceMethod (bad, "()I"u8)); });
 				AssertRejected ("signature", () => { _ = unsafe (Object_class.GetStaticMethod ("x"u8, bad)); });
 				unsafe {
-					// SAFETY: Both arrays stay pinned and terminated; validation throws before JNI sees the callback.
+					// SAFETY: All buffers stay pinned and terminated; validation throws before JNI sees the callback.
 					fixed (byte* good = "native"u8)
+					fixed (byte* supplementary = "native\U00010000"u8)
 					fixed (byte* badPtr = bad) {
 						var callback = (IntPtr) (delegate* unmanaged<IntPtr, IntPtr, IntPtr, int>) &UnicodeNativeCallback;
-						// The malformed entry is last, so validation must not stop at the first conversion decision.
 						var methods = new JniNativeMethod [] {
 							new JniNativeMethod (good, good, callback),
 							new JniNativeMethod (good, badPtr, callback),
 						};
+						AssertRejected ("methods", () => JniEnvironment.Types.RegisterNatives (r, methods));
+
+						methods [0] = new JniNativeMethod (supplementary, good, callback);
+						AssertRejected ("methods", () => JniEnvironment.Types.RegisterNatives (r, methods));
+
+						methods [0] = new JniNativeMethod (supplementary, badPtr, callback);
 						AssertRejected ("methods", () => JniEnvironment.Types.RegisterNatives (r, methods));
 					}
 				}

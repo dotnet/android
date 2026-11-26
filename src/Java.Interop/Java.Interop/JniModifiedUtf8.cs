@@ -137,6 +137,14 @@ namespace Java.Interop {
 			GetExtraByteCount (unsafe (MemoryMarshal.CreateReadOnlySpanFromNullTerminated (value)), paramName);
 		}
 
+		internal static void Validate (ReadOnlySpan<byte> value, string paramName)
+		{
+			int terminator = value.IndexOf ((byte) 0);
+			if (terminator >= 0)
+				value = value.Slice (0, terminator);
+			GetExtraByteCount (value, paramName);
+		}
+
 		/// <safety>
 		/// A non-null value must remain readable and unchanged through its NUL terminator.
 		/// </safety>

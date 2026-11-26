@@ -380,15 +380,15 @@ namespace Java.Interop
 				if (!type.IsValid)
 					throw new ArgumentException ("Handle must be valid.", nameof (type));
 
-				bool needsConversion = false;
-				unsafe {
-					// SAFETY: The caller keeps each name and signature terminated and unchanged through registration.
-					// Scan every descriptor so malformed UTF-8 is rejected before any of it reaches JNI.
-					foreach (var method in methods) {
-						needsConversion |= JniModifiedUtf8.RequiresConversion (method.name, nameof (methods));
-						needsConversion |= JniModifiedUtf8.RequiresConversion (method.signature, nameof (methods));
-					}
-				}
+				// This is intentionally two-pass. Scan until conversion is needed; if none is, this pass
+				// validates every terminated name and signature before registering the original descriptors.
+				// Otherwise, the conversion pass validates and converts the remaining descriptors before JNI.
+				// It turns standard four-byte UTF-8 scalars into modified-UTF-8 surrogate sequences, tracks
+				// each allocated replacement for finally cleanup, and keeps temporary descriptors and strings
+				// alive through the synchronous JNI call. Scratch buffers use stack storage for up to 32
+				// methods and heap storage above that.
+				// SAFETY: The caller keeps each name and signature terminated and unchanged through registration.
+				bool needsConversion = unsafe (RequiresModifiedUtf8Conversion (methods));
 				if (!needsConversion) {
 					unsafe {
 						// SAFETY: The caller retains the original strings and callback storage through registration.
@@ -426,6 +426,24 @@ namespace Java.Interop
 					for (int i = 0; i < unmanagedStrings.Length; ++i)
 						JniModifiedUtf8.Free (unmanagedStrings [i]);
 				}
+			}
+
+			/// <safety>
+			/// Each method's name and signature must remain readable and unchanged through its NUL
+			/// terminator for the duration of the scan.
+			/// </safety>
+			static unsafe bool RequiresModifiedUtf8Conversion (ReadOnlySpan<JniNativeMethod> methods)
+			{
+				unsafe {
+					foreach (var method in methods) {
+						// SAFETY: The caller retains every descriptor string through registration.
+						bool nameRequiresConversion = JniModifiedUtf8.RequiresConversion (method.name, nameof (methods));
+						bool signatureRequiresConversion = JniModifiedUtf8.RequiresConversion (method.signature, nameof (methods));
+						if (nameRequiresConversion || signatureRequiresConversion)
+							return true;
+					}
+				}
+				return false;
 			}
 
 			/// <safety>
@@ -523,11 +541,7 @@ namespace Java.Interop
 				var terminator = classname.IndexOf ((byte) 0);
 				var nameLength = terminator >= 0 ? terminator : classname.Length;
 
-				unsafe {
-					// SAFETY: The caller keeps classname terminated and unchanged; fixed pins it for the bounded scan.
-					fixed (byte* p = classname)
-						JniModifiedUtf8.Validate (p, nameof (classname));
-				}
+				JniModifiedUtf8.Validate (classname, nameof (classname));
 
 				// Convert dot-separated names (e.g. "java.lang.Object"u8) to JNI form ("java/lang/Object")
 				// before calling FindClass, because ART's CheckJNI aborts the process on dot-separated names.

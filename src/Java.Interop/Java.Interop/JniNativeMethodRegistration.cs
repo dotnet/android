@@ -27,12 +27,14 @@ namespace Java.Interop {
 	/// Layout matches JNI's <c>JNINativeMethod</c> struct exactly.
 	/// </summary>
 	[ExtendedLayout (ExtendedLayoutKind.CStruct)]
-	public struct JniNativeMethod
+	public readonly struct JniNativeMethod
 	{
-		// SAFETY: Field access stores or copies addresses; pointee access and callback invocation have separate contracts.
-		internal safe byte* name;
-		internal safe byte* signature;
-		internal safe IntPtr functionPointer;
+		/// <summary>Address of the NUL-terminated method name.</summary>
+		public readonly safe byte* name;
+		/// <summary>Address of the NUL-terminated method signature.</summary>
+		public readonly safe byte* signature;
+		/// <summary>Address of the JNI-compatible callback.</summary>
+		public readonly safe IntPtr functionPointer;
 
 		/// <remarks>
 		/// This constructor stores addresses without reading their memory or invoking the callback.

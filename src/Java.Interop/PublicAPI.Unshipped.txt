@@ -45,6 +45,9 @@ Java.Interop.IJavaPeerable.JniObjectReferenceControlBlock.get -> nint
 Java.Interop.JniNativeMethod
 Java.Interop.JniNativeMethod.JniNativeMethod() -> void
 Java.Interop.JniNativeMethod.JniNativeMethod(byte* name, byte* signature, nint functionPointer) -> void
+readonly Java.Interop.JniNativeMethod.name -> byte*
+readonly Java.Interop.JniNativeMethod.signature -> byte*
+readonly Java.Interop.JniNativeMethod.functionPointer -> nint
 static unsafe Java.Interop.JniEnvironment.Types.RegisterNatives(Java.Interop.JniObjectReference type, System.ReadOnlySpan<Java.Interop.JniNativeMethod> methods) -> void
 unsafe Java.Interop.JniType.JniType(System.ReadOnlySpan<byte> classname) -> void
 unsafe Java.Interop.JniType.GetConstructor(System.ReadOnlySpan<byte> signature) -> Java.Interop.JniMethodInfo!
