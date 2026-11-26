@@ -9,6 +9,7 @@ static class RuntimeFeature
 	const bool IsNativeAotRuntimeEnabledByDefault = false;
 	const bool IsAssignableFromCheckEnabledByDefault = true;
 	const bool StartupNoGCRegionEnabledByDefault = true;
+	const bool StartupTracingEnabledByDefault = false;
 	const bool StartupHookSupportEnabledByDefault = true;
 	const bool UseTypeMapAttributesForJavaDictionaryValueTypeLookupsEnabledByDefault = false;
 	const bool GCBridgeLoggingEnabledByDefault = true;
@@ -33,6 +34,10 @@ static class RuntimeFeature
 	[FeatureSwitchDefinition ($"{FeatureSwitchPrefix}{nameof (StartupNoGCRegion)}")]
 	internal static bool StartupNoGCRegion { get; } =
 		AppContext.TryGetSwitch ($"{FeatureSwitchPrefix}{nameof (StartupNoGCRegion)}", out bool isEnabled) ? isEnabled : StartupNoGCRegionEnabledByDefault;
+
+	[FeatureSwitchDefinition ($"{FeatureSwitchPrefix}{nameof (StartupTracing)}")]
+	internal static bool StartupTracing { get; } =
+		AppContext.TryGetSwitch ($"{FeatureSwitchPrefix}{nameof (StartupTracing)}", out bool isEnabled) ? isEnabled : StartupTracingEnabledByDefault;
 
 	[FeatureSwitchDefinition (StartupHookProviderSwitch)]
 	[FeatureGuard (typeof (RequiresUnreferencedCodeAttribute))]

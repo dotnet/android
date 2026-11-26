@@ -118,12 +118,27 @@ sealed partial class TrimmableTypeMapValueManager : JniRuntime.JniValueManager
 			return null;
 		}
 
+		using var activity = RuntimeTelemetry.InteropSource.StartActivity (RuntimeTelemetry.InteropCreatePeer);
 		try {
+			if (activity?.IsAllDataRequested == true) {
+				activity.SetTag (RuntimeTelemetry.JavaClassTag, JniEnvironment.Types.GetJniTypeNameFromInstance (reference));
+				activity.SetTag (RuntimeTelemetry.TargetTypeTag, targetType?.FullName);
+			}
 			var resolvedTargetType = ResolvePeerType (targetType);
-			return TrimmableTypeMap.Instance.CreateInstance (reference.Handle, resolvedTargetType)
+			var peer = TrimmableTypeMap.Instance.CreateInstance (reference.Handle, resolvedTargetType)
 				?? NotFoundFallback (ref reference, targetType, resolvedTargetType);
+			activity?.SetTag (RuntimeTelemetry.ManagedTypeTag, peer?.GetType ().FullName);
+			return peer;
+		} catch (Exception e) when (activity != null && RecordFailure (activity, e)) {
+			throw;
 		} finally {
 			JniObjectReference.Dispose (ref reference, transfer);
+		}
+
+		static bool RecordFailure (System.Diagnostics.Activity activity, Exception e)
+		{
+			activity.SetStatus (ActivityStatusCode.Error, e.GetType ().FullName);
+			return false;
 		}
 
 		static Type? ResolvePeerType (Type? type)

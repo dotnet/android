@@ -292,6 +292,86 @@ And the output files should be found in the current directory. You can
 use the `-o` switch if you would prefer to output them to a specific
 directory.
 
+## Activity tracing for Android apps
+
+.NET for Android exposes the `Microsoft.Android.Runtime` `ActivitySource` for
+in-process listeners, including an OpenTelemetry tracer provider. It does not
+include an OpenTelemetry SDK or exporter. Register a listener for
+`Android.Runtime.AndroidTelemetry.ActivitySourceName` before enabling activity
+lifecycle tracing or replaying startup data, and keep the listener alive while
+collecting. For example, from an `Application` instance:
+
+```csharp
+// Register an ActivityListener or an OpenTelemetry tracer provider first.
+Android.Runtime.AndroidTelemetry.EnableActivityLifecycleTracing (this);
+Android.Runtime.AndroidTelemetry.ReplayStartupActivities ();
+```
+
+`EnableActivityLifecycleTracing` registers application lifecycle callbacks once
+per process and keeps them registered for the application lifetime. It emits
+short `android.activity.created`, `started`, `resumed`, `paused`, `stopped`,
+`save_instance_state`, and `destroyed` activities. Each has an
+`android.activity.name` tag containing the managed activity type name. These
+represent callback notifications, not the duration of an activity's overridden
+lifecycle method or application-level OpenTelemetry lifecycle log events.
+No intents, saved state, or other activity contents are recorded.
+
+To retain managed runtime startup timings until the listener is available, opt
+in at build time:
+
+```xml
+<ItemGroup>
+  <RuntimeHostConfigurationOption Include="Microsoft.Android.Runtime.RuntimeFeature.StartupTracing" Value="true" Trim="true" />
+</ItemGroup>
+```
+
+`ReplayStartupActivities` emits the buffered trace at most once per process.
+It returns the number of activities emitted, or zero when recording was not
+enabled, initialization has not completed, no listener samples the root, or
+the trace was already replayed. A call without a sampling listener does not
+consume the buffer. Startup is represented by a root `android.runtime.initialize`
+activity and child activities for managed type-map setup, JNI runtime creation,
+GC bridge setup, native registration, and (on CoreCLR) startup hooks. The root
+starts during managed initialization, not at process launch; native startup and
+application initialization outside that interval are not measured. Recorded
+timestamps use a wall-clock anchor and monotonic elapsed time. The root and
+children carry `android.runtime.startup.buffered=true`; the root also carries
+`android.runtime.startup.dropped`, the number of phases exceeding the bounded
+buffer's 16-child capacity. The replay is a separate trace and does not inherit
+the caller's current activity.
+
+Lifecycle collection and startup recording are independent opt-ins. Optimized
+builds may disable metrics, EventSource, and HTTP activity propagation by
+default; enable those separately if the consumer also needs those signals.
+`EventSourceSupport` and `EnableDiagnostics` are not required for this
+in-process `ActivitySource`.
+
+When a listener samples `Microsoft.Android.Runtime`, each managed GC bridge
+pass also emits a root `android.runtime.gc_bridge.process` activity tagged with
+`android.gc_bridge.components`, `android.gc_bridge.cross_references`,
+`android.gc_bridge.collected`, and `android.gc_bridge.generation`. It is
+emitted after bridge processing completes, so listener code never runs while
+the bridge is in progress.
+
+### Interop activities
+
+Fine-grained Java interop activities use a separate source,
+`Android.Runtime.AndroidTelemetry.InteropActivitySourceName`
+(`Microsoft.Android.Runtime.Interop`). Traces have no levels, so listening to
+this source is the opt-in for higher-volume data. It emits:
+
+| Activity | When | Tags |
+| --- | --- | --- |
+| `android.runtime.interop.register_natives` | A Java class registers its native methods | `android.java.class` |
+| `android.runtime.interop.create_peer` | The runtime creates a managed peer for a Java object | `android.managed.type`; when all data is requested, also `android.java.class` and `android.interop.target_type` |
+| `android.runtime.type_map.java_to_managed` | A Java-to-managed type-map cache miss | `android.java.class`, `android.type_map.found` |
+| `android.runtime.type_map.managed_to_java` | A managed-to-Java type-map cache miss | `android.managed.type`, `android.type_map.found`, and `android.java.class` when found |
+
+Type-map lookups that hit the cache are not traced. Interop activities are not
+buffered during startup, so activities occurring before a listener is
+registered are not recorded. A listener that itself creates Java peers will
+observe nested `create_peer` activities.
+
 ## .NET for Android runtime events
 
 Runtime interop timing and JNI reference events use the `Microsoft.Android.Runtime` provider.

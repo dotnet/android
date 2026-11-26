@@ -94,20 +94,23 @@ static partial class JavaInteropRuntime
 			}
 			// Seed DateTimeOffset.Now's fast path before managed runtime initialization or application code.
 			AppContext.SetData ("System.TimeZoneInfo.LocalDateTimeOffset", localDateTimeOffset.ToString (CultureInfo.InvariantCulture));
+			using var startup = RuntimeTelemetry.StartStartupOperation (RuntimeTelemetry.StartupInitialization);
 			unsafe {
 				// SAFETY: the host returned process-lifetime remapping storage and runtime-lifetime global references.
 				JNIEnvInit.InitializeBeforeRuntimeCreation (initArgs);
 			}
 
-			var options = new NativeAotRuntimeOptions {
-				EnvironmentPointer = jnienv,
-				ClassLoader        = new JniObjectReference (classLoader, JniObjectReferenceType.Global),
-				ObjectReferenceManager = new ManagedObjectReferenceManager (),
-				TypeManager                 = new TrimmableTypeMapTypeManager (),
-				ValueManager                = new TrimmableTypeMapValueManager (),
-			};
-			// SAFETY: JNI retains this thread's environment and borrowed loader through the callback; creation duplicates the loader and the VM outlives the runtime.
-			runtime = unsafe (options.CreateJreVM ());
+			using (RuntimeTelemetry.StartStartupOperation (RuntimeTelemetry.StartupJniRuntime)) {
+				var options = new NativeAotRuntimeOptions {
+					EnvironmentPointer = jnienv,
+					ClassLoader        = new JniObjectReference (classLoader, JniObjectReferenceType.Global),
+					ObjectReferenceManager = new ManagedObjectReferenceManager (),
+					TypeManager                 = new TrimmableTypeMapTypeManager (),
+					ValueManager                = new TrimmableTypeMapValueManager (),
+				};
+				// SAFETY: JNI retains this thread's environment and borrowed loader through the callback; creation duplicates the loader and the VM outlives the runtime.
+				runtime = unsafe (options.CreateJreVM ());
+			}
 
 			// Entry point into Mono.Android.dll for NativeAOT-specific JNI runtime initialization.
 			unsafe {

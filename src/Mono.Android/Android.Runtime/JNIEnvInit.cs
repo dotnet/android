@@ -64,7 +64,9 @@ namespace Android.Runtime
 				// SAFETY: the native host retains the remapping body and global references beyond initialization.
 				InitializeCommonState (args);
 			}
-			TypeMapLoader.Initialize ();
+			using (RuntimeTelemetry.StartStartupOperation (RuntimeTelemetry.StartupTypeMap)) {
+				TypeMapLoader.Initialize ();
+			}
 		}
 
 		internal static void InitializeMaxGrefCounts (JnienvInitializeArgs args)
@@ -94,11 +96,15 @@ namespace Android.Runtime
 			}
 			androidRuntime = runtime;
 			JniRuntime.SetCurrent (runtime);
-			unsafe {
-				// SAFETY: the caller retains the native host's process-lifetime initializer and matching runtime descriptor.
-				JavaMarshalGCBridge.Initialize (args);
+			using (RuntimeTelemetry.StartStartupOperation (RuntimeTelemetry.StartupGCBridge)) {
+				unsafe {
+					// SAFETY: the caller retains the native host's process-lifetime initializer and matching runtime descriptor.
+					JavaMarshalGCBridge.Initialize (args);
+				}
 			}
-			TrimmableTypeMap.RegisterNativeMethods ();
+			using (RuntimeTelemetry.StartStartupOperation (RuntimeTelemetry.StartupNativeMethods)) {
+				TrimmableTypeMap.RegisterNativeMethods ();
+			}
 			SetSynchronizationContext ();
 		}
 
@@ -121,26 +127,35 @@ namespace Android.Runtime
 					throw new NotSupportedException ("Internal error: CoreCLR must be enabled.");
 				}
 
+				using var startup = RuntimeTelemetry.StartStartupOperation (RuntimeTelemetry.StartupInitialization);
 				if (RuntimeFeature.StartupNoGCRegion) {
 					StartupNoGCRegion.Start ();
 				}
 
 				InitializeBeforeRuntimeCreation (*args);
 
-				androidRuntime = new AndroidRuntime (
-						args->env,
-						args->javaVm,
-						args->grefLoader,
-						new TrimmableTypeMapTypeManager (),
-						new TrimmableTypeMapValueManager ()
-				);
-				JniRuntime.SetCurrent (androidRuntime);
-				JavaMarshalGCBridge.Initialize (*args);
-				TrimmableTypeMap.RegisterNativeMethods ();
+				using (RuntimeTelemetry.StartStartupOperation (RuntimeTelemetry.StartupJniRuntime)) {
+					androidRuntime = new AndroidRuntime (
+							args->env,
+							args->javaVm,
+							args->grefLoader,
+							new TrimmableTypeMapTypeManager (),
+							new TrimmableTypeMapValueManager ()
+					);
+					JniRuntime.SetCurrent (androidRuntime);
+				}
+				using (RuntimeTelemetry.StartStartupOperation (RuntimeTelemetry.StartupGCBridge)) {
+					JavaMarshalGCBridge.Initialize (*args);
+				}
+				using (RuntimeTelemetry.StartStartupOperation (RuntimeTelemetry.StartupNativeMethods)) {
+					TrimmableTypeMap.RegisterNativeMethods ();
+				}
 
 				args->propagateUncaughtExceptionFn = (IntPtr)(delegate* unmanaged<IntPtr, IntPtr, IntPtr, void>)&PropagateUncaughtException;
 
-				RunStartupHooksIfNeeded ();
+				using (RuntimeTelemetry.StartStartupOperation (RuntimeTelemetry.StartupHooks)) {
+					RunStartupHooksIfNeeded ();
+				}
 				SetSynchronizationContext ();
 			}
 		}

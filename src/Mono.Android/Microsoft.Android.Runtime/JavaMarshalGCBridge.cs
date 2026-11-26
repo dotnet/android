@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Globalization;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
@@ -92,14 +93,19 @@ static class JavaMarshalGCBridge
 			// SAFETY: the registered CLR callback supplies args and all counted arrays until FinishCrossReferenceProcessing; identity checks do not validate their native bounds, and failures terminate the process.
 			try {
 				ArgumentNullException.ThrowIfNull (args);
+				long startTimestamp = Stopwatch.GetTimestamp ();
 				bool gcBridgeEventEnabled = RuntimeFeature.EventSourceSupport && RuntimeEventSource.GCBridgeStart ();
 				HandleContext.EnsureAllContextsAreOurs (args);
 				Process (args);
 				ReadOnlySpan<GCHandle> handlesToFree = ProcessCollectedContexts (args);
+				long components = (long) args->ComponentCount;
+				long crossReferences = (long) args->CrossReferenceCount;
+				int collected = handlesToFree.Length;
 
 				JavaMarshal.FinishCrossReferenceProcessing (args, handlesToFree);
 
-				Interlocked.Increment (ref bridgeProcessingGeneration);
+				int generation = Interlocked.Increment (ref bridgeProcessingGeneration);
+				RuntimeTelemetry.RecordGCBridgeProcessing (startTimestamp, components, crossReferences, collected, generation);
 				// Keep the switch here so ILLink removes the EventSource when it is disabled.
 				if (RuntimeFeature.EventSourceSupport) {
 					if (gcBridgeEventEnabled) {
