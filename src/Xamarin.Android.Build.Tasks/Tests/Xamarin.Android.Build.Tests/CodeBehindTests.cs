@@ -338,6 +338,58 @@ namespace Xamarin.Android.Build.Tests
 			RunTest (TestName, many: true, dtb: false, runner: SuccessfulBuild_AndroidX, runtime: runtime);
 		}
 
+		[Test]
+		public void AndroidXFragmentBindingPreservesConstructors ()
+		{
+			if (IgnoreUnsupportedConfiguration (AndroidRuntime.NativeAOT, release: true)) {
+				return;
+			}
+
+			var project = new XamarinAndroidApplicationProject {
+				IsRelease = true,
+				LayoutMain = """
+					<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+						xmlns:xamarin="http://schemas.xamarin.com/android/xamarin/tools"
+						android:orientation="vertical"
+						android:layout_width="match_parent"
+						android:layout_height="match_parent">
+						<fragment android:name="androidx.fragment.app.Fragment"
+							android:id="@+id/my_fragment"
+							android:layout_width="match_parent"
+							android:layout_height="match_parent"
+							xamarin:managedType="AndroidX.Fragment.App.Fragment" />
+					</LinearLayout>
+					""",
+				MainActivity = """
+					using Android.App;
+					using Android.OS;
+					using AndroidX.Fragment.App;
+
+					namespace UnnamedProject {
+						[Activity (MainLauncher = true)]
+						public class MainActivity : FragmentActivity {
+							protected override void OnCreate (Bundle? savedInstanceState) {
+								base.OnCreate (savedInstanceState);
+								SetContentView (Resource.Layout.Main);
+								var fragment = new Binding.Main (this).my_fragment;
+							}
+						}
+					}
+					""",
+			};
+			project.SetRuntime (AndroidRuntime.NativeAOT);
+			project.SetRuntimeIdentifiers (["arm64-v8a"]);
+			project.SetProperty ("AndroidGenerateLayoutBindings", "true");
+			project.SetProperty ("DefineConstants", "$(DefineConstants);__HAVE_ANDROIDX__");
+			project.SetProperty ("TrimmerSingleWarn", "false");
+			project.SetProperty ("NoWarn", "IL2104;IL2122;IL3053");
+			project.SetProperty ("WarningsAsErrors", "IL2091");
+			project.PackageReferences.Add (KnownPackages.AndroidXAppCompat);
+
+			using var builder = CreateApkBuilder ();
+			Assert.IsTrue (builder.Build (project), "AndroidX fragment binding should build without IL2091.");
+		}
+
 		void SuccessfulBuild_AndroidX (TestProjectInfo testInfo, bool many, bool dtb, LocalBuilder builder, AndroidRuntime runtime)
 		{
 			string[] parameters = GetBuildProperties (builder, runtime, many, dtb, referenceAndroidX:true, "__HAVE_ANDROIDX__");
