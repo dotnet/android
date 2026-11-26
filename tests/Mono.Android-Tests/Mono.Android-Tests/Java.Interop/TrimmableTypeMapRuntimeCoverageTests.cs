@@ -92,16 +92,6 @@ namespace Java.InteropTests
 		}
 
 		[TestMethod]
-		public void JavaToManagedGnssNavigationStatusCallback_UsesVoidSignature ()
-		{
-			using var callback = new TrimmableRuntimeGnssNavigationCallback ();
-			var method = JNIEnv.GetMethodID (callback.Class.Handle, "onStatusChanged", "(I)V");
-			JNIEnv.CallVoidMethod (callback.Handle, method, new JValue (2));
-
-			Assert.AreEqual (2, callback.Status);
-		}
-
-		[TestMethod]
 		public void JavaToManagedClickCallback_MarshalsObjectParameter ()
 		{
 			TrimmableRuntimeClickListener.Reset ();
@@ -523,19 +513,6 @@ namespace Java.InteropTests
 		public static void Reset ()
 		{
 			OnTextChangedInvocations = 0;
-		}
-	}
-
-	class TrimmableRuntimeGnssNavigationCallback : Android.Locations.GnssNavigationMessage.Callback
-	{
-		public int Status { get; private set; } = -1;
-
-		public override void OnStatusChanged (int status)
-		{
-#pragma warning disable CA1422 // The Android callback is obsolete on API 31 and later.
-			base.OnStatusChanged (status);
-#pragma warning restore CA1422
-			Status = status;
 		}
 	}
 

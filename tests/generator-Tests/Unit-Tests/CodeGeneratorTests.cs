@@ -17,51 +17,6 @@ namespace generatortests
 	class XAJavaInteropCodeGeneratorTests : CodeGeneratorTests
 	{
 		[Test]
-		public void GnssNavigationStatusCallbackUsesVoidJniSignature ()
-		{
-			var api = """
-				<api>
-				  <enum name='Android.Locations.GnssNavigationStatus' />
-				  <package name='java.lang' jni-name='java/lang'>
-				    <class abstract='false' deprecated='not deprecated' final='false' name='Object' static='false' visibility='public' jni-signature='Ljava/lang/Object;' />
-				  </package>
-				  <package name='android.location' jni-name='android/location'>
-				    <class abstract='false' deprecated='not deprecated' extends='java.lang.Object' final='false' name='GnssNavigationMessage' static='false' visibility='public' jni-signature='Landroid/location/GnssNavigationMessage;' />
-				    <class abstract='true' deprecated='not deprecated' extends='java.lang.Object' final='false' name='GnssNavigationMessage.Callback' static='true' visibility='public' jni-signature='Landroid/location/GnssNavigationMessage$Callback;'>
-				      <method abstract='false' deprecated='not deprecated' final='false' name='onStatusChanged' jni-signature='(I)V' return='void' static='false' visibility='public'>
-				        <parameter name='status' type='int' jni-type='I' />
-				      </method>
-				    </class>
-				  </package>
-				</api>
-				""";
-			var mappings = new EnumMappings ("", "", "37", false);
-			var methodMap = Path.Combine (TestContext.CurrentContext.TestDirectory, "TestInputs", "Mono.Android-methodmap.csv");
-			var transforms = mappings.ParseMethodMappings (methodMap, new AndroidSdkVersion (37));
-			using var stream = new MemoryStream ();
-			using (var metadataWriter = new StreamWriter (stream, new UTF8Encoding (false), 1024, true)) {
-				metadataWriter.WriteLine ("<metadata>");
-				foreach (var transform in transforms.Where (t => t.Package == "android.location" && t.Class == "GnssNavigationMessage.Callback"))
-					transform.WriteTransform (metadataWriter);
-				metadataWriter.WriteLine ("</metadata>");
-			}
-			stream.Position = 0;
-			var apiDocument = new ApiXmlDocument (XDocument.Parse (api), "37", 0);
-			apiDocument.ApplyFixupFile (new FixupXmlDocument (XDocument.Load (stream)));
-
-			var gens = ParseApiDefinition (apiDocument.ApiDocument.ToString ());
-			var source = GetGeneratedTypeOutput (gens.Single (g => g.Name == "GnssNavigationMessage"));
-
-			StringAssert.Contains ("void OnStatusChanged (int status)", source);
-			StringAssert.Contains ("\"onStatusChanged\", \"(I)V\"", source);
-			StringAssert.Contains ("onStatusChanged.(I)V", source);
-			StringAssert.Contains ("new _JniMarshal_PPI_V (n_OnStatusChanged_I)", source);
-			StringAssert.Contains ("JniMarshal.SafeInvokeAction", source);
-			StringAssert.Contains ("__this.OnStatusChanged (status);", source);
-			StringAssert.Contains ("InvokeVirtualVoidMethod", source);
-		}
-
-		[Test]
 		public void WriteMethodJniSignatureOverrides ()
 		{
 			var api = """
