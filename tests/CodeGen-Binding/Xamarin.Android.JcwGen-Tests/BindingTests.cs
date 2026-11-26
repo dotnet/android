@@ -1,7 +1,6 @@
 using System;
 using System.Reflection;
 using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
 using System.Reflection.Metadata;
 using System.Reflection.PortableExecutable;
 
@@ -36,13 +35,13 @@ namespace Xamarin.Android.JcwGenTests {
 		[TestMethod]
 		public void TestNativeLibDllImport ()
 		{
-			Assert.AreEqual (TestNativeLib.Binding.SampleFunction (), 0xf00);
+			Assert.AreEqual (0xf00, TestNativeLib.Binding.SampleFunction ());
 		}
 
 		[TestMethod]
 		public void TestNativeLibDllImportInEmbeddedArchive ()
 		{
-			Assert.AreEqual (TestNativeLib.Binding.SampleFunction2 (), 0xf200);
+			Assert.AreEqual (0xf200, TestNativeLib.Binding.SampleFunction2 ());
 		}
 
 		[TestMethod]
@@ -72,9 +71,7 @@ namespace Xamarin.Android.JcwGenTests {
 		[TestMethod]
 		public void EnsureTypesAreBound ()
 		{
-#pragma warning disable 0219
-			Com.Xamarin.Android.Bxc9446 ignore  = null;
-#pragma warning restore 0219
+			_ = typeof (Com.Xamarin.Android.Bxc9446);
 		}
 
 		[TestMethod]
@@ -85,11 +82,13 @@ namespace Xamarin.Android.JcwGenTests {
 					Assert.AreEqual ("fromNode", e.FromNode);
 					Assert.AreEqual ("fromChannel", e.FromChannel);
 					Assert.AreEqual ("payloadType", e.PayloadType);
-					for (int i = 0; i < e.Payload.Length; ++i) {
-						for (int j = 0; j < e.Payload [i].Length; ++j) {
+					var payload = e.Payload;
+					Assert.IsNotNull (payload);
+					for (int i = 0; i < payload.Length; ++i) {
+						for (int j = 0; j < payload [i].Length; ++j) {
 							byte expected = (byte) (((i+1)*10) + (j+1));
-							Assert.AreEqual ((byte)(expected + 'J'), e.Payload [i][j]);
-							e.Payload [i][j] = expected;
+							Assert.AreEqual ((byte)(expected + 'J'), payload [i][j]);
+							payload [i][j] = expected;
 						}
 					}
 				};
@@ -111,6 +110,7 @@ namespace Xamarin.Android.JcwGenTests {
 				// that only the per-instance references are measured below; a real per-instance
 				// leak still shows up.
 				var warmup = Com.Xamarin.Android.CallMethodFromCtor.NewInstance (c);
+				Assert.IsNotNull (warmup);
 				warmup.Dispose ();
 				AssertNoSustainedGlobalReferenceGrowth (() => AssertJavaSideActivation (c));
 			}
@@ -119,7 +119,9 @@ namespace Xamarin.Android.JcwGenTests {
 		static void AssertJavaSideActivation (Java.Lang.Class c)
 		{
 			using (var j = Com.Xamarin.Android.CallMethodFromCtor.NewInstance (c)) {
+				Assert.IsNotNull (j);
 				var instance = j.JavaCast<ConstructorTest>();
+				Assert.IsNotNull (instance);
 				Assert.AreSame (j, instance);
 				Assert.IsTrue (instance.DefaultConstructorInvoked);
 				Assert.IsTrue (instance.ActivationConstructorInvoked);
@@ -180,7 +182,7 @@ namespace Xamarin.Android.JcwGenTests {
 		{
 			using (var d = new CallNonvirtualDerived ()) {
 				d.Method ();
-				Assert.IsTrue (d.MethodInvoked);
+				Assert.IsTrue (d.DerivedMethodInvoked);
 			}
 			using (var b = new CallNonvirtualBase ()) {
 				b.Method ();
@@ -189,11 +191,11 @@ namespace Xamarin.Android.JcwGenTests {
 			using (CallNonvirtualBase b = new CallNonvirtualDerived ()) {
 				b.Method ();
 				Assert.IsFalse (b.MethodInvoked);
-				Assert.IsTrue (((CallNonvirtualDerived) b).MethodInvoked);
+				Assert.IsTrue (((CallNonvirtualDerived) b).DerivedMethodInvoked);
 			}
 			using (var d2 = new CallNonvirtualDerived2 ()) {
 				d2.Method ();
-				Assert.IsTrue (((CallNonvirtualDerived) d2).MethodInvoked);
+				Assert.IsTrue (((CallNonvirtualDerived) d2).DerivedMethodInvoked);
 				Assert.IsFalse (((CallNonvirtualBase) d2).MethodInvoked);
 			}
 		}
@@ -292,7 +294,6 @@ namespace Xamarin.Android.JcwGenTests {
 		}
 
 		[TestMethod]
-		[RequiresUnreferencedCode ("Tests trimming unsafe features")]
 		public void JavaAbstractMethodTest ()
 		{
 			// Library is referencing APIv1, ICursor is from APIv2
@@ -301,20 +302,18 @@ namespace Xamarin.Android.JcwGenTests {
 
 			// we should be able to call Method without issue
 			ic.Method ();
+			Assert.AreEqual (4, ic.MethodWithCursor (ic), "The existing explicit interface implementation must not be replaced.");
+			bool abstractMethodErrorThrown = false;
 			try {
 				// when calling Newmethod, we should get Java.Lang.AbstractMethodError. we catch
 				// general Exception on purpose, so that AbstractmethodError is not marked by MarkStep
 				// but by FixAbstractMethodStep
 				ic.NewMethod ();
 			} catch (Exception e) {
-				if (e.GetType ().ToString () != "Java.Lang.AbstractMethodError")
-					throw e;
+				Assert.AreEqual ("Java.Lang.AbstractMethodError", e.GetType ().ToString ());
+				abstractMethodErrorThrown = true;
 			}
-
-			var mi = typeof (Library.MyClrCursor).GetMethod ("global::Test.Bindings.ICursor.MethodWithCursor", BindingFlags.Instance | BindingFlags.NonPublic);
-			Assert.IsNotNull (mi, "ICursor.MethodWithCursor not found");
-			if (mi.GetMethodBody ()?.LocalVariables?.Count is not int x || x == 0)
-				throw new Exception ("FixAbstractMethodStep broken, MethodWithRT added, while it should not be");
+			Assert.IsTrue (abstractMethodErrorThrown, "The missing interface method must throw Java.Lang.AbstractMethodError.");
 		}
 
 		// Context https://bugzilla.xamarin.com/show_bug.cgi?id=36036
