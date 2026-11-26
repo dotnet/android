@@ -9,6 +9,7 @@ namespace Xamarin.Android.Tasks
 	/// <summary>
 	/// Provides a localizable way to log a warning from an MSBuild target.
 	/// </summary>
+	[MSBuildMultiThreadableTask]
 	public class AndroidWarning : Task
 	{
 		/// <summary>
