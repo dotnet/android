@@ -1,6 +1,6 @@
 // NOTE: logging methods below are need temporarily due to:
 // 1) linux-bionic BCL doesn't redirect stdout/stderr to logcat
-// 2) Android.Util.Log won't work until we initialize the Java.Interop.JreRuntime
+// 2) Android.Util.Log won't work until we initialize the Java.Interop.NativeAotJniRuntime
 
 using System.IO;
 using System.Runtime.InteropServices;

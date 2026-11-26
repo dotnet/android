@@ -246,12 +246,8 @@ namespace Java.Interop
 			}
 
 			var envp    = options.EnvironmentPointer;
-			if (envp == IntPtr.Zero &&
-					Invoker.GetEnv (InvocationPointer, out envp, (int) JniVersion) != JNI_OK &&
-					(envp = _AttachCurrentThread ()) == IntPtr.Zero) {
-				// Shouldn't be reached, as _AttachCurrentThread() throws
-				throw new InvalidOperationException ("Could not obtain JNIEnv* value!");
-			}
+			if (envp == IntPtr.Zero)
+				envp = _AttachCurrentThread ();
 			var env     = new JniEnvironmentInfo (envp, this);
 			JniEnvironment.SetEnvironmentInfo (env);
 

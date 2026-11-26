@@ -6,13 +6,14 @@ using Java.Interop;
 
 namespace Android.Runtime {
 
-	class AndroidRuntime : JniRuntime {
+	sealed class AndroidRuntime : JniRuntime {
 
 		public const string InternalDllName = "xa-internal-api";
 
 		/// <safety>
-		/// <paramref name="vm"/> must be a live JavaVM for this runtime's lifetime. <paramref name="jnienv"/>
-		/// must be null (VM-only attachment) or a live environment for that VM on the current thread.
+		/// <paramref name="vm"/> must be null or a live JavaVM for this runtime's lifetime. <paramref name="jnienv"/>
+		/// must be null (VM-only attachment) or a live environment for that VM on the current thread; at least one
+		/// must be non-null. When <paramref name="vm"/> is null, the VM is derived from <paramref name="jnienv"/>.
 		/// <paramref name="classLoader"/> must be null or a live global class-loader reference during initialization.
 		/// </safety>
 		internal unsafe AndroidRuntime (IntPtr jnienv,
@@ -20,11 +21,14 @@ namespace Android.Runtime {
 				IntPtr classLoader,
 				JniRuntime.JniTypeManager typeManager,
 				JniRuntime.JniValueManager valueManager)
-			: base (new AndroidRuntimeOptions (jnienv,
-					vm,
-					classLoader,
-					typeManager,
-					valueManager))
+			: base (new JniRuntime.CreationOptions {
+				EnvironmentPointer      = jnienv,
+				ClassLoader             = new JniObjectReference (classLoader, JniObjectReferenceType.Global),
+				InvocationPointer       = vm,
+				ObjectReferenceManager  = new ManagedObjectReferenceManager (),
+				TypeManager             = typeManager,
+				ValueManager            = valueManager,
+			})
 		{
 		}
 
@@ -33,9 +37,9 @@ namespace Android.Runtime {
 			AndroidEnvironment.FailFast (message);
 		}
 
-		public override string GetCurrentManagedThreadName ()
+		public override string? GetCurrentManagedThreadName ()
 		{
-			return Thread.CurrentThread.Name!;
+			return Thread.CurrentThread.Name;
 		}
 
 		public override string GetCurrentManagedThreadStackTrace (int skipFrames, bool fNeedFileInfo)
@@ -65,22 +69,6 @@ namespace Android.Runtime {
 		public override void RaisePendingException (Exception pendingException)
 		{
 			AndroidExceptionManager.RaisePendingException (pendingException);
-		}
-	}
-
-	class AndroidRuntimeOptions : JniRuntime.CreationOptions {
-		public AndroidRuntimeOptions (IntPtr jnienv,
-				IntPtr vm,
-				IntPtr classLoader,
-				JniRuntime.JniTypeManager typeManager,
-				JniRuntime.JniValueManager valueManager)
-		{
-			EnvironmentPointer      = jnienv;
-			ClassLoader             = new JniObjectReference (classLoader, JniObjectReferenceType.Global);
-			InvocationPointer       = vm;
-			ObjectReferenceManager  = new ManagedObjectReferenceManager ();
-			TypeManager             = typeManager;
-			ValueManager            = valueManager;
 		}
 	}
 }
