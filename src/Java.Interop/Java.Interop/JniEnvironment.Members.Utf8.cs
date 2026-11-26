@@ -29,9 +29,9 @@ namespace Java.Interop {
 			{
 				if (!type.IsValid)
 					throw new ArgumentException ("Handle must be valid.", "type");
-				if (name.IsEmpty)
+				if (name.IsEmpty || name [0] == 0)
 					throw new ArgumentException ("'name' cannot be empty.", nameof (name));
-				if (signature.IsEmpty)
+				if (signature.IsEmpty || signature [0] == 0)
 					throw new ArgumentException ("'signature' cannot be empty.", nameof (signature));
 
 				// SAFETY: The caller guarantees readable NUL-terminated backing storage, so the byte after each span is readable.
@@ -80,9 +80,9 @@ namespace Java.Interop {
 			{
 				if (!type.IsValid)
 					throw new ArgumentException ("Handle must be valid.", "type");
-				if (name.IsEmpty)
+				if (name.IsEmpty || name [0] == 0)
 					throw new ArgumentException ("'name' cannot be empty.", nameof (name));
-				if (signature.IsEmpty)
+				if (signature.IsEmpty || signature [0] == 0)
 					throw new ArgumentException ("'signature' cannot be empty.", nameof (signature));
 
 				// SAFETY: The caller guarantees readable NUL-terminated backing storage, so the byte after each span is readable.
@@ -131,9 +131,9 @@ namespace Java.Interop {
 			{
 				if (!type.IsValid)
 					throw new ArgumentException ("Handle must be valid.", "type");
-				if (name.IsEmpty)
+				if (name.IsEmpty || name [0] == 0)
 					throw new ArgumentException ("'name' cannot be empty.", nameof (name));
-				if (signature.IsEmpty)
+				if (signature.IsEmpty || signature [0] == 0)
 					throw new ArgumentException ("'signature' cannot be empty.", nameof (signature));
 
 				// SAFETY: The caller guarantees readable NUL-terminated backing storage, so the byte after each span is readable.
@@ -182,9 +182,9 @@ namespace Java.Interop {
 			{
 				if (!type.IsValid)
 					throw new ArgumentException ("Handle must be valid.", "type");
-				if (name.IsEmpty)
+				if (name.IsEmpty || name [0] == 0)
 					throw new ArgumentException ("'name' cannot be empty.", nameof (name));
-				if (signature.IsEmpty)
+				if (signature.IsEmpty || signature [0] == 0)
 					throw new ArgumentException ("'signature' cannot be empty.", nameof (signature));
 
 				// SAFETY: The caller guarantees readable NUL-terminated backing storage, so the byte after each span is readable.

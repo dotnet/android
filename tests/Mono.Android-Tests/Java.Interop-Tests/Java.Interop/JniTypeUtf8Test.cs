@@ -195,6 +195,20 @@ namespace Java.InteropTests
 				AssertRejected ("classname", () => { _ = unsafe (JniEnvironment.Types.TryFindClass ("\0java/lang/Object"u8, out _)); });
 				AssertRejected ("name", () => { _ = unsafe (JniEnvironment.InstanceMethods.GetMethodID (r, ""u8, "()V"u8)); });
 				AssertRejected ("signature", () => { _ = unsafe (JniEnvironment.InstanceFields.GetFieldID (r, "x"u8, ""u8)); });
+				AssertRejected ("name", () => { _ = unsafe (JniEnvironment.InstanceMethods.GetMethodID (r, "\0hashCode"u8, "()I"u8)); });
+				AssertRejected ("signature", () => { _ = unsafe (JniEnvironment.StaticMethods.GetStaticMethodID (r, "x"u8, "\0()V"u8)); });
+				AssertRejected ("name", () => { _ = unsafe (JniEnvironment.InstanceFields.GetFieldID (r, "\0"u8, "I"u8)); });
+				AssertRejected ("signature", () => { _ = unsafe (JniEnvironment.StaticFields.GetStaticFieldID (r, "x"u8, "\0I"u8)); });
+
+				var nullName = default (JniNativeMethodRegistration);
+				nullName.Signature = "()V";
+				nullName.Marshaler = new Action (() => {});
+				var nullSignature = nullName;
+				nullSignature.Name = "x";
+				nullSignature.Signature = default (JniNativeMethodRegistration).Signature;
+				// SAFETY: Null names and signatures are rejected before JNI can retain the callback.
+				AssertRejected ("methods", () => { unsafe { Object_class.RegisterNativeMethods (nullName); } });
+				AssertRejected ("methods", () => { unsafe { Object_class.RegisterNativeMethods (nullSignature); } });
 				unsafe {
 					// SAFETY: All buffers stay pinned and terminated; validation throws before JNI sees the callback.
 					fixed (byte* good = "native"u8)
