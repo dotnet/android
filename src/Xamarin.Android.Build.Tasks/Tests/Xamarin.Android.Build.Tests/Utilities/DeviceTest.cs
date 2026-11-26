@@ -56,7 +56,7 @@ namespace Xamarin.Android.Build.Tests
 		/// Checks if there is a device available
 		/// * Defaults to Assert.Fail ()
 		/// </summary>
-		public void AssertHasDevices (bool fail = true)
+		public static void AssertHasDevices (bool fail = true)
 		{
 			if (!IsDeviceAttached (refreshCachedValue: true)) {
 				var message = "This test requires an attached device or emulator.";
@@ -103,7 +103,7 @@ namespace Xamarin.Android.Build.Tests
 		/// restart first; if the service is still broken the run is marked inconclusive
 		/// (an infrastructure problem, not a product regression).
 		/// </summary>
-		protected void AssertPackageManagerResponsive ()
+		protected static void AssertPackageManagerResponsive ()
 		{
 			if (IsPackageManagerResponsive (out _)) {
 				return;

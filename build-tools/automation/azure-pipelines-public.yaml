@@ -519,13 +519,12 @@ stages:
 
     - template: /build-tools/automation/yaml-templates/start-stop-emulator.yaml
 
-    # Two tests at a time share the emulator, matching [assembly: LevelOfParallelism (2)].
-    - template: /build-tools/automation/yaml-templates/run-nunit-tests.yaml
+    # Two tests at a time share the emulator ([assembly: Parallelize (Workers = 2)]).
+    - template: /build-tools/automation/yaml-templates/run-mstest-tests.yaml
       parameters:
         testAssembly: $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/TrimmingTests/$(DotNetStableTargetFramework)/TrimmingTests.dll
+        testFilter: $(TrimmingTestFilter)
         testRunTitle: TrimmingTests On Device - macOS - $(TrimmingConfiguration)
-        dotNetTestExtraArgs: --filter "$(TrimmingTestFilter)"
-        workers: 2
         timeoutInMinutes: 120
 
     - template: /build-tools/automation/yaml-templates/upload-results.yaml

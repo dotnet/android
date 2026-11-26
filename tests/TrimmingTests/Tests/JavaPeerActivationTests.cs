@@ -1,16 +1,17 @@
 #nullable enable
-using NUnit.Framework;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Microsoft.VisualStudio.TestTools.UnitTesting.Combinatorial;
 
 namespace Microsoft.Android.TrimmingTests;
 
-[TestFixture]
-[Category ("UsesDevice")]
-[Parallelizable (ParallelScope.Children)]
+[TestClass]
+[TestCategory ("UsesDevice")]
 public class JavaPeerActivationTests : TrimmingTestBase
 {
 	// The case app converts a Java array of closed generic peers with JNIEnv.GetArray<T> () and reports PASS only if every
 	// element comes back. The [Kept] activation constructor must survive trimming.
-	[Test]
+	[TestMethod]
+	[CombinatorialData]
 	public void GetArrayActivatesClosedGenericPeerElementsWithoutWarnings ([TrimmingConfigurations] TrimmingConfiguration configuration)
 	{
 		var app = BuildAndRun ("Cases/GenericPeerArrayElement.cs", configuration);
@@ -81,7 +82,8 @@ public class JavaPeerActivationTests : TrimmingTestBase
 
 	// The case app converts untyped Java collections to IList<string>, ICollection<string>, and IDictionary<string, string>
 	// through JavaConvert, without naming the wrappers; their FromJniHandle () methods must survive trimming.
-	[Test]
+	[TestMethod]
+	[CombinatorialData]
 	public void JavaConvertActivatesGenericCollectionWrappersWithoutWarnings ([TrimmingConfigurations] TrimmingConfiguration configuration)
 	{
 		var app = BuildAndRun ("Cases/GenericCollectionConversion.cs", configuration);

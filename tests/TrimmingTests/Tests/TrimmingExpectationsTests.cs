@@ -1,15 +1,15 @@
 #nullable enable
 using System;
 using System.Linq;
-using NUnit.Framework;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Xamarin.Android.Build.Tests;
 
 namespace Microsoft.Android.TrimmingTests;
 
-[TestFixture]
+[TestClass]
 public class TrimmingExpectationsTests : BaseTest
 {
-	[Test]
+	[TestMethod]
 	public void MethodSignaturesDistinguishGenericArity ()
 	{
 		var assembly = AssemblyMetadata.Read (typeof (GenericMethodOverloads).Assembly.Location);
@@ -17,8 +17,8 @@ public class TrimmingExpectationsTests : BaseTest
 		var type = assembly.Types [typeName];
 		var methods = type.Members.OfType<MethodMetadata> ().Where (method => method.Name == nameof (GenericMethodOverloads.Method)).ToArray ();
 
-		Assert.That (methods.Select (method => method.Signature), Is.EquivalentTo (new [] { "Method()", "Method``1()" }));
-		Assert.That (methods.Select (method => method.CanonicalSignature), Is.EquivalentTo (new [] { "Method()", "Method``1()" }));
+		CollectionAssert.AreEquivalent (new [] { "Method()", "Method``1()" }, methods.Select (method => method.Signature).ToArray ());
+		CollectionAssert.AreEquivalent (new [] { "Method()", "Method``1()" }, methods.Select (method => method.CanonicalSignature).ToArray ());
 	}
 }
 

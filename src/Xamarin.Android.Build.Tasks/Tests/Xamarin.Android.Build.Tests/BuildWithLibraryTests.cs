@@ -1280,7 +1280,7 @@ namespace MultiTfmLib
 				"The Android-TFM MyReceiver JCW should be compiled into classes.dex.");
 		}
 
-		[Test]
+		[TestMethod]
 		public void LocalTestServersBuildsForNetStandard ()
 		{
 			var library = new DotNetStandard {

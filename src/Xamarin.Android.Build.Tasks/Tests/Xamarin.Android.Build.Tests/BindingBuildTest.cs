@@ -1377,7 +1377,8 @@ VNZXRob2RzLmphdmFQSwUGAAAAAAcABwDOAQAAVgMAAAAA
 			}
 		}
 
-		[Test]
+		[TestMethod]
+		[DoNotParallelize] // Shares the Maven cache with the other AndroidMavenLibrary tests
 		public void KotlinDefaultArgumentOverloads ()
 		{
 			// androidx.datastore:datastore-core-jvm has `class CorruptionException (message: String, cause: Throwable? = null)`.
@@ -1399,10 +1400,10 @@ VNZXRob2RzLmphdmFQSwUGAAAAAAcABwDOAQAAVgMAAAAA
 			Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
 
 			var cs_file = b.Output.GetIntermediaryPath (Path.Combine ("generated", "src", "Androidx.Datastore.Core.CorruptionException.cs"));
-			FileAssert.Exists (cs_file);
+			Assert.IsTrue (File.Exists (cs_file));
 			var code = File.ReadAllText (cs_file);
-			StringAssert.Contains ("public CorruptionException (string message) :", code);
-			StringAssert.Contains ("(Ljava/lang/String;Ljava/lang/Throwable;ILkotlin/jvm/internal/DefaultConstructorMarker;)V", code);
+			Assert.Contains ("public CorruptionException (string message) :", code);
+			Assert.Contains ("(Ljava/lang/String;Ljava/lang/Throwable;ILkotlin/jvm/internal/DefaultConstructorMarker;)V", code);
 		}
 	}
 }

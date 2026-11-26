@@ -81,46 +81,46 @@ namespace generatortests
 				$"Expected at least 3 inline-class ClassGens, generator output was:\n{output}");
 		}
 
-		[Test]
+		[TestMethodAttribute]
 		public void GeneratorMarshalsBoxedKotlinInlineClasses ()
 		{
 			var output = GenerateCSharp (BuildApiXmlFromKotlinFixture (), out _, nullableReferenceTypes: true);
 
-			StringAssert.Contains ("\"box-impl\", \"(J)Lxat/bytecode/tests/MyColor;\"", output);
-			StringAssert.Contains ("\"unbox-impl\", \"()J\"", output);
+			Assert.Contains ("\"box-impl\", \"(J)Lxat/bytecode/tests/MyColor;\"", output);
+			Assert.Contains ("\"unbox-impl\", \"()J\"", output);
 
 			// Only MyDp has an `init` block, so only its constructor calls `constructor-impl`,
 			// and its conversion from the primitive is explicit.
-			StringAssert.Contains ("public MyDp (float value) { Value = ConstructorImpl (value); }", output);
-			StringAssert.Contains ("\"constructor-impl\", \"(F)F\"", output);
-			StringAssert.Contains ("public static explicit operator MyDp (float value)", output);
-			StringAssert.Contains ("public MyColor (long value) { Value = value; }", output);
-			StringAssert.DoesNotContain ("\"constructor-impl\", \"(J)J\"", output);
+			Assert.Contains ("public MyDp (float value) { Value = ConstructorImpl (value); }", output);
+			Assert.Contains ("\"constructor-impl\", \"(F)F\"", output);
+			Assert.Contains ("public static explicit operator MyDp (float value)", output);
+			Assert.Contains ("public MyColor (long value) { Value = value; }", output);
+			Assert.DoesNotContain ("\"constructor-impl\", \"(J)J\"", output);
 
 			// Values from Java skip the `init` block, which Kotlin already ran.
-			StringAssert.Contains ("return Xat.Bytecode.Tests.MyDp.FromJniValue (__rm);", output);
+			Assert.Contains ("return Xat.Bytecode.Tests.MyDp.FromJniValue (__rm);", output);
 
 			// Kotlin `MyColor?` is passed boxed.
-			StringAssert.Contains ("Xat.Bytecode.Tests.MyColor? MaybeColor (Xat.Bytecode.Tests.MyColor? color)", output);
-			StringAssert.Contains ("Xat.Bytecode.Tests.MyColor.ToLocalJniHandle (color)", output);
-			StringAssert.DoesNotContain ("color!", output);
-			StringAssert.Contains ("Xat.Bytecode.Tests.MyColor.FromJniHandle (__rm.Handle, JniHandleOwnership.TransferLocalRef);", output);
+			Assert.Contains ("Xat.Bytecode.Tests.MyColor? MaybeColor (Xat.Bytecode.Tests.MyColor? color)", output);
+			Assert.Contains ("Xat.Bytecode.Tests.MyColor.ToLocalJniHandle (color)", output);
+			Assert.DoesNotContain ("color!", output);
+			Assert.Contains ("Xat.Bytecode.Tests.MyColor.FromJniHandle (__rm.Handle, JniHandleOwnership.TransferLocalRef);", output);
 
 			// Java calls back into C# with a boxed value.
-			StringAssert.Contains ("Xat.Bytecode.Tests.MyColor.ToLocalJniHandle (__this.OnColor (color))", output);
-			StringAssert.Contains ("var dp = Xat.Bytecode.Tests.MyDp.FromJniValue (native_dp);", output);
-			StringAssert.Contains ("return __this.OnDp (dp);", output);
+			Assert.Contains ("Xat.Bytecode.Tests.MyColor.ToLocalJniHandle (__this.OnColor (color))", output);
+			Assert.Contains ("var dp = Xat.Bytecode.Tests.MyDp.FromJniValue (native_dp);", output);
+			Assert.Contains ("return __this.OnDp (dp);", output);
 
 			// JavaList<T> can't hold a struct, so `List<MyColor>` keeps the boxed Java objects.
-			StringAssert.Contains ("IList<Java.Lang.Object> Colors (System.Collections.Generic.IList<Java.Lang.Object> colors)", output);
+			Assert.Contains ("IList<Java.Lang.Object> Colors (System.Collections.Generic.IList<Java.Lang.Object> colors)", output);
 
 			// @JvmName: C# uses the Kotlin name, and JNI uses the @JvmName.
-			StringAssert.IsMatch (@"Register \(""computeUInt"", ""\(I\)V"", """"\)\]\s+public void Compute \(uint x\)", output);
-			StringAssert.IsMatch (@"Register \(""compute"", ""\(I\)V"", """"\)\]\s+public void Compute \(int x\)", output);
-			StringAssert.IsMatch (@"Register \(""tintColor"", ""\(J\)V"", """"\)\]\s+public void TintWith \(Xat.Bytecode.Tests.MyColor color\)", output);
+			Assert.MatchesRegex (@"Register \(""computeUInt"", ""\(I\)V"", """"\)\]\s+public void Compute \(uint x\)", output);
+			Assert.MatchesRegex (@"Register \(""compute"", ""\(I\)V"", """"\)\]\s+public void Compute \(int x\)", output);
+			Assert.MatchesRegex (@"Register \(""tintColor"", ""\(J\)V"", """"\)\]\s+public void TintWith \(Xat.Bytecode.Tests.MyColor color\)", output);
 		}
 
-		[Test]
+		[TestMethodAttribute]
 		public void GeneratorHandlesNestedFieldAndArrayKotlinInlineClasses ()
 		{
 			var output = GenerateCSharp ("""
@@ -147,26 +147,26 @@ namespace generatortests
 				""", out _, nullableReferenceTypes: true);
 
 			// A nested value class is a struct too.
-			StringAssert.Contains ("readonly partial struct Inner", output);
-			StringAssert.Contains ("Com.Example.Outer.Inner? Maybe (Com.Example.Outer.Inner? value)", output);
+			Assert.Contains ("readonly partial struct Inner", output);
+			Assert.Contains ("Com.Example.Outer.Inner? Maybe (Com.Example.Outer.Inner? value)", output);
 
 			// A Java field of a value-class type is marshaled through the boxing helpers.
-			StringAssert.Contains ("Com.Example.Outer.Inner.FromJniHandle (__v.Handle, JniHandleOwnership.TransferLocalRef);", output);
-			StringAssert.DoesNotContain ("GetObject<Com.Example.Outer.Inner>", output);
+			Assert.Contains ("Com.Example.Outer.Inner.FromJniHandle (__v.Handle, JniHandleOwnership.TransferLocalRef);", output);
+			Assert.DoesNotContain ("GetObject<Com.Example.Outer.Inner>", output);
 
 			// Arrays of value classes can't be marshaled, so the member is skipped.
-			StringAssert.DoesNotContain (" All (", output);
+			Assert.DoesNotContain (" All (", output);
 
 			// A `uint` (for example from Metadata.xml) is not the struct's `int`, so it is not projected.
-			StringAssert.Contains ("uint Unsigned ()", output);
+			Assert.Contains ("uint Unsigned ()", output);
 
 			// The struct writer emits no nested types, so members that use them are skipped.
-			StringAssert.DoesNotContain ("Companion", output);
+			Assert.DoesNotContain ("Companion", output);
 
 			AssertCompiles (output);
 		}
 
-		[Test]
+		[TestMethodAttribute]
 		public void GeneratorFallsBackWhenKotlinInlineClassCannotBeProjected ()
 		{
 			var output = GenerateCSharp ("""
@@ -191,7 +191,7 @@ namespace generatortests
 				""", out _, nullableReferenceTypes: true);
 
 			// A struct named `Value` cannot have a `Value` field (CS0542), so it stays a class.
-			StringAssert.Contains ("public sealed partial class Value", output);
+			Assert.Contains ("public sealed partial class Value", output);
 
 			// `Color` and `Alpha` are classes, as from an older binding, so the parameters stay
 			// `long`, and the colliding mangled overload is removed as without value classes.

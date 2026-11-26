@@ -131,7 +131,7 @@ namespace Xamarin.Android.Tools.BytecodeTests
 				"Each tint(<inline class>) parameter must be stamped with its inline-class JNI signature.");
 		}
 
-		[Test]
+		[TestMethod]
 		public void Fixup_StampsExtensionReceiverInlineClassJniType ()
 		{
 			var classes = LoadInlineClassFixture ();
@@ -144,7 +144,7 @@ namespace Xamarin.Android.Tools.BytecodeTests
 
 		// A value class from another library (its .class file is not bound here) is still
 		// stamped, so the generator can project it to a struct from a referenced assembly.
-		[Test]
+		[TestMethod]
 		public void Fixup_StampsInlineClassFromAnotherLibrary ()
 		{
 			var widgets = LoadClassFile ("Widgets.class");
@@ -220,11 +220,11 @@ namespace Xamarin.Android.Tools.BytecodeTests
 			classPath.SaveXmlDescription (sw);
 			var xml = sw.ToString ();
 
-			StringAssert.Contains (xml, "kotlin-inline-class=\"true\"");
-			StringAssert.Contains (xml, "kotlin-inline-class-underlying-jni-type=\"J\"");
-			StringAssert.Contains (xml, "kotlin-inline-class-underlying-jni-type=\"F\"");
-			StringAssert.Contains (xml, "kotlin-inline-class-jni-type=\"Lxat/bytecode/tests/MyColor;\"");
-			StringAssert.Contains (xml, "kotlin-inline-class-return-jni-type=\"Lxat/bytecode/tests/MyDp;\"");
+			Assert.Contains (xml, "kotlin-inline-class=\"true\"");
+			Assert.Contains (xml, "kotlin-inline-class-underlying-jni-type=\"J\"");
+			Assert.Contains (xml, "kotlin-inline-class-underlying-jni-type=\"F\"");
+			Assert.Contains (xml, "kotlin-inline-class-jni-type=\"Lxat/bytecode/tests/MyColor;\"");
+			Assert.Contains (xml, "kotlin-inline-class-return-jni-type=\"Lxat/bytecode/tests/MyDp;\"");
 		}
 
 		static List<ClassFile> LoadInlineClassFixture () => new List<ClassFile> {
