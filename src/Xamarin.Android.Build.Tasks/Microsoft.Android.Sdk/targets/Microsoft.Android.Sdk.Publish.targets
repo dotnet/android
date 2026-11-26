@@ -51,7 +51,7 @@ This file contains the implementation for 'dotnet publish'.
         <ApplicationVersion>%(_ApplicationArtifactForPublish.ApplicationVersion)</ApplicationVersion>
       </_ApplicationArtifactPublishCopy>
       <ApplicationArtifact Remove="@(ApplicationArtifact)" />
-      <ApplicationArtifact Include="@(_ApplicationArtifactPublishCopy)" />
+      <ApplicationArtifact Include="@(_ApplicationArtifactPublishCopy->'%(FullPath)')" />
       <_ApplicationArtifactForPublish Remove="@(_ApplicationArtifactForPublish)" />
       <_ApplicationArtifactPublishCopy Remove="@(_ApplicationArtifactPublishCopy)" />
     </ItemGroup>
