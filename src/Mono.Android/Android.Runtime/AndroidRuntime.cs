@@ -3,6 +3,7 @@ using System.Diagnostics;
 using System.Threading;
 
 using Java.Interop;
+using RuntimeFeature = Microsoft.Android.Runtime.RuntimeFeature;
 
 namespace Android.Runtime {
 
@@ -11,9 +12,12 @@ namespace Android.Runtime {
 		public const string InternalDllName = "xa-internal-api";
 
 		/// <safety>
-		/// <paramref name="vm"/> must be a live JavaVM for this runtime's lifetime. <paramref name="jnienv"/>
-		/// must be null (VM-only attachment) or a live environment for that VM on the current thread.
-		/// <paramref name="classLoader"/> must be null or a live global class-loader reference during initialization.
+		/// <paramref name="vm"/> must be zero or a live JavaVM for this runtime's lifetime.
+		/// <paramref name="jnienv"/> must be zero or a live environment on the current thread. At least one
+		/// must be nonzero; if both are supplied, the environment must belong to that VM. If only the
+		/// environment is supplied, its VM must remain live for the runtime's lifetime.
+		/// <paramref name="classLoader"/> must be zero or a live JNI reference until initialization duplicates it;
+		/// any local reference must belong to the current thread.
 		/// </safety>
 		internal unsafe AndroidRuntime (IntPtr jnienv,
 				IntPtr vm,
@@ -33,7 +37,12 @@ namespace Android.Runtime {
 
 		public override void FailFast (string? message)
 		{
-			AndroidEnvironment.FailFast (message);
+			// NativeAOT previously inherited the base implementation.
+			if (RuntimeFeature.IsNativeAotRuntime) {
+				base.FailFast (message);
+			} else {
+				AndroidEnvironment.FailFast (message);
+			}
 		}
 
 		public override string? GetCurrentManagedThreadName ()
