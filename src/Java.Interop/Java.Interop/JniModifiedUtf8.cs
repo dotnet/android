@@ -260,11 +260,18 @@ namespace Java.Interop {
 	readonly ref struct JniModifiedUtf8String {
 		readonly IntPtr owned;
 
-		internal IntPtr Pointer { get; }
+		/// <safety>
+		/// The address must only be consumed while this wrapper is alive. For caller-provided
+		/// source storage, the constructor's lifetime and immutability requirements also apply.
+		/// </safety>
+		internal unsafe IntPtr Pointer { get; }
 
 		internal JniModifiedUtf8String (string value)
 		{
-			Pointer = owned = JniModifiedUtf8.Alloc (value);
+			owned = JniModifiedUtf8.Alloc (value);
+			unsafe {
+				Pointer = owned;
+			}
 		}
 
 		/// <safety>
