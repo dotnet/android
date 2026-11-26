@@ -77,11 +77,15 @@ namespace Android.GraphicsTests
 		IntPtr AssetManager_openNonAsset;
 		IntPtr OpenNonAsset (AssetManager manager, int cookie, string fileName, int accessMode)
 		{
-			if (AssetManager_openNonAsset == IntPtr.Zero)
-				AssetManager_openNonAsset = JNIEnv.GetMethodID (manager.Class.Handle, "openNonAsset", "(ILjava/lang/String;I)Ljava/io/InputStream;");
+			if (AssetManager_openNonAsset == IntPtr.Zero) {
+				using var klass = manager.Class;
+				AssetManager_openNonAsset = JNIEnv.GetMethodID (klass.Handle, "openNonAsset", "(ILjava/lang/String;I)Ljava/io/InputStream;");
+			}
 
 			using (var f = new Java.Lang.String (fileName)) {
-				return JNIEnv.CallObjectMethod (manager.Handle, AssetManager_openNonAsset, new JValue (cookie), new JValue (f), new JValue (accessMode));
+				IntPtr result = JNIEnv.CallObjectMethod (manager.Handle, AssetManager_openNonAsset, new JValue (cookie), new JValue (f), new JValue (accessMode));
+				GC.KeepAlive (manager);
+				return result;
 			}
 		}
 	}
