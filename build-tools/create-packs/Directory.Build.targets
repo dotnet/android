@@ -81,14 +81,14 @@
   </Target>
 
   <Target Name="ExtractWorkloadPacks"
-      DependsOnTargets="DeleteExtractedWorkloadPacks;_GetDefaultPackageVersion">
+      DependsOnTargets="DeleteExtractedWorkloadPacks;_GetDefaultPackageVersion;_DetermineLocalSdkFeatureBand">
     <ItemGroup>
       <_WLManifest Include="$(XamarinAndroidSourcePath)bin\Build$(Configuration)\nuget-unsigned\Microsoft.NET.Sdk.Android.Manifest-*.nupkg" />
     </ItemGroup>
     <PropertyGroup>
       <_WorkloadPackRoot>$(BuildOutputDirectory)workload</_WorkloadPackRoot>
       <_WorkloadToInstall>android</_WorkloadToInstall>
-      <_SdkManifestsFolder>$(_WorkloadPackRoot)\sdk-manifests\$(DotNetSdkManifestsFolder)\</_SdkManifestsFolder>
+      <_SdkManifestsFolder>$(_WorkloadPackRoot)\sdk-manifests\$(_LocalSdkFeatureBand)\</_SdkManifestsFolder>
       <_LocalAndroidManifestFolder>$(_SdkManifestsFolder)microsoft.net.sdk.android\$(AndroidPackVersionLong)\</_LocalAndroidManifestFolder>
     </PropertyGroup>
     <Error Condition=" '@(_WLManifest->Count())' != '1' " Text="Expected exactly one Android workload manifest package, found @(_WLManifest->Count())." />

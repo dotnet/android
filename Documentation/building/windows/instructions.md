@@ -82,7 +82,8 @@ Build the project:
     > dotnet-local.cmd build foo.csproj
 
 The `dotnet-local` script sets worktree-local workload overrides and forwards
-arguments unchanged through dotnetup, using normal `global.json` lookup.
+SDK commands through dotnetup using the repository root's SDK pin, while
+preserving the caller's directory and `global.json` test-runner settings.
 It defaults to Debug workload paths. Use `set CONFIGURATION=Release` in cmd
 or `$env:CONFIGURATION = 'Release'` in PowerShell to select Release packs;
 `-c Release` only controls the forwarded build/test command.

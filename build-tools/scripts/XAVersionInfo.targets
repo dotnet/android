@@ -13,6 +13,20 @@
   <!-- Java.Interop and the Android tools projects live in-tree and their commit
        is the dotnet/android commit. No submodules contribute version info
        anymore, so there is no _GetSubmodulesVersionInfo target. -->
+  <Target Name="_DetermineLocalSdkFeatureBand">
+    <PropertyGroup>
+      <_LocalSdkVersion>$(NETCoreSdkVersion)</_LocalSdkVersion>
+      <!-- Non-SDK projects such as Prepare.proj do not import NETCoreSdkVersion. -->
+      <_LocalSdkVersion Condition=" '$(_LocalSdkVersion)' == '' ">$([System.IO.Path]::GetFileName('$(MSBuildBinPath)'))</_LocalSdkVersion>
+      <_LocalSdkFeatureBandPrefix>$([System.Text.RegularExpressions.Regex]::Match($(_LocalSdkVersion), `^\d+\.\d+\.\d`))</_LocalSdkFeatureBandPrefix>
+      <_LocalSdkFeatureBand Condition=" '$(_LocalSdkFeatureBandPrefix)' != '' ">$(_LocalSdkFeatureBandPrefix)00</_LocalSdkFeatureBand>
+      <_LocalSdkPrerelease>$([System.Text.RegularExpressions.Regex]::Match($(_LocalSdkVersion), `(?&lt;=-)[^+]+`))</_LocalSdkPrerelease>
+      <_LocalSdkPrereleaseFeatureBand>$([System.Text.RegularExpressions.Regex]::Match($(_LocalSdkPrerelease), `^[^.]+(\.[^.]+)?`))</_LocalSdkPrereleaseFeatureBand>
+      <_LocalSdkFeatureBand Condition=" '$(_LocalSdkFeatureBandPrefix)' != '' and '$(_LocalSdkPrerelease)' != '' and !$(_LocalSdkPrerelease.Contains('dev')) and !$(_LocalSdkPrerelease.Contains('ci')) and !$(_LocalSdkPrerelease.Contains('rtm')) ">$(_LocalSdkFeatureBand)-$(_LocalSdkPrereleaseFeatureBand)</_LocalSdkFeatureBand>
+    </PropertyGroup>
+    <Error Condition=" '$(_LocalSdkFeatureBand)' == '' " Text="Failed to determine the SDK feature band from running SDK version '$(_LocalSdkVersion)'." />
+  </Target>
+
   <Target Name="GetXAVersionInfo">
     <PropertyGroup>
       <_AndroidAllowMissingGitStartCommit>false</_AndroidAllowMissingGitStartCommit>

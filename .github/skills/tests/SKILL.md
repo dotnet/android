@@ -21,7 +21,8 @@ Install the pinned SDK with `dotnetup sdk install` from the repository root.
 For full-build tests, build `Microsoft.Android.slnx` with `dotnetup dotnet build`
 first; rebuild after source changes. The wrappers report missing local workloads.
 They default to Debug; export `CONFIGURATION=Release` for Release workloads and
-also pass `-c Release` to build/test commands. Normal `global.json` lookup applies.
+also pass `-c Release` to build/test commands. The wrappers keep the repository
+root's SDK pin while preserving the caller's `global.json` test-runner settings.
 Forward SDK help with `dotnetup dotnet -- test --help`.
 
 Validate locally before pushing: build missing prerequisites, run focused tests,
@@ -97,7 +98,7 @@ ADB_TARGET='-s emulator-5554' ./dotnet-local.sh test bin/TestDebug/MSBuildDevice
 CI runs these assemblies with Microsoft Testing Platform, and splits them across jobs with
 `build-tools/automation/scripts/RunSlicedTests.cs`:
 ```bash
-./bin/Debug/dotnet/dotnet run build-tools/automation/scripts/RunSlicedTests.cs -- \
+dotnetup dotnet run build-tools/automation/scripts/RunSlicedTests.cs -- \
   --test-assembly bin/TestDebug/${TFM}/Xamarin.Android.Build.Tests.dll --results-directory bin/TestDebug/TestResults \
   --filter "FullyQualifiedName~BuildTest2" --slice 1 --total-slices 4
 ```
