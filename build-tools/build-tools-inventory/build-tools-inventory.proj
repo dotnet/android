@@ -7,7 +7,7 @@
     Required by Section 4.e.i.D of the Executive Order on Cybersecurity build
     system security requirements. Consumed as the ``AndroidBuildToolsInventory``
     pipeline artifact by ``build-macos-steps.yaml``, ``build-macos.yaml``, and
-    ``commercial-build.yaml``.
+    ``build-macos-nightly-steps.yaml``.
 
     Previously produced by ``Context.WriteBuildToolsInventoryCsv ()`` in
     xaprepare; now generated directly from the MSBuild properties/items that

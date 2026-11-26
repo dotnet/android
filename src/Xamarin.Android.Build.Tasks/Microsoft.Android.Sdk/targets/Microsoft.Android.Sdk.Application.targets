@@ -56,14 +56,14 @@ This file contains targets specific for Android application projects.
   is insufficient because the .NET SDK's `dotnet run` invokes DeployToDevice via
   ProjectInstance.Build() in-process, where BeforeTargets hooks may not fire.
 
-  The BeforeTargets="_GetPrimaryCpuAbi" entry is kept for commercial builds where
-  _GetPrimaryCpuAbi needs AdbTarget resolved before it runs.
+  The BeforeTargets="_GetPrimaryCpuAbi" entry ensures AdbTarget is resolved before
+  _GetPrimaryCpuAbi runs for applications without embedded assemblies.
 
   Publish-only RID inner builds skip the device ABI query and must not repeat the
   outer build's device boot check.
 
-  Note: this target CANNOT use DependsOnTargets="_ResolveMonoAndroidSdks" because in commercial
-  builds _GetPrimaryCpuAbi is in $(_ResolveMonoAndroidSdksDependsOn), which would create a cycle:
+  Note: this target CANNOT use DependsOnTargets="_ResolveMonoAndroidSdks" because
+  _GetPrimaryCpuAbi is in $(_ResolveMonoAndroidSdksDependsOn), which would create a cycle:
     _ResolveMonoAndroidSdks -> _GetPrimaryCpuAbi -> _EnsureDeviceBooted -> _ResolveMonoAndroidSdks
   Instead, the task computes tool paths from $(AndroidSdkDirectory), which is available because
   _ResolveSdks runs earlier in the dependency chain.

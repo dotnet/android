@@ -7,6 +7,9 @@ Support for Xamarin.Android ended on **May 1, 2024** as per the [Xamarin Support
 
 However, the released installers are still available for download.
 
+The term "commercial" below is historical and does not indicate a separate
+current .NET for Android build.
+
 | Platform        | Link   |
 |-----------------|--------|
 | **Commercial Xamarin.Android 13.2.2 (d17-8)** for Windows+Visual Studio 2022                | [Download][commercial-d17-8-Windows-x86_64] |
