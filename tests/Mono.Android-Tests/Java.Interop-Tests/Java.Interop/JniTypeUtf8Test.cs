@@ -192,6 +192,9 @@ namespace Java.InteropTests
 				AssertRejected ("signature", () => { _ = unsafe (JniEnvironment.StaticFields.GetStaticFieldID (r, "x"u8, bad)); });
 				AssertRejected ("name", () => { _ = unsafe (Object_class.GetInstanceMethod (bad, "()I"u8)); });
 				AssertRejected ("signature", () => { _ = unsafe (Object_class.GetStaticMethod ("x"u8, bad)); });
+				AssertRejected ("classname", () => { _ = unsafe (JniEnvironment.Types.TryFindClass ("\0java/lang/Object"u8, out _)); });
+				AssertRejected ("name", () => { _ = unsafe (JniEnvironment.InstanceMethods.GetMethodID (r, ""u8, "()V"u8)); });
+				AssertRejected ("signature", () => { _ = unsafe (JniEnvironment.InstanceFields.GetFieldID (r, "x"u8, ""u8)); });
 				unsafe {
 					// SAFETY: All buffers stay pinned and terminated; validation throws before JNI sees the callback.
 					fixed (byte* good = "native"u8)
@@ -208,6 +211,13 @@ namespace Java.InteropTests
 						AssertRejected ("methods", () => JniEnvironment.Types.RegisterNatives (r, methods));
 
 						methods [0] = new JniNativeMethod (supplementary, badPtr, callback);
+						AssertRejected ("methods", () => JniEnvironment.Types.RegisterNatives (r, methods));
+
+						methods [0] = default;
+						AssertRejected ("methods", () => JniEnvironment.Types.RegisterNatives (r, methods));
+
+						methods [0] = new JniNativeMethod (supplementary, good, callback);
+						methods [1] = new JniNativeMethod (good, null, callback);
 						AssertRejected ("methods", () => JniEnvironment.Types.RegisterNatives (r, methods));
 					}
 				}

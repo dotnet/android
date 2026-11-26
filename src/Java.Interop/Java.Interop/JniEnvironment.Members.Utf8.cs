@@ -28,6 +28,10 @@ namespace Java.Interop {
 			{
 				if (!type.IsValid)
 					throw new ArgumentException ("Handle must be valid.", "type");
+				if (name.IsEmpty)
+					throw new ArgumentException ("'name' cannot be empty.", nameof (name));
+				if (signature.IsEmpty)
+					throw new ArgumentException ("'signature' cannot be empty.", nameof (signature));
 
 				IntPtr __env = JniEnvironment.EnvironmentPointer;
 				unsafe {
@@ -71,6 +75,10 @@ namespace Java.Interop {
 			{
 				if (!type.IsValid)
 					throw new ArgumentException ("Handle must be valid.", "type");
+				if (name.IsEmpty)
+					throw new ArgumentException ("'name' cannot be empty.", nameof (name));
+				if (signature.IsEmpty)
+					throw new ArgumentException ("'signature' cannot be empty.", nameof (signature));
 
 				IntPtr __env = JniEnvironment.EnvironmentPointer;
 				unsafe {
@@ -114,6 +122,10 @@ namespace Java.Interop {
 			{
 				if (!type.IsValid)
 					throw new ArgumentException ("Handle must be valid.", "type");
+				if (name.IsEmpty)
+					throw new ArgumentException ("'name' cannot be empty.", nameof (name));
+				if (signature.IsEmpty)
+					throw new ArgumentException ("'signature' cannot be empty.", nameof (signature));
 
 				IntPtr __env = JniEnvironment.EnvironmentPointer;
 				unsafe {
@@ -157,6 +169,10 @@ namespace Java.Interop {
 			{
 				if (!type.IsValid)
 					throw new ArgumentException ("Handle must be valid.", "type");
+				if (name.IsEmpty)
+					throw new ArgumentException ("'name' cannot be empty.", nameof (name));
+				if (signature.IsEmpty)
+					throw new ArgumentException ("'signature' cannot be empty.", nameof (signature));
 
 				IntPtr __env = JniEnvironment.EnvironmentPointer;
 				unsafe {

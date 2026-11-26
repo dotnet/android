@@ -133,9 +133,10 @@ namespace Java.Interop
 
 				// Class names here are binary/JNI names, so `NewStringUTF()` lets the fallback
 				// avoid a managed UTF-16 allocation while still calling `Class.forName()`.
-				Span<byte> javaName = classname.Length + 1 <= 256
-					? stackalloc byte [classname.Length + 1]
-					: new byte [classname.Length + 1];
+				int javaNameLength = checked (classname.Length + 1);
+				Span<byte> javaName = javaNameLength <= 256
+					? stackalloc byte [javaNameLength]
+					: new byte [javaNameLength];
 
 				classname.Replace (javaName, (byte) '/', (byte) '.');
 				javaName [classname.Length] = 0;
@@ -328,9 +329,10 @@ namespace Java.Interop
 				Span<JniNativeMethod> natives = useStackAllocatedBuffers
 					? stackalloc JniNativeMethod [numMethods]
 					: new JniNativeMethod [numMethods];
+				int unmanagedStringCount = checked (numMethods * 2);
 				Span<IntPtr> unmanagedStrings = useStackAllocatedBuffers
-					? stackalloc IntPtr [numMethods * 2]
-					: new IntPtr [numMethods * 2];
+					? stackalloc IntPtr [unmanagedStringCount]
+					: new IntPtr [unmanagedStringCount];
 				unmanagedStrings.Clear ();
 				try {
 					for (int i = 0; i < numMethods; ++i) {
@@ -411,6 +413,7 @@ namespace Java.Interop
 						// SAFETY: Caller-owned inputs remain readable; each allocated replacement is recorded before the next allocation.
 						for (int i = 0; i < methods.Length; ++i) {
 							var method = methods [i];
+							ThrowIfNullDescriptor (method, nameof (methods));
 							IntPtr name = JniModifiedUtf8.AllocConvertedUtf8 (method.name, nameof (methods));
 							unmanagedStrings [i * 2] = name;
 							IntPtr signature = JniModifiedUtf8.AllocConvertedUtf8 (method.signature, nameof (methods));
@@ -428,6 +431,12 @@ namespace Java.Interop
 				}
 			}
 
+			static unsafe void ThrowIfNullDescriptor (JniNativeMethod method, string paramName)
+			{
+				if (method.name == null || method.signature == null)
+					throw new ArgumentException ("Native method names and signatures must not be null.", paramName);
+			}
+
 			/// <safety>
 			/// Each method's name and signature must remain readable and unchanged through its NUL
 			/// terminator for the duration of the scan.
@@ -436,6 +445,7 @@ namespace Java.Interop
 			{
 				unsafe {
 					foreach (var method in methods) {
+						ThrowIfNullDescriptor (method, nameof (methods));
 						// SAFETY: The caller retains every descriptor string through registration.
 						bool nameRequiresConversion = JniModifiedUtf8.RequiresConversion (method.name, nameof (methods));
 						bool signatureRequiresConversion = JniModifiedUtf8.RequiresConversion (method.signature, nameof (methods));
@@ -533,7 +543,7 @@ namespace Java.Interop
 			/// </safety>
 			static unsafe JniObjectReference TryFindClass (ReadOnlySpan<byte> classname, bool throwOnError)
 			{
-				if (classname.Length == 0)
+				if (classname.Length == 0 || classname [0] == 0)
 					throw new ArgumentException ("'classname' cannot be a zero-length string.", nameof (classname));
 
 				var info = JniEnvironment.CurrentInfo;
@@ -551,9 +561,10 @@ namespace Java.Interop
 					return unsafe (TryFindClassFromPtr (info, classname, classname, terminator, throwOnError));
 				}
 
-				Span<byte> jniClassName = nameLength + 1 <= 256
-					? stackalloc byte [nameLength + 1]
-					: new byte [nameLength + 1];
+				int jniClassNameLength = checked (nameLength + 1);
+				Span<byte> jniClassName = jniClassNameLength <= 256
+					? stackalloc byte [jniClassNameLength]
+					: new byte [jniClassNameLength];
 				for (int i = 0; i < nameLength; ++i)
 					jniClassName [i] = classname [i] == (byte) '.' ? (byte) '/' : classname [i];
 				jniClassName [nameLength] = 0;
