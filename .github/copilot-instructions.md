@@ -236,20 +236,7 @@ builder.Save (proj, doNotCleanupOnUpdate: true, saveProject: false);
 
 This pattern ensures proper encoding, timestamps, and file attributes are handled correctly. The `Touch` + `Save` pattern is used throughout the test suite for incremental builds and file modifications.
 
-### Writing reliable tests
-
-New tests must not fail without a product bug. CI flakes in this repository came repeatedly from the patterns below; avoid them (full checklist: `.github/skills/code-review/references/testing-rules.md`):
-
-- **No timing thresholds.** Don't assert that a build, install, or operation finished within N ms. Assert behavior instead, such as a skipped target or changed output.
-- **No sleeps as synchronization.** Wait for an explicit condition (process exit, readiness property, unique log marker, `TaskCompletionSource`) with a generous deadline, and print diagnostics on timeout. Order concurrency and cancellation tests with gates, not delays.
-- **Isolate every case.** Give each parameterized row its own directory, including all distinguishing parameters. Don't share caches, environment variables, the current directory, or fixed `%TEMP%` paths between tests.
-- **Avoid crosstalk in process-wide runtime state.** Other tests, framework threads, and pending finalizers also change global reference counts, peer/object maps, GC counts, and thread-pool state. Don't assert exact process-wide deltas; establish a quiescent baseline, observe only objects the test owns (for example a specific handle or weak reference), and use `[NonParallelizable]` when global state can't be avoided.
-- **Avoid the network.** Prefer small in-repo fixtures to third-party SDKs or large remote dependency graphs.
-- **Assert on the current run only.** Delete old logs before each build, and scope logcat to the current run with a marker or a fresh dump.
-- **Don't rely on file timestamps.** Use content hashes or target-skip evidence.
-- **Bound process I/O.** Don't wait indefinitely for redirected output from processes whose children may inherit the pipes.
-- **Keep device matrices representative,** not exhaustive, and await device readiness after changing device state.
-- **Don't hide flakes.** No `[Retry]`, rerun loops, or swallowed assertions. Don't add a retry until evidence identifies what holds the lock or causes the error and shows the condition is external and transient; fix the holder when it is ours. `[Ignore]` for flakiness needs a tracking issue. If a flaky test adds no unique coverage, delete it rather than patching it.
+New tests must not fail without a product bug: no timing thresholds, sleeps as synchronization, shared state or directories, network dependencies, or retries that hide flakes. See the checklist in `.github/skills/code-review/references/testing-rules.md`; use the `flaky-tests` skill for investigating existing flakes.
 
 ## Error Patterns
 - **MSBuild Errors:** `XA####` (errors), `XA####` (warnings), `APT####` (Android tools)
