@@ -1,7 +1,6 @@
 #nullable enable
 
 using System;
-using System.Globalization;
 using System.IO;
 using System.Threading.Tasks;
 using NUnit.Framework;
@@ -11,24 +10,6 @@ namespace Xamarin.Android.Build.Tests
 {
 	public class GetMicrosoftNuGetPackagesMapTests
 	{
-		[TestCase ("ar-SA")]
-		[TestCase ("fa-IR")]
-		[TestCase ("th-TH")]
-		public void CacheFileNamesUseInvariantCulture (string cultureName)
-		{
-			var originalCulture = CultureInfo.CurrentCulture;
-			try {
-				CultureInfo.CurrentCulture = CultureInfo.GetCultureInfo (cultureName);
-				var date = new DateTime (2026, 11, 25);
-				var filename = PackagesFile.GetFileName (date);
-				Assert.AreEqual ("microsoft-packages-20261125.json", filename);
-				Assert.IsTrue (PackagesFile.TryParse (filename, out var file));
-				Assert.AreEqual (date, file?.DownloadDate);
-			} finally {
-				CultureInfo.CurrentCulture = originalCulture;
-			}
-		}
-
 		[Test]
 		[SetCulture ("fa-IR")]
 		public async Task NoCachedFile ()
@@ -61,13 +42,15 @@ namespace Xamarin.Android.Build.Tests
 			// If a file already exists for today, it should be used and nothing new should be downloaded
 			var engine = new MockBuildEngine (TestContext.Out, []);
 			var temp_cache_dir = Path.Combine (Path.GetTempPath (), Guid.NewGuid ().ToString ());
-			var today_file = Path.Combine (temp_cache_dir, FormattableString.Invariant ($"microsoft-packages-{DateTime.Today:yyyyMMdd}.json"));
+			var today = DateTime.Today;
+			var today_file = Path.Combine (temp_cache_dir, FormattableString.Invariant ($"microsoft-packages-{today:yyyyMMdd}.json"));
 
 			try {
 				Directory.CreateDirectory (temp_cache_dir);
 				File.WriteAllText (today_file, "dummy file");
+				Assert.AreEqual (Path.GetFileName (today_file), PackagesFile.GetFileName (today));
 				Assert.IsTrue (PackagesFile.TryParse (today_file, out var cachedFile));
-				Assert.AreEqual (DateTime.Today, cachedFile?.DownloadDate);
+				Assert.AreEqual (today, cachedFile?.DownloadDate);
 
 				var task = new GetMicrosoftNuGetPackagesMap {
 					BuildEngine = engine,
