@@ -76,7 +76,7 @@ Reference official Android documentation where helpful:
 <UsingTask AssemblyFile="$(PrepTasksAssembly)" TaskName="Xamarin.Android.BuildTools.PrepTasks.MyTask" TaskFactory="TaskHostFactory" Runtime="NET" />
 ```
 
-**Do NOT** use `TaskFactory="TaskHostFactory"` or `Runtime="NET"` on `<UsingTask/>` elements shipped in the product (e.g., in `Xamarin.Android.Common.targets` or `Microsoft.Android.Sdk/*.targets`), as it could negatively impact customer builds.
+**Shipped `<UsingTask/>` elements:** Omit `TaskFactory="TaskHostFactory"` and `Runtime="NET"` on `netstandard2.0` shipped task assemblies (`Xamarin.Android.Build.Tasks.dll`, `$(_XamarinAndroidBuildTasksAssembly)`, `Xamarin.Android.Build.Debugging.Tasks.dll`, `Xamarin.Installer.Build.Tasks.dll`) so they do not explicitly force a task host on either .NET Framework or .NET MSBuild. For modern-.NET shipped tasks in `$(_MicrosoftAndroidBuildTasksAssembly)` (`Microsoft.Android.Build.Tasks.dll`), declare the conditioned pair `Runtime="NET" TaskFactory="TaskHostFactory" Condition=" '$(MSBuildRuntimeType)' == 'Full' "` and `Runtime="NET" Condition=" '$(MSBuildRuntimeType)' == 'Core' "` so `.NET` MSBuild does not force a task host while .NET Framework MSBuild (e.g. `MSBuild.exe` in Visual Studio) uses the .NET task host; never add an unconditioned `TaskFactory="TaskHostFactory"` to shipped tasks.
 
 **API Bindings:** Use `[Register]` attributes, follow `Android.*` namespace patterns.
 

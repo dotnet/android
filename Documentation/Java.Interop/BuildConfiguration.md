@@ -24,9 +24,12 @@ Overridable MSBuild properties include:
 * `$(MicrosoftAndroidSdkOutDir)`: Output directory for tools such as
     [`class-parse`](../../src/class-parse) and [`generator`](../../src/generator),
     within the Android SDK pack's `tools/` directory.
-* `$(BuildOutputDirectory)` and `$(TestOutputDirectory)`: Libraries and tooling
-    tests use `bin/$(Configuration)/net10.0/` and
-    `bin/Test$(Configuration)/net10.0/`, respectively.
+* `$(BuildOutputDirectory)` and `$(TestOutputDirectory)`: Projects configured
+    with these roots write to `bin/$(Configuration)/$(DotNetStableTargetFramework)/`
+    and `bin/Test$(Configuration)/$(DotNetStableTargetFramework)/`, respectively
+    (including `netstandard2.0` shared libraries such as `Java.Interop.Tools.Cecil`;
+    test-support libraries such as `Xamarin.Android.Tools.Bytecode` also write under
+    `$(TestOutputDirectory)`).
 
 ## Native registration
 

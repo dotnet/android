@@ -109,9 +109,10 @@ Use the top-level build and test workflow for Android runtime integration;
 prerequisites are documented in the top-level `.github/copilot-instructions.md`.
 
 Standalone host tooling builds and tooling tests do not require a locally built
-Android SDK. The standalone tooling and test target framework is .NET 10 via
-`DotNetStableTargetFramework` in the root `Directory.Build.props`, independently of the Android
-product's target framework. Follow the Java.Interop
+Android SDK. Standalone host tools and tooling tests target
+`$(DotNetStableTargetFramework)` in the root `Directory.Build.props` (some shared
+libraries target `netstandard2.0`), independently of the Android product's
+`$(DotNetTargetFramework)`. Follow the Java.Interop
 [README](../../Documentation/Java.Interop/README.md#building) and
 [build configuration](../../Documentation/Java.Interop/BuildConfiguration.md)
 for shared build configuration and JDK tool-path settings
