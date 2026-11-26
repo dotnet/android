@@ -90,6 +90,12 @@ namespace Java.Interop
 
 			public  IntPtr                      InvocationPointer           {get; set;}
 			public  IntPtr                      EnvironmentPointer          {get; set;}
+			/// <summary>Required callback for registering native cleanup for threads attached by this runtime.</summary>
+			/// <safety>
+			/// Must be a process-lifetime function with the declared unmanaged ABI. It receives a JNI environment
+			/// belonging to the current thread, supports concurrent calls, and must not detach the thread before returning.
+			/// </safety>
+			public safe delegate* unmanaged<IntPtr, void> ThreadDetachCallback {get; init;}
 
 			public  JniObjectReference          ClassLoader                 {get; set;}
 			[Obsolete ("No longer supported; Class.forName() is now used instead")]
@@ -145,14 +151,6 @@ namespace Java.Interop
 		}
 
 		static JniRuntime? current;
-		static IntPtr registerThreadDetach;
-
-		internal static void SetThreadDetachCallback (IntPtr callback)
-		{
-			if (callback == IntPtr.Zero)
-				throw new ArgumentNullException (nameof (callback));
-			Volatile.Write (ref registerThreadDetach, callback);
-		}
 
 		public static JniRuntime CurrentRuntime {
 			get {
@@ -199,6 +197,7 @@ namespace Java.Interop
 		public      JniVersion                          JniVersion          {get; private set;}
 
 		internal    bool                                TrackIDs            {get; private set;}
+		readonly safe delegate* unmanaged<IntPtr, void> registerThreadDetach;
 
 		/// <safety>
 		/// The VM in <paramref name="options"/> must have the JNI invocation-table ABI and remain live
@@ -206,6 +205,7 @@ namespace Java.Interop
 		/// with readable JNI table storage. When only the VM is supplied, initialization obtains an environment
 		/// through GetEnv or attaches the current thread. Any supplied class-loader reference must remain live
 		/// until initialization duplicates it; local references must belong to the current thread.
+		/// <paramref name="options"/> must provide a non-null thread-detachment callback with a process lifetime.
 		/// Do not concurrently destroy the VM, release the loader, or mutate the supplied options while construction
 		/// reads them. Construction can publish runtime state before it throws; failure alone does not release native
 		/// resources or authorize invalidating outstanding JNI references. If DestroyRuntimeOnDispose is set,
@@ -216,9 +216,12 @@ namespace Java.Interop
 			ArgumentNullException.ThrowIfNull (options);
 			if (options.InvocationPointer == IntPtr.Zero && options.EnvironmentPointer == IntPtr.Zero)
 				throw new ArgumentException ("Need either options.InvocationPointer or options.EnvironmentPointer!", nameof (options));
+			if (options.ThreadDetachCallback == null)
+				throw new ArgumentException ($"Please set {nameof (CreationOptions)}.{nameof (options.ThreadDetachCallback)}!", nameof (options));
 
 			TrackIDs     = options.TrackIDs;
 			DestroyRuntimeOnDispose     = options.DestroyRuntimeOnDispose;
+			registerThreadDetach = options.ThreadDetachCallback;
 
 			JniVersion          = options.JniVersion;
 
@@ -246,11 +249,8 @@ namespace Java.Interop
 			}
 
 			var envp    = options.EnvironmentPointer;
-			if (envp == IntPtr.Zero &&
-					Invoker.GetEnv (InvocationPointer, out envp, (int) JniVersion) != JNI_OK &&
-					(envp = _AttachCurrentThread ()) == IntPtr.Zero) {
-				// Shouldn't be reached, as _AttachCurrentThread() throws
-				throw new InvalidOperationException ("Could not obtain JNIEnv* value!");
+			if (envp == IntPtr.Zero) {
+				envp = _AttachCurrentThread ();
 			}
 			var env     = new JniEnvironmentInfo (envp, this);
 			JniEnvironment.SetEnvironmentInfo (env);
@@ -393,10 +393,6 @@ namespace Java.Interop
 			if (status != JNI_EDETACHED)
 				throw new NotSupportedException ("GetEnv returned " + status.ToString ());
 
-			IntPtr register = Volatile.Read (ref registerThreadDetach);
-			if (OperatingSystem.IsAndroid () && register == IntPtr.Zero)
-				throw new InvalidOperationException ("JNI thread detachment has not been initialized.");
-
 			var threadArgs = new JavaVMThreadAttachArgs () {
 				version = JniVersion,
 			};
@@ -411,11 +407,9 @@ namespace Java.Interop
 					throw new NotSupportedException ("AttachCurrentThread returned " + r.ToString ());
 				if (jnienv == IntPtr.Zero)
 					throw new InvalidOperationException ("AttachCurrentThread returned a null JNIEnv.");
-				if (register != IntPtr.Zero) {
-					unsafe {
-						// SAFETY: The host supplies a process-lifetime native callback, and jnienv belongs to this thread.
-						((delegate* unmanaged<IntPtr, void>) register) (jnienv);
-					}
+				unsafe {
+					// SAFETY: The host supplies a process-lifetime native callback, and jnienv belongs to this thread.
+					registerThreadDetach (jnienv);
 				}
 				return jnienv;
 			} finally {

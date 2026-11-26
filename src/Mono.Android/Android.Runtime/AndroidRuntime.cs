@@ -14,17 +14,23 @@ namespace Android.Runtime {
 		/// <paramref name="vm"/> must be a live JavaVM for this runtime's lifetime. <paramref name="jnienv"/>
 		/// must be null (VM-only attachment) or a live environment for that VM on the current thread.
 		/// <paramref name="classLoader"/> must be null or a live global class-loader reference during initialization.
+		/// <paramref name="threadDetachCallback"/> must be a non-null unmanaged callback that remains valid for the process lifetime.
 		/// </safety>
 		internal unsafe AndroidRuntime (IntPtr jnienv,
 				IntPtr vm,
 				IntPtr classLoader,
+				delegate* unmanaged<IntPtr, void> threadDetachCallback,
 				JniRuntime.JniTypeManager typeManager,
 				JniRuntime.JniValueManager valueManager)
-			: base (new AndroidRuntimeOptions (jnienv,
-					vm,
-					classLoader,
-					typeManager,
-					valueManager))
+			: base (new JniRuntime.CreationOptions {
+					EnvironmentPointer      = jnienv,
+					ThreadDetachCallback    = threadDetachCallback,
+					ClassLoader             = new JniObjectReference (classLoader, JniObjectReferenceType.Global),
+					InvocationPointer       = vm,
+					ObjectReferenceManager  = new ManagedObjectReferenceManager (),
+					TypeManager             = typeManager,
+					ValueManager            = valueManager,
+				})
 		{
 		}
 
@@ -65,22 +71,6 @@ namespace Android.Runtime {
 		public override void RaisePendingException (Exception pendingException)
 		{
 			AndroidExceptionManager.RaisePendingException (pendingException);
-		}
-	}
-
-	class AndroidRuntimeOptions : JniRuntime.CreationOptions {
-		public AndroidRuntimeOptions (IntPtr jnienv,
-				IntPtr vm,
-				IntPtr classLoader,
-				JniRuntime.JniTypeManager typeManager,
-				JniRuntime.JniValueManager valueManager)
-		{
-			EnvironmentPointer      = jnienv;
-			ClassLoader             = new JniObjectReference (classLoader, JniObjectReferenceType.Global);
-			InvocationPointer       = vm;
-			ObjectReferenceManager  = new ManagedObjectReferenceManager ();
-			TypeManager             = typeManager;
-			ValueManager            = valueManager;
 		}
 	}
 }

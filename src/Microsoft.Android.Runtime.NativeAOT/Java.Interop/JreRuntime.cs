@@ -6,31 +6,14 @@ using Microsoft.Android.Runtime;
 
 namespace Java.Interop {
 
-	class NativeAotRuntimeOptions : JniRuntime.CreationOptions {
-
-		public NativeAotRuntimeOptions ()
-		{
-			JniVersion  = JniVersion.v1_2;
-		}
-
-		/// <safety>
-		/// This options instance must contain a live VM and/or current-thread environment with the JNI ABI.
-		/// The VM must outlive the runtime, and any class-loader reference must remain live during initialization.
-		/// </safety>
-		public unsafe JreRuntime CreateJreVM ()
-		{
-			// SAFETY: the caller retains the supplied VM, thread environment and loader through runtime initialization.
-			return unsafe (new JreRuntime (this));
-		}
-	}
-
 	class JreRuntime : JniRuntime
 	{
 		/// <safety>
 		/// <paramref name="builder"/> must supply a live VM and/or current-thread JNI environment with the JNI ABI,
 		/// retaining the VM for the runtime lifetime and the class-loader reference through initialization.
+		/// Its <see cref="JniRuntime.CreationOptions.ThreadDetachCallback"/> must be a non-null unmanaged callback valid for the process lifetime.
 		/// </safety>
-		internal protected unsafe JreRuntime (NativeAotRuntimeOptions builder)
+		internal unsafe JreRuntime (CreationOptions builder)
 			: base (builder)
 		{
 		}
