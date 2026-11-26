@@ -220,11 +220,11 @@ namespace Xamarin.Android.Tools.BytecodeTests
 			classPath.SaveXmlDescription (sw);
 			var xml = sw.ToString ();
 
-			Assert.Contains (xml, "kotlin-inline-class=\"true\"");
-			Assert.Contains (xml, "kotlin-inline-class-underlying-jni-type=\"J\"");
-			Assert.Contains (xml, "kotlin-inline-class-underlying-jni-type=\"F\"");
-			Assert.Contains (xml, "kotlin-inline-class-jni-type=\"Lxat/bytecode/tests/MyColor;\"");
-			Assert.Contains (xml, "kotlin-inline-class-return-jni-type=\"Lxat/bytecode/tests/MyDp;\"");
+			Assert.Contains ("kotlin-inline-class=\"true\"", xml);
+			Assert.Contains ("kotlin-inline-class-underlying-jni-type=\"J\"", xml);
+			Assert.Contains ("kotlin-inline-class-underlying-jni-type=\"F\"", xml);
+			Assert.Contains ("kotlin-inline-class-jni-type=\"Lxat/bytecode/tests/MyColor;\"", xml);
+			Assert.Contains ("kotlin-inline-class-return-jni-type=\"Lxat/bytecode/tests/MyDp;\"", xml);
 		}
 
 		static List<ClassFile> LoadInlineClassFixture () => new List<ClassFile> {
