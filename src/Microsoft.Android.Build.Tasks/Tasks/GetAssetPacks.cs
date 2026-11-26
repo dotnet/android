@@ -2,6 +2,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Text;
 using System.Linq;
@@ -69,7 +70,7 @@ namespace Microsoft.Android.Tasks
 				var cacheFile = kvp.Value.GetMetadata ("AssetPackCacheFile");
 				using (var sw = MemoryStreamPool.Shared.CreateStreamWriter ()) { 
 					foreach (var file in files [kvp.Key]) {
-						sw.WriteLine ($"{file}:{File.GetLastWriteTimeUtc (file)}");
+						sw.WriteLine ($"{file}:{File.GetLastWriteTimeUtc (file).ToString (CultureInfo.InvariantCulture)}");
 					}
 					var deliveryType = item.GetMetadata ("DeliveryType") ?? "InstallTime";
 					if (!IsDeliveryTypeValid (item, deliveryType)) {

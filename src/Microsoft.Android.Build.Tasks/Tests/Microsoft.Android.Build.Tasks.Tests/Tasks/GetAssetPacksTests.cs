@@ -1,6 +1,8 @@
 #nullable enable
 
+using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using Microsoft.Android.Tasks;
@@ -14,7 +16,20 @@ namespace Xamarin.Android.Build.Tests.Tasks
 	public class GetAssetPacksTests : BaseTest
 	{
 		[Test]
-		public void GroupsAssetsByAssetPack ()
+		[SetCulture ("en-US")]
+		public void GroupsAssetsByAssetPack_en_US ()
+		{
+			GroupsAssetsByAssetPack ();
+		}
+
+		[Test]
+		[SetCulture ("fa-IR")]
+		public void GroupsAssetsByAssetPack_fa_IR ()
+		{
+			GroupsAssetsByAssetPack ();
+		}
+
+		void GroupsAssetsByAssetPack ()
 		{
 			var dir = Path.Combine (Root, "temp", TestName);
 			Directory.CreateDirectory (dir);
@@ -46,9 +61,14 @@ namespace Xamarin.Android.Build.Tests.Tasks
 			Assert.AreEqual (Path.Combine (dir, "assetpacks", "My_Pack1", "assetpack.cache"), cacheFile);
 			var lines = File.ReadAllLines (cacheFile);
 			Assert.AreEqual (3, lines.Length);
-			StringAssert.StartsWith ($"{asset1}:", lines [0]);
-			StringAssert.StartsWith ($"{asset2}:", lines [1]);
+			Assert.AreEqual ($"{asset1}:{File.GetLastWriteTimeUtc (asset1).ToString (CultureInfo.InvariantCulture)}", lines [0]);
+			Assert.AreEqual ($"{asset2}:{File.GetLastWriteTimeUtc (asset2).ToString (CultureInfo.InvariantCulture)}", lines [1]);
 			Assert.AreEqual ("OnDemand", lines [2]);
+
+			File.SetLastWriteTimeUtc (cacheFile, new DateTime (2020, 1, 1, 0, 0, 0, DateTimeKind.Utc));
+			var originalWriteTime = File.GetLastWriteTimeUtc (cacheFile);
+			Assert.IsTrue (task.Execute ());
+			Assert.AreEqual (originalWriteTime, File.GetLastWriteTimeUtc (cacheFile));
 		}
 
 		[TestCase ("my-pack")]

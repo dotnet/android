@@ -872,12 +872,12 @@ namespace Xamarin.Android.Tools.Bytecode {
 				else
 					value = floatItem.Value.ToString ("G9", CultureInfo.InvariantCulture);
 				break;
-			case ConstantPoolItemType.Long:     value = ((ConstantPoolLongItem) constant).Value.ToString ();    break;
+			case ConstantPoolItemType.Long:     value = ((ConstantPoolLongItem) constant).Value.ToString (CultureInfo.InvariantCulture);    break;
 			case ConstantPoolItemType.Integer:
 				if (field.Descriptor == "Z")
 					value = ((ConstantPoolIntegerItem) constant).Value == 1 ? bool.TrueString.ToLower () : bool.FalseString.ToLower ();
 				else
-					value = ((ConstantPoolIntegerItem) constant).Value.ToString (); 
+					value = ((ConstantPoolIntegerItem) constant).Value.ToString (CultureInfo.InvariantCulture);
 				break;
 			case ConstantPoolItemType.String:
 				value = '"' + EscapeLiteral (((ConstantPoolStringItem) constant).StringData.Value) + '"';
