@@ -1,3 +1,4 @@
+// Originally from: https://github.com/dotnet/java-interop/blob/dd3c1d0514addfe379f050627b3e97493e985da6/src/Java.Runtime.Environment/Java.Interop/JreRuntime.cs
 using System;
 using System.Diagnostics;
 using System.Threading;

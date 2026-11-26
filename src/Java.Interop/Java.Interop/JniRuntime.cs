@@ -145,15 +145,6 @@ namespace Java.Interop
 		}
 
 		static JniRuntime? current;
-		static IntPtr registerThreadDetach;
-
-		internal static void SetThreadDetachCallback (IntPtr callback)
-		{
-			if (callback == IntPtr.Zero)
-				throw new ArgumentNullException (nameof (callback));
-			Volatile.Write (ref registerThreadDetach, callback);
-		}
-
 		public static JniRuntime CurrentRuntime {
 			get {
 				var c   = current;
@@ -246,8 +237,12 @@ namespace Java.Interop
 			}
 
 			var envp    = options.EnvironmentPointer;
-			if (envp == IntPtr.Zero)
-				envp = _AttachCurrentThread ();
+			if (envp == IntPtr.Zero &&
+					Invoker.GetEnv (InvocationPointer, out envp, (int) JniVersion) != JNI_OK &&
+					(envp = _AttachCurrentThread ()) == IntPtr.Zero) {
+				// Shouldn't be reached, as _AttachCurrentThread() throws
+				throw new InvalidOperationException ("Could not obtain JNIEnv* value!");
+			}
 			var env     = new JniEnvironmentInfo (envp, this);
 			JniEnvironment.SetEnvironmentInfo (env);
 
@@ -380,19 +375,6 @@ namespace Java.Interop
 		internal    IntPtr  _AttachCurrentThread (string? name = null, JniObjectReference group = default (JniObjectReference))
 		{
 			AssertValid ();
-			int status = Invoker.GetEnv (InvocationPointer, out IntPtr jnienv, (int) JniVersion);
-			if (status == JNI_OK) {
-				if (jnienv == IntPtr.Zero)
-					throw new InvalidOperationException ("GetEnv returned a null JNIEnv.");
-				return jnienv;
-			}
-			if (status != JNI_EDETACHED)
-				throw new NotSupportedException ("GetEnv returned " + status.ToString ());
-
-			IntPtr register = Volatile.Read (ref registerThreadDetach);
-			if (OperatingSystem.IsAndroid () && register == IntPtr.Zero)
-				throw new InvalidOperationException ("JNI thread detachment has not been initialized.");
-
 			var threadArgs = new JavaVMThreadAttachArgs () {
 				version = JniVersion,
 			};
@@ -401,18 +383,11 @@ namespace Java.Interop
 					threadArgs.name = Marshal.StringToHGlobalAnsi (name);
 				if (group.IsValid)
 					threadArgs.group = group.Handle;
+				IntPtr jnienv;
 				// SAFETY: threadArgs is local; its optional name allocation and supplied group stay live through attachment.
 				int r = unsafe (Invoker.AttachCurrentThread (InvocationPointer, out jnienv, ref threadArgs));
 				if (r != JNI_OK)
 					throw new NotSupportedException ("AttachCurrentThread returned " + r.ToString ());
-				if (jnienv == IntPtr.Zero)
-					throw new InvalidOperationException ("AttachCurrentThread returned a null JNIEnv.");
-				if (register != IntPtr.Zero) {
-					unsafe {
-						// SAFETY: The host supplies a process-lifetime native callback, and jnienv belongs to this thread.
-						((delegate* unmanaged<IntPtr, void>) register) (jnienv);
-					}
-				}
 				return jnienv;
 			} finally {
 				unsafe {

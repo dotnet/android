@@ -89,14 +89,6 @@ typedef struct
 } RegisterFromThreadContext;
 
 typedef void (*CB)(JNIEnv *env, jobject self);
-typedef void (*ThreadCB)(void);
-
-typedef struct
-{
-	ThreadCB callback;
-	int preattach;
-	int result;
-} ThreadCallbackContext;
 
 static JavaVM *gvm;
 static sem_t start_gc_on_main;
@@ -125,48 +117,6 @@ _get_env (const char *where)
 		exit (-1);
 	}
 	return env;
-}
-
-static void *
-_call_cb_from_detached_thread (void *data)
-{
-	ThreadCallbackContext *context = (ThreadCallbackContext*)data;
-	JNIEnv *env = NULL;
-	int r = (*gvm)->GetEnv (gvm, (void**)&env, JNI_VERSION_1_6);
-	if (r != JNI_EDETACHED) {
-		context->result = -1;
-		return NULL;
-	}
-
-	if (context->preattach) {
-		r = (*gvm)->AttachCurrentThread (gvm, &env, NULL);
-		if (r != JNI_OK || env == NULL) {
-			context->result = -2;
-			return NULL;
-		}
-	}
-
-	context->callback ();
-
-	env = NULL;
-	r = (*gvm)->GetEnv (gvm, (void**)&env, JNI_VERSION_1_6);
-	if (r != JNI_OK || env == NULL)
-		context->result = -3;
-	if (context->preattach && (*gvm)->DetachCurrentThread (gvm) != JNI_OK)
-		context->result = -4;
-	return NULL;
-}
-
-JNIEXPORT int JNICALL
-rt_invoke_callback_on_detached_thread (ThreadCB callback, int preattach)
-{
-	ThreadCallbackContext context = { callback, preattach, 0 };
-	pthread_t thread;
-	int r = pthread_create (&thread, NULL, _call_cb_from_detached_thread, &context);
-	if (r != 0)
-		return r;
-	r = pthread_join (thread, NULL);
-	return r == 0 ? context.result : r;
 }
 
 static jobject

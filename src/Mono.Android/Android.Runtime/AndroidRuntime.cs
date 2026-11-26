@@ -11,9 +11,8 @@ namespace Android.Runtime {
 		public const string InternalDllName = "xa-internal-api";
 
 		/// <safety>
-		/// <paramref name="vm"/> must be null or a live JavaVM for this runtime's lifetime. <paramref name="jnienv"/>
-		/// must be null (VM-only attachment) or a live environment for that VM on the current thread; at least one
-		/// must be non-null. When <paramref name="vm"/> is null, the VM is derived from <paramref name="jnienv"/>.
+		/// <paramref name="vm"/> must be a live JavaVM for this runtime's lifetime. <paramref name="jnienv"/>
+		/// must be null (VM-only attachment) or a live environment for that VM on the current thread.
 		/// <paramref name="classLoader"/> must be null or a live global class-loader reference during initialization.
 		/// </safety>
 		internal unsafe AndroidRuntime (IntPtr jnienv,
