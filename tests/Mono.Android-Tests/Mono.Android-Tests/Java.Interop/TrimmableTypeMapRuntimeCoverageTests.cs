@@ -326,19 +326,29 @@ namespace Java.InteropTests
 			where T : Java.Lang.Object, new ()
 		{
 			using var arrayList = new Java.Util.ArrayList ();
+			IntPtr elementHandle;
 			// Dispose the original peer so CopyTo must activate a new one instead of reusing a cached peer.
-			using (var element = new T ())
+			using (var element = new T ()) {
 				arrayList.Add (element);
+				elementHandle = JNIEnv.NewGlobalRef (element.Handle);
+			}
+			try {
+				var values = new T [1];
+				CopyToJavaCollection (arrayList, values);
+				using (values [0]) {
+					Assert.IsInstanceOfType<T> (values [0]);
+					Assert.IsTrue (JNIEnv.IsSameObject (elementHandle, values [0].Handle));
+				}
 
-			var values = new T [1];
-			CopyToJavaCollection (arrayList, values);
-			using (values [0])
-				Assert.IsInstanceOfType<T> (values [0]);
-
-			values = new T [1];
-			CopyToJavaList (arrayList, values);
-			using (values [0])
-				Assert.IsInstanceOfType<T> (values [0]);
+				values = new T [1];
+				CopyToJavaList (arrayList, values);
+				using (values [0]) {
+					Assert.IsInstanceOfType<T> (values [0]);
+					Assert.IsTrue (JNIEnv.IsSameObject (elementHandle, values [0].Handle));
+				}
+			} finally {
+				JNIEnv.DeleteGlobalRef (elementHandle);
+			}
 		}
 
 		[TestMethod]
