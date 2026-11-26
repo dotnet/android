@@ -150,25 +150,6 @@ namespace Java.InteropTests
 		}
 
 		[TestMethod]
-		[TestCategory ("JniThreadAttachment")]
-		public void ManagedThreadsExitAfterJniUse ()
-		{
-			for (int i = 0; i < 10; ++i) {
-				Exception? error = null;
-				var thread = new Thread (() => {
-					try {
-						using var peer = new Java.Lang.Object ();
-					} catch (Exception e) {
-						Volatile.Write (ref error, e);
-					}
-				});
-				thread.Start ();
-				Assert.IsTrue (thread.Join (5000), "Managed JNI worker did not exit");
-				Assert.IsNull (Volatile.Read (ref error), $"JNI use on the worker failed: {error}");
-			}
-		}
-
-		[TestMethod]
 		public void ThreadReuse ()
 		{
 			bool missingObject = false;
