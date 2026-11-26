@@ -47,7 +47,7 @@ Classify the user's request:
 | `src/Microsoft.Android.Build.Tasks/Tasks/` | Standalone: `Microsoft.Android.Build.Tasks.Tests.csproj` |
 | `src/Xamarin.Android.Build.Tasks/Utilities/` | Host: `Xamarin.Android.Build.Tests.dll` — grep for test classes referencing the utility |
 | `src/Xamarin.Android.Build.Tasks/**/*.targets` | Host: `Xamarin.Android.Build.Tests.dll`. Device: `MSBuildDeviceIntegration.dll` |
-| `src/Microsoft.Android.Sdk.TrimmableTypeMap/` | On-device: `Mono.Android.NET-Tests.csproj`. Host: `GenerateTrimmableTypeMapTests`, `TrimmableTypeMapIncrementalTests`, `TrimmableTypeMapManifestAliasTests`, `TrimmableTypeMapRidCallbackTests`, `ExtractTypeMapKeysFromNativeAotObjectTests`, `TrimmableTypeMapBuildTests` |
+| `src/Microsoft.Android.Sdk.TrimmableTypeMap/` | On-device: `Mono.Android.NET-Tests.csproj`, `TrimmingTests.dll`. Host: `GenerateTrimmableTypeMapTests`, `TrimmableTypeMapIncrementalTests`, `TrimmableTypeMapManifestAliasTests`, `TrimmableTypeMapRidCallbackTests`, `ExtractTypeMapKeysFromNativeAotObjectTests`, `TrimmableTypeMapBuildTests` |
 | `src/Java.Interop/` | On-device: core JNI tests in `tests/Mono.Android-Tests/Java.Interop-Tests/`, run with `Mono.Android.NET-Tests.csproj` |
 | `src/Java.Interop.Tools.*/`, `src/generator/`, `src/class-parse/` | Standalone tooling tests under `tests/` |
 | `src/native/` | On-device runtime tests in `Mono.Android.NET-Tests.csproj` |
@@ -65,6 +65,7 @@ Escalate only when the change or focused results require it.
 | Standalone libraries (`Microsoft.Android.Build.BaseTasks`, `Xamarin.Android.Tools.AndroidSdk`, `Microsoft.Android.Build.Tasks`, Java.Interop tooling, `generator`, `class-parse`) | `dotnet build` + standalone tests |
 | `src/Xamarin.Android.Build.Tasks` | Focused `Xamarin.Android.Build.Tests.dll` filters on the local SDK; `MSBuildDeviceIntegration.dll` only if install/deploy/run changes |
 | `src/Mono.Android`, core `src/Java.Interop`, `src/native`, typemaps, hosting | `Mono.Android.NET-Tests` on device for each affected runtime |
+| Code reached by reflection or other trimming/AOT-sensitive paths | Add or run a `TrimmingTests.dll` case (CoreCLR full trimming and NativeAOT) |
 | `Makefile`, `build-tools/`, `eng/`, CI YAML | Run the affected entry point or pipeline command locally |
 
 ## Running tests
