@@ -8,10 +8,10 @@ namespace Microsoft.Android.TrimmingTests;
 [Parallelizable (ParallelScope.Children)]
 public class JavaPeerActivationTests : TrimmingTestBase
 {
-	// The case app converts a Java array of closed generic peers with JNIEnv.GetArray<T> () and reports PASS only if every
-	// element comes back. The [Kept] activation constructor must survive trimming.
+	// The case app converts closed generic peers with JNIEnv.GetArray<T> () and non-generic collection CopyTo ().
+	// The [Kept] activation constructor must survive trimming.
 	[Test]
-	public void GetArrayActivatesClosedGenericPeerElementsWithoutWarnings ([TrimmingConfigurations] TrimmingConfiguration configuration)
+	public void ArrayAndCollectionCopyActivateClosedGenericPeerElementsWithoutWarnings ([TrimmingConfigurations] TrimmingConfiguration configuration)
 	{
 		var app = BuildAndRun ("Cases/GenericPeerArrayElement.cs", configuration);
 		AssertTrimmingExpectations (app);

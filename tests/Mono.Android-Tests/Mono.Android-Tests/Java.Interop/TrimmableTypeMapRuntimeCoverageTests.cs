@@ -316,42 +316,6 @@ namespace Java.InteropTests
 		}
 
 		[TestMethod]
-		public void NonGenericCollection_CopyTo_ClosedGenericPeerArray_ActivatesElement ()
-		{
-			AssertCopyToActivatesElement<JniEnvGenericArrayElement<string>> ();
-			AssertCopyToActivatesElement<JniEnvGenericArrayElement<int>> ();
-		}
-
-		static void AssertCopyToActivatesElement<T> ()
-			where T : Java.Lang.Object, new ()
-		{
-			using var arrayList = new Java.Util.ArrayList ();
-			IntPtr elementHandle;
-			// Dispose the original peer so CopyTo must activate a new one instead of reusing a cached peer.
-			using (var element = new T ()) {
-				arrayList.Add (element);
-				elementHandle = JNIEnv.NewGlobalRef (element.Handle);
-			}
-			try {
-				var values = new T [1];
-				CopyToJavaCollection (arrayList, values);
-				using (values [0]) {
-					Assert.IsInstanceOfType<T> (values [0]);
-					Assert.IsTrue (JNIEnv.IsSameObject (elementHandle, values [0].Handle));
-				}
-
-				values = new T [1];
-				CopyToJavaList (arrayList, values);
-				using (values [0]) {
-					Assert.IsInstanceOfType<T> (values [0]);
-					Assert.IsTrue (JNIEnv.IsSameObject (elementHandle, values [0].Handle));
-				}
-			} finally {
-				JNIEnv.DeleteGlobalRef (elementHandle);
-			}
-		}
-
-		[TestMethod]
 		public void JavaAnnotation_LongValueOutsideIntRange_UsesJavaLongLiteral ()
 		{
 			using var peer = new TrimmableRuntimeLongAnnotationPeer ();

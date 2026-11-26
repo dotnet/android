@@ -4,10 +4,10 @@
 #:property SupportedOSPlatformVersion=24
 #:project TrimmingTests.Expectations/TrimmingTests.Expectations.csproj
 
-// JNIEnv.GetArray<T> () reaches TrimmableTypeMap.CreateInstance () with only a runtime Type. For a closed generic
-// peer the runtime reflects over the (IntPtr, JniHandleOwnership) constructor, which nothing else in this app keeps.
-// The generated proxy of the open generic definition keeps that constructor with [DynamicDependency]; that must not
-// keep generic peers the app doesn't use, nor make NativeAOT compile instantiations the app doesn't use.
+// JNIEnv.GetArray<T> () and non-generic JavaCollection/JavaList.CopyTo () activate closed generic peers using a
+// runtime Type. The runtime reflects over the (IntPtr, JniHandleOwnership) constructor, which nothing else in this
+// app keeps. The generated proxy of the open generic definition keeps that constructor with [DynamicDependency];
+// that must not keep generic peers the app doesn't use, nor make NativeAOT compile instantiations the app doesn't use.
 
 using System;
 using System.Collections.Generic;
@@ -40,25 +40,51 @@ public class MainActivity : Activity
 
 	static void Check<T> (T value)
 	{
-		IntPtr array;
-		using (var element = new GenericArrayElement<T> { Value = value }) {
-			array = JNIEnv.NewObjectArray (1, element.Class.Handle, element.Handle);
-		}
+		using var source = new Java.Util.ArrayList ();
+		IntPtr array = IntPtr.Zero;
+		IntPtr elementHandle = IntPtr.Zero;
 		try {
-			var items = JNIEnv.GetArray<GenericArrayElement<T>> (array);
-			if (items is not { Length: 1 } || items [0] is not { } item) {
-				throw new InvalidOperationException ($"Unable to convert the Java array element to {typeof (GenericArrayElement<T>)}.");
+			using (var element = new GenericArrayElement<T> { Value = value }) {
+				using var elementClass = element.Class;
+				array = JNIEnv.NewObjectArray (1, elementClass.Handle, element.Handle);
+				source.Add (element);
+				elementHandle = JNIEnv.NewGlobalRef (element.Handle);
 			}
+			CheckElement ("JNIEnv.GetArray", JNIEnv.GetArray<GenericArrayElement<T>> (array), elementHandle);
+
+			var items = new GenericArrayElement<T> [1];
+			using (var collection = new JavaCollection (source.Handle, JniHandleOwnership.DoNotTransfer)) {
+				collection.CopyTo (items, 0);
+			}
+			CheckElement ("JavaCollection.CopyTo", items, elementHandle);
+
+			items = new GenericArrayElement<T> [1];
+			using (var list = new JavaList (source.Handle, JniHandleOwnership.DoNotTransfer)) {
+				list.CopyTo (items, 0);
+			}
+			CheckElement ("JavaList.CopyTo", items, elementHandle);
+		} finally {
+			JNIEnv.DeleteLocalRef (array);
+			JNIEnv.DeleteGlobalRef (elementHandle);
+		}
+	}
+
+	static void CheckElement<T> (string operation, GenericArrayElement<T> []? items, IntPtr elementHandle)
+	{
+		if (items is not { Length: 1 } || items [0] is not { } item) {
+			throw new InvalidOperationException ($"{operation} did not return a {typeof (GenericArrayElement<T>)}.");
+		}
+		using (item) {
 			if (item.GetType () != typeof (GenericArrayElement<T>)) {
-				throw new InvalidOperationException ($"Expected {typeof (GenericArrayElement<T>)}, got {item.GetType ()}.");
+				throw new InvalidOperationException ($"{operation}: expected {typeof (GenericArrayElement<T>)}, got {item.GetType ()}.");
+			}
+			if (!JNIEnv.IsSameObject (elementHandle, item.Handle)) {
+				throw new InvalidOperationException ($"{operation} returned a peer for a different Java object.");
 			}
 			// The original peer was disposed, so this must be a new peer from the activation constructor, without its managed state.
 			if (!EqualityComparer<T>.Default.Equals (item.Value, default)) {
-				throw new InvalidOperationException ($"Expected a newly activated peer, but Value is '{item.Value}'.");
+				throw new InvalidOperationException ($"{operation}: expected a newly activated peer, but Value is '{item.Value}'.");
 			}
-			item.Dispose ();
-		} finally {
-			JNIEnv.DeleteLocalRef (array);
 		}
 	}
 }
