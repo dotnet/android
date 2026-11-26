@@ -89,6 +89,7 @@ Follow [Unsafe code best practices](https://learn.microsoft.com/dotnet/standard/
 - Prefer `unsafe (expression)` for single value-producing operations, including getters, ref returns and `using` acquisition. Keep managed comparisons/hash/formatting outside; retain blocks for pinning, void calls and multiple statements.
 - Under the new rules, caller-unsafe members still need body contexts. Keep `// SAFETY:` proofs adjacent; use multiline `/// <safety>` for caller obligations.
 - Respect producer/consumer language modes, including generated code. Inline expressions need pinned-compiler preview; never enable preview just for syntax. Preserve behavior and lifetimes.
+- **JNI peer lifetimes (`GC.KeepAlive`):** Copying `.Handle`/`.PeerReference` or using `JValue`/`JniArgumentValue` does not root the peer, and on CoreCLR/NativeAOT `JavaMarshalGCBridge` deletes/replaces grefs of managed-unreachable peers even if Java still references them. Keep every borrowed owner alive past JNI/P/Invoke calls; see the [JNI Peer Lifetimes checklist](skills/code-review/references/interop-rules.md#jni-peer-lifetimes-gckeepalive-review-checklist).
 
 ## Nullable Reference Types
 
