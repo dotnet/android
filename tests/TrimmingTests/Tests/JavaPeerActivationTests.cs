@@ -87,4 +87,13 @@ public class JavaPeerActivationTests : TrimmingTestBase
 		var app = BuildAndRun ("Cases/GenericCollectionConversion.cs", configuration);
 		AssertTrimmingExpectations (app);
 	}
+
+	// The case app converts Java collections to IDictionary<string, double>, IDictionary<long, string>, and IList<int> through
+	// JavaConvert, without naming the wrappers; NativeAOT maps the mixed dictionaries' constructors from rooted exemplars.
+	[Test]
+	public void JavaConvertActivatesValueTypeCollectionWrappersWithoutWarnings ([TrimmingConfigurations] TrimmingConfiguration configuration)
+	{
+		var app = BuildAndRun ("Cases/ValueTypeCollectionConversion.cs", configuration);
+		AssertTrimmingExpectations (app);
+	}
 }

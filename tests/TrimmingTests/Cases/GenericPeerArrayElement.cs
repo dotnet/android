@@ -5,9 +5,10 @@
 #:project TrimmingTests.Expectations/TrimmingTests.Expectations.csproj
 
 // JNIEnv.GetArray<T> () reaches TrimmableTypeMap.CreateInstance () with only a runtime Type. For a closed generic
-// peer the runtime reflects over the (IntPtr, JniHandleOwnership) constructor, which nothing else in this app keeps.
-// The generated proxy of the open generic definition keeps that constructor with [DynamicDependency]; that must not
-// keep generic peers the app doesn't use, nor make NativeAOT compile instantiations the app doesn't use.
+// peer the runtime needs the (IntPtr, JniHandleOwnership) constructor, which nothing else in this app keeps.
+// The generated proxy of the open generic definition returns it from GetGenericTargetTypeDefinition (), annotated to keep
+// its constructors, and the runtime maps that constructor onto the closed type (#13721). That must not keep generic
+// peers the app doesn't use, nor make NativeAOT compile instantiations the app doesn't use.
 
 using System;
 using System.Collections.Generic;
@@ -78,7 +79,7 @@ public class GenericArrayElement<T> : Java.Lang.Object
 	public T? Value { get; set; }
 }
 
-// A generic peer the app never uses, with the same shape: its proxy, and so its [DynamicDependency], must not keep it.
+// A generic peer the app never uses, with the same shape: its proxy, and so its constructor annotation, must not keep it.
 [Removed]
 public class UnusedGenericElement<T> : Java.Lang.Object
 {
