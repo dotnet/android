@@ -14,6 +14,7 @@ namespace Java.Interop {
 			/// Looks up a JNI instance field ID using null-terminated UTF-8 name and signature spans.
 			/// Use with <c>"fieldName"u8</c> literals to avoid string marshalling overhead.
 			/// Standard UTF-8 supplementary characters are converted to JNI modified UTF-8.
+			/// Structurally invalid UTF-8 throws <see cref="ArgumentException"/> before JNI reads it.
 			/// </summary>
 			/// <safety>
 			/// The caller must ensure <paramref name="name"/> and <paramref name="signature"/> have
@@ -33,6 +34,8 @@ namespace Java.Interop {
 					// SAFETY: The caller supplies terminated readable bytes; both spans are pinned through GetFieldID and exception polling on this thread's JNIEnv.
 					fixed (byte* _name_ptr = name)
 					fixed (byte* _signature_ptr = signature) {
+						JniModifiedUtf8.Validate (_name_ptr, nameof (name));
+						JniModifiedUtf8.Validate (_signature_ptr, nameof (signature));
 						var tmp = JniNativeMethods.GetFieldID (__env, type.Handle, (IntPtr) _name_ptr, (IntPtr) _signature_ptr);
 						IntPtr thrown = JniNativeMethods.ExceptionOccurred (__env);
 
@@ -54,6 +57,7 @@ namespace Java.Interop {
 			/// Looks up a JNI instance method ID using null-terminated UTF-8 name and signature spans.
 			/// Use with <c>"methodName"u8</c> literals to avoid string marshalling overhead.
 			/// Standard UTF-8 supplementary characters are converted to JNI modified UTF-8.
+			/// Structurally invalid UTF-8 throws <see cref="ArgumentException"/> before JNI reads it.
 			/// </summary>
 			/// <safety>
 			/// The caller must ensure <paramref name="name"/> and <paramref name="signature"/> have
@@ -73,6 +77,8 @@ namespace Java.Interop {
 					// SAFETY: The caller's name/signature bytes stay terminated and readable; fixed covers the complete JNI method-ID lookup on the current thread.
 					fixed (byte* _name_ptr = name)
 					fixed (byte* _signature_ptr = signature) {
+						JniModifiedUtf8.Validate (_name_ptr, nameof (name));
+						JniModifiedUtf8.Validate (_signature_ptr, nameof (signature));
 						var tmp = JniNativeMethods.GetMethodID (__env, type.Handle, (IntPtr) _name_ptr, (IntPtr) _signature_ptr);
 						IntPtr thrown = JniNativeMethods.ExceptionOccurred (__env);
 
@@ -94,6 +100,7 @@ namespace Java.Interop {
 			/// Looks up a JNI static field ID using null-terminated UTF-8 name and signature spans.
 			/// Use with <c>"fieldName"u8</c> literals to avoid string marshalling overhead.
 			/// Standard UTF-8 supplementary characters are converted to JNI modified UTF-8.
+			/// Structurally invalid UTF-8 throws <see cref="ArgumentException"/> before JNI reads it.
 			/// </summary>
 			/// <safety>
 			/// The caller must ensure <paramref name="name"/> and <paramref name="signature"/> have
@@ -113,6 +120,8 @@ namespace Java.Interop {
 					// SAFETY: Fixed pins the caller-guaranteed terminated name/signature until this thread's static-field lookup and exception check finish.
 					fixed (byte* _name_ptr = name)
 					fixed (byte* _signature_ptr = signature) {
+						JniModifiedUtf8.Validate (_name_ptr, nameof (name));
+						JniModifiedUtf8.Validate (_signature_ptr, nameof (signature));
 						var tmp = JniNativeMethods.GetStaticFieldID (__env, type.Handle, (IntPtr) _name_ptr, (IntPtr) _signature_ptr);
 						IntPtr thrown = JniNativeMethods.ExceptionOccurred (__env);
 
@@ -134,6 +143,7 @@ namespace Java.Interop {
 			/// Looks up a JNI static method ID using null-terminated UTF-8 name and signature spans.
 			/// Use with <c>"methodName"u8</c> literals to avoid string marshalling overhead.
 			/// Standard UTF-8 supplementary characters are converted to JNI modified UTF-8.
+			/// Structurally invalid UTF-8 throws <see cref="ArgumentException"/> before JNI reads it.
 			/// </summary>
 			/// <safety>
 			/// The caller must ensure <paramref name="name"/> and <paramref name="signature"/> have
@@ -153,6 +163,8 @@ namespace Java.Interop {
 					// SAFETY: The static-method name/signature satisfy the caller's termination contract and are pinned while this thread's JNIEnv consumes them.
 					fixed (byte* _name_ptr = name)
 					fixed (byte* _signature_ptr = signature) {
+						JniModifiedUtf8.Validate (_name_ptr, nameof (name));
+						JniModifiedUtf8.Validate (_signature_ptr, nameof (signature));
 						var tmp = JniNativeMethods.GetStaticMethodID (__env, type.Handle, (IntPtr) _name_ptr, (IntPtr) _signature_ptr);
 						IntPtr thrown = JniNativeMethods.ExceptionOccurred (__env);
 

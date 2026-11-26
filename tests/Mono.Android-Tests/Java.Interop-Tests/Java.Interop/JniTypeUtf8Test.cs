@@ -50,7 +50,7 @@ namespace Java.InteropTests
 			unsafe {
 				// SAFETY: source remains pinned and NUL-terminated through conversion.
 				fixed (byte* bytes = source) {
-					var converted = JniModifiedUtf8.AllocConvertedUtf8 (bytes);
+					var converted = JniModifiedUtf8.AllocConvertedUtf8 (bytes, "value");
 					try {
 						Assert.AreNotEqual (IntPtr.Zero, converted);
 						var actual = new byte [expected.Length];
@@ -96,13 +96,12 @@ namespace Java.InteropTests
 
 		[TestMethod]
 		[TestCategory ("JniModifiedUtf8")]
-		public void ModifiedUtf8_PreservesMalformedAndTruncatedUtf8 ()
+		public void ModifiedUtf8_PreservesStructurallyValidNonScalarSequences ()
 		{
+			// ART CheckJNI accepts these lead/continuation shapes; only valid four-byte scalars are rewritten.
 			byte [][] unchanged = [
-				[0xf0], [0xf0, 0x90], [0xf0, 0x90, 0x80],
 				[0xf0, 0x8f, 0xbf, 0xbf], [0xf4, 0x90, 0x80, 0x80], [0xf5, 0x80, 0x80, 0x80],
-				[0xf0, 0xff, 0x80, 0x80], [0xf0, 0x90, 0x7f, 0x80], [0xf0, 0x90, 0x80, 0xc0],
-				[0xc0, 0x80], [0xed, 0xa0, 0x80, 0xed, 0xb0, 0x80], [0x80, 0xff],
+				[0xf7, 0xbf, 0xbf, 0xbf], [0xc0, 0x80], [0xed, 0xa0, 0x80, 0xed, 0xb0, 0x80],
 			];
 			for (int prefix = 0; prefix <= 33; prefix++) {
 				foreach (var bytes in unchanged) {
@@ -117,15 +116,15 @@ namespace Java.InteropTests
 					unsafe {
 						// SAFETY: source stays pinned and NUL-terminated through each conversion.
 						fixed (byte* pointer = source) {
-							Assert.IsFalse (JniModifiedUtf8.RequiresConversion (pointer));
-							Assert.AreEqual (IntPtr.Zero, JniModifiedUtf8.AllocConvertedUtf8 (pointer));
+							Assert.IsFalse (JniModifiedUtf8.RequiresConversion (pointer, "value"));
+							Assert.AreEqual (IntPtr.Zero, JniModifiedUtf8.AllocConvertedUtf8 (pointer, "value"));
 							source [prefix + bytes.Length] = 0xf0;
 							source [prefix + bytes.Length + 1] = 0x90;
 							source [prefix + bytes.Length + 2] = 0x80;
 							source [prefix + bytes.Length + 3] = 0x80;
 							source [source.Length - 1] = 0;
-							Assert.IsTrue (JniModifiedUtf8.RequiresConversion (pointer));
-							IntPtr converted = JniModifiedUtf8.AllocConvertedUtf8 (pointer);
+							Assert.IsTrue (JniModifiedUtf8.RequiresConversion (pointer, "value"));
+							IntPtr converted = JniModifiedUtf8.AllocConvertedUtf8 (pointer, "value");
 							try {
 								Assert.AreNotEqual (IntPtr.Zero, converted);
 								var expected = new List<byte> (source.AsSpan (0, prefix + bytes.Length).ToArray ());
@@ -139,6 +138,80 @@ namespace Java.InteropTests
 						}
 					}
 				}
+			}
+		}
+
+		internal static readonly byte [][] MalformedUtf8 = [
+			[0xf0], [0xf0, 0x90], [0xf0, 0x90, 0x80], [0xe0, 0xa0], [0xc2],
+			[0xf0, 0xff, 0x80, 0x80], [0xf0, 0x90, 0x7f, 0x80], [0xf0, 0x90, 0x80, 0xc0],
+			[0x80], [0xbf], [0xf8, 0x80, 0x80, 0x80, 0x80], [0xff], [0xc2, 0x41],
+		];
+
+		[TestMethod]
+		[TestCategory ("JniModifiedUtf8")]
+		public void ModifiedUtf8_RejectsMalformedAndTruncatedUtf8 ()
+		{
+			for (int prefix = 0; prefix <= 33; prefix++) {
+				foreach (var bytes in MalformedUtf8) {
+					// Truncated sequences end at the NUL; valid bytes beyond it must not complete them.
+					var source = new byte [prefix + bytes.Length + 4];
+					Array.Fill (source, (byte) 'a', 0, prefix);
+					bytes.CopyTo (source, prefix);
+					source [prefix + bytes.Length + 1] = 0x80;
+					source [prefix + bytes.Length + 2] = 0x80;
+					source [prefix + bytes.Length + 3] = 0x80;
+					unsafe {
+						// SAFETY: source stays pinned and NUL-terminated through each scan.
+						fixed (byte* pinned = source) {
+							IntPtr pointer = (IntPtr) pinned;
+							var e = Assert.ThrowsExactly<ArgumentException> (() => JniModifiedUtf8.Validate ((byte*) pointer, "value"));
+							Assert.AreEqual ("value", e.ParamName);
+							StringAssert.Contains (e.Message, $"byte offset {prefix}");
+							Assert.ThrowsExactly<ArgumentException> (() => JniModifiedUtf8.RequiresConversion ((byte*) pointer, "value"));
+							Assert.ThrowsExactly<ArgumentException> (() => JniModifiedUtf8.AllocConvertedUtf8 ((byte*) pointer, "value"));
+						}
+					}
+				}
+			}
+		}
+
+		[TestMethod]
+		[TestCategory ("JniModifiedUtf8")]
+		public void Utf8Apis_RejectMalformedUtf8BeforeJni ()
+		{
+			byte [] bad = [(byte) 'a', 0xe0, 0xa0, 0];
+			using (var Object_class = new JniType ("java/lang/Object")) {
+				var r = Object_class.PeerReference;
+				// SAFETY: Every buffer is a live, NUL-terminated array or u8 literal; malformed input throws before JNI reads it.
+				AssertRejected ("classname", () => { _ = unsafe (JniEnvironment.Types.FindClass (bad)); });
+				AssertRejected ("classname", () => { _ = unsafe (JniEnvironment.Types.TryFindClass ([(byte) 'a', (byte) '.', 0xe0, 0xa0, 0], out _)); });
+				AssertRejected ("name", () => { _ = unsafe (JniEnvironment.InstanceMethods.GetMethodID (r, bad, "()V"u8)); });
+				AssertRejected ("signature", () => { _ = unsafe (JniEnvironment.InstanceMethods.GetMethodID (r, "hashCode"u8, bad)); });
+				AssertRejected ("name", () => { _ = unsafe (JniEnvironment.StaticMethods.GetStaticMethodID (r, bad, "()V"u8)); });
+				AssertRejected ("name", () => { _ = unsafe (JniEnvironment.InstanceFields.GetFieldID (r, bad, "I"u8)); });
+				AssertRejected ("signature", () => { _ = unsafe (JniEnvironment.StaticFields.GetStaticFieldID (r, "x"u8, bad)); });
+				AssertRejected ("name", () => { _ = unsafe (Object_class.GetInstanceMethod (bad, "()I"u8)); });
+				AssertRejected ("signature", () => { _ = unsafe (Object_class.GetStaticMethod ("x"u8, bad)); });
+				unsafe {
+					// SAFETY: Both arrays stay pinned and terminated; validation throws before JNI sees the callback.
+					fixed (byte* good = "native"u8)
+					fixed (byte* badPtr = bad) {
+						var callback = (IntPtr) (delegate* unmanaged<IntPtr, IntPtr, IntPtr, int>) &UnicodeNativeCallback;
+						// The malformed entry is last, so validation must not stop at the first conversion decision.
+						var methods = new JniNativeMethod [] {
+							new JniNativeMethod (good, good, callback),
+							new JniNativeMethod (good, badPtr, callback),
+						};
+						AssertRejected ("methods", () => JniEnvironment.Types.RegisterNatives (r, methods));
+					}
+				}
+				Assert.IsFalse (JniEnvironment.Exceptions.ExceptionOccurred ().IsValid);
+			}
+
+			static void AssertRejected (string paramName, Action action)
+			{
+				var e = Assert.ThrowsExactly<ArgumentException> (action);
+				Assert.AreEqual (paramName, e.ParamName);
 			}
 		}
 

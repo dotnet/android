@@ -871,6 +871,11 @@ namespace Java.Interop {
 				throw new ArgumentNullException (nameof (name));
 			if (signature == null)
 				throw new ArgumentNullException (nameof (signature));
+			// SAFETY: The caller keeps both buffers terminated and unchanged for these scans.
+			unsafe {
+				JniModifiedUtf8.Validate (name, nameof (name));
+				JniModifiedUtf8.Validate (signature, nameof (signature));
+			}
 
 			var env = JniEnvironment.EnvironmentPointer;
 			IntPtr id;

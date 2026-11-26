@@ -90,25 +90,36 @@ namespace Java.Interop {
 		/// <safety>
 		/// A non-null value must remain readable and unchanged through its NUL terminator.
 		/// </safety>
-		internal static unsafe bool RequiresConversion (byte* value)
+		internal static unsafe void Validate (byte* value, string paramName)
+		{
+			if (value == null)
+				return;
+			// SAFETY: The caller keeps value readable through its terminator for this scan.
+			GetExtraByteCount (unsafe (MemoryMarshal.CreateReadOnlySpanFromNullTerminated (value)), paramName);
+		}
+
+		/// <safety>
+		/// A non-null value must remain readable and unchanged through its NUL terminator.
+		/// </safety>
+		internal static unsafe bool RequiresConversion (byte* value, string paramName)
 		{
 			if (value == null)
 				return false;
 			// SAFETY: The caller keeps value readable through its terminator for this scan.
-			return GetExtraByteCount (unsafe (MemoryMarshal.CreateReadOnlySpanFromNullTerminated (value))) != 0;
+			return GetExtraByteCount (unsafe (MemoryMarshal.CreateReadOnlySpanFromNullTerminated (value)), paramName) != 0;
 		}
 
 		/// <safety>
 		/// A non-null value must remain readable and unchanged through its NUL terminator.
 		/// The caller owns a nonzero result and must release it with Free.
 		/// </safety>
-		internal static unsafe IntPtr AllocConvertedUtf8 (byte* value)
+		internal static unsafe IntPtr AllocConvertedUtf8 (byte* value, string paramName)
 		{
 			if (value == null)
 				return IntPtr.Zero;
 			// SAFETY: The caller keeps value readable through its terminator while the bytes are copied.
 			var source = unsafe (MemoryMarshal.CreateReadOnlySpanFromNullTerminated (value));
-			int extra = GetExtraByteCount (source);
+			int extra = GetExtraByteCount (source, paramName);
 			if (extra == 0)
 				return IntPtr.Zero;
 
@@ -142,14 +153,30 @@ namespace Java.Interop {
 			}
 		}
 
-		static int GetExtraByteCount (ReadOnlySpan<byte> value)
+		// Accepts exactly what ART CheckJNI's CheckUtfBytes accepts. Release ART decoders trust lead
+		// bytes and would read past the NUL of a truncated sequence, so reject before calling JNI.
+		// Existing modified UTF-8 needs no conversion; only valid four-byte UTF-8 scalars expand.
+		static int GetExtraByteCount (ReadOnlySpan<byte> value, string paramName)
 		{
-			// Existing modified UTF-8 needs no conversion; only valid four-byte UTF-8 scalars expand.
 			int extra = 0;
+			int position = 0;
 			int index;
-			while ((index = IndexOfSupplementary (value, out _)) >= 0) {
-				extra = checked (extra + 2);
-				value = value.Slice (index + 4);
+			while ((index = value.IndexOfAnyExceptInRange ((byte) 0x01, (byte) 0x7f)) >= 0) {
+				position += index;
+				value = value.Slice (index);
+				int length = value [0] switch {
+					>= 0xc0 and <= 0xdf => 2,
+					>= 0xe0 and <= 0xef => 3,
+					>= 0xf0 and <= 0xf7 => 4,
+					_ => 0,
+				};
+				if (length == 0 || value.Length < length ||
+						value.Slice (1, length - 1).IndexOfAnyExceptInRange ((byte) 0x80, (byte) 0xbf) >= 0)
+					throw new ArgumentException ($"Invalid JNI modified UTF-8 sequence at byte offset {position}.", paramName);
+				if (length == 4 && Rune.DecodeFromUtf8 (value.Slice (0, 4), out _, out _) == OperationStatus.Done)
+					extra = checked (extra + 2);
+				position += length;
+				value = value.Slice (length);
 			}
 			return extra;
 		}
@@ -203,7 +230,7 @@ namespace Java.Interop {
 		internal unsafe JniModifiedUtf8String (byte* value)
 		{
 			// SAFETY: The caller retains the source bytes through conversion and any subsequent JNI call.
-			owned = unsafe (JniModifiedUtf8.AllocConvertedUtf8 (value));
+			owned = unsafe (JniModifiedUtf8.AllocConvertedUtf8 (value, nameof (value)));
 			Pointer = owned == IntPtr.Zero ? (IntPtr) value : owned;
 		}
 

@@ -361,6 +361,7 @@ namespace Java.Interop
 			/// with raw function pointers and UTF-8 name/signature pointers.
 			/// Calls the JNI RegisterNatives function directly without delegate marshaling.
 			/// Standard UTF-8 supplementary characters are converted to JNI modified UTF-8.
+			/// Structurally invalid UTF-8 throws <see cref="ArgumentException"/> before JNI reads it.
 			/// </summary>
 			/// <safety>
 			/// Each method's name and signature must address readable NUL-terminated UTF-8 memory
@@ -382,11 +383,10 @@ namespace Java.Interop
 				bool needsConversion = false;
 				unsafe {
 					// SAFETY: The caller keeps each name and signature terminated and unchanged through registration.
+					// Scan every descriptor so malformed UTF-8 is rejected before any of it reaches JNI.
 					foreach (var method in methods) {
-						if (JniModifiedUtf8.RequiresConversion (method.name) || JniModifiedUtf8.RequiresConversion (method.signature)) {
-							needsConversion = true;
-							break;
-						}
+						needsConversion |= JniModifiedUtf8.RequiresConversion (method.name, nameof (methods));
+						needsConversion |= JniModifiedUtf8.RequiresConversion (method.signature, nameof (methods));
 					}
 				}
 				if (!needsConversion) {
@@ -411,9 +411,9 @@ namespace Java.Interop
 						// SAFETY: Caller-owned inputs remain readable; each allocated replacement is recorded before the next allocation.
 						for (int i = 0; i < methods.Length; ++i) {
 							var method = methods [i];
-							IntPtr name = JniModifiedUtf8.AllocConvertedUtf8 (method.name);
+							IntPtr name = JniModifiedUtf8.AllocConvertedUtf8 (method.name, nameof (methods));
 							unmanagedStrings [i * 2] = name;
-							IntPtr signature = JniModifiedUtf8.AllocConvertedUtf8 (method.signature);
+							IntPtr signature = JniModifiedUtf8.AllocConvertedUtf8 (method.signature, nameof (methods));
 							unmanagedStrings [i * 2 + 1] = signature;
 							natives [i] = new JniNativeMethod (
 								name == IntPtr.Zero ? method.name : (byte*) name,
@@ -472,6 +472,7 @@ namespace Java.Interop
 			/// Finds a Java class using a null-terminated UTF-8 class name span.
 			/// Use with <c>"java/lang/Object"u8</c> literals to avoid string marshalling overhead.
 			/// Standard UTF-8 supplementary characters are converted to JNI modified UTF-8.
+			/// Structurally invalid UTF-8 throws <see cref="ArgumentException"/> before JNI reads it.
 			/// </summary>
 			/// <safety>
 			/// The caller must ensure the backing storage remains readable and NUL-terminated
@@ -491,6 +492,7 @@ namespace Java.Interop
 			/// Tries to find a Java class using a null-terminated UTF-8 class name span.
 			/// Returns <c>true</c> if the class was found, <c>false</c> otherwise.
 			/// Standard UTF-8 supplementary characters are converted to JNI modified UTF-8.
+			/// Structurally invalid UTF-8 throws <see cref="ArgumentException"/> before JNI reads it.
 			/// </summary>
 			/// <safety>
 			/// The caller must ensure the backing storage remains readable and NUL-terminated
@@ -520,6 +522,12 @@ namespace Java.Interop
 
 				var terminator = classname.IndexOf ((byte) 0);
 				var nameLength = terminator >= 0 ? terminator : classname.Length;
+
+				unsafe {
+					// SAFETY: The caller keeps classname terminated and unchanged; fixed pins it for the bounded scan.
+					fixed (byte* p = classname)
+						JniModifiedUtf8.Validate (p, nameof (classname));
+				}
 
 				// Convert dot-separated names (e.g. "java.lang.Object"u8) to JNI form ("java/lang/Object")
 				// before calling FindClass, because ART's CheckJNI aborts the process on dot-separated names.
