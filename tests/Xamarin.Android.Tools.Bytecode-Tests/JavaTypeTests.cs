@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Globalization;
 using System.Linq;
 
 using Xamarin.Android.Tools.Bytecode;
@@ -347,17 +346,23 @@ namespace Xamarin.Android.Tools.BytecodeTests {
 			}.Assert (c);
 		}
 
-		[TestCase ("en-US")]
-		[TestCase ("fa-IR")]
-		public void XmlDeclaration_WithJavaType_class (string cultureName)
+		[Test]
+		[SetCulture ("en-US")]
+		public void XmlDeclaration_WithJavaType_class_en_US ()
 		{
-			var originalCulture = CultureInfo.CurrentCulture;
-			try {
-				CultureInfo.CurrentCulture = CultureInfo.GetCultureInfo (cultureName);
-				AssertXmlDeclaration ("JavaType.class", "JavaType.xml");
-			} finally {
-				CultureInfo.CurrentCulture = originalCulture;
-			}
+			AssertXmlDeclaration_WithJavaType_class ();
+		}
+
+		[Test]
+		[SetCulture ("fa-IR")]
+		public void XmlDeclaration_WithJavaType_class_fa_IR ()
+		{
+			AssertXmlDeclaration_WithJavaType_class ();
+		}
+
+		void AssertXmlDeclaration_WithJavaType_class ()
+		{
+			AssertXmlDeclaration ("JavaType.class", "JavaType.xml");
 		}
 	}
 }
