@@ -37,11 +37,13 @@ about the various Microsoft.Android workloads.
     <ReplaceFileContents
         SourceFile="$(XamarinAndroidSourcePath)src\Xamarin.Android.Build.Tasks\Microsoft.NET.Sdk.Android\WorkloadManifest.in.json"
         DestinationFile="$(WorkloadManifestJsonPath)"
+        WriteOnlyWhenDifferent="true"
         Replacements="@WORKLOAD_VERSION@=$(WorkloadVersion);@NET_PREVIOUS_VERSION@=$(AndroidNetPreviousVersion)">
     </ReplaceFileContents>
     <ReplaceFileContents
         SourceFile="$(XamarinAndroidSourcePath)src\Xamarin.Android.Build.Tasks\Microsoft.NET.Sdk.Android\WorkloadManifest.in.targets"
         DestinationFile="$(WorkloadManifestTargetsPath)"
+        WriteOnlyWhenDifferent="true"
         Replacements="@NET_PREVIOUS_VERSION@=$(AndroidNetPreviousVersion);@NET_PREVIOUS_ILLINK_VERSION@=$(AndroidNetPreviousILLinkVersion)">
     </ReplaceFileContents>
     <ItemGroup>
@@ -73,6 +75,7 @@ about the various Microsoft.Android workloads.
     </ItemGroup>
 
     <MSBuild
+        Condition=" '$(_AndroidSkipWorkloadDependencies)' != 'true' "
         Projects="$(MSBuildThisFileDirectory)/../../tools/workload-dependencies/WorkloadDependencies.proj"
         Properties="@(_WorkloadDepProp)"
         Targets="GenerateWorkloadDependencies"
@@ -82,7 +85,7 @@ about the various Microsoft.Android workloads.
       <_PackageFiles Include="$(WorkloadManifestJsonPath)" PackagePath="data" />
       <_PackageFiles Include="$(_AndroidWorkloadManifestLocalizationPath)\WorkloadManifest.*.json" PackagePath="data\localize" />
       <_PackageFiles Include="$(WorkloadManifestTargetsPath)" PackagePath="data" />
-      <_PackageFiles Include="$(WorkloadDependenciesPath)" PackagePath="data" />
+      <_PackageFiles Include="$(WorkloadDependenciesPath)" PackagePath="data" Condition=" '$(_AndroidSkipWorkloadDependencies)' != 'true' " />
     </ItemGroup>
   </Target>
 

@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.IO.Compression;
 using System.Linq;
 using System.Text.Json;
 using System.Xml.Linq;
@@ -14,8 +15,9 @@ namespace Xamarin.Android.BuildTools
 		static int Main (string [] args)
 		{
 			try {
-				if (args.Length == 2 && args [0] == "--finalize-pack") {
+				if (args.Length == 4 && args [0] == "--finalize-pack") {
 					FinalizePack (args [1]);
+					WritePackMarker (args [1], args [2], args [3]);
 					return 0;
 				}
 				if (args.Length < 7 || args.Length > 8)
@@ -84,6 +86,11 @@ namespace Xamarin.Android.BuildTools
 						WorkloadPackKind.Sdk or WorkloadPackKind.Framework => Path.Combine (packRoot, "packs", pack.ResolvedPackageId, pack.Version),
 						_ => throw new InvalidDataException ($"Unknown workload pack kind: {pack.Kind}"),
 					};
+					var marker = Path.Combine (destination, $"{fileName}.installed");
+					if (File.Exists (marker) && !HasInstalledFiles (destination, fileName, packed)) {
+						Console.WriteLine ($"Reinstalling incomplete workload pack '{pack.ResolvedPackageId}'.");
+						File.Delete (marker);
+					}
 					installs.Add (new XElement ("_WorkloadPack", new XAttribute ("Include", source),
 						new XElement ("Destination", destination),
 						new XElement ("Packed", packed.ToString ().ToLowerInvariant ()),
@@ -101,23 +108,53 @@ namespace Xamarin.Android.BuildTools
 						new XAttribute ("Condition", "'@(_WorkloadPack->Count())' != '0'"),
 						new XAttribute ("Inputs", $"@(_WorkloadPack);$(MSBuildThisFileFullPath);{toolPath}"),
 						new XAttribute ("Outputs", "%(_WorkloadPack.Destination)/%(_WorkloadPack.PackageFileName).installed"),
+						new XElement ("Delete", new XAttribute ("Files", "%(_WorkloadPack.Destination)/%(_WorkloadPack.PackageFileName).installed")),
 						new XElement ("Unzip", new XAttribute ("SourceFiles", "@(_WorkloadPack)"),
 							new XAttribute ("DestinationFolder", "%(_WorkloadPack.Destination)"),
 							new XAttribute ("Condition", "'%(_WorkloadPack.Packed)' != 'true'")),
 						new XElement ("Copy", new XAttribute ("SourceFiles", "@(_WorkloadPack)"),
 							new XAttribute ("DestinationFiles", "%(_WorkloadPack.Destination)/%(_WorkloadPack.PackageFileName)"),
 							new XAttribute ("Condition", "'%(_WorkloadPack.Packed)' == 'true'")),
-						new XElement ("Exec", new XAttribute ("Command", $"\"{dotnetPath}\" \"{toolPath}\" --finalize-pack \"%(_WorkloadPack.Destination)\""),
+						new XElement ("Exec", new XAttribute ("Command", $"\"{dotnetPath}\" \"{toolPath}\" --finalize-pack \"%(_WorkloadPack.Destination)\" \"@(_WorkloadPack)\" \"%(_WorkloadPack.PackageFileName)\""),
 							new XAttribute ("Condition", "'%(_WorkloadPack.Packed)' != 'true'")),
 						new XElement ("Touch", new XAttribute ("Files", "%(_WorkloadPack.Destination)/%(_WorkloadPack.PackageFileName).installed"),
 							new XAttribute ("AlwaysCreate", "true")))));
 				Directory.CreateDirectory (Path.GetDirectoryName (outputProject) ?? throw new InvalidDataException ("The output project has no directory."));
-				File.WriteAllText (outputProject, project.ToString ());
+				Files.CopyIfStringChanged (project.ToString (), outputProject);
 				return 0;
 			} catch (Exception ex) {
 				Console.Error.WriteLine ($"Workload dependency resolution failed: {ex}");
 				return 1;
 			}
+		}
+
+		static bool HasInstalledFiles (string directory, string fileName, bool packed)
+		{
+			if (packed)
+				return File.Exists (Path.Combine (directory, fileName));
+
+			var contents = File.ReadAllText (Path.Combine (directory, $"{fileName}.installed"));
+			// Older empty markers do not identify the files that must be restored.
+			if (contents.Length == 0)
+				return false;
+			try {
+				var files = JsonSerializer.Deserialize<string []> (contents);
+				return files != null && files.Length > 0 && files.All (path => !string.IsNullOrEmpty (path) && File.Exists (Files.GetArchiveExtractionPath (directory, path)));
+			} catch (JsonException) {
+				return false;
+			}
+		}
+
+		static void WritePackMarker (string directory, string package, string fileName)
+		{
+			using var archive = ZipFile.OpenRead (package);
+			var files = archive.Entries
+				.Where (entry => !entry.FullName.EndsWith ("/", StringComparison.Ordinal) && !entry.FullName.EndsWith ("\\", StringComparison.Ordinal))
+				.Select (entry => entry.FullName)
+				.ToArray ();
+			if (files.Length == 0 || files.Any (path => !File.Exists (Files.GetArchiveExtractionPath (directory, path))))
+				throw new InvalidDataException ($"Workload pack '{package}' was not fully extracted to '{directory}'.");
+			File.WriteAllText (Path.Combine (directory, $"{fileName}.installed"), JsonSerializer.Serialize (files));
 		}
 
 		static void FinalizePack (string directory)

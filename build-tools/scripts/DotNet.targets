@@ -18,15 +18,87 @@
     />
   </Target>
 
-  <!-- Build Mono.Android.dll for additional API levels if necessary -->
+  <Target Name="_GetExtraApiLevelInputs">
+    <PropertyGroup>
+      <_ExtraApiLevelOutputStateFile>$(_Root)bin\Build$(Configuration)\BuildExtraApiLevels.outputs</_ExtraApiLevelOutputStateFile>
+      <_ExtraApiLevelInputStateFile>$(_Root)bin\Build$(Configuration)\BuildExtraApiLevels.inputs</_ExtraApiLevelInputStateFile>
+    </PropertyGroup>
+    <ItemGroup>
+      <_DefaultApiLevelOutput Include="$(_MonoAndroidNETDefaultOutDir)**" />
+      <_ExtraApiLevelDeclaredInput Include="$(_Root)src\Mono.Android\Profiles\api-%(AndroidBuildApiLevel.PlatformId).xml"
+          Condition=" '%(AndroidBuildApiLevel.Identity)' != '$(AndroidApiLevel)' " />
+      <_ExtraApiLevelDeclaredInput Include="$(_Root)src\Mono.Android\PublicAPI\API-%(AndroidBuildApiLevel.Identity)\*"
+          Condition=" '%(AndroidBuildApiLevel.Identity)' != '$(AndroidApiLevel)' " />
+      <_ExtraApiLevelDeclaredInput Include="$(MSBuildThisFileFullPath);$(_Root)Configuration.props;$(_Root)src\Mono.Android\Mono.Android.csproj;$(_Root)src\Mono.Android\Mono.Android.targets" />
+      <_ExtraApiLevelInputStateLine Include="AndroidApiLevel=$(AndroidApiLevel);AndroidPackVersion=$(AndroidPackVersion);DotNetAndroidTargetFramework=$(DotNetAndroidTargetFramework)" />
+      <_ExtraApiLevelInputStateLine Include="AndroidBuildApiLevel=%(AndroidBuildApiLevel.Identity)|%(AndroidBuildApiLevel.PlatformId)|%(AndroidBuildApiLevel.FrameworkVersion)|%(AndroidBuildApiLevel.Unstable)"
+          Condition=" '%(AndroidBuildApiLevel.Identity)' != '$(AndroidApiLevel)' " />
+
+      <_ExtraApiLevelCurrentOutput Include="$(_MonoAndroidNETOutputRoot)%(AndroidBuildApiLevel.Identity)\**"
+          Condition=" '%(AndroidBuildApiLevel.Identity)' != '$(AndroidApiLevel)' " />
+      <!-- Workload setup generates pack metadata and copies analyzers after the extra API-level build. -->
+      <_ExtraApiLevelCurrentOutput Include="$(MicrosoftAndroidPacksRootDir)Microsoft.Android.Ref.%(AndroidBuildApiLevel.Identity)\$(AndroidPackVersion)\**"
+          Exclude="$(MicrosoftAndroidPacksRootDir)Microsoft.Android.Ref.*\$(AndroidPackVersion)\data\FrameworkList.xml;$(MicrosoftAndroidPacksRootDir)Microsoft.Android.Ref.*\$(AndroidPackVersion)\data\*.assets.cache;$(MicrosoftAndroidPacksRootDir)Microsoft.Android.Ref.*\$(AndroidPackVersion)\analyzers\dotnet\cs\Microsoft.Android.Sdk.Analysis.dll"
+          Condition=" '%(AndroidBuildApiLevel.Identity)' != '$(AndroidApiLevel)' " />
+      <_ExtraApiLevelCurrentOutput Include="$(MicrosoftAndroidPacksRootDir)Microsoft.Android.Runtime.%(AndroidBuildApiLevel.Identity).android\$(AndroidPackVersion)\**"
+          Exclude="$(MicrosoftAndroidPacksRootDir)Microsoft.Android.Runtime.*.android\$(AndroidPackVersion)\data\RuntimeList.xml;$(MicrosoftAndroidPacksRootDir)Microsoft.Android.Runtime.*.android\$(AndroidPackVersion)\data\*.assets.cache"
+          Condition=" '%(AndroidBuildApiLevel.Identity)' != '$(AndroidApiLevel)' " />
+      <_ExtraApiLevelCurrentOutput Include="$(MicrosoftAndroidSdkPackDir)data\$(DotNetAndroidTargetFramework)%(AndroidBuildApiLevel.Identity)\**"
+          Condition=" '%(AndroidBuildApiLevel.Identity)' != '$(AndroidApiLevel)' " />
+    </ItemGroup>
+
+    <ReadLinesFromFile File="$(_ExtraApiLevelOutputStateFile)" Condition="Exists('$(_ExtraApiLevelOutputStateFile)')">
+      <Output TaskParameter="Lines" ItemName="_ExtraApiLevelPreviousOutput" />
+    </ReadLinesFromFile>
+    <ItemGroup>
+      <_ExtraApiLevelInput Include="@(_DefaultApiLevelOutput);@(_ExtraApiLevelDeclaredInput);@(_ExtraApiLevelCurrentOutput);@(_ExtraApiLevelPreviousOutput);$(_ExtraApiLevelOutputStateFile);$(_ExtraApiLevelInputStateFile)" />
+      <FileWrites Include="$(_ExtraApiLevelOutputStateFile);$(_ExtraApiLevelInputStateFile);$(_Root)bin\Build$(Configuration)\BuildExtraApiLevels.stamp" />
+    </ItemGroup>
+
+    <MakeDir Directories="$([System.IO.Path]::GetDirectoryName('$(_ExtraApiLevelOutputStateFile)'))" />
+    <WriteLinesToFile
+        File="$(_ExtraApiLevelOutputStateFile)"
+        Lines="@(_ExtraApiLevelCurrentOutput)"
+        Overwrite="true"
+        WriteOnlyWhenDifferent="true"
+    />
+    <WriteLinesToFile
+        File="$(_ExtraApiLevelInputStateFile)"
+        Lines="@(_ExtraApiLevelInputStateLine);@(_ExtraApiLevelDeclaredInput)"
+        Overwrite="true"
+        WriteOnlyWhenDifferent="true"
+    />
+  </Target>
+
+  <!-- Build Mono.Android.dll for additional API levels if necessary. -->
   <Target Name="BuildExtraApiLevels"
-      Inputs="@(AndroidBuildApiLevel)"
-      Outputs="$(_MonoAndroidNETOutputRoot)%(AndroidBuildApiLevel.Identity)\Mono.Android.dll">
+      DependsOnTargets="_GetExtraApiLevelInputs"
+      Inputs="@(_ExtraApiLevelInput)"
+      Outputs="$(_Root)bin\Build$(Configuration)\BuildExtraApiLevels.stamp">
     <MSBuild
          Condition=" '%(AndroidBuildApiLevel.Identity)' != '$(AndroidApiLevel)' "
          Projects="$(_Root)src\Mono.Android\Mono.Android.csproj"
          Properties="AndroidApiLevel=%(AndroidBuildApiLevel.Identity);AndroidPlatformId=%(AndroidBuildApiLevel.PlatformId);AndroidFrameworkVersion=%(AndroidBuildApiLevel.FrameworkVersion);IsUnstableVersion=%(AndroidBuildApiLevel.Unstable)"
     />
+    <ItemGroup>
+      <_ExtraApiLevelOutputAfterBuild Include="$(_MonoAndroidNETOutputRoot)%(AndroidBuildApiLevel.Identity)\**"
+          Condition=" '%(AndroidBuildApiLevel.Identity)' != '$(AndroidApiLevel)' " />
+      <_ExtraApiLevelOutputAfterBuild Include="$(MicrosoftAndroidPacksRootDir)Microsoft.Android.Ref.%(AndroidBuildApiLevel.Identity)\$(AndroidPackVersion)\**"
+          Exclude="$(MicrosoftAndroidPacksRootDir)Microsoft.Android.Ref.*\$(AndroidPackVersion)\data\FrameworkList.xml;$(MicrosoftAndroidPacksRootDir)Microsoft.Android.Ref.*\$(AndroidPackVersion)\data\*.assets.cache;$(MicrosoftAndroidPacksRootDir)Microsoft.Android.Ref.*\$(AndroidPackVersion)\analyzers\dotnet\cs\Microsoft.Android.Sdk.Analysis.dll"
+          Condition=" '%(AndroidBuildApiLevel.Identity)' != '$(AndroidApiLevel)' " />
+      <_ExtraApiLevelOutputAfterBuild Include="$(MicrosoftAndroidPacksRootDir)Microsoft.Android.Runtime.%(AndroidBuildApiLevel.Identity).android\$(AndroidPackVersion)\**"
+          Exclude="$(MicrosoftAndroidPacksRootDir)Microsoft.Android.Runtime.*.android\$(AndroidPackVersion)\data\RuntimeList.xml;$(MicrosoftAndroidPacksRootDir)Microsoft.Android.Runtime.*.android\$(AndroidPackVersion)\data\*.assets.cache"
+          Condition=" '%(AndroidBuildApiLevel.Identity)' != '$(AndroidApiLevel)' " />
+      <_ExtraApiLevelOutputAfterBuild Include="$(MicrosoftAndroidSdkPackDir)data\$(DotNetAndroidTargetFramework)%(AndroidBuildApiLevel.Identity)\**"
+          Condition=" '%(AndroidBuildApiLevel.Identity)' != '$(AndroidApiLevel)' " />
+    </ItemGroup>
+    <WriteLinesToFile
+        File="$(_ExtraApiLevelOutputStateFile)"
+        Lines="@(_ExtraApiLevelOutputAfterBuild)"
+        Overwrite="true"
+        WriteOnlyWhenDifferent="true"
+    />
+    <Touch Files="$(_Root)bin\Build$(Configuration)\BuildExtraApiLevels.stamp" AlwaysCreate="true" />
   </Target>
 
   <Target Name="UpdateMauiWorkloadsProj">

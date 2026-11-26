@@ -1,15 +1,5 @@
 <Project>
 
-  <!-- https://stackoverflow.com/questions/15914145/cross-join-itemgroups-in-msbuild -->
-  <Target Name="_CreateAndroidBuildInfo">
-    <ItemGroup>
-      <_AndroidBuildInfo Include="@(AndroidBuildApiLevel)">
-        <AndroidRuntime>%(AndroidAbiAndRuntimeFlavor.AndroidRuntime)</AndroidRuntime>
-        <AndroidRID>%(AndroidAbiAndRuntimeFlavor.AndroidRID)</AndroidRID>
-      </_AndroidBuildInfo>
-    </ItemGroup>
-  </Target>
-
   <Target Name="_CreateLocalFrameworkLists">
     <ItemGroup>
       <_FrameworkListInputs Include="$(BuildOutputDirectory)lib\packs\Microsoft.Android.Ref.%(AndroidBuildApiLevel.Identity)\$(AndroidPackVersion)\ref\**" />
@@ -17,42 +7,68 @@
       <_FrameworkListOutputs Include="$(BuildOutputDirectory)lib\packs\Microsoft.Android.Ref.%(AndroidBuildApiLevel.Identity)\$(AndroidPackVersion)\data\FrameworkList.xml">
         <AndroidApiLevel>%(AndroidBuildApiLevel.Identity)</AndroidApiLevel>
       </_FrameworkListOutputs>
-      <_TemplatesInputs Include="$(XamarinAndroidSourcePath)src\Microsoft.Android.Templates\**" />
+      <_FrameworkListAnalyzerOutputs Include="$(BuildOutputDirectory)lib\packs\Microsoft.Android.Ref.%(AndroidBuildApiLevel.Identity)\$(AndroidPackVersion)\analyzers\dotnet\cs\Microsoft.Android.Sdk.Analysis.dll"
+          Condition=" '%(AndroidBuildApiLevel.Identity)' != '$(AndroidLatestStableApiLevel)' " />
+      <_TemplatesInputs Include="$(XamarinAndroidSourcePath)src\Microsoft.Android.Templates\**" Exclude="$(XamarinAndroidSourcePath)src\Microsoft.Android.Templates\bin\**;$(XamarinAndroidSourcePath)src\Microsoft.Android.Templates\obj\**" />
       <_TemplatesOutputs Include="$(BuildOutputDirectory)lib\template-packs\microsoft.android.templates.$(AndroidPackVersion).nupkg" />
     </ItemGroup>
   </Target>
 
   <Target Name="_CreateLocalRuntimeListsInputs"
-      DependsOnTargets="_CreateLocalFrameworkLists;_CreateAndroidBuildInfo">
+      DependsOnTargets="_CreateLocalFrameworkLists">
     <ItemGroup>
+      <!-- Native runtime packs are API-independent and use the latest stable API level. -->
       <_RuntimeListInputs
-          Include="$(BuildOutputDirectory)lib\packs\Microsoft.Android.Runtime.%(_AndroidBuildInfo.AndroidRuntime).%(_AndroidBuildInfo.Identity).%(_AndroidBuildInfo.AndroidRID)\$(AndroidPackVersion)\runtimes\%(_AndroidBuildInfo.AndroidRID)\**"
-          AndroidApiLevel="%(_AndroidBuildInfo.Identity)"
-          AndroidRID="%(_AndroidBuildInfo.AndroidRID)"
-          AndroidRuntime="%(_AndroidBuildInfo.AndroidRuntime)" />
+          Include="$(BuildOutputDirectory)lib\packs\Microsoft.Android.Runtime.%(AndroidAbiAndRuntimeFlavor.AndroidRuntime).$(AndroidLatestStableApiLevel).%(AndroidAbiAndRuntimeFlavor.AndroidRID)\$(AndroidPackVersion)\runtimes\%(AndroidAbiAndRuntimeFlavor.AndroidRID)\**" />
       <_RuntimeListOutputs
-          Include="$(BuildOutputDirectory)lib\packs\Microsoft.Android.Runtime.%(_AndroidBuildInfo.AndroidRuntime).%(_AndroidBuildInfo.Identity).%(_AndroidBuildInfo.AndroidRID)\$(AndroidPackVersion)\data\RuntimeList.xml"
-          AndroidApiLevel="%(_AndroidBuildInfo.Identity)"
-          AndroidRID="%(_AndroidBuildInfo.AndroidRID)"
-          AndroidRuntime="%(_AndroidBuildInfo.AndroidRuntime)"
+          Include="$(BuildOutputDirectory)lib\packs\Microsoft.Android.Runtime.%(AndroidAbiAndRuntimeFlavor.AndroidRuntime).$(AndroidLatestStableApiLevel).%(AndroidAbiAndRuntimeFlavor.AndroidRID)\$(AndroidPackVersion)\data\RuntimeList.xml"
+          AndroidApiLevel="$(AndroidLatestStableApiLevel)"
+          AndroidRID="%(AndroidAbiAndRuntimeFlavor.AndroidRID)"
+          AndroidRuntime="%(AndroidAbiAndRuntimeFlavor.AndroidRuntime)"
       />
       <_ManagedRuntimeListOutputs
           Include="$(BuildOutputDirectory)lib\packs\Microsoft.Android.Runtime.%(AndroidBuildApiLevel.Identity).android\$(AndroidPackVersion)\data\RuntimeList.xml"
           AndroidApiLevel="%(AndroidBuildApiLevel.Identity)"
+          AssemblyDirectory="$(_MonoAndroidNETOutputRoot)%(AndroidBuildApiLevel.Identity)\"
       />
     </ItemGroup>
   </Target>
 
-  <Target Name="CreateLocalRuntimeLists"
+  <Target Name="_CreateLocalManagedRuntimeLists"
       DependsOnTargets="_CreateLocalRuntimeListsInputs"
-      Inputs="$(MSBuildAllProjects);@(_RuntimeListInputs)"
-      Outputs="@(_RuntimeListOutputs);@(_ManagedRuntimeListOutputs)">
-    <Exec Command="&quot;$(DotNetPreviewTool)&quot; build -t:_GenerateFrameworkList -p:IntermediateOutputPath=%(_RuntimeListOutputs.RelativeDir) -p:AndroidApiLevel=%(_RuntimeListOutputs.AndroidApiLevel) -p:AndroidRID=%(_RuntimeListOutputs.AndroidRID) -p:AndroidRuntime=%(_RuntimeListOutputs.AndroidRuntime) -p:Configuration=$(Configuration) &quot;$(MSBuildThisFileDirectory)Microsoft.Android.Runtime.proj&quot;" />
+      Inputs="$(MSBuildAllProjects);$(MSBuildThisFileDirectory)Microsoft.Android.Runtime.Managed.proj;%(_ManagedRuntimeListOutputs.AssemblyDirectory)Java.Interop.dll;%(_ManagedRuntimeListOutputs.AssemblyDirectory)Java.Interop.pdb;%(_ManagedRuntimeListOutputs.AssemblyDirectory)Mono.Android.dll;%(_ManagedRuntimeListOutputs.AssemblyDirectory)Mono.Android.pdb;%(_ManagedRuntimeListOutputs.AssemblyDirectory)System.IO.Hashing.dll"
+      Outputs="%(_ManagedRuntimeListOutputs.Identity)">
     <Exec Command="&quot;$(DotNetPreviewTool)&quot; build -t:_GenerateFrameworkList -p:IntermediateOutputPath=%(_ManagedRuntimeListOutputs.RelativeDir) -p:AndroidApiLevel=%(_ManagedRuntimeListOutputs.AndroidApiLevel) -p:Configuration=$(Configuration) &quot;$(MSBuildThisFileDirectory)Microsoft.Android.Runtime.Managed.proj&quot;" />
+    <ItemGroup>
+      <FileWrites Include="%(_ManagedRuntimeListOutputs.Identity)" />
+    </ItemGroup>
+  </Target>
+
+  <Target Name="CreateLocalRuntimeLists"
+      DependsOnTargets="_CreateLocalRuntimeListsInputs;_CreateLocalManagedRuntimeLists"
+      Inputs="$(MSBuildAllProjects);$(MSBuildThisFileDirectory)Microsoft.Android.Runtime.proj;@(_RuntimeListInputs)"
+      Outputs="@(_RuntimeListOutputs)">
+    <Exec Command="&quot;$(DotNetPreviewTool)&quot; build -t:_GenerateFrameworkList -p:IntermediateOutputPath=%(_RuntimeListOutputs.RelativeDir) -p:AndroidApiLevel=%(_RuntimeListOutputs.AndroidApiLevel) -p:AndroidRID=%(_RuntimeListOutputs.AndroidRID) -p:AndroidRuntime=%(_RuntimeListOutputs.AndroidRuntime) -p:Configuration=$(Configuration) &quot;$(MSBuildThisFileDirectory)Microsoft.Android.Runtime.proj&quot;" />
+    <ItemGroup>
+      <FileWrites Include="@(_RuntimeListOutputs)" />
+    </ItemGroup>
+  </Target>
+
+  <Target Name="_CopyLocalReferencePackAnalyzers"
+      DependsOnTargets="_CreateLocalFrameworkLists"
+      Inputs="$(MicrosoftAndroidSdkAnalysisOutDir)Microsoft.Android.Sdk.Analysis.dll"
+      Outputs="@(_FrameworkListAnalyzerOutputs)">
+    <Copy SourceFiles="@(_FrameworkListAnalyzerOutputs->'$(MicrosoftAndroidSdkAnalysisOutDir)Microsoft.Android.Sdk.Analysis.dll')"
+        DestinationFiles="@(_FrameworkListAnalyzerOutputs)"
+        SkipUnchangedFiles="true"
+        Condition=" '@(_FrameworkListAnalyzerOutputs->Count())' != '0' " />
+    <ItemGroup>
+      <FileWrites Include="@(_FrameworkListAnalyzerOutputs)" />
+    </ItemGroup>
   </Target>
 
   <Target Name="CreateLocalFrameworkLists"
-      DependsOnTargets="_CreateLocalFrameworkLists"
+      DependsOnTargets="_CreateLocalFrameworkLists;_CopyLocalReferencePackAnalyzers"
       Inputs="$(MSBuildAllProjects);@(_FrameworkListInputs)"
       Outputs="@(_FrameworkListOutputs)">
     <Exec Command="&quot;$(DotNetPreviewTool)&quot; build -t:_GenerateFrameworkList -p:IntermediateOutputPath=%(_FrameworkListOutputs.RelativeDir) -p:AndroidApiLevel=%(_FrameworkListOutputs.AndroidApiLevel) -p:Configuration=$(Configuration) &quot;$(MSBuildThisFileDirectory)Microsoft.Android.Ref.proj&quot;" />
@@ -85,7 +101,7 @@
     <MakeDir Directories="$(_LocalAndroidManifestFolder)" />
     <MSBuild
         Projects="$(MSBuildThisFileDirectory)Microsoft.NET.Sdk.Android.proj"
-        Properties="WorkloadManifestJsonPath=$(_LocalAndroidManifestFolder)WorkloadManifest.json;WorkloadManifestTargetsPath=$(_LocalAndroidManifestFolder)WorkloadManifest.targets;WorkloadVersion=$(AndroidPackVersion)"
+        Properties="WorkloadManifestJsonPath=$(_LocalAndroidManifestFolder)WorkloadManifest.json;WorkloadManifestTargetsPath=$(_LocalAndroidManifestFolder)WorkloadManifest.targets;WorkloadVersion=$(AndroidPackVersion);_AndroidSkipWorkloadDependencies=true"
         Targets="_GenerateXAWorkloadContent"
     />
 
@@ -111,20 +127,10 @@
       <Output TaskParameter="Result" ItemName="_WorkloadSources" />
     </XmlPeek>
     <Exec Command="&quot;$(DotNetPreviewTool)&quot; build &quot;$(XamarinAndroidSourcePath)build-tools/workload-tools/workload-tools.csproj&quot; -p:Configuration=$(Configuration)" />
-    <ItemGroup>
-      <_WorkloadPlanInput Include="$(XamarinAndroidSourcePath)global.json;$(XamarinAndroidSourcePath)NuGet.config;$(_WorkloadToolAssembly)" />
-      <_WorkloadPlanInput Include="$(DotNetPreviewPath)sdk-manifests/$(_LocalSdkFeatureBand)/**/WorkloadManifest.json" />
-      <_WorkloadPlanInput Include="$(_WorkloadDestination)sdk-manifests/$(_LocalSdkFeatureBand)/**/WorkloadManifest.json" />
-      <_WorkloadPlanInput Include="$(_WorkloadManifestDirectory)WorkloadManifest.json" />
-      <_WorkloadPlanInput Include="$(XamarinAndroidSourcePath)bin/Build$(Configuration)/nuget-unsigned/*.nupkg" />
-      <_WorkloadPlanInput Condition=" '$(MauiUseLocalPacks)' == 'true' " Include="$(MauiPackagePath)/*.nupkg;$(MauiSourcePath)/NuGet.config" />
-    </ItemGroup>
   </Target>
 
-  <Target Name="_ResolveWorkloadPacks"
-      DependsOnTargets="_ResolveWorkloadPacksInputs"
-      Inputs="$(MSBuildThisFileFullPath);@(_WorkloadPlanInput)"
-      Outputs="$(_WorkloadPackagesProject)">
+  <!-- SDK pack availability and changing input sets cannot be tracked by timestamps alone. -->
+  <Target Name="_ResolveWorkloadPacks" DependsOnTargets="_ResolveWorkloadPacksInputs">
     <!-- A directory's trailing backslash must not escape the closing quote on Windows. -->
     <Exec
         Command="&quot;$(DotNetPreviewTool)&quot; &quot;$(_WorkloadToolAssembly)&quot; &quot;$(DotNetPreviewPath).&quot; &quot;$(NETCoreSdkVersion)&quot; &quot;$(_WorkloadManifestDirectory).&quot; &quot;$(_WorkloadDestination).&quot; &quot;$(_WorkloadPackageDirectory).&quot; &quot;$(_WorkloadPackagesProject)&quot; $(_WorkloadToInstall) &quot;@(_WorkloadSources, ';')&quot;"
@@ -135,8 +141,7 @@
   <!-- Restore immutable dependencies through NuGet, then extract only into this worktree. -->
   <Target Name="InstallWorkloadPacks" DependsOnTargets="_ResolveWorkloadPacks">
     <!-- Use a fresh evaluation after restore so NuGetPackageRoot is available. -->
-    <Exec Command="&quot;$(DotNetPreviewTool)&quot; restore &quot;$(_WorkloadPackagesProject)&quot;" />
-    <Exec Command="&quot;$(DotNetPreviewTool)&quot; msbuild &quot;$(_WorkloadPackagesProject)&quot; -t:Install -p:Configuration=$(Configuration)" />
+    <Exec Command="&quot;$(DotNetPreviewTool)&quot; msbuild &quot;$(_WorkloadPackagesProject)&quot; -restore -t:Install -p:Configuration=$(Configuration)" />
   </Target>
 
   <PropertyGroup>
