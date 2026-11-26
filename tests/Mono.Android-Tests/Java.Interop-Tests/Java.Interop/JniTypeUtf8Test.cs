@@ -1,6 +1,7 @@
 #nullable enable
 
 using System;
+using System.Collections.Generic;
 using System.Runtime.InteropServices;
 
 using Java.Interop;
@@ -57,6 +58,85 @@ namespace Java.InteropTests
 						CollectionAssert.AreEqual (expected, actual);
 					} finally {
 						JniModifiedUtf8.Free (converted);
+					}
+				}
+			}
+		}
+
+		[TestMethod]
+		[TestCategory ("JniModifiedUtf8")]
+		public void ModifiedUtf8_HandlesVectorBoundaries ()
+		{
+			const string pattern = "A\0\u007f\u0080\u07ff\u0800\ud800\udc00\udfff";
+			byte [][] encoded = [
+				[0x41], [0xc0, 0x80], [0x7f], [0xc2, 0x80], [0xdf, 0xbf],
+				[0xe0, 0xa0, 0x80], [0xed, 0xa0, 0x80], [0xed, 0xb0, 0x80], [0xed, 0xbf, 0xbf],
+			];
+			for (int start = 0; start < 16; start++) {
+				for (int length = 0; length <= 65; length++) {
+					var chars = new char [start + length + 1];
+					Array.Fill (chars, '\uffff');
+					var expected = new List<byte> ();
+					for (int i = 0; i < length; i++) {
+						int index = (start + i) % pattern.Length;
+						chars [start + i] = pattern [index];
+						expected.AddRange (encoded [index]);
+					}
+					var value = chars.AsSpan (start, length);
+					Assert.AreEqual (expected.Count, JniModifiedUtf8.GetByteCount (value), $"start={start}, length={length}");
+					var destination = new byte [expected.Count + 2];
+					Array.Fill (destination, (byte) 0xcc);
+					JniModifiedUtf8.GetBytes (value, destination.AsSpan (1, expected.Count));
+					CollectionAssert.AreEqual (expected.ToArray (), destination.AsSpan (1, expected.Count).ToArray ());
+					Assert.AreEqual ((byte) 0xcc, destination [0]);
+					Assert.AreEqual ((byte) 0xcc, destination [destination.Length - 1]);
+				}
+			}
+		}
+
+		[TestMethod]
+		[TestCategory ("JniModifiedUtf8")]
+		public void ModifiedUtf8_PreservesMalformedAndTruncatedUtf8 ()
+		{
+			byte [][] unchanged = [
+				[0xf0], [0xf0, 0x90], [0xf0, 0x90, 0x80],
+				[0xf0, 0x8f, 0xbf, 0xbf], [0xf4, 0x90, 0x80, 0x80], [0xf5, 0x80, 0x80, 0x80],
+				[0xf0, 0xff, 0x80, 0x80], [0xf0, 0x90, 0x7f, 0x80], [0xf0, 0x90, 0x80, 0xc0],
+				[0xc0, 0x80], [0xed, 0xa0, 0x80, 0xed, 0xb0, 0x80], [0x80, 0xff],
+			];
+			for (int prefix = 0; prefix <= 33; prefix++) {
+				foreach (var bytes in unchanged) {
+					var source = new byte [prefix + bytes.Length + 5];
+					Array.Fill (source, (byte) 'a', 0, prefix);
+					bytes.CopyTo (source, prefix);
+					// The scalar beyond this terminator must not be inspected.
+					source [prefix + bytes.Length + 1] = 0xf0;
+					source [prefix + bytes.Length + 2] = 0x90;
+					source [prefix + bytes.Length + 3] = 0x80;
+					source [prefix + bytes.Length + 4] = 0x80;
+					unsafe {
+						// SAFETY: source stays pinned and NUL-terminated through each conversion.
+						fixed (byte* pointer = source) {
+							Assert.IsFalse (JniModifiedUtf8.RequiresConversion (pointer));
+							Assert.AreEqual (IntPtr.Zero, JniModifiedUtf8.AllocConvertedUtf8 (pointer));
+							source [prefix + bytes.Length] = 0xf0;
+							source [prefix + bytes.Length + 1] = 0x90;
+							source [prefix + bytes.Length + 2] = 0x80;
+							source [prefix + bytes.Length + 3] = 0x80;
+							source [source.Length - 1] = 0;
+							Assert.IsTrue (JniModifiedUtf8.RequiresConversion (pointer));
+							IntPtr converted = JniModifiedUtf8.AllocConvertedUtf8 (pointer);
+							try {
+								Assert.AreNotEqual (IntPtr.Zero, converted);
+								var expected = new List<byte> (source.AsSpan (0, prefix + bytes.Length).ToArray ());
+								expected.AddRange ([0xed, 0xa0, 0x80, 0xed, 0xb0, 0x80, 0]);
+								var actual = new byte [expected.Count];
+								Marshal.Copy (converted, actual, 0, actual.Length);
+								CollectionAssert.AreEqual (expected.ToArray (), actual);
+							} finally {
+								JniModifiedUtf8.Free (converted);
+							}
+						}
 					}
 				}
 			}

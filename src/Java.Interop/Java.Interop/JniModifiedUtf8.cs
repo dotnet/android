@@ -1,8 +1,11 @@
 #nullable enable
 
 using System;
+using System.Buffers;
 using System.Runtime.InteropServices;
+using System.Runtime.Intrinsics;
 using System.Security.Cryptography;
+using System.Text;
 
 namespace Java.Interop {
 
@@ -13,6 +16,20 @@ namespace Java.Interop {
 		{
 			int count = 0;
 			checked {
+				if (Vector128.IsHardwareAccelerated) {
+					while (value.Length >= Vector128<ushort>.Count) {
+						// SAFETY: char and ushort have equal size and alignment and contain no references;
+						// the read-only cast preserves the span bounds, checked by Vector128.Create.
+						var chars = Vector128.Create (unsafe (MemoryMarshal.Cast<char, ushort> (value)));
+						// Like Utf16Utility's byte-count adjustment, but NUL also needs two bytes
+						// and surrogate code units each keep their three-byte encoding.
+						var twoBytes = Vector128.GreaterThan (chars, Vector128.Create ((ushort) 0x7f)) |
+							Vector128.Equals (chars, Vector128<ushort>.Zero);
+						var threeBytes = Vector128.GreaterThan (chars, Vector128.Create ((ushort) 0x7ff));
+						count += Vector128<ushort>.Count + Vector128.Sum (Vector128<ushort>.Zero - twoBytes - threeBytes);
+						value = value.Slice (Vector128<ushort>.Count);
+					}
+				}
 				foreach (char c in value)
 					count += c is > '\0' and <= '\u007f' ? 1 : c <= '\u07ff' ? 2 : 3;
 			}
@@ -22,6 +39,14 @@ namespace Java.Interop {
 		internal static void GetBytes (ReadOnlySpan<char> value, Span<byte> destination)
 		{
 			int offset = 0;
+			if (!value.IsEmpty && value [0] is > '\0' and <= '\u007f') {
+				int asciiLength = value.IndexOfAnyExceptInRange ('\u0001', '\u007f');
+				if (asciiLength < 0)
+					asciiLength = value.Length;
+				if (Ascii.FromUtf16 (value.Slice (0, asciiLength), destination, out offset) != OperationStatus.Done)
+					throw new ArgumentException ("Destination is too short.", nameof (destination));
+				value = value.Slice (asciiLength);
+			}
 			foreach (char c in value)
 				WriteChar (c, destination, ref offset);
 		}
@@ -94,16 +119,17 @@ namespace Java.Interop {
 					// SAFETY: result owns length writable bytes; source remains readable throughout the copy.
 					var destination = new Span<byte> ((void*) result, length);
 					int offset = 0;
-					for (int i = 0; i < source.Length; i++) {
-						if (TryReadSupplementary (source, i, out int scalar)) {
-							scalar -= 0x10000;
-							WriteChar ((char) (0xd800 + (scalar >> 10)), destination, ref offset);
-							WriteChar ((char) (0xdc00 + (scalar & 0x3ff)), destination, ref offset);
-							i += 3;
-						} else {
-							destination [offset++] = source [i];
-						}
+					int index;
+					while ((index = IndexOfSupplementary (source, out Rune rune)) >= 0) {
+						source.Slice (0, index).CopyTo (destination.Slice (offset));
+						offset += index;
+						int scalar = rune.Value - 0x10000;
+						WriteChar ((char) (0xd800 + (scalar >> 10)), destination, ref offset);
+						WriteChar ((char) (0xdc00 + (scalar & 0x3ff)), destination, ref offset);
+						source = source.Slice (index + 4);
 					}
+					source.CopyTo (destination.Slice (offset));
+					offset += source.Length;
 					destination [offset] = 0;
 				}
 				return result;
@@ -120,30 +146,30 @@ namespace Java.Interop {
 		{
 			// Existing modified UTF-8 needs no conversion; only valid four-byte UTF-8 scalars expand.
 			int extra = 0;
-			for (int i = 0; i < value.Length; i++) {
-				if (TryReadSupplementary (value, i, out _)) {
-					extra = checked (extra + 2);
-					i += 3;
-				}
+			int index;
+			while ((index = IndexOfSupplementary (value, out _)) >= 0) {
+				extra = checked (extra + 2);
+				value = value.Slice (index + 4);
 			}
 			return extra;
 		}
 
-		static bool TryReadSupplementary (ReadOnlySpan<byte> value, int offset, out int scalar)
+		static int IndexOfSupplementary (ReadOnlySpan<byte> value, out Rune rune)
 		{
-			scalar = 0;
-			int first = value [offset];
-			if (first < 0xf0 || first > 0xf4 || offset > value.Length - 4)
-				return false;
-
-			int second = value [offset + 1];
-			int third = value [offset + 2];
-			int fourth = value [offset + 3];
-			if ((second & 0xc0) != 0x80 || (third & 0xc0) != 0x80 || (fourth & 0xc0) != 0x80)
-				return false;
-
-			scalar = ((first & 0x07) << 18) | ((second & 0x3f) << 12) | ((third & 0x3f) << 6) | (fourth & 0x3f);
-			return scalar is >= 0x10000 and <= 0x10ffff;
+			int offset = 0;
+			int index;
+			// Only F0..F4 start four-byte scalars; let Rune validate the complete sequence.
+			while ((index = value.IndexOfAnyInRange ((byte) 0xf0, (byte) 0xf4)) >= 0) {
+				offset += index;
+				value = value.Slice (index);
+				if (Rune.DecodeFromUtf8 (value, out rune, out _) == OperationStatus.Done)
+					return offset;
+				// Preserve malformed bytes and existing modified UTF-8 for JNI to handle.
+				offset++;
+				value = value.Slice (1);
+			}
+			rune = default;
+			return -1;
 		}
 
 		internal static void Free (IntPtr value)
