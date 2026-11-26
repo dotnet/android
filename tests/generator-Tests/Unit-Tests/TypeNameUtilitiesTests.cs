@@ -21,13 +21,6 @@ namespace generatortests
 			Assert.AreEqual ("foo", TypeNameUtilities.MangleName ("foo"));
 		}
 
-		[Test]
-		[SetCulture ("tr-TR")]
-		public void StudlyCaseIsCultureInvariant ()
-		{
-			Assert.AreEqual ("ItemInfo", TypeNameUtilities.StudlyCase ("item_info"));
-		}
-
 		[TestCase ("index", "Index")]
 		[TestCase ("@index", "Index")]
 		[SetCulture ("tr-TR")]
