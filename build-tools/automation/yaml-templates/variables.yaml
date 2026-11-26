@@ -91,3 +91,7 @@ variables:
   value: 'true'
 - name: NuGetAudit
   value: 'false'
+# Run MSBuild in multithreaded mode (-mt) by default. An explicit -mt:false still turns it off.
+# Signing steps set this to '0'; see the dotnet_prepare_release stages and the macOS entitlements step.
+- name: MSBUILDENABLEMULTITHREADED
+  value: '1'

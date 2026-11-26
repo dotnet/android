@@ -99,3 +99,5 @@ stages:
         arguments: >-
           /t:AddMachOEntitlements /p:Configuration=$(XA.Build.Configuration)
           /bl:${{ parameters.xaSourcePath }}/bin/Build$(XA.Build.Configuration)/sign-content.binlog
+      env:
+        MSBUILDENABLEMULTITHREADED: '0'
