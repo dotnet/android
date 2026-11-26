@@ -3,7 +3,7 @@
 // two revisions of one platform package, for the PR description.
 //
 // Usage:
-//   dotnet run diff_platform_api.cs -- <old-url> <old-sha256> <new-url> <new-sha1> <new-size>
+//   dotnetup dotnet run diff_platform_api.cs -- <old-url> <old-sha256> <new-url> <new-sha1> <new-size>
 //
 // <old-sha256> is the Hash pinned in androidsdk.targets. <new-sha1> and
 // <new-size> come from the manifest. Requires javap (JAVA_HOME or PATH).
@@ -13,7 +13,7 @@ using System.IO.Compression;
 using System.Security.Cryptography;
 
 if (args.Length != 5 || !long.TryParse(args [4], out long newSize)) {
-	Console.Error.WriteLine("usage: dotnet run diff_platform_api.cs -- <old-url> <old-sha256> <new-url> <new-sha1> <new-size>");
+	Console.Error.WriteLine("usage: dotnetup dotnet run diff_platform_api.cs -- <old-url> <old-sha256> <new-url> <new-sha1> <new-size>");
 	return 1;
 }
 

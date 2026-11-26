@@ -88,18 +88,6 @@
     <Exec Command="&quot;$(DotNetPreviewTool)&quot; pack @(_PackProps, ' ') &quot;$(XamarinAndroidSourcePath)src\Microsoft.Android.Templates\Microsoft.Android.Templates.csproj&quot;" />
   </Target>
 
-  <Target Name="_DetermineLocalSdkFeatureBand">
-    <PropertyGroup>
-      <_LocalSdkFeatureBandPrefix>$([System.Text.RegularExpressions.Regex]::Match($(NETCoreSdkVersion), `^\d+\.\d+\.\d`))</_LocalSdkFeatureBandPrefix>
-      <_LocalSdkFeatureBand Condition=" '$(_LocalSdkFeatureBandPrefix)' != '' ">$(_LocalSdkFeatureBandPrefix)00</_LocalSdkFeatureBand>
-      <_LocalSdkPrerelease>$([System.Text.RegularExpressions.Regex]::Match($(NETCoreSdkVersion), `(?&lt;=-)[^+]+`))</_LocalSdkPrerelease>
-      <_LocalSdkPrereleaseFeatureBand>$([System.Text.RegularExpressions.Regex]::Match($(_LocalSdkPrerelease), `^[^.]+(\.[^.]+)?`))</_LocalSdkPrereleaseFeatureBand>
-      <_LocalSdkFeatureBand Condition=" '$(_LocalSdkFeatureBandPrefix)' != '' and '$(_LocalSdkPrerelease)' != '' and !$(_LocalSdkPrerelease.Contains('dev')) and !$(_LocalSdkPrerelease.Contains('ci')) and !$(_LocalSdkPrerelease.Contains('rtm')) ">$(_LocalSdkFeatureBand)-$(_LocalSdkPrereleaseFeatureBand)</_LocalSdkFeatureBand>
-    </PropertyGroup>
-
-    <Error Condition=" '$(_LocalSdkFeatureBand)' == '' " Text="Failed to determine the SDK feature band from NETCoreSdkVersion '$(NETCoreSdkVersion)'." />
-  </Target>
-
   <Target Name="InstallManifestAndDependencies"
       DependsOnTargets="_GetDefaultPackageVersion;_DetermineLocalSdkFeatureBand">
     <PropertyGroup>
@@ -121,7 +109,7 @@
         Properties="_WorkloadPackRoot=$(_WorkloadPackRoot);_WorkloadToInstall=$(_WorkloadToInstall);_LocalAndroidManifestFolder=$(_LocalAndroidManifestFolder)" />
   </Target>
 
-  <Target Name="_ResolveWorkloadPacksInputs">
+  <Target Name="_ResolveWorkloadPacksInputs" DependsOnTargets="_DetermineLocalSdkFeatureBand">
     <PropertyGroup>
       <_WorkloadPackagesProject>$(BootstrapOutputDirectory)workload-dependencies\$(_WorkloadToInstall).proj</_WorkloadPackagesProject>
       <_WorkloadToolAssembly>$([MSBuild]::NormalizePath('$(BootstrapOutputDirectory)', '$(DotNetTargetFramework)', 'workload-tools.dll'))</_WorkloadToolAssembly>

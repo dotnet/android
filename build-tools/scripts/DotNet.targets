@@ -128,14 +128,14 @@
     />
   </Target>
 
-  <Target Name="InstallMaui" DependsOnTargets="GetXAVersionInfo">
+  <Target Name="InstallMaui" DependsOnTargets="GetXAVersionInfo;_DetermineLocalSdkFeatureBand">
     <Error Text="%24(MauiVersion) must be specified." Condition=" '$(MauiVersion)' == '' and '$(MauiUseLocalPacks)' != 'true' " />
     <PropertyGroup>
       <_TempDirectory>$(BootstrapOutputDirectory).xa-workload-temp-$([System.IO.Path]::GetRandomFileName())</_TempDirectory>
       <MauiVersionBand Condition=" '$(MauiVersionBand)' == '' ">$(DotNetSdkManifestsFolder)</MauiVersionBand>
       <_MauiWorkloadRoot>$(BuildOutputDirectory)lib</_MauiWorkloadRoot>
       <_MauiWorkloadRoot Condition=" Exists('$(BuildOutputDirectory)workload/sdk-manifests') ">$(BuildOutputDirectory)workload</_MauiWorkloadRoot>
-      <_MauiAndroidManifestFolder>$(_MauiWorkloadRoot)/sdk-manifests/$(DotNetSdkManifestsFolder)/microsoft.net.sdk.android/$(AndroidPackVersionLong)/</_MauiAndroidManifestFolder>
+      <_MauiAndroidManifestFolder>$(_MauiWorkloadRoot)/sdk-manifests/$(_LocalSdkFeatureBand)/microsoft.net.sdk.android/$(AndroidPackVersionLong)/</_MauiAndroidManifestFolder>
     </PropertyGroup>
     <MakeDir Directories="$(_TempDirectory)" />
 
@@ -168,7 +168,7 @@
     </ItemGroup>
     <!-- Copy manifest to diagnostics folder if specified -->
     <Copy Condition=" '$(MauiManifestDiagnosticsPath)' != '' " SourceFiles="@(_WLManifest)" DestinationFolder="$(MauiManifestDiagnosticsPath)" />
-    <Copy SourceFiles="@(_WLManifest)" DestinationFolder="$(_MauiWorkloadRoot)/sdk-manifests/$(DotNetSdkManifestsFolder)/microsoft.net.sdk.maui/$(MauiVersion)/" />
+    <Copy SourceFiles="@(_WLManifest)" DestinationFolder="$(_MauiWorkloadRoot)/sdk-manifests/$(_LocalSdkFeatureBand)/microsoft.net.sdk.maui/$(MauiVersion)/" />
     <MSBuild Projects="$(XamarinAndroidSourcePath)build-tools/create-packs/Microsoft.Android.Sdk.proj"
         Targets="InstallWorkloadPacks"
         Properties="_WorkloadPackRoot=$(_MauiWorkloadRoot);_LocalAndroidManifestFolder=$(_MauiAndroidManifestFolder);_WorkloadToInstall=$(MauiWorkloadToInstall);MauiUseLocalPacks=$(MauiUseLocalPacks);MauiPackagePath=$(MauiPackagePath);MauiSourcePath=$(MauiSourcePath)" />

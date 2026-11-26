@@ -72,7 +72,10 @@ The `run-dotnet-preview.yaml` template opts into that behavior with
 `useLocalWorkload: true`; its `configuration` parameter selects workload paths,
 independently of the application's `-c` argument.
 The wrappers disable the MSBuild server so workload resolution does not reuse
-manifests cached by a build outside the wrapper.
+manifests cached by a build outside the wrapper. SDK commands use the repository
+root's SDK pin even from test directories with their own `global.json`; the
+caller's directory and test-runner settings are preserved. Explicit host
+commands such as `exec` and direct assembly execution are forwarded unchanged.
 
 Internal signing uses the same pinned SDK and an additional .NET 8 runtime for
 SwixBuild. The isolated Arcade adapter copies `global.json` unchanged and points

@@ -278,7 +278,7 @@ Consult this table for skill-specific context that supplements (never overrides)
 ## Phase 1: Follow the Selected Skill
 
 Read the selected skill's `SKILL.md` now and execute its documented workflow end to end. Use any
-scripts it bundles (for example `dotnet run *.cs` helpers) exactly as documented there rather than
+scripts it bundles (for example `dotnetup dotnet run *.cs` helpers) exactly as documented there rather than
 reimplementing equivalent logic ad hoc. Do not deviate from any hard rule the skill defines — treat
 those as non-negotiable regardless of how the task otherwise seems to be going.
 
