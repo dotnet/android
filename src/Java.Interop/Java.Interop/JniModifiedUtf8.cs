@@ -145,6 +145,31 @@ namespace Java.Interop {
 			GetExtraByteCount (value, paramName);
 		}
 
+		/// <summary>
+		/// Returns <paramref name="value"/> when JNI would stop reading at or before its length
+		/// (a NUL within it, or the u8 literal terminator right after it); otherwise a terminated copy.
+		/// </summary>
+		/// <safety>
+		/// A nonempty value without a NUL must have readable backing storage for the byte after its length.
+		/// </safety>
+		internal static unsafe ReadOnlySpan<byte> EnsureTerminated (ReadOnlySpan<byte> value)
+		{
+			if (value.IndexOf ((byte) 0) >= 0)
+				return value;
+			if (!value.IsEmpty) {
+				unsafe {
+					// SAFETY: The caller guarantees the byte after the span is readable.
+					fixed (byte* p = value) {
+						if (p [value.Length] == 0)
+							return value;
+					}
+				}
+			}
+			var copy = new byte [checked (value.Length + 1)];
+			value.CopyTo (copy);
+			return copy;
+		}
+
 		/// <safety>
 		/// A non-null value must remain readable and unchanged through its NUL terminator.
 		/// </safety>

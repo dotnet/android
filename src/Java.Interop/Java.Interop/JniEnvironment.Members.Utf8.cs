@@ -13,6 +13,7 @@ namespace Java.Interop {
 			/// <summary>
 			/// Looks up a JNI instance field ID using null-terminated UTF-8 name and signature spans.
 			/// Use with <c>"fieldName"u8</c> literals to avoid string marshalling overhead.
+			/// Each span ends at its length or at an earlier NUL within it.
 			/// Standard UTF-8 supplementary characters are converted to JNI modified UTF-8.
 			/// Structurally invalid UTF-8 throws <see cref="ArgumentException"/> before JNI reads it.
 			/// </summary>
@@ -33,6 +34,9 @@ namespace Java.Interop {
 				if (signature.IsEmpty)
 					throw new ArgumentException ("'signature' cannot be empty.", nameof (signature));
 
+				// SAFETY: The caller guarantees readable NUL-terminated backing storage, so the byte after each span is readable.
+				name = unsafe (JniModifiedUtf8.EnsureTerminated (name));
+				signature = unsafe (JniModifiedUtf8.EnsureTerminated (signature));
 				IntPtr __env = JniEnvironment.EnvironmentPointer;
 				unsafe {
 					// SAFETY: The caller supplies terminated readable bytes; both spans are pinned through GetFieldID and exception polling on this thread's JNIEnv.
@@ -60,6 +64,7 @@ namespace Java.Interop {
 			/// <summary>
 			/// Looks up a JNI instance method ID using null-terminated UTF-8 name and signature spans.
 			/// Use with <c>"methodName"u8</c> literals to avoid string marshalling overhead.
+			/// Each span ends at its length or at an earlier NUL within it.
 			/// Standard UTF-8 supplementary characters are converted to JNI modified UTF-8.
 			/// Structurally invalid UTF-8 throws <see cref="ArgumentException"/> before JNI reads it.
 			/// </summary>
@@ -80,6 +85,9 @@ namespace Java.Interop {
 				if (signature.IsEmpty)
 					throw new ArgumentException ("'signature' cannot be empty.", nameof (signature));
 
+				// SAFETY: The caller guarantees readable NUL-terminated backing storage, so the byte after each span is readable.
+				name = unsafe (JniModifiedUtf8.EnsureTerminated (name));
+				signature = unsafe (JniModifiedUtf8.EnsureTerminated (signature));
 				IntPtr __env = JniEnvironment.EnvironmentPointer;
 				unsafe {
 					// SAFETY: The caller's name/signature bytes stay terminated and readable; fixed covers the complete JNI method-ID lookup on the current thread.
@@ -107,6 +115,7 @@ namespace Java.Interop {
 			/// <summary>
 			/// Looks up a JNI static field ID using null-terminated UTF-8 name and signature spans.
 			/// Use with <c>"fieldName"u8</c> literals to avoid string marshalling overhead.
+			/// Each span ends at its length or at an earlier NUL within it.
 			/// Standard UTF-8 supplementary characters are converted to JNI modified UTF-8.
 			/// Structurally invalid UTF-8 throws <see cref="ArgumentException"/> before JNI reads it.
 			/// </summary>
@@ -127,6 +136,9 @@ namespace Java.Interop {
 				if (signature.IsEmpty)
 					throw new ArgumentException ("'signature' cannot be empty.", nameof (signature));
 
+				// SAFETY: The caller guarantees readable NUL-terminated backing storage, so the byte after each span is readable.
+				name = unsafe (JniModifiedUtf8.EnsureTerminated (name));
+				signature = unsafe (JniModifiedUtf8.EnsureTerminated (signature));
 				IntPtr __env = JniEnvironment.EnvironmentPointer;
 				unsafe {
 					// SAFETY: Fixed pins the caller-guaranteed terminated name/signature until this thread's static-field lookup and exception check finish.
@@ -154,6 +166,7 @@ namespace Java.Interop {
 			/// <summary>
 			/// Looks up a JNI static method ID using null-terminated UTF-8 name and signature spans.
 			/// Use with <c>"methodName"u8</c> literals to avoid string marshalling overhead.
+			/// Each span ends at its length or at an earlier NUL within it.
 			/// Standard UTF-8 supplementary characters are converted to JNI modified UTF-8.
 			/// Structurally invalid UTF-8 throws <see cref="ArgumentException"/> before JNI reads it.
 			/// </summary>
@@ -174,6 +187,9 @@ namespace Java.Interop {
 				if (signature.IsEmpty)
 					throw new ArgumentException ("'signature' cannot be empty.", nameof (signature));
 
+				// SAFETY: The caller guarantees readable NUL-terminated backing storage, so the byte after each span is readable.
+				name = unsafe (JniModifiedUtf8.EnsureTerminated (name));
+				signature = unsafe (JniModifiedUtf8.EnsureTerminated (signature));
 				IntPtr __env = JniEnvironment.EnvironmentPointer;
 				unsafe {
 					// SAFETY: The static-method name/signature satisfy the caller's termination contract and are pinned while this thread's JNIEnv consumes them.

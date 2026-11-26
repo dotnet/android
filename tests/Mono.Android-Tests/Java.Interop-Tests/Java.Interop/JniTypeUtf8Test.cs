@@ -589,6 +589,40 @@ namespace Java.InteropTests
 		}
 
 		[TestMethod]
+		[TestCategory ("JniModifiedUtf8")]
+		public void GetMembers_Utf8_UseSpanLength ()
+		{
+			using var Integer_class = new JniType ("java/lang/Integer");
+			var r = Integer_class.PeerReference;
+			// Every slice is unterminated at its length and must not include the bytes after it.
+			ReadOnlySpan<byte> hashCode = "hashCodeX"u8;
+			ReadOnlySpan<byte> intReturn = "()IX"u8;
+			ReadOnlySpan<byte> valueOf = "valueOfX"u8;
+			ReadOnlySpan<byte> valueOfSignature = "(I)Ljava/lang/Integer;X"u8;
+			ReadOnlySpan<byte> value = "valueX"u8;
+			ReadOnlySpan<byte> maxValue = "MAX_VALUEX"u8;
+			ReadOnlySpan<byte> intType = "IX"u8;
+			unsafe {
+				// SAFETY: Every slice comes from a live, NUL-terminated u8 literal and r is a live class reference.
+				Assert.IsTrue (JniEnvironment.InstanceMethods.GetMethodID (r, hashCode.Slice (0, 8), intReturn.Slice (0, 3)).IsValid);
+				Assert.IsTrue (JniEnvironment.StaticMethods.GetStaticMethodID (r, valueOf.Slice (0, 7), valueOfSignature.Slice (0, valueOfSignature.Length - 1)).IsValid);
+				Assert.IsTrue (JniEnvironment.InstanceFields.GetFieldID (r, value.Slice (0, 5), intType.Slice (0, 1)).IsValid);
+				Assert.IsTrue (JniEnvironment.StaticFields.GetStaticFieldID (r, maxValue.Slice (0, 9), intType.Slice (0, 1)).IsValid);
+				Assert.IsTrue (Integer_class.GetInstanceMethod (hashCode.Slice (0, 8), intReturn.Slice (0, 3)).IsValid);
+
+				ReadOnlySpan<byte> hash = "hashCode"u8;
+				Exception? notFound = null;
+				try {
+					_ = JniEnvironment.InstanceMethods.GetMethodID (r, hash.Slice (0, 4), "()I"u8);
+				} catch (Exception e) {
+					notFound = e;
+				}
+				Assert.IsNotNull (notFound, "GetMethodID (hash) must not find hashCode.");
+			}
+			Assert.IsFalse (JniEnvironment.Exceptions.ExceptionOccurred ().IsValid);
+		}
+
+		[TestMethod]
 		public void TryFindClass_Utf8 ()
 		{
 			// SAFETY: Both UTF-8 literals have NUL-terminated backing storage.
