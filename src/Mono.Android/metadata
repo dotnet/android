@@ -320,6 +320,8 @@
   <attr path="/api/package[@name='java.lang']/interface[@name='Iterable']" name="name">Iterable&lt;T&gt;</attr>
   <attr path="/api/package[@name='java.nio.channels']/class[@name='Channels']/method[@name='newChannel' and @return='java.nio.channels.ReadableByteChannel']" name="managedName">NewReadableChannel</attr>
   <attr path="/api/package[@name='java.nio.channels']/class[@name='Channels']/method[@name='newChannel' and @return='java.nio.channels.WritableByteChannel']" name="managedName">NewWritableChannel</attr>
+  <!-- Only interestOps() returns the operations set; interestOps(int) returns SelectionKey. -->
+  <attr path="/api/package[@name='java.nio.channels']/class[@name='SelectionKey']/method[@name='interestOps' and count(parameter)=0]" name="enumReturn">Java.Nio.Channels.Operations</attr>
   <attr path="/api/package[@name='java.util']/class[@name='Dictionary']/method/parameter[@name='key']" name="type">K</attr>
   <attr path="/api/package[@name='java.util']/class[@name='Dictionary']/method/parameter[@name='value']" name="type">V</attr>
   <attr path="/api/package[@name='java.util']/class[@name='Dictionary']" name="name">Dictionary&lt;K, V&gt;</attr>
