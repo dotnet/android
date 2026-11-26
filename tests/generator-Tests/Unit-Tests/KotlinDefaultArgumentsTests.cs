@@ -19,7 +19,7 @@ namespace generatortests
 			Assert.Contains ("kotlin-default-jni-signature=\"(Lxat/bytecode/tests/DefaultArguments;Ljava/lang/String;IZILjava/lang/Object;)Ljava/lang/String;\"", apiXml);
 			Assert.Contains ("kotlin-default-jni-signature=\"(Ljava/lang/String;IILkotlin/jvm/internal/DefaultConstructorMarker;)V\"", apiXml);
 
-			var output = KotlinInlineClassEndToEndTests.GenerateCSharp (apiXml, out _, defaultInterfaceMethods: true);
+			var output = KotlinInlineClassEndToEndTests.GenerateCSharp (apiXml, defaultInterfaceMethods: true).Output;
 
 			// fun greet (greeting: String, times: Int = 2, loud: Boolean = false)
 			Assert.Contains ("public string Greet (string greeting, int times)", output);

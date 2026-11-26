@@ -32,7 +32,7 @@ namespace generatortests
 			StringAssert.Contains (apiXml, "kotlin-inline-class-jni-type=\"Lxat/bytecode/tests/MyColor;\"");
 			StringAssert.Contains (apiXml, "kotlin-inline-class-return-jni-type=\"Lxat/bytecode/tests/MyDp;\"");
 
-			var output = GenerateCSharp (apiXml, out var gens);
+			var (output, gens) = GenerateCSharp (apiXml);
 
 			// MyColor / MyAlpha / MyDp must be projected as readonly partial structs.
 			StringAssert.Contains (output, "readonly partial struct MyColor");
@@ -84,7 +84,7 @@ namespace generatortests
 		[TestMethodAttribute]
 		public void GeneratorMarshalsBoxedKotlinInlineClasses ()
 		{
-			var output = GenerateCSharp (BuildApiXmlFromKotlinFixture (), out _, nullableReferenceTypes: true);
+			var output = GenerateCSharp (BuildApiXmlFromKotlinFixture (), nullableReferenceTypes: true).Output;
 
 			Assert.Contains ("\"box-impl\", \"(J)Lxat/bytecode/tests/MyColor;\"", output);
 			Assert.Contains ("\"unbox-impl\", \"()J\"", output);
@@ -144,7 +144,7 @@ namespace generatortests
 				    <class abstract='false' deprecated='not deprecated' extends='java.lang.Object' extends-generic-aware='java.lang.Object' jni-extends='Ljava/lang/Object;' final='true' name='Outer.Inner.Companion' static='true' visibility='public' jni-signature='Lcom/example/Outer$Inner$Companion;' />
 				  </package>
 				</api>
-				""", out _, nullableReferenceTypes: true);
+				""", nullableReferenceTypes: true).Output;
 
 			// A nested value class is a struct too.
 			Assert.Contains ("readonly partial struct Inner", output);
@@ -188,7 +188,7 @@ namespace generatortests
 				    </class>
 				  </package>
 				</api>
-				""", out _, nullableReferenceTypes: true);
+				""", nullableReferenceTypes: true).Output;
 
 			// A struct named `Value` cannot have a `Value` field (CS0542), so it stays a class.
 			Assert.Contains ("public sealed partial class Value", output);
@@ -269,7 +269,8 @@ namespace generatortests
 
 		// Drive the parsed api.xml through XmlApiImporter + Validate + the
 		// JavaInteropCodeGenerator to produce the C# binding text.
-		internal static string GenerateCSharp (string apiXml, out List<GenBase> gens, bool nullableReferenceTypes = false, bool defaultInterfaceMethods = false)
+		// Returns a tuple rather than using `out`: MSTest.SourceGeneration rejects `out` parameters on members of test classes (AOTSG0005).
+		internal static (string Output, List<GenBase> Gens) GenerateCSharp (string apiXml, bool nullableReferenceTypes = false, bool defaultInterfaceMethods = false)
 		{
 			var options = new CodeGenerationOptions { SupportNullableReferenceTypes = nullableReferenceTypes, SupportDefaultInterfaceMethods = defaultInterfaceMethods };
 			var sb = new System.Text.StringBuilder ();
@@ -277,7 +278,7 @@ namespace generatortests
 			var generator = new JavaInteropCodeGenerator (writer, options);
 
 			var doc = XDocument.Parse (apiXml);
-			gens = XmlApiImporter.Parse (doc, options);
+			var gens = XmlApiImporter.Parse (doc, options);
 
 			// Like CodeGenerator.AddTypeToTable, include nested types.
 			void AddType (GenBase gen)
@@ -316,7 +317,7 @@ namespace generatortests
 				generator.Context.ContextTypes.Pop ();
 			}
 
-			return sb.ToString ();
+			return (sb.ToString (), gens);
 		}
 	}
 }
