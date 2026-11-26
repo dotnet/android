@@ -286,10 +286,10 @@ namespace Java.Interop {
 		/// A non-null value must remain readable and unchanged through its NUL terminator
 		/// until this instance is disposed. The source storage is never freed.
 		/// </safety>
-		internal unsafe JniModifiedUtf8String (byte* value)
+		internal unsafe JniModifiedUtf8String (byte* value, string paramName)
 		{
 			// SAFETY: The caller retains the source bytes through conversion and any subsequent JNI call.
-			owned = unsafe (JniModifiedUtf8.AllocConvertedUtf8 (value, nameof (value)));
+			owned = unsafe (JniModifiedUtf8.AllocConvertedUtf8 (value, paramName));
 			Pointer = owned == IntPtr.Zero ? (IntPtr) value : owned;
 		}
 

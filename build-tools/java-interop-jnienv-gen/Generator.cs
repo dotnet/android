@@ -217,7 +217,7 @@ namespace Xamarin.Java.Interop
 				if (normalizeUtf8) {
 					foreach (var p in entry.Parameters) {
 						if (p.Type is StringTypeInfo)
-							o.WriteLine ($"\t\t\t\tusing var __{p.Name}Utf8 = new JniModifiedUtf8String ((byte*) {Escape (p.Name)});");
+							o.WriteLine ($"\t\t\t\tusing var __{p.Name}Utf8 = new JniModifiedUtf8String ((byte*) {Escape (p.Name)}, \"{p.Name}\");");
 					}
 				}
 				o.Write ("\t\t\t\t");

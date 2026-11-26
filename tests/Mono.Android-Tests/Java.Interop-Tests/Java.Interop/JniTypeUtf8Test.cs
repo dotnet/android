@@ -219,6 +219,12 @@ namespace Java.InteropTests
 						methods [0] = new JniNativeMethod (supplementary, good, callback);
 						methods [1] = new JniNativeMethod (good, null, callback);
 						AssertRejected ("methods", () => JniEnvironment.Types.RegisterNatives (r, methods));
+
+						IntPtr env = JniEnvironment.EnvironmentPointer;
+						IntPtr badName = (IntPtr) badPtr, goodName = (IntPtr) good;
+						AssertRejected ("classname", () => JniNativeMethods.FindClass (env, badName));
+						AssertRejected ("name", () => JniNativeMethods.GetMethodID (env, r.Handle, badName, goodName));
+						AssertRejected ("signature", () => JniNativeMethods.GetStaticFieldID (env, r.Handle, goodName, badName));
 					}
 				}
 				Assert.IsFalse (JniEnvironment.Exceptions.ExceptionOccurred ().IsValid);
@@ -538,6 +544,48 @@ namespace Java.InteropTests
 		{
 			// SAFETY: The UTF-8 literal is terminated; only the class lookup is expected to fail.
 			Assert.ThrowsExactly<Java.Lang.ClassNotFoundException> (() => unsafe (JniEnvironment.Types.FindClass ("does/not/Exist"u8)));
+		}
+
+		[TestMethod]
+		[TestCategory ("JniModifiedUtf8")]
+		public void TryFindClass_Utf8_UsesSpanLength ()
+		{
+			// Neither slice is terminated at its length; only the span's bytes name the class.
+			ReadOnlySpan<byte> longer = "java/lang/ObjectDoesNotExist"u8;
+			ReadOnlySpan<byte> dottedLonger = "java.lang.ObjectDoesNotExist"u8;
+			ReadOnlySpan<byte> prefix = "java/lang/Object"u8;
+			ReadOnlySpan<byte> dottedPrefix = "java.lang.Object"u8;
+			// SAFETY: Every slice comes from a live, NUL-terminated u8 literal.
+			unsafe {
+				AssertFindsObject (longer.Slice (0, 16));
+				AssertFindsObject (dottedLonger.Slice (0, 16));
+				Assert.IsFalse (JniEnvironment.Types.TryFindClass (prefix.Slice (0, 13), out var obj), "java/lang/Obj");
+				Assert.IsFalse (obj.IsValid);
+				Assert.IsFalse (JniEnvironment.Types.TryFindClass (dottedPrefix.Slice (0, 13), out obj), "java.lang.Obj");
+				Assert.IsFalse (obj.IsValid);
+				Exception? notFound = null;
+				try {
+					var found = JniEnvironment.Types.FindClass (prefix.Slice (0, 13));
+					JniObjectReference.Dispose (ref found);
+				} catch (Exception x) {
+					notFound = x;
+				}
+				Assert.IsNotNull (notFound, "FindClass (java/lang/Obj) must not find java/lang/Object.");
+			}
+			Assert.IsFalse (JniEnvironment.Exceptions.ExceptionOccurred ().IsValid);
+
+			static unsafe void AssertFindsObject (ReadOnlySpan<byte> classname)
+			{
+				var expected = JniEnvironment.Types.FindClass ("java/lang/Object");
+				// SAFETY: classname is a slice of a live, NUL-terminated u8 literal.
+				Assert.IsTrue (unsafe (JniEnvironment.Types.TryFindClass (classname, out var actual)));
+				try {
+					Assert.IsTrue (JniEnvironment.Types.IsSameObject (expected, actual));
+				} finally {
+					JniObjectReference.Dispose (ref expected);
+					JniObjectReference.Dispose (ref actual);
+				}
+			}
 		}
 
 		[TestMethod]

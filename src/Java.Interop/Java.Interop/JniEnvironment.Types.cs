@@ -145,7 +145,7 @@ namespace Java.Interop
 				unsafe {
 					// SAFETY: Pin the NUL-terminated name through NewStringUTF on this thread's live JNI environment.
 					fixed (byte* pJavaName = javaName) {
-						using var nativeName = new JniModifiedUtf8String (pJavaName);
+						using var nativeName = new JniModifiedUtf8String (pJavaName, nameof (classname));
 						s = (*((JNIEnv**) env))->NewStringUTF (env, nativeName.Pointer);
 					}
 				}
@@ -556,7 +556,18 @@ namespace Java.Interop
 				// Convert dot-separated names (e.g. "java.lang.Object"u8) to JNI form ("java/lang/Object")
 				// before calling FindClass, because ART's CheckJNI aborts the process on dot-separated names.
 				bool hasDots = classname.Slice (0, nameLength).IndexOf ((byte) '.') >= 0;
-				if (!hasDots) {
+				// u8 literals are terminated immediately after their length; any other unterminated span
+				// is copied so JNI reads exactly the span's bytes rather than everything up to a later NUL.
+				bool terminated = terminator >= 0;
+				if (!terminated) {
+					unsafe {
+						// SAFETY: The caller guarantees readable NUL-terminated backing storage, so the byte after the span is readable.
+						fixed (byte* p = classname) {
+							terminated = p [classname.Length] == 0;
+						}
+					}
+				}
+				if (!hasDots && terminated) {
 					// SAFETY: No copy is made; the caller's termination guarantee applies to the pinned classname storage.
 					return unsafe (TryFindClassFromPtr (info, classname, classname, terminator, throwOnError));
 				}
