@@ -151,8 +151,33 @@ void CoreClrBootstrap::initialize () noexcept
 	sys_offset = header.sys_offset;
 	preload_offset = header.preload_offset;
 	strings_start = header.strings_offset;
+	if (preload_stride == 0 || preload_count % preload_stride != 0) {
+		invalid ("invalid JNI preload stride");
+	}
+	uint64_t next_offset = sizeof (BootstrapHeader);
+	auto validate_table = [&next_offset] (uint32_t offset, uint32_t count, uint32_t entry_size, const char *name) noexcept {
+		if (offset != next_offset || offset > body_size || count > (body_size - offset) / entry_size) {
+			invalid (name);
+		}
+		next_offset += static_cast<uint64_t> (count) * entry_size;
+	};
+	validate_table (header.env_offset, header.env_count, 8, "environment table exceeds the bootstrap body");
+	validate_table (header.sys_offset, header.sys_count, 8, "system property table exceeds the bootstrap body");
+	validate_table (header.prop_offset, header.prop_count, 8, "runtime property table exceeds the bootstrap body");
+	validate_table (header.dso_offset, header.dso_count, 16, "DSO table exceeds the bootstrap body");
+	validate_table (header.preload_offset, header.preload_count, 4, "JNI preload table exceeds the bootstrap body");
+	if (header.strings_offset != next_offset || header.strings_length == 0 ||
+		header.strings_offset > body_size || header.strings_length != body_size - header.strings_offset) {
+		invalid ("string table exceeds the bootstrap body");
+	}
 	if (header.prop_count < HOST_RUNTIME_PROPERTY_COUNT || header.prop_count > std::numeric_limits<int>::max ()) {
 		invalid ("runtime property count out of range");
+	}
+	for (uint32_t i = 0; i < preload_count; i++) {
+		uint32_t entry = read (static_cast<uint64_t> (preload_offset) + static_cast<uint64_t> (i) * 4);
+		if (entry >= header.dso_count) {
+			invalid ("preload refers to a missing DSO");
+		}
 	}
 	config = {
 		.ignore_split_configs = (header.flags & 1) != 0,
