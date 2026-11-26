@@ -499,6 +499,7 @@ namespace Java.Interop
 			/// <summary>
 			/// Finds a Java class using a null-terminated UTF-8 class name span.
 			/// Use with <c>"java/lang/Object"u8</c> literals to avoid string marshalling overhead.
+			/// The name ends at the span length or at an earlier NUL within the span.
 			/// Standard UTF-8 supplementary characters are converted to JNI modified UTF-8.
 			/// Structurally invalid UTF-8 throws <see cref="ArgumentException"/> before JNI reads it.
 			/// </summary>
@@ -519,6 +520,7 @@ namespace Java.Interop
 			/// <summary>
 			/// Tries to find a Java class using a null-terminated UTF-8 class name span.
 			/// Returns <c>true</c> if the class was found, <c>false</c> otherwise.
+			/// The name ends at the span length or at an earlier NUL within the span.
 			/// Standard UTF-8 supplementary characters are converted to JNI modified UTF-8.
 			/// Structurally invalid UTF-8 throws <see cref="ArgumentException"/> before JNI reads it.
 			/// </summary>
