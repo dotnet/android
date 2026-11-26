@@ -11,6 +11,44 @@ namespace Java.Interop {
 
 	static class JniModifiedUtf8 {
 
+		// JNI modified UTF-8 byte patterns:
+		// https://docs.oracle.com/en/java/javase/24/docs/specs/jni/types.html#modified-utf-8-strings
+		const byte MinNonNullAsciiByte = 0x01;
+		const byte MaxAsciiByte = 0x7f;
+		const char MaxTwoByteCodeUnit = '\u07ff';
+		const byte TwoByteLeadPrefix = 0xc0;
+		const byte ThreeByteLeadPrefix = 0xe0;
+		const byte ContinuationBytePrefix = 0x80;
+		const byte MaxContinuationByte = 0xbf;
+		const byte ContinuationPayloadMask = 0x3f;
+		const int ContinuationPayloadBits = 6;
+		const int SingleByteSequenceLength = 1;
+		const int TwoByteSequenceLength = 2;
+		const int ThreeByteSequenceLength = 3;
+		const int ThreeByteLeadShift = 2 * ContinuationPayloadBits;
+
+		// ART CheckUtfBytes accepts these structural lead-byte ranges, including non-scalar sequences:
+		// https://android.googlesource.com/platform/art/+/refs/heads/main/runtime/jni/check_jni.cc
+		const byte MaxTwoByteLead = 0xdf;
+		const byte MaxThreeByteLead = 0xef;
+		const byte FourByteLeadPrefix = 0xf0;
+		const byte MaxArtFourByteLead = 0xf7;
+
+		// RFC 3629 section 4 limits standard UTF-8 four-byte scalar leads to F0..F4:
+		// https://www.rfc-editor.org/rfc/rfc3629.html#section-4
+		const byte MaxUtf8FourByteLead = 0xf4;
+		const int FourByteSequenceLength = 4;
+
+		// UTF-16 surrogate encoding, RFC 2781 section 2.1:
+		// https://www.rfc-editor.org/rfc/rfc2781.html#section-2.1
+		const int SurrogatePairCodeUnitCount = 2;
+		const int SupplementaryConversionExtraBytes = SurrogatePairCodeUnitCount * ThreeByteSequenceLength - FourByteSequenceLength;
+		const int FirstSupplementaryCodePoint = 0x10000;
+		const int HighSurrogateStart = 0xd800;
+		const int LowSurrogateStart = 0xdc00;
+		const int SurrogatePayloadMask = 0x3ff;
+		const int SurrogatePayloadBits = 10;
+
 		// JNI encodes each UTF-16 code unit, including NUL and both halves of a surrogate pair.
 		internal static int GetByteCount (ReadOnlySpan<char> value)
 		{
@@ -23,15 +61,16 @@ namespace Java.Interop {
 						var chars = Vector128.Create (unsafe (MemoryMarshal.Cast<char, ushort> (value)));
 						// Like Utf16Utility's byte-count adjustment, but NUL also needs two bytes
 						// and surrogate code units each keep their three-byte encoding.
-						var twoBytes = Vector128.GreaterThan (chars, Vector128.Create ((ushort) 0x7f)) |
+						var twoBytes = Vector128.GreaterThan (chars, Vector128.Create ((ushort) MaxAsciiByte)) |
 							Vector128.Equals (chars, Vector128<ushort>.Zero);
-						var threeBytes = Vector128.GreaterThan (chars, Vector128.Create ((ushort) 0x7ff));
+						var threeBytes = Vector128.GreaterThan (chars, Vector128.Create ((ushort) MaxTwoByteCodeUnit));
 						count += Vector128<ushort>.Count + Vector128.Sum (Vector128<ushort>.Zero - twoBytes - threeBytes);
 						value = value.Slice (Vector128<ushort>.Count);
 					}
 				}
 				foreach (char c in value)
-					count += c is > '\0' and <= '\u007f' ? 1 : c <= '\u07ff' ? 2 : 3;
+					count += c is > '\0' and <= (char) MaxAsciiByte ? SingleByteSequenceLength :
+						c <= MaxTwoByteCodeUnit ? TwoByteSequenceLength : ThreeByteSequenceLength;
 			}
 			return count;
 		}
@@ -39,8 +78,8 @@ namespace Java.Interop {
 		internal static void GetBytes (ReadOnlySpan<char> value, Span<byte> destination)
 		{
 			int offset = 0;
-			if (!value.IsEmpty && value [0] is > '\0' and <= '\u007f') {
-				int asciiLength = value.IndexOfAnyExceptInRange ('\u0001', '\u007f');
+			if (!value.IsEmpty && value [0] is > '\0' and <= (char) MaxAsciiByte) {
+				int asciiLength = value.IndexOfAnyExceptInRange ((char) MinNonNullAsciiByte, (char) MaxAsciiByte);
 				if (asciiLength < 0)
 					asciiLength = value.Length;
 				if (Ascii.FromUtf16 (value.Slice (0, asciiLength), destination, out offset) != OperationStatus.Done)
@@ -53,15 +92,15 @@ namespace Java.Interop {
 
 		static void WriteChar (char c, Span<byte> destination, ref int offset)
 		{
-			if (c is > '\0' and <= '\u007f') {
+			if (c is > '\0' and <= (char) MaxAsciiByte) {
 				destination [offset++] = (byte) c;
-			} else if (c <= '\u07ff') {
-				destination [offset++] = (byte) (0xc0 | (c >> 6));
-				destination [offset++] = (byte) (0x80 | (c & 0x3f));
+			} else if (c <= MaxTwoByteCodeUnit) {
+				destination [offset++] = (byte) (TwoByteLeadPrefix | (c >> ContinuationPayloadBits));
+				destination [offset++] = (byte) (ContinuationBytePrefix | (c & ContinuationPayloadMask));
 			} else {
-				destination [offset++] = (byte) (0xe0 | (c >> 12));
-				destination [offset++] = (byte) (0x80 | ((c >> 6) & 0x3f));
-				destination [offset++] = (byte) (0x80 | (c & 0x3f));
+				destination [offset++] = (byte) (ThreeByteLeadPrefix | (c >> ThreeByteLeadShift));
+				destination [offset++] = (byte) (ContinuationBytePrefix | ((c >> ContinuationPayloadBits) & ContinuationPayloadMask));
+				destination [offset++] = (byte) (ContinuationBytePrefix | (c & ContinuationPayloadMask));
 			}
 		}
 
@@ -123,6 +162,11 @@ namespace Java.Interop {
 			if (extra == 0)
 				return IntPtr.Zero;
 
+			return AllocUtf8AsModifiedUtf8 (source, extra);
+		}
+
+		static IntPtr AllocUtf8AsModifiedUtf8 (ReadOnlySpan<byte> source, int extra)
+		{
 			int length = checked (source.Length + extra + 1);
 			IntPtr result = Marshal.AllocCoTaskMem (length);
 			try {
@@ -134,10 +178,10 @@ namespace Java.Interop {
 					while ((index = IndexOfSupplementary (source, out Rune rune)) >= 0) {
 						source.Slice (0, index).CopyTo (destination.Slice (offset));
 						offset += index;
-						int scalar = rune.Value - 0x10000;
-						WriteChar ((char) (0xd800 + (scalar >> 10)), destination, ref offset);
-						WriteChar ((char) (0xdc00 + (scalar & 0x3ff)), destination, ref offset);
-						source = source.Slice (index + 4);
+						int scalar = rune.Value - FirstSupplementaryCodePoint;
+						WriteChar ((char) (HighSurrogateStart + (scalar >> SurrogatePayloadBits)), destination, ref offset);
+						WriteChar ((char) (LowSurrogateStart + (scalar & SurrogatePayloadMask)), destination, ref offset);
+						source = source.Slice (index + FourByteSequenceLength);
 					}
 					source.CopyTo (destination.Slice (offset));
 					offset += source.Length;
@@ -161,20 +205,20 @@ namespace Java.Interop {
 			int extra = 0;
 			int position = 0;
 			int index;
-			while ((index = value.IndexOfAnyExceptInRange ((byte) 0x01, (byte) 0x7f)) >= 0) {
+			while ((index = value.IndexOfAnyExceptInRange (MinNonNullAsciiByte, MaxAsciiByte)) >= 0) {
 				position += index;
 				value = value.Slice (index);
 				int length = value [0] switch {
-					>= 0xc0 and <= 0xdf => 2,
-					>= 0xe0 and <= 0xef => 3,
-					>= 0xf0 and <= 0xf7 => 4,
+					>= TwoByteLeadPrefix and <= MaxTwoByteLead => TwoByteSequenceLength,
+					>= ThreeByteLeadPrefix and <= MaxThreeByteLead => ThreeByteSequenceLength,
+					>= FourByteLeadPrefix and <= MaxArtFourByteLead => FourByteSequenceLength,
 					_ => 0,
 				};
 				if (length == 0 || value.Length < length ||
-						value.Slice (1, length - 1).IndexOfAnyExceptInRange ((byte) 0x80, (byte) 0xbf) >= 0)
+						value.Slice (1, length - 1).IndexOfAnyExceptInRange (ContinuationBytePrefix, MaxContinuationByte) >= 0)
 					throw new ArgumentException ($"Invalid JNI modified UTF-8 sequence at byte offset {position}.", paramName);
-				if (length == 4 && Rune.DecodeFromUtf8 (value.Slice (0, 4), out _, out _) == OperationStatus.Done)
-					extra = checked (extra + 2);
+				if (length == FourByteSequenceLength && Rune.DecodeFromUtf8 (value.Slice (0, FourByteSequenceLength), out _, out _) == OperationStatus.Done)
+					extra = checked (extra + SupplementaryConversionExtraBytes);
 				position += length;
 				value = value.Slice (length);
 			}
@@ -185,13 +229,13 @@ namespace Java.Interop {
 		{
 			int offset = 0;
 			int index;
-			// Only F0..F4 start four-byte scalars; let Rune validate the complete sequence.
-			while ((index = value.IndexOfAnyInRange ((byte) 0xf0, (byte) 0xf4)) >= 0) {
+			// The lead-byte range is necessary but not sufficient; Rune validates the complete sequence.
+			while ((index = value.IndexOfAnyInRange (FourByteLeadPrefix, MaxUtf8FourByteLead)) >= 0) {
 				offset += index;
 				value = value.Slice (index);
 				if (Rune.DecodeFromUtf8 (value, out rune, out _) == OperationStatus.Done)
 					return offset;
-				// Preserve malformed bytes and existing modified UTF-8 for JNI to handle.
+				// Preserve structurally accepted sequences that are not Unicode scalars.
 				offset++;
 				value = value.Slice (1);
 			}
