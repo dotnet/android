@@ -26,7 +26,6 @@
 #include <runtime-base/jni-wrappers.hh>
 #include <runtime-base/monodroid-dl.hh>
 #include <runtime-base/runtime-environment.hh>
-#include <runtime-base/monodroid-state.hh>
 #include <runtime-base/util.hh>
 #include <shared/log_functions.hh>
 #include <shared/log_types.hh>
@@ -432,8 +431,6 @@ void Host::Java_mono_android_Runtime_initInternal (
 
 	jnienv_propagate_uncaught_exception = init.propagateUncaughtExceptionFn;
 	abort_unless (jnienv_propagate_uncaught_exception != nullptr, "Failed to obtain unmanaged-callers-only function pointer to the PropagateUncaughtException method.");
-
-	MonodroidState::mark_startup_done ();
 }
 
 auto HostCommon::Java_JNI_OnLoad (JavaVM *vm, [[maybe_unused]] void *reserved) noexcept -> jint

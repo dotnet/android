@@ -13,7 +13,6 @@
 #include "coreclr-bootstrap.hh"
 #include <runtime-base/crc32.hh>
 #include <runtime-base/dso-loader.hh>
-#include "startup-aware-lock.hh"
 
 namespace xamarin::android
 {
@@ -146,7 +145,7 @@ namespace xamarin::android
 				return nullptr;
 			}
 
-			StartupAwareLock lock (dso_handle_write_lock);
+			lock_guard lock (dso_handle_write_lock);
 			cached_handle = __atomic_load_n (&dso->handle, __ATOMIC_RELAXED);
 			if (cached_handle != nullptr) {
 				return cached_handle;
