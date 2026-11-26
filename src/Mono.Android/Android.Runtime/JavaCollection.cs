@@ -199,13 +199,16 @@ namespace Android.Runtime {
 
 				var converter = new JavaConvert.ArrayElementConverter (array);
 				IntPtr lrefArray = JNIEnv.CallObjectMethod (Handle, id_toArray);
-				for (int i = 0; i < Count; i++)
-					array.SetValue (
-							converter.FromJniHandle (
-								JNIEnv.GetObjectArrayElement (lrefArray, i),
-								JniHandleOwnership.TransferLocalRef),
-							array_index + i);
-				JNIEnv.DeleteLocalRef (lrefArray);
+				try {
+					for (int i = 0; i < Count; i++)
+						array.SetValue (
+								converter.FromJniHandle (
+									JNIEnv.GetObjectArrayElement (lrefArray, i),
+									JniHandleOwnership.TransferLocalRef),
+								array_index + i);
+				} finally {
+					JNIEnv.DeleteLocalRef (lrefArray);
+				}
 			}
 		}
 
