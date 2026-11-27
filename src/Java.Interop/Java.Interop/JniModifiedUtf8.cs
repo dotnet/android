@@ -26,9 +26,11 @@ namespace Java.Interop {
 		}
 
 		/// <summary>
-		/// Validates strict JNI modified UTF-8 (1-byte <c>0x01..0x7F</c>, 2-byte <c>C0 80</c> or
-		/// <c>C2..DF 80..BF</c>, 3-byte <c>E0 A0..BF 80..BF</c> or <c>E1..EF 80..BF 80..BF</c>).
-		/// Rejects truncated, overlong, and 4-byte standard UTF-8 sequences before JNI reads them.
+		/// Validates JNI modified UTF-8 and standard 4-byte UTF-8 sequences before JNI reads them
+		/// (1-byte <c>0x01..0x7F</c>, 2-byte <c>C0 80</c> or <c>C2..DF 80..BF</c>,
+		/// 3-byte <c>E0 A0..BF 80..BF</c> or <c>E1..EF 80..BF 80..BF</c>,
+		/// 4-byte <c>F0 90..BF</c> / <c>F1..F3 80..BF</c> / <c>F4 80..8F</c> followed by two <c>80..BF</c>).
+		/// Rejects truncated, overlong, out-of-range, and lone-continuation byte sequences.
 		/// </summary>
 		internal static void Validate (ReadOnlySpan<byte> value, string paramName)
 		{
@@ -50,13 +52,15 @@ namespace Java.Interop {
 						value [1] is >= 0x80 and <= 0xbf && value [2] is >= 0x80 and <= 0xbf &&
 						(lead != 0xe0 || value [1] >= 0xa0))
 					seqLen = 3;
+				else if (lead is >= 0xf0 and <= 0xf4 && value.Length >= 4 &&
+						value [1] is >= 0x80 and <= 0xbf && value [2] is >= 0x80 and <= 0xbf && value [3] is >= 0x80 and <= 0xbf &&
+						(lead != 0xf0 || value [1] >= 0x90) &&
+						(lead != 0xf4 || value [1] <= 0x8f))
+					seqLen = 4;
 
 				if (seqLen == 0) {
 					int position = totalLength - value.Length;
-					string message = lead is >= 0xf0 and <= 0xf4
-						? $"Invalid JNI modified UTF-8 sequence at byte offset {position}: 4-byte UTF-8 sequences are not valid modified UTF-8."
-						: $"Invalid JNI modified UTF-8 sequence at byte offset {position}.";
-					throw new ArgumentException (message, paramName);
+					throw new ArgumentException ($"Invalid JNI modified UTF-8 sequence at byte offset {position}.", paramName);
 				}
 				value = value.Slice (seqLen);
 			}

@@ -19,8 +19,8 @@ namespace Java.Interop {
 
 	/// <remarks>
 	/// For overloads accepting UTF-8 spans, the caller must ensure each span remains readable
-	/// and unchanged for the duration of the call. Inputs must be valid JNI modified UTF-8;
-	/// invalid or 4-byte standard UTF-8 sequences throw <see cref="ArgumentException"/>.
+	/// and unchanged for the duration of the call. Malformed or truncated UTF-8 sequences
+	/// throw <see cref="ArgumentException"/>.
 	/// </remarks>
 	public sealed class JniType : IDisposable {
 

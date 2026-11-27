@@ -27,6 +27,7 @@ namespace Java.InteropTests
 				[0x41], [0xc0, 0x80], [0xc2, 0x80], [0xdf, 0xbf],
 				[0xe0, 0xa0, 0x80], [0xef, 0xbf, 0xbf],
 				[0xed, 0xa0, 0x80, 0xed, 0xb0, 0x80], [0xed, 0xaf, 0xbf, 0xed, 0xbf, 0xbf],
+				[0xf0, 0x90, 0x80, 0x80], [0xf4, 0x8f, 0xbf, 0xbf],
 			];
 			for (int prefix = 0; prefix <= 33; prefix++) {
 				foreach (var bytes in valid) {
@@ -34,8 +35,8 @@ namespace Java.InteropTests
 					Array.Fill (source, (byte) 'a', 0, prefix);
 					bytes.CopyTo (source, prefix);
 					// Invalid bytes beyond the NUL terminator must not be inspected.
-					source [prefix + bytes.Length + 1] = 0xf0;
-					source [prefix + bytes.Length + 2] = 0x90;
+					source [prefix + bytes.Length + 1] = 0xf5;
+					source [prefix + bytes.Length + 2] = 0x80;
 					source [prefix + bytes.Length + 3] = 0x80;
 					source [prefix + bytes.Length + 4] = 0x80;
 					JniModifiedUtf8.Validate (source, "value");
@@ -49,8 +50,9 @@ namespace Java.InteropTests
 		}
 
 		internal static readonly byte [][] MalformedUtf8 = [
-			[0xf0], [0xf0, 0x90], [0xf0, 0x90, 0x80], [0xf0, 0x90, 0x80, 0x80],
-			[0xf4, 0x8f, 0xbf, 0xbf], [0xf5, 0x80, 0x80, 0x80], [0xf7, 0xbf, 0xbf, 0xbf],
+			[0xf0], [0xf0, 0x90], [0xf0, 0x90, 0x80],
+			[0xf0, 0x8f, 0xbf, 0xbf], [0xf4, 0x90, 0x80, 0x80],
+			[0xf5, 0x80, 0x80, 0x80], [0xf7, 0xbf, 0xbf, 0xbf],
 			[0xe0, 0xa0], [0xe0, 0x80, 0x80], [0xe0, 0x9f, 0xbf],
 			[0xc0], [0xc0, 0x81], [0xc1, 0x80], [0xc2],
 			[0x80], [0xbf], [0xf8, 0x80, 0x80, 0x80, 0x80], [0xff], [0xc2, 0x41],
@@ -69,31 +71,28 @@ namespace Java.InteropTests
 					source [prefix + bytes.Length + 1] = 0x80;
 					source [prefix + bytes.Length + 2] = 0x80;
 					source [prefix + bytes.Length + 3] = 0x80;
-					bool expectFourByteHint = bytes [0] is >= 0xf0 and <= 0xf4;
-					AssertInvalid (source, prefix, expectFourByteHint);
+					AssertInvalid (source, prefix);
 				}
 			}
 
-			static void AssertInvalid (byte [] source, int offset, bool expectFourByteHint)
+			static void AssertInvalid (byte [] source, int offset)
 			{
 				var eSpan = Assert.ThrowsExactly<ArgumentException> (() => JniModifiedUtf8.Validate (source, "value"));
-				AssertMessage (eSpan, offset, expectFourByteHint);
+				AssertMessage (eSpan, offset);
 				unsafe {
 					// SAFETY: source stays pinned and NUL-terminated through validation.
 					fixed (byte* pinned = source) {
 						IntPtr pointer = (IntPtr) pinned;
 						var ePtr = Assert.ThrowsExactly<ArgumentException> (() => JniModifiedUtf8.Validate ((byte*) pointer, "value"));
-						AssertMessage (ePtr, offset, expectFourByteHint);
+						AssertMessage (ePtr, offset);
 					}
 				}
 			}
 
-			static void AssertMessage (ArgumentException e, int offset, bool expectFourByteHint)
+			static void AssertMessage (ArgumentException e, int offset)
 			{
 				Assert.AreEqual ("value", e.ParamName);
 				StringAssert.Contains (e.Message, $"byte offset {offset}");
-				if (expectFourByteHint)
-					StringAssert.Contains (e.Message, "4-byte UTF-8");
 			}
 		}
 
@@ -119,19 +118,9 @@ namespace Java.InteropTests
 				AssertRejected ("name", () => { _ = unsafe (JniEnvironment.InstanceMethods.GetMethodID (r, "\0hashCode"u8, "()I"u8)); });
 				AssertRejected ("signature", () => { _ = unsafe (JniEnvironment.StaticMethods.GetStaticMethodID (r, "x"u8, "\0()V"u8)); });
 
-				var nullName = default (JniNativeMethodRegistration);
-				nullName.Signature = "()V";
-				nullName.Marshaler = new Action (() => {});
-				var nullSignature = nullName;
-				nullSignature.Name = "x";
-				nullSignature.Signature = default (JniNativeMethodRegistration).Signature;
-				// SAFETY: Null names and signatures are rejected before JNI can retain the callback.
-				AssertRejected ("methods", () => { unsafe { Object_class.RegisterNativeMethods (nullName); } });
-				AssertRejected ("methods", () => { unsafe { Object_class.RegisterNativeMethods (nullSignature); } });
 				unsafe {
 					// SAFETY: All buffers stay pinned and terminated; validation throws before JNI sees the callback.
 					fixed (byte* good = "native"u8)
-					fixed (byte* supplementary = "native\U00010000"u8)
 					fixed (byte* badPtr = bad) {
 						var callback = (IntPtr) (delegate* unmanaged<IntPtr, IntPtr, IntPtr, int>) &UnicodeNativeCallback;
 						var methods = new JniNativeMethod [] {
@@ -140,7 +129,7 @@ namespace Java.InteropTests
 						};
 						AssertRejected ("signature", () => JniEnvironment.Types.RegisterNatives (r, methods));
 
-						methods [0] = new JniNativeMethod (supplementary, good, callback);
+						methods [0] = new JniNativeMethod (badPtr, good, callback);
 						AssertRejected ("name", () => JniEnvironment.Types.RegisterNatives (r, methods));
 
 						methods [0] = default;
@@ -227,13 +216,6 @@ namespace Java.InteropTests
 			using (var fromModifiedUtf8 = unsafe (new JniType (modifiedName))) {
 				Assert.IsTrue (fromModifiedUtf8.PeerReference.IsValid);
 			}
-			// 4-byte standard UTF-8 is rejected before JNI.
-			Assert.ThrowsExactly<ArgumentException> (() => {
-				using var _ = unsafe (new JniType ("net/dot/jni/test/UnicodeNames$Value\U00010000"u8));
-			});
-			Assert.ThrowsExactly<ArgumentException> (() => {
-				using var _ = new JniType ("net/dot/jni/test/UnicodeNames$Value\U00010000");
-			});
 		}
 
 		[TestMethod]
@@ -276,15 +258,6 @@ namespace Java.InteropTests
 						Assert.AreEqual (identity.ID, fromByteSignature?.ID);
 					}
 				}
-
-				// 4-byte standard UTF-8 (u8 literals and strings) is rejected before JNI.
-				Assert.ThrowsExactly<ArgumentException> (() => unsafe (type.GetInstanceMethod ("method\U00010000"u8, "()I"u8)));
-				Assert.ThrowsExactly<ArgumentException> (() => unsafe (type.GetStaticMethod ("staticMethod\U00010000"u8, "()I"u8)));
-				Assert.ThrowsExactly<ArgumentException> (() => unsafe (type.GetInstanceField ("field\U00010000"u8, "I"u8)));
-				Assert.ThrowsExactly<ArgumentException> (() => unsafe (type.GetStaticField ("staticField\U00010000"u8, "I"u8)));
-				Assert.ThrowsExactly<ArgumentException> (() => unsafe (type.GetInstanceField ("value"u8, "Lnet/dot/jni/test/UnicodeNames$Value\U00010000;"u8)));
-				Assert.ThrowsExactly<ArgumentException> (() => type.GetInstanceMethod ("method\U00010000", "()I"));
-				Assert.ThrowsExactly<ArgumentException> (() => type.GetInstanceMethod ("method\U00010000".AsSpan (), "()I".AsSpan ()));
 			}
 		}
 

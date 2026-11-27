@@ -18,6 +18,26 @@ namespace Java.InteropTests {
 		const string ClassName = "net/dot/jni/test/RegisterNativesTestType";
 
 		[TestMethod]
+		[TestCategory ("JniModifiedUtf8")]
+		[UnconditionalSuppressMessage ("AOT", "IL3050", Justification = "Delegate registration tests run only on runtimes supporting dynamic code.")]
+		public void RegisterNativeMethods_RejectsNullNameOrSignature ()
+		{
+			using (var type = new JniType (ClassName)) {
+				var nullName = default (JniNativeMethodRegistration);
+				nullName.Signature = "()V";
+				nullName.Marshaler = new Action (() => {});
+				var nullSignature = default (JniNativeMethodRegistration);
+				nullSignature.Name = "x";
+				nullSignature.Marshaler = new Action (() => {});
+				// SAFETY: Null names and signatures are rejected before JNI can retain the callback.
+				var eName = Assert.ThrowsExactly<ArgumentException> (() => { unsafe { type.RegisterNativeMethods (nullName); } });
+				Assert.AreEqual ("methods", eName.ParamName);
+				var eSig = Assert.ThrowsExactly<ArgumentException> (() => { unsafe { type.RegisterNativeMethods (nullSignature); } });
+				Assert.AreEqual ("methods", eSig.ParamName);
+			}
+		}
+
+		[TestMethod]
 		public void RetainsTransferredArrayUntilUnregistration ()
 		{
 			using (var type = new JniType (ClassName)) {

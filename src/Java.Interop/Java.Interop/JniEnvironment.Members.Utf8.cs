@@ -68,7 +68,7 @@ namespace Java.Interop {
 			/// Looks up a JNI instance field ID using JNI modified UTF-8 name and signature spans.
 			/// Use with <c>"fieldName"u8</c> literals to avoid string marshalling overhead.
 			/// Each span ends at its length or at an earlier NUL within it.
-			/// Invalid or 4-byte standard UTF-8 throws <see cref="ArgumentException"/> before JNI reads it.
+			/// Malformed or truncated UTF-8 throws <see cref="ArgumentException"/> before JNI reads it.
 			/// </summary>
 			/// <safety>
 			/// The caller must keep <paramref name="name"/> and <paramref name="signature"/> readable
@@ -87,7 +87,7 @@ namespace Java.Interop {
 			/// Looks up a JNI instance method ID using JNI modified UTF-8 name and signature spans.
 			/// Use with <c>"methodName"u8</c> literals to avoid string marshalling overhead.
 			/// Each span ends at its length or at an earlier NUL within it.
-			/// Invalid or 4-byte standard UTF-8 throws <see cref="ArgumentException"/> before JNI reads it.
+			/// Malformed or truncated UTF-8 throws <see cref="ArgumentException"/> before JNI reads it.
 			/// </summary>
 			/// <safety>
 			/// The caller must keep <paramref name="name"/> and <paramref name="signature"/> readable
@@ -106,7 +106,7 @@ namespace Java.Interop {
 			/// Looks up a JNI static field ID using JNI modified UTF-8 name and signature spans.
 			/// Use with <c>"fieldName"u8</c> literals to avoid string marshalling overhead.
 			/// Each span ends at its length or at an earlier NUL within it.
-			/// Invalid or 4-byte standard UTF-8 throws <see cref="ArgumentException"/> before JNI reads it.
+			/// Malformed or truncated UTF-8 throws <see cref="ArgumentException"/> before JNI reads it.
 			/// </summary>
 			/// <safety>
 			/// The caller must keep <paramref name="name"/> and <paramref name="signature"/> readable
@@ -125,7 +125,7 @@ namespace Java.Interop {
 			/// Looks up a JNI static method ID using JNI modified UTF-8 name and signature spans.
 			/// Use with <c>"methodName"u8</c> literals to avoid string marshalling overhead.
 			/// Each span ends at its length or at an earlier NUL within it.
-			/// Invalid or 4-byte standard UTF-8 throws <see cref="ArgumentException"/> before JNI reads it.
+			/// Malformed or truncated UTF-8 throws <see cref="ArgumentException"/> before JNI reads it.
 			/// </summary>
 			/// <safety>
 			/// The caller must keep <paramref name="name"/> and <paramref name="signature"/> readable

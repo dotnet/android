@@ -364,7 +364,7 @@ namespace Java.Interop
 			/// Registers JNI native methods using blittable <see cref="JniNativeMethod"/> structs
 			/// with raw function pointers and NUL-terminated JNI modified UTF-8 name/signature pointers.
 			/// Calls the JNI RegisterNatives function directly without delegate marshaling.
-			/// Invalid or 4-byte standard UTF-8 throws <see cref="ArgumentException"/> before JNI reads it.
+			/// Malformed or truncated UTF-8 throws <see cref="ArgumentException"/> before JNI reads it.
 			/// </summary>
 			/// <safety>
 			/// Each method's name and signature must address readable NUL-terminated JNI modified UTF-8 memory
