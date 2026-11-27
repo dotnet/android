@@ -6,7 +6,7 @@ Load this file only when the user asks to analyze .binlog artifacts from a build
 
 | Tool | Check | Install |
 |------|-------|---------|
-| `binlogtool` | `dotnet tool list -g \| grep binlogtool` | `dotnet tool install -g binlogtool` |
+| `binlogtool` | `dotnet tool list -g \| grep binlogtool` | `dotnet tool install -g binlogtool --configfile <absolute-path-to-repo>/NuGet.config` |
 
 ## Download .binlog artifacts
 

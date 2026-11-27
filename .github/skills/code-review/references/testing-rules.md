@@ -12,7 +12,7 @@ Guidance for test code. The repo-specific conventions (e.g., `BaseTest`,
 | **`BaseTest`** | Build integration fixtures that need its project, SDK, or platform helpers can follow existing `BaseTest` patterns; standalone tooling fixtures need not inherit it. |
 | **Test framework** | Follow the fixture's NUnit or MSTest conventions; disable parallel execution only when needed. |
 | **Test command** | See the `tests` skill: standalone tooling uses `dotnet test`; full-build tests use the local SDK. |
-| **Tests must earn their place** | Prefer existing coverage and tests of meaningful behavior or regressions; refactors can need characterization tests. Avoid duplicates, brittle GC-timing tests, and tests that only assert trivial implementation details or removed code. |
+| **Tests must earn their place** | Flag new tests that duplicate coverage, overfit the implementation, or rely on GC timing. Request a test only for an unprotected real regression, never as a default. |
 | **Test assertions** | Assert the relevant behavior and add diagnostic context when a failure would otherwise be ambiguous. |
 | **Deterministic test data** | Tests should not depend on system locale, timezone, or current date. Use explicit `CultureInfo.InvariantCulture` and hardcoded dates when testing formatting. |
 | **Android tools SDK/JDK fixtures** | Tests under `tests/Xamarin.Android.Tools.AndroidSdk-Tests/` commonly build isolated fake SDK/JDK layouts and platform-specific tool scripts (`.bat` on Windows, shell scripts on Unix). Keep these fixtures self-contained and cleaned up in setup/teardown rather than depending on the developer machine's installed SDK/JDK. |
