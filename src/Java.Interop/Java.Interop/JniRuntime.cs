@@ -90,9 +90,10 @@ namespace Java.Interop
 
 			public  IntPtr                      InvocationPointer           {get; set;}
 			public  IntPtr                      EnvironmentPointer          {get; set;}
-			/// <summary>Required callback for registering native cleanup for threads attached by this runtime.</summary>
+			/// <summary>Optional callback for registering native cleanup for threads attached by this runtime.</summary>
+			/// <remarks>When not set, threads that this runtime attaches stay attached to the VM when they exit.</remarks>
 			/// <safety>
-			/// Must be a process-lifetime function with the declared unmanaged ABI. It receives a JNI environment
+			/// When set, must be a process-lifetime function with the declared unmanaged ABI. It receives a JNI environment
 			/// belonging to the current thread, supports concurrent calls, and must not detach the thread before returning.
 			/// </safety>
 			public safe delegate* unmanaged<IntPtr, void> ThreadDetachCallback {get; init;}
@@ -204,7 +205,7 @@ namespace Java.Interop
 		/// with readable JNI table storage. When only the VM is supplied, initialization obtains an environment
 		/// through GetEnv or attaches the current thread. Any supplied class-loader reference must remain live
 		/// until initialization duplicates it; local references must belong to the current thread.
-		/// <paramref name="options"/> must provide a non-null thread-detachment callback with a process lifetime.
+		/// A thread-detachment callback in <paramref name="options"/>, if any, must have a process lifetime.
 		/// Do not concurrently destroy the VM, release the loader, or mutate the supplied options while construction
 		/// reads them. Construction can publish runtime state before it throws; failure alone does not release native
 		/// resources or authorize invalidating outstanding JNI references. If DestroyRuntimeOnDispose is set,
@@ -215,8 +216,6 @@ namespace Java.Interop
 			ArgumentNullException.ThrowIfNull (options);
 			if (options.InvocationPointer == IntPtr.Zero && options.EnvironmentPointer == IntPtr.Zero)
 				throw new ArgumentException ("Need either options.InvocationPointer or options.EnvironmentPointer!", nameof (options));
-			if (options.ThreadDetachCallback == null)
-				throw new ArgumentException ($"Please set {nameof (CreationOptions)}.{nameof (options.ThreadDetachCallback)}!", nameof (options));
 
 			TrackIDs     = options.TrackIDs;
 			DestroyRuntimeOnDispose     = options.DestroyRuntimeOnDispose;
@@ -406,9 +405,11 @@ namespace Java.Interop
 					throw new NotSupportedException ("AttachCurrentThread returned " + r.ToString ());
 				if (jnienv == IntPtr.Zero)
 					throw new InvalidOperationException ("AttachCurrentThread returned a null JNIEnv.");
-				unsafe {
-					// SAFETY: The host supplies a process-lifetime native callback, and jnienv belongs to this thread.
-					registerThreadDetach (jnienv);
+				if (registerThreadDetach != null) {
+					unsafe {
+						// SAFETY: The host supplies a process-lifetime native callback, and jnienv belongs to this thread.
+						registerThreadDetach (jnienv);
+					}
 				}
 				return jnienv;
 			} finally {
