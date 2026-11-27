@@ -27,120 +27,100 @@ namespace Android.Util
 		{
 		}
 		
-		static IntPtr id_append_ILjava_lang_Object_;
 		// https://developer.android.com/reference/android/util/SparseArray#append(int,%20E)
 		[Register ("append", "(ILjava/lang/Object;)V", "")]
 		public virtual void Append (int key, E value)
 		{
+			const string id = "append.(ILjava/lang/Object;)V";
 			unsafe {
-				// SAFETY: SparseArray.append.(ILjava/lang/Object;)V matches this peer's JNI ABI.
-				// GC.KeepAlive retains this peer and WithLocalJniHandle retains borrowed arguments.
-				if (id_append_ILjava_lang_Object_ == IntPtr.Zero)
-					id_append_ILjava_lang_Object_ = JNIEnv.GetMethodID (GetPeerMembers (null).GetPeerTypeHandle (), "append", "(ILjava/lang/Object;)V");
+				// SAFETY: The stack arguments match id; the helpers retain this peer and the local argument through JNI.
 				JavaConvert.WithLocalJniHandle (value, lref => {
-						JNIEnv.CallNonvirtualVoidMethod (Handle, GetPeerMembers (null).GetPeerTypeHandle (), id_append_ILjava_lang_Object_, new JValue (key), new JValue (lref));
-						return IntPtr.Zero;
+					JniArgumentValue* args = stackalloc JniArgumentValue [2] { new (key), new (lref) };
+					GetPeerMembers (null).InstanceMethods.InvokeVirtualVoidMethod (id, this, args);
+					return IntPtr.Zero;
 				});
-				GC.KeepAlive (this);
 			}
 		}
 		
-		static IntPtr id_get_I;
 		[Register ("get", "(I)Ljava/lang/Object;", "")]
 		[return: MaybeNull]
 		public new virtual E Get (int key)
 		{
+			const string id = "get.(I)Ljava/lang/Object;";
 			unsafe {
-				// SAFETY: SparseArray.get.(I)Ljava/lang/Object; matches this peer's JNI ABI.
-				// GC.KeepAlive retains this peer and result locals transfer to conversion.
-				if (id_get_I == IntPtr.Zero)
-					id_get_I = JNIEnv.GetMethodID (GetPeerMembers (null).GetPeerTypeHandle (), "get", "(I)Ljava/lang/Object;");
-				IntPtr lref = JNIEnv.CallNonvirtualObjectMethod (Handle, GetPeerMembers (null).GetPeerTypeHandle (), id_get_I, new JValue (key));
-				GC.KeepAlive (this);
-				return JavaConvert.FromJniHandle<E> (lref, JniHandleOwnership.TransferLocalRef);
+				// SAFETY: The stack argument matches id; invocation retains this peer and the result local transfers to conversion.
+				JniArgumentValue* args = stackalloc JniArgumentValue [1] { new (key) };
+				var result = GetPeerMembers (null).InstanceMethods.InvokeVirtualObjectMethod (id, this, args);
+				return JavaConvert.FromJniHandle<E> (result.Handle, JniHandleOwnership.TransferLocalRef);
 			}
 		}
 
-		static IntPtr id_get_ILjava_lang_Object_;
 		[Register ("get", "(ILjava/lang/Object;)Ljava/lang/Object;", "")]
 		[return: MaybeNull]
 		public virtual E Get (int key, E valueIfKeyNotFound)
 		{
+			const string id = "get.(ILjava/lang/Object;)Ljava/lang/Object;";
 			unsafe {
-				// SAFETY: SparseArray.get.(ILjava/lang/Object;)Ljava/lang/Object; matches this peer's JNI ABI.
-				// GC.KeepAlive retains this peer and WithLocalJniHandle retains borrowed arguments.
-				if (id_get_ILjava_lang_Object_ == IntPtr.Zero)
-					id_get_ILjava_lang_Object_ = JNIEnv.GetMethodID (GetPeerMembers (null).GetPeerTypeHandle (), "get", "(ILjava/lang/Object;)Ljava/lang/Object;");
-				IntPtr value = JavaConvert.WithLocalJniHandle (valueIfKeyNotFound,
-						lref => JNIEnv.CallNonvirtualObjectMethod (Handle, GetPeerMembers (null).GetPeerTypeHandle (), id_get_ILjava_lang_Object_, new JValue (key), new JValue (lref)));
-				GC.KeepAlive (this);
-				return JavaConvert.FromJniHandle<E> (value, JniHandleOwnership.TransferLocalRef);
+				// SAFETY: The stack arguments match id; the helpers retain this peer and the local argument through JNI.
+				var result = JavaConvert.WithLocalJniHandle (valueIfKeyNotFound, lref => {
+					JniArgumentValue* args = stackalloc JniArgumentValue [2] { new (key), new (lref) };
+					return GetPeerMembers (null).InstanceMethods.InvokeVirtualObjectMethod (id, this, args);
+				});
+				return JavaConvert.FromJniHandle<E> (result.Handle, JniHandleOwnership.TransferLocalRef);
 			}
 		}
 
-		static IntPtr id_indexOfValue_Ljava_lang_Object_;
 		[Register ("indexOfValue", "(Ljava/lang/Object;)I", "")]
 		public virtual int IndexOfValue (E value)
 		{
+			const string id = "indexOfValue.(Ljava/lang/Object;)I";
 			unsafe {
-				// SAFETY: SparseArray.indexOfValue.(Ljava/lang/Object;)I matches this peer's JNI ABI.
-				// GC.KeepAlive retains this peer and WithLocalJniHandle retains borrowed arguments.
-				if (id_indexOfValue_Ljava_lang_Object_ == IntPtr.Zero)
-					id_indexOfValue_Ljava_lang_Object_ = JNIEnv.GetMethodID (GetPeerMembers (null).GetPeerTypeHandle (), "indexOfValue", "(Ljava/lang/Object;)I");
-				int result = JavaConvert.WithLocalJniHandle (value,
-						lref => JNIEnv.CallNonvirtualIntMethod (Handle, GetPeerMembers (null).GetPeerTypeHandle (), id_indexOfValue_Ljava_lang_Object_, new JValue (lref)));
-				GC.KeepAlive (this);
-				return result;
+				// SAFETY: The stack argument matches id; the helpers retain this peer and the local argument through JNI.
+				return JavaConvert.WithLocalJniHandle (value, lref => {
+					JniArgumentValue* args = stackalloc JniArgumentValue [1] { new (lref) };
+					return GetPeerMembers (null).InstanceMethods.InvokeVirtualInt32Method (id, this, args);
+				});
 			}
 		}
 
-		static IntPtr id_put_ILjava_lang_Object_;
 		[Register ("put", "(ILjava/lang/Object;)V", "")]
 		public virtual void Put (int key, E value)
 		{
+			const string id = "put.(ILjava/lang/Object;)V";
 			unsafe {
-				// SAFETY: SparseArray.put.(ILjava/lang/Object;)V matches this peer's JNI ABI.
-				// GC.KeepAlive retains this peer and WithLocalJniHandle retains borrowed arguments.
-				if (id_put_ILjava_lang_Object_ == IntPtr.Zero)
-					id_put_ILjava_lang_Object_ = JNIEnv.GetMethodID (GetPeerMembers (null).GetPeerTypeHandle (), "put", "(ILjava/lang/Object;)V");
+				// SAFETY: The stack arguments match id; the helpers retain this peer and the local argument through JNI.
 				JavaConvert.WithLocalJniHandle (value, lref => {
-						JNIEnv.CallNonvirtualVoidMethod (Handle, GetPeerMembers (null).GetPeerTypeHandle (), id_put_ILjava_lang_Object_, new JValue (key), new JValue (lref));
-						return IntPtr.Zero;
+					JniArgumentValue* args = stackalloc JniArgumentValue [2] { new (key), new (lref) };
+					GetPeerMembers (null).InstanceMethods.InvokeVirtualVoidMethod (id, this, args);
+					return IntPtr.Zero;
 				});
-				GC.KeepAlive (this);
 			}
 		}
 
-		static IntPtr id_setValueAt_ILjava_lang_Object_;
 		[Register ("setValueAt", "(ILjava/lang/Object;)V", "")]
 		public virtual void SetValueAt (int index, E value)
 		{
+			const string id = "setValueAt.(ILjava/lang/Object;)V";
 			unsafe {
-				// SAFETY: SparseArray.setValueAt.(ILjava/lang/Object;)V matches this peer's JNI ABI.
-				// GC.KeepAlive retains this peer and WithLocalJniHandle retains borrowed arguments.
-				if (id_setValueAt_ILjava_lang_Object_ == IntPtr.Zero)
-					id_setValueAt_ILjava_lang_Object_ = JNIEnv.GetMethodID (GetPeerMembers (null).GetPeerTypeHandle (), "setValueAt", "(ILjava/lang/Object;)V");
+				// SAFETY: The stack arguments match id; the helpers retain this peer and the local argument through JNI.
 				JavaConvert.WithLocalJniHandle (value, lref => {
-						JNIEnv.CallNonvirtualVoidMethod (Handle, GetPeerMembers (null).GetPeerTypeHandle (), id_setValueAt_ILjava_lang_Object_, new JValue (index), new JValue (lref));
-						return IntPtr.Zero;
+					JniArgumentValue* args = stackalloc JniArgumentValue [2] { new (index), new (lref) };
+					GetPeerMembers (null).InstanceMethods.InvokeVirtualVoidMethod (id, this, args);
+					return IntPtr.Zero;
 				});
-				GC.KeepAlive (this);
 			}
 		}
 		
-		static IntPtr id_valueAt_I;
 		[Register ("valueAt", "(I)Ljava/lang/Object;", "")]
 		[return: MaybeNull]
 		public new virtual E ValueAt (int index)
 		{
+			const string id = "valueAt.(I)Ljava/lang/Object;";
 			unsafe {
-				// SAFETY: SparseArray.valueAt.(I)Ljava/lang/Object; matches this peer's JNI ABI.
-				// GC.KeepAlive retains this peer and result locals transfer to conversion.
-				if (id_valueAt_I == IntPtr.Zero)
-					id_valueAt_I = JNIEnv.GetMethodID (GetPeerMembers (null).GetPeerTypeHandle (), "valueAt", "(I)Ljava/lang/Object;");
-				IntPtr lref = JNIEnv.CallNonvirtualObjectMethod (Handle, GetPeerMembers (null).GetPeerTypeHandle (), id_valueAt_I, new JValue (index));
-				GC.KeepAlive (this);
-				return JavaConvert.FromJniHandle<E> (lref, JniHandleOwnership.TransferLocalRef);
+				// SAFETY: The stack argument matches id; invocation retains this peer and the result local transfers to conversion.
+				JniArgumentValue* args = stackalloc JniArgumentValue [1] { new (index) };
+				var result = GetPeerMembers (null).InstanceMethods.InvokeVirtualObjectMethod (id, this, args);
+				return JavaConvert.FromJniHandle<E> (result.Handle, JniHandleOwnership.TransferLocalRef);
 			}
 		}
 	}
