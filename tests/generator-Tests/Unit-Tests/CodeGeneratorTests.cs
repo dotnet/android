@@ -1453,9 +1453,9 @@ namespace generatortests
 			CollectionAssert.AreEqual (new [] { "0618" }, memberPragmas ["public virtual void TakeLegacyCollection ("]);
 			CollectionAssert.AreEqual (new [] { "0809" }, memberPragmas ["public override void KeepAlive ("]);
 			CollectionAssert.AreEqual (new [] { "0465" }, memberPragmas ["public virtual void Finalize ("]);
-			CollectionAssert.IsEmpty (memberPragmas ["public virtual void TakeNewerDeprecated ("]);
-			CollectionAssert.IsEmpty (memberPragmas ["public override void AlreadyOld ("]);
-			CollectionAssert.IsEmpty (memberPragmas ["public virtual void Unrelated ("]);
+			Assert.IsEmpty (memberPragmas ["public virtual void TakeNewerDeprecated ("]);
+			Assert.IsEmpty (memberPragmas ["public override void AlreadyOld ("]);
+			Assert.IsEmpty (memberPragmas ["public virtual void Unrelated ("]);
 		}
 
 		protected static IEnumerable<string> GetLinesThatStartWith (string source, string value)

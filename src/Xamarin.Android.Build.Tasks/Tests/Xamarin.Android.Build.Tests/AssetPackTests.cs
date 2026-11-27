@@ -285,7 +285,7 @@ namespace Xamarin.Android.Build.Tests
 				app.OtherBuildItems.Remove (asset4);
 				Assert.IsTrue (appBuilder.Build (app, doNotCleanupOnUpdate: true), "Removing an asset pack should succeed.");
 				Assert.IsFalse (File.Exists (assetPack2Archive), "IncrementalClean should remove the old pack archive.");
-				Assert.IsTrue (File.Exists (assetPack1Archive, "The remaining pack archive should be preserved."));
+				Assert.IsTrue (File.Exists (assetPack1Archive), "The remaining pack archive should be preserved.");
 				Assert.IsTrue (appBuilder.Clean (app, doNotCleanupOnUpdate: true), "Clean should succeed.");
 				Assert.IsFalse (Directory.Exists (assetPacksDirectory), "Clean should remove the asset-pack intermediates.");
 			}
