@@ -52,11 +52,15 @@ macro(lib_target_options TARGET_NAME)
     )
   endif()
 
+  # The app link uses --gc-sections. Per-function and per-object sections let it drop host code that a
+  # NativeAOT app never references, such as CoreCLR-only functions in sources shared with the CoreCLR host.
   target_compile_options(
     ${TARGET_NAME}
     PRIVATE
     ${XA_DEFAULT_SYMBOL_VISIBILITY}
     ${XA_COMMON_CXX_ARGS}
+    -ffunction-sections
+    -fdata-sections
   )
 
   target_include_directories(

@@ -8,10 +8,7 @@ namespace xamarin::android {
 	public:
 		static void initialize (JavaVM *vm) noexcept;
 		static auto get_java_vm () noexcept -> JavaVM* { return jvm; }
-#if !defined (XA_HOST_NATIVEAOT)
-		// NativeAOT startup receives its JNIEnv* from the managed entry point; only CoreCLR attaches here.
 		static auto get_jnienv () noexcept -> JNIEnv*;
-#endif // !defined (XA_HOST_NATIVEAOT)
 		static void register_thread_detach (JNIEnv *env) noexcept;
 
 	private:
