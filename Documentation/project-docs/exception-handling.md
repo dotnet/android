@@ -91,11 +91,9 @@ entrypoint.
 
 ## Translating the exception
 
-CoreCLR's
-[`AndroidRuntime`](../../src/Mono.Android/Android.Runtime/AndroidRuntime.cs)
-and NativeAOT's
-[`JreRuntime`](../../src/Microsoft.Android.Runtime.NativeAOT/Java.Interop/JreRuntime.cs)
-share
+CoreCLR and NativeAOT both use
+[`AndroidRuntime`](../../src/Mono.Android/Android.Runtime/AndroidRuntime.cs),
+which delegates to
 [`AndroidExceptionManager`](../../src/Mono.Android/Android.Runtime/AndroidExceptionManager.cs)
 for raising pending exceptions and converting Java throwables back to managed
 exceptions.
@@ -166,12 +164,11 @@ Setting `RaiseThrowableEventArgs.Handled` to `true` suppresses conversion to a
 pending Java exception on those paths. This does not resume the failed managed
 method at the throw site or produce its intended return value.
 
-Hook coverage depends on the path: CoreCLR's `AndroidRuntime` override checks
-the event before delegating to the default `OnUserUnhandledException`, and the
-registered-forwarder handler also checks it through
-`AndroidEnvironment.UnhandledException`. NativeAOT's `JreRuntime` inherits the
-default `OnUserUnhandledException`; do not assume that every callback path
-raises this event identically on both runtimes.
+Hook coverage depends on the path: the `AndroidRuntime` override used by both
+CoreCLR and NativeAOT checks the event before delegating to the default
+`OnUserUnhandledException`. On CoreCLR, the registered-forwarder handler also
+checks it through `AndroidEnvironment.UnhandledException`. Do not assume that
+every callback path raises this event identically on both runtimes.
 
 If an exception escapes the Java caller without being caught, Java's
 [uncaught-exception handler](https://developer.android.com/reference/java/lang/Thread.UncaughtExceptionHandler)
