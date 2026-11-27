@@ -11,6 +11,7 @@
 #include <runtime-base/binary-blob-loader.hh>
 #include <runtime-base/app-system-properties.hh>
 #include <runtime-base/jni-wrappers.hh>
+#include <runtime-base/runtime-environment.hh>
 #include <shared/log_functions.hh>
 #include <shared/log_types.hh>
 
@@ -108,6 +109,7 @@ auto NativeAOT_JNI_OnLoad (JavaVM *vm, void*, JnienvInitializeArgs *initArgs) ->
 {
 	abort_if_invalid_pointer_argument (initArgs, "initArgs");
 	abort_if_invalid_pointer_argument (vm, "vm");
+	RuntimeEnvironment::initialize (vm);
 	JNIEnv *env = nullptr;
 	jint result = vm->GetEnv (reinterpret_cast<void**>(&env), JNI_VERSION_1_6);
 	abort_unless (result == JNI_OK && env != nullptr, "Unable to get JNI environment for NativeAOT startup");
@@ -144,6 +146,7 @@ extern "C" void NativeAOT_OnInit (JNIEnv *env, jstring language, jstring filesDi
 	initArgs->grefGcThreshold = static_cast<int>(AndroidSystem::get_gref_gc_threshold ());
 	initArgs->maxGrefCount = static_cast<int>(AndroidSystem::get_max_gref_count ());
 	initArgs->initializeGCBridge = &GCBridge::initialize_callback;
+	initArgs->registerThreadDetach = &RuntimeEnvironment::register_thread_detach;
 	initArgs->grefIGCUserPeer = create_igc_user_peer_global_ref (env);
 	initArgs->jniRemappingData = load_nativeaot_remapping ();
 }

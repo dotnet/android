@@ -101,10 +101,12 @@ static partial class JavaInteropRuntime
 
 			// SAFETY: JNI retains this thread's environment and borrowed loader through the callback; creation derives
 			// the VM from the environment and duplicates the loader, and the VM outlives the runtime.
+			// The host supplies a process-lifetime thread-detachment callback.
 			runtime = unsafe (new AndroidRuntime (
 					jnienv,
 					vm: IntPtr.Zero,
 					classLoader,
+					initArgs.registerThreadDetach,
 					new TrimmableTypeMapTypeManager (),
 					new TrimmableTypeMapValueManager ()));
 

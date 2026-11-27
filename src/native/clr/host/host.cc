@@ -406,6 +406,7 @@ void Host::Java_mono_android_Runtime_initInternal (
 	init.grefGcThreshold                                = static_cast<int>(AndroidSystem::get_gref_gc_threshold ());
 	init.maxGrefCount                                   = static_cast<int>(AndroidSystem::get_max_gref_count ());
 	init.initializeGCBridge                            = &GCBridge::initialize_callback;
+	init.registerThreadDetach                           = &RuntimeEnvironment::register_thread_detach;
 
 	init.grefLoader                                     = env->NewGlobalRef (loader);
 	init.grefIGCUserPeer                                = RuntimeUtil::get_class_from_runtime_field (env, runtimeClass, "mono_android_IGCUserPeer"sv, true);

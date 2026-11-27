@@ -90,6 +90,13 @@ namespace Java.Interop
 
 			public  IntPtr                      InvocationPointer           {get; set;}
 			public  IntPtr                      EnvironmentPointer          {get; set;}
+			/// <summary>Optional callback for registering native cleanup for threads attached by this runtime.</summary>
+			/// <remarks>When not set, threads that this runtime attaches stay attached to the VM when they exit.</remarks>
+			/// <safety>
+			/// When set, must be a process-lifetime function with the declared unmanaged ABI. It receives a JNI environment
+			/// belonging to the current thread, supports concurrent calls, and must not detach the thread before returning.
+			/// </safety>
+			public safe delegate* unmanaged<IntPtr, void> ThreadDetachCallback {get; init;}
 
 			public  JniObjectReference          ClassLoader                 {get; set;}
 			[Obsolete ("No longer supported; Class.forName() is now used instead")]
@@ -190,6 +197,7 @@ namespace Java.Interop
 		public      JniVersion                          JniVersion          {get; private set;}
 
 		internal    bool                                TrackIDs            {get; private set;}
+		readonly safe delegate* unmanaged<IntPtr, void> registerThreadDetach;
 
 		/// <safety>
 		/// The VM in <paramref name="options"/> must have the JNI invocation-table ABI and remain live
@@ -197,6 +205,7 @@ namespace Java.Interop
 		/// with readable JNI table storage. When only the VM is supplied, initialization obtains an environment
 		/// through GetEnv or attaches the current thread. Any supplied class-loader reference must remain live
 		/// until initialization duplicates it; local references must belong to the current thread.
+		/// A thread-detachment callback in <paramref name="options"/>, if any, must have a process lifetime.
 		/// Do not concurrently destroy the VM, release the loader, or mutate the supplied options while construction
 		/// reads them. Construction can publish runtime state before it throws; failure alone does not release native
 		/// resources or authorize invalidating outstanding JNI references. If DestroyRuntimeOnDispose is set,
@@ -210,6 +219,7 @@ namespace Java.Interop
 
 			TrackIDs     = options.TrackIDs;
 			DestroyRuntimeOnDispose     = options.DestroyRuntimeOnDispose;
+			registerThreadDetach = options.ThreadDetachCallback;
 
 			JniVersion          = options.JniVersion;
 
@@ -237,11 +247,8 @@ namespace Java.Interop
 			}
 
 			var envp    = options.EnvironmentPointer;
-			if (envp == IntPtr.Zero &&
-					Invoker.GetEnv (InvocationPointer, out envp, (int) JniVersion) != JNI_OK &&
-					(envp = _AttachCurrentThread ()) == IntPtr.Zero) {
-				// Shouldn't be reached, as _AttachCurrentThread() throws
-				throw new InvalidOperationException ("Could not obtain JNIEnv* value!");
+			if (envp == IntPtr.Zero) {
+				envp = _AttachCurrentThread ();
 			}
 			var env     = new JniEnvironmentInfo (envp, this);
 			JniEnvironment.SetEnvironmentInfo (env);
@@ -375,6 +382,15 @@ namespace Java.Interop
 		internal    IntPtr  _AttachCurrentThread (string? name = null, JniObjectReference group = default (JniObjectReference))
 		{
 			AssertValid ();
+			int status = Invoker.GetEnv (InvocationPointer, out IntPtr jnienv, (int) JniVersion);
+			if (status == JNI_OK) {
+				if (jnienv == IntPtr.Zero)
+					throw new InvalidOperationException ("GetEnv returned a null JNIEnv.");
+				return jnienv;
+			}
+			if (status != JNI_EDETACHED)
+				throw new NotSupportedException ("GetEnv returned " + status.ToString ());
+
 			var threadArgs = new JavaVMThreadAttachArgs () {
 				version = JniVersion,
 			};
@@ -383,11 +399,18 @@ namespace Java.Interop
 					threadArgs.name = Marshal.StringToHGlobalAnsi (name);
 				if (group.IsValid)
 					threadArgs.group = group.Handle;
-				IntPtr jnienv;
 				// SAFETY: threadArgs is local; its optional name allocation and supplied group stay live through attachment.
 				int r = unsafe (Invoker.AttachCurrentThread (InvocationPointer, out jnienv, ref threadArgs));
 				if (r != JNI_OK)
 					throw new NotSupportedException ("AttachCurrentThread returned " + r.ToString ());
+				if (jnienv == IntPtr.Zero)
+					throw new InvalidOperationException ("AttachCurrentThread returned a null JNIEnv.");
+				if (registerThreadDetach != null) {
+					unsafe {
+						// SAFETY: The host supplies a process-lifetime native callback, and jnienv belongs to this thread.
+						registerThreadDetach (jnienv);
+					}
+				}
 				return jnienv;
 			} finally {
 				unsafe {

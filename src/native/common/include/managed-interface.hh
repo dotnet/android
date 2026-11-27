@@ -12,6 +12,7 @@ namespace xamarin::android {
 	using jnienv_propagate_uncaught_exception_fn = void (*)(JNIEnv *env, jobject javaThread, jthrowable javaException);
 	using jnienv_gc_bridge_fn = void (*)(MarkCrossReferencesArgs*);
 	using jnienv_initialize_gc_bridge_fn = jnienv_gc_bridge_fn (*)(jnienv_gc_bridge_fn);
+	using jnienv_register_thread_detach_fn = void (*)(JNIEnv*);
 
 	// NOTE: Keep this in sync with managed side in src/Mono.Android/Android.Runtime/JNIEnvInit.cs
 	struct JnienvInitializeArgs {
@@ -28,10 +29,12 @@ namespace xamarin::android {
 		jnienv_propagate_uncaught_exception_fn propagateUncaughtExceptionFn;
 		int              maxGrefCount;
 		jnienv_initialize_gc_bridge_fn initializeGCBridge;
+		jnienv_register_thread_detach_fn registerThreadDetach;
 	};
 
 	static_assert (offsetof (JnienvInitializeArgs, initializeGCBridge) == (sizeof (void*) == 8 ? 80 : 48));
-	static_assert (sizeof (JnienvInitializeArgs) == (sizeof (void*) == 8 ? 88 : 52));
+	static_assert (offsetof (JnienvInitializeArgs, registerThreadDetach) == (sizeof (void*) == 8 ? 88 : 52));
+	static_assert (sizeof (JnienvInitializeArgs) == (sizeof (void*) == 8 ? 96 : 56));
 
 	// Keep the enum values in sync with those in src/Mono.Android/AndroidRuntime/BoundExceptionType.cs
 	enum class BoundExceptionType : uint8_t

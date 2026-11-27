@@ -158,6 +158,32 @@ namespace Java.InteropTests
 		}
 
 		[TestMethod]
+		[Timeout (60_000, CooperativeCancellation = true)]
+		public async Task ManagedThreadIsDetachedOnExit ()
+		{
+			Exception? error = null;
+			Java.Lang.Thread? javaThread = null;
+			var thread = new Thread (() => {
+				try {
+					Volatile.Write (ref javaThread, Java.Lang.Thread.CurrentThread ());
+				} catch (Exception e) {
+					Volatile.Write (ref error, e);
+				}
+			});
+			thread.Start ();
+			while (thread.IsAlive)
+				await Task.Delay (10, testContext.CancellationToken);
+			Assert.IsNull (Volatile.Read (ref error), $"The worker failed: {error}");
+
+			using var exited = Volatile.Read (ref javaThread);
+			Assert.IsNotNull (exited, "The worker has no java.lang.Thread");
+			// Detaching can happen after the managed thread finishes, while the native thread exits.
+			// If the worker is never detached, this waits until the test times out.
+			while (exited.IsAlive)
+				await Task.Delay (10, testContext.CancellationToken);
+		}
+
+		[TestMethod]
 		public void DeleteLrefOnWrongThread ()
 		{
 			Console.WriteLine ("Delete JNI local refs on wrong thread...");

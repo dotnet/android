@@ -117,8 +117,6 @@ namespace Xamarin.Android.Build.Tests
 			StringAssert.DoesNotContain ("BinaryBlobLoader::load(", definitions);
 			StringAssert.DoesNotContain ("BinaryBlobLoader::load_optional(", definitions);
 			StringAssert.DoesNotContain ("OSBridge::", definitions);
-			StringAssert.DoesNotContain ("RuntimeEnvironment::", definitions,
-				"NativeAOT startup must use the supplied JNI environment without retaining a native JavaVM cache.");
 		}
 
 		[Test]

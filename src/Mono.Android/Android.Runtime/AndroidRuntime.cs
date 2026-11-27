@@ -18,14 +18,17 @@ namespace Android.Runtime {
 		/// environment is supplied, its VM must remain live for the runtime's lifetime.
 		/// <paramref name="classLoader"/> must be zero or a live JNI reference until initialization duplicates it;
 		/// any local reference must belong to the current thread.
+		/// <paramref name="threadDetachCallback"/> must be a non-null unmanaged callback that remains valid for the process lifetime.
 		/// </safety>
 		internal unsafe AndroidRuntime (IntPtr jnienv,
 				IntPtr vm,
 				IntPtr classLoader,
+				delegate* unmanaged<IntPtr, void> threadDetachCallback,
 				JniRuntime.JniTypeManager typeManager,
 				JniRuntime.JniValueManager valueManager)
 			: base (new JniRuntime.CreationOptions {
 				EnvironmentPointer      = jnienv,
+				ThreadDetachCallback    = threadDetachCallback,
 				ClassLoader             = new JniObjectReference (classLoader, JniObjectReferenceType.Global),
 				InvocationPointer       = vm,
 				ObjectReferenceManager  = new ManagedObjectReferenceManager (),

@@ -33,6 +33,7 @@ namespace Android.Runtime
 			public safe IntPtr          propagateUncaughtExceptionFn;
 			public safe int             maxGrefCount;
 			public safe delegate* unmanaged<delegate* unmanaged<MarkCrossReferencesArgs*, void>, delegate* unmanaged<MarkCrossReferencesArgs*, void>> initializeGCBridge;
+			public safe delegate* unmanaged<IntPtr, void> registerThreadDetach;
 		}
 #pragma warning restore 0649
 
@@ -56,7 +57,7 @@ namespace Android.Runtime
 
 		/// <safety>
 		/// <paramref name="args"/> must come from the native host with the matching descriptor layout,
-		/// process-lifetime remapping data, and runtime-lifetime global references.
+		/// process-lifetime remapping data and thread-detachment callback, and runtime-lifetime global references.
 		/// </safety>
 		internal static unsafe void InitializeBeforeRuntimeCreation (JnienvInitializeArgs args)
 		{
@@ -131,6 +132,7 @@ namespace Android.Runtime
 						args->env,
 						args->javaVm,
 						args->grefLoader,
+						args->registerThreadDetach,
 						new TrimmableTypeMapTypeManager (),
 						new TrimmableTypeMapValueManager ()
 				);
@@ -146,8 +148,8 @@ namespace Android.Runtime
 		}
 
 		/// <safety>
-		/// <paramref name="args"/> must retain its native remapping body for the process lifetime
-		/// and its JNI global references for the runtime lifetime.
+		/// <paramref name="args"/> must retain its native remapping body and thread-detachment callback
+		/// for the process lifetime and its JNI global references for the runtime lifetime.
 		/// </safety>
 		static unsafe void InitializeCommonState (JnienvInitializeArgs args)
 		{
