@@ -65,7 +65,8 @@ public sealed record TrimmedApp (string CaseFile, TrimmingConfiguration Configur
 /// <para>
 /// Tests in a fixture may run in parallel (<c>[Parallelizable (ParallelScope.Children)]</c>), also on the device: each test builds in
 /// its own directory, installs its own package (<c>ApplicationId</c> plus the configuration), and reads only its app's logcat output.
-/// Fixtures run one after another, so the one-time device setup of <see cref="DeviceTest"/> never runs concurrently.
+/// Launches run one at a time: an activity started in another task before the app's process attaches covers the app's activity,
+/// and Android then never creates it. Fixtures run one after another, so the one-time device setup of <see cref="DeviceTest"/> never runs concurrently.
 /// </para>
 /// <para>
 /// <see cref="BuildAndRun"/> requires a build without warnings, unless the test lists the expected warning codes, and a launch
@@ -77,6 +78,7 @@ public abstract class TrimmingTestBase : DeviceTest
 {
 	const string ResultTag = "TRIMMING_TEST_RESULT:";
 	const string ExpectationsProject = "TrimmingTests.Expectations";
+	static readonly object LaunchLock = new ();
 
 	// Tests share the device, so check it once per fixture, where restarting it can't disrupt a running test.
 	[OneTimeSetUp]
@@ -141,7 +143,9 @@ public abstract class TrimmingTestBase : DeviceTest
 		var install = RunAdbCommand ($"install -r \"{apk}\"", timeout: 120);
 		StringAssert.Contains ("Success", install, $"{caseFile} should install.");
 		try {
-			AssertLaunchReportsPass (caseFile, configuration, packageName, directory);
+			lock (LaunchLock) {
+				AssertLaunchReportsPass (caseFile, configuration, packageName, directory);
+			}
 		} finally {
 			RunAdbCommand ($"uninstall {packageName}");
 		}
