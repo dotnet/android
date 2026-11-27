@@ -34,6 +34,11 @@ void RuntimeEnvironment::register_thread_detach ([[maybe_unused]] JNIEnv *env) n
 {
 	int ret = pthread_once (&jni_env_key_once, create_jni_env_key);
 	abort_unless (ret == 0, "Unable to initialize TLS key for JNI thread detachment");
+	// Cleanup is already registered: keep its round. Another destructor may detach and re-attach the thread
+	// while it exits; restarting at round 1 would run out of rounds before the detach and leak the attachment.
+	if (pthread_getspecific (jni_env_key) != nullptr) {
+		return;
+	}
 	ret = pthread_setspecific (jni_env_key, round_value (1));
 	abort_unless (ret == 0, "Unable to register JNI thread detachment callback");
 }
