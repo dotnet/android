@@ -13,15 +13,15 @@ namespace generator.SourceWriters
 	// an overload with type 'string' as a convenience for the user.
 	public class BoundPropertyStringVariant : PropertyWriter
 	{
-		public BoundPropertyStringVariant (Property property, CodeGenerationOptions opt, BoundAbstractProperty original)
-			: this (property, opt, original.IsVirtual)
+		public BoundPropertyStringVariant (Property property, CodeGenerationOptions opt, BoundAbstractProperty original, GenBase declaringType = null)
+			: this (property, opt, original.IsVirtual, declaringType)
 		{ }
 
-		public BoundPropertyStringVariant (Property property, CodeGenerationOptions opt, BoundProperty original)
-			: this(property, opt, original.IsVirtual)
+		public BoundPropertyStringVariant (Property property, CodeGenerationOptions opt, BoundProperty original, GenBase declaringType = null)
+			: this (property, opt, original.IsVirtual, declaringType)
 		{ }
 
-		private BoundPropertyStringVariant (Property property, CodeGenerationOptions opt, bool isOriginalVirtual)
+		private BoundPropertyStringVariant (Property property, CodeGenerationOptions opt, bool isOriginalVirtual, GenBase declaringType)
 		{
 			var is_array = property.Getter.RetVal.IsArray;
 
@@ -32,6 +32,8 @@ namespace generator.SourceWriters
 			};
 
 			SetVisibility ((property.Setter ?? property.Getter).Visibility);
+			if (declaringType != null && declaringType.RequiresNewForMemberName (property.Name, opt))
+				IsShadow = true;
 
 			SourceWriterExtensions.AddSupportedOSPlatform (Attributes, property.Getter, opt);
 

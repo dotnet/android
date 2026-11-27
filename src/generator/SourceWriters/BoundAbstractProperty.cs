@@ -25,12 +25,14 @@ namespace generator.SourceWriters
 			IsAbstract = true;
 			HasGet = true;
 
-			var baseProp = gen.BaseSymbol != null ? gen.BaseSymbol.GetPropertyByName (property.Name, true) : null;
+			var isForcedNew = string.Equals ((property.Getter ?? property.Setter).ManagedOverride, "new", StringComparison.OrdinalIgnoreCase);
+			var baseProp = isForcedNew ? null : gen.BaseSymbol?.GetPropertyByName (property.Name, true);
 
 			if (baseProp != null) {
 				IsOverride = true;
 			} else {
-				IsShadow = gen.RequiresNew (property);
+				if (isForcedNew || (!ExplicitInterfaceImplementation.HasValue () && gen.RequiresNew (property, opt)))
+					IsShadow = true;
 
 				getter_callback = new MethodCallback (gen, property.Getter, opt, property.AdjustedName, false);
 

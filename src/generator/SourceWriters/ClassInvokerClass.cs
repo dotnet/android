@@ -115,7 +115,7 @@ namespace generator.SourceWriters
 					Methods.Add (new ExplicitInterfaceInvokerMethod (gen, m, opt));
 				} else {
 					m.IsOverride = true;
-					Methods.Add (new BoundMethod (klass, m, opt, false));
+					Methods.Add (new BoundMethod (klass, m, opt, false, forceOverride: true));
 
 					if (m.Asyncify)
 						Methods.Add (new MethodAsyncWrapper (m, opt));

@@ -65,16 +65,13 @@ namespace generator.SourceWriters
 				if (shouldObsolete && string.IsNullOrWhiteSpace (method.Deprecated))
 					method.Deprecated = $"Use '{iface.FullName}.{method.AdjustedName}'. This class will be removed in a future release.";
 
-				Methods.Add (new BoundMethod (iface, method, opt, true));
+				Methods.Add (new BoundMethod (iface, method, opt, true, isShadow: GenBase.RequiresNewForJavaObjectMethod (method.AdjustedName, method, opt)));
 
-				var name_and_jnisig = method.JavaName + method.JniSignature.Replace ("java/lang/CharSequence", "java/lang/String");
-				var gen_string_overload = !method.IsOverride && method.Parameters.HasCharSequence && !iface.ContainsMethod (name_and_jnisig);
-
-				if (gen_string_overload || method.IsReturnCharSequence)
-					Methods.Add (new BoundMethodStringOverload (method, opt));
+				if (iface.MethodEmitsStringOverload (method))
+					Methods.Add (new BoundMethodStringOverload (method, opt, iface, isShadow: GenBase.RequiresNewForJavaObjectMethod (method.Name, method, opt, stringOverload: true)));
 
 				if (method.Asyncify)
-					Methods.Add (new MethodAsyncWrapper (method, opt));
+					Methods.Add (new MethodAsyncWrapper (method, opt, iface, isShadow: GenBase.RequiresNewForJavaObjectMethod (method.AdjustedName + "Async", method, opt)));
 
 				method.Deprecated = original;
 			}
@@ -118,10 +115,11 @@ namespace generator.SourceWriters
 					seen.Add (f.Name);
 					needs_property = needs_property || f.NeedsProperty;
 
+					var isShadow = GenBase.RequiresNewForJavaObject (f.Name, null, opt);
 					if (f.NeedsProperty)
-						Properties.Add (new BoundFieldAsProperty (iface, f, opt));
+						Properties.Add (new BoundFieldAsProperty (iface, f, opt, isShadow));
 					else
-						Fields.Add (new BoundField (iface, f, opt));
+						Fields.Add (new BoundField (iface, f, opt, isShadow));
 				}
 			}
 
