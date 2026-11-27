@@ -139,17 +139,17 @@ namespace Java.InteropTests
 							new JniNativeMethod (good, good, callback),
 							new JniNativeMethod (good, badPtr, callback),
 						};
-						AssertRejected ("methods", () => JniEnvironment.Types.RegisterNatives (r, methods));
+						AssertRejected ("signature", () => JniEnvironment.Types.RegisterNatives (r, methods));
 
 						methods [0] = new JniNativeMethod (supplementary, good, callback);
-						AssertRejected ("methods", () => JniEnvironment.Types.RegisterNatives (r, methods));
+						AssertRejected ("name", () => JniEnvironment.Types.RegisterNatives (r, methods));
 
 						methods [0] = default;
-						AssertRejected ("methods", () => JniEnvironment.Types.RegisterNatives (r, methods));
+						AssertRejected ("name", () => JniEnvironment.Types.RegisterNatives (r, methods));
 
 						methods [0] = new JniNativeMethod (good, good, callback);
 						methods [1] = new JniNativeMethod (good, null, callback);
-						AssertRejected ("methods", () => JniEnvironment.Types.RegisterNatives (r, methods));
+						AssertRejected ("signature", () => JniEnvironment.Types.RegisterNatives (r, methods));
 
 						IntPtr env = JniEnvironment.EnvironmentPointer;
 						IntPtr badName = (IntPtr) badPtr, goodName = (IntPtr) good;

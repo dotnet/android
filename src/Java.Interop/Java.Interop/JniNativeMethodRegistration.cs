@@ -57,14 +57,16 @@ namespace Java.Interop {
 		/// <see cref="name"/> and <see cref="signature"/>, when non-null, must remain readable
 		/// and unchanged through their NUL terminators for the duration of this scan.
 		/// </safety>
-		internal unsafe readonly void Validate (string paramName)
+		internal unsafe readonly void Validate ()
 		{
 			unsafe {
-				if (name == null || signature == null)
-					throw new ArgumentException ("Native method names and signatures must not be null.", paramName);
+				if (name == null)
+					throw new ArgumentException ("Native method names and signatures must not be null.", nameof (name));
+				if (signature == null)
+					throw new ArgumentException ("Native method names and signatures must not be null.", nameof (signature));
 				// SAFETY: The caller keeps both descriptor strings readable and NUL-terminated through registration.
-				JniModifiedUtf8.Validate (name, paramName);
-				JniModifiedUtf8.Validate (signature, paramName);
+				JniModifiedUtf8.Validate (name, nameof (name));
+				JniModifiedUtf8.Validate (signature, nameof (signature));
 			}
 		}
 	}

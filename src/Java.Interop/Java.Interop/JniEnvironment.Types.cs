@@ -386,7 +386,7 @@ namespace Java.Interop
 				unsafe {
 					// SAFETY: The caller retains every descriptor string through registration.
 					foreach (var method in methods)
-						method.Validate (nameof (methods));
+						method.Validate ();
 				}
 
 				IntPtr env = JniEnvironment.EnvironmentPointer;
