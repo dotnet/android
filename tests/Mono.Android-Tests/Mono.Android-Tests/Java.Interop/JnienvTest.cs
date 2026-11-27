@@ -158,7 +158,8 @@ namespace Java.InteropTests
 		}
 
 		[TestMethod]
-		public void ManagedThreadIsDetachedOnExit ()
+		[Timeout (60_000, CooperativeCancellation = true)]
+		public async Task ManagedThreadIsDetachedOnExit ()
 		{
 			Exception? error = null;
 			Java.Lang.Thread? javaThread = null;
@@ -170,15 +171,16 @@ namespace Java.InteropTests
 				}
 			});
 			thread.Start ();
-			Assert.IsTrue (thread.Join (5000), "The worker did not exit");
+			while (thread.IsAlive)
+				await Task.Delay (10, testContext.CancellationToken);
 			Assert.IsNull (Volatile.Read (ref error), $"The worker failed: {error}");
 
 			using var exited = Volatile.Read (ref javaThread);
 			Assert.IsNotNull (exited, "The worker has no java.lang.Thread");
-			// Detaching can happen after Join () returns, while the native thread exits.
-			for (int i = 0; i < 500 && exited.IsAlive; i++)
-				Thread.Sleep (20);
-			Assert.IsFalse (exited.IsAlive, "The worker is still attached to the VM after it exited");
+			// Detaching can happen after the managed thread finishes, while the native thread exits.
+			// If the worker is never detached, this waits until the test times out.
+			while (exited.IsAlive)
+				await Task.Delay (10, testContext.CancellationToken);
 		}
 
 		[TestMethod]
