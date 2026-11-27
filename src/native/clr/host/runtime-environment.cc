@@ -107,6 +107,7 @@ void RuntimeEnvironment::initialize (JavaVM *vm) noexcept
 	abort_unless (ret == 0, "Unable to initialize TLS key for JNI thread detachment");
 }
 
+#if !defined (XA_HOST_NATIVEAOT)
 auto RuntimeEnvironment::get_jnienv () noexcept -> JNIEnv*
 {
 	JNIEnv *env = nullptr;
@@ -123,3 +124,4 @@ auto RuntimeEnvironment::get_jnienv () noexcept -> JNIEnv*
 
 	return env;
 }
+#endif // !defined (XA_HOST_NATIVEAOT)
