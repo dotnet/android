@@ -16,6 +16,11 @@
     -->
     <TrimMode>full</TrimMode>
   </PropertyGroup>
+  <!--#if (Framework != "net11.0-android") -->
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Android" Version="MICROSOFT_ANDROID_PACKAGE_VERSION" />
+  </ItemGroup>
+  <!--#endif -->
   <ItemGroup>
     <PackageReference Include="Xamarin.AndroidX.Wear" Version="1.3.0.10" />
   </ItemGroup>

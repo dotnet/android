@@ -391,7 +391,8 @@ public class GenerateTrimmableTypeMap : AndroidTask
 		string.Equals (item.GetMetadata ("FrameworkReferenceName"), "Microsoft.Android", StringComparison.Ordinal) ||
 		item.GetMetadata ("FrameworkReferenceName").StartsWith ("Microsoft.NETCore.", StringComparison.OrdinalIgnoreCase) ||
 		item.GetMetadata ("NuGetPackageId").StartsWith ("Microsoft.NETCore.App.Runtime.", StringComparison.OrdinalIgnoreCase) ||
-		item.GetMetadata ("NuGetPackageId").StartsWith ("Microsoft.Android.Runtime.", StringComparison.OrdinalIgnoreCase);
+		// The Microsoft.Android.net[version] NuGets
+		item.GetMetadata ("NuGetPackageId").StartsWith ("Microsoft.Android.net", StringComparison.OrdinalIgnoreCase);
 
 	internal static IReadOnlyCollection<string> LoadCustomViewTypeNames (string mapFile)
 	{

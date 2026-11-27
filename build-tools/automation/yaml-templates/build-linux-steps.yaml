@@ -102,7 +102,7 @@ steps:
   inputs:
     SourceFolder: ${{ parameters.xaSourcePath }}/bin/Build$(XA.Build.Configuration)/nuget-unsigned
     Contents: |
-      **/Microsoft.Android.Sdk.Linux*.symbols.nupkg
+      **/Microsoft.Android.Tools.Linux*.symbols.nupkg
       **/SignList.xml
     TargetFolder: ${{ parameters.xaSourcePath }}/bin/Build$(XA.Build.Configuration)/nuget-linux-symbols
 
@@ -115,7 +115,7 @@ steps:
 - script: >
     df -h &&
     mkdir -p ${{ parameters.xaSourcePath }}/bin/Build$(XA.Build.Configuration)/nuget-linux &&
-    ln ${{ parameters.xaSourcePath }}/bin/Build$(XA.Build.Configuration)/nuget-unsigned/Microsoft.Android.Sdk.Linux*.nupkg
+    ln ${{ parameters.xaSourcePath }}/bin/Build$(XA.Build.Configuration)/nuget-unsigned/Microsoft.Android.Tools.Linux*.nupkg
     ${{ parameters.xaSourcePath }}/bin/Build$(XA.Build.Configuration)/nuget-linux &&
     ln ${{ parameters.xaSourcePath }}/bin/Build$(XA.Build.Configuration)/nuget-unsigned/SignList.xml
     ${{ parameters.xaSourcePath }}/bin/Build$(XA.Build.Configuration)/nuget-linux

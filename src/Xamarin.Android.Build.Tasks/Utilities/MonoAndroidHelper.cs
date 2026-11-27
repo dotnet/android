@@ -289,7 +289,8 @@ namespace Xamarin.Android.Tasks
 		{
 			string packageId = assembly.GetMetadata ("NuGetPackageId") ?? "";
 			return packageId.StartsWith ("Microsoft.NETCore.App.Runtime.", StringComparison.OrdinalIgnoreCase) ||
-				packageId.StartsWith ("Microsoft.Android.Runtime.", StringComparison.OrdinalIgnoreCase);
+				// The Microsoft.Android.net[version] NuGets
+				packageId.StartsWith ("Microsoft.Android.net", StringComparison.OrdinalIgnoreCase);
 		}
 
 		public static bool SaveMapFile (IBuildEngine4 engine, string mapFile, Dictionary<string, string> map)

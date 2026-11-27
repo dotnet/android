@@ -1,0 +1,53 @@
+<!--
+***********************************************************************************************
+Microsoft.Android.proj
+
+This project file is used to create the Microsoft.Android NuGet, which projects reference to
+build Android applications and libraries. It only has dependencies: one group per Android API
+level, each with the matching Microsoft.Android.$(DotNetTargetFramework).Ref.[API] NuGet.
+
+_CreateLibraryPacks in Directory.Build.targets passes $(_LibraryPackVersion) and $(AndroidPlatformIds),
+a space-separated list such as "37.0 37.1".
+***********************************************************************************************
+-->
+<Project>
+
+  <!-- Only reference the other packages: do not import their build files or the android workload. -->
+  <PropertyGroup>
+    <ImportProjectExtensionProps>false</ImportProjectExtensionProps>
+    <ImportProjectExtensionTargets>false</ImportProjectExtensionTargets>
+    <MSBuildEnableWorkloadResolver>false</MSBuildEnableWorkloadResolver>
+  </PropertyGroup>
+
+  <Import Project="Sdk.props" Sdk="Microsoft.Build.NoTargets" />
+
+  <PropertyGroup>
+    <TargetFramework></TargetFramework>
+    <TargetFrameworks>$(DotNetAndroidTargetFramework)$(AndroidPlatformIds.Replace(' ', ';$(DotNetAndroidTargetFramework)'))</TargetFrameworks>
+    <TargetPlatformSupported>true</TargetPlatformSupported>
+    <PackageId>Microsoft.Android</PackageId>
+    <PackageVersion>$(_LibraryPackVersion)</PackageVersion>
+    <PackageType>Dependency</PackageType>
+    <Description>.NET for Android. Reference this package to build Android applications and libraries.</Description>
+    <IncludeBuildOutput>false</IncludeBuildOutput>
+    <NoBuild>true</NoBuild>
+    <AppendTargetFrameworkToOutputPath>true</AppendTargetFrameworkToOutputPath>
+    <IncludeSymbols>false</IncludeSymbols>
+    <SuppressDependenciesWhenPacking>false</SuppressDependenciesWhenPacking>
+    <PackageOutputPath Condition=" '$(PackageOutputPath)' == '' ">$(OutputPath)</PackageOutputPath>
+    <RestoreAdditionalProjectSources>$(PackageOutputPath)</RestoreAdditionalProjectSources>
+  </PropertyGroup>
+
+  <ItemGroup Condition=" '$(TargetPlatformVersion)' != '' ">
+    <SdkSupportedTargetPlatformVersion Include="$(TargetPlatformVersion)" />
+    <!-- PrivateAssets="none": projects need the build and analyzers assets of these packages -->
+    <PackageReference
+        Include="$(MicrosoftAndroidSdkPackageId);$(MicrosoftAndroidSdkPackageId).Ref.$(TargetPlatformVersion);Microsoft.Android.Tools.Darwin;Microsoft.Android.Tools.Linux;Microsoft.Android.Tools.Windows"
+        Version="[$(PackageVersion)]"
+        PrivateAssets="none"
+    />
+  </ItemGroup>
+
+  <Import Project="Sdk.targets" Sdk="Microsoft.Build.NoTargets" />
+
+</Project>

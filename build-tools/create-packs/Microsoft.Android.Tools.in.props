@@ -1,0 +1,9 @@
+<!--
+  Imported by NuGet for projects that reference Microsoft.Android.
+  NuGet restores the tools packages for all host OSes, so only use this one on its own host OS.
+-->
+<Project>
+  <PropertyGroup Condition=" '$(Aapt2ToolPath)' == '' and $([MSBuild]::IsOSPlatform('@HOST_OS_PLATFORM@')) ">
+    <Aapt2ToolPath>$([MSBuild]::NormalizeDirectory('$(MSBuildThisFileDirectory)', '..', 'tools'))</Aapt2ToolPath>
+  </PropertyGroup>
+</Project>

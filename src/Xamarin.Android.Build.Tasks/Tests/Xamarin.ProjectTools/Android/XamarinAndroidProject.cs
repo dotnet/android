@@ -42,6 +42,7 @@ namespace Xamarin.ProjectTools
 		{
 			Language = XamarinAndroidProjectLanguage.CSharp;
 			SetProperty (KnownProperties.OutputType, "Library");
+			PackageReferences.Add (KnownPackages.MicrosoftAndroid);
 
 			// Prevent CI Guardian SDL analysis from breaking CoreCompile incrementality.
 			// Guardian's MergeGuardianDotnetAnalyzersRuleSets target regenerates a merged

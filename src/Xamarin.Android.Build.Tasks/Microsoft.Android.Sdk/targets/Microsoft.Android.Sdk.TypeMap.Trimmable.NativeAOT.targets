@@ -23,14 +23,15 @@
       <_TrimmableTypeMapFrameworkIlcAssemblyNames Include="@(ReferencePath->'_%(Filename).TypeMap')"
           Condition=" '%(ReferencePath.FrameworkAssembly)' == 'true' " />
       <!-- Runtime-only assemblies (e.g. the NativeAOT runtime host Microsoft.Android.Runtime.NativeAOT)
-           come from the runtime pack and have no @(ReferencePath) counterpart, so their per-assembly
-           typemap DLLs are not caught by the rules above. Every runtime-pack managed assembly is a
+           come from the runtime pack or the Microsoft.Android NuGets and have no @(ReferencePath) counterpart,
+           so their per-assembly typemap DLLs are not caught by the rules above. Every such managed assembly is a
            framework/runtime assembly: classify its typemap DLL as framework so it stays an IlcReference
            (ILC reads its conditional TypeMap attributes) but is removed from the unmanaged-entrypoint
            roots, matching Mono.Android/Java.Interop. Their JCW native methods register via the runtime
            registerNatives path. -->
       <_TrimmableTypeMapFrameworkIlcAssemblyNames Include="@(RuntimePackAsset->'_%(Filename).TypeMap')"
           Condition=" '%(RuntimePackAsset.Extension)' == '.dll' and '%(RuntimePackAsset.AssetType)' == 'runtime' " />
+      <_TrimmableTypeMapFrameworkIlcAssemblyNames Include="@(_AndroidPackageRuntimeAsset->'_%(Filename).TypeMap')" />
       <!-- The root assembly (_Microsoft.Android.TypeMaps) only contains TypeMapLoader.Initialize()
             and assembly-level attributes — no types that need vtable generation.
             Framework per-assembly typemap DLLs must remain IlcReference inputs so ILC can read

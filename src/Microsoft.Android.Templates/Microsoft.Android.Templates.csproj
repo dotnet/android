@@ -30,4 +30,28 @@
     <PackageReference Include="Microsoft.TemplateEngine.Authoring.Tasks" Version="$(MicrosoftTemplateEngineAuthoringTasksPackageVersion)" PrivateAssets="all" IsImplicitlyDefined="true" />
   </ItemGroup>
 
+  <UsingTask AssemblyFile="$(PrepTasksAssembly)" TaskName="Xamarin.Android.BuildTools.PrepTasks.ReplaceFileContents" TaskFactory="TaskHostFactory" Runtime="NET" />
+
+  <!-- Projects created from the templates reference the Microsoft.Android NuGet with the version of the templates. -->
+  <Target Name="_ReplaceMicrosoftAndroidPackageVersion"
+      BeforeTargets="_GetPackageFiles"
+      DependsOnTargets="_GetDefaultPackageVersion">
+    <ItemGroup>
+      <_TemplateProject Include="@(Content)" Condition=" '%(Extension)' == '.csproj' ">
+        <ReplacedPath>$(IntermediateOutputPath)templates\%(Identity)</ReplacedPath>
+        <PackagePath>content\%(RelativeDir)</PackagePath>
+      </_TemplateProject>
+    </ItemGroup>
+    <MakeDir Directories="@(_TemplateProject->'%(ReplacedPath)'->'%(RootDir)%(Directory)')" />
+    <ReplaceFileContents
+        SourceFile="%(_TemplateProject.Identity)"
+        DestinationFile="%(_TemplateProject.ReplacedPath)"
+        Replacements="MICROSOFT_ANDROID_PACKAGE_VERSION=$(PackageVersion)"
+    />
+    <ItemGroup>
+      <Content Remove="@(_TemplateProject)" />
+      <Content Include="@(_TemplateProject->'%(ReplacedPath)')" />
+    </ItemGroup>
+  </Target>
+
 </Project>

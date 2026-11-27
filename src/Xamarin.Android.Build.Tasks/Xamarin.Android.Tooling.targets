@@ -34,19 +34,19 @@ used by all .NET Android projects.
   </Target>
 
   <PropertyGroup>
-    <_ResolveSdksDependsOnTargets>ResolveTargetingPackAssets</_ResolveSdksDependsOnTargets>
+    <_ResolveSdksDependsOnTargets>ResolveTargetingPackAssets;ResolveLockFileReferences</_ResolveSdksDependsOnTargets>
   </PropertyGroup>
 
   <Target Name="_ResolveSdks" DependsOnTargets="$(_ResolveSdksDependsOnTargets)">
-    <!-- When using .NET 5, provide a list of paths to the Android and NETCore targeting pack directories, e.g.
-          `packages\microsoft.android.ref\10.0.100-ci.master.22\ref\net5.0\` and
+    <!-- Provide a list of paths to the Android and NETCore reference assembly directories, e.g.
+          `packages\microsoft.android.net12.0.ref.37.0\37.0.0\ref\net12.0-android37.0\` and
           `C:\Program Files\dotnet\packs\Microsoft.NETCore.App.Ref\5.0.0-preview.6.20264.1\ref\net5.0\`
          See https://github.com/dotnet/sdk/blob/9eeb58e24af894597a534326156d09173d9f0f91/src/Tasks/Microsoft.NET.Build.Tasks/ResolveTargetingPackAssets.cs#L56
     -->
     <ItemGroup>
       <_AndroidApiInfo Include="$(MSBuildThisFileDirectory)..\data\*\AndroidApiInfo.xml" />
       <_AndroidApiInfoDirectories Include="@(_AndroidApiInfo->'%(RootDir)%(Directory)')" />
-      <_ResolveSdksFrameworkRefAssemblyPaths Include="@(Reference->'$([System.String]::Copy('%(RootDir)%(Directory)').TrimEnd('\'))')" Condition=" '%(Reference.FrameworkReferenceName)' != '' " />
+      <_ResolveSdksFrameworkRefAssemblyPaths Include="@(Reference->'$([System.String]::Copy('%(RootDir)%(Directory)').TrimEnd('\'))')" Condition=" '%(Reference.FrameworkReferenceName)' != '' or $([System.String]::Copy('%(Reference.NuGetPackageId)').StartsWith('$(_AndroidSdkPackageId)')) " />
     </ItemGroup>
     <PropertyGroup>
       <_AndroidAllowMissingSdkTooling Condition=" '$(_AndroidAllowMissingSdkTooling)' == '' ">False</_AndroidAllowMissingSdkTooling>

@@ -2342,7 +2342,7 @@ namespace UnnamedProject
 				proj.SetProperty ("EnablePreviewFeatures", "true");
 			}
 
-			proj.Imports.Add (CreateAndroidTargetingPackAssertion (apiLevel));
+			proj.Imports.Add (CreateAndroidReferencePackageAssertion (targetFramework, apiLevel));
 
 			proj.MainActivity = proj.DefaultMainActivity
 				.Replace ("//${AFTER_ONCREATE}", """
@@ -2398,7 +2398,7 @@ namespace UnnamedProject
 				}
 			};
 			proj.SetRuntime (runtime);
-			proj.Imports.Add (CreateAndroidTargetingPackAssertion (apiLevel));
+			proj.Imports.Add (CreateAndroidReferencePackageAssertion (targetFramework, apiLevel));
 
 			if (enablePreviewFeatures) {
 				proj.SetProperty ("EnablePreviewFeatures", "true");
@@ -2435,18 +2435,23 @@ namespace UnnamedProject
 			Assert.IsTrue(didLaunch, "Activity should have started.");
 		}
 
-		static Import CreateAndroidTargetingPackAssertion (string apiLevel)
+		static Import CreateAndroidReferencePackageAssertion (string targetFramework, string apiLevel)
 		{
+			// Only the current .NET version uses the Microsoft.Android NuGet packages
+			string latest = XABuildConfig.LatestDotNetTargetFramework;
+			string packageId = targetFramework.StartsWith (latest, StringComparison.Ordinal) ?
+				$"Microsoft.Android.{latest}.Ref.{apiLevel}" :
+				$"Microsoft.Android.Ref.{apiLevel}";
 			return new Import (() => "Directory.Build.targets") {
 				TextContent = () => $"""
 <Project>
-	<Target Name="_AssertAndroidTargetingPack" BeforeTargets="ResolveFrameworkReferences">
+	<Target Name="_AssertAndroidReferencePackage" AfterTargets="ResolveLockFileReferences">
 		<ItemGroup>
-			<_AndroidKnownFrameworkReference Include="@(KnownFrameworkReference)" Condition=" '%(Identity)' == 'Microsoft.Android' " />
+			<_MonoAndroidReference Include="@(Reference)" Condition=" '%(Filename)' == 'Mono.Android' " />
 		</ItemGroup>
 		<Error
-			Condition=" '%(_AndroidKnownFrameworkReference.TargetingPackName)' != 'Microsoft.Android.Ref.{apiLevel}' "
-			Text="Expected Microsoft.Android.Ref.{apiLevel}, but selected '%(_AndroidKnownFrameworkReference.TargetingPackName)'." />
+			Condition=" '@(_MonoAndroidReference->WithMetadataValue('NuGetPackageId', '{packageId}'))' == '' "
+			Text="Expected Mono.Android from {packageId}, but selected '@(_MonoAndroidReference->'%(NuGetPackageId)')'." />
 	</Target>
 </Project>
 """

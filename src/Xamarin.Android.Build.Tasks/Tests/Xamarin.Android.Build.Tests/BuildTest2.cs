@@ -696,15 +696,16 @@ namespace Xamarin.Android.Build.Tests
 			var proj = new XamarinAndroidApplicationProject ();
 			proj.SetRuntime (AndroidRuntime.CoreCLR);
 			proj.SetProperty (KnownProperties.RuntimeIdentifier, "android-arm64");
-			foreach (string library in new [] { "libc.so", "libdl.so", "liblog.so" }) {
-				proj.OtherBuildItems.Add (RuntimeLibrary (library, "Microsoft.Android.Runtime.CoreCLR.android-arm64", "android-arm64"));
+			// The package with the native runtimes, see build-tools/create-packs/Microsoft.Android.Sdk.proj
+			string sdkPackage = $"Microsoft.Android.{XABuildConfig.LatestDotNetTargetFramework}";
+			foreach (string library in new [] { "libc.so", "libdl.so", "liblog.so", "libm.so" }) {
+				proj.OtherBuildItems.Add (RuntimeLibrary (library, sdkPackage, "android-arm64"));
 			}
-			proj.OtherBuildItems.Add (RuntimeLibrary ("libm.so", "Microsoft.Android.Runtime.NativeAOT.android-arm64", "android-arm64"));
-			proj.OtherBuildItems.Add (RuntimeLibrary ("LIBZ.SO", "MICROSOFT.ANDROID.RUNTIME.NATIVEAOT.ANDROID-ARM64", "android-arm64"));
+			proj.OtherBuildItems.Add (RuntimeLibrary ("LIBZ.SO", sdkPackage.ToUpperInvariant (), "android-arm64"));
 			var kept = new [] {
 				RuntimeLibrary (Path.Combine ("unrelated", "libc.so"), "Other.Package", "android-arm64"),
-				RuntimeLibrary (Path.Combine ("no-rid", "libc.so"), "Microsoft.Android.Runtime.CoreCLR.android-arm64"),
-				RuntimeLibrary (Path.Combine ("other", "libcustom.so"), "Microsoft.Android.Runtime.CoreCLR.android-arm64", "android-arm64"),
+				RuntimeLibrary (Path.Combine ("no-rid", "libc.so"), sdkPackage),
+				RuntimeLibrary (Path.Combine ("other", "libcustom.so"), sdkPackage, "android-arm64"),
 			};
 			foreach (var item in kept) {
 				proj.OtherBuildItems.Add (item);

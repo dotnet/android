@@ -11,4 +11,9 @@
     -->
     <IsTrimmable>true</IsTrimmable>
   </PropertyGroup>
+  <!--#if (Framework != "net11.0-android") -->
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Android" Version="MICROSOFT_ANDROID_PACKAGE_VERSION" />
+  </ItemGroup>
+  <!--#endif -->
 </Project>

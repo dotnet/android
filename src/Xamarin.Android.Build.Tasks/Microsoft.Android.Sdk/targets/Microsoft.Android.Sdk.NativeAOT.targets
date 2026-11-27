@@ -16,7 +16,6 @@ This file contains the NativeAOT-specific MSBuild logic for .NET for Android.
 
   <!-- Default property values for NativeAOT -->
   <PropertyGroup>
-    <_AndroidRuntimePackRuntime>NativeAOT</_AndroidRuntimePackRuntime>
     <!-- .NET SDK gives: error NETSDK1191: A runtime identifier for the property 'PublishAot' couldn't be inferred. Specify a rid explicitly. -->
     <AllowPublishAotWithoutRuntimeIdentifier Condition=" '$(AllowPublishAotWithoutRuntimeIdentifier)' == '' ">true</AllowPublishAotWithoutRuntimeIdentifier>
     <!-- NativeAOT's targets currently gives an error about cross-compilation -->
@@ -224,7 +223,7 @@ This file contains the NativeAOT-specific MSBuild logic for .NET for Android.
       <!-- Satellite assemblies -->
       <IlcSatelliteAssembly Include="$(_OuterIntermediateSatelliteAssembliesWithTargetPath)" />
 
-      <_NdkLibs Include="@(RuntimePackAsset->WithMetadataValue('Filename', 'libnaot-android.release-static-release'))" />
+      <_NdkLibs Include="@(NativeCopyLocalItems->WithMetadataValue('Filename', 'libnaot-android.release-static-release'))" />
 
       <LinkerArg Include="&quot;%(_NdkLibs.Identity)&quot;" />
 

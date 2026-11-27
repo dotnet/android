@@ -65,6 +65,8 @@
     <MicrosoftAndroidSdkPackName Condition="$([MSBuild]::IsOSPlatform('windows'))">Microsoft.Android.Sdk.Windows</MicrosoftAndroidSdkPackName>
     <MicrosoftAndroidSdkPackName Condition="$([MSBuild]::IsOSPlatform('linux'))">Microsoft.Android.Sdk.Linux</MicrosoftAndroidSdkPackName>
     <MicrosoftAndroidSdkPackName Condition="$([MSBuild]::IsOSPlatform('osx'))">Microsoft.Android.Sdk.Darwin</MicrosoftAndroidSdkPackName>
+    <!-- The NuGet with the MSBuild targets, tasks, and native runtimes; see build-tools/create-packs/Microsoft.Android.Sdk.proj -->
+    <MicrosoftAndroidSdkPackageId>Microsoft.Android.$(DotNetTargetFramework)</MicrosoftAndroidSdkPackageId>
   </PropertyGroup>
   <PropertyGroup>
     <MicrosoftAndroidPacksRootDir>$(BuildOutputDirectory)lib\packs\</MicrosoftAndroidPacksRootDir>

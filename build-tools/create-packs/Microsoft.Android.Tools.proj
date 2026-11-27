@@ -1,0 +1,53 @@
+<!--
+***********************************************************************************************
+Microsoft.Android.Tools.proj
+
+This project file is used to create the Microsoft.Android.Tools.$(HostOS) NuGets, which contain
+the native tools (aapt2) for one host OS. Projects get all three through the Microsoft.Android
+NuGet; each one only sets $(Aapt2ToolPath) on its own host OS.
+***********************************************************************************************
+-->
+<Project Sdk="Microsoft.Build.NoTargets">
+
+  <Sdk Name="Microsoft.DotNet.SharedFramework.Sdk" Version="$(MicrosoftDotNetBuildTasksFeedPackageVersion)" />
+
+  <PropertyGroup>
+    <PackageId>Microsoft.Android.Tools.$(HostOS)</PackageId>
+    <OverridePackageId>$(PackageId)</OverridePackageId>
+    <PlatformPackageType>ToolPack</PlatformPackageType>
+    <!-- A normal NuGet package; restore rejects the DotnetPlatform package type. -->
+    <PackageType>Dependency</PackageType>
+    <Description>Native tools for building Android applications on $(HostOS). Please do not reference directly; reference the Microsoft.Android package.</Description>
+    <Description Condition=" '$(HostOS)' == 'Linux' ">$(Description) Please note that this package is not officially supported, and has not received extensive testing.</Description>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <BeforePack>
+      _GetDefaultPackageVersion;
+      $(BeforePack);
+    </BeforePack>
+  </PropertyGroup>
+
+  <Target Name="_GetAndroidToolsItems"
+      DependsOnTargets="_GetLicense"
+      BeforeTargets="GetFilesToPackage" >
+    <ItemGroup>
+      <_Aapt2File Include="$(MicrosoftAndroidSdkOutDir)aapt2.exe"   Condition=" '$(HostOS)' == 'Windows' " OSPlatform="windows" />
+      <_Aapt2File Include="$(MicrosoftAndroidSdkOutDir)Darwin\aapt2" Condition=" '$(HostOS)' == 'Darwin' "  OSPlatform="osx" />
+      <_Aapt2File Include="$(MicrosoftAndroidSdkOutDir)Linux\aapt2"  Condition=" '$(HostOS)' == 'Linux' "   OSPlatform="linux" />
+      <_PropsReplacement Include="@(_Aapt2File->'@HOST_OS_PLATFORM@=%(OSPlatform)')" />
+    </ItemGroup>
+    <!-- NuGet imports buildTransitive/<package id>.props, so the file name must match the package id. -->
+    <MakeDir Directories="$(IntermediateOutputPath)buildTransitive" />
+    <ReplaceFileContents
+        SourceFile="$(MSBuildThisFileDirectory)Microsoft.Android.Tools.in.props"
+        DestinationFile="$(IntermediateOutputPath)buildTransitive\$(PackageId).props"
+        Replacements="@(_PropsReplacement)"
+    />
+    <ItemGroup>
+      <FilesToPackage Include="@(_Aapt2File)" TargetPath="tools" />
+      <FilesToPackage Include="$(IntermediateOutputPath)buildTransitive\$(PackageId).props" TargetPath="buildTransitive" />
+    </ItemGroup>
+  </Target>
+
+</Project>

@@ -1,10 +1,8 @@
 <Project>
   <ImportGroup Condition=" '$(TargetPlatformIdentifier)' == 'android' ">
-    <Import Project="Sdk.targets" Sdk="Microsoft.Android.Sdk.net12"
-        Condition=" $([MSBuild]::VersionEquals($(TargetFrameworkVersion), '12.0')) " />
     <Import Project="Sdk.targets" Sdk="Microsoft.Android.Sdk.net11"
         Condition=" $([MSBuild]::VersionEquals($(TargetFrameworkVersion), '11.0')) " />
-    <Import Project="Eol.targets" Sdk="Microsoft.Android.Sdk.net12"
+    <Import Project="Eol.targets" Sdk="Microsoft.Android.Sdk.net11"
         Condition=" $([MSBuild]::VersionLessThanOrEquals($(TargetFrameworkVersion), '10.0')) " />
   </ImportGroup>
 
@@ -23,4 +21,37 @@
   <ItemGroup Condition=" '$(TargetFrameworkIdentifier)' == '.NETCoreApp' and $([MSBuild]::VersionGreaterThanOrEquals($(TargetFrameworkVersion), '11.0')) ">
     <SdkSupportedTargetPlatformIdentifier Include="android" DisplayName="Android" />
   </ItemGroup>
+
+  <!--
+    .NET @DOTNET_TARGET_FRAMEWORK_VERSION@ projects get the Android build from the Microsoft.Android NuGet. Restore does not import
+    targets from packages, so set what restore needs here. Keep in sync with Microsoft.Android.Sdk.DefaultProperties.targets.
+  -->
+  <PropertyGroup Condition=" '$(TargetPlatformIdentifier)' == 'android' and $([MSBuild]::VersionEquals($(TargetFrameworkVersion), '@DOTNET_TARGET_FRAMEWORK_VERSION@')) ">
+    <MicrosoftAndroidPackageVersion Condition=" '$(MicrosoftAndroidPackageVersion)' == '' ">@WORKLOAD_VERSION@</MicrosoftAndroidPackageVersion>
+    <TargetPlatformSupported>true</TargetPlatformSupported>
+    <TargetPlatformVersion Condition=" '$(TargetPlatformVersion)' == '' ">@DEFAULT_TARGET_PLATFORM_VERSION@</TargetPlatformVersion>
+    <EffectiveTargetPlatformVersion Condition=" '$(EffectiveTargetPlatformVersion)' == '' ">$(TargetPlatformVersion)</EffectiveTargetPlatformVersion>
+    <RuntimeIdentifiers Condition=" '$(RuntimeIdentifier)' == '' and '$(RuntimeIdentifiers)' == '' and ('$(AndroidApplication)' == 'true' or ('$(AndroidApplication)' == '' and '$(OutputType)' == 'Exe')) ">android-arm64;android-x64</RuntimeIdentifiers>
+    <!-- Android uses NativeAOT for optimized builds, not only for 'dotnet publish' -->
+    <_IsPublishing Condition=" '$(_IsPublishing)' == '' and '$(PublishAot)' == 'true' and '$(Optimize)' == 'true' ">true</_IsPublishing>
+    <_IsPublishing Condition=" '$(_IsPublishing)' == '' and '$(_AndroidRuntime)' == 'NativeAOT' ">true</_IsPublishing>
+    <PublishAotUsingRuntimePack Condition=" '$(PublishAotUsingRuntimePack)' == '' and '$(PublishAot)' == 'true' and '$(_IsPublishing)' == 'true' ">true</PublishAotUsingRuntimePack>
+  </PropertyGroup>
+
+  <!-- During restore only: request the ILLink and Crossgen2 packs that application builds use -->
+  <PropertyGroup Condition=" '$(TargetPlatformIdentifier)' == 'android' and $([MSBuild]::VersionEquals($(TargetFrameworkVersion), '@DOTNET_TARGET_FRAMEWORK_VERSION@')) and '$(MicrosoftAndroidSdkTargetsImported)' != 'true' and ('$(AndroidApplication)' == 'true' or ('$(AndroidApplication)' == '' and '$(OutputType)' == 'Exe')) ">
+    <EnableSingleFileAnalyzer Condition=" '$(EnableSingleFileAnalyzer)' == '' ">true</EnableSingleFileAnalyzer>
+    <PublishReadyToRun Condition=" '$(PublishReadyToRun)' == '' and '$(_IsPublishing)' != 'true' and '$(Configuration)' == 'Release' ">true</PublishReadyToRun>
+    <PublishReadyToRun Condition=" '$(PublishReadyToRun)' == '' and '$(_IsPublishing)' == 'true' and '$(PublishAot)' != 'true' ">true</PublishReadyToRun>
+  </PropertyGroup>
+
+  <Target Name="_AndroidCheckForMicrosoftAndroidPackageReference"
+      BeforeTargets="_CheckForInvalidConfigurationAndPlatform;CollectPackageReferences"
+      Condition=" '$(TargetPlatformIdentifier)' == 'android' and $([MSBuild]::VersionEquals($(TargetFrameworkVersion), '@DOTNET_TARGET_FRAMEWORK_VERSION@')) ">
+    <Error
+        Code="XA1052"
+        Text="The 'Microsoft.Android' NuGet package is required to build '$(TargetFramework)' projects. Add &lt;PackageReference Include=&quot;Microsoft.Android&quot; Version=&quot;$(MicrosoftAndroidPackageVersion)&quot; /&gt; to the project file."
+        Condition=" '@(PackageReference->WithMetadataValue('Identity', 'Microsoft.Android'))' == '' "
+    />
+  </Target>
 </Project>

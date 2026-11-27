@@ -38,6 +38,35 @@ _ResolveAssemblies MSBuild target.
     <Delete Files="$(_LinkSemaphore)" />
   </Target>
 
+  <!--
+    NuGet cannot select the native runtime, because it does not know about runtime flavors. Add it from native/ in
+    this package: native/$(RuntimeIdentifier)/ for all runtimes, and native/$(_AndroidRuntime)/ for each runtime.
+  -->
+  <Target Name="_AndroidResolveRuntimePackageAssets"
+      AfterTargets="ResolvePackageAssets"
+      Condition=" '$(RuntimeIdentifier)' != '' ">
+    <PropertyGroup>
+      <_AndroidRuntimePackageAssetsDirectory>$([MSBuild]::NormalizeDirectory('$(MSBuildThisFileDirectory)', '..', 'native'))</_AndroidRuntimePackageAssetsDirectory>
+    </PropertyGroup>
+    <ItemGroup>
+      <NativeCopyLocalItems Include="$(_AndroidRuntimePackageAssetsDirectory)$(RuntimeIdentifier)\*;$(_AndroidRuntimePackageAssetsDirectory)$(_AndroidRuntime)\$(RuntimeIdentifier)\*"
+          AssetType="native"
+          CopyLocal="true"
+          RuntimeIdentifier="$(RuntimeIdentifier)"
+          NuGetPackageId="$(_AndroidSdkPackageId)"
+      />
+      <RuntimeCopyLocalItems Include="$(_AndroidRuntimePackageAssetsDirectory)$(_AndroidRuntime)\managed\*.dll"
+          AssetType="runtime"
+          CopyLocal="true"
+          NuGetPackageId="$(_AndroidSdkPackageId)"
+      />
+      <!-- Mono.Android, Java.Interop, and the runtime assemblies from the Microsoft.Android NuGets -->
+      <_AndroidPackageRuntimeAsset Include="@(RuntimeCopyLocalItems)"
+          Condition=" '%(RuntimeCopyLocalItems.Extension)' == '.dll' and $([System.String]::Copy('%(RuntimeCopyLocalItems.NuGetPackageId)').StartsWith('$(_AndroidSdkPackageId)')) "
+      />
+    </ItemGroup>
+  </Target>
+
   <!-- Some NuGet packages add assemblies as @(Reference) items with CopyToOutputDirectory
        metadata, or as @(None) items with CopyToOutputDirectory. Both paths flow into
        @(_SourceItemsToCopyToPublishDirectory) which gets blanket-removed from
@@ -134,19 +163,18 @@ _ResolveAssemblies MSBuild target.
     through the MSBuild task for every RID.
 
     It stops after ResolveReferences - it does NOT run ComputeFilesToPublish/ILLink/ILC/AOT - and
-    returns Android runtime-pack managed assemblies as framework inputs plus copy-local implementation
+    returns Android managed assemblies as framework inputs plus copy-local implementation
     assemblies for project/package references as non-framework inputs. -->
   <Target Name="_ResolveImplementationAssembliesForTypeMap"
       DependsOnTargets="BuildOnlySettings;_FixupIntermediateAssembly;_PatchNuGetReferenceMetadata;ResolveReferences"
       Returns="@(_TypeMapFrameworkImplementationAssembly);@(_TypeMapReferenceImplementationAssembly)">
     <ItemGroup>
-      <_TypeMapFrameworkImplementationAssembly Include="@(RuntimePackAsset)"
-          Condition=" '%(RuntimePackAsset.Extension)' == '.dll' and '%(RuntimePackAsset.AssetType)' == 'runtime' and $([System.String]::Copy('%(RuntimePackAsset.NuGetPackageId)').StartsWith('Microsoft.Android.Runtime')) ">
+      <_TypeMapFrameworkImplementationAssembly Include="@(_AndroidPackageRuntimeAsset)">
         <FrameworkAssembly>true</FrameworkAssembly>
         <RuntimeIdentifier>$(RuntimeIdentifier)</RuntimeIdentifier>
       </_TypeMapFrameworkImplementationAssembly>
       <_TypeMapReferenceImplementationAssembly Include="@(ReferenceCopyLocalPaths)"
-          Condition=" '%(ReferenceCopyLocalPaths.Extension)' == '.dll' and '%(ReferenceCopyLocalPaths.DestinationSubDirectory)' == '' and '%(ReferenceCopyLocalPaths.AssetType)' != 'native' and '%(ReferenceCopyLocalPaths.FrameworkReferenceName)' == '' and !$([System.String]::Copy('%(ReferenceCopyLocalPaths.NuGetPackageId)').StartsWith('Microsoft.Android.Runtime')) and !$([System.String]::Copy('%(ReferenceCopyLocalPaths.NuGetPackageId)').StartsWith('Microsoft.NETCore.App.Runtime')) ">
+          Condition=" '%(ReferenceCopyLocalPaths.Extension)' == '.dll' and '%(ReferenceCopyLocalPaths.DestinationSubDirectory)' == '' and '%(ReferenceCopyLocalPaths.AssetType)' != 'native' and '%(ReferenceCopyLocalPaths.FrameworkReferenceName)' == '' and !$([System.String]::Copy('%(ReferenceCopyLocalPaths.NuGetPackageId)').StartsWith('$(_AndroidSdkPackageId)')) and !$([System.String]::Copy('%(ReferenceCopyLocalPaths.NuGetPackageId)').StartsWith('Microsoft.NETCore.App.Runtime')) ">
         <FrameworkAssembly>false</FrameworkAssembly>
         <RuntimeIdentifier>$(RuntimeIdentifier)</RuntimeIdentifier>
       </_TypeMapReferenceImplementationAssembly>
@@ -177,7 +205,7 @@ _ResolveAssemblies MSBuild target.
       Returns="@(_AndroidAssemblyCompressionInput)">
     <ItemGroup>
       <_AndroidAssemblyCompressionInput
-          Include="@(RuntimePackAsset);@(ReferenceCopyLocalPaths);@(IntermediateAssembly);@(_GeneratedTypeMapAssembliesFromList)"
+          Include="@(RuntimePackAsset);@(_AndroidPackageRuntimeAsset);@(ReferenceCopyLocalPaths);@(IntermediateAssembly);@(_GeneratedTypeMapAssembliesFromList)"
           Condition=" '%(Extension)' == '.dll' ">
         <RuntimeIdentifier>$(RuntimeIdentifier)</RuntimeIdentifier>
       </_AndroidAssemblyCompressionInput>
@@ -247,13 +275,11 @@ _ResolveAssemblies MSBuild target.
       <Output TaskParameter="TargetOutputs" ItemName="ResolvedFileToPublish" />
     </MSBuild>
 
-    <!-- Exclude runtime-pack system library stubs before native-library packaging. -->
+    <!-- Exclude the native runtime's system library stubs before native-library packaging. -->
     <ItemGroup>
       <_AndroidRuntimePackSystemLibrary Include="libc.so;libdl.so;liblog.so;libm.so;libz.so" />
       <_NativeLibraryToRemove Include="@(ResolvedFileToPublish)"
-          Condition=" '%(ResolvedFileToPublish.RuntimeIdentifier)' != '' and
-            ($([System.String]::Copy('%(ResolvedFileToPublish.NuGetPackageId)').StartsWith('Microsoft.Android.Runtime.CoreCLR.', StringComparison.OrdinalIgnoreCase)) or
-             $([System.String]::Copy('%(ResolvedFileToPublish.NuGetPackageId)').StartsWith('Microsoft.Android.Runtime.NativeAOT.', StringComparison.OrdinalIgnoreCase))) " />
+          Condition=" '%(ResolvedFileToPublish.RuntimeIdentifier)' != '' and '%(ResolvedFileToPublish.NuGetPackageId)' == '$(_AndroidSdkPackageId)' " />
       <_AndroidRuntimePackLibraryToKeep Include="@(_NativeLibraryToRemove)" />
       <_AndroidRuntimePackLibraryToKeep Remove="@(_AndroidRuntimePackSystemLibrary)"
           MatchOnMetadata="Filename;Extension" MatchOnMetadataOptions="CaseInsensitive" />

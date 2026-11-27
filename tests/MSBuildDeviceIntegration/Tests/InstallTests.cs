@@ -190,15 +190,16 @@ namespace Xamarin.Android.Build.Tests
 				var apkPath = Path.Combine (Root, builder.ProjectDirectory,
 					proj.OutputPath, $"{proj.PackageName}-Signed.apk");
 				using (var apk = ZipHelper.OpenZip (apkPath)) {
-					foreach (var abi in abis) {
-						string runtimeAbiName = AbiUtils.AbiToRuntimeIdentifier (abi);
-						var runtime = runtimeInfo.FirstOrDefault (x => x.Abi == runtimeAbiName && x.Runtime == "debug");
-						Assert.IsNotNull (runtime, "Could not find the expected runtime.");
-						var inApk = ZipHelper.ReadFileFromZip (apk, String.Format ("lib/{0}/{1}", abi, runtime.Name));
-						var inApkRuntime = runtimeInfo.FirstOrDefault (x => x.Abi == runtimeAbiName && x.Size == inApk.Length);
-						Assert.IsNotNull (inApkRuntime, "Could not find the actual runtime used.");
-						Assert.AreEqual (runtime.Size, inApkRuntime.Size, "expected {0} got {1}", "debug", inApkRuntime.Runtime);
-					}
+					// Install with fast deployment only builds the device ABI
+					string abi = DeviceAbi;
+					string runtimeAbiName = AbiUtils.AbiToRuntimeIdentifier (abi);
+					var runtime = runtimeInfo.FirstOrDefault (x => x.Abi == runtimeAbiName && x.Runtime == "debug");
+					Assert.IsNotNull (runtime.Name, "Could not find the expected runtime.");
+					var inApk = ZipHelper.ReadFileFromZip (apk, String.Format ("lib/{0}/{1}", abi, runtime.Name));
+					Assert.IsNotNull (inApk, $"lib/{abi}/{runtime.Name} should exist in the APK.");
+					var inApkRuntime = runtimeInfo.FirstOrDefault (x => x.Abi == runtimeAbiName && x.Size == inApk.Length);
+					Assert.IsNotNull (inApkRuntime.Name, "Could not find the actual runtime used.");
+					Assert.AreEqual (runtime.Size, inApkRuntime.Size, "expected {0} got {1}", "debug", inApkRuntime.Runtime);
 				}
 				//FIXME: https://github.com/xamarin/androidtools/issues/141
 				//Assert.AreEqual (0, RunAdbCommand ("shell pm list packages Mono.Android.DebugRuntime").Trim ().Length,

@@ -2,15 +2,15 @@
 ***********************************************************************************************
 Microsoft.Android.Sdk.proj
 
-This project file is used to create the Microsoft.Android.Sdk.$(HostOS) NuGets, which are the
-core workload SDK packs imported by WorkloadManifest.targets.
+This project file is used to create the Microsoft.Android.$(DotNetTargetFramework) NuGet. It
+contains the MSBuild targets, tasks, Java libraries, analyzer, and the CoreCLR and NativeAOT
+native runtimes. Projects get it through the Microsoft.Android NuGet.
 ***********************************************************************************************
 -->
 <Project Sdk="Microsoft.Build.NoTargets">
 
   <!-- Use net10.0 version since CI only has the .NET 10 SDK installed for BAR manifest publishing -->
   <Sdk Name="Microsoft.DotNet.SharedFramework.Sdk" Version="$(MicrosoftDotNetBuildTasksFeedPackageVersionNet10)" />
-  <UsingTask AssemblyFile="$(BootstrapTasksAssembly)" TaskName="Xamarin.Android.Tools.BootstrapTasks.GenerateUnixFilePermissions" TaskFactory="TaskHostFactory" Runtime="NET" />
 
   <PropertyGroup>
     <!-- Use stable TFM since CI only has the stable .NET SDK installed -->
@@ -18,11 +18,12 @@ core workload SDK packs imported by WorkloadManifest.targets.
   </PropertyGroup>
 
   <PropertyGroup>
-    <PackageId>Microsoft.Android.Sdk.$(HostOS)</PackageId>
+    <PackageId>$(MicrosoftAndroidSdkPackageId)</PackageId>
     <OverridePackageId>$(PackageId)</OverridePackageId>
     <PlatformPackageType>ToolPack</PlatformPackageType>
-    <Description>C# Tools and Bindings for the Android SDK.</Description>
-    <Description Condition=" '$(HostOS)' == 'Linux' ">$(Description) Please note that this package is not officially supported, and has not received extensive testing.</Description>
+    <!-- A normal NuGet package; restore rejects the DotnetPlatform package type. -->
+    <PackageType>Dependency</PackageType>
+    <Description>C# Tools and Bindings for the Android SDK. Please do not reference directly; reference the Microsoft.Android package.</Description>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
   </PropertyGroup>
 
@@ -39,21 +40,33 @@ core workload SDK packs imported by WorkloadManifest.targets.
   </PropertyGroup>
 
   <Target Name="_GenerateXASdkContent"
-      DependsOnTargets="ConstructInstallerItems;_GetLicense"
+      DependsOnTargets="ConstructInstallerItems;_GetLicense;_AndroidGetNdkRedistributables"
       BeforeTargets="GetFilesToPackage" >
     <ItemGroup>
-      <!-- Use Path.Combine so files at the root of MSBuildItems* (RelativePath has no directory)
+      <!-- Use Path.Combine so files at the root of MSBuildItems (RelativePath has no directory)
            produce 'tools' rather than 'tools\', which would otherwise be packed as 'tools//<file>'. -->
-      <AndroidSdkBuildTools Include="@(MSBuildItemsWin)"  TargetPath="$([System.IO.Path]::Combine('tools', $([System.IO.Path]::GetDirectoryName('%(MSBuildItemsWin.RelativePath)'))))"  Condition=" '$(HostOS)' == 'Windows' " />
-      <AndroidSdkBuildTools Include="@(MSBuildItemsUnix)" TargetPath="$([System.IO.Path]::Combine('tools', $([System.IO.Path]::GetDirectoryName('%(MSBuildItemsUnix.RelativePath)'))))" Condition=" '$(HostOS)' == 'Linux' or '$(HostOS)' == 'Darwin' " />
+      <AndroidSdkBuildTools Include="@(MSBuildItems)" TargetPath="$([System.IO.Path]::Combine('tools', $([System.IO.Path]::GetDirectoryName('%(MSBuildItems.RelativePath)'))))" />
     </ItemGroup>
 
-    <GenerateUnixFilePermissions
-        Condition=" '$(HostOS)' != 'Windows' "
-        Output="$(IntermediateOutputPath)UnixFilePermissions.xml"
-        PackagePath="tools"
-        Files="@(AndroidSdkBuildTools)"
+    <!-- NuGet imports buildTransitive/<package id>.props, so the file name must match the package id. -->
+    <Copy
+        SourceFiles="$(XamarinAndroidSourcePath)src\Xamarin.Android.Build.Tasks\Microsoft.Android.Sdk\buildTransitive\Microsoft.Android.Sdk.props"
+        DestinationFiles="$(IntermediateOutputPath)buildTransitive\$(PackageId).props"
+        SkipUnchangedFiles="true"
     />
+
+    <!-- Native runtimes, selected by %(AndroidRuntime) and $(RuntimeIdentifier) in Microsoft.Android.Sdk.AssemblyResolution.targets -->
+    <ItemGroup>
+      <_AndroidRuntimeAbi Include="@(AndroidSupportedTargetJitAbi)" Condition=" '%(AndroidSupportedTargetJitAbi.SupportCoreCLR)' == 'true' " AndroidRuntime="CoreCLR" RuntimeFlavorDirName="$(_CLRRuntimeFlavorDirName)" />
+      <_AndroidRuntimeAbi Include="@(AndroidSupportedTargetJitAbi)" Condition=" '%(AndroidSupportedTargetJitAbi.SupportNativeAOT)' == 'true' " AndroidRuntime="NativeAOT" RuntimeFlavorDirName="$(_NativeAotRuntimeFlavorDirName)" />
+      <_AndroidNativeRuntimeFile Include="@(_AndroidRuntimeAbi->'$(NativeRuntimeOutputRootDir)%(RuntimeFlavorDirName)\%(AndroidRID)\libnet-android.debug.so')"            Condition=" '%(_AndroidRuntimeAbi.AndroidRuntime)' == 'CoreCLR' " />
+      <_AndroidNativeRuntimeFile Include="@(_AndroidRuntimeAbi->'$(NativeRuntimeOutputRootDir)%(RuntimeFlavorDirName)\%(AndroidRID)\libnet-android.release.so')"          Condition=" '%(_AndroidRuntimeAbi.AndroidRuntime)' == 'CoreCLR' " />
+      <_AndroidNativeRuntimeFile Include="@(_AndroidRuntimeAbi->'$(NativeRuntimeOutputRootDir)%(RuntimeFlavorDirName)\%(AndroidRID)\libnaot-android.debug-static-debug.a')"     Condition=" '%(_AndroidRuntimeAbi.AndroidRuntime)' == 'NativeAOT' " />
+      <_AndroidNativeRuntimeFile Include="@(_AndroidRuntimeAbi->'$(NativeRuntimeOutputRootDir)%(RuntimeFlavorDirName)\%(AndroidRID)\libnaot-android.release-static-release.a')" Condition=" '%(_AndroidRuntimeAbi.AndroidRuntime)' == 'NativeAOT' " />
+      <!-- System library stubs and toolchain libraries, used by both runtimes for native linking -->
+      <_AndroidNativeSharedFile Include="@(_AndroidNdkRedistributable)" Condition=" '%(_AndroidNdkRedistributable.SupportCoreCLR)' == 'true' or '%(_AndroidNdkRedistributable.SupportNativeAOT)' == 'true' " />
+      <_AndroidNativeAotRuntimeAssembly Include="$(_MonoAndroidNETOutputRoot)$(AndroidLatestStableApiLevel)\Microsoft.Android.Runtime.NativeAOT.dll" />
+    </ItemGroup>
 
     <!-- For symbols use a relative path one directory up to circumvent the inclusion of a root 'runtimes' folder in the target path due to:
       https://github.com/dotnet/arcade/blob/2b1931c05dd6ceb89120131a8b39eaa81735179a/src/Microsoft.DotNet.SharedFramework.Sdk/targets/sharedfx.targets#L569
@@ -80,8 +93,12 @@ core workload SDK packs imported by WorkloadManifest.targets.
       <FilesToPackage Include="$(XamarinAndroidSourcePath)src\Xamarin.Android.Build.Tasks\Microsoft.Android.Sdk\Sdk\**" TargetPath="Sdk" />
       <FilesToPackage Include="$(XamarinAndroidSourcePath)src\Xamarin.Android.Build.Tasks\Microsoft.Android.Sdk\PreserveLists\**" TargetPath="PreserveLists" />
       <FilesToPackage Include="$(XamarinAndroidSourcePath)src\Xamarin.Android.Build.Tasks\Microsoft.Android.Sdk\targets\**" TargetPath="targets" />
-      <FilesToPackage Include="$(IntermediateOutputPath)UnixFilePermissions.xml" TargetPath="data" Condition=" '$(HostOS)' != 'Windows' " />
-      <FilesToPackage Include="$(MSBuildThisFileDirectory)\linux-README.md" TargetPath="\README.md" Condition=" '$(HostOS)' == 'Linux' " />
+      <FilesToPackage Include="$(IntermediateOutputPath)buildTransitive\$(PackageId).props" TargetPath="buildTransitive" />
+      <FilesToPackage Include="$(MicrosoftAndroidSdkAnalysisOutDir)Microsoft.Android.Sdk.Analysis.dll" TargetPath="analyzers\dotnet\cs" />
+      <FilesToPackage Include="@(_AndroidNativeRuntimeFile)" Condition=" Exists('%(_AndroidNativeRuntimeFile.Identity)') " TargetPath="native\%(_AndroidNativeRuntimeFile.AndroidRuntime)\%(_AndroidNativeRuntimeFile.AndroidRID)" />
+      <FilesToPackage Include="@(_AndroidNativeSharedFile)" TargetPath="native\%(_AndroidNativeSharedFile.AndroidRID)" />
+      <FilesToPackage Include="@(_AndroidNativeAotRuntimeAssembly)" TargetPath="native\NativeAOT\managed" />
+      <FilesToPackage Include="@(_AndroidNativeAotRuntimeAssembly->'%(RelativeDir)%(Filename).pdb')" TargetPath="..\native\NativeAOT\managed" IsSymbolFile="true" />
       <FilesToPackage
           Include="$(_MonoAndroidNETOutputRoot)%(AndroidBuildApiLevel.Identity)\AndroidApiInfo.xml"
           TargetPath="data\$(DotNetAndroidTargetFramework)%(AndroidBuildApiLevel.Identity)"

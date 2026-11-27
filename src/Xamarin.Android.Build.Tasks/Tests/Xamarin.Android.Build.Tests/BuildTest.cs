@@ -878,7 +878,7 @@ AAMMAAABzYW1wbGUvSGVsbG8uY2xhc3NQSwUGAAAAAAMAAwC9AAAA1gEAAAAA") });
 				string build_props = b.Output.GetIntermediaryPath ("build.props");
 				FileAssert.Exists (build_props, "build.props should exist after first build.");
 
-				proj.PackageReferences.Clear ();
+				proj.PackageReferences.Remove (proj.PackageReferences.Single (p => p.Id == "Xamarin.AndroidX.AppCompat"));
 				//NOTE: this should be newer than specified above
 				proj.PackageReferences.Add (KnownPackages.AndroidXAppCompat);
 				b.Save (proj, doNotCleanupOnUpdate: true);
