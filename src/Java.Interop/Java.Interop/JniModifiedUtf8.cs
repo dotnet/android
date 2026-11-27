@@ -17,7 +17,13 @@ namespace Java.Interop {
 		const byte MaxAsciiByte = 0x7f;
 		const char MaxTwoByteCodeUnit = '\u07ff';
 		const byte TwoByteLeadPrefix = 0xc0;
+		const byte MinNonNullTwoByteLead = 0xc2;
+		const byte MaxTwoByteLead = 0xdf;
 		const byte ThreeByteLeadPrefix = 0xe0;
+		const byte MaxThreeByteLead = 0xef;
+		const byte MinThreeByteE0Continuation = 0xa0;
+		const byte FourByteLeadPrefix = 0xf0;
+		const byte MaxUtf8FourByteLead = 0xf4;
 		const byte ContinuationBytePrefix = 0x80;
 		const byte MaxContinuationByte = 0xbf;
 		const byte ContinuationPayloadMask = 0x3f;
@@ -26,28 +32,6 @@ namespace Java.Interop {
 		const int TwoByteSequenceLength = 2;
 		const int ThreeByteSequenceLength = 3;
 		const int ThreeByteLeadShift = 2 * ContinuationPayloadBits;
-
-		// ART CheckUtfBytes accepts these structural lead-byte ranges, including non-scalar sequences:
-		// https://android.googlesource.com/platform/art/+/refs/heads/main/runtime/jni/check_jni.cc
-		const byte MaxTwoByteLead = 0xdf;
-		const byte MaxThreeByteLead = 0xef;
-		const byte FourByteLeadPrefix = 0xf0;
-		const byte MaxArtFourByteLead = 0xf7;
-
-		// RFC 3629 section 4 limits standard UTF-8 four-byte scalar leads to F0..F4:
-		// https://www.rfc-editor.org/rfc/rfc3629.html#section-4
-		const byte MaxUtf8FourByteLead = 0xf4;
-		const int FourByteSequenceLength = 4;
-
-		// UTF-16 surrogate encoding, RFC 2781 section 2.1:
-		// https://www.rfc-editor.org/rfc/rfc2781.html#section-2.1
-		const int SurrogatePairCodeUnitCount = 2;
-		const int SupplementaryConversionExtraBytes = SurrogatePairCodeUnitCount * ThreeByteSequenceLength - FourByteSequenceLength;
-		const int FirstSupplementaryCodePoint = 0x10000;
-		const int HighSurrogateStart = 0xd800;
-		const int LowSurrogateStart = 0xdc00;
-		const int SurrogatePayloadMask = 0x3ff;
-		const int SurrogatePayloadBits = 10;
 
 		// JNI encodes each UTF-16 code unit, including NUL and both halves of a surrogate pair.
 		internal static int GetByteCount (ReadOnlySpan<char> value)
@@ -134,146 +118,50 @@ namespace Java.Interop {
 			if (value == null)
 				return;
 			// SAFETY: The caller keeps value readable through its terminator for this scan.
-			GetExtraByteCount (unsafe (MemoryMarshal.CreateReadOnlySpanFromNullTerminated (value)), paramName);
+			Validate (unsafe (MemoryMarshal.CreateReadOnlySpanFromNullTerminated (value)), paramName);
 		}
 
+		// Validates strict JNI modified UTF-8 (1-byte 0x01..0x7F, 2-byte C0 80 or C2..DF 80..BF,
+		// 3-byte E0 A0..BF 80..BF or E1..EF 80..BF 80..BF). Rejects truncated, overlong, and 4-byte
+		// standard UTF-8 sequences before JNI reads them.
 		internal static void Validate (ReadOnlySpan<byte> value, string paramName)
 		{
 			int terminator = value.IndexOf ((byte) 0);
 			if (terminator >= 0)
 				value = value.Slice (0, terminator);
-			GetExtraByteCount (value, paramName);
-		}
 
-		/// <summary>
-		/// Returns <paramref name="value"/> when JNI would stop reading at or before its length
-		/// (a NUL within it, or the u8 literal terminator right after it); otherwise a terminated copy.
-		/// </summary>
-		/// <safety>
-		/// A nonempty value without a NUL must have readable backing storage for the byte after its length.
-		/// </safety>
-		internal static unsafe ReadOnlySpan<byte> EnsureTerminated (ReadOnlySpan<byte> value)
-		{
-			if (value.IndexOf ((byte) 0) >= 0)
-				return value;
-			if (!value.IsEmpty) {
-				unsafe {
-					// SAFETY: The caller guarantees the byte after the span is readable.
-					fixed (byte* p = value) {
-						if (p [value.Length] == 0)
-							return value;
-					}
-				}
-			}
-			var copy = new byte [checked (value.Length + 1)];
-			value.CopyTo (copy);
-			return copy;
-		}
-
-		/// <safety>
-		/// A non-null value must remain readable and unchanged through its NUL terminator.
-		/// </safety>
-		internal static unsafe bool RequiresConversion (byte* value, string paramName)
-		{
-			if (value == null)
-				return false;
-			// SAFETY: The caller keeps value readable through its terminator for this scan.
-			return GetExtraByteCount (unsafe (MemoryMarshal.CreateReadOnlySpanFromNullTerminated (value)), paramName) != 0;
-		}
-
-		/// <safety>
-		/// A non-null value must remain readable and unchanged through its NUL terminator.
-		/// The caller owns a nonzero result and must release it with Free.
-		/// </safety>
-		internal static unsafe IntPtr AllocConvertedUtf8 (byte* value, string paramName)
-		{
-			if (value == null)
-				return IntPtr.Zero;
-			// SAFETY: The caller keeps value readable through its terminator while the bytes are copied.
-			var source = unsafe (MemoryMarshal.CreateReadOnlySpanFromNullTerminated (value));
-			int extra = GetExtraByteCount (source, paramName);
-			if (extra == 0)
-				return IntPtr.Zero;
-
-			return AllocUtf8AsModifiedUtf8 (source, extra);
-		}
-
-		static IntPtr AllocUtf8AsModifiedUtf8 (ReadOnlySpan<byte> source, int extra)
-		{
-			int length = checked (source.Length + extra + 1);
-			IntPtr result = Marshal.AllocCoTaskMem (length);
-			try {
-				unsafe {
-					// SAFETY: result owns length writable bytes; source remains readable throughout the copy.
-					var destination = new Span<byte> ((void*) result, length);
-					int offset = 0;
-					int index;
-					while ((index = IndexOfSupplementary (source, out Rune rune)) >= 0) {
-						source.Slice (0, index).CopyTo (destination.Slice (offset));
-						offset += index;
-						int scalar = rune.Value - FirstSupplementaryCodePoint;
-						WriteChar ((char) (HighSurrogateStart + (scalar >> SurrogatePayloadBits)), destination, ref offset);
-						WriteChar ((char) (LowSurrogateStart + (scalar & SurrogatePayloadMask)), destination, ref offset);
-						source = source.Slice (index + FourByteSequenceLength);
-					}
-					source.CopyTo (destination.Slice (offset));
-					offset += source.Length;
-					destination [offset] = 0;
-				}
-				return result;
-			} catch {
-				unsafe {
-					// SAFETY: The allocation is owned here and was not published.
-					Marshal.FreeCoTaskMem (result);
-				}
-				throw;
-			}
-		}
-
-		// Accepts exactly what ART CheckJNI's CheckUtfBytes accepts. Release ART decoders trust lead
-		// bytes and would read past the NUL of a truncated sequence, so reject before calling JNI.
-		// Existing modified UTF-8 needs no conversion; only valid four-byte UTF-8 scalars expand.
-		static int GetExtraByteCount (ReadOnlySpan<byte> value, string paramName)
-		{
-			int extra = 0;
 			int position = 0;
 			int index;
 			while ((index = value.IndexOfAnyExceptInRange (MinNonNullAsciiByte, MaxAsciiByte)) >= 0) {
 				position += index;
 				value = value.Slice (index);
-				int length = value [0] switch {
-					>= TwoByteLeadPrefix and <= MaxTwoByteLead => TwoByteSequenceLength,
-					>= ThreeByteLeadPrefix and <= MaxThreeByteLead => ThreeByteSequenceLength,
-					>= FourByteLeadPrefix and <= MaxArtFourByteLead => FourByteSequenceLength,
-					_ => 0,
-				};
-				if (length == 0 || value.Length < length ||
-						value.Slice (1, length - 1).IndexOfAnyExceptInRange (ContinuationBytePrefix, MaxContinuationByte) >= 0)
+				byte lead = value [0];
+				if (lead == TwoByteLeadPrefix) {
+					if (value.Length < TwoByteSequenceLength || value [1] != ContinuationBytePrefix)
+						throw new ArgumentException ($"Invalid JNI modified UTF-8 sequence at byte offset {position}.", paramName);
+					position += TwoByteSequenceLength;
+					value = value.Slice (TwoByteSequenceLength);
+				} else if (lead is >= MinNonNullTwoByteLead and <= MaxTwoByteLead) {
+					if (value.Length < TwoByteSequenceLength || value [1] is < ContinuationBytePrefix or > MaxContinuationByte)
+						throw new ArgumentException ($"Invalid JNI modified UTF-8 sequence at byte offset {position}.", paramName);
+					position += TwoByteSequenceLength;
+					value = value.Slice (TwoByteSequenceLength);
+				} else if (lead is >= ThreeByteLeadPrefix and <= MaxThreeByteLead) {
+					if (value.Length < ThreeByteSequenceLength ||
+							value [1] is < ContinuationBytePrefix or > MaxContinuationByte ||
+							value [2] is < ContinuationBytePrefix or > MaxContinuationByte ||
+							(lead == ThreeByteLeadPrefix && value [1] < MinThreeByteE0Continuation))
+						throw new ArgumentException ($"Invalid JNI modified UTF-8 sequence at byte offset {position}.", paramName);
+					position += ThreeByteSequenceLength;
+					value = value.Slice (ThreeByteSequenceLength);
+				} else if (lead is >= FourByteLeadPrefix and <= MaxUtf8FourByteLead) {
+					throw new ArgumentException (
+						$"Invalid JNI modified UTF-8 sequence at byte offset {position}: 4-byte UTF-8 sequences are not valid modified UTF-8. Encode supplementary characters as UTF-16 surrogate pairs or use the string overload.",
+						paramName);
+				} else {
 					throw new ArgumentException ($"Invalid JNI modified UTF-8 sequence at byte offset {position}.", paramName);
-				if (length == FourByteSequenceLength && Rune.DecodeFromUtf8 (value.Slice (0, FourByteSequenceLength), out _, out _) == OperationStatus.Done)
-					extra = checked (extra + SupplementaryConversionExtraBytes);
-				position += length;
-				value = value.Slice (length);
+				}
 			}
-			return extra;
-		}
-
-		static int IndexOfSupplementary (ReadOnlySpan<byte> value, out Rune rune)
-		{
-			int offset = 0;
-			int index;
-			// The lead-byte range is necessary but not sufficient; Rune validates the complete sequence.
-			while ((index = value.IndexOfAnyInRange (FourByteLeadPrefix, MaxUtf8FourByteLead)) >= 0) {
-				offset += index;
-				value = value.Slice (index);
-				if (Rune.DecodeFromUtf8 (value, out rune, out _) == OperationStatus.Done)
-					return offset;
-				// Preserve structurally accepted sequences that are not Unicode scalars.
-				offset++;
-				value = value.Slice (1);
-			}
-			rune = default;
-			return -1;
 		}
 
 		internal static void Free (IntPtr value)
@@ -294,28 +182,13 @@ namespace Java.Interop {
 		readonly IntPtr owned;
 
 		/// <safety>
-		/// The address must only be consumed while this wrapper is alive. For caller-provided
-		/// source storage, the constructor's lifetime and immutability requirements also apply.
+		/// The address must only be consumed while this wrapper is alive.
 		/// </safety>
-		internal unsafe IntPtr Pointer { get; }
+		internal unsafe IntPtr Pointer => owned;
 
 		internal JniModifiedUtf8String (string value)
 		{
 			owned = JniModifiedUtf8.Alloc (value);
-			unsafe {
-				Pointer = owned;
-			}
-		}
-
-		/// <safety>
-		/// A non-null value must remain readable and unchanged through its NUL terminator
-		/// until this instance is disposed. The source storage is never freed.
-		/// </safety>
-		internal unsafe JniModifiedUtf8String (byte* value, string paramName)
-		{
-			// SAFETY: The caller retains the source bytes through conversion and any subsequent JNI call.
-			owned = unsafe (JniModifiedUtf8.AllocConvertedUtf8 (value, paramName));
-			Pointer = owned == IntPtr.Zero ? (IntPtr) value : owned;
 		}
 
 		public void Dispose () => JniModifiedUtf8.Free (owned);

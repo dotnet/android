@@ -17,11 +17,9 @@ using Java.Interop;
 namespace Java.Interop {
 
 	/// <remarks>
-	/// For overloads accepting UTF-8 spans, the caller must ensure each span has readable
-	/// NUL-terminated backing storage for the duration of the call. Complete C# UTF-8 literals
-	/// provide a terminator beyond their span length; copies and slices do not carry that guarantee.
-	/// Standard UTF-8 and JNI modified UTF-8 are accepted; supplementary characters in standard
-	/// UTF-8 are converted to modified UTF-8 for JNI.
+	/// For overloads accepting UTF-8 spans, the caller must ensure each span remains readable
+	/// and unchanged for the duration of the call. Inputs must be valid JNI modified UTF-8;
+	/// invalid or 4-byte standard UTF-8 sequences throw <see cref="ArgumentException"/>.
 	/// </remarks>
 	public sealed class JniType : IDisposable {
 

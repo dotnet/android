@@ -212,12 +212,12 @@ namespace Xamarin.Java.Interop
 				o.WriteLine ("\t\t{");
 				o.WriteLine ("\t\t\tunsafe {");
 				o.WriteLine ("\t\t\t\t// SAFETY: The caller supplies this thread's live JNIEnv and arguments matching the {0} JNI slot.", entry.Name);
-				bool normalizeUtf8 = entry.Name == "FindClass" || entry.Name == "GetMethodID" ||
+				bool validateUtf8 = entry.Name == "FindClass" || entry.Name == "GetMethodID" ||
 					entry.Name == "GetStaticMethodID" || entry.Name == "GetFieldID" || entry.Name == "GetStaticFieldID";
-				if (normalizeUtf8) {
+				if (validateUtf8) {
 					foreach (var p in entry.Parameters) {
 						if (p.Type is StringTypeInfo)
-							o.WriteLine ($"\t\t\t\tusing var __{p.Name}Utf8 = new JniModifiedUtf8String ((byte*) {Escape (p.Name)}, \"{p.Name}\");");
+							o.WriteLine ($"\t\t\t\tJniModifiedUtf8.Validate ((byte*) {Escape (p.Name)}, \"{p.Name}\");");
 					}
 				}
 				o.Write ("\t\t\t\t");
@@ -227,7 +227,7 @@ namespace Xamarin.Java.Interop
 				o.Write ($"(*((JNIEnv**)env))->{entry.Name} (env");
 				foreach (var p in entry.Parameters) {
 					o.Write (", ");
-					o.Write (normalizeUtf8 && p.Type is StringTypeInfo ? $"__{p.Name}Utf8.Pointer" : Escape (p.Name));
+					o.Write (Escape (p.Name));
 				}
 				o.WriteLine (");");
 				o.WriteLine ("\t\t\t}");

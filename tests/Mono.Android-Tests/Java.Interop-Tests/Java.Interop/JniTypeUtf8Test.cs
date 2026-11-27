@@ -36,28 +36,61 @@ namespace Java.InteropTests
 
 		[TestMethod]
 		[TestCategory ("JniModifiedUtf8")]
-		public void ModifiedUtf8_ConvertsSupplementaryUtf8 ()
+		public void ModifiedUtf8_AcceptsValidModifiedUtf8 ()
 		{
-			byte [] source = [
-				0xed, 0xa0, 0x80, 0xed, 0xb0, 0x80,
-				0xf0, 0x90, 0x80, 0x80, 0xf4, 0x8f, 0xbf, 0xbf, 0,
+			byte [][] valid = [
+				[0x41],
+				[0xc0, 0x80],
+				[0xc2, 0x80],
+				[0xdf, 0xbf],
+				[0xe0, 0xa0, 0x80],
+				[0xef, 0xbf, 0xbf],
+				[0xed, 0xa0, 0x80, 0xed, 0xb0, 0x80],
+				[0xed, 0xaf, 0xbf, 0xed, 0xbf, 0xbf],
 			];
-			byte [] expected = [
-				0xed, 0xa0, 0x80, 0xed, 0xb0, 0x80,
-				0xed, 0xa0, 0x80, 0xed, 0xb0, 0x80,
-				0xed, 0xaf, 0xbf, 0xed, 0xbf, 0xbf, 0,
+			for (int prefix = 0; prefix <= 33; prefix++) {
+				foreach (var bytes in valid) {
+					var source = new byte [prefix + bytes.Length + 5];
+					Array.Fill (source, (byte) 'a', 0, prefix);
+					bytes.CopyTo (source, prefix);
+					// Invalid bytes beyond the NUL terminator must not be inspected.
+					source [prefix + bytes.Length + 1] = 0xf0;
+					source [prefix + bytes.Length + 2] = 0x90;
+					source [prefix + bytes.Length + 3] = 0x80;
+					source [prefix + bytes.Length + 4] = 0x80;
+					JniModifiedUtf8.Validate (source, "value");
+					unsafe {
+						// SAFETY: source stays pinned and NUL-terminated through validation.
+						fixed (byte* pointer = source) {
+							JniModifiedUtf8.Validate (pointer, "value");
+						}
+					}
+				}
+			}
+		}
+
+		[TestMethod]
+		[TestCategory ("JniModifiedUtf8")]
+		public void ModifiedUtf8_RejectsFourByteUtf8WithActionableMessage ()
+		{
+			byte [][] fourByte = [
+				[0xf0, 0x90, 0x80, 0x80],
+				[0xf4, 0x8f, 0xbf, 0xbf],
+				[0xf0],
 			];
-			unsafe {
-				// SAFETY: source remains pinned and NUL-terminated through conversion.
-				fixed (byte* bytes = source) {
-					var converted = JniModifiedUtf8.AllocConvertedUtf8 (bytes, "value");
-					try {
-						Assert.AreNotEqual (IntPtr.Zero, converted);
-						var actual = new byte [expected.Length];
-						Marshal.Copy (converted, actual, 0, actual.Length);
-						CollectionAssert.AreEqual (expected, actual);
-					} finally {
-						JniModifiedUtf8.Free (converted);
+			foreach (var bytes in fourByte) {
+				var source = new byte [bytes.Length + 1];
+				bytes.CopyTo (source, 0);
+				var e = Assert.ThrowsExactly<ArgumentException> (() => JniModifiedUtf8.Validate (source, "value"));
+				Assert.AreEqual ("value", e.ParamName);
+				StringAssert.Contains (e.Message, "4-byte UTF-8");
+				unsafe {
+					// SAFETY: source stays pinned and NUL-terminated through validation.
+					fixed (byte* pinned = source) {
+						IntPtr pointer = (IntPtr) pinned;
+						var ePtr = Assert.ThrowsExactly<ArgumentException> (() => JniModifiedUtf8.Validate ((byte*) pointer, "value"));
+						Assert.AreEqual ("value", ePtr.ParamName);
+						StringAssert.Contains (ePtr.Message, "4-byte UTF-8");
 					}
 				}
 			}
@@ -94,56 +127,11 @@ namespace Java.InteropTests
 			}
 		}
 
-		[TestMethod]
-		[TestCategory ("JniModifiedUtf8")]
-		public void ModifiedUtf8_PreservesStructurallyValidNonScalarSequences ()
-		{
-			// ART CheckJNI accepts these lead/continuation shapes; only valid four-byte scalars are rewritten.
-			byte [][] unchanged = [
-				[0xf0, 0x8f, 0xbf, 0xbf], [0xf4, 0x90, 0x80, 0x80], [0xf5, 0x80, 0x80, 0x80],
-				[0xf7, 0xbf, 0xbf, 0xbf], [0xc0, 0x80], [0xed, 0xa0, 0x80, 0xed, 0xb0, 0x80],
-			];
-			for (int prefix = 0; prefix <= 33; prefix++) {
-				foreach (var bytes in unchanged) {
-					var source = new byte [prefix + bytes.Length + 5];
-					Array.Fill (source, (byte) 'a', 0, prefix);
-					bytes.CopyTo (source, prefix);
-					// The scalar beyond this terminator must not be inspected.
-					source [prefix + bytes.Length + 1] = 0xf0;
-					source [prefix + bytes.Length + 2] = 0x90;
-					source [prefix + bytes.Length + 3] = 0x80;
-					source [prefix + bytes.Length + 4] = 0x80;
-					unsafe {
-						// SAFETY: source stays pinned and NUL-terminated through each conversion.
-						fixed (byte* pointer = source) {
-							Assert.IsFalse (JniModifiedUtf8.RequiresConversion (pointer, "value"));
-							Assert.AreEqual (IntPtr.Zero, JniModifiedUtf8.AllocConvertedUtf8 (pointer, "value"));
-							source [prefix + bytes.Length] = 0xf0;
-							source [prefix + bytes.Length + 1] = 0x90;
-							source [prefix + bytes.Length + 2] = 0x80;
-							source [prefix + bytes.Length + 3] = 0x80;
-							source [source.Length - 1] = 0;
-							Assert.IsTrue (JniModifiedUtf8.RequiresConversion (pointer, "value"));
-							IntPtr converted = JniModifiedUtf8.AllocConvertedUtf8 (pointer, "value");
-							try {
-								Assert.AreNotEqual (IntPtr.Zero, converted);
-								var expected = new List<byte> (source.AsSpan (0, prefix + bytes.Length).ToArray ());
-								expected.AddRange ([0xed, 0xa0, 0x80, 0xed, 0xb0, 0x80, 0]);
-								var actual = new byte [expected.Count];
-								Marshal.Copy (converted, actual, 0, actual.Length);
-								CollectionAssert.AreEqual (expected.ToArray (), actual);
-							} finally {
-								JniModifiedUtf8.Free (converted);
-							}
-						}
-					}
-				}
-			}
-		}
-
 		internal static readonly byte [][] MalformedUtf8 = [
-			[0xf0], [0xf0, 0x90], [0xf0, 0x90, 0x80], [0xe0, 0xa0], [0xc2],
-			[0xf0, 0xff, 0x80, 0x80], [0xf0, 0x90, 0x7f, 0x80], [0xf0, 0x90, 0x80, 0xc0],
+			[0xf0], [0xf0, 0x90], [0xf0, 0x90, 0x80], [0xf0, 0x90, 0x80, 0x80],
+			[0xf4, 0x8f, 0xbf, 0xbf], [0xf5, 0x80, 0x80, 0x80], [0xf7, 0xbf, 0xbf, 0xbf],
+			[0xe0, 0xa0], [0xe0, 0x80, 0x80], [0xe0, 0x9f, 0xbf],
+			[0xc0], [0xc0, 0x81], [0xc1, 0x80], [0xc2],
 			[0x80], [0xbf], [0xf8, 0x80, 0x80, 0x80, 0x80], [0xff], [0xc2, 0x41],
 		];
 
@@ -160,6 +148,9 @@ namespace Java.InteropTests
 					source [prefix + bytes.Length + 1] = 0x80;
 					source [prefix + bytes.Length + 2] = 0x80;
 					source [prefix + bytes.Length + 3] = 0x80;
+					var eSpan = Assert.ThrowsExactly<ArgumentException> (() => JniModifiedUtf8.Validate (source, "value"));
+					Assert.AreEqual ("value", eSpan.ParamName);
+					StringAssert.Contains (eSpan.Message, $"byte offset {prefix}");
 					unsafe {
 						// SAFETY: source stays pinned and NUL-terminated through each scan.
 						fixed (byte* pinned = source) {
@@ -167,8 +158,6 @@ namespace Java.InteropTests
 							var e = Assert.ThrowsExactly<ArgumentException> (() => JniModifiedUtf8.Validate ((byte*) pointer, "value"));
 							Assert.AreEqual ("value", e.ParamName);
 							StringAssert.Contains (e.Message, $"byte offset {prefix}");
-							Assert.ThrowsExactly<ArgumentException> (() => JniModifiedUtf8.RequiresConversion ((byte*) pointer, "value"));
-							Assert.ThrowsExactly<ArgumentException> (() => JniModifiedUtf8.AllocConvertedUtf8 ((byte*) pointer, "value"));
 						}
 					}
 				}
@@ -287,12 +276,17 @@ namespace Java.InteropTests
 			// ART's String-based Class.forName() cannot load classes whose names contain supplementary
 			// characters, so the lookup must use JNI FindClass() with the app class loader. ART selects
 			// that loader from the calling native method, so run the lookups inside a UnicodeNames native method.
+			byte [] modifiedNativeName = [.. "native"u8, 0xed, 0xa0, 0x80, 0xed, 0xb0, 0x80, 0];
+			byte [] modifiedNativeSignature = [
+				.. "(Lnet/dot/jni/test/UnicodeNames$Value"u8,
+				0xed, 0xa0, 0x80, 0xed, 0xb0, 0x80, .. ";)I"u8, 0,
+			];
 			using (var type = new JniType (UnicodeTypeName)) {
 				try {
 					unsafe {
-						// SAFETY: Literals remain pinned and terminated through registration; the callback has the matching JNI ABI.
-						fixed (byte* name = "native\U00010000"u8)
-						fixed (byte* signature = "(Lnet/dot/jni/test/UnicodeNames$Value\U00010000;)I"u8) {
+						// SAFETY: Buffers remain pinned and terminated through registration; the callback has the matching JNI ABI.
+						fixed (byte* name = modifiedNativeName)
+						fixed (byte* signature = modifiedNativeSignature) {
 							var methods = new [] {
 								new JniNativeMethod (name, signature,
 									(IntPtr) (delegate* unmanaged<IntPtr, IntPtr, IntPtr, int>) &FindSupplementaryClassCallback),
@@ -333,13 +327,15 @@ namespace Java.InteropTests
 				0xed, 0xa0, 0x80, 0xed, 0xb0, 0x80, 0,
 			];
 			using (var fromString = new JniType (className))
-			// SAFETY: The literal and modifiedName both have NUL-terminated backing storage.
-			using (var fromUtf8 = unsafe (new JniType ("net/dot/jni/test/UnicodeNames$Value\U00010000"u8)))
+			// SAFETY: modifiedName has NUL-terminated modified UTF-8 backing storage.
 			using (var fromModifiedUtf8 = unsafe (new JniType (modifiedName))) {
 				Assert.AreEqual (className, fromString.Name);
-				Assert.IsTrue (JniEnvironment.Types.IsSameObject (fromString.PeerReference, fromUtf8.PeerReference));
 				Assert.IsTrue (JniEnvironment.Types.IsSameObject (fromString.PeerReference, fromModifiedUtf8.PeerReference));
 			}
+			// 4-byte standard UTF-8 is rejected before JNI.
+			Assert.ThrowsExactly<ArgumentException> (() => {
+				using var _ = unsafe (new JniType ("net/dot/jni/test/UnicodeNames$Value\U00010000"u8));
+			});
 		}
 
 		[TestMethod]
@@ -353,8 +349,17 @@ namespace Java.InteropTests
 			const string valueSignature = "Lnet/dot/jni/test/UnicodeNames$Value\U00010000;";
 			const string identitySignature = "(Lnet/dot/jni/test/UnicodeNames$Value\U00010000;)Lnet/dot/jni/test/UnicodeNames$Value\U00010000;";
 			byte [] modifiedName = [.. "method"u8, 0xed, 0xa0, 0x80, 0xed, 0xb0, 0x80, 0];
+			byte [] modifiedStaticName = [.. "staticMethod"u8, 0xed, 0xa0, 0x80, 0xed, 0xb0, 0x80, 0];
+			byte [] modifiedInstanceFieldName = [.. "field"u8, 0xed, 0xa0, 0x80, 0xed, 0xb0, 0x80, 0];
+			byte [] modifiedStaticFieldName = [.. "staticField"u8, 0xed, 0xa0, 0x80, 0xed, 0xb0, 0x80, 0];
 			byte [] modifiedSignature = [
 				.. "Lnet/dot/jni/test/UnicodeNames$Value"u8,
+				0xed, 0xa0, 0x80, 0xed, 0xb0, 0x80, (byte) ';', 0,
+			];
+			byte [] modifiedIdentitySignature = [
+				.. "(Lnet/dot/jni/test/UnicodeNames$Value"u8,
+				0xed, 0xa0, 0x80, 0xed, 0xb0, 0x80,
+				.. ";)Lnet/dot/jni/test/UnicodeNames$Value"u8,
 				0xed, 0xa0, 0x80, 0xed, 0xb0, 0x80, (byte) ';', 0,
 			];
 
@@ -375,18 +380,15 @@ namespace Java.InteropTests
 				Assert.AreEqual (instance.ID, triedInstance?.ID);
 				Assert.AreEqual (staticMethod.ID, triedStatic?.ID);
 
-				// SAFETY: Each literal or array is terminated and remains alive through its lookup.
+				// SAFETY: Each modified UTF-8 array is terminated and remains alive through its lookup.
 				unsafe {
-					Assert.AreEqual (instance.ID, type.GetInstanceMethod ("method\U00010000"u8, "()I"u8).ID);
 					Assert.AreEqual (instance.ID, type.GetInstanceMethod (modifiedName, "()I"u8).ID);
-					Assert.AreEqual (staticMethod.ID, type.GetStaticMethod ("staticMethod\U00010000"u8, "()I"u8).ID);
-					Assert.AreEqual (instanceField.ID, type.GetInstanceField ("field\U00010000"u8, "I"u8).ID);
-					Assert.AreEqual (staticField.ID, type.GetStaticField ("staticField\U00010000"u8, "I"u8).ID);
-					Assert.AreEqual (valueField.ID, type.GetInstanceField ("value"u8, "Lnet/dot/jni/test/UnicodeNames$Value\U00010000;"u8).ID);
+					Assert.AreEqual (staticMethod.ID, type.GetStaticMethod (modifiedStaticName, "()I"u8).ID);
+					Assert.AreEqual (instanceField.ID, type.GetInstanceField (modifiedInstanceFieldName, "I"u8).ID);
+					Assert.AreEqual (staticField.ID, type.GetStaticField (modifiedStaticFieldName, "I"u8).ID);
 					Assert.AreEqual (valueField.ID, type.GetInstanceField ("value"u8, modifiedSignature).ID);
-					Assert.AreEqual (identity.ID, type.GetStaticMethod ("identity"u8,
-						"(Lnet/dot/jni/test/UnicodeNames$Value\U00010000;)Lnet/dot/jni/test/UnicodeNames$Value\U00010000;"u8).ID);
-					fixed (byte* name = "method\U00010000"u8)
+					Assert.AreEqual (identity.ID, type.GetStaticMethod ("identity"u8, modifiedIdentitySignature).ID);
+					fixed (byte* name = modifiedName)
 					fixed (byte* signature = "()I"u8) {
 						Assert.IsTrue (type.TryGetInstanceMethod (name, "()I".AsSpan (), out var fromByteName));
 						Assert.IsTrue (type.TryGetInstanceMethod (instanceName.AsSpan (), signature, out var fromByteSignature));
@@ -396,29 +398,31 @@ namespace Java.InteropTests
 						Assert.AreEqual (instance.ID, fromBytes?.ID);
 					}
 					fixed (byte* name = "identity"u8)
-					fixed (byte* signature = "(Lnet/dot/jni/test/UnicodeNames$Value\U00010000;)Lnet/dot/jni/test/UnicodeNames$Value\U00010000;"u8) {
+					fixed (byte* signature = modifiedIdentitySignature) {
 						Assert.IsTrue (type.TryGetStaticMethod (name, signature, out var fromBytes));
 						Assert.IsTrue (type.TryGetStaticMethod ("identity".AsSpan (), signature, out var fromByteSignature));
 						Assert.AreEqual (identity.ID, fromBytes?.ID);
 						Assert.AreEqual (identity.ID, fromByteSignature?.ID);
 					}
 				}
+
+				// 4-byte standard UTF-8 spans are rejected before JNI.
+				Assert.ThrowsExactly<ArgumentException> (() => unsafe (type.GetInstanceMethod ("method\U00010000"u8, "()I"u8)));
+				Assert.ThrowsExactly<ArgumentException> (() => unsafe (type.GetStaticMethod ("staticMethod\U00010000"u8, "()I"u8)));
+				Assert.ThrowsExactly<ArgumentException> (() => unsafe (type.GetInstanceField ("field\U00010000"u8, "I"u8)));
+				Assert.ThrowsExactly<ArgumentException> (() => unsafe (type.GetStaticField ("staticField\U00010000"u8, "I"u8)));
+				Assert.ThrowsExactly<ArgumentException> (() => unsafe (type.GetInstanceField ("value"u8, "Lnet/dot/jni/test/UnicodeNames$Value\U00010000;"u8)));
 			}
 		}
 
 		[TestMethod]
 		[TestCategory ("JniModifiedUtf8")]
-		[DataRow (1, false)]
-		[DataRow (1, true)]
-		[DataRow (40, false)]
-		public void RegisterNatives_SupplementaryUtf8 (int count, bool modified)
+		[DataRow (1)]
+		[DataRow (40)]
+		public void RegisterNatives_SupplementaryModifiedUtf8 (int count)
 		{
-			byte [] name = modified
-				? [.. "native"u8, 0xed, 0xa0, 0x80, 0xed, 0xb0, 0x80, 0]
-				: [.. "native\U00010000"u8, 0];
-			byte [] signature = modified
-				? [.. "(Lnet/dot/jni/test/UnicodeNames$Value"u8, 0xed, 0xa0, 0x80, 0xed, 0xb0, 0x80, .. ";)I"u8, 0]
-				: [.. "(Lnet/dot/jni/test/UnicodeNames$Value\U00010000;)I"u8, 0];
+			byte [] name = [.. "native"u8, 0xed, 0xa0, 0x80, 0xed, 0xb0, 0x80, 0];
+			byte [] signature = [.. "(Lnet/dot/jni/test/UnicodeNames$Value"u8, 0xed, 0xa0, 0x80, 0xed, 0xb0, 0x80, .. ";)I"u8, 0];
 			using (var type = new JniType (UnicodeTypeName)) {
 				try {
 					unsafe {
@@ -443,19 +447,21 @@ namespace Java.InteropTests
 		[TestCategory ("JniModifiedUtf8")]
 		public void RegisterNatives_MissingSupplementaryName_Throws ()
 		{
+			byte [] missingName = [.. "missing"u8, 0xed, 0xa0, 0x80, 0xed, 0xb0, 0x80, 0];
+			byte [] signatureBytes = [.. "(Lnet/dot/jni/test/UnicodeNames$Value"u8, 0xed, 0xa0, 0x80, 0xed, 0xb0, 0x80, .. ";)I"u8, 0];
 			using (var type = new JniType (UnicodeTypeName)) {
 				try {
 					unsafe {
-						// SAFETY: Literals remain pinned and terminated through registration; the callback has the matching JNI ABI.
-						fixed (byte* name = "missing\U00010000"u8)
-						fixed (byte* signature = "(Lnet/dot/jni/test/UnicodeNames$Value\U00010000;)I"u8) {
+						// SAFETY: Buffers remain pinned and terminated through registration; the callback has the matching JNI ABI.
+						fixed (byte* name = missingName)
+						fixed (byte* signature = signatureBytes) {
 							var methods = new [] {
 								new JniNativeMethod (name, signature,
 									(IntPtr) (delegate* unmanaged<IntPtr, IntPtr, IntPtr, int>) &UnicodeNativeCallback),
 							};
 							var error = Assert.ThrowsExactly<Java.Lang.NoSuchMethodError> (() => {
 								unsafe {
-									// SAFETY: Both pinned literals and the callback remain valid through this synchronous call.
+									// SAFETY: Both pinned buffers and the callback remain valid through this synchronous call.
 									JniEnvironment.Types.RegisterNatives (type.PeerReference, methods);
 								}
 							});

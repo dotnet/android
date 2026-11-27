@@ -2,28 +2,39 @@
 
 using System;
 using System.Runtime.ExceptionServices;
-using System.Runtime.InteropServices;
 
 namespace Java.Interop {
 
 	partial class JniEnvironment {
 
+		const int MaxStackTerminatedUtf8Length = 512;
+
+		static ReadOnlySpan<byte> TerminateUtf8 (ReadOnlySpan<byte> value, Span<byte> stackBuffer)
+		{
+			if (value.IndexOf ((byte) 0) >= 0)
+				return value;
+			int length = checked (value.Length + 1);
+			Span<byte> buffer = length <= stackBuffer.Length
+				? stackBuffer.Slice (0, length)
+				: new byte [length];
+			value.CopyTo (buffer);
+			buffer [value.Length] = 0;
+			return buffer;
+		}
+
 		partial class InstanceFields {
 
 			/// <summary>
-			/// Looks up a JNI instance field ID using null-terminated UTF-8 name and signature spans.
+			/// Looks up a JNI instance field ID using JNI modified UTF-8 name and signature spans.
 			/// Use with <c>"fieldName"u8</c> literals to avoid string marshalling overhead.
 			/// Each span ends at its length or at an earlier NUL within it.
-			/// Standard UTF-8 supplementary characters are converted to JNI modified UTF-8.
-			/// Structurally invalid UTF-8 throws <see cref="ArgumentException"/> before JNI reads it.
+			/// Invalid or 4-byte standard UTF-8 throws <see cref="ArgumentException"/> before JNI reads it.
 			/// </summary>
 			/// <safety>
-			/// The caller must ensure <paramref name="name"/> and <paramref name="signature"/> have
-			/// readable NUL-terminated backing storage for the duration of the call.
-			/// Complete C# UTF-8 literals provide a terminator beyond the span length; copies and slices do not.
-			/// Keep both byte sequences unchanged and readable through success or failure;
-			/// prevent concurrent mutation/reclamation through aliases. This wrapper pins managed
-			/// backing storage during JNI access and does not retain the spans.
+			/// The caller must keep <paramref name="name"/> and <paramref name="signature"/> readable
+			/// and unchanged through success or failure, and prevent concurrent mutation/reclamation
+			/// through aliases. This wrapper pins managed backing storage during JNI access and does
+			/// not retain the spans.
 			/// </safety>
 			public static unsafe JniFieldInfo GetFieldID (JniObjectReference type, ReadOnlySpan<byte> name, ReadOnlySpan<byte> signature)
 			{
@@ -34,16 +45,19 @@ namespace Java.Interop {
 				if (signature.IsEmpty || signature [0] == 0)
 					throw new ArgumentException ("'signature' cannot be empty.", nameof (signature));
 
-				// SAFETY: The caller guarantees readable NUL-terminated backing storage, so the byte after each span is readable.
-				name = unsafe (JniModifiedUtf8.EnsureTerminated (name));
-				signature = unsafe (JniModifiedUtf8.EnsureTerminated (signature));
+				JniModifiedUtf8.Validate (name, nameof (name));
+				JniModifiedUtf8.Validate (signature, nameof (signature));
+
+				Span<byte> nameStack = stackalloc byte [MaxStackTerminatedUtf8Length];
+				Span<byte> signatureStack = stackalloc byte [MaxStackTerminatedUtf8Length];
+				ReadOnlySpan<byte> terminatedName = TerminateUtf8 (name, nameStack);
+				ReadOnlySpan<byte> terminatedSignature = TerminateUtf8 (signature, signatureStack);
+
 				IntPtr __env = JniEnvironment.EnvironmentPointer;
 				unsafe {
-					// SAFETY: The caller supplies terminated readable bytes; both spans are pinned through GetFieldID and exception polling on this thread's JNIEnv.
-					fixed (byte* _name_ptr = name)
-					fixed (byte* _signature_ptr = signature) {
-						JniModifiedUtf8.Validate (_name_ptr, nameof (name));
-						JniModifiedUtf8.Validate (_signature_ptr, nameof (signature));
+					// SAFETY: Both spans are validated, NUL-terminated within bounds, and pinned through GetFieldID and exception polling on this thread's JNIEnv.
+					fixed (byte* _name_ptr = terminatedName)
+					fixed (byte* _signature_ptr = terminatedSignature) {
 						var tmp = JniNativeMethods.GetFieldID (__env, type.Handle, (IntPtr) _name_ptr, (IntPtr) _signature_ptr);
 						IntPtr thrown = JniNativeMethods.ExceptionOccurred (__env);
 
@@ -62,19 +76,16 @@ namespace Java.Interop {
 		partial class InstanceMethods {
 
 			/// <summary>
-			/// Looks up a JNI instance method ID using null-terminated UTF-8 name and signature spans.
+			/// Looks up a JNI instance method ID using JNI modified UTF-8 name and signature spans.
 			/// Use with <c>"methodName"u8</c> literals to avoid string marshalling overhead.
 			/// Each span ends at its length or at an earlier NUL within it.
-			/// Standard UTF-8 supplementary characters are converted to JNI modified UTF-8.
-			/// Structurally invalid UTF-8 throws <see cref="ArgumentException"/> before JNI reads it.
+			/// Invalid or 4-byte standard UTF-8 throws <see cref="ArgumentException"/> before JNI reads it.
 			/// </summary>
 			/// <safety>
-			/// The caller must ensure <paramref name="name"/> and <paramref name="signature"/> have
-			/// readable NUL-terminated backing storage for the duration of the call.
-			/// Complete C# UTF-8 literals provide a terminator beyond the span length; copies and slices do not.
-			/// Keep both byte sequences unchanged and readable through success or failure;
-			/// prevent concurrent mutation/reclamation through aliases. This wrapper pins managed
-			/// backing storage during JNI access and does not retain the spans.
+			/// The caller must keep <paramref name="name"/> and <paramref name="signature"/> readable
+			/// and unchanged through success or failure, and prevent concurrent mutation/reclamation
+			/// through aliases. This wrapper pins managed backing storage during JNI access and does
+			/// not retain the spans.
 			/// </safety>
 			public static unsafe JniMethodInfo GetMethodID (JniObjectReference type, ReadOnlySpan<byte> name, ReadOnlySpan<byte> signature)
 			{
@@ -85,16 +96,19 @@ namespace Java.Interop {
 				if (signature.IsEmpty || signature [0] == 0)
 					throw new ArgumentException ("'signature' cannot be empty.", nameof (signature));
 
-				// SAFETY: The caller guarantees readable NUL-terminated backing storage, so the byte after each span is readable.
-				name = unsafe (JniModifiedUtf8.EnsureTerminated (name));
-				signature = unsafe (JniModifiedUtf8.EnsureTerminated (signature));
+				JniModifiedUtf8.Validate (name, nameof (name));
+				JniModifiedUtf8.Validate (signature, nameof (signature));
+
+				Span<byte> nameStack = stackalloc byte [MaxStackTerminatedUtf8Length];
+				Span<byte> signatureStack = stackalloc byte [MaxStackTerminatedUtf8Length];
+				ReadOnlySpan<byte> terminatedName = TerminateUtf8 (name, nameStack);
+				ReadOnlySpan<byte> terminatedSignature = TerminateUtf8 (signature, signatureStack);
+
 				IntPtr __env = JniEnvironment.EnvironmentPointer;
 				unsafe {
-					// SAFETY: The caller's name/signature bytes stay terminated and readable; fixed covers the complete JNI method-ID lookup on the current thread.
-					fixed (byte* _name_ptr = name)
-					fixed (byte* _signature_ptr = signature) {
-						JniModifiedUtf8.Validate (_name_ptr, nameof (name));
-						JniModifiedUtf8.Validate (_signature_ptr, nameof (signature));
+					// SAFETY: Both spans are validated, NUL-terminated within bounds, and pinned through GetMethodID and exception polling on this thread's JNIEnv.
+					fixed (byte* _name_ptr = terminatedName)
+					fixed (byte* _signature_ptr = terminatedSignature) {
 						var tmp = JniNativeMethods.GetMethodID (__env, type.Handle, (IntPtr) _name_ptr, (IntPtr) _signature_ptr);
 						IntPtr thrown = JniNativeMethods.ExceptionOccurred (__env);
 
@@ -113,19 +127,16 @@ namespace Java.Interop {
 		partial class StaticFields {
 
 			/// <summary>
-			/// Looks up a JNI static field ID using null-terminated UTF-8 name and signature spans.
+			/// Looks up a JNI static field ID using JNI modified UTF-8 name and signature spans.
 			/// Use with <c>"fieldName"u8</c> literals to avoid string marshalling overhead.
 			/// Each span ends at its length or at an earlier NUL within it.
-			/// Standard UTF-8 supplementary characters are converted to JNI modified UTF-8.
-			/// Structurally invalid UTF-8 throws <see cref="ArgumentException"/> before JNI reads it.
+			/// Invalid or 4-byte standard UTF-8 throws <see cref="ArgumentException"/> before JNI reads it.
 			/// </summary>
 			/// <safety>
-			/// The caller must ensure <paramref name="name"/> and <paramref name="signature"/> have
-			/// readable NUL-terminated backing storage for the duration of the call.
-			/// Complete C# UTF-8 literals provide a terminator beyond the span length; copies and slices do not.
-			/// Keep both byte sequences unchanged and readable through success or failure;
-			/// prevent concurrent mutation/reclamation through aliases. This wrapper pins managed
-			/// backing storage during JNI access and does not retain the spans.
+			/// The caller must keep <paramref name="name"/> and <paramref name="signature"/> readable
+			/// and unchanged through success or failure, and prevent concurrent mutation/reclamation
+			/// through aliases. This wrapper pins managed backing storage during JNI access and does
+			/// not retain the spans.
 			/// </safety>
 			public static unsafe JniFieldInfo GetStaticFieldID (JniObjectReference type, ReadOnlySpan<byte> name, ReadOnlySpan<byte> signature)
 			{
@@ -136,16 +147,19 @@ namespace Java.Interop {
 				if (signature.IsEmpty || signature [0] == 0)
 					throw new ArgumentException ("'signature' cannot be empty.", nameof (signature));
 
-				// SAFETY: The caller guarantees readable NUL-terminated backing storage, so the byte after each span is readable.
-				name = unsafe (JniModifiedUtf8.EnsureTerminated (name));
-				signature = unsafe (JniModifiedUtf8.EnsureTerminated (signature));
+				JniModifiedUtf8.Validate (name, nameof (name));
+				JniModifiedUtf8.Validate (signature, nameof (signature));
+
+				Span<byte> nameStack = stackalloc byte [MaxStackTerminatedUtf8Length];
+				Span<byte> signatureStack = stackalloc byte [MaxStackTerminatedUtf8Length];
+				ReadOnlySpan<byte> terminatedName = TerminateUtf8 (name, nameStack);
+				ReadOnlySpan<byte> terminatedSignature = TerminateUtf8 (signature, signatureStack);
+
 				IntPtr __env = JniEnvironment.EnvironmentPointer;
 				unsafe {
-					// SAFETY: Fixed pins the caller-guaranteed terminated name/signature until this thread's static-field lookup and exception check finish.
-					fixed (byte* _name_ptr = name)
-					fixed (byte* _signature_ptr = signature) {
-						JniModifiedUtf8.Validate (_name_ptr, nameof (name));
-						JniModifiedUtf8.Validate (_signature_ptr, nameof (signature));
+					// SAFETY: Both spans are validated, NUL-terminated within bounds, and pinned through GetStaticFieldID and exception polling on this thread's JNIEnv.
+					fixed (byte* _name_ptr = terminatedName)
+					fixed (byte* _signature_ptr = terminatedSignature) {
 						var tmp = JniNativeMethods.GetStaticFieldID (__env, type.Handle, (IntPtr) _name_ptr, (IntPtr) _signature_ptr);
 						IntPtr thrown = JniNativeMethods.ExceptionOccurred (__env);
 
@@ -164,19 +178,16 @@ namespace Java.Interop {
 		partial class StaticMethods {
 
 			/// <summary>
-			/// Looks up a JNI static method ID using null-terminated UTF-8 name and signature spans.
+			/// Looks up a JNI static method ID using JNI modified UTF-8 name and signature spans.
 			/// Use with <c>"methodName"u8</c> literals to avoid string marshalling overhead.
 			/// Each span ends at its length or at an earlier NUL within it.
-			/// Standard UTF-8 supplementary characters are converted to JNI modified UTF-8.
-			/// Structurally invalid UTF-8 throws <see cref="ArgumentException"/> before JNI reads it.
+			/// Invalid or 4-byte standard UTF-8 throws <see cref="ArgumentException"/> before JNI reads it.
 			/// </summary>
 			/// <safety>
-			/// The caller must ensure <paramref name="name"/> and <paramref name="signature"/> have
-			/// readable NUL-terminated backing storage for the duration of the call.
-			/// Complete C# UTF-8 literals provide a terminator beyond the span length; copies and slices do not.
-			/// Keep both byte sequences unchanged and readable through success or failure;
-			/// prevent concurrent mutation/reclamation through aliases. This wrapper pins managed
-			/// backing storage during JNI access and does not retain the spans.
+			/// The caller must keep <paramref name="name"/> and <paramref name="signature"/> readable
+			/// and unchanged through success or failure, and prevent concurrent mutation/reclamation
+			/// through aliases. This wrapper pins managed backing storage during JNI access and does
+			/// not retain the spans.
 			/// </safety>
 			public static unsafe JniMethodInfo GetStaticMethodID (JniObjectReference type, ReadOnlySpan<byte> name, ReadOnlySpan<byte> signature)
 			{
@@ -187,16 +198,19 @@ namespace Java.Interop {
 				if (signature.IsEmpty || signature [0] == 0)
 					throw new ArgumentException ("'signature' cannot be empty.", nameof (signature));
 
-				// SAFETY: The caller guarantees readable NUL-terminated backing storage, so the byte after each span is readable.
-				name = unsafe (JniModifiedUtf8.EnsureTerminated (name));
-				signature = unsafe (JniModifiedUtf8.EnsureTerminated (signature));
+				JniModifiedUtf8.Validate (name, nameof (name));
+				JniModifiedUtf8.Validate (signature, nameof (signature));
+
+				Span<byte> nameStack = stackalloc byte [MaxStackTerminatedUtf8Length];
+				Span<byte> signatureStack = stackalloc byte [MaxStackTerminatedUtf8Length];
+				ReadOnlySpan<byte> terminatedName = TerminateUtf8 (name, nameStack);
+				ReadOnlySpan<byte> terminatedSignature = TerminateUtf8 (signature, signatureStack);
+
 				IntPtr __env = JniEnvironment.EnvironmentPointer;
 				unsafe {
-					// SAFETY: The static-method name/signature satisfy the caller's termination contract and are pinned while this thread's JNIEnv consumes them.
-					fixed (byte* _name_ptr = name)
-					fixed (byte* _signature_ptr = signature) {
-						JniModifiedUtf8.Validate (_name_ptr, nameof (name));
-						JniModifiedUtf8.Validate (_signature_ptr, nameof (signature));
+					// SAFETY: Both spans are validated, NUL-terminated within bounds, and pinned through GetStaticMethodID and exception polling on this thread's JNIEnv.
+					fixed (byte* _name_ptr = terminatedName)
+					fixed (byte* _signature_ptr = terminatedSignature) {
 						var tmp = JniNativeMethods.GetStaticMethodID (__env, type.Handle, (IntPtr) _name_ptr, (IntPtr) _signature_ptr);
 						IntPtr thrown = JniNativeMethods.ExceptionOccurred (__env);
 

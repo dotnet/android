@@ -143,11 +143,9 @@ namespace Java.Interop
 
 				IntPtr s;
 				unsafe {
-					// SAFETY: Pin the NUL-terminated name through NewStringUTF on this thread's live JNI environment.
-					fixed (byte* pJavaName = javaName) {
-						using var nativeName = new JniModifiedUtf8String (pJavaName, nameof (classname));
-						s = (*((JNIEnv**) env))->NewStringUTF (env, nativeName.Pointer);
-					}
+					// SAFETY: Pin the validated NUL-terminated modified UTF-8 name through NewStringUTF on this thread's live JNI environment.
+					fixed (byte* pJavaName = javaName)
+						s = (*((JNIEnv**) env))->NewStringUTF (env, (IntPtr) pJavaName);
 				}
 				var e = JniEnvironment.GetExceptionForLastThrowable ();
 				if (e != null)
@@ -362,13 +360,12 @@ namespace Java.Interop
 
 			/// <summary>
 			/// Registers JNI native methods using blittable <see cref="JniNativeMethod"/> structs
-			/// with raw function pointers and UTF-8 name/signature pointers.
+			/// with raw function pointers and NUL-terminated JNI modified UTF-8 name/signature pointers.
 			/// Calls the JNI RegisterNatives function directly without delegate marshaling.
-			/// Standard UTF-8 supplementary characters are converted to JNI modified UTF-8.
-			/// Structurally invalid UTF-8 throws <see cref="ArgumentException"/> before JNI reads it.
+			/// Invalid or 4-byte standard UTF-8 throws <see cref="ArgumentException"/> before JNI reads it.
 			/// </summary>
 			/// <safety>
-			/// Each method's name and signature must address readable NUL-terminated UTF-8 memory
+			/// Each method's name and signature must address readable NUL-terminated JNI modified UTF-8 memory
 			/// through this call. Each callback must match its JNI descriptor's ABI, including
 			/// the leading JNIEnv and receiver/class pointers. Keep callback storage callable and
 			/// rooted for as long as JNI can invoke it, including after failed or partial registration.
@@ -384,86 +381,16 @@ namespace Java.Interop
 				if (!type.IsValid)
 					throw new ArgumentException ("Handle must be valid.", nameof (type));
 
-				// This is intentionally two-pass. Scan until conversion is needed; if none is, this pass
-				// validates every terminated name and signature before registering the original descriptors.
-				// Otherwise, the conversion pass validates and converts the remaining descriptors before JNI.
-				// It turns standard four-byte UTF-8 scalars into modified-UTF-8 surrogate sequences, tracks
-				// each allocated replacement for finally cleanup, and keeps temporary descriptors and strings
-				// alive through the synchronous JNI call. Scratch buffers use stack storage for up to 32
-				// methods and heap storage above that.
-				// SAFETY: The caller keeps each name and signature terminated and unchanged through registration.
-				bool needsConversion = unsafe (RequiresModifiedUtf8Conversion (methods));
-				if (!needsConversion) {
-					unsafe {
-						// SAFETY: The caller retains the original strings and callback storage through registration.
-						RegisterNativesCore (type, methods);
-					}
-					return;
-				}
-
-				const int MaxStackAllocatedNativeMethods = 32;
-				bool useStackAllocatedBuffers = methods.Length <= MaxStackAllocatedNativeMethods;
-				Span<JniNativeMethod> natives = useStackAllocatedBuffers
-					? stackalloc JniNativeMethod [methods.Length]
-					: new JniNativeMethod [methods.Length];
-				Span<IntPtr> unmanagedStrings = useStackAllocatedBuffers
-					? stackalloc IntPtr [methods.Length * 2]
-					: new IntPtr [checked (methods.Length * 2)];
-				unmanagedStrings.Clear ();
-				try {
-					unsafe {
-						// SAFETY: Caller-owned inputs remain readable; each allocated replacement is recorded before the next allocation.
-						for (int i = 0; i < methods.Length; ++i) {
-							var method = methods [i];
-							ThrowIfNullDescriptor (method, nameof (methods));
-							IntPtr name = JniModifiedUtf8.AllocConvertedUtf8 (method.name, nameof (methods));
-							unmanagedStrings [i * 2] = name;
-							IntPtr signature = JniModifiedUtf8.AllocConvertedUtf8 (method.signature, nameof (methods));
-							unmanagedStrings [i * 2 + 1] = signature;
-							natives [i] = new JniNativeMethod (
-								name == IntPtr.Zero ? method.name : (byte*) name,
-								signature == IntPtr.Zero ? method.signature : (byte*) signature,
-								method.functionPointer);
-						}
-						RegisterNativesCore (type, natives);
-					}
-				} finally {
-					for (int i = 0; i < unmanagedStrings.Length; ++i)
-						JniModifiedUtf8.Free (unmanagedStrings [i]);
-				}
-			}
-
-			static unsafe void ThrowIfNullDescriptor (JniNativeMethod method, string paramName)
-			{
-				if (method.name == null || method.signature == null)
-					throw new ArgumentException ("Native method names and signatures must not be null.", paramName);
-			}
-
-			/// <safety>
-			/// Each method's name and signature must remain readable and unchanged through its NUL
-			/// terminator for the duration of the scan.
-			/// </safety>
-			static unsafe bool RequiresModifiedUtf8Conversion (ReadOnlySpan<JniNativeMethod> methods)
-			{
 				unsafe {
 					foreach (var method in methods) {
-						ThrowIfNullDescriptor (method, nameof (methods));
+						if (method.name == null || method.signature == null)
+							throw new ArgumentException ("Native method names and signatures must not be null.", nameof (methods));
 						// SAFETY: The caller retains every descriptor string through registration.
-						bool nameRequiresConversion = JniModifiedUtf8.RequiresConversion (method.name, nameof (methods));
-						bool signatureRequiresConversion = JniModifiedUtf8.RequiresConversion (method.signature, nameof (methods));
-						if (nameRequiresConversion || signatureRequiresConversion)
-							return true;
+						JniModifiedUtf8.Validate (method.name, nameof (methods));
+						JniModifiedUtf8.Validate (method.signature, nameof (methods));
 					}
 				}
-				return false;
-			}
 
-			/// <safety>
-			/// The caller must keep each method's terminated name and signature readable, and
-			/// must satisfy the callback ABI and lifetime requirements of RegisterNatives.
-			/// </safety>
-			static unsafe void RegisterNativesCore (JniObjectReference type, ReadOnlySpan<JniNativeMethod> methods)
-			{
 				IntPtr env = JniEnvironment.EnvironmentPointer;
 				int r;
 				fixed (JniNativeMethod* methodsPtr = methods) {
@@ -499,71 +426,59 @@ namespace Java.Interop
 			}
 
 			/// <summary>
-			/// Finds a Java class using a null-terminated UTF-8 class name span.
+			/// Finds a Java class using a JNI modified UTF-8 class name span.
 			/// Use with <c>"java/lang/Object"u8</c> literals to avoid string marshalling overhead.
 			/// The name ends at the span length or at an earlier NUL within the span.
-			/// Standard UTF-8 supplementary characters are converted to JNI modified UTF-8.
-			/// Structurally invalid UTF-8 throws <see cref="ArgumentException"/> before JNI reads it.
+			/// Invalid or 4-byte standard UTF-8 throws <see cref="ArgumentException"/> before JNI reads it.
 			/// </summary>
 			/// <safety>
-			/// The caller must ensure the backing storage remains readable and NUL-terminated
-			/// for the duration of the call. C# UTF-8 literals provide a
-			/// terminator immediately beyond the span length; copies and slices do not carry that guarantee.
-			/// Keep the backing bytes readable and unchanged until completion, including failure;
+			/// The caller must keep the backing bytes readable and unchanged until completion, including failure;
 			/// another thread must not mutate or reclaim an alias. The wrapper pins managed
 			/// backing storage during the JNI read.
 			/// </safety>
 			public static unsafe JniObjectReference FindClass (ReadOnlySpan<byte> classname)
 			{
-				// SAFETY: The caller guarantees the terminator and byte lifetime; lookup pins the span only for JNI's synchronous read.
+				// SAFETY: The caller guarantees byte lifetime; lookup pins the span only for JNI's synchronous read.
 				return unsafe (TryFindClass (classname, throwOnError: true));
 			}
 
 			/// <summary>
-			/// Tries to find a Java class using a null-terminated UTF-8 class name span.
+			/// Tries to find a Java class using a JNI modified UTF-8 class name span.
 			/// Returns <c>true</c> if the class was found, <c>false</c> otherwise.
 			/// The name ends at the span length or at an earlier NUL within the span.
-			/// Standard UTF-8 supplementary characters are converted to JNI modified UTF-8.
-			/// Structurally invalid UTF-8 throws <see cref="ArgumentException"/> before JNI reads it.
+			/// Invalid or 4-byte standard UTF-8 throws <see cref="ArgumentException"/> before JNI reads it.
 			/// </summary>
 			/// <safety>
-			/// The caller must ensure the backing storage remains readable and NUL-terminated
-			/// for the duration of the call. C# UTF-8 literals provide a
-			/// terminator immediately beyond the span length; copies and slices do not carry that guarantee.
-			/// Keep the backing bytes readable and unchanged until completion, including failure;
+			/// The caller must keep the backing bytes readable and unchanged until completion, including failure;
 			/// another thread must not mutate or reclaim an alias. The wrapper pins managed
 			/// backing storage during the JNI read.
 			/// </safety>
 			public static unsafe bool TryFindClass (ReadOnlySpan<byte> classname, out JniObjectReference instance)
 			{
-				// SAFETY: The caller supplies readable terminated bytes through failed or successful lookup; the helper owns JNI pinning.
+				// SAFETY: The caller supplies readable bytes through failed or successful lookup; the helper owns JNI pinning.
 				instance = unsafe (TryFindClass (classname, throwOnError: false));
 				return instance.IsValid;
 			}
 
 			/// <safety>
-			/// <paramref name="classname"/> must have readable, unchanged NUL-terminated backing
-			/// storage through lookup and fallback, even when the terminator is beyond its length.
+			/// <paramref name="classname"/> must remain readable and unchanged through lookup and fallback.
 			/// </safety>
 			static unsafe JniObjectReference TryFindClass (ReadOnlySpan<byte> classname, bool throwOnError)
 			{
 				if (classname.Length == 0 || classname [0] == 0)
 					throw new ArgumentException ("'classname' cannot be a zero-length string.", nameof (classname));
 
-				var info = JniEnvironment.CurrentInfo;
+				JniModifiedUtf8.Validate (classname, nameof (classname));
 
-				// SAFETY: The caller guarantees readable NUL-terminated backing storage, so the byte after the span is readable.
-				classname = unsafe (JniModifiedUtf8.EnsureTerminated (classname));
+				var info = JniEnvironment.CurrentInfo;
 				var terminator = classname.IndexOf ((byte) 0);
 				var nameLength = terminator >= 0 ? terminator : classname.Length;
-
-				JniModifiedUtf8.Validate (classname, nameof (classname));
 
 				// Convert dot-separated names (e.g. "java.lang.Object"u8) to JNI form ("java/lang/Object")
 				// before calling FindClass, because ART's CheckJNI aborts the process on dot-separated names.
 				bool hasDots = classname.Slice (0, nameLength).IndexOf ((byte) '.') >= 0;
-				if (!hasDots) {
-					// SAFETY: No copy is made; the caller's termination guarantee applies to the pinned classname storage.
+				if (terminator >= 0 && !hasDots) {
+					// SAFETY: classname contains a NUL within its bounds and stays readable through lookup.
 					return unsafe (TryFindClassFromPtr (info, classname, classname, terminator, throwOnError));
 				}
 
@@ -571,8 +486,12 @@ namespace Java.Interop
 				Span<byte> jniClassName = jniClassNameLength <= 256
 					? stackalloc byte [jniClassNameLength]
 					: new byte [jniClassNameLength];
-				for (int i = 0; i < nameLength; ++i)
-					jniClassName [i] = classname [i] == (byte) '.' ? (byte) '/' : classname [i];
+				if (hasDots) {
+					for (int i = 0; i < nameLength; ++i)
+						jniClassName [i] = classname [i] == (byte) '.' ? (byte) '/' : classname [i];
+				} else {
+					classname.Slice (0, nameLength).CopyTo (jniClassName);
+				}
 				jniClassName [nameLength] = 0;
 
 				// SAFETY: jniClassName owns its appended NUL; the original caller-owned span remains readable for bounded fallback conversion.
