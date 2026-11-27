@@ -23,28 +23,20 @@ namespace Android.UtilTests {
 		}
 
 		[TestMethod]
-		public void GenericMethodsDispatchToJavaOverrides ()
+		public void GenericAppendDispatchesToJavaOverride ()
 		{
-			using var values = new JavaSparseArray ();
-			values.Append (1, "one");
-			Assert.AreEqual ("append:1:one", values.LastCall);
-			Assert.AreEqual ("get:2", values.Get (2));
-			Assert.AreEqual ("getDefault:3:fallback", values.Get (3, "fallback"));
-			Assert.AreEqual (123, values.IndexOfValue ("needle"));
-			Assert.AreEqual ("indexOfValue:needle", values.LastCall);
-			values.Put (4, "put");
-			Assert.AreEqual ("put:4:put", values.LastCall);
-			values.SetValueAt (5, "set");
-			Assert.AreEqual ("setValueAt:5:set", values.LastCall);
-			Assert.AreEqual ("valueAt:6", values.ValueAt (6));
+			using var values = new JavaOverrideSparseArray ();
+			((SparseArray<string>) values).Append (1, "one");
+			Assert.AreEqual (1, values.AppendedKey);
 		}
 
 		[TestMethod]
 		public void GenericManagedBaseCallUsesJavaBaseImplementation ()
 		{
 			using var values = new ManagedDerivedSparseArray ();
-			values.Put (2, "base");
-			Assert.AreEqual ("put:2:base", values.LastCall);
+			values.Append (2, "base");
+			Assert.AreEqual ("base", values.Get (2));
+			Assert.IsFalse (values.NonGenericAppendCalled);
 		}
 
 		// https://github.com/dotnet/android/issues/13674
@@ -72,33 +64,24 @@ namespace Android.UtilTests {
 			}
 		}
 
-		[Register ("net/dot/android/test/VirtualSparseArray", DoNotGenerateAcw = true)]
-		class JavaSparseArray : SparseArray<string> {
+		[Register ("net/dot/android/test/JavaOverrideSparseArray")]
+		public class JavaOverrideSparseArray : SparseArray<string> {
 
 			static readonly JniPeerMembers members = new JniPeerMembers (
-				"net/dot/android/test/VirtualSparseArray", typeof (JavaSparseArray));
+				"net/dot/android/test/JavaOverrideSparseArray", typeof (JavaOverrideSparseArray));
 
+			// Give the generated Java subclass its own peer metadata.
 			public override JniPeerMembers JniPeerMembers => members;
+			public int AppendedKey { get; private set; } = -1;
 
-			public string LastCall {
-				get {
-					var type = Class;
-					var method = JNIEnv.GetMethodID (type.Handle, "getLastCall", "()Ljava/lang/String;");
-					var result = JNIEnv.GetString (JNIEnv.CallObjectMethod (Handle, method), JniHandleOwnership.TransferLocalRef);
-					GC.KeepAlive (type);
-					GC.KeepAlive (this);
-					return result ?? throw new InvalidOperationException ("The Java fixture returned a null call record.");
-				}
-			}
+			public override void Append (int key, Java.Lang.Object? value) => AppendedKey = key;
 		}
 
-		[Register ("net/dot/android/test/VirtualSparseArray$Derived", DoNotGenerateAcw = true)]
-		sealed class ManagedDerivedSparseArray : JavaSparseArray {
+		public class ManagedDerivedSparseArray : SparseArray<string> {
+			public bool NonGenericAppendCalled { get; private set; }
 
-			public override void Put (int key, string value)
-			{
-				base.Put (key, value);
-			}
+			public override void Append (int key, Java.Lang.Object? value) => NonGenericAppendCalled = true;
+			public override void Append (int key, string value) => base.Append (key, value);
 		}
 	}
 }

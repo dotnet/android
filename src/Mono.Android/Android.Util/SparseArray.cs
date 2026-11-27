@@ -35,10 +35,7 @@ namespace Android.Util
 			unsafe {
 				// SAFETY: The stack arguments match id; the helpers retain this peer and the local argument through JNI.
 				JavaConvert.WithLocalJniHandle (value, lref => {
-					JniArgumentValue* args = stackalloc JniArgumentValue [2] {
-						new JniArgumentValue (key),
-						new JniArgumentValue (lref),
-					};
+					JniArgumentValue* args = stackalloc JniArgumentValue [2] { new (key), new (lref) };
 					GetPeerMembers (null).InstanceMethods.InvokeVirtualVoidMethod (id, this, args);
 					return IntPtr.Zero;
 				});
@@ -52,9 +49,7 @@ namespace Android.Util
 			const string id = "get.(I)Ljava/lang/Object;";
 			unsafe {
 				// SAFETY: The stack argument matches id; invocation retains this peer and the result local transfers to conversion.
-				JniArgumentValue* args = stackalloc JniArgumentValue [1] {
-					new JniArgumentValue (key),
-				};
+				JniArgumentValue* args = stackalloc JniArgumentValue [1] { new (key) };
 				var result = GetPeerMembers (null).InstanceMethods.InvokeVirtualObjectMethod (id, this, args);
 				return JavaConvert.FromJniHandle<E> (result.Handle, JniHandleOwnership.TransferLocalRef);
 			}
@@ -68,10 +63,7 @@ namespace Android.Util
 			unsafe {
 				// SAFETY: The stack arguments match id; the helpers retain this peer and the local argument through JNI.
 				var result = JavaConvert.WithLocalJniHandle (valueIfKeyNotFound, lref => {
-					JniArgumentValue* args = stackalloc JniArgumentValue [2] {
-						new JniArgumentValue (key),
-						new JniArgumentValue (lref),
-					};
+					JniArgumentValue* args = stackalloc JniArgumentValue [2] { new (key), new (lref) };
 					return GetPeerMembers (null).InstanceMethods.InvokeVirtualObjectMethod (id, this, args);
 				});
 				return JavaConvert.FromJniHandle<E> (result.Handle, JniHandleOwnership.TransferLocalRef);
@@ -85,9 +77,7 @@ namespace Android.Util
 			unsafe {
 				// SAFETY: The stack argument matches id; the helpers retain this peer and the local argument through JNI.
 				return JavaConvert.WithLocalJniHandle (value, lref => {
-					JniArgumentValue* args = stackalloc JniArgumentValue [1] {
-						new JniArgumentValue (lref),
-					};
+					JniArgumentValue* args = stackalloc JniArgumentValue [1] { new (lref) };
 					return GetPeerMembers (null).InstanceMethods.InvokeVirtualInt32Method (id, this, args);
 				});
 			}
@@ -100,10 +90,7 @@ namespace Android.Util
 			unsafe {
 				// SAFETY: The stack arguments match id; the helpers retain this peer and the local argument through JNI.
 				JavaConvert.WithLocalJniHandle (value, lref => {
-					JniArgumentValue* args = stackalloc JniArgumentValue [2] {
-						new JniArgumentValue (key),
-						new JniArgumentValue (lref),
-					};
+					JniArgumentValue* args = stackalloc JniArgumentValue [2] { new (key), new (lref) };
 					GetPeerMembers (null).InstanceMethods.InvokeVirtualVoidMethod (id, this, args);
 					return IntPtr.Zero;
 				});
@@ -117,10 +104,7 @@ namespace Android.Util
 			unsafe {
 				// SAFETY: The stack arguments match id; the helpers retain this peer and the local argument through JNI.
 				JavaConvert.WithLocalJniHandle (value, lref => {
-					JniArgumentValue* args = stackalloc JniArgumentValue [2] {
-						new JniArgumentValue (index),
-						new JniArgumentValue (lref),
-					};
+					JniArgumentValue* args = stackalloc JniArgumentValue [2] { new (index), new (lref) };
 					GetPeerMembers (null).InstanceMethods.InvokeVirtualVoidMethod (id, this, args);
 					return IntPtr.Zero;
 				});
@@ -134,9 +118,7 @@ namespace Android.Util
 			const string id = "valueAt.(I)Ljava/lang/Object;";
 			unsafe {
 				// SAFETY: The stack argument matches id; invocation retains this peer and the result local transfers to conversion.
-				JniArgumentValue* args = stackalloc JniArgumentValue [1] {
-					new JniArgumentValue (index),
-				};
+				JniArgumentValue* args = stackalloc JniArgumentValue [1] { new (index) };
 				var result = GetPeerMembers (null).InstanceMethods.InvokeVirtualObjectMethod (id, this, args);
 				return JavaConvert.FromJniHandle<E> (result.Handle, JniHandleOwnership.TransferLocalRef);
 			}
