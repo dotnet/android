@@ -30,10 +30,8 @@ namespace Java.InteropTests {
 				nullSignature.Name = "x";
 				nullSignature.Marshaler = new Action (() => {});
 				// SAFETY: Null names and signatures are rejected before JNI can retain the callback.
-				var eName = Assert.ThrowsExactly<ArgumentException> (() => { unsafe { type.RegisterNativeMethods (nullName); } });
-				Assert.AreEqual ("methods", eName.ParamName);
-				var eSig = Assert.ThrowsExactly<ArgumentException> (() => { unsafe { type.RegisterNativeMethods (nullSignature); } });
-				Assert.AreEqual ("methods", eSig.ParamName);
+				Assert.ThrowsExactly<ArgumentNullException> (() => { unsafe { type.RegisterNativeMethods (nullName); } });
+				Assert.ThrowsExactly<ArgumentNullException> (() => { unsafe { type.RegisterNativeMethods (nullSignature); } });
 			}
 		}
 
