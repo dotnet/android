@@ -8,7 +8,8 @@ using Microsoft.Android.Build.Tasks;
 
 namespace Xamarin.Android.Tasks
 {
-	public class ComputeHash : AndroidTask
+	[MSBuildMultiThreadableTask]
+	public class ComputeHash : MultithreadedAndroidTask
 	{
 		public override string TaskPrefix => "CPT";
 

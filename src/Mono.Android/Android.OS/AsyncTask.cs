@@ -50,12 +50,13 @@ namespace Android.OS {
 				return;
 
 			unsafe {
-				// SAFETY: StartCreateInstance supplies this peer's owned handle for its zero-argument
-				// instance constructor; no argument array or arbitrary caller handle is consumed here.
+				// SAFETY: AllocObject supplies this peer's owned handle for its zero-argument instance
+				// constructor; GC.KeepAlive retains this across FinishCreateInstance.
 				SetHandle (
 						JNIEnv.AllocObject (GetType ()),
 						JniHandleOwnership.TransferLocalRef);
 				JNIEnv.FinishCreateInstance (Handle, "()V"u8);
+				GC.KeepAlive (this);
 			}
 		}
 

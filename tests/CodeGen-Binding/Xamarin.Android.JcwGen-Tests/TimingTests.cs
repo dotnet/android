@@ -222,7 +222,9 @@ namespace Xamarin.Android.JcwGenTests {
 			foo_init (JNIEnv.Handle);
 
 			var jniTimes = new long [comparisons.Length];
-			foo_get_native_jni_timings (JNIEnv.Handle, count, j.Class.Handle, j.Handle, jniTimes);
+			using (var klass = j.Class) {
+				foo_get_native_jni_timings (JNIEnv.Handle, count, klass.Handle, j.Handle, jniTimes);
+			}
 
 			int jniTimeIndex = 0;
 			foreach (var c in comparisons) {

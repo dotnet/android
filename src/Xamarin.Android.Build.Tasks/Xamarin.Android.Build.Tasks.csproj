@@ -11,10 +11,6 @@
     <TargetFramework>netstandard2.0</TargetFramework>
     <RootNamespace>Xamarin.Android.Tasks</RootNamespace>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-    <LangVersion>preview</LangVersion>
-    <!-- Use the property instead of the feature flag: satellite compilation forwards Features but not LangVersion.
-         https://github.com/dotnet/sdk/issues/56839 -->
-    <MemorySafetyRulesVersion>2</MemorySafetyRulesVersion>
     <OutputPath>$(MicrosoftAndroidSdkOutDir)</OutputPath>
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
     <DefineConstants>$(DefineConstants);HAVE_CECIL</DefineConstants>

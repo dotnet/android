@@ -99,16 +99,16 @@ static partial class JavaInteropRuntime
 				JNIEnvInit.InitializeBeforeRuntimeCreation (initArgs);
 			}
 
-			var options = new JniRuntime.CreationOptions {
-				EnvironmentPointer = jnienv,
-				ThreadDetachCallback = initArgs.registerThreadDetach,
-				ClassLoader        = new JniObjectReference (classLoader, JniObjectReferenceType.Global),
-				ObjectReferenceManager = new ManagedObjectReferenceManager (),
-				TypeManager                 = new TrimmableTypeMapTypeManager (),
-				ValueManager                = new TrimmableTypeMapValueManager (),
-			};
-			// SAFETY: JNI retains this thread's environment and borrowed loader through the callback; creation duplicates the loader and the VM outlives the runtime.
-			runtime = unsafe (new JreRuntime (options));
+			// SAFETY: JNI retains this thread's environment and borrowed loader through the callback; creation derives
+			// the VM from the environment and duplicates the loader, and the VM outlives the runtime.
+			// The host supplies a process-lifetime thread-detachment callback.
+			runtime = unsafe (new AndroidRuntime (
+					jnienv,
+					vm: IntPtr.Zero,
+					classLoader,
+					initArgs.registerThreadDetach,
+					new TrimmableTypeMapTypeManager (),
+					new TrimmableTypeMapValueManager ()));
 
 			// Entry point into Mono.Android.dll for NativeAOT-specific JNI runtime initialization.
 			unsafe {

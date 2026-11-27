@@ -96,6 +96,7 @@ namespace generator.SourceWriters
 			AddMethods (klass, opt, context);
 			AddAbstractMembers (klass, opt, context);
 			AddExplicitGenericInterfaceMembers (klass, opt);
+			KotlinDefaultArguments.AddMethods (this, klass, opt, context);
 			AddCharSequenceEnumerator (klass);
 
 			context.ContextGeneratedMethods.Clear ();
@@ -156,6 +157,8 @@ namespace generator.SourceWriters
 				if (ctor.Parameters.HasCharSequence && !klass.ContainsCtor (ctor.JniSignature.Replace ("java/lang/CharSequence", "java/lang/String")))
 					Constructors.Add (new StringOverloadConstructor(klass, ctor, klass.InheritsObject, opt, context));
 			}
+
+			KotlinDefaultArguments.AddConstructors (this, klass, opt, context);
 		}
 
 		void AddCharSequenceEnumerator (ClassGen klass)

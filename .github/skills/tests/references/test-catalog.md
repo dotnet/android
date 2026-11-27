@@ -112,6 +112,46 @@ Same assembly as above. These test individual MSBuild tasks in isolation with `M
 
 ---
 
+## Trimming and AOT Tests (full-build — requires local SDK + device)
+
+Assembly: `bin/TestDebug/TrimmingTests/${TFM}/TrimmingTests.dll`
+Build: Full-build + device/emulator connected
+Device: **Yes** (`[Category("UsesDevice")]`)
+
+Each case is a purpose-built single-file app in `tests/TrimmingTests/Cases/` (`#:property` and `#:package` directives, its own
+`ApplicationId`, `#:project TrimmingTests.Expectations/TrimmingTests.Expectations.csproj`, and one `TRIMMING_TEST_RESULT: PASS`/`FAIL`
+log line). A case that needs more files lives in `Cases/<Case>/<Case>.cs` next to its `Resources/`, `AndroidManifest.xml`, or a
+`Case.targets` with MSBuild items. Cases for reported bugs start with a comment linking the issue or PR; known failures are
+`[Ignore]`d (or `Assert.Ignore`d for one configuration) with the link to the open issue.
+A test takes `[TrimmingConfigurations] TrimmingConfiguration configuration`, which runs it with CoreCLR full trimming, NativeAOT, and
+CoreCLR partial trimming (the CoreCLR Release default, which trims only trimmable assemblies and suppresses trimming warnings), or
+only in the configurations it lists, and calls `var app = BuildAndRun ("Cases/<Case>.cs", configuration, expectedWarnings: [...])`, which copies the case into its own
+directory shielded from the repository's `Directory.Build.*` files, builds it in that configuration, fails on any build
+warning whose code is not in `expectedWarnings` (with `TrimmerSingleWarn=false`) or on an expected one that is missing, and then installs
+and launches it and requires PASS.
+
+The test then calls `AssertTrimmingExpectations (app)`, which checks `[Kept]`, `[Removed]`, `[KeptMember]` and
+`[Kept|Removed][Type|Member]InAssembly` (optionally `By = Tool.FullTrimming|Tool.PartialTrimming|Tool.NativeAot`, or `Tool.Trimmer` for both ILLink modes) against ILLink's `linked/` assemblies (CoreCLR)
+or ILC's mstat file (NativeAOT). In partial mode, expectations on assemblies ILLink doesn't trim (the app's own, unless marked
+`IsTrimmable`) are replaced by a check that the whole assembly was kept. On NativeAOT, `*TypeInAssembly` also checks generic instantiations such as
+``JavaDictionary`2<System.Int32,System.Int64>``. `Cases/Directory.Build.targets` disables JIT inlining for NativeAOT cases, because the mstat omits
+inlined methods.
+
+Tests in a fixture run in parallel (`[Parallelizable (ParallelScope.Children)]`), also on the device: each configuration installs its
+own package (`<ApplicationId>.coreclr`/`.nativeaot`) and results are matched by process ID in a logcat stream started before the launch, so never clear logcat in a test. Expectation attributes take strings only, never `typeof`, so they cannot keep anything themselves. Never root anything in a case
+unless rooting is the behavior under test.
+
+| Test Area | Filter | Notes |
+|-----------|--------|-------|
+| **trimming** (all) | (no filter) | Every case on CoreCLR full trimming and NativeAOT |
+| **Java peer activation** | `--filter "FullyQualifiedName~JavaPeerActivationTests"` | Reflection-based activation of closed generic Java peers |
+
+```bash
+ADB_TARGET='-s emulator-5554' ./dotnet-local.sh test bin/TestDebug/TrimmingTests/${TFM}/TrimmingTests.dll
+```
+
+---
+
 ## Device Integration Tests (full-build — requires local SDK + device)
 
 Assembly: `bin/TestDebug/MSBuildDeviceIntegration/${TFM}/MSBuildDeviceIntegration.dll`

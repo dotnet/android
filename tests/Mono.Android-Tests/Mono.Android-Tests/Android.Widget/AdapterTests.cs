@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
@@ -71,6 +72,38 @@ namespace Android.WidgetTests {
 		}
 
 		[TestMethod]
+		public void ArrayAdapterConstructorsReleaseLocalRefsOnFailure ()
+		{
+			const int layout = Android.Resource.Layout.SimpleListItem1;
+			const int textViewId = Android.Resource.Id.Text1;
+			var array = new [] { "one" };
+			var list = new List<string> { "alpha" };
+			Context nullContext = null;
+
+			Action [] ctors = [
+				() => _ = new ArrayAdapter<string> (nullContext, layout, array),
+				() => _ = new ArrayAdapter<string> (nullContext, layout, textViewId, array),
+				() => _ = new ArrayAdapter<string> (nullContext, layout, list),
+				() => _ = new ArrayAdapter<string> (nullContext, layout, textViewId, list),
+				() => _ = new DerivedStringArrayAdapter (nullContext, layout, array),
+				() => _ = new DerivedStringArrayAdapter (nullContext, layout, textViewId, array),
+				() => _ = new DerivedStringArrayAdapter (nullContext, layout, list),
+				() => _ = new DerivedStringArrayAdapter (nullContext, layout, textViewId, list),
+			];
+
+			// Warm up lazily-initialized constructor IDs and exception handling before measuring local refs.
+			foreach (var ctor in ctors) {
+				Assert.Throws<Java.Lang.NullPointerException> (ctor);
+			}
+
+			int localReferences = Java.Interop.JniEnvironment.LocalReferenceCount;
+			foreach (var ctor in ctors) {
+				Assert.Throws<Java.Lang.NullPointerException> (ctor);
+				Assert.AreEqual (localReferences, Java.Interop.JniEnvironment.LocalReferenceCount);
+			}
+		}
+
+		[TestMethod]
 		[TestCategory ("ThresholdDispatch")]
 		public void DerivedArrayAdapterInListView ()
 		{
@@ -134,6 +167,26 @@ namespace Android.WidgetTests {
 
 		public DerivedStringArrayAdapter (Context context)
 			: base (context, Android.Resource.Layout.SimpleListItem1)
+		{
+		}
+
+		public DerivedStringArrayAdapter (Context context, int textViewResourceId, string [] objects)
+			: base (context, textViewResourceId, objects)
+		{
+		}
+
+		public DerivedStringArrayAdapter (Context context, int resource, int textViewResourceId, string [] objects)
+			: base (context, resource, textViewResourceId, objects)
+		{
+		}
+
+		public DerivedStringArrayAdapter (Context context, int textViewResourceId, IList<string> objects)
+			: base (context, textViewResourceId, objects)
+		{
+		}
+
+		public DerivedStringArrayAdapter (Context context, int resource, int textViewResourceId, IList<string> objects)
+			: base (context, resource, textViewResourceId, objects)
 		{
 		}
 

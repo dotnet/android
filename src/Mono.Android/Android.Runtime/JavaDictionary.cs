@@ -194,7 +194,8 @@ namespace Android.Runtime {
 				return;
 
 			unsafe {
-				// SAFETY: java.util.Map.<init>.()V matches this peer's JNI ABI. Result locals transfer to conversion.
+				// SAFETY: AllocObject supplies this peer's owned handle; FinishCreateInstance invokes
+				// the ()V constructor while GC.KeepAlive retains this.
 				if (GetType () == typeof (JavaDictionary)) {
 					SetHandle (
 							// SAFETY: The complete ASCII literal supplies stable, NUL-terminated JNI class-name bytes.
@@ -207,6 +208,7 @@ namespace Android.Runtime {
 							JniHandleOwnership.TransferLocalRef);
 					JNIEnv.FinishCreateInstance (Handle, "()V"u8);
 				}
+				GC.KeepAlive (this);
 			}
 		}
 
@@ -479,7 +481,8 @@ namespace Android.Runtime {
 				return;
 
 			unsafe {
-				// SAFETY: java.util.Map.<init>.()V matches this peer's JNI ABI. Result locals transfer to conversion.
+				// SAFETY: AllocObject supplies this peer's owned handle; FinishCreateInstance invokes
+				// the ()V constructor while GC.KeepAlive retains this.
 				if (GetType () == typeof (JavaDictionary<K, V>)) {
 					SetHandle (
 							// SAFETY: The complete ASCII literal supplies stable, NUL-terminated JNI class-name bytes.
@@ -491,6 +494,7 @@ namespace Android.Runtime {
 							JniHandleOwnership.TransferLocalRef);
 				}
 				JNIEnv.FinishCreateInstance (Handle, "()V"u8);
+				GC.KeepAlive (this);
 			}
 		}
 

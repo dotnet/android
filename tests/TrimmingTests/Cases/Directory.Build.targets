@@ -1,0 +1,12 @@
+<!-- Keeps the repository's build settings out of the file-based case apps, so `dotnet run Case.cs` works here too. -->
+<Project>
+  <!--
+    ILC's mstat lists only methods with their own compiled body, so a method the JIT inlines looks removed even though
+    the trimmer kept it. Disabling inlining makes the mstat match what ILC's scanner kept.
+  -->
+  <ItemGroup Condition=" '$(PublishAot)' == 'true' ">
+    <IlcArg Include="--codegenopt:JitNoInline=1" />
+  </ItemGroup>
+  <!-- A case in its own directory can add MSBuild items (which `#:` directives can't) in a Case.targets file. -->
+  <Import Project="$(MSBuildProjectDirectory)/Case.targets" Condition=" Exists('$(MSBuildProjectDirectory)/Case.targets') " />
+</Project>

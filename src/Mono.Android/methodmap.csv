@@ -862,7 +862,6 @@
 1, android.os, Parcel, writeTypedArray, parcelableFlags, Android.OS.ParcelableWriteFlags
 1, android.text, TextUtils, writeToParcel, parcelableFlags, Android.OS.ParcelableWriteFlags
 
-0, java.nio.channels, SelectionKey, interestOps, return, Java.Nio.Channels.Operations
 0, java.nio.channels, SelectionKey, readyOps, return, Java.Nio.Channels.Operations
 0, java.nio.channels, SelectableChannel, validOps, return, Java.Nio.Channels.Operations
 0, java.nio.channels, DatagramChannel, validOps, return, Java.Nio.Channels.Operations
@@ -2042,7 +2041,6 @@
 24, android.location, GnssMeasurementsEvent.Callback, onStatusChanged, status, Android.Locations.GnssMeasurementCallbackStatus
 24, android.location, GnssNavigationMessage, getStatus, return, Android.Locations.GnssNavigationStatus
 24, android.location, GnssNavigationMessage, getType, return, Android.Locations.GnssNavigationType
-24, android.location, GnssNavigationMessage.Callback, onStatusChanged, return, Android.Locations.GnssNavigationStatus
 24, android.location, GnssStatus, getConstellationType, return, Android.Locations.GnssConstellationType
 
 24, android.media, AudioRecord, getTimestamp, timebase, Android.Media.AudioTimebase
@@ -2381,7 +2379,6 @@
 28, android.media, AudioPresentation, getMasteringIndication, return, Android.Media.MasteringIndicationType
 28, android.media.audiofx, DynamicsProcessing.Config, getVariant, return, Android.Media.Audiofx.VariantType
 28, android.media, MediaDrm, getConnectedHdcpLevel, return, Android.Media.HdcpLevel
-28, android.media, MicrophoneInfo, getChannelMapping, return, Android.Media.MicrophoneChannelMapping
 28, android.media, MicrophoneInfo, getDirectionality, return, Android.Media.MicrophoneDirectionality
 28, android.media, MicrophoneInfo, getLocation, return, Android.Media.MicrophoneLocation
 28, android.net, IpSecManager, applyTransportModeTransform, direction, Android.Net.IpSecTransportDirection
@@ -2520,8 +2517,6 @@
 29, android.media, AudioManager, getAllowedCapturePolicy, return, Android.Media.CapturePolicies
 29, android.media, AudioPlaybackCaptureConfiguration.Builder, addMatchingUsage, usage, Android.Media.AudioUsageKind
 29, android.media, AudioPlaybackCaptureConfiguration.Builder, excludeUsage, usage, Android.Media.AudioUsageKind
-29, android.media, AudioPlaybackCaptureConfiguration, getExcludeUsages, return, Android.Media.AudioUsageKind
-29, android.media, AudioPlaybackCaptureConfiguration, getMatchingUsages, return, Android.Media.AudioUsageKind
 29, android.media, AudioPresentation.Builder, setMasteringIndication, masteringIndication, Android.Media.MasteringIndicationType
 29, android.media, MicrophoneDirection, setPreferredMicrophoneDirection, direction, Android.Media.MicDirection
 // Cannot change this at this state.

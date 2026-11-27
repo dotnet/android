@@ -13,6 +13,14 @@ Projects use the repository's shared
 MSBuild properties may be placed in the repository-root
 `Configuration.Override.props` or passed with `-p:Name=Value`.
 
+The repository defaults to C# preview and `MemorySafetyRulesVersion=2` in
+`Directory.Build.props`, including test projects. Use the compiler provisioned
+by `make prepare`; older language modes do not support these rules.
+The isolated workload-dependency tool opts in separately because it does not
+import the root props. The shared Arcade package-restore bootstrap keeps its own
+defaults. The template packaging project also uses the repository defaults, but
+generated Android projects leave compiler settings at the SDK defaults.
+
 Overridable MSBuild properties include:
 
 * `$(Configuration)`: Build configuration, normally `Debug` or `Release`.
@@ -24,9 +32,12 @@ Overridable MSBuild properties include:
 * `$(MicrosoftAndroidSdkOutDir)`: Output directory for tools such as
     [`class-parse`](../../src/class-parse) and [`generator`](../../src/generator),
     within the Android SDK pack's `tools/` directory.
-* `$(BuildOutputDirectory)` and `$(TestOutputDirectory)`: Libraries and tooling
-    tests use `bin/$(Configuration)/net10.0/` and
-    `bin/Test$(Configuration)/net10.0/`, respectively.
+* `$(BuildOutputDirectory)` and `$(TestOutputDirectory)`: Projects configured
+    with these roots write to `bin/$(Configuration)/$(DotNetStableTargetFramework)/`
+    and `bin/Test$(Configuration)/$(DotNetStableTargetFramework)/`, respectively
+    (including `netstandard2.0` shared libraries such as `Java.Interop.Tools.Cecil`;
+    test-support libraries such as `Xamarin.Android.Tools.Bytecode` also write under
+    `$(TestOutputDirectory)`).
 
 ## Native registration
 
