@@ -20,6 +20,14 @@
 
 Shared Android tooling targets `netstandard2.0` and/or modern .NET; check APIs against all target frameworks. Prefer `ANDROID_HOME` for new SDK environment handling; retain `ANDROID_SDK_ROOT` only for compatibility.
 
+## NuGet feeds
+
+Never access nuget.org locally, including HTTP tools or package sources. Use the repo `NuGet.config` Azure DevOps feeds (`dotnet-public` for public packages).
+
+- Versions/downloads: append `<id>/index.json` or `<id>/<version>/<id>.<version>.nupkg` (lowercase) to `https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-public/nuget/v3/flat2/`.
+- Restores/tools: `--configfile <repo>/NuGet.config` (`--add-source` retains inherited feeds). Scratch projects: `dotnet new ... --no-restore`, then restore with that config.
+- Report missing packages; never fall back to nuget.org.
+
 ## Working Principles
 
 - **Check for existing work first:** search PRs and branches (`gh pr list --repo dotnet/android --state all --search "<keywords>"`, `git log origin/main --grep "<keywords>"`) and prior sessions; extend rather than redo, including before fanning out.
