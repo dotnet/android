@@ -376,6 +376,10 @@ namespace Xamarin.Android.Tools.Bytecode
 			// Same projection as above, but for the return type.
 			method.KotlinInlineClassReturnJniType = GetInlineClassJniType (metadata.ReturnType?.ClassName, method.ReturnType.TypeSignature, inlineClasses);
 
+			if (metadata.Flags.HasFlag (KotlinFunctionFlags.IsSuspend) &&
+					method.Descriptor.EndsWith ("Lkotlin/coroutines/Continuation;)Ljava/lang/Object;", StringComparison.Ordinal))
+				method.KotlinSuspendReturnType = GetSuspendReturnType (metadata.ReturnType);
+
 			// Recover the unmangled Kotlin source-level name when the Kotlin
 			// compiler mangled the JVM name for inline-class binary compat
 			// (e.g. JVM name `tint-Rn_QMJI`, Kotlin name `tint`). The generator
@@ -427,6 +431,17 @@ namespace Xamarin.Android.Tools.Bytecode
 				return;
 			method.KotlinDefaultJniSignature = helper_signature;
 			method.KotlinDefaultParameters = defaults;
+		}
+
+		// Type parameters have no class name, so they become `kotlin/Any?`.
+		// Platform types (`T!`) from Java can be null.
+		static string GetSuspendReturnType (KotlinType? type)
+		{
+			var name = type?.ClassName?.TrimEnd (';');
+			if (type is null || name is null || name.Length == 0)
+				return "kotlin/Any?";
+			var nullable = type.Nullable || type.FlexibleUpperBound != null || type.FlexibleTypeCapabilitiesId != null;
+			return nullable ? name + "?" : name;
 		}
 
 		static string PascalCase (string name)

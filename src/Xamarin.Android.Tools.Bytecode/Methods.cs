@@ -59,6 +59,9 @@ namespace Xamarin.Android.Tools.Bytecode {
 		public  string?             KotlinDefaultJniSignature { get; set; }
 		public  int[]?              KotlinDefaultParameters { get; set; }
 
+		// Kotlin result type of a `suspend` function (e.g. `kotlin/Int?`), which the JVM erases to `Object`.
+		public  string?             KotlinSuspendReturnType { get; set; }
+
 		public MethodInfo (ConstantPool constantPool, ClassFile declaringType, Stream stream)
 		{
 			ConstantPool    = constantPool;

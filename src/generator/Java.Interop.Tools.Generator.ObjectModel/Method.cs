@@ -32,6 +32,8 @@ namespace MonoDroid.Generation
 		public string ManagedOverride { get; set; }
 		public string ManagedReturn { get; set; }
 		public string KotlinInlineClassReturnJniType { get; set; }
+		// Kotlin result type of a `suspend` function (e.g. `kotlin/Int?`), or null.
+		public string KotlinSuspendReturnType { get; set; }
 		public string PropertyNameOverride { get; set; }
 		public string Return { get; set; }
 		public bool ReturnNotNull { get; set; }
@@ -158,6 +160,7 @@ namespace MonoDroid.Generation
 			clone.ManagedOverride = ManagedOverride;
 			clone.ManagedReturn = ManagedReturn;
 			clone.KotlinInlineClassReturnJniType = KotlinInlineClassReturnJniType;
+			clone.KotlinSuspendReturnType = KotlinSuspendReturnType;
 			clone.PropertyNameOverride = PropertyNameOverride;
 			clone.Return = Return;
 			clone.ReturnNotNull = ReturnNotNull;

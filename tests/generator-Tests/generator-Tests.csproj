@@ -49,6 +49,8 @@
     <EmbeddedResource Include="$(IntermediateOutputPath)kotlin-gradle\classes\xat\bytecode\tests\DefaultArgumentsKt.class" Link="kotlin-gradle\DefaultArgumentsKt.class" LogicalName="generatortests.kotlin-gradle.DefaultArgumentsKt.class" />
     <EmbeddedResource Include="$(IntermediateOutputPath)kotlin-gradle\classes\xat\bytecode\tests\DefaultArgumentsInterface.class" Link="kotlin-gradle\DefaultArgumentsInterface.class" LogicalName="generatortests.kotlin-gradle.DefaultArgumentsInterface.class" />
     <EmbeddedResource Include="$(IntermediateOutputPath)kotlin-gradle\classes\xat\bytecode\tests\DefaultArgumentsChild.class" Link="kotlin-gradle\DefaultArgumentsChild.class" LogicalName="generatortests.kotlin-gradle.DefaultArgumentsChild.class" />
+    <EmbeddedResource Include="$(IntermediateOutputPath)kotlin-gradle\classes\xat\bytecode\tests\SuspendFunctions.class" Link="kotlin-gradle\SuspendFunctions.class" LogicalName="generatortests.kotlin-gradle.SuspendFunctions.class" />
+    <EmbeddedResource Include="$(IntermediateOutputPath)kotlin-gradle\classes\xat\bytecode\tests\SuspendCallback.class" Link="kotlin-gradle\SuspendCallback.class" LogicalName="generatortests.kotlin-gradle.SuspendCallback.class" />
   </ItemGroup>
 
   <Import Project="..\Xamarin.Android.Tools.Bytecode-Tests\kotlin-gradle.targets" />

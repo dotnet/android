@@ -236,14 +236,20 @@ namespace generatortests
 				"</package>"));
 
 			// Like CodeGenerator, run class-parse output through the JavaTypeSystem adjuster.
-			// `java.lang.String`, `java.lang.CharSequence` and `java.util.List` come from the reference API in a real build.
+			// These reference types come from the reference API and assemblies in a real build.
 			var references = Java.Interop.Tools.JavaTypeSystem.JavaXmlApiImporter.ParseString (
 				"<api><package name='java.lang' jni-name='java/lang'>" +
 				"<class abstract='false' deprecated='not deprecated' final='true' name='String' static='false' visibility='public' jni-signature='Ljava/lang/String;' />" +
 				"<interface deprecated='not deprecated' name='CharSequence' static='false' visibility='public' jni-signature='Ljava/lang/CharSequence;' />" +
+				"<class abstract='false' deprecated='not deprecated' final='true' name='Integer' static='false' visibility='public' jni-signature='Ljava/lang/Integer;' />" +
 				"</package><package name='java.util' jni-name='java/util'>" +
 				"<interface deprecated='not deprecated' name='List' static='false' visibility='public' jni-signature='Ljava/util/List;'>" +
 				"<typeParameters><typeParameter name='E' /></typeParameters>" +
+				"</interface></package><package name='kotlin' jni-name='kotlin'>" +
+				"<class abstract='false' deprecated='not deprecated' final='true' name='Unit' static='false' visibility='public' jni-signature='Lkotlin/Unit;' />" +
+				"</package><package name='kotlin.coroutines' jni-name='kotlin/coroutines'>" +
+				"<interface deprecated='not deprecated' name='Continuation' static='false' visibility='public' jni-signature='Lkotlin/coroutines/Continuation;'>" +
+				"<typeParameters><typeParameter name='T' /></typeParameters>" +
 				"</interface></package></api>");
 			var types = new Java.Interop.Tools.JavaTypeSystem.Models.JavaTypeCollection ();
 			foreach (var reference in references.TypesFlattened.Values)

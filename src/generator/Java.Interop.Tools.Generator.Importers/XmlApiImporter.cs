@@ -397,6 +397,7 @@ namespace MonoDroid.Generation
 				ManagedOverride = elem.XGetAttribute ("managedOverride"),
 				ManagedReturn = elem.XGetAttribute ("managedReturn"),
 				KotlinInlineClassReturnJniType = elem.Attribute ("kotlin-inline-class-return-jni-type") != null ? elem.XGetAttribute ("kotlin-inline-class-return-jni-type") : null,
+				KotlinSuspendReturnType = elem.Attribute ("kotlin-suspend-return-type")?.Value,
 				PropertyNameOverride = elem.XGetAttribute ("propertyName"),
 				Return = elem.XGetAttribute ("return"),
 				ReturnNotNull = elem.XGetAttribute ("return-not-null") == "true",
