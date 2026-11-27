@@ -10,6 +10,7 @@ using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Runtime.ExceptionServices;
+using System.Text;
 using System.Threading;
 
 using Java.Interop;
@@ -355,8 +356,8 @@ namespace Java.Interop {
 
 		IntPtr RawGetMethodID (IntPtr env, string name, string signature, out IntPtr thrown)
 		{
-			using var nativeName = new JniModifiedUtf8String (name);
-			using var nativeSignature = new JniModifiedUtf8String (signature);
+			using var nativeName = new JniUtf8String (name);
+			using var nativeSignature = new JniUtf8String (signature);
 			unsafe {
 				// SAFETY: Both terminated buffers remain owned through lookup and exception capture.
 				var id      = JniNativeMethods.GetMethodID (env, PeerReference.Handle, nativeName.Pointer, nativeSignature.Pointer);
@@ -410,8 +411,8 @@ namespace Java.Interop {
 
 		IntPtr RawGetStaticMethodID (IntPtr env, string name, string signature, out IntPtr thrown)
 		{
-			using var nativeName = new JniModifiedUtf8String (name);
-			using var nativeSignature = new JniModifiedUtf8String (signature);
+			using var nativeName = new JniUtf8String (name);
+			using var nativeSignature = new JniUtf8String (signature);
 			unsafe {
 				// SAFETY: Both terminated buffers remain owned through static lookup and exception capture.
 				var id      = JniNativeMethods.GetStaticMethodID (env, PeerReference.Handle, nativeName.Pointer, nativeSignature.Pointer);
@@ -821,7 +822,9 @@ namespace Java.Interop {
 
 		IntPtr GetMemberID (ReadOnlySpan<char> name, ReadOnlySpan<char> signature, MemberKind kind, bool throwOnError = true)
 		{
-			int nameLength = checked (JniModifiedUtf8.GetByteCount (name) + 1);
+			// Match StringToCoTaskMemUTF8, including unpaired-surrogate replacement
+			// and embedded-NUL termination, rather than changing to JNI modified UTF-8.
+			int nameLength = checked (Encoding.UTF8.GetByteCount (name) + 1);
 			byte[]? rentedName = null;
 			try {
 				if (nameLength > 512)
@@ -830,7 +833,7 @@ namespace Java.Interop {
 				Span<byte> nameBuffer = rentedName == null
 					? stackalloc byte [nameLength]
 					: rentedName.AsSpan (0, nameLength);
-				JniModifiedUtf8.GetBytes (name, nameBuffer);
+				Encoding.UTF8.GetBytes (name, nameBuffer);
 				nameBuffer [nameLength - 1] = 0;
 
 				unsafe {
@@ -921,7 +924,7 @@ namespace Java.Interop {
 		/// </safety>
 		unsafe IntPtr GetMemberID (ReadOnlySpan<char> value, byte* otherValue, bool valueIsName, MemberKind kind, bool throwOnError)
 		{
-			int valueLength = checked (JniModifiedUtf8.GetByteCount (value) + 1);
+			int valueLength = checked (Encoding.UTF8.GetByteCount (value) + 1);
 			byte[]? rentedValue = null;
 			try {
 				if (valueLength > 512)
@@ -930,7 +933,7 @@ namespace Java.Interop {
 				Span<byte> valueBuffer = rentedValue == null
 					? stackalloc byte [valueLength]
 					: rentedValue.AsSpan (0, valueLength);
-				JniModifiedUtf8.GetBytes (value, valueBuffer);
+				Encoding.UTF8.GetBytes (value, valueBuffer);
 				valueBuffer [valueLength - 1] = 0;
 
 				unsafe {

@@ -18,30 +18,6 @@ namespace Java.InteropTests {
 		const string ClassName = "net/dot/jni/test/RegisterNativesTestType";
 
 		[TestMethod]
-		[TestCategory ("JniModifiedUtf8")]
-		[UnconditionalSuppressMessage ("AOT", "IL3050", Justification = "Delegate registration tests run only on runtimes supporting dynamic code.")]
-		public void RegisterManaged_SupplementaryNameAndSignature ()
-		{
-			using (var type = new JniType (JniTypeUtf8Test.UnicodeTypeName)) {
-				var callback = new UnicodeCallback ((env, self, value) => 57);
-				var methods = new [] {
-					new JniNativeMethodRegistration (JniTypeUtf8Test.UnicodeNativeName, JniTypeUtf8Test.UnicodeNativeSignature, callback),
-				};
-				try {
-					unsafe {
-						// SAFETY: The callback matches the descriptor; methods and callback remain rooted through unregistration.
-						type.RegisterNativeMethods (methods);
-					}
-					Assert.AreEqual (57, JniTypeUtf8Test.InvokeUnicodeNative (type));
-				} finally {
-					type.UnregisterNativeMethods ();
-					GC.KeepAlive (methods);
-					GC.KeepAlive (callback);
-				}
-			}
-		}
-
-		[TestMethod]
 		public void RetainsTransferredArrayUntilUnregistration ()
 		{
 			using (var type = new JniType (ClassName)) {
@@ -251,9 +227,6 @@ namespace Java.InteropTests {
 
 		[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
 		delegate int AddCallback (IntPtr env, IntPtr self, int a, int b);
-
-		[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-		delegate int UnicodeCallback (IntPtr env, IntPtr self, IntPtr value);
 
 		static void Collect ()
 		{

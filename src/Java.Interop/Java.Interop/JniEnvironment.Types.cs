@@ -162,7 +162,7 @@ namespace Java.Interop
 			/// </safety>
 			static unsafe bool TryRawFindClass (IntPtr env, string classname, out IntPtr klass, out IntPtr thrown)
 			{
-				using var nativeName = new JniModifiedUtf8String (classname);
+				using var nativeName = new JniUtf8String (classname);
 				unsafe {
 					// SAFETY: This helper owns the terminated allocation through lookup and exception polling; env belongs to this thread.
 					klass   = JniNativeMethods.FindClass (env, nativeName.Pointer);
@@ -339,9 +339,9 @@ namespace Java.Interop
 							throw new ArgumentException ($"JniNativeMethodRegistration[{i}] has a null Name or Signature.", nameof (methods));
 						if (m.Marshaler == null)
 							throw new ArgumentException ($"JniNativeMethodRegistration[{i}] ({m.Name}{m.Signature}) has a null Marshaler delegate.", nameof (methods));
-						IntPtr name = JniModifiedUtf8.Alloc (m.Name);
+						IntPtr name = Marshal.StringToCoTaskMemUTF8 (m.Name);
 						unmanagedStrings [i * 2] = name;
-						IntPtr sig  = JniModifiedUtf8.Alloc (m.Signature);
+						IntPtr sig  = Marshal.StringToCoTaskMemUTF8 (m.Signature);
 						unmanagedStrings [i * 2 + 1] = sig;
 						// SAFETY: Descriptor stores tracked addresses; registration owns callback validity.
 						natives [i] = unsafe (new JniNativeMethod ((byte*) name, (byte*) sig, Marshal.GetFunctionPointerForDelegate (m.Marshaler)));
@@ -351,8 +351,12 @@ namespace Java.Interop
 						RegisterNatives (type, natives);
 					}
 				} finally {
-					for (int i = 0; i < unmanagedStrings.Length; ++i) {
-						JniModifiedUtf8.Free (unmanagedStrings [i]);
+					unsafe {
+						// SAFETY: Free recorded allocations on paths entering this finally; keep delegates alive through cleanup.
+						for (int i = 0; i < unmanagedStrings.Length; ++i) {
+							if (unmanagedStrings [i] != IntPtr.Zero)
+								Marshal.ZeroFreeCoTaskMemUTF8 (unmanagedStrings [i]);
+						}
 					}
 					GC.KeepAlive (methods);
 				}

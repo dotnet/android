@@ -801,7 +801,7 @@ namespace Xamarin.Java.Interop
 		public override string[] GetManagedToMarshalPrepareStatements (string variable)
 		{
 			return new[]{
-				$"using var _{variable}_utf8 = new JniModifiedUtf8String ({variable});",
+				$"using var _{variable}_utf8 = new JniUtf8String ({variable});",
 			};
 		}
 	}
