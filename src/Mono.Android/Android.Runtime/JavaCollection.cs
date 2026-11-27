@@ -439,6 +439,7 @@ namespace Android.Runtime {
 								JniHandleOwnership.TransferLocalRef)!;
 				} finally {
 					JNIEnv.DeleteLocalRef (lrefArray);
+					GC.KeepAlive (this);
 				}
 			}
 		}
