@@ -52,34 +52,6 @@ public partial class MonoAndroidHelper
 	}
 
 #if MSBUILD
-	public static void RefreshAndroidSdk (string? sdkPath, string? ndkPath, string? javaPath, TaskLoggingHelper? logHelper = null)
-	{
-		Action<TraceLevel, string> logger = (level, value) => {
-			var log = logHelper;
-			switch (level) {
-			case TraceLevel.Error:
-				if (log == null)
-					Console.Error.Write (value);
-				else
-					log.LogCodedError ("XA5300", "{0}", value);
-				break;
-			case TraceLevel.Warning:
-				if (log == null)
-					Console.WriteLine (value);
-				else
-					log.LogCodedWarning ("XA5300", "{0}", value);
-				break;
-			default:
-				if (log == null)
-					Console.WriteLine (value);
-				else
-					log.LogDebugMessage ("{0}", value);
-				break;
-			}
-		};
-		AndroidSdk  = new AndroidSdkInfo (logger, sdkPath, ndkPath, javaPath);
-	}
-
 	public static void RefreshSupportedVersions (string[]? referenceAssemblyPaths)
 	{
 		SupportedVersions   = new AndroidVersions (referenceAssemblyPaths ?? []);
