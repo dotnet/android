@@ -133,9 +133,10 @@ namespace Java.Interop
 
 				// Class names here are binary/JNI names, so `NewStringUTF()` lets the fallback
 				// avoid a managed UTF-16 allocation while still calling `Class.forName()`.
-				Span<byte> javaName = classname.Length + 1 <= 256
-					? stackalloc byte [classname.Length + 1]
-					: new byte [classname.Length + 1];
+				int javaNameLength = checked (classname.Length + 1);
+				Span<byte> javaName = javaNameLength <= 256
+					? stackalloc byte [javaNameLength]
+					: new byte [javaNameLength];
 
 				classname.Replace (javaName, (byte) '/', (byte) '.');
 				javaName [classname.Length] = 0;
@@ -327,12 +328,13 @@ namespace Java.Interop
 				// data, which corrupts the registered method names. See https://github.com/dotnet/android/issues/11633.
 				const int MaxStackAllocatedNativeMethods = 32;
 				bool useStackAllocatedBuffers = numMethods <= MaxStackAllocatedNativeMethods;
+				int unmanagedStringCount = checked (numMethods * 2);
 				Span<JniNativeMethod> natives = useStackAllocatedBuffers
 					? stackalloc JniNativeMethod [numMethods]
 					: new JniNativeMethod [numMethods];
 				Span<IntPtr> unmanagedStrings = useStackAllocatedBuffers
-					? stackalloc IntPtr [numMethods * 2]
-					: new IntPtr [numMethods * 2];
+					? stackalloc IntPtr [unmanagedStringCount]
+					: new IntPtr [unmanagedStringCount];
 				unmanagedStrings.Clear ();
 				try {
 					for (int i = 0; i < numMethods; ++i) {
@@ -477,9 +479,10 @@ namespace Java.Interop
 					return unsafe (TryFindClassFromPtr (info, classname, classname, terminator, throwOnError));
 				}
 
-				Span<byte> jniClassName = nameLength + 1 <= 256
-					? stackalloc byte [nameLength + 1]
-					: new byte [nameLength + 1];
+				int jniClassNameLength = checked (nameLength + 1);
+				Span<byte> jniClassName = jniClassNameLength <= 256
+					? stackalloc byte [jniClassNameLength]
+					: new byte [jniClassNameLength];
 				for (int i = 0; i < nameLength; ++i)
 					jniClassName [i] = classname [i] == (byte) '.' ? (byte) '/' : classname [i];
 				jniClassName [nameLength] = 0;
