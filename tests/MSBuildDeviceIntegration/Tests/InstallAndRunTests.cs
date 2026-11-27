@@ -1626,6 +1626,8 @@ using System.Runtime.Serialization.Json;
 			};
 			proj.SetRuntime (runtime);
 			proj.SetDefaultTargetDevice ();
+			if (runtime == AndroidRuntime.CoreCLR)
+				proj.SetProperty ("AndroidPackageFormat", "aab");
 			proj.SetProperty ("ApplicationId", "com.i.should.get.overridden.by.the.manifest");
 			if (testOnly)
 				proj.AndroidManifest = proj.AndroidManifest.Replace ("<application", "<application android:testOnly=\"true\"");
@@ -1633,27 +1635,12 @@ using System.Runtime.Serialization.Json;
 			proj.SetRuntimeIdentifiers (new[] { DeviceAbi });
 			builder = CreateApkBuilder ();
 			Assert.IsTrue (builder.Install (proj), "Install should have succeeded.");
+			Assert.IsFalse (builder.Output.IsTargetSkipped ("_DeployAppBundle"), "The app bundle should be installed.");
 			RunProjectAndAssert (proj, builder);
 
 			var didStart = WaitForActivityToStart (proj.PackageName, "MainActivity",
 				Path.Combine (Root, builder.ProjectDirectory, "startup-logcat.log"), ActivityStartTimeoutInSeconds);
 			Assert.IsTrue (didStart, "Activity should have started.");
-		}
-
-		[Test]
-		public void SingleProject_TestOnlyApplicationBundle ()
-		{
-			var proj = new XamarinAndroidApplicationProject (
-				packageName: PackageUtils.MakePackageName (AndroidRuntime.CoreCLR, "testonlybundle"));
-			proj.SetRuntime (AndroidRuntime.CoreCLR);
-			proj.SetDefaultTargetDevice ();
-			proj.SetProperty ("AndroidPackageFormat", "aab");
-			proj.AndroidManifest = proj.AndroidManifest.Replace ("<application", "<application android:testOnly=\"true\"");
-			proj.SetRuntimeIdentifiers (new[] { DeviceAbi });
-
-			builder = CreateApkBuilder ();
-			Assert.IsTrue (builder.Install (proj), "Test-only app bundle should have installed successfully.");
-			Assert.IsFalse (builder.Output.IsTargetSkipped ("_DeployAppBundle"), "The app bundle should be installed.");
 		}
 
 		[Test]
