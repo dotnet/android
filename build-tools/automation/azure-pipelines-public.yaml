@@ -29,6 +29,10 @@ parameters:
   values:
   - 'true'
   - 'false'
+- name: publishWindowsPackages
+  displayName: Publish unsigned Windows workload packages
+  type: boolean
+  default: false
 
 # Repository resources
 resources:
@@ -123,6 +127,14 @@ stages:
       parameters:
         buildResultArtifactName: Build Results - Windows
         use1ESTemplate: false
+
+    - ${{ if eq(parameters.publishWindowsPackages, true) }}:
+      - task: PublishPipelineArtifact@1
+        displayName: upload Windows nupkgs
+        condition: succeeded()
+        inputs:
+          artifactName: nuget-windows-unsigned
+          targetPath: $(System.DefaultWorkingDirectory)/bin/Build$(XA.Build.Configuration)/nuget-unsigned
 
 # Linux Build Stage
 - stage: linux_build
