@@ -384,13 +384,9 @@ namespace Java.Interop
 					throw new ArgumentException ("Handle must be valid.", nameof (type));
 
 				unsafe {
-					foreach (var method in methods) {
-						if (method.name == null || method.signature == null)
-							throw new ArgumentException ("Native method names and signatures must not be null.", nameof (methods));
-						// SAFETY: The caller retains every descriptor string through registration.
-						JniModifiedUtf8.Validate (method.name, nameof (methods));
-						JniModifiedUtf8.Validate (method.signature, nameof (methods));
-					}
+					// SAFETY: The caller retains every descriptor string through registration.
+					foreach (var method in methods)
+						method.Validate (nameof (methods));
 				}
 
 				IntPtr env = JniEnvironment.EnvironmentPointer;

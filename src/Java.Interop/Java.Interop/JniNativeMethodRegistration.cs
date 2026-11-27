@@ -30,8 +30,8 @@ namespace Java.Interop {
 	public struct JniNativeMethod
 	{
 		// SAFETY: Field access stores or copies addresses; pointee access and callback invocation have separate contracts.
-		internal readonly safe byte* name;
-		internal readonly safe byte* signature;
+		safe byte* name;
+		safe byte* signature;
 		safe IntPtr functionPointer;
 
 		/// <remarks>
@@ -51,6 +51,21 @@ namespace Java.Interop {
 			this.name = name;
 			this.signature = signature;
 			this.functionPointer = functionPointer;
+		}
+
+		/// <safety>
+		/// <see cref="name"/> and <see cref="signature"/>, when non-null, must remain readable
+		/// and unchanged through their NUL terminators for the duration of this scan.
+		/// </safety>
+		internal unsafe readonly void Validate (string paramName)
+		{
+			unsafe {
+				if (name == null || signature == null)
+					throw new ArgumentException ("Native method names and signatures must not be null.", paramName);
+				// SAFETY: The caller keeps both descriptor strings readable and NUL-terminated through registration.
+				JniModifiedUtf8.Validate (name, paramName);
+				JniModifiedUtf8.Validate (signature, paramName);
+			}
 		}
 	}
 }
