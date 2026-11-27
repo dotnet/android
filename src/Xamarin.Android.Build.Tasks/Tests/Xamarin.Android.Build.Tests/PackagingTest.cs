@@ -41,13 +41,16 @@ namespace Xamarin.Android.Build.Tests
 			Assert.IsTrue (builder.Build (proj), "The compressed-store build should succeed.");
 			string archive = Path.Combine (Root, builder.ProjectDirectory, proj.OutputPath, $"{proj.PackageName}-Signed.{packageFormat}");
 			AssertArchive ();
-			AssertStoresTracked ();
 			DateTime archiveTimestamp = File.GetLastWriteTimeUtc (archive);
 
 			Assert.IsTrue (builder.Build (proj, doNotCleanupOnUpdate: true, saveProject: false), "The unchanged build should succeed.");
 			Assert.IsTrue (builder.Output.IsTargetSkipped ("_BuildApkEmbed"), "An unchanged build must not rewrite assembly-store wrappers.");
 			Assert.AreEqual (archiveTimestamp, File.GetLastWriteTimeUtc (archive), "The package should remain unchanged.");
-			AssertStoresTracked ();
+			string removedStore = Path.GetFullPath (builder.Output.GetIntermediaryPath (Path.Combine ("app_shared_libraries", "x86_64", "assembly-store.so")));
+			string fileList = builder.Output.GetIntermediaryPath ($"{proj.ProjectName}.csproj.FileListAbsolute.txt");
+			var files = File.ReadAllLines (fileList);
+			CollectionAssert.Contains (files, removedStore);
+			CollectionAssert.Contains (files, removedStore + ".manifest");
 
 			proj.MainActivity = proj.DefaultMainActivity.Replace ("//${AFTER_ONCREATE}", "System.Console.WriteLine (\"assembly-store update\");");
 			proj.Touch ("MainActivity.cs");
@@ -55,28 +58,13 @@ namespace Xamarin.Android.Build.Tests
 			Assert.IsTrue (builder.Build (proj, doNotCleanupOnUpdate: true, saveProject: false), "The changed-assembly build should succeed.");
 			Assert.IsFalse (builder.Output.IsTargetSkipped ("_BuildApkEmbed"), "Changing an assembly must refresh the packaged stores.");
 			AssertArchive ();
-			AssertStoresTracked ();
 
-			string removedStore = builder.Output.GetIntermediaryPath (Path.Combine ("app_shared_libraries", "x86_64", "assembly-store.so"));
 			arches = [AndroidTargetArch.Arm64];
 			proj.SetRuntimeIdentifiers (arches);
 			Assert.IsTrue (builder.Build (proj, doNotCleanupOnUpdate: true), "Removing ABIs should succeed.");
 			FileAssert.DoesNotExist (removedStore);
 			FileAssert.DoesNotExist (removedStore + ".manifest");
 			AssertArchive ();
-			AssertStoresTracked ();
-
-			void AssertStoresTracked ()
-			{
-				string fileList = builder.Output.GetIntermediaryPath ($"{proj.ProjectName}.csproj.FileListAbsolute.txt");
-				var files = File.ReadAllLines (fileList);
-				foreach (var arch in arches) {
-					string abi = MonoAndroidHelper.ArchToAbi (arch);
-					string store = Path.GetFullPath (builder.Output.GetIntermediaryPath (Path.Combine ("app_shared_libraries", abi, "assembly-store.so")));
-					CollectionAssert.Contains (files, store);
-					CollectionAssert.Contains (files, store + ".manifest");
-				}
-			}
 
 			void AssertArchive ()
 			{

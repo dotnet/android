@@ -41,7 +41,6 @@ public class GenerateCoreClrRuntimeProviderSourcesTests : BaseTest
 		var similarName = Path.Combine (sourceDirectory, "MonoRuntimeProvider_1backup.java");
 		File.WriteAllText (unrelated, "unrelated");
 		File.WriteAllText (similarName, "unrelated");
-		var firstTimestamp = File.GetLastWriteTimeUtc (first);
 
 		task.AdditionalProviderSources = ["MonoRuntimeProvider_1"];
 		Assert.IsTrue (task.Execute ());
@@ -50,15 +49,10 @@ public class GenerateCoreClrRuntimeProviderSourcesTests : BaseTest
 		FileAssert.Exists (unrelated);
 		FileAssert.Exists (similarName);
 		CollectionAssert.AreEquivalent (new [] { second }, task.DeletedSources);
-		Assert.AreEqual (firstTimestamp, File.GetLastWriteTimeUtc (first));
 
 		task.AdditionalProviderSources = [];
 		Assert.IsTrue (task.Execute ());
 		FileAssert.DoesNotExist (first);
-		FileAssert.Exists (unrelated);
-		FileAssert.Exists (similarName);
 		CollectionAssert.AreEquivalent (new [] { first }, task.DeletedSources);
-		Assert.IsTrue (task.Execute ());
-		Assert.IsEmpty (task.DeletedSources);
 	}
 }

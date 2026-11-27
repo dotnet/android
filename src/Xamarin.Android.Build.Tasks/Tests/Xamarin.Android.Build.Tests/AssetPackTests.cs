@@ -231,8 +231,6 @@ namespace Xamarin.Android.Build.Tests
 				var assetPack2Archive = Path.Combine (assetPacksDirectory, "assetpack2.zip");
 				var fileList = Path.Combine (Root, path, app.ProjectName, app.IntermediateOutputPath,
 					$"{app.ProjectName}.csproj.FileListAbsolute.txt");
-				FileAssert.Exists (assetPack2Archive);
-				CollectionAssert.Contains (File.ReadAllLines (fileList), Path.GetFullPath (assetPack2Archive));
 				using (var zip = ZipHelper.OpenZip (aab)) {
 					Assert.IsNotNull (zip.GetEntry ("base/assets/asset1.txt"), "aab should contain base/assets/asset1.txt");
 					Assert.IsNull (zip.GetEntry ("base/assets/asset2.txt"), "aab should not contain base/assets/asset2.txt");

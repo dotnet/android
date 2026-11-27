@@ -2868,15 +2868,8 @@ namespace Xamarin.Android.Build.Tests {
 			FileAssert.Exists (provider);
 			FileAssert.Exists (providerClass);
 
-			receiver.TextContent = () => """
-				using Android.Content;
-
-				[BroadcastReceiver (Name = "example.RemoteReceiver")]
-				public class RemoteReceiver : BroadcastReceiver
-				{
-					public override void OnReceive (Context context, Intent intent) { }
-				}
-				""";
+			var receiverSource = receiver.TextContent ();
+			receiver.TextContent = () => receiverSource.Replace ("Process = \":remote\", ", "");
 			proj.Touch ("RemoteReceiver.cs");
 			Assert.IsTrue (builder.Build (proj, doNotCleanupOnUpdate: true, saveProject: false), "The incremental build should succeed.");
 			builder.Output.AssertTargetIsNotSkipped ("_CompileJava");
