@@ -694,3 +694,11 @@ stages:
         use1ESTemplate: false
 
     - template: /build-tools/automation/yaml-templates/fail-on-issue.yaml
+
+# DevSkim Banned API Stage
+- template: /build-tools/automation/yaml-templates/stage-devskim.yaml@self
+  parameters:
+    pool:
+      name: $(NetCorePublicPoolName)
+      demands:
+      - ImageOverride -equals $(LinuxPoolImageNetCorePublic)

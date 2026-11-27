@@ -77,7 +77,7 @@ auto FastDevAssemblies::open_assembly (std::string_view const& name, int64_t &si
 	if (override_dir_fd < 0) [[unlikely]] {
 		override_dir = opendir (override_dir_path);
 		if (override_dir == nullptr) [[unlikely]] {
-			log_warnf (LOG_ASSEMBLY, "Failed to open override dir '%s'. %s", override_dir_path, strerror (errno));
+			log_warnf (LOG_ASSEMBLY, "Failed to open override dir '%s'. %s", override_dir_path, ErrorMessage (errno).c_str ());
 			return nullptr;
 		}
 		override_dir_fd = dirfd (override_dir);
@@ -114,7 +114,7 @@ auto FastDevAssemblies::open_assembly (std::string_view const& name, int64_t &si
 			LOG_ASSEMBLY,
 			"Failed to open FastDev assembly '%.*s' for reading. %s",
 			static_cast<int>(name.length ()), name.data (),
-			strerror (errno)
+			ErrorMessage (errno).c_str ()
 		);
 
 		return nullptr;
@@ -129,7 +129,7 @@ auto FastDevAssemblies::open_assembly (std::string_view const& name, int64_t &si
 		);
 
 		if (close (asm_fd) < 0) {
-			log_warnf (LOG_ASSEMBLY, "Failed to close FastDev assembly '%.*s'. %s", static_cast<int>(name.length ()), name.data (), strerror (errno));
+			log_warnf (LOG_ASSEMBLY, "Failed to close FastDev assembly '%.*s'. %s", static_cast<int>(name.length ()), name.data (), ErrorMessage (errno).c_str ());
 		}
 		return nullptr;
 	}
@@ -155,7 +155,7 @@ auto FastDevAssemblies::open_assembly (std::string_view const& name, int64_t &si
 		break;
 	}
 	if (close (asm_fd) < 0) {
-		log_warnf (LOG_ASSEMBLY, "Failed to close FastDev assembly '%.*s'. %s", static_cast<int>(name.length ()), name.data (), strerror (errno));
+		log_warnf (LOG_ASSEMBLY, "Failed to close FastDev assembly '%.*s'. %s", static_cast<int>(name.length ()), name.data (), ErrorMessage (errno).c_str ());
 	}
 
 	if (nread != assembly_size) [[unlikely]] {
@@ -166,7 +166,7 @@ auto FastDevAssemblies::open_assembly (std::string_view const& name, int64_t &si
 				LOG_ASSEMBLY,
 				"Failed to read FastDev assembly '%.*s' data. %s",
 				static_cast<int>(name.length ()), name.data (),
-				strerror (read_errno)
+				ErrorMessage (read_errno).c_str ()
 			);
 		} else {
 			log_warnf (
@@ -215,7 +215,7 @@ auto FastDevAssemblies::build_tpa_list () noexcept -> char*
 
 	DIR *dir = opendir (override_dir_path);
 	if (dir == nullptr) {
-		log_warnf (LOG_ASSEMBLY, "FastDev: failed to open override dir '%s'. %s", override_dir_path, std::strerror (errno));
+		log_warnf (LOG_ASSEMBLY, "FastDev: failed to open override dir '%s'. %s", override_dir_path, ErrorMessage (errno).c_str ());
 		return nullptr;
 	}
 
@@ -223,7 +223,7 @@ auto FastDevAssemblies::build_tpa_list () noexcept -> char*
 	size_t tpa_length = 0;
 	FILE *stream = open_memstream (&tpa_list, &tpa_length);
 	if (stream == nullptr) {
-		log_warnf (LOG_ASSEMBLY, "FastDev: unable to allocate memory for the TPA list. %s", std::strerror (errno));
+		log_warnf (LOG_ASSEMBLY, "FastDev: unable to allocate memory for the TPA list. %s", ErrorMessage (errno).c_str ());
 		closedir (dir);
 		return nullptr;
 	}
@@ -251,8 +251,11 @@ auto FastDevAssemblies::build_tpa_list () noexcept -> char*
 			break;
 		}
 
-		if (std::fprintf (stream, "%s%s/%s", count > 0 ? ":" : "", override_dir_path, e->d_name) < 0) {
-			log_warnf (LOG_ASSEMBLY, "FastDev: unable to write the TPA list. %s", std::strerror (errno));
+		if ((count > 0 && std::fputc (':', stream) == EOF) ||
+		    std::fputs (override_dir_path, stream) == EOF ||
+		    std::fputc ('/', stream) == EOF ||
+		    std::fputs (e->d_name, stream) == EOF) {
+			log_warnf (LOG_ASSEMBLY, "FastDev: unable to write the TPA list. %s", ErrorMessage (errno).c_str ());
 			write_failed = true;
 			break;
 		}
@@ -262,7 +265,7 @@ auto FastDevAssemblies::build_tpa_list () noexcept -> char*
 		count++;
 	}
 	if (std::fclose (stream) != 0) {
-		log_warnf (LOG_ASSEMBLY, "FastDev: unable to close the TPA list stream. %s", std::strerror (errno));
+		log_warnf (LOG_ASSEMBLY, "FastDev: unable to close the TPA list stream. %s", ErrorMessage (errno).c_str ());
 		write_failed = true;
 	}
 	closedir (dir);

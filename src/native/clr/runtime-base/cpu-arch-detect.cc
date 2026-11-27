@@ -1,3 +1,6 @@
+#include <fcntl.h>
+#include <unistd.h>
+
 #include <cerrno>
 #include <cstdio>
 #include <cstring>
@@ -5,6 +8,7 @@
 #include <shared/cpp-util.hh>
 #include <shared/log_functions.hh>
 #include <runtime-base/cpu-arch.hh>
+#include <runtime-base/util.hh>
 
 using namespace xamarin::android;
 
@@ -16,12 +20,17 @@ find_in_maps (const char *str)
 {
 	abort_if_invalid_pointer_argument (str, "str");
 
-	FILE *maps = fopen ("/proc/self/maps", "r");
+	int fd = open ("/proc/self/maps", O_RDONLY);
+	FILE *maps = fd == -1 ? nullptr : fdopen (fd, "r");
 	char *line;
 	char  buf [BUF_SIZE];
 
 	if (!maps) {
-		log_warnf (LOG_DEFAULT, "Failed to open /proc/self/maps for CPU detection: %s", strerror (errno));
+		log_warnf (LOG_DEFAULT, "Failed to open /proc/self/maps for CPU detection: %s", ErrorMessage (errno).c_str ());
+		if (fd != -1) {
+			// `fdopen` failed, so we still own the file descriptor
+			close (fd);
+		}
 		return -1;
 	}
 
@@ -34,11 +43,11 @@ find_in_maps (const char *str)
 	}
 
 	if (ferror (maps)) {
-		log_warnf (LOG_DEFAULT, "Failed to read /proc/self/maps for CPU detection: %s", strerror (errno));
+		log_warnf (LOG_DEFAULT, "Failed to read /proc/self/maps for CPU detection: %s", ErrorMessage (errno).c_str ());
 		found = -1;
 	}
 	if (fclose (maps) != 0) {
-		log_warnf (LOG_DEFAULT, "Failed to close /proc/self/maps after CPU detection: %s", strerror (errno));
+		log_warnf (LOG_DEFAULT, "Failed to close /proc/self/maps after CPU detection: %s", ErrorMessage (errno).c_str ());
 	}
 
 	return found;

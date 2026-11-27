@@ -7,6 +7,7 @@
 #include <cstdlib>
 #include <cstdio>
 #include <cstring>
+#include <initializer_list>
 #include <limits>
 #include <optional>
 #include <string_view>
@@ -18,6 +19,32 @@
 #include <shared/log_types.hh>
 
 namespace xamarin::android {
+	// Gets the message for an `errno` value without `strerror ()`. The message is stored in the object, so
+	// `c_str ()` stays valid for as long as the object does. Create it in the expression that uses the message:
+	//
+	//   log_warnf (LOG_DEFAULT, "Failed: %s", ErrorMessage (errno).c_str ());
+	//
+	// `strerror_r` returns the message only in its GNU variant, which Android has since API level 23.
+	class ErrorMessage final
+	{
+	public:
+		explicit ErrorMessage (int error_number) noexcept
+			: message { strerror_r (error_number, buffer, sizeof (buffer)) }
+		{}
+
+		ErrorMessage (ErrorMessage const&) = delete;
+		auto operator= (ErrorMessage const&) -> ErrorMessage& = delete;
+
+		auto c_str () const noexcept -> const char*
+		{
+			return message;
+		}
+
+	private:
+		char buffer [128];
+		const char *message;
+	};
+
 	class Util
 	{
 	public:
@@ -100,7 +127,7 @@ namespace xamarin::android {
 		{
 			struct stat sbuf;
 			if (fstatat (dirfd, file_name, &sbuf, 0) == -1) {
-				log_warnf (LOG_ASSEMBLY, "Failed to stat file '%s': %s", optional_string (file_name), std::strerror (errno));
+				log_warnf (LOG_ASSEMBLY, "Failed to stat file '%s': %s", optional_string (file_name), ErrorMessage (errno).c_str ());
 				return std::nullopt;
 			}
 
@@ -122,7 +149,7 @@ namespace xamarin::android {
 		{
 			log_debugf (LOG_DEFAULT, "Setting environment variable %s = '%s'", optional_string (name), optional_string (value));
 			if (::setenv (name, value, 1) < 0) {
-				log_warnf (LOG_DEFAULT, "Failed to set environment variable '%s': %s", optional_string (name), ::strerror (errno));
+				log_warnf (LOG_DEFAULT, "Failed to set environment variable '%s': %s", optional_string (name), ErrorMessage (errno).c_str ());
 			}
 		}
 
@@ -142,7 +169,7 @@ namespace xamarin::android {
 					"Failed to set environment variable '%.*s': %s",
 					static_cast<int>(name.length ()),
 					name.data (),
-					::strerror (errno)
+					ErrorMessage (errno).c_str ()
 				);
 			}
 		}
@@ -171,7 +198,7 @@ namespace xamarin::android {
 						optional_string (value.get_cstr ()),
 						static_cast<int>(name.length ()),
 						name.data (),
-						strerror (errno)
+						ErrorMessage (errno).c_str ()
 					);
 				}
 			}
@@ -256,6 +283,32 @@ namespace xamarin::android {
 			buffer [path_length] = '\0';
 
 			return static_cast<ssize_t>(path_length);
+		}
+
+		// Returns the length of the concatenated parts excluding NUL, or the negative required capacity including NUL.
+		static auto format_concatenated (char *buffer, size_t buffer_size, std::initializer_list<std::string_view> parts) noexcept -> ssize_t
+		{
+			size_t length = 0uz;
+			for (std::string_view const& part : parts) {
+				length = Helpers::add_with_overflow_check<size_t> (length, part.length ());
+			}
+
+			size_t required_capacity = Helpers::add_with_overflow_check<size_t> (length, 1uz);
+			abort_unless (required_capacity <= static_cast<size_t>(std::numeric_limits<ssize_t>::max ()), "Concatenated string is too long");
+			if (buffer == nullptr || buffer_size < required_capacity) {
+				return -static_cast<ssize_t>(required_capacity);
+			}
+
+			char *destination = buffer;
+			for (std::string_view const& part : parts) {
+				if (!part.empty ()) {
+					memcpy (destination, part.data (), part.length ());
+					destination += part.length ();
+				}
+			}
+			*destination = '\0';
+
+			return static_cast<ssize_t>(length);
 		}
 
 		// Formats a string that usually fits in a stack buffer, falling back to the heap when it

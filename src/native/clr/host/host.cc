@@ -2,6 +2,7 @@
 #include <dlfcn.h>
 
 #include <cerrno>
+#include <charconv>
 #include <cinttypes>
 #include <cstdio>
 #include <cstdlib>
@@ -31,6 +32,17 @@
 #include <shared/log_types.hh>
 
 using namespace xamarin::android;
+
+namespace {
+	// Writes `value` to `buffer` as a NUL-terminated string. Aborts if the buffer is too small.
+	template<typename T>
+	void format_integer (char *buffer, size_t buffer_size, T value, int base = 10) noexcept
+	{
+		auto result = std::to_chars (buffer, buffer + buffer_size - 1, value, base);
+		abort_unless (result.ec == std::errc {}, "Integer doesn't fit in the buffer");
+		*result.ptr = '\0';
+	}
+}
 
 void Host::clr_error_writer (const char *message) noexcept
 {
@@ -91,7 +103,7 @@ void Host::load_assembly_store_from_filesystem () noexcept
 			std::source_location::current (),
 			"Unable to locate assembly store '%s': %s",
 			store_path,
-			std::strerror (errno)
+			ErrorMessage (errno).c_str ()
 		);
 	} else {
 		log_debugf (LOG_ASSEMBLY, "Assembly store '%s' not found", store_path);
@@ -266,7 +278,9 @@ void Host::Java_mono_android_Runtime_initInternal (
 
 	coreclr_set_error_writer (clr_error_writer);
 	// We REALLY shouldn't be doing this
-	snprintf (host_contract_ptr_buffer.data (), host_contract_ptr_buffer.size (), "%p", &runtime_contract);
+	host_contract_ptr_buffer[0] = '0';
+	host_contract_ptr_buffer[1] = 'x';
+	format_integer (host_contract_ptr_buffer.data () + 2, host_contract_ptr_buffer.size () - 2, reinterpret_cast<uintptr_t>(&runtime_contract), 16);
 
 	// These indices are load-bearing: the application build emits the property names in this
 	// exact order (see `CoreClrBootstrapBlob`) so that we can fill in
@@ -301,7 +315,7 @@ void Host::Java_mono_android_Runtime_initInternal (
 
 	// Java calculated the device's current UTC offset in seconds; the blob only reserves the slot.
 	static char local_date_time_offset_buffer[16] {};
-	std::snprintf (local_date_time_offset_buffer, sizeof (local_date_time_offset_buffer), "%d", localDateTimeOffset);
+	format_integer (local_date_time_offset_buffer, sizeof (local_date_time_offset_buffer), localDateTimeOffset);
 	CoreClrBootstrap::property_values[RUNTIME_PROPERTY_INDEX_LOCAL_DATE_TIME_OFFSET] = local_date_time_offset_buffer;
 
 	const char **prop_names = CoreClrBootstrap::property_names;
