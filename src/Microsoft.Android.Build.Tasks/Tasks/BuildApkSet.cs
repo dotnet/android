@@ -5,8 +5,9 @@ using Microsoft.Build.Utilities;
 using System;
 using System.IO;
 using Xamarin.Android.Tools;
+using Xamarin.Android.Tasks;
 
-namespace Xamarin.Android.Tasks
+namespace Microsoft.Android.Tasks
 {
 	/// <summary>
 	/// Invokes `bundletool` to create an APK set (.apks file)

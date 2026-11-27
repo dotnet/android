@@ -5,7 +5,7 @@ using System.Linq;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
 using NUnit.Framework;
-using Xamarin.Android.Tasks;
+using Microsoft.Android.Tasks;
 using Xamarin.Android.Tools;
 
 namespace Xamarin.Android.Build.Tests
@@ -164,7 +164,7 @@ namespace Xamarin.Android.Build.Tests
 
 		protected override string CreateResponseFilePath ()
 		{
-			if (!ResponseFileDirectory.IsNullOrEmpty ()) {
+			if (!string.IsNullOrEmpty (ResponseFileDirectory)) {
 				return Path.Combine (ResponseFileDirectory, Path.GetRandomFileName ());
 			}
 			return base.CreateResponseFilePath ();

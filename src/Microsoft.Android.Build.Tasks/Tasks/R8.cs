@@ -6,8 +6,10 @@ using Microsoft.Build.Utilities;
 using System.Collections.Generic;
 using System.IO;
 using Microsoft.Android.Build.Tasks;
+using Xamarin.Android.Tasks;
+using Properties = Xamarin.Android.Tasks.Properties;
 
-namespace Xamarin.Android.Tasks
+namespace Microsoft.Android.Tasks
 {
 	/// <summary>
 	/// This task invokes r8 in order to:
@@ -177,7 +179,7 @@ namespace Xamarin.Android.Tasks
 							appcfg.WriteLine ($"{KeepOption} class {java} {{ *; }}");
 						}
 					}
-				} else if (!UseTypeMapProguardConfiguration && !AcwMapFile.IsNullOrEmpty ()) {
+				} else if (!UseTypeMapProguardConfiguration && !AcwMapFile.IsNullOrEmpty () && !ProguardGeneratedApplicationConfiguration.IsNullOrEmpty ()) {
 					var acwMap      = MonoAndroidHelper.LoadMapFile (BuildEngine4, Path.GetFullPath (AcwMapFile), StringComparer.OrdinalIgnoreCase);
 					var javaTypes   = new List<string> (acwMap.Values.Count);
 					foreach (var v in acwMap.Values) {

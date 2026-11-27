@@ -60,19 +60,20 @@
 
   <ItemGroup>
     <EmbeddedResource Include="..\Xamarin.Android.Build.Tasks\Resources\Resource.Designer.snk" LogicalName="Resource.Designer.snk" />
-    <EmbeddedResource Include="..\Xamarin.Android.Build.Tasks\Resources\JavaInteropRuntime.java;..\Xamarin.Android.Build.Tasks\Resources\NativeAotRuntimeProvider.java;..\Xamarin.Android.Build.Tasks\Resources\MonoRuntimeProvider.Bundled.java">
+    <EmbeddedResource Include="..\Xamarin.Android.Build.Tasks\Resources\JavaInteropRuntime.java;..\Xamarin.Android.Build.Tasks\Resources\NativeAotRuntimeProvider.java;..\Xamarin.Android.Build.Tasks\Resources\MonoRuntimeProvider.Bundled.java;..\Xamarin.Android.Build.Tasks\Resources\proguard_xamarin.cfg;..\Xamarin.Android.Build.Tasks\Resources\proguard_typemap.cfg;..\Xamarin.Android.Build.Tasks\Resources\proguard_typemap_coreclr.cfg">
       <LogicalName>%(Filename)%(Extension)</LogicalName>
     </EmbeddedResource>
     <Compile Include="..\Xamarin.Android.Build.Tasks\Utilities\AndroidRuntime.cs" Link="Utilities\AndroidRuntime.cs" />
+    <Compile Include="..\Xamarin.Android.Build.Tasks\Utilities\AndroidResource.cs" Link="Utilities\AndroidResource.cs" />
     <Compile Include="..\Xamarin.Android.Build.Tasks\Utilities\NullableExtensions.cs" Link="Utilities\NullableExtensions.cs" />
     <Compile Include="..\Xamarin.Android.Build.Tasks\Utilities\MetadataExtensions.cs" Link="Utilities\MetadataExtensions.cs" />
     <Compile Include="..\Xamarin.Android.Build.Tasks\Utilities\KnownMetadata.cs" Link="Utilities\KnownMetadata.cs" />
     <Compile Include="..\Xamarin.Android.Build.Tasks\Utilities\DummyCustomAttributeProvider.cs" Link="Utilities\DummyCustomAttributeProvider.cs" />
     <Compile Include="..\Xamarin.Android.Build.Tasks\Utilities\ManifestPlaceholderResolver.cs" Link="Utilities\ManifestPlaceholderResolver.cs" />
+    <Compile Include="..\Xamarin.Android.Build.Tasks\Utilities\ManifestDocument.Shared.cs" Link="Utilities\ManifestDocument.Shared.cs" />
     <Compile Include="..\Xamarin.Android.Build.Tasks\Utilities\MonoAndroidHelper.Basic.cs" Link="Utilities\MonoAndroidHelper.Basic.cs" />
+    <Compile Include="..\Xamarin.Android.Build.Tasks\Utilities\MonoAndroidHelper.Nullable.cs" Link="Utilities\MonoAndroidHelper.Nullable.cs" />
     <Compile Include="..\Xamarin.Android.Build.Tasks\Utilities\MonoAndroidHelper.Tasks.cs" Link="Utilities\MonoAndroidHelper.Tasks.cs" />
-    <!-- Aapt2Link: ManifestMerger still uses these, so they remain shared sources. -->
-    <Compile Include="..\Xamarin.Android.Build.Tasks\Utilities\AndroidResource.cs" Link="Utilities\AndroidResource.cs" />
     <Compile Include="..\Xamarin.Android.Build.Tasks\Utilities\ManifestDocument.cs" Link="Utilities\ManifestDocument.cs" />
     <Compile Include="..\Xamarin.Android.Build.Tasks\Utilities\ResourceParser.cs" Link="Utilities\ResourceParser.cs" />
     <Compile Include="..\Xamarin.Android.Build.Tasks\Utilities\ResourceIdentifier.cs" Link="Utilities\ResourceIdentifier.cs" />
@@ -82,9 +83,6 @@
     <Compile Include="..\Xamarin.Android.Build.Tasks\Utilities\ELFHelper.Shared.cs" Link="Utilities\ELFHelper.Shared.cs" />
     <Compile Include="..\Xamarin.Android.Build.Tasks\Utilities\ZipArchiveEntryExtensions.cs" Link="Utilities\ZipArchiveEntryExtensions.cs" />
     <Compile Include="..\..\src-ThirdParty\android-platform-tools-base\PackagingUtils.cs" Link="Utilities\PackagingUtils.cs" />
-    <!-- BuildAppBundle: the legacy BundleToolAdbTask tasks still derive from these, so they remain shared sources. -->
-    <Compile Include="..\Xamarin.Android.Build.Tasks\Tasks\JavaToolTask.cs" Link="Tasks\JavaToolTask.cs" />
-    <Compile Include="..\Xamarin.Android.Build.Tasks\Tasks\BundleTool.cs" Link="Tasks\BundleTool.cs" />
     <Compile Include="..\Xamarin.Android.Build.Tasks\Utilities\AssemblyIdentityMap.cs" Link="Utilities\AssemblyIdentityMap.cs" />
     <!-- Aapt2 uses ItemGroupToCaseMap () and FixUpAndroidResourcePath (). -->
     <Compile Include="..\Xamarin.Android.Build.Tasks\Utilities\MonoAndroidHelper.Shared.cs" Link="Utilities\MonoAndroidHelper.Shared.cs" />

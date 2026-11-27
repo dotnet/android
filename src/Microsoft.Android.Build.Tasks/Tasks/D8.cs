@@ -1,13 +1,15 @@
 #nullable enable
 
+using System.Globalization;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
 using System.Collections.Generic;
 using System.IO;
 using Xamarin.Android.Tools;
 using Microsoft.Android.Build.Tasks;
+using Xamarin.Android.Tasks;
 
-namespace Xamarin.Android.Tasks
+namespace Microsoft.Android.Tasks
 {
 	/// <summary>
 	/// This task invokes d8, and is also subclassed by the R8 task
@@ -113,7 +115,7 @@ namespace Xamarin.Android.Tasks
 				if (doc.MinSdkVersion.HasValue) {
 					MinSdkVersion = doc.MinSdkVersion.Value;
 					WriteArg (response, "--min-api");
-					WriteArg (response, MinSdkVersion.ToString ());
+					WriteArg (response, MinSdkVersion.ToString (CultureInfo.InvariantCulture));
 				}
 			}
 
