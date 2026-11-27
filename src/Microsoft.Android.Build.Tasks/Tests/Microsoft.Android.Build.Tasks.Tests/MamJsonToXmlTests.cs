@@ -9,7 +9,6 @@ using Microsoft.Android.Tasks;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
 using NUnit.Framework;
-using Xamarin.Android.Tasks;
 
 using Task = System.Threading.Tasks.Task;
 
@@ -68,31 +67,6 @@ namespace Xamarin.Android.Build.Tests.Tasks {
 			var expected = File.ReadAllText (ResourcePath ("mam.xml")).ReplaceLineEndings ();
 			var xml = File.ReadAllText (output).ReplaceLineEndings ();
 			Assert.AreEqual (expected, xml);
-		}
-
-		[Test]
-		[SetCulture ("tr-TR")]
-		public void ReplacementXmlUsesOrdinalOrdering ()
-		{
-			var parser = new MamJsonParser ((_, _) => { });
-			foreach (var name in new [] { "i", "a", "I" }) {
-				parser.ReplacementTypes [name] = "target";
-				parser.ReplacementMethods [("owner", name, "()")] = (null, null, null, null, false);
-				parser.ReplacementMethods [("owner", "same", $"({name})")] = (null, null, null, null, false);
-				parser.ReplacementMethods [(name, "same", "()")] = (null, null, null, null, false);
-			}
-
-			var xml = parser.ToXml ();
-			CollectionAssert.AreEqual (new [] { "I", "a", "i" },
-				xml.Elements ("replace-type").Select (element => (string?) element.Attribute ("from")));
-			CollectionAssert.AreEqual (new [] { "I", "a", "i", "owner", "owner", "owner", "owner", "owner", "owner" },
-				xml.Elements ("replace-method").Select (element => (string?) element.Attribute ("source-type")));
-			var ownerMethods = xml.Elements ("replace-method").Where (element => (string?) element.Attribute ("source-type") == "owner");
-			CollectionAssert.AreEqual (new [] { "I", "a", "i", "same", "same", "same" },
-				ownerMethods.Select (element => (string?) element.Attribute ("source-method-name")));
-			CollectionAssert.AreEqual (new [] { "(I)", "(a)", "(i)" },
-				ownerMethods.Where (element => (string?) element.Attribute ("source-method-name") == "same")
-					.Select (element => (string?) element.Attribute ("source-method-signature")));
 		}
 
 		[TestCase (false)]

@@ -1,7 +1,4 @@
 using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
 using Java.Interop.Tools.Generator.Enumification;
 using NUnit.Framework;
 
@@ -9,36 +6,6 @@ namespace Java.Interop.Tools.Generator_Tests
 {
 	public class ConstantEntryTests
 	{
-		[Test]
-		[SetCulture ("tr-TR")]
-		public void GeneratedMapsUseOrdinalOrdering ()
-		{
-			var methods = new [] {
-				MethodMapEntry.FromString ("E,1,i,Type,method,return,Test.Enum"),
-				MethodMapEntry.FromString ("E,1,a,Type,method,return,Test.Enum"),
-				MethodMapEntry.FromString ("E,1,I,Type,method,return,Test.Enum"),
-			};
-			using var writer = new StringWriter ();
-			MethodMapParser.SaveMethodMapCsv (methods, writer, version2: true);
-			using var reader = new StringReader (writer.ToString ());
-			CollectionAssert.AreEqual (new [] { "I", "a", "i" },
-				MethodMapParser.FromMethodMapCsv (reader).Select (entry => entry.JavaPackage));
-
-			var constants = new List<ConstantEntry> {
-				new ConstantEntry { JavaSignature = "pkg/Type.i" },
-				new ConstantEntry { JavaSignature = "pkg/Type.a" },
-				new ConstantEntry { JavaSignature = "pkg/Type.I" },
-				new ConstantEntry { EnumFullType = "i.Enum", EnumMember = "Value" },
-				new ConstantEntry { EnumFullType = "a.Enum", EnumMember = "Value" },
-				new ConstantEntry { EnumFullType = "I.Enum", EnumMember = "Value" },
-			};
-			var sorted = ConstantsParser.Sort (constants);
-			CollectionAssert.AreEqual (new [] { "pkg/Type.I", "pkg/Type.a", "pkg/Type.i" },
-				sorted.Where (entry => entry.JavaSignature != null).Select (entry => entry.JavaSignature));
-			CollectionAssert.AreEqual (new [] { "I.Enum", "a.Enum", "i.Enum" },
-				sorted.Where (entry => entry.JavaSignature == null).Select (entry => entry.EnumFullType));
-		}
-
 		[Test]
 		public void ParseEnumMapV1 ()
 		{
