@@ -65,8 +65,8 @@ namespace Java.Interop {
 				if (signature == null)
 					throw new ArgumentException ("Native method names and signatures must not be null.", nameof (signature));
 				// SAFETY: The caller keeps both descriptor strings readable and NUL-terminated through registration.
-				JniModifiedUtf8.Validate (name, nameof (name));
-				JniModifiedUtf8.Validate (signature, nameof (signature));
+				JniModifiedUtf8.Validate (name);
+				JniModifiedUtf8.Validate (signature);
 			}
 		}
 	}

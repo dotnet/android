@@ -1,6 +1,7 @@
 #nullable enable
 
 using System;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
 namespace Java.Interop {
@@ -17,7 +18,7 @@ namespace Java.Interop {
 		/// <safety>
 		/// A non-null value must remain readable and unchanged through its NUL terminator.
 		/// </safety>
-		internal static unsafe void Validate (byte* value, string paramName)
+		internal static unsafe void Validate (byte* value, [CallerArgumentExpression (nameof (value))] string? paramName = null)
 		{
 			if (value == null)
 				return;
@@ -32,7 +33,7 @@ namespace Java.Interop {
 		/// 4-byte <c>F0 90..BF</c> / <c>F1..F3 80..BF</c> / <c>F4 80..8F</c> followed by two <c>80..BF</c>).
 		/// Rejects truncated, overlong, out-of-range, and lone-continuation byte sequences.
 		/// </summary>
-		internal static void Validate (ReadOnlySpan<byte> value, string paramName)
+		internal static void Validate (ReadOnlySpan<byte> value, [CallerArgumentExpression (nameof (value))] string? paramName = null)
 		{
 			int terminator = value.IndexOf ((byte) 0);
 			if (terminator >= 0)
