@@ -77,7 +77,7 @@ The `${TFM}` placeholder = `DotNetStableTargetFramework` from `Directory.Build.p
 dotnet test <project>.csproj -v minimal
 dotnet test <project>.csproj -v minimal --filter "Name~TestName"
 ```
-In a worktree with no commits on its branch, SourceLink fails with `Repository has no commit`; add `-p:EnableSourceLink=false -p:EnableSourceControlManagerQueries=false` locally. Omit `--no-restore` in new worktrees and scratch projects (NETSDK1004).
+In a worktree with no commits on its branch, SourceLink fails with `Repository has no commit`; add `-p:EnableSourceLink=false -p:EnableSourceControlManagerQueries=false` locally. Omit `--no-restore` from test commands in new worktrees and scratch projects (NETSDK1004).
 
 ### Host-side MSBuild tests (full-build)
 ```bash
