@@ -13,10 +13,8 @@ using Xamarin.Android.Tools;
 namespace Xamarin.Android.Tasks
 {
 	/// <summary>
-	/// ResolveAndroidTooling does lot of the grunt work ResolveSdks used to do:
-	/// - Modify TargetFrameworkVersion
-	/// - Calculate ApiLevel and ApiLevelName
-	/// - Find the paths of various Android tooling that other tasks need to call
+	/// Resolves the Android API level from TargetPlatformVersion and locates
+	/// the Android SDK tools needed by other tasks.
 	/// </summary>
 	public class ResolveAndroidTooling : AndroidTask
 	{
@@ -30,13 +28,9 @@ namespace Xamarin.Android.Tasks
 
 		public string? CommandLineToolsVersion { get; set; }
 
-		public string? ProjectFilePath { get; set; }
-
 		public string? SequencePointsMode { get; set; }
 
 		public bool AotAssemblies { get; set; }
-
-		public bool AndroidApplication { get; set; } = true;
 
 		[Output]
 		public string? AndroidApiLevel { get; set; }
@@ -71,12 +65,12 @@ namespace Xamarin.Android.Tasks
 		[Output]
 		public string? Aapt2ToolPath { get; set; }
 
-		protected static readonly bool IsWindows = Path.DirectorySeparatorChar == '\\';
-		protected static readonly string ZipAlign = IsWindows ? "zipalign.exe" : "zipalign";
-		protected static readonly string Aapt2 = IsWindows ? "aapt2.exe" : "aapt2";
-		protected static readonly string Android = IsWindows ? "android.bat" : "android";
-		protected static readonly string Lint = IsWindows ? "lint.bat" : "lint";
-		protected static readonly string ApkSigner = "apksigner.jar";
+		static readonly bool IsWindows = Path.DirectorySeparatorChar == '\\';
+		static readonly string ZipAlign = IsWindows ? "zipalign.exe" : "zipalign";
+		static readonly string Aapt2 = IsWindows ? "aapt2.exe" : "aapt2";
+		static readonly string Android = IsWindows ? "android.bat" : "android";
+		static readonly string Lint = IsWindows ? "lint.bat" : "lint";
+		static readonly string ApkSigner = "apksigner.jar";
 
 		public override bool RunTask ()
 		{
@@ -186,9 +180,6 @@ namespace Xamarin.Android.Tasks
 				return false;
 			}
 
-			if (!Validate ())
-				return false;
-
 			SequencePointsMode mode;
 			if (!Aot.TryGetSequencePointsMode (SequencePointsMode ?? "None", out mode))
 				Log.LogCodedError ("XA0104", Properties.Resources.XA0104, SequencePointsMode ?? "");
@@ -196,16 +187,7 @@ namespace Xamarin.Android.Tasks
 
 			AndroidApiLevelName = MonoAndroidHelper.SupportedVersions.GetIdFromApiLevel (AndroidApiLevel);
 
-			LogOutputs ();
-
 			return !Log.HasLoggedErrors;
-		}
-
-		protected virtual bool Validate () => !AndroidApiLevel.IsNullOrEmpty ();
-
-		protected virtual void LogOutputs ()
-		{
-			// Retain the virtual hook for existing task subclasses.
 		}
 
 		//  Android Asset Packaging Tool (aapt) 2:19
@@ -252,7 +234,7 @@ namespace Xamarin.Android.Tasks
 			return false;
 		}
 
-		protected int GetMaxStableApiLevel ()
+		int GetMaxStableApiLevel ()
 		{
 			var stableVersion = MonoAndroidHelper.SupportedVersions.MaxStableVersion;
 			if (stableVersion is null)
