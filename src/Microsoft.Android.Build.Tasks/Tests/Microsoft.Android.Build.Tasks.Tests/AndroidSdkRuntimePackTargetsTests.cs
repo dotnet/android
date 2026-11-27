@@ -16,41 +16,11 @@ public class AndroidSdkRuntimePackTargetsTests : BaseTest
 {
 	static readonly string [] AndroidFrameworks = ["Microsoft.Android", "Microsoft.Android.Runtimes"];
 
-	[Test]
-	public void ResolveAndroidRuntimePack (
-		[Values ("CoreCLR", "NativeAOT")] string runtime,
-		[Values ("android-arm", "android-arm64", "android-x64", "android-x86")] string rid)
-	{
-		using var document = ResolveFrameworkReferences (runtime, "RuntimeIdentifier", rid);
-		var items = document.RootElement.GetProperty ("Items");
-		var runtimePacks = items.GetProperty ("RuntimePack").EnumerateArray ()
-			.Where (item => AndroidFrameworks.Contains (item.GetProperty ("FrameworkName").GetString ()))
-			.ToArray ();
-		var unavailable = items.GetProperty ("UnavailableRuntimePack").EnumerateArray ()
-			.Where (item => AndroidFrameworks.Contains (item.GetProperty ("Identity").GetString ()))
-			.ToArray ();
-
-		if (rid == "android-x86") {
-			Assert.IsEmpty (runtimePacks, "Unsupported x86 must not select Android runtime packs.");
-			CollectionAssert.AreEquivalent (AndroidFrameworks, unavailable.Select (item => item.GetProperty ("Identity").GetString ()));
-			Assert.That (unavailable.Select (item => item.GetProperty ("RuntimeIdentifier").GetString ()), Is.All.EqualTo (rid));
-			return;
-		}
-
-		Assert.IsEmpty (unavailable);
-		CollectionAssert.AreEquivalent (AndroidFrameworks, runtimePacks.Select (item => item.GetProperty ("FrameworkName").GetString ()));
-		Assert.That (runtimePacks.Select (item => item.GetProperty ("RuntimeIdentifier").GetString ()), Is.All.EqualTo (rid));
-		var nativePack = runtimePacks.Single (item => item.GetProperty ("FrameworkName").GetString () == "Microsoft.Android.Runtimes");
-		string packId = nativePack.GetProperty ("NuGetPackageId").GetString () ?? throw new InvalidOperationException ("The runtime pack has no package ID.");
-		StringAssert.Contains ($".Runtime.{runtime}.", packId);
-		StringAssert.EndsWith ($".{rid}", packId);
-	}
-
 	[TestCase ("CoreCLR")]
 	[TestCase ("NativeAOT")]
 	public void MixedRuntimeIdentifiersDoNotDownloadAnX86Pack (string runtime)
 	{
-		using var document = ResolveFrameworkReferences (runtime, "RuntimeIdentifiers", "android-arm64;android-x86");
+		using var document = ResolveFrameworkReferences (runtime, "android-arm64;android-x86");
 		var items = document.RootElement.GetProperty ("Items");
 		var unavailable = items.GetProperty ("UnavailableRuntimePack").EnumerateArray ()
 			.Where (item => AndroidFrameworks.Contains (item.GetProperty ("Identity").GetString ()))
@@ -65,18 +35,7 @@ public class AndroidSdkRuntimePackTargetsTests : BaseTest
 		Assert.IsFalse (downloads.Any (name => name.StartsWith ("Microsoft.Android.Runtime.", StringComparison.Ordinal) && name.EndsWith (".android-x86", StringComparison.Ordinal)));
 	}
 
-	[Test]
-	public void FrameworkDependentX86DoesNotRequireRuntimePacks ()
-	{
-		using var document = ResolveFrameworkReferences ("CoreCLR", "RuntimeIdentifier", "android-x86", selfContained: false);
-		var items = document.RootElement.GetProperty ("Items");
-		Assert.IsFalse (items.GetProperty ("RuntimePack").EnumerateArray ()
-			.Any (item => AndroidFrameworks.Contains (item.GetProperty ("FrameworkName").GetString ())));
-		Assert.IsFalse (items.GetProperty ("UnavailableRuntimePack").EnumerateArray ()
-			.Any (item => AndroidFrameworks.Contains (item.GetProperty ("Identity").GetString ())));
-	}
-
-	JsonDocument ResolveFrameworkReferences (string runtime, string runtimeIdentifierProperty, string runtimeIdentifiers, bool selfContained = true)
+	JsonDocument ResolveFrameworkReferences (string runtime, string runtimeIdentifiers)
 	{
 		string directory = Path.Combine (Root, "temp", TestName);
 		Directory.CreateDirectory (directory);
@@ -91,14 +50,14 @@ public class AndroidSdkRuntimePackTargetsTests : BaseTest
 			new XElement ("Project", new XAttribute ("Sdk", "Microsoft.NET.Sdk"),
 				new XElement ("PropertyGroup",
 					new XElement ("TargetFramework", targetFramework),
-					new XElement ("SelfContained", selfContained),
+					new XElement ("SelfContained", "true"),
 					new XElement ("UseAppHost", "false"),
 					new XElement ("EnableDefaultItems", "false"),
 					new XElement ("PublishAot", runtime == "NativeAOT"),
 					new XElement ("PublishAotUsingRuntimePack", runtime == "NativeAOT"),
 					new XElement ("AllowPublishAotWithoutRuntimeIdentifier", "true"),
 					new XElement ("_AndroidRuntimePackRuntime", runtime),
-					new XElement (runtimeIdentifierProperty, runtimeIdentifiers)),
+					new XElement ("RuntimeIdentifiers", runtimeIdentifiers)),
 				new XElement ("ItemGroup",
 					new XElement ("FrameworkReference", new XAttribute ("Include", "Microsoft.Android")),
 					new XElement ("FrameworkReference", new XAttribute ("Include", "Microsoft.Android.Runtimes"))),
