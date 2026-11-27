@@ -32,6 +32,7 @@ public sealed class GenerateNativeAotBootstrapSources : AndroidTask
 		File.Delete (Path.Combine (outputDirectory, "NativeAotEnvironmentVars.java"));
 		var sources = new List<string> {
 			WriteSource ("JavaInteropRuntime.java", ("@MAIN_ASSEMBLY_NAME@", EscapeJavaString (TargetName))),
+			WriteSource ("NativeAotAppComponentFactory.java"),
 		};
 		sources.AddRange (RuntimeProviderSourceGenerator.WriteAdditionalRuntimeProviderSources (
 			TaskEnvironment.Fallback, OutputDirectory, isCoreCLR: false, AdditionalProviderSources, preserveTimestamp: false));

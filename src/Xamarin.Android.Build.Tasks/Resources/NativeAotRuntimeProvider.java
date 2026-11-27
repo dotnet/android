@@ -1,10 +1,6 @@
 package net.dot.jni.nativeaot;
 
-import java.time.OffsetDateTime;
-import java.util.Calendar;
-import java.util.Locale;
 import android.util.Log;
-import net.dot.android.ApplicationRegistration;
 
 public class NativeAotRuntimeProvider
     extends android.content.ContentProvider
@@ -24,28 +20,10 @@ public class NativeAotRuntimeProvider
     @Override
     public void attachInfo(android.content.Context context, android.content.pm.ProviderInfo info) {
         Log.d(TAG, "NativeAotRuntimeProvider.attachInfo(): calling JavaInteropRuntime.init()…");
-        if (context instanceof android.app.Application) {
-            ApplicationRegistration.Context = context;
-        }
-
-        ClassLoader loader = context.getClassLoader ();
-        Locale locale = Locale.getDefault ();
-        String language = locale.getLanguage () + "-" + locale.getCountry ();
-        String filesDir = context.getFilesDir().getAbsolutePath();
-        String cacheDir = context.getCacheDir().getAbsolutePath();
-        int localDateTimeOffset;
-        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
-            localDateTimeOffset = OffsetDateTime.now().getOffset().getTotalSeconds();
-        } else {
-            Calendar calendar = Calendar.getInstance();
-            localDateTimeOffset = (calendar.get(Calendar.ZONE_OFFSET) + calendar.get(Calendar.DST_OFFSET)) / 1000;
-        }
-
-        // Initialize .NET runtime
-        JavaInteropRuntime.loadLibrary(context);
-        JavaInteropRuntime.init(loader, language, filesDir, cacheDir, localDateTimeOffset);
-        // NOTE: only required for custom applications
-        ApplicationRegistration.registerApplications();
+        JavaInteropRuntime.initialize(
+            context.getApplicationInfo(),
+            context.getClassLoader(),
+            context);
         super.attachInfo (context, info);
     }
 

@@ -427,6 +427,7 @@ public class TrimmableTypeMapGenerator
 			MinSdkVersion = minSdk,
 			TargetSdkVersion = targetSdk,
 			RuntimeProviderJavaName = config.RuntimeProviderJavaName ?? throw new InvalidOperationException ("RuntimeProviderJavaName must be provided by MSBuild."),
+			AppComponentFactoryJavaName = config.AppComponentFactoryJavaName,
 			Debug = config.Debug,
 			NeedsInternet = config.NeedsInternet,
 			EmbedAssemblies = config.EmbedAssemblies,

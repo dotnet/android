@@ -122,6 +122,7 @@ public class GenerateTrimmableTypeMap : AndroidTask
 	public string? AndroidApiLevel { get; set; }
 	public string? SupportedOSPlatformVersion { get; set; }
 	public string? RuntimeProviderJavaName { get; set; }
+	public string? AppComponentFactoryJavaName { get; set; }
 	public bool Debug { get; set; }
 	public bool NeedsInternet { get; set; }
 	public bool EmbedAssemblies { get; set; }
@@ -225,6 +226,7 @@ public class GenerateTrimmableTypeMap : AndroidTask
 					AndroidApiLevel: AndroidApiLevel,
 					SupportedOSPlatformVersion: SupportedOSPlatformVersion,
 					RuntimeProviderJavaName: RuntimeProviderJavaName,
+					AppComponentFactoryJavaName: AppComponentFactoryJavaName,
 					Debug: Debug,
 					NeedsInternet: NeedsInternet,
 					EmbedAssemblies: EmbedAssemblies,
