@@ -101,6 +101,30 @@ namespace Java.InteropTests
 		}
 
 		[TestMethod]
+		public void TryFindClass_Utf8_UsesSpanLength ()
+		{
+			// SAFETY: Each span remains readable and unchanged during lookup; TryFindClass bounds reads to the span length or an earlier NUL.
+			Assert.IsTrue (unsafe (JniEnvironment.Types.TryFindClass ("java/lang/ObjectDoesNotExist"u8.Slice (0, 16), out var found)));
+			try {
+				Assert.IsTrue (found.IsValid);
+			} finally {
+				JniObjectReference.Dispose (ref found);
+			}
+
+			Assert.IsTrue (unsafe (JniEnvironment.Types.TryFindClass ("java.lang.ObjectDoesNotExist"u8.Slice (0, 16), out var foundDotted)));
+			try {
+				Assert.IsTrue (foundDotted.IsValid);
+			} finally {
+				JniObjectReference.Dispose (ref foundDotted);
+			}
+
+			Assert.IsFalse (unsafe (JniEnvironment.Types.TryFindClass ("java/lang/Object"u8.Slice (0, 13), out var truncated)));
+			Assert.IsFalse (truncated.IsValid);
+
+			Assert.ThrowsExactly<ArgumentException> (() => unsafe (JniEnvironment.Types.TryFindClass ("\0java/lang/Object"u8, out _)));
+		}
+
+		[TestMethod]
 		[TestCategory (JniReferenceLeakCategory)]
 		public void TryFindClass_Utf8_DoesNotLeakGlobalRefs ()
 		{
