@@ -271,6 +271,13 @@
       <Output TaskParameter="AdditionalProviderSources" ItemName="_AdditionalProviderSources" />
     </GenerateTrimmableTypeMap>
 
+    <GenerateCoreClrRuntimeProviderSources
+        Condition=" '$(_AndroidRuntime)' == 'CoreCLR' "
+        OutputDirectory="$(IntermediateOutputPath)android"
+        AdditionalProviderSources="@(_AdditionalProviderSources)">
+      <Output TaskParameter="DeletedSources" ItemName="_DeletedRuntimeProviderSources" />
+    </GenerateCoreClrRuntimeProviderSources>
+
     <WriteLinesToFile
         File="$(_TypeMapJavaFilesList)"
         Lines="@(_GeneratedJavaFiles->'%(FullPath)')"
@@ -280,7 +287,8 @@
     <!-- If the generator removed a Java source, bust the Java compile stamp so _CompileJava
          re-runs (it fully cleans its class output each run, dropping the stale .class). The
          JCWs are compiled in place, so there are no android/src copies to delete. -->
-    <Delete Files="$(_AndroidCompileJavaStampFile)" Condition=" '@(_DeletedJavaFiles->Count())' != '0' " />
+    <Delete Files="$(_AndroidCompileJavaStampFile)"
+        Condition=" '@(_DeletedJavaFiles->Count())' != '0' or '@(_DeletedRuntimeProviderSources->Count())' != '0' " />
 
     <!-- Touch only the stamp: it is the target's sole Output and incremental sentinel.
          The generated TypeMap DLLs and the assemblies list are written via CopyIfStreamChanged
@@ -289,9 +297,11 @@
     <Touch Files="$(_TrimmableTypeMapOutputStamp)" AlwaysCreate="true" />
 
     <ItemGroup>
-      <FileWrites Remove="@(_DeletedJavaFiles)" />
+      <FileWrites Remove="@(_DeletedJavaFiles);@(_DeletedRuntimeProviderSources)" />
       <FileWrites Include="@(_GeneratedTypeMapAssemblies)" />
       <FileWrites Include="@(_GeneratedJavaFiles)" />
+      <FileWrites Include="@(_AdditionalProviderSources->'$(IntermediateOutputPath)android/src/mono/%(Identity).java')"
+          Condition=" '$(_AndroidRuntime)' == 'CoreCLR' " />
       <FileWrites Include="$(_TypeMapAssembliesListFile)" />
       <FileWrites Include="$(_TrimmableTypeMapFingerprintsFile)" />
       <FileWrites Include="$(_TypeMapJavaFilesList)" />
@@ -536,11 +546,6 @@
          @(_AdditionalJavaStubDirectory) (see _CompileJava / _FindJavaStubFiles); they are no
          longer copied into android/src. -->
 
-    <GenerateCoreClrRuntimeProviderSources
-        Condition=" '$(_AndroidRuntime)' == 'CoreCLR' and '@(_AdditionalProviderSources->Count())' != '0' "
-        OutputDirectory="$(IntermediateOutputPath)android"
-        AdditionalProviderSources="@(_AdditionalProviderSources)" />
-
     <!-- Copy generated manifest to expected location -->
     <Copy SourceFiles="$(_TypeMapBaseOutputDir)AndroidManifest.xml"
         DestinationFiles="$(IntermediateOutputPath)AndroidManifest.xml"
@@ -557,8 +562,6 @@
       <FileWrites Include="$(IntermediateOutputPath)android/src/net/dot/android/ApplicationRegistration.java" />
       <FileWrites Include="$(IntermediateOutputPath)AndroidManifest.xml" />
       <FileWrites Include="$(IntermediateOutputPath)acw-map.txt" />
-      <FileWrites Include="@(_AdditionalProviderSources->'$(IntermediateOutputPath)android/src/mono/%(Identity).java')"
-          Condition=" '$(_AndroidRuntime)' == 'CoreCLR' " />
     </ItemGroup>
 
     <MakeDir Directories="$(_AndroidStampDirectory)" Condition=" !Exists('$(_AndroidStampDirectory)') " />

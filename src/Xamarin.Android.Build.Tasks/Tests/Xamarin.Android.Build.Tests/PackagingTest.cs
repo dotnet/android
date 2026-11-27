@@ -46,12 +46,24 @@ namespace Xamarin.Android.Build.Tests
 			Assert.IsTrue (builder.Build (proj, doNotCleanupOnUpdate: true, saveProject: false), "The unchanged build should succeed.");
 			Assert.IsTrue (builder.Output.IsTargetSkipped ("_BuildApkEmbed"), "An unchanged build must not rewrite assembly-store wrappers.");
 			Assert.AreEqual (archiveTimestamp, File.GetLastWriteTimeUtc (archive), "The package should remain unchanged.");
+			string removedStore = Path.GetFullPath (builder.Output.GetIntermediaryPath (Path.Combine ("app_shared_libraries", "x86_64", "assembly-store.so")));
+			string fileList = builder.Output.GetIntermediaryPath ($"{proj.ProjectName}.csproj.FileListAbsolute.txt");
+			var files = File.ReadAllLines (fileList);
+			CollectionAssert.Contains (files, removedStore);
+			CollectionAssert.Contains (files, removedStore + ".manifest");
 
 			proj.MainActivity = proj.DefaultMainActivity.Replace ("//${AFTER_ONCREATE}", "System.Console.WriteLine (\"assembly-store update\");");
 			proj.Touch ("MainActivity.cs");
 			builder.Save (proj, doNotCleanupOnUpdate: true, saveProject: false);
 			Assert.IsTrue (builder.Build (proj, doNotCleanupOnUpdate: true, saveProject: false), "The changed-assembly build should succeed.");
 			Assert.IsFalse (builder.Output.IsTargetSkipped ("_BuildApkEmbed"), "Changing an assembly must refresh the packaged stores.");
+			AssertArchive ();
+
+			arches = [AndroidTargetArch.Arm64];
+			proj.SetRuntimeIdentifiers (arches);
+			Assert.IsTrue (builder.Build (proj, doNotCleanupOnUpdate: true), "Removing ABIs should succeed.");
+			FileAssert.DoesNotExist (removedStore);
+			FileAssert.DoesNotExist (removedStore + ".manifest");
 			AssertArchive ();
 
 			void AssertArchive ()

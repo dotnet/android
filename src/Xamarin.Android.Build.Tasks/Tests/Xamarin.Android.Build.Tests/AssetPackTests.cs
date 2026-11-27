@@ -190,6 +190,11 @@ namespace Xamarin.Android.Build.Tests
 				Encoding = Encoding.ASCII,
 				MetadataValues="AssetPack=assetpack1",
 			};
+			var asset4 = new AndroidItem.AndroidAsset ("Assets\\asset4.txt") {
+				TextContent = () => "Asset4",
+				Encoding = Encoding.ASCII,
+				MetadataValues="AssetPack=assetpack2;DeliveryType=OnDemand",
+			};
 			var app = new XamarinAndroidApplicationProject {
 				ProjectName = "MyApp",
 				IsRelease = isRelease,
@@ -204,11 +209,7 @@ namespace Xamarin.Android.Build.Tests
 						MetadataValues="AssetPack=assetpack1;DeliveryType=InstallTime",
 					},
 					asset3,
-					new AndroidItem.AndroidAsset ("Assets\\asset4.txt") {
-						TextContent = () => "Asset4",
-						Encoding = Encoding.ASCII,
-						MetadataValues="AssetPack=assetpack2;DeliveryType=OnDemand",
-					},
+					asset4,
 					new AndroidItem.AndroidAsset ("Assets\\asset5.txt") {
 						TextContent = () => "Asset5",
 						Encoding = Encoding.ASCII,
@@ -225,6 +226,11 @@ namespace Xamarin.Android.Build.Tests
 					app.OutputPath, $"{app.PackageName}.aab");
 				var asset3File = Path.Combine (Root, path, app.ProjectName,
 					app.IntermediateOutputPath, "assetpacks", "assetpack1", "assets", "asset3.txt");
+				var assetPacksDirectory = Path.Combine (Root, path, app.ProjectName, app.IntermediateOutputPath, "assetpacks");
+				var assetPack1Archive = Path.Combine (assetPacksDirectory, "assetpack1.zip");
+				var assetPack2Archive = Path.Combine (assetPacksDirectory, "assetpack2.zip");
+				var fileList = Path.Combine (Root, path, app.ProjectName, app.IntermediateOutputPath,
+					$"{app.ProjectName}.csproj.FileListAbsolute.txt");
 				using (var zip = ZipHelper.OpenZip (aab)) {
 					Assert.IsNotNull (zip.GetEntry ("base/assets/asset1.txt"), "aab should contain base/assets/asset1.txt");
 					Assert.IsNull (zip.GetEntry ("base/assets/asset2.txt"), "aab should not contain base/assets/asset2.txt");
@@ -241,6 +247,8 @@ namespace Xamarin.Android.Build.Tests
 				appBuilder.Output.AssertTargetIsSkipped ("_CreateAssetPackManifests");
 				appBuilder.Output.AssertTargetIsSkipped ("_BuildAssetPacks");
 				appBuilder.Output.AssertTargetIsSkipped ("_GenerateAndroidAssetsDir");
+				FileAssert.Exists (assetPack2Archive);
+				CollectionAssert.Contains (File.ReadAllLines (fileList), Path.GetFullPath (assetPack2Archive));
 				FileAssert.Exists (asset3File, $"file {asset3File} should exist.");
 				asset3.TextContent = () => "Asset3 Updated";
 				asset3.Timestamp = DateTime.UtcNow.AddSeconds(1);
@@ -268,6 +276,12 @@ namespace Xamarin.Android.Build.Tests
 				appBuilder.Output.AssertTargetIsNotSkipped ("_CreateAssetPackManifests");
 				appBuilder.Output.AssertTargetIsNotSkipped ("_BuildAssetPacks");
 				appBuilder.Output.AssertTargetIsNotSkipped ("_GenerateAndroidAssetsDir");
+				app.OtherBuildItems.Remove (asset4);
+				Assert.IsTrue (appBuilder.Build (app, doNotCleanupOnUpdate: true), "Removing an asset pack should succeed.");
+				FileAssert.DoesNotExist (assetPack2Archive, "IncrementalClean should remove the old pack archive.");
+				FileAssert.Exists (assetPack1Archive, "The remaining pack archive should be preserved.");
+				Assert.IsTrue (appBuilder.Clean (app, doNotCleanupOnUpdate: true), "Clean should succeed.");
+				Assert.IsFalse (Directory.Exists (assetPacksDirectory), "Clean should remove the asset-pack intermediates.");
 			}
 		}
 	}
