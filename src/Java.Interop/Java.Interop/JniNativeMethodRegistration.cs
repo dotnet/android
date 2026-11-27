@@ -60,10 +60,8 @@ namespace Java.Interop {
 		internal unsafe readonly void EnsureValidModifiedUtf8Strings ()
 		{
 			unsafe {
-				if (name == null)
-					throw new ArgumentException ("Native method names and signatures must not be null.", nameof (name));
-				if (signature == null)
-					throw new ArgumentException ("Native method names and signatures must not be null.", nameof (signature));
+				ArgumentNullException.ThrowIfNull (name);
+				ArgumentNullException.ThrowIfNull (signature);
 				// SAFETY: The caller keeps both descriptor strings readable and NUL-terminated through registration.
 				JniModifiedUtf8.Validate (name);
 				JniModifiedUtf8.Validate (signature);

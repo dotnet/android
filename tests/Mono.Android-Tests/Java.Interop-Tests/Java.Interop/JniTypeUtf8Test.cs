@@ -129,11 +129,11 @@ namespace Java.InteropTests
 						AssertRejected ("name", () => JniEnvironment.Types.RegisterNatives (r, methods));
 
 						methods [0] = default;
-						AssertRejected ("name", () => JniEnvironment.Types.RegisterNatives (r, methods));
+						Assert.AreEqual ("name", Assert.ThrowsExactly<ArgumentNullException> (() => JniEnvironment.Types.RegisterNatives (r, methods)).ParamName);
 
 						methods [0] = new JniNativeMethod (good, good, callback);
 						methods [1] = new JniNativeMethod (good, null, callback);
-						AssertRejected ("signature", () => JniEnvironment.Types.RegisterNatives (r, methods));
+						Assert.AreEqual ("signature", Assert.ThrowsExactly<ArgumentNullException> (() => JniEnvironment.Types.RegisterNatives (r, methods)).ParamName);
 
 						IntPtr env = JniEnvironment.EnvironmentPointer;
 						IntPtr badName = (IntPtr) badPtr, goodName = (IntPtr) good;
