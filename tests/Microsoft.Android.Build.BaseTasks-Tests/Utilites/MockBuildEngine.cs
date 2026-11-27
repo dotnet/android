@@ -91,13 +91,9 @@ namespace Microsoft.Android.Build.BaseTasks.Tests.Utilities {
 			throw new NotImplementedException ();
 		}
 
-		public int YieldCount { get; private set; }
+		void IBuildEngine3.Yield () { }
 
-		public int ReacquireCount { get; private set; }
-
-		void IBuildEngine3.Yield () => YieldCount++;
-
-		void IBuildEngine3.Reacquire () => ReacquireCount++;
+		void IBuildEngine3.Reacquire () { }
 
 		bool IBuildEngine2.BuildProjectFile (string projectFileName, string [] targetNames, IDictionary globalProperties, IDictionary targetOutputs, string toolsVersion) => true;
 

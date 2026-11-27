@@ -107,8 +107,9 @@ public class TypeMapProguardTargetsTests : BaseTest
 		DirectoryAssert.DoesNotExist (proguardDirectory);
 	}
 
-	[Test]
-	public void NativeObjectTargetUnionsRidsAndHonorsDisabledTrimming ()
+	[TestCase (false)]
+	[TestCase (true)]
+	public void NativeObjectTargetUnionsRidsAndHonorsDisabledTrimming (bool multithreaded)
 	{
 		var first = WriteNativeObject ("first", "test/Live", "test/Outer$Inner[0]");
 		var second = WriteNativeObject ("second", "test/Second", "test/Outer$Inner[1]");
@@ -116,7 +117,10 @@ public class TypeMapProguardTargetsTests : BaseTest
 		var project = CreateProject ("NativeAOT",
 			NativeObjectItem ("first.so", first),
 			NativeObjectItem ("second.so", second));
-		Build (project, "-p:_AndroidEnableTypemapR8Trimming=true");
+		var arguments = multithreaded
+			? new [] { "-p:_AndroidEnableTypemapR8Trimming=true", "-m", "-mt", "-warnaserror:MSB4286,MSB4287,MSB4288" }
+			: new [] { "-p:_AndroidEnableTypemapR8Trimming=true", "-m" };
+		Build (project, arguments);
 		var rules = Path.Combine (directory, "obj", "proguard", "proguard_project_references.cfg");
 		Assert.AreEqual (TypeRules ("test.Live", "test.Outer$Inner", "test.Second"), File.ReadAllText (rules));
 		Assert.IsFalse (File.Exists (Path.Combine (directory, "obj", "proguard", "proguard_typemap_members.cfg")));

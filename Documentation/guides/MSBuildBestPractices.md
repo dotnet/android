@@ -67,12 +67,12 @@ directory. It implements `IMultiThreadableTask` so the engine supplies the
 `TaskEnvironment.Fallback` also supports direct task instantiation.
 Keep other tasks on their existing base until all their code paths are safe.
 
-For asynchronous tasks, `MultithreadedAsyncTask` avoids the legacy constructor's
-process-directory capture while retaining `AsyncTask` cancellation, queued
-logging, and `Yield()`/`Reacquire()` handling. Resolve file paths and create child
-processes through its engine-supplied `TaskEnvironment`, including failure cleanup.
-Keep output item paths and metadata project-relative when that is their existing
-contract; resolve only the physical I/O paths.
+Tasks that run child processes can use `MultithreadedAndroidTask` while keeping
+task-environment access and logging on the task thread. Preserve cancellation and
+any existing optional `Yield()`/`Reacquire()` handling. Resolve file paths and
+create child processes through the engine-supplied `TaskEnvironment`, including
+failure cleanup. Keep output item paths and metadata project-relative when that is
+their existing contract; resolve only the physical I/O paths.
 
 The original 28 `Microsoft.Android.Build.Tasks` tasks now support multithreaded
 execution except `BuildAppBundle`. That task still depends on the legacy

@@ -5,6 +5,7 @@ using System.Globalization;
 using System.IO;
 using System.Text;
 using System.Text.Json;
+using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Android.Build.Tasks;
 using Microsoft.Build.Framework;
@@ -14,13 +15,17 @@ using Properties = Xamarin.Android.Tasks.Properties;
 namespace Microsoft.Android.Tasks;
 
 [MSBuildMultiThreadableTask]
-public class ExtractTypeMapKeysFromNativeAotObject : MultithreadedAsyncTask
+public class ExtractTypeMapKeysFromNativeAotObject : MultithreadedAndroidTask, ICancelableTask
 {
 	const string TypeMapSymbol = "__external_type_map__";
 	const string CommonFixupsSymbol = "__external_CommonFixupsTable_references";
 	const long SectionGroupFlag = 0x200;
 
+	readonly CancellationTokenSource cancellation = new ();
+
 	public override string TaskPrefix => "ETMKNAO";
+	public bool YieldDuringToolExecution { get; set; }
+	public CancellationToken CancellationToken => cancellation.Token;
 
 	[Required]
 	public ITaskItem [] NativeObjectFiles { get; set; } = [];
@@ -31,7 +36,20 @@ public class ExtractTypeMapKeysFromNativeAotObject : MultithreadedAsyncTask
 	[Required]
 	public string OutputFile { get; set; } = "";
 
-	public override async Task RunTaskAsync ()
+	public void Cancel () => cancellation.Cancel ();
+
+	public override bool RunTask ()
+	{
+		var engine = YieldDuringToolExecution ? BuildEngine as IBuildEngine3 : null;
+		engine?.Yield ();
+		try {
+			return Extract ();
+		} finally {
+			engine?.Reacquire ();
+		}
+	}
+
+	bool Extract ()
 	{
 		string currentFile = nameof (NativeObjectFiles);
 		try {
@@ -48,9 +66,9 @@ public class ExtractTypeMapKeysFromNativeAotObject : MultithreadedAsyncTask
 				CancellationToken.ThrowIfCancellationRequested ();
 				currentFile = file.ItemSpec;
 				using var stream = File.OpenRead (TaskEnvironment.GetAbsolutePath (currentFile));
-				string metadata = await ReadObjectMetadataAsync (currentFile).ConfigureAwait (false);
+				string metadata = WaitForAsyncHook (() => ReadObjectMetadataAsync (currentFile));
 				using var document = JsonDocument.Parse (metadata);
-				await ReadKeysAsync (currentFile, stream, document.RootElement, keys).ConfigureAwait (false);
+				ReadKeys (currentFile, stream, document.RootElement, keys);
 			}
 
 			CancellationToken.ThrowIfCancellationRequested ();
@@ -68,8 +86,9 @@ public class ExtractTypeMapKeysFromNativeAotObject : MultithreadedAsyncTask
 			}
 		} catch (Exception e) when (e is IOException || e is UnauthorizedAccessException || e is BadImageFormatException ||
 			e is JsonException || e is InvalidOperationException || e is FormatException || e is ArgumentException || e is Win32Exception) {
-			LogCodedError ("XA4327", Properties.Resources.XA4327, currentFile, e.Message);
+			Log.LogCodedError ("XA4327", Properties.Resources.XA4327, currentFile, e.Message);
 		}
+		return !Log.HasLoggedErrors;
 	}
 
 	protected virtual void WriteOutputFile (string outputFile, IReadOnlyCollection<string> keys)
@@ -80,7 +99,23 @@ public class ExtractTypeMapKeysFromNativeAotObject : MultithreadedAsyncTask
 		}
 	}
 
-	protected virtual async Task<string> ReadObjectMetadataAsync (string objectFile)
+	static T WaitForAsyncHook<T> (Func<Task<T>> hook)
+	{
+		var context = SynchronizationContext.Current;
+		if (context == null) {
+			return hook ().GetAwaiter ().GetResult ();
+		}
+		try {
+			// The old asynchronous task invoked overrides without the caller's context.
+			SynchronizationContext.SetSynchronizationContext (null);
+			return hook ().GetAwaiter ().GetResult ();
+		} finally {
+			SynchronizationContext.SetSynchronizationContext (context);
+		}
+	}
+
+	// Preserve the virtual async hooks for task subclasses while running the tools on the task thread.
+	protected virtual Task<string> ReadObjectMetadataAsync (string objectFile)
 	{
 		using var stdout = new StringWriter (CultureInfo.InvariantCulture);
 		using var stderr = new StringWriter (CultureInfo.InvariantCulture);
@@ -89,7 +124,7 @@ public class ExtractTypeMapKeysFromNativeAotObject : MultithreadedAsyncTask
 		foreach (var argument in new [] { "--elf-output-style=JSON", "--file-headers", "--sections", TaskEnvironment.GetAbsolutePath (objectFile).ToString () }) {
 			startInfo.ArgumentList.Add (argument);
 		}
-		int exitCode = await ProcessUtils.StartProcess (startInfo, stdout, stderr, CancellationToken).ConfigureAwait (false);
+		int exitCode = ProcessUtils.StartProcess (startInfo, stdout, stderr, CancellationToken).GetAwaiter ().GetResult ();
 		if (exitCode != 0) {
 			throw new InvalidOperationException ($"llvm-readobj exited with code {exitCode}: {stderr}");
 		}
@@ -116,7 +151,7 @@ public class ExtractTypeMapKeysFromNativeAotObject : MultithreadedAsyncTask
 		// A real app can have hundreds of MB of symbol JSON. Keep only the two
 		// non-COMDAT .rodata symbols emitted by ILC, not a DOM of the entire symbol table.
 		using var symbols = new TypeMapSymbolWriter ();
-		await RunObjdumpAsync (symbols, "--syms", TaskEnvironment.GetAbsolutePath (objectFile)).ConfigureAwait (false);
+		RunObjdump (symbols, "--syms", TaskEnvironment.GetAbsolutePath (objectFile));
 		symbols.Flush ();
 		using var result = new MemoryStream ();
 		using (var json = new Utf8JsonWriter (result)) {
@@ -158,19 +193,19 @@ public class ExtractTypeMapKeysFromNativeAotObject : MultithreadedAsyncTask
 			json.WriteEndObject ();
 			json.WriteEndArray ();
 		}
-		return Encoding.UTF8.GetString (result.ToArray ());
+		return Task.FromResult (Encoding.UTF8.GetString (result.ToArray ()));
 	}
 
-	protected virtual async Task<string> ReadObjectRelocationsAsync (string objectFile, string section, long start, long end)
+	protected virtual Task<string> ReadObjectRelocationsAsync (string objectFile, string section, long start, long end)
 	{
 		using var stdout = new StringWriter (CultureInfo.InvariantCulture);
-		await RunObjdumpAsync (stdout, "--reloc", "--section=" + section,
+		RunObjdump (stdout, "--reloc", "--section=" + section,
 			"--start-address=0x" + start.ToString ("x", CultureInfo.InvariantCulture),
-			"--stop-address=0x" + end.ToString ("x", CultureInfo.InvariantCulture), TaskEnvironment.GetAbsolutePath (objectFile)).ConfigureAwait (false);
-		return stdout.ToString ();
+			"--stop-address=0x" + end.ToString ("x", CultureInfo.InvariantCulture), TaskEnvironment.GetAbsolutePath (objectFile));
+		return Task.FromResult (stdout.ToString ());
 	}
 
-	async Task RunObjdumpAsync (TextWriter stdout, params string [] arguments)
+	void RunObjdump (TextWriter stdout, params string [] arguments)
 	{
 		string? directory = Path.GetDirectoryName (LlvmReadObjPath);
 		if (string.IsNullOrEmpty (directory)) {
@@ -186,18 +221,18 @@ public class ExtractTypeMapKeysFromNativeAotObject : MultithreadedAsyncTask
 		foreach (var argument in arguments) {
 			startInfo.ArgumentList.Add (argument);
 		}
-		int exitCode = await ProcessUtils.StartProcess (startInfo, stdout, stderr, CancellationToken).ConfigureAwait (false);
+		int exitCode = ProcessUtils.StartProcess (startInfo, stdout, stderr, CancellationToken).GetAwaiter ().GetResult ();
 		if (exitCode != 0) {
 			throw new InvalidOperationException ($"llvm-objdump exited with code {exitCode}: {stderr}");
 		}
 	}
 
-	protected virtual async Task<HashSet<uint>> GetJavaTypeMapGroupsAsync (
+	protected virtual Task<HashSet<uint>> GetJavaTypeMapGroupsAsync (
 		string objectFile, JsonElement metadata, string mapSymbol, IReadOnlyCollection<uint> groupIndices, long fileLength)
 	{
 		var selected = new HashSet<uint> ();
 		if (groupIndices.Count == 0) {
-			return selected;
+			return Task.FromResult (selected);
 		}
 
 		string fixupsName = mapSymbol.Substring (0, mapSymbol.Length - TypeMapSymbol.Length) + CommonFixupsSymbol;
@@ -258,7 +293,7 @@ public class ExtractTypeMapKeysFromNativeAotObject : MultithreadedAsyncTask
 			_ => throw new BadImageFormatException ("Unsupported NativeAOT relocation architecture."),
 		};
 		var resolved = new HashSet<uint> ();
-		string relocations = await ReadObjectRelocationsAsync (objectFile, relocationSection, start, end).ConfigureAwait (false);
+		string relocations = WaitForAsyncHook (() => ReadObjectRelocationsAsync (objectFile, relocationSection, start, end));
 		using var lines = new StringReader (relocations);
 		string? line;
 		while ((line = lines.ReadLine ()) != null) {
@@ -272,7 +307,7 @@ public class ExtractTypeMapKeysFromNativeAotObject : MultithreadedAsyncTask
 			}
 			string groupSymbol = fields [2].Trim ();
 			bool isJavaGroup = TypeMapKey.IsJavaGroupSymbol (groupSymbol);
-			LogDebugMessage ("NativeAOT type map group {0}: {1} ({2}).", index, groupSymbol, isJavaGroup ? "Java" : "not Java");
+			Log.LogMessage (MessageImportance.Low, "NativeAOT type map group {0}: {1} ({2}).", index, groupSymbol, isJavaGroup ? "Java" : "not Java");
 			if (isJavaGroup) {
 				selected.Add (index);
 			}
@@ -283,10 +318,10 @@ public class ExtractTypeMapKeysFromNativeAotObject : MultithreadedAsyncTask
 		if (selected.Count == 0) {
 			throw new BadImageFormatException ("No Java type map group was found in the NativeAOT object.");
 		}
-		return selected;
+		return Task.FromResult (selected);
 	}
 
-	async Task ReadKeysAsync (string objectFile, FileStream stream, JsonElement root, ISet<string> keys)
+	void ReadKeys (string objectFile, FileStream stream, JsonElement root, ISet<string> keys)
 	{
 		if (root.ValueKind != JsonValueKind.Array || root.GetArrayLength () != 1) {
 			throw new BadImageFormatException ("Expected llvm-readobj metadata for one native object.");
@@ -321,7 +356,7 @@ public class ExtractTypeMapKeysFromNativeAotObject : MultithreadedAsyncTask
 			var data = new byte [(int) region.Size];
 			stream.ReadExactly (data);
 			var reader = new NativeAotTypeMapReader (data);
-			var javaGroups = await GetJavaTypeMapGroupsAsync (objectFile, file, name, reader.ReadGroupTypeIndices (), stream.Length).ConfigureAwait (false);
+			var javaGroups = WaitForAsyncHook (() => GetJavaTypeMapGroupsAsync (objectFile, file, name, reader.ReadGroupTypeIndices (), stream.Length));
 			reader.ReadKeys (keys, javaGroups);
 		}
 		if (!found) {

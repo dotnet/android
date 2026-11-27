@@ -51,10 +51,10 @@ namespace Microsoft.Android.Build.Tasks
 		public CancellationToken CancellationToken => cts.Token;
 
 		/// <summary>
-		/// Gets the task working directory. Legacy tasks capture the process directory
-		/// at construction; multithreaded tasks use the engine-supplied project directory.
+		/// Gets the current working directory for the task, which is captured at task 
+		/// creation time from <see cref="Directory.GetCurrentDirectory"/>.
 		/// </summary>
-		protected virtual string WorkingDirectory { get; }
+		protected string WorkingDirectory { get; private set; }
 
 		[Obsolete ("Do not use the Log.LogXXXX from within your Async task as it will Lock the Visual Studio UI. Use the this.LogXXXX methods instead.")]
 		private new TaskLoggingHelper Log => base.Log;
@@ -62,14 +62,10 @@ namespace Microsoft.Android.Build.Tasks
 		/// <summary>
 		/// Initializes the task.
 		/// </summary>
-		protected AsyncTask () : this (Directory.GetCurrentDirectory ())
-		{
-		}
-
-		protected AsyncTask (string workingDirectory)
+		protected AsyncTask ()
 		{
 			YieldDuringToolExecution = false;
-			WorkingDirectory = workingDirectory;
+			WorkingDirectory = Directory.GetCurrentDirectory ();
 			uiThreadId = Thread.CurrentThread.ManagedThreadId;
 		}
 

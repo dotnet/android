@@ -4,19 +4,18 @@ using System.ComponentModel;
 using System.Globalization;
 using System.IO;
 using System.Text;
-using System.Threading.Tasks;
+using System.Threading;
 using Microsoft.Android.Build.Tasks;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
 using Xamarin.Android.Tasks;
 using Xamarin.Android.Tools;
 using Properties = Xamarin.Android.Tasks.Properties;
-using Task = System.Threading.Tasks.Task;
 
 namespace Microsoft.Android.Tasks;
 
 [MSBuildMultiThreadableTask]
-public class LinkNativeAotSharedLibrary : MultithreadedAsyncTask
+public class LinkNativeAotSharedLibrary : MultithreadedAndroidTask, ICancelableTask
 {
 	static readonly string [] ArmEhabiPersonalitySymbols = [
 		"__aeabi_unwind_cpp_pr0",
@@ -24,7 +23,11 @@ public class LinkNativeAotSharedLibrary : MultithreadedAsyncTask
 		"__aeabi_unwind_cpp_pr2",
 	];
 
+	readonly CancellationTokenSource cancellation = new ();
+
 	public override string TaskPrefix => "LNAS";
+	public bool YieldDuringToolExecution { get; set; }
+	public CancellationToken CancellationToken => cancellation.Token;
 
 	[Required]
 	public string LinkerToolPath { get; set; } = "";
@@ -61,11 +64,25 @@ public class LinkNativeAotSharedLibrary : MultithreadedAsyncTask
 
 	string ArmEhabiArchive => Path.Combine (IntermediateOutputPath, "libRuntime.WorkstationGC.arm-ehabi.a");
 
-	public override async Task RunTaskAsync ()
+	public void Cancel () => cancellation.Cancel ();
+
+	public override bool RunTask ()
+	{
+		var engine = YieldDuringToolExecution ? BuildEngine as IBuildEngine3 : null;
+		engine?.Yield ();
+		try {
+			return LinkWithCleanup ();
+		} finally {
+			engine?.Reacquire ();
+		}
+	}
+
+	bool LinkWithCleanup ()
 	{
 		bool success = false;
 		try {
-			success = await LinkAsync ().ConfigureAwait (false);
+			success = Link ();
+			return success && !Log.HasLoggedErrors;
 		} finally {
 			// A failed link or debug-info operation must not leave outputs that make
 			// the next incremental build skip the link target.
@@ -79,7 +96,7 @@ public class LinkNativeAotSharedLibrary : MultithreadedAsyncTask
 		}
 	}
 
-	async Task<bool> LinkAsync ()
+	bool Link ()
 	{
 		Directory.CreateDirectory (TaskEnvironment.GetAbsolutePath (IntermediateOutputPath));
 		Directory.CreateDirectory (TaskEnvironment.GetAbsolutePath (Path.GetDirectoryName (TaskEnvironment.GetAbsolutePath (OutputSharedLibrary)) ?? throw new InvalidOperationException ("Missing output directory.")));
@@ -105,7 +122,7 @@ public class LinkNativeAotSharedLibrary : MultithreadedAsyncTask
 			}
 			args.Add (library.ItemSpec);
 			args.Add (ArmEhabiArchive);
-			if (!await RunToolAsync (ObjcopyToolPath, "XA3007", Properties.Resources.XA3007, args.ToArray ()).ConfigureAwait (false)) {
+			if (!RunTool (ObjcopyToolPath, "XA3007", Properties.Resources.XA3007, args.ToArray ())) {
 				return false;
 			}
 			libraries.Add (new TaskItem (library) { ItemSpec = ArmEhabiArchive });
@@ -113,8 +130,8 @@ public class LinkNativeAotSharedLibrary : MultithreadedAsyncTask
 
 		string responseFile = Path.Combine (IntermediateOutputPath, $"ld.{Path.GetFileNameWithoutExtension (OutputSharedLibrary)}.{Abi}.rsp");
 		WriteResponseFile (responseFile, libraries);
-		if (!await RunToolAsync (LinkerToolPath, "XA3007", Properties.Resources.XA3007,
-			"@" + responseFile, "-o", OutputSharedLibrary).ConfigureAwait (false)) {
+		if (!RunTool (LinkerToolPath, "XA3007", Properties.Resources.XA3007,
+			"@" + responseFile, "-o", OutputSharedLibrary)) {
 			return false;
 		}
 		if (DebugBuild) {
@@ -122,16 +139,16 @@ public class LinkNativeAotSharedLibrary : MultithreadedAsyncTask
 		}
 
 		string debugFile = Path.ChangeExtension (OutputSharedLibrary, ".dbg.so");
-		if (!await RunToolAsync (ObjcopyToolPath, "XA3008", Properties.Resources.XA3008,
-			"--only-keep-debug", OutputSharedLibrary, debugFile).ConfigureAwait (false)) {
+		if (!RunTool (ObjcopyToolPath, "XA3008", Properties.Resources.XA3008,
+			"--only-keep-debug", OutputSharedLibrary, debugFile)) {
 			return false;
 		}
-		if (!await RunToolAsync (ObjcopyToolPath, "XA3008", Properties.Resources.XA3008,
-			"--strip-debug", "--strip-unneeded", OutputSharedLibrary).ConfigureAwait (false)) {
+		if (!RunTool (ObjcopyToolPath, "XA3008", Properties.Resources.XA3008,
+			"--strip-debug", "--strip-unneeded", OutputSharedLibrary)) {
 			return false;
 		}
-		return await RunToolAsync (ObjcopyToolPath, "XA3008", Properties.Resources.XA3008,
-			"--add-gnu-debuglink=" + debugFile, OutputSharedLibrary).ConfigureAwait (false);
+		return RunTool (ObjcopyToolPath, "XA3008", Properties.Resources.XA3008,
+			"--add-gnu-debuglink=" + debugFile, OutputSharedLibrary);
 	}
 
 	void WriteResponseFile (string path, IEnumerable<ITaskItem> libraries)
@@ -205,11 +222,11 @@ public class LinkNativeAotSharedLibrary : MultithreadedAsyncTask
 		}
 	}
 
-	async Task<bool> RunToolAsync (string tool, string errorCode, string errorMessage, params string [] arguments)
+	bool RunTool (string tool, string errorCode, string errorMessage, params string [] arguments)
 	{
 		using var stdout = new StringWriter (CultureInfo.InvariantCulture);
 		using var stderr = new StringWriter (CultureInfo.InvariantCulture);
-		LogDebugMessage ("{0} {1}", tool, string.Join (" ", arguments));
+		Log.LogMessage (MessageImportance.Low, "{0} {1}", tool, string.Join (" ", arguments));
 		int exitCode;
 		try {
 			var startInfo = TaskEnvironment.GetProcessStartInfo ();
@@ -217,20 +234,20 @@ public class LinkNativeAotSharedLibrary : MultithreadedAsyncTask
 			foreach (var argument in arguments) {
 				startInfo.ArgumentList.Add (argument);
 			}
-			exitCode = await ProcessUtils.StartProcess (
+			exitCode = ProcessUtils.StartProcess (
 				startInfo, stdout, stderr, CancellationToken
-			).ConfigureAwait (false);
+			).GetAwaiter ().GetResult ();
 		} catch (Win32Exception e) {
-			LogCodedError (errorCode, errorMessage, Path.GetFileName (OutputSharedLibrary), Environment.NewLine + e.Message);
+			Log.LogCodedError (errorCode, errorMessage, Path.GetFileName (OutputSharedLibrary), Environment.NewLine + e.Message);
 			return false;
 		}
 		if (exitCode != 0) {
-			LogCodedError (errorCode, errorMessage, Path.GetFileName (OutputSharedLibrary),
+			Log.LogCodedError (errorCode, errorMessage, Path.GetFileName (OutputSharedLibrary),
 				$"{Environment.NewLine}{Path.GetFileName (tool)} exited with code {exitCode}.{Environment.NewLine}{stdout}{stderr}");
 			return false;
 		}
-		LogDebugMessage (stdout.ToString ());
-		LogDebugMessage (stderr.ToString ());
+		Log.LogMessage (MessageImportance.Low, stdout.ToString ());
+		Log.LogMessage (MessageImportance.Low, stderr.ToString ());
 		return true;
 	}
 

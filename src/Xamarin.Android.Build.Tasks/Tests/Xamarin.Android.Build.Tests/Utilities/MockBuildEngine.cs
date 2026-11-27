@@ -93,9 +93,13 @@ namespace Xamarin.Android.Build.Tests
 			throw new NotImplementedException ();
 		}
 
-		void IBuildEngine3.Yield () { }
+		public int YieldCount { get; private set; }
 
-		void IBuildEngine3.Reacquire () { }
+		public int ReacquireCount { get; private set; }
+
+		void IBuildEngine3.Yield () => YieldCount++;
+
+		void IBuildEngine3.Reacquire () => ReacquireCount++;
 
 		bool IBuildEngine2.BuildProjectFile (string projectFileName, string [] targetNames, IDictionary globalProperties, IDictionary targetOutputs, string toolsVersion) => true;
 
