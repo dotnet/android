@@ -42,14 +42,6 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="..\Mono.AndroidTools\Util\AggregateAsyncResult.cs">
-      <Link>Utilities\AggregateAsyncResult.cs</Link>
-    </Compile>
-    <Compile Include="..\Mono.AndroidTools\Util\StreamExtensions.cs">
-      <Link>Utilities\StreamExtensions.cs</Link>
-    </Compile>
-  </ItemGroup>
-  <ItemGroup>
     <Compile Update="Properties\Resources.Designer.cs">
       <DesignTime>True</DesignTime>
       <AutoGen>True</AutoGen>
