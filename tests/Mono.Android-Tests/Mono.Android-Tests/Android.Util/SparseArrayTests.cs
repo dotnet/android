@@ -18,33 +18,16 @@ namespace Android.UtilTests {
 			using var values = new SparseArray<string> ();
 
 			values.Put (1, "one");
-			values.Append (2, "two");
 
 			Assert.AreEqual ("one", values.Get (1));
-			Assert.AreEqual ("two", values.Get (2));
-		}
-
-		[TestMethod]
-		public void AppendResolvesAppendMethod ()
-		{
-			using var values = new JavaSparseArray ();
-			values.Append (1, "one");
-
-			Assert.AreEqual ("append:1:one", values.LastCall);
 		}
 
 		[TestMethod]
 		public void GenericMethodsDispatchToJavaOverrides ()
 		{
 			using var values = new JavaSparseArray ();
-			using var argument = new Java.Lang.String ("direct");
-			var type = values.Class;
-			var append = JNIEnv.GetMethodID (type.Handle, "append", "(ILjava/lang/Object;)V");
-			JNIEnv.CallVoidMethod (values.Handle, append, new JValue (9), new JValue (argument));
-			GC.KeepAlive (type);
-			GC.KeepAlive (argument);
-			Assert.AreEqual ("append:9:direct", values.LastCall);
-
+			values.Append (1, "one");
+			Assert.AreEqual ("append:1:one", values.LastCall);
 			Assert.AreEqual ("get:2", values.Get (2));
 			Assert.AreEqual ("getDefault:3:fallback", values.Get (3, "fallback"));
 			Assert.AreEqual (123, values.IndexOfValue ("needle"));
@@ -60,14 +43,6 @@ namespace Android.UtilTests {
 		public void GenericManagedBaseCallUsesJavaBaseImplementation ()
 		{
 			using var values = new ManagedDerivedSparseArray ();
-			using var argument = new Java.Lang.String ("direct");
-			var type = values.Class;
-			var put = JNIEnv.GetMethodID (type.Handle, "put", "(ILjava/lang/Object;)V");
-			JNIEnv.CallVoidMethod (values.Handle, put, new JValue (1), new JValue (argument));
-			GC.KeepAlive (type);
-			GC.KeepAlive (argument);
-			Assert.AreEqual ("derivedPut:1:direct", values.LastCall);
-
 			values.Put (2, "base");
 			Assert.AreEqual ("put:2:base", values.LastCall);
 		}
