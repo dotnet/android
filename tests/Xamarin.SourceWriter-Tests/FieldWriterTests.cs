@@ -25,7 +25,7 @@ namespace Xamarin.SourceWriter.Tests
 			Assert.AreEqual (expected, sw.ToString ());
 		}
 
-		[Test]
+		[TestMethod]
 		public void ShadowConstField ()
 		{
 			var field = new FieldWriter {

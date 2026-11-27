@@ -1968,7 +1968,7 @@ namespace generatortests
 			Assert.AreNotEqual (lines.ElementAt (0), lines.ElementAt (1));
 		}
 
-		[Test]
+		[TestMethodAttribute]
 		public void ManagedOverride_NewOnFinalOverrideAndAbstractProperty ()
 		{
 			var xml = """
@@ -1994,16 +1994,16 @@ namespace generatortests
 			var source = GetGeneratedTypeOutput (derived);
 
 			// managedOverride="new" on a final override must not emit `sealed`
-			StringAssert.Contains ("public new void Work ()", source);
-			StringAssert.DoesNotContain ("new sealed", source);
+			Assert.Contains ("public new void Work ()", source);
+			Assert.DoesNotContain ("new sealed", source);
 
 			// managedOverride="new" on an abstract property over an existing base property must emit `new abstract` with callbacks
-			StringAssert.Contains ("public new abstract int Value {", source);
-			StringAssert.DoesNotContain ("public override abstract int Value", source);
-			StringAssert.Contains ("static Delegate GetGetValueHandler ()", source);
+			Assert.Contains ("public new abstract int Value {", source);
+			Assert.DoesNotContain ("public override abstract int Value", source);
+			Assert.Contains ("static Delegate GetGetValueHandler ()", source);
 		}
 
-		[Test]
+		[TestMethodAttribute]
 		public void InterfaceInvokerMethod_OverrideAndNewSelection ()
 		{
 			var xml = """
@@ -2050,15 +2050,15 @@ namespace generatortests
 			var mismatchedSource = GetGeneratedTypeOutput (mismatched);
 
 			var standardInvoker = standardSource.Substring (standardSource.IndexOf ("internal partial class IStandardInvoker", StringComparison.Ordinal));
-			StringAssert.Contains ("public override bool Equals (Java.Lang.Object o)", standardInvoker);
-			StringAssert.Contains ("public override int GetHashCode ()", standardInvoker);
-			StringAssert.Contains ("public override string ToString ()", standardInvoker);
-			StringAssert.Contains ("public new Java.Lang.Object Clone ()", standardInvoker);
-			StringAssert.Contains ("public new void Handle (int x)", standardInvoker);
+			Assert.Contains ("public override bool Equals (Java.Lang.Object o)", standardInvoker);
+			Assert.Contains ("public override int GetHashCode ()", standardInvoker);
+			Assert.Contains ("public override string ToString ()", standardInvoker);
+			Assert.Contains ("public new Java.Lang.Object Clone ()", standardInvoker);
+			Assert.Contains ("public new void Handle (int x)", standardInvoker);
 
 			var mismatchedInvoker = mismatchedSource.Substring (mismatchedSource.IndexOf ("internal partial class IMismatchedReturnInvoker", StringComparison.Ordinal));
-			StringAssert.Contains ("public new int ToString ()", mismatchedInvoker);
-			StringAssert.DoesNotContain ("public override int ToString ()", mismatchedInvoker);
+			Assert.Contains ("public new int ToString ()", mismatchedInvoker);
+			Assert.DoesNotContain ("public override int ToString ()", mismatchedInvoker);
 
 			var delegates = string.Join ("\n", options.GetJniMarshalDelegates ().Select (d => {
 				var parts = d.Split ('_');
@@ -2072,21 +2072,21 @@ namespace generatortests
 				"using System; using Android.Runtime; using Java.Interop; namespace Com.Example {\n" + standardSource + "\n" + mismatchedSource + "\n}",
 				"using System;\n" + delegates,
 			], out var hasErrors, out var output, out _, allowWarnings: true);
-			Assert.False (hasErrors, output);
+			Assert.IsFalse (hasErrors, output);
 
 			var standardType = assembly.GetType ("Com.Example.IStandardInvoker", throwOnError: true);
 			var jloType = assembly.GetType ("Java.Lang.Object", throwOnError: true);
-			Assert.False (standardType.GetMethod ("Equals", [jloType]).Attributes.HasFlag (System.Reflection.MethodAttributes.NewSlot));
-			Assert.False (standardType.GetMethod ("GetHashCode", Type.EmptyTypes).Attributes.HasFlag (System.Reflection.MethodAttributes.NewSlot));
-			Assert.False (standardType.GetMethod ("ToString", Type.EmptyTypes).Attributes.HasFlag (System.Reflection.MethodAttributes.NewSlot));
-			Assert.True (standardType.GetMethod ("Clone", Type.EmptyTypes).Attributes.HasFlag (System.Reflection.MethodAttributes.NewSlot));
-			Assert.True (standardType.GetMethod ("Handle", [typeof (int)]).Attributes.HasFlag (System.Reflection.MethodAttributes.NewSlot));
+			Assert.IsFalse (standardType.GetMethod ("Equals", [jloType]).Attributes.HasFlag (System.Reflection.MethodAttributes.NewSlot));
+			Assert.IsFalse (standardType.GetMethod ("GetHashCode", Type.EmptyTypes).Attributes.HasFlag (System.Reflection.MethodAttributes.NewSlot));
+			Assert.IsFalse (standardType.GetMethod ("ToString", Type.EmptyTypes).Attributes.HasFlag (System.Reflection.MethodAttributes.NewSlot));
+			Assert.IsTrue (standardType.GetMethod ("Clone", Type.EmptyTypes).Attributes.HasFlag (System.Reflection.MethodAttributes.NewSlot));
+			Assert.IsTrue (standardType.GetMethod ("Handle", [typeof (int)]).Attributes.HasFlag (System.Reflection.MethodAttributes.NewSlot));
 
 			var mismatchedType = assembly.GetType ("Com.Example.IMismatchedReturnInvoker", throwOnError: true);
-			Assert.True (mismatchedType.GetMethod ("ToString", Type.EmptyTypes).Attributes.HasFlag (System.Reflection.MethodAttributes.NewSlot));
+			Assert.IsTrue (mismatchedType.GetMethod ("ToString", Type.EmptyTypes).Attributes.HasFlag (System.Reflection.MethodAttributes.NewSlot));
 		}
 
-		[Test]
+		[TestMethodAttribute]
 		public void HidingEdgeCases_VarargsInterfaceConstsExternalInternalAndOrder ()
 		{
 			var xml = """
@@ -2137,15 +2137,15 @@ namespace generatortests
 			// Generate DerivedIface BEFORE BaseIface (and without FixupMethodOverrides) to verify order independence
 			var derivedIface = gens.Single (g => g.Name == "IDerivedIface");
 			var derivedIfaceOut = GetGeneratedTypeOutput (derivedIface);
-			StringAssert.Contains ("new void Accept (params int[] values);", derivedIfaceOut);
-			StringAssert.Contains ("new void InvokeIBaseIface ();", derivedIfaceOut);
+			Assert.Contains ("new void Accept (params int[] values);", derivedIfaceOut);
+			Assert.Contains ("new void InvokeIBaseIface ();", derivedIfaceOut);
 
 			// BaseWithDupField already declares Foo, so it emits no InterfaceConsts; DerivedWithConsts must not emit `new` on InterfaceConsts
 			builder.Clear ();
 			var derivedWithConsts = gens.Single (g => g.Name == "DerivedWithConsts");
 			var derivedWithConstsOut = GetGeneratedTypeOutput (derivedWithConsts);
-			StringAssert.Contains ("public static class InterfaceConsts {", derivedWithConstsOut);
-			StringAssert.DoesNotContain ("public new static class InterfaceConsts", derivedWithConstsOut);
+			Assert.Contains ("public static class InterfaceConsts {", derivedWithConstsOut);
+			Assert.DoesNotContain ("public new static class InterfaceConsts", derivedWithConstsOut);
 
 			// External (IsGeneratable == false) base class with an internal const field must not trigger `new` on derived class
 			var externalBase = new ClassGen (new GenBaseSupport {
@@ -2196,8 +2196,8 @@ namespace generatortests
 			sub.Validate (options, new GenericParameterDefinitionList (), generator.Context);
 			builder.Clear ();
 			var subOut = GetGeneratedTypeOutput (sub);
-			StringAssert.Contains ("public const int InternalConst = (int) 2;", subOut);
-			StringAssert.DoesNotContain ("public new const int InternalConst", subOut);
+			Assert.Contains ("public const int InternalConst = (int) 2;", subOut);
+			Assert.DoesNotContain ("public new const int InternalConst", subOut);
 		}
 	}
 

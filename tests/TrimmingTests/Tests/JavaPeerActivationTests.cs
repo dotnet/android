@@ -73,7 +73,8 @@ public class JavaPeerActivationTests : TrimmingTestBase
 	}
 
 	// Non-generic JavaCollection/JavaList wrappers must activate closed generic peers when copying into a typed array.
-	[Test]
+	[TestMethod]
+	[CombinatorialData]
 	public void CollectionCopyToActivatesClosedGenericPeerElementsWithoutWarnings ([TrimmingConfigurations] TrimmingConfiguration configuration)
 	{
 		var app = BuildAndRun ("Cases/GenericPeerCollectionCopyTo.cs", configuration);

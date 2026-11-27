@@ -388,7 +388,7 @@ namespace Xamarin.Android.Build.Tests
 			RunTest (TestName, many: true, dtb: false, runner: SuccessfulBuild_AndroidX, runtime: runtime);
 		}
 
-		[Test]
+		[TestMethod]
 		public void AndroidXFragmentBindingPreservesConstructors ()
 		{
 			if (IgnoreUnsupportedConfiguration (AndroidRuntime.NativeAOT, release: true)) {
