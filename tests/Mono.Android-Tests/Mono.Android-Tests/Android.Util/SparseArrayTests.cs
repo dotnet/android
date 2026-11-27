@@ -34,7 +34,7 @@ namespace Android.UtilTests {
 		public void GenericManagedBaseCallUsesJavaBaseImplementation ()
 		{
 			using var values = new ManagedDerivedSparseArray ();
-			values.Append (2, "base");
+			values.CallBaseAppend (2, "base");
 			Assert.AreEqual ("base", values.Get (2));
 			Assert.IsFalse (values.NonGenericAppendCalled);
 		}
@@ -74,14 +74,14 @@ namespace Android.UtilTests {
 			public override JniPeerMembers JniPeerMembers => members;
 			public int AppendedKey { get; private set; } = -1;
 
-			public override void Append (int key, Java.Lang.Object? value) => AppendedKey = key;
+			public override void Append (int key, Java.Lang.Object value) => AppendedKey = key;
 		}
 
 		public class ManagedDerivedSparseArray : SparseArray<string> {
 			public bool NonGenericAppendCalled { get; private set; }
 
-			public override void Append (int key, Java.Lang.Object? value) => NonGenericAppendCalled = true;
-			public override void Append (int key, string value) => base.Append (key, value);
+			public override void Append (int key, Java.Lang.Object value) => NonGenericAppendCalled = true;
+			public void CallBaseAppend (int key, string value) => base.Append (key, value);
 		}
 	}
 }
