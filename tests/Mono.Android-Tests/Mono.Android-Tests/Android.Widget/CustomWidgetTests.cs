@@ -1,6 +1,5 @@
 using System.Collections.Generic;
 using System.Diagnostics.Tracing;
-using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Android.App;
@@ -85,10 +84,10 @@ namespace Xamarin.Android.RuntimeTests
 			int leaked = int.MaxValue;
 			for (int i = 0; i < maxCollections && leaked > maxLeaked; i++) {
 				await Java.InteropTests.GCBridgeTestHelpers.CollectUnreachablePeersAsync (testContext.CancellationToken);
-				leaked = references.LiveGlobalReferenceCount;
+				leaked = references.OutstandingReferenceCount;
 			}
 			Assert.IsTrue (leaked <= maxLeaked,
-				$"Global reference leak detected: {leaked} global refs created while inflating {inflateCount} custom views are still alive after GC.");
+				$"Global reference leak detected: {leaked} tracked JNI references created while inflating {inflateCount} custom views are still outstanding after GC.");
 		}
 
 		// Tracks global references created on the recording thread, following the
@@ -96,7 +95,7 @@ namespace Xamarin.Android.RuntimeTests
 		sealed class InflatedGlobalReferences : EventListener
 		{
 			readonly Lock gate = new ();
-			readonly Dictionary<ulong, bool> live = new ();
+			readonly HashSet<ulong> outstanding = new ();
 			int recordingThreadId = -1;
 
 			public InflatedGlobalReferences ()
@@ -108,10 +107,10 @@ namespace Xamarin.Android.RuntimeTests
 				}
 			}
 
-			public int LiveGlobalReferenceCount {
+			public int OutstandingReferenceCount {
 				get {
 					lock (gate)
-						return live.Count (entry => entry.Value);
+						return outstanding.Count;
 				}
 			}
 
@@ -130,14 +129,14 @@ namespace Xamarin.Android.RuntimeTests
 						return;
 					bool recorded = payload [6] is int threadId && threadId == Volatile.Read (ref recordingThreadId);
 					lock (gate) {
-						if (recorded || live.ContainsKey (source))
-							live [handle] = eventData.EventId == RuntimeEventSource.GlobalReferenceCreatedEventId;
+						if (recorded || outstanding.Contains (source))
+							outstanding.Add (handle);
 					}
 					break;
 				case RuntimeEventSource.GlobalReferenceDeletedEventId:
 				case RuntimeEventSource.WeakGlobalReferenceDeletedEventId:
 					lock (gate)
-						live.Remove (source);
+						outstanding.Remove (source);
 					break;
 				}
 			}

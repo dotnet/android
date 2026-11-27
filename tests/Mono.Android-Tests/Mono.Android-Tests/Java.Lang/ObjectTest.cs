@@ -72,11 +72,12 @@ namespace Java.LangTests
 		}
 
 		[TestMethod]
-		public void java_lang_Object_Is_Java_Lang_Object ()
+		public void java_lang_Object_MapsToSupportedManagedType ()
 		{
 			var jloType = global::Java.Interop.JniEnvironment.Runtime.TypeManager.GetType (new JniTypeSignature ("java/lang/Object"));
-			Assert.AreSame (typeof (Java.Lang.Object), jloType,
-					$"`java/lang/Object` is typemap'd to `{jloType}`, not `Java.Lang.Object, Mono.Android`!");
+			// Debug CoreCLR uses the Java.Interop fallback; optimized builds use managed typemaps.
+			Assert.IsTrue (jloType == typeof (Java.Lang.Object) || jloType == typeof (global::Java.Interop.JavaObject),
+					$"`java/lang/Object` is typemap'd to unexpected type `{jloType}`.");
 		}
 	}
 
