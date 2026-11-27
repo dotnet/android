@@ -50,6 +50,25 @@ namespace Com.Mypackage
 		public class NestedFieldClass : Java.Lang.Object { }
 	}
 
+	// A Kotlin value class struct, as generated in another binding assembly.
+	[Register ("com/mypackage/MyDp", DoNotGenerateAcw = true)]
+	public readonly struct MyDp : System.IEquatable<MyDp>
+	{
+		public readonly float Value;
+
+		public bool Equals (MyDp other) => Value.Equals (other.Value);
+	}
+
+	[Register ("com/mypackage/DpUser")]
+	public class DpUser : Java.Lang.Object
+	{
+		[Register ("pad-abc", "(F)F", "")]
+		public MyDp Pad (MyDp dp) => dp;
+
+		[Register ("maybe", "(Lcom/mypackage/MyDp;)Lcom/mypackage/MyDp;", "")]
+		public MyDp? Maybe (MyDp? dp) => dp;
+	}
+
 }
 
 namespace GenericTestClasses
@@ -126,6 +145,42 @@ namespace generatortests
 		{
 			module.Dispose ();
 			File.Delete (tempFile);
+		}
+
+		[Test]
+		public void KotlinValueClassStruct ()
+		{
+			var @class = CecilApiImporter.CreateClass (module.GetType ("Com.Mypackage.MyDp"), options);
+			Assert.IsTrue (@class.Validate (options, new GenericParameterDefinitionList (), new CodeGeneratorContext ()), "@class.Validate failed!");
+
+			Assert.AreEqual ("com.mypackage.MyDp", @class.JavaName);
+			Assert.IsTrue (@class.IsKotlinInlineClass);
+			Assert.AreEqual ("F", @class.KotlinInlineClassUnderlyingJniType);
+			CollectionAssert.IsEmpty (@class.ImplementedInterfaces, "IEquatable<T> is not a Java interface.");
+		}
+
+		[Test]
+		public void KotlinValueClassStructMembers ()
+		{
+			// Like a real build, which imports referenced types lazily.
+			options.UseShallowReferencedTypes = true;
+			options.SymbolTable.AddType (CecilApiImporter.CreateClass (module.GetType ("Com.Mypackage.MyDp"), options));
+			options.SymbolTable.AddType (CecilApiImporter.CreateClass (module.GetType ("Com.Mypackage.DpUser"), options));
+			var @class = (ClassGen) options.SymbolTable.Lookup ("com.mypackage.DpUser");
+			Assert.IsTrue (@class.Validate (options, new GenericParameterDefinitionList (), new CodeGeneratorContext ()), "@class.Validate failed!");
+
+			// `MyDp` is passed as its underlying `float`.
+			var pad = @class.Methods.Single (m => m.Name == "Pad");
+			Assert.AreEqual ("Com.Mypackage.MyDp", pad.Parameters [0].Type);
+			Assert.AreEqual ("F", pad.Parameters [0].JniType);
+			Assert.AreEqual ("Com.Mypackage.MyDp", pad.RetVal.FullName);
+			Assert.IsTrue (pad.RetVal.NotNull);
+
+			// `MyDp?` is passed boxed.
+			var maybe = @class.Methods.Single (m => m.Name == "Maybe");
+			Assert.AreEqual ("Com.Mypackage.MyDp?", maybe.Parameters [0].Type);
+			Assert.AreEqual ("Lcom/mypackage/MyDp;", maybe.Parameters [0].JniType);
+			Assert.AreEqual ("Com.Mypackage.MyDp?", maybe.RetVal.FullName);
 		}
 
 		[Test]

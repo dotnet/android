@@ -220,15 +220,19 @@ namespace Java.InteropTests
 		}
 
 		[TestMethod]
-		public unsafe void CannotCreateGenericHolderFromJava ()
+		public void CannotCreateGenericHolderFromJava ()
 		{
 			var signature   = JniRuntime.CurrentRuntime.TypeManager.GetTypeSignature (typeof (GenericHolder<>));
 			using var type  = new JniType (signature.Name);
 			var ctor        = type.GetConstructor ("()V");
 			var instance    = type.AllocObject ();
 
-			Assert.ThrowsExactly<NotSupportedException>(() =>
-				JniEnvironment.InstanceMethods.CallNonvirtualVoidMethod (instance, type.PeerReference, ctor));
+			// SAFETY: ctor is the ()V constructor of the live allocated instance; no arguments are required.
+			Assert.ThrowsExactly<NotSupportedException>(() => {
+				unsafe {
+					JniEnvironment.InstanceMethods.CallNonvirtualVoidMethod (instance, type.PeerReference, ctor);
+				}
+			});
 		}
 	}
 

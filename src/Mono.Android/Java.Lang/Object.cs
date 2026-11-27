@@ -37,6 +37,11 @@ namespace Java.Lang {
 		/// an earlier base-constructor failure does not enter that cleanup. DoNotTransfer retains
 		/// the caller's ownership. Zero is accepted and does not supply a new Java peer.
 		/// </safety>
+		/// <remarks>
+		/// This released raw-handle constructor remains safe-callable for compatibility.
+		/// The compiler does not enforce the caller obligations above, including for nonzero handles.
+		/// The constructor does not validate reference provenance, lifetime, thread or ownership.
+		/// </remarks>
 		public Object (IntPtr handle, JniHandleOwnership transfer)
 			: base (JniObjectReferenceOptions.None)
 		{
@@ -53,11 +58,13 @@ namespace Java.Lang {
 				return;
 
 			unsafe {
-				// SAFETY: StartCreateInstance supplies this peer's owned handle; FinishCreateInstance invokes the ()V constructor with the matching arguments before this constructor returns.
+				// SAFETY: AllocObject supplies this peer's owned handle; FinishCreateInstance invokes
+				// the ()V constructor while GC.KeepAlive retains this.
 				SetHandle (
 						JNIEnv.AllocObject (GetType ()),
 						JniHandleOwnership.TransferLocalRef);
 				JNIEnv.FinishCreateInstance (Handle, "()V"u8);
+				GC.KeepAlive (this);
 			}
 		}
 
@@ -182,11 +189,7 @@ namespace Java.Lang {
 			return (T?) GetObject (handle, transfer, typeof (T));
 		}
 
-		internal static IJavaPeerable? GetObject (
-				IntPtr handle,
-				JniHandleOwnership transfer,
-				[DynamicallyAccessedMembers (Constructors)]
-				Type? type = null)
+		internal static IJavaPeerable? GetObject (IntPtr handle, JniHandleOwnership transfer, Type? type = null)
 		{
 			if (handle == IntPtr.Zero)
 				return null;

@@ -22,9 +22,10 @@ can also be used by setting the `$(MSBUILD)` make variable to `xbuild`.
         # -or-
         make prepare MSBUILD=msbuild
 
-    This will ensure that the build dependencies are installed, perform
-    `git submodule update`, download NuGet dependencies, and other
-    "preparatory" and pre-build tasks that need to be performed.
+    This will ensure that the build dependencies are installed, initialize
+    the `external/android-api-docs` submodule, download NuGet dependencies,
+    and perform other "preparatory" and pre-build tasks that need to be
+    performed.
 
  7. Build the project:
 

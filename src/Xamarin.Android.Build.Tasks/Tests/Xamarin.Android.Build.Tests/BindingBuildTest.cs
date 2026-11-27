@@ -1203,6 +1203,61 @@ VNZXRob2RzLmphdmFQSwUGAAAAAAcABwDOAQAAVgMAAAAA
 		}
 
 		[Test]
+		public void AndroidMavenLibrary_KotlinValueClasses ()
+		{
+			// androidx.compose.ui:ui-unit has `@JvmInline value class Dp(val value: Float)`
+			// and functions with mangled JVM names, such as `coerceAtLeast-YgX7TsA(FF)F`.
+			// ui-text uses ui-unit's `TextUnit` value class from another binding assembly.
+			var path = Path.Combine ("temp", TestName);
+			var unit = new XamarinAndroidBindingProject {
+				ProjectName = "UiUnit",
+				Jars = { CreateMavenLibrary ("androidx.compose.ui:ui-unit-android") },
+			};
+			// The generated value-class helpers must compile under the new unsafe rules too, which need C# preview.
+			unit.SetProperty ("MemorySafetyRulesVersion", "2");
+			unit.SetProperty ("LangVersion", "preview");
+
+			var text = new XamarinAndroidBindingProject {
+				ProjectName = "UiText",
+				Jars = { CreateMavenLibrary ("androidx.compose.ui:ui-text-android") },
+				// Only bind TextIndent; the rest of ui-text needs unrelated metadata fixes.
+				MetadataXml = """
+					<metadata>
+					  <remove-node path="/api/package[@name!='androidx.compose.ui.text.style']" />
+					  <remove-node path="/api/package[@name='androidx.compose.ui.text.style']/*[@name!='TextIndent']" />
+					</metadata>
+					""",
+			};
+			text.AddReference (unit);
+
+			using var unitBuilder = CreateDllBuilder (Path.Combine (path, unit.ProjectName));
+			using var textBuilder = CreateDllBuilder (Path.Combine (path, text.ProjectName));
+			Assert.IsTrue (unitBuilder.Build (unit), "UiUnit build should have succeeded.");
+			Assert.IsTrue (textBuilder.Build (text), "UiText build should have succeeded.");
+
+			var dp = File.ReadAllText (unitBuilder.Output.GetIntermediaryPath (Path.Combine ("generated", "src", "Androidx.Compose.UI.Unit.Dp.cs")));
+			StringAssert.Contains ("readonly partial struct Dp", dp);
+			StringAssert.Contains ("[global::Android.Runtime.Register (\"androidx/compose/ui/unit/Dp\", DoNotGenerateAcw=true)]", dp);
+
+			var dpKt = File.ReadAllText (unitBuilder.Output.GetIntermediaryPath (Path.Combine ("generated", "src", "Androidx.Compose.UI.Unit.DpKt.cs")));
+			StringAssert.Contains ("Dp CoerceAtLeast (global::Androidx.Compose.UI.Unit.Dp obj, global::Androidx.Compose.UI.Unit.Dp minimumValue)", dpKt);
+			StringAssert.Contains ("DpSize Lerp (global::Androidx.Compose.UI.Unit.DpSize start, global::Androidx.Compose.UI.Unit.DpSize stop, float fraction)", dpKt);
+
+			// TextUnit comes from the UiUnit assembly.
+			var textIndent = File.ReadAllText (textBuilder.Output.GetIntermediaryPath (Path.Combine ("generated", "src", "Androidx.Compose.UI.Text.Style.TextIndent.cs")));
+			StringAssert.Contains ("global::Androidx.Compose.UI.Unit.TextUnit FirstLine", textIndent);
+
+			static BuildItem CreateMavenLibrary (string artifact)
+			{
+				var item = new BuildItem ("AndroidMavenLibrary", artifact);
+				item.Metadata.Add ("Version", "1.12.1");
+				item.Metadata.Add ("Repository", TestEnvironment.DotNetPublicMaven);
+				item.Metadata.Add ("VerifyDependencies", "false");
+				return item;
+			}
+		}
+
+		[Test]
 		public void AndroidMavenLibrary_FailsDueToUnverifiedDependency ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			bool isRelease = runtime == AndroidRuntime.NativeAOT;
@@ -1320,6 +1375,34 @@ VNZXRob2RzLmphdmFQSwUGAAAAAAcABwDOAQAAVgMAAAAA
 				}
 				Assert.Fail ("Build should have succeeded.");
 			}
+		}
+
+		[Test]
+		public void KotlinDefaultArgumentOverloads ()
+		{
+			// androidx.datastore:datastore-core-jvm has `class CorruptionException (message: String, cause: Throwable? = null)`.
+			// The NuGet packages for its dependencies match version 1.2.1.
+			var datastore = new BuildItem ("AndroidMavenLibrary", "androidx.datastore:datastore-core-jvm");
+			datastore.Metadata.Add ("Version", "1.2.1");
+			datastore.Metadata.Add ("Repository", TestEnvironment.DotNetPublicMaven);
+
+			var proj = new XamarinAndroidBindingProject {
+				Jars = { datastore },
+				PackageReferences = {
+					new Package { Id = "Xamarin.AndroidX.Annotation.Jvm", Version = "1.10.0.1" },
+					new Package { Id = "Xamarin.Kotlin.StdLib", Version = "2.4.0.1" },
+					new Package { Id = "Xamarin.KotlinX.Coroutines.Core", Version = "1.11.0.1" },
+				},
+			};
+
+			using var b = CreateDllBuilder ();
+			Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
+
+			var cs_file = b.Output.GetIntermediaryPath (Path.Combine ("generated", "src", "Androidx.Datastore.Core.CorruptionException.cs"));
+			FileAssert.Exists (cs_file);
+			var code = File.ReadAllText (cs_file);
+			StringAssert.Contains ("public CorruptionException (string message) :", code);
+			StringAssert.Contains ("(Ljava/lang/String;Ljava/lang/Throwable;ILkotlin/jvm/internal/DefaultConstructorMarker;)V", code);
 		}
 	}
 }

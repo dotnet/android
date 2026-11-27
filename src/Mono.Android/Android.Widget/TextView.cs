@@ -24,51 +24,48 @@ namespace Android.Widget {
 
 		public event EventHandler<AfterTextChangedEventArgs> AfterTextChanged {
 			add {
-				if (implementor_TextWatcher == null || !implementor_TextWatcher.IsAlive) {
-					implementor_TextWatcher = new WeakReference (new TextWatcherImplementor (this, null, null, value));
-					AddTextChangedListener ((TextWatcherImplementor) implementor_TextWatcher.Target!);
-				} else {
-					var impl = (TextWatcherImplementor) implementor_TextWatcher.Target!;
+				if (implementor_TextWatcher?.Target is TextWatcherImplementor impl) {
 					impl.AfterTextChanged = (EventHandler<AfterTextChangedEventArgs>) Delegate.Combine (impl.AfterTextChanged, value);
+				} else {
+					impl = new TextWatcherImplementor (this, null, null, value);
+					implementor_TextWatcher = new WeakReference (impl);
+					AddTextChangedListener (impl);
 				}
 			}
 			remove {
-				var impl = implementor_TextWatcher != null ? (TextWatcherImplementor?) implementor_TextWatcher.Target : null;
-				if (impl != null)
+				if (implementor_TextWatcher?.Target is TextWatcherImplementor impl)
 					impl.AfterTextChanged = (EventHandler<AfterTextChangedEventArgs>?) Delegate.Remove (impl.AfterTextChanged, value);
 			}
 		}
 
 		public event EventHandler<TextChangedEventArgs> BeforeTextChanged {
 			add {
-				if (implementor_TextWatcher == null || !implementor_TextWatcher.IsAlive) {
-					implementor_TextWatcher = new WeakReference (new TextWatcherImplementor (this, null, value, null));
-					AddTextChangedListener ((TextWatcherImplementor) implementor_TextWatcher.Target!);
-				} else {
-					var impl = (TextWatcherImplementor) implementor_TextWatcher.Target!;
+				if (implementor_TextWatcher?.Target is TextWatcherImplementor impl) {
 					impl.BeforeTextChanged = (EventHandler<TextChangedEventArgs>) Delegate.Combine (impl.BeforeTextChanged, value);
+				} else {
+					impl = new TextWatcherImplementor (this, null, value, null);
+					implementor_TextWatcher = new WeakReference (impl);
+					AddTextChangedListener (impl);
 				}
 			}
 			remove {
-				var impl = implementor_TextWatcher != null ? (TextWatcherImplementor?) implementor_TextWatcher.Target : null;
-				if (impl != null)
+				if (implementor_TextWatcher?.Target is TextWatcherImplementor impl)
 					impl.BeforeTextChanged = (EventHandler<TextChangedEventArgs>?) Delegate.Remove (impl.BeforeTextChanged, value);
 			}
 		}
 
 		public event EventHandler<TextChangedEventArgs> TextChanged {
 			add {
-				if (implementor_TextWatcher == null || !implementor_TextWatcher.IsAlive) {
-					implementor_TextWatcher = new WeakReference (new TextWatcherImplementor (this, value, null, null));
-					AddTextChangedListener ((TextWatcherImplementor) implementor_TextWatcher.Target!);
-				} else {
-					var impl = (TextWatcherImplementor) implementor_TextWatcher.Target!;
+				if (implementor_TextWatcher?.Target is TextWatcherImplementor impl) {
 					impl.TextChanged = (EventHandler<TextChangedEventArgs>) Delegate.Combine (impl.TextChanged, value);
+				} else {
+					impl = new TextWatcherImplementor (this, value, null, null);
+					implementor_TextWatcher = new WeakReference (impl);
+					AddTextChangedListener (impl);
 				}
 			}
 			remove {
-				var impl = implementor_TextWatcher != null ? (TextWatcherImplementor?) implementor_TextWatcher.Target : null;
-				if (impl != null)
+				if (implementor_TextWatcher?.Target is TextWatcherImplementor impl)
 					impl.TextChanged = (EventHandler<TextChangedEventArgs>?) Delegate.Remove (impl.TextChanged, value);
 			}
 		}

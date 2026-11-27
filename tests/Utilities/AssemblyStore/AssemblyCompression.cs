@@ -1,10 +1,8 @@
 using System;
 using System.IO;
 
-#if NET11_0_OR_GREATER
 using System.Buffers;
 using ZstandardDecoder = System.IO.Compression.ZstandardDecoder;
-#endif // NET11_0_OR_GREATER
 
 namespace Xamarin.Android.AssemblyStore;
 
@@ -19,7 +17,6 @@ public static class AssemblyCompression
 	const uint Lz4Magic = 0x5A4C4158; // 'XALZ', little-endian
 	const uint ZstandardMagic = 0x535A4158; // 'XAZS', little-endian
 
-#if NET11_0_OR_GREATER
 	const int HeaderSize = 3 * sizeof (uint);
 	const uint MaximumUncompressedAssemblySize = 512 * 1024 * 1024;
 
@@ -104,21 +101,6 @@ public static class AssemblyCompression
 			}
 			totalRead += read;
 		}
-	}
-#endif // NET11_0_OR_GREATER
-
-	internal static bool IsCompressed (Stream input)
-	{
-		ArgumentNullException.ThrowIfNull (input);
-
-		if (!input.CanRead || !input.CanSeek) {
-			throw new ArgumentException ("Input stream must be readable and seekable", nameof (input));
-		}
-
-		long start = input.Position;
-		bool compressed = TryReadFormat (input, out _);
-		input.Seek (start, SeekOrigin.Begin);
-		return compressed;
 	}
 
 	static bool TryReadFormat (Stream input, out AssemblyCompressionFormat format)

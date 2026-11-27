@@ -7,7 +7,6 @@ namespace Android.Graphics {
 
 	partial class Bitmap {
 
-#if ANDROID_8
 		enum NdkError {
 			Success           = 0,
 			BadParameter      = -1,
@@ -38,10 +37,12 @@ namespace Android.Graphics {
 		public AndroidBitmapInfo GetBitmapInfo ()
 		{
 			unsafe {
-				// SAFETY: Handle is this Bitmap's JNI peer; the native stub writes one matching AndroidBitmapInfo.
-				// CheckNdkError rejects failure before the output is returned; no pixel pointer is accessed.
+				// SAFETY: Handle is this Bitmap's JNI peer, retained by GC.KeepAlive (this) across the native call;
+				// the native stub writes one matching AndroidBitmapInfo. CheckNdkError rejects failure before
+				// the output is returned; no pixel pointer is accessed.
 				AndroidBitmapInfo info;
 				int r = JNIEnv.AndroidBitmap_getInfo (Handle, out info);
+				GC.KeepAlive (this);
 				CheckNdkError ("AndroidBitmap_getInfo", r);
 				return info;
 			}
@@ -60,10 +61,12 @@ namespace Android.Graphics {
 		public IntPtr LockPixels ()
 		{
 			unsafe {
-				// SAFETY: Handle identifies this Bitmap; the stub writes the borrowed pixel address only.
-				// CheckNdkError rejects failure before publication; later dereference requires the caller to retain the lock and bitmap.
+				// SAFETY: Handle identifies this Bitmap, retained by GC.KeepAlive (this) across the native call;
+				// the stub writes the borrowed pixel address only. CheckNdkError rejects failure before publication;
+				// later dereference requires the caller to retain the lock and bitmap.
 				IntPtr p;
 				int r = JNIEnv.AndroidBitmap_lockPixels (Handle, out p);
+				GC.KeepAlive (this);
 				CheckNdkError ("AndroidBitmap_lockPixels", r);
 				return p;
 			}
@@ -82,18 +85,17 @@ namespace Android.Graphics {
 		{
 			unsafe {
 				// SAFETY: the caller owns this Bitmap's matching lock and has stopped pixel-alias access;
-				// the native return code is checked without dereferencing any pixel pointer.
+				// GC.KeepAlive (this) retains this Bitmap across the native call, and the native return code
+				// is checked without dereferencing any pixel pointer.
 				int r = JNIEnv.AndroidBitmap_unlockPixels (Handle);
+				GC.KeepAlive (this);
 				CheckNdkError ("AndroidBitmap_unlockPixels", r);
 			}
 		}
-#endif  // ANDROID_8
-#if ANDROID_19
 		[Obsolete ("Use the IsPremultiplied property getter or the SetPremultiplied(bool) method.")]
 		public bool Premultiplied {
 			get {return IsPremultiplied;}
 			set {SetPremultiplied (value);}
 		}
-#endif
 	}
 }

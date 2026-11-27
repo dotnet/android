@@ -19,6 +19,7 @@ using System.Runtime.Versioning;
 // [assembly: AssemblyCopyright ("Copyright 2011-2014 Xamarin Inc.")]
 [assembly: AssemblyCompany ("Microsoft Corporation")]
 [assembly: AssemblyMetadata ("IsTrimmable", "True")]
+[assembly: AssemblyMetadata ("IsAotCompatible", "True")]
 #if ANDROID_UNSTABLE
 [assembly: RequiresPreviewFeatures("This is an unstable Android API level. Opt into preview features by adding <EnablePreviewFeatures>True</EnablePreviewFeatures> to your project file.")]
 #endif

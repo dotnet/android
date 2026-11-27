@@ -295,7 +295,6 @@ namespace Java.InteropTests
 							JniEnvironment.Runtime.RaisePendingException (escaped);
 							pending = JniEnvironment.Exceptions.ExceptionOccurred ();
 							JniEnvironment.Exceptions.ExceptionClear ();
-							JniEnvironment.References.CreatedReference (pending);
 							Assert.IsTrue (pending.IsValid);
 							Assert.AreSame (escaped, JniEnvironment.Runtime.GetExceptionForThrowable (
 								ref pending, JniObjectReferenceOptions.CopyAndDispose));
@@ -430,8 +429,11 @@ namespace Java.InteropTests
 			} finally {
 				SetReferenceManager (runtime, originalManager);
 				if (observer.InputDeletions == 0) {
-					JNIEnv.DeleteRef (input, type == JniObjectReferenceType.Global
-						? JniHandleOwnership.TransferGlobalRef : JniHandleOwnership.TransferLocalRef);
+					// SAFETY: This scope owns the still-live input reference and records its exact JNI reference kind.
+					unsafe {
+						JNIEnv.DeleteRef (input, type == JniObjectReferenceType.Global
+							? JniHandleOwnership.TransferGlobalRef : JniHandleOwnership.TransferLocalRef);
+					}
 				}
 			}
 		}

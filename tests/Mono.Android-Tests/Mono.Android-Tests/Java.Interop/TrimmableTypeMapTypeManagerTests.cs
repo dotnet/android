@@ -77,6 +77,12 @@ namespace Java.InteropTests
 				result = manager.GetType (signature);
 			}
 
+			// CoreCLR and NativeAOT share a GC whose GetAllocatedBytesForCurrentThread subtracts
+			// the unused tail of the thread's allocation context. A concurrent background GC can
+			// void that context without accounting for the tail, inflating the counter even though
+			// this thread allocated nothing. A blocking GC retires the context first.
+			// See https://github.com/dotnet/android/issues/13726
+			GC.Collect (GC.MaxGeneration, GCCollectionMode.Forced, blocking: true);
 			long before = GC.GetAllocatedBytesForCurrentThread ();
 			for (int i = 0; i < iterationCount; i++) {
 				result = manager.GetType (signature);
@@ -577,10 +583,13 @@ namespace Java.InteropTests
 
 		static IntPtr noPinActionPointer;
 
-		static unsafe void NoPinActionHelper (int depth, Action action)
+		static void NoPinActionHelper (int depth, Action action)
 		{
-			int* values = stackalloc int [20];
-			noPinActionPointer = new IntPtr (values);
+			// SAFETY: Only the address is retained for conservative-stack testing; it is never dereferenced.
+			unsafe {
+				int* values = stackalloc int [20];
+				noPinActionPointer = new IntPtr (values);
+			}
 
 			if (depth <= 0) {
 				new object ();
@@ -603,8 +612,26 @@ namespace Java.InteropTests
 
 		class OpenT<T> { }
 		class OpenT2<T1, T2> { }
+		class DerivedOpenT<T> : OpenT<T> { }
 		class ClosedOfIntOpenT : OpenT<int> { }
 		class DeepClosedOfOpenT : ClosedOfIntOpenT { }
+
+		[TestMethod]
+		[TestCategory ("TrimmableTypeMapRuntimeCoverage")]
+		public void TryGetProxyType_GenericAlias_PrefersExactTarget ()
+		{
+			var typeMap = new SingleUniverseTypeMap (
+				new Dictionary<string, Type> {
+					["base"] = typeof (BaseGenericAliasProxy),
+					["derived"] = typeof (DerivedGenericAliasProxy),
+				},
+				new Dictionary<Type, Type> {
+					[typeof (DerivedOpenT<>)] = typeof (GenericAliasHolder),
+				});
+
+			Assert.IsTrue (typeMap.TryGetProxyType (typeof (DerivedOpenT<>), out var proxyType));
+			Assert.AreEqual (typeof (DerivedGenericAliasProxy), proxyType);
+		}
 
 		[TestMethod]
 		public void TargetTypeMatches_DirectAssignable_ReturnsTrue ()
@@ -646,6 +673,25 @@ namespace Java.InteropTests
 		public void TargetTypeMatches_UnrelatedNonGeneric_ReturnsFalse ()
 		{
 			Assert.IsFalse (TrimmableTypeMap.TargetTypeMatches (typeof (string), typeof (int)));
+		}
+
+		[JavaPeerAliases ("base", "derived")]
+		sealed class GenericAliasHolder { }
+
+		[BaseGenericAliasProxy]
+		sealed class BaseGenericAliasProxy : JavaPeerProxy
+		{
+			public BaseGenericAliasProxy () : base ("test", typeof (OpenT<>)) { }
+
+			public override IJavaPeerable? CreateInstance (IntPtr handle, JniHandleOwnership transfer) => null;
+		}
+
+		[DerivedGenericAliasProxy]
+		sealed class DerivedGenericAliasProxy : JavaPeerProxy
+		{
+			public DerivedGenericAliasProxy () : base ("test", typeof (DerivedOpenT<>)) { }
+
+			public override IJavaPeerable? CreateInstance (IntPtr handle, JniHandleOwnership transfer) => null;
 		}
 	}
 

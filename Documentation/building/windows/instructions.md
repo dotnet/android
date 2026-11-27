@@ -22,9 +22,10 @@ be available within the Command-Line environment.
 
         dotnet msbuild Microsoft.Android.slnx -t:Prepare
 
-    This will ensure that the build dependencies are installed, perform
-    `git submodule update`, download NuGet dependencies, and other
-    "preparatory" and pre-build tasks that need to be performed.
+    This will ensure that the build dependencies are installed, initialize
+    the `external/android-api-docs` submodule, download NuGet dependencies,
+    and perform other "preparatory" and pre-build tasks that need to be
+    performed.
 
  6. Build the project:
 

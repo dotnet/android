@@ -8,11 +8,13 @@ namespace Java.Nio {
 		public IntPtr GetDirectBufferAddress ()
 		{
 			unsafe {
-				// SAFETY: the live Buffer peer supplies the JNI handle; obtaining its address does not dereference or extend the backing memory lifetime.
-#if ANDROID_9
-				if (IsDirect)
-					return JNIEnv.GetDirectBufferAddress (Handle);
-#endif
+				// SAFETY: the live Buffer peer supplies the JNI handle, retained by GC.KeepAlive (this) across the JNI call;
+				// obtaining its address does not dereference or extend the backing memory lifetime.
+				if (IsDirect) {
+					IntPtr address = JNIEnv.GetDirectBufferAddress (Handle);
+					GC.KeepAlive (this);
+					return address;
+				}
 				return IntPtr.Zero;
 			}
 		}

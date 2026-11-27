@@ -1,3 +1,4 @@
+#include <cerrno>
 #include <limits>
 
 #include <runtime-base/android-system.hh>
@@ -62,21 +63,26 @@ AndroidSystem::get_max_gref_count_from_system () noexcept -> long
 	std::string_view property_name = Constants::DEBUG_DOTNET_MAX_GREFC;
 	const char *grefc = monodroid_get_system_property (property_name.data (), override, sizeof (override));
 	if (grefc != nullptr) {
+		errno = 0;
 		char *e;
-		max = strtol (grefc, &e, 10);
+		long parsed = strtol (grefc, &e, 10);
+		bool overflow = errno == ERANGE;
+		long multiplier = 1;
 		switch (*e) {
 			case 'k':
 				e++;
-				max *= 1000;
+				multiplier = 1000;
 				break;
 			case 'm':
 				e++;
-				max *= 1000000;
+				multiplier = 1000000;
 				break;
 		}
 
-		if (max < 0) {
+		if (overflow || parsed < 0 || parsed > std::numeric_limits<int>::max () / multiplier) {
 			max = std::numeric_limits<int>::max ();
+		} else {
+			max = parsed * multiplier;
 		}
 
 		if (*e) {

@@ -15,6 +15,8 @@ namespace generator.SourceWriters
 		readonly CodeGenerationOptions opt;
 		readonly List<TypeWriter> sibling_types = new List<TypeWriter> ();
 
+		internal IReadOnlyList<TypeWriter> SiblingTypes => sibling_types;
+
 		public BoundClass (ClassGen klass, CodeGenerationOptions opt, CodeGeneratorContext context, GenerationInfo generationInfo)
 		{
 			context.ContextTypes.Push (klass);
@@ -30,7 +32,6 @@ namespace generator.SourceWriters
 			Name = klass.Name;
 
 			SetVisibility (klass.Visibility);
-			IsShadow = klass.NeedsNew;
 			IsAbstract = klass.IsAbstract;
 			IsSealed = klass.IsFinal;
 			IsPartial = true;
@@ -76,8 +77,11 @@ namespace generator.SourceWriters
 
 			var ic = new InterfaceConstsClass (klass, seen, opt, context);
 
-			if (ic.ShouldGenerate)
+			if (ic.ShouldGenerate) {
+				if (klass.RequiresNewForMemberName (ic.Name, opt))
+					ic.IsShadow = true;
 				NestedTypes.Add (ic);
+			}
 
 			// Sibling classes
 			if (!klass.AssemblyQualifiedName.Contains ('/')) {
@@ -96,6 +100,7 @@ namespace generator.SourceWriters
 			AddMethods (klass, opt, context);
 			AddAbstractMembers (klass, opt, context);
 			AddExplicitGenericInterfaceMembers (klass, opt);
+			KotlinDefaultArguments.AddMethods (this, klass, opt, context);
 			AddCharSequenceEnumerator (klass);
 
 			context.ContextGeneratedMethods.Clear ();
@@ -104,7 +109,10 @@ namespace generator.SourceWriters
 
 		void AddBindingInfrastructure (ClassGen klass, CodeGenerationOptions opt)
 		{
-			Fields.Add (new PeerMembersField (opt, klass.RawJniName, klass.Name, false));
+			var membersField = new PeerMembersField (opt, klass.RawJniName, klass.Name, false) {
+				IsShadow = klass.HasEnclosingAncestor (opt),
+			};
+			Fields.Add (membersField);
 
 			if (klass.BaseGen != null && klass.InheritsObject) {
 				Properties.Add (new JniPeerMembersGetter ());
@@ -156,13 +164,18 @@ namespace generator.SourceWriters
 				if (ctor.Parameters.HasCharSequence && !klass.ContainsCtor (ctor.JniSignature.Replace ("java/lang/CharSequence", "java/lang/String")))
 					Constructors.Add (new StringOverloadConstructor(klass, ctor, klass.InheritsObject, opt, context));
 			}
+
+			KotlinDefaultArguments.AddConstructors (this, klass, opt, context);
 		}
 
 		void AddCharSequenceEnumerator (ClassGen klass)
 		{
 			if (klass.Interfaces.Any (p => p.FullName == "Java.Lang.ICharSequence")) {
 				Methods.Add (new CharSequenceEnumeratorMethod ());
-				Methods.Add (new CharSequenceGenericEnumeratorMethod ());
+				var genericEnum = new CharSequenceGenericEnumeratorMethod {
+					IsShadow = klass.RequiresNewForMethod ("GetEnumerator", [], opt),
+				};
+				Methods.Add (genericEnum);
 			}
 		}
 
@@ -256,24 +269,7 @@ namespace generator.SourceWriters
 
 		void AddMethods (ClassGen klass, CodeGenerationOptions opt, CodeGeneratorContext context)
 		{
-			var methodsToDeclare = klass.Methods.AsEnumerable ();
-
-			// This does not exclude overrides (unlike virtual methods) because we're not sure
-			// if calling the base interface default method via JNI expectedly dispatches to
-			// the derived method.
-			var defaultMethods = klass.GetAllDerivedInterfaces ()
-				.SelectMany (i => i.Methods)
-				.Where (m => m.IsInterfaceDefaultMethod)
-				.Where (m => !klass.ContainsMethod (m, false, false));
-
-			var overrides = defaultMethods.Where (m => m.OverriddenInterfaceMethod != null);
-
-			var overridens = defaultMethods.Where (m => overrides.Where (_ => _.Name == m.Name && _.JniSignature == m.JniSignature)
-				.Any (mm => mm.DeclaringType.GetAllDerivedInterfaces ().Contains (m.DeclaringType)));
-
-			methodsToDeclare = opt.SupportDefaultInterfaceMethods ? methodsToDeclare : methodsToDeclare.Concat (defaultMethods.Except (overridens)).Where (m => m.DeclaringType.IsGeneratable);
-
-			foreach (var m in methodsToDeclare) {
+			foreach (var m in klass.GetMethodsToDeclare (opt)) {
 				var virt = m.IsVirtual;
 				m.IsVirtual = !klass.IsFinal && virt;
 
@@ -300,11 +296,11 @@ namespace generator.SourceWriters
 		{
 			Methods.Add (new BoundMethodAbstractDeclaration (iface, method, opt, klass));
 
-			if (method.IsReturnCharSequence || method.Parameters.HasCharSequence)
-				Methods.Add (new BoundMethodStringOverload (method, opt));
+			if (klass.MethodEmitsStringOverload (method, isAbstractDecl: true))
+				Methods.Add (new BoundMethodStringOverload (method, opt, klass));
 
 			if (method.Asyncify)
-				Methods.Add (new MethodAsyncWrapper (method, opt));
+				Methods.Add (new MethodAsyncWrapper (method, opt, klass));
 		}
 
 		void AddMethod (GenBase klass, Method method, CodeGenerationOptions opt)
@@ -314,14 +310,11 @@ namespace generator.SourceWriters
 
 			Methods.Add (new BoundMethod(klass, method, opt, true));
 
-			var name_and_jnisig = method.JavaName + method.JniSignature.Replace ("java/lang/CharSequence", "java/lang/String");
-			var gen_string_overload = !method.IsOverride && method.Parameters.HasCharSequence && !klass.ContainsMethod (name_and_jnisig);
-
-			if (gen_string_overload  || method.IsReturnCharSequence)
-				Methods.Add (new BoundMethodStringOverload (method, opt));
+			if (klass.MethodEmitsStringOverload (method))
+				Methods.Add (new BoundMethodStringOverload (method, opt, klass));
 
 			if (method.Asyncify)
-				Methods.Add (new MethodAsyncWrapper (method, opt));
+				Methods.Add (new MethodAsyncWrapper (method, opt, klass));
 		}
 
 		void AddProperties (ClassGen klass, CodeGenerationOptions opt)
@@ -353,12 +346,13 @@ namespace generator.SourceWriters
 			Properties.Add (bound_property);
 
 			if (property.Type.StartsWith ("Java.Lang.ICharSequence", StringComparison.Ordinal) && !bound_property.IsOverride)
-				Properties.Add (new BoundPropertyStringVariant (property, opt, bound_property));
+				Properties.Add (new BoundPropertyStringVariant (property, opt, bound_property, klass));
 		}
 
 		void AddAbstractPropertyDeclaration (ClassGen klass, Property property, CodeGenerationOptions opt)
 		{
-			var baseProp = klass.BaseSymbol?.GetPropertyByName (property.Name, true);
+			var isForcedNew = string.Equals ((property.Getter ?? property.Setter).ManagedOverride, "new", StringComparison.OrdinalIgnoreCase);
+			var baseProp = isForcedNew ? null : klass.BaseSymbol?.GetPropertyByName (property.Name, true);
 
 			if (baseProp != null) {
 				if (baseProp.Type != property.Getter.Return) {
@@ -372,16 +366,35 @@ namespace generator.SourceWriters
 			Properties.Add (bound_property);
 
 			if (property.Type.StartsWith ("Java.Lang.ICharSequence", StringComparison.Ordinal))
-				Properties.Add (new BoundPropertyStringVariant (property, opt, bound_property));
+				Properties.Add (new BoundPropertyStringVariant (property, opt, bound_property, klass));
 		}
 
 		void AddNestedTypes (ClassGen klass, CodeGenerationOptions opt, CodeGeneratorContext context, GenerationInfo genInfo)
 		{
 			foreach (var nest in klass.NestedTypes) {
-				if (klass.BaseGen?.ContainsNestedType (nest) == true && nest is ClassGen c)
-					c.NeedsNew = true;
+				var nestedWriter = SourceWriterExtensions.BuildManagedTypeModel (nest, opt, context, genInfo);
+				if (klass.RequiresNewForMemberName (nestedWriter.Name, opt))
+					nestedWriter.IsShadow = true;
 
-				NestedTypes.Add (SourceWriterExtensions.BuildManagedTypeModel (nest, opt, context, genInfo));
+				if (nestedWriter is BoundClass nestedClass) {
+					foreach (var sibling in nestedClass.SiblingTypes) {
+						if (klass.RequiresNewForMemberName (sibling.Name, opt))
+							sibling.IsShadow = true;
+					}
+				} else if (nestedWriter is BoundInterface nestedIface) {
+					foreach (var sibling in nestedIface.PreSiblingTypes) {
+						if (klass.RequiresNewForMemberName (sibling.Name, opt))
+							sibling.IsShadow = true;
+					}
+					foreach (var sibling in nestedIface.PostSiblingTypes) {
+						if (sibling is TypeWriter tw && klass.RequiresNewForMemberName (tw.Name, opt))
+							tw.IsShadow = true;
+						else if (sibling is DelegateWriter dw && klass.RequiresNewForMemberName (dw.Name, opt))
+							dw.IsShadow = true;
+					}
+				}
+
+				NestedTypes.Add (nestedWriter);
 			}
 		}
 

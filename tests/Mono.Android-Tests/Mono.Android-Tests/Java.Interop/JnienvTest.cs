@@ -5,6 +5,7 @@ using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Threading;
+using System.Threading.Tasks;
 
 using Android.App;
 using Android.Graphics;
@@ -21,6 +22,13 @@ namespace Java.InteropTests
 	[TestClass]
 	public class JnienvTest
 	{
+		readonly TestContext testContext;
+
+		public JnienvTest (TestContext testContext)
+		{
+			this.testContext = testContext;
+		}
+
 		[TestMethod]
 		[TestCategory ("JniStringLength")]
 		public void NewStringValidatesLengthAndSupportsPrefix ()
@@ -38,11 +46,12 @@ namespace Java.InteropTests
 		[TestMethod]
 		public void TestMyPaintColor ()
 		{
-			using (var p = new MyPaint ()) {
-				var g = JNIEnv.GetMethodID(p.Class.Handle, "getColor", "()I");
-				int c = JNIEnv.CallIntMethod(p.Handle, g);
+			using (var p = new MyPaint ())
+			using (var klass = p.Class) {
+				var g = JNIEnv.GetMethodID (klass.Handle, "getColor", "()I");
+				int c = JNIEnv.CallIntMethod (p.Handle, g);
 				Assert.AreEqual (0x11223344, c);
-				var s = JNIEnv.GetMethodID(p.Class.Handle, "setColor", "(I)V");
+				var s = JNIEnv.GetMethodID (klass.Handle, "setColor", "(I)V");
 				JNIEnv.CallVoidMethod (p.Handle, s, new JValue (0x22331144));
 				Assert.AreEqual (0x22331144, p.LastSetColor.ToArgb ());
 			}
@@ -62,13 +71,17 @@ namespace Java.InteropTests
 #pragma warning restore CA1422
 		}
 
+		/// <safety>
+		/// class_loader must remain a live JNI global reference until the native worker has joined.
+		/// </safety>
 		[DllImport ("reuse-threads")]
-		static extern int rt_register_type_on_new_thread (string java_type_namem, IntPtr class_loader);
+		static unsafe extern int rt_register_type_on_new_thread (string java_type_namem, IntPtr class_loader);
 
 		delegate void CB (IntPtr jnienv, IntPtr java_instance);
 
+		// The native fixture joins the worker before returning; the marshaled callback never outlives this call.
 		[DllImport ("reuse-threads")]
-		static extern int rt_invoke_callback_on_new_thread (CB cb);
+		static safe extern int rt_invoke_callback_on_new_thread (CB cb);
 
 		[TestMethod]
 		public void RegisterTypeOnNewNativeThread ()
@@ -76,7 +89,8 @@ namespace Java.InteropTests
 			var classLoader = Application.Context.ClassLoader;
 			if (classLoader == null)
 				throw new AssertFailedException ("Application context has no class loader");
-			int ret = rt_register_type_on_new_thread ("from.NewNativeThreadOne", classLoader.Handle);
+			// SAFETY: classLoader owns the global reference through the synchronous native worker join.
+			int ret = unsafe (rt_register_type_on_new_thread ("from.NewNativeThreadOne", classLoader.Handle));
 			GC.KeepAlive (classLoader);
 			Assert.AreEqual (0, ret, $"Java type registration on a new thread failed with code {ret}");
 		}
@@ -176,7 +190,10 @@ namespace Java.InteropTests
 		{
 			try {
 				var lrefInstance = JNIEnv.AllocObject (typeof (JniEnvGenericHolder<>));
-				JNIEnv.FinishCreateInstance (lrefInstance, "()V"u8);
+				// SAFETY: The literal is terminated and the allocated local peer takes no arguments.
+				unsafe {
+					JNIEnv.FinishCreateInstance (lrefInstance, "()V"u8);
+				}
 				Assert.Fail ("SHOULD NOT BE REACHED: creation of open generic types is not supported");
 			} catch (NotSupportedException) {
 			}
@@ -209,8 +226,9 @@ namespace Java.InteropTests
 			// The element type only reaches the runtime as a Type through GetArray<T>, so nothing statically keeps
 			// its (IntPtr, JniHandleOwnership) constructor: the generated proxy for the open generic definition must.
 			IntPtr array;
-			using (var element = new T ()) {
-				array = JNIEnv.NewObjectArray (1, element.Class.Handle, element.Handle);
+			using (var element = new T ())
+			using (var klass = element.Class) {
+				array = JNIEnv.NewObjectArray (1, klass.Handle, element.Handle);
 			}
 			try {
 				var items = JNIEnv.GetArray<T> (array);
@@ -383,8 +401,9 @@ namespace Java.InteropTests
 		[TestMethod]
 		public void SetField_PermitNullValues ()
 		{
-			using (var resource = new Intent.ShortcutIconResource ()) {
-				var f = JNIEnv.GetFieldID (resource.Class.Handle, "packageName", "Ljava/lang/String;");
+			using (var resource = new Intent.ShortcutIconResource ())
+			using (var klass = resource.Class) {
+				var f = JNIEnv.GetFieldID (klass.Handle, "packageName", "Ljava/lang/String;");
 				Console.WriteLine ("# f=0x{0}", f.ToString ("x"));
 				resource.PackageName = null;
 				Assert.AreEqual (null, resource.PackageName);
@@ -394,10 +413,11 @@ namespace Java.InteropTests
 		[TestMethod, TestCategory ("Export")]
 		public void CreateTypeWithExportedMethods ()
 		{
-			using (var e = new ContainsExportedMethods ()) {
+			using (var e = new ContainsExportedMethods ())
+			using (var klass = e.Class) {
 				e.Exported ();
 				Assert.AreEqual (1, e.Count);
-				IntPtr m = JNIEnv.GetMethodID (e.Class.Handle, "Exported", "()V");
+				IntPtr m = JNIEnv.GetMethodID (klass.Handle, "Exported", "()V");
 				JNIEnv.CallVoidMethod (e.Handle, m);
 				Assert.AreEqual (2, e.Count);
 			}
@@ -678,50 +698,44 @@ namespace Java.InteropTests
 		}
 
 		[TestMethod, TestCategory ("GCBridge")]
-		[Ignore ("Failing in NativeAOT: https://github.com/dotnet/android/issues/11690")]
-#pragma warning disable CS0618 // The wrapper filters live peers and creates weak-reference snapshots; this GC test intentionally retains its existing semantics.
-		public void DoNotLeakWeakReferences ()
+		[Timeout (60_000, CooperativeCancellation = true)]
+#pragma warning disable CS0618 // Exercise the weak-reference snapshots returned by this legacy API.
+		public async Task DoNotLeakWeakReferences ()
 		{
-			GC.Collect ();
-			GC.WaitForPendingFinalizers ();
-
-			var surfaced    = Runtime.GetSurfacedObjects ();
-			int startCount  = surfaced.Count;
-
-			Assert.IsTrue (surfaced.All (s => s.Target != null), "#1");
-
-			// `Runtime.GetSurfacedObjects()` is process-global: NUnit/MTP
-			// infrastructure (per-test TestExecutionContext, listeners, Console
-			// capture, etc.) creates and releases transient Java.Lang.Object
-			// peers around every test, so the count drifts by a few entries
-			// between the snapshots below. Allow a small tolerance instead of
-			// requiring an exact count -- a real leak would dwarf this.
-			const int tolerance = 10;
-
-			WeakReference? r = null;
+			WeakReference? surfacedPeer = null;
+			JniObjectReference weakPeer = default;
 			Exception? threadException = null;
 			var t = new Thread (() => {
+				MyCb? peer = null;
 				try {
-					var c = new MyCb ();
-					Assert.AreEqual ((double) (startCount + 1), (double) (Runtime.GetSurfacedObjects ().Count), (double) (tolerance), "#2");
-					r = new WeakReference (c);
+					peer = new MyCb ();
+					foreach (var reference in Runtime.GetSurfacedObjects ()) {
+						if (ReferenceEquals (reference.Target, peer)) {
+							Assert.IsNull (surfacedPeer, "The peer should be surfaced only once.");
+							surfacedPeer = reference;
+						}
+					}
+					Assert.IsNotNull (surfacedPeer, "The new peer should be surfaced.");
+					weakPeer = peer.PeerReference.NewWeakGlobalRef ();
+					GC.KeepAlive (peer);
 				} catch (Exception e) {
+					peer?.Dispose ();
 					threadException = e;
 				}
 			});
-			t.Start ();
-			t.Join ();
-			if (threadException != null)
-				throw new Exception ("Worker thread failed", threadException);
+			try {
+				t.Start ();
+				t.Join ();
+				if (threadException != null)
+					throw new Exception ("Worker thread failed", threadException);
 
-			GC.Collect ();
-			GC.WaitForPendingFinalizers ();
-			GC.Collect ();
-			GC.WaitForPendingFinalizers ();
-
-			surfaced  = Runtime.GetSurfacedObjects ();
-			Assert.AreEqual ((double) (startCount), (double) (surfaced.Count), (double) (tolerance), "#3");
-			Assert.IsTrue (surfaced.All (s => s.Target != null), "#4");
+				var reference = surfacedPeer ?? throw new AssertFailedException ("The peer was not surfaced.");
+				await GCBridgeTestHelpers.CollectUnreachablePeersAsync (testContext.CancellationToken);
+				Assert.IsNull (reference.Target, "The surfaced weak reference must not keep the peer alive.");
+				Assert.IsNull (JniEnvironment.Runtime.ValueManager.PeekPeer (weakPeer), "The collected peer must not be returned by the registry.");
+			} finally {
+				JniObjectReference.Dispose (ref weakPeer);
+			}
 		}
 #pragma warning restore CS0618
 	}

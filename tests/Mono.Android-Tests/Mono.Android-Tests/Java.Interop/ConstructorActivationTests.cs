@@ -43,7 +43,10 @@ namespace Java.InteropTests
 			// Keep it through peer assertions/disposal; finally deletes it even if initialization throws.
 			var handle = JNIEnv.AllocObject (typeof (ConstructorActivationJavaException));
 			try {
-				JNIEnv.FinishCreateInstance (handle, "()V"u8);
+				// SAFETY: The literal has terminated backing storage and the owned local peer takes no arguments.
+				unsafe {
+					JNIEnv.FinishCreateInstance (handle, "()V"u8);
+				}
 				var reference = new JniObjectReference (handle);
 				using var instance = JniEnvironment.Runtime.ValueManager.PeekPeer (reference) as ConstructorActivationJavaException;
 				Assert.IsNotNull (instance, "Java construction must activate and register the managed constructor.");
@@ -131,7 +134,10 @@ namespace Java.InteropTests
 				var peer = (IJavaPeerable) instance;
 				peer.SetJniManagedPeerState (instance.JniManagedPeerState | JniManagedPeerStates.Activatable | JniManagedPeerStates.Replaceable);
 
-				JNIEnv.FinishCreateInstance (instance.Handle, "()V"u8);
+				// SAFETY: The literal is terminated and the live peer's constructor takes no arguments.
+				unsafe {
+					JNIEnv.FinishCreateInstance (instance.Handle, "()V"u8);
+				}
 
 				Assert.AreEqual (2, ConstructorActivationDefault.ConstructorInvocations);
 				Assert.AreEqual (2, instance.ConstructorOrdinal);

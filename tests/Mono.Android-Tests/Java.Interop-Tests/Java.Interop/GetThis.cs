@@ -21,9 +21,10 @@ namespace Java.InteropTests
 		{
 		}
 
-		public unsafe GetThis This {
+		public GetThis This {
 			get {
-				var o   = _members.InstanceMethods.InvokeNonvirtualObjectMethod ("getThis.()Lnet/dot/jni/test/GetThis;", this, null);
+				// SAFETY: getThis takes no arguments; this owns the receiver peer.
+				var o   = unsafe (_members.InstanceMethods.InvokeNonvirtualObjectMethod ("getThis.()Lnet/dot/jni/test/GetThis;", this, null));
 				return JniEnvironment.Runtime.ValueManager.GetValue<GetThis> (ref o, JniObjectReferenceOptions.CopyAndDispose);
 			}
 		}

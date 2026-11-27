@@ -4,7 +4,7 @@ using Mono.Cecil;
 #endif
 namespace Android.Runtime {
 
-	[AttributeUsage (AttributeTargets.Class | AttributeTargets.Constructor | AttributeTargets.Field | AttributeTargets.Interface | AttributeTargets.Method | AttributeTargets.Property)]
+	[AttributeUsage (AttributeTargets.Class | AttributeTargets.Constructor | AttributeTargets.Field | AttributeTargets.Interface | AttributeTargets.Method | AttributeTargets.Property | AttributeTargets.Struct)]
 #if !JCW_ONLY_TYPE_NAMES
 	public
 #endif  // !JCW_ONLY_TYPE_NAMES

@@ -16,6 +16,7 @@ using Xamarin.Android.RuntimeTests;
 namespace Java.InteropTests
 {
 	[TestClass]
+	[TestCategory ("JavaConvert")]
 	public class JavaConvertTest
 	{
 		[TestMethod]
@@ -598,6 +599,55 @@ namespace Java.InteropTests
 			}
 		}
 
+		// Cover conversion and constructor mapping for a reference key and value-type value.
+		[TestMethod]
+		[TestCategory ("NativeAOTTrimmable")]
+		public void FromJniHandle_IDictionaryStringInt32 ()
+		{
+			using (var source = new JavaDictionary ()) {
+				source.Add ("one", 1);
+				source.Add ("two", 2);
+
+				var converted = InvokeJavaConvertFromJniHandle (typeof (IDictionary<string, int>), source.Handle, JniHandleOwnership.DoNotTransfer);
+				try {
+					var convertedType = converted.GetType ();
+					Assert.AreEqual (typeof (JavaDictionary<,>), convertedType.GetGenericTypeDefinition ());
+					CollectionAssert.AreEqual (new [] { typeof (string), typeof (int) }, convertedType.GetGenericArguments ());
+
+					var dictionary = (IDictionary<string, int>) converted;
+					Assert.AreEqual (1, dictionary ["one"]);
+					Assert.AreEqual (2, dictionary ["two"]);
+				} finally {
+					(converted as IDisposable)?.Dispose ();
+				}
+			}
+		}
+
+		// JavaDictionaryTest independently roots the reference-key int template;
+		// keep the bool? wrapper open to exercise the mixed-key exemplar instead.
+		[TestMethod]
+		[TestCategory ("NativeAOTTrimmable")]
+		public void FromJniHandle_IDictionaryStringNullableBoolean ()
+		{
+			using (var source = new JavaDictionary ()) {
+				source.Add ("present", true);
+				source.Add ("null", null);
+
+				var converted = InvokeJavaConvertFromJniHandle (typeof (IDictionary<string, bool?>), source.Handle, JniHandleOwnership.DoNotTransfer);
+				try {
+					var convertedType = converted.GetType ();
+					Assert.AreEqual (typeof (JavaDictionary<,>), convertedType.GetGenericTypeDefinition ());
+					CollectionAssert.AreEqual (new [] { typeof (string), typeof (bool?) }, convertedType.GetGenericArguments ());
+
+					var dictionary = (IDictionary<string, bool?>) converted;
+					Assert.AreEqual ((bool?) true, dictionary ["present"]);
+					Assert.IsNull (dictionary ["null"]);
+				} finally {
+					(converted as IDisposable)?.Dispose ();
+				}
+			}
+		}
+
 		// The non-generic source and assertions intentionally avoid referencing
 		// JavaDictionary<int, long>, so NativeAOT must root that exact wrapper through
 		// the hand-written value-type dictionary universe.
@@ -683,6 +733,7 @@ namespace Java.InteropTests
 		// Keep the expected wrapper types open so NativeAOT must construct the closed reference-type
 		// wrappers through SafeJavaCollectionFactory's rooted canonical templates.
 		[TestMethod]
+		[TestCategory ("NativeAOTTrimmable")]
 		[DataRow (typeof (IList<string>), typeof (JavaList<>), false)]
 		[DataRow (typeof (ICollection<string>), typeof (JavaCollection<>), false)]
 		[DataRow (typeof (IDictionary<string, string>), typeof (JavaDictionary<,>), true)]
@@ -798,7 +849,8 @@ namespace Java.InteropTests
 			[DynamicallyAccessedMembers (DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.NonPublicConstructors)]
 			Type targetType, IntPtr handle, JniHandleOwnership transfer)
 		{
-			var value = JavaConvert.FromJniHandle (handle, transfer, targetType);
+			// SAFETY: Each test retains its source wrapper in a using scope and passes DoNotTransfer.
+			var value = unsafe (JavaConvert.FromJniHandle (handle, transfer, targetType));
 			Assert.IsNotNull (value);
 			return value;
 		}

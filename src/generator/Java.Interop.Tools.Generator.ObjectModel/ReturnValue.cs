@@ -16,6 +16,7 @@ namespace MonoDroid.Generation {
 		string raw_type;
 		bool is_enumified;
 		Method owner;
+		bool unboxed_kotlin_inline_class;
 
 		public ReturnValue (Method owner, string java_type, string managed_type, bool isEnumified, bool notNull)
 		{
@@ -28,9 +29,14 @@ namespace MonoDroid.Generation {
 
 		public string CallMethodPrefix => TypeNameUtilities.GetCallPrefix (sym);
 
+		// A Kotlin value class projected as a struct, either unboxed (`Foo`) or boxed (`Foo?`).
+		public bool IsKotlinInlineClass => sym is KotlinInlineClassBoxedSymbol || !string.IsNullOrEmpty (owner?.KotlinInlineClassReturnJniType);
+
 		public ReturnValue Clone (Method owner)
 		{
-			return new ReturnValue (owner, java_type, managed_type, is_enumified, NotNull);
+			return new ReturnValue (owner, java_type, managed_type, is_enumified, NotNull) {
+				unboxed_kotlin_inline_class = unboxed_kotlin_inline_class,
+			};
 		}
 
 		public string DefaultValue {
@@ -99,6 +105,8 @@ namespace MonoDroid.Generation {
 
 		public string FromNative (CodeGenerationOptions opt, string var_name, bool owned, bool isMarshal = false)
 		{
+			if (unboxed_kotlin_inline_class)
+				return $"{opt.GetOutputName (managed_type)}.FromJniValue ({sym.FromNative (opt, var_name, owned, isMarshal)})";
 			if (!string.IsNullOrEmpty (managed_type) && (sym is ClassGen || sym is InterfaceGen)) {
 				return string.Format ("global::Java.Lang.Object.GetObject<{0}> ({1}, {2})", 
 				                      opt.GetOutputName (managed_type), var_name, owned ? "JniHandleOwnership.TransferLocalRef" : "JniHandleOwnership.DoNotTransfer");
@@ -146,15 +154,20 @@ namespace MonoDroid.Generation {
 		void ApplyKotlinInlineClassProjection (CodeGenerationOptions opt, GenericParameterDefinitionList type_params)
 		{
 			var jni = owner?.KotlinInlineClassReturnJniType;
-			if (string.IsNullOrEmpty (jni))
+			if (string.IsNullOrEmpty (jni)) {
+				// The JVM returns a nullable value class (Kotlin `Foo?`) boxed; project it as the struct `Foo?`.
+				if (sym is ClassGen { IsKotlinInlineClass: true } gen)
+					sym = new KotlinInlineClassBoxedSymbol (gen);
 				return;
+			}
 			var javaName = TypeNameUtilities.JniSignatureToJavaTypeName (jni);
 			if (javaName == null)
 				return;
 			var wrapper = opt.SymbolTable.Lookup (javaName, type_params) as ClassGen;
-			if (wrapper == null || !wrapper.IsKotlinInlineClass)
+			if (wrapper == null || !wrapper.IsKotlinInlineClassOf (opt, sym))
 				return;
 			managed_type = wrapper.FullName;
+			unboxed_kotlin_inline_class = true;
 			NotNull = true;
 		}
 	}

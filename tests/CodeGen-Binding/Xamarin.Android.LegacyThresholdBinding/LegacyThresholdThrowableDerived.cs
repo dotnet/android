@@ -22,7 +22,7 @@ namespace Xamarin.Android.LegacyThresholdBinding {
 		{
 		}
 
-		public unsafe LegacyThresholdThrowableDerived ()
+		public LegacyThresholdThrowableDerived ()
 			: base (IntPtr.Zero, JniHandleOwnership.DoNotTransfer)
 		{
 			const string id = "()V";
@@ -32,7 +32,10 @@ namespace Xamarin.Android.LegacyThresholdBinding {
 
 			var reference = _members.InstanceMethods.StartCreateInstance (id, GetType (), null);
 			SetHandle (reference.Handle, JniHandleOwnership.TransferLocalRef);
-			_members.InstanceMethods.FinishCreateInstance (id, this, null);
+			// SAFETY: The ()V constructor takes no arguments; this owns the new peer.
+			unsafe {
+				_members.InstanceMethods.FinishCreateInstance (id, this, null);
+			}
 		}
 
 		public bool DerivedMethodInvoked => _members.InstanceFields.GetBooleanValue ("derivedMethodInvoked.Z", this);

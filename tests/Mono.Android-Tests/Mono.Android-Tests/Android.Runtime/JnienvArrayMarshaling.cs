@@ -635,11 +635,12 @@ namespace Android.RuntimeTests {
 			}
 		}
 
-		static unsafe Java.Interop.JniObjectReference CreateTrimmableRuntimeJavaInteropPeerReference ()
+		static Java.Interop.JniObjectReference CreateTrimmableRuntimeJavaInteropPeerReference ()
 		{
 			using var type = new Java.Interop.JniType ("net/dot/android/test/TrimmableRuntimeJavaInteropPeer");
 			var constructor = type.GetConstructor ("()V");
-			var localReference = type.NewObject (constructor, null);
+			// SAFETY: constructor belongs to the live type and takes no arguments.
+			var localReference = unsafe (type.NewObject (constructor, null));
 			var reference = localReference.NewGlobalRef ();
 			Java.Interop.JniObjectReference.Dispose (ref localReference);
 			return reference;

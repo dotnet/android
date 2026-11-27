@@ -77,6 +77,7 @@ namespace Xamarin.Android.RuntimeTests {
 		}
 
 		[TestMethod]
+		[TestCategory ("JniLocalReferenceAccounting")]
 		[DataRow (false)]
 		[DataRow (true)]
 		public void ManagedExceptionRoundTripPreservesIdentity (bool directThrow)
@@ -98,6 +99,7 @@ namespace Xamarin.Android.RuntimeTests {
 		}
 
 		[TestMethod]
+		[TestCategory ("JniLocalReferenceAccounting")]
 		[DataRow (false)]
 		[DataRow (true)]
 		public void JavaThrowableRoundTripPreservesIdentity (bool directThrow)
@@ -115,15 +117,18 @@ namespace Xamarin.Android.RuntimeTests {
 		}
 
 		[TestMethod]
-		public unsafe void UnregisteredJavaThrowableCreatesAndroidException ()
+		public void UnregisteredJavaThrowableCreatesAndroidException ()
 		{
 			using var type = new JniType ("java/lang/IllegalStateException");
 			var message = JniEnvironment.Strings.NewString ("unregistered throwable");
 			JniObjectReference reference = default;
 			try {
-				JniArgumentValue* arguments = stackalloc JniArgumentValue [1];
-				arguments [0] = new JniArgumentValue (message);
-				reference = type.NewObject (type.GetConstructor ("(Ljava/lang/String;)V"), arguments);
+				// SAFETY: The one-element stack buffer and live string reference match the constructor.
+				unsafe {
+					JniArgumentValue* arguments = stackalloc JniArgumentValue [1];
+					arguments [0] = new JniArgumentValue (message);
+					reference = type.NewObject (type.GetConstructor ("(Ljava/lang/String;)V"), arguments);
+				}
 				Assert.IsNull (JniEnvironment.Runtime.ValueManager.PeekPeer (reference));
 				var actual = JniEnvironment.Runtime.GetExceptionForThrowable (
 					ref reference, JniObjectReferenceOptions.CopyAndDispose);

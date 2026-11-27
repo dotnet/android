@@ -18,8 +18,6 @@
 
   <PropertyGroup>
     <TargetFramework>$(TargetFrameworkNETStandard)</TargetFramework>
-    <LangVersion>preview</LangVersion>
-    <MemorySafetyRulesVersion>2</MemorySafetyRulesVersion>
     <RootNamespace>Xamarin.Android.Tools</RootNamespace>
     <SignAssembly>true</SignAssembly>
     <AssemblyOriginatorKeyFile>..\..\product.snk</AssemblyOriginatorKeyFile>

@@ -85,6 +85,12 @@ public sealed record JavaPeerInfo
 	public bool DoNotGenerateAcw { get; init; }
 
 	/// <summary>
+	/// True for a Kotlin value-class struct. It has no proxy; its typemap entry only lets
+	/// R8 keep the Kotlin class when the struct survives trimming.
+	/// </summary>
+	public bool IsKotlinValueClass { get; init; }
+
+	/// <summary>
 	/// True when the type was discovered via <c>[JniTypeSignatureAttribute]</c>
 	/// rather than <c>[RegisterAttribute]</c>.  Used to resolve cross-assembly
 	/// alias ownership: <c>[Register]</c> types take precedence.

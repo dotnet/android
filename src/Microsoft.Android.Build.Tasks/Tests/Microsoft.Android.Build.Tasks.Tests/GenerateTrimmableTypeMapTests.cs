@@ -96,8 +96,8 @@ namespace Xamarin.Android.Build.Tests {
 			[Values] bool inherited,
 			[Values (ActivationCtorStyle.XamarinAndroid, ActivationCtorStyle.JavaInterop)] ActivationCtorStyle style)
 		{
-			// TrimmableTypeMap.CreateInstance () activates closed instantiations of an open generic peer by reflecting
-			// over the leaf type's (IntPtr, JniHandleOwnership) constructor, so the generated proxy must keep it.
+			// JavaPeerProxy activates closed instantiations of an open generic peer through the leaf type's
+			// (IntPtr, JniHandleOwnership) constructor, so the generated proxy must keep it.
 			string managedTypeName = generic ? "Example.Peer`1" : "Example.Peer";
 			string declaringTypeName = inherited ? "Example.BasePeer" : managedTypeName;
 			var peer = new JavaPeerInfo {
@@ -129,18 +129,22 @@ namespace Xamarin.Android.Build.Tests {
 			using var assembly = Mono.Cecil.AssemblyDefinition.ReadAssembly (stream);
 
 			var proxyType = assembly.MainModule.Types.Single (type => type.Name == model.ProxyTypes.Single ().TypeName);
-			var dependencies = proxyType.Methods.Single (method => method.Name == "CreateInstance").CustomAttributes
-				.Where (attribute => attribute.AttributeType.FullName == "System.Diagnostics.CodeAnalysis.DynamicDependencyAttribute")
-				.ToList ();
+			var overrides = proxyType.Methods.Where (method => method.Name == "GetGenericTargetTypeDefinition").ToList ();
 			if (!generic || inherited || style != ActivationCtorStyle.XamarinAndroid) {
-				Assert.IsEmpty (dependencies, "Only leaf activation constructors of open generic peers are activated by reflection.");
+				Assert.IsEmpty (overrides, "Only leaf activation constructors of open generic peers are activated through the generic definition.");
 				return;
 			}
 
-			Assert.AreEqual (1, dependencies.Count, "CreateInstance must keep the open generic peer's activation constructor.");
-			var dependency = dependencies [0];
-			Assert.AreEqual ("#ctor(System.IntPtr,Android.Runtime.JniHandleOwnership)", dependency.ConstructorArguments [0].Value);
-			var target = (Mono.Cecil.TypeReference) dependency.ConstructorArguments [1].Value;
+			var method = overrides.Single ();
+			Assert.IsTrue (method.IsFamily && method.IsVirtual && method.IsReuseSlot, "The method must override the protected base method.");
+			Assert.AreEqual ("System.Type", method.ReturnType.FullName);
+
+			var annotation = method.MethodReturnType.CustomAttributes.Single ();
+			Assert.AreEqual ("System.Diagnostics.CodeAnalysis.DynamicallyAccessedMembersAttribute", annotation.AttributeType.FullName);
+			Assert.AreEqual ("System.Diagnostics.CodeAnalysis.DynamicallyAccessedMemberTypes", annotation.ConstructorArguments [0].Type.FullName);
+			Assert.AreEqual (0x0003 | 0x0004, annotation.ConstructorArguments [0].Value, "PublicConstructors | NonPublicConstructors");
+
+			var target = (Mono.Cecil.TypeReference) method.Body.Instructions.Single (i => i.OpCode == Mono.Cecil.Cil.OpCodes.Ldtoken).Operand;
 			Assert.AreEqual ("Example.Peer`1", target.FullName);
 			Assert.AreEqual ("Example", target.Scope.Name);
 		}

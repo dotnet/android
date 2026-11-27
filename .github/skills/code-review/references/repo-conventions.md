@@ -73,8 +73,8 @@ and merge conflicts.
 
 | Check | What to look for |
 |-------|-----------------|
-| **JNI reference lifecycle** | Every `JniObjectReference` must be properly disposed via `try`/`finally` or `using`. Local references are cleaned up by the JVM at JNI frame boundaries, but explicit cleanup prevents local-reference-table exhaustion in loops. |
-| **Use `JniTransition` for exception marshaling** | Native callbacks into managed code should use `JniTransition` to properly handle exception marshaling between Java and C#. |
+| **JNI reference lifecycle** | Release owned `JniObjectReference` instances at the correct boundary; don't dispose borrowed references or release transferred ownership twice. Explicit cleanup of owned local references prevents local-reference-table exhaustion in loops. |
+| **JNI transitions for native callbacks** | Generated callbacks use `JniMarshal.SafeInvokeAction`/`SafeInvokeFunc` or typed helpers to handle transitions and exceptions. |
 | **`JniPeerMembers` caching** | Method and field IDs should be accessed via `JniPeerMembers` for efficient caching. Don't look up method IDs on every call. |
 | **`[Register]` attribute correctness** | `[Register]` attributes must match the Java method signature exactly. Mismatches cause runtime `NoSuchMethodError`. |
 | **Trimmer/NativeAOT-aware reflection** | Reflection over managed types called from Java requires `[DynamicallyAccessedMembers]` annotations. `Type.GetType()` with assembly-qualified names breaks under trimming — prefer direct type references or typemap lookups. |

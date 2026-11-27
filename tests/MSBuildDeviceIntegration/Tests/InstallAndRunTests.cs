@@ -836,7 +836,8 @@ static int InvokeIntMethod (Java.Lang.Object instance, string methodName)
 			var dotnet = new DotNetCLI (Path.Combine (Root, builder.ProjectDirectory, proj.ProjectFilePath));
 
 			// Start dotnet watch which will build, deploy, and watch for changes
-			using var process = dotnet.StartWatch ();
+			var serial = RunAdbCommand ("get-serialno").Trim ();
+			using var process = dotnet.StartWatch (["--device", serial]);
 
 			var output = new StringBuilder ();
 			using var readerCts = new CancellationTokenSource ();
@@ -862,21 +863,20 @@ static int InvokeIntMethod (Java.Lang.Object instance, string methodName)
 				Assert.IsTrue (initialMessageEvent.Wait (TimeSpan.FromMinutes (5)),
 					$"Initial message '{initialMessage}' was not found in output. See {logPath} for details.");
 
-				// Give dotnet watch time to finish post-deploy setup and start its file watcher.
-				// There is no explicit "ready" signal from dotnet watch after deploy completes.
-				Thread.Sleep (5000);
-
-				// Modify the vanilla C# helper class (not the Java-interop MainActivity)
-				appHelperBody = $"""
-					Console.WriteLine ("{initialMessage}");
-					Console.WriteLine ("MODIFIED_LINE");
-					""";
-				proj.Touch ("AppHelper.cs");
 				builder.BuiltBefore = true; // dotnet watch will build, not builder.Build()
-				builder.Save (proj, doNotCleanupOnUpdate: true, saveProject: false);
+				// Watch may not be ready when the app launches. Retry the edit until it observes one.
+				for (int attempt = 0; attempt < 24 && !hotReloadAppliedEvent.IsSet; attempt++) {
+					appHelperBody = $"""
+						Console.WriteLine ("{initialMessage}");
+						Console.WriteLine ("MODIFIED_LINE_{attempt}");
+						""";
+					proj.Touch ("AppHelper.cs");
+					builder.Save (proj, doNotCleanupOnUpdate: true, saveProject: false);
+					hotReloadAppliedEvent.Wait (TimeSpan.FromSeconds (5));
+				}
 
 				// Wait for hot reload to apply (MetadataUpdateHandler fires Console.WriteLine)
-				Assert.IsTrue (hotReloadAppliedEvent.Wait (TimeSpan.FromMinutes (2)),
+				Assert.IsTrue (hotReloadAppliedEvent.IsSet,
 					$"Hot reload message '{hotReloadMessage}' was not found in output. See {logPath} for details.");
 			} finally {
 				// Ensure the process is stopped and its output reader has exited.
@@ -1046,7 +1046,8 @@ $@"button.ViewTreeObserver.GlobalLayout += Button_ViewTreeObserver_GlobalLayout;
 		[Test]
 		public void TabLayoutOnTabSelectedListener2_ShouldFire_OnActivityLaunch ()
 		{
-			const string expectedLogcatOutput = "OnTabSelected called!";
+			// The monitor checks buffered logcat before launching, so use a per-run marker.
+			var expectedLogcatOutput = $"OnTabSelected called! {Guid.NewGuid ():N}";
 
 			var proj = new XamarinAndroidApplicationProject {
 				PackageReferences = {
@@ -1073,7 +1074,7 @@ $@"button.ViewTreeObserver.GlobalLayout += Button_ViewTreeObserver_GlobalLayout;
 
 		public void OnTabSelected (TabLayout.Tab tab)
 		{
-			Android.Util.Log.Debug ("TabLayoutTest", "OnTabSelected called!");
+			Android.Util.Log.Info ("TabLayoutTest", "${EXPECTED_LOGCAT_OUTPUT}");
 		}
 
 		public void OnTabUnselected (TabLayout.Tab tab)
@@ -1082,16 +1083,19 @@ $@"button.ViewTreeObserver.GlobalLayout += Button_ViewTreeObserver_GlobalLayout;
 
 		public void OnTabReselected (TabLayout.Tab tab)
 		{
-""");
+""")
+				.Replace ("${EXPECTED_LOGCAT_OUTPUT}", expectedLogcatOutput, StringComparison.Ordinal);
 
 			builder = CreateApkBuilder (Path.Combine ("temp", "TabLayoutOnTabSelectedListener2"));
 			Assert.IsTrue (builder.Install (proj), "Install should have succeeded.");
 			ClearAdbLogcat ();
-			RunProjectAndAssert (proj, builder);
+			if (!MonitorAdbLogcat (line => line.Contains (expectedLogcatOutput, StringComparison.Ordinal),
+				Path.Combine (Root, builder.ProjectDirectory, "tab-selected-logcat.log"), ActivityStartTimeoutInSeconds,
+				onMonitoringStarted: () => RunProjectAndAssert (proj, builder, doNotCleanupOnUpdate: true))) {
+				Assert.Fail ($"Output did not contain {expectedLogcatOutput}!\n{RunAdbCommand ("logcat -d -s TabLayoutTest:I AndroidRuntime:V *:F")}");
+			}
 			Assert.IsTrue (WaitForActivityToStart (proj.PackageName, "MainActivity",
 				Path.Combine (Root, builder.ProjectDirectory, "startup-logcat.log"), ActivityStartTimeoutInSeconds), "Activity should have started.");
-			Assert.IsTrue (MonitorAdbLogcat (line => line.Contains (expectedLogcatOutput),
-				Path.Combine (Root, builder.ProjectDirectory, "tab-selected-logcat.log"), 60), $"Output did not contain {expectedLogcatOutput}!");
 		}
 
 		[Test]
@@ -2903,23 +2907,31 @@ CUSTOM_ENVIRONMENT_VALUE=custom",
 				EnableDefaultItems = true,
 			};
 			proj.SetRuntime (runtime);
-			proj.MainActivity = proj.DefaultMainActivity.Replace ("//${AFTER_ONCREATE}", """
-		Console.WriteLine ("#STACKTRACE-BEGIN#");
+			proj.SetDefaultTargetDevice ();
+			// Ignore markers from earlier app launches even if logcat clearing leaves buffered output.
+			var markerId = Guid.NewGuid ().ToString ("N");
+			var beginMarker = $"#STACKTRACE-BEGIN#{markerId}";
+			var endMarker = $"#STACKTRACE-END#{markerId}";
+			proj.MainActivity = proj.DefaultMainActivity.Replace ("//${AFTER_ONCREATE}", $$"""
+		Console.WriteLine ("{{beginMarker}}");
 		Console.WriteLine (Environment.StackTrace);
-		Console.WriteLine ("#STACKTRACE-END#");
+		Console.WriteLine ("{{endMarker}}");
 		""");
 			using var builder = CreateApkBuilder ();
 			Assert.IsTrue (builder.Install (proj), "App should have installed.");
 			RunProjectAndAssert (proj, builder);
 
 			var appStartupLogcatFile = Path.Combine (Root, builder.ProjectDirectory, "stacktrace-logcat.log");
-			Assert.IsTrue (
-				MonitorAdbLogcat (line => line.Contains ("#STACKTRACE-END#"), appStartupLogcatFile, timeout: 60),
-				"Stack trace end marker not found in logcat (output may be missing or truncated)."
-			);
-
+			bool didFinish = MonitorAdbLogcat (
+				line => line.Contains (endMarker), appStartupLogcatFile, timeout: 60);
 			var logcatOutput = File.ReadAllText (appStartupLogcatFile);
-			StringAssert.Contains ("#STACKTRACE-BEGIN#", logcatOutput, "Stack trace start marker not found in logcat");
+			if (!didFinish) {
+				// Distinguish an app that never launched from one whose output is missing.
+				var appPid = RunAdbCommand ($"shell pidof {proj.PackageName}").Trim ();
+				Assert.Fail ($"Stack trace end marker not found in logcat. App process id: '{appPid}'. Logcat:\n{logcatOutput}");
+			}
+
+			StringAssert.Contains (beginMarker, logcatOutput, "Stack trace start marker not found in logcat");
 			StringAssert.Contains ("FastDev: Found ", logcatOutput, "FastDev assembly discovery should be logged.");
 			StringAssert.Contains ("Loading assemblies from disk is normal during Fast Deployment.", logcatOutput, "FastDev disk loading should be described as normal.");
 			StringAssert.DoesNotContain ("not found in FastDev override directory", logcatOutput, "Deferring to CoreCLR's disk loader should not report missing FastDev assemblies.");
@@ -3073,54 +3085,51 @@ CUSTOM_ENVIRONMENT_VALUE=custom",
 		}
 
 		[Test]
-		public void GradleFBProj ([ValueSource (typeof (BaseTest), nameof (BaseTest.ValidRuntimeConfigurations))] (bool isRelease, AndroidRuntime runtime) configuration)
+		public void GradleLibrary ([ValueSource (typeof (BaseTest), nameof (BaseTest.ValidRuntimeConfigurations))] (bool isRelease, AndroidRuntime runtime) configuration)
 		{
 			var (isRelease, runtime) = configuration;
 
-			const string facebookVersion = "18.3.0";
-			var moduleName = "Library";
+			// Keep the Java dependency local; the Android Gradle Plugin still comes from the feed.
+			const string libraryModuleName = "Library";
+			const string dependencyJar = "gson-2.7.jar";
+			var successMarker = $"GradleLibrary-{Guid.NewGuid ():N}";
+			var expectedLogcatOutput = $"{successMarker} Hello dotnet from Gradle dependency";
 			var gradleTestProjectDir = Path.Combine (Root, "temp", "gradle", TestName);
-			var gradleModule = new AndroidGradleModule (Path.Combine (gradleTestProjectDir, moduleName));
-			gradleModule.PackageName = "com.microsoft.mauifacebook";
-			gradleModule.BuildGradleFileContent = $@"
-plugins {{
-    id(""com.android.library"")
-}}
-android {{
-    namespace = ""{gradleModule.PackageName}""
-    compileSdk = {XABuildConfig.AndroidDefaultTargetDotnetApiLevel.Major}
-    defaultConfig {{
-        minSdk = {XABuildConfig.AndroidMinimumDotNetApiLevel.Major}
-    }}
-}}
-dependencies {{
-    implementation(""androidx.appcompat:appcompat:1.7.0"")
-    implementation(""com.google.android.material:material:1.11.0"")
-    implementation(""com.facebook.android:facebook-android-sdk:{facebookVersion}"")
-}}
-";
-			gradleModule.JavaSources.Add (new AndroidItem.AndroidJavaSource ("FacebookSdk.java") {
-				TextContent = () => $@"
-package com.microsoft.mauifacebook;
-public class FacebookSdk {{
-    static com.facebook.appevents.AppEventsLogger _logger;
-    public static void initializeSDK(android.app.Activity activity, Boolean isDebug) {{
-        android.app.Application application = activity.getApplication();
-        com.facebook.FacebookSdk.sdkInitialize(application);
-        com.facebook.FacebookSdk.addLoggingBehavior(com.facebook.LoggingBehavior.APP_EVENTS);
-        com.facebook.appevents.AppEventsLogger.activateApp(application);
-        _logger = com.facebook.appevents.AppEventsLogger.newLogger(activity);
-    }}
-    public static void logEvent(String eventName) {{
-        _logger.logEvent(eventName);
-    }}
-}}
-",
+
+			var libraryModule = new AndroidGradleModule (Path.Combine (gradleTestProjectDir, libraryModuleName)) {
+				PackageName = "com.example.gradlelibrary",
+			};
+			libraryModule.BuildGradleFileContent = $$"""
+plugins {
+    id("com.android.library")
+}
+android {
+    namespace = "{{libraryModule.PackageName}}"
+    compileSdk = {{XABuildConfig.AndroidDefaultTargetDotnetApiLevel.Major}}
+    defaultConfig {
+        minSdk = {{XABuildConfig.AndroidMinimumDotNetApiLevel.Major}}
+    }
+}
+dependencies {
+    compileOnly(files("libs/{{dependencyJar}}"))
+}
+""";
+			libraryModule.JavaSources.Add (new AndroidItem.AndroidJavaSource ("Greeter.java") {
+				TextContent = () => $$"""
+package {{libraryModule.PackageName}};
+public class Greeter {
+    public static String greet(android.content.Context context, String name) {
+        com.google.gson.JsonObject value = new com.google.gson.JsonObject();
+        value.addProperty("greeting", context.getString(R.string.gradle_dependency_greeting, name));
+        return value.get("greeting").getAsString();
+    }
+}
+""",
 			});
 
 			var gradleProject = new AndroidGradleProject (gradleTestProjectDir) {
 				Modules = {
-					gradleModule,
+					libraryModule,
 				},
 			};
 			gradleProject.Create ();
@@ -3128,75 +3137,65 @@ public class FacebookSdk {{
 			var proj = new XamarinAndroidApplicationProject (packageName: PackageUtils.MakePackageName (runtime)) {
 				IsRelease = isRelease,
 				OtherBuildItems = {
+					new BuildItem (BuildActions.None, Path.Combine (libraryModule.ModuleDirectory, "src", "main", "res", "values", "strings.xml")) {
+						TextContent = () => """
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="gradle_dependency_greeting">Hello %1$s from Gradle dependency</string>
+</resources>
+""",
+					},
 					new AndroidItem.TransformFile ("Transforms\\Metadata.xml") {
-						TextContent = () => $@"<metadata><attr path=""/api/package[@name='{gradleModule.PackageName}']"" name=""managedName"">Facebook</attr></metadata>",
+						TextContent = () => $@"<metadata><attr path=""/api/package[@name='{libraryModule.PackageName}']"" name=""managedName"">GradleLibrary</attr></metadata>",
 					},
 					new BuildItem (KnownProperties.AndroidGradleProject, gradleProject.BuildFilePath) {
 						Metadata = {
-							{ "ModuleName", moduleName },
+							{ "ModuleName", libraryModuleName },
 						},
 					},
-					new BuildItem ("AndroidMavenLibrary", "com.facebook.android:facebook-core") {
-						Metadata = {
-							{ "Version", facebookVersion },
-							{ "Bind", "false" },
-							{ "Repository", TestEnvironment.DotNetPublicMaven },
-						},
-					},
-					new BuildItem ("AndroidMavenLibrary", "com.facebook.android:facebook-bolts") {
-						Metadata = {
-							{ "Version", facebookVersion },
-							{ "Bind", "false" },
-							{ "Repository", TestEnvironment.DotNetPublicMaven },
-						},
-					},
-				},
-				PackageReferences = {
-					new Package {
-						Id = "Xamarin.AndroidX.AppCompat",
-						Version = "1.7.0.3",
-					},
-					new Package {
-						Id = "Xamarin.AndroidX.Annotation",
-						Version = "1.8.2.1",
-					},
-					new Package {
-						Id = "Xamarin.AndroidX.Legacy.Support.Core.Utils",
-						Version = "1.0.0.29",
-					},
-					new Package {
-						Id = "Xamarin.Google.Android.InstallReferrer",
-						// Facebook SDK 18.3.0 requires com.android.installreferrer:installreferrer:2.2.
-						Version = "2.2.0.8",
-					},
-					new Package {
-						Id = "Xamarin.AndroidX.Core.Core.Ktx",
-						Version = "1.13.1.5",
-					},
-					new Package {
-						Id = "Xamarin.Kotlin.StdLib",
-						Version = "2.0.21",
+					// The bound library's runtime dependency is supplied separately, without bindings.
+					new BuildItem (AndroidBuildActions.AndroidJavaLibrary, Path.Combine (libraryModule.ModuleDirectory, "libs", dependencyJar)) {
+						TestResourceFileName = dependencyJar,
 					},
 				},
 			};
 			proj.SetRuntime (runtime);
-			proj.MainActivity = proj.DefaultMainActivity.Replace ("//${AFTER_ONCREATE}", @"
-Facebook.FacebookSdk.InitializeSDK(this, Java.Lang.Boolean.True);
-Facebook.FacebookSdk.LogEvent(""TestFacebook"");
-");
-			proj.AndroidManifest =@"<?xml version=""1.0"" encoding=""utf-8""?>
-<manifest xmlns:android=""http://schemas.android.com/apk/res/android"" xmlns:tools=""http://schemas.android.com/tools"" android:versionCode=""1"" android:versionName=""1.0"" package=""com.xamarin.gradleproj"">
-  <application android:label=""UnnamedProject"">
-    <meta-data android:name=""com.facebook.sdk.ApplicationId"" android:value=""appid""/>
-    <meta-data android:name=""com.facebook.sdk.ClientToken"" android:value=""token""/>
-  </application>
-</manifest>";
+			proj.SetDefaultTargetDevice ();
+			proj.MainActivity = proj.DefaultMainActivity.Replace ("//${AFTER_ONCREATE}", $$"""
+Android.Util.Log.Info ("GradleLibrary", "{{successMarker}} " + GradleLibrary.Greeter.Greet (this, "dotnet"));
+""");
 
 			using var builder = CreateApkBuilder ();
-			Assert.IsTrue (builder.Build (proj, environmentVariables: new Dictionary<string, string> {
+			builder.ThrowOnBuildFailure = false;
+			if (!builder.Build (proj, environmentVariables: new Dictionary<string, string> {
 				{ "GRADLE_OPTS", $"{Environment.GetEnvironmentVariable ("GRADLE_OPTS")} -Dorg.gradle.logging.level=info -Dorg.gradle.logging.stacktrace=all" },
-			}));
-			RunProjectAndAssert (proj, builder);
+			})) {
+				// CI retries discard the first attempt's build.log, so keep the cause in the failure message.
+				Assert.Fail ($"Build should have succeeded:{Environment.NewLine}{GetBuildFailureSummary (builder.LastBuildOutput)}");
+			}
+			ClearAdbLogcat ();
+			Assert.IsTrue (MonitorAdbLogcat (line => line.Contains (expectedLogcatOutput),
+				Path.Combine (Root, builder.ProjectDirectory, "logcat.log"), ActivityStartTimeoutInSeconds,
+				onMonitoringStarted: () => RunProjectAndAssert (proj, builder)), $"Output did not contain {expectedLogcatOutput}!");
+		}
+
+		static string GetBuildFailureSummary (IEnumerable<string> output)
+		{
+			const int gradleFailureLines = 20;
+			var summary = new List<string> ();
+			int gradleLinesRemaining = 0;
+			foreach (var line in output) {
+				if (line.Contains ("FAILURE:", StringComparison.Ordinal)) {
+					gradleLinesRemaining = gradleFailureLines;
+				}
+				if (gradleLinesRemaining > 0) {
+					gradleLinesRemaining--;
+					summary.Add (line);
+				} else if (line.Contains (": error ", StringComparison.Ordinal)) {
+					summary.Add (line);
+				}
+			}
+			return string.Join (Environment.NewLine, summary.Distinct ().Take (50));
 		}
 
 		[Test]

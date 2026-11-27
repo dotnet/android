@@ -2,7 +2,6 @@ using System;
 
 using Android.Content;
 
-#if ANDROID_8
 
 namespace Android.App {
 
@@ -14,7 +13,3 @@ namespace Android.App {
 		}
 	}
 }
-
-#endif
-
-

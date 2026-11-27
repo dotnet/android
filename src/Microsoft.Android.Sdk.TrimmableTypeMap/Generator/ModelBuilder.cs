@@ -137,6 +137,10 @@ static class ModelBuilder
 		if (!isAliasGroup) {
 			// Single peer — no aliases needed, emit directly with the base JNI name
 			var peer = peersForName [0];
+			if (peer.IsKotlinValueClass) {
+				model.Entries.Add (BuildEntry (peer, proxy: null, assemblyName, jniName));
+				return;
+			}
 			// A concrete type that supplies its own Java peer ([JniTypeSignature(GenerateJavaPeer=false)]
 			// or an MCW binding without an activation ctor) is constructed managed-side via `new`, so its
 			// managed→Java JNI name must still be resolvable in order to instantiate the correct Java class.

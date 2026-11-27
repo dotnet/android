@@ -105,7 +105,7 @@ sealed class ValueTypeFactory<[DynamicallyAccessedMembers (SafeJavaCollectionFac
 	/// </typeparam>
 	/// <param name="arguments">The <c>[key, value]</c> generic arguments, exactly one of which is a reference type.</param>
 	[UnconditionalSuppressMessage ("AOT", "IL3050:RequiresDynamicCode",
-		Justification = "NativeAOT's Type.MakeGenericType() and Activator.CreateInstance() are annotated because arbitrary constructed generics can lack a runtime template. " +
+		Justification = "NativeAOT's Type.MakeGenericType() is annotated because arbitrary constructed generics can lack a runtime template. " +
 			"This helper only closes JavaDictionary<,> over one reference argument and the fixed value-type argument from TExemplar. " +
 			"The reference argument canonicalizes to __Canon and the value type stays exact, so the result shares the JavaDictionary<IJavaPeerable, T> / JavaDictionary<T, IJavaPeerable> " +
 			"template that TExemplar already roots.")]
@@ -115,9 +115,6 @@ sealed class ValueTypeFactory<[DynamicallyAccessedMembers (SafeJavaCollectionFac
 			"dynamic-code path, where the wrapper reflectively activates key/value peers from their constructors. On the trimmable typemap path taken here the wrapper never " +
 			"activates its elements: element peer creation goes through JavaConvert and the typemap's registered activation constructors, so the unmet element requirement is " +
 			"never exercised. The wrapper's own constructor is separately rooted by the DynamicallyAccessedMembers(Constructors) annotation on TExemplar.")]
-	[UnconditionalSuppressMessage ("Trimming", "IL2072:UnrecognizedReflectionPattern",
-		Justification = "The constructed dictionary type rides the TExemplar canonical template whose constructors are rooted by DynamicallyAccessedMembers(Constructors). " +
-			"Only the known JavaDictionary<TKey,TValue> constructor is invoked here.")]
 	static IDictionary CreateReferenceMixedDictionary<[DynamicallyAccessedMembers (SafeJavaCollectionFactory.Constructors)] TExemplar> (
 		Type[] arguments,
 		IntPtr handle,
@@ -128,15 +125,21 @@ sealed class ValueTypeFactory<[DynamicallyAccessedMembers (SafeJavaCollectionFac
 
 		var definition = exemplarType.GetGenericTypeDefinition ();
 		var dictionaryType = definition.MakeGenericType (arguments);
-		var instance = Activator.CreateInstance (
-			dictionaryType,
+		var exemplarConstructor = exemplarType.GetConstructor (
 			SafeJavaCollectionFactory.ActivationConstructorBinding,
 			binder: null,
-			args: [handle, transfer],
-			culture: CultureInfo.InvariantCulture);
-		if (instance == null) {
-			throw new InvalidOperationException ($"Unable to create an instance of collection type '{dictionaryType}'.");
+			types: [typeof (IntPtr), typeof (JniHandleOwnership)],
+			modifiers: null);
+		if (exemplarConstructor == null) {
+			throw new MissingMethodException ($"Unable to find the activation constructor of collection type '{exemplarType}'.");
 		}
-		return (IDictionary) instance;
+
+		// Map the constructor already rooted on the exemplar; the exact value-type template stays unchanged.
+		var constructor = (ConstructorInfo) dictionaryType.GetMemberWithSameMetadataDefinitionAs (exemplarConstructor);
+		return (IDictionary) constructor.Invoke (
+			SafeJavaCollectionFactory.ActivationConstructorBinding,
+			binder: null,
+			parameters: [handle, transfer],
+			culture: CultureInfo.InvariantCulture);
 	}
 }

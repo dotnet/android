@@ -90,7 +90,6 @@ namespace Xamarin.Android.Design
 			cachedField = ret;
 			return ret;
 		}
-#if __ANDROID_11__
 #pragma warning disable CA1422
 		protected T FindFragment<
 				[DynamicallyAccessedMembers (Constructors)]
@@ -105,10 +104,12 @@ namespace Xamarin.Android.Design
 			return __FindFragment<T> (resourceId, (activity) => activity.FragmentManager?.FindFragmentById<T> (resourceId), ref cachedField);
 		}
 #pragma warning restore CA1422
-#endif  // __ANDROID_11__
 
 #if __HAVE_ANDROIDX__
-		protected T FindFragment<T> (int resourceId, global::AndroidX.Fragment.App.Fragment? __ignoreMe, ref T? cachedField)
+		protected T FindFragment<
+				[DynamicallyAccessedMembers (Constructors)]
+				T
+		> (int resourceId, global::AndroidX.Fragment.App.Fragment? __ignoreMe, ref T? cachedField)
 			where T : global::AndroidX.Fragment.App.Fragment
 		{
 			return __FindFragment(resourceId, (activity) => {

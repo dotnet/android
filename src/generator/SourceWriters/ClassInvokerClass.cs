@@ -47,6 +47,10 @@ namespace generator.SourceWriters
 				ctor.Comments.Add ("/// transfer must match ownership; transferred references cannot be used again,");
 				ctor.Comments.Add ("/// even if construction throws.");
 				ctor.Comments.Add ("/// </safety>");
+				ctor.Comments.Add ("/// <remarks>");
+				ctor.Comments.Add ("/// This raw-handle constructor is safe-callable as a compatibility exception.");
+				ctor.Comments.Add ("/// The compiler does not enforce these obligations or validate nonzero references.");
+				ctor.Comments.Add ("/// </remarks>");
 			}
 
 			Constructors.Add (ctor);
@@ -111,7 +115,7 @@ namespace generator.SourceWriters
 					Methods.Add (new ExplicitInterfaceInvokerMethod (gen, m, opt));
 				} else {
 					m.IsOverride = true;
-					Methods.Add (new BoundMethod (klass, m, opt, false));
+					Methods.Add (new BoundMethod (klass, m, opt, false, forceOverride: true));
 
 					if (m.Asyncify)
 						Methods.Add (new MethodAsyncWrapper (m, opt));

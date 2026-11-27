@@ -216,28 +216,34 @@ namespace Java.InteropTests
 		{
 		}
 
-		public unsafe void doesNotExist ()
+		public void doesNotExist ()
 		{
 			const string id = "doesNotExist.()V";
-			_members.InstanceMethods.InvokeNonvirtualVoidMethod (id, this, null);
+			// SAFETY: The ()V signature has no arguments; lookup must fail before dispatch.
+			unsafe {
+				_members.InstanceMethods.InvokeNonvirtualVoidMethod (id, this, null);
+			}
 		}
 
-		public unsafe JniObjectReference remappedToToString ()
+		public JniObjectReference remappedToToString ()
 		{
 			const string id = "remappedToToString.()Ljava/lang/String;";
-			return _members.InstanceMethods.InvokeNonvirtualObjectMethod (id, this, null);
+			// SAFETY: The remapped method takes no arguments; this owns the live receiver.
+			return unsafe (_members.InstanceMethods.InvokeNonvirtualObjectMethod (id, this, null));
 		}
 
-		public unsafe JniObjectReference remappedToStringWithUtf8Signature ()
+		public JniObjectReference remappedToStringWithUtf8Signature ()
 		{
 			const string id = "remappedToStringWithUtf8Signature.()Ljava/lang/String;";
-			return _members.InstanceMethods.InvokeNonvirtualObjectMethod (id, this, null);
+			// SAFETY: The remapped method takes no arguments; this owns the live receiver.
+			return unsafe (_members.InstanceMethods.InvokeNonvirtualObjectMethod (id, this, null));
 		}
 
-		public unsafe int remappedToStaticHashCode ()
+		public int remappedToStaticHashCode ()
 		{
 			const string id = "remappedToStaticHashCode.()I";
-			return _members.InstanceMethods.InvokeVirtualInt32Method (id, this, null);
+			// SAFETY: ()I has no source arguments; static redirection prepends this live receiver to its own buffer.
+			return unsafe (_members.InstanceMethods.InvokeVirtualInt32Method (id, this, null));
 		}
 
 	}
@@ -247,16 +253,20 @@ namespace Java.InteropTests
 		internal    const    string         JniTypeName = "java/lang/Runtime";
 		static      readonly JniPeerMembers _members    = new JniPeerMembers (JniTypeName, typeof (JavaLangRemappingTestRuntime));
 
-		public static unsafe JniObjectReference remappedToGetRuntime()
+		public static JniObjectReference remappedToGetRuntime()
 		{
 			const string id = "remappedToGetRuntime.()Ljava/lang/Runtime;";
-			return _members.StaticMethods.InvokeObjectMethod (id, null);
+			// SAFETY: The remapped static method takes no arguments.
+			return unsafe (_members.StaticMethods.InvokeObjectMethod (id, null));
 		}
 
-		public static unsafe void doesNotExist ()
+		public static void doesNotExist ()
 		{
 			const string id = "doesNotExist.()V";
-			_members.StaticMethods.InvokeVoidMethod (id, null);
+			// SAFETY: The ()V signature has no arguments; lookup must fail before dispatch.
+			unsafe {
+				_members.StaticMethods.InvokeVoidMethod (id, null);
+			}
 		}
 	}
 
@@ -266,9 +276,10 @@ namespace Java.InteropTests
 
 		internal static JniPeerMembers _members = new JniPeerMembers (JniTypeName, typeof (IAndroidInterface), isInterface: true);
 
-		public static unsafe string getClassName ()
+		public static string getClassName ()
 		{
-			var s = _members.StaticMethods.InvokeObjectMethod ("getClassName.()Ljava/lang/String;", null);
+			// SAFETY: The interface's static getClassName method takes no arguments.
+			var s = unsafe (_members.StaticMethods.InvokeObjectMethod ("getClassName.()Ljava/lang/String;", null));
 			return JniEnvironment.Strings.ToString (ref s, JniObjectReferenceOptions.CopyAndDispose);
 		}
 	}

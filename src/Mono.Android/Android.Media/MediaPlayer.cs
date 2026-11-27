@@ -6,7 +6,6 @@ namespace Android.Media {
 
 	partial class MediaPlayer {
 
-#if ANDROID_17
 		[Obsolete ("This constant will be removed in the future version. Use Android.Media.MediaError.Io.")]
 		public const int MediaErrorIo = (int) MediaError.Io;
 
@@ -18,7 +17,6 @@ namespace Android.Media {
 
 		[Obsolete ("This constant will be removed in the future version. Use Android.Media.MediaError.Unsupported.")]
 		public const int MediaErrorUnsupported = (int) MediaError.Unsupported;
-#endif
 	}
 }
 

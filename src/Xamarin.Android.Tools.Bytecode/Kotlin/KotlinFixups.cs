@@ -47,6 +47,8 @@ namespace Xamarin.Android.Tools.Bytecode
 						foreach (var con in class_metadata.Constructors) {
 							var java_constructors = FindJavaConstructors (class_metadata, con, c);
 							FixupConstructor (java_constructors.FirstOrDefault (), con, java_constructors.Count == 1);
+							if (java_constructors.Count == 1)
+								FixupDefaultArguments (java_constructors [0], con.ValueParameters);
 						}
 					}
 
@@ -59,8 +61,10 @@ namespace Xamarin.Android.Tools.Bytecode
 						// We work from Java methods to Kotlin metadata because they aren't a 1:1 relation
 						// and we need to find the "best" match for each Java method.
 						foreach (var java_method in c.Methods)
-							if (FindKotlinFunctionMetadata (metadata, java_method) is KotlinFunction function_metadata)
+							if (FindKotlinFunctionMetadata (metadata, java_method) is KotlinFunction function_metadata) {
 								FixupFunction (java_method, function_metadata, class_metadata, inlineClasses);
+								FixupDefaultArguments (java_method, function_metadata.ValueParameters);
+							}
 					}
 
 					if (metadata.Properties != null) {
@@ -136,6 +140,11 @@ namespace Xamarin.Android.Tools.Bytecode
 
 					c.KotlinInlineClassUnderlyingJniType = backing.Descriptor;
 
+					// Without an `init` block, kotlinc writes the primary `constructor-impl` as "load the argument, return it" (2 bytes).
+					// Secondary constructors also compile to `constructor-impl`, with other signatures.
+					var primary = $"({backing.Descriptor}){backing.Descriptor}";
+					c.KotlinInlineClassHasInit = c.Methods.FirstOrDefault (m => m.Name == "constructor-impl" && m.Descriptor == primary)?.Attributes.Get<CodeAttribute> ()?.ByteCode is { Length: > 2 };
+
 					// Kotlin's `KotlinType.ClassName` strings are stored without the
 					// leading `L` but with a trailing `;` (e.g. `com/example/MyColor;`).
 					// We index by that form so callers can look up directly from
@@ -167,8 +176,14 @@ namespace Xamarin.Android.Tools.Bytecode
 		{
 			if (kotlinTypeClassName is null || jvmDescriptor is null)
 				return null;
-			if (!inlineClasses.TryGetValue (kotlinTypeClassName, out var underlying))
+			if (!inlineClasses.TryGetValue (kotlinTypeClassName, out var underlying)) {
+				// A value class from another library: only value classes and Kotlin built-in
+				// types are erased to a JVM primitive. The generator projects it only when a
+				// referenced binding assembly has the matching value-class struct.
+				if (IsJvmPrimitiveDescriptor (jvmDescriptor) && !kotlinTypeClassName.StartsWith ("kotlin/", StringComparison.Ordinal))
+					return "L" + kotlinTypeClassName;
 				return null;
+			}
 			if (jvmDescriptor != underlying)
 				return null;
 			return "L" + kotlinTypeClassName;
@@ -326,7 +341,7 @@ namespace Xamarin.Android.Tools.Bytecode
 					continue;
 
 				// Kotlin provides actual parameter names
-				if (TypesMatch (java_p.Type, kotlin_p.Type, kotlinClass) && java_p.IsUnnamedParameter () && !kotlin_p.IsUnnamedParameter ()) {
+				if (TypesMatch (java_p.Type, kotlin_p.Type, kotlinClass, inlineClasses) && java_p.IsUnnamedParameter () && !kotlin_p.IsUnnamedParameter ()) {
 					Log.Debug ($"Kotlin: Renaming parameter {method.DeclaringType?.ThisClass.Name.Value} - {method.Name} - {java_p.Name} -> {kotlin_p.Name}");
 					java_p.Name = kotlin_p.Name;
 				}
@@ -347,9 +362,11 @@ namespace Xamarin.Android.Tools.Bytecode
 				java_p.KotlinNotNull = IsNotNullReference (kotlin_p.Type, java_p.Type.BinaryName);
 			}
 
-			// The extension receiver is the first Java parameter
-			if (metadata.ReceiverType != null && start > 0)
+			// The extension receiver (e.g. `fun Dp.coerceAtLeast()`) is the first Java parameter
+			if (metadata.ReceiverType != null && start > 0) {
 				java_parameters [0].KotlinNotNull = IsNotNullReference (metadata.ReceiverType, java_parameters [0].Type.BinaryName);
+				java_parameters [0].KotlinInlineClassJniType = GetInlineClassJniType (metadata.ReceiverType.ClassName, java_parameters [0].Type.TypeSignature, inlineClasses);
+			}
 
 			method.KotlinReturnNotNull = IsNotNullReference (metadata.ReturnType, method.ReturnType.BinaryName);
 
@@ -367,6 +384,49 @@ namespace Xamarin.Android.Tools.Bytecode
 			// target. See dotnet/java-interop#1431 (Phase 2).
 			if (metadata.Name != null && metadata.JvmName != null && metadata.Name != metadata.JvmName)
 				method.KotlinName = PascalCase (metadata.Name);
+		}
+
+		// Records the helper that computes Kotlin default arguments, so the generator can
+		// create overloads that omit trailing defaulted parameters:
+		//   fun f(a: Int = 1)        ->  static f$default(Owner, int, int mask, Object)
+		//   constructor(a: Int = 1)  ->  <init>(int, int mask, DefaultConstructorMarker)
+		// If the exact helper does not exist, keep the full-argument API.
+		static void FixupDefaultArguments (MethodInfo? method, List<KotlinValueParameter>? valueParameters)
+		{
+			if (method is null || !method.IsPubliclyVisible || valueParameters is null)
+				return;
+
+			var defaults = Enumerable.Range (0, valueParameters.Count)
+				.Where (i => valueParameters [i].Flags.HasFlag (KotlinParameterFlags.DeclaresDefaultValue))
+				.ToArray ();
+			if (defaults.Length == 0)
+				return;
+
+			// Receivers, continuations and outer-class parameters move the mask bits.
+			if (method.GetParameters ().Length != valueParameters.Count)
+				return;
+
+			var owner = method.DeclaringType;
+			var masks = new string ('I', (valueParameters.Count + 31) / 32);
+			var close = method.Descriptor.IndexOf (')');
+			var parameters = method.Descriptor.Substring (1, close - 1);
+
+			string helper_name, helper_signature;
+			if (method.IsConstructor) {
+				helper_name = "<init>";
+				helper_signature = "(" + parameters + masks + "Lkotlin/jvm/internal/DefaultConstructorMarker;)V";
+			} else {
+				var receiver = method.AccessFlags.HasFlag (MethodAccessFlags.Static) ? "" : owner.FullJniName;
+				helper_name = method.Name + "$default";
+				helper_signature = "(" + receiver + parameters + masks + "Ljava/lang/Object;)" + method.Descriptor.Substring (close + 1);
+			}
+
+			// Older Kotlin puts interface helpers only on `$DefaultImpls`. That class has no
+			// managed peer, so R8 can remove it; do not use it.
+			if (!owner.Methods.Any (m => m.Name == helper_name && m.Descriptor == helper_signature))
+				return;
+			method.KotlinDefaultJniSignature = helper_signature;
+			method.KotlinDefaultParameters = defaults;
 		}
 
 		static string PascalCase (string name)
@@ -661,16 +721,8 @@ namespace Xamarin.Android.Tools.Bytecode
 			if (javaType.BinaryName == "Ljava/lang/Object;")
 				return true;
 
-			// dotnet/java-interop#1431 (Phase 2): the JVM erases @JvmInline value
-			// class types to their underlying primitive descriptor, so e.g. a
-			// `MyColor` property (ULong-backed) appears in the bytecode as `()J`
-			// even though the Kotlin metadata still says `MyColor`. Accept the
-			// match when the JVM primitive matches the inline class's recorded
-			// underlying-primitive descriptor.
-			if (inlineClasses != null && IsJvmPrimitiveDescriptor (javaType.BinaryName) &&
-					kotlinType.ClassName != null &&
-					inlineClasses.TryGetValue (kotlinType.ClassName, out var underlying) &&
-					underlying == javaType.BinaryName)
+			// The JVM erases a @JvmInline value class to its underlying primitive.
+			if (inlineClasses != null && GetInlineClassJniType (kotlinType.ClassName, javaType.BinaryName, inlineClasses) != null)
 				return true;
 
 			// Sometimes Kotlin keeps its native types rather than converting them to Java native types

@@ -52,16 +52,17 @@ namespace Java.Interop {
 		JniObjectReference      arrayHandle;
 
 		/// <safety>
-		/// Supply a live JNI <#= info.JniMarshalType #> array and its unreleased, aligned Get<#= info.JniMarshalType #>ArrayElements
-		/// result in the current thread's JVM, with a non-negative count within the array length.
-		/// Keep the array reference valid through owner release and exclude conflicting aliases or
-		/// concurrent release/disposal. This owner does not root the wrapper; on construction failure,
-		/// the caller remains responsible for release.
+		/// Supply a live JNI <#= info.JniMarshalType #> array, its owning wrapper, and its unreleased,
+		/// aligned Get<#= info.JniMarshalType #>ArrayElements result in the current thread's JVM,
+		/// with a non-negative count within the array length. Keep the array peer valid (not disposed
+		/// externally) through release and exclude conflicting aliases or concurrent release/disposal.
+		/// This owner roots <paramref name="owner"/> until <see cref="JniArrayElements.Release"/> succeeds;
+		/// on construction failure, the caller remains responsible for release.
 		/// </safety>
-		internal unsafe Jni<#= info.TypeModifier #>ArrayElements (JniObjectReference arrayHandle, <#= info.ManagedType #>* elements, int elementCount)
-			: base (elements, elementCount, sizeof (<#= info.ManagedType #>))
+		internal unsafe Jni<#= info.TypeModifier #>ArrayElements (JniObjectReference arrayHandle, <#= info.ManagedType #>* elements, int elementCount, Java<#= info.TypeModifier #>Array owner)
+			: base (elements, elementCount, sizeof (<#= info.ManagedType #>), owner)
 		{
-			// SAFETY: Retain the caller's matching JNI array handle for release.
+			// SAFETY: Retain the caller's matching JNI array handle for release; base roots owner until release.
 			this.arrayHandle = arrayHandle;
 		}
 
@@ -89,7 +90,7 @@ namespace Java.Interop {
 		protected override void Synchronize (JniReleaseArrayElementsMode releaseMode)
 		{
 			unsafe {
-				// SAFETY: The owner pairs this acquired buffer with arrayHandle for the matching JNI release.
+				// SAFETY: The base class roots the owning wrapper while this acquired buffer is released with arrayHandle.
 				JniEnvironment.Arrays.Release<#= info.JniMarshalType #>ArrayElements (arrayHandle, Elements, releaseMode);
 			}
 		}
@@ -132,14 +133,16 @@ namespace Java.Interop {
 
 		public new Jni<#= info.TypeModifier #>ArrayElements GetElements ()
 		{
-			if (!PeerReference.IsValid)
+			var peerReference = PeerReference;
+			if (!peerReference.IsValid)
 				throw JniEnvironment.CreateObjectDisposedException (this);
+			int length = JniEnvironment.Arrays.GetArrayLength (peerReference);
 			unsafe {
-				// SAFETY: Pair JNI's non-null typed acquisition with its array and length.
-				var elements = JniEnvironment.Arrays.Get<#= info.JniMarshalType #>ArrayElements (PeerReference, null);
+				// SAFETY: Pair JNI's non-null typed acquisition with its array, length, and owning wrapper.
+				var elements = JniEnvironment.Arrays.Get<#= info.JniMarshalType #>ArrayElements (peerReference, null);
 				if (elements == null)
 					throw new InvalidOperationException ("`JniEnvironment.Arrays.Get<#= info.JniMarshalType #>ArrayElements()` returned NULL!");
-				return new Jni<#= info.TypeModifier #>ArrayElements (PeerReference, elements, Length);
+				return new Jni<#= info.TypeModifier #>ArrayElements (peerReference, elements, length, this);
 			}
 		}
 
@@ -190,6 +193,7 @@ namespace Java.Interop {
 				fixed (<#= info.ManagedType #>* b = destinationArray)
 					JniEnvironment.Arrays.Get<#= info.JniMarshalType #>ArrayRegion (PeerReference, sourceIndex, length, (b+destinationIndex));
 			}
+			GC.KeepAlive (this);
 		}
 
 		public override void CopyFrom (<#= info.ManagedType #>[] sourceArray, int sourceIndex, int destinationIndex, int length)
@@ -205,6 +209,7 @@ namespace Java.Interop {
 				fixed (<#= info.ManagedType #>* b = sourceArray)
 					JniEnvironment.Arrays.Set<#= info.JniMarshalType #>ArrayRegion (PeerReference, destinationIndex, length, (b+sourceIndex));
 			}
+			GC.KeepAlive (this);
 		}
 
 		internal override bool TargetTypeIsCurrentType (Type? targetType)

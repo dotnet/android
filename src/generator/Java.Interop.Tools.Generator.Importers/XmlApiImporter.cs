@@ -112,6 +112,7 @@ namespace MonoDroid.Generation
 				IsFinal = elem.XGetAttribute ("final") == "true",
 				IsKotlinInlineClass = elem.XGetAttribute ("kotlin-inline-class") == "true",
 				KotlinInlineClassUnderlyingJniType = elem.XGetAttribute ("kotlin-inline-class-underlying-jni-type"),
+				KotlinInlineClassHasInit = elem.XGetAttribute ("kotlin-inline-class-has-init") == "true",
 				PeerConstructorPartialMethod = elem.XGetAttribute ("peerConstructorPartialMethod"),
 				// Only use an explicitly set XML attribute
 				Unnest = elem.XGetAttribute ("unnest") == "true" ? true :
@@ -199,6 +200,8 @@ namespace MonoDroid.Generation
 			}
 
 			ctor.Name = EnsureValidIdentifer (ctor.Name);
+
+			SetKotlinDefaultArguments (ctor, elem);
 
 			// If declaring type was deprecated earlier than member, use the type's deprecated-since
 			if (declaringType.DeprecatedSince.HasValue && declaringType.DeprecatedSince < ctor.DeprecatedSince.GetValueOrDefault (default))
@@ -429,6 +432,8 @@ namespace MonoDroid.Generation
 
 			method.Name = EnsureValidIdentifer (method.Name);
 
+			SetKotlinDefaultArguments (method, elem);
+
 			method.FillReturnType ();
 
 			// If declaring type was deprecated earlier than member, use the type's deprecated-since
@@ -439,6 +444,16 @@ namespace MonoDroid.Generation
 			SetLineInfo (method, elem, options);
 
 			return method;
+		}
+
+		static void SetKotlinDefaultArguments (MethodBase method, XElement elem)
+		{
+			var signature = elem.XGetAttribute ("kotlin-default-jni-signature");
+			var parameters = elem.XGetAttribute ("kotlin-default-parameters");
+			if (string.IsNullOrEmpty (signature) || string.IsNullOrEmpty (parameters))
+				return;
+			method.KotlinDefaultJniSignature = signature;
+			method.KotlinDefaultParameters = parameters.Split (',').Select (p => int.Parse (p, System.Globalization.CultureInfo.InvariantCulture)).ToArray ();
 		}
 
 		public static Parameter CreateParameter (XElement elem, CodeGenerationOptions options = null)

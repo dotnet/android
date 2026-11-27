@@ -21,11 +21,12 @@ namespace Java.InteropTests
 		[TestMethod]
 		public void CreateJavaVMWithNullBuilder ()
 		{
-			Assert.ThrowsExactly<ArgumentNullException> (() => new JavaVMWithNullBuilder ());
+			// SAFETY: The base constructor rejects null options before accessing any native state.
+			Assert.ThrowsExactly<ArgumentNullException> (() => unsafe (new JavaVMWithNullBuilder ()));
 		}
 
 		class JavaVMWithNullBuilder : JniRuntime {
-			public JavaVMWithNullBuilder ()
+			public unsafe JavaVMWithNullBuilder ()
 				: base ((JniRuntime.CreationOptions) null)
 			{
 			}

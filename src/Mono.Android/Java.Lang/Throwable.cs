@@ -48,6 +48,11 @@ namespace Java.Lang {
 		/// no alias may delete them concurrently. <paramref name="transfer"/> must match the reference kind and ownership:
 		/// transferred references must not be used or released by the caller afterward, including when construction throws.
 		/// </safety>
+		/// <remarks>
+		/// This released raw-handle constructor remains safe-callable for compatibility.
+		/// The compiler does not enforce the caller obligations above, including for nonzero handles.
+		/// The constructor does not validate reference provenance, lifetime, thread or ownership.
+		/// </remarks>
 		public Throwable (IntPtr handle, JniHandleOwnership transfer)
 			: base (GetThrowableReference (handle, transfer), JniObjectReferenceOptions.CopyAndDispose)
 		{

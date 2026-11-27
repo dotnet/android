@@ -35,10 +35,13 @@ namespace generator.SourceWriters
 
 		public static void AddField (TypeWriter tw, GenBase type, Field field, CodeGenerationOptions opt)
 		{
+			bool? isShadow = tw is InterfaceConstsClass
+				? GenBase.RequiresNewForSystemObject (field.Name)
+				: (bool?) null;
 			if (field.NeedsProperty)
-				tw.Properties.Add (new BoundFieldAsProperty (type, field, opt));
+				tw.Properties.Add (new BoundFieldAsProperty (type, field, opt, isShadow));
 			else
-				tw.Fields.Add (new BoundField (type, field, opt));
+				tw.Fields.Add (new BoundField (type, field, opt, isShadow));
 		}
 
 		public static bool AddFields (TypeWriter tw, GenBase gen, List<Field> fields, HashSet<string> seen, CodeGenerationOptions opt, CodeGeneratorContext context)
@@ -549,7 +552,7 @@ namespace generator.SourceWriters
 		public static TypeWriter BuildManagedTypeModel (GenBase gen, CodeGenerationOptions opt, CodeGeneratorContext context, GenerationInfo genInfo)
 		{
 			if (gen is ClassGen klass)
-				return new BoundClass (klass, opt, context, genInfo);
+				return klass.IsKotlinInlineClass ? new KotlinInlineClassStruct (klass, opt) : new BoundClass (klass, opt, context, genInfo);
 			else if (gen is InterfaceGen iface)
 				return new BoundInterface (iface, opt, context, genInfo);
 

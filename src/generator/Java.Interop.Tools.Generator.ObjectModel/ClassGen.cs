@@ -207,12 +207,321 @@ namespace MonoDroid.Generation
 		// Kotlin @JvmInline value class support.
 		// When IsKotlinInlineClass is true, the generator emits a `readonly struct`
 		// wrapper around KotlinInlineClassUnderlyingJniType instead of the usual
-		// peer-class binding.
-		public bool IsKotlinInlineClass { get; set; }
+		// peer-class binding. A type named `Value` keeps the peer-class binding,
+		// because the struct's `Value` field cannot have the type's name (CS0542).
+		bool is_kotlin_inline_class;
+		public bool IsKotlinInlineClass {
+			get => is_kotlin_inline_class && Name != "Value";
+			set => is_kotlin_inline_class = value;
+		}
 
 		public string KotlinInlineClassUnderlyingJniType { get; set; }
 
-		public bool NeedsNew { get; set; }
+		// The value class has an `init` block, so the struct constructor calls `constructor-impl`.
+		public bool KotlinInlineClassHasInit { get; set; }
+
+		// True when `underlying` is the struct's `Value` type, so the struct can replace it.
+		public bool IsKotlinInlineClassOf (CodeGenerationOptions opt, ISymbol underlying) =>
+			IsKotlinInlineClass &&
+			opt.SymbolTable.Lookup (Java.Interop.Tools.JavaTypeSystem.Models.JniTypeName.ParseExact (KotlinInlineClassUnderlyingJniType).Type)?.FullName == underlying.FullName;
+
+		// The value-class struct writer emits no nested types (e.g. `Companion`), so members that use them are skipped.
+		public override void AddNestedType (GenBase gen)
+		{
+			if (!IsKotlinInlineClass)
+				base.AddNestedType (gen);
+		}
+
+		(bool valid, bool supportDim, List<(GenBase owner, Method method, string propertyName, bool isFormatted)> entries) callback_entries_cache;
+
+		internal bool HasEnclosingAncestor (CodeGenerationOptions opt)
+		{
+			for (var anc = GetBaseGen (opt); anc != null; anc = anc.GetBaseGen (opt)) {
+				if (anc.IsEnclosingTypeOf (this))
+					return true;
+			}
+			return false;
+		}
+
+		internal IEnumerable<(GenBase owner, Method method, string propertyName, bool isFormatted)> GetEnclosingAncestorCallbackEntries (CodeGenerationOptions opt)
+		{
+			for (var anc = GetBaseGen (opt); anc != null; anc = anc.GetBaseGen (opt)) {
+				if (anc is ClassGen ancCls && ancCls.IsEnclosingTypeOf (this)) {
+					foreach (var entry in ancCls.GetEmittedCallbackEntries (opt))
+						yield return entry;
+				}
+			}
+		}
+
+		internal IEnumerable<Method> GetMethodsToDeclare (CodeGenerationOptions opt)
+		{
+			if (opt == null || opt.SupportDefaultInterfaceMethods)
+				return Methods;
+
+			// This does not exclude overrides (unlike virtual methods) because we're not sure
+			// if calling the base interface default method via JNI expectedly dispatches to
+			// the derived method.
+			var defaultMethods = GetAllDerivedInterfaces ()
+				.SelectMany (i => i.Methods)
+				.Where (m => m.IsInterfaceDefaultMethod)
+				.Where (m => !ContainsMethod (m, false, false))
+				.ToList ();
+
+			var overrides = defaultMethods.Where (m => m.OverriddenInterfaceMethod != null).ToList ();
+
+			var overridens = defaultMethods.Where (m => overrides.Where (_ => _.Name == m.Name && _.JniSignature == m.JniSignature)
+				.Any (mm => mm.DeclaringType.GetAllDerivedInterfaces ().Contains (m.DeclaringType)));
+
+			return Methods.Concat (defaultMethods.Except (overridens)).Where (m => m.DeclaringType.IsGeneratable);
+		}
+
+		internal IEnumerable<(InterfaceGen iface, Method method)> GetAbstractInterfaceMethods ()
+		{
+			if (!IsAbstract)
+				yield break;
+
+			var seen = new HashSet<string> (StringComparer.Ordinal);
+			foreach (var iface in GetAllDerivedInterfaces ()) {
+				foreach (var m in iface.Methods) {
+					if (m.IsInterfaceDefaultMethod || m.IsStatic)
+						continue;
+					if (SkippedInterfaceMethods.Contains (m.GetSkipInvokerSignature ()))
+						continue;
+					var sig = m.GetSignature ();
+					if (ExplicitlyImplementedInterfaceMethods.Contains (sig) || m.RetVal.IsGeneric)
+						continue;
+					if (!seen.Add (m.Name + "\0" + m.JniSignature))
+						continue;
+					bool alreadyInHierarchy = false;
+					for (var c = this; c != null; c = c.BaseGen) {
+						if (c.ContainsMethod (m, false) || (c != this && ExplicitlyImplementedInterfaceMethods.Contains (sig))) {
+							alreadyInHierarchy = true;
+							break;
+						}
+					}
+					if (!alreadyInHierarchy)
+						yield return (iface, m);
+				}
+			}
+		}
+
+		internal IEnumerable<Property> GetAbstractInterfaceProperties ()
+		{
+			if (!IsAbstract)
+				yield break;
+
+			foreach (var iface in GetAllDerivedInterfaces ()) {
+				foreach (var p in iface.Properties) {
+					if (p.Getter.IsInterfaceDefaultMethod || p.Getter.IsStatic)
+						continue;
+					if (ContainsProperty (p.Name, false))
+						continue;
+					yield return p;
+				}
+			}
+		}
+
+		List<(GenBase owner, Method method, string propertyName, bool isFormatted)> GetEmittedCallbackEntries (CodeGenerationOptions opt)
+		{
+			bool supportDim = opt?.SupportDefaultInterfaceMethods ?? false;
+			if (callback_entries_cache.valid && callback_entries_cache.supportDim == supportDim)
+				return callback_entries_cache.entries;
+
+			var entries = new List<(GenBase owner, Method method, string propertyName, bool isFormatted)> ();
+
+			foreach (var m in GetMethodsToDeclare (opt)) {
+				if (!m.IsValid || m.IsStatic)
+					continue;
+				bool isAbstract = m.IsAbstract && m.OverriddenInterfaceMethod == null && (supportDim || !m.IsInterfaceDefaultMethod);
+				if (isAbstract || (!IsFinal && m.IsVirtual))
+					entries.Add ((this, m, null, m.IsReturnCharSequence));
+			}
+
+			foreach (var p in Properties) {
+				if (p.Getter == null || p.Getter.IsStatic)
+					continue;
+				bool emitsCallback = p.Getter.IsAbstract
+					? BaseSymbol?.GetPropertyByName (p.Name, true) == null
+					: !IsFinal && p.Getter.IsVirtual && (p.Setter == null || p.Setter.IsVirtual);
+				if (emitsCallback) {
+					entries.Add ((this, p.Getter, p.AdjustedName, false));
+					if (p.Setter != null)
+						entries.Add ((this, p.Setter, p.AdjustedName, false));
+				}
+			}
+
+			foreach (var (_, m) in GetAbstractInterfaceMethods ())
+				entries.Add ((this, m, null, m.IsReturnCharSequence));
+
+			foreach (var p in GetAbstractInterfaceProperties ()) {
+				if (BaseSymbol?.GetPropertyByName (p.Name, true) != null)
+					continue;
+				entries.Add ((this, p.Getter, p.AdjustedName, false));
+				if (p.Setter != null)
+					entries.Add ((this, p.Setter, p.AdjustedName, false));
+			}
+
+			callback_entries_cache = (true, supportDim, entries);
+			return entries;
+		}
+
+		bool HasInterfaceConsts ()
+		{
+			var seen = new HashSet<string> (StringComparer.Ordinal);
+			foreach (var f in Fields) {
+				if (!ContainsName (f.Name))
+					seen.Add (f.Name);
+			}
+
+			return GetAllImplementedInterfaces ()
+				.Except (BaseGen?.GetAllImplementedInterfaces () ?? [])
+				.Any (i => i.Fields.Any (f => !i.ContainsName (f.Name) && !seen.Contains (f.Name)));
+		}
+
+		private protected override bool HidesInheritedMember (string memberName, string [] paramTypes, CodeGenerationOptions opt)
+		{
+			if (SystemObjectMembers.Matches (memberName, paramTypes))
+				return true;
+
+			if (InheritsObject && JavaObjectHandwrittenMembers.Matches (memberName, paramTypes))
+				return true;
+
+			if (IsThrowable () && ThrowableMembers.Matches (memberName, paramTypes))
+				return true;
+
+			for (var anc = GetBaseGen (opt); anc != null; anc = anc.GetBaseGen (opt)) {
+				if (anc.HasEmittedMember (memberName, paramTypes, opt, includePrivate: anc.IsEnclosingTypeOf (this)))
+					return true;
+			}
+
+			return false;
+		}
+
+		private protected override void PopulateEmittedMembers (EmittedMemberTable accessible, EmittedMemberTable privateOnly, CodeGenerationOptions opt)
+		{
+			EmittedMemberTable Target (string visibility)
+			{
+				if (string.Equals (visibility, "private", StringComparison.OrdinalIgnoreCase))
+					return privateOnly;
+				if (!IsGeneratable && string.Equals (visibility, "internal", StringComparison.OrdinalIgnoreCase))
+					return null;
+				return accessible;
+			}
+
+			foreach (var f in Fields) {
+				if (ContainsName (f.Name))
+					continue;
+				Target (f.Visibility)?.AddNonMethod (f.Name);
+			}
+
+			if (HasInterfaceConsts ())
+				accessible.AddNonMethod ("InterfaceConsts");
+
+			foreach (var p in Properties) {
+				if (!string.IsNullOrEmpty (p.ExplicitInterface))
+					continue;
+				if (p.Getter.IsAbstract && BaseSymbol?.GetPropertyByName (p.Name, true) is Property bp && bp.Type != p.Getter.Return)
+					continue;
+				var vis = p.Getter.IsAbstract && p.Getter.RetVal.IsGeneric ? "protected" : (p.Setter ?? p.Getter).Visibility;
+				var target = Target (vis);
+				if (target == null)
+					continue;
+				target.AddNonMethod (p.AdjustedName);
+				if (p.Type.StartsWith ("Java.Lang.ICharSequence", StringComparison.Ordinal))
+					target.AddNonMethod (p.Name);
+			}
+
+			foreach (var p in GetAbstractInterfaceProperties ()) {
+				if (!string.IsNullOrEmpty (p.ExplicitInterface))
+					continue;
+				if (BaseSymbol?.GetPropertyByName (p.Name, true) is Property bp && bp.Type != p.Getter.Return)
+					continue;
+				accessible.AddNonMethod (p.AdjustedName);
+				if (p.Type.StartsWith ("Java.Lang.ICharSequence", StringComparison.Ordinal))
+					accessible.AddNonMethod (p.Name);
+			}
+
+			foreach (var nt in NestedTypes) {
+				Target (nt.Visibility)?.AddNonMethod (nt.Name);
+				if (nt is ClassGen nestedCls && nestedCls.IsAbstract) {
+					if (IsGeneratable)
+						accessible.AddNonMethod (nestedCls.Name + "Invoker");
+				} else if (nt is InterfaceGen nestedIface) {
+					if (IsGeneratable && (opt == null || !nestedIface.IsConstSugar (opt)))
+						accessible.AddNonMethod (nestedIface.Name + "Invoker");
+					if (!nestedIface.NoAlternatives && (nestedIface.Fields.Any () || nestedIface.Methods.Any (m => m.IsStatic))) {
+						var altName = nestedIface.HasManagedName ? nestedIface.Name.Substring (1) + "Consts" : nestedIface.Name.Substring (1);
+						accessible.AddNonMethod (altName);
+						if (!nestedIface.HasManagedName && (opt == null || !opt.SupportInterfaceConstants))
+							accessible.AddNonMethod (nestedIface.Name.Substring (1) + "Consts");
+					}
+					if (nestedIface.IsListener) {
+						foreach (var lm in nestedIface.Methods) {
+							if (lm.EventName == "")
+								continue;
+							if (lm.RetVal.IsVoid || lm.IsEventHandlerWithHandledProperty) {
+								if (!lm.IsSimpleEventHandler || lm.IsEventHandlerWithHandledProperty)
+									accessible.AddNonMethod (nestedIface.GetArgsName (lm));
+							} else {
+								accessible.AddNonMethod (nestedIface.GetEventDelegateName (lm));
+							}
+						}
+					}
+				}
+			}
+
+			var connectorMethods = Methods.Concat (Properties.Where (p => p.Setter != null).Select (p => p.Setter));
+			foreach (var m in connectorMethods) {
+				if (!m.IsListenerConnector || m.EventName == "" || m.ListenerType == null || !m.ListenerType.IsValid)
+					continue;
+				var baseEventName = m.CalculateEventName (ContainsName);
+				if (string.IsNullOrEmpty (baseEventName))
+					continue;
+				var ltype = m.ListenerType;
+				foreach (var lm in ltype.Methods) {
+					if (lm.EventName == "")
+						continue;
+					var nameSpec = ltype.Methods.Count > 1 ? lm.EventName ?? lm.AdjustedName : "";
+					var nameUnique = string.IsNullOrEmpty (nameSpec) ? baseEventName : nameSpec;
+					if (nameUnique.StartsWith ("On", StringComparison.Ordinal))
+						nameUnique = nameUnique.Substring (2);
+					if (ContainsName (nameUnique))
+						nameUnique += "Event";
+					accessible.AddNonMethod (nameUnique);
+				}
+			}
+
+			if (Interfaces.Any (p => p.FullName == "Java.Lang.ICharSequence"))
+				accessible.AddMethod ("GetEnumerator", []);
+
+			void AddEmittedMethod (Method m, bool isAbstractDecl, EmittedMemberTable target)
+			{
+				var paramTypes = GetParameterTypes (m.Parameters, opt, stringOverload: false);
+				target.AddMethod (m.AdjustedName, paramTypes);
+				if (MethodEmitsStringOverload (m, isAbstractDecl))
+					target.AddMethod (m.Name, GetParameterTypes (m.Parameters, opt, stringOverload: true));
+				if (m.Asyncify)
+					target.AddMethod (m.AdjustedName + "Async", paramTypes);
+			}
+
+			foreach (var m in GetMethodsToDeclare (opt)) {
+				if (!m.IsValid || !string.IsNullOrEmpty (m.ExplicitInterface))
+					continue;
+				var target = Target (m.Visibility);
+				if (target == null)
+					continue;
+				bool isAbstractDecl = m.IsAbstract && m.OverriddenInterfaceMethod == null && (opt == null || opt.SupportDefaultInterfaceMethods || !m.IsInterfaceDefaultMethod);
+				AddEmittedMethod (m, isAbstractDecl, target);
+			}
+
+			foreach (var (_, m) in GetAbstractInterfaceMethods ()) {
+				if (!string.IsNullOrEmpty (m.ExplicitInterface))
+					continue;
+				var target = Target (m.Visibility);
+				if (target != null)
+					AddEmittedMethod (m, isAbstractDecl: true, target);
+			}
+		}
 
 		public string PeerConstructorPartialMethod { get; set; }
 
@@ -267,6 +576,7 @@ namespace MonoDroid.Generation
 		public override void ResetValidation ()
 		{
 			validated = false;
+			callback_entries_cache = default;
 			base.ResetValidation ();
 		}
 

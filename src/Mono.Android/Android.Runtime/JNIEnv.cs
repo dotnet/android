@@ -16,6 +16,11 @@ using Microsoft.Android.Runtime;
 using RuntimeFeature = Microsoft.Android.Runtime.RuntimeFeature;
 
 namespace Android.Runtime {
+	/// <remarks>
+	/// Released JNI entry points remain safe-callable for compatibility; the compiler does not enforce
+	/// their documented reference, buffer, ABI, thread or ownership obligations.
+	/// The new UTF-8 allocation and construction overloads retain caller-unsafe declarations.
+	/// </remarks>
 	public static partial class JNIEnv {
 		const DynamicallyAccessedMemberTypes Constructors = DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.NonPublicConstructors;
 
@@ -1073,14 +1078,8 @@ namespace Android.Runtime {
 						IntPtr elem = type == typeof (Java.Lang.String)
 							? GetStringArrayElement (source, index)
 							: GetObjectArrayElement (source, index);
-						return GetObject (elem, type);
+						return Java.Lang.Object.GetObject (elem, JniHandleOwnership.TransferLocalRef, type);
 					}
-
-					// FIXME: Since a Dictionary<Type, Func> is used here, the trimmer will not be able to properly analyze `Type t`
-					// error IL2111: Method 'lambda expression' with parameters or return value with `DynamicallyAccessedMembersAttribute` is accessed via reflection. Trimmer can't guarantee availability of the requirements of the method.
-					[UnconditionalSuppressMessage ("Trimming", "IL2067", Justification = "FIXME: https://github.com/dotnet/android/issues/8724")]
-					static object? GetObject (IntPtr e, Type? t) =>
-						Java.Lang.Object.GetObject (e, JniHandleOwnership.TransferLocalRef, t);
 				} },
 				{ typeof (Array), (type, source, index) => {
 					unsafe {
@@ -2508,7 +2507,6 @@ namespace Android.Runtime {
 					JniEnvironment.Arrays.GetLongArrayRegion (new JniObjectReference (src), 0, dest.Length, (long*) __p);
 			}
 		}
-#if ANDROID_8
 		/// <safety>
 		/// <paramref name="env"/> must be the current thread's live JNI environment; <paramref name="jbitmap"/>
 		/// must be a live Bitmap reference for the call. The native output layout must match <paramref name="info"/>.
@@ -2562,6 +2560,5 @@ namespace Android.Runtime {
 			// SAFETY: Handle is this thread's environment; the caller owns the matching lock and has stopped pixel access.
 			return unsafe(AndroidBitmap_unlockPixels (Handle, jbitmap));
 		}
-#endif  // ANDROID_8
 	}
 }

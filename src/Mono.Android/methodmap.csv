@@ -862,7 +862,6 @@
 1, android.os, Parcel, writeTypedArray, parcelableFlags, Android.OS.ParcelableWriteFlags
 1, android.text, TextUtils, writeToParcel, parcelableFlags, Android.OS.ParcelableWriteFlags
 
-0, java.nio.channels, SelectionKey, interestOps, return, Java.Nio.Channels.Operations
 0, java.nio.channels, SelectionKey, readyOps, return, Java.Nio.Channels.Operations
 0, java.nio.channels, SelectableChannel, validOps, return, Java.Nio.Channels.Operations
 0, java.nio.channels, DatagramChannel, validOps, return, Java.Nio.Channels.Operations
@@ -2042,7 +2041,6 @@
 24, android.location, GnssMeasurementsEvent.Callback, onStatusChanged, status, Android.Locations.GnssMeasurementCallbackStatus
 24, android.location, GnssNavigationMessage, getStatus, return, Android.Locations.GnssNavigationStatus
 24, android.location, GnssNavigationMessage, getType, return, Android.Locations.GnssNavigationType
-24, android.location, GnssNavigationMessage.Callback, onStatusChanged, return, Android.Locations.GnssNavigationStatus
 24, android.location, GnssStatus, getConstellationType, return, Android.Locations.GnssConstellationType
 
 24, android.media, AudioRecord, getTimestamp, timebase, Android.Media.AudioTimebase
@@ -2381,7 +2379,6 @@
 28, android.media, AudioPresentation, getMasteringIndication, return, Android.Media.MasteringIndicationType
 28, android.media.audiofx, DynamicsProcessing.Config, getVariant, return, Android.Media.Audiofx.VariantType
 28, android.media, MediaDrm, getConnectedHdcpLevel, return, Android.Media.HdcpLevel
-28, android.media, MicrophoneInfo, getChannelMapping, return, Android.Media.MicrophoneChannelMapping
 28, android.media, MicrophoneInfo, getDirectionality, return, Android.Media.MicrophoneDirectionality
 28, android.media, MicrophoneInfo, getLocation, return, Android.Media.MicrophoneLocation
 28, android.net, IpSecManager, applyTransportModeTransform, direction, Android.Net.IpSecTransportDirection
@@ -2520,8 +2517,6 @@
 29, android.media, AudioManager, getAllowedCapturePolicy, return, Android.Media.CapturePolicies
 29, android.media, AudioPlaybackCaptureConfiguration.Builder, addMatchingUsage, usage, Android.Media.AudioUsageKind
 29, android.media, AudioPlaybackCaptureConfiguration.Builder, excludeUsage, usage, Android.Media.AudioUsageKind
-29, android.media, AudioPlaybackCaptureConfiguration, getExcludeUsages, return, Android.Media.AudioUsageKind
-29, android.media, AudioPlaybackCaptureConfiguration, getMatchingUsages, return, Android.Media.AudioUsageKind
 29, android.media, AudioPresentation.Builder, setMasteringIndication, masteringIndication, Android.Media.MasteringIndicationType
 29, android.media, MicrophoneDirection, setPreferredMicrophoneDirection, direction, Android.Media.MicDirection
 // Cannot change this at this state.
@@ -4653,10 +4648,6 @@
 37.1,android.widget.photopicker,EmbeddedPhotoPickerUiCustomizationParams,getAspectRatio,return,Android.Widget.Photopicker.AspectRatio
 37.1,android.widget.photopicker,EmbeddedPhotoPickerUiCustomizationParams,writeToParcel,flags,Android.OS.ParcelableWriteFlags
 37.1,android.widget.photopicker,EmbeddedPhotoPickerUiCustomizationParams.Builder,setAspectRatio,aspectRatio,Android.Widget.Photopicker.AspectRatio
-37.2,android.agenticon,AgentTaskEvent,writeToParcel,flags,Android.OS.ParcelableWriteFlags
-37.2,android.agenticon,AgentTaskOutcome,writeToParcel,flags,Android.OS.ParcelableWriteFlags
-37.2,android.agenticon,AgentTaskState,writeToParcel,flags,Android.OS.ParcelableWriteFlags
-37.2,android.agenticon,AgentTaskUpdate,writeToParcel,flags,Android.OS.ParcelableWriteFlags
 37.2,android.app,ActivityOptions.LaunchCookie,writeToParcel,flags,Android.OS.ParcelableWriteFlags
 37.2,android.app.admin,DevicePolicyManager,generateKeyPair,idAttestationFlags,Android.App.Admin.IdAttestationFlags
 37.2,android.app.admin,DevicePolicyManager,generateKeyPair,scope,Android.Security.KeyChainManagerKeyPairScope
@@ -4683,45 +4674,6 @@
 37.2,android.app.contentsafety,ContentClassificationResult,writeToParcel,flags,Android.OS.ParcelableWriteFlags
 37.2,android.app.job,JobInfo,getCategory,return,Android.App.Job.JobInfoCategory
 37.2,android.app.job,JobInfo.Builder,setCategory,category,Android.App.Job.JobInfoCategory
-37.2,android.app,Notification,getAgentInteractionFlags,return,Android.App.NotificationAgentTaskInteractionFlags
-37.2,android.app,Notification.Builder,setAgentInteractionFlags,flags,Android.App.NotificationAgentTaskInteractionFlags
-37.2,android.app.personalcontext.hint,CallHint,ctor,modality,Android.App.PersonalContext.Hint.CallHintModality
-37.2,android.app.personalcontext.hint,CallHint,getModality,return,Android.App.PersonalContext.Hint.CallHintModality
-37.2,android.app.personalcontext.hint,CapturedText,writeToParcel,flags,Android.OS.ParcelableWriteFlags
-37.2,android.app.personalcontext.hint,ChatMessageContextData,writeToParcel,flags,Android.OS.ParcelableWriteFlags
-37.2,android.app.personalcontext.hint,ChatMessageData,writeToParcel,flags,Android.OS.ParcelableWriteFlags
-37.2,android.app.personalcontext.hint,ConversationData,writeToParcel,flags,Android.OS.ParcelableWriteFlags
-37.2,android.app.personalcontext.hint,HintFilter,getHintTypes,filter,Android.App.PersonalContext.Hint.HintFilterType
-37.2,android.app.personalcontext.hint,HintFilter,getPackages,filter,Android.App.PersonalContext.Hint.HintFilterType
-37.2,android.app.personalcontext.hint,HintFilter,writeToParcel,flags,Android.OS.ParcelableWriteFlags
-37.2,android.app.personalcontext.hint,HintFilter.Builder,addHintType,filterType,Android.App.PersonalContext.Hint.HintFilterType
-37.2,android.app.personalcontext.hint,HintFilter.Builder,addPackage,filterType,Android.App.PersonalContext.Hint.HintFilterType
-37.2,android.app.personalcontext.hint,NotificationDetails,writeToParcel,flags,Android.OS.ParcelableWriteFlags
-37.2,android.app.personalcontext.hint,UserInputText,getFieldType,return,Android.App.PersonalContext.Hint.UserInputTextFieldType
-37.2,android.app.personalcontext.hint,UserInputText,getUserInputTextSource,return,Android.App.PersonalContext.Hint.UserInputTextSource
-37.2,android.app.personalcontext.hint,UserInputText,writeToParcel,flags,Android.OS.ParcelableWriteFlags
-37.2,android.app.personalcontext.hint,UserInputText.Builder,setFieldType,fieldType,Android.App.PersonalContext.Hint.UserInputTextFieldType
-37.2,android.app.personalcontext.hint,UserInputText.Builder,setUserInputTextSource,userInputTextSource,Android.App.PersonalContext.Hint.UserInputTextSource
-37.2,android.app.personalcontext.insight,InsightActionDetails,getActionTypes,return,Android.App.PersonalContext.Insight.InsightActionDetailsActionType
-37.2,android.app.personalcontext.insight,InsightActionDetails,hasActionType,actionType,Android.App.PersonalContext.Insight.InsightActionDetailsActionType
-37.2,android.app.personalcontext.insight,InsightActionDetails,writeToParcel,flags,Android.OS.ParcelableWriteFlags
-37.2,android.app.personalcontext.insight,InsightBranding,getColor,type,Android.App.PersonalContext.Insight.InsightBrandingColorType
-37.2,android.app.personalcontext.insight,InsightBranding,getIcons,type,Android.App.PersonalContext.Insight.InsightBrandingIconType
-37.2,android.app.personalcontext.insight,InsightBranding,writeToParcel,flags,Android.OS.ParcelableWriteFlags
-37.2,android.app.personalcontext.insight,InsightBranding.Builder,setColor,type,Android.App.PersonalContext.Insight.InsightBrandingColorType
-37.2,android.app.personalcontext.insight,InsightBranding.Builder,setIcon,type,Android.App.PersonalContext.Insight.InsightBrandingIconType
-37.2,android.app.personalcontext.insight,InsightDisplayDetails,writeToParcel,flags,Android.OS.ParcelableWriteFlags
-37.2,android.app.personalcontext.insight,InsightFilter,writeToParcel,flags,Android.OS.ParcelableWriteFlags
-37.2,android.app.personalcontext.insight.interaction,InsightEvent,getEventType,return,Android.App.PersonalContext.Insight.Interaction.InsightEventType
-37.2,android.app.personalcontext.insight.interaction,InsightEvent,writeToParcel,flags,Android.OS.ParcelableWriteFlags
-37.2,android.app.personalcontext.insight,PromptRequest,writeToParcel,flags,Android.OS.ParcelableWriteFlags
-37.2,android.app.personalcontext.insight,RemoteAppFunctionAction,writeToParcel,flags,Android.OS.ParcelableWriteFlags
-37.2,android.app.personalcontext.understander,FeedbackRequest,ctor,properties,Android.App.PersonalContext.Understander.FeedbackRequestProperties
-37.2,android.app.personalcontext.understander,FeedbackRequest,getProperties,return,Android.App.PersonalContext.Understander.FeedbackRequestProperties
-37.2,android.app.personalcontext.understander,FeedbackRequest,writeToParcel,flags,Android.OS.ParcelableWriteFlags
-37.2,android.app.personalcontext.understander,RegistrationRequest,writeToParcel,flags,Android.OS.ParcelableWriteFlags
-37.2,android.app.personalcontext.understander,RegistrationResponse,ctor,response,Android.App.PersonalContext.Understander.RegistrationResponseResponse
-37.2,android.app.personalcontext.understander,RegistrationResponse,getResponse,return,Android.App.PersonalContext.Understander.RegistrationResponseResponse
 37.2,android.app.privatecompute,AssistantQueryRequest.Query,writeToParcel,flags,Android.OS.ParcelableWriteFlags
 37.2,android.app.privatecompute,EgressRequest,writeToParcel,flags,Android.OS.ParcelableWriteFlags
 37.2,android.app.privatecompute,EgressResponse,writeToParcel,flags,Android.OS.ParcelableWriteFlags
@@ -4771,11 +4723,6 @@
 37.2,android.security,KeyChainManager,getPrivateKey,scope,Android.Security.KeyChainManagerKeyPairScope
 37.2,android.security.net.config,NetworkSecurityConfig,getDomainEncryptionMode,return,Android.Security.DomainEncryptionMode
 37.2,android.security.net.config,NetworkSecurityConfig.Builder,setDomainEncryptionMode,mode,Android.Security.DomainEncryptionMode
-37.2,android.service.notification,NotificationListenerService.Ranking,getAgentInteractionFlags,return,Android.App.NotificationAgentTaskInteractionFlags
-37.2,android.service.personalcontext.embedded,[Interface]InsightVisualizerSession,close,reason,Android.Service.PersonalContext.Embedded.InsightVisualizerSessionCloseReason
-37.2,android.service.personalcontext.embedded,VisualizerViewAction,writeToParcel,flags,Android.OS.ParcelableWriteFlags
-37.2,android.service.personalcontext.insight.interaction,InsightEvent,getEventType,return,Android.Service.PersonalContext.Insight.Interaction.InsightEventType
-37.2,android.service.personalcontext.insight.interaction,InsightEvent,writeToParcel,flags,Android.OS.ParcelableWriteFlags
 37.2,android.view.accessibility,AccessibilityNodeInfo.SelectionPosition,getOffsetType,return,Android.Views.Accessibility.AccessibilityNodeInfoSelectionPositionOffsetType
 37.2,android.view.accessibility,AccessibilityNodeInfo.SelectionPosition.Builder,setOffsetType,offsetType,Android.Views.Accessibility.AccessibilityNodeInfoSelectionPositionOffsetType
 37.2,android.view.contentcapture,ContentCaptureSession,getContentCaptureVersion,return,Android.Views.ContentCaptures.ContentCaptureSessionVersion

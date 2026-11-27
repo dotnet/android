@@ -5,6 +5,7 @@ using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading;
 using System.Xml.Linq;
 using NUnit.Framework;
@@ -46,6 +47,9 @@ namespace Xamarin.Android.Build.Tests
 				proj.SetRuntime (runtime);
 				var buildArgs = new List<string> {
 					"AcceptAndroidSDKLicenses=true",
+					// Saving the project can delete these directories, so never let the build fall back to a shared SDK/JDK.
+					$"AndroidSdkDirectory=\"{sdkPath}\"",
+					$"JavaSdkDirectory=\"{jdkPath}\"",
 
 					// This integration test downloads the SDK, JDK and (for NativeAOT) NDK from scratch.
 					"AndroidDependencyInstallationTimeout=30",
@@ -74,9 +78,10 @@ namespace Xamarin.Android.Build.Tests
 					// InstallAndroidDependencies downloads the Android SDK and JDK over the network, which
 					// can fail intermittently in CI. Retry a few times before giving up, starting from a
 					// clean SDK/JDK directory each attempt so a partial download does not affect the next.
-					// See https://github.com/dotnet/android/issues/11973
+					// See https://github.com/dotnet/android/issues/11973 and https://github.com/dotnet/android/issues/13644
 					const int maxInstallAttempts = 3;
 					bool installSucceeded = false;
+					var networkFailures = new List<string> ();
 					for (int attempt = 1; attempt <= maxInstallAttempts; attempt++) {
 						foreach (var path in new [] { sdkPath, jdkPath }) {
 							if (Directory.Exists (path))
@@ -84,17 +89,24 @@ namespace Xamarin.Android.Build.Tests
 							Directory.CreateDirectory (path);
 						}
 
-
+						b.BuildLogFile = $"install-deps-{attempt}.log";
 						if (b.Build (proj, parameters: buildArgs.ToArray ())) {
 							installSucceeded = true;
 							break;
 						}
 
-						TestContext.WriteLine ($"InstallAndroidDependencies attempt {attempt} of {maxInstallAttempts} failed. Please check the task output in 'install-deps.log'.");
+						TestContext.WriteLine ($"InstallAndroidDependencies attempt {attempt} of {maxInstallAttempts} failed. Please check the task output in '{b.BuildLogFile}'.");
+						var networkFailure = FindTransientNetworkFailure (b.LastBuildOutput);
+						if (networkFailure != null)
+							networkFailures.Add ($"{b.BuildLogFile}: {networkFailure}");
 						if (attempt < maxInstallAttempts)
 							Thread.Sleep (TimeSpan.FromSeconds (10));
 					}
-					Assert.IsTrue (installSucceeded, $"InstallAndroidDependencies should have succeeded within {maxInstallAttempts} attempts.");
+					if (!installSucceeded && networkFailures.Count == maxInstallAttempts) {
+						Assert.Inconclusive ($"InstallAndroidDependencies could not download its dependencies in {maxInstallAttempts} attempts because of transient network failures:\n{string.Join ("\n", networkFailures)}");
+					}
+					Assert.IsTrue (installSucceeded, $"InstallAndroidDependencies should have succeeded within {maxInstallAttempts} attempts. Please check the task output in 'install-deps-*.log'.");
+					string installLog = b.BuildLogFile;
 
 					FileAssert.Exists (Path.Combine (sdkPath, "cmdline-tools", "21.0", "source.properties"));
 
@@ -108,23 +120,41 @@ namespace Xamarin.Android.Build.Tests
 								sb.AppendLine (line);
 							}
 						}
-						Assert.Fail ($"A required dependency was not installed, warnings are listed below. Please check the task output in 'install-deps.log'.\n{sb.ToString ()}");
+						Assert.Fail ($"A required dependency was not installed, warnings are listed below. Please check the task output in '{installLog}'.\n{sb.ToString ()}");
 					}
 
 					b.Target = defaultTarget;
 					b.BuildLogFile = "build.log";
-					Assert.IsTrue (b.Build (proj, true), "build should have succeeded.");
+					Assert.IsTrue (b.Build (proj, true, parameters: buildArgs.ToArray ()), "build should have succeeded.");
 					Assert.IsTrue ( b.LastBuildOutput.ContainsText ($"Output Property: _AndroidSdkDirectory={sdkPath}"),
-						$"_AndroidSdkDirectory was not set to new SDK path `{sdkPath}`. Please check the task output in 'install-deps.log'");
+						$"_AndroidSdkDirectory was not set to new SDK path `{sdkPath}`. Please check the task output in '{installLog}'");
 					Assert.IsTrue (b.LastBuildOutput.ContainsText ($"Output Property: _JavaSdkDirectory={jdkPath}"),
-						$"_JavaSdkDirectory was not set to new JDK path `{jdkPath}`. Please check the task output in 'install-deps.log'");
+						$"_JavaSdkDirectory was not set to new JDK path `{jdkPath}`. Please check the task output in '{installLog}'");
 					Assert.IsTrue (b.LastBuildOutput.ContainsText ($"JavaPlatformJarPath={sdkPath}"),
-						$"JavaPlatformJarPath did not contain new SDK path `{sdkPath}`. Please check the task output in 'install-deps.log'");
+						$"JavaPlatformJarPath did not contain new SDK path `{sdkPath}`. Please check the task output in '{installLog}'");
 				}
 			} finally {
 				Environment.SetEnvironmentVariable ("TEST_ANDROID_SDK_PATH", oldSdkPath);
 				Environment.SetEnvironmentVariable ("TEST_ANDROID_JDK_PATH", oldJdkPath);
 			}
+		}
+
+		// Match only the HTTP transport failures that InstallAndroidDependencies reports as errors, e.g.
+		//   error XAIAD7000: System.Net.Http.HttpRequestException: nodename nor servname provided, or not known (aka.ms:443)
+		//   error XAIAD7024: System.Net.Http.HttpIOException: The response ended prematurely, ...
+		// HTTP status code failures (for example 404) indicate a broken URL rather than a transient outage.
+		static string? FindTransientNetworkFailure (IEnumerable<string> output)
+		{
+			foreach (var line in output) {
+				var match = Regex.Match (line, @"error XAIAD\d+: System\.Net\.Http\.(HttpRequestException|HttpIOException): (?<message>[^\[]*)");
+				if (!match.Success)
+					continue;
+				string message = match.Groups ["message"].Value.Trim ();
+				if (message.StartsWith ("Response status code does not indicate success", StringComparison.Ordinal))
+					return null;
+				return match.Value.Trim ();
+			}
+			return null;
 		}
 
 		[TestCase (AndroidRuntime.CoreCLR, false, false, false)]
@@ -257,16 +287,12 @@ namespace Xamarin.Android.Build.Tests
 				Directory.Delete (root, recursive: true);
 			Directory.CreateDirectory (root);
 
-			// A fake Android CLI that writes its arguments to args.txt.
-			string cli;
-			if (OperatingSystem.IsWindows ()) {
-				cli = Path.Combine (root, "android.cmd");
-				File.WriteAllText (cli, "@echo %* > \"%~dp0args.txt\"\r\n");
-			} else {
-				cli = Path.Combine (root, "android");
-				File.WriteAllText (cli, "#!/bin/sh\necho \"$@\" > \"$(dirname \"$0\")/args.txt\"\n");
-				File.SetUnixFileMode (cli, UnixFileMode.UserRead | UnixFileMode.UserWrite | UnixFileMode.UserExecute);
-			}
+			var cli = CreateCatalogCli (root, """
+				Available packages:
+				  platform-tools  38.0.0  Android SDK Platform-Tools
+				  platform-tools  37.0.10  Android SDK Platform-Tools
+				  platform-tools  37.0.3  Android SDK Platform-Tools
+				""");
 
 			var errors = new List<BuildErrorEventArgs> ();
 			var task = new InstallAndroidDependencies {
@@ -281,13 +307,188 @@ namespace Xamarin.Android.Build.Tests
 					new TaskItem ("platform-tools", new Dictionary<string, string> { { "Version", "37.0.3" } }),
 					new TaskItem ("ndk-bundle", new Dictionary<string, string> { { "Version", "27.2.12479018" } }),
 					new TaskItem ("platforms/android-37.0"),
+					new TaskItem ("cmdline-tools/latest", new Dictionary<string, string> { { "Version", "latest" } }),
 				],
 			};
 			Assert.IsTrue (task.Execute (), string.Join (Environment.NewLine, errors.Select (e => e.Message)));
 
 			var args = File.ReadAllText (Path.Combine (root, "args.txt")).Trim ();
 			StringAssert.Contains ($"--no-metrics --sdk={Path.Combine (root, "sdk")} sdk install", args);
-			StringAssert.EndsWith ("build-tools/37.0.0 platform-tools@37.0.3 ndk/27.2.12479018 platforms/android-37.0", args);
+			StringAssert.EndsWith ("build-tools/37.0.0 platform-tools@37.0.10 ndk/27.2.12479018 platforms/android-37.0 cmdline-tools/latest", args);
+			StringAssert.EndsWith ("sdk list --all --all-versions platform-tools",
+				File.ReadAllText (Path.Combine (root, "list-args.txt")).Trim ());
+		}
+
+		[TestCase ("37.0", "37.0.3", "37.0.3", null, null, TestName = "PlatformToolsLatestAlreadyInstalled")]
+		[TestCase ("37.0", "37.0.1", "37.0.3", "platform-tools@37.0.3", null, TestName = "PlatformToolsRollsForwardWithinMajor")]
+		[TestCase ("37.0", "38.0.0", "37.0.3", null, null, TestName = "PlatformToolsNewerMajorInstalled")]
+		[TestCase ("37.0", "37.0.3-rc1", "37.0.3", "platform-tools@37.0.3", null, TestName = "PlatformToolsPreviewInstalled")]
+		[TestCase ("37.0", null, null, null, "XA5310", TestName = "PlatformToolsNoCompatibleVersion")]
+		[TestCase ("37.0", "37.0.3", null, null, "XA5310", TestName = "PlatformToolsInstalledButNotInCatalog")]
+		[TestCase ("37.5", null, "37.0.3", null, "XA5310", TestName = "PlatformToolsNoSufficientVersion")]
+		[TestCase ("38.0.0", null, "38.0.2", "platform-tools@38.0.2", null, TestName = "PlatformToolsRequestedMajor")]
+		[TestCase ("", null, "37.0.3", "platform-tools", null, TestName = "PlatformToolsUnversionedNotInstalled")]
+		[TestCase ("", "36.0.0", "37.0.3", null, null, TestName = "PlatformToolsUnversionedInstalled")]
+		[TestCase ("latest", null, "37.0.3", null, "XA5311", TestName = "PlatformToolsMalformedVersion")]
+		[TestCase ("37.0.3oops", null, "37.0.3", null, "XA5311", TestName = "PlatformToolsMalformedVersionSuffix")]
+		[TestCase ("37.0.3...", null, "37.0.3", null, "XA5311", TestName = "PlatformToolsMalformedVersionTrailingDots")]
+		public void PlatformToolsRollForward (string requested, string installed, string available, string expectedInstall, string expectedError)
+		{
+			var root = Path.Combine (Root, "temp", TestName);
+			if (Directory.Exists (root))
+				Directory.Delete (root, recursive: true);
+			Directory.CreateDirectory (root);
+			var sdkPath = Path.Combine (root, "sdk");
+			if (installed != null) {
+				var directory = Path.Combine (sdkPath, "platform-tools");
+				Directory.CreateDirectory (directory);
+				File.WriteAllText (Path.Combine (directory, "source.properties"), $"Pkg.Revision={installed}\n");
+			}
+			// The installed section is ignored: only versions available in the catalog can be selected.
+			var catalog = $"""
+				Installed packages:
+				  platform-tools  {installed ?? "unknown"}  Android SDK Platform-Tools
+				Available packages:
+				  platform-tools  38.0.0  Android SDK Platform-Tools
+				  platform-tools  {available ?? "37.1.0-rc1"}  Android SDK Platform-Tools
+				""";
+			var errors = new List<BuildErrorEventArgs> ();
+			var task = new InstallAndroidDependencies {
+				BuildEngine = new MockBuildEngine (TestContext.Out, errors, [], []),
+				AndroidSdkPath = sdkPath,
+				AcceptAndroidSDKLicenses = true,
+				InstallJavaDependencies = false,
+				AndroidCliPath = CreateCatalogCli (root, catalog),
+				JavaDependencies = [],
+				Dependencies = [new TaskItem ("platform-tools", new Dictionary<string, string> { { "Version", requested } })],
+			};
+			Assert.AreEqual (expectedError == null, task.Execute (), string.Join (Environment.NewLine, errors.Select (e => e.Message)));
+			if (expectedError != null) {
+				var error = errors.Single ();
+				Assert.AreEqual (expectedError, error.Code);
+				if (expectedError == "XA5310")
+					StringAssert.Contains ($"version {requested} or later in the supported {requested.Split ('.') [0]}.x", error.Message);
+				else
+					StringAssert.Contains ($"'{requested}'", error.Message);
+			}
+			var argsPath = Path.Combine (root, "args.txt");
+			Assert.AreEqual (expectedInstall != null, File.Exists (argsPath));
+			if (expectedInstall != null)
+				StringAssert.EndsWith ($"sdk install {expectedInstall}", File.ReadAllText (argsPath).Trim ());
+			// Unversioned or invalid requests never query the catalog.
+			Assert.AreEqual (requested.Length > 0 && expectedError != "XA5311", File.Exists (Path.Combine (root, "list-args.txt")));
+		}
+
+		[TestCase (false)]
+		[TestCase (true)]
+		public void PlatformToolsCatalogSelectsLatestStableVersion (bool pipes)
+		{
+			var catalog = """
+				Installed packages:
+				  platform-tools | 37.9.0 | Android SDK Platform-Tools
+				Available packages:
+				  platform-tools | 38.0.0 | Android SDK Platform-Tools
+				  platform-tools | 37.0.3 | Android SDK Platform-Tools
+				  platform-tools | 37.2.0 | Android SDK Platform-Tools
+				  platform-tools | 37.0.10 | Android SDK Platform-Tools
+				  platform-tools | 37.3.0-rc1 | Android SDK Platform-Tools
+				  platform-tools | invalid | Android SDK Platform-Tools
+				  build-tools/37.4.0 | 37.4.0 | Android SDK Build-Tools
+				""";
+			if (!pipes)
+				catalog = catalog.Replace (" | ", "  ");
+			Assert.AreEqual ("37.2.0", InstallAndroidDependencies.SelectPlatformToolsVersion (catalog, new Version (37, 0)));
+			Assert.AreEqual ("37.2.0", InstallAndroidDependencies.SelectPlatformToolsVersion (catalog, new Version (37, 2, 0)));
+			Assert.IsNull (InstallAndroidDependencies.SelectPlatformToolsVersion (catalog, new Version (37, 2, 1)));
+		}
+
+		[Test]
+		public void PlatformToolsCatalogFailureStopsInstallation ()
+		{
+			var root = Path.Combine (Root, "temp", TestName);
+			if (Directory.Exists (root))
+				Directory.Delete (root, recursive: true);
+			Directory.CreateDirectory (root);
+			var errors = new List<BuildErrorEventArgs> ();
+			var task = new InstallAndroidDependencies {
+				BuildEngine = new MockBuildEngine (TestContext.Out, errors, [], []),
+				AndroidSdkPath = Path.Combine (root, "sdk"),
+				AcceptAndroidSDKLicenses = true,
+				InstallJavaDependencies = false,
+				AndroidCliPath = CreateCatalogCli (root, "Available packages:\n  platform-tools  37.0.3  Android SDK Platform-Tools", listExitCode: 7),
+				JavaDependencies = [],
+				Dependencies = [new TaskItem ("platform-tools", new Dictionary<string, string> { { "Version", "37.0" } })],
+			};
+			Assert.IsFalse (task.Execute ());
+			Assert.AreEqual ("XA5309", errors.Single ().Code);
+			StringAssert.Contains ("7", errors.Single ().Message);
+			StringAssert.Contains ("catalog failed", errors.Single ().Message);
+			StringAssert.Contains ("Available packages:", errors.Single ().Message);
+			Assert.IsFalse (File.Exists (Path.Combine (root, "args.txt")));
+		}
+
+		[TestCase ("37.0.3", true, TestName = "PlatformToolsInstalledWithoutLicenses")]
+		[TestCase ("37.0.1", false, TestName = "PlatformToolsUpgradeRequiresLicenses")]
+		public void PlatformToolsLicenses (string installed, bool expectedSuccess)
+		{
+			var root = Path.Combine (Root, "temp", TestName);
+			if (Directory.Exists (root))
+				Directory.Delete (root, recursive: true);
+			var sdkPath = Path.Combine (root, "sdk");
+			var directory = Path.Combine (sdkPath, "platform-tools");
+			Directory.CreateDirectory (directory);
+			File.WriteAllText (Path.Combine (directory, "source.properties"), $"Pkg.Revision={installed}\n");
+			var errors = new List<BuildErrorEventArgs> ();
+			var task = new InstallAndroidDependencies {
+				BuildEngine = new MockBuildEngine (TestContext.Out, errors, [], []),
+				AndroidSdkPath = sdkPath,
+				AcceptAndroidSDKLicenses = false,
+				InstallJavaDependencies = false,
+				AndroidCliPath = CreateCatalogCli (root, "Available packages:\n  platform-tools  37.0.3  Android SDK Platform-Tools"),
+				JavaDependencies = [],
+				Dependencies = [new TaskItem ("platform-tools", new Dictionary<string, string> { { "Version", "37.0" } })],
+			};
+			Assert.AreEqual (expectedSuccess, task.Execute (), string.Join (Environment.NewLine, errors.Select (e => e.Message)));
+			if (!expectedSuccess)
+				StringAssert.Contains ("AcceptAndroidSDKLicenses", errors.Single ().Message);
+			Assert.IsFalse (File.Exists (Path.Combine (root, "args.txt")));
+		}
+
+		static string CreateCatalogCli (string root, string catalog, int listExitCode = 0)
+		{
+			File.WriteAllText (Path.Combine (root, "catalog.txt"), catalog);
+			string cli;
+			if (OperatingSystem.IsWindows ()) {
+				cli = Path.Combine (root, "android.cmd");
+				File.WriteAllText (cli, $"""
+					@echo off
+					rem cmd.exe splits --sdk=PATH at '=', so search for the "list" token instead of using a fixed position.
+					echo %* | findstr /c:" list " >nul
+					if not errorlevel 1 (
+					  echo %* > "%~dp0list-args.txt"
+					  type "%~dp0catalog.txt"
+					  echo catalog failed 1>&2
+					  exit /b {listExitCode}
+					)
+					echo %* > "%~dp0args.txt"
+					""" + "\r\n");
+			} else {
+				cli = Path.Combine (root, "android");
+				File.WriteAllText (cli, $$"""
+					#!/bin/sh
+					case " $* " in
+					*" list "*)
+					  echo "$@" > "$(dirname "$0")/list-args.txt"
+					  cat "$(dirname "$0")/catalog.txt"
+					  echo "catalog failed" >&2
+					  exit {{listExitCode}}
+					  ;;
+					esac
+					echo "$@" > "$(dirname "$0")/args.txt"
+					""" + "\n");
+				File.SetUnixFileMode (cli, UnixFileMode.UserRead | UnixFileMode.UserWrite | UnixFileMode.UserExecute);
+			}
+			return cli;
 		}
 
 		[Test]

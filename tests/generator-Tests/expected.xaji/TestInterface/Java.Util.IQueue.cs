@@ -11,7 +11,7 @@ namespace Java.Util {
 	public partial interface IQueue : global::Java.Util.ICollection {
 		// Metadata.xml XPath method reference: path="/api/package[@name='java.util']/interface[@name='Queue']/method[@name='add' and count(parameter)=1 and parameter[1][@type='E']]"
 		[Register ("add", "(Ljava/lang/Object;)Z", "GetAdd_Ljava_lang_Object_Handler:Java.Util.IQueueInvoker, Mono.Android, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null")]
-		bool Add (global::Java.Lang.Object e);
+		new bool Add (global::Java.Lang.Object e);
 
 	}
 

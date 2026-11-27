@@ -286,6 +286,10 @@ namespace Xamarin.Android.Tasks
 				writer.WriteLine ("-keepclassmembernames class * { <fields>; }");
 				writer.WriteLine ("-keepnames public class *");
 				writer.WriteLine ("-keepnames class **$*");
+				// Kotlin value-class structs call these helpers by name over JNI.
+				writer.WriteLine ("-keepclassmembernames class * { *** box?impl(...); *** unbox?impl(...); *** constructor?impl(...); }");
+				// Kotlin default-argument overloads call these helpers by name over JNI.
+				writer.WriteLine ("-keepclassmembernames class * { static *** *$default(...); }");
 				return;
 			}
 			if (!string.Equals (obfuscationMode, "private-members", StringComparison.OrdinalIgnoreCase)) {

@@ -237,10 +237,12 @@ namespace Java.InteropTests {
 
 		static int InvokeAdd (JniType type)
 		{
-			var constructor = JniEnvironment.InstanceMethods.GetMethodID (type.PeerReference, "<init>", "()V");
-			var instance = JniEnvironment.Object.NewObject (type.PeerReference, constructor);
+			// SAFETY: The live type and terminated managed signatures identify its no-argument constructor.
+			var constructor = unsafe (JniEnvironment.InstanceMethods.GetMethodID (type.PeerReference, "<init>", "()V"));
+			var instance = unsafe (JniEnvironment.Object.NewObject (type.PeerReference, constructor));
 			try {
-				var method = JniEnvironment.InstanceMethods.GetMethodID (type.PeerReference, "add", "(II)I");
+				// SAFETY: The live type and managed signatures identify the registered (II)I method.
+				var method = unsafe (JniEnvironment.InstanceMethods.GetMethodID (type.PeerReference, "add", "(II)I"));
 				unsafe {
 					// SAFETY: JNI synchronously reads this two-element argument buffer for the matching (II)I method.
 					var args = stackalloc JniArgumentValue [2];

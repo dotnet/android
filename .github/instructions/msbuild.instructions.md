@@ -9,10 +9,10 @@ Rules for authoring MSBuild targets, wherever they live — `.targets`, `.props`
 targets under `src/Xamarin.Android.Build.Tasks/Microsoft.Android.Sdk/targets/` and
 `src/Xamarin.Android.Build.Tasks/Xamarin.Android.Common.targets`, which ship to customers.
 
-## Every target that produces a file must be incremental
+## Make file-producing targets incremental when appropriate
 
-Any target invoking a task that writes a file needs `Inputs` and `Outputs`. A target without them
-re-runs on every build, which shows up directly in customer inner-loop build times.
+When a target has complete, stable file inputs and outputs and can be skipped without losing
+required side effects, declare `Inputs` and `Outputs` to avoid redundant work.
 
 ```xml
 <Target Name="_AndroidGenerateSomething"
@@ -35,11 +35,11 @@ real output can never serve as `Outputs` — you are then forced to invent a
 `$(...)Stamp` file, `<MakeDir/>` it, `<Touch/>` it, and add it to `@(FileWrites)`. That is a lot of
 machinery to buy back something you did not need. Prefer the simple version.
 
-## Compute `Inputs` in a `<TargetName>Inputs` target
+## Compute late-bound `Inputs` in a `<TargetName>Inputs` target
 
-Do not compute the input `ItemGroup` inside the target that consumes it — `Inputs` is evaluated
-before the target body runs, so the item group would be empty on the first evaluation. Put it in a
-separate target pulled in via `DependsOnTargets`, named `<TargetName>Inputs`:
+If input items must be populated during execution, don't compute them inside the consuming target:
+`Inputs` is evaluated before its body runs. Use already available inputs directly, or populate
+late-bound inputs in a dependency named `<TargetName>Inputs`:
 
 ```xml
 <Target Name="_AndroidGenerateSomethingInputs">
@@ -49,8 +49,9 @@ separate target pulled in via `DependsOnTargets`, named `<TargetName>Inputs`:
 </Target>
 ```
 
-`DependsOnTargets` targets run **before** the parent target's `Condition`, `Inputs`, and `Outputs`
-are evaluated, so this works.
+`DependsOnTargets` targets run **after** the parent target's `Condition` is evaluated (if `true`),
+and **before** its `Inputs` and `Outputs` are evaluated, so this works for incremental inputs and
+outputs.
 
 ### Output paths belong in the same target
 
@@ -128,9 +129,11 @@ target's `Condition`.
 
 ## A target's `Condition` is evaluated *before* its `DependsOnTargets`
 
-So a `Condition` can never read a property that one of its dependencies sets — the dependency is
-never built. This is tempting when a decision has several inputs and you want to resolve it into a
-single property in the `Inputs` helper target; it silently never runs.
+So a `Condition` cannot rely on a property set by a dependency pulled in only via its own
+`DependsOnTargets` — if `Condition` evaluates to `false` first, MSBuild never schedules those
+dependencies through this target. This is tempting when a decision has several inputs and you want
+to resolve it into a single property in the `Inputs` helper target; unless an earlier target already
+ran that helper, the parent silently skips.
 
 Giving the helper the same `AfterTargets`/`BeforeTargets` hooks does work (targets sharing a hook
 run in declaration order), but it makes correctness depend on declaration order. Prefer keeping the
@@ -185,5 +188,16 @@ try { [xml]$x = Get-Content path\to\File.targets; "ok" } catch { "INVALID: $($_.
 * `$(UndefinedProperty.Contains('x'))` safely evaluates to `false`; no null check is needed.
 * `@(X->Distinct())` is a valid item function and is the right way to dedupe overlapping item lists.
 * Add generated files to `@(FileWrites)` so `Clean` removes them.
-* Use `TaskFactory="TaskHostFactory"` and `Runtime="NET"` on `<UsingTask/>` for **internal**
-  build-time tasks (`xa-prep-tasks`, `BootstrapTasks`) only — never on tasks shipped to customers.
+* On `<UsingTask/>`:
+  * **Internal build-time tasks** (`$(BootstrapTasksAssembly)`, `$(PrepTasksAssembly)`): always set
+    `TaskFactory="TaskHostFactory" Runtime="NET"`.
+  * **Shipped `netstandard2.0` tasks** (`Xamarin.Android.Build.Tasks.dll`,
+    `$(_XamarinAndroidBuildTasksAssembly)`, `Xamarin.Android.Build.Debugging.Tasks.dll`,
+    `Xamarin.Installer.Build.Tasks.dll`): omit both `TaskFactory="TaskHostFactory"` and
+    `Runtime="NET"` so they do not explicitly force a task host on either .NET Framework or .NET
+    MSBuild.
+  * **Shipped modern-.NET tasks** (`$(_MicrosoftAndroidBuildTasksAssembly)`): register with a
+    conditioned pair — `Runtime="NET" TaskFactory="TaskHostFactory" Condition=" '$(MSBuildRuntimeType)' == 'Full' "`
+    and `Runtime="NET" Condition=" '$(MSBuildRuntimeType)' == 'Core' "` — so .NET MSBuild does not
+    force a task host while .NET Framework MSBuild (e.g. `MSBuild.exe` in Visual Studio) launches
+    the .NET task host. Never put an unconditioned `TaskFactory="TaskHostFactory"` on shipped tasks.

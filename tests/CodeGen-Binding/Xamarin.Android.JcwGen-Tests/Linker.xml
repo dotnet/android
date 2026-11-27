@@ -1,0 +1,6 @@
+<linker>
+  <assembly fullname="System.Private.CoreLib">
+    <!-- MSTest's generated reflection metadata materializes this attribute. -->
+    <type fullname="System.Diagnostics.DebuggerStepThroughAttribute" preserve="all" />
+  </assembly>
+</linker>

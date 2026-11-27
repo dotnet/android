@@ -337,6 +337,10 @@ extends:
           ne(variables['Build.Reason'], 'PullRequest'),
           ne(variables['Build.Reason'], 'Schedule')
         )
+      variables:
+      # Keep signing and MSI creation (Workloads.proj runs VS MSBuild.exe) out of MSBuild multithreaded mode.
+      - name: MSBUILDENABLEMULTITHREADED
+        value: '0'
       jobs:
       - template: /eng/common/templates-official/jobs/jobs.yml@self
         parameters:

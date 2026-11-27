@@ -23,6 +23,11 @@ namespace generator.SourceWriters
 			IsPublic = true;
 			IsStatic = method.IsStatic;
 
+			if (GenBase.CanOverrideJavaObjectMethod (Name, method, opt))
+				IsOverride = true;
+			else if (GenBase.RequiresNewForJavaObjectMethod (Name, method, opt))
+				IsShadow = true;
+
 			method_callback = new MethodCallback (iface, method, opt, null, method.IsReturnCharSequence, iface.FullName + "Invoker");
 			SourceWriterExtensions.AddSupportedOSPlatform (Attributes, method, opt);
 
