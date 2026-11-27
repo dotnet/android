@@ -21,6 +21,15 @@ namespace generatortests
 			Assert.AreEqual ("foo", TypeNameUtilities.MangleName ("foo"));
 		}
 
+		[TestCase ("index", "Index")]
+		[TestCase ("@index", "Index")]
+		[SetCulture ("tr-TR")]
+		public void ParameterPropertyNameIsCultureInvariant (string name, string expected)
+		{
+			var parameter = new Parameter (name, "int", "int", false);
+			Assert.AreEqual (expected, parameter.PropertyName);
+		}
+
 		[Test, TestCaseSource (nameof (ReservedKeywords))]
 		[SetCulture ("cs-CZ")]
 		public void MangleNameCutlureInvariant (string keyword)

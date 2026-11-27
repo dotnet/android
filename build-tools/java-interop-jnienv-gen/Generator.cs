@@ -170,7 +170,7 @@ namespace Xamarin.Java.Interop
 			foreach (var t in JNIEnvEntries
 					.Select (e => e.DeclaringType ?? "JniEnvironment")
 					.Distinct ()
-					.OrderBy (t => t)) {
+					.OrderBy (t => t, StringComparer.Ordinal)) {
 				string visibility;
 				if (!visibilities.TryGetValue (t, out visibility))
 					visibility = "internal";
@@ -326,7 +326,7 @@ namespace Xamarin.Java.Interop
 				} else {
 					uc = false;
 				}
-				sb.Append (char.ToLower (c));
+				sb.Append (char.ToLowerInvariant (c));
 			}
 			return sb.ToString ();
 		}

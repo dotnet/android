@@ -52,6 +52,18 @@ public class MavenVersionTests
 		TestSort ("1.0.1.0,1.0.10.1,1.0.10.2,1.0.9.3", "1.0.9.3", "1.0.10.1", "1.0.1.0", "1.0.10.2");
 	}
 
+	[Test]
+	[SetCulture ("tr-TR")]
+	public void QualifierComparisonsUseOrdinalOrdering ()
+	{
+		Assert.Less (MavenVersion.Parse ("1.0-RC").CompareTo (MavenVersion.Parse ("1.0-rc")), 0);
+		Assert.Less (MavenVersion.Parse ("1.0.0.1-I").CompareTo (MavenVersion.Parse ("1.0.0.1-i")), 0);
+		Assert.Less (MavenVersion.Parse ("1.0-I").CompareTo (MavenVersion.Parse ("1.0-a")), 0);
+
+		var range = MavenVersionRange.Parse ("[1.0-I,1.0-a]").Single ();
+		Assert.IsTrue (range.ContainsVersion (MavenVersion.Parse ("1.0-Z")));
+	}
+
 	static void TestParse (string input, string? major, string? minor, string? patch, bool isValid)
 	{
 		var v = MavenVersion.Parse (input);

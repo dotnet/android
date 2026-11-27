@@ -146,13 +146,13 @@ namespace MonoDroid.Tools
 			if (namespaces.TryGetValue (javapkg, out managed))
 				return managed;
 			string ret = String.Join (".", (from s in javapkg.Split ('.') select
-				Char.ToUpper (s [0]) + s.Substring (1)).ToArray ());
+				Char.ToUpperInvariant (s [0]) + s.Substring (1)).ToArray ());
 			return ret;
 		}
 
 		string ToPascal (string field)
 		{
-			return String.Join ("", (from s in field.Split ('_') select s.Length == 0 ? "" : Char.ToUpper (s [0]) + s.Substring (1).ToLower ()).ToArray ());
+			return String.Join ("", (from s in field.Split ('_') select s.Length == 0 ? "" : Char.ToUpperInvariant (s [0]) + s.Substring (1).ToLowerInvariant ()).ToArray ());
 		}
 	}
 }

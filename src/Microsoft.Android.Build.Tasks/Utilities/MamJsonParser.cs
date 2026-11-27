@@ -210,7 +210,7 @@ namespace Xamarin.Android.Tasks
 
 		IEnumerable<XElement> GetReplacementTypes ()
 		{
-			foreach (var k in ReplacementTypes.Keys.OrderBy (k => k)) {
+			foreach (var k in ReplacementTypes.Keys.OrderBy (k => k, StringComparer.Ordinal)) {
 				yield return new XElement ("replace-type",
 						new XAttribute ("from", k),
 						new XAttribute ("to", ReplacementTypes [k]));
@@ -219,9 +219,9 @@ namespace Xamarin.Android.Tasks
 
 		IEnumerable<XElement> GetReplacementMethods ()
 		{
-			var entries = ReplacementMethods.Keys.OrderBy (e => e.SourceType)
-				.ThenBy (e => e.SourceName)
-				.ThenBy (e => e.SourceSignature);
+			var entries = ReplacementMethods.Keys.OrderBy (e => e.SourceType, StringComparer.Ordinal)
+				.ThenBy (e => e.SourceName, StringComparer.Ordinal)
+				.ThenBy (e => e.SourceSignature, StringComparer.Ordinal);
 			foreach (var k in entries) {
 				var v = ReplacementMethods [k];
 				yield return new XElement ("replace-method",

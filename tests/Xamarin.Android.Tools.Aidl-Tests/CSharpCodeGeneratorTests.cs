@@ -119,6 +119,25 @@ parcelable MyData;
 		}
 
 		[Test]
+		[SetCulture ("tr-TR")]
+		public void GeneratedIdentifiersUseInvariantCasing ()
+		{
+			const string input = """
+				package io.example;
+				interface Test {
+					int index ();
+				}
+				""";
+			var compiler = new AidlCompiler ();
+			var results = compiler.Run (input, out var output);
+
+			Assert.IsEmpty (results.LogMessages);
+			StringAssert.Contains ("namespace Io.Example", output);
+			StringAssert.Contains ("int Index ();", output);
+			StringAssert.Contains ("const string descriptor = \"io.example.Test\";", output);
+		}
+
+		[Test]
 		public void ParseErrorIsReported ()
 		{
 			const string input = "this is not valid aidl @@@";

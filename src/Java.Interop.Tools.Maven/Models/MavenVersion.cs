@@ -69,7 +69,7 @@ public class MavenVersion : IComparable, IComparable<MavenVersion>, IEquatable<M
 
 		// If either instance is nonstandard, Maven does a simple string compare
 		if (!IsValid || !other.IsValid)
-			return string.Compare (RawVersion, other.RawVersion);
+			return string.Compare (RawVersion, other.RawVersion, StringComparison.Ordinal);
 
 		var major_compare = ComparePart (Major ?? "0", other.Major ?? "0");
 
@@ -109,7 +109,7 @@ public class MavenVersion : IComparable, IComparable<MavenVersion>, IEquatable<M
 
 		// Identical versions with different qualifier fields are compared by using basic string comparison.
 		if (a_qualifier is not null && b_qualifier is not null)
-			return a_qualifier.CompareTo (b_qualifier);
+			return string.Compare (a_qualifier, b_qualifier, StringComparison.Ordinal);
 
 		// All versions with a qualifier are older than the same version without a qualifier (release version).
 		if (a_qualifier is not null)

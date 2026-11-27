@@ -164,7 +164,7 @@ namespace Xamarin.Android.Tools.Aidl
 			case "char":
 				return s;
 			}
-			return Char.ToUpper (s [0]) + s.Substring (1);
+			return Char.ToUpperInvariant (s [0]) + s.Substring (1);
 		}
 	}
 }

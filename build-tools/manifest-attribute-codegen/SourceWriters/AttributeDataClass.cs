@@ -35,7 +35,7 @@ class AttributeDataClass : ClassWriter
 			});
 
 		// Add properties
-		foreach (var a in attr.Attributes.OrderBy (a => a.Name)) {
+		foreach (var a in attr.Attributes.OrderBy (a => a.Name, StringComparer.Ordinal)) {
 			var attr_metadata = metadata.GetMetadata ($"{attr.ActualElementName}.{a.Name}");
 
 			if (!attr_metadata.Visible)
