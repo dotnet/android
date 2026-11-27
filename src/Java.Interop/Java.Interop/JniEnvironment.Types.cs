@@ -383,10 +383,11 @@ namespace Java.Interop
 				if (!type.IsValid)
 					throw new ArgumentException ("Handle must be valid.", nameof (type));
 
-				unsafe {
-					// SAFETY: The caller retains every descriptor string through registration.
-					foreach (var method in methods)
-						method.Validate ();
+				foreach (var method in methods) {
+					unsafe {
+						// SAFETY: The caller retains every descriptor string through registration.
+						method.EnsureValidModifiedUtf8Strings ();
+					}
 				}
 
 				IntPtr env = JniEnvironment.EnvironmentPointer;

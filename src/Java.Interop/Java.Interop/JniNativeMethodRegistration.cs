@@ -57,7 +57,7 @@ namespace Java.Interop {
 		/// <see cref="name"/> and <see cref="signature"/>, when non-null, must remain readable
 		/// and unchanged through their NUL terminators for the duration of this scan.
 		/// </safety>
-		internal unsafe readonly void Validate ()
+		internal unsafe readonly void EnsureValidModifiedUtf8Strings ()
 		{
 			unsafe {
 				if (name == null)
