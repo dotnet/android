@@ -22,35 +22,24 @@ namespace Xamarin.Android.Build.Tests {
 			[Values ("AGenericBinding", "Mono.Android")] string genericAssembly,
 			[Values] bool reverseOrder)
 		{
-			var genericPeer = new JavaPeerInfo {
+			JavaPeerInfo CreatePeer (string ns, string name, string assemblyName, bool generic) => new JavaPeerInfo {
 				JavaName = "example/AliasPeer",
 				CompatJniName = "example/AliasPeer",
-				ManagedTypeName = "A.GenericPeer`1",
-				ManagedTypeNamespace = "A",
-				ManagedTypeShortName = "GenericPeer`1",
-				AssemblyName = genericAssembly,
-				IsGenericDefinition = true,
+				ManagedTypeName = $"{ns}.{name}",
+				ManagedTypeNamespace = ns,
+				ManagedTypeShortName = name,
+				AssemblyName = assemblyName,
+				IsGenericDefinition = generic,
 				DoNotGenerateAcw = true,
 				ActivationCtor = new ActivationCtorInfo {
-					DeclaringTypeName = "A.GenericPeer`1",
-					DeclaringAssemblyName = genericAssembly,
-					DeclaringType = new TypeRefData { ManagedTypeName = "A.GenericPeer`1", AssemblyName = genericAssembly },
+					DeclaringTypeName = $"{ns}.{name}",
+					DeclaringAssemblyName = assemblyName,
+					DeclaringType = new TypeRefData { ManagedTypeName = $"{ns}.{name}", AssemblyName = assemblyName },
 					Style = ActivationCtorStyle.XamarinAndroid,
 				},
 			};
-			var nonGenericPeer = genericPeer with {
-				ManagedTypeName = "Z.NonGenericPeer",
-				ManagedTypeNamespace = "Z",
-				ManagedTypeShortName = "NonGenericPeer",
-				AssemblyName = "ZNonGenericBinding",
-				IsGenericDefinition = false,
-				ActivationCtor = new ActivationCtorInfo {
-					DeclaringTypeName = "Z.NonGenericPeer",
-					DeclaringAssemblyName = "ZNonGenericBinding",
-					DeclaringType = new TypeRefData { ManagedTypeName = "Z.NonGenericPeer", AssemblyName = "ZNonGenericBinding" },
-					Style = ActivationCtorStyle.XamarinAndroid,
-				},
-			};
+			var genericPeer = CreatePeer ("A", "GenericPeer`1", genericAssembly, generic: true);
+			var nonGenericPeer = CreatePeer ("Z", "NonGenericPeer", "ZNonGenericBinding", generic: false);
 			var peers = reverseOrder
 				? new List<JavaPeerInfo> { nonGenericPeer, genericPeer }
 				: new List<JavaPeerInfo> { genericPeer, nonGenericPeer };

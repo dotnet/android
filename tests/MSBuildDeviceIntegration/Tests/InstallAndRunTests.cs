@@ -105,39 +105,13 @@ namespace Xamarin.Android.Build.Tests
 			proj.SetRuntime (AndroidRuntime.CoreCLR);
 			proj.SetRuntimeIdentifiers ([DeviceAbi]);
 			proj.SetDefaultTargetDevice ();
-			var libraries = new [] {
-				new XamarinAndroidLibraryProject { ProjectName = "AGenericBinding" },
-				new XamarinAndroidLibraryProject { ProjectName = "ZNonGenericBinding" },
-			};
-			libraries [0].Sources.Add (new BuildItem.Source ("Peer.cs") {
-				TextContent = () => """
-					using System;
-					using Android.Runtime;
-
-					namespace A;
-
-					[Register ("example/AliasPeer", DoNotGenerateAcw = true)]
-					public class GenericPeer<T> : Java.Lang.Object
-					{
-						public GenericPeer (IntPtr handle, JniHandleOwnership transfer) : base (handle, transfer) { }
-					}
-					""",
-			});
-			libraries [1].Sources.Add (new BuildItem.Source ("Peer.cs") {
-				TextContent = () => """
-					using System;
-					using Android.Runtime;
-
-					namespace Z;
-
-					[Register ("example/AliasPeer", DoNotGenerateAcw = true)]
-					public class NonGenericPeer : Java.Lang.Object
-					{
-						public NonGenericPeer (IntPtr handle, JniHandleOwnership transfer) : base (handle, transfer) { }
-					}
-					""",
-			});
-			foreach (var library in reverseReferences ? libraries.Reverse () : libraries) {
+			var caseDirectory = Path.Combine (XABuildPaths.TopDirectory, "tests", "TrimmingTests", "Cases", "GenericBindingAliases");
+			var libraries = new [] { ("AGenericBinding", "GenericPeer.cs"), ("ZNonGenericBinding", "NonGenericPeer.cs") };
+			foreach (var (name, source) in reverseReferences ? libraries.Reverse () : libraries) {
+				var library = new XamarinAndroidLibraryProject { ProjectName = name };
+				library.Sources.Add (new BuildItem.Source (source) {
+					TextContent = () => File.ReadAllText (Path.Combine (caseDirectory, name, source)),
+				});
 				library.AndroidResources.Clear ();
 				library.SetProperty ("AndroidGenerateResourceDesigner", "false");
 				proj.AddReference (library);
@@ -151,35 +125,19 @@ namespace Xamarin.Android.Build.Tests
 				Metadata = { { "Bind", "False" } },
 			});
 			proj.MainActivity = proj.DefaultMainActivity.Replace ("//${AFTER_ONCREATE}", """
-				GC.KeepAlive (typeof (A.GenericPeer<Java.Lang.Object>));
-				GC.KeepAlive (typeof (Z.NonGenericPeer));
 				var runtime = Java.Interop.JniEnvironment.Runtime;
 				var mappedType = runtime.TypeManager.GetType (new Java.Interop.JniTypeSignature ("example/AliasPeer"));
-				Android.Util.Log.Info ("GenericAliases", $"JAVA_TO_MANAGED_TYPE={mappedType}");
-				var javaClass = Android.Runtime.JNIEnv.FindClass ("example/AliasPeer");
-				try {
-					var constructor = Android.Runtime.JNIEnv.GetMethodID (javaClass, "<init>", "()V");
-					var handle = Android.Runtime.JNIEnv.NewObject (javaClass, constructor);
-					try {
-						var reference = new Java.Interop.JniObjectReference (handle, Java.Interop.JniObjectReferenceType.Local);
-						using var peer = runtime.ValueManager.CreatePeer (
-							ref reference, Java.Interop.JniObjectReferenceOptions.Copy, targetType: null);
-						if (mappedType != typeof (Z.NonGenericPeer) || peer?.GetType () != typeof (Z.NonGenericPeer)) {
-							throw new InvalidOperationException ($"Wrong untyped peer: {mappedType}, {peer?.GetType ()}");
-						}
-					} finally {
-						Android.Runtime.JNIEnv.DeleteLocalRef (handle);
-					}
-					handle = Android.Runtime.JNIEnv.NewObject (javaClass, constructor);
-					using var genericPeer = Java.Lang.Object.GetObject<A.GenericPeer<Java.Lang.Object>> (
-						handle, Android.Runtime.JniHandleOwnership.TransferLocalRef);
-					if (genericPeer?.GetType () != typeof (A.GenericPeer<Java.Lang.Object>)) {
-						throw new InvalidOperationException ("The closed-generic binding was lost.");
-					}
-					Android.Util.Log.Info ("GenericAliases", "NON_GENERIC_BINDING_ACTIVATED");
-				} finally {
-					Android.Runtime.JNIEnv.DeleteGlobalRef (javaClass);
+				var reference = new Java.Interop.JniObjectReference (
+					Android.Runtime.JNIEnv.CreateInstance ("example/AliasPeer", "()V"), Java.Interop.JniObjectReferenceType.Local);
+				using var peer = runtime.ValueManager.CreatePeer (
+					ref reference, Java.Interop.JniObjectReferenceOptions.CopyAndDispose, targetType: null);
+				using var genericPeer = Java.Lang.Object.GetObject<A.GenericPeer<Java.Lang.Object>> (
+					Android.Runtime.JNIEnv.CreateInstance ("example/AliasPeer", "()V"), Android.Runtime.JniHandleOwnership.TransferLocalRef);
+				if (mappedType != typeof (Z.NonGenericPeer) || peer?.GetType () != typeof (Z.NonGenericPeer) ||
+						genericPeer?.GetType () != typeof (A.GenericPeer<Java.Lang.Object>)) {
+					throw new InvalidOperationException ($"Wrong peers: {mappedType}, {peer?.GetType ()}, {genericPeer?.GetType ()}");
 				}
+				Android.Util.Log.Info ("GenericAliases", "NON_GENERIC_BINDING_ACTIVATED");
 				""");
 
 			using var builder = CreateApkBuilder (Path.Combine ("temp", TestName, "App"));
