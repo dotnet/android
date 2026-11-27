@@ -147,6 +147,7 @@ namespace Xamarin.Android.Build.Tests
 			}
 			proj.AndroidJavaSources.Add (new AndroidItem.AndroidJavaSource ("example/AliasPeer.java") {
 				TextContent = () => "package example; public class AliasPeer {}",
+				Encoding = new UTF8Encoding (encoderShouldEmitUTF8Identifier: false),
 				Metadata = { { "Bind", "False" } },
 			});
 			proj.MainActivity = proj.DefaultMainActivity.Replace ("//${AFTER_ONCREATE}", """
