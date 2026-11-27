@@ -69,4 +69,5 @@ With more than one device attached, always target one:
 
 - `-p:IncludeCategories=A%2CB` (escape the comma) limits `Mono.Android.NET-Tests` to those categories (the value goes into `runtimeconfig.json`). Pass it to both the install and test commands.
 - `PublishAot=true` in Debug still runs CoreCLR unless `Optimize=true` or publishing. Check `_AndroidRuntime` before claiming NativeAOT coverage.
+- For experiments that manually replace or repackage APKs or native libraries, verify the installed candidate; `dotnet test --no-build` may still deploy baseline outputs.
 - A silent instrumentation run means the app crashed: run `adb -s <serial> logcat -d | grep -E 'FATAL|tombstone|signal'`.

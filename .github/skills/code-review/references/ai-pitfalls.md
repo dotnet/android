@@ -21,7 +21,8 @@ reviews.
 | **Docs describe intent not reality** | AI doc comments often describe what the code *should* do, not what it *actually* does. Review doc comments against the implementation. (Postmortem `#59`) |
 | **Unused parameters** | AI adds `CancellationToken` parameters but never observes them, or accepts `additionalArgs` as a string and interpolates it into a command. Unused CancellationToken is a broken contract; string args are injection risks. |
 | **Confidently wrong domain facts** | AI makes authoritative claims about platform-specific behavior that are wrong (e.g., claiming a deprecated env var is recommended). Always verify domain-specific claims against official docs. |
-| **Over-mocking** | Not everything needs to be mocked. Integration tests with `Assert.Ignore` on failure are fine and catch real API changes that mocks never will. |
+| **Low-value tests** | Flag duplicates, brittle GC-timing tests, and tests that only assert trivial implementation details or removed code. Preserve meaningful regression and characterization coverage. |
+| **Over-mocking** | Prefer meaningful integration coverage when appropriate. Skip only for documented missing prerequisites or unsupported platforms, not failing assertions. |
 | **`Debug.WriteLine` for logging** | AI catch blocks often log with `System.Diagnostics.Debug.WriteLine()` or `Console.WriteLine()` — neither integrates with MSBuild or codebase logger patterns. Use the task's logging facilities instead. |
 | **Modifying localization files** | AI modifies non-English `.resx` or `.lcl` files. Only the main English resource files should be edited. |
 | **`git commit --amend`** | AI uses `--amend` on commits. Always create new commits — the maintainer will squash as needed. |

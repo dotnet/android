@@ -9,10 +9,10 @@ Rules for authoring MSBuild targets, wherever they live — `.targets`, `.props`
 targets under `src/Xamarin.Android.Build.Tasks/Microsoft.Android.Sdk/targets/` and
 `src/Xamarin.Android.Build.Tasks/Xamarin.Android.Common.targets`, which ship to customers.
 
-## Every target that produces a file must be incremental
+## Make file-producing targets incremental when appropriate
 
-Any target invoking a task that writes a file needs `Inputs` and `Outputs`. A target without them
-re-runs on every build, which shows up directly in customer inner-loop build times.
+When a target has complete, stable file inputs and outputs and can be skipped without losing
+required side effects, declare `Inputs` and `Outputs` to avoid redundant work.
 
 ```xml
 <Target Name="_AndroidGenerateSomething"
@@ -35,11 +35,11 @@ real output can never serve as `Outputs` — you are then forced to invent a
 `$(...)Stamp` file, `<MakeDir/>` it, `<Touch/>` it, and add it to `@(FileWrites)`. That is a lot of
 machinery to buy back something you did not need. Prefer the simple version.
 
-## Compute `Inputs` in a `<TargetName>Inputs` target
+## Compute late-bound `Inputs` in a `<TargetName>Inputs` target
 
-Do not compute the input `ItemGroup` inside the target that consumes it — `Inputs` is evaluated
-before the target body runs, so the item group would be empty on the first evaluation. Put it in a
-separate target pulled in via `DependsOnTargets`, named `<TargetName>Inputs`:
+If input items must be populated during execution, don't compute them inside the consuming target:
+`Inputs` is evaluated before its body runs. Use already available inputs directly, or populate
+late-bound inputs in a dependency named `<TargetName>Inputs`:
 
 ```xml
 <Target Name="_AndroidGenerateSomethingInputs">

@@ -10,13 +10,13 @@ native runtime, or TrimmableTypeMap paths.
 
 | Check | What to look for |
 |-------|-----------------|
-| **`JniObjectReference` lifecycle** | Every `JniObjectReference` obtained from JNI calls must be disposed in a `try`/`finally` block. Local references that escape their JNI frame exhaust the local reference table (default 512 entries). Global references that aren't freed are permanent leaks. |
+| **`JniObjectReference` lifecycle** | Track local/global ownership and transfer semantics. Release owned references at the correct boundary; don't dispose borrowed references or release transferred ownership twice. |
 | **`JniPeerMembers` for method/field IDs** | Method and field IDs should be cached via `JniPeerMembers.InstanceMethods`, `JniPeerMembers.StaticMethods`, or `JniPeerMembers.InstanceFields`. Looking up IDs on every call is expensive. |
 | **Virtual vs non-virtual dispatch** | Default interface method implementations should use `InvokeNonvirtualVoidMethod()` (non-virtual). Class method overrides should use `InvokeVirtualVoidMethod()` (virtual). Getting this wrong changes dispatch semantics. |
 | **`[Register]` attribute accuracy** | `[Register]` attributes must exactly match the Java method name and JNI signature. Mismatches cause `NoSuchMethodError` at runtime. Verify against the Java API description. |
-| **`JniTransition` for native callbacks** | Entry points from Java into managed code should use `JniTransition` to properly handle exception marshaling. Without it, managed exceptions propagate into the JVM as undefined behavior. |
-| **Exception checking after JNI calls** | After JNI calls that can throw (most of them), check for pending Java exceptions via `JniEnvironment.Errors.ExceptionOccurred()` or rely on the built-in checking in `JniPeerMembers` wrappers. Don't ignore JNI error return codes. |
-| **Thread-local JNI environments** | JNI environments are thread-local. Use `JniEnvironment.Current` to access the current thread's environment. Never cache a `JNIEnv*` across threads. |
+| **JNI transitions for native callbacks** | Generated callbacks use `JniMarshal.SafeInvokeAction`/`SafeInvokeFunc` or typed helpers to handle transitions and exceptions. |
+| **Exception checking after JNI calls** | Handle pending Java exceptions according to the wrapper contract. `JniEnvironment.Exceptions.ExceptionOccurred()` returns an owned local reference when valid. |
+| **Thread-local JNI environments** | Use `JniEnvironment.EnvironmentPointer` for the current thread; never cache a `JNIEnv*` across threads. |
 | **Retaining JNI handle owners (`GC.KeepAlive`)** | `.Handle`, `.PeerReference`, `new JValue (peer)`, and `new JniArgumentValue (peer)` copy raw handles without rooting peers. On CoreCLR/NativeAOT, Java reachability doesn't protect copied handles: `JavaMarshalGCBridge` deletes and replaces grefs of unreachable peers (even `java.lang.Class`), causing CheckJNI `use of deleted global reference` aborts. See checklist below. |
 
 ---
