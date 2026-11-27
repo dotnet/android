@@ -60,9 +60,9 @@ namespace Java.Interop {
 		internal unsafe readonly void EnsureValidModifiedUtf8Strings ()
 		{
 			unsafe {
+				// SAFETY: The caller keeps both descriptor strings readable and NUL-terminated through registration.
 				ArgumentNullException.ThrowIfNull (name);
 				ArgumentNullException.ThrowIfNull (signature);
-				// SAFETY: The caller keeps both descriptor strings readable and NUL-terminated through registration.
 				JniModifiedUtf8.Validate (name);
 				JniModifiedUtf8.Validate (signature);
 			}
