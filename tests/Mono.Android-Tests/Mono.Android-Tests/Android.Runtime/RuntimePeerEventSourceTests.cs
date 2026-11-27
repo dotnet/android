@@ -33,16 +33,16 @@ namespace Android.RuntimeTests
 
 			int managedHash;
 			int jniHash;
-			using (var instance = new Java.Lang.Integer (42)) {
+			using (var instance = new Java.Util.ArrayList ()) {
 				managedHash = RuntimeHelpers.GetHashCode (instance);
 				jniHash = instance.JniIdentityHashCode;
 			}
 
 			var events = listener.GetEventsForManagedObject (managedHash);
 			Assert.AreEqual (3, events.Count, "Expected JavaPeerCreated, ManagedPeerReleasedJavaPeer, and JavaPeerReleasedManagedPeer.");
-			AssertLifecycleEvent (events [0], RuntimeEventSource.JavaPeerCreatedEventId, "JavaPeerCreated", "Java.Lang.Integer", "java/lang/Integer", jniHash, managedHash);
-			AssertLifecycleEvent (events [1], RuntimeEventSource.ManagedPeerReleasedJavaPeerEventId, "ManagedPeerReleasedJavaPeer", "Java.Lang.Integer", "java/lang/Integer", jniHash, managedHash);
-			AssertLifecycleEvent (events [2], RuntimeEventSource.JavaPeerReleasedManagedPeerEventId, "JavaPeerReleasedManagedPeer", "Java.Lang.Integer", "java/lang/Integer", jniHash, managedHash);
+			AssertLifecycleEvent (events [0], RuntimeEventSource.JavaPeerCreatedEventId, "JavaPeerCreated", "Java.Util.ArrayList", "java/util/ArrayList", jniHash, managedHash);
+			AssertLifecycleEvent (events [1], RuntimeEventSource.ManagedPeerReleasedJavaPeerEventId, "ManagedPeerReleasedJavaPeer", "Java.Util.ArrayList", "java/util/ArrayList", jniHash, managedHash);
+			AssertLifecycleEvent (events [2], RuntimeEventSource.JavaPeerReleasedManagedPeerEventId, "JavaPeerReleasedManagedPeer", "Java.Util.ArrayList", "java/util/ArrayList", jniHash, managedHash);
 		}
 
 		[TestMethod]
