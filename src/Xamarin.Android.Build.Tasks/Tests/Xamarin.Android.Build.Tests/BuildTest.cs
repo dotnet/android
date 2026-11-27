@@ -393,6 +393,9 @@ namespace Xamarin.Android.Build.Tests
 				GetTargetResultMetadata (item, "ApplicationVersion") == applicationVersion &&
 				GetTargetResultMetadata (item, "MauiArtifact") == mauiArtifact).ToList ();
 			Assert.AreEqual (1, matches.Count, $"Expected application artifact item '{fileName}|{packageFormat}|{signed}|{applicationId}|{abi}|{applicationTitle}|{applicationName}|{applicationDisplayVersion}|{applicationVersion}|{mauiArtifact}'. Actual items:{Environment.NewLine}{FormatApplicationArtifactTargetResultItems (items)}");
+			var identity = GetTargetResultMetadata (matches [0], "Identity");
+			Assert.IsTrue (Path.IsPathRooted (identity), $"Expected application artifact item '{fileName}' to use a full path, but was '{identity}'.");
+			Assert.AreEqual (GetTargetResultMetadata (matches [0], "FullPath"), identity, $"Expected application artifact item '{fileName}' identity to match its FullPath.");
 		}
 
 		static string GetTargetResultMetadata (Dictionary<string, string> item, string name)

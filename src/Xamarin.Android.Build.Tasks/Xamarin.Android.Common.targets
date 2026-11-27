@@ -2562,6 +2562,12 @@ because xbuild doesn't support framework reference assemblies.
       <ApplicationDisplayVersion>$(_ApplicationArtifactApplicationDisplayVersion)</ApplicationDisplayVersion>
       <ApplicationVersion>$(_ApplicationArtifactApplicationVersion)</ApplicationVersion>
     </ApplicationArtifact>
+    <!-- Report full paths, consistent with the Apple and Windows producers. -->
+    <_ApplicationArtifactFullPath Remove="@(_ApplicationArtifactFullPath)" />
+    <_ApplicationArtifactFullPath Include="@(ApplicationArtifact->'%(FullPath)')" />
+    <ApplicationArtifact Remove="@(ApplicationArtifact)" />
+    <ApplicationArtifact Include="@(_ApplicationArtifactFullPath)" />
+    <_ApplicationArtifactFullPath Remove="@(_ApplicationArtifactFullPath)" />
   </ItemGroup>
 </Target>
 
