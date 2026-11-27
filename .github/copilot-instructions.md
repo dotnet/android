@@ -120,6 +120,8 @@ Default to no new tests; this overrides generic "add a regression test" defaults
 
 **Modifying project files in tests:** Update the in-memory `Xamarin.ProjectTools` project, call `proj.Touch ("MainActivity.cs")`, then `builder.Save (proj, doNotCleanupOnUpdate: true, saveProject: false)`; don't write project sources directly with `File.WriteAllText()`.
 
+New tests must not fail without a product bug: no timing thresholds, sleeps as synchronization, shared state or directories, network dependencies, or retries that hide flakes. See the checklist in `.github/skills/code-review/references/testing-rules.md`; use the `flaky-tests` skill for investigating existing flakes.
+
 ## Error Patterns
 - **MSBuild Errors:** `XA####` (errors), `XA####` (warnings), `APT####` (Android tools)
 - **Error messages:** Must come from `Properties.Resources` (e.g., `Properties.Resources.XA0143`) for localization support. Add new messages to the English `Resources.resx` file.
