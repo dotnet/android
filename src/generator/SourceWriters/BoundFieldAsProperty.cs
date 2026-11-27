@@ -14,7 +14,7 @@ namespace generator.SourceWriters
 		readonly Field field;
 		readonly CodeGenerationOptions opt;
 
-		public BoundFieldAsProperty (GenBase type, Field field, CodeGenerationOptions opt)
+		public BoundFieldAsProperty (GenBase type, Field field, CodeGenerationOptions opt, bool? isShadow = null)
 		{
 			this.field = field;
 			this.opt = opt;
@@ -43,6 +43,7 @@ namespace generator.SourceWriters
 			SetVisibility (field.Visibility);
 			UseExplicitPrivateKeyword = true;
 
+			IsShadow = isShadow ?? type.RequiresNew (field, opt);
 			IsStatic = field.IsStatic;
 
 			HasGet = true;

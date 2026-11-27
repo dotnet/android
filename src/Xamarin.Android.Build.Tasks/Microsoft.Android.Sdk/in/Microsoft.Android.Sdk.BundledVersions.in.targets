@@ -33,7 +33,7 @@ WARNING:  DO NOT MODIFY this file unless you are knowledgeable about MSBuild and
         TargetingPackName="Microsoft.Android.Ref.$(_AndroidTargetingPackId)"
         TargetingPackVersion="**FromWorkload**"
         RuntimePackNamePatterns="Microsoft.Android.Runtime.$(_AndroidManagedRuntimePackId).android"
-        RuntimePackRuntimeIdentifiers="android-arm;android-arm64;android-x86;android-x64"
+        RuntimePackRuntimeIdentifiers="android-arm;android-arm64;android-x64"
         Profile="Android"
     />
     <KnownFrameworkReference
@@ -44,7 +44,7 @@ WARNING:  DO NOT MODIFY this file unless you are knowledgeable about MSBuild and
         TargetingPackName="Microsoft.Android.Ref.$(_AndroidTargetingPackId)"
         TargetingPackVersion="**FromWorkload**"
         RuntimePackNamePatterns="Microsoft.Android.Runtime.$(_AndroidRuntimePackRuntime).$(_AndroidRuntimePackId).**RID**"
-        RuntimePackRuntimeIdentifiers="android-arm;android-arm64;android-x86;android-x64"
+        RuntimePackRuntimeIdentifiers="android-arm;android-arm64;android-x64"
         Profile="Android"
     />
   </ItemGroup>

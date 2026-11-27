@@ -15,7 +15,7 @@ Consult `references/test-catalog.md` for the full mapping of test areas → asse
 ## Test categories
 
 - **Standalone** — `dotnet test <project>.csproj`. No local SDK needed.
-- **Full-build** — requires the local SDK at `bin/Debug/dotnet/dotnet` (or Release). Use `./dotnet-local.sh` (macOS/Linux) or `dotnet-local.cmd` (Windows).
+- **Full-build** — requires the local SDK at `bin/Debug/dotnet/dotnet` (or Release). Use `./dotnet-local.sh` (macOS/Linux) or `dotnet-local.cmd` (Windows); see `local-build` if the wrapper selects the wrong configuration.
 
 Check for the local SDK in the configuration needed by the tests:
 ```bash
@@ -25,7 +25,7 @@ test -x "bin/${CONFIGURATION}/dotnet/dotnet"
 
 **If the local SDK is missing, prepare and build it, then run the full-build tests.** On macOS/Linux, use `make prepare && make leeroy` (not `make all`); on Windows, use `build.cmd`. For Release tests on macOS/Linux, use `make prepare CONFIGURATION=Release && make leeroy CONFIGURATION=Release`. The presence of the `dotnet` executable only confirms provisioning, not that the SDK or test assemblies have been built. Rebuild after source changes so tests exercise the updated SDK. See `local-build` for per-project rebuilds and known issues, and `android-devices` for emulators.
 
-**Validate code changes locally before pushing.** Full SDK builds and relevant host/device tests are expected development work. Do not label them prohibitively slow, ask whether to skip them solely because of presumed duration, or rely on CI as the first validation. Start with focused tests while iterating and expand coverage as needed for the affected components. Never silently skip tests: if the user explicitly limits validation or an actual environment constraint blocks it, report the exact command, failure or missing prerequisite, and remaining unvalidated coverage. Include commands and outcomes in the handoff.
+Validation and test-adding rules are in `.github/copilot-instructions.md` (Testing).
 
 ## Workflow
 
@@ -77,6 +77,7 @@ The `${TFM}` placeholder = `DotNetStableTargetFramework` from `Directory.Build.p
 dotnet test <project>.csproj -v minimal
 dotnet test <project>.csproj -v minimal --filter "Name~TestName"
 ```
+In a worktree with no commits on its branch, SourceLink fails with `Repository has no commit`; add `-p:EnableSourceLink=false -p:EnableSourceControlManagerQueries=false` locally.
 
 ### Host-side MSBuild tests (full-build)
 ```bash
