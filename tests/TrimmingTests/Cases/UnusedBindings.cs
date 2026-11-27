@@ -4,7 +4,7 @@
 #:property SupportedOSPlatformVersion=24
 #:project TrimmingTests.Expectations/TrimmingTests.Expectations.csproj
 
-// An app that is only an Activity: Mono.Android bindings it never uses must be trimmed away.
+// An app that is only an Instrumentation: Mono.Android bindings it never uses must be trimmed away.
 // It also guards these fixed bugs:
 // - https://github.com/dotnet/android/pull/11144: ILLink failed with IL1034 because the app assembly was rooted as an entry
 //   point; rooting the whole app assembly would also keep UnusedHelper.
@@ -15,12 +15,12 @@
 
 using System;
 using Android.App;
-using Android.OS;
+using Android.Runtime;
 using Microsoft.Android.TrimmingTests.Expectations;
 
 // Used by the app.
-[assembly: KeptTypeInAssembly ("Mono.Android", "Android.App.Activity")]
-[assembly: KeptMemberInAssembly ("Mono.Android", "Android.App.Activity", "OnCreate(Android.OS.Bundle)")]
+[assembly: KeptTypeInAssembly ("Mono.Android", "Android.App.Instrumentation")]
+[assembly: KeptMemberInAssembly ("Mono.Android", "Android.App.Instrumentation", "CallApplicationOnCreate(Android.App.Application)")]
 
 // Never used by the app.
 [assembly: RemovedTypeInAssembly ("Mono.Android", "Android.Webkit.WebView")]
@@ -32,15 +32,20 @@ using Microsoft.Android.TrimmingTests.Expectations;
 [assembly: RemovedTypeInAssembly ("Mono.Android", "Android.Views.View/IOnClickListenerInvoker")]
 [assembly: RemovedTypeInAssembly ("Mono.Android", "Android.Views.View/IOnClickListenerImplementor")]
 
-// Android instantiates the activity through its compiler-generated default constructor.
-[Activity (Label = "UnusedBindings", MainLauncher = true)]
-[KeptMember (".ctor()")]
-public class MainActivity : Activity
+[Instrumentation (Name = "net.dot.trimmingtests.CaseInstrumentation")]
+public class CaseInstrumentation : Instrumentation
 {
+	// Android creates instrumentations before the runtime starts, so their peer is activated later through this constructor.
 	[Kept]
-	protected override void OnCreate (Bundle? savedInstanceState)
+	public CaseInstrumentation (IntPtr handle, JniHandleOwnership transfer)
+		: base (handle, transfer)
 	{
-		base.OnCreate (savedInstanceState);
+	}
+
+	[Kept]
+	public override void CallApplicationOnCreate (Application? app)
+	{
+		base.CallApplicationOnCreate (app);
 		Android.Util.Log.Info ("TrimmingTests", "TRIMMING_TEST_RESULT: PASS");
 	}
 

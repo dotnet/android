@@ -9,7 +9,7 @@
 
 using System;
 using Android.App;
-using Android.OS;
+using Android.Runtime;
 using Microsoft.Android.TrimmingTests.Expectations;
 
 [assembly: KeptTypeInAssembly ("Mono.Android", "Java.Lang.Integer")]
@@ -22,12 +22,18 @@ using Microsoft.Android.TrimmingTests.Expectations;
 [assembly: RemovedTypeInAssembly ("Mono.Android", "Java.Math.BigDecimal")]
 [assembly: RemovedTypeInAssembly ("Mono.Android", "Java.Util.Concurrent.Atomic.AtomicInteger")]
 
-[Activity (Label = "JavaObjectActivation", MainLauncher = true)]
-public class MainActivity : Activity
+[Instrumentation (Name = "net.dot.trimmingtests.CaseInstrumentation")]
+public class CaseInstrumentation : Instrumentation
 {
-	protected override void OnCreate (Bundle? savedInstanceState)
+	// Android creates instrumentations before the runtime starts, so their peer is activated later through this constructor.
+	public CaseInstrumentation (IntPtr handle, JniHandleOwnership transfer)
+		: base (handle, transfer)
 	{
-		base.OnCreate (savedInstanceState);
+	}
+
+	public override void CallApplicationOnCreate (Application? app)
+	{
+		base.CallApplicationOnCreate (app);
 		try {
 			var list = new Java.Util.ArrayList ();
 			// Dispose the wrapper the app created, so ArrayList.get () has to activate a new one.

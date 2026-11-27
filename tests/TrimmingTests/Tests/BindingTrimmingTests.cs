@@ -56,4 +56,29 @@ public class BindingTrimmingTests : TrimmingTestBase
 		var app = BuildAndRun ("Cases/UnusedBoxingBindings.cs", configuration);
 		AssertTrimmingExpectations (app);
 	}
+
+	// Reading Context.CacheDir keeps only the activation constructor of Java.IO.File, not all of its constructors.
+	[Test]
+	[Ignore ("https://github.com/dotnet/android/issues/13649: GetObject<T> keeps every constructor of every bound return type.")]
+	public void BoundReturnTypesKeepOnlyTheActivationConstructorWithoutWarnings ([TrimmingConfigurations] TrimmingConfiguration configuration)
+	{
+		var app = BuildAndRun ("Cases/BoundReturnTypeConstructors.cs", configuration);
+		AssertTrimmingExpectations (app);
+	}
+
+	// AndroidMessageHandler's authentication modules are removed when PreAuthenticationData is never set.
+	[Test]
+	public void UnusedAuthenticationModulesAreRemovedWithoutWarnings ([TrimmingConfigurations] TrimmingConfiguration configuration)
+	{
+		var app = BuildAndRun ("Cases/AndroidMessageHandlerAuthModules.cs", configuration);
+		AssertTrimmingExpectations (app);
+	}
+
+	// NativeAOT compiles only the JavaDictionary<TKey,TValue> value-type instantiations the app uses.
+	[Test]
+	public void UnusedValueTypeDictionariesAreNotCompiledWithoutWarnings ([TrimmingConfigurations] TrimmingConfiguration configuration)
+	{
+		var app = BuildAndRun ("Cases/ValueTypeDictionaryInstantiations.cs", configuration);
+		AssertTrimmingExpectations (app);
+	}
 }

@@ -11,7 +11,7 @@
 
 using System;
 using Android.App;
-using Android.OS;
+using Android.Runtime;
 using Android.Views;
 using Android.Widget;
 using Microsoft.Android.TrimmingTests.Expectations;
@@ -27,15 +27,22 @@ using Microsoft.Android.TrimmingTests.Expectations;
 [assembly: RemovedTypeInAssembly ("Mono.Android", "Android.Widget.Button")]
 [assembly: RemovedTypeInAssembly ("Mono.Android", "Android.Widget.CalendarView")]
 
-[Activity (Label = "UsedBindings", MainLauncher = true)]
-public class MainActivity : Activity
+[Instrumentation (Name = "net.dot.trimmingtests.CaseInstrumentation")]
+public class CaseInstrumentation : Instrumentation
 {
-	protected override void OnCreate (Bundle? savedInstanceState)
+	// Android creates instrumentations before the runtime starts, so their peer is activated later through this constructor.
+	public CaseInstrumentation (IntPtr handle, JniHandleOwnership transfer)
+		: base (handle, transfer)
 	{
-		base.OnCreate (savedInstanceState);
+	}
+
+	public override void CallApplicationOnCreate (Application? app)
+	{
+		base.CallApplicationOnCreate (app);
 		try {
+			var context = app ?? throw new InvalidOperationException ("No application.");
 			var listener = new ClickListener ();
-			var view = new TextView (this);
+			var view = new TextView (context);
 			view.SetOnClickListener (listener);
 			if (!view.PerformClick () || !listener.Clicked) {
 				throw new InvalidOperationException ("Java did not call the managed click listener.");

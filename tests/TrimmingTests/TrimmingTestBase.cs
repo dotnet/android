@@ -57,7 +57,10 @@ public sealed record TrimmedApp (string CaseFile, TrimmingConfiguration Configur
 /// Each case is a file-based app (<c>#:property</c> directives) purpose-built for one scenario, so nothing else can keep the
 /// types and members under test alive. A case must declare <c>#:property ApplicationId=...</c>, reference the expectations
 /// with <c>#:project TrimmingTests.Expectations/TrimmingTests.Expectations.csproj</c>, and log exactly one
-/// <c>TRIMMING_TEST_RESULT: PASS</c> or <c>TRIMMING_TEST_RESULT: FAIL ...</c> line on startup. Never add trimmer descriptors,
+/// <c>TRIMMING_TEST_RESULT: PASS</c> or <c>TRIMMING_TEST_RESULT: FAIL ...</c> line on startup. A case starts from an
+/// <c>[Instrumentation (Name = "net.dot.trimmingtests.CaseInstrumentation")]</c> that runs its checks in
+/// <c>CallApplicationOnCreate ()</c>, on the main thread after the application's <c>OnCreate ()</c>, unless it needs an activity
+/// window (layouts, starting activities); then it has a <c>MainLauncher</c> activity instead. Never add trimmer descriptors,
 /// rooted assemblies, or <c>[DynamicDependency]</c> to a case unless that is the behavior under test. A case that needs more
 /// than one file lives in its own directory, <c>Cases/&lt;Case&gt;/&lt;Case&gt;.cs</c>, next to its Android resources, its
 /// <c>AndroidManifest.xml</c>, or a <c>Case.targets</c> with MSBuild items. Cases that reproduce a reported bug link to it.
@@ -65,6 +68,8 @@ public sealed record TrimmedApp (string CaseFile, TrimmingConfiguration Configur
 /// <para>
 /// Tests in a fixture may run in parallel (<c>[Parallelizable (ParallelScope.Children)]</c>), also on the device: each test builds in
 /// its own directory, installs its own package (<c>ApplicationId</c> plus the configuration), and reads only its app's logcat output.
+/// Tests of activity cases must be <c>[NonParallelizable]</c>: an activity started in another task before the app's process attaches
+/// covers the app's activity, and Android then never creates it. Instrumentations don't depend on which activity is on top.
 /// Fixtures run one after another, so the one-time device setup of <see cref="DeviceTest"/> never runs concurrently.
 /// </para>
 /// <para>
@@ -204,10 +209,16 @@ public abstract class TrimmingTestBase : DeviceTest
 	// never clears logcat, so tests can share the device.
 	static void AssertLaunchReportsPass (string caseFile, TrimmingConfiguration configuration, string packageName, string directory)
 	{
-		var activity = RunAdbCommand ($"shell cmd package resolve-activity --brief {packageName}")
+		// "instrumentation:<package>/<class> (target=<package>)"
+		var instrumentation = RunAdbCommand ($"shell pm list instrumentation {packageName}")
+			.Split ('\n', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+			.Where (line => line.StartsWith ("instrumentation:", StringComparison.Ordinal))
+			.Select (line => line ["instrumentation:".Length..].Split (' ') [0])
+			.SingleOrDefault ();
+		var activity = instrumentation is not null ? null : RunAdbCommand ($"shell cmd package resolve-activity --brief {packageName}")
 			.Split ('\n', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
 			.LastOrDefault ();
-		Assert.IsNotNull (activity, $"{packageName} should have a launcher activity.");
+		Assert.IsTrue (instrumentation is not null || activity is not null, $"{packageName} should have an instrumentation or a launcher activity.");
 
 		var logcat = Path.Combine (directory, "logcat.log");
 		string? pid = null;
@@ -224,9 +235,15 @@ public abstract class TrimmingTestBase : DeviceTest
 			result = line;
 			return true;
 		}, logcat, timeout: ActivityStartTimeoutInSeconds, onMonitoringStarted: () => {
-			var started = RunAdbCommand ($"shell am start -W -n {activity}", timeout: ActivityStartTimeoutInSeconds);
-			StringAssert.Contains ("Complete", started, $"{caseFile} should start on {configuration}.");
-			// `am start -W` can return before the app's process exists, so give it a moment to appear.
+			if (instrumentation is not null) {
+				// Without -w, `am instrument` returns once the instrumentation is started and prints nothing unless that fails.
+				var started = RunAdbCommand ($"shell am instrument {instrumentation}", timeout: ActivityStartTimeoutInSeconds);
+				Assert.IsEmpty (started.Trim (), $"{caseFile} should start {instrumentation} on {configuration}.");
+			} else {
+				var started = RunAdbCommand ($"shell am start -W -n {activity}", timeout: ActivityStartTimeoutInSeconds);
+				StringAssert.Contains ("Complete", started, $"{caseFile} should start on {configuration}.");
+			}
+			// `am start -W` and `am instrument` can return before the app's process exists, so give it a moment to appear.
 			var deadline = DateTime.UtcNow.AddSeconds (10);
 			while ((pid = RunAdbCommand ($"shell pidof {packageName}").Split (' ', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries).FirstOrDefault ()) is null &&
 					DateTime.UtcNow < deadline) {

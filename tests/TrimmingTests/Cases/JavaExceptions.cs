@@ -9,7 +9,7 @@
 
 using System;
 using Android.App;
-using Android.OS;
+using Android.Runtime;
 using Microsoft.Android.TrimmingTests.Expectations;
 
 [assembly: KeptTypeInAssembly ("Mono.Android", "Java.Lang.NumberFormatException")]
@@ -19,12 +19,18 @@ using Microsoft.Android.TrimmingTests.Expectations;
 [assembly: RemovedTypeInAssembly ("Mono.Android", "Java.Util.Zip.DataFormatException")]
 [assembly: RemovedTypeInAssembly ("Mono.Android", "Android.Database.Sqlite.SQLiteFullException")]
 
-[Activity (Label = "JavaExceptions", MainLauncher = true)]
-public class MainActivity : Activity
+[Instrumentation (Name = "net.dot.trimmingtests.CaseInstrumentation")]
+public class CaseInstrumentation : Instrumentation
 {
-	protected override void OnCreate (Bundle? savedInstanceState)
+	// Android creates instrumentations before the runtime starts, so their peer is activated later through this constructor.
+	public CaseInstrumentation (IntPtr handle, JniHandleOwnership transfer)
+		: base (handle, transfer)
 	{
-		base.OnCreate (savedInstanceState);
+	}
+
+	public override void CallApplicationOnCreate (Application? app)
+	{
+		base.CallApplicationOnCreate (app);
 		try {
 			try {
 				Java.Lang.Integer.ParseInt ("not a number");
