@@ -4,7 +4,7 @@ using Android.Runtime;
 
 namespace Java.Lang {
 
-	[Register ("mono/java/lang/Runnable")]
+	[Register ("net/dot/android/java/lang/Runnable")]
 	public sealed class Runnable : Java.Lang.Object, Java.Lang.IRunnable {
 
 		Action handler;
@@ -12,7 +12,7 @@ namespace Java.Lang {
 		public Runnable (Action handler)
 			: base (
 					// SAFETY: The complete ASCII literal supplies stable, NUL-terminated JNI class-name bytes.
-					unsafe (JNIEnv.AllocObject ("mono/java/lang/Runnable"u8)),
+					unsafe (JNIEnv.AllocObject ("net/dot/android/java/lang/Runnable"u8)),
 					JniHandleOwnership.TransferLocalRef)
 		{
 			unsafe {

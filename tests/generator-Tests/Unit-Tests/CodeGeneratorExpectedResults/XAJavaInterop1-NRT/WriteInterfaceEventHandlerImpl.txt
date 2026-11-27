@@ -1,11 +1,11 @@
-[global::Android.Runtime.Register ("mono/java/code/IMyInterfaceImplementor")]
+[global::Android.Runtime.Register ("net/dot/android/java/code/IMyInterfaceImplementor")]
 internal sealed partial class IMyInterfaceImplementor : global::Java.Lang.Object, IMyInterface {
 
 	object sender;
 
 	public IMyInterfaceImplementor (object sender)
 		: base (
-			global::Android.Runtime.JNIEnv.StartCreateInstance ("mono/java/code/IMyInterfaceImplementor", "()V"),
+			global::Android.Runtime.JNIEnv.StartCreateInstance ("net/dot/android/java/code/IMyInterfaceImplementor", "()V"),
 			JniHandleOwnership.TransferLocalRef)
 	{
 		global::Android.Runtime.JNIEnv.FinishCreateInstance (((global::Java.Lang.Object) this).Handle, "()V");

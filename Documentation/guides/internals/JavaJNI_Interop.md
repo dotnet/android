@@ -48,10 +48,10 @@ The corresponding JCW is roughly the following Java. This excerpt omits construc
 package my.app;
 
 public class MainActivity extends android.app.Activity
-        implements mono.android.IGCUserPeer
+        implements net.dot.android.IGCUserPeer
 {
     static {
-        mono.android.Runtime.registerNatives (MainActivity.class);
+        net.dot.android.Runtime.registerNatives (MainActivity.class);
     }
 
     @Override
@@ -141,7 +141,7 @@ When JNI returns an object or Java passes one into managed code, [`TrimmableType
 
 ### JCW declarations and per-class registration
 
-The generated Java `onCreate` calls its native `n_OnCreate_Landroid_os_Bundle_`; constructors similarly declare generated `nctor_*` native callbacks, and instantiate/activate the managed peer when appropriate. The class's static block calls `mono.android.Runtime.registerNatives (MainActivity.class)` when the class is first initialized. This is **per Java class**. Application and instrumentation JCWs instead use a guarded `__md_registerNatives()` helper called from their generated wrappers: registration in their static initializer can be too early in startup. The declaration of `registerNatives(Class)` in [`mono.android.Runtime`](../../../src/java-runtime/java/mono/android/Runtime.java) is handwritten Java; individual JCWs and their registration calls are generated.
+The generated Java `onCreate` calls its native `n_OnCreate_Landroid_os_Bundle_`; constructors similarly declare generated `nctor_*` native callbacks, and instantiate/activate the managed peer when appropriate. The class's static block calls `net.dot.android.Runtime.registerNatives (MainActivity.class)` when the class is first initialized. This is **per Java class**. Application and instrumentation JCWs instead use a guarded `__md_registerNatives()` helper called from their generated wrappers: registration in their static initializer can be too early in startup. The declaration of `registerNatives(Class)` in [`mono.android.Runtime`](../../../src/java-runtime/java/mono/android/Runtime.java) is handwritten Java; individual JCWs and their registration calls are generated.
 
 Abstract JCWs retain their Java constructors and `super(...)` calls for
 subclasses, but do not declare or call native constructor bridges. Deferred
@@ -162,7 +162,7 @@ NativeAOT has its own entry: [`JavaInteropRuntime.JNI_OnLoad` and `init`](../../
 
 Both hosts supply a GC-bridge initializer function pointer in [`JnienvInitializeArgs`](../../../src/native/common/include/managed-interface.hh). After publishing the `JniRuntime`, managed startup calls [`JavaMarshalGCBridge.Initialize`](../../../src/Mono.Android/Microsoft.Android.Runtime/JavaMarshalGCBridge.cs) with the startup arguments. It supplies its private `ProcessBridge` callback to the native initializer and passes the returned native callback to `JavaMarshal.Initialize`. Initialization is guarded by a lock and a process-wide flag, so the native bridge-processing thread starts exactly once, before registering native methods or running CoreCLR startup hooks.
 
-The first native binding is for `mono.android.Runtime.registerNatives` itself. [`TrimmableTypeMap.RegisterNativeMethods()`](../../../src/Mono.Android/Microsoft.Android.Runtime/TrimmableTypeMap.cs) uses actual C# UTF-8 string literals for its JNI name and signature:
+The first native binding is for `net.dot.android.Runtime.registerNatives` itself. [`TrimmableTypeMap.RegisterNativeMethods()`](../../../src/Mono.Android/Microsoft.Android.Runtime/TrimmableTypeMap.cs) uses actual C# UTF-8 string literals for its JNI name and signature:
 
 ```csharp
 fixed (byte* name = "registerNatives"u8,
@@ -232,7 +232,7 @@ On the managed side, [`TrimmableTypeMap`](../../../src/Mono.Android/Microsoft.An
 
 Proxies for sealed managed types defined in `Mono.Android` pass `isSealed: true` to the `JavaPeerProxy` constructor. The resulting `JavaPeerProxy.IsSealed` property lets target-type lookups use `FindClass` and `IsInstanceOf` without inspecting `Type.Assembly` at runtime. Other peers pass `isSealed: false` and still use the object's actual Java class hierarchy, even for sealed app and library types: these classes can use a different class loader, so resolving their class by name could incorrectly reject a valid object.
 
-Every generated JCW implements the Java [`IGCUserPeer`](../../../src/java-runtime/java/mono/android/IGCUserPeer.java) hooks `monodroidAddReference` and `monodroidClearReferences`. Managed [`JavaMarshalRegisteredPeers`](../../../src/Mono.Android/Microsoft.Android.Runtime/JavaMarshalRegisteredPeers.cs) tracks add/peek/remove/finalize operations, and the GC bridge coordinates the two collectors. Local and global JNI references have different lifetimes: a managed wrapper may need a global reference to keep its peer accessible after a JNI call returns. `JniHandleOwnership` records whether an incoming reference is transferred. Calling `Dispose()` can remove the association; a raw `IntPtr` retained afterward is not a safe substitute for a live managed peer. For invalid reference diagnostics, see [Debugging JNI Object Reference Crashes](debug-jni-objrefs.md).
+Every generated JCW implements the Java [`IGCUserPeer`](../../../src/java-runtime/java/net/dot/android/IGCUserPeer.java) hooks `dotnetAddReference` and `dotnetClearReferences`. Managed [`JavaMarshalRegisteredPeers`](../../../src/Mono.Android/Microsoft.Android.Runtime/JavaMarshalRegisteredPeers.cs) tracks add/peek/remove/finalize operations, and the GC bridge coordinates the two collectors. Local and global JNI references have different lifetimes: a managed wrapper may need a global reference to keep its peer accessible after a JNI call returns. `JniHandleOwnership` records whether an incoming reference is transferred. Calling `Dispose()` can remove the association; a raw `IntPtr` retained afterward is not a safe substitute for a live managed peer. For invalid reference diagnostics, see [Debugging JNI Object Reference Crashes](debug-jni-objrefs.md).
 
 ## Diagnosing a broken interop path
 
@@ -241,7 +241,7 @@ Start at the boundary where the failure occurs; these files distinguish build ou
 [`Java.Interop.TypeManager.RegisterType`](../../../src/Mono.Android/Java.Interop/TypeManager.cs) is not a fallback for a missing generated mapping: it throws `NotSupportedException` with the trimmable TypeMap. `Java.Interop.TypeManager` and the older `Android.Runtime.TypeManager` facade are obsolete and will be removed in the next release. Give the peer a discoverable Java name (`[Register]` for a peer type, or the component `Name` attribute used above) so the scanner can generate the mapping instead.
 
 1. **Missing or wrong Java class:** inspect the merged manifest, `typemap/java/` (or CoreCLR's `typemap/linked-java/` after trimming), `java-files.txt` / `linked-java-files.txt`, and `acw-map.txt`. Confirm the expected Java name and base/override signatures. A stale `.class` is not proof that a corresponding TypeMap entry survived.
-2. **Unbound native method / `UnsatisfiedLinkError`:** compare the generated JCW's `native` method **name and JNI descriptor** with the generated managed `IAndroidCallableWrapper.RegisterNatives` entry for that class. Check whether `mono.android.Runtime.registerNatives` ran for the class (or its deferred helper did), and inspect `adb logcat` for the registration exception. Do not search for a missing `Java_...` export in this pipeline.
+2. **Unbound native method / `UnsatisfiedLinkError`:** compare the generated JCW's `native` method **name and JNI descriptor** with the generated managed `IAndroidCallableWrapper.RegisterNatives` entry for that class. Check whether `net.dot.android.Runtime.registerNatives` ran for the class (or its deferred helper did), and inspect `adb logcat` for the registration exception. Do not search for a missing `Java_...` export in this pipeline.
 3. **Wrong managed type or activation failure:** check `typemap-assemblies.txt`, the root `_Microsoft.Android.TypeMaps` assembly, `TrimmableTypeMap` lookup, proxy construction, and `JavaMarshalRegisteredPeers`. Verify whether a Java callback came from a managed-created peer or needs activation from a Java-created peer. On NativeAOT a missing generated mapping cannot be rescued by CoreCLR-only reflection.
 4. **Release/trim-only failure:** inspect the *linked* managed assemblies and CoreCLR post-trim JCWs, or NativeAOT ILC inputs and shrinker rules. The pre-trim generated Java is not necessarily packaged Java. The [build-pipeline guide](../../../src/Microsoft.Android.Sdk.TrimmableTypeMap/README.md) explains target stamps and stale-file handling.
 5. **JNI reference or marshal failure:** use `adb logcat` and [the JNI reference guide](debug-jni-objrefs.md) for ownership and collection problems. For unsupported TypeMap settings see [the build property](../../docs-mobile/building-apps/build-properties.md); duplicate Java-visible constructor signatures produce [XA4259](../../docs-mobile/messages/xa4259.md).

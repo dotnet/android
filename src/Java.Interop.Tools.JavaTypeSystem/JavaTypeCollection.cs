@@ -249,10 +249,10 @@ namespace Java.Interop.Tools.JavaTypeSystem.Models
 			if (ReferencedTypesFlattened.TryGetValue (type, out var ref_type))
 				return ref_type;
 
-			// We moved this type to "mono.android.app.IntentService" which makes this
+			// We moved this type to "net.dot.android.app.IntentService" which makes this
 			// type resolution fail if a user tries to reference it in Java.
 			if (type == "android.app.IntentService")
-				return FindType ("mono.android.app.IntentService");
+				return FindType ("net.dot.android.app.IntentService");
 
 			return null;
 		}

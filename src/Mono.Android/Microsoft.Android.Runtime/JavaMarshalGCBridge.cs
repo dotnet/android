@@ -293,7 +293,7 @@ static class JavaMarshalGCBridge
 	static void ClearReferencesIfNeeded (HandleContext* context)
 	{
 		unsafe {
-			// SAFETY: context remains registered during bridge processing; only a live global reference with added links is passed to monodroidClearReferences.()V.
+			// SAFETY: context remains registered during bridge processing; only a live global reference with added links is passed to dotnetClearReferences.()V.
 			if (context->IsCollected)
 				return;
 			if (context->PeerReference.Type != JniObjectReferenceType.Global)

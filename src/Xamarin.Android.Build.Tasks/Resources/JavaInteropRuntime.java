@@ -6,7 +6,7 @@ import java.util.Locale;
 import android.content.Context;
 import android.content.pm.ApplicationInfo;
 import android.util.Log;
-import mono.NativeLibraryHelper;
+import net.dot.android.NativeLibraryHelper;
 import net.dot.android.ApplicationRegistration;
 import net.dot.android.RuntimeDirectories;
 

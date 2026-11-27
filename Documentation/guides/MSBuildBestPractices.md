@@ -110,7 +110,7 @@ unless they pass `-mt:false`. Signing steps set it to `0`.
 `GeneratePackageManagerJava` runs from `Microsoft.Android.Build.Tasks.dll` on
 .NET, using the .NET task host when invoked by .NET Framework MSBuild.
 It resolves its output directory through `TaskEnvironment` and preserves the
-timestamp of unchanged `MonoPackageManager_Resources.java` files. Its copy
+timestamp of unchanged `CoreClrPackageManager_Resources.java` files. Its copy
 helper reads retry settings from the task environment rather than the process.
 Custom build extensions must register `Microsoft.Android.Tasks.GeneratePackageManagerJava`
 from the modern task assembly; the old `Xamarin.Android.Tasks` entry point has

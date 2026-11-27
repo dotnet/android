@@ -1633,14 +1633,14 @@ namespace UnamedProject
 				var dexFile = Path.Combine (intermediate, "android", "bin", "classes.dex");
 				FileAssert.Exists (dexFile);
 				var classes = new List<string> {
-					"Lmono/android/view/View_OnClickListenerImplementor;",
+					"Lnet/dot/android/view/View_OnClickListenerImplementor;",
 					$"L{toolbar_class.Replace ('.', '/')};"
 				};
 				classes.Add ("Landroid/runtime/JavaProxyThrowable;");
 				if (runtime == AndroidRuntime.NativeAOT) {
 					classes.Add ("Lnet/dot/jni/nativeaot/NativeAotRuntimeProvider;");
 				} else {
-					classes.Add ("Lmono/MonoRuntimeProvider;");
+					classes.Add ("Lnet/dot/android/CoreClrRuntimeProvider;");
 				}
 
 				foreach (var className in classes) {

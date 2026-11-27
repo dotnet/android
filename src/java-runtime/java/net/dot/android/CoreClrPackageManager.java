@@ -1,4 +1,4 @@
-package mono;
+package net.dot.android;
 
 import java.io.*;
 import java.lang.String;
@@ -14,11 +14,8 @@ import android.content.pm.ApplicationInfo;
 import android.content.res.AssetManager;
 import android.os.Build;
 import android.util.Log;
-import mono.android.Runtime;
-import net.dot.android.ApplicationRegistration;
-import net.dot.android.RuntimeDirectories;
 
-public class MonoPackageManager {
+public class CoreClrPackageManager {
 
 	static Object lock = new Object ();
 	static boolean initialized;
@@ -40,7 +37,7 @@ public class MonoPackageManager {
 		}
 	}
 
-	// Shared by MonoRuntimeProvider (API < 29) and CoreClrAppComponentFactory (API 29+); must not reference AppComponentFactory types.
+	// Shared by CoreClrRuntimeProvider (API < 29) and CoreClrAppComponentFactory (API 29+); must not reference AppComponentFactory types.
 	public static void LoadApplication (ApplicationInfo runtimePackage, ClassLoader loader, Context context)
 	{
 		synchronized (lock) {
@@ -79,7 +76,7 @@ public class MonoPackageManager {
 				};
 				boolean haveSplitApks = runtimePackage.splitSourceDirs != null && runtimePackage.splitSourceDirs.length > 0;
 
-				NativeLibraryHelper.loadLibrary ("monodroid", runtimePackage, apks);
+				NativeLibraryHelper.loadLibrary ("dotnet-android", runtimePackage, apks);
 
 				Runtime.initInternal (
 					language,
@@ -125,7 +122,7 @@ public class MonoPackageManager {
 
 	public static String[] getAssemblies ()
 	{
-		return MonoPackageManager_Resources.Assemblies;
+		return CoreClrPackageManager_Resources.Assemblies;
 	}
 
 }

@@ -53,8 +53,8 @@ namespace Java.Interop.Tools.JavaTypeSystem.Tests
 			// https://github.com/dotnet/java-interop/issues/717
 			var api = JavaApiTestHelper.GetLoadedApi ();
 
-			// Create "mono.android.app" package
-			var mono_android_app = api.AddPackage ("mono.android.app", "mono/android/app");
+			// Create "net.dot.android.app" package
+			var net_dot_android_app = api.AddPackage ("net.dot.android.app", "net/dot/android/app");
 
 			// Remove "android.app.IntentService" type
 			var android_app = api.Packages["android.app"];
@@ -62,15 +62,15 @@ namespace Java.Interop.Tools.JavaTypeSystem.Tests
 			android_app.Types.Remove (intent_service);
 			api.RemoveType (intent_service);
 
-			// Create new "mono.android.app.IntentService" type
-			var new_intent_service = JavaApiTestHelper.CreateClass (mono_android_app, "IntentService");
+			// Create new "net.dot.android.app.IntentService" type
+			var new_intent_service = JavaApiTestHelper.CreateClass (net_dot_android_app, "IntentService");
 
 			api.AddType (new_intent_service);
 
 			api.ResolveCollection ();
 
 			// Ensure we can resolve the type by either name
-			Assert.AreSame (new_intent_service, api.FindType ("mono.android.app.IntentService"));
+			Assert.AreSame (new_intent_service, api.FindType ("net.dot.android.app.IntentService"));
 			Assert.AreSame (new_intent_service, api.FindType ("android.app.IntentService"));
 		}
 

@@ -1,4 +1,4 @@
-package mono;
+package net.dot.android;
 
 import java.io.File;
 import java.io.IOException;
@@ -44,7 +44,7 @@ public final class NativeLibraryHelper {
 		loadLibrary (libraryName, applicationInfo, apks);
 	}
 
-	static void loadLibrary (String libraryName, ApplicationInfo applicationInfo, String[] apks)
+	public static void loadLibrary (String libraryName, ApplicationInfo applicationInfo, String[] apks)
 	{
 		try {
 			System.loadLibrary (libraryName);

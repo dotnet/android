@@ -61,13 +61,13 @@ namespace Android.App {
 	}
 
 	[Obsolete ("This class is obsoleted in this android platform")]
-	[Register ("mono/android/app/TabEventDispatcher")]
+	[Register ("net/dot/android/app/TabEventDispatcher")]
 	internal sealed class TabEventDispatcher : Java.Lang.Object, ActionBar.ITabListener {
 
 		public TabEventDispatcher ()
 			: base (
 					// SAFETY: The complete ASCII literal supplies stable, NUL-terminated JNI class-name bytes.
-					unsafe (JNIEnv.AllocObject ("mono/android/app/TabEventDispatcher"u8)),
+					unsafe (JNIEnv.AllocObject ("net/dot/android/app/TabEventDispatcher"u8)),
 					JniHandleOwnership.TransferLocalRef)
 		{
 			unsafe {

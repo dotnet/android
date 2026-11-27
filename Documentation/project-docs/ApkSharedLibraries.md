@@ -5,7 +5,7 @@ of APK archives, or `base/lib/{ABI}/` in AAB archives. These include the .NET
 runtime, BCL platform libraries, ReadyToRun images, the .NET for Android native
 host, and data payload libraries.
 
-The CoreCLR host (`libmonodroid.so` in the APK) is precompiled and shared by all
+The CoreCLR host (`libdotnet-android.so` in the APK) is precompiled and shared by all
 applications. Application configuration and embedded managed assemblies are
 packaged as data-only ELF libraries written directly by managed code. No
 assembler, native linker, or objcopy executable is needed to create them.

@@ -43,7 +43,7 @@
     <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)Java.Interop.Tools.Maven.pdb" />
     <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)java-source-utils.jar" />
     <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)LayoutBinding.cs" />
-    <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)MonoRuntimeProvider.Bundled.java" />
+    <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)CoreClrRuntimeProvider.Bundled.java" />
     <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)Microsoft.Android.Build.BaseTasks.dll" />
     <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)Microsoft.Android.Build.BaseTasks.pdb" />
     <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)Mono.Options.dll" />

@@ -22,10 +22,10 @@ public class GeneratePackageManagerJava : MultithreadedAndroidTask
 		var mainFileName = Path.GetFileName (MainAssembly);
 
 		using (var pkgmgr = MemoryStreamPool.Shared.CreateStreamWriter ()) {
-			pkgmgr.WriteLine ("package mono;");
+			pkgmgr.WriteLine ("package net.dot.android;");
 
 			// Write all the user assemblies
-			pkgmgr.WriteLine ("public class MonoPackageManager_Resources {");
+			pkgmgr.WriteLine ("public class CoreClrPackageManager_Resources {");
 			pkgmgr.WriteLine ("\tpublic static String[] Assemblies = new String[]{");
 
 			pkgmgr.WriteLine ("\t\t/* \"{0}\" should be the only entry in this list. */", mainFileName);
@@ -36,7 +36,7 @@ public class GeneratePackageManagerJava : MultithreadedAndroidTask
 			pkgmgr.Flush ();
 
 			// Only copy to the real location if the contents actually changed
-			var dest = TaskEnvironment.GetAbsolutePath (Path.Combine (OutputDirectory, "MonoPackageManager_Resources.java"));
+			var dest = TaskEnvironment.GetAbsolutePath (Path.Combine (OutputDirectory, "CoreClrPackageManager_Resources.java"));
 
 			Files.CopyIfStreamChanged (pkgmgr.BaseStream, dest, TaskEnvironment);
 		}

@@ -11,10 +11,10 @@ JNI_OnLoad (JavaVM *vm, void *reserved)
 }
 
 JNIEXPORT void JNICALL
-Java_mono_android_Runtime_initInternal (JNIEnv *env, jclass klass, jstring lang, jobjectArray runtimeApksJava,
+Java_net_dot_android_Runtime_initInternal (JNIEnv *env, jclass klass, jstring lang, jobjectArray runtimeApksJava,
 	jobjectArray appDirs, jint localDateTimeOffset, jobject loader, jboolean isEmulator, jboolean haveSplitApks)
 {
-	Host::Java_mono_android_Runtime_initInternal (
+	Host::Java_net_dot_android_Runtime_initInternal (
 		env,
 		klass,
 		lang,
@@ -28,7 +28,7 @@ Java_mono_android_Runtime_initInternal (JNIEnv *env, jclass klass, jstring lang,
 }
 
 JNIEXPORT void
-JNICALL Java_mono_android_Runtime_propagateUncaughtException (JNIEnv *env, [[maybe_unused]] jclass klass, jobject javaThread, jthrowable javaException)
+JNICALL Java_net_dot_android_Runtime_propagateUncaughtException (JNIEnv *env, [[maybe_unused]] jclass klass, jobject javaThread, jthrowable javaException)
 {
 	Host::propagate_uncaught_exception (env, javaThread, javaException);
 }

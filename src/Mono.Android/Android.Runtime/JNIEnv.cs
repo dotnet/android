@@ -1944,7 +1944,7 @@ namespace Android.Runtime {
 					return IntPtr.Zero;
 
 				IntPtr grefArrayElementClass = GetArrayElementClass (values);
-				if (JniEnvironment.Types.GetJniTypeNameFromClass (new JniObjectReference (grefArrayElementClass)) == "mono/android/runtime/JavaObject") {
+				if (JniEnvironment.Types.GetJniTypeNameFromClass (new JniObjectReference (grefArrayElementClass)) == "net/dot/android/runtime/JavaObject") {
 					DeleteGlobalRef (grefArrayElementClass);
 					grefArrayElementClass = NewGlobalRef (Java.Lang.Class.Object);
 				}

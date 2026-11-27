@@ -95,7 +95,7 @@ namespace Xamarin.Android.Build.Tests {
 			var keysFile = Path.Combine (intermediate, "typemap.keys.txt");
 			var keys = File.ReadAllLines (keysFile);
 			var live = keys.Single (key => key.EndsWith ("/MainActivity", StringComparison.Ordinal));
-			const string dead = "mono/android/animation/Animator_AnimatorListenerImplementor";
+			const string dead = "net/dot/android/animation/Animator_AnimatorListenerImplementor";
 			CollectionAssert.DoesNotContain (keys, dead);
 			var configuration = Path.Combine (intermediate, "proguard", "proguard_project_references.cfg");
 			CollectionAssert.AreEqual (
@@ -120,7 +120,7 @@ namespace Xamarin.Android.Build.Tests {
 				StringAssert.Contains ("-keepclassmembers interface * {", common);
 				FileAssert.DoesNotExist (members);
 			}
-			StringAssert.DoesNotContain ("-keep class mono.android.**", common);
+			StringAssert.DoesNotContain ("-keep class net.dot.android.**", common);
 			StringAssert.DoesNotContain ("-keep class net.dot.jni.**", common);
 			var dex = Path.Combine (intermediate, "android", "bin", "classes.dex");
 			Assert.IsTrue (DexUtils.ContainsClass ($"L{live};", dex, AndroidSdkPath), "Live class names must not be obfuscated.");
@@ -169,7 +169,7 @@ namespace Xamarin.Android.Build.Tests {
 				var frameworkJcw = Path.Combine (intermediateDir, "java", "android", "app", "ActivityTracker.java");
 				FileAssert.Exists (frameworkJcw);
 				var source = File.ReadAllText (frameworkJcw);
-				StringAssert.Contains ("mono.android.Runtime.registerNatives (ActivityTracker.class)", source);
+				StringAssert.Contains ("net.dot.android.Runtime.registerNatives (ActivityTracker.class)", source);
 				StringAssert.DoesNotContain ("mono.android.TypeManager.Activate", source);
 			}
 		}
@@ -2620,11 +2620,11 @@ namespace Xamarin.Android.Build.Tests {
 			Assert.IsNotEmpty (dexFiles, "R8 should produce DEX files.");
 			foreach (var (method, signature) in new [] {
 				("<init>", "()V"),
-				("monodroidAddReference", "(Ljava/lang/Object;)V"),
-				("monodroidClearReferences", "()V"),
+				("dotnetAddReference", "(Ljava/lang/Object;)V"),
+				("dotnetClearReferences", "()V"),
 			}) {
 				Assert.IsTrue (dexFiles.Any (dex => DexUtils.ContainsClassWithMethod (
-					"Lmono/android/GCUserPeer;", method, signature, dex, AndroidSdkPath)),
+					"Lnet/dot/android/GCUserPeer;", method, signature, dex, AndroidSdkPath)),
 					$"R8 must preserve GCUserPeer.{method}{signature} for the native GC bridge.");
 			}
 		}
@@ -3439,7 +3439,7 @@ namespace Xamarin.Android.Build.Tests {
 				var linkedDirectory = builder.Output.GetIntermediaryPath (Path.Combine ("android-arm64", "linked"));
 				var linkedBinding = Path.Combine (linkedDirectory, $"{binding.ProjectName}.dll");
 				var javaDirectory = builder.Output.GetIntermediaryPath (Path.Combine ("android-arm64", "typemap", "linked-java"));
-				var implementorJava = Path.Combine (javaDirectory, "mono", "com", "example", "listener", "Widget_OnChangedListenerImplementor.java");
+				var implementorJava = Path.Combine (javaDirectory, "net", "dot", "android", "com", "example", "listener", "Widget_OnChangedListenerImplementor.java");
 				var acwMapPath = builder.Output.GetIntermediaryPath (Path.Combine ("android-arm64", "acw-map.txt"));
 				var proguardPath = builder.Output.GetIntermediaryPath (Path.Combine ("android-arm64", "proguard", "proguard_project_references.cfg"));
 				var dexPath = builder.Output.GetIntermediaryPath (Path.Combine ("android-arm64", "android", "bin", "classes.dex"));
@@ -3459,12 +3459,12 @@ namespace Xamarin.Android.Build.Tests {
 					$"{app.ProjectName} ACW map");
 				AssertFileContains (
 					proguardPath,
-					"mono.com.example.listener.Widget_OnChangedListenerImplementor",
+					"net.dot.android.com.example.listener.Widget_OnChangedListenerImplementor",
 					useListener,
 					$"{app.ProjectName} ProGuard configuration");
 				Assert.AreEqual (
 					useListener,
-					DexUtils.ContainsClass ("Lmono/com/example/listener/Widget_OnChangedListenerImplementor;", dexPath, AndroidSdkPath),
+					DexUtils.ContainsClass ("Lnet/dot/android/com/example/listener/Widget_OnChangedListenerImplementor;", dexPath, AndroidSdkPath),
 					$"{app.ProjectName} DEX should {(useListener ? "retain" : "trim")} the listener implementor.");
 			}
 		}
@@ -3599,11 +3599,11 @@ namespace Xamarin.Android.Build.Tests {
 
 			using var runtimeJar = ZipFile.OpenRead (Path.Combine (toolsDir, "java_runtime_trimmable.jar"));
 			foreach (var entry in new [] {
-				"mono/android/Runtime.class",
-				"mono/android/IGCUserPeer.class",
-				"mono/android/GCUserPeer.class",
-				"mono/MonoPackageManager.class",
-				"mono/NativeLibraryHelper.class",
+				"net/dot/android/Runtime.class",
+				"net/dot/android/IGCUserPeer.class",
+				"net/dot/android/GCUserPeer.class",
+				"net/dot/android/CoreClrPackageManager.class",
+				"net/dot/android/NativeLibraryHelper.class",
 			}) {
 				Assert.IsNotNull (runtimeJar.GetEntry (entry), $"{entry} must remain in the runtime JAR.");
 			}
@@ -3611,7 +3611,7 @@ namespace Xamarin.Android.Build.Tests {
 				"mono/android/DebugRuntime.class",
 				"mono/android/BuildConfig.class",
 				"mono/android/app/XamarinAndroidEnvironmentVariables.class",
-				"mono/MonoPackageManager_Resources.class",
+				"net/dot/android/CoreClrPackageManager_Resources.class",
 				"net/dot/android/ApplicationRegistration.class",
 				"classes.dex",
 			}) {
@@ -4216,14 +4216,14 @@ namespace UnnamedProject {
 		void AssertPostTrimR8InputsExcludeDeadFrameworkImplementor (string dexFile, string javaSourceDirectory, string acwMapPath, string proguardPrimaryPath)
 		{
 			const string deadManagedType = "Android.Animation.Animator+IAnimatorListenerImplementor";
-			const string deadJavaName = "Lmono/android/animation/Animator_AnimatorListenerImplementor;";
-			const string deadJavaDotName = "mono.android.animation.Animator_AnimatorListenerImplementor";
+			const string deadJavaName = "Lnet/dot/android/animation/Animator_AnimatorListenerImplementor;";
+			const string deadJavaDotName = "net.dot.android.animation.Animator_AnimatorListenerImplementor";
 
 			Assert.IsTrue (
 				Directory.EnumerateFiles (javaSourceDirectory, "MainActivity.java", SearchOption.AllDirectories).Any (),
 				"Post-trim Java source generation should keep the app activity JCW.");
 			FileAssert.DoesNotExist (
-				Path.Combine (javaSourceDirectory, "mono", "android", "animation", "Animator_AnimatorListenerImplementor.java"),
+				Path.Combine (javaSourceDirectory, "net", "dot", "android", "animation", "Animator_AnimatorListenerImplementor.java"),
 				"Post-trim Java source generation should not generate framework listener implementors removed by ILLink.");
 
 			FileAssert.Exists (acwMapPath, "Post-trim scan should rewrite acw-map.txt for R8.");

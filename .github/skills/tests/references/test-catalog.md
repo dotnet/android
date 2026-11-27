@@ -243,7 +243,7 @@ and run with the on-device `Mono.Android.NET-Tests.csproj` suite. They require
 the locally built Android SDK and an Android device/emulator; use the on-device
 build/install and test commands above.
 
-Handwritten Android Java peers use `mono.android.IGCUserPeer`; their fixture JAR
+Handwritten Android Java peers use `net.dot.android.IGCUserPeer`; their fixture JAR
 compiles against the Android platform and runtime JARs.
 `JavaMarshalGCBridgeTests.HandwrittenPeersUseAndroidGCReferenceContract` checks
 peer recognition and reference addition/clearing for those fixtures.

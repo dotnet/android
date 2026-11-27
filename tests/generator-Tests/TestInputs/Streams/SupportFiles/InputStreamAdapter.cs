@@ -3,14 +3,14 @@ using System.IO;
 
 namespace Android.Runtime {
 
-	[Register ("mono/android/runtime/InputStreamAdapter")]
+	[Register ("net/dot/android/runtime/InputStreamAdapter")]
 	public sealed class InputStreamAdapter : Java.IO.InputStream {
 
 		public Stream BaseStream {get; private set;}
 
 		public InputStreamAdapter (System.IO.Stream stream)
 			: base (
-					JNIEnv.StartCreateInstance ("mono/android/runtime/InputStreamAdapter", "()V"),
+					JNIEnv.StartCreateInstance ("net/dot/android/runtime/InputStreamAdapter", "()V"),
 					JniHandleOwnership.TransferLocalRef)
 		{
 			throw new NotImplementedException ();

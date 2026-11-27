@@ -80,14 +80,14 @@ namespace Android.OS {
 		}
 	}
 
-	[Register ("mono/android/os/ActionHandlerCallback")]
+	[Register ("net/dot/android/os/ActionHandlerCallback")]
 	internal sealed class ActionHandlerCallback : Java.Lang.Object, Handler.ICallback {
 		Action<Message> handler;
 
 		public ActionHandlerCallback (Action<Message> handler)
 			: base (
 					// SAFETY: The complete ASCII literal supplies stable, NUL-terminated JNI class-name bytes.
-					unsafe (JNIEnv.AllocObject ("mono/android/os/ActionHandlerCallback"u8)),
+					unsafe (JNIEnv.AllocObject ("net/dot/android/os/ActionHandlerCallback"u8)),
 					JniHandleOwnership.TransferLocalRef)
 		{
 			unsafe {

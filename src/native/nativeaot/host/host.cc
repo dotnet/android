@@ -62,12 +62,12 @@ namespace {
 	{
 		// NativeAOT initializes Mono.Android's common JNI state before creating the JniRuntime,
 		// so the Java peer marker class must be provided by the host instead of being looked
-		// up later from mono.android.Runtime static fields like MonoVM/CoreCLR.
-		jclass lrefIGCUserPeer = env->FindClass ("mono/android/IGCUserPeer");
+		// up later from net.dot.android.Runtime static fields like MonoVM/CoreCLR.
+		jclass lrefIGCUserPeer = env->FindClass ("net/dot/android/IGCUserPeer");
 		if (lrefIGCUserPeer == nullptr) [[unlikely]] {
 			env->ExceptionDescribe ();
 			env->ExceptionClear ();
-			abort_unless (false, "Failed to load mono/android/IGCUserPeer class");
+			abort_unless (false, "Failed to load net/dot/android/IGCUserPeer class");
 		}
 
 		jobject grefIGCUserPeer = env->NewGlobalRef (lrefIGCUserPeer);
@@ -76,7 +76,7 @@ namespace {
 				env->ExceptionDescribe ();
 				env->ExceptionClear ();
 			}
-			abort_unless (false, "Failed to create a global reference for mono/android/IGCUserPeer");
+			abort_unless (false, "Failed to create a global reference for net/dot/android/IGCUserPeer");
 		}
 		env->DeleteLocalRef (lrefIGCUserPeer);
 		return grefIGCUserPeer;

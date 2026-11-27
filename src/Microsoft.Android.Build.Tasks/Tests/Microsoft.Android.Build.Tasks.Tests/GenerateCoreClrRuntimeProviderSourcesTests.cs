@@ -13,14 +13,14 @@ public class GenerateCoreClrRuntimeProviderSourcesTests : BaseTest
 		var outputDirectory = Path.Combine (Root, "temp", TestName, "android");
 		var task = new GenerateCoreClrRuntimeProviderSources {
 			BuildEngine = new MockBuildEngine (TestContext.Out),
-			AdditionalProviderSources = ["MonoRuntimeProvider_1"],
+			AdditionalProviderSources = ["CoreClrRuntimeProvider_1"],
 			OutputDirectory = outputDirectory,
 		};
 
 		Assert.IsTrue (task.Execute (), "The additional provider should be generated.");
-		var provider = Path.Combine (outputDirectory, "src", "mono", "MonoRuntimeProvider_1.java");
+		var provider = Path.Combine (outputDirectory, "src", "net", "dot", "android", "CoreClrRuntimeProvider_1.java");
 		FileAssert.Exists (provider);
-		StringAssert.Contains ("class MonoRuntimeProvider_1", File.ReadAllText (provider));
+		StringAssert.Contains ("class CoreClrRuntimeProvider_1", File.ReadAllText (provider));
 	}
 
 	[Test]

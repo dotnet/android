@@ -3,7 +3,7 @@ using System.IO;
 
 namespace Android.Runtime
 {
-	[Register ("mono/android/runtime/OutputStreamAdapter")]
+	[Register ("net/dot/android/runtime/OutputStreamAdapter")]
 	public class OutputStreamAdapter : Java.IO.OutputStream
 	{
 		public Stream BaseStream {get; private set;}
@@ -12,7 +12,7 @@ namespace Android.Runtime
 		public OutputStreamAdapter (System.IO.Stream stream)
 			: base (
 					// SAFETY: The complete ASCII literal supplies stable, NUL-terminated JNI class-name bytes.
-					unsafe (JNIEnv.AllocObject ("mono/android/runtime/OutputStreamAdapter"u8)),
+					unsafe (JNIEnv.AllocObject ("net/dot/android/runtime/OutputStreamAdapter"u8)),
 					JniHandleOwnership.TransferLocalRef)
 		{
 			unsafe {

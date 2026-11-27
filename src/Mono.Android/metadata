@@ -584,7 +584,7 @@
   <attr api-since="8" path="/api/package[@name='org.w3c.dom']/interface[@name='UserDataHandler']/method[@name='handle']" name="managedName">handleData</attr>
   <add-node path="/api/package[@name='android.app']/class[@name='IntentService']">
     <constructor name="IntentService"
-      type="mono.android.app.IntentService"
+      type="net.dot.android.app.IntentService"
       static="false"
       final="false"
       deprecated="not deprecated"
@@ -592,10 +592,10 @@
     </constructor>
   </add-node>
   <add-node path="/api">
-    <package name="mono.android.app" managedName="Android.App">
+    <package name="net.dot.android.app" managedName="Android.App">
     </package>
   </add-node>
-  <move-node path="/api/package[@name='android.app']/class[@name='IntentService']">/api/package[@name='mono.android.app']</move-node>
+  <move-node path="/api/package[@name='android.app']/class[@name='IntentService']">/api/package[@name='net.dot.android.app']</move-node>
 
   <!-- FIXME: they should be removed in 5.0 API -->
   <add-node api-since="16" path="/api/package[@name='android.annotation']">

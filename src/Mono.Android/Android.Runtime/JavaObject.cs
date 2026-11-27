@@ -2,7 +2,7 @@ using System;
 
 namespace Android.Runtime {
 
-	[Register ("mono/android/runtime/JavaObject")]
+	[Register ("net/dot/android/runtime/JavaObject")]
 	internal sealed class JavaObject : Java.Lang.Object {
 
 		[System.Diagnostics.CodeAnalysis.SuppressMessage ("Interoperability", "CA1422:Validate platform compatibility", Justification = "Suggested replacement uses instance sharing")]
@@ -64,7 +64,7 @@ namespace Android.Runtime {
 		public JavaObject (object inst)
 			: base (
 					// SAFETY: The complete ASCII literal supplies stable, NUL-terminated JNI class-name bytes.
-					unsafe (JNIEnv.AllocObject ("mono/android/runtime/JavaObject"u8)),
+					unsafe (JNIEnv.AllocObject ("net/dot/android/runtime/JavaObject"u8)),
 					JniHandleOwnership.TransferLocalRef)
 		{
 			unsafe {

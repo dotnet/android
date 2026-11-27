@@ -275,9 +275,9 @@ namespace Xamarin.Android.Tasks
 			if (string.Equals (obfuscationMode, "runtime-remapping", StringComparison.OrdinalIgnoreCase)) {
 				// Keep names used by bootstrap JNI and resource/interface lookups that do not
 				// pass through the generated member-remapping tables.
-				writer.WriteLine ("-keep class mono.NativeLibraryHelper { *; <init>(...); }");
-				writer.WriteLine ("-keep class mono.android.Runtime { *; }");
-				writer.WriteLine ("-keep class mono.android.GCUserPeer { <init>(); }");
+				writer.WriteLine ("-keep class net.dot.android.NativeLibraryHelper { *; <init>(...); }");
+				writer.WriteLine ("-keep class net.dot.android.Runtime { *; }");
+				writer.WriteLine ("-keep class net.dot.android.GCUserPeer { <init>(); }");
 				writer.WriteLine ("-keepclassmembernames interface * { *; }");
 				writer.WriteLine ("-keepclassmembernames,includedescriptorclasses class * { native <methods>; }");
 				// Inherited field lookups try the original name before base remaps. A renamed

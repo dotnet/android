@@ -117,7 +117,7 @@
       <Link>LayoutBinding.cs</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Include="Resources\MonoRuntimeProvider.Bundled.java;Resources\NativeAotRuntimeProvider.java;Resources\net.android.init.gradle.kts">
+    <None Include="Resources\CoreClrRuntimeProvider.Bundled.java;Resources\NativeAotRuntimeProvider.java;Resources\net.android.init.gradle.kts">
       <Link>%(Filename)%(Extension)</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
@@ -127,7 +127,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <EmbeddedResource Include="Resources\*" Exclude="Resources\LayoutBinding.cs;Resources\MonoRuntimeProvider.Bundled.java;Resources\NativeAotRuntimeProvider.java;Resources\net.android.init.gradle.kts">
+    <EmbeddedResource Include="Resources\*" Exclude="Resources\LayoutBinding.cs;Resources\CoreClrRuntimeProvider.Bundled.java;Resources\NativeAotRuntimeProvider.java;Resources\net.android.init.gradle.kts">
       <LogicalName>%(Filename)%(Extension)</LogicalName>
     </EmbeddedResource>
   </ItemGroup>

@@ -101,7 +101,7 @@ namespace Xamarin.Android.Build.Tests
 			StringAssert.IsMatch (@"\bI\s+DOTNET-timing\s*:\s+FatalExceptionTiming", logOutput,
 				"Managed timing diagnostics should use the DOTNET-timing tag when timing is enabled.");
 			Assert.IsFalse (logOutput.Contains (
-				"No implementation found for void mono.android.Runtime.propagateUncaughtException"),
+				"No implementation found for void net.dot.android.Runtime.propagateUncaughtException"),
 				"The uncaught exception handler should not call a missing native method.");
 		}
 

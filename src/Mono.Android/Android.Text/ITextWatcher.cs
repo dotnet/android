@@ -89,7 +89,7 @@ namespace Android.Text {
 
 	}
 
-	[Register ("mono/android/text/TextWatcherImplementor")]
+	[Register ("net/dot/android/text/TextWatcherImplementor")]
 	internal sealed class TextWatcherImplementor : Java.Lang.Object, ITextWatcher {
 
 		object inst;
@@ -100,7 +100,7 @@ namespace Android.Text {
 		public TextWatcherImplementor (object inst, EventHandler<TextChangedEventArgs>? changed_handler, EventHandler<TextChangedEventArgs>? before_handler, EventHandler<AfterTextChangedEventArgs>? after_handler)
 			: base (
 					// SAFETY: The complete ASCII literal supplies stable, NUL-terminated JNI class-name bytes.
-					unsafe (JNIEnv.AllocObject ("mono/android/text/TextWatcherImplementor"u8)),
+					unsafe (JNIEnv.AllocObject ("net/dot/android/text/TextWatcherImplementor"u8)),
 					JniHandleOwnership.TransferLocalRef)
 		{
 			unsafe {

@@ -32,7 +32,7 @@ namespace Java.InteropTests
 			var reference = JniEnvironment.Runtime.ValueManager.CreateLocalObjectReferenceArgument (typeof (object), value);
 			try {
 				Assert.IsTrue (Java.Interop.Runtime.IsGCUserPeer (reference.Handle));
-				using var interfaceType = new JniType ("mono/android/IGCUserPeer");
+				using var interfaceType = new JniType ("net/dot/android/IGCUserPeer");
 				Assert.IsTrue (JniEnvironment.Types.IsInstanceOf (reference, interfaceType.PeerReference));
 			} finally {
 				JniObjectReference.Dispose (ref reference);

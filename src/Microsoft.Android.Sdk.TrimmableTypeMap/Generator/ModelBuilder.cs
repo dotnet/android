@@ -145,7 +145,7 @@ static class ModelBuilder
 			// or an MCW binding without an activation ctor) is constructed managed-side via `new`, so its
 			// managed→Java JNI name must still be resolvable in order to instantiate the correct Java class.
 			// Such types have neither an activation ctor nor an invoker; without a proxy + association they
-			// fall back to the generic mono.android.runtime.JavaObject peer and throw ArrayStoreException
+			// fall back to the generic net.dot.android.runtime.JavaObject peer and throw ArrayStoreException
 			// when stored into a typed Java array (e.g. CrossReferenceBridge[]).
 			bool needsManagedToJavaName = peer.DoNotGenerateAcw && !peer.IsInterface && !peer.IsAbstract;
 			bool hasProxy = peer.ActivationCtor != null || peer.InvokerTypeName != null || needsManagedToJavaName;

@@ -406,7 +406,7 @@ namespace Bug12935
 
 				string providerName = runtime switch {
 					AndroidRuntime.NativeAOT => "net.dot.jni.nativeaot.NativeAotRuntimeProvider",
-					_ => "mono.MonoRuntimeProvider"
+					_ => "net.dot.android.CoreClrRuntimeProvider"
 				};
 				Assert.IsTrue (doc.XPathSelectElements ($"//provider[@android:name='{providerName}' and @android:directBootAware='true']", nsResolver).Any (),
 						   "'provider' element is not generated as expected.");

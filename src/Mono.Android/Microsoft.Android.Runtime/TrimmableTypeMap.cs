@@ -104,7 +104,7 @@ public class TrimmableTypeMap
 
 			unsafe {
 				// SAFETY: Complete UTF8 literals provide permanent terminated names; OnRegisterNatives is a static UCO entry point with the exact (JNIEnv,jclass,jclass)->void ABI.
-				using var runtimeClass = new JniType ("mono/android/Runtime"u8);
+				using var runtimeClass = new JniType ("net/dot/android/Runtime"u8);
 				fixed (byte* name = "registerNatives"u8, sig = "(Ljava/lang/Class;)V"u8) {
 					var onRegisterNatives = (IntPtr)(delegate* unmanaged<IntPtr, IntPtr, IntPtr, void>)&OnRegisterNatives;
 					var method = new JniNativeMethod (name, sig, onRegisterNatives);
