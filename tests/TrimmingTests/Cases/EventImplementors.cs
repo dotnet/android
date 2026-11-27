@@ -10,7 +10,7 @@
 
 using System;
 using Android.App;
-using Android.OS;
+using Android.Runtime;
 using Android.Widget;
 using Microsoft.Android.TrimmingTests.Expectations;
 
@@ -18,15 +18,22 @@ using Microsoft.Android.TrimmingTests.Expectations;
 [assembly: RemovedTypeInAssembly ("Mono.Android", "Android.Views.View/IOnLongClickListenerImplementor")]
 [assembly: RemovedTypeInAssembly ("Mono.Android", "Android.Views.View/IOnFocusChangeListenerImplementor")]
 
-[Activity (Label = "EventImplementors", MainLauncher = true)]
-public class MainActivity : Activity
+[Instrumentation (Name = "net.dot.trimmingtests.CaseInstrumentation")]
+public class CaseInstrumentation : Instrumentation
 {
-	protected override void OnCreate (Bundle? savedInstanceState)
+	// Android creates instrumentations before the runtime starts, so their peer is activated later through this constructor.
+	public CaseInstrumentation (IntPtr handle, JniHandleOwnership transfer)
+		: base (handle, transfer)
 	{
-		base.OnCreate (savedInstanceState);
+	}
+
+	public override void CallApplicationOnCreate (Application? app)
+	{
+		base.CallApplicationOnCreate (app);
 		try {
+			var context = app ?? throw new InvalidOperationException ("No application.");
 			bool clicked = false;
-			var view = new TextView (this);
+			var view = new TextView (context);
 			view.Click += (sender, e) => clicked = true;
 			if (!view.PerformClick () || !clicked) {
 				throw new InvalidOperationException ("Java did not raise the Click event.");

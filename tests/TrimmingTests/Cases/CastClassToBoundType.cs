@@ -11,21 +11,30 @@
 
 using System;
 using Android.App;
+using Android.Content;
 using Android.OS;
+using Android.Runtime;
 using Microsoft.Android.TrimmingTests.Expectations;
 
 [assembly: KeptTypeInAssembly ("Mono.Android", "Android.OS.PowerManager")]
 [assembly: KeptMemberInAssembly ("Mono.Android", "Android.OS.PowerManager",
 	".ctor(System.IntPtr,Android.Runtime.JniHandleOwnership)", "get_IsInteractive()")]
 
-[Activity (Label = "CastClassToBoundType", MainLauncher = true)]
-public class MainActivity : Activity
+[Instrumentation (Name = "net.dot.trimmingtests.CaseInstrumentation")]
+public class CaseInstrumentation : Instrumentation
 {
-	protected override void OnCreate (Bundle? savedInstanceState)
+	// Android creates instrumentations before the runtime starts, so their peer is activated later through this constructor.
+	public CaseInstrumentation (IntPtr handle, JniHandleOwnership transfer)
+		: base (handle, transfer)
 	{
-		base.OnCreate (savedInstanceState);
+	}
+
+	public override void CallApplicationOnCreate (Application? app)
+	{
+		base.CallApplicationOnCreate (app);
 		try {
-			var power = (PowerManager?) GetSystemService (PowerService) ?? throw new InvalidOperationException ("No power service.");
+			var context = app ?? throw new InvalidOperationException ("No application.");
+			var power = (PowerManager?) context.GetSystemService (Context.PowerService) ?? throw new InvalidOperationException ("No power service.");
 			_ = power.IsInteractive;
 			Android.Util.Log.Info ("TrimmingTests", "TRIMMING_TEST_RESULT: PASS");
 		} catch (Exception e) {

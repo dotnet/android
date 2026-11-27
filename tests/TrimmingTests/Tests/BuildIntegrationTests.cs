@@ -10,6 +10,7 @@ public class BuildIntegrationTests : TrimmingTestBase
 {
 	// The code generated for layout bindings builds without trimming warnings and finds its views.
 	[Test]
+	[NonParallelizable] // Launches an activity; see TrimmingTestBase.
 	public void LayoutBindingsWorkWithoutWarnings ([TrimmingConfigurations] TrimmingConfiguration configuration)
 	{
 		var app = BuildAndRun ("Cases/LayoutBindings/LayoutBindings.cs", configuration);

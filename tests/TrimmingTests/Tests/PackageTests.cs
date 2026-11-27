@@ -18,6 +18,7 @@ public class PackageTests : TrimmingTestBase
 
 	// Library code that reads its Android resource IDs works.
 	[Test]
+	[NonParallelizable] // Launches an activity; see TrimmingTestBase.
 	public void LibraryResourceDesignerIsAvailableWithoutWarnings ([TrimmingConfigurations] TrimmingConfiguration configuration)
 	{
 		var app = BuildAndRun ("Cases/LibraryResourceDesigner.cs", configuration);

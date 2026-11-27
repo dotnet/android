@@ -13,18 +13,26 @@ using System;
 using Android.App;
 using Android.Content;
 using Android.OS;
+using Android.Runtime;
 using Microsoft.Android.TrimmingTests.Expectations;
 
-[Activity (Label = "ManifestComponentsByName", MainLauncher = true)]
-public class MainActivity : Activity
+[Instrumentation (Name = "net.dot.trimmingtests.CaseInstrumentation")]
+public class CaseInstrumentation : Instrumentation
 {
-	protected override void OnCreate (Bundle? savedInstanceState)
+	// Android creates instrumentations before the runtime starts, so their peer is activated later through this constructor.
+	public CaseInstrumentation (IntPtr handle, JniHandleOwnership transfer)
+		: base (handle, transfer)
 	{
-		base.OnCreate (savedInstanceState);
+	}
+
+	public override void CallApplicationOnCreate (Application? app)
+	{
+		base.CallApplicationOnCreate (app);
 		try {
+			var context = app ?? throw new InvalidOperationException ("No application.");
 			// The receiver starts the service, and the service reports the result.
-			var packageName = PackageName ?? throw new InvalidOperationException ("The activity has no package name.");
-			SendBroadcast (new Intent ().SetClassName (packageName, "net.dot.trimmingtests.ByNameReceiver"));
+			var packageName = context.PackageName ?? throw new InvalidOperationException ("The application has no package name.");
+			context.SendBroadcast (new Intent ().SetClassName (packageName, "net.dot.trimmingtests.ByNameReceiver"));
 		} catch (Exception e) {
 			Android.Util.Log.Error ("TrimmingTests", $"TRIMMING_TEST_RESULT: FAIL {e}");
 		}

@@ -11,14 +11,20 @@
 
 using System;
 using Android.App;
-using Android.OS;
+using Android.Runtime;
 
-[Activity (Label = "TrimmerRootAssemblyWithoutRootMode", MainLauncher = true)]
-public class MainActivity : Activity
+[Instrumentation (Name = "net.dot.trimmingtests.CaseInstrumentation")]
+public class CaseInstrumentation : Instrumentation
 {
-	protected override void OnCreate (Bundle? savedInstanceState)
+	// Android creates instrumentations before the runtime starts, so their peer is activated later through this constructor.
+	public CaseInstrumentation (IntPtr handle, JniHandleOwnership transfer)
+		: base (handle, transfer)
 	{
-		base.OnCreate (savedInstanceState);
+	}
+
+	public override void CallApplicationOnCreate (Application? app)
+	{
+		base.CallApplicationOnCreate (app);
 		Android.Util.Log.Info ("TrimmingTests", "TRIMMING_TEST_RESULT: PASS");
 	}
 }

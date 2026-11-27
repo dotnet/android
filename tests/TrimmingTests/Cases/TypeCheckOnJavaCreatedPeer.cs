@@ -11,20 +11,28 @@
 
 using System;
 using Android.App;
-using Android.OS;
+using Android.Content;
+using Android.Runtime;
 using Microsoft.Android.TrimmingTests.Expectations;
 
 [assembly: KeptTypeInAssembly ("Mono.Android", "Android.Content.ClipboardManager")]
 [assembly: KeptMemberInAssembly ("Mono.Android", "Android.Content.ClipboardManager", ".ctor(System.IntPtr,Android.Runtime.JniHandleOwnership)")]
 
-[Activity (Label = "TypeCheckOnJavaCreatedPeer", MainLauncher = true)]
-public class MainActivity : Activity
+[Instrumentation (Name = "net.dot.trimmingtests.CaseInstrumentation")]
+public class CaseInstrumentation : Instrumentation
 {
-	protected override void OnCreate (Bundle? savedInstanceState)
+	// Android creates instrumentations before the runtime starts, so their peer is activated later through this constructor.
+	public CaseInstrumentation (IntPtr handle, JniHandleOwnership transfer)
+		: base (handle, transfer)
 	{
-		base.OnCreate (savedInstanceState);
+	}
+
+	public override void CallApplicationOnCreate (Application? app)
+	{
+		base.CallApplicationOnCreate (app);
 		try {
-			var service = GetSystemService (ClipboardService);
+			var context = app ?? throw new InvalidOperationException ("No application.");
+			var service = context.GetSystemService (Context.ClipboardService);
 			if (service is not Android.Content.ClipboardManager clipboard) {
 				throw new InvalidOperationException ($"The clipboard service was activated as {service?.GetType ()}.");
 			}

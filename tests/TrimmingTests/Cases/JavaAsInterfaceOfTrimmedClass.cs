@@ -12,7 +12,7 @@
 using System;
 using Android.App;
 using Android.Graphics.Drawables;
-using Android.OS;
+using Android.Runtime;
 using Java.Interop;
 using Microsoft.Android.TrimmingTests.Expectations;
 
@@ -21,12 +21,18 @@ using Microsoft.Android.TrimmingTests.Expectations;
 	".ctor(System.IntPtr,Android.Runtime.JniHandleOwnership)", "get_IsRunning()")]
 [assembly: RemovedTypeInAssembly ("Mono.Android", "Android.Graphics.Drawables.AnimationDrawable")]
 
-[Activity (Label = "JavaAsInterfaceOfTrimmedClass", MainLauncher = true)]
-public class MainActivity : Activity
+[Instrumentation (Name = "net.dot.trimmingtests.CaseInstrumentation")]
+public class CaseInstrumentation : Instrumentation
 {
-	protected override void OnCreate (Bundle? savedInstanceState)
+	// Android creates instrumentations before the runtime starts, so their peer is activated later through this constructor.
+	public CaseInstrumentation (IntPtr handle, JniHandleOwnership transfer)
+		: base (handle, transfer)
 	{
-		base.OnCreate (savedInstanceState);
+	}
+
+	public override void CallApplicationOnCreate (Application? app)
+	{
+		base.CallApplicationOnCreate (app);
 		try {
 			// Create an android.graphics.drawable.AnimationDrawable without referencing its binding.
 			var constructor = Java.Lang.Class.ForName ("android.graphics.drawable.AnimationDrawable").GetConstructor ()

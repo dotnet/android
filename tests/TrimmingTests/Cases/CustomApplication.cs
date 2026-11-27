@@ -20,20 +20,27 @@ using Android.OS;
 using Android.Runtime;
 using Microsoft.Android.TrimmingTests.Expectations;
 
-[Activity (Label = "CustomApplication", MainLauncher = true)]
-public class MainActivity : Activity
+[Instrumentation (Name = "net.dot.trimmingtests.CaseInstrumentation")]
+public class CaseInstrumentation : Instrumentation
 {
 	const string MetaDataKey = "net.dot.trimmingtests.value";
 
-	protected override void OnCreate (Bundle? savedInstanceState)
+	// Android creates instrumentations before the runtime starts, so their peer is activated later through this constructor.
+	public CaseInstrumentation (IntPtr handle, JniHandleOwnership transfer)
+		: base (handle, transfer)
 	{
-		base.OnCreate (savedInstanceState);
+	}
+
+	public override void CallApplicationOnCreate (Application? app)
+	{
+		base.CallApplicationOnCreate (app);
 		try {
 			if (!State.ApplicationCreated) {
-				throw new InvalidOperationException ($"Android did not run the custom application's OnCreate (); the application is {Application?.Class.Name}.");
+				throw new InvalidOperationException ($"Android did not run the custom application's OnCreate (); the application is {app?.Class.Name}.");
 			}
-			var packageManager = PackageManager ?? throw new InvalidOperationException ("No PackageManager.");
-			var packageName = PackageName ?? throw new InvalidOperationException ("The activity has no package name.");
+			var context = app ?? throw new InvalidOperationException ("No application.");
+			var packageManager = context.PackageManager ?? throw new InvalidOperationException ("No PackageManager.");
+			var packageName = context.PackageName ?? throw new InvalidOperationException ("The application has no package name.");
 			var info = OperatingSystem.IsAndroidVersionAtLeast (33)
 				? packageManager.GetApplicationInfo (packageName, PackageManager.ApplicationInfoFlags.Of ((long) PackageInfoFlags.MetaData))
 				: packageManager.GetApplicationInfo (packageName, PackageInfoFlags.MetaData);
@@ -41,20 +48,20 @@ public class MainActivity : Activity
 			if (value != "present") {
 				throw new InvalidOperationException ($"The {MetaDataKey} meta-data is '{value}'.");
 			}
-			AssertActivatedFromJava (info.BackupAgentName, "TestBackupAgent");
-			AssertActivatedFromJava (info.ManageSpaceActivityName, "TestManageSpaceActivity");
+			AssertActivatedFromJava (context, info.BackupAgentName, "TestBackupAgent");
+			AssertActivatedFromJava (context, info.ManageSpaceActivityName, "TestManageSpaceActivity");
 			Android.Util.Log.Info ("TrimmingTests", "TRIMMING_TEST_RESULT: PASS");
 		} catch (Exception e) {
 			Android.Util.Log.Error ("TrimmingTests", $"TRIMMING_TEST_RESULT: FAIL {e}");
 		}
 	}
 
-	void AssertActivatedFromJava (string? javaName, string expectedTypeName)
+	static void AssertActivatedFromJava (Android.Content.Context context, string? javaName, string expectedTypeName)
 	{
 		if (javaName is null) {
 			throw new InvalidOperationException ($"The manifest does not name the {expectedTypeName} class.");
 		}
-		var instance = Java.Lang.Class.ForName (javaName, true, ClassLoader).GetConstructor ()?.NewInstance ();
+		var instance = Java.Lang.Class.ForName (javaName, true, context.ClassLoader).GetConstructor ()?.NewInstance ();
 		if (instance?.GetType ().Name != expectedTypeName) {
 			throw new InvalidOperationException ($"new {javaName} () was activated as {instance?.GetType ()}.");
 		}

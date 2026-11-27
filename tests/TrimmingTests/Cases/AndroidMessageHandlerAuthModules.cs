@@ -10,7 +10,7 @@
 using System;
 using System.Net.Http;
 using Android.App;
-using Android.OS;
+using Android.Runtime;
 using Xamarin.Android.Net;
 using Microsoft.Android.TrimmingTests.Expectations;
 
@@ -20,12 +20,18 @@ using Microsoft.Android.TrimmingTests.Expectations;
 [assembly: RemovedTypeInAssembly ("Mono.Android", "Xamarin.Android.Net.AuthDigestSession")]
 [assembly: RemovedTypeInAssembly ("Mono.Android", "Xamarin.Android.Net.AuthDigestHeaderParser")]
 
-[Activity (Label = "AndroidMessageHandlerAuthModules", MainLauncher = true)]
-public class MainActivity : Activity
+[Instrumentation (Name = "net.dot.trimmingtests.CaseInstrumentation")]
+public class CaseInstrumentation : Instrumentation
 {
-	protected override void OnCreate (Bundle? savedInstanceState)
+	// Android creates instrumentations before the runtime starts, so their peer is activated later through this constructor.
+	public CaseInstrumentation (IntPtr handle, JniHandleOwnership transfer)
+		: base (handle, transfer)
 	{
-		base.OnCreate (savedInstanceState);
+	}
+
+	public override void CallApplicationOnCreate (Application? app)
+	{
+		base.CallApplicationOnCreate (app);
 		try {
 #pragma warning disable CS0618 // AndroidMessageHandler is obsolete, but apps still use it.
 			using var client = new HttpClient (new AndroidMessageHandler ());

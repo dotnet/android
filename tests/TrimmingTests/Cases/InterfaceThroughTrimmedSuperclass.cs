@@ -12,19 +12,25 @@
 
 using System;
 using Android.App;
-using Android.OS;
+using Android.Runtime;
 using Javax.Net.Ssl;
 using Microsoft.Android.TrimmingTests.Expectations;
 
 [assembly: KeptTypeInAssembly ("Mono.Android", "Javax.Net.Ssl.IX509TrustManagerInvoker")]
 [assembly: RemovedTypeInAssembly ("Mono.Android", "Javax.Net.Ssl.X509ExtendedTrustManager")]
 
-[Activity (Label = "InterfaceThroughTrimmedSuperclass", MainLauncher = true)]
-public class MainActivity : Activity
+[Instrumentation (Name = "net.dot.trimmingtests.CaseInstrumentation")]
+public class CaseInstrumentation : Instrumentation
 {
-	protected override void OnCreate (Bundle? savedInstanceState)
+	// Android creates instrumentations before the runtime starts, so their peer is activated later through this constructor.
+	public CaseInstrumentation (IntPtr handle, JniHandleOwnership transfer)
+		: base (handle, transfer)
 	{
-		base.OnCreate (savedInstanceState);
+	}
+
+	public override void CallApplicationOnCreate (Application? app)
+	{
+		base.CallApplicationOnCreate (app);
 		try {
 			var factory = TrustManagerFactory.GetInstance (TrustManagerFactory.DefaultAlgorithm)
 				?? throw new InvalidOperationException ("No TrustManagerFactory.");

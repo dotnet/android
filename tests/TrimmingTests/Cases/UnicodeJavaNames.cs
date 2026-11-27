@@ -9,30 +9,35 @@
 
 using System;
 using Android.App;
-using Android.OS;
 using Android.Runtime;
 
-[Activity (Label = "UnicodeJavaNames", MainLauncher = true)]
-public class MainActivity : Activity
+[Instrumentation (Name = "net.dot.trimmingtests.CaseInstrumentation")]
+public class CaseInstrumentation : Instrumentation
 {
-	protected override void OnCreate (Bundle? savedInstanceState)
+	// Android creates instrumentations before the runtime starts, so their peer is activated later through this constructor.
+	public CaseInstrumentation (IntPtr handle, JniHandleOwnership transfer)
+		: base (handle, transfer)
 	{
-		base.OnCreate (savedInstanceState);
+	}
+
+	public override void CallApplicationOnCreate (Application? app)
+	{
+		base.CallApplicationOnCreate (app);
 		try {
 			using var café = new Café ();
 			if (!café.Class.Name.EndsWith (".Café", StringComparison.Ordinal)) {
 				throw new InvalidOperationException ($"Café's Java class is '{café.Class.Name}'.");
 			}
-			AssertActivatedFromJava ("net.dot.trimmingtests.Ünïcode", typeof (Ünïcode));
+			AssertActivatedFromJava (app?.ClassLoader, "net.dot.trimmingtests.Ünïcode", typeof (Ünïcode));
 			Android.Util.Log.Info ("TrimmingTests", "TRIMMING_TEST_RESULT: PASS");
 		} catch (Exception e) {
 			Android.Util.Log.Error ("TrimmingTests", $"TRIMMING_TEST_RESULT: FAIL {e}");
 		}
 	}
 
-	void AssertActivatedFromJava (string javaName, Type expected)
+	static void AssertActivatedFromJava (Java.Lang.ClassLoader? loader, string javaName, Type expected)
 	{
-		var instance = Java.Lang.Class.ForName (javaName, true, ClassLoader).GetConstructor ()?.NewInstance ();
+		var instance = Java.Lang.Class.ForName (javaName, true, loader).GetConstructor ()?.NewInstance ();
 		if (instance?.GetType () != expected) {
 			throw new InvalidOperationException ($"new {javaName} () was activated as {instance?.GetType ()}.");
 		}

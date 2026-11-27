@@ -10,16 +10,22 @@
 
 using System;
 using Android.App;
-using Android.OS;
+using Android.Runtime;
 using Android.Webkit;
 using Java.Interop;
 
-[Activity (Label = "JavascriptInterfaceAnnotation", MainLauncher = true)]
-public class MainActivity : Activity
+[Instrumentation (Name = "net.dot.trimmingtests.CaseInstrumentation")]
+public class CaseInstrumentation : Instrumentation
 {
-	protected override void OnCreate (Bundle? savedInstanceState)
+	// Android creates instrumentations before the runtime starts, so their peer is activated later through this constructor.
+	public CaseInstrumentation (IntPtr handle, JniHandleOwnership transfer)
+		: base (handle, transfer)
 	{
-		base.OnCreate (savedInstanceState);
+	}
+
+	public override void CallApplicationOnCreate (Application? app)
+	{
+		base.CallApplicationOnCreate (app);
 		try {
 			using var bridge = new Bridge ();
 			var method = bridge.Class.GetMethod ("postMessage", Java.Lang.Class.ForName ("java.lang.String"))

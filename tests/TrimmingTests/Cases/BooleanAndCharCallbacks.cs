@@ -12,15 +12,22 @@
 using System;
 using Android.App;
 using Android.OS;
+using Android.Runtime;
 using Java.Lang;
 using Microsoft.Android.TrimmingTests.Expectations;
 
-[Activity (Label = "BooleanAndCharCallbacks", MainLauncher = true)]
-public class MainActivity : Activity
+[Instrumentation (Name = "net.dot.trimmingtests.CaseInstrumentation")]
+public class CaseInstrumentation : Instrumentation
 {
-	protected override void OnCreate (Bundle? savedInstanceState)
+	// Android creates instrumentations before the runtime starts, so their peer is activated later through this constructor.
+	public CaseInstrumentation (IntPtr handle, JniHandleOwnership transfer)
+		: base (handle, transfer)
 	{
-		base.OnCreate (savedInstanceState);
+	}
+
+	public override void CallApplicationOnCreate (Application? app)
+	{
+		base.CallApplicationOnCreate (app);
 		try {
 			// Handler.Callback.handleMessage () returns a JNI boolean.
 			var callback = new MessageCallback ();

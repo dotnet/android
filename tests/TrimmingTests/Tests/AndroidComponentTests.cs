@@ -26,6 +26,7 @@ public class AndroidComponentTests : TrimmingTestBase
 
 	// Android creates an activity that only a hand-written AndroidManifest.xml entry refers to.
 	[Test]
+	[NonParallelizable] // Launches an activity; see TrimmingTestBase.
 	public void ManifestOnlyActivityIsKeptWithoutWarnings ([TrimmingConfigurations] TrimmingConfiguration configuration)
 	{
 		var app = BuildAndRun ("Cases/ManifestOnlyActivity/ManifestOnlyActivity.cs", configuration);
@@ -34,6 +35,7 @@ public class AndroidComponentTests : TrimmingTestBase
 
 	// A layout XML file inflates a custom view that no managed code refers to.
 	[Test]
+	[NonParallelizable] // Launches an activity; see TrimmingTestBase.
 	public void CustomViewFromLayoutIsKeptWithoutWarnings ([TrimmingConfigurations] TrimmingConfiguration configuration)
 	{
 		var app = BuildAndRun ("Cases/CustomViewFromLayout/CustomViewFromLayout.cs", configuration);

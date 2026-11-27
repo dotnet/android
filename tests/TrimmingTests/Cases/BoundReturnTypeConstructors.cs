@@ -12,7 +12,7 @@
 
 using System;
 using Android.App;
-using Android.OS;
+using Android.Runtime;
 using Microsoft.Android.TrimmingTests.Expectations;
 
 [assembly: KeptMemberInAssembly ("Mono.Android", "Java.IO.File",
@@ -20,12 +20,18 @@ using Microsoft.Android.TrimmingTests.Expectations;
 [assembly: RemovedMemberInAssembly ("Mono.Android", "Java.IO.File",
 	".ctor(Java.IO.File,System.String)", ".ctor(System.String,System.String)", ".ctor(Java.Net.URI)", ".ctor(System.String)")]
 
-[Activity (Label = "BoundReturnTypeConstructors", MainLauncher = true)]
-public class MainActivity : Activity
+[Instrumentation (Name = "net.dot.trimmingtests.CaseInstrumentation")]
+public class CaseInstrumentation : Instrumentation
 {
-	protected override void OnCreate (Bundle? savedInstanceState)
+	// Android creates instrumentations before the runtime starts, so their peer is activated later through this constructor.
+	public CaseInstrumentation (IntPtr handle, JniHandleOwnership transfer)
+		: base (handle, transfer)
 	{
-		base.OnCreate (savedInstanceState);
+	}
+
+	public override void CallApplicationOnCreate (Application? app)
+	{
+		base.CallApplicationOnCreate (app);
 		try {
 			if (string.IsNullOrEmpty (CacheDir?.AbsolutePath)) {
 				throw new InvalidOperationException ("CacheDir has no path.");

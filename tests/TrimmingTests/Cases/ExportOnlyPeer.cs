@@ -10,20 +10,26 @@
 
 using System;
 using Android.App;
-using Android.OS;
 using Android.Runtime;
 using Java.Interop;
 using Microsoft.Android.TrimmingTests.Expectations;
 
-[Activity (Label = "ExportOnlyPeer", MainLauncher = true)]
-public class MainActivity : Activity
+[Instrumentation (Name = "net.dot.trimmingtests.CaseInstrumentation")]
+public class CaseInstrumentation : Instrumentation
 {
-	protected override void OnCreate (Bundle? savedInstanceState)
+	// Android creates instrumentations before the runtime starts, so their peer is activated later through this constructor.
+	public CaseInstrumentation (IntPtr handle, JniHandleOwnership transfer)
+		: base (handle, transfer)
 	{
-		base.OnCreate (savedInstanceState);
+	}
+
+	public override void CallApplicationOnCreate (Application? app)
+	{
+		base.CallApplicationOnCreate (app);
 		try {
+			var context = app ?? throw new InvalidOperationException ("No application.");
 			// Load the Java class without referencing the managed type.
-			var type = Java.Lang.Class.ForName ("net.dot.trimmingtests.ExportOnly", true, ClassLoader);
+			var type = Java.Lang.Class.ForName ("net.dot.trimmingtests.ExportOnly", true, context.ClassLoader);
 			var instance = type.GetConstructor ()?.NewInstance () ?? throw new InvalidOperationException ("newInstance returned null.");
 			var value = type.GetMethod ("getValue")?.Invoke (instance)?.ToString ();
 			if (value != "42") {

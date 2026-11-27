@@ -15,13 +15,20 @@ using Android.OS;
 using Android.Runtime;
 using Microsoft.Android.TrimmingTests.Expectations;
 
-[Activity (Label = "JavaActivatedUserConstructors", MainLauncher = true)]
-public class MainActivity : Activity
+[Instrumentation (Name = "net.dot.trimmingtests.CaseInstrumentation")]
+public class CaseInstrumentation : Instrumentation
 {
-	protected override void OnCreate (Bundle? savedInstanceState)
+	// Android creates instrumentations before the runtime starts, so their peer is activated later through this constructor.
+	public CaseInstrumentation (IntPtr handle, JniHandleOwnership transfer)
+		: base (handle, transfer)
 	{
-		base.OnCreate (savedInstanceState);
+	}
+
+	public override void CallApplicationOnCreate (Application? app)
+	{
+		base.CallApplicationOnCreate (app);
 		try {
+			var context = app ?? throw new InvalidOperationException ("No application.");
 			// The app also creates the exception itself, which keeps it and its type map proxy.
 			var cause = new Java.Lang.RuntimeException ("cause");
 			if (new CausedException (cause).Cause?.Message != "cause") {
@@ -30,7 +37,7 @@ public class MainActivity : Activity
 			CausedException.LastCause = null;
 
 			// Create the exception from Java so that Java calls its (Throwable) constructor.
-			var exceptionType = Java.Lang.Class.ForName ("net.dot.trimmingtests.CausedException", true, ClassLoader);
+			var exceptionType = Java.Lang.Class.ForName ("net.dot.trimmingtests.CausedException", true, context.ClassLoader);
 			var constructor = exceptionType.GetConstructor (Java.Lang.Class.ForName ("java.lang.Throwable"))
 				?? throw new InvalidOperationException ("CausedException has no (Throwable) constructor.");
 			var instance = constructor.NewInstance (cause.JavaCast<Java.Lang.Object> ()) ?? throw new InvalidOperationException ("newInstance returned null.");

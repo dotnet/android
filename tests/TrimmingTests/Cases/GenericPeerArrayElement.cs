@@ -13,7 +13,6 @@
 using System;
 using System.Collections.Generic;
 using Android.App;
-using Android.OS;
 using Android.Runtime;
 using Microsoft.Android.TrimmingTests.Expectations;
 
@@ -22,14 +21,20 @@ using Microsoft.Android.TrimmingTests.Expectations;
 [assembly: KeptTypeInAssembly ("GenericPeerArrayElement", "GenericArrayElement`1<System.String>", By = Tool.NativeAot)]
 [assembly: RemovedTypeInAssembly ("GenericPeerArrayElement", "GenericArrayElement`1<System.Int64>", By = Tool.NativeAot)]
 [assembly: RemovedTypeInAssembly ("GenericPeerArrayElement", "GenericArrayElement`1<System.Object>", By = Tool.NativeAot)]
-[assembly: RemovedTypeInAssembly ("GenericPeerArrayElement", "GenericArrayElement`1<MainActivity>", By = Tool.NativeAot)]
+[assembly: RemovedTypeInAssembly ("GenericPeerArrayElement", "GenericArrayElement`1<CaseInstrumentation>", By = Tool.NativeAot)]
 
-[Activity (Label = "GenericPeerArrayElement", MainLauncher = true)]
-public class MainActivity : Activity
+[Instrumentation (Name = "net.dot.trimmingtests.CaseInstrumentation")]
+public class CaseInstrumentation : Instrumentation
 {
-	protected override void OnCreate (Bundle? savedInstanceState)
+	// Android creates instrumentations before the runtime starts, so their peer is activated later through this constructor.
+	public CaseInstrumentation (IntPtr handle, JniHandleOwnership transfer)
+		: base (handle, transfer)
 	{
-		base.OnCreate (savedInstanceState);
+	}
+
+	public override void CallApplicationOnCreate (Application? app)
+	{
+		base.CallApplicationOnCreate (app);
 		try {
 			Check ("managed state");
 			Check (42);

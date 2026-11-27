@@ -10,21 +10,28 @@
 
 using System;
 using Android.App;
-using Android.OS;
+using Android.Runtime;
 using Microsoft.Android.TrimmingTests.Expectations;
 
-[Activity (Label = "OrphanedJavaCallableWrapper", MainLauncher = true)]
-public class MainActivity : Activity
+[Instrumentation (Name = "net.dot.trimmingtests.CaseInstrumentation")]
+public class CaseInstrumentation : Instrumentation
 {
-	protected override void OnCreate (Bundle? savedInstanceState)
+	// Android creates instrumentations before the runtime starts, so their peer is activated later through this constructor.
+	public CaseInstrumentation (IntPtr handle, JniHandleOwnership transfer)
+		: base (handle, transfer)
 	{
-		base.OnCreate (savedInstanceState);
+	}
+
+	public override void CallApplicationOnCreate (Application? app)
+	{
+		base.CallApplicationOnCreate (app);
 		try {
+			var context = app ?? throw new InvalidOperationException ("No application.");
 			if (OrphanPeer.Created) {
 				throw new InvalidOperationException ("Nothing should have created an OrphanPeer yet.");
 			}
 			try {
-				var instance = Java.Lang.Class.ForName ("net.dot.trimmingtests.OrphanPeer", true, ClassLoader).GetConstructor ()?.NewInstance ();
+				var instance = Java.Lang.Class.ForName ("net.dot.trimmingtests.OrphanPeer", true, context.ClassLoader).GetConstructor ()?.NewInstance ();
 				throw new InvalidOperationException ($"Java created the trimmed peer as {instance?.GetType ()}.");
 			} catch (Java.Lang.ClassNotFoundException) {
 			}
