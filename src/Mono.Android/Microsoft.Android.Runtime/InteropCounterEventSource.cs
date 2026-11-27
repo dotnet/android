@@ -33,34 +33,26 @@ namespace Microsoft.Android.Runtime
 		{
 			const string EventCounterIntervalSecArgumentName = "EventCounterIntervalSec";
 
-			EventCounter? managedObjectsOnlyReachableFromJavaCounter;
-			EventCounter? javaObjectsOnlyReachableFromManagedCounter;
 			readonly object countersLock = new ();
+			volatile Counters? counters;
 
-			volatile bool bridgeProcessingCountersEnabled;
-
-			internal bool BridgeProcessingCountersEnabled => bridgeProcessingCountersEnabled;
+			// Counters are created once and never disposed: EventCommand.Disable is raised per
+			// listener/session, so tearing them down would break other sessions still listening.
+			internal bool BridgeProcessingCountersEnabled => counters != null && IsEnabled ();
 
 			[NonEvent]
 			protected override void OnEventCommand (EventCommandEventArgs command)
 			{
 				base.OnEventCommand (command);
 
-				if (command.Command == EventCommand.Disable) {
-					lock (countersLock) {
-						bridgeProcessingCountersEnabled = false;
-						DisposeBridgeProcessingCounters ();
-					}
-					return;
-				}
-
 				if (command.Command != EventCommand.Enable || command.Arguments == null || !command.Arguments.ContainsKey (EventCounterIntervalSecArgumentName)) {
 					return;
 				}
 
 				lock (countersLock) {
-					EnsureBridgeProcessingCountersInitialized ();
-					bridgeProcessingCountersEnabled = true;
+					counters ??= new Counters (
+						CreateCounter (ManagedObjectsOnlyReachableFromJavaCounterName, ".NET objects only reachable from Java"),
+						CreateCounter (JavaObjectsOnlyReachableFromManagedCounterName, "Java objects only reachable from .NET"));
 				}
 			}
 
@@ -69,25 +61,13 @@ namespace Microsoft.Android.Runtime
 					int managedObjectsOnlyReachableFromJavaCount,
 					int javaObjectsOnlyReachableFromManagedCount)
 			{
-				lock (countersLock) {
-					if (!bridgeProcessingCountersEnabled) {
-						return;
-					}
-
-					GetManagedObjectsOnlyReachableFromJavaCounter ().WriteMetric (managedObjectsOnlyReachableFromJavaCount);
-					GetJavaObjectsOnlyReachableFromManagedCounter ().WriteMetric (javaObjectsOnlyReachableFromManagedCount);
+				var current = counters;
+				if (current == null || !IsEnabled ()) {
+					return;
 				}
-			}
 
-			[NonEvent]
-			void EnsureBridgeProcessingCountersInitialized ()
-			{
-				managedObjectsOnlyReachableFromJavaCounter ??= CreateCounter (
-					ManagedObjectsOnlyReachableFromJavaCounterName,
-					".NET objects only reachable from Java");
-				javaObjectsOnlyReachableFromManagedCounter ??= CreateCounter (
-					JavaObjectsOnlyReachableFromManagedCounterName,
-					"Java objects only reachable from .NET");
+				current.ManagedObjectsOnlyReachableFromJava.WriteMetric (managedObjectsOnlyReachableFromJavaCount);
+				current.JavaObjectsOnlyReachableFromManaged.WriteMetric (javaObjectsOnlyReachableFromManagedCount);
 			}
 
 			[NonEvent]
@@ -99,34 +79,7 @@ namespace Microsoft.Android.Runtime
 				};
 			}
 
-			[NonEvent]
-			EventCounter GetManagedObjectsOnlyReachableFromJavaCounter ()
-			{
-				if (managedObjectsOnlyReachableFromJavaCounter == null) {
-					throw new InvalidOperationException ($"{ManagedObjectsOnlyReachableFromJavaCounterName} counter was not initialized.");
-				}
-
-				return managedObjectsOnlyReachableFromJavaCounter;
-			}
-
-			[NonEvent]
-			EventCounter GetJavaObjectsOnlyReachableFromManagedCounter ()
-			{
-				if (javaObjectsOnlyReachableFromManagedCounter == null) {
-					throw new InvalidOperationException ($"{JavaObjectsOnlyReachableFromManagedCounterName} counter was not initialized.");
-				}
-
-				return javaObjectsOnlyReachableFromManagedCounter;
-			}
-
-			[NonEvent]
-			void DisposeBridgeProcessingCounters ()
-			{
-				managedObjectsOnlyReachableFromJavaCounter?.Dispose ();
-				managedObjectsOnlyReachableFromJavaCounter = null;
-				javaObjectsOnlyReachableFromManagedCounter?.Dispose ();
-				javaObjectsOnlyReachableFromManagedCounter = null;
-			}
+			sealed record Counters (EventCounter ManagedObjectsOnlyReachableFromJava, EventCounter JavaObjectsOnlyReachableFromManaged);
 		}
 	}
 }

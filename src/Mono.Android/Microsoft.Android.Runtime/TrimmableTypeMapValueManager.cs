@@ -48,7 +48,8 @@ sealed partial class TrimmableTypeMapValueManager : JniRuntime.JniValueManager
 
 	public override void DisposePeer (IJavaPeerable value)
 	{
-		if (RuntimeEventSource.PeerLifecycleEventsEnabled && value is not null) {
+		ArgumentNullException.ThrowIfNull (value);
+		if (RuntimeEventSource.PeerLifecycleEventsEnabled) {
 			JniObjectReference reference = value.PeerReference;
 			if (reference.IsValid) {
 				RuntimeEventSource.ManagedPeerReleasedJavaPeer (

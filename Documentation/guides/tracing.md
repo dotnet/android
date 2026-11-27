@@ -375,8 +375,9 @@ $ dotnet-trace collect --dsrouter android-emu --providers Microsoft.Android.Runt
 All six events have the payload `managedType` (`string`), `javaType`
 (`string`), `jniIdentityHashCode` (`int`), `managedObjectHashCode` (`int`),
 and `runtimeFlavor` (`string`: `CoreCLR`, `NativeAOT`, or `Unknown`). Values
-which cannot be determined, such as the Java type of a peer whose Java object
-was already collected, are reported as `Unknown`. Reachability events (5, 6)
+which cannot be determined are reported as `Unknown`; in particular, `javaType`
+is always `Unknown` for event 6 because the Java object has already been
+collected. Reachability events (5, 6)
 additionally contain `componentIndex` (`int`), `contextIndex` (`int`), and
 `contextPointer` (`long`), which identify the peer within the GC bridge graph.
 Reachability events are buffered and written after
