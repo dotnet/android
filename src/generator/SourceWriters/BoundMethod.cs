@@ -12,10 +12,11 @@ namespace generator.SourceWriters
 	public class BoundMethod : MethodWriter
 	{
 		readonly MethodCallback callback;
+		List<string> disabled_warnings;
 
 		public Method JavaMethod { get; }
 
-		public BoundMethod (GenBase type, Method method, CodeGenerationOptions opt, bool generateCallbacks, bool forceOverride = false, bool? isShadow = null)
+		public BoundMethod (GenBase type, Method method, CodeGenerationOptions opt, bool generateCallbacks, bool forceOverride = false, bool? isShadow = null, bool isInvoker = false, bool? isObsoleteContext = null)
 		{
 			JavaMethod = method;
 
@@ -90,6 +91,19 @@ namespace generator.SourceWriters
 			this.AddMethodParameters (method.Parameters, opt);
 
 			SourceWriterExtensions.AddMethodBody (Body, method, opt);
+
+			var hasObsoleteAttr = Attributes.OfType<ObsoleteAttr> ().Any ();
+			var inObsoleteContext = isObsoleteContext ?? SourceWriterExtensions.IsTypeObsolete (type, opt);
+
+			if (Name == "Finalize" && Parameters.Count == 0)
+				SourceWriterExtensions.AddDisabledWarning (ref disabled_warnings, "0465");
+
+			if (!inObsoleteContext && !hasObsoleteAttr && SourceWriterExtensions.ReferencesObsoleteType (method, opt))
+				SourceWriterExtensions.AddDisabledWarning (ref disabled_warnings, "0618");
+
+			if (!isInvoker && IsOverride && string.IsNullOrEmpty (ExplicitInterfaceImplementation) && hasObsoleteAttr &&
+					!SourceWriterExtensions.WillBaseMethodEmitObsolete (type, method, opt))
+				SourceWriterExtensions.AddDisabledWarning (ref disabled_warnings, "0809");
 		}
 
 		static string GetDeclaringTypeOfExplicitInterfaceMethod (Method method)
@@ -103,7 +117,7 @@ namespace generator.SourceWriters
 		{
 			callback?.Write (writer);
 
-			base.Write (writer);
+			SourceWriterExtensions.WriteWithWarningsDisabled (writer, disabled_warnings, () => base.Write (writer));
 		}
 	}
 }

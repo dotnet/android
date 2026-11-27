@@ -13,6 +13,7 @@ namespace generator.SourceWriters
 	{
 		readonly MethodCallback getter_callback;
 		readonly MethodCallback setter_callback;
+		readonly bool suppress_obsolete_warning;
 
 		public BoundAbstractProperty (GenBase gen, Property property, CodeGenerationOptions opt)
 		{
@@ -62,6 +63,8 @@ namespace generator.SourceWriters
 				SourceWriterExtensions.AddMethodCustomAttributes (SetterAttributes, property.Setter);
 				SetterAttributes.Add (new RegisterAttr (property.Setter.JavaName, property.Setter.JniSignature, UnmanagedCallbackSupport.GetPropertyConnectorNameFull (gen, property, property.Setter, opt), additionalProperties: property.Setter.AdditionalAttributeString ()));
 			}
+
+			suppress_obsolete_warning = !SourceWriterExtensions.IsTypeObsolete (gen, opt) && SourceWriterExtensions.ReferencesObsoleteType (property, opt);
 		}
 
 		public override void Write (CodeWriter writer)
@@ -70,7 +73,7 @@ namespace generator.SourceWriters
 			getter_callback?.Write (writer);
 			setter_callback?.Write (writer);
 
-			base.Write (writer);
+			SourceWriterExtensions.WriteWithWarningsDisabled (writer, suppress_obsolete_warning, "0618", () => base.Write (writer));
 		}
 	}
 }

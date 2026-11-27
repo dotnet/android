@@ -32,6 +32,7 @@ namespace MonoDroid.Generation
 		public List<Method> Methods { get; private set; } = new List<Method> ();
 		public List<GenBase> NestedTypes { get; private set; } = new List<GenBase> ();
 		public List<Property> Properties { get; } = new List<Property> ();
+		internal GenBase DeclaringType { get; private set; }
 		public string DefaultValue { get; set; }
 		public bool HasVirtualMethods { get; set; }
 
@@ -85,6 +86,7 @@ namespace MonoDroid.Generation
 			foreach (var rmv in removes)
 				NestedTypes.Remove (rmv);
 
+			gen.DeclaringType = this;
 			NestedTypes.Add (gen);
 		}
 
@@ -492,6 +494,32 @@ namespace MonoDroid.Generation
 			}
 			foreach (var nested in NestedTypes)
 				nested.FixupInterfaceMethodNullability ();
+		}
+
+		internal Method FindOverriddenBaseMethod (Method m, CodeGenerationOptions opt)
+		{
+			bool Matches (Method mm, bool requireExactReturnType) =>
+				mm.AdjustedName == m.AdjustedName &&
+				(mm.Visibility == m.Visibility || mm.IsAbstract) &&
+				(!requireExactReturnType || mm.RetVal.FullName == m.RetVal.FullName) &&
+				ParameterList.Equals (mm.Parameters, m.Parameters);
+
+			for (var bt = GetBaseGen (opt); bt != null; bt = bt.GetBaseGen (opt)) {
+				var bm = bt.Methods.FirstOrDefault (mm => Matches (mm, requireExactReturnType: true)) ??
+					bt.Methods.FirstOrDefault (mm => Matches (mm, requireExactReturnType: false));
+				if (bm == null && bt is ClassGen { IsAbstract: true } abstractBase &&
+						!bt.ContainsMethod (m, false, false)) {
+					bm = bt.GetAllDerivedInterfaces ().SelectMany (iface => iface.Methods).FirstOrDefault (mm =>
+						!mm.IsInterfaceDefaultMethod && !mm.IsStatic && !mm.IsGeneric && !mm.RetVal.IsGeneric &&
+						string.IsNullOrEmpty (mm.ExplicitInterface) &&
+						!abstractBase.SkippedInterfaceMethods.Contains (mm.GetSkipInvokerSignature ()) &&
+						!abstractBase.IsCovariantMethod (mm) &&
+						Matches (mm, requireExactReturnType: true));
+				}
+				if (bm != null)
+					return bm;
+			}
+			return null;
 		}
 
 		public abstract string FromNative (CodeGenerationOptions opt, string varname, bool owned);

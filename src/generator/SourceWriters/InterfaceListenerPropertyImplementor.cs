@@ -12,8 +12,9 @@ namespace generator.SourceWriters
 	{
 		readonly string name;
 		readonly CodeGenerationOptions opt;
+		readonly bool suppress_obsolete_warning;
 
-		public InterfaceListenerPropertyImplementor (InterfaceGen iface, string name, CodeGenerationOptions opt)
+		public InterfaceListenerPropertyImplementor (InterfaceGen iface, string name, CodeGenerationOptions opt, ClassGen target = null)
 		{
 			this.name = name;
 			this.opt = opt;
@@ -30,6 +31,8 @@ namespace generator.SourceWriters
 			HasSet = true;
 
 			SetBody.Add ($"weak_implementor_{name} = new WeakReference (value, true);");
+
+			suppress_obsolete_warning = !SourceWriterExtensions.IsTypeObsolete (target, opt) && SourceWriterExtensions.IsTypeObsolete (iface, opt);
 		}
 
 		public override void Write (CodeWriter writer)
@@ -38,7 +41,7 @@ namespace generator.SourceWriters
 			writer.WriteLine ($"WeakReference{opt.NullableOperator} weak_implementor_{name};");
 			writer.WriteLine ();
 
-			base.Write (writer);
+			SourceWriterExtensions.WriteWithWarningsDisabled (writer, suppress_obsolete_warning, "0618", () => base.Write (writer));
 		}
 	}
 }

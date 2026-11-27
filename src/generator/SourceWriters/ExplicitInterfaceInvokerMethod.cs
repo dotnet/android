@@ -12,8 +12,9 @@ namespace generator.SourceWriters
 	{
 		readonly Method method;
 		readonly CodeGenerationOptions opt;
+		readonly bool suppress_obsolete_warning;
 
-		public ExplicitInterfaceInvokerMethod (GenBase iface, Method method, CodeGenerationOptions opt)
+		public ExplicitInterfaceInvokerMethod (GenBase iface, Method method, CodeGenerationOptions opt, bool isObsoleteContext = false)
 		{
 			this.method = method;
 			this.opt = opt;
@@ -25,6 +26,13 @@ namespace generator.SourceWriters
 
 			this.AddMethodParameters (method.Parameters, opt);
 			SourceWriterExtensions.AddMethodBody (Body, method, opt);
+
+			suppress_obsolete_warning = !isObsoleteContext && (SourceWriterExtensions.IsTypeObsolete (iface, opt) || SourceWriterExtensions.ReferencesObsoleteType (method, opt));
+		}
+
+		public override void Write (CodeWriter writer)
+		{
+			SourceWriterExtensions.WriteWithWarningsDisabled (writer, suppress_obsolete_warning, "0618", () => base.Write (writer));
 		}
 	}
 }

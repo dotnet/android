@@ -13,19 +13,25 @@ namespace generator.SourceWriters
 	// an overload with type 'string' as a convenience for the user.
 	public class BoundPropertyStringVariant : PropertyWriter
 	{
+		readonly bool suppress_obsolete_warning;
+
 		public BoundPropertyStringVariant (Property property, CodeGenerationOptions opt, BoundAbstractProperty original, GenBase declaringType = null)
-			: this (property, opt, original.IsVirtual, declaringType)
+			: this (property, opt, original.IsVirtual, declaringType, false)
 		{ }
 
 		public BoundPropertyStringVariant (Property property, CodeGenerationOptions opt, BoundProperty original, GenBase declaringType = null)
-			: this (property, opt, original.IsVirtual, declaringType)
+			: this (property, opt, original.IsVirtual, declaringType,
+				original.Attributes.OfType<ObsoleteAttr> ().Any () ||
+				original.GetterAttributes.OfType<ObsoleteAttr> ().Any () ||
+				original.SetterAttributes.OfType<ObsoleteAttr> ().Any ())
 		{ }
 
-		private BoundPropertyStringVariant (Property property, CodeGenerationOptions opt, bool isOriginalVirtual, GenBase declaringType)
+		private BoundPropertyStringVariant (Property property, CodeGenerationOptions opt, bool isOriginalVirtual, GenBase declaringType, bool originalIsObsolete)
 		{
 			var is_array = property.Getter.RetVal.IsArray;
 
 			Name = property.Name;
+			suppress_obsolete_warning = originalIsObsolete && !SourceWriterExtensions.IsTypeObsolete (declaringType ?? property.Getter?.DeclaringType, opt);
 
 			PropertyType = new TypeReferenceWriter ("string" + (is_array ? "[]" : string.Empty)) {
 				Nullable = opt.SupportNullableReferenceTypes
@@ -87,6 +93,11 @@ namespace generator.SourceWriters
 					SetBody.Add ("}");
 				}
 			}
+		}
+
+		public override void Write (CodeWriter writer)
+		{
+			SourceWriterExtensions.WriteWithWarningsDisabled (writer, suppress_obsolete_warning, "0618", () => base.Write (writer));
 		}
 	}
 }

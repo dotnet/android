@@ -10,6 +10,8 @@ namespace generator.SourceWriters
 {
 	public class InterfaceEventArgsClass : ClassWriter
 	{
+		bool suppress_obsolete_warning;
+
 		public InterfaceEventArgsClass (InterfaceGen iface, Method method)
 		{
 			Name = iface.GetArgsName (method);
@@ -28,8 +30,16 @@ namespace generator.SourceWriters
 
 		public void AddMembersFromMethod (InterfaceGen iface, Method method, CodeGenerationOptions opt)
 		{
+			if (!suppress_obsolete_warning && method.Parameters.Any (p => !p.IsSender && SourceWriterExtensions.IsSymbolObsolete (p.Symbol, opt)))
+				suppress_obsolete_warning = true;
+
 			AddConstructor (iface, method, opt);
 			AddProperties (method, opt);
+		}
+
+		public override void Write (CodeWriter writer)
+		{
+			SourceWriterExtensions.WriteWithWarningsDisabled (writer, suppress_obsolete_warning, "0618", () => base.Write (writer));
 		}
 
 		void AddConstructor (InterfaceGen iface, Method method, CodeGenerationOptions opt)

@@ -14,6 +14,7 @@ namespace generator.SourceWriters
 		readonly List<TypeWriter> pre_sibling_types = new List<TypeWriter> ();
 		readonly List<ISourceWriter> post_sibling_types = new List<ISourceWriter> ();
 		readonly bool dont_generate;
+		bool suppress_obsolete_signature;
 
 		internal IReadOnlyList<TypeWriter> PreSiblingTypes => pre_sibling_types;
 		internal IReadOnlyList<ISourceWriter> PostSiblingTypes => post_sibling_types;
@@ -146,6 +147,7 @@ namespace generator.SourceWriters
 
 		void AddInheritedInterfaces (InterfaceGen iface, CodeGenerationOptions opt)
 		{
+			var ifaceIsObsolete = SourceWriterExtensions.IsTypeObsolete (iface, opt);
 			foreach (var isym in iface.Interfaces) {
 				var igen = (isym is GenericSymbol ? (isym as GenericSymbol).Gen : isym) as InterfaceGen;
 
@@ -157,6 +159,8 @@ namespace generator.SourceWriters
 					continue;
 
 				Implements.Add (opt.GetOutputName (isym.FullName));
+				if (!ifaceIsObsolete && SourceWriterExtensions.IsSymbolObsolete (isym, opt))
+					suppress_obsolete_signature = true;
 			}
 
 			if (Implements.Count == 0 && !iface.IsConstSugar (opt)) {
@@ -253,6 +257,11 @@ namespace generator.SourceWriters
 					nestedWriter.IsShadow = true;
 				NestedTypes.Add (nestedWriter);
 			}
+		}
+
+		public override void WriteSignature (CodeWriter writer)
+		{
+			SourceWriterExtensions.WriteWithWarningsDisabled (writer, suppress_obsolete_signature, "0618", () => base.WriteSignature (writer));
 		}
 
 		public override void Write (CodeWriter writer)
