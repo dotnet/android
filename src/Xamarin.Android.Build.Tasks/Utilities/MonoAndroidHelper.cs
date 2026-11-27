@@ -341,7 +341,7 @@ namespace Xamarin.Android.Tasks
 				new string [] { proguardHomeVariable, "JAVA_TOOL_OPTIONS=-Dfile.encoding=UTF8" };
 		}
 
-		public static string? TryGetAndroidJarPath (TaskLoggingHelper log, string platform, AndroidVersions supportedVersions, bool designTimeBuild = false, bool buildingInsideVisualStudio = false, string? targetFramework = "", string? androidSdkDirectory = "")
+		public static string TryGetAndroidJarPath (TaskLoggingHelper log, string platform, AndroidVersions supportedVersions, bool designTimeBuild = false, bool buildingInsideVisualStudio = false, string targetFramework = "", string androidSdkDirectory = "")
 		{
 			if (string.IsNullOrEmpty (androidSdkDirectory)) {
 				log.LogCodedError ("XA5300", Properties.Resources.XA5300_Android_SDK);
