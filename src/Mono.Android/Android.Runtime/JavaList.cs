@@ -525,6 +525,8 @@ namespace Android.Runtime {
 				throw new ArgumentException (ex.Message, ex);
 			} catch (Java.Lang.IndexOutOfBoundsException ex) when (JNIEnv.ShouldWrapJavaException (ex)) {
 				throw new ArgumentOutOfRangeException (ex.Message, ex);
+			} finally {
+				GC.KeepAlive (item);
 			}
 			return Java.Lang.Object.GetObject<Java.Lang.Object> (
 					obj.Handle,
@@ -573,7 +575,7 @@ namespace Android.Runtime {
 		/// <paramref name="transfer"/> must describe ownership the caller holds. Do not race reference
 		/// release or reuse aliases after ownership is consumed, including when conversion later fails.
 		/// </safety>
-		public static unsafe IList? FromJniHandle (IntPtr handle, JniHandleOwnership transfer)
+		public static IList? FromJniHandle (IntPtr handle, JniHandleOwnership transfer)
 		{
 			if (handle == IntPtr.Zero)
 				return null;
@@ -582,7 +584,10 @@ namespace Android.Runtime {
 			if (inst == null)
 				inst = new JavaList (handle, transfer);
 			else
-				JNIEnv.DeleteRef (handle, transfer);
+				unsafe {
+					// SAFETY: the caller's transfer contract covers this reference; the cached peer replaces it.
+					JNIEnv.DeleteRef (handle, transfer);
+				}
 
 			return (IList) inst;
 		}
@@ -715,9 +720,32 @@ namespace Android.Runtime {
 		
 		public virtual bool RemoveAll (JavaList collection)
 		{
+			if (collection == null)
+				throw new ArgumentNullException (nameof (collection));
+
 			bool ret = false;
-			foreach (Java.Lang.Object? item in collection)
-				ret |= Remove (item);
+			for (int i = 0; i < Count;) {
+				var reference = InternalGetReference (i);
+				Java.Lang.Object? item = null;
+				bool disposeItem = false;
+				try {
+					item = Java.Lang.Object.PeekObject<Java.Lang.Object> (reference.Handle);
+					if (item == null && reference.IsValid) {
+						// SAFETY: List.get returned this owned local, retained through the virtual calls below.
+						item = unsafe(new Java.Lang.Object (reference.Handle, JniHandleOwnership.DoNotTransfer | JniHandleOwnership.DoNotRegister));
+						disposeItem = true;
+					}
+					if (collection.Contains (item) && Remove (item))
+						ret = true;
+					else
+						i++;
+				} finally {
+					// Do not leave temporary peers interned or dispose a caller's existing peer.
+					if (disposeItem)
+						item?.Dispose ();
+					JniObjectReference.Dispose (ref reference);
+				}
+			}
 			return ret;
 		}
 		
@@ -1092,7 +1120,7 @@ namespace Android.Runtime {
 		/// <paramref name="transfer"/> must describe ownership the caller holds. Do not race reference
 		/// release or reuse aliases after ownership is consumed, including when conversion later fails.
 		/// </safety>
-		public new static unsafe IList<T>? FromJniHandle (IntPtr handle, JniHandleOwnership transfer)
+		public new static IList<T>? FromJniHandle (IntPtr handle, JniHandleOwnership transfer)
 		{
 			if (handle == IntPtr.Zero)
 				return null;
@@ -1101,7 +1129,10 @@ namespace Android.Runtime {
 			if (inst == null)
 				inst = new JavaList<T> (handle, transfer);
 			else
-				JNIEnv.DeleteRef (handle, transfer);
+				unsafe {
+					// SAFETY: the caller's transfer contract covers this reference; the cached peer replaces it.
+					JNIEnv.DeleteRef (handle, transfer);
+				}
 
 			return (IList<T>) inst;
 		}

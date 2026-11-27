@@ -106,6 +106,12 @@ runtime/trim-policy changes, so removing a RID or switching modes cannot
 reuse stale type roots. The outputs are registered in `FileWrites` and
 regenerated if deleted.
 
+When managed trimming is disabled (`PublishTrimmed=false`), R8 still needs
+keep rules for Java classes and members accessed from managed bindings.
+CoreCLR generates `proguard/proguard_project_references.cfg` from the
+untrimmed publish assemblies in each inner RID build before R8 runs.
+Disabling managed trimming does not disable Java shrinking or optimization.
+
 # Runtime JNI remapping
 
 [`AndroidR8ObfuscationMode=runtime-remapping`](../docs-mobile/building-apps/build-properties.md#androidr8obfuscationmode)

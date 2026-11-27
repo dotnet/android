@@ -1,6 +1,9 @@
 #nullable enable
 
 using System;
+using System.ComponentModel;
+using System.Diagnostics.CodeAnalysis;
+using System.Reflection;
 using Android.Runtime;
 
 namespace Java.Interop
@@ -16,8 +19,10 @@ namespace Java.Interop
 	/// The alias holder is NOT a <see cref="JavaPeerProxy"/> subclass — this ensures
 	/// <c>GetCustomAttribute&lt;JavaPeerProxy&gt;()</c> returns null for alias entries,
 	/// keeping the fast path (non-alias types) free of alias checks.
+	/// This attribute is not intended for direct use outside generated trimmable typemap code.
 	/// </remarks>
 	[AttributeUsage (AttributeTargets.Class, Inherited = false, AllowMultiple = false)]
+	[EditorBrowsable (EditorBrowsableState.Never)]
 	public sealed class JavaPeerAliasesAttribute : Attribute
 	{
 		/// <summary>
@@ -37,17 +42,25 @@ namespace Java.Interop
 	/// Proxy attributes are generated at build time and applied to the proxy type itself
 	/// (self-application pattern). The .NET runtime's <c>GetCustomAttribute&lt;JavaPeerProxy&gt;()</c>
 	/// instantiates the proxy in an AOT-safe manner — no <c>Activator.CreateInstance()</c> needed.
+	/// This attribute is not intended for direct use outside generated trimmable typemap code.
 	/// </remarks>
 	[AttributeUsage (AttributeTargets.Class | AttributeTargets.Interface, Inherited = false, AllowMultiple = false)]
+	[EditorBrowsable (EditorBrowsableState.Never)]
 	public abstract class JavaPeerProxy : Attribute
 	{
 		protected JavaPeerProxy (string jniName, Type targetType)
+			: this (jniName, targetType, false)
+		{
+		}
+
+		protected JavaPeerProxy (string jniName, Type targetType, bool isSealed)
 		{
 			ArgumentNullException.ThrowIfNull (jniName);
 			ArgumentNullException.ThrowIfNull (targetType);
 
 			JniName = jniName;
 			TargetType = targetType;
+			IsSealed = isSealed;
 		}
 
 		/// <summary>
@@ -68,6 +81,59 @@ namespace Java.Interop
 		/// Gets the target .NET type that this proxy represents.
 		/// </summary>
 		public Type TargetType { get; }
+
+		/// <summary>
+		/// Gets whether the sealed target can be resolved directly using the runtime's class loader.
+		/// </summary>
+		/// <remarks>
+		/// Generated proxies pass <see langword="true"/> only for sealed Mono.Android targets. External
+		/// targets pass <see langword="false"/> even when sealed, because they can use a different class loader.
+		/// </remarks>
+		public bool IsSealed { get; }
+
+		/// <summary>
+		/// Gets the open generic target type definition whose activation constructors are preserved,
+		/// so that closed instantiations of it can be activated.
+		/// </summary>
+		/// <returns>
+		/// The generic type definition, or <see langword="null"/> when this proxy can't activate
+		/// closed instantiations of its target type.
+		/// </returns>
+		/// <remarks>
+		/// Generated proxies override this method only when the open generic peer declares an
+		/// <c>(IntPtr, JniHandleOwnership)</c> activation constructor.
+		/// </remarks>
+		[return: DynamicallyAccessedMembers (Constructors)]
+		protected virtual Type? GetGenericTargetTypeDefinition () => null;
+
+		const DynamicallyAccessedMemberTypes Constructors = DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.NonPublicConstructors;
+
+		static readonly Type[] ActivationConstructorSignature = [typeof (IntPtr), typeof (JniHandleOwnership)];
+
+		/// <summary>
+		/// Creates an instance of <paramref name="closedType"/>, a closed instantiation of this proxy's
+		/// open generic target type, using its <c>(IntPtr, JniHandleOwnership)</c> constructor.
+		/// </summary>
+		internal IJavaPeerable? CreateClosedGenericInstance (Type closedType, IntPtr handle, JniHandleOwnership transfer)
+		{
+			var definition = GetGenericTargetTypeDefinition ();
+			if (definition is null || closedType.GetGenericTypeDefinition () != definition) {
+				return null;
+			}
+
+			var definitionCtor = definition.GetConstructor (
+				BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance,
+				binder: null,
+				ActivationConstructorSignature,
+				modifiers: null);
+			if (definitionCtor is null) {
+				return null;
+			}
+
+			// A constructor declared by the generic definition is also declared by every instantiation of it.
+			var ctor = (ConstructorInfo) closedType.GetMemberWithSameMetadataDefinitionAs (definitionCtor);
+			return (IJavaPeerable) ctor.Invoke ([handle, transfer]);
+		}
 
 		/// <summary>
 		/// Returns <see langword="true"/> when the UCO constructor callback should skip

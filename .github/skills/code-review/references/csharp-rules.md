@@ -17,7 +17,7 @@ General C# guidance applicable to any .NET repository.
 
 | Check | What to look for |
 |-------|-----------------|
-| **`#nullable enable`** | New files should have `#nullable enable` at the top with no preceding blank lines — **unless** nullable is already enabled at the project level (for example via the `Nullable` MSBuild property in the project or imported props), in which case it is not needed per-file. |
+| **`#nullable enable`** | Enable NRT for new code without converting existing code unless asked. New files should start with `#nullable enable` unless the project already enables nullable. |
 | **Never use `!` (null-forgiving operator)** | The postfix `!` null-forgiving operator (e.g., `foo!.Bar`) is banned. If the value can be null, add a proper null check. If it can't be null, make the type non-nullable. AI-generated code frequently sprinkles `!` to silence warnings — this turns compile-time safety into runtime `NullReferenceException`s. Note: this rule is about the postfix `!` operator, not the logical negation `!` (e.g., `if (!someBool)` or `if (!string.IsNullOrEmpty (s))`). |
 | **Use `IsNullOrEmpty()` extension (netstandard2.0 only)** | In projects targeting `netstandard2.0` (e.g., `Xamarin.Android.Build.Tasks`), use the `NullableExtensions` instance methods (`str.IsNullOrEmpty()`, `str.IsNullOrWhiteSpace()`) instead of the static `string.IsNullOrEmpty(str)` / `string.IsNullOrWhiteSpace(str)` — they provide `[NotNullWhen]` annotations that netstandard2.0's BCL lacks. **This rule does NOT apply to projects targeting modern .NET** (e.g., `net11.0`) — in modern .NET, the static `string.IsNullOrEmpty` is already annotated with `[NotNullWhen(false)]`, so the extension is unnecessary. Verify the project's `TargetFramework` before flagging this. |
 | **`ArgumentNullException.ThrowIfNull`** | Android-targeted code (.NET 10+) should use `ArgumentNullException.ThrowIfNull(param)`. |
@@ -61,13 +61,12 @@ General C# guidance applicable to any .NET repository.
 | Check | What to look for |
 |-------|-----------------|
 | **Avoid unnecessary allocations** | Don't create intermediate collections when LINQ chaining or a single list would do. Char arrays for `string.Split()` should be `static readonly` fields. |
-| **ArrayPool for large buffers** | Buffers ≥ 1 KB should use `ArrayPool<byte>.Shared.Rent()` with `try`/`finally` return. Large allocations go to the LOH and are expensive to GC. |
 | **Use existing pools for repeated streams/buffers** | In Android tools code, prefer existing pooling helpers such as `MemoryStreamPool`/`ObjectPool<T>` for repeated temporary streams or buffers instead of allocating new instances in hot paths. If mutable buffers are reused with single-caller assumptions, document the thread-safety invariant. |
 | **Static `HttpClient`** | `HttpClient` instances should be `static readonly` fields, not per-instance objects that are repeatedly constructed or disposed. Per-instance clients can exhaust sockets; inject clients only when there is a real caller requirement. |
 | **`HashSet.Add()` already handles duplicates** | Calling `.Contains()` before `.Add()` does the hash lookup twice. Just call `.Add()`. (Postmortem `#41`) |
 | **Don't wrap a value in an interpolated string** | `$"{someString}"` creates an unnecessary `string.Format` call when `someString` is already a string. (Postmortem `#42`) |
 | **Consider allocations when choosing types** | `Stopwatch` is heap-allocated; `DateTime`/`ValueStopwatch` is a struct. On hot paths or startup, prefer value types. (Postmortem `#39`) |
-| **Use `.Ordinal` when comparing IL/C# identifiers** | `.Ordinal` is always faster than `.OrdinalIgnoreCase`. Use `.OrdinalIgnoreCase` only for filesystem paths. (Postmortem `#49`) |
+| **String comparisons** | Choose ordinal case sensitivity according to the identifier's semantics and use platform-appropriate path comparisons. |
 | **`Split()` with count parameter** | `line.Split(new char[]{'='}, 2)` prevents values containing `=` from being split incorrectly. Follow existing patterns. (Postmortem `#50`) |
 | **Pre-allocate collections when size is known** | Use `new List<T>(capacity)` or `new Dictionary<TK, TV>(count)` when the size is known or estimable. Repeated resizing is O(n) allocation waste. |
 | **Avoid closures in hot paths** | Lambdas that capture local variables allocate a closure object on every call. In loops or frequently-called methods, extract the lambda to a static method or cache the delegate. |
@@ -91,5 +90,4 @@ General C# guidance applicable to any .NET repository.
 | **Introduce base types to reduce `#if` noise** | Instead of scattering `#if` in every class, create a base type (e.g., `BaseMarkHandler`) and let subclasses just override what differs. (Postmortem `#55`) |
 | **Reduce indentation with early returns** | `foreach (var x in items ?? Array.Empty<T>())` eliminates a null-check nesting level. Invert logic for the common case with `continue` so complex cases have less nesting. (Postmortem `#62`, `#63`) |
 | **Don't initialize fields to default values** | `bool flag = false;` and `int count = 0;` are noise. The CLR zero-initializes all fields. Only assign when the initial value is non-default. |
-| **`sealed` classes skip full Dispose** | A `sealed` class doesn't need `Dispose(bool)` + `GC.SuppressFinalize`. Just implement `IDisposable.Dispose()` directly. The full pattern is only for unsealed base classes. |
 | **Well-named constants over magic numbers** | `if (retryCount > 3)` should be `if (retryCount > MaxRetries)`. Constants document intent and make the value easy to find and change. |

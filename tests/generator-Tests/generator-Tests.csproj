@@ -3,7 +3,7 @@
   <PropertyGroup>
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
     <Version>11.0.0</Version>
-    <LangVersion>13.0</LangVersion>
+    <!-- This opts in the test host, not the consumer compilations created by Compiler.cs. -->
     <TargetFramework>$(DotNetStableTargetFramework)</TargetFramework>
     <IntermediateOutputPath>obj\$(Configuration)\$(TargetFramework)\</IntermediateOutputPath>
     <IsPackable>false</IsPackable>
@@ -44,6 +44,11 @@
     <EmbeddedResource Include="$(IntermediateOutputPath)kotlin-gradle\classes\xat\bytecode\tests\MyAlpha.class" Link="kotlin-gradle\MyAlpha.class" LogicalName="generatortests.kotlin-gradle.MyAlpha.class" />
     <EmbeddedResource Include="$(IntermediateOutputPath)kotlin-gradle\classes\xat\bytecode\tests\MyDp.class" Link="kotlin-gradle\MyDp.class" LogicalName="generatortests.kotlin-gradle.MyDp.class" />
     <EmbeddedResource Include="$(IntermediateOutputPath)kotlin-gradle\classes\xat\bytecode\tests\Widgets.class" Link="kotlin-gradle\Widgets.class" LogicalName="generatortests.kotlin-gradle.Widgets.class" />
+    <EmbeddedResource Include="$(IntermediateOutputPath)kotlin-gradle\classes\xat\bytecode\tests\ColorCallback.class" Link="kotlin-gradle\ColorCallback.class" LogicalName="generatortests.kotlin-gradle.ColorCallback.class" />
+    <EmbeddedResource Include="$(IntermediateOutputPath)kotlin-gradle\classes\xat\bytecode\tests\DefaultArguments.class" Link="kotlin-gradle\DefaultArguments.class" LogicalName="generatortests.kotlin-gradle.DefaultArguments.class" />
+    <EmbeddedResource Include="$(IntermediateOutputPath)kotlin-gradle\classes\xat\bytecode\tests\DefaultArgumentsKt.class" Link="kotlin-gradle\DefaultArgumentsKt.class" LogicalName="generatortests.kotlin-gradle.DefaultArgumentsKt.class" />
+    <EmbeddedResource Include="$(IntermediateOutputPath)kotlin-gradle\classes\xat\bytecode\tests\DefaultArgumentsInterface.class" Link="kotlin-gradle\DefaultArgumentsInterface.class" LogicalName="generatortests.kotlin-gradle.DefaultArgumentsInterface.class" />
+    <EmbeddedResource Include="$(IntermediateOutputPath)kotlin-gradle\classes\xat\bytecode\tests\DefaultArgumentsChild.class" Link="kotlin-gradle\DefaultArgumentsChild.class" LogicalName="generatortests.kotlin-gradle.DefaultArgumentsChild.class" />
   </ItemGroup>
 
   <Import Project="..\Xamarin.Android.Tools.Bytecode-Tests\kotlin-gradle.targets" />

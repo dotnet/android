@@ -4,7 +4,6 @@ using Android.Content;
 
 namespace Android.App {
 
-#if ANDROID_9
 
 	public partial class DownloadManager {
 
@@ -14,7 +13,6 @@ namespace Android.App {
 		}
 	}
 
-#endif
 
 }
 

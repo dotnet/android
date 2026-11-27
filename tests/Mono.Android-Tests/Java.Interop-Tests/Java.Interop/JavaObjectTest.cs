@@ -1,18 +1,24 @@
 using System;
-using System.Diagnostics;
+using System.Linq;
 using System.Threading.Tasks;
 
 using Java.Interop;
 
-using NUnit.Framework;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Java.InteropTests
 {
-	[TestFixture]
+	[TestClass]
 	public class JavaObjectTest
 	{
-#if !NO_GC_BRIDGE_SUPPORT
-		[Test]
+		readonly TestContext testContext;
+
+		public JavaObjectTest (TestContext testContext)
+		{
+			this.testContext = testContext;
+		}
+
+		[TestMethod]
 		public void JavaReferencedInstanceSurvivesCollection ()
 		{
 			Console.WriteLine ("JavaReferencedInstanceSurvivesCollection");
@@ -41,30 +47,36 @@ namespace Java.InteropTests
 				array.Dispose ();
 			}
 		}
-#endif  // !NO_GC_BRIDGE_SUPPORT
 
-		[Test]
-		[Ignore ("Frequently failing: https://github.com/dotnet/android/issues/12031")]
+		// The surfaced-peer registry is process-wide, so other threads can add or
+		// remove unrelated peers while a test runs. Count only entries for this peer.
+		static int GetSurfacedEntryCount (IJavaPeerable peer)
+			=> JniRuntime.CurrentRuntime.ValueManager.GetSurfacedPeers ().Count (
+				info => info.SurfacedPeer.TryGetTarget (out var target) && ReferenceEquals (target, peer));
+
+		[TestMethod]
 		public void UnregisterFromRuntime ()
 		{
-			int registeredCount = JniRuntime.CurrentRuntime.ValueManager.GetSurfacedPeers ().Count;
-			JniObjectReference l;
+			JniObjectReference l = default;
 			JavaObject o;
-			using (o = new JavaObject ()) {
-				l   = o.PeerReference.NewLocalRef ();
-				Assert.AreEqual (JniObjectReferenceType.Global, o.PeerReference.Type);
-				Assert.AreEqual (registeredCount+1, JniRuntime.CurrentRuntime.ValueManager.GetSurfacedPeers ().Count, "registeredCount+1 should match!");
-				Assert.IsNotNull (JniRuntime.CurrentRuntime.ValueManager.PeekValue (l));
-				Assert.AreNotSame (l, o.PeerReference);
-				Assert.AreSame (o, JniRuntime.CurrentRuntime.ValueManager.PeekValue (l));
+			try {
+				using (o = new JavaObject ()) {
+					l   = o.PeerReference.NewLocalRef ();
+					Assert.AreEqual (JniObjectReferenceType.Global, o.PeerReference.Type);
+					Assert.AreEqual (1, GetSurfacedEntryCount (o), "Constructed peer should be surfaced exactly once.");
+					Assert.IsNotNull (JniRuntime.CurrentRuntime.ValueManager.PeekValue (l));
+					Assert.AreNotEqual (l, o.PeerReference);
+					Assert.AreSame (o, JniRuntime.CurrentRuntime.ValueManager.PeekValue (l));
+				}
+				Assert.AreEqual (0, GetSurfacedEntryCount (o), "Disposed peer should no longer be surfaced.");
+				Assert.IsNull (JniRuntime.CurrentRuntime.ValueManager.PeekValue (l));
+			} finally {
+				JniObjectReference.Dispose (ref l);
 			}
-			Assert.AreEqual (registeredCount, JniRuntime.CurrentRuntime.ValueManager.GetSurfacedPeers ().Count, "registeredCount should match!");
-			Assert.IsNull (JniRuntime.CurrentRuntime.ValueManager.PeekValue (l));
-			JniObjectReference.Dispose (ref l);
-			Assert.Throws<ObjectDisposedException> (() => o.UnregisterFromRuntime ());
+			Assert.ThrowsExactly<ObjectDisposedException> (() => o.UnregisterFromRuntime ());
 		}
 
-		[Test]
+		[TestMethod]
 		public void RegisterWithVM_PermitsAliases ()
 		{
 			using (var original = new JavaObject ()) {
@@ -74,8 +86,8 @@ namespace Java.InteropTests
 			}
 		}
 
-#if !NO_GC_BRIDGE_SUPPORT
-		[Test]
+		[TestMethod]
+		[Timeout (60_000, CooperativeCancellation = true)]
 		public async Task UnreferencedInstanceIsCollected ()
 		{
 			JniObjectReference  oldHandle = new JniObjectReference ();
@@ -85,18 +97,14 @@ namespace Java.InteropTests
 					oldHandle = v.PeerReference.NewWeakGlobalRef ();
 					r         = new WeakReference (v);
 			});
-			JniEnvironment.Runtime.ValueManager.CollectPeers ();
-			await WaitForGC (
-					() => !r.IsAlive && JniRuntime.CurrentRuntime.ValueManager.PeekValue (oldHandle) == null,
-					"Expected the unreferenced instance to be collected.");
-			Assert.IsFalse (r.IsAlive);
+			await GCBridgeTestHelpers.CollectUnreachablePeersAsync (testContext.CancellationToken);
+			Assert.IsFalse (r.IsAlive, "Expected the unreferenced instance to be collected.");
 			Assert.IsNull (r.Target);
 			Assert.IsNull (JniRuntime.CurrentRuntime.ValueManager.PeekValue (oldHandle));
 			JniObjectReference.Dispose (ref oldHandle);
 		}
-#endif  // !NO_GC_BRIDGE_SUPPORT
 
-		[Test]
+		[TestMethod]
 		public void Dispose ()
 		{
 			var d = false;
@@ -107,8 +115,8 @@ namespace Java.InteropTests
 			Assert.IsFalse (f);
 		}
 
-#if !NO_GC_BRIDGE_SUPPORT
-		[Test]
+		[TestMethod]
+		[Timeout (60_000, CooperativeCancellation = true)]
 		public async Task Dispose_Finalized ()
 		{
 			var disposed  = new TaskCompletionSource<bool> (TaskCreationOptions.RunContinuationsAsynchronously);
@@ -122,29 +130,12 @@ namespace Java.InteropTests
 				});
 				JniEnvironment.Runtime.ValueManager.CollectPeers ();
 			});
-			JniEnvironment.Runtime.ValueManager.CollectPeers ();
-			await WaitForGC (
-					() => disposed.Task.IsCompleted || finalized.Task.IsCompleted,
-					"Expected JavaDisposedObject.Dispose(disposing: false) to run.");
+			await GCBridgeTestHelpers.CollectUnreachablePeersAsync (testContext.CancellationToken);
 			Assert.IsFalse (disposed.Task.IsCompleted);
-			Assert.IsTrue (finalized.Task.IsCompleted);
-		}
-#endif  // !NO_GC_BRIDGE_SUPPORT
-
-		static async Task WaitForGC (Func<bool> predicate, string message, int timeoutMilliseconds = 2000)
-		{
-			var timeout   = TimeSpan.FromMilliseconds (timeoutMilliseconds);
-			var stopwatch = Stopwatch.StartNew ();
-			while (!predicate () && stopwatch.Elapsed < timeout) {
-				GC.Collect (generation: 2, mode: GCCollectionMode.Forced, blocking: true);
-				GC.WaitForPendingFinalizers ();
-				JniEnvironment.Runtime.ValueManager.CollectPeers ();
-				await Task.Yield ();
-			}
-			Assert.IsTrue (predicate (), message);
+			Assert.IsTrue (finalized.Task.IsCompleted, "Expected JavaDisposedObject.Dispose(disposing: false) to run.");
 		}
 
-		[Test]
+		[TestMethod]
 		public void ObjectDisposed ()
 		{
 			var o = new JavaObject ();
@@ -155,40 +146,41 @@ namespace Java.InteropTests
 			var p = o.JniPeerMembers;
 
 			// These should throw
-			Assert.Throws<ObjectDisposedException> (() => o.GetHashCode ());
-			Assert.Throws<ObjectDisposedException> (() => o.UnregisterFromRuntime ());
-			Assert.Throws<ObjectDisposedException> (() => o.ToString ());
-			Assert.Throws<ObjectDisposedException> (() => o.Equals (o));
+			Assert.ThrowsExactly<ObjectDisposedException> (() => o.GetHashCode ());
+			Assert.ThrowsExactly<ObjectDisposedException> (() => o.UnregisterFromRuntime ());
+			Assert.ThrowsExactly<ObjectDisposedException> (() => o.ToString ());
+			Assert.ThrowsExactly<ObjectDisposedException> (() => o.Equals (o));
 		}
 
-		[Test]
-		public unsafe void Ctor ()
+		[TestMethod]
+		public void Ctor ()
 		{
 			using (var t = new JniType ("java/lang/Object")) {
 				var c = t.GetConstructor ("()V");
-				var lref = t.NewObject (c, null);
+				// SAFETY: c is the ()V constructor of the live type, so no arguments are required.
+				var lref = unsafe (t.NewObject (c, null));
 				Assert.IsTrue (lref.IsValid);
 				using (var o = new JavaObject (ref lref, JniObjectReferenceOptions.Copy)) {
 					Assert.IsTrue (lref.IsValid);
-					Assert.AreNotSame (lref, o.PeerReference);
+					Assert.AreNotEqual (lref, o.PeerReference);
 				}
 				using (var o = new JavaObject (ref lref, JniObjectReferenceOptions.CopyAndDispose)) {
 					Assert.IsFalse (lref.IsValid);
-					Assert.AreNotSame (lref, o.PeerReference);
+					Assert.AreNotEqual (lref, o.PeerReference);
 				}
 			}
 		}
 
-		[Test]
+		[TestMethod]
 		public void Ctor_Exceptions ()
 		{
 			var r   = new JniObjectReference ();
-			Assert.Throws<ArgumentException> (() => new JavaObject (ref r, JniObjectReferenceOptions.CopyAndDispose));
+			Assert.ThrowsExactly<ArgumentException> (() => new JavaObject (ref r, JniObjectReferenceOptions.CopyAndDispose));
 
-			Assert.Throws<Java.Lang.ClassNotFoundException> (() => new JavaObjectWithMissingJavaPeer ()).Dispose ();
+			Assert.ThrowsExactly<Java.Lang.ClassNotFoundException> (() => new JavaObjectWithMissingJavaPeer ()).Dispose ();
 		}
 
-		[Test]
+		[TestMethod]
 		public void CrossThreadSharingRequresRegistration ()
 		{
 			JavaObject o = null;
@@ -199,7 +191,7 @@ namespace Java.InteropTests
 			o.Dispose ();
 		}
 
-		[Test]
+		[TestMethod]
 		public void NestedDisposeInvocations ()
 		{
 			var value = new MyDisposableObject ();
@@ -207,7 +199,7 @@ namespace Java.InteropTests
 			value.Dispose ();
 		}
 
-		[Test]
+		[TestMethod]
 		public void DisposeAccessesThis ()
 		{
 			var value = new GetThis ();

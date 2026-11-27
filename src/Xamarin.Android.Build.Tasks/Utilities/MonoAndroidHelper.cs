@@ -15,40 +15,14 @@ using Xamarin.Android.Tools;
 using Mono.Cecil;
 
 
-#if MSBUILD
 using Microsoft.Android.Build.Tasks;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
-#endif
 
 namespace Xamarin.Android.Tasks
 {
 	public partial class MonoAndroidHelper
 	{
-		static Lazy<string> uname = new Lazy<string> (GetOSBinDirName, System.Threading.LazyThreadSafetyMode.PublicationOnly);
-
-		internal static XAAssemblyResolver MakeResolver (TaskLoggingHelper log, AndroidTargetArch targetArch, Dictionary<string, ITaskItem> assemblies, bool loadDebugSymbols = true)
-		{
-			var readerParams = new ReaderParameters ();
-
-			var res = new XAAssemblyResolver (targetArch, log, loadDebugSymbols: loadDebugSymbols, loadReaderParameters: readerParams);
-			var uniqueDirs = new HashSet<string> (StringComparer.OrdinalIgnoreCase);
-
-			log.LogDebugMessage ($"Adding search directories to new architecture {targetArch} resolver:");
-			foreach (var kvp in assemblies) {
-				string assemblyDir = Path.GetDirectoryName (kvp.Value.ItemSpec);
-				if (uniqueDirs.Contains (assemblyDir)) {
-					continue;
-				}
-
-				uniqueDirs.Add (assemblyDir);
-				res.SearchDirectories.Add (assemblyDir);
-				log.LogDebugMessage ($"  {assemblyDir}");
-			}
-
-			return res;
-		}
-
 		public static StringBuilder MergeStdoutAndStderrMessages (List<string> stdout, List<string> stderr)
 		{
 			var sb = new StringBuilder ();
@@ -145,167 +119,20 @@ namespace Xamarin.Android.Tasks
 			}
 		}
 
-		public static int RunProcess (string name, string args, DataReceivedEventHandler onOutput, DataReceivedEventHandler onError, Dictionary<string, string> environmentVariables = null)
-		{
-			return RunProcess (TaskEnvironment.Fallback, name, args, onOutput, onError, environmentVariables);
-		}
-
-		public static int RunProcess (TaskEnvironment taskEnvironment, string name, string args, DataReceivedEventHandler onOutput, DataReceivedEventHandler onError, Dictionary<string, string> environmentVariables = null)
-		{
-			if (taskEnvironment == null)
-				throw new ArgumentNullException (nameof (taskEnvironment));
-
-			var psi = taskEnvironment.GetProcessStartInfo ();
-			psi.FileName = name;
-			psi.Arguments = args;
-			psi.UseShellExecute = false;
-			psi.RedirectStandardOutput = true;
-			psi.RedirectStandardError = true;
-			psi.CreateNoWindow = true;
-			psi.WindowStyle = ProcessWindowStyle.Hidden;
-			if (environmentVariables != null) {
-				foreach (var pair in environmentVariables) {
-					psi.EnvironmentVariables [pair.Key] = pair.Value;
-				}
-			}
-			Process p = new Process ();
-			p.StartInfo = psi;
-
-			p.OutputDataReceived += onOutput;
-			p.ErrorDataReceived += onError;
-			p.Start ();
-			p.BeginErrorReadLine ();
-			p.BeginOutputReadLine ();
-			p.WaitForExit ();
-			try {
-				return p.ExitCode;
-			} finally {
-				p.Close ();
-			}
-		}
-
-		static string GetOSBinDirName ()
-		{
-			if (OS.IsWindows)
-				return "";
-			string os = null;
-			DataReceivedEventHandler output = (o, e) => {
-				if (string.IsNullOrWhiteSpace (e.Data))
-					return;
-				os = e.Data.Trim ();
-			};
-			DataReceivedEventHandler error = (o, e) => {};
-
-			string uname = "/usr/bin/uname";
-			if (!File.Exists (uname)) {
-				uname = "uname";
-			}
-
-			int r = RunProcess (uname, "-s", output, error);
-			if (r == 0)
-				return os;
-			return null;
-		}
-
 		// Path which contains OS-specific binaries; formerly known as $prefix/bin
 		internal static string GetOSBinPath ()
 		{
 			var toolsDir = Path.GetDirectoryName (typeof (MonoAndroidHelper).Assembly.Location);
-			var os = RuntimeInformation.IsOSPlatform (OSPlatform.Windows) ? "" :
-				RuntimeInformation.IsOSPlatform (OSPlatform.OSX) ? "Darwin" : "Linux";
-			return Path.Combine (toolsDir, os);
+			return Path.Combine (toolsDir, GetOSBinDirName ());
 		}
+
+		static string GetOSBinDirName () => RuntimeInformation.IsOSPlatform (OSPlatform.Windows) ? "" :
+			RuntimeInformation.IsOSPlatform (OSPlatform.OSX) ? "Darwin" : "Linux";
 
 		internal static string GetOSLibPath ()
 		{
-			var toolsDir = Path.GetFullPath (Path.GetDirectoryName (typeof (MonoAndroidHelper).Assembly.Location));
-			return Path.Combine (toolsDir, "lib", $"host-{uname.Value}");
-		}
-
-		class SizeAndContentFileComparer : IEqualityComparer<FileInfo>
-#if MSBUILD
-			, IEqualityComparer<ITaskItem>
-#endif  // MSBUILD
-		{
-			public  static  readonly  SizeAndContentFileComparer  DefaultComparer     = new SizeAndContentFileComparer ();
-
-#if MSBUILD
-			readonly TaskEnvironment taskEnvironment;
-
-			public SizeAndContentFileComparer (TaskEnvironment? taskEnvironment = null)
-			{
-				this.taskEnvironment = taskEnvironment ?? TaskEnvironment.Fallback;
-			}
-#endif
-
-			public bool Equals (FileInfo x, FileInfo y)
-			{
-				if (x.Exists != y.Exists || x.Length != y.Length)
-					return false;
-				string xHash = Files.HashFile (x.FullName);
-				string yHash = Files.HashFile (y.FullName);
-				return xHash == yHash;
-			}
-
-			public int GetHashCode (FileInfo obj)
-			{
-				return (int) obj.Length;
-			}
-
-#if MSBUILD
-			public bool Equals (ITaskItem x, ITaskItem y)
-			{
-				return Equals (new FileInfo (taskEnvironment.GetAbsolutePath (x.ItemSpec)), new FileInfo (taskEnvironment.GetAbsolutePath (y.ItemSpec)));
-			}
-
-			public int GetHashCode (ITaskItem obj)
-			{
-				return GetHashCode (new FileInfo (taskEnvironment.GetAbsolutePath (obj.ItemSpec)));
-			}
-#endif  // MSBUILD
-		}
-
-		internal static bool LogInternalExceptions {
-			get {
-				return string.Equals (
-						"icanhaz",
-						Environment.GetEnvironmentVariable ("__XA_LOG_ERRORS__"),
-						StringComparison.OrdinalIgnoreCase);
-			}
-		}
-
-#if MSBUILD
-		public static IEnumerable<string> ExpandFiles (ITaskItem[] libraryProjectJars)
-		{
-			libraryProjectJars  = libraryProjectJars ?? [];
-			return (from path in libraryProjectJars
-					let     dir     = Path.GetDirectoryName (path.ItemSpec)
-					let     pattern = Path.GetFileName (path.ItemSpec)
-					where   Directory.Exists (dir)
-					select  Directory.GetFiles (dir, pattern))
-				.SelectMany (paths => paths);
-		}
-
-		public static IEnumerable<ITaskItem> DistinctFilesByContent (IEnumerable<ITaskItem> filePaths)
-		{
-			return filePaths.Distinct (MonoAndroidHelper.SizeAndContentFileComparer.DefaultComparer);
-		}
-
-		public static IEnumerable<ITaskItem> DistinctFilesByContent (IEnumerable<ITaskItem> filePaths, TaskEnvironment taskEnvironment)
-		{
-			return filePaths.Distinct (new MonoAndroidHelper.SizeAndContentFileComparer (taskEnvironment));
-		}
-
-		public static IEnumerable<string> DistinctFilesByContent (IEnumerable<string> filePaths, TaskEnvironment taskEnvironment)
-		{
-			return filePaths.Select (p => new FileInfo (taskEnvironment.GetAbsolutePath (p))).ToArray ()
-				.Distinct (new MonoAndroidHelper.SizeAndContentFileComparer ()).Select (f => f.FullName).ToArray ();
-		}
-#endif
-
-		public static IEnumerable<string> DistinctFilesByContent (IEnumerable<string> filePaths)
-		{
-			return filePaths.Select (p => new FileInfo (p)).ToArray ().Distinct (new MonoAndroidHelper.SizeAndContentFileComparer ()).Select (f => f.FullName).ToArray ();
+			var toolsDir = Path.GetDirectoryName (typeof (MonoAndroidHelper).Assembly.Location);
+			return Path.Combine (toolsDir, "lib", $"host-{GetOSBinDirName ()}");
 		}
 
 		public static IEnumerable<string> GetDuplicateFileNames (IEnumerable<string> fullPaths, string [] excluded)
@@ -317,14 +144,8 @@ namespace Xamarin.Android.Tasks
 						yield return files [i];
 		}
 
-		public static bool IsEmbeddedReferenceJar (string jar)
-		{
-			return jar.StartsWith ("__reference__", StringComparison.Ordinal);
-		}
-
 		public static void LogWarning (object log, string msg, params object [] args)
 		{
-#if MSBUILD
 			var helper = log as TaskLoggingHelper;
 			if (helper != null) {
 				helper.LogWarning (msg, args);
@@ -335,12 +156,8 @@ namespace Xamarin.Android.Tasks
 				action (string.Format (msg, args));
 				return;
 			}
-#else
-			Console.Error.WriteLine (msg, args);
-#endif
 		}
 
-#if MSBUILD
 		public static bool IsAndroidAssembly (ITaskItem source)
 		{
 			string name = Path.GetFileNameWithoutExtension (source.ItemSpec);
@@ -381,7 +198,6 @@ namespace Xamarin.Android.Tasks
 			var reader = pe.GetMetadataReader ();
 			return HasMonoAndroidReference (reader);
 		}
-#endif
 
 		public static bool HasMonoAndroidReference (MetadataReader reader)
 		{
@@ -425,18 +241,18 @@ namespace Xamarin.Android.Tasks
 			return false;
 		}
 
-		public static bool CopyAssemblyAndSymbols (string source, string destination)
+		public static bool CopyAssemblyAndSymbols (string source, string destination, TaskEnvironment taskEnvironment)
 		{
-			bool changed = Files.CopyIfChanged (source, destination);
+			bool changed = Files.CopyIfChanged (source, destination, taskEnvironment);
 			var mdb = source + ".mdb";
 			if (File.Exists (mdb)) {
 				var mdbDestination = destination + ".mdb";
-				Files.CopyIfChanged (mdb, mdbDestination);
+				Files.CopyIfChanged (mdb, mdbDestination, taskEnvironment);
 			}
 			var pdb = Path.ChangeExtension (source, "pdb");
 			if (File.Exists (pdb) && Files.IsPortablePdb (pdb)) {
 				var pdbDestination = Path.ChangeExtension (destination, "pdb");
-				Files.CopyIfChanged (pdb, pdbDestination);
+				Files.CopyIfChanged (pdb, pdbDestination, taskEnvironment);
 			}
 			return changed;
 		}
@@ -450,7 +266,6 @@ namespace Xamarin.Android.Tasks
 			}
 		}
 
-#if MSBUILD
 		public static bool IsFrameworkAssembly (ITaskItem assembly)
 		{
 			// Known assembly names: Mono.Android, Java.Interop, etc.
@@ -508,7 +323,6 @@ namespace Xamarin.Android.Tasks
 				return Files.CopyIfStreamChanged (writer.BaseStream, mapFile);
 			}
 		}
-#endif // MSBUILD
 
 		public static string [] GetProguardEnvironmentVaribles (string proguardHome)
 		{
@@ -521,7 +335,6 @@ namespace Xamarin.Android.Tasks
 				new string [] { proguardHomeVariable, "JAVA_TOOL_OPTIONS=-Dfile.encoding=UTF8" };
 		}
 
-#if MSBUILD
 		public static string TryGetAndroidJarPath (TaskLoggingHelper log, string platform, AndroidVersions supportedVersions, bool designTimeBuild = false, bool buildingInsideVisualStudio = false, string targetFramework = "", string androidSdkDirectory = "")
 		{
 			if (string.IsNullOrEmpty (androidSdkDirectory)) {
@@ -542,35 +355,7 @@ namespace Xamarin.Android.Tasks
 			}
 			return Path.Combine (platformPath, "android.jar");
 		}
-
-		public static Dictionary<string, string> ItemGroupToCaseMap (ITaskItem [] items)
-		{
-			var map = new Dictionary<string, string> (items.Length, StringComparer.Ordinal);
-			foreach (var item in items)
-				map [item.ItemSpec] = item.GetMetadata ("OriginalName");
-			return map;
-		}
-#endif // MSBUILD
-		public static string FixUpAndroidResourcePath (string file, string resourceDirectory, string resourceDirectoryFullPath, Dictionary<string, string> resource_name_case_map)
-		{
-			string newfile = null;
-			if (file.StartsWith (resourceDirectory, StringComparison.InvariantCultureIgnoreCase)) {
-				newfile = file.Substring (resourceDirectory.Length).TrimStart (Path.DirectorySeparatorChar);
-			}
-			if (!string.IsNullOrEmpty (resourceDirectoryFullPath) && file.StartsWith (resourceDirectoryFullPath, StringComparison.InvariantCultureIgnoreCase)) {
-				newfile = file.Substring (resourceDirectoryFullPath.Length).TrimStart (Path.DirectorySeparatorChar);
-			}
-			if (!string.IsNullOrEmpty (newfile)) {
-				if (resource_name_case_map.TryGetValue (newfile, out string value))
-					newfile = value;
-				newfile = Path.Combine ("Resources", newfile);
-				return newfile;
-			}
-			return string.Empty;
-		}
-
 		static readonly char [] DirectorySeparators = new [] { Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar };
-#if MSBUILD
 		/// <summary>
 		/// Returns the relative path that should be used for an @(AndroidAsset) item
 		/// </summary>
@@ -582,7 +367,6 @@ namespace Xamarin.Android.Tasks
 			path = head.Length == path.Length ? path : path.Substring ((head.Length == 0 ? 0 : head.Length + 1) + assetsDirectory.Length).TrimStart (DirectorySeparators);
 			return path;
 		}
-#endif // MSBUILD
 
 
 
@@ -603,21 +387,6 @@ namespace Xamarin.Android.Tasks
 			return apiLevel;
 		}
 
-		public static bool TryParseApiLevel (string apiLevel, out Version version)
-		{
-			if (Version.TryParse (apiLevel, out var v)) {
-				version = v;
-				return true;
-			}
-			if (int.TryParse (apiLevel, out var major)) {
-				version = new Version (major, 0);
-				return true;
-			}
-			version = null;
-			return false;
-		}
-
-#if MSBUILD
 		public static string GetAssemblyRid (ITaskItem asmItem)
 		{
 			string? abi = asmItem.GetMetadata ("RuntimeIdentifier");
@@ -638,7 +407,6 @@ namespace Xamarin.Android.Tasks
 
 			return ret;
 		}
-#endif // MSBUILD
 
 		public static uint ZipAlignmentToPageSize (int alignment) => ZipAlignmentToMaskOrPageSize (alignment, needMask: false);
 

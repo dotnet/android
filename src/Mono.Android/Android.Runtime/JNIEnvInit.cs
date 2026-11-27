@@ -111,9 +111,9 @@ namespace Android.Runtime
 		[UnmanagedCallersOnly]
 		internal static unsafe void Initialize (JnienvInitializeArgs* args)
 		{
-			ArgumentNullException.ThrowIfNull (args);
 			unsafe {
 				// SAFETY: the native host calls this entry point with its matching live descriptor, current-thread environment and runtime-lifetime VM/global references.
+				ArgumentNullException.ThrowIfNull (args);
 				if (RuntimeFeature.IsNativeAotRuntime) {
 					throw new NotSupportedException ("JNIEnvInit.Initialize cannot be used to initialize NativeAOT.");
 				}
@@ -185,7 +185,7 @@ namespace Android.Runtime
 
 			var type = typeof(object).Assembly.GetType (typeName, throwOnError: false);
 			if (type is null) {
-				Logger.Log (LogLevel.Warn, "monodroid",
+				Logger.Log (LogLevel.Warn, "DOTNET",
 					$"Could not load type '{typeName}'. Skipping startup hooks.");
 				return;
 			}
@@ -193,7 +193,7 @@ namespace Android.Runtime
 			var method = type.GetMethod (methodName, 
 				BindingFlags.NonPublic | BindingFlags.Static, null, [ typeof(string) ], null);
 			if (method is null) {
-				Logger.Log (LogLevel.Warn, "monodroid",
+				Logger.Log (LogLevel.Warn, "DOTNET",
 					$"Could not load method '{typeName}.{methodName}'. Skipping startup hooks.");
 				return;
 			}

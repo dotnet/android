@@ -2,35 +2,37 @@ using System;
 
 using Java.Interop;
 
-using NUnit.Framework;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Java.InteropTests
 {
-	[TestFixture]
+	[TestClass]
 	public class JniRuntimeTest
 	{
-		[Test]
+		[TestMethod]
 		public void CreateJavaVM ()
 		{
-			Assert.AreSame (JniRuntime.CurrentRuntime, JniRuntime.CurrentRuntime);
+			var runtime = JniRuntime.CurrentRuntime;
+			Assert.AreSame (runtime, JniRuntime.CurrentRuntime);
 			Assert.IsTrue (JniRuntime.CurrentRuntime.InvocationPointer != IntPtr.Zero);
 			Assert.IsTrue (JniEnvironment.EnvironmentPointer != IntPtr.Zero);
 		}
 
-		[Test]
+		[TestMethod]
 		public void CreateJavaVMWithNullBuilder ()
 		{
-			Assert.Throws<ArgumentNullException> (() => new JavaVMWithNullBuilder ());
+			// SAFETY: The base constructor rejects null options before accessing any native state.
+			Assert.ThrowsExactly<ArgumentNullException> (() => unsafe (new JavaVMWithNullBuilder ()));
 		}
 
 		class JavaVMWithNullBuilder : JniRuntime {
-			public JavaVMWithNullBuilder ()
+			public unsafe JavaVMWithNullBuilder ()
 				: base ((JniRuntime.CreationOptions) null)
 			{
 			}
 		}
 
-		[Test]
+		[TestMethod]
 		public void GetRegisteredJavaVM_ExistingInstance ()
 		{
 			Assert.AreEqual (JniRuntime.CurrentRuntime, JniRuntime.GetRegisteredRuntime (JniRuntime.CurrentRuntime.InvocationPointer));

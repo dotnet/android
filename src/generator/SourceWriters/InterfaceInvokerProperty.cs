@@ -22,6 +22,8 @@ namespace generator.SourceWriters
 			PropertyType = new TypeReferenceWriter (opt.GetTypeReferenceName (property));
 
 			IsPublic = true;
+			if (GenBase.RequiresNewForJavaObject (Name, null, opt))
+				IsShadow = true;
 
 			SourceWriterExtensions.AddSupportedOSPlatform (Attributes, property.Getter, opt);
 

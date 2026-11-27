@@ -33,22 +33,31 @@ namespace Xamarin.ProjectTools
 		/// </remarks>
 		public const string DotNetPublicMaven = "https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-public-maven/maven/v1";
 
+		/// <safety>
+		/// The caller must supply writable storage large enough for the native utsname structure.
+		/// </safety>
 		[DllImport ("libc")]
-		static extern int uname (IntPtr buf);
+		static unsafe extern int uname (IntPtr buf);
 
 		static bool IsDarwin ()
 		{
 			IntPtr buf = IntPtr.Zero;
 			try {
 				buf = Marshal.AllocHGlobal (8192);
-				if (uname (buf) == 0) {
-					string os = Marshal.PtrToStringAnsi (buf);
+				// SAFETY: The live 8192-byte allocation exceeds utsname on the supported Unix platforms.
+				if (unsafe (uname (buf)) == 0) {
+					// SAFETY: Successful uname writes a NUL-terminated system name into the live allocation.
+					string os = unsafe (Marshal.PtrToStringAnsi (buf));
 					return os == "Darwin";
 				}
 			} catch {
 			} finally {
-				if (buf != IntPtr.Zero)
-					Marshal.FreeHGlobal (buf);
+				if (buf != IntPtr.Zero) {
+					// SAFETY: This is the allocation owned by this invocation, and it has not been freed.
+					unsafe {
+						Marshal.FreeHGlobal (buf);
+					}
+				}
 			}
 			return false;
 		}

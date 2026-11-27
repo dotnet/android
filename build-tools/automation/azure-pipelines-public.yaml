@@ -53,7 +53,7 @@ variables:
 - name: NetCorePublicPoolName
   value: NetCore-Public
 - name: WindowsPoolImageNetCorePublic
-  value: windows.vs2022.amd64.open
+  value: windows.vs2026.amd64.open
 - name: LinuxPoolImageNetCorePublic
   value: build.Ubuntu.2204.amd64.open
 # Skip tests when explicitly requested; otherwise run full PR test matrix.
@@ -111,6 +111,7 @@ stages:
     pool:
       name: $(NetCorePublicPoolName)
       demands:
+      # The build runs a .NET TaskHost test that requires MSBuild 18.7 or later.
       - ImageOverride -equals $(WindowsPoolImageNetCorePublic)
     timeoutInMinutes: 240
     steps:
@@ -276,7 +277,7 @@ stages:
   jobs:
   - job: mac_msbuild_tests
     strategy:
-      parallel: 10
+      parallel: 9
     displayName: macOS > Tests > MSBuild
     pool:
       name: AcesShared
@@ -288,7 +289,6 @@ stages:
     steps:
     - template: /build-tools/automation/yaml-templates/setup-test-environment-public.yaml
       parameters:
-        installTestSlicer: true
         use1ESTemplate: false
 
     # AndroidGradleProjectTests run the Gradle wrapper, which downloads the
@@ -322,7 +322,7 @@ stages:
 
   - job: win_msbuild_tests
     strategy:
-      parallel: 8
+      parallel: 7
     displayName: Windows > Tests > MSBuild
     pool:
       name: $(NetCorePublicPoolName)
@@ -340,7 +340,6 @@ stages:
     - template: /build-tools/automation/yaml-templates/setup-test-environment-public.yaml
       parameters:
         useAgentJdkPath: false
-        installTestSlicer: true
         use1ESTemplate: false
 
     # AndroidGradleProjectTests run the Gradle wrapper, which downloads the
@@ -396,7 +395,6 @@ stages:
       parameters:
         jdkMajorVersion: $(DefaultJavaSdkMajorVersion)
         useAgentJdkPath: true
-        installTestSlicer: true
         installApkDiff: false
         use1ESTemplate: false
 
@@ -418,12 +416,64 @@ stages:
     - template: /build-tools/automation/yaml-templates/run-sliced-nunit-tests.yaml
       parameters:
         testAssembly: $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/MSBuildDeviceIntegration/$(DotNetStableTargetFramework)/MSBuildDeviceIntegration.dll
-        testFilter: $(ExcludedNightlyNUnitCategories)
+        testFilter: $(ExcludedNightlyTestCategories)
         testRunTitle: MSBuildDeviceIntegration On Device - macOS
 
     - template: /build-tools/automation/yaml-templates/upload-results.yaml
       parameters:
         artifactName: Test Results - MSBuild With Emulator - macOS-$(System.JobPositionInPhase)
+        xaSourcePath: $(System.DefaultWorkingDirectory)
+        use1ESTemplate: false
+
+    - template: /build-tools/automation/yaml-templates/fail-on-issue.yaml
+      parameters:
+        condition: true
+
+  # Purpose-built apps that check what trimming keeps and removes; see tests/TrimmingTests.
+  - job: mac_trimming_tests
+    displayName: "macOS > Tests > Trimming+Emulator"
+    # NOTE: AcesShared pool cannot boot Android emulators, so these jobs must use hosted images
+    pool:
+      name: Azure Pipelines
+      vmImage: $(HostedMacImageWithEmulator)
+      os: macOS
+    timeoutInMinutes: 120
+    cancelTimeoutInMinutes: 5
+    workspace:
+      clean: all
+    steps:
+    - template: /build-tools/automation/yaml-templates/setup-test-environment-public.yaml
+      parameters:
+        jdkMajorVersion: $(DefaultJavaSdkMajorVersion)
+        useAgentJdkPath: true
+        installApkDiff: false
+        use1ESTemplate: false
+
+    - task: DownloadPipelineArtifact@2
+      inputs:
+        artifactName: $(TestAssembliesArtifactName)
+        downloadPath: $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)
+
+    - template: /build-tools/automation/yaml-templates/run-dotnet-preview.yaml
+      parameters:
+        project: Microsoft.Android.slnx
+        arguments: -t:PrepareOpenJDK -c $(XA.Build.Configuration) --no-restore
+        displayName: prepare OpenJDK $(XA.Build.Configuration)
+        continueOnError: false
+
+    - template: /build-tools/automation/yaml-templates/start-stop-emulator.yaml
+
+    # Two tests at a time share the emulator, matching [assembly: LevelOfParallelism (2)].
+    - template: /build-tools/automation/yaml-templates/run-nunit-tests.yaml
+      parameters:
+        testAssembly: $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/TrimmingTests/$(DotNetStableTargetFramework)/TrimmingTests.dll
+        testRunTitle: TrimmingTests On Device - macOS
+        workers: 2
+        timeoutInMinutes: 90
+
+    - template: /build-tools/automation/yaml-templates/upload-results.yaml
+      parameters:
+        artifactName: Test Results - Trimming With Emulator - macOS
         xaSourcePath: $(System.DefaultWorkingDirectory)
         use1ESTemplate: false
 

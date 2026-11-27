@@ -6,9 +6,9 @@ namespace TestNativeLib
 	public class Binding
 	{
 		[DllImport("simple")]
-		public static extern int SampleFunction ();
+		public static safe extern int SampleFunction ();
 
 		[DllImport("simple2")]
-		public static extern int SampleFunction2 ();
+		public static safe extern int SampleFunction2 ();
 	}
 }

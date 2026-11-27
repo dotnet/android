@@ -6,11 +6,9 @@ using System.IO;
 using System.Linq;
 using Xamarin.Android.Tools;
 
-#if MSBUILD
 using Microsoft.Android.Build.Tasks;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
-#endif
 
 namespace Xamarin.Android.Tasks;
 
@@ -41,7 +39,6 @@ public partial class MonoAndroidHelper
 	public static JdkInfo? GetJdkInfo (Action<TraceLevel, string> logger, string? javaSdkPath, Version minSupportedVersion, Version maxSupportedVersion)
 		=> JdkInfo.FindJdk (logger, javaSdkPath, minSupportedVersion, maxSupportedVersion, null);
 
-#if MSBUILD
 	public static string GetExecutablePath (string? dir, string exe, TaskEnvironment taskEnvironment)
 	{
 		if (dir is not { Length: > 0 })
@@ -56,28 +53,9 @@ public partial class MonoAndroidHelper
 		return exe;
 	}
 
-	public static AndroidVersions GetSupportedVersions (IBuildEngine4 engine, string[]? referenceAssemblyPaths)
-		=> GetSupportedVersions (engine, referenceAssemblyPaths?.Select (Path.GetFullPath).ToArray (), TaskEnvironment.Fallback);
-
-	public static AndroidVersions GetSupportedVersions (IBuildEngine4 engine, string[]? referenceAssemblyPaths, TaskEnvironment taskEnvironment)
-	{
-		// GetAbsolutePath roots paths but does not collapse ".." for the cache key.
-		var paths = (referenceAssemblyPaths ?? []).Select (path => new DirectoryInfo (taskEnvironment.GetAbsolutePath (path)).FullName).ToArray ();
-		// Share immutable API metadata by input, never a process-wide "current SDK".
-		var key = (typeof (MonoAndroidHelper).Assembly.Location, nameof (AndroidVersions), string.Join ("\0", paths));
-		var cached = engine.GetRegisteredTaskObjectAssemblyLocal<AndroidVersions> (key, RegisteredTaskObjectLifetime.Build);
-		if (cached != null)
-			return cached;
-
-		var versions = new AndroidVersions (paths);
-		engine.RegisterTaskObjectAssemblyLocal (key, versions, RegisteredTaskObjectLifetime.Build);
-		return versions;
-	}
-
 	public static Dictionary<string, string> LoadMapFile (IBuildEngine4 engine, string mapFile, StringComparer comparer)
 	{
 		var cachedMap = engine?.GetRegisteredTaskObjectAssemblyLocal<Dictionary<string, string>> (mapFile, RegisteredTaskObjectLifetime.Build);
 		return cachedMap ?? LoadMapFile (File.Exists (mapFile) ? File.ReadLines (mapFile) : [], comparer);
 	}
-#endif  // MSBUILD
 }

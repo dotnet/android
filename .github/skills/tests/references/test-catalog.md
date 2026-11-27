@@ -7,7 +7,7 @@ Mapping of test area keywords to assemblies, filters, and build prerequisites.
 - **Filter**: The `--filter` argument for host-side `dotnet test`, or on-device MTP category/property notes.
 - **Build**: What must be built before running:
   - **Standalone** — Can run with plain `dotnet test <project>.csproj`. No local SDK needed.
-  - **Full-build** — Requires the local SDK (`dotnet-local.sh`). Build with `./dotnet-local.sh build Microsoft.Android.slnx -c Debug` or `make prepare && make all`.
+  - **Full-build** — Requires the local SDK (`dotnet-local.sh`). Build with `make prepare && make leeroy`.
 - **Device**: Whether an Android device/emulator is required.
 
 ---
@@ -23,6 +23,7 @@ These tests can be run immediately with `dotnet test` on the `.csproj`, even if 
 | **modern Android build tasks** | `src/Microsoft.Android.Build.Tasks/Tests/Microsoft.Android.Build.Tasks.Tests/` | `dotnet test src/Microsoft.Android.Build.Tasks/Tests/Microsoft.Android.Build.Tasks.Tests/Microsoft.Android.Build.Tasks.Tests.csproj -v minimal` |
 | **temporary-directory target execution/inference** | `src/Microsoft.Android.Build.Tasks/Tests/Microsoft.Android.Build.Tasks.Tests/` | `dotnet test src/Microsoft.Android.Build.Tasks/Tests/Microsoft.Android.Build.Tasks.Tests/Microsoft.Android.Build.Tasks.Tests.csproj -v minimal --filter FullyQualifiedName~TemporaryDirectoryTargetsTests` |
 | **package manager Java generation** | `src/Microsoft.Android.Build.Tasks/Tests/Microsoft.Android.Build.Tasks.Tests/` | `dotnet test src/Microsoft.Android.Build.Tasks/Tests/Microsoft.Android.Build.Tasks.Tests/Microsoft.Android.Build.Tasks.Tests.csproj -v minimal --filter FullyQualifiedName~GeneratePackageManagerJavaTests` |
+| **Gradle targets command quoting/environment** | `src/Microsoft.Android.Build.Tasks/Tests/Microsoft.Android.Build.Tasks.Tests/` | `dotnet test src/Microsoft.Android.Build.Tasks/Tests/Microsoft.Android.Build.Tasks.Tests/Microsoft.Android.Build.Tasks.Tests.csproj -v minimal --filter FullyQualifiedName~AndroidGradleTargetsTests` |
 | **aidl** | `tests/Xamarin.Android.Tools.Aidl-Tests/` | `dotnet test tests/Xamarin.Android.Tools.Aidl-Tests/Xamarin.Android.Tools.Aidl-Tests.csproj -v minimal` |
 | **source writer** | `tests/Xamarin.SourceWriter-Tests/` | `dotnet test tests/Xamarin.SourceWriter-Tests/Xamarin.SourceWriter-Tests.csproj -v minimal` |
 | **java source** | `tests/Java.Interop.Tools.JavaSource-Tests/` | `dotnet test tests/Java.Interop.Tools.JavaSource-Tests/Java.Interop.Tools.JavaSource-Tests.csproj -v minimal` |
@@ -45,6 +46,16 @@ It uses the production raw-only envelope reader and checks compressed/truncated 
 On macOS/Linux, these tests require a C++23 compiler (`clang++`, or `CXX`); they do not
 require an Android device or a locally built Android SDK.
 
+`GetAndroidDefineConstantsTests` executes both registered task names through `dotnet msbuild`.
+On Windows it also runs them through the full-framework `MSBuild.exe` from the pinned
+`Microsoft.Build.Runtime` test dependency. `Runtime="NET"` hosting requires MSBuild 18 or
+newer; Visual Studio 2022's MSBuild 17 cannot host these tasks. The generated test project
+supplies the build SDK's `NetCoreSdkRoot` and `DOTNET_HOST_PATH`, which normally come from
+the .NET SDK imports, so the Full host can launch its .NET task worker. Missing tools or
+failed task-host execution fail the tests. Other platforms skip only the Full MSBuild cases.
+Run the focused standalone suite with:
+`dotnet test src/Microsoft.Android.Build.Tasks/Tests/Microsoft.Android.Build.Tasks.Tests/Microsoft.Android.Build.Tasks.Tests.csproj -v minimal --filter FullyQualifiedName~GetAndroidDefineConstantsTests`.
+
 ---
 
 The `TypeMapProguardTargetsTests` NativeAOT cases in the modern build-task suite
@@ -57,7 +68,7 @@ skipped. Other target regression cases do not require native tools.
 ## Host-Side MSBuild Tests (full-build — requires local SDK)
 
 Assembly: `bin/TestDebug/${TFM}/Xamarin.Android.Build.Tests.dll`
-Build: Full-build — `./dotnet-local.sh build Microsoft.Android.slnx -c Debug` or `make prepare && make all`
+Build: Full-build — `make prepare && make leeroy`
 Device: No
 
 | Test Area | Filter | Test Classes / Notes |
@@ -95,9 +106,49 @@ Same assembly as above. These test individual MSBuild tasks in isolation with `M
 | **d8/dex** | `--filter "FullyQualifiedName~D8Tests"` | D8 dexing task |
 | **filter assemblies** | `--filter "FullyQualifiedName~FilterAssembliesTests"` | Assembly filtering |
 | **resource generation** | `--filter "FullyQualifiedName~GenerateResourceCaseMapTests"` | Resource case map generation |
-| **key tool** | `--filter "FullyQualifiedName~KeyToolTests"` | Keystore/signing tasks |
+| **debug key** | `--filter "FullyQualifiedName~AndroidCreateDebugKeyTests"` | Debug keystore creation task |
 | **bundletool commands** | `--filter "FullyQualifiedName~BundleToolTaskTests"` | Command-line generation only; no project builds or device |
 | **ndk** | `--filter "FullyQualifiedName~AndroidNdkToolsTests"` | Canonical NDK tools and Clang runtime discovery |
+
+---
+
+## Trimming and AOT Tests (full-build — requires local SDK + device)
+
+Assembly: `bin/TestDebug/TrimmingTests/${TFM}/TrimmingTests.dll`
+Build: Full-build + device/emulator connected
+Device: **Yes** (`[Category("UsesDevice")]`)
+
+Each case is a purpose-built single-file app in `tests/TrimmingTests/Cases/` (`#:property` and `#:package` directives, its own
+`ApplicationId`, `#:project TrimmingTests.Expectations/TrimmingTests.Expectations.csproj`, and one `TRIMMING_TEST_RESULT: PASS`/`FAIL`
+log line). A case that needs more files lives in `Cases/<Case>/<Case>.cs` next to its `Resources/`, `AndroidManifest.xml`, or a
+`Case.targets` with MSBuild items. Cases for reported bugs start with a comment linking the issue or PR; known failures are
+`[Ignore]`d (or `Assert.Ignore`d for one configuration) with the link to the open issue.
+A test takes `[TrimmingConfigurations] TrimmingConfiguration configuration`, which runs it with CoreCLR full trimming, NativeAOT, and
+CoreCLR partial trimming (the CoreCLR Release default, which trims only trimmable assemblies and suppresses trimming warnings), or
+only in the configurations it lists, and calls `var app = BuildAndRun ("Cases/<Case>.cs", configuration, expectedWarnings: [...])`, which copies the case into its own
+directory shielded from the repository's `Directory.Build.*` files, builds it in that configuration, fails on any build
+warning whose code is not in `expectedWarnings` (with `TrimmerSingleWarn=false`) or on an expected one that is missing, and then installs
+and launches it and requires PASS.
+
+The test then calls `AssertTrimmingExpectations (app)`, which checks `[Kept]`, `[Removed]`, `[KeptMember]` and
+`[Kept|Removed][Type|Member]InAssembly` (optionally `By = Tool.FullTrimming|Tool.PartialTrimming|Tool.NativeAot`, or `Tool.Trimmer` for both ILLink modes) against ILLink's `linked/` assemblies (CoreCLR)
+or ILC's mstat file (NativeAOT). In partial mode, expectations on assemblies ILLink doesn't trim (the app's own, unless marked
+`IsTrimmable`) are replaced by a check that the whole assembly was kept. On NativeAOT, `*TypeInAssembly` also checks generic instantiations such as
+``JavaDictionary`2<System.Int32,System.Int64>``. `Cases/Directory.Build.targets` disables JIT inlining for NativeAOT cases, because the mstat omits
+inlined methods.
+
+Tests in a fixture run in parallel (`[Parallelizable (ParallelScope.Children)]`), also on the device: each configuration installs its
+own package (`<ApplicationId>.coreclr`/`.nativeaot`) and results are matched by process ID in a logcat stream started before the launch, so never clear logcat in a test. Expectation attributes take strings only, never `typeof`, so they cannot keep anything themselves. Never root anything in a case
+unless rooting is the behavior under test.
+
+| Test Area | Filter | Notes |
+|-----------|--------|-------|
+| **trimming** (all) | (no filter) | Every case on CoreCLR full trimming and NativeAOT |
+| **Java peer activation** | `--filter "FullyQualifiedName~JavaPeerActivationTests"` | Reflection-based activation of closed generic Java peers |
+
+```bash
+ADB_TARGET='-s emulator-5554' ./dotnet-local.sh test bin/TestDebug/TrimmingTests/${TFM}/TrimmingTests.dll
+```
 
 ---
 
@@ -131,7 +182,7 @@ architecture. Local workload setup installs the previous Android SDK.
 
 ## On-Device Runtime Tests (full-build — requires local SDK + device)
 
-Mono.Android device tests use stock NUnit through Microsoft Testing Platform (MTP), not NUnitLite. This changed in dotnet/android#11224.
+`Mono.Android.NET-Tests` (including the Java.Interop fixtures) and `Xamarin.Android.JcwGen-Tests` use MSTest with `MSTest.SourceGeneration` through Microsoft Testing Platform (MTP).
 
 Build/install with `-t:Install`, then run `dotnet test --no-build --report-trx` from the test project's directory so the project-local `global.json` selects the MTP runner.
 
@@ -160,6 +211,8 @@ The `Mono.Android.NET-Tests.csproj` dynamically excludes categories based on run
 - **NativeAOT runtime**: Excludes `NativeAOTIgnore`, `SSL`, `NTLM`
 
 Other categories: `SSL`, `InetAccess`, `JavaList`, `RuntimeConfig`, `Intune`, `NTLM`
+
+To run a subset, pass `-p:IncludeCategories=<Category>` to **both** install and test; `--filter` is not supported.
 
 Command:
 ```bash

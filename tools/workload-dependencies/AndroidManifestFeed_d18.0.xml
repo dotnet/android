@@ -1,5 +1,15 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <xamarin-android sdk-version="0.0.0" generated-on="Tue, 28 Jan 2025 15:22:34 GMT" xmlns:sdk="http://schemas.android.com/repository/android/common/02" xmlns:common="http://schemas.android.com/repository/android/sites-common/1" xmlns:sdk-common="http://schemas.android.com/sdk/android/repo/common/03" xmlns:generic="http://schemas.android.com/repository/android/generic/02" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:sys-img="http://schemas.android.com/sdk/android/repo/sys-img2/03" xmlns:addon="http://schemas.android.com/sdk/android/repo/addon2/03">
+	<jdk revision="21.0.13.1" description="Open JDK (Microsoft distribution)" obsolete="False" preview="False" license="" vendor-id="Microsoft" vendor-display="Microsoft">
+		<urls>
+			<url host-os="windows" host-bits="0" host-arch="aarch64" size="196808102" checksum-type="sha1" checksum="335760404e908d71f84983b53caca696063864b7" payloadFileName="microsoft-jdk-21.0.13.1-windows-aarch64.zip">https://aka.ms/download-jdk/microsoft-jdk-21.0.13.1-windows-aarch64.zip</url>
+			<url host-os="windows" host-bits="0" host-arch="x64" size="201469095" checksum-type="sha1" checksum="786443fd3273a47fabb52f9f62ddb877c9b2dcf6" payloadFileName="microsoft-jdk-21.0.13.1-windows-x64.zip">https://aka.ms/download-jdk/microsoft-jdk-21.0.13.1-windows-x64.zip</url>
+			<url host-os="macosx" host-bits="0" host-arch="aarch64" size="199799286" checksum-type="sha1" checksum="d29d7ba338e790f23b136e4982e288e6991b7d16" payloadFileName="microsoft-jdk-21.0.13.1-macOS-aarch64.tar.gz">https://aka.ms/download-jdk/microsoft-jdk-21.0.13.1-macOS-aarch64.tar.gz</url>
+			<url host-os="macosx" host-bits="0" host-arch="x64" size="202224097" checksum-type="sha1" checksum="3ca20d3b0afa55d82baf825419278072cf55409a" payloadFileName="microsoft-jdk-21.0.13.1-macOS-x64.tar.gz">https://aka.ms/download-jdk/microsoft-jdk-21.0.13.1-macOS-x64.tar.gz</url>
+			<url host-os="linux" host-bits="0" host-arch="aarch64" size="205153763" checksum-type="sha1" checksum="c49ab39d9c7511a035d881ed30926440f7ee858d" payloadFileName="microsoft-jdk-21.0.13.1-linux-aarch64.tar.gz">https://aka.ms/download-jdk/microsoft-jdk-21.0.13.1-linux-aarch64.tar.gz</url>
+			<url host-os="linux" host-bits="0" host-arch="x64" size="206943375" checksum-type="sha1" checksum="ca66f434af4d1d95277cd2541337eeffe4955efc" payloadFileName="microsoft-jdk-21.0.13.1-linux-x64.tar.gz">https://aka.ms/download-jdk/microsoft-jdk-21.0.13.1-linux-x64.tar.gz</url>
+		</urls>
+	</jdk>
 	<jdk revision="21.0.9" description="Open JDK (Microsoft distribution)" obsolete="False" preview="False" license="" vendor-id="Microsoft" vendor-display="Microsoft">
 		<urls>
 			<url host-os="windows" host-bits="0" host-arch="aarch64" size="192544939" checksum-type="sha1" checksum="07892010bc59e99bf25db0225873f0815250d270" payloadFileName="microsoft-jdk-21.0.9-windows-aarch64.zip">https://aka.ms/download-jdk/microsoft-jdk-21.0.9-windows-aarch64.zip</url>
@@ -90,6 +100,13 @@
 			<url host-os="linux" host-bits="0" host-arch="x64" size="193808535" checksum-type="sha1" checksum="D55978EDEEC613357789D8CE13732117F59D053B" payloadFileName="microsoft-jdk-11.0.19-linux-x64.tar.gz">https://aka.ms/download-jdk/microsoft-jdk-11.0.19-linux-x64.tar.gz</url>
 		</urls>
 	</jdk>
+	<platform-tools revision="37.0.3" path="platform-tools" filesystem-path="platform-tools" manifest-url="https://dl.google.com/android/repository/repository2-3.xml" description="Android SDK Platform-Tools" obsolete="False" preview="False" license="android-sdk-license" original-type="generic:genericDetailsType">
+		<urls>
+			<url host-os="linux" host-bits="0" size="9571024" checksum-type="sha1" checksum="e1579b288a7ae4e9bc28dedec6a154d78b3c04ed">https://dl.google.com/android/repository/platform-tools_r37.0.3-linux.zip</url>
+			<url host-os="macosx" host-bits="0" size="16597626" checksum-type="sha1" checksum="d48920e2650321710b4d15d3acd9e277d59cd55b">https://dl.google.com/android/repository/platform-tools_r37.0.3-darwin.zip</url>
+			<url host-os="windows" host-bits="0" size="8188601" checksum-type="sha1" checksum="7fea85bc18d0480bc81d3603952d666f49496e5a">https://dl.google.com/android/repository/platform-tools_r37.0.3-win.zip</url>
+		</urls>
+	</platform-tools>
 	<platform-tools revision="37.0.1" path="platform-tools" filesystem-path="platform-tools" manifest-url="https://dl.google.com/android/repository/repository2-3.xml" description="Android SDK Platform-Tools" obsolete="False" preview="False" license="android-sdk-license" original-type="generic:genericDetailsType">
 		<urls>
 			<url host-os="linux" host-bits="0" size="9054187" checksum-type="sha1" checksum="477254aa5f903c15cf51001717bdf347fb6b53e0">https://dl.google.com/android/repository/platform-tools_r37.0.1-linux.zip</url>

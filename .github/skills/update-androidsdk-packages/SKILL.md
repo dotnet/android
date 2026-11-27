@@ -19,7 +19,7 @@ lives in two files:
 Google republishes tool revisions on their own cadence; this skill brings those two files back in
 sync with Google's *current stable* releases with a minimal, reviewable diff — matching the shape of PR #12371, which did exactly this (build-tools/platform-tools/cmdline-tools/cmake/emulator/sources/platform revisions all bumped, hashes recomputed, and per-arch macOS cmdline-tools support added when Apple Silicon archives showed up).
 
-## Seven hard rules — read these before touching anything
+## Eight hard rules — read these before touching anything
 
 **1. Never touch the Android NDK.** `_XAAndroidNdkRelease`, `_XAAndroidNdkPkgRevision`, and every
 `XAAndroidNdkHash*` property in `Configuration.props`, plus the `android-ndk-r$(_XAAndroidNdkRelease)-*`
@@ -74,6 +74,19 @@ marker only after validation succeeds.
 **7. Extraction outputs identify the exact archive.** Packages for different hosts or architectures
 may share a destination. Their incremental output stamp must include both archive identity and
 expected SHA-256; `source.properties` alone is not a safe extraction sentinel.
+
+**8. A new platform revision needs an API diff, not only a new hash.** A new revision can remove
+public API (`platform-37.2_r01` → `r02` removed 88 types; see #13661). For each new revision of an
+existing `_PlatformPackage` entry, run `scripts/diff_platform_api.cs` (step 4) and put its full
+output in the PR description. If it reports **Binding follow-up required**, still open the PR, but
+start the PR description with:
+
+```markdown
+> [!CAUTION]
+> Do not merge: this platform revision removes or changes public API. Update `src/Mono.Android/Profiles/api-<level>.xml` first (see `Documentation/workflow/HowToAddNewApiLevel.md`).
+```
+
+If the script fails, stop and report the failure.
 
 ## Workflow
 
@@ -168,6 +181,15 @@ one shared macOS zip still covers both).
   extension-level suffix too when Google has published one for an API level that already uses it
   (e.g. `platform-34-ext7_r02` → `platform-34-ext12_r01`) — do not introduce an extension suffix for
   an API level that never had one, or vice versa, without a clear reason from the manifest.
+- For every platform revision bump (hard rule 8), diff the API. The script also prints the new
+  SHA-256 for `Hash`. It needs `javap` (`JAVA_HOME` or `PATH`):
+
+  ```bash
+  dotnet run .github/skills/update-androidsdk-packages/scripts/diff_platform_api.cs -- \
+    <old-zip-url> <old Hash from androidsdk.targets> <new-zip-url> <manifest-sha1> <manifest-size>
+  ```
+
+  It does not report parameter-name changes.
 - Keep a `source-NN.N_r0M.zip` package for every API level marked `IsLatestStable` in
   `_PlatformPackage`. Treat a newly published stable source as an addition, not a replacement.
   Give each archive a version-specific hash property such as `XAAndroidSourcesHash37_0`, and use
@@ -200,7 +222,7 @@ dotnet build src/androidsdk/androidsdk.csproj --no-restore -v:minimal -t:_AddPla
 Also check:
 - **XML validity** — both edited files still parse (`dotnet build` will fail loudly on malformed XML, but a quick sanity check like `powershell -Command "[xml](Get-Content src/androidsdk/androidsdk.targets)"` catches issues faster).
 - **Diff cleanliness** — no unrelated files or stray temp downloads. Routine families remain scoped to `Configuration.props` and `src/androidsdk/androidsdk.targets`; command-line-tools updates additionally require the two shipped-product files in hard rule 5. Never edit `package.xml.in` during a routine refresh.
-- **The seven hard rules above** — diff the NDK properties and the `_PlatformPackage` item count/API-level set, verify every `IsLatestStable` platform has its own sources package, verify selected releases are stable, and verify extraction outputs remain archive/hash-specific.
+- **The eight hard rules above** — diff the NDK properties and the `_PlatformPackage` item count/API-level set, verify every `IsLatestStable` platform has its own sources package, verify selected releases are stable, verify extraction outputs remain archive/hash-specific, and verify each platform revision bump has an API diff.
 - **Command-line tools compatibility** — test with `licenses/android-sdk-license` and `.licenses-accepted` absent, with a pre-existing unrelated valid fingerprint, and with malformed content. Confirm the expected pinned fingerprint is created, the unrelated fingerprint is preserved, malformed content fails, writes are atomic/locked, and Gradle recognizes the Build Tools and platform licenses. No license-acceptance path may execute a network-capable Android CLI.
 - **Formatting** — match the existing tab indentation and column alignment in both files (several `_PlatformPackage`/`_AndroidSdkPackage` lines are hand-aligned with extra spaces before `<ApiLevel>`/`<Hash>` — preserve that style rather than reformatting the whole block).
 
@@ -214,7 +236,10 @@ above — either "no newer stable platform level exists upstream" or, if one doe
 still tops out at 37.0; add it in a separate change if desired"). Report this every time, regardless
 of whether the user's request mentioned platform levels at all.
 
+For each platform revision bump, include the full `diff_platform_api.cs` output (hard rule 8).
+
 ## Reference
 
 - `references/package-catalog.md` — the current package families, their manifest paths, and their
   `Configuration.props`/`androidsdk.targets` locations.
+- `scripts/diff_platform_api.cs` — API diff between two platform revisions.

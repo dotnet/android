@@ -1,0 +1,154 @@
+// Copyright (C) 2011 Xamarin, Inc. All rights reserved.
+#nullable enable
+
+using System;
+using System.Diagnostics;
+using System.IO;
+using System.IO.Compression;
+using System.Linq;
+using System.Threading;
+using System.Xml;
+using System.Xml.Linq;
+using Microsoft.Build.Utilities;
+using Microsoft.Build.Framework;
+using System.Text.RegularExpressions;
+using System.Collections.Generic;
+using Xamarin.Android.Tools;
+using Microsoft.Android.Build.Tasks;
+using Xamarin.Android.Tasks;
+using Properties = Xamarin.Android.Tasks.Properties;
+
+namespace Microsoft.Android.Tasks {
+
+	public class Aapt2Compile : Aapt2 {
+		public override string TaskPrefix => "A2C";
+
+		List<ITaskItem> archives = new List<ITaskItem> ();
+		List<ITaskItem> files = new List<ITaskItem> ();
+		List<string> temporaryArchives = new List<string> ();
+
+		public string? ExtraArgs { get; set; }
+
+		public string? FlatArchivesDirectory { get; set; }
+
+		public string? FlatFilesDirectory { get; set; }
+		public ITaskItem []? ResourcesToCompile { get; set; }
+
+		[Output]
+		public ITaskItem [] CompiledResourceFlatArchives => archives.ToArray ();
+
+		[Output]
+		public ITaskItem [] CompiledResourceFlatFiles => files.ToArray ();
+
+		protected override int GetRequiredDaemonInstances ()
+		{
+			return Math.Min ((ResourcesToCompile ?? ResourceDirectories)?.Length ?? 1, DaemonMaxInstanceCount);
+		}
+
+		public async override System.Threading.Tasks.Task RunTaskAsync ()
+		{
+			try {
+				await this.WhenAllWithLock (ResourcesToCompile ?? ResourceDirectories ?? [], ProcessDirectory);
+
+				ProcessOutput ();
+
+				for (int i = archives.Count -1; i > 0; i-- ) {
+					if (!File.Exists (archives[i].ItemSpec)) {
+						archives.RemoveAt (i);
+					}
+				}
+			} finally {
+				foreach (var archive in temporaryArchives) {
+					Files.TryDeleteFile (archive, LogDebugMessage);
+				}
+				temporaryArchives.Clear ();
+			}
+		}
+
+		void ProcessDirectory (ITaskItem item, object lockObject)
+		{
+			var flatFile = item.GetMetadata ("_FlatFile");
+			bool isArchive = false;
+			bool isDirectory = flatFile.EndsWith (".flata", StringComparison.OrdinalIgnoreCase);
+			if (flatFile.IsNullOrEmpty ()) {
+				FileAttributes fa = File.GetAttributes (item.ItemSpec);
+				isDirectory = (fa & FileAttributes.Directory) == FileAttributes.Directory;
+			}
+
+			string fileOrDirectory = item.GetMetadata ("ResourceDirectory");
+			if (fileOrDirectory.IsNullOrEmpty () || !isDirectory)
+				fileOrDirectory = item.ItemSpec;
+			if (isDirectory && !Directory.Exists (fileOrDirectory)) {
+				LogCodedWarning ("XA4323", Properties.Resources.XA4323, fileOrDirectory);
+				return;
+			}
+			if (isDirectory && !Directory.EnumerateDirectories (fileOrDirectory).Any ())
+				return;
+
+			string outputArchive = isDirectory ?  GetFullPath (FlatArchivesDirectory ?? "") : GetFullPath (FlatFilesDirectory ?? "");
+			string targetDir = item.GetMetadata ("_ArchiveDirectory");
+			if (!targetDir.IsNullOrEmpty ()) {
+				outputArchive = GetFullPath (targetDir);
+			}
+			Directory.CreateDirectory (outputArchive);
+			if (isDirectory && OS.IsWindows && !IsPathOnlyASCII (fileOrDirectory)) {
+				var temporaryArchive = Path.Combine (outputArchive, $"{Path.GetRandomFileName ()}.zip");
+				lock (lockObject)
+					temporaryArchives.Add (temporaryArchive);
+				using (var zip = ZipFile.Open (temporaryArchive, ZipArchiveMode.Create)) {
+					foreach (var (filename, archivePath) in Files.EnumerateArchiveFiles (fileOrDirectory))
+						zip.CreateEntryFromFile (filename, "res/" + archivePath);
+				}
+				fileOrDirectory = temporaryArchive;
+				isArchive = true;
+			}
+			string expectedOutputFile;
+			if (isDirectory) {
+				if (flatFile.IsNullOrEmpty ())
+					flatFile = item.GetMetadata ("Hash");
+				var filename = !flatFile.IsNullOrEmpty () ? flatFile : "compiled";
+				if (!filename.EndsWith (".flata", StringComparison.OrdinalIgnoreCase))
+					filename = $"{filename}.flata";
+				outputArchive = Path.Combine (outputArchive, filename);
+				expectedOutputFile = outputArchive;
+			} else {
+				if (MonoAndroidHelper.IsInvalidFilename (fileOrDirectory)) {
+					LogDebugMessage ($"Invalid filename, ignoring: {fileOrDirectory}");
+					return;
+				}
+				expectedOutputFile = Path.Combine (outputArchive, flatFile);
+			}
+			RunAapt (GenerateCommandLineCommands (fileOrDirectory, isDirectory, isArchive, outputArchive), expectedOutputFile);
+			if (isDirectory) {
+				lock (lockObject)
+					archives.Add (new TaskItem (expectedOutputFile));
+			} else {
+				lock (lockObject)
+					files.Add (new TaskItem (expectedOutputFile));
+			}
+		}
+
+		protected string[] GenerateCommandLineCommands (string fileOrDirectory, bool isDirectory, bool isArchive, string outputArchive)
+		{
+			List<string> cmd = new List<string> ();
+			cmd.Add ("compile");
+			cmd.Add ($"-o");
+			cmd.Add (GetFullPath (outputArchive));
+			if (!ResourceSymbolsTextFile.IsNullOrEmpty ()) {
+				cmd.Add ($"--output-text-symbols");
+				cmd.Add (GetFullPath (ResourceSymbolsTextFile ?? ""));
+			}
+			if (isDirectory) {
+				cmd.Add (isArchive ? "--zip" : "--dir");
+				cmd.Add (GetFullPath (fileOrDirectory).TrimEnd ('\\'));
+			} else
+				cmd.Add (GetFullPath (fileOrDirectory));
+			if (!ExtraArgs.IsNullOrEmpty ())
+				cmd.Add (ExtraArgs);
+			if (MonoAndroidHelper.LogInternalExceptions)
+				cmd.Add ("-v");
+			return cmd.ToArray ();
+		}
+
+	}
+}

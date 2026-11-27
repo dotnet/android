@@ -274,6 +274,10 @@ extends:
       - mac_build
       - linux_build
       condition: and(in(dependencies.mac_build.result, 'Succeeded', 'SucceededWithIssues'), in(dependencies.linux_build.result, 'Succeeded', 'SucceededWithIssues'), eq(variables['Build.DefinitionName'], 'Xamarin.Android'))
+      variables:
+      # Keep signing and MSI creation out of MSBuild multithreaded mode.
+      - name: MSBUILDENABLEMULTITHREADED
+        value: '0'
       jobs:
       # Check - "Xamarin.Android (Prepare .NET Release Sign Archives)"
       - template: sign-artifacts/jobs/v4.yml@yaml-templates
@@ -312,6 +316,7 @@ extends:
       - template: nuget-msi-convert/job/v5.yml@yaml-templates
         parameters:
           yamlResourceName: yaml-templates
+          reportReleaseDropStatus: false
           dependsOn: sign_net_mac_win
           artifactName: nuget-signed
           artifactPatterns: |

@@ -39,7 +39,7 @@ namespace xamarin::android {
 		[[gnu::flatten, gnu::always_inline]]
 		static void set_system_property (const char *name, const char *value) noexcept
 		{
-			// TODO: should we **actually** try to set the system property here? Would that even work? Needs testing
+			// Bundled properties are read through AndroidSystem::lookup_system_property, not set on the OS.
 			log_debugf (LOG_DEFAULT, " System property %s = '%s'", optional_string (name), optional_string (value));
 		}
 

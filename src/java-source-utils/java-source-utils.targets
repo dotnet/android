@@ -3,7 +3,7 @@
   <Target Name="_BuildJava"
       DependsOnTargets="_CompileTestResources"
       BeforeTargets="GetCopyToOutputDirectoryItems"
-      Inputs="$(MSBuildThisFile);build.gradle;@(CompileJava);@(CompileTestJava);@(CompileTestJavaResources)"
+      Inputs="$(MSBuildThisFile);build.gradle;settings.gradle;$(MSBuildThisFileDirectory)..\..\eng\gradle\dependency-constraints.gradle;@(CompileJava);@(CompileTestJava);@(CompileTestJavaResources)"
       Outputs="$(OutputPath)\java-source-utils.jar">
     <Exec
         Command="&quot;$(GradleWPath)&quot; -d $(GradleArgs) -PjavaSourceVer=$(JavacSourceVersion) -PjavaTargetVer=$(JavacTargetVersion) jar"

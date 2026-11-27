@@ -110,7 +110,6 @@ sealed partial class TrimmableTypeMapValueManager : JniRuntime.JniValueManager
 	public override IJavaPeerable? CreatePeer (
 		ref JniObjectReference reference,
 		JniObjectReferenceOptions transfer,
-		[DynamicallyAccessedMembers (Constructors)]
 		Type? targetType)
 	{
 		EnsureNotDisposed ();
@@ -127,8 +126,7 @@ sealed partial class TrimmableTypeMapValueManager : JniRuntime.JniValueManager
 			JniObjectReference.Dispose (ref reference, transfer);
 		}
 
-		[return: DynamicallyAccessedMembers (Constructors)]
-		static Type? ResolvePeerType ([DynamicallyAccessedMembers (Constructors)] Type? type)
+		static Type? ResolvePeerType (Type? type)
 		{
 			if (type is null) {
 				return null;
@@ -195,7 +193,7 @@ sealed partial class TrimmableTypeMapValueManager : JniRuntime.JniValueManager
 						// SAFETY: the value manager borrows this live reference throughout the cast check and retains both class references until finally.
 						string? instanceName = unsafe(JNIEnv.GetClassNameFromInstance (reference.Handle));
 						var message = $"Handle 0x{reference.Handle:x} is of type '{instanceName}' which is not assignable to '{targetSig.SimpleReference}'";
-						Logger.Log (LogLevel.Debug, "monodroid-assembly", message);
+						Logger.Log (LogLevel.Debug, "DOTNET-assembly", message);
 					}
 
 					if (RuntimeFeature.IsAssignableFromCheck) {
@@ -384,9 +382,12 @@ sealed partial class TrimmableTypeMapValueManager : JniRuntime.JniValueManager
 		}
 
 		if (value is IJavaPeerable peerable) {
-			return peerable.PeerReference.IsValid
-				? peerable.PeerReference.NewLocalRef ()
+			var r = peerable.PeerReference;
+			var local = r.IsValid
+				? r.NewLocalRef ()
 				: new JniObjectReference ();
+			GC.KeepAlive (peerable);
+			return local;
 		}
 
 		if (JavaConvert.TryConvertKnownValueToLocalJniHandle (value, out var handle)) {
@@ -396,7 +397,9 @@ sealed partial class TrimmableTypeMapValueManager : JniRuntime.JniValueManager
 		}
 
 		var proxy = TrimmableJavaProxyObject.GetProxy (value);
-		return proxy.PeerReference.NewLocalRef ();
+		var proxyLocal = proxy.PeerReference.NewLocalRef ();
+		GC.KeepAlive (proxy);
+		return proxyLocal;
 	}
 
 	protected override JniValueMarshaler GetValueMarshalerCore (Type type)

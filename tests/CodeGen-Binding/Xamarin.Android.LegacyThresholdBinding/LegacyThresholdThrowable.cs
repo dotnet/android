@@ -22,7 +22,7 @@ namespace Xamarin.Android.LegacyThresholdBinding {
 		{
 		}
 
-		public unsafe LegacyThresholdThrowable ()
+		public LegacyThresholdThrowable ()
 			: base (IntPtr.Zero, JniHandleOwnership.DoNotTransfer)
 		{
 			const string id = "()V";
@@ -32,12 +32,18 @@ namespace Xamarin.Android.LegacyThresholdBinding {
 
 			var reference = _members.InstanceMethods.StartCreateInstance (id, GetType (), null);
 			SetHandle (reference.Handle, JniHandleOwnership.TransferLocalRef);
-			_members.InstanceMethods.FinishCreateInstance (id, this, null);
+			// SAFETY: The ()V constructor takes no arguments; this owns the new peer.
+			unsafe {
+				_members.InstanceMethods.FinishCreateInstance (id, this, null);
+			}
 		}
 
-		public virtual unsafe void Method ()
+		public virtual void Method ()
 		{
-			_members.InstanceMethods.InvokeVirtualVoidMethod ("method.()V", this, null);
+			// SAFETY: The registered method takes no arguments and this owns the receiver peer.
+			unsafe {
+				_members.InstanceMethods.InvokeVirtualVoidMethod ("method.()V", this, null);
+			}
 		}
 
 		public bool MethodInvoked => _members.InstanceFields.GetBooleanValue ("methodInvoked.Z", this);

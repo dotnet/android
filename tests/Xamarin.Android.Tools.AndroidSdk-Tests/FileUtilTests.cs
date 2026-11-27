@@ -2,7 +2,6 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 
 using System;
-using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
 using System.Threading;
@@ -142,42 +141,6 @@ namespace Xamarin.Android.Tools.Tests
 			Assert.That (backups, Has.Length.EqualTo (1));
 			Assert.AreEqual ("old", File.ReadAllText (Path.Combine (backups [0], "old.txt")));
 			Assert.AreEqual ("blocking file", File.ReadAllText (target));
-		}
-
-		[TestCase (false)]
-		[TestCase (true)]
-		public void SystemRename_Success (bool existingTarget)
-		{
-			var source = Path.Combine (tempDir, "source");
-			var target = Path.Combine (tempDir, "target");
-			File.WriteAllText (source, "replacement");
-			if (existingTarget)
-				File.WriteAllText (target, "original");
-
-			FileUtil.SystemRename (source, target);
-
-			Assert.IsFalse (File.Exists (source));
-			Assert.AreEqual ("replacement", File.ReadAllText (target));
-		}
-
-		[Test]
-		public void SystemRename_DirectoryTarget_ThrowsAndPreservesSource ()
-		{
-			var source = Path.Combine (tempDir, "source");
-			var target = Path.Combine (tempDir, "target");
-			File.WriteAllText (source, "preserve");
-			Directory.CreateDirectory (target);
-
-			var error = Assert.Throws<IOException> (() => FileUtil.SystemRename (source, target));
-
-			Assert.AreEqual ("preserve", File.ReadAllText (source));
-			Assert.IsTrue (Directory.Exists (target));
-			if (!OS.IsWindows) {
-				Assert.IsNotNull (error);
-				Assert.That (error.Message, Does.Contain (source).And.Contain (target).And.Contain ("errno"));
-				Assert.That (error.InnerException, Is.TypeOf<Win32Exception> ());
-				Assert.AreNotEqual (0, ((Win32Exception) error.InnerException).NativeErrorCode);
-			}
 		}
 
 		[Test]

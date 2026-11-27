@@ -306,12 +306,25 @@ namespace MonoDroid.Generation
 		{
 			// Process regular methods (non-static, non-interface default methods)
 			foreach (var m in Methods.Where (m => !m.IsStatic && !m.IsInterfaceDefaultMethod)) {
+				bool Matches (Method mm) =>
+					mm.Name == m.Name &&
+					mm.Visibility == m.Visibility &&
+					mm.RetVal.FullName == m.RetVal.FullName && // if return type is different, it could be still "new", not "override".
+					ParameterList.Equals (mm.Parameters, m.Parameters);
+
 				for (var bt = GetBaseGen (opt); bt != null; bt = bt.GetBaseGen (opt)) {
-					var bm = bt.Methods.FirstOrDefault (mm =>
-						mm.Name == m.Name &&
-						mm.Visibility == m.Visibility &&
-						mm.RetVal.FullName == m.RetVal.FullName && // if return type is different, it could be still "new", not "override".
-						ParameterList.Equals (mm.Parameters, m.Parameters));
+					var bm = bt.Methods.FirstOrDefault (Matches);
+					if (bm == null && bt is ClassGen { IsAbstract: true } abstractBase &&
+							!bt.ContainsMethod (m, false, false)) {
+						// These abstract slots are emitted from interfaces later, during class generation.
+						// Skip methods that BoundClass emits as explicit implementations instead.
+						bm = bt.GetAllDerivedInterfaces ().SelectMany (iface => iface.Methods).FirstOrDefault (mm =>
+							!mm.IsInterfaceDefaultMethod && !mm.IsStatic && !mm.IsGeneric && !mm.RetVal.IsGeneric &&
+							string.IsNullOrEmpty (mm.ExplicitInterface) &&
+							!abstractBase.SkippedInterfaceMethods.Contains (mm.GetSkipInvokerSignature ()) &&
+							!abstractBase.IsCovariantMethod (mm) &&
+							Matches (mm));
+					}
 					if (bm == null) {
 						continue;
 					}
@@ -458,12 +471,27 @@ namespace MonoDroid.Generation
 			foreach (var m in Methods) {
 				if (m.Name == Name || ContainsProperty (m.Name, true) || HasNestedType (m.Name))
 					m.Name = "Invoke" + m.Name;
-				if ((m.Name == "ToString" && m.Parameters.Count == 0) || (BaseGen != null && BaseGen.ContainsMethod (m, true)))
+				if ((m.Name == "ToString" && m.Parameters.Count == 0) || (BaseGen != null && BaseGen.ContainsMethod (m, false, false)))
 					m.IsOverride = true;
 			}
 
 			foreach (var nt in NestedTypes)
 				nt.FixupMethodOverrides (opt);
+		}
+
+		internal void FixupInterfaceMethodNullability ()
+		{
+			if (this is InterfaceGen) {
+				foreach (var method in Methods.Where (m => m.IsInterfaceDefaultMethod && m.OverriddenInterfaceMethod != null)) {
+					for (var contract = method.OverriddenInterfaceMethod; contract != null; contract = contract.OverriddenInterfaceMethod) {
+						method.ReturnNotNull = method.RetVal.NotNull = method.RetVal.NotNull || contract.RetVal.NotNull;
+						for (int i = 0; i < method.Parameters.Count; i++)
+							method.Parameters [i].NotNull &= contract.Parameters [i].NotNull;
+					}
+				}
+			}
+			foreach (var nested in NestedTypes)
+				nested.FixupInterfaceMethodNullability ();
 		}
 
 		public abstract string FromNative (CodeGenerationOptions opt, string varname, bool owned);
@@ -578,7 +606,7 @@ namespace MonoDroid.Generation
 		public IEnumerable<Method> GetAllMethods () =>
 			Methods.Concat (Properties.Select (p => p.Getter)).Concat (Properties.Select (p => p.Setter)).Where (m => m != null);
 
-		GenBase GetBaseGen (CodeGenerationOptions opt)
+		internal GenBase GetBaseGen (CodeGenerationOptions opt)
 		{
 			if (this is InterfaceGen)
 				return null;
@@ -586,7 +614,7 @@ namespace MonoDroid.Generation
 			if (BaseGen != null)
 				return BaseGen;
 
-			if (BaseSymbol == null)
+			if (BaseSymbol == null || opt?.SymbolTable == null)
 				return null;
 
 			if (opt.SymbolTable.Lookup (BaseSymbol.FullName) is GenBase bg && bg != this)
@@ -702,7 +730,7 @@ namespace MonoDroid.Generation
 
 		public bool IsObfuscated => support.IsObfuscated;
 
-		bool IsThrowable () =>
+		protected bool IsThrowable () =>
 			FullName == "Java.Lang.Throwable" || Ancestors ().Any (a => a.FullName == "Java.Lang.Throwable");
 
 		// This is not a perfect match with Java language specification http://docs.oracle.com/javase/specs/jls/se5.0/html/interfaces.html#9.7
@@ -842,7 +870,7 @@ namespace MonoDroid.Generation
 					m.Name = "GetHashCode";
 				}
 				jni_sig_hash [m.JavaName + m.JniSignature] = m;
-				if ((m.Name == "ToString" && m.Parameters.Count == 0) || (BaseSymbol != null && BaseSymbol.ContainsMethod (m, true)))
+				if ((m.Name == "ToString" && m.Parameters.Count == 0) || (BaseSymbol != null && BaseSymbol.ContainsMethod (m, false, false)))
 					m.IsOverride = true;
 			}
 			return true;
@@ -882,52 +910,304 @@ namespace MonoDroid.Generation
 
 		public string RawVisibility => support.Visibility;
 
-		public bool RequiresNew (Property property)
+		private protected sealed class EmittedMemberTable
 		{
-			switch (property.AdjustedName.ToLowerInvariant ()) {
-				case "handle":
-				case "gethashcode":
-				case "gettype":
-				case "tostring":
-				case "equals":
-				case "referenceequals":
-					return true;
+			readonly Dictionary<string, List<string []>> entries = new Dictionary<string, List<string []>> (StringComparer.Ordinal);
+
+			public void AddNonMethod (string name)
+			{
+				if (string.IsNullOrEmpty (name))
+					return;
+				if (!entries.TryGetValue (name, out var list)) {
+					list = new List<string []> (1);
+					entries [name] = list;
+				}
+				if (!list.Contains (null))
+					list.Add (null);
 			}
 
-			return IsThrowable () && ThrowableRequiresNew.Contains (property.AdjustedName);
-		}
-
-		public bool RequiresNew (string memberName, Method method)
-		{
-			switch (memberName.ToLowerInvariant ()) {
-				case "handle":
-					// The same name as a property always requires new, no matter the parameters
-					return true;
-				case "gethashcode":
-				case "gettype":
-				case "tostring":
-					return method.Parameters.Count == 0;
-				case "equals":
-					if (method.Parameters.Count == 1 && method.Parameters.All (p => p.Type == "object"))
-						return true;
-					if (method.Parameters.Count == 2 && method.Parameters.All (p => p.Type == "object"))
-						return true;
-
-					break;
-				case "referenceequals":
-					if (method.Parameters.Count == 2 && method.Parameters.All (p => p.Type == "object"))
-						return true;
-
-					break;
+			public void AddMethod (string name, string [] paramTypes)
+			{
+				if (string.IsNullOrEmpty (name))
+					return;
+				if (!entries.TryGetValue (name, out var list)) {
+					list = new List<string []> (1);
+					entries [name] = list;
+				}
+				list.Add (paramTypes);
 			}
 
-			return IsThrowable () && ThrowableRequiresNew.Contains (memberName);
+			public bool Matches (string name, string [] paramTypes)
+			{
+				if (!entries.TryGetValue (name, out var list))
+					return false;
+				if (paramTypes == null)
+					return true;
+				foreach (var entry in list) {
+					if (entry == null || ParameterTypesMatch (entry, paramTypes))
+						return true;
+				}
+				return false;
+			}
 		}
+
+		(bool valid, bool supportDim, bool supportConsts, EmittedMemberTable accessible, EmittedMemberTable privateOnly) emitted_members_cache;
+
+		public bool RequiresNew (Property property) =>
+			RequiresNew (property, null);
+
+		public bool RequiresNew (Property property, CodeGenerationOptions opt) =>
+			HidesInheritedMember (property.AdjustedName, null, opt);
+
+		public bool RequiresNew (Field field, CodeGenerationOptions opt = null) =>
+			HidesInheritedMember (field.Name, null, opt);
+
+		public bool RequiresNew (string memberName, Method method) =>
+			RequiresNew (memberName, method, null);
+
+		public bool RequiresNew (string memberName, Method method, CodeGenerationOptions opt) =>
+			HidesInheritedMember (memberName, GetParameterTypes (method.Parameters, opt, stringOverload: false), opt);
+
+		internal bool RequiresNewStringOverload (Method method, CodeGenerationOptions opt) =>
+			HidesInheritedMember (method.Name, GetParameterTypes (method.Parameters, opt, stringOverload: true), opt);
+
+		internal bool RequiresNewForMemberName (string memberName, CodeGenerationOptions opt) =>
+			!string.IsNullOrEmpty (memberName) && HidesInheritedMember (memberName, null, opt);
+
+		internal bool RequiresNewForMethod (string memberName, string [] paramTypes, CodeGenerationOptions opt) =>
+			!string.IsNullOrEmpty (memberName) && HidesInheritedMember (memberName, paramTypes, opt);
+
+		private protected abstract bool HidesInheritedMember (string memberName, string [] paramTypes, CodeGenerationOptions opt);
+
+		private protected abstract void PopulateEmittedMembers (EmittedMemberTable accessible, EmittedMemberTable privateOnly, CodeGenerationOptions opt);
+
+		internal bool HasEmittedMember (string name, string [] paramTypes, CodeGenerationOptions opt, bool includePrivate)
+		{
+			bool supportDim = opt?.SupportDefaultInterfaceMethods ?? false;
+			bool supportConsts = opt?.SupportInterfaceConstants ?? false;
+			if (!emitted_members_cache.valid || emitted_members_cache.supportDim != supportDim || emitted_members_cache.supportConsts != supportConsts) {
+				var accessible = new EmittedMemberTable ();
+				var privateOnly = new EmittedMemberTable ();
+				PopulateEmittedMembers (accessible, privateOnly, opt);
+				emitted_members_cache = (true, supportDim, supportConsts, accessible, privateOnly);
+			}
+			return emitted_members_cache.accessible.Matches (name, paramTypes) ||
+				(includePrivate && emitted_members_cache.privateOnly.Matches (name, paramTypes));
+		}
+
+		internal bool MethodEmitsStringOverload (Method m, bool isAbstractDecl = false)
+		{
+			if (isAbstractDecl)
+				return m.IsReturnCharSequence || m.Parameters.HasCharSequence;
+			var name_and_jnisig = m.JavaName + m.JniSignature.Replace ("java/lang/CharSequence", "java/lang/String");
+			var gen_string_overload = !m.IsOverride && m.Parameters.HasCharSequence && !ContainsMethod (name_and_jnisig);
+			return gen_string_overload || m.IsReturnCharSequence;
+		}
+
+		internal static bool RequiresNewForSystemObject (string memberName, string [] paramTypes = null) =>
+			SystemObjectMembers.Matches (memberName, paramTypes);
+
+		internal static bool RequiresNewForJavaObject (string memberName, string [] paramTypes, CodeGenerationOptions opt)
+		{
+			if (SystemObjectMembers.Matches (memberName, paramTypes) || JavaObjectHandwrittenMembers.Matches (memberName, paramTypes))
+				return true;
+			if (opt?.SymbolTable?.Lookup ("java.lang.Object") is ClassGen jlo)
+				return jlo.HasEmittedMember (memberName, paramTypes, opt, includePrivate: false);
+			return false;
+		}
+
+		internal static bool RequiresNewForJavaObjectMethod (string memberName, Method method, CodeGenerationOptions opt, bool stringOverload = false) =>
+			RequiresNewForJavaObject (memberName, GetParameterTypes (method.Parameters, opt, stringOverload), opt);
+
+		internal static bool CanOverrideJavaObjectMethod (string memberName, Method method, CodeGenerationOptions opt)
+		{
+			if (method.IsStatic)
+				return false;
+
+			var paramTypes = GetParameterTypes (method.Parameters, opt, stringOverload: false);
+			var retType = NormalizeCSharpType (opt != null ? opt.GetOutputName (method.RetVal.FullName) : method.RetVal.FullName);
+
+			if (memberName == "GetHashCode" && paramTypes.Length == 0 && retType == "int")
+				return true;
+			if (memberName == "ToString" && paramTypes.Length == 0 && retType == "string")
+				return true;
+			if (memberName == "Equals" && paramTypes.Length == 1 && paramTypes [0] == "object" && retType == "bool")
+				return true;
+
+			if (opt?.SymbolTable?.Lookup ("java.lang.Object") is ClassGen jlo) {
+				foreach (var m in jlo.Methods) {
+					if (!m.IsValid || m.IsStatic || !string.IsNullOrEmpty (m.ExplicitInterface))
+						continue;
+					if (!string.Equals (m.Visibility, "public", StringComparison.OrdinalIgnoreCase))
+						continue;
+					if (!m.IsVirtual && !m.IsOverride)
+						continue;
+					if (m.AdjustedName != memberName)
+						continue;
+					if (NormalizeCSharpType (opt.GetOutputName (m.RetVal.FullName)) != retType)
+						continue;
+					if (ParameterTypesMatch (GetParameterTypes (m.Parameters, opt, stringOverload: false), paramTypes))
+						return true;
+				}
+			}
+
+			return false;
+		}
+
+		internal bool IsEnclosingTypeOf (GenBase candidate)
+		{
+			if (NestedTypes.Count == 0)
+				return false;
+			foreach (var nt in NestedTypes) {
+				if (ReferenceEquals (nt, candidate) || nt.IsEnclosingTypeOf (candidate))
+					return true;
+			}
+			return false;
+		}
+
+		internal static string [] GetParameterTypes (ParameterList parameters, CodeGenerationOptions opt, bool stringOverload)
+		{
+			if (parameters == null || parameters.Count == 0)
+				return [];
+			var result = new string [parameters.Count];
+			for (int i = 0; i < parameters.Count; i++) {
+				var t = opt != null ? opt.GetOutputName (parameters [i].InternalType) : parameters [i].InternalType;
+				if (stringOverload)
+					t = t.Replace ("Java.Lang.ICharSequence", "string").Replace ("global::string", "string");
+				result [i] = NormalizeCSharpType (t);
+			}
+			return result;
+		}
+
+		static bool ParameterTypesMatch (string [] a, string [] b)
+		{
+			if (a.Length != b.Length)
+				return false;
+			for (int i = 0; i < a.Length; i++) {
+				if (a [i] != b [i])
+					return false;
+			}
+			return true;
+		}
+
+		static string NormalizeCSharpType (string typeName)
+		{
+			if (string.IsNullOrEmpty (typeName))
+				return "";
+			if (typeName.StartsWith ("params ", StringComparison.Ordinal))
+				typeName = typeName.Substring ("params ".Length);
+			if (typeName.StartsWith ("global::", StringComparison.Ordinal))
+				typeName = typeName.Substring ("global::".Length);
+			if (typeName.EndsWith ("[]", StringComparison.Ordinal))
+				return NormalizeCSharpType (typeName.Substring (0, typeName.Length - 2)) + "[]";
+			switch (typeName) {
+				case "System.Boolean": return "bool";
+				case "System.Byte": return "byte";
+				case "System.SByte": return "sbyte";
+				case "System.Char": return "char";
+				case "System.Int16": return "short";
+				case "System.UInt16": return "ushort";
+				case "System.Int32": return "int";
+				case "System.UInt32": return "uint";
+				case "System.Int64": return "long";
+				case "System.UInt64": return "ulong";
+				case "System.Single": return "float";
+				case "System.Double": return "double";
+				case "System.String": return "string";
+				case "System.Object": return "object";
+				case "System.Void": return "void";
+				case "System.IntPtr": return "IntPtr";
+				case "System.UIntPtr": return "UIntPtr";
+				default: return typeName;
+			}
+		}
+
+		static EmittedMemberTable BuildSystemObjectMembers ()
+		{
+			var t = new EmittedMemberTable ();
+			t.AddMethod ("GetHashCode", []);
+			t.AddMethod ("GetType", []);
+			t.AddMethod ("ToString", []);
+			t.AddMethod ("MemberwiseClone", []);
+			t.AddMethod ("Equals", ["object"]);
+			t.AddMethod ("Equals", ["object", "object"]);
+			t.AddMethod ("ReferenceEquals", ["object", "object"]);
+			return t;
+		}
+
+		static EmittedMemberTable BuildJavaInterfaceMembers ()
+		{
+			var t = new EmittedMemberTable ();
+			t.AddNonMethod ("Handle");
+			t.AddNonMethod ("PeerReference");
+			t.AddNonMethod ("JniPeerMembers");
+			t.AddNonMethod ("JniManagedPeerState");
+			t.AddNonMethod ("JniIdentityHashCode");
+			t.AddNonMethod ("JniObjectReferenceControlBlock");
+			t.AddMethod ("Dispose", []);
+			t.AddMethod ("SetJniIdentityHashCode", ["int"]);
+			t.AddMethod ("SetPeerReference", ["Java.Interop.JniObjectReference"]);
+			t.AddMethod ("SetJniManagedPeerState", ["Java.Interop.JniManagedPeerStates"]);
+			t.AddMethod ("UnregisterFromRuntime", []);
+			t.AddMethod ("DisposeUnlessReferenced", []);
+			t.AddMethod ("Disposed", []);
+			t.AddMethod ("Finalized", []);
+			return t;
+		}
+
+		static EmittedMemberTable BuildJavaObjectHandwrittenMembers ()
+		{
+			var t = new EmittedMemberTable ();
+			t.AddNonMethod ("Handle");
+			t.AddNonMethod ("PeerReference");
+			t.AddNonMethod ("JniPeerMembers");
+			t.AddNonMethod ("JniManagedPeerState");
+			t.AddNonMethod ("JniIdentityHashCode");
+			t.AddNonMethod ("ThresholdClass");
+			t.AddNonMethod ("ThresholdType");
+			t.AddNonMethod ("InvalidJniObjectReference");
+			t.AddMethod ("Dispose", []);
+			t.AddMethod ("Dispose", ["bool"]);
+			t.AddMethod ("UnregisterFromRuntime", []);
+			t.AddMethod ("DisposeUnlessReferenced", []);
+			t.AddMethod ("SetHandle", ["IntPtr", "Android.Runtime.JniHandleOwnership"]);
+			t.AddMethod ("Construct", ["Java.Interop.JniObjectReference&", "Java.Interop.JniObjectReferenceOptions"]);
+			t.AddMethod ("SetPeerReference", ["Java.Interop.JniObjectReference&", "Java.Interop.JniObjectReferenceOptions"]);
+			return t;
+		}
+
+		static EmittedMemberTable BuildThrowableMembers ()
+		{
+			var t = new EmittedMemberTable ();
+			foreach (var prop in typeof (System.Exception).GetProperties (BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static)) {
+				var getter = prop.GetMethod;
+				if (getter != null && (getter.IsPublic || getter.IsFamily || getter.IsFamilyOrAssembly))
+					t.AddNonMethod (prop.Name);
+			}
+			foreach (var m in typeof (System.Exception).GetMethods (BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static)) {
+				if (m.Attributes.HasFlag (MethodAttributes.SpecialName) || m.Attributes.HasFlag (MethodAttributes.RTSpecialName))
+					continue;
+				if (!m.IsPublic && !m.IsFamily && !m.IsFamilyOrAssembly)
+					continue;
+				var ps = m.GetParameters ();
+				var paramTypes = new string [ps.Length];
+				for (int i = 0; i < ps.Length; i++)
+					paramTypes [i] = NormalizeCSharpType (ps [i].ParameterType.FullName ?? ps [i].ParameterType.Name);
+				t.AddMethod (m.Name, paramTypes);
+			}
+			return t;
+		}
+
+		private protected static readonly EmittedMemberTable SystemObjectMembers = BuildSystemObjectMembers ();
+		private protected static readonly EmittedMemberTable JavaInterfaceMembers = BuildJavaInterfaceMembers ();
+		private protected static readonly EmittedMemberTable JavaObjectHandwrittenMembers = BuildJavaObjectHandwrittenMembers ();
+		private protected static readonly EmittedMemberTable ThrowableMembers = BuildThrowableMembers ();
 
 		public virtual void ResetValidation ()
 		{
 			Interfaces.Clear ();
 			iface_validation_failed = false;
+			emitted_members_cache = default;
 
 			foreach (var nt in NestedTypes)
 				nt.ResetValidation ();
@@ -957,16 +1237,6 @@ namespace MonoDroid.Generation
 			foreach (var n in NestedTypes)
 				n.StripNonBindables (opt);
 		}
-
-		static readonly HashSet<string> ThrowableRequiresNew = new HashSet<string> (
-			typeof (System.Exception)
-				.GetMethods ()
-				.Where (m => !m.Attributes.HasFlag (MethodAttributes.SpecialName) &&
-						!m.Attributes.HasFlag (MethodAttributes.RTSpecialName))
-				.Select (m => m.Name)
-				.Concat (typeof (System.Exception).GetProperties ().Select (p => p.Name))
-				.Concat (new [] { "Handle" }),
-			StringComparer.OrdinalIgnoreCase);
 
 		public abstract string ToNative (CodeGenerationOptions opt, string varname, Dictionary<string, string> mappings = null);
 

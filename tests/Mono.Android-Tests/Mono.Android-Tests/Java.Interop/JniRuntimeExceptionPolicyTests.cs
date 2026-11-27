@@ -6,15 +6,16 @@ using System.Runtime.InteropServices;
 using Android.Runtime;
 using Java.Interop;
 
-using NUnit.Framework;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Xamarin.Android.RuntimeTests;
 
 // JNI transport coverage without an attached debugger, not debugger stop/Continue behavior.
-[TestFixture]
-[NonParallelizable]
-[Category ("JniRuntimeExceptionPolicy")]
+[TestClass]
+[DoNotParallelize]
+[TestCategory ("JniRuntimeExceptionPolicy")]
 public class JniRuntimeExceptionPolicyTests {
+	public TestContext? TestContext { get; set; }
 	static Exception? callbackException;
 	static int callbackInvocations;
 
@@ -31,23 +32,25 @@ public class JniRuntimeExceptionPolicyTests {
 		Callback (env, klass);
 	}
 
-	[SetUp]
+	[TestInitialize]
 	public void ResetCallbacks ()
 	{
 		callbackException = null;
 		callbackInvocations = 0;
-		TestContext.WriteLine ($"JNI runtime: {JniEnvironment.Runtime.GetType ().FullName}");
+		var context = TestContext ?? throw new InvalidOperationException ("The runner did not initialize TestContext.");
+		context.WriteLine ($"JNI runtime: {JniEnvironment.Runtime.GetType ().FullName}");
 	}
 
-	[TearDown]
+	[TestCleanup]
 	public void ClearCallbacks ()
 	{
 		JniEnvironment.Exceptions.ExceptionClear ();
 		callbackException = null;
 	}
 
-	[TestCase (false)]
-	[TestCase (true)]
+	[TestMethod]
+	[DataRow (false)]
+	[DataRow (true)]
 	public void FailedFunctionReturnsDefault (bool handled)
 	{
 		var expected = new InvalidOperationException ("JNI function exception");
@@ -56,7 +59,8 @@ public class JniRuntimeExceptionPolicyTests {
 		AndroidEnvironment.UnhandledExceptionRaiser += notification.OnException;
 		JniObjectReference pending = default;
 		try {
-			Assert.AreEqual (0, InvokeManagedInt (JniEnvironment.EnvironmentPointer, IntPtr.Zero));
+			// SAFETY: This is the current-thread environment; the callback does not use klass.
+			Assert.AreEqual (0, unsafe (InvokeManagedInt (JniEnvironment.EnvironmentPointer, IntPtr.Zero)));
 			pending = JniEnvironment.Exceptions.ExceptionOccurred ();
 			JniEnvironment.Exceptions.ExceptionClear ();
 			Assert.AreEqual (!handled, pending.IsValid);
@@ -72,10 +76,11 @@ public class JniRuntimeExceptionPolicyTests {
 		}
 	}
 
-	[TestCase (false, false)]
-	[TestCase (false, true)]
-	[TestCase (true, false)]
-	[TestCase (true, true)]
+	[TestMethod]
+	[DataRow (false, false)]
+	[DataRow (false, true)]
+	[DataRow (true, false)]
+	[DataRow (true, true)]
 	public void JavaCatchAndFinallyRespectPolicy (bool action, bool handled)
 	{
 		using var type = RegisterCallbacks ();
@@ -96,8 +101,9 @@ public class JniRuntimeExceptionPolicyTests {
 		}
 	}
 
-	[TestCase (false)]
-	[TestCase (true)]
+	[TestMethod]
+	[DataRow (false)]
+	[DataRow (true)]
 	public void JavaRethrowPreservesIdentityAndRunsFinally (bool action)
 	{
 		using var type = RegisterCallbacks ();
@@ -106,7 +112,7 @@ public class JniRuntimeExceptionPolicyTests {
 		var notification = new PolicyNotification (expected, handled: false);
 		AndroidEnvironment.UnhandledExceptionRaiser += notification.OnException;
 		try {
-			var actual = Assert.Throws<InvalidOperationException> (() => InvokeJava (type, action, swallow: false));
+			var actual = Assert.ThrowsExactly<InvalidOperationException> (() => InvokeJava (type, action, swallow: false));
 			Assert.AreSame (expected, actual);
 			Assert.AreEqual (1, GetCounter (type, "caught"));
 			Assert.AreEqual (1, GetCounter (type, "finished"));
@@ -118,8 +124,9 @@ public class JniRuntimeExceptionPolicyTests {
 		}
 	}
 
-	[TestCase (false)]
-	[TestCase (true)]
+	[TestMethod]
+	[DataRow (false)]
+	[DataRow (true)]
 	public void SuccessfulCallbacksPreserveReturnValue (bool action)
 	{
 		using var type = RegisterCallbacks ();
@@ -144,7 +151,7 @@ public class JniRuntimeExceptionPolicyTests {
 		Assert.AreEqual (1, notification.Count);
 		Assert.IsTrue (notification.SameException);
 		Assert.IsFalse (notification.PendingException);
-		Assert.Greater (notification.JavaTime, 0, "Java calls must remain usable during policy notification.");
+		Assert.IsGreaterThan (0, notification.JavaTime, "Java calls must remain usable during policy notification.");
 	}
 
 	sealed class PolicyNotification (Exception expected, bool handled) {
@@ -168,40 +175,56 @@ public class JniRuntimeExceptionPolicyTests {
 	static int GetCounter (JniType type, string name)
 		=> JniEnvironment.StaticFields.GetStaticIntField (type.PeerReference, type.GetStaticField (name, "I"));
 
-	static unsafe int InvokeJava (JniType type, bool action, bool swallow)
+	static int InvokeJava (JniType type, bool action, bool swallow)
 	{
-		JniArgumentValue* args = stackalloc JniArgumentValue [2];
-		args [0] = new JniArgumentValue (action);
-		args [1] = new JniArgumentValue (swallow);
-		return JniEnvironment.StaticMethods.CallStaticIntMethod (
-			type.PeerReference, type.GetStaticMethod ("invoke", "(ZZ)I"), args);
+		// SAFETY: The live type's (ZZ)I method synchronously consumes these two initialized arguments.
+		unsafe {
+			JniArgumentValue* args = stackalloc JniArgumentValue [2];
+			args [0] = new JniArgumentValue (action);
+			args [1] = new JniArgumentValue (swallow);
+			return JniEnvironment.StaticMethods.CallStaticIntMethod (
+				type.PeerReference, type.GetStaticMethod ("invoke", "(ZZ)I"), args);
+		}
 	}
 
-	static unsafe JniType RegisterCallbacks ()
+	static JniType RegisterCallbacks ()
 	{
 		var type = new JniType ("net/dot/android/test/JniRuntimeExceptionPolicy");
-		fixed (byte* callbackName = "callback\0"u8)
-		fixed (byte* callbackSignature = "()I\0"u8)
-		fixed (byte* actionName = "action\0"u8)
-		fixed (byte* actionSignature = "()V\0"u8) {
-			JniNativeMethod* methods = stackalloc JniNativeMethod [2];
-			methods [0] = new JniNativeMethod (callbackName, callbackSignature,
-				(IntPtr) (delegate* unmanaged<IntPtr, IntPtr, int>) &InvokeInt);
-			methods [1] = new JniNativeMethod (actionName, actionSignature,
-				(IntPtr) (delegate* unmanaged<IntPtr, IntPtr, void>) &InvokeVoid);
-			JniEnvironment.Types.RegisterNatives (type.PeerReference, new ReadOnlySpan<JniNativeMethod> (methods, 2));
+		// SAFETY: Terminated names stay pinned during registration; the static callbacks have matching JNI ABIs.
+		unsafe {
+			fixed (byte* callbackName = "callback\0"u8)
+			fixed (byte* callbackSignature = "()I\0"u8)
+			fixed (byte* actionName = "action\0"u8)
+			fixed (byte* actionSignature = "()V\0"u8) {
+				JniNativeMethod* methods = stackalloc JniNativeMethod [2];
+				methods [0] = new JniNativeMethod (callbackName, callbackSignature,
+					(IntPtr) (delegate* unmanaged<IntPtr, IntPtr, int>) &InvokeInt);
+				methods [1] = new JniNativeMethod (actionName, actionSignature,
+					(IntPtr) (delegate* unmanaged<IntPtr, IntPtr, void>) &InvokeVoid);
+				JniEnvironment.Types.RegisterNatives (type.PeerReference, new ReadOnlySpan<JniNativeMethod> (methods, 2));
+			}
 		}
 		return type;
 	}
 
+	/// <safety>
+	/// env must be the current thread's live JNIEnv; Callback does not inspect klass.
+	/// </safety>
 	static unsafe int InvokeManagedInt (IntPtr env, IntPtr klass)
-		=> JniMarshal.SafeInvokeFunc<int> (env, klass, &Callback);
+		// SAFETY: The caller supplies the current-thread environment and Callback has the matching signature.
+		=> unsafe (JniMarshal.SafeInvokeFunc<int> (env, klass, &Callback));
 
 	[UnmanagedCallersOnly]
 	static int InvokeInt (IntPtr env, IntPtr klass)
-		=> InvokeManagedInt (env, klass);
+		// SAFETY: JNI invokes this signature-matched callback with the current-thread environment.
+		=> unsafe (InvokeManagedInt (env, klass));
 
 	[UnmanagedCallersOnly]
 	static unsafe void InvokeVoid (IntPtr env, IntPtr klass)
-		=> JniMarshal.SafeInvokeAction (env, klass, &Action);
+	{
+		// SAFETY: JNI supplies the current-thread environment and Action has the matching signature.
+		unsafe {
+			JniMarshal.SafeInvokeAction (env, klass, &Action);
+		}
+	}
 }

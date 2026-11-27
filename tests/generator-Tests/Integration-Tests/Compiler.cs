@@ -66,7 +66,7 @@ namespace generatortests
 		public static Assembly CompileSources (IEnumerable<string> sources, out bool hasErrors, out string output)
 			=> CompileSources (sources, out hasErrors, out output, out _);
 
-		public static Assembly CompileSources (IEnumerable<string> sources, out bool hasErrors, out string output, out byte [] assemblyImage)
+		public static Assembly CompileSources (IEnumerable<string> sources, out bool hasErrors, out string output, out byte [] assemblyImage, bool allowWarnings = true)
 		{
 			var supportFiles = Directory.EnumerateFiles (Path.Combine (Path.GetDirectoryName (supportFilePath), "SupportFiles"),
 				"*.cs", SearchOption.AllDirectories);
@@ -76,7 +76,7 @@ namespace generatortests
 			var references = GetReferencePaths ().Select (p => MetadataReference.CreateFromFile (p));
 
 			return Compile ("GeneratedCallbacks_" + Guid.NewGuid ().ToString ("N"), syntaxTrees, references,
-				out hasErrors, out output, allowWarnings: true, out assemblyImage);
+				out hasErrors, out output, allowWarnings, out assemblyImage);
 		}
 
 		static string [] GetReferencePaths ()

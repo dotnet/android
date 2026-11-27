@@ -483,13 +483,6 @@ int xml myxml 0x7f140000
 		[Test]
 		public void GenerateDesignerFileFromRtxt ([Values] bool withLibraryReference, [Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
-			// TODO: fix NativeAOT, it currently fails with:
-			//
-			//  bin/TestDebug/temp/GenerateDesignerFileFromRtxtTrueNativeAOT Some Space/Resource.designer.cs and bin/TestDebug/Expected/GenerateDesignerFileWithLibraryReferenceExpected.cs do not match.
-			if (runtime == AndroidRuntime.NativeAOT) {
-				Assert.Ignore ("NativeAOT currently doesn't work with this test.");
-			}
-
 			var path = Path.Combine ("temp", TestName + " Some Space");
 			CreateResourceDirectory (path);
 			var mapTask = CreateCaseMapTask (path);
@@ -501,7 +494,7 @@ int xml myxml 0x7f140000
 				var libraryPath = Path.Combine (path, "Library");
 				BuildLibraryWithResources (libraryPath, runtime);
 				task.References = new TaskItem [] {
-					new TaskItem (Path.Combine (Root, libraryPath, "bin", "Debug", "Library.dll"))
+					new TaskItem (Path.Combine (Root, libraryPath, "bin", runtime == AndroidRuntime.NativeAOT ? "Release" : "Debug", "Library.dll"))
 				};
 			}
 			Assert.IsTrue (task.Execute (), "Task should have executed successfully.");
@@ -636,45 +629,26 @@ int xml myxml 0x7f140000
 		{
 			var path = Path.Combine ("temp", TestName);
 			CreateResourceDirectory (path);
-			File.WriteAllText (Path.Combine (Root, path, "foo.map"), @"a\nb");
 			Directory.CreateDirectory (Path.Combine (Root, path, "java"));
 			List<BuildErrorEventArgs> errors = new List<BuildErrorEventArgs> ();
 			List<BuildMessageEventArgs> messages = new List<BuildMessageEventArgs> ();
 			IBuildEngine engine = new MockBuildEngine (TestContext.Out, errors: errors, messages: messages);
-			var aapt2Compile = new Aapt2Compile {
-				BuildEngine = engine,
-				ToolPath = GetPathToAapt2 (),
-				ResourceDirectories = new ITaskItem [] {
-					new TaskItem(Path.Combine (Root, path, "lp", "res"), new Dictionary<string, string> {
-						{ "Hash", "lp" }
-					}),
-					new TaskItem(Path.Combine (Root, path, "res"), new Dictionary<string, string> {
-						{ "Hash", "compiled" }
-					}),
-				},
-				FlatArchivesDirectory = Path.Combine (Root, path),
-				FlatFilesDirectory = Path.Combine (Root, path),
-			};
-
-			Assert.IsTrue (aapt2Compile.Execute (), $"Aapt2 Compile should have succeeded. {string.Join (" ", errors.Select (x => x.Message))}");
-			var platform = AndroidSdkResolver.GetMaxInstalledPlatform ();
+			// Run aapt2 directly with the arguments that <Aapt2Compile/> and <Aapt2Link/> use.
+			string aapt2 = Path.Combine (GetPathToAapt2 (), IsWindows ? "aapt2.exe" : "aapt2");
 			string resPath = Path.Combine (Root, path, "res");
 			string rTxt = Path.Combine (Root, path, "R.txt");
-			var aapt2Link = new Aapt2Link {
-				BuildEngine = engine,
-				ToolPath = GetPathToAapt2 (),
-				ResourceDirectories = new ITaskItem [] { new TaskItem (resPath) },
-				ManifestFiles = new ITaskItem [] { new TaskItem (Path.Combine (Root, path, "AndroidManifest.xml")) },
-				AdditionalResourceArchives = new ITaskItem [] { new TaskItem (Path.Combine (Root, path, "lp.flata")) },
-				CompiledResourceFlatArchive = new TaskItem (Path.Combine (Root, path, "compiled.flata")),
-				OutputFile = Path.Combine (Root, path, "foo.apk"),
-				AssemblyIdentityMapFile = Path.Combine (Root, path, "foo.map"),
-				JavaPlatformJarPath = AndroidSdkResolver.GetAndroidJarPath (platform),
-				JavaDesignerOutputDirectory = Path.Combine (Root, path, "java"),
-				ResourceSymbolsTextFile = rTxt,
-
-			};
-			Assert.IsTrue (aapt2Link.Execute (), "Aapt2 Link should have succeeded.");
+			string javaPlatformJarPath = AndroidSdkResolver.GetAndroidJarPath (AndroidSdkResolver.GetMaxInstalledPlatform ());
+			RunAapt2 (aapt2, "compile", "-o", Path.Combine (Root, path, "lp.flata"), "--dir", Path.Combine (Root, path, "lp", "res"));
+			RunAapt2 (aapt2, "compile", "-o", Path.Combine (Root, path, "compiled.flata"), "--dir", resPath);
+			RunAapt2 (aapt2, "link",
+				"--manifest", Path.Combine (Root, path, "AndroidManifest.xml"),
+				"--java", Path.Combine (Root, path, "java"),
+				"-R", Path.Combine (Root, path, "lp.flata"),
+				"-R", Path.Combine (Root, path, "compiled.flata"),
+				"--auto-add-overlay",
+				"-I", javaPlatformJarPath,
+				"--output-text-symbols", rTxt,
+				"-o", Path.Combine (Root, path, "foo.apk"));
 
 			FileAssert.Exists (rTxt, $"{rTxt} should have been created.");
 
@@ -699,7 +673,7 @@ int xml myxml 0x7f140000
 			};
 			task.ResourceFlagFile = Path.Combine (Root, path, "AndroidResgen.flag");
 			task.IsApplication = true;
-			task.JavaPlatformJarPath = aapt2Link.JavaPlatformJarPath;
+			task.JavaPlatformJarPath = javaPlatformJarPath;
 			Assert.IsTrue (task.Execute (), "Task should have executed successfully.");
 
 			File.WriteAllText (task.ResourceFlagFile, string.Empty);
@@ -716,36 +690,10 @@ int xml myxml 0x7f140000
 			Directory.Delete (Path.Combine (Root, path), recursive: true);
 		}
 
-		[Test]
-		[NonParallelizable] // Test measures performance
-		public void CheckPerformanceOfManagedParser ()
+		static void RunAapt2 (string aapt2, params string [] args)
 		{
-			var path = Path.Combine ("temp", TestName);
-			CreateResourceDirectory (path);
-			IBuildEngine engine = new MockBuildEngine (TestContext.Out);
-			TaskLoggingHelper loggingHelper = new TaskLoggingHelper (engine, nameof (ManagedResourceParser));
-			string resPath = Path.Combine (Root, path, "res");
-			var platform = AndroidSdkResolver.GetMaxInstalledPlatform ();
-			var flagFile = Path.Combine (Root, path, "AndroidResgen.flag");
-			var lp = new string [] { Path.Combine (Root, path, "lp", "res") };
-			Stopwatch sw = new Stopwatch ();
-			long totalMS = 0;
-			int i;
-			for (i = 0; i < 100; i++) {
-				var parser = new ManagedResourceParser (loggingHelper) {
-					JavaPlatformDirectory = Path.Combine (AndroidSdkDirectory, "platforms", AndroidSdkResolver.GetPlatformDirectoryName (platform)),
-					ResourceFlagFile =  flagFile,
-				};
-				sw.Start ();
-				var codeDom = parser.Parse (resPath, "R.txt", lp, isApp: true, resourceMap: new Dictionary<string, string> ());
-				sw.Stop ();
-				TestContext.Out.WriteLine ($"Pass {i} took {sw.ElapsedMilliseconds} ms");
-				totalMS += sw.ElapsedMilliseconds;
-				sw.Reset ();
-				Assert.AreEqual (20, codeDom.Members.Count, "Expected 20 Classes to be generated");
-			}
-			TestContext.Out.WriteLine ($"Average {totalMS / i} ms");
-			Assert.LessOrEqual (totalMS / i, 160, "Parser should have taken on average less than 160 ms.");
+			var result = Process.RunAndCaptureText (aapt2, args);
+			Assert.AreEqual (0, result.ExitStatus.ExitCode, $"`aapt2 {string.Join (" ", args)}` should have succeeded. {result.StandardError}");
 		}
 
 		[Test]

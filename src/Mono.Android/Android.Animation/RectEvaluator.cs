@@ -1,4 +1,3 @@
-#if ANDROID_18
 
 using Java.Lang;
 using Android.Graphics;
@@ -13,5 +12,3 @@ namespace Android.Animation
 		}
 	}
 }
-
-#endif

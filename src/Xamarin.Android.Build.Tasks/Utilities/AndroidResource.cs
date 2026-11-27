@@ -19,7 +19,8 @@ namespace Monodroid {
 		{
 			try {
 				XDocument doc = XDocument.Load (filename, LoadOptions.SetLineInfo);
-				UpdateXmlResource (res, doc.Root ?? throw new InvalidOperationException ("The resource XML has no root element."), additionalDirectories, (e) => {
+				var root = doc.Root ?? throw new InvalidDataException ($"'{filename}' has no root element.");
+				UpdateXmlResource (res, root, additionalDirectories, (e) => {
 					registerCustomView?.Invoke (e, filename);
 				});
 				using (var sw = MemoryStreamPool.Shared.CreateStreamWriter ())
@@ -73,10 +74,9 @@ namespace Monodroid {
 
 				TryFixCustomClassAttribute (a, registerCustomView);
 
-				var parent = a.Parent ?? throw new InvalidOperationException ("The resource attribute has no parent element.");
 				if (a.Name.Namespace != android &&
 						!(a.Name.LocalName == "layout" && a.Name.Namespace == XNamespace.None &&
-						  parent.Name.LocalName == "include" && parent.Name.Namespace == XNamespace.None))
+						  a.Parent?.Name.LocalName == "include" && a.Parent.Name.Namespace == XNamespace.None))
 					continue;
 
 				Match m = r.Match (a.Value);
@@ -177,7 +177,7 @@ namespace Monodroid {
 			//   <fragment class="My.DotNet.Class" 
 			//   <fragment android:name="My.DotNet.Class" ...
 			// and tries to change it to the ACW name
-			if ((attr.Parent ?? throw new InvalidOperationException ("The resource attribute has no parent element.")).Name != "fragment")
+			if (attr.Parent?.Name != "fragment")
 				return;
 
 			if (attr.Name == "class" || attr.Name == android + "name") {
@@ -212,7 +212,7 @@ namespace Monodroid {
 			 * try to convert those like for TryFixCustomView
 			 */
 			if (attr.Name != (res_auto + "layout_behavior")                              // For custom CoordinatorLayout behavior
-			    && ((attr.Parent ?? throw new InvalidOperationException ("The resource attribute has no parent element.")).Name != "transition" || attr.Name.LocalName != "class")) // For custom transitions
+			    && (attr.Parent?.Name != "transition" || attr.Name.LocalName != "class")) // For custom transitions
 				return;
 
 			registerCustomView?.Invoke (attr.Value);
@@ -236,7 +236,7 @@ namespace Monodroid {
 		///		values\strings.xml -> values_strings.arsc.flat
 		public static string CalculateAapt2FlatArchiveFileName (string file)
 		{
-			var dir = (Path.GetFileName (Path.GetDirectoryName (file)) ?? throw new ArgumentException ("The resource file has no directory.", nameof (file))).TrimEnd ('\\').TrimEnd ('/');
+			var dir = (Path.GetFileName (Path.GetDirectoryName (file)) ?? "").TrimEnd ('\\').TrimEnd ('/');
 			var ext = Path.GetExtension (file);
 			if (dir.StartsWith ("values", StringComparison.OrdinalIgnoreCase))
 				ext = ".arsc";

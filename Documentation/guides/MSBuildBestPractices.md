@@ -65,6 +65,10 @@ codes and file-lock diagnostics without capturing the process working
 directory. It implements `IMultiThreadableTask` so the engine supplies the
 `TaskEnvironment` used to resolve paths in exception messages. Its default
 `TaskEnvironment.Fallback` also supports direct task instantiation.
+For tasks that run an external tool, use `MultithreadedAndroidToolTask`.
+MSBuild's `ToolTask` already implements `IMultiThreadableTask` and
+`ICancelableTask`, and starts the tool with `TaskEnvironment`. Unlike
+`AndroidToolTask`, this base does not capture the process working directory.
 Keep other tasks on their existing base until all their code paths are safe.
 
 `FilterAssemblies` resolves input file paths through `TaskEnvironment` but
@@ -98,6 +102,10 @@ Check both ordinary builds and `-m -mt -nr:false` builds with the local SDK.
 Use `-warnaserror:MSB4286,MSB4287,MSB4288` for the strict checks. Inspect a
 binary log to confirm that each migrated task ran in-process and that item
 paths still belong to the correct project.
+
+CI sets `MSBUILDENABLEMULTITHREADED=1` in
+`build-tools/automation/yaml-templates/variables.yaml`, so builds run with `-mt`
+unless they pass `-mt:false`. Signing steps set it to `0`.
 
 `GeneratePackageManagerJava` runs from `Microsoft.Android.Build.Tasks.dll` on
 .NET, using the .NET task host when invoked by .NET Framework MSBuild.

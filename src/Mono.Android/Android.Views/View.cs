@@ -7,19 +7,13 @@ using Android.Runtime;
 
 namespace Android.Views {
 
-#if ANDROID_11 && !ANDROID_14
-	public enum SystemUiFlags {
-	}
-#endif
 
 	public partial class View {
-#if ANDROID_16
 		[Obsolete ("This method uses wrong enum type. Please use PerformAccessibilityAction(Action) instead.")]
 		public bool PerformAccessibilityAction (GlobalAction action, Bundle arguments)
 		{
 			return PerformAccessibilityAction ((Android.Views.Accessibility.Action) (int) action, arguments);
 		}
-#endif
 
 		public T? FindViewById<
 				[DynamicallyAccessedMembers (Constructors)]
@@ -88,23 +82,13 @@ namespace Android.Views {
 			runnable.Dispose ();
 		}
 
-#if ANDROID_11
 		[Obsolete ("Please Use DispatchSystemUiVisibilityChanged(SystemUiFlags)")]
 		[global::System.Runtime.Versioning.ObsoletedOSPlatform ("android30.0")]
 		public void DispatchSystemUiVisibilityChanged (int visibility)
 		{
 			DispatchSystemUiVisibilityChanged ((SystemUiFlags) visibility);
 		}
-#endif  // ANDROID_11
-#if ANDROID_14 && !ANDROID_16
-		[Obsolete ("The View.fitsSystemWindows() method was REMOVED by Google in API-16. DO NOT USE.)", error:true)]
-		public bool FitsSystemWindows ()
-		{
-			return InvokeFitsSystemWindows ();
-		}
-#endif
 
-#if ANDROID_34
 		[global::System.Runtime.Versioning.ObsoletedOSPlatform ("android30.0", "These flags are deprecated. Use WindowInsetsController instead.")]
 		public SystemUiFlags SystemUiFlags {
 #pragma warning disable CS0618 // Access the legacy property while exposing the correctly enumified replacement.
@@ -112,6 +96,5 @@ namespace Android.Views {
 			set => SystemUiVisibility = (Android.Views.StatusBarVisibility) value;
 #pragma warning restore CS0618
 		}
-#endif
 	}
 }

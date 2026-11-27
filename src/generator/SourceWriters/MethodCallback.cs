@@ -23,6 +23,7 @@ namespace generator.SourceWriters
 		readonly MethodWriter delegate_getter;
 		readonly UnmanagedCallbackKind kind;
 		readonly TypedCallbackShape typed_shape;
+		readonly bool marshal_target_is_shadow;
 
 		// static sbyte n_ByteValueExact (IntPtr jnienv, IntPtr native__this)
 		// {
@@ -42,21 +43,47 @@ namespace generator.SourceWriters
 			if (kind == UnmanagedCallbackKind.UnmanagedTyped)
 				UnmanagedCallbackSupport.TryGetTypedShape (type, method, options, propertyName, isFormatted, out typed_shape);
 
+			Name = UnmanagedCallbackSupport.GetCallbackName (type, method, options);
+			target_name = UnmanagedCallbackSupport.GetCallbackTargetName (type, method, options);
+
+			bool hidesDelegateField = false;
+			bool hidesDelegateGetter = false;
+			bool hidesCallbackMethod = false;
+			bool hidesMarshalTarget = false;
+
+			if (declaringType == null && type is ClassGen cls && cls.HasEnclosingAncestor (options)) {
+				foreach (var (ancOwner, ancMethod, ancPropName, ancIsFormatted) in cls.GetEnclosingAncestorCallbackEntries (options)) {
+					var ancKind = UnmanagedCallbackSupport.GetCallbackKind (ancOwner, ancMethod, options, ancPropName, ancIsFormatted);
+					if (kind == UnmanagedCallbackKind.Legacy && ancKind == UnmanagedCallbackKind.Legacy) {
+						if (ancMethod.EscapedCallbackName == method.EscapedCallbackName)
+							hidesDelegateField = true;
+						if (ancMethod.ConnectorName == method.ConnectorName)
+							hidesDelegateGetter = true;
+					}
+					if (UnmanagedCallbackSupport.GetCallbackName (ancOwner, ancMethod, options) == Name && NativeParametersMatch (ancMethod, method))
+						hidesCallbackMethod = true;
+					if (typed_shape == null && ancKind != UnmanagedCallbackKind.UnmanagedTyped &&
+							UnmanagedCallbackSupport.GetCallbackTargetName (ancOwner, ancMethod, options) == target_name &&
+							NativeParametersMatch (ancMethod, method))
+						hidesMarshalTarget = true;
+				}
+			}
+
 			if (kind == UnmanagedCallbackKind.Legacy) {
-				delegate_field = new MethodCallbackDelegateField (method, options);
-				delegate_getter = new GetDelegateHandlerMethod (method, options);
+				delegate_field = new MethodCallbackDelegateField (method, options) { IsShadow = hidesDelegateField };
+				delegate_getter = new GetDelegateHandlerMethod (method, options) { IsShadow = hidesDelegateGetter };
 			} else {
 				// Keep the shared _JniMarshal_* delegate declarations for hand-written
 				// and legacy generated callbacks even when this callback has no connector.
 				method.GetDelegateType (options);
 			}
 
-			Name = UnmanagedCallbackSupport.GetCallbackName (type, method, options);
-			target_name = UnmanagedCallbackSupport.GetCallbackTargetName (type, method, options);
 			// Interface invokers marshal an interface peer but declare the target on the invoker.
 			declaring_type = opt.GetOutputName (declaringType ?? type.FullName);
 			ReturnType = new TypeReferenceWriter (method.RetVal.NativeType);
 
+			IsShadow = hidesCallbackMethod;
+			marshal_target_is_shadow = hidesMarshalTarget;
 			IsStatic = true;
 			IsPrivate = method.IsInterfaceDefaultMethod;
 			IsUnsafe = true;
@@ -118,7 +145,7 @@ namespace generator.SourceWriters
 			if (typed_shape != null)
 				writer.WriteLine (typed_shape.GetTargetSignature (opt.GetOutputName (type.FullName), target_name, opt.NullableOperator));
 			else
-				writer.WriteLine ($"private static unsafe {method.RetVal.NativeType} {target_name} (IntPtr jnienv, IntPtr native__this{method.Parameters.GetCallbackSignature (opt)})");
+				writer.WriteLine ($"private {(marshal_target_is_shadow ? "new " : "")}static unsafe {method.RetVal.NativeType} {target_name} (IntPtr jnienv, IntPtr native__this{method.Parameters.GetCallbackSignature (opt)})");
 			writer.WriteLine ("{");
 
 			writer.Indent ();
@@ -137,16 +164,31 @@ namespace generator.SourceWriters
 			// has a parameter requiring post-call cleanup, so the `__ret` dance is unnecessary.
 			var useRetTemporary = typed_shape == null && method.Parameters.HasCleanup;
 			string ToReturn (string call) => typed_shape != null && typed_shape.ReturnsPeer ? call : method.RetVal.ToNative (opt, call);
+			var arguments = method.Parameters.GetCall (opt);
+			if (opt.SupportNullableReferenceTypes && method.IsInterfaceDefaultMethod && method.OverriddenInterfaceMethod != null) {
+				var contract = method.OverriddenInterfaceMethod;
+				while (contract.OverriddenInterfaceMethod != null)
+					contract = contract.OverriddenInterfaceMethod;
+				arguments = string.Join (", ", method.Parameters.Select ((p, index) => {
+					var argument = opt.GetSafeIdentifier (p.Name);
+					if (p.NativeType != "IntPtr" || p.Type == "IntPtr" || p.Symbol.IsEnum)
+						return argument;
+					// Dispatch binds to the original interface signature, but a DIM may explicitly accept null.
+					return argument + (p.NotNull
+						? " ?? throw new global::Java.Lang.NullPointerException ()"
+						: opt.GetNullForgiveness (contract.Parameters [index]));
+				}));
+			}
 
 			if (string.IsNullOrEmpty (property_name)) {
-				var call = "__this." + method.Name + (is_formatted ? "Formatted" : string.Empty) + " (" + method.Parameters.GetCall (opt) + ")";
+				var call = "__this." + method.Name + (is_formatted ? "Formatted" : string.Empty) + " (" + arguments + ")";
 				if (method.IsVoid)
 					writer.WriteLine (call + ";");
 				else
 					writer.WriteLine ("{0} {1};", useRetTemporary ? method.RetVal.NativeType + " __ret =" : "return", ToReturn (call));
 			} else {
 				if (method.IsVoid)
-					writer.WriteLine ("__this.{0} = {1};", property_name, method.Parameters.GetCall (opt));
+					writer.WriteLine ("__this.{0} = {1};", property_name, arguments);
 				else
 					writer.WriteLine ("{0} {1};", useRetTemporary ? method.RetVal.NativeType + " __ret =" : "return", ToReturn ("__this." + property_name));
 			}
@@ -165,6 +207,17 @@ namespace generator.SourceWriters
 			}
 			writer.Unindent ();
 			writer.WriteLine ("}");
+		}
+
+		static bool NativeParametersMatch (Method a, Method b)
+		{
+			if (a.Parameters.Count != b.Parameters.Count)
+				return false;
+			for (int i = 0; i < a.Parameters.Count; i++) {
+				if (a.Parameters [i].NativeType != b.Parameters [i].NativeType)
+					return false;
+			}
+			return true;
 		}
 
 		// Object parameters are marshaled by the shared typed helper and arrive already converted;

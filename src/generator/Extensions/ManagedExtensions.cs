@@ -6,7 +6,6 @@ using System.Linq;
 
 namespace MonoDroid.Generation
 {
-#if HAVE_CECIL
 	internal static class ManagedExtensions
 	{
 		public static string FullNameCorrected (this TypeReference t) => t.FullName.Replace ('/', '.');
@@ -23,7 +22,7 @@ namespace MonoDroid.Generation
 		public static string Visibility (this MethodDefinition m) =>
 			m.IsPublic ? "public" : m.IsFamilyOrAssembly ? "protected internal" : m.IsFamily ? "protected" : m.IsAssembly ? "internal" : "private";
 
-		public static IEnumerable<Parameter> GetParameters (this MethodDefinition m, CustomAttribute regatt)
+		public static IEnumerable<Parameter> GetParameters (this MethodDefinition m, CustomAttribute regatt, CodeGenerationOptions opt)
 		{
 			var jnisig = (string)(regatt.ConstructorArguments.Count > 1 ? regatt.ConstructorArguments [1].Value : regatt.Properties.First (p => p.Name == "JniSignature").Argument.Value);
 			var types = jnisig == null ? null : JavaNativeTypeManager.FromSignature (jnisig);
@@ -45,7 +44,13 @@ namespace MonoDroid.Generation
 				var type = p.ParameterType.FullName == "System.IO.Stream" && e != null ? e.Current.Type : null;
 				var isNotNull = p.GetTypeNullability (m) == Nullability.NotNull;
 
-				yield return CecilApiImporter.CreateParameter (p, type, rawtype, isNotNull);
+				// A Kotlin value-class struct (`Foo` or `Foo?`) is bound from its JNI type, like class-parse output.
+				var valueClass = e != null ? CecilApiImporter.GetKotlinValueClassJniName (p.ParameterType, opt) : null;
+				var parameter = CecilApiImporter.CreateParameter (p, valueClass != null ? rawtype : type, rawtype, isNotNull);
+				if (valueClass != null && e.Current.IsKeyword)
+					parameter.KotlinInlineClassJniType = $"L{valueClass};";
+
+				yield return parameter;
 			}
 		}
 
@@ -88,5 +93,4 @@ namespace MonoDroid.Generation
 			};
 		}
 	}
-#endif
 }

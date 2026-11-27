@@ -74,12 +74,14 @@ namespace Android.Widget {
 				return;
 
 			unsafe {
-				// SAFETY: StartCreateInstance supplies this peer's owned handle; FinishCreateInstance invokes the (Landroid/content/Context;)V constructor with the matching arguments before this constructor returns.
+				// SAFETY: AllocObject supplies this peer's owned handle; FinishCreateInstance invokes
+				// (Landroid/content/Context;)V while GC.KeepAlive retains context and this.
 				SetHandle (
 						JNIEnv.AllocObject (GetType ()),
 						JniHandleOwnership.TransferLocalRef);
 				JNIEnv.FinishCreateInstance (Handle, "(Landroid/content/Context;)V"u8, new JValue (context));
 				GC.KeepAlive (context);
+				GC.KeepAlive (this);
 			}
 		}
 
@@ -91,13 +93,15 @@ namespace Android.Widget {
 				return;
 
 			unsafe {
-				// SAFETY: StartCreateInstance supplies this peer's owned handle; FinishCreateInstance invokes the (Landroid/content/Context;Landroid/util/AttributeSet;)V constructor with the matching arguments before this constructor returns.
+				// SAFETY: AllocObject supplies this peer's owned handle; FinishCreateInstance invokes
+				// (Landroid/content/Context;Landroid/util/AttributeSet;)V while GC.KeepAlive retains context, attrs, and this.
 				SetHandle (
 						JNIEnv.AllocObject (GetType ()),
 						JniHandleOwnership.TransferLocalRef);
 				JNIEnv.FinishCreateInstance (Handle, "(Landroid/content/Context;Landroid/util/AttributeSet;)V"u8, new JValue (context), new JValue (attrs));
 				GC.KeepAlive (context);
 				GC.KeepAlive (attrs);
+				GC.KeepAlive (this);
 			}
 		}
 
@@ -109,13 +113,15 @@ namespace Android.Widget {
 				return;
 
 			unsafe {
-				// SAFETY: StartCreateInstance supplies this peer's owned handle; FinishCreateInstance invokes the (Landroid/content/Context;Landroid/util/AttributeSet;I)V constructor with the matching arguments before this constructor returns.
+				// SAFETY: AllocObject supplies this peer's owned handle; FinishCreateInstance invokes
+				// (Landroid/content/Context;Landroid/util/AttributeSet;I)V while GC.KeepAlive retains context, attrs, and this.
 				SetHandle (
 						JNIEnv.AllocObject (GetType ()),
 						JniHandleOwnership.TransferLocalRef);
 				JNIEnv.FinishCreateInstance (Handle, "(Landroid/content/Context;Landroid/util/AttributeSet;I)V"u8, new JValue (context), new JValue (attrs), new JValue (defStyle));
 				GC.KeepAlive (context);
 				GC.KeepAlive (attrs);
+				GC.KeepAlive (this);
 			}
 		}
 

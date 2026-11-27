@@ -24,5 +24,27 @@ namespace Xamarin.SourceWriter.Tests
 
 			Assert.AreEqual (expected, sw.ToString ());
 		}
+
+		[Test]
+		public void ShadowConstField ()
+		{
+			var field = new FieldWriter {
+				Name = "MyConst",
+				IsPublic = true,
+				IsConst = true,
+				IsShadow = true,
+				Type = new TypeReferenceWriter ("int"),
+				Value = "42",
+			};
+
+			var sw = new StringWriter ();
+			var writer = new CodeWriter (sw);
+
+			field.Write (writer);
+
+			var expected = "public new const int MyConst = 42;\n";
+
+			Assert.AreEqual (expected, sw.ToString ().Replace ("\r\n", "\n"));
+		}
 	}
 }

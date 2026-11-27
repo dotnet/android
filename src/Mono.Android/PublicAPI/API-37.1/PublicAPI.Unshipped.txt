@@ -1,9 +1,21 @@
 #nullable enable
-static Android.Runtime.JNIEnv.AllocObject(System.ReadOnlySpan<byte> jniClassName) -> nint
-static Android.Runtime.JNIEnv.FinishCreateInstance(nint instance, System.ReadOnlySpan<byte> jniCtorSignature, Android.Runtime.JValue* constructorParameters) -> void
-static Android.Runtime.JNIEnv.FinishCreateInstance(nint instance, System.ReadOnlySpan<byte> jniCtorSignature, params System.ReadOnlySpan<Android.Runtime.JValue> constructorParameters) -> void
-static Android.Runtime.JNIEnv.InvokeConstructor(nint instance, System.ReadOnlySpan<byte> jniCtorSignature, Android.Runtime.JValue* constructorParameters) -> void
-static Android.Runtime.JNIEnv.InvokeConstructor(nint instance, System.ReadOnlySpan<byte> jniCtorSignature, params Android.Runtime.JValue[]! constructorParameters) -> void
+*REMOVED*virtual Android.Locations.GnssNavigationMessage.Callback.OnStatusChanged(int status) -> Android.Locations.GnssNavigationStatus
+virtual Android.Locations.GnssNavigationMessage.Callback.OnStatusChanged(int status) -> void
+*REMOVED*Android.Media.AudioPlaybackCaptureConfiguration.ExcludeUsages.get -> Android.Media.AudioUsageKind
+*REMOVED*Android.Media.AudioPlaybackCaptureConfiguration.MatchingUsages.get -> Android.Media.AudioUsageKind
+Android.Media.AudioPlaybackCaptureConfiguration.GetExcludeUsages() -> int[]!
+Android.Media.AudioPlaybackCaptureConfiguration.GetMatchingUsages() -> int[]!
+*REMOVED*Android.Media.MicrophoneInfo.ChannelMapping.get -> Android.Media.MicrophoneChannelMapping
+Android.Media.MicrophoneInfo.ChannelMapping.get -> System.Collections.Generic.IList<Android.Util.Pair!>?
+*REMOVED*abstract Java.Nio.Channels.SelectionKey.InterestOps(Java.Nio.Channels.Operations ops) -> Java.Nio.Channels.Operations
+abstract Java.Nio.Channels.SelectionKey.InterestOps(Java.Nio.Channels.Operations ops) -> Java.Nio.Channels.SelectionKey?
+*REMOVED*Java.Lang.Object.~Object() -> void
+*REMOVED*Java.Lang.Throwable.~Throwable() -> void
+static unsafe Android.Runtime.JNIEnv.AllocObject(System.ReadOnlySpan<byte> jniClassName) -> nint
+static unsafe Android.Runtime.JNIEnv.FinishCreateInstance(nint instance, System.ReadOnlySpan<byte> jniCtorSignature, Android.Runtime.JValue* constructorParameters) -> void
+static unsafe Android.Runtime.JNIEnv.FinishCreateInstance(nint instance, System.ReadOnlySpan<byte> jniCtorSignature, params System.ReadOnlySpan<Android.Runtime.JValue> constructorParameters) -> void
+static unsafe Android.Runtime.JNIEnv.InvokeConstructor(nint instance, System.ReadOnlySpan<byte> jniCtorSignature, Android.Runtime.JValue* constructorParameters) -> void
+static unsafe Android.Runtime.JNIEnv.InvokeConstructor(nint instance, System.ReadOnlySpan<byte> jniCtorSignature, params Android.Runtime.JValue[]! constructorParameters) -> void
 *REMOVED*Xamarin.Android.Net.IAndroidAuthenticationModule.Authenticate(string! challenge, Java.Net.HttpURLConnection! request, System.Net.ICredentials! credentials) -> System.Net.Authorization!
 *REMOVED*Xamarin.Android.Net.IAndroidAuthenticationModule.PreAuthenticate(Java.Net.HttpURLConnection! request, System.Net.ICredentials! credentials) -> System.Net.Authorization!
 *REMOVED*override Android.AccessibilityServices.AccessibilityButtonController.AccessibilityButtonCallback.ThresholdClass.get -> nint

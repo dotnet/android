@@ -1,6 +1,7 @@
 #nullable enable
 
 using System;
+using System.ComponentModel;
 
 namespace Java.Interop {
 
@@ -33,10 +34,11 @@ namespace Java.Interop {
 	/// unsupported rather than assuming the legacy format.
 	/// </para>
 	/// <para>
-	/// This attribute is an implementation detail of the .NET for Android bindings and the
-	/// trimmable typemap generator.  It is not intended for use by application code.
+	/// The binding generator emits this attribute into generated bindings; it is not intended
+	/// for use by application code.
 	/// </para>
 	/// </remarks>
+	[EditorBrowsable (EditorBrowsableState.Never)]
 	[AttributeUsage (AttributeTargets.Assembly, AllowMultiple = false, Inherited = false)]
 	public sealed class JavaPeerCallbackFormatAttribute : Attribute {
 

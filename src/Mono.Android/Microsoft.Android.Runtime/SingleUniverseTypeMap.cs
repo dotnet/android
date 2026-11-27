@@ -72,14 +72,23 @@ sealed class SingleUniverseTypeMap : ITypeMap
 		// Slow path: alias holder — find the alias whose target type matches
 		var aliases = mappedProxyType.GetCustomAttribute<JavaPeerAliasesAttribute> (inherit: false);
 		if (aliases is not null) {
+			// A generic definition can match a base alias; prefer its own proxy.
+			Type? compatibleProxyType = null;
 			foreach (var key in aliases.Aliases) {
 				if (_typeMap.TryGetValue (key, out var aliasProxyType)) {
 					var aliasProxy = aliasProxyType.GetCustomAttribute<JavaPeerProxy> (inherit: false);
 					if (aliasProxy is not null && TrimmableTypeMap.TargetTypeMatches (managedType, aliasProxy.TargetType)) {
-						proxyType = aliasProxyType;
-						return true;
+						if (!managedType.IsGenericTypeDefinition || aliasProxy.TargetType == managedType) {
+							proxyType = aliasProxyType;
+							return true;
+						}
+						compatibleProxyType ??= aliasProxyType;
 					}
 				}
+			}
+			if (compatibleProxyType is not null) {
+				proxyType = compatibleProxyType;
+				return true;
 			}
 		}
 

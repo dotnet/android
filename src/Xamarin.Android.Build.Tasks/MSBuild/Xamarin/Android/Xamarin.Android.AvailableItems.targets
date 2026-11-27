@@ -17,7 +17,6 @@ This item group populates the Build Action drop-down in IDEs.
     <AvailableItemName Include="AndroidInterfaceDescription" />
     <AvailableItemName Include="AndroidJavaSource" />
     <AvailableItemName Include="AndroidLibrary" />
-    <AvailableItemName Include="AndroidLintConfig" />
     <AvailableItemName Include="AndroidResourceAnalysisConfig" />
     <AvailableItemName Include="AndroidNativeLibrary" />
     <AvailableItemName Include="AndroidResource" />

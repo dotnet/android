@@ -1276,6 +1276,43 @@ namespace generatortests
 			Assert.AreEqual ("deprecated", gens.Single (g => g.Name == "MyClass").Methods.Single (m => m.Name == "DoStuff").Deprecated);
 		}
 
+		[TestCase (false)]
+		[TestCase (true)]
+		public void InterfaceOnlyAbstractBaseInfersOverrideAndObsoleteUnlessSkipped (bool skip)
+		{
+			options.FixObsoleteOverrides = true;
+			var gens = ParseApiDefinition ($$"""
+				<api>
+				  <package name='java.lang'>
+				    <class name='Object' visibility='public' deprecated='not deprecated' />
+				  </package>
+				  <package name='com.example'>
+				    <interface name='Counter' visibility='public' abstract='true' deprecated='not deprecated'>
+				      <method name='count' jni-signature='()I' return='int' visibility='public' abstract='true' static='false' deprecated='deprecated' deprecated-since='21' />
+				    </interface>
+				    <class name='Base' extends='java.lang.Object' visibility='public' abstract='true' deprecated='not deprecated'
+				        {{(skip ? "skipInterfaceMethods='com/example/Counter.count()I'" : "")}}>
+				      <implements name='com.example.Counter' name-generic-aware='com.example.Counter' />
+				    </class>
+				    <class name='Derived' extends='com.example.Base' visibility='public' abstract='false' deprecated='not deprecated'>
+				      <method name='count' return='int' visibility='public' abstract='false' static='false' final='false' deprecated='not deprecated' deprecated-since='29' />
+				    </class>
+				  </package>
+				</api>
+				""");
+			var baseType = gens.Single (g => g.Name == "Base");
+			var derived = gens.Single (g => g.Name == "Derived");
+			var method = derived.Methods.Single ();
+			Assert.That (baseType.Methods, Is.Empty);
+			Assert.AreEqual (!skip, method.IsOverride);
+			Assert.AreEqual (skip ? null : "deprecated", method.Deprecated);
+			Assert.AreEqual (skip ? 29 : 21, method.DeprecatedSince?.ApiLevel ?? 0);
+
+			var source = GetGeneratedTypeOutput (derived);
+			StringAssert.Contains (skip ? "public virtual int Count ()" : "public override int Count ()", source);
+			Assert.AreEqual (!skip, source.Contains ("System.Obsolete"));
+		}
+
 		[Test]
 		public void FixupDeprecatedSinceBaseMethods ()
 		{
@@ -1807,6 +1844,238 @@ namespace generatortests
 			Assert.AreEqual (2, lines.Count ());
 			Assert.AreNotEqual (lines.ElementAt (0), lines.ElementAt (1));
 		}
+
+		[Test]
+		public void ManagedOverride_NewOnFinalOverrideAndAbstractProperty ()
+		{
+			var xml = """
+				<api>
+				  <package name='java.lang' jni-name='java/lang'>
+				    <class abstract='false' deprecated='not deprecated' final='false' name='Object' static='false' visibility='public' jni-signature='Ljava/lang/Object;' />
+				  </package>
+				  <package name='com.example' jni-name='com/example'>
+				    <class abstract='false' deprecated='not deprecated' extends='java.lang.Object' extends-generic-aware='java.lang.Object' final='false' name='Base' static='false' visibility='public' jni-signature='Lcom/example/Base;'>
+				      <method abstract='false' deprecated='not deprecated' final='false' name='work' jni-signature='()V' bridge='false' native='false' return='void' jni-return='V' static='false' synchronized='false' synthetic='false' visibility='public' />
+				      <method abstract='false' deprecated='not deprecated' final='false' name='getValue' jni-signature='()I' bridge='false' native='false' return='int' jni-return='I' static='false' synchronized='false' synthetic='false' visibility='public' />
+				    </class>
+				    <class abstract='true' deprecated='not deprecated' extends='com.example.Base' extends-generic-aware='com.example.Base' final='false' name='Derived' static='false' visibility='public' jni-signature='Lcom/example/Derived;'>
+				      <method abstract='false' deprecated='not deprecated' final='true' name='work' jni-signature='()V' bridge='false' native='false' return='void' jni-return='V' static='false' synchronized='false' synthetic='false' visibility='public' managedOverride='new' />
+				      <method abstract='true' deprecated='not deprecated' final='false' name='getValue' jni-signature='()I' bridge='false' native='false' return='int' jni-return='I' static='false' synchronized='false' synthetic='false' visibility='public' managedOverride='new' />
+				    </class>
+				  </package>
+				</api>
+				""";
+
+			var gens = ParseApiDefinition (xml);
+			var derived = gens.Single (g => g.Name == "Derived");
+			var source = GetGeneratedTypeOutput (derived);
+
+			// managedOverride="new" on a final override must not emit `sealed`
+			StringAssert.Contains ("public new void Work ()", source);
+			StringAssert.DoesNotContain ("new sealed", source);
+
+			// managedOverride="new" on an abstract property over an existing base property must emit `new abstract` with callbacks
+			StringAssert.Contains ("public new abstract int Value {", source);
+			StringAssert.DoesNotContain ("public override abstract int Value", source);
+			StringAssert.Contains ("static Delegate GetGetValueHandler ()", source);
+		}
+
+		[Test]
+		public void InterfaceInvokerMethod_OverrideAndNewSelection ()
+		{
+			var xml = """
+				<api>
+				  <package name='java.lang' jni-name='java/lang'>
+				    <class abstract='false' deprecated='not deprecated' final='false' name='Object' static='false' visibility='public' jni-signature='Ljava/lang/Object;'>
+				      <method abstract='false' deprecated='not deprecated' final='false' name='clone' jni-signature='()Ljava/lang/Object;' bridge='false' native='false' return='java.lang.Object' jni-return='Ljava/lang/Object;' static='false' synchronized='false' synthetic='false' visibility='protected' />
+				      <method abstract='false' deprecated='not deprecated' final='false' name='equals' jni-signature='(Ljava/lang/Object;)Z' bridge='false' native='false' return='boolean' jni-return='Z' static='false' synchronized='false' synthetic='false' visibility='public'>
+				        <parameter name='obj' type='java.lang.Object' jni-type='Ljava/lang/Object;' />
+				      </method>
+				      <method abstract='false' deprecated='not deprecated' final='false' name='hashCode' jni-signature='()I' bridge='false' native='false' return='int' jni-return='I' static='false' synchronized='false' synthetic='false' visibility='public' />
+				      <method abstract='false' deprecated='not deprecated' final='false' name='toString' jni-signature='()Ljava/lang/String;' bridge='false' native='false' return='java.lang.String' jni-return='Ljava/lang/String;' static='false' synchronized='false' synthetic='false' visibility='public' />
+				    </class>
+				    <class abstract='false' deprecated='not deprecated' extends='java.lang.Object' extends-generic-aware='java.lang.Object' final='true' name='String' static='false' visibility='public' jni-signature='Ljava/lang/String;' />
+				  </package>
+				  <package name='com.example' jni-name='com/example'>
+				    <interface abstract='true' deprecated='not deprecated' final='false' name='Standard' static='false' visibility='public' jni-signature='Lcom/example/Standard;'>
+				      <method abstract='true' deprecated='not deprecated' final='false' name='equals' jni-signature='(Ljava/lang/Object;)Z' bridge='false' native='false' return='boolean' jni-return='Z' static='false' synchronized='false' synthetic='false' visibility='public'>
+				        <parameter name='o' type='java.lang.Object' jni-type='Ljava/lang/Object;' />
+				      </method>
+				      <method abstract='true' deprecated='not deprecated' final='false' name='hashCode' jni-signature='()I' bridge='false' native='false' return='int' jni-return='I' static='false' synchronized='false' synthetic='false' visibility='public' />
+				      <method abstract='true' deprecated='not deprecated' final='false' name='toString' jni-signature='()Ljava/lang/String;' bridge='false' native='false' return='java.lang.String' jni-return='Ljava/lang/String;' static='false' synchronized='false' synthetic='false' visibility='public' />
+				      <method abstract='true' deprecated='not deprecated' final='false' name='clone' jni-signature='()Ljava/lang/Object;' bridge='false' native='false' return='java.lang.Object' jni-return='Ljava/lang/Object;' static='false' synchronized='false' synthetic='false' visibility='public' />
+				      <method abstract='true' deprecated='not deprecated' final='false' name='handle' jni-signature='(I)V' bridge='false' native='false' return='void' jni-return='V' static='false' synchronized='false' synthetic='false' visibility='public'>
+				        <parameter name='x' type='int' jni-type='I' />
+				      </method>
+				    </interface>
+				    <interface abstract='true' deprecated='not deprecated' final='false' name='MismatchedReturn' static='false' visibility='public' jni-signature='Lcom/example/MismatchedReturn;'>
+				      <method abstract='true' deprecated='not deprecated' final='false' name='toString' jni-signature='()I' bridge='false' native='false' return='int' jni-return='I' static='false' synchronized='false' synthetic='false' visibility='public' />
+				    </interface>
+				  </package>
+				</api>
+				""";
+
+			var gens = ParseApiDefinition (xml);
+			var jlo = gens.Single (g => g.FullName == "Java.Lang.Object");
+			var standard = gens.Single (g => g.Name == "IStandard");
+			var mismatched = gens.Single (g => g.Name == "IMismatchedReturn");
+
+			var jloSource = GetGeneratedTypeOutput (jlo);
+			builder.Clear ();
+			var standardSource = GetGeneratedTypeOutput (standard);
+			builder.Clear ();
+			var mismatchedSource = GetGeneratedTypeOutput (mismatched);
+
+			var standardInvoker = standardSource.Substring (standardSource.IndexOf ("internal partial class IStandardInvoker", StringComparison.Ordinal));
+			StringAssert.Contains ("public override bool Equals (Java.Lang.Object o)", standardInvoker);
+			StringAssert.Contains ("public override int GetHashCode ()", standardInvoker);
+			StringAssert.Contains ("public override string ToString ()", standardInvoker);
+			StringAssert.Contains ("public new Java.Lang.Object Clone ()", standardInvoker);
+			StringAssert.Contains ("public new void Handle (int x)", standardInvoker);
+
+			var mismatchedInvoker = mismatchedSource.Substring (mismatchedSource.IndexOf ("internal partial class IMismatchedReturnInvoker", StringComparison.Ordinal));
+			StringAssert.Contains ("public new int ToString ()", mismatchedInvoker);
+			StringAssert.DoesNotContain ("public override int ToString ()", mismatchedInvoker);
+
+			var delegates = string.Join ("\n", options.GetJniMarshalDelegates ().Select (d => {
+				var parts = d.Split ('_');
+				var ret = parts [3] switch { "V" => "void", "I" => "int", "B" => "sbyte", _ => "IntPtr" };
+				var ps = string.Join (", ", parts [2].Select ((c, i) => (c switch { 'I' => "int", 'B' => "sbyte", _ => "IntPtr" }) + $" p{i}"));
+				return $"delegate {ret} {d} ({ps});";
+			}));
+
+			var assembly = Compiler.CompileSources ([
+				"using System; using Android.Runtime; using Java.Interop; namespace Java.Lang {\n" + jloSource + "\n}",
+				"using System; using Android.Runtime; using Java.Interop; namespace Com.Example {\n" + standardSource + "\n" + mismatchedSource + "\n}",
+				"using System;\n" + delegates,
+			], out var hasErrors, out var output, out _, allowWarnings: true);
+			Assert.False (hasErrors, output);
+
+			var standardType = assembly.GetType ("Com.Example.IStandardInvoker", throwOnError: true);
+			var jloType = assembly.GetType ("Java.Lang.Object", throwOnError: true);
+			Assert.False (standardType.GetMethod ("Equals", [jloType]).Attributes.HasFlag (System.Reflection.MethodAttributes.NewSlot));
+			Assert.False (standardType.GetMethod ("GetHashCode", Type.EmptyTypes).Attributes.HasFlag (System.Reflection.MethodAttributes.NewSlot));
+			Assert.False (standardType.GetMethod ("ToString", Type.EmptyTypes).Attributes.HasFlag (System.Reflection.MethodAttributes.NewSlot));
+			Assert.True (standardType.GetMethod ("Clone", Type.EmptyTypes).Attributes.HasFlag (System.Reflection.MethodAttributes.NewSlot));
+			Assert.True (standardType.GetMethod ("Handle", [typeof (int)]).Attributes.HasFlag (System.Reflection.MethodAttributes.NewSlot));
+
+			var mismatchedType = assembly.GetType ("Com.Example.IMismatchedReturnInvoker", throwOnError: true);
+			Assert.True (mismatchedType.GetMethod ("ToString", Type.EmptyTypes).Attributes.HasFlag (System.Reflection.MethodAttributes.NewSlot));
+		}
+
+		[Test]
+		public void HidingEdgeCases_VarargsInterfaceConstsExternalInternalAndOrder ()
+		{
+			var xml = """
+				<api>
+				  <package name='java.lang' jni-name='java/lang'>
+				    <class abstract='false' deprecated='not deprecated' final='false' name='Object' static='false' visibility='public' jni-signature='Ljava/lang/Object;' />
+				  </package>
+				  <package name='com.example' jni-name='com/example'>
+				    <interface abstract='true' deprecated='not deprecated' final='false' name='BaseIface' static='false' visibility='public' jni-signature='Lcom/example/BaseIface;'>
+				      <method abstract='true' deprecated='not deprecated' final='false' name='accept' jni-signature='([I)V' bridge='false' native='false' return='void' jni-return='V' static='false' synchronized='false' synthetic='false' visibility='public'>
+				        <parameter name='values' type='int[]' jni-type='[I' />
+				      </method>
+				      <method abstract='true' deprecated='not deprecated' final='false' name='iBaseIface' jni-signature='()V' bridge='false' native='false' return='void' jni-return='V' static='false' synchronized='false' synthetic='false' visibility='public' />
+				    </interface>
+				    <interface abstract='true' deprecated='not deprecated' final='false' name='DerivedIface' static='false' visibility='public' jni-signature='Lcom/example/DerivedIface;'>
+				      <implements name='com.example.BaseIface' name-generic-aware='com.example.BaseIface' jni-type='Lcom/example/BaseIface;' />
+				      <method abstract='true' deprecated='not deprecated' final='false' name='accept' jni-signature='([I)V' bridge='false' native='false' return='void' jni-return='V' static='false' synchronized='false' synthetic='false' visibility='public'>
+				        <parameter name='values' type='int...' jni-type='[I' />
+				      </method>
+				      <method abstract='true' deprecated='not deprecated' final='false' name='invokeIBaseIface' jni-signature='()V' bridge='false' native='false' return='void' jni-return='V' static='false' synchronized='false' synthetic='false' visibility='public' />
+				    </interface>
+				    <interface abstract='true' deprecated='not deprecated' final='false' name='ConstsA' static='false' visibility='public' jni-signature='Lcom/example/ConstsA;'>
+				      <field deprecated='not deprecated' final='true' name='FOO' jni-signature='I' static='true' transient='false' type='int' value='1' visibility='public' volatile='false' />
+				    </interface>
+				    <interface abstract='true' deprecated='not deprecated' final='false' name='ConstsB' static='false' visibility='public' jni-signature='Lcom/example/ConstsB;'>
+				      <field deprecated='not deprecated' final='true' name='BAR' jni-signature='I' static='true' transient='false' type='int' value='2' visibility='public' volatile='false' />
+				    </interface>
+				    <class abstract='false' deprecated='not deprecated' extends='java.lang.Object' extends-generic-aware='java.lang.Object' final='false' name='BaseWithDupField' static='false' visibility='public' jni-signature='Lcom/example/BaseWithDupField;'>
+				      <implements name='com.example.ConstsA' name-generic-aware='com.example.ConstsA' jni-type='Lcom/example/ConstsA;' />
+				      <field deprecated='not deprecated' final='true' name='FOO' jni-signature='I' static='true' transient='false' type='int' value='1' visibility='public' volatile='false' />
+				    </class>
+				    <class abstract='false' deprecated='not deprecated' extends='com.example.BaseWithDupField' extends-generic-aware='com.example.BaseWithDupField' final='false' name='DerivedWithConsts' static='false' visibility='public' jni-signature='Lcom/example/DerivedWithConsts;'>
+				      <implements name='com.example.ConstsB' name-generic-aware='com.example.ConstsB' jni-type='Lcom/example/ConstsB;' />
+				    </class>
+				  </package>
+				</api>
+				""";
+
+			var doc = XDocument.Parse (xml);
+			var gens = XmlApiImporter.Parse (doc, options);
+			foreach (var gen in gens)
+				options.SymbolTable.AddType (gen);
+			foreach (var gen in gens)
+				gen.Validate (options, new GenericParameterDefinitionList (), generator.Context);
+			foreach (var gen in gens)
+				gen.FillProperties ();
+
+			// Generate DerivedIface BEFORE BaseIface (and without FixupMethodOverrides) to verify order independence
+			var derivedIface = gens.Single (g => g.Name == "IDerivedIface");
+			var derivedIfaceOut = GetGeneratedTypeOutput (derivedIface);
+			StringAssert.Contains ("new void Accept (params int[] values);", derivedIfaceOut);
+			StringAssert.Contains ("new void InvokeIBaseIface ();", derivedIfaceOut);
+
+			// BaseWithDupField already declares Foo, so it emits no InterfaceConsts; DerivedWithConsts must not emit `new` on InterfaceConsts
+			builder.Clear ();
+			var derivedWithConsts = gens.Single (g => g.Name == "DerivedWithConsts");
+			var derivedWithConstsOut = GetGeneratedTypeOutput (derivedWithConsts);
+			StringAssert.Contains ("public static class InterfaceConsts {", derivedWithConstsOut);
+			StringAssert.DoesNotContain ("public new static class InterfaceConsts", derivedWithConstsOut);
+
+			// External (IsGeneratable == false) base class with an internal const field must not trigger `new` on derived class
+			var externalBase = new ClassGen (new GenBaseSupport {
+				FullName = "Com.Example.ExternalBase",
+				IsGeneratable = false,
+				JavaSimpleName = "ExternalBase",
+				Name = "ExternalBase",
+				Namespace = "Com.Example",
+				PackageName = "com.example",
+				Visibility = "public",
+			}) {
+				BaseType = "java.lang.Object",
+			};
+			externalBase.AddField (new Field {
+				IsFinal = true,
+				IsStatic = true,
+				JavaName = "INTERNAL_CONST",
+				Name = "InternalConst",
+				SetterParameter = new Parameter ("value", "int", "int", false),
+				TypeName = "int",
+				Value = "1",
+				Visibility = "internal",
+			});
+			options.SymbolTable.AddType (externalBase);
+			externalBase.Validate (options, new GenericParameterDefinitionList (), generator.Context);
+
+			var sub = new ClassGen (new GenBaseSupport {
+				FullName = "Com.Example.ExternalDerived",
+				IsGeneratable = true,
+				JavaSimpleName = "ExternalDerived",
+				Name = "ExternalDerived",
+				Namespace = "Com.Example",
+				PackageName = "com.example",
+				Visibility = "public",
+			}) {
+				BaseType = "com.example.ExternalBase",
+			};
+			sub.AddField (new Field {
+				IsFinal = true,
+				IsStatic = true,
+				JavaName = "INTERNAL_CONST",
+				Name = "InternalConst",
+				SetterParameter = new Parameter ("value", "int", "int", false),
+				TypeName = "int",
+				Value = "2",
+				Visibility = "public",
+			});
+			sub.Validate (options, new GenericParameterDefinitionList (), generator.Context);
+			builder.Clear ();
+			var subOut = GetGeneratedTypeOutput (sub);
+			StringAssert.Contains ("public const int InternalConst = (int) 2;", subOut);
+			StringAssert.DoesNotContain ("public new const int InternalConst", subOut);
+		}
 	}
 
 	abstract class CodeGeneratorTests : CodeGeneratorTestBase
@@ -1841,6 +2110,92 @@ namespace generatortests
 			generator.Context.ContextTypes.Pop ();
 
 			AssertTargetedExpected (nameof (WriteObjectField), writer.ToString ());
+		}
+
+		[Test]
+		public void WriteInterfaceListenerProperty ()
+		{
+			var iface = SupportTypeBuilder.CreateInterface ("java.code.IMyInterface", options);
+			new InterfaceListenerProperty (iface, "MyName", "MyNameSpec", "MyMethodName", "MyFullDelegateName", options).Write (new CodeWriter (writer));
+
+			AssertOriginalExpected (nameof (WriteInterfaceListenerProperty), writer.ToString ());
+		}
+
+		[Test]
+		public void ListenerEventUsesConnectorForSameListener ()
+		{
+			// 'addEventListener' checks the listener type; 'addOtherListener' checks that the shortest overload is used.
+			var gens = ParseApiDefinition ("""
+				<api>
+				  <package name='java.lang'>
+				    <class name='Object' visibility='public' deprecated='not deprecated' />
+				  </package>
+				  <package name='android.os'>
+				    <class name='Handler' extends='java.lang.Object' visibility='public' deprecated='not deprecated' />
+				  </package>
+				  <package name='com.example'>
+				    <interface name='FirstListener' visibility='public' abstract='true' deprecated='not deprecated'>
+				      <method name='onFirst' return='void' visibility='public' abstract='true' static='false' deprecated='not deprecated' />
+				    </interface>
+				    <interface name='SecondListener' visibility='public' abstract='true' deprecated='not deprecated'>
+				      <method name='onSecond' return='void' visibility='public' abstract='true' static='false' deprecated='not deprecated' />
+				    </interface>
+				    <class name='Target' extends='java.lang.Object' visibility='public' deprecated='not deprecated'>
+				      <method name='addEventListener' return='void' visibility='public' abstract='false' static='false' final='false' deprecated='not deprecated'>
+				        <parameter name='listener' type='com.example.SecondListener' />
+				      </method>
+				      <method name='addEventListener' return='void' visibility='public' abstract='false' static='false' final='false' deprecated='not deprecated'>
+				        <parameter name='listener' type='com.example.FirstListener' />
+				        <parameter name='handler' type='android.os.Handler' />
+				      </method>
+				      <method name='addOtherListener' return='void' visibility='public' abstract='false' static='false' final='false' deprecated='not deprecated'>
+				        <parameter name='listener' type='com.example.FirstListener' />
+				        <parameter name='handler' type='android.os.Handler' />
+				      </method>
+				      <method name='addOtherListener' return='void' visibility='public' abstract='false' static='false' final='false' deprecated='not deprecated'>
+				        <parameter name='listener' type='com.example.FirstListener' />
+				      </method>
+				    </class>
+				  </package>
+				</api>
+				""");
+			var source = GetGeneratedTypeOutput (gens.Single (g => g.Name == "Target")).Replace ("\t", "");
+			var nl = Environment.NewLine;
+
+			StringAssert.Contains ($"__CreateIFirstListenerImplementor,{nl}AddEventListener_Event_With_Handler_Helper,{nl}", source);
+			StringAssert.Contains ($"__CreateIFirstListenerImplementor,{nl}AddOtherListener,{nl}", source);
+		}
+
+		[TestCase (true)]
+		[TestCase (false)]
+		public void GenericExplicitImplementationChecksNonNullString (bool notNull)
+		{
+			var gens = ParseApiDefinition ($$"""
+				<api>
+				  <package name='java.lang'>
+				    <class name='Object' visibility='public' deprecated='not deprecated' />
+				    <class name='String' extends='java.lang.Object' visibility='public' final='true' deprecated='not deprecated' />
+				  </package>
+				  <package name='com.example'>
+				    <interface name='Sink' visibility='public' abstract='true' deprecated='not deprecated'>
+				      <typeParameters><typeParameter name='T' /></typeParameters>
+				      <method name='accept' return='void' visibility='public' abstract='true' static='false' deprecated='not deprecated'>
+				        <parameter name='value' type='T' not-null='{{(notNull ? "true" : "false")}}' />
+				      </method>
+				    </interface>
+				    <class name='StringSink' extends='java.lang.Object' visibility='public' deprecated='not deprecated'>
+				      <implements name='com.example.Sink' name-generic-aware='com.example.Sink&lt;java.lang.String&gt;' />
+				      <method name='accept' return='void' visibility='public' abstract='false' static='false' final='false' deprecated='not deprecated'>
+				        <parameter name='value' type='java.lang.String' />
+				      </method>
+				    </class>
+				  </package>
+				</api>
+				""");
+			var source = GetGeneratedTypeOutput (gens.Single (g => g.Name == "StringSink"));
+
+			StringAssert.Contains ("Accept (value?.ToString ()", source);
+			Assert.AreEqual (notNull, source.Contains ("value?.ToString () ?? throw new global::Java.Lang.NullPointerException ()"));
 		}
 
 		[Test]

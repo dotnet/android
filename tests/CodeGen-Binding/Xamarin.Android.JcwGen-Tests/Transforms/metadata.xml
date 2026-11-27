@@ -1,4 +1,7 @@
 <metadata>
+  <!-- Keep the two Java methodInvoked fields distinct without hiding the managed base property. -->
+  <attr path="/api/package[@name='com.xamarin.android']/class[@name='CallNonvirtualDerived']/field[@name='methodInvoked']" name="managedName">DerivedMethodInvoked</attr>
+
   <!-- Change Bxc4288.useColors() method to take and return Android.Graphics.Color -->
   <attr
       path="/api/package[@name='com.xamarin.android']/class[@name='Bxc4288']/method[@name='useColors']"

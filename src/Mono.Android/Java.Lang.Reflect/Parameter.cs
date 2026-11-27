@@ -1,4 +1,3 @@
-#if ANDROID_26
 using System;
 
 namespace Java.Lang.Reflect
@@ -14,4 +13,3 @@ namespace Java.Lang.Reflect
 		}
 	}
 }
-#endif

@@ -9,6 +9,7 @@ namespace Xamarin.Android.Tasks
 	/// <summary>
 	/// Provides a localizable way to log a message from an MSBuild target.
 	/// </summary>
+	[MSBuildMultiThreadableTask]
 	public class AndroidMessage : Task
 	{
 		/// <summary>

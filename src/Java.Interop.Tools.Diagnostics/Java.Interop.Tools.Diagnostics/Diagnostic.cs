@@ -31,8 +31,6 @@ namespace Java.Interop.Tools.Diagnostics {
 
 	//					XA0100 EmbeddedNativeLibrary '{0}' is invalid in Android Application project. Please use AndroidNativeLibrary instead.
 	//					XA0101 @(Content) build action is not supported
-	//					XA0102 Lint Warning
-	//					XA0103 Lint Error
 	//					XA0104 Invalid Sequence Point mode
 	//					XA0105 The TargetFrameworkVersion for {0} (v{1}) is greater than the TargetFrameworkVersion for your project (v{2}). You need to increase the TargetFrameworkVersion for your project.
 

@@ -19,6 +19,11 @@
         Text="The specified `%24(AndroidToolchainDirectory)` '$(AndroidToolchainDirectory)' contains a space. Android NDK commands do not support this. Please create a Configuration.Override.props file that sets the AndroidToolchainDirectory property to a different path."
         Condition=" '$(HostOS)' == 'Windows' And $(AndroidToolchainDirectory.Contains (' '))"
     />
+    <!-- Mono.Android.xml is generated from this submodule late in the build. -->
+    <Exec
+        Command="git submodule update --init -- external/android-api-docs"
+        WorkingDirectory="$(_TopDir)"
+    />
     <!-- Build out of process so NuGet-generated props are evaluated after restore. -->
     <Exec
         Command="&quot;$(DotNetPreviewTool)&quot; build &quot;$(_TopDir)\build-tools\Xamarin.Android.Tools.BootstrapTasks\Xamarin.Android.Tools.BootstrapTasks.csproj&quot; -p:Configuration=$(Configuration) -bl:$(_BinlogPathPrefix)-bootstrap-tasks.binlog"

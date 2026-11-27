@@ -44,8 +44,12 @@ namespace Xamarin.Android.Tools.Bytecode
 						if (class_metadata.Constructors == null)
 							continue;
 
-						foreach (var con in class_metadata.Constructors)
-							FixupConstructor (FindJavaConstructor (class_metadata, con, c), con);
+						foreach (var con in class_metadata.Constructors) {
+							var java_constructors = FindJavaConstructors (class_metadata, con, c);
+							FixupConstructor (java_constructors.FirstOrDefault (), con, java_constructors.Count == 1);
+							if (java_constructors.Count == 1)
+								FixupDefaultArguments (java_constructors [0], con.ValueParameters);
+						}
 					}
 
 					// Do fixups valid for both classes and modules
@@ -57,8 +61,10 @@ namespace Xamarin.Android.Tools.Bytecode
 						// We work from Java methods to Kotlin metadata because they aren't a 1:1 relation
 						// and we need to find the "best" match for each Java method.
 						foreach (var java_method in c.Methods)
-							if (FindKotlinFunctionMetadata (metadata, java_method) is KotlinFunction function_metadata)
+							if (FindKotlinFunctionMetadata (metadata, java_method) is KotlinFunction function_metadata) {
 								FixupFunction (java_method, function_metadata, class_metadata, inlineClasses);
+								FixupDefaultArguments (java_method, function_metadata.ValueParameters);
+							}
 					}
 
 					if (metadata.Properties != null) {
@@ -134,6 +140,11 @@ namespace Xamarin.Android.Tools.Bytecode
 
 					c.KotlinInlineClassUnderlyingJniType = backing.Descriptor;
 
+					// Without an `init` block, kotlinc writes the primary `constructor-impl` as "load the argument, return it" (2 bytes).
+					// Secondary constructors also compile to `constructor-impl`, with other signatures.
+					var primary = $"({backing.Descriptor}){backing.Descriptor}";
+					c.KotlinInlineClassHasInit = c.Methods.FirstOrDefault (m => m.Name == "constructor-impl" && m.Descriptor == primary)?.Attributes.Get<CodeAttribute> ()?.ByteCode is { Length: > 2 };
+
 					// Kotlin's `KotlinType.ClassName` strings are stored without the
 					// leading `L` but with a trailing `;` (e.g. `com/example/MyColor;`).
 					// We index by that form so callers can look up directly from
@@ -165,8 +176,14 @@ namespace Xamarin.Android.Tools.Bytecode
 		{
 			if (kotlinTypeClassName is null || jvmDescriptor is null)
 				return null;
-			if (!inlineClasses.TryGetValue (kotlinTypeClassName, out var underlying))
+			if (!inlineClasses.TryGetValue (kotlinTypeClassName, out var underlying)) {
+				// A value class from another library: only value classes and Kotlin built-in
+				// types are erased to a JVM primitive. The generator projects it only when a
+				// referenced binding assembly has the matching value-class struct.
+				if (IsJvmPrimitiveDescriptor (jvmDescriptor) && !kotlinTypeClassName.StartsWith ("kotlin/", StringComparison.Ordinal))
+					return "L" + kotlinTypeClassName;
 				return null;
+			}
 			if (jvmDescriptor != underlying)
 				return null;
 			return "L" + kotlinTypeClassName;
@@ -280,7 +297,7 @@ namespace Xamarin.Android.Tools.Bytecode
 				FixupExtensionMethod (method);
 		}
 
-		static void FixupConstructor (MethodInfo? method, KotlinConstructor metadata)
+		static void FixupConstructor (MethodInfo? method, KotlinConstructor metadata, bool isOnlyMatch)
 		{
 			if (method is null)
 				return;
@@ -290,6 +307,15 @@ namespace Xamarin.Android.Tools.Bytecode
 				Log.Debug ($"Kotlin: Hiding internal constructor {method.DeclaringType?.ThisClass.Name.Value} - {metadata.GetSignature ()}");
 				method.AccessFlags = SetVisibility (method.AccessFlags, MethodAccessFlags.Internal);
 			}
+
+			// Nullability is only safe when one Java constructor matches
+			// (e.g. a Java `Object` parameter matches any Kotlin type)
+			if (!isOnlyMatch || metadata.ValueParameters is not List<KotlinValueParameter> kotlin_parameters)
+				return;
+
+			var java_parameters = method.GetFilteredParameters ();
+			for (var i = 0; i < java_parameters.Length; i++)
+				java_parameters [i].KotlinNotNull = IsNotNullReference (kotlin_parameters [i].Type, java_parameters [i].Type.BinaryName);
 		}
 
 		static void FixupFunction (MethodInfo? method, KotlinFunction metadata, KotlinClass? kotlinClass, IDictionary<string, string> inlineClasses)
@@ -315,7 +341,7 @@ namespace Xamarin.Android.Tools.Bytecode
 					continue;
 
 				// Kotlin provides actual parameter names
-				if (TypesMatch (java_p.Type, kotlin_p.Type, kotlinClass) && java_p.IsUnnamedParameter () && !kotlin_p.IsUnnamedParameter ()) {
+				if (TypesMatch (java_p.Type, kotlin_p.Type, kotlinClass, inlineClasses) && java_p.IsUnnamedParameter () && !kotlin_p.IsUnnamedParameter ()) {
 					Log.Debug ($"Kotlin: Renaming parameter {method.DeclaringType?.ThisClass.Name.Value} - {method.Name} - {java_p.Name} -> {kotlin_p.Name}");
 					java_p.Name = kotlin_p.Name;
 				}
@@ -332,7 +358,17 @@ namespace Xamarin.Android.Tools.Bytecode
 				// underlying primitive. Boxed positions are skipped.
 				// See dotnet/java-interop#1431 (Phase 2).
 				java_p.KotlinInlineClassJniType = GetInlineClassJniType (kotlin_p.Type.ClassName, java_p.Type.TypeSignature, inlineClasses);
+
+				java_p.KotlinNotNull = IsNotNullReference (kotlin_p.Type, java_p.Type.BinaryName);
 			}
+
+			// The extension receiver (e.g. `fun Dp.coerceAtLeast()`) is the first Java parameter
+			if (metadata.ReceiverType != null && start > 0) {
+				java_parameters [0].KotlinNotNull = IsNotNullReference (metadata.ReceiverType, java_parameters [0].Type.BinaryName);
+				java_parameters [0].KotlinInlineClassJniType = GetInlineClassJniType (metadata.ReceiverType.ClassName, java_parameters [0].Type.TypeSignature, inlineClasses);
+			}
+
+			method.KotlinReturnNotNull = IsNotNullReference (metadata.ReturnType, method.ReturnType.BinaryName);
 
 			// Handle erasure of Kotlin unsigned types
 			method.KotlinReturnType = GetKotlinType (method.ReturnType.TypeSignature, metadata.ReturnType?.ClassName);
@@ -348,6 +384,49 @@ namespace Xamarin.Android.Tools.Bytecode
 			// target. See dotnet/java-interop#1431 (Phase 2).
 			if (metadata.Name != null && metadata.JvmName != null && metadata.Name != metadata.JvmName)
 				method.KotlinName = PascalCase (metadata.Name);
+		}
+
+		// Records the helper that computes Kotlin default arguments, so the generator can
+		// create overloads that omit trailing defaulted parameters:
+		//   fun f(a: Int = 1)        ->  static f$default(Owner, int, int mask, Object)
+		//   constructor(a: Int = 1)  ->  <init>(int, int mask, DefaultConstructorMarker)
+		// If the exact helper does not exist, keep the full-argument API.
+		static void FixupDefaultArguments (MethodInfo? method, List<KotlinValueParameter>? valueParameters)
+		{
+			if (method is null || !method.IsPubliclyVisible || valueParameters is null)
+				return;
+
+			var defaults = Enumerable.Range (0, valueParameters.Count)
+				.Where (i => valueParameters [i].Flags.HasFlag (KotlinParameterFlags.DeclaresDefaultValue))
+				.ToArray ();
+			if (defaults.Length == 0)
+				return;
+
+			// Receivers, continuations and outer-class parameters move the mask bits.
+			if (method.GetParameters ().Length != valueParameters.Count)
+				return;
+
+			var owner = method.DeclaringType;
+			var masks = new string ('I', (valueParameters.Count + 31) / 32);
+			var close = method.Descriptor.IndexOf (')');
+			var parameters = method.Descriptor.Substring (1, close - 1);
+
+			string helper_name, helper_signature;
+			if (method.IsConstructor) {
+				helper_name = "<init>";
+				helper_signature = "(" + parameters + masks + "Lkotlin/jvm/internal/DefaultConstructorMarker;)V";
+			} else {
+				var receiver = method.AccessFlags.HasFlag (MethodAccessFlags.Static) ? "" : owner.FullJniName;
+				helper_name = method.Name + "$default";
+				helper_signature = "(" + receiver + parameters + masks + "Ljava/lang/Object;)" + method.Descriptor.Substring (close + 1);
+			}
+
+			// Older Kotlin puts interface helpers only on `$DefaultImpls`. That class has no
+			// managed peer, so R8 can remove it; do not use it.
+			if (!owner.Methods.Any (m => m.Name == helper_name && m.Descriptor == helper_signature))
+				return;
+			method.KotlinDefaultJniSignature = helper_signature;
+			method.KotlinDefaultParameters = defaults;
 		}
 
 		static string PascalCase (string name)
@@ -434,6 +513,8 @@ namespace Xamarin.Android.Tools.Bytecode
 			if (getter != null) {
 				getter.KotlinReturnType = GetKotlinType (getter.ReturnType.TypeSignature, metadata.ReturnType?.ClassName);
 				getter.KotlinInlineClassReturnJniType = GetInlineClassJniType (metadata.ReturnType?.ClassName, getter.ReturnType.TypeSignature, inlineClasses);
+				if (IsExactAccessor (getter, metadata.GetterJvmName, metadata))
+					getter.KotlinReturnNotNull = IsNotNullReference (metadata.ReturnType, getter.ReturnType.BinaryName);
 			}
 
 			if (setter != null) {
@@ -447,8 +528,16 @@ namespace Xamarin.Android.Tools.Bytecode
 				// Handle erasure of Kotlin unsigned types
 				setter_parameter.KotlinType = GetKotlinType (setter_parameter.Type.TypeSignature, metadata.ReturnType?.ClassName);
 				setter_parameter.KotlinInlineClassJniType = GetInlineClassJniType (metadata.ReturnType?.ClassName, setter_parameter.Type.TypeSignature, inlineClasses);
+				if (IsExactAccessor (setter, metadata.SetterJvmName, metadata))
+					setter_parameter.KotlinNotNull = IsNotNullReference (metadata.ReturnType, setter_parameter.Type.BinaryName);
 			}
 		}
+
+		// FindJavaPropertyGetter/Setter match by name pattern only, so an unrelated
+		// `fun getX(): String?` can match. An extension property accessor also has
+		// a receiver parameter, so a match without one is the wrong method.
+		static bool IsExactAccessor (MethodInfo method, string? jvmName, KotlinProperty metadata)
+			=> metadata.ReceiverType is null && method.Name == jvmName;
 
 		static void FixupField (FieldInfo? field, KotlinProperty metadata)
 		{
@@ -466,19 +555,32 @@ namespace Xamarin.Android.Tools.Bytecode
 
 			// Handle erasure of Kotlin unsigned types
 			field.KotlinType = GetKotlinType (field.Descriptor, metadata.ReturnType?.ClassName);
+
+			// A `lateinit` field is null until it is set
+			if (field.Name == metadata.FieldJvmName && !metadata.Flags.HasFlag (KotlinPropertyFlags.IsLateInit))
+				field.KotlinNotNull = IsNotNullReference (metadata.ReturnType, field.Descriptor);
 		}
 
-		static MethodInfo? FindJavaConstructor (KotlinClass kotlinClass, KotlinConstructor constructor, ClassFile klass)
+		// kotlinc writes @NotNull annotations, but R8 can remove them, so use the
+		// Kotlin metadata. Type parameters, platform types and unboxed value classes
+		// (e.g. `value class Maybe(val value: String?)`) can be null in Java, so the
+		// Kotlin type must be a non-null class that maps to the JVM reference type.
+		static bool IsNotNullReference (KotlinType? type, string jvmDescriptor)
+		{
+			if (type is null || type.Nullable || type.ClassName is null)
+				return false;
+			if (type.FlexibleUpperBound != null || type.FlexibleTypeCapabilitiesId != null)
+				return false;
+			// Primitive descriptors such as "I" are one character
+			return jvmDescriptor.Length > 1 && KotlinUtilities.ConvertKotlinTypeSignature (type) == jvmDescriptor;
+		}
+
+		static List<MethodInfo> FindJavaConstructors (KotlinClass kotlinClass, KotlinConstructor constructor, ClassFile klass)
 		{
 			var all_constructors = klass.Methods.Where (method => method.Name == "<init>" || method.Name == "<clinit>");
 			var possible_constructors = all_constructors.Where (method => method.GetFilteredParameters ().Length == constructor.ValueParameters?.Count);
 
-			foreach (var method in possible_constructors) {
-				if (ParametersMatch (kotlinClass, method, constructor.ValueParameters!))
-					return method;
-			}
-
-			return null;
+			return possible_constructors.Where (method => ParametersMatch (kotlinClass, method, constructor.ValueParameters ?? [])).ToList ();
 		}
 
 		static KotlinFunction? FindKotlinFunctionMetadata (KotlinFile? kotlinFile, MethodInfo javaMethod)
@@ -492,30 +594,46 @@ namespace Xamarin.Android.Tools.Bytecode
 			var possible_functions = kotlinFile.Functions.Where (f => f.JvmName == javaMethod.Name).ToArray ();
 
 			// If we have metadata with a Descriptor/JvmSignature match, that means all parameters and return type match
-			if (possible_functions.SingleOrDefault (f => f.JvmSignature != null && f.JvmSignature == java_descriptor) is KotlinFunction kf)
-				return kf;
+			var matches = possible_functions.Where (f => f.JvmSignature != null && f.JvmSignature == java_descriptor).ToArray ();
 
 			// Sometimes JvmSignature is null (or unhelpful), so we're going to construct one ourselves and see if they match
-			if (possible_functions.SingleOrDefault (f => f.ConstructJvmSignature () == java_descriptor) is KotlinFunction kf2)
-				return kf2;
+			if (matches.Length == 0)
+				matches = possible_functions.Where (f => f.ConstructJvmSignature () == java_descriptor).ToArray ();
 
 			// If that didn't work, let's try it the hard way!
 			// This catches cases where Kotlin only wrote one metadata entry for multiple methods with the same mangled JvmName (ex: contains-WZ4Q5Ns)
-			var java_param_count = javaMethod.GetFilteredParameters ().Length;
+			if (matches.Length == 0) {
+				var java_param_count = javaMethod.GetFilteredParameters ().Length;
 
-			foreach (var function in possible_functions.Where (f => f.ValueParameters?.Count == java_param_count)) {
-				if (function.ReturnType == null)
-					continue;
-				if (!TypesMatch (javaMethod.ReturnType, function.ReturnType, kotlinFile))
-					continue;
-
-				if (!ParametersMatch (kotlinFile, javaMethod, function.ValueParameters!))
-					continue;
-
-				return function;
+				matches = possible_functions.Where (f =>
+						f.ValueParameters?.Count == java_param_count &&
+						f.ReturnType != null &&
+						TypesMatch (javaMethod.ReturnType, f.ReturnType, kotlinFile) &&
+						ParametersMatch (kotlinFile, javaMethod, f.ValueParameters)).ToArray ();
 			}
 
+			if (matches.Length == 1)
+				return matches [0];
+
+			if (matches.Length > 1)
+				ReportAmbiguousFunction (javaMethod, matches);
+
 			return null;
+		}
+
+		static void ReportAmbiguousFunction (MethodInfo javaMethod, KotlinFunction [] matches)
+		{
+			var java_method = $"{javaMethod.DeclaringType?.ThisClass.Name.Value}.{javaMethod.Name}{javaMethod.Descriptor}";
+			var kotlin_functions = string.Join (", ", matches.Select (f => $"{f.Name}{f.JvmSignature ?? f.ConstructJvmSignature ()}"));
+
+			// Non-public and synthetic methods (for example, kotlinc bridges) are not bound API,
+			// so a warning would only be noise.
+			if (!javaMethod.IsPubliclyVisible || javaMethod.AccessFlags.HasFlag (MethodAccessFlags.Synthetic)) {
+				Log.Debug ($"Kotlin: Skipping non-public or synthetic method {java_method} that matches more than one Kotlin function: {kotlin_functions}");
+				return;
+			}
+
+			Log.Warning (0, "class-parse: warning XA4268: " + string.Format (Java.Interop.Localization.Resources.ClassParse_XA4268, java_method, kotlin_functions));
 		}
 
 		static FieldInfo? FindJavaFieldProperty (KotlinFile kotlinClass, KotlinProperty property, ClassFile klass)
@@ -603,16 +721,8 @@ namespace Xamarin.Android.Tools.Bytecode
 			if (javaType.BinaryName == "Ljava/lang/Object;")
 				return true;
 
-			// dotnet/java-interop#1431 (Phase 2): the JVM erases @JvmInline value
-			// class types to their underlying primitive descriptor, so e.g. a
-			// `MyColor` property (ULong-backed) appears in the bytecode as `()J`
-			// even though the Kotlin metadata still says `MyColor`. Accept the
-			// match when the JVM primitive matches the inline class's recorded
-			// underlying-primitive descriptor.
-			if (inlineClasses != null && IsJvmPrimitiveDescriptor (javaType.BinaryName) &&
-					kotlinType.ClassName != null &&
-					inlineClasses.TryGetValue (kotlinType.ClassName, out var underlying) &&
-					underlying == javaType.BinaryName)
+			// The JVM erases a @JvmInline value class to its underlying primitive.
+			if (inlineClasses != null && GetInlineClassJniType (kotlinType.ClassName, javaType.BinaryName, inlineClasses) != null)
 				return true;
 
 			// Sometimes Kotlin keeps its native types rather than converting them to Java native types

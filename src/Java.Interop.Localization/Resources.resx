@@ -121,6 +121,10 @@
     <value>Error while loading assembly: '{0}'.</value>
     <comment>{0} - File name</comment>
   </data>
+  <data name="ClassParse_XA4268" xml:space="preserve">
+    <value>The Kotlin metadata for Java method '{0}' matches more than one Kotlin function: {1}. The Kotlin fixups for this method are skipped.</value>
+    <comment>{0} - Java method name and JNI signature. {1} - Comma-separated list of Kotlin function names and JNI signatures.</comment>
+  </data>
   <data name="Generator_BG4000" xml:space="preserve">
     <value>Failed to remove old constants: {0}.</value>
     <comment>{0} - The list of constants that could not be removed.

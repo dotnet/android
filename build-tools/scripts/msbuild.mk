@@ -56,11 +56,6 @@ define DOTNET_BINLOG
 		-bl:"$(dir $(realpath $(firstword $(MAKEFILE_LIST))))/bin/Build$(CONFIGURATION)/msbuild-`date +%Y%m%dT%H%M%S`-$(1).binlog"
 endef
 
-# $(call SYSTEM_DOTNET_BINLOG,name,build=$(DOTNET_VERB))
-define SYSTEM_DOTNET_BINLOG
-	$(call DOTNET_BINLOG,$(1),$(2),dotnet)
-endef
-
 else    # $(MSBUILD) != 1
 _CSC_EMITS_PDB  := $(shell if $(_PKG_CONFIG) --atleast-version=4.9 mono ; then echo Pdb; fi )
 ifeq ($(_CSC_EMITS_PDB),Pdb)

@@ -165,6 +165,21 @@ makes sure that the SHA-256 hash of the file is the same as the hash included wi
 the .NET for Android SDK. The Android CLI is available for Windows x64, macOS (x64
 and Arm64), and Linux (x64 and Arm64).
 
+For `platform-tools`, the target queries the CLI's stable package catalog and
+selects the newest version in the supported 37.x major band that is at least
+the requested `$(AndroidSdkPlatformToolsVersion)`. It does not automatically
+install 38.x or preview releases. An older installed 37.x package is updated; an
+equal or newer installed version is left alone. An installed preview, such as
+37.0.3-rc1, does not satisfy the stable release with the same number. If the catalog contains no
+such stable package, installation fails with [XA5310](../messages/xa5310.md),
+rather than crossing major versions.
+The Android CLI downloads SDK archives using its HTTPS catalog and the checksums
+published there; these dynamically selected archives do not have independently
+pinned hashes in the .NET for Android SDK.
+The major band comes from `$(AndroidSdkPlatformToolsVersion)`: an explicit
+override selects a different major band, not an exact point release. Workload
+dependency generation still uses that property's exact revision.
+
 The Android CLI accepts the Android SDK licenses without a prompt. Thus, if Android SDK
 packages must be installed, this target fails unless you set `$(AcceptAndroidSDKLicenses)`
 to `true`. Before you set this
@@ -219,18 +234,6 @@ For example, to query the published artifacts:
 ```shell
 dotnet build MyApp.csproj -t:Publish -getTargetResult:Publish
 ```
-
-## RunWithLogging
-
-Runs the application with additional logging enabled.  Helpful when reporting or investigating an issue with
-either the application or the runtime.  If successful, messages printed to the screen will show location
-of the logcat file with the logged messages.
-
-Properties which affect how the target works:
-
-  * `/p:RunLogVerbose=true` enables even more verbose runtime logging
-  * `/p:RunLogDelayInMS=X` where `X` should be replaced with time in milliseconds to wait before writing the
-    log output to file.  Defaults to `1000`.
 
 ## SignAndroidPackage
 

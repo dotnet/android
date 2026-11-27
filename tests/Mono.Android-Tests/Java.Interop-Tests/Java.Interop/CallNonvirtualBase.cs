@@ -19,9 +19,12 @@ namespace Java.InteropTests
 		{
 		}
 
-		public virtual unsafe void Method ()
+		public virtual void Method ()
 		{
-			_members.InstanceMethods.InvokeVirtualVoidMethod ("method.()V", this, null);
+			// SAFETY: The registered ()V method takes no arguments; this owns the receiver peer.
+			unsafe {
+				_members.InstanceMethods.InvokeVirtualVoidMethod ("method.()V", this, null);
+			}
 		}
 
 		public bool MethodInvoked {

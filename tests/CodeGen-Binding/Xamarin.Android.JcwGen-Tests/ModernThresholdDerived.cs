@@ -18,7 +18,7 @@ namespace Xamarin.Android.JcwGenTests {
 		{
 		}
 
-		public unsafe ModernThresholdDerived ()
+		public ModernThresholdDerived ()
 			: base (IntPtr.Zero, JniHandleOwnership.DoNotTransfer)
 		{
 			const string id = "()V";
@@ -28,7 +28,10 @@ namespace Xamarin.Android.JcwGenTests {
 
 			var reference = _members.InstanceMethods.StartCreateInstance (id, GetType (), null);
 			SetHandle (reference.Handle, JniHandleOwnership.TransferLocalRef);
-			_members.InstanceMethods.FinishCreateInstance (id, this, null);
+			// SAFETY: The ()V constructor takes no arguments; this owns the new peer.
+			unsafe {
+				_members.InstanceMethods.FinishCreateInstance (id, this, null);
+			}
 		}
 
 		public bool ModernMethodInvoked => _members.InstanceFields.GetBooleanValue ("modernMethodInvoked.Z", this);

@@ -68,7 +68,10 @@
       <_WorkloadDeps Include="--ndk-version=$(AndroidNdkVersion)" />
       <_WorkloadDeps Include="--platform-tools-version=$(AndroidSdkPlatformToolsVersion)" />
       <_WorkloadDeps Include="--platform-version=$(AndroidSdkPlatformVersion)" />
-      <_WorkloadDeps Include="--preview-platform-version=%(_AndroidPreviewPlatformId.Identity)" />
+      <_WorkloadDeps
+          Include="--preview-platform-version=%(_AndroidPreviewPlatformId.Identity)"
+          Condition=" '%(_AndroidPreviewPlatformId.Identity)' != '' "
+      />
       <_WorkloadDeps Include="--workload-version=$(WorkloadVersion)" />
       <!-- $(AndroidSdkEmulatorVersion) is unversioned, so skip -->
     </ItemGroup>

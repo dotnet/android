@@ -9,15 +9,15 @@ namespace Java.Interop.Tools.Generator.Transformation
 {
 	public static class KotlinFixups
 	{
-		public static void Fixup (List<GenBase> gens)
+		public static void Fixup (List<GenBase> gens, CodeGenerationOptions opt)
 		{
 			foreach (var c in gens.OfType<ClassGen> ())
-				FixupClass (c);
+				FixupClass (c, opt);
 			foreach (var i in gens.OfType<InterfaceGen> ())
-				FixupInterface (i);
+				FixupInterface (i, opt);
 		}
 
-		private static void FixupClass (ClassGen c)
+		private static void FixupClass (ClassGen c, CodeGenerationOptions opt)
 		{
 			// Kotlin mangles the name of some methods to make them
 			// inaccessible from Java, like `add-impl` and `add-V5j3Lk8`.
@@ -38,30 +38,39 @@ namespace Java.Interop.Tools.Generator.Transformation
 				FixMethodName (method);
 			}
 
-			RemoveCollidingSiblings (c, mangled);
+			RemoveCollidingSiblings (c, mangled, opt);
 		}
 
-		private static void FixupInterface (InterfaceGen gen)
+		private static void FixupInterface (InterfaceGen gen, CodeGenerationOptions opt)
 		{
 			var mangled = gen.Methods.Where (m => m.IsKotlinNameMangled).ToList ();
 
 			foreach (var method in mangled)
 				FixMethodName (method);
 
-			RemoveCollidingSiblings (gen, mangled);
+			RemoveCollidingSiblings (gen, mangled, opt);
 		}
 
 		// After the rename above, hash-mangled siblings can collide with each
 		// other AND with pre-existing non-mangled overloads. Both cases produce
-		// CS0111 in the generated code. Until step 2 of dotnet/java-interop#1431
-		// projects inline-class params as strongly-typed wrappers, drop the
-		// mangled duplicate deterministically and warn so the user can override
+		// CS0111 in the generated code. Parameters of different value classes
+		// do not collide (see MethodBase.Matches). For the other collisions, drop
+		// the mangled duplicate deterministically and warn so the user can override
 		// via Metadata.xml if desired. Non-mangled methods are always kept; only
 		// mangled methods are ever removed.
-		private static void RemoveCollidingSiblings (GenBase gen, List<Method> renamed)
+		private static void RemoveCollidingSiblings (GenBase gen, List<Method> renamed, CodeGenerationOptions opt)
 		{
 			if (renamed.Count == 0)
 				return;
+
+			// class-parse marks value classes from other libraries without knowing whether a
+			// referenced binding has their struct (an older binding has a peer class). Such a
+			// parameter stays the primitive, so it must also collide like the primitive.
+			foreach (var p in gen.Methods.SelectMany (m => m.Parameters)) {
+				if (p.KotlinInlineClassJniType is string jni &&
+				    opt.SymbolTable.Lookup (TypeNameUtilities.JniSignatureToJavaTypeName (jni)) is not ClassGen { IsKotlinInlineClass: true })
+					p.KotlinInlineClassJniType = null;
+			}
 
 			foreach (var method in renamed) {
 				// A mangled method is always the "lesser" choice compared to a

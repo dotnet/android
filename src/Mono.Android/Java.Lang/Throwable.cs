@@ -48,7 +48,12 @@ namespace Java.Lang {
 		/// no alias may delete them concurrently. <paramref name="transfer"/> must match the reference kind and ownership:
 		/// transferred references must not be used or released by the caller afterward, including when construction throws.
 		/// </safety>
-		public unsafe Throwable (IntPtr handle, JniHandleOwnership transfer)
+		/// <remarks>
+		/// This released raw-handle constructor remains safe-callable for compatibility.
+		/// The compiler does not enforce the caller obligations above, including for nonzero handles.
+		/// The constructor does not validate reference provenance, lifetime, thread or ownership.
+		/// </remarks>
+		public Throwable (IntPtr handle, JniHandleOwnership transfer)
 			: base (GetThrowableReference (handle, transfer), JniObjectReferenceOptions.CopyAndDispose)
 		{
 			if (GetType () == typeof (Throwable))
@@ -172,11 +177,14 @@ namespace Java.Lang {
 				try {
 					Dispose ();
 				} catch (System.Exception cleanupException) {
-					Logger.Log (LogLevel.Error, "monodroid", "Failed to dispose a partially constructed Throwable: " + cleanupException);
+					Logger.Log (LogLevel.Error, "DOTNET", "Failed to dispose a partially constructed Throwable: " + cleanupException);
 				}
 				throw;
 			} finally {
-				JNIEnv.DeleteRef (value, transfer);
+				unsafe {
+					// SAFETY: the caller's transfer contract covers value; it is released once, even on failure.
+					JNIEnv.DeleteRef (value, transfer);
+				}
 			}
 		}
 
@@ -197,10 +205,6 @@ namespace Java.Lang {
 				throw new ArgumentNullException ("e");
 
 			return e;
-		}
-
-		~Throwable ()
-		{
 		}
 
 		public new void UnregisterFromRuntime () => base.UnregisterFromRuntime ();

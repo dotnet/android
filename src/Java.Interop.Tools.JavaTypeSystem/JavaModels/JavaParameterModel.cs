@@ -16,6 +16,7 @@ namespace Java.Interop.Tools.JavaTypeSystem.Models
 		public JavaTypeReference? TypeModel { get; private set; }
 		public bool IsParameterArray { get; private set; }
 		public string? InstantiatedGenericArgumentName { get; internal set; }
+		public Dictionary<string, string> PropertyBag { get; } = new Dictionary<string, string> ();
 
 		public JavaParameterModel (JavaMethodModel declaringMethod, string javaName, string javaType, string jniType, bool isNotNull)
 		{

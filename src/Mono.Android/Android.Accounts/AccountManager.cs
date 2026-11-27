@@ -4,7 +4,6 @@ using Android.Runtime;
 
 using Java.Interop;
 
-#if ANDROID_5
 
 namespace Android.Accounts {
 
@@ -39,5 +38,3 @@ namespace Android.Accounts {
 		}
 	}
 }
-
-#endif  // ANDROID_5

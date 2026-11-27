@@ -2,6 +2,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Xml.Linq;
@@ -42,7 +43,7 @@ namespace Xamarin.Android.Tasks {
 			int minSdkVersion;
 			if (!int.TryParse (MinSdkVersionName, out minSdkVersion))
 				minSdkVersion = XABuildConfig.AndroidMinimumDotNetApiLevel.Major;
-			return minSdkVersion.ToString ();
+			return minSdkVersion.ToString (CultureInfo.InvariantCulture);
 		}
 
 		public string GetMinimumSdk () {
@@ -85,12 +86,12 @@ namespace Xamarin.Android.Tasks {
 		{
 			int code = 1;
 			if (!string.IsNullOrEmpty (VersionCode)) {
-				code = Convert.ToInt32 (VersionCode);
+				code = Convert.ToInt32 (VersionCode, CultureInfo.InvariantCulture);
 				if (code > maxVersionCode || code < 0)
 					throw new ArgumentOutOfRangeException ("VersionCode", $"VersionCode is outside 0, {maxVersionCode} interval");
 			}
 			code |= GetAbiCode (abi) << 16;
-			VersionCode = code.ToString ();
+			VersionCode = code.ToString (CultureInfo.InvariantCulture);
 		}
 
 		public bool ValidateVersionCode (out string error, out string errorCode)
@@ -98,12 +99,12 @@ namespace Xamarin.Android.Tasks {
 			int code;
 			error = errorCode = "";
 			if (!int.TryParse (VersionCode, out code)) {
-				error = string.Format (Properties.Resources.XA0003, VersionCode);
+				error = string.Format (CultureInfo.CurrentCulture, Properties.Resources.XA0003, VersionCode);
 				errorCode = "XA0003";
 				return false;
 			}
 			if (code > maxVersionCode || code < 0) {
-				error = string.Format (Properties.Resources.XA0004, code, maxVersionCode);
+				error = string.Format (CultureInfo.CurrentCulture, Properties.Resources.XA0004, code, maxVersionCode);
 				errorCode = "XA0004";
 				return false;
 			}
@@ -139,7 +140,7 @@ namespace Xamarin.Android.Tasks {
 				var format = match.Value.Replace (key, "0");
 				if (!kvp.ContainsKey (key))
 					continue;
-				versionCode.AppendFormat (format, kvp [key]);
+				versionCode.AppendFormat (CultureInfo.InvariantCulture, format, kvp [key]);
 			}
 			VersionCode = versionCode.ToString ().TrimStart ('0');
 		}

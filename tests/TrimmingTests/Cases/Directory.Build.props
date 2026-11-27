@@ -1,0 +1,2 @@
+<!-- Keeps the repository's build settings out of the file-based case apps, so `dotnet run Case.cs` works here too. -->
+<Project />

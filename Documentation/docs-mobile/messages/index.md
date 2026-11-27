@@ -54,17 +54,17 @@ ms.date: 04/11/2024
 + [XA0031](xa0031.md): Java SDK {minimumSupportedJavaVersion} or above is required by the .NET for Android SDK.
 + [XA0032](xa0032.md): Legacy Android Build-Tools Java requirement; no longer emitted by current SDKs.
 + [XA0033](xa0033.md): Failed to get the Java SDK version because the returned value does not appear to contain a valid version number.
-+ [XA0034](xa0034.md): Failed to get the Java SDK version.
++ [XA0034](xa0034.md): Legacy Java version retrieval warning; no longer emitted starting in .NET 12.
 + [XA0035](xa0035.md): Failed to determine the Android ABI for the project.
 + [XA0036](xa0036.md): $(AndroidSupportedAbis) is not supported in .NET 6 and higher.
 + XA0100: EmbeddedNativeLibrary is invalid in Android Application projects. Please use AndroidNativeLibrary instead.
 + [XA0101](xa0101.md): warning XA0101: @(Content) build action is not supported.
-+ [XA0102](xa0102.md): Generic `lint` Warning.
-+ [XA0103](xa0103.md): Generic `lint` Error.
++ [XA0102](xa0102.md): No longer emitted by current SDKs.
++ [XA0103](xa0103.md): No longer emitted by current SDKs.
 + XA0104: Invalid value for \`$(AndroidSequencePointsMode)\`
 + [XA0105](xa0105.md): No longer emitted by current SDKs.
 + [XA0107](xa0107.md): `{Assmebly}` is a Reference Assembly.
-+ [XA0108](xa0108.md): Could not get version from `lint`.
++ [XA0108](xa0108.md): The 'AndroidLintEnabled' MSBuild property is no longer supported.
 + [XA0109](xa0109.md): Unsupported or invalid `$(TargetFrameworkVersion)` value of 'v4.5'.
 + [XA0111](xa0111.md): Could not get the `aapt2` version. Please check it is installed correctly.
 + [XA0112](xa0112.md): `aapt2` is not installed. Disabling `aapt2` support. Please check it is installed correctly.
@@ -76,7 +76,7 @@ ms.date: 04/11/2024
 + [XA0119](xa0119.md): A non-ideal configuration was found in the project.
 + [XA0121](xa0121.md): Assembly '{assembly}' is using '[assembly: Java.Interop.JavaLibraryReferenceAttribute]', which is no longer supported. Use a newer version of this NuGet package or notify the library author.
 + [XA0122](xa0122.md): No longer emitted by current SDKs.
-+ XA0123: Removing {issue} from {propertyName}. Lint {version} does not support this check.
++ XA0123: No longer emitted by current SDKs.
 + [XA0125](xa0125.md): No longer emitted by current SDKs.
 + [XA0126](xa0126.md): Error installing FastDev Tools. This device does not support Fast Deployment. Please rebuild your app using `EmbedAssembliesIntoApk = True`.
 + [XA0127](xa0127.md): There was an issue deploying {destination} using {FastDevTool}. We encountered the following error {output}. Please rebuild your app using `EmbedAssembliesIntoApk = True`.
@@ -231,6 +231,7 @@ Either change the value in the AndroidManifest.xml to match the $(SupportedOSPla
 + [XA4263](xa4263.md): The exported member '{member}' has unsupported signature type '{type}'. Use a Java peer type, a supported managed-to-Java mapping, or [ExportParameter].
 + [XA4264](xa4264.md): No longer emitted by current SDKs.
 + [XA4266](xa4266.md): Assembly '{assembly}' has different Java peer callback metadata across runtime-specific implementations.
++ [XA4268](xa4268.md): The Kotlin metadata for Java method '{method}' matches more than one Kotlin function: {functions}. The Kotlin fixups for this method are skipped.
 + XA4300: No longer emitted by current SDKs.
 + [XA4301](xa4301.md): Apk already contains the item `xxx`.
 + [XA4302](xa4302.md): Unhandled exception merging \`AndroidManifest.xml\`: {ex}
@@ -285,6 +286,9 @@ Either change the value in the AndroidManifest.xml to match the $(SupportedOSPla
 + [XA5306](xa5306.md): The Android CLI is not available for this operating system and architecture.
 + [XA5307](xa5307.md): The SHA-256 hash of the downloaded Android CLI is not correct.
 + [XA5308](xa5308.md): The Android CLI failed while it installed Android SDK packages.
++ [XA5309](xa5309.md): The Android CLI failed while it listed Android SDK packages.
++ [XA5310](xa5310.md): No stable platform-tools package satisfies the requested version in the supported major version.
++ [XA5311](xa5311.md): An Android SDK dependency has an invalid version.
 
 ## XA6xxx: Internal tools
 
@@ -302,7 +306,6 @@ and `NNN` is a 3 digit number indicating the type of the unhandled `Exception`.
 * `ACD` - `AndroidCreateDebugKey`
 * `ACM` - `AppendCustomMetadataToItemGroup`
 * `ADB` - `Adb`
-* `AJV` - `AdjustJavacVersionArguments`
 * `AOT` - `Aot`
 * `APT` - `Aapt`
 * `ASP` - `AndroidSignPackage`
@@ -329,7 +332,6 @@ and `NNN` is a 3 digit number indicating the type of the unhandled `Exception`.
 * `CPD` - `CalculateProjectDependencies`
 * `CPT` - `ComputeHash`
 * `CRC` - `ConvertResourcesCases`
-* `CRM` - `CreateResgenManifest`
 * `CRN` - `Crunch`
 * `CRP` - `AndroidComputeResPaths`
 * `CTX` - `CompileToDalvik`
@@ -355,10 +357,8 @@ and `NNN` is a 3 digit number indicating the type of the unhandled `Exception`.
 * `GRD` - `GenerateResourceDesigner`
 * `IAS` - `InstallApkSet`
 * `JVC` - `Javac`
-* `KEY` - `KeyTool`
 * `LNK` - `LinkAssemblies`
 * `LNS` - `LinkAssembliesNoShrink`
-* `LNT` - `Lint`
 * `PAW` - `ParseAndroidWearProjectAndManifest`
 * `PRO` - `Proguard`
 * `PWA` - `PrepareWearApplicationFiles`

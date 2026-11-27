@@ -10,12 +10,16 @@ namespace Xamarin.Android.Build.Tests
 {
 	public class GetMicrosoftNuGetPackagesMapTests
 	{
+		static string GetFileName (DateTime date) =>
+			FormattableString.Invariant ($"microsoft-packages-{date:yyyyMMdd}.json");
+
 		[Test]
+		[SetCulture ("fa-IR")]
 		public async Task NoCachedFile ()
 		{
 			var engine = new MockBuildEngine (TestContext.Out, []);
 			var temp_cache_dir = Path.Combine (Path.GetTempPath (), Guid.NewGuid ().ToString ());
-			var today_file = Path.Combine (temp_cache_dir, $"microsoft-packages-{DateTime.Today:yyyyMMdd}.json");
+			var today_file = Path.Combine (temp_cache_dir, GetFileName (DateTime.Today));
 
 			try {
 				var task = new GetMicrosoftNuGetPackagesMap {
@@ -35,16 +39,21 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
+		[SetCulture ("fa-IR")]
 		public async Task CachedTodayFile ()
 		{
 			// If a file already exists for today, it should be used and nothing new should be downloaded
 			var engine = new MockBuildEngine (TestContext.Out, []);
 			var temp_cache_dir = Path.Combine (Path.GetTempPath (), Guid.NewGuid ().ToString ());
-			var today_file = Path.Combine (temp_cache_dir, $"microsoft-packages-{DateTime.Today:yyyyMMdd}.json");
+			var today = DateTime.Today;
+			var today_file = Path.Combine (temp_cache_dir, GetFileName (today));
 
 			try {
 				Directory.CreateDirectory (temp_cache_dir);
 				File.WriteAllText (today_file, "dummy file");
+				Assert.AreEqual (Path.GetFileName (today_file), PackagesFile.GetFileName (today));
+				Assert.IsTrue (PackagesFile.TryParse (today_file, out var cachedFile));
+				Assert.AreEqual (today, cachedFile?.DownloadDate);
 
 				var task = new GetMicrosoftNuGetPackagesMap {
 					BuildEngine = engine,
@@ -72,8 +81,8 @@ namespace Xamarin.Android.Build.Tests
 			// If a file only exists for yesterday, a new one should be downloaded and the old one should be deleted
 			var engine = new MockBuildEngine (TestContext.Out, []);
 			var temp_cache_dir = Path.Combine (Path.GetTempPath (), Guid.NewGuid ().ToString ());
-			var yesterday_file = Path.Combine (temp_cache_dir, $"microsoft-packages-{DateTime.Today.AddDays (-1):yyyyMMdd}.json");
-			var today_file = Path.Combine (temp_cache_dir, $"microsoft-packages-{DateTime.Today:yyyyMMdd}.json");
+			var yesterday_file = Path.Combine (temp_cache_dir, GetFileName (DateTime.Today.AddDays (-1)));
+			var today_file = Path.Combine (temp_cache_dir, GetFileName (DateTime.Today));
 
 			try {
 				Directory.CreateDirectory (temp_cache_dir);
@@ -102,7 +111,7 @@ namespace Xamarin.Android.Build.Tests
 			var engine = new MockBuildEngine (TestContext.Out, []);
 			var temp_cache_dir = Path.Combine (Path.GetTempPath (), Guid.NewGuid ().ToString ());
 			var malformed_file = Path.Combine (temp_cache_dir, $"microsoft-packages-dummy.json");
-			var today_file = Path.Combine (temp_cache_dir, $"microsoft-packages-{DateTime.Today:yyyyMMdd}.json");
+			var today_file = Path.Combine (temp_cache_dir, GetFileName (DateTime.Today));
 
 			try {
 				Directory.CreateDirectory (temp_cache_dir);
@@ -133,7 +142,7 @@ namespace Xamarin.Android.Build.Tests
 			// the old file and don't delete it
 			var engine = new MockBuildEngine (TestContext.Out, []);
 			var temp_cache_dir = Path.Combine (Path.GetTempPath (), Guid.NewGuid ().ToString ());
-			var yesterday_file = Path.Combine (temp_cache_dir, $"microsoft-packages-{DateTime.Today.AddDays (-1):yyyyMMdd}.json");
+			var yesterday_file = Path.Combine (temp_cache_dir, GetFileName (DateTime.Today.AddDays (-1)));
 
 			try {
 				Directory.CreateDirectory (temp_cache_dir);

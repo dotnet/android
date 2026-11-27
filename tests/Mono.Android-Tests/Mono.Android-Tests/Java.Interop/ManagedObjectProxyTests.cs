@@ -1,5 +1,4 @@
 using System;
-using System.Diagnostics;
 using System.Globalization;
 using System.Runtime.CompilerServices;
 using System.Runtime.ExceptionServices;
@@ -9,17 +8,24 @@ using System.Threading.Tasks;
 using Android.Runtime;
 using Java.Interop;
 
-using NUnit.Framework;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Java.InteropTests
 {
-	[TestFixture]
-	[Category ("ManagedObjectProxy")]
+	[TestClass]
+	[TestCategory ("ManagedObjectProxy")]
 	public class ManagedObjectProxyTests
 	{
+		readonly TestContext testContext;
+
+		public ManagedObjectProxyTests (TestContext testContext)
+		{
+			this.testContext = testContext;
+		}
+
 		static IntPtr noPinActionPointer;
 
-		[Test]
+		[TestMethod]
 		public void ManagedValueProxyUsesAndroidGCReferenceContract ()
 		{
 			var value = new ManagedValue (42);
@@ -35,7 +41,7 @@ namespace Java.InteropTests
 
 		// Managed reference identity is the common round-trip contract. Java-visible equality,
 		// hashing, and string conversion are asserted separately because they vary by typemap.
-		[Test]
+		[TestMethod]
 		public void JavaObjectArray_RoundTripPreservesManagedReferences ()
 		{
 			var value = new ManagedValue (42);
@@ -56,7 +62,7 @@ namespace Java.InteropTests
 			Assert.AreEqual (42, ((ManagedValue) values [0]).Value);
 		}
 
-		[Test]
+		[TestMethod]
 		public void JavaObjectArray_RepeatedLookupUsesSameJavaAndManagedIdentity ()
 		{
 			var value = new ManagedValue (42);
@@ -85,7 +91,7 @@ namespace Java.InteropTests
 			}
 		}
 
-		[Test]
+		[TestMethod]
 		public void JavaLangObjectView_RoundTripUsesManagedProxyAssociation ()
 		{
 			var value = new ManagedValue (42);
@@ -116,7 +122,7 @@ namespace Java.InteropTests
 			}
 		}
 
-		[Test]
+		[TestMethod]
 		public void JavaList_RoundTripPreservesDuplicateManagedReferencesAndNull ()
 		{
 			var value = new ManagedValue (42);
@@ -141,7 +147,7 @@ namespace Java.InteropTests
 			Assert.AreEqual (3, values.IndexOf (null));
 		}
 
-		[Test]
+		[TestMethod]
 		public void JavaDictionary_RoundTripPreservesKeysDuplicateValuesAndNull ()
 		{
 			var firstKey = new ManagedValue (1);
@@ -159,7 +165,7 @@ namespace Java.InteropTests
 			Assert.IsNull (values [null]);
 		}
 
-		[Test]
+		[TestMethod]
 		public void JavaDictionary_DistinctManagedEqualKeysRemainDistinct ()
 		{
 			var firstKey = new ManagedValue (42);
@@ -177,7 +183,7 @@ namespace Java.InteropTests
 			Assert.AreSame (secondValue, values [equalKey]);
 		}
 
-		[Test]
+		[TestMethod]
 		public void NestedJavaCollections_RoundTripPreservesManagedReference ()
 		{
 			var value = new ManagedValue (42);
@@ -194,7 +200,7 @@ namespace Java.InteropTests
 
 		// Managed round-trip identity is common to both typemap implementations, but the Java-visible
 		// object methods intentionally differ. See https://github.com/dotnet/android/issues/11703.
-		[Test]
+		[TestMethod]
 		public void ProxyObjectMethodsFollowConfiguredJavaSemantics ()
 		{
 			var value = new ManagedValue (42);
@@ -245,15 +251,15 @@ namespace Java.InteropTests
 			}
 		}
 
-		[Test]
+		[TestMethod]
+		[Timeout (60_000, CooperativeCancellation = true)]
 		public async Task JavaObjectArrayRetainsManagedValueUntilReleased ()
 		{
 			WeakReference<ManagedValue> weakValue;
 			var values = CreateJavaRootedValue (out weakValue);
 
 			try {
-				await WaitForGC (() => IsAlive (weakValue),
-					"A Java array reference should retain its managed value.");
+				await GCBridgeTestHelpers.WaitForBridgeRoundsAsync (testContext.CancellationToken);
 				AssertJavaRootRetainsValue (values, weakValue);
 			} finally {
 				try {
@@ -264,7 +270,8 @@ namespace Java.InteropTests
 				values = null;
 			}
 
-			await WaitForGC (() => !IsAlive (weakValue),
+			await GCBridgeTestHelpers.CollectUnreachablePeersAsync (testContext.CancellationToken);
+			Assert.IsFalse (IsAlive (weakValue),
 				"The managed value should be collectible after its Java collection reference is cleared and disposed.");
 		}
 
@@ -316,29 +323,6 @@ namespace Java.InteropTests
 			});
 		}
 
-		static async Task WaitForGC (Func<bool> predicate, string message, int timeoutMilliseconds = 5000)
-		{
-			int initialBridgeGeneration = JNIEnv.BridgeProcessingGeneration;
-			var timeout = TimeSpan.FromMilliseconds (timeoutMilliseconds);
-			var stopwatch = Stopwatch.StartNew ();
-			do {
-				GC.Collect (generation: 2, mode: GCCollectionMode.Forced, blocking: true);
-				GC.WaitForPendingFinalizers ();
-				JNIEnv.WaitForBridgeProcessing ();
-				JniEnvironment.Runtime.ValueManager.CollectPeers ();
-				JNIEnv.WaitForBridgeProcessing ();
-				await Task.Yield ();
-			} while ((!predicate () ||
-					JNIEnv.BridgeProcessingGeneration == initialBridgeGeneration) &&
-				stopwatch.Elapsed < timeout);
-
-			int finalBridgeGeneration = JNIEnv.BridgeProcessingGeneration;
-			Assert.Greater (finalBridgeGeneration, initialBridgeGeneration,
-				$"A JNI bridge-processing cycle did not complete within {timeoutMilliseconds}ms. " +
-				$"Initial generation: {initialBridgeGeneration}; final generation: {finalBridgeGeneration}.");
-			Assert.IsTrue (predicate (), message);
-		}
-
 		[MethodImpl (MethodImplOptions.NoInlining)]
 		static bool IsAlive (WeakReference<ManagedValue> weakValue)
 		{
@@ -347,10 +331,13 @@ namespace Java.InteropTests
 			return isAlive;
 		}
 
-		static unsafe void NoPinActionHelper (int depth, Action action)
+		static void NoPinActionHelper (int depth, Action action)
 		{
-			int* values = stackalloc int [20];
-			noPinActionPointer = new IntPtr (values);
+			// SAFETY: Only the address is retained for conservative-stack testing; it is never dereferenced.
+			unsafe {
+				int* values = stackalloc int [20];
+				noPinActionPointer = new IntPtr (values);
+			}
 
 			if (depth <= 0) {
 				new object ();

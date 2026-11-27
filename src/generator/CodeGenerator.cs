@@ -87,7 +87,7 @@ namespace Xamarin.Android.Binder
 				FixObsoleteOverrides = options.FixObsoleteOverrides,
 				UseUnmanagedCallersOnlyCallbacks = options.UseUnmanagedCallersOnlyCallbacks,
 			};
-			var resolverCache       = new TypeDefinitionCache ();
+			var resolverCache       = opt.TypeCache;
 
 			// Load reference libraries
 
@@ -203,7 +203,7 @@ namespace Xamarin.Android.Binder
 			}
 
 			// Apply fixups
-			KotlinFixups.Fixup (gens);
+			KotlinFixups.Fixup (gens, opt);
 
 			Validate (gens, opt, new CodeGeneratorContext ());
 
@@ -221,6 +221,10 @@ namespace Xamarin.Android.Binder
 
 			foreach (GenBase gen in gens)
 				gen.FixupMethodOverrides (opt);
+
+			if (opt.SupportDefaultInterfaceMethods)
+				foreach (var gen in gens)
+					gen.FixupInterfaceMethodNullability ();
 
 			foreach (GenBase gen in gens)
 				gen.FixupExplicitImplementation ();
@@ -267,7 +271,8 @@ namespace Xamarin.Android.Binder
 				return false;
 			if (!a.ImplementsInterface ("Android.Runtime.IJavaObject", cache) || !b.ImplementsInterface ("Android.Runtime.IJavaObject", cache))
 				return false;
-			return JavaNativeTypeManager.ToJniName (a, cache) == JavaNativeTypeManager.ToJniName (b, cache);
+			return JavaNativeTypeManager.ToJniName (a, cache, PackageNamingPolicy.LowercaseCrc64) ==
+				JavaNativeTypeManager.ToJniName (b, cache, PackageNamingPolicy.LowercaseCrc64);
 		}
 
 		static IEnumerable<GenBase> FlattenNestedTypes (IEnumerable<GenBase> gens)
@@ -328,7 +333,6 @@ namespace Xamarin.Android.Binder
 			} while (removed.Count > 0);
 		}
 
-#if HAVE_CECIL
 		internal static void ProcessReferencedType (TypeDefinition td, CodeGenerationOptions opt)
 		{
 			if (!td.IsPublic && !td.IsNested)
@@ -338,7 +342,7 @@ namespace Xamarin.Android.Binder
 			if (td.Name.EndsWith ("Invoker", StringComparison.Ordinal)) {
 				string n = td.FullName;
 				n = n.Substring (0, n.Length - 7);
-				var types = td.DeclaringType != null ? td.DeclaringType.Resolve ().NestedTypes : td.Module.Types;
+				var types = td.DeclaringType != null ? td.DeclaringType.NestedTypes : td.Module.Types;
 				if (types.Any (t => t.FullName == n))
 					return;
 				//Console.Error.WriteLine ("WARNING: " + td.FullName + " survived");
@@ -346,7 +350,7 @@ namespace Xamarin.Android.Binder
 			if (td.Name.EndsWith ("Implementor", StringComparison.Ordinal)) {
 				string n = td.FullName;
 				n = n.Substring (0, n.Length - 11);
-				var types = td.DeclaringType != null ? td.DeclaringType.Resolve ().NestedTypes : td.Module.Types;
+				var types = td.DeclaringType != null ? td.DeclaringType.NestedTypes : td.Module.Types;
 				if (types.Any (t => t.FullName == n))
 					return;
 				//Console.Error.WriteLine ("WARNING: " + td.FullName + " survived");
@@ -358,7 +362,6 @@ namespace Xamarin.Android.Binder
 			foreach (var nt in td.NestedTypes)
 				ProcessReferencedType (nt, opt);
 		}
-#endif  // HAVE_CECIL
 
 		static void GenerateAnnotationAttributes (List<GenBase> gens, IEnumerable<string> zips)
 		{

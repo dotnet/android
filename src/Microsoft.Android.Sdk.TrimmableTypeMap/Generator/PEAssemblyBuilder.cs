@@ -36,6 +36,7 @@ sealed class PEAssemblyBuilder
 
 	MemberReferenceHandle _debuggerDisableUserUnhandledExceptionsCtorRef;
 	BlobHandle _debuggerDisableUserUnhandledExceptionsBlob;
+	MemberReferenceHandle _assemblyMetadataAttributeCtorRef;
 
 	// Holds raw byte data for fields with FieldAttributes.HasFieldRVA (e.g., UTF-8 string literals).
 	// Passed to ManagedPEBuilder as the mappedFieldData section.
@@ -102,6 +103,28 @@ sealed class PEAssemblyBuilder
 			default,
 			MetadataTokens.FieldDefinitionHandle (1),
 			MetadataTokens.MethodDefinitionHandle (1));
+
+		// Generated typemaps are reflection-free; mark them like the _Microsoft.Android.TypeMaps reference assembly.
+		EmitAssemblyMetadataAttribute ("IsTrimmable", "True");
+		EmitAssemblyMetadataAttribute ("IsAotCompatible", "True");
+	}
+
+	void EmitAssemblyMetadataAttribute (string key, string value)
+	{
+		if (_assemblyMetadataAttributeCtorRef.IsNil) {
+			var attributeType = Metadata.AddTypeReference (SystemRuntimeRef,
+				Metadata.GetOrAddString ("System.Reflection"),
+				Metadata.GetOrAddString ("AssemblyMetadataAttribute"));
+			_assemblyMetadataAttributeCtorRef = AddMemberRef (attributeType, ".ctor",
+				sig => sig.MethodSignature (isInstanceMethod: true).Parameters (2,
+					rt => rt.Void (),
+					p => {
+						p.AddParameter ().Type ().String ();
+						p.AddParameter ().Type ().String ();
+					}));
+		}
+		Metadata.AddCustomAttribute (EntityHandle.AssemblyDefinition, _assemblyMetadataAttributeCtorRef,
+			BuildAttributeBlob (key, value));
 	}
 
 	/// <summary>

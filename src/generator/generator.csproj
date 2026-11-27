@@ -1,15 +1,14 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <Import Project="..\..\Configuration.props" />
+  <Import Project="..\..\build-tools\banned-apis\banned-apis.targets" />
 
   <PropertyGroup>
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
     <Version>11.0.0</Version>
-    <LangVersion>latest</LangVersion>
     <TargetFramework>$(DotNetStableTargetFramework)</TargetFramework>
     <OutputType>Exe</OutputType>
     <UseAppHost>false</UseAppHost>
-    <DefineConstants>$(DefineConstants);GENERATOR;HAVE_CECIL;JCW_ONLY_TYPE_NAMES</DefineConstants>
   </PropertyGroup>
 
   <PropertyGroup>

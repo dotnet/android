@@ -109,6 +109,8 @@ namespace Xamarin.Android.Tools.Bytecode {
 				yield break;
 			yield return new XAttribute ("kotlin-inline-class", "true");
 			yield return new XAttribute ("kotlin-inline-class-underlying-jni-type", underlying);
+			if (classFile.KotlinInlineClassHasInit)
+				yield return new XAttribute ("kotlin-inline-class-has-init", "true");
 		}
 
 		string GetElementName ()
@@ -172,8 +174,9 @@ namespace Xamarin.Android.Tools.Bytecode {
 				return "protected";
 			if ((accessFlags & ClassAccessFlags.Private) != 0)
 				return "private";
+			// Preserve binding compatibility; GetAnnotatedVisibility records module-info restrictions.
 			if (accessFlags.HasFlag (ClassAccessFlags.Internal))
-				return "public";    // TODO: `kotlin-internal` at some point?  See also GetAnnotatedVisibility()
+				return "public";
 			return "";
 		}
 
@@ -418,6 +421,7 @@ namespace Xamarin.Android.Tools.Bytecode {
 				new XAttribute ("synthetic",    (method.AccessFlags & MethodAccessFlags.Synthetic) != 0),
 				new XAttribute ("jni-signature",    method.Descriptor),
 				GetNotNull (method),
+				GetKotlinDefaultArguments (method),
 				GetTypeParmeters (msig == null ? null : msig.TypeParameters),
 				GetMethodParameters (method),
 				GetExceptions (method));
@@ -443,6 +447,14 @@ namespace Xamarin.Android.Tools.Bytecode {
 			if (string.IsNullOrEmpty (method.KotlinInlineClassReturnJniType))
 				return null;
 			return new XAttribute ("kotlin-inline-class-return-jni-type", method.KotlinInlineClassReturnJniType);
+		}
+
+		static IEnumerable<XAttribute> GetKotlinDefaultArguments (MethodInfo method)
+		{
+			if (method.KotlinDefaultJniSignature is null || method.KotlinDefaultParameters is null)
+				yield break;
+			yield return new XAttribute ("kotlin-default-jni-signature", method.KotlinDefaultJniSignature);
+			yield return new XAttribute ("kotlin-default-parameters", string.Join (",", method.KotlinDefaultParameters));
 		}
 
 		static XAttribute? GetNative (MethodInfo method)
@@ -605,6 +617,8 @@ namespace Xamarin.Android.Tools.Bytecode {
 				ta => ta.TargetType == TypeAnnotationTargetType.MethodReturn);
 			if (typeNullness.HasValue)
 				return typeNullness;
+			if (method.KotlinReturnNotNull)
+				return true;
 			if (isNullMarked && IsReferenceTypeDescriptor (GetReturnDescriptor (method.Descriptor))
 					&& !IsTopLevelTypeVariableSignature (method.ReturnType.TypeSignature))
 				return true;
@@ -635,8 +649,11 @@ namespace Xamarin.Android.Tools.Bytecode {
 			if (typeNullness.HasValue)
 				return typeNullness;
 
+			var parameters = method.GetParameters ();
+			if (parameterIndex >= 0 && parameterIndex < parameters.Length && parameters [parameterIndex].KotlinNotNull)
+				return true;
+
 			if (isNullMarked) {
-				var parameters = method.GetParameters ();
 				if (parameterIndex >= 0 && parameterIndex < parameters.Length
 						&& IsReferenceTypeDescriptor (parameters [parameterIndex].Type.BinaryName)
 						&& !IsTopLevelTypeVariableSignature (parameters [parameterIndex].Type.TypeSignature))
@@ -655,6 +672,8 @@ namespace Xamarin.Android.Tools.Bytecode {
 				ta => ta.TargetType == TypeAnnotationTargetType.Field);
 			if (typeNullness.HasValue)
 				return typeNullness;
+			if (field.KotlinNotNull)
+				return true;
 			if (isNullMarked && IsReferenceTypeDescriptor (field.Descriptor)
 					&& !IsTopLevelTypeVariableSignature (field.GetSignature ()))
 				return true;
@@ -853,12 +872,12 @@ namespace Xamarin.Android.Tools.Bytecode {
 				else
 					value = floatItem.Value.ToString ("G9", CultureInfo.InvariantCulture);
 				break;
-			case ConstantPoolItemType.Long:     value = ((ConstantPoolLongItem) constant).Value.ToString ();    break;
+			case ConstantPoolItemType.Long:     value = ((ConstantPoolLongItem) constant).Value.ToString (CultureInfo.InvariantCulture);    break;
 			case ConstantPoolItemType.Integer:
 				if (field.Descriptor == "Z")
 					value = ((ConstantPoolIntegerItem) constant).Value == 1 ? bool.TrueString.ToLower () : bool.FalseString.ToLower ();
 				else
-					value = ((ConstantPoolIntegerItem) constant).Value.ToString (); 
+					value = ((ConstantPoolIntegerItem) constant).Value.ToString (CultureInfo.InvariantCulture);
 				break;
 			case ConstantPoolItemType.String:
 				value = '"' + EscapeLiteral (((ConstantPoolStringItem) constant).StringData.Value) + '"';

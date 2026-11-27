@@ -52,6 +52,13 @@ namespace Xamarin.Android.Tools.Bytecode {
 		// See dotnet/java-interop#1431 (Phase 2).
 		public  string?             KotlinName { get; set; }
 
+		public  bool                KotlinReturnNotNull { get; set; }
+		// Kotlin default arguments: JNI signature of the `$default` helper (or of the
+		// `DefaultConstructorMarker` constructor) on the declaring type, and the indexes
+		// of the parameters that declare a default value.
+		public  string?             KotlinDefaultJniSignature { get; set; }
+		public  int[]?              KotlinDefaultParameters { get; set; }
+
 		public MethodInfo (ConstantPool constantPool, ClassFile declaringType, Stream stream)
 		{
 			ConstantPool    = constantPool;
@@ -402,6 +409,8 @@ namespace Xamarin.Android.Tools.Bytecode {
 		// whose JVM type is `J`. null when no projection applies.
 		// See dotnet/java-interop#1431 (Phase 2).
 		public  string?     KotlinInlineClassJniType;
+
+		public  bool        KotlinNotNull;
 
 		public  MethodParameterAccessFlags      AccessFlags;
 

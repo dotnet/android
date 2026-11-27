@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Security;
 using System.Text;
 using System.Text.Json;
 using Java.Interop.Tools.Cecil;
@@ -109,6 +110,77 @@ namespace Xamarin.Android.Build.Tests
 					"Legacy Java-object XML should not be generated.");
 			} finally {
 				Directory.Delete (path, recursive: true);
+			}
+		}
+
+		[TestCase (false)]
+		[TestCase (true)]
+		public void LinkAssembliesNoShrinkConcurrentProjectsUseRelativePaths (bool multithreaded)
+		{
+			var path = Path.Combine (Root, "temp", TestName);
+			TestOutputDirectories [TestContext.CurrentContext.Test.ID] = path;
+			var tasks = SecurityElement.Escape (Path.Combine (TestEnvironment.AndroidMSBuildDirectory, "Xamarin.Android.Build.Tasks.dll"));
+			var resources = new List<ProjectResource> ();
+			foreach (string name in new [] { "first", "second" }) {
+				string input = Path.Combine (path, name, "input");
+				Directory.CreateDirectory (input);
+				using (var android = CreateFauxMonoAndroidAssembly ()) {
+					// Make each project's Mono.Android.dll unique, to detect copies from the wrong project
+					android.MainModule.Types.Add (new TypeDefinition ("Marker", name, TypeAttributes.Public));
+					android.Write (Path.Combine (input, "Mono.Android.dll"));
+					CreateAbstractIfaceImplementation (Path.Combine (input, "DimTest.dll"), android, writeSymbols: true);
+				}
+				resources.Add (new ProjectResource {
+					Path = Path.Combine (name, "link.proj"),
+					Content = $"""
+						<Project>
+						  <UsingTask TaskName="Xamarin.Android.Tasks.LinkAssembliesNoShrink" AssemblyFile="{tasks}" />
+						  <ItemGroup>
+						    <Source Include="input/DimTest.dll" Abi="arm64-v8a" TargetFrameworkIdentifier="MonoAndroid" />
+						    <Source Include="input/Mono.Android.dll" Abi="arm64-v8a" />
+						  </ItemGroup>
+						  <Target Name="Build">
+						    <LinkAssembliesNoShrink SourceFiles="@(Source)" DestinationFiles="@(Source->'linked/%(Filename)%(Extension)')"
+						        ResolvedAssemblies="@(Source)" ResolvedUserAssemblies="input/DimTest.dll" TargetName="App" Deterministic="true" ReadSymbols="true" />
+						  </Target>
+						</Project>
+						""",
+				});
+			}
+			resources.Add (new ProjectResource {
+				Path = "driver.proj",
+				Content = """
+					<Project>
+					  <Target Name="Build">
+					    <MSBuild Projects="first/link.proj;second/link.proj" BuildInParallel="true" />
+					  </Target>
+					</Project>
+					""",
+			});
+			new XamarinAndroidApplicationProject ().UpdateProjectFiles (path, resources, doNotCleanup: true);
+
+			var dotnet = new DotNetCLI (Path.Combine (path, "driver.proj")) { Verbosity = "diagnostic" };
+			dotnet.EnvironmentVariables ["DOTNET_CLI_USE_MSBUILD_SERVER"] = "0";
+			dotnet.EnvironmentVariables ["MSBUILDDISABLENODEREUSE"] = "1";
+			string [] arguments = multithreaded ?
+				["--no-restore", "-m:2", "-mt", "-nr:false", "-warnaserror:MSB4286,MSB4287,MSB4288"] :
+				["--no-restore", "-m:2", "-nr:false"];
+			Assert.IsTrue (dotnet.Build (msbuildArguments: arguments),
+				string.Join (Environment.NewLine, dotnet.LastBuildOutput) + File.ReadAllText (dotnet.ProcessLogFile));
+			if (multithreaded) {
+				Assert.IsEmpty (dotnet.LastBuildOutput.Where (line =>
+					line.Contains (nameof (LinkAssembliesNoShrink), StringComparison.Ordinal) && line.Contains ("ran in TaskHost process", StringComparison.Ordinal)),
+					"LinkAssembliesNoShrink must run in-process with -mt.");
+			}
+
+			foreach (string name in new [] { "first", "second" }) {
+				string root = Path.Combine (path, name);
+				FileAssert.AreEqual (Path.Combine (root, "input", "Mono.Android.dll"), Path.Combine (root, "linked", "Mono.Android.dll"),
+					"Unmodified assemblies should be copied from this project's directory.");
+				FileAssert.Exists (Path.Combine (root, "linked", "DimTest.pdb"));
+				using var assembly = AssemblyDefinition.ReadAssembly (Path.Combine (root, "linked", "DimTest.dll"));
+				var type = assembly.MainModule.GetType ("MyNamespace.MyClass");
+				Assert.IsTrue (type.Methods.Any (m => m.Name == "MyAbstractMethod"), "FixAbstractMethodsStep should write the modified assembly.");
 			}
 		}
 
@@ -615,11 +687,9 @@ namespace Xamarin.Android.Build.Tests
 		public void WarnAboutAppDomains ([ValueSource (typeof (BaseTest), nameof (BaseTest.ValidRuntimeConfigurations))] (bool isRelease, AndroidRuntime runtime) configuration)
 		{
 			var (isRelease, runtime) = configuration;
-			if (isRelease) {
-				// NOTE: trimmer warnings are hidden by default in .NET 7 rc1
-				Assert.Ignore("https://github.com/dotnet/linker/issues/2982");
+			if (runtime == AndroidRuntime.NativeAOT) {
+				Assert.Ignore ("NativeAOT does not report AppDomain.CreateDomain usage.");
 			}
-
 			var path = Path.Combine (Root, "temp", TestName);
 			var lib = new XamarinAndroidLibraryProject {
 				IsRelease = isRelease,
@@ -644,9 +714,8 @@ namespace Xamarin.Android.Build.Tests
 			using var appBuilder = CreateApkBuilder (Path.Combine (path, app.ProjectName));
 			Assert.IsTrue (appBuilder.Build (app), "app build should have succeeded.");
 
-			// NOTE: in .NET 6, we only emit IL6200 for Release builds
 			if (isRelease) {
-				string code = "IL6200";
+				string code = "XA2000";
 				Assert.IsTrue (StringAssertEx.ContainsText (appBuilder.LastBuildOutput, "1 Warning(s)"), "MSBuild should count 1 warnings.");
 				Assert.IsTrue (StringAssertEx.ContainsText (appBuilder.LastBuildOutput, $"warning {code}: Use of AppDomain.CreateDomain()"), $"Should warn {code} about creating AppDomain.");
 			}

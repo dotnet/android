@@ -1,0 +1,51 @@
+package xat.bytecode.tests
+
+// Kotlin metadata tells which types can be null. KotlinFixups copies this
+// information to the api.xml `not-null` attributes.
+class Nullability(val name: String, val nickname: String?) {
+
+    var title: String = ""
+    var subtitle: String? = null
+
+    lateinit var late: String
+
+    @JvmField
+    var field: String = ""
+
+    @JvmField
+    var nullableField: String? = null
+
+    fun join(text: String, other: String?, count: Int): String = text
+
+    fun find(text: String): String? = null
+
+    fun <T> generic(value: T): T = value
+
+    fun String.extension(): String = this
+
+    fun produce(): Maybe = Maybe(null)
+
+    suspend fun fetch(text: String): String = text
+
+    val platform = System.getProperty("x")
+
+    // Java `Object` matches any Kotlin type, so two Java constructors match
+    // the primary constructor
+    constructor(name: String?, other: Any) : this(name ?: "", null)
+
+    // Unrelated methods with the same names as property accessors and fields
+    @get:JvmName("fetchX")
+    val x: String = ""
+    fun getX(): String? = null
+
+    val String.label: String get() = this
+    fun getLabel(): String? = null
+    @JvmField
+    val label: String? = null
+
+    val isReady: String = ""
+    fun getIsReady(): String? = null
+}
+
+@JvmInline
+value class Maybe(val value: String?)

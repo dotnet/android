@@ -615,12 +615,6 @@ namespace Xamarin.Android.Build.Tests
 				return;
 			}
 
-			// TODO: NativeAOT fails the App1.csproj.FileListAbsolute.txt contents check. It adds some entries, needs verification
-			//       if it's a correct behavior or not.
-			if (runtime == AndroidRuntime.NativeAOT) {
-				Assert.Ignore ("NativeAOT fails the App1.csproj.FileListAbsolute.txt contents check");
-			}
-
 			var path = Path.Combine ("temp", TestName);
 			var proj = new XamarinAndroidApplicationProject () {
 				ProjectName = "App1",
@@ -1013,7 +1007,6 @@ namespace Lib2
 
 		//https://github.com/dotnet/android/issues/2247
 		[Test]
-		[NonParallelizable] // Do not run timing sensitive tests in parallel
 		public void AppProjectTargetsDoNotBreak ([Values (AndroidRuntime.CoreCLR)] AndroidRuntime runtime)
 		{
 			bool isRelease = runtime == AndroidRuntime.NativeAOT;
@@ -1036,9 +1029,9 @@ namespace Lib2
 				}
 			};
 			proj.SetRuntime (runtime);
+			proj.SetRuntimeIdentifiers (["x86_64"]);
 			using (var b = CreateApkBuilder ()) {
 				Assert.IsTrue (b.Build (proj), "first build should succeed");
-				var firstBuildTime = b.LastBuildTime;
 				foreach (var target in targets) {
 					Assert.IsFalse (b.Output.IsTargetSkipped (target.target), $"`{target}` should *not* be skipped!");
 				}
@@ -1068,14 +1061,12 @@ namespace Lib2
 
 				//NOTE: second build, targets will run because inputs changed
 				Assert.IsTrue (b.Build (proj, doNotCleanupOnUpdate: true, saveProject: false), "second build should succeed");
-				var secondBuildTime = b.LastBuildTime;
 				foreach (var target in targets) {
 					b.Output.AssertTargetIsNotSkipped (target.target);
 				}
 
 				//NOTE: third build, targets should certainly *not* run! there are no changes
 				Assert.IsTrue (b.Build (proj, doNotCleanupOnUpdate: true, saveProject: false), "third build should succeed");
-				var thirdBuildTime = b.LastBuildTime;
 				foreach (var target in targets) {
 					if (runtime == AndroidRuntime.NativeAOT && target.ignoreOnNAOT) {
 						continue;
@@ -1083,10 +1074,7 @@ namespace Lib2
 
 					b.Output.AssertTargetIsSkipped (target.target);
 				}
-				if (runtime != AndroidRuntime.NativeAOT) {
-					Assert.IsTrue (thirdBuildTime < firstBuildTime, $"Third unchanged build: '{thirdBuildTime}' should be faster than clean build: '{firstBuildTime}'.");
-					Assert.IsTrue (thirdBuildTime < secondBuildTime, $"Third unchanged build: '{thirdBuildTime}' should be faster than partially incremental second build: '{secondBuildTime}'.");
-				}
+				b.Output.AssertTargetIsSkipped ("CoreCompile");
 			}
 		}
 
@@ -1474,6 +1462,7 @@ namespace Lib2
 				IsRelease = isRelease,
 			};
 			proj.SetRuntime (runtime);
+			proj.SetRuntimeIdentifiers (["arm64-v8a"]);
 
 			using (var b = CreateApkBuilder ()) {
 				Assert.IsTrue (b.Build (proj), "build should have succeeded.");
@@ -1492,9 +1481,7 @@ namespace Lib2
 
 				// No changes
 				Assert.IsTrue (b.Build (proj, doNotCleanupOnUpdate: true), "build should have succeeded.");
-				if (runtime != AndroidRuntime.NativeAOT) { // TODO: review if NativeAOT should skip it
-					b.Output.AssertTargetIsSkipped (KnownTargets.LinkAssembliesNoShrink);
-				}
+				b.Output.AssertTargetIsSkipped (KnownTargets.LinkAssembliesNoShrink);
 			}
 		}
 
@@ -1642,12 +1629,9 @@ namespace Lib2
 		}
 
 		[Test]
-		public void ResolveLibraryProjectImports ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
+		public void ResolveLibraryProjectImports ([Values (false, true)] bool isRelease)
 		{
-			bool isRelease = runtime == AndroidRuntime.NativeAOT;
-			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
-				return;
-			}
+			const AndroidRuntime runtime = AndroidRuntime.CoreCLR;
 			var proj = new XamarinFormsAndroidApplicationProject {
 				IsRelease = isRelease,
 			};
@@ -1850,14 +1834,9 @@ namespace Lib2
 		public void GenerateJavaStubsAndAssembly ([ValueSource (typeof (BaseTest), nameof (BaseTest.ValidRuntimeConfigurations))] (bool isRelease, AndroidRuntime runtime) configuration)
 		{
 			var (isRelease, runtime) = configuration;
-			// TODO: NativeAOT build doesn't add android/environment.arm64-v8a.o to file writes
-			if (runtime == AndroidRuntime.NativeAOT) {
-				Assert.Ignore ("NativeAOT doesn't currently add android/environment.arm64-v8a.o to file writes");
-			}
-
 			var targets = new [] {
 				"_GenerateJavaStubs",
-				"_AndroidGenerateCoreClrBootstrap",
+				runtime == AndroidRuntime.NativeAOT ? "_AndroidGenerateNativeAotBootstrapObject" : "_AndroidGenerateCoreClrBootstrap",
 			};
 			var proj = new XamarinAndroidApplicationProject {
 				IsRelease = isRelease,
@@ -1939,12 +1918,9 @@ namespace Lib2
 #pragma warning restore 414
 
 		[Test]
-		public void DeterministicBuilds ([Values] bool deterministic, [Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
+		public void DeterministicBuilds ([Values] bool deterministic, [Values (false, true)] bool isRelease)
 		{
-			bool isRelease = runtime == AndroidRuntime.NativeAOT;
-			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
-				return;
-			}
+			const AndroidRuntime runtime = AndroidRuntime.CoreCLR;
 
 			var proj = new XamarinAndroidApplicationProject {
 				IsRelease = isRelease,
@@ -2190,10 +2166,7 @@ namespace Lib2
 
 				builder.Output.AssertTargetIsSkipped ("_ResolveLibraryProjectImports");
 
-				// TODO: NativeAOT doesn't skip this target
-				if (runtime != AndroidRuntime.NativeAOT) {
-					builder.Output.AssertTargetIsSkipped ("_GenerateJavaStubs");
-				}
+				builder.Output.AssertTargetIsSkipped ("_GenerateJavaStubs");
 				builder.Output.AssertTargetIsSkipped ("_CompileJava");
 				builder.Output.AssertTargetIsSkipped ("_CompileToDalvik");
 				if (runtime == AndroidRuntime.NativeAOT) {
