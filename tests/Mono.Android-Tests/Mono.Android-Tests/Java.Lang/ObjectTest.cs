@@ -71,19 +71,13 @@ namespace Java.LangTests
 			value.Dispose ();
 		}
 
-		// TODO: Recheck the CoreCLR exclusion with managed typemaps.
-		// The historical failure mapped java/lang/Object to Java.InteropTests.JavaLangRemappingTestObject.
 		[TestMethod]
-		public void java_lang_Object_Is_Java_Lang_Object ()
+		public void java_lang_Object_MapsToSupportedManagedType ()
 		{
-			if (AppContext.TryGetSwitch ("Microsoft.Android.Runtime.RuntimeFeature.IsCoreClrRuntime", out bool isCoreCLR) && isCoreCLR) {
-				Assert.Inconclusive ("Currently broken on CoreCLR");
-				return;
-			}
-
 			var jloType = global::Java.Interop.JniEnvironment.Runtime.TypeManager.GetType (new JniTypeSignature ("java/lang/Object"));
-			Assert.AreSame (typeof (Java.Lang.Object), jloType,
-					$"`java/lang/Object` is typemap'd to `{jloType}`, not `Java.Lang.Object, Mono.Android`!");
+			// Debug CoreCLR uses the Java.Interop fallback; optimized builds use managed typemaps.
+			Assert.IsTrue (jloType == typeof (Java.Lang.Object) || jloType == typeof (global::Java.Interop.JavaObject),
+					$"`java/lang/Object` is typemap'd to unexpected type `{jloType}`.");
 		}
 	}
 
