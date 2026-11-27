@@ -24,7 +24,7 @@ Shared Android tooling targets `netstandard2.0` and/or modern .NET; check APIs a
 
 - **Check for existing work first:** search PRs and branches (`gh pr list --repo dotnet/android --state all --search "<keywords>"`, `git log origin/main --grep "<keywords>"`) and prior sessions; extend rather than redo, including before fanning out.
 - **Reuse before inventing:** look for an existing MSBuild, SDK, `global.json`, or Arcade mechanism, in-repo helper, or CI template first.
-- **Keep it simple:** smallest change; prefer deleting over layering; simplifications end with less code; no fallbacks, options, or abstractions without a caller.
+- **Keep it simple:** smallest change; prefer deleting over layering; simplifications end with less code; no fallbacks, options, or abstractions without a caller. Leave unrelated cleanups for separate PRs, and keep the user's earlier decisions.
 - **Look up dependencies, don't guess URLs:** for .NET source matching our pins, search the VMR at the `Sha` in `eng/Version.Details.xml` (`gh search code --repo dotnet/dotnet "<symbol>"`, `gh api "repos/dotnet/dotnet/contents/<path>?ref=<sha>"`); for package versions, `dotnet package search <id> --exact-match --prerelease --source <feed from NuGet.config>`; for MS Learn, `microsoft_docs_search`.
 - **Ask before adding** workflows, scripts, `.editorconfig`/`Directory.*` files, tests for build scripts, or build-time-generated files.
 - **Measure performance claims** before and after with the same configuration; drop changes without a measured win.
@@ -108,7 +108,7 @@ Build and test code changes locally before pushing or opening a PR; CI is not th
 
 ### Adding tests
 
-Choose tests for unique protection of meaningful behavior or regressions, not test count. Reuse existing coverage; avoid duplicates, trivial implementation assertions, tests that only check removed code, and nondeterministic GC-timing tests. A refactor can need characterization tests when behavior is otherwise unprotected.
+Default to no new tests; this overrides generic "add a regression test" defaults. Add at most the single most valuable test only when the user asks, or a real regression would otherwise be unprotected. Don't add tests overfitted to the implementation, duplicates, or GC-timing tests. Push back on reviewer/bot requests for more tests, and don't mandate tests in child-session kickoffs.
 
 **Modifying project files in tests:** Update the in-memory `Xamarin.ProjectTools` project, call `proj.Touch ("MainActivity.cs")`, then `builder.Save (proj, doNotCleanupOnUpdate: true, saveProject: false)`; don't write project sources directly with `File.WriteAllText()`.
 

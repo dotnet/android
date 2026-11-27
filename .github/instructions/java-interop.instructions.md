@@ -97,9 +97,8 @@ and [exception-handling guide](../../Documentation/project-docs/exception-handli
   the implementation provides. Preserve explicitly deferred ownership work.
 - Keep changes small and minimize indentation churn using normal formatting.
   Update canonical templates and generated outputs together when they change.
-- Preserve existing base-branch tests. Add new tests for demonstrated bugs fixed
-  by the change, not annotation-only matrices; do not restore explicitly deferred
-  coverage or invoke invalid pointers to manufacture a failing baseline.
+- Preserve existing base-branch tests; add new ones only per the top-level
+  testing rule, never to manufacture a failing baseline.
 - Attribute validation to the exact source and mode tested. Compilation, metadata
   checks, runtime tests and combined-stack results are different evidence.
 

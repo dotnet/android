@@ -102,5 +102,5 @@ A maintainer commented `/review` on this pull request. Perform a thorough code r
 - If Azure DevOps is needed, run each `az devops invoke` as a standalone shell call with literal arguments; do not use variable preambles, chaining, pipes, or redirection.
 - Run local Git inspection commands separately; do not chain shell commands or use command substitution. Compare changes with `git diff origin/main...HEAD` when the range is available; otherwise use the GitHub pull request diff.
 - **Always submit the review as a COMMENT event.** Never APPROVE or REQUEST_CHANGES — surface issues in the comment body instead.
-- Prioritize: bugs > safety > performance > missing tests > duplication > consistency > documentation.
+- Prioritize: bugs > safety > performance > duplication > consistency > documentation. Request tests only for an unprotected real regression, one case at most.
 - **Post suggestions as inline comments, not just in the summary.** If a suggestion can't be posted inline, omit it.
