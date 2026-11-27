@@ -30,11 +30,7 @@
 
   <Target Name="_CleanProguardRules" BeforeTargets="Clean">
     <Delete Files="$(_Destination);$(_OptimizeDestination)" />
-    <Exec
-        Command="&quot;$(GradleWPath)&quot; clean $(GradleArgs)"
-        EnvironmentVariables="JAVA_HOME=$(JavaSdkDirectory);APP_HOME=$(GradleHome)"
-        WorkingDirectory="$(MSBuildThisFileDirectory)"
-    />
+    <RemoveDir Directories="$(MSBuildThisFileDirectory)build" />
   </Target>
 
 </Project>

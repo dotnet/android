@@ -177,17 +177,12 @@
   </Target>
 
   <Target Name="_CleanRuntimes"
-          AfterTargets="Clean">
-    <Exec
-        Command="$(NinjaPath) -v clean"
-        WorkingDirectory="$(FlavorIntermediateOutputPath)%(AndroidSupportedTargetJitAbi.AndroidRID)-Debug"/>
-    <Exec
-        Command="$(NinjaPath) -v clean"
-        WorkingDirectory="$(FlavorIntermediateOutputPath)%(AndroidSupportedTargetJitAbi.AndroidRID)-Release"/>
-
+          AfterTargets="Clean"
+          DependsOnTargets="_PrepareCommonProperties">
+    <RemoveDir Directories="$(FlavorIntermediateOutputPath)" />
+    <!-- OutputPath can be shared; only the runtime's RID directories belong to this project. -->
+    <RemoveDir Directories="@(AndroidSupportedTargetJitAbi->'$(OutputPath)%(AndroidRID)')" />
     <RemoveDir Directories="obj\local;libs" />
-    <RemoveDir Directories="$(FlavorIntermediateOutputPath)%(AndroidSupportedTargetJitAbi.AndroidRID)-Debug" />
-    <RemoveDir Directories="$(FlavorIntermediateOutputPath)%(AndroidSupportedTargetJitAbi.AndroidRID)-Release" />
     <Delete Files="jni\config.include;jni\machine.config.include;jni\Application.mk" />
     <Delete Files="%(_EmbeddedBlob.Include)" />
   </Target>

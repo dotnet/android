@@ -61,7 +61,7 @@
   </Target>
 
   <Target Name="_CleanAapt2" BeforeTargets="Clean">
-    <Delete Files="@(_BuildTools->'$(_Destination)\%(HostOS)')" />
+    <Delete Files="@(_BuildTools->'$(_Destination)\%(HostOS)\%(FilesToExtract)')" />
   </Target>
 
 </Project>

@@ -39,11 +39,11 @@ stages:
         downloadPath: $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)
 
     # Set up dependencies to run tests in both debug and release configurations
-    - task: DotNetCoreCLI@2
+    - pwsh: >-
+        dotnetup dotnet build build-tools/Xamarin.Android.Tools.BootstrapTasks/Xamarin.Android.Tools.BootstrapTasks.csproj
+        -c Debug -bl:$(System.DefaultWorkingDirectory)/bin/TestDebug/BootstrapTasks.binlog
       displayName: build Xamarin.Android.Tools.BootstrapTasks.csproj
-      inputs:
-        projects: $(System.DefaultWorkingDirectory)/build-tools/Xamarin.Android.Tools.BootstrapTasks/Xamarin.Android.Tools.BootstrapTasks.csproj
-        arguments: -c Debug -bl:$(System.DefaultWorkingDirectory)/bin/TestDebug/BootstrapTasks.binlog
+      workingDirectory: $(System.DefaultWorkingDirectory)
 
     - template: /build-tools/automation/yaml-templates/run-dotnet-preview.yaml
       parameters:
@@ -133,11 +133,11 @@ stages:
         downloadPath: $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)
 
     # Set up dependencies to run tests in both debug and release configurations
-    - task: DotNetCoreCLI@2
+    - pwsh: >-
+        dotnetup dotnet build build-tools/Xamarin.Android.Tools.BootstrapTasks/Xamarin.Android.Tools.BootstrapTasks.csproj
+        -c Debug -bl:$(System.DefaultWorkingDirectory)/bin/TestDebug/BootstrapTasks.binlog
       displayName: build Xamarin.Android.Tools.BootstrapTasks.csproj
-      inputs:
-        projects: $(System.DefaultWorkingDirectory)/build-tools/Xamarin.Android.Tools.BootstrapTasks/Xamarin.Android.Tools.BootstrapTasks.csproj
-        arguments: -c Debug -bl:$(System.DefaultWorkingDirectory)/bin/TestDebug/BootstrapTasks.binlog
+      workingDirectory: $(System.DefaultWorkingDirectory)
 
     - template: /build-tools/automation/yaml-templates/run-dotnet-preview.yaml
       parameters:
@@ -200,6 +200,8 @@ stages:
 
     - task: ShellScript@2
       displayName: Test dotnet-local.sh
+      env:
+        CONFIGURATION: $(XA.Build.Configuration)
       inputs:
         scriptPath: dotnet-local.sh
         args: build samples/HelloWorld/HelloWorld/HelloWorld.DotNet.csproj

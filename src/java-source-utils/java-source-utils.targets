@@ -73,11 +73,7 @@
 
   <Target Name="_CleanJava" BeforeTargets="Clean">
     <Delete Files="$(OutputPath)java-source-utils.jar" />
-    <Exec
-        Command="&quot;$(GradleWPath)&quot; clean $(GradleArgs)"
-        EnvironmentVariables="JAVA_HOME=$(JavaSdkDirectory);APP_HOME=$(GradleHome)"
-        WorkingDirectory="$(MSBuildThisFileDirectory)"
-    />
+    <RemoveDir Directories="$(MSBuildThisFileDirectory)build" />
   </Target>
 
   <Target Name="_UpdateTestOutputs"

@@ -3,8 +3,7 @@ parameters:
   xaSourcePath: $(System.DefaultWorkingDirectory)
   jdkMajorVersion: $(DefaultJavaSdkMajorVersion)
   useAgentJdkPath: true
-  remove_dotnet: false
-  dotnetVersion: $(DotNetSdkVersion)
+  dotnetRuntimeVersion: $(DotNetRuntimeVersion)
   installApkDiff: true
   androidSdkPlatforms: $(DefaultTestSdkPlatforms)
   repositoryAlias: 'self'
@@ -32,8 +31,7 @@ steps:
     xaSourcePath: ${{ parameters.xaSourcePath }}
     jdkMajorVersion: ${{ parameters.jdkMajorVersion }}
     useAgentJdkPath: ${{ parameters.useAgentJdkPath }}
-    remove_dotnet: ${{ parameters.remove_dotnet }}
-    dotnetVersion: ${{ parameters.dotnetVersion }}
+    dotnetRuntimeVersion: ${{ parameters.dotnetRuntimeVersion }}
     installApkDiff: ${{ parameters.installApkDiff }}
     androidSdkPlatforms: ${{ parameters.androidSdkPlatforms }}
     use1ESTemplate: ${{ parameters.use1ESTemplate }}

@@ -80,6 +80,8 @@ stages:
 
     - task: ShellScript@2
       displayName: Test dotnet-local.sh
+      env:
+        CONFIGURATION: $(XA.Build.Configuration)
       inputs:
         scriptPath: dotnet-local.sh
         args: >-

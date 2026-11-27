@@ -2,29 +2,29 @@ parameters:
   toolName: ''
   version: ''
   condition: succeeded()
+  xaSourcePath: $(System.DefaultWorkingDirectory)
 
 steps:
-- powershell: dotnet tool uninstall ${{ parameters.toolName }} -g
+- powershell: dotnetup dotnet tool uninstall ${{ parameters.toolName }} -g
   displayName: uninstall global ${{ parameters.toolName }}
   ignoreLASTEXITCODE: true
   condition: ${{ parameters.condition }}
+  workingDirectory: ${{ parameters.xaSourcePath }}
 
-- powershell: dotnet tool uninstall ${{ parameters.toolName }} --tool-path "$(Agent.ToolsDirectory)"
+- powershell: dotnetup dotnet tool uninstall ${{ parameters.toolName }} --tool-path "$(Agent.ToolsDirectory)"
   displayName: uninstall cached ${{ parameters.toolName }}
   ignoreLASTEXITCODE: true
   condition: ${{ parameters.condition }}
+  workingDirectory: ${{ parameters.xaSourcePath }}
 
-- task: DotNetCoreCLI@2
+- powershell: >-
+    dotnetup dotnet tool install ${{ parameters.toolName }} -v:diag
+    --tool-path "$(Agent.ToolsDirectory)"
+    --version ${{ parameters.version }}
+    --source "https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-public/nuget/v3/index.json"
   displayName: install ${{ parameters.toolName }} ${{ parameters.version }}
   condition: ${{ parameters.condition }}
-  inputs:
-    command: custom
-    custom: tool
-    arguments: >-
-      install ${{ parameters.toolName }} -v:diag
-      --tool-path "$(Agent.ToolsDirectory)"
-      --version ${{ parameters.version }}
-      --source "https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-public/nuget/v3/index.json"
+  workingDirectory: ${{ parameters.xaSourcePath }}
 
 - powershell: Write-Host "##vso[task.prependpath]$(Agent.ToolsDirectory)"
   displayName: add dotnet tools to PATH

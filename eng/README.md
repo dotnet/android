@@ -35,6 +35,59 @@ To update all dependencies, use the [`darc update-dependencies`][4] command:
 darc update-dependencies --channel ".NET 6"
 ```
 
+## SDK selection and CI
+
+`global.json` selects the shared SDK. During Arcade dependency updates,
+darc/Maestro advances both `tools.dotnet` and the existing `sdk.version` to
+Arcade's bootstrap SDK version when it is newer than `tools.dotnet`.
+Keep both version fields in sync and leave `tools.pinned` unset so these
+automatic updates are enabled.
+
+This follows Arcade's bootstrap SDK, not the produced `Microsoft.NET.Sdk`
+dependency in `eng/Version.Details.xml`; the versions can differ. An older
+incoming bootstrap SDK does not downgrade the selected SDK. After an update
+changes `global.json`, install the selected SDK:
+```
+dotnetup sdk install
+```
+
+Use `dotnetup dotnet` to launch the managed installation without changing the
+shell's SDK `PATH` or `DOTNET_ROOT`. CI bootstraps dotnetup using Microsoft's
+official scripts, then installs the pinned SDK and the older runtime needed
+by host-side tests. `DotNetRuntimeVersion` pins that runtime, independently of
+`DotNetStableTargetFrameworkVersion`, which selects the host tooling's target
+framework. Older target frameworks do not require older SDKs.
+Only dotnetup is added to the job's `PATH`.
+CI logs the selected dotnetup executable and version and disables interactive
+SDK/runtime installation. Keep dotnetup's metadata and SDK/runtime installation
+shared across worktrees; do not override `DOTNET_DOTNETUP_DATA_DIR` per checkout.
+Local workload resolution uses the running SDK's version rather than the SDK
+dependency's package version, which may differ after dependency updates or SDK
+stabilization.
+
+CI preparation, packaging, and standalone tools use `dotnetup dotnet` directly.
+Commands that consume this checkout's Android/MAUI workloads use `dotnet-local.sh`
+or `dotnet-local.cmd` with `CONFIGURATION` selecting the SDK build configuration.
+The `run-dotnet-preview.yaml` template opts into that behavior with
+`useLocalWorkload: true`; its `configuration` parameter selects workload paths,
+independently of the application's `-c` argument.
+The wrappers disable the MSBuild server so workload resolution does not reuse
+manifests cached by a build outside the wrapper. SDK commands use the repository
+root's SDK pin even from test directories with their own `global.json`; the
+caller's directory and test-runner settings are preserved. Explicit host
+commands such as `exec` and direct assembly execution are forwarded unchanged.
+
+Internal signing uses the same pinned SDK and an additional .NET 8 runtime for
+SwixBuild. The isolated Arcade adapter copies `global.json` unchanged and points
+Arcade at the shared dotnet installation rather than bootstrapping another SDK.
+Visual Studio's desktop MSBuild runs the SDK-free Swix manifest projects; these
+do not compile managed code or need a separate restore.
+
+Build and packaging commands are documented for [Unix](../Documentation/building/unix/instructions.md)
+and [Windows](../Documentation/building/windows/instructions.md).
+
+## Subscriptions
+
 To configure automatic updates, use the [`darc add-subscription`][5] command
 to enroll a target repo/branch into updates from a particular channel:
 ```

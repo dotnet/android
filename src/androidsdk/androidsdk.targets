@@ -275,7 +275,7 @@
   </ItemGroup>
 
   <Target Name="_AddPlatformPackagesToInstall"
-      BeforeTargets="_DownloadAndroidSdkPackages;_ExtractAndroidSdkPackages;_GenerateAndroidPackageXmls;_CleanAndroidSdkComponents">
+      BeforeTargets="_DownloadAndroidSdkPackages;_ExtractAndroidSdkPackages;_GenerateAndroidPackageXmls">
     <ItemGroup>
       <_AndroidSdkPackage Include="@(_PlatformPackage->'%(Identity).zip')"
           Condition=" '$(_InstallAllPlatforms)' == 'true' or
@@ -462,11 +462,6 @@
         LicenseHashes="$(XAAndroidSdkLicenseHash)"
         ValidateOnly="true"
     />
-  </Target>
-
-  <Target Name="_CleanAndroidSdkComponents" BeforeTargets="Clean">
-    <Delete Files="$(_LicensesAcceptedFile)" />
-    <RemoveDir Directories="@(_AndroidSdkPackage->'%(Destination)')" />
   </Target>
 
 </Project>

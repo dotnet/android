@@ -43,7 +43,7 @@ by projects that use the Microsoft.Android framework in .NET 6+.
       <FilesToPackage Include="@(_AndroidRefPackAssemblies)" TargetPath="$(_AndroidRefPackAssemblyPath)" />
       <FilesToPackage Include="@(_AndroidRefPackAnalyzers)" TargetPath="$(_AndroidRefPackAnalyzersPath)" />
       <FilesToPackage Include="$(_MonoAndroidNETDefaultOutDir)Java.Interop.xml" TargetPath="$(_AndroidRefPackAssemblyPath)" />
-      <FilesToPackage Include="$(_MonoAndroidNETDefaultOutDir)Mono.Android.xml" TargetPath="$(_AndroidRefPackAssemblyPath)" />
+      <FilesToPackage Include="$(_MonoAndroidNETDefaultOutDir)Mono.Android.xml" TargetPath="$(_AndroidRefPackAssemblyPath)" Condition="Exists('$(_MonoAndroidNETDefaultOutDir)Mono.Android.xml')" />
     </ItemGroup>
   </Target>
 
