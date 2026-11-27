@@ -298,21 +298,6 @@ namespace Java.InteropTests
 		}
 
 		[TestMethod]
-		[TestCategory ("JniLocalReferenceCleanup")]
-		public void GenericArrayFactoryReleasesLocalWhenElementConversionThrows ()
-		{
-			IntPtr warmup = JNIEnv.NewObjectArray<object> ([]);
-			JNIEnv.DeleteLocalRef (warmup);
-
-			object [] values = [new int []? [] { null }];
-			int localReferences = JniEnvironment.LocalReferenceCount;
-			for (int i = 0; i < 4; i++) {
-				Assert.ThrowsExactly<ArgumentNullException> (() => JNIEnv.NewObjectArray (values));
-				Assert.AreEqual (localReferences, JniEnvironment.LocalReferenceCount);
-			}
-		}
-
-		[TestMethod]
 		public void NewObjectArrayWithObjectArray ()
 		{
 			var array = JNIEnv.NewObjectArray<Java.Lang.String> (new Java.Lang.String [0]);

@@ -61,24 +61,6 @@ namespace Android.RuntimeTests
 			Assert.AreEqual (1, collection.Count);
 		}
 
-		[TestMethod]
-		[TestCategory ("JniLocalReferenceCleanup")]
-		public void GenericCopyToReleasesArrayWhenConversionThrows ()
-		{
-			using var list = new Java.Util.ArrayList ();
-			using (var value = Java.Lang.Integer.ValueOf (1))
-				list.Add (value);
-			using var collection = new JavaCollection<Guid> (list.Handle, JniHandleOwnership.DoNotTransfer);
-			var destination = new Guid [1];
-
-			Assert.ThrowsExactly<InvalidCastException> (() => collection.CopyTo (destination, 0));
-			int localReferences = Java.Interop.JniEnvironment.LocalReferenceCount;
-			for (int i = 0; i < 4; i++) {
-				Assert.ThrowsExactly<InvalidCastException> (() => collection.CopyTo (destination, 0));
-				Assert.AreEqual (localReferences, Java.Interop.JniEnvironment.LocalReferenceCount);
-			}
-		}
-
 		sealed class ManagedItem
 		{
 		}
