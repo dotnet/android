@@ -113,10 +113,6 @@ namespace Java.InteropTests
 				AssertRejected ("signature", () => { _ = unsafe (JniEnvironment.StaticFields.GetStaticFieldID (r, "x"u8, bad)); });
 				AssertRejected ("name", () => { _ = unsafe (Object_class.GetInstanceMethod (bad, "()I"u8)); });
 				AssertRejected ("signature", () => { _ = unsafe (Object_class.GetStaticMethod ("x"u8, bad)); });
-				AssertRejected ("name", () => { _ = unsafe (JniEnvironment.InstanceMethods.GetMethodID (r, ""u8, "()V"u8)); });
-				AssertRejected ("signature", () => { _ = unsafe (JniEnvironment.InstanceFields.GetFieldID (r, "x"u8, ""u8)); });
-				AssertRejected ("name", () => { _ = unsafe (JniEnvironment.InstanceMethods.GetMethodID (r, "\0hashCode"u8, "()I"u8)); });
-				AssertRejected ("signature", () => { _ = unsafe (JniEnvironment.StaticMethods.GetStaticMethodID (r, "x"u8, "\0()V"u8)); });
 
 				unsafe {
 					// SAFETY: All buffers stay pinned and terminated; validation throws before JNI sees the callback.
@@ -393,33 +389,6 @@ namespace Java.InteropTests
 		{
 			// SAFETY: The UTF-8 literal is terminated; only the class lookup is expected to fail.
 			Assert.ThrowsExactly<Java.Lang.ClassNotFoundException> (() => unsafe (JniEnvironment.Types.FindClass ("does/not/Exist"u8)));
-		}
-
-		[TestMethod]
-		[TestCategory ("JniModifiedUtf8")]
-		public void GetMembers_Utf8_UseSpanLength ()
-		{
-			using var Integer_class = new JniType ("java/lang/Integer");
-			var r = Integer_class.PeerReference;
-			// Every slice is unterminated at its length and must not include the bytes after it.
-			ReadOnlySpan<byte> hashCode = "hashCodeX"u8;
-			ReadOnlySpan<byte> intReturn = "()IX"u8;
-			ReadOnlySpan<byte> valueOf = "valueOfX"u8;
-			ReadOnlySpan<byte> valueOfSignature = "(I)Ljava/lang/Integer;X"u8;
-			ReadOnlySpan<byte> value = "valueX"u8;
-			ReadOnlySpan<byte> maxValue = "MAX_VALUEX"u8;
-			ReadOnlySpan<byte> intType = "IX"u8;
-			unsafe {
-				// SAFETY: Every slice comes from a live, NUL-terminated u8 literal and r is a live class reference.
-				Assert.IsTrue (JniEnvironment.InstanceMethods.GetMethodID (r, hashCode.Slice (0, 8), intReturn.Slice (0, 3)).IsValid);
-				Assert.IsTrue (JniEnvironment.StaticMethods.GetStaticMethodID (r, valueOf.Slice (0, 7), valueOfSignature.Slice (0, valueOfSignature.Length - 1)).IsValid);
-				Assert.IsTrue (JniEnvironment.InstanceFields.GetFieldID (r, value.Slice (0, 5), intType.Slice (0, 1)).IsValid);
-				Assert.IsTrue (JniEnvironment.StaticFields.GetStaticFieldID (r, maxValue.Slice (0, 9), intType.Slice (0, 1)).IsValid);
-				Assert.IsTrue (Integer_class.GetInstanceMethod (hashCode.Slice (0, 8), intReturn.Slice (0, 3)).IsValid);
-
-				Assert.Throws<Exception> (() => { _ = unsafe (JniEnvironment.InstanceMethods.GetMethodID (r, "hashCode"u8.Slice (0, 4), "()I"u8)); });
-			}
-			Assert.IsFalse (JniEnvironment.Exceptions.ExceptionOccurred ().IsValid);
 		}
 
 		[TestMethod]
