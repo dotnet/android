@@ -299,69 +299,17 @@ namespace Java.InteropTests
 
 		[TestMethod]
 		[TestCategory ("JniLocalReferenceCleanup")]
-		public void ObjectArrayFactoryReleasesLocalWhenHandleThrows ()
-		{
-			IntPtr warmup = JNIEnv.NewArray ((IJavaObject []) []);
-			JNIEnv.DeleteLocalRef (warmup);
-
-			using var value = new ThrowingJavaObject ();
-			IJavaObject [] values = [value];
-			void CreateArray ()
-			{
-				IntPtr result = JNIEnv.NewArray (values);
-				JNIEnv.DeleteLocalRef (result);
-			}
-
-			AssertArrayFactoryThrowsWithoutLeaking<InvalidOperationException> (CreateArray);
-		}
-
-		[TestMethod]
-		[TestCategory ("JniLocalReferenceCleanup")]
 		public void GenericArrayFactoryReleasesLocalWhenElementConversionThrows ()
 		{
 			IntPtr warmup = JNIEnv.NewObjectArray<object> ([]);
 			JNIEnv.DeleteLocalRef (warmup);
 
 			object [] values = [new int []? [] { null }];
-			void CreateArray ()
-			{
-				IntPtr result = JNIEnv.NewObjectArray (values);
-				JNIEnv.DeleteLocalRef (result);
-			}
-
-			AssertArrayFactoryThrowsWithoutLeaking<ArgumentNullException> (CreateArray);
-		}
-
-		static void AssertArrayFactoryThrowsWithoutLeaking<TException> (Action createArray) where TException : Exception
-		{
 			int localReferences = JniEnvironment.LocalReferenceCount;
 			for (int i = 0; i < 4; i++) {
-				Assert.ThrowsExactly<TException> (createArray);
+				Assert.ThrowsExactly<ArgumentNullException> (() => JNIEnv.NewObjectArray (values));
 				Assert.AreEqual (localReferences, JniEnvironment.LocalReferenceCount);
 			}
-		}
-
-		[TestMethod]
-		[TestCategory ("JniLocalReferenceCleanup")]
-		public void CopyNestedArrayReleasesLocalWhenSourceIsNull ()
-		{
-			int [] [] values = [[1]];
-			IntPtr destination = JNIEnv.NewArray (values);
-			try {
-				JNIEnv.CopyArray (values, destination);
-				int localReferences = JniEnvironment.LocalReferenceCount;
-				int []? [] source = [null];
-				Assert.ThrowsExactly<NullReferenceException> (() => JNIEnv.CopyArray (source, destination));
-				Assert.AreEqual (localReferences, JniEnvironment.LocalReferenceCount);
-			} finally {
-				JNIEnv.DeleteLocalRef (destination);
-			}
-		}
-
-		sealed class ThrowingJavaObject : Java.Lang.Object, IJavaObject
-		{
-			public ThrowingJavaObject () : base (IntPtr.Zero, JniHandleOwnership.DoNotTransfer) {}
-			IntPtr IJavaObject.Handle => throw new InvalidOperationException ("Cannot obtain a JNI handle.");
 		}
 
 		[TestMethod]

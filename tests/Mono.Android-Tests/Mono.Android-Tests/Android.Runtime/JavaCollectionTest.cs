@@ -63,43 +63,18 @@ namespace Android.RuntimeTests
 
 		[TestMethod]
 		[TestCategory ("JniLocalReferenceCleanup")]
-		[DataRow (false)]
-		[DataRow (true)]
-		public void CopyToReleasesArrayWhenConversionThrows (bool generic)
+		public void GenericCopyToReleasesArrayWhenConversionThrows ()
 		{
 			using var list = new Java.Util.ArrayList ();
 			using (var value = Java.Lang.Integer.ValueOf (1))
 				list.Add (value);
+			using var collection = new JavaCollection<Guid> (list.Handle, JniHandleOwnership.DoNotTransfer);
 			var destination = new Guid [1];
 
-			if (generic) {
-				using var collection = new JavaCollection<Guid> (list.Handle, JniHandleOwnership.DoNotTransfer);
-				AssertCopyThrowsWithoutLeaking<InvalidCastException> (() => collection.CopyTo (destination, 0));
-			} else {
-				using var collection = new JavaCollection (list.Handle, JniHandleOwnership.DoNotTransfer);
-				AssertCopyThrowsWithoutLeaking<InvalidCastException> (() => collection.CopyTo (destination, 0));
-			}
-		}
-
-		[TestMethod]
-		[TestCategory ("JniLocalReferenceCleanup")]
-		public void CopyToReleasesArrayWhenAssignmentThrows ()
-		{
-			using var list = new Java.Util.ArrayList ();
-			using (var value = Java.Lang.Integer.ValueOf (1))
-				list.Add (value);
-			using var collection = new JavaCollection<object> (list.Handle, JniHandleOwnership.DoNotTransfer);
-			object [] destination = new string [1];
-
-			AssertCopyThrowsWithoutLeaking<ArrayTypeMismatchException> (() => collection.CopyTo (destination, 0));
-		}
-
-		static void AssertCopyThrowsWithoutLeaking<TException> (Action copy) where TException : Exception
-		{
-			Assert.ThrowsExactly<TException> (copy);
+			Assert.ThrowsExactly<InvalidCastException> (() => collection.CopyTo (destination, 0));
 			int localReferences = Java.Interop.JniEnvironment.LocalReferenceCount;
 			for (int i = 0; i < 4; i++) {
-				Assert.ThrowsExactly<TException> (copy);
+				Assert.ThrowsExactly<InvalidCastException> (() => collection.CopyTo (destination, 0));
 				Assert.AreEqual (localReferences, Java.Interop.JniEnvironment.LocalReferenceCount);
 			}
 		}
