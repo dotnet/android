@@ -437,12 +437,6 @@ public class TrimmableTypeMap
 		return RegisterCreatedPeer (peer);
 	}
 
-	internal IJavaPeerable? CreateInstanceWithoutReflectionFallback (IntPtr handle, Type? targetType = null)
-	{
-		var peer = GetProxyForJavaObject (handle, targetType)?.CreateInstance (handle, ImplicitPeerOwnership);
-		return RegisterCreatedPeer (peer);
-	}
-
 	const DynamicallyAccessedMemberTypes Constructors = DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.NonPublicConstructors;
 	const JniHandleOwnership ImplicitPeerOwnership = JniHandleOwnership.DoNotTransfer | JniHandleOwnership.DoNotRegister;
 

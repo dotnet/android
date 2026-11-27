@@ -200,21 +200,18 @@ namespace Java.Interop {
 			return FromJniHandle (handle, transfer);
 		}
 
+		[UnconditionalSuppressMessage ("ReflectionAnalysis", "IL2067:RequiresUnreferencedCode",
+			Justification = "Closed generic element types are activated through the constructor that the generated proxy for their open generic definition preserves with DynamicDependency.")]
+		static IJavaPeerable? CreatePeerWithTrimmableTypeMap (IntPtr handle, Type elementType)
+		{
+			return TrimmableTypeMap.Instance.CreateInstance (handle, elementType);
+		}
+
 		static object? FromJniHandleWithTrimmableTypeMapping (IntPtr handle, JniHandleOwnership transfer, Type elementType)
 		{
 			bool consumed = false;
 			try {
-				if (elementType.IsGenericType) {
-					throw new NotSupportedException (
-						FormattableString.Invariant ($"Cannot convert Java collection elements to closed generic array element type '{elementType}'."));
-				}
-
-				// This path intentionally avoids the reflection fallback used by TrimmableTypeMap.CreateInstance ()
-				// because passing array element types there would require DAM annotations.  Closed generic element
-				// types cannot be supported without that fallback: creating a non-generic base peer would not be
-				// assignable to the requested closed generic array element type.  If the requested element type is
-				// already a non-generic base type, the typemap lookup can still select that base mapping.
-				var peer = TrimmableTypeMap.Instance.CreateInstanceWithoutReflectionFallback (handle, elementType);
+				var peer = CreatePeerWithTrimmableTypeMap (handle, elementType);
 				if (peer != null) {
 					consumed = true;
 					JNIEnv.DeleteRef (handle, transfer);
