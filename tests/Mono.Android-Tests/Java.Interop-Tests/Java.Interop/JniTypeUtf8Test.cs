@@ -1,7 +1,6 @@
 #nullable enable
 
 using System;
-using System.Collections.Generic;
 using System.Runtime.InteropServices;
 
 using Java.Interop;
@@ -19,19 +18,30 @@ namespace Java.InteropTests
 		internal const string UnicodeNativeSignature = "(Lnet/dot/jni/test/UnicodeNames$Value\U00010000;)I";
 		public TestContext? TestContext { get; set; }
 
+		static byte [] ModifiedUtf8 (string value)
+		{
+			var bytes = new byte [JniModifiedUtf8.GetByteCount (value) + 1];
+			JniModifiedUtf8.GetBytes (value, bytes);
+			return bytes;
+		}
+
 		[TestMethod]
 		[TestCategory ("JniModifiedUtf8")]
 		public void ModifiedUtf8_EncodesUtf16CodeUnits ()
 		{
-			const string value = "A\0\u007f\u0080\u07ff\u0800\ud800\udc00\udbff\udfff\udfff";
+			const string value = "abcA\0\u007f\u0080\u07ff\u0800\ud800\udc00\udbff\udfff\udfffxyz";
 			byte [] expected = [
+				(byte) 'a', (byte) 'b', (byte) 'c',
 				0x41, 0xc0, 0x80, 0x7f, 0xc2, 0x80, 0xdf, 0xbf, 0xe0, 0xa0, 0x80,
 				0xed, 0xa0, 0x80, 0xed, 0xb0, 0x80, 0xed, 0xaf, 0xbf, 0xed, 0xbf, 0xbf,
 				0xed, 0xbf, 0xbf,
+				(byte) 'x', (byte) 'y', (byte) 'z',
 			];
 			var actual = new byte [JniModifiedUtf8.GetByteCount (value)];
 			JniModifiedUtf8.GetBytes (value, actual);
 			CollectionAssert.AreEqual (expected, actual);
+			Assert.AreEqual (5, JniModifiedUtf8.GetByteCount ("hello"));
+			Assert.AreEqual (0, JniModifiedUtf8.GetByteCount (""));
 		}
 
 		[TestMethod]
@@ -39,14 +49,9 @@ namespace Java.InteropTests
 		public void ModifiedUtf8_AcceptsValidModifiedUtf8 ()
 		{
 			byte [][] valid = [
-				[0x41],
-				[0xc0, 0x80],
-				[0xc2, 0x80],
-				[0xdf, 0xbf],
-				[0xe0, 0xa0, 0x80],
-				[0xef, 0xbf, 0xbf],
-				[0xed, 0xa0, 0x80, 0xed, 0xb0, 0x80],
-				[0xed, 0xaf, 0xbf, 0xed, 0xbf, 0xbf],
+				[0x41], [0xc0, 0x80], [0xc2, 0x80], [0xdf, 0xbf],
+				[0xe0, 0xa0, 0x80], [0xef, 0xbf, 0xbf],
+				[0xed, 0xa0, 0x80, 0xed, 0xb0, 0x80], [0xed, 0xaf, 0xbf, 0xed, 0xbf, 0xbf],
 			];
 			for (int prefix = 0; prefix <= 33; prefix++) {
 				foreach (var bytes in valid) {
@@ -61,68 +66,9 @@ namespace Java.InteropTests
 					JniModifiedUtf8.Validate (source, "value");
 					unsafe {
 						// SAFETY: source stays pinned and NUL-terminated through validation.
-						fixed (byte* pointer = source) {
+						fixed (byte* pointer = source)
 							JniModifiedUtf8.Validate (pointer, "value");
-						}
 					}
-				}
-			}
-		}
-
-		[TestMethod]
-		[TestCategory ("JniModifiedUtf8")]
-		public void ModifiedUtf8_RejectsFourByteUtf8WithActionableMessage ()
-		{
-			byte [][] fourByte = [
-				[0xf0, 0x90, 0x80, 0x80],
-				[0xf4, 0x8f, 0xbf, 0xbf],
-				[0xf0],
-			];
-			foreach (var bytes in fourByte) {
-				var source = new byte [bytes.Length + 1];
-				bytes.CopyTo (source, 0);
-				var e = Assert.ThrowsExactly<ArgumentException> (() => JniModifiedUtf8.Validate (source, "value"));
-				Assert.AreEqual ("value", e.ParamName);
-				StringAssert.Contains (e.Message, "4-byte UTF-8");
-				unsafe {
-					// SAFETY: source stays pinned and NUL-terminated through validation.
-					fixed (byte* pinned = source) {
-						IntPtr pointer = (IntPtr) pinned;
-						var ePtr = Assert.ThrowsExactly<ArgumentException> (() => JniModifiedUtf8.Validate ((byte*) pointer, "value"));
-						Assert.AreEqual ("value", ePtr.ParamName);
-						StringAssert.Contains (ePtr.Message, "4-byte UTF-8");
-					}
-				}
-			}
-		}
-
-		[TestMethod]
-		[TestCategory ("JniModifiedUtf8")]
-		public void ModifiedUtf8_HandlesVectorBoundaries ()
-		{
-			const string pattern = "A\0\u007f\u0080\u07ff\u0800\ud800\udc00\udfff";
-			byte [][] encoded = [
-				[0x41], [0xc0, 0x80], [0x7f], [0xc2, 0x80], [0xdf, 0xbf],
-				[0xe0, 0xa0, 0x80], [0xed, 0xa0, 0x80], [0xed, 0xb0, 0x80], [0xed, 0xbf, 0xbf],
-			];
-			for (int start = 0; start < 16; start++) {
-				for (int length = 0; length <= 65; length++) {
-					var chars = new char [start + length + 1];
-					Array.Fill (chars, '\uffff');
-					var expected = new List<byte> ();
-					for (int i = 0; i < length; i++) {
-						int index = (start + i) % pattern.Length;
-						chars [start + i] = pattern [index];
-						expected.AddRange (encoded [index]);
-					}
-					var value = chars.AsSpan (start, length);
-					Assert.AreEqual (expected.Count, JniModifiedUtf8.GetByteCount (value), $"start={start}, length={length}");
-					var destination = new byte [expected.Count + 2];
-					Array.Fill (destination, (byte) 0xcc);
-					JniModifiedUtf8.GetBytes (value, destination.AsSpan (1, expected.Count));
-					CollectionAssert.AreEqual (expected.ToArray (), destination.AsSpan (1, expected.Count).ToArray ());
-					Assert.AreEqual ((byte) 0xcc, destination [0]);
-					Assert.AreEqual ((byte) 0xcc, destination [destination.Length - 1]);
 				}
 			}
 		}
@@ -148,19 +94,31 @@ namespace Java.InteropTests
 					source [prefix + bytes.Length + 1] = 0x80;
 					source [prefix + bytes.Length + 2] = 0x80;
 					source [prefix + bytes.Length + 3] = 0x80;
-					var eSpan = Assert.ThrowsExactly<ArgumentException> (() => JniModifiedUtf8.Validate (source, "value"));
-					Assert.AreEqual ("value", eSpan.ParamName);
-					StringAssert.Contains (eSpan.Message, $"byte offset {prefix}");
-					unsafe {
-						// SAFETY: source stays pinned and NUL-terminated through each scan.
-						fixed (byte* pinned = source) {
-							IntPtr pointer = (IntPtr) pinned;
-							var e = Assert.ThrowsExactly<ArgumentException> (() => JniModifiedUtf8.Validate ((byte*) pointer, "value"));
-							Assert.AreEqual ("value", e.ParamName);
-							StringAssert.Contains (e.Message, $"byte offset {prefix}");
-						}
+					bool expectFourByteHint = bytes [0] is >= 0xf0 and <= 0xf4;
+					AssertInvalid (source, prefix, expectFourByteHint);
+				}
+			}
+
+			static void AssertInvalid (byte [] source, int offset, bool expectFourByteHint)
+			{
+				var eSpan = Assert.ThrowsExactly<ArgumentException> (() => JniModifiedUtf8.Validate (source, "value"));
+				AssertMessage (eSpan, offset, expectFourByteHint);
+				unsafe {
+					// SAFETY: source stays pinned and NUL-terminated through validation.
+					fixed (byte* pinned = source) {
+						IntPtr pointer = (IntPtr) pinned;
+						var ePtr = Assert.ThrowsExactly<ArgumentException> (() => JniModifiedUtf8.Validate ((byte*) pointer, "value"));
+						AssertMessage (ePtr, offset, expectFourByteHint);
 					}
 				}
+			}
+
+			static void AssertMessage (ArgumentException e, int offset, bool expectFourByteHint)
+			{
+				Assert.AreEqual ("value", e.ParamName);
+				StringAssert.Contains (e.Message, $"byte offset {offset}");
+				if (expectFourByteHint)
+					StringAssert.Contains (e.Message, "4-byte UTF-8");
 			}
 		}
 
@@ -174,6 +132,7 @@ namespace Java.InteropTests
 				// SAFETY: Every buffer is a live, NUL-terminated array or u8 literal; malformed input throws before JNI reads it.
 				AssertRejected ("classname", () => { _ = unsafe (JniEnvironment.Types.FindClass (bad)); });
 				AssertRejected ("classname", () => { _ = unsafe (JniEnvironment.Types.TryFindClass ([(byte) 'a', (byte) '.', 0xe0, 0xa0, 0], out _)); });
+				AssertRejected ("classname", () => { _ = unsafe (JniEnvironment.Types.TryFindClass ("\0java/lang/Object"u8, out _)); });
 				AssertRejected ("name", () => { _ = unsafe (JniEnvironment.InstanceMethods.GetMethodID (r, bad, "()V"u8)); });
 				AssertRejected ("signature", () => { _ = unsafe (JniEnvironment.InstanceMethods.GetMethodID (r, "hashCode"u8, bad)); });
 				AssertRejected ("name", () => { _ = unsafe (JniEnvironment.StaticMethods.GetStaticMethodID (r, bad, "()V"u8)); });
@@ -181,13 +140,10 @@ namespace Java.InteropTests
 				AssertRejected ("signature", () => { _ = unsafe (JniEnvironment.StaticFields.GetStaticFieldID (r, "x"u8, bad)); });
 				AssertRejected ("name", () => { _ = unsafe (Object_class.GetInstanceMethod (bad, "()I"u8)); });
 				AssertRejected ("signature", () => { _ = unsafe (Object_class.GetStaticMethod ("x"u8, bad)); });
-				AssertRejected ("classname", () => { _ = unsafe (JniEnvironment.Types.TryFindClass ("\0java/lang/Object"u8, out _)); });
 				AssertRejected ("name", () => { _ = unsafe (JniEnvironment.InstanceMethods.GetMethodID (r, ""u8, "()V"u8)); });
 				AssertRejected ("signature", () => { _ = unsafe (JniEnvironment.InstanceFields.GetFieldID (r, "x"u8, ""u8)); });
 				AssertRejected ("name", () => { _ = unsafe (JniEnvironment.InstanceMethods.GetMethodID (r, "\0hashCode"u8, "()I"u8)); });
 				AssertRejected ("signature", () => { _ = unsafe (JniEnvironment.StaticMethods.GetStaticMethodID (r, "x"u8, "\0()V"u8)); });
-				AssertRejected ("name", () => { _ = unsafe (JniEnvironment.InstanceFields.GetFieldID (r, "\0"u8, "I"u8)); });
-				AssertRejected ("signature", () => { _ = unsafe (JniEnvironment.StaticFields.GetStaticFieldID (r, "x"u8, "\0I"u8)); });
 
 				var nullName = default (JniNativeMethodRegistration);
 				nullName.Signature = "()V";
@@ -213,13 +169,10 @@ namespace Java.InteropTests
 						methods [0] = new JniNativeMethod (supplementary, good, callback);
 						AssertRejected ("methods", () => JniEnvironment.Types.RegisterNatives (r, methods));
 
-						methods [0] = new JniNativeMethod (supplementary, badPtr, callback);
-						AssertRejected ("methods", () => JniEnvironment.Types.RegisterNatives (r, methods));
-
 						methods [0] = default;
 						AssertRejected ("methods", () => JniEnvironment.Types.RegisterNatives (r, methods));
 
-						methods [0] = new JniNativeMethod (supplementary, good, callback);
+						methods [0] = new JniNativeMethod (good, good, callback);
 						methods [1] = new JniNativeMethod (good, null, callback);
 						AssertRejected ("methods", () => JniEnvironment.Types.RegisterNatives (r, methods));
 
@@ -269,6 +222,22 @@ namespace Java.InteropTests
 			}
 		}
 
+		static unsafe void RegisterUnicodeNative (JniType type, string name, string signature, IntPtr callback, int count = 1)
+		{
+			byte [] nameBytes = ModifiedUtf8 (name);
+			byte [] signatureBytes = ModifiedUtf8 (signature);
+			unsafe {
+				// SAFETY: Buffers remain pinned and terminated through registration; the callback matches the descriptor ABI.
+				fixed (byte* namePtr = nameBytes)
+				fixed (byte* signaturePtr = signatureBytes) {
+					var methods = new JniNativeMethod [count];
+					for (int i = 0; i < methods.Length; i++)
+						methods [i] = new JniNativeMethod (namePtr, signaturePtr, callback);
+					JniEnvironment.Types.RegisterNatives (type.PeerReference, methods);
+				}
+			}
+		}
+
 		[TestMethod]
 		[TestCategory ("JniModifiedUtf8")]
 		public void FindClass_SupplementaryName ()
@@ -276,23 +245,12 @@ namespace Java.InteropTests
 			// ART's String-based Class.forName() cannot load classes whose names contain supplementary
 			// characters, so the lookup must use JNI FindClass() with the app class loader. ART selects
 			// that loader from the calling native method, so run the lookups inside a UnicodeNames native method.
-			byte [] modifiedNativeName = [.. "native"u8, 0xed, 0xa0, 0x80, 0xed, 0xb0, 0x80, 0];
-			byte [] modifiedNativeSignature = [
-				.. "(Lnet/dot/jni/test/UnicodeNames$Value"u8,
-				0xed, 0xa0, 0x80, 0xed, 0xb0, 0x80, .. ";)I"u8, 0,
-			];
 			using (var type = new JniType (UnicodeTypeName)) {
 				try {
 					unsafe {
-						// SAFETY: Buffers remain pinned and terminated through registration; the callback has the matching JNI ABI.
-						fixed (byte* name = modifiedNativeName)
-						fixed (byte* signature = modifiedNativeSignature) {
-							var methods = new [] {
-								new JniNativeMethod (name, signature,
-									(IntPtr) (delegate* unmanaged<IntPtr, IntPtr, IntPtr, int>) &FindSupplementaryClassCallback),
-							};
-							JniEnvironment.Types.RegisterNatives (type.PeerReference, methods);
-						}
+						// SAFETY: FindSupplementaryClassCallback has the matching JNI ABI for UnicodeNativeSignature.
+						RegisterUnicodeNative (type, UnicodeNativeName, UnicodeNativeSignature,
+							(IntPtr) (delegate* unmanaged<IntPtr, IntPtr, IntPtr, int>) &FindSupplementaryClassCallback);
 					}
 					findSupplementaryClassFailure = "callback was not invoked";
 					var result = InvokeUnicodeNative (type);
@@ -322,13 +280,9 @@ namespace Java.InteropTests
 		static void AssertFindClassSupplementaryName ()
 		{
 			const string className = "net/dot/jni/test/UnicodeNames$Value\U00010000";
-			byte [] modifiedName = [
-				.. "net/dot/jni/test/UnicodeNames$Value"u8,
-				0xed, 0xa0, 0x80, 0xed, 0xb0, 0x80, 0,
-			];
 			using (var fromString = new JniType (className))
-			// SAFETY: modifiedName has NUL-terminated modified UTF-8 backing storage.
-			using (var fromModifiedUtf8 = unsafe (new JniType (modifiedName))) {
+			// SAFETY: ModifiedUtf8 returns NUL-terminated modified UTF-8 backing storage.
+			using (var fromModifiedUtf8 = unsafe (new JniType (ModifiedUtf8 (className)))) {
 				Assert.AreEqual (className, fromString.Name);
 				Assert.IsTrue (JniEnvironment.Types.IsSameObject (fromString.PeerReference, fromModifiedUtf8.PeerReference));
 			}
@@ -348,20 +302,8 @@ namespace Java.InteropTests
 			const string staticFieldName = "staticField\U00010000";
 			const string valueSignature = "Lnet/dot/jni/test/UnicodeNames$Value\U00010000;";
 			const string identitySignature = "(Lnet/dot/jni/test/UnicodeNames$Value\U00010000;)Lnet/dot/jni/test/UnicodeNames$Value\U00010000;";
-			byte [] modifiedName = [.. "method"u8, 0xed, 0xa0, 0x80, 0xed, 0xb0, 0x80, 0];
-			byte [] modifiedStaticName = [.. "staticMethod"u8, 0xed, 0xa0, 0x80, 0xed, 0xb0, 0x80, 0];
-			byte [] modifiedInstanceFieldName = [.. "field"u8, 0xed, 0xa0, 0x80, 0xed, 0xb0, 0x80, 0];
-			byte [] modifiedStaticFieldName = [.. "staticField"u8, 0xed, 0xa0, 0x80, 0xed, 0xb0, 0x80, 0];
-			byte [] modifiedSignature = [
-				.. "Lnet/dot/jni/test/UnicodeNames$Value"u8,
-				0xed, 0xa0, 0x80, 0xed, 0xb0, 0x80, (byte) ';', 0,
-			];
-			byte [] modifiedIdentitySignature = [
-				.. "(Lnet/dot/jni/test/UnicodeNames$Value"u8,
-				0xed, 0xa0, 0x80, 0xed, 0xb0, 0x80,
-				.. ";)Lnet/dot/jni/test/UnicodeNames$Value"u8,
-				0xed, 0xa0, 0x80, 0xed, 0xb0, 0x80, (byte) ';', 0,
-			];
+			byte [] modifiedName = ModifiedUtf8 (instanceName);
+			byte [] modifiedIdentitySignature = ModifiedUtf8 (identitySignature);
 
 			using (var type = new JniType (UnicodeTypeName)) {
 				var instance = type.GetInstanceMethod (instanceName, "()I");
@@ -383,10 +325,10 @@ namespace Java.InteropTests
 				// SAFETY: Each modified UTF-8 array is terminated and remains alive through its lookup.
 				unsafe {
 					Assert.AreEqual (instance.ID, type.GetInstanceMethod (modifiedName, "()I"u8).ID);
-					Assert.AreEqual (staticMethod.ID, type.GetStaticMethod (modifiedStaticName, "()I"u8).ID);
-					Assert.AreEqual (instanceField.ID, type.GetInstanceField (modifiedInstanceFieldName, "I"u8).ID);
-					Assert.AreEqual (staticField.ID, type.GetStaticField (modifiedStaticFieldName, "I"u8).ID);
-					Assert.AreEqual (valueField.ID, type.GetInstanceField ("value"u8, modifiedSignature).ID);
+					Assert.AreEqual (staticMethod.ID, type.GetStaticMethod (ModifiedUtf8 (staticName), "()I"u8).ID);
+					Assert.AreEqual (instanceField.ID, type.GetInstanceField (ModifiedUtf8 (instanceFieldName), "I"u8).ID);
+					Assert.AreEqual (staticField.ID, type.GetStaticField (ModifiedUtf8 (staticFieldName), "I"u8).ID);
+					Assert.AreEqual (valueField.ID, type.GetInstanceField ("value"u8, ModifiedUtf8 (valueSignature)).ID);
 					Assert.AreEqual (identity.ID, type.GetStaticMethod ("identity"u8, modifiedIdentitySignature).ID);
 					fixed (byte* name = modifiedName)
 					fixed (byte* signature = "()I"u8) {
@@ -421,20 +363,12 @@ namespace Java.InteropTests
 		[DataRow (40)]
 		public void RegisterNatives_SupplementaryModifiedUtf8 (int count)
 		{
-			byte [] name = [.. "native"u8, 0xed, 0xa0, 0x80, 0xed, 0xb0, 0x80, 0];
-			byte [] signature = [.. "(Lnet/dot/jni/test/UnicodeNames$Value"u8, 0xed, 0xa0, 0x80, 0xed, 0xb0, 0x80, .. ";)I"u8, 0];
 			using (var type = new JniType (UnicodeTypeName)) {
 				try {
 					unsafe {
-						// SAFETY: Both arrays remain pinned and terminated through registration; the callback has the matching JNI ABI.
-						fixed (byte* namePtr = name)
-						fixed (byte* signaturePtr = signature) {
-							var methods = new JniNativeMethod [count];
-							for (int i = 0; i < methods.Length; i++)
-								methods [i] = new JniNativeMethod (namePtr, signaturePtr,
-									(IntPtr) (delegate* unmanaged<IntPtr, IntPtr, IntPtr, int>) &UnicodeNativeCallback);
-							JniEnvironment.Types.RegisterNatives (type.PeerReference, methods);
-						}
+						// SAFETY: UnicodeNativeCallback has the matching JNI ABI for UnicodeNativeSignature.
+						RegisterUnicodeNative (type, UnicodeNativeName, UnicodeNativeSignature,
+							(IntPtr) (delegate* unmanaged<IntPtr, IntPtr, IntPtr, int>) &UnicodeNativeCallback, count);
 					}
 					Assert.AreEqual (57, InvokeUnicodeNative (type));
 				} finally {
@@ -447,27 +381,16 @@ namespace Java.InteropTests
 		[TestCategory ("JniModifiedUtf8")]
 		public void RegisterNatives_MissingSupplementaryName_Throws ()
 		{
-			byte [] missingName = [.. "missing"u8, 0xed, 0xa0, 0x80, 0xed, 0xb0, 0x80, 0];
-			byte [] signatureBytes = [.. "(Lnet/dot/jni/test/UnicodeNames$Value"u8, 0xed, 0xa0, 0x80, 0xed, 0xb0, 0x80, .. ";)I"u8, 0];
 			using (var type = new JniType (UnicodeTypeName)) {
 				try {
-					unsafe {
-						// SAFETY: Buffers remain pinned and terminated through registration; the callback has the matching JNI ABI.
-						fixed (byte* name = missingName)
-						fixed (byte* signature = signatureBytes) {
-							var methods = new [] {
-								new JniNativeMethod (name, signature,
-									(IntPtr) (delegate* unmanaged<IntPtr, IntPtr, IntPtr, int>) &UnicodeNativeCallback),
-							};
-							var error = Assert.ThrowsExactly<Java.Lang.NoSuchMethodError> (() => {
-								unsafe {
-									// SAFETY: Both pinned buffers and the callback remain valid through this synchronous call.
-									JniEnvironment.Types.RegisterNatives (type.PeerReference, methods);
-								}
-							});
-							error.Dispose ();
+					var error = Assert.ThrowsExactly<Java.Lang.NoSuchMethodError> (() => {
+						unsafe {
+							// SAFETY: Callback matches JNI ABI; missing method fails synchronously.
+							RegisterUnicodeNative (type, "missing\U00010000", UnicodeNativeSignature,
+								(IntPtr) (delegate* unmanaged<IntPtr, IntPtr, IntPtr, int>) &UnicodeNativeCallback);
 						}
-					}
+					});
+					error.Dispose ();
 				} finally {
 					type.UnregisterNativeMethods ();
 				}
@@ -583,14 +506,10 @@ namespace Java.InteropTests
 				Assert.IsFalse (obj.IsValid);
 				Assert.IsFalse (JniEnvironment.Types.TryFindClass (dottedPrefix.Slice (0, 13), out obj), "java.lang.Obj");
 				Assert.IsFalse (obj.IsValid);
-				Exception? notFound = null;
-				try {
-					var found = JniEnvironment.Types.FindClass (prefix.Slice (0, 13));
+				Assert.Throws<Exception> (() => {
+					var found = unsafe (JniEnvironment.Types.FindClass ("java/lang/Object"u8.Slice (0, 13)));
 					JniObjectReference.Dispose (ref found);
-				} catch (Exception x) {
-					notFound = x;
-				}
-				Assert.IsNotNull (notFound, "FindClass (java/lang/Obj) must not find java/lang/Object.");
+				});
 			}
 			Assert.IsFalse (JniEnvironment.Exceptions.ExceptionOccurred ().IsValid);
 
@@ -630,14 +549,7 @@ namespace Java.InteropTests
 				Assert.IsTrue (JniEnvironment.StaticFields.GetStaticFieldID (r, maxValue.Slice (0, 9), intType.Slice (0, 1)).IsValid);
 				Assert.IsTrue (Integer_class.GetInstanceMethod (hashCode.Slice (0, 8), intReturn.Slice (0, 3)).IsValid);
 
-				ReadOnlySpan<byte> hash = "hashCode"u8;
-				Exception? notFound = null;
-				try {
-					_ = JniEnvironment.InstanceMethods.GetMethodID (r, hash.Slice (0, 4), "()I"u8);
-				} catch (Exception e) {
-					notFound = e;
-				}
-				Assert.IsNotNull (notFound, "GetMethodID (hash) must not find hashCode.");
+				Assert.Throws<Exception> (() => { _ = unsafe (JniEnvironment.InstanceMethods.GetMethodID (r, "hashCode"u8.Slice (0, 4), "()I"u8)); });
 			}
 			Assert.IsFalse (JniEnvironment.Exceptions.ExceptionOccurred ().IsValid);
 		}

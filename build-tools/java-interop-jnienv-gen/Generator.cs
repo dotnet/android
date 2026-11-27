@@ -212,8 +212,7 @@ namespace Xamarin.Java.Interop
 				o.WriteLine ("\t\t{");
 				o.WriteLine ("\t\t\tunsafe {");
 				o.WriteLine ("\t\t\t\t// SAFETY: The caller supplies this thread's live JNIEnv and arguments matching the {0} JNI slot.", entry.Name);
-				bool validateUtf8 = entry.Name == "FindClass" || entry.Name == "GetMethodID" ||
-					entry.Name == "GetStaticMethodID" || entry.Name == "GetFieldID" || entry.Name == "GetStaticFieldID";
+				bool validateUtf8 = entry.Name is "FindClass" or "GetMethodID" or "GetStaticMethodID" or "GetFieldID" or "GetStaticFieldID";
 				if (validateUtf8) {
 					foreach (var p in entry.Parameters) {
 						if (p.Type is StringTypeInfo)

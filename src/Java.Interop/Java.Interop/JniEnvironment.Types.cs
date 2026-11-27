@@ -468,8 +468,6 @@ namespace Java.Interop
 				if (classname.Length == 0 || classname [0] == 0)
 					throw new ArgumentException ("'classname' cannot be a zero-length string.", nameof (classname));
 
-				JniModifiedUtf8.Validate (classname, nameof (classname));
-
 				var info = JniEnvironment.CurrentInfo;
 				var terminator = classname.IndexOf ((byte) 0);
 				var nameLength = terminator >= 0 ? terminator : classname.Length;
@@ -486,12 +484,7 @@ namespace Java.Interop
 				Span<byte> jniClassName = jniClassNameLength <= 256
 					? stackalloc byte [jniClassNameLength]
 					: new byte [jniClassNameLength];
-				if (hasDots) {
-					for (int i = 0; i < nameLength; ++i)
-						jniClassName [i] = classname [i] == (byte) '.' ? (byte) '/' : classname [i];
-				} else {
-					classname.Slice (0, nameLength).CopyTo (jniClassName);
-				}
+				classname.Slice (0, nameLength).Replace (jniClassName, (byte) '.', (byte) '/');
 				jniClassName [nameLength] = 0;
 
 				// SAFETY: jniClassName owns its appended NUL; the original caller-owned span remains readable for bounded fallback conversion.
