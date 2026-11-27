@@ -27,6 +27,8 @@ namespace Xamarin.Android.Tasks
 		[Required]
 		public string AndroidApiLevel { get; set; } = "";
 
+		public string []? ReferenceAssemblyPaths { get; set; }
+
 		[Required]
 		public string OutputFile { get; set; } = "";
 
@@ -54,7 +56,8 @@ namespace Xamarin.Android.Tasks
 			}
 
 			// Ensure that the user has the platform they are targeting installed
-			var jarpath = MonoAndroidHelper.TryGetAndroidJarPath (Log, AndroidApiLevel, androidSdkDirectory: AndroidSdkDirectory);
+			var jarpath = MonoAndroidHelper.TryGetAndroidJarPath (Log, AndroidApiLevel,
+				MonoAndroidHelper.GetSupportedVersions (BuildEngine4, ReferenceAssemblyPaths), androidSdkDirectory: AndroidSdkDirectory);
 			if (jarpath == null)
 				return !Log.HasLoggedErrors;
 
@@ -107,7 +110,8 @@ namespace Xamarin.Android.Tasks
 			}
 
 			// Arguments sent to jar2xml
-			var jarpath = MonoAndroidHelper.TryGetAndroidJarPath (Log, AndroidApiLevel, androidSdkDirectory: AndroidSdkDirectory);
+			var jarpath = MonoAndroidHelper.TryGetAndroidJarPath (Log, AndroidApiLevel,
+				MonoAndroidHelper.GetSupportedVersions (BuildEngine4, ReferenceAssemblyPaths), androidSdkDirectory: AndroidSdkDirectory);
 			if (jarpath != null)
 				cmd.AppendSwitchIfNotNull ("--ref=", Path.GetFullPath (jarpath));
 
