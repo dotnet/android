@@ -5,10 +5,15 @@ using System.Runtime.InteropServices;
 
 namespace Java.Interop {
 
-	// JNI modified UTF-8 validation:
-	// https://docs.oracle.com/en/java/javase/24/docs/specs/jni/types.html#modified-utf-8-strings
+	/// <summary>
+	/// JNI modified UTF-8 validation.
+	/// See <see href="https://docs.oracle.com/en/java/javase/24/docs/specs/jni/types.html#modified-utf-8-strings" />.
+	/// </summary>
 	static class JniModifiedUtf8 {
 
+		/// <summary>
+		/// Validates a NUL-terminated JNI modified UTF-8 byte sequence before passing it to JNI.
+		/// </summary>
 		/// <safety>
 		/// A non-null value must remain readable and unchanged through its NUL terminator.
 		/// </safety>
@@ -20,9 +25,11 @@ namespace Java.Interop {
 			Validate (unsafe (MemoryMarshal.CreateReadOnlySpanFromNullTerminated (value)), paramName);
 		}
 
-		// Validates strict JNI modified UTF-8 (1-byte 0x01..0x7F, 2-byte C0 80 or C2..DF 80..BF,
-		// 3-byte E0 A0..BF 80..BF or E1..EF 80..BF 80..BF). Rejects truncated, overlong, and 4-byte
-		// standard UTF-8 sequences before JNI reads them.
+		/// <summary>
+		/// Validates strict JNI modified UTF-8 (1-byte <c>0x01..0x7F</c>, 2-byte <c>C0 80</c> or
+		/// <c>C2..DF 80..BF</c>, 3-byte <c>E0 A0..BF 80..BF</c> or <c>E1..EF 80..BF 80..BF</c>).
+		/// Rejects truncated, overlong, and 4-byte standard UTF-8 sequences before JNI reads them.
+		/// </summary>
 		internal static void Validate (ReadOnlySpan<byte> value, string paramName)
 		{
 			int terminator = value.IndexOf ((byte) 0);
