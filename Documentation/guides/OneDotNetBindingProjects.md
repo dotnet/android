@@ -20,7 +20,7 @@ For example, a binding library would be identical to a class library:
 **Note:** It is still recommended that you create separate project(s) for binding your
 libraries, just that the project file will look the same as an application.
 
-[binding]: https://docs.microsoft.com/xamarin/android/platform/binding-java-library/
+[binding]: https://learn.microsoft.com/dotnet/android/binding-libs/binding-java-libs/binding-java-library
 
 ## Unsupported Legacy Options
 
@@ -89,7 +89,7 @@ Or exclude *all* files within that folder:
 <AndroidLibrary Remove="AndroidStudio\**\*" />
 ```
 
-[default-items]: https://github.com/xamarin/xamarin-android/blob/main/src/Xamarin.Android.Build.Tasks/Microsoft.Android.Sdk/Sdk/AutoImport.props
+[default-items]: https://github.com/dotnet/android/blob/main/src/Xamarin.Android.Build.Tasks/Microsoft.Android.Sdk/Sdk/AutoImport.props
 
 ## Embedded `.jar`./`.aar`
 

@@ -96,56 +96,11 @@
         </Str>
         <Disp Icon="Str" />
       </Item>
-      <Item ItemId=";XA0000_API_for_TargetFrameworkVersion" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
-        <Str Cat="Text">
-          <Val><![CDATA[Could not determine API level for $(TargetFrameworkVersion) of '{0}'.]]></Val>
-          <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA['{0}' の $(TargetFrameworkVersion) の API レベルを特定できませんでした。]]></Val>
-          </Tgt>
-        </Str>
-        <Disp Icon="Str" />
-      </Item>
-      <Item ItemId=";XA0000_API_or_TargetFrameworkVersion_Fail" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
-        <Str Cat="Text">
-          <Val><![CDATA[Could not determine $(AndroidApiLevel) or $(TargetFrameworkVersion); should not be reached.]]></Val>
-          <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[$(AndroidApiLevel) も $(TargetFrameworkVersion) も特定できませんでした。これは、通常は表示されないメッセージです。]]></Val>
-          </Tgt>
-        </Str>
-        <Disp Icon="Str" />
-      </Item>
       <Item ItemId=";XA0000_Exception" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Unhandled exception: {0}]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
             <Val><![CDATA[ハンドルされない例外: {0}]]></Val>
-          </Tgt>
-        </Str>
-        <Disp Icon="Str" />
-      </Item>
-      <Item ItemId=";XA0000_TargetFrameworkVersion_for_API" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
-        <Str Cat="Text">
-          <Val><![CDATA[Could not determine $(TargetFrameworkVersion) for API level '{0}.']]></Val>
-          <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[API レベル '{0}' の $(TargetFrameworkVersion) を特定できませんでした。]]></Val>
-          </Tgt>
-        </Str>
-        <Disp Icon="Str" />
-      </Item>
-      <Item ItemId=";XA0001" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
-        <Str Cat="Text">
-          <Val><![CDATA[Unsupported or invalid $(TargetFrameworkVersion) value of '{0}'. Please update your Project Options.]]></Val>
-          <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA['{0}' の $(TargetFrameworkVersion) 値がサポートされていないか、無効です。プロジェクトのオプションを更新してください。]]></Val>
-          </Tgt>
-        </Str>
-        <Disp Icon="Str" />
-      </Item>
-      <Item ItemId=";XA0002" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
-        <Str Cat="Text">
-          <Val><![CDATA[Could not find mono.android.jar]]></Val>
-          <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[mono.android.jar が見つかりませんでした]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
@@ -177,29 +132,11 @@
         </Str>
         <Disp Icon="Str" />
       </Item>
-      <Item ItemId=";XA0031" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
-        <Str Cat="Text">
-          <Val><![CDATA[Java SDK {0} or above is required when using {1}.]D;]A;Download the latest JDK at: https://aka.ms/msopenjdk]D;]A;Note: the Android Designer is incompatible with Java SDK 11.0: https://aka.ms/vs2019-and-jdk-11]]></Val>
-          <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[{1} を使用する場合は、ava SDK {0} 以上が必要です。]D;]A;最新の JDK のダウンロード場所: https://aka.ms/msopenjdk]D;]A;注意: Android Designerは Java SDK 11.0 と互換性がありません: https://aka.ms/vs2019-and-jdk-11]]></Val>
-          </Tgt>
-        </Str>
-        <Disp Icon="Str" />
-      </Item>
       <Item ItemId=";XA0031_NET" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Java SDK {0} or above is required when using .NET 6 or higher. Download the latest JDK at: https://aka.ms/msopenjdk]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
             <Val><![CDATA[.NET 6 以降を使用する場合は、Java SDK {0}以上が必要です。最新の JDK のダウンロード場所: https://aka.ms/msopenjdk]]></Val>
-          </Tgt>
-        </Str>
-        <Disp Icon="Str" />
-      </Item>
-      <Item ItemId=";XA0032" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
-        <Str Cat="Text">
-          <Val><![CDATA[Java SDK {0} or above is required when using Android SDK Build-Tools {1}.]]></Val>
-          <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[Android SDK ビルドツール {1} を使用するときには、Java SDK {0} 以上が必要です。]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
@@ -240,15 +177,6 @@
         </Str>
         <Disp Icon="Str" />
       </Item>
-      <Item ItemId=";XA0037" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
-        <Str Cat="Text">
-          <Val><![CDATA[Unknown mode: {0}]]></Val>
-          <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[不明なモード: {0}]]></Val>
-          </Tgt>
-        </Str>
-        <Disp Icon="Str" />
-      </Item>
       <Item ItemId=";XA0100" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[EmbeddedNativeLibrary '{0}' is invalid in Android Application projects. Please use AndroidNativeLibrary instead.]]></Val>
@@ -258,20 +186,11 @@
         </Str>
         <Disp Icon="Str" />
       </Item>
-      <Item ItemId=";XA0104" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
+      <Item ItemId=";XA0101" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
         <Str Cat="Text">
-          <Val><![CDATA[Invalid value for `$(AndroidSequencePointsMode)`: {0}]]></Val>
+          <Val><![CDATA[@(Content) build action is not supported]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA['$(AndroidSequencePointsMode)' の値が無効です: {0}]]></Val>
-          </Tgt>
-        </Str>
-        <Disp Icon="Str" />
-      </Item>
-      <Item ItemId=";XA0105" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
-        <Str Cat="Text">
-          <Val><![CDATA[The $(TargetFrameworkVersion) for {0} ({1}) is greater than the $(TargetFrameworkVersion) for the application project ({2}). Please increase the $(TargetFrameworkVersion) for the application project.]]></Val>
-          <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[{0} ({1}) の $(TargetFrameworkVersion) が、アプリケーション プロジェクト ({2}) の $(TargetFrameworkVersion) よりも大きくなっています。アプリケーション プロジェクトの $(TargetFrameworkVersion) を大きくしてください。]]></Val>
+            <Val><![CDATA[@(コンテンツ) ビルド アクションはサポートされていません]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
@@ -281,15 +200,6 @@
           <Val><![CDATA[{0} is a Reference Assembly.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
             <Val><![CDATA[{0} は参照アセンブリです。]]></Val>
-          </Tgt>
-        </Str>
-        <Disp Icon="Str" />
-      </Item>
-      <Item ItemId=";XA0107_Ignoring" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
-        <Str Cat="Text">
-          <Val><![CDATA[Ignoring Reference Assembly `{0}`.]]></Val>
-          <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[参照アセンブリ '{0}' を無視しています。]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
@@ -321,75 +231,15 @@
         </Str>
         <Disp Icon="Str" />
       </Item>
-      <Item ItemId=";XA0113" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
-        <Str Cat="Text">
-          <Val><![CDATA[Google Play requires that new applications and updates must use a TargetFrameworkVersion of {0} (API level {1}) or above. You are currently targeting {2} (API level {3}).]]></Val>
-          <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[Google Play では、新しいアプリケーションと更新プログラムで {0} (API レベル {1}) 以上の TargetFrameworkVersion を使用する必要があります。現在は、{2} (API レベル {3}) をターゲットにしています。]]></Val>
-          </Tgt>
-        </Str>
-        <Disp Icon="Str" />
-      </Item>
       <Item ItemId=";XA0116" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
         <Str Cat="Text">
-          <Val><![CDATA[Unable to find `EmbeddedResource` named `{0}`.]]></Val>
+          <Val><![CDATA[Unable to find required SDK file `{0}`.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[`{0}` という名前の `EmbeddedResource` が見つかりません。]]></Val>
+            <Val><![CDATA[必要な SDK ファイル `{0}` が見つかりません。]]></Val>
           </Tgt>
-        </Str>
-        <Disp Icon="Str" />
-      </Item>
-      <Item ItemId=";XA0117" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
-        <Str Cat="Text">
-          <Val><![CDATA[The TargetFrameworkVersion {0} is deprecated. Please update it to be v5.0 or higher.]]></Val>
-          <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[TargetFrameworkVersion {0} は非推奨です。v5.0 以上に更新してください。]]></Val>
-          </Tgt>
-        </Str>
-        <Disp Icon="Str" />
-      </Item>
-      <Item ItemId=";XA0118_Parse" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
-        <Str Cat="Text">
-          <Val><![CDATA[Could not parse '{0}']]></Val>
-          <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA['{0}' を解析できませんでした]]></Val>
-          </Tgt>
-        </Str>
-        <Disp Icon="Str" />
-      </Item>
-      <Item ItemId=";XA0118_Target" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
-        <Str Cat="Text">
-          <Val><![CDATA[Could not resolve `target` in lock file for '{0}']]></Val>
-          <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA['{0}' のロック ファイルで 'target' を解決できませんでした]]></Val>
-          </Tgt>
-        </Str>
-        <Disp Icon="Str" />
-      </Item>
-      <Item ItemId=";XA0119_AAB" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
-        <Str Cat="Text">
-          <Val><![CDATA[Using Fast Deployment and Android App Bundles at the same time is not currently supported. Use Fast Deployment for Debug configurations and Android App Bundles for Release configurations.]]></Val>
-          <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[Fast Deployment および Android App Bundles を同時に使用することは、現在サポートされていません。デバッグ構成には Fast Deployment を使用し、リリース構成には Android App Bundles を使用してください。]]></Val>
-          </Tgt>
-        </Str>
-        <Disp Icon="Str" />
-      </Item>
-      <Item ItemId=";XA0119_AOT" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
-        <Str Cat="Text">
-          <Val><![CDATA[Using fast deployment and AOT at the same time is not recommended. Use fast deployment for Debug configurations and AOT for Release configurations.]]></Val>
-          <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[高速展開と AOT を同時に使用することはお勧めしません。Debug 構成には高速展開、Release 構成には AOT を使用してください。]]></Val>
-          </Tgt>
-        </Str>
-        <Disp Icon="Str" />
-      </Item>
-      <Item ItemId=";XA0119_Interpreter" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
-        <Str Cat="Text">
-          <Val><![CDATA[Disabling the interpreter; using the interpreter and AOT at the same time is not supported. Use the interpreter for hot reload support in Debug configurations and AOT for Release configurations.]]></Val>
-          <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[インタープリターを無効にしているため、インタープリターと AOT の同時使用はサポートされていません。デバッグ構成でサポートするホット リロードのインタープリターとリリース構成の AOT を使用します。]]></Val>
-          </Tgt>
+          <Prev Cat="Text">
+            <Val><![CDATA[Unable to find `EmbeddedResource` named `{0}`.]]></Val>
+          </Prev>
         </Str>
         <Disp Icon="Str" />
       </Item>
@@ -420,20 +270,20 @@
         </Str>
         <Disp Icon="Str" />
       </Item>
+      <Item ItemId=";XA0119_ReadyToRunWithoutTrimming" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[ReadyToRun has been disabled because trimming is disabled. Set the 'PublishTrimmed' MSBuild property to 'true' to use ReadyToRun.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[トリミングが無効になっているため、ReadyToRun は無効になっています。ReadyToRun を使用するには、'PublishTrimmed' MSBuild プロパティを 'true' に設定してください。]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
       <Item ItemId=";XA0121" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Assembly '{0}' is using '[assembly: {1}]5D;', which is no longer supported. Use a newer version of this NuGet package or notify the library author.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
             <Val><![CDATA[アセンブリ '{0}' は、今はサポートされていない '[assembly: {1}]5D;' を使用しています。この NuGet パッケージの新しいバージョンを使用するか、ライブラリの作成者に連絡してください。]]></Val>
-          </Tgt>
-        </Str>
-        <Disp Icon="Str" />
-      </Item>
-      <Item ItemId=";XA0122" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
-        <Str Cat="Text">
-          <Val><![CDATA[Assembly '{0}' is using a deprecated attribute '[assembly: {1}]5D;'. Use a newer version of this NuGet package or notify the library author.]]></Val>
-          <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[アセンブリ '{0}' は、非推奨の属性 '[assembly: {1}]5D;' を使用しています。この NuGet パッケージの新しいバージョンを使用するか、ライブラリの作成者に連絡してください。]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
@@ -447,29 +297,11 @@
         </Str>
         <Disp Icon="Str" />
       </Item>
-      <Item ItemId=";XA0125" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
-        <Str Cat="Text">
-          <Val><![CDATA['{0}' is using a deprecated debug information level.]D;]A;Set the debugging information to Portable in the Visual Studio project property pages or edit the project file in a text editor and set the 'DebugType' MSBuild property to 'portable' to use the newer, cross-platform debug information level.]D;]A;If this file comes from a NuGet package, update to a newer version of the NuGet package or notify the library author.]]></Val>
-          <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA['{0}' では非推奨のデバッグ情報レベルが使用されています。]D;]A;Visual Studio プロジェクトのプロパティ ページでデバッグ情報を [移植可能]5D; に設定するか、テキスト エディターでプロジェクト ファイルを編集して 'DebugType' MSBuild プロパティを 'portable' に設定し、新しいクロスプラットフォームのデバッグ情報レベルを使用してください。]D;]A;このファイルが NuGet パッケージからのものである場合は、この NuGet パッケージの新しいバージョンに更新するか、ライブラリの作成者に通知してください。]]></Val>
-          </Tgt>
-        </Str>
-        <Disp Icon="Str" />
-      </Item>
       <Item ItemId=";XA0138" ItemType="0;.resx" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[%(AndroidAsset.AssetPack) and %(AndroidAsset.AssetPack) item metadata are only supported when `$(AndroidApplication)` is `true`.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
             <Val><![CDATA[%(AndroidAsset.AssetPack) および %(AndroidAsset.AssetPack) 項目メタデータは、'$(AndroidApplication)' が 'true' の場合にのみサポートされます。]]></Val>
-          </Tgt>
-        </Str>
-        <Disp Icon="Str" />
-      </Item>
-      <Item ItemId=";XA0139" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
-        <Str Cat="Text">
-          <Val><![CDATA[`@(AndroidAsset)` `{0}` has an invalid `DeliveryType` metadata of `{1}`. Supported values are `installtime`, `ondemand` or `fastfollow`.]]></Val>
-          <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA['@(AndroidAsset)' '{0}' に、'{1}' の無効な 'DeliveryType' メタデータがあります。サポートされている値は、'installtime'、'ondemand'、または 'fastfollow' です。]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
@@ -539,15 +371,6 @@
           <Val><![CDATA[Attempt to check whether '{0}' is a correctly aligned ELF file failed with exception, ignoring alignment check for the file.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
             <Val><![CDATA['{0}' が正しく配置された ELF ファイルであるかどうかをチェックしようとしましたが、例外が発生して失敗しました。このファイルの配置チェックは無視されます。]]></Val>
-          </Tgt>
-        </Str>
-        <Disp Icon="Str" />
-      </Item>
-      <Item ItemId=";XA0147" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
-        <Str Cat="Text">
-          <Val><![CDATA[Attempt to check whether '{0}' is a valid ELF file failed with exception, ignoring AOT check for the file.]]></Val>
-          <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA['{0}' が有効な ELF ファイルであるかどうかをチェックしようとしましたが、例外が発生して失敗しました。このファイルの AOT チェックは無視されます。]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
@@ -696,33 +519,6 @@
         </Str>
         <Disp Icon="Str" />
       </Item>
-      <Item ItemId=";XA1015" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
-        <Str Cat="Text">
-          <Val><![CDATA[More than one Android Wear project is specified as the paired project. It can be at most one.]]></Val>
-          <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[複数の Android Wear プロジェクトが、ペアリングされたプロジェクトとして指定されています。最大 1 つ指定できます。]]></Val>
-          </Tgt>
-        </Str>
-        <Disp Icon="Str" />
-      </Item>
-      <Item ItemId=";XA1016" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
-        <Str Cat="Text">
-          <Val><![CDATA[Target Wear application's project '{0}' does not specify required 'AndroidManifest' project property.]]></Val>
-          <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[Target Wear アプリケーションのプロジェクト '{0}' は、必須の 'AndroidManifest' プロジェクト プロパティを指定しません。]]></Val>
-          </Tgt>
-        </Str>
-        <Disp Icon="Str" />
-      </Item>
-      <Item ItemId=";XA1017" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
-        <Str Cat="Text">
-          <Val><![CDATA[Target Wear application's AndroidManifest.xml does not specify required 'package' attribute.]]></Val>
-          <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[Target Wear アプリケーションの AndroidManifest.xml は、必須の 'package' 属性を指定しません。]]></Val>
-          </Tgt>
-        </Str>
-        <Disp Icon="Str" />
-      </Item>
       <Item ItemId=";XA1018" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Specified AndroidManifest file does not exist: {0}.]]></Val>
@@ -732,29 +528,11 @@
         </Str>
         <Disp Icon="Str" />
       </Item>
-      <Item ItemId=";XA1019" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
-        <Str Cat="Text">
-          <Val><![CDATA[`LibraryProjectProperties` file `{0}` is located in a parent directory of the bindings project's intermediate output directory. Please adjust the path to use the original `project.properties` file directly from the Android library project directory.]]></Val>
-          <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA['LibraryProjectProperties' ファイル '{0}' は、バインド プロジェクトの中間出力ディレクトリの親ディレクトリにあります。元の 'project.properties' ファイルを Android ライブラリ プロジェクト ディレクトリから直接使用するには、パスを調整してください。]]></Val>
-          </Tgt>
-        </Str>
-        <Disp Icon="Str" />
-      </Item>
       <Item ItemId=";XA1020" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[At least one Java library is required for binding. Check that a Java library is included in the project and has the appropriate build action: 'LibraryProjectZip' (for AAR or ZIP), 'EmbeddedJar', 'InputJar' (for JAR), or 'LibraryProjectProperties' (project.properties).]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
             <Val><![CDATA[バインドには、少なくとも 1 つの Java ライブラリが必要です。Java ライブラリがプロジェクトに含まれており、適切なビルド アクションが存在することを確認してください: 'LibraryProjectZip' (AAR または ZIP 用)、'EmbeddedJar'、'InputJar' (JAR 用)、または 'LibraryProjectProperties' (project.properties)。]]></Val>
-          </Tgt>
-        </Str>
-        <Disp Icon="Str" />
-      </Item>
-      <Item ItemId=";XA1021" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
-        <Str Cat="Text">
-          <Val><![CDATA[Specified source Java library not found: {0}]]></Val>
-          <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[指定されたソース Java ライブラリが見つかりませんでした: {0}]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
@@ -777,15 +555,6 @@
         </Str>
         <Disp Icon="Str" />
       </Item>
-      <Item ItemId=";XA1025" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
-        <Str Cat="Text">
-          <Val><![CDATA[The experimental 'Hybrid' value for the 'AndroidAotMode' MSBuild property is not currently compatible with the armeabi-v7a target ABI. To continue using the experimental 'Hybrid' value for 'AndroidAotMode', deselect the armeabi-v7a target ABI in the Visual Studio project property pages or edit the project file in a text editor and remove 'armeabi-v7a' from the 'AndroidSupportedAbis' MSBuild property.]]></Val>
-          <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA['AndroidAotMode' MSBuild プロパティの試験的な 'Hybrid' 値は、現在、armeabi-v7a ターゲット ABI と互換性がありません。'AndroidAotMode' の試験的な 'Hybrid' 値を継続して使用するには、Visual Studio プロジェクト プロパティ ページで armeabi-v7a ターゲット ABI の選択を解除するか、テキスト エディターでプロジェクト ファイルを編集して、'AndroidSupportedAbis' MSBuild プロパティから 'armeabi-v7a' を削除します。]]></Val>
-          </Tgt>
-        </Str>
-        <Disp Icon="Str" />
-      </Item>
       <Item ItemId=";XA1027" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[The 'EnableProguard' MSBuild property is set to 'true' and the 'AndroidLinkTool' MSBuild property is empty, so 'AndroidLinkTool' will default to 'proguard'.]]></Val>
@@ -804,24 +573,6 @@
         </Str>
         <Disp Icon="Str" />
       </Item>
-      <Item ItemId=";XA1029" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
-        <Str Cat="Text">
-          <Val><![CDATA[The 'AotAssemblies' MSBuild property is deprecated. Edit the project file in a text editor to remove this property, and use the 'RunAOTCompilation' MSBuild property instead.]]></Val>
-          <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA['AotAssemblies' MSBuild プロパティは非推奨です。テキスト エディターでプロジェクト ファイルを編集してこのプロパティを削除し、代わりに 'RunAOTCompilation' MSBuild プロパティを使用してください。]]></Val>
-          </Tgt>
-        </Str>
-        <Disp Icon="Str" />
-      </Item>
-      <Item ItemId=";XA1030" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
-        <Str Cat="Text">
-          <Val><![CDATA[The 'RunAOTCompilation' MSBuild property is only supported when trimming is enabled. Edit the project file in a text editor to set 'PublishTrimmed' to 'true' for this build configuration.]]></Val>
-          <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA['RunAOTCompilation' MSBuild プロパティは、トリミングが有効な場合にのみサポートされます。テキスト エディターでプロジェクト ファイルを編集して、このビルド構成の 'PublishTrimmed' を 'true' に設定します。]]></Val>
-          </Tgt>
-        </Str>
-        <Disp Icon="Str" />
-      </Item>
       <Item ItemId=";XA1034" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Your project references '{0}' which uses the `_Microsoft.Android.Resource.Designer` assembly, but you do not have this feature enabled. Please set the `AndroidUseDesignerAssembly` MSBuild property to `true` in your project file.]]></Val>
@@ -833,10 +584,13 @@
       </Item>
       <Item ItemId=";XA1035" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
         <Str Cat="Text">
-          <Val><![CDATA[The 'BundleAssemblies' property is deprecated and it has no effect on the application build. Equivalent functionality is implemented by the 'AndroidUseAssemblyStore' and 'AndroidEnableAssemblyCompression' properties.]]></Val>
+          <Val><![CDATA[The 'BundleAssemblies' property is deprecated and no longer affects the build. Remove it. CoreCLR and NativeAOT do not use Mono's mkbundle.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA['BundleAssemblies' プロパティは非推奨であり、アプリケーションのビルドには影響しません。同等の機能は、'AndroidUseAssemblyStore' プロパティと 'AndroidEnableAssemblyCompression' プロパティによって実装されます。]]></Val>
+            <Val><![CDATA['BundleAssemblies' プロパティは非推奨になっており、ビルドに影響しなくなりました。削除してください。CoreCLR と NativeAOT では Mono の mkbundle を使用しません。]]></Val>
           </Tgt>
+          <Prev Cat="Text">
+            <Val><![CDATA[The 'BundleAssemblies' property is deprecated and no longer affects the build. Remove it. For supported .NET 10-and-earlier Mono projects, use 'AndroidUseAssemblyStore' with 'AndroidEnableAssemblyCompression' for the former behavior. .NET 11 CoreCLR controls packaged assembly-store behavior and needs no replacement setting.]]></Val>
+          </Prev>
         </Str>
         <Disp Icon="Str" />
       </Item>
@@ -844,16 +598,16 @@
         <Str Cat="Text">
           <Val><![CDATA[AndroidManifest.xml //uses-sdk/@android:minSdkVersion '{0}' does not match the $(SupportedOSPlatformVersion) value '{1}' in the project file (if there is no $(SupportedOSPlatformVersion) value in the project file, then a default value has been assumed).]D;]A;Either change the value in the AndroidManifest.xml to match the $(SupportedOSPlatformVersion) value, or remove the value in the AndroidManifest.xml (and add a $(SupportedOSPlatformVersion) value to the project file if it doesn't already exist).]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[AndroidManifest.xml //uses-sdk/@android:minSdkVersion '{0}' は、プロジェクト ファイルの $(SupportedOSPlatformVersion) 値 '{1}' と一致しません (プロジェクト ファイルに $(SupportedOSPlatformVersion) 値がない場合は、既定値が想定されています)。]A;]D;$(SupportedOSPlatformVersion) 値に一致するように AndroidManifest.xml の値を変更するか、AndroidManifest.xml の値を削除します (まだ存在しない場合は、$(SupportedOSPlatformVersion) 値をプロジェクト ファイルに追加します)。]]></Val>
+            <Val><![CDATA[AndroidManifest.xml //uses-sdk/@android:minSdkVersion '{0}' は、プロジェクト ファイルの $(SupportedOSPlatformVersion) 値 '{1}' と一致しません (プロジェクト ファイルに $(SupportedOSPlatformVersion) 値がない場合は、既定値が想定されています)。]D;]A;$(SupportedOSPlatformVersion) 値に一致するように AndroidManifest.xml の値を変更するか、AndroidManifest.xml の値を削除してください (そして、まだ存在しない場合は、$(SupportedOSPlatformVersion) 値をプロジェクト ファイルに追加してください)。]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";XA1037" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
         <Str Cat="Text">
-          <Val><![CDATA[The '{0}' MSBuild property is deprecated and will be removed in .NET {1}. See https://aka.ms/net-android-deprecations for more details.]]></Val>
+          <Val><![CDATA[Unsupported @(Reference) item: {0}]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA['{0}' MSBuild プロパティは非推奨であり、.NET {1}では削除されます。詳細については、「https://aka.ms/net-android-deprecations」を参照してください。]]></Val>
+            <Val><![CDATA[サポートされていない @(Reference) 項目: {0}]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
@@ -879,15 +633,6 @@
         </Str>
         <Disp Icon="Str" />
       </Item>
-      <Item ItemId=";XA1040" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
-        <Str Cat="Text">
-          <Val><![CDATA[The {0} runtime on Android is an experimental feature and not yet suitable for production use. File issues at: https://github.com/dotnet/android/issues]]></Val>
-          <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[Android 上の {0} ランタイムは試験的な機能であり、まだ運用環境での使用には適していません。問題の報告先: https://github.com/dotnet/android/issues]]></Val>
-          </Tgt>
-        </Str>
-        <Disp Icon="Str" />
-      </Item>
       <Item ItemId=";XA1041" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[The MSBuild property '{0}' has an invalid value of '{1}'. The value is expected to be a directory path representing the relative location of your Assets or Resources.]]></Val>
@@ -897,41 +642,83 @@
         </Str>
         <Disp Icon="Str" />
       </Item>
+      <Item ItemId=";XA1042" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[The <instrumentation> element in '{0}' is missing the android:name attribute.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA['{0}' の <instrumentation>要素に android:name 属性がありません。]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";XA1043" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[Could not determine what to launch: '{0}' does not contain a launchable <activity> or an <instrumentation> element. Set the $(AndroidLaunchActivity) or $(AndroidInstrumentation) MSBuild property to specify one.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[起動対象を判断できませんでした: '{0}' には起動可能な <activity>または <instrumentation> 要素が含まれていません。$(AndroidLaunchActivity) または $(AndroidInstrumentation) MSBuild プロパティを設定して、起動対象を指定します。]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
       <Item ItemId=";XA1044" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
         <Str Cat="Text">
-          <Val><![CDATA[The MSBuild property '{0}' is not compatible with the {1} runtime. The build cannot continue while this property is enabled. Either remove the property or guard it with a condition: Condition="'$(UseMonoRuntime)' == 'true'"]]></Val>
+          <Val><![CDATA[The MSBuild property '{0}' is not compatible with the {1} runtime. The build cannot continue while this property is enabled. Remove the property.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[MSBuild プロパティ '{0}' は {1} ランタイムと互換性がありません。このプロパティが有効な間はビルドを続行できません。プロパティを削除するか、次の条件で保護してください: Condition="'$(UseMonoRuntime)' == 'true'"]]></Val>
+            <Val><![CDATA[MSBuild プロパティ '{0}' は、{1} ランタイムと互換性がありません。このプロパティが有効になっている間は、ビルドを続行できません。プロパティを削除します。]]></Val>
           </Tgt>
           <Prev Cat="Text">
-            <Val><![CDATA[The MSBuild property '{0}' is not compatible with the {1} runtime and will be ignored. Either remove the property or guard it with a condition: Condition="'$(UseMonoRuntime)' == 'true'"]]></Val>
+            <Val><![CDATA[The MSBuild property '{0}' is not compatible with the {1} runtime. The build cannot continue while this property is enabled. Either remove the property or guard it with a condition: Condition="'$(UseMonoRuntime)' == 'true'"]]></Val>
           </Prev>
         </Str>
         <Disp Icon="Str" />
       </Item>
-      <Item ItemId=";XA1045" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
+      <Item ItemId=";XA1044_RunAOTCompilationDisabled" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
         <Str Cat="Text">
-          <Val><![CDATA[Input file `{0}` does not start with `<replacements/>`.]]></Val>
+          <Val><![CDATA[The MSBuild property 'RunAOTCompilation' is not compatible with the CoreCLR runtime. The build cannot continue while this property is set to 'false'. Remove the property. Starting with .NET 11, set 'PublishReadyToRun' to 'false' to disable ReadyToRun (R2R) AOT compilation.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[入力ファイル `{0}` は `<replacements/>` で始まっていません。]]></Val>
+            <Val><![CDATA[MSBuild プロパティ 'RunAOTCompilation' は、CoreCLR ランタイムと互換性がありません。このプロパティが 'false' に設定されている間は、ビルドを続行できません。プロパティを削除してください。.NET 11 以降では、ReadyToRun (R2R) AOT コンパイルを無効にするには、'PublishReadyToRun' を 'false' に設定してください。]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
-      <Item ItemId=";XA1046" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
+      <Item ItemId=";XA1048" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
         <Str Cat="Text">
-          <Val><![CDATA[Attribute '{0}' in element '{1}' has value '{2}' that cannot be parsed as boolean; {3} line {4}.]]></Val>
+          <Val><![CDATA['{0}' does not contain an <instrumentation> element. Add an Android.App.Instrumentation subclass to the application, or set the $(AndroidInstrumentation) MSBuild property to the name of one.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[要素 '{1}' の属性 '{0}' には、ブール値として解析できない値 '{2}' があります。{3} 行 {4}。]]></Val>
+            <Val><![CDATA['{0}' には <instrumentation> 要素が含まれていません。アプリケーションに Android.App.Instrumentation のサブクラスを追加するか、$(AndroidInstrumentation) MSBuild プロパティをその名前に設定します。]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
-      <Item ItemId=";XA1047" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
+      <Item ItemId=";XA1049" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
         <Str Cat="Text">
-          <Val><![CDATA[Required attribute '{0}' missing from element '{1}'; {2} line {3}.]]></Val>
+          <Val><![CDATA[The 'AndroidEnableMarshalMethods' MSBuild property is no longer supported. Remove it or set it to 'false'.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[必須属性 '{0}' が要素 '{1}' にありません。{2} 行 {3}。]]></Val>
+            <Val><![CDATA['AndroidEnableMarshalMethods' MSBuild プロパティはサポートされなくなりました。削除するか、'false' に設定します。]]></Val>
+          </Tgt>
+          <Prev Cat="Text">
+            <Val><![CDATA[The 'AndroidEnableMarshalMethods' and 'PublishReadyToRun' MSBuild properties cannot both be set to 'true'. Set one property to 'false'.]]></Val>
+          </Prev>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";XA1050" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[The 'AndroidR8ObfuscationMode' MSBuild property has an invalid value of '{0}'. Valid values are 'disabled', 'private-members', and 'runtime-remapping'.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA['AndroidR8ObfuscationMode' MSBuild プロパティの値 '{0}' が無効です。有効な値は 'disabled'、'private-members'、および 'runtime-remapping' です。]]></Val>
+          </Tgt>
+          <Prev Cat="Text">
+            <Val><![CDATA[The 'AndroidR8ObfuscationMode' MSBuild property has an invalid value of '{0}'. Valid values are 'disabled' and 'private-members'.]]></Val>
+          </Prev>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";XA1051" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[The AndroidStaticJniInitFunction MSBuild item is not supported with NativeAOT. Remove it from the project or use a NativeAOT-compatible version of the library that adds it.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[AndroidStaticJniInitFunction MSBuild 項目は、NativeAOT ではサポートされていません。プロジェクトから削除するか、それを追加するライブラリの NativeAOT 互換バージョンを使用します。]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
@@ -948,77 +735,11 @@
         </Str>
         <Disp Icon="Str" />
       </Item>
-      <Item ItemId=";XA2000_gcParams_bridgeImpl" ItemType="0;.resx" PsrId="211" Leaf="true">
-        <Str Cat="Text">
-          <Val><![CDATA[Support for the 'MONO_GC_PARAMS=bridge-implementation=old' value will be removed in .NET 7.]]></Val>
-          <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA['MONO_GC_PARAMS=bridge-implementation=old' 値のサポートは .NET 7 で解除されます。]]></Val>
-          </Tgt>
-        </Str>
-        <Disp Icon="Str" />
-      </Item>
       <Item ItemId=";XA2001" ItemType="0;.resx" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Source file '{0}' could not be found.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
             <Val><![CDATA[ソース ファイル '{0}' が見つかりませんでした。]]></Val>
-          </Tgt>
-        </Str>
-        <Disp Icon="Str" />
-      </Item>
-      <Item ItemId=";XA2002_Framework" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
-        <Str Cat="Text">
-          <Val><![CDATA[Can not resolve reference: `{0}`, referenced by {1}. Perhaps it doesn't exist in the .NET for Android profile?]]></Val>
-          <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[{1} によって参照されている参照 '{0}' を解決できません。.NET for Android プロファイル内にそれが存在しないと思われます。]]></Val>
-          </Tgt>
-          <Prev Cat="Text">
-            <Val><![CDATA[Can not resolve reference: `{0}`, referenced by {1}. Perhaps it doesn't exist in the Mono for Android profile?]]></Val>
-          </Prev>
-        </Str>
-        <Disp Icon="Str" />
-      </Item>
-      <Item ItemId=";XA2002_NuGet" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
-        <Str Cat="Text">
-          <Val><![CDATA[Can not resolve reference: `{0}`, referenced by {1}. Please add a NuGet package or assembly reference for `{0}`, or remove the reference to `{2}`.]]></Val>
-          <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[{1} によって参照されている参照 '{0}' を解決できません。'{0}' の NuGet パッケージまたはアセンブリ参照を追加するか、'{2}' への参照を削除してください。]]></Val>
-          </Tgt>
-        </Str>
-        <Disp Icon="Str" />
-      </Item>
-      <Item ItemId=";XA2006" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
-        <Str Cat="Text">
-          <Val><![CDATA[Could not resolve reference to '{0}' (defined in assembly '{1}') with scope '{2}'. When the scope is different from the defining assembly, it usually means that the type is forwarded.]]></Val>
-          <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA['{0}' (アセンブリ '{1}' 内で定義されている) への参照をスコープ '{2}' で解決できませんでした。定義しているアセンブリとスコープが異なる場合、通常は、その型が転送されることを意味します。]]></Val>
-          </Tgt>
-        </Str>
-        <Disp Icon="Str" />
-      </Item>
-      <Item ItemId=";XA2007" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
-        <Str Cat="Text">
-          <Val><![CDATA[Exception while loading assemblies: {0}]]></Val>
-          <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[アセンブリの読み込み中に例外が発生しました。{0}]]></Val>
-          </Tgt>
-        </Str>
-        <Disp Icon="Str" />
-      </Item>
-      <Item ItemId=";XA2008" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
-        <Str Cat="Text">
-          <Val><![CDATA[In referenced assembly {0}, Java.Interop.DoNotPackageAttribute requires non-null file name.]]></Val>
-          <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[参照されたアセンブリ {0} では、Java.Interop.DoNotPackageAttribute に Null 以外のファイル名が必要です。]]></Val>
-          </Tgt>
-        </Str>
-        <Disp Icon="Str" />
-      </Item>
-      <Item ItemId=";XA2024" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
-        <Str Cat="Text">
-          <Val><![CDATA[Unable to load assembly '{0}'.]]></Val>
-          <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[アセンブリ {0} を読み込めません。]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
@@ -1029,54 +750,6 @@
           <Tgt Cat="Text" Stat="Loc" Orig="New">
             <Val><![CDATA[アセンブリ {0} が存在しません。]]></Val>
           </Tgt>
-        </Str>
-        <Disp Icon="Str" />
-      </Item>
-      <Item ItemId=";XA3001" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
-        <Str Cat="Text">
-          <Val><![CDATA[Could not AOT the assembly: {0}]]></Val>
-          <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[アセンブリを AOT できませんでした: {0}]]></Val>
-          </Tgt>
-        </Str>
-        <Disp Icon="Str" />
-      </Item>
-      <Item ItemId=";XA3002" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
-        <Str Cat="Text">
-          <Val><![CDATA[Invalid AOT mode: {0}]]></Val>
-          <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[無効な AOT モード: {0}]]></Val>
-          </Tgt>
-        </Str>
-        <Disp Icon="Str" />
-      </Item>
-      <Item ItemId=";XA3004" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
-        <Str Cat="Text">
-          <Val><![CDATA[Android NDK r10d is buggy and provides an incompatible x86_64 libm.so. See https://code.google.com/p/android/issues/detail?id=161422.]]></Val>
-          <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[Android NDK r10d にはバグがあるため、互換性のない x86_64 libm.so が提供されます。https://code.google.com/p/android/issues/detail?id=161422 をご覧ください。]]></Val>
-          </Tgt>
-        </Str>
-        <Disp Icon="Str" />
-      </Item>
-      <Item ItemId=";XA3005" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
-        <Str Cat="Text">
-          <Val><![CDATA[The detected Android NDK version is incompatible with the targeted LLVM configuration. Please upgrade to NDK r10d or newer.]]></Val>
-          <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[検出された Android NDK のバージョンは、ターゲットの LLVM 構成と互換性がありません。NDK r10d 以降にアップグレードしてください。]]></Val>
-          </Tgt>
-        </Str>
-        <Disp Icon="Str" />
-      </Item>
-      <Item ItemId=";XA3006" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
-        <Str Cat="Text">
-          <Val><![CDATA[Could not compile native assembly file: {0}{1}]]></Val>
-          <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[ネイティブ アセンブリ ファイルをコンパイルできませんでした: {0}{1}]]></Val>
-          </Tgt>
-          <Prev Cat="Text">
-            <Val><![CDATA[Could not compile native assembly file: {0}]]></Val>
-          </Prev>
         </Str>
         <Disp Icon="Str" />
       </Item>
@@ -1097,24 +770,6 @@
           <Val><![CDATA[Failed to extract debug info from '{0}'{1}]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
             <Val><![CDATA['{0}'{1} からデバッグ情報を抽出できませんでした]]></Val>
-          </Tgt>
-        </Str>
-        <Disp Icon="Str" />
-      </Item>
-      <Item ItemId=";XA4209" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
-        <Str Cat="Text">
-          <Val><![CDATA[Failed to generate Java type for class: {0} due to {1}]]></Val>
-          <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[{1} のため、クラス {0} の Java の型を生成できませんでした]]></Val>
-          </Tgt>
-        </Str>
-        <Disp Icon="Str" />
-      </Item>
-      <Item ItemId=";XA4210" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
-        <Str Cat="Text">
-          <Val><![CDATA[Please add a reference to Mono.Android.Export.dll when using ExportAttribute or ExportFieldAttribute.]]></Val>
-          <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[ExportAttribute または ExportFieldAttribute を使用するときには、Mono.Android.Export.dll への参照を追加してください。]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
@@ -1145,24 +800,6 @@
           <Val><![CDATA[The type '{0}' must provide a public default constructor]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
             <Val><![CDATA[型 '{0}' には、既定のパブリック コンストラクターを指定する必要があります]]></Val>
-          </Tgt>
-        </Str>
-        <Disp Icon="Str" />
-      </Item>
-      <Item ItemId=";XA4214" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
-        <Str Cat="Text">
-          <Val><![CDATA[The managed type `{0}` exists in multiple assemblies: {1}. Please refactor the managed type names in these assemblies so that they are not identical.]]></Val>
-          <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[マネージ型 '{0}' が複数のアセンブリに存在します: {1}。これらのアセンブリにあるマネージ型の名前をリファクターして、それらが同一にならないようにしてください。]]></Val>
-          </Tgt>
-        </Str>
-        <Disp Icon="Str" />
-      </Item>
-      <Item ItemId=";XA4214_Result" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
-        <Str Cat="Text">
-          <Val><![CDATA[References to the type `{0}` will refer to `{0}, {1}`.]]></Val>
-          <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[型 '{0}' への参照では、'{0}, {1}' が参照されます。]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
@@ -1211,15 +848,6 @@
           <Val><![CDATA[AndroidManifest.xml //uses-sdk/@android:targetSdkVersion '{0}' is less than API-{1}, this configuration is not supported.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
             <Val><![CDATA[AndroidManifest.xml //uses-sdk/@android:targetSdkVersion '{0}' が API-{1} よりも小さいため、この構成はサポートされません。]]></Val>
-          </Tgt>
-        </Str>
-        <Disp Icon="Str" />
-      </Item>
-      <Item ItemId=";XA4217" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
-        <Str Cat="Text">
-          <Val><![CDATA[Architecture '{0}' has Java types which have no counterparts in template architecture '{1}': {2}]]></Val>
-          <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[アーキテクチャ '{0}' には、テンプレート アーキテクチャ '{1}' に対応する型がない Java 型があります: {2}]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
@@ -1305,15 +933,6 @@
         </Str>
         <Disp Icon="Str" />
       </Item>
-      <Item ItemId=";XA4227" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
-        <Str Cat="Text">
-          <Val><![CDATA[Architecture '{0}' doesn't match all marshal methods in architecture '{1}'. Please see detailed MSBuild logs for more information.]]></Val>
-          <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[アーキテクチャ '{0}' が、アーキテクチャ '{1}' のすべてのマーシャリング メソッドと一致しません。詳細については、MSBuild の詳細ログを参照してください。]]></Val>
-          </Tgt>
-        </Str>
-        <Disp Icon="Str" />
-      </Item>
       <Item ItemId=";XA4228" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Unable to find specified //activity-alias/@android:targetActivity: '{0}']]></Val>
@@ -1341,26 +960,14 @@
         </Str>
         <Disp Icon="Str" />
       </Item>
-      <Item ItemId=";XA4231" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
-        <Str Cat="Text">
-          <Val><![CDATA[The Android class parser value '{0}' is deprecated and will be removed in a future version of .NET for Android. Update the project properties to use 'class-parse'.]]></Val>
-          <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[Android クラス パーサーの値 '{0}' は非推奨であり、.NET for Android の今後のバージョンでは削除されます。'class-parse' を使用するようにプロジェクトのプロパティを更新してください。]]></Val>
-          </Tgt>
-          <Prev Cat="Text">
-            <Val><![CDATA[The Android class parser value '{0}' is deprecated and will be removed in a future version of .NET Android. Update the project properties to use 'class-parse'.]]></Val>
-          </Prev>
-        </Str>
-        <Disp Icon="Str" />
-      </Item>
       <Item ItemId=";XA4232" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
         <Str Cat="Text">
-          <Val><![CDATA[The Android code generation target '{0}' is deprecated and will be removed in a future version of .NET for Android. Update the project properties to use 'XAJavaInterop1'.]]></Val>
+          <Val><![CDATA[The Android code generation target '{0}' is no longer supported. The 'AndroidCodegenTarget' property only supports 'XAJavaInterop1'.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[Android コード生成ターゲット '{0}' は非推奨であり、.NET for Android の今後のバージョンでは削除されます。'XAJavaInterop1' を使用するようにプロジェクトのプロパティを更新してください。]]></Val>
+            <Val><![CDATA[Android コード生成ターゲット '{0}' はサポートされなくなりました。'AndroidCodegenTarget' プロパティでサポートされるのは 'XAJavaInterop1' のみです。]]></Val>
           </Tgt>
           <Prev Cat="Text">
-            <Val><![CDATA[The Android code generation target '{0}' is deprecated and will be removed in a future version of .NET Android. Update the project properties to use 'XAJavaInterop1'.]]></Val>
+            <Val><![CDATA[The Android code generation target '{0}' is deprecated and will be removed in a future version of .NET for Android. Update the project properties to use 'XAJavaInterop1'.]]></Val>
           </Prev>
         </Str>
         <Disp Icon="Str" />
@@ -1419,11 +1026,29 @@
         </Str>
         <Disp Icon="Str" />
       </Item>
+      <Item ItemId=";XA4237_Details" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[Failed to resolve POM for Maven artifact '{0}' from '{1}'.]D;]A;- {2}]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Maven アーティファクト '{0}' の POM を '{1}' から解決できませんでした。]D;]A;- {2}]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
       <Item ItemId=";XA4239" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Unknown Maven repository: '{0}'.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
             <Val><![CDATA[不明な Maven リポジトリ: '{0}'。]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";XA4240" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[The Java callable wrapper code generation target '{0}' is no longer supported. The '_AndroidJcwCodegenTarget' property only supports 'XAJavaInterop1'; 'XamarinAndroid' and 'JavaInterop1' are not supported.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Java 呼び出し可能ラッパーのコード生成ターゲット '{0}' は、サポートされなくなりました。'_AndroidJcwCodegenTarget' プロパティでは 'XAJavaInterop1' のみがサポートされています。'XamarinAndroid' と 'JavaInterop1' はサポートされていません。]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
@@ -1442,15 +1067,6 @@
           <Val><![CDATA[Java dependency '{0}' is not satisfied. Microsoft maintains the NuGet package '{1}' that could fulfill this dependency.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
             <Val><![CDATA[Java 依存関係 '{0}' が満たされていません。Microsoft は、この依存関係を満たす可能性のある NuGet パッケージ '{1}' を保持しています。]]></Val>
-          </Tgt>
-        </Str>
-        <Disp Icon="Str" />
-      </Item>
-      <Item ItemId=";XA4243" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
-        <Str Cat="Text">
-          <Val><![CDATA[Attribute '{0}' is required when using '{1}' for '{2}' item '{3}'.]]></Val>
-          <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA['{2}' 項目 '{3}' に '{1}' を使用する場合は、属性 '{0}' が必要です。]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
@@ -1518,29 +1134,11 @@
         </Str>
         <Disp Icon="Str" />
       </Item>
-      <Item ItemId=";XA4251" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
-        <Str Cat="Text">
-          <Val><![CDATA[Type '{0}' uses [JniAddNativeMethodRegistrationAttribute]5D;, which is not supported by the trimmable type map. To work around this, do not target the trimmable type map (for example, by switching to the 'llvm-ir' type map implementation), and please report this scenario at https://github.com/dotnet/android/issues so the team can evaluate whether to support it.]]></Val>
-          <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[型 '{0}' は [JniAddNativeMethodRegistrationAttribute]5D; を使用していますが、これはトリミング可能な型マップではサポートされていません。これを回避するには、トリミング可能な型マップを対象にしないでください (たとえば、'llvm-ir' 型マップの実装に切り替えます)。また、このシナリオを https://github.com/dotnet/android/issues で報告してください。チームがサポートするかどうかを評価できます。]]></Val>
-          </Tgt>
-        </Str>
-        <Disp Icon="Str" />
-      </Item>
       <Item ItemId=";XA4252" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Insecure HTTP Maven repository URL '{0}' is not allowed. Use an HTTPS URL, or set AllowInsecureHttp="true" metadata on the item to override this check.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
             <Val><![CDATA[セキュリティで保護されていない HTTP Maven リポジトリ URL '{0}' は許可されていません。HTTPS URL を使用するか、項目に AllowInsecureHttp="true" メタデータを設定して、このチェックをオーバーライドします。]]></Val>
-          </Tgt>
-        </Str>
-        <Disp Icon="Str" />
-      </Item>
-      <Item ItemId=";XA4253" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
-        <Str Cat="Text">
-          <Val><![CDATA[Generated Java callable wrapper code changed: '{0}']]></Val>
-          <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[生成された Java 呼び出し可能ラッパー コードが変更されました: '{0}']]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
@@ -1581,12 +1179,72 @@
         </Str>
         <Disp Icon="Str" />
       </Item>
-      <Item ItemId=";XA4300" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
+      <Item ItemId=";XA4258" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
         <Str Cat="Text">
-          <Val><![CDATA[Native library '{0}' will not be bundled because it has an unsupported ABI. Move this file to a directory with a valid Android ABI name such as 'libs/armeabi-v7a/'.]]></Val>
+          <Val><![CDATA[Java name '{0}' contains invalid or unsupported Java identifier '{1}'. Change the package or type name.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[ネイティブ ライブラリ '{0}' は、サポートされていない ABI があるため、バンドルされません。このファイルを、'libs/armeabi-v7a/' などの有効な Android ABI 名のディレクトリに移動します。]]></Val>
+            <Val><![CDATA[Java 名 '{0}' には、無効であるかサポートされていない Java 識別子 '{1}' が含まれています。パッケージ名または型名を変更してください。]]></Val>
           </Tgt>
+          <Prev Cat="Text">
+            <Val><![CDATA[Java name '{0}' contains reserved Java identifier '{1}'. Change the package or type name.]]></Val>
+          </Prev>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";XA4259" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[Type '{0}' has multiple managed constructors that map to the same Java Native Interface (JNI) signature '{1}'. Change the constructor parameter types so each constructor has a unique JNI signature.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[型 '{0}' には、同じ Java Native Interface (JNI) シグネチャ '{1}' にマップされている複数のマネージド コンストラクターがあります。コンストラクターのパラメーター型を変更して、各コンストラクターの JNI シグネチャが一意になるようにしてください。]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";XA4260" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[Type '{0}' has a constructor parameter type '{1}' that cannot be represented in a Java constructor. Remove the constructor or change the parameter to a supported Java type.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[型 '{0}' には、Java コンストラクターで表現できないコンストラクター パラメーターの型 '{1}' があります。コンストラクターを削除するか、パラメーターをサポートされている Java 型に変更してください。]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";XA4261" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[Type '{0}' has Java constructor signature '{1}', but its base type does not expose a compatible Java constructor. Add a compatible base constructor or remove the derived constructor.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[型 '{0}' には Java コンストラクター シグネチャ '{1}' がありますが、その基底型には互換性のある Java コンストラクターが公開されていません。互換性のある基底コンストラクターを追加するか、派生コンストラクターを削除してください。]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";XA4262" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[Type '{0}' has an invalid [Export]5D; SuperArgumentsString value '{1}'. The value references a constructor parameter that does not exist.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[型 '{0}' に無効な [Export]5D; SuperArgumentsString 値 '{1}' があります。値が存在しないコンストラクター パラメーターを参照しています。]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";XA4263" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[The exported member '{0}' has unsupported signature type '{1}'. Use a Java peer type, a supported managed-to-Java mapping, or [ExportParameter]5D;.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[エクスポートされたメンバー '{0}' に、サポートされていないシグネチャ型 '{1}' があります。Java のピア型、サポートされているマネージド コードから Java へのマッピング、または [ExportParameter]5D; を使用してください。]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";XA4266" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[Assembly '{0}' has different Java peer callback metadata in runtime-specific implementations '{1}' and '{2}'. All RuntimeIdentifiers must provide equivalent callback metadata.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[アセンブリ '{0}' には、ランタイム固有の実装 '{1}' と '{2}' で異なる Java ピア コールバック メタデータがあります。すべての RuntimeIdentifier は同等のコールバック メタデータを提供する必要があります。]]></Val>
+          </Tgt>
+          <Prev Cat="Text">
+            <Val><![CDATA[Assembly '{0}' has different Java peer callback metadata in runtime-specific implementations '{1}' and '{2}'. All RuntimeIdentifiers must provide equivalent callback metadata when AndroidTypeMapImplementation=trimmable.]]></Val>
+          </Prev>
         </Str>
         <Disp Icon="Str" />
       </Item>
@@ -1626,15 +1284,6 @@
         </Str>
         <Disp Icon="Str" />
       </Item>
-      <Item ItemId=";XA4302" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
-        <Str Cat="Text">
-          <Val><![CDATA[Unhandled exception merging `AndroidManifest.xml`: {0}]]></Val>
-          <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[ハンドルされない例外が 'AndroidManifest.xml' をマージしています。{0}]]></Val>
-          </Tgt>
-        </Str>
-        <Disp Icon="Str" />
-      </Item>
       <Item ItemId=";XA4303" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Error extracting resources from "{0}": {1}]]></Val>
@@ -1662,38 +1311,11 @@
         </Str>
         <Disp Icon="Str" />
       </Item>
-      <Item ItemId=";XA4305_File_Missing" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
-        <Str Cat="Text">
-          <Val><![CDATA[Multidex is enabled, but the `$(_AndroidMainDexListFile)` file '{0}' does not exist.]]></Val>
-          <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[Multidex が有効になっていますが、`$(_AndroidMainDexListFile)` ファイル '{0}' が存在しません。]]></Val>
-          </Tgt>
-        </Str>
-        <Disp Icon="Str" />
-      </Item>
       <Item ItemId=";XA4306" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[R8 does not support `@(MultiDexMainDexList)` files when android:minSdkVersion >= 21]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
             <Val><![CDATA[android:minSdkVersion が 21 以上の場合、R8 では `@(MultiDexMainDexList)` ファイルはサポートされません。]]></Val>
-          </Tgt>
-        </Str>
-        <Disp Icon="Str" />
-      </Item>
-      <Item ItemId=";XA4307" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
-        <Str Cat="Text">
-          <Val><![CDATA[Invalid ProGuard configuration file. {0}]]></Val>
-          <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[ProGuard 構成ファイルが無効です。{0}]]></Val>
-          </Tgt>
-        </Str>
-        <Disp Icon="Str" />
-      </Item>
-      <Item ItemId=";XA4308" ItemType="0;.resx" PsrId="211" Leaf="true">
-        <Str Cat="Text">
-          <Val><![CDATA[Failed to generate type maps]]></Val>
-          <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[型のマップを生成できませんでした]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
@@ -1712,15 +1334,6 @@
           <Val><![CDATA[`{0}` file `{1}` could not be found.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
             <Val><![CDATA[`{0}` ファイル `{1}` が見つかりませんでした。]]></Val>
-          </Tgt>
-        </Str>
-        <Disp Icon="Str" />
-      </Item>
-      <Item ItemId=";XA4311" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
-        <Str Cat="Text">
-          <Val><![CDATA[The application won't contain the paired Wear package because the Wear application package APK is not created yet. If building on the command line, be sure to build the "SignAndroidPackage" target.]]></Val>
-          <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[Wear アプリケーション パッケージ APK がまだ作成されていないため、アプリケーションにはペアリングされた Wear パッケージは含まれません。コマンド ラインでビルドする場合は、"SignAndroidPackage" ターゲットをビルドしてください。]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
@@ -1791,33 +1404,6 @@
         </Str>
         <Disp Icon="Str" />
       </Item>
-      <Item ItemId=";XA4319" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
-        <Str Cat="Text">
-          <Val><![CDATA[No NativeAOT DGML files were provided.]]></Val>
-          <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[NativeAOT DGML ファイルは指定されませんでした。]]></Val>
-          </Tgt>
-        </Str>
-        <Disp Icon="Str" />
-      </Item>
-      <Item ItemId=";XA4320" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
-        <Str Cat="Text">
-          <Val><![CDATA[ACW map file '{0}' was not found.]]></Val>
-          <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[ACW マップ ファイル '{0}' が見つかりませんでした。]]></Val>
-          </Tgt>
-        </Str>
-        <Disp Icon="Str" />
-      </Item>
-      <Item ItemId=";XA4321" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
-        <Str Cat="Text">
-          <Val><![CDATA[NativeAOT DGML file '{0}' was not found.]]></Val>
-          <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[NativeAOT DGML ファイル '{0}' が見つかりませんでした。]]></Val>
-          </Tgt>
-        </Str>
-        <Disp Icon="Str" />
-      </Item>
       <Item ItemId=";XA4322" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Skipping library ProGuard configuration file '{1}' (from {2}) because it contains the unsupported global option '{0}'. Global ProGuard options are only allowed in application projects.]]></Val>
@@ -1836,6 +1422,243 @@
         </Str>
         <Disp Icon="Str" />
       </Item>
+      <Item ItemId=";XA4325" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[Failed to generate the JNI remapping data. {0}]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[JNI 再マップ データを生成できませんでした。{0}]]></Val>
+          </Tgt>
+          <Prev Cat="Text">
+            <Val><![CDATA[Failed to generate the R8 JNI remapping data. {0}]]></Val>
+          </Prev>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";XA4325_AmbiguousEntry" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[The generated '{0}' entries for '{1}' have conflicting runtime targets '{2}' and '{3}', which cannot be represented by the JNI remapping tables.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA['{1}' の生成された '{0}' エントリには、競合するランタイム・ターゲット '{2}' と '{3}' があり、JNI再マップ表では表現できません。]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";XA4325_AssemblyHasNoMetadata" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[The linked managed assembly '{0}' does not contain managed metadata.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[リンクされたマネージド アセンブリ '{0}' にマネージド メタデータが含まれていません。]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";XA4325_AssemblyNotFound" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[The linked managed assembly '{0}' was not found.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[リンクされたマネージド アセンブリ '{0}' が見つかりませんでした。]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";XA4325_AssemblyReadFailure" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[The linked managed assembly '{0}' could not be read: {1}]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[リンクされたマネージド アセンブリ '{0}' を読み取れませんでした: {1}]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";XA4325_MappingDataFailure" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[The R8 mapping file '{0}' could not be read: {1}]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[R8 マッピング ファイル '{0}' を読み取ることができませんでした: {1}]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";XA4325_MappingNotFound" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[The R8 mapping file '{0}' was not found.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[R8 マッピング ファイル '{0}' が見つかりませんでした。]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";XA4325_NativeAotInvalidDehydration" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[The NativeAOT object contains an invalid data dehydration stream.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[NativeAOT オブジェクトに無効なデータ デハイドレーション ストリームが含まれています。]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";XA4325_NativeAotInvalidSection" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[The NativeAOT ELF object contains an invalid section extent.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[NativeAOT ELF オブジェクトに無効なセクション範囲が含まれています。]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";XA4325_NativeAotMissingSections" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[The NativeAOT object must contain allocated __managedcode and initialized data sections.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[NativeAOT オブジェクトには、割り当て済みの __managedcode セクションと、初期化済みのデータ セクションが含まれている必要があります。]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";XA4325_NativeAotModeRequired" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[NativeAotObjectFile requires NativeAot=true.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[NativeAotObjectFile には NativeAot=true が必要です。]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";XA4325_NativeAotObjectFormat" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[Expected a 32-bit or 64-bit little-endian relocatable NativeAOT ELF object.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[32 ビットまたは 64 ビットのリトル エンディアンの再配置可能な NativeAOT ELF オブジェクトが必要です。]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";XA4325_NativeAotObjectReadFailure" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[The NativeAOT retention object '{0}' could not be read: {1}]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[NativeAOT 保持オブジェクト '{0}' を読み取ることができませんでした: {1}]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";XA4325_NativeAotObjectRequired" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[NativeAOT JNI retention requires an existing post-ILC NativeAotObjectFile; '{0}' was not found.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[NativeAOT JNI の保持には、既存の ILC 後の NativeAotObjectFile が必要です。'{0}' が見つかりませんでした。]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";XA4325_NativeAotTruncatedSection" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[The NativeAOT ELF object contains truncated section data.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[NativeAOT ELF オブジェクトに切り詰められたセクション データが含まれています。]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";XA4326" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[The R8 JNI remapping data is incomplete. {0}]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[R8 JNI の再マッピング データが不完全です。 {0}]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";XA4326_ConflictingEntry" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[The '{0}' entry for '{1}' was not emitted: another JNI remapping input already maps it to '{2}', which conflicts with '{3}'.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA['{1}' の '{0}' エントリーが出力されませんでした: 別の JNI 再マップ入力で既に '{2}' にマップされており、'{3}' と競合しています。]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";XA4326_UnsupportedSignature" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[The entry for '{0}' was not emitted: its signature '{1}' could not be converted to a JNI descriptor.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA['{0}' のエントリは出力されませんでした。署名 '{1}' を JNI 記述子に変換できませんでした。]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";XA4327" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[Could not extract Java type map keys from '{0}': {1}]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA['{0}' から Java 型マップ キーを抽出できませんでした: {1}]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";XA4328" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[Could not generate typemap ProGuard configuration from '{0}': {1}]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA['{0}' から typemap の ProGuard 構成を生成できませんでした: {1}]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";XA4328_InvalidName" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[Line {0} contains an invalid retained Java class name: '{1}'.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[行 {0} に無効な保持 Java クラス名が含まれています: '{1}'。]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";XA4328_NoInputs" ItemType="0;.resx" PsrId="211" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[No retained Java type map key files were provided.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[保持されている Java 型マップ キー ファイルが提供されていません。]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";XA4329_RequiredProperty" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[AndroidR8ObfuscationMode=runtime-remapping requires $({0}) to be '{1}', but it is {2}.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[AndroidR8ObfuscationMode=runtime-remapping では $({0}) を '{1}' する必要がありますが、{2} です。]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";XA4329_UnsupportedRuntime" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[AndroidR8ObfuscationMode=runtime-remapping is not supported for runtime '{0}'. Supported runtimes are CoreCLR and NativeAOT.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[AndroidR8ObfuscationMode=runtime-remapping は、ランタイム '{0}' ではサポートされていません。サポートされているランタイムは CoreCLR と NativeAOT です。]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";XA4330" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[Native library '{0}' uses the reserved name 'libbinary_blobs.so' (archive path '{1}' or ELF SONAME). This name is reserved for .NET for Android binary data.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[ネイティブ ライブラリ '{0}' は、予約名 'libbinary_blobs.so' (アーカイブ パス '{1}' または ELF SONAME) を使用しています。この名前は、.NET for Android のバイナリ データ用に予約されています。]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";XA4331" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[Failed to process bundle config file '{0}', split config files will be ignored at run time.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[バンドル構成ファイル '{0}' の処理に失敗しました。分割構成ファイルは実行時に無視されます。]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
       <Item ItemId=";XA5101" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Missing Android NDK toolchains directory '{0}'. Please install the Android NDK.]]></Val>
@@ -1845,20 +1668,11 @@
         </Str>
         <Disp Icon="Str" />
       </Item>
-      <Item ItemId=";XA5101_C_Compiler" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
+      <Item ItemId=";XA5101_ClangRuntime" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
         <Str Cat="Text">
-          <Val><![CDATA[C compiler for target {0} was not found. Tried paths: "{1}"]]></Val>
+          <Val><![CDATA[Could not locate Android NDK Clang runtime libraries. Searched under: {0}. Please install a complete Android NDK.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[ターゲット {0} の C コンパイラが見つかりませんでした。試行したパス: "{1}"]]></Val>
-          </Tgt>
-        </Str>
-        <Disp Icon="Str" />
-      </Item>
-      <Item ItemId=";XA5101_Toolchain" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
-        <Str Cat="Text">
-          <Val><![CDATA[Toolchain directory for target {0} was not found.]]></Val>
-          <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[ターゲット {0} のためのツールチェーン ディレクトリが見つかりませんでした。]]></Val>
+            <Val><![CDATA[Android NDK Clang ランタイム ライブラリが見つかりませんでした。次の場所を検索しました: {0}。完全な Android NDK をインストールしてください。]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
@@ -1932,29 +1746,11 @@
         </Str>
         <Disp Icon="Str" />
       </Item>
-      <Item ItemId=";XA5211" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
-        <Str Cat="Text">
-          <Val><![CDATA[Embedded Wear app package name differs from handheld app package name ({0} != {1}).]]></Val>
-          <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[組み込みの Wear アプリ パッケージ名がハンドヘルド アプリ パッケージ名と異なります ({0}! = {1})。]]></Val>
-          </Tgt>
-        </Str>
-        <Disp Icon="Str" />
-      </Item>
       <Item ItemId=";XA5213" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[java.lang.OutOfMemoryError. Consider increasing the value of $(JavaMaximumHeapSize). Java ran out of memory while executing '{0} {1}']]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
             <Val><![CDATA[java.lang.OutOfMemoryError。$(JavaMaximumHeapSize) の値を増やすことを検討してください。'{0} {1}' の実行中に Java でメモリ不足が発生しました]]></Val>
-          </Tgt>
-        </Str>
-        <Disp Icon="Str" />
-      </Item>
-      <Item ItemId=";XA5300_Android_Platforms" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
-        <Str Cat="Text">
-          <Val><![CDATA[No Android platforms installed at '{0}'. Please install an SDK Platform with the `{1}{2}tools{2}{3}` program.]]></Val>
-          <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[Android プラットフォームが '{0}' にインストールされていません。`{1}{2}tools{2}{3}` プログラムを使用して SDK プラットフォームをインストールしてください。]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
@@ -1980,15 +1776,6 @@
           <Prev Cat="Text">
             <Val><![CDATA[The Java SDK directory could not be found. Ensure that the Android section of the Visual Studio options has a valid Java SDK directory configured. To use a custom SDK path for a command line build, set the 'JavaSdkDirectory' MSBuild property to the custom path.]]></Val>
           </Prev>
-        </Str>
-        <Disp Icon="Str" />
-      </Item>
-      <Item ItemId=";XA5301" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
-        <Str Cat="Text">
-          <Val><![CDATA[Failed to generate Java type for class: {0} due to MAX_PATH: {1}]]></Val>
-          <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[MAX_PATH のため、クラス {0} の Java の型を生成できませんでした: {1}]]></Val>
-          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
@@ -2024,6 +1811,15 @@
           <Val><![CDATA[Could not find Android Resource '{0}'. Please update @(AndroidResource) to add the missing resource.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
             <Val><![CDATA[Android リソース '{0}' が見つかりませんでした。不足しているリソースを追加するには、@(AndroidResource) を更新してください。]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";XAGCA7009_UnsupportedRuntime" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[GenerateNativeApplicationConfigSources only supports CoreCLR bootstrap configuration. The supplied AndroidRuntime value was '{0}'.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[GenerateNativeApplicationConfigSources では、CoreCLR ブートストラップ構成のみがサポートされます。指定された AndroidRuntime 値が '{0}' でした。]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />

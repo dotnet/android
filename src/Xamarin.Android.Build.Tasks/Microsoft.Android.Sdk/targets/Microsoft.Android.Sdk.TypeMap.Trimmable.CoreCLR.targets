@@ -1,15 +1,99 @@
 <!-- Trimmable typemap: CoreCLR-specific (ILLink integration). -->
 <Project>
 
-  <UsingTask TaskName="Xamarin.Android.Tasks.GenerateMissingTypeMapStubs" AssemblyFile="$(_XamarinAndroidBuildTasksAssembly)" />
+  <UsingTask TaskName="Microsoft.Android.Tasks.GenerateMissingTypeMapStubs" AssemblyFile="$(_MicrosoftAndroidBuildTasksAssembly)" Runtime="NET" TaskFactory="TaskHostFactory" Condition=" '$(MSBuildRuntimeType)' == 'Full' " />
+  <UsingTask TaskName="Microsoft.Android.Tasks.GenerateMissingTypeMapStubs" AssemblyFile="$(_MicrosoftAndroidBuildTasksAssembly)" Runtime="NET" Condition=" '$(MSBuildRuntimeType)' == 'Core' " />
+  <UsingTask TaskName="Xamarin.Android.Tasks.PreTrimmingFixLegacyBindings" AssemblyFile="$(_XamarinAndroidBuildTasksAssembly)" />
+  <UsingTask TaskName="Xamarin.Android.Tasks.PostTrimmingPipeline" AssemblyFile="$(_XamarinAndroidBuildTasksAssembly)" />
 
   <PropertyGroup>
     <_TrimmableRuntimeProviderJavaName Condition=" '$(_TrimmableRuntimeProviderJavaName)' == '' ">mono.MonoRuntimeProvider</_TrimmableRuntimeProviderJavaName>
   </PropertyGroup>
 
+  <!-- Repair opted-in legacy bindings before ILLink so it sees injected method
+       implementations and references to the current resource designer. -->
+  <Target Name="_AndroidFixAbstractMethodsBeforePublishInputs"
+      DependsOnTargets="_CreatePropertiesCache;_ComputeAssembliesToPostprocessOnPublish">
+    <PropertyGroup>
+      <_AndroidPreLinkModifiedAssembliesList>$(IntermediateOutputPath)prelink/modified-assemblies.txt</_AndroidPreLinkModifiedAssembliesList>
+    </PropertyGroup>
+    <ItemGroup>
+      <_AndroidPreLinkAssembly Remove="@(_AndroidPreLinkAssembly)" />
+      <_AndroidPreLinkAssembly Include="@(ResolvedFileToPublish)"
+          Condition=" '%(ResolvedFileToPublish.Extension)' == '.dll' and '%(ResolvedFileToPublish.PostprocessAssembly)' == 'true' " />
+      <_AndroidPreLinkSymbols Include="@(_AndroidPreLinkAssembly->'%(RootDir)%(Directory)%(Filename).pdb')"
+          Condition="Exists('%(_AndroidPreLinkAssembly.RootDir)%(_AndroidPreLinkAssembly.Directory)%(_AndroidPreLinkAssembly.Filename).pdb')" />
+    </ItemGroup>
+  </Target>
+
+  <Target Name="_AndroidInvalidateAbstractMethodsBeforePublishStamp">
+    <ReadLinesFromFile File="$(_AndroidPreLinkModifiedAssembliesList)" Condition="Exists('$(_AndroidPreLinkModifiedAssembliesList)')">
+      <Output TaskParameter="Lines" ItemName="_AndroidExpectedPreLinkAssembly" />
+    </ReadLinesFromFile>
+    <ItemGroup>
+      <_AndroidMissingPreLinkAssembly Include="@(_AndroidExpectedPreLinkAssembly)"
+          Condition="!Exists('%(_AndroidExpectedPreLinkAssembly.Identity)')" />
+    </ItemGroup>
+    <Delete Files="$(_AndroidStampDirectory)_AndroidFixAbstractMethodsBeforePublish.stamp"
+        Condition="Exists('$(_AndroidStampDirectory)_AndroidFixAbstractMethodsBeforePublish.stamp') and (!Exists('$(_AndroidPreLinkModifiedAssembliesList)') or '@(_AndroidMissingPreLinkAssembly->Count())' != '0')" />
+    <ItemGroup>
+      <_AndroidExpectedPreLinkAssembly Remove="@(_AndroidExpectedPreLinkAssembly)" />
+      <_AndroidMissingPreLinkAssembly Remove="@(_AndroidMissingPreLinkAssembly)" />
+    </ItemGroup>
+  </Target>
+
+  <Target Name="_AndroidFixAbstractMethodsBeforePublish"
+      AfterTargets="ComputeResolvedFilesToPublishList"
+      BeforeTargets="PrepareForILLink"
+      DependsOnTargets="_AndroidFixAbstractMethodsBeforePublishInputs;_AndroidInvalidateAbstractMethodsBeforePublishStamp"
+      Condition=" '$(AndroidEnableLegacyCompatibilityAssemblyFixups)' == 'true' and '$(RuntimeIdentifier)' != '' and '$(PublishTrimmed)' == 'true' and '$(RunILLink)' != 'false' "
+      Inputs="@(_AndroidPreLinkAssembly);@(_AndroidPreLinkSymbols);$(_AndroidBuildPropertiesCache);@(_AndroidMSBuildAllProjects)"
+      Outputs="$(_AndroidStampDirectory)_AndroidFixAbstractMethodsBeforePublish.stamp">
+    <PreTrimmingFixLegacyBindings
+        Assemblies="@(_AndroidPreLinkAssembly)"
+        TargetName="$(TargetName)"
+        OutputDirectory="$(IntermediateOutputPath)prelink"
+        FixResourceDesigner="$(AndroidUseDesignerAssembly)"
+        Deterministic="$(Deterministic)">
+      <Output TaskParameter="ModifiedAssemblies" ItemName="_AndroidModifiedPreLinkAssembly" />
+    </PreTrimmingFixLegacyBindings>
+    <ItemGroup>
+      <_AndroidModifiedPreLinkSymbols Include="@(_AndroidModifiedPreLinkAssembly->'%(RootDir)%(Directory)%(Filename).pdb')"
+          Condition="Exists('%(_AndroidModifiedPreLinkAssembly.RootDir)%(_AndroidModifiedPreLinkAssembly.Directory)%(_AndroidModifiedPreLinkAssembly.Filename).pdb')" />
+    </ItemGroup>
+    <WriteLinesToFile
+        File="$(_AndroidPreLinkModifiedAssembliesList)"
+        Lines="@(_AndroidModifiedPreLinkAssembly);@(_AndroidModifiedPreLinkSymbols)"
+        Overwrite="true"
+        WriteOnlyWhenDifferent="true" />
+    <MakeDir Directories="$(_AndroidStampDirectory)" />
+    <Touch Files="$(_AndroidStampDirectory)_AndroidFixAbstractMethodsBeforePublish.stamp" AlwaysCreate="true" />
+    <ItemGroup>
+      <FileWrites Include="$(_AndroidStampDirectory)_AndroidFixAbstractMethodsBeforePublish.stamp" />
+      <FileWrites Include="$(_AndroidPreLinkModifiedAssembliesList)" />
+      <_AndroidPreLinkSwappableAssembly Include="@(ResolvedFileToPublish)"
+          Condition=" '%(ResolvedFileToPublish.Extension)' == '.dll' and '%(ResolvedFileToPublish.PostprocessAssembly)' == 'true' and Exists('$(IntermediateOutputPath)prelink/%(ResolvedFileToPublish.Filename)%(ResolvedFileToPublish.Extension)') " />
+      <ResolvedFileToPublish Remove="@(_AndroidPreLinkSwappableAssembly)" />
+      <ResolvedFileToPublish Include="@(_AndroidPreLinkSwappableAssembly->'$(IntermediateOutputPath)prelink/%(Filename)%(Extension)')" />
+      <FileWrites Include="@(_AndroidPreLinkSwappableAssembly->'$(IntermediateOutputPath)prelink/%(Filename)%(Extension)')" />
+      <FileWrites Include="$(IntermediateOutputPath)prelink/*.pdb" />
+      <_AndroidModifiedPreLinkAssembly Remove="@(_AndroidModifiedPreLinkAssembly)" />
+      <_AndroidModifiedPreLinkSymbols Remove="@(_AndroidModifiedPreLinkSymbols)" />
+    </ItemGroup>
+  </Target>
+
   <PropertyGroup>
+    <_GenerateProguardAfterTargets Condition=" '$(_GenerateProguardAfterTargets)' == '' and '$(PublishTrimmed)' != 'true' ">ComputeFilesToPublish</_GenerateProguardAfterTargets>
     <_GenerateProguardAfterTargets Condition=" '$(_GenerateProguardAfterTargets)' == '' ">ILLink</_GenerateProguardAfterTargets>
   </PropertyGroup>
+
+  <Target Name="_AndroidSetTrimmableProguardConfiguration"
+      BeforeTargets="$(_GenerateProguardAfterTargets)"
+      Condition=" '$(AndroidLinkTool)' != '' ">
+    <PropertyGroup>
+      <_ProguardProjectConfiguration Condition=" '$(_ProguardProjectConfiguration)' == '' ">$([System.IO.Path]::Combine('$(IntermediateOutputPath)', 'proguard', 'proguard_project_references.cfg'))</_ProguardProjectConfiguration>
+    </PropertyGroup>
+  </Target>
 
   <!-- Add TypeMap DLLs to ILLink input. ILLink natively understands TypeMapAttribute<T>. -->
   <Target Name="_AddTrimmableTypeMapToLinker"
@@ -29,30 +113,88 @@
       DependsOnTargets="_GenerateTrimmableTypeMap">
     <PropertyGroup>
       <_ExtraTrimmerArgs>$(_ExtraTrimmerArgs) --typemap-entry-assembly "$(_TypeMapAssemblyName)"</_ExtraTrimmerArgs>
+      <_TrimmerDumpDependencies Condition=" '$(LinkerDumpDependencies)' == 'true' ">true</_TrimmerDumpDependencies>
     </PropertyGroup>
+    <ItemGroup>
+      <TrimmerRootDescriptor Include="@(LinkDescription)" />
+    </ItemGroup>
+  </Target>
+
+  <Target Name="_CollectPostTrimmingAssemblies"
+      Condition=" '$(PublishTrimmed)' == 'true' ">
+    <ItemGroup>
+      <_PostTrimmingAssembly Remove="@(_PostTrimmingAssembly)" />
+      <_PostTrimmingAssembly Include="@(ResolvedFileToPublish)"
+          Condition=" '%(Extension)' == '.dll' and '%(ResolvedFileToPublish.PostprocessAssembly)' == 'true' " />
+    </ItemGroup>
+  </Target>
+
+  <!-- These shared modifications are independent of the typemap implementation.
+       The stamp tracks in-place assembly writes before ReadyToRun compilation.
+       Opted-in abstract-method repairs have already run before ILLink. -->
+  <Target Name="_PostTrimmingPipeline"
+      AfterTargets="ILLink"
+      BeforeTargets="CreateReadyToRunImages"
+      DependsOnTargets="_CreatePropertiesCache;_CollectPostTrimmingAssemblies"
+      Condition=" '$(PublishTrimmed)' == 'true' and '$(RunILLink)' != 'false' "
+      Inputs="@(_PostTrimmingAssembly);$(_AndroidBuildPropertiesCache);@(_AndroidMSBuildAllProjects)"
+      Outputs="$(_AndroidStampDirectory)_PostTrimmingPipeline.stamp">
+    <PostTrimmingPipeline
+        Assemblies="@(_PostTrimmingAssembly)"
+        AddKeepAlives="$(AndroidAddKeepAlives)"
+        AndroidLinkResources="$(AndroidLinkResources)"
+        Deterministic="$(Deterministic)"
+        EnableLegacyCompatibilityAssemblyFixups="false" />
+    <MakeDir Directories="$(_AndroidStampDirectory)" />
+    <Touch Files="$(_AndroidStampDirectory)_PostTrimmingPipeline.stamp" AlwaysCreate="true" />
+    <ItemGroup>
+      <FileWrites Include="$(_AndroidStampDirectory)_PostTrimmingPipeline.stamp" />
+    </ItemGroup>
   </Target>
 
   <Target Name="_PrepareLinkedAssembliesForProguard"
       AfterTargets="$(_GenerateProguardAfterTargets)"
-      Condition=" '$(PublishTrimmed)' == 'true' and '$(_ProguardProjectConfiguration)' != '' ">
+      Condition=" '$(_ProguardProjectConfiguration)' != '' ">
     <ItemGroup>
       <_LinkedAssemblyForProguard Include="@(ResolvedFileToPublish)" Condition=" '%(Extension)' == '.dll' " />
     </ItemGroup>
   </Target>
 
+  <!-- Untrimmed builds also need rules for Java members referenced only from managed code.
+       Generate the R8 rules in the inner RID build before the outer R8 invocation.
+       The outer build scans the final assemblies only for remapping metadata. -->
   <Target Name="_GenerateProguardConfiguration"
       AfterTargets="_PrepareLinkedAssembliesForProguard"
-      Condition=" '$(PublishTrimmed)' == 'true' and '$(_ProguardProjectConfiguration)' != '' "
-      Inputs="@(_LinkedAssemblyForProguard)"
-      Outputs="$(_ProguardProjectConfiguration)">
+      DependsOnTargets="_AndroidInvalidateProguardConfigurationStamp"
+      Condition=" '$(_ProguardProjectConfiguration)' != '' and '$(_ComputeFilesToPublishForRuntimeIdentifiers)' == 'true' and ('$(PublishTrimmed)' != 'true' or '$(AndroidLinkTool)' != 'r8' or '$(_AndroidEnableTypemapR8Trimming)' == 'false' or '$(RunILLink)' == 'false') "
+      Inputs="@(_LinkedAssemblyForProguard);$(_AndroidBuildPropertiesCache)"
+      Outputs="$(_ProguardProjectConfiguration).stamp">
     <GenerateProguardConfiguration
         LinkedAssemblies="@(_LinkedAssemblyForProguard)"
+        EnableObfuscation="$(_AndroidR8RuntimeRemappingEnabled)"
         OutputFile="$(_ProguardProjectConfiguration)" />
+    <Touch Files="$(_ProguardProjectConfiguration).stamp" AlwaysCreate="true" />
+    <ItemGroup>
+      <FileWrites Include="$(_ProguardProjectConfiguration);$(_ProguardProjectConfiguration).stamp" />
+    </ItemGroup>
+  </Target>
+
+  <Target Name="_AndroidPrepareR8JniRemappingAssemblies"
+      Condition=" '$(_AndroidR8RuntimeRemappingEnabled)' == 'true' and '$(_ComputeFilesToPublishForRuntimeIdentifiers)' != 'true' "
+      DependsOnTargets="_PrepareLinkedAssembliesForProguard">
+    <ItemGroup>
+      <_AndroidR8JniRemappingAssembly Remove="@(_AndroidR8JniRemappingAssembly)" />
+      <_AndroidR8JniRemappingAssembly Include="@(_LinkedAssemblyForProguard)" />
+    </ItemGroup>
   </Target>
 
   <Target Name="_ComputePostTrimTrimmableTypeMapInputs"
-      Condition=" '$(_AndroidTypeMapImplementation)' == 'trimmable' and '$(PublishTrimmed)' == 'true' and '$(_ComputeFilesToPublishForRuntimeIdentifiers)' != 'true' "
+      Condition=" '$(PublishTrimmed)' == 'true' and '$(_ComputeFilesToPublishForRuntimeIdentifiers)' != 'true' "
       AfterTargets="_ResolveAssemblies">
+    <PropertyGroup>
+      <!-- Device selection can change RuntimeIdentifier after RuntimeIdentifiers was evaluated. -->
+      <_PostTrimTypeMapFirstRuntimeIdentifier Condition=" '$(RuntimeIdentifier)' != '' ">$(RuntimeIdentifier)</_PostTrimTypeMapFirstRuntimeIdentifier>
+    </PropertyGroup>
     <ItemGroup>
       <_PostTrimTrimmableTypeMapInputAssemblies Remove="@(_PostTrimTrimmableTypeMapInputAssemblies)" />
       <!-- Only the linked .dll assemblies that already exist on disk are valid inputs.
@@ -70,7 +212,7 @@
        a real output but leaves the stamp, invalidate the stamp so the producer restores the complete
        post-trim output set instead of letting _GenerateJavaStubs create an empty acw-map placeholder. -->
   <Target Name="_InvalidatePostTrimTrimmableTypeMapStampIfOutputsMissing"
-      Condition=" '$(_AndroidTypeMapImplementation)' == 'trimmable' and '$(PublishTrimmed)' == 'true' and '$(_ComputeFilesToPublishForRuntimeIdentifiers)' != 'true' ">
+      Condition=" '$(PublishTrimmed)' == 'true' and '$(_ComputeFilesToPublishForRuntimeIdentifiers)' != 'true' ">
     <ItemGroup>
       <_ExpectedPostTrimJavaFile Remove="@(_ExpectedPostTrimJavaFile)" />
       <_ActualPostTrimJavaFile Remove="@(_ActualPostTrimJavaFile)" />
@@ -99,7 +241,7 @@
   </Target>
 
   <Target Name="_GeneratePostTrimTrimmableTypeMapJavaSources"
-      Condition=" '$(_AndroidTypeMapImplementation)' == 'trimmable' and '$(PublishTrimmed)' == 'true' and '$(_ComputeFilesToPublishForRuntimeIdentifiers)' != 'true' "
+      Condition=" '$(PublishTrimmed)' == 'true' and '$(_ComputeFilesToPublishForRuntimeIdentifiers)' != 'true' "
       DependsOnTargets="_ComputePostTrimTrimmableTypeMapInputs;_InvalidatePostTrimTrimmableTypeMapStampIfOutputsMissing"
       AfterTargets="_ResolveAssemblies"
       BeforeTargets="_GenerateJavaStubs;_CompileJava;_CompileToDalvik"
@@ -158,7 +300,7 @@
        assembly references in it - untouched. Runs before the linked TypeMap DLLs are handed to the
        publish/ReadyToRun pipeline. -->
   <Target Name="_GenerateMissingTrimmableTypeMapStubs"
-      Condition=" '$(_AndroidTypeMapImplementation)' == 'trimmable' and '$(PublishTrimmed)' == 'true' and '$(RuntimeIdentifier)' != '' "
+      Condition=" '$(PublishTrimmed)' == 'true' and '$(RuntimeIdentifier)' != '' "
       AfterTargets="ILLink"
       BeforeTargets="_AddTrimmableTypeMapToResolvedFileToPublish;CreateReadyToRunImages">
     <GenerateMissingTypeMapStubs
@@ -177,7 +319,19 @@
       BeforeTargets="CreateReadyToRunImages"
       DependsOnTargets="_ReadGeneratedTrimmableTypeMapAssemblies">
     <ItemGroup>
-      <_TrimmableTypeMapLinkedAssemblies Include="$(IntermediateOutputPath)linked\_*.TypeMap.dll;$(IntermediateOutputPath)linked\_Microsoft.Android.TypeMap*.dll" />
+      <!-- Directory contents can include images for references removed since the last build.
+           Use the current generator inventory for publication and prune only orphaned typemaps. -->
+      <_AndroidObsoleteTypeMapImages Include="$(IntermediateOutputPath)linked/_*.TypeMap.dll;$(IntermediateOutputPath)linked/_Microsoft.Android.TypeMap*.dll" />
+      <_AndroidObsoleteTypeMapImages Include="$(IntermediateOutputPath)R2R/_*.TypeMap.dll;$(IntermediateOutputPath)R2R/_Microsoft.Android.TypeMap*.dll" />
+      <_AndroidObsoleteTypeMapImages Remove="@(_GeneratedTypeMapAssembliesFromList)" MatchOnMetadata="Filename;Extension" />
+      <_AndroidObsoleteTypeMapOutputs Include="@(_AndroidObsoleteTypeMapImages);@(_AndroidObsoleteTypeMapImages->'%(RootDir)%(Directory)%(Filename).pdb')" />
+      <ResolvedFileToPublish Remove="@(_AndroidObsoleteTypeMapOutputs)" />
+      <FileWrites Remove="@(_AndroidObsoleteTypeMapOutputs)" />
+    </ItemGroup>
+    <Delete Files="@(_AndroidObsoleteTypeMapOutputs)" />
+    <ItemGroup>
+      <_TrimmableTypeMapLinkedAssemblies Include="@(_GeneratedTypeMapAssembliesFromList->'$(IntermediateOutputPath)linked/%(Filename)%(Extension)')" />
+      <_TrimmableTypeMapLinkedAssemblies Remove="@(_TrimmableTypeMapLinkedAssemblies)" Condition="!Exists('%(_TrimmableTypeMapLinkedAssemblies.Identity)')" />
       <_TrimmableTypeMapAssembliesToPublish Include="@(_TrimmableTypeMapLinkedAssemblies)" />
       <_TrimmableTypeMapAssembliesToPublish Include="@(_GeneratedTypeMapAssembliesFromList)" Condition=" '@(_TrimmableTypeMapLinkedAssemblies->Count())' == '0' " />
       <ResolvedFileToPublish Include="@(_TrimmableTypeMapAssembliesToPublish)">
@@ -185,6 +339,9 @@
         <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
         <PostprocessAssembly>true</PostprocessAssembly>
         <RuntimeIdentifier>$(RuntimeIdentifier)</RuntimeIdentifier>
+        <!-- These generated assemblies always reference Mono.Android. Preserve this known fact so
+             ProcessAssemblies does not reopen and scan every per-assembly typemap DLL. -->
+        <HasMonoAndroidReference>true</HasMonoAndroidReference>
       </ResolvedFileToPublish>
     </ItemGroup>
   </Target>
@@ -193,14 +350,15 @@
       Condition=" '$(RuntimeIdentifier)' != '' and '$(PublishReadyToRun)' == 'true' "
       AfterTargets="CreateReadyToRunImages">
     <ItemGroup>
-      <_TrimmableTypeMapLinkedAssemblies Include="$(IntermediateOutputPath)linked\_*.TypeMap.dll;$(IntermediateOutputPath)linked\_Microsoft.Android.TypeMap*.dll" />
-      <_TrimmableTypeMapReadyToRunAssemblies Include="$(IntermediateOutputPath)R2R\_*.TypeMap.dll;$(IntermediateOutputPath)R2R\_Microsoft.Android.TypeMap*.dll" />
-      <ResolvedFileToPublish Remove="@(_TrimmableTypeMapLinkedAssemblies)" />
-      <ResolvedFileToPublish Remove="@(_TrimmableTypeMapReadyToRunAssemblies)" />
+      <_AndroidOtherReadyToRunFiles Include="@(_ReadyToRunFilesToPublish)" />
+      <_AndroidOtherReadyToRunFiles Remove="@(_GeneratedTypeMapAssembliesFromList)" MatchOnMetadata="Filename;Extension" />
+      <_TrimmableTypeMapReadyToRunAssemblies Include="@(_ReadyToRunFilesToPublish)" Exclude="@(_AndroidOtherReadyToRunFiles)" />
+      <ResolvedFileToPublish Remove="@(_TrimmableTypeMapReadyToRunAssemblies)" MatchOnMetadata="Filename;Extension" />
       <ResolvedFileToPublish Include="@(_TrimmableTypeMapReadyToRunAssemblies)">
         <RelativePath>%(Filename)%(Extension)</RelativePath>
         <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
         <RuntimeIdentifier>$(RuntimeIdentifier)</RuntimeIdentifier>
+        <HasMonoAndroidReference>true</HasMonoAndroidReference>
       </ResolvedFileToPublish>
     </ItemGroup>
   </Target>

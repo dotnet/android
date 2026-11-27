@@ -5,9 +5,7 @@
   </PropertyGroup>
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
-    <LangVersion>12</LangVersion>
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
-    <DefineConstants Condition=" '$(OS)' == 'Windows_NT' ">WINDOWS</DefineConstants>
     <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
     <OutputPath>$(MicrosoftAndroidSdkOutDir)</OutputPath>
   </PropertyGroup>
@@ -20,22 +18,13 @@
     <None Update="Xamarin.Installer.Common.targets">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Include="$(PkgSharpZipLib)\lib\$(TargetFramework)\ICSharpCode.SharpZipLib.pdb">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\Xamarin.Installer.AndroidSDK\Xamarin.Installer.AndroidSDK.csproj" />
-    <ProjectReference Include="..\Xamarin.AndroidTools\Xamarin.AndroidTools.csproj" />
-    <ProjectReference Include="..\Mono.AndroidTools\Mono.AndroidTools.csproj" />
-    <ProjectReference Include="..\Xamarin.Installer.Common\Xamarin.Installer.Common.csproj" />
+    <Compile Include="..\Xamarin.Android.Tools.AndroidSdk\SdkPackageListParser.cs" Link="SdkPackageListParser.cs" />
+    <ProjectReference Include="..\Xamarin.Android.Tools.AndroidSdk\Xamarin.Android.Tools.AndroidSdk.csproj" />
     <ProjectReference Include="..\Microsoft.Android.Build.BaseTasks\Microsoft.Android.Build.BaseTasks.csproj" />
   </ItemGroup>
   <Import Project="..\Microsoft.Android.Build.BaseTasks\MSBuildReferences.projitems" />
-  <ItemGroup>
-    <PackageReference Include="Polly" Version="$(PollyVersion)" />
-    <PackageReference Include="SharpZipLib" Version="$(SharpZipLibVersion)" GeneratePathProperty="true" />
-  </ItemGroup>
   <ItemGroup>
     <Compile Update="Properties\Resources.Designer.cs">
       <DesignTime>True</DesignTime>

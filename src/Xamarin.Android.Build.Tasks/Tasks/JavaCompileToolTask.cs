@@ -30,28 +30,21 @@ namespace Xamarin.Android.Tasks
 			get { return OS.IsWindows ? "javac.exe" : "javac"; }
 		}
 
-		private bool IsRunningInsideVS {
-			get {
-				var vside = false;
-				return bool.TryParse(Environment.GetEnvironmentVariable("VSIDE"), out vside) && vside;
-			}
-		}
-
 		internal string? TemporarySourceListFile;
 
 		public override bool RunTask ()
 		{
-			GenerateResponseFile ();
-
-			var retval = base.RunTask ();
-
 			try {
-				File.Delete (TemporarySourceListFile);
-			} catch (Exception) {
-				// Ignore exception, a tiny temp file will get left on the user's system
+				GenerateResponseFile ();
+				return base.RunTask ();
+			} finally {
+				try {
+					if (TemporarySourceListFile != null)
+						File.Delete (TemporarySourceListFile);
+				} catch (Exception) {
+					// Ignore exception, a tiny temp file will get left on the user's system
+				}
 			}
-
-			return retval;
 		}
 
 		protected virtual void WriteOptionsToResponseFile (StreamWriter sw)

@@ -1,4 +1,3 @@
-#if INSIDE_MONO_ANDROID_RUNTIME
 namespace Android.Runtime
 {
 	// Keep in sync with the LogLevel enum in
@@ -15,4 +14,3 @@ namespace Android.Runtime
 		Silent  = 0x08
 	}
 }
-#endif // INSIDE_MONO_ANDROID_RUNTIME

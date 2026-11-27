@@ -1,4 +1,4 @@
-// https://github.com/xamarin/xamarin-android/blob/87ee20c59a09ba4314f4226e1c77ee2331c3f09f/src/Xamarin.Android.Build.Tasks/Utilities/ObjectPool.cs
+// https://github.com/dotnet/android/blob/87ee20c59a09ba4314f4226e1c77ee2331c3f09f/src/Xamarin.Android.Build.Tasks/Utilities/ObjectPool.cs
 
 using System;
 using System.Collections.Concurrent;

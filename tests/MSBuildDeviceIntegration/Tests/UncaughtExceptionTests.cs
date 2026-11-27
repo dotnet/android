@@ -1,7 +1,9 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Text.RegularExpressions;
+using System.Threading;
 using NUnit.Framework;
 using Xamarin.Android.Tasks;
 using Xamarin.ProjectTools;
@@ -19,6 +21,89 @@ namespace Xamarin.Android.Build.Tests
 			public int SequenceNumber = -1;
 			public int Count = 0;
 		};
+
+		[Test]
+		public void FatalManagedExceptionTerminatesProcess ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
+		{
+			string packageName = PackageUtils.MakePackageName (runtime).ToLowerInvariant ();
+			var app = new XamarinAndroidApplicationProject (packageName: packageName) {
+				IsRelease = true,
+			};
+			app.SetRuntime (runtime);
+			app.SetRuntimeIdentifiers (new [] { DeviceAbi });
+			app.SetDefaultTargetDevice ();
+			app.OtherBuildItems.Add (new BuildItem ("AndroidEnvironment", "logging.env") {
+				TextContent = () => "debug.dotnet.log=timing\ndebug.dotnet.max_grefc=1234",
+			});
+			app.MainActivity = app.DefaultMainActivity.Replace ("//${AFTER_ONCREATE}", """
+				#pragma warning disable CS0618
+				using var timing = new Android.Runtime.TimingLogger ("FatalExceptionTiming");
+				#pragma warning restore CS0618
+				throw new InvalidOperationException ("FatalManagedExceptionTerminatesProcess");
+				""");
+
+			using var builder = CreateApkBuilder (packageName: packageName);
+			Assert.IsTrue (builder.Install (app), "Install should have succeeded.");
+			ClearAdbLogcat ();
+
+			string logcatPath = Path.Combine (Root, builder.ProjectDirectory, "fatal-exception-logcat.log");
+			var deviceProperties = new Dictionary<string, string> ();
+			try {
+				foreach (string name in new [] { "debug.dotnet.log", "debug.dotnet.max_grefc" }) {
+					var (code, output, error) = RunAdbCommandWithExitCode ($"shell getprop {name}");
+					Assert.AreEqual (0, code, $"Could not read {name}: {error}");
+					deviceProperties.Add (name, output.TrimEnd ('\r', '\n'));
+					Assert.IsEmpty (ClearShellProp (name), $"Could not clear {name}.");
+				}
+				Assert.IsTrue (MonitorAdbLogcat (
+					line => line.Contains ("System.InvalidOperationException") && line.Contains ("FatalManagedExceptionTerminatesProcess"),
+					logcatPath,
+					timeout: ActivityStartTimeoutInSeconds,
+					onMonitoringStarted: () => StartActivityAndAssert (app)),
+					"The expected managed exception should have been logged.");
+			} finally {
+				Assert.Multiple (() => {
+					foreach (var property in deviceProperties) {
+						string value = property.Value.Replace ("'", "'\\''");
+						var (code, output, error) = RunAdbCommandWithExitCode ($"shell setprop {property.Key} '{value}'");
+						Assert.AreEqual (0, code, $"Could not restore {property.Key}: {output}{error}");
+					}
+				});
+			}
+			string remainingPids = "";
+			bool processExited = false;
+			var timeout = TimeSpan.FromSeconds (30);
+			var stopwatch = Stopwatch.StartNew ();
+			while (stopwatch.Elapsed < timeout) {
+				int queryTimeout = (int) (timeout - stopwatch.Elapsed).TotalSeconds;
+				if (queryTimeout < 1) {
+					break;
+				}
+				var (exitCode, output, error) = RunAdbCommandWithExitCode ($"shell pidof {app.PackageName}", timeout: queryTimeout);
+				Assert.IsTrue (exitCode == 0 || exitCode == 1,
+					$"Could not query the app process: exit code {exitCode}, stdout: {output}, stderr: {error}");
+				Assert.IsEmpty (error, "Querying the app process should not write to stderr.");
+				remainingPids = output.Trim ();
+				processExited = exitCode == 1 && remainingPids.Length == 0 && stopwatch.Elapsed < timeout;
+				if (processExited || stopwatch.Elapsed >= timeout) {
+					break;
+				}
+				Thread.Sleep ((int) Math.Min (1000, Math.Max (0, (timeout - stopwatch.Elapsed).TotalMilliseconds)));
+			}
+			TestContext.Out.WriteLine (RunAdbCommand ("logcat -d -b crash"));
+
+			Assert.IsTrue (processExited,
+				$"A fatal managed exception should terminate {app.PackageName} within 30 seconds. Remaining PIDs: {remainingPids}");
+			var (logExitCode, logOutput, logError) = RunAdbCommandWithExitCode ("logcat -d");
+			Assert.AreEqual (0, logExitCode, $"Could not read logcat: {logError}");
+			StringAssert.IsMatch (@"\bW\s+DOTNET-gc\s*:\s+Overriding max JNI Global Reference count to 1234", logOutput,
+				"Native GC diagnostics should retain their warning level under the DOTNET-gc tag.");
+			StringAssert.IsMatch (@"\bI\s+DOTNET-timing\s*:\s+FatalExceptionTiming", logOutput,
+				"Managed timing diagnostics should use the DOTNET-timing tag when timing is enabled.");
+			Assert.IsFalse (logOutput.Contains (
+				"No implementation found for void mono.android.Runtime.propagateUncaughtException"),
+				"The uncaught exception handler should not call a missing native method.");
+		}
 
 		[Test]
 		public void EnsureUncaughtExceptionWorks ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
@@ -170,7 +255,7 @@ namespace Scratch.JMJMException
 			using (var appBuilder = CreateApkBuilder (Path.Combine (path, app.ProjectName))) {
 				Assert.True (libBuilder.Build (lib), "Library should have built.");
 				Assert.IsTrue (appBuilder.Install (app), "Install should have succeeded.");
-				AdbStartActivity ($"{app.PackageName}/{app.JavaPackageName}.MainActivity");
+				ClearAdbLogcat ();
 
 				string logcatPath = Path.Combine (Root, appBuilder.ProjectDirectory, "logcat.log");
 				int sequenceCounter = 0;
@@ -186,7 +271,11 @@ namespace Scratch.JMJMException
 							break;
 						}
 						return false; // we must examine all the lines, and returning `true` aborts the monitoring process
-					}, logcatPath, 15);
+					},
+					logcatPath,
+					timeout: 15,
+					onMonitoringStarted: () => StartActivityAndAssert (app)
+				);
 			}
 
 			AssertValidLine (0, 0);

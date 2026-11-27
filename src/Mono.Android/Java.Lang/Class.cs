@@ -19,7 +19,8 @@ namespace Java.Lang {
 			Object = JNIEnv.FindClass ("java/lang/Object");
 			String = JNIEnv.FindClass ("java/lang/String");
 			CharSequence = JNIEnv.FindClass ("java/lang/CharSequence");
-			CharSequence_toString = JNIEnv.GetMethodID (CharSequence, "toString", "()Ljava/lang/String;");
+			// SAFETY: CharSequence is the retained global class; the member has the zero-argument String-returning ABI.
+			CharSequence_toString = unsafe(JNIEnv.GetMethodID (CharSequence, "toString", "()Ljava/lang/String;"));
 		}
 
 		public static Class FromType (System.Type type)
@@ -30,13 +31,11 @@ namespace Java.Lang {
 			return Java.Lang.Object.GetObject<Class> (JNIEnv.FindClass (type), JniHandleOwnership.TransferGlobalRef)!;
 		}
 
-#if ANDROID_34
 		// A new interface (Java.Lang.Invoke.ITypeDescriptor.IOfField) was added to this class in API-34.
 		// The new required ComponentType () method conflicts with our ComponentType property created from
 		// the existing getComponentType method. Explicitly implement this method, which Android has documented
 		// as equivalent to the existing getComponentType method.
 		Java.Lang.Object? ITypeDescriptor.IOfField.ComponentType ()
 			=> ComponentType;
-#endif
 	}
 }

@@ -2,6 +2,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.IO;
 using System.Text;
@@ -83,6 +84,8 @@ namespace Xamarin.Android.Tasks
 
 		public string? JavaMaximumHeapSize { get; set; }
 
+		public string? JdkVersion { get; set; }
+
 		public virtual string DefaultErrorCode => "JAVA0000";
 
 		public string? AssemblyIdentityMapFile { get; set; }
@@ -123,6 +126,26 @@ namespace Xamarin.Android.Tasks
 			return Path.Combine (ToolPath, ToolExe);
 		}
 
+		internal static string GetJavaOptions (string? javaOptions, string? jdkVersion)
+		{
+			string options = javaOptions ?? "";
+			if (!Version.TryParse (jdkVersion, out var version) || version.Major < 24) {
+				return options;
+			}
+
+			options = AppendJavaOption (options, "--enable-native-access=ALL-UNNAMED");
+			return AppendJavaOption (options, "--sun-misc-unsafe-memory-access=allow");
+		}
+
+		static string AppendJavaOption (string options, string option)
+		{
+			if (options.IndexOf (option, StringComparison.Ordinal) >= 0) {
+				return options;
+			}
+
+			return options.IsNullOrWhiteSpace () ? option : $"{options} {option}";
+		}
+
 		protected bool LogFromException (string exception, string error) {
 			switch (exception) {
 				case "java.lang.OutOfMemoryError":
@@ -142,7 +165,7 @@ namespace Xamarin.Android.Tasks
 				var asmName = assemblyMap.GetAssemblyNameForImportDirectory (id);
 				if (!asmName.IsNullOrEmpty ()) {
 					var path = Path.Combine(IntermediateOutputPath ?? "", "lp", id);
-					mappingText.Add (string.Format (Properties.Resources.XA_Directory_Is_From, path, asmName));
+					mappingText.Add (string.Format (CultureInfo.CurrentCulture, Properties.Resources.XA_Directory_Is_From, path, asmName));
 				}
 			}
 
@@ -187,7 +210,7 @@ namespace Xamarin.Android.Tasks
 
 		protected virtual void GetLineNumber (string match, out int line, out int column)
 		{
-			line = int.Parse (match) + 1;
+			line = int.Parse (match, CultureInfo.InvariantCulture) + 1;
 			column = 0;
 		}
 
@@ -231,4 +254,3 @@ namespace Xamarin.Android.Tasks
 		}
 	}
 }
-

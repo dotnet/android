@@ -9,6 +9,7 @@ namespace Xamarin.Android.Tasks
 	/// <summary>
 	/// Provides a localizable way to log a warning from an MSBuild target.
 	/// </summary>
+	[MSBuildMultiThreadableTask]
 	public class AndroidWarning : Task
 	{
 		/// <summary>
@@ -28,10 +29,14 @@ namespace Xamarin.Android.Tasks
 		/// </summary>
 		public string []? FormatArguments { get; set; }
 
+		public string? File { get; set; }
+
 		public override bool Execute ()
 		{
 			Log.LogCodedWarning (
 				Code,
+				File ?? "",
+				0,
 				Properties.Resources.ResourceManager.GetString (ResourceName, Properties.Resources.Culture)
 					?? $"(Missing resource: {ResourceName})",
 				FormatArguments ?? []

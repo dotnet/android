@@ -30,6 +30,8 @@ namespace Xamarin.Android.Tasks
 
 		public string []? ManifestPlaceholders { get; set; }
 
+		public string []? ReferenceAssemblyPaths { get; set; }
+
 		public string? ExtraArgs { get; set; }
 
 		public bool SkipLenientManifestHandling { get; set; }

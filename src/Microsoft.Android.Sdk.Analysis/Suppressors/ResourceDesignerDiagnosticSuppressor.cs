@@ -1,3 +1,4 @@
+#nullable enable
 using System.Linq;
 using System.Collections.Immutable;
 using System.Threading;
@@ -25,12 +26,12 @@ public class ResourceDesignerDiagnosticSuppressor : DiagnosticSuppressor
 			if (diagnostic.Id != Rule.SuppressedDiagnosticId)
 				continue;
 			Location location = diagnostic.Location;
-			SyntaxTree syntaxTree = location.SourceTree;
+			SyntaxTree? syntaxTree = location.SourceTree;
 			if (syntaxTree is null)
 				continue;
 
 			SyntaxNode root = syntaxTree.GetRoot (context.CancellationToken);
-			SyntaxNode syntaxNode = root.FindNode (location.SourceSpan)
+			SyntaxNode? syntaxNode = root.FindNode (location.SourceSpan)
 				.DescendantNodesAndSelf ()
 				.FirstOrDefault ();
 
@@ -38,7 +39,7 @@ public class ResourceDesignerDiagnosticSuppressor : DiagnosticSuppressor
 				continue;
 
 			SemanticModel model = context.GetSemanticModel (syntaxTree);
-			ISymbol typeSymbol = model.GetSymbolInfo (syntaxNode).Symbol;
+			ISymbol? typeSymbol = model.GetSymbolInfo (syntaxNode).Symbol;
 			if (typeSymbol is not INamedTypeSymbol namedTypeSymbol)
 				continue;
 

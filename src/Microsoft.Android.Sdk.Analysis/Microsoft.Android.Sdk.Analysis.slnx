@@ -1,0 +1,4 @@
+<Solution>
+  <Project Path="Microsoft.Android.Sdk.Analysis.csproj" />
+  <Project Path="Tests/Microsoft.Android.Sdk.Analysis.Tests.csproj" />
+</Solution>

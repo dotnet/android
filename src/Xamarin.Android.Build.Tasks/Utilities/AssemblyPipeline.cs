@@ -2,7 +2,6 @@
 using System;
 using System.Collections.Generic;
 using Java.Interop.Tools.Cecil;
-using Java.Interop.Tools.JavaCallableWrappers;
 using Microsoft.Build.Framework;
 using Mono.Cecil;
 
@@ -52,9 +51,7 @@ public interface IAssemblyModifierPipelineStep
 
 public class StepContext
 {
-	public JavaPeerStyle CodeGenerationTarget { get; set; }
 	public ITaskItem Destination { get; }
-	public bool EnableMarshalMethods { get; set; }
 	public bool IsAndroidAssembly { get; set; }
 	public bool IsAssemblyModified { get; set; }
 	public bool IsDebug { get; set; }

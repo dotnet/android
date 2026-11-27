@@ -1,21 +1,21 @@
 using System;
 using System.IO;
 
-using NUnit.Framework;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace System.IOTests {
 
-	[TestFixture]
+	[TestClass]
 	public class DriveInfoTest {
 
-		[Test]
+		[TestMethod]
 		public void TotalFreeSpace_IsNotInt64_MaxValue ()
 		{
 			foreach (DriveInfo drive in DriveInfo.GetDrives()) {
 				if (drive.IsReady) {
 					try {
 						Console.WriteLine ("# DriveInfo: Name={0}; TotalFreeSpace={1}", drive.Name, drive.TotalFreeSpace);
-						Assert.AreNotEqual (drive.TotalFreeSpace, long.MaxValue);
+						Assert.AreNotEqual (long.MaxValue, drive.TotalFreeSpace);
 					} catch (UnauthorizedAccessException e) {
 						Console.Error.WriteLine ("DriveInfo.TotalFreeSpace IGNORING path '{0}': {1}", drive.Name, e);
 					} catch (IOException e) {

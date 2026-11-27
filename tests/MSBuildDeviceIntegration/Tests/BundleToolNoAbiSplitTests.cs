@@ -1,11 +1,9 @@
 using NUnit.Framework;
 using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using Xamarin.Android.Tasks;
 using Xamarin.ProjectTools;
-using Xamarin.Tools.Zip;
 
 namespace Xamarin.Android.Build.Tests
 {
@@ -70,7 +68,6 @@ namespace Xamarin.Android.Build.Tests
 
 			app = new XamarinFormsMapsApplicationProject {
 				IsRelease = true,
-				AotAssemblies = false, // Release defaults to Profiled AOT for .NET 6
 				PackageName = "com.xamarin.bundletoolnoabisplittests",
 			};
 			app.SetRuntime (runtime);
@@ -128,24 +125,11 @@ namespace Xamarin.Android.Build.Tests
 			bin = Path.Combine (projectDir, app.OutputPath);
 
 			string objPath = Path.Combine (Root, appBuilder.ProjectDirectory, app.IntermediateOutputPath);
-                        List<EnvironmentHelper.EnvironmentFile> envFiles = EnvironmentHelper.GatherEnvironmentFiles (
-                                objPath,
-                                String.Join (";", Abis),
-                                true,
-				runtime
-                        );
-
-			if (runtime != AndroidRuntime.NativeAOT) { // NAOT doesn't have ApplicationConfig
-				EnvironmentHelper.IApplicationConfig app_config = EnvironmentHelper.ReadApplicationConfig (envFiles, runtime);
-
-				Assert.That (app_config, Is.Not.Null, "application_config must be present in the environment files");
-
-				bool ignoreSplitConfigs = runtime switch {
-					AndroidRuntime.MonoVM  => ((EnvironmentHelper.ApplicationConfig_MonoVM)app_config).ignore_split_configs,
-					AndroidRuntime.CoreCLR => ((EnvironmentHelper.ApplicationConfig_CoreCLR)app_config).ignore_split_configs,
-					_                      => throw new NotSupportedException ($"Unsupported runtime '{runtime}'")
-				};
-				Assert.AreEqual (ignoreSplitConfigs, true, $"App config should indicate that split configs must be ignored");
+			if (runtime == AndroidRuntime.NativeAOT) {
+				EnvironmentHelper.ReadNativeAotEnvironmentVariables (objPath);
+			} else {
+				EnvironmentHelper.ApplicationConfig app_config = EnvironmentHelper.ReadCoreClrBootstrap (objPath).Config;
+				Assert.IsTrue (app_config.ignore_split_configs, $"App config should indicate that split configs must be ignored");
 			}
 		}
 
@@ -168,17 +152,9 @@ namespace Xamarin.Android.Build.Tests
 		[Test]
 		public void InstallAndRun ()
 		{
-			// TODO: fix under NativeAOT. Currently fails with an exception at run time:
-			//
-			// FATAL UNHANDLED EXCEPTION: System.InvalidCastException: Unable to convert instance of type 'AndroidX.AppCompat.Widget.AppCompatImageButton' to type 'AndroidX.AppCompat.Widget.Toolbar'.
-			//    at Java.Interop.JavaObjectExtensions._JavaCast[TResult](IJavaObject) + 0x165
-			//    at Android.Runtime.Extensions.JavaCast[TResult](IJavaObject) + 0x10
-			//    at Xamarin.Forms.Platform.Android.FormsAppCompatActivity.OnCreate(Bundle, ActivationFlags) + 0x601
-			//    at UnnamedProject.MainActivity.OnCreate(Bundle savedInstanceState) + 0x3c
-			//    at Android.App.Activity.n_OnCreate_Landroid_os_Bundle_(IntPtr jnienv, IntPtr native__this, IntPtr native_savedInstanceState) + 0x72
-			//
 			if (runtime == AndroidRuntime.NativeAOT) {
-				Assert.Ignore ("NativeAOT crashes with an InvalidCastException exception");
+				// TODO: Xamarin.Forms startup cannot find the ResourcesProvider constructor under NativeAOT.
+				Assert.Ignore ("NativeAOT Xamarin.Forms startup throws MissingMethodException.");
 			}
 			Assert.IsTrue (appBuilder.Install (app), "Install should have succeeded.");
 			RunProjectAndAssert (app, appBuilder);

@@ -1,4 +1,4 @@
-// https://github.com/xamarin/xamarin-android/blob/0134c2fb20f2f20127b24ef49177d9fe8226efdb/src/Xamarin.Android.Build.Tasks/Tasks/AndroidToolTask.cs#L9
+// https://github.com/dotnet/android/blob/0134c2fb20f2f20127b24ef49177d9fe8226efdb/src/Xamarin.Android.Build.Tasks/Tasks/AndroidToolTask.cs#L9
 
 using System.IO;
 using System.Text.RegularExpressions;

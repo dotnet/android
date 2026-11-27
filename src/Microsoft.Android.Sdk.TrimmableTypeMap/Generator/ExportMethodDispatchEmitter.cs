@@ -44,8 +44,7 @@ sealed class ExportMethodDispatchEmitter
 
 		// Wrap the dispatch in the standard BeginMarshalMethod/try/catch/finally pattern so
 		// managed exceptions thrown from the method body are routed through
-		// JniRuntime.OnUserUnhandledException — matching the legacy LLVM-IR contract
-		// (Mono.Android.Export/CallbackCode.cs) and the trimmable UCO ctor wrapper.
+		// JniRuntime.OnUserUnhandledException, matching the trimmable UCO ctor wrapper.
 		var handle = _pe.EmitBody (uco.WrapperName,
 			MethodAttributes.Public | MethodAttributes.Static | MethodAttributes.HideBySig,
 			encodeSig,
@@ -56,6 +55,7 @@ sealed class ExportMethodDispatchEmitter
 			exportMethodDispatchLocals.EncodeLocals);
 
 		AddUnmanagedCallersOnlyAttribute (handle);
+		_pe.AddDebuggerDisableUserUnhandledExceptionsAttribute (handle);
 		return handle;
 	}
 
@@ -384,7 +384,6 @@ sealed class ExportMethodDispatchEmitter
 		}
 
 		// Reference-type returns that need dedicated marshalling. Mirrors the
-		// SymbolKind dispatch in legacy Mono.Android.Export/CallbackCode.cs:
 		//   - CharSequence.ToLocalJniHandle handles 'string'-as-ICharSequence,
 		//     not just IJavaObject-derived peers.
 		//   - JavaList/JavaDictionary/JavaCollection.ToLocalJniHandle wrap raw
@@ -444,12 +443,12 @@ sealed class ExportMethodDispatchEmitter
 			case ExportParameterKindInfo.XmlPullParser:
 				encoder.LoadArgument (argumentIndex);
 				encoder.LoadConstantI4 (0);
-				encoder.Call (_context.XmlPullParserReaderFromJniHandleRef, parameterCount: 2, returnsValue: true);
+				encoder.Call (_context.GetXmlPullParserReaderFromJniHandleRef (), parameterCount: 2, returnsValue: true);
 				return true;
 			case ExportParameterKindInfo.XmlResourceParser:
 				encoder.LoadArgument (argumentIndex);
 				encoder.LoadConstantI4 (0);
-				encoder.Call (_context.XmlResourceParserReaderFromJniHandleRef, parameterCount: 2, returnsValue: true);
+				encoder.Call (_context.GetXmlResourceParserReaderFromJniHandleRef (), parameterCount: 2, returnsValue: true);
 				return true;
 			default:
 				return false;
@@ -534,10 +533,10 @@ sealed class ExportMethodDispatchEmitter
 				encoder.Call (_context.OutputStreamAdapterToLocalJniHandleRef, parameterCount: 1, returnsValue: true);
 				return true;
 			case ExportParameterKindInfo.XmlPullParser:
-				encoder.Call (_context.XmlReaderPullParserToLocalJniHandleRef, parameterCount: 1, returnsValue: true);
+				encoder.Call (_context.GetXmlReaderPullParserToLocalJniHandleRef (), parameterCount: 1, returnsValue: true);
 				return true;
 			case ExportParameterKindInfo.XmlResourceParser:
-				encoder.Call (_context.XmlReaderResourceParserToLocalJniHandleRef, parameterCount: 1, returnsValue: true);
+				encoder.Call (_context.GetXmlReaderResourceParserToLocalJniHandleRef (), parameterCount: 1, returnsValue: true);
 				return true;
 			default:
 				return false;

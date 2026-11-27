@@ -158,6 +158,7 @@
   <attr api-since="11" path="/api/package[@name='android.animation']/interface[@name='TypeEvaluator']/method[@name='evaluate']/parameter[@name='endValue']" name="type">java.lang.Object</attr>
   <attr path="/api/package[@name='android.accessibilityservice']" name="managedName">Android.AccessibilityServices</attr>
   <attr api-since="11" path="/api/package[@name='android.app']/class[@name='ActionBar.LayoutParams']/field[@name='gravity']" name="type">Android.Views.GravityFlags</attr>
+  <remove-node path="/api/package[@name='android.app']/class[@name='Activity']/method[@name='reportFullyDrawn']" />
   <attr path="/api/package[@name='android.app']/class[@name='Dialog']/method[@name='setOnKeyListener']" name="eventName">KeyPress</attr>
   <attr path="/api/package[@name='android.app']/interface[@name='DatePickerDialog.OnDateSetListener']/method[@name='onDateSet']/parameter[@name='view']" name="sender">true</attr>
   <attr path="/api/package[@name='android.app']/interface[@name='TimePickerDialog.OnTimeSetListener']/method[@name='onTimeSet']/parameter[@name='view']" name="sender">true</attr>
@@ -319,6 +320,8 @@
   <attr path="/api/package[@name='java.lang']/interface[@name='Iterable']" name="name">Iterable&lt;T&gt;</attr>
   <attr path="/api/package[@name='java.nio.channels']/class[@name='Channels']/method[@name='newChannel' and @return='java.nio.channels.ReadableByteChannel']" name="managedName">NewReadableChannel</attr>
   <attr path="/api/package[@name='java.nio.channels']/class[@name='Channels']/method[@name='newChannel' and @return='java.nio.channels.WritableByteChannel']" name="managedName">NewWritableChannel</attr>
+  <!-- Only interestOps() returns the operations set; interestOps(int) returns SelectionKey. -->
+  <attr path="/api/package[@name='java.nio.channels']/class[@name='SelectionKey']/method[@name='interestOps' and count(parameter)=0]" name="enumReturn">Java.Nio.Channels.Operations</attr>
   <attr path="/api/package[@name='java.util']/class[@name='Dictionary']/method/parameter[@name='key']" name="type">K</attr>
   <attr path="/api/package[@name='java.util']/class[@name='Dictionary']/method/parameter[@name='value']" name="type">V</attr>
   <attr path="/api/package[@name='java.util']/class[@name='Dictionary']" name="name">Dictionary&lt;K, V&gt;</attr>
@@ -396,11 +399,6 @@
 	    or @name='setStrokeColor'
 	  )]/parameter[@type='int']"
 	  name="type">Android.Graphics.Color</attr>
-
-	<!-- TODO in 5.0!
-	s/int[] colors/Color[] colors/g
-	TextView.getTextColor() should return Color
-	-->
 
 	<!-- Color parameters... -->
 	<!-- cosmetic fix for non-conformant name
@@ -1133,6 +1131,14 @@
     The problem with this is that our tooling doesn't have any real support for stating that
     a method was removed; api-merge assumes that once an API is added, it's present for ALL TIME.
     -->
+  <!-- These constructors were removed before the minimum supported Android API level. -->
+  <attr path="/api/package[@name='android.util']/class[@name='Config' or @name='DebugUtils' or @name='EventLog' or @name='StateSet' or @name='TimeUtils' or @name='Xml']/constructor[(@visibility='public' or @visibility='protected') and count(parameter)=0]" name="deprecated">This constructor was removed in Android API level 15.</attr>
+  <attr path="/api/package[@name='android.webkit']/class[@name='Plugin' or @name='PluginList' or @name='UrlInterceptRegistry']/constructor[@visibility='public' or @visibility='protected']" name="deprecated">This constructor was removed in Android API level 15.</attr>
+  <attr path="/api/package[@name='android.webkit']/class[@name='GeolocationPermissions' or @name='WebStorage']/constructor[(@visibility='public' or @visibility='protected') and count(parameter)=0]" name="deprecated">This constructor was removed in Android API level 16.</attr>
+  <attr path="/api/package[@name='android.webkit']/class[@name='CacheManager']/constructor[(@visibility='public' or @visibility='protected') and count(parameter)=0]" name="deprecated">This constructor was removed in Android API level 17.</attr>
+  <attr path="/api/package[@name='android.media']/class[@name='AudioFormat']/constructor[(@visibility='public' or @visibility='protected') and count(parameter)=0]" name="deprecated">This constructor was removed in Android API level 21.</attr>
+  <attr path="/api/package[@name='android.os']/class[@name='BatteryManager' or @name='RecoverySystem']/constructor[(@visibility='public' or @visibility='protected') and count(parameter)=0]" name="deprecated">This constructor was removed in Android API level 23.</attr>
+
   <!-- View.fitsSystemWindows() was removed from docs/android.jar, but still appears to exist on-device. -->
   <attr api-since="14" path="/api/package[@name='android.view']/class[@name='View']/method[@name='fitsSystemWindows' and count(parameters)=0]"
       name="managedName"
@@ -1980,6 +1986,9 @@
   <ns-replace source="privatecompute"       replacement="PrivateCompute" />
   <ns-replace source="voiceinteraction"     replacement="VoiceInteractions" />
   <ns-replace source="permissionui"         replacement="PermissionUI" />
+  <ns-replace source="contentsafety"        replacement="ContentSafety" />
+  <ns-replace source="multisensory"         replacement="MultiSensory" />
+  <ns-replace source="authenticationpolicy" replacement="AuthenticationPolicy" />
 
   <!-- Public method cannot override protected base method -->
   <attr api-since="36" path="/api/package[@name='android.media.tv.ad']/class[@name='TvAdView']/method[@name='onLayout' and count(parameter)=5 and parameter[1][@type='boolean'] and parameter[2][@type='int'] and parameter[3][@type='int'] and parameter[4][@type='int'] and parameter[5][@type='int']]" name="visibility">protected</attr>
@@ -2042,6 +2051,15 @@
       name="managedOverride"
   >override</attr>
 
+  <!-- API-37.1 Adjustments -->
+  <!-- API-31 introduced these types as non-`final`. API-35 changed them to be `final`, but api-merge
+       "ignored" that change because binding them as C# `sealed` types would be a source-breaking change.
+       API-37.1 changed `describeContents()` from a `final` method to a non-`final` method; this doesn't
+       matter on the Java side because it's a method on a `final` type, so it can't actually be overridden.
+       Force the method to stay `final` so the C# binding doesn't change. -->
+  <attr api-since="37.1" path="/api/package[@name='android.app.appsearch']/class[@name='SetSchemaResponse']/method[@name='describeContents']" name="final">true</attr>
+  <attr api-since="37.1" path="/api/package[@name='android.app.appsearch']/class[@name='StorageInfo']/method[@name='describeContents']" name="final">true</attr>
+
   <!--
     ***********************************************************************
     THE FOLLOWING LINES MUST BE CREATED FOR ANY NEW PLATFORM THAT IS ADDED.
@@ -2074,6 +2092,8 @@
   <attr api-since="36.1" path="/api/package[contains(@merge.SourceFile,'api-36.1.xml.in')]/interface" name="no-alternatives">true</attr>
   <attr api-since="37" path="/api/package[contains(@merge.SourceFile,'api-CinnamonBun.xml.in')]/interface" name="no-alternatives">true</attr>
   <attr api-since="37" path="/api/package[contains(@merge.SourceFile,'api-37.0.xml.in')]/interface" name="no-alternatives">true</attr>
+  <attr api-since="37.1" path="/api/package[contains(@merge.SourceFile,'api-37.1.xml.in')]/interface" name="no-alternatives">true</attr>
+  <attr api-since="37.2" path="/api/package[contains(@merge.SourceFile,'api-37.2.xml.in')]/interface" name="no-alternatives">true</attr>
 
   <!-- Set ApiSince based on merge sourcefile. -->
   <attr api-since="22" path="/api//*[contains(@merge.SourceFile,'api-22.xml.in')]" name="api-since">22</attr>
@@ -2103,6 +2123,8 @@
   <attr api-since="37" path="/api//*[contains(@merge.SourceFile,'api-CinnamonBun.xml.in')]" name="api-since">37.0</attr>
   <attr api-since="37" path="/api//*[contains(@merge.SourceFile,'api-37.xml.in')]" name="api-since">37.0</attr>
   <attr api-since="37" path="/api//*[contains(@merge.SourceFile,'api-37.0.xml.in')]" name="api-since">37.0</attr>
+  <attr api-since="37.1" path="/api//*[contains(@merge.SourceFile,'api-37.1.xml.in')]" name="api-since">37.1</attr>
+  <attr api-since="37.2" path="/api//*[contains(@merge.SourceFile,'api-37.2.xml.in')]" name="api-since">37.2</attr>
 
   <!-- Erase some 'api-since' attributes (This has to be done after they are set above) -->
 
@@ -2123,7 +2145,7 @@
   <!-- fields with name starting with `color` or ending with `Color` in packages added in API 37+ -->
   <attr api-since="37" path="/api/package[@api-since >= 37.0]
       /*[(local-name()='class' or local-name()='interface')]
-      /field[@type='int' and (starts-with(@name, 'color') or substring(@name, string-length(@name) - string-length('Color') + 1)='Color')]"
+      /field[@type='int' and (starts-with(@name, 'color') or substring(@name, string-length(@name) - string-length('Color') + 1)='Color') and @final!='true']"
     name="type">Android.Graphics.Color</attr>
   <!-- methods with name ending with `Color` in packages added in API 37+ -->
   <attr api-since="37" path="/api/package[@api-since >= 37.0]
@@ -2134,6 +2156,12 @@
   <attr api-since="37" path="/api/package[@api-since >= 37.0]
       /*[(local-name()='class' or local-name()='interface')]
       /method[starts-with(@name, 'set')]
+      /parameter[@type='int' and (starts-with(@name, 'color') or substring(@name, string-length(@name) - string-length('Color') + 1)='Color')]"
+    name="type">Android.Graphics.Color</attr>
+  <!-- `constructor` method parameters with name starting with `color` or ending with `Color` in packages added in API 37.2+ -->
+  <attr api-since="37.2" path="/api/package[@api-since >= 37.2]
+      /*[(local-name()='class' or local-name()='interface')]
+      /constructor
       /parameter[@type='int' and (starts-with(@name, 'color') or substring(@name, string-length(@name) - string-length('Color') + 1)='Color')]"
     name="type">Android.Graphics.Color</attr>
   <!-- methods with name ending with `Tint` in packages added in API 37+ -->
@@ -2147,11 +2175,17 @@
       /method[starts-with(@name, 'set')]
       /parameter[@type='int' and (starts-with(@name, 'tint') or substring(@name, string-length(@name) - string-length('Tint') + 1)='Tint')]"
     name="type">Android.Graphics.Color</attr>
+  <!-- `constructor` method parameters with name starting with `tint` or ending with `Tint` in packages added in API 37.2+ -->
+  <attr api-since="37.2" path="/api/package[@api-since >= 37.2]
+      /*[(local-name()='class' or local-name()='interface')]
+      /constructor
+      /parameter[@type='int' and (starts-with(@name, 'tint') or substring(@name, string-length(@name) - string-length('Tint') + 1)='Tint')]"
+    name="type">Android.Graphics.Color</attr>
 
   <!-- fields with name `color` or ending with `Color` in types added in API 37+ -->
   <attr api-since="37" path="/api/package
       /*[@api-since >= 37.0 and (local-name()='class' or local-name()='interface')]
-      /field[@type='int' and (starts-with(@name, 'color') or substring(@name, string-length(@name) - string-length('Color') + 1)='Color')]"
+      /field[@type='int' and (starts-with(@name, 'color') or substring(@name, string-length(@name) - string-length('Color') + 1)='Color') and @final!='true']"
     name="type">Android.Graphics.Color</attr>
   <!-- methods with name ending with `Color` in types added in API 37+ -->
   <attr api-since="37" path="/api/package
@@ -2162,6 +2196,12 @@
   <attr api-since="37" path="/api/package
       /*[@api-since >= 37.0 and (local-name()='class' or local-name()='interface')]
       /method[starts-with(@name, 'set')]
+      /parameter[@type='int' and (starts-with(@name, 'color') or substring(@name, string-length(@name) - string-length('Color') + 1)='Color')]"
+    name="type">Android.Graphics.Color</attr>
+  <!-- `constructor` method parameters with name starting with `color` or ending with `Color` in packages added in API 37.2+ -->
+  <attr api-since="37.2" path="/api/package
+      /*[@api-since >= 37.2 and (local-name()='class' or local-name()='interface')]
+      /constructor
       /parameter[@type='int' and (starts-with(@name, 'color') or substring(@name, string-length(@name) - string-length('Color') + 1)='Color')]"
     name="type">Android.Graphics.Color</attr>
   <!-- methods with name ending with `Tint` in types added in API 37+ -->
@@ -2175,11 +2215,17 @@
       /method[starts-with(@name, 'set')]
       /parameter[@type='int' and (starts-with(@name, 'tint') or substring(@name, string-length(@name) - string-length('Tint') + 1)='Tint')]"
     name="type">Android.Graphics.Color</attr>
+  <!-- `constructor` method parameters with name starting with `color` or ending with `Color` in packages added in API 37.2+ -->
+  <attr api-since="37.2" path="/api/package
+      /*[@api-since >= 37.2 and (local-name()='class' or local-name()='interface')]
+      /constructor
+      /parameter[@type='int' and (starts-with(@name, 'tint') or substring(@name, string-length(@name) - string-length('Tint') + 1)='Tint')]"
+    name="type">Android.Graphics.Color</attr>
 
   <!-- fields added in API-37+ with name `color` or ending with `Color` -->
   <attr api-since="37" path="/api/package
       /*[(local-name()='class' or local-name()='interface')]
-      /field[@api-since >= 37.0 and @type='int' and (starts-with(@name, 'color') or substring(@name, string-length(@name) - string-length('Color') + 1)='Color')]"
+      /field[@api-since >= 37.0 and @type='int' and (starts-with(@name, 'color') or substring(@name, string-length(@name) - string-length('Color') + 1)='Color') and @final!='true']"
     name="type">Android.Graphics.Color</attr>
   <!-- methods added in API-37+ with name ending with `Color` -->
   <attr api-since="37" path="/api/package
@@ -2192,6 +2238,12 @@
       /method[@api-since >= 37.0 and starts-with(@name, 'set')]
       /parameter[@type='int' and (starts-with(@name, 'color') or substring(@name, string-length(@name) - string-length('Color') + 1)='Color')]"
     name="type">Android.Graphics.Color</attr>
+  <!-- `constructor` method parameters with name starting with `color` or ending with `Color` in packages added in API 37.2+ -->
+  <attr api-since="37.2" path="/api/package
+      /*[(local-name()='class' or local-name()='interface')]
+      /constructor[@api-since >= 37.2]
+      /parameter[@type='int' and (starts-with(@name, 'color') or substring(@name, string-length(@name) - string-length('Color') + 1)='Color')]"
+    name="type">Android.Graphics.Color</attr>
   <!-- methods added in API-37+ with name ending with `Tint` -->
   <attr api-since="37" path="/api/package
       /*[(local-name()='class' or local-name()='interface')]
@@ -2201,6 +2253,12 @@
   <attr api-since="37" path="/api/package
       /*[(local-name()='class' or local-name()='interface')]
       /method[@api-since >= 37.0 and starts-with(@name, 'set')]
+      /parameter[@type='int' and (starts-with(@name, 'tint') or substring(@name, string-length(@name) - string-length('Tint') + 1)='Tint')]"
+    name="type">Android.Graphics.Color</attr>
+  <!-- `constructor` method parameters with name starting with `color` or ending with `Color` in packages added in API 37.2+ -->
+  <attr api-since="37.2" path="/api/package
+      /*[(local-name()='class' or local-name()='interface')]
+      /constructor[@api-since >= 37.2]
       /parameter[@type='int' and (starts-with(@name, 'tint') or substring(@name, string-length(@name) - string-length('Tint') + 1)='Tint')]"
     name="type">Android.Graphics.Color</attr>
 

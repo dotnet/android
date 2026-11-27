@@ -29,9 +29,40 @@ public sealed class TypeMapAssemblyGenerator
 	/// </param>
 	public void Generate (IReadOnlyList<JavaPeerInfo> peers, Stream stream, string assemblyName, bool useSharedTypemapUniverse = false)
 	{
-		var model = ModelBuilder.Build (peers, assemblyName + ".dll", assemblyName);
+		var model = CreateModel (peers, assemblyName);
+		Generate (model, stream, useSharedTypemapUniverse);
+	}
+
+	internal TypeMapAssemblyData CreateModel (IReadOnlyList<JavaPeerInfo> peers, string assemblyName)
+	{
+		return ModelBuilder.Build (peers, assemblyName + ".dll", assemblyName);
+	}
+
+	/// <summary>
+	/// Computes the content fingerprint — and, when <paramref name="includeIncremental"/> is
+	/// <see langword="true"/>, the incremental-build fingerprint — in a single walk over the model.
+	/// The content fingerprint should be passed back to
+	/// <see cref="Generate(TypeMapAssemblyData, Stream, bool, byte[])"/> so the model is not walked twice.
+	/// </summary>
+	internal ModelFingerprints ComputeFingerprints (TypeMapAssemblyData model, bool useSharedTypemapUniverse, bool includeIncremental)
+	{
+		return MetadataHelper.ComputeFingerprints (model, _systemRuntimeVersion, useSharedTypemapUniverse, includeIncremental);
+	}
+
+	internal void Generate (TypeMapAssemblyData model, Stream stream, bool useSharedTypemapUniverse, byte []? contentFingerprint = null)
+	{
 		var emitter = new TypeMapAssemblyEmitter (_systemRuntimeVersion);
-		emitter.Emit (model, stream, useSharedTypemapUniverse);
+		emitter.Emit (model, stream, useSharedTypemapUniverse, contentFingerprint);
+	}
+
+	/// <summary>
+	/// Generates the PE assembly and returns a read-only stream over the serialised image without
+	/// copying it into a second buffer.
+	/// </summary>
+	internal Stream GenerateToStream (TypeMapAssemblyData model, bool useSharedTypemapUniverse, byte []? contentFingerprint = null)
+	{
+		var emitter = new TypeMapAssemblyEmitter (_systemRuntimeVersion);
+		return emitter.EmitToStream (model, useSharedTypemapUniverse, contentFingerprint);
 	}
 
 	/// <summary>

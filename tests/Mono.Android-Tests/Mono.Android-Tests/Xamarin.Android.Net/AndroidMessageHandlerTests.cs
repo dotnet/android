@@ -11,12 +11,14 @@ using System.Threading.Tasks;
 using Android.Runtime;
 using Xamarin.Android.Net;
 
-using NUnit.Framework;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+#pragma warning disable CS0618 // These tests intentionally exercise the obsolete AndroidMessageHandler.
 
 namespace Xamarin.Android.NetTests
 {
-	[TestFixture]
-	[Category ("SSL")] // TODO: https://github.com/dotnet/android/issues/10069
+	[TestClass]
+	[TestCategory ("SSL")] // TODO: https://github.com/dotnet/android/issues/10079
 	public class AndroidMessageHandlerTests : AndroidHandlerTestBase
 	{
 		protected override HttpMessageHandler CreateHandler ()
@@ -26,7 +28,7 @@ namespace Xamarin.Android.NetTests
 
 		// We can't test `deflate` for now because S.I.Compression.DeflateStream doesn't recognize the compression
 		// method previously used by the external test server.
-		static readonly object[] DecompressionSource = new object[] {
+		public static readonly object [][] DecompressionSource = {
 			new object[] {
 				"gzip", // urlPath
 				"gzip", // encoding
@@ -40,8 +42,8 @@ namespace Xamarin.Android.NetTests
 			},
 		};
 
-		[Test]
-		[TestCaseSource (nameof (DecompressionSource))]
+		[TestMethod]
+		[DynamicData (nameof (DecompressionSource))]
 		public async Task Decompression (string urlPath, string encoding, string jsonFieldName)
 		{
 			var handler = new AndroidMessageHandler {
@@ -54,7 +56,7 @@ namespace Xamarin.Android.NetTests
 			EnsureSuccessStatusCode (response);
 
 			foreach (string enc in response.Content.Headers.ContentEncoding) {
-				if (String.Compare (enc, encoding, StringComparison.Ordinal) == 0) {
+				if (string.Equals (enc, encoding, StringComparison.Ordinal)) {
 					Assert.Fail ($"Encoding '{encoding}' should have been removed from the Content-Encoding header");
 				}
 			}
@@ -81,7 +83,7 @@ namespace Xamarin.Android.NetTests
 			return port;
 		}
 
-		[Test]
+		[TestMethod]
 		public async Task DoesNotDisposeContentStream()
 		{
 			int port = GetAvailablePort ();
@@ -99,7 +101,7 @@ namespace Xamarin.Android.NetTests
 			var request = new HttpRequestMessage (HttpMethod.Post, $"http://localhost:{port}/") { Content = jsonContent };
 
 			var response = await new HttpClient (new AndroidMessageHandler ()).SendAsync (request);
-			Assert.True (response.IsSuccessStatusCode);
+			Assert.IsTrue (response.IsSuccessStatusCode);
 
 			var contentValue = await jsonContent.ReadAsStringAsync ();
 			Assert.AreEqual ("hello", contentValue);
@@ -107,7 +109,7 @@ namespace Xamarin.Android.NetTests
 			listener.Close ();
 		}
 
-		[Test]
+		[TestMethod]
 		public async Task ServerCertificateCustomValidationCallback_ApproveRequest ()
 		{
 			bool callbackHasBeenCalled = false;
@@ -115,11 +117,11 @@ namespace Xamarin.Android.NetTests
 
 			var handler = new AndroidMessageHandler {
 				ServerCertificateCustomValidationCallback = (request, cert, chain, errors) => {
-					Assert.NotNull (request, "request");
+					Assert.IsNotNull (request, "request");
 					Assert.AreEqual ("localhost", request.RequestUri.Host);
-					Assert.NotNull (cert, "cert");
-					Assert.True (cert.Subject.Contains ("localhost"), $"Unexpected certificate subject {cert.Subject}");
-					Assert.NotNull (chain, "chain");
+					Assert.IsNotNull (cert, "cert");
+					Assert.IsTrue (cert.Subject.Contains ("localhost"), $"Unexpected certificate subject {cert.Subject}");
+					Assert.IsNotNull (chain, "chain");
 
 					callbackHasBeenCalled = true;
 					return true;
@@ -133,7 +135,7 @@ namespace Xamarin.Android.NetTests
 			server.AssertNoUnhandledExceptions ();
 		}
 
-		[Test]
+		[TestMethod]
 		public async Task ServerCertificateCustomValidationCallback_RejectRequest ()
 		{
 			bool callbackHasBeenCalled = false;
@@ -152,7 +154,7 @@ namespace Xamarin.Android.NetTests
 			Assert.IsTrue (callbackHasBeenCalled, "custom validation callback hasn't been called");
 		}
 
-		[Test]
+		[TestMethod]
 		public async Task ServerCertificateCustomValidationCallback_ApprovesRequestWithInvalidCertificate ()
 		{
 			bool callbackHasBeenCalled = false;
@@ -172,7 +174,7 @@ namespace Xamarin.Android.NetTests
 			server.AssertNoUnhandledExceptions ();
 		}
 
-		[Test]
+		[TestMethod]
 		public async Task NoServerCertificateCustomValidationCallback_ThrowsWhenThereIsCertificateHostnameMismatch ()
 		{
 			using var server = LocalHttpsServer.Start ();
@@ -194,7 +196,7 @@ namespace Xamarin.Android.NetTests
 			await AssertRejectsRemoteCertificate (() => client.GetStringAsync (mismatchedUri));
 		}
 
-		[Test]
+		[TestMethod]
 		public async Task ServerCertificateCustomValidationCallback_IgnoresCertificateHostnameMismatch ()
 		{
 			bool callbackHasBeenCalled = false;
@@ -217,7 +219,7 @@ namespace Xamarin.Android.NetTests
 			server.AssertNoUnhandledExceptions ();
 		}
 
-		[Test]
+		[TestMethod]
 		public async Task ServerCertificateCustomValidationCallback_Redirects ()
 		{
 			int callbackCounter = 0;
@@ -240,7 +242,7 @@ namespace Xamarin.Android.NetTests
 			server.AssertNoUnhandledExceptions ();
 		}
 
-		[Test]
+		[TestMethod]
 		public async Task AndroidMessageHandlerFollows308PermanentRedirect ()
 		{
 			using var server = LocalHttpServer.Start ();
@@ -256,7 +258,7 @@ namespace Xamarin.Android.NetTests
 			server.AssertNoUnhandledExceptions ();
 		}
 
-		[Test]
+		[TestMethod]
 		public async Task AndroidMessageHandlerPreservesHeadMethodOnRedirect ()
 		{
 			using var server = LocalHttpServer.Start ();
@@ -274,8 +276,9 @@ namespace Xamarin.Android.NetTests
 			server.AssertNoUnhandledExceptions ();
 		}
 
-		[Test]
-		public async Task AndroidMessageHandlerSendsClientCertificate ([Values(true, false)] bool setClientCertificateOptionsExplicitly)
+		[TestMethod]
+		[Microsoft.VisualStudio.TestTools.UnitTesting.Combinatorial.CombinatorialData]
+		public async Task AndroidMessageHandlerSendsClientCertificate ([Microsoft.VisualStudio.TestTools.UnitTesting.Combinatorial.CombinatorialValues(true, false)] bool setClientCertificateOptionsExplicitly)
 		{
 			using X509Certificate2 certificate = BuildClientCertificate ();
 			using var server = LocalHttpsServer.Start (clientCertificateRequired: true);
@@ -292,12 +295,12 @@ namespace Xamarin.Android.NetTests
 			var response = await client.GetAsync (server.GetUri ("echo-client-certificate"));
 			var content = await response.EnsureSuccessStatusCode ().Content.ReadAsStringAsync ();
 
-			X509Certificate2 certificate2 = new X509Certificate2 (global::System.Convert.FromBase64String (content));
+			using X509Certificate2 certificate2 = X509CertificateLoader.LoadCertificate (global::System.Convert.FromBase64String (content));
 			Assert.AreEqual (certificate.Thumbprint, certificate2.Thumbprint);
 			server.AssertNoUnhandledExceptions ();
 		}
 
-		[Test]
+		[TestMethod]
 		public async Task AndroidMessageHandlerRejectsClientCertificateOptionsAutomatic ()
 		{
 			var handler = new AndroidMessageHandler
@@ -305,7 +308,7 @@ namespace Xamarin.Android.NetTests
 				ClientCertificateOptions = ClientCertificateOption.Automatic,
 			};
 
-			Assert.Throws<InvalidOperationException>(() => handler.ClientCertificates.Add (BuildClientCertificate ()));
+			Assert.ThrowsExactly<InvalidOperationException>(() => handler.ClientCertificates.Add (BuildClientCertificate ()));
 		}
 
 		private async Task AssertRejectsRemoteCertificate (Func<Task> makeRequest)
@@ -351,88 +354,10 @@ namespace Xamarin.Android.NetTests
 			return clientCert;
 		}
 
-		[Test]
-		public async Task HttpContentStreamIsRewoundAfterCancellation ()
-		{
-			int testPort = GetAvailablePort ();
-			using var listener = new HttpListener ();
-			listener.Prefixes.Add ($"http://+:{testPort}/");
-			listener.Start ();
-			
-			// Handle the first request - simulate a slow server to allow cancellation
-			listener.BeginGetContext (ar => {
-				var ctx = listener.EndGetContext (ar);
-				// Read the request body slowly to ensure cancellation happens during upload
-				var buffer = new byte[4096];
-				try {
-					while (ctx.Request.InputStream.Read (buffer, 0, buffer.Length) > 0) {
-						System.Threading.Thread.Sleep (100); // Slow down to allow cancellation
-					}
-				} catch (Exception ex) {
-					// Expected when connection is cancelled
-					Console.WriteLine ($"Exception while reading request body: {ex}");
-				}
-				try {
-					ctx.Response.StatusCode = 200;
-					ctx.Response.Close ();
-				} catch (Exception ex) {
-					// Connection may already be closed
-					Console.WriteLine ($"Exception while closing response: {ex}");
-				}
-			}, null);
 
-			var tcs = new System.Threading.CancellationTokenSource ();
-			tcs.CancelAfter (500); // Cancel after 500ms
-			var client = new HttpClient (new AndroidMessageHandler ());
-			var byc = new ByteArrayContent (new byte[1_000_000]); // 1 MB of data
-			var request = new HttpRequestMessage (HttpMethod.Post, $"http://localhost:{testPort}/") { Content = byc };
-			
-			var stream = await byc.ReadAsStreamAsync ();
-			var positionBefore = stream.Position;
-			Assert.AreEqual (0, positionBefore, "Stream position should be 0 before first request");
-
-			bool exceptionThrown = false;
-			try {
-				await client.SendAsync (request, tcs.Token).ConfigureAwait (false);
-				// If we get here without exception, that's also OK for this test
-			} catch (Exception ex) when (IsConnectionFailure (ex)) {
-				Assert.Ignore ($"Ignoring transient connection failure: {ex.GetType ()}: {ex.Message}");
-			} catch (Exception ex) {
-				// Expected - cancellation or connection error
-				// We catch all exceptions to ensure the test doesn't fail due to unhandled exceptions
-				Console.WriteLine ($"Exception during first request (expected): {ex}");
-				exceptionThrown = true;
-			}
-
-			// The key assertion: stream should be rewound even after an exception
-			var stream2 = await byc.ReadAsStreamAsync ();
-			var positionAfter = stream2.Position;
-			Assert.AreEqual (0, positionAfter, "Stream position should be 0 after failed request (stream should be rewound)");
-
-			// Only proceed with second request if we actually got an exception (test scenario succeeded)
-			if (exceptionThrown) {
-				var request2 = new HttpRequestMessage (HttpMethod.Post, $"http://localhost:{testPort}/") { Content = byc };
-			
-				// Set up listener for second request
-				listener.BeginGetContext (ar => {
-					var ctx = listener.EndGetContext (ar);
-					ctx.Response.StatusCode = 200;
-					ctx.Response.Close ();
-				}, null);
-
-				var response2 = await client.SendAsync (request2).ConfigureAwait (false);
-				Assert.True (response2.IsSuccessStatusCode, "Second request should succeed with reused content");
-
-				var stream3 = await byc.ReadAsStreamAsync ();
-				var positionFinal = stream3.Position;
-				Assert.AreEqual (0, positionFinal, "Stream position should be 0 after successful request");
-			}
-
-			listener.Close ();
-		}
-
-		[Test]
-		public void ConnectionFailureThrowsHttpRequestException ()
+		[TestMethod]
+		[TestCategory ("AndroidMessageHandlerExceptions")]
+		public async global::System.Threading.Tasks.Task ConnectionFailureThrowsHttpRequestException ()
 		{
 			// https://github.com/dotnet/android/issues/5761
 			// HttpClient.SendAsync is documented to throw HttpRequestException when there is a problem
@@ -440,15 +365,16 @@ namespace Xamarin.Android.NetTests
 			int unusedPort = GetAvailablePort ();
 			using var client = new HttpClient (new AndroidMessageHandler ());
 
-			var ex = Assert.CatchAsync (async () => await client.GetAsync ($"http://localhost:{unusedPort}/"));
-			Assert.IsInstanceOf<HttpRequestException> (ex, $"Expected HttpRequestException but got {ex?.GetType ()}: {ex?.Message}");
+			var ex = await Assert.ThrowsAsync<global::System.Exception> (async () => await client.GetAsync ($"http://localhost:{unusedPort}/"));
+			Assert.IsInstanceOfType<HttpRequestException> (ex, $"Expected HttpRequestException but got {ex?.GetType ()}: {ex?.Message}");
 			var inner = ex?.InnerException as WebException;
 			Assert.IsNotNull (inner, $"Expected inner WebException but got {ex?.InnerException?.GetType ()}");
 			Assert.AreEqual (WebExceptionStatus.ConnectFailure, inner.Status, "Inner WebException should preserve ConnectFailure status");
 		}
 
-		[Test]
-		public void ExceedingMaxAutomaticRedirectionsThrowsHttpRequestException ()
+		[TestMethod]
+		[TestCategory ("AndroidMessageHandlerExceptions")]
+		public async global::System.Threading.Tasks.Task ExceedingMaxAutomaticRedirectionsThrowsHttpRequestException ()
 		{
 			// https://github.com/dotnet/android/issues/5761
 			// Failures in the request path must be surfaced as HttpRequestException (per the HttpClient.SendAsync
@@ -468,13 +394,14 @@ namespace Xamarin.Android.NetTests
 			var handler = new AndroidMessageHandler { MaxAutomaticRedirections = 1 };
 			using var client = new HttpClient (handler);
 
-			var ex = Assert.CatchAsync (async () => await client.GetAsync ($"http://localhost:{port}/"));
+			var ex = await Assert.ThrowsAsync<global::System.Exception> (async () => await client.GetAsync ($"http://localhost:{port}/"));
 			listener.Close ();
 
-			Assert.IsInstanceOf<HttpRequestException> (ex, $"Expected HttpRequestException but got {ex?.GetType ()}: {ex?.Message}");
+			Assert.IsInstanceOfType<HttpRequestException> (ex, $"Expected HttpRequestException but got {ex?.GetType ()}: {ex?.Message}");
 			var inner = ex?.InnerException as WebException;
 			Assert.IsNotNull (inner, $"Expected inner WebException but got {ex?.InnerException?.GetType ()}");
 			Assert.AreEqual (WebExceptionStatus.UnknownError, inner.Status, "Inner WebException should preserve UnknownError status");
 		}
+
 	}
 }

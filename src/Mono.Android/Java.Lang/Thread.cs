@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using System.Threading;
 
 using Android.Runtime;
 
@@ -19,15 +20,19 @@ namespace Java.Lang {
 
 			public RunnableImplementor (Action handler, bool removable)
 				: base (
-						JNIEnv.StartCreateInstance ("mono/java/lang/RunnableImplementor", "()V"),
+						// SAFETY: The complete ASCII literal supplies stable, NUL-terminated JNI class-name bytes.
+						unsafe (JNIEnv.AllocObject ("mono/java/lang/RunnableImplementor"u8)),
 						JniHandleOwnership.TransferLocalRef)
 			{
-				JNIEnv.FinishCreateInstance (Handle, "()V");
+				unsafe {
+					// SAFETY: this peer owns the allocated handle; ()V supplies the zero-argument instance-constructor ABI.
+					JNIEnv.FinishCreateInstance (Handle, "()V"u8);
+				}
 
 				Handler = handler;
 				this.removable = removable;
 				if (removable)
-					lock (instances)
+					lock (instancesLock)
 						instances.AddOrUpdate (handler, this);
 			}
 
@@ -36,18 +41,19 @@ namespace Java.Lang {
 				if (Handler != null)
 					Handler ();
 				if (removable)
-					lock (instances)
+					lock (instancesLock)
 						if (Handler != null)
 							instances.Remove (Handler);
 				Dispose ();
 			}
 
-			static ConditionalWeakTable<Action, RunnableImplementor> instances = new ();
+			static readonly Lock instancesLock = new ();
+			static readonly ConditionalWeakTable<Action, RunnableImplementor> instances = new ();
 
 			public static RunnableImplementor Remove (Action handler)
 			{
 				RunnableImplementor result;
-				lock (instances) {
+				lock (instancesLock) {
 					instances.TryGetValue (handler, out result!);
 					instances.Remove (handler);
 				}

@@ -1,7 +1,6 @@
 using Android.Runtime;
 using Java.Interop;
 
-#if ANDROID_29
 
 namespace Android.Telephony.Mbms
 {
@@ -13,6 +12,3 @@ namespace Android.Telephony.Mbms
 		// This is still created because it is used by other classes.
 	}
 }
-
-#endif
-

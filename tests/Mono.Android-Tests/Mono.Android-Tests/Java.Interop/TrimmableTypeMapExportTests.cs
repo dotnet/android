@@ -1,0 +1,399 @@
+using System;
+using System.Collections;
+
+using Android.Runtime;
+using Android.Views;
+
+using Java.Interop;
+
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+using static Java.InteropTests.TrimmableTypeMapTestHelpers;
+
+namespace Java.InteropTests
+{
+	[TestClass]
+	[TestCategory ("Export")]
+	[TestCategory ("TrimmableTypeMapRuntimeCoverage")]
+	[TestCategory ("GeneratedJniDebuggerBoundary")]
+	public class TrimmableTypeMapExportTests
+	{
+		[TestMethod]
+		public void HandledExportExceptionsReturnAbiDefaultsAndDeliverPolicyOnce ()
+		{
+			using var peer = new GeneratedJniDebuggerBoundaryExportPeer ();
+			using var klass = peer.Class;
+			int notifications = 0;
+			int unexpectedExceptions = 0;
+			EventHandler<RaiseThrowableEventArgs> handler = (sender, args) => {
+				if (!ReferenceEquals (peer.Exception, args.Exception)) {
+					unexpectedExceptions++;
+				}
+				notifications++;
+				args.Handled = true;
+			};
+			AndroidEnvironment.UnhandledExceptionRaiser += handler;
+			try {
+				var boolMethod = GetRequiredMethodID (klass.Handle, "throwBoolean", "()Z");
+				var intMethod = GetRequiredMethodID (klass.Handle, "throwInt", "()I");
+				var longMethod = GetRequiredMethodID (klass.Handle, "throwLong", "()J");
+				var floatMethod = GetRequiredMethodID (klass.Handle, "throwFloat", "()F");
+				var doubleMethod = GetRequiredMethodID (klass.Handle, "throwDouble", "()D");
+				var objectMethod = GetRequiredMethodID (klass.Handle, "throwString", "()Ljava/lang/String;");
+				Assert.IsFalse (JNIEnv.CallBooleanMethod (peer.Handle, boolMethod));
+				Assert.AreEqual (1, notifications, "The boolean export must deliver policy once.");
+				Assert.AreEqual (0, JNIEnv.CallIntMethod (peer.Handle, intMethod));
+				Assert.AreEqual (2, notifications, "The int export must deliver policy once.");
+				Assert.AreEqual (0L, JNIEnv.CallLongMethod (peer.Handle, longMethod));
+				Assert.AreEqual (3, notifications, "The long export must deliver policy once.");
+				Assert.AreEqual (0f, JNIEnv.CallFloatMethod (peer.Handle, floatMethod));
+				Assert.AreEqual (4, notifications, "The float export must deliver policy once.");
+				Assert.AreEqual (0d, JNIEnv.CallDoubleMethod (peer.Handle, doubleMethod));
+				Assert.AreEqual (5, notifications, "The double export must deliver policy once.");
+				Assert.AreEqual (IntPtr.Zero, JNIEnv.CallObjectMethod (peer.Handle, objectMethod));
+				Assert.AreEqual (6, notifications, "The object export must deliver policy once.");
+				Assert.AreEqual (0, unexpectedExceptions, "Policy must receive the original managed exception.");
+			} finally {
+				AndroidEnvironment.UnhandledExceptionRaiser -= handler;
+			}
+
+			var success = GetRequiredMethodID (klass.Handle, "succeed", "()I");
+			Assert.AreEqual (42, JNIEnv.CallIntMethod (peer.Handle, success),
+				"Handled exceptions must not leak JNI pending state into the next call.");
+		}
+
+		[TestMethod]
+		public void OverloadedAndRenamedExports_DispatchByJniNameAndSignature ()
+		{
+			using var peer = new TrimmableExportOverloadPeer ();
+			using var klass = peer.Class;
+			using var argument = new Java.Lang.String ("hello");
+
+			var intMethod = GetRequiredMethodID (klass.Handle, "call", "(I)I");
+			var stringMethod = GetRequiredMethodID (klass.Handle, "call", "(Ljava/lang/String;)Ljava/lang/String;");
+			var renamedMethod = GetRequiredMethodID (klass.Handle, "javaSideName", "()I");
+
+			Assert.AreEqual (42, JNIEnv.CallIntMethod (peer.Handle, intMethod, new JValue (41)));
+			var result = JNIEnv.CallObjectMethod (peer.Handle, stringMethod, new JValue (argument.Handle));
+			try {
+				Assert.AreEqual ("hello!", JNIEnv.GetString (result, JniHandleOwnership.DoNotTransfer));
+			} finally {
+				JNIEnv.DeleteLocalRef (result);
+			}
+			Assert.AreEqual (99, JNIEnv.CallIntMethod (peer.Handle, renamedMethod));
+		}
+
+		[TestMethod]
+		public void InheritedVirtualExport_DispatchesToManagedOverride ()
+		{
+			using var peer = new TrimmableExportDerivedPeer ();
+			using var klass = peer.Class;
+
+			var method = GetRequiredMethodID (klass.Handle, "ping", "()I");
+			Assert.AreEqual (42, JNIEnv.CallIntMethod (peer.Handle, method));
+		}
+
+		[TestMethod]
+		public void RenamedInterfaceExport_AndInterfaceCallback_ReachManagedMethod ()
+		{
+			using var listener = new TrimmableExportClickListener ();
+			using var klass = listener.Class;
+			using var view = new View (Android.App.Application.Context);
+
+			var interfaceMethod = GetRequiredMethodID (klass.Handle, "onClick", "(Landroid/view/View;)V");
+			var exportedMethod = GetRequiredMethodID (klass.Handle, "onClickRenamed", "(Landroid/view/View;)V");
+
+			JNIEnv.CallVoidMethod (listener.Handle, interfaceMethod, new JValue (view.Handle));
+			JNIEnv.CallVoidMethod (listener.Handle, exportedMethod, new JValue (view.Handle));
+
+			Assert.AreEqual (2, listener.Invocations);
+			Assert.AreEqual (view.Handle, listener.LastViewHandle);
+		}
+
+		[TestMethod]
+		public void EnumExports_MarshalPrimitiveArgumentsAndReturns ()
+		{
+			using var peer = new TrimmableExportEnumPeer ();
+			using var klass = peer.Class;
+
+			var intMethod = GetRequiredMethodID (klass.Handle, "nextInt", "(I)I");
+			var longMethod = GetRequiredMethodID (klass.Handle, "nextLong", "(J)J");
+
+			Assert.AreEqual (2, JNIEnv.CallIntMethod (peer.Handle, intMethod, new JValue (1)));
+			Assert.AreEqual (long.MaxValue, JNIEnv.CallLongMethod (peer.Handle, longMethod, new JValue (1L)));
+		}
+
+		[TestMethod]
+		public void CharSequenceAndCollectionExports_MarshalReferenceTypes ()
+		{
+			using var peer = new TrimmableExportReferencePeer ();
+			using var klass = peer.Class;
+			using var argument = new Java.Lang.String ("managed");
+
+			var echo = GetRequiredMethodID (
+				klass.Handle, "echoCharSequence", "(Ljava/lang/CharSequence;)Ljava/lang/CharSequence;");
+			var echoed = JNIEnv.CallObjectMethod (peer.Handle, echo, new JValue (argument.Handle));
+			try {
+				Assert.AreEqual ("managed", JNIEnv.GetString (echoed, JniHandleOwnership.DoNotTransfer));
+			} finally {
+				JNIEnv.DeleteLocalRef (echoed);
+			}
+
+			var makeList = GetRequiredMethodID (klass.Handle, "makeList", "()Ljava/util/List;");
+			var listHandle = JNIEnv.CallObjectMethod (peer.Handle, makeList);
+			using var list = Java.Lang.Object.GetObject<JavaList> (listHandle, JniHandleOwnership.TransferLocalRef);
+			Assert.IsNotNull (list);
+			Assert.AreEqual ("alpha", list [0]);
+		}
+
+		[TestMethod]
+		public void UserPeerArrayExport_UsesGeneratedElementNameAndRoundTrips ()
+		{
+			using var peer = new TrimmableExportUserArrayPeer ();
+			using var klass = peer.Class;
+			using var first = new TrimmableExportUserPeer ();
+			using var second = new TrimmableExportUserPeer ();
+
+			var input = JNIEnv.NewObjectArray (first, second);
+			try {
+				var arrayName = JNIEnv.GetClassNameFromInstance (input);
+				Assert.IsNotNull (arrayName);
+				StringAssert.EndsWith (arrayName, "/TrimmableExportUserPeer;");
+
+				var method = GetRequiredMethodID (klass.Handle, "echoUserPeers", $"({arrayName}){arrayName}");
+				var output = JNIEnv.CallObjectMethod (peer.Handle, method, new JValue (input));
+				try {
+					Assert.AreEqual (arrayName, JNIEnv.GetClassNameFromInstance (output));
+					Assert.AreEqual (1, peer.Invocations);
+					Assert.AreEqual (2, peer.ReceivedLength);
+					Assert.IsNotNull (peer.ReceivedFirst);
+					Assert.IsTrue (JNIEnv.IsSameObject (first.Handle, peer.ReceivedFirst.Handle));
+
+					var returnedFirst = JNIEnv.GetObjectArrayElement (output, 0);
+					try {
+						var returnedSecond = JNIEnv.GetObjectArrayElement (output, 1);
+						try {
+							Assert.IsTrue (JNIEnv.IsSameObject (first.Handle, returnedFirst));
+							Assert.IsTrue (JNIEnv.IsSameObject (second.Handle, returnedSecond));
+						} finally {
+							JNIEnv.DeleteLocalRef (returnedSecond);
+						}
+					} finally {
+						JNIEnv.DeleteLocalRef (returnedFirst);
+					}
+				} finally {
+					JNIEnv.DeleteLocalRef (output);
+				}
+			} finally {
+				JNIEnv.DeleteLocalRef (input);
+			}
+		}
+
+		[TestMethod]
+		public void StreamExport_MarshalsJavaInputStream ()
+		{
+			using var peer = new TrimmableExportStreamPeer ();
+			using var klass = peer.Class;
+			using var input = new Java.IO.ByteArrayInputStream (new byte [] { 42, 43 });
+
+			var method = GetRequiredMethodID (klass.Handle, "readStream", "(Ljava/io/InputStream;)I");
+			Assert.AreEqual (42, JNIEnv.CallIntMethod (peer.Handle, method, new JValue (input.Handle)));
+		}
+
+		[TestMethod]
+		public void NonPublicExports_DispatchFromJava ()
+		{
+			using var peer = new TrimmableExportNonPublicPeer ();
+			using var klass = peer.Class;
+
+			var protectedMethod = GetRequiredMethodID (klass.Handle, "protectedCall", "(I)I");
+			var privateMethod = GetRequiredMethodID (klass.Handle, "privateCall", "(I)I");
+
+			Assert.AreEqual (42, JNIEnv.CallIntMethod (peer.Handle, protectedMethod, new JValue (21)));
+			Assert.AreEqual (43, JNIEnv.CallIntMethod (peer.Handle, privateMethod, new JValue (21)));
+			Assert.AreEqual (2, peer.Invocations);
+		}
+
+		[TestMethod]
+		[TestCategory ("JniUtf8Construction")]
+		public void ExportConstructor_ForwardsSuperArgumentsToJavaBase ()
+		{
+			TrimmableExportSuperArgsPeer.ConstructorInvocations = 0;
+
+			var handle = JNIEnv.AllocObject (typeof (TrimmableExportSuperArgsPeer));
+			try {
+				// SAFETY: The literal is terminated; the live allocated peer and one argument match (I)V.
+				unsafe {
+					JNIEnv.FinishCreateInstance (handle, "(I)V"u8, new JValue (42));
+				}
+				using var peer = Java.Lang.Object.GetObject<TrimmableExportSuperArgsPeer> (handle, JniHandleOwnership.DoNotTransfer);
+				Assert.IsNotNull (peer);
+				using var klass = peer.Class;
+
+				var method = GetRequiredMethodID (klass.Handle, "getSuperValue", "()I");
+				Assert.AreEqual (42, JNIEnv.CallIntMethod (peer.Handle, method));
+				Assert.AreEqual (1, TrimmableExportSuperArgsPeer.ConstructorInvocations);
+			} finally {
+				JNIEnv.DeleteLocalRef (handle);
+			}
+		}
+	}
+
+	class TrimmableExportOverloadPeer : Java.Lang.Object
+	{
+		[Export ("call")]
+		public int Call (int value) => value + 1;
+
+		[Export ("call")]
+		public string Call (string value) => value + "!";
+
+		[Export ("javaSideName")]
+		public int ManagedName () => 99;
+	}
+
+	class GeneratedJniDebuggerBoundaryExportPeer : Java.Lang.Object
+	{
+		public readonly InvalidOperationException Exception = new InvalidOperationException ("generated export boundary");
+
+		[Export ("throwBoolean")]
+		public bool ThrowBoolean () => throw Exception;
+
+		[Export ("throwInt")]
+		public int ThrowInt () => throw Exception;
+
+		[Export ("throwLong")]
+		public long ThrowLong () => throw Exception;
+
+		[Export ("throwFloat")]
+		public float ThrowFloat () => throw Exception;
+
+		[Export ("throwDouble")]
+		public double ThrowDouble () => throw Exception;
+
+		[Export ("throwString")]
+		public string ThrowString () => throw Exception;
+
+		[Export ("succeed")]
+		public int Succeed () => 42;
+	}
+
+	class TrimmableExportBasePeer : Java.Lang.Object
+	{
+		[Export ("ping")]
+		public virtual int Ping () => 0;
+	}
+
+	class TrimmableExportDerivedPeer : TrimmableExportBasePeer
+	{
+		public override int Ping () => 42;
+	}
+
+	class TrimmableExportClickListener : Java.Lang.Object, View.IOnClickListener
+	{
+		public int Invocations;
+		public IntPtr LastViewHandle;
+
+		[Export ("onClickRenamed")]
+		public void OnClick (View view)
+		{
+			Invocations++;
+			LastViewHandle = view.Handle;
+		}
+	}
+
+	enum TrimmableExportIntEnum { One = 1, Two = 2 }
+	enum TrimmableExportLongEnum : long { One = 1, Max = long.MaxValue }
+
+	class TrimmableExportEnumPeer : Java.Lang.Object
+	{
+		[Export ("nextInt")]
+		public TrimmableExportIntEnum NextInt (TrimmableExportIntEnum value)
+			=> value == TrimmableExportIntEnum.One ? TrimmableExportIntEnum.Two : TrimmableExportIntEnum.One;
+
+		[Export ("nextLong")]
+		public TrimmableExportLongEnum NextLong (TrimmableExportLongEnum value)
+			=> value == TrimmableExportLongEnum.One ? TrimmableExportLongEnum.Max : TrimmableExportLongEnum.One;
+	}
+
+	class TrimmableExportReferencePeer : Java.Lang.Object
+	{
+		[Export ("echoCharSequence")]
+		public Java.Lang.ICharSequence EchoCharSequence (Java.Lang.ICharSequence value) => value;
+
+		[Export ("makeList")]
+		public IList MakeList () => new ArrayList { "alpha" };
+	}
+
+	class TrimmableExportUserPeer : Java.Lang.Object
+	{
+	}
+
+	class TrimmableExportUserArrayPeer : Java.Lang.Object
+	{
+		public int Invocations;
+		public int ReceivedLength;
+		public TrimmableExportUserPeer ReceivedFirst;
+
+		[Export ("echoUserPeers")]
+		public TrimmableExportUserPeer [] EchoUserPeers (TrimmableExportUserPeer [] values)
+		{
+			Invocations++;
+			ReceivedLength = values.Length;
+			ReceivedFirst = values [0];
+			return values;
+		}
+	}
+
+	class TrimmableExportStreamPeer : Java.Lang.Object
+	{
+		[Export ("readStream")]
+		public int ReadStream ([ExportParameter (ExportParameterKind.InputStream)] System.IO.Stream stream)
+			=> stream.ReadByte ();
+	}
+
+	class TrimmableExportNonPublicPeer : Java.Lang.Object
+	{
+		public int Invocations;
+
+		[Export ("protectedCall")]
+		protected int ProtectedCall (int value)
+		{
+			Invocations++;
+			return value * 2;
+		}
+
+		[Export ("privateCall")]
+		int PrivateCall (int value)
+		{
+			Invocations++;
+			return value * 2 + 1;
+		}
+	}
+
+	[Register ("net/dot/android/test/TrimmableSuperArgsBase", DoNotGenerateAcw = true)]
+	class TrimmableSuperArgsBase : Java.Lang.Object
+	{
+		[Register (".ctor", "(I)V", "")]
+		public TrimmableSuperArgsBase (int value)
+		{
+		}
+
+		protected TrimmableSuperArgsBase (IntPtr handle, JniHandleOwnership transfer)
+			: base (handle, transfer)
+		{
+		}
+	}
+
+	[Register ("net/dot/android/test/TrimmableExportSuperArgsPeer")]
+	class TrimmableExportSuperArgsPeer : TrimmableSuperArgsBase
+	{
+		public static int ConstructorInvocations;
+
+		[Export (SuperArgumentsString = "p0")]
+		public TrimmableExportSuperArgsPeer (int value)
+			: base (value)
+		{
+			ConstructorInvocations++;
+		}
+	}
+}

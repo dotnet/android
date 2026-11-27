@@ -2,22 +2,23 @@
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
 using System;
+using System.Diagnostics;
 using System.Linq;
 using System.IO;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Globalization;
 using Microsoft.Android.Build.Tasks;
+using Xamarin.Android.Tools;
 
 namespace Xamarin.Android.Tasks
 {
 	/// <summary>
-	/// ResolveAndroidTooling does lot of the grunt work ResolveSdks used to do:
-	/// - Modify TargetFrameworkVersion
-	/// - Calculate ApiLevel and ApiLevelName
-	/// - Find the paths of various Android tooling that other tasks need to call
+	/// Resolves the Android API level from TargetPlatformVersion and locates
+	/// the Android SDK tools needed by other tasks.
 	/// </summary>
-	public class ResolveAndroidTooling : AndroidTask
+	[MSBuildMultiThreadableTask]
+	public class ResolveAndroidTooling : MultithreadedAndroidTask
 	{
 		public override string TaskPrefix => "RAT";
 
@@ -27,15 +28,9 @@ namespace Xamarin.Android.Tasks
 
 		public string? AndroidSdkBuildToolsVersion { get; set; }
 
-		public string? CommandLineToolsVersion { get; set; }
+		public string []? ReferenceAssemblyPaths { get; set; }
 
-		public string? ProjectFilePath { get; set; }
-
-		public string? SequencePointsMode { get; set; }
-
-		public bool AotAssemblies { get; set; }
-
-		public bool AndroidApplication { get; set; } = true;
+		AndroidVersions SupportedVersions => MonoAndroidHelper.GetSupportedVersions (BuildEngine4, ReferenceAssemblyPaths, TaskEnvironment);
 
 		[Output]
 		public string? AndroidApiLevel { get; set; }
@@ -53,12 +48,6 @@ namespace Xamarin.Android.Tasks
 		public string? ZipAlignPath { get; set; }
 
 		[Output]
-		public string? AndroidSequencePointsMode { get; set; }
-
-		[Output]
-		public string? LintToolPath { get; set; }
-
-		[Output]
 		public string? ApkSignerJar { get; set; }
 
 		[Output]
@@ -70,15 +59,21 @@ namespace Xamarin.Android.Tasks
 		[Output]
 		public string? Aapt2ToolPath { get; set; }
 
-		protected static readonly bool IsWindows = Path.DirectorySeparatorChar == '\\';
-		protected static readonly string ZipAlign = IsWindows ? "zipalign.exe" : "zipalign";
-		protected static readonly string Aapt2 = IsWindows ? "aapt2.exe" : "aapt2";
-		protected static readonly string Android = IsWindows ? "android.bat" : "android";
-		protected static readonly string Lint = IsWindows ? "lint.bat" : "lint";
-		protected static readonly string ApkSigner = "apksigner.jar";
+		static readonly bool IsWindows = Path.DirectorySeparatorChar == '\\';
+		static readonly string ZipAlign = IsWindows ? "zipalign.exe" : "zipalign";
+		static readonly string Aapt2 = IsWindows ? "aapt2.exe" : "aapt2";
+		static readonly string Android = IsWindows ? "android.bat" : "android";
+		static readonly string ApkSigner = "apksigner.jar";
 
 		public override bool RunTask ()
 		{
+			if (!AndroidSdkPath.IsNullOrEmpty ())
+				AndroidSdkPath = TaskEnvironment.GetAbsolutePath (AndroidSdkPath);
+			if (!ZipAlignPath.IsNullOrEmpty ())
+				ZipAlignPath = TaskEnvironment.GetAbsolutePath (ZipAlignPath);
+			if (!Aapt2ToolPath.IsNullOrEmpty ())
+				Aapt2ToolPath = TaskEnvironment.GetAbsolutePath (Aapt2ToolPath);
+
 			// This should be 31.0, 32.0, etc.
 			if (Version.TryParse (TargetPlatformVersion, out Version v)) {
 				if (v.Minor == 0) {
@@ -90,32 +85,17 @@ namespace Xamarin.Android.Tasks
 				AndroidApiLevel = GetMaxStableApiLevel ().ToString ();
 			}
 
-			var androidSdk = MonoAndroidHelper.AndroidSdk;
-			if (androidSdk == null || AndroidSdkPath.IsNullOrEmpty ()) {
+			if (AndroidSdkPath.IsNullOrEmpty () || !Directory.Exists (TaskEnvironment.GetAbsolutePath (AndroidSdkPath))) {
 				Log.LogCodedError ("XA5300", Properties.Resources.XA5300_Android_SDK);
 				return false;
 			}
 
 			string toolsZipAlignPath = Path.Combine (AndroidSdkPath, "tools", ZipAlign);
-			bool findZipAlign = (ZipAlignPath.IsNullOrEmpty () || !Directory.Exists (ZipAlignPath)) && !File.Exists (toolsZipAlignPath);
+			bool findZipAlign = (ZipAlignPath.IsNullOrEmpty () || !Directory.Exists (TaskEnvironment.GetAbsolutePath (ZipAlignPath))) && !File.Exists (TaskEnvironment.GetAbsolutePath (toolsZipAlignPath));
 
-			var lintPaths = androidSdk.GetCommandLineToolsPaths (CommandLineToolsVersion ?? "")
-				.SelectMany (p => new [] {
-					p,
-					Path.Combine (p, "bin"),
-				});
-
-			LintToolPath = null;
-			foreach (var path in lintPaths) {
-				if (File.Exists (Path.Combine (path, Lint))) {
-					LintToolPath = path;
-					break;
-				}
-			}
-
-			foreach (var dir in androidSdk.GetBuildToolsPaths (AndroidSdkBuildToolsVersion ?? "")) {
+			foreach (var dir in AndroidSdkInfo.GetBuildToolsPaths (AndroidSdkPath, AndroidSdkBuildToolsVersion ?? "")) {
 				Log.LogDebugMessage ("Trying build-tools path: {0}", dir);
-				if (dir == null || !Directory.Exists (dir))
+				if (dir == null || !Directory.Exists (TaskEnvironment.GetAbsolutePath (dir)))
 					continue;
 
 				var toolsPaths = new string [] {
@@ -123,16 +103,16 @@ namespace Xamarin.Android.Tasks
 					Path.Combine (dir, "bin"),
 				};
 
-				string aapt = toolsPaths.FirstOrDefault (x => File.Exists (Path.Combine (x, MonoAndroidHelper.GetExecutablePath (x, Aapt2))));
+				string aapt = toolsPaths.FirstOrDefault (x => File.Exists (TaskEnvironment.GetAbsolutePath (Path.Combine (x, MonoAndroidHelper.GetExecutablePath (x, Aapt2, TaskEnvironment)))));
 				if (aapt.IsNullOrEmpty ()) {
 					Log.LogDebugMessage ("Could not find `{0}`; tried: {1}", Aapt2,
 						string.Join (Path.PathSeparator.ToString (), toolsPaths.Select (x => Path.Combine (x, Aapt2))));
 					continue;
 				}
-				AndroidSdkBuildToolsPath = Path.GetFullPath (dir);
-				AndroidSdkBuildToolsBinPath = Path.GetFullPath (aapt);
+				AndroidSdkBuildToolsPath = new DirectoryInfo (TaskEnvironment.GetAbsolutePath (dir)).FullName;
+				AndroidSdkBuildToolsBinPath = new DirectoryInfo (TaskEnvironment.GetAbsolutePath (aapt)).FullName;
 
-				string zipalign = toolsPaths.FirstOrDefault (x => File.Exists (Path.Combine (x, ZipAlign)));
+				string zipalign = toolsPaths.FirstOrDefault (x => File.Exists (TaskEnvironment.GetAbsolutePath (Path.Combine (x, ZipAlign))));
 				if (findZipAlign && zipalign.IsNullOrEmpty ()) {
 					Log.LogDebugMessage ("Could not find `{0}`; tried: {1}", ZipAlign,
 						string.Join (Path.PathSeparator.ToString (), toolsPaths.Select (x => Path.Combine (x, ZipAlign))));
@@ -148,36 +128,36 @@ namespace Xamarin.Android.Tasks
 			}
 
 			ApkSignerJar = Path.Combine (AndroidSdkBuildToolsBinPath, "lib", ApkSigner);
-			AndroidUseApkSigner = File.Exists (ApkSignerJar);
+			AndroidUseApkSigner = File.Exists (TaskEnvironment.GetAbsolutePath (ApkSignerJar));
 
 			var aapt2Exe = Aapt2;
 			if (Aapt2ToolPath.IsNullOrEmpty ()) {
 				var osBinPath = MonoAndroidHelper.GetOSBinPath ();
-				aapt2Exe = MonoAndroidHelper.GetExecutablePath (osBinPath, Aapt2);
+				aapt2Exe = MonoAndroidHelper.GetExecutablePath (osBinPath, Aapt2, TaskEnvironment);
 				var aapt2 = Path.Combine (osBinPath, aapt2Exe);
-				if (File.Exists (aapt2))
+				if (File.Exists (TaskEnvironment.GetAbsolutePath (aapt2)))
 					Aapt2ToolPath = osBinPath;
 				else {
 					Log.LogDebugMessage ("Could not find `{0}`; tried: {1}", aapt2Exe, aapt2);
-					aapt2Exe = MonoAndroidHelper.GetExecutablePath (AndroidSdkBuildToolsBinPath, Aapt2);
+					aapt2Exe = MonoAndroidHelper.GetExecutablePath (AndroidSdkBuildToolsBinPath, Aapt2, TaskEnvironment);
 					aapt2 = Path.Combine (AndroidSdkBuildToolsBinPath, aapt2Exe);
-					if (File.Exists (aapt2))
+					if (File.Exists (TaskEnvironment.GetAbsolutePath (aapt2)))
 						Aapt2ToolPath = AndroidSdkBuildToolsBinPath;
 				}
 			}
-			if (Aapt2ToolPath.IsNullOrEmpty () || !File.Exists (Path.Combine (Aapt2ToolPath, aapt2Exe))) {
+			if (Aapt2ToolPath.IsNullOrEmpty () || !File.Exists (TaskEnvironment.GetAbsolutePath (Path.Combine (Aapt2ToolPath, aapt2Exe)))) {
 				Log.LogCodedError ("XA0112", Properties.Resources.XA0112, Aapt2ToolPath ?? "");
 			} else if (!GetAapt2Version (aapt2Exe)) {
 				Log.LogCodedError ("XA0111", Properties.Resources.XA0111, Aapt2ToolPath);
 			}
 
-			if (ZipAlignPath.IsNullOrEmpty () || !Directory.Exists (ZipAlignPath)) {
+			if (ZipAlignPath.IsNullOrEmpty () || !Directory.Exists (TaskEnvironment.GetAbsolutePath (ZipAlignPath))) {
 				ZipAlignPath = new [] {
 						Path.Combine (AndroidSdkBuildToolsPath),
 						Path.Combine (AndroidSdkBuildToolsBinPath),
 						Path.Combine (AndroidSdkPath, "tools"),
 					}
-					.Where (p => File.Exists (Path.Combine (p, ZipAlign)))
+					.Where (p => File.Exists (TaskEnvironment.GetAbsolutePath (Path.Combine (p, ZipAlign))))
 					.FirstOrDefault ();
 			}
 			if (ZipAlignPath.IsNullOrEmpty ()) {
@@ -186,37 +166,9 @@ namespace Xamarin.Android.Tasks
 				return false;
 			}
 
-			if (!Validate ())
-				return false;
-
-			SequencePointsMode mode;
-			if (!Aot.TryGetSequencePointsMode (SequencePointsMode ?? "None", out mode))
-				Log.LogCodedError ("XA0104", Properties.Resources.XA0104, SequencePointsMode ?? "");
-			AndroidSequencePointsMode = mode.ToString ();
-
-			AndroidApiLevelName = MonoAndroidHelper.SupportedVersions.GetIdFromApiLevel (AndroidApiLevel);
-
-			LogOutputs ();
+			AndroidApiLevelName = SupportedVersions.GetIdFromApiLevel (AndroidApiLevel);
 
 			return !Log.HasLoggedErrors;
-		}
-
-		protected virtual bool Validate () => !AndroidApiLevel.IsNullOrEmpty ();
-
-		protected virtual void LogOutputs ()
-		{
-			Log.LogDebugMessage ($"{nameof (ResolveAndroidTooling)} Outputs:");
-			Log.LogDebugMessage ($"  {nameof (AndroidApiLevel)}: {AndroidApiLevel}");
-			Log.LogDebugMessage ($"  {nameof (AndroidApiLevelName)}: {AndroidApiLevelName}");
-			Log.LogDebugMessage ($"  {nameof (AndroidSdkBuildToolsPath)}: {AndroidSdkBuildToolsPath}");
-			Log.LogDebugMessage ($"  {nameof (AndroidSdkBuildToolsBinPath)}: {AndroidSdkBuildToolsBinPath}");
-			Log.LogDebugMessage ($"  {nameof (ZipAlignPath)}: {ZipAlignPath}");
-			Log.LogDebugMessage ($"  {nameof (AndroidSequencePointsMode)}: {AndroidSequencePointsMode}");
-			Log.LogDebugMessage ($"  {nameof (LintToolPath)}: {LintToolPath}");
-			Log.LogDebugMessage ($"  {nameof (ApkSignerJar)}: {ApkSignerJar}");
-			Log.LogDebugMessage ($"  {nameof (AndroidUseApkSigner)}: {AndroidUseApkSigner}");
-			Log.LogDebugMessage ($"  {nameof (Aapt2Version)}: {Aapt2Version}");
-			Log.LogDebugMessage ($"  {nameof (Aapt2ToolPath)}: {Aapt2ToolPath}");
 		}
 
 		//  Android Asset Packaging Tool (aapt) 2:19
@@ -226,7 +178,7 @@ namespace Xamarin.Android.Tasks
 		bool GetAapt2Version (string aapt2Exe)
 		{
 			var sb = new StringBuilder ();
-			var aapt2Tool = Path.Combine (Aapt2ToolPath, aapt2Exe);
+			var aapt2Tool = new FileInfo (TaskEnvironment.GetAbsolutePath (Path.Combine (Aapt2ToolPath, aapt2Exe))).FullName;
 
 			// Try to use a cached value for Aapt2Version
 			// NOTE: this doesn't need to use GetRegisteredTaskObjectAssemblyLocal()
@@ -240,14 +192,13 @@ namespace Xamarin.Android.Tasks
 			}
 
 			try {
-				MonoAndroidHelper.RunProcess (aapt2Tool, "version", (s, e) => {
-					if (!e.Data.IsNullOrEmpty ())
-						sb.AppendLine (e.Data);
-				}, (s, e) => {
-					if (!e.Data.IsNullOrEmpty ())
-						sb.AppendLine (e.Data);
-				}
-				);
+				DataReceivedEventHandler appendOutput = (s, e) => {
+					if (!e.Data.IsNullOrEmpty ()) {
+						lock (sb)
+							sb.AppendLine (e.Data);
+					}
+				};
+				MonoAndroidHelper.RunProcess (TaskEnvironment, aapt2Tool, "version", appendOutput, appendOutput);
 			} catch (Exception ex) {
 				Log.LogWarningFromException (ex);
 				return false;
@@ -263,9 +214,9 @@ namespace Xamarin.Android.Tasks
 			return false;
 		}
 
-		protected int GetMaxStableApiLevel ()
+		int GetMaxStableApiLevel ()
 		{
-			var stableVersion = MonoAndroidHelper.SupportedVersions.MaxStableVersion;
+			var stableVersion = SupportedVersions.MaxStableVersion;
 			if (stableVersion is null)
 				throw new ArgumentNullException ("MaxStableVersion");
 			return stableVersion.ApiLevel;

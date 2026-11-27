@@ -1,8 +1,9 @@
 using System;
+using System.Buffers;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Text;
+using System.Runtime.InteropServices;
 
 namespace Microsoft.Android.Sdk.TrimmableTypeMap;
 
@@ -15,6 +16,10 @@ namespace Microsoft.Android.Sdk.TrimmableTypeMap;
 static class ModelBuilder
 {
 	const string ProxyTypeSuffix = "_Proxy";
+	const string AliasHolderTypeSuffix = "_Aliases";
+
+	static readonly SearchValues<char> ManagedTypeNameSeparators = SearchValues.Create (".+`");
+	static readonly SearchValues<char> JniNameSeparators = SearchValues.Create ("/$");
 
 	static readonly HashSet<string> EssentialRuntimeTypes = new (StringComparer.Ordinal) {
 		"java/lang/Object",
@@ -38,12 +43,8 @@ static class ModelBuilder
 	/// <param name="assemblyName">Explicit assembly name. If null, derived from <paramref name="outputPath"/>.</param>
 	public static TypeMapAssemblyData Build (IReadOnlyList<JavaPeerInfo> peers, string outputPath, string? assemblyName = null)
 	{
-		if (peers is null) {
-			throw new ArgumentNullException (nameof (peers));
-		}
-		if (outputPath is null) {
-			throw new ArgumentNullException (nameof (outputPath));
-		}
+		ArgumentNullException.ThrowIfNull (peers);
+		ArgumentNullException.ThrowIfNull (outputPath);
 		assemblyName ??= Path.GetFileNameWithoutExtension (outputPath);
 
 		var model = new TypeMapAssemblyData {
@@ -94,6 +95,13 @@ static class ModelBuilder
 			foreach (var uco in proxy.UcoMethods) {
 				AddIfCrossAssembly (referencedAssemblies, uco.CallbackType.AssemblyName, assemblyName);
 			}
+			// Directly-registered [UnmanagedCallersOnly] callbacks have no wrapper in UcoMethods,
+			// but ldftn still needs access to the (usually private) n_* method.
+			foreach (var registration in proxy.NativeRegistrations) {
+				if (registration.DirectCallback is not null) {
+					AddIfCrossAssembly (referencedAssemblies, registration.DirectCallback.CallbackType.AssemblyName, assemblyName);
+				}
+			}
 			if (proxy.ActivationCtor != null && !proxy.ActivationCtor.IsOnLeafType) {
 				AddIfCrossAssembly (referencedAssemblies, proxy.ActivationCtor.DeclaringType.AssemblyName, assemblyName);
 			}
@@ -129,6 +137,10 @@ static class ModelBuilder
 		if (!isAliasGroup) {
 			// Single peer — no aliases needed, emit directly with the base JNI name
 			var peer = peersForName [0];
+			if (peer.IsKotlinValueClass) {
+				model.Entries.Add (BuildEntry (peer, proxy: null, assemblyName, jniName));
+				return;
+			}
 			// A concrete type that supplies its own Java peer ([JniTypeSignature(GenerateJavaPeer=false)]
 			// or an MCW binding without an activation ctor) is constructed managed-side via `new`, so its
 			// managed→Java JNI name must still be resolvable in order to instantiate the correct Java class.
@@ -162,7 +174,7 @@ static class ModelBuilder
 		// Alias group: generate an alias holder and indexed entries for each peer.
 		// The base JNI name maps to the alias holder; each peer gets "[0]", "[1]", etc.
 		var aliasKeys = new List<string> ();
-		string holderTypeName = jniName.Replace ('/', '_').Replace ('$', '_') + "_Aliases";
+		string holderTypeName = JniNameToAliasHolderTypeName (jniName);
 		var holderNamespace = "_TypeMap.Aliases";
 		string holderRef = AssemblyQualify ($"{holderNamespace}.{holderTypeName}", assemblyName);
 
@@ -235,18 +247,15 @@ static class ModelBuilder
 			return true;
 		}
 
-		// User-defined ACW types (not MCW bindings, not interfaces) are unconditional
-		// because Android can instantiate them from Java at any time.
-		if (!peer.IsFrameworkAssembly && !peer.DoNotGenerateAcw && !peer.IsInterface) {
-			return true;
-		}
-
 		// Types marked unconditional by the scanner (component attributes: Activity, Service, etc.)
 		if (peer.IsUnconditional) {
 			return true;
 		}
 
-		return false;
+		// Explicit exports are Java entry points even without a managed caller.
+		// Root the proxy, whose callback and constructor references preserve only
+		// the Java-facing surface, rather than all members of the declaring type.
+		return !peer.DoNotGenerateAcw && !peer.IsInterface && peer.MarshalMethods.Any (method => method.IsExport);
 	}
 
 	static void AddIfCrossAssembly (SortedSet<string> set, string? asmName, string outputAssemblyName)
@@ -258,18 +267,18 @@ static class ModelBuilder
 
 	static string ManagedTypeNameToProxyTypeName (string managedTypeName)
 	{
-		var builder = new StringBuilder (managedTypeName.Length + ProxyTypeSuffix.Length);
-		AppendSafeManagedTypeName (builder, managedTypeName);
-		builder.Append (ProxyTypeSuffix);
-		return builder.ToString ();
+		return string.Create (managedTypeName.Length + ProxyTypeSuffix.Length, managedTypeName, static (destination, name) => {
+			name.AsSpan ().ReplaceAny (destination, ManagedTypeNameSeparators, '_');
+			ProxyTypeSuffix.AsSpan ().CopyTo (destination [name.Length..]);
+		});
 	}
 
-	static void AppendSafeManagedTypeName (StringBuilder builder, string managedTypeName)
+	static string JniNameToAliasHolderTypeName (string jniName)
 	{
-		for (int i = 0; i < managedTypeName.Length; i++) {
-			char c = managedTypeName [i];
-			builder.Append (c == '.' || c == '+' || c == '`' ? '_' : c);
-		}
+		return string.Create (jniName.Length + AliasHolderTypeSuffix.Length, jniName, static (destination, name) => {
+			name.AsSpan ().ReplaceAny (destination, JniNameSeparators, '_');
+			AliasHolderTypeSuffix.AsSpan ().CopyTo (destination [name.Length..]);
+		});
 	}
 
 	static JavaPeerProxyData BuildProxyType (JavaPeerInfo peer, string jniName, HashSet<string> usedProxyNames, bool isAcw)
@@ -300,6 +309,7 @@ static class ModelBuilder
 			},
 			IsAcw = isAcw,
 			IsGenericDefinition = peer.IsGenericDefinition,
+			CanResolveFromSealedTargetType = peer.IsSealed && string.Equals (peer.AssemblyName, "Mono.Android", StringComparison.Ordinal),
 			CannotRegisterInStaticConstructor = peer.CannotRegisterInStaticConstructor,
 		};
 
@@ -347,6 +357,9 @@ static class ModelBuilder
 				JniSignature = mm.JniSignature,
 				CallbackParameterTypeNames = mm.NativeCallbackParameterTypeNames,
 				CallbackReturnTypeName = mm.NativeCallbackReturnTypeName,
+				// A callback which is already [UnmanagedCallersOnly] is registered directly; a
+				// generated wrapper would have to managed-call it, which is illegal.
+				IsDirectUnmanagedCallersOnlyCallback = mm.IsUnmanagedCallersOnlyCallback && !mm.IsExport && !mm.CallManagedMethodDirectly,
 				ExportMethodDispatch = (mm.IsExport || mm.CallManagedMethodDirectly) ? new ExportMethodDispatchData {
 					ManagedMethodName = mm.ManagedMethodName,
 					ParameterTypes = mm.ManagedParameterTypes,
@@ -366,18 +379,12 @@ static class ModelBuilder
 			return;
 		}
 
-		// Abstract types are never directly instantiated from Java — the ACW
-		// constructor's getClass() guard prevents activation. Skip generating
-		// UCO constructor wrappers for them.
-		if (peer.IsAbstract) {
+		// Abstract and deferred JCWs do not call native constructor callbacks.
+		if (peer.IsAbstract || peer.CannotRegisterInStaticConstructor) {
 			return;
 		}
 
 		foreach (var ctor in peer.JavaConstructors) {
-			if (ctor.SuperArgumentsString != null && !ctor.HasMatchingManagedCtor) {
-				throw new InvalidOperationException (
-					$"Trimmable typemap cannot generate Java constructor wrapper '{ctor.JniSignature}' for '{peer.ManagedTypeName}' because no matching user-visible managed constructor was found.");
-			}
 			proxy.UcoConstructors.Add (new UcoConstructorData {
 				WrapperName = $"nctor_{ctor.ConstructorIndex}_uco",
 				JniSignature = ctor.JniSignature,
@@ -386,6 +393,7 @@ static class ModelBuilder
 					AssemblyName = peer.AssemblyName,
 				},
 				ManagedParameterTypes = ctor.ManagedParameterTypes,
+				ParameterKinds = ctor.ManagedParameterExportKinds,
 				HasMatchingManagedCtor = ctor.HasMatchingManagedCtor,
 			});
 		}
@@ -396,26 +404,41 @@ static class ModelBuilder
 		var sharedWrapperTargets = new Dictionary<UcoWrapperReuseKey, UcoWrapperTargetData> ();
 		foreach (var proxy in model.ProxyTypes) {
 			foreach (var uco in proxy.UcoMethods) {
-				if (!CanShareUcoWrapper (proxy, uco)) {
+				if (uco.IsDirectUnmanagedCallersOnlyCallback || !CanShareUcoWrapper (proxy, uco)) {
 					continue;
 				}
 
-				var reuseKey = CreateUcoWrapperReuseKey (uco);
-				if (!sharedWrapperTargets.ContainsKey (reuseKey)) {
-					sharedWrapperTargets.Add (reuseKey, UcoWrapperTargetData.From (proxy, uco.WrapperName));
+				ref var target = ref CollectionsMarshal.GetValueRefOrAddDefault (sharedWrapperTargets, CreateUcoWrapperReuseKey (uco), out bool exists);
+				if (!exists) {
+					target = UcoWrapperTargetData.From (proxy, uco.WrapperName);
 				}
 			}
 		}
 
 		foreach (var proxy in model.ProxyTypes) {
-			var reusedUcoMethods = new HashSet<UcoMethodData> ();
+			HashSet<UcoMethodData>? reusedUcoMethods = null;
+
+			HashSet<UcoMethodData>? directUcoMethods = null;
 
 			foreach (var uco in proxy.UcoMethods) {
 				var wrapperTarget = UcoWrapperTargetData.From (proxy, uco.WrapperName);
+
+				if (uco.IsDirectUnmanagedCallersOnlyCallback) {
+					(directUcoMethods ??= new ()).Add (uco);
+					proxy.NativeRegistrations.Add (new NativeRegistrationData {
+						JniMethodName = uco.CallbackMethodName,
+						JniSignature = uco.JniSignature,
+						WrapperMethodName = wrapperTarget.MethodName,
+						WrapperTarget = wrapperTarget,
+						DirectCallback = uco,
+					});
+					continue;
+				}
+
 				if (CanReuseUcoWrapper (proxy, uco) &&
 				    sharedWrapperTargets.TryGetValue (CreateUcoWrapperReuseKey (uco), out var sharedWrapperTarget)) {
 					wrapperTarget = sharedWrapperTarget;
-					reusedUcoMethods.Add (uco);
+					(reusedUcoMethods ??= new ()).Add (uco);
 				}
 				proxy.NativeRegistrations.Add (new NativeRegistrationData {
 					JniMethodName = uco.CallbackMethodName,
@@ -425,7 +448,11 @@ static class ModelBuilder
 				});
 			}
 
-			if (reusedUcoMethods.Count > 0) {
+			if (directUcoMethods is not null) {
+				proxy.UcoMethods.RemoveAll (uco => directUcoMethods.Contains (uco));
+			}
+
+			if (reusedUcoMethods is not null) {
 				proxy.UcoMethods.RemoveAll (uco => reusedUcoMethods.Contains (uco));
 			}
 

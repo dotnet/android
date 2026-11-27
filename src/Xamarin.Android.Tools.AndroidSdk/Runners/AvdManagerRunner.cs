@@ -51,6 +51,7 @@ public class AvdManagerRunner
 	/// <summary>
 	/// Creates an AVD with the specified name and system image. If <paramref name="force"/> is <c>false</c>
 	/// and an AVD with the same name already exists, returns the existing AVD without re-creating it.
+	/// Newly created AVDs enable GPU acceleration with automatic renderer selection.
 	/// </summary>
 	public async Task<AvdInfo> GetOrCreateAvdAsync (string name, string systemImage, string? deviceProfile = null,
 		bool force = false, CancellationToken cancellationToken = default)
@@ -97,10 +98,24 @@ public class AvdManagerRunner
 		// Re-list to get the actual path from avdmanager (respects ANDROID_USER_HOME/ANDROID_AVD_HOME)
 		var avds = await ListAvdsAsync (cancellationToken).ConfigureAwait (false);
 		var created = avds.FirstOrDefault (a => string.Equals (a.Name, name, StringComparison.OrdinalIgnoreCase));
-		if (created is not null)
-			return created;
+		if (created is null)
+			throw new InvalidOperationException ($"avdmanager reported success but AVD '{name}' was not found in the list.");
 
-		throw new InvalidOperationException ($"avdmanager reported success but AVD '{name}' was not found in the list.");
+		if (string.IsNullOrWhiteSpace (created.Path))
+			throw new InvalidOperationException ($"avdmanager did not report a path for AVD '{name}'.");
+
+		var configPath = Path.Combine (created.Path, "config.ini");
+		var lines = File.ReadAllLines (configPath).Where (line => {
+			var separator = line.IndexOf ('=');
+			if (separator < 0)
+				return true;
+			var key = line.Substring (0, separator).Trim ();
+			return key != "hw.gpu.enabled" && key != "hw.gpu.mode";
+		}).ToList ();
+		lines.Add ("hw.gpu.enabled=yes");
+		lines.Add ("hw.gpu.mode=auto");
+		File.WriteAllLines (configPath, lines);
+		return created;
 	}
 
 	public async Task DeleteAvdAsync (string name, CancellationToken cancellationToken = default)
@@ -177,4 +192,3 @@ public class AvdManagerRunner
 	}
 
 }
-

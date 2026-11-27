@@ -1,0 +1,107 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
+
+using Java.Interop;
+
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+namespace Java.InteropTests
+{
+	public abstract class JavaPrimitiveArrayContract<TArray, TElement> : JavaArrayContract<TElement>
+		where TArray : JavaPrimitiveArray<TElement>
+	{
+		protected override TElement CreateValueA ()
+		{
+			return FromInt32 ((int) 'A');
+		}
+
+		protected override TElement CreateValueB ()
+		{
+			return FromInt32 ((int) 'B');
+		}
+
+		protected abstract ICollection<TElement> CreateCollection (IList<TElement> values);
+
+		protected abstract ICollection<TElement> CreateCollection (int length);
+
+		protected TElement FromInt32 (int value)
+		{
+			return (TElement) Convert.ChangeType (value, typeof(TElement));
+		}
+
+		[TestMethod]
+		public void Constructor_Exceptions ()
+		{
+			Assert.ThrowsExactly<ArgumentNullException>(() => CreateCollection ((IEnumerable<TElement>) null));
+			Assert.ThrowsExactly<ArgumentNullException>(() => CreateCollection ((IList<TElement>) null));
+			Assert.ThrowsExactly<ArgumentException>(() => CreateCollection (-1));
+		}
+
+		[TestMethod]
+		[TestCategory ("JniPrimitiveArrayBounds")]
+		public void GetElements ()
+		{
+			var a = (TArray) CreateCollection (new[]{FromInt32 ('A')});
+			Assert.IsTrue (global::Java.Interop.JniMarshal.RecursiveEquals (CreateValueA (), a [0]));
+			Assert.Throws<ArgumentException> (() => {
+				var _ = a [-1];
+			});
+			Assert.Throws<ArgumentException> (() => {
+				var _ = a [1];
+			});
+			Assert.Throws<ArgumentException> (() => {
+				var _ = a [2];
+			});
+			JniArrayElements e;
+			using (e = a.GetElements ()) {
+				if (e == null) // OOM?
+					return;
+				Assert.IsGreaterThan (0, e.Size);
+				Assert.IsTrue (e.Elements != IntPtr.Zero);
+				// Multi-dispose is supported.
+				e.Dispose ();
+			}
+			Assert.ThrowsExactly<ObjectDisposedException> (() => e.Release (JniReleaseArrayElementsMode.Abort));
+			Assert.ThrowsExactly<ObjectDisposedException> (() => {
+					#pragma warning disable 0219
+					var _ = e.Elements;
+					#pragma warning restore 0219
+			});
+			a.Dispose ();
+		}
+
+		// Even an empty array can return a non-null elements pointer, which must still be released.
+		[TestMethod]
+		[TestCategory ("JniPrimitiveArrayBounds")]
+		public void GetElements_EmptyArray ()
+		{
+			var a = (TArray) CreateCollection (new TElement[0]);
+			Assert.Throws<ArgumentException> (() => {
+				var _ = a [-1];
+			});
+			Assert.Throws<ArgumentException> (() => {
+				var _ = a [0];
+			});
+			Assert.Throws<ArgumentException> (() => {
+				var _ = a [1];
+			});
+			JniArrayElements e;
+			using (e = a.GetElements ()) {
+				if (e == null)
+					return;
+				Assert.AreEqual (0, e.Size);
+				Assert.IsTrue (e.Elements != IntPtr.Zero);
+				// Multi-dispose is supported.
+				e.Dispose ();
+			}
+			Assert.ThrowsExactly<ObjectDisposedException> (() => e.Release (JniReleaseArrayElementsMode.Abort));
+			Assert.ThrowsExactly<ObjectDisposedException> (() => {
+				#pragma warning disable 0219
+				var _ = e.Elements;
+				#pragma warning restore 0219
+			});
+			a.Dispose ();
+		}
+	}
+}

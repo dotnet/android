@@ -9,19 +9,15 @@ cat << 'GUIDANCE'
 The repo style is explicit: **Do NOT use `#region` or `#endregion`.**
 
 ### How to fix
-Delete the `#region NAME` and matching `#endregion` lines. Do not delete
-the code between them, and do not reflow the surrounding lines — keep the
-diff to just the two directive lines per region.
-
-If the region name carried useful information (e.g. `#region IDisposable`),
-preserve it as a single `// IDisposable` comment on the line that used to
-hold the `#region` directive.
+Delete the `#region NAME` and matching `#endregion` lines. Do not replace
+region labels with comments, delete the code between them, or reflow the
+surrounding lines — keep the diff to just the two directive lines per region.
 
 ### What NOT to flag
 - Generated files (`*.generated.cs`, `*.Designer.cs`, `*.g.cs`)
 - Files under `external/` (submodules — not owned by this repo)
 - `#region` appearing inside a string literal or comment (rare but verify
-  by opening the file before filing)
+  by opening the file before changing it)
 GUIDANCE
 
 echo ""

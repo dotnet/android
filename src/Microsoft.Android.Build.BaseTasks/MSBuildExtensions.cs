@@ -1,4 +1,4 @@
-﻿// https://github.com/xamarin/xamarin-android/blob/eed430e4dc442ee98046fb13956ef49f29ce7b40/src/Xamarin.Android.Build.Tasks/Utilities/MSBuildExtensions.cs
+// https://github.com/dotnet/android/blob/eed430e4dc442ee98046fb13956ef49f29ce7b40/src/Xamarin.Android.Build.Tasks/Utilities/MSBuildExtensions.cs
 
 using System;
 using System.Diagnostics;

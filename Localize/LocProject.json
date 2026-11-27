@@ -5,8 +5,9 @@
       "LocItems": [
         {
           "CopyOption": "LangIDOnName",
-          "SourceFile": ".\\src\\Microsoft.Android.Sdk.ILLink\\Properties\\Resources.resx",
-          "OutputPath": ".\\src\\Microsoft.Android.Sdk.ILLink\\Properties\\"
+          "SourceFile": ".\\src\\Java.Interop.Localization\\Resources.resx",
+          "OutputPath": ".\\src\\Java.Interop.Localization",
+          "LclFile": "Localize\\loc\\{Lang}\\src\\Java.Interop.Localization\\Resources.resx.lcl"
         },
         {
           "CopyOption": "LangIDOnName",
@@ -42,12 +43,6 @@
           "SourceFile": ".\\src\\Xamarin.Installer.Build.Tasks\\Properties\\Resources.resx",
           "OutputPath": ".\\src\\Xamarin.Installer.Build.Tasks\\Properties\\",
           "LclFile": "Localize\\loc\\{Lang}\\Xamarin.Installer.Build.Tasks\\Properties\\Resources.resx.lcl"
-        },
-        {
-          "CopyOption": "LangIDOnName",
-          "SourceFile": ".\\src\\Xamarin.AndroidTools\\Properties\\Resources.resx",
-          "OutputPath": ".\\src\\Xamarin.AndroidTools\\Properties\\",
-          "LclFile": "Localize\\loc\\{Lang}\\Xamarin.AndroidTools\\Properties\\Resources.resx.lcl"
         },
         {
           "CopyOption": "LangIDOnName",

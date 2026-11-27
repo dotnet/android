@@ -1,4 +1,7 @@
+#nullable enable annotations
+
 using System;
+using System.Diagnostics.CodeAnalysis;
 
 using Android.App;
 using Android.Content;
@@ -8,14 +11,15 @@ using Android.Views;
 
 using Java.Interop;
 
-using NUnit.Framework;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Java.InteropTests
 {
-	[TestFixture]
+	[TestClass]
+	[TestCategory ("GeneratedJniDebuggerBoundary")]
 	public class ConstructorActivationTests
 	{
-		[Test]
+		[TestMethod]
 		public void JavaSideDefaultConstructorRunsOnceAndRegistersPeer ()
 		{
 			ConstructorActivationDefault.Reset ();
@@ -28,7 +32,53 @@ namespace Java.InteropTests
 			}
 		}
 
-		[Test]
+		[TestMethod]
+		[TestCategory ("ManagedConstruction")]
+		[TestCategory ("JniUtf8Construction")]
+		public void JavaSideExceptionConstructorCapturesStackFromPreinstalledPeer ()
+		{
+			ConstructorActivationJavaException.Reset ();
+
+			// SAFETY: AllocObject allocates a real current-thread local reference.
+			// Keep it through peer assertions/disposal; finally deletes it even if initialization throws.
+			var handle = JNIEnv.AllocObject (typeof (ConstructorActivationJavaException));
+			try {
+				// SAFETY: The literal has terminated backing storage and the owned local peer takes no arguments.
+				unsafe {
+					JNIEnv.FinishCreateInstance (handle, "()V"u8);
+				}
+				var reference = new JniObjectReference (handle);
+				using var instance = JniEnvironment.Runtime.ValueManager.PeekPeer (reference) as ConstructorActivationJavaException;
+				Assert.IsNotNull (instance, "Java construction must activate and register the managed constructor.");
+				if (instance == null)
+					throw new InvalidOperationException ("The Java constructor did not register its managed peer.");
+
+				Assert.AreEqual (1, ConstructorActivationJavaException.ConstructorInvocations);
+				Assert.AreEqual (0, ConstructorActivationJavaException.ActivationConstructorInvocations);
+				Assert.IsTrue (JniEnvironment.Types.IsSameObject (reference, instance.PeerReference));
+				Assert.AreEqual (JniObjectReferenceType.Global, instance.PeerReference.Type);
+				Assert.IsNotEmpty (instance.StackAtConstruction, "The base constructor must capture the preinstalled peer's stack.");
+				StringAssert.Contains (instance.JavaStackTrace, ConstructorActivationJavaException.JavaName.Replace ('/', '.'));
+				Assert.AreEqual (instance.StackAtConstruction, instance.JavaStackTrace);
+			} finally {
+				JNIEnv.DeleteLocalRef (handle);
+			}
+		}
+
+		[TestMethod]
+		[TestCategory ("UnicodeJavaIdentifiers")]
+		public void JavaSideUnicodeIdentifierConstructorsRunAndRegisterPeers ()
+		{
+			UnicodeLetterIdentifierPeer.Reset ();
+			using (var instance = CreateFromJava<UnicodeLetterIdentifierPeer> ("()V")) {
+				Assert.AreEqual (1, UnicodeLetterIdentifierPeer.ConstructorInvocations);
+				Assert.AreEqual ("com/\u00e9xample/\u0394elta", JNIEnv.GetClassNameFromInstance (instance.Handle));
+				AssertRegisteredSame (instance);
+			}
+
+		}
+
+		[TestMethod]
 		public void ManagedConstructionDoesNotReenterThroughJavaConstructorActivation ()
 		{
 			ConstructorActivationDefault.Reset ();
@@ -41,7 +91,7 @@ namespace Java.InteropTests
 			}
 		}
 
-		[Test]
+		[TestMethod]
 		public void CreateInstanceDoesNotActivateManagedConstructorInsideNewObjectScope ()
 		{
 			ConstructorActivationDefault.Reset ();
@@ -57,8 +107,8 @@ namespace Java.InteropTests
 			}
 		}
 
-		[Test]
-		[Category ("InheritedActivationCreateInstance")]
+		[TestMethod]
+		[TestCategory ("InheritedActivationCreateInstance")]
 		public void CreateInstanceWithInheritedActivationCtorDoesNotRegisterPeerInsideNewObjectScope ()
 		{
 			ConstructorActivationMarshalObject.Reset ();
@@ -74,7 +124,8 @@ namespace Java.InteropTests
 			}
 		}
 
-		[Test]
+		[TestMethod]
+		[TestCategory ("JniUtf8Construction")]
 		public void JavaSideConstructorReinvokesExistingActivatablePeer ()
 		{
 			ConstructorActivationDefault.Reset ();
@@ -83,7 +134,10 @@ namespace Java.InteropTests
 				var peer = (IJavaPeerable) instance;
 				peer.SetJniManagedPeerState (instance.JniManagedPeerState | JniManagedPeerStates.Activatable | JniManagedPeerStates.Replaceable);
 
-				JNIEnv.FinishCreateInstance (instance.Handle, "()V");
+				// SAFETY: The literal is terminated and the live peer's constructor takes no arguments.
+				unsafe {
+					JNIEnv.FinishCreateInstance (instance.Handle, "()V"u8);
+				}
 
 				Assert.AreEqual (2, ConstructorActivationDefault.ConstructorInvocations);
 				Assert.AreEqual (2, instance.ConstructorOrdinal);
@@ -91,18 +145,76 @@ namespace Java.InteropTests
 			}
 		}
 
-		[Test]
+		[TestMethod]
 		public void JavaSideThrowingConstructorPropagatesException ()
 		{
 			ConstructorActivationThrowing.Reset ();
 
-			var exception = Assert.Catch<Exception> (() => CreateFromJavaExpectingConstructorException<ConstructorActivationThrowing> ("()V"));
-			Assert.IsNotNull (exception);
-			Assert.AreEqual (1, ConstructorActivationThrowing.ConstructorInvocations);
-			Assert.IsTrue (exception.ToString ().Contains (ConstructorActivationThrowing.ExceptionMessage));
+			// A user-code catch avoids another debugger stop when JNI rethrows into an external assertion helper.
+			try {
+				CreateFromJavaExpectingConstructorException<ConstructorActivationThrowing> ("()V");
+			} catch (Exception exception) {
+				Assert.AreSame (ConstructorActivationThrowing.LastException, exception);
+				Assert.AreEqual (1, ConstructorActivationThrowing.ConstructorInvocations);
+				Assert.IsTrue (exception.ToString ().Contains (ConstructorActivationThrowing.ExceptionMessage));
+				return;
+			}
+			Assert.Fail ("Expected the original constructor exception.");
 		}
 
-		[Test]
+		[TestMethod]
+		public void JavaSideThrowingConstructorDoesNotLeakPendingException ()
+		{
+			ConstructorActivationThrowing.Reset ();
+			ConstructorActivationDefault.Reset ();
+
+			var exception = Assert.Throws<Exception> (() => CreateFromJavaExpectingConstructorException<ConstructorActivationThrowing> ("()V"));
+			Assert.AreSame (ConstructorActivationThrowing.LastException, exception);
+			using var instance = CreateFromJava<ConstructorActivationDefault> ("()V");
+			Assert.AreEqual (1, ConstructorActivationDefault.ConstructorInvocations);
+			AssertRegisteredSame (instance);
+		}
+
+		[TestMethod]
+		public void JavaSideHandledConstructorExceptionDeliversPolicyOnce ()
+		{
+			ConstructorActivationThrowing.Reset ();
+			int notifications = 0;
+			Exception? notifiedException = null;
+			EventHandler<RaiseThrowableEventArgs> handler = (sender, args) => {
+				notifiedException = args.Exception;
+				notifications++;
+				args.Handled = true;
+			};
+			AndroidEnvironment.UnhandledExceptionRaiser += handler;
+			try {
+				Xamarin.Android.UnitTests.AndroidTestAssert.DoesNotThrow (() => CreateFromJavaExpectingConstructorException<ConstructorActivationThrowing> ("()V"));
+				Assert.AreEqual (1, notifications);
+				Assert.AreSame (ConstructorActivationThrowing.LastException, notifiedException);
+				Assert.AreEqual (1, ConstructorActivationThrowing.ConstructorInvocations);
+			} finally {
+				AndroidEnvironment.UnhandledExceptionRaiser -= handler;
+			}
+
+			ConstructorActivationDefault.Reset ();
+			using var instance = CreateFromJava<ConstructorActivationDefault> ("()V");
+			Assert.AreEqual (1, ConstructorActivationDefault.ConstructorInvocations);
+			AssertRegisteredSame (instance);
+		}
+
+		[TestMethod]
+		[TestCategory ("ConstructorParity")]
+		public void JavaSideExportConstructorWithThrowsRunsOnce ()
+		{
+			ConstructorActivationWithThrows.Reset ();
+
+			using (var instance = CreateFromJava<ConstructorActivationWithThrows> ("()V")) {
+				Assert.AreEqual (1, ConstructorActivationWithThrows.ConstructorInvocations);
+				AssertRegisteredSame (instance);
+			}
+		}
+
+		[TestMethod]
 		public void JavaSideContextConstructorForwardsArgument ()
 		{
 			ConstructorActivationContextView.Reset ();
@@ -116,7 +228,7 @@ namespace Java.InteropTests
 			}
 		}
 
-		[Test]
+		[TestMethod]
 		public void JavaSideContextAttributeSetConstructorForwardsArguments ()
 		{
 			ConstructorActivationAttributeSetView.Reset ();
@@ -132,7 +244,7 @@ namespace Java.InteropTests
 			}
 		}
 
-		[Test]
+		[TestMethod]
 		public void JavaSideContextAttributeSetStyleConstructorForwardsArguments ()
 		{
 			ConstructorActivationStyledView.Reset ();
@@ -150,7 +262,7 @@ namespace Java.InteropTests
 			}
 		}
 
-		[Test]
+		[TestMethod]
 		public void JavaSideBooleanConstructorForwardsTrue ()
 		{
 			ConstructorActivationMarshalObject.Reset ();
@@ -161,7 +273,7 @@ namespace Java.InteropTests
 			}
 		}
 
-		[Test]
+		[TestMethod]
 		public void JavaSideBooleanConstructorForwardsFalse ()
 		{
 			ConstructorActivationMarshalObject.Reset ();
@@ -172,7 +284,7 @@ namespace Java.InteropTests
 			}
 		}
 
-		[Test]
+		[TestMethod]
 		public void JavaSideByteConstructorForwardsSignedValue ()
 		{
 			ConstructorActivationMarshalObject.Reset ();
@@ -183,7 +295,7 @@ namespace Java.InteropTests
 			}
 		}
 
-		[Test]
+		[TestMethod]
 		public void JavaSideCharConstructorForwardsValue ()
 		{
 			ConstructorActivationMarshalObject.Reset ();
@@ -194,11 +306,10 @@ namespace Java.InteropTests
 			}
 		}
 
-		[Test]
+		[TestMethod]
 		public void JavaSideShortConstructorForwardsValue ()
 		{
 			ConstructorActivationMarshalObject.Reset ();
-			AssumeTrimmableConstructorParameterMarshalling ();
 
 			using (var instance = CreateFromJava<ConstructorActivationMarshalObject> ("(S)V", new JValue ((short) -1234))) {
 				Assert.AreEqual (1, ConstructorActivationMarshalObject.ConstructorInvocations);
@@ -206,7 +317,7 @@ namespace Java.InteropTests
 			}
 		}
 
-		[Test]
+		[TestMethod]
 		public void JavaSideIntConstructorForwardsValue ()
 		{
 			ConstructorActivationMarshalObject.Reset ();
@@ -217,7 +328,7 @@ namespace Java.InteropTests
 			}
 		}
 
-		[Test]
+		[TestMethod]
 		public void JavaSideLongConstructorForwardsValue ()
 		{
 			ConstructorActivationMarshalObject.Reset ();
@@ -228,7 +339,7 @@ namespace Java.InteropTests
 			}
 		}
 
-		[Test]
+		[TestMethod]
 		public void JavaSideFloatConstructorForwardsValue ()
 		{
 			ConstructorActivationMarshalObject.Reset ();
@@ -239,7 +350,7 @@ namespace Java.InteropTests
 			}
 		}
 
-		[Test]
+		[TestMethod]
 		public void JavaSideDoubleConstructorForwardsValue ()
 		{
 			ConstructorActivationMarshalObject.Reset ();
@@ -250,7 +361,7 @@ namespace Java.InteropTests
 			}
 		}
 
-		[Test]
+		[TestMethod]
 		public void JavaSidePrimitiveMixedConstructorForwardsValues ()
 		{
 			ConstructorActivationMarshalObject.Reset ();
@@ -267,11 +378,10 @@ namespace Java.InteropTests
 			}
 		}
 
-		[Test]
+		[TestMethod]
 		public void JavaSideStringConstructorForwardsValue ()
 		{
 			ConstructorActivationMarshalObject.Reset ();
-			AssumeTrimmableConstructorParameterMarshalling ();
 
 			using (var value = new Java.Lang.String ("hello constructor"))
 			using (var instance = CreateFromJava<ConstructorActivationMarshalObject> ("(Ljava/lang/String;)V", new JValue (value))) {
@@ -280,11 +390,10 @@ namespace Java.InteropTests
 			}
 		}
 
-		[Test]
+		[TestMethod]
 		public void JavaSideStringConstructorForwardsNull ()
 		{
 			ConstructorActivationMarshalObject.Reset ();
-			AssumeTrimmableConstructorParameterMarshalling ();
 
 			using (var instance = CreateFromJava<ConstructorActivationMarshalObject> ("(Ljava/lang/String;)V", JValue.Zero)) {
 				Assert.AreEqual (1, ConstructorActivationMarshalObject.ConstructorInvocations);
@@ -292,11 +401,10 @@ namespace Java.InteropTests
 			}
 		}
 
-		[Test]
+		[TestMethod]
 		public void JavaSideTwoStringConstructorForwardsValues ()
 		{
 			ConstructorActivationMarshalObject.Reset ();
-			AssumeTrimmableConstructorParameterMarshalling ();
 
 			using (var first = new Java.Lang.String ("first"))
 			using (var second = new Java.Lang.String ("second"))
@@ -310,11 +418,10 @@ namespace Java.InteropTests
 			}
 		}
 
-		[Test]
+		[TestMethod]
 		public void JavaSideTwoStringConstructorForwardsNullSecondValue ()
 		{
 			ConstructorActivationMarshalObject.Reset ();
-			AssumeTrimmableConstructorParameterMarshalling ();
 
 			using (var first = new Java.Lang.String ("first"))
 			using (var instance = CreateFromJava<ConstructorActivationMarshalObject> (
@@ -327,11 +434,10 @@ namespace Java.InteropTests
 			}
 		}
 
-		[Test]
+		[TestMethod]
 		public void JavaSideStringIntConstructorForwardsValues ()
 		{
 			ConstructorActivationMarshalObject.Reset ();
-			AssumeTrimmableConstructorParameterMarshalling ();
 
 			using (var text = new Java.Lang.String ("string-int"))
 			using (var instance = CreateFromJava<ConstructorActivationMarshalObject> (
@@ -344,25 +450,23 @@ namespace Java.InteropTests
 			}
 		}
 
-		[Test]
+		[TestMethod]
 		public void JavaSideIntArrayConstructorForwardsValues ()
 		{
 			ConstructorActivationMarshalObject.Reset ();
-			AssumeTrimmableConstructorParameterMarshalling ();
 
 			using (var instance = CreateFromJavaWithLocalArray<ConstructorActivationMarshalObject> (
 					"([I)V",
 					JNIEnv.NewArray (new [] { 1, 2, 3, 5 }))) {
 				Assert.AreEqual (1, ConstructorActivationMarshalObject.ConstructorInvocations);
-				Assert.AreEqual (new [] { 1, 2, 3, 5 }, instance.IntArrayValue);
+				CollectionAssert.AreEqual (new [] { 1, 2, 3, 5 }, instance.IntArrayValue);
 			}
 		}
 
-		[Test]
+		[TestMethod]
 		public void JavaSideIntArrayConstructorForwardsEmptyArray ()
 		{
 			ConstructorActivationMarshalObject.Reset ();
-			AssumeTrimmableConstructorParameterMarshalling ();
 
 			using (var instance = CreateFromJavaWithLocalArray<ConstructorActivationMarshalObject> (
 					"([I)V",
@@ -373,11 +477,10 @@ namespace Java.InteropTests
 			}
 		}
 
-		[Test]
+		[TestMethod]
 		public void JavaSideIntArrayConstructorForwardsNull ()
 		{
 			ConstructorActivationMarshalObject.Reset ();
-			AssumeTrimmableConstructorParameterMarshalling ();
 
 			using (var instance = CreateFromJava<ConstructorActivationMarshalObject> ("([I)V", JValue.Zero)) {
 				Assert.AreEqual (1, ConstructorActivationMarshalObject.ConstructorInvocations);
@@ -385,11 +488,10 @@ namespace Java.InteropTests
 			}
 		}
 
-		[Test]
+		[TestMethod]
 		public void JavaSideStringIntArrayConstructorForwardsValues ()
 		{
 			ConstructorActivationMarshalObject.Reset ();
-			AssumeTrimmableConstructorParameterMarshalling ();
 
 			using (var label = new Java.Lang.String ("string-array"))
 			{
@@ -401,7 +503,7 @@ namespace Java.InteropTests
 							new JValue (array))) {
 						Assert.AreEqual (1, ConstructorActivationMarshalObject.ConstructorInvocations);
 						Assert.AreEqual ("string-array", instance.StringArrayLabel);
-						Assert.AreEqual (new [] { 8, 13, 21 }, instance.StringArrayValues);
+						CollectionAssert.AreEqual (new [] { 8, 13, 21 }, instance.StringArrayValues);
 					}
 				} finally {
 					JNIEnv.DeleteLocalRef (array);
@@ -409,67 +511,62 @@ namespace Java.InteropTests
 			}
 		}
 
-		[Test]
+		[TestMethod]
 		public void JavaSideBooleanArrayConstructorForwardsValues ()
 		{
 			ConstructorActivationMarshalObject.Reset ();
-			AssumeTrimmableConstructorParameterMarshalling ();
 
 			using (var instance = CreateFromJavaWithLocalArray<ConstructorActivationMarshalObject> (
 					"([Z)V",
 					JNIEnv.NewArray (new [] { true, false, true }))) {
 				Assert.AreEqual (1, ConstructorActivationMarshalObject.ConstructorInvocations);
-				Assert.AreEqual (new [] { true, false, true }, instance.BooleanArrayValue);
+				CollectionAssert.AreEqual (new [] { true, false, true }, instance.BooleanArrayValue);
 			}
 		}
 
-		[Test]
+		[TestMethod]
 		public void JavaSideByteArrayConstructorForwardsValues ()
 		{
 			ConstructorActivationMarshalObject.Reset ();
-			AssumeTrimmableConstructorParameterMarshalling ();
 
 			using (var instance = CreateFromJavaWithLocalArray<ConstructorActivationMarshalObject> (
 					"([B)V",
 					JNIEnv.NewArray (new byte [] { 1, 127, 255 }))) {
 				Assert.AreEqual (1, ConstructorActivationMarshalObject.ConstructorInvocations);
-				Assert.AreEqual (new byte [] { 1, 127, 255 }, instance.ByteArrayValue);
+				CollectionAssert.AreEqual (new byte [] { 1, 127, 255 }, instance.ByteArrayValue);
 			}
 		}
 
-		[Test]
+		[TestMethod]
 		public void JavaSideStringArrayConstructorForwardsValues ()
 		{
 			ConstructorActivationMarshalObject.Reset ();
-			AssumeTrimmableConstructorParameterMarshalling ();
 
 			using (var instance = CreateFromJavaWithLocalArray<ConstructorActivationMarshalObject> (
 					"([Ljava/lang/String;)V",
 					JNIEnv.NewArray (new [] { "red", "green", "blue" }))) {
 				Assert.AreEqual (1, ConstructorActivationMarshalObject.ConstructorInvocations);
-				Assert.AreEqual (new [] { "red", "green", "blue" }, instance.StringArrayValue);
+				CollectionAssert.AreEqual (new [] { "red", "green", "blue" }, instance.StringArrayValue);
 			}
 		}
 
-		[Test]
+		[TestMethod]
 		public void JavaSideStringArrayConstructorForwardsNullElement ()
 		{
 			ConstructorActivationMarshalObject.Reset ();
-			AssumeTrimmableConstructorParameterMarshalling ();
 
 			using (var instance = CreateFromJavaWithLocalArray<ConstructorActivationMarshalObject> (
 					"([Ljava/lang/String;)V",
 					JNIEnv.NewArray (new [] { "red", null, "blue" }))) {
 				Assert.AreEqual (1, ConstructorActivationMarshalObject.ConstructorInvocations);
-				Assert.AreEqual (new [] { "red", null, "blue" }, instance.StringArrayValue);
+				CollectionAssert.AreEqual (new [] { "red", null, "blue" }, instance.StringArrayValue);
 			}
 		}
 
-		[Test]
+		[TestMethod]
 		public void JavaSideStringArrayConstructorForwardsNull ()
 		{
 			ConstructorActivationMarshalObject.Reset ();
-			AssumeTrimmableConstructorParameterMarshalling ();
 
 			using (var instance = CreateFromJava<ConstructorActivationMarshalObject> ("([Ljava/lang/String;)V", JValue.Zero)) {
 				Assert.AreEqual (1, ConstructorActivationMarshalObject.ConstructorInvocations);
@@ -477,11 +574,10 @@ namespace Java.InteropTests
 			}
 		}
 
-		[Test]
+		[TestMethod]
 		public void JavaSideObjectArrayConstructorForwardsValues ()
 		{
 			ConstructorActivationMarshalObject.Reset ();
-			AssumeTrimmableConstructorParameterMarshalling ();
 
 			using (var first = new Java.Lang.String ("object-array-value"))
 			using (var instance = CreateFromJavaWithLocalArray<ConstructorActivationMarshalObject> (
@@ -495,11 +591,10 @@ namespace Java.InteropTests
 			}
 		}
 
-		[Test]
+		[TestMethod]
 		public void JavaSideObjectArrayConstructorForwardsNull ()
 		{
 			ConstructorActivationMarshalObject.Reset ();
-			AssumeTrimmableConstructorParameterMarshalling ();
 
 			using (var instance = CreateFromJava<ConstructorActivationMarshalObject> ("([Ljava/lang/Object;)V", JValue.Zero)) {
 				Assert.AreEqual (1, ConstructorActivationMarshalObject.ConstructorInvocations);
@@ -507,11 +602,10 @@ namespace Java.InteropTests
 			}
 		}
 
-		[Test]
+		[TestMethod]
 		public void JavaSideNestedIntArrayConstructorForwardsValues ()
 		{
 			ConstructorActivationMarshalObject.Reset ();
-			AssumeTrimmableConstructorParameterMarshalling ();
 
 			using (var instance = CreateFromJavaWithLocalArray<ConstructorActivationMarshalObject> (
 					"([[I)V",
@@ -521,29 +615,26 @@ namespace Java.InteropTests
 					}))) {
 				Assert.AreEqual (1, ConstructorActivationMarshalObject.ConstructorInvocations);
 				Assert.IsNotNull (instance.NestedIntArrayValue);
-				Assert.AreEqual (new [] { 1, 2 }, instance.NestedIntArrayValue [0]);
-				Assert.AreEqual (new [] { 3, 4, 5 }, instance.NestedIntArrayValue [1]);
+				CollectionAssert.AreEqual (new [] { 1, 2 }, instance.NestedIntArrayValue [0]);
+				CollectionAssert.AreEqual (new [] { 3, 4, 5 }, instance.NestedIntArrayValue [1]);
 			}
 		}
 
-		static void AssumeTrimmableConstructorParameterMarshalling ()
-		{
-			if (!Microsoft.Android.Runtime.RuntimeFeature.TrimmableTypeMap) {
-				Assert.Ignore ("Legacy TypeManager.n_Activate does not marshal string, short, or array constructor parameters; this case validates trimmable constructor UCO parameter marshalling.");
-			}
-		}
-
-		static T CreateFromJava<T> (string constructorSignature, params JValue [] arguments)
+		static T CreateFromJava<
+			[DynamicallyAccessedMembers (DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.NonPublicConstructors)]
+			T> (string constructorSignature, params JValue [] arguments)
 			where T : Java.Lang.Object
 		{
-			var instance = JNIEnv.StartCreateInstance (typeof (T), constructorSignature, arguments);
+			var instance = JNIEnv.AllocObject (typeof (T));
 			JNIEnv.FinishCreateInstance (instance, constructorSignature, arguments);
 			var result = Java.Lang.Object.GetObject<T> (instance, JniHandleOwnership.TransferLocalRef);
 			Assert.IsNotNull (result);
 			return result;
 		}
 
-		static T CreateFromJavaWithLocalArray<T> (string constructorSignature, IntPtr array)
+		static T CreateFromJavaWithLocalArray<
+			[DynamicallyAccessedMembers (DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.NonPublicConstructors)]
+			T> (string constructorSignature, IntPtr array)
 			where T : Java.Lang.Object
 		{
 			try {
@@ -558,7 +649,7 @@ namespace Java.InteropTests
 		{
 			IntPtr instance = IntPtr.Zero;
 			try {
-				instance = JNIEnv.StartCreateInstance (typeof (T), constructorSignature, arguments);
+				instance = JNIEnv.AllocObject (typeof (T));
 				JNIEnv.FinishCreateInstance (instance, constructorSignature, arguments);
 			} finally {
 				if (instance != IntPtr.Zero) {
@@ -567,15 +658,15 @@ namespace Java.InteropTests
 			}
 		}
 
-		static void AssertRegisteredSame<T> (T instance)
+		static void AssertRegisteredSame<
+			[DynamicallyAccessedMembers (DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.NonPublicConstructors)]
+			T> (T instance)
 			where T : Java.Lang.Object
 		{
 			var registered = Java.Lang.Object.GetObject<T> (instance.Handle, JniHandleOwnership.DoNotTransfer);
 			try {
 				Assert.AreSame (instance, registered);
-				if (Microsoft.Android.Runtime.RuntimeFeature.TrimmableTypeMap) {
-					Assert.AreEqual (Java.Lang.JavaSystem.IdentityHashCode (instance), instance.JniIdentityHashCode);
-				}
+				Assert.AreEqual (Java.Lang.JavaSystem.IdentityHashCode (instance), instance.JniIdentityHashCode);
 			} finally {
 				if (registered != null && !object.ReferenceEquals (instance, registered))
 					registered.Dispose ();
@@ -592,17 +683,69 @@ namespace Java.InteropTests
 		}
 	}
 
+	[JniTypeSignature (ConstructorActivationJavaException.JavaName)]
+	public class ConstructorActivationJavaException : JavaException
+	{
+		public const string JavaName = "net/dot/android/test/ConstructorActivationJavaException";
+		static readonly JniPeerMembers members = new JniPeerMembers (JavaName, typeof (ConstructorActivationJavaException));
+
+		public static int ConstructorInvocations;
+		public static int ActivationConstructorInvocations;
+		public string? StackAtConstruction { get; }
+
+		public override JniPeerMembers JniPeerMembers => members;
+
+		[JniConstructorSignature ("()V")]
+		public ConstructorActivationJavaException ()
+		{
+			ConstructorInvocations++;
+			StackAtConstruction = JavaStackTrace;
+		}
+
+		public ConstructorActivationJavaException (ref JniObjectReference reference, JniObjectReferenceOptions options)
+			: base (ref reference, options)
+		{
+			ActivationConstructorInvocations++;
+		}
+
+		public static void Reset ()
+		{
+			ConstructorInvocations = 0;
+			ActivationConstructorInvocations = 0;
+		}
+	}
+
 	[Register ("net/dot/android/test/ConstructorActivationThrowing")]
 	public class ConstructorActivationThrowing : Java.Lang.Object
 	{
 		public const string ExceptionMessage = "constructor activation throw";
 
 		public static int ConstructorInvocations;
+		public static Exception? LastException;
 
 		public ConstructorActivationThrowing ()
 		{
 			ConstructorInvocations++;
-			throw new InvalidOperationException (ExceptionMessage);
+			LastException = new InvalidOperationException (ExceptionMessage);
+			throw LastException;
+		}
+
+		public static void Reset ()
+		{
+			ConstructorInvocations = 0;
+			LastException = null;
+		}
+	}
+
+	[Register ("net/dot/android/test/ConstructorActivationWithThrows")]
+	public class ConstructorActivationWithThrows : Java.Lang.Object
+	{
+		public static int ConstructorInvocations;
+
+		[Export (SuperArgumentsString = "", Throws = new [] { typeof (Java.IO.IOException) })]
+		public ConstructorActivationWithThrows ()
+		{
+			ConstructorInvocations++;
 		}
 
 		public static void Reset ()
@@ -710,6 +853,22 @@ namespace Java.InteropTests
 		public ConstructorActivationDefault ()
 		{
 			ConstructorOrdinal = ++ConstructorInvocations;
+		}
+
+		public static void Reset ()
+		{
+			ConstructorInvocations = 0;
+		}
+	}
+
+	[Register ("com/\u00e9xample/\u0394elta")]
+	public class UnicodeLetterIdentifierPeer : Java.Lang.Object
+	{
+		public static int ConstructorInvocations;
+
+		public UnicodeLetterIdentifierPeer ()
+		{
+			ConstructorInvocations++;
 		}
 
 		public static void Reset ()

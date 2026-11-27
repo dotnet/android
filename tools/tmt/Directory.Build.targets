@@ -1,6 +1,0 @@
-<Project>
-  <Target Name="CopyLaunchScript"
-          AfterTargets="Build">
-    <Copy SourceFiles="..\scripts\tmt" DestinationFiles="$(OutputPath)\..\tmt" />
-  </Target>
-</Project>

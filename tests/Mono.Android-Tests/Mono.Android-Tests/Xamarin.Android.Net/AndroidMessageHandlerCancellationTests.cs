@@ -1,5 +1,7 @@
 #nullable enable
 
+#pragma warning disable CS0618 // These tests intentionally exercise the obsolete AndroidMessageHandler.
+
 using System;
 using System.Diagnostics;
 using System.IO;
@@ -11,14 +13,14 @@ using System.Threading.Tasks;
 
 using Xamarin.Android.Net;
 
-using NUnit.Framework;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Xamarin.Android.NetTests
 {
-	[TestFixture]
-	[Category ("AndroidMessageHandlerCancellation")]
-	[Category ("InetAccess")]
-	public class AndroidMessageHandlerCancellationTests
+	[TestClass]
+	[TestCategory ("AndroidMessageHandlerCancellation")]
+	[TestCategory ("InetAccess")]
+	public partial class AndroidMessageHandlerCancellationTests
 	{
 		const int StalledResponseContentLength = 1024 * 1024;
 		const int UploadContentLength = 16 * 1024 * 1024;
@@ -28,13 +30,13 @@ namespace Xamarin.Android.NetTests
 		static readonly byte[] InitialResponseChunk = [42];
 		StalledResponseServer? stalledResponseServer;
 
-		[SetUp]
+		[TestInitialize]
 		public void SetUp ()
 		{
 			stalledResponseServer = new StalledResponseServer ();
 		}
 
-		[TearDown]
+		[TestCleanup]
 		public void TearDown ()
 		{
 			var server = stalledResponseServer;
@@ -45,7 +47,7 @@ namespace Xamarin.Android.NetTests
 				server.Stop ();
 		}
 
-		[Test]
+		[TestMethod]
 		public async Task ResponseContentReadBodyReadCancellationIsPrompt ()
 		{
 			var server = stalledResponseServer ?? throw new InvalidOperationException ("The stalled response server was not initialized.");
@@ -61,7 +63,7 @@ namespace Xamarin.Android.NetTests
 			await AssertCanceledPromptly (readTask, server.ReleaseResponseBody).ConfigureAwait (false);
 		}
 
-		[Test]
+		[TestMethod]
 		public async Task RequestBodyUploadCancellationIsPrompt ()
 		{
 			using var uploadServer = new StalledRequestServer ();
@@ -82,7 +84,7 @@ namespace Xamarin.Android.NetTests
 			await AssertCanceledPromptly (sendTask, uploadServer.ReleaseRequestBody).ConfigureAwait (false);
 		}
 
-		[Test]
+		[TestMethod]
 		public async Task ResponseHeadersReadBodyReadCancellationIsPrompt ()
 		{
 			var server = stalledResponseServer ?? throw new InvalidOperationException ("The stalled response server was not initialized.");
@@ -99,7 +101,7 @@ namespace Xamarin.Android.NetTests
 			await AssertCanceledPromptly (readContentTask, server.ReleaseResponseBody).ConfigureAwait (false);
 		}
 
-		[Test]
+		[TestMethod]
 		public async Task ResponseHeadersReadDisposeResponseDuringCanceledBodyReadDoesNotRaceStreamDispose ()
 		{
 			var server = stalledResponseServer ?? throw new InvalidOperationException ("The stalled response server was not initialized.");
@@ -120,7 +122,7 @@ namespace Xamarin.Android.NetTests
 			await AssertCanceledPromptly (readTask, server.ReleaseResponseBody).ConfigureAwait (false);
 		}
 
-		[Test]
+		[TestMethod]
 		public async Task ResponseHeadersReadDisposeResponseDuringBodyReadDoesNotRaceStreamDispose ()
 		{
 			var server = stalledResponseServer ?? throw new InvalidOperationException ("The stalled response server was not initialized.");
@@ -141,7 +143,7 @@ namespace Xamarin.Android.NetTests
 
 		// Token-only cancellation must disconnect the transport and unwind the parked read without
 		// requiring the response to be disposed.
-		[Test]
+		[TestMethod]
 		public async Task ResponseHeadersReadTokenPassedToReadCancelOnlyUnwindsCleanly ()
 		{
 			var server = stalledResponseServer ?? throw new InvalidOperationException ("The stalled response server was not initialized.");
@@ -164,7 +166,7 @@ namespace Xamarin.Android.NetTests
 
 		// Concurrent caller cancellation and response disposal (the gRPC cancellation shape) must
 		// coalesce their disconnect request and never race stream disposal or crash the process.
-		[Test]
+		[TestMethod]
 		public async Task ResponseHeadersReadTokenPassedToReadCancelAndDisposeConcurrentlyDoesNotCrash ()
 		{
 			var server = stalledResponseServer ?? throw new InvalidOperationException ("The stalled response server was not initialized.");
@@ -212,7 +214,7 @@ namespace Xamarin.Android.NetTests
 			var stopwatch = Stopwatch.StartNew ();
 			response.Dispose ();
 			stopwatch.Stop ();
-			Assert.Less (stopwatch.ElapsedMilliseconds, PromptCancellationTimeoutMilliseconds, "Disposing the response blocked while aborting its active body read.");
+			Assert.IsLessThan (PromptCancellationTimeoutMilliseconds, stopwatch.ElapsedMilliseconds, "Disposing the response blocked while aborting its active body read.");
 		}
 
 		static int GetAvailablePort ()

@@ -6,13 +6,15 @@ using System.Net.Sockets;
 using System.Threading;
 using System.Threading.Tasks;
 
-using NUnit.Framework;
+using Android.Systems;
+
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 using Xamarin.Android.NetTests;
 
 namespace System.NetTests {
-	// TODO: https://github.com/dotnet/android/issues/10069
-	[TestFixture, Category ("InetAccess"), Category ("SSL")]
+	// TODO: https://github.com/dotnet/android/issues/10079
+	[TestClass, TestCategory ("InetAccess"), TestCategory ("SSL")]
 	public class SslTest
 	{
 		bool ShouldIgnoreException (WebException wex)
@@ -28,7 +30,8 @@ namespace System.NetTests {
 		}
 
 		// https://xamarin.desk.com/agent/case/35534
-		[Test]
+#pragma warning disable SYSLIB0014 // Regression coverage for WebClient and ServicePointManager.
+		[TestMethod]
 		public void SslWithinTasksShouldWork ()
 		{
 			using var server = LocalHttpsServer.Start ();
@@ -65,17 +68,19 @@ namespace System.NetTests {
 			Assert.AreEqual (TaskStatus.RanToCompletion, status);
 			server.AssertNoUnhandledExceptions ();
 		}
+#pragma warning restore SYSLIB0014
 
-		[Test]
+		[TestMethod]
 		public void HttpsShouldWork ()
 		{
 			if (!OperatingSystem.IsAndroidVersionAtLeast (24)) {
-				Assert.Ignore ("Not supported on API 23 and lower.");
+				Assert.Inconclusive ("Not supported on API 23 and lower.");
 			}
 
 			RunIgnoringWebException (DoHttpsShouldWork);
 		}
 
+#pragma warning disable SYSLIB0014 // Regression coverage for HttpWebRequest and ServicePointManager.
 		void DoHttpsShouldWork ()
 		{
 			using var server = LocalHttpsServer.Start ();
@@ -104,23 +109,69 @@ namespace System.NetTests {
 				ServicePointManager.ServerCertificateValidationCallback = callback;
 			}
 		}
+#pragma warning restore SYSLIB0014
 
-		[Test (Description="Bug https://bugzilla.xamarin.com/show_bug.cgi?id=18962")]
+		[TestMethod]
+		[Description ("Bug https://bugzilla.xamarin.com/show_bug.cgi?id=18962")]
 		public void VerifyTrustedCertificates ()
 		{
 			if (!OperatingSystem.IsAndroidVersionAtLeast (24)) {
-				Assert.Ignore ("Not supported on API 23 and lower.");
+				Assert.Inconclusive ("Not supported on API 23 and lower.");
 			}
 
-			Assert.DoesNotThrow (() => RunIgnoringWebException (DoVerifyTrustedCertificates), "Certificate validation");
+			using var tcpClient = ConnectToTrustedCertificatesEndpoint ();
+			using var ssl = new SslStream (tcpClient.GetStream (), false);
+			global::Xamarin.Android.UnitTests.AndroidTestAssert.DoesNotThrow (() => ssl.AuthenticateAsClient ("google.com"), "Certificate validation");
 		}
 
-		void DoVerifyTrustedCertificates ()
+		static TcpClient ConnectToTrustedCertificatesEndpoint ()
 		{
-			var tcpClient = new TcpClient ("google.com", 443);
-			using (var ssl = new SslStream (tcpClient.GetStream (), false)) {
-				ssl.AuthenticateAsClient ("google.com");
+			try {
+				return new TcpClient ("google.com", 443);
+			} catch (SocketException ex) when (IsExternalConnectivityFailure (ex)) {
+				Assert.Inconclusive ($"Unable to reach google.com:443 before TLS certificate validation. SocketError={ex.SocketErrorCode}; NativeError={ex.NativeErrorCode}; Message={ex.Message}");
+				throw;
 			}
+		}
+
+		static bool IsExternalConnectivityFailure (SocketException exception)
+		{
+			return IsExternalConnectivityFailure (exception.SocketErrorCode) ||
+				exception.NativeErrorCode == OsConstants.Enetunreach ||
+				exception.NativeErrorCode == OsConstants.Ehostunreach;
+		}
+
+		static bool IsExternalConnectivityFailure (SocketError socketError)
+		{
+			switch (socketError) {
+				case SocketError.HostNotFound:
+				case SocketError.NoData:
+				case SocketError.NetworkUnreachable:
+				case SocketError.HostUnreachable:
+					return true;
+			}
+
+			return false;
+		}
+
+		[TestMethod]
+		[DataRow (SocketError.HostNotFound, true)]
+		[DataRow (SocketError.NoData, true)]
+		[DataRow (SocketError.NetworkUnreachable, true)]
+		[DataRow (SocketError.HostUnreachable, true)]
+		[DataRow (SocketError.TimedOut, false)]
+		[DataRow (SocketError.ConnectionReset, false)]
+		public void ExternalConnectivityFailureClassification (SocketError socketError, bool expected)
+		{
+			Assert.AreEqual (expected, IsExternalConnectivityFailure (socketError));
+		}
+
+		[TestMethod]
+		public void NativeExternalConnectivityFailureClassification ()
+		{
+			Assert.IsTrue (IsExternalConnectivityFailure (new SocketException (OsConstants.Enetunreach)), "ENETUNREACH");
+			Assert.IsTrue (IsExternalConnectivityFailure (new SocketException (OsConstants.Ehostunreach)), "EHOSTUNREACH");
+			Assert.IsFalse (IsExternalConnectivityFailure (new SocketException (OsConstants.Econnreset)), "ECONNRESET");
 		}
 
 		void RunIgnoringWebException (Action test)
@@ -139,7 +190,7 @@ namespace System.NetTests {
 
 			if (wex != null) {
 				if (ShouldIgnoreException (wex)) {
-					Assert.Ignore ($"Ignoring network failure: {wex.Status}");
+					Assert.Inconclusive ($"Ignoring network failure: {wex.Status}");
 					return;
 				}
 				throw wex;

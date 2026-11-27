@@ -2,13 +2,12 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Xml.Linq;
 using System.Reflection;
 using System.Text;
 using NUnit.Framework;
 using Xamarin.Android.Tools;
 using Xamarin.ProjectTools;
-using Xamarin.Tools.Zip;
+using System.IO.Compression;
 using Microsoft.Android.Build.Tasks;
 using Xamarin.Android.Tasks;
 
@@ -23,6 +22,264 @@ namespace Xamarin.Android.Build.Tests
 	public class XASdkTests : BaseTest
 	{
 		[Test]
+		[TestCase (false)]
+		[TestCase (true)]
+		public void NestedBuildReusesResolvedAndroidTooling (bool multithreaded)
+		{
+			var projectName = $"ResolvedTooling{multithreaded}";
+			var testPath = Path.Combine (Root, "temp", TestName, "O'Brien", projectName);
+			TestOutputDirectories [TestContext.CurrentContext.Test.ID] = testPath;
+			if (Directory.Exists (testPath))
+				Directory.Delete (testPath, recursive: true);
+			var dotnet = new DotNetCLI (Path.Combine (testPath, $"{projectName}.csproj")) {
+				Verbosity = "diagnostic",
+			};
+			Assert.IsTrue (dotnet.New ("android", noRestore: true), "Creating the Android project should succeed.");
+			var parameters = new [] {
+				"EmbedAssembliesIntoApk=true",
+			};
+			var arguments = multithreaded ? new [] { "-m:2", "-mt" } : new [] { "-m:1" };
+			dotnet.EnvironmentVariables ["DOTNET_CLI_USE_MSBUILD_SERVER"] = "0";
+			dotnet.EnvironmentVariables ["MSBUILDDISABLENODEREUSE"] = "1";
+			Assert.IsTrue (dotnet.Build (parameters: parameters, msbuildArguments: arguments), "The multi-RID Android build should succeed.");
+			AssertResolvedTaskCounts ();
+			Assert.IsTrue (dotnet.Build (parameters: parameters, msbuildArguments: arguments), "The incremental multi-RID Android build should succeed.");
+			AssertResolvedTaskCounts ();
+
+			Assert.IsTrue (dotnet.Build (target: "_ResolveMonoAndroidSdks", parameters: parameters, msbuildArguments: arguments),
+				"Standalone tooling resolution should still succeed.");
+			var standalone = GetTaskCounts ();
+			Assert.AreEqual (1, standalone ["ResolveSdks"]);
+			Assert.AreEqual (1, standalone ["ResolveAndroidTooling"]);
+			Assert.AreEqual (1, standalone ["_ValidateJavaVersion"]);
+			Assert.IsFalse (dotnet.Build (parameters: parameters.Concat (["LatestSupportedJavaVersion=1.0"]).ToArray (), msbuildArguments: arguments),
+				"A changed Java limit must still be validated.");
+			StringAssertEx.Contains ("error XA0030", dotnet.LastBuildOutput);
+
+			void AssertResolvedTaskCounts ()
+			{
+				var counts = GetTaskCounts ();
+				Assert.AreEqual (1, counts ["ResolveSdks"], "Only the outer build should discover SDKs.");
+				Assert.AreEqual (1, counts ["ResolveAndroidTooling"], "Only the outer build should resolve Android tooling.");
+				Assert.AreEqual (1, counts ["_ValidateJavaVersion"], "Only the outer build should validate Java.");
+				Assert.GreaterOrEqual (counts ["RuntimeIdentifierToAbi"], 3, "Both RID-specific target bodies must still execute.");
+			}
+
+			Dictionary<string, int> GetTaskCounts ()
+			{
+				var counts = new Dictionary<string, int> {
+					["ResolveSdks"] = 0,
+					["ResolveAndroidTooling"] = 0,
+					["RuntimeIdentifierToAbi"] = 0,
+				};
+				foreach (var task in counts.Keys.ToArray ()) {
+					counts [task] = CountTask (dotnet.LastBuildOutput, task);
+				}
+				counts ["_ValidateJavaVersion"] = CountTarget (dotnet.LastBuildOutput, "_ValidateJavaVersion");
+				return counts;
+			}
+		}
+
+		[Test]
+		[TestCase (AndroidRuntime.CoreCLR)]
+		[TestCase (AndroidRuntime.NativeAOT)]
+		public void PublishReusesResolvedToolingInSpecializedInnerBuilds (AndroidRuntime runtime)
+		{
+			if (IgnoreUnsupportedConfiguration (runtime, release: true))
+				return;
+
+			var project = new XamarinAndroidApplicationProject { IsRelease = true };
+			project.SetRuntime (runtime);
+			project.SetProperty ("RuntimeIdentifier", "android-arm64");
+			project.SetProperty ("AndroidLinkTool", "r8");
+			project.SetProperty ("AndroidR8ObfuscationMode", "runtime-remapping");
+			project.SetProperty ("AndroidEnableAssemblyCompression", "true");
+			project.SetProperty ("ZipAlignToolPath", Path.Combine (Root, "temp", TestName, "O'Brien;tag=1"));
+			var imports = project.Imports.Single (import => import.Project () == "Directory.Build.targets");
+			imports.TextContent = () => """
+				<Project>
+				  <Target Name="_TestInnerToolingPaths" AfterTargets="_ResolveMonoAndroidSdks"
+				      Condition=" '$(_OuterIntermediateOutputPath)' != '' ">
+				    <Error Condition=" '$(_AndroidUseResolvedSdk)' != 'true' or '$(_AndroidUseResolvedTooling)' != 'true' "
+				        Text="Escaped tooling paths must not disable reuse." />
+				    <Error Condition=" '$(_AndroidOuterZipAlignToolPath)' != '$(ZipAlignToolPath)' or '$(_AndroidOuterToolingInputZipAlignToolPath)' != '$(ZipAlignToolPath)' "
+				        Text="The zipalign path changed during forwarding." />
+				    <Error Condition=" '$(tag)' != '' " Text="The path was split into a separate property." />
+				  </Target>
+				</Project>
+				""";
+			using var builder = CreateApkBuilder ();
+			builder.Target = "Publish";
+			builder.Verbosity = Microsoft.Build.Framework.LoggerVerbosity.Diagnostic;
+			Assert.IsTrue (builder.Build (project));
+			Assert.AreEqual (1, CountTask (builder.LastBuildOutput, "ResolveSdks"));
+			Assert.AreEqual (1, CountTask (builder.LastBuildOutput, "ResolveAndroidTooling"));
+			Assert.AreEqual (1, CountTarget (builder.LastBuildOutput, "_ValidateJavaVersion"));
+			Assert.GreaterOrEqual (CountTask (builder.LastBuildOutput, "RuntimeIdentifierToAbi"), 2);
+			builder.Output.AssertTargetIsNotSkipped ("_ResolveImplementationAssembliesForTypeMap");
+			builder.Output.AssertTargetIsNotSkipped (runtime == AndroidRuntime.CoreCLR ?
+				"_AndroidResolveAssemblyCompressionInputsForRuntimeIdentifier" : "_AndroidLinkNativeAotForRuntimeIdentifier");
+		}
+
+		[Test]
+		[TestCase ("DesignTimeBuild=true", 1)]
+		[TestCase ("_SkipNdkResolution=true", 2)]
+		[TestCase ("_AndroidAllowMissingSdkTooling=true", 2)]
+		[TestCase ("Configuration=Release", 2)]
+		[TestCase ("AndroidSdkBuildToolsVersion=0.0.0", 2)]
+		[TestCase ("LatestSupportedJavaVersion=99.0", 2)]
+		public void NestedBuildToolingFallsBackForChangedInputs (string innerProperties, int javaCalls)
+		{
+			var project = new XamarinAndroidApplicationProject ();
+			project.SetProperty ("EmbedAssembliesIntoApk", "true");
+			var imports = project.Imports.Single (import => import.Project () == "Directory.Build.targets");
+			imports.TextContent = () => """
+				<Project>
+				  <Target Name="_TestNestedTooling" DependsOnTargets="_ResolveMonoAndroidSdks">
+				    <MSBuild Projects="$(MSBuildProjectFullPath)"
+				        Targets="_TestInnerTooling"
+				        Properties="$(_AndroidResolvedToolingProperties);RuntimeIdentifier=android-arm64;_ComputeFilesToPublishForRuntimeIdentifiers=true;_OuterIntermediateOutputPath=$(IntermediateOutputPath);_AndroidNdkDirectory=$([MSBuild]::Escape('$(_AndroidNdkDirectory)'));_TestPinnedNdkDirectory=$([MSBuild]::Escape('$(_AndroidNdkDirectory)'));$(_TestInnerProperties)" />
+				  </Target>
+				  <Target Name="_TestInnerTooling" DependsOnTargets="_ResolveMonoAndroidSdks">
+				    <Error Condition=" '$(_AndroidUseResolvedSdk)' == 'true' and '$(_AndroidUseResolvedTooling)' == 'true' "
+				        Text="Changed inner inputs must not reuse the entire tooling snapshot." />
+				    <Error Condition=" '$(_SkipNdkResolution)' != 'true' and '$(_AndroidNdkDirectory)' != '$(_TestPinnedNdkDirectory)' "
+				        Text="Inner builds must keep the outer build's resolved NDK." />
+				  </Target>
+				</Project>
+				""";
+			using var builder = CreateApkBuilder ();
+			builder.Target = "_TestNestedTooling";
+			builder.Verbosity = Microsoft.Build.Framework.LoggerVerbosity.Diagnostic;
+			Assert.IsTrue (builder.Build (project, parameters: [$"_TestInnerProperties={innerProperties}"]));
+			Assert.AreEqual (javaCalls, CountTarget (builder.LastBuildOutput, "_ValidateJavaVersion"));
+			Assert.AreEqual (2, CountTask (builder.LastBuildOutput, "ResolveAndroidTooling"));
+			Assert.AreEqual (innerProperties.StartsWith ("AndroidSdkBuildToolsVersion", StringComparison.Ordinal) ? 1 : 2,
+				CountTask (builder.LastBuildOutput, "ResolveSdks"));
+		}
+
+		[Test]
+		public void NestedBuildPreservesEscapedNdkPath ()
+		{
+			var path = Path.Combine ("temp", TestName);
+			var ndkPath = CreateFauxAndroidNdkDirectory (Path.Combine (path, "O'Brien;ndk=1"));
+			File.WriteAllText (Path.Combine (ndkPath, "source.properties"), "Pkg.Revision = 21.0.6113669");
+			var project = new XamarinAndroidApplicationProject ();
+			project.SetProperty ("AndroidNdkDirectory", ndkPath);
+			var imports = project.Imports.Single (import => import.Project () == "Directory.Build.targets");
+			imports.TextContent = () => """
+				<Project>
+				  <Target Name="_TestEscapedNdk" DependsOnTargets="_ResolveMonoAndroidSdks">
+				    <MSBuild Projects="$(MSBuildProjectFullPath)"
+				        Targets="_TestInnerEscapedNdk"
+				        Properties="$(_AndroidResolvedToolingProperties);RuntimeIdentifier=android-arm64;_ComputeFilesToPublishForRuntimeIdentifiers=true;_OuterIntermediateOutputPath=$(IntermediateOutputPath);_AndroidNdkDirectory=$([MSBuild]::Escape('$(_AndroidNdkDirectory)'))" />
+				  </Target>
+				  <Target Name="_TestInnerEscapedNdk" DependsOnTargets="_ResolveMonoAndroidSdks">
+				    <PropertyGroup>
+				      <_TestExpectedNdkDirectory>$([MSBuild]::EnsureTrailingSlash('$(_AndroidOuterNdkDirectory)'))</_TestExpectedNdkDirectory>
+				    </PropertyGroup>
+				    <Error Condition=" '$(_AndroidUseResolvedSdk)' != 'true' or '$(_AndroidUseResolvedTooling)' != 'true' "
+				        Text="Escaped NDK paths must not disable reuse." />
+				    <Error Condition=" '$(_AndroidNdkDirectory)' != '$(_TestExpectedNdkDirectory)' "
+				        Text="The NDK path changed during forwarding." />
+				  </Target>
+				</Project>
+				""";
+			using var builder = CreateApkBuilder (Path.Combine (path, "App"));
+			builder.Target = "_TestEscapedNdk";
+			builder.Verbosity = Microsoft.Build.Framework.LoggerVerbosity.Diagnostic;
+			Assert.IsTrue (builder.Build (project, parameters: [$"AndroidNdkDirectory=\"{ndkPath}\""]));
+			Assert.AreEqual (1, CountTask (builder.LastBuildOutput, "ResolveSdks"));
+			Assert.AreEqual (1, CountTask (builder.LastBuildOutput, "ResolveAndroidTooling"));
+			Assert.AreEqual (1, CountTarget (builder.LastBuildOutput, "_ValidateJavaVersion"));
+		}
+
+		[Test]
+		public void NestedToolingSnapshotDoesNotSkipProjectReferenceResolution ()
+		{
+			var directory = Path.Combine ("temp", TestName);
+			var library = new XamarinAndroidLibraryProject { ProjectName = "Library" };
+			library.SetProperty ("RuntimeIdentifiers", "android-arm64");
+			var project = new XamarinAndroidApplicationProject { ProjectName = "Application" };
+			project.AddReference (library);
+			project.SetProperty ("EmbedAssembliesIntoApk", "true");
+			var imports = project.Imports.Single (import => import.Project () == "Directory.Build.targets");
+			imports.TextContent = () => """
+				<Project>
+				  <Target Name="_TestReferenceTooling" DependsOnTargets="_ResolveMonoAndroidSdks">
+				    <MSBuild Projects="@(ProjectReference)"
+				        Targets="_ResolveMonoAndroidSdks"
+				        Properties="$(_AndroidResolvedToolingProperties);RuntimeIdentifier=android-arm64;_ComputeFilesToPublishForRuntimeIdentifiers=true;_OuterIntermediateOutputPath=$(IntermediateOutputPath)" />
+				  </Target>
+				</Project>
+				""";
+			using var libraryBuilder = CreateDllBuilder (Path.Combine (directory, library.ProjectName));
+			libraryBuilder.Save (library);
+			using var builder = CreateApkBuilder (Path.Combine (directory, project.ProjectName));
+			builder.Target = "_TestReferenceTooling";
+			builder.Verbosity = Microsoft.Build.Framework.LoggerVerbosity.Diagnostic;
+			Assert.IsTrue (builder.Build (project));
+			Assert.AreEqual (2, CountTask (builder.LastBuildOutput, "ResolveSdks"));
+			Assert.AreEqual (2, CountTask (builder.LastBuildOutput, "ResolveAndroidTooling"));
+			Assert.AreEqual (2, CountTarget (builder.LastBuildOutput, "_ValidateJavaVersion"));
+		}
+
+		static int CountTask (IEnumerable<string> output, string task) =>
+			output.Count (line => line.Contains ($"Task \"{task}\" (TaskId:", StringComparison.Ordinal));
+
+		// Executed targets log `Target "Name: (TargetId:N)" in file ...`; skipped ones do not.
+		static int CountTarget (IEnumerable<string> output, string target) =>
+			output.Count (line => line.Contains ($"Target \"{target}: (TargetId:", StringComparison.Ordinal) &&
+				line.Contains ("\" in file \"", StringComparison.Ordinal));
+
+		[Test]
+		public void DotNetWorkloadSearchUsesEnglishDescription ()
+		{
+			const string description = ".NET SDK Workload for building Android applications.";
+			var testPath = Path.Combine (Root, "temp", TestName);
+			Directory.CreateDirectory (testPath);
+			TestOutputDirectories [TestContext.CurrentContext.Test.ID] = testPath;
+
+			var manifestRoot = TestEnvironment.UseLocalBuildOutput ?
+				TestEnvironment.WorkloadManifestOverridePath :
+				Path.Combine (TestEnvironment.DotNetPreviewDirectory, "sdk-manifests");
+			Assert.IsTrue (Directory.Exists (manifestRoot), $"The workload manifest root '{manifestRoot}' should exist.");
+			var androidManifestDirectory = $"{Path.DirectorySeparatorChar}microsoft.net.sdk.android{Path.DirectorySeparatorChar}";
+			var englishCatalog = Directory.EnumerateFiles (manifestRoot, "WorkloadManifest.en.json", SearchOption.AllDirectories)
+				.FirstOrDefault (path => path.IndexOf (androidManifestDirectory, StringComparison.OrdinalIgnoreCase) >= 0);
+			Assert.IsNotNull (englishCatalog, $"An English Android workload localization catalog should be installed under '{manifestRoot}'.");
+			StringAssert.Contains (description, File.ReadAllText (englishCatalog));
+
+			var dotnet = new DotNetCLI (Path.Combine (testPath, "unused.csproj"));
+			dotnet.EnvironmentVariables ["DOTNET_CLI_UI_LANGUAGE"] = "en";
+
+			Assert.IsTrue (dotnet.WorkloadSearch ("android"), "`dotnet workload search android` should succeed");
+			StringAssert.Contains (
+				description,
+				File.ReadAllText (dotnet.ProcessLogFile),
+				"`dotnet workload search android` should use the English workload description");
+		}
+
+		[Test]
+		public void DotNetNewFramework (
+			[Values ("android", "androidlib", "android-bindinglib", "androidwear", "androidtest")] string template,
+			[Values (null, "net12.0-android", "net11.0-android")] string framework)
+		{
+			var templateName = TestName.Replace ("-", "");
+			var templatePath = Path.Combine (Root, "temp", templateName);
+			if (Directory.Exists (templatePath))
+				Directory.Delete (templatePath, true);
+
+			TestOutputDirectories [TestContext.CurrentContext.Test.ID] = templatePath;
+			var projectFile = Path.Combine (templatePath, $"{templateName}.csproj");
+			var dotnet = new DotNetCLI (projectFile);
+			Assert.IsTrue (dotnet.New (template, noRestore: true, framework: framework), $"`dotnet new {template}` should succeed with framework '{framework}'");
+
+			var project = System.Xml.Linq.XDocument.Load (projectFile);
+			Assert.AreEqual (framework ?? $"{XABuildConfig.LatestDotNetTargetFramework}-android", project.Root.Element ("PropertyGroup").Element ("TargetFramework").Value);
+		}
+
+		[Test]
 		public void DotNetNew ([Values ("android", "androidlib", "android-bindinglib", "androidwear")] string template)
 		{
 			var templateName = TestName.Replace ("-", "");
@@ -32,18 +289,42 @@ namespace Xamarin.Android.Build.Tests
 
 			TestOutputDirectories [TestContext.CurrentContext.Test.ID] = templatePath;
 			var dotnet = new DotNetCLI (Path.Combine (templatePath, $"{templateName}.csproj"));
-			Assert.IsTrue (dotnet.New (template), $"`dotnet new {template}` should succeed");
+			Assert.IsTrue (dotnet.New (template, noRestore: true), $"`dotnet new {template} --no-restore` should succeed");
+
+			var repoNuGetConfig = Path.Combine (XABuildPaths.TopDirectory, "NuGet.config");
+			var projectNuGetConfig = Path.Combine (dotnet.ProjectDirectory, "NuGet.config");
+			FileAssert.AreEqual (repoNuGetConfig, projectNuGetConfig);
+
 			File.WriteAllBytes (Path.Combine (dotnet.ProjectDirectory, "foo.jar"), ResourceData.JavaSourceJarTestJar);
 			Assert.IsTrue (dotnet.New ("android-activity"), "`dotnet new android-activity` should succeed");
 			Assert.IsTrue (dotnet.New ("android-layout", Path.Combine (dotnet.ProjectDirectory, "Resources", "layout")), "`dotnet new android-layout` should succeed");
 
 			// Debug build
-			Assert.IsTrue (dotnet.Build (parameters: new [] { "Configuration=Debug", "TrimmerSingleWarn=false" }), "`dotnet build` should succeed");
+			Assert.IsTrue (dotnet.Build (parameters: GetBuildParameters ("Debug")), "`dotnet build` should succeed");
 			dotnet.AssertHasNoWarnings ();
 
 			// Release build
-			Assert.IsTrue (dotnet.Build (parameters: new [] { "Configuration=Release", "TrimmerSingleWarn=false" }), "`dotnet build` should succeed");
+			Assert.IsTrue (dotnet.Build (parameters: GetBuildParameters ("Release")), "`dotnet build` should succeed");
 			dotnet.AssertHasNoWarnings ();
+
+			string [] GetBuildParameters (string configuration)
+			{
+				var parameters = new List<string> {
+					$"Configuration={configuration}",
+					"TrimmerSingleWarn=false",
+				};
+				if (template == "androidwear") {
+					var mavenTargets = Path.Combine (
+						XABuildPaths.TopDirectory,
+						"src",
+						"Xamarin.Android.Build.Tasks",
+						"Tests",
+						"Xamarin.Android.Build.Tests",
+						"dotnet-public-maven.targets");
+					parameters.Add ($"CustomAfterMicrosoftCommonTargets=\"{mavenTargets}\"");
+				}
+				return parameters.ToArray ();
+			}
 		}
 
 		static IEnumerable<object[]> Get_DotNetPack_Data ()
@@ -54,13 +335,13 @@ namespace Xamarin.Android.Build.Tests
 				AddTestData (
 					dotnetVersion: XABuildConfig.PreviousDotNetTargetFramework,
 					platform: "android",
-					apiLevel: new Version (36, 0),
+					apiLevel: new Version (37, 0),
 					runtime: runtime);
 
 				AddTestData (
 					dotnetVersion: XABuildConfig.PreviousDotNetTargetFramework,
-					platform: "android36",
-					apiLevel: new Version (36, 0),
+					platform: "android37",
+					apiLevel: new Version (37, 0),
 					runtime: runtime);
 
 				AddTestData (
@@ -155,13 +436,16 @@ public class JavaSourceTest {
 				MetadataValues = "Pack=false;Bind=false",
 			});
 			proj.OtherBuildItems.Add (new AndroidItem.AndroidMavenLibrary ("org.jetbrains.kotlinx:kotlinx-serialization-json-jvm") {
-				MetadataValues = "Version=1.3.3;Bind=false",
+				MetadataValues = $"Version=1.3.3;Bind=false;Repository={TestEnvironment.DotNetPublicMaven}",
 				BinaryContent = () => [],
 			});
 
 			var projBuilder = CreateDllBuilder ();
 			projBuilder.Save (proj);
 			var dotnet = new DotNetCLI (Path.Combine (Root, projBuilder.ProjectDirectory, proj.ProjectFilePath));
+			if (dotnetVersion == XABuildConfig.PreviousDotNetTargetFramework) {
+				dotnet.JavaSdkPath = GetPreviousWorkloadJavaSdkPath ();
+			}
 			Assert.IsTrue (dotnet.Pack (parameters: ["Configuration=Release"]), "`dotnet pack` should succeed");
 
 			var nupkgPath = Path.Combine (Root, projBuilder.ProjectDirectory, proj.OutputPath, $"{proj.ProjectName}.1.0.0.nupkg");
@@ -181,16 +465,17 @@ public class JavaSourceTest {
 			nupkg.AssertDoesNotContainEntry (nupkgPath, $"lib/{dotnetVersion}-android{apiLevel}/_Microsoft.Android.Resource.Designer.dll");
 
 			using var aarStream = new MemoryStream ();
-			var aarEntry = nupkg.ReadEntry (aarPath);
-			aarEntry.Extract (aarStream);
+			var aarEntry = nupkg.GetEntry (aarPath) ?? throw new InvalidOperationException ($"Missing AAR '{aarPath}'.");
+			using (var source = aarEntry.Open ())
+				source.CopyTo (aarStream);
 			aarStream.Seek (0, SeekOrigin.Begin);
 
-			// Look for 2 .jar files under libs/
-			using var aar = ZipArchive.Open (aarStream);
-			int count = aar.Count (e =>
+			// Look for the Maven dependency, foo.jar, and the compiled AndroidJavaSource output under libs/
+			using var aar = new ZipArchive (aarStream, ZipArchiveMode.Read, leaveOpen: true);
+			int count = aar.Entries.Count (e =>
 				e.FullName.StartsWith ("libs/", StringComparison.OrdinalIgnoreCase) &&
 				e.FullName.EndsWith (".jar", StringComparison.OrdinalIgnoreCase));
-			Assert.AreEqual (2, count, $"There should be 2 .jar files in the {aarPath} archive, but found {count}.");
+			Assert.AreEqual (3, count, $"There should be 3 .jar files in the {aarPath} archive, but found {count}.");
 		}
 
 		static IEnumerable<object[]> Get_DotNetTargetFrameworks_Data ()
@@ -201,7 +486,7 @@ public class JavaSourceTest {
 				AddTestData (
 					dotnetVersion: XABuildConfig.PreviousDotNetTargetFramework,
 					platform: "android",
-					apiLevel: new Version (36, 0),
+					apiLevel: new Version (37, 0),
 					runtime: runtime
 				);
 
@@ -254,20 +539,9 @@ public class JavaSourceTest {
 		}
 
 		[Test]
-		public void DotNetPublishDefaultValues ([Values] bool isRelease, [Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
+		public void DotNetPublishDefaultValues ([ValueSource (typeof (BaseTest), nameof (BaseTest.ValidRuntimeConfigurations))] (bool isRelease, AndroidRuntime runtime) configuration)
 		{
-			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
-				return;
-			}
-
-			// TODO: fix NativeAOT build. It currently fails with
-			//
-			//  error MSB3030: Could not copy the file "bin/Release/native/UnnamedProject.so" because it was not found.
-			//
-			// The file exists in bin/Release/{RID}/native/UnnamedProject.so
-			if (runtime == AndroidRuntime.NativeAOT) {
-				Assert.Ignore ("NativeAOT publish support is broken atm");
-			}
+			var (isRelease, runtime) = configuration;
 
 			var proj = new XamarinAndroidApplicationProject {
 				IsRelease = isRelease
@@ -331,16 +605,13 @@ public class JavaSourceTest {
 
 			// Only check latest TFM, as previous or preview TFMs will come from NuGet
 			if (dotnetVersion == XABuildConfig.LatestDotNetTargetFramework && !preview) {
+				var buildOutput = dotnet.LastBuildOutput.ToArray ();
 				var versionString = apiLevel.Minor == 0 ? $"{apiLevel.Major}" : $"{apiLevel.Major}.{apiLevel.Minor}";
-				var refDirectory = Directory.GetDirectories (Path.Combine (TestEnvironment.DotNetPreviewPacksDirectory, $"Microsoft.Android.Ref.{versionString}")).LastOrDefault ();
-				var expectedMonoAndroidRefPath = Path.Combine (refDirectory, "ref", dotnetVersion, "Mono.Android.dll");
-				Assert.IsTrue (dotnet.LastBuildOutput.ContainsText (expectedMonoAndroidRefPath), $"Build should be using {expectedMonoAndroidRefPath}");
+				AssertUsingPack (buildOutput, $"Microsoft.Android.Ref.{versionString}", "ref", dotnetVersion, "Mono.Android.dll");
 
 				var runtimeApiLevel = (apiLevel == XABuildConfig.AndroidDefaultTargetDotnetApiLevel && apiLevel < XABuildConfig.AndroidLatestStableApiLevel) ? XABuildConfig.AndroidLatestStableApiLevel : apiLevel;
 				versionString = runtimeApiLevel.Minor == 0 ? $"{runtimeApiLevel.Major}" : $"{runtimeApiLevel.Major}.{runtimeApiLevel.Minor}";
-				var runtimeDirectory = Directory.GetDirectories (Path.Combine (TestEnvironment.DotNetPreviewPacksDirectory, $"Microsoft.Android.Runtime.{versionString}.android")).LastOrDefault ();
-				var expectedMonoAndroidRuntimePath = Path.Combine (runtimeDirectory, "runtimes", "android", "lib", dotnetVersion, "Mono.Android.dll");
-				Assert.IsTrue (dotnet.LastBuildOutput.ContainsText (expectedMonoAndroidRuntimePath), $"Build should be using {expectedMonoAndroidRuntimePath}");
+				AssertUsingPack (buildOutput, $"Microsoft.Android.Runtime.{versionString}.android", "runtimes", "android", "lib", dotnetVersion, "Mono.Android.dll");
 			}
 
 			var publishDirectory = Path.Combine (Root, projBuilder.ProjectDirectory, proj.OutputPath, runtimeIdentifier, "publish");
@@ -359,6 +630,17 @@ public class JavaSourceTest {
 				FileAssert.Exists (aab);
 				FileAssert.Exists (aabSigned);
 			}
+		}
+
+		static void AssertUsingPack (IEnumerable<string> buildOutput, string packName, params string [] assemblyPath)
+		{
+			var packDirectory = Path.Combine (TestEnvironment.DotNetPreviewPacksDirectory, packName);
+			var assemblyPathSuffix = Path.Combine (assemblyPath);
+			var assemblyFileName = Path.GetFileName (assemblyPathSuffix);
+			Assert.That (Directory.EnumerateFiles (packDirectory, assemblyFileName, SearchOption.AllDirectories),
+				Has.Exactly (1).Matches<string> (path =>
+					path.EndsWith (assemblyPathSuffix, StringComparison.OrdinalIgnoreCase) && buildOutput.ContainsText (path)),
+				$"Build should use exactly one installed '{packName}' pack.");
 		}
 
 		[Test]
@@ -407,7 +689,11 @@ public abstract class Foo<TVirtualView, TNativeView> : ViewHandler<TVirtualView,
 			});
 
 			var builder = CreateDllBuilder ();
-			Assert.IsTrue (builder.Build (library), $"{library.ProjectName} should succeed");
+			string [] parameters = null;
+			if (dotnetVersion == XABuildConfig.PreviousDotNetTargetFramework) {
+				parameters = [$"JavaSdkDirectory=\"{GetPreviousWorkloadJavaSdkPath ()}\""];
+			}
+			Assert.IsTrue (builder.Build (library, parameters: parameters), $"{library.ProjectName} should succeed");
 			// NOTE: Preview API levels emit XA4211
 			if (!preview) {
 				builder.AssertHasNoWarnings ();

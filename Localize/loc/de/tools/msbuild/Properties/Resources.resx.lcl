@@ -13,7 +13,7 @@
         <Str Cat="Text">
           <Val><![CDATA[  Starting Debugger on {0}:{1}]D;]A;Start sdb then run the following command]D;]A;  connect {0} {1}]D;]A;    ]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[  Debugger wird auf {0} gestartet:{1}]D;]A;Starten Sie „sdb“, und führen Sie dann die folgende Befehls-]D;-]A;  Verbindung {0} {1}]D; aus]A;    ]]></Val>
+            <Val><![CDATA[  Debugger wird auf {0} gestartet:{1}]D;]A;Starten Sie „sdb“, und führen Sie dann den folgenden Befehl aus:]D;]A;  verbinden {0} {1}]D;]A;    ]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />

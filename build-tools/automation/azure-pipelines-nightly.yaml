@@ -15,10 +15,10 @@ resources:
     type: git
     name: DevDiv/Xamarin.yaml-templates
     ref: refs/heads/main
-  - repository: maui
+  - repository: macios-devtools
     type: github
-    name: dotnet/maui
-    ref: net11.0
+    name: dotnet/macios-devtools
+    ref: refs/heads/main
     endpoint: xamarin
 
 parameters:
@@ -57,7 +57,6 @@ stages:
 
     - template: /build-tools/automation/yaml-templates/commercial-build.yaml
       parameters:
-        makeMSBuildArgs: /p:EnableNativeAnalyzers=true
         use1ESTemplate: false
 
     - template: /build-tools/automation/yaml-templates/upload-results.yaml
@@ -122,9 +121,9 @@ stages:
 
     - template: /build-tools/automation/yaml-templates/run-dotnet-preview.yaml
       parameters:
-        project: Xamarin.Android.sln
-        arguments: -t:PrepareJavaInterop -c $(XA.Build.Configuration) -m:1 -v:n
-        displayName: prepare java.interop $(XA.Build.Configuration)
+        project: Microsoft.Android.slnx
+        arguments: -t:PrepareOpenJDK -c $(XA.Build.Configuration) -m:1 -v:n
+        displayName: prepare OpenJDK $(XA.Build.Configuration)
         continueOnError: false
 
     - template: /build-tools/automation/yaml-templates/start-stop-emulator.yaml
@@ -192,7 +191,6 @@ stages:
 
     - template: /build-tools/automation/yaml-templates/setup-test-environment.yaml
       parameters:
-        installTestSlicer: true
         useAgentJdkPath: false
         jdkMajorVersion: $(LatestJavaSdkMajorVersion)
 
@@ -208,7 +206,7 @@ stages:
     - template: /build-tools/automation/yaml-templates/run-sliced-nunit-tests.yaml
       parameters:
         testAssembly: $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/MSBuildDeviceIntegration/$(DotNetStableTargetFramework)/MSBuildDeviceIntegration.dll
-        testFilter: method == CheckTimeZoneInfoIsCorrectWithSlicer
+        testFilter: Name~CheckTimeZoneInfoIsCorrectWithSlicer
         testRunTitle: CheckTimeZoneInfoIsCorrectNode On Device - macOS
 
     - template: /build-tools/automation/yaml-templates/upload-results.yaml
@@ -244,7 +242,6 @@ stages:
 
     - template: /build-tools/automation/yaml-templates/setup-test-environment.yaml
       parameters:
-        installTestSlicer: true
         useAgentJdkPath: false
         jdkMajorVersion: $(LatestJavaSdkMajorVersion)
 
@@ -260,7 +257,7 @@ stages:
     - template: /build-tools/automation/yaml-templates/run-sliced-nunit-tests.yaml
       parameters:
         testAssembly: $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/MSBuildDeviceIntegration/$(DotNetStableTargetFramework)/MSBuildDeviceIntegration.dll
-        testFilter: method == CheckLocalizationIsCorrectWithSlicer
+        testFilter: Name~CheckLocalizationIsCorrectWithSlicer
         testRunTitle: CheckLocalizationIsCorrect On Device - macOS
 
     - template: /build-tools/automation/yaml-templates/upload-results.yaml
@@ -294,24 +291,12 @@ stages:
       parameters:
         installApkDiff: false
 
-    - task: DownloadPipelineArtifact@2
-      displayName: Download binutils pdbs
-      inputs:
-        artifactName: $(WindowsToolchainPdbArtifactName)
-        downloadPath: $(Build.StagingDirectory)\binutils-pdb
-
-    - powershell: |
-        Expand-Archive "$(Build.StagingDirectory)\binutils-pdb\$(WindowsToolchainPdbArtifactName).zip" "$(System.DefaultWorkingDirectory)\binutils-pdb"
-        Get-ChildItem -Path "$(System.DefaultWorkingDirectory)\binutils-pdb" -Recurse
-      displayName: Extract binutils pdbs
-
     ### Copy .dll, .exe, .pdb files for APIScan
     - task: CopyFiles@2
       displayName: Collect Files for APIScan
       inputs:
         Contents: |
           $(System.DefaultWorkingDirectory)\bin\$(XA.Build.Configuration)\dotnet\packs\Microsoft.Android*\**\?(*.dll|*.exe|*.pdb)
-          $(System.DefaultWorkingDirectory)\binutils-pdb\*.pdb
         TargetFolder: $(Agent.TempDirectory)\T
         OverWrite: true
         flattenFolders: true

@@ -862,7 +862,6 @@
 1, android.os, Parcel, writeTypedArray, parcelableFlags, Android.OS.ParcelableWriteFlags
 1, android.text, TextUtils, writeToParcel, parcelableFlags, Android.OS.ParcelableWriteFlags
 
-0, java.nio.channels, SelectionKey, interestOps, return, Java.Nio.Channels.Operations
 0, java.nio.channels, SelectionKey, readyOps, return, Java.Nio.Channels.Operations
 0, java.nio.channels, SelectableChannel, validOps, return, Java.Nio.Channels.Operations
 0, java.nio.channels, DatagramChannel, validOps, return, Java.Nio.Channels.Operations
@@ -2042,7 +2041,6 @@
 24, android.location, GnssMeasurementsEvent.Callback, onStatusChanged, status, Android.Locations.GnssMeasurementCallbackStatus
 24, android.location, GnssNavigationMessage, getStatus, return, Android.Locations.GnssNavigationStatus
 24, android.location, GnssNavigationMessage, getType, return, Android.Locations.GnssNavigationType
-24, android.location, GnssNavigationMessage.Callback, onStatusChanged, return, Android.Locations.GnssNavigationStatus
 24, android.location, GnssStatus, getConstellationType, return, Android.Locations.GnssConstellationType
 
 24, android.media, AudioRecord, getTimestamp, timebase, Android.Media.AudioTimebase
@@ -2381,7 +2379,6 @@
 28, android.media, AudioPresentation, getMasteringIndication, return, Android.Media.MasteringIndicationType
 28, android.media.audiofx, DynamicsProcessing.Config, getVariant, return, Android.Media.Audiofx.VariantType
 28, android.media, MediaDrm, getConnectedHdcpLevel, return, Android.Media.HdcpLevel
-28, android.media, MicrophoneInfo, getChannelMapping, return, Android.Media.MicrophoneChannelMapping
 28, android.media, MicrophoneInfo, getDirectionality, return, Android.Media.MicrophoneDirectionality
 28, android.media, MicrophoneInfo, getLocation, return, Android.Media.MicrophoneLocation
 28, android.net, IpSecManager, applyTransportModeTransform, direction, Android.Net.IpSecTransportDirection
@@ -2520,8 +2517,6 @@
 29, android.media, AudioManager, getAllowedCapturePolicy, return, Android.Media.CapturePolicies
 29, android.media, AudioPlaybackCaptureConfiguration.Builder, addMatchingUsage, usage, Android.Media.AudioUsageKind
 29, android.media, AudioPlaybackCaptureConfiguration.Builder, excludeUsage, usage, Android.Media.AudioUsageKind
-29, android.media, AudioPlaybackCaptureConfiguration, getExcludeUsages, return, Android.Media.AudioUsageKind
-29, android.media, AudioPlaybackCaptureConfiguration, getMatchingUsages, return, Android.Media.AudioUsageKind
 29, android.media, AudioPresentation.Builder, setMasteringIndication, masteringIndication, Android.Media.MasteringIndicationType
 29, android.media, MicrophoneDirection, setPreferredMicrophoneDirection, direction, Android.Media.MicDirection
 // Cannot change this at this state.
@@ -4637,3 +4632,104 @@
 37,android/widget/photopicker,PhotoPickerUiCustomizationParams,writeToParcel,flags,Android.OS.ParcelableWriteFlags
 37,android/widget/photopicker,PhotoPickerUiCustomizationParams$Builder,setAspectRatio,aspectRatio,Android.Widget.Photopicker.AspectRatio
 37,android/widget,RemoteViews,setViewPadding,units,Android.Util.ComplexUnitType
+37.1,android.hardware.hid,HidDevice,getTransport,return,Android.Hardware.Hid.HidDeviceTransport
+37.1,android.hardware.input,ButtonCustomizationTrigger,ctor,buttonCode,Android.Hardware.Input.CustomizableButton
+37.1,android.hardware.input,ButtonCustomizationTrigger,getButtonCode,return,Android.Hardware.Input.CustomizableButton
+37.1,android.hardware.input,InputManager,isButtonAllowedForCustomization,buttonCode,Android.Hardware.Input.CustomizableButton
+37.1,android.hardware.input,InputManager,isKeyAllowedForCustomization,keyCode,Android.Hardware.Input.CustomizableKeyCode
+37.1,android.hardware.input,KeyCustomizationTrigger,ctor,keyCode,Android.Hardware.Input.CustomizableKeyCode
+37.1,android.hardware.input,KeyCustomizationTrigger,getKeyCode,return,Android.Hardware.Input.CustomizableKeyCode
+37.1,android.hardware.input,SimpleCustomizationAction,ctor,actionType,Android.Hardware.Input.SimpleCustomizationActionType
+37.1,android.hardware.input,SimpleCustomizationAction,getType,return,Android.Hardware.Input.SimpleCustomizationActionType
+37.1,android.hardware.input,UriCustomizationAction,ctor,actionType,Android.Hardware.Input.UriCustomizationActionType
+37.1,android.hardware.input,UriCustomizationAction,getType,return,Android.Hardware.Input.UriCustomizationActionType
+37.1,android.widget.photopicker,EmbeddedPhotoPickerFeatureInfo,getLaunchTab,return,Android.Widget.Photopicker.EmbeddedPhotoPickerLaunchTab
+37.1,android.widget.photopicker,EmbeddedPhotoPickerFeatureInfo.Builder,setLaunchTab,launchTab,Android.Widget.Photopicker.EmbeddedPhotoPickerLaunchTab
+37.1,android.widget.photopicker,EmbeddedPhotoPickerUiCustomizationParams,getAspectRatio,return,Android.Widget.Photopicker.AspectRatio
+37.1,android.widget.photopicker,EmbeddedPhotoPickerUiCustomizationParams,writeToParcel,flags,Android.OS.ParcelableWriteFlags
+37.1,android.widget.photopicker,EmbeddedPhotoPickerUiCustomizationParams.Builder,setAspectRatio,aspectRatio,Android.Widget.Photopicker.AspectRatio
+37.2,android.app,ActivityOptions.LaunchCookie,writeToParcel,flags,Android.OS.ParcelableWriteFlags
+37.2,android.app.admin,DevicePolicyManager,generateKeyPair,idAttestationFlags,Android.App.Admin.IdAttestationFlags
+37.2,android.app.admin,DevicePolicyManager,generateKeyPair,scope,Android.Security.KeyChainManagerKeyPairScope
+37.2,android.app.admin,DevicePolicyManager,getKeyPairGrants,scope,Android.Security.KeyChainManagerKeyPairScope
+37.2,android.app.admin,DevicePolicyManager,getPolicy,scope,Android.App.Admin.DevicePolicyManagerScope
+37.2,android.app.admin,DevicePolicyManager,grantKeyPairToApp,scope,Android.Security.KeyChainManagerKeyPairScope
+37.2,android.app.admin,DevicePolicyManager,grantKeyPairToWifiAuth,scope,Android.Security.KeyChainManagerKeyPairScope
+37.2,android.app.admin,DevicePolicyManager,hasKeyPair,scope,Android.Security.KeyChainManagerKeyPairScope
+37.2,android.app.admin,DevicePolicyManager,isKeyPairGrantedToWifiAuth,scope,Android.Security.KeyChainManagerKeyPairScope
+37.2,android.app.admin,DevicePolicyManager,removeKeyPair,scope,Android.Security.KeyChainManagerKeyPairScope
+37.2,android.app.admin,DevicePolicyManager,revokeKeyPairFromApp,scope,Android.Security.KeyChainManagerKeyPairScope
+37.2,android.app.admin,DevicePolicyManager,revokeKeyPairFromWifiAuth,scope,Android.Security.KeyChainManagerKeyPairScope
+37.2,android.app.admin,DevicePolicyManager,setKeyPairCertificate,scope,Android.Security.KeyChainManagerKeyPairScope
+37.2,android.app.admin,DevicePolicyManager,setPolicy,scope,Android.App.Admin.DevicePolicyManagerScope
+37.2,android.app.appfunctions,AppFunctionMetadata,getAccessLevel,return,Android.App.AppFunctions.AppFunctionMetadataAccessLevel
+37.2,android.app,AppInteractionDeniedException,ctor,reason,Android.App.AppInteractionDeniedReason
+37.2,android.app,AppInteractionDeniedException,getReason,return,Android.App.AppInteractionDeniedReason
+37.2,android.app,[Interface]AppInteractionSession.LifecycleListener,onAppInteractionSessionClosed,reason,Android.App.AppInteractionSessionCloseReason
+37.2,android.app.appsearch,AppSearchSchema.StringPropertyConfig,getDeletePropagationType,return,Android.App.AppSearch.AppSearchSchemaDeletePropagationType
+37.2,android.app.appsearch,AppSearchSchema.StringPropertyConfig.Builder,setDeletePropagationType,deletePropagationType,Android.App.AppSearch.AppSearchSchemaDeletePropagationType
+37.2,android.app.contentsafety,ClassifiableContent,writeToParcel,flags,Android.OS.ParcelableWriteFlags
+37.2,android.app.contentsafety,ContentClassificationResult,ctor,type,Android.App.ContentSafety.ContentClassificationType
+37.2,android.app.contentsafety,ContentClassificationResult,getType,return,Android.App.ContentSafety.ContentClassificationType
+37.2,android.app.contentsafety,ContentClassificationResult,writeToParcel,flags,Android.OS.ParcelableWriteFlags
+37.2,android.app.job,JobInfo,getCategory,return,Android.App.Job.JobInfoCategory
+37.2,android.app.job,JobInfo.Builder,setCategory,category,Android.App.Job.JobInfoCategory
+37.2,android.app.privatecompute,AssistantQueryRequest.Query,writeToParcel,flags,Android.OS.ParcelableWriteFlags
+37.2,android.app.privatecompute,EgressRequest,writeToParcel,flags,Android.OS.ParcelableWriteFlags
+37.2,android.app.privatecompute,EgressResponse,writeToParcel,flags,Android.OS.ParcelableWriteFlags
+37.2,android.app.privatecompute,PccEgressException,ctor,statusCode,Android.App.PrivateCompute.PccEgressExceptionStatusError
+37.2,android.app.privatecompute,PccEgressException,getStatusCode,return,Android.App.PrivateCompute.PccEgressExceptionStatusError
+37.2,android.app.privatecompute,PccEgressException,writeToParcel,flags,Android.OS.ParcelableWriteFlags
+37.2,android.app.privatecompute,PccEgressException.SensitiveCategoryInfo,writeToParcel,flags,Android.OS.ParcelableWriteFlags
+37.2,android.app.usage,AppUsageDuration,writeToParcel,flags,Android.OS.ParcelableWriteFlags
+37.2,android.app.usage,AppUsageDurationQuery,getIntervalType,return,Android.App.Usage.UsageStatsInterval
+37.2,android.app.usage,AppUsageDurationQuery,writeToParcel,flags,Android.OS.ParcelableWriteFlags
+37.2,android.app.usage,AppUsageDurationQuery.Builder,ctor,intervalType,Android.App.Usage.UsageStatsInterval
+37.2,android.app.usage,AppUsageDurationQuery.Builder,setIntervalType,intervalType,Android.App.Usage.UsageStatsInterval
+37.2,android.bluetooth,BluetoothDevice,disconnectAcl,return,Android.Bluetooth.CurrentBluetoothStatusCodes
+37.2,android.bluetooth,BluetoothDevice,disconnectAcl,transport,Android.Bluetooth.BluetoothTransports
+37.2,android.bluetooth,BluetoothGattCallback,onConnectionUpdated,status,Android.Bluetooth.GattStatus
+37.2,android.bluetooth,BluetoothGattServerCallback,onConnectionUpdated,status,Android.Bluetooth.GattStatus
+37.2,android.bluetooth,BluetoothHeadset,getCodecType,return,Android.Bluetooth.BluetoothHeadsetCodecType
+37.2,android.companion,CompanionDeviceManager.TrustPairingCallback,onFailure,errorCode,Android.Companion.CompanionDeviceResult
+37.2,android.companion,CompanionDeviceService,onDeviceTrustFailure,errorCode,Android.Companion.CompanionDeviceManagerTrustErrorCode
+37.2,android.companion,OutOfBandPairingRequest,writeToParcel,flags,Android.OS.ParcelableWriteFlags
+37.2,android.companion.virtual,VirtualDevice,getDeviceProfile,return,Android.Companion.Virtual.VirtualDeviceProfile
+37.2,android.content.pm,MemoryBudgetInfo,getFeature,return,Android.Content.PM.MemoryBudgetInfoFeature
+37.2,android.content.pm,MemoryBudgetInfo,getState,return,Android.Content.PM.MemoryBudgetInfoState
+37.2,android.content.pm,MemoryBudgetInfo,writeToParcel,flags,Android.OS.ParcelableWriteFlags
+37.2,android.graphics.pdf,RenderParams,getRenderPageObjectFlags,return,Android.Graphics.Pdf.RenderParamsRenderPageObjectFlags
+37.2,android.graphics.pdf,RenderParams.Builder,setRenderPageObjectFlags,flags,Android.Graphics.Pdf.RenderParamsRenderPageObjectFlags
+37.2,android.hardware.biometrics,BiometricPrompt,getAuthenticationPurpose,return,Android.Hardware.Biometrics.BiometricManagerAuthenticationPurpose
+37.2,android.hardware.biometrics,BiometricPrompt.Builder,setAuthenticationPurpose,purpose,Android.Hardware.Biometrics.BiometricManagerAuthenticationPurpose
+37.2,android.hardware.biometrics,BiometricPromptStyleSpec,writeToParcel,flags,Android.OS.ParcelableWriteFlags
+37.2,android.hardware.biometrics,EmbeddedBiometricPrompt,getAllowedAuthenticators,return,Android.Hardware.Biometrics.BiometricManagerAuthenticators
+37.2,android.hardware.biometrics,EmbeddedBiometricPrompt,getAuthenticationPurpose,return,Android.Hardware.Biometrics.BiometricManagerAuthenticationPurpose
+37.2,android.hardware.biometrics,EmbeddedBiometricPrompt,startAuthenticationSession,startMode,Android.Hardware.Biometrics.EmbeddedBiometricPromptStartMode
+37.2,android.hardware.biometrics,EmbeddedBiometricPrompt.AuthenticationCallback,onAuthenticationError,errorCode,Android.Hardware.Biometrics.BiometricErrorCode
+37.2,android.hardware.biometrics,EmbeddedBiometricPrompt.Builder,addFallbackOption,iconType,Android.Hardware.Biometrics.BiometricManagerIconType
+37.2,android.hardware.biometrics,EmbeddedBiometricPrompt.Builder,setAllowedAuthenticators,authenticators,Android.Hardware.Biometrics.BiometricManagerAuthenticators
+37.2,android.hardware.biometrics,EmbeddedBiometricPrompt.Builder,setAuthenticationPurpose,purpose,Android.Hardware.Biometrics.BiometricManagerAuthenticationPurpose
+37.2,android.net.wifi.aware,Characteristics,getSupportedOffloadBootstrappingMethods,return,Android.Net.Wifi.Aware.AwarePairingBootstrappingMethods
+37.2,android.os.multisensory,MultisensoryManager,playToken,tokenConstant,Android.OS.MultiSensory.MultisensoryManagerToken
+37.2,android.os,VibrationEffect.Preset,create,presetId,Android.OS.VibrationEffectPresetType
+37.2,android.os,Vibrator,getPresetDuration,presetId,Android.OS.VibrationEffectPresetType
+37.2,android.os,Vibrator,isPresetSupported,presetId,Android.OS.VibrationEffectPresetType
+37.2,android.security.authenticationpolicy,CrossDeviceAuthenticationException,ctor,errorCode,Android.Security.AuthenticationPolicy.CrossDeviceAuthenticationExceptionErrorCode
+37.2,android.security.authenticationpolicy,CrossDeviceAuthenticationException,getErrorCode,return,Android.Security.AuthenticationPolicy.CrossDeviceAuthenticationExceptionErrorCode
+37.2,android.security,GrantedKeyInfo,writeToParcel,flags,Android.OS.ParcelableWriteFlags
+37.2,android.security,KeyChainManager,getCertificateChain,scope,Android.Security.KeyChainManagerKeyPairScope
+37.2,android.security,KeyChainManager,getGrantedKeyPairs,scope,Android.Security.KeyChainManagerKeyPairScope
+37.2,android.security,KeyChainManager,getPrivateKey,scope,Android.Security.KeyChainManagerKeyPairScope
+37.2,android.security.net.config,NetworkSecurityConfig,getDomainEncryptionMode,return,Android.Security.DomainEncryptionMode
+37.2,android.security.net.config,NetworkSecurityConfig.Builder,setDomainEncryptionMode,mode,Android.Security.DomainEncryptionMode
+37.2,android.view.accessibility,AccessibilityNodeInfo.SelectionPosition,getOffsetType,return,Android.Views.Accessibility.AccessibilityNodeInfoSelectionPositionOffsetType
+37.2,android.view.accessibility,AccessibilityNodeInfo.SelectionPosition.Builder,setOffsetType,offsetType,Android.Views.Accessibility.AccessibilityNodeInfoSelectionPositionOffsetType
+37.2,android.view.contentcapture,ContentCaptureSession,getContentCaptureVersion,return,Android.Views.ContentCaptures.ContentCaptureSessionVersion
+37.2,android.view,InputDevice.ViewBehavior,getPrimaryDirectionalMotionAxis,return,Android.Views.Axis
+37.2,android.view,[Interface]WindowManager,getDisplayEngagementMode,return,Android.Views.WindowManagerDisplayEngagementModes
+37.2,android.view,[Interface]WindowManager,requestEngagementControlState,engagementControlFlags,Android.Views.WindowManagerEngagementControlState
+37.2,android.view,WindowManager.DisplayEngagementModeState,getEngagementModeFlags,return,Android.Views.WindowManagerDisplayEngagementModes
+37.2,android.view,WindowManager.LayoutParams,screenBrightnessUnit,,Android.Hardware.Display.DisplayBrightnessUnit
+37.2,android.window,TrustedPresentationThresholds,ctor,signalMode,Android.Window.TrustedPresentationThresholdsSignalMode
+37.2,android.window,TrustedPresentationThresholds,getSignalMode,return,Android.Window.TrustedPresentationThresholdsSignalMode

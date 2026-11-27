@@ -9,34 +9,14 @@
   </Target>
 
   <Target Name="_BuildRuntimes" BeforeTargets="Build"
-          DependsOnTargets="_PrepareCommonProperties;_ConfigureAndBuildArchiveDSOStub;_ConfigureAndBuildTestJniLibrary;_ConfigureRuntimes;_BuildAndroidRuntimes;_BuildAndroidAnalyzerRuntimes;_CopyToPackDirs">
-  </Target>
-
-  <!-- The runtime check makes the target run only once, when building the CoreCLR runtime. Otherwise, when building in parallel, we will get
-       the "Text file busy" error on Ci, as both of the runtimes will attempt to compile and run the same binaries a the same time -->
-  <Target Name="_TestPinvokeTables" Condition=" '$(HostOS)' == 'Linux' And '$(RunningOnCI)' == 'true' And '$(CMakeRuntimeFlavor)' == 'CoreCLR' ">
-    <Exec
-        Command="..\..\build-tools\scripts\generate-pinvoke-tables.sh --test-only --ci"
-        WorkingDirectory="$(MSBuildThisFileDirectory)"
-        />
-  </Target>
-
-  <Target Name="RunStaticAnalysis" Condition=" '$(HostOS)' != 'Windows' ">
-    <Exec
-        Command="$(NinjaPath) run_static_analysis"
-        WorkingDirectory="$(FlavorIntermediateOutputPath)%(AndroidSupportedTargetJitAbi.AndroidRID)-Debug" />
-    <Exec
-        Command="$(NinjaPath) run_static_analysis"
-        WorkingDirectory="$(FlavorIntermediateOutputPath)%(AndroidSupportedTargetJitAbi.AndroidRID)-Release" />
+          DependsOnTargets="_PrepareCommonProperties;_ConfigureAndBuildTestJniLibrary;_ConfigureRuntimes;_BuildAndroidRuntimes;_CopyToPackDirs">
   </Target>
 
   <Target Name="_ConfigureRuntimesInputs">
     <ItemGroup>
       <_ConfigureRuntimesInputs  Include="..\..\build-tools\scripts\Ndk.targets" />
       <_ConfigureRuntimesInputs  Include="CMakeLists.txt" />
-      <_ConfigureRuntimesInputs  Include="common\java-interop\CMakeLists.txt" />
-      <_ConfigureRuntimesInputs  Include="common\libunwind\CMakeLists.txt" />
-      <_ConfigureRuntimesInputs  Include="common\runtime-base\CMakeLists.txt" />
+      <_ConfigureRuntimesInputs  Include="CMakePresets.json" />
 
       <_ConfigureRuntimesOutputs Include="@(AndroidSupportedTargetJitAbi->'$(FlavorIntermediateOutputPath)\%(AndroidRID)-Debug\CMakeCache.txt')" />
       <_ConfigureRuntimesOutputs Include="@(AndroidSupportedTargetJitAbi->'$(FlavorIntermediateOutputPath)\%(AndroidRID)-Release\CMakeCache.txt')" />
@@ -45,70 +25,15 @@
       <_OutputDirsToCreate       Include="$(FlavorIntermediateOutputPath)\%(AndroidSupportedTargetJitAbi.AndroidRID)-Release" />
     </ItemGroup>
 
-    <ItemGroup Condition=" '$(CMakeRuntimeFlavor)' == 'MonoVM' ">
-      <_ConfigureRuntimesInputs  Include="mono\monodroid\CMakeLists.txt" />
-      <_ConfigureRuntimesInputs  Include="mono\runtime-base\CMakeLists.txt" />
-      <_ConfigureRuntimesInputs  Include="mono\shared\CMakeLists.txt" />
-      <_ConfigureRuntimesInputs  Include="mono\tracing\CMakeLists.txt" />
-      <_ConfigureRuntimesInputs  Include="mono\xamarin-app-stub\CMakeLists.txt" />
-      <_ConfigureRuntimesInputs  Include="mono\xamarin-debug-app-helper\CMakeLists.txt" />
-
-      <_ConfigureRuntimesOutputs Include="@(AndroidSupportedTargetJitAbi->'$(FlavorIntermediateOutputPath)\%(AndroidRID)-asan-Debug\CMakeCache.txt')"    Condition="'$(EnableNativeAnalyzers)' == 'true'" />
-      <_ConfigureRuntimesOutputs Include="@(AndroidSupportedTargetJitAbi->'$(FlavorIntermediateOutputPath)\%(AndroidRID)-asan-Release\CMakeCache.txt')"  Condition="'$(EnableNativeAnalyzers)' == 'true'" />
-      <_ConfigureRuntimesOutputs Include="@(AndroidSupportedTargetJitAbi->'$(FlavorIntermediateOutputPath)\%(AndroidRID)-ubsan-Debug\CMakeCache.txt')"   Condition="'$(EnableNativeAnalyzers)' == 'true'" />
-      <_ConfigureRuntimesOutputs Include="@(AndroidSupportedTargetJitAbi->'$(FlavorIntermediateOutputPath)\%(AndroidRID)-ubsan-Release\CMakeCache.txt')" Condition="'$(EnableNativeAnalyzers)' == 'true'" />
-
-      <_OutputDirsToCreate       Include="$(FlavorIntermediateOutputPath)\%(AndroidSupportedTargetJitAbi.AndroidRID)-asan-Debug"     Condition="'$(EnableNativeAnalyzers)' == 'true'" />
-      <_OutputDirsToCreate       Include="$(FlavorIntermediateOutputPath)\%(AndroidSupportedTargetJitAbi.AndroidRID)-ubsan-Debug"    Condition="'$(EnableNativeAnalyzers)' == 'true'" />
-      <_OutputDirsToCreate       Include="$(FlavorIntermediateOutputPath)\%(AndroidSupportedTargetJitAbi.AndroidRID)-asan-Release"   Condition="'$(EnableNativeAnalyzers)' == 'true'" />
-      <_OutputDirsToCreate       Include="$(FlavorIntermediateOutputPath)\%(AndroidSupportedTargetJitAbi.AndroidRID)-ubsan-Release"  Condition="'$(EnableNativeAnalyzers)' == 'true'" />
-    </ItemGroup>
-
     <ItemGroup Condition=" '$(CMakeRuntimeFlavor)' == 'CoreCLR' ">
       <_ConfigureRuntimesInputs  Include="clr\host\CMakeLists.txt" />
       <_ConfigureRuntimesInputs  Include="clr\runtime-base\CMakeLists.txt" />
       <_ConfigureRuntimesInputs  Include="clr\shared\CMakeLists.txt" />
-      <_ConfigureRuntimesInputs  Include="clr\startup\CMakeLists.txt" />
-      <_ConfigureRuntimesInputs  Include="clr\xamarin-app-stub\CMakeLists.txt" />
     </ItemGroup>
 
     <ItemGroup Condition=" '$(CMakeRuntimeFlavor)' == 'NativeAOT' ">
       <_ConfigureRuntimesInputs  Include="nativeaot\host\CMakeLists.txt" />
     </ItemGroup>
-  </Target>
-
-  <Target Name="_ConfigureArchiveDSOInputsAndOutputs">
-    <ItemGroup>
-      <_ArchiveDSOInput Include="common\archive-dso-stub\CMakeLists.txt" />
-
-      <_ArchiveDSOOutput Include="@(AndroidSupportedTargetJitAbi->'$(FlavorIntermediateOutputPath)\%(AndroidRID)-archive-dso-stub\CMakeCache.txt')" />
-      <_ArchiveDSOOutput Include="@(AndroidSupportedTargetJitAbi->'$(OutputPath)\%(AndroidRID)\libarchive-dso-stub.so')" />
-
-      <_ArchiveOutputDirToCreate Include="$(FlavorIntermediateOutputPath)\%(AndroidSupportedTargetJitAbi.AndroidRID)-archive-dso-stub" />
-    </ItemGroup>
-  </Target>
-
-  <Target Name="_ConfigureAndBuildArchiveDSOStub"
-          Condition=" '$(CMakeRuntimeFlavor)' != 'NativeAOT' "
-          DependsOnTargets="_PrepareCommonProperties;_ConfigureArchiveDSOInputsAndOutputs"
-          Inputs="@(_ArchiveDSOInput)"
-          Outputs="@(_ArchiveDSOOutput)">
-    <ItemGroup>
-      <_ConfigureArchiveDSOStubCommands Include="@(AndroidSupportedTargetJitAbi)">
-        <Command>$(CmakePath)</Command>
-        <Arguments>-DOUTPUT_PATH="$(OutputPath.TrimEnd('\'))" -DRUNTIME_FLAVOR="$(CMakeRuntimeFlavor)" --preset default-release-%(AndroidSupportedTargetJitAbi.Identity) -DBUILD_ARCHIVE_DSO_STUB=ON -DSTRIP_DEBUG=ON "$(MSBuildThisFileDirectory)"</Arguments>
-        <WorkingDirectory>$(FlavorIntermediateOutputPath)%(AndroidSupportedTargetJitAbi.AndroidRID)-archive-dso-stub</WorkingDirectory>
-      </_ConfigureArchiveDSOStubCommands>
-    </ItemGroup>
-
-    <MakeDir Directories="@(_ArchiveOutputDirToCreate)" />
-    <RunParallelCmds Commands="@(_ConfigureArchiveDSOStubCommands)" />
-
-    <Exec
-        Command="$(NinjaPath) -v"
-        WorkingDirectory="$(FlavorIntermediateOutputPath)%(AndroidSupportedTargetJitAbi.AndroidRID)-archive-dso-stub" />
-
-    <Touch Files="@(_ArchiveDSOOutput)" />
   </Target>
 
   <Target Name="_ConfigureTestJniLibraryInputsAndOutputs">
@@ -120,6 +45,7 @@
 
     <ItemGroup>
       <_TestJniLibraryInput Include="common\test-jni-library\CMakeLists.txt" />
+      <_TestJniLibraryInput Include="CMakePresets.json" />
 
       <_TestJniLibraryOutput Include="@(_TestJniLibraryAbi->'$(FlavorIntermediateOutputPath)%(AndroidRID)-test-jni-library\CMakeCache.txt')" />
 
@@ -135,7 +61,7 @@
     <ItemGroup>
       <_ConfigureTestJniLibraryCommands Include="@(_TestJniLibraryAbi)">
         <Command>$(CmakePath)</Command>
-        <Arguments>-DOUTPUT_PATH="$(OutputPath.TrimEnd('\'))" -DRUNTIME_FLAVOR="$(CMakeRuntimeFlavor)" --preset default-release-%(_TestJniLibraryAbi.Identity) -DBUILD_TEST_JNI_LIBRARY=ON "$(MSBuildThisFileDirectory)"</Arguments>
+        <Arguments>-DOUTPUT_PATH="$(OutputPath.TrimEnd('\'))" -DRUNTIME_FLAVOR="$(CMakeRuntimeFlavor)" --preset default-release-%(_TestJniLibraryAbi.Identity) -DBUILD_TEST_JNI_LIBRARY=ON "$(MSBuildThisFileDirectory.TrimEnd('\'))"</Arguments>
         <WorkingDirectory>$(FlavorIntermediateOutputPath)%(_TestJniLibraryAbi.AndroidRID)-test-jni-library</WorkingDirectory>
       </_ConfigureTestJniLibraryCommands>
     </ItemGroup>
@@ -161,7 +87,7 @@
       <_NoStrip Condition=" '$(DoNotStripMonodroid)' == 'true' ">-DSTRIP_DEBUG=OFF</_NoStrip>
       <_LocalDotNetRuntimePath Condition=" '$(CLRLocalRuntimePath)' != '' And '$(CMakeRuntimeFlavor)' == 'CoreCLR' ">-DLOCAL_CORECLR_PATH="$(CLRLocalRuntimePath)"</_LocalDotNetRuntimePath>
       <_LocalDotNetRuntimeConfig Condition=" '$(CLRLocalRuntimeConfig)' != '' And '$(CMakeRuntimeFlavor)' == 'CoreCLR' ">-DLOCAL_CORECLR_CONFIG="$(CLRLocalRuntimeConfig)"</_LocalDotNetRuntimeConfig>
-      <_CmakeAndroidFlags>-DOUTPUT_PATH="$(OutputPath.TrimEnd('\'))" -DRUNTIME_FLAVOR="$(CMakeRuntimeFlavor)" $(_NoInline) $(_NoStrip) $(_LocalDotNetRuntimePath) $(_LocaLDotNetRuntimeConfig) "$(MSBuildThisFileDirectory)"</_CmakeAndroidFlags>
+      <_CmakeAndroidFlags>-DOUTPUT_PATH="$(OutputPath.TrimEnd('\'))" -DRUNTIME_FLAVOR="$(CMakeRuntimeFlavor)" $(_NoInline) $(_NoStrip) $(_LocalDotNetRuntimePath) $(_LocaLDotNetRuntimeConfig) "$(MSBuildThisFileDirectory.TrimEnd('\'))"</_CmakeAndroidFlags>
     </PropertyGroup>
 
     <ItemGroup>
@@ -178,67 +104,39 @@
       </_ConfigureRuntimeCommands>
     </ItemGroup>
 
-    <ItemGroup Condition=" '$(EnableNativeAnalyzers)' == 'true' And '$(CMakeRuntimeFlavor)' == 'MonoVM' " >
-      <_ConfigureRuntimeCommands Include="@(AndroidSupportedTargetJitAbi)">
-        <Command>$(CmakePath)</Command>
-        <Arguments>--preset $(_PresetPrefix)asan-debug-%(AndroidSupportedTargetJitAbi.Identity) $(_CmakeAndroidFlags)</Arguments>
-        <WorkingDirectory>$(FlavorIntermediateOutputPath)%(AndroidSupportedTargetJitAbi.AndroidRID)-asan-Debug</WorkingDirectory>
-      </_ConfigureRuntimeCommands>
-
-      <_ConfigureRuntimeCommands Include="@(AndroidSupportedTargetJitAbi)">
-        <Command>$(CmakePath)</Command>
-        <Arguments>--preset $(_PresetPrefix)asan-release-%(AndroidSupportedTargetJitAbi.Identity) $(_CmakeAndroidFlags)</Arguments>
-        <WorkingDirectory>$(FlavorIntermediateOutputPath)%(AndroidSupportedTargetJitAbi.AndroidRID)-asan-Release</WorkingDirectory>
-      </_ConfigureRuntimeCommands>
-
-      <_ConfigureRuntimeCommands Include="@(AndroidSupportedTargetJitAbi)">
-        <Command>$(CmakePath)</Command>
-        <Arguments>--preset $(_PresetPrefix)ubsan-debug-%(AndroidSupportedTargetJitAbi.Identity) $(_CmakeAndroidFlags)</Arguments>
-        <WorkingDirectory>$(FlavorIntermediateOutputPath)%(AndroidSupportedTargetJitAbi.AndroidRID)-ubsan-Debug</WorkingDirectory>
-      </_ConfigureRuntimeCommands>
-
-      <_ConfigureRuntimeCommands Include="@(AndroidSupportedTargetJitAbi)">
-        <Command>$(CmakePath)</Command>
-        <Arguments>--preset $(_PresetPrefix)ubsan-release-%(AndroidSupportedTargetJitAbi.Identity) $(_CmakeAndroidFlags)</Arguments>
-        <WorkingDirectory>$(FlavorIntermediateOutputPath)%(AndroidSupportedTargetJitAbi.AndroidRID)-ubsan-Release</WorkingDirectory>
-      </_ConfigureRuntimeCommands>
-    </ItemGroup>
-
     <MakeDir Directories="@(_OutputDirsToCreate)"/>
     <RunParallelCmds Commands="@(_ConfigureRuntimeCommands)" />
     <Touch Files="@(_ConfigureRuntimesOutputs)" />
   </Target>
 
-  <!-- TODO: update for the changes -->
+  <!-- TODO: Include all shared NativeAOT sources and headers, such as clr/host/gc-bridge.cc and clr/runtime-base/util.cc. -->
   <Target Name="_FindRuntimeSources">
     <ItemGroup>
-      <_RuntimeSources Include="$(JavaInteropFullPath)\src\java-interop\*.cc;$(JavaInteropFullPath)\src\java-interop\*.h" />
-      <_RuntimeSources Include="common\archive-dso-stub\*.cc" />
       <_RuntimeSources Include="common\include\**\*.hh" />
       <_RuntimeSources Include="common\runtime-base\*.cc" />
     </ItemGroup>
 
-    <ItemGroup Condition=" '$(CMakeRuntimeFlavor)' == 'MonoVM' ">
-      <_RuntimeSources Include="mono\monodroid\*.cc;mono\monodroid\*.hh" />
-      <_RuntimeSources Include="mono\runtime-base\*.cc;mono\runtime-base\*.hh" />
-      <_RuntimeSources Include="mono\shared\*.cc;mono\shared\*.hh" />
-      <_RuntimeSources Include="mono\tracing\*.cc;mono\tracing\*.hh" />
-      <_RuntimeSources Include="mono\xamarin-app-stub\*.cc;mono\xamarin-app-stub\*.hh" />
-      <_RuntimeSources Include="mono\xamarin-debug-app-helper\*.cc;mono\xamarin-debug-app-helper\*.hh" />
-    </ItemGroup>
-
     <ItemGroup Condition=" '$(CMakeRuntimeFlavor)' == 'CoreCLR' ">
+      <_RuntimeSources Include="clr\include\runtime\*.h" Condition=" '$(CLRLocalRuntimePath)' == '' " />
       <_RuntimeSources Include="clr\include\**\*.hh" />
       <_RuntimeSources Include="clr\host\*.cc;clr\host\*.hh" />
+      <_RuntimeSources Include="clr\pinvoke-override\*.cc" />
       <_RuntimeSources Include="clr\startup\*.cc;clr\startup\*.hh" />
-      <_RuntimeSources Include="clr\xamarin-app-stub\*.cc;clr\xamarin-app-stub\*.hh" />
       <_RuntimeSources Include="clr\runtime-base\*.cc;clr\runtime-base\*.hh" />
       <_RuntimeSources Include="clr\shared\*.cc;clr\shared\*.hh" />
     </ItemGroup>
 
     <ItemGroup Condition=" '$(CMakeRuntimeFlavor)' == 'NativeAOT' ">
+      <_RuntimeSources Include="clr\include\constants.hh" />
+      <_RuntimeSources Include="clr\include\host\host-common.hh" />
+      <_RuntimeSources Include="clr\include\runtime-base\android-system.hh" />
+      <_RuntimeSources Include="clr\include\shared\log_types.hh" />
+      <_RuntimeSources Include="clr\host\host-shared.cc" />
+      <_RuntimeSources Include="clr\runtime-base\android-system-shared.cc" />
+      <_RuntimeSources Include="clr\runtime-base\binary-blob-loader.cc" />
       <_RuntimeSources Include="nativeaot\include\**\*.hh" />
       <_RuntimeSources Include="nativeaot\host\*.cc" />
+      <_RuntimeSources Include="nativeaot\runtime-base\*.cc" />
     </ItemGroup>
   </Target>
 
@@ -251,35 +149,20 @@
       <_BuildAndroidRuntimesInputs  Include="..\..\build-tools\scripts\Ndk.targets" />
     </ItemGroup>
 
-    <ItemGroup Condition= " '$(CMakeRuntimeFlavor)' != 'NativeAOT' ">
-      <_BuildAndroidRuntimesOutputs Include="@(AndroidSupportedTargetJitAbi->'$(OutputPath)\%(AndroidRID)\Debug\libxamarin-app.so')" />
-      <_BuildAndroidRuntimesOutputs Include="@(AndroidSupportedTargetJitAbi->'$(OutputPath)\%(AndroidRID)\Release\libxamarin-app.so')" />
-    </ItemGroup>
-
-    <ItemGroup Condition=" '$(CMakeRuntimeFlavor)' == 'MonoVM' ">
-      <_BuildAndroidRuntimesOutputs Include="@(AndroidSupportedTargetJitAbi->'$(OutputPath)\%(AndroidRID)\libmono-android.debug.so')" />
-      <_BuildAndroidRuntimesOutputs Include="@(AndroidSupportedTargetJitAbi->'$(OutputPath)\%(AndroidRID)\libmono-android.release.so')" />
-    </ItemGroup>
-
     <ItemGroup Condition=" '$(CMakeRuntimeFlavor)' == 'CoreCLR' ">
       <_BuildAndroidRuntimesOutputs Include="@(AndroidSupportedTargetJitAbi->'$(OutputPath)\%(AndroidRID)\libnet-android.debug.so')" />
       <_BuildAndroidRuntimesOutputs Include="@(AndroidSupportedTargetJitAbi->'$(OutputPath)\%(AndroidRID)\libnet-android.release.so')" />
     </ItemGroup>
 
     <ItemGroup Condition=" '$(CMakeRuntimeFlavor)' == 'NativeAOT' ">
-      <_BuildAndroidRuntimesOutputs Include="@(AndroidSupportedTargetJitAbi->'$(OutputPath)\%(AndroidRID)\libnaot-android.release.so')" />
+      <_BuildAndroidRuntimesOutputs Include="@(AndroidSupportedTargetJitAbi->'$(OutputPath)\%(AndroidRID)\libnaot-android.debug-static-debug.a')" />
+      <_BuildAndroidRuntimesOutputs Include="@(AndroidSupportedTargetJitAbi->'$(OutputPath)\%(AndroidRID)\libnaot-android.release-static-release.a')" />
     </ItemGroup>
 
-    <ItemGroup  Condition=" '$(EnableNativeAnalyzers)' == 'true' And '$(CMakeRuntimeFlavor)' == 'MonoVM' ">
-      <_BuildAndroidAnalyzerRuntimesOutputs Include="@(AndroidSupportedTargetJitAbi->'$(OutputPath)\%(AndroidRID)\libmono-android-checked+ubsan.debug.so')" />
-      <_BuildAndroidAnalyzerRuntimesOutputs Include="@(AndroidSupportedTargetJitAbi->'$(OutputPath)\%(AndroidRID)\libmono-android-checked+asan.debug.so')" />
-      <_BuildAndroidAnalyzerRuntimesOutputs Include="@(AndroidSupportedTargetJitAbi->'$(OutputPath)\%(AndroidRID)\libmono-android-checked+asan.release.so')" />
-      <_BuildAndroidAnalyzerRuntimesOutputs Include="@(AndroidSupportedTargetJitAbi->'$(OutputPath)\%(AndroidRID)\libmono-android-checked+ubsan.release.so')" />
-    </ItemGroup>
   </Target>
 
   <Target Name="_BuildAndroidRuntimes"
-          DependsOnTargets="_BuildAndroidRuntimesInputs;_TestPinvokeTables"
+          DependsOnTargets="_BuildAndroidRuntimesInputs"
           Inputs="@(_BuildAndroidRuntimesInputs)"
           Outputs="@(_BuildAndroidRuntimesOutputs)">
     <Exec
@@ -293,35 +176,8 @@
     <Touch Files="@(_BuildAndroidRuntimesOutputs)" />
   </Target>
 
-  <Target Name="_BuildAndroidAnalyzerRuntimes"
-          Condition=" '$(EnableNativeAnalyzers)' == 'true' And '$(CMakeRuntimeFlavor)' == 'MonoVM' "
-          DependsOnTargets="_BuildAndroidRuntimesInputs"
-          Inputs="@(_BuildAndroidRuntimesInputs)"
-          Outputs="@(_BuildAndroidAnalyzerRuntimesOutputs)">
-    <Exec
-        Command="$(NinjaPath) -v"
-        WorkingDirectory="$(FlavorIntermediateOutputPath)%(AndroidSupportedTargetJitAbi.AndroidRID)-asan-Debug" />
-
-    <Exec
-        Command="$(NinjaPath) -v"
-        WorkingDirectory="$(FlavorIntermediateOutputPath)%(AndroidSupportedTargetJitAbi.AndroidRID)-ubsan-Debug" />
-
-    <Exec
-        Command="$(NinjaPath) -v"
-        WorkingDirectory="$(FlavorIntermediateOutputPath)%(AndroidSupportedTargetJitAbi.AndroidRID)-asan-Release" />
-
-    <Exec
-        Command="$(NinjaPath) -v"
-        WorkingDirectory="$(FlavorIntermediateOutputPath)%(AndroidSupportedTargetJitAbi.AndroidRID)-ubsan-Release" />
-
-    <Touch Files="@(_BuildAndroidAnalyzerRuntimesOutputs)" />
-  </Target>
-
   <Target Name="_CleanRuntimes"
           AfterTargets="Clean">
-    <Exec
-        Command="$(NinjaPath) -v clean"
-        WorkingDirectory="$(FlavorIntermediateOutputPath)%(AndroidSupportedTargetJitAbi.AndroidRID)-android-dso-stub"/>
     <Exec
         Command="$(NinjaPath) -v clean"
         WorkingDirectory="$(FlavorIntermediateOutputPath)%(AndroidSupportedTargetJitAbi.AndroidRID)-Debug"/>
@@ -333,10 +189,6 @@
     <RemoveDir Directories="$(FlavorIntermediateOutputPath)%(AndroidSupportedTargetJitAbi.AndroidRID)-Debug" />
     <RemoveDir Directories="$(FlavorIntermediateOutputPath)%(AndroidSupportedTargetJitAbi.AndroidRID)-Release" />
     <Delete Files="jni\config.include;jni\machine.config.include;jni\Application.mk" />
-    <Delete Files="@(AndroidSupportedTargetJitAbi->'$(OutputPath)\%(AndroidRID)\libmono-android.debug.so')" />
-    <Delete Files="@(AndroidSupportedTargetJitAbi->'$(OutputPath)\%(AndroidRID)\libmono-android.debug.d.so')" />
-    <Delete Files="@(AndroidSupportedTargetJitAbi->'$(OutputPath)\%(AndroidRID)\libmono-android.release.so')" />
-    <Delete Files="@(AndroidSupportedTargetJitAbi->'$(OutputPath)\%(AndroidRID)\libmono-android.release.d.so')" />
     <Delete Files="%(_EmbeddedBlob.Include)" />
   </Target>
 
@@ -344,9 +196,9 @@
           DependsOnTargets="Build">
   </Target>
 
-  <Target Name="_CopyToPackDirs">
+  <Target Name="_CopyToPackDirs"
+          DependsOnTargets="_AndroidGetNdkRedistributables">
     <PropertyGroup>
-      <_RuntimePackName Condition=" '$(CMakeRuntimeFlavor)' == 'MonoVM' ">Mono</_RuntimePackName>
       <_RuntimePackName Condition=" '$(CMakeRuntimeFlavor)' == 'CoreCLR' ">CoreCLR</_RuntimePackName>
       <_RuntimePackName Condition=" '$(CMakeRuntimeFlavor)' == 'NativeAOT' ">NativeAOT</_RuntimePackName>
     </PropertyGroup>
@@ -356,30 +208,61 @@
                          AndroidRID="%(AndroidSupportedTargetJitAbi.AndroidRID)"
                          AndroidRuntime="$(CMakeRuntimeFlavor)"
                          RuntimePackName="$(_RuntimePackName)" />
-      <_RuntimePackFiles Include="$(NativeRuntimeOutputRootDir)$(_RuntimeRedistDirName)\%(AndroidSupportedTargetJitAbi.AndroidRID)\*.so"
-                         AndroidRID="%(AndroidSupportedTargetJitAbi.AndroidRID)"
+      <_RuntimePackFiles Include="@(_AndroidNdkRedistributable)"
+                         Condition=" '%(_AndroidNdkRedistributable.Kind)' == 'System' "
+                         AndroidRID="%(_AndroidNdkRedistributable.AndroidRID)"
                          AndroidRuntime="$(CMakeRuntimeFlavor)"
                          RuntimePackName="$(_RuntimePackName)" />
     </ItemGroup>
 
     <ItemGroup Condition=" '$(CMakeRuntimeFlavor)' == 'CoreCLR' Or '$(CMakeRuntimeFlavor)' == 'NativeAOT' ">
-      <_RuntimePackFiles Include="$(NativeRuntimeOutputRootDir)$(_RuntimeRedistDirName)\%(AndroidSupportedTargetJitAbi.AndroidRID)\*.o"
-                         AndroidRID="%(AndroidSupportedTargetJitAbi.AndroidRID)"
-                         AndroidRuntime="$(CMakeRuntimeFlavor)"
-                         RuntimePackName="$(_RuntimePackName)" />
-      <_RuntimePackFiles Include="$(NativeRuntimeOutputRootDir)$(_RuntimeRedistDirName)\%(AndroidSupportedTargetJitAbi.AndroidRID)\*.a"
-                         AndroidRID="%(AndroidSupportedTargetJitAbi.AndroidRID)"
+      <_RuntimePackFiles Include="@(_AndroidNdkRedistributable)"
+                         Condition=" '%(_AndroidNdkRedistributable.Kind)' == 'Toolchain' "
+                         AndroidRID="%(_AndroidNdkRedistributable.AndroidRID)"
                          AndroidRuntime="$(CMakeRuntimeFlavor)"
                          RuntimePackName="$(_RuntimePackName)" />
     </ItemGroup>
 
-    <ItemGroup Condition=" '$(CMakeRuntimeFlavor)' == 'NativeAOT' ">
-      <_RuntimePackFiles Include="$(XAPackagesDir)\microsoft.netcore.app.runtime.nativeaot.%(AndroidSupportedTargetJitAbi.AndroidRID)\$(MicrosoftNETCoreAppRefPackageVersion)\runtimes\%(AndroidSupportedTargetJitAbi.AndroidRID)\native\libSystem.Security.Cryptography.Native.Android.a"
-                         Condition="Exists('$(XAPackagesDir)\microsoft.netcore.app.runtime.nativeaot.%(AndroidSupportedTargetJitAbi.AndroidRID)\$(MicrosoftNETCoreAppRefPackageVersion)\runtimes\%(AndroidSupportedTargetJitAbi.AndroidRID)\native\libSystem.Security.Cryptography.Native.Android.a')"
-                         AndroidRID="%(AndroidSupportedTargetJitAbi.AndroidRID)"
-                         AndroidRuntime="$(CMakeRuntimeFlavor)"
-                         RuntimePackName="$(_RuntimePackName)" />
+    <!-- Remove obsolete native libraries from previous builds. -->
+    <ItemGroup Condition=" '$(CMakeRuntimeFlavor)' == 'CoreCLR' Or '$(CMakeRuntimeFlavor)' == 'NativeAOT' ">
+      <_ObsoleteRuntimePackDirectory Include="@(AndroidSupportedTargetJitAbi->'$(MicrosoftAndroidPacksRootDir)Microsoft.Android.Runtime.$(_RuntimePackName).$(AndroidApiLevel).%(AndroidRID)\$(AndroidPackVersion)\runtimes\%(AndroidRID)\native')" />
+      <_ObsoleteRuntimePackFile Include="@(_ObsoleteRuntimePackDirectory->'%(Identity)\libc++_static.a')" />
+      <_ObsoleteRuntimePackFile Include="@(_ObsoleteRuntimePackDirectory->'%(Identity)\libc++abi.a')" />
+      <_ObsoleteRuntimePackFile Include="@(_ObsoleteRuntimePackDirectory->'%(Identity)\libunwind.a')" />
+      <_ObsoleteRuntimePackFile Include="@(_ObsoleteRuntimePackDirectory->'%(Identity)\libxa-java-interop-debug.a')" />
+      <_ObsoleteRuntimePackFile Include="@(_ObsoleteRuntimePackDirectory->'%(Identity)\libxa-java-interop-release.a')" />
+      <_ObsoleteRuntimePackFile Include="@(AndroidSupportedTargetJitAbi->'$(OutputPath)\%(AndroidRID)\libxa-java-interop-debug.a')" />
+      <_ObsoleteRuntimePackFile Include="@(AndroidSupportedTargetJitAbi->'$(OutputPath)\%(AndroidRID)\libxa-java-interop-release.a')" />
     </ItemGroup>
+
+    <ItemGroup Condition=" '$(CMakeRuntimeFlavor)' == 'NativeAOT' ">
+      <_ObsoleteRuntimePackFile Include="%(_ObsoleteRuntimePackDirectory.Identity)\libnaot-android*.so" />
+      <_ObsoleteRuntimePackFile Include="$(OutputPath)\%(AndroidSupportedTargetJitAbi.AndroidRID)\libnaot-android*.so" />
+    </ItemGroup>
+
+    <Delete Files="@(_ObsoleteRuntimePackFile)" />
+    <ItemGroup>
+      <_RuntimePackFiles Remove="@(_ObsoleteRuntimePackFile)" MatchOnMetadata="FullPath" MatchOnMetadataOptions="PathLike" />
+    </ItemGroup>
+
+    <ItemGroup Condition=" '$(CMakeRuntimeFlavor)' == 'CoreCLR' ">
+      <_ObsoleteCoreClrArchive Include="@(_ObsoleteRuntimePackDirectory->'%(Identity)\libnet-android.debug-static-debug.a')" />
+      <_ObsoleteCoreClrArchive Include="@(_ObsoleteRuntimePackDirectory->'%(Identity)\libnet-android.release-static-release.a')" />
+      <_ObsoleteCoreClrArchive Include="@(_ObsoleteRuntimePackDirectory->'%(Identity)\libarchive-dso-stub.so')" />
+      <!-- Keep fixed-host build intermediates and stale application-link archives out of runtime packs. -->
+      <_ObsoleteCoreClrArchive Include="@(_ObsoleteRuntimePackDirectory->'%(Identity)\libruntime-base-debug.a')" />
+      <_ObsoleteCoreClrArchive Include="@(_ObsoleteRuntimePackDirectory->'%(Identity)\libruntime-base-release.a')" />
+      <_ObsoleteCoreClrArchive Include="@(_ObsoleteRuntimePackDirectory->'%(Identity)\libxa-lz4-debug.a')" />
+      <_ObsoleteCoreClrArchive Include="@(_ObsoleteRuntimePackDirectory->'%(Identity)\libxa-lz4-release.a')" />
+      <_ObsoleteCoreClrArchive Include="@(_ObsoleteRuntimePackDirectory->'%(Identity)\libxa-shared-bits-debug.a')" />
+      <_ObsoleteCoreClrArchive Include="@(_ObsoleteRuntimePackDirectory->'%(Identity)\libxa-shared-bits-release.a')" />
+      <_ObsoleteCoreClrArchive Include="@(_ObsoleteRuntimePackDirectory->'%(Identity)\libxamarin-startup-debug.a')" />
+      <_ObsoleteCoreClrArchive Include="@(_ObsoleteRuntimePackDirectory->'%(Identity)\libxamarin-startup-release.a')" />
+      <_ObsoleteCoreClrArchive Include="@(AndroidSupportedTargetJitAbi->'$(OutputPath)\%(AndroidRID)\Debug\libxamarin-app.so')" />
+      <_ObsoleteCoreClrArchive Include="@(AndroidSupportedTargetJitAbi->'$(OutputPath)\%(AndroidRID)\Release\libxamarin-app.so')" />
+      <_RuntimePackFiles Remove="@(_ObsoleteCoreClrArchive)" MatchOnMetadata="Filename;Extension" MatchOnMetadataOptions="CaseInsensitive" />
+    </ItemGroup>
+    <Delete Files="@(_ObsoleteCoreClrArchive)" />
 
     <Copy
         SourceFiles="%(_RuntimePackFiles.Identity)"

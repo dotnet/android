@@ -11,32 +11,15 @@ namespace Android.Runtime {
 			if (obj == null)
 				return IntPtr.Zero;
 
-			Type type = obj.GetType ();
-			if (type == typeof (bool))
-				return new Java.Lang.Boolean ((bool)obj).Handle;
-			else if (type == typeof (sbyte))
-				return new Java.Lang.Byte ((sbyte)obj).Handle;
-			else if (type == typeof (char))
-				return new Java.Lang.Character ((char)obj).Handle;
-			else if (type == typeof (short))
-				return new Java.Lang.Short ((short)obj).Handle;
-			else if (type == typeof (int))
-				return new Java.Lang.Integer ((int)obj).Handle;
-			else if (type == typeof (long))
-				return new Java.Lang.Long ((long)obj).Handle;
-			else if (type == typeof (float))
-				return new Java.Lang.Float ((float)obj).Handle;
-			else if (type == typeof (double))
-				return new Java.Lang.Double ((double)obj).Handle;
-			else if (type == typeof (string))
-				return JNIEnv.NewString ((string)obj);
-			else if (typeof (IJavaObject).IsAssignableFrom (type))
-				return ((IJavaObject)obj).Handle;
-			else
-				return new JavaObject (obj).Handle;
+			return Java.Interop.JavaConvert.ToLocalJniHandle (obj);
 		}
 
-		public static object? GetObject (IntPtr handle, JniHandleOwnership transfer)
+		/// <safety>
+		/// <paramref name="handle"/> must be null or a live JNI object reference from this VM usable on
+		/// the current thread until conversion returns or throws. The requested transfer must be owned by the
+		/// caller; do not race its release or reuse aliases once consumed, including on a later conversion failure.
+		/// </safety>
+		public static unsafe object? GetObject (IntPtr handle, JniHandleOwnership transfer)
 		{
 			Java.Lang.Object? jlo = Java.Lang.Object.GetObject (handle, transfer) as Java.Lang.Object;
 			if (jlo == null)
@@ -58,7 +41,8 @@ namespace Android.Runtime {
 			else if (jlo is Java.Lang.Double)
 				return Dispose ((Java.Lang.Double) jlo, v => v.DoubleValue ());
 			else if (jlo is Java.Lang.String)
-				return Dispose (jlo, v => JNIEnv.GetString (v.Handle, JniHandleOwnership.DoNotTransfer));
+				// SAFETY: v is the typed String peer; Dispose retains its wrapper until GetString returns or throws.
+				return Dispose (jlo, v => unsafe(JNIEnv.GetString (v.Handle, JniHandleOwnership.DoNotTransfer)));
 			else if (jlo is JavaObject)
 				return ((JavaObject) jlo).inst;
 			else
@@ -79,10 +63,14 @@ namespace Android.Runtime {
 
 		public JavaObject (object inst)
 			: base (
-					JNIEnv.StartCreateInstance ("mono/android/runtime/JavaObject", "()V"),
+					// SAFETY: The complete ASCII literal supplies stable, NUL-terminated JNI class-name bytes.
+					unsafe (JNIEnv.AllocObject ("mono/android/runtime/JavaObject"u8)),
 					JniHandleOwnership.TransferLocalRef)
 		{
-			JNIEnv.FinishCreateInstance (Handle, "()V");
+			unsafe {
+				// SAFETY: this peer owns the allocated handle; ()V supplies the zero-argument instance-constructor ABI.
+				JNIEnv.FinishCreateInstance (Handle, "()V"u8);
+			}
 
 			this.inst = inst;
 		}
@@ -112,4 +100,3 @@ namespace Android.Runtime {
 		}
 	}
 }
-

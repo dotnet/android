@@ -22,7 +22,8 @@
         Condition=" $(AndroidSupportedTargetJitAbisForConditionalChecks.Contains (':armeabi-v7a:')) ">
       <ApiLevel>$(AndroidNdkApiLevel_ArmV7a)</ApiLevel>
       <AndroidRID>android-arm</AndroidRID>
-      <SupportMonoVM>True</SupportMonoVM>
+      <ToolchainPrefix>arm-linux-androideabi</ToolchainPrefix>
+      <ClangArch>arm</ClangArch>
       <SupportCoreCLR>True</SupportCoreCLR>
       <SupportNativeAOT>True</SupportNativeAOT>
     </AndroidSupportedTargetJitAbi>
@@ -32,7 +33,8 @@
         Condition=" $(AndroidSupportedTargetJitAbisForConditionalChecks.Contains (':arm64-v8a:')) ">
       <ApiLevel>$(AndroidNdkApiLevel_ArmV8a)</ApiLevel>
       <AndroidRID>android-arm64</AndroidRID>
-      <SupportMonoVM>True</SupportMonoVM>
+      <ToolchainPrefix>aarch64-linux-android</ToolchainPrefix>
+      <ClangArch>aarch64</ClangArch>
       <SupportCoreCLR>True</SupportCoreCLR>
       <SupportNativeAOT>True</SupportNativeAOT>
     </AndroidSupportedTargetJitAbi>
@@ -42,7 +44,8 @@
         Condition=" $(AndroidSupportedTargetJitAbisForConditionalChecks.Contains (':x86:')) ">
       <ApiLevel>$(AndroidNdkApiLevel_X86)</ApiLevel>
       <AndroidRID>android-x86</AndroidRID>
-      <SupportMonoVM>True</SupportMonoVM>
+      <ToolchainPrefix>i686-linux-android</ToolchainPrefix>
+      <ClangArch>i686</ClangArch>
       <SupportCoreCLR>False</SupportCoreCLR>
       <SupportNativeAOT>False</SupportNativeAOT>
     </AndroidSupportedTargetJitAbi>
@@ -52,7 +55,8 @@
         Condition=" $(AndroidSupportedTargetJitAbisForConditionalChecks.Contains (':x86_64:')) ">
       <ApiLevel>$(AndroidNdkApiLevel_X86_64)</ApiLevel>
       <AndroidRID>android-x64</AndroidRID>
-      <SupportMonoVM>True</SupportMonoVM>
+      <ToolchainPrefix>x86_64-linux-android</ToolchainPrefix>
+      <ClangArch>x86_64</ClangArch>
       <SupportCoreCLR>True</SupportCoreCLR>
       <SupportNativeAOT>True</SupportNativeAOT>
     </AndroidSupportedTargetJitAbi>

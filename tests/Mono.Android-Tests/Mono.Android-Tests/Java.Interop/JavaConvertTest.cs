@@ -1,22 +1,25 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
-using System.Reflection;
 
 using Android.App;
 using Android.Content;
 using Android.Runtime;
 
-using NUnit.Framework;
+using Java.Interop;
+
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 using Xamarin.Android.RuntimeTests;
 
 namespace Java.InteropTests
 {
-	[TestFixture]
+	[TestClass]
+	[TestCategory ("JavaConvert")]
 	public class JavaConvertTest
 	{
-		[Test]
+		[TestMethod]
 		public void Conversions ()
 		{
 			var entries = new []{
@@ -30,6 +33,7 @@ namespace Java.InteropTests
 				new {Key = "z",   Value = (object) false },
 				new {Key = "_",   Value = (object) "string" },
 				new {Key = "nil", Value = (object) null },
+#pragma warning disable CA1422 // Boxed primitive constructors are obsolete since API 31 (Byte/Short), API 33 (Double/Float/Integer/Long/Boolean), and API 34 (Character).
 				new {Key = "jlb", Value = (object) new Java.Lang.Byte (10)},
 				new {Key = "jlc", Value = (object) new Java.Lang.Character ('d')},
 				new {Key = "jld", Value = (object) new Java.Lang.Double (12.01)},
@@ -38,6 +42,7 @@ namespace Java.InteropTests
 				new {Key = "jlj", Value = (object) new Java.Lang.Long (15L)},
 				new {Key = "jls", Value = (object) new Java.Lang.Short (16)},
 				new {Key = "jlz", Value = (object) new Java.Lang.Boolean (true)},
+#pragma warning restore CA1422
 				new {Key = "jl_", Value = (object) new Java.Lang.String ("JavaString")},
 				new {Key = "njo", Value = (object) new NonJavaObject ()},
 				new {Key = "jo",  Value = (object) new MyIntent ()},
@@ -106,7 +111,7 @@ namespace Java.InteropTests
 			} while (false);
 		}
 
-		[Test]
+		[TestMethod]
 		public void NullStringMarshalsAsIntPtrZero ()
 		{
 			var list = new JavaList<string> ();
@@ -114,7 +119,21 @@ namespace Java.InteropTests
 			Assert.AreEqual (null, list [0]);
 		}
 
-		[Test]
+		[TestMethod]
+		public void DeleteLocalRefWithDoNotRegister ()
+		{
+			int initialLocalReferenceCount = Java.Interop.Runtime.LocalReferenceCount;
+
+			using (var value = new Java.Lang.String (
+					JNIEnv.NewString ("value"),
+					JniHandleOwnership.TransferLocalRef | JniHandleOwnership.DoNotRegister)) {
+				Assert.AreEqual ("value", value.ToString ());
+			}
+
+			Assert.AreEqual (initialLocalReferenceCount, Java.Interop.Runtime.LocalReferenceCount);
+		}
+
+		[TestMethod]
 		public void MarshalInt23Array ()
 		{
 			using (var values = new JavaList<int[]>(
@@ -128,7 +147,25 @@ namespace Java.InteropTests
 			}
 		}
 
-		[Test]
+		[TestMethod]
+		public void ValueManagerConvertsJavaListToPrimitiveIList ()
+		{
+			using (var values = new Java.Util.ArrayList ())
+#pragma warning disable CA1422 // Boolean(bool) constructor is obsolete since API 33.
+			using (var first = new Java.Lang.Boolean (true))
+			using (var second = new Java.Lang.Boolean (false)) {
+#pragma warning restore CA1422
+				values.Add (first);
+				values.Add (second);
+
+				var reference = values.PeerReference;
+				var converted = JniEnvironment.Runtime.ValueManager.GetValue<IList<bool>> (ref reference, JniObjectReferenceOptions.Copy);
+
+				CollectionAssert.AreEqual (new [] { true, false }, converted.ToArray ());
+			}
+		}
+
+		[TestMethod]
 		public void FromJniHandle_IListNullableInt32 ()
 		{
 			using (var source = new JavaList<int?> ()) {
@@ -151,16 +188,407 @@ namespace Java.InteropTests
 			}
 		}
 
-		[Test]
+		[TestMethod]
+		public void ValueManagerConvertsPrimitiveArrayToIList ()
+		{
+			var reference = new JniObjectReference (JNIEnv.NewArray (new [] { true, false }), JniObjectReferenceType.Local);
+			var converted = JniEnvironment.Runtime.ValueManager.GetValue<IList<bool>> (ref reference, JniObjectReferenceOptions.CopyAndDispose);
+
+			CollectionAssert.AreEqual (new [] { true, false }, converted.ToArray ());
+		}
+
+		[TestMethod]
+		[DataRow (JniObjectReferenceOptions.Copy, true)]
+		[DataRow (JniObjectReferenceOptions.CopyAndDispose, false)]
+		public void ValueManagerRejectsNonListForPrimitiveIListAndHonorsOwnership (
+			JniObjectReferenceOptions options,
+			bool remainsValid)
+		{
+			var reference = new JniObjectReference (JNIEnv.NewString ("not a list"), JniObjectReferenceType.Local);
+			try {
+				Assert.ThrowsExactly<InvalidCastException> (() =>
+					JniEnvironment.Runtime.ValueManager.GetValue<IList<bool>> (ref reference, options));
+				Assert.AreEqual (remainsValid, reference.IsValid);
+			} finally {
+				JniObjectReference.Dispose (ref reference);
+			}
+		}
+
+		[TestMethod]
+		public void ValueManagerRejectsMismatchedPrimitiveArrayAndDisposesReference ()
+		{
+			var reference = new JniObjectReference (JNIEnv.NewArray (new [] { 1, 2 }), JniObjectReferenceType.Local);
+			try {
+				Assert.ThrowsExactly<InvalidCastException> (() =>
+					JniEnvironment.Runtime.ValueManager.GetValue<IList<bool>> (ref reference, JniObjectReferenceOptions.CopyAndDispose));
+				Assert.IsFalse (reference.IsValid);
+			} finally {
+				JniObjectReference.Dispose (ref reference);
+			}
+		}
+
+		[TestMethod]
+		[TestCategory ("NativeAOTTrimmable")]
+		public void FromJniHandle_ValueTypeDictionariesCoverFullPrimitiveProduct ()
+		{
+			AssertValueTypeDictionaryConversion<bool, bool> ();
+			AssertValueTypeDictionaryConversion<bool, byte> ();
+			AssertValueTypeDictionaryConversion<bool, sbyte> ();
+			AssertValueTypeDictionaryConversion<bool, char> ();
+			AssertValueTypeDictionaryConversion<bool, short> ();
+			AssertValueTypeDictionaryConversion<bool, int> ();
+			AssertValueTypeDictionaryConversion<bool, long> ();
+			AssertValueTypeDictionaryConversion<bool, float> ();
+			AssertValueTypeDictionaryConversion<bool, double> ();
+			AssertValueTypeDictionaryConversion<bool, bool?> ();
+			AssertValueTypeDictionaryConversion<bool, byte?> ();
+			AssertValueTypeDictionaryConversion<bool, sbyte?> ();
+			AssertValueTypeDictionaryConversion<bool, char?> ();
+			AssertValueTypeDictionaryConversion<bool, short?> ();
+			AssertValueTypeDictionaryConversion<bool, int?> ();
+			AssertValueTypeDictionaryConversion<bool, long?> ();
+			AssertValueTypeDictionaryConversion<bool, float?> ();
+			AssertValueTypeDictionaryConversion<bool, double?> ();
+
+			AssertValueTypeDictionaryConversion<byte, bool> ();
+			AssertValueTypeDictionaryConversion<byte, byte> ();
+			AssertValueTypeDictionaryConversion<byte, sbyte> ();
+			AssertValueTypeDictionaryConversion<byte, char> ();
+			AssertValueTypeDictionaryConversion<byte, short> ();
+			AssertValueTypeDictionaryConversion<byte, int> ();
+			AssertValueTypeDictionaryConversion<byte, long> ();
+			AssertValueTypeDictionaryConversion<byte, float> ();
+			AssertValueTypeDictionaryConversion<byte, double> ();
+			AssertValueTypeDictionaryConversion<byte, bool?> ();
+			AssertValueTypeDictionaryConversion<byte, byte?> ();
+			AssertValueTypeDictionaryConversion<byte, sbyte?> ();
+			AssertValueTypeDictionaryConversion<byte, char?> ();
+			AssertValueTypeDictionaryConversion<byte, short?> ();
+			AssertValueTypeDictionaryConversion<byte, int?> ();
+			AssertValueTypeDictionaryConversion<byte, long?> ();
+			AssertValueTypeDictionaryConversion<byte, float?> ();
+			AssertValueTypeDictionaryConversion<byte, double?> ();
+
+			AssertValueTypeDictionaryConversion<sbyte, bool> ();
+			AssertValueTypeDictionaryConversion<sbyte, byte> ();
+			AssertValueTypeDictionaryConversion<sbyte, sbyte> ();
+			AssertValueTypeDictionaryConversion<sbyte, char> ();
+			AssertValueTypeDictionaryConversion<sbyte, short> ();
+			AssertValueTypeDictionaryConversion<sbyte, int> ();
+			AssertValueTypeDictionaryConversion<sbyte, long> ();
+			AssertValueTypeDictionaryConversion<sbyte, float> ();
+			AssertValueTypeDictionaryConversion<sbyte, double> ();
+			AssertValueTypeDictionaryConversion<sbyte, bool?> ();
+			AssertValueTypeDictionaryConversion<sbyte, byte?> ();
+			AssertValueTypeDictionaryConversion<sbyte, sbyte?> ();
+			AssertValueTypeDictionaryConversion<sbyte, char?> ();
+			AssertValueTypeDictionaryConversion<sbyte, short?> ();
+			AssertValueTypeDictionaryConversion<sbyte, int?> ();
+			AssertValueTypeDictionaryConversion<sbyte, long?> ();
+			AssertValueTypeDictionaryConversion<sbyte, float?> ();
+			AssertValueTypeDictionaryConversion<sbyte, double?> ();
+
+			AssertValueTypeDictionaryConversion<char, bool> ();
+			AssertValueTypeDictionaryConversion<char, byte> ();
+			AssertValueTypeDictionaryConversion<char, sbyte> ();
+			AssertValueTypeDictionaryConversion<char, char> ();
+			AssertValueTypeDictionaryConversion<char, short> ();
+			AssertValueTypeDictionaryConversion<char, int> ();
+			AssertValueTypeDictionaryConversion<char, long> ();
+			AssertValueTypeDictionaryConversion<char, float> ();
+			AssertValueTypeDictionaryConversion<char, double> ();
+			AssertValueTypeDictionaryConversion<char, bool?> ();
+			AssertValueTypeDictionaryConversion<char, byte?> ();
+			AssertValueTypeDictionaryConversion<char, sbyte?> ();
+			AssertValueTypeDictionaryConversion<char, char?> ();
+			AssertValueTypeDictionaryConversion<char, short?> ();
+			AssertValueTypeDictionaryConversion<char, int?> ();
+			AssertValueTypeDictionaryConversion<char, long?> ();
+			AssertValueTypeDictionaryConversion<char, float?> ();
+			AssertValueTypeDictionaryConversion<char, double?> ();
+
+			AssertValueTypeDictionaryConversion<short, bool> ();
+			AssertValueTypeDictionaryConversion<short, byte> ();
+			AssertValueTypeDictionaryConversion<short, sbyte> ();
+			AssertValueTypeDictionaryConversion<short, char> ();
+			AssertValueTypeDictionaryConversion<short, short> ();
+			AssertValueTypeDictionaryConversion<short, int> ();
+			AssertValueTypeDictionaryConversion<short, long> ();
+			AssertValueTypeDictionaryConversion<short, float> ();
+			AssertValueTypeDictionaryConversion<short, double> ();
+			AssertValueTypeDictionaryConversion<short, bool?> ();
+			AssertValueTypeDictionaryConversion<short, byte?> ();
+			AssertValueTypeDictionaryConversion<short, sbyte?> ();
+			AssertValueTypeDictionaryConversion<short, char?> ();
+			AssertValueTypeDictionaryConversion<short, short?> ();
+			AssertValueTypeDictionaryConversion<short, int?> ();
+			AssertValueTypeDictionaryConversion<short, long?> ();
+			AssertValueTypeDictionaryConversion<short, float?> ();
+			AssertValueTypeDictionaryConversion<short, double?> ();
+
+			AssertValueTypeDictionaryConversion<int, bool> ();
+			AssertValueTypeDictionaryConversion<int, byte> ();
+			AssertValueTypeDictionaryConversion<int, sbyte> ();
+			AssertValueTypeDictionaryConversion<int, char> ();
+			AssertValueTypeDictionaryConversion<int, short> ();
+			AssertValueTypeDictionaryConversion<int, int> ();
+			AssertValueTypeDictionaryConversion<int, long> ();
+			AssertValueTypeDictionaryConversion<int, float> ();
+			AssertValueTypeDictionaryConversion<int, double> ();
+			AssertValueTypeDictionaryConversion<int, bool?> ();
+			AssertValueTypeDictionaryConversion<int, byte?> ();
+			AssertValueTypeDictionaryConversion<int, sbyte?> ();
+			AssertValueTypeDictionaryConversion<int, char?> ();
+			AssertValueTypeDictionaryConversion<int, short?> ();
+			AssertValueTypeDictionaryConversion<int, int?> ();
+			AssertValueTypeDictionaryConversion<int, long?> ();
+			AssertValueTypeDictionaryConversion<int, float?> ();
+			AssertValueTypeDictionaryConversion<int, double?> ();
+
+			AssertValueTypeDictionaryConversion<long, bool> ();
+			AssertValueTypeDictionaryConversion<long, byte> ();
+			AssertValueTypeDictionaryConversion<long, sbyte> ();
+			AssertValueTypeDictionaryConversion<long, char> ();
+			AssertValueTypeDictionaryConversion<long, short> ();
+			AssertValueTypeDictionaryConversion<long, int> ();
+			AssertValueTypeDictionaryConversion<long, long> ();
+			AssertValueTypeDictionaryConversion<long, float> ();
+			AssertValueTypeDictionaryConversion<long, double> ();
+			AssertValueTypeDictionaryConversion<long, bool?> ();
+			AssertValueTypeDictionaryConversion<long, byte?> ();
+			AssertValueTypeDictionaryConversion<long, sbyte?> ();
+			AssertValueTypeDictionaryConversion<long, char?> ();
+			AssertValueTypeDictionaryConversion<long, short?> ();
+			AssertValueTypeDictionaryConversion<long, int?> ();
+			AssertValueTypeDictionaryConversion<long, long?> ();
+			AssertValueTypeDictionaryConversion<long, float?> ();
+			AssertValueTypeDictionaryConversion<long, double?> ();
+
+			AssertValueTypeDictionaryConversion<float, bool> ();
+			AssertValueTypeDictionaryConversion<float, byte> ();
+			AssertValueTypeDictionaryConversion<float, sbyte> ();
+			AssertValueTypeDictionaryConversion<float, char> ();
+			AssertValueTypeDictionaryConversion<float, short> ();
+			AssertValueTypeDictionaryConversion<float, int> ();
+			AssertValueTypeDictionaryConversion<float, long> ();
+			AssertValueTypeDictionaryConversion<float, float> ();
+			AssertValueTypeDictionaryConversion<float, double> ();
+			AssertValueTypeDictionaryConversion<float, bool?> ();
+			AssertValueTypeDictionaryConversion<float, byte?> ();
+			AssertValueTypeDictionaryConversion<float, sbyte?> ();
+			AssertValueTypeDictionaryConversion<float, char?> ();
+			AssertValueTypeDictionaryConversion<float, short?> ();
+			AssertValueTypeDictionaryConversion<float, int?> ();
+			AssertValueTypeDictionaryConversion<float, long?> ();
+			AssertValueTypeDictionaryConversion<float, float?> ();
+			AssertValueTypeDictionaryConversion<float, double?> ();
+
+			AssertValueTypeDictionaryConversion<double, bool> ();
+			AssertValueTypeDictionaryConversion<double, byte> ();
+			AssertValueTypeDictionaryConversion<double, sbyte> ();
+			AssertValueTypeDictionaryConversion<double, char> ();
+			AssertValueTypeDictionaryConversion<double, short> ();
+			AssertValueTypeDictionaryConversion<double, int> ();
+			AssertValueTypeDictionaryConversion<double, long> ();
+			AssertValueTypeDictionaryConversion<double, float> ();
+			AssertValueTypeDictionaryConversion<double, double> ();
+			AssertValueTypeDictionaryConversion<double, bool?> ();
+			AssertValueTypeDictionaryConversion<double, byte?> ();
+			AssertValueTypeDictionaryConversion<double, sbyte?> ();
+			AssertValueTypeDictionaryConversion<double, char?> ();
+			AssertValueTypeDictionaryConversion<double, short?> ();
+			AssertValueTypeDictionaryConversion<double, int?> ();
+			AssertValueTypeDictionaryConversion<double, long?> ();
+			AssertValueTypeDictionaryConversion<double, float?> ();
+			AssertValueTypeDictionaryConversion<double, double?> ();
+
+			AssertValueTypeDictionaryConversion<bool?, bool> ();
+			AssertValueTypeDictionaryConversion<bool?, byte> ();
+			AssertValueTypeDictionaryConversion<bool?, sbyte> ();
+			AssertValueTypeDictionaryConversion<bool?, char> ();
+			AssertValueTypeDictionaryConversion<bool?, short> ();
+			AssertValueTypeDictionaryConversion<bool?, int> ();
+			AssertValueTypeDictionaryConversion<bool?, long> ();
+			AssertValueTypeDictionaryConversion<bool?, float> ();
+			AssertValueTypeDictionaryConversion<bool?, double> ();
+			AssertValueTypeDictionaryConversion<bool?, bool?> ();
+			AssertValueTypeDictionaryConversion<bool?, byte?> ();
+			AssertValueTypeDictionaryConversion<bool?, sbyte?> ();
+			AssertValueTypeDictionaryConversion<bool?, char?> ();
+			AssertValueTypeDictionaryConversion<bool?, short?> ();
+			AssertValueTypeDictionaryConversion<bool?, int?> ();
+			AssertValueTypeDictionaryConversion<bool?, long?> ();
+			AssertValueTypeDictionaryConversion<bool?, float?> ();
+			AssertValueTypeDictionaryConversion<bool?, double?> ();
+
+			AssertValueTypeDictionaryConversion<byte?, bool> ();
+			AssertValueTypeDictionaryConversion<byte?, byte> ();
+			AssertValueTypeDictionaryConversion<byte?, sbyte> ();
+			AssertValueTypeDictionaryConversion<byte?, char> ();
+			AssertValueTypeDictionaryConversion<byte?, short> ();
+			AssertValueTypeDictionaryConversion<byte?, int> ();
+			AssertValueTypeDictionaryConversion<byte?, long> ();
+			AssertValueTypeDictionaryConversion<byte?, float> ();
+			AssertValueTypeDictionaryConversion<byte?, double> ();
+			AssertValueTypeDictionaryConversion<byte?, bool?> ();
+			AssertValueTypeDictionaryConversion<byte?, byte?> ();
+			AssertValueTypeDictionaryConversion<byte?, sbyte?> ();
+			AssertValueTypeDictionaryConversion<byte?, char?> ();
+			AssertValueTypeDictionaryConversion<byte?, short?> ();
+			AssertValueTypeDictionaryConversion<byte?, int?> ();
+			AssertValueTypeDictionaryConversion<byte?, long?> ();
+			AssertValueTypeDictionaryConversion<byte?, float?> ();
+			AssertValueTypeDictionaryConversion<byte?, double?> ();
+
+			AssertValueTypeDictionaryConversion<sbyte?, bool> ();
+			AssertValueTypeDictionaryConversion<sbyte?, byte> ();
+			AssertValueTypeDictionaryConversion<sbyte?, sbyte> ();
+			AssertValueTypeDictionaryConversion<sbyte?, char> ();
+			AssertValueTypeDictionaryConversion<sbyte?, short> ();
+			AssertValueTypeDictionaryConversion<sbyte?, int> ();
+			AssertValueTypeDictionaryConversion<sbyte?, long> ();
+			AssertValueTypeDictionaryConversion<sbyte?, float> ();
+			AssertValueTypeDictionaryConversion<sbyte?, double> ();
+			AssertValueTypeDictionaryConversion<sbyte?, bool?> ();
+			AssertValueTypeDictionaryConversion<sbyte?, byte?> ();
+			AssertValueTypeDictionaryConversion<sbyte?, sbyte?> ();
+			AssertValueTypeDictionaryConversion<sbyte?, char?> ();
+			AssertValueTypeDictionaryConversion<sbyte?, short?> ();
+			AssertValueTypeDictionaryConversion<sbyte?, int?> ();
+			AssertValueTypeDictionaryConversion<sbyte?, long?> ();
+			AssertValueTypeDictionaryConversion<sbyte?, float?> ();
+			AssertValueTypeDictionaryConversion<sbyte?, double?> ();
+
+			AssertValueTypeDictionaryConversion<char?, bool> ();
+			AssertValueTypeDictionaryConversion<char?, byte> ();
+			AssertValueTypeDictionaryConversion<char?, sbyte> ();
+			AssertValueTypeDictionaryConversion<char?, char> ();
+			AssertValueTypeDictionaryConversion<char?, short> ();
+			AssertValueTypeDictionaryConversion<char?, int> ();
+			AssertValueTypeDictionaryConversion<char?, long> ();
+			AssertValueTypeDictionaryConversion<char?, float> ();
+			AssertValueTypeDictionaryConversion<char?, double> ();
+			AssertValueTypeDictionaryConversion<char?, bool?> ();
+			AssertValueTypeDictionaryConversion<char?, byte?> ();
+			AssertValueTypeDictionaryConversion<char?, sbyte?> ();
+			AssertValueTypeDictionaryConversion<char?, char?> ();
+			AssertValueTypeDictionaryConversion<char?, short?> ();
+			AssertValueTypeDictionaryConversion<char?, int?> ();
+			AssertValueTypeDictionaryConversion<char?, long?> ();
+			AssertValueTypeDictionaryConversion<char?, float?> ();
+			AssertValueTypeDictionaryConversion<char?, double?> ();
+
+			AssertValueTypeDictionaryConversion<short?, bool> ();
+			AssertValueTypeDictionaryConversion<short?, byte> ();
+			AssertValueTypeDictionaryConversion<short?, sbyte> ();
+			AssertValueTypeDictionaryConversion<short?, char> ();
+			AssertValueTypeDictionaryConversion<short?, short> ();
+			AssertValueTypeDictionaryConversion<short?, int> ();
+			AssertValueTypeDictionaryConversion<short?, long> ();
+			AssertValueTypeDictionaryConversion<short?, float> ();
+			AssertValueTypeDictionaryConversion<short?, double> ();
+			AssertValueTypeDictionaryConversion<short?, bool?> ();
+			AssertValueTypeDictionaryConversion<short?, byte?> ();
+			AssertValueTypeDictionaryConversion<short?, sbyte?> ();
+			AssertValueTypeDictionaryConversion<short?, char?> ();
+			AssertValueTypeDictionaryConversion<short?, short?> ();
+			AssertValueTypeDictionaryConversion<short?, int?> ();
+			AssertValueTypeDictionaryConversion<short?, long?> ();
+			AssertValueTypeDictionaryConversion<short?, float?> ();
+			AssertValueTypeDictionaryConversion<short?, double?> ();
+
+			AssertValueTypeDictionaryConversion<int?, bool> ();
+			AssertValueTypeDictionaryConversion<int?, byte> ();
+			AssertValueTypeDictionaryConversion<int?, sbyte> ();
+			AssertValueTypeDictionaryConversion<int?, char> ();
+			AssertValueTypeDictionaryConversion<int?, short> ();
+			AssertValueTypeDictionaryConversion<int?, int> ();
+			AssertValueTypeDictionaryConversion<int?, long> ();
+			AssertValueTypeDictionaryConversion<int?, float> ();
+			AssertValueTypeDictionaryConversion<int?, double> ();
+			AssertValueTypeDictionaryConversion<int?, bool?> ();
+			AssertValueTypeDictionaryConversion<int?, byte?> ();
+			AssertValueTypeDictionaryConversion<int?, sbyte?> ();
+			AssertValueTypeDictionaryConversion<int?, char?> ();
+			AssertValueTypeDictionaryConversion<int?, short?> ();
+			AssertValueTypeDictionaryConversion<int?, int?> ();
+			AssertValueTypeDictionaryConversion<int?, long?> ();
+			AssertValueTypeDictionaryConversion<int?, float?> ();
+			AssertValueTypeDictionaryConversion<int?, double?> ();
+
+			AssertValueTypeDictionaryConversion<long?, bool> ();
+			AssertValueTypeDictionaryConversion<long?, byte> ();
+			AssertValueTypeDictionaryConversion<long?, sbyte> ();
+			AssertValueTypeDictionaryConversion<long?, char> ();
+			AssertValueTypeDictionaryConversion<long?, short> ();
+			AssertValueTypeDictionaryConversion<long?, int> ();
+			AssertValueTypeDictionaryConversion<long?, long> ();
+			AssertValueTypeDictionaryConversion<long?, float> ();
+			AssertValueTypeDictionaryConversion<long?, double> ();
+			AssertValueTypeDictionaryConversion<long?, bool?> ();
+			AssertValueTypeDictionaryConversion<long?, byte?> ();
+			AssertValueTypeDictionaryConversion<long?, sbyte?> ();
+			AssertValueTypeDictionaryConversion<long?, char?> ();
+			AssertValueTypeDictionaryConversion<long?, short?> ();
+			AssertValueTypeDictionaryConversion<long?, int?> ();
+			AssertValueTypeDictionaryConversion<long?, long?> ();
+			AssertValueTypeDictionaryConversion<long?, float?> ();
+			AssertValueTypeDictionaryConversion<long?, double?> ();
+
+			AssertValueTypeDictionaryConversion<float?, bool> ();
+			AssertValueTypeDictionaryConversion<float?, byte> ();
+			AssertValueTypeDictionaryConversion<float?, sbyte> ();
+			AssertValueTypeDictionaryConversion<float?, char> ();
+			AssertValueTypeDictionaryConversion<float?, short> ();
+			AssertValueTypeDictionaryConversion<float?, int> ();
+			AssertValueTypeDictionaryConversion<float?, long> ();
+			AssertValueTypeDictionaryConversion<float?, float> ();
+			AssertValueTypeDictionaryConversion<float?, double> ();
+			AssertValueTypeDictionaryConversion<float?, bool?> ();
+			AssertValueTypeDictionaryConversion<float?, byte?> ();
+			AssertValueTypeDictionaryConversion<float?, sbyte?> ();
+			AssertValueTypeDictionaryConversion<float?, char?> ();
+			AssertValueTypeDictionaryConversion<float?, short?> ();
+			AssertValueTypeDictionaryConversion<float?, int?> ();
+			AssertValueTypeDictionaryConversion<float?, long?> ();
+			AssertValueTypeDictionaryConversion<float?, float?> ();
+			AssertValueTypeDictionaryConversion<float?, double?> ();
+
+			AssertValueTypeDictionaryConversion<double?, bool> ();
+			AssertValueTypeDictionaryConversion<double?, byte> ();
+			AssertValueTypeDictionaryConversion<double?, sbyte> ();
+			AssertValueTypeDictionaryConversion<double?, char> ();
+			AssertValueTypeDictionaryConversion<double?, short> ();
+			AssertValueTypeDictionaryConversion<double?, int> ();
+			AssertValueTypeDictionaryConversion<double?, long> ();
+			AssertValueTypeDictionaryConversion<double?, float> ();
+			AssertValueTypeDictionaryConversion<double?, double> ();
+			AssertValueTypeDictionaryConversion<double?, bool?> ();
+			AssertValueTypeDictionaryConversion<double?, byte?> ();
+			AssertValueTypeDictionaryConversion<double?, sbyte?> ();
+			AssertValueTypeDictionaryConversion<double?, char?> ();
+			AssertValueTypeDictionaryConversion<double?, short?> ();
+			AssertValueTypeDictionaryConversion<double?, int?> ();
+			AssertValueTypeDictionaryConversion<double?, long?> ();
+			AssertValueTypeDictionaryConversion<double?, float?> ();
+			AssertValueTypeDictionaryConversion<double?, double?> ();
+		}
+
+		// Keep the source and expected wrapper type open so NativeAOT must root the
+		// JavaDictionary<int?, __Canon> template through ValueTypeFactory's mixed-value exemplar.
+		[TestMethod]
+		[TestCategory ("NativeAOTTrimmable")]
 		public void FromJniHandle_IDictionaryNullableInt32String ()
 		{
-			using (var source = new JavaDictionary<int?, string> ()) {
+			using (var source = new JavaDictionary ()) {
 				source.Add (1, "one");
 				source.Add (null, "null");
 
 				var converted = InvokeJavaConvertFromJniHandle (typeof (IDictionary<int?, string>), source.Handle, JniHandleOwnership.DoNotTransfer);
 				try {
-					Assert.AreEqual (typeof (JavaDictionary<int?, string>), converted.GetType ());
+					var convertedType = converted.GetType ();
+					Assert.AreEqual (typeof (JavaDictionary<,>), convertedType.GetGenericTypeDefinition ());
+					CollectionAssert.AreEqual (new [] { typeof (int?), typeof (string) }, convertedType.GetGenericArguments ());
 
 					var dictionary = (IDictionary<int?, string>) converted;
 					Assert.AreEqual ("one", dictionary [1]);
@@ -171,17 +599,62 @@ namespace Java.InteropTests
 			}
 		}
 
+		// Cover conversion and constructor mapping for a reference key and value-type value.
+		[TestMethod]
+		[TestCategory ("NativeAOTTrimmable")]
+		public void FromJniHandle_IDictionaryStringInt32 ()
+		{
+			using (var source = new JavaDictionary ()) {
+				source.Add ("one", 1);
+				source.Add ("two", 2);
+
+				var converted = InvokeJavaConvertFromJniHandle (typeof (IDictionary<string, int>), source.Handle, JniHandleOwnership.DoNotTransfer);
+				try {
+					var convertedType = converted.GetType ();
+					Assert.AreEqual (typeof (JavaDictionary<,>), convertedType.GetGenericTypeDefinition ());
+					CollectionAssert.AreEqual (new [] { typeof (string), typeof (int) }, convertedType.GetGenericArguments ());
+
+					var dictionary = (IDictionary<string, int>) converted;
+					Assert.AreEqual (1, dictionary ["one"]);
+					Assert.AreEqual (2, dictionary ["two"]);
+				} finally {
+					(converted as IDisposable)?.Dispose ();
+				}
+			}
+		}
+
+		// JavaDictionaryTest independently roots the reference-key int template;
+		// keep the bool? wrapper open to exercise the mixed-key exemplar instead.
+		[TestMethod]
+		[TestCategory ("NativeAOTTrimmable")]
+		public void FromJniHandle_IDictionaryStringNullableBoolean ()
+		{
+			using (var source = new JavaDictionary ()) {
+				source.Add ("present", true);
+				source.Add ("null", null);
+
+				var converted = InvokeJavaConvertFromJniHandle (typeof (IDictionary<string, bool?>), source.Handle, JniHandleOwnership.DoNotTransfer);
+				try {
+					var convertedType = converted.GetType ();
+					Assert.AreEqual (typeof (JavaDictionary<,>), convertedType.GetGenericTypeDefinition ());
+					CollectionAssert.AreEqual (new [] { typeof (string), typeof (bool?) }, convertedType.GetGenericArguments ());
+
+					var dictionary = (IDictionary<string, bool?>) converted;
+					Assert.AreEqual ((bool?) true, dictionary ["present"]);
+					Assert.IsNull (dictionary ["null"]);
+				} finally {
+					(converted as IDisposable)?.Dispose ();
+				}
+			}
+		}
+
 		// The non-generic source and assertions intentionally avoid referencing
 		// JavaDictionary<int, long>, so NativeAOT must root that exact wrapper through
-		// ValueTypeFactory<T>.CreateDictionaryWithKey<TKey>'s generic-virtual dispatch.
-		[Test]
-		[Category ("NativeAOTTrimmable")]
+		// the hand-written value-type dictionary universe.
+		[TestMethod]
+		[TestCategory ("NativeAOTTrimmable")]
 		public void FromJniHandle_IDictionaryInt32Int64 ()
 		{
-			if (!Microsoft.Android.Runtime.RuntimeFeature.TrimmableTypeMap) {
-				Assert.Ignore ("This test validates value/value dictionary rooting on the trimmable typemap path.");
-			}
-
 			using (var source = new JavaDictionary ()) {
 				source.Add (1, 100L);
 				source.Add (2, 200L);
@@ -197,10 +670,46 @@ namespace Java.InteropTests
 			}
 		}
 
+		[TestMethod]
+		[TestCategory ("NativeAOTTrimmable")]
+		public void FromJniHandle_IDictionaryNullableDoubleNullableBoolean ()
+		{
+			using (var source = new JavaDictionary ()) {
+				source.Add (1.5, true);
+				source.Add (null, null);
+
+				var converted = InvokeJavaConvertFromJniHandle (typeof (IDictionary<double?, bool?>), source.Handle, JniHandleOwnership.DoNotTransfer);
+				try {
+					var dictionary = (IDictionary<double?, bool?>) converted;
+					Assert.AreEqual ((bool?) true, dictionary [1.5]);
+					Assert.IsNull (dictionary [null]);
+				} finally {
+					(converted as IDisposable)?.Dispose ();
+				}
+			}
+		}
+
+		[TestMethod]
+		[TestCategory ("NativeAOTTrimmable")]
+		public void FromJniHandle_JavaDictionaryNullableByteInt16 ()
+		{
+			using (var source = new JavaDictionary ()) {
+				source.Add ((byte) 200, (short) -2);
+
+				var converted = InvokeJavaConvertFromJniHandle (typeof (JavaDictionary<byte?, short>), source.Handle, JniHandleOwnership.DoNotTransfer);
+				try {
+					var dictionary = (JavaDictionary<byte?, short>) converted;
+					Assert.AreEqual ((short) -2, dictionary [(byte) 200]);
+				} finally {
+					(converted as IDisposable)?.Dispose ();
+				}
+			}
+		}
+
 		// Regression: byte-element collections must stay supported on the trimmable typemap path
 		// (ValueTypeFactory maps byte alongside sbyte). byte marshals to java.lang.Byte bitwise, so
 		// values above 127 round-trip through the signed Java byte.
-		[Test]
+		[TestMethod]
 		public void FromJniHandle_IListByte ()
 		{
 			using (var source = new JavaList<byte> ()) {
@@ -223,10 +732,14 @@ namespace Java.InteropTests
 
 		// Keep the expected wrapper types open so NativeAOT must construct the closed reference-type
 		// wrappers through SafeJavaCollectionFactory's rooted canonical templates.
-		[TestCase (typeof (IList<string>), typeof (JavaList<>), false)]
-		[TestCase (typeof (ICollection<string>), typeof (JavaCollection<>), false)]
-		[TestCase (typeof (IDictionary<string, string>), typeof (JavaDictionary<,>), true)]
-		public void FromJniHandle_ReferenceArgumentsUseCanonicalTemplate (Type targetType, Type expectedWrapperDefinition, bool dictionary)
+		[TestMethod]
+		[TestCategory ("NativeAOTTrimmable")]
+		[DataRow (typeof (IList<string>), typeof (JavaList<>), false)]
+		[DataRow (typeof (ICollection<string>), typeof (JavaCollection<>), false)]
+		[DataRow (typeof (IDictionary<string, string>), typeof (JavaDictionary<,>), true)]
+		public void FromJniHandle_ReferenceArgumentsUseCanonicalTemplate (
+			[DynamicallyAccessedMembers (DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.NonPublicConstructors)]
+			Type targetType, Type expectedWrapperDefinition, bool dictionary)
 		{
 			Java.Lang.Object source = dictionary ? new JavaDictionary () : new JavaList ();
 			using (source) {
@@ -242,27 +755,35 @@ namespace Java.InteropTests
 			}
 		}
 
-		[TestCase (typeof (IList<DateTime>), false)]
-		[TestCase (typeof (ICollection<DateTime>), false)]
-		[TestCase (typeof (IDictionary<DateTime, string>), true)]
-		[TestCase (typeof (IDictionary<string, DateTime>), true)]
-		[TestCase (typeof (IList<UnsupportedValueType>), false)]
-		[TestCase (typeof (ICollection<UnsupportedValueType>), false)]
-		[TestCase (typeof (IDictionary<UnsupportedValueType, string>), true)]
-		[TestCase (typeof (IDictionary<string, UnsupportedValueType>), true)]
-		[Category ("NativeAOTTrimmable")]
-		public void FromJniHandle_UnsupportedValueTypeUsesUntypedFallback (Type targetType, bool dictionary)
+		[TestMethod]
+		[DataRow (typeof (IList<DateTime>), false)]
+		[DataRow (typeof (ICollection<DateTime>), false)]
+		[DataRow (typeof (IDictionary<DateTime, string>), true)]
+		[DataRow (typeof (IDictionary<string, DateTime>), true)]
+		[DataRow (typeof (IList<UnsupportedValueType>), false)]
+		[DataRow (typeof (ICollection<UnsupportedValueType>), false)]
+		[DataRow (typeof (IDictionary<UnsupportedValueType, string>), true)]
+		[DataRow (typeof (IDictionary<string, UnsupportedValueType>), true)]
+		[TestCategory ("NativeAOTTrimmable")]
+		public void FromJniHandle_UnsupportedValueTypeUsesRuntimeSpecificPath (
+			[DynamicallyAccessedMembers (DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.NonPublicConstructors)]
+			Type targetType, bool dictionary)
 		{
-			if (!Microsoft.Android.Runtime.RuntimeFeature.TrimmableTypeMap) {
-				Assert.Ignore ("This test validates unsupported value-type container fallback on the trimmable typemap path.");
-			}
-
 			Java.Lang.Object source = dictionary ? new JavaDictionary () : new JavaList ();
 			using (source) {
 				var converted = InvokeJavaConvertFromJniHandle (targetType, source.Handle, JniHandleOwnership.DoNotTransfer);
 				try {
-					Assert.AreEqual (dictionary ? typeof (JavaDictionary) : typeof (JavaList), converted.GetType ());
-					Assert.IsFalse (targetType.IsInstanceOfType (converted));
+					if (Microsoft.Android.Runtime.RuntimeFeature.UseTypeMapAttributesForJavaDictionaryValueTypeLookups) {
+						Assert.AreEqual (dictionary ? typeof (JavaDictionary) : typeof (JavaList), converted.GetType ());
+						Assert.IsFalse (targetType.IsInstanceOfType (converted));
+					} else {
+						Assert.IsTrue (targetType.IsInstanceOfType (converted));
+						var targetDefinition = targetType.GetGenericTypeDefinition ();
+						var expectedDefinition = dictionary
+							? typeof (JavaDictionary<,>)
+							: targetDefinition == typeof (ICollection<>) ? typeof (JavaCollection<>) : typeof (JavaList<>);
+						Assert.AreEqual (expectedDefinition, converted.GetType ().GetGenericTypeDefinition ());
+					}
 				} finally {
 					(converted as IDisposable)?.Dispose ();
 				}
@@ -271,6 +792,45 @@ namespace Java.InteropTests
 
 		readonly struct UnsupportedValueType
 		{
+		}
+
+		static void AssertValueTypeDictionaryConversion<
+			[DynamicallyAccessedMembers (DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.NonPublicConstructors)]
+			TKey,
+			[DynamicallyAccessedMembers (DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.NonPublicConstructors)]
+			TValue> ()
+		{
+			using (var source = new JavaDictionary ()) {
+				AssertValueTypeDictionaryConversion<TKey, TValue> (
+					source,
+					typeof (IDictionary<TKey, TValue>));
+				AssertValueTypeDictionaryConversion<TKey, TValue> (
+					source,
+					typeof (JavaDictionary<TKey, TValue>));
+			}
+		}
+
+		static void AssertValueTypeDictionaryConversion<
+			[DynamicallyAccessedMembers (DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.NonPublicConstructors)]
+			TKey,
+			[DynamicallyAccessedMembers (DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.NonPublicConstructors)]
+			TValue> (
+			JavaDictionary source,
+			[DynamicallyAccessedMembers (DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.NonPublicConstructors)]
+			Type targetType)
+		{
+			var converted = InvokeJavaConvertFromJniHandle (targetType, source.Handle, JniHandleOwnership.DoNotTransfer);
+			try {
+				Assert.AreEqual (
+					typeof (JavaDictionary<TKey, TValue>),
+					converted.GetType (),
+					$"Unexpected wrapper for '{targetType}'.");
+				Assert.IsTrue (
+					targetType.IsInstanceOfType (converted),
+					$"Converted wrapper is not assignable to '{targetType}'.");
+			} finally {
+				(converted as IDisposable)?.Dispose ();
+			}
 		}
 
 		static Java.Util.ArrayList CreateList (params int[][] items)
@@ -285,20 +845,12 @@ namespace Java.InteropTests
 			return list;
 		}
 
-		static object InvokeJavaConvertFromJniHandle (Type targetType, IntPtr handle, JniHandleOwnership transfer)
+		static object InvokeJavaConvertFromJniHandle (
+			[DynamicallyAccessedMembers (DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.NonPublicConstructors)]
+			Type targetType, IntPtr handle, JniHandleOwnership transfer)
 		{
-			var javaConvert = typeof (Java.Lang.Object).Assembly.GetType ("Java.Interop.JavaConvert");
-			Assert.IsNotNull (javaConvert);
-
-			var method = javaConvert.GetMethod (
-				"FromJniHandle",
-				BindingFlags.Public | BindingFlags.Static,
-				binder: null,
-				types: new [] { typeof (IntPtr), typeof (JniHandleOwnership), typeof (Type) },
-				modifiers: null);
-			Assert.IsNotNull (method);
-
-			var value = method.Invoke (null, new object [] { handle, transfer, targetType });
+			// SAFETY: Each test retains its source wrapper in a using scope and passes DoNotTransfer.
+			var value = unsafe (JavaConvert.FromJniHandle (handle, transfer, targetType));
 			Assert.IsNotNull (value);
 			return value;
 		}

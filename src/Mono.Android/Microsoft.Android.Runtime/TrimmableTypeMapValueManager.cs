@@ -3,8 +3,8 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
-using System.Reflection;
 using System.Runtime.CompilerServices;
+using System.Threading;
 using Android.Runtime;
 using Java.Interop;
 
@@ -14,11 +14,6 @@ sealed partial class TrimmableTypeMapValueManager : JniRuntime.JniValueManager
 {
 	const DynamicallyAccessedMemberTypes Constructors = DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.NonPublicConstructors;
 	const JniObjectReferenceOptions DoNotRegisterTarget = JniObjectReferenceOptions.CopyAndDoNotRegister & ~JniObjectReferenceOptions.Copy;
-
-	public TrimmableTypeMapValueManager ()
-	{
-		JavaMarshalRegisteredPeers.InitializeIfNeeded ();
-	}
 
 	public override void WaitForGCBridgeProcessing ()
 	{
@@ -42,12 +37,28 @@ sealed partial class TrimmableTypeMapValueManager : JniRuntime.JniValueManager
 
 	public override IJavaPeerable? PeekPeer (JniObjectReference reference)
 	{
+		EnsureNotDisposed ();
 		return JavaMarshalRegisteredPeers.PeekPeer (reference);
 	}
 
 	public override void RemovePeer (IJavaPeerable value)
 	{
 		JavaMarshalRegisteredPeers.RemovePeer (value);
+	}
+
+	public override void DisposePeer (IJavaPeerable value)
+	{
+		if (RuntimeEventSource.PeerLifecycleEventsEnabled && value is not null) {
+			JniObjectReference reference = value.PeerReference;
+			if (reference.IsValid) {
+				RuntimeEventSource.ManagedPeerReleasedJavaPeer (
+					value.GetType ().FullName,
+					JniEnvironment.Types.GetJniTypeNameFromInstance (reference),
+					value.JniIdentityHashCode,
+					RuntimeHelpers.GetHashCode (value));
+			}
+		}
+		base.DisposePeer (value);
 	}
 
 	public override void FinalizePeer (IJavaPeerable value)
@@ -58,11 +69,6 @@ sealed partial class TrimmableTypeMapValueManager : JniRuntime.JniValueManager
 	public override List<JniSurfacedPeerInfo> GetSurfacedPeers ()
 	{
 		return JavaMarshalRegisteredPeers.GetSurfacedPeers ();
-	}
-
-	public override void ActivatePeer (JniObjectReference reference, Type type, ConstructorInfo cinfo, object?[]? argumentValues)
-	{
-		throw new PlatformNotSupportedException ("Activating Java peers through the value manager is not supported when TrimmableTypeMap is enabled.");
 	}
 
 	protected override void ConstructPeerCore (
@@ -100,9 +106,9 @@ sealed partial class TrimmableTypeMapValueManager : JniRuntime.JniValueManager
 
 		peer.SetPeerReference (newRef);
 		peer.SetJniIdentityHashCode (JniEnvironment.References.GetIdentityHashCode (newRef));
-		if (RuntimeFeature.IsInteropEventSourceEnabled (InteropEventSource.PeerLifecycleKeyword)) {
+		if (RuntimeEventSource.PeerLifecycleEventsEnabled) {
 			var javaType = newRef.IsValid ? JniEnvironment.Types.GetJniTypeNameFromInstance (newRef) : null;
-			InteropEventSource.JavaPeerCreated (
+			RuntimeEventSource.JavaPeerCreated (
 				peer.GetType ().FullName,
 				javaType,
 				peer.JniIdentityHashCode,
@@ -127,7 +133,6 @@ sealed partial class TrimmableTypeMapValueManager : JniRuntime.JniValueManager
 	public override IJavaPeerable? CreatePeer (
 		ref JniObjectReference reference,
 		JniObjectReferenceOptions transfer,
-		[DynamicallyAccessedMembers (Constructors)]
 		Type? targetType)
 	{
 		EnsureNotDisposed ();
@@ -140,10 +145,10 @@ sealed partial class TrimmableTypeMapValueManager : JniRuntime.JniValueManager
 			var resolvedTargetType = ResolvePeerType (targetType);
 			var peer = TrimmableTypeMap.Instance.CreateInstance (reference.Handle, resolvedTargetType)
 				?? NotFoundFallback (ref reference, targetType, resolvedTargetType);
-			if (peer != null && RuntimeFeature.IsInteropEventSourceEnabled (InteropEventSource.PeerLifecycleKeyword)) {
+			if (peer != null && RuntimeEventSource.PeerLifecycleEventsEnabled) {
 				var peerReference = peer.PeerReference;
 				var javaType = peerReference.IsValid ? JniEnvironment.Types.GetJniTypeNameFromInstance (peerReference) : null;
-				InteropEventSource.ManagedPeerCreated (
+				RuntimeEventSource.ManagedPeerCreated (
 					peer.GetType ().FullName,
 					javaType,
 					peer.JniIdentityHashCode,
@@ -154,8 +159,7 @@ sealed partial class TrimmableTypeMapValueManager : JniRuntime.JniValueManager
 			JniObjectReference.Dispose (ref reference, transfer);
 		}
 
-		[return: DynamicallyAccessedMembers (Constructors)]
-		static Type? ResolvePeerType ([DynamicallyAccessedMembers (Constructors)] Type? type)
+		static Type? ResolvePeerType (Type? type)
 		{
 			if (type is null) {
 				return null;
@@ -198,7 +202,7 @@ sealed partial class TrimmableTypeMapValueManager : JniRuntime.JniValueManager
 
 			throw new NotSupportedException (
 				$"No generated {nameof (JavaPeerProxy)} was found for Java type '{javaType}' " +
-				$"with targetType '{targetName}' while {nameof (RuntimeFeature.TrimmableTypeMap)} is enabled. " +
+				$"with targetType '{targetName}'. " +
 				$"This indicates a missing trimmable typemap proxy or association and should be fixed in the generator.");
 		}
 
@@ -210,14 +214,19 @@ sealed partial class TrimmableTypeMapValueManager : JniRuntime.JniValueManager
 			var instanceClass = JniEnvironment.Types.GetObjectClass (reference);
 			JniObjectReference targetClass = default;
 			try {
-				targetClass = JniEnvironment.Types.FindClass (targetJniName);
+				string runtimeJniName = RuntimeFeature.JniRemapping
+					? JniRemappingLookup.GetReplacementType (targetJniName) ?? targetJniName
+					: targetJniName;
+				targetClass = JniEnvironment.Types.FindClass (runtimeJniName);
 
 				if (!JniEnvironment.Types.IsAssignableFrom (instanceClass, targetClass)) {
 					// Match the legacy cast diagnostic when assembly logging is enabled.
 					if (Logger.LogAssembly) {
 						var targetSig = JniRuntime.CurrentRuntime.TypeManager.GetTypeSignature (targetType);
-						var message = $"Handle 0x{reference.Handle:x} is of type '{JNIEnv.GetClassNameFromInstance (reference.Handle)}' which is not assignable to '{targetSig.SimpleReference}'";
-						Logger.Log (LogLevel.Debug, "monodroid-assembly", message);
+						// SAFETY: the value manager borrows this live reference throughout the cast check and retains both class references until finally.
+						string? instanceName = unsafe(JNIEnv.GetClassNameFromInstance (reference.Handle));
+						var message = $"Handle 0x{reference.Handle:x} is of type '{instanceName}' which is not assignable to '{targetSig.SimpleReference}'";
+						Logger.Log (LogLevel.Debug, "DOTNET-assembly", message);
 					}
 
 					if (RuntimeFeature.IsAssignableFromCheck) {
@@ -259,16 +268,18 @@ sealed partial class TrimmableTypeMapValueManager : JniRuntime.JniValueManager
 				nameof (targetType));
 		}
 
-		var boxed = PeekBoxedObject (reference);
-		if (boxed != null) {
-			JniObjectReference.Dispose (ref reference, options);
-			return (T) Convert.ChangeType (boxed, targetType ?? typeof (T), CultureInfo.InvariantCulture);
-		}
-
 		targetType ??= typeof (T);
 
 		if (typeof (IJavaPeerable).IsAssignableFrom (targetType)) {
 			return (T?) CreatePeer (ref reference, options, targetType);
+		}
+
+		var boxed = PeekBoxedObject (reference);
+		if (boxed != null) {
+			JniObjectReference.Dispose (ref reference, options);
+			return (T) (targetType.IsInstanceOfType (boxed)
+				? boxed
+				: Convert.ChangeType (boxed, targetType, CultureInfo.InvariantCulture));
 		}
 
 		if (PrimitiveArrayInfo.TryCreateWrapper (ref reference, options, targetType, out var arrayWrapper)) {
@@ -300,7 +311,7 @@ sealed partial class TrimmableTypeMapValueManager : JniRuntime.JniValueManager
 		var boxed = PeekBoxedObject (reference);
 		if (boxed != null) {
 			JniObjectReference.Dispose (ref reference, options);
-			if (targetType != null) {
+			if (targetType != null && !targetType.IsInstanceOfType (boxed)) {
 				return Convert.ChangeType (boxed, targetType, CultureInfo.InvariantCulture);
 			}
 			return boxed;
@@ -333,7 +344,9 @@ sealed partial class TrimmableTypeMapValueManager : JniRuntime.JniValueManager
 
 		targetType ??= typeof (T);
 
-		var existing = PeekValue (reference);
+		var existing = typeof (IJavaPeerable).IsAssignableFrom (targetType)
+			? PeekPeer (reference)
+			: PeekValue (reference);
 		if (existing != null && targetType.IsAssignableFrom (existing.GetType ())) {
 			JniObjectReference.Dispose (ref reference, options);
 			return (T) existing;
@@ -357,7 +370,9 @@ sealed partial class TrimmableTypeMapValueManager : JniRuntime.JniValueManager
 			return null;
 		}
 
-		var existing = PeekValue (reference);
+		var existing = targetType != null && typeof (IJavaPeerable).IsAssignableFrom (targetType)
+			? PeekPeer (reference)
+			: PeekValue (reference);
 		if (existing != null && (targetType == null || targetType.IsAssignableFrom (existing.GetType ()))) {
 			JniObjectReference.Dispose (ref reference, options);
 			return existing;
@@ -381,6 +396,10 @@ sealed partial class TrimmableTypeMapValueManager : JniRuntime.JniValueManager
 			result = proxy.Value;
 			return true;
 		}
+		if (value is global::Android.Runtime.JavaProxyThrowable throwable) {
+			result = throwable.InnerException;
+			return true;
+		}
 
 		return base.TryUnboxPeerObject (value, out result);
 	}
@@ -396,9 +415,12 @@ sealed partial class TrimmableTypeMapValueManager : JniRuntime.JniValueManager
 		}
 
 		if (value is IJavaPeerable peerable) {
-			return peerable.PeerReference.IsValid
-				? peerable.PeerReference.NewLocalRef ()
+			var r = peerable.PeerReference;
+			var local = r.IsValid
+				? r.NewLocalRef ()
 				: new JniObjectReference ();
+			GC.KeepAlive (peerable);
+			return local;
 		}
 
 		if (JavaConvert.TryConvertKnownValueToLocalJniHandle (value, out var handle)) {
@@ -408,7 +430,9 @@ sealed partial class TrimmableTypeMapValueManager : JniRuntime.JniValueManager
 		}
 
 		var proxy = TrimmableJavaProxyObject.GetProxy (value);
-		return proxy.PeerReference.NewLocalRef ();
+		var proxyLocal = proxy.PeerReference.NewLocalRef ();
+		GC.KeepAlive (proxy);
+		return proxyLocal;
 	}
 
 	protected override JniValueMarshaler GetValueMarshalerCore (Type type)
@@ -418,12 +442,11 @@ sealed partial class TrimmableTypeMapValueManager : JniRuntime.JniValueManager
 		=> throw new NotSupportedException ($"{nameof (GetValueMarshalerCore)} should not be called in the trimmable typemap path.");
 
 	// Trimmable proxies use Java identity semantics: equals/hashCode/toString are NOT overridden
-	// and therefore do not delegate to the wrapped .NET object. This matches the trimmable Java
-	// runtime copy of JavaProxyObject and avoids the reflection-based native method registration
-	// that is unsupported in the trimmable typemap path.
+	// and therefore do not delegate to the wrapped .NET object.
 	[Register ("net/dot/jni/internal/TrimmableJavaProxyObject")]
 	private sealed class TrimmableJavaProxyObject : Java.Lang.Object
 	{
+		static readonly Lock CachedValuesLock = new ();
 		static readonly ConditionalWeakTable<object, TrimmableJavaProxyObject> CachedValues = new ();
 
 		private TrimmableJavaProxyObject (object value) => Value = value;
@@ -438,7 +461,7 @@ sealed partial class TrimmableTypeMapValueManager : JniRuntime.JniValueManager
 		{
 			ArgumentNullException.ThrowIfNull (value);
 
-			lock (CachedValues) {
+			lock (CachedValuesLock) {
 				return CachedValues.GetOrAdd (value, static (value) => new TrimmableJavaProxyObject (value));
 			}
 		}

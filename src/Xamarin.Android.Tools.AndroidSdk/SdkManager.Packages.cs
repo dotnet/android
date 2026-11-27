@@ -69,45 +69,22 @@ public partial class SdkManager
 		if (array.Length == 0)
 			throw new ArgumentException ("At least one package must be specified.", nameof (packages));
 
+		foreach (var package in array) {
+			if (package is null || package.Length == 0 || package.Any (c =>
+				!IsAsciiLetterOrDigit (c) && c != '.' && c != '-' && c != '_' && c != ';'))
+				throw new ArgumentException ($"Invalid Android SDK package ID: '{package}'.", nameof (packages));
+		}
+
 		return array;
 	}
 
-	internal static (IReadOnlyList<SdkPackage> Installed, IReadOnlyList<SdkPackage> Available) ParseSdkManagerList (string output)
+	static bool IsAsciiLetterOrDigit (char value)
 	{
-		var installed = new List<SdkPackage> ();
-		var available = new List<SdkPackage> ();
-		List<SdkPackage>? target = null;
-		var parsingUpdates = false;
-
-		foreach (var line in output.Split (new[] { '\n', '\r' }, StringSplitOptions.RemoveEmptyEntries)) {
-			var trimmed = line.Trim ();
-
-			if (trimmed.Contains ("Installed packages:")) { target = installed; parsingUpdates = false; continue; }
-			if (trimmed.Contains ("Available Packages:")) { target = available; parsingUpdates = false; continue; }
-			if (trimmed.Contains ("Available Updates:")) { target = available; parsingUpdates = true; continue; }
-
-			if (target is null || trimmed.StartsWith ("Path", StringComparison.Ordinal) || trimmed.StartsWith ("---", StringComparison.Ordinal))
-				continue;
-
-			var parts = trimmed.Split ('|');
-			if (parsingUpdates && string.Equals (parts [0].Trim (), "ID", StringComparison.Ordinal))
-				continue;
-			var versionIndex = parsingUpdates ? 2 : 1;
-			if (parts.Length <= versionIndex)
-				continue;
-
-			var path = parts[0].Trim ();
-			if (string.IsNullOrEmpty (path))
-				continue;
-
-			target.Add (new SdkPackage (
-				path,
-				Version: parts[versionIndex].Trim (),
-				Description: !parsingUpdates && parts.Length > 2 ? parts[2].Trim () : null,
-				IsInstalled: target == installed
-			));
-		}
-
-		return (installed.AsReadOnly (), available.AsReadOnly ());
+		return value >= '0' && value <= '9' ||
+			value >= 'A' && value <= 'Z' ||
+			value >= 'a' && value <= 'z';
 	}
+
+	internal static (IReadOnlyList<SdkPackage> Installed, IReadOnlyList<SdkPackage> Available) ParseSdkManagerList (string output)
+		=> SdkPackageListParser.Parse (output);
 }

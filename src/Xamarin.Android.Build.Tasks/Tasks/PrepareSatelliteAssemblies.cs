@@ -10,7 +10,8 @@ using Xamarin.Android.Tools;
 
 namespace Xamarin.Android.Tasks;
 
-public class PrepareSatelliteAssemblies : AndroidTask
+[MSBuildMultiThreadableTask]
+public class PrepareSatelliteAssemblies : MultithreadedAndroidTask
 {
 	public override string TaskPrefix => "PSA";
 

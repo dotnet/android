@@ -15,15 +15,21 @@ imports:
   - uses: shared/pat_pool.md
     with:
       environment: copilot-pat-pool
+  - shared/network-allowlist.md
 
 environment: copilot-pat-pool
 permissions:
+  checks: read
   contents: read
   pull-requests: read
+model: gpt-6.1-sol
 engine:
   id: copilot
-  model: claude-opus-4.8
+  # GPT-6.1 Sol requires Copilot CLI 1.0.90 or newer.
+  version: 1.0.102
   env:
+    # /run/user/<uid> does not exist in the AWF sandbox, which breaks .NET named mutexes.
+    XDG_RUNTIME_DIR: ${{ '' }}
     COPILOT_GITHUB_TOKEN: |
       ${{ case(
         needs.pat_pool.outputs.pat_number == '0', secrets.COPILOT_PAT_0,
@@ -40,20 +46,21 @@ engine:
       }}
 max-daily-ai-credits: -1
 max-ai-credits: -1
-network:
-  allowed:
-    - defaults
-    - chrome
-    - dotnet
-    - github
-    - java
-    - "aka.ms"
-    - "dev.azure.com"
-    - "gstatic.com"
-    - "httpbin.org"
-    - "microsoft.com"
-    - "vsassets.io"
+timeout-minutes: 60
 tools:
+  bash:
+    - az *
+    - c++ *
+    - cat
+    - command *
+    - dotnet *
+    - git *
+    - grep
+    - head
+    - jq
+    - sed
+    - tail
+    - wc
   github:
     github-token: ${{ secrets.GITHUB_TOKEN }}
     toolsets: [pull_requests, repos]
@@ -75,7 +82,7 @@ A maintainer commented `/review` on this pull request. Perform a thorough code r
 
 ## Instructions
 
-1. Read the review methodology from `.github/skills/android-reviewer/SKILL.md` — this defines the review workflow, mindset, severity levels, comment format, and which rule files to load based on changed file types.
+1. Read the review methodology from `.github/skills/code-review/SKILL.md` — this defines the review workflow, mindset, severity levels, comment format, and which rule files to load based on changed file types.
 2. Follow the skill's workflow to analyze the pull request:
    - Gather context: read the diff and changed files
    - For each changed file, read the **full source file** to understand surrounding context
@@ -83,7 +90,7 @@ A maintainer commented `/review` on this pull request. Perform a thorough code r
    - Read the PR title and description — treat claims as things to verify
    - Check CI status
    - Analyze the diff against the review rules
-3. Post your findings as inline review comments and a review summary.
+3. Queue all inline findings with `create_pull_request_review_comment` before submitting the review. Then call `submit_pull_request_review` exactly once with `event: "COMMENT"` and the complete review summary in `body`; this single submission publishes both the queued inline comments and the summary. If there are no inline findings, still submit the summary once. Do not submit a separate review for the inline findings or a second review for the summary.
 
 ## Constraints
 
@@ -92,6 +99,8 @@ A maintainer commented `/review` on this pull request. Perform a thorough code r
 - If the same issue appears many times, flag it once listing all affected files.
 - Don't flag what CI catches (compiler errors, linter issues).
 - Avoid false positives — verify concerns given the full file context and project configuration (TargetFramework, references, available APIs).
+- If Azure DevOps is needed, run each `az devops invoke` as a standalone shell call with literal arguments; do not use variable preambles, chaining, pipes, or redirection.
+- Run local Git inspection commands separately; do not chain shell commands or use command substitution. Compare changes with `git diff origin/main...HEAD` when the range is available; otherwise use the GitHub pull request diff.
 - **Always submit the review as a COMMENT event.** Never APPROVE or REQUEST_CHANGES — surface issues in the comment body instead.
 - Prioritize: bugs > safety > performance > missing tests > duplication > consistency > documentation.
 - **Post suggestions as inline comments, not just in the summary.** If a suggestion can't be posted inline, omit it.

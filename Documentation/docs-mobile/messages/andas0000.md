@@ -15,7 +15,7 @@ This message indicates that the Android `apksigner` command line tool used by
 
 Errors reported by `apksigner` and other Android command line tooling are
 outside of .NET for Android's control, so a general error code of
-ANDAS0000 is used reporting the exact message.
+ANDAS0000 is used to report the exact message.
 
 ## Solution
 

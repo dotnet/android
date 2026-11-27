@@ -1,5 +1,4 @@
 using System;
-using System.Reflection;
 
 namespace Java.Interop {
 
@@ -26,11 +25,6 @@ namespace Java.Interop {
 		public Type []?               Throws                  {get; set;}
 		internal string []?           ThrownNames             {get; set;} // msbuild internal use
 
-		internal override Delegate CreateDynamicCallback (MethodInfo method)
-		{
-			return CreateDynamicCallbackCore (method);
-		}
 	}
 }
-
 

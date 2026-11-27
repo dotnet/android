@@ -2,9 +2,9 @@ using System;
 
 namespace Java.Interop {
 
-	[Obsolete ("Use EventHelper")]
+	[Obsolete ("Use EventHelper", error: true)]
 	public static class AndroidEventHelper {
-		
+
 		public static void AddEventHandler<TInterface, TImplementor> (
 				ref WeakReference? implementor,
 				Func<TImplementor> creator,
@@ -40,4 +40,3 @@ namespace Java.Interop {
 		}
 	}
 }
-

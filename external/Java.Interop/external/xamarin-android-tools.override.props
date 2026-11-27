@@ -1,6 +1,0 @@
-<Project>
-  <Import Project="..\Directory.Build.props" />
-  <PropertyGroup>
-    <AndroidToolsDisableMultiTargeting>true</AndroidToolsDisableMultiTargeting>
-  </PropertyGroup>
-</Project>

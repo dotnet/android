@@ -9,7 +9,7 @@ using Android.Runtime;
 using Java.Interop;
 
 namespace Android.Widget {
-	[Obsolete ("Use AdapterView.ItemClickEventArgs instead")]
+	[Obsolete ("Use AdapterView.ItemClickEventArgs instead", error: true)]
 	public class ItemEventArgs : AdapterView.ItemClickEventArgs {
 
 		public ItemEventArgs (Android.Views.View view, int position, long id)
@@ -22,7 +22,7 @@ namespace Android.Widget {
 		{
 		}
 	}
-	
+
 	public abstract partial class AdapterView {	
 		
 		List<EventHandler>? selection_cleared;
@@ -55,12 +55,17 @@ namespace Android.Widget {
 			T
 	> : AdapterView  where T : IAdapter {
 
+		/// <safety>
+		/// A nonzero <paramref name="handle"/> must be a live AdapterView-compatible reference from this VM
+		/// usable on this thread until construction returns or throws. Own the requested reference transfer,
+		/// exclude concurrent release/use of consumed aliases, and use zero only for empty-peer initialization.
+		/// Caller-unsafe enforcement on raw peer constructors is deferred; existing initialization APIs are unchanged.
+		/// </safety>
 		public AdapterView (IntPtr handle, JniHandleOwnership transfer)
 			: base (handle, transfer)
 		{
 		}
 
-		static IntPtr id_ctor_Landroid_content_Context_;
 		[Register (".ctor", "(Landroid/content/Context;)V", "")]
 		public AdapterView (Android.Content.Context context)
 			: base (IntPtr.Zero, JniHandleOwnership.DoNotTransfer)
@@ -68,22 +73,18 @@ namespace Android.Widget {
 			if (Handle != IntPtr.Zero)
 				return;
 
-			if (GetType () == typeof (AdapterView<T>)) {
-				if (id_ctor_Landroid_content_Context_ == IntPtr.Zero)
-					id_ctor_Landroid_content_Context_ = JNIEnv.GetMethodID (class_ref, "<init>", "(Landroid/content/Context;)V");
+			unsafe {
+				// SAFETY: AllocObject supplies this peer's owned handle; FinishCreateInstance invokes
+				// (Landroid/content/Context;)V while GC.KeepAlive retains context and this.
 				SetHandle (
-						JNIEnv.StartCreateInstance (class_ref, id_ctor_Landroid_content_Context_, new JValue (context)),
+						JNIEnv.AllocObject (GetType ()),
 						JniHandleOwnership.TransferLocalRef);
-				JNIEnv.FinishCreateInstance (Handle, class_ref, id_ctor_Landroid_content_Context_, new JValue (context));
-			} else {
-				SetHandle (
-						JNIEnv.StartCreateInstance (GetType (), "(Landroid/content/Context;)V", new JValue (context)),
-						JniHandleOwnership.TransferLocalRef);
-				JNIEnv.FinishCreateInstance (Handle, "(Landroid/content/Context;)V", new JValue (context));
+				JNIEnv.FinishCreateInstance (Handle, "(Landroid/content/Context;)V"u8, new JValue (context));
+				GC.KeepAlive (context);
+				GC.KeepAlive (this);
 			}
 		}
 
-		static IntPtr id_ctor_Landroid_content_Context_Landroid_util_AttributeSet_;
 		[Register (".ctor", "(Landroid/content/Context;Landroid/util/AttributeSet;)V", "")]
 		public AdapterView (Android.Content.Context context, Android.Util.IAttributeSet attrs)
 			: base (IntPtr.Zero, JniHandleOwnership.DoNotTransfer)
@@ -91,22 +92,19 @@ namespace Android.Widget {
 			if (Handle != IntPtr.Zero)
 				return;
 
-			if (GetType () == typeof (AdapterView<T>)) {
-				if (id_ctor_Landroid_content_Context_Landroid_util_AttributeSet_ == IntPtr.Zero)
-					id_ctor_Landroid_content_Context_Landroid_util_AttributeSet_ = JNIEnv.GetMethodID (class_ref, "<init>", "(Landroid/content/Context;Landroid/util/AttributeSet;)V");
+			unsafe {
+				// SAFETY: AllocObject supplies this peer's owned handle; FinishCreateInstance invokes
+				// (Landroid/content/Context;Landroid/util/AttributeSet;)V while GC.KeepAlive retains context, attrs, and this.
 				SetHandle (
-						JNIEnv.StartCreateInstance (class_ref, id_ctor_Landroid_content_Context_Landroid_util_AttributeSet_, new JValue (context), new JValue (attrs)),
+						JNIEnv.AllocObject (GetType ()),
 						JniHandleOwnership.TransferLocalRef);
-				JNIEnv.FinishCreateInstance (Handle, class_ref, id_ctor_Landroid_content_Context_Landroid_util_AttributeSet_, new JValue (context), new JValue (attrs));
-			} else {
-				SetHandle (
-						JNIEnv.StartCreateInstance (GetType (), "(Landroid/content/Context;Landroid/util/AttributeSet;)V", new JValue (context), new JValue (attrs)),
-						JniHandleOwnership.TransferLocalRef);
-				JNIEnv.FinishCreateInstance (Handle, "(Landroid/content/Context;Landroid/util/AttributeSet;)V", new JValue (context), new JValue (attrs));
+				JNIEnv.FinishCreateInstance (Handle, "(Landroid/content/Context;Landroid/util/AttributeSet;)V"u8, new JValue (context), new JValue (attrs));
+				GC.KeepAlive (context);
+				GC.KeepAlive (attrs);
+				GC.KeepAlive (this);
 			}
 		}
 
-		static IntPtr id_ctor_Landroid_content_Context_Landroid_util_AttributeSet_I;
 		[Register (".ctor", "(Landroid/content/Context;Landroid/util/AttributeSet;I)V", "")]
 		public AdapterView (Android.Content.Context context, Android.Util.IAttributeSet attrs, int defStyle)
 			: base (IntPtr.Zero, JniHandleOwnership.DoNotTransfer)
@@ -114,18 +112,16 @@ namespace Android.Widget {
 			if (Handle != IntPtr.Zero)
 				return;
 
-			if (GetType () == typeof (AdapterView<T>)) {
-				if (id_ctor_Landroid_content_Context_Landroid_util_AttributeSet_I == IntPtr.Zero)
-					id_ctor_Landroid_content_Context_Landroid_util_AttributeSet_I = JNIEnv.GetMethodID (class_ref, "<init>", "(Landroid/content/Context;Landroid/util/AttributeSet;I)V");
+			unsafe {
+				// SAFETY: AllocObject supplies this peer's owned handle; FinishCreateInstance invokes
+				// (Landroid/content/Context;Landroid/util/AttributeSet;I)V while GC.KeepAlive retains context, attrs, and this.
 				SetHandle (
-						JNIEnv.StartCreateInstance (class_ref, id_ctor_Landroid_content_Context_Landroid_util_AttributeSet_I, new JValue (context), new JValue (attrs), new JValue (defStyle)),
+						JNIEnv.AllocObject (GetType ()),
 						JniHandleOwnership.TransferLocalRef);
-				JNIEnv.FinishCreateInstance (Handle, class_ref, id_ctor_Landroid_content_Context_Landroid_util_AttributeSet_I, new JValue (context), new JValue (attrs), new JValue (defStyle));
-			} else {
-				SetHandle (
-						JNIEnv.StartCreateInstance (GetType (), "(Landroid/content/Context;Landroid/util/AttributeSet;I)V", new JValue (context), new JValue (attrs), new JValue (defStyle)),
-						JniHandleOwnership.TransferLocalRef);
-				JNIEnv.FinishCreateInstance (Handle, "(Landroid/content/Context;Landroid/util/AttributeSet;I)V", new JValue (context), new JValue (attrs), new JValue (defStyle));
+				JNIEnv.FinishCreateInstance (Handle, "(Landroid/content/Context;Landroid/util/AttributeSet;I)V"u8, new JValue (context), new JValue (attrs), new JValue (defStyle));
+				GC.KeepAlive (context);
+				GC.KeepAlive (attrs);
+				GC.KeepAlive (this);
 			}
 		}
 
@@ -140,4 +136,3 @@ namespace Android.Widget {
 		}
 	}
 }
-

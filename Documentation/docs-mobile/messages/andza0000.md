@@ -15,7 +15,7 @@ This message indicates that the Android `zipalign` command line tool used by
 
 Errors reported by `zipalign` and other Android command line tooling are
 outside of .NET for Android's control, so a general error code of
-ANDZA0000 is used reporting the exact message.
+ANDZA0000 is used to report the exact message.
 
 ## Solution
 

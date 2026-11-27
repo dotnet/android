@@ -1,7 +1,9 @@
 using System;
+using System.ComponentModel;
 
 namespace Java.Interop {
 
+	[EditorBrowsable (EditorBrowsableState.Never)]
 	public static class EventHelper {
 		
 		public static void AddEventHandler<TInterface, TImplementor> (

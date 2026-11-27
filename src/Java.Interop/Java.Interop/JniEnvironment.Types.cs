@@ -1,0 +1,534 @@
+#nullable enable
+
+using System;
+using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
+using System.Collections.Generic;
+using System.Runtime.ExceptionServices;
+using System.Runtime.InteropServices;
+using System.Text;
+
+namespace Java.Interop
+{
+	partial class JniEnvironment {
+		static partial class Types {
+
+			readonly    static  KeyValuePair<string, string>[]  BuiltinMappings = new KeyValuePair<string, string>[] {
+				new KeyValuePair<string, string>("byte",       "B"),
+				new KeyValuePair<string, string>("boolean",    "Z"),
+				new KeyValuePair<string, string>("char",       "C"),
+				new KeyValuePair<string, string>("double",     "D"),
+				new KeyValuePair<string, string>("float",      "F"),
+				new KeyValuePair<string, string>("int",        "I"),
+				new KeyValuePair<string, string>("long",       "J"),
+				new KeyValuePair<string, string>("short",      "S"),
+				new KeyValuePair<string, string>("void",       "V"),
+			};
+
+			static  readonly    JniMethodInfo           Class_getName;
+			static  readonly    JniMethodInfo           Class_forName;
+			static  readonly    JniObjectReference      Class_reference;
+
+			static Types ()
+			{
+				using (var t = new JniType ("java/lang/Class")) {
+					Class_reference = t.PeerReference.NewGlobalRef ();
+					Class_getName   = t.GetInstanceMethod ("getName", "()Ljava/lang/String;");
+					Class_forName   = t.GetStaticMethod ("forName", "(Ljava/lang/String;ZLjava/lang/ClassLoader;)Ljava/lang/Class;");
+				}
+			}
+
+			public static JniObjectReference FindClass (string classname)
+			{
+				return TryFindClass (classname, throwOnError: true);
+			}
+
+			static JniObjectReference TryFindClass (string classname, bool throwOnError)
+			{
+				ArgumentNullException.ThrowIfNull (classname);
+				if (classname.Length == 0)
+					throw new ArgumentException ("'classname' cannot be a zero-length string.", nameof (classname));
+
+				var info    = JniEnvironment.CurrentInfo;
+				// Convert dot-separated names (e.g. "java.lang.Object") to JNI form ("java/lang/Object")
+				// before calling FindClass, because ART's CheckJNI aborts the process on dot-separated names.
+				var jniClassName = classname.Contains ('.') ? classname.Replace ('.', '/') : classname;
+				// SAFETY: info supplies this attached thread's live environment; the helper owns marshaling of the managed class name.
+				var found = unsafe (TryRawFindClass (info.EnvironmentPointer, jniClassName, out var c, out var thrown));
+				if (found) {
+					var r   = new JniObjectReference (c, JniObjectReferenceType.Local);
+					JniEnvironment.LogCreateLocalRef (r);
+					return r;
+				}
+				unsafe {
+					// SAFETY: Clear only the pending lookup exception in this same attached thread's environment before invoking the fallback.
+					RawExceptionClear (info.EnvironmentPointer);
+				}
+				var java = info.ToJavaName (classname);
+				try {
+					if (TryLoadClassWithFallback (info, thrown, java, throwOnError, out var result))
+						return result;
+				} finally {
+					JniObjectReference.Dispose (ref java);
+				}
+				if (!throwOnError)
+					return default;
+
+				throw new InvalidOperationException ($"Could not find Java class '{classname}'.");
+			}
+
+			static bool TryLoadClassWithFallback (JniEnvironmentInfo info, IntPtr thrown, JniObjectReference classNameJavaString, bool throwOnError, out JniObjectReference result)
+			{
+				result = default;
+
+				if (Class_forName.IsValid) {
+					IntPtr c;
+					IntPtr forNameThrown;
+					unsafe {
+						// SAFETY: Three initialized stack slots match Class.forName; references stay live through the call.
+						var __args  = stackalloc JniArgumentValue [3];
+						__args [0]  = new JniArgumentValue (classNameJavaString);
+						__args [1]  = new JniArgumentValue (true);  // initialize the class
+						__args [2]  = new JniArgumentValue (info.Runtime.ClassLoader);
+						c = RawCallStaticObjectMethodA (info.EnvironmentPointer, out forNameThrown, Class_reference.Handle, Class_forName.ID, (IntPtr) __args);
+					}
+					if (forNameThrown == IntPtr.Zero) {
+						// Class.forName() succeeded; discard the FindClass throwable.
+						JniEnvironment.References.RawDeleteLocalRef (info.EnvironmentPointer, thrown);
+						result = new JniObjectReference (c, JniObjectReferenceType.Local);
+						JniEnvironment.LogCreateLocalRef (result);
+						return true;
+					}
+					unsafe {
+						// SAFETY: The fallback's pending exception belongs to info's current JNI thread; no foreign JNIEnv is used.
+						RawExceptionClear (info.EnvironmentPointer);
+					}
+					JniEnvironment.References.RawDeleteLocalRef (info.EnvironmentPointer, forNameThrown);
+				}
+
+				if (!throwOnError) {
+					JniEnvironment.References.RawDeleteLocalRef (info.EnvironmentPointer, thrown);
+					return false;
+				}
+
+				// Both FindClass and Class.forName() failed; materialize a managed exception to throw.
+				var findClassThrown     = new JniObjectReference (thrown, JniObjectReferenceType.Local);
+				LogCreateLocalRef (findClassThrown);
+				Exception? pendingException = info.Runtime.GetExceptionForThrowable (ref findClassThrown, JniObjectReferenceOptions.CopyAndDispose);
+				if (pendingException != null)
+					throw pendingException;
+
+				return false;
+			}
+
+			/// <safety>
+			/// <paramref name="env"/> must remain a live JNIEnv for the calling attached thread.
+			/// The class-name span itself is read within its bounds and converted to owned storage.
+			/// </safety>
+			static unsafe JniObjectReference NewJavaNameFromUtf8 (IntPtr env, ReadOnlySpan<byte> classname)
+			{
+				var terminator = classname.IndexOf ((byte) 0);
+				if (terminator >= 0)
+					classname = classname.Slice (0, terminator);
+
+				// Class names here are binary/JNI names, so `NewStringUTF()` lets the fallback
+				// avoid a managed UTF-16 allocation while still calling `Class.forName()`.
+				Span<byte> javaName = classname.Length + 1 <= 256
+					? stackalloc byte [classname.Length + 1]
+					: new byte [classname.Length + 1];
+
+				classname.Replace (javaName, (byte) '/', (byte) '.');
+				javaName [classname.Length] = 0;
+
+				IntPtr s;
+				unsafe {
+					// SAFETY: Pin the NUL-terminated name through NewStringUTF on this thread's live JNI environment.
+					fixed (byte* pJavaName = javaName)
+						s = (*((JNIEnv**) env))->NewStringUTF (env, (IntPtr) pJavaName);
+				}
+				var e = JniEnvironment.GetExceptionForLastThrowable ();
+				if (e != null)
+					ExceptionDispatchInfo.Capture (e).Throw ();
+
+				var r = new JniObjectReference (s, JniObjectReferenceType.Local);
+				JniEnvironment.LogCreateLocalRef (r);
+				return r;
+			}
+
+			/// <safety>
+			/// <paramref name="env"/> must remain a live JNIEnv for the calling attached thread
+			/// throughout the native lookup and exception query, including failure.
+			/// </safety>
+			static unsafe bool TryRawFindClass (IntPtr env, string classname, out IntPtr klass, out IntPtr thrown)
+			{
+				var _classname_ptr = Marshal.StringToCoTaskMemUTF8 (classname);
+				unsafe {
+					// SAFETY: This helper owns the UTF8 allocation until JNI and exception polling finish; env comes from the calling thread's JniEnvironmentInfo.
+					klass   = JniNativeMethods.FindClass (env, _classname_ptr);
+					thrown  = JniNativeMethods.ExceptionOccurred (env);
+				}
+				unsafe {
+					// SAFETY: Release only this call's CoTaskMemUTF8 allocation after JNI has finished reading it.
+					Marshal.ZeroFreeCoTaskMemUTF8 (_classname_ptr);
+				}
+				if (thrown == IntPtr.Zero) {
+					return true;
+				}
+				return false;
+			}
+
+			/// <safety>
+			/// <paramref name="env"/> must be the current attached thread's live JNI environment.
+			/// </safety>
+			static unsafe void RawExceptionClear (IntPtr env)
+			{
+				unsafe {
+					// SAFETY: env is the current lookup thread's JNI environment; only its pending exception is cleared.
+					JniNativeMethods.ExceptionClear (env);
+				}
+			}
+
+			/// <safety>
+			/// env must belong to the current attached thread and clazz/jmethodID must identify the static
+			/// method being invoked. args must address readable initialized slots matching its descriptor,
+			/// or be zero for no arguments. Keep storage and object references live and unchanged through
+			/// the call and exception capture, including failure. No argument storage is retained.
+			/// </safety>
+			static unsafe IntPtr RawCallStaticObjectMethodA (IntPtr env, out IntPtr thrown, IntPtr clazz, IntPtr jmethodID, IntPtr args)
+			{
+				IntPtr r;
+				unsafe {
+					// SAFETY: The caller supplies a descriptor-matched live argument buffer for this JNI thread.
+					r       = JniNativeMethods.CallStaticObjectMethodA (env, clazz, jmethodID, args);
+					thrown  = JniNativeMethods.ExceptionOccurred (env);
+				}
+				return r;
+			}
+
+			public static bool TryFindClass (string classname, out JniObjectReference instance)
+			{
+				ArgumentNullException.ThrowIfNull (classname);
+				if (classname.Length == 0)
+					throw new ArgumentException ("'classname' cannot be a zero-length string.", nameof (classname));
+
+				instance = TryFindClass (classname, throwOnError: false);
+				return instance.IsValid;
+			}
+
+			public static JniType? GetTypeFromInstance (JniObjectReference instance)
+			{
+				if (!instance.IsValid)
+					return null;
+
+				var lref = JniEnvironment.Types.GetObjectClass (instance);
+				if (lref.IsValid)
+					return new JniType (ref lref, JniObjectReferenceOptions.CopyAndDispose);
+				return null;
+			}
+
+			public static string? GetJniTypeNameFromInstance (JniObjectReference instance)
+			{
+				if (!instance.IsValid)
+					return null;
+
+				var lref = GetObjectClass (instance);
+				try {
+					return GetJniTypeNameFromClass (lref);
+				}
+				finally {
+					JniObjectReference.Dispose (ref lref, JniObjectReferenceOptions.CopyAndDispose);
+				}
+			}
+
+			public static string? GetJniTypeNameFromClass (JniObjectReference type)
+			{
+				if (!type.IsValid)
+					return null;
+
+				// SAFETY: Class_getName was resolved as Class.getName()String; it reads no argument buffer and type remains the lookup's live class reference.
+				var s = unsafe (JniEnvironment.InstanceMethods.CallObjectMethod (type, Class_getName));
+				return JavaClassToJniType (Strings.ToString (ref s, JniObjectReferenceOptions.CopyAndDispose)!);
+			}
+
+			static string JavaClassToJniType (string value)
+			{
+				for (int i = 0; i < BuiltinMappings.Length; ++i) {
+					if (value == BuiltinMappings [i].Key)
+						return BuiltinMappings [i].Value;
+				}
+				return value.Replace ('.', '/');
+			}
+
+			/// <safety>
+			/// The caller must keep the Marshaler delegates in <paramref name="methods"/> strongly
+			/// reachable for as long as JNI can invoke their callbacks, including after a failed
+			/// or partially completed registration. Returning from this call does not end that lifetime.
+			/// Release those roots only after successful unregistration and completion of all
+			/// in-flight callbacks.
+			/// Each delegate's parameter and return types, calling convention, and marshaling
+			/// attributes must match its JNI descriptor, including the leading JNIEnv and
+			/// receiver/class pointers. JNI scalar values must not be interpreted as managed references.
+			/// Do not mutate registration entries while this call reads them. Concurrent native
+			/// invocations must be quiesced before roots are reclaimed; an exception does not
+			/// establish that JNI retained no callbacks.
+			/// </safety>
+			[RequiresDynamicCode ("Native method registration via JniNativeMethodRegistration[] requires dynamic code generation. Use the blittable RegisterNatives(JniObjectReference, ReadOnlySpan<JniNativeMethod>) overload with statically-compiled function pointers for Native AOT compatibility.")]
+			public static unsafe void RegisterNatives (JniObjectReference type, JniNativeMethodRegistration [] methods)
+			{
+				unsafe {
+					// SAFETY: Caller supplies JNI-compatible delegates and keeps them rooted.
+					RegisterNatives (type, methods, methods == null ? 0 : methods.Length);
+				}
+			}
+
+			/// <safety>
+			/// The caller must keep the Marshaler delegates in the first <paramref name="numMethods"/>
+			/// entries of <paramref name="methods"/> strongly reachable for as long as JNI can invoke
+			/// their callbacks, including after a failed or partially completed registration.
+			/// Returning from this call does not end that lifetime. Release those roots only after
+			/// successful unregistration and completion of all in-flight callbacks.
+			/// Each registered delegate's parameter and return types, calling convention, and
+			/// marshaling attributes must match its JNI descriptor, including the leading JNIEnv
+			/// and receiver/class pointers. JNI scalar values must not be interpreted as managed references.
+			/// Do not mutate the selected entries while this call reads them. Quiesce native
+			/// invocations before reclaiming roots; thrown/failed registration may still leave
+			/// native callbacks installed.
+			/// </safety>
+			[RequiresDynamicCode ("Native method registration via JniNativeMethodRegistration[] requires dynamic code generation. Use the blittable RegisterNatives(JniObjectReference, ReadOnlySpan<JniNativeMethod>) overload with statically-compiled function pointers for Native AOT compatibility.")]
+			public static unsafe void RegisterNatives (JniObjectReference type, JniNativeMethodRegistration [] methods, int numMethods)
+			{
+				if ((numMethods < 0) ||
+						(numMethods > (methods?.Length ?? 0))) {
+					throw new ArgumentOutOfRangeException (nameof (numMethods), numMethods,
+							$"`numMethods` must be between 0 and `methods.Length` ({methods?.Length ?? 0})!");
+				}
+#if DEBUG
+				for (int i = 0; methods != null && i < numMethods; ++i) {
+					var m   = methods [i];
+					if (m.Marshaler != null && m.Marshaler.GetType ().GenericTypeArguments.Length != 0) {
+						var method  = m.Marshaler.Method;
+						Debug.WriteLine ($"JNIEnv::RegisterNatives() given a generic delegate type `{m.Marshaler.GetType()}`.  .NET Core doesn't like this.");
+						Debug.WriteLine ($"  Java: {m.Name}{m.Signature}");
+						Debug.WriteLine ($"  Marshaler Type={m.Marshaler.GetType ().FullName} Method={method.DeclaringType?.FullName}.{method.Name}");
+					}
+				}
+#endif  // DEBUG
+
+				if (numMethods == 0 || methods == null) {
+					return;
+				}
+
+				// Marshal the non-blittable JniNativeMethodRegistration[] into blittable JniNativeMethod
+				// values and dispatch to the blittable overload, instead of invoking the JNI
+				// `RegisterNatives` function pointer with a non-blittable managed-array parameter.
+				// The runtime marshalling stub synthesized for such a `delegate* unmanaged<>` call is
+				// miscompiled by crossgen2 under composite ReadyToRun + PGO: the JniNativeMethod `name`
+				// pointers end up referencing the managed `string` objects instead of marshalled UTF-8
+				// data, which corrupts the registered method names. See https://github.com/dotnet/android/issues/11633.
+				const int MaxStackAllocatedNativeMethods = 32;
+				bool useStackAllocatedBuffers = numMethods <= MaxStackAllocatedNativeMethods;
+				Span<JniNativeMethod> natives = useStackAllocatedBuffers
+					? stackalloc JniNativeMethod [numMethods]
+					: new JniNativeMethod [numMethods];
+				Span<IntPtr> unmanagedStrings = useStackAllocatedBuffers
+					? stackalloc IntPtr [numMethods * 2]
+					: new IntPtr [numMethods * 2];
+				unmanagedStrings.Clear ();
+				try {
+					for (int i = 0; i < numMethods; ++i) {
+						var m       = methods [i];
+						if (m.Marshaler == null)
+							throw new ArgumentException ($"JniNativeMethodRegistration[{i}] ({m.Name}{m.Signature}) has a null Marshaler delegate.", nameof (methods));
+						IntPtr name = Marshal.StringToCoTaskMemUTF8 (m.Name);
+						unmanagedStrings [i * 2] = name;
+						IntPtr sig  = Marshal.StringToCoTaskMemUTF8 (m.Signature);
+						unmanagedStrings [i * 2 + 1] = sig;
+						// SAFETY: Descriptor stores tracked addresses; registration owns callback validity.
+						natives [i] = unsafe (new JniNativeMethod ((byte*) name, (byte*) sig, Marshal.GetFunctionPointerForDelegate (m.Marshaler)));
+					}
+					unsafe {
+						// SAFETY: Strings remain allocated until finally; caller guarantees callback ABI and lifetime.
+						RegisterNatives (type, natives);
+					}
+				} finally {
+					unsafe {
+						// SAFETY: Free recorded allocations on paths entering this finally; keep delegates alive through cleanup.
+						for (int i = 0; i < unmanagedStrings.Length; ++i) {
+							if (unmanagedStrings [i] != IntPtr.Zero)
+								Marshal.ZeroFreeCoTaskMemUTF8 (unmanagedStrings [i]);
+						}
+					}
+					GC.KeepAlive (methods);
+				}
+			}
+
+			/// <summary>
+			/// Registers JNI native methods using blittable <see cref="JniNativeMethod"/> structs
+			/// with raw function pointers and UTF-8 name/signature pointers.
+			/// Calls the JNI RegisterNatives function directly without delegate marshaling.
+			/// </summary>
+			/// <safety>
+			/// Each method's name and signature must address readable NUL-terminated UTF-8 memory
+			/// through this call. Each callback must match its JNI descriptor's ABI, including
+			/// the leading JNIEnv and receiver/class pointers. Keep callback storage callable and
+			/// rooted for as long as JNI can invoke it, including after failed or partial registration.
+			/// Prevent new calls to the registered native methods before unregistration. Release
+			/// callback storage only after unregistration succeeds and all callbacks already
+			/// running have finished.
+			/// Keep the descriptor span stable and unmodified through the call. Name/signature
+			/// aliases must not race JNI reads; callback storage has the longer lifetime above,
+			/// even if registration returns an error or throws.
+			/// </safety>
+			public static unsafe void RegisterNatives (JniObjectReference type, ReadOnlySpan<JniNativeMethod> methods)
+			{
+				if (!type.IsValid)
+					throw new ArgumentException ("Handle must be valid.", nameof (type));
+
+				IntPtr env = JniEnvironment.EnvironmentPointer;
+				int r;
+				fixed (JniNativeMethod* methodsPtr = methods) {
+					unsafe {
+						// SAFETY: Runtime supplies JNIEnv; span is pinned; caller guarantees strings and callback ABI/lifetime.
+						var registerNatives = (delegate* unmanaged<IntPtr, IntPtr, JniNativeMethod*, int, int>)
+							(void*) (*((JNIEnv**)env))->RegisterNatives;
+						r = registerNatives (env, type.Handle, methodsPtr, methods.Length);
+					}
+				}
+
+				// Surface (and clear) any pending Java exception raised by JNI::RegisterNatives()
+				// — e.g. NoSuchMethodError — before falling back to the return-code check, matching
+				// the behavior of the prior JniNativeMethodRegistration[] registration path. Leaving a pending
+				// exception in the JNIEnv would make subsequent JNI calls fail or abort.
+				var thrown = JniEnvironment.GetExceptionForLastThrowable ();
+				if (thrown != null)
+					ExceptionDispatchInfo.Capture (thrown).Throw ();
+
+				if (r != 0) {
+					throw new InvalidOperationException ($"Could not register native methods for class '{GetJniTypeNameFromClass (type)}'; JNIEnv::RegisterNatives() returned {r}.");
+				}
+			}
+
+			public static void UnregisterNatives (JniObjectReference type)
+			{
+				int r   = _UnregisterNatives (type);
+
+				if (r != 0) {
+					throw new InvalidOperationException (
+							string.Format ("Could not unregister native methods for class '{0}'; JNIEnv::UnregisterNatives() returned {1}.", GetJniTypeNameFromClass (type), r));
+				}
+			}
+
+			/// <summary>
+			/// Finds a Java class using a null-terminated UTF-8 class name span.
+			/// Use with <c>"java/lang/Object"u8</c> literals to avoid string marshalling overhead.
+			/// </summary>
+			/// <safety>
+			/// The caller must ensure the backing storage remains readable and NUL-terminated
+			/// for the duration of the call. C# UTF-8 literals provide a
+			/// terminator immediately beyond the span length; copies and slices do not carry that guarantee.
+			/// Keep the backing bytes readable and unchanged until completion, including failure;
+			/// another thread must not mutate or reclaim an alias. The wrapper pins managed
+			/// backing storage during the JNI read.
+			/// </safety>
+			public static unsafe JniObjectReference FindClass (ReadOnlySpan<byte> classname)
+			{
+				// SAFETY: The caller guarantees the terminator and byte lifetime; lookup pins the span only for JNI's synchronous read.
+				return unsafe (TryFindClass (classname, throwOnError: true));
+			}
+
+			/// <summary>
+			/// Tries to find a Java class using a null-terminated UTF-8 class name span.
+			/// Returns <c>true</c> if the class was found, <c>false</c> otherwise.
+			/// </summary>
+			/// <safety>
+			/// The caller must ensure the backing storage remains readable and NUL-terminated
+			/// for the duration of the call. C# UTF-8 literals provide a
+			/// terminator immediately beyond the span length; copies and slices do not carry that guarantee.
+			/// Keep the backing bytes readable and unchanged until completion, including failure;
+			/// another thread must not mutate or reclaim an alias. The wrapper pins managed
+			/// backing storage during the JNI read.
+			/// </safety>
+			public static unsafe bool TryFindClass (ReadOnlySpan<byte> classname, out JniObjectReference instance)
+			{
+				// SAFETY: The caller supplies readable terminated bytes through failed or successful lookup; the helper owns JNI pinning.
+				instance = unsafe (TryFindClass (classname, throwOnError: false));
+				return instance.IsValid;
+			}
+
+			/// <safety>
+			/// <paramref name="classname"/> must have readable, unchanged NUL-terminated backing
+			/// storage through lookup and fallback, even when the terminator is beyond its length.
+			/// </safety>
+			static unsafe JniObjectReference TryFindClass (ReadOnlySpan<byte> classname, bool throwOnError)
+			{
+				if (classname.Length == 0)
+					throw new ArgumentException ("'classname' cannot be a zero-length string.", nameof (classname));
+
+				var info = JniEnvironment.CurrentInfo;
+
+				var terminator = classname.IndexOf ((byte) 0);
+				var nameLength = terminator >= 0 ? terminator : classname.Length;
+
+				// Convert dot-separated names (e.g. "java.lang.Object"u8) to JNI form ("java/lang/Object")
+				// before calling FindClass, because ART's CheckJNI aborts the process on dot-separated names.
+				bool hasDots = classname.Slice (0, nameLength).IndexOf ((byte) '.') >= 0;
+				if (!hasDots) {
+					// SAFETY: No copy is made; the caller's termination guarantee applies to the pinned classname storage.
+					return unsafe (TryFindClassFromPtr (info, classname, classname, terminator, throwOnError));
+				}
+
+				Span<byte> jniClassName = nameLength + 1 <= 256
+					? stackalloc byte [nameLength + 1]
+					: new byte [nameLength + 1];
+				for (int i = 0; i < nameLength; ++i)
+					jniClassName [i] = classname [i] == (byte) '.' ? (byte) '/' : classname [i];
+				jniClassName [nameLength] = 0;
+
+				// SAFETY: jniClassName owns its appended NUL; the original caller-owned span remains readable for bounded fallback conversion.
+				return unsafe (TryFindClassFromPtr (info, classname, jniClassName, terminator, throwOnError));
+			}
+
+			/// <safety>
+			/// <paramref name="findClassSpan"/> must have readable NUL-terminated backing storage
+			/// and no concurrently mutating alias. <paramref name="info"/> must describe this JNI thread.
+			/// </safety>
+			static unsafe JniObjectReference TryFindClassFromPtr (JniEnvironmentInfo info, ReadOnlySpan<byte> classname, ReadOnlySpan<byte> findClassSpan, int terminator, bool throwOnError)
+			{
+				IntPtr c;
+				unsafe {
+					// SAFETY: The caller supplies termination; fixed pins the span while this thread's live JNIEnv reads through its NUL.
+					fixed (byte* _classname_ptr = findClassSpan) {
+						c = JniNativeMethods.FindClass (info.EnvironmentPointer, (IntPtr) _classname_ptr);
+					}
+				}
+				// SAFETY: info is the current lookup's attached-thread environment, queried immediately after FindClass before fallback clears its exception.
+				IntPtr thrown = unsafe (JniNativeMethods.ExceptionOccurred (info.EnvironmentPointer));
+				if (thrown == IntPtr.Zero) {
+					var r = new JniObjectReference (c, JniObjectReferenceType.Local);
+					JniEnvironment.LogCreateLocalRef (r);
+					return r;
+				}
+
+				JniObjectReference javaName;
+				unsafe {
+					// SAFETY: Both operations use the same current-thread JNIEnv; NewJavaNameFromUtf8 constructs and pins its own terminated copy for fallback only.
+					RawExceptionClear (info.EnvironmentPointer);
+					javaName = NewJavaNameFromUtf8 (info.EnvironmentPointer, classname);
+				}
+				try {
+					if (TryLoadClassWithFallback (info, thrown, javaName, throwOnError, out var result))
+						return result;
+				} finally {
+					JniObjectReference.Dispose (ref javaName);
+				}
+				if (!throwOnError)
+					return default;
+
+				var errorClassName = terminator >= 0
+					? Encoding.UTF8.GetString (classname.Slice (0, terminator))
+					: Encoding.UTF8.GetString (classname);
+				throw new InvalidOperationException ($"Could not find Java class '{errorClassName}'.");
+			}
+		}
+	}
+}

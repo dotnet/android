@@ -120,38 +120,39 @@ Then update the following files:
       <Level>36</Level>
       <VersionCodeFull>36.1</VersionCodeFull>
       <Id>36.1</Id>
-      <Stable>True</Stable>
+      <Stable>False</Stable>
     </AndroidApiInfo>
     ```
 
     `Include` is the binding framework version (e.g. `v16.1`).  `Level` is the
     integer API level (`Major` of `VersionCodeFull`).  `Id` is the platform ID
     used to locate `android-$(Id)` directories under the Android SDK.  `Stable`
-    should be `True`; every entry currently in the projitems uses `True`,
-    including preview codenames like CANARY.  (Setting it to `False` would
-    exclude the entry from being picked as the default stable framework
-    version by some build-time selection logic.)
+    should be `False` for preview API levels and `True` once the API level is
+    stable.
 
-    TODO: what should be done for the "mid-year" updates, as is the case for API-CANARY?
+    For minor API updates, add a separate entry with the same integer `Level`
+    and the new `VersionCodeFull` and platform `Id`, as in the `36.1` example
+    above and the existing `37.1` entry in `Mono.Android.Apis.projitems`.
 
   - Add a new `<_PlatformPackage>` entry to the platform catalog in
     [`/src/androidsdk/androidsdk.targets`](../../src/androidsdk/androidsdk.targets):
 
     ```xml
-    <_PlatformPackage Include="platform-36.0-CANARY_r03"> <ApiLevel>CANARY</ApiLevel> <Hash>...</Hash></_PlatformPackage>
+    <_PlatformPackage Include="platform-36.0-CANARY_r03"> <ApiLevel>CANARY</ApiLevel> <IsLatestStable>true</IsLatestStable> <Hash>...</Hash></_PlatformPackage>
     ```
 
     The `Include` value is the *base filename* of the package to download; the
     build automatically appends `.zip`. Provide the package's SHA-256 hash in
-    the `<Hash>` metadata.
+    the `%(Hash)` metadata.  `%(IsLatestStable)` should be `true` so that it
+    will be downloaded and installed.
 
-At this point, you can run `Xamarin.Android.sln -t:Prepare` using your usual mechanism.
+At this point, you can run `Microsoft.Android.slnx -t:Prepare` using your usual mechanism.
 However, it might not download the new platform into your local Android SDK.
 
 ### Build Xamarin.Android
 
-Build `Xamarin.Android.sln` using your usual mechanism. This will not use the new platform yet,
-but will build the tools like `param-name-importer` and `class-parse` that will be needed
+Build `Microsoft.Android.slnx` using your usual mechanism. This will not use the new platform yet,
+but will build the tools like `java-source-utils` and `class-parse` that will be needed
 in the next steps.
 
 
@@ -216,18 +217,32 @@ You should search-and-replace instances of your local directory name with `..\..
 
 - Add level to `/build-tools/Xamarin.Android.Tools.BootstrapTasks/Xamarin.Android.Tools.BootstrapTasks/CheckApiCompatibility.cs`
   to enable running ApiCompat against the new level. (ex: `{ "v11.0.99", "v11.0" }`)
-- Add level to `/build-tools/api-xml-adjuster/Makefile`
-  [TODO: remove? `$(API_LEVELS)` was last touched for API-34!]
 - Add level to `DefaultTestSdkPlatforms` in `/build-tools/automation/yaml-templates/variables.yaml`
-- Update `WorkloadManifest.in.json` to generate .NET SDK Workload Packs for the new API level.
-- Update `DotNetInstallAndRunPreviewAPILevels` in `InstallAndRunTests.cs` to try to access a member added in the new API level.
-- If (when) the new API level is unstable, update `Configuration.props` and modify the `*Unstable*` MSBuild properties to match the new unstable API level:
+- Update `WorkloadManifest.in.json` with the `Microsoft.Android.Ref.*` and
+  `Microsoft.Android.Runtime.*.android` packs for the new API level.
+- Update `DotNetInstallAndRunPreviewAPILevels` in `InstallAndRunTests.cs` to
+  retain the existing preview API levels and try to access a member added in
+  each one.
+- Add the API level to `@(AndroidBuildApiLevel)` in `Configuration.props`.
+  This list drives binding builds, targeting-pack selection, pack creation,
+  local workload setup, and workload dependency installation:
+    ```xml
+    <AndroidBuildApiLevel Include="36.1">
+      <PlatformId>CANARY</PlatformId>
+      <FrameworkVersion>v16.1</FrameworkVersion>
+      <Unstable>true</Unstable>
+    </AndroidBuildApiLevel>
+    ```
+- If the new API level is the latest unstable API level, also update the
+  `*LatestUnstable*` pointers. Keep earlier supported preview API levels in
+  `@(AndroidBuildApiLevel)`:
     ```xml
     <AndroidLatestUnstableApiLevel Condition="'$(AndroidLatestUnstableApiLevel)' == ''">36.1</AndroidLatestUnstableApiLevel>
     <AndroidLatestUnstablePlatformId Condition="'$(AndroidLatestUnstablePlatformId)' == ''">CANARY</AndroidLatestUnstablePlatformId>
     <AndroidLatestUnstableFrameworkVersion Condition="'$(AndroidLatestUnstableFrameworkVersion)'==''">v16.1</AndroidLatestUnstableFrameworkVersion>
     ```
-- LOCAL ONLY: Update `Configuration.props` or `Configuration.Override.props` to specify building the new level:
+- LOCAL ONLY: To build only the new level, update `Configuration.Override.props`
+  or pass these properties on the command line:
   - `<AndroidApiLevel>31</AndroidApiLevel>`
   - `<AndroidPlatformId>S</AndroidPlatformId>`
   - `<AndroidFrameworkVersion>v11.0.99</AndroidFrameworkVersion>`
@@ -247,7 +262,7 @@ cp src/Mono.Android/PublicAPI/API-36/* src/Mono.Android/PublicAPI/API-36.1
 
 ### Building the New Mono.Android
 
-- Build `Xamarin.Android.sln` with your usual mechanism, and the new `Mono.Android.dll` should be built
+- Build `Microsoft.Android.slnx` with your usual mechanism, and the new `Mono.Android.dll` should be built
 - Read the note at the bottom of `/src/Mono.Android/metadata` that has a few lines that must be 
   copy/pasted for new API levels
 - Add required metadata fixes in `/src/Mono.Android/metadata` until `Mono.Android.csproj` builds
@@ -459,15 +474,38 @@ BindingStudio crashes.
 
 The left tree view can be updated by saving and reopening the `map.csv` file.
 
-Once `map.csv` has been updated, run the following command:
+Once `map.csv` has been updated, run the following commands:
 
 ```sh
+# BindingStudio currently produces a slightly different CSV format.
+# "Update" to what's currently in git(1) to reduce diff size.
+tr -d '\r' < src/Mono.Android/map.csv > src/Mono.Android/new-map.csv
+sed 's/,$//' < src/Mono.Android/new-map.csv > src/Mono.Android/map.csv
+
+# Check for two-letter package parts.
 git grep '\.[A-Z][a-z]\.' src/Mono.Android/map.csv
 ```
 
 This checks for any namespace-parts which are two letters long, the first letter is
 upper-case, and the second letter is lower-case, e.g. `.Pm.`. These should be all
 upper-case, e.g. `.PM.`.
+
+See the next section on how to rename Java "package parts".
+
+### PascalCase new namespaces
+
+If you have the "Android API Differences Report", e.g.
+[this one for API-37.2 vs. API-37.1](https://developer.android.com/sdk/api_diff/37.2/changes),
+review the **Added Packages** section for *new* packages, and consider PascalCasing them.
+
+PascalCasing namespaces requires changes to three places:
+
+ 1. Add `<ns-replace/>` elements to [`src/Mono.Android/metadata`](../../src/Mono.Android/metadata).
+ 2. [`src/Mono.Android/map.csv`](../../src/Mono.Android/map.csv) will need to be updated to match (1).
+ 2. [`src/Mono.Android/methodmap.csv`](../../src/Mono.Android/methodmap.csv) will need to be updated to match (1).
+
+As BindingStudio doesn't know about `<ns-replace/>`, it is recommended that namespace renames
+be done after enum creation.
 
 ### Extract methods that possibly need enums
 
@@ -547,7 +585,17 @@ the `csv` variable within `MainForm.FindAPILevelMethodsToolStripMenuItem_Click`.
 Once this process is complete, use `Tools` -> `Export Final Method Map`, and create a *new*
 `.csv` file, e.g. `new-methodmap.csv`.
 
-Copy the contents of `new-methodmap.csv` and *append* to `src/Mono.Android/methodmap.csv`.
+Note: `new-methodmap.csv` will likely use JNI syntax for package names, e.g. `android/widget`,
+and contain a leading action column. `methodmap.csv` ***must*** contain only the enumified rows,
+without the action column, and use *Java* syntax for package names, e.g. `android.widget`.
+Use **grep**(1) and **sed**(1) to normalize the output:
+
+```sh
+grep '^E,' src/Mono.Android/new-methodmap.csv |
+    sed 's/^E,//;s,/,.,g;s/\$/./g' > src/Mono.Android/new-methodmap2.csv
+```
+
+Copy the contents of `new-methodmap2.csv` and *append* to `src/Mono.Android/methodmap.csv`.
 
 There may be redundant duplicate entries within `methodmap.csv`.  Use the **uniq**(1)
 Unix app to remove duplicate entries.
@@ -604,15 +652,10 @@ are automatically converted into `Android.Graphics.Color`.
 
 ### Finishing the method map
 
-The official `methodmap.csv` uses a slightly different format than the one used for enumification.
-
-Using BindingStudio:
-
-- Ensure the "new api level method map" CSV file is loaded.
-- Choose `Tools` -> `Export Final Method Map`
-- Choose a temporary file name
-- Open the temporary file, copy the contents to the bottom of the official:
-  - dotnet/android/src/Mono.Android/methodmap.csv
+The normalized `new-methodmap2.csv` output appended in the **Mapping methods** section
+is the final method map. Do not export and append the BindingStudio output again, as
+the raw output uses JNI package and nested-type syntax that `methodmap.csv` does not
+support.
 
 Congrats! Enumification is complete!
 
@@ -637,20 +680,19 @@ Android P introduced no documented XML artifact.
 
 ### Update Android Tooling Versions
 
-[`Xamarin.Android.Common.props.in`](../../src/Xamarin.Android.Build.Tasks/Xamarin.Android.Common.props.in)
-contains multiple MSBuild properties which provide default versions for various Android SDK packages.
-These properties in turn come from properties defined within
+[`Xamarin.Installer.Common.props`](../../src/Xamarin.Installer.Build.Tasks/Xamarin.Installer.Common.props)
+contains MSBuild properties which provide the shipped default versions for various Android SDK packages.
+The bootstrap versions used to build and test the repository are defined separately in
 [`Configuration.props`](../../Configuration.props).
 
   * `$(AndroidSdkBuildToolsVersion)`: Android SDK `build-tools` version.
-    Defaults to `$(XABuildToolsFolder)` within `Configuration.props`.
   * `$(AndroidSdkPlatformToolsVersion)`:  Android SDK `platform-tools` version
-    Defaults to `$(XAPlatformToolsVersion)` within `Configuration.props`.
 
 The major version should generally match the new API level. For Android P this will be 28.x.x . If a version which exactly matches the API Level is not available then the latest version should be used.
 
-A separate PR should be created which bumps the values within `Configuration.props`
-to ensure that all unit tests pass.
+A separate PR should be created which coordinates the shipped defaults in
+`Xamarin.Installer.Common.props` with the bootstrap values in `Configuration.props`
+and ensures that all unit tests pass.
 
 ## Bindings Finalization
 
@@ -664,4 +706,3 @@ Depending on when enumification was done, the 10000 may be stored instead of 31.
 goes stable we must update `map.csv` to the correct value.
 
 Search for `android/os/Build$VERSION_CODES` in `map.csv`.
-

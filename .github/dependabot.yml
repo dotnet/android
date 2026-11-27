@@ -8,7 +8,7 @@ updates:
   # discoverable via text scanning (e.g. msbuild-sdks in global.json).
   #
   # Workaround: target a release branch whose projects build against
-  # the SDK Dependabot has. PRs land on release/10.0.1xx; forward-port
+  # the SDK Dependabot has. PRs land on release/11.0.1xx; forward-port
   # them to `main` by cherry-picking onto a branch off `main` (PowerShell example):
   #
   #     gh pr checkout <dependabot-pr-number>
@@ -22,7 +22,7 @@ updates:
   #         --body  "Forward-port of #<dependabot-pr-number>"
   #
   # Do NOT use GitHub's "Change base branch" button to retarget the
-  # Dependabot PR at `main` -- the branch is based on release/10.0.1xx,
+  # Dependabot PR at `main` -- the branch is based on release/11.0.1xx,
   # so the resulting diff would include every commit on the release
   # branch that isn't on `main`.
   #
@@ -37,25 +37,57 @@ updates:
       - "/build-tools"
       - "/tools"
       - "/src/Xamarin.Android.Build.Tasks"
-    target-branch: "release/10.0.1xx"
+    target-branch: "release/11.0.1xx"
+    schedule:
+      interval: "weekly"
+    # Arcade packages are updated by darc/Maestro dependency flow.
+    ignore:
+      - dependency-name: "Microsoft.DotNet.Arcade.Sdk"
+      - dependency-name: "Microsoft.DotNet.Helix.Sdk"
+  - package-ecosystem: "gradle"
+    directories:
+      - "/tests/Xamarin.Android.Tools.Bytecode-Tests/kotlin-gradle"
+      - "/src/bundletool"
+      - "/src/r8"
+      - "/src/proguard-android"
+      - "/tests/CodeGen-Binding/Xamarin.Android.LibraryProjectZip-LibBinding/java/JavaLib"
+    # Google Maven does not publish per-version release dates for R8, so the
+    # default cooldown filters every available R8 update.
+    cooldown:
+      default-days: 0
     schedule:
       interval: "weekly"
   - package-ecosystem: "gradle"
-    directories:
-      - "/external/Java.Interop/tests/Xamarin.Android.Tools.Bytecode-Tests/kotlin-gradle"
-      - "/external/Java.Interop/tools/java-source-utils"
-      - "/src/r8"
-      - "/src/manifestmerger"
-      - "/src/proguard-android"
-      - "/tests/CodeGen-Binding/Xamarin.Android.LibraryProjectZip-LibBinding/java/JavaLib"
+    directory: "/src/java-source-utils"
+    cooldown:
+      default-days: 0
     schedule:
       interval: "weekly"
+    groups:
+      java-source-utils-dependencies:
+        applies-to: version-updates
+        patterns:
+          - "*"
+      java-source-utils-security-updates:
+        applies-to: security-updates
+        patterns:
+          - "*"
+  - package-ecosystem: "gradle"
+    directory: "/src/manifestmerger"
+    cooldown:
+      default-days: 0
+    schedule:
+      interval: "weekly"
+    groups:
+      manifestmerger-dependencies:
+        applies-to: version-updates
+        patterns:
+          - "*"
+      manifestmerger-security-updates:
+        applies-to: security-updates
+        patterns:
+          - "*"
   - package-ecosystem: "gitsubmodule"
     directory: "/"
     schedule:
       interval: "daily"
-    ignore:
-      - dependency-name: "external/constexpr-xxh3"
-      - dependency-name: "external/lz4"
-      - dependency-name: "external/robin-map"
-      - dependency-name: "external/xxHash"

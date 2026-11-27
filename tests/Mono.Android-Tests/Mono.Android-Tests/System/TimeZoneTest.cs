@@ -4,14 +4,62 @@ using System.Globalization;
 using Android.App;
 using Android.Content;
 
-using NUnit.Framework;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Xamarin.Android.RuntimeTests
 {
-	[TestFixture]
+	[TestClass]
 	public class TimeZoneTest
 	{
-		[Test]
+		[TestMethod]
+		[TestCategory ("NativeAOTTimeZone")]
+		public void NativeAotStartupOffsetMatchesDevice ()
+		{
+			if (!Microsoft.Android.Runtime.RuntimeFeature.IsNativeAotRuntime) {
+				Assert.Inconclusive ("NativeAOT startup initialization regression.");
+			}
+
+			using (var timeZone = Java.Util.TimeZone.Default) {
+				int expectedSeconds = timeZone.GetOffset (Java.Lang.JavaSystem.CurrentTimeMillis ()) / 1000;
+				var startupOffset = AppContext.GetData ("System.TimeZoneInfo.LocalDateTimeOffset");
+				Console.WriteLine ($"Device time zone: {timeZone.ID}; offset seconds: {expectedSeconds}; startup offset: {startupOffset}");
+				Assert.AreEqual (expectedSeconds.ToString (CultureInfo.InvariantCulture), startupOffset,
+					"The startup offset must come from the device, including a zero UTC offset.");
+				Assert.AreEqual (TimeSpan.FromSeconds (expectedSeconds), DateTimeOffset.Now.Offset);
+			}
+		}
+
+		[TestMethod]
+		[TestCategory ("CoreClrStartupTimeZone")]
+		public void CoreClrStartupOffsetUsesDeviceTimeZone ()
+		{
+			if (!Microsoft.Android.Runtime.RuntimeFeature.IsCoreClrRuntime) {
+				Assert.Inconclusive ("The startup offset is supplied by the CoreCLR host.");
+				return;
+			}
+
+			var value = AppContext.GetData ("System.TimeZoneInfo.LocalDateTimeOffset");
+			if (value is not string text || !int.TryParse (text, NumberStyles.Integer, CultureInfo.InvariantCulture, out int startupOffsetSeconds)) {
+				Assert.Fail ($"Invalid CoreCLR startup time-zone offset: {value}");
+				return;
+			}
+
+			using (var timezone = Java.Util.TimeZone.Default) {
+				long now = Java.Lang.JavaSystem.CurrentTimeMillis ();
+				long processStart = now - (global::Android.OS.SystemClock.ElapsedRealtime () - global::Android.OS.Process.StartElapsedRealtime);
+				int deviceOffsetAtStart = timezone.GetOffset (processStart) / 1000;
+				int deviceOffsetNow = timezone.GetOffset (now) / 1000;
+				if (deviceOffsetAtStart != deviceOffsetNow) {
+					Assert.Inconclusive ("The device's time-zone offset changed since process startup.");
+					return;
+				}
+				Assert.AreEqual (deviceOffsetAtStart, startupOffsetSeconds, "The startup offset must come from the Android device.");
+				Assert.AreEqual (TimeSpan.FromSeconds (deviceOffsetNow), DateTimeOffset.Now.Offset);
+			}
+		}
+
+#pragma warning disable CS0618 // Compare legacy TimeZone and Java Date behavior with TimeZoneInfo.
+		[TestMethod]
 		public void TestDaylightSavingsTime ()
 		{
 			using (var jtz = Java.Util.TimeZone.Default) {
@@ -88,8 +136,10 @@ namespace Xamarin.Android.RuntimeTests
 		{
 			return new Java.Util.Date (time.Year - 1900, time.Month - 1, time.Day, time.Hour, time.Minute, time.Second);
 		}
+#pragma warning restore CS0618
 
-		[Test]
+#pragma warning disable CS0618 // Regression coverage for legacy daylight-saving transition calculations.
+		[TestMethod]
 		public void Transitions ()
 		{
 			var hasDst  = TimeZoneInfo.Local.SupportsDaylightSavingTime;
@@ -140,57 +190,61 @@ namespace Xamarin.Android.RuntimeTests
 				}
 			}
 		}
+#pragma warning restore CS0618
 
 		// https://bugzilla.xamarin.com/show_bug.cgi?id=22955
-		[Test]
+		[TestMethod]
 		public void DateTimeConversions_ShouldNotThrow ()
 		{
-			Assert.DoesNotThrow (() => {
+			global::Xamarin.Android.UnitTests.AndroidTestAssert.DoesNotThrow (() => {
 				DateTime baseTime = new DateTime (2014, 9, 11, 0, 0, 0, 0);
 				DateTime epochTime = new DateTime (1970, 1, 1, 0, 0, 0, 0);
 				TimeSpan span = baseTime.ToLocalTime () - epochTime.ToLocalTime ();
-				Assert.IsNotNull (span);
 			}, "Regression test for #22955 failed.");
 		}
 
-		static string[] TimeStrings = { @"1969-12-31 18:59:59.999", @"1942-8-25 6:32:52",
-			@"2039-02-08T14:42:52.510+06:00", @"2044-08-13T21:07:12.510+02:00", @"2089-11-25T01:07:37-04:00" };
+		public static readonly object [][] TimeStrings = {
+			["1969-12-31 18:59:59.999"], ["1942-8-25 6:32:52"],
+			["2039-02-08T14:42:52.510+06:00"], ["2044-08-13T21:07:12.510+02:00"], ["2089-11-25T01:07:37-04:00"]
+		};
 		// https://bugzilla.xamarin.com/show_bug.cgi?id=22955#c2
 		// https://bugzilla.xamarin.com/show_bug.cgi?id=22955#c30
-		[Test, TestCaseSource (nameof (TimeStrings))]
+		[TestMethod, DynamicData (nameof (TimeStrings))]
 		public void DateTimeConversions_ShouldNotThrow2 (string timeString)
 		{
-			Assert.DoesNotThrow (() => {
+			global::Xamarin.Android.UnitTests.AndroidTestAssert.DoesNotThrow (() => {
+#pragma warning disable CS0618 // Regression coverage for TimeZone.GetUtcOffset on historical dates.
 				var tz = TimeZone.CurrentTimeZone.GetUtcOffset (Convert.ToDateTime (timeString));
-				Assert.IsNotNull (tz);
+#pragma warning restore CS0618
 			}, "Regression test for #22955 c2 failed.");
 		}
 
-		static int[] Years = { 1962, 1970, 1992, 2014, 2020, 2038, 2062 };
+		public static readonly object [][] Years = { [1962], [1970], [1992], [2014], [2020], [2038], [2062] };
 		// https://bugzilla.xamarin.com/show_bug.cgi?id=22955#c17
 		// https://bugzilla.xamarin.com/show_bug.cgi?id=22955#c30
-		[Test, TestCaseSource (nameof (Years))]
+		[TestMethod, DynamicData (nameof (Years))]
 		public void DaylightChangesEndMinusStart_ShouldNotThrow (int year)
 		{
-			Assert.DoesNotThrow (() => {
+			global::Xamarin.Android.UnitTests.AndroidTestAssert.DoesNotThrow (() => {
+#pragma warning disable CS0618 // Regression coverage for TimeZone.GetDaylightChanges across years.
 				var dst = TimeZone.CurrentTimeZone.GetDaylightChanges (year);
+#pragma warning restore CS0618
 				Assert.IsNotNull (dst);
 			}, "Regression test for #22955 c17 failed.");
 		}
 
 		// https://bugzilla.xamarin.com/show_bug.cgi?id=22955#c35
-		[Test]
+		[TestMethod]
 		public void DateTimeConversions_ShouldNotThrow3 ()
 		{
-			Assert.DoesNotThrow (() => {
+			global::Xamarin.Android.UnitTests.AndroidTestAssert.DoesNotThrow (() => {
 				var dt = DateTime.MinValue;
 				var dt1 = dt.ToLocalTime ();
-				Assert.IsNotNull (dt1);
 			}, "Regression test for #22955 c35 failed.");
 		}
 
 		// https://bugzilla.xamarin.com/show_bug.cgi?id=23405#c23
-		[Test]
+		[TestMethod]
 		public void DifferentDateTimeInit_ShouldHaveSameValue ()
 		{
 			var utcNow = DateTime.UtcNow;

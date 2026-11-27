@@ -1,10 +1,3 @@
-# Needed modules
-
-include(CheckIncludeFile)
-include(CheckCXXSymbolExists)
-
-set(BUILD_STATIC_LIBRARY ON)
-
 if(DEBUG_BUILD)
   # Convince NDK to really optimize our Debug builds. Without this, NDK's cmake toolchain definition
   # will force a -O0 on us and our "debug" build is not really for debugging of our native code but
@@ -14,31 +7,20 @@ if(DEBUG_BUILD)
   set(CMAKE_CXX_FLAGS_DEBUG ${XA_COMPILER_FLAGS_DEBUG})
 endif()
 
-# Library directories
-set(XA_LIBRARY_OUTPUT_DIRECTORY "${XA_LIB_TOP_DIR}/lib/${ANDROID_RID}")
-set(XA_LIBRARY_STUBS_OUTPUT_DIRECTORY "${XA_LIB_TOP_DIR}/libstubs/${ANDROID_RID}")
-
-# Header checks
-
 # Sources
 string(TOLOWER ${CMAKE_BUILD_TYPE} XAMARIN_NET_ANDROID_SUFFIX)
-set(XAMARIN_NET_ANDROID_LIB "net-android${CHECKED_BUILD_INFIX}.${XAMARIN_NET_ANDROID_SUFFIX}")
-set(XAMARIN_NET_ANDROID_STATIC_LIB "${XAMARIN_NET_ANDROID_LIB}-static")
+set(XAMARIN_NET_ANDROID_LIB "net-android.${XAMARIN_NET_ANDROID_SUFFIX}")
 
 set(XAMARIN_MONODROID_SOURCES
   assembly-store.cc
-  bridge-processing.cc
-  gc-bridge.cc
   host.cc
+  coreclr-bootstrap.cc
   host-jni.cc
   host-shared.cc
-  host-util.cc
-  internal-pinvokes-clr.cc
-  internal-pinvokes-shared.cc
-  os-bridge.cc
+  gc-bridge.cc
   runtime-environment.cc
   runtime-util.cc
-  typemap.cc
+  ../runtime-base/binary-blob-loader.cc
 )
 
 if(DEBUG_BUILD)
@@ -47,32 +29,12 @@ if(DEBUG_BUILD)
   )
 endif()
 
-list(APPEND LOCAL_CLANG_CHECK_SOURCES
-  ${XAMARIN_MONODROID_SOURCES}
-)
-
-add_clang_check_sources("${LOCAL_CLANG_CHECK_SOURCES}")
-
 # Build
 add_library(
   ${XAMARIN_NET_ANDROID_LIB}
   SHARED ${XAMARIN_MONODROID_SOURCES}
 )
 strip_unneeded_elf_sections(${XAMARIN_NET_ANDROID_LIB})
-
-if(BUILD_STATIC_LIBRARY)
-  add_library(
-    ${XAMARIN_NET_ANDROID_STATIC_LIB}
-    STATIC
-    ${XAMARIN_MONODROID_SOURCES}
-  )
-  set_static_library_suffix(${XAMARIN_NET_ANDROID_STATIC_LIB})
-  target_compile_definitions(
-    ${XAMARIN_NET_ANDROID_STATIC_LIB}
-    PRIVATE
-    DYNAMIC_RUNTIME_LINKING
-  )
-endif()
 
 macro(lib_target_options TARGET_NAME)
   target_compile_definitions(
@@ -99,14 +61,6 @@ macro(lib_target_options TARGET_NAME)
     )
   endif()
 
-  if (ENABLE_TIMING)
-    target_compile_definitions(
-      ${TARGET_NAME}
-      PRIVATE
-      MONODROID_TIMING
-    )
-  endif()
-
   target_compile_options(
     ${TARGET_NAME}
     PRIVATE
@@ -125,9 +79,7 @@ macro(lib_target_options TARGET_NAME)
     SYSTEM PRIVATE
     ${SYSROOT_CXX_INCLUDE_DIR}
     ${RUNTIME_INCLUDE_DIR}
-    ${TEMP_MONO_RUNTIME_INCLUDE_DIR}
     ${NATIVE_TRACING_INCLUDE_DIRS}
-    ${LIBUNWIND_INCLUDE_DIRS}
   )
 
   target_link_directories(
@@ -146,10 +98,8 @@ macro(lib_target_options TARGET_NAME)
 
   target_link_libraries(
     ${TARGET_NAME}
-    xa::xamarin-app
     ${SHARED_LIB_NAME}
     xa::runtime-base
-    xa::java-interop
     xa::pinvoke-override-precompiled
     -lSystem.IO.Compression.Native
     -landroid
@@ -167,9 +117,3 @@ target_link_options(${XAMARIN_NET_ANDROID_LIB}
   -Wl,--version-script,${CMAKE_SOURCE_DIR}/clr/libnet-android.map.txt
   -Wl,--no-undefined-version
 )
-
-if(BUILD_STATIC_LIBRARY)
-  lib_target_options(${XAMARIN_NET_ANDROID_STATIC_LIB})
-  xa_add_compile_definitions(${XAMARIN_NET_ANDROID_STATIC_LIB})
-  xa_add_include_directories(${XAMARIN_NET_ANDROID_STATIC_LIB})
-endif()

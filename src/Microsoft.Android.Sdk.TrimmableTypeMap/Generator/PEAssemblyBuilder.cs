@@ -34,6 +34,10 @@ sealed class PEAssemblyBuilder
 	readonly BlobBuilder _codeBlob = new BlobBuilder (256);
 	readonly BlobBuilder _attrBlob = new BlobBuilder (64);
 
+	MemberReferenceHandle _debuggerDisableUserUnhandledExceptionsCtorRef;
+	BlobHandle _debuggerDisableUserUnhandledExceptionsBlob;
+	MemberReferenceHandle _assemblyMetadataAttributeCtorRef;
+
 	// Holds raw byte data for fields with FieldAttributes.HasFieldRVA (e.g., UTF-8 string literals).
 	// Passed to ManagedPEBuilder as the mappedFieldData section.
 	readonly BlobBuilder _mappedFieldData = new BlobBuilder ();
@@ -42,9 +46,10 @@ sealed class PEAssemblyBuilder
 	// Avoids creating duplicate __utf8_N types when multiple fields share the same size.
 	readonly Dictionary<int, TypeDefinitionHandle> _sizedTypeCache = new ();
 
-	// Deduplication cache for UTF-8 string RVA fields. Strings like "()V" that repeat across
-	// many proxy types are stored once and shared via the same FieldDefinitionHandle.
-	readonly Dictionary<string, FieldDefinitionHandle> _utf8FieldCache = new (StringComparer.Ordinal);
+	// JNI signatures are owner-independent and can safely share one RVA field. JNI method names
+	// are owner-specific after R8 rewriting, so each registration receives its own field.
+	readonly Dictionary<string, FieldDefinitionHandle> _sharedUtf8FieldCache = new (StringComparer.Ordinal);
+	readonly Dictionary<string, Queue<FieldDefinitionHandle>> _uniqueUtf8FieldCache = new (StringComparer.Ordinal);
 	TypeDefinitionHandle _privateImplDetailsType;
 	int _utf8FieldCounter;
 
@@ -98,12 +103,50 @@ sealed class PEAssemblyBuilder
 			default,
 			MetadataTokens.FieldDefinitionHandle (1),
 			MetadataTokens.MethodDefinitionHandle (1));
+
+		// Generated typemaps are reflection-free; mark them like the _Microsoft.Android.TypeMaps reference assembly.
+		EmitAssemblyMetadataAttribute ("IsTrimmable", "True");
+		EmitAssemblyMetadataAttribute ("IsAotCompatible", "True");
+	}
+
+	void EmitAssemblyMetadataAttribute (string key, string value)
+	{
+		if (_assemblyMetadataAttributeCtorRef.IsNil) {
+			var attributeType = Metadata.AddTypeReference (SystemRuntimeRef,
+				Metadata.GetOrAddString ("System.Reflection"),
+				Metadata.GetOrAddString ("AssemblyMetadataAttribute"));
+			_assemblyMetadataAttributeCtorRef = AddMemberRef (attributeType, ".ctor",
+				sig => sig.MethodSignature (isInstanceMethod: true).Parameters (2,
+					rt => rt.Void (),
+					p => {
+						p.AddParameter ().Type ().String ();
+						p.AddParameter ().Type ().String ();
+					}));
+		}
+		Metadata.AddCustomAttribute (EntityHandle.AssemblyDefinition, _assemblyMetadataAttributeCtorRef,
+			BuildAttributeBlob (key, value));
 	}
 
 	/// <summary>
 	/// Serialises the metadata + IL into a PE DLL and writes it to the given <paramref name="stream"/>.
 	/// </summary>
 	public void WritePE (Stream stream)
+	{
+		var peBlob = SerializePE ();
+		if (stream is MemoryStream memoryStream && memoryStream.Length == 0 && memoryStream.Capacity < peBlob.Count) {
+			memoryStream.Capacity = peBlob.Count;
+		}
+		peBlob.WriteContentTo (stream);
+	}
+
+	/// <summary>
+	/// Serialises the metadata + IL into a PE DLL and returns a read-only stream over the
+	/// serialised bytes. Unlike <see cref="WritePE(Stream)"/> the image is not copied into a
+	/// second contiguous buffer.
+	/// </summary>
+	public Stream CreatePEStream () => new BlobBuilderStream (SerializePE ());
+
+	BlobBuilder SerializePE ()
 	{
 		var peBuilder = new ManagedPEBuilder (
 			new PEHeaderBuilder (imageCharacteristics: Characteristics.Dll),
@@ -114,7 +157,7 @@ sealed class PEAssemblyBuilder
 			deterministicIdProvider: DeterministicContentId);
 		var peBlob = new BlobBuilder ();
 		peBuilder.Serialize (peBlob);
-		peBlob.WriteContentTo (stream);
+		return peBlob;
 	}
 
 	static BlobContentId DeterministicContentId (IEnumerable<Blob> content)
@@ -156,10 +199,16 @@ sealed class PEAssemblyBuilder
 	/// Adds a member reference using the reusable signature blob builder.
 	/// </summary>
 	public MemberReferenceHandle AddMemberRef (EntityHandle parent, string name, Action<BlobEncoder> encodeSig)
+		=> AddMemberRef (parent, name, GetOrAddSignature (encodeSig));
+
+	public MemberReferenceHandle AddMemberRef (EntityHandle parent, string name, BlobHandle signature)
+		=> Metadata.AddMemberReference (parent, Metadata.GetOrAddString (name), signature);
+
+	public BlobHandle GetOrAddSignature (Action<BlobEncoder> encodeSig)
 	{
 		_sigBlob.Clear ();
 		encodeSig (new BlobEncoder (_sigBlob));
-		return Metadata.AddMemberReference (parent, Metadata.GetOrAddString (name), Metadata.GetOrAddBlob (_sigBlob));
+		return Metadata.GetOrAddBlob (_sigBlob);
 	}
 
 	/// <summary>
@@ -270,33 +319,65 @@ sealed class PEAssemblyBuilder
 	}
 
 	/// <summary>
-	/// Returns a deduplicated RVA field containing the null-terminated UTF-8 encoding of
-	/// <paramref name="value"/>. Strings like <c>"()V"</c> that appear across many proxy
-	/// types are stored once and share the same <see cref="FieldDefinitionHandle"/>.
-	/// The field is declared on an internal sized helper type (e.g. <c>__utf8_10</c>)
-	/// nested under <c>&lt;PrivateImplementationDetails&gt;</c>.
+	/// Emits RVA fields containing the supplied null-terminated UTF-8 strings.
+	/// <paramref name="sharedValues"/> are deduplicated, while every occurrence in
+	/// <paramref name="uniqueValues"/> receives a separate field.
+	/// Fields are grouped by size so each group is emitted contiguously on its sized helper
+	/// type before any consuming types are emitted.
 	/// </summary>
-	public FieldDefinitionHandle GetOrAddUtf8Field (string value)
+	public void PrepareUtf8Fields (IEnumerable<string> sharedValues, IEnumerable<string> uniqueValues)
 	{
-		if (_utf8FieldCache.TryGetValue (value, out var existing)) {
-			return existing;
+		var sharedValuesBySize = new SortedDictionary<int, SortedSet<string>> ();
+		foreach (string value in sharedValues) {
+			int size = System.Text.Encoding.UTF8.GetByteCount (value) + 1;
+			if (!sharedValuesBySize.TryGetValue (size, out var valuesForSize)) {
+				valuesForSize = new SortedSet<string> (StringComparer.Ordinal);
+				sharedValuesBySize.Add (size, valuesForSize);
+			}
+			valuesForSize.Add (value);
 		}
 
-		EnsurePrivateImplDetailsType ();
+		var uniqueValuesBySize = new SortedDictionary<int, SortedDictionary<string, int>> ();
+		foreach (string value in uniqueValues) {
+			int size = System.Text.Encoding.UTF8.GetByteCount (value) + 1;
+			if (!uniqueValuesBySize.TryGetValue (size, out var valuesForSize)) {
+				valuesForSize = new SortedDictionary<string, int> (StringComparer.Ordinal);
+				uniqueValuesBySize.Add (size, valuesForSize);
+			}
+			valuesForSize.TryGetValue (value, out int count);
+			valuesForSize [value] = count + 1;
+		}
 
+		var sizes = new SortedSet<int> (sharedValuesBySize.Keys);
+		sizes.UnionWith (uniqueValuesBySize.Keys);
+		foreach (int size in sizes) {
+			var sizedType = GetOrCreateSizedType (size);
+			if (sharedValuesBySize.TryGetValue (size, out var sharedForSize)) {
+				foreach (string value in sharedForSize) {
+					_sharedUtf8FieldCache.Add (value, AddUtf8Field (value, sizedType));
+				}
+			}
+			if (uniqueValuesBySize.TryGetValue (size, out var uniqueForSize)) {
+				foreach (var pair in uniqueForSize) {
+					var fields = new Queue<FieldDefinitionHandle> (pair.Value);
+					for (int i = 0; i < pair.Value; i++) {
+						fields.Enqueue (AddUtf8Field (pair.Key, sizedType));
+					}
+					_uniqueUtf8FieldCache.Add (pair.Key, fields);
+				}
+			}
+		}
+	}
+
+	FieldDefinitionHandle AddUtf8Field (string value, TypeDefinitionHandle sizedType)
+	{
 		// Encode to null-terminated UTF-8 (all JNI names/signatures are ASCII).
-		int byteCount = System.Text.Encoding.UTF8.GetByteCount (value);
-		var bytes = new byte [byteCount + 1];
-		System.Text.Encoding.UTF8.GetBytes (value, 0, value.Length, bytes, 0);
-		// bytes[byteCount] is already 0 (null terminator)
-
-		var sizedType = GetOrCreateSizedType (bytes.Length);
-
 		_sigBlob.Clear ();
 		new BlobEncoder (_sigBlob).FieldSignature ().Type (sizedType, true);
 
 		int rva = _mappedFieldData.Count;
-		_mappedFieldData.WriteBytes (bytes);
+		_mappedFieldData.WriteUTF8 (value);
+		_mappedFieldData.WriteByte (0);
 
 		var fieldHandle = Metadata.AddFieldDefinition (
 			FieldAttributes.Static | FieldAttributes.Assembly | FieldAttributes.HasFieldRVA | FieldAttributes.InitOnly,
@@ -304,9 +385,31 @@ sealed class PEAssemblyBuilder
 			Metadata.GetOrAddBlob (_sigBlob));
 
 		Metadata.AddFieldRelativeVirtualAddress (fieldHandle, rva);
-
-		_utf8FieldCache [value] = fieldHandle;
 		return fieldHandle;
+	}
+
+	/// <summary>
+	/// Returns a previously prepared UTF-8 RVA field.
+	/// </summary>
+	public FieldDefinitionHandle GetUtf8Field (string value)
+	{
+		if (_sharedUtf8FieldCache.TryGetValue (value, out var existing)) {
+			return existing;
+		}
+
+		throw new InvalidOperationException ($"UTF-8 field '{value}' was not prepared before type emission.");
+	}
+
+	/// <summary>
+	/// Returns and consumes one previously prepared unique UTF-8 RVA field.
+	/// </summary>
+	public FieldDefinitionHandle GetUniqueUtf8Field (string value)
+	{
+		if (_uniqueUtf8FieldCache.TryGetValue (value, out var fields) && fields.Count > 0) {
+			return fields.Dequeue ();
+		}
+
+		throw new InvalidOperationException ($"Unique UTF-8 field '{value}' was not prepared before type emission.");
 	}
 
 	void EnsurePrivateImplDetailsType ()
@@ -362,6 +465,15 @@ sealed class PEAssemblyBuilder
 		Action<BlobEncoder> encodeSig, Action<TrackedInstructionEncoder> emitIL)
 		=> EmitBody (name, attrs, encodeSig, emitIL, encodeLocals: null, useBranches: false);
 
+	public MethodDefinitionHandle EmitBody (string name, MethodAttributes attrs,
+		BlobHandle signature, Action<TrackedInstructionEncoder> emitIL)
+		=> EmitBody (name, attrs, signature, emitIL, encodeLocals: null, useBranches: false);
+
+	public MethodDefinitionHandle EmitBody (string name, MethodAttributes attrs,
+		BlobHandle signature, Action<TrackedInstructionEncoder> emitIL,
+		Action<BlobBuilder>? encodeLocals)
+		=> EmitBody (name, attrs, signature, emitIL, encodeLocals, useBranches: false);
+
 	/// <summary>
 	/// Emits a method body and definition with optional local variable declarations.
 	/// </summary>
@@ -384,12 +496,15 @@ sealed class PEAssemblyBuilder
 		Action<BlobEncoder> encodeSig, Action<TrackedInstructionEncoder> emitIL,
 		Action<BlobBuilder>? encodeLocals, bool useBranches)
 	{
-		_sigBlob.Clear ();
-		encodeSig (new BlobEncoder (_sigBlob));
 		// Capture the sig blob handle before emitIL, because emitIL callbacks
 		// may call AddMemberRef which clears and repopulates _sigBlob.
-		var sigBlobHandle = Metadata.GetOrAddBlob (_sigBlob);
+		return EmitBody (name, attrs, GetOrAddSignature (encodeSig), emitIL, encodeLocals, useBranches);
+	}
 
+	MethodDefinitionHandle EmitBody (string name, MethodAttributes attrs,
+		BlobHandle signature, Action<TrackedInstructionEncoder> emitIL,
+		Action<BlobBuilder>? encodeLocals, bool useBranches)
+	{
 		StandaloneSignatureHandle localSigHandle = default;
 		if (encodeLocals != null) {
 			var localSigBlob = new BlobBuilder (32);
@@ -413,7 +528,7 @@ sealed class PEAssemblyBuilder
 		return Metadata.AddMethodDefinition (
 			attrs, MethodImplAttributes.IL,
 			Metadata.GetOrAddString (name),
-			sigBlobHandle,
+			signature,
 			bodyOffset, MetadataTokens.ParameterHandle (Metadata.GetRowCount (TableIndex.Param) + 1));
 	}
 
@@ -434,7 +549,13 @@ sealed class PEAssemblyBuilder
 		// Capture the sig blob handle before emitIL, because emitIL callbacks
 		// may call AddMemberRef which clears and repopulates _sigBlob.
 		var sigBlobHandle = Metadata.GetOrAddBlob (_sigBlob);
+		return EmitBody (name, attrs, sigBlobHandle, emitIL, encodeLocals);
+	}
 
+	public MethodDefinitionHandle EmitBody (string name, MethodAttributes attrs,
+		BlobHandle signature, Action<TrackedInstructionEncoder, ControlFlowBuilder> emitIL,
+		Action<BlobBuilder>? encodeLocals)
+	{
 		StandaloneSignatureHandle localSigHandle = default;
 		if (encodeLocals != null) {
 			var localSigBlob = new BlobBuilder (32);
@@ -458,7 +579,7 @@ sealed class PEAssemblyBuilder
 		return Metadata.AddMethodDefinition (
 			attrs, MethodImplAttributes.IL,
 			Metadata.GetOrAddString (name),
-			sigBlobHandle,
+			signature,
 			bodyOffset, MetadataTokens.ParameterHandle (Metadata.GetRowCount (TableIndex.Param) + 1));
 	}
 
@@ -489,6 +610,43 @@ sealed class PEAssemblyBuilder
 		_attrBlob.WriteUInt16 (0x0001); // Prolog
 		writePayload (_attrBlob);
 		_attrBlob.WriteUInt16 (0x0000); // NumNamed
+		return Metadata.GetOrAddBlob (_attrBlob);
+	}
+
+	public void AddDebuggerDisableUserUnhandledExceptionsAttribute (MethodDefinitionHandle method)
+	{
+		if (_debuggerDisableUserUnhandledExceptionsCtorRef.IsNil) {
+			var attributeType = Metadata.AddTypeReference (SystemRuntimeRef,
+				Metadata.GetOrAddString ("System.Diagnostics"),
+				Metadata.GetOrAddString ("DebuggerDisableUserUnhandledExceptionsAttribute"));
+			_debuggerDisableUserUnhandledExceptionsCtorRef = AddMemberRef (attributeType, ".ctor",
+				sig => sig.MethodSignature (isInstanceMethod: true).Parameters (0, rt => rt.Void (), p => { }));
+			_debuggerDisableUserUnhandledExceptionsBlob = BuildAttributeBlob (b => { });
+		}
+
+		// The boundary's catch delegates the user-unhandled decision to runtime policy.
+		Metadata.AddCustomAttribute (method, _debuggerDisableUserUnhandledExceptionsCtorRef,
+			_debuggerDisableUserUnhandledExceptionsBlob);
+	}
+
+	public BlobHandle BuildAttributeBlob (string first, string second)
+	{
+		_attrBlob.Clear ();
+		_attrBlob.WriteUInt16 (0x0001);
+		_attrBlob.WriteSerializedString (first);
+		_attrBlob.WriteSerializedString (second);
+		_attrBlob.WriteUInt16 (0x0000);
+		return Metadata.GetOrAddBlob (_attrBlob);
+	}
+
+	public BlobHandle BuildAttributeBlob (string first, string second, string third)
+	{
+		_attrBlob.Clear ();
+		_attrBlob.WriteUInt16 (0x0001);
+		_attrBlob.WriteSerializedString (first);
+		_attrBlob.WriteSerializedString (second);
+		_attrBlob.WriteSerializedString (third);
+		_attrBlob.WriteUInt16 (0x0000);
 		return Metadata.GetOrAddBlob (_attrBlob);
 	}
 
@@ -650,7 +808,14 @@ sealed class PEAssemblyBuilder
 			Push (1);
 		}
 
-		public void LoadFunction (MethodDefinitionHandle handle)
+		public void LoadFunction (MethodDefinitionHandle handle) => LoadFunction ((EntityHandle) handle);
+
+		/// <summary>
+		/// <c>ldftn</c> against an arbitrary method token. The <see cref="EntityHandle" /> overload
+		/// exists so RegisterNatives can take the address of an external
+		/// <c>[UnmanagedCallersOnly]</c> callback through a MemberRef.
+		/// </summary>
+		public void LoadFunction (EntityHandle handle)
 		{
 			Encoder.OpCode (ILOpCode.Ldftn);
 			Encoder.Token (handle);

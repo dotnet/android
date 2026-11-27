@@ -2,6 +2,11 @@
 
 Tips and tricks while developing .NET for Android.
 
+The update-directory guidance in this page applies to Android fast deployment.
+Use the CoreCLR diagnostics and runtime guidance in the
+[tracing](../guides/tracing.md) and
+[custom Android system properties](SystemProperties.md) documentation instead.
+
 # Run MSBuild-Based On-Device Unit Tests
 
 The [`tests/MSBuildDeviceIntegration`](tests/MSBuildDeviceIntegration)
@@ -83,38 +88,8 @@ that, run the `xa-lldb` script as described in README.md.
 
 ## Adding debug symbols for `libmonosgen-2.0.so`
 
-First, you'll need to get a version of `libmonosgen-2.0.so` that includes debug
-symbols.  You can either use a custom local build or download the debug version
-of `libmonosgen-2.0.so` for a published .NET for Android version:
-
- 1. Go to <https://github.com/xamarin/xamarin-android/tags> and click on the
-    .NET for Android version you are debugging.
-
- 2. Find the **OSS core** section at the bottom of the release information and
-    click the link to the open-source build.
-
- 3. Navigate to **Azure Artifacts** in the left sidebar and download the
-    `xamarin-android/xamarin-android/bin/Release/bundle*.7z` file.  For the
-    `d16-2` branch and earlier, the file extension will be `.zip` instead of
-    `.7z`.
-
- 4. Extract the `libmonosgen-2.0.d.so` files from the bundle.  For example, if
-    you have `brew` installed, run:
-
-        $ brew install p7zip
-        $ 7z x -r bundle*.7z libmonosgen-2.0.d.so
-
-    On Windows, Visual Studio includes the `7z.exe` executable when the **Mobile
-    development with .NET** workload is installed, so you can use that:
-
-        "C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\Common7\IDE\Extensions\Xamarin.VisualStudio\7-Zip\7z.exe" x -r bundle*.7z libmonosgen-2.0.d.so
-
-    For `d16-2` and earlier, use `unzip` instead:
-
-        $ unzip bundle*.zip '**libmonosgen-2.0.d.so'
-
-    (On Windows, the Git Bash command prompt includes the `unzip` command, so
-    that's one way to complete this step.)
+First, obtain a version of `libmonosgen-2.0.so` that includes debug symbols,
+such as from a custom local build.
 
 Next, there are a few options to get LLDB to see the debug symbols.
 
@@ -152,7 +127,7 @@ versions of `libmonosgen-2.0.so`.
     guide][lldb-source-map] to allow stepping through the Mono runtime source
     files.
 
-[using-native-libraries]: https://docs.microsoft.com/xamarin/android/platform/native-libraries
+[using-native-libraries]: https://learn.microsoft.com/dotnet/android/building-apps/build-items#androidnativelibrary
 [lldb-source-map]: https://www.mono-project.com/docs/debug+profile/debug/lldb-source-map/
 
 ### Option B: Upload the library with symbols to the update directory
@@ -475,84 +450,58 @@ copying `.nupkg` files to the `library-packs` directory of a given
 The `library-packs` directory is simply an implicit NuGet feed that is
 automatically picked up by the .NET SDK.
 
-## Enabling Mono Logging
+## Enabling Runtime Logging
 
-### The easy way
-
-A quick way to enable Mono logging is to use the `RunWithLogging`
-target:
+Set `debug.dotnet.log` to a comma-separated list of runtime categories:
 
 ```bash
-$ dotnet build -t:RunWithLogging
+$ adb shell setprop debug.dotnet.log default,timing,assembly,gc
 ```
 
-If successful, messages printed to the screen will show location
-of the logcat file with the logged messages.
-
-Verbosity of logging can be increased by setting the `$(RunLogVerbose)`
-property to `true`, in which case the log output file will contain
-(very) verbose log messages from the MonoVM runtime.
-
-By default, the target will wait for a 1000ms before it dumps the
-logcat buffer to file.  This is to give the Android logging daemon
-time to actually put all the messages logged by the application in
-the logcat buffer.  This value can be overridden by setting the
-`$(RunLogDelayInMS)` MSBuild property to a number of milliseconds that
-the target should wait before creating the log file.
-
-### The manual way
-
-Since [6e58ce4][6e58ce4], logging from Mono is no longer enabled by
-default. You can set the `debug.mono.log` system property to answer
-questions like: Is AOT working? Is the Mono Interpreter enabled?
-
-If you wanted to enable logging for AOT, for example:
+Use `all` to enable every category:
 
 ```bash
-$ adb shell setprop debug.mono.log mono_log_level=debug,mono_log_mask=aot
+$ adb shell setprop debug.dotnet.log all
 ```
 
-You could use `mono_log_mask=all` to enable all logging. See the [Mono
-documentation][mono-logging] for more information about
-`MONO_LOG_LEVEL` and `MONO_LOG_MASK`.  You can specify more than one
-category as the value of `mono_log-mask`, in which case individual
-categories need to be separated with `:`, for instance:
+Then launch the app with `dotnet run`, which restarts the app (so the
+new value takes effect) and streams the app's logcat output until it
+exits or you press Ctrl+C:
 
 ```bash
-$ adb shell setprop debug.mono.log mono_log_level=debug,mono_log_mask=gc:asm:dll
+$ dotnet run
 ```
 
-There is further logging produced by `libmonodroid.so` you can enable with:
+`dotnet run` hides the `DOTNET-assembly` logcat tag by default, so
+messages from the `assembly` category are not shown. To include them,
+override the logcat filter:
 
 ```bash
-$ adb shell setprop debug.mono.log=default,timing=bare,assembly,gc,debugger
+$ dotnet run -p:_AndroidRunLogcatArgs=DOTNET-assembly:V
 ```
 
-You can combine both together. The following would log nearly everything:
+Alternatively, capture the complete device log in a separate terminal:
 
 ```bash
-$ adb shell setprop debug.mono.log=default,timing=bare,assembly,gc,debugger,mono_log_level=debug,mono_log_mask=aot
+$ adb logcat > logcat.txt
 ```
 
-To unset `debug.mono.log`, you can do:
+To unset `debug.dotnet.log`, run:
 
 ```bash
-$ adb shell setprop debug.mono.log "''"
+$ adb shell setprop debug.dotnet.log "''"
 ```
 
 You could also reboot the device or emulator to completely clear all
 system properties.
 
-The `debug.mono.log` system property can also be set in an
+The `debug.dotnet.log` system property can also be set in an
 `@(AndroidEnvironment)` text file. However, the system property will
 be preferred if it is not blank.
 
-[mono-logging]: https://www.mono-project.com/docs/advanced/runtime/logging-runtime-events/
-[6e58ce4]: https://github.com/xamarin/xamarin-android/commit/6e58ce405d00a965f3c206e2d509f5a5343b16f7
-
 ## Installing .NET MAUI
 
-`make pack-dotnet` or `msbuild Xamarin.Android.sln -t:PackDotNet`
+`make pack-dotnet` or `msbuild Microsoft.Android.slnx -t:PackDotNet`
 provisions a .NET SDK and locally built Android workload in:
 
     bin/$(Configuration)/dotnet/
@@ -564,7 +513,7 @@ Android workload.
 To simplify things, we have an MSBuild target to install .NET MAUI:
 
     # or dotnet-local.cmd on Windows
-    dotnet-local.sh build Xamarin.Android.sln -t:InstallMaui -p:MauiVersion=9.0.0
+    dotnet-local.sh build Microsoft.Android.slnx -t:InstallMaui -p:MauiVersion=9.0.0
 
 To find the version number of .NET MAUI you want to install, find the
 package on the [nightly Azure DevOps feed][maui-feed]. Or look for the
@@ -575,7 +524,7 @@ download the incorrect manifest pack.
 
 Note that this will not provision the `maui-ios`, `maui-maccatalyst`,
 or `maui-windows` parts of .NET MAUI. Simply specify a single
-`<TargetFramework>net11.0-android</TargetFramework>` in MAUI projects
+`<TargetFramework>net12.0-android</TargetFramework>` in MAUI projects
 to build them.
 
 [maui-feed]: https://dev.azure.com/dnceng/public/_packaging?_a=feed&feed=dotnet6%40Local

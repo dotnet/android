@@ -196,10 +196,17 @@ class TrimmableTypeMapTypeManager : JniRuntime.JniTypeManager
 			yield return builtInType;
 		}
 
-		if (TrimmableTypeMap.Instance.TryGetTargetTypes (jniSimpleReference, out var types)) {
-			foreach (var type in types) {
+		// The type map is keyed by the JNI names the managed code declares, so a name that was
+		// renamed in the packaged application has to be translated back first.
+		if (GetOriginalSimpleReference (jniSimpleReference) is string originalReference) {
+			foreach (var type in TrimmableTypeMap.Instance.GetTargetTypes (originalReference)) {
 				yield return type;
 			}
+			yield break;
+		}
+
+		foreach (var type in TrimmableTypeMap.Instance.GetTargetTypes (jniSimpleReference)) {
+			yield return type;
 		}
 	}
 
@@ -212,12 +219,25 @@ class TrimmableTypeMapTypeManager : JniRuntime.JniTypeManager
 			return builtInType;
 		}
 
-		// TryGetTargetTypes returns a non-empty array when it succeeds.
-		if (TrimmableTypeMap.Instance.TryGetTargetTypes (jniSimpleReference, out var types)) {
-			return types [0];
+		if (GetOriginalSimpleReference (jniSimpleReference) is string originalReference) {
+			return TrimmableTypeMap.Instance.TryGetTargetType (originalReference, out var type) ? type : null;
 		}
 
-		return null;
+		return TrimmableTypeMap.Instance.TryGetTargetType (jniSimpleReference, out var directType) ? directType : null;
+	}
+
+	static string? GetOriginalSimpleReference (string jniSimpleReference)
+	{
+		if (!RuntimeFeature.JniRemapping) {
+			return null;
+		}
+
+		var original = JniRemappingLookup.GetReverseType (jniSimpleReference);
+		if (original is null || string.Equals (original, jniSimpleReference, StringComparison.Ordinal)) {
+			return null;
+		}
+
+		return original;
 	}
 
 	// Lookup of the built-in managed type for a JNI simple reference, e.g., string, bool?, int?, etc.
@@ -274,7 +294,10 @@ class TrimmableTypeMapTypeManager : JniRuntime.JniTypeManager
 
 			while (currentType is not null) {
 				if (TrimmableTypeMap.Instance.TryGetJniNameForManagedType (currentType, out var jniName)) {
-					return new (jniName, rank, keyword: false);
+					string runtimeJniName = RuntimeFeature.JniRemapping
+						? JniRemappingLookup.GetReplacementType (jniName) ?? jniName
+						: jniName;
+					return new (runtimeJniName, rank, keyword: false);
 				}
 
 				currentType = currentType.BaseType;
@@ -373,16 +396,67 @@ class TrimmableTypeMapTypeManager : JniRuntime.JniTypeManager
 		return signature.IsValid ? [signature] : [];
 	}
 
-	// Remapping APIs for InTune support
+	// Remapping APIs, used by the Intune/MAM mapping and generated JNI runtime remapping
 
 	protected override IReadOnlyList<string>? GetStaticMethodFallbackTypesCore (string jniSimpleReference)
-		=> JniRemappingLookup.GetStaticMethodFallbackTypes (jniSimpleReference, useReplacementTypes: true);
+		=> RuntimeFeature.JniRemapping
+			? JniRemappingLookup.GetStaticMethodFallbackTypes (jniSimpleReference, useReplacementTypes: true)
+			: JniStaticMethodFallback.GetTypes (jniSimpleReference);
 
 	protected override string? GetReplacementTypeCore (string jniSimpleReference)
-		=> JniRemappingLookup.GetReplacementType (jniSimpleReference);
+		=> RuntimeFeature.JniRemapping ? JniRemappingLookup.GetReplacementType (jniSimpleReference) : null;
+
+	/// <safety>
+	/// Results borrow host-retained table bytes through every runtime/cache read, including
+	/// diagnostics after failure. No alias may modify/free the table or race reinitialization
+	/// or runtime disposal with readers. No ownership transfers.
+	/// </safety>
+	protected override unsafe void GetReplacementTypeInfoUnsafe (string jniSimpleReference, out string? replacement, out byte* replacementUtf8)
+	{
+		replacement = null;
+		unsafe {
+			// SAFETY: the generated table's native owner retains NUL-terminated result bytes for the runtime and cached readers.
+			replacementUtf8 = RuntimeFeature.JniRemapping
+				? JniRemappingLookup.GetReplacementTypeUtf8 (jniSimpleReference)
+				: null;
+		}
+	}
 
 	protected override JniRuntime.ReplacementMethodInfo? GetReplacementMethodInfoCore (string jniSourceType, string jniMethodName, string jniMethodSignature)
-		=> JniRemappingLookup.GetReplacementMethodInfo (jniSourceType, jniMethodName, jniMethodSignature);
+		=> RuntimeFeature.JniRemapping
+			? JniRemappingLookup.GetReplacementMethodInfo (jniSourceType, jniMethodName, jniMethodSignature)
+			: null;
+
+	// SAFETY: the managed source name and process-lifetime remapping table retain all borrowed names through lookup.
+	protected override JniRuntime.ReplacementMethodInfo? GetReplacementMethodInfoCore (string jniSourceType, ReadOnlySpan<char> jniMethodName, ReadOnlySpan<char> jniMethodSignature)
+		=> unsafe(RuntimeFeature.JniRemapping
+			? JniRemappingLookup.GetReplacementMethodInfo (jniSourceType, jniMethodName, jniMethodSignature)
+			: null);
+
+	/// <safety>
+	/// Source bytes must be readable through their NUL and unchanged until return or throw,
+	/// without writes/frees through aliases. Targets borrow the host-retained table for all
+	/// later reads; no concurrent mutation/reinitialization or runtime disposal is allowed.
+	/// </safety>
+	protected override unsafe JniRuntime.ReplacementMethodInfo? GetReplacementMethodInfoUnsafe (byte* jniSourceTypeUtf8, ReadOnlySpan<char> jniMethodName, ReadOnlySpan<char> jniMethodSignature)
+	{
+		unsafe {
+			// SAFETY: the caller retains source bytes through lookup; targets borrow the immutable process-lived table.
+			return RuntimeFeature.JniRemapping
+				? JniRemappingLookup.GetReplacementMethodInfo (jniSourceTypeUtf8, jniMethodName, jniMethodSignature)
+				: null;
+		}
+	}
+
+	protected override JniRuntime.ReplacementFieldInfo? GetReplacementFieldInfoCore (string jniSourceType, string jniFieldName, string jniFieldSignature)
+		=> RuntimeFeature.JniRemapping
+			? JniRemappingLookup.GetReplacementFieldInfo (jniSourceType, jniFieldName, jniFieldSignature)
+			: null;
+
+	protected override JniRuntime.ReplacementFieldInfo? GetReplacementFieldInfoCore (string jniSourceType, ReadOnlySpan<char> jniFieldName, ReadOnlySpan<char> jniFieldSignature)
+		=> RuntimeFeature.JniRemapping
+			? JniRemappingLookup.GetReplacementFieldInfo (jniSourceType, jniFieldName, jniFieldSignature)
+			: null;
 
 	// The rest of the APIs are unsupported - they are not needed internally anywhere anyway
 

@@ -6,22 +6,39 @@ applyTo: "**/*.gradle,**/*.gradle.kts"
 
 All `src/*` Gradle projects share two repo config files: **`eng/gradle/plugin-repositories.gradle`** (for `pluginManagement.repositories`) and **`eng/gradle/dependency-repositories.gradle`** (for `dependencyResolutionManagement.repositories`). Never hard-code Maven URLs (`mavenCentral()`, `google()`, `pkgs.dev.azure.com/...`, etc.) in `build.gradle`/`settings.gradle`.
 
+Dependabot's Gradle updater does not inspect repository declarations in scripts
+loaded with `apply from`. Each configured `settings.gradle` must repeat the
+public repository declarations behind a `DEPENDABOT_JOB_ID` environment check
+so version discovery queries Google Maven. Dependabot already probes Maven
+Central and the Gradle Plugin Portal by default, and sets this variable inside
+its updater container.
+
 ## settings.gradle template
 
 ```groovy
 // See: eng/gradle/plugin-repositories.gradle, eng/gradle/dependency-repositories.gradle
 pluginManagement {
     apply from: "${rootDir}/../../eng/gradle/plugin-repositories.gradle", to: pluginManagement
+    if (System.getenv('DEPENDABOT_JOB_ID') != null) {
+        repositories {
+            google()
+        }
+    }
 }
 dependencyResolutionManagement {
     apply from: "${rootDir}/../../eng/gradle/dependency-repositories.gradle", to: dependencyResolutionManagement
+    if (System.getenv('DEPENDABOT_JOB_ID') != null) {
+        repositories {
+            google()
+        }
+    }
 }
 rootProject.name = '<project>'
 ```
 
 Adjust the `../..` depth to reach the repo root from that project; it is not
-always two levels (e.g. `external/Java.Interop/tools/java-source-utils` uses
-four).
+always two levels (e.g. `tests/Xamarin.Android.Tools.Bytecode-Tests/kotlin-gradle`
+uses three).
 
 Kotlin DSL (`settings.gradle.kts`) applies the same two Groovy files, but passes
 the receiver as `to = this`:
@@ -30,14 +47,37 @@ the receiver as `to = this`:
 // See: eng/gradle/plugin-repositories.gradle, eng/gradle/dependency-repositories.gradle
 pluginManagement {
     apply(from = "$rootDir/../../eng/gradle/plugin-repositories.gradle", to = this)
+    if (System.getenv("DEPENDABOT_JOB_ID") != null) {
+        repositories {
+            google()
+        }
+    }
 }
 dependencyResolutionManagement {
     apply(from = "$rootDir/../../eng/gradle/dependency-repositories.gradle", to = this)
+    if (System.getenv("DEPENDABOT_JOB_ID") != null) {
+        repositories {
+            google()
+        }
+    }
 }
 rootProject.name = "<project>"
 ```
 
 `build.gradle` files must not declare their own `repositories { ... }`.
+
+## Transitive dependency versions
+
+To raise a transitive dependency that no direct dependency bump can update,
+add it to **`eng/gradle/dependency-constraints.gradle`** and apply that file
+from the project's `settings.gradle`:
+
+```groovy
+apply from: "${rootDir}/../../eng/gradle/dependency-constraints.gradle"
+```
+
+It also covers plugin dependencies, such as those of the Android Gradle Plugin.
+Dependabot does not read this file, so update its versions manually.
 
 ## CI vs local
 

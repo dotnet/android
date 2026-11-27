@@ -200,14 +200,14 @@ See the [.aab format spec][aab_format] for further detail.
 
 ## BundleConfig.json
 
-Since .NET assemblies and typemap files must remain uncompressed in
+Since .NET assemblies must remain uncompressed in
 .NET for Android apps, we will also need to specify a
 `BundleConfig.json` file:
 
 ```json
 {
   "compression": {
-    "uncompressedGlob": ["typemap.mj", "typemap.jm", "assemblies/*"]
+    "uncompressedGlob": ["assemblies/**"]
   }
 }
 ```
@@ -268,6 +268,14 @@ Bundles with what is configured in the existing MSBuild properties.
 [app_signing]: https://developer.android.com/studio/publish/app-signing
 
 ## Deployment
+
+APK set installation and Fast Deployment of managed files are tracked
+separately. An unchanged install skips both operations. With Fast Deployment
+enabled, managed-only updates do not reinstall an unchanged APK set.
+Changes to packaged resources or native libraries still install the updated
+APK set. Removing the app from the device, or changing the deployment
+configuration, device, user, or selected `AndroidInstallModules`, invalidates
+the recorded installation.
 
 ### Create a device-specific APK Set
 

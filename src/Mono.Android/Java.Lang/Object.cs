@@ -28,13 +28,25 @@ namespace Java.Lang {
 			}
 		}
 
-		~Object ()
+		/// <safety>
+		/// A nonzero <paramref name="handle"/> must be a live JNI object reference compatible
+		/// with this peer's Java type and VM throughout construction and cleanup, including failure.
+		/// Local references must belong to the calling thread; aliases must not delete the reference
+		/// concurrently. TransferLocalRef/TransferGlobalRef must match its actual reference kind.
+		/// SetHandle releases transferred references in its finally, even if peer construction fails;
+		/// an earlier base-constructor failure does not enter that cleanup. DoNotTransfer retains
+		/// the caller's ownership. Zero is accepted and does not supply a new Java peer.
+		/// </safety>
+		/// <remarks>
+		/// This released raw-handle constructor remains safe-callable for compatibility.
+		/// The compiler does not enforce the caller obligations above, including for nonzero handles.
+		/// The constructor does not validate reference provenance, lifetime, thread or ownership.
+		/// </remarks>
+		public Object (IntPtr handle, JniHandleOwnership transfer)
+			: base (JniObjectReferenceOptions.None)
 		{
-		}
-
-		public unsafe Object (IntPtr handle, JniHandleOwnership transfer)
-			: base (ref *InvalidJniObjectReference, JniObjectReferenceOptions.None)
-		{
+			// SAFETY: The caller supplies the reference and transfer rights described above.
+			// SetHandle delegates peer construction and releases the transferred handle in its finally.
 			SetHandle (handle, transfer);
 		}
 
@@ -45,10 +57,15 @@ namespace Java.Lang {
 			if (Handle != IntPtr.Zero)
 				return;
 
-			SetHandle (
-					JNIEnv.StartCreateInstance (GetType (), "()V"),
-					JniHandleOwnership.TransferLocalRef);
-			JNIEnv.FinishCreateInstance (Handle, "()V");
+			unsafe {
+				// SAFETY: AllocObject supplies this peer's owned handle; FinishCreateInstance invokes
+				// the ()V constructor while GC.KeepAlive retains this.
+				SetHandle (
+						JNIEnv.AllocObject (GetType ()),
+						JniHandleOwnership.TransferLocalRef);
+				JNIEnv.FinishCreateInstance (Handle, "()V"u8);
+				GC.KeepAlive (this);
+			}
 		}
 
 		[EditorBrowsable (EditorBrowsableState.Never)]
@@ -92,6 +109,7 @@ namespace Java.Lang {
 			return ThresholdClass;
 		}
 
+		// Used only to preserve virtual dispatch for legacy bindings.
 		internal System.Type GetThresholdType ()
 		{
 			return ThresholdType;
@@ -109,21 +127,19 @@ namespace Java.Lang {
 		[EditorBrowsable (EditorBrowsableState.Never)]
 		protected void SetHandle (IntPtr value, JniHandleOwnership transfer)
 		{
-			var reference = new JniObjectReference (value);
-			var options   = FromJniHandleOwnership (transfer);
-			JniEnvironment.Runtime.ValueManager.ConstructPeer (
-					this,
-					ref reference,
-					value == IntPtr.Zero ? JniObjectReferenceOptions.None : options);
-			JNIEnv.DeleteRef (value, transfer);
-		}
-
-		static JniObjectReferenceOptions FromJniHandleOwnership (JniHandleOwnership transfer)
-		{
-			var options = JniObjectReferenceOptions.Copy;
-			if (transfer.HasFlag (JniHandleOwnership.DoNotRegister))
-				options |= JniObjectReferenceOptions.CopyAndDoNotRegister;
-			return options;
+			try {
+				var reference = new JniObjectReference (value);
+				var options   = JNIEnv.ToJniObjectReferenceOptions (transfer);
+				JniEnvironment.Runtime.ValueManager.ConstructPeer (
+						this,
+						ref reference,
+						value == IntPtr.Zero ? JniObjectReferenceOptions.None : options);
+			} finally {
+				unsafe {
+					// SAFETY: the caller's transfer contract covers value; it is released once, even on failure.
+					JNIEnv.DeleteRef (value, transfer);
+				}
+			}
 		}
 
 		internal static IJavaPeerable? PeekObject (IntPtr handle, Type? requiredType = null)
@@ -141,11 +157,19 @@ namespace Java.Lang {
 			return (T?)PeekObject (handle, typeof (T));
 		}
 
+		/// <safety>
+		/// <paramref name="jnienv"/> must be a live JNI environment for the current thread and runtime.
+		/// <paramref name="handle"/> must be null or a live object reference usable by that environment
+		/// for the call; <paramref name="transfer"/> must match reference ownership the caller holds.
+		/// </safety>
 		public static T? GetObject<[DynamicallyAccessedMembers (Constructors)] T> (
 			IntPtr jnienv, IntPtr handle, JniHandleOwnership transfer)
 			where T : class, IJavaObject
 		{
-			JNIEnv.CheckHandle (jnienv);
+			unsafe {
+				// SAFETY: the caller retains the current-thread JNI environment and borrowed object reference for this transition.
+				JNIEnv.CheckHandle (jnienv);
+			}
 			return GetObject<T> (handle, transfer);
 		}
 
@@ -165,24 +189,30 @@ namespace Java.Lang {
 			return (T?) GetObject (handle, transfer, typeof (T));
 		}
 
-		internal static IJavaPeerable? GetObject (
-				IntPtr handle,
-				JniHandleOwnership transfer,
-				[DynamicallyAccessedMembers (Constructors)]
-				Type? type = null)
+		internal static IJavaPeerable? GetObject (IntPtr handle, JniHandleOwnership transfer, Type? type = null)
 		{
 			if (handle == IntPtr.Zero)
 				return null;
 
-			var r = JniEnvironment.Runtime.ValueManager.GetPeer (new JniObjectReference (handle), type);
-			JNIEnv.DeleteRef (handle, transfer);
-			return r;
+			try {
+				return JniEnvironment.Runtime.ValueManager.GetPeer (new JniObjectReference (handle), type);
+			} finally {
+				unsafe {
+					// SAFETY: the caller's transfer contract covers handle; it is released once, even on failure.
+					JNIEnv.DeleteRef (handle, transfer);
+				}
+			}
 		}
 
 		[EditorBrowsable (EditorBrowsableState.Never)]
 		public T[]? ToArray<T>()
 		{
-			return JNIEnv.GetArray<T>(Handle);
+			try {
+				// SAFETY: this peer owns the JNI object reference; GetArray checks its compatible array kind before native access.
+				return unsafe(JNIEnv.GetArray<T> (Handle));
+			} finally {
+				GC.KeepAlive (this);
+			}
 		}
 
 		public static Java.Lang.Object? FromArray<T>(T[] value)

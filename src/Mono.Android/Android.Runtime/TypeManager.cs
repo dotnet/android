@@ -4,8 +4,7 @@ using System.Reflection;
 using System.Linq;
 
 namespace Android.Runtime {
-
-	[Obsolete ("Use Java.Interop.TypeManager")]
+	[Obsolete ("This class is obsolete and will be removed in the next release. Use [Register] on Java peer types instead of explicit type registration.", error: true)]
 	public static partial class TypeManager {
 
 		public static string? LookupTypeMapping (string[] mappings, string javaType)

@@ -110,6 +110,11 @@ sealed class JavaPeerProxyData
 	public required TypeRefData TargetType { get; init; }
 
 	/// <summary>
+	/// True when the sealed Mono.Android target can use the runtime's class loader.
+	/// </summary>
+	public bool CanResolveFromSealedTargetType { get; init; }
+
+	/// <summary>
 	/// Reference to the invoker type (for interfaces/abstract types). Null if not applicable.
 	/// </summary>
 	public TypeRefData? InvokerType { get; set; }
@@ -302,6 +307,13 @@ sealed record UcoMethodData
 	/// True when this wrapper performs the managed direct-dispatch path.
 	/// </summary>
 	public bool UsesExportMethodDispatch => ExportMethodDispatch != null;
+
+	/// <summary>
+	/// True when the callback is already an <c>[UnmanagedCallersOnly]</c> method in its own
+	/// assembly. No wrapper is emitted for such a callback: RegisterNatives takes its address
+	/// directly through a MemberRef, because managed code must never call it.
+	/// </summary>
+	public bool IsDirectUnmanagedCallersOnlyCallback { get; init; }
 }
 
 sealed record UcoWrapperTargetData
@@ -407,6 +419,11 @@ sealed record UcoConstructorData
 	/// to the corresponding managed type before calling the user ctor.
 	/// </summary>
 	public IReadOnlyList<TypeRefData> ManagedParameterTypes { get; init; } = [];
+
+	/// <summary>
+	/// Per-parameter [ExportParameter] kinds for constructor argument marshalling.
+	/// </summary>
+	public IReadOnlyList<ExportParameterKindInfo> ParameterKinds { get; init; } = [];
 }
 
 /// <summary>
@@ -435,6 +452,13 @@ sealed record NativeRegistrationData
 	/// same base callback.
 	/// </summary>
 	public required UcoWrapperTargetData WrapperTarget { get; init; }
+
+	/// <summary>
+	/// When set, RegisterNatives binds this external <c>[UnmanagedCallersOnly]</c> callback
+	/// directly and no wrapper is emitted for it. <see cref="WrapperTarget" /> is then only a
+	/// lookup key.
+	/// </summary>
+	public UcoMethodData? DirectCallback { get; init; }
 }
 
 /// <summary>

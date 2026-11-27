@@ -1,4 +1,142 @@
-This is the D8 and R8 integration specification for .NET for Android.
+This guide describes the current retained-typemap R8 pipeline, followed by
+historical notes from the original D8 and R8 integration.
+
+# Retained typemap type roots
+
+When managed trimming and R8 are enabled, CoreCLR and trimmable NativeAOT
+builds derive Java class and interface roots from the final typemap rather than retaining
+every class in the ACW map:
+
+| Runtime and typemap | Retained-key source |
+| --- | --- |
+| NativeAOT, trimmable | Retained external typemap records in each RID's final ILC object |
+| CoreCLR, trimmable | Surviving `TypeMapAttribute<T>` records in linked typemap assemblies, including empty stubs |
+
+Inner builds return their exact source paths to the outer build. Keys are
+unioned across the requested RIDs/ABIs; stale files from other builds are not
+discovered by globbing. NativeAOT locates external typemap blobs with
+`llvm-readobj`, resolves Java group identities using bounded `llvm-objdump`
+relocations, reads their object-file byte ranges, and decodes the retained
+NativeFormat keys. It does not require an ACW map or generate dependency graphs.
+
+Both adapters and both ProGuard generators are `Microsoft.Android.Tasks`
+tasks in `Microsoft.Android.Build.Tasks.dll`.
+The adapters write `typemap.keys.txt` in the outer intermediate directory.
+The format is UTF-8 without a BOM, one canonical JNI type name per line,
+ordinal-sorted and distinct, with LF endings and a final LF when nonempty.
+For example:
+
+```text
+android/app/Activity
+example/Outer$Inner
+```
+
+The assembly and NativeAOT object adapters collapse implementation-specific
+numeric aliases before writing this format. Valid JNI array entries contribute
+their reference element type; primitive arrays do not contribute a type.
+A valid zero-byte file means no retained types;
+missing, unreadable, or unsupported inputs fail the build.
+
+`GenerateTypeMapProguardConfiguration` knows only this format. It accepts a
+union of keys files and writes deterministic type-root rules to
+`proguard/proguard_project_references.cfg`:
+
+```text
+-keep class android.app.Activity
+-keep interface android.app.Activity
+-keep class example.Outer$Inner
+-keep interface example.Outer$Inner
+```
+
+Each retained key emits both alternatives because the key format does not
+encode whether the Java type is a class or interface. The root generator
+never emits member rules or global R8 options.
+CoreCLR uses a separate `GenerateTypeMapMemberProguardConfiguration` task to
+write `proguard/proguard_typemap_members.cfg` from the same retained keys:
+
+```text
+-keepclassmembers class android.app.Activity { *; }
+-keepclassmembers interface android.app.Activity { *; }
+-keepclassmembers class example.Outer$Inner { *; }
+-keepclassmembers interface example.Outer$Inner { *; }
+```
+
+This preserves JNI-facing methods, constructors, and fields without also
+preserving every member of Java-only dependencies. R8's member matching
+includes inherited accessible methods and superclass fields. The separate
+`proguard_typemap_coreclr.cfg` configuration preserves runtime bootstrap
+classes and their members, reflection-visible interface implementation
+relationships used for managed proxy selection, plus framework-driven view
+members. Dynamic JNI or reflection access to types or members not represented
+by retained managed bindings still needs application/library ProGuard rules.
+
+NativeAOT continues to use `proguard_typemap.cfg`, which retains members of
+all surviving classes and interfaces, including third-party types, while
+allowing unused types to disappear. Both policies keep explicit runtime bootstrap roots
+rather than whole wrapper packages. User Java source retention and
+application/library ProGuard rules remain separate.
+
+The temporary private override `_AndroidEnableTypemapR8Trimming` controls this
+pipeline. It replaces the old NativeAOT-specific trimming and ProGuard switches.
+Leave it unset for automatic CoreCLR behavior, set it to `true` to enable
+the pipeline in eligible managed-trimmed CoreCLR/NativeAOT R8 builds, or set it
+to `false` to use legacy ACW retention without running the new tasks. Disabling
+it avoids NativeAOT object inspection. The switch does not enable R8 or managed
+trimming in otherwise ineligible builds.
+
+NativeAOT object inspection currently requires explicit `true` and uses
+`llvm-readobj` and adjacent `llvm-objdump` from the resolved Android NDK.
+NativeAOT also requires that NDK for its normal application link;
+`GetAndroidDependencies` includes it independently of this opt-in.
+Leaving the override unset or `false` skips typemap object inspection and
+keeps all ACW classes, but does not remove the NativeAOT NDK requirement.
+
+This pipeline disables all obfuscation, including private-member
+obfuscation, with both `-dontobfuscate` and R8's `--no-minification` option.
+CoreCLR uses `proguard-android-optimize.txt` so optimization remains enabled
+independently of obfuscation. Its JNI class/member keep rules still protect
+the names and signatures required by managed code. NativeAOT retains its
+existing non-optimizing defaults.
+Nonshrinking/multidex-only builds and the existing complete
+`ProguardConfigFiles` override do not use this retained-key pipeline.
+
+Both extraction and rule generation use their real files as incremental
+outputs. A content-sensitive input manifest also tracks source-list and
+runtime/trim-policy changes, so removing a RID or switching modes cannot
+reuse stale type roots. The outputs are registered in `FileWrites` and
+regenerated if deleted.
+
+When managed trimming is disabled (`PublishTrimmed=false`), R8 still needs
+keep rules for Java classes and members accessed from managed bindings.
+CoreCLR generates `proguard/proguard_project_references.cfg` from the
+untrimmed publish assemblies in each inner RID build before R8 runs.
+Disabling managed trimming does not disable Java shrinking or optimization.
+
+# Runtime JNI remapping
+
+[`AndroidR8ObfuscationMode=runtime-remapping`](../docs-mobile/building-apps/build-properties.md#androidr8obfuscationmode)
+selects a separate pipeline instead of the retained-key policy above.
+R8 runs after managed trimming (CoreCLR) or ILC (NativeAOT), while managed
+assemblies keep their original JNI names.
+
+CoreCLR packages the final mappings as optional `remapping_data` alongside its
+required `coreclr_bootstrap` in each ABI's `libbinary_blobs.so`. NativeAOT
+instead links raw remapping and bootstrap data objects into the existing
+application shared library after R8, without recompiling the ILC object.
+Neither path uses application-generated LLVM or native source code.
+See [application shared libraries](../project-docs/ApkSharedLibraries.md)
+and [NativeAOT startup data](../workflow/SystemProperties.md#bundled-nativeaot-startup-data)
+for the payload and initialization contracts.
+
+# Historical D8/R8 integration proposal
+
+The remaining sections preserve the original integration proposal and its
+measurements. They are not current property defaults, supported tool choices,
+or toolchain acquisition instructions. In particular, the `dx` and standalone
+ProGuard paths described historically must not be inferred from these notes.
+See the current
+[build properties](../docs-mobile/building-apps/build-properties.md) for
+supported application settings.
 
 # What is D8? What is R8?
 
@@ -93,22 +231,22 @@ Usage: r8 [options] <input-files>
 
 In other words, what is currently happening *before* we introduce D8/R8 support?
 
-1. The [Javac](https://github.com/xamarin/xamarin-android/blob/221a2190ebb3aaec9ecd9b1cf8f7f6174c43153a/src/Xamarin.Android.Build.Tasks/Tasks/Javac.cs)
+1. The [Javac](https://github.com/dotnet/android/blob/221a2190ebb3aaec9ecd9b1cf8f7f6174c43153a/src/Xamarin.Android.Build.Tasks/Tasks/Javac.cs)
    MSBuild task compiles `*.java` files to a `classes.zip` file.
-2. The [Desugar](https://github.com/xamarin/xamarin-android/blob/221a2190ebb3aaec9ecd9b1cf8f7f6174c43153a/src/Xamarin.Android.Build.Tasks/Tasks/Desugar.cs)
+2. The [Desugar](https://github.com/dotnet/android/blob/221a2190ebb3aaec9ecd9b1cf8f7f6174c43153a/src/Xamarin.Android.Build.Tasks/Tasks/Desugar.cs)
    MSBuild task "desugars" using `desugar_deploy.jar` if
    `$(AndroidEnableDesugar)` is `True`.
-3. The [Proguard](https://github.com/xamarin/xamarin-android/blob/221a2190ebb3aaec9ecd9b1cf8f7f6174c43153a/src/Xamarin.Android.Build.Tasks/Tasks/Proguard.cs)
+3. The [Proguard](https://github.com/dotnet/android/blob/221a2190ebb3aaec9ecd9b1cf8f7f6174c43153a/src/Xamarin.Android.Build.Tasks/Tasks/Proguard.cs)
    MSBuild task shrinks the compiled Java code if
    `$(AndroidEnableProguard)` is `True`. Developers may also supply
    custom proguard configuration files via `ProguardConfiguration`
    build items.
-4. The [CreateMultiDexMainDexClassList](https://github.com/xamarin/xamarin-android/blob/221a2190ebb3aaec9ecd9b1cf8f7f6174c43153a/src/Xamarin.Android.Build.Tasks/Tasks/CreateMultiDexMainDexClassList.cs)
+4. The [CreateMultiDexMainDexClassList](https://github.com/dotnet/android/blob/221a2190ebb3aaec9ecd9b1cf8f7f6174c43153a/src/Xamarin.Android.Build.Tasks/Tasks/CreateMultiDexMainDexClassList.cs)
    MSBuild task runs `proguard` to generate a final, combined
    `multidex.keep` file if `$(AndroidEnableMultiDex)` is `True`.
    Developers can also supply custom `multidex.keep` files via
    `MultiDexMainDexList` build items.
-5. The [CompileToDalvik](https://github.com/xamarin/xamarin-android/blob/221a2190ebb3aaec9ecd9b1cf8f7f6174c43153a/src/Xamarin.Android.Build.Tasks/Tasks/CompileToDalvik.cs)
+5. The [CompileToDalvik](https://github.com/dotnet/android/blob/221a2190ebb3aaec9ecd9b1cf8f7f6174c43153a/src/Xamarin.Android.Build.Tasks/Tasks/CompileToDalvik.cs)
    MSBuild task runs `dx.jar` to generate a final `classes.dex` file
    in `$(IntermediateOutputPath)android\bin`. If `multidex` is
    enabled, a `classes2.dex` (and potentially more) are also generated
@@ -118,7 +256,7 @@ In other words, what is currently happening *before* we introduce D8/R8 support?
 
 .NET for Android now has two new MSBuild tasks: `<R8/>` and `<D8/>`.
 
-1. The [Javac](https://github.com/xamarin/xamarin-android/blob/221a2190ebb3aaec9ecd9b1cf8f7f6174c43153a/src/Xamarin.Android.Build.Tasks/Tasks/Javac.cs)
+1. The [Javac](https://github.com/dotnet/android/blob/221a2190ebb3aaec9ecd9b1cf8f7f6174c43153a/src/Xamarin.Android.Build.Tasks/Tasks/Javac.cs)
    MSBuild task will remain unchanged.
 2. `D8` will run if `$(AndroidEnableMultiDex)` is `False`,
    `$(AndroidLinkTool)` is not `r8`, and "desugar" by default.
@@ -264,7 +402,7 @@ Some of my thoughts:
 
 [dex]: https://source.android.com/devices/tech/dalvik/dalvik-bytecode
 [multidex]: https://developer.android.com/studio/build/multidex
-[debug_symbols]: https://github.com/xamarin/xamarin-android/blob/221a2190ebb3aaec9ecd9b1cf8f7f6174c43153a/src/Xamarin.Android.Build.Tasks/Xamarin.Android.Common.targets#L315-L336
+[debug_symbols]: https://github.com/dotnet/android/blob/221a2190ebb3aaec9ecd9b1cf8f7f6174c43153a/src/Xamarin.Android.Build.Tasks/Xamarin.Android.Common.targets#L315-L336
 [depot_tools]: http://commondatastorage.googleapis.com/chrome-infra-docs/flat/depot_tools/docs/html/depot_tools_tutorial.html
 [powershell_script]: https://github.com/jonathanpeppers/HelloWorld/blob/39e2854f6ca39c0941fb8bd6f2a16d8b7663003e/build.ps1
-[d8andr8_zip]: https://github.com/xamarin/xamarin-android/files/2470385/d8andr8.zip
+[d8andr8_zip]: https://github.com/dotnet/android/files/2470385/d8andr8.zip

@@ -1,43 +1,37 @@
 #pragma once
 
+#include <cstddef>
 #include <cstdint>
 
 #include <jni.h>
+#include <runtime-base/binary-blob-loader.hh>
+
+struct MarkCrossReferencesArgs;
 
 namespace xamarin::android {
-	// Values must be identical to those in src/Mono.Android/Android.Runtime/RuntimeNativeMethods.cs
-	enum class TraceKind : uint32_t
-	{
-		Java    = 0x01,
-		Managed = 0x02,
-		Native  = 0x04,
-		Signals = 0x08,
-	};
-
 	using jnienv_propagate_uncaught_exception_fn = void (*)(JNIEnv *env, jobject javaThread, jthrowable javaException);
-	using jnienv_register_jni_natives_fn = void (*)(const jchar *typeName_ptr, int32_t typeName_len, jclass jniClass, const jchar *methods_ptr, int32_t methods_len);
+	using jnienv_gc_bridge_fn = void (*)(MarkCrossReferencesArgs*);
+	using jnienv_initialize_gc_bridge_fn = jnienv_gc_bridge_fn (*)(jnienv_gc_bridge_fn);
 
 	// NOTE: Keep this in sync with managed side in src/Mono.Android/Android.Runtime/JNIEnvInit.cs
 	struct JnienvInitializeArgs {
 		JavaVM         *javaVm;
 		JNIEnv         *env;
 		jobject         grefLoader;
-		jmethodID       Loader_loadClass;
-		jclass          grefClass;
 		unsigned int    logCategories;
-		int             version;
 		int             grefGcThreshold;
 		jobject         grefIGCUserPeer;
 		uint8_t         brokenExceptionTransitions;
 		int             packageNamingPolicy;
 		uint8_t         boundExceptionType;
-		int             jniAddNativeMethodRegistrationAttributePresent;
-		bool            jniRemappingInUse;
-		bool            marshalMethodsEnabled;
-		jobject         grefGCUserPeerable;
+		const BinaryBlobPayload *jniRemappingData;
 		jnienv_propagate_uncaught_exception_fn propagateUncaughtExceptionFn;
-		jnienv_register_jni_natives_fn registerJniNativesFn;
+		int              maxGrefCount;
+		jnienv_initialize_gc_bridge_fn initializeGCBridge;
 	};
+
+	static_assert (offsetof (JnienvInitializeArgs, initializeGCBridge) == (sizeof (void*) == 8 ? 80 : 48));
+	static_assert (sizeof (JnienvInitializeArgs) == (sizeof (void*) == 8 ? 88 : 52));
 
 	// Keep the enum values in sync with those in src/Mono.Android/AndroidRuntime/BoundExceptionType.cs
 	enum class BoundExceptionType : uint8_t

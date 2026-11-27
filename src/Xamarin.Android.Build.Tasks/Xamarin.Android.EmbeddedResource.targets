@@ -33,7 +33,6 @@ This file is used by all project types, including binding projects.
   </PropertyGroup>
 
   <Target Name="_ResolveLibraryProjectImports"
-      Condition="'$(DesignTimeBuild)' != 'true' or ('$(DesignTimeBuild)' == 'true' and '$(AndroidUseManagedDesignTimeResourceGenerator)' == 'true') "
       DependsOnTargets="$(CoreResolveReferencesDependsOn)"
       Inputs="$(ProjectAssetsFile);$(MSBuildProjectFullPath);@(_MonoAndroidReferencePath);@(_MonoAndroidReferenceDependencyPaths);@(AndroidAarLibrary);$(_AndroidBuildPropertiesCache)"
       Outputs="$(_AndroidStampDirectory)_ResolveLibraryProjectImports.stamp">
@@ -67,10 +66,6 @@ This file is used by all project types, including binding projects.
       <Output TaskParameter="ProguardConfigFiles" ItemName="ProguardConfiguration" />
       <Output TaskParameter="ExtractedDirectories" ItemName="_ExtractedDirectories" />
     </ReadLibraryProjectImportsCache>
-    <ItemGroup>
-      <FileWrites Include="@(ResolvedResourceDirectories->'%(ResourceDirectoryArchive)')"
-          Condition=" '%(ResolvedResourceDirectories.ResourceDirectoryArchive)' != '' And Exists ('%(ResolvedResourceDirectories.ResourceDirectoryArchive)')" />
-    </ItemGroup>
   </Target>
 
   <Target Name="_BuildLibraryImportsCache"

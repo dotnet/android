@@ -5,7 +5,7 @@
 #include <string>
 #include <string_view>
 
-#include <java-interop-util.h>
+#include <shared/log_categories.hh>
 
 using namespace std::string_view_literals;
 

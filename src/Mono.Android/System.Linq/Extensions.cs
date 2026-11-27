@@ -20,8 +20,11 @@ namespace System.Linq {
 		static Extensions ()
 		{
 			IntPtr grefIterable = JNIEnv.FindClass ("java/util/Iterator");
-			id_next = JNIEnv.GetMethodID (grefIterable, "next", "()Ljava/lang/Object;");
-			JNIEnv.DeleteGlobalRef (grefIterable);
+			unsafe {
+				// SAFETY: the class reference is owned here; next is the parameterless Iterator method returning Object.
+				id_next = JNIEnv.GetMethodID (grefIterable, "next", "()Ljava/lang/Object;");
+				JNIEnv.DeleteGlobalRef (grefIterable);
+			}
 		}
 
 		/// <summary>
@@ -35,13 +38,14 @@ namespace System.Linq {
 		/// <exception cref="System.ArgumentNullException"><paramref name="source" /> is <see langword="null" />.</exception>
 		public static IEnumerable ToEnumerable (this Java.Lang.IIterable source)
 		{
-			if (source == null)
-				throw new ArgumentNullException ("source");
+			ArgumentNullException.ThrowIfNull (source);
 			using (var iterator = source.Iterator ())
 				while (iterator.HasNext) {
-					yield return JavaConvert.FromJniHandle (
+					// SAFETY: iterator is retained by using and id_next is the matching zero-argument Object-returning member.
+					// The returned local transfers to conversion before iterator suspension, including its existing failure path.
+					yield return unsafe(JavaConvert.FromJniHandle (
 							JNIEnv.CallObjectMethod (iterator.Handle, id_next),
-							JniHandleOwnership.TransferLocalRef);
+							JniHandleOwnership.TransferLocalRef));
 				}
 		}
 
@@ -49,9 +53,11 @@ namespace System.Linq {
 		{
 			using (source)
 				while (source.HasNext) {
-					yield return JavaConvert.FromJniHandle (
+					// SAFETY: source is retained by using and id_next is the matching zero-argument Object-returning member.
+					// The returned local transfers to conversion before iterator suspension, including its existing failure path.
+					yield return unsafe(JavaConvert.FromJniHandle (
 							JNIEnv.CallObjectMethod (source.Handle, id_next),
-							JniHandleOwnership.TransferLocalRef);
+							JniHandleOwnership.TransferLocalRef));
 				}
 		}
 
@@ -69,13 +75,14 @@ namespace System.Linq {
 				T
 		> (this Java.Lang.IIterable source)
 		{
-			if (source == null)
-				throw new ArgumentNullException ("source");
+			ArgumentNullException.ThrowIfNull (source);
 			using (var iterator = source.Iterator ())
 				while (iterator.HasNext) {
-					yield return JavaConvert.FromJniHandle<T>(
+					// SAFETY: iterator is retained by using and id_next is the matching zero-argument Object-returning member.
+					// Conversion receives the owned local before yield; no JNI reference or unsafe context spans suspension.
+					yield return unsafe(JavaConvert.FromJniHandle<T> (
 							JNIEnv.CallObjectMethod (iterator.Handle, id_next),
-							JniHandleOwnership.TransferLocalRef)!;
+							JniHandleOwnership.TransferLocalRef));
 				}
 		}
 
@@ -86,11 +93,14 @@ namespace System.Linq {
 		{
 			using (source)
 				while (source.HasNext) {
-					yield return JavaConvert.FromJniHandle<T>(
+#pragma warning disable CS8603 // Java iterators can return null even when T is non-nullable.
+					// SAFETY: source is retained by using and id_next is the matching zero-argument Object-returning member.
+					// Conversion receives the owned local before yield; no JNI reference or unsafe context spans suspension.
+					yield return unsafe(JavaConvert.FromJniHandle<T> (
 							JNIEnv.CallObjectMethod (source.Handle, id_next),
-							JniHandleOwnership.TransferLocalRef)!;
+							JniHandleOwnership.TransferLocalRef));
+#pragma warning restore CS8603
 				}
 		}
 	}
 }
-

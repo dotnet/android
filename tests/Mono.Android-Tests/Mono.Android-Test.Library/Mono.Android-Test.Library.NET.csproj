@@ -20,4 +20,9 @@
     </AndroidAsset>
   </ItemGroup>
 
+  <ItemGroup>
+    <!-- Keep generated bindings outside the Mono.Android friend assembly so compiler warnings remain actionable. -->
+    <InternalsVisibleTo Include="Mono.Android.NET-Tests" />
+  </ItemGroup>
+
 </Project>

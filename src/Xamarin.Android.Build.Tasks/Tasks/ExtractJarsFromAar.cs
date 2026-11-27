@@ -2,9 +2,9 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.IO.Compression;
 using Microsoft.Build.Framework;
 using Xamarin.Android.Tools;
-using Xamarin.Tools.Zip;
 using Microsoft.Android.Build.Tasks;
 
 namespace Xamarin.Android.Tasks
@@ -24,47 +24,20 @@ namespace Xamarin.Android.Tasks
 
 		public string []? Libraries { get; set; }
 
+		[Required]
+		public string OutputReferenceJarsDirectory { get; set; } = "";
+
+		[Required]
+		public string OutputReferenceAnnotationsDirectory { get; set; } = "";
+
+		public string []? ReferenceLibraries { get; set; }
+
 		public override bool RunTask ()
 		{
-			if (Libraries == null || Libraries.Length == 0)
-				return true;
-
 			var memoryStream = MemoryStreamPool.Shared.Rent ();
 			try {
-				var jars = new HashSet<string> (StringComparer.OrdinalIgnoreCase);
-				var annotations = new HashSet<string> (StringComparer.OrdinalIgnoreCase);
-				foreach (var library in Libraries) {
-					bool isAar = library.EndsWith (".aar", StringComparison.OrdinalIgnoreCase);
-					var jarOutputDirectory = Path.Combine (OutputJarsDirectory, Path.GetFileName (library));
-					var annotationOutputDirectory = Path.Combine (OutputAnnotationsDirectory, Path.GetFileName (library));
-					using (var zip = MonoAndroidHelper.ReadZipFile (library)) {
-						foreach (var entry in zip) {
-							if (entry.IsDirectory)
-								continue;
-							var entryFullName = entry.FullName;
-							var fileName = Path.GetFileName (entryFullName);
-							if (string.Equals (fileName, "annotations.zip", StringComparison.OrdinalIgnoreCase)) {
-								var path = Path.GetFullPath (Path.Combine (annotationOutputDirectory, entryFullName));
-								if (!IsUnderDirectory (path, annotationOutputDirectory, entryFullName, library))
-									continue;
-								Extract (entry, memoryStream, path);
-								annotations.Add (path);
-							} else if (!entryFullName.EndsWith (".jar", StringComparison.OrdinalIgnoreCase)) {
-								continue;
-							} else if (isAar && Files.ShouldSkipEntryInAar (entryFullName)) {
-								continue;
-							} else {
-								var path = Path.GetFullPath (Path.Combine (jarOutputDirectory, entryFullName));
-								if (!IsUnderDirectory (path, jarOutputDirectory, entryFullName, library))
-									continue;
-								Extract (entry, memoryStream, path);
-								jars.Add (path);
-							}
-						}
-					}
-				}
-				DeleteUnknownFiles (OutputJarsDirectory, jars);
-				DeleteUnknownFiles (OutputAnnotationsDirectory, annotations);
+				ExtractLibraries (Libraries, OutputJarsDirectory, OutputAnnotationsDirectory, memoryStream);
+				ExtractLibraries (ReferenceLibraries, OutputReferenceJarsDirectory, OutputReferenceAnnotationsDirectory, memoryStream);
 			} finally {
 				MemoryStreamPool.Shared.Return (memoryStream);
 			}
@@ -72,19 +45,53 @@ namespace Xamarin.Android.Tasks
 			return !Log.HasLoggedErrors;
 		}
 
-		bool IsUnderDirectory (string resolvedPath, string targetDirectory, string entryName, string archivePath)
+		void ExtractLibraries (string []? libraries, string outputJarsDirectory, string outputAnnotationsDirectory, MemoryStream memoryStream)
 		{
-			var normalizedDir = Path.GetFullPath (targetDirectory) + Path.DirectorySeparatorChar;
-			if (resolvedPath.StartsWith (normalizedDir, StringComparison.OrdinalIgnoreCase))
-				return true;
-			Log.LogDebugMessage ($"Skipping archive entry '{entryName}' in '{archivePath}': resolves outside target directory.");
-			return false;
+			var comparer = Path.DirectorySeparatorChar == '\\' ? StringComparer.OrdinalIgnoreCase : StringComparer.Ordinal;
+			var jars = new HashSet<string> (comparer);
+			var annotations = new HashSet<string> (comparer);
+			if (libraries != null) {
+				foreach (var library in libraries) {
+					bool isAar = library.EndsWith (".aar", StringComparison.OrdinalIgnoreCase);
+					var jarOutputDirectory = Path.Combine (outputJarsDirectory, Path.GetFileName (library));
+					var annotationOutputDirectory = Path.Combine (outputAnnotationsDirectory, Path.GetFileName (library));
+					using (var zip = MonoAndroidHelper.ReadZipFile (library)) {
+						var entries = new List<(ZipArchiveEntry Entry, bool IsAnnotation)> ();
+						foreach (var entry in zip.Entries) {
+							if (entry.IsDirectory ())
+								continue;
+							var entryFullName = entry.FullName.Replace ('\\', '/');
+							var fileName = Path.GetFileName (entryFullName);
+							if (string.Equals (fileName, "annotations.zip", StringComparison.OrdinalIgnoreCase)) {
+								Files.GetArchiveExtractionPath (annotationOutputDirectory, entryFullName);
+								entries.Add ((entry, true));
+							} else if (!entryFullName.EndsWith (".jar", StringComparison.OrdinalIgnoreCase)) {
+								continue;
+							} else {
+								Files.GetArchiveExtractionPath (jarOutputDirectory, entryFullName);
+								if (isAar && Files.ShouldSkipEntryInAar (entryFullName))
+									continue;
+								entries.Add ((entry, false));
+							}
+						}
+						foreach (var (entry, isAnnotation) in entries) {
+							var path = Files.GetArchiveExtractionPath (isAnnotation ? annotationOutputDirectory : jarOutputDirectory, entry.FullName);
+							Extract (entry, memoryStream, path);
+							(isAnnotation ? annotations : jars).Add (path);
+						}
+					}
+				}
+			}
+			DeleteUnknownFiles (outputJarsDirectory, jars);
+			DeleteUnknownFiles (outputAnnotationsDirectory, annotations);
 		}
 
-		static void Extract (ZipEntry entry, MemoryStream stream, string destination)
+		static void Extract (ZipArchiveEntry entry, MemoryStream stream, string destination)
 		{
 			stream.SetLength (0); //Reuse the stream
-			entry.Extract (stream);
+			using (var source = entry.Open ())
+				source.CopyTo (stream);
+			stream.Position = 0;
 			Files.CopyIfStreamChanged (stream, destination);
 		}
 
@@ -92,8 +99,12 @@ namespace Xamarin.Android.Tasks
 		{
 			if (!Directory.Exists (directory))
 				return;
+			var prefix = Path.GetFullPath (directory);
+			if (!prefix.EndsWith (Path.DirectorySeparatorChar.ToString (), StringComparison.Ordinal))
+				prefix += Path.DirectorySeparatorChar;
 			foreach (var file in Directory.GetFiles (directory, "*", SearchOption.AllDirectories)) {
-				var path = Path.GetFullPath (file);
+				var fullPath = Path.GetFullPath (file);
+				var path = Files.GetArchiveExtractionPath (directory, fullPath.Substring (prefix.Length));
 				if (!knownFiles.Contains (path)) {
 					Log.LogDebugMessage ($"Deleting unknown file: {path}");
 					File.Delete (path);

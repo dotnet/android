@@ -12,4 +12,5 @@ for config in Release Debug ; do
     exec "${ROOT}/bin/${config}/dotnet/dotnet" "$@"
 done
 
-echo "You need to run 'make prepare' first."
+echo "You need to run 'make prepare' first." >&2
+exit 1

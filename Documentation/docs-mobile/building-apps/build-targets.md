@@ -19,7 +19,7 @@ target, *or* set the
 property to True when building:
 
 ```shell
-msbuild /p:AndroidBuildApplicationPackage=True App.sln
+msbuild /p:AndroidBuildApplicationPackage=True App.slnx
 ```
 
 ## BuildAndStartAotProfiling
@@ -27,6 +27,9 @@ msbuild /p:AndroidBuildApplicationPackage=True App.sln
 Builds the app with an  embedded AOT profiler, sets the profiler TCP port to
 [`$(AndroidAotProfilerPort)`](build-properties.md#androidaotprofilerport),
 and starts the default activity.
+
+This legacy target applies to supported .NET 10-and-earlier projects that
+use Mono. It does not configure CoreCLR or NativeAOT profiling.
 
 The default TCP port is `9999`.
 
@@ -71,6 +74,9 @@ Added in .NET 11.
 Must be called *after* the [BuildAndStartAotProfiling](#buildandstartaotprofiling)
 target.
 
+This legacy target applies to supported .NET 10-and-earlier projects that
+use Mono.
+
 Collects the AOT profiler data from the device or emulator through the TCP port
 [`$(AndroidAotProfilerPort)`](build-properties.md#androidaotprofilerport)
 and writes them to
@@ -85,7 +91,7 @@ property.
 This is equivalent to:
 
 ```shell
-aprofutil $(AProfUtilExtraOptions) -s -v -f -p $(AndroidAotProfilerPort) -o "$(AndroidAotCustomProfilePath)"
+aprofutil $(AProfUtilExtraOptions) -s -v -p $(AndroidAotProfilerPort) -o "$(AndroidAotCustomProfilePath)"
 ```
 
 Added in Xamarin.Android 10.2.
@@ -151,6 +157,39 @@ MSBuild /t:Install ProjectName.csproj /p:AdbTarget=-e
 Calls the [`GetAndroidDependencies`](#getandroiddependencies) target, then installs
 the Android SDK packages specified in the `@(AndroidDependency)` item group.
 
+The Android SDK packages are installed with Google's
+[Android CLI](https://developer.android.com/tools/agents/android-cli)
+(`android sdk install`). The target downloads a pinned version of the Android CLI
+from Google into a per-user cache. Before it runs the Android CLI, the target
+makes sure that the SHA-256 hash of the file is the same as the hash included with
+the .NET for Android SDK. The Android CLI is available for Windows x64, macOS (x64
+and Arm64), and Linux (x64 and Arm64).
+
+For `platform-tools`, the target queries the CLI's stable package catalog and
+selects the newest version in the supported 37.x major band that is at least
+the requested `$(AndroidSdkPlatformToolsVersion)`. It does not automatically
+install 38.x or preview releases. An older installed 37.x package is updated; an
+equal or newer installed version is left alone. An installed preview, such as
+37.0.3-rc1, does not satisfy the stable release with the same number. If the catalog contains no
+such stable package, installation fails with [XA5310](../messages/xa5310.md),
+rather than crossing major versions.
+The Android CLI downloads SDK archives using its HTTPS catalog and the checksums
+published there; these dynamically selected archives do not have independently
+pinned hashes in the .NET for Android SDK.
+The major band comes from `$(AndroidSdkPlatformToolsVersion)`: an explicit
+override selects a different major band, not an exact point release. Workload
+dependency generation still uses that property's exact revision.
+
+The Android CLI accepts the Android SDK licenses without a prompt. Thus, if Android SDK
+packages must be installed, this target fails unless you set `$(AcceptAndroidSDKLicenses)`
+to `true`. Before you set this
+property, read the [Android SDK License Agreement](https://developer.android.com/studio/terms).
+
+Before it extracts a downloaded Microsoft OpenJDK archive, this target verifies
+the archive's detached digital signature. The signing key must match the trusted
+key hash included with the .NET for Android SDK. Missing or invalid signatures
+stop installation with [XA5305](../messages/xa5305.md).
+
 ```dotnetcli
 dotnet build -t:InstallAndroidDependencies -f net8.0-android "-p:AndroidSdkDirectory=<path to sdk>" "-p:JavaSdkDirectory=<path to java sdk>"
 ```
@@ -162,13 +201,16 @@ you will get the following error:
 error MSB4057: The target "InstallAndroidDependencies" does not exist in the project.
 ```
 
-The `AndroidSdkDirectory` and `JavaSdkDirectory` properties are required as we need to know where to install the required components. These directories can be empty or existing. Sdk components
-will be installed on top on an existing sdk installation.
+The `AndroidSdkDirectory` and `JavaSdkDirectory` properties set where the components are installed.
+These directories can be empty or existing. Sdk components will be installed on top of an existing sdk installation.
+If a property is not set, the build looks for an existing installation, the same as a normal build.
+If it finds no installation, `AndroidSdkDirectory` uses the `ANDROID_HOME` or `ANDROID_SDK_ROOT` environment variable.
+If those are also not set, the default is `%LOCALAPPDATA%\Android\Sdk` on Windows, `~/Library/Android/sdk` on macOS,
+and `~/Android/Sdk` on Linux.
+`JavaSdkDirectory` uses the `JAVA_HOME` or `JDK_HOME` environment variable.
+If those are also not set, the default is `%LOCALAPPDATA%\Android\jdk-<major version>` on Windows and
+`~/Library/Android/microsoft-<major version>.jdk` on macOS. On Linux, you must set `JavaSdkDirectory` or `JAVA_HOME`.
 
-The [`$(AndroidManifestType)`](build-properties.md#androidmanifesttype)
-MSBuild property controls which
-[Visual Studio SDK Manager repository](/xamarin/android/get-started/installation/android-sdk?tabs=windows#repository-selection)
-is used for package name and package version detection, and URLs to download.
 
 ## Publish
 
@@ -193,18 +235,6 @@ For example, to query the published artifacts:
 dotnet build MyApp.csproj -t:Publish -getTargetResult:Publish
 ```
 
-## RunWithLogging
-
-Runs the application with additional logging enabled.  Helpful when reporting or investigating an issue with
-either the application or the runtime.  If successful, messages printed to the screen will show location
-of the logcat file with the logged messages.
-
-Properties which affect how the target works:
-
-  * `/p:RunLogVerbose=true` enables even more verbose logging from MonoVM
-  * `/p:RunLogDelayInMS=X` where `X` should be replaced with time in milliseconds to wait before writing the
-    log output to file.  Defaults to `1000`.
-
 ## SignAndroidPackage
 
 Creates and signs the Android package (`.apk`) file.
@@ -214,21 +244,22 @@ Use with `/p:Configuration=Release` to generate self-contained "Release" package
 Package files created by this target are available in the
 [`@(ApplicationArtifact)`](build-items.md#applicationartifact) item group.
 
-## StartAndroidActivity
+## Run
 
-Starts the default activity on the device or the running emulator.
+Builds and installs the application, then starts it on the device or running emulator.
+This target uses the same launch path as `dotnet run -p:WaitForExit=false` and returns
+after starting the application. Unlike that command, the `Run` target wakes the device
+and dismisses its keyguard before launching the application.
 
 To start a different activity, set the
 [`$(AndroidLaunchActivity)`](build-properties.md#androidlaunchactivity)
 property to the activity name.
 
-This is equivalent to:
-
 ```shell
-adb shell am start -S -n @PACKAGE_NAME@/$(AndroidLaunchActivity)
+dotnet build -t:Run
 ```
 
-Added in Xamarin.Android 10.2.
+`StartAndroidActivity` is retained as an alias for `Run`.
 
 ## StopAndroidPackage
 

@@ -144,9 +144,6 @@ namespace Xamarin.Android.Tasks
 			if (LayoutBindingFiles.Length == 0)
 				LogDebugMessage ("  No layout file qualifies for code-behind generation");
 			LayoutPartialClassFiles = layoutPartialClassFiles?.ToArray () ?? [];
-
-			LogDebugTaskItems ("  LayoutBindingFiles:", LayoutBindingFiles);
-			LogDebugTaskItems ("  LayoutPartialClassFiles:", LayoutPartialClassFiles);
 		}
 
 		void ParseAndLoadGroup (Dictionary <string, LayoutGroup> groupIndex, string groupName, List<ITaskItem>? items, ref List<ITaskItem>? layoutBindingFiles, ref List<ITaskItem>? layoutPartialClassFiles)
@@ -217,7 +214,7 @@ namespace Xamarin.Android.Tasks
 				XPathNavigator current = nodes.Current;
 
 				// <merge> anywhere is ignored - Android always returns 'null' if you try to find such
-				// an element. Prevents https://github.com/xamarin/xamarin-android/issues/1929
+				// an element. Prevents https://github.com/dotnet/android/issues/1929
 				if (MonoAndroidHelper.StringEquals ("merge", current.LocalName))
 					continue;
 

@@ -1,0 +1,13 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <Import Project="..\..\Configuration.props" />
+
+  <PropertyGroup>
+    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+    <Version>11.0.0</Version>
+    <OutputPath>$(BuildOutputDirectory)$(DotNetStableTargetFramework)\</OutputPath>
+
+    <TargetFramework>$(DotNetStableTargetFramework)</TargetFramework>
+  </PropertyGroup>
+
+</Project>

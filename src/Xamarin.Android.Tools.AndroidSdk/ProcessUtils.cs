@@ -14,15 +14,11 @@ namespace Xamarin.Android.Tools
 {
 	public static class ProcessUtils
 	{
-		static string[] ExecutableFileExtensions;
-
-		static ProcessUtils ()
-		{
+		static readonly Lazy<string[]> ExecutableFileExtensions = new Lazy<string[]> (() => {
 			var pathExt     = Environment.GetEnvironmentVariable (EnvironmentVariableNames.PathExt);
 			var pathExts    = pathExt?.Split (new char [] { Path.PathSeparator }, StringSplitOptions.RemoveEmptyEntries) ?? new string [0];
-
-			ExecutableFileExtensions    = pathExts;
-		}
+			return pathExts;
+		});
 
 		/// Backward-compatible overload matching the original shipped API (without environmentVariables).
 #pragma warning disable RS0027 // Public API with optional parameter(s) should have the most parameters amongst its public overloads
@@ -69,12 +65,13 @@ namespace Xamarin.Android.Tools
 				//
 				// We wrap `stdout` and `stderr` in syncronized wrappers for safety in case they
 				// end up writing to the same buffer, or they are the same object.
+				// Redirected streams without a writer must still be drained so the process cannot block.
 				using (cancellationToken.Register (() => KillProcess (process))) {
 					if (psi.RedirectStandardOutput)
-						output = ReadStreamAsync (process.StandardOutput, TextWriter.Synchronized (stdout!));
+						output = ReadStreamAsync (process.StandardOutput, TextWriter.Synchronized (stdout ?? TextWriter.Null));
 
 					if (psi.RedirectStandardError)
-						error = ReadStreamAsync (process.StandardError, TextWriter.Synchronized (stderr!));
+						error = ReadStreamAsync (process.StandardError, TextWriter.Synchronized (stderr ?? TextWriter.Null));
 
 					await Task.WhenAll (new [] { output, error, exit }).ConfigureAwait (false);
 				}
@@ -186,7 +183,8 @@ namespace Xamarin.Android.Tools
 		/// <summary>
 		/// Creates a <see cref="ProcessStartInfo"/> with the given filename and arguments.
 		/// On .NET 5+ uses <see cref="ProcessStartInfo.ArgumentList"/> to avoid shell-escaping issues;
-		/// on older frameworks falls back to a single <see cref="ProcessStartInfo.Arguments"/> string.
+		/// on older frameworks falls back to a single <see cref="ProcessStartInfo.Arguments"/> string
+		/// built by <see cref="JoinArguments"/>.
 		/// </summary>
 		public static ProcessStartInfo CreateProcessStartInfo (string fileName, params string[] args)
 		{
@@ -204,18 +202,74 @@ namespace Xamarin.Android.Tools
 			return psi;
 		}
 
-#if !NET5_0_OR_GREATER
-		static string JoinArguments (string[] args)
+		/// <summary>
+		/// Joins <paramref name="args"/> into a single command line suitable for
+		/// <see cref="ProcessStartInfo.Arguments"/>.
+		/// </summary>
+		/// <remarks>
+		/// Implements the quoting rules understood by <c>CommandLineToArgvW</c>, which are also
+		/// the rules .NET uses when it parses <see cref="ProcessStartInfo.Arguments"/> on Unix.
+		/// A run of backslashes is only an escape sequence when it is immediately followed by a
+		/// quote, so backslashes must *not* be doubled unconditionally: doing so turns
+		/// <c>C:\dir\file.dll</c> into <c>C:\\dir\\file.dll</c>, which some tools (notably
+		/// <c>adb push</c>) reject.
+		/// </remarks>
+		internal static string JoinArguments (params string?[] args)
 		{
 			var sb = new StringBuilder ();
 			for (int i = 0; i < args.Length; i++) {
 				if (i > 0)
 					sb.Append (' ');
-				sb.Append ('"').Append (args [i]).Append ('"');
+				AppendArgument (sb, args [i]);
 			}
 			return sb.ToString ();
 		}
-#endif
+
+		static void AppendArgument (StringBuilder sb, string? argument)
+		{
+			if (argument is null || argument.Length == 0) {
+				sb.Append ("\"\"");
+				return;
+			}
+
+			if (ContainsNoWhitespaceOrQuotes (argument)) {
+				sb.Append (argument);
+				return;
+			}
+
+			sb.Append ('"');
+			for (int i = 0; i < argument.Length; i++) {
+				int backslashes = 0;
+				while (i < argument.Length && argument [i] == '\\') {
+					backslashes++;
+					i++;
+				}
+
+				if (i == argument.Length) {
+					// Trailing backslashes precede the closing quote, so they must be doubled
+					// to avoid escaping it.
+					sb.Append ('\\', backslashes * 2);
+					break;
+				}
+
+				if (argument [i] == '"') {
+					sb.Append ('\\', backslashes * 2 + 1).Append ('"');
+				} else {
+					sb.Append ('\\', backslashes).Append (argument [i]);
+				}
+			}
+			sb.Append ('"');
+		}
+
+		static bool ContainsNoWhitespaceOrQuotes (string s)
+		{
+			for (int i = 0; i < s.Length; i++) {
+				char c = s [i];
+				if (char.IsWhiteSpace (c) || c == '"')
+					return false;
+			}
+			return true;
+		}
 
 		/// <summary>
 		/// Throws <see cref="InvalidOperationException"/> when <paramref name="exitCode"/> is non-zero.
@@ -246,8 +300,9 @@ namespace Xamarin.Android.Tools
 
 		/// <summary>
 		/// Searches for a cmdline-tools binary in the SDK.
-		/// Selects the highest installed revision reported by source.properties,
-		/// with deterministic directory-name fallback when metadata is unavailable.
+		/// Selects cmdline-tools/latest first, then the highest installed revision reported
+		/// by source.properties, with deterministic directory-name fallback when metadata is unavailable.
+		/// Legacy tools/bin installations are not supported.
 		/// </summary>
 		/// <param name="sdkPath">Root path to the Android SDK.</param>
 		/// <param name="toolName">Tool binary name without extension (e.g., "avdmanager").</param>
@@ -262,26 +317,27 @@ namespace Xamarin.Android.Tools
 				logger: logger)?.Path;
 		}
 
-		internal static IEnumerable<string> FindExecutablesInPath (string executable)
+		internal static IEnumerable<string> FindExecutablesInPath (string executable, IDictionary<string, string>? environmentVariables = null, string? workingDirectory = null)
 		{
-			var path        = Environment.GetEnvironmentVariable (EnvironmentVariableNames.Path) ?? "";
+			var path        = GetEnvironmentVariable (EnvironmentVariableNames.Path, environmentVariables) ?? "";
 			var pathDirs    = path.Split (new char[] { Path.PathSeparator }, StringSplitOptions.RemoveEmptyEntries);
 
 			foreach (var dir in pathDirs) {
-				foreach (var exe in FindExecutablesInDirectory (dir, executable)) {
+				foreach (var exe in FindExecutablesInDirectory (dir, executable, environmentVariables, workingDirectory)) {
 					yield return exe;
 				}
 			}
 		}
 
-		internal static IEnumerable<string> FindExecutablesInDirectory (string dir, string executable)
+		internal static IEnumerable<string> FindExecutablesInDirectory (string dir, string executable, IDictionary<string, string>? environmentVariables = null, string? workingDirectory = null)
 		{
-			if (!Directory.Exists (dir))
+			var directory = ResolvePath (dir, workingDirectory);
+			if (directory == null || !Directory.Exists (directory))
 				yield break;
-			foreach (var exe in ExecutableFiles (executable)) {
+			foreach (var exe in ExecutableFiles (executable, environmentVariables)) {
 				string exePath;
 				try {
-					exePath = Path.Combine (dir, exe);
+					exePath = Path.Combine (directory, exe);
 				} catch (ArgumentException) {
 					continue;
 				}
@@ -290,14 +346,65 @@ namespace Xamarin.Android.Tools
 			}
 		}
 
-		internal static IEnumerable<string> ExecutableFiles (string executable)
+		internal static string? ResolvePath (string path, string? workingDirectory)
 		{
-			if (ExecutableFileExtensions == null || ExecutableFileExtensions.Length == 0) {
+			if (workingDirectory == null)
+				return path;
+			var baseRoot = Path.GetPathRoot (workingDirectory);
+			if (string.IsNullOrEmpty (baseRoot) || (OS.IsWindows && baseRoot.Length < 3))
+				throw new ArgumentException ("The working directory must be an absolute path.", nameof (workingDirectory));
+			if (path.Length == 0 || (OS.IsWindows && string.IsNullOrWhiteSpace (path)) || path.IndexOfAny (Path.GetInvalidPathChars ()) >= 0)
+				return null;
+			try {
+				if (OS.IsWindows) {
+					var root = Path.GetPathRoot (path);
+					if (root?.Length == 1) {
+						path = Path.Combine (baseRoot, path.Substring (1));
+					} else if (root?.Length == 2 && root [1] == ':') {
+						// Drive-relative paths use the project's directory on the same drive.
+						path = string.Equals (root, baseRoot.Substring (0, 2), StringComparison.OrdinalIgnoreCase)
+							? path.Substring (2)
+							: root + Path.DirectorySeparatorChar + path.Substring (2);
+					}
+				}
+				return Path.GetFullPath (Path.Combine (workingDirectory, path));
+			} catch (ArgumentException) {
+				return null;
+			} catch (NotSupportedException) {
+				return null;
+			} catch (PathTooLongException) {
+				return null;
+			}
+		}
+
+		internal static string? GetEnvironmentVariable (string name, IDictionary<string, string>? environmentVariables)
+		{
+			if (environmentVariables == null)
+				return Environment.GetEnvironmentVariable (name);
+			if (environmentVariables.TryGetValue (name, out var value))
+				return value;
+			if (OS.IsWindows)
+				foreach (var pair in environmentVariables)
+					if (string.Equals (pair.Key, name, StringComparison.OrdinalIgnoreCase))
+						return pair.Value;
+			return null;
+		}
+
+		internal static string? GetUnixHome (IDictionary<string, string>? environmentVariables)
+			=> environmentVariables == null
+				? Environment.GetFolderPath (Environment.SpecialFolder.UserProfile)
+				: GetEnvironmentVariable ("HOME", environmentVariables);
+
+		internal static IEnumerable<string> ExecutableFiles (string executable, IDictionary<string, string>? environmentVariables = null)
+		{
+			var extensions = environmentVariables == null ? ExecutableFileExtensions.Value :
+				GetEnvironmentVariable (EnvironmentVariableNames.PathExt, environmentVariables)?.Split (new [] { Path.PathSeparator }, StringSplitOptions.RemoveEmptyEntries);
+			if (extensions == null || extensions.Length == 0) {
 				yield return executable;
 				yield break;
 			}
 
-			foreach (var ext in ExecutableFileExtensions)
+			foreach (var ext in extensions)
 				yield return Path.ChangeExtension (executable, ext);
 			yield return executable;
 		}
@@ -317,10 +424,10 @@ namespace Xamarin.Android.Tools
 #if !NET5_0_OR_GREATER
 		[DllImport ("shell32.dll")]
 		[return: MarshalAs (UnmanagedType.Bool)]
-		static extern bool IsUserAnAdmin ();
+		static safe extern bool IsUserAnAdmin ();
 
 		[DllImport ("libc", SetLastError = true)]
-		static extern uint geteuid ();
+		static safe extern uint geteuid ();
 #endif
 	}
 }

@@ -1,14 +1,14 @@
 using System;
 using System.Threading;
 
-using NUnit.Framework;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Xamarin.Android.RuntimeTests {
 
-	[TestFixture]
+	[TestClass]
 	public class AssemblyInformationalVersionAttributeTest {
 
-		[Test]
+		[TestMethod]
 		public void VersionInformationExists ()
 		{
 			var attrs = (System.Reflection.AssemblyInformationalVersionAttribute[])

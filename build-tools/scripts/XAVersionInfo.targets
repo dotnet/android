@@ -14,6 +14,10 @@
        is the dotnet/android commit. No submodules contribute version info
        anymore, so there is no _GetSubmodulesVersionInfo target. -->
   <Target Name="GetXAVersionInfo">
+    <PropertyGroup>
+      <_AndroidAllowMissingGitStartCommit>false</_AndroidAllowMissingGitStartCommit>
+      <_AndroidAllowMissingGitStartCommit Condition=" '$(SYSTEM_PULLREQUEST_PULLREQUESTNUMBER)' != '' ">true</_AndroidAllowMissingGitStartCommit>
+    </PropertyGroup>
     <GitBlame
         FileName="Directory.Build.props"
         LineFilter="&lt;ProductVersion&gt;"
@@ -23,6 +27,7 @@
       <Output TaskParameter="Commits"                 ItemName="_XAVersionCommit" />
     </GitBlame>
     <GitCommitsInRange
+        AllowMissingStartCommit="$(_AndroidAllowMissingGitStartCommit)"
         ContinueOnError="true"
         StartCommit="%(_XAVersionCommit.CommitHash)"
         WorkingDirectory="$(XamarinAndroidSourcePath)"
@@ -39,6 +44,7 @@
       <Output TaskParameter="Commits"                 ItemName="_PackVersionCommit" />
     </GitBlame>
     <GitCommitsInRange
+        AllowMissingStartCommit="$(_AndroidAllowMissingGitStartCommit)"
         ContinueOnError="true"
         StartCommit="%(_PackVersionCommit.CommitHash)"
         WorkingDirectory="$(XamarinAndroidSourcePath)"
@@ -63,7 +69,7 @@
       <!-- See Azure Pipelines predefined variables. -->
       <_AndroidPackLabel Condition=" '$(SYSTEM_PULLREQUEST_PULLREQUESTNUMBER)' != '' ">ci.pr.gh$(SYSTEM_PULLREQUEST_PULLREQUESTNUMBER).$(PackVersionCommitCount)</_AndroidPackLabel>
       <_AndroidPackBranch>$([System.Text.RegularExpressions.Regex]::Replace('$(XAVersionBranch)', '[^a-zA-Z0-9-]', '-'))</_AndroidPackBranch>
-      <_AndroidPackLabel Condition=" '$(_AndroidPackLabel)' == '' and $(XAVersionBranch.StartsWith('release/'))">$(AndroidPackVersionSuffix).$(PackVersionCommitCount)</_AndroidPackLabel>
+      <_AndroidPackLabel Condition=" '$(_AndroidPackLabel)' == '' and ('$(XAVersionBranch)' == 'main' or $(XAVersionBranch.StartsWith('release/')))">$(AndroidPackVersionSuffix).$(PackVersionCommitCount)</_AndroidPackLabel>
       <_AndroidPackLabel Condition=" '$(_AndroidPackLabel)' == '' ">ci.$(_AndroidPackBranch).$(PackVersionCommitCount)</_AndroidPackLabel>
       <AndroidPackVersionLong>$(AndroidPackVersion)-$(_AndroidPackLabel)</AndroidPackVersionLong>
       <AndroidMSIVersion>$(AndroidPackVersion).$(PackVersionCommitCount)</AndroidMSIVersion>

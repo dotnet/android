@@ -1,11 +1,13 @@
 # Tracing .NET for Android Applications
 
-Attaching `dotnet-trace` to a .NET for Android application, allows you to
-get profiling information in formats like `.nettrace` and
-`.speedscope`. These give you CPU sampling information about the time
-spent in each method in your application. This is quite useful for
-finding *where* time is spent in the startup or general performance of
-your .NET applications.
+Attaching `dotnet-trace` to a .NET for Android application allows you to get
+profiling information in formats like `.nettrace` and `.speedscope`. These
+give you CPU sampling information about the time spent in each method in your
+application. This is useful for finding *where* time is spent during startup
+or general application execution.
+
+CoreCLR EventPipe diagnostics use the runtime diagnostic server and configured
+TCP diagnostic ports.
 
 To use `dotnet-trace` on Android, the following tools/components work
 together to make this happen:
@@ -19,11 +21,12 @@ together to make this happen:
 * [`dotnet-gcdump`][dotnet-gcdump] is a .NET global tool that can be
   used to collect memory dumps of .NET applications.
 
-* The Mono Diagnostic component, `libmono-component-diagnostics_tracing.so`,
-  is included in the application and is used to collect the trace data.
+* CoreCLR's EventPipe diagnostic server is included in .NET 11 and later
+  applications and communicates with the diagnostic tools through
+  `dotnet-dsrouter`.
 
-> **NOTE:** You need at least version 9.0.621003 of all the diagnostic
-> tools to use the features described in this guide. Check
+> **NOTE:** Use current releases of the diagnostic tools. The .NET 11 RC1
+> SDK is the validation baseline for the workflow described here. Check
 > [dotnet-trace](https://www.nuget.org/packages/dotnet-trace/),
 > [dotnet-dsrouter](https://www.nuget.org/packages/dotnet-dsrouter/),
 > and [dotnet-gcdump](https://www.nuget.org/packages/dotnet-gcdump/)
@@ -60,20 +63,25 @@ You can invoke the tool using the following command: dotnet-trace
 Tool 'dotnet-trace' was successfully installed.
 ```
 
-## Quickstart (Android Device)
+## Quickstart (CoreCLR on an Android device)
 **Do not run the app through Visual Studio**, the app freezes on the splash screen.
 
-Run the following commands to create a memory dump of the app:
+The following commands collect a GC memory dump from a CoreCLR application.
+The same diagnostic-port connection can be used with `dotnet-trace`.
 
-1. `dotnet build -c Release -p:EnableDiagnostics=true .\MyApp.csproj`
-2. `adb install .\bin\Release\net11.0-android\MyApp-Signed.apk`
-3. `dotnet-dsrouter android`
-4. `adb shell setprop debug.mono.profile '127.0.0.1:9000,nosuspend'`
-5. Start the app on your device
-6. `dotnet-gcdump ps` to find the PID
-7. `dotnet-gcdump collect -p PID`
+1. In a separate terminal, start the forwarding router:
+   `dotnet-dsrouter android`
+2. In another terminal, build, install, and start the application on the device:
+   `dotnet build -t:Run -c Release -p:EnableDiagnostics=true .\MyApp.csproj`
+3. In a third terminal, run `dotnet-gcdump ps` to find the router process.
+4. In the same terminal, run `dotnet-gcdump collect -p PID`.
 
-This will create a `.gcdump` file wich you can open in Visual Studio.
+`EnableDiagnostics` is an Android SDK/MSBuild property. It is distinct from
+the `DOTNET_EnableDiagnostics` runtime environment variable. The build
+properties configure `DOTNET_DiagnosticPorts`; they do not use
+`debug.dotnet.profile` as the primary CoreCLR port configuration.
+
+This creates a `.gcdump` file that you can open in Visual Studio.
 
 ## Configuration & Setup
 
@@ -124,6 +132,12 @@ Unix by opening them with [https://speedscope.app/][speedscope].
 
 Running `dotnet-dsrouter` separately provides finer control over its
 options and can be useful for viewing its log messages when troubleshooting.
+The examples below use `connect` mode: the application connects to the
+router's TCP endpoint, and the diagnostic tool connects to the router's local
+IPC endpoint. Start the router before launching an application configured with
+`DiagnosticSuspend=true`; otherwise the application waits for a connection
+that does not yet exist. Use `DiagnosticSuspend=false` when the application
+should start before a tool attaches.
 
 For profiling an Android application running on an Android *emulator*:
 
@@ -148,8 +162,6 @@ info: dotnet-dsrouter-1234[0]
 For profiling an Android application running on an Android *device*:
 
 ```sh
-# `adb reverse` is required when using hardware devices
-$ adb reverse tcp:9000 tcp:9001
 $ dotnet-dsrouter android
 How to connect current dotnet-dsrouter pid=1234 with android device and diagnostics tooling.
 Build and run your application on android device such as:
@@ -162,36 +174,48 @@ dotnet-trace collect -p 1234
 ...
 ```
 
+The emulator's `10.0.2.2` address reaches the host loopback. On a physical
+device, `dotnet-dsrouter android` establishes the required device forwarding.
+Diagnostic TCP endpoints are unauthenticated and unencrypted development
+interfaces and must remain local.
+
 ### Android System Properties
 
 The `$(DiagnosticAddress)`, `$(DiagnosticPort)`, `$(DiagnosticSuspend)`,
 and `$(DiagnosticListenMode)` MSBuild properties configure the
-`$DOTNET_DiagnosticPorts` environment variable packaged in the application.
-Alternatively, the `debug.mono.profile` Android system property can configure
-diagnostics without rebuilding the app.
+`DOTNET_DiagnosticPorts` environment variable packaged in the application.
+`$(DiagnosticConfiguration)` can be used to provide the complete value.
+Nonempty `Diagnostic*` settings implicitly enable Android diagnostics.
+`$(AndroidEnableProfiler)` remains supported as a legacy synonym for
+`$(EnableDiagnostics)`. Setting it explicitly to `false` disables implicit
+diagnostics enablement.
 
-For emulators, `$DOTNET_DiagnosticPorts` should specify an IP address
+For CoreCLR, these MSBuild properties are the primary diagnostic-port
+configuration. `debug.dotnet.profile` is not a diagnostic-port setting; its
+presence is used by current runtime diagnostic-output-directory behavior.
+`DOTNET_EnableDiagnostics` is a separate CoreCLR runtime environment variable
+that controls whether diagnostics are enabled at runtime.
+
+For emulators, `DOTNET_DiagnosticPorts` should specify an IP address
 of 10.0.2.2:
 
 ```sh
-$ adb shell setprop debug.mono.profile '10.0.2.2:9000,suspend,connect'
+$ dotnet build -t:Run -c Release -p:DiagnosticAddress=10.0.2.2 -p:DiagnosticPort=9000 -p:DiagnosticSuspend=true -p:DiagnosticListenMode=connect
 ```
 
-For devices, `$DOTNET_DiagnosticPorts` should specify an IP address of
-127.0.0.1, and the port number should be the [port used used with adb
-reverse](#start-the-tracing-routerproxy-on-host), e.g:
+For devices, `DOTNET_DiagnosticPorts` should specify an IP address of
+127.0.0.1. `dotnet-dsrouter android` establishes the device connection:
 
 ```sh
-# `adb reverse` is required when using hardware devices
-$ adb reverse tcp:9000 tcp:9001
-$ adb shell setprop debug.mono.profile '127.0.0.1:9000,suspend,connect'
+$ dotnet-dsrouter android
+$ dotnet build -t:Run -c Release -p:DiagnosticAddress=127.0.0.1 -p:DiagnosticPort=9000 -p:DiagnosticSuspend=true -p:DiagnosticListenMode=connect
 ```
 
 `suspend` is useful as it blocks application startup, so you can
 actually `dotnet-trace` startup times of the application.
 
 If you are wanting to collect a `gcdump` or just get things working,
-try `nosuspend` instead. See the [`dotnet-dsrouter`
+use `-p:DiagnosticSuspend=false` instead. See the [`dotnet-dsrouter`
 documentation][nosuspend] for further information.
 
 [nosuspend]: https://learn.microsoft.com/dotnet/core/diagnostics/dotnet-dsrouter#collect-a-trace-using-dotnet-trace-from-a-net-application-running-on-android
@@ -229,21 +253,22 @@ Unix by opening them with [https://speedscope.app/][speedscope].
 
 ### Running the .NET for Android Application
 
-`$(EnableDiagnostics)` must be set to `true` to include the Mono diagnostic
-component, `libmono-component-diagnostics_tracing.so`, in the application.
-`$(AndroidEnableProfiler)` is an equivalent property retained for backwards
-compatibility.
+For CoreCLR applications, set the Android SDK/MSBuild
+`$(EnableDiagnostics)` property to `true`, or set one of the
+`Diagnostic*` properties. These settings configure the CoreCLR diagnostic
+server and `DOTNET_DiagnosticPorts`. `$(AndroidEnableProfiler)` remains
+supported as a legacy synonym for `$(EnableDiagnostics)`.
 
 ```sh
-$ dotnet build -f net8.0-android -t:Run -c Release -p:EnableDiagnostics=true
+$ dotnet build -f net12.0-android -t:Run -c Release -p:EnableDiagnostics=true
 ```
 
 Setting any of the `$(DiagnosticAddress)`, `$(DiagnosticPort)`,
 `$(DiagnosticSuspend)`, or `$(DiagnosticListenMode)` properties implicitly
-enables the diagnostic component, so `-p:EnableDiagnostics=true` is not needed
+enables Android diagnostics, so `-p:EnableDiagnostics=true` is not needed
 with the `dotnet-dsrouter` commands shown above.
 
-*NOTE: `-f net8.0-android` is only needed for projects with multiple `$(TargetFrameworks)`.*
+*NOTE: `-f net12.0-android` is only needed for projects with multiple `$(TargetFrameworks)`.*
 
 Once the application is installed and started, `dotnet-trace` should show something similar to:
 
@@ -266,6 +291,195 @@ Writing:	hellomaui-app-trace.speedscope.json
 And the output files should be found in the current directory. You can
 use the `-o` switch if you would prefer to output them to a specific
 directory.
+
+## .NET for Android runtime events
+
+Runtime interop timing and JNI reference events use the `Microsoft.Android.Runtime` provider.
+Optimized `Release` applications disable EventSource support by default so the
+provider implementation can be trimmed away. Enable EventSource support in the
+application project:
+
+```xml
+<PropertyGroup>
+  <EventSourceSupport>true</EventSourceSupport>
+</PropertyGroup>
+```
+
+`$(EnableDiagnostics)` is additionally required only for out-of-process
+collection with tools such as `dotnet-trace`. It enables the diagnostic
+transport.
+
+The runtime instrumentation defines the following events:
+
+| Event IDs | Keyword | Area |
+|---|---|---|
+| 1-4 | `0x1` | Peer lifecycle |
+| 5-6 | `0x2` | GC bridge peer reachability |
+| 7-8 | `0x8` | GC bridge start/stop |
+| 9-10 | `0x4` | Trimmable type-map lookup start/stop |
+| 11-14, 18, 20 | `0x10` | Global and weak-global reference operations and diagnostics |
+| 15-17, 19 | `0x20` | Local reference operations and diagnostics |
+| 21 | `0x40` | Opt-in NativeAOT managed reference stacks |
+
+Collect both areas at informational level:
+
+```sh
+$ dotnet-trace collect --dsrouter android-emu --providers Microsoft.Android.Runtime:0xC:4
+```
+
+Use keyword `0x8` for GC bridge events, `0x4` for type-map events, or `0xC`
+for both.
+
+`GCBridgeStart` (event ID 7) and `GCBridgeStop` (event ID 8) have no payloads
+and measure the complete logical CoreCLR/NativeAOT GC bridge round. Start is
+emitted after validating the native callback argument and before managed
+pre-processing validates every reference-tracking context. Stop is emitted
+only after managed collected-context processing,
+`JavaMarshal.FinishCrossReferenceProcessing`, and the increment of
+`JNIEnv.BridgeProcessingGeneration` have completed. The
+native cross-reference processing runs between these managed callbacks.
+Enablement is checked once at Start and latched on the dedicated serialized
+bridge-processing thread, so a listener attaching during a round cannot
+produce an unmatched Stop event.
+
+`TypeMapLookupStart` (event ID 9) and `TypeMapLookupStop` (event ID 10) use
+task 2, keyword `0x4`, and have one `direction` string payload:
+`JavaToManaged` or `ManagedToJava`. They measure uncached backend lookups in
+the trimmable typemap only. The events are emitted from the cache-population
+callbacks for JNI-name-to-managed-proxy and managed-type-to-JNI-proxy
+resolution. A cache hit performs no provider enablement check and emits no
+events. Successful and failed backend lookups both emit a matched pair; the
+Stop event has no success or found payload, so the lookup result must be
+determined from the consuming runtime operation. Enablement is checked once
+when cache population begins and latched for exception-safe pairing, so a
+Start is followed by Stop even when the backend lookup throws.
+
+### Peer lifecycle and reachability events
+
+Peer lifecycle (keyword `0x1`) and GC bridge reachability (keyword `0x2`)
+events are informational-level events:
+
+```sh
+$ dotnet-trace collect --dsrouter android-emu --providers Microsoft.Android.Runtime:0x3:4
+```
+
+| ID | Event | Emitted when |
+|---|---|---|
+| 1 | `ManagedPeerCreated` | A managed peer is created for an existing Java instance. |
+| 2 | `JavaPeerCreated` | A managed peer is bound to a newly constructed Java instance. |
+| 3 | `ManagedPeerReleasedJavaPeer` | A managed peer releases its Java reference when disposed or finalized. |
+| 4 | `JavaPeerReleasedManagedPeer` | A managed peer is removed from the peer registry. |
+| 5 | `ManagedPeerOnlyReachableFromJavaPeer` | A bridged peer survives a GC bridge round. |
+| 6 | `JavaPeerOnlyReachableFromManagedPeer` | A bridged peer is collected by a GC bridge round. |
+
+All six events have the payload `managedType` (`string`), `javaType`
+(`string`), `jniIdentityHashCode` (`int`), `managedObjectHashCode` (`int`),
+and `runtimeFlavor` (`string`: `CoreCLR`, `NativeAOT`, or `Unknown`). Values
+which cannot be determined, such as the Java type of a peer whose Java object
+was already collected, are reported as `Unknown`. Reachability events (5, 6)
+additionally contain `componentIndex` (`int`), `contextIndex` (`int`), and
+`contextPointer` (`long`), which identify the peer within the GC bridge graph.
+Reachability events are buffered and written after
+`JavaMarshal.FinishCrossReferenceProcessing` so that listeners cannot extend
+the GC pause.
+
+Aggregate counts per GC bridge round are available from the separate
+`Microsoft.Android.Runtime.InteropMetrics` EventCounters provider without
+enabling the per-peer events:
+
+```sh
+$ dotnet-counters monitor --dsrouter android-emu --counters Microsoft.Android.Runtime.InteropMetrics
+```
+
+| Counter | Meaning |
+|---|---|
+| `managed-objects-only-reachable-from-java` | Mean number of bridged peers which survived each GC bridge round. |
+| `java-objects-only-reachable-from-managed` | Mean number of bridged peers which were collected in each GC bridge round. |
+
+### JNI reference events
+
+Reference events require verbose level (`5`). They are independently selectable
+from timing events and do not require a separate Android reference-logging
+feature switch.
+
+```sh
+# Global and weak-global references only
+dotnet-trace collect --dsrouter android-emu --providers Microsoft.Android.Runtime:0x10:5 -o references.nettrace
+# Include local references, which can produce substantially more data
+dotnet-trace collect --dsrouter android-emu --providers Microsoft.Android.Runtime:0x30:5 -o references.nettrace
+```
+
+| ID | Event |
+|---|---|
+| 11 | `GlobalReferenceCreated` |
+| 12 | `GlobalReferenceDeleted` |
+| 13 | `WeakGlobalReferenceCreated` |
+| 14 | `WeakGlobalReferenceDeleted` |
+| 15 | `LocalReferenceCreated` |
+| 16 | `LocalReferenceDeleted` |
+| 17 | `LocalReferenceReleased` |
+| 18 | `GlobalReferenceDiagnostic` |
+| 19 | `LocalReferenceDiagnostic` |
+| 20 | `WeakGlobalReferenceCollected` |
+| 21 | `ReferenceStackTrace` |
+
+Global-reference operations carry `sourceHandle`, `handle`, `sourceType`,
+`referenceType`, `globalCount`, `weakCount`, `managedThreadId`, and
+`bridgeOperation`. Handles are unsigned 64-bit values on every ABI. Deletion
+uses `sourceHandle` for the deleted reference and a zero destination `handle`.
+Reference types are `0` (invalid), `1` (local), `2` (global), and `3` (weak-global).
+Bridge operations are `0` (ordinary operation), `1` (bridge initialization),
+`2` (global-to-weak), and `3` (weak-to-global).
+
+Local-reference operations carry `sourceHandle`, `handle`, `localCount`,
+`managedThreadId`, and `bridgeOperation`. `sourceHandle` is zero for a reference
+adopted from JNI and for deletion/release. `LocalReferenceReleased` transfers the
+handle out of managed ownership; it does **not** mean JNI deleted the reference.
+Local counts track the supplied JNI environment's managed reference accounting,
+not the entire process's JNI local-reference table.
+
+Diagnostic events retain Java.Interop's peer creation, disposal, finalization,
+identity, and type messages in a `message` payload. `WeakGlobalReferenceCollected`
+identifies a weak `handle` that could not be promoted after Java GC.
+
+Reference counters and GREF-pressure GC behavior remain active even when
+EventSource support is disabled. Event payloads are built only when their
+keyword and level are enabled. CoreCLR EventPipe supplies call stacks without
+the runtime formatting a `StackTrace` string for each reference.
+
+NativeAOT EventPipe reference traces do not currently contain call stacks.
+To collect managed stacks there, additionally enable keyword `0x40`:
+
+```sh
+# NativeAOT globals/weak-globals with managed stacks
+dotnet-trace collect --dsrouter android-emu --providers Microsoft.Android.Runtime:0x50:5 -o references.nettrace
+# NativeAOT globals/weak-globals/locals with managed stacks
+dotnet-trace collect --dsrouter android-emu --providers Microsoft.Android.Runtime:0x70:5 -o references.nettrace
+```
+
+`ReferenceStackTrace` carries `referenceEventId`, `handle`, `managedThreadId`,
+and `stackTrace`. It follows the corresponding reference operation on the same
+thread. This opt-in fallback allocates and formats a managed stack string;
+ordinary reference collection does not. The capture helper is omitted, but other
+runtime frames may appear depending on compiler inlining. Keyword `0x40` alone
+does not enable reference operations, and CoreCLR never emits this fallback event. NativeAOT
+applications must also retain standard `StackTraceSupport` (enabled by default)
+to obtain useful stacks.
+
+Keep the `.nettrace` file: Speedscope and the `dotnet-trace` Chromium conversion
+do not retain these event payloads. Inspect the events with
+[PerfView](https://github.com/microsoft/perfview) on Windows or a cross-platform
+analyzer using `Microsoft.Diagnostics.Tracing.TraceEvent`. A repository skill
+for schema-aware interpretation is planned in
+[#13000](https://github.com/dotnet/android/issues/13000); it is not yet available.
+
+Start collection before the relevant references are created, using
+`DiagnosticSuspend=true` for startup investigations. EventPipe buffers can
+overflow under heavy reference traffic; increase `--buffersize` or disable
+local events as necessary. Check the analyzer's event-loss diagnostics;
+missing pre-collection operations and an abrupt crash's final buffered events
+cannot be recovered. Counter values are
+concurrent snapshots, not a guarantee of a complete, globally ordered history.
 
 ## How to get GC memory dumps?
 
@@ -311,53 +525,6 @@ $ dotnet-gcdump collect -p 38604
 
 This will create a `*.gcdump` file in the current directory.
 
-Note that using `nosuspend` in the `debug.mono.profile` property is
-useful, as it won't block application startup.
-
-## Memory Dumps for Android in .NET 7
-
-In .NET 7, we have to use th older, more complicated method for collecting
-`*.gcdump` files for Android applications. To get this data from an Android
-application, you need all the above setup for `adb shell`, `dsrouter`, etc.
-
-```sh
-$ dotnet-trace collect --diagnostic-port /tmp/maui-app --providers Microsoft-DotNETRuntimeMonoProfiler:0xC900001:4
-```
-
-`0xC900001`, a bitmask, enables the following event types:
-
-* `GCKeyword`
-* `GCHeapCollectKeyword`
-* `GCRootKeyword`
-
-See the [`Microsoft-DotNETRuntimeMonoProfiler` event types][mono-events] for more info.
-
-`:4` enables "Informational" verbosity, where the different logging
-levels are described by [`dotnet-trace help` output][dotnet-trace-help].
-
-This saves a `.nettrace` file with GC events that are not available
-with the default provider.
-
-To actually view this data, you'll have to use one of:
-
-* https://github.com/lateralusX/diagnostics-nettrace-samples
-* https://github.com/filipnavara/mono-gcdump
-
-Using `mono-gcdump`:
-
-```sh
-$ dotnet run --project path/to/filipnavara/mono-gcdump/mono-gcdump.csproj -- convert foo.nettrace
-```
-
-This saves a `foo.gcdump` that you can open in Visual Studio.
-
-See the [dotnet/runtime documentation][gc-dumps-on-mono] for
-additional details.
-
-[mono-events]: https://github.com/dotnet/runtime/blob/c887c92d8af4ce65b19962b777f96ae8eb997a42/src/coreclr/vm/ClrEtwAll.man#L7433-L7468
-[dotnet-trace-help]: https://github.com/dotnet/diagnostics/blob/6d755e8b5435b1380c118e9d81e075654b0330c9/documentation/dotnet-trace-instructions.md#dotnet-trace-help
-[gc-dumps-on-mono]: https://github.com/dotnet/runtime/blob/728fd85bc7ad04f5a0ea2ad0d4d8afe371ff9b64/docs/design/mono/diagnostics-tracing.md#collect-gc-dumps-on-monovm
-
 ## How to `dotnet trace` a Build?
 
 Setting this up is easy, the main issue is there end up being
@@ -368,7 +535,7 @@ the trace smaller and easier to understand:
 
 * Set `$DOTNET_CLI_TELEMETRY_OPTOUT` to `1`, to avoid any dotnet CLI
   telemetry in the trace.
-* Profile a single `.csproj` build, not a `.sln`. This keeps
+* Profile a single `.csproj` build, not a `.slnx`. This keeps
   the build in-process.
 * Always `restore` in a separate step and use `--no-restore` when you
   trace. This avoids NuGet logic in the trace.

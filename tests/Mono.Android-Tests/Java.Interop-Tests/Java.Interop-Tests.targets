@@ -1,11 +1,18 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup>
-    <_JavaInteropTestsJarFile>Jars\Mono.Android-Test-classes.jar</_JavaInteropTestsJarFile>
-    <_JavaInteropTestsJarFile Condition=" '$(_AndroidTypeMapImplementation)' == 'trimmable' ">Jars\Mono.Android-Test-classes-trimmable.jar</_JavaInteropTestsJarFile>
+    <_JavaInteropTestsJarFile>Jars\Mono.Android-Test-classes-trimmable.jar</_JavaInteropTestsJarFile>
   </PropertyGroup>
   <ItemGroup>
     <AndroidJavaLibrary Include="$(_JavaInteropTestsJarFile)" />
+    <!--
+      Once BuildTestJarFile has written these, the SDK's default @(AndroidLibrary)
+      glob (**\*.jar, %(Bind)=true) would bind our own test JAR on any later
+      evaluation. Also exclude the legacy variant left by earlier builds.
+      See dotnet/android#12254.
+    -->
+    <AndroidLibrary Remove="Jars\Mono.Android-Test-classes.jar" />
+    <AndroidLibrary Remove="Jars\Mono.Android-Test-classes-trimmable.jar" />
   </ItemGroup>
   <Import Project="..\..\..\build-tools\scripts\Jar.targets" />
   <ItemDefinitionGroup>
@@ -14,42 +21,16 @@
     </TestJarEntry>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <!--
-      java-trimmable/net/dot/jni/test/GetThis.java is added explicitly via
-      TestJarEntry below when building for the trimmable typemap; it must be
-      removed from the implicit AndroidJavaSource glob so the .NET SDK does
-      not also try to compile it as a regular AndroidJavaSource (which would
-      collide with the desktop GetThis.java in the test JAR).
-    -->
-    <AndroidJavaSource Remove="java-trimmable\**\*.java" />
+    <!-- These fixtures are compiled into the test JAR, not individually by the Android SDK. -->
+    <AndroidJavaSource Remove="java\**\*.java" />
   </ItemGroup>
 
   <ItemGroup>
-    <!--
-      java-trimmable/net/dot/jni/test/GetThis.java is the Android trimmable
-      typemap variant of the Java.Interop GetThis.java test fixture. It omits
-      the desktop-JVM static initializer (net.dot.jni.ManagedPeer.registerNativeMembers /
-      ManagedPeer.construct) that is only registered by the Java.Interop test
-      JVM and throws UnsatisfiedLinkError on Android. Both files declare
-      `public class net.dot.jni.test.GetThis`, so include exactly one based on
-      $(_AndroidTypeMapImplementation). The trimmable variant lives in this
-      project (not the submodule) and in a parallel directory because javac
-      requires the file name match the public class name.
-    -->
-    <!--
-      Both branches below are mutually exclusive on $(_AndroidTypeMapImplementation).
-      The trimmable variant uses a distinct output jar so MSBuild up-to-date
-      checks cannot reuse a non-trimmable jar with the desktop GetThis class.
-    -->
-    <TestJarEntry Include="$(MSBuildThisFileDirectory)..\..\..\external\Java.Interop\tests\Java.Interop-Tests\java\**\*.java"
-                  Exclude="$(MSBuildThisFileDirectory)..\..\..\external\Java.Interop\tests\Java.Interop-Tests\java\net\dot\jni\test\GetThis.java"
-                  Condition=" '$(_AndroidTypeMapImplementation)' == 'trimmable' " />
-    <TestJarEntry Include="$(MSBuildThisFileDirectory)..\..\..\external\Java.Interop\tests\Java.Interop-Tests\java\**\*.java"
-                  Condition=" '$(_AndroidTypeMapImplementation)' != 'trimmable' " />
-    <TestJarEntry Include="$(MSBuildThisFileDirectory)java-trimmable\net\dot\jni\test\GetThis.java"
-                  Condition=" '$(_AndroidTypeMapImplementation)' == 'trimmable' " />
+    <TestJarEntry Include="$(MSBuildThisFileDirectory)java\**\*.java" />
   </ItemGroup>
-  <Target Name="_CopyTestJarFiles">
+  <Target Name="_CopyTestJarFiles"
+      Inputs="%(TestJarEntry.OutputFile)"
+      Outputs="$(OutputPath)$([System.IO.Path]::GetFileName($([MSBuild]::NormalizePath('%(TestJarEntry.OutputFile)'))))">
     <Copy
         SourceFiles="%(TestJarEntry.OutputFile)"
         DestinationFolder="$(OutputPath)"

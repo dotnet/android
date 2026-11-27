@@ -1,7 +1,10 @@
+#nullable enable
+
 using System.Xml.Serialization;
 using System.ComponentModel;
+using System.Diagnostics.CodeAnalysis;
 
-using NUnit.Framework;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace System.XmlTests {
     public class C {
@@ -9,10 +12,12 @@ namespace System.XmlTests {
         public Type? T { get; }
     }
     
-    [TestFixture]
+    [TestClass]
     public class XmlSerializerTest {
 
-        [Test]
+        [TestMethod]
+        [RequiresUnreferencedCode ("Tests XML serialization metadata after trimming.")]
+        [RequiresDynamicCode ("Tests XML serialization that may require runtime code generation.")]
         public void TrimmingDefaultValueAttribute ()
         {
             // Context: https://github.com/dotnet/runtime/issues/109724

@@ -25,11 +25,13 @@ namespace Xamarin.Android.Tasks {
 
 		public ITaskItem []? ResourceDirectories { get; set; }
 
+		public ITaskItem [] ResourceCaseMap { get; set; } = [];
+
 		[Output]
 		public ITaskItem []? Processed { get; set; }
 
 		Dictionary<string, string>? _resource_name_case_map;
-		Dictionary<string, string> resource_name_case_map => _resource_name_case_map ??= MonoAndroidHelper.LoadResourceCaseMap (BuildEngine4, ProjectSpecificTaskObjectKey);
+		Dictionary<string, string> resource_name_case_map => _resource_name_case_map ??= MonoAndroidHelper.ItemGroupToCaseMap (ResourceCaseMap);
 
 		public override bool RunTask ()
 		{
@@ -95,7 +97,6 @@ namespace Xamarin.Android.Tasks {
 				var stamp = resdir?.GetMetadata ("StampFile");
 				var filename = !hash.IsNullOrEmpty () ? hash : "compiled";
 				var stampFile = !stamp.IsNullOrEmpty () ? stamp : $"{filename}.stamp";
-				Log.LogDebugMessage ($"{filename} {stampFile}");
 				output.Add (file, new TaskItem (Path.GetFullPath (file), new Dictionary<string, string> {
 					{ "StampFile" , stampFile },
 					{ "Hash" , filename },
@@ -141,7 +142,7 @@ namespace Xamarin.Android.Tasks {
 					return true;
 				} else if (attr.Value?.Contains (',') ?? false) {
 					// attr.Value could be an assembly-qualified name that isn't in acw-map.txt;
-					// see e5b1c92c, https://github.com/xamarin/xamarin-android/issues/1296#issuecomment-365091948
+					// see e5b1c92c, https://github.com/dotnet/android/issues/1296#issuecomment-365091948
 					var n = attr.Value.Substring (0, attr.Value.IndexOf (','));
 					if (acwMap.TryGetValue (n, out mappedValue)) {
 						attr.Value = mappedValue;
@@ -164,7 +165,7 @@ namespace Xamarin.Android.Tasks {
 			}
 			if (logMessage == null)
 				return false;
-			var matchingKey = acwMap.FirstOrDefault (x => String.Equals (x.Key, name, StringComparison.OrdinalIgnoreCase));
+			var matchingKey = acwMap.FirstOrDefault (x => string.Equals (x.Key, name, StringComparison.OrdinalIgnoreCase));
 			if (matchingKey.Key != null) {
 				// we have elements with slightly different casing.
 				// lets issue a error.

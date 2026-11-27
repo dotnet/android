@@ -4,53 +4,53 @@ using Android.Runtime;
 
 using Java.Interop;
 
-using Microsoft.Android.Runtime;
-
-using NUnit.Framework;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Java.InteropTests
 {
 	// Device-level coverage for [Export] / [ExportField] marshalling.
 	//
 	// These tests drive the Java side of an [Export]-bearing peer via JNIEnv,
-	// then assert what C# observed (and vice versa). They run under both the
-	// legacy llvm-ir typemap (which is the contract) and the trimmable typemap
-	// (which must match it).
+	// then assert what C# observed (and vice versa).
 	//
 	// Naming: each test is named Export_<Group>_<Feature>_<Behaviour> so the
 	// runner output is greppable.
-	[TestFixture]
+	[TestClass]
+	[TestCategory ("GeneratedJniDebuggerBoundary")]
 	public class ExportTests
 	{
 		// ---------------------------------------------------------------
 		// Group A — parameter / return marshalling
 		// ---------------------------------------------------------------
 
-		[Test, Category ("Export")]
+		[TestMethod, TestCategory ("Export")]
 		public void Export_Method_Primitive_RoundTrip ()
 		{
 			using var e = new ExportPrimitiveInt ();
-			var m = JNIEnv.GetMethodID (e.Class.Handle, "EchoInt", "(I)I");
+			using var klass = e.Class;
+			var m = JNIEnv.GetMethodID (klass.Handle, "EchoInt", "(I)I");
 			Assert.AreNotEqual (IntPtr.Zero, m, "JNI method id for EchoInt not found");
 			int r = JNIEnv.CallIntMethod (e.Handle, m, new JValue (21));
 			Assert.AreEqual (43, r, "EchoInt(21) should be 43 (= 21*2 + 1)");
 		}
 
-		[Test, Category ("Export")]
+		[TestMethod, TestCategory ("Export")]
 		public void Export_Method_Bool_RoundTrip ()
 		{
 			using var e = new ExportPrimitiveBool ();
-			var m = JNIEnv.GetMethodID (e.Class.Handle, "EchoBool", "(Z)Z");
+			using var klass = e.Class;
+			var m = JNIEnv.GetMethodID (klass.Handle, "EchoBool", "(Z)Z");
 			Assert.AreNotEqual (IntPtr.Zero, m, "JNI method id for EchoBool not found");
 			Assert.IsFalse (JNIEnv.CallBooleanMethod (e.Handle, m, new JValue (true)),  "EchoBool(true) should return false");
 			Assert.IsTrue  (JNIEnv.CallBooleanMethod (e.Handle, m, new JValue (false)), "EchoBool(false) should return true");
 		}
 
-		[Test, Category ("Export")]
+		[TestMethod, TestCategory ("Export")]
 		public void Export_Method_String_RoundTrip ()
 		{
 			using var e = new ExportString ();
-			var m = JNIEnv.GetMethodID (e.Class.Handle, "EchoString", "(Ljava/lang/String;)Ljava/lang/String;");
+			using var klass = e.Class;
+			var m = JNIEnv.GetMethodID (klass.Handle, "EchoString", "(Ljava/lang/String;)Ljava/lang/String;");
 			Assert.AreNotEqual (IntPtr.Zero, m, "JNI method id for EchoString not found");
 			IntPtr argHandle = JNIEnv.NewString ("world");
 			try {
@@ -66,12 +66,15 @@ namespace Java.InteropTests
 			}
 		}
 
-		[Test, Category ("Export")]
+		[TestMethod, TestCategory ("Export")]
 		public void Export_Method_PeerArg_RoundTrip ()
 		{
 			using var e = new ExportPeerArg ();
+			using var klass = e.Class;
+#pragma warning disable CA1422 // Integer(int) constructor is obsolete since API 33.
 			using var arg = new Java.Lang.Integer (42);
-			var m = JNIEnv.GetMethodID (e.Class.Handle, "GetClassName", "(Ljava/lang/Object;)Ljava/lang/String;");
+#pragma warning restore CA1422
+			var m = JNIEnv.GetMethodID (klass.Handle, "GetClassName", "(Ljava/lang/Object;)Ljava/lang/String;");
 			Assert.AreNotEqual (IntPtr.Zero, m, "JNI method id for GetClassName not found");
 			IntPtr resultHandle = JNIEnv.CallObjectMethod (e.Handle, m, new JValue (arg.Handle));
 			try {
@@ -82,11 +85,12 @@ namespace Java.InteropTests
 			}
 		}
 
-		[Test, Category ("Export")]
+		[TestMethod, TestCategory ("Export")]
 		public void Export_Method_PeerArg_NullArg_HandledGracefully ()
 		{
 			using var e = new ExportPeerArg ();
-			var m = JNIEnv.GetMethodID (e.Class.Handle, "GetClassName", "(Ljava/lang/Object;)Ljava/lang/String;");
+			using var klass = e.Class;
+			var m = JNIEnv.GetMethodID (klass.Handle, "GetClassName", "(Ljava/lang/Object;)Ljava/lang/String;");
 			IntPtr resultHandle = JNIEnv.CallObjectMethod (e.Handle, m, new JValue (IntPtr.Zero));
 			try {
 				string result = JNIEnv.GetString (resultHandle, JniHandleOwnership.DoNotTransfer);
@@ -96,11 +100,12 @@ namespace Java.InteropTests
 			}
 		}
 
-		[Test, Category ("Export")]
+		[TestMethod, TestCategory ("Export")]
 		public void Export_Method_IntArray_RoundTrip_AndCopyBack ()
 		{
 			using var e = new ExportIntArray ();
-			var m = JNIEnv.GetMethodID (e.Class.Handle, "DoubleArray", "([I)[I");
+			using var klass = e.Class;
+			var m = JNIEnv.GetMethodID (klass.Handle, "DoubleArray", "([I)[I");
 			Assert.AreNotEqual (IntPtr.Zero, m, "JNI method id for DoubleArray not found");
 
 			var input = new int [] { 1, 2, 3 };
@@ -109,11 +114,11 @@ namespace Java.InteropTests
 				IntPtr resultHandle = JNIEnv.CallObjectMethod (e.Handle, m, new JValue (argHandle));
 				try {
 					var output = (int []) JNIEnv.GetArray (resultHandle, JniHandleOwnership.DoNotTransfer, typeof (int));
-					Assert.AreEqual (new [] { 2, 4, 6 }, output, "return array should have doubled values");
+					CollectionAssert.AreEqual (new [] { 2, 4, 6 }, output, "return array should have doubled values");
 
 					// Copy-back: the input handle should also reflect the doubled values
 					var roundTrippedInput = (int []) JNIEnv.GetArray (argHandle, JniHandleOwnership.DoNotTransfer, typeof (int));
-					Assert.AreEqual (new [] { 2, 4, 6 }, roundTrippedInput, "input array mutations should propagate back to JNI handle");
+					CollectionAssert.AreEqual (new [] { 2, 4, 6 }, roundTrippedInput, "input array mutations should propagate back to JNI handle");
 				} finally {
 					JNIEnv.DeleteLocalRef (resultHandle);
 				}
@@ -130,15 +135,18 @@ namespace Java.InteropTests
 		// belong with the codegen fix that teaches the JCW emitter to
 		// widen these types.
 
-		[Test, Category ("Export")]
+		[TestMethod, TestCategory ("Export")]
 		public void Export_Method_PeerArray_RoundTrip ()
 		{
 			using var e = new ExportPeerArray ();
+			using var klass = e.Class;
+#pragma warning disable CA1422 // Integer(int) constructor is obsolete since API 33.
 			using var a = new Java.Lang.Integer (1);
 			using var b = new Java.Lang.Integer (2);
 			using var c = new Java.Lang.Integer (3);
+#pragma warning restore CA1422
 
-			var m = JNIEnv.GetMethodID (e.Class.Handle, "Tail", "([Ljava/lang/Object;)[Ljava/lang/Object;");
+			var m = JNIEnv.GetMethodID (klass.Handle, "Tail", "([Ljava/lang/Object;)[Ljava/lang/Object;");
 			Assert.AreNotEqual (IntPtr.Zero, m, "JNI method id for Tail not found");
 
 			IntPtr argHandle = JNIEnv.NewObjectArray<Java.Lang.Object> (a, b, c);
@@ -172,34 +180,39 @@ namespace Java.InteropTests
 		// surfaces with a recognizable message". See
 		// ExportMethodDispatchEmitter.EmitWrappedExportMethodDispatch.
 
-		[Test, Category ("Export")]
+		[TestMethod, TestCategory ("Export")]
 		public void Export_Method_Throws_PrimitiveReturn_SurfacesAsManagedException ()
 		{
-			AssumeTrimmableExportExceptionRouting ();
-
 			using var e = new ExportThrowing ();
-			var m = JNIEnv.GetMethodID (e.Class.Handle, "Throwing", "()I");
+			using var klass = e.Class;
+			var m = JNIEnv.GetMethodID (klass.Handle, "Throwing", "()I");
 			Assert.AreNotEqual (IntPtr.Zero, m, "JNI method id for Throwing not found");
 
 			// The managed body throws InvalidOperationException("boom"). The wrapper
 			// must catch it and route it through OnUserUnhandledException so the
 			// process survives; the exception then re-surfaces on the calling
 			// thread when the JNI call returns to managed code.
-			var ex = Assert.Catch (() => JNIEnv.CallIntMethod (e.Handle, m));
-			Assert.That (ex, Is.Not.Null, "expected an exception, got null");
-			Assert.That (ex.Message, Contains.Substring ("boom"), "exception message should preserve 'boom'");
+			// A user-code catch avoids another debugger stop when JNI rethrows into an external assertion helper.
+			try {
+				JNIEnv.CallIntMethod (e.Handle, m);
+			} catch (Exception ex) {
+				Assert.AreSame (e.PrimitiveException, ex);
+				StringAssert.Contains (ex.Message, "boom", "exception message should preserve 'boom'");
+				return;
+			}
+			Assert.Fail ("Expected the original export exception.");
 		}
 
-		[Test, Category ("Export")]
+		[TestMethod, TestCategory ("Export")]
 		public void Export_Method_Throws_ObjectReturn_SurfacesAsManagedException ()
 		{
-			AssumeTrimmableExportExceptionRouting ();
-
 			using var e = new ExportThrowing ();
-			var m = JNIEnv.GetMethodID (e.Class.Handle, "ThrowingString", "()Ljava/lang/String;");
+			using var klass = e.Class;
+			var m = JNIEnv.GetMethodID (klass.Handle, "ThrowingString", "()Ljava/lang/String;");
 			Assert.AreNotEqual (IntPtr.Zero, m, "JNI method id for ThrowingString not found");
-			var ex = Assert.Catch (() => JNIEnv.CallObjectMethod (e.Handle, m));
-			Assert.That (ex, Is.Not.Null, "expected an exception, got null");
+			var ex = Assert.Throws<global::System.Exception> (() => JNIEnv.CallObjectMethod (e.Handle, m));
+			Assert.IsNotNull (ex, "expected an exception, got null");
+			Assert.AreSame (e.ObjectException, ex);
 		}
 
 		// Nested / re-entrant exception routing. The [Export] UCO wrapper sets a
@@ -208,34 +221,32 @@ namespace Java.InteropTests
 		// state isn't restored cleanly across nested invocations, a *second* exception
 		// would either swallow the first or surface stale state.
 
-		[Test, Category ("Export")]
+		[TestMethod, TestCategory ("Export")]
 		public void Export_Method_Throws_FollowedBySecondCall_DoesNotLeakPendingException ()
 		{
-			AssumeTrimmableExportExceptionRouting ();
-
 			using var e = new ExportThrowing ();
-			var throwing = JNIEnv.GetMethodID (e.Class.Handle, "Throwing", "()I");
+			using var throwingClass = e.Class;
+			var throwing = JNIEnv.GetMethodID (throwingClass.Handle, "Throwing", "()I");
 			Assert.AreNotEqual (IntPtr.Zero, throwing, "JNI method id for Throwing not found");
 
 			// First call: must throw and the exception must surface to managed.
-			Assert.Catch (() => JNIEnv.CallIntMethod (e.Handle, throwing));
+			Assert.Throws<global::System.Exception> (() => JNIEnv.CallIntMethod (e.Handle, throwing));
 
 			// Second call on a *different* peer goes through a separate [Export]
 			// method that does NOT throw. If the previous pending exception had
 			// leaked across the JniTransition boundary, this call would either
 			// throw the stale exception or return a corrupted value.
 			using var p = new ExportPrimitiveInt ();
-			var echo = JNIEnv.GetMethodID (p.Class.Handle, "EchoInt", "(I)I");
+			using var echoClass = p.Class;
+			var echo = JNIEnv.GetMethodID (echoClass.Handle, "EchoInt", "(I)I");
 			Assert.AreNotEqual (IntPtr.Zero, echo, "JNI method id for EchoInt not found");
 			int result = JNIEnv.CallIntMethod (p.Handle, echo, new JValue (10));
 			Assert.AreEqual (21, result, "After a throwing [Export], a subsequent non-throwing [Export] must return its real value.");
 		}
 
-		[Test, Category ("Export")]
+		[TestMethod, TestCategory ("Export")]
 		public void Export_Method_NestedJniCall_PreservesExceptionFromInnerExport ()
 		{
-			AssumeTrimmableExportExceptionRouting ();
-
 			// Outer [Export] method (ReentrantOuter) invokes Java reflection to call
 			// an inner [Export] method on the same peer (ReentrantInner) that throws.
 			// The inner throw is caught by the *inner* wrapper, set as a pending
@@ -244,32 +255,72 @@ namespace Java.InteropTests
 			// JniTransition. The managed caller (this test) must observe the original
 			// "reentrant-boom" message.
 			using var e = new ExportReentrant ();
-			var outer = JNIEnv.GetMethodID (e.Class.Handle, "ReentrantOuter", "()I");
+			using var klass = e.Class;
+			var outer = JNIEnv.GetMethodID (klass.Handle, "ReentrantOuter", "()I");
 			Assert.AreNotEqual (IntPtr.Zero, outer, "JNI method id for ReentrantOuter not found");
-			var ex = Assert.Catch (() => JNIEnv.CallIntMethod (e.Handle, outer));
-			Assert.That (ex, Is.Not.Null, "expected an exception from the nested call, got null");
-			Assert.That (ex.Message, Contains.Substring ("reentrant-boom"),
+			var ex = Assert.Throws<global::System.Exception> (() => JNIEnv.CallIntMethod (e.Handle, outer));
+			Assert.IsNotNull (ex, "expected an exception from the nested call, got null");
+			Assert.AreSame (e.InnerException, ex);
+			StringAssert.Contains (ex.Message, "reentrant-boom",
 				"the original inner-export exception message must propagate through both [Export] wrappers");
 		}
 
-		static void AssumeTrimmableExportExceptionRouting ()
+		// ---------------------------------------------------------------
+		// Group C — static [Export] dispatch
+		// ---------------------------------------------------------------
+
+		[TestMethod, TestCategory ("Export")]
+		public void Export_StaticMethod_Primitive_RoundTrip ()
 		{
-			if (!RuntimeFeature.TrimmableTypeMap) {
-				Assert.Ignore ("[Export] exception routing coverage is only relevant for the trimmable typemap path.");
-			}
+			using var klass = Java.Lang.Class.FromType (typeof (ExportStatic));
+			var m = JNIEnv.GetStaticMethodID (klass.Handle, "Add", "(II)I");
+			Assert.AreNotEqual (IntPtr.Zero, m, "JNI static method id for Add not found");
+			int result = JNIEnv.CallStaticIntMethod (klass.Handle, m, new JValue (20), new JValue (22));
+			Assert.AreEqual (42, result);
 		}
 
 		// ---------------------------------------------------------------
 		// Group D — [ExportField] runtime visibility from Java
 		// ---------------------------------------------------------------
-		// NOTE: device-level [ExportField] tests are deferred. The JCW
-		// generator (legacy and trimmable) currently emits a static field
-		// initializer that calls the [ExportField] method as a non-static
-		// member (`public static int FOO = InitialFoo();`), which fails
-		// javac when the C# method is `static`, and is unreachable at
-		// runtime when the C# method is an instance member because there
-		// is no peer instance during class init. Add runtime [ExportField]
-		// coverage once the JCW emitter handles both shapes correctly.
+
+		[TestMethod, TestCategory ("Export")]
+		public void ExportField_StaticPrimitive_InitializerVisibleFromJava ()
+		{
+			using var klass = Java.Lang.Class.FromType (typeof (ExportStaticField));
+			var field = JNIEnv.GetStaticFieldID (klass.Handle, "ANSWER", "I");
+			Assert.AreNotEqual (IntPtr.Zero, field, "JNI static field id for ANSWER not found");
+			Assert.AreEqual (42, JNIEnv.GetStaticIntField (klass.Handle, field));
+		}
+
+		[TestMethod, TestCategory ("Export")]
+		public void ExportField_StaticObject_InitializerVisibleFromJava ()
+		{
+			using var klass = Java.Lang.Class.FromType (typeof (ExportStaticField));
+			var field = JNIEnv.GetStaticFieldID (klass.Handle, "OBJECT_ANSWER", "Ljava/lang/Integer;");
+			Assert.AreNotEqual (IntPtr.Zero, field, "JNI static field id for OBJECT_ANSWER not found");
+
+			IntPtr valueHandle = JNIEnv.GetStaticObjectField (klass.Handle, field);
+			Assert.AreNotEqual (IntPtr.Zero, valueHandle, "OBJECT_ANSWER should contain a Java peer");
+			var value = Java.Lang.Object.GetObject<Java.Lang.Integer> (valueHandle, JniHandleOwnership.TransferLocalRef);
+			Assert.IsNotNull (value, "OBJECT_ANSWER should wrap as java.lang.Integer");
+			if (value is null) {
+				Assert.Fail ("OBJECT_ANSWER should wrap as java.lang.Integer");
+				return;
+			}
+			using (value) {
+				Assert.AreEqual (43, value.IntValue ());
+			}
+		}
+
+		[TestMethod, TestCategory ("Export")]
+		public void ExportField_InstancePrimitive_InitializerVisibleFromJava ()
+		{
+			using var value = new ExportInstanceField ();
+			using var klass = Java.Lang.Class.FromType (typeof (ExportInstanceField));
+			var field = JNIEnv.GetFieldID (klass.Handle, "ANSWER", "I");
+			Assert.AreNotEqual (IntPtr.Zero, field, "JNI field id for ANSWER not found");
+			Assert.AreEqual (42, JNIEnv.GetIntField (value.Handle, field));
+		}
 	}
 
 	// ---------------------------------------------------------------
@@ -289,6 +340,29 @@ namespace Java.InteropTests
 	{
 		[Export]
 		public bool EchoBool (bool x) => !x;
+	}
+
+	class ExportStatic : Java.Lang.Object
+	{
+		[Export]
+		public static int Add (int x, int y) => x + y;
+	}
+
+	class ExportStaticField : Java.Lang.Object
+	{
+		[ExportField ("ANSWER")]
+		public static int GetAnswer () => 42;
+
+		[ExportField ("OBJECT_ANSWER")]
+#pragma warning disable CA1422 // Integer(int) constructor is obsolete since API 33.
+		public static Java.Lang.Integer GetObjectAnswer () => new Java.Lang.Integer (43);
+#pragma warning restore CA1422
+	}
+
+	class ExportInstanceField : Java.Lang.Object
+	{
+		[ExportField ("ANSWER")]
+		public int GetAnswer () => 42;
 	}
 
 	class ExportString : Java.Lang.Object
@@ -331,11 +405,14 @@ namespace Java.InteropTests
 
 	class ExportThrowing : Java.Lang.Object
 	{
-		[Export]
-		public int Throwing () => throw new InvalidOperationException ("boom");
+		public InvalidOperationException PrimitiveException { get; } = new ("boom");
+		public InvalidOperationException ObjectException { get; } = new ("boom-string");
 
 		[Export]
-		public string ThrowingString () => throw new InvalidOperationException ("boom-string");
+		public int Throwing () => throw PrimitiveException;
+
+		[Export]
+		public string ThrowingString () => throw ObjectException;
 	}
 
 	// Re-entrancy fixture: the outer [Export] invokes the inner [Export] on `this`
@@ -343,17 +420,22 @@ namespace Java.InteropTests
 	// crosses both wrapper layers without losing its original message.
 	class ExportReentrant : Java.Lang.Object
 	{
+		public InvalidOperationException InnerException { get; } = new ("reentrant-boom");
+
 		[Export]
-		public int ReentrantInner () => throw new InvalidOperationException ("reentrant-boom");
+		public int ReentrantInner () => throw InnerException;
 
 		[Export]
 		public int ReentrantOuter ()
 		{
-			var m = JNIEnv.GetMethodID (Class.Handle, "ReentrantInner", "()I");
+			using var klass = Class;
+			var m = JNIEnv.GetMethodID (klass.Handle, "ReentrantInner", "()I");
 			if (m == IntPtr.Zero) {
 				throw new InvalidOperationException ("could not resolve ReentrantInner on the peer");
 			}
-			return JNIEnv.CallIntMethod (Handle, m);
+			int result = JNIEnv.CallIntMethod (Handle, m);
+			GC.KeepAlive (this);
+			return result;
 		}
 	}
 }

@@ -1,0 +1,452 @@
+#nullable enable
+
+using System;
+using System.Collections.Concurrent;
+using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
+using System.Diagnostics.Tracing;
+using System.Reflection;
+using System.Threading;
+using System.Threading.Tasks;
+
+using Android.Runtime;
+using Java.Interop;
+using Java.InteropTests;
+using Microsoft.Android.Runtime;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+namespace Android.RuntimeTests
+{
+	[TestClass]
+	public class RuntimeEventSourceTests
+	{
+		readonly TestContext testContext;
+
+		public RuntimeEventSourceTests (TestContext testContext)
+		{
+			this.testContext = testContext;
+		}
+
+		[TestMethod]
+		[TestCategory ("GCBridge")]
+		[DynamicDependency (DynamicallyAccessedMemberTypes.All, "Microsoft.Android.Runtime.RuntimeEventSource", "Mono.Android")]
+		public void ProviderContractAndEmission ()
+		{
+			Assert.IsTrue (AppContext.TryGetSwitch ("System.Diagnostics.Tracing.EventSource.IsSupported", out bool enabled) && enabled,
+				"The runtime EventSource feature switch should be enabled for this test application.");
+			Assert.IsTrue (Microsoft.Android.Runtime.RuntimeFeature.EventSourceSupport,
+				"The runtime EventSource feature wrapper should report support as enabled.");
+
+			var eventSourceType = Type.GetType ("Microsoft.Android.Runtime.RuntimeEventSource, Mono.Android", throwOnError: true)
+				?? throw new InvalidOperationException ("Could not find the runtime EventSource.");
+			Assert.AreEqual ("Microsoft.Android.Runtime", GetConstant<string> (eventSourceType, "ProviderName"));
+			Assert.AreEqual ((EventKeywords) 0x4, GetConstant<EventKeywords> (eventSourceType, "TypeMapKeyword"));
+			Assert.AreEqual ((EventKeywords) 0x8, GetConstant<EventKeywords> (eventSourceType, "GCBridgeKeyword"));
+			Assert.AreEqual (7, GetConstant<int> (eventSourceType, "GCBridgeStartEventId"));
+			Assert.AreEqual (8, GetConstant<int> (eventSourceType, "GCBridgeStopEventId"));
+			Assert.AreEqual (9, GetConstant<int> (eventSourceType, "TypeMapLookupStartEventId"));
+			Assert.AreEqual (10, GetConstant<int> (eventSourceType, "TypeMapLookupStopEventId"));
+
+			var typeMapKeyword = GetConstant<EventKeywords> (eventSourceType, "TypeMapKeyword");
+			var gcBridgeKeyword = GetConstant<EventKeywords> (eventSourceType, "GCBridgeKeyword");
+			var gcBridgeTask = GetConstant<EventTask> (eventSourceType, "GCBridgeTask");
+			var typeMapTask = GetConstant<EventTask> (eventSourceType, "TypeMapTask");
+			var javaToManagedDirection = GetConstant<string> (eventSourceType, "JavaToManagedTypeMapDirection");
+			var managedToJavaDirection = GetConstant<string> (eventSourceType, "ManagedToJavaTypeMapDirection");
+			int gcBridgeStartEventId = GetConstant<int> (eventSourceType, "GCBridgeStartEventId");
+			int gcBridgeStopEventId = GetConstant<int> (eventSourceType, "GCBridgeStopEventId");
+			int typeMapStartEventId = GetConstant<int> (eventSourceType, "TypeMapLookupStartEventId");
+			int typeMapStopEventId = GetConstant<int> (eventSourceType, "TypeMapLookupStopEventId");
+			Assert.AreEqual ((EventTask) 2, typeMapTask);
+			Assert.AreEqual ("JavaToManaged", javaToManagedDirection);
+			Assert.AreEqual ("ManagedToJava", managedToJavaDirection);
+
+			using var listener = new CapturingEventListener ();
+			Assert.IsTrue (listener.ProviderCreated, "The managed GC bridge should initialize the provider during setup.");
+			Assert.IsTrue (Invoke<bool> (eventSourceType, "GCBridgeStart"));
+			Assert.IsTrue (listener.ProviderCreated, "The EventListener should observe the runtime EventSource.");
+			Invoke (eventSourceType, "GCBridgeStop");
+			Assert.IsTrue (Invoke<bool> (eventSourceType, "TypeMapLookupStart", javaToManagedDirection));
+			Invoke (eventSourceType, "TypeMapLookupStop", javaToManagedDirection);
+
+			var events = listener.GetEvents (gcBridgeStartEventId, gcBridgeStopEventId, typeMapStartEventId, typeMapStopEventId);
+			Assert.AreEqual (4, events.Count);
+			AssertEvent (
+				events [0],
+				gcBridgeStartEventId,
+				"GCBridgeStart",
+				gcBridgeKeyword,
+				gcBridgeTask,
+				EventOpcode.Start);
+			AssertEvent (
+				events [1],
+				gcBridgeStopEventId,
+				"GCBridgeStop",
+				gcBridgeKeyword,
+				gcBridgeTask,
+				EventOpcode.Stop,
+				expectedPayload: null);
+			AssertEvent (
+				events [2],
+				typeMapStartEventId,
+				"TypeMapLookupStart",
+				typeMapKeyword,
+				typeMapTask,
+				EventOpcode.Start,
+				javaToManagedDirection);
+			AssertEvent (
+				events [3],
+				typeMapStopEventId,
+				"TypeMapLookupStop",
+				typeMapKeyword,
+				typeMapTask,
+				EventOpcode.Stop,
+				javaToManagedDirection);
+		}
+
+		[TestMethod]
+		[TestCategory ("TypeMap")]
+		public void JavaToManagedTypeMapLookup_EmitsOnlyForCachePopulation ()
+		{
+			const string jniName = "net/dot/android/test/RuntimeEventSourceMappedPeer";
+			var instance = TrimmableTypeMap.Instance;
+			GetJniProxyCache (instance).TryRemove (jniName, out _);
+
+			var eventSourceType = GetRuntimeEventSourceType ();
+			int startEventId = GetConstant<int> (eventSourceType, "TypeMapLookupStartEventId");
+			int stopEventId = GetConstant<int> (eventSourceType, "TypeMapLookupStopEventId");
+			var keyword = GetConstant<EventKeywords> (eventSourceType, "TypeMapKeyword");
+			var task = GetConstant<EventTask> (eventSourceType, "TypeMapTask");
+			var direction = GetConstant<string> (eventSourceType, "JavaToManagedTypeMapDirection");
+
+			using var listener = new CapturingEventListener ();
+			Assert.IsTrue (instance.TryGetTargetType (jniName, out var first));
+			Assert.AreEqual (typeof (RuntimeEventSourceMappedPeer), first);
+			Assert.IsTrue (instance.TryGetTargetType (jniName, out var second));
+			Assert.AreEqual (first, second);
+
+			var events = listener.GetEvents (startEventId, stopEventId);
+			Assert.AreEqual (2, events.Count, "A cache hit must not emit another type-map pair.");
+			AssertTypeMapPair (events, 0, startEventId, stopEventId, keyword, task, direction);
+		}
+
+		[TestMethod]
+		[TestCategory ("TypeMap")]
+		public void ManagedToJavaTypeMapLookup_EmitsOnlyForCachePopulation ()
+		{
+			var managedType = typeof (RuntimeEventSourceMappedPeer);
+			var instance = TrimmableTypeMap.Instance;
+			GetProxyCache (instance).TryRemove (managedType, out _);
+
+			var eventSourceType = GetRuntimeEventSourceType ();
+			int startEventId = GetConstant<int> (eventSourceType, "TypeMapLookupStartEventId");
+			int stopEventId = GetConstant<int> (eventSourceType, "TypeMapLookupStopEventId");
+			var keyword = GetConstant<EventKeywords> (eventSourceType, "TypeMapKeyword");
+			var task = GetConstant<EventTask> (eventSourceType, "TypeMapTask");
+			var direction = GetConstant<string> (eventSourceType, "ManagedToJavaTypeMapDirection");
+
+			using var listener = new CapturingEventListener ();
+			Assert.IsTrue (instance.TryGetJniNameForManagedType (managedType, out var first));
+			Assert.AreEqual ("net/dot/android/test/RuntimeEventSourceMappedPeer", first);
+			Assert.IsTrue (instance.TryGetJniNameForManagedType (managedType, out var second));
+			Assert.AreEqual (first, second);
+
+			var events = listener.GetEvents (startEventId, stopEventId);
+			Assert.AreEqual (2, events.Count, "A cache hit must not emit another type-map pair.");
+			AssertTypeMapPair (events, 0, startEventId, stopEventId, keyword, task, direction);
+		}
+
+		[TestMethod]
+		[TestCategory ("TypeMap")]
+		public void FailedTypeMapLookups_EmitMatchedPairs ()
+		{
+			const string missingJniName = "net/dot/android/test/RuntimeEventSourceMissingType";
+			var missingManagedType = typeof (RuntimeEventSourceTests);
+			var instance = TrimmableTypeMap.Instance;
+			GetJniProxyCache (instance).TryRemove (missingJniName, out _);
+			GetProxyCache (instance).TryRemove (missingManagedType, out _);
+
+			var eventSourceType = GetRuntimeEventSourceType ();
+			int startEventId = GetConstant<int> (eventSourceType, "TypeMapLookupStartEventId");
+			int stopEventId = GetConstant<int> (eventSourceType, "TypeMapLookupStopEventId");
+			var keyword = GetConstant<EventKeywords> (eventSourceType, "TypeMapKeyword");
+			var task = GetConstant<EventTask> (eventSourceType, "TypeMapTask");
+			var javaToManaged = GetConstant<string> (eventSourceType, "JavaToManagedTypeMapDirection");
+			var managedToJava = GetConstant<string> (eventSourceType, "ManagedToJavaTypeMapDirection");
+
+			using var listener = new CapturingEventListener ();
+			Assert.IsFalse (instance.TryGetTargetType (missingJniName, out var targetType));
+			Assert.IsNull (targetType);
+			Assert.IsFalse (instance.TryGetJniNameForManagedType (missingManagedType, out var jniName));
+			Assert.IsNull (jniName);
+
+			var events = listener.GetEvents (startEventId, stopEventId);
+			Assert.AreEqual (4, events.Count);
+			AssertTypeMapPair (events, 0, startEventId, stopEventId, keyword, task, javaToManaged);
+			AssertTypeMapPair (events, 2, startEventId, stopEventId, keyword, task, managedToJava);
+		}
+
+		[TestMethod]
+		[TestCategory ("TypeMap")]
+		public void ThrowingTypeMapLookups_EmitMatchedPairsAndPropagate ()
+		{
+			var instance = CreateTrimmableTypeMap (new ThrowingTypeMap ());
+			var eventSourceType = GetRuntimeEventSourceType ();
+			int startEventId = GetConstant<int> (eventSourceType, "TypeMapLookupStartEventId");
+			int stopEventId = GetConstant<int> (eventSourceType, "TypeMapLookupStopEventId");
+			var keyword = GetConstant<EventKeywords> (eventSourceType, "TypeMapKeyword");
+			var task = GetConstant<EventTask> (eventSourceType, "TypeMapTask");
+			var javaToManaged = GetConstant<string> (eventSourceType, "JavaToManagedTypeMapDirection");
+			var managedToJava = GetConstant<string> (eventSourceType, "ManagedToJavaTypeMapDirection");
+
+			using var listener = new CapturingEventListener ();
+			var javaException = Assert.ThrowsExactly<InvalidOperationException> (() =>
+				instance.TryGetTargetType ("net/dot/android/test/ThrowingType", out _));
+			Assert.AreEqual (ThrowingTypeMap.ExceptionMessage, javaException?.Message);
+			var managedException = Assert.ThrowsExactly<InvalidOperationException> (() =>
+				instance.TryGetJniNameForManagedType (typeof (RuntimeEventSourceTests), out _));
+			Assert.AreEqual (ThrowingTypeMap.ExceptionMessage, managedException?.Message);
+
+			var events = listener.GetEvents (startEventId, stopEventId);
+			Assert.AreEqual (4, events.Count);
+			AssertTypeMapPair (events, 0, startEventId, stopEventId, keyword, task, javaToManaged);
+			AssertTypeMapPair (events, 2, startEventId, stopEventId, keyword, task, managedToJava);
+		}
+
+		[TestMethod]
+		[Timeout (60_000, CooperativeCancellation = true)]
+		[TestCategory ("GCBridge")]
+		[DynamicDependency (DynamicallyAccessedMemberTypes.All, "Microsoft.Android.Runtime.RuntimeEventSource", "Mono.Android")]
+		public async Task GCBridgeRoundEmission ()
+		{
+			if (!Microsoft.Android.Runtime.RuntimeFeature.IsCoreClrRuntime) {
+				Assert.Inconclusive ("This test exercises the managed CoreCLR GC bridge.");
+			}
+
+			var eventSourceType = Type.GetType ("Microsoft.Android.Runtime.RuntimeEventSource, Mono.Android", throwOnError: true)
+				?? throw new InvalidOperationException ("Could not find the runtime EventSource.");
+			int startEventId = GetConstant<int> (eventSourceType, "GCBridgeStartEventId");
+			int stopEventId = GetConstant<int> (eventSourceType, "GCBridgeStopEventId");
+
+			using var listener = new CapturingEventListener ();
+			// A round decides whether to write its events when it starts, so wait for one that started after the listener was enabled.
+			await GCBridgeTestHelpers.WaitForBridgeRoundsAsync (testContext.CancellationToken);
+
+			Assert.IsTrue (listener.TryGetEventPair (startEventId, stopEventId, out var startEvent, out var stopEvent),
+				"GC bridge Start and Stop events should be emitted as matched pairs.");
+			Assert.AreEqual (startEventId, startEvent.Id);
+			Assert.AreEqual (0, startEvent.Payload.Count);
+			Assert.AreEqual (stopEventId, stopEvent.Id);
+			Assert.AreEqual (0, stopEvent.Payload.Count);
+		}
+
+		[return: DynamicallyAccessedMembers (DynamicallyAccessedMemberTypes.NonPublicFields | DynamicallyAccessedMemberTypes.NonPublicMethods)]
+		static Type GetRuntimeEventSourceType ()
+		{
+			return Type.GetType ("Microsoft.Android.Runtime.RuntimeEventSource, Mono.Android", throwOnError: true)
+				?? throw new InvalidOperationException ("Could not find the runtime EventSource.");
+		}
+
+		static ConcurrentDictionary<Type, JavaPeerProxy> GetProxyCache (TrimmableTypeMap instance)
+		{
+			var field = typeof (TrimmableTypeMap).GetField ("_proxyCache", BindingFlags.Instance | BindingFlags.NonPublic)
+				?? throw new InvalidOperationException ("Could not find the managed proxy cache.");
+			return field.GetValue (instance) as ConcurrentDictionary<Type, JavaPeerProxy>
+				?? throw new InvalidOperationException ("Could not read the managed proxy cache.");
+		}
+
+		static ConcurrentDictionary<string, object> GetJniProxyCache (TrimmableTypeMap instance)
+		{
+			var field = typeof (TrimmableTypeMap).GetField ("_jniProxyCache", BindingFlags.Instance | BindingFlags.NonPublic)
+				?? throw new InvalidOperationException ("Could not find the JNI proxy cache.");
+			return field.GetValue (instance) as ConcurrentDictionary<string, object>
+				?? throw new InvalidOperationException ("Could not read the JNI proxy cache.");
+		}
+
+		static TrimmableTypeMap CreateTrimmableTypeMap (ITypeMap typeMap)
+		{
+			var constructor = typeof (TrimmableTypeMap).GetConstructor (
+				BindingFlags.Instance | BindingFlags.NonPublic,
+				binder: null,
+				[typeof (ITypeMap)],
+				modifiers: null)
+				?? throw new InvalidOperationException ("Could not find the TrimmableTypeMap constructor.");
+			return (TrimmableTypeMap) constructor.Invoke ([typeMap]);
+		}
+
+		static T GetConstant<T> ([DynamicallyAccessedMembers (DynamicallyAccessedMemberTypes.NonPublicFields)] Type type, string name)
+		{
+			var field = type.GetField (name, BindingFlags.NonPublic | BindingFlags.Static)
+				?? throw new InvalidOperationException ($"Could not find {type.FullName}.{name}.");
+			var value = field.GetRawConstantValue ()
+				?? throw new InvalidOperationException ($"{type.FullName}.{name} did not have a constant value.");
+			if (typeof (T).IsEnum) {
+				return (T) Enum.ToObject (typeof (T), value);
+			}
+			return (T) value;
+		}
+
+		static void AssertTypeMapPair (
+			IReadOnlyList<CapturedEvent> events,
+			int offset,
+			int startEventId,
+			int stopEventId,
+			EventKeywords keyword,
+			EventTask task,
+			string direction)
+		{
+			AssertEvent (events [offset], startEventId, "TypeMapLookupStart", keyword, task, EventOpcode.Start, direction);
+			AssertEvent (events [offset + 1], stopEventId, "TypeMapLookupStop", keyword, task, EventOpcode.Stop, direction);
+		}
+
+		static void Invoke ([DynamicallyAccessedMembers (DynamicallyAccessedMemberTypes.NonPublicMethods)] Type type, string name, params object?[] arguments)
+		{
+			var method = type.GetMethod (name, BindingFlags.NonPublic | BindingFlags.Static)
+				?? throw new InvalidOperationException ($"Could not find {type.FullName}.{name}.");
+			method.Invoke (null, arguments);
+		}
+
+		static T Invoke<T> ([DynamicallyAccessedMembers (DynamicallyAccessedMemberTypes.NonPublicMethods)] Type type, string name, params object?[] arguments)
+		{
+			var method = type.GetMethod (name, BindingFlags.NonPublic | BindingFlags.Static)
+				?? throw new InvalidOperationException ($"Could not find {type.FullName}.{name}.");
+			var value = method.Invoke (null, arguments)
+				?? throw new InvalidOperationException ($"{type.FullName}.{name} returned null.");
+			return (T) value;
+		}
+
+		static void AssertEvent (
+			CapturedEvent captured,
+			int expectedId,
+			string expectedName,
+			EventKeywords expectedKeywords,
+			EventTask expectedTask,
+			EventOpcode expectedOpcode,
+			string? expectedPayload = null)
+		{
+			Assert.AreEqual (expectedId, captured.Id);
+			Assert.AreEqual (expectedName, captured.Name);
+			Assert.AreEqual ((long) expectedKeywords, (long) captured.Keywords & 0x0FFFFFFFFFFF);
+			Assert.AreEqual (expectedTask, captured.Task);
+			Assert.AreEqual (expectedOpcode, captured.Opcode);
+			if (expectedPayload is null) {
+				Assert.AreEqual (0, captured.Payload.Count);
+			} else {
+				Assert.AreEqual (1, captured.Payload.Count);
+				Assert.AreEqual (expectedPayload, captured.Payload [0]);
+			}
+		}
+
+		readonly struct CapturedEvent
+		{
+			public int Id { get; }
+			public string Name { get; }
+			public EventKeywords Keywords { get; }
+			public EventTask Task { get; }
+			public EventOpcode Opcode { get; }
+			public IReadOnlyList<object?> Payload { get; }
+			public int ManagedThreadId { get; }
+
+			public CapturedEvent (EventWrittenEventArgs eventData)
+			{
+				Id = eventData.EventId;
+				Name = eventData.EventName ?? "";
+				Keywords = eventData.Keywords;
+				Task = eventData.Task;
+				Opcode = eventData.Opcode;
+				Payload = eventData.Payload ?? [];
+				ManagedThreadId = Environment.CurrentManagedThreadId;
+			}
+		}
+
+		sealed class CapturingEventListener : EventListener
+		{
+			readonly Lock eventsLock = new ();
+			readonly List<CapturedEvent> events = new ();
+
+			public bool ProviderCreated { get; private set; }
+
+			public IReadOnlyList<CapturedEvent> GetEvents (params int [] eventIds)
+			{
+				int managedThreadId = Environment.CurrentManagedThreadId;
+				lock (eventsLock) {
+					if (eventIds.Length == 0) {
+						return events.FindAll (captured => captured.ManagedThreadId == managedThreadId);
+					}
+
+					var matchingEvents = new List<CapturedEvent> ();
+					foreach (var captured in events) {
+						if (captured.ManagedThreadId == managedThreadId && Array.IndexOf (eventIds, captured.Id) >= 0) {
+							matchingEvents.Add (captured);
+						}
+					}
+					return matchingEvents;
+				}
+			}
+
+			public bool TryGetEventPair (
+				int startEventId,
+				int stopEventId,
+				out CapturedEvent startEvent,
+				out CapturedEvent stopEvent)
+			{
+				lock (eventsLock) {
+					// TypeMap events from other threads can be written between a pair's Start and Stop.
+					bool started = false;
+					startEvent = default;
+					foreach (var captured in events) {
+						if (captured.Id == startEventId) {
+							startEvent = captured;
+							started = true;
+						} else if (captured.Id == stopEventId && started) {
+							stopEvent = captured;
+							return true;
+						}
+					}
+				}
+
+				startEvent = default;
+				stopEvent = default;
+				return false;
+			}
+
+			protected override void OnEventSourceCreated (EventSource eventSource)
+			{
+				if (eventSource.Name == "Microsoft.Android.Runtime") {
+					ProviderCreated = true;
+					EnableEvents (eventSource, EventLevel.Informational, EventKeywords.All);
+				}
+			}
+
+			protected override void OnEventWritten (EventWrittenEventArgs eventData)
+			{
+				if (eventData.EventName is not null) {
+					lock (eventsLock) {
+						events.Add (new CapturedEvent (eventData));
+					}
+				}
+			}
+		}
+
+		sealed class ThrowingTypeMap : ITypeMap
+		{
+			internal const string ExceptionMessage = "Test typemap lookup failure.";
+
+			public void CollectProxyTypes (string jniName, ref JniProxyCacheBuilder builder)
+			{
+				throw new InvalidOperationException (ExceptionMessage);
+			}
+
+			public bool TryGetProxyType (Type managedType, [NotNullWhen (true)] out Type? proxyType)
+			{
+				proxyType = null;
+				throw new InvalidOperationException (ExceptionMessage);
+			}
+		}
+	}
+
+	[Register ("net/dot/android/test/RuntimeEventSourceMappedPeer")]
+	class RuntimeEventSourceMappedPeer : Java.Lang.Object
+	{
+	}
+}

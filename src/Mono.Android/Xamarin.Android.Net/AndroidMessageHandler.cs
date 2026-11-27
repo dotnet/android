@@ -62,6 +62,7 @@ namespace Xamarin.Android.Net
 	/// if they use a certificate with a fully validated trust chain) unless you store the CA certificates from your Android system in <see cref="TrustedCerts"/> along with
 	/// the self-signed certificate(s).</para>
 	/// </remarks>
+	[Obsolete ("AndroidMessageHandler is obsolete. Use System.Net.Http.SocketsHttpHandler instead.")]
 	public class AndroidMessageHandler : HttpMessageHandler
 	{
 		sealed class RequestRedirectionState
@@ -177,7 +178,7 @@ namespace Xamarin.Android.Net
 			readonly CancellationTokenSource abortCts = new CancellationTokenSource ();
 
 			// Guards the draining state machine (inUseCount / disposeRequested / disposed).
-			readonly object stateLock = new object ();
+			readonly Lock stateLock = new ();
 			int inUseCount;          // operations (read/write/copy/flush) currently in flight (normally 0 or 1)
 			int disconnectRequested; // coalesces caller cancellation and Dispose() into one background disconnect
 			bool disposeRequested;   // Dispose() called: reject new operations; close once the last one unwinds
@@ -328,7 +329,7 @@ namespace Xamarin.Android.Net
 			}
 
 			/// <summary>
-			/// Void counterpart of <see cref="RunOperation{T}"/>, for operations that return no value.
+			/// Void counterpart of <see cref="RunOperation{T}(Func{CancellationToken,Task{T}},CancellationToken,string)"/>, for operations that return no value.
 			/// Delegates to the generic overload so the BeginUse/try/finally/EndUse bracket lives in exactly
 			/// one place.
 			/// </summary>
@@ -336,7 +337,7 @@ namespace Xamarin.Android.Net
 				RunOperation<bool> (async operationToken => { await operation (operationToken).ConfigureAwait (false); return true; }, callerToken, canceledMessage);
 
 			/// <summary>
-			/// Synchronous, value-returning wrapper over <see cref="RunOperation{T}"/> for the synchronous
+			/// Synchronous, value-returning wrapper over <see cref="RunOperation{T}(Func{CancellationToken,Task{T}},CancellationToken,string)"/> for the synchronous
 			/// <see cref="Stream"/> overrides, which carry no caller token. It uses the drain-safety bracket
 			/// directly rather than allocating a completed task.
 			/// </summary>
@@ -480,7 +481,7 @@ namespace Xamarin.Android.Net
 					or WebException;
 		}
 
-		internal const string LOG_APP = "monodroid-net";
+		internal const string LOG_APP = "DOTNET-net";
 
 		const string GZIP_ENCODING = "gzip";
 		const string DEFLATE_ENCODING = "deflate";
@@ -507,13 +508,9 @@ namespace Xamarin.Android.Net
 			"Last-Modified"
 		};
 
-		static readonly List <IAndroidAuthenticationModule> authModules = new List <IAndroidAuthenticationModule> {
-			new AuthModuleBasic (),
-			new AuthModuleDigest ()
-		};
-
 		CookieContainer? _cookieContainer;
 		DecompressionMethods _decompressionMethods;
+		IAndroidAuthenticationModule []? authModules;
 
 		bool disposed;
 		bool started;
@@ -759,7 +756,20 @@ namespace Xamarin.Android.Net
 		/// </para>
 		/// </summary>
 		/// <value>The pre authentication data.</value>
-		public AuthenticationData? PreAuthenticationData { get; set; }
+		public AuthenticationData? PreAuthenticationData {
+			get;
+			set {
+				// Keep these constructor references in the setter so apps that never configure pre-authentication can trim the built-in modules.
+				if (value != null && authModules == null) {
+					authModules = [
+						new AuthModuleBasic (),
+						new AuthModuleDigest ()
+					];
+				}
+
+				field = value;
+			}
+		}
 
 		/// <summary>
 		/// If the website requires authentication, this property will contain data about each scheme supported
@@ -929,8 +939,7 @@ namespace Xamarin.Android.Net
 		{
 			started = true;
 			AssertSelf ();
-			if (request == null)
-				throw new ArgumentNullException (nameof (request));
+			ArgumentNullException.ThrowIfNull (request);
 
 			if (request.RequestUri is null || !request.RequestUri.IsAbsoluteUri)
 				throw new ArgumentException ("Must represent an absolute URI", "request");
@@ -1058,39 +1067,51 @@ namespace Xamarin.Android.Net
 			if (request.Content is null)
 				return;
 
-			var stream = await request.Content.ReadAsStreamAsync ().ConfigureAwait (false);
+			Stream? stream = null;
+			bool uploadCompleted = false;
 			try {
-				await stream.CopyToAsync(httpConnection.OutputStream!, 4096, cancellationToken).ConfigureAwait(false);
+				try {
+					stream = await request.Content.ReadAsStreamAsync ().ConfigureAwait (false);
+					await stream.CopyToAsync(httpConnection.OutputStream!, 4096, cancellationToken).ConfigureAwait(false);
+					uploadCompleted = true;
+				} finally {
+					//
+					// Rewind the stream to beginning in case the HttpContent implementation
+					// will be accessed again (e.g. after redirect or retry) and it keeps its stream
+					// open behind the scenes instead of recreating it on the next call to
+					// ReadAsStreamAsync. If we don't rewind it, the ReadAsStreamAsync
+					// call above will throw an exception as we'd be attempting to read an
+					// already "closed" stream (that is one whose Position is set to its
+					// end).
+					//
+					// This is not a perfect solution since the HttpContent may do weird
+					// things in its implementation, but it's better than copying the
+					// content into a buffer since we have no way of knowing how the data is
+					// read or generated and also we don't want to keep potentially large
+					// amounts of data in memory (which would happen if we read the content
+					// into a byte[] buffer and kept it cached for re-use on redirect).
+					//
+					// We use try-finally to attempt the rewind even if an exception occurs
+					// during the copy operation, without replacing the original failure if
+					// the rewind also fails.
+					//
+					// See https://bugzilla.xamarin.com/show_bug.cgi?id=55477
+					//
+					try {
+						if (stream != null && stream.CanSeek)
+							stream.Seek (0, SeekOrigin.Begin);
+					} catch (Exception ex) when (!uploadCompleted) {
+						Logger.Log (LogLevel.Info, LOG_APP, $"Exception caught while rewinding content after upload failure: {ex}");
+					}
+				}
 			} catch (Exception ex) when (ShouldMapToCancellation (ex, cancellationToken)) {
 				// When the caller cancels the request while the body is being uploaded, the connection
 				// is disconnected which surfaces as a transport exception (e.g. "Socket closed"). Map it
 				// to an OperationCanceledException so callers observe cancellation instead of a WebException.
 				throw new System.OperationCanceledException ("Request body upload was canceled.", ex, cancellationToken);
-			} finally {
-				//
-				// Rewind the stream to beginning in case the HttpContent implementation
-				// will be accessed again (e.g. after redirect or retry) and it keeps its stream
-				// open behind the scenes instead of recreating it on the next call to
-				// ReadAsStreamAsync. If we don't rewind it, the ReadAsStreamAsync
-				// call above will throw an exception as we'd be attempting to read an
-				// already "closed" stream (that is one whose Position is set to its
-				// end).
-				//
-				// This is not a perfect solution since the HttpContent may do weird
-				// things in its implementation, but it's better than copying the
-				// content into a buffer since we have no way of knowing how the data is
-				// read or generated and also we don't want to keep potentially large
-				// amounts of data in memory (which would happen if we read the content
-				// into a byte[] buffer and kept it cached for re-use on redirect).
-				//
-				// We use try-finally to ensure the stream is rewound even if an exception
-				// occurs during the copy operation (e.g., cancellation, timeout, or network error),
-				// allowing the HttpContent to be safely reused in retry scenarios.
-				//
-				// See https://bugzilla.xamarin.com/show_bug.cgi?id=55477
-				//
-				if (stream.CanSeek)
-					stream.Seek (0, SeekOrigin.Begin);
+			} catch (global::System.IO.IOException ex) {
+				// Content acquisition, copying, and rewinding can surface managed I/O failures.
+				throw CreateHttpRequestException (ex.Message, ex, WebExceptionStatus.UnknownError);
 			}
 		}
 
@@ -1188,7 +1209,7 @@ namespace Xamarin.Android.Net
 					// There's also no way to send content using GET (except in the URL, of course), so discarding
 					// request.Content is what we should do.
 					//
-					// See https://github.com/xamarin/xamarin-android/issues/1282
+					// See https://github.com/dotnet/android/issues/1282
 					if (redirectState.Method == HttpMethod.Get) {
 						if (Logger.LogNet)
 							Logger.Log (LogLevel.Info, LOG_APP, $"Discarding content on redirect");
@@ -1448,9 +1469,9 @@ namespace Xamarin.Android.Net
 
 		AuthenticationScheme GetAuthScheme (string scheme)
 		{
-			if (String.Compare ("basic", scheme, StringComparison.OrdinalIgnoreCase) == 0)
+			if (string.Equals ("basic", scheme, StringComparison.OrdinalIgnoreCase))
 				return AuthenticationScheme.Basic;
-			if (String.Compare ("digest", scheme, StringComparison.OrdinalIgnoreCase) == 0)
+			if (string.Equals ("digest", scheme, StringComparison.OrdinalIgnoreCase))
 				return AuthenticationScheme.Digest;
 
 			return AuthenticationScheme.Unsupported;
@@ -1498,12 +1519,12 @@ namespace Xamarin.Android.Net
 				}
 
 				IEnumerable<string> values = headers [key];
-				if (removeContentLength && String.Compare (ContentLengthHeaderName, key, StringComparison.OrdinalIgnoreCase) == 0) {
+				if (removeContentLength && string.Equals (ContentLengthHeaderName, key, StringComparison.OrdinalIgnoreCase)) {
 					removeContentLength = false;
 					continue;
 				}
 
-				if ((removeContentEncoding || setNewContentEncodingValue) && String.Compare (ContentEncodingHeaderName, key, StringComparison.OrdinalIgnoreCase) == 0) {
+				if ((removeContentEncoding || setNewContentEncodingValue) && string.Equals (ContentEncodingHeaderName, key, StringComparison.OrdinalIgnoreCase)) {
 					if (removeContentEncoding) {
 						removeContentEncoding = false;
 						continue;
@@ -1581,8 +1602,7 @@ namespace Xamarin.Android.Net
 
 		async Task <HttpURLConnection> SetupRequestInternal (HttpRequestMessage request, URLConnection conn)
 		{
-			if (conn == null)
-				throw new ArgumentNullException (nameof (conn));
+			ArgumentNullException.ThrowIfNull (conn);
 			var httpConnection = conn.JavaCast <HttpURLConnection> ();
 			if (httpConnection == null)
 				throw new InvalidOperationException ($"Unsupported URL scheme {conn.URL?.Protocol}");
@@ -1737,7 +1757,7 @@ namespace Xamarin.Android.Net
 				(key, algorithmName) = (rsa, "RSA");
 			} else if (clientCertificate.GetECDsaPrivateKey () is {} ec) {
 				(key, algorithmName) = (ec, "EC");
-			} else if (clientCertificate.GetDSAPrivateKey () is {} dsa) {
+			} else if (clientCertificate.GetDSAPrivateKey () is {} dsa) { // CodeQL [SM03800] Used only after RSA and ECDSA for customer-provided client certificate compatibility.
 				(key, algorithmName) = (dsa, "DSA");
 			} else {
 				return null;
@@ -1746,6 +1766,7 @@ namespace Xamarin.Android.Net
 			var keyFactory = KeyFactory.GetInstance (algorithmName) ?? throw new InvalidOperationException ($"Failed to get the KeyFactory instance for algorithm {algorithmName}");
 			var privateKey = keyFactory.GeneratePrivate (new Java.Security.Spec.PKCS8EncodedKeySpec (key.ExportPkcs8PrivateKey ()));
 			var certificate = Java.Lang.Object.GetObject<Certificate> (clientCertificate.Handle, JniHandleOwnership.DoNotTransfer);
+			GC.KeepAlive (clientCertificate);
 
 			if (privateKey is null || certificate is null) {
 				return null;
@@ -1767,14 +1788,14 @@ namespace Xamarin.Android.Net
 				return;
 			}
 
-			var auth = data.Scheme == AuthenticationScheme.Unsupported ? data.AuthModule : authModules.Find (m => m?.Scheme == data.Scheme);
+			var auth = data.Scheme == AuthenticationScheme.Unsupported ? data.AuthModule : authModules?.FirstOrDefault (m => m.Scheme == data.Scheme);
 			if (auth == null) {
 				if (Logger.LogNet)
 					Logger.Log (LogLevel.Info, LOG_APP, $"Authentication module for scheme '{data.Scheme}' not found. No authentication will be performed");
 				return;
 			}
 
-			Authorization authorization = auth.Authenticate (data.Challenge!, httpConnection, creds);
+			Authorization? authorization = auth.Authenticate (data.Challenge!, httpConnection, creds);
 			if (authorization == null) {
 				if (Logger.LogNet)
 					Logger.Log (LogLevel.Info, LOG_APP, $"Authorization module {auth.GetType ()} for scheme {data.Scheme} returned no authorization");

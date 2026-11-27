@@ -1,8 +1,11 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
+using System.Globalization;
 using System.Reflection.Metadata;
+using System.Reflection.Metadata.Ecma335;
 using System.Reflection.PortableExecutable;
+using System.Text;
 
 namespace Microsoft.Android.Sdk.TrimmableTypeMap;
 
@@ -12,12 +15,28 @@ namespace Microsoft.Android.Sdk.TrimmableTypeMap;
 /// </summary>
 sealed class AssemblyIndex : IDisposable
 {
+	const byte ElementTypeValueType = 0x11;
+
 	readonly PEReader peReader;
 	readonly CustomAttributeTypeProvider customAttributeTypeProvider;
+	readonly string? [] typeFullNames;
+	readonly string? [] typeReferenceFullNames;
+	readonly string? [] typeReferenceAssemblyNames;
+	readonly string? [] assemblyReferenceNames;
+	readonly TypeRefData? [] classTypeDefinitions;
+	readonly TypeRefData? [] valueTypeDefinitions;
+	readonly TypeRefData? [] classTypeReferences;
+	readonly TypeRefData? [] valueTypeReferences;
+	readonly Dictionary<EntityHandle, string?> customAttributeNames = new ();
+	readonly Dictionary<EntityHandle, int> constructorParameterCounts = new ();
+	IReadOnlyList<string>? callbackMetadata;
 
 	public MetadataReader Reader { get; }
 	public string AssemblyName { get; }
+	public string MetadataAssemblyName { get; }
 	public string AssemblyPath { get; }
+	public bool IsReferenceAssembly { get; private set; }
+	internal TypeRefSignatureTypeProvider TypeRefSignatureProvider { get; }
 
 	/// <summary>
 	/// Maps full managed type name (e.g., "Android.App.Activity") to its TypeDefinitionHandle.
@@ -40,22 +59,42 @@ sealed class AssemblyIndex : IDisposable
 	public HashSet<string> ExportedTypeNames { get; } = new (StringComparer.Ordinal);
 
 	/// <summary>
-	/// True iff the assembly's metadata mentions
-	/// <c>Java.Interop.JniAddNativeMethodRegistrationAttribute</c> (as a
-	/// TypeReference or TypeDefinition). The trimmable typemap forbids that
-	/// attribute (XA4251); this flag lets the scanner short-circuit the
-	/// per-method attribute walk for the overwhelmingly common case of
-	/// assemblies that don't use it.
+	/// The version declared by the assembly's <c>[assembly: Java.Interop.JavaPeerCallbackFormat]</c>
+	/// attribute, or <see cref="JavaPeerCallbackFormat.ConnectorDelegates" /> when the attribute is
+	/// absent — an unmarked assembly uses the legacy <c>cb_*</c>/<c>Get*Handler ()</c> shape.
 	/// </summary>
-	public bool MayUseJniAddNativeMethodRegistrationAttribute { get; private set; }
+	public int CallbackFormatVersion { get; private set; } = JavaPeerCallbackFormat.ConnectorDelegates;
+
+	/// <summary>
+	/// True when the assembly's <c>n_*</c> binding callbacks are <c>[UnmanagedCallersOnly]</c> and
+	/// therefore have no <c>Get*Handler ()</c> connector method to bind through. RegisterNatives
+	/// must point at those callbacks directly rather than at a generated managed-calling wrapper.
+	/// </summary>
+	public bool UsesUnmanagedCallersOnlyCallbacks =>
+		CallbackFormatVersion == JavaPeerCallbackFormat.UnmanagedCallersOnlyCallbacks;
+
+	/// <summary>
+	/// Maps forwarded managed type names to the target assembly simple name.
+	/// </summary>
+	public Dictionary<string, string> ForwardedTypeAssemblies { get; } = new (StringComparer.Ordinal);
 
 	AssemblyIndex (PEReader peReader, MetadataReader reader, string assemblyName, string assemblyPath)
 	{
 		this.peReader = peReader;
 		this.customAttributeTypeProvider = new CustomAttributeTypeProvider (reader);
+		typeFullNames = new string? [reader.TypeDefinitions.Count + 1];
+		typeReferenceFullNames = new string? [reader.TypeReferences.Count + 1];
+		typeReferenceAssemblyNames = new string? [reader.TypeReferences.Count + 1];
+		assemblyReferenceNames = new string? [reader.AssemblyReferences.Count + 1];
+		classTypeDefinitions = new TypeRefData? [reader.TypeDefinitions.Count + 1];
+		valueTypeDefinitions = new TypeRefData? [reader.TypeDefinitions.Count + 1];
+		classTypeReferences = new TypeRefData? [reader.TypeReferences.Count + 1];
+		valueTypeReferences = new TypeRefData? [reader.TypeReferences.Count + 1];
 		Reader = reader;
 		AssemblyName = assemblyName;
+		MetadataAssemblyName = reader.GetString (reader.GetAssemblyDefinition ().Name);
 		AssemblyPath = assemblyPath;
+		TypeRefSignatureProvider = new TypeRefSignatureTypeProvider (this);
 	}
 
 	public static AssemblyIndex Create (PEReader peReader, string assemblyName, string assemblyPath = "")
@@ -68,34 +107,22 @@ sealed class AssemblyIndex : IDisposable
 
 	void Build ()
 	{
-		const string JniAddNativeMethodRegistrationAttribute = "JniAddNativeMethodRegistrationAttribute";
-		const string JavaInteropNamespace = "Java.Interop";
-
-		// Cheap first pass over TypeReferences / TypeDefinitions to decide whether
-		// the assembly is even capable of carrying [JniAddNativeMethodRegistration].
-		// The per-method attribute walk in the scanner can then skip entirely for
-		// the common case where the attribute is neither imported nor declared here.
-		foreach (var trHandle in Reader.TypeReferences) {
-			var typeReference = Reader.GetTypeReference (trHandle);
-			if (IsTypeReferenceMatch (typeReference, Reader, JavaInteropNamespace, JniAddNativeMethodRegistrationAttribute)) {
-				MayUseJniAddNativeMethodRegistrationAttribute = true;
+		foreach (var exportedTypeHandle in Reader.ExportedTypes) {
+			var exportedType = Reader.GetExportedType (exportedTypeHandle);
+			var fullName = GetExportedTypeFullName (exportedType);
+			ExportedTypeNames.Add (fullName);
+			var forwardedAssemblyName = GetForwardedAssemblyName (exportedType);
+			if (forwardedAssemblyName is not null) {
+				ForwardedTypeAssemblies [fullName] = forwardedAssemblyName;
 			}
 		}
 
-		foreach (var exportedTypeHandle in Reader.ExportedTypes) {
-			var exportedType = Reader.GetExportedType (exportedTypeHandle);
-			ExportedTypeNames.Add (GetExportedTypeFullName (exportedType));
-		}
+		ReadAssemblyMetadata ();
 
 		foreach (var typeHandle in Reader.TypeDefinitions) {
 			var typeDef = Reader.GetTypeDefinition (typeHandle);
 
-			if (!MayUseJniAddNativeMethodRegistrationAttribute &&
-			    IsTypeDefinitionMatch (typeDef, Reader, JavaInteropNamespace, JniAddNativeMethodRegistrationAttribute)) {
-				MayUseJniAddNativeMethodRegistrationAttribute = true;
-			}
-
-			var fullName = MetadataTypeNameResolver.GetFullName (typeDef, Reader);
+			var fullName = GetTypeFullName (typeHandle);
 			if (fullName.Length == 0) {
 				continue;
 			}
@@ -123,6 +150,18 @@ sealed class AssemblyIndex : IDisposable
 			var ns = Reader.GetString (exportedType.Namespace);
 			return MetadataTypeNameResolver.JoinNamespaceAndName (ns, name);
 		}
+
+		string? GetForwardedAssemblyName (ExportedType exportedType)
+		{
+			if (exportedType.Implementation.Kind == HandleKind.AssemblyReference) {
+				var assemblyReference = Reader.GetAssemblyReference ((AssemblyReferenceHandle) exportedType.Implementation);
+				return Reader.GetString (assemblyReference.Name);
+			}
+			if (exportedType.Implementation.Kind == HandleKind.ExportedType) {
+				return GetForwardedAssemblyName (Reader.GetExportedType ((ExportedTypeHandle) exportedType.Implementation));
+			}
+			return null;
+		}
 	}
 
 	(RegisterInfo? register, TypeAttributeInfo? attrs) ParseAttributes (TypeDefinition typeDef)
@@ -135,25 +174,33 @@ sealed class AssemblyIndex : IDisposable
 		// with the wrong AttributeName.
 		List<IntentFilterInfo>? intentFilters = null;
 		List<MetaDataInfo>? metaData = null;
+		List<PropertyInfo>? properties = null;
+		List<UsesLibraryInfo>? usesLibraries = null;
+		List<GrantUriPermissionInfo>? grantUriPermissions = null;
 		Dictionary<string, object?>? layoutProperties = null;
 
 		foreach (var caHandle in typeDef.GetCustomAttributes ()) {
 			var ca = Reader.GetCustomAttribute (caHandle);
-			var attrName = GetCustomAttributeName (ca, Reader);
+			var attrName = GetCustomAttributeName (ca);
 
 			if (attrName is null) {
 				continue;
 			}
 
-			if (attrName == "RegisterAttribute") {
+			if (IsCustomAttributeMatch (ca, Reader, "Android.Runtime", "RegisterAttribute")) {
 				registerInfo = ParseRegisterAttribute (ca);
 				registerInfo = registerInfo with { JniName = registerInfo.JniName.Replace ('.', '/') };
-			} else if (attrName == "JniTypeSignatureAttribute") {
+			} else if (IsCustomAttributeMatch (ca, Reader, "Java.Interop", "JniTypeSignatureAttribute")) {
 				registerInfo = ParseJniTypeSignatureAttribute (ca);
-			} else if (attrName == "ExportAttribute") {
-				// [Export] is a method-level attribute; it is parsed at scan time by JavaPeerScanner
-			} else if (IsKnownComponentAttribute (attrName)) {
-				attrInfo ??= CreateTypeAttributeInfo (attrName);
+			} else if (IsKnownComponentAttribute (attrName) &&
+			           IsCustomAttributeMatch (ca, Reader,
+			               attrName is "BroadcastReceiverAttribute" or "ContentProviderAttribute" ? "Android.Content" : "Android.App",
+			               attrName)) {
+				if (attrInfo is null || !attrInfo.IsComponentAttribute) {
+					var jniName = attrInfo?.JniName;
+					attrInfo = CreateTypeAttributeInfo (attrName);
+					attrInfo.JniName = jniName;
+				}
 				var value = DecodeAttribute (ca);
 
 				if (attrName == "ContentProviderAttribute") {
@@ -179,21 +226,39 @@ sealed class AssemblyIndex : IDisposable
 						applicationAttributeInfo.ManageSpaceActivity = manageSpace;
 					}
 				}
-			} else if (attrName == "IntentFilterAttribute") {
+			} else if (IsCustomAttributeMatch (ca, Reader, "Android.App", "IntentFilterAttribute")) {
 				intentFilters ??= new List<IntentFilterInfo> ();
 				intentFilters.Add (ParseIntentFilterAttribute (ca));
-			} else if (attrName == "MetaDataAttribute") {
+			} else if (IsCustomAttributeMatch (ca, Reader, "Android.App", "MetaDataAttribute")) {
 				metaData ??= new List<MetaDataInfo> ();
 				var (mdName, mdProps) = ParseNameAndProperties (ca);
 				metaData.Add (CreateMetaDataInfo (mdName, mdProps));
-			} else if (attrName == "LayoutAttribute") {
+			} else if (IsCustomAttributeMatch (ca, Reader, "Android.App", "PropertyAttribute")) {
+				properties ??= new List<PropertyInfo> ();
+				var (propertyName, propertyProps) = ParseNameAndProperties (ca);
+				properties.Add (CreatePropertyInfo (propertyName, propertyProps));
+			} else if (IsCustomAttributeMatch (ca, Reader, "Android.App", "UsesLibraryAttribute")) {
+				usesLibraries ??= new List<UsesLibraryInfo> ();
+				var (libraryName, libraryProps) = ParseNameAndProperties (ca);
+				usesLibraries.Add (CreateUsesLibraryInfo (libraryName, libraryProps));
+			} else if (IsCustomAttributeMatch (ca, Reader, "Android.Content", "GrantUriPermissionAttribute")) {
+				grantUriPermissions ??= new List<GrantUriPermissionInfo> ();
+				var (_, grantProps) = ParseNameAndProperties (ca);
+				grantUriPermissions.Add (new GrantUriPermissionInfo {
+					Path = grantProps.TryGetValue ("Path", out var path) && path is string pathValue ? pathValue : null,
+					PathPattern = grantProps.TryGetValue ("PathPattern", out var pattern) && pattern is string patternValue ? patternValue : null,
+					PathPrefix = grantProps.TryGetValue ("PathPrefix", out var prefix) && prefix is string prefixValue ? prefixValue : null,
+				});
+			} else if (IsCustomAttributeMatch (ca, Reader, "Android.App", "LayoutAttribute")) {
 				layoutProperties = ParseLayoutAttribute (ca);
 			} else if (attrInfo is null && ImplementsJniNameProviderAttribute (ca)) {
 				// Custom attribute implementing IJniNameProviderAttribute (e.g., user-defined [CustomJniName])
 				var name = TryGetNameProperty (ca);
 				if (name is not null) {
-					attrInfo = new TypeAttributeInfo (attrName);
-					attrInfo.JniName = name.Replace ('.', '/');
+					attrInfo = new TypeAttributeInfo (attrName) {
+						IsComponentAttribute = false,
+						JniName = name.Replace ('.', '/'),
+					};
 				}
 			}
 		}
@@ -206,12 +271,131 @@ sealed class AssemblyIndex : IDisposable
 			if (metaData is not null) {
 				attrInfo.MetaData.AddRange (metaData);
 			}
+			if (properties is not null) {
+				attrInfo.ManifestProperties.AddRange (properties);
+			}
+			if (usesLibraries is not null) {
+				attrInfo.UsesLibraries.AddRange (usesLibraries);
+			}
+			if (grantUriPermissions is not null) {
+				attrInfo.GrantUriPermissions.AddRange (grantUriPermissions);
+			}
 			if (layoutProperties is not null) {
 				attrInfo.LayoutProperties = layoutProperties;
 			}
 		}
 
 		return (registerInfo, attrInfo);
+	}
+
+	internal string GetTypeFullName (TypeDefinitionHandle handle)
+	{
+		int row = MetadataTokens.GetRowNumber (handle);
+		var fullName = typeFullNames [row];
+		if (fullName is not null) {
+			return fullName;
+		}
+
+		var typeDef = Reader.GetTypeDefinition (handle);
+		var name = Reader.GetString (typeDef.Name);
+		if (typeDef.IsNested) {
+			fullName = MetadataTypeNameResolver.JoinNestedTypeName (GetTypeFullName (typeDef.GetDeclaringType ()), name);
+		} else {
+			fullName = MetadataTypeNameResolver.JoinNamespaceAndName (Reader.GetString (typeDef.Namespace), name);
+		}
+		typeFullNames [row] = fullName;
+		return fullName;
+	}
+
+	internal TypeRefData GetTypeRef (TypeDefinitionHandle handle, byte rawTypeKind)
+	{
+		var cache = rawTypeKind == ElementTypeValueType ? valueTypeDefinitions : classTypeDefinitions;
+		int row = MetadataTokens.GetRowNumber (handle);
+		var type = cache [row];
+		if (type is not null) {
+			return type;
+		}
+
+		type = new TypeRefData {
+			ManagedTypeName = GetTypeFullName (handle),
+			AssemblyName = AssemblyName,
+			IsValueType = rawTypeKind == ElementTypeValueType,
+		};
+		cache [row] = type;
+		return type;
+	}
+
+	internal TypeRefData GetTypeRef (TypeReferenceHandle handle, byte rawTypeKind)
+	{
+		var cache = rawTypeKind == ElementTypeValueType ? valueTypeReferences : classTypeReferences;
+		int row = MetadataTokens.GetRowNumber (handle);
+		var type = cache [row];
+		if (type is not null) {
+			return type;
+		}
+
+		type = new TypeRefData {
+			ManagedTypeName = GetTypeReferenceFullName (handle),
+			AssemblyName = GetTypeReferenceAssemblyName (handle),
+			IsValueType = rawTypeKind == ElementTypeValueType,
+		};
+		cache [row] = type;
+		return type;
+	}
+
+	string GetTypeReferenceFullName (TypeReferenceHandle handle)
+	{
+		int row = MetadataTokens.GetRowNumber (handle);
+		var fullName = typeReferenceFullNames [row];
+		if (fullName is not null) {
+			return fullName;
+		}
+
+		var typeRef = Reader.GetTypeReference (handle);
+		var name = Reader.GetString (typeRef.Name);
+		fullName = typeRef.ResolutionScope.Kind == HandleKind.TypeReference
+			? MetadataTypeNameResolver.JoinNestedTypeName (GetTypeReferenceFullName ((TypeReferenceHandle) typeRef.ResolutionScope), name)
+			: MetadataTypeNameResolver.JoinNamespaceAndName (Reader.GetString (typeRef.Namespace), name);
+		typeReferenceFullNames [row] = fullName;
+		return fullName;
+	}
+
+	string GetTypeReferenceAssemblyName (TypeReferenceHandle handle)
+	{
+		int row = MetadataTokens.GetRowNumber (handle);
+		var assemblyName = typeReferenceAssemblyNames [row];
+		if (assemblyName is not null) {
+			return assemblyName;
+		}
+
+		var typeRef = Reader.GetTypeReference (handle);
+		if (typeRef.ResolutionScope.Kind == HandleKind.TypeReference) {
+			assemblyName = GetTypeReferenceAssemblyName ((TypeReferenceHandle) typeRef.ResolutionScope);
+		} else if (typeRef.ResolutionScope.Kind == HandleKind.AssemblyReference) {
+			var assemblyHandle = (AssemblyReferenceHandle) typeRef.ResolutionScope;
+			int assemblyRow = MetadataTokens.GetRowNumber (assemblyHandle);
+			assemblyName = assemblyReferenceNames [assemblyRow];
+			if (assemblyName is null) {
+				assemblyName = Reader.GetString (Reader.GetAssemblyReference (assemblyHandle).Name);
+				assemblyReferenceNames [assemblyRow] = assemblyName;
+			}
+		} else {
+			assemblyName = AssemblyName;
+		}
+
+		typeReferenceAssemblyNames [row] = assemblyName;
+		return assemblyName;
+	}
+
+	internal string? GetCustomAttributeName (CustomAttribute ca)
+	{
+		if (customAttributeNames.TryGetValue (ca.Constructor, out var name)) {
+			return name;
+		}
+
+		name = GetCustomAttributeName (ca, Reader);
+		customAttributeNames.Add (ca.Constructor, name);
+		return name;
 	}
 
 	static readonly HashSet<string> KnownComponentAttributes = new (StringComparer.Ordinal) {
@@ -246,19 +430,190 @@ sealed class AssemblyIndex : IDisposable
 			var impl = Reader.GetInterfaceImplementation (implHandle);
 			if (impl.Interface.Kind == HandleKind.TypeReference) {
 				var typeRef = Reader.GetTypeReference ((TypeReferenceHandle)impl.Interface);
-				if (Reader.GetString (typeRef.Name) == "IJniNameProviderAttribute" &&
-				    Reader.GetString (typeRef.Namespace) == "Java.Interop") {
+				if (Reader.StringComparer.Equals (typeRef.Name, "IJniNameProviderAttribute") &&
+				    Reader.StringComparer.Equals (typeRef.Namespace, "Java.Interop")) {
 					return true;
 				}
 			} else if (impl.Interface.Kind == HandleKind.TypeDefinition) {
 				var ifaceDef = Reader.GetTypeDefinition ((TypeDefinitionHandle)impl.Interface);
-				if (Reader.GetString (ifaceDef.Name) == "IJniNameProviderAttribute" &&
-				    Reader.GetString (ifaceDef.Namespace) == "Java.Interop") {
+				if (Reader.StringComparer.Equals (ifaceDef.Name, "IJniNameProviderAttribute") &&
+				    Reader.StringComparer.Equals (ifaceDef.Namespace, "Java.Interop")) {
 					return true;
 				}
 			}
 		}
 		return false;
+	}
+
+	/// <summary>
+	/// Reads assembly-level metadata that affects duplicate assembly handling.
+	/// </summary>
+	void ReadAssemblyMetadata ()
+	{
+		if (!Reader.IsAssembly) {
+			return;
+		}
+
+		bool callbackFormatRead = false;
+		foreach (var caHandle in Reader.GetAssemblyDefinition ().GetCustomAttributes ()) {
+			var ca = Reader.GetCustomAttribute (caHandle);
+			if (IsCustomAttributeMatch (ca, Reader, "System.Runtime.CompilerServices", "ReferenceAssemblyAttribute")) {
+				IsReferenceAssembly = true;
+				continue;
+			}
+			if (!IsCustomAttributeMatch (ca, Reader, "Java.Interop", "JavaPeerCallbackFormatAttribute")) {
+				continue;
+			}
+			if (callbackFormatRead) {
+				continue;
+			}
+
+			var value = ca.DecodeValue (customAttributeTypeProvider);
+			if (value.FixedArguments.Length != 1 || value.FixedArguments [0].Value is not int version) {
+				throw new NotSupportedException (
+					$"Assembly '{AssemblyName}' declares a Java peer callback format attribute without a supported integer version.");
+			}
+			if (version != JavaPeerCallbackFormat.ConnectorDelegates &&
+			    version != JavaPeerCallbackFormat.UnmanagedCallersOnlyCallbacks) {
+				throw new NotSupportedException (
+					$"Assembly '{AssemblyName}' declares unsupported Java peer callback format version '{version}'. " +
+					$"Supported versions are '{JavaPeerCallbackFormat.ConnectorDelegates}' and '{JavaPeerCallbackFormat.UnmanagedCallersOnlyCallbacks}'.");
+			}
+			CallbackFormatVersion = version;
+			callbackFormatRead = true;
+		}
+	}
+
+	IReadOnlyList<string> BuildCallbackMetadata ()
+	{
+		var entries = new List<string> ();
+		foreach (var typeHandle in Reader.TypeDefinitions) {
+			var typeDef = Reader.GetTypeDefinition (typeHandle);
+			var typeName = GetTypeFullName (typeHandle);
+
+			if (RegisterInfoByType.TryGetValue (typeHandle, out var typeRegister)) {
+				entries.Add (CreateCallbackMetadataEntry ("type", typeName, null, null, typeRegister));
+			}
+
+			foreach (var methodHandle in typeDef.GetMethods ()) {
+				var methodDef = Reader.GetMethodDefinition (methodHandle);
+				var methodName = Reader.GetString (methodDef.Name);
+				RegisterInfo? register = null;
+				bool isUnmanagedCallersOnly = false;
+				List<string>? registrationAttributes = null;
+				foreach (var attributeHandle in methodDef.GetCustomAttributes ()) {
+					var attribute = Reader.GetCustomAttribute (attributeHandle);
+					var attributeName = GetCustomAttributeName (attribute);
+					if (attributeName == "RegisterAttribute" && register is null) {
+						register = ParseRegisterAttribute (attribute);
+					}
+					if (attributeName == "RegisterAttribute" ||
+					    attributeName == "JniConstructorSignatureAttribute" ||
+					    IsCustomAttributeMatch (attribute, Reader, "Java.Interop", "ExportAttribute") ||
+					    IsCustomAttributeMatch (attribute, Reader, "Java.Interop", "ExportFieldAttribute")) {
+						registrationAttributes ??= new List<string> ();
+						registrationAttributes.Add ($"{attributeName}:{Convert.ToHexString (Reader.GetBlobBytes (attribute.Value))}");
+					}
+					if (IsCustomAttributeMatch (attribute, Reader, "System.Runtime.InteropServices", "UnmanagedCallersOnlyAttribute")) {
+						isUnmanagedCallersOnly = true;
+					}
+				}
+
+				if (register is null && registrationAttributes is null && !isUnmanagedCallersOnly && !methodName.StartsWith ("n_", StringComparison.Ordinal)) {
+					continue;
+				}
+
+				registrationAttributes?.Sort (StringComparer.Ordinal);
+				var parameterAttributes = new List<string> ();
+				foreach (var parameterHandle in methodDef.GetParameters ()) {
+					var parameter = Reader.GetParameter (parameterHandle);
+					foreach (var attributeHandle in parameter.GetCustomAttributes ()) {
+						var attribute = Reader.GetCustomAttribute (attributeHandle);
+						if (!IsCustomAttributeMatch (attribute, Reader, "Java.Interop", "ExportParameterAttribute")) {
+							continue;
+						}
+						parameterAttributes.Add (
+							$"{parameter.SequenceNumber.ToString (CultureInfo.InvariantCulture)}:{Convert.ToHexString (Reader.GetBlobBytes (attribute.Value))}");
+					}
+				}
+				parameterAttributes.Sort (StringComparer.Ordinal);
+				var signature = methodDef.DecodeSignature (SignatureTypeProvider.Instance, genericContext: null);
+				var signatureText = string.Join (":",
+					signature.Header.RawValue.ToString (CultureInfo.InvariantCulture),
+					signature.GenericParameterCount.ToString (CultureInfo.InvariantCulture),
+					signature.ReturnType,
+					string.Join (",", signature.ParameterTypes));
+				entries.Add (CreateCallbackMetadataEntry (
+					"method",
+					typeName,
+					methodName,
+					signatureText,
+					register,
+					((int) methodDef.Attributes).ToString (CultureInfo.InvariantCulture),
+					isUnmanagedCallersOnly.ToString (),
+					registrationAttributes is null ? null : string.Join (",", registrationAttributes),
+					parameterAttributes.Count == 0 ? null : string.Join (",", parameterAttributes)));
+			}
+
+			foreach (var propertyHandle in typeDef.GetProperties ()) {
+				var property = Reader.GetPropertyDefinition (propertyHandle);
+				foreach (var attributeHandle in property.GetCustomAttributes ()) {
+					var attribute = Reader.GetCustomAttribute (attributeHandle);
+					if (GetCustomAttributeName (attribute) != "RegisterAttribute") {
+						continue;
+					}
+					entries.Add (CreateCallbackMetadataEntry (
+						"property",
+						typeName,
+						Reader.GetString (property.Name),
+						null,
+						ParseRegisterAttribute (attribute)));
+					break;
+				}
+			}
+		}
+		entries.Sort (StringComparer.Ordinal);
+		return entries;
+	}
+
+	internal IReadOnlyList<string> GetCallbackMetadata ()
+		=> callbackMetadata ??= BuildCallbackMetadata ();
+
+	static string CreateCallbackMetadataEntry (
+		string kind,
+		string typeName,
+		string? memberName,
+		string? signature,
+		RegisterInfo? register,
+		string? methodAttributes = null,
+		string? isUnmanagedCallersOnly = null,
+		string? registrationAttributes = null,
+		string? parameterAttributes = null)
+	{
+		var builder = new StringBuilder ();
+		AppendField (builder, kind);
+		AppendField (builder, typeName);
+		AppendField (builder, memberName);
+		AppendField (builder, signature);
+		AppendField (builder, register?.JniName);
+		AppendField (builder, register?.Signature);
+		AppendField (builder, register?.Connector);
+		AppendField (builder, register?.DoNotGenerateAcw.ToString ());
+		AppendField (builder, register?.IsFromJniTypeSignature.ToString ());
+		AppendField (builder, register?.IsArrayType.ToString ());
+		AppendField (builder, register?.InvokerTypeName);
+		AppendField (builder, methodAttributes);
+		AppendField (builder, isUnmanagedCallersOnly);
+		AppendField (builder, registrationAttributes);
+		AppendField (builder, parameterAttributes);
+		return builder.ToString ();
+	}
+
+	static void AppendField (StringBuilder builder, string? value)
+	{
+		builder.Append (value?.Length ?? -1);
+		builder.Append (':');
+		builder.Append (value);
 	}
 
 	internal static string? GetCustomAttributeName (CustomAttribute ca, MetadataReader reader)
@@ -296,16 +651,86 @@ sealed class AssemblyIndex : IDisposable
 	}
 
 	static bool IsTypeReferenceMatch (TypeReference typeRef, MetadataReader reader, string typeNamespace, string typeName) =>
-		reader.GetString (typeRef.Name) == typeName &&
-		reader.GetString (typeRef.Namespace) == typeNamespace;
+		reader.StringComparer.Equals (typeRef.Name, typeName) &&
+		reader.StringComparer.Equals (typeRef.Namespace, typeNamespace);
 
 	static bool IsTypeDefinitionMatch (TypeDefinition typeDef, MetadataReader reader, string typeNamespace, string typeName) =>
-		reader.GetString (typeDef.Name) == typeName &&
-		reader.GetString (typeDef.Namespace) == typeNamespace;
+		reader.StringComparer.Equals (typeDef.Name, typeName) &&
+		reader.StringComparer.Equals (typeDef.Namespace, typeNamespace);
 
 	internal RegisterInfo ParseRegisterAttribute (CustomAttribute ca)
 	{
-		return ParseRegisterInfo (DecodeAttribute (ca));
+		// RegisterAttribute has only string constructor arguments and bool/int/string
+		// named properties. Reading that stable shape directly avoids the generic
+		// custom-attribute decoder's arrays and boxed values for every Java method.
+		var reader = Reader.GetBlobReader (ca.Value);
+		if (reader.ReadUInt16 () != 1) {
+			throw new BadImageFormatException ("Invalid custom attribute prolog.");
+		}
+
+		int parameterCount = GetConstructorParameterCount (ca.Constructor);
+		if (parameterCount > 3) {
+			return ParseRegisterInfo (DecodeAttribute (ca));
+		}
+		string jniName = parameterCount > 0 ? reader.ReadSerializedString () ?? "" : "";
+		string? signature = parameterCount > 1 ? reader.ReadSerializedString () : null;
+		string? connector = parameterCount > 2 ? reader.ReadSerializedString () : null;
+
+		bool doNotGenerateAcw = false;
+		int namedArgumentCount = reader.ReadUInt16 ();
+		for (int i = 0; i < namedArgumentCount; i++) {
+			reader.ReadByte ();
+			var typeCode = (SerializationTypeCode) reader.ReadByte ();
+			var name = reader.ReadSerializedString ();
+			switch (typeCode) {
+			case SerializationTypeCode.Boolean:
+				bool value = reader.ReadByte () != 0;
+				if (name == "DoNotGenerateAcw") {
+					doNotGenerateAcw = value;
+				}
+				break;
+			case SerializationTypeCode.Int32:
+				reader.ReadInt32 ();
+				break;
+			case SerializationTypeCode.String:
+				reader.ReadSerializedString ();
+				break;
+			default:
+				return ParseRegisterInfo (DecodeAttribute (ca));
+			}
+		}
+
+		return new RegisterInfo {
+			JniName = jniName,
+			Signature = signature,
+			Connector = connector,
+			DoNotGenerateAcw = doNotGenerateAcw,
+		};
+	}
+
+	int GetConstructorParameterCount (EntityHandle constructor)
+	{
+		if (constructorParameterCounts.TryGetValue (constructor, out int count)) {
+			return count;
+		}
+
+		BlobHandle signature = constructor.Kind switch {
+			HandleKind.MemberReference => Reader.GetMemberReference ((MemberReferenceHandle) constructor).Signature,
+			HandleKind.MethodDefinition => Reader.GetMethodDefinition ((MethodDefinitionHandle) constructor).Signature,
+			_ => default,
+		};
+		if (signature.IsNil) {
+			return 0;
+		}
+
+		var reader = Reader.GetBlobReader (signature);
+		var header = reader.ReadSignatureHeader ();
+		if (header.IsGeneric) {
+			reader.ReadCompressedInteger ();
+		}
+		count = reader.ReadCompressedInteger ();
+		constructorParameterCounts.Add (constructor, count);
+		return count;
 	}
 
 	internal RegisterInfo ParseJniTypeSignatureAttribute (CustomAttribute ca)
@@ -324,12 +749,14 @@ sealed class AssemblyIndex : IDisposable
 		}
 
 		var isArrayType = TryGetNamedArgument<int> (value, "ArrayRank", out var rank) && rank > 0;
+		TryGetNamedArgument<string> (value, "InvokerType", out var invokerTypeName);
 
 		return new RegisterInfo {
 			JniName = jniName.Replace ('.', '/'),
 			DoNotGenerateAcw = doNotGenerateAcw,
 			IsFromJniTypeSignature = true,
 			IsArrayType = isArrayType,
+			InvokerTypeName = invokerTypeName,
 		};
 	}
 
@@ -516,6 +943,7 @@ sealed class AssemblyIndex : IDisposable
 		"UsesConfigurationAttribute",
 		"MetaDataAttribute",
 		"PropertyAttribute",
+		"InstrumentationAttribute",
 		"SupportsGLTextureAttribute",
 		"ApplicationAttribute",
 	};
@@ -525,8 +953,10 @@ sealed class AssemblyIndex : IDisposable
 		var asmDef = Reader.GetAssemblyDefinition ();
 		foreach (var caHandle in asmDef.GetCustomAttributes ()) {
 			var ca = Reader.GetCustomAttribute (caHandle);
-			var attrName = GetCustomAttributeName (ca, Reader);
-			if (attrName is null || !KnownAssemblyAttributes.Contains (attrName)) {
+			var attrName = GetCustomAttributeName (ca);
+			if (attrName is null ||
+			    !KnownAssemblyAttributes.Contains (attrName) ||
+			    !IsCustomAttributeMatch (ca, Reader, "Android.App", attrName)) {
 				continue;
 			}
 
@@ -560,12 +990,16 @@ sealed class AssemblyIndex : IDisposable
 			case "PropertyAttribute":
 				info.Properties.Add (CreatePropertyInfo (name, props));
 				break;
+			case "InstrumentationAttribute":
+				info.Instrumentations.Add (new InstrumentationInfo { Name = name, Properties = props });
+				break;
 			case "SupportsGLTextureAttribute":
 				if (name.Length > 0) {
 					info.SupportsGLTextures.Add (new SupportsGLTextureInfo { Name = name });
 				}
 				break;
 			case "ApplicationAttribute":
+				info.ApplicationAttributeCount++;
 				info.ApplicationProperties ??= new Dictionary<string, object?> (StringComparer.Ordinal);
 				foreach (var kvp in props) {
 					info.ApplicationProperties [kvp.Key] = kvp.Value;
@@ -669,6 +1103,7 @@ sealed record RegisterInfo
 	public bool DoNotGenerateAcw { get; init; }
 	public bool IsFromJniTypeSignature { get; init; }
 	public bool IsArrayType { get; init; }
+	public string? InvokerTypeName { get; init; }
 }
 
 /// <summary>
@@ -678,6 +1113,7 @@ sealed record ExportInfo
 {
 	public IReadOnlyList<string>? ThrownNames { get; init; }
 	public string? SuperArgumentsString { get; init; }
+	public bool IsField { get; init; }
 	public IReadOnlyList<ExportParameterKindInfo> ParameterKinds { get; init; } = [];
 	public ExportParameterKindInfo ReturnKind { get; init; }
 }
@@ -685,6 +1121,7 @@ sealed record ExportInfo
 class TypeAttributeInfo (string attributeName)
 {
 	public string AttributeName { get; } = attributeName;
+	public bool IsComponentAttribute { get; init; } = true;
 	public string? JniName { get; set; }
 
 	/// <summary>
@@ -701,6 +1138,9 @@ class TypeAttributeInfo (string attributeName)
 	/// Metadata entries declared on this type via [MetaData] attributes.
 	/// </summary>
 	public List<MetaDataInfo> MetaData { get; } = [];
+	public List<PropertyInfo> ManifestProperties { get; } = [];
+	public List<UsesLibraryInfo> UsesLibraries { get; } = [];
+	public List<GrantUriPermissionInfo> GrantUriPermissions { get; } = [];
 
 	/// <summary>
 	/// Named property values from a [Layout] attribute on this type, or null if none.

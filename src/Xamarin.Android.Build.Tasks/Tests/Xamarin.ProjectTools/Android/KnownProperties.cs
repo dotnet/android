@@ -8,6 +8,7 @@ namespace Xamarin.ProjectTools
 		public const string TargetFrameworkVersion = "TargetFrameworkVersion";
 
 		public const string AndroidLinkMode = "AndroidLinkMode";
+		public const string AndroidEnableFastDeployment = "AndroidEnableFastDeployment";
 		public const string EmbedAssembliesIntoApk = "EmbedAssembliesIntoApk";
 		public const string AndroidCreatePackagePerAbi = "AndroidCreatePackagePerAbi";
 		public const string AndroidEnableMarshalMethods = "AndroidEnableMarshalMethods";
@@ -16,7 +17,6 @@ namespace Xamarin.ProjectTools
 		public const string AndroidSupportedAbis = "AndroidSupportedAbis";
 		public const string RuntimeIdentifier = "RuntimeIdentifier";
 		public const string RuntimeIdentifiers = "RuntimeIdentifiers";
-		public const string RunAOTCompilation = "RunAOTCompilation";
 		public const string PublishTrimmed = "PublishTrimmed";
 		public const string TrimMode = "TrimMode";
 		public const string SupportedOSPlatformVersion = "SupportedOSPlatformVersion";
@@ -25,9 +25,8 @@ namespace Xamarin.ProjectTools
 		public const string AndroidEnableDesugar = "AndroidEnableDesugar";
 		public const string AndroidManifestMerger = "AndroidManifestMerger";
 		public const string AndroidLinkTool = "AndroidLinkTool";
+		public const string AndroidR8ObfuscationMode = "AndroidR8ObfuscationMode";
 		public const string UseJackAndJill = "UseJackAndJill";
-		public const string AotAssemblies = "AotAssemblies";
-		public const string AndroidEnableProfiledAot = "AndroidEnableProfiledAot";
 
 		public const string OutputPath = "OutputPath";
 		public const string IntermediateOutputPath = "IntermediateOutputPath";

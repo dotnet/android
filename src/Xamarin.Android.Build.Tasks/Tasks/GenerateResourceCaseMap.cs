@@ -9,7 +9,6 @@ using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
 using Microsoft.Android.Build.Tasks;
 using Xamarin.Android.Tools;
-//using Xamarin.Tools.Zip;
 using System.IO.Compression;
 
 namespace Xamarin.Android.Tasks
@@ -133,7 +132,7 @@ namespace Xamarin.Android.Tasks
 			string curTo;
 
 			if (resource_fixup.TryGetValue (from, out curTo)) {
-				if (string.Compare (to, curTo, StringComparison.OrdinalIgnoreCase) != 0) {
+				if (!string.Equals (to, curTo, StringComparison.OrdinalIgnoreCase)) {
 					var ext = Path.GetExtension (android);
 					var dir = Path.GetDirectoryName (user);
 

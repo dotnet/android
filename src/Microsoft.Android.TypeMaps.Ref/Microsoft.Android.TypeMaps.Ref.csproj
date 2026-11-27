@@ -1,5 +1,5 @@
 <Project Sdk="Microsoft.NET.Sdk">
-  <Import Project="..\..\Configuration.props" />
+  <Import Project="../../Configuration.props" />
 
   <PropertyGroup>
     <TargetFramework>$(DotNetTargetFramework)</TargetFramework>
@@ -11,6 +11,7 @@
     <ProduceOnlyReferenceAssembly>true</ProduceOnlyReferenceAssembly>
     <!-- Do NOT sign — the generated implementation assembly (emitted by PEAssemblyBuilder)
          is unsigned, so the ref assembly must match to avoid identity mismatch. -->
+    <IsAotCompatible>true</IsAotCompatible>
   </PropertyGroup>
 
 </Project>

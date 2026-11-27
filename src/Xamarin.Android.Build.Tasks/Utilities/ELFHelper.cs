@@ -15,7 +15,7 @@ using ELFSectionType = global::ELFSharp.ELF.Sections.SectionType;
 
 namespace Xamarin.Android.Tasks
 {
-	static class ELFHelper
+	static partial class ELFHelper
 	{
 		public static ELFInfo? GetInfo (TaskLoggingHelper log, string path)
 		{
@@ -29,20 +29,24 @@ namespace Xamarin.Android.Tasks
 			}
 		}
 
-		public static void AssertValidLibraryAlignment (TaskLoggingHelper log, int alignmentInPages, string path, ITaskItem? item)
+		public static bool AssertValidLibraryAlignment (TaskLoggingHelper log, int alignmentInPages, string path, ITaskItem? item, string? reservedSoname = null)
 		{
 			if (path.IsNullOrEmpty () || !File.Exists (path)) {
-				return;
+				return false;
 			}
 
+			bool hasReservedSoname = false;
 			log.LogDebugMessage ($"Checking alignment to {alignmentInPages}k page boundary in shared library {path}");
 			try {
 				using IELF elf = ELFReader.Load (path);
+				if (!reservedSoname.IsNullOrEmpty ())
+					hasReservedSoname = HasSoname (elf, reservedSoname);
 				AssertValidLibraryAlignment (log, MonoAndroidHelper.ZipAlignmentToPageSize (alignmentInPages), path, elf, item);
 			} catch (Exception ex) {
 				log.LogCodedWarning ("XA0146", Properties.Resources.XA0146, path);
 				log.LogWarningFromException (ex, showStackTrace: true);
 			}
+			return hasReservedSoname;
 		}
 
 		static void AssertValidLibraryAlignment (TaskLoggingHelper log, uint pageSize, string path, IELF elf, ITaskItem? item)
@@ -114,178 +118,6 @@ namespace Xamarin.Android.Tasks
 
 				return (id, version, originalFile);
 			}
-		}
-
-		public static bool IsEmptyAOTLibrary (TaskLoggingHelper log, string path)
-		{
-			if (path.IsNullOrEmpty () || !File.Exists (path)) {
-				return false;
-			}
-
-			try {
-				using IELF elf = ELFReader.Load (path);
-				return IsEmptyAOTLibrary (log, path, elf);
-			} catch (Exception ex) {
-				log.LogCodedWarning ("XA0147", Properties.Resources.XA0147, path);
-				log.LogWarningFromException (ex, showStackTrace: true);
-				return false;
-			}
-		}
-
-		public static bool ReferencesLibrary (string libraryPath, string referencedLibraryName)
-		{
-			if (libraryPath.IsNullOrEmpty () || !File.Exists (libraryPath)) {
-				return false;
-			}
-
-			using IELF elf = ELFReader.Load (libraryPath);
-			var dynstr = GetSection (elf, ".dynstr") as IStringTable;
-			if (dynstr == null) {
-				return false;
-			}
-
-			foreach (IDynamicSection section in elf.GetSections<IDynamicSection> ()) {
-				foreach (IDynamicEntry entry in section.Entries) {
-					if (IsLibraryReference (dynstr, entry, referencedLibraryName)) {
-						return true;
-					}
-				}
-			}
-
-			return false;
-		}
-
-		public static bool LibraryHasSymbol (TaskLoggingHelper log, string elfPath, string sectionName, string symbolName, ELFSymbolType symbolType = ELFSymbolType.NotSpecified)
-		{
-			if (elfPath.IsNullOrEmpty () || !File.Exists (elfPath)) {
-				return false;
-			}
-
-			try {
-				using IELF elf = ELFReader.Load (elfPath);
-				return HasSymbol (elf, sectionName, symbolName, symbolType);
-			} catch (Exception ex) {
-				log.LogCodedWarning ("XA0148", Properties.Resources.XA0148, elfPath, symbolName, sectionName);
-				log.LogWarningFromException (ex, showStackTrace: true);
-				return false;
-			}
-		}
-
-		public static bool LibraryHasPublicSymbol (TaskLoggingHelper log, string elfPath, string symbolName, ELFSymbolType symbolType = ELFSymbolType.NotSpecified) => LibraryHasSymbol (log, elfPath, ".dynsym", symbolName, symbolType);
-
-		public static bool HasSymbol (IELF elf, string sectionName, string symbolName, ELFSymbolType symbolType = ELFSymbolType.NotSpecified)
-		{
-			ISymbolTable? symtab = GetSymbolTable (elf, sectionName);
-			if (symtab == null) {
-				return false;
-			}
-
-			foreach (var entry in symtab.Entries) {
-				if (MonoAndroidHelper.StringEquals (symbolName, entry.Name) && (symbolType == ELFSymbolType.NotSpecified || entry.Type == symbolType)) {
-					return true;
-				}
-			}
-
-			return false;
-		}
-
-		public static bool HasPublicSymbol (IELF elf, string symbolName, ELFSymbolType symbolType = ELFSymbolType.NotSpecified) => HasSymbol (elf, ".dynsym", symbolName, symbolType);
-
-		public static bool IsJniLibrary (TaskLoggingHelper log, string elfPath) => LibraryHasPublicSymbol (log, elfPath, "JNI_OnLoad", ELFSymbolType.Function);
-
-		static bool IsLibraryReference (IStringTable stringTable, IDynamicEntry dynEntry, string referencedLibraryName)
-		{
-			if (dynEntry.Tag != DynamicTag.Needed) {
-				return false;
-			}
-
-			ulong index;
-			if (dynEntry is DynamicEntry<ulong> entry64) {
-				index = entry64.Value;
-			} else if (dynEntry is DynamicEntry<uint> entry32) {
-				index = (ulong)entry32.Value;
-			} else {
-				return false;
-			}
-
-			return MonoAndroidHelper.StringEquals (referencedLibraryName, stringTable[(long)index]);
-		}
-
-		static bool IsEmptyAOTLibrary (TaskLoggingHelper log, string path, IELF elf)
-		{
-			if (!HasPublicSymbol (elf, "mono_aot_file_info", ELFSymbolType.Object)) {
-				// Not a MonoVM AOT assembly
-				return false;
-			}
-
-			ISymbolTable? symtab = GetSymbolTable (elf, ".symtab");
-			if (symtab == null) {
-				// The DSO is stripped, we can't tell if there are any functions defined (.text will be present anyway)
-				// We perhaps **can** take a look at the .text section size, but it's not a solid check...
-				log.LogDebugMessage ($"{path} is an AOT assembly but without symbol table (stripped?). Including it in the archive.");
-				return false;
-			}
-
-			bool isElf64 = elf.Class == Class.Bit64;
-			foreach (var entry in symtab.Entries) {
-				if (entry.Type == ELFSymbolType.Function) {
-					return false;
-				}
-
-				if (!(isElf64 ? IsNonEmptyCodeSymbol (entry as SymbolEntry<ulong>) : IsNonEmptyCodeSymbol (entry as SymbolEntry<uint>))) {
-					continue;
-				}
-
-				// We have an entry that's in (some) executable section and has some code in it.
-				// Mono creates symbols which are essentially jump tables into executable code
-				// inside the DSO that is not accessible via any other symbol, merely a blob of
-				// executable code. The jump table symbols are named with the `_plt` prefix.
-				if (entry.Name.EndsWith ("_plt")) {
-					return false;
-				}
-			}
-			return true;
-
-			bool IsNonEmptyCodeSymbol<T> (SymbolEntry<T>? symbolEntry) where T : struct
-			{
-				if (symbolEntry == null) {
-					return true; // Err on the side of caution
-				}
-
-				Type t = typeof(T);
-				ulong size = 0;
-				if (t == typeof(System.UInt64)) {
-					size = (ulong)(object)symbolEntry.Size;
-				} else if (t == typeof(System.UInt32)) {
-					size = (uint)(object)symbolEntry.Size;
-				}
-
-				return size != 0 && symbolEntry.PointedSection.Type == ELFSectionType.ProgBits;
-			}
-		}
-
-		static ISymbolTable? GetSymbolTable (IELF elf, string sectionName)
-		{
-			ISection? section = GetSection (elf, sectionName);
-			if (section == null) {
-				return null;
-			}
-
-			var symtab = section as ISymbolTable;
-			if (symtab == null) {
-				return null;
-			}
-
-			return symtab;
-		}
-
-		static ISection? GetSection (IELF elf, string sectionName)
-		{
-			if (!elf.TryGetSection (sectionName, out ISection section)) {
-				return null;
-			}
-
-			return section;
 		}
 	}
 }

@@ -7,8 +7,11 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Reflection.PortableExecutable;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading;
+using System.Threading.Tasks;
 using System.Xml.Linq;
 using Xamarin.Android.Tasks;
 using Xamarin.ProjectTools;
@@ -16,6 +19,7 @@ using Microsoft.Android.Build.Tasks;
 using System.Runtime.CompilerServices;
 using ICSharpCode.Decompiler;
 using ICSharpCode.Decompiler.CSharp;
+using ICSharpCode.Decompiler.Metadata;
 
 namespace Xamarin.Android.Build.Tests
 {
@@ -23,6 +27,23 @@ namespace Xamarin.Android.Build.Tests
 	{
 		public static ConcurrentDictionary<string, string> TestOutputDirectories = new ConcurrentDictionary<string, string> ();
 		public static ConcurrentDictionary<string, string> TestPackageNames = new ConcurrentDictionary<string, string> ();
+
+		public static IEnumerable<(bool isRelease, AndroidRuntime runtime)> ValidRuntimeConfigurations => [
+			(false, AndroidRuntime.CoreCLR),
+			(true, AndroidRuntime.CoreCLR),
+			(true, AndroidRuntime.NativeAOT),
+		];
+
+		protected static string GetPreviousWorkloadJavaSdkPath ()
+		{
+			var architecture = RuntimeInformation.ProcessArchitecture.ToString ().ToUpperInvariant ();
+			var variableName = $"JAVA_HOME_21_{architecture}";
+			var javaSdkPath = Environment.GetEnvironmentVariable (variableName);
+			if (string.IsNullOrEmpty (javaSdkPath)) {
+				Assert.Ignore ($"The previous Android workload requires JDK 21, but {variableName} is not set.");
+			}
+			return javaSdkPath;
+		}
 
 		protected bool IsWindows => TestEnvironment.IsWindows;
 
@@ -95,33 +116,54 @@ namespace Xamarin.Android.Build.Tests
 
 		protected static string RunAdbCommand (string command, bool ignoreErrors = true, int timeout = 30)
 		{
+			var (_, stdOutput, stdError) = RunAdbCommandWithExitCode (command, timeout);
+			return stdOutput + stdError;
+		}
+
+		protected static (int code, string stdOutput, string stdError) RunAdbCommandWithExitCode (string command, int timeout = 30)
+		{
 			string ext = Environment.OSVersion.Platform != PlatformID.Unix ? ".exe" : "";
 			string adb = Path.Combine (AndroidSdkPath, "platform-tools", "adb" + ext);
 			string adbTarget = Environment.GetEnvironmentVariable ("ADB_TARGET");
-			return RunProcess (adb, $"{adbTarget} {command}", timeout);
+			return RunProcessWithExitCode (adb, $"{adbTarget} {command}", timeout);
+		}
+
+		protected static (int code, string stdOutput, string stdError) RunAdbCommandWithExitCode (string [] command, int timeout = 30)
+		{
+			var arguments = new Microsoft.Build.Utilities.CommandLineBuilder ();
+			arguments.AppendSwitchIfNotNull ("", command, " ");
+			return RunAdbCommandWithExitCode (arguments.ToString (), timeout);
 		}
 
 		protected static (int code, string stdOutput, string stdError) RunApkDiffCommand (string args, string logFilePath)
 		{
-			string ext = Environment.OSVersion.Platform != PlatformID.Unix ? ".exe" : "";
-			(int code, string stdOutput, string stdError) result;
-
+			var executableName = OperatingSystem.IsWindows () ? "apkdiff.exe" : "apkdiff";
+			var info = new ProcessStartInfo (executableName, $"--verbose {args}") {
+				CreateNoWindow = true,
+				WindowStyle = ProcessWindowStyle.Hidden,
+			};
+			using var stdOutput = new StringWriter ();
+			using var stdError = new StringWriter ();
+			int timeoutInSeconds = TestEnvironment.IsRunningOnCI ? 120 : 30;
+			using var cancellationTokenSource = new CancellationTokenSource (TimeSpan.FromSeconds (timeoutInSeconds));
+			int processId = -1;
+			int exitCode;
 			try {
-				result = RunProcessWithExitCode ("apkdiff" + ext, args);
-			} catch (System.ComponentModel.Win32Exception) {
-				// apkdiff's location might not be in the $PATH, try known locations
-				var profileDir = Environment.GetFolderPath (Environment.SpecialFolder.UserProfile);
-				var apkdiffPath = Path.Combine (profileDir, ".dotnet", "tools", "apkdiff" + ext);
-				if (!File.Exists (apkdiffPath)) {
-					var agentToolsDir = Environment.GetEnvironmentVariable ("AGENT_TOOLSDIRECTORY");
-					if (Directory.Exists (agentToolsDir)) {
-						apkdiffPath = Path.Combine (agentToolsDir, "apkdiff" + ext);
-					}
-				}
-				result = RunProcessWithExitCode (apkdiffPath, args);
+				exitCode = Xamarin.Android.Tools.ProcessUtils.StartProcess (
+					info,
+					stdOutput,
+					stdError,
+					cancellationTokenSource.Token,
+					onStarted: process => processId = process.Id
+				).GetAwaiter ().GetResult ();
+			} catch (OperationCanceledException) {
+				exitCode = -1;
+				stdError.WriteLine ($"apkdiff timed out after {timeoutInSeconds} seconds (PID {processId}).");
 			}
-			var logContent = $"apkdiff exited with code: {result.code}" +
-				$"\ncontext: https://github.com/xamarin/xamarin-android/blob/main/Documentation/project-docs/ApkSizeRegressionChecks.md" +
+
+			var result = (code: exitCode, stdOutput: stdOutput.ToString ().Trim (), stdError: stdError.ToString ().Trim ());
+			var logContent = $"apkdiff exited with code: {exitCode}" +
+				$"\ncontext: https://github.com/dotnet/android/blob/main/Documentation/project-docs/ApkSizeRegressionChecks.md" +
 				$"\nstdOut:\n{result.stdOutput}\nstdErr:\n{result.stdError}";
 			File.WriteAllText (logFilePath, logContent);
 			TestContext.AddTestAttachment (logFilePath, Path.GetFileName (logFilePath));
@@ -135,7 +177,7 @@ namespace Xamarin.Android.Build.Tests
 			return stdOutput + stdError;
 		}
 
-		protected static (int code, string stdOutput, string stdError) RunProcessWithExitCode (string exe, string args, int timeoutInSeconds = 30)
+		protected static (int code, string stdOutput, string stdError) RunProcessWithExitCode (string exe, string args, int timeoutInSeconds = 30, IDictionary<string, string>? environment = null)
 		{
 			TestContext.Out.WriteLine ($"{nameof(RunProcess)}: {exe} {args}");
 			var info = new ProcessStartInfo (exe, args) {
@@ -145,15 +187,25 @@ namespace Xamarin.Android.Build.Tests
 				CreateNoWindow = true,
 				WindowStyle = ProcessWindowStyle.Hidden,
 			};
+			if (environment != null) {
+				foreach (var variable in environment)
+					info.Environment [variable.Key] = variable.Value;
+			}
 			using (var proc = new Process ()) {
 				StringBuilder standardOutput = new StringBuilder (), errorOutput = new StringBuilder ();
+				var outputDone = new TaskCompletionSource<bool> (TaskCreationOptions.RunContinuationsAsynchronously);
+				var errorDone = new TaskCompletionSource<bool> (TaskCreationOptions.RunContinuationsAsynchronously);
 				proc.StartInfo = info;
 				proc.OutputDataReceived += new DataReceivedEventHandler ((sender, e) => {
-					if (!string.IsNullOrEmpty (e.Data))
+					if (e.Data == null)
+						outputDone.TrySetResult (true);
+					else if (!string.IsNullOrEmpty (e.Data))
 						standardOutput.AppendLine (e.Data);
 				});
 				proc.ErrorDataReceived += new DataReceivedEventHandler ((sender, e) => {
-					if (!string.IsNullOrEmpty (e.Data))
+					if (e.Data == null)
+						errorDone.TrySetResult (true);
+					else if (!string.IsNullOrEmpty (e.Data))
 						errorOutput.AppendLine (e.Data);
 				});
 
@@ -162,12 +214,17 @@ namespace Xamarin.Android.Build.Tests
 				proc.BeginErrorReadLine ();
 
 				if (!proc.WaitForExit ((int)TimeSpan.FromSeconds (timeoutInSeconds).TotalMilliseconds)) {
-					proc.Kill ();
+					if (!proc.HasExited)
+						proc.Kill (entireProcessTree: true);
 					TestContext.Out.WriteLine ($"{nameof (RunProcess)} timed out: {exe} {args}");
 					return (-1, null, null); //Don't try to read stdout/stderr
 				}
 
-				proc.WaitForExit ();
+				// A child process can keep the redirected handles open after adb exits.
+				bool outputDrained = outputDone.Task.Wait (TimeSpan.FromSeconds (2));
+				bool errorDrained = errorDone.Task.Wait (TimeSpan.FromSeconds (2));
+				if (!outputDrained || !errorDrained)
+					TestContext.Out.WriteLine ($"{nameof (RunProcess)}: {exe} exited with redirected output still open.");
 
 				return (proc.ExitCode, standardOutput.ToString ().Trim (), errorOutput.ToString ().Trim ());
 			}
@@ -226,7 +283,6 @@ namespace Xamarin.Android.Build.Tests
 				}
 				CreateFauxExecutable (Path.Combine (androidSdkBuildToolsPath, IsWindows ? "aapt2.cmd" : "aapt2"), sb);
 			}
-			File.WriteAllText (Path.Combine (androidSdkToolsPath, IsWindows ? "lint.bat" : "lint"), "");
 
 			List<ApiInfo> defaults = new List<ApiInfo> ();
 			for (int i = 10; i < 26; i++) {
@@ -340,7 +396,7 @@ namespace Xamarin.Android.Build.Tests
 		// https://github.com/dotnet/android-tools/blob/683f37508b56c76c24b3287a5687743438625341/tests/Xamarin.Android.Tools.AndroidSdk-Tests/JdkInfoTests.cs#L108-L132
 		void CreateShellScript (string path, string contents)
 		{
-			if (IsWindows && string.Compare (Path.GetExtension (path), ".dll", StringComparison.OrdinalIgnoreCase) != 0)
+			if (IsWindows && !string.Equals (Path.GetExtension (path), ".dll", StringComparison.OrdinalIgnoreCase))
 				path += ".cmd";
 			using (var script = new StreamWriter (path)) {
 				if (IsWindows) {
@@ -353,18 +409,7 @@ namespace Xamarin.Android.Build.Tests
 			}
 			if (IsWindows)
 				return;
-			var chmod = new ProcessStartInfo {
-				FileName                    = "chmod",
-				Arguments                   = $"+x \"{path}\"",
-				UseShellExecute             = false,
-				RedirectStandardInput       = false,
-				RedirectStandardOutput      = true,
-				RedirectStandardError       = true,
-				CreateNoWindow              = true,
-				WindowStyle                 = ProcessWindowStyle.Hidden,
-			};
-			var p = Process.Start (chmod);
-			p.WaitForExit ();
+			Process.Run ("chmod", ["+x", path]);
 		}
 
 		void CreateFauxExecutable (string exeFullPath, StringBuilder sb) {
@@ -477,7 +522,7 @@ namespace Xamarin.Android.Build.Tests
 			if (!File.Exists (apksignerExe)) {
 				// Fall back to META-INF check if apksigner is not available
 				using (var zip = ZipHelper.OpenZip (apkPath)) {
-					Assert.IsTrue (zip.Any (e => e.FullName == "META-INF/MANIFEST.MF"), $"APK file `{apkPath}` is not signed! It is missing `META-INF/MANIFEST.MF`.");
+					Assert.IsTrue (zip.Entries.Any (e => e.FullName == "META-INF/MANIFEST.MF"), $"APK file `{apkPath}` is not signed! It is missing `META-INF/MANIFEST.MF`.");
 				}
 				return;
 			}
@@ -490,17 +535,14 @@ namespace Xamarin.Android.Build.Tests
 				UseShellExecute = false,
 				CreateNoWindow = true,
 			};
-			using var proc = Process.Start (psi) ?? throw new InvalidOperationException ($"Failed to start '{apksignerExe}'.");
-			string stdout = proc.StandardOutput.ReadToEnd ();
-			string stderr = proc.StandardError.ReadToEnd ();
-			proc.WaitForExit ();
-			Assert.AreEqual (0, proc.ExitCode, $"APK file `{apkPath}` is not signed! apksigner verify failed:\n{stderr}\n{stdout}");
+			var result = Process.RunAndCaptureText (psi);
+			Assert.AreEqual (0, result.ExitStatus.ExitCode, $"APK file `{apkPath}` is not signed! apksigner verify failed:\n{result.StandardError}\n{result.StandardOutput}");
 		}
 
 		protected string GetResourceDesignerPath (ProjectBuilder builder, XamarinAndroidProject project)
 		{
 			string path = Path.Combine (Root, builder.ProjectDirectory, project.IntermediateOutputPath);
-			if (string.Compare (project.GetProperty ("AndroidUseDesignerAssembly"), "False", ignoreCase: true) != 0) {
+			if (!string.Equals (project.GetProperty ("AndroidUseDesignerAssembly"), "False", StringComparison.CurrentCultureIgnoreCase)) {
 				return Path.Combine (path, "_Microsoft.Android.Resource.Designer.dll");
 			}
 			return Path.Combine (path, "Resource.designer" + project.Language.DefaultDesignerExtension);
@@ -508,8 +550,25 @@ namespace Xamarin.Android.Build.Tests
 
 		protected string GetResourceDesignerText (XamarinAndroidProject project, string path)
 		{
-			if (string.Compare (project.GetProperty ("AndroidUseDesignerAssembly"), "False", ignoreCase: true) != 0) {
-				var decompiler = new CSharpDecompiler (path, new DecompilerSettings () { });
+			if (!string.Equals (project.GetProperty ("AndroidUseDesignerAssembly"), "False", StringComparison.CurrentCultureIgnoreCase)) {
+				string targetFramework = project.TargetFramework.Split ('-') [0];
+				string [] packDirectories = [
+					Path.Combine (TestEnvironment.DotNetPreviewDirectory, "packs", "Microsoft.NETCore.App.Ref"),
+					Path.Combine (project.GlobalPackagesFolder, "microsoft.netcore.app.ref"),
+				];
+				var referenceDirectory = packDirectories
+					.Where (Directory.Exists)
+					.SelectMany (directory => Directory.GetDirectories (directory))
+					.Select (directory => Path.Combine (directory, "ref", targetFramework))
+					.FirstOrDefault (Directory.Exists);
+				if (referenceDirectory == null) {
+					throw new DirectoryNotFoundException ($"Could not find Microsoft.NETCore.App.Ref for '{targetFramework}'.");
+				}
+				// Use the project's targeting pack instead of the unrelated dotnet found on PATH.
+				var resolver = new UniversalAssemblyResolver (path, throwOnError: true, targetFramework: null,
+					streamOptions: PEStreamOptions.PrefetchMetadata);
+				resolver.AddSearchDirectory (referenceDirectory);
+				var decompiler = new CSharpDecompiler (path, resolver, new DecompilerSettings ());
 				return decompiler.DecompileWholeModuleAsString ();
 			}
 
@@ -518,9 +577,8 @@ namespace Xamarin.Android.Build.Tests
 
 		protected string[] GetResourceDesignerLines (XamarinAndroidProject project, string path)
 		{
-			if (string.Compare (project.GetProperty ("AndroidUseDesignerAssembly"), "False", ignoreCase: true) != 0) {
-				var decompiler = new CSharpDecompiler (path, new DecompilerSettings () { });
-				return decompiler.DecompileWholeModuleAsString ().Split (Environment.NewLine[0]);
+			if (!string.Equals (project.GetProperty ("AndroidUseDesignerAssembly"), "False", StringComparison.CurrentCultureIgnoreCase)) {
+				return GetResourceDesignerText (project, path).Split (Environment.NewLine[0]);
 			}
 			return File.ReadAllLines (path);
 		}
@@ -555,53 +613,25 @@ namespace Xamarin.Android.Build.Tests
 				WindowStyle		= ProcessWindowStyle.Hidden,
 			};
 
-			var stderr_completed = new ManualResetEvent (false);
-			var stdout_completed = new ManualResetEvent (false);
-
-			var p = new Process () {
-				StartInfo   = psi,
-			};
-
-			p.ErrorDataReceived += (sender, e) => {
-				if (e.Data == null)
-					stderr_completed.Set ();
-				else
-					Console.WriteLine (e.Data);
-			};
-
-			p.OutputDataReceived += (sender, e) => {
-				if (e.Data == null)
-					stdout_completed.Set ();
-				else
-					Console.WriteLine (e.Data);
-			};
-
-			using (p) {
-				p.StartInfo = psi;
-				p.Start ();
-				p.BeginOutputReadLine ();
-				p.BeginErrorReadLine ();
-
-				bool success = p.WaitForExit (60000);
-
-				// We need to call the parameter-less WaitForExit only if any of the standard
-				// streams have been redirected (see
-				// https://docs.microsoft.com/en-us/dotnet/api/system.diagnostics.process.waitforexit?view=netframework-4.7.2#System_Diagnostics_Process_WaitForExit)
-				//
-				p.WaitForExit ();
-				stderr_completed.WaitOne (TimeSpan.FromSeconds (60));
-				stdout_completed.WaitOne (TimeSpan.FromSeconds (60));
-
-				if (!success || p.ExitCode != 0) {
-					Console.Error.WriteLine ($"Process `{command} {arguments}` exited with value {p.ExitCode}.");
-					return false;
-				}
-
-				return true;
+			ProcessTextOutput result;
+			try {
+				result = Process.RunAndCaptureText (psi, TimeSpan.FromSeconds (60));
+			} catch (TimeoutException) {
+				Console.Error.WriteLine ($"Process `{command} {arguments}` timed out.");
+				return false;
 			}
+
+			Console.WriteLine (result.StandardOutput);
+			Console.WriteLine (result.StandardError);
+			if (result.ExitStatus.ExitCode != 0) {
+				Console.Error.WriteLine ($"Process `{command} {arguments}` exited with value {result.ExitStatus.ExitCode}.");
+				return false;
+			}
+
+			return true;
 		}
 
-		protected bool IgnoreUnsupportedConfiguration (AndroidRuntime runtime, bool aot = false, bool release = false)
+		protected bool IgnoreUnsupportedConfiguration (AndroidRuntime runtime, bool release = false)
 		{
 			if (runtime == AndroidRuntime.NativeAOT) {
 				// NativeAOT is release-only, AOT is always implied
@@ -610,31 +640,6 @@ namespace Xamarin.Android.Build.Tests
 				}
 
 				Assert.Ignore ($"NativeAOT: unsupported configuration (release == {release})");
-				return true;
-			}
-
-			if (runtime == AndroidRuntime.CoreCLR) {
-				// CoreCLR doesn't support AOT
-				if (!aot) {
-					return false;
-				}
-
-				Assert.Ignore ($"CoreCLR: unsupported configuration (aot == {aot})");
-				return true;
-			}
-
-			// MonoVM supports all the combinations
-			return false;
-		}
-
-		// NativeAOT trims with ILC and does not emit illink's `obj/<config>/<rid>/linked/` output.
-		// Tests that inspect the `linked/` directory (e.g. to verify trimming or type-map behavior)
-		// therefore cannot run as-is on NativeAOT.
-		// TODO: add DGML-based counterparts to verify these behaviors on NativeAOT (follow-up issue).
-		protected bool IgnoreNativeAotLinkedAssemblyChecks (AndroidRuntime runtime)
-		{
-			if (runtime == AndroidRuntime.NativeAOT) {
-				Assert.Ignore ("NativeAOT does not produce illink's `linked/` output; skipping `linked/` assembly inspection (DGML counterpart tracked as a follow-up).");
 				return true;
 			}
 

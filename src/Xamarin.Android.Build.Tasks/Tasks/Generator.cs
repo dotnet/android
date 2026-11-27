@@ -50,13 +50,19 @@ namespace Xamarin.Android.Tasks
 
 		public string? LangVersion { get; set; }
 
-		public bool EmitLegacyInterfaceInvokers { get; set; }
-
 		public bool EnableBindingStaticAndDefaultInterfaceMethods { get; set; }
 		public bool EnableBindingNestedInterfaceTypes { get; set; }
 		public bool EnableBindingInterfaceConstants { get; set; }
 		public string? EnableRestrictToAttributes { get; set; }
 		public bool EnableObsoleteOverrideInheritance { get; set; }
+
+		/// <summary>
+		/// Experimental, for internal use: emit each supported non-generic <c>n_*</c> binding
+		/// callback as an <c>[UnmanagedCallersOnly]</c> method which forwards to a shared typed
+		/// marshaling helper, and omit the <c>cb_*</c> delegate cache fields and
+		/// <c>Get*Handler ()</c> connector methods.  Requires the trimmable typemap.
+		/// </summary>
+		public bool EnableUnmanagedCallersOnlyCallbacks { get; set; }
 		public string? Nullable { get; set; }
 
 		public ITaskItem[]? TransformFiles { get; set; }
@@ -66,8 +72,7 @@ namespace Xamarin.Android.Tasks
 
 		public ITaskItem[]? JavadocXml { get; set; }
 		public string? JavadocVerbosity { get; set; }
-
-		public bool UseJavaLegacyResolver { get; set; }
+		public ITaskItem []? JavaReferenceApiXml { get; set; }
 
 		private List<Tuple<string, string>> transform_files = new List<Tuple<string,string>> ();
 
@@ -191,6 +196,9 @@ namespace Xamarin.Android.Tasks
 				if (ReferencedManagedLibraries != null)
 					foreach (var lib in ReferencedManagedLibraries)
 						WriteLine (sw, $"--ref=\"{Path.GetFullPath (lib.ItemSpec)}\"");
+				if (JavaReferenceApiXml != null)
+					foreach (var reference in JavaReferenceApiXml)
+						WriteLine (sw, $"--java-reference=\"{Path.GetFullPath (reference.ItemSpec)}\"");
 				if (AnnotationsZipFiles != null)
 					foreach (var zip in AnnotationsZipFiles)
 						WriteLine (sw, $"--annotations=\"{Path.GetFullPath (zip.ItemSpec)}\"");
@@ -213,10 +221,6 @@ namespace Xamarin.Android.Tasks
 				if (SupportsCSharp8) {
 					var features = new List<string> ();
 
-					if (EmitLegacyInterfaceInvokers) {
-						features.Add ("emit-legacy-interface-invokers");
-					}
-
 					if (EnableBindingInterfaceConstants)
 						features.Add ("interface-constants");
 
@@ -235,6 +239,9 @@ namespace Xamarin.Android.Tasks
 					if (string.Equals (Nullable, "enable", StringComparison.OrdinalIgnoreCase))
 						features.Add ("nullable-reference-types");
 
+					if (EnableUnmanagedCallersOnlyCallbacks)
+						features.Add ("unmanaged-callers-only-callbacks");
+
 					if (features.Any ())
 						WriteLine (sw, $"--lang-features={string.Join (",", features)}");
 				}
@@ -247,9 +254,6 @@ namespace Xamarin.Android.Tasks
 						WriteLine (sw, $"\"--with-javadoc-xml={Path.GetFullPath (xml.ItemSpec)}\"");
 					}
 				}
-
-				if (UseJavaLegacyResolver)
-					WriteLine (sw, "--use-legacy-java-resolver=true");
 			}
 
 			cmd.AppendSwitch ($"\"{ApiXmlInput}\"");

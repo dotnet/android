@@ -98,7 +98,7 @@ namespace Xamarin.Android.Tools
 
 		static HashAlgorithm CreateHashAlgorithm (ChecksumType checksumType) => checksumType switch {
 			ChecksumType.Sha256 => (HashAlgorithm) SHA256.Create (),
-			ChecksumType.Sha1 => SHA1.Create (),
+			ChecksumType.Sha1 => SHA1.Create (), // CodeQL [SM02196] Google's manifest only provides SHA-1 checksums; this is not used for authentication, signing, passwords, or authorization.
 			_ => throw new NotSupportedException ($"Unsupported checksum type: '{checksumType}'."),
 		};
 
@@ -111,16 +111,16 @@ namespace Xamarin.Android.Tools
 		/// <summary>Extracts a ZIP archive with Zip Slip protection.</summary>
 		public static void ExtractZipSafe (string archivePath, string destinationPath, CancellationToken cancellationToken)
 		{
-			using var archive = ZipFile.OpenRead (archivePath);
 			var fullExtractRoot = Path.GetFullPath (destinationPath);
 
+			using var archive = ZipFile.OpenRead (archivePath);
 			foreach (var entry in archive.Entries) {
 				cancellationToken.ThrowIfCancellationRequested ();
 
 				if (string.IsNullOrEmpty (entry.Name))
 					continue;
 
-				var destinationFile = Path.GetFullPath (Path.Combine (fullExtractRoot, entry.FullName));
+				var destinationFile = Path.GetFullPath (Path.Combine (fullExtractRoot, entry.FullName)); // CodeQL [SM02729] IsUnderDirectory canonicalizes both paths and enforces ordinal directory-boundary containment.
 
 				// Zip Slip protection
 				if (!FileUtil.IsUnderDirectory (destinationFile, fullExtractRoot)) {

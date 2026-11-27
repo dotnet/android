@@ -2,6 +2,8 @@
 - [Build Configuration](#build-configuration)
   - [Options suitable to use in builds for public use](#options-suitable-to-use-in-builds-for-public-use)
   - [Options suitable for local development](#options-suitable-for-local-development)
+    - [Manifest merger (`src/manifestmerger`)](#manifest-merger-srcmanifestmerger)
+    - [Bundletool (`src/bundletool`)](#bundletool-srcbundletool)
     - [Native runtime (`src/native`)](#native-runtime-srcnative)
       - [Disable function inlining](#disable-function-inlining)
       - [Don't strip the runtime shared libraries](#dont-strip-the-runtime-shared-libraries)
@@ -11,7 +13,7 @@
 
 The .NET for Android build is heavily dependent on MSBuild, with the *intention*
 that it should (eventually?) be possible to build the project simply by
-checking out the repo, loading `Xamarin.Android.sln` into an IDE, and Building
+checking out the repo, loading `Microsoft.Android.slnx` into an IDE, and Building
 the solution. (This isn't currently possible, and may never be, but it's
 the *vision*.)
 
@@ -70,12 +72,6 @@ Overridable MSBuild properties include:
     building `src/Mono.Android`. This is usually the same value as
     `$(AndroidApiLevel)`, but may differ with Android Preview releases.
 
-  * `$(AndroidSupportedTargetAotAbis)`: The Android ABIs for which to build the
-    Mono AOT compilers. The AOT compilers are required in order to set the
-    [`$(RunAOTCompilation)`][runaotcompilation] app configuration property to True.
-
-    [runaotcompilation]: https://developer.xamarin.com/guides/android/under_the_hood/build_process/#RunAOTCompilation
-
   * `$(AndroidSupportedTargetJitAbis)`: The Android ABIs for which to build the
     the Mono JIT for inclusion within apps. This is a `:`-separated list of
     ABIs to build. Supported values are:
@@ -97,10 +93,6 @@ Overridable MSBuild properties include:
     check when building Mono.Android if set to `True`. The check is performed
     by default.
 
-  * `$(JavaInteropSourceDirectory)`: The Java.Interop source directory to
-    build and reference projects from. By default, this is
-    `external/Java.Interop` directory, maintained by `git submodule update`.
-
   * `$(JavaSdkDirectory)`: The JDK directory.  `$(JavaSdkDirectory)\bin\java`,
     `$(JavaSdkDirectory)\bin\javac`, and `$(JavaSdkDirectory)\bin\jar` must
     exist.
@@ -118,13 +110,53 @@ Overridable MSBuild properties include:
      assemblies placed in the APK will be compressed in `Release` builds. `Debug`
      builds are not affected.
 
-  * `$(AndroidEnableAssemblyStoreDecompressionCache)`: Defaults to `False`. When
-     enabled for a CoreCLR `Release` build, decompressed assemblies are cached in
-     the app's Android code-cache directory and mapped from there on subsequent
-     launches. The cache consumes additional on-device storage and is rebuilt
-     after app or platform updates.
-
 ## Options suitable for local development
+
+### Manifest merger (`src/manifestmerger`)
+
+The Gradle `build` task uses ProGuard to shrink and optimize the bundled Java dependencies
+without obfuscation. It produces `build/libs/manifestmerger.jar`,
+which is copied into the SDK, and `build/libs/manifestmerger-unshrunk.jar` for
+comparison. Keep rules are in `src/manifestmerger/proguard.pro`.
+
+From the repository root, run
+`build-tools/gradle/gradlew -p src/manifestmerger build -PjavaSourceVer=17 -PjavaTargetVer=17`
+(use `gradlew.bat` on Windows). Manifest merging is covered by the existing
+Android project integration tests in `Xamarin.Android.Build.Tests`.
+Compare the two JAR sizes to measure the savings for the current dependencies.
+Set `JAVA_HOME` to the JDK used for the SDK build.
+
+### Bundletool (`src/bundletool`)
+
+MSBuild downloads the GitHub release JAR specified by `XABundleToolVersion` and
+verifies `XABundleToolHash` before processing it with Gradle and ProGuard.
+Bundletool is not built from source. The Gradle `build` task removes the bundled
+aapt2 executables and JNA content, then shrinks and optimizes without obfuscation
+using `src/bundletool/proguard.pro`. It preserves the executable manifest,
+service providers, and reflection-based protobuf and APK signing APIs.
+
+The already-obfuscated embedded R8 classes are supplied to ProGuard as a library
+and copied into the final JAR byte-for-byte unchanged. Processing those classes
+with ProGuard 7.10.0 produces invalid JVM stack-map frames. Archive processing
+does not extract classes to disk, preserving case-distinct R8 class names on
+Windows.
+
+After preparing the repository, run
+`dotnet-local.cmd build src\bundletool\bundletool.csproj` on Windows, or
+`./dotnet-local.sh build src/bundletool/bundletool.csproj` on macOS/Linux.
+`src/bundletool/build/libs/bundletool.jar` is copied into the SDK;
+`bundletool-unshrunk.jar` in the same directory is the stripped, unprocessed
+comparison artifact. The original downloaded JAR remains in the toolchain cache.
+Compare these sizes to distinguish ProGuard savings from removal of native tools.
+
+Existing `CheckAppBundle`, `UniversalApkFromBundleIsIncremental`, and
+`AssetPackTests` in `Xamarin.Android.Build.Tests`, plus `BundleToolTests` and
+`BundleToolNoAbiSplitTests` in `MSBuildDeviceIntegration`, cover bundle creation,
+configuration, signing, APK generation, and installation. Run them against the
+locally built SDK after `PackDotNet`; use `JAVA_TOOL_OPTIONS=-Xverify:all` to also
+check JVM verification during these integration tests.
+When several devices are connected, set both `ADB_TARGET` (the test harness)
+and `AdbTarget` (MSBuild) to `-s <device-serial>`.
 
 ### Native runtime (`src/native`)
 

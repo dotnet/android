@@ -49,17 +49,6 @@ namespace MonoDroid.Tuner {
 			return td != null ? td.FullName + "," + td.Module.Assembly.FullName : arg.Value;
 		}
 
-		public static AssemblyDefinition GetAssembly (this LinkContext context, string assemblyName)
-		{
-			AssemblyDefinition ad;
-#if !ILLINK
-			ad = context.GetAssembly (assemblyName);
-#else
-			ad = context.GetLoadedAssembly (assemblyName);
-#endif
-			return ad;
-		}
-
 		public static TypeDefinition GetType (this LinkContext context, string assemblyName, string typeName)
 		{
 			AssemblyDefinition ad = context.GetAssembly (assemblyName);
@@ -91,23 +80,18 @@ namespace MonoDroid.Tuner {
 		public static MethodDefinition GetMethod (TypeDefinition type, string name, string [] parameters)
 		{
 			MethodDefinition method = null;
-			foreach (var md in type.Methods) {
+			methods: foreach (var md in type.Methods) {
 				if (md.Name != name)
 					continue;
 
 				if (md.Parameters.Count != parameters.Length)
 					continue;
 
-				var equal = true;
 				for (int i = 0; i < parameters.Length; i++) {
 					if (md.Parameters [i].ParameterType.FullName != parameters [i]) {
-						equal = false;
-						break;
+						continue methods;
 					}
 				}
-
-				if (!equal)
-					continue;
 
 				method = md;
 				break;

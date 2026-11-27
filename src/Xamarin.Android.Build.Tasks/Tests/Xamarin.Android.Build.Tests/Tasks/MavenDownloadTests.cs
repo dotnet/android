@@ -3,6 +3,11 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
+using System.Text;
+using Java.Interop.Tools.Maven;
+using Java.Interop.Tools.Maven.Models;
+using Java.Interop.Tools.Maven.Repositories;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
 using NUnit.Framework;
@@ -155,9 +160,73 @@ public class MavenDownloadTests
 			await task.RunTaskAsync ();
 
 			Assert.AreEqual (1, engine.Errors.Count);
-			Assert.AreEqual ($"Cannot download POM file for Maven artifact 'com.example:dummy:1.0.0'.{Environment.NewLine}- Response status code does not indicate success: 404 (Not Found).", engine.Errors [0].Message?.ReplaceLineEndings ());
+			Assert.AreEqual ($"Cannot download POM file for Maven artifact 'com.example:dummy:1.0.0'.{Environment.NewLine}- Failed to resolve POM for Maven artifact 'com.example:dummy:1.0.0' from 'https://repo1.maven.org/maven2/com/example/dummy/1.0.0/dummy-1.0.0.pom'.{Environment.NewLine}- Response status code does not indicate success: 404 (Not Found).", engine.Errors [0].Message?.ReplaceLineEndings ());
 		} finally {
 			DeleteTempDirectory (temp_cache_dir);
+		}
+	}
+
+	[Test]
+	public void ImportedPomFailureIdentifiesTransitiveArtifactAndRepository ()
+	{
+		var root = new Artifact ("com.example", "library", "1.0.0");
+		var imported = new Artifact ("androidx.compose", "compose-bom", "2024.09.00");
+		var root_pom = """
+			<project xmlns="http://maven.apache.org/POM/4.0.0">
+			  <modelVersion>4.0.0</modelVersion>
+			  <groupId>com.example</groupId>
+			  <artifactId>library</artifactId>
+			  <version>1.0.0</version>
+			  <dependencyManagement>
+			    <dependencies>
+			      <dependency>
+			        <groupId>androidx.compose</groupId>
+			        <artifactId>compose-bom</artifactId>
+			        <version>2024.09.00</version>
+			        <type>pom</type>
+			        <scope>import</scope>
+			      </dependency>
+			    </dependencies>
+			  </dependencyManagement>
+			</project>
+			""";
+		var repository = new TestMavenRepository ((root, root_pom));
+		var cache = new CachedMavenRepository (Path.Combine (Path.GetTempPath (), Guid.NewGuid ().ToString ()), repository);
+		var resolver = new LoggingPomResolver (cache, "https://repo.example.com/maven2/");
+
+		try {
+			var exception = Assert.Throws<InvalidOperationException> (() => ResolvedProject.FromArtifact (root, resolver));
+
+			Assert.AreEqual ($"No POM found for {imported}", exception?.Message);
+			Assert.AreEqual (imported.VersionedArtifactString, resolver.UnresolvedArtifact?.VersionedArtifactString);
+			Assert.AreEqual ("https://repo.example.com/maven2/androidx/compose/compose-bom/2024.09.00/compose-bom-2024.09.00.pom", resolver.UnresolvedPomUrl);
+		} finally {
+			DeleteTempDirectory (cache.CacheDirectory);
+		}
+	}
+
+	[Test]
+	public void ImportedPomModelFailureDoesNotBlameRootArtifact ()
+	{
+		var root = new Artifact ("com.example", "library", "1.0.0");
+		var imported = new Artifact ("com.example", "bom", "1.0.0");
+		var root_pom = CreatePomWithImport (root, imported.GroupId, imported.Id, imported.Version);
+		var imported_pom = CreatePomWithImport (imported, "${invalid.group}", "nested-bom", "1.0.0");
+		var repository = new TestMavenRepository ((root, root_pom), (imported, imported_pom));
+		var cache = new CachedMavenRepository (Path.Combine (Path.GetTempPath (), Guid.NewGuid ().ToString ()), repository);
+		var resolver = new LoggingPomResolver (cache, "https://repo.example.com/maven2/");
+
+		try {
+			var exception = Assert.Throws<ArgumentException> (() => ResolvedProject.FromArtifact (root, resolver));
+			if (exception is null)
+				throw new InvalidOperationException ("Expected imported POM model resolution to fail.");
+
+			Assert.IsNull (resolver.UnresolvedArtifact);
+			Assert.IsNull (resolver.UnresolvedPomUrl);
+			Assert.IsTrue (resolver.ResolvedPoms.ContainsKey (imported.VersionedArtifactString));
+			Assert.AreEqual (exception.Message, MavenDownload.GetPomResolutionErrorDetails (resolver, exception));
+		} finally {
+			DeleteTempDirectory (cache.CacheDirectory);
 		}
 	}
 
@@ -299,6 +368,50 @@ public class MavenDownloadTests
 			Directory.Delete (dir, true);
 		} catch {
 			// Ignore any cleanup failure
+		}
+	}
+
+	static string CreatePomWithImport (Artifact artifact, string importedGroupId, string importedArtifactId, string importedVersion)
+		=> $"""
+			<project xmlns="http://maven.apache.org/POM/4.0.0">
+			  <modelVersion>4.0.0</modelVersion>
+			  <groupId>{artifact.GroupId}</groupId>
+			  <artifactId>{artifact.Id}</artifactId>
+			  <version>{artifact.Version}</version>
+			  <dependencyManagement>
+			    <dependencies>
+			      <dependency>
+			        <groupId>{importedGroupId}</groupId>
+			        <artifactId>{importedArtifactId}</artifactId>
+			        <version>{importedVersion}</version>
+			        <type>pom</type>
+			        <scope>import</scope>
+			      </dependency>
+			    </dependencies>
+			  </dependencyManagement>
+			</project>
+			""";
+
+	sealed class TestMavenRepository : IMavenRepository
+	{
+		readonly Dictionary<string, byte []> poms;
+
+		public string Name => "test";
+
+		public TestMavenRepository (params (Artifact Artifact, string Pom) [] poms)
+		{
+			this.poms = poms.ToDictionary (p => p.Artifact.VersionedArtifactString, p => Encoding.UTF8.GetBytes (p.Pom));
+		}
+
+		public bool TryGetFile (Artifact artifact, string filename, out Stream stream)
+		{
+			if (poms.TryGetValue (artifact.VersionedArtifactString, out var pom)) {
+				stream = new MemoryStream (pom);
+				return true;
+			}
+
+			stream = Stream.Null;
+			return false;
 		}
 	}
 }

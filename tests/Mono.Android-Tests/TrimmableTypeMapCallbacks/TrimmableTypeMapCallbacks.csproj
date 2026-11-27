@@ -1,0 +1,12 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <Import Project="..\..\..\Configuration.props" />
+
+  <PropertyGroup>
+    <TargetFramework>$(DotNetAndroidTargetFramework)</TargetFramework>
+    <SupportedOSPlatformVersion>$(AndroidMinimumDotNetApiLevel)</SupportedOSPlatformVersion>
+    <AssemblyName>TrimmableTypeMapCallbacks</AssemblyName>
+    <SignAssembly>true</SignAssembly>
+    <AssemblyOriginatorKeyFile>..\..\..\product.snk</AssemblyOriginatorKeyFile>
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+</Project>

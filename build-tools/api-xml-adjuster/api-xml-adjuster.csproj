@@ -11,8 +11,8 @@
   <Import Project="..\..\Configuration.props" />
 
   <ItemGroup>
-    <ProjectReference Include="..\..\external\Java.Interop\src\Xamarin.Android.Tools.ApiXmlAdjuster\Xamarin.Android.Tools.ApiXmlAdjuster.csproj" />
-    <ProjectReference Include="..\..\external\Java.Interop\tools\class-parse\class-parse.csproj">
+    <ProjectReference Include="..\..\src\Xamarin.Android.Tools.ApiXmlAdjuster\Xamarin.Android.Tools.ApiXmlAdjuster.csproj" />
+    <ProjectReference Include="..\..\src\class-parse\class-parse.csproj">
       <ReferenceOutputAssembly>False</ReferenceOutputAssembly>
     </ProjectReference>
   </ItemGroup>

@@ -7,7 +7,6 @@ namespace Android.Media
 	public partial class AudioRecord
 	{
 
-#if ANDROID_29
 		[Obsolete ("Please do not use Android.Media.AudioRecord.RoutingChangedEventArgs since it was wrongly generated and it is not used internally.", error: true)]
 		public partial class RoutingChangedEventArgs : global::System.EventArgs {
 
@@ -21,6 +20,5 @@ namespace Android.Media
 				get { return audioRecord; }
 			}
 		}
-#endif  // ANDROID_29
 	}
 }

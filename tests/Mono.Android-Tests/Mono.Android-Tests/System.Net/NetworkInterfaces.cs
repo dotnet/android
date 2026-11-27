@@ -5,14 +5,14 @@ using System.Net;
 using System.Net.NetworkInformation;
 using Java.Net;
 
-using NUnit.Framework;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 using MNetworkInterface = System.Net.NetworkInformation.NetworkInterface;
 using JNetworkInterface = Java.Net.NetworkInterface;
 
 namespace System.NetTests
 {
-	[TestFixture]
+	[TestClass]
 	public class NetworkInterfacesTest
 	{
 		sealed class InterfaceInfo
@@ -44,6 +44,12 @@ namespace System.NetTests
 					IsUp == other.IsUp &&
 					HardwareAddressesAreEqual (HardwareAddress, other.HardwareAddress) &&
 					AddressesAreEqual (Addresses, other.Addresses);
+			}
+
+			public override int GetHashCode ()
+			{
+				// Address order is ignored, and hardware addresses are ignored on API 33.
+				return HashCode.Combine (Name, IsLoopback, IsUp);
 			}
 
 			string HardwareAddressToString ()
@@ -104,7 +110,33 @@ namespace System.NetTests
 			}
 		}
 
-		[Test, Category("NetworkInterfaces")]
+		[TestMethod, TestCategory ("NetworkInterfaceEquality")]
+		public void InterfaceInfo_EqualValuesHaveEqualHashCodes ()
+		{
+			var first = new InterfaceInfo {
+				Name = "test",
+				IsUp = true,
+				HardwareAddress = [1, 2, 3],
+				Addresses = [IPAddress.Loopback, IPAddress.IPv6Loopback],
+			};
+			var second = new InterfaceInfo {
+				Name = "test",
+				IsUp = true,
+				HardwareAddress = [1, 2, 3],
+				Addresses = [IPAddress.IPv6Loopback, IPAddress.Loopback],
+			};
+
+			Assert.AreEqual (first, second);
+			Assert.AreEqual (first.GetHashCode (), second.GetHashCode ());
+
+			if (Android.OS.Build.VERSION.SdkInt == Android.OS.BuildVersionCodes.Tiramisu) {
+				second.HardwareAddress = null;
+				Assert.AreEqual (first, second);
+				Assert.AreEqual (first.GetHashCode (), second.GetHashCode ());
+			}
+		}
+
+		[TestMethod, TestCategory("NetworkInterfaces")]
 		public void DotNetInterfacesShouldEqualJavaInterfaces ()
 		{
 			List <InterfaceInfo> dotnetInterfaces = GetInfos (MNetworkInterface.GetAllNetworkInterfaces ());
@@ -131,7 +163,7 @@ namespace System.NetTests
 				counter++;
 				Assert.IsNotNull (inf, String.Format ("#{0}.1", counter));
 				Assert.IsFalse (String.IsNullOrEmpty (inf.Name), String.Format ("#{0}.2", counter));
-				Assert.IsTrue (javaInterfaces.Contains (inf), "#{0}.3 ({1} not found in Java interfaces)", counter, inf.Name);
+				Assert.IsTrue (javaInterfaces.Contains (inf), $"#{counter}.3 ({inf.Name} not found in Java interfaces)");
 				Console.WriteLine ("Interface {0}: passed", inf.Name);
 			}
 		}
@@ -234,7 +266,7 @@ namespace System.NetTests
 		{
 			// Android 30 will not tell us the interface type if the app targets API 30, we need to look at the
 			// name then.
-			return inf.NetworkInterfaceType == NetworkInterfaceType.Loopback || String.Compare ("lo", inf.Name, StringComparison.OrdinalIgnoreCase) == 0;
+			return inf.NetworkInterfaceType == NetworkInterfaceType.Loopback || string.Equals ("lo", inf.Name, StringComparison.OrdinalIgnoreCase);
 		}
 	}
 }

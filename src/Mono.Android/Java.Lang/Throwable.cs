@@ -13,13 +13,63 @@ namespace Java.Lang {
 	{
 		protected bool is_generated;
 
-		public unsafe Throwable (IntPtr handle, JniHandleOwnership transfer)
-			: base (ref *InvalidJniObjectReference, JniObjectReferenceOptions.None, new JniObjectReference (handle))
+		/// <summary>
+		/// Initializes an empty peer for a derived binding to construct its Java throwable.
+		/// </summary>
+		/// <param name="options">
+		/// Must be <see cref="JniObjectReferenceOptions.None"/>.
+		/// </param>
+		/// <exception cref="ArgumentException">
+		/// <paramref name="options"/> is not <see cref="JniObjectReferenceOptions.None"/>.
+		/// </exception>
+		/// <remarks>
+		/// No JNI reference is accepted or transferred. The peer remains empty until the derived binding
+		/// constructs it; JNI-dependent members cannot be used before then.
+		/// </remarks>
+		internal Throwable (JniObjectReferenceOptions options)
+			: base (default (JniObjectReference), GetEmptyPeerInitializationOptions (options))
+		{
+			if (GetType () == typeof (Throwable))
+				is_generated = true;
+
+			SetHandle (IntPtr.Zero, JniHandleOwnership.DoNotTransfer);
+		}
+
+		static JniObjectReferenceOptions GetEmptyPeerInitializationOptions (JniObjectReferenceOptions options)
+		{
+			if (options != JniObjectReferenceOptions.None)
+				throw new ArgumentException ("Only JniObjectReferenceOptions.None is supported for empty peer initialization.", nameof (options));
+			return JniObjectReferenceOptions.CopyAndDispose;
+		}
+
+		/// <safety>
+		/// <paramref name="handle"/> is zero for an empty peer, or a live JNI throwable compatible with this type.
+		/// Use an attached JNI thread, and the creating thread for local references. Keep borrowed references valid for the whole constructor;
+		/// no alias may delete them concurrently. <paramref name="transfer"/> must match the reference kind and ownership:
+		/// transferred references must not be used or released by the caller afterward, including when construction throws.
+		/// </safety>
+		/// <remarks>
+		/// This released raw-handle constructor remains safe-callable for compatibility.
+		/// The compiler does not enforce the caller obligations above, including for nonzero handles.
+		/// The constructor does not validate reference provenance, lifetime, thread or ownership.
+		/// </remarks>
+		public Throwable (IntPtr handle, JniHandleOwnership transfer)
+			: base (GetThrowableReference (handle, transfer), JniObjectReferenceOptions.CopyAndDispose)
 		{
 			if (GetType () == typeof (Throwable))
 				is_generated = true;
 
 			SetHandle (handle, transfer);
+		}
+
+		static JniObjectReference GetThrowableReference (IntPtr handle, JniHandleOwnership transfer)
+		{
+			var type = (transfer & (JniHandleOwnership.TransferLocalRef | JniHandleOwnership.TransferGlobalRef)) switch {
+				JniHandleOwnership.TransferLocalRef => JniObjectReferenceType.Local,
+				JniHandleOwnership.TransferGlobalRef => JniObjectReferenceType.Global,
+				_ => JniObjectReferenceType.Invalid,
+			};
+			return new JniObjectReference (handle, type);
 		}
 
 		IntPtr IJavaObjectEx.ToLocalJniHandle ()
@@ -66,7 +116,7 @@ namespace Java.Lang {
 		[DebuggerBrowsable (DebuggerBrowsableState.Never)]
 		[EditorBrowsable (EditorBrowsableState.Never)]
 		protected virtual IntPtr ThresholdClass {
-			get { return class_ref; }
+			get { return _members.GetPeerTypeHandle (); }
 		}
 
 		[DebuggerBrowsable (DebuggerBrowsableState.Never)]
@@ -80,17 +130,21 @@ namespace Java.Lang {
 			return ThresholdClass;
 		}
 
+		// Used only to preserve virtual dispatch for legacy bindings.
 		internal System.Type GetThresholdType ()
 		{
 			return ThresholdType;
 		}
 
-		public unsafe Java.Lang.Class? Class {
+		public Java.Lang.Class? Class {
 			[Register ("getClass", "()Ljava/lang/Class;", "GetGetClassHandler")]
 			get {
 				IntPtr value;
 				const string __id = "getClass.()Ljava/lang/Class;";
-				value = _members.InstanceMethods.InvokeVirtualObjectMethod (__id, this, null).Handle;
+				unsafe {
+					// SAFETY: getClass() has no arguments; transfer its returned local reference to the managed class wrapper below.
+					value = _members.InstanceMethods.InvokeVirtualObjectMethod (__id, this, null).Handle;
+				}
 				return global::Java.Lang.Object.GetObject<Java.Lang.Class> (value, JniHandleOwnership.TransferLocalRef);
 			}
 		}
@@ -98,15 +152,40 @@ namespace Java.Lang {
 		[EditorBrowsable (EditorBrowsableState.Never)]
 		protected void SetHandle (IntPtr value, JniHandleOwnership transfer)
 		{
-			var reference = new JniObjectReference (value);
-
-			Construct (
-					ref reference,
-					value == IntPtr.Zero ? JniObjectReferenceOptions.None : JniObjectReferenceOptions.Copy);
-			if (value != IntPtr.Zero) {
-				SetJavaStackTrace (new JniObjectReference (value));
+			try {
+				var reference = new JniObjectReference (value);
+				Construct (
+						ref reference,
+						value == IntPtr.Zero
+							? JniObjectReferenceOptions.None
+							: JNIEnv.ToJniObjectReferenceOptions (transfer));
+				if (value != IntPtr.Zero) {
+					SetJavaStackTrace (new JniObjectReference (value));
+				}
+			} catch (System.Exception exception) {
+				// Reentrant Java throws can surface this peer directly or as a cause.
+				var causes = new List<System.Exception> ();
+				for (System.Exception? cause = exception; cause != null; cause = cause.InnerException) {
+					if (ReferenceEquals (cause, this)) {
+						throw;
+					}
+					if (causes.Exists (previous => ReferenceEquals (previous, cause))) {
+						break;
+					}
+					causes.Add (cause);
+				}
+				try {
+					Dispose ();
+				} catch (System.Exception cleanupException) {
+					Logger.Log (LogLevel.Error, "DOTNET", "Failed to dispose a partially constructed Throwable: " + cleanupException);
+				}
+				throw;
+			} finally {
+				unsafe {
+					// SAFETY: the caller's transfer contract covers value; it is released once, even on failure.
+					JNIEnv.DeleteRef (value, transfer);
+				}
 			}
-			JNIEnv.DeleteRef (value, transfer);
 		}
 
 		public static Throwable FromException (System.Exception e)
@@ -126,10 +205,6 @@ namespace Java.Lang {
 				throw new ArgumentNullException ("e");
 
 			return e;
-		}
-
-		~Throwable ()
-		{
 		}
 
 		public new void UnregisterFromRuntime () => base.UnregisterFromRuntime ();

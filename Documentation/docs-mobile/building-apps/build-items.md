@@ -150,10 +150,15 @@ and `.jar` files will be included in the appropriate item groups.
 
 ## AndroidAotProfile
 
-Used to provide an AOT profile, for use with profile-guided AOT.
+Used to provide a Mono AOT profile for profiled AOT in supported
+.NET 10-and-earlier projects that use Mono.
 
-It can be also used from Visual Studio by setting the `AndroidAotProfile`
-build action to a file containing an AOT profile.
+This item is consumed when
+[`$(AndroidEnableProfiledAot)`](build-properties.md#androidenableprofiledaot)
+is `true`. It is not a MIBC profile or a dynamic PGO input.
+
+It can also be used from Visual Studio by setting the `AndroidAotProfile`
+build action on a file containing a Mono AOT profile.
 
 ## AndroidAppBundleMetaDataFile
 
@@ -296,14 +301,8 @@ This simplification means you can use **AndroidLibrary** everywhere.
 
 ## AndroidLintConfig
 
-The Build action 'AndroidLintConfig' should be used in conjunction with the
-[`$(AndroidLintEnabled)`](/xamarin/android/deploy-test/building-apps/build-properties#androidlintenabled)
-property. Files with this build action will be merged together and passed to the
-android `lint` tooling. They should be XML files containing information on
-tests to enable and disable.
-
-See the [lint documentation](https://developer.android.com/studio/write/lint)
-for more details.
+This build action was removed in .NET 12 and has no effect.
+See [`$(AndroidLintEnabled)`](build-properties.md#androidlintenabled).
 
 ## AndroidManifestOverlay
 
@@ -409,6 +408,12 @@ proper initialization. However, in some cases it might not be the desired
 behavior and this item group allows exclusion of libraries from this process
 on an individual basis.
 
+When an exempted JNI library is later loaded on demand, its `JNI_OnLoad`
+function runs synchronously on the thread that triggered the load. Libraries
+whose `JNI_OnLoad` implementation requires the main thread (for example,
+because it expects a prepared main-thread `Looper` or `ALooper`) must remain
+preloaded at startup and should not be added to this item group.
+
 Some framework libraries which must be loaded at application startup will not
 be affected if included in this item group.
 
@@ -422,7 +427,17 @@ excluded from the final package. The default values are as follows
 ```xml
 <ItemGroup>
 	<AndroidPackagingOptionsExclude Include="DebugProbesKt.bin" />
-	<AndroidPackagingOptionsExclude Include="$([MSBuild]::Escape('*.kotlin_*')" />
+	<AndroidPackagingOptionsExclude Include="$([MSBuild]::Escape('*.kotlin*'))" />
+	<AndroidPackagingOptionsExclude Include="$([MSBuild]::Escape('*.jar$'))" />
+	<AndroidPackagingOptionsExclude Include="$([MSBuild]::Escape('*.knm$'))" />
+	<AndroidPackagingOptionsExclude Include="$([MSBuild]::Escape('^(|root/)[^/]+Main/default/(manifest|linkdata/*)$'))" />
+	<AndroidPackagingOptionsExclude Include="$([MSBuild]::Escape('^(|root/)R.txt$'))" />
+	<AndroidPackagingOptionsExclude Include="$([MSBuild]::Escape('^(|root/)proguard.txt$'))" />
+	<AndroidPackagingOptionsExclude Include="$([MSBuild]::Escape('^(|root/)META-INF/kotlin-project-structure-metadata.json$'))" />
+	<AndroidPackagingOptionsExclude Include="$([MSBuild]::Escape('^(|root/)META-INF/proguard/*$'))" />
+	<AndroidPackagingOptionsExclude Include="$([MSBuild]::Escape('^(|root/)META-INF/com.android.tools/proguard/*$'))" />
+	<AndroidPackagingOptionsExclude Include="$([MSBuild]::Escape('^(|root/)META-INF/com.android.tools/r8*/*$'))" />
+	<AndroidPackagingOptionsExclude Include="$([MSBuild]::Escape('^(|root/)META-INF/com/android/build/gradle/aar-metadata.properties$'))" />
 </ItemGroup>
 ```
 

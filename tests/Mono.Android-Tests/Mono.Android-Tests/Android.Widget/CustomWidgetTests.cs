@@ -1,53 +1,53 @@
-﻿using System;
+using System;
 using Android.App;
 using Android.Content;
 using Android.Util;
 using Android.Views;
 using Android.Widget;
-using NUnit.Framework;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Mono.Android_Test.Library;
 
 namespace Xamarin.Android.RuntimeTests
 {
-	[TestFixture]
+	[TestClass]
 	public class CustomWidgetTests
 	{
 		public CustomWidgetTests()
 		{
-			// FIXME: https://github.com/xamarin/xamarin-android/issues/9008
+			// FIXME: https://github.com/dotnet/android/issues/9008
 			new Foo ();
 		}
 
 		// https://bugzilla.xamarin.com/show_bug.cgi?id=23880
-		[Test]
+		[TestMethod]
 		public void UpperCaseCustomWidget_ShouldNotThrowInflateException ()
 		{
-			Assert.DoesNotThrow (() => {
+			global::Xamarin.Android.UnitTests.AndroidTestAssert.DoesNotThrow (() => {
 				var inflater = (LayoutInflater)Application.Context.GetSystemService (Context.LayoutInflaterService);
 				inflater.Inflate (Resource.Layout.uppercase_custom, null);
 			}, "Regression test for widget with uppercase namespace (bug #23880) failed");
 		}
 
-		[Test]
+		[TestMethod]
 		public void LowerCaseCustomWidget_ShouldNotThrowInflateException ()
 		{
-			Assert.DoesNotThrow (() => {
+			global::Xamarin.Android.UnitTests.AndroidTestAssert.DoesNotThrow (() => {
 				var inflater = (LayoutInflater)Application.Context.GetSystemService(Context.LayoutInflaterService);
 				inflater.Inflate(Resource.Layout.lowercase_custom, null);
 			}, "Regression test for widget with lowercase namespace (bug #23880) failed.");
 		}
 
-		[Test]
+		[TestMethod]
 		public void UpperAndLowerCaseCustomWidget_FromLibrary_ShouldNotThrowInflateException ()
 		{
-			Assert.DoesNotThrow (() => {
+			global::Xamarin.Android.UnitTests.AndroidTestAssert.DoesNotThrow (() => {
 				var inflater = (LayoutInflater)Application.Context.GetSystemService (Context.LayoutInflaterService);
 				inflater.Inflate (Resource.Layout.upper_lower_custom, null);
 			}, "Regression test for widgets with uppercase and lowercase namespace (bug #23880) failed.");
 		}
 
 		// https://github.com/dotnet/android/issues/11101
-		[Test]
+		[TestMethod]
 		[Ignore ("Currently failing/flaky due to unresolved custom view global ref leak: https://github.com/dotnet/android/issues/11201")]
 		public void InflateCustomView_ShouldNotLeakGlobalRefs ()
 		{

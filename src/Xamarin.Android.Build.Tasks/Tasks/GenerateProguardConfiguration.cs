@@ -19,17 +19,21 @@ namespace Xamarin.Android.Tasks
 		[Required]
 		public string OutputFile { get; set; } = "";
 
+		public bool EnableObfuscation { get; set; }
+
 		public override bool RunTask ()
 		{
 			var dir = Path.GetDirectoryName (OutputFile);
 			if (!dir.IsNullOrEmpty () && !Directory.Exists (dir)) {
 				Directory.CreateDirectory (dir);
 			}
-			using var writer = File.CreateText (OutputFile);
+			using var writer = new StringWriter ();
 
 			foreach (var assembly in LinkedAssemblies) {
 				ProcessAssembly (assembly.ItemSpec, writer);
 			}
+
+			Files.CopyIfStringChanged (writer.ToString (), OutputFile);
 
 			return !Log.HasLoggedErrors;
 		}
@@ -80,7 +84,6 @@ namespace Xamarin.Android.Tasks
 		void ProcessType (MetadataReader reader, TypeDefinition type, TextWriter writer)
 		{
 			// RegisterAttribute can be applied to interfaces, but proguard rules are only needed for classes.
-			// Structs don't need to be checked because RegisterAttribute cannot be applied to them.
 			if ((type.Attributes & System.Reflection.TypeAttributes.Interface) != 0)
 				return;
 
@@ -100,15 +103,31 @@ namespace Xamarin.Android.Tasks
 			if (javaTypeName == null)
 				return;
 
-			writer.WriteLine ($"-keep class {javaTypeName}");
-			writer.WriteLine ($"-keepclassmembers class {javaTypeName} {{");
+			string keepOption = EnableObfuscation ? "-keep,allowobfuscation" : "-keep";
+			string keepMembersOption = EnableObfuscation ? "-keepclassmembers,allowobfuscation" : "-keepclassmembers";
+			writer.WriteLine ($"{keepOption} class {javaTypeName}");
+			writer.WriteLine ($"{keepMembersOption} class {javaTypeName} {{");
 
-			foreach (var methodHandle in type.GetMethods ()) {
-				ProcessMethod (reader, methodHandle, writer);
+			if (IsValueType (reader, type)) {
+				// Kotlin value-class structs call `box-impl`, `unbox-impl` and `constructor-impl` by name.
+				writer.WriteLine ("   *;");
+			} else {
+				foreach (var methodHandle in type.GetMethods ()) {
+					ProcessMethod (reader, methodHandle, writer);
+				}
 			}
 
 			writer.WriteLine ("}");
 			writer.WriteLine ();
+		}
+
+		static bool IsValueType (MetadataReader reader, TypeDefinition type)
+		{
+			if (type.BaseType.Kind != HandleKind.TypeReference) {
+				return false;
+			}
+			var baseType = reader.GetTypeReference ((TypeReferenceHandle) type.BaseType);
+			return reader.StringComparer.Equals (baseType.Namespace, "System") && reader.StringComparer.Equals (baseType.Name, "ValueType");
 		}
 
 		void ProcessMethod (MetadataReader reader, MethodDefinitionHandle methodHandle, TextWriter writer)

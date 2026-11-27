@@ -1,4 +1,3 @@
-#if ANDROID_24
 
 using System;
 
@@ -29,6 +28,3 @@ and adding explicit interface methods here instead.
 		}
 	}
 }
-
-#endif
-

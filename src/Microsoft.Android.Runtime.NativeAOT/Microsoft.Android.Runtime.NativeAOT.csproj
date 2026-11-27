@@ -17,12 +17,8 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\external\Java.Interop\src\Java.Interop\Java.Interop.csproj" />
+    <ProjectReference Include="..\..\src\Java.Interop\Java.Interop.csproj" />
     <ProjectReference Include="..\Mono.Android\Mono.Android.csproj" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <PackageReference Include="System.IO.Hashing" Version="$(SystemIOHashingPackageVersion)" />
   </ItemGroup>
 
   <Import Project="Sdk.targets" Sdk="Microsoft.NET.Sdk" />

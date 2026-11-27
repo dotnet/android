@@ -12,14 +12,15 @@ namespace Xamarin.Android.Tools;
 public partial class SdkManager
 {
 	const string LatestCommandLineToolsPackage = "cmdline-tools;latest";
+	const string LatestCommandLineToolsAndroidCliPackage = "cmdline-tools/latest";
 
 	/// <summary>
-	/// Finds the installed <c>sdkmanager</c> from the highest command-line tools
-	/// revision reported by <c>source.properties</c>.
+	/// Finds <c>sdkmanager</c> in <c>cmdline-tools/latest/bin</c>, or falls back to
+	/// the highest installed command-line tools revision reported by <c>source.properties</c>.
 	/// </summary>
 	/// <returns>
 	/// The selected executable and revision, or <see langword="null"/> when no compatible
-	/// <c>sdkmanager</c> is installed.
+	/// <c>sdkmanager</c> is installed. Legacy <c>tools/bin</c> installations are not supported.
 	/// </returns>
 	public CommandLineTool? FindSdkManager ()
 	{
@@ -102,7 +103,7 @@ public partial class SdkManager
 		SdkPackage? latestPackage = null;
 		CommandLineToolsResolver.ParsedRevision? latestRevision = null;
 		foreach (var package in available.Concat (installed)) {
-			if (!string.Equals (package.Path, LatestCommandLineToolsPackage, StringComparison.Ordinal) ||
+			if (!IsLatestCommandLineToolsPackage (package.Path) ||
 				!CommandLineToolsResolver.TryParseRevision (package.Version, out var packageRevision))
 				continue;
 			if (latestRevision.HasValue && packageRevision.CompareTo (latestRevision.Value) <= 0)
@@ -142,6 +143,12 @@ public partial class SdkManager
 			100,
 			$"Command-line tools {selected.Revision} are ready."));
 		return selected;
+	}
+
+	static bool IsLatestCommandLineToolsPackage (string path)
+	{
+		return string.Equals (path, LatestCommandLineToolsPackage, StringComparison.Ordinal) ||
+			string.Equals (path, LatestCommandLineToolsAndroidCliPackage, StringComparison.Ordinal);
 	}
 
 	sealed class BootstrapProgressForwarder : IProgress<SdkBootstrapProgress>

@@ -1,12 +1,12 @@
 # Instructions for AIs
 
-**.NET for Android** (formerly Xamarin.Android) - Open-source Android development bindings for .NET languages. `main` branch targets **.NET 11**.
+**.NET for Android** (formerly Xamarin.Android) - Open-source Android development bindings for .NET languages. `main` branch targets **.NET 12**.
 
 ## Architecture
 - `src/Mono.Android/` - Android SDK bindings in C#
 - `src/Xamarin.Android.Build.Tasks/` - MSBuild tasks for Android apps  
 - `src/native/` - Native runtime (MonoVM/CoreCLR/NativeAOT)
-- `external/Java.Interop/` - JNI bindings and Java-to-.NET interop
+- `src/Java.Interop/`, `src/Java.Interop.Tools.*/` - JNI bindings and Java-to-.NET interop tooling
 - `src/Microsoft.Android.Build.BaseTasks/` - Shared MSBuild task infrastructure: `AndroidTask`, `AsyncTask`, NRT extensions, and common file/process utilities
 - `src/Xamarin.Android.Tools.AndroidSdk/` - Shared Android SDK/JDK discovery, `AdbRunner`, `EmulatorRunner`, and SDK info utilities
 - `tests/` - NUnit tests, integration tests, device tests
@@ -14,10 +14,12 @@
 **Build System:** MSBuild + .NET Arcade SDK + CMake (native)
 
 ## Essential Commands
-- **Build:** `./build.sh` or `build.cmd`
-- **Test with local build:** `dotnet-local.sh`/`dotnet-local.cmd` 
-- **Run tests:** `dotnet-local.cmd test bin/TestDebug/net9.0/Xamarin.Android.Build.Tests.dll --filter Name~TestName`
-- **Device tests:** `dotnet-local.cmd test bin/TestDebug/MSBuildDeviceIntegration/net9.0/MSBuildDeviceIntegration.dll`
+- **Build the local SDK:** `make prepare && make leeroy` (not `make all`) or `build.cmd`; see the `local-build` skill
+- **Test with local build:** `dotnet-local.sh`/`dotnet-local.cmd` (prefers `bin/Release` when present)
+- **Run tests:** `dotnet-local.cmd test bin/TestDebug/net11.0/Xamarin.Android.Build.Tests.dll --filter Name~TestName`
+- **Device tests:** `dotnet-local.cmd test bin/TestDebug/MSBuildDeviceIntegration/net11.0/MSBuildDeviceIntegration.dll` (`android-devices` skill)
+
+The test assembly framework comes from `DotNetStableTargetFramework` in `Directory.Build.props`. On macOS/Linux, use `./dotnet-local.sh` instead of `dotnet-local.cmd`.
 
 ### Shared Android tooling
 
@@ -31,9 +33,21 @@ dotnet test tests/Xamarin.Android.Tools.AndroidSdk-Tests/Xamarin.Android.Tools.A
 dotnet test tests/Microsoft.Android.Build.BaseTasks-Tests/Microsoft.Android.Build.BaseTasks-Tests.csproj
 ```
 
+## Working Principles
+
+- **Check for existing work first:** search PRs and branches (`gh pr list --repo dotnet/android --state all --search "<keywords>"`, `git log origin/main --grep "<keywords>"`) and prior sessions; extend rather than redo, including before fanning out.
+- **Reuse before inventing:** look for an existing MSBuild, SDK, `global.json`, or Arcade mechanism, in-repo helper, or CI template first.
+- **Keep it simple:** smallest change; prefer deleting over layering; simplifications end with less code; no fallbacks, options, or abstractions without a caller.
+- **Look up dependencies, don't guess URLs:** for .NET source matching our pins, search the VMR at the `Sha` in `eng/Version.Details.xml` (`gh search code --repo dotnet/dotnet "<symbol>"`, `gh api "repos/dotnet/dotnet/contents/<path>?ref=<sha>"`); for package versions, `dotnet package search <id> --exact-match --prerelease --source <feed from NuGet.config>`; for MS Learn, `microsoft_docs_search`.
+- **Ask before adding** workflows, scripts, `.editorconfig`/`Directory.*` files, tests for build scripts, or build-time-generated files.
+- **Measure performance claims** before and after with the same configuration; drop changes without a measured win.
+- **Validate proportionally:** use the smallest sufficient validation (table in the `tests` skill).
+
 ## Critical Rules
 
 **Never use `git commit --amend`:** Always create new commits. The user will squash or fixup as needed.
+
+**PR descriptions and commit messages:** PRs are squash-merged; follow the `pull-request` skill.
 
 Reference official Android documentation where helpful:
 * [Android Developer Guide](https://developer.android.com/develop)
@@ -46,7 +60,14 @@ Reference official Android documentation where helpful:
 
 **Use Microsoft docs:** Search MS Learn before making .NET, Windows, or Microsoft features, APIs, or integrations. Use the `microsoft_docs_search` tool.
 
-**MSBuild Tasks:** Extend `AndroidTask` base class, use `XA####` error codes, test in isolation. Use `AsyncTask` for tasks that need `async`/`await` — it handles `Yield()`, `try`/`finally`, and `Reacquire()` automatically.
+**MSBuild Tasks:** ALL NEW MSBuild tasks must support multithreaded execution and declare `[MSBuildMultiThreadableTask]` directly on each concrete task class. The attribute is not inherited; implementing `IMultiThreadableTask` alone does not enable in-process MT execution.
+
+- Use `MultithreadedAndroidTask` for new managed tasks, or `MultithreadedAndroidToolTask` for tasks that run an external tool. Do not derive new tasks from `AndroidTask`, `AsyncTask`, or `AndroidToolTask`, whose constructors capture the process working directory.
+- Use the engine-supplied `TaskEnvironment` for project-relative paths, environment access, and child processes. Keep constructors free of process-state dependencies; initialize `TaskEnvironment` to `Fallback` when implementing the interface directly so direct instantiation also works.
+- Before adding wrappers or workarounds, check the public APIs in the pinned dependency's reference assembly. XML documentation can include internal methods.
+- `TaskEnvironment.GetAbsolutePath (path)` roots a path but does not collapse `.` or `..`. When canonicalization is needed, call `.GetCanonicalForm ()` on the returned `AbsolutePath`; use `.Value` for string operations. Do not construct `FileInfo` or `DirectoryInfo` just to normalize paths.
+- Review helpers, exception paths, and static state for thread safety. Do not mutate shared process state or use process isolation as a substitute for MT support. For asynchronous tasks, preserve the `Yield()`/`Reacquire()` contract with `try`/`finally`.
+- Use `XA####` error codes and test in isolation. Validate ordinary and strict `-m -mt -nr:false -warnaserror:MSB4286,MSB4287,MSB4288` builds. See [MSBuild best practices](../Documentation/guides/MSBuildBestPractices.md#multithreaded-tasks).
 
 **Internal build `<UsingTask/>` elements:** For `xa-prep-tasks` and `BootstrapTasks` (internal build-time tasks, not shipped to customers), always use `TaskFactory="TaskHostFactory"` and `Runtime="NET"` attributes on `<UsingTask/>` elements. This runs the task in a separate process to avoid Windows file locking issues and ensures the task runs on .NET (even when MSBuild.exe in Visual Studio uses .NET Framework). Example:
 
@@ -55,11 +76,20 @@ Reference official Android documentation where helpful:
 <UsingTask AssemblyFile="$(PrepTasksAssembly)" TaskName="Xamarin.Android.BuildTools.PrepTasks.MyTask" TaskFactory="TaskHostFactory" Runtime="NET" />
 ```
 
-**Do NOT** use `TaskFactory="TaskHostFactory"` or `Runtime="NET"` on `<UsingTask/>` elements shipped in the product (e.g., in `Xamarin.Android.Common.targets` or `Microsoft.Android.Sdk/*.targets`), as it could negatively impact customer builds.
+**Shipped `<UsingTask/>` elements:** Omit `TaskFactory="TaskHostFactory"` and `Runtime="NET"` on `netstandard2.0` shipped task assemblies (`Xamarin.Android.Build.Tasks.dll`, `$(_XamarinAndroidBuildTasksAssembly)`, `Xamarin.Android.Build.Debugging.Tasks.dll`, `Xamarin.Installer.Build.Tasks.dll`) so they do not explicitly force a task host on either .NET Framework or .NET MSBuild. For modern-.NET shipped tasks in `$(_MicrosoftAndroidBuildTasksAssembly)` (`Microsoft.Android.Build.Tasks.dll`), declare the conditioned pair `Runtime="NET" TaskFactory="TaskHostFactory" Condition=" '$(MSBuildRuntimeType)' == 'Full' "` and `Runtime="NET" Condition=" '$(MSBuildRuntimeType)' == 'Core' "` so `.NET` MSBuild does not force a task host while .NET Framework MSBuild (e.g. `MSBuild.exe` in Visual Studio) uses the .NET task host; never add an unconditioned `TaskFactory="TaskHostFactory"` to shipped tasks.
 
 **API Bindings:** Use `[Register]` attributes, follow `Android.*` namespace patterns.
 
 **Native Code:** Use CMake, handle multiple ABIs (arm64-v8a, armeabi-v7a, x86_64, x86).
+
+## Unsafe C# and Memory Safety
+
+Follow [Unsafe code best practices](https://learn.microsoft.com/dotnet/standard/unsafe-code/best-practices) for affected unsafe code; do not scan the repository unless asked. For caller contracts and safety documentation, see [Improving C# memory safety](https://devblogs.microsoft.com/dotnet/improving-csharp-memory-safety/).
+
+- Prefer `unsafe (expression)` for single value-producing operations, including getters, ref returns and `using` acquisition. Keep managed comparisons/hash/formatting outside; retain blocks for pinning, void calls and multiple statements.
+- Under the new rules, caller-unsafe members still need body contexts. Keep `// SAFETY:` proofs adjacent; use multiline `/// <safety>` for caller obligations.
+- Respect producer/consumer language modes, including generated code. Inline expressions need pinned-compiler preview; never enable preview just for syntax. Preserve behavior and lifetimes.
+- **JNI peer lifetimes (`GC.KeepAlive`):** Copying `.Handle`/`.PeerReference` or using `JValue`/`JniArgumentValue` does not root the peer, and on CoreCLR/NativeAOT `JavaMarshalGCBridge` deletes/replaces grefs of managed-unreachable peers even if Java still references them. Keep every borrowed owner alive past JNI/P/Invoke calls; see the [JNI Peer Lifetimes checklist](skills/code-review/references/interop-rules.md#jni-peer-lifetimes-gckeepalive-review-checklist).
 
 ## Nullable Reference Types
 
@@ -184,6 +214,16 @@ try {
 
 ## Testing
 
+### Validate locally before pushing
+
+**Build and test code changes locally before pushing or opening a PR.** Building the full SDK is a normal part of development, not something to avoid because it is assumed to be slow. CI provides additional coverage; it is not a substitute for local validation or the first place to discover whether a change builds.
+
+- **Prepare and build the SDK when needed.** On macOS/Linux, run `make prepare && make leeroy`; on Windows, run `build.cmd`. Use the configuration required by the affected tests (for example, `make prepare CONFIGURATION=Release && make leeroy CONFIGURATION=Release`). A missing local SDK is a reason to prepare and build it, not to offer skipping full-build tests. Rebuild after source changes so tests exercise the updated SDK, not stale binaries.
+- **Run the relevant tests against the locally built SDK.** Use `dotnet-local.sh`/`dotnet-local.cmd` for full-build tests; standalone tests can use plain `dotnet test`. Consult `.github/skills/tests/SKILL.md` and its test catalog for commands and coverage. Start with focused tests while iterating, then expand coverage for cross-cutting changes. Runtime, JNI, and native changes need the relevant on-device tests, not just host-side unit tests; exercise the affected runtime, ABI, and build properties.
+- **Do not ask whether to skip validation solely because of presumed build time.** Proceed with the required local build and tests unless the user explicitly limits validation or a concrete environment constraint prevents it. If blocked, report the exact command, failure or missing prerequisite, and what remains unvalidated. Do not push known regressions or use repeated CI runs to debug them.
+- **Record actual validation results.** Report the build/test commands and their outcomes when handing off code changes or preparing a PR. Documentation-only changes do not require SDK compilation or device tests.
+- **Parallel sessions:** run at most one or two full SDK builds per host, give each device run its own emulator or serial, never stop processes or `adb` you didn't start, and queue heavy work instead of inventing lease protocols.
+
 **Modifying project files in tests:** Never use `File.WriteAllText()` directly to update project source files. Instead, use the `Xamarin.ProjectTools` infrastructure:
 
 ```csharp
@@ -219,17 +259,13 @@ When diagnosing runtime, build, or test failures, follow these practices. They e
 
 - **Reproduce CI failures locally — do not iterate through CI.** A clean local test cycle is minutes; a CI iteration is hours. Run device tests the same way CI does:
   ```bash
-  make prepare && make all CONFIGURATION=Release
+  make prepare CONFIGURATION=Release && make leeroy CONFIGURATION=Release
   ./dotnet-local.sh build -t:Install -c Release \
-      tests/Mono.Android-Tests/Mono.Android-Tests/Mono.Android.NET-Tests.csproj \
-      -p:_AndroidTypeMapImplementation=<llvm-ir|trimmable> \
-      -p:UseMonoRuntime=<true|false>
+      tests/Mono.Android-Tests/Mono.Android-Tests/Mono.Android.NET-Tests.csproj
   (
       cd tests/Mono.Android-Tests/Mono.Android-Tests
       ../../../dotnet-local.sh test Mono.Android.NET-Tests.csproj --no-build -c Release \
-          --report-trx --results-directory ../../../bin/TestRelease/TestResults \
-          -p:_AndroidTypeMapImplementation=<llvm-ir|trimmable> \
-          -p:UseMonoRuntime=<true|false>
+          --report-trx --results-directory ../../../bin/TestRelease/TestResults
   )
   ```
   On Windows, use `build.cmd` and `dotnet-local.cmd` instead of `make`/`dotnet-local.sh`.
@@ -237,14 +273,16 @@ When diagnosing runtime, build, or test failures, follow these practices. They e
 
 - **When the build gets into a weird state, delete `bin/` and `obj/` and rebuild from scratch.** Stale incremental output causes phantom errors. See **Troubleshooting → Build** below.
 
-- **Verify code paths with logging, not reasoning.** Add `log_warn (LOG_DEFAULT, "..."sv, ...)` in C++ or `Android.Util.Log` in C#, rebuild, re-run, and check `adb logcat -d`. If your log never fires, your call-graph assumption is wrong.
+- **Verify code paths with logging, not reasoning.** Add `log_warnf (LOG_DEFAULT, "...", ...)` in C++ or `Android.Util.Log` in C#, rebuild, re-run, and check `adb logcat -d`. If your log never fires, your call-graph assumption is wrong.
 
 - **Decompile the produced `.dll` before blaming runtime.** Use `ilspycmd` or `ildasm` to inspect the actual generated IL/metadata. A missing attribute or misnamed type in generator output cascades into opaque runtime failures.
 
 - **`am instrument` going silent means it crashed, not hung.** Check `adb logcat -d | grep -E 'FATAL|tombstone|signal'` for a native crash dump. Do not wait for a CI timeout to "confirm" a hang that was really an instant crash.
 
+- **Confirm the runtime that ran.** `PublishAot=true` in Debug still uses CoreCLR unless `Optimize=true` or publishing; check `_AndroidRuntime` before claiming NativeAOT coverage.
+
 ## Troubleshooting
-- **Build:** Clean `bin/`+`obj/`, check Android SDK/NDK, `make clean && make prepare && make all`
+- **Build:** Clean `bin/`+`obj/`, check Android SDK/NDK, `make clean && make prepare && make leeroy`; see the `local-build` skill for stalls, SourceLink warnings, and disk space
 - **MSBuild:** Test in isolation, validate inputs
-- **Device:** Use update directories for rapid Debug iteration
+- **Device:** Use update directories for rapid Debug iteration; see the `android-devices` skill
 - **Performance:** See `../Documentation/guides/profiling.md` and `../Documentation/guides/tracing.md`

@@ -1,6 +1,6 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFramework>net11.0-android</TargetFramework>
+    <TargetFramework>net12.0-android</TargetFramework>
     <SupportedOSPlatformVersion>SUPPORTED_OS_PLATFORM_VERSION</SupportedOSPlatformVersion>
     <RootNamespace Condition="'$(name)' != '$(name{-VALUE-FORMS-}safe_namespace)'">AndroidTest1</RootNamespace>
     <OutputType>Exe</OutputType>
@@ -19,6 +19,7 @@
 
   <ItemGroup>
     <PackageReference Include="MSTest" Version="4.3.2" />
+    <PackageReference Include="Microsoft.Testing.Platform.ServerMode.Client.Sources" Version="2.5.3" />
   </ItemGroup>
 
   <ItemGroup>

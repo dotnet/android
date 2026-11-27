@@ -1,4 +1,5 @@
 using System;
+using System.Buffers;
 using System.Collections.Generic;
 using System.Reflection.Metadata;
 using System.Reflection.Metadata.Ecma335;
@@ -27,6 +28,8 @@ enum JniParamKind
 /// </summary>
 static class JniSignatureHelper
 {
+	static readonly SearchValues<char> JavaSourceNameSeparators = SearchValues.Create ("/$");
+
 	/// <summary>
 	/// Parses the parameter types from a JNI method signature like "(Landroid/os/Bundle;)V".
 	/// </summary>
@@ -174,15 +177,17 @@ static class JniSignatureHelper
 	/// </summary>
 	public static bool HasAmbiguousCallbackType (string jniSignature)
 	{
-		if (IsAmbiguousCallbackKind (ParseReturnType (jniSignature))) {
-			return true;
-		}
-		foreach (var kind in ParseParameterTypes (jniSignature)) {
-			if (IsAmbiguousCallbackKind (kind)) {
+		int i = 1;
+		while (i < jniSignature.Length && jniSignature [i] != ')') {
+			if (IsAmbiguousCallbackKind (ParseSingleType (jniSignature, ref i))) {
 				return true;
 			}
 		}
-		return false;
+		if (i >= jniSignature.Length) {
+			throw new ArgumentException ($"Malformed JNI signature '{jniSignature}': missing ')'");
+		}
+		i++;
+		return IsAmbiguousCallbackKind (ParseSingleType (jniSignature, ref i));
 	}
 
 	/// <summary>
@@ -218,31 +223,8 @@ static class JniSignatureHelper
 			throw new ArgumentException ("JNI name must not be null or empty.", nameof (jniName));
 		}
 
-		int segmentStart = 0;
-		for (int i = 0; i <= jniName.Length; i++) {
-			if (i == jniName.Length || jniName [i] == '/') {
-				if (i == segmentStart) {
-					throw new ArgumentException ($"JNI name '{jniName}' has an empty segment.", nameof (jniName));
-				}
-
-				// First char of a segment must not be a digit
-				char first = jniName [segmentStart];
-				if (first >= '0' && first <= '9') {
-					throw new ArgumentException ($"JNI name '{jniName}' has a segment starting with a digit.", nameof (jniName));
-				}
-
-				// All chars in the segment must be valid Java identifier chars
-				for (int j = segmentStart; j < i; j++) {
-					char c = jniName [j];
-					bool valid = (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') ||
-					             (c >= '0' && c <= '9') || c == '_' || c == '$';
-					if (!valid) {
-						throw new ArgumentException ($"JNI name '{jniName}' contains invalid character '{c}'.", nameof (jniName));
-					}
-				}
-
-				segmentStart = i + 1;
-			}
+		if (JavaNameValidator.TryGetInvalidJniNameSegment (jniName, out var invalidIdentifier)) {
+			throw new ArgumentException ($"JNI name '{jniName}' contains invalid or unsupported Java identifier '{invalidIdentifier}'.", nameof (jniName));
 		}
 	}
 
@@ -252,10 +234,19 @@ static class JniSignatureHelper
 	/// Java source uses '.' for both.
 	/// e.g., "android/app/Activity" → "android.app.Activity"
 	/// e.g., "android/drm/DrmManagerClient$OnEventListener" → "android.drm.DrmManagerClient.OnEventListener"
+	/// Names in <paramref name="generatedPeerNames"/> instead preserve '$' in their top-level class identifiers.
 	/// </summary>
-	internal static string JniNameToJavaName (string jniName)
+	internal static string JniNameToJavaName (string jniName, IReadOnlySet<string>? generatedPeerNames = null)
 	{
-		return jniName.Replace ('/', '.').Replace ('$', '.');
+		// Generated wrappers are top-level classes, even when their identifiers contain '$'.
+		if (generatedPeerNames?.Contains (jniName) == true) {
+			return JniNameToJavaBinaryName (jniName);
+		}
+		if (jniName.AsSpan ().IndexOfAny (JavaSourceNameSeparators) < 0) {
+			return jniName;
+		}
+		return string.Create (jniName.Length, jniName, static (destination, name) =>
+			name.AsSpan ().ReplaceAny (destination, JavaSourceNameSeparators, '.'));
 	}
 
 	/// <summary>
@@ -280,7 +271,8 @@ static class JniSignatureHelper
 		if (lastSlash < 0) {
 			return null;
 		}
-		return jniName.Substring (0, lastSlash).Replace ('/', '.');
+		return string.Create (lastSlash, jniName, static (destination, name) =>
+			name.AsSpan (0, destination.Length).Replace (destination, '/', '.'));
 	}
 
 	/// <summary>
@@ -297,8 +289,9 @@ static class JniSignatureHelper
 	/// <summary>
 	/// Converts a JNI type descriptor to a Java source type.
 	/// e.g., "V" \u2192 "void", "I" \u2192 "int", "Landroid/os/Bundle;" \u2192 "android.os.Bundle"
+	/// Names in <paramref name="generatedPeerNames"/> preserve '$', including in array element types.
 	/// </summary>
-	internal static string JniTypeToJava (string jniType)
+	internal static string JniTypeToJava (string jniType, IReadOnlySet<string>? generatedPeerNames = null)
 	{
 		if (jniType.Length == 1) {
 			return jniType [0] switch {
@@ -317,12 +310,12 @@ static class JniSignatureHelper
 
 		// Array types: "[I" \u2192 "int[]", "[Ljava/lang/String;" \u2192 "java.lang.String[]"
 		if (jniType [0] == '[') {
-			return JniTypeToJava (jniType.Substring (1)) + "[]";
+			return JniTypeToJava (jniType.Substring (1), generatedPeerNames) + "[]";
 		}
 
 		// Object types: "Landroid/os/Bundle;" \u2192 "android.os.Bundle"
 		if (jniType [0] == 'L' && jniType [jniType.Length - 1] == ';') {
-			return JniNameToJavaName (jniType.Substring (1, jniType.Length - 2));
+			return JniNameToJavaName (jniType.Substring (1, jniType.Length - 2), generatedPeerNames);
 		}
 
 		throw new ArgumentException ($"Unknown JNI type descriptor: {jniType}");

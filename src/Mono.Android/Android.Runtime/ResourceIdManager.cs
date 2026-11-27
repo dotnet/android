@@ -1,9 +1,11 @@
 using System;
+using System.ComponentModel;
 using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 
 namespace Android.Runtime
 {
+	[EditorBrowsable (EditorBrowsableState.Never)]
 	public static class ResourceIdManager
 	{
 		static bool id_initialized;

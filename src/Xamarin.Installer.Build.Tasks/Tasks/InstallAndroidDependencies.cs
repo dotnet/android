@@ -1,22 +1,26 @@
 ﻿using System;
+using System.Buffers;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net.Http;
 using System.Runtime.InteropServices;
+using System.Security.Cryptography;
+using System.Text;
 using System.Threading.Tasks;
 using Microsoft.Build.Framework;
 using Microsoft.Android.Build.Tasks;
-using Xamarin.Installer.AndroidSDK;
-using Xamarin.Installer.AndroidSDK.Common;
-using Xamarin.Installer.AndroidSDK.Manager;
+using Xamarin.Android.Tools;
 using Xamarin.Installer.Build.Tasks.Properties;
-using Xamarin.Installer.Common;
 using System.Threading;
 
 namespace Xamarin.Installer.Build.Tasks
 {
-	public class InstallAndroidDependencies : AsyncTask, ILogAdapter
+	/// <summary>
+	/// Installs the JDK from Microsoft OpenJDK and the Android SDK packages with Google's Android CLI.
+	/// The Android CLI is downloaded from Google and its SHA-256 is checked against the pins in Xamarin.Installer.Common.targets.
+	/// </summary>
+	public class InstallAndroidDependencies : AsyncTask
 	{
 		public override string TaskPrefix => "IAD";
 
@@ -38,17 +42,34 @@ namespace Xamarin.Installer.Build.Tasks
 
 		public bool InstallJavaDependencies { get; set; } = true;
 
+		public bool SkipSignCheck { get; set; }
+
+		public string OpenJdkPublicKeyUrl { get; set; } = "";
+
+		public string OpenJdkPublicKeySha256 { get; set; } = "";
+
 		List<string> temporaryFiles = new List<string> ();
 
-		public string ManifestType { get; set; }
+		/// <summary>
+		/// The per-user cache directory for the pinned Android CLI version.
+		/// </summary>
+		public string AndroidCliDirectory { get; set; } = "";
+
+		/// <summary>
+		/// One item per host platform, for example `windows_x86_64`, with `Url` and `Sha256` metadata.
+		/// </summary>
+		public ITaskItem [] AndroidCliPackages { get; set; } = [];
+
+		/// <summary>
+		/// Uses this Android CLI executable instead of the pinned download.
+		/// </summary>
+		public string AndroidCliPath { get; set; } = "";
 
 		public async override Task RunTaskAsync ()
 		{
 			if (Dependencies?.Length == 0 && JavaDependencies?.Length == 0) {
 				return;
 			}
-
-			Logger.LogAdapter = this;
 
 			try {
 				using (var installationContext = ResolveInstallationContext())
@@ -61,26 +82,26 @@ namespace Xamarin.Installer.Build.Tasks
 					var token = installationContext.CancellationToken;
 					
 					var success = await InstallJavaSDKAsync(installationContext, token);
-					if (!success || token.IsCancellationRequested)
+					token.ThrowIfCancellationRequested ();
+					if (!success)
 					{
 						return;
 					}
 					
 					success = await InstallAndroidSDKAsync(installationContext, token);
-					if (!success || token.IsCancellationRequested)
+					token.ThrowIfCancellationRequested ();
+					if (!success)
 					{
 						return;
 					}
 				}
 			}
-			catch (TaskCanceledException ex)
+			catch (OperationCanceledException ex)
 			{
 				Exception(Resources.Task_Cancelled, ex, TimeoutInMinutes);
 			} catch (Exception ex) {
 				Exception (Resources.Task_Failed, ex);
 			} finally {
-				Logger.LogAdapter = null;
-
 				// removes temp files
 				foreach (var temp in temporaryFiles) {
 					if (File.Exists (temp)) {
@@ -99,15 +120,6 @@ namespace Xamarin.Installer.Build.Tasks
 
 		InstallationContext ResolveInstallationContext()
 		{
-			var manifestType = AndroidManifestType.Xamarin;
-
-			if (!string.IsNullOrEmpty(ManifestType) &&
-				!Enum.TryParse<AndroidManifestType>(ManifestType, out manifestType))
-			{
-				Warning(Resources.Unsupported_Manifest_Type, ManifestType);
-				manifestType = AndroidManifestType.Xamarin;
-			}
-
 			string path = AndroidSdkPath;
 			if (string.IsNullOrEmpty(path))
 			{
@@ -141,90 +153,74 @@ namespace Xamarin.Installer.Build.Tasks
 				resolvedJavaSdkPath = GetDefaultJavaSdkPath();
 			}
 
-			var installer = new AndroidSDKInstaller(new Helper(), manifestType);
-			installer.Discover(new List<string> { path });
-
-			var sdkInstance = installer.FindInstance(path);
-			if (sdkInstance == null)
-			{
-				Error(Resources.AndroidSdk_Not_Found, path);
-				return null;
-			}
-
-			IList<IAndroidComponent> installationSet = new List<IAndroidComponent>();
-			var unknownInputs = new List<AndroidDependencyInput>();
-			var components = new List<IAndroidComponent>();
+			var components = new List<AndroidPackage>();
 			foreach (var dependency in Dependencies)
 			{
-				string dependencyPath = dependency.ItemSpec.Replace('/', ';');
-				string version = dependency.GetMetadata("Version");
-				var v = !string.IsNullOrWhiteSpace(version) ? new AndroidRevision(version) : null;
-
-				/*
-				* It's possible a component is in multiple channels, the channel list is of the form:
-				* <channel id="channel-0">stable</channel>
-				* <channel id="channel-1">beta</channel>
-				* <channel id="channel-2">dev</channel>
-				* <channel id="channel-3">canary</channel>
-				*/
-				IAndroidComponent matchingComponent = sdkInstance.Components
-					.Where (c => c.Path == dependencyPath && c.Revision == (v ?? c.Revision))
-					.OrderBy (c => c.Channel?.ID ?? "channel-99") // null sorted last
-					.FirstOrDefault ();
-				if (matchingComponent != null)
-				{
-					if (!matchingComponent.Present && !matchingComponent.Obsolete) {
-						Debug ($"Adding dependency '{dependencyPath}/{version}'.");
-						components.Add (matchingComponent);
-					} else {
-						Debug ($"Skipping dependency '{dependencyPath}/{version}' as it is already installed or obsolete.");
-					}
+				var versionText = dependency.GetMetadata ("Version");
+				var component = new AndroidPackage (dependency.ItemSpec, versionText);
+				if (component.HasInvalidVersion) {
+					LogCodedError ("XA5311", Resources.XA5311, versionText, dependency.ItemSpec);
+					return null;
 				}
-				else
-				{
-					Debug ($"Unknown dependency: '{dependencyPath}/{version}'");
-
-					unknownInputs.Add(new AndroidDependencyInput
-					{
-						Path = dependencyPath,
-						Version = version,
-					});
+				if (component.RollForwardMinimum != null || !component.IsInstalled (path)) {
+					Debug ($"Adding dependency '{component.InstallArgument}'.");
+					components.Add (component);
+				} else {
+					Debug ($"Skipping dependency '{component.InstallArgument}' as it is already up-to-date.");
 				}
-			}
-
-			if (components.Count > 0)
-			{
-				installationSet = installer.GetInstallationSet(sdkInstance, components);
 			}
 
 			return new InstallationContext(TimeoutInMinutes, CancellationToken)
 			{
 				HttpClient = new HttpClient(),
-				Installer = installer,
-				SdkInstance = sdkInstance,
-				InstallationSet = installationSet,
+				SdkPath = path,
 				Components = components,
-				UnknownInputs = unknownInputs,
 				JavaSdkPath = resolvedJavaSdkPath
 			};
 		}
 
 		async Task<bool> InstallAndroidSDKAsync(InstallationContext installationContext, CancellationToken cancellationToken)
 		{
-			var sdkInstance = installationContext.SdkInstance;
+			var sdkPath = installationContext.SdkPath;
 			var components = installationContext.Components;
 
 			if (components.Count > 0)
 			{
-				foreach (var component in components)
-				{
-					Debug("Dependency found: {0}", component.DisplayName);
-				}
+				var cli = await GetAndroidCliAsync (installationContext.HttpClient, cancellationToken);
+				if (string.IsNullOrEmpty (cli))
+					return false;
 
-				var installationSet = installationContext.InstallationSet;
-				foreach (var component in installationSet)
-				{
-					Debug("Dependency to be installed: {0}", component.DisplayName);
+				for (int i = 0; i < components.Count; i++) {
+					var minimum = components [i].RollForwardMinimum;
+					if (minimum == null)
+						continue;
+
+					// Stable is the CLI default. Include all versions so a newer major cannot hide this band.
+					var list = ProcessUtils.CreateProcessStartInfo (cli,
+						"--no-metrics", "--sdk=" + sdkPath, "sdk", "list", "--all", "--all-versions", "platform-tools");
+					using (var stdout = new StringWriter ()) {
+						var stderr = new OutputTail ();
+						int listExitCode = await ProcessUtils.StartProcess (list, stdout, stderr, cancellationToken);
+						cancellationToken.ThrowIfCancellationRequested ();
+						if (listExitCode != 0) {
+							var listOutput = new OutputTail ();
+							listOutput.WriteLine (stdout.ToString ());
+							listOutput.Write (stderr.ToString ());
+							LogCodedError ("XA5309", Resources.XA5309, listExitCode, listOutput);
+							return false;
+						}
+						var selected = SelectPlatformToolsVersion (stdout.ToString (), minimum);
+						if (selected == null) {
+							LogCodedError ("XA5310", Resources.XA5310, minimum, minimum.Major);
+							return false;
+						}
+						components [i] = new AndroidPackage ("platform-tools", selected);
+					}
+				}
+				components.RemoveAll (c => c.IsInstalled (sdkPath));
+				if (components.Count == 0) {
+					Debug ("No Android SDK components need to be installed.");
+					return true;
 				}
 
 				if (!AcceptAndroidSDKLicenses)
@@ -233,22 +229,20 @@ namespace Xamarin.Installer.Build.Tasks
 					return false;
 				}
 
-				var installer = installationContext.Installer;
-				var downloads = installer.GetDownloadItems(installationSet);
-				if (downloads == null)
+				Directory.CreateDirectory (sdkPath);
+				var args = new List<string> { "--no-metrics", "--sdk=" + sdkPath, "sdk", "install" };
+				args.AddRange (components.Select (c => c.InstallArgument));
+				Info ("Installing Android SDK packages to '{0}': {1}", sdkPath, string.Join (" ", components.Select (c => c.InstallArgument)));
+
+				var psi = ProcessUtils.CreateProcessStartInfo (cli, args.ToArray ());
+				Debug ("{0} {1}", psi.FileName, psi.Arguments);
+				var output = new OutputTail ();
+				int exitCode = await ProcessUtils.StartProcess (psi, output, output, cancellationToken);
+				if (exitCode != 0)
 				{
-					Error(Resources.Required_Downloadable_Mismatch, installationSet.Count);
+					LogCodedError ("XA5308", Resources.XA5308, exitCode, output);
 					return false;
 				}
-
-				await Task.WhenAll(downloads.Select(d => DownloadAsync(installationContext.HttpClient, d, cancellationToken)));
-
-				if (!cancellationToken.IsCancellationRequested)
-				{
-					installer.Install(sdkInstance, installationSet);
-				}
-
-				await AcceptLicensesAsync(installationContext, cancellationToken);
 			}
 			else
 			{
@@ -257,20 +251,29 @@ namespace Xamarin.Installer.Build.Tasks
 
 			if (!cancellationToken.IsCancellationRequested)
 			{
-				var unknownInputs = installationContext.UnknownInputs;
-				if (unknownInputs.Any())
+				// The Android CLI can exit with 0 when it does not know a package, so check the SDK again.
+				foreach (var unresolved in components.Where (c => !c.IsInstalled (sdkPath)))
 				{
-					var sdkManagerDirectory = Directory.EnumerateFiles(
-						Path.Combine(sdkInstance.Path, "cmdline-tools"), "sdkmanager*", SearchOption.AllDirectories)
-						.LastOrDefault(s => s.IndexOf("bin", StringComparison.OrdinalIgnoreCase) != -1) ?? "sdkmanager";
-					foreach (var unresolved in unknownInputs)
-					{
-						Warning(Resources.Required_Not_Installed, unresolved.Path, sdkManagerDirectory);
-					}
+					Warning(Resources.Required_Not_Installed, unresolved.InstallArgument, sdkPath);
 				}
 			}
 
 			return true;
+		}
+
+		/// <summary>
+		/// Selects the newest stable catalog version that is at least <paramref name="minimum"/> and in the same major version.
+		/// </summary>
+		internal static string SelectPlatformToolsVersion (string output, Version minimum)
+		{
+			// The CLI lists installed packages under available packages too, so the installed section is not needed.
+			var (_, available) = SdkPackageListParser.Parse (output);
+			return available
+				.Where (p => p.Path == "platform-tools" && Version.TryParse (p.Version, out var version) &&
+					version.Major == minimum.Major && version >= minimum)
+				.OrderByDescending (p => Version.Parse (p.Version))
+				.Select (p => p.Version)
+				.FirstOrDefault ();
 		}
 
 		async Task<bool> InstallJavaSDKAsync(InstallationContext installationContext, CancellationToken cancellationToken)
@@ -282,20 +285,30 @@ namespace Xamarin.Installer.Build.Tasks
 				return true;
 			}
 
-			var javaInstaller = new JavaDependencyInstaller(new Helper())
+			var javaInstaller = new JavaDependencyInstaller()
 			{
 				JdkPath = installationContext.JavaSdkPath,
 			};
 
-			var requestedJdkVersion = new AndroidRevision(JavaDependencies?.FirstOrDefault(j => j.ItemSpec == "jdk")?.GetMetadata("Version") ?? string.Empty);
-			bool didParseExistingJdkVersion = javaInstaller.GetJdkRevision(out AndroidRevision currentVersion);
+			var requestedJdkVersionText = JavaDependencies?.FirstOrDefault(j => j.ItemSpec == "jdk")?.GetMetadata("Version");
+			if (string.IsNullOrEmpty(requestedJdkVersionText))
+			{
+				return true;
+			}
+			var requestedJdkVersion = ParseVersion(requestedJdkVersionText);
+			if (requestedJdkVersion == null)
+			{
+				Error(Resources.Invalid_JavaSdkVersion, requestedJdkVersionText);
+				return false;
+			}
+			bool didParseExistingJdkVersion = javaInstaller.GetJdkRevision(out Version currentVersion);
 			if (currentVersion.Major >= requestedJdkVersion.Major && didParseExistingJdkVersion)
 			{
 				Info($"Requested Java SDK with major version '{requestedJdkVersion.Major}' (or greater) is already installed at '{installationContext.JavaSdkPath}'.");
 				return true;
 			}
 
-			Info($"Attempting to install Java SDK version '{requestedJdkVersion}' to '{installationContext.JavaSdkPath}'.");
+			Info($"Attempting to install Java SDK version '{requestedJdkVersionText}' to '{installationContext.JavaSdkPath}'.");
 
 			if (!javaInstaller.IsJdkPathValid())
 			{
@@ -311,60 +324,75 @@ namespace Xamarin.Installer.Build.Tasks
 				return false;
 			}
 
-			javaInstaller.Discover();
-			var jdkToInstall = javaInstaller.GetFirstValidJdkArchiveWithVersion(requestedJdkVersion);
+			var jdkToInstall = await javaInstaller.GetFirstValidJdkArchiveWithVersion(installationContext.HttpClient, requestedJdkVersionText, cancellationToken);
 			if (jdkToInstall == null)
 			{
-				Error(Resources.Invalid_JavaSdkVersion, requestedJdkVersion);
+				Error(Resources.Invalid_JavaSdkVersion, requestedJdkVersionText);
 				return false;
 			}
 
 			await DownloadAsync(installationContext.HttpClient, jdkToInstall, cancellationToken);
-
-			if (!cancellationToken.IsCancellationRequested)
-			{
-				javaInstaller.InstallJdk(jdkToInstall);
-			}
+			cancellationToken.ThrowIfCancellationRequested ();
+			if (!await VerifyJavaArchiveAsync (installationContext.HttpClient, jdkToInstall, cancellationToken))
+				return false;
+			cancellationToken.ThrowIfCancellationRequested ();
+			await javaInstaller.InstallJdk(jdkToInstall, cancellationToken);
 
 			return true;
 		}
 
-		async Task AcceptLicensesAsync(InstallationContext installationContext, CancellationToken cancellationToken)
+		internal async Task<bool> VerifyJavaArchiveAsync (HttpClient httpClient, Archive archive, CancellationToken cancellationToken)
 		{
-			if (AcceptAndroidSDKLicenses)
-			{
-				var installationSet = installationContext.InstallationSet;
+			cancellationToken.ThrowIfCancellationRequested ();
+			if (SkipSignCheck) {
+				LogMessage ($"Microsoft OpenJDK signature verification was skipped for '{archive.Url}' because _SkipSignCheck=true. Use this workaround only if you have independently verified the archive.", MessageImportance.High);
+				return true;
+			}
 
-				//Trying to mimic Android SDK's prompt, let's at least log all the licenses
-				foreach (var component in installationSet)
-				{
-					if (cancellationToken.IsCancellationRequested)
-					{
-						return;
-					}    
+			try {
+				var keyUrl = string.IsNullOrEmpty (OpenJdkPublicKeyUrl) ? OpenJdkSignatureVerifier.PublicKeyUrl : OpenJdkPublicKeyUrl;
+				if (!Uri.TryCreate (keyUrl, UriKind.Absolute, out var publicKeyUrl) ||
+					(publicKeyUrl.Scheme != Uri.UriSchemeHttps && publicKeyUrl.Scheme != Uri.UriSchemeHttp))
+					throw new InvalidDataException ("The OpenJDK public key URL must be an absolute HTTP or HTTPS URL.");
+				var trustedKeySha256 = string.IsNullOrEmpty (OpenJdkPublicKeySha256) ? OpenJdkSignatureVerifier.PublicKeySha256 : OpenJdkPublicKeySha256;
+				if (trustedKeySha256.Length != 64 || !trustedKeySha256.All (Uri.IsHexDigit))
+					throw new InvalidDataException ("The OpenJDK public key SHA-256 hash must contain exactly 64 hexadecimal characters.");
+				var signatureUrl = new UriBuilder (archive.Url);
+				signatureUrl.Path += ".sig";
+				var signature = await DownloadVerificationFileAsync (httpClient, signatureUrl.Uri, cancellationToken);
+				var publicKey = await DownloadVerificationFileAsync (httpClient, publicKeyUrl, cancellationToken);
+				using (var file = File.OpenRead (archive.DownloadedFilePath))
+					OpenJdkSignatureVerifier.Verify (file, signature, publicKey, trustedKeySha256, cancellationToken);
+				return true;
+			} catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested) {
+				throw;
+			} catch (Exception ex) when (ex is HttpRequestException || ex is IOException || ex is InvalidDataException ||
+				ex is System.Security.Cryptography.CryptographicException || ex is FormatException || ex is OperationCanceledException) {
+				LogCodedError ("XA5305", Resources.XA5305, archive.Url, ex.Message);
+				return false;
+			}
+		}
 
-					LogMessage(component.License.Text);
-				}
-
-				try
-				{
-					Debug($"Accepting all SDK package licenses, via $({nameof(AcceptAndroidSDKLicenses)})");
-
-					var licenses = installationSet.Select(component => component.License);
-
-					var installer = installationContext.Installer;
-					var sdkInstance = installationContext.SdkInstance;
-
-					var logPath = string.Empty; // TODO: set a file path 
-					await installer.AcceptLicensesAsync(sdkInstance, licenses, cancellationToken, javaSdkPath: installationContext.JavaSdkPath, logPath: logPath, throwsErrorIfValidationFailed: true);
-
-					Debug($"All SDK package licenses have been accepted");
-				}
-				catch (Exception e)
-				{
-					// Exception is not propagated to ensure complete the installation process
-					Warning(Resources.Licenses_Acceptance_Failed, e.Message);
-					Debug(Resources.Licenses_Acceptance_Failed, e, e.Message);
+		internal static async Task<byte []> DownloadVerificationFileAsync (HttpClient httpClient, Uri url, CancellationToken cancellationToken, ArrayPool<byte> bufferPool = null)
+		{
+			using (var response = await httpClient.GetAsync (url, HttpCompletionOption.ResponseHeadersRead, cancellationToken)) {
+				response.EnsureSuccessStatusCode ();
+				using (var input = await response.Content.ReadAsStreamAsync ()) {
+					const int maximumLength = 64 * 1024;
+					var pool = bufferPool ?? ArrayPool<byte>.Shared;
+					var buffer = pool.Rent (maximumLength + 1);
+					try {
+						int length = 0;
+						int count;
+						while ((count = await input.ReadAsync (buffer, length, buffer.Length - length, cancellationToken)) > 0) {
+							length += count;
+							if (length > maximumLength)
+								throw new InvalidDataException ("The OpenJDK verification file exceeds 64 KiB.");
+						}
+						return buffer.AsSpan (0, length).ToArray ();
+					} finally {
+						pool.Return (buffer);
+					}
 				}
 			}
 		}
@@ -379,31 +407,31 @@ namespace Xamarin.Installer.Build.Tasks
 				temporaryFiles.Add (path);
 				using (var fileStream = File.OpenWrite (path)) {
 					using (var httpStream = await response.Content.ReadAsStreamAsync ()) {
-						var buffer = new byte[16 * 1024];
-						int bytesRead;
-						double bytesWritten = 0;
-						double previousProgress = 0;
-						while ((bytesRead = httpStream.Read (buffer, 0, buffer.Length)) > 0) {
-							fileStream.Write (buffer, 0, bytesRead);
-							bytesWritten += bytesRead;
-							// Log download progress roughly every 10%.
-							var progress = bytesWritten / fileLength;
-							if (progress - previousProgress > .10) {
-								Info ($"Downloaded {progress:P0} of {Path.GetFileName (archive.Url.AbsolutePath)}");
-								previousProgress = progress;
+						const int bufferSize = 16 * 1024;
+						var buffer = ArrayPool<byte>.Shared.Rent (bufferSize);
+						try {
+							int bytesRead;
+							double bytesWritten = 0;
+							double previousProgress = 0;
+							while ((bytesRead = await httpStream.ReadAsync (buffer, 0, buffer.Length, cancellationToken).ConfigureAwait (false)) > 0) {
+								fileStream.Write (buffer, 0, bytesRead);
+								bytesWritten += bytesRead;
+								// Log download progress roughly every 10%.
+								var progress = bytesWritten / fileLength;
+								if (progress - previousProgress > .10) {
+									Info ($"Downloaded {progress:P0} of {Path.GetFileName (archive.Url.AbsolutePath)}");
+									previousProgress = progress;
+								}
 							}
+							fileStream.Flush ();
+						} finally {
+							ArrayPool<byte>.Shared.Return (buffer);
 						}
-						fileStream.Flush ();
 					}
 				}
 				Info ("Wrote '{0}' to '{1}'", archive.Url, path);
 				archive.DownloadedFilePath = path;
 			}
-		}
-
-		public void Action (string format, params object [] parms)
-		{
-			LogDebugMessage (format, parms);
 		}
 
 		public void Debug (string format, params object [] parms)
@@ -437,8 +465,6 @@ namespace Xamarin.Installer.Build.Tasks
 		{
 			LogWarning (format, parms);
 		}
-
-		public void SetOperationStatus (OperationStatus status) { }
 
 		/// <summary>
 		/// Gets the default Android SDK path based on the current platform.
@@ -476,13 +502,10 @@ namespace Xamarin.Installer.Build.Tasks
 		{
 			var requestedJdkVersion = JavaDependencies?.FirstOrDefault(j => j.ItemSpec == "jdk")?.GetMetadata("Version");
 			int majorVersion = 21; // Default if parsing fails
-			if (!string.IsNullOrEmpty(requestedJdkVersion))
+			var revision = ParseVersion(requestedJdkVersion);
+			if (revision != null && revision.Major > 0)
 			{
-				var revision = new AndroidRevision(requestedJdkVersion);
-				if (revision.Major > 0)
-				{
-					majorVersion = revision.Major;
-				}
+				majorVersion = revision.Major;
 			}
 
 			if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
@@ -496,6 +519,219 @@ namespace Xamarin.Installer.Build.Tasks
 			// Linux: no default, require explicit JAVA_HOME or JavaSdkPath
 			return null;
 		}
+
+		async Task<string> GetAndroidCliAsync (HttpClient client, CancellationToken cancellationToken)
+		{
+			if (!string.IsNullOrEmpty (AndroidCliPath))
+				return AndroidCliPath;
+
+			var platform = GetAndroidCliPlatform ();
+			var package = platform == null ? null : AndroidCliPackages?.FirstOrDefault (p => p.ItemSpec == platform);
+			var url = package?.GetMetadata ("Url");
+			var expectedSha256 = package?.GetMetadata ("Sha256");
+			if (string.IsNullOrEmpty (url) || string.IsNullOrEmpty (expectedSha256) || string.IsNullOrEmpty (AndroidCliDirectory)) {
+				LogCodedError ("XA5306", Resources.XA5306, RuntimeInformation.OSDescription, RuntimeInformation.OSArchitecture);
+				return null;
+			}
+
+			var directory = AndroidCliDirectory;
+			var path = Path.Combine (directory, RuntimeInformation.IsOSPlatform (OSPlatform.Windows) ? "android-cli.exe" : "android-cli");
+			if (File.Exists (path)) {
+				if (HashMatches (path, expectedSha256))
+					return path;
+				Debug ("The cached Android CLI at '{0}' does not match the expected SHA-256 and will be downloaded again.", path);
+			}
+
+			var archive = new Archive { Url = new Uri (url) };
+			await DownloadAsync (client, archive, cancellationToken);
+
+			var actualSha256 = ComputeSha256 (archive.DownloadedFilePath);
+			if (!string.Equals (actualSha256, expectedSha256, StringComparison.OrdinalIgnoreCase)) {
+				LogCodedError ("XA5307", Resources.XA5307, url, expectedSha256, actualSha256);
+				return null;
+			}
+
+			if (!RuntimeInformation.IsOSPlatform (OSPlatform.Windows)) {
+				var chmod = ProcessUtils.CreateProcessStartInfo ("chmod", "755", archive.DownloadedFilePath);
+				var chmodOutput = new OutputTail ();
+				int exitCode = await ProcessUtils.StartProcess (chmod, chmodOutput, chmodOutput, cancellationToken);
+				if (exitCode != 0)
+					throw new IOException ($"'chmod 755 {archive.DownloadedFilePath}' failed with exit code {exitCode}: {chmodOutput}");
+			}
+
+			Directory.CreateDirectory (directory);
+			try {
+				if (File.Exists (path))
+					File.Delete (path);
+				File.Move (archive.DownloadedFilePath, path);
+			} catch (Exception ex) when ((ex is IOException || ex is UnauthorizedAccessException) && File.Exists (path) && HashMatches (path, expectedSha256)) {
+				// Another build put the same file in place first.
+				Debug ("Using the Android CLI that another build put at '{0}'.", path);
+			}
+			return path;
+		}
+
+		static string GetAndroidCliPlatform ()
+		{
+			string os = RuntimeInformation.IsOSPlatform (OSPlatform.Windows) ? "windows" : RuntimeInformation.IsOSPlatform (OSPlatform.OSX) ? "darwin" : RuntimeInformation.IsOSPlatform (OSPlatform.Linux) ? "linux" : null;
+			string arch = RuntimeInformation.OSArchitecture switch {
+				Architecture.X64 => "x86_64",
+				Architecture.Arm64 => "arm64",
+				_ => null,
+			};
+			return os == null || arch == null ? null : $"{os}_{arch}";
+		}
+
+		static bool HashMatches (string path, string expectedSha256) =>
+			string.Equals (ComputeSha256 (path), expectedSha256, StringComparison.OrdinalIgnoreCase);
+
+		static string ComputeSha256 (string path)
+		{
+			using (var sha256 = SHA256.Create ())
+			using (var file = File.OpenRead (path))
+				return BitConverter.ToString (sha256.ComputeHash (file)).Replace ("-", "");
+		}
+
+		/// <summary>
+		/// Parses the leading digits and dots of a version, for example `21.0.8` or `37.0.0-rc1`.
+		/// </summary>
+		internal static Version ParseVersion (string value)
+		{
+			if (string.IsNullOrEmpty (value))
+				return null;
+			int length = 0;
+			value = value.Trim ();
+			while (length < value.Length && (char.IsDigit (value [length]) || value [length] == '.'))
+				length++;
+			var text = value.Substring (0, length).Trim ('.');
+			if (text.Length == 0)
+				return null;
+			if (text.IndexOf ('.') < 0)
+				text += ".0";
+			return Version.TryParse (text, out var version) ? version : null;
+		}
+
+		static bool IsValidPlatformToolsVersion (string value)
+		{
+			if (string.IsNullOrEmpty (value))
+				return false;
+
+			value = value.Trim ();
+			if (value.Length == 0 || value [0] == '.' || value [value.Length - 1] == '.' || value.Contains (".."))
+				return false;
+
+			foreach (char c in value) {
+				if ((c < '0' || c > '9') && c != '.')
+					return false;
+			}
+
+			return ParseVersion (value) != null;
+		}
+
+		internal static string ReadProperty (string path, string name)
+		{
+			if (!File.Exists (path))
+				return null;
+			foreach (var line in File.ReadLines (path)) {
+				int index = line.IndexOf ('=');
+				if (index > 0 && line.Substring (0, index).Trim () == name)
+					return line.Substring (index + 1).Trim ();
+			}
+			return null;
+		}
+
+		/// <summary>
+		/// An `@(AndroidDependency)` item, mapped to an Android CLI package name and SDK directory.
+		/// </summary>
+		internal sealed class AndroidPackage
+		{
+			readonly string directory;
+			readonly Version version;
+
+			public string InstallArgument { get; }
+
+			/// <summary>
+			/// The minimum platform-tools version; the newest catalog version in its major version is installed.
+			/// </summary>
+			public Version RollForwardMinimum { get; }
+
+			public bool HasInvalidVersion { get; }
+
+			public AndroidPackage (string path, string version)
+			{
+				path = path.Replace (';', '/');
+				// The Android CLI has no `ndk-bundle` package. Use the side-by-side NDK instead.
+				if (path == "ndk-bundle" && !string.IsNullOrEmpty (version))
+					path = "ndk/" + version;
+				directory = path;
+				this.version = ParseVersion (version);
+				if (path == "platform-tools") {
+					// Other packages, such as `cmdline-tools/latest`, can use nonnumeric versions.
+					HasInvalidVersion = !string.IsNullOrEmpty (version) && !IsValidPlatformToolsVersion (version);
+					RollForwardMinimum = this.version;
+				}
+
+				var lastSegment = path.Substring (path.LastIndexOf ('/') + 1);
+				InstallArgument = string.IsNullOrEmpty (version) || lastSegment == version ? path : $"{path}@{version}";
+			}
+
+			public bool IsInstalled (string sdkPath)
+			{
+				var properties = Path.Combine (sdkPath, directory.Replace ('/', Path.DirectorySeparatorChar), "source.properties");
+				if (!File.Exists (properties))
+					return false;
+				if (version == null)
+					return true;
+				var revision = ReadProperty (properties, "Pkg.Revision");
+				var installed = ParseVersion (revision);
+				if (installed == null)
+					return false;
+				// A platform-tools preview, such as 37.0.3-rc1, does not satisfy the stable 37.0.3 release.
+				if (RollForwardMinimum != null && installed == version && !IsValidPlatformToolsVersion (revision))
+					return false;
+				return installed >= version;
+			}
+		}
+
+		/// <summary>
+		/// Keeps only the end of the process output, so that progress output does not use a lot of memory.
+		/// </summary>
+		internal sealed class OutputTail : TextWriter
+		{
+			const int MaximumLength = 4096;
+			readonly StringBuilder text = new StringBuilder ();
+			readonly object textLock = new object ();
+
+			public override Encoding Encoding => Encoding.UTF8;
+
+			public override void Write (char value)
+			{
+				lock (textLock) {
+					text.Append (value);
+					Trim ();
+				}
+			}
+
+			public override void Write (char [] buffer, int index, int count)
+			{
+				lock (textLock) {
+					text.Append (buffer, index, count);
+					Trim ();
+				}
+			}
+
+			void Trim ()
+			{
+				if (text.Length > MaximumLength)
+					text.Remove (0, text.Length - MaximumLength);
+			}
+
+			public override string ToString ()
+			{
+				lock (textLock)
+					return text.ToString ().Trim ();
+			}
+		}
 	}
 
 	public class InstallationContext : IDisposable
@@ -505,22 +741,14 @@ namespace Xamarin.Installer.Build.Tasks
 		{
 			cancellationTokenSource = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
 			cancellationTokenSource.CancelAfter(TimeSpan.FromMinutes(timeoutInMinutes));
-			Components = new List<IAndroidComponent>();
-			UnknownInputs = new List<AndroidDependencyInput>();
-			InstallationSet = new List<IAndroidComponent>();
+			Components = new List<InstallAndroidDependencies.AndroidPackage>();
 		}
 
 		public HttpClient HttpClient { get; set; }
 
-		public AndroidSDKInstaller Installer { get; set; }
+		public string SdkPath { get; set; }
 
-		public AndroidSdkInstance SdkInstance { get; set; }
-
-		public List<IAndroidComponent> Components { get; internal set; }
-
-		public List<AndroidDependencyInput> UnknownInputs { get; internal set; }
-
-		public IList<IAndroidComponent> InstallationSet { get; set; }
+		internal List<InstallAndroidDependencies.AndroidPackage> Components { get; set; }
 
 		public string JavaSdkPath { get; set; }
 
@@ -533,9 +761,13 @@ namespace Xamarin.Installer.Build.Tasks
 		}
 	}
 
-	public class AndroidDependencyInput
+	/// <summary>
+	/// A downloaded file. A simplified copy of Archive from the removed Xamarin.Installer.AndroidSDK project.
+	/// </summary>
+	public class Archive
 	{
-		public string Path { get; set; }
-		public string Version { get; set; }
+		public Uri Url { get; set; }
+
+		public string DownloadedFilePath { get; set; }
 	}
 }

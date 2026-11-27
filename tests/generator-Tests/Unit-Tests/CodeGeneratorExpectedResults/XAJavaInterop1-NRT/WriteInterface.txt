@@ -1,0 +1,538 @@
+[Register ("mono/internal/java/code/IMyInterface", DoNotGenerateAcw=true)]
+public abstract class MyInterface : Java.Lang.Object {
+	internal MyInterface ()
+	{
+	}
+
+	// Metadata.xml XPath method reference: path="/api/package[@name='java.code']/interface[@name='IMyInterface']/method[@name='StaticMethod' and count(parameter)=0]"
+	[Register ("StaticMethod", "()V", "")]
+	public static void StaticMethod ()
+	{
+		const string __id = "StaticMethod.()V";
+		unsafe {
+			// SAFETY: __id fixes argument types/count; initialized stack arguments and JNI locals stay on this thread for the synchronous call.
+			_members.StaticMethods.InvokeVoidMethod (__id, null);
+		}
+	}
+
+	static readonly JniPeerMembers _members = new JniPeerMembers ("java/code/IMyInterface", typeof (MyInterface));
+
+}
+
+[Register ("mono/internal/java/code/IMyInterface", DoNotGenerateAcw=true)]
+[global::System.Obsolete (@"Use the 'MyInterface' type. This type will be removed in a future release.", error: true)]
+public abstract class MyInterfaceConsts : MyInterface {
+	private MyInterfaceConsts ()
+	{
+	}
+
+}
+
+// Metadata.xml XPath interface reference: path="/api/package[@name='java.code']/interface[@name='IMyInterface']"
+[Register ("java/code/IMyInterface", "", "java.code.IMyInterfaceInvoker")]
+public partial interface IMyInterface : IJavaObject, IJavaPeerable {
+	int Count {
+		// Metadata.xml XPath method reference: path="/api/package[@name='java.code']/interface[@name='IMyInterface']/method[@name='get_Count' and count(parameter)=0]"
+		[Register ("get_Count", "()I", "Getget_CountHandler:java.code.IMyInterfaceInvoker, ")]
+		get; 
+
+		// Metadata.xml XPath method reference: path="/api/package[@name='java.code']/interface[@name='IMyInterface']/method[@name='set_Count' and count(parameter)=1 and parameter[1][@type='int']]"
+		[Register ("set_Count", "(I)V", "Getset_Count_IHandler:java.code.IMyInterfaceInvoker, ")]
+		set; 
+	}
+
+	string? Key {
+		// Metadata.xml XPath method reference: path="/api/package[@name='java.code']/interface[@name='IMyInterface']/method[@name='get_Key' and count(parameter)=0]"
+		[Register ("get_Key", "()Ljava/lang/String;", "Getget_KeyHandler:java.code.IMyInterfaceInvoker, ")]
+		get; 
+
+		// Metadata.xml XPath method reference: path="/api/package[@name='java.code']/interface[@name='IMyInterface']/method[@name='set_Key' and count(parameter)=1 and parameter[1][@type='java.lang.String']]"
+		[Register ("set_Key", "(Ljava/lang/String;)V", "Getset_Key_Ljava_lang_String_Handler:java.code.IMyInterfaceInvoker, ")]
+		set; 
+	}
+
+	int AbstractCount {
+		// Metadata.xml XPath method reference: path="/api/package[@name='java.code']/interface[@name='IMyInterface']/method[@name='get_AbstractCount' and count(parameter)=0]"
+		[Register ("get_AbstractCount", "()I", "Getget_AbstractCountHandler:java.code.IMyInterfaceInvoker, ")]
+		get; 
+
+		// Metadata.xml XPath method reference: path="/api/package[@name='java.code']/interface[@name='IMyInterface']/method[@name='set_AbstractCount' and count(parameter)=1 and parameter[1][@type='int']]"
+		[Register ("set_AbstractCount", "(I)V", "Getset_AbstractCount_IHandler:java.code.IMyInterfaceInvoker, ")]
+		set; 
+	}
+
+	// Metadata.xml XPath method reference: path="/api/package[@name='java.code']/interface[@name='IMyInterface']/method[@name='GetCountForKey' and count(parameter)=1 and parameter[1][@type='java.lang.String']]"
+	[Register ("GetCountForKey", "(Ljava/lang/String;)I", "GetGetCountForKey_Ljava_lang_String_Handler:java.code.IMyInterfaceInvoker, ")]
+	int GetCountForKey (string? key);
+
+	// Metadata.xml XPath method reference: path="/api/package[@name='java.code']/interface[@name='IMyInterface']/method[@name='Key' and count(parameter)=0]"
+	[Register ("Key", "()Ljava/lang/String;", "GetKeyHandler:java.code.IMyInterfaceInvoker, ")]
+	string? Key ();
+
+	// Metadata.xml XPath method reference: path="/api/package[@name='java.code']/interface[@name='IMyInterface']/method[@name='AbstractMethod' and count(parameter)=0]"
+	[Register ("AbstractMethod", "()V", "GetAbstractMethodHandler:java.code.IMyInterfaceInvoker, ")]
+	void AbstractMethod ();
+
+}
+
+[global::Android.Runtime.Register ("java/code/IMyInterface", DoNotGenerateAcw=true)]
+internal partial class IMyInterfaceInvoker : global::Java.Lang.Object, IMyInterface {
+	[global::System.Diagnostics.DebuggerBrowsable (global::System.Diagnostics.DebuggerBrowsableState.Never)]
+	[global::System.ComponentModel.EditorBrowsable (global::System.ComponentModel.EditorBrowsableState.Never)]
+	public override global::Java.Interop.JniPeerMembers JniPeerMembers {
+		get { return _members_java_code_IMyInterface; }
+	}
+
+	static readonly JniPeerMembers _members_java_code_IMyInterface = new JniPeerMembers ("java/code/IMyInterface", typeof (IMyInterfaceInvoker));
+
+	public IMyInterfaceInvoker (IntPtr handle, JniHandleOwnership transfer) : base (handle, transfer)
+	{
+	}
+
+	static Delegate? cb_get_Count_get_Count_I;
+#pragma warning disable 0169
+	static Delegate Getget_CountHandler ()
+	{
+		unsafe {
+			// SAFETY: The delegate matches the registered callback signature; JNI, not this connector, supplies its arguments.
+			return cb_get_Count_get_Count_I ??= new _JniMarshal_PP_I (n_get_Count);
+		}
+	}
+
+	/// <safety>
+	/// Use the registered JNI ABI on jnienv's attached thread. Receiver/reference arguments
+	/// must match the registered types and stay live without concurrent deletion for this call;
+	/// permitted nulls stay null. JNI retains borrowed ownership. The helper reports managed
+	/// failures and may return default; invalid addresses are not validated.
+	/// </safety>
+	static unsafe int n_get_Count (IntPtr jnienv, IntPtr native__this)
+	{
+		unsafe {
+			// SAFETY: JNI supplies this thread's environment and live typed references; the static target pointer is synchronous.
+			return global::Java.Interop.JniMarshal.SafeInvokeFunc (jnienv, native__this, &__n_get_Count);
+		}
+	}
+	/// <safety>
+	/// Requires the entry point's live, type-correct borrowed references in its active JNI
+	/// frame/thread, without concurrent deletion. Copy-back occurs on normal return only;
+	/// failures propagate to the marshal helper.
+	/// </safety>
+	private static unsafe int __n_get_Count (IntPtr jnienv, IntPtr native__this)
+	{
+		unsafe {
+			// SAFETY: The marshal frame keeps typed JNI references live on this thread through conversion and normal-return copy-back.
+			var __this = global::Java.Lang.Object.GetObject<java.code.IMyInterface> (jnienv, native__this, JniHandleOwnership.DoNotTransfer)!;
+			return __this.Count;
+		}
+	}
+#pragma warning restore 0169
+
+	static Delegate? cb_set_Count_set_Count_I_V;
+#pragma warning disable 0169
+	static Delegate Getset_Count_IHandler ()
+	{
+		unsafe {
+			// SAFETY: The delegate matches the registered callback signature; JNI, not this connector, supplies its arguments.
+			return cb_set_Count_set_Count_I_V ??= new _JniMarshal_PPI_V (n_set_Count_I);
+		}
+	}
+
+	/// <safety>
+	/// Use the registered JNI ABI on jnienv's attached thread. Receiver/reference arguments
+	/// must match the registered types and stay live without concurrent deletion for this call;
+	/// permitted nulls stay null. JNI retains borrowed ownership. The helper reports managed
+	/// failures and may return default; invalid addresses are not validated.
+	/// </safety>
+	static unsafe void n_set_Count_I (IntPtr jnienv, IntPtr native__this, int value)
+	{
+		unsafe {
+			// SAFETY: JNI supplies this thread's environment and live typed references; the static target pointer is synchronous.
+			global::Java.Interop.JniMarshal.SafeInvokeAction (jnienv, native__this, value, &__n_set_Count_I);
+		}
+	}
+	/// <safety>
+	/// Requires the entry point's live, type-correct borrowed references in its active JNI
+	/// frame/thread, without concurrent deletion. Copy-back occurs on normal return only;
+	/// failures propagate to the marshal helper.
+	/// </safety>
+	private static unsafe void __n_set_Count_I (IntPtr jnienv, IntPtr native__this, int value)
+	{
+		unsafe {
+			// SAFETY: The marshal frame keeps typed JNI references live on this thread through conversion and normal-return copy-back.
+			var __this = global::Java.Lang.Object.GetObject<java.code.IMyInterface> (jnienv, native__this, JniHandleOwnership.DoNotTransfer)!;
+			__this.Count = value;
+		}
+	}
+#pragma warning restore 0169
+
+	public int Count {
+		get {
+			const string __id = "get_Count.()I";
+			unsafe {
+				// SAFETY: __id fixes argument types/count; initialized stack arguments and JNI locals stay on this thread for the synchronous call.
+				var __rm = _members_java_code_IMyInterface.InstanceMethods.InvokeVirtualInt32Method (__id, this, null);
+				return __rm;
+			}
+		}
+		set {
+			const string __id = "set_Count.(I)V";
+			unsafe {
+				// SAFETY: __id fixes argument types/count; initialized stack arguments and JNI locals stay on this thread for the synchronous call.
+				JniArgumentValue* __args = stackalloc JniArgumentValue [1];
+				__args [0] = new JniArgumentValue (value);
+				_members_java_code_IMyInterface.InstanceMethods.InvokeVirtualVoidMethod (__id, this, __args);
+			}
+		}
+	}
+
+	static Delegate? cb_get_Key_get_Key_Ljava_lang_String_;
+#pragma warning disable 0169
+	static Delegate Getget_KeyHandler ()
+	{
+		unsafe {
+			// SAFETY: The delegate matches the registered callback signature; JNI, not this connector, supplies its arguments.
+			return cb_get_Key_get_Key_Ljava_lang_String_ ??= new _JniMarshal_PP_L (n_get_Key);
+		}
+	}
+
+	/// <safety>
+	/// Use the registered JNI ABI on jnienv's attached thread. Receiver/reference arguments
+	/// must match the registered types and stay live without concurrent deletion for this call;
+	/// permitted nulls stay null. JNI retains borrowed ownership. The helper reports managed
+	/// failures and may return default; invalid addresses are not validated.
+	/// </safety>
+	static unsafe IntPtr n_get_Key (IntPtr jnienv, IntPtr native__this)
+	{
+		unsafe {
+			// SAFETY: JNI supplies this thread's environment and live typed references; the static target pointer is synchronous.
+			return global::Java.Interop.JniMarshal.SafeInvokeFunc (jnienv, native__this, &__n_get_Key);
+		}
+	}
+	/// <safety>
+	/// Requires the entry point's live, type-correct borrowed references in its active JNI
+	/// frame/thread, without concurrent deletion. Copy-back occurs on normal return only;
+	/// failures propagate to the marshal helper.
+	/// </safety>
+	private static unsafe IntPtr __n_get_Key (IntPtr jnienv, IntPtr native__this)
+	{
+		unsafe {
+			// SAFETY: The marshal frame keeps typed JNI references live on this thread through conversion and normal-return copy-back.
+			var __this = global::Java.Lang.Object.GetObject<java.code.IMyInterface> (jnienv, native__this, JniHandleOwnership.DoNotTransfer)!;
+			return JNIEnv.NewString (__this.Key);
+		}
+	}
+#pragma warning restore 0169
+
+	static Delegate? cb_set_Key_set_Key_Ljava_lang_String__V;
+#pragma warning disable 0169
+	static Delegate Getset_Key_Ljava_lang_String_Handler ()
+	{
+		unsafe {
+			// SAFETY: The delegate matches the registered callback signature; JNI, not this connector, supplies its arguments.
+			return cb_set_Key_set_Key_Ljava_lang_String__V ??= new _JniMarshal_PPL_V (n_set_Key_Ljava_lang_String_);
+		}
+	}
+
+	/// <safety>
+	/// Use the registered JNI ABI on jnienv's attached thread. Receiver/reference arguments
+	/// must match the registered types and stay live without concurrent deletion for this call;
+	/// permitted nulls stay null. JNI retains borrowed ownership. The helper reports managed
+	/// failures and may return default; invalid addresses are not validated.
+	/// </safety>
+	static unsafe void n_set_Key_Ljava_lang_String_ (IntPtr jnienv, IntPtr native__this, IntPtr native_value)
+	{
+		unsafe {
+			// SAFETY: JNI supplies this thread's environment and live typed references; the static target pointer is synchronous.
+			global::Java.Interop.JniMarshal.SafeInvokeAction (jnienv, native__this, native_value, &__n_set_Key_Ljava_lang_String_);
+		}
+	}
+	/// <safety>
+	/// Requires the entry point's live, type-correct borrowed references in its active JNI
+	/// frame/thread, without concurrent deletion. Copy-back occurs on normal return only;
+	/// failures propagate to the marshal helper.
+	/// </safety>
+	private static unsafe void __n_set_Key_Ljava_lang_String_ (IntPtr jnienv, IntPtr native__this, IntPtr native_value)
+	{
+		unsafe {
+			// SAFETY: The marshal frame keeps typed JNI references live on this thread through conversion and normal-return copy-back.
+			var __this = global::Java.Lang.Object.GetObject<java.code.IMyInterface> (jnienv, native__this, JniHandleOwnership.DoNotTransfer)!;
+			var value = JNIEnv.GetString (native_value, JniHandleOwnership.DoNotTransfer);
+			__this.Key = value;
+		}
+	}
+#pragma warning restore 0169
+
+	public string? Key {
+		get {
+			const string __id = "get_Key.()Ljava/lang/String;";
+			unsafe {
+				// SAFETY: __id fixes argument types/count; initialized stack arguments and JNI locals stay on this thread for the synchronous call.
+				var __rm = _members_java_code_IMyInterface.InstanceMethods.InvokeVirtualObjectMethod (__id, this, null);
+				return JNIEnv.GetString (__rm.Handle, JniHandleOwnership.TransferLocalRef);
+			}
+		}
+		set {
+			const string __id = "set_Key.(Ljava/lang/String;)V";
+			unsafe {
+				// SAFETY: __id fixes argument types/count; initialized stack arguments and JNI locals stay on this thread for the synchronous call.
+				IntPtr native_value = JNIEnv.NewString ((string?)value);
+				try {
+					JniArgumentValue* __args = stackalloc JniArgumentValue [1];
+					__args [0] = new JniArgumentValue (native_value);
+					_members_java_code_IMyInterface.InstanceMethods.InvokeVirtualVoidMethod (__id, this, __args);
+				} finally {
+					JNIEnv.DeleteLocalRef (native_value);
+				}
+			}
+		}
+	}
+
+	static Delegate? cb_get_AbstractCount_get_AbstractCount_I;
+#pragma warning disable 0169
+	static Delegate Getget_AbstractCountHandler ()
+	{
+		unsafe {
+			// SAFETY: The delegate matches the registered callback signature; JNI, not this connector, supplies its arguments.
+			return cb_get_AbstractCount_get_AbstractCount_I ??= new _JniMarshal_PP_I (n_get_AbstractCount);
+		}
+	}
+
+	/// <safety>
+	/// Use the registered JNI ABI on jnienv's attached thread. Receiver/reference arguments
+	/// must match the registered types and stay live without concurrent deletion for this call;
+	/// permitted nulls stay null. JNI retains borrowed ownership. The helper reports managed
+	/// failures and may return default; invalid addresses are not validated.
+	/// </safety>
+	static unsafe int n_get_AbstractCount (IntPtr jnienv, IntPtr native__this)
+	{
+		unsafe {
+			// SAFETY: JNI supplies this thread's environment and live typed references; the static target pointer is synchronous.
+			return global::Java.Interop.JniMarshal.SafeInvokeFunc (jnienv, native__this, &__n_get_AbstractCount);
+		}
+	}
+	/// <safety>
+	/// Requires the entry point's live, type-correct borrowed references in its active JNI
+	/// frame/thread, without concurrent deletion. Copy-back occurs on normal return only;
+	/// failures propagate to the marshal helper.
+	/// </safety>
+	private static unsafe int __n_get_AbstractCount (IntPtr jnienv, IntPtr native__this)
+	{
+		unsafe {
+			// SAFETY: The marshal frame keeps typed JNI references live on this thread through conversion and normal-return copy-back.
+			var __this = global::Java.Lang.Object.GetObject<java.code.IMyInterface> (jnienv, native__this, JniHandleOwnership.DoNotTransfer)!;
+			return __this.AbstractCount;
+		}
+	}
+#pragma warning restore 0169
+
+	static Delegate? cb_set_AbstractCount_set_AbstractCount_I_V;
+#pragma warning disable 0169
+	static Delegate Getset_AbstractCount_IHandler ()
+	{
+		unsafe {
+			// SAFETY: The delegate matches the registered callback signature; JNI, not this connector, supplies its arguments.
+			return cb_set_AbstractCount_set_AbstractCount_I_V ??= new _JniMarshal_PPI_V (n_set_AbstractCount_I);
+		}
+	}
+
+	/// <safety>
+	/// Use the registered JNI ABI on jnienv's attached thread. Receiver/reference arguments
+	/// must match the registered types and stay live without concurrent deletion for this call;
+	/// permitted nulls stay null. JNI retains borrowed ownership. The helper reports managed
+	/// failures and may return default; invalid addresses are not validated.
+	/// </safety>
+	static unsafe void n_set_AbstractCount_I (IntPtr jnienv, IntPtr native__this, int value)
+	{
+		unsafe {
+			// SAFETY: JNI supplies this thread's environment and live typed references; the static target pointer is synchronous.
+			global::Java.Interop.JniMarshal.SafeInvokeAction (jnienv, native__this, value, &__n_set_AbstractCount_I);
+		}
+	}
+	/// <safety>
+	/// Requires the entry point's live, type-correct borrowed references in its active JNI
+	/// frame/thread, without concurrent deletion. Copy-back occurs on normal return only;
+	/// failures propagate to the marshal helper.
+	/// </safety>
+	private static unsafe void __n_set_AbstractCount_I (IntPtr jnienv, IntPtr native__this, int value)
+	{
+		unsafe {
+			// SAFETY: The marshal frame keeps typed JNI references live on this thread through conversion and normal-return copy-back.
+			var __this = global::Java.Lang.Object.GetObject<java.code.IMyInterface> (jnienv, native__this, JniHandleOwnership.DoNotTransfer)!;
+			__this.AbstractCount = value;
+		}
+	}
+#pragma warning restore 0169
+
+	public int AbstractCount {
+		get {
+			const string __id = "get_AbstractCount.()I";
+			unsafe {
+				// SAFETY: __id fixes argument types/count; initialized stack arguments and JNI locals stay on this thread for the synchronous call.
+				var __rm = _members_java_code_IMyInterface.InstanceMethods.InvokeAbstractInt32Method (__id, this, null);
+				return __rm;
+			}
+		}
+		set {
+			const string __id = "set_AbstractCount.(I)V";
+			unsafe {
+				// SAFETY: __id fixes argument types/count; initialized stack arguments and JNI locals stay on this thread for the synchronous call.
+				JniArgumentValue* __args = stackalloc JniArgumentValue [1];
+				__args [0] = new JniArgumentValue (value);
+				_members_java_code_IMyInterface.InstanceMethods.InvokeAbstractVoidMethod (__id, this, __args);
+			}
+		}
+	}
+
+	static Delegate? cb_GetCountForKey_GetCountForKey_Ljava_lang_String__I;
+#pragma warning disable 0169
+	static Delegate GetGetCountForKey_Ljava_lang_String_Handler ()
+	{
+		unsafe {
+			// SAFETY: The delegate matches the registered callback signature; JNI, not this connector, supplies its arguments.
+			return cb_GetCountForKey_GetCountForKey_Ljava_lang_String__I ??= new _JniMarshal_PPL_I (n_GetCountForKey_Ljava_lang_String_);
+		}
+	}
+
+	/// <safety>
+	/// Use the registered JNI ABI on jnienv's attached thread. Receiver/reference arguments
+	/// must match the registered types and stay live without concurrent deletion for this call;
+	/// permitted nulls stay null. JNI retains borrowed ownership. The helper reports managed
+	/// failures and may return default; invalid addresses are not validated.
+	/// </safety>
+	static unsafe int n_GetCountForKey_Ljava_lang_String_ (IntPtr jnienv, IntPtr native__this, IntPtr native_key)
+	{
+		unsafe {
+			// SAFETY: JNI supplies this thread's environment and live typed references; the static target pointer is synchronous.
+			return global::Java.Interop.JniMarshal.SafeInvokeFunc (jnienv, native__this, native_key, &__n_GetCountForKey_Ljava_lang_String_);
+		}
+	}
+	/// <safety>
+	/// Requires the entry point's live, type-correct borrowed references in its active JNI
+	/// frame/thread, without concurrent deletion. Copy-back occurs on normal return only;
+	/// failures propagate to the marshal helper.
+	/// </safety>
+	private static unsafe int __n_GetCountForKey_Ljava_lang_String_ (IntPtr jnienv, IntPtr native__this, IntPtr native_key)
+	{
+		unsafe {
+			// SAFETY: The marshal frame keeps typed JNI references live on this thread through conversion and normal-return copy-back.
+			var __this = global::Java.Lang.Object.GetObject<java.code.IMyInterface> (jnienv, native__this, JniHandleOwnership.DoNotTransfer)!;
+			var key = JNIEnv.GetString (native_key, JniHandleOwnership.DoNotTransfer);
+			int __ret = __this.GetCountForKey (key);
+			return __ret;
+		}
+	}
+#pragma warning restore 0169
+
+	public int GetCountForKey (string? key)
+	{
+		const string __id = "GetCountForKey.(Ljava/lang/String;)I";
+		unsafe {
+			// SAFETY: __id fixes argument types/count; initialized stack arguments and JNI locals stay on this thread for the synchronous call.
+			IntPtr native_key = JNIEnv.NewString ((string?)key);
+			try {
+				JniArgumentValue* __args = stackalloc JniArgumentValue [1];
+				__args [0] = new JniArgumentValue (native_key);
+				var __rm = _members_java_code_IMyInterface.InstanceMethods.InvokeVirtualInt32Method (__id, this, __args);
+				return __rm;
+			} finally {
+				JNIEnv.DeleteLocalRef (native_key);
+			}
+		}
+	}
+
+	static Delegate? cb_Key_Key_Ljava_lang_String_;
+#pragma warning disable 0169
+	static Delegate GetKeyHandler ()
+	{
+		unsafe {
+			// SAFETY: The delegate matches the registered callback signature; JNI, not this connector, supplies its arguments.
+			return cb_Key_Key_Ljava_lang_String_ ??= new _JniMarshal_PP_L (n_Key);
+		}
+	}
+
+	/// <safety>
+	/// Use the registered JNI ABI on jnienv's attached thread. Receiver/reference arguments
+	/// must match the registered types and stay live without concurrent deletion for this call;
+	/// permitted nulls stay null. JNI retains borrowed ownership. The helper reports managed
+	/// failures and may return default; invalid addresses are not validated.
+	/// </safety>
+	static unsafe IntPtr n_Key (IntPtr jnienv, IntPtr native__this)
+	{
+		unsafe {
+			// SAFETY: JNI supplies this thread's environment and live typed references; the static target pointer is synchronous.
+			return global::Java.Interop.JniMarshal.SafeInvokeFunc (jnienv, native__this, &__n_Key);
+		}
+	}
+	/// <safety>
+	/// Requires the entry point's live, type-correct borrowed references in its active JNI
+	/// frame/thread, without concurrent deletion. Copy-back occurs on normal return only;
+	/// failures propagate to the marshal helper.
+	/// </safety>
+	private static unsafe IntPtr __n_Key (IntPtr jnienv, IntPtr native__this)
+	{
+		unsafe {
+			// SAFETY: The marshal frame keeps typed JNI references live on this thread through conversion and normal-return copy-back.
+			var __this = global::Java.Lang.Object.GetObject<java.code.IMyInterface> (jnienv, native__this, JniHandleOwnership.DoNotTransfer)!;
+			return JNIEnv.NewString (__this.Key ());
+		}
+	}
+#pragma warning restore 0169
+
+	public string? Key ()
+	{
+		const string __id = "Key.()Ljava/lang/String;";
+		unsafe {
+			// SAFETY: __id fixes argument types/count; initialized stack arguments and JNI locals stay on this thread for the synchronous call.
+			var __rm = _members_java_code_IMyInterface.InstanceMethods.InvokeVirtualObjectMethod (__id, this, null);
+			return JNIEnv.GetString (__rm.Handle, JniHandleOwnership.TransferLocalRef);
+		}
+	}
+
+	static Delegate? cb_AbstractMethod_AbstractMethod_V;
+#pragma warning disable 0169
+	static Delegate GetAbstractMethodHandler ()
+	{
+		unsafe {
+			// SAFETY: The delegate matches the registered callback signature; JNI, not this connector, supplies its arguments.
+			return cb_AbstractMethod_AbstractMethod_V ??= new _JniMarshal_PP_V (n_AbstractMethod);
+		}
+	}
+
+	/// <safety>
+	/// Use the registered JNI ABI on jnienv's attached thread. Receiver/reference arguments
+	/// must match the registered types and stay live without concurrent deletion for this call;
+	/// permitted nulls stay null. JNI retains borrowed ownership. The helper reports managed
+	/// failures and may return default; invalid addresses are not validated.
+	/// </safety>
+	static unsafe void n_AbstractMethod (IntPtr jnienv, IntPtr native__this)
+	{
+		unsafe {
+			// SAFETY: JNI supplies this thread's environment and live typed references; the static target pointer is synchronous.
+			global::Java.Interop.JniMarshal.SafeInvokeAction (jnienv, native__this, &__n_AbstractMethod);
+		}
+	}
+	/// <safety>
+	/// Requires the entry point's live, type-correct borrowed references in its active JNI
+	/// frame/thread, without concurrent deletion. Copy-back occurs on normal return only;
+	/// failures propagate to the marshal helper.
+	/// </safety>
+	private static unsafe void __n_AbstractMethod (IntPtr jnienv, IntPtr native__this)
+	{
+		unsafe {
+			// SAFETY: The marshal frame keeps typed JNI references live on this thread through conversion and normal-return copy-back.
+			var __this = global::Java.Lang.Object.GetObject<java.code.IMyInterface> (jnienv, native__this, JniHandleOwnership.DoNotTransfer)!;
+			__this.AbstractMethod ();
+		}
+	}
+#pragma warning restore 0169
+
+	public void AbstractMethod ()
+	{
+		const string __id = "AbstractMethod.()V";
+		unsafe {
+			// SAFETY: __id fixes argument types/count; initialized stack arguments and JNI locals stay on this thread for the synchronous call.
+			_members_java_code_IMyInterface.InstanceMethods.InvokeAbstractVoidMethod (__id, this, null);
+		}
+	}
+
+}

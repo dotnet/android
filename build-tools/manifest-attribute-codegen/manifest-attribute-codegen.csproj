@@ -17,17 +17,13 @@
   </ItemGroup>
   
   <ItemGroup>
-    <ProjectReference Include="..\..\external\Java.Interop\src\Xamarin.SourceWriter\Xamarin.SourceWriter.csproj" />
+    <ProjectReference Include="..\..\src\Xamarin.SourceWriter\Xamarin.SourceWriter.csproj" />
   </ItemGroup>
 
   <!-- Generates manifest attributes from Android SDK -->
   <Target Name="GenerateManifestAttributes"
       DependsOnTargets="Build">
 
-    <PropertyGroup>
-      <_ManifestAttributeCodeGen>$(TargetPath)</_ManifestAttributeCodeGen>
-      <_ManifestFile>$(MSBuildThisFileDirectory)manifest-definition.xml</_ManifestFile>
-    </PropertyGroup>
     <ItemGroup>
       <_MacArgs Include="&quot;$(TargetPath)&quot;" />
       <_MacArgs Include="&quot;-sdk-path=$(AndroidSdkFullPath)&quot;" />

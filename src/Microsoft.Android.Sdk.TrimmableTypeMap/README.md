@@ -1,7 +1,7 @@
 # Trimmable typemap build pipeline
 
 This document describes how the **trimmable** typemap implementation
-(`_AndroidTypeMapImplementation=trimmable`) is produced during an Android app
+is produced during an Android app
 build, and how the MSBuild targets are kept incremental. It is aimed at
 contributors working on the targets in
 `src/Xamarin.Android.Build.Tasks/Microsoft.Android.Sdk/targets/Microsoft.Android.Sdk.TypeMap.Trimmable*.targets`
@@ -9,9 +9,10 @@ and the `GenerateTrimmableTypeMap` MSBuild task.
 
 ## Background
 
-The legacy typemap implementations (`llvm-ir`, `managed`) embed the
-managed&nbsp;↔&nbsp;Java type mapping into native binaries. The **trimmable**
-implementation instead generates a set of small managed *TypeMap assemblies*
+CoreCLR and NativeAOT applications use the **trimmable** typemap implementation.
+The former `llvm-ir` and `managed` implementations are no longer selectable.
+Instead of embedding the managed&nbsp;↔&nbsp;Java type mapping in generated
+native code, the build generates small managed *TypeMap assemblies*
 (one per input assembly, plus a `_Microsoft.Android.TypeMaps` root) and the Java
 Callable Wrapper (JCW) `*.java` sources from the same scan. This keeps the
 mapping trimmer-friendly: unused entries are removed by the IL linker.
@@ -21,6 +22,12 @@ The work happens in the `GenerateTrimmableTypeMap` task, invoked from the
 (`CoreCLR` or `NativeAOT`); the runtime-specific imports
 (`*.Trimmable.CoreCLR.targets`, `*.Trimmable.NativeAOT.targets`) extend the
 shared pipeline.
+
+Generated JCWs are top-level Java classes, even when an explicit component or
+registration name contains `$` (for example, `example.components.Outer$for`).
+Name validation and source references preserve that identifier as a whole.
+External Java nested types still use dotted source references and validate each
+nested identifier separately.
 
 ## Target pipeline (CoreCLR, non-trimmed Debug build)
 
@@ -34,21 +41,40 @@ CoreCompile
           • touches typemap/_GenerateTrimmableTypeMap.stamp
    ...
 _ReadGeneratedTrimmableTypeMapAssemblies    (reads typemap-assemblies.txt)
-_PrepareTrimmableNativeConfigAssemblies     (feeds _GeneratePackageManagerJava)
+_PrepareTrimmableNativeConfigAssemblies     (feeds _AndroidGenerateCoreClrBootstrapInputs)
 _PrepareTrimmableTypeMapAssemblies          (feeds packaging / assembly store)
-_GenerateJavaStubs                          (prepares manifest and native config)
+_GenerateJavaStubs                          (prepares manifest and runtime providers)
    └─► _CompileJava ─► _CompileToDalvik ─► packaging
+_AndroidGenerateCoreClrBootstrap            (writes binary CoreCLR configuration)
+   └─► _AndroidGenerateBinaryBlobs / _AndroidGenerateR8BinaryBlobs
 ```
 
-`_GenerateJavaStubs` **overrides** the legacy target of the same name from
-`BuildOrder.targets`; in the trimmable path the JCWs already exist and are
+`_GenerateJavaStubs` retains the build-order hook used by
+`Microsoft.Android.Sdk.BuildOrder.targets`; the JCWs already exist and are
 compiled in place from the generator output directory. This target wires up
-the manifest and native config.
+the manifest and runtime providers.
+
+CoreCLR bootstrap generation has its own inputs fingerprint and completion stamp,
+independent of `_GeneratePackageManagerJava`, which writes only the entry assembly's
+`MonoPackageManager_Resources.java`. The bootstrap fingerprint tracks environment,
+runtime configuration, assembly and native library membership, and JNI preload
+settings. Missing bootstrap data invalidates its stamp; unchanged payload bytes
+retain their timestamps. NativeAOT continues to generate its linked data objects
+and minimal Java providers independently.
 
 For `CoreCLR` + `PublishTrimmed=true`, a second pass
 (`_GeneratePostTrimTrimmableTypeMapJavaSources`, in the CoreCLR targets)
 regenerates the JCWs from the **linked** assemblies into a `linked-java`
 directory, which then becomes the source for `_GenerateJavaStubs`.
+
+When retained-typemap R8 trimming is enabled, CoreCLR extracts keys from these
+linked TypeMap assemblies. NativeAOT extracts retained external typemap records
+from the final per-RID ILC objects, using the official Android NDK's
+`llvm-readobj` and `llvm-objdump`; it does not require an ILC dependency graph.
+NativeAOT always uses that NDK for the final application link, while CoreCLR
+configuration and assembly-store generation need no native toolchain.
+See the [R8 pipeline](../../Documentation/guides/D8andR8.md#retained-typemap-type-roots)
+for the retained-key opt-in and ACW-retention fallback.
 
 ## Incrementality design
 
@@ -88,7 +114,7 @@ correctly **skipped** when none of the inputs changed.
 ### 2. `_GenerateJavaStubs` keys off both producer stamps
 
 ```xml
-Inputs="$(_TrimmableTypeMapOutputStamp);$(_TrimmableJavaSourceStamp);@(_EnvironmentFiles)"
+Inputs="$(_TrimmableTypeMapOutputStamp);$(_TrimmableJavaSourceStamp);@(_AndroidCoreClrEnvironmentInputs)"
 Outputs="$(_AndroidStampDirectory)_GenerateJavaStubs.stamp"
 ```
 
@@ -139,8 +165,9 @@ suppressed so a partial result cannot delete the last known-good output set.
 ### 4. Dynamic `FileWrites` are re-emitted on no-op builds
 
 The set of generated assemblies and JCWs is data-dependent, so a build that
-*skips* `_GenerateTrimmableTypeMap` never executes the `ItemGroup` that registers
-those files in `@(FileWrites)`. `_RecordTrimmableTypeMapFileWrites` re-reads the
+*skips* `_GenerateTrimmableTypeMap` cannot reconstruct the task's dynamic output
+items from the target's `ItemGroup` alone. `_RecordTrimmableTypeMapFileWrites`
+re-reads the
 generated outputs from `typemap-assemblies.txt`, `java-files.txt`, and
 `linked-java-files.txt`, then re-emits them — plus the stamps — into
 `@(FileWrites)` *before* MSBuild's `IncrementalClean`. This avoids recursively
@@ -185,5 +212,6 @@ builds), the generator runs exactly once per outer build.
 | `Microsoft.Android.Sdk.TypeMap.Trimmable.targets` | Shared pipeline: generation, Java stubs, packaging hookup, incremental `FileWrites`. |
 | `Microsoft.Android.Sdk.TypeMap.Trimmable.CoreCLR.targets` | CoreCLR specifics, incl. the post-trim `linked-java` regeneration. |
 | `Microsoft.Android.Sdk.TypeMap.Trimmable.NativeAOT.targets` | NativeAOT specifics (ILC inputs, proguard). |
-| `Tasks/GenerateTrimmableTypeMap.cs` | The MSBuild task front-end for the generator. |
-| `Microsoft.Android.Sdk.TrimmableTypeMap/**` | The generator/scanner library invoked by the task. |
+| `../Microsoft.Android.Build.Tasks/Tasks/GenerateTrimmableTypeMap.cs` | The net12.0 MSBuild task front-end for the generator. |
+| `../Microsoft.Android.Build.Tasks/Tasks/GetAndroidPackageName.cs` | The net12.0 package-name task; shares Java identifier validation with the generator. |
+| `Microsoft.Android.Sdk.TrimmableTypeMap/**` | The net12.0 generator/scanner library invoked by the task. |

@@ -40,9 +40,10 @@ stages:
         resource: ${{ parameters.repositoryAlias }}
         commit: ${{ parameters.checkoutCommit }}
 
-    # Always checkout a second resource to ensure we are using multi-repo checkout behavior
+    # This small repository is intentionally unused; its checkout keeps the
+    # primary repository at s/android under Azure's multi-repo layout.
     #  https://learn.microsoft.com/en-us/azure/devops/pipelines/repos/multi-repo-checkout?view=azure-devops#checkout-path
-    - checkout: maui
+    - checkout: macios-devtools
 
     - template: /build-tools/automation/yaml-templates/build-linux-steps.yaml
       parameters:

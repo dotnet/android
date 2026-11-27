@@ -17,9 +17,7 @@ schedules:
 pr:
   branches:
     include:
-    - main
-    - release/*
-    - feature/*
+    - '*'
 
 parameters:
 - name: macTestAgentsUseCleanImages   # Test agents we do not need to clean up when finished because they are not reused
@@ -35,6 +33,11 @@ parameters:
 # Repository resources
 resources:
   repositories:
+  - repository: macios-devtools
+    type: github
+    name: dotnet/macios-devtools
+    endpoint: public
+    ref: refs/heads/main
   - repository: maui
     type: github
     name: dotnet/maui
@@ -44,16 +47,13 @@ resources:
 # Global variables
 variables:
 - template: /build-tools/automation/yaml-templates/variables.yaml@self
-# Override for public pipeline
-- name: DefaultJavaSdkMajorVersion
-  value: 21
 # Override pool images for public Microsoft-hosted agents
 - name: LinuxPoolImage
   value: ubuntu-22.04
 - name: NetCorePublicPoolName
   value: NetCore-Public
 - name: WindowsPoolImageNetCorePublic
-  value: windows.vs2022.amd64.open
+  value: windows.vs2026.amd64.open
 - name: LinuxPoolImageNetCorePublic
   value: build.Ubuntu.2204.amd64.open
 # Skip tests when explicitly requested; otherwise run full PR test matrix.
@@ -86,10 +86,11 @@ stages:
       submodules: recursive
       persistCredentials: false
 
-    # Checkout a second repo to force multi-repo checkout behavior
+    # This small repository is intentionally unused; its checkout keeps the
+    # primary repository at s/android under Azure's multi-repo layout.
     # https://learn.microsoft.com/en-us/azure/devops/pipelines/repos/multi-repo-checkout?view=azure-devops#checkout-path
-    - checkout: maui
-      path: s/maui
+    - checkout: macios-devtools
+      path: s/macios-devtools
 
     - template: /build-tools/automation/yaml-templates/build-macos-steps.yaml
       parameters:
@@ -97,7 +98,6 @@ stages:
         installerArtifactName: $(InstallerArtifactName)
         nugetArtifactName: $(NuGetArtifactName)
         testAssembliesArtifactName: $(TestAssembliesArtifactName)
-        windowsToolchainPdbArtifactName: $(WindowsToolchainPdbArtifactName)
         buildResultArtifactName: Build Results - macOS
         use1ESTemplate: false
 
@@ -111,6 +111,7 @@ stages:
     pool:
       name: $(NetCorePublicPoolName)
       demands:
+      # The build runs a .NET TaskHost test that requires MSBuild 18.7 or later.
       - ImageOverride -equals $(WindowsPoolImageNetCorePublic)
     timeoutInMinutes: 240
     steps:
@@ -146,9 +147,10 @@ stages:
       submodules: recursive
       persistCredentials: false
 
-    # Checkout a second repo to force multi-repo checkout behavior
-    - checkout: maui
-      path: s/maui
+    # This small repository is intentionally unused; its checkout keeps the
+    # primary repository at s/android under Azure's multi-repo layout.
+    - checkout: macios-devtools
+      path: s/macios-devtools
 
     - script: |
         sudo apt-get update
@@ -275,7 +277,7 @@ stages:
   jobs:
   - job: mac_msbuild_tests
     strategy:
-      parallel: 10
+      parallel: 9
     displayName: macOS > Tests > MSBuild
     pool:
       name: AcesShared
@@ -287,7 +289,6 @@ stages:
     steps:
     - template: /build-tools/automation/yaml-templates/setup-test-environment-public.yaml
       parameters:
-        installTestSlicer: true
         use1ESTemplate: false
 
     # AndroidGradleProjectTests run the Gradle wrapper, which downloads the
@@ -321,7 +322,7 @@ stages:
 
   - job: win_msbuild_tests
     strategy:
-      parallel: 8
+      parallel: 7
     displayName: Windows > Tests > MSBuild
     pool:
       name: $(NetCorePublicPoolName)
@@ -339,7 +340,6 @@ stages:
     - template: /build-tools/automation/yaml-templates/setup-test-environment-public.yaml
       parameters:
         useAgentJdkPath: false
-        installTestSlicer: true
         use1ESTemplate: false
 
     # AndroidGradleProjectTests run the Gradle wrapper, which downloads the
@@ -379,7 +379,7 @@ stages:
   jobs:
   - job: mac_dotnetdevice_tests
     strategy:
-      parallel: 12
+      parallel: ${{ variables.MSBuildEmulatorTestAgentCount }}
     displayName: "macOS > Tests > MSBuild+Emulator"
     # NOTE: AcesShared pool cannot boot Android emulators, so these jobs must use hosted images
     pool:
@@ -393,7 +393,8 @@ stages:
     steps:
     - template: /build-tools/automation/yaml-templates/setup-test-environment-public.yaml
       parameters:
-        installTestSlicer: true
+        jdkMajorVersion: $(DefaultJavaSdkMajorVersion)
+        useAgentJdkPath: true
         installApkDiff: false
         use1ESTemplate: false
 
@@ -405,9 +406,9 @@ stages:
     # Currently needed for samples/NativeAOT
     - template: /build-tools/automation/yaml-templates/run-dotnet-preview.yaml
       parameters:
-        project: Xamarin.Android.sln
-        arguments: -t:PrepareJavaInterop -c $(XA.Build.Configuration) --no-restore
-        displayName: prepare java.interop $(XA.Build.Configuration)
+        project: Microsoft.Android.slnx
+        arguments: -t:PrepareOpenJDK -c $(XA.Build.Configuration) --no-restore
+        displayName: prepare OpenJDK $(XA.Build.Configuration)
         continueOnError: false
 
     - template: /build-tools/automation/yaml-templates/start-stop-emulator.yaml
@@ -415,7 +416,7 @@ stages:
     - template: /build-tools/automation/yaml-templates/run-sliced-nunit-tests.yaml
       parameters:
         testAssembly: $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/MSBuildDeviceIntegration/$(DotNetStableTargetFramework)/MSBuildDeviceIntegration.dll
-        testFilter: $(ExcludedNightlyNUnitCategories)
+        testFilter: $(ExcludedNightlyTestCategories)
         testRunTitle: MSBuildDeviceIntegration On Device - macOS
 
     - template: /build-tools/automation/yaml-templates/upload-results.yaml
@@ -428,19 +429,57 @@ stages:
       parameters:
         condition: true
 
-# Java.Interop Tests Stage
-- template: /build-tools/automation/yaml-templates/stage-java-interop-tests.yaml@self
-  parameters:
-    windowsPool:
-      name: $(NetCorePublicPoolName)
-      demands:
-      - ImageOverride -equals $(WindowsPoolImageNetCorePublic)
-      os: windows
-    macPool:
-      name: AcesShared
-      demands:
-      - ImageOverride -equals ACES_VM_SharedPool_Tahoe
+  # Purpose-built apps that check what trimming keeps and removes; see tests/TrimmingTests.
+  - job: mac_trimming_tests
+    displayName: "macOS > Tests > Trimming+Emulator"
+    # NOTE: AcesShared pool cannot boot Android emulators, so these jobs must use hosted images
+    pool:
+      name: Azure Pipelines
+      vmImage: $(HostedMacImageWithEmulator)
       os: macOS
+    timeoutInMinutes: 120
+    cancelTimeoutInMinutes: 5
+    workspace:
+      clean: all
+    steps:
+    - template: /build-tools/automation/yaml-templates/setup-test-environment-public.yaml
+      parameters:
+        jdkMajorVersion: $(DefaultJavaSdkMajorVersion)
+        useAgentJdkPath: true
+        installApkDiff: false
+        use1ESTemplate: false
+
+    - task: DownloadPipelineArtifact@2
+      inputs:
+        artifactName: $(TestAssembliesArtifactName)
+        downloadPath: $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)
+
+    - template: /build-tools/automation/yaml-templates/run-dotnet-preview.yaml
+      parameters:
+        project: Microsoft.Android.slnx
+        arguments: -t:PrepareOpenJDK -c $(XA.Build.Configuration) --no-restore
+        displayName: prepare OpenJDK $(XA.Build.Configuration)
+        continueOnError: false
+
+    - template: /build-tools/automation/yaml-templates/start-stop-emulator.yaml
+
+    # Two tests at a time share the emulator, matching [assembly: LevelOfParallelism (2)].
+    - template: /build-tools/automation/yaml-templates/run-nunit-tests.yaml
+      parameters:
+        testAssembly: $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/TrimmingTests/$(DotNetStableTargetFramework)/TrimmingTests.dll
+        testRunTitle: TrimmingTests On Device - macOS
+        workers: 2
+        timeoutInMinutes: 90
+
+    - template: /build-tools/automation/yaml-templates/upload-results.yaml
+      parameters:
+        artifactName: Test Results - Trimming With Emulator - macOS
+        xaSourcePath: $(System.DefaultWorkingDirectory)
+        use1ESTemplate: false
+
+    - template: /build-tools/automation/yaml-templates/fail-on-issue.yaml
+      parameters:
+        condition: true
 
 # Android Tools Tests Stage
 - template: /build-tools/automation/yaml-templates/stage-xamarin-android-tools-tests.yaml@self
@@ -464,6 +503,8 @@ stages:
   jobs:
   - job: maui_tests_integration
     displayName: MAUI Integration
+    # Re-enable when dotnet/maui's net12.0 branch exists: https://github.com/dotnet/android/issues/13088
+    condition: 'false'
     pool:
       name: $(NetCorePublicPoolName)
       demands:
@@ -506,8 +547,8 @@ stages:
         xaSourcePath: $(Build.SourcesDirectory)/android
         androidSdkPlatforms: $(DefaultTestSdkPlatforms)
         dotnetVersion: $(DotNetSdkVersion)
-        dotnetQuality: $(DotNetSdkQuality)
-        useAgentJdkPath: false
+        jdkMajorVersion: $(DefaultJavaSdkMajorVersion)
+        useAgentJdkPath: true
         use1ESTemplate: false
 
     - task: DownloadPipelineArtifact@2
@@ -535,13 +576,15 @@ stages:
     - task: DotNetCoreCLI@2
       displayName: Update Android SDK band in Workloads.csproj
       inputs:
-        projects: $(Build.SourcesDirectory)/android/Xamarin.Android.sln
+        projects: $(Build.SourcesDirectory)/android/Microsoft.Android.slnx
         arguments: -t:UpdateMauiWorkloadsProj -c $(XA.Build.Configuration) --no-restore -v:n -bl:$(Build.StagingDirectory)/logs/update-maui-workloadsproj.binlog
 
     - pwsh: ./build.ps1 --target=dotnet --configuration="$(XA.Build.Configuration)" --nugetsource="$(Build.StagingDirectory)\android-packs" --verbosity=diagnostic
       displayName: Install .NET
       retryCountOnTaskFailure: 3
       workingDirectory: $(Build.SourcesDirectory)/maui
+      env:
+        _SkipUpdateBuildNumber: 'true'
 
     - task: NodeTool@0
       displayName: Install Node.js
@@ -580,18 +623,21 @@ stages:
     - pwsh: ./build.ps1 --target=dotnet-pack --configuration="$(XA.Build.Configuration)" --nugetsource="$(Build.StagingDirectory)\android-packs" --verbosity=diagnostic
       displayName: Pack .NET Maui
       workingDirectory: $(Build.SourcesDirectory)/maui
+      env:
+        _SkipUpdateBuildNumber: 'true'
+        NoWarn: CS0618
 
     - task: DotNetCoreCLI@2
       displayName: Install MAUI workload packs
       retryCountOnTaskFailure: 3
       inputs:
-        projects: $(Build.SourcesDirectory)/android/Xamarin.Android.sln
+        projects: $(Build.SourcesDirectory)/android/Microsoft.Android.slnx
         arguments: -t:InstallMaui -p:MauiUseLocalPacks=true -p:MauiWorkloadToInstall=maui -p:MauiManifestDiagnosticsPath=$(Build.StagingDirectory)/logs/maui-manifest -c $(XA.Build.Configuration) --no-restore -v:n -bl:$(Build.StagingDirectory)/logs/install-maui.binlog
 
     - template: /build-tools/automation/yaml-templates/run-dotnet-preview.yaml
       parameters:
         command: new
-        arguments: maui -o $(Build.StagingDirectory)/MauiTestProj
+        arguments: maui -o $(Build.StagingDirectory)/MauiTestProj --no-restore
         xaSourcePath: $(Build.SourcesDirectory)/android
         displayName: Create MAUI template
         continueOnError: false
@@ -606,6 +652,7 @@ stages:
         arguments: >-
           -f $(DotNetTargetFramework)-android -c Debug
           --configfile $(Build.SourcesDirectory)/maui/NuGet.config
+          -p:RestoreAdditionalProjectSources=https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet12/nuget/v3/index.json
           -bl:$(Build.StagingDirectory)/logs/MauiTestProj-Debug.binlog
         xaSourcePath: $(Build.SourcesDirectory)/android
         displayName: Build MAUI template - Debug
@@ -616,9 +663,17 @@ stages:
         arguments: >-
           -f $(DotNetTargetFramework)-android -c Release
           --configfile $(Build.SourcesDirectory)/maui/NuGet.config
+          -p:RestoreAdditionalProjectSources=https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet12/nuget/v3/index.json
           -bl:$(Build.StagingDirectory)/logs/MauiTestProj-Release.binlog
         xaSourcePath: $(Build.SourcesDirectory)/android
         displayName: Build MAUI template - Release
+
+    - template: /build-tools/automation/yaml-templates/run-maui-r2r-helix-matrix.yaml
+      parameters:
+        project: $(Build.StagingDirectory)/MauiTestProj/MauiTestProj.csproj
+        xaSourcePath: $(Build.SourcesDirectory)/android
+        logsDirectory: $(Build.StagingDirectory)/logs
+        extraBuildArguments: --configfile $(Build.SourcesDirectory)/maui/NuGet.config -p:RestoreAdditionalProjectSources=https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet12/nuget/v3/index.json
 
     - task: CopyFiles@2
       displayName: copy build logs

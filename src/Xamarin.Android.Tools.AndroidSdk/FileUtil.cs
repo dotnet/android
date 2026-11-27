@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Diagnostics;
 using System.IO;
 using System.Runtime.InteropServices;
@@ -9,51 +9,6 @@ namespace Xamarin.Android.Tools
 {
 	class FileUtil
 	{
-		public static string GetTempFilenameForWrite (string fileName)
-		{
-			return Path.GetDirectoryName (fileName) + Path.DirectorySeparatorChar + ".#" + Path.GetFileName (fileName);
-		}
-
-		//From MonoDevelop.Core.FileService
-		public static void SystemRename (string sourceFile, string destFile)
-		{
-			//FIXME: use the atomic System.IO.File.Replace on NTFS
-			if (OS.IsWindows) {
-				string? wtmp = null;
-				if (File.Exists (destFile)) {
-					do {
-						wtmp = Path.Combine (Path.GetTempPath (), Guid.NewGuid ().ToString ());
-					} while (File.Exists (wtmp));
-
-					File.Move (destFile, wtmp);
-				}
-				try {
-					File.Move (sourceFile, destFile);
-				}
-				catch {
-					try {
-						if (wtmp != null)
-							File.Move (wtmp, destFile);
-					}
-					catch {
-						wtmp = null;
-					}
-					throw;
-				}
-				finally {
-					if (wtmp != null) {
-						try {
-							File.Delete (wtmp);
-						}
-						catch { }
-					}
-				}
-			}
-			else {
-				rename (sourceFile, destFile);
-			}
-		}
-
 		/// <summary>Deletes a file if it exists, logging any failure instead of throwing.</summary>
 		internal static void TryDeleteFile (string path, Action<TraceLevel, string> logger)
 		{
@@ -72,39 +27,46 @@ namespace Xamarin.Android.Tools
 			catch (Exception ex) { logger (TraceLevel.Warning, $"Could not clean up {label} at '{path}': {ex.Message}"); }
 		}
 
-		/// <summary>Moves a directory to the target path, backing up any existing directory and restoring on failure.</summary>
-		internal static void MoveWithRollback (string sourcePath, string targetPath, Action<TraceLevel, string> logger)
+		/// <summary>Moves a directory, retaining its backup until validation and the final cancellation check succeed.</summary>
+		internal static void MoveWithRollback (string sourcePath, string targetPath, Action<TraceLevel, string> logger, Action? validate = null, CancellationToken cancellationToken = default)
 		{
-			string? backupPath = null;
-			if (Directory.Exists (targetPath)) {
-				backupPath = targetPath + $".old-{Guid.NewGuid ():N}";
-				Directory.Move (targetPath, backupPath);
-			}
-
+			cancellationToken.ThrowIfCancellationRequested ();
 			var parentDir = Path.GetDirectoryName (targetPath);
 			if (!string.IsNullOrEmpty (parentDir))
 				Directory.CreateDirectory (parentDir);
 
+			string? backupPath = null;
+			bool moved = false;
 			try {
+				if (Directory.Exists (targetPath)) {
+					var backup = targetPath + $".old-{Guid.NewGuid ():N}";
+					Directory.Move (targetPath, backup);
+					backupPath = backup;
+				}
+
+				cancellationToken.ThrowIfCancellationRequested ();
 				Directory.Move (sourcePath, targetPath);
+				moved = true;
+				validate?.Invoke ();
+				cancellationToken.ThrowIfCancellationRequested ();
 			}
 			catch (Exception ex) {
-				logger (TraceLevel.Error, $"Failed to move to '{targetPath}': {ex.Message}");
-				if (backupPath is not null && Directory.Exists (backupPath)) {
-					try {
-						if (Directory.Exists (targetPath))
-							Directory.Delete (targetPath, recursive: true);
+				logger (TraceLevel.Error, $"Failed to install to '{targetPath}': {ex.Message}");
+				try {
+					if (moved && Directory.Exists (targetPath))
+						Directory.Delete (targetPath, recursive: true);
+					if (backupPath is not null) {
 						Directory.Move (backupPath, targetPath);
 						logger (TraceLevel.Warning, $"Restored previous directory from backup '{backupPath}'.");
 					}
-					catch (Exception restoreEx) {
-						logger (TraceLevel.Error, $"Failed to restore from backup: {restoreEx.Message}");
-					}
+				}
+				catch (Exception restoreEx) {
+					logger (TraceLevel.Error, $"Failed to roll back '{targetPath}'; previous directory backup: '{backupPath}': {restoreEx.Message}");
+					throw new AggregateException ("Directory installation and rollback failed.", ex, restoreEx);
 				}
 				throw;
 			}
 
-			// Delete backup only after move and caller validation succeed
 			if (backupPath is not null)
 				TryDeleteDirectory (backupPath, "old backup", logger);
 		}
@@ -126,25 +88,11 @@ namespace Xamarin.Android.Tools
 					extractedDir = dirs.Length == 1 ? dirs[0] : tempExtractDir;
 				}
 
-				MoveWithRollback (extractedDir, targetPath, logger);
+				MoveWithRollback (extractedDir, targetPath, logger, cancellationToken: cancellationToken);
 				logger (TraceLevel.Info, $"Installed to '{targetPath}'.");
 			}
 			finally {
 				TryDeleteDirectory (tempExtractDir, "temp extract dir", logger);
-			}
-		}
-
-		/// <summary>Deletes a backup created by MoveWithRollback. Call after validation succeeds.</summary>
-		internal static void CommitMove (string targetPath, Action<TraceLevel, string> logger)
-		{
-			// Find and clean up any leftover backup directories
-			var parentDir = Path.GetDirectoryName (targetPath);
-			if (string.IsNullOrEmpty (parentDir) || !Directory.Exists (parentDir))
-				return;
-
-			var dirName = Path.GetFileName (targetPath);
-			foreach (var dir in Directory.GetDirectories (parentDir, $"{dirName}.old-*")) {
-				TryDeleteDirectory (dir, "old backup", logger);
 			}
 		}
 
@@ -186,13 +134,18 @@ namespace Xamarin.Android.Tools
 		}
 
 		/// <summary>Checks if a path is under a given directory.</summary>
-		internal static bool IsUnderDirectory (string path, string directory)
+		internal static bool IsUnderDirectory (string? path, string? directory)
 		{
 			if (string.IsNullOrEmpty (directory) || string.IsNullOrEmpty (path))
 				return false;
-			if (path.Equals (directory, StringComparison.OrdinalIgnoreCase))
+
+			var fullPath = Path.GetFullPath (path);
+			var fullDirectory = Path.GetFullPath (directory);
+			if (fullPath.Equals (fullDirectory, StringComparison.Ordinal))
 				return true;
-			return path.StartsWith (directory + Path.DirectorySeparatorChar, StringComparison.OrdinalIgnoreCase);
+			if (!fullDirectory.EndsWith (Path.DirectorySeparatorChar.ToString (), StringComparison.Ordinal))
+				fullDirectory += Path.DirectorySeparatorChar;
+			return fullPath.StartsWith (fullDirectory, StringComparison.Ordinal);
 		}
 
 		// Returns .msi (Windows), .pkg (macOS), or null (Linux)
@@ -262,13 +215,9 @@ namespace Xamarin.Android.Tools
 			}
 		}
 
-		[DllImport ("libc", SetLastError=true)]
-		static extern int rename (string old, string @new);
-
 #if !NET7_0_OR_GREATER
 		[DllImport ("libc", SetLastError = true)]
-		static extern int chmod (string pathname, int mode);
+		static safe extern int chmod (string pathname, int mode);
 #endif
 	}
 }
-

@@ -52,7 +52,7 @@ Only the updated assemblies are resynchronized to the target device.
 
 Fast deployment is supported for both `.apk` and `.aab` package formats.
 It is enabled by default, and may be disabled in Debug builds
-by setting the `$(EmbedAssembliesIntoApk)` property to `True`.
+by setting the `$(AndroidEnableFastDeployment)` property to `False`.
 Note that using `.aab` with fast deployment will be slower than `.apk`
 because the `.aab` file must be processed through `bundletool` for
 packaging and installation.
@@ -185,4 +185,3 @@ written correctly, build extensions can affect your build
 performance, especially if they run on every build. It is
 highly recommended that you read the MSBuild [documentation](/visualstudio/msbuild/msbuild)
 before implementing such extensions.
-

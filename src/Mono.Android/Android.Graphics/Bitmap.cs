@@ -7,7 +7,6 @@ namespace Android.Graphics {
 
 	partial class Bitmap {
 
-#if ANDROID_8
 		enum NdkError {
 			Success           = 0,
 			BadParameter      = -1,
@@ -30,34 +29,73 @@ namespace Android.Graphics {
 			}
 		}
 
+		/// <summary>Gets information about the bitmap's native pixel buffer.</summary>
+		/// <returns>An <see cref="AndroidBitmapInfo"/> containing the buffer dimensions, stride, and pixel format.</returns>
+		/// <exception cref="ArgumentException">The native bitmap is invalid.</exception>
+		/// <exception cref="InvalidOperationException">The native operation failed.</exception>
+		/// <remarks>See the <see href="https://developer.android.com/ndk/reference/group/bitmap">Android NDK Bitmap documentation</see>.</remarks>
 		public AndroidBitmapInfo GetBitmapInfo ()
 		{
-			AndroidBitmapInfo info;
-			int r = JNIEnv.AndroidBitmap_getInfo (Handle, out info);
-			CheckNdkError ("AndroidBitmap_getInfo", r);
-			return info;
+			unsafe {
+				// SAFETY: Handle is this Bitmap's JNI peer, retained by GC.KeepAlive (this) across the native call;
+				// the native stub writes one matching AndroidBitmapInfo. CheckNdkError rejects failure before
+				// the output is returned; no pixel pointer is accessed.
+				AndroidBitmapInfo info;
+				int r = JNIEnv.AndroidBitmap_getInfo (Handle, out info);
+				GC.KeepAlive (this);
+				CheckNdkError ("AndroidBitmap_getInfo", r);
+				return info;
+			}
 		}
 
+		/// <summary>Locks the bitmap's native pixel buffer for direct access.</summary>
+		/// <returns>A pointer to the first byte of the pixel buffer.</returns>
+		/// <exception cref="ArgumentException">The native bitmap is invalid.</exception>
+		/// <exception cref="InvalidOperationException">The native operation failed.</exception>
+		/// <remarks>
+		/// Call <see cref="UnlockPixels"/> when access is complete. See the
+		/// <see href="https://developer.android.com/ndk/reference/group/bitmap">Android NDK Bitmap documentation</see>.
+		/// The returned address does not own the bitmap: retain it, stay within the reported pixel extent,
+		/// and synchronize competing accesses until the matching unlock. A failed lock supplies no usable address.
+		/// </remarks>
 		public IntPtr LockPixels ()
 		{
-			IntPtr p;
-			int r = JNIEnv.AndroidBitmap_lockPixels (Handle, out p);
-			CheckNdkError ("AndroidBitmap_lockPixels", r);
-			return p;
+			unsafe {
+				// SAFETY: Handle identifies this Bitmap, retained by GC.KeepAlive (this) across the native call;
+				// the stub writes the borrowed pixel address only. CheckNdkError rejects failure before publication;
+				// later dereference requires the caller to retain the lock and bitmap.
+				IntPtr p;
+				int r = JNIEnv.AndroidBitmap_lockPixels (Handle, out p);
+				GC.KeepAlive (this);
+				CheckNdkError ("AndroidBitmap_lockPixels", r);
+				return p;
+			}
 		}
 
+		/// <summary>Unlocks the bitmap's native pixel buffer after direct access.</summary>
+		/// <exception cref="ArgumentException">The native bitmap is invalid.</exception>
+		/// <exception cref="InvalidOperationException">The native operation failed.</exception>
+		/// <remarks>See the <see href="https://developer.android.com/ndk/reference/group/bitmap">Android NDK Bitmap documentation</see>.</remarks>
+		/// <safety>
+		/// Own a successful unmatched pixel lock on this bitmap. Stop all accesses through borrowed pixel
+		/// aliases before unlocking, and exclude concurrent disposal or another unlock until this call returns
+		/// or throws. An exception does not prove that previously borrowed pixel addresses remain usable.
+		/// </safety>
 		public void UnlockPixels ()
 		{
-			int r = JNIEnv.AndroidBitmap_unlockPixels (Handle);
-			CheckNdkError ("AndroidBitmap_unlockPixels", r);
+			unsafe {
+				// SAFETY: the caller owns this Bitmap's matching lock and has stopped pixel-alias access;
+				// GC.KeepAlive (this) retains this Bitmap across the native call, and the native return code
+				// is checked without dereferencing any pixel pointer.
+				int r = JNIEnv.AndroidBitmap_unlockPixels (Handle);
+				GC.KeepAlive (this);
+				CheckNdkError ("AndroidBitmap_unlockPixels", r);
+			}
 		}
-#endif  // ANDROID_8
-#if ANDROID_19
 		[Obsolete ("Use the IsPremultiplied property getter or the SetPremultiplied(bool) method.")]
 		public bool Premultiplied {
 			get {return IsPremultiplied;}
 			set {SetPremultiplied (value);}
 		}
-#endif
 	}
 }

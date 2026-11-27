@@ -14,10 +14,16 @@ namespace Android.Runtime
 			if (value == null)
 				return IntPtr.Zero;
 
-			var xpr = value as XmlResourceParserReader;
-			if (xpr != null)
-				return JNIEnv.NewLocalRef (xpr.Handle);
-			return JNIEnv.ToLocalJniHandle (new Android.Runtime.XmlReaderResourceParser (value));
+			unsafe {
+				// SAFETY: the managed parser adapter retains its JNI peer until the owned local reference is duplicated and existing KeepAlive completes.
+				var xpr = value as XmlResourceParserReader;
+				if (xpr != null) {
+					IntPtr result = JNIEnv.NewLocalRef (xpr.Handle);
+					GC.KeepAlive (xpr);
+					return result;
+				}
+				return JNIEnv.ToLocalJniHandle (new Android.Runtime.XmlReaderResourceParser (value));
+			}
 		}
 
 		XmlReader r;
@@ -129,10 +135,16 @@ namespace Android.Runtime
 			if (value == null)
 				return IntPtr.Zero;
 
-			var xppr = value as XmlPullParserReader;
-			if (xppr != null)
-				return JNIEnv.NewLocalRef (xppr.Handle);
-			return JNIEnv.ToLocalJniHandle (new Android.Runtime.XmlReaderPullParser (value));
+			unsafe {
+				// SAFETY: the managed parser adapter retains its JNI peer until the owned local reference is duplicated and existing KeepAlive completes.
+				var xppr = value as XmlPullParserReader;
+				if (xppr != null) {
+					IntPtr result = JNIEnv.NewLocalRef (xppr.Handle);
+					GC.KeepAlive (xppr);
+					return result;
+				}
+				return JNIEnv.ToLocalJniHandle (new Android.Runtime.XmlReaderPullParser (value));
+			}
 		}
 		
 		XmlReader r;
@@ -188,8 +200,8 @@ namespace Android.Runtime
 		public bool GetFeature (string? name)
 		{
 			switch (name) {
-			case XmlPullParser.FeatureProcessNamespaces:
-			case XmlPullParser.FeatureReportNamespaceAttributes:
+			case IXmlPullParser.FeatureProcessNamespaces:
+			case IXmlPullParser.FeatureReportNamespaceAttributes:
 				return true;
 			}
 			return false;
@@ -337,8 +349,8 @@ namespace Android.Runtime
 		public void SetFeature (string? name, bool state)
 		{
 			switch (name) {
-			case XmlPullParser.FeatureProcessNamespaces:
-			case XmlPullParser.FeatureReportNamespaceAttributes:
+			case IXmlPullParser.FeatureProcessNamespaces:
+			case IXmlPullParser.FeatureReportNamespaceAttributes:
 				if (state)
 					return;
 				break;

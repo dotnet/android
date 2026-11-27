@@ -31,12 +31,14 @@ namespace Xamarin.Android.Tasks
 		/// </summary>
 		public string? AndroidManifestFile { get; set; }
 
+		public string []? ReferenceAssemblyPaths { get; set; }
+
 		// general d8 feature options.
 		public bool Debug { get; set; }
 		public bool EnableDesugar { get; set; } = true;
 
 		// Java libraries to embed or reference
-		public string? ClassesZip { get; set; }
+		public ITaskItem []? ClassFiles { get; set; }
 		[Required]
 		public string JavaPlatformJarPath { get; set; } = "";
 		public ITaskItem []? JavaLibrariesToEmbed { get; set; }
@@ -80,7 +82,7 @@ namespace Xamarin.Android.Tasks
 
 			// Create response file with all D8/R8 arguments to avoid command line length limits
 			responseFilePath = CreateResponseFile ();
-			cmd.AppendSwitch ($"@{responseFilePath}");
+			cmd.AppendSwitch ($"\"@{responseFilePath}\"");
 
 			return cmd;
 		}
@@ -91,7 +93,8 @@ namespace Xamarin.Android.Tasks
 		/// </summary>
 		protected virtual string CreateResponseFile ()
 		{
-			var responseFile = Path.GetTempFileName ();
+			var responseFile = CreateResponseFilePath ();
+			responseFilePath = responseFile;
 			Log.LogDebugMessage ($"[{MainClass}] response file: {responseFile}");
 
 			using var response = new StreamWriter (responseFile, append: false, encoding: Files.UTF8withoutBOM);
@@ -106,7 +109,7 @@ namespace Xamarin.Android.Tasks
 
 			//NOTE: if this is blank, we can omit --min-api in this call
 			if (!AndroidManifestFile.IsNullOrEmpty ()) {
-				var doc = AndroidAppManifest.Load (AndroidManifestFile, MonoAndroidHelper.SupportedVersions);
+				var doc = AndroidAppManifest.Load (AndroidManifestFile, MonoAndroidHelper.GetSupportedVersions (BuildEngine4, ReferenceAssemblyPaths));
 				if (doc.MinSdkVersion.HasValue) {
 					MinSdkVersion = doc.MinSdkVersion.Value;
 					WriteArg (response, "--min-api");
@@ -135,21 +138,23 @@ namespace Xamarin.Android.Tasks
 				}
 			}
 
-			// --lib and input jars
-			var injars = new List<string> ();
+			// --lib and program inputs
+			var inputs = new List<string> ();
 			var libjars = new List<string> ();
+			if (ClassFiles != null) {
+				foreach (var classFile in ClassFiles) {
+					inputs.Add (classFile.ItemSpec);
+				}
+			}
 			if (AlternativeJarLibrariesToEmbed?.Length > 0) {
 				Log.LogDebugMessage ("  processing AlternativeJarLibrariesToEmbed...");
 				foreach (var jar in AlternativeJarLibrariesToEmbed) {
-					injars.Add (jar.ItemSpec);
+					inputs.Add (jar.ItemSpec);
 				}
 			} else if (JavaLibrariesToEmbed != null) {
-				Log.LogDebugMessage ("  processing ClassesZip, JavaLibrariesToEmbed...");
-				if (!ClassesZip.IsNullOrEmpty () && File.Exists (ClassesZip)) {
-					injars.Add (ClassesZip);
-				}
+				Log.LogDebugMessage ("  processing JavaLibrariesToEmbed...");
 				foreach (var jar in JavaLibrariesToEmbed) {
-					injars.Add (jar.ItemSpec);
+					inputs.Add (jar.ItemSpec);
 				}
 			}
 			libjars.Add (JavaPlatformJarPath);
@@ -163,12 +168,14 @@ namespace Xamarin.Android.Tasks
 				WriteArg (response, "--lib");
 				WriteArg (response, jar);
 			}
-			foreach (var jar in injars) {
-				WriteArg (response, jar);
+			foreach (var input in inputs) {
+				WriteArg (response, input);
 			}
 
 			return responseFile;
 		}
+
+		protected virtual string CreateResponseFilePath () => Path.GetTempFileName ();
 
 		/// <summary>
 		/// Writes a single argument to the response file.

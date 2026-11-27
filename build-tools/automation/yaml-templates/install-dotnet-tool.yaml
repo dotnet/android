@@ -2,24 +2,30 @@ parameters:
   toolName: ''
   version: ''
   condition: succeeded()
-  continueOnError: true
 
 steps:
 - powershell: dotnet tool uninstall ${{ parameters.toolName }} -g
-  displayName: uninstall ${{ parameters.toolName }}
+  displayName: uninstall global ${{ parameters.toolName }}
+  ignoreLASTEXITCODE: true
+  condition: ${{ parameters.condition }}
+
+- powershell: dotnet tool uninstall ${{ parameters.toolName }} --tool-path "$(Agent.ToolsDirectory)"
+  displayName: uninstall cached ${{ parameters.toolName }}
   ignoreLASTEXITCODE: true
   condition: ${{ parameters.condition }}
 
 - task: DotNetCoreCLI@2
   displayName: install ${{ parameters.toolName }} ${{ parameters.version }}
   condition: ${{ parameters.condition }}
-  continueOnError: ${{ parameters.continueOnError }}
   inputs:
     command: custom
     custom: tool
     arguments: >-
-      update ${{ parameters.toolName }} -v:diag
-      --tool-path $(Agent.ToolsDirectory)
+      install ${{ parameters.toolName }} -v:diag
+      --tool-path "$(Agent.ToolsDirectory)"
       --version ${{ parameters.version }}
       --source "https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-public/nuget/v3/index.json"
 
+- powershell: Write-Host "##vso[task.prependpath]$(Agent.ToolsDirectory)"
+  displayName: add dotnet tools to PATH
+  condition: ${{ parameters.condition }}

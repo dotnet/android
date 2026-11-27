@@ -14,7 +14,6 @@ parameters:
   stageName: mac_build
   stageDisplayName: Mac
   testAssembliesArtifactName: $(TestAssembliesArtifactName)
-  windowsToolchainPdbArtifactName: $(WindowsToolchainPdbArtifactName)
   use1ESTemplate: true
 
 stages:
@@ -54,10 +53,6 @@ stages:
           artifactName: ${{ parameters.nugetArtifactName }}-symbols
           targetPath: ${{ parameters.xaSourcePath }}/bin/Build$(XA.Build.Configuration)/nuget-unsigned-symbols
         - output: pipelineArtifact
-          displayName: upload Windows toolchain pdb files
-          artifactName: ${{ parameters.windowsToolchainPdbArtifactName }}
-          targetPath: ${{ parameters.xaSourcePath }}/bin/Build$(XA.Build.Configuration)/windows-toolchain-pdb
-        - output: pipelineArtifact
           displayName: upload test assemblies
           artifactName: ${{ parameters.testAssembliesArtifactName }}
           targetPath: ${{ parameters.xaSourcePath }}/bin/Test$(XA.Build.Configuration)
@@ -73,9 +68,10 @@ stages:
         resource: ${{ parameters.repositoryAlias }}
         commit: ${{ parameters.checkoutCommit }}
 
-    # Always checkout a second resource to ensure we are using multi-repo checkout behavior
+    # This small repository is intentionally unused; its checkout keeps the
+    # primary repository at s/android under Azure's multi-repo layout.
     #  https://learn.microsoft.com/en-us/azure/devops/pipelines/repos/multi-repo-checkout?view=azure-devops#checkout-path
-    - checkout: maui
+    - checkout: macios-devtools
 
     - task: CodeQL3000Init@0
       displayName: CodeQL 3000 Init
@@ -88,7 +84,6 @@ stages:
         installerArtifactName: ${{ parameters.installerArtifactName }}
         nugetArtifactName: ${{ parameters.nugetArtifactName }}
         testAssembliesArtifactName: ${{ parameters.testAssembliesArtifactName }}
-        windowsToolchainPdbArtifactName: ${{ parameters.windowsToolchainPdbArtifactName }}
         buildResultArtifactName: ${{ parameters.buildResultArtifactName }}
         use1ESTemplate: ${{ parameters.use1ESTemplate }}
 
@@ -104,3 +99,5 @@ stages:
         arguments: >-
           /t:AddMachOEntitlements /p:Configuration=$(XA.Build.Configuration)
           /bl:${{ parameters.xaSourcePath }}/bin/Build$(XA.Build.Configuration)/sign-content.binlog
+      env:
+        MSBUILDENABLEMULTITHREADED: '0'

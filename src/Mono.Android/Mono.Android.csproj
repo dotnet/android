@@ -10,13 +10,11 @@
     <RootNamespace>Android</RootNamespace>
     <SignAssembly>true</SignAssembly>
     <AssemblyOriginatorKeyFile>..\..\product.snk</AssemblyOriginatorKeyFile>
-    <NoWarn>0618;0809;0108;0114;0465;8609;8610;8614;8617;8613;8764;8765;8766;8767;RS0041</NoWarn>
+    <NoWarn>0618;0809;0108;0114;0465;8764;8765;8766;8767;RS0041</NoWarn>
     <WarningsAsErrors>$(WarningsAsErrors);CS2002</WarningsAsErrors>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-    <DefineConstants>$(DefineConstants);JAVA_INTEROP</DefineConstants>
     <IntermediateOutputPath>$(BaseIntermediateOutputPath)$(Configuration)\$(TargetFramework)\android-$(AndroidPlatformId)\</IntermediateOutputPath>
     <ImplicitlyExpandDesignTimeFacades>false</ImplicitlyExpandDesignTimeFacades>
-    <JavaCallableWrapperAfterTargets>CoreBuild</JavaCallableWrapperAfterTargets>
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
     <!-- @(Compile) ordering matters! See https://github.com/dotnet/java-interop/commit/d7dfa0bb7b03261d5eceb51ac22cd33aa15fa865 -->
     <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
@@ -26,7 +24,8 @@
   </PropertyGroup>
 
   <PropertyGroup>
-    <IsUnstableVersion Condition=" $([MSBuild]::VersionGreaterThan($(AndroidApiLevel), $(AndroidLatestStableApiLevel)))
+    <IsUnstableVersion Condition=" '$(IsUnstableVersion)' == ''
+        And $([MSBuild]::VersionGreaterThan($(AndroidApiLevel), $(AndroidLatestStableApiLevel)))
         And ( '$(AndroidLatestStableApiLevel2)' == '' Or $([MSBuild]::VersionGreaterThan($(AndroidApiLevel), $(AndroidLatestStableApiLevel2))) )
         "
     >true</IsUnstableVersion>
@@ -51,16 +50,8 @@
     <AdditionalFiles Include="PublicAPI\API-$(AndroidApiLevel)\PublicAPI.Unshipped.txt" />
   </ItemGroup>
 
-  <PropertyGroup>
-    <JavaCallableWrapperAbsAssembly>$([System.IO.Path]::GetFullPath ('$(OutputPath)$(AssemblyName).dll'))</JavaCallableWrapperAbsAssembly>
-  </PropertyGroup>
-
-  <PropertyGroup Condition=" '$(_EnableMarshalMethods)' == 'YesPlease' ">
-    <DefineConstants>$(DefineConstants);ENABLE_MARSHAL_METHODS</DefineConstants>
-  </PropertyGroup>
-
   <ItemGroup>
-    <ProjectReference Include="..\..\external\Java.Interop\src\Java.Interop\Java.Interop.csproj" />
+    <ProjectReference Include="..\..\src\Java.Interop\Java.Interop.csproj" />
     <!-- Compile-only reference: the real _Microsoft.Android.TypeMaps.dll is generated at app
          build time by the trimmable typemap generator and replaces this ref assembly. -->
     <ProjectReference Include="..\Microsoft.Android.TypeMaps.Ref\Microsoft.Android.TypeMaps.Ref.csproj">
@@ -76,17 +67,14 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Compile Include="..\..\external\Java.Interop\src\Java.Interop.Tools.TypeNameMappings\Java.Interop.Tools.TypeNameMappings\JavaNativeTypeManager.cs">
+    <Compile Include="..\..\src\Java.Interop.Tools.TypeNameMappings\Java.Interop.Tools.TypeNameMappings\JavaNativeTypeManager.cs">
       <Link>JavaNativeTypeManager.cs</Link>
     </Compile>
-    <Compile Include="..\..\external\Java.Interop\src\Java.Interop.Tools.JavaCallableWrappers\Java.Interop.Tools.JavaCallableWrappers\Crc64.cs">
+    <Compile Include="..\..\src\Java.Interop.Tools.JavaCallableWrappers\Java.Interop.Tools.JavaCallableWrappers\Crc64.cs">
       <Link>Crc64.cs</Link>
     </Compile>
-    <Compile Include="..\..\external\Java.Interop\src\Java.Interop.Tools.JavaCallableWrappers\Java.Interop.Tools.JavaCallableWrappers\Crc64Helper.cs">
+    <Compile Include="..\Java.Interop.Tools.JavaCallableWrappers\Java.Interop.Tools.JavaCallableWrappers\Crc64Helper.cs">
       <Link>Crc64Helper.cs</Link>
-    </Compile>
-    <Compile Include="..\..\external\Java.Interop\src\Java.Interop.Tools.JavaCallableWrappers\Java.Interop.Tools.JavaCallableWrappers\Crc64.Table.cs">
-      <Link>Crc64.Table.cs</Link>
     </Compile>
     <Compile Include="Android.App\IntentFilterAttribute.Partial.cs" />
     <Compile Include="Android.App\MetaDataAttribute.Partial.cs" />
@@ -103,9 +91,7 @@
     <Compile Include="Android.Icu\RelativeDateTimeFormatter.cs" />
     <Compile Include="Android.Icu\DateIntervalFormat.cs" />
     <Compile Include="Android.Net.Wifi.P2p\WifiP2pManager.cs" />
-    <Compile Include="Android.Runtime\DynamicMethodNameCounter.cs" />
     <Compile Include="Android.Runtime\ExtraDelegates.cs" />
-    <Compile Include="Android.Runtime\IJavaObjectValueMarshaler.cs" />
     <Compile Include="Android.Telecom\InCallService.cs" />
     <Compile Include="Android.Telephony.Mbms\StreamingService.cs" />
     <Compile Include="Android.Telephony\MbmsDownloadSession.cs" />
@@ -121,14 +107,9 @@
 
   <Import Project="..\Xamarin.Android.NamingCustomAttributes\Xamarin.Android.NamingCustomAttributes.projitems" Label="Shared" Condition="Exists('..\Xamarin.Android.NamingCustomAttributes\Xamarin.Android.NamingCustomAttributes.projitems')" />
   <Import Project="Mono.Android.targets" />
-  <Import Project="..\..\build-tools\scripts\JavaCallableWrappers.targets" />
   <Import Project="$(IntermediateOutputPath)mcw\Mono.Android.projitems" Condition="Exists('$(IntermediateOutputPath)mcw\Mono.Android.projitems')" />
 
 <ItemGroup>
-    <None Include="Android.Runtime\JNINativeWrapper.g.tt">
-      <Generator>TextTemplatingFileGenerator</Generator>
-      <LastGenOutput>JNINativeWrapper.g.cs</LastGenOutput>
-    </None>
     <Compile Include="Android\IncludeAndroidResourcesFromAttribute.cs" />
     <Compile Include="Android\LinkerSafeAttribute.cs" />
     <Compile Include="Android\NativeLibraryReferenceAttribute.cs" />
@@ -223,8 +204,9 @@
     <Compile Include="Android.Opengl\GLSurfaceView.cs" />
     <Compile Include="Android.Preferences\CheckBoxPreference.cs" />
     <Compile Include="Android.Runtime\AndroidEnvironment.cs" />
+    <Compile Include="Android.Runtime\AndroidExceptionManager.cs" />
+    <Compile Include="Android.Runtime\ManagedObjectReferenceManager.cs" />
     <Compile Include="Android.Runtime\AndroidRuntime.cs" />
-    <Compile Include="Android.Runtime\AndroidRuntimeInternal.cs" />
     <Compile Include="Android.Runtime\AnnotationAttribute.cs" />
     <Compile Include="Android.Runtime\BoundExceptionType.cs" />
     <Compile Include="Android.Runtime\CharSequence.cs" />
@@ -247,12 +229,8 @@
     <Compile Include="Android.Runtime\JNIEnv.g.cs" />
     <Compile Include="Android.Runtime\JNIEnvInit.cs" />
     <Compile Include="Android.Runtime\JniHandleOwnership.cs" />
+    <Compile Include="Android.Runtime\JniPeerMembersExtensions.cs" />
     <Compile Include="Android.Runtime\JNINativeWrapper.cs" />
-    <Compile Include="Android.Runtime\JNINativeWrapper.g.cs">
-      <DesignTime>True</DesignTime>
-      <AutoGen>True</AutoGen>
-      <DependentUpon>JNINativeWrapper.g.tt</DependentUpon>
-    </Compile>
     <Compile Include="Android.Runtime\JObjectRefType.cs" />
     <Compile Include="Android.Runtime\JValue.cs" />
     <Compile Include="Android.Runtime\Logger.cs" />
@@ -265,9 +243,8 @@
     <Compile Include="Android.Runtime\RaiseThrowableEventArgs.cs" />
     <Compile Include="Android.Runtime\RequiresPermissionAttribute.cs" />
     <Compile Include="Android.Runtime\ResourceDesignerAttribute.cs" />
-    <Compile Include="Android.Runtime\RuntimeConstants.cs" />
     <Compile Include="Android.Runtime\ResourceIdManager.cs" />
-    <Compile Include="Android.Runtime\RuntimeNativeMethods.cs" />
+    <Compile Include="Android.Runtime\StartupNoGCRegion.cs" />
     <Compile Include="Android.Runtime\StringDefAttribute.cs" />
     <Compile Include="Android.Runtime\TimingLogger.cs" />
     <Compile Include="Android.Runtime\TypeManager.cs" />
@@ -279,7 +256,6 @@
     <Compile Include="Android.Telephony\PhoneNumberUtils.cs" />
     <Compile Include="Android.Telephony\TelephonyManager.cs" />
     <Compile Include="Android.Telephony.Mbms\IGroupCallCallback.cs" />
-    <Compile Include="Android.Test\MoreAsserts.cs" />
     <Compile Include="Android.Text\ClipboardManager.cs" />
     <Compile Include="Android.Text\ITextWatcher.cs" />
     <Compile Include="Android.Text.Format\DateUtils.cs" />
@@ -319,13 +295,16 @@
     <Compile Include="Java.Interop\JavaLibraryReferenceAttribute.cs" />
     <Compile Include="Java.Interop\JavaLocationException.cs" />
     <Compile Include="Java.Interop\JavaObjectExtensions.cs" />
+    <Compile Include="Java.Interop\JavaPeerCallbackFormatAttribute.cs" />
     <Compile Include="Java.Interop\JavaPeerProxy.cs" />
     <Compile Include="Java.Interop\JavaTypeParametersAttribute.cs" />
+    <Compile Include="Java.Interop\JniMarshalTyped.cs" />
     <Compile Include="Java.Interop\Runtime.cs" />
     <Compile Include="Java.Interop\SafeArrayFactory.cs" />
     <Compile Include="Java.Interop\SafeJavaCollectionFactory.cs" />
     <Compile Include="Java.Interop\TypeManager.cs" />
     <Compile Include="Java.Interop\ValueTypeFactory.cs" />
+    <Compile Include="Java.Interop\ValueTypeDictionaryFactory.cs" />
     <Compile Include="Java.Lang\Boolean.cs" />
     <Compile Include="Java.Lang\Byte.cs" />
     <Compile Include="Java.Lang\Character.cs" />
@@ -361,11 +340,16 @@
     <Compile Include="Java.Util.Concurrent.Atomic\AtomicLong.cs" />
     <Compile Include="Javax.Microedition.Khronos.Egl\EGLContext.cs" />
     <Compile Include="Microsoft.Android.Runtime\AggregateTypeMap.cs" />
+    <Compile Include="Microsoft.Android.Runtime\HandleContext.cs" />
+    <Compile Include="Microsoft.Android.Runtime\InteropCounterEventSource.cs" />
     <Compile Include="Microsoft.Android.Runtime\ITypeMap.cs" />
     <Compile Include="Microsoft.Android.Runtime\JniRemappingLookup.cs" />
+    <Compile Include="Microsoft.Android.Runtime\JavaMarshalGCBridge.cs" />
+    <Compile Include="Microsoft.Android.Runtime\JavaMarshalGCBridgeJni.cs" />
     <Compile Include="Microsoft.Android.Runtime\JavaMarshalRegisteredPeers.cs" />
-    <Compile Include="Microsoft.Android.Runtime\JavaMarshalValueManager.cs" />
     <Compile Include="Microsoft.Android.Runtime\PrimitiveArrayInfo.cs" />
+    <Compile Include="Microsoft.Android.Runtime\RuntimeEventSource.cs" />
+    <Compile Include="Microsoft.Android.Runtime\RuntimeFeature.cs" />
     <Compile Include="Microsoft.Android.Runtime\SingleUniverseTypeMap.cs" />
     <Compile Include="Microsoft.Android.Runtime\TrimmableTypeMap.cs" />
     <Compile Include="Microsoft.Android.Runtime\TrimmableTypeMapTypeManager.cs" />
@@ -392,7 +376,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="System.IO.Hashing" Version="$(SystemIOHashingPackageVersion)" />
+    <PackageReference Include="System.IO.Hashing" Version="$(SystemIOHashingPackageVersion)" PrivateAssets="all" />
     <PackageReference Include="Microsoft.CodeAnalysis.PublicApiAnalyzers" Version="5.6.0">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
@@ -401,15 +385,10 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\build-tools\create-android-api\create-android-api.csproj" ReferenceOutputAssembly="false" />
-    <ProjectReference Include="..\..\external\Java.Interop\tools\generator\generator.csproj" ReferenceOutputAssembly="false" />
-    <ProjectReference Include="..\..\external\Java.Interop\tools\jcw-gen\jcw-gen.csproj" ReferenceOutputAssembly="false" />
-    <ProjectReference Include="..\..\external\Java.Interop\tools\java-source-utils\java-source-utils.csproj" ReferenceOutputAssembly="false" />
+    <ProjectReference Include="..\..\src\generator\generator.csproj" ReferenceOutputAssembly="false" />
+    <ProjectReference Include="..\..\src\java-source-utils\java-source-utils.csproj" ReferenceOutputAssembly="false" />
     <ProjectReference Include="..\..\src\java-runtime\java-runtime.csproj" ReferenceOutputAssembly="false" />
     <ProjectReference Include="..\r8\r8.csproj" ReferenceOutputAssembly="False" />
-  </ItemGroup>
-
-  <ItemGroup Condition=" '$(TargetFramework)' == '$(DotNetTargetFramework)' ">
-    <ProjectReference Include="..\Mono.Android.Runtime\Mono.Android.Runtime.csproj" />
   </ItemGroup>
 
   <!--NOTE: a workaround for the test runner in VS Windows-->
@@ -443,7 +422,7 @@
         SkipUnchangedFiles="true"
     />
     <Copy
-        SourceFiles="$(OutputPath)ref\Mono.Android.dll;$(JavaInteropSourceDirectory)\bin\$(Configuration)-$(JavaInteropTargetFrameworkVersion)\ref\Java.Interop.dll"
+        SourceFiles="$(OutputPath)ref\Mono.Android.dll;$(BuildOutputDirectory)$(DotNetStableTargetFramework)\ref\Java.Interop.dll"
         DestinationFolder="$(MicrosoftAndroidRefPackDir)"
         SkipUnchangedFiles="true"
     />

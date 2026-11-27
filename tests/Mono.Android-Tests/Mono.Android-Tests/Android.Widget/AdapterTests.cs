@@ -1,6 +1,7 @@
 using System;
+using System.Collections.Generic;
 
-using NUnit.Framework;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 using Android.App;
 using Android.Content;
@@ -10,10 +11,10 @@ using Android.Runtime;
 
 namespace Android.WidgetTests {
 
-	[TestFixture]
+	[TestClass]
 	public class AdapterTests {
 
-		[Test]
+		[TestMethod]
 		public void InvokeOverriddenAbsListView_AdapterProperty ()
 		{
 			IntPtr grefAbsListView_class  = JNIEnv.FindClass ("android/widget/AbsListView");
@@ -27,6 +28,7 @@ namespace Android.WidgetTests {
 			IntPtr grefAdapterView_class  = JNIEnv.FindClass ("android/widget/AdapterView");
 			IntPtr AdapterView_getAdapter = JNIEnv.GetMethodID (grefAdapterView_class, "getAdapter", "()Landroid/widget/Adapter;");
 			IntPtr AdapterView_setAdapter = JNIEnv.GetMethodID (grefAdapterView_class, "setAdapter", "(Landroid/widget/Adapter;)V");
+			IntPtr AdapterView_setSelection = JNIEnv.GetMethodID (grefAdapterView_class, "setSelection", "(I)V");
 
 			JNIEnv.DeleteGlobalRef (grefAbsListView_class);
 			JNIEnv.DeleteGlobalRef (grefAdapterView_class);
@@ -45,15 +47,193 @@ namespace Android.WidgetTests {
 				adapter.AdapterSetterInvoked = false;
 				JNIEnv.CallVoidMethod (adapter.Handle, AdapterView_setAdapter, new JValue (IntPtr.Zero));
 				Assert.IsTrue (adapter.AdapterSetterInvoked);
+
+				JNIEnv.CallVoidMethod (adapter.Handle, AdapterView_setSelection, new JValue (23));
+				Assert.AreEqual (23, adapter.SelectionPosition);
 			}
 		}
 
-		[Test]
+		[TestMethod]
 		public void GridView_Adapter ()
 		{
 			var view = new GridView (Application.Context);
 			var adapter = view.Adapter;
 			view.Adapter = adapter;
+		}
+
+		[TestMethod]
+		public void GenericArrayAdapterUsesArrayAdapterClass ()
+		{
+			using var adapter = new ArrayAdapter<string> (Application.Context, Android.Resource.Layout.SimpleListItem1);
+
+			adapter.Add ("first");
+
+			Assert.AreEqual ("first", adapter.GetItem (0));
+		}
+
+		[TestMethod]
+		public void ArrayAdapterConstructorsReleaseLocalRefsOnFailure ()
+		{
+			const int layout = Android.Resource.Layout.SimpleListItem1;
+			const int textViewId = Android.Resource.Id.Text1;
+			var array = new [] { "one" };
+			var list = new List<string> { "alpha" };
+			Context nullContext = null;
+
+			Action [] ctors = [
+				() => _ = new ArrayAdapter<string> (nullContext, layout, array),
+				() => _ = new ArrayAdapter<string> (nullContext, layout, textViewId, array),
+				() => _ = new ArrayAdapter<string> (nullContext, layout, list),
+				() => _ = new ArrayAdapter<string> (nullContext, layout, textViewId, list),
+				() => _ = new DerivedStringArrayAdapter (nullContext, layout, array),
+				() => _ = new DerivedStringArrayAdapter (nullContext, layout, textViewId, array),
+				() => _ = new DerivedStringArrayAdapter (nullContext, layout, list),
+				() => _ = new DerivedStringArrayAdapter (nullContext, layout, textViewId, list),
+			];
+
+			// Warm up lazily-initialized constructor IDs and exception handling before measuring local refs.
+			foreach (var ctor in ctors) {
+				Assert.Throws<Java.Lang.NullPointerException> (ctor);
+			}
+
+			int localReferences = Java.Interop.JniEnvironment.LocalReferenceCount;
+			foreach (var ctor in ctors) {
+				Assert.Throws<Java.Lang.NullPointerException> (ctor);
+				Assert.AreEqual (localReferences, Java.Interop.JniEnvironment.LocalReferenceCount);
+			}
+		}
+
+		[TestMethod]
+		[TestCategory ("ThresholdDispatch")]
+		public void DerivedArrayAdapterInListView ()
+		{
+			using var adapter = new DerivedStringArrayAdapter (Application.Context);
+			using var view = new ListView (Application.Context);
+
+			adapter.Add ("first");
+			view.Adapter = adapter;
+
+			Assert.AreSame (adapter, view.Adapter);
+			Assert.AreEqual ("first", view.GetItemAtPosition (0)?.ToString ());
+		}
+
+		[TestMethod]
+		[TestCategory ("ThresholdDispatch")]
+		public void AbsListView_SetAdapter ()
+		{
+			using (var view = new ListView (Application.Context)) {
+				AssertSetAdapterRoundTrips (view);
+			}
+			using (var view = new ManagedListView (Application.Context))
+			using (var adapter = new ArrayAdapter (Application.Context, 0)) {
+				view.CallBaseSetAdapter (adapter);
+				Assert.IsFalse (view.SetAdapterInvoked);
+				Assert.AreSame (adapter, view.Adapter);
+			}
+		}
+
+		static void AssertSetAdapterRoundTrips (ListView view)
+		{
+			using (var adapter = new ArrayAdapter (Application.Context, 0)) {
+#pragma warning disable 618
+				view.SetAdapter (adapter);
+#pragma warning restore 618
+				Assert.AreSame (adapter, view.Adapter);
+			}
+		}
+
+		[TestMethod]
+		[TestCategory ("ThresholdDispatch")]
+		public void AdapterViewAnimator_Adapter ()
+		{
+			using (var view = new AdapterViewFlipper (Application.Context)) {
+				AssertAdapterRoundTrips (view);
+			}
+			using (var view = new ManagedAdapterViewFlipper (Application.Context)) {
+				AssertAdapterRoundTrips (view);
+			}
+		}
+
+		static void AssertAdapterRoundTrips (AdapterViewAnimator view)
+		{
+			using (var adapter = new ArrayAdapter (Application.Context, 0)) {
+				view.Adapter = adapter;
+				Assert.AreSame (adapter, view.Adapter);
+			}
+		}
+	}
+
+	public class DerivedStringArrayAdapter : ArrayAdapter<string> {
+
+		public DerivedStringArrayAdapter (Context context)
+			: base (context, Android.Resource.Layout.SimpleListItem1)
+		{
+		}
+
+		public DerivedStringArrayAdapter (Context context, int textViewResourceId, string [] objects)
+			: base (context, textViewResourceId, objects)
+		{
+		}
+
+		public DerivedStringArrayAdapter (Context context, int resource, int textViewResourceId, string [] objects)
+			: base (context, resource, textViewResourceId, objects)
+		{
+		}
+
+		public DerivedStringArrayAdapter (Context context, int textViewResourceId, IList<string> objects)
+			: base (context, textViewResourceId, objects)
+		{
+		}
+
+		public DerivedStringArrayAdapter (Context context, int resource, int textViewResourceId, IList<string> objects)
+			: base (context, resource, textViewResourceId, objects)
+		{
+		}
+
+		protected DerivedStringArrayAdapter (IntPtr handle, JniHandleOwnership transfer)
+			: base (handle, transfer)
+		{
+		}
+	}
+
+	public class ManagedListView : ListView {
+
+		public ManagedListView (Context context)
+			: base (context)
+		{
+		}
+
+		protected ManagedListView (IntPtr handle, JniHandleOwnership transfer)
+			: base (handle, transfer)
+		{
+		}
+
+		public bool SetAdapterInvoked { get; private set; }
+
+#pragma warning disable 618
+		public void CallBaseSetAdapter (IListAdapter adapter)
+		{
+			base.SetAdapter (adapter);
+		}
+
+		[Obsolete ("Please use the Adapter property setter")]
+		public override void SetAdapter (IListAdapter adapter)
+		{
+			SetAdapterInvoked = true;
+		}
+#pragma warning restore 618
+	}
+
+	public class ManagedAdapterViewFlipper : AdapterViewFlipper {
+
+		public ManagedAdapterViewFlipper (Context context)
+			: base (context)
+		{
+		}
+
+		protected ManagedAdapterViewFlipper (IntPtr handle, JniHandleOwnership transfer)
+			: base (handle, transfer)
+		{
 		}
 	}
 
@@ -77,6 +257,8 @@ namespace Android.WidgetTests {
 
 		public bool         AdapterSetterInvoked;
 
+		public int SelectionPosition;
+
 		public override IListAdapter Adapter {
 			get {return AdapterValue;}
 			set {
@@ -86,7 +268,7 @@ namespace Android.WidgetTests {
 
 		public override void SetSelection (int position)
 		{
-			throw new NotImplementedException();
+			SelectionPosition = position;
 		}
 
 

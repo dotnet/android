@@ -15,6 +15,33 @@ an [MSBuild PropertyGroup](/visualstudio/msbuild/propertygroup-element-msbuild).
 > [!NOTE]
 > In .NET for Android there is technically no distinction between an application and a bindings project, so properties will work in both. In practice it is highly recommended to create separate application and bindings projects. Properties that are primarily used in bindings projects are documented in the [MSBuild bindings project properties](../binding-libs/msbuild-reference/build-properties.md) reference guide.
 
+## Runtime scope
+
+Ordinary Android applications target CoreCLR in .NET 11 and later. Android
+applications targeting .NET 10 and earlier use Mono by default. Setting
+`$(PublishAot)` to `true` selects the NativeAOT runtime for supported publish
+or optimized builds and takes precedence over `$(UseMonoRuntime)`.
+
+`$(UseMonoRuntime)=true` is not a .NET 11 escape hatch. The .NET 11 SDK
+rejects it with [NETSDK1242](/dotnet/core/tools/sdk-errors/netsdk1242).
+Use the .NET 10-and-earlier Mono guidance only when targeting a framework where
+Mono is supported.
+
+.NET 11 Android applications require Android API level 24 or later.
+`$(SupportedOSPlatformVersion)` sets the application's deployment minimum and
+maps to `//uses-sdk/@android:minSdkVersion` in the Android manifest. It does not
+select the target SDK or represent Google Play policy.
+
+The .NET 11 CoreCLR runtime packs support the following .NET runtime identifiers
+(RIDs) and corresponding Android application binary interfaces (ABIs):
+
+- `android-arm`: `armeabi-v7a`
+- `android-arm64`: `arm64-v8a`
+- `android-x64`: `x86_64`
+
+Android NativeAOT is experimental and supports the same three RIDs. RIDs are
+distinct from Android ABI names and emulator system-image architectures.
+
 ## AdbTarget
 
 The `$(AdbTarget)` property specifies the Android target device the
@@ -51,45 +78,52 @@ object collection.
 
 The default value is `True` for Release configuration builds.
 
+For untrimmed builds using the `trimmable` type map, `GC.KeepAlive()` calls are
+only inserted when
+[`$(AndroidEnableLegacyCompatibilityAssemblyFixups)`](#androidenablelegacycompatibilityassemblyfixups)
+is also `True`. Trimmed builds using the `trimmable` type map do not insert
+these calls.
+
 ## AndroidAotAdditionalArguments
 
-A string property that allows
-passing options to the Mono compiler during the `Aot`
-task for projects that have either
-[`$(AndroidEnableProfiledAot)`](#androidenableprofiledaot) or
-[`$(AotAssemblies)`](#aotassemblies) set to `true`.
-The string value of the property is added to the response file when
-calling the Mono cross-compiler.
+A string property that allows supported .NET 10-and-earlier projects
+that use Mono to pass additional comma-separated options within the
+Mono AOT compiler's `--aot=...` argument. The property is used only
+when Mono AOT compilation is enabled.
 
 In general, this property should be left blank, but in certain
 special scenarios it might provide useful flexibility.
 
 The `$(AndroidAotAdditionalArguments)` property is different from the related
 [`$(AndroidExtraAotOptions)`](#androidextraaotoptions) property;
-`$(AndroidAotAdditionalArguments)` passes full standalone space-separated options
-like `--verbose` or `--debug` to the AOT compiler, while
-`$(AndroidExtraAotOptions)` contains comma-separated arguments which are part of
-the `--aot` option of the AOT compiler.
+`$(AndroidAotAdditionalArguments)` is included within the `--aot` option,
+while `$(AndroidExtraAotOptions)` passes standalone arguments directly to
+the Mono AOT compiler process.
 
 ## AndroidAotCustomProfilePath
 
-The file that `aprofutil` should create to hold profiler data.
+The file that `aprofutil` should create to hold Mono AOT profiler data.
+The default value is `custom.aprof`.
 
-## AndroidAotProfiles
-
-A string property that allows the
-developer to add AOT profiles from the command line. It's a
-semicolon or comma-separated list of absolute paths.
+This property applies to the legacy AOT profiling targets for supported
+.NET 10-and-earlier projects that use Mono.
 
 ## AndroidAotProfilerPort
 
-The port that `aprofutil` should connect to when obtaining profiling data.
+The port that `aprofutil` should connect to when obtaining Mono AOT
+profiling data. The default value is `9999`.
+
+This property applies to the legacy AOT profiling targets for supported
+.NET 10-and-earlier projects that use Mono.
 
 ## AndroidAotEnableLazyLoad
 
-Enable lazy (delayed) loading of AOT-d assemblies, instead of
-preloading them at the startup.  The default value is `True` for Release builds
-with any form of AOT enabled.
+Enables lazy (delayed) loading of Mono AOT-compiled assemblies instead of
+preloading them at startup.
+
+This property applies to supported .NET 10-and-earlier projects that use
+Mono. It defaults to `True` when Mono AOT is enabled and debug symbols are
+not included. It does not configure CoreCLR or NativeAOT.
 
 Introduced in .NET 6.
 
@@ -158,17 +192,6 @@ for details about available feature switches.
 Added in .NET 8.
 
 [feature-switches]: /dotnet/core/deploying/trimming/trimming-options?pivots=dotnet-8-0#trim-framework-library-features
-
-## AndroidBinUtilsPath
-
-A path to a directory containing
-the Android [binutils][binutils] such as `ld`, the native linker,
-and `as`, the native assembler. These tools are included in the
-.NET for Android workload.
-
-The default value is `$(MonoAndroidBinDirectory)\binutils\bin\`.
-
-[binutils]: https://github.com/xamarin/xamarin-android-binutils/
 
 ## AndroidBoundExceptionType
 
@@ -273,16 +296,17 @@ Possible values include:
   Xamarin.Android 6.1 or later. Xamarin.Android 6.1 and later bind
   `Mono.Android.dll` with this value.
 
-- **JavaInterop1**: experimental value, currently the default for the
-  NativeAOT runtime.
+- **JavaInterop1**: this value is obsolete and is no longer supported.
 
-The default value is `XAJavaInterop1`.
+The default and only supported value is `XAJavaInterop1`, including for
+the NativeAOT runtime.
 
 ## AndroidCreatePackagePerAbi
 
-A boolean property that determines if a *set* of files--one per ABI
-specified in [`$(AndroidSupportedAbis)`](#androidsupportedabis)--should
-be created instead of having support for all ABIs in a single `.apk`.
+A boolean property that determines whether to create one `.apk` per selected
+Android ABI (such as `arm64-v8a`) instead of only a single `.apk` supporting
+all selected ABIs. The RIDs in `$(RuntimeIdentifiers)` select those ABIs;
+APKs are produced per ABI, not per RID.
 
 See also the [Building ABI-Specific APKs](/xamarin/android/deploy-test/building-apps/abi-specific-apks)
 guide.
@@ -360,7 +384,7 @@ The default value is `d8`. See our
 documentation on [D8 and R8][d8-r8].
 
 [dex]: https://source.android.com/devices/tech/dalvik/dalvik-bytecode
-[d8-r8]: https://github.com/xamarin/xamarin-android/blob/main/Documentation/guides/D8andR8.md
+[d8-r8]: https://github.com/dotnet/android/blob/main/Documentation/guides/D8andR8.md
 
 ## AndroidEnableDesugar
 
@@ -372,6 +396,17 @@ called `desugar`, on the output of the `javac` compiler. The default value is
 `False` if using `$(AndroidDexTool)=dx` and `True` if
 using [`$(AndroidDexTool)`](#androiddextool)=`d8`.
 
+## AndroidEnableFastDeployment
+
+A boolean property that determines whether [Fast Deployment](build-process.md#Fast_Deployment)
+is enabled. Fast Deployment installs assemblies outside of the application
+package, which can reduce deployment and rebuild times.
+
+The default value is `True` for Debug builds and `False` for Release builds.
+Setting this property is equivalent to setting the inverse value of
+[`$(EmbedAssembliesIntoApk)`](#embedassembliesintoapk). If both properties
+are set, `$(EmbedAssembliesIntoApk)` takes precedence.
+
 ## AndroidEnableGooglePlayStoreChecks
 
 A bool property
@@ -380,13 +415,26 @@ Store checks: XA1004, XA1005 and XA1006. Disabling these checks is useful for
 developers who are not targeting the Google Play Store and do
 not wish to run those checks.
 
+## AndroidEnableLegacyCompatibilityAssemblyFixups
+
+A boolean property that controls whether untrimmed builds modify referenced
+assemblies to support legacy binding and resource designer behavior. These
+modifications include adding missing abstract interface methods, updating
+legacy resource designer references, and inserting `GC.KeepAlive()` calls into
+older Xamarin.Android binding assemblies. For trimmed CoreCLR builds, this
+property repairs missing abstract methods and legacy resource designer references
+in project-local assembly copies before trimming, so the trimmer can preserve
+their dependencies.
+Other shared post-trimming steps, including `GC.KeepAlive()` insertion, are
+controlled separately.
+
+The default value is `False`.
+
 ## AndroidEnableMarshalMethods
 
-A bool property, that determines whether or not LLVM marshal methods are enabled.
-LLVM marshal methods are an app startup optimization which uses native entry points
-for Java `native` method registration.
-
-This property is False by default.
+A legacy boolean property for LLVM marshal methods. Marshal methods are no
+longer supported. Remove this property or set it to `false`; setting it to
+`true` produces error XA1049.
 
 Added in .NET 8.
 
@@ -400,12 +448,17 @@ This property is `False` by default.
 
 ## AndroidEnableProfiler
 
-Synonym for the [`$(EnableDiagnostics)`](#enablediagnostics) property.
+For Mono applications, this is a synonym for the
+[`$(EnableDiagnostics)`](#enablediagnostics) property. If it is `true`, the
+Mono diagnostic component, `libmono-component-diagnostics_tracing.so`, is
+included in the application.
 
-Required for using `dotnet-trace` or `dotnet-gcdump` in Android
-applications. If set to `true`, it includes the Mono diagnostic
-component in the application. This component is the
-`libmono-component-diagnostics_tracing.so` native library.
+For CoreCLR applications in .NET 11 and later, this property enables the
+CoreCLR diagnostic-port configuration used by tools such as `dotnet-trace` and
+`dotnet-gcdump`; it does not add a Mono diagnostic component. NativeAOT is a
+separate runtime selected by `$(PublishAot)` and this
+property documents only the supported Android packaging and configuration
+behavior.
 
 This property is `False` by default.
 
@@ -430,9 +483,8 @@ will be loaded during process startup, before any application code is invoked.
 When set to `False`, assemblies will only be loaded on an as-needed basis.
 Loading assemblies on an as-needed basis allows applications to launch faster,
 and is also more consistent with desktop .NET semantics.
-To see the time savings, set the `debug.mono.log`
-System Property to include `timing`, and look for the
-`Finished loading assemblies: preloaded` message within `adb logcat`.
+To inspect assembly loading, set the `debug.dotnet.log` System Property to
+include `assembly` and review the assembly load messages within `adb logcat`.
 
 Applications or libraries, which use dependency injection may *require* that
 this property be `True` if they in turn require that
@@ -444,16 +496,20 @@ By default this value is False.
 ## AndroidEnableProfiledAot
 
 A boolean property that
-determines whether or not the AOT profiles are used during
-Ahead-of-Time compilation.
+determines whether or not Mono AOT profiles are used during
+Ahead-of-Time compilation. It applies to supported .NET 10-and-earlier
+projects that use Mono and does not configure ReadyToRun, MIBC profiles,
+dynamic PGO, or NativeAOT.
 
 The profiles are listed in
 [`@(AndroidAotProfile)`](build-items.md#androidaotprofile)
-item group. This ItemGroup contains default profile(s). It can be overridden by
-removing the existing one(s) and adding your own AOT profiles.
+item group. When profiled AOT is enabled, the default profile is included
+unless [`$(AndroidUseDefaultAotProfile)`](#androidusedefaultaotprofile) is
+`false`. Custom profiles can be added with `@(AndroidAotProfile)`.
 
-This property is `False` by default.
-
+When [`$(RunAOTCompilation)`](#runaotcompilation) is `true` and this
+property is not set, it defaults to `true`. Consequently, it defaults to
+`true` for applicable Release builds that use Mono.
 
 ## AndroidEnableRestrictToAttributes
 
@@ -493,7 +549,9 @@ determines whether or not Mono's
 [concurrent GC collector](https://www.mono-project.com/docs/about-mono/releases/4.8.0/#concurrent-sgen)
 will be used.
 
-This property is `False` by default.
+This property is `True` by default. It applies to supported .NET
+10-and-earlier projects that use Mono and does not configure the CoreCLR
+or NativeAOT garbage collectors.
 
 ## AndroidErrorOnCustomJavaObject
 
@@ -524,54 +582,25 @@ This property is no longer supported.
 
 ## AndroidExtraAotOptions
 
-A string property that allows
-passing options to the Mono compiler during the `Aot`
-task for projects that have either
-[`$(AndroidEnableProfiledAot)`](#androidenableprofiledaot) or
-[`$(AotAssemblies)`](#aotassemblies) set to `true`.
-The string value of the property is added to the response file when
-calling the Mono cross-compiler.
+A string property that allows supported .NET 10-and-earlier projects
+that use Mono to pass semicolon-separated standalone arguments directly
+to the Mono AOT compiler process. The property is used only when Mono AOT
+compilation is enabled.
 
 In general, this property should be left blank, but in certain
 special scenarios it might provide useful flexibility.
 
 The `$(AndroidExtraAotOptions)` property is different from the related
 [`$(AndroidAotAdditionalArguments)`](#androidaotadditionalarguments) property;
-`$(AndroidAotAdditionalArguments)` places
-comma-separated arguments into the `--aot` option of the Mono
-compiler. `$(AndroidExtraAotOptions)` instead passes full standalone
-space-separated options like `--verbose` or `--debug` to the
-compiler.
+`$(AndroidExtraAotOptions)` passes standalone process arguments, while
+`$(AndroidAotAdditionalArguments)` is included within the comma-separated
+`--aot=...` option.
 
 <a name="AndroidFastDeploymentType"></a>
 
 ## AndroidFastDeploymentType
 
-A `:` (colon)-separated list
-of values to control what types can be deployed to the
-[Fast Deployment directory](build-process.md#Fast_Deployment)
-on the target device
-when the [`$(EmbedAssembliesIntoApk)`](#embedassembliesintoapk) MSBuild
-property is `False`. If a resource is fast deployed, it is *not*
-embedded into the generated `.apk` or `.aab`, which can speed up deployment
-times. (The more that is fast deployed, then the less frequently
-the package needs to be rebuilt, and the install process can be
-faster.) Valid values include:
-
-- `Assemblies`: Deploy application assemblies.
-- `Dexes`: Deploy `.dex` files, native libraries and typemaps.
-  **The `Dexes` value can *only* be used on devices running
-  Android 4.4 or later (API-19).**
-
-The default value is `Assemblies`.
-
-Support for Fast Deploying resources and assets via that system was
-removed in commit [f0d565fe](https://github.com/xamarin/xamarin-android/commit/f0d565fe4833f16df31378c77bbb492ffd2904b9). This was becuase it required the use of
-deprecated API's to work.
-
-**Support for this feature was removed in .NET 9
-
-**Experimental**.
+This property was removed in .NET 9 and has no effect.
 
 ## AndroidFragmentType
 
@@ -612,6 +641,12 @@ from being preloaded at application startup.  By default, all such libraries
 will be loaded by the runtime early during application startup in order to
 assure their proper initialization. However, in some cases it might not be the
 desired behavior and this property allows you to effectively disable it.
+
+When JNI preloading is disabled, each exempted library's `JNI_OnLoad` function
+runs synchronously on the thread that first loads the library. Libraries whose
+`JNI_OnLoad` implementation requires the main thread (for example, because it
+expects a prepared main-thread `Looper` or `ALooper`) must be preloaded on the
+main thread instead of relying on on-demand worker-thread loading.
 
 Some framework libraries which must be loaded at application startup will not
 be affected by this property.
@@ -822,45 +857,24 @@ used for Java code. The default value is an empty string, or
 `proguard` if `$(AndroidEnableProguard)` is `True`. See our documentation on
 [D8 and R8][d8-r8].
 
-[d8-r8]: https://github.com/xamarin/xamarin-android/blob/main/Documentation/guides/D8andR8.md
+[d8-r8]: https://github.com/dotnet/android/blob/main/Documentation/guides/D8andR8.md
 
 ## AndroidLintEnabled
 
-A bool property that allows the developer to
-run the android `lint` tool as part of the packaging process.
-
-When `$(AndroidLintEnabled)`=True, the following properties are used:
-
-- [`$(AndroidLintEnabledIssues)`](#androidlintenabledissues):
-- [`$(AndroidLintDisabledIssues)`](#androidlintdisabledissues):
-- [`$(AndroidLintCheckIssues)`](#androidlintcheckissues):
-
-The following build actions may also be used:
-
-- [`@(AndroidLintConfig)`](build-items.md#androidlintconfig):
-
-See [Lint Help](https://developer.android.com/studio/write/lint) for more details on
-the android `lint` tooling.
+This property was removed in .NET 12 and has no effect.
+Setting it to `True` emits warning [XA0108](../messages/xa0108.md).
 
 ## AndroidLintEnabledIssues
 
-A string property that is a comma-separated list of lint issues to enable.
-
-Only used when [`$(AndroidLintEnabled)`](#androidlintenabled)=True.
+This property was removed in .NET 12 and has no effect.
 
 ## AndroidLintDisabledIssues
 
-A string property that is a comma-separated list of lint issues to disable.
-
-Only used when [`$(AndroidLintEnabled)`](#androidlintenabled)=True.
+This property was removed in .NET 12 and has no effect.
 
 ## AndroidLintCheckIssues
 
-A string property that is a comma-separated list of lint issues to check.
-
-Only used when [`$(AndroidLintEnabled)`](#androidlintenabled)=True.
-
-Note: only these issues will be checked.
+This property was removed in .NET 12 and has no effect.
 
 ## AndroidManagedSymbols
 
@@ -909,19 +923,15 @@ If you want detailed output from the tool you can add the following to the
 
 ## AndroidManifestType
 
-An enum-style property with valid values of `Xamarin` or `GoogleV2`.
-This controls which repository is used by the
-[`InstallAndroidDependencies`](build-targets.md#installandroiddependencies)
-target to determine which Android packages and package versions are
-available and can be installed.
+This property was removed in .NET 12 and has no effect.
+The [`InstallAndroidDependencies`](build-targets.md#installandroiddependencies)
+target now uses the Android CLI to install Android SDK packages.
 
-`Xamarin` is the **Approved List (Recommended)** repository within the
-[Visual Studio SDK Manager](/xamarin/android/get-started/installation/android-sdk?tabs=windows#repository-selection).
+## AndroidManifestSource
 
-`GoogleV2` is the **Full List (Unsupported)** repository within the
-[Visual Studio SDK Manager](/xamarin/android/get-started/installation/android-sdk?tabs=windows#repository-selection).
-
-If `$(AndroidManifestType)` is not set, then `Xamarin` is used.
+This property was removed in .NET 12 and has no effect.
+The [`InstallAndroidDependencies`](build-targets.md#installandroiddependencies)
+target now uses the Android CLI to install Android SDK packages.
 
 ## AndroidManifestPlaceholders
 
@@ -963,6 +973,24 @@ If you are getting this error you can add the following to the
 ```
 
 which will allow the `dx` step to succeed.
+
+## AndroidNdkDirectory
+
+The `$(AndroidNdkDirectory)` property specifies a custom Android NDK
+installation directory. The path can be set in the project file or on the
+command line:
+
+```dotnetcli
+dotnet build -p:AndroidNdkDirectory=/path/to/android-ndk
+```
+
+If this property is not set, .NET for Android locates the NDK from the
+configured Android development environment.
+
+In .NET 11 and later, NativeAOT builds require an installed Android NDK.
+The final native link uses the NDK's `ld.lld`, `llvm-objcopy`, CRT objects,
+sysroot libraries, and compiler runtime. CoreCLR builds do not require an NDK
+unless native library stripping is enabled.
 
 ## AndroidPackageFormat
 
@@ -1077,6 +1105,65 @@ The path to `r8.jar` for use with the
 r8 dex-compiler and shrinker. The default value is a path into the
 .NET for Android workload installation. For further information see our
 documentation on [D8 and R8][d8-r8].
+
+## AndroidR8ObfuscationMode
+
+An enum-style property that specifies how `r8` obfuscates Java names when
+[`$(AndroidLinkTool)`](#androidlinktool) is `r8`. Supported values are:
+
+| Value | Behavior |
+|---|---|
+| `private-members` | Preserves Java class and interface names and public or protected member names. Private and package-private members can be obfuscated, and R8 optimization is enabled. |
+| `disabled` | Disables obfuscation, preserves all Java names, and uses the non-optimizing Android R8 defaults. |
+| `runtime-remapping` | Keeps managed assemblies unchanged and translates JNI type/member lookups using a separate read-only binary data library. Available for trimmed CoreCLR and NativeAOT applications. |
+
+This property does not disable R8 code shrinking. It was introduced in a .NET 10
+servicing release and defaults to `disabled` in .NET 10 and to `private-members`
+in .NET 11 and later. The experimental `runtime-remapping` value was added in
+.NET 11 and must be selected explicitly.
+
+The `runtime-remapping` value requires `AndroidLinkTool=r8`,
+`PublishTrimmed=true`, and either the CoreCLR or NativeAOT runtime. Explicit incompatible settings produce
+[XA4329](../messages/xa4329.md) rather than being silently changed. This
+runtime-remapping mode has no effect on library projects.
+
+For example:
+
+```xml
+<PropertyGroup Condition="'$(Configuration)' == 'Release'">
+  <AndroidLinkTool>r8</AndroidLinkTool>
+  <PublishTrimmed>true</PublishTrimmed>
+  <AndroidR8ObfuscationMode>runtime-remapping</AndroidR8ObfuscationMode>
+</PropertyGroup>
+```
+
+CoreCLR and NativeAOT applications also package a separate per-ABI
+`libbinary_blobs.so` for ordinary JNI remapping in Debug and non-obfuscated
+builds that have remapping entries. Empty mappings omit the remapping symbol
+and do not require a data library. The remapping data is not compiled into the
+application's native code or shipped as an XML asset.
+
+The runtime-remapping mode leaves managed assemblies unchanged. It runs R8 once,
+after managed trimming or ILC, then uses the resulting R8 mapping to
+generate a per-ABI `libbinary_blobs.so` containing bounded, read-only JNI
+remapping data. CoreCLR selects remaps from linked assemblies. NativeAOT
+selects remaps from retained JNI literals in ILC's native object. Neither
+runtime needs to compile the remapping table into application native code.
+The build validates the full ELF and remapping payload. The native host checks
+the payload envelope and passes bounded data to the managed lookup. The
+uncompressed payload remains mapped without copying by default.
+
+Runtime-generated JNI names may require explicit remapping or keep rules.
+Conservative keep rules still protect native callbacks, bootstrap code, and
+resource-referenced names. No mode falls back to another mode; unrecognized
+values report [XA1050](../messages/xa1050.md) when R8 is enabled.
+
+When managed-trimmed CoreCLR builds use retained typemap rules, all Java
+names are preserved regardless of this setting, but R8 optimization remains
+enabled. This path uses the optimizing Android defaults together with
+`-dontobfuscate` and `--no-minification`; disabling renaming does not disable
+optimization. The `runtime-remapping` mode uses its own renameable retention
+policy instead of this no-minification path.
 
 ## AndroidResgenExtraArgs
 
@@ -1212,9 +1299,11 @@ A bool property that specifies whether or not the *method bodies* of AOT compile
 
 The default value is `false`, and the method bodies of AOT compiled methods will *not* be removed.
 
-When set to `true`, [`$(AndroidEnableProfiledAot)`](#androidenableprofiledaot) is set to `false` by default.
-This means that in Release configuration builds -- in which
-[`$(RunAOTCompilation)`](#runaotcompilation) is `true` by default -- AOT is enabled for *everything*.
+When set to `true`, [`$(AndroidEnableProfiledAot)`](#androidenableprofiledaot)
+is set to `false` by default. This means that in supported .NET 8 and .NET 9
+Mono Release builds -- in which
+[`$(RunAOTCompilation)`](#runaotcompilation) is `true` by default -- Mono AOT
+is enabled for *everything*.
 This can result in increased app sizes. This behavior can be overridden by explicitly setting
 `$(AndroidEnableProfiledAot)` to `true` within your project file.
 
@@ -1226,22 +1315,39 @@ A bool property which tells the packaging process to strip debug symbols from th
 
 The default value is `false` and the debug symbols, if any, will be preserved when packaging.
 
+In .NET 11 and later, setting this property to `true` requires an installed
+Android NDK and uses its `llvm-strip` tool for APK and AAB packaging, including
+Debug and Fast Deployment builds. Libraries are stripped into intermediate
+copies; the original project files and installed runtime packs are not modified.
+Wrapper scripts such as `wrap.sh` are packaged unchanged, not passed to `llvm-strip`.
+Missing NDK tools or a failed strip operation fail the build instead of
+packaging an unstripped fallback.
+
 ## AndroidSupportedAbis
 
-A string property that contains a
-semicolon (`;`)-delimited list of ABIs which should be included
-into the `.apk`.
+This property is no longer supported in .NET 6 and later. Remove it and use
+`$(RuntimeIdentifier)` or `$(RuntimeIdentifiers)` with .NET RIDs rather than
+Android ABI names.
 
-Supported values include:
+For example, the following .NET 11 setting includes all supported CoreCLR
+architectures:
 
-- `armeabi-v7a`
-- `x86`
-- `arm64-v8a`
-- `x86_64`
+```xml
+<PropertyGroup>
+  <RuntimeIdentifiers>android-arm;android-arm64;android-x64</RuntimeIdentifiers>
+</PropertyGroup>
+```
 
 ## AndroidTlsProvider
 
 This property is obsolete and should not be used.
+
+## AndroidTypeMapImplementation
+
+This property is obsolete and no longer affects the build. All Android
+applications use the trimmable type map. Remove this property; existing
+assignments, including `llvm-ir` and an explicitly empty command-line value,
+are ignored.
 
 ## AndroidUseApkSigner
 
@@ -1251,17 +1357,29 @@ use the `apksigner` tool rather than `jarsigner`.
 ## AndroidUseDefaultAotProfile
 
 A bool property that allows
-the developer to suppress usage of the default AOT profiles.
+the developer to suppress usage of the default Mono AOT profile.
 
-To suppress the default AOT profiles, set the property to `false`.
+The default profile is used when
+[`$(AndroidEnableProfiledAot)`](#androidenableprofiledaot) is `true`
+unless this property is set to `false`.
+
+This property applies to supported .NET 10-and-earlier projects that use
+Mono. It does not select MIBC profiles or dynamic PGO for CoreCLR.
 
 ## AndroidUseDesignerAssembly
 
 A bool property which controls if the build system will generate an
-`_Microsoft.Android.Resource.Designer.dll` as apposed to a `Resource.Designer.cs` file. The benefits of this are smaller applications and
+`_Microsoft.Android.Resource.Designer.dll` as apposed to a `Resource.designer.cs` file. The benefits of this are smaller applications and
 faster startup time.
 
 The default value is `true` in .NET 8.
+
+When this property is `true`, design-time builds use the managed resource
+parser to generate the designer assembly on all platforms.
+
+Starting in .NET 12, the separate managed design-time source generator has been
+removed. When this property is `false`, run a normal build to generate or
+refresh `Resource.designer.cs`; design-time builds do not regenerate it.
 
 As a Nuget Author it is recommended that you ship three versions of
 the assembly if you want to maintain backward compatibility.
@@ -1303,8 +1421,13 @@ Introduced in .NET 11.
 
 ## AndroidUseInterpreter
 
-A boolean property that causes the `.apk` to contain the mono
-*interpreter*, and not the normal JIT.
+A boolean property that causes a MonoVM `.apk` to contain the Mono
+*interpreter*, and not the normal JIT. It defaults to `True` for Debug
+builds that use Mono and `False` otherwise.
+
+This property applies to supported .NET 10-and-earlier projects that use
+Mono. It is not a CoreCLR setting, and Android has no interpreter in .NET 11
+and later.
 
 ***Experimental***.
 
@@ -1319,9 +1442,14 @@ property is used.
 
 ## AndroidUseManagedDesignTimeResourceGenerator
 
-A boolean property that
-will switch over the design time builds to use the managed resource parser rather
-than `aapt`.
+A boolean property that switched design-time builds to use the managed resource
+parser rather than `aapt`.
+
+Removed in .NET 12. Use
+[`$(AndroidUseDesignerAssembly)`](#androidusedesignerassembly) instead.
+When `true` (the default), design-time builds use managed designer assembly
+generation on all platforms. When `false`, run a normal build to generate or
+refresh `Resource.designer.cs`; design-time builds do not regenerate it.
 
 ## AndroidUseNegotiateAuthentication
 
@@ -1449,16 +1577,29 @@ about the requirements for `/manifest/@android:versionName`.
 ## AotAssemblies
 
 A boolean property that determines whether or not assemblies will be
-Ahead-of-Time compiled into native code and included in applications.
-This property is `False` by default.
+Ahead-of-Time compiled into native code by Mono and included in applications.
+When it is not specified, its effective value follows
+[`$(RunAOTCompilation)`](#runaotcompilation): `False` for Debug builds
+and `True` for Release builds that use Mono on supported .NET
+10-and-earlier target frameworks.
 
-Deprecated in .NET 7. Migrate to the new
-[`$(RunAOTCompilation)`](#runaotcompilation) MSBuild property instead,
-as support for `$(AotAssemblies)` will be removed in a future release.
+Deprecated in .NET 7. For supported .NET 10-and-earlier projects that use
+Mono, migrate to the
+[`$(RunAOTCompilation)`](#runaotcompilation) MSBuild property instead.
+Specifying `$(AotAssemblies)`, including setting it to `false`, emits
+the [XA1029](../messages/xa1029.md) warning.
+Setting it to `true` for CoreCLR or NativeAOT causes the build-stopping
+[XA1044](../messages/xa1044.md) error when `$(RunAOTCompilation)` is
+unset (or otherwise evaluates to `true`), because the defaulting logic
+forwards `$(AotAssemblies)` to `$(RunAOTCompilation)`.
+
+For .NET 11 CoreCLR projects, remove `$(AotAssemblies)` without adding
+`$(RunAOTCompilation)`. CoreCLR does not use the Mono AOT pipeline.
 
 ## AProfUtilExtraOptions
 
-Extra options to pass to `aprofutil`.
+Extra options to pass to `aprofutil` when using the legacy Mono AOT
+profiling targets in supported .NET 10-and-earlier projects.
 
 ## BeforeBuildAndroidAssetPacks
 
@@ -1545,50 +1686,64 @@ For more information about device selection, see the
 ## DiagnosticAddress
 
 A value provided by `dotnet-dsrouter` such as `127.0.0.1`, the IP
-address component of `$(DiagnosticConfiguration)` or `$DOTNET_DiagnosticPorts`.
+address component of `$(DiagnosticConfiguration)` or
+`DOTNET_DiagnosticPorts`.
 
-Implicitly enables the Mono diagnostic component, meaning that
-`$(EnableDiagnostics)`/`$(AndroidEnableProfiler)` is set to `true`.
+When this property is nonempty and `$(AndroidEnableProfiler)` is not explicitly
+set to `false`, it implicitly enables Android diagnostics.
+For CoreCLR, the resulting TCP endpoint is normally kept on loopback and is
+used by `dotnet-dsrouter`. For an Android emulator, use `10.0.2.2` to reach
+the development machine; for a physical device, use `127.0.0.1` with
+Android port forwarding enabled by
+`dotnet-dsrouter server-server --tcp-server 127.0.0.1:9000 --forward-port Android`.
 
 Defaults to `127.0.0.1`.
 
 ## DiagnosticConfiguration
 
-A value provided by `dotnet-dsrouter` for `$DOTNET_DiagnosticPorts` such as:
+A value provided by `dotnet-dsrouter` for `DOTNET_DiagnosticPorts` such as:
 
-* `127.0.0.1:9000,suspend,connect`
-* `127.0.0.1:9000,nosuspend,connect`
+* `127.0.0.1:9000,connect,suspend`
+* `127.0.0.1:9000,connect,nosuspend`
+
+When diagnostics are enabled without an explicit configuration, the derived
+defaults are address `127.0.0.1`, port `9000`, `DiagnosticSuspend=false`, and
+`DiagnosticListenMode=connect`.
 
 Note that the `,` character will need to be escaped with `%2c` if
 passed in command-line to `dotnet build`:
 
 ```dotnetcli
-dotnet build -c Release -p:DiagnosticConfiguration=127.0.0.1:9000%2csuspend%2cconnect
+dotnet build -c Release -p:DiagnosticConfiguration=127.0.0.1:9000%2cconnect%2csuspend
 ```
 
-This will automatically set the `$DOTNET_DiagnosticPorts` environment
-variable packaged inside the application.
+This automatically sets the `DOTNET_DiagnosticPorts` environment variable
+packaged inside the application. In `connect` mode, the Android runtime
+connects to the configured TCP endpoint and `dotnet-dsrouter` bridges that
+connection to the local diagnostic tool. The endpoint is unauthenticated and
+unencrypted, so keep it on a local development interface.
 
-Implicitly enables the Mono diagnostic component, meaning that
-`$(EnableDiagnostics)`/`$(AndroidEnableProfiler)` is set to `true`.
+Setting this property, or any of the component properties below, implicitly
+enables Android diagnostics when `$(AndroidEnableProfiler)` is not explicitly
+set to `false`.
 
 ## DiagnosticListenMode
 
 A value provided by `dotnet-dsrouter` such as `connect`, the listening
-mode component of `$(DiagnosticConfiguration)` or `$DOTNET_DiagnosticPorts`.
+mode component of `$(DiagnosticConfiguration)` or `DOTNET_DiagnosticPorts`.
 
-Implicitly enables the Mono diagnostic component, meaning that
-`$(EnableDiagnostics)`/`$(AndroidEnableProfiler)` is set to `true`.
+When this property is nonempty and `$(AndroidEnableProfiler)` is not explicitly
+set to `false`, it implicitly enables Android diagnostics.
 
 Defaults to `connect`.
 
 ## DiagnosticPort
 
 A value provided by `dotnet-dsrouter` such as `9000`, the port
-component of `$(DiagnosticConfiguration)` or `$DOTNET_DiagnosticPorts`.
+component of `$(DiagnosticConfiguration)` or `DOTNET_DiagnosticPorts`.
 
-Implicitly enables the Mono diagnostic component, meaning that
-`$(EnableDiagnostics)`/`$(AndroidEnableProfiler)` is set to `true`.
+When this property is nonempty and `$(AndroidEnableProfiler)` is not explicitly
+set to `false`, it implicitly enables Android diagnostics.
 
 Defaults to `9000`.
 
@@ -1596,10 +1751,10 @@ Defaults to `9000`.
 
 A boolean value provided by `dotnet-dsrouter` such as `true/suspend`
 or `false/nosuspend`, a component of `$(DiagnosticConfiguration)`
-or `$DOTNET_DiagnosticPorts`.
+or `DOTNET_DiagnosticPorts`.
 
-Implicitly enables the Mono diagnostic component, meaning that
-`$(EnableDiagnostics)`/`$(AndroidEnableProfiler)` is set to `true`.
+When this property is nonempty and `$(AndroidEnableProfiler)` is not explicitly
+set to `false`, it implicitly enables Android diagnostics.
 
 Defaults to `false`.
 
@@ -1609,15 +1764,14 @@ A boolean property that
 determines whether or not the app's assemblies should be embedded
 into the Application package.
 
+This property is the inverse of
+[`$(AndroidEnableFastDeployment)`](#androidenablefastdeployment). New projects
+should use `$(AndroidEnableFastDeployment)` to control Fast Deployment. If both
+properties are set, `$(EmbedAssembliesIntoApk)` takes precedence.
+
 This property should be `True` for Release builds and `False` for
 Debug builds. It *may* need to be `True` in Debug builds if Fast
 Deployment doesn't support the target device.
-
-When this property is `False`, then the
-[`$(AndroidFastDeploymentType)`](#androidfastdeploymenttype)
-MSBuild property also controls what
-will be embedded into the `.apk` or `.aab`, which can impact deployment and
-rebuild times.
 
 ## EnableCrashReport
 
@@ -1630,34 +1784,41 @@ is `True`.
 
 ## EnableDiagnostics
 
-Synonym for the [`$(AndroidEnableProfiler)`](#androidenableprofiler)
-property.
+An Android SDK/MSBuild property that enables diagnostics for the selected
+runtime. It is a synonym for
+[`$(AndroidEnableProfiler)`](#androidenableprofiler) for Mono applications.
+For CoreCLR, it enables the diagnostic-port configuration used by
+`dotnet-trace` and `dotnet-gcdump`.
 
-Required for using `dotnet-trace` or `dotnet-gcdump` in Android
-applications. If set to `true`, it includes the Mono diagnostic
-component in the application. This component is the
-`libmono-component-diagnostics_tracing.so` native library.
+`$(EnableDiagnostics)` is not the same as the CoreCLR runtime environment
+variable `DOTNET_EnableDiagnostics`. The former is evaluated by the Android
+SDK/MSBuild targets; the latter is read by the runtime when supplied as an
+environment variable.
 
 This property is `False` by default.
 
 ## EnableLLVM
 
 A boolean property that determines whether
-or not LLVM will be used when Ahead-of-Time compiling assemblies
-into native code.
+or not LLVM will be used by the Mono AOT compiler when Ahead-of-Time
+compiling assemblies into native code.
 
 The Android NDK must be installed to build a project that has this
 property enabled.
 
 This property is `False` by default.
 
-This property is ignored unless the
-[`$(AotAssemblies)`](#aotassemblies) MSBuild property is `True`.
+This property applies to supported .NET 10-and-earlier projects that use
+Mono and affects compilation only when
+[`$(RunAOTCompilation)`](#runaotcompilation) is `True`.
+
+Setting this property to `true` for CoreCLR or NativeAOT resets it to
+`false` and stops the build with [XA1044](../messages/xa1044.md).
 
 ## EnableMSTestRunner
 
 A boolean property that enables the
-[MSTest runner](https://learn.microsoft.com/dotnet/core/testing/unit-testing-mstest-running-tests)
+[MSTest runner](/dotnet/core/testing/unit-testing-mstest-running-tests)
 for Android test projects. When set to `true`, `dotnet run` will launch the
 application via `am instrument` instead of `am start`, allowing test results
 to be reported through Android's instrumentation protocol.
@@ -1689,7 +1850,7 @@ functioning, but at the benefit of reduced application size.
 Set to `false` by default in `Release` mode, unless
 `$(EnableDiagnostics)` or `$(AndroidEnableProfiler)` are enabled.
 
-[eventsource]: https://learn.microsoft.com/dotnet/core/diagnostics/eventsource
+[eventsource]: /dotnet/core/diagnostics/eventsource
 
 ## GenerateApplicationManifest
 
@@ -1769,6 +1930,22 @@ The default value is False.
 
 This MSBuild property is obsolete and is no longer supported.
 
+## MauiEnableFullReadyToRun
+
+A boolean property for .NET MAUI Android applications that use CoreCLR
+and are built in `Release` configuration with ReadyToRun enabled.
+When this property is unset or `false`, MAUI uses partial ReadyToRun
+with its default MIBC profiles. Set this property to `true` to enable
+full ReadyToRun. This property has no effect when
+[`$(PublishReadyToRun)`](#publishreadytorun) is `false`.
+
+Full ReadyToRun increases application and download size, but can
+potentially improve runtime performance because more methods are
+precompiled.
+
+For more information about CoreCLR and ReadyToRun in .NET MAUI, see
+[Runtimes and compilation in .NET MAUI][maui-runtimes-compilation].
+
 ## MetricsSupport
 
 When set to `false`, disables .NET's [Metrics][dotnetmetrics] support
@@ -1779,9 +1956,9 @@ but at the benefit of reduced application size.
 Set to `false` by default in `Release` mode, unless
 `$(EnableDiagnostics)` or `$(AndroidEnableProfiler)` are enabled.
 
-[dotnetmetrics]: https://learn.microsoft.com/dotnet/core/diagnostics/metrics
+[dotnetmetrics]: /dotnet/core/diagnostics/metrics
 
-## MonoAndroidAssetPrefix
+## MonoAndroidAssetsPrefix
 
 Specifies a *path prefix*
 that is removed from the start of filenames with a Build action of
@@ -1819,25 +1996,108 @@ debugging symbols enabled:
 [`$(Optimize)`](/visualstudio/msbuild/common-msbuild-project-properties)
 is True.
 
+## PublishReadyToRun
+
+A boolean property that controls whether assemblies are compiled to
+[ReadyToRun][ready-to-run] format when using CoreCLR. ReadyToRun
+assemblies contain both MSIL and native code. This can improve
+application startup time while retaining JIT compatibility, but
+increases application and download size.
+
+For Android applications that use CoreCLR, this property defaults to
+`true` in `Release` configuration and is not enabled by default in
+`Debug` configuration. ReadyToRun does not apply when using Mono or
+NativeAOT.
+
+ReadyToRun requires trimming. If `$(PublishTrimmed)` is not `true`,
+.NET for Android disables `PublishReadyToRun` and
+[`$(PublishReadyToRunComposite)`](#publishreadytoruncomposite) and emits
+warning XA0119.
+
+ReadyToRun compilation is composite by default. See
+[`$(PublishReadyToRunComposite)`](#publishreadytoruncomposite).
+.NET MAUI also uses partial ReadyToRun with default MIBC profiles. See
+[`$(MauiEnableFullReadyToRun)`](#mauienablefullreadytorun) to opt in to
+full ReadyToRun.
+
+For more information, see
+[Runtimes and compilation in .NET MAUI][maui-runtimes-compilation].
+
+[ready-to-run]: /dotnet/core/deploying/ready-to-run
+
+## PublishReadyToRunComposite
+
+A boolean property that controls whether ReadyToRun compilation
+combines application assemblies into a composite image. Composite
+ReadyToRun enables cross-assembly optimizations, but can increase build
+time.
+
+For Android applications that use CoreCLR, this property defaults to
+`true` when [`$(PublishReadyToRun)`](#publishreadytorun) is `true`.
+ReadyToRun, including composite ReadyToRun, requires
+`$(PublishTrimmed)` to be `true`.
+
 ## RunAOTCompilation
 
 A boolean property that determines whether or not assemblies will be
-Ahead-of-Time compiled into native code and included in applications.
-This property is `False` by default for `Debug` builds and `True` by
-default for `Release` builds.
+Ahead-of-Time compiled with the Mono AOT compiler and included in
+applications that use the Mono runtime. This property is `False` by
+default for `Debug` builds and `True` by default for `Release` builds
+that use Mono on supported .NET 10-and-earlier target frameworks.
 
 This MSBuild property replaces the
 [`$(AotAssemblies)`](#aotassemblies) MSBuild property from
 Xamarin.Android. This is the same property used for [Blazor WASM][blazor].
 
+This property does not enable ReadyToRun or NativeAOT. Setting it to
+`true` for CoreCLR or NativeAOT resets it to `false` and stops the build
+with [XA1044](../messages/xa1044.md).
+
+Setting it to `false` for CoreCLR also stops the build with XA1044
+instead of silently ignoring the property. Starting with .NET 11,
+remove `$(RunAOTCompilation)` and set
+[`$(PublishReadyToRun)`](#publishreadytorun) to `false` to disable
+ReadyToRun (R2R) AOT compilation.
+
 [blazor]: /aspnet/core/blazor/host-and-deploy/webassembly/#ahead-of-time-aot-compilation
+
+## UseMonoRuntime
+
+A boolean property that controls whether Android applications use the
+Mono runtime instead of CoreCLR for supported .NET 10-and-earlier targets.
+Set this property to `true` to use Mono or `false` to use CoreCLR on those
+targets. `$(PublishAot)` takes precedence and selects NativeAOT for supported
+publish or optimized builds when set to `true`.
+
+This property defaults to `true` in .NET 10 and earlier, so Android
+applications use Mono. In .NET 11 and later, it defaults to `false`, so
+Android applications use CoreCLR, and an explicit `true` value is rejected
+with [NETSDK1242](/dotnet/core/tools/sdk-errors/netsdk1242).
+
+For more information, see
+[Runtimes and compilation in .NET MAUI][maui-runtimes-compilation].
+
+[maui-runtimes-compilation]: /dotnet/maui/deployment/runtimes-compilation
+
+## UseNativeHttpHandler
+
+A boolean property that selects the default HTTP handler used by
+`System.Net.Http.HttpClientHandler`. Set it to `true` to use
+`Xamarin.Android.Net.AndroidMessageHandler` or `false` to use
+`System.Net.Http.SocketsHttpHandler`.
+
+Starting with .NET 12, the default is `false`. In .NET 11 and earlier,
+the default is `true`. An explicitly configured value takes precedence.
+
+`AndroidMessageHandler` is obsolete starting with .NET 12. Use
+`SocketsHttpHandler` instead.
 
 ## WaitForExit
 
 A boolean property that controls the behavior of `dotnet run` when launching
 Android applications.
 
-When `$(WaitForExit)` not `false` (the default), `dotnet run` will:
+When `$(WaitForExit)` is not `false` (the default), `dotnet run` will:
 
 * Launch the Android application
 * Stream `logcat` output filtered to the application's process

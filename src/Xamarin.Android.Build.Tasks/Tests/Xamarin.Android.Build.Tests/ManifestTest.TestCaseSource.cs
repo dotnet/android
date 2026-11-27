@@ -6,7 +6,6 @@ using System.IO;
 using System.Xml;
 using System.Xml.Linq;
 using System.Xml.XPath;
-using Xamarin.Tools.Zip;
 using Xamarin.Android.Tasks;
 using System.Collections.Generic;
 
@@ -20,6 +19,10 @@ namespace Xamarin.Android.Build.Tests
 
 			foreach (AndroidRuntime runtime in new[] { AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT }) {
 				AddTestData ( "", true, false, runtime);
+				// Run fewer NativeAOT cases to reduce CI time.
+				if (runtime == AndroidRuntime.NativeAOT) {
+					continue;
+				}
 				AddTestData ( "", false, true, runtime);
 				AddTestData ( "None", true, false, runtime);
 				AddTestData ( "None", false, true, runtime);

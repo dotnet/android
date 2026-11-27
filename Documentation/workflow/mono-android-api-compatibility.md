@@ -276,4 +276,4 @@ throw `AbstractMethodError`.
 [cgnus]: https://developer.android.com/reference/android/database/Cursor.html#getNotificationUris()
 [csnus]: https://developer.android.com/reference/android/database/Cursor.html#setNotificationUris(android.content.ContentResolver,%20java.util.List%3Candroid.net.Uri%3E)
 [icursor]: https://docs.microsoft.com/en-us/dotnet/api/android.database.icursor?view=xamarin-android-sdk-9
-[linker-fix]: https://github.com/xamarin/xamarin-android/commit/f96fcf93e157472072576bcc0a8698302899e8cf
+[linker-fix]: https://github.com/dotnet/android/commit/f96fcf93e157472072576bcc0a8698302899e8cf

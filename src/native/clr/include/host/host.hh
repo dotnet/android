@@ -7,8 +7,8 @@
 #include <host_runtime_contract.h>
 
 #include "host-common.hh"
+#include "pinvoke-override.hh"
 #include <runtime-base/jni-wrappers.hh>
-#include <runtime-base/timing.hh>
 #include "../shared/log_types.hh"
 #include "managed-interface.hh"
 
@@ -17,21 +17,8 @@ namespace xamarin::android {
 	{
 	public:
 		static void Java_mono_android_Runtime_initInternal (JNIEnv *env, jclass klass, jstring lang, jobjectArray runtimeApksJava,
-			jstring runtimeNativeLibDir, jobjectArray appDirs, jint localDateTimeOffset, jobject loader,
-			jobjectArray assembliesJava, jboolean isEmulator, jboolean haveSplitApks) noexcept;
-		static void Java_mono_android_Runtime_register (JNIEnv *env, jstring managedType, jclass nativeClass, jstring methods) noexcept;
-		static void Java_mono_android_Runtime_registerNatives (JNIEnv *env, jclass nativeClass) noexcept;
+			jobjectArray appDirs, jint localDateTimeOffset, jobject loader, jboolean isEmulator, jboolean haveSplitApks) noexcept;
 		static void propagate_uncaught_exception (JNIEnv *env, jobject javaThread, jthrowable javaException) noexcept;
-
-		static auto get_timing () -> std::shared_ptr<Timing>
-		{
-			return _timing;
-		}
-
-		static auto get_java_class_TimeZone () noexcept -> jclass
-		{
-			return java_TimeZone;
-		}
 
 	private:
 		// Must match `DlopenAssemblyStoreGenerator.PayloadStartSymbol` in the build tasks.
@@ -39,10 +26,9 @@ namespace xamarin::android {
 
 		static void gather_assemblies_and_libraries (jstring_array_wrapper& runtimeApks, bool have_split_apks);
 		static void map_assembly_store_via_dlopen (const char *store_path) noexcept;
-		static void scan_filesystem_for_assemblies_and_libraries () noexcept;
+		static void load_assembly_store_from_filesystem () noexcept;
 
 		static bool clr_external_assembly_probe (const char *path, void **data_start, int64_t *size) noexcept;
-		static const void* clr_pinvoke_override (const char *library_name, const char *entry_point_name) noexcept;
 		static void clr_error_writer (const char *message) noexcept;
 
 		static auto create_delegate (
@@ -54,20 +40,19 @@ namespace xamarin::android {
 	private:
 		static inline void *clr_host = nullptr;
 		static inline unsigned int domain_id = 0;
-		static inline std::shared_ptr<Timing> _timing{};
 		static inline bool found_assembly_store = false;
-		static inline jnienv_register_jni_natives_fn jnienv_register_jni_natives = nullptr;
 		static inline jnienv_propagate_uncaught_exception_fn jnienv_propagate_uncaught_exception = nullptr;
-
-		static inline jclass java_TimeZone = nullptr;
 
 		static inline host_runtime_contract runtime_contract{
 			.size = sizeof(host_runtime_contract),
 			.context = nullptr,
 			.get_runtime_property = nullptr,
 			.bundle_probe = nullptr,
-			.pinvoke_override = clr_pinvoke_override,
+			.pinvoke_override = PinvokeOverride::load_symbol,
 			.external_assembly_probe = clr_external_assembly_probe,
+			.get_native_code_data = nullptr,
+			.get_assembly_names = nullptr,
+			.resolve_assembly_to_path = nullptr,
 		};
 
 		// Enough to fit 0xffffffffffffffff + terminating NUL

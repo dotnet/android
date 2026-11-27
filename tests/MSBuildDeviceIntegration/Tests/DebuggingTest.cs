@@ -20,12 +20,6 @@ namespace Xamarin.Android.Build.Tests
 		const int DEBUGGER_MAX_CONNECTIONS = 100;
 		const int DEBUGGER_CONNECTION_TIMEOUT = 3000;
 
-		[TearDown]
-		public void ClearDebugProperties ()
-		{
-			ClearDebugProperty ();
-		}
-
 		void SetTargetFrameworkAndManifest(XamarinAndroidApplicationProject proj, Builder builder, int? apiLevelOverride)
 		{
 			builder.LatestTargetFrameworkVersion (out string apiLevel);
@@ -51,23 +45,29 @@ namespace Xamarin.Android.Build.Tests
 			return -1;
 		}
 
-		[Test]
-		public void ApplicationRunsWithoutDebugger ([Values] bool isRelease, [Values] bool extractNativeLibs, [Values] bool useEmbeddedDex, [Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
+		static IEnumerable<TestCaseData> ApplicationRunsWithoutDebuggerCases ()
 		{
-			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
-				return;
+			foreach (var configuration in BaseTest.ValidRuntimeConfigurations) {
+				foreach (var extractNativeLibs in new [] { false, true }) {
+					foreach (var useEmbeddedDex in new [] { false, true }) {
+						// Release normalizes embedded DEX to false; retain the existing NativeAOT skip cases.
+						if (configuration.isRelease && configuration.runtime == AndroidRuntime.CoreCLR && useEmbeddedDex) {
+							continue;
+						}
+						yield return new TestCaseData (configuration, extractNativeLibs, useEmbeddedDex);
+					}
+				}
 			}
+		}
 
-			// TODO: NativeAOT fails with the following exception:
-			//
-			// FATAL UNHANDLED EXCEPTION: System.InvalidCastException: Unable to convert instance of type 'AndroidX.AppCompat.Widget.AppCompatImageButton' to type 'AndroidX.AppCompat.Widget.Toolbar'.
-			//    at Java.Interop.JavaObjectExtensions._JavaCast[TResult](IJavaObject) + 0x190
-			//    at Android.Runtime.Extensions.JavaCast[TResult](IJavaObject) + 0x18
-			//    at Xamarin.Forms.Platform.Android.FormsAppCompatActivity.OnCreate(Bundle, ActivationFlags) + 0x5bc
-			//    at UnnamedProject.MainActivity.OnCreate(Bundle savedInstanceState) + 0x4c
-			//    at Android.App.Activity.n_OnCreate_Landroid_os_Bundle_(IntPtr jnienv, IntPtr native__this, IntPtr native_savedInstanceState) + 0x7c
+		[TestCaseSource (nameof (ApplicationRunsWithoutDebuggerCases))]
+		public void ApplicationRunsWithoutDebugger ((bool isRelease, AndroidRuntime runtime) configuration, bool extractNativeLibs, bool useEmbeddedDex)
+		{
+			var (isRelease, runtime) = configuration;
+
 			if (runtime == AndroidRuntime.NativeAOT) {
-				Assert.Ignore ("NativeAOT currently crashes with an exception.");
+				// TODO: Xamarin.Forms startup cannot find the ResourcesProvider constructor under NativeAOT.
+				Assert.Ignore ("NativeAOT Xamarin.Forms startup throws MissingMethodException.");
 			}
 
 			SwitchUser ();
@@ -76,6 +76,7 @@ namespace Xamarin.Android.Build.Tests
 				IsRelease = isRelease,
 			};
 			proj.SetRuntime (runtime);
+			proj.SetProperty ("AndroidEnableLegacyCompatibilityAssemblyFixups", "true");
 			if (isRelease) {
 				proj.SetRuntimeIdentifiers (new[] { DeviceAbi });
 			}
@@ -99,33 +100,11 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		public void ClassLibraryMainLauncherRuns ([Values] bool preloadAssemblies, [Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
+		public void ClassLibraryMainLauncherRuns ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			bool isRelease = runtime == AndroidRuntime.NativeAOT;
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
 				return;
-			}
-
-			// TODO: NativeAOT currently dies with a Java android.os.DeadObjectException exception (GC issue?):
-			//
-			// Exception thrown during dispatchAppVisibility Window{74689fa u0 com.xamarin.classlibrarymainlauncherruns/com.xamarin.classlibrarymainlauncherruns.MainActivity EXITING}
-			// android.os.DeadObjectException
-			//         at android.os.BinderProxy.transactNative(Native Method)
-			//         at android.os.BinderProxy.transact(BinderProxy.java:592)
-			//         at android.view.IWindow$Stub$Proxy.dispatchAppVisibility(IWindow.java:538)
-			//         at com.android.server.wm.WindowState.sendAppVisibilityToClients(WindowState.java:3183)
-			//         at com.android.server.wm.WindowContainer.sendAppVisibilityToClients(WindowContainer.java:1233)
-			//         at com.android.server.wm.WindowToken.setClientVisible(WindowToken.java:394)
-			//         at com.android.server.wm.ActivityRecord.commitVisibility(ActivityRecord.java:5546)
-			//         at com.android.server.wm.Transition.finishTransition(Transition.java:1485)
-			//         at com.android.server.wm.TransitionController.finishTransition(TransitionController.java:1048)
-			//         at com.android.server.wm.WindowOrganizerController.finishTransition(WindowOrganizerController.java:514)
-			//         at android.window.IWindowOrganizerController$Stub.onTransact(IWindowOrganizerController.java:270)
-			//         at com.android.server.wm.WindowOrganizerController.onTransact(WindowOrganizerController.java:230)
-			//         at android.os.Binder.execTransactInternal(Binder.java:1446)
-			//         at android.os.Binder.execTransact(Binder.java:1385)
-			if (runtime == AndroidRuntime.NativeAOT) {
-				Assert.Ignore ("NativeAOT currently dies at startup with a Java android.os.DeadObjectException exception");
 			}
 
 			SwitchUser ();
@@ -138,7 +117,6 @@ namespace Xamarin.Android.Build.Tests
 			};
 			app.SetRuntime (runtime);
 			app.SetDefaultTargetDevice ();
-			app.SetProperty ("AndroidEnablePreloadAssemblies", preloadAssemblies.ToString ());
 
 			var lib = new XamarinAndroidLibraryProject {
 				ProjectName = "MyLibrary"

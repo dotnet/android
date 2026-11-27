@@ -78,10 +78,11 @@ namespace Java.Interop {
 			if (instance is TResult)
 				return (TResult) instance;
 
-			if (instance.Handle == IntPtr.Zero)
-				throw new ObjectDisposedException (instance.GetType ().FullName);
+			ObjectDisposedException.ThrowIf (instance.Handle == IntPtr.Zero, instance);
 
-			return (TResult?) Java.Lang.Object.GetObject (instance.Handle, JniHandleOwnership.DoNotTransfer, typeof (TResult)) ??
+			var result = (TResult?) Java.Lang.Object.GetObject (instance.Handle, JniHandleOwnership.DoNotTransfer, typeof (TResult));
+			GC.KeepAlive (instance);
+			return result ??
 				throw new InvalidCastException (
 					FormattableString.Invariant ($"Unable to convert instance of type '{instance.GetType ().FullName}' to type '{typeof (TResult).FullName}'."));
 		}
@@ -91,8 +92,7 @@ namespace Java.Interop {
 				[DynamicallyAccessedMembers (Constructors)]
 				Type resultType)
 		{
-			if (resultType == null)
-				throw new ArgumentNullException ("resultType");
+			ArgumentNullException.ThrowIfNull (resultType);
 
 			if (instance == null)
 				return null;
@@ -100,7 +100,9 @@ namespace Java.Interop {
 			if (resultType.IsAssignableFrom (instance.GetType ()))
 				return instance;
 
-			return (IJavaObject?) Java.Lang.Object.GetObject (instance.Handle, JniHandleOwnership.DoNotTransfer, resultType) ??
+			var result = (IJavaObject?) Java.Lang.Object.GetObject (instance.Handle, JniHandleOwnership.DoNotTransfer, resultType);
+			GC.KeepAlive (instance);
+			return result ??
 				throw new InvalidCastException (
 					FormattableString.Invariant ($"Unable to convert instance of type '{instance.GetType ().FullName}' to type '{resultType.FullName}'."));
 		}

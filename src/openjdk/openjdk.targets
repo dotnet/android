@@ -30,8 +30,8 @@
     <_OpenJDKInstallDir>$(AndroidToolchainDirectory)\$(MicrosoftOpenJDKFolder)</_OpenJDKInstallDir>
     <_OpenJDKVersionFile>$(_OpenJDKInstallDir)\xa_jdk_version.txt</_OpenJDKVersionFile>
     <!-- Strip the archive's root folder(s) so files land directly in the install dir.
-         Windows/Linux archives have: jdk-21.0.8+9/bin/java (1 level)
-         macOS archives have: ./jdk-21.0.8+9/Contents/Home/bin/java (4 levels, ./ counts) -->
+         Windows/Linux archives have: jdk-25.0.4.1+1/bin/java (1 level)
+         macOS archives have: ./jdk-25.0.4.1+1/Contents/Home/bin/java (4 levels, ./ counts) -->
     <_OpenJDKStripComponents Condition=" '$(HostOS)' != 'Darwin' ">1</_OpenJDKStripComponents>
     <_OpenJDKStripComponents Condition=" '$(HostOS)' == 'Darwin' ">4</_OpenJDKStripComponents>
   </PropertyGroup>
@@ -40,7 +40,7 @@
       Inputs="$(MSBuildThisFileFullPath);$(MSBuildProjectFullPath);..\..\Configuration.props"
       Outputs="$(_OpenJDKArchive)">
     <!-- Phase 1: download the .sha256sum.txt to learn the expected hash.
-         File format: "6ecfa864...  microsoft-jdk-21.0.8-windows-x64.zip" -->
+         File format: "6ecfa864...  microsoft-jdk-25.0.4.1-windows-x64.zip" -->
     <ItemGroup>
       <_DownloadFile Include="$(_OpenJDKHashFileName)">
         <AdditionalProperties>_DownloadUrl=$(_OpenJDKHashUrl);_DownloadFolder=$(AndroidToolchainCacheDirectory);_DownloadFileName=$(_OpenJDKHashFileName)</AdditionalProperties>

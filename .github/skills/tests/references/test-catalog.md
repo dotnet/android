@@ -7,7 +7,7 @@ Mapping of test area keywords to assemblies, filters, and build prerequisites.
 - **Filter**: The `--filter` argument for host-side `dotnet test`, or on-device MTP category/property notes.
 - **Build**: What must be built before running:
   - **Standalone** — Can run with plain `dotnet test <project>.csproj`. No local SDK needed.
-  - **Full-build** — Requires the local SDK (`dotnet-local.sh`). Build with `./dotnet-local.sh build Xamarin.Android.sln -c Debug` or `make prepare && make all`.
+  - **Full-build** — Requires the local SDK (`dotnet-local.sh`). Build with `make prepare && make leeroy`.
 - **Device**: Whether an Android device/emulator is required.
 
 ---
@@ -20,36 +20,62 @@ These tests can be run immediately with `dotnet test` on the `.csproj`, even if 
 
 | Test Area | Project | Command |
 |-----------|---------|---------|
-| **assembly store reader** | `.github/skills/read-assembly-store/tests/AssemblyStore.Tests/` | `dotnet test .github/skills/read-assembly-store/tests/AssemblyStore.Tests/AssemblyStore.Tests.csproj -v minimal` |
-| **trimmable type map** (unit) | `tests/Microsoft.Android.Sdk.TrimmableTypeMap.Tests/` | `dotnet test tests/Microsoft.Android.Sdk.TrimmableTypeMap.Tests/Microsoft.Android.Sdk.TrimmableTypeMap.Tests.csproj -v minimal` |
+| **modern Android build tasks** | `src/Microsoft.Android.Build.Tasks/Tests/Microsoft.Android.Build.Tasks.Tests/` | `dotnet test src/Microsoft.Android.Build.Tasks/Tests/Microsoft.Android.Build.Tasks.Tests/Microsoft.Android.Build.Tasks.Tests.csproj -v minimal` |
+| **temporary-directory target execution/inference** | `src/Microsoft.Android.Build.Tasks/Tests/Microsoft.Android.Build.Tasks.Tests/` | `dotnet test src/Microsoft.Android.Build.Tasks/Tests/Microsoft.Android.Build.Tasks.Tests/Microsoft.Android.Build.Tasks.Tests.csproj -v minimal --filter FullyQualifiedName~TemporaryDirectoryTargetsTests` |
+| **package manager Java generation** | `src/Microsoft.Android.Build.Tasks/Tests/Microsoft.Android.Build.Tasks.Tests/` | `dotnet test src/Microsoft.Android.Build.Tasks/Tests/Microsoft.Android.Build.Tasks.Tests/Microsoft.Android.Build.Tasks.Tests.csproj -v minimal --filter FullyQualifiedName~GeneratePackageManagerJavaTests` |
+| **Gradle targets command quoting/environment** | `src/Microsoft.Android.Build.Tasks/Tests/Microsoft.Android.Build.Tasks.Tests/` | `dotnet test src/Microsoft.Android.Build.Tasks/Tests/Microsoft.Android.Build.Tasks.Tests/Microsoft.Android.Build.Tasks.Tests.csproj -v minimal --filter FullyQualifiedName~AndroidGradleTargetsTests` |
 | **aidl** | `tests/Xamarin.Android.Tools.Aidl-Tests/` | `dotnet test tests/Xamarin.Android.Tools.Aidl-Tests/Xamarin.Android.Tools.Aidl-Tests.csproj -v minimal` |
-| **source writer** | `external/Java.Interop/tests/Xamarin.SourceWriter-Tests/` | `dotnet test external/Java.Interop/tests/Xamarin.SourceWriter-Tests/Xamarin.SourceWriter-Tests.csproj -v minimal` |
-| **java source** | `external/Java.Interop/tests/Java.Interop.Tools.JavaSource-Tests/` | `dotnet test external/Java.Interop/tests/Java.Interop.Tools.JavaSource-Tests/Java.Interop.Tools.JavaSource-Tests.csproj -v minimal` |
-| **maven** | `external/Java.Interop/tests/Java.Interop.Tools.Maven-Tests/` | `dotnet test external/Java.Interop/tests/Java.Interop.Tools.Maven-Tests/Java.Interop.Tools.Maven-Tests.csproj -v minimal` |
-| **api xml adjuster** | `external/Java.Interop/tests/Xamarin.Android.Tools.ApiXmlAdjuster-Tests/` | `dotnet test external/Java.Interop/tests/Xamarin.Android.Tools.ApiXmlAdjuster-Tests/Xamarin.Android.Tools.ApiXmlAdjuster-Tests.csproj -v minimal` |
-| **java callable wrappers** | `external/Java.Interop/tests/Java.Interop.Tools.JavaCallableWrappers-Tests/` | `dotnet test external/Java.Interop/tests/Java.Interop.Tools.JavaCallableWrappers-Tests/Java.Interop.Tools.JavaCallableWrappers-Tests.csproj -v minimal` |
-| **java type system** | `external/Java.Interop/tests/Java.Interop.Tools.JavaTypeSystem-Tests/` | `dotnet test external/Java.Interop/tests/Java.Interop.Tools.JavaTypeSystem-Tests/Java.Interop.Tools.JavaTypeSystem-Tests.csproj -v minimal` |
-| **expressions** | `external/Java.Interop/tests/Java.Interop.Tools.Expressions-Tests/` | `dotnet test external/Java.Interop/tests/Java.Interop.Tools.Expressions-Tests/Java.Interop.Tools.Expressions-Tests.csproj -v minimal` ⚠️ Requires `javac` |
-| **generator tools** | `external/Java.Interop/tests/Java.Interop.Tools.Generator-Tests/` | `dotnet test external/Java.Interop/tests/Java.Interop.Tools.Generator-Tests/Java.Interop.Tools.Generator-Tests.csproj -v minimal` |
-| **generator** | `external/Java.Interop/tests/generator-Tests/` | `dotnet test external/Java.Interop/tests/generator-Tests/generator-Tests.csproj -v minimal` |
-| **bytecode** | `external/Java.Interop/tests/Xamarin.Android.Tools.Bytecode-Tests/` | `dotnet test external/Java.Interop/tests/Xamarin.Android.Tools.Bytecode-Tests/Xamarin.Android.Tools.Bytecode-Tests.csproj -v minimal` ⚠️ Requires `javac` |
+| **source writer** | `tests/Xamarin.SourceWriter-Tests/` | `dotnet test tests/Xamarin.SourceWriter-Tests/Xamarin.SourceWriter-Tests.csproj -v minimal` |
+| **java source** | `tests/Java.Interop.Tools.JavaSource-Tests/` | `dotnet test tests/Java.Interop.Tools.JavaSource-Tests/Java.Interop.Tools.JavaSource-Tests.csproj -v minimal` |
+| **maven** | `tests/Java.Interop.Tools.Maven-Tests/` | `dotnet test tests/Java.Interop.Tools.Maven-Tests/Java.Interop.Tools.Maven-Tests.csproj -v minimal` |
+| **api xml adjuster** | `tests/Xamarin.Android.Tools.ApiXmlAdjuster-Tests/` | `dotnet test tests/Xamarin.Android.Tools.ApiXmlAdjuster-Tests/Xamarin.Android.Tools.ApiXmlAdjuster-Tests.csproj -v minimal` |
+| **Java peer naming** | `tests/Java.Interop.Tools.JavaCallableWrappers-Tests/` | `dotnet test tests/Java.Interop.Tools.JavaCallableWrappers-Tests/Java.Interop.Tools.JavaCallableWrappers-Tests.csproj -v minimal` |
+| **java type system** | `tests/Java.Interop.Tools.JavaTypeSystem-Tests/` | `dotnet test tests/Java.Interop.Tools.JavaTypeSystem-Tests/Java.Interop.Tools.JavaTypeSystem-Tests.csproj -v minimal` |
+| **expressions** | `tests/Java.Interop.Tools.Expressions-Tests/` | `dotnet test tests/Java.Interop.Tools.Expressions-Tests/Java.Interop.Tools.Expressions-Tests.csproj -v minimal` ⚠️ Requires `javac` |
+| **generator tools** | `tests/Java.Interop.Tools.Generator-Tests/` | `dotnet test tests/Java.Interop.Tools.Generator-Tests/Java.Interop.Tools.Generator-Tests.csproj -v minimal` |
+| **generator** | `tests/generator-Tests/` | `dotnet test tests/generator-Tests/generator-Tests.csproj -v minimal` |
+| **bytecode** | `tests/Xamarin.Android.Tools.Bytecode-Tests/` | `dotnet test tests/Xamarin.Android.Tools.Bytecode-Tests/Xamarin.Android.Tools.Bytecode-Tests.csproj -v minimal` ⚠️ Requires `javac` |
 | **base tasks** | `tests/Microsoft.Android.Build.BaseTasks-Tests/` | `dotnet test tests/Microsoft.Android.Build.BaseTasks-Tests/Microsoft.Android.Build.BaseTasks-Tests.csproj -v minimal` |
+| **Android test adapter streaming/TRX** | `tests/Xamarin.Android.Tools.AndroidSdk-Tests/` | `dotnet test tests/Xamarin.Android.Tools.AndroidSdk-Tests/Xamarin.Android.Tools.AndroidSdk-Tests.csproj -v minimal -p:AndroidToolsDisableMultiTargeting=false -p:DotNetTargetFrameworkVersion=10.0 --filter "FullyQualifiedName~StreamingTests"` |
 | **android sdk tools** | `tests/Xamarin.Android.Tools.AndroidSdk-Tests/` | `dotnet test tests/Xamarin.Android.Tools.AndroidSdk-Tests/Xamarin.Android.Tools.AndroidSdk-Tests.csproj -v minimal -p:AndroidToolsDisableMultiTargeting=false -p:DotNetTargetFrameworkVersion=10.0` |
 
+The modern build-task `NativeAotSystemPropertiesTests` additionally compiles the production
+NativeAOT offset-based property reader. Its native probe memory-maps the generated
+ELF `.o` and reads the raw bootstrap body without Java/JNI transport or payload copies.
+It uses the production raw-only envelope reader and checks compressed/truncated rejection.
+On macOS/Linux, these tests require a C++23 compiler (`clang++`, or `CXX`); they do not
+require an Android device or a locally built Android SDK.
+
+`GetAndroidDefineConstantsTests` executes both registered task names through `dotnet msbuild`.
+On Windows it also runs them through the full-framework `MSBuild.exe` from the pinned
+`Microsoft.Build.Runtime` test dependency. `Runtime="NET"` hosting requires MSBuild 18 or
+newer; Visual Studio 2022's MSBuild 17 cannot host these tasks. The generated test project
+supplies the build SDK's `NetCoreSdkRoot` and `DOTNET_HOST_PATH`, which normally come from
+the .NET SDK imports, so the Full host can launch its .NET task worker. Missing tools or
+failed task-host execution fail the tests. Other platforms skip only the Full MSBuild cases.
+Run the focused standalone suite with:
+`dotnet test src/Microsoft.Android.Build.Tasks/Tests/Microsoft.Android.Build.Tasks.Tests/Microsoft.Android.Build.Tasks.Tests.csproj -v minimal --filter FullyQualifiedName~GetAndroidDefineConstantsTests`.
+
 ---
+
+The `TypeMapProguardTargetsTests` NativeAOT cases in the modern build-task suite
+also require the NDK `llvm-readobj` and adjacent `llvm-objdump` and `clang`
+executables. Pass
+`-p:_NativeAotLlvmReadObjPath=/path/to/ndk/toolchains/llvm/prebuilt/<host>/bin/llvm-readobj`
+(with `.exe` on Windows) to execute them; without it, those cases are reported as
+skipped. Other target regression cases do not require native tools.
 
 ## Host-Side MSBuild Tests (full-build — requires local SDK)
 
 Assembly: `bin/TestDebug/${TFM}/Xamarin.Android.Build.Tests.dll`
-Build: Full-build — `./dotnet-local.sh build Xamarin.Android.sln -c Debug` or `make prepare && make all`
+Build: Full-build — `make prepare && make leeroy`
 Device: No
 
 | Test Area | Filter | Test Classes / Notes |
 |-----------|--------|---------------------|
 | **build** (general) | `--filter "FullyQualifiedName~BuildTest"` | `BuildTest`, `BuildTest2`, `BuildTest3` — core build pipeline tests |
 | **smoke** | `--filter "cat=SmokeTests"` | Quick subset of build, packaging, and asset pack tests |
-| **aot** | `--filter "cat=AOT"` | `AotTests` + AOT-related tests in `BuildTest`, `IncrementalBuildTest` |
-| **llvm** | `--filter "cat=LLVM"` | LLVM-specific AOT compilation tests |
+| **native aot** | `--filter "FullyQualifiedName~NativeAotBuildTests"` | NativeAOT build and packaging tests |
 | **bindings** | `--filter "FullyQualifiedName~BindingBuildTest"` | Java binding generation and build tests |
 | **packaging** | `--filter "FullyQualifiedName~PackagingTest"` | APK/AAB packaging, signing, zipalign |
 | **incremental build** | `--filter "FullyQualifiedName~IncrementalBuildTest"` | Incremental build correctness tests |
@@ -61,7 +87,6 @@ Device: No
 | **fsharp** | `--filter "cat=FSharp"` | F# project build tests |
 | **wear** | `--filter "FullyQualifiedName~WearTests"` | Wear OS build tests |
 | **code behind** | `--filter "FullyQualifiedName~CodeBehindTests"` | Layout code-behind generation |
-| **marshal methods** | `--filter "FullyQualifiedName~MarshalMethodTests"` | Marshal method generation tests |
 | **asset packs** | `--filter "FullyQualifiedName~AssetPackTests"` | Play Asset Delivery tests |
 | **gradle** | `--filter "FullyQualifiedName~AndroidGradleProjectTests"` | Gradle project integration |
 | **deferred build** | `--filter "FullyQualifiedName~DeferredBuildTest"` | Deferred build tests |
@@ -81,9 +106,49 @@ Same assembly as above. These test individual MSBuild tasks in isolation with `M
 | **d8/dex** | `--filter "FullyQualifiedName~D8Tests"` | D8 dexing task |
 | **filter assemblies** | `--filter "FullyQualifiedName~FilterAssembliesTests"` | Assembly filtering |
 | **resource generation** | `--filter "FullyQualifiedName~GenerateResourceCaseMapTests"` | Resource case map generation |
-| **package manager** | `--filter "FullyQualifiedName~GeneratePackageManagerJavaTests"` | Package manager Java generation |
-| **key tool** | `--filter "FullyQualifiedName~KeyToolTests"` | Keystore/signing tasks |
-| **ndk** | `--filter "FullyQualifiedName~NdkUtilTests"` | NDK utility tasks |
+| **debug key** | `--filter "FullyQualifiedName~AndroidCreateDebugKeyTests"` | Debug keystore creation task |
+| **bundletool commands** | `--filter "FullyQualifiedName~BundleToolTaskTests"` | Command-line generation only; no project builds or device |
+| **ndk** | `--filter "FullyQualifiedName~AndroidNdkToolsTests"` | Canonical NDK tools and Clang runtime discovery |
+
+---
+
+## Trimming and AOT Tests (full-build — requires local SDK + device)
+
+Assembly: `bin/TestDebug/TrimmingTests/${TFM}/TrimmingTests.dll`
+Build: Full-build + device/emulator connected
+Device: **Yes** (`[Category("UsesDevice")]`)
+
+Each case is a purpose-built single-file app in `tests/TrimmingTests/Cases/` (`#:property` and `#:package` directives, its own
+`ApplicationId`, `#:project TrimmingTests.Expectations/TrimmingTests.Expectations.csproj`, and one `TRIMMING_TEST_RESULT: PASS`/`FAIL`
+log line). A case that needs more files lives in `Cases/<Case>/<Case>.cs` next to its `Resources/`, `AndroidManifest.xml`, or a
+`Case.targets` with MSBuild items. Cases for reported bugs start with a comment linking the issue or PR; known failures are
+`[Ignore]`d (or `Assert.Ignore`d for one configuration) with the link to the open issue.
+A test takes `[TrimmingConfigurations] TrimmingConfiguration configuration`, which runs it with CoreCLR full trimming, NativeAOT, and
+CoreCLR partial trimming (the CoreCLR Release default, which trims only trimmable assemblies and suppresses trimming warnings), or
+only in the configurations it lists, and calls `var app = BuildAndRun ("Cases/<Case>.cs", configuration, expectedWarnings: [...])`, which copies the case into its own
+directory shielded from the repository's `Directory.Build.*` files, builds it in that configuration, fails on any build
+warning whose code is not in `expectedWarnings` (with `TrimmerSingleWarn=false`) or on an expected one that is missing, and then installs
+and launches it and requires PASS.
+
+The test then calls `AssertTrimmingExpectations (app)`, which checks `[Kept]`, `[Removed]`, `[KeptMember]` and
+`[Kept|Removed][Type|Member]InAssembly` (optionally `By = Tool.FullTrimming|Tool.PartialTrimming|Tool.NativeAot`, or `Tool.Trimmer` for both ILLink modes) against ILLink's `linked/` assemblies (CoreCLR)
+or ILC's mstat file (NativeAOT). In partial mode, expectations on assemblies ILLink doesn't trim (the app's own, unless marked
+`IsTrimmable`) are replaced by a check that the whole assembly was kept. On NativeAOT, `*TypeInAssembly` also checks generic instantiations such as
+``JavaDictionary`2<System.Int32,System.Int64>``. `Cases/Directory.Build.targets` disables JIT inlining for NativeAOT cases, because the mstat omits
+inlined methods.
+
+Tests in a fixture run in parallel (`[Parallelizable (ParallelScope.Children)]`), also on the device: each configuration installs its
+own package (`<ApplicationId>.coreclr`/`.nativeaot`) and results are matched by process ID in a logcat stream started before the launch, so never clear logcat in a test. Expectation attributes take strings only, never `typeof`, so they cannot keep anything themselves. Never root anything in a case
+unless rooting is the behavior under test.
+
+| Test Area | Filter | Notes |
+|-----------|--------|-------|
+| **trimming** (all) | (no filter) | Every case on CoreCLR full trimming and NativeAOT |
+| **Java peer activation** | `--filter "FullyQualifiedName~JavaPeerActivationTests"` | Reflection-based activation of closed generic Java peers |
+
+```bash
+ADB_TARGET='-s emulator-5554' ./dotnet-local.sh test bin/TestDebug/TrimmingTests/${TFM}/TrimmingTests.dll
+```
 
 ---
 
@@ -103,18 +168,21 @@ Device: **Yes** (most tests have `[Category("UsesDevice")]`)
 | **localization** | `--filter "cat=Localization"` | Locale/culture device tests |
 | **timezone** | `--filter "cat=TimeZoneInfo"` | Time zone handling on device |
 | **wear** | `--filter "cat=WearOS"` | Wear OS device tests |
-| **aot profile** | `--filter "cat=ProfiledAOT"` | AOT profiling on device |
-| **export** | `--filter "FullyQualifiedName~MonoAndroidExportTest"` | `[Export]` attribute tests |
-| **bundletool** | `--filter "FullyQualifiedName~BundleToolTests"` | AAB bundle tool tests |
-| **uncaught exceptions** | `--filter "FullyQualifiedName~UncaughtExceptionTests"` | Unhandled exception behavior |
+| **export** | `--filter "FullyQualifiedName~ExportAttributeBuildTest"` | `[Export]` attribute tests |
+| **bundletool** | `--filter "FullyQualifiedName~BundleToolTests"` | One combined archive/signing/APK-set check per runtime, sharing a single project build per case |
+| **uncaught exceptions** | `--filter "FullyQualifiedName~UncaughtExceptionTests"` | Java exception handling and fatal managed main-thread process termination on CoreCLR and NativeAOT |
 | **system app** | `--filter "FullyQualifiedName~SystemApplicationTests"` | System application tests |
 | **fast dev** | `--filter "FullyQualifiedName~FastDevTest"` | Fast Deployment install/upload flow |
+
+`DotNetInstallAndRunPreviousSdk` covers CoreCLR Debug/Release and NativeAOT Release.
+Set `JAVA_HOME_21_ARM64` or `JAVA_HOME_21_X64` to JDK 21, matching the test host's
+architecture. Local workload setup installs the previous Android SDK.
 
 ---
 
 ## On-Device Runtime Tests (full-build — requires local SDK + device)
 
-Mono.Android device tests use stock NUnit through Microsoft Testing Platform (MTP), not NUnitLite. This changed in dotnet/android#11224.
+`Mono.Android.NET-Tests` (including the Java.Interop fixtures) and `Xamarin.Android.JcwGen-Tests` use MSTest with `MSTest.SourceGeneration` through Microsoft Testing Platform (MTP).
 
 Build/install with `-t:Install`, then run `dotnet test --no-build --report-trx` from the test project's directory so the project-local `global.json` selects the MTP runner.
 
@@ -124,6 +192,7 @@ Device: **Yes**
 | Test Area | Project | Notes |
 |-----------|---------|-------|
 | **runtime** (all) | `tests/Mono.Android-Tests/Mono.Android-Tests/Mono.Android.NET-Tests.csproj` | Core runtime tests |
+| **trimmable type map** | Same project | Java-driven activation, direct UCO callbacks, exports, manifest-only rooting, and typemap lookups (`TrimmableTypeMapRuntimeCoverageTests`, `TrimmableTypeMapDirectCallbackTests`, `TrimmableTypeMapExportTests`, `TrimmableTypeMapManifestTests`, `ExportTests`, `ConstructorActivationTests`, `JavaConvertTest`) |
 | **networking** | Same project — tests in `Xamarin.Android.Net/` and `System.Net/` | `AndroidMessageHandlerTests`, `AndroidMessageHandlerIntegrationTests` |
 | **java interop (on-device)** | Same project — tests in `Java.Interop/` | `JnienvTest`, `JavaListTest` |
 | **android app** | Same project — tests in `Android.App/` | `Application`, `Activity` tests |
@@ -139,10 +208,11 @@ Device: **Yes**
 
 The `Mono.Android.NET-Tests.csproj` dynamically excludes categories based on runtime:
 - **CoreCLR runtime**: Excludes `CoreCLRIgnore`, `NTLM`
-- **NativeAOT runtime**: Excludes `NativeAOTIgnore`, `SSL`, `NTLM`, `Export`, `NativeTypeMap`
-- **LLVM**: Excludes `LLVMIgnore`, `InetAccess`, `NetworkInterfaces`
+- **NativeAOT runtime**: Excludes `NativeAOTIgnore`, `SSL`, `NTLM`
 
 Other categories: `SSL`, `InetAccess`, `JavaList`, `RuntimeConfig`, `Intune`, `NTLM`
+
+To run a subset, pass `-p:IncludeCategories=<Category>` to **both** install and test; `--filter` is not supported.
 
 Command:
 ```bash
@@ -153,7 +223,7 @@ Command:
 )
 ```
 
-Results are `.trx` files under `bin/TestDebug/TestResults/` and are published as VSTest results in CI. Always pass the same configuration and MSBuild properties to the install and `dotnet test --no-build` commands (for example, `-c Release -p:UseMonoRuntime=false`).
+Results are `.trx` files under `bin/TestDebug/TestResults/` and are published as VSTest results in CI. Always pass the same configuration and MSBuild properties to the install and `dotnet test --no-build` commands (for example, `-c Release -p:PublishAot=true`).
 
 For `Xamarin.Android.JcwGen-Tests`, use the same pattern from `tests/CodeGen-Binding/Xamarin.Android.JcwGen-Tests/`:
 ```bash
@@ -167,37 +237,79 @@ For `Xamarin.Android.JcwGen-Tests`, use the same pattern from `tests/CodeGen-Bin
 ## Java.Interop Tests — Mixed Tiers
 
 Tooling tests are standalone (listed in the Standalone Tests table above).
-JVM-based tests are full-build (require local SDK + JVM).
+Core JNI interop tests live in `tests/Mono.Android-Tests/Java.Interop-Tests/`
+and are compiled by its `Java.Interop-Tests.NET.csproj` default source glob
+and run with the on-device `Mono.Android.NET-Tests.csproj` suite. They require
+the locally built Android SDK and an Android device/emulator; use the on-device
+build/install and test commands above.
 
-Build (full-build only): `./dotnet-local.sh build external/Java.Interop/Java.Interop.sln -c Debug`
-Device: **No** (runs on host JVM via `TestJVM`)
+Handwritten Android Java peers use `mono.android.IGCUserPeer`; their fixture JAR
+compiles against the Android platform and runtime JARs.
+`JavaMarshalGCBridgeTests.HandwrittenPeersUseAndroidGCReferenceContract` checks
+peer recognition and reference addition/clearing for those fixtures.
+
+CoreCLR and NativeAOT share the `Android.Runtime.JavaProxyThrowable` exception path.
+`ExceptionTest` covers original managed exception identity, Java causes, direct JNI
+throws, stack traces, and typed throwable/proxy array lookups; `ExportTests` covers
+exceptions through generated callbacks. `TransferredReferenceTests` checks that
+runtime exception lookup consumes transferred references exactly once when message,
+cause, or stack-trace extraction fails, while borrowed references remain valid.
 
 | Test Area | Assembly / Project | Notes |
 |-----------|--------------------|-------|
-| **java-interop** (core) | `external/Java.Interop/tests/Java.Interop-Tests/` | Core JNI interop tests |
-| **java-interop export** | `external/Java.Interop/tests/Java.Interop.Export-Tests/` | Export/callable wrapper tests |
-| **java-interop dynamic** | `external/Java.Interop/tests/Java.Interop.Dynamic-Tests/` | Dynamic interop |
-| **java-interop performance** | `external/Java.Interop/tests/Java.Interop-PerformanceTests/` | JNI performance benchmarks |
-| **java-base** | `external/Java.Interop/tests/Java.Base-Tests/` | Java.Base runtime tests |
-| **generator** | `external/Java.Interop/tests/generator-Tests/` | Binding generator tests |
-| **java callable wrappers** | `external/Java.Interop/tests/Java.Interop.Tools.JavaCallableWrappers-Tests/` | JCW generation |
-| **java type system** | `external/Java.Interop/tests/Java.Interop.Tools.JavaTypeSystem-Tests/` | Java type system tooling |
-| **java source** | `external/Java.Interop/tests/Java.Interop.Tools.JavaSource-Tests/` | Java source generation |
-| **maven** | `external/Java.Interop/tests/Java.Interop.Tools.Maven-Tests/` | Maven integration |
-| **bytecode** | `external/Java.Interop/tests/Xamarin.Android.Tools.Bytecode-Tests/` | Bytecode analysis |
-| **api xml adjuster** | `external/Java.Interop/tests/Xamarin.Android.Tools.ApiXmlAdjuster-Tests/` | API XML adjustment |
-| **source writer** | `external/Java.Interop/tests/Xamarin.SourceWriter-Tests/` | Source code generation |
+| **generator** | `tests/generator-Tests/` | Binding generator tests |
+| **Java peer naming** | `tests/Java.Interop.Tools.JavaCallableWrappers-Tests/` | CRC64 hashing, identifier validation, native type naming, and assembly resolution; current scanning and JCW generation are covered by the trimmable type map suites |
+| **java type system** | `tests/Java.Interop.Tools.JavaTypeSystem-Tests/` | Java type system tooling |
+| **java source** | `tests/Java.Interop.Tools.JavaSource-Tests/` | Java source generation |
+| **maven** | `tests/Java.Interop.Tools.Maven-Tests/` | Maven integration |
+| **bytecode** | `tests/Xamarin.Android.Tools.Bytecode-Tests/` | Bytecode analysis |
+| **api xml adjuster** | `tests/Xamarin.Android.Tools.ApiXmlAdjuster-Tests/` | API XML adjustment |
+| **source writer** | `tests/Xamarin.SourceWriter-Tests/` | Source code generation |
 
 Run these tests with `dotnet test` from each test project directory listed above.
 
 ---
 
-## Trimmable Type Map Tests (xUnit) — Mixed Tiers
+## Trimmable Type Map Coverage
 
-| Test Area | Tier | Assembly | Notes |
-|-----------|------|----------|-------|
-| **trimmable type map** (unit) | **Standalone** | `tests/Microsoft.Android.Sdk.TrimmableTypeMap.Tests/` | Scanner + generator unit tests — `dotnet test` on `.csproj` |
-| **trimmable type map** (integration) | **Full-build** | `tests/Microsoft.Android.Sdk.TrimmableTypeMap.IntegrationTests/` | End-to-end with Mono.Android + build tasks |
+The trimmable typemap is exercised by the on-device runtime tests above,
+`TrimmableTypeMapBuildTests` (host-side build integration), and
+`GenerateTrimmableTypeMapTests`, `GeneratedJniDebuggerBoundaryTests`, `TrimmableTypeMapIncrementalTests`,
+`TrimmableTypeMapManifestAliasTests`, `TrimmableTypeMapRidCallbackTests`, and
+`ExtractTypeMapKeysFromNativeAotObjectTests` (standalone build-task tests).
+The host tests cover incremental typemap invalidation, activity-alias rewriting,
+cross-RID callback metadata mismatches, and NativeAOT object extraction failures
+that cannot be exercised by a successful device run.
+The object-extraction tests use synthetic metadata, so they need no NDK tools.
+The direct callback fixture has its own assembly (`TrimmableTypeMapCallbacks`)
+because the UCO format marker is assembly-wide. The manifest-only Activity
+lives in the library assembly, which is not rooted wholesale by the test app.
+
+`GeneratedJniDebuggerBoundaryTests` checks the emitted debugger attribute and
+inline exception regions for constructor and export/direct-dispatch UCOs.
+On device, `-p:IncludeCategories=GeneratedJniDebuggerBoundary` selects constructor
+activation and export coverage, including throwing calls, subsequent successful
+calls, and handled-exception ABI defaults with exactly-once application-event
+delivery on both CoreCLR and NativeAOT.
+Ordinary device runs are no-debugger transport tests, not proof of an attached
+debugger's user-unhandled stop, Continue, or Java evaluation behavior.
+For attached CoreCLR acceptance, build with `Optimize=false` and use
+`JavaSideThrowingConstructorPropagatesException` and
+`Export_Method_Throws_PrimitiveReturn_SurfacesAsManagedException`: their catches
+remain in user code so JNI's managed rethrow does not add another user-unhandled
+stop inside NUnit's external `Assert.Catch`. Each should stop once at the original
+throw, then pass after Continue. The handled-policy tests above should not stop.
+Java evaluation while stopped must be checked separately.
+
+To run the on-device typemap tests:
+
+```bash
+./dotnet-local.sh build -t:Install -c Release tests/Mono.Android-Tests/Mono.Android-Tests/Mono.Android.NET-Tests.csproj
+(
+  cd tests/Mono.Android-Tests/Mono.Android-Tests
+  ../../../dotnet-local.sh test Mono.Android.NET-Tests.csproj --no-build -c Release --report-trx --results-directory ../../../bin/TestRelease/TestResults
+)
+```
 
 ---
 
@@ -206,6 +318,5 @@ Run these tests with `dotnet test` from each test project directory listed above
 | Test Area | Tier | Assembly / Project | Notes |
 |-----------|------|--------------------|-------|
 | **aidl** | **Standalone** | `tests/Xamarin.Android.Tools.Aidl-Tests/` | AIDL compiler tests — `dotnet test` on `.csproj` |
-| **assembly store reader** | **Standalone** | `.github/skills/read-assembly-store/tests/AssemblyStore.Tests/` | Legacy/current store layouts and LZ4/Zstd decompression |
 | **api compatibility** | N/A | `tests/api-compatibility/` | Not a test runner — reference data for API surface checks |
 | **android sdk tools** | **Standalone** | `tests/Xamarin.Android.Tools.AndroidSdk-Tests/` | Android SDK helper tooling tests — `dotnet test` on `.csproj` |

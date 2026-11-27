@@ -9,11 +9,9 @@ namespace Xamarin.Android.Build.Tests
 	public class WearTests : BaseTest
 	{
 		[Test]
-		public void BasicProject ([Values] bool isRelease, [Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
+		public void BasicProject ([ValueSource (typeof (BaseTest), nameof (BaseTest.ValidRuntimeConfigurations))] (bool isRelease, AndroidRuntime runtime) configuration)
 		{
-			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
-				return;
-			}
+			var (isRelease, runtime) = configuration;
 			var proj = new XamarinAndroidWearApplicationProject {
 				IsRelease = isRelease,
 			};

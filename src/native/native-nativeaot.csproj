@@ -7,7 +7,6 @@
     <OutputType>Exe</OutputType>
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
 
-    <AndroidSupportedTargetAotAbis>arm64:x86_64</AndroidSupportedTargetAotAbis>
     <AndroidSupportedTargetJitAbis>armeabi-v7a:arm64-v8a:x86_64</AndroidSupportedTargetJitAbis>
   </PropertyGroup>
 

@@ -354,11 +354,11 @@ namespace Xamarin.Android.Tasks
 					return string.Empty;
 				}
 
-				isGlobal = widgetId!.StartsWith (CalculateLayoutCodeBehind.GlobalIdPrefix, StringComparison.Ordinal);
+				isGlobal = widgetId.StartsWith (CalculateLayoutCodeBehind.GlobalIdPrefix, StringComparison.Ordinal);
 				if (!isGlobal)
-					return widgetId!;
+					return widgetId;
 
-				return widgetId!.Substring (CalculateLayoutCodeBehind.GlobalIdPrefix.Length);
+				return widgetId.Substring (CalculateLayoutCodeBehind.GlobalIdPrefix.Length);
 			}
 		}
 	}

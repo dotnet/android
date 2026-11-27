@@ -1,8 +1,12 @@
+#include <cerrno>
 #include <cstdio>
 #include <cstring>
 
 #include <shared/cpp-util.hh>
+#include <shared/log_functions.hh>
 #include <runtime-base/cpu-arch.hh>
+
+using namespace xamarin::android;
 
 #if __arm__
 static inline constexpr size_t BUF_SIZE = 512uz;
@@ -16,15 +20,28 @@ find_in_maps (const char *str)
 	char *line;
 	char  buf [BUF_SIZE];
 
-	if (!maps)
+	if (!maps) {
+		log_warnf (LOG_DEFAULT, "Failed to open /proc/self/maps for CPU detection: %s", strerror (errno));
 		return -1;
-
-	while ((line = fgets (buf, BUF_SIZE, maps))) {
-		if (strstr (line, str))
-			return 1;
 	}
 
-	return 0;
+	int found = 0;
+	while ((line = fgets (buf, BUF_SIZE, maps))) {
+		if (strstr (line, str)) {
+			found = 1;
+			break;
+		}
+	}
+
+	if (ferror (maps)) {
+		log_warnf (LOG_DEFAULT, "Failed to read /proc/self/maps for CPU detection: %s", strerror (errno));
+		found = -1;
+	}
+	if (fclose (maps) != 0) {
+		log_warnf (LOG_DEFAULT, "Failed to close /proc/self/maps after CPU detection: %s", strerror (errno));
+	}
+
+	return found;
 }
 
 static int
@@ -78,7 +95,11 @@ namespace {
 	{
 		bool found = true;
 #if __arm__
-		if (!detect_houdini ()) {
+		int houdini = detect_houdini ();
+		if (houdini < 0) {
+			Helpers::abort_application (LOG_DEFAULT, "Unable to determine the running CPU architecture");
+		}
+		if (houdini == 0) {
 			running_on_cpu = CPU_KIND_ARM;
 		} else {
 			/* If houdini is mapped in we're running on x86 */

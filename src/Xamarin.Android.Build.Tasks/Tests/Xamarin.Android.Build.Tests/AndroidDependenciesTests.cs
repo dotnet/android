@@ -2,15 +2,19 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Net;
+using System.Net.Http;
 using System.Text;
 using System.Threading;
-using System.Xml;
 using System.Xml.Linq;
 using NUnit.Framework;
+using Microsoft.Android.Build.Tasks;
 using Xamarin.Android.Tasks;
 using Xamarin.Android.Tools;
 using Xamarin.ProjectTools;
 using Microsoft.Build.Framework;
+using Microsoft.Build.Utilities;
+using Xamarin.Installer.Build.Tasks;
 
 namespace Xamarin.Android.Build.Tests
 {
@@ -20,25 +24,16 @@ namespace Xamarin.Android.Build.Tests
 	{
 		[Test]
 		[NonParallelizable] // Do not run environment modifying tests in parallel.
-		public void InstallAndroidDependenciesTest ([Values ("GoogleV2", "Xamarin")] string manifestType, [Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
+		public void InstallAndroidDependenciesTest ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			bool isRelease = runtime == AndroidRuntime.NativeAOT;
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
 				return;
 			}
 
-			// The GoogleV2 manifest from Google doesn't have an ndk-bundle component,
-			// so the NDK dependency can't be resolved for runtimes that require it.
-			if (manifestType == "GoogleV2" && runtime == AndroidRuntime.NativeAOT) {
-				Assert.Ignore ("GoogleV2 manifest does not have an ndk-bundle component for NativeAOT");
-			}
-
-			// Set to true when we are marking a new Android API level as stable, but it has not
-			// been added to the Xamarin manifest yet.
-			var xamarin_manifest_needs_updating = false;
-
 			var oldSdkPath = Environment.GetEnvironmentVariable ("TEST_ANDROID_SDK_PATH");
 			var oldJdkPath = Environment.GetEnvironmentVariable ("TEST_ANDROID_JDK_PATH");
+
 			try {
 				string sdkPath = Path.Combine (Root, "temp", TestName, "android-sdk");
 				string jdkPath = Path.Combine (Root, "temp", TestName, "android-jdk");
@@ -51,13 +46,10 @@ namespace Xamarin.Android.Build.Tests
 				proj.SetRuntime (runtime);
 				var buildArgs = new List<string> {
 					"AcceptAndroidSDKLicenses=true",
-					$"AndroidManifestType={manifestType}",
+
+					// This integration test downloads the SDK, JDK and (for NativeAOT) NDK from scratch.
+					"AndroidDependencyInstallationTimeout=30",
 				};
-				// When using the default Xamarin manifest, this test should fail if we can't install any of the defaults in Xamarin.Installer.Common.props
-				// When using the Google manifest, override the platform tools version to the one in their manifest as it only ever contains one version
-				if (manifestType == "GoogleV2") {
-					buildArgs.Add ($"AndroidSdkPlatformToolsVersion={GetCurrentPlatformToolsVersion ()}");
-				}
 
 				using (var b = CreateApkBuilder ()) {
 					b.Verbosity = LoggerVerbosity.Detailed;
@@ -66,6 +58,18 @@ namespace Xamarin.Android.Build.Tests
 					string defaultTarget = b.Target;
 					b.Target = "InstallAndroidDependencies";
 					b.BuildLogFile = "install-deps.log";
+
+					if (runtime == AndroidRuntime.NativeAOT) {
+						Directory.CreateDirectory (sdkPath);
+						Directory.CreateDirectory (jdkPath);
+						var timeoutArgs = buildArgs
+							.Where (arg => !arg.StartsWith ("AndroidDependencyInstallationTimeout=", StringComparison.Ordinal))
+							.Concat (["AndroidDependencyInstallationTimeout=0"])
+							.ToArray ();
+						Assert.IsFalse (b.Build (proj, parameters: timeoutArgs), "A timed-out dependency installation must not report success.");
+						Assert.IsTrue (b.LastBuildOutput.ContainsText ("timed out or was cancelled"),
+							"Timeout must be diagnosed before callers try to use missing installed files.");
+					}
 
 					// InstallAndroidDependencies downloads the Android SDK and JDK over the network, which
 					// can fail intermittently in CI. Retry a few times before giving up, starting from a
@@ -80,6 +84,7 @@ namespace Xamarin.Android.Build.Tests
 							Directory.CreateDirectory (path);
 						}
 
+
 						if (b.Build (proj, parameters: buildArgs.ToArray ())) {
 							installSucceeded = true;
 							break;
@@ -91,22 +96,12 @@ namespace Xamarin.Android.Build.Tests
 					}
 					Assert.IsTrue (installSucceeded, $"InstallAndroidDependencies should have succeeded within {maxInstallAttempts} attempts.");
 
-					// When dependencies can not be resolved/installed a warning will be present in build output:
-					//    Dependency `platform-tools` should have been installed but could not be resolved.
-					var depFailedMessage = "should have been installed but could not be resolved";
-					bool failedToInstall = b.LastBuildOutput.ContainsText (depFailedMessage);
+					FileAssert.Exists (Path.Combine (sdkPath, "cmdline-tools", "21.0", "source.properties"));
 
-					// If we don't think the Xamarin manifest has been updated to contain the new API level:
-					// - Don't error if we got the expected failure
-					// - Error if didn't get a failure, because we need to update this test
-					if (manifestType == "Xamarin" && xamarin_manifest_needs_updating) {
-						if (!failedToInstall)
-							Assert.Fail ("We didn't expect the Xamarin manifest to have the requested component. If the manifest has been updated, change 'InstallAndroidDependenciesTest.xamarin_manifest_needs_updating' to be 'false'. ");
-
-						return;
-					}
-
-					if (failedToInstall) {
+					// When a package is not installed, a warning is present in the build output:
+					//    The Android CLI did not install Android SDK package `platform-tools` into `...`.
+					var depFailedMessage = "The Android CLI did not install Android SDK package";
+					if (b.LastBuildOutput.ContainsText (depFailedMessage)) {
 						var sb = new StringBuilder ();
 						foreach (var line in b.LastBuildOutput) {
 							if (line.Contains (depFailedMessage)) {
@@ -132,110 +127,35 @@ namespace Xamarin.Android.Build.Tests
 			}
 		}
 
-		static string GetCurrentPlatformToolsVersion ()
+		[TestCase (AndroidRuntime.CoreCLR, false, false, false)]
+		[TestCase (AndroidRuntime.CoreCLR, false, true, true)]
+		[TestCase (AndroidRuntime.NativeAOT, true, false, true)]
+		[TestCase (AndroidRuntime.NativeAOT, false, false, false)]
+		[TestCase (AndroidRuntime.NativeAOT, false, true, true)]
+		public void NdkDependencyUsesEffectiveRuntime (AndroidRuntime runtime, bool isRelease, bool stripNativeLibraries, bool ndkRequired)
 		{
-			var s = new XmlReaderSettings {
-				XmlResolver = null,
-			};
-			var r = XmlReader.Create ("https://dl-ssl.google.com/android/repository/repository2-3.xml", s);
-			var d = XDocument.Load (r);
-
-			var platformToolsPackage    = d.Root.Elements ("remotePackage")
-				.Where (e => "platform-tools" == (string) e.Attribute("path") &&
-					"android-sdk-preview-license" != (string) e.Element ("uses-license")?.Attribute ("ref"))
-				.FirstOrDefault ();
-
-			var revision    = platformToolsPackage.Element ("revision");
-
-			return $"{revision.Element ("major")?.Value}.{revision.Element ("minor")?.Value}.{revision.Element ("micro")?.Value}";
-		}
-
-		static IEnumerable<object[]> Get_GetDependencyNdkRequiredConditionsData ()
-		{
-			var ret = new List<object[]> ();
-
-			foreach (AndroidRuntime runtime in new[] { AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT }) {
-				AddTestData ("AotAssemblies", false, runtime);
-				AddTestData ("AndroidEnableProfiledAot", false, runtime);
-				AddTestData ("EnableLLVM", true, runtime);
-			}
-
-			return ret;
-
-			void AddTestData (string property, bool ndkRequired, AndroidRuntime runtime)
-			{
-				ret.Add (new object[] {
-					property,
-					ndkRequired,
-					runtime,
-				});
-			}
-		}
-
-		[Test]
-		[TestCaseSource (nameof (Get_GetDependencyNdkRequiredConditionsData))]
-		public void GetDependencyNdkRequiredConditions (string property, bool ndkRequired, AndroidRuntime runtime)
-		{
-			bool isRelease = runtime == AndroidRuntime.NativeAOT;
-			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
-				return;
-			}
-
-			// CoreCLR doesn't support AOT so it doesn't ever need the NDK and it doesn't support profiled AOT
-			if (runtime == AndroidRuntime.CoreCLR && (ndkRequired || property == "AndroidEnableProfiledAot")) {
-				Assert.Ignore ("CoreCLR doesn't support AOT, it doesn't ever require the NDK");
-			}
-
-			// NativeAOT doesn't support profiled AOT or EnableLLVM (Mono concepts)
-			if (runtime == AndroidRuntime.NativeAOT && property == "AndroidEnableProfiledAot") {
-				Assert.Ignore ("NativeAOT doesn't support profiled AOT");
-			}
-
-			if (runtime == AndroidRuntime.NativeAOT && property == "EnableLLVM") {
-				Assert.Ignore ("EnableLLVM is not applicable to NativeAOT");
-			}
-
-			var proj = new XamarinAndroidApplicationProject {
-				IsRelease = isRelease,
-			};
+			var proj = new XamarinAndroidApplicationProject ();
 			proj.SetRuntime (runtime);
-			proj.AotAssemblies = runtime == AndroidRuntime.MonoVM;
-			proj.SetProperty (property, "true");
+			// PublishAot remains true in Debug, but the effective runtime is CoreCLR.
+			proj.IsRelease = isRelease;
+			proj.SetProperty ("AndroidStripNativeLibraries", stripNativeLibraries.ToString ());
+			proj.SetProperty ("_SkipNdkResolution", "true");
 			using (var builder = CreateApkBuilder ()) {
 				builder.Verbosity = LoggerVerbosity.Detailed;
 				builder.Target = "GetAndroidDependencies";
-				Assert.IsTrue (builder.Build (proj), "Build should have succeeded.");
+				Assert.IsTrue (builder.Build (proj), "Dependency discovery should succeed without an installed NDK.");
 				IEnumerable<string> taskOutput = builder.LastBuildOutput
 					.Select (x => x.Trim ())
 					.SkipWhile (x => !x.StartsWith ("Task \"CalculateProjectDependencies\"", StringComparison.Ordinal))
 					.SkipWhile (x => !x.StartsWith ("Output Item(s):", StringComparison.Ordinal))
-					.TakeWhile (x => !x.StartsWith ("Done executing task \"CalculateProjectDependencies\"", StringComparison.Ordinal));
-				if (ndkRequired)
-					StringAssertEx.Contains ("ndk-bundle", taskOutput, "ndk-bundle should be a dependency.");
-				else
-					StringAssertEx.DoesNotContain ("ndk-bundle", taskOutput, "ndk-bundle should not be a dependency.");
-			}
-		}
-
-		[Test]
-		public void NativeAotRequiresNdk_WhenWorkloadLinkerDisabled ()
-		{
-			var proj = new XamarinAndroidApplicationProject {
-				IsRelease = true,
-			};
-			proj.SetRuntime (AndroidRuntime.NativeAOT);
-			proj.SetProperty ("_AndroidUseWorkloadNativeLinker", "false");
-			proj.SetProperty ("_SkipNdkResolution", "false");
-			using (var builder = CreateApkBuilder ()) {
-				builder.Verbosity = LoggerVerbosity.Detailed;
-				builder.Target = "GetAndroidDependencies";
-				Assert.IsTrue (builder.Build (proj), "Build should have succeeded.");
-				IEnumerable<string> taskOutput = builder.LastBuildOutput
-					.Select (x => x.Trim ())
-					.SkipWhile (x => !x.StartsWith ("Task \"CalculateProjectDependencies\"", StringComparison.Ordinal))
-					.SkipWhile (x => !x.StartsWith ("Output Item(s):", StringComparison.Ordinal))
-					.TakeWhile (x => !x.StartsWith ("Done executing task \"CalculateProjectDependencies\"", StringComparison.Ordinal));
-				StringAssertEx.Contains ("ndk-bundle", taskOutput, "ndk-bundle should be a dependency for NativeAOT without workload linker.");
+					.TakeWhile (x => !x.StartsWith ("Done executing task \"CalculateProjectDependencies\"", StringComparison.Ordinal))
+					.ToArray ();
+				Assert.IsNotEmpty (taskOutput, "CalculateProjectDependencies should log its output items.");
+				if (ndkRequired) {
+					StringAssertEx.Contains ("ndk-bundle", taskOutput, "NativeAOT and optional native library stripping require the NDK.");
+				} else {
+					StringAssertEx.DoesNotContain ("ndk-bundle", taskOutput, "Ordinary CoreCLR builds should not require the NDK.");
+				}
 			}
 		}
 
@@ -327,6 +247,236 @@ namespace Xamarin.Android.Build.Tests
 				else
 					StringAssertEx.DoesNotContainRegex ($@"JavaDependency=\s*jdk\s*Version={requestedJdkVersion}", builder.LastBuildOutput, $"jdk {requestedJdkVersion} should not be a dependency.");
 			}
+		}
+
+		[Test]
+		public void InstallAndroidDependenciesPassesPackagesToAndroidCli ()
+		{
+			var root = Path.Combine (Root, "temp", TestName);
+			if (Directory.Exists (root))
+				Directory.Delete (root, recursive: true);
+			Directory.CreateDirectory (root);
+
+			var cli = CreateCatalogCli (root, """
+				Available packages:
+				  platform-tools  38.0.0  Android SDK Platform-Tools
+				  platform-tools  37.0.10  Android SDK Platform-Tools
+				  platform-tools  37.0.3  Android SDK Platform-Tools
+				""");
+
+			var errors = new List<BuildErrorEventArgs> ();
+			var task = new InstallAndroidDependencies {
+				BuildEngine = new MockBuildEngine (TestContext.Out, errors, [], []),
+				AndroidSdkPath = Path.Combine (root, "sdk"),
+				AcceptAndroidSDKLicenses = true,
+				InstallJavaDependencies = false,
+				AndroidCliPath = cli,
+				JavaDependencies = [],
+				Dependencies = [
+					new TaskItem ("build-tools/37.0.0", new Dictionary<string, string> { { "Version", "37.0.0" } }),
+					new TaskItem ("platform-tools", new Dictionary<string, string> { { "Version", "37.0.3" } }),
+					new TaskItem ("ndk-bundle", new Dictionary<string, string> { { "Version", "27.2.12479018" } }),
+					new TaskItem ("platforms/android-37.0"),
+					new TaskItem ("cmdline-tools/latest", new Dictionary<string, string> { { "Version", "latest" } }),
+				],
+			};
+			Assert.IsTrue (task.Execute (), string.Join (Environment.NewLine, errors.Select (e => e.Message)));
+
+			var args = File.ReadAllText (Path.Combine (root, "args.txt")).Trim ();
+			StringAssert.Contains ($"--no-metrics --sdk={Path.Combine (root, "sdk")} sdk install", args);
+			StringAssert.EndsWith ("build-tools/37.0.0 platform-tools@37.0.10 ndk/27.2.12479018 platforms/android-37.0 cmdline-tools/latest", args);
+			StringAssert.EndsWith ("sdk list --all --all-versions platform-tools",
+				File.ReadAllText (Path.Combine (root, "list-args.txt")).Trim ());
+		}
+
+		[TestCase ("37.0", "37.0.3", "37.0.3", null, null, TestName = "PlatformToolsLatestAlreadyInstalled")]
+		[TestCase ("37.0", "37.0.1", "37.0.3", "platform-tools@37.0.3", null, TestName = "PlatformToolsRollsForwardWithinMajor")]
+		[TestCase ("37.0", "38.0.0", "37.0.3", null, null, TestName = "PlatformToolsNewerMajorInstalled")]
+		[TestCase ("37.0", "37.0.3-rc1", "37.0.3", "platform-tools@37.0.3", null, TestName = "PlatformToolsPreviewInstalled")]
+		[TestCase ("37.0", null, null, null, "XA5310", TestName = "PlatformToolsNoCompatibleVersion")]
+		[TestCase ("37.0", "37.0.3", null, null, "XA5310", TestName = "PlatformToolsInstalledButNotInCatalog")]
+		[TestCase ("37.5", null, "37.0.3", null, "XA5310", TestName = "PlatformToolsNoSufficientVersion")]
+		[TestCase ("38.0.0", null, "38.0.2", "platform-tools@38.0.2", null, TestName = "PlatformToolsRequestedMajor")]
+		[TestCase ("", null, "37.0.3", "platform-tools", null, TestName = "PlatformToolsUnversionedNotInstalled")]
+		[TestCase ("", "36.0.0", "37.0.3", null, null, TestName = "PlatformToolsUnversionedInstalled")]
+		[TestCase ("latest", null, "37.0.3", null, "XA5311", TestName = "PlatformToolsMalformedVersion")]
+		[TestCase ("37.0.3oops", null, "37.0.3", null, "XA5311", TestName = "PlatformToolsMalformedVersionSuffix")]
+		[TestCase ("37.0.3...", null, "37.0.3", null, "XA5311", TestName = "PlatformToolsMalformedVersionTrailingDots")]
+		public void PlatformToolsRollForward (string requested, string installed, string available, string expectedInstall, string expectedError)
+		{
+			var root = Path.Combine (Root, "temp", TestName);
+			if (Directory.Exists (root))
+				Directory.Delete (root, recursive: true);
+			Directory.CreateDirectory (root);
+			var sdkPath = Path.Combine (root, "sdk");
+			if (installed != null) {
+				var directory = Path.Combine (sdkPath, "platform-tools");
+				Directory.CreateDirectory (directory);
+				File.WriteAllText (Path.Combine (directory, "source.properties"), $"Pkg.Revision={installed}\n");
+			}
+			// The installed section is ignored: only versions available in the catalog can be selected.
+			var catalog = $"""
+				Installed packages:
+				  platform-tools  {installed ?? "unknown"}  Android SDK Platform-Tools
+				Available packages:
+				  platform-tools  38.0.0  Android SDK Platform-Tools
+				  platform-tools  {available ?? "37.1.0-rc1"}  Android SDK Platform-Tools
+				""";
+			var errors = new List<BuildErrorEventArgs> ();
+			var task = new InstallAndroidDependencies {
+				BuildEngine = new MockBuildEngine (TestContext.Out, errors, [], []),
+				AndroidSdkPath = sdkPath,
+				AcceptAndroidSDKLicenses = true,
+				InstallJavaDependencies = false,
+				AndroidCliPath = CreateCatalogCli (root, catalog),
+				JavaDependencies = [],
+				Dependencies = [new TaskItem ("platform-tools", new Dictionary<string, string> { { "Version", requested } })],
+			};
+			Assert.AreEqual (expectedError == null, task.Execute (), string.Join (Environment.NewLine, errors.Select (e => e.Message)));
+			if (expectedError != null) {
+				var error = errors.Single ();
+				Assert.AreEqual (expectedError, error.Code);
+				if (expectedError == "XA5310")
+					StringAssert.Contains ($"version {requested} or later in the supported {requested.Split ('.') [0]}.x", error.Message);
+				else
+					StringAssert.Contains ($"'{requested}'", error.Message);
+			}
+			var argsPath = Path.Combine (root, "args.txt");
+			Assert.AreEqual (expectedInstall != null, File.Exists (argsPath));
+			if (expectedInstall != null)
+				StringAssert.EndsWith ($"sdk install {expectedInstall}", File.ReadAllText (argsPath).Trim ());
+			// Unversioned or invalid requests never query the catalog.
+			Assert.AreEqual (requested.Length > 0 && expectedError != "XA5311", File.Exists (Path.Combine (root, "list-args.txt")));
+		}
+
+		[TestCase (false)]
+		[TestCase (true)]
+		public void PlatformToolsCatalogSelectsLatestStableVersion (bool pipes)
+		{
+			var catalog = """
+				Installed packages:
+				  platform-tools | 37.9.0 | Android SDK Platform-Tools
+				Available packages:
+				  platform-tools | 38.0.0 | Android SDK Platform-Tools
+				  platform-tools | 37.0.3 | Android SDK Platform-Tools
+				  platform-tools | 37.2.0 | Android SDK Platform-Tools
+				  platform-tools | 37.0.10 | Android SDK Platform-Tools
+				  platform-tools | 37.3.0-rc1 | Android SDK Platform-Tools
+				  platform-tools | invalid | Android SDK Platform-Tools
+				  build-tools/37.4.0 | 37.4.0 | Android SDK Build-Tools
+				""";
+			if (!pipes)
+				catalog = catalog.Replace (" | ", "  ");
+			Assert.AreEqual ("37.2.0", InstallAndroidDependencies.SelectPlatformToolsVersion (catalog, new Version (37, 0)));
+			Assert.AreEqual ("37.2.0", InstallAndroidDependencies.SelectPlatformToolsVersion (catalog, new Version (37, 2, 0)));
+			Assert.IsNull (InstallAndroidDependencies.SelectPlatformToolsVersion (catalog, new Version (37, 2, 1)));
+		}
+
+		[Test]
+		public void PlatformToolsCatalogFailureStopsInstallation ()
+		{
+			var root = Path.Combine (Root, "temp", TestName);
+			if (Directory.Exists (root))
+				Directory.Delete (root, recursive: true);
+			Directory.CreateDirectory (root);
+			var errors = new List<BuildErrorEventArgs> ();
+			var task = new InstallAndroidDependencies {
+				BuildEngine = new MockBuildEngine (TestContext.Out, errors, [], []),
+				AndroidSdkPath = Path.Combine (root, "sdk"),
+				AcceptAndroidSDKLicenses = true,
+				InstallJavaDependencies = false,
+				AndroidCliPath = CreateCatalogCli (root, "Available packages:\n  platform-tools  37.0.3  Android SDK Platform-Tools", listExitCode: 7),
+				JavaDependencies = [],
+				Dependencies = [new TaskItem ("platform-tools", new Dictionary<string, string> { { "Version", "37.0" } })],
+			};
+			Assert.IsFalse (task.Execute ());
+			Assert.AreEqual ("XA5309", errors.Single ().Code);
+			StringAssert.Contains ("7", errors.Single ().Message);
+			StringAssert.Contains ("catalog failed", errors.Single ().Message);
+			StringAssert.Contains ("Available packages:", errors.Single ().Message);
+			Assert.IsFalse (File.Exists (Path.Combine (root, "args.txt")));
+		}
+
+		[TestCase ("37.0.3", true, TestName = "PlatformToolsInstalledWithoutLicenses")]
+		[TestCase ("37.0.1", false, TestName = "PlatformToolsUpgradeRequiresLicenses")]
+		public void PlatformToolsLicenses (string installed, bool expectedSuccess)
+		{
+			var root = Path.Combine (Root, "temp", TestName);
+			if (Directory.Exists (root))
+				Directory.Delete (root, recursive: true);
+			var sdkPath = Path.Combine (root, "sdk");
+			var directory = Path.Combine (sdkPath, "platform-tools");
+			Directory.CreateDirectory (directory);
+			File.WriteAllText (Path.Combine (directory, "source.properties"), $"Pkg.Revision={installed}\n");
+			var errors = new List<BuildErrorEventArgs> ();
+			var task = new InstallAndroidDependencies {
+				BuildEngine = new MockBuildEngine (TestContext.Out, errors, [], []),
+				AndroidSdkPath = sdkPath,
+				AcceptAndroidSDKLicenses = false,
+				InstallJavaDependencies = false,
+				AndroidCliPath = CreateCatalogCli (root, "Available packages:\n  platform-tools  37.0.3  Android SDK Platform-Tools"),
+				JavaDependencies = [],
+				Dependencies = [new TaskItem ("platform-tools", new Dictionary<string, string> { { "Version", "37.0" } })],
+			};
+			Assert.AreEqual (expectedSuccess, task.Execute (), string.Join (Environment.NewLine, errors.Select (e => e.Message)));
+			if (!expectedSuccess)
+				StringAssert.Contains ("AcceptAndroidSDKLicenses", errors.Single ().Message);
+			Assert.IsFalse (File.Exists (Path.Combine (root, "args.txt")));
+		}
+
+		static string CreateCatalogCli (string root, string catalog, int listExitCode = 0)
+		{
+			File.WriteAllText (Path.Combine (root, "catalog.txt"), catalog);
+			string cli;
+			if (OperatingSystem.IsWindows ()) {
+				cli = Path.Combine (root, "android.cmd");
+				File.WriteAllText (cli, $"""
+					@echo off
+					rem cmd.exe splits --sdk=PATH at '=', so search for the "list" token instead of using a fixed position.
+					echo %* | findstr /c:" list " >nul
+					if not errorlevel 1 (
+					  echo %* > "%~dp0list-args.txt"
+					  type "%~dp0catalog.txt"
+					  echo catalog failed 1>&2
+					  exit /b {listExitCode}
+					)
+					echo %* > "%~dp0args.txt"
+					""" + "\r\n");
+			} else {
+				cli = Path.Combine (root, "android");
+				File.WriteAllText (cli, $$"""
+					#!/bin/sh
+					case " $* " in
+					*" list "*)
+					  echo "$@" > "$(dirname "$0")/list-args.txt"
+					  cat "$(dirname "$0")/catalog.txt"
+					  echo "catalog failed" >&2
+					  exit {{listExitCode}}
+					  ;;
+					esac
+					echo "$@" > "$(dirname "$0")/args.txt"
+					""" + "\n");
+				File.SetUnixFileMode (cli, UnixFileMode.UserRead | UnixFileMode.UserWrite | UnixFileMode.UserExecute);
+			}
+			return cli;
+		}
+
+		[Test]
+		public async System.Threading.Tasks.Task UnknownJdkVersionIsNotValid ()
+		{
+			// aka.ms sends an unknown link to an HTML page on bing.com with status 200.
+			using (var client = new HttpClient (new HtmlHandler ())) {
+				var archive = await new JavaDependencyInstaller ().GetFirstValidJdkArchiveWithVersion (client, "21.0.99", CancellationToken.None);
+				Assert.IsNull (archive);
+			}
+		}
+
+		sealed class HtmlHandler : HttpMessageHandler
+		{
+			protected override System.Threading.Tasks.Task<HttpResponseMessage> SendAsync (HttpRequestMessage request, CancellationToken cancellationToken) =>
+				System.Threading.Tasks.Task.FromResult (new HttpResponseMessage (HttpStatusCode.OK) {
+					Content = new StringContent ("<html></html>", Encoding.UTF8, "text/html"),
+				});
 		}
 
 		static readonly XNamespace MSBuildXmlns = "http://schemas.microsoft.com/developer/msbuild/2003";

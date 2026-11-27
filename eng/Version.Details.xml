@@ -1,28 +1,20 @@
 <Dependencies>
   <ProductDependencies>
-    <Dependency Name="Microsoft.NET.Sdk" Version="11.0.100-preview.7.26365.101">
+    <Dependency Name="Microsoft.NET.Sdk" Version="12.0.100-alpha.1.26556.115">
       <Uri>https://github.com/dotnet/dotnet</Uri>
-      <Sha>cb8306a63c5cf24e9381108a3a9eb58907fd0f60</Sha>
+      <Sha>6e6f978fd9ca19b62796a13ff5230b21af0c42fa</Sha>
     </Dependency>
-    <Dependency Name="Microsoft.NET.ILLink" Version="11.0.0-preview.7.26365.101">
+    <Dependency Name="Microsoft.NET.ILLink" Version="12.0.0-alpha.1.26556.115">
       <Uri>https://github.com/dotnet/dotnet</Uri>
-      <Sha>cb8306a63c5cf24e9381108a3a9eb58907fd0f60</Sha>
+      <Sha>6e6f978fd9ca19b62796a13ff5230b21af0c42fa</Sha>
     </Dependency>
-    <Dependency Name="Microsoft.NETCore.App.Ref" Version="11.0.0-preview.7.26365.101">
+    <Dependency Name="Microsoft.NETCore.App.Ref" Version="12.0.0-alpha.1.26556.115">
       <Uri>https://github.com/dotnet/dotnet</Uri>
-      <Sha>cb8306a63c5cf24e9381108a3a9eb58907fd0f60</Sha>
+      <Sha>6e6f978fd9ca19b62796a13ff5230b21af0c42fa</Sha>
     </Dependency>
-    <Dependency Name="Microsoft.DotNet.Cecil" Version="0.11.5-preview.26365.101">
+    <Dependency Name="Microsoft.DotNet.Cecil" Version="0.11.5-preview.26556.115">
       <Uri>https://github.com/dotnet/dotnet</Uri>
-      <Sha>cb8306a63c5cf24e9381108a3a9eb58907fd0f60</Sha>
-    </Dependency>
-    <Dependency Name="Microsoft.NET.Workload.Mono.Toolchain.Current.Manifest-11.0.100-preview.4" Version="11.0.100-preview.4.26215.121">
-      <Uri>https://github.com/dotnet/dotnet</Uri>
-      <Sha>ab01524bbb2ef1eea0ffaef161b3ef5686e8f256</Sha>
-    </Dependency>
-    <Dependency Name="Microsoft.NET.Workload.Emscripten.Current.Manifest-11.0.100-preview.4" Version="11.0.100-preview.4.26215.121">
-      <Uri>https://github.com/dotnet/dotnet</Uri>
-      <Sha>ab01524bbb2ef1eea0ffaef161b3ef5686e8f256</Sha>
+      <Sha>6e6f978fd9ca19b62796a13ff5230b21af0c42fa</Sha>
     </Dependency>
     <!-- Previous .NET version -->
     <Dependency Name="Microsoft.NET.Workload.Mono.ToolChain.Current.Manifest-9.0.100" Version="9.0.12">
@@ -30,27 +22,39 @@
       <Sha>2b2a06c8a4d45ec0781266ffa3f3852a052f0fbb</Sha>
     </Dependency>
     <!-- Previous .NET Android version(s) -->
-    <Dependency Name="Microsoft.NET.Sdk.Android.Manifest-10.0.100" Version="36.1.69">
+    <Dependency Name="Microsoft.NET.Sdk.Android.Manifest-11.0.100-rc.2" Version="37.2.0-rc.2.84">
       <Uri>https://github.com/dotnet/android</Uri>
-      <Sha>d549e1dc4e2a083b08b4f24cb5495e81b99d79b5</Sha>
+      <Sha>801f9ecbab5118b13d21cb52409e507ad4b2feb7</Sha>
+    </Dependency>
+    <Dependency Name="System.IO.Hashing" Version="12.0.0-alpha.1.26556.115">
+      <Uri>https://github.com/dotnet/dotnet</Uri>
+      <Sha>6e6f978fd9ca19b62796a13ff5230b21af0c42fa</Sha>
     </Dependency>
   </ProductDependencies>
   <ToolsetDependencies>
-    <Dependency Name="Microsoft.DotNet.Arcade.Sdk" Version="11.0.0-beta.26365.101">
+    <Dependency Name="Microsoft.DotNet.Arcade.Sdk" Version="12.0.0-beta.26556.115">
       <Uri>https://github.com/dotnet/dotnet</Uri>
-      <Sha>cb8306a63c5cf24e9381108a3a9eb58907fd0f60</Sha>
+      <Sha>6e6f978fd9ca19b62796a13ff5230b21af0c42fa</Sha>
     </Dependency>
-    <Dependency Name="Microsoft.DotNet.Build.Tasks.Feed" Version="11.0.0-beta.26365.101">
+    <Dependency Name="Microsoft.DotNet.Build.Tasks.Feed" Version="12.0.0-beta.26556.115">
       <Uri>https://github.com/dotnet/dotnet</Uri>
-      <Sha>cb8306a63c5cf24e9381108a3a9eb58907fd0f60</Sha>
+      <Sha>6e6f978fd9ca19b62796a13ff5230b21af0c42fa</Sha>
     </Dependency>
-    <Dependency Name="Microsoft.TemplateEngine.Authoring.Tasks" Version="11.0.100-preview.7.26365.101">
+    <Dependency Name="Microsoft.TemplateEngine.Authoring.Tasks" Version="12.0.100-alpha.1.26556.115">
       <Uri>https://github.com/dotnet/dotnet</Uri>
-      <Sha>cb8306a63c5cf24e9381108a3a9eb58907fd0f60</Sha>
+      <Sha>6e6f978fd9ca19b62796a13ff5230b21af0c42fa</Sha>
     </Dependency>
-    <Dependency Name="MSTest" Version="4.4.0-preview.26376.8">
+    <Dependency Name="MSTest" Version="4.6.0-preview.26531.5">
       <Uri>https://github.com/microsoft/testfx</Uri>
-      <Sha>20bae7233d7d0036ec6e20f52933e7d8418b22f8</Sha>
+      <Sha>2a8ebadb17a3b388b62bbb0cedd407999e3ce10a</Sha>
+    </Dependency>
+    <Dependency Name="Microsoft.Testing.Extensions.TrxReport" Version="2.6.0-preview.26531.5">
+      <Uri>https://github.com/microsoft/testfx</Uri>
+      <Sha>2a8ebadb17a3b388b62bbb0cedd407999e3ce10a</Sha>
+    </Dependency>
+    <Dependency Name="Microsoft.DotNet.Helix.Sdk" Version="12.0.0-beta.26556.115">
+      <Uri>https://github.com/dotnet/dotnet</Uri>
+      <Sha>6e6f978fd9ca19b62796a13ff5230b21af0c42fa</Sha>
     </Dependency>
   </ToolsetDependencies>
 </Dependencies>

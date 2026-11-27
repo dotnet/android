@@ -20,8 +20,11 @@ namespace Xamarin.ProjectTools
 		public string AndroidNdkPath { get; set; } = AndroidSdkResolver.GetAndroidNdkPath ();
 		public string JavaSdkPath { get; set; } = AndroidSdkResolver.GetJavaSdkPath ();
 		public string ProjectDirectory { get; set; }
+		public IDictionary<string, string> EnvironmentVariables { get; } = new Dictionary<string, string> ();
 
 		readonly string projectOrSolution;
+
+		bool IsFileBasedApp => projectOrSolution.EndsWith (".cs", StringComparison.OrdinalIgnoreCase);
 
 		public DotNetCLI (string projectOrSolution)
 		{
@@ -62,6 +65,9 @@ namespace Xamarin.ProjectTools
 			}
 			if (Directory.Exists (JavaSdkPath)) {
 				p.StartInfo.SetEnvironmentVariable ("JavaSdkDirectory", JavaSdkPath.TrimEnd ('\\'));
+			}
+			foreach (var variable in EnvironmentVariables) {
+				p.StartInfo.SetEnvironmentVariable (variable.Key, variable.Value);
 			}
 
 			p.Start ();
@@ -154,13 +160,26 @@ namespace Xamarin.ProjectTools
 			}
 		}
 
-		public bool New (string template, string output = null)
+		public bool New (string template, string output = null, bool noRestore = false, string framework = null)
 		{
+			Directory.CreateDirectory (ProjectDirectory);
+			var nugetConfig = Path.Combine (ProjectDirectory, "NuGet.config");
+			if (!File.Exists (nugetConfig)) {
+				File.Copy (Path.Combine (XABuildPaths.TopDirectory, "NuGet.config"), nugetConfig);
+			}
+
 			var arguments = new List<string> {
 				"new",
 				template,
 				"--output", $"\"{output ?? ProjectDirectory}\"",
 			};
+			if (noRestore) {
+				arguments.Add ("--no-restore");
+			}
+			if (!string.IsNullOrEmpty (framework)) {
+				arguments.Add ("--framework");
+				arguments.Add (framework);
+			}
 			return Execute (arguments.ToArray ());
 		}
 
@@ -180,6 +199,11 @@ namespace Xamarin.ProjectTools
 		{
 			var arguments = GetDefaultCommandLineArgs ("pack", target, runtimeIdentifier, parameters, msbuildArguments);
 			return Execute (arguments.ToArray ());
+		}
+
+		public bool WorkloadSearch (string searchString)
+		{
+			return Execute ("workload", "search", searchString);
 		}
 
 		public bool Publish (string target = null, string runtimeIdentifier = null, string [] parameters = null, string [] msbuildArguments = null)
@@ -293,13 +317,17 @@ namespace Xamarin.ProjectTools
 			var arguments = new List<string> {
 				verb,
 				$"\"{projectOrSolution}\"",
-				"/noconsolelogger",
-				$"/flp1:LogFile=\"{BuildLogFile}\";Encoding=UTF-8;Verbosity={Verbosity}",
-				$"/bl:\"{Path.Combine (testDir, $"{(string.IsNullOrEmpty (target) ? "msbuild" : target)}.binlog")}\"",
-				"-m:1",
-				"-nodeReuse:false",
-				"/p:_DisableParallelAot=true",
 			};
+			// File-based apps (`dotnet build App.cs`) reject file loggers and node options; their console output
+			// goes to ProcessLogFile instead of BuildLogFile.
+			if (!IsFileBasedApp) {
+				arguments.Add ("/noconsolelogger");
+				arguments.Add ($"/flp1:LogFile=\"{BuildLogFile}\";Encoding=UTF-8;Verbosity={Verbosity}");
+				arguments.Add ("-m:1");
+				arguments.Add ("-nodeReuse:false");
+			}
+			arguments.Add ($"/bl:\"{Path.Combine (testDir, $"{(string.IsNullOrEmpty (target) ? "msbuild" : target)}.binlog")}\"");
+			arguments.Add ("/p:_DisableParallelAot=true");
 			if (!string.IsNullOrEmpty (target)) {
 				arguments.Add ($"/t:{target}");
 			}

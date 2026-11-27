@@ -28,11 +28,12 @@ about the various Microsoft.Android workloads.
     <PropertyGroup>
       <WorkloadDependenciesPath Condition="'$(WorkloadDependenciesPath)' == ''">$(OutputPath)workload-manifest\WorkloadDependencies.json</WorkloadDependenciesPath>
       <WorkloadManifestJsonPath Condition="'$(WorkloadManifestJsonPath)' == ''">$(OutputPath)workload-manifest\WorkloadManifest.json</WorkloadManifestJsonPath>
+      <_AndroidWorkloadManifestLocalizationPath>$([System.IO.Path]::GetDirectoryName('$(WorkloadManifestJsonPath)'))\localize</_AndroidWorkloadManifestLocalizationPath>
       <WorkloadManifestTargetsPath Condition="'$(WorkloadManifestTargetsPath)' == ''">$(OutputPath)workload-manifest\WorkloadManifest.targets</WorkloadManifestTargetsPath>
       <WorkloadVersion Condition="'$(WorkloadVersion)' == ''">$(AndroidPackVersionLong)</WorkloadVersion>
     </PropertyGroup>
 
-    <MakeDir Directories="$(OutputPath)workload-manifest" />
+    <MakeDir Directories="$(OutputPath)workload-manifest;$(_AndroidWorkloadManifestLocalizationPath)" />
     <ReplaceFileContents
         SourceFile="$(XamarinAndroidSourcePath)src\Xamarin.Android.Build.Tasks\Microsoft.NET.Sdk.Android\WorkloadManifest.in.json"
         DestinationFile="$(WorkloadManifestJsonPath)"
@@ -41,16 +42,32 @@ about the various Microsoft.Android workloads.
     <ReplaceFileContents
         SourceFile="$(XamarinAndroidSourcePath)src\Xamarin.Android.Build.Tasks\Microsoft.NET.Sdk.Android\WorkloadManifest.in.targets"
         DestinationFile="$(WorkloadManifestTargetsPath)"
-        Replacements="@NET_PREVIOUS_VERSION@=$(AndroidNetPreviousVersion)">
+        Replacements="@NET_PREVIOUS_VERSION@=$(AndroidNetPreviousVersion);@NET_PREVIOUS_ILLINK_VERSION@=$(AndroidNetPreviousILLinkVersion)">
     </ReplaceFileContents>
+    <ItemGroup>
+      <_AndroidWorkloadManifestLocalizationFiles Include="$(XamarinAndroidSourcePath)src\Xamarin.Android.Build.Tasks\Microsoft.NET.Sdk.Android\localize\WorkloadManifest.*.json" />
+    </ItemGroup>
+    <Copy
+        SourceFiles="@(_AndroidWorkloadManifestLocalizationFiles)"
+        DestinationFolder="$(_AndroidWorkloadManifestLocalizationPath)"
+        SkipUnchangedFiles="true"
+    />
 
     <ItemGroup>
+      <_AndroidPreviewPlatformId
+          Include="@(AndroidBuildApiLevel)"
+          Condition=" '%(AndroidBuildApiLevel.Unstable)' == 'true' "
+      />
+    </ItemGroup>
+    <PropertyGroup>
+      <_AndroidPreviewPlatformIds>@(_AndroidPreviewPlatformId->'%(PlatformId)', ',')</_AndroidPreviewPlatformIds>
+    </PropertyGroup>
+    <ItemGroup>
       <_WorkloadDepProp Include="AndroidLatestStablePlatformId=$(AndroidLatestStablePlatformId)" />
-      <_WorkloadDepProp Include="AndroidLatestUnstablePlatformId=$(AndroidLatestUnstablePlatformId)" />
+      <_WorkloadDepProp Include="AndroidPreviewPlatformIds=$(_AndroidPreviewPlatformIds)" />
       <_WorkloadDepProp Include="DotNetStableTargetFramework=$(DotNetStableTargetFramework)" />
       <_WorkloadDepProp Include="MicrosoftAndroidSdkOutDir=$(MicrosoftAndroidSdkOutDir)" />
       <_WorkloadDepProp Include="MonoOptionsVersion=$(MonoOptionsVersion)" />
-      <_WorkloadDepProp Include="NewtonsoftJsonPackageVersion=$(NewtonsoftJsonPackageVersion)" />
       <_WorkloadDepProp Include="WorkloadDependenciesPath=$(WorkloadDependenciesPath)" />
       <_WorkloadDepProp Include="WorkloadVersion=$(WorkloadVersion)" />
     </ItemGroup>
@@ -63,6 +80,7 @@ about the various Microsoft.Android workloads.
 
     <ItemGroup>
       <_PackageFiles Include="$(WorkloadManifestJsonPath)" PackagePath="data" />
+      <_PackageFiles Include="$(_AndroidWorkloadManifestLocalizationPath)\WorkloadManifest.*.json" PackagePath="data\localize" />
       <_PackageFiles Include="$(WorkloadManifestTargetsPath)" PackagePath="data" />
       <_PackageFiles Include="$(WorkloadDependenciesPath)" PackagePath="data" />
     </ItemGroup>

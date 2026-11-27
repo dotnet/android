@@ -1,0 +1,52 @@
+# MSBuild Review Rules
+
+MSBuild task and target guidance applicable to any .NET repository with MSBuild
+build infrastructure.
+
+---
+
+## MSBuild Task Conventions (C#)
+
+Most build tasks ship to customers and run inside MSBuild (`xa-prep-tasks` and
+`BootstrapTasks` are internal build-time exceptions). Getting shipped tasks wrong
+causes broken builds for every .NET Android developer.
+
+| Check | What to look for |
+|-------|-----------------|
+| **Task base classes and paths** | New tasks must derive from `MultithreadedAndroidTask` and implement `TaskPrefix` and `RunTask()` (or derive from `MultithreadedAndroidToolTask` and implement `TaskPrefix` when running an external tool), and declare `[MSBuildMultiThreadableTask]` directly on each concrete task class (the attribute is not inherited; unhandled exceptions in both bases are automatically converted to coded errors). Flag new tasks inheriting `AndroidTask`, `AsyncTask`, or `AndroidToolTask`, and flag `[MSBuildMultiThreadableTask]` added to tasks still on those bases, whose constructors capture the process working directory. Unmigrated legacy tasks may remain on their existing base until all code paths are thread-safe; log-only wrappers (`AndroidError`, `AndroidWarning`, `AndroidMessage`) may inherit `Microsoft.Build.Utilities.Task`. Resolve physical paths via `TaskEnvironment`, and call `TaskEnvironment.GetAbsolutePath(path).GetCanonicalForm()` when comparisons, containment checks, or cache keys need `.`/`..` collapsed (preserve logical item paths and metadata). Do not suggest `Path.GetFullPath(TaskEnvironment.GetAbsolutePath(...))`: its implicit string conversion fails `MSBuildTask0002` (an error in `.editorconfig`). |
+| **Async and parallel work** | Legacy `AsyncTask` subclasses override `RunTaskAsync()` (which handles `Yield()`, `try`/`finally`, and `Reacquire()`) and must use `AsyncTask` logging helpers on background threads — calling `Log.*` directly can hang Visual Studio. When migrating an `AsyncTask` to `MultithreadedAndroidTask`, preserve `Yield()`/`Reacquire()` in `try`/`finally` and keep background logging queued to the executing thread (`MSBuildExtensions.CreateTaskLogger(this Task)` calls `task.Log.*` directly, unlike the `AsyncTask` overload). `TaskEnvironment` is not thread-safe: resolve paths and environment settings before `Task.WhenAll` or parallel fan-out, and pass immutable values to workers. |
+| **Return `!Log.HasLoggedErrors`** | `RunTask()` must return `!Log.HasLoggedErrors`. Do not return `true`/`false` directly — it skips the centralized error-tracking mechanism. |
+| **Use `Log.LogCoded*` methods** | Errors and warnings must use `Log.LogCodedError("XA####", …)` or `Log.LogCodedWarning("XA####", …)` — never bare `Log.LogError` without a code. Error messages should come from `Properties.Resources`. |
+| **XA error codes** | Error codes follow `XA####` (4+ digits). New codes must not collide with existing ones. Check `Properties/Resources.resx` for used codes. Every new code must have a corresponding markdown documentation file at `Documentation/docs-mobile/messages/xa####.md` (following the existing format with frontmatter, example messages, issue explanation, and solution), and the code must be added to both `Documentation/docs-mobile/messages/index.md` and `Documentation/docs-mobile/TOC.yml`. (Postmortem `#10`) |
+| **`[Required]` properties** | `[Required]` properties must be non-nullable with a default: `public string Foo { get; set; } = "";` or `public ITaskItem[] Bar { get; set; } = [];`. Non-`[Required]` and `[Output]` properties must be nullable (`string?`, `ITaskItem[]?`). Mark properties `[Required]` when the task crashes without them. (Postmortem `#51`) |
+| **`UsingTask` hosting** | `<UsingTask/>` elements for `xa-prep-tasks` and `BootstrapTasks` (internal, not shipped) must use `TaskFactory="TaskHostFactory"` and `Runtime="NET"`. Shipped `netstandard2.0` task assemblies (`Xamarin.Android.Build.Tasks.dll`, `$(_XamarinAndroidBuildTasksAssembly)`, `Xamarin.Android.Build.Debugging.Tasks.dll`, `Xamarin.Installer.Build.Tasks.dll`) must omit both attributes so they do not explicitly force a task host. Shipped modern-.NET tasks in `$(_MicrosoftAndroidBuildTasksAssembly)` must declare the conditioned pair `Runtime="NET" TaskFactory="TaskHostFactory" Condition=" '$(MSBuildRuntimeType)' == 'Full' "` and `Runtime="NET" Condition=" '$(MSBuildRuntimeType)' == 'Core' "` (so .NET Framework MSBuild uses the .NET task host while .NET MSBuild does not force one) — never an unconditioned `TaskFactory="TaskHostFactory"`. |
+| **Caching with `RegisterTaskObject`** | Use `BuildEngine4.RegisterTaskObject()` (via the `RegisterTaskObjectAssemblyLocal()` extension method) instead of `static` variables for sharing data between tasks or across builds. Use `as` for casts to avoid `InvalidCastException`. Cache keys should include context that invalidates properly (device target, file path, version), and producer and consumer must match on key type, value, and lifetime. Under `-mt`, `RegisteredTaskObjectLifetime.Build` entries are shared across concurrent inner builds of the same project (such as different RIDs or TFMs); keying on project path or directory alone collides across configurations (`MultithreadedAndroidTask` has no `ProjectSpecificTaskObjectKey`), so include a configuration-specific discriminator such as the resolved absolute intermediate output directory. Cache primitive/small values only. |
+| **Use appropriate log levels** | Use `MessageImportance.Low` for verbose diagnostics, `MessageImportance.Normal` for progress, and `MessageImportance.High` for important status. Don't spam high-importance messages. |
+
+---
+
+## Process Management in Tasks
+
+| Check | What to look for |
+|-------|-----------------|
+| **Don't redirect stdout/stderr without draining** | Background processes with `RedirectStandardOutput = true` must have async readers draining the output. Otherwise the OS pipe buffer fills and the child process deadlocks. For fire-and-forget processes, set `Redirect* = false`. |
+| **Include stdout in error diagnostics** | When a task captures stdout, pass it to error reporting so failure messages include all output, not just stderr. |
+
+---
+
+## MSBuild Targets & XML
+
+Targets define the build pipeline. Mistakes here break incremental builds,
+cause performance regressions, or silently delete files.
+
+| Check | What to look for |
+|-------|-----------------|
+| **Underscore prefix for private names** | Internal targets, properties, and item groups must be prefixed with `_` (e.g., `_CompileJava`, `$(_JarFile)`, `@(_JavaFiles)`). MSBuild has no visibility — the underscore signals "we might rename this." Public-facing properties should be prefixed with `Android` (e.g., `$(AndroidEnableProguard)`). |
+| **Incremental builds (`Inputs`/`Outputs`)** | Every target that *writes files* must have `Inputs` and `Outputs` so MSBuild can skip it when nothing changed. Targets that only read files, set properties, or populate item groups do NOT need them. MSBuild evaluates a target's `Condition` *before* scheduling its `DependsOnTargets`, and runs `DependsOnTargets` *before* evaluating `Inputs` and `Outputs`: a `<TargetName>Inputs` dependency pulled in only via `DependsOnTargets` populates properties/items for `Inputs`/`Outputs` and the target body, not for the parent target's own `Condition`. |
+| **Stamp files** | When outputs aren't known ahead of time, use a stamp file in `$(_AndroidStampDirectory)` named after the target (e.g., `$(_AndroidStampDirectory)_ResolveLibraryProjectImports.stamp`). Create it with `<Touch Files="..." AlwaysCreate="True" />`. |
+| **`FileWrites` for intermediate files** | Intermediate files must be added to `@(FileWrites)` so `IncrementalClean` doesn't delete them. Use an `<ItemGroup>` block inside the target (it evaluates even when the target is skipped). Do NOT use `<Output TaskParameter="TouchedFiles" ItemName="FileWrites" />` — it won't run when the target is skipped, so `IncrementalClean` will delete the stamp and break incrementality. Stamp files in `$(_AndroidStampDirectory)` are already handled by `_AddFilesToFileWrites`. |
+| **Don't duplicate item group transforms** | If a target uses the same transform (e.g., `@(Files->'$(Dir)%(Filename)%(Extension)')`) more than once, compute it into a local item group first and reuse it. Duplicated transforms allocate the same array twice. |
+| **Use `->Count()` for empty checks** | Prefer `'@(Items->Count())' != '0'` over `'@(Items)' != ''`. The latter does a string join of all items, producing enormous log messages. `->Count()` returns `0` even for non-existent item groups. |
+| **Avoid `BeforeTargets`/`AfterTargets`** | Prefer `$(XDependsOn)` properties (e.g., `$(BuildDependsOn)`) to order targets. `AfterTargets` runs even if the predecessor *failed*, causing confusing cascading errors. Use `BeforeTargets`/`AfterTargets` only when no `DependsOn` property exists, and consider checking `$(MSBuildLastTaskResult)`. |
+| **XML indentation** | MSBuild/XML files use 2 spaces for indentation (per `.editorconfig`), not tabs. |
+| **`Condition` attribute first** | On `<Target>` and task elements, put the `Condition` attribute first — it's the most important for debugging. Be consistent with attribute ordering within a file. (Postmortem `#33`) |

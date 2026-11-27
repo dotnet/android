@@ -3,10 +3,6 @@
     <_Destination>$(MicrosoftAndroidSdkOutDir)</_Destination>
     <IntermediateOutputPath>obj\$(Configuration)\</IntermediateOutputPath>
     <_BundleToolDownloadLocation>$(AndroidToolchainCacheDirectory)\bundletool-all-$(XABundleToolVersion).jar</_BundleToolDownloadLocation>
-    <_BundleToolCopyLocation>$(AndroidToolchainCacheDirectory)\bundletool-all-$(XABundleToolVersion)-copy.jar</_BundleToolCopyLocation>
-    <_BundleToolExtractLocation>$(AndroidToolchainCacheDirectory)\bundletool-unzip-$(XABundleToolVersion)</_BundleToolExtractLocation>
-    <_JarPath Condition=" '$(JavaSdkDirectory)' != '' ">$(JavaSdkDirectory)/bin/jar</_JarPath>
-    <_JarPath Condition=" '$(_JarPath)' == '' ">jar</_JarPath>
   </PropertyGroup>
 
   <Import Project="..\..\build-tools\scripts\DownloadFileWithRetry.targets" />
@@ -22,31 +18,40 @@
         BuildInParallel="true" />
   </Target>
 
+  <Target Name="_StripAndCopyBundleToolInputs" DependsOnTargets="_DownloadBundleTool">
+    <PropertyGroup>
+      <_AndroidBundleToolInputsFile>$(IntermediateOutputPath)bundletool.inputs</_AndroidBundleToolInputsFile>
+    </PropertyGroup>
+    <MakeDir Directories="$(IntermediateOutputPath)" />
+    <WriteLinesToFile
+        File="$(_AndroidBundleToolInputsFile)"
+        Lines="BundleTool=$(_BundleToolDownloadLocation);SHA256=$(XABundleToolHash);JDK=$(JavaSdkDirectory);Gradle=$(GradleWPath);GradleArgs=$(GradleArgs)"
+        Overwrite="true"
+        WriteOnlyWhenDifferent="true"
+    />
+    <ItemGroup>
+      <FileWrites Include="$(_AndroidBundleToolInputsFile)" />
+    </ItemGroup>
+  </Target>
+
   <Target Name="_StripAndCopyBundleTool"
       BeforeTargets="Build"
-      DependsOnTargets="_DownloadBundleTool"
-      Inputs="$(_BundleToolDownloadLocation)"
-      Outputs="$(_Destination)bundletool.jar" >
-    <!-- Strip unused jna content and aapt2 from bundletool.jar, as we pass it our own path to aapt2.
-          This simplifies signing/hardening and reduces our installation footprint slightly. -->
-    <RemoveDir Directories="$(_BundleToolExtractLocation)" />
-    <MakeDir Directories="$(_BundleToolExtractLocation)" />
-    <Copy
-        SourceFiles="$(_BundleToolDownloadLocation)"
-        DestinationFiles="$(_BundleToolCopyLocation)"
-        SkipUnchangedFiles="True"
+      DependsOnTargets="_StripAndCopyBundleToolInputs"
+      Inputs="$(MSBuildThisFile);$(_AndroidBundleToolInputsFile);$(_BundleToolDownloadLocation);build.gradle;settings.gradle;proguard.pro;$(MSBuildThisFileDirectory)..\..\eng\gradle\dependency-repositories.gradle;$(MSBuildThisFileDirectory)..\..\eng\gradle\plugin-repositories.gradle;$(GradleHome)\gradle\wrapper\gradle-wrapper.properties;$(JavaSdkDirectory)\release"
+      Outputs="$(_Destination)bundletool.jar">
+    <Exec
+        Command="&quot;$(GradleWPath)&quot; build $(GradleArgs) -PbundletoolJar=&quot;$(_BundleToolDownloadLocation)&quot;"
+        EnvironmentVariables="JAVA_HOME=$(JavaSdkDirectory);APP_HOME=$(GradleHome)"
+        WorkingDirectory="$(MSBuildThisFileDirectory)"
     />
-    <Exec WorkingDirectory="$(_BundleToolExtractLocation)" Command="$(_JarPath) -xf &quot;$(_BundleToolCopyLocation)&quot;" />
-    <Delete Files="$(_BundleToolCopyLocation)" />
-    <Delete Files="$(_BundleToolExtractLocation)\linux\aapt2;$(_BundleToolExtractLocation)\macos\aapt2;$(_BundleToolExtractLocation)\windows\aapt2.exe" />
-    <RemoveDir Directories="$(_BundleToolExtractLocation)\com\sun\jna" />
-    <Exec WorkingDirectory="$(_BundleToolExtractLocation)" Command="$(_JarPath) -cmf META-INF/MANIFEST.MF &quot;$(_BundleToolCopyLocation)&quot; ." />
-    <RemoveDir Directories="$(_BundleToolExtractLocation)" />
     <Copy
-        SourceFiles="$(_BundleToolCopyLocation)"
+        SourceFiles="$(MSBuildThisFileDirectory)build\libs\bundletool.jar"
         DestinationFiles="$(_Destination)bundletool.jar"
-        SkipUnchangedFiles="True"
     />
+    <Touch Files="$(_Destination)bundletool.jar" />
+    <ItemGroup>
+      <FileWrites Include="$(_Destination)bundletool.jar;$(MSBuildThisFileDirectory)build\libs\bundletool.jar;$(MSBuildThisFileDirectory)build\libs\bundletool-processed.jar;$(MSBuildThisFileDirectory)build\libs\bundletool-unshrunk.jar" />
+    </ItemGroup>
   </Target>
 
   <Target Name="_CleanBundleTool" BeforeTargets="Clean">

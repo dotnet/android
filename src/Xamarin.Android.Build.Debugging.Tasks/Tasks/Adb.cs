@@ -1,18 +1,11 @@
 ﻿// Copyright (C) 2015 Xamarin, Inc. All rights reserved.
 
-using System;
-using System.Diagnostics;
 using System.IO;
-using System.Linq;
-using System.Xml;
-using System.Xml.Linq;
-using Microsoft.Build.Utilities;
-using Microsoft.Build.Framework;
-using System.Text.RegularExpressions;
-using Xamarin.AndroidTools;
-using System.Collections.Generic;
 using System.Text;
+using System.Text.RegularExpressions;
 using Microsoft.Android.Build.Tasks;
+using Microsoft.Build.Framework;
+using Microsoft.Build.Utilities;
 
 namespace Xamarin.Android.Tasks
 {
@@ -86,4 +79,3 @@ namespace Xamarin.Android.Tasks
 		}
 	}
 }
-

@@ -4,6 +4,7 @@
 using System;
 using System.Diagnostics;
 using System.IO;
+using System.Threading;
 
 using NUnit.Framework;
 
@@ -91,9 +92,61 @@ namespace Xamarin.Android.Tools.Tests
 		}
 
 		[Test]
+		public void MoveWithRollback_CancelledAfterValidation_RestoresBackup ()
+		{
+			var source = Path.Combine (tempDir, "source");
+			var target = Path.Combine (tempDir, "target");
+			Directory.CreateDirectory (source);
+			File.WriteAllText (Path.Combine (source, "new.txt"), "new");
+			Directory.CreateDirectory (target);
+			File.WriteAllText (Path.Combine (target, "old.txt"), "old");
+			using var cts = new CancellationTokenSource ();
+			Action validate = () => {
+				Assert.IsTrue (File.Exists (Path.Combine (target, "new.txt")));
+				var backups = Directory.GetDirectories (tempDir, "target.old-*");
+				Assert.That (backups, Has.Length.EqualTo (1), "Backup must survive through validation");
+				Assert.AreEqual ("old", File.ReadAllText (Path.Combine (backups [0], "old.txt")));
+				cts.Cancel ();
+			};
+
+			Assert.Throws<OperationCanceledException> (() => FileUtil.MoveWithRollback (source, target, logger, validate, cts.Token));
+
+			Assert.AreEqual ("old", File.ReadAllText (Path.Combine (target, "old.txt")));
+			Assert.IsFalse (File.Exists (Path.Combine (target, "new.txt")));
+			Assert.IsEmpty (Directory.GetDirectories (tempDir, "target.old-*"));
+		}
+
+		[Test]
+		public void MoveWithRollback_RollbackFailure_PreservesBackupAndBothErrors ()
+		{
+			var source = Path.Combine (tempDir, "source");
+			var target = Path.Combine (tempDir, "target");
+			Directory.CreateDirectory (source);
+			Directory.CreateDirectory (target);
+			File.WriteAllText (Path.Combine (target, "old.txt"), "old");
+			var validationError = new InvalidOperationException ("Validation failed");
+
+			var error = Assert.Throws<AggregateException> (() => FileUtil.MoveWithRollback (source, target, logger, validate: () => {
+				Directory.Delete (target);
+				File.WriteAllText (target, "blocking file");
+				throw validationError;
+			}));
+
+			Assert.IsNotNull (error);
+			if (error is null)
+				throw new InvalidOperationException ("Expected rollback failure");
+			Assert.That (error.InnerExceptions, Has.Count.EqualTo (2));
+			Assert.AreSame (validationError, error.InnerExceptions [0]);
+			var backups = Directory.GetDirectories (tempDir, "target.old-*");
+			Assert.That (backups, Has.Length.EqualTo (1));
+			Assert.AreEqual ("old", File.ReadAllText (Path.Combine (backups [0], "old.txt")));
+			Assert.AreEqual ("blocking file", File.ReadAllText (target));
+		}
+
+		[Test]
 		public void IsUnderDirectory_ChildPath_ReturnsTrue ()
 		{
-			var parent = Path.Combine ($"{Path.DirectorySeparatorChar}opt", "programs");
+			var parent = Path.Combine (tempDir, "programs");
 			var child = Path.Combine (parent, "java", "jdk-21");
 			Assert.IsTrue (FileUtil.IsUnderDirectory (child, parent));
 		}
@@ -101,24 +154,32 @@ namespace Xamarin.Android.Tools.Tests
 		[Test]
 		public void IsUnderDirectory_ExactMatch_ReturnsTrue ()
 		{
-			var dir = Path.Combine ($"{Path.DirectorySeparatorChar}opt", "programs");
-			Assert.IsTrue (FileUtil.IsUnderDirectory (dir, dir));
+			var directory = Path.Combine (tempDir, "programs");
+			Assert.IsTrue (FileUtil.IsUnderDirectory (directory, directory));
 		}
 
 		[Test]
 		public void IsUnderDirectory_SiblingPath_ReturnsFalse ()
 		{
 			Assert.IsFalse (FileUtil.IsUnderDirectory (
-				Path.Combine ($"{Path.DirectorySeparatorChar}opt", "data", "java"),
-				Path.Combine ($"{Path.DirectorySeparatorChar}opt", "programs")));
+				Path.Combine (tempDir, "data", "java"),
+				Path.Combine (tempDir, "programs")));
 		}
 
 		[Test]
 		public void IsUnderDirectory_DifferentRoot_ReturnsFalse ()
 		{
 			Assert.IsFalse (FileUtil.IsUnderDirectory (
-				Path.Combine ($"{Path.DirectorySeparatorChar}other", "java"),
-				Path.Combine ($"{Path.DirectorySeparatorChar}opt", "programs")));
+				Path.Combine (Path.GetPathRoot (tempDir), "other", "java"),
+				Path.Combine (tempDir, "programs")));
+		}
+
+		[Test]
+		public void IsUnderDirectory_PartialDirNameMatch_ReturnsFalse ()
+		{
+			var parent = Path.Combine (tempDir, "programs");
+			var sibling = Path.Combine (tempDir, "programs-extra", "java");
+			Assert.IsFalse (FileUtil.IsUnderDirectory (sibling, parent));
 		}
 
 		[TestCase (null, "/dir")]
@@ -128,24 +189,24 @@ namespace Xamarin.Android.Tools.Tests
 		[TestCase (null, null)]
 		public void IsUnderDirectory_NullOrEmpty_ReturnsFalse (string path, string directory)
 		{
-			Assert.IsFalse (FileUtil.IsUnderDirectory (path!, directory!));
+			Assert.IsFalse (FileUtil.IsUnderDirectory (path, directory));
 		}
 
 		[Test]
-		public void IsUnderDirectory_CaseInsensitive ()
+		public void IsUnderDirectory_CaseSensitive ()
 		{
-			var parent = Path.Combine ($"{Path.DirectorySeparatorChar}opt", "Programs");
-			var child = Path.Combine ($"{Path.DirectorySeparatorChar}opt", "PROGRAMS", "java");
-			Assert.IsTrue (FileUtil.IsUnderDirectory (child, parent));
+			var parent = Path.Combine (tempDir, "Programs");
+			var child = Path.Combine (tempDir, "PROGRAMS", "java");
+			Assert.IsFalse (FileUtil.IsUnderDirectory (child, parent));
 		}
 
 		[Test]
-		public void IsUnderDirectory_PartialDirNameMatch_ReturnsFalse ()
+		public void IsUnderDirectory_CanonicalCaseMismatch_ReturnsFalse ()
 		{
-			var parent = Path.Combine ($"{Path.DirectorySeparatorChar}opt", "programs");
-			Assert.IsFalse (FileUtil.IsUnderDirectory (
-				Path.Combine ($"{Path.DirectorySeparatorChar}opt", "programs-extra", "java"),
-				parent));
+			var parent = Path.Combine (tempDir, "programs");
+			var sibling = Path.Combine (parent, "..", "PROGRAMS", "java");
+			Assert.IsFalse (FileUtil.IsUnderDirectory (sibling, parent));
 		}
+
 	}
 }

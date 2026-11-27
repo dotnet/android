@@ -1,67 +1,56 @@
-#include <sys/types.h>
-#include <dirent.h>
+#include <sys/stat.h>
 #include <dlfcn.h>
 
 #include <cerrno>
+#include <cinttypes>
 #include <cstdio>
+#include <cstdlib>
 #include <cstring>
-#include <string>
-#include <vector>
 #include <unistd.h>
-
-#include <android/looper.h>
 
 #include <coreclrhost.h>
 
 #include <xamarin-app.hh>
 #include <host/assembly-store.hh>
-#include <host/gc-bridge.hh>
 #include <host/fastdev-assemblies.hh>
+#include <host/gc-bridge.hh>
 #include <host/host.hh>
+#include <host/host-common.hh>
 #include <host/host-environment-clr.hh>
 #include <host/host-jni.hh>
-#include <host/host-util.hh>
-#include <host/os-bridge.hh>
 #include <host/runtime-util.hh>
 #include <runtime-base/android-system.hh>
+#include <runtime-base/binary-blob-loader.hh>
+#include <runtime-base/coreclr-bootstrap.hh>
 #include <runtime-base/dso-loader.hh>
 #include <runtime-base/jni-wrappers.hh>
-#include <runtime-base/logger.hh>
 #include <runtime-base/monodroid-dl.hh>
-#include <runtime-base/monodroid-state.hh>
-#include <runtime-base/timing-internal.hh>
+#include <runtime-base/runtime-environment.hh>
+#include <runtime-base/util.hh>
+#include <shared/log_functions.hh>
 #include <shared/log_types.hh>
 
 using namespace xamarin::android;
 
 void Host::clr_error_writer (const char *message) noexcept
 {
-	log_error (LOG_DEFAULT, "CLR error: {}", optional_string (message));
+	log_errorf (LOG_DEFAULT, "CLR error: %s", optional_string (message));
 }
 
 bool Host::clr_external_assembly_probe (const char *path, void **data_start, int64_t *size) noexcept
 {
 	// TODO: `path` might be a full path, make sure it isn't
-	log_debug (LOG_DEFAULT, "clr_external_assembly_probe (\"{}\"...)"sv, path);
+	log_debugf (LOG_ASSEMBLY, "clr_external_assembly_probe (\"%s\"...)", optional_string (path));
 	if (data_start == nullptr || size == nullptr) {
 		return false; // TODO: abort instead?
 	}
 
-	if (FastTiming::enabled ()) [[unlikely]] {
-		internal_timing.start_event (TimingEventKind::AssemblyLoad);
-	}
-
 	auto log_and_return = [](const char *name, void *data_start, int64_t size) {
-		if (FastTiming::enabled ()) [[unlikely]] {
-			internal_timing.end_event (true /* uses_more_info */);
-			internal_timing.add_more_info (name);
-		}
-
-		log_debug (
+		log_debugf (
 			LOG_ASSEMBLY,
-			"Assembly '{}' data {}mapped ({:p}, {} bytes)",
+			"Assembly '%s' data %smapped (%p, %" PRId64 " bytes)",
 			optional_string (name),
-			data_start == nullptr ? "not "sv : ""sv,
+			data_start == nullptr ? "not " : "",
 			data_start,
 			size
 		);
@@ -74,12 +63,6 @@ bool Host::clr_external_assembly_probe (const char *path, void **data_start, int
 		if (*data_start != nullptr && *size > 0) {
 			return log_and_return (path, *data_start, *size);
 		}
-
-		log_warn (
-			LOG_ASSEMBLY,
-			"Assembly '{}' not found in FastDev override directory. Attempting to load from assembly store"sv,
-			optional_string (path)
-		);
 	}
 
 	*data_start = AssemblyStore::open_assembly (path, *size);
@@ -88,78 +71,46 @@ bool Host::clr_external_assembly_probe (const char *path, void **data_start, int
 }
 
 [[gnu::always_inline]]
-void Host::scan_filesystem_for_assemblies_and_libraries () noexcept
+void Host::load_assembly_store_from_filesystem () noexcept
 {
-	std::string const& native_lib_dir = AndroidSystem::get_native_libraries_dir ();
-	log_debug (LOG_ASSEMBLY, "Looking for assemblies in '{}'"sv, native_lib_dir);
-
-	DIR *lib_dir = opendir (native_lib_dir.c_str ());
-	if (lib_dir == nullptr) [[unlikely]] {
-		Helpers::abort_application (
-			LOG_ASSEMBLY,
-			std::format (
-				"Unable to open native library directory '{}'. {}"sv,
-				native_lib_dir,
-				std::strerror (errno)
-			)
-		);
+	if (found_assembly_store) {
+		return;
 	}
 
-	int dir_fd = dirfd (lib_dir);
-	if (dir_fd < 0) [[unlikely]] {
-		Helpers::abort_application (
+	const char *native_lib_dir = AndroidSystem::get_native_libraries_dir ();
+	char stack_buffer [Util::LocalPathBufferSize];
+	char *store_path = Util::join_paths (stack_buffer, sizeof (stack_buffer), native_lib_dir, Constants::assembly_store_file_name);
+
+	struct stat sbuf;
+	if (::lstat (store_path, &sbuf) == 0) {
+		log_debugf (LOG_ASSEMBLY, "Found assembly store in '%s'", store_path);
+		map_assembly_store_via_dlopen (store_path);
+	} else if (errno != ENOENT || !Util::dir_exists (native_lib_dir)) [[unlikely]] {
+		Helpers::abort_applicationf (
 			LOG_ASSEMBLY,
-			std::format (
-				"Unable to obtain file descriptor for opened directory '{}'. {}"sv,
-				native_lib_dir,
-				std::strerror (errno)
-			)
+			std::source_location::current (),
+			"Unable to locate assembly store '%s': %s",
+			store_path,
+			std::strerror (errno)
 		);
+	} else {
+		log_debugf (LOG_ASSEMBLY, "Assembly store '%s' not found", store_path);
 	}
 
-	do {
-		errno = 0;
-		dirent *cur = readdir (lib_dir);
-		if (cur == nullptr) {
-			if (errno != 0) {
-				log_warn (LOG_ASSEMBLY, "Failed to open a directory entry from '{}': {}"sv, native_lib_dir, std::strerror (errno));
-				continue; // No harm, keep going
-			}
-			break; // we're done
-		}
-
-		// We can ignore the obvious entries
-		if (cur->d_name[0] == '.') {
-			continue;
-		}
-
-		if (!found_assembly_store) {
-			found_assembly_store = Constants::assembly_store_file_name.compare (cur->d_name) == 0;
-			if (!found_assembly_store) {
-				continue;
-			}
-
-			log_debug (LOG_ASSEMBLY, "Found assembly store in '{}/{}'"sv, native_lib_dir, Constants::assembly_store_file_name);
-
-			std::string store_path = native_lib_dir;
-			store_path.append ("/"sv);
-			store_path.append (cur->d_name);
-			map_assembly_store_via_dlopen (store_path.c_str ());
-			break; // we've found all we need
-		}
-	} while (true);
-	closedir (lib_dir);
+	if (store_path != stack_buffer) {
+		std::free (store_path);
+	}
 }
 
 void Host::gather_assemblies_and_libraries ([[maybe_unused]] jstring_array_wrapper& runtimeApks, [[maybe_unused]] bool have_split_apks)
 {
-	if (!application_config.have_assembly_store) {
-		log_debug (LOG_ASSEMBLY, "No assembly store configured; skipping assembly store discovery"sv);
+	if (!CoreClrBootstrap::config.have_assembly_store) {
+		log_debugf (LOG_ASSEMBLY, "No assembly store configured; skipping assembly store discovery");
 		return;
 	}
 
 	if (!AndroidSystem::is_embedded_dso_mode_enabled ()) {
-		scan_filesystem_for_assemblies_and_libraries ();
+		load_assembly_store_from_filesystem ();
 		return;
 	}
 
@@ -176,23 +127,29 @@ void Host::map_assembly_store_via_dlopen (const char *store_path) noexcept
 	// the global lookup scope (RTLD_GLOBAL would just add linker bookkeeping).
 	void *handle = ::dlopen (store_path, RTLD_NOW | RTLD_LOCAL);
 	if (handle == nullptr) [[unlikely]] {
-		Helpers::abort_application (
+		Helpers::abort_applicationf (
 			LOG_ASSEMBLY,
-			std::format ("Unable to dlopen() assembly store '{}': {}"sv, optional_string (store_path), optional_string (::dlerror ()))
+			std::source_location::current (),
+			"Unable to dlopen() assembly store '%s': %s",
+			optional_string (store_path),
+			optional_string (::dlerror ())
 		);
 	}
 
 	// NOTE: intentionally not calling dlclose() - we keep the store mapped for the lifetime of the app.
 	void *payload = ::dlsym (handle, DLOPEN_ASSEMBLY_STORE_SYMBOL.data ());
 	if (payload == nullptr) [[unlikely]] {
-		Helpers::abort_application (
+		Helpers::abort_applicationf (
 			LOG_ASSEMBLY,
-			std::format ("Assembly store '{}' does not export the '{}' symbol"sv, optional_string (store_path), DLOPEN_ASSEMBLY_STORE_SYMBOL)
+			std::source_location::current (),
+			"Assembly store '%s' does not export the '%s' symbol",
+			optional_string (store_path),
+			DLOPEN_ASSEMBLY_STORE_SYMBOL.data ()
 		);
 	}
 
-	log_debug (LOG_ASSEMBLY, "Assembly store payload via dynamic symbol: {:p} ({})"sv, payload, optional_string (store_path));
-	AssemblyStore::configure_from_payload (payload, [store_path]() -> std::string { return std::string { store_path }; });
+	log_debugf (LOG_ASSEMBLY, "Assembly store payload via dynamic symbol: %p (%s)", payload, optional_string (store_path));
+	AssemblyStore::configure_from_payload (payload, store_path);
 	found_assembly_store = true;
 }
 
@@ -210,25 +167,25 @@ auto Host::create_delegate (
 		method_name.data (),
 		&delegate
 	);
-	log_debug (LOG_ASSEMBLY,
-			   "{}@{}.{} delegate creation result == {:x}; delegate == {:p}"sv,
-			   assembly_name,
-			   type_name,
-			   method_name,
+	log_debugf (LOG_ASSEMBLY,
+			   "%s@%s.%s delegate creation result == %x; delegate == %p",
+			   assembly_name.data (),
+			   type_name.data (),
+			   method_name.data (),
 			   static_cast<unsigned int>(hr),
 			   delegate
 	);
 
 	// TODO: make S_OK & friends known to us
 	if (hr != 0 /* S_OK */) {
-		Helpers::abort_application (
+		Helpers::abort_applicationf (
 			LOG_DEFAULT,
-			std::format (
-				"Failed to create delegate for {}.{}.{} (result == {:x})"sv,
-				assembly_name,
-				type_name,
-				method_name,
-				hr)
+			std::source_location::current (),
+			"Failed to create delegate for %s.%s.%s (result == %x)",
+			assembly_name.data (),
+			type_name.data (),
+			method_name.data (),
+			static_cast<unsigned int>(hr)
 		);
 	}
 
@@ -238,33 +195,22 @@ auto Host::create_delegate (
 [[gnu::flatten, gnu::always_inline]]
 void Host::preload_jni_libraries () noexcept
 {
-	// NOTE: when fixing a bug here, fix also the MonoVM code in src/native/mono/monodroid-glue.cc@preload_jni_libraries
-	if (application_config.number_of_shared_libraries == 0) [[unlikely]] {
+	if (CoreClrBootstrap::config.number_of_shared_libraries == 0) [[unlikely]] {
 		return;
 	}
 
-	log_debug (LOG_ASSEMBLY, "DSO jni preloads index stride == {}", dso_jni_preloads_idx_stride);
+	log_debugf (LOG_ASSEMBLY, "DSO jni preloads index stride == %u", CoreClrBootstrap::preload_stride);
 
-	if ((dso_jni_preloads_idx_count % dso_jni_preloads_idx_stride) != 0) [[unlikely]] {
-		Helpers::abort_application (
-			LOG_ASSEMBLY,
-			std::format (
-				"DSO preload index is invalid, size ({}) is not a multiple of {}"sv,
-				dso_jni_preloads_idx_count,
-				dso_jni_preloads_idx_stride
-			)
-		);
-	}
-
-	for (size_t i = 0; i < dso_jni_preloads_idx_count; i += dso_jni_preloads_idx_stride) {
-		const size_t entry_index = dso_jni_preloads_idx[i];
-		DSOCacheEntry &entry = dso_cache[entry_index];
+	for (size_t i = 0; i < CoreClrBootstrap::preload_count; i += CoreClrBootstrap::preload_stride) {
+		const size_t entry_index = CoreClrBootstrap::preload_index (i);
+		DSOCacheEntry &entry = CoreClrBootstrap::dso_cache[entry_index];
 		const std::string_view dso_name = MonodroidDl::get_dso_name (&entry);
 
-		log_debug (
+		log_debugf (
 			LOG_ASSEMBLY,
-			"Preloading JNI shared library: {} (entry's index: {}; name hash: {:x})",
-			dso_name,
+			"Preloading JNI shared library: %.*s (entry's index: %zu; name hash: %x)",
+			static_cast<int>(dso_name.length ()),
+			dso_name.data (),
 			entry_index,
 			entry.hash
 		);
@@ -272,16 +218,17 @@ void Host::preload_jni_libraries () noexcept
 		void *handle = MonodroidDl::monodroid_dlopen (&entry, dso_name, RTLD_NOW);
 
 		// Set handle in all the alias entries
-		for (size_t j = 1; j < dso_jni_preloads_idx_stride; j++) {
-			const size_t entry_alias_index = dso_jni_preloads_idx[i + j];
-			DSOCacheEntry &entry_alias = dso_cache[entry_alias_index];
-			const std::string_view entry_alias_name = MonodroidDl::get_dso_name (&entry);
+		for (size_t j = 1; j < CoreClrBootstrap::preload_stride; j++) {
+			const size_t entry_alias_index = CoreClrBootstrap::preload_index (i + j);
+			DSOCacheEntry &entry_alias = CoreClrBootstrap::dso_cache[entry_alias_index];
+			const std::string_view entry_alias_name = MonodroidDl::get_dso_name (&entry_alias);
 
-			log_debug (
+			log_debugf (
 				LOG_ASSEMBLY,
-				"Putting JNI library handle in alias entry at index {}: {}",
+				"Putting JNI library handle in alias entry at index %zu: %.*s",
 				entry_alias_index,
-				entry_alias_name
+				static_cast<int>(entry_alias_name.length ()),
+				entry_alias_name.data ()
 			);
 			entry_alias.handle = handle;
 		}
@@ -290,29 +237,10 @@ void Host::preload_jni_libraries () noexcept
 
 void Host::Java_mono_android_Runtime_initInternal (
 	JNIEnv *env, jclass runtimeClass, jstring lang, jobjectArray runtimeApksJava,
-
-	// TODO: MonoVM used this to load the profiler, probably won't be needed anymore
-	[[maybe_unused]] jstring runtimeNativeLibDir,
-	jobjectArray appDirs,
-
-	// TODO: MonoVM used this to improve performance of System.DateTime + friends, might not be needed anymore
-	[[maybe_unused]] jint localDateTimeOffset,
-	jobject loader,
-
-	// TODO: was used in the past to pre-load assemblies (some versions of Xamarin.Forms needed that).
-	// Might not be needed anymore.
-	[[maybe_unused]] jobjectArray assembliesJava,
+	jobjectArray appDirs, jint localDateTimeOffset, jobject loader,
 	jboolean isEmulator, jboolean haveSplitApks) noexcept
 {
-	Logger::init_logging_categories ();
-
-	// If fast logging is disabled, log messages immediately
-	FastTiming::initialize ((Logger::log_timing_categories() & LogTimingCategories::FastBare) != LogTimingCategories::FastBare);
-
-	if (FastTiming::enabled ()) [[unlikely]] {
-		_timing = std::make_shared<Timing> ();
-		internal_timing.start_event (TimingEventKind::TotalRuntimeInit);
-	}
+	HostCommon::init_logging_categories ();
 
 	jstring_array_wrapper applicationDirs (env, appDirs);
 	jstring_wrapper language (env, lang);
@@ -325,36 +253,60 @@ void Host::Java_mono_android_Runtime_initInternal (
 	);
 	HostEnvironment::set_variable_if_unset ("DOTNET_CrashReportRootPath"sv, cache_dir);
 
-	java_TimeZone = RuntimeUtil::get_class_from_runtime_field (env, runtimeClass, "java_util_TimeZone"sv, true);
-
 	AndroidSystem::detect_embedded_dso_mode (applicationDirs);
 	AndroidSystem::set_running_in_emulator (isEmulator);
 	AndroidSystem::set_primary_override_dir (files_dir);
-	AndroidSystem::set_app_code_cache_dir (applicationDirs[Constants::APP_DIRS_CODE_CACHE_DIR_INDEX]);
 	AndroidSystem::create_update_dir (AndroidSystem::get_primary_override_dir ());
 	AndroidSystem::setup_environment ();
-	Logger::init_reference_logging (AndroidSystem::get_primary_override_dir ());
 
 	jstring_array_wrapper runtimeApks (env, runtimeApksJava);
 	AndroidSystem::setup_app_library_directories (runtimeApks, applicationDirs, haveSplitApks);
 
 	gather_assemblies_and_libraries (runtimeApks, haveSplitApks);
 
-	if (FastTiming::enabled ()) [[unlikely]] {
-		internal_timing.start_event (TimingEventKind::ManagedRuntimeInit);
-	}
-
 	coreclr_set_error_writer (clr_error_writer);
 	// We REALLY shouldn't be doing this
 	snprintf (host_contract_ptr_buffer.data (), host_contract_ptr_buffer.size (), "%p", &runtime_contract);
 
-	// The first entry in the property arrays is for the host contract pointer. Application build makes sure
-	// of that.
-	init_runtime_property_values[0] = host_contract_ptr_buffer.data ();
+	// These indices are load-bearing: the application build emits the property names in this
+	// exact order (see `CoreClrBootstrapBlob`) so that we can fill in
+	// the values here without searching the names array.
+	constexpr size_t RUNTIME_PROPERTY_INDEX_HOST_CONTRACT = 0;
+	constexpr size_t RUNTIME_PROPERTY_INDEX_RUNTIME_IDENTIFIER = 1;
+	constexpr size_t RUNTIME_PROPERTY_INDEX_APP_CONTEXT_BASE_DIRECTORY = 2;
+	constexpr size_t RUNTIME_PROPERTY_INDEX_LOCAL_DATE_TIME_OFFSET = 3;
 
-	const char **prop_names = init_runtime_property_names;
-	const char **prop_values = const_cast<const char**>(init_runtime_property_values);
-	int prop_count = static_cast<int>(application_config.number_of_runtime_properties);
+	CoreClrBootstrap::property_values[RUNTIME_PROPERTY_INDEX_HOST_CONTRACT] = host_contract_ptr_buffer.data ();
+
+	// `hostfxr` normally hands `RUNTIME_IDENTIFIER` to the runtime, but we don't use `hostfxr`.
+	// Without it, `RuntimeInformation.RuntimeIdentifier` returns "unknown". The value can only
+	// come from here: the shared `*.runtimeconfig.json` does not know the ABI of the
+	// running process.
+	CoreClrBootstrap::property_values[RUNTIME_PROPERTY_INDEX_RUNTIME_IDENTIFIER] = const_cast<char*>(Constants::runtime_identifier.data ());
+
+	// Likewise for `APP_CONTEXT_BASE_DIRECTORY`, which backs `AppContext.BaseDirectory`. Without it
+	// the runtime falls back to the directory of `Assembly.GetEntryAssembly ()`, which is the empty
+	// string for us since assemblies are read straight out of the APK. Point it at the application's
+	// files directory, the same value MonoVM has always used. `.NET` terminates the base directory
+	// with a directory separator, so we do too.
+	// Storage must outlive `coreclr_initialize`, hence the function-local static. A plain pointer is
+	// constant-initialized, so it needs no guard variable. Assign on every call rather than relying
+	// on the initializer, which would only ever see the first `files_dir`. Runtime initialization is
+	// process-global, so no live CLR instance can retain the previous value when it is replaced.
+	static char *app_context_base_directory = nullptr;
+	std::free (app_context_base_directory);
+	// A null stack buffer makes `join_paths` return a `malloc`ed result with explicit ownership.
+	app_context_base_directory = Util::join_paths (nullptr, 0uz, files_dir.get_cstr (), "/"sv);
+	CoreClrBootstrap::property_values[RUNTIME_PROPERTY_INDEX_APP_CONTEXT_BASE_DIRECTORY] = app_context_base_directory;
+
+	// Java calculated the device's current UTC offset in seconds; the blob only reserves the slot.
+	static char local_date_time_offset_buffer[16] {};
+	std::snprintf (local_date_time_offset_buffer, sizeof (local_date_time_offset_buffer), "%d", localDateTimeOffset);
+	CoreClrBootstrap::property_values[RUNTIME_PROPERTY_INDEX_LOCAL_DATE_TIME_OFFSET] = local_date_time_offset_buffer;
+
+	const char **prop_names = CoreClrBootstrap::property_names;
+	const char **prop_values = const_cast<const char**>(CoreClrBootstrap::property_values);
+	int prop_count = static_cast<int>(CoreClrBootstrap::config.number_of_runtime_properties);
 
 	// In Debug builds with FastDev, append `TRUSTED_PLATFORM_ASSEMBLIES` with full
 	// paths to the assemblies pushed into `.__override__/<arch>/`. CoreCLR then
@@ -363,25 +315,50 @@ void Host::Java_mono_android_Runtime_initInternal (
 	// managed stack traces (file/line).
 	if constexpr (Constants::is_debug_build) {
 		// Storage must outlive `coreclr_initialize`; function-local statics
-		// give us process lifetime without polluting global namespace.
-		static std::string fastdev_tpa_list;
-		static std::vector<const char*> fastdev_prop_names;
-		static std::vector<const char*> fastdev_prop_values;
+		// give us process lifetime without polluting global namespace. All
+		// three are plain pointers, so they are constant-initialized and need
+		// no guard variables.
+		static char *fastdev_tpa_list = nullptr;
+		static const char **fastdev_prop_names = nullptr;
+		static const char **fastdev_prop_values = nullptr;
 
-		if (FastDevAssemblies::build_tpa_list (fastdev_tpa_list)) {
-			fastdev_prop_names.assign (prop_names, prop_names + prop_count);
-			fastdev_prop_values.assign (prop_values, prop_values + prop_count);
-			fastdev_prop_names.push_back (HOST_PROPERTY_TRUSTED_PLATFORM_ASSEMBLIES);
-			fastdev_prop_values.push_back (fastdev_tpa_list.c_str ());
+		FastDevAssemblies::discard_tpa_list (fastdev_tpa_list);
+		std::free (fastdev_prop_names);
+		std::free (fastdev_prop_values);
+		fastdev_tpa_list = nullptr;
+		fastdev_prop_names = nullptr;
+		fastdev_prop_values = nullptr;
 
-			prop_names = fastdev_prop_names.data ();
-			prop_values = fastdev_prop_values.data ();
-			prop_count = static_cast<int>(fastdev_prop_names.size ());
+		fastdev_tpa_list = FastDevAssemblies::build_tpa_list ();
+		if (fastdev_tpa_list != nullptr) {
+			size_t old_count = static_cast<size_t>(prop_count);
+			size_t new_count = Helpers::add_with_overflow_check<size_t> (old_count, 1uz);
+
+			fastdev_prop_names = static_cast<const char**> (std::calloc (new_count, sizeof (const char*)));
+			fastdev_prop_values = static_cast<const char**> (std::calloc (new_count, sizeof (const char*)));
+			if (fastdev_prop_names == nullptr || fastdev_prop_values == nullptr) [[unlikely]] {
+				log_warnf (LOG_ASSEMBLY, "FastDev: unable to allocate memory for the runtime properties; falling back to assembly probing");
+				std::free (fastdev_prop_names);
+				std::free (fastdev_prop_values);
+				FastDevAssemblies::discard_tpa_list (fastdev_tpa_list);
+				fastdev_prop_names = nullptr;
+				fastdev_prop_values = nullptr;
+				fastdev_tpa_list = nullptr;
+			} else {
+				memcpy (fastdev_prop_names, prop_names, old_count * sizeof (const char*));
+				memcpy (fastdev_prop_values, prop_values, old_count * sizeof (const char*));
+				fastdev_prop_names [old_count] = HOST_PROPERTY_TRUSTED_PLATFORM_ASSEMBLIES;
+				fastdev_prop_values [old_count] = fastdev_tpa_list;
+
+				prop_names = fastdev_prop_names;
+				prop_values = fastdev_prop_values;
+				prop_count = static_cast<int>(new_count);
+			}
 		}
 	}
 
-	int hr = FastTiming::time_call ("coreclr_initialize"sv, coreclr_initialize,
-		application_config.android_package_name,
+	int hr = coreclr_initialize (
+		CoreClrBootstrap::config.android_package_name,
 		"Xamarin.Android",
 		prop_count,
 		prop_names,
@@ -390,18 +367,13 @@ void Host::Java_mono_android_Runtime_initInternal (
 		&domain_id
 	);
 
-	if (FastTiming::enabled ()) [[unlikely]] {
-		internal_timing.end_event ();
-	}
-
 	// TODO: make S_OK & friends known to us
 	if (hr != 0 /* S_OK */) {
-		Helpers::abort_application (
+		Helpers::abort_applicationf (
 			LOG_DEFAULT,
-			std::format (
-				"Failed to initialize CoreCLR. Error code: {:x}"sv,
-				static_cast<unsigned int>(hr)
-			)
+			std::source_location::current (),
+			"Failed to initialize CoreCLR. Error code: %x",
+			static_cast<unsigned int>(hr)
 		);
 	}
 
@@ -414,50 +386,34 @@ void Host::Java_mono_android_Runtime_initInternal (
 
 	DsoLoader::init (
 		env,
-		RuntimeUtil::get_class_from_runtime_field (env, runtimeClass, "java_lang_System", true),
-		ALooper_forThread (), // main thread looper
-		gettid ()
+		RuntimeUtil::get_class_from_runtime_field (env, runtimeClass, "mono_NativeLibraryHelper", true)
 	);
 
 	preload_jni_libraries ();
 
 	struct JnienvInitializeArgs init = {};
-	init.javaVm                                         = jvm;
+	init.javaVm                                         = RuntimeEnvironment::get_java_vm ();
 	init.env                                            = env;
 	init.logCategories                                  = log_categories;
-	init.version                                        = env->GetVersion ();
 	init.brokenExceptionTransitions                     = 0;
-	init.packageNamingPolicy                            = static_cast<int>(application_config.package_naming_policy);
+	init.packageNamingPolicy                            = static_cast<int>(CoreClrBootstrap::config.package_naming_policy);
 	init.boundExceptionType                             = 0; // System
-	init.jniAddNativeMethodRegistrationAttributePresent = application_config.jni_add_native_method_registration_attribute_present ? 1 : 0;
-	init.jniRemappingInUse                              = application_config.jni_remapping_replacement_type_count > 0 || application_config.jni_remapping_replacement_method_index_entry_count > 0;
-	init.marshalMethodsEnabled                          = application_config.marshal_methods_enabled;
+	static BinaryBlobPayload remapping = {};
+	remapping                                           = BinaryBlobLoader::load_optional ("remapping_data");
+	init.jniRemappingData                               = remapping.data == nullptr ? nullptr : &remapping;
 
 	// GC threshold is 90% of the max GREF count
 	init.grefGcThreshold                                = static_cast<int>(AndroidSystem::get_gref_gc_threshold ());
-	init.grefClass                                      = RuntimeUtil::get_class_from_runtime_field (env, runtimeClass, "java_lang_Class"sv, true);
-	Class_getName                                       = env->GetMethodID (init.grefClass, "getName", "()Ljava/lang/String;");
-
-	jclass lrefLoaderClass                              = env->GetObjectClass (loader);
-	init.Loader_loadClass                               = env->GetMethodID (lrefLoaderClass, "loadClass", "(Ljava/lang/String;)Ljava/lang/Class;");
-	env->DeleteLocalRef (lrefLoaderClass);
+	init.maxGrefCount                                   = static_cast<int>(AndroidSystem::get_max_gref_count ());
+	init.initializeGCBridge                            = &GCBridge::initialize_callback;
 
 	init.grefLoader                                     = env->NewGlobalRef (loader);
 	init.grefIGCUserPeer                                = RuntimeUtil::get_class_from_runtime_field (env, runtimeClass, "mono_android_IGCUserPeer"sv, true);
-	init.grefGCUserPeerable                             = RuntimeUtil::get_class_from_runtime_field (env, runtimeClass, "net_dot_jni_GCUserPeerable"sv, true);
 
-	log_info (LOG_GC, "GREF GC Threshold: {}"sv, init.grefGcThreshold);
+	log_infof (LOG_GC, "GREF GC Threshold: %d", init.grefGcThreshold);
 
-	OSBridge::initialize_on_runtime_init (env, runtimeClass);
-	GCBridge::initialize_on_runtime_init (env, runtimeClass);
-
-	if (FastTiming::enabled ()) [[unlikely]] {
-		internal_timing.start_event (TimingEventKind::NativeToManagedTransition);
-	}
-
-	log_debug (LOG_ASSEMBLY, "Creating UCO delegate to {}.Initialize"sv, Constants::JNIENVINIT_FULL_TYPE_NAME);
-	void *delegate = nullptr;
-	delegate = FastTiming::time_call ("create_delegate for Initialize"sv, create_delegate, Constants::MONO_ANDROID_ASSEMBLY_NAME, Constants::JNIENVINIT_FULL_TYPE_NAME, "Initialize"sv);
+	log_debugf (LOG_ASSEMBLY, "Creating UCO delegate to %s.Initialize", Constants::JNIENVINIT_FULL_TYPE_NAME.data ());
+	void *delegate = create_delegate (Constants::MONO_ANDROID_ASSEMBLY_NAME, Constants::JNIENVINIT_FULL_TYPE_NAME, "Initialize"sv);
 	auto initialize = reinterpret_cast<jnienv_initialize_fn> (delegate);
 	abort_unless (
 		initialize != nullptr,
@@ -470,77 +426,17 @@ void Host::Java_mono_android_Runtime_initInternal (
 		}
 	);
 
-	log_debug (LOG_DEFAULT, "Calling into managed runtime init"sv);
-	FastTiming::time_call ("JNIEnv.Initialize UCO"sv, initialize, &init);
+	log_debugf (LOG_DEFAULT, "Calling into managed runtime init");
+	initialize (&init);
 
-	// RegisterJniNatives and PropagateUncaughtException are returned from Initialize
-	// to avoid extra create_delegate calls. RegisterJniNatives is null when using the
-	// trimmable typemap path (the method is trimmed; registration is handled in managed code).
-	jnienv_register_jni_natives = init.registerJniNativesFn;
 	jnienv_propagate_uncaught_exception = init.propagateUncaughtExceptionFn;
 	abort_unless (jnienv_propagate_uncaught_exception != nullptr, "Failed to obtain unmanaged-callers-only function pointer to the PropagateUncaughtException method.");
-
-	if (FastTiming::enabled ()) [[unlikely]] {
-		internal_timing.end_event (); // native to managed
-		internal_timing.end_event (); // total init time
-	}
-
-	MonodroidState::mark_startup_done ();
-}
-
-void Host::Java_mono_android_Runtime_register (JNIEnv *env, jstring managedType, jclass nativeClass, jstring methods) noexcept
-{
-	if (FastTiming::enabled ()) [[unlikely]] {
-		internal_timing.start_event (TimingEventKind::RuntimeRegister);
-	}
-
-	jsize managedType_len = env->GetStringLength (managedType);
-	const jchar *managedType_ptr = env->GetStringChars (managedType, nullptr);
-	int methods_len = env->GetStringLength (methods);
-	const jchar *methods_ptr = env->GetStringChars (methods, nullptr);
-
-	dynamic_local_string<SENSIBLE_TYPE_NAME_LENGTH> managed_type_name;
-	const char *mt_ptr = env->GetStringUTFChars (managedType, nullptr);
-	managed_type_name.assign (mt_ptr, strlen (mt_ptr));
-	log_debug (LOG_ASSEMBLY, "Registering type: '{}'"sv, managed_type_name.get ());
-	env->ReleaseStringUTFChars (managedType, mt_ptr);
-
-	// TODO: must attach thread to the runtime here
-	if (jnienv_register_jni_natives != nullptr) {
-		jnienv_register_jni_natives (managedType_ptr, managedType_len, nativeClass, methods_ptr, methods_len);
-	}
-
-	env->ReleaseStringChars (methods, methods_ptr);
-	env->ReleaseStringChars (managedType, managedType_ptr);
-
-	if (FastTiming::enabled ()) [[unlikely]] {
-		internal_timing.end_event (true /* uses_more_info */);
-
-		dynamic_local_string<SENSIBLE_TYPE_NAME_LENGTH> type;
-		mt_ptr = env->GetStringUTFChars (managedType, nullptr);
-		type.assign (mt_ptr, strlen (mt_ptr));
-		env->ReleaseStringUTFChars (managedType, mt_ptr);
-
-		internal_timing.add_more_info (type);
-	}
-}
-
-void Host::Java_mono_android_Runtime_registerNatives ([[maybe_unused]] JNIEnv *env, [[maybe_unused]] jclass nativeClass) noexcept
-{
-	// In the trimmable typemap path, registerNatives is handled entirely in managed code
-	// via a dynamically registered JNI native method. This C++ stub exists only as a
-	// fallback for the legacy code path (which doesn't use registerNatives).
 }
 
 auto HostCommon::Java_JNI_OnLoad (JavaVM *vm, [[maybe_unused]] void *reserved) noexcept -> jint
 {
-	jvm = vm;
-
-	JNIEnv *env = nullptr;
-	vm->GetEnv ((void**)&env, JNI_VERSION_1_6);
-	OSBridge::initialize_on_onload (vm, env);
-	GCBridge::initialize_on_onload (env);
-
+	CoreClrBootstrap::initialize ();
+	RuntimeEnvironment::initialize (vm);
 	AndroidSystem::init_max_gref_count ();
 	return JNI_VERSION_1_6;
 }
@@ -548,7 +444,7 @@ auto HostCommon::Java_JNI_OnLoad (JavaVM *vm, [[maybe_unused]] void *reserved) n
 void Host::propagate_uncaught_exception (JNIEnv *env, jobject javaThread, jthrowable javaException) noexcept
 {
 	if (jnienv_propagate_uncaught_exception == nullptr) {
-		log_warn (LOG_DEFAULT, "propagate_uncaught_exception called before JNIEnvInit.PropagateUncaughtException was initialized"sv);
+		log_warnf (LOG_DEFAULT, "propagate_uncaught_exception called before JNIEnvInit.PropagateUncaughtException was initialized");
 		return;
 	}
 

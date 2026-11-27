@@ -4,7 +4,6 @@ using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.IO;
-using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Runtime.ExceptionServices;
 using System.Runtime.InteropServices;
@@ -17,11 +16,13 @@ using Microsoft.Android.Runtime;
 using RuntimeFeature = Microsoft.Android.Runtime.RuntimeFeature;
 
 namespace Android.Runtime {
+	/// <remarks>
+	/// Released JNI entry points remain safe-callable for compatibility; the compiler does not enforce
+	/// their documented reference, buffer, ABI, thread or ownership obligations.
+	/// The new UTF-8 allocation and construction overloads retain caller-unsafe declarations.
+	/// </remarks>
 	public static partial class JNIEnv {
 		const DynamicallyAccessedMemberTypes Constructors = DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.NonPublicConstructors;
-
-		[ThreadStatic]
-		static byte[]? mvid_bytes;
 
 		public static IntPtr Handle => JniEnvironment.EnvironmentPointer;
 
@@ -31,46 +32,54 @@ namespace Android.Runtime {
 				return Array.CreateInstance (elementType, length);
 			}
 
-			if (RuntimeFeature.TrimmableTypeMap) {
-				return SafeArrayFactory.CreateInstance (elementType, rank: 1, length);
-			}
-
-			throw new NotSupportedException ($"It is not possible to create an array with element type '{elementType}'.");
+			return SafeArrayFactory.CreateInstance (elementType, rank: 1, length);
 		}
 
-		internal static IntPtr IdentityHash (IntPtr v)
+		/// <safety>
+		/// <paramref name="v"/> must be null or a live object reference from this VM, usable on this thread
+		/// until System.identityHashCode returns or throws. The result is an integer hash encoded as IntPtr, not a JNI reference.
+		/// </safety>
+		internal static unsafe IntPtr IdentityHash (IntPtr v)
 		{
 			return JniEnvironment.References.GetIdentityHashCode (new JniObjectReference (v));
 		}
 
+		/// <safety>
+		/// <paramref name="jnienv"/> must be a live JNI environment for the current thread and current runtime, with readable matching JNI table storage.
+		/// It and its VM must remain usable through transition disposal, including if transition setup throws.
+		/// </safety>
 		public static void CheckHandle (IntPtr jnienv)
 		{
 			new JniTransition (jnienv).Dispose ();
 		}
 
-		internal static bool IsGCUserPeer (IntPtr value)
+		/// <safety>
+		/// A nonzero <paramref name="value"/> must be a live JNI object reference from this VM, retained
+		/// on this thread until the type test returns or throws. The zero check does not validate other addresses.
+		/// </safety>
+		internal static unsafe bool IsGCUserPeer (IntPtr value)
 		{
 			if (value == IntPtr.Zero)
 				return false;
 
-			return IsInstanceOf (value, JNIEnvInit.grefIGCUserPeer_class) ||
-				IsInstanceOf (value, JNIEnvInit.grefGCUserPeerable_class);
+			// SAFETY: value is the borrowed peer passed by runtime marshaling; grefIGCUserPeer_class is the host's retained global class, used only for this type test.
+			return unsafe(IsInstanceOf (value, JNIEnvInit.grefIGCUserPeer_class));
 		}
 
 		internal static bool ShouldWrapJavaException (Java.Lang.Throwable? t, [CallerMemberName] string? caller = null)
 		{
 			if (t == null) {
-				RuntimeNativeMethods.monodroid_log (LogLevel.Warn,
-				               LogCategories.Default,
+				Logger.Log (LogLevel.Warn,
+				               "DOTNET",
 				               $"ShouldWrapJavaException was not passed a valid `Java.Lang.Throwable` instance. Called from method `{caller}`");
 				return false;
 			}
 
 			bool wrap = JNIEnvInit.BoundExceptionType == BoundExceptionType.System;
 			if (!wrap) {
-				RuntimeNativeMethods.monodroid_log (
+				Logger.Log (
 					LogLevel.Warn,
-					LogCategories.Default,
+					"DOTNET",
 					$"Not wrapping exception of type {t.GetType().FullName} from method `{caller}`. This will change in a future release."
 				);
 			}
@@ -78,40 +87,34 @@ namespace Android.Runtime {
 			return wrap;
 		}
 
-		static void MonoDroidUnhandledException (Exception ex)
+		/// <safety>
+		/// <paramref name="env"/> must be this thread's live JNI environment and <paramref name="javaExceptionPtr"/>
+		/// a borrowed Throwable reference from the same VM, retained through marshaling/reporting or failure.
+		/// The thread argument is not dereferenced by this implementation; input reference ownership is not transferred.
+		/// </safety>
+		[DebuggerDisableUserUnhandledExceptions]
+		internal static unsafe void PropagateUncaughtException (IntPtr env, IntPtr javaThreadPtr, IntPtr javaExceptionPtr)
 		{
-			RuntimeNativeMethods.monodroid_unhandled_exception (ex);
-		}
+			unsafe {
+				// SAFETY: the native uncaught-exception callback supplies the live current-thread environment and borrowed thread/throwable references for this transition.
+				if (!JNIEnvInit.PropagateExceptions)
+					return;
 
-		internal static void PropagateUncaughtException (IntPtr env, IntPtr javaThreadPtr, IntPtr javaExceptionPtr)
-		{
-			if (!JNIEnvInit.PropagateExceptions)
-				return;
+				var javaException = JavaObject.GetObject<Java.Lang.Throwable> (env, javaExceptionPtr, JniHandleOwnership.DoNotTransfer)!;
 
-			var javaException = JavaObject.GetObject<Java.Lang.Throwable> (env, javaExceptionPtr, JniHandleOwnership.DoNotTransfer)!;
+				Debugger.BreakForUserUnhandledException (javaException);
 
-			if (Debugger.IsAttached) {
-				AndroidRuntimeInternal.mono_unhandled_exception?.Invoke (javaException);
-			}
+				try {
+					var jltp = javaException as JavaProxyThrowable;
+					Exception? innerException = jltp?.InnerException;
 
-			try {
-				var jltp = javaException as JavaProxyThrowable;
-				Exception? innerException = jltp?.InnerException;
+					Logger.Log (LogLevel.Info, "DOTNET", "UNHANDLED EXCEPTION:");
+					Logger.Log (LogLevel.Info, "DOTNET", javaException.ToString ());
 
-				Logger.Log (LogLevel.Info, "MonoDroid", "UNHANDLED EXCEPTION:");
-				Logger.Log (LogLevel.Info, "MonoDroid", javaException.ToString ());
-
-				if (RuntimeFeature.IsMonoRuntime) {
-					MonoDroidUnhandledException (innerException ?? javaException);
-				} else if (RuntimeFeature.IsCoreClrRuntime) {
 					ExceptionHandling.RaiseAppDomainUnhandledExceptionEvent (innerException ?? javaException);
-				} else if (RuntimeFeature.IsNativeAotRuntime) {
-					ExceptionHandling.RaiseAppDomainUnhandledExceptionEvent (innerException ?? javaException);
-				} else {
-					throw new NotSupportedException ("Internal error: unknown runtime not supported");
+				} catch (Exception e) {
+					Logger.Log (LogLevel.Error, "DOTNET", "Exception thrown while raising AppDomain.UnhandledException event: " + e.ToString ());
 				}
-			} catch (Exception e) {
-				Logger.Log (LogLevel.Error, "monodroid", "Exception thrown while raising AppDomain.UnhandledException event: " + e.ToString ());
 			}
 		}
 
@@ -120,150 +123,357 @@ namespace Android.Runtime {
 			JniEnvironment.Runtime.ValueManager.WaitForGCBridgeProcessing ();
 		}
 
+		/// <summary>
+		/// Gets the number of completed CoreCLR or NativeAOT GC bridge processing cycles.
+		/// </summary>
+		public static int BridgeProcessingGeneration => JavaMarshalGCBridge.BridgeProcessingGeneration;
+
 		public static IntPtr AllocObject (string jniClassName)
 		{
-			IntPtr jniClass = JNIEnv.FindClass (jniClassName);
-			try {
-				return AllocObject (jniClass);
-			}
-			finally {
-				JNIEnv.DeleteGlobalRef (jniClass);
+			unsafe {
+				// SAFETY: FindClass owns a global reference for jniClassName; AllocObject borrows it only until return or throw, and finally releases that owned class reference.
+				IntPtr jniClass = JNIEnv.FindClass (jniClassName);
+				try {
+					return AllocObject (jniClass);
+				}
+				finally {
+					JNIEnv.DeleteGlobalRef (jniClass);
+				}
 			}
 		}
 
 		public static IntPtr AllocObject (Type type)
 		{
-			IntPtr jniClass = JNIEnv.FindClass (type);
+			unsafe {
+				// SAFETY: FindClass owns a global reference for type; AllocObject borrows it only until return or throw, and finally releases that owned class reference.
+				IntPtr jniClass = JNIEnv.FindClass (type);
+				try {
+					return AllocObject (jniClass);
+				}
+				finally {
+					JNIEnv.DeleteGlobalRef (jniClass);
+				}
+			}
+		}
+
+		/// <summary>Allocates a Java object without invoking its constructor, using a modified UTF-8 class name.</summary>
+		/// <safety>
+		/// jniClassName must have readable, unchanged NUL-terminated backing storage through this call,
+		/// including failure. Complete ASCII u8 literals satisfy this contract; copies and slices may not.
+		/// The span is not retained.
+		/// </safety>
+		public static unsafe IntPtr AllocObject (ReadOnlySpan<byte> jniClassName)
+		{
+			// SAFETY: The caller supplies terminated bytes; FindClass returns the owned class reference used through allocation.
+			IntPtr jniClass = unsafe (FindClass (jniClassName));
 			try {
-				return AllocObject (jniClass);
+				// SAFETY: The class reference is live until the finally releases it; AllocObject returns a new local reference.
+				return unsafe (AllocObject (jniClass));
+			} finally {
+				unsafe {
+					// SAFETY: This call owns the global class reference returned by FindClass.
+					DeleteGlobalRef (jniClass);
+				}
 			}
-			finally {
-				JNIEnv.DeleteGlobalRef (jniClass);
+		}
+
+		/// <safety>
+		/// <paramref name="jclass"/> must be a live allocatable JNI class from this VM, usable on the current thread
+		/// until allocation returns or throws. No constructor ID or argument is read in this phase.
+		/// </safety>
+		public static IntPtr StartCreateInstance (IntPtr jclass, IntPtr constructorId, JValue* constructorParameters)
+		{
+			// SAFETY: only jclass is consumed by AllocObject; constructorId and constructorParameters are deliberately unused in this allocation-only phase.
+			return unsafe(AllocObject (jclass));
+		}
+
+		/// <safety>
+		/// <paramref name="jclass"/> must be a live allocatable JNI class from this VM, usable on the current thread
+		/// until allocation returns or throws. No constructor ID or argument is read in this phase.
+		/// </safety>
+		public static IntPtr StartCreateInstance (IntPtr jclass, IntPtr constructorId, params JValue[] constructorParameters)
+		{
+			unsafe {
+				// SAFETY: constructorParameters stays pinned while forwarding, but the allocation-only pointer overload never reads it or constructorId; only jclass must be live.
+				fixed (JValue* cp = constructorParameters)
+					return StartCreateInstance (jclass, constructorId, cp);
 			}
 		}
 
-		public static unsafe IntPtr StartCreateInstance (IntPtr jclass, IntPtr constructorId, JValue* constructorParameters)
+		/// <safety>
+		/// <paramref name="instance"/> must be null where supported, or a live JNI object reference of the required type usable on the current thread for the call.
+		/// <paramref name="jclass"/> must be null where supported, or a live JNI class reference of the required type usable on the current thread for the call.
+		/// <paramref name="constructorId"/> must be a live instance constructor ID for the supplied class with the matching JNI argument signature and void return ABI.
+		/// <paramref name="constructorParameters"/> must supply every constructor argument in the declared JNI order and types; all referenced objects must stay live.
+		/// The pointer storage in <paramref name="constructorParameters"/> must remain readable for that argument count throughout the call.
+		/// </safety>
+		public static void FinishCreateInstance (IntPtr instance, IntPtr jclass, IntPtr constructorId, JValue* constructorParameters)
 		{
-			return AllocObject (jclass);
+			unsafe {
+				// SAFETY: the caller supplies instance/jclass and the void constructor ABI; constructorParameters is forwarded without a copy or any extension of its lifetime.
+				CallNonvirtualVoidMethod (instance, jclass, constructorId, constructorParameters);
+			}
 		}
 
-		public static unsafe IntPtr StartCreateInstance (IntPtr jclass, IntPtr constructorId, params JValue[] constructorParameters)
+		/// <safety>
+		/// <paramref name="instance"/> must be null where supported, or a live JNI object reference of the required type usable on the current thread for the call.
+		/// <paramref name="jclass"/> must be null where supported, or a live JNI class reference of the required type usable on the current thread for the call.
+		/// <paramref name="constructorId"/> must be a live instance constructor ID for the supplied class with the matching JNI argument signature and void return ABI.
+		/// <paramref name="constructorParameters"/> must supply every constructor argument in the declared JNI order and types; all referenced objects must stay live.
+		/// </safety>
+		public static void FinishCreateInstance (IntPtr instance, IntPtr jclass, IntPtr constructorId, params JValue[] constructorParameters)
 		{
-			fixed (JValue* cp = constructorParameters)
-				return StartCreateInstance (jclass, constructorId, cp);
+			unsafe {
+				// SAFETY: fixed pins constructorParameters until FinishCreateInstance returns or throws; the caller supplies its count, constructor ABI and referenced-object lifetimes.
+				fixed (JValue* cp = constructorParameters)
+					FinishCreateInstance (instance, jclass, constructorId, cp);
+			}
 		}
 
-		public static unsafe void FinishCreateInstance (IntPtr instance, IntPtr jclass, IntPtr constructorId, JValue* constructorParameters)
-		{
-			CallNonvirtualVoidMethod (instance, jclass, constructorId, constructorParameters);
-		}
-
-		public static unsafe void FinishCreateInstance (IntPtr instance, IntPtr jclass, IntPtr constructorId, params JValue[] constructorParameters)
-		{
-			fixed (JValue* cp = constructorParameters)
-				FinishCreateInstance (instance, jclass, constructorId, cp);
-		}
-
-		public static unsafe IntPtr StartCreateInstance (Type type, string jniCtorSignature, JValue* constructorParameters)
+		public static IntPtr StartCreateInstance (Type type, string jniCtorSignature, JValue* constructorParameters)
 		{
 			return AllocObject (type);
 		}
 
-		public static unsafe IntPtr StartCreateInstance (Type type, string jniCtorSignature, params JValue[] constructorParameters)
+		public static IntPtr StartCreateInstance (Type type, string jniCtorSignature, params JValue[] constructorParameters)
 		{
-			fixed (JValue* cp = constructorParameters)
-				return StartCreateInstance (type, jniCtorSignature, cp);
+			unsafe {
+				// SAFETY: this allocation-only overload never reads constructor arguments; the pin preserves legacy pointer-signature compatibility.
+				fixed (JValue* cp = constructorParameters)
+					return StartCreateInstance (type, jniCtorSignature, cp);
+			}
 		}
 
-		public static unsafe IntPtr StartCreateInstance (string jniClassName, string jniCtorSignature, JValue* constructorParameters)
+		public static IntPtr StartCreateInstance (string jniClassName, string jniCtorSignature, JValue* constructorParameters)
 		{
 			return AllocObject (jniClassName);
 		}
 
-		public static unsafe IntPtr StartCreateInstance (string jniClassName, string jniCtorSignature, params JValue[] constructorParameters)
+		public static IntPtr StartCreateInstance (string jniClassName, string jniCtorSignature, params JValue[] constructorParameters)
 		{
-			fixed (JValue* cp = constructorParameters)
-				return StartCreateInstance (jniClassName, jniCtorSignature, cp);
+			unsafe {
+				// SAFETY: this allocation-only overload never reads constructor arguments; the pin preserves legacy pointer-signature compatibility.
+				fixed (JValue* cp = constructorParameters)
+					return StartCreateInstance (jniClassName, jniCtorSignature, cp);
+			}
 		}
 
-		public static unsafe void FinishCreateInstance (IntPtr instance, string jniCtorSignature, JValue* constructorParameters)
+		/// <safety>
+		/// <paramref name="instance"/> must be null where supported, or a live JNI object reference of the required type usable on the current thread for the call.
+		/// <paramref name="jniCtorSignature"/> must describe the supplied arguments and a void-returning instance constructor of the requested class.
+		/// <paramref name="constructorParameters"/> must supply every constructor argument in the declared JNI order and types; all referenced objects must stay live.
+		/// The pointer storage in <paramref name="constructorParameters"/> must remain readable for that argument count throughout the call.
+		/// </safety>
+		public static void FinishCreateInstance (IntPtr instance, string jniCtorSignature, JValue* constructorParameters)
 		{
-			InvokeConstructor (instance, jniCtorSignature, constructorParameters);
+			unsafe {
+				// SAFETY: InvokeConstructor consumes the caller's live instance and matching constructor arguments synchronously; forwarding neither validates nor retains the raw storage.
+				InvokeConstructor (instance, jniCtorSignature, constructorParameters);
+			}
 		}
 
-		public static unsafe void FinishCreateInstance (IntPtr instance, string jniCtorSignature, params JValue[] constructorParameters)
+		/// <safety>
+		/// <paramref name="instance"/> must be null where supported, or a live JNI object reference of the required type usable on the current thread for the call.
+		/// <paramref name="jniCtorSignature"/> must describe the supplied arguments and a void-returning instance constructor of the requested class.
+		/// <paramref name="constructorParameters"/> must supply every constructor argument in the declared JNI order and types; all referenced objects must stay live.
+		/// </safety>
+		public static void FinishCreateInstance (IntPtr instance, string jniCtorSignature, params JValue[] constructorParameters)
 		{
-			fixed (JValue* cp = constructorParameters)
-				FinishCreateInstance (instance, jniCtorSignature, cp);
+			unsafe {
+				// SAFETY: fixed pins constructorParameters through InvokeConstructor; the caller retains instance and all referenced arguments with the declared constructor ABI.
+				fixed (JValue* cp = constructorParameters)
+					FinishCreateInstance (instance, jniCtorSignature, cp);
+			}
 		}
 
-		public static unsafe void InvokeConstructor (IntPtr instance, string jniCtorSignature, JValue* constructorParameters)
+		/// <summary>Invokes the allocated peer's constructor using a modified UTF-8 descriptor.</summary>
+		/// <safety>
+		/// jniCtorSignature must have readable, unchanged NUL-terminated backing storage through this call,
+		/// including failure. Complete ASCII u8 literals satisfy this contract; copies and slices may not.
+		/// instance must be a live allocated peer compatible with the constructor. constructorParameters must
+		/// address initialized JNI slots matching the descriptor, or be null for a zero-argument constructor.
+		/// Keep argument storage and referenced objects live and unchanged through the call.
+		/// Local references must belong to the calling thread. The span and arguments are not retained.
+		/// </safety>
+		public static unsafe void FinishCreateInstance (IntPtr instance, ReadOnlySpan<byte> jniCtorSignature, JValue* constructorParameters)
 		{
-			IntPtr lrefClass = GetObjectClass (instance);
+			unsafe {
+				// SAFETY: The caller keeps the constructor-compatible peer, descriptor and argument slots live through invocation.
+				InvokeConstructor (instance, jniCtorSignature, constructorParameters);
+			}
+		}
+
+		/// <inheritdoc cref="FinishCreateInstance(IntPtr, ReadOnlySpan{byte}, JValue*)"/>
+		public static unsafe void FinishCreateInstance (IntPtr instance, ReadOnlySpan<byte> jniCtorSignature, params ReadOnlySpan<JValue> constructorParameters)
+		{
+			unsafe {
+				// SAFETY: The span's backing storage is pinned through invocation; the caller supplies the matching descriptor and live peer/references.
+				fixed (JValue* cp = constructorParameters)
+					FinishCreateInstance (instance, jniCtorSignature, cp);
+			}
+		}
+
+		/// <safety>
+		/// <paramref name="instance"/> must be null where supported, or a live JNI object reference of the required type usable on the current thread for the call.
+		/// <paramref name="jniCtorSignature"/> must describe the supplied arguments and a void-returning instance constructor of the requested class.
+		/// <paramref name="constructorParameters"/> must supply every constructor argument in the declared JNI order and types; all referenced objects must stay live.
+		/// The pointer storage in <paramref name="constructorParameters"/> must remain readable for that argument count throughout the call.
+		/// </safety>
+		public static void InvokeConstructor (IntPtr instance, string jniCtorSignature, JValue* constructorParameters)
+		{
+			unsafe {
+				// SAFETY: the caller retains instance and its constructor arguments; GetObjectClass supplies the owned class used for lookup and released in finally.
+				IntPtr lrefClass = GetObjectClass (instance);
+				try {
+					IntPtr ctor = JNIEnv.GetMethodID (lrefClass, "<init>", jniCtorSignature);
+					if (ctor == IntPtr.Zero)
+						throw new ArgumentException (FormattableString.Invariant (
+							$"Could not find constructor JNI signature '{jniCtorSignature}' on type '{JniEnvironment.Types.GetJniTypeNameFromClass (new JniObjectReference (lrefClass))}'."));
+					CallNonvirtualVoidMethod (instance, lrefClass, ctor, constructorParameters);
+				} finally {
+					DeleteLocalRef (lrefClass);
+				}
+			}
+		}
+
+		/// <safety>
+		/// <paramref name="instance"/> must be null where supported, or a live JNI object reference of the required type usable on the current thread for the call.
+		/// <paramref name="jniCtorSignature"/> must describe the supplied arguments and a void-returning instance constructor of the requested class.
+		/// <paramref name="constructorParameters"/> must supply every constructor argument in the declared JNI order and types; all referenced objects must stay live.
+		/// </safety>
+		public static void InvokeConstructor (IntPtr instance, string jniCtorSignature, params JValue[] constructorParameters)
+		{
+			unsafe {
+				// SAFETY: constructorParameters remains pinned until InvokeConstructor returns or throws; its entries and instance are the caller's matching constructor inputs.
+				fixed (JValue* cp = constructorParameters)
+					InvokeConstructor (instance, jniCtorSignature, cp);
+			}
+		}
+
+		/// <inheritdoc cref="FinishCreateInstance(IntPtr, ReadOnlySpan{byte}, JValue*)"/>
+		public static unsafe void InvokeConstructor (IntPtr instance, ReadOnlySpan<byte> jniCtorSignature, JValue* constructorParameters)
+		{
+			// SAFETY: The caller keeps the compatible peer live; GetObjectClass returns an owned local class reference.
+			IntPtr lrefClass = unsafe (GetObjectClass (instance));
 			try {
-				IntPtr ctor = JNIEnv.GetMethodID (lrefClass, "<init>", jniCtorSignature);
+				// SAFETY: The class reference is live; the caller supplies a terminated descriptor and the literal supplies the name terminator.
+				var ctor = unsafe (JniEnvironment.InstanceMethods.GetMethodID (new JniObjectReference (lrefClass), "<init>"u8, jniCtorSignature));
+				unsafe {
+					// SAFETY: The resolved constructor matches the peer and caller-supplied argument ABI; all storage/references remain live.
+					CallNonvirtualVoidMethod (instance, lrefClass, ctor.ID, constructorParameters);
+				}
+			} finally {
+				unsafe {
+					// SAFETY: This call owns the current-thread local class reference returned by GetObjectClass.
+					DeleteLocalRef (lrefClass);
+				}
+			}
+		}
+
+		/// <inheritdoc cref="FinishCreateInstance(IntPtr, ReadOnlySpan{byte}, JValue*)"/>
+		public static unsafe void InvokeConstructor (IntPtr instance, ReadOnlySpan<byte> jniCtorSignature, params JValue[] constructorParameters)
+		{
+			unsafe {
+				// SAFETY: The array is pinned through invocation; the caller supplies the matching descriptor and live peer/references.
+				fixed (JValue* cp = constructorParameters)
+					InvokeConstructor (instance, jniCtorSignature, cp);
+			}
+		}
+
+		/// <safety>
+		/// <paramref name="jniClass"/> must be null where supported, or a live JNI class reference of the required type usable on the current thread for the call.
+		/// <paramref name="signature"/> must describe the supplied arguments and a void-returning instance constructor of the requested class.
+		/// <paramref name="constructorParameters"/> must supply every constructor argument in the declared JNI order and types; all referenced objects must stay live.
+		/// The pointer storage in <paramref name="constructorParameters"/> must remain readable for that argument count throughout the call.
+		/// </safety>
+		public static IntPtr CreateInstance (IntPtr jniClass, string signature, JValue* constructorParameters)
+		{
+			unsafe {
+				// SAFETY: the caller retains jniClass; GetMethodID resolves <init> with signature, and NewObject consumes the caller's matching argument count/storage synchronously.
+				IntPtr ctor = JNIEnv.GetMethodID (jniClass, "<init>", signature);
 				if (ctor == IntPtr.Zero)
 					throw new ArgumentException (FormattableString.Invariant (
-						$"Could not find constructor JNI signature '{jniCtorSignature}' on type '{JniEnvironment.Types.GetJniTypeNameFromClass (new JniObjectReference (lrefClass))}'."));
-				CallNonvirtualVoidMethod (instance, lrefClass, ctor, constructorParameters);
-			} finally {
-				DeleteLocalRef (lrefClass);
+						$"Could not find constructor JNI signature '{signature}' on type '{JniEnvironment.Types.GetJniTypeNameFromClass (new JniObjectReference (jniClass))}'."));
+				return JNIEnv.NewObject (jniClass, ctor, constructorParameters);
 			}
 		}
 
-		public static unsafe void InvokeConstructor (IntPtr instance, string jniCtorSignature, params JValue[] constructorParameters)
+		/// <safety>
+		/// <paramref name="jniClass"/> must be null where supported, or a live JNI class reference of the required type usable on the current thread for the call.
+		/// <paramref name="signature"/> must describe the supplied arguments and a void-returning instance constructor of the requested class.
+		/// <paramref name="constructorParameters"/> must supply every constructor argument in the declared JNI order and types; all referenced objects must stay live.
+		/// </safety>
+		public static IntPtr CreateInstance (IntPtr jniClass, string signature, params JValue[] constructorParameters)
 		{
-			fixed (JValue* cp = constructorParameters)
-				InvokeConstructor (instance, jniCtorSignature, cp);
-		}
-
-		public static unsafe IntPtr CreateInstance (IntPtr jniClass, string signature, JValue* constructorParameters)
-		{
-			IntPtr ctor = JNIEnv.GetMethodID (jniClass, "<init>", signature);
-			if (ctor == IntPtr.Zero)
-				throw new ArgumentException (FormattableString.Invariant (
-					$"Could not find constructor JNI signature '{signature}' on type '{JniEnvironment.Types.GetJniTypeNameFromClass (new JniObjectReference (jniClass))}'."));
-			return JNIEnv.NewObject (jniClass, ctor, constructorParameters);
-		}
-
-		public static unsafe IntPtr CreateInstance (IntPtr jniClass, string signature, params JValue[] constructorParameters)
-		{
-			fixed (JValue* cp = constructorParameters)
-				return CreateInstance (jniClass, signature, cp);
-		}
-
-		public static unsafe IntPtr CreateInstance (string jniClassName, string signature, JValue* constructorParameters)
-		{
-			IntPtr jniClass = JNIEnv.FindClass (jniClassName);
-			try {
-				return CreateInstance (jniClass, signature, constructorParameters);
-			}
-			finally {
-				JNIEnv.DeleteGlobalRef (jniClass);
+			unsafe {
+				// SAFETY: fixed pins constructorParameters through CreateInstance; jniClass, signature and referenced argument lifetimes remain the caller's contract.
+				fixed (JValue* cp = constructorParameters)
+					return CreateInstance (jniClass, signature, cp);
 			}
 		}
 
-		public static unsafe IntPtr CreateInstance (string jniClassName, string signature, params JValue[] constructorParameters)
+		/// <safety>
+		/// <paramref name="signature"/> must describe the supplied arguments and a void-returning instance constructor of the requested class.
+		/// <paramref name="constructorParameters"/> must supply every constructor argument in the declared JNI order and types; all referenced objects must stay live.
+		/// The pointer storage in <paramref name="constructorParameters"/> must remain readable for that argument count throughout the call.
+		/// </safety>
+		public static IntPtr CreateInstance (string jniClassName, string signature, JValue* constructorParameters)
 		{
-			fixed (JValue* cp = constructorParameters)
-				return CreateInstance (jniClassName, signature, cp);
+			unsafe {
+				// SAFETY: FindClass supplies an owned global class released in finally; the caller retains the matching constructor argument storage until NewObject returns or throws.
+				IntPtr jniClass = JNIEnv.FindClass (jniClassName);
+				try {
+					return CreateInstance (jniClass, signature, constructorParameters);
+				}
+				finally {
+					JNIEnv.DeleteGlobalRef (jniClass);
+				}
+			}
 		}
 
-		public static unsafe IntPtr CreateInstance (Type type, string signature, JValue* constructorParameters)
+		/// <safety>
+		/// <paramref name="signature"/> must describe the supplied arguments and a void-returning instance constructor of the requested class.
+		/// <paramref name="constructorParameters"/> must supply every constructor argument in the declared JNI order and types; all referenced objects must stay live.
+		/// </safety>
+		public static IntPtr CreateInstance (string jniClassName, string signature, params JValue[] constructorParameters)
 		{
-			IntPtr jniClass = JNIEnv.FindClass (type);
-			try {
-				return CreateInstance (jniClass, signature, constructorParameters);
-			}
-			finally {
-				JNIEnv.DeleteGlobalRef (jniClass);
+			unsafe {
+				// SAFETY: fixed pins constructorParameters while forwarding the caller's signature and arguments; FindClass owns the class used by the pointer overload.
+				fixed (JValue* cp = constructorParameters)
+					return CreateInstance (jniClassName, signature, cp);
 			}
 		}
 
-		public static unsafe IntPtr CreateInstance (Type type, string signature, params JValue[] constructorParameters)
+		/// <safety>
+		/// <paramref name="signature"/> must describe the supplied arguments and a void-returning instance constructor of the requested class.
+		/// <paramref name="constructorParameters"/> must supply every constructor argument in the declared JNI order and types; all referenced objects must stay live.
+		/// The pointer storage in <paramref name="constructorParameters"/> must remain readable for that argument count throughout the call.
+		/// </safety>
+		public static IntPtr CreateInstance (Type type, string signature, JValue* constructorParameters)
 		{
-			fixed (JValue* cp = constructorParameters)
-				return CreateInstance (type, signature, cp);
+			unsafe {
+				// SAFETY: FindClass supplies type's owned global class released in finally; the caller retains the argument buffer and references for the matching constructor ABI.
+				IntPtr jniClass = JNIEnv.FindClass (type);
+				try {
+					return CreateInstance (jniClass, signature, constructorParameters);
+				}
+				finally {
+					JNIEnv.DeleteGlobalRef (jniClass);
+				}
+			}
+		}
+
+		/// <safety>
+		/// <paramref name="signature"/> must describe the supplied arguments and a void-returning instance constructor of the requested class.
+		/// <paramref name="constructorParameters"/> must supply every constructor argument in the declared JNI order and types; all referenced objects must stay live.
+		/// </safety>
+		public static IntPtr CreateInstance (Type type, string signature, params JValue[] constructorParameters)
+		{
+			unsafe {
+				// SAFETY: fixed pins constructorParameters while forwarding the caller's signature and arguments; the pointer overload owns its FindClass result.
+				fixed (JValue* cp = constructorParameters)
+					return CreateInstance (type, signature, cp);
+			}
 		}
 
 		public static IntPtr FindClass (System.Type type)
@@ -280,18 +490,8 @@ namespace Android.Runtime {
 			} catch (Java.Lang.Throwable e) {
 				if (!((e is Java.Lang.NoClassDefFoundError) || (e is Java.Lang.ClassNotFoundException)))
 					throw;
-				RuntimeNativeMethods.monodroid_log (LogLevel.Warn, LogCategories.Default, $"JNIEnv.FindClass(Type) caught unexpected exception: {e}");
-				var jni = Java.Interop.TypeManager.GetJniTypeName (type);
-				if (jni != null) {
-					e.Dispose ();
-					return FindClass (JavaNativeTypeManager.ToJniName (jni, rank));
-				}
-
-				// Though it's tempting to call TypeManager.RegisterType() to avoid
-				// calling GetCustomAttributes() again, this isn't necessary as
-				// JNIEnv.FindClass() will invoke the static constructor for the type,
-				// which will (indirectly) call TypeManager.RegisterType().
-				jni = JavaNativeTypeManager.ToJniNameFromAttributes (type);
+				Logger.Log (LogLevel.Warn, "DOTNET", $"JNIEnv.FindClass(Type) caught unexpected exception: {e}");
+				var jni = JavaNativeTypeManager.ToJniNameFromAttributes (type);
 				if (jni != null) {
 					e.Dispose ();
 					return FindClass (JavaNativeTypeManager.ToJniName (jni, rank));
@@ -302,22 +502,48 @@ namespace Android.Runtime {
 
 		public static IntPtr FindClass (string classname)
 		{
-			JniObjectReference local_ref = JniEnvironment.Types.FindClass (classname);
-			IntPtr global_ref = NewGlobalRef (local_ref.Handle);
-			JniObjectReference.Dispose (ref local_ref);
-			return global_ref;
+			unsafe {
+				// SAFETY: FindClass returns this thread's local class; NewGlobalRef duplicates that live reference before the local reference is disposed.
+				JniObjectReference local_ref = JniEnvironment.Types.FindClass (classname);
+				IntPtr global_ref = NewGlobalRef (local_ref.Handle);
+				JniObjectReference.Dispose (ref local_ref);
+				return global_ref;
+			}
+		}
+
+		/// <safety>
+		/// <paramref name="classname"/> must have readable NUL-terminated UTF-8 backing storage for the call.
+		/// Complete C# UTF-8 literals provide a terminator immediately beyond the span length.
+		/// Do not slice away the terminator, mutate the name, or release its storage until lookup returns or throws.
+		/// </safety>
+		static unsafe IntPtr FindClass (ReadOnlySpan<byte> classname)
+		{
+			unsafe {
+				// SAFETY: the caller supplies NUL-terminated UTF-8 classname storage; the found local class stays live while its global reference is created.
+				JniObjectReference local_ref = JniEnvironment.Types.FindClass (classname);
+				IntPtr global_ref = NewGlobalRef (local_ref.Handle);
+				JniObjectReference.Dispose (ref local_ref);
+				return global_ref;
+			}
 		}
 
 		public static IntPtr FindClass (string className, ref IntPtr cachedJniClassHandle)
 		{
-			if (cachedJniClassHandle != IntPtr.Zero)
+			unsafe {
+				// SAFETY: h is the global reference allocated by FindClass; only a losing h is deleted after CompareExchange, never the cached winning reference.
+				if (cachedJniClassHandle != IntPtr.Zero)
+					return cachedJniClassHandle;
+				IntPtr h = FindClass (className);
+				if (Interlocked.CompareExchange (ref cachedJniClassHandle, h, IntPtr.Zero) != IntPtr.Zero)
+					DeleteGlobalRef (h);
 				return cachedJniClassHandle;
-			IntPtr h = FindClass (className);
-			if (Interlocked.CompareExchange (ref cachedJniClassHandle, h, IntPtr.Zero) != IntPtr.Zero)
-				DeleteGlobalRef (h);
-			return cachedJniClassHandle;
+			}
 		}
 
+		/// <safety>
+		/// A nonzero <paramref name="obj"/> must be a live JNI Throwable reference from this VM on the current
+		/// thread, retained until JNI returns or throws. Zero is rejected before the JNI call.
+		/// </safety>
 		public static void Throw (IntPtr obj)
 		{
 			if (obj == IntPtr.Zero)
@@ -326,6 +552,10 @@ namespace Android.Runtime {
 			JniEnvironment.Exceptions.Throw (new JniObjectReference (obj));
 		}
 
+		/// <safety>
+		/// <paramref name="clazz"/> must be a live class reference for Throwable or a subclass with a String
+		/// constructor, usable on this thread until JNI returns or throws. Retain the class during exception creation.
+		/// </safety>
 		public static void ThrowNew (IntPtr clazz, string message)
 		{
 			if (message == null)
@@ -344,142 +574,152 @@ namespace Android.Runtime {
 			JniEnvironment.References.EnsureLocalCapacity (capacity);
 		}
 
-		internal static void DeleteRef (IntPtr handle, JniHandleOwnership transfer)
+		/// <safety>
+		/// For a transfer, <paramref name="handle"/> must be null or an owned live reference of the indicated
+		/// local/global kind; local references belong to this thread. Exclude concurrent release or use of aliases,
+		/// and do not reuse a consumed handle even if later conversion fails. DoNotTransfer does not access it.
+		/// </safety>
+		internal static unsafe void DeleteRef (IntPtr handle, JniHandleOwnership transfer)
 		{
-			switch (transfer) {
-			case JniHandleOwnership.DoNotTransfer:
-				break;
-			case JniHandleOwnership.TransferLocalRef:
-				JNIEnv.DeleteLocalRef (handle);
-				break;
-			case JniHandleOwnership.TransferGlobalRef:
-				JNIEnv.DeleteGlobalRef (handle);
-				break;
+			unsafe {
+				// SAFETY: transfer comes from the raw marshaling boundary and identifies the caller-owned local/global reference to release; DoNotTransfer performs no native access.
+				switch (transfer & (JniHandleOwnership.TransferLocalRef | JniHandleOwnership.TransferGlobalRef)) {
+				case JniHandleOwnership.DoNotTransfer:
+					break;
+				case JniHandleOwnership.TransferLocalRef:
+					JNIEnv.DeleteLocalRef (handle);
+					break;
+				case JniHandleOwnership.TransferGlobalRef:
+					JNIEnv.DeleteGlobalRef (handle);
+					break;
+				}
 			}
 		}
 
+		/// <summary>
+		/// Converts the <see cref="JniHandleOwnership"/> given to an
+		/// <c>(IntPtr, JniHandleOwnership)</c> activation constructor into the
+		/// <see cref="JniObjectReferenceOptions"/> that the Java.Interop-style
+		/// <c>(ref JniObjectReference, JniObjectReferenceOptions)</c> constructor expects.
+		/// </summary>
+		/// <remarks>
+		/// Only <see cref="JniHandleOwnership.DoNotRegister"/> survives the conversion. The
+		/// handle-transfer bits intentionally do not: the caller keeps the incoming handle and
+		/// releases it with <see cref="DeleteRef"/> in a finally, even if construction throws, so the peer must
+		/// always take a reference of its own — which is why
+		/// <see cref="JniObjectReferenceOptions.Copy"/> is always set.
+		/// </remarks>
+		[MethodImpl (MethodImplOptions.AggressiveInlining)]
+		internal static JniObjectReferenceOptions ToJniObjectReferenceOptions (JniHandleOwnership transfer)
+		{
+			return (transfer & JniHandleOwnership.DoNotRegister) != 0
+				? JniObjectReferenceOptions.CopyAndDoNotRegister
+				: JniObjectReferenceOptions.Copy;
+		}
+
+		/// <safety>
+		/// <paramref name="jobject"/> must be null where supported, or a live JNI object reference of the required type usable on the current thread for the call.
+		/// </safety>
 		public static IntPtr NewGlobalRef (IntPtr jobject)
 		{
 			var r = new JniObjectReference (jobject);
 			return r.NewGlobalRef ().Handle;
 		}
 
+		/// <safety>
+		/// <paramref name="jobject"/> must be null or a live JNI global reference whose release the caller owns.
+		/// Exclude concurrent release/use through aliases during deletion and stop using this reference afterward;
+		/// an exception does not prove the handle is still valid. Deleting it does not delete other JNI references to the same object.
+		/// </safety>
 		public static void DeleteGlobalRef (IntPtr jobject)
 		{
 			var r = new JniObjectReference (jobject, JniObjectReferenceType.Global);
 			JniObjectReference.Dispose (ref r);
 		}
 
+		/// <safety>
+		/// <paramref name="jobject"/> must be null where supported, or a live JNI object reference of the required type usable on the current thread for the call.
+		/// </safety>
 		public static IntPtr NewLocalRef (IntPtr jobject)
 		{
 			return new JniObjectReference (jobject).NewLocalRef ().Handle;
 		}
 
+		/// <safety>
+		/// <paramref name="jobject"/> must be null or a live JNI local reference owned by the current thread and caller.
+		/// Exclude alias access while deleting and do not reuse this local handle afterward, including on failure.
+		/// Other references to the same Java object retain their independent lifetimes.
+		/// </safety>
 		public static void DeleteLocalRef (IntPtr jobject)
 		{
 			var r = new JniObjectReference (jobject, JniObjectReferenceType.Local);
 			JniObjectReference.Dispose (ref r);
 		}
 
+		/// <safety>
+		/// <paramref name="jobject"/> must be null or a live JNI weak-global reference whose release the caller owns.
+		/// Exclude concurrent release/use of aliases and do not reuse this weak handle afterward, including on failure.
+		/// </safety>
 		public static void DeleteWeakGlobalRef (IntPtr jobject)
 		{
 			var r = new JniObjectReference (jobject, JniObjectReferenceType.WeakGlobal);
 			JniObjectReference.Dispose (ref r);
 		}
 
+		/// <safety>
+		/// <paramref name="jclass"/> must be a live JNI class reference and <paramref name="jmethod"/>
+		/// its live instance constructor ID with the exact zero-argument <c>()V</c> JNI signature.
+		/// Both must remain usable on the current thread for the call.
+		/// </safety>
 		public static IntPtr NewObject (IntPtr jclass, IntPtr jmethod)
 		{
-			var r = JniEnvironment.Object.NewObject (new JniObjectReference (jclass), new JniMethodInfo (jmethod, isStatic: false));
-			return r.Handle;
+			unsafe {
+				// SAFETY: the caller supplies the live class and a constructor ID with the zero-argument constructor ABI.
+				var r = JniEnvironment.Object.NewObject (new JniObjectReference (jclass), new JniMethodInfo (jmethod, isStatic: false));
+				return r.Handle;
+			}
 		}
 
-		public static unsafe IntPtr NewObject (IntPtr jclass, IntPtr jmethod, JValue* parms)
+		/// <safety>
+		/// <paramref name="jclass"/> must be null where supported, or a live JNI class reference of the required type usable on the current thread for the call.
+		/// <paramref name="jmethod"/> must be a live instance constructor ID for the supplied class with the matching JNI argument signature and void return ABI.
+		/// <paramref name="parms"/> must supply every constructor argument in the declared JNI order and types; all referenced objects must stay live.
+		/// The pointer storage in <paramref name="parms"/> must remain readable for that argument count throughout the call.
+		/// </safety>
+		public static IntPtr NewObject (IntPtr jclass, IntPtr jmethod, JValue* parms)
 		{
-			var r = JniEnvironment.Object.NewObject (new JniObjectReference (jclass), new JniMethodInfo (jmethod, isStatic: false), (JniArgumentValue*) parms);
-			return r.Handle;
+			unsafe {
+				// SAFETY: jclass/jmethod and the matching argument buffer are caller-owned for this call; JValue and JniArgumentValue use the same JNI union layout.
+				var r = JniEnvironment.Object.NewObject (new JniObjectReference (jclass), new JniMethodInfo (jmethod, isStatic: false), (JniArgumentValue*) parms);
+				return r.Handle;
+			}
 		}
 
-		public static unsafe IntPtr NewObject (IntPtr jclass, IntPtr jmethod, params JValue[] parms)
+		/// <safety>
+		/// <paramref name="jclass"/> must be null where supported, or a live JNI class reference of the required type usable on the current thread for the call.
+		/// <paramref name="jmethod"/> must be a live instance constructor ID for the supplied class with the matching JNI argument signature and void return ABI.
+		/// <paramref name="parms"/> must supply every constructor argument in the declared JNI order and types; all referenced objects must stay live.
+		/// </safety>
+		public static IntPtr NewObject (IntPtr jclass, IntPtr jmethod, params JValue[] parms)
 		{
-			fixed (JValue* p = parms)
-				return NewObject (jclass, jmethod, p);
+			unsafe {
+				// SAFETY: fixed pins parms for NewObject; the caller supplies the constructor's complete argument count/types and retains all referenced objects.
+				fixed (JValue* p = parms)
+					return NewObject (jclass, jmethod, p);
+			}
 		}
 
+		/// <safety>
+		/// <paramref name="jobject"/> must be null where supported, or a live JNI object reference of the required type usable on the current thread for the call.
+		/// </safety>
 		public static string? GetClassNameFromInstance (IntPtr jobject)
 		{
 			return JniEnvironment.Types.GetJniTypeNameFromInstance (new JniObjectReference (jobject));
 		}
 
-		[MethodImplAttribute(MethodImplOptions.InternalCall)]
-		static extern unsafe IntPtr monodroid_typemap_managed_to_java (Type type, byte* mvid);
-
-		internal static void LogTypemapTrace (StackTrace st)
+		internal static string? TypemapManagedToJava (Type type)
 		{
-			string? trace = st.ToString ()?.Trim ();
-			if (String.IsNullOrEmpty (trace))
-				return;
-
-			RuntimeNativeMethods.monodroid_log (LogLevel.Warn, LogCategories.Assembly, "typemap: called from");
-			foreach (string line in trace!.Split ('\n')) {
-				RuntimeNativeMethods.monodroid_log (LogLevel.Warn, LogCategories.Assembly, line);
-			}
-		}
-
-		// We need this proxy method because if `TypeManagedToJava` contained the call to `monodroid_typemap_managed_to_java`
-		// (which is an icall, or ecall in CoreCLR parlance), CoreCLR JIT would throw an exception, refusing to compile the
-		// method.  The exception would be thrown even if the icall weren't called (e.g. hidden behind a runtime type check)
-		static unsafe IntPtr monovm_typemap_managed_to_java (Type type, byte* mvidptr)
-		{
-			return monodroid_typemap_managed_to_java (type, mvidptr);
-		}
-
-		internal static unsafe string? TypemapManagedToJava (Type type)
-		{
-			if (RuntimeFeature.TrimmableTypeMap) {
-				// The trimmable typemap doesn't use the native typemap tables.
-				// Delegate to the managed TrimmableTypeMap instead.
-				return TrimmableTypeMap.Instance.TryGetJniNameForManagedType (type, out var jniName) ? jniName : null;
-			}
-
-			byte[]? mvid_data = null;
-			// The Debug CoreCLR typemaps are keyed on the assembly display name, so computing the MVID would be wasted work.
-			if (!RuntimeFeature.IsCoreClrRuntime || !RuntimeFeature.ManagedToJavaUsesAssemblyFullName) {
-				if (mvid_bytes == null)
-					mvid_bytes = new byte[16];
-
-				var mvid = new Span<byte>(mvid_bytes);
-				if (!type.Module.ModuleVersionId.TryWriteBytes (mvid)) {
-					RuntimeNativeMethods.monodroid_log (LogLevel.Warn, LogCategories.Default, $"Failed to obtain module MVID using the fast method, falling back to the slow one");
-					mvid_data = type.Module.ModuleVersionId.ToByteArray ();
-				} else {
-					mvid_data = mvid_bytes;
-				}
-			}
-
-			IntPtr ret;
-			fixed (byte* mvidptr = mvid_data) {
-				if (RuntimeFeature.IsMonoRuntime) {
-					ret = monovm_typemap_managed_to_java (type, mvidptr);
-				} else if (RuntimeFeature.IsCoreClrRuntime) {
-					if (type.FullName is null)
-						return null;
-					string? assemblyFullName = RuntimeFeature.ManagedToJavaUsesAssemblyFullName ? type.Assembly.FullName : null;
-					ret = RuntimeNativeMethods.clr_typemap_managed_to_java (type.FullName, assemblyFullName, (IntPtr)mvidptr);
-				} else {
-					throw new NotSupportedException ("Internal error: unknown runtime not supported");
-				}
-			}
-
-			if (ret == IntPtr.Zero) {
-				if (Logger.LogAssembly) {
-					RuntimeNativeMethods.monodroid_log (LogLevel.Warn, LogCategories.Default, $"typemap: failed to map managed type to Java type: {type.AssemblyQualifiedName} (Module ID: {type.Module.ModuleVersionId}; Type token: {type.MetadataToken})");
-					LogTypemapTrace (new StackTrace (true));
-				}
-
-				return null;
-			}
-
-			return Marshal.PtrToStringAnsi (ret);
+			return TrimmableTypeMap.Instance.TryGetJniNameForManagedType (type, out var jniName) ? jniName : null;
 		}
 
 		public static string GetJniName (Type type)
@@ -506,11 +746,29 @@ namespace Android.Runtime {
 			if (value == null)
 				return IntPtr.Zero;
 			var ex = value as IJavaObjectEx;
-			if (ex != null)
-				return ex.ToLocalJniHandle ();
-			return NewLocalRef (value.Handle);
+			if (ex != null) {
+				IntPtr result = ex.ToLocalJniHandle ();
+				GC.KeepAlive (value);
+				return result;
+			}
+			return ToLocalJniHandleFallback (value);
 		}
 
+		internal static IntPtr ToLocalJniHandleFallback (IJavaObject value)
+		{
+			unsafe {
+				// SAFETY: value.Handle is duplicated while value remains reachable; GC.KeepAlive extends that managed peer's lifetime past NewLocalRef.
+				IntPtr result = NewLocalRef (value.Handle);
+				GC.KeepAlive (value);
+				return result;
+			}
+		}
+
+		/// <safety>
+		/// <paramref name="jobject"/> must be null where supported, or a live JNI object reference of the required type usable on the current thread for the call.
+		/// This implementation does not consume <paramref name="transfer"/> or release the input handle.
+		/// Retain it through Object.toString and copying the returned String, including exception unwinding.
+		/// </safety>
 		public static string? GetCharSequence (IntPtr jobject, JniHandleOwnership transfer)
 		{
 			if (jobject == IntPtr.Zero)
@@ -520,17 +778,25 @@ namespace Android.Runtime {
 			return JniEnvironment.Strings.ToString (ref r, JniObjectReferenceOptions.CopyAndDispose);
 		}
 
-		public static unsafe string? GetString (IntPtr value, JniHandleOwnership transfer)
+		/// <safety>
+		/// <paramref name="value"/> must be null where supported, or a live JNI string reference of the required type usable on the current thread for the call.
+		/// <paramref name="transfer"/> must describe ownership the caller holds. On successful conversion the requested
+		/// reference is released; do not access aliases during or after release. A conversion exception occurs before that release.
+		/// </safety>
+		public static string? GetString (IntPtr value, JniHandleOwnership transfer)
 		{
 			if (value == IntPtr.Zero)
 				return null;
 
-			var s = JniEnvironment.Strings.ToString (new JniObjectReference (value));
-			DeleteRef (value, transfer);
-			return s;
+			unsafe {
+				// SAFETY: the caller retains value as a JNI string until conversion completes; DeleteRef releases the requested ownership only after conversion succeeds.
+				var s = JniEnvironment.Strings.ToString (new JniObjectReference (value));
+				DeleteRef (value, transfer);
+				return s;
+			}
 		}
 
-		public static unsafe IntPtr NewString (string? text)
+		public static IntPtr NewString (string? text)
 		{
 			if (text == null)
 				return IntPtr.Zero;
@@ -538,88 +804,164 @@ namespace Android.Runtime {
 			return JniEnvironment.Strings.NewString (text).Handle;
 		}
 
-		public static unsafe IntPtr NewString (char[]? text, int length)
+		public static IntPtr NewString (char[]? text, int length)
 		{
 			if (text == null)
 				return IntPtr.Zero;
 
-			fixed (char *s = text)
-				return JniEnvironment.Strings.NewString (s, length).Handle;
+			if (length < 0 || length > text.Length)
+				throw new ArgumentOutOfRangeException (nameof (length));
+			if (length == 0)
+				return JniEnvironment.Strings.NewString ("").Handle;
+
+			unsafe {
+				// SAFETY: length is checked against the managed array and the UTF-16 buffer remains pinned for the call.
+				fixed (char *s = text)
+					return JniEnvironment.Strings.NewString (s, length).Handle;
+			}
 		}
 
 		static void AssertCompatibleArrayTypes (Type srcElementType, IntPtr destArray)
 		{
-			IntPtr grefSource = FindArrayClassByElementType (srcElementType);
-			IntPtr lrefDest   = GetObjectClass (destArray);
+			JniObjectReference sourceClass = FindArrayClassByElementType (srcElementType);
+			JniObjectReference destClass   = JniEnvironment.Types.GetObjectClass (new JniObjectReference (destArray));
 			try {
-				if (!IsAssignableFrom (grefSource, lrefDest)) {
+				if (!JniEnvironment.Types.IsAssignableFrom (sourceClass, destClass)) {
 					throw new InvalidCastException (FormattableString.Invariant (
-						$"Unable to cast from '{JniEnvironment.Types.GetJniTypeNameFromClass (new JniObjectReference (grefSource))}' to '{JniEnvironment.Types.GetJniTypeNameFromClass (new JniObjectReference (lrefDest))}'."));
+						$"Unable to cast from '{JniEnvironment.Types.GetJniTypeNameFromClass (sourceClass)}' to '{JniEnvironment.Types.GetJniTypeNameFromClass (destClass)}'."));
 				}
 			} finally {
-				DeleteGlobalRef (grefSource);
-				DeleteLocalRef (lrefDest);
+				JniObjectReference.Dispose (ref sourceClass);
+				JniObjectReference.Dispose (ref destClass);
 			}
 		}
 
 		static void AssertCompatibleArrayTypes (IntPtr sourceArray, Type destElementType)
 		{
-			IntPtr grefDest   = FindArrayClassByElementType (destElementType);
-			IntPtr lrefSource = GetObjectClass (sourceArray);
+			JniObjectReference destClass = FindArrayClassByElementType (destElementType);
 			try {
-				if (!IsAssignableFrom (lrefSource, grefDest)) {
+				var sourceReference = new JniObjectReference (sourceArray);
+				if (JniEnvironment.Types.IsInstanceOf (sourceReference, destClass))
+					return;
+
+				JniObjectReference sourceClass = JniEnvironment.Types.GetObjectClass (sourceReference);
+				try {
 					throw new InvalidCastException (FormattableString.Invariant (
-						$"Unable to cast from '{JniEnvironment.Types.GetJniTypeNameFromClass (new JniObjectReference (lrefSource))}' to '{JniEnvironment.Types.GetJniTypeNameFromClass (new JniObjectReference (grefDest))}'."));
+						$"Unable to cast from '{JniEnvironment.Types.GetJniTypeNameFromClass (sourceClass)}' to '{JniEnvironment.Types.GetJniTypeNameFromClass (destClass)}'."));
+				} finally {
+					JniObjectReference.Dispose (ref sourceClass);
 				}
 			} finally {
-				DeleteGlobalRef (grefDest);
-				DeleteLocalRef (lrefSource);
+				JniObjectReference.Dispose (ref destClass);
 			}
 		}
 
-		static IntPtr FindArrayClassByElementType (Type elementType)
+		static void AssertArrayConversionType (IntPtr sourceArray, Type? elementType)
 		{
-			var boxedPrimitiveJniClassName = GetBoxedPrimitiveJniClassName (elementType);
-			if (boxedPrimitiveJniClassName != null) {
-				return FindClass ("[L" + boxedPrimitiveJniClassName + ";");
+			if (elementType != null && (elementType.IsValueType || elementType == typeof (string) || elementType == typeof (Array) ||
+					elementType.IsArray || typeof (IJavaObject).IsAssignableFrom (elementType))) {
+				AssertCompatibleArrayTypes (sourceArray,
+					destElementType: elementType.IsValueType ? elementType : typeof (Java.Lang.Object));
+				return;
+			}
+
+			// SAFETY: the conversion caller retains this object reference; class-name lookup does not
+			// use array-specific JNI. GetConverter selects the source's reader for inferred/boxed values.
+			string? sourceType = unsafe(GetClassNameFromInstance (sourceArray));
+			if (sourceType == null || sourceType.Length < 2 || sourceType [0] != '[')
+				throw new InvalidCastException (FormattableString.Invariant (
+					$"Java object of type '{sourceType}' is not an array."));
+		}
+
+		static JniObjectReference FindArrayClassByElementType (Type elementType)
+		{
+			var builtInArrayJniClassName = GetBuiltInArrayJniClassNameUtf8 (elementType);
+			if (!builtInArrayJniClassName.IsEmpty) {
+				// SAFETY: GetBuiltInArrayJniClassNameUtf8 returns only complete, process-lifetime UTF-8 literals, never slices or copies.
+				return unsafe(JniEnvironment.Types.FindClass (builtInArrayJniClassName));
 			}
 
 			int rank = JavaNativeTypeManager.GetArrayInfo (elementType, out elementType) + 1;
 			var typeSignature = JniRuntime.CurrentRuntime.TypeManager.GetTypeSignature (elementType).AddArrayRank (rank);
-			return FindClass (typeSignature.Name);
+			return JniEnvironment.Types.FindClass (typeSignature.Name);
 		}
 
-		static string? GetBoxedPrimitiveJniClassName (Type type)
+		static ReadOnlySpan<byte> GetBuiltInArrayJniClassNameUtf8 (Type type)
 		{
-			if (type == typeof (bool?))   return "java/lang/Boolean";
-			if (type == typeof (byte?))   return "java/lang/Byte";
-			if (type == typeof (sbyte?))  return "java/lang/Byte";
-			if (type == typeof (char?))   return "java/lang/Character";
-			if (type == typeof (short?))  return "java/lang/Short";
-			if (type == typeof (int?))    return "java/lang/Integer";
-			if (type == typeof (long?))   return "java/lang/Long";
-			if (type == typeof (float?))  return "java/lang/Float";
-			if (type == typeof (double?)) return "java/lang/Double";
-			return null;
+			// Formatting JniTypeSignature.Name allocates for array ranks; use static UTF-8 data for hot built-in cases.
+			if (type.IsEnum)
+				type = Enum.GetUnderlyingType (type);
+
+			if (type == typeof (bool))    return "[Z"u8;
+			if (type == typeof (byte))    return "[B"u8;
+			if (type == typeof (sbyte))   return "[B"u8;
+			if (type == typeof (char))    return "[C"u8;
+			if (type == typeof (short))   return "[S"u8;
+			if (type == typeof (ushort))  return "[S"u8;
+			if (type == typeof (int))     return "[I"u8;
+			if (type == typeof (uint))    return "[I"u8;
+			if (type == typeof (long))    return "[J"u8;
+			if (type == typeof (ulong))   return "[J"u8;
+			if (type == typeof (float))   return "[F"u8;
+			if (type == typeof (double))  return "[D"u8;
+			if (type == typeof (bool?))   return "[Ljava/lang/Boolean;"u8;
+			if (type == typeof (byte?))   return "[Ljava/lang/Byte;"u8;
+			if (type == typeof (sbyte?))  return "[Ljava/lang/Byte;"u8;
+			if (type == typeof (char?))   return "[Ljava/lang/Character;"u8;
+			if (type == typeof (short?))  return "[Ljava/lang/Short;"u8;
+			if (type == typeof (int?))    return "[Ljava/lang/Integer;"u8;
+			if (type == typeof (long?))   return "[Ljava/lang/Long;"u8;
+			if (type == typeof (float?))  return "[Ljava/lang/Float;"u8;
+			if (type == typeof (double?)) return "[Ljava/lang/Double;"u8;
+			return [];
 		}
 
+		static ReadOnlySpan<byte> GetBoxedPrimitiveJniClassNameUtf8 (Type type)
+		{
+			if (type == typeof (bool?))   return "java/lang/Boolean"u8;
+			if (type == typeof (byte?))   return "java/lang/Byte"u8;
+			if (type == typeof (sbyte?))  return "java/lang/Byte"u8;
+			if (type == typeof (char?))   return "java/lang/Character"u8;
+			if (type == typeof (short?))  return "java/lang/Short"u8;
+			if (type == typeof (int?))    return "java/lang/Integer"u8;
+			if (type == typeof (long?))   return "java/lang/Long"u8;
+			if (type == typeof (float?))  return "java/lang/Float"u8;
+			if (type == typeof (double?)) return "java/lang/Double"u8;
+			return [];
+		}
+
+		/// <safety>
+		/// <paramref name="src"/> must be null where supported, or a live JNI array reference of the required type usable on the current thread for the call.
+		/// The JNI array element type must match the requested managed conversion and all requested element ranges must lie within the live array.
+		/// </safety>
 		public static void CopyArray (IntPtr src, bool[] dest)
 		{
 			if (dest == null)
 				throw new ArgumentNullException ("dest");
 
-			AssertCompatibleArrayTypes (src, destElementType: typeof (bool));
+			unsafe {
+				// SAFETY: the caller retains a Boolean array with dest.Length readable elements for the checked copy.
+				AssertCompatibleArrayTypes (src, destElementType: typeof (bool));
 
-			_GetBooleanArrayRegion (src, 0, dest.Length, dest);
+				_GetBooleanArrayRegion (src, 0, dest.Length, dest);
+			}
 		}
 
+		/// <safety>
+		/// <paramref name="src"/> must be a live JNI reference array usable on this thread with at least
+		/// <paramref name="dest"/>.Length elements. Retain it and exclude conflicting mutation or release
+		/// until return or throw. Each element is checked for null or java.lang.String before string access.
+		/// </safety>
 		public static void CopyArray (IntPtr src, string[] dest)
 		{
 			if (dest == null)
 				throw new ArgumentNullException ("dest");
 
-			for (int i = 0; i < dest.Length; i++)
-				dest [i] = GetString (GetObjectArrayElement (src, i), JniHandleOwnership.TransferLocalRef)!;
+			unsafe {
+				// SAFETY: the caller retains src for dest.Length object slots; the converter checks each
+				// nonnull element before string-specific JNI access and transfers its owned local to conversion.
+				CopyArray<string> (src, dest);
+			}
 		}
 
 		static Dictionary<Type, Func<Type?, IntPtr, int, object?>>? nativeArrayElementToManaged;
@@ -639,42 +981,74 @@ namespace Android.Runtime {
 			return new Dictionary<Type, Func<Type?, IntPtr, int, object?>> () {
 				{ typeof (bool), (type, source, index) => {
 					var r = new bool [1];
-					_GetBooleanArrayRegion (source, index, 1, r);
+					unsafe {
+						// SAFETY: source/index identify one live element; r has exactly one destination slot.
+						_GetBooleanArrayRegion (source, index, 1, r);
+					}
 					return r [0];
 				} },
 				{ typeof (byte), (type, source, index) => {
 					var r = new byte [1];
-					_GetByteArrayRegion (source, index, 1, r);
+					unsafe {
+						// SAFETY: source/index identify one live element; r has exactly one destination slot.
+						_GetByteArrayRegion (source, index, 1, r);
+					}
+					return r [0];
+				} },
+				{ typeof (sbyte), (type, source, index) => {
+					var r = new sbyte [1];
+					unsafe {
+						// SAFETY: source/index identify one live element; r has exactly one destination slot.
+						_GetByteArrayRegion (source, index, 1, (byte[]) (object) r);
+					}
 					return r [0];
 				} },
 				{ typeof (char), (type, source, index) => {
 					var r = new char [1];
-					_GetCharArrayRegion (source, index, 1, r);
+					unsafe {
+						// SAFETY: source/index identify one live element; r has exactly one destination slot.
+						_GetCharArrayRegion (source, index, 1, r);
+					}
 					return r [0];
 				} },
 				{ typeof (short), (type, source, index) => {
 					var r = new short [1];
-					_GetShortArrayRegion (source, index, 1, r);
+					unsafe {
+						// SAFETY: source/index identify one live element; r has exactly one destination slot.
+						_GetShortArrayRegion (source, index, 1, r);
+					}
 					return r [0];
 				} },
 				{ typeof (int), (type, source, index) => {
 					var r = new int [1];
-					_GetIntArrayRegion (source, index, 1, r);
+					unsafe {
+						// SAFETY: source/index identify one live element; r has exactly one destination slot.
+						_GetIntArrayRegion (source, index, 1, r);
+					}
 					return r [0];
 				} },
 				{ typeof (long), (type, source, index) => {
 					var r = new long [1];
-					_GetLongArrayRegion (source, index, 1, r);
+					unsafe {
+						// SAFETY: source/index identify one live element; r has exactly one destination slot.
+						_GetLongArrayRegion (source, index, 1, r);
+					}
 					return r [0];
 				} },
 				{ typeof (float), (type, source, index) => {
 					var r = new float [1];
-					_GetFloatArrayRegion (source, index, 1, r);
+					unsafe {
+						// SAFETY: source/index identify one live element; r has exactly one destination slot.
+						_GetFloatArrayRegion (source, index, 1, r);
+					}
 					return r [0];
 				} },
 				{ typeof (double), (type, source, index) => {
 					var r = new double [1];
-					_GetDoubleArrayRegion (source, index, 1, r);
+					unsafe {
+						// SAFETY: source/index identify one live element; r has exactly one destination slot.
+						_GetDoubleArrayRegion (source, index, 1, r);
+					}
 					return r [0];
 				} },
 				{ typeof (bool?),   (type, source, index) => GetNullableArrayElement (source, index, typeof (bool?)) },
@@ -687,34 +1061,62 @@ namespace Android.Runtime {
 				{ typeof (float?),  (type, source, index) => GetNullableArrayElement (source, index, typeof (float?)) },
 				{ typeof (double?), (type, source, index) => GetNullableArrayElement (source, index, typeof (double?)) },
 				{ typeof (string), (type, source, index) => {
-					IntPtr elem = GetObjectArrayElement (source, index);
-					if (type == typeof (Java.Lang.String))
-						return new Java.Lang.String (elem, JniHandleOwnership.TransferLocalRef);
-					return GetString (elem, JniHandleOwnership.TransferLocalRef);
+					unsafe {
+						// SAFETY: the checked local is null or a String before its existing conversion consumes it.
+						IntPtr elem = GetStringArrayElement (source, index);
+						if (type == typeof (Java.Lang.String))
+							return new Java.Lang.String (elem, JniHandleOwnership.TransferLocalRef);
+						return GetString (elem, JniHandleOwnership.TransferLocalRef);
+					}
 				} },
 				{ typeof (IJavaObject), (type, source, index) => {
 					AssertIsJavaObject (type);
 
-					IntPtr elem = GetObjectArrayElement (source, index);
-					return GetObject (elem, type);
-
-					// FIXME: Since a Dictionary<Type, Func> is used here, the trimmer will not be able to properly analyze `Type t`
-					// error IL2111: Method 'lambda expression' with parameters or return value with `DynamicallyAccessedMembersAttribute` is accessed via reflection. Trimmer can't guarantee availability of the requirements of the method.
-					[UnconditionalSuppressMessage ("Trimming", "IL2067", Justification = "FIXME: https://github.com/xamarin/xamarin-android/issues/8724")]
-					static object? GetObject (IntPtr e, Type? t) =>
-						Java.Lang.Object.GetObject (e, JniHandleOwnership.TransferLocalRef, t);
+					unsafe {
+						// SAFETY: source/index supply a live element; String targets are checked before
+						// peer lookup, which consumes the local in its existing conversion/failure path.
+						IntPtr elem = type == typeof (Java.Lang.String)
+							? GetStringArrayElement (source, index)
+							: GetObjectArrayElement (source, index);
+						return Java.Lang.Object.GetObject (elem, JniHandleOwnership.TransferLocalRef, type);
+					}
 				} },
 				{ typeof (Array), (type, source, index) => {
-					IntPtr  elem      = GetObjectArrayElement (source, index);
-					return GetArray (elem, JniHandleOwnership.TransferLocalRef, type);
+					unsafe {
+						// SAFETY: source/index supply a live nested array; GetArray consumes its owned local immediately.
+						IntPtr elem = GetObjectArrayElement (source, index);
+						return GetArray (elem, JniHandleOwnership.TransferLocalRef, type?.GetElementType ());
+					}
 				} },
 			};
 		}
 
+		static IntPtr GetStringArrayElement (IntPtr source, int index)
+		{
+			unsafe {
+				// SAFETY: the copy caller retains this object-array slot; IsInstanceOf guards string-specific
+				// conversion. Hand off the checked local; validation failure releases it before propagating.
+				IntPtr element = GetObjectArrayElement (source, index);
+				try {
+					if (element != IntPtr.Zero && !IsInstanceOf (element, Java.Lang.Class.String))
+						throw new InvalidCastException (FormattableString.Invariant (
+							$"Array element at index {index} is not a java.lang.String."));
+					IntPtr result = element;
+					element = IntPtr.Zero;
+					return result;
+				} finally {
+					DeleteLocalRef (element);
+				}
+			}
+		}
+
 		static object? GetNullableArrayElement (IntPtr source, int index, [DynamicallyAccessedMembers (Constructors)] Type targetType)
 		{
-			IntPtr elem = GetObjectArrayElement (source, index);
-			return JavaConvert.FromJniHandle (elem, JniHandleOwnership.TransferLocalRef, targetType);
+			unsafe {
+				// SAFETY: the array-copy caller supplies a live object array and valid index; its new local element reference transfers to FromJniHandle.
+				IntPtr elem = GetObjectArrayElement (source, index);
+				return JavaConvert.FromJniHandle (elem, JniHandleOwnership.TransferLocalRef, targetType);
+			}
 		}
 
 		static TValue GetConverter<TValue>(Dictionary<Type, TValue> dict, Type? elementType, IntPtr array)
@@ -726,10 +1128,13 @@ namespace Android.Runtime {
 					elementType = Enum.GetUnderlyingType (elementType);
 				if (dict.TryGetValue (elementType, out converter))
 					return converter;
+				if (elementType.IsArray)
+					return dict [typeof (Array)];
 			}
 
 			if (array != IntPtr.Zero) {
-				string? type = GetClassNameFromInstance (array);
+				// SAFETY: the marshaling caller retains array while its class name is read.
+				string? type = unsafe(GetClassNameFromInstance (array));
 				if (type == null || type.Length < 1 || type [0] != '[')
 					throw new InvalidOperationException ("Unsupported java array type: " + type);
 
@@ -752,91 +1157,159 @@ namespace Android.Runtime {
 					return dict [typeof (string)];
 			}
 
-			if (elementType != null && elementType.IsArray)
-				return dict [typeof (Array)];
-
 			AssertIsJavaObject (elementType);
 			return dict [typeof (IJavaObject)];
 		}
 
+		/// <safety>
+		/// <paramref name="array"/> must be null where supported, or a live JNI array reference of the required type usable on the current thread for the call.
+		/// The requested start/length range must lie within the live JNI array, whose primitive element type must match the buffer.
+		/// <paramref name="length"/> must not exceed <paramref name="buffer"/>.Length; the managed buffer is pinned only for this call.
+		/// </safety>
 		static unsafe void _GetBooleanArrayRegion (IntPtr array, int start, int length, bool[] buffer)
 		{
-			fixed (bool* p = buffer)
-				JniEnvironment.Arrays.GetBooleanArrayRegion (new JniObjectReference (array), start, length, p);
+			unsafe {
+				// SAFETY: fixed pins buffer for the synchronous primitive read; the caller supplies a matching array and nonnegative start/length within both native and managed extents.
+				fixed (bool* p = buffer)
+					JniEnvironment.Arrays.GetBooleanArrayRegion (new JniObjectReference (array), start, length, p);
+			}
 		}
 
+		/// <safety>
+		/// <paramref name="array"/> must be null where supported, or a live JNI array reference of the required type usable on the current thread for the call.
+		/// The requested start/length range must lie within the live JNI array, whose primitive element type must match the buffer.
+		/// <paramref name="length"/> must not exceed <paramref name="buffer"/>.Length; the managed buffer is pinned only for this call.
+		/// </safety>
 		static unsafe void _GetByteArrayRegion (IntPtr array, int start, int length, byte[] buffer)
 		{
-			fixed (byte* p = buffer)
-				JniEnvironment.Arrays.GetByteArrayRegion (new JniObjectReference (array), start, length, (sbyte*) p);
+			unsafe {
+				// SAFETY: fixed pins buffer for the synchronous primitive read; the caller supplies a matching array and nonnegative start/length within both native and managed extents.
+				fixed (byte* p = buffer)
+					JniEnvironment.Arrays.GetByteArrayRegion (new JniObjectReference (array), start, length, (sbyte*) p);
+			}
 		}
 
+		/// <safety>
+		/// <paramref name="array"/> must be null where supported, or a live JNI array reference of the required type usable on the current thread for the call.
+		/// The requested start/length range must lie within the live JNI array, whose primitive element type must match the buffer.
+		/// <paramref name="length"/> must not exceed <paramref name="buffer"/>.Length; the managed buffer is pinned only for this call.
+		/// </safety>
 		static unsafe void _GetCharArrayRegion (IntPtr array, int start, int length, char[] buffer)
 		{
-			fixed (char* p = buffer)
-				JniEnvironment.Arrays.GetCharArrayRegion (new JniObjectReference (array), start, length, p);
+			unsafe {
+				// SAFETY: fixed pins buffer for the synchronous primitive read; the caller supplies a matching array and nonnegative start/length within both native and managed extents.
+				fixed (char* p = buffer)
+					JniEnvironment.Arrays.GetCharArrayRegion (new JniObjectReference (array), start, length, p);
+			}
 		}
 
+		/// <safety>
+		/// <paramref name="array"/> must be null where supported, or a live JNI array reference of the required type usable on the current thread for the call.
+		/// The requested start/length range must lie within the live JNI array, whose primitive element type must match the buffer.
+		/// <paramref name="length"/> must not exceed <paramref name="buffer"/>.Length; the managed buffer is pinned only for this call.
+		/// </safety>
 		static unsafe void _GetShortArrayRegion (IntPtr array, int start, int length, short[] buffer)
 		{
-			fixed (short* p = buffer)
-				JniEnvironment.Arrays.GetShortArrayRegion (new JniObjectReference (array), start, length, p);
+			unsafe {
+				// SAFETY: fixed pins buffer for the synchronous primitive read; the caller supplies a matching array and nonnegative start/length within both native and managed extents.
+				fixed (short* p = buffer)
+					JniEnvironment.Arrays.GetShortArrayRegion (new JniObjectReference (array), start, length, p);
+			}
 		}
 
+		/// <safety>
+		/// <paramref name="array"/> must be null where supported, or a live JNI array reference of the required type usable on the current thread for the call.
+		/// The requested start/length range must lie within the live JNI array, whose primitive element type must match the buffer.
+		/// <paramref name="length"/> must not exceed <paramref name="buffer"/>.Length; the managed buffer is pinned only for this call.
+		/// </safety>
 		static unsafe void _GetIntArrayRegion (IntPtr array, int start, int length, int[] buffer)
 		{
-			fixed (int* p = buffer)
-				JniEnvironment.Arrays.GetIntArrayRegion (new JniObjectReference (array), start, length, p);
+			unsafe {
+				// SAFETY: fixed pins buffer for the synchronous primitive read; the caller supplies a matching array and nonnegative start/length within both native and managed extents.
+				fixed (int* p = buffer)
+					JniEnvironment.Arrays.GetIntArrayRegion (new JniObjectReference (array), start, length, p);
+			}
 		}
 
+		/// <safety>
+		/// <paramref name="array"/> must be null where supported, or a live JNI array reference of the required type usable on the current thread for the call.
+		/// The requested start/length range must lie within the live JNI array, whose primitive element type must match the buffer.
+		/// <paramref name="length"/> must not exceed <paramref name="buffer"/>.Length; the managed buffer is pinned only for this call.
+		/// </safety>
 		static unsafe void _GetLongArrayRegion (IntPtr array, int start, int length, long[] buffer)
 		{
-			fixed (long* p = buffer)
-				JniEnvironment.Arrays.GetLongArrayRegion (new JniObjectReference (array), start, length, p);
+			unsafe {
+				// SAFETY: fixed pins buffer for the synchronous primitive read; the caller supplies a matching array and nonnegative start/length within both native and managed extents.
+				fixed (long* p = buffer)
+					JniEnvironment.Arrays.GetLongArrayRegion (new JniObjectReference (array), start, length, p);
+			}
 		}
 
+		/// <safety>
+		/// <paramref name="array"/> must be null where supported, or a live JNI array reference of the required type usable on the current thread for the call.
+		/// The requested start/length range must lie within the live JNI array, whose primitive element type must match the buffer.
+		/// <paramref name="length"/> must not exceed <paramref name="buffer"/>.Length; the managed buffer is pinned only for this call.
+		/// </safety>
 		static unsafe void _GetFloatArrayRegion (IntPtr array, int start, int length, float[] buffer)
 		{
-			fixed (float* p = buffer)
-				JniEnvironment.Arrays.GetFloatArrayRegion (new JniObjectReference (array), start, length, p);
+			unsafe {
+				// SAFETY: fixed pins buffer for the synchronous primitive read; the caller supplies a matching array and nonnegative start/length within both native and managed extents.
+				fixed (float* p = buffer)
+					JniEnvironment.Arrays.GetFloatArrayRegion (new JniObjectReference (array), start, length, p);
+			}
 		}
 
+		/// <safety>
+		/// <paramref name="array"/> must be null where supported, or a live JNI array reference of the required type usable on the current thread for the call.
+		/// The requested start/length range must lie within the live JNI array, whose primitive element type must match the buffer.
+		/// <paramref name="length"/> must not exceed <paramref name="buffer"/>.Length; the managed buffer is pinned only for this call.
+		/// </safety>
 		static unsafe void _GetDoubleArrayRegion (IntPtr array, int start, int length, double[] buffer)
 		{
-			fixed (double* p = buffer)
-				JniEnvironment.Arrays.GetDoubleArrayRegion (new JniObjectReference (array), start, length, p);
+			unsafe {
+				// SAFETY: fixed pins buffer for the synchronous primitive read; the caller supplies a matching array and nonnegative start/length within both native and managed extents.
+				fixed (double* p = buffer)
+					JniEnvironment.Arrays.GetDoubleArrayRegion (new JniObjectReference (array), start, length, p);
+			}
 		}
 
 #pragma warning disable RS0027 // API with optional parameter(s) should have the most parameters amongst its public overloads
+		/// <safety>
+		/// <paramref name="src"/> must be null where supported, or a live JNI array reference of the required type usable on the current thread for the call.
+		/// The JNI array element type must match the requested managed conversion and all requested element ranges must lie within the live array.
+		/// </safety>
 		public static void CopyArray (IntPtr src, Array dest, Type? elementType = null)
 #pragma warning restore RS0027 // API with optional parameter(s) should have the most parameters amongst its public overloads
 		{
 			if (dest == null)
 				throw new ArgumentNullException ("dest");
 
-			if (elementType != null && elementType.IsValueType)
-				AssertCompatibleArrayTypes (src, destElementType: elementType);
+			unsafe {
+				// SAFETY: the caller retains src and a compatible element kind for dest.Length entries; nested local arrays are released in finally after conversion.
+				if (elementType != null && elementType.IsValueType)
+					AssertCompatibleArrayTypes (src, destElementType: elementType);
 
-			if (elementType != null && elementType.IsArray) {
-				for (int i = 0; i < dest.Length; ++i) {
-					IntPtr a = GetObjectArrayElement (src, i);
-					try {
-						var d = (Array?) dest.GetValue (i);
-						if (d == null)
-							dest.SetValue (GetArray (a, JniHandleOwnership.DoNotTransfer, elementType.GetElementType ()), i);
-						else
-							CopyArray (a, d, elementType.GetElementType ());
-					} finally {
-						DeleteLocalRef (a);
+				if (elementType != null && elementType.IsArray) {
+					for (int i = 0; i < dest.Length; ++i) {
+						IntPtr a = GetObjectArrayElement (src, i);
+						try {
+							var d = (Array?) dest.GetValue (i);
+							if (d == null)
+								dest.SetValue (GetArray (a, JniHandleOwnership.DoNotTransfer, elementType.GetElementType ()), i);
+							else
+								CopyArray (a, d, elementType.GetElementType ());
+						} finally {
+							DeleteLocalRef (a);
+						}
 					}
+					return;
 				}
-				return;
+
+				var converter = GetConverter (NativeArrayElementToManaged, elementType, src);
+
+				for (int i = 0; i < dest.Length; i++)
+					dest.SetValue (converter (elementType, src, i), i);
 			}
-
-			var converter = GetConverter (NativeArrayElementToManaged, elementType, src);
-
-			for (int i = 0; i < dest.Length; i++)
-				dest.SetValue (converter (elementType, src, i), i);
 		}
 
 		static void AssertIsJavaObject (Type? targetType)
@@ -845,48 +1318,73 @@ namespace Android.Runtime {
 				throw new NotSupportedException ("Don't know how to convert type '" + targetType.FullName + "' to an Android.Runtime.IJavaObject.");
 		}
 
+		/// <safety>
+		/// <paramref name="src"/> must be null where supported, or a live JNI array reference of the required type usable on the current thread for the call.
+		/// The JNI array element type must match the requested managed conversion and all requested element ranges must lie within the live array.
+		/// </safety>
 		public static void CopyArray<T> (IntPtr src, T[] dest)
 		{
 			if (dest == null)
 				throw new ArgumentNullException ("dest");
 
-			if (typeof (T).IsValueType)
-				AssertCompatibleArrayTypes (src, destElementType: typeof (T));
+			unsafe {
+				// SAFETY: the caller retains src with the matching T conversion and dest.Length entries; primitive kinds are checked before the existing element converters run.
+				if (typeof (T).IsValueType)
+					AssertCompatibleArrayTypes (src, destElementType: typeof (T));
 
-			if (typeof (T).IsArray) {
-				CopyArray (src, dest, typeof (T));
-				return;
+				if (typeof (T).IsArray) {
+					CopyArray (src, dest, typeof (T));
+					return;
+				}
+
+				var converter = GetConverter (NativeArrayElementToManaged, typeof (T), src);
+
+				for (int i = 0; i < dest.Length; i++)
+					dest [i] = (T) converter (typeof (T), src, i)!;
 			}
-
-			var converter = GetConverter (NativeArrayElementToManaged, typeof (T), src);
-
-			for (int i = 0; i < dest.Length; i++)
-				dest [i] = (T) converter (typeof (T), src, i)!;
 		}
 
-		public static unsafe void CopyArray (bool[] src, IntPtr dest)
+		/// <safety>
+		/// <paramref name="dest"/> must be null where supported, or a live JNI array reference of the required type usable on the current thread for the call.
+		/// The JNI array element type must match the requested managed conversion and all requested element ranges must lie within the live array.
+		/// </safety>
+		public static void CopyArray (bool[] src, IntPtr dest)
 		{
 			if (src == null)
 				throw new ArgumentNullException ("src");
 
-			AssertCompatibleArrayTypes (srcElementType: typeof (bool), dest);
+			unsafe {
+				// SAFETY: src is pinned for src.Length values; the caller retains a matching, sufficiently long destination.
+				AssertCompatibleArrayTypes (srcElementType: typeof (bool), dest);
 
-			fixed (bool* p = src)
-				JniEnvironment.Arrays.SetBooleanArrayRegion (new JniObjectReference (dest), 0, src.Length, p);
+				fixed (bool* p = src)
+					JniEnvironment.Arrays.SetBooleanArrayRegion (new JniObjectReference (dest), 0, src.Length, p);
+			}
 		}
 
+		/// <safety>
+		/// <paramref name="dest"/> must be null where supported, or a live JNI array reference of the required type usable on the current thread for the call.
+		/// The JNI array element type must match the requested managed conversion and all requested element ranges must lie within the live array.
+		/// </safety>
 		public static void CopyArray (string[] src, IntPtr dest)
 		{
 			if (src == null)
 				throw new ArgumentNullException ("src");
 
-			for (int i = 0; i < src.Length; i++) {
-				IntPtr native = NewString (src [i]);
-				JniEnvironment.Arrays.SetObjectArrayElement (new JniObjectReference (dest), i, new JniObjectReference (native));
-				DeleteLocalRef (native);
+			unsafe {
+				// SAFETY: the caller retains dest as a String-compatible object array; each temporary NewString reference is passed to SetObjectArrayElement before normal-path deletion.
+				for (int i = 0; i < src.Length; i++) {
+					IntPtr native = NewString (src [i]);
+					JniEnvironment.Arrays.SetObjectArrayElement (new JniObjectReference (dest), i, new JniObjectReference (native));
+					DeleteLocalRef (native);
+				}
 			}
 		}
 
+		/// <safety>
+		/// <paramref name="dest"/> must be null where supported, or a live JNI array reference of the required type usable on the current thread for the call.
+		/// The JNI array element type must match the requested managed conversion and all requested element ranges must lie within the live array.
+		/// </safety>
 		public static void CopyArray (IJavaObject[] src, IntPtr dest)
 		{
 			if (src == null)
@@ -895,6 +1393,7 @@ namespace Android.Runtime {
 			for (int i = 0; i < src.Length; i++) {
 				IJavaObject o = src [i];
 				JniEnvironment.Arrays.SetObjectArrayElement (new JniObjectReference (dest), i, new JniObjectReference (o == null ? IntPtr.Zero : o.Handle));
+				GC.KeepAlive (o);
 			}
 		}
 
@@ -913,14 +1412,60 @@ namespace Android.Runtime {
 		static Dictionary<Type, Action<Array, IntPtr>> CreateCopyManagedToNativeArray ()
 		{
 			return new Dictionary<Type, Action<Array, IntPtr>> () {
-				{ typeof (bool),        (source, dest) => CopyArray ((bool[]) source, dest) },
-				{ typeof (byte),        (source, dest) => CopyArray ((byte[]) source, dest) },
-				{ typeof (char),        (source, dest) => CopyArray ((char[]) source, dest) },
-				{ typeof (short),       (source, dest) => CopyArray ((short[]) source, dest) },
-				{ typeof (int),         (source, dest) => CopyArray ((int[]) source, dest) },
-				{ typeof (long),        (source, dest) => CopyArray ((long[]) source, dest) },
-				{ typeof (float),       (source, dest) => CopyArray ((float[]) source, dest) },
-				{ typeof (double),      (source, dest) => CopyArray ((double[]) source, dest) },
+				{ typeof (bool),        (source, dest) => {
+					unsafe {
+						// SAFETY: the array marshaler retains the matching array and element range for this synchronous conversion.
+						CopyArray ((bool[]) source, dest);
+					}
+				} },
+				{ typeof (byte),        (source, dest) => {
+					unsafe {
+						// SAFETY: the array marshaler retains the matching array and element range for this synchronous conversion.
+						CopyArray ((byte[]) source, dest);
+					}
+				} },
+				{ typeof (sbyte),       (source, dest) => {
+					unsafe {
+						// SAFETY: the array marshaler retains the matching array and element range for this synchronous conversion.
+						CopyArray ((byte[]) (object) (sbyte[]) source, dest);
+					}
+				} },
+				{ typeof (char),        (source, dest) => {
+					unsafe {
+						// SAFETY: the array marshaler retains the matching array and element range for this synchronous conversion.
+						CopyArray ((char[]) source, dest);
+					}
+				} },
+				{ typeof (short),       (source, dest) => {
+					unsafe {
+						// SAFETY: the array marshaler retains the matching array and element range for this synchronous conversion.
+						CopyArray ((short[]) source, dest);
+					}
+				} },
+				{ typeof (int),         (source, dest) => {
+					unsafe {
+						// SAFETY: the array marshaler retains the matching array and element range for this synchronous conversion.
+						CopyArray ((int[]) source, dest);
+					}
+				} },
+				{ typeof (long),        (source, dest) => {
+					unsafe {
+						// SAFETY: the array marshaler retains the matching array and element range for this synchronous conversion.
+						CopyArray ((long[]) source, dest);
+					}
+				} },
+				{ typeof (float),       (source, dest) => {
+					unsafe {
+						// SAFETY: the array marshaler retains the matching array and element range for this synchronous conversion.
+						CopyArray ((float[]) source, dest);
+					}
+				} },
+				{ typeof (double),      (source, dest) => {
+					unsafe {
+						// SAFETY: the array marshaler retains the matching array and element range for this synchronous conversion.
+						CopyArray ((double[]) source, dest);
+					}
+				} },
 				{ typeof (bool?),       (source, dest) => CopyManagedObjectArray (source, dest) },
 				{ typeof (byte?),       (source, dest) => CopyManagedObjectArray (source, dest) },
 				{ typeof (sbyte?),      (source, dest) => CopyManagedObjectArray (source, dest) },
@@ -933,27 +1478,42 @@ namespace Android.Runtime {
 				{ typeof (string),      (source, dest) => {
 					var s = source as string[];
 					if (s != null) {
-						CopyArray (s, dest);
+						unsafe {
+							// SAFETY: the conversion retains its matching JNI array and owned local references for this call.
+							CopyArray (s, dest);
+						}
 						return;
 					}
 					var ijo = source as IJavaObject[];
 					if (ijo != null) {
-						CopyArray (ijo, dest);
+						unsafe {
+							// SAFETY: the conversion retains its matching JNI array and owned local references for this call.
+							CopyArray (ijo, dest);
+						}
 						return;
 					}
-					throw new NotSupportedException ("Don't know how to copy '" +
+					// SAFETY: dest is the retained array supplied to this conversion; only its diagnostic class name is read.
+					throw unsafe(new NotSupportedException ("Don't know how to copy '" +
 							source.GetType ().FullName + "' to '" +
 							GetClassNameFromInstance (dest) +
-							"'.");
+							"'."));
 				} },
-				{ typeof (IJavaObject), (source, dest) => CopyArray ((IJavaObject[]) source, dest) },
+				{ typeof (IJavaObject), (source, dest) => {
+					unsafe {
+						// SAFETY: the array marshaler retains the matching array and element range for this synchronous conversion.
+						CopyArray ((IJavaObject[]) source, dest);
+					}
+				} },
 				{ typeof (Array),       (source, dest) => {
 					int len = source.GetLength (0);
 					for (int i = 0; i < len; ++i) {
-						IntPtr _dest    = GetObjectArrayElement (dest, i);
-						Array  _source  = (Array) source.GetValue (i)!;
-						CopyArray (_source, _source.GetType ().GetElementType ()!, _dest);
-						JNIEnv.DeleteLocalRef (_dest);
+						unsafe {
+							// SAFETY: dest/i supply the nested array; conversion and the existing local release stay together.
+							IntPtr _dest = GetObjectArrayElement (dest, i);
+							Array  _source  = (Array) source.GetValue (i)!;
+							CopyArray (_source, _source.GetType ().GetElementType ()!, _dest);
+							JNIEnv.DeleteLocalRef (_dest);
+						}
 					}
 				} },
 			};
@@ -961,21 +1521,28 @@ namespace Android.Runtime {
 
 		static void CopyManagedObjectArray (Array source, IntPtr dest)
 		{
-			// Inlined equivalent of JavaConvert.WithLocalJniHandle to avoid allocating a capturing
-			// closure per element (this runs once per array element for both NewObjectArray and the
-			// nullable-primitive CopyManagedToNativeArray entries).
-			for (int i = 0; i < source.Length; i++) {
-				object? value = source.GetValue (i);
-				IntPtr lref = JavaConvert.ToLocalJniHandle (value);
-				try {
-					SetObjectArrayElement (dest, i, lref);
-				} finally {
-					DeleteLocalRef (lref);
-					GC.KeepAlive (value);
+			unsafe {
+				// SAFETY: dest is the retained object array supplied by its creation/copy path; each local converted value is borrowed for the set and released in finally.
+				// Inlined equivalent of JavaConvert.WithLocalJniHandle to avoid allocating a capturing
+				// closure per element (this runs once per array element for both NewObjectArray and the
+				// nullable-primitive CopyManagedToNativeArray entries).
+				for (int i = 0; i < source.Length; i++) {
+					object? value = source.GetValue (i);
+					IntPtr lref = JavaConvert.ToLocalJniHandle (value);
+					try {
+						SetObjectArrayElement (dest, i, lref);
+					} finally {
+						DeleteLocalRef (lref);
+						GC.KeepAlive (value);
+					}
 				}
 			}
 		}
 
+		/// <safety>
+		/// <paramref name="dest"/> must be null where supported, or a live JNI array reference of the required type usable on the current thread for the call.
+		/// The JNI array element type must match the requested managed conversion and all requested element ranges must lie within the live array.
+		/// </safety>
 		public static void CopyArray (Array source, Type elementType, IntPtr dest)
 		{
 			if (source == null)
@@ -991,21 +1558,36 @@ namespace Android.Runtime {
 			converter (source, dest);
 		}
 
+		/// <safety>
+		/// <paramref name="dest"/> must be null where supported, or a live JNI array reference of the required type usable on the current thread for the call.
+		/// The JNI array element type must match the requested managed conversion and all requested element ranges must lie within the live array.
+		/// </safety>
 		public static void CopyArray<T> (T[] src, IntPtr dest)
 		{
 			if (src == null)
 				throw new ArgumentNullException ("src");
 
-			CopyArray (src, typeof (T), dest);
+			unsafe {
+				// SAFETY: the caller retains the destination for the matching T conversion; no extra reference is acquired.
+				CopyArray (src, typeof (T), dest);
+			}
 		}
 
+		/// <safety>
+		/// <paramref name="array_ptr"/> must be null where supported, or a live JNI array reference of the required type usable on the current thread for the call.
+		/// <paramref name="transfer"/> must describe reference ownership the caller holds; transferred handles must not be used after their release.
+		/// The JNI array element type must match the requested managed conversion and all requested element ranges must lie within the live array.
+		/// </safety>
 		public static Array? GetArray (IntPtr array_ptr, JniHandleOwnership transfer, Type? element_type = null)
 		{
 			try {
 				return _GetArray (array_ptr, element_type);
 			}
 			finally {
-				DeleteRef (array_ptr, transfer);
+				unsafe {
+					// SAFETY: the caller's transfer contract covers array_ptr; it is released once after conversion.
+					DeleteRef (array_ptr, transfer);
+				}
 			}
 		}
 
@@ -1026,57 +1608,98 @@ namespace Android.Runtime {
 			return new Dictionary<Type, Func<Type?, IntPtr, int, Array>> () {
 				{ typeof (bool), (type, source, len) => {
 					var r = new bool [len];
-					CopyArray (source, r);
+					unsafe {
+						// SAFETY: source is the matching live JNI array; the managed result bounds the copy.
+						CopyArray (source, r);
+					}
 					return r;
 				} },
 				{ typeof (byte), (type, source, len) => {
 					var r = new byte[len];
-					CopyArray (source, r);
+					unsafe {
+						// SAFETY: source is the matching live JNI array; the managed result bounds the copy.
+						CopyArray (source, r);
+					}
+					return r;
+				} },
+				{ typeof (sbyte), (type, source, len) => {
+					var r = new sbyte [len];
+					unsafe {
+						// SAFETY: source is the matching live JNI array; the managed result bounds the copy.
+						CopyArray (source, (byte[]) (object) r);
+					}
 					return r;
 				} },
 				{ typeof (char), (type, source, len) => {
 					var r = new char [len];
-					CopyArray (source, r);
+					unsafe {
+						// SAFETY: source is the matching live JNI array; the managed result bounds the copy.
+						CopyArray (source, r);
+					}
 					return r;
 				} },
 				{ typeof (short), (type, source, len) => {
 					var r = new short [len];
-					CopyArray (source, r);
+					unsafe {
+						// SAFETY: source is the matching live JNI array; the managed result bounds the copy.
+						CopyArray (source, r);
+					}
 					return r;
 				} },
 				{ typeof (ushort), (type, source, len) => {
 					var r = new ushort [len];
-					CopyArray (source, r);
+					unsafe {
+						// SAFETY: source is the matching live JNI array; the managed result bounds the copy.
+						CopyArray (source, r);
+					}
 					return r;
 				} },
 				{ typeof (int), (type, source, len) => {
 					var r = new int[len];
-					CopyArray (source, r);
+					unsafe {
+						// SAFETY: source is the matching live JNI array; the managed result bounds the copy.
+						CopyArray (source, r);
+					}
 					return r;
 				} },
 				{ typeof (uint), (type, source, len) => {
 					var r = new uint[len];
-					CopyArray (source, r);
+					unsafe {
+						// SAFETY: source is the matching live JNI array; the managed result bounds the copy.
+						CopyArray (source, r);
+					}
 					return r;
 				} },
 				{ typeof (long), (type, source, len) => {
 					var r = new long[len];
-					CopyArray (source, r);
+					unsafe {
+						// SAFETY: source is the matching live JNI array; the managed result bounds the copy.
+						CopyArray (source, r);
+					}
 					return r;
 				} },
 				{ typeof (ulong), (type, source, len) => {
 					var r = new ulong[len];
-					CopyArray (source, r);
+					unsafe {
+						// SAFETY: source is the matching live JNI array; the managed result bounds the copy.
+						CopyArray (source, r);
+					}
 					return r;
 				} },
 				{ typeof (float), (type, source, len) => {
 					var r = new float[len];
-					CopyArray (source, r);
+					unsafe {
+						// SAFETY: source is the matching live JNI array; the managed result bounds the copy.
+						CopyArray (source, r);
+					}
 					return r;
 				} },
 				{ typeof (double), (type, source, len) => {
 					var r = new double [len];
-					CopyArray (source, r);
+					unsafe {
+						// SAFETY: source is the matching live JNI array; the managed result bounds the copy.
+						CopyArray (source, r);
+					}
 					return r;
 				} },
 				{ typeof (bool?),   (type, source, len) => CreateManagedArrayFromObjectArray (type, source, len) },
@@ -1091,22 +1714,34 @@ namespace Android.Runtime {
 				{ typeof (string), (type, source, len) => {
 					if (type != null && typeof (Java.Lang.Object).IsAssignableFrom (type)) {
 						var r = new Java.Lang.String [len];
-						CopyArray (source, r);
+						unsafe {
+							// SAFETY: source is the matching live JNI array; the managed result bounds the copy.
+							CopyArray (source, r);
+						}
 						return r;
 					} else {
 						var r = new string [len];
-						CopyArray (source, r);
+						unsafe {
+							// SAFETY: source is the matching live JNI array; the managed result bounds the copy.
+							CopyArray (source, r);
+						}
 						return r;
 					}
 				} },
 				{ typeof (IJavaObject), (type, source, len) => {
 					var r = ArrayCreateInstance (type!, len);
-					CopyArray (source, r, type);
+					unsafe {
+						// SAFETY: source is the matching live JNI array; the managed result bounds the copy.
+						CopyArray (source, r, type);
+					}
 					return r;
 				} },
 				{ typeof (Array), (type, source, len) => {
 					var r = ArrayCreateInstance (type!, len);
-					CopyArray (source, r, type);
+					unsafe {
+						// SAFETY: source is the matching live JNI array; the managed result bounds the copy.
+						CopyArray (source, r, type);
+					}
 					return r;
 				} },
 			};
@@ -1117,9 +1752,12 @@ namespace Android.Runtime {
 			if (elementType == null)
 				throw new ArgumentNullException (nameof (elementType));
 
-			var r = ArrayCreateInstance (elementType, len);
-			CopyArray (source, r, elementType);
-			return r;
+			unsafe {
+				// SAFETY: the marshaler retains source for len elements; the result is allocated to that same length before copying.
+				var r = ArrayCreateInstance (elementType, len);
+				CopyArray (source, r, elementType);
+				return r;
+			}
 		}
 
 		static Array? _GetArray (IntPtr array_ptr, Type? element_type)
@@ -1127,12 +1765,10 @@ namespace Android.Runtime {
 			if (array_ptr == IntPtr.Zero)
 				return null;
 
-			if (element_type != null && element_type.IsValueType)
-				AssertCompatibleArrayTypes (array_ptr, destElementType: element_type);
-
-			int cnt = _GetArrayLength (array_ptr);
+			AssertArrayConversionType (array_ptr, element_type);
 
 			var converter = GetConverter (NativeArrayToManaged, element_type, array_ptr);
+			int cnt = _GetArrayLength (array_ptr);
 
 			return converter (element_type, array_ptr, cnt);
 		}
@@ -1142,6 +1778,10 @@ namespace Android.Runtime {
 			return JniEnvironment.Arrays.GetArrayLength (new JniObjectReference (array_ptr));
 		}
 
+		/// <safety>
+		/// <paramref name="array_ptr"/> must be null where supported, or a live JNI array reference of the required type usable on the current thread for the call.
+		/// The JNI array element type must match the requested managed conversion and all requested element ranges must lie within the live array.
+		/// </safety>
 		public static object?[]? GetObjectArray (IntPtr array_ptr, Type[] element_types)
 		{
 			if (array_ptr == IntPtr.Zero)
@@ -1169,18 +1809,27 @@ namespace Android.Runtime {
 			return ret;
 		}
 
+		/// <safety>
+		/// <paramref name="array_ptr"/> must be null or a live JNI object reference usable on the current thread for the call.
+		/// The source array kind is checked before native array access; primitive readers must match
+		/// that kind, including when their values are boxed. Retain the reference and exclude conflicting
+		/// mutation or release until conversion returns or throws.
+		/// </safety>
 		public static T[]? GetArray<T> (IntPtr array_ptr)
 		{
 			if (array_ptr == IntPtr.Zero)
 				return null;
 
-			if (typeof (T).IsValueType)
-				AssertCompatibleArrayTypes (array_ptr, destElementType: typeof (T));
+			unsafe {
+				// SAFETY: the caller retains the array; a destination-selected reader requires its matching
+				// array kind, while inferred/boxing readers are selected from the source's JNI signature.
+				AssertArrayConversionType (array_ptr, typeof (T));
 
-			int cnt = _GetArrayLength (array_ptr);
-			T[] ret = new T [cnt];
-			CopyArray<T> (array_ptr, ret);
-			return ret;
+				int cnt = _GetArrayLength (array_ptr);
+				T[] ret = new T [cnt];
+				CopyArray<T> (array_ptr, ret);
+				return ret;
+			}
 		}
 
 		public static T[]? GetArray<
@@ -1196,18 +1845,28 @@ namespace Android.Runtime {
 			return ret;
 		}
 
+		/// <safety>
+		/// <paramref name="array_ptr"/> must be null where supported, or a live JNI array reference of the required type usable on the current thread for the call.
+		/// The JNI array element type must match the requested managed conversion and all requested element ranges must lie within the live array.
+		/// </safety>
 		public static T GetArrayItem<T> (IntPtr array_ptr, int index)
 		{
 			if (array_ptr == IntPtr.Zero)
 				throw new ArgumentException ("array_ptr");
-			if (index < 0 || index >= GetArrayLength (array_ptr))
-				throw new ArgumentOutOfRangeException ("index");
+			unsafe {
+				// SAFETY: the caller retains array_ptr with T-compatible elements; the explicit index check runs before the one-element converter accesses the JNI array.
+				if (index < 0 || index >= GetArrayLength (array_ptr))
+					throw new ArgumentOutOfRangeException ("index");
 
-			var converter = GetConverter (NativeArrayElementToManaged, typeof (T), array_ptr);
+				var converter = GetConverter (NativeArrayElementToManaged, typeof (T), array_ptr);
 
-			return (T) converter (typeof (T), array_ptr, index)!;
+				return (T) converter (typeof (T), array_ptr, index)!;
+			}
 		}
 
+		/// <safety>
+		/// <paramref name="array_ptr"/> must be null where supported, or a live JNI array reference of the required type usable on the current thread for the call.
+		/// </safety>
 		public static int GetArrayLength (IntPtr array_ptr)
 		{
 			if (array_ptr == IntPtr.Zero)
@@ -1215,15 +1874,18 @@ namespace Android.Runtime {
 			return _GetArrayLength (array_ptr);
 		}
 
-		public static unsafe IntPtr NewArray (bool[]? array)
+		public static IntPtr NewArray (bool[]? array)
 		{
 			if (array == null)
 				return IntPtr.Zero;
 			IntPtr result;
 
 			var r   = JniEnvironment.Arrays.NewBooleanArray (array.Length);
-			fixed (bool* p = array)
-				JniEnvironment.Arrays.SetBooleanArrayRegion (r, 0, array.Length, p);
+			unsafe {
+				// SAFETY: JNI allocated array.Length Boolean slots; pin the managed source for this synchronous copy.
+				fixed (bool* p = array)
+					JniEnvironment.Arrays.SetBooleanArrayRegion (r, 0, array.Length, p);
+			}
 			result  = r.Handle;
 
 			return result;
@@ -1234,10 +1896,13 @@ namespace Android.Runtime {
 			if (array == null)
 				return IntPtr.Zero;
 
-			IntPtr result = NewObjectArray (array.Length, Java.Lang.Class.String, IntPtr.Zero);
-			CopyArray (array, result);
+			unsafe {
+				// SAFETY: NewObjectArray creates a String array of array.Length; CopyArray uses that owned local reference and exactly the managed source's elements.
+				IntPtr result = NewObjectArray (array.Length, Java.Lang.Class.String, IntPtr.Zero);
+				CopyArray (array, result);
 
-			return result;
+				return result;
+			}
 		}
 
 		// We do these translations here instead of in the binding to force a compile
@@ -1248,11 +1913,19 @@ namespace Android.Runtime {
 
 		public static IntPtr NewArray (ulong[] array) => NewArray ((long[])(object)array);
 
+		/// <safety>
+		/// <paramref name="elementClass"/> must be null where supported, or a live JNI class reference of the required type usable on the current thread for the call.
+		/// </safety>
 		public static IntPtr NewObjectArray (int length, IntPtr elementClass)
 		{
-			return NewObjectArray (length, elementClass, IntPtr.Zero);
+			// SAFETY: the caller retains elementClass as a live class; the three-argument overload initializes each new element with the JNI null reference.
+			return unsafe(NewObjectArray (length, elementClass, IntPtr.Zero));
 		}
 
+		/// <safety>
+		/// <paramref name="elementClass"/> must be null where supported, or a live JNI class reference of the required type usable on the current thread for the call.
+		/// <paramref name="initialElement"/> must be null where supported, or a live JNI object reference of the required type usable on the current thread for the call.
+		/// </safety>
 		public static IntPtr NewObjectArray (int length, IntPtr elementClass, IntPtr initialElement)
 		{
 			return JniEnvironment.Arrays.NewObjectArray (length, new JniObjectReference (elementClass), new JniObjectReference (initialElement)).Handle;
@@ -1260,46 +1933,56 @@ namespace Android.Runtime {
 
 		public static IntPtr NewObjectArray<T>(params T[]? values)
 		{
-			if (values == null)
-				return IntPtr.Zero;
+			unsafe {
+				// SAFETY: the new object array has values.Length slots; the class global survives until finally and WithLocalJniHandle borrows each value only for its synchronous set.
+				if (values == null)
+					return IntPtr.Zero;
 
-			IntPtr grefArrayElementClass = GetArrayElementClass (values);
-			if (JniEnvironment.Types.GetJniTypeNameFromClass (new JniObjectReference (grefArrayElementClass)) == "mono/android/runtime/JavaObject") {
-				DeleteGlobalRef (grefArrayElementClass);
-				grefArrayElementClass = NewGlobalRef (Java.Lang.Class.Object);
-			}
-			try {
-				IntPtr lrefArray = NewObjectArray (values.Length, grefArrayElementClass, IntPtr.Zero);
+				IntPtr grefArrayElementClass = GetArrayElementClass (values);
+				if (JniEnvironment.Types.GetJniTypeNameFromClass (new JniObjectReference (grefArrayElementClass)) == "mono/android/runtime/JavaObject") {
+					DeleteGlobalRef (grefArrayElementClass);
+					grefArrayElementClass = NewGlobalRef (Java.Lang.Class.Object);
+				}
+				try {
+					IntPtr lrefArray = NewObjectArray (values.Length, grefArrayElementClass, IntPtr.Zero);
 
-				for (int i = 0; i < values.Length; ++i) {
-					JavaConvert.WithLocalJniHandle (values [i], lref => {
-							SetObjectArrayElement (lrefArray, i, lref);
-							return IntPtr.Zero;
-					});
+					for (int i = 0; i < values.Length; ++i) {
+						JavaConvert.WithLocalJniHandle (values [i], lref => {
+								SetObjectArrayElement (lrefArray, i, lref);
+								return IntPtr.Zero;
+						});
+					}
+
+					return lrefArray;
+				}
+				finally {
+					DeleteGlobalRef (grefArrayElementClass);
 				}
 
-				return lrefArray;
 			}
-			finally {
-				DeleteGlobalRef (grefArrayElementClass);
-			}
-
 		}
 
 		static IntPtr GetArrayElementClass<T>(T[] values)
 		{
-			Type    elementType = typeof (T);
-			var jniClass    = JavaConvert.GetJniClassForType (elementType);
-			if (jniClass != null) {
-				return FindClass (jniClass);
+			unsafe {
+				// SAFETY: FindClass returns an owned global for the selected managed element type; the java/lang/Object fallback duplicates the runtime's retained class.
+				Type    elementType = typeof (T);
+				var jniClass    = JavaConvert.GetJniClassForType (elementType);
+				if (jniClass != null) {
+					return FindClass (jniClass);
+				}
+
+				if (elementType.IsValueType)
+					return NewGlobalRef (Java.Lang.Class.Object);
+
+				return FindClass (elementType);
 			}
-
-			if (elementType.IsValueType)
-				return NewGlobalRef (Java.Lang.Class.Object);
-
-			return FindClass (elementType);
 		}
 
+		/// <safety>
+		/// <paramref name="source"/> must be null where supported, or a live JNI array reference of the required type usable on the current thread for the call.
+		/// The JNI array element type must match the requested managed conversion and all requested element ranges must lie within the live array.
+		/// </safety>
 		public static void CopyObjectArray<
 				[DynamicallyAccessedMembers (Constructors)]
 				T
@@ -1307,29 +1990,39 @@ namespace Android.Runtime {
 		{
 			if (source == IntPtr.Zero)
 				return;
-			if (destination == null)
-				throw new ArgumentNullException ("destination");
+			unsafe {
+				// SAFETY: the caller retains source as a compatible object array; Math.Min bounds reads by both arrays, and each local element reference transfers to conversion.
+				if (destination == null)
+					throw new ArgumentNullException ("destination");
 
-			int len = Math.Min (GetArrayLength (source), destination.Length);
-			for (int i = 0; i < len; ++i) {
-				IntPtr value = GetObjectArrayElement (source, i);
-				destination [i] = JavaConvert.FromJniHandle<T>(value, JniHandleOwnership.TransferLocalRef)!;
+				int len = Math.Min (GetArrayLength (source), destination.Length);
+				for (int i = 0; i < len; ++i) {
+					IntPtr value = GetObjectArrayElement (source, i);
+					destination [i] = JavaConvert.FromJniHandle<T>(value, JniHandleOwnership.TransferLocalRef)!;
+				}
 			}
 		}
 
+		/// <safety>
+		/// <paramref name="destination"/> must be null where supported, or a live JNI array reference of the required type usable on the current thread for the call.
+		/// The JNI array element type must match the requested managed conversion and all requested element ranges must lie within the live array.
+		/// </safety>
 		public static void CopyObjectArray<T>(T[]? source, IntPtr destination)
 		{
 			if (source == null)
 				return;
-			if (destination == IntPtr.Zero)
-				throw new ArgumentException ("Destination is a null JNI handle!", "destination");
+			unsafe {
+				// SAFETY: the caller retains destination as a compatible object array; Math.Min bounds writes, and WithLocalJniHandle retains each value through the set.
+				if (destination == IntPtr.Zero)
+					throw new ArgumentException ("Destination is a null JNI handle!", "destination");
 
-			int len = Math.Min (source.Length, GetArrayLength (destination));
-			for (int i = 0; i < len; ++i) {
-				JavaConvert.WithLocalJniHandle (source [i], lref => {
-						SetObjectArrayElement (destination, i, lref);
-						return IntPtr.Zero;
-				});
+				int len = Math.Min (source.Length, GetArrayLength (destination));
+				for (int i = 0; i < len; ++i) {
+					JavaConvert.WithLocalJniHandle (source [i], lref => {
+							SetObjectArrayElement (destination, i, lref);
+							return IntPtr.Zero;
+					});
+				}
 			}
 		}
 
@@ -1338,17 +2031,20 @@ namespace Android.Runtime {
 			if (array == null)
 				return IntPtr.Zero;
 
-			IntPtr result;
-			IntPtr grefClass = FindClass (array.GetType ().GetElementType ()!);
-			try {
-				result = NewObjectArray (array.Length, grefClass, IntPtr.Zero);
-			} finally {
-				DeleteGlobalRef (grefClass);
+			unsafe {
+				// SAFETY: FindClass owns the element-class global through allocation; the new array has array.Length slots and CopyArray retains each managed element during insertion.
+				IntPtr result;
+				IntPtr grefClass = FindClass (array.GetType ().GetElementType ()!);
+				try {
+					result = NewObjectArray (array.Length, grefClass, IntPtr.Zero);
+				} finally {
+					DeleteGlobalRef (grefClass);
+				}
+
+				CopyArray (array, result);
+
+				return result;
 			}
-
-			CopyArray (array, result);
-
-			return result;
 		}
 
 		static Dictionary<Type, Func<Array, IntPtr>>? createManagedToNativeArray;
@@ -1368,6 +2064,7 @@ namespace Android.Runtime {
 			return new Dictionary<Type, Func<Array, IntPtr>> () {
 				{ typeof (bool),          (source) => NewArray ((bool[]) source) },
 				{ typeof (byte),          (source) => NewArray ((byte[]) source) },
+				{ typeof (sbyte),         (source) => NewArray ((byte[]) (object) (sbyte[]) source) },
 				{ typeof (char),          (source) => NewArray ((char[]) source) },
 				{ typeof (short),         (source) => NewArray ((short[]) source) },
 				{ typeof (int),           (source) => NewArray ((int[]) source) },
@@ -1391,27 +2088,31 @@ namespace Android.Runtime {
 
 		static IntPtr NewObjectArray (Array value, Type elementType)
 		{
-			IntPtr grefArrayElementClass = FindObjectArrayElementClass (elementType);
-			try {
-				IntPtr array = IntPtr.Zero;
+			unsafe {
+				// SAFETY: the class global survives in finally and the newly allocated array has value.Length slots; on copy failure the owned array local is deleted before rethrow.
+				IntPtr grefArrayElementClass = FindObjectArrayElementClass (elementType);
 				try {
-					array = NewObjectArray (value.Length, grefArrayElementClass, IntPtr.Zero);
-					CopyManagedObjectArray (value, array);
-					return array;
-				} catch {
-					DeleteLocalRef (array);
-					throw;
+					IntPtr array = IntPtr.Zero;
+					try {
+						array = NewObjectArray (value.Length, grefArrayElementClass, IntPtr.Zero);
+						CopyManagedObjectArray (value, array);
+						return array;
+					} catch {
+						DeleteLocalRef (array);
+						throw;
+					}
+				} finally {
+					DeleteGlobalRef (grefArrayElementClass);
 				}
-			} finally {
-				DeleteGlobalRef (grefArrayElementClass);
 			}
 		}
 
 		static IntPtr FindObjectArrayElementClass (Type elementType)
 		{
-			var boxedPrimitiveJniClassName = GetBoxedPrimitiveJniClassName (elementType);
-			if (boxedPrimitiveJniClassName != null) {
-				return FindClass (boxedPrimitiveJniClassName);
+			var boxedPrimitiveJniClassName = GetBoxedPrimitiveJniClassNameUtf8 (elementType);
+			if (!boxedPrimitiveJniClassName.IsEmpty) {
+				// SAFETY: GetBoxedPrimitiveJniClassNameUtf8 returns only complete UTF-8 literals with the trailing NUL outside their span length.
+				return unsafe(FindClass (boxedPrimitiveJniClassName));
 			}
 
 			return FindClass (elementType);
@@ -1422,20 +2123,23 @@ namespace Android.Runtime {
 			if (value == null)
 				throw new ArgumentNullException ("value");
 
-			elementType ??= value.GetType ().GetElementType ()!;
+			unsafe {
+				// SAFETY: nested arrays use the class global found for elementType and released in finally; nonnested creators own their JNI allocations and use managed lengths.
+				elementType ??= value.GetType ().GetElementType ()!;
 
-			if (elementType.IsArray) {
-				IntPtr grefArrayElementClass = FindClass (elementType);
-				try {
-					return NewArray (value, elementType, grefArrayElementClass);
-				} finally {
-					DeleteGlobalRef (grefArrayElementClass);
+				if (elementType.IsArray) {
+					IntPtr grefArrayElementClass = FindClass (elementType);
+					try {
+						return NewArray (value, elementType, grefArrayElementClass);
+					} finally {
+						DeleteGlobalRef (grefArrayElementClass);
+					}
 				}
+
+				Func<Array, IntPtr> creator = GetConverter (CreateManagedToNativeArray, elementType, IntPtr.Zero);
+
+				return creator (value);
 			}
-
-			Func<Array, IntPtr> creator = GetConverter (CreateManagedToNativeArray, elementType, IntPtr.Zero);
-
-			return creator (value);
 		}
 
 		public static IntPtr NewArray<T> (T[]? array)
@@ -1443,18 +2147,21 @@ namespace Android.Runtime {
 			if (array == null)
 				return IntPtr.Zero;
 
-			if (typeof (T).IsArray) {
-				IntPtr grefArrayElementClass = FindClass (typeof (T));
-				try {
-					return NewArray (array, typeof (T), grefArrayElementClass);
-				} finally {
-					DeleteGlobalRef (grefArrayElementClass);
+			unsafe {
+				// SAFETY: nested arrays use the class global found for T and released in finally; nonnested creators use array.Length and the matching managed element conversion.
+				if (typeof (T).IsArray) {
+					IntPtr grefArrayElementClass = FindClass (typeof (T));
+					try {
+						return NewArray (array, typeof (T), grefArrayElementClass);
+					} finally {
+						DeleteGlobalRef (grefArrayElementClass);
+					}
 				}
+
+				Func<Array, IntPtr> creator = GetConverter (CreateManagedToNativeArray, typeof (T), IntPtr.Zero);
+
+				return creator (array);
 			}
-
-			Func<Array, IntPtr> creator = GetConverter (CreateManagedToNativeArray, typeof (T), IntPtr.Zero);
-
-			return creator (array);
 		}
 
 		static IntPtr NewArray (Array value, Type elementType, IntPtr elementClass)
@@ -1462,20 +2169,23 @@ namespace Android.Runtime {
 			if (value == null)
 				throw new ArgumentNullException ("value");
 
-			IntPtr array = IntPtr.Zero;
-			try {
-				array = NewObjectArray (value.Length, elementClass, IntPtr.Zero);
+			unsafe {
+				// SAFETY: elementClass is retained by the calling factory; the new array has value.Length slots and each generated subarray is inserted before normal-path local deletion.
+				IntPtr array = IntPtr.Zero;
+				try {
+					array = NewObjectArray (value.Length, elementClass, IntPtr.Zero);
 
-				for (int i = 0; i < value.Length; ++i) {
-					IntPtr subarray = NewArray ((Array) value.GetValue (i)!, elementType.GetElementType ());
-					SetObjectArrayElement (array, i, subarray);
-					DeleteLocalRef (subarray);
+					for (int i = 0; i < value.Length; ++i) {
+						IntPtr subarray = NewArray ((Array) value.GetValue (i)!, elementType.GetElementType ());
+						SetObjectArrayElement (array, i, subarray);
+						DeleteLocalRef (subarray);
+					}
+
+					return array;
+				} catch {
+					DeleteLocalRef (array);
+					throw;
 				}
-
-				return array;
-			} catch {
-				DeleteLocalRef (array);
-				throw;
 			}
 		}
 
@@ -1496,35 +2206,66 @@ namespace Android.Runtime {
 			return new Dictionary<Type, Action<IntPtr, int, object?>> () {
 				{ typeof (bool), (dest, index, value) => {
 					var _value = new[]{(bool) value!};
-					_SetBooleanArrayRegion (dest, index, _value.Length, _value);
+					unsafe {
+						// SAFETY: dest/index identify one live element; _value has exactly one source slot.
+						_SetBooleanArrayRegion (dest, index, _value.Length, _value);
+					}
 				} },
 				{ typeof (byte), (dest, index, value) => {
 					var _value = new[]{(byte) value!};
-					_SetByteArrayRegion (dest, index, _value.Length, _value);
+					unsafe {
+						// SAFETY: dest/index identify one live element; _value has exactly one source slot.
+						_SetByteArrayRegion (dest, index, _value.Length, _value);
+					}
+				} },
+				{ typeof (sbyte), (dest, index, value) => {
+					var _value = new[]{(sbyte) value!};
+					unsafe {
+						// SAFETY: dest/index identify one live element; _value has exactly one source slot.
+						_SetByteArrayRegion (dest, index, _value.Length, (byte[]) (object) _value);
+					}
 				} },
 				{ typeof (char), (dest, index, value) => {
 					var _value = new[]{(char) value!};
-					_SetCharArrayRegion (dest, index, _value.Length, _value);
+					unsafe {
+						// SAFETY: dest/index identify one live element; _value has exactly one source slot.
+						_SetCharArrayRegion (dest, index, _value.Length, _value);
+					}
 				} },
 				{ typeof (short), (dest, index, value) => {
 					var _value = new[]{(short) value!};
-					_SetShortArrayRegion (dest, index, _value.Length, _value);
+					unsafe {
+						// SAFETY: dest/index identify one live element; _value has exactly one source slot.
+						_SetShortArrayRegion (dest, index, _value.Length, _value);
+					}
 				} },
 				{ typeof (int), (dest, index, value) => {
 					var _value = new[]{(int) value!};
-					_SetIntArrayRegion (dest, index, _value.Length, _value);
+					unsafe {
+						// SAFETY: dest/index identify one live element; _value has exactly one source slot.
+						_SetIntArrayRegion (dest, index, _value.Length, _value);
+					}
 				} },
 				{ typeof (long), (dest, index, value) => {
 					var _value = new[]{(long) value!};
-					_SetLongArrayRegion (dest, index, _value.Length, _value);
+					unsafe {
+						// SAFETY: dest/index identify one live element; _value has exactly one source slot.
+						_SetLongArrayRegion (dest, index, _value.Length, _value);
+					}
 				} },
 				{ typeof (float), (dest, index, value) => {
 					var _value = new[]{(float) value!};
-					_SetFloatArrayRegion (dest, index, _value.Length, _value);
+					unsafe {
+						// SAFETY: dest/index identify one live element; _value has exactly one source slot.
+						_SetFloatArrayRegion (dest, index, _value.Length, _value);
+					}
 				} },
 				{ typeof (double), (dest, index, value) => {
 					var _value = new[]{(double) value!};
-					_SetDoubleArrayRegion (dest, index, _value.Length, _value);
+					unsafe {
+						// SAFETY: dest/index identify one live element; _value has exactly one source slot.
+						_SetDoubleArrayRegion (dest, index, _value.Length, _value);
+					}
 				} },
 				{ typeof (bool?),   (dest, index, value) => SetObjectArrayElementFromManagedValue (dest, index, value) },
 				{ typeof (byte?),   (dest, index, value) => SetObjectArrayElementFromManagedValue (dest, index, value) },
@@ -1536,95 +2277,179 @@ namespace Android.Runtime {
 				{ typeof (float?),  (dest, index, value) => SetObjectArrayElementFromManagedValue (dest, index, value) },
 				{ typeof (double?), (dest, index, value) => SetObjectArrayElementFromManagedValue (dest, index, value) },
 				{ typeof (string), (dest, index, value) => {
-					IntPtr s = NewString (value!.ToString ());
-					try {
-						SetObjectArrayElement (dest, index, s);
-					} finally {
-						DeleteLocalRef (s);
+					unsafe {
+						// SAFETY: dest/index supply an object slot; the owned String local is retained through the set and finally release.
+						IntPtr s = NewString (value!.ToString ());
+						try {
+							SetObjectArrayElement (dest, index, s);
+						} finally {
+							DeleteLocalRef (s);
+						}
 					}
 				} },
 				{ typeof (IJavaObject), (dest, index, value) => {
-					SetObjectArrayElement (dest, index, value == null ? IntPtr.Zero : ((IJavaObject) value).Handle);
+					unsafe {
+						// SAFETY: the marshaler retains dest and the local element for this in-range set.
+						SetObjectArrayElement (dest, index, value == null ? IntPtr.Zero : ((IJavaObject) value).Handle);
+					}
+					GC.KeepAlive (value);
 				} },
 				{ typeof (Array), (dest, index, value) => {
 					IntPtr _v = NewArray ((Array) value!);
-					SetObjectArrayElement (dest, index, _v);
-					JNIEnv.DeleteLocalRef (_v);
+					unsafe {
+						// SAFETY: the marshaler retains dest and the local element for this in-range set.
+						SetObjectArrayElement (dest, index, _v);
+						JNIEnv.DeleteLocalRef (_v);
+					}
 				} },
 			};
 		}
 
 		static void SetObjectArrayElementFromManagedValue (IntPtr dest, int index, object? value)
 		{
-			// Inlined equivalent of JavaConvert.WithLocalJniHandle to avoid allocating a capturing
-			// closure on every element set (this runs once per element on the SetArrayItem path).
-			IntPtr lref = JavaConvert.ToLocalJniHandle (value);
-			try {
-				SetObjectArrayElement (dest, index, lref);
-			} finally {
-				DeleteLocalRef (lref);
-				GC.KeepAlive (value);
+			unsafe {
+				// SAFETY: dest/index come from the checked object-array setter; ToLocalJniHandle creates the borrowed value reference, released in finally with value kept alive.
+				// Inlined equivalent of JavaConvert.WithLocalJniHandle to avoid allocating a capturing
+				// closure on every element set (this runs once per element on the SetArrayItem path).
+				IntPtr lref = JavaConvert.ToLocalJniHandle (value);
+				try {
+					SetObjectArrayElement (dest, index, lref);
+				} finally {
+					DeleteLocalRef (lref);
+					GC.KeepAlive (value);
+				}
 			}
 		}
 
+		/// <safety>
+		/// <paramref name="array"/> must be null where supported, or a live JNI array reference of the required type usable on the current thread for the call.
+		/// The requested start/length range must lie within the live JNI array, whose primitive element type must match the buffer.
+		/// <paramref name="length"/> must not exceed <paramref name="buffer"/>.Length; the managed buffer is pinned only for this call.
+		/// </safety>
 		static unsafe void _SetBooleanArrayRegion (IntPtr array, int start, int length, bool[] buffer)
 		{
-			fixed (bool* p = buffer)
-				JniEnvironment.Arrays.SetBooleanArrayRegion (new JniObjectReference (array), start, length, p);
+			unsafe {
+				// SAFETY: fixed pins buffer for the synchronous primitive write; the caller supplies a matching array and nonnegative start/length within both native and managed extents.
+				fixed (bool* p = buffer)
+					JniEnvironment.Arrays.SetBooleanArrayRegion (new JniObjectReference (array), start, length, p);
+			}
 		}
 
+		/// <safety>
+		/// <paramref name="array"/> must be null where supported, or a live JNI array reference of the required type usable on the current thread for the call.
+		/// The requested start/length range must lie within the live JNI array, whose primitive element type must match the buffer.
+		/// <paramref name="length"/> must not exceed <paramref name="buffer"/>.Length; the managed buffer is pinned only for this call.
+		/// </safety>
 		static unsafe void _SetByteArrayRegion (IntPtr array, int start, int length, byte[] buffer)
 		{
-			fixed (byte* p = buffer)
-				JniEnvironment.Arrays.SetByteArrayRegion (new JniObjectReference (array), start, length, (sbyte*) p);
+			unsafe {
+				// SAFETY: fixed pins buffer for the synchronous primitive write; the caller supplies a matching array and nonnegative start/length within both native and managed extents.
+				fixed (byte* p = buffer)
+					JniEnvironment.Arrays.SetByteArrayRegion (new JniObjectReference (array), start, length, (sbyte*) p);
+			}
 		}
 
+		/// <safety>
+		/// <paramref name="array"/> must be null where supported, or a live JNI array reference of the required type usable on the current thread for the call.
+		/// The requested start/length range must lie within the live JNI array, whose primitive element type must match the buffer.
+		/// <paramref name="length"/> must not exceed <paramref name="buffer"/>.Length; the managed buffer is pinned only for this call.
+		/// </safety>
 		static unsafe void _SetCharArrayRegion (IntPtr array, int start, int length, char[] buffer)
 		{
-			fixed (char* p = buffer)
-				JniEnvironment.Arrays.SetCharArrayRegion (new JniObjectReference (array), start, length, p);
+			unsafe {
+				// SAFETY: fixed pins buffer for the synchronous primitive write; the caller supplies a matching array and nonnegative start/length within both native and managed extents.
+				fixed (char* p = buffer)
+					JniEnvironment.Arrays.SetCharArrayRegion (new JniObjectReference (array), start, length, p);
+			}
 		}
 
+		/// <safety>
+		/// <paramref name="array"/> must be null where supported, or a live JNI array reference of the required type usable on the current thread for the call.
+		/// The requested start/length range must lie within the live JNI array, whose primitive element type must match the buffer.
+		/// <paramref name="length"/> must not exceed <paramref name="buffer"/>.Length; the managed buffer is pinned only for this call.
+		/// </safety>
 		static unsafe void _SetShortArrayRegion (IntPtr array, int start, int length, short[] buffer)
 		{
-			fixed (short* p = buffer)
-				JniEnvironment.Arrays.SetShortArrayRegion (new JniObjectReference (array), start, length, p);
+			unsafe {
+				// SAFETY: fixed pins buffer for the synchronous primitive write; the caller supplies a matching array and nonnegative start/length within both native and managed extents.
+				fixed (short* p = buffer)
+					JniEnvironment.Arrays.SetShortArrayRegion (new JniObjectReference (array), start, length, p);
+			}
 		}
 
+		/// <safety>
+		/// <paramref name="array"/> must be null where supported, or a live JNI array reference of the required type usable on the current thread for the call.
+		/// The requested start/length range must lie within the live JNI array, whose primitive element type must match the buffer.
+		/// <paramref name="length"/> must not exceed <paramref name="buffer"/>.Length; the managed buffer is pinned only for this call.
+		/// </safety>
 		static unsafe void _SetIntArrayRegion (IntPtr array, int start, int length, int[] buffer)
 		{
-			fixed (int* p = buffer)
-				JniEnvironment.Arrays.SetIntArrayRegion (new JniObjectReference (array), start, length, p);
+			unsafe {
+				// SAFETY: fixed pins buffer for the synchronous primitive write; the caller supplies a matching array and nonnegative start/length within both native and managed extents.
+				fixed (int* p = buffer)
+					JniEnvironment.Arrays.SetIntArrayRegion (new JniObjectReference (array), start, length, p);
+			}
 		}
 
+		/// <safety>
+		/// <paramref name="array"/> must be null where supported, or a live JNI array reference of the required type usable on the current thread for the call.
+		/// The requested start/length range must lie within the live JNI array, whose primitive element type must match the buffer.
+		/// <paramref name="length"/> must not exceed <paramref name="buffer"/>.Length; the managed buffer is pinned only for this call.
+		/// </safety>
 		static unsafe void _SetLongArrayRegion (IntPtr array, int start, int length, long[] buffer)
 		{
-			fixed (long* p = buffer)
-				JniEnvironment.Arrays.SetLongArrayRegion (new JniObjectReference (array), start, length, p);
+			unsafe {
+				// SAFETY: fixed pins buffer for the synchronous primitive write; the caller supplies a matching array and nonnegative start/length within both native and managed extents.
+				fixed (long* p = buffer)
+					JniEnvironment.Arrays.SetLongArrayRegion (new JniObjectReference (array), start, length, p);
+			}
 		}
 
+		/// <safety>
+		/// <paramref name="array"/> must be null where supported, or a live JNI array reference of the required type usable on the current thread for the call.
+		/// The requested start/length range must lie within the live JNI array, whose primitive element type must match the buffer.
+		/// <paramref name="length"/> must not exceed <paramref name="buffer"/>.Length; the managed buffer is pinned only for this call.
+		/// </safety>
 		static unsafe void _SetFloatArrayRegion (IntPtr array, int start, int length, float[] buffer)
 		{
-			fixed (float* p = buffer)
-				JniEnvironment.Arrays.SetFloatArrayRegion (new JniObjectReference (array), start, length, p);
+			unsafe {
+				// SAFETY: fixed pins buffer for the synchronous primitive write; the caller supplies a matching array and nonnegative start/length within both native and managed extents.
+				fixed (float* p = buffer)
+					JniEnvironment.Arrays.SetFloatArrayRegion (new JniObjectReference (array), start, length, p);
+			}
 		}
 
+		/// <safety>
+		/// <paramref name="array"/> must be null where supported, or a live JNI array reference of the required type usable on the current thread for the call.
+		/// The requested start/length range must lie within the live JNI array, whose primitive element type must match the buffer.
+		/// <paramref name="length"/> must not exceed <paramref name="buffer"/>.Length; the managed buffer is pinned only for this call.
+		/// </safety>
 		static unsafe void _SetDoubleArrayRegion (IntPtr array, int start, int length, double[] buffer)
 		{
-			fixed (double* p = buffer)
-				JniEnvironment.Arrays.SetDoubleArrayRegion (new JniObjectReference (array), start, length, p);
+			unsafe {
+				// SAFETY: fixed pins buffer for the synchronous primitive write; the caller supplies a matching array and nonnegative start/length within both native and managed extents.
+				fixed (double* p = buffer)
+					JniEnvironment.Arrays.SetDoubleArrayRegion (new JniObjectReference (array), start, length, p);
+			}
 		}
 
+		/// <safety>
+		/// <paramref name="array_ptr"/> must be null where supported, or a live JNI array reference of the required type usable on the current thread for the call.
+		/// The JNI array element type must match the requested managed conversion and all requested element ranges must lie within the live array.
+		/// </safety>
 		public static void SetArrayItem<T> (IntPtr array_ptr, int index, T value)
 		{
 			if (array_ptr == IntPtr.Zero)
 				throw new ArgumentException ("array_ptr");
-			if (index < 0 || index >= GetArrayLength (array_ptr))
-				throw new ArgumentOutOfRangeException ("index");
+			unsafe {
+				// SAFETY: the caller retains array_ptr with T-compatible elements; the explicit index check precedes the selected one-element setter.
+				if (index < 0 || index >= GetArrayLength (array_ptr))
+					throw new ArgumentOutOfRangeException ("index");
 
-			var setter = GetConverter (SetNativeArrayElement, typeof (T), array_ptr);
+				var setter = GetConverter (SetNativeArrayElement, typeof (T), array_ptr);
 
-			setter (array_ptr, index, value);
+				setter (array_ptr, index, value);
+			}
 		}
 
 		[return: NotNullIfNotNull (parameterName: "array")]
@@ -1638,56 +2463,102 @@ namespace Android.Runtime {
 			return ret;
 		}
 
-		public static unsafe void CopyArray (IntPtr src, uint[] dest)
+		/// <safety>
+		/// <paramref name="src"/> must be null where supported, or a live JNI array reference of the required type usable on the current thread for the call.
+		/// The JNI array element type must match the requested managed conversion and all requested element ranges must lie within the live array.
+		/// </safety>
+		public static void CopyArray (IntPtr src, uint[] dest)
 		{
 			if (src == IntPtr.Zero)
 				return;
-			fixed (uint* __p = dest)
-				JniEnvironment.Arrays.GetIntArrayRegion (new JniObjectReference (src), 0, dest.Length, (int*) __p);
+			unsafe {
+				// SAFETY: fixed pins dest.Length uint values; JNI int and uint have identical widths, and the caller retains src as a matching sufficiently long int array.
+				fixed (uint* __p = dest)
+					JniEnvironment.Arrays.GetIntArrayRegion (new JniObjectReference (src), 0, dest.Length, (int*) __p);
+			}
 		}
 
-		public static unsafe void CopyArray (IntPtr src, ushort[] dest)
+		/// <safety>
+		/// <paramref name="src"/> must be null where supported, or a live JNI array reference of the required type usable on the current thread for the call.
+		/// The JNI array element type must match the requested managed conversion and all requested element ranges must lie within the live array.
+		/// </safety>
+		public static void CopyArray (IntPtr src, ushort[] dest)
 		{
 			if (src == IntPtr.Zero)
 				return;
-			fixed (ushort* __p = dest)
-				JniEnvironment.Arrays.GetShortArrayRegion (new JniObjectReference (src), 0, dest.Length, (short*) __p);
+			unsafe {
+				// SAFETY: fixed pins dest.Length ushort values; JNI short and ushort have identical widths, and the caller retains src as a matching sufficiently long short array.
+				fixed (ushort* __p = dest)
+					JniEnvironment.Arrays.GetShortArrayRegion (new JniObjectReference (src), 0, dest.Length, (short*) __p);
+			}
 		}
 
-		public static unsafe void CopyArray (IntPtr src, ulong[] dest)
+		/// <safety>
+		/// <paramref name="src"/> must be null where supported, or a live JNI array reference of the required type usable on the current thread for the call.
+		/// The JNI array element type must match the requested managed conversion and all requested element ranges must lie within the live array.
+		/// </safety>
+		public static void CopyArray (IntPtr src, ulong[] dest)
 		{
 			if (src == IntPtr.Zero)
 				return;
-			fixed (ulong* __p = dest)
-				JniEnvironment.Arrays.GetLongArrayRegion (new JniObjectReference (src), 0, dest.Length, (long*) __p);
+			unsafe {
+				// SAFETY: fixed pins dest.Length ulong values; JNI long and ulong have identical widths, and the caller retains src as a matching sufficiently long long array.
+				fixed (ulong* __p = dest)
+					JniEnvironment.Arrays.GetLongArrayRegion (new JniObjectReference (src), 0, dest.Length, (long*) __p);
+			}
 		}
-#if ANDROID_8
+		/// <safety>
+		/// <paramref name="env"/> must be the current thread's live JNI environment; <paramref name="jbitmap"/>
+		/// must be a live Bitmap reference for the call. The native output layout must match <paramref name="info"/>.
+		/// </safety>
 		[LibraryImport ("libjnigraphics.so")]
 		[UnmanagedCallConv (CallConvs = new[] { typeof (CallConvCdecl) })]
-		private static partial int AndroidBitmap_getInfo (IntPtr env, IntPtr jbitmap, out Android.Graphics.AndroidBitmapInfo info);
+		private static unsafe partial int AndroidBitmap_getInfo (IntPtr env, IntPtr jbitmap, out Android.Graphics.AndroidBitmapInfo info);
 
+		/// <safety>
+		/// <paramref name="env"/> must be the current thread's live JNI environment and <paramref name="jbitmap"/>
+		/// a live Bitmap reference. On success, <paramref name="addrPtr"/> belongs to the bitmap; only access its
+		/// declared pixel extent while locked and retain the bitmap until the matching unlock.
+		/// </safety>
 		[LibraryImport ("libjnigraphics.so")]
 		[UnmanagedCallConv (CallConvs = new[] { typeof (CallConvCdecl) })]
-		private static partial int AndroidBitmap_lockPixels (IntPtr env, IntPtr jbitmap, out IntPtr addrPtr);
+		private static unsafe partial int AndroidBitmap_lockPixels (IntPtr env, IntPtr jbitmap, out IntPtr addrPtr);
 
+		/// <safety>
+		/// <paramref name="env"/> must be the current thread's live JNI environment and <paramref name="jbitmap"/>
+		/// the live Bitmap whose pixel lock the caller owns. Stop accessing pixel-memory aliases before unlocking.
+		/// </safety>
 		[LibraryImport ("libjnigraphics.so")]
 		[UnmanagedCallConv (CallConvs = new[] { typeof (CallConvCdecl) })]
-		private static partial int AndroidBitmap_unlockPixels (IntPtr env, IntPtr jbitmap);
+		private static unsafe partial int AndroidBitmap_unlockPixels (IntPtr env, IntPtr jbitmap);
 
-		internal static int AndroidBitmap_getInfo (IntPtr jbitmap, out Android.Graphics.AndroidBitmapInfo info)
+		/// <safety>
+		/// <paramref name="jbitmap"/> must be a live Bitmap reference usable on the current thread.
+		/// </safety>
+		internal static unsafe int AndroidBitmap_getInfo (IntPtr jbitmap, out Android.Graphics.AndroidBitmapInfo info)
 		{
-			return AndroidBitmap_getInfo (Handle, jbitmap, out info);
+			// SAFETY: Handle is this thread's environment; the caller retains the Bitmap and the stub owns the scalar output.
+			return unsafe(AndroidBitmap_getInfo (Handle, jbitmap, out info));
 		}
 
-		internal static int AndroidBitmap_lockPixels (IntPtr jbitmap, out IntPtr addrPtr)
+		/// <safety>
+		/// <paramref name="jbitmap"/> must be a live Bitmap reference usable on the current thread.
+		/// On success, <paramref name="addrPtr"/> is usable only within the bitmap's pixel extent and until its matching unlock.
+		/// </safety>
+		internal static unsafe int AndroidBitmap_lockPixels (IntPtr jbitmap, out IntPtr addrPtr)
 		{
-			return AndroidBitmap_lockPixels (Handle, jbitmap, out addrPtr);
+			// SAFETY: Handle is this thread's environment; the caller retains the Bitmap and owns the resulting lock.
+			return unsafe(AndroidBitmap_lockPixels (Handle, jbitmap, out addrPtr));
 		}
 
-		internal static int AndroidBitmap_unlockPixels (IntPtr jbitmap)
+		/// <safety>
+		/// <paramref name="jbitmap"/> must remain live, the caller must own its matching pixel lock,
+		/// and no pixel-memory alias may be accessed after unlocking.
+		/// </safety>
+		internal static unsafe int AndroidBitmap_unlockPixels (IntPtr jbitmap)
 		{
-			return AndroidBitmap_unlockPixels (Handle, jbitmap);
+			// SAFETY: Handle is this thread's environment; the caller owns the matching lock and has stopped pixel access.
+			return unsafe(AndroidBitmap_unlockPixels (Handle, jbitmap));
 		}
-#endif  // ANDROID_8
 	}
 }

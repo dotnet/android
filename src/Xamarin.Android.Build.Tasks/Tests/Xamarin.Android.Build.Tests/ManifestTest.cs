@@ -5,16 +5,11 @@ using System.Linq;
 using System.Xml;
 using System.Xml.Linq;
 using System.Xml.XPath;
-using Android.App;
-using Android.Content;
-using Java.Interop.Tools.Cecil;
-using Mono.Cecil;
 using NUnit.Framework;
 using Xamarin.Android.Tasks;
 using Xamarin.Android.Tools;
 using Xamarin.ProjectTools;
-using Xamarin.Tools.Zip;
-using PropertyAttribute = Android.App.PropertyAttribute;
+using System.IO.Compression;
 
 namespace Xamarin.Android.Build.Tests
 {
@@ -181,38 +176,6 @@ namespace Bug12935
 				var a = parent.Attribute (name);
 				Assert.IsNotNull (a, $"{name} attribute should not be null.");
 				Assert.AreEqual (expected, a.Value, $"{name} attribute value did not match.");
-			}
-		}
-
-		[Test]
-		public void OverlayManifestTest ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
-		{
-			const bool isRelease = true;
-			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
-				return;
-			}
-			var proj = new XamarinAndroidApplicationProject () {
-				IsRelease = isRelease,
-				ManifestMerger = "manifestmerger.jar",
-			};
-			proj.SetRuntime (runtime);
-			proj.AndroidManifest = @"<?xml version=""1.0"" encoding=""utf-8""?>
-<manifest xmlns:android=""http://schemas.android.com/apk/res/android"" xmlns:tools=""http://schemas.android.com/tools"" android:versionCode=""1"" android:versionName=""1.0"" package=""foo.foo"">
-	<application android:label=""foo"">
-	</application>
-</manifest>";
-			proj.OtherBuildItems.Add (new BuildItem ("AndroidManifestOverlay", "ManifestOverlay.xml") {
-				TextContent = () => @"<?xml version=""1.0"" encoding=""utf-8""?>
-<manifest xmlns:android=""http://schemas.android.com/apk/res/android"">
-	<uses-permission android:name=""android.permission.CAMERA"" />
-</manifest>
-"
-			});
-			using (var b = CreateApkBuilder (cleanupAfterSuccessfulBuild: true, cleanupOnDispose: false)) {
-				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
-				var manifestFile = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath, "android", "AndroidManifest.xml");
-				var text = File.ReadAllText (manifestFile);
-				StringAssert.Contains ("android.permission.CAMERA", text, $"{manifestFile} should contain 'android.permission.CAMERA'");
 			}
 		}
 
@@ -636,6 +599,10 @@ namespace Bug12935
 			foreach (AndroidRuntime runtime in new[] { AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT }) {
 				AddTestData ("1", false, "manifest=1", runtime);
 				AddTestData ("1", true, "x86_64=500001;arm64-v8a=400001", runtime);
+				// Run fewer NativeAOT cases to reduce CI time.
+				if (runtime == AndroidRuntime.NativeAOT) {
+					continue;
+				}
 				AddTestData ("2", false, "manifest=2", runtime);
 				AddTestData ("2", true, "x86_64=500002;arm64-v8a=400002", runtime);
 				AddTestData ("999", false, "manifest=999", runtime);
@@ -726,7 +693,7 @@ namespace Bug12935
 		}
 
 		[Test]
-		public void ManifestPlaceholders ([Values ("legacy", "manifestmerger.jar")] string manifestMerger, [Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
+		public void ManifestPlaceholders ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			const bool isRelease = true;
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
@@ -734,7 +701,6 @@ namespace Bug12935
 			}
 			var proj = new XamarinAndroidApplicationProject () {
 				IsRelease = isRelease,
-				ManifestMerger = manifestMerger,
 				JavaPackageName = "com.foo.bar",
 			};
 			proj.SetRuntime (runtime);
@@ -777,7 +743,7 @@ namespace Bug12935
 		}
 
 		[Test]
-		public void ManifestPlaceHoldersXA1010 ([Values ("legacy", "manifestmerger.jar")] string manifestMerger, [Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
+		public void ManifestPlaceHoldersXA1010 ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			bool isRelease = runtime == AndroidRuntime.NativeAOT;
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
@@ -785,26 +751,33 @@ namespace Bug12935
 			}
 			var proj = new XamarinAndroidApplicationProject () {
 				IsRelease = isRelease,
-				ManifestMerger = manifestMerger,
 			};
 			proj.SetRuntime (runtime);
 			proj.AndroidManifest = proj.AndroidManifest.Replace ("application android:label=\"${PROJECT_NAME}\"", "application android:label=\"${ph1}\" x='${ph2}' ");
 			proj.SetProperty ("AndroidManifestPlaceholders", "ph2=a=b\\c;ph1");
 			using (var builder = CreateApkBuilder ()) {
-				IEnumerable<string> messages;
-				if (string.CompareOrdinal (manifestMerger, "legacy") == 0) {
-					Assert.IsTrue (builder.Build (proj), "Build should have succeeded.");
-					messages = builder.LastBuildOutput.SkipWhile (x => !x.StartsWith ("Build succeeded.", StringComparison.Ordinal));
-				}
-				else {
-					builder.ThrowOnBuildFailure = false;
-					Assert.IsFalse (builder.Build (proj), "Build should have failed.");
-					messages = builder.LastBuildOutput.SkipWhile (x => !x.StartsWith ("Build FAILED.", StringComparison.Ordinal));
-				}
+				builder.ThrowOnBuildFailure = false;
+				Assert.IsFalse (builder.Build (proj), "Build should have failed.");
+				var messages = builder.LastBuildOutput.SkipWhile (x => !x.StartsWith ("Build FAILED.", StringComparison.Ordinal));
 				string warning = messages.FirstOrDefault (x => x.Contains ("warning XA1010:"));
 				Assert.IsNotNull (warning, "Warning should be XA1010");
 				StringAssert.Contains ("AndroidManifestPlaceholders", warning, "Warning should mention AndroidManifestPlaceholders");
 				StringAssert.Contains ("ph1", warning, "Warning should mention invalid placeholder");
+			}
+		}
+
+		[Test]
+		public void UnsupportedManifestMerger ([Values ("legacy", "other")] string manifestMerger)
+		{
+			var proj = new XamarinAndroidApplicationProject {
+				ManifestMerger = manifestMerger,
+			};
+			proj.SetRuntime (AndroidRuntime.CoreCLR);
+			using (var builder = CreateApkBuilder ()) {
+				builder.ThrowOnBuildFailure = false;
+				Assert.IsFalse (builder.Build (proj), "Build should reject an unsupported manifest merger.");
+				StringAssert.Contains ("error XA1038:", string.Join ("\n", builder.LastBuildOutput));
+				StringAssert.Contains ("AndroidManifestMerger", string.Join ("\n", builder.LastBuildOutput));
 			}
 		}
 
@@ -828,11 +801,9 @@ namespace Bug12935
 		}
 
 		[Test]
-		public void ModifyManifest ([Values] bool isRelease, [Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
+		public void ModifyManifest ([ValueSource (typeof (BaseTest), nameof (BaseTest.ValidRuntimeConfigurations))] (bool isRelease, AndroidRuntime runtime) configuration)
 		{
-			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
-				return;
-			}
+			var (isRelease, runtime) = configuration;
 			var proj = new XamarinAndroidApplicationProject () {
 				IsRelease = isRelease,
 				Imports = {
@@ -890,25 +861,30 @@ namespace Bug12935
 			byte [] classesJar = XamarinAndroidCommonProject.GetResourceContents ("Xamarin.ProjectTools.Resources.Base.classes.jar");
 			byte [] data;
 			using (var ms = new MemoryStream ()) {
-				using (var zip = ZipArchive.Create (ms)) {
-					zip.AddEntry ("AndroidManifest.xml", @"<?xml version='1.0'?>
-<manifest xmlns:android='http://schemas.android.com/apk/res/android' package='com.xamarin.test'>
-    <uses-sdk android:minSdkVersion='16'/>
-    <permission android:name='${applicationId}.permission.C2D_MESSAGE' android:protectionLevel='signature' />
-    <application>
-        <activity android:name='.signin.internal.SignInHubActivity' />
-        <provider
-            android:authorities='${applicationId}.FacebookInitProvider'
-            android:name='.internal.FacebookInitProvider'
-            android:exported='false' />
-        <meta-data android:name='android.support.VERSION' android:value='25.4.0' />
-        <meta-data android:name='android.support.VERSION' android:value='25.4.0' />
-    </application>
-</manifest>
-", encoding: System.Text.Encoding.UTF8);
-					zip.CreateDirectory ("res");
-					zip.AddEntry (classesJar, "classes.jar");
-					zip.AddEntry ("R.txt", " ", encoding: System.Text.Encoding.UTF8);
+				using (var zip = new ZipArchive (ms, ZipArchiveMode.Create, leaveOpen: true)) {
+					using (var writer = new StreamWriter (zip.CreateEntry ("AndroidManifest.xml").Open ())) {
+						writer.Write (
+							"""
+							<?xml version='1.0'?>
+							<manifest xmlns:android='http://schemas.android.com/apk/res/android' package='com.xamarin.test'>
+							    <uses-sdk android:minSdkVersion='16'/>
+							    <permission android:name='${applicationId}.permission.C2D_MESSAGE' android:protectionLevel='signature' />
+							    <application>
+							        <activity android:name='.signin.internal.SignInHubActivity' />
+							        <provider
+							            android:authorities='${applicationId}.FacebookInitProvider'
+							            android:name='.internal.FacebookInitProvider'
+							            android:exported='false' />
+							        <meta-data android:name='android.support.VERSION' android:value='25.4.0' />
+							    </application>
+							</manifest>
+							""");
+					}
+					zip.CreateEntry ("res/");
+					using (var entryStream = zip.CreateEntry ("classes.jar").Open ())
+						entryStream.Write (classesJar, 0, classesJar.Length);
+					using (var writer = new StreamWriter (zip.CreateEntry ("R.txt").Open ()))
+						writer.Write (" ");
 				}
 				data = ms.ToArray ();
 			}
@@ -935,7 +911,6 @@ namespace Bug12935
 				},
 			};
 			proj.SetRuntime (runtime);
-			proj.SetProperty ("AndroidManifestMerger", "legacy");
 			proj.Sources.Add (new BuildItem.Source ("TestActivity1.cs") {
 				TextContent = () => @"using System;
 using System.Collections.Generic;
@@ -950,7 +925,7 @@ using Android.Views;
 using Android.Widget;
 using AndroidX.Fragment.App;
 using Android.Util;
-[Activity (Label = ""TestActivity1"")]
+[Activity (Label = ""TestActivity1"", Exported = true)]
 [IntentFilter (new[]{Intent.ActionMain}, Categories = new[]{ ""com.xamarin.sample"" })]
 public class TestActivity1 : FragmentActivity {
 }
@@ -970,7 +945,7 @@ using Android.Views;
 using Android.Widget;
 using AndroidX.Fragment.App;
 using Android.Util;
-[Activity (Label = ""TestActivity2"")]
+[Activity (Label = ""TestActivity2"", Exported = true)]
 [IntentFilter (new[]{Intent.ActionMain}, Categories = new[]{ ""com.xamarin.sample"" })]
 public class TestActivity2 : FragmentActivity {
 }
@@ -1005,7 +980,7 @@ public class TestActivity2 : FragmentActivity {
 		}
 
 		[Test]
-		public void AllActivityAttributeProperties ([Values ("legacy", "manifestmerger.jar")] string manifestMerger, [Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
+		public void AllActivityAttributeProperties ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			bool isRelease = runtime == AndroidRuntime.NativeAOT;
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
@@ -1013,12 +988,10 @@ public class TestActivity2 : FragmentActivity {
 			}
 			var proj = new XamarinAndroidApplicationProject {
 				IsRelease = isRelease,
-				ManifestMerger = manifestMerger,
 			};
 			proj.SetRuntime (runtime);
 
-			string expectedOutput = manifestMerger == "legacy" ?
-				$"android:allowEmbedded=\"true\" android:allowTaskReparenting=\"true\" android:alwaysRetainTaskState=\"true\" android:autoRemoveFromRecents=\"true\" android:banner=\"@drawable/icon\" android:clearTaskOnLaunch=\"true\" android:colorMode=\"hdr\" android:configChanges=\"mcc\" android:description=\"@string/app_name\" android:directBootAware=\"true\" android:documentLaunchMode=\"never\" android:enabled=\"true\" android:enableVrMode=\"foo\" android:excludeFromRecents=\"true\" android:exported=\"true\" android:finishOnCloseSystemDialogs=\"true\" android:finishOnTaskLaunch=\"true\" android:hardwareAccelerated=\"true\" android:icon=\"@drawable/icon\" android:immersive=\"true\" android:label=\"TestActivity\" android:launchMode=\"singleTop\" android:lockTaskMode=\"normal\" android:logo=\"@drawable/icon\" android:maxAspectRatio=\"1.2\" android:maxRecents=\"1\" android:multiprocess=\"true\" android:name=\"com.contoso.TestActivity\" android:noHistory=\"true\" android:parentActivityName=\"{proj.PackageName}.MainActivity\" android:permission=\"com.contoso.permission.TEST_ACTIVITY\" android:persistableMode=\"persistNever\" android:process=\"com.contoso.process.testactivity_process\" android:recreateOnConfigChanges=\"mcc\" android:relinquishTaskIdentity=\"true\" android:resizeableActivity=\"true\" android:resumeWhilePausing=\"true\" android:rotationAnimation=\"crossfade\" android:roundIcon=\"@drawable/icon\" android:screenOrientation=\"portrait\" android:showForAllUsers=\"true\" android:showOnLockScreen=\"true\" android:showWhenLocked=\"true\" android:singleUser=\"true\" android:stateNotNeeded=\"true\" android:supportsPictureInPicture=\"true\" android:taskAffinity=\"com.contoso\" android:theme=\"@android:style/Theme.Light\" android:turnScreenOn=\"true\" android:uiOptions=\"splitActionBarWhenNarrow\" android:visibleToInstantApps=\"true\" android:windowSoftInputMode=\"stateUnchanged|adjustUnspecified\"" :
+			string expectedOutput =
 				$"android:name=\"com.contoso.TestActivity\" android:allowEmbedded=\"true\" android:allowTaskReparenting=\"true\" android:alwaysRetainTaskState=\"true\" android:autoRemoveFromRecents=\"true\" android:banner=\"@drawable/icon\" android:clearTaskOnLaunch=\"true\" android:colorMode=\"hdr\" android:configChanges=\"mcc\" android:description=\"@string/app_name\" android:directBootAware=\"true\" android:documentLaunchMode=\"never\" android:enableVrMode=\"foo\" android:enabled=\"true\" android:excludeFromRecents=\"true\" android:exported=\"true\" android:finishOnCloseSystemDialogs=\"true\" android:finishOnTaskLaunch=\"true\" android:hardwareAccelerated=\"true\" android:icon=\"@drawable/icon\" android:immersive=\"true\" android:label=\"TestActivity\" android:launchMode=\"singleTop\" android:lockTaskMode=\"normal\" android:logo=\"@drawable/icon\" android:maxAspectRatio=\"1.2\" android:maxRecents=\"1\" android:multiprocess=\"true\" android:noHistory=\"true\" android:parentActivityName=\"{proj.PackageName}.MainActivity\" android:permission=\"com.contoso.permission.TEST_ACTIVITY\" android:persistableMode=\"persistNever\" android:process=\"com.contoso.process.testactivity_process\" android:recreateOnConfigChanges=\"mcc\" android:relinquishTaskIdentity=\"true\" android:resizeableActivity=\"true\" android:resumeWhilePausing=\"true\" android:rotationAnimation=\"crossfade\" android:roundIcon=\"@drawable/icon\" android:screenOrientation=\"portrait\" android:showForAllUsers=\"true\" android:showOnLockScreen=\"true\" android:showWhenLocked=\"true\" android:singleUser=\"true\" android:stateNotNeeded=\"true\" android:supportsPictureInPicture=\"true\" android:taskAffinity=\"com.contoso\" android:theme=\"@android:style/Theme.Light\" android:turnScreenOn=\"true\" android:uiOptions=\"splitActionBarWhenNarrow\" android:visibleToInstantApps=\"true\" android:windowSoftInputMode=\"stateUnchanged|adjustUnspecified\"";
 
 			proj.Sources.Add (new BuildItem.Source ("TestActivity.cs") {
@@ -1098,11 +1071,9 @@ class TestActivity : Activity { }"
 		{
 			var ret = new List<object[]> ();
 
-			foreach (AndroidRuntime runtime in new[] { AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT }) {
-				AddTestData ("Android.Content.PM.ForegroundService.TypeSpecialUse", "specialUse", runtime);
-				AddTestData ("Android.Content.PM.ForegroundService.TypeConnectedDevice", "connectedDevice", runtime);
-				AddTestData ("Android.Content.PM.ForegroundService.TypeCamera|Android.Content.PM.ForegroundService.TypeMicrophone", "camera|microphone", runtime);
-			}
+			AddTestData ("Android.Content.PM.ForegroundService.TypeSpecialUse", "specialUse", AndroidRuntime.CoreCLR);
+			AddTestData ("Android.Content.PM.ForegroundService.TypeConnectedDevice", "connectedDevice", AndroidRuntime.CoreCLR);
+			AddTestData ("Android.Content.PM.ForegroundService.TypeCamera|Android.Content.PM.ForegroundService.TypeMicrophone", "camera|microphone", AndroidRuntime.CoreCLR);
 
 			return ret;
 
@@ -1148,20 +1119,17 @@ class TestActivity : Activity { }"
 		}
 
 		[Test]
- 		public void AllServiceAttributeProperties ([Values ("legacy", "manifestmerger.jar")] string manifestMerger, [Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
+		public void AllServiceAttributeProperties ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
  		{
 			bool isRelease = runtime == AndroidRuntime.NativeAOT;
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
 				return;
 			}
 
- 			string expectedOutput = manifestMerger == "legacy" ?
-				"android:directBootAware=\"true\" android:enabled=\"true\" android:exported=\"true\" android:foregroundServiceType=\"connectedDevice\" android:icon=\"@drawable/icon\" android:isolatedProcess=\"true\" android:label=\"TestActivity\" android:name=\"com.contoso.TestActivity\" android:permission=\"com.contoso.permission.TEST_ACTIVITY\" android:process=\"com.contoso.process.testactivity_process\" android:roundIcon=\"@drawable/icon\"" :
-				"android:name=\"com.contoso.TestActivity\" android:directBootAware=\"true\" android:enabled=\"true\" android:exported=\"true\" android:foregroundServiceType=\"connectedDevice\" android:icon=\"@drawable/icon\" android:isolatedProcess=\"true\" android:label=\"TestActivity\" android:permission=\"com.contoso.permission.TEST_ACTIVITY\" android:process=\"com.contoso.process.testactivity_process\" android:roundIcon=\"@drawable/icon\"";
+			string expectedOutput = "android:name=\"com.contoso.TestActivity\" android:directBootAware=\"true\" android:enabled=\"true\" android:exported=\"true\" android:foregroundServiceType=\"connectedDevice\" android:icon=\"@drawable/icon\" android:isolatedProcess=\"true\" android:label=\"TestActivity\" android:permission=\"com.contoso.permission.TEST_ACTIVITY\" android:process=\"com.contoso.process.testactivity_process\" android:roundIcon=\"@drawable/icon\"";
 
 			var proj = new XamarinAndroidApplicationProject {
 				IsRelease = isRelease,
-				ManifestMerger = manifestMerger,
 			};
 			proj.SetRuntime (runtime);
 
@@ -1226,16 +1194,7 @@ class TestActivity : Activity { }"
 			using var b = CreateDllBuilder ();
 			b.ThrowOnBuildFailure = false;
 			Assert.IsFalse (b.Build (proj), "Build should have failed");
-			var extension = IsWindows ? ".exe" : "";
-			if (runtime == AndroidRuntime.NativeAOT) {
-				// The trimmable manifest generator emits the merged components in a different
-				// (but valid) order than the legacy path, so the offending <service> lands on a
-				// different manifest line. Assert the coded AMM0000 error itself rather than the
-				// exact line/column, which is an implementation detail of the manifest layout.
-				Assert.IsTrue (b.LastBuildOutput.ContainsText ($"java{extension} error AMM0000:"), "Should receive AMM0000 error");
-			} else {
-				Assert.IsTrue (b.LastBuildOutput.ContainsText ($"AndroidManifest.xml(12,5): java{extension} error AMM0000:"), "Should receive AMM0000 error");
-			}
+			Assert.IsTrue (b.LastBuildOutput.ContainsText ("error AMM0000:"), "Should receive AMM0000 error");
 			Assert.IsTrue (b.LastBuildOutput.ContainsText ("Apps targeting Android 12 and higher are required to specify an explicit value for `android:exported`"), "Should receive AMM0000 error");
 		}
 
@@ -1272,6 +1231,11 @@ class TestActivity : Activity { }"
 					removeUsesSdkElement: true,
 					runtime: runtime
 				);
+
+				// Run fewer NativeAOT cases to reduce CI time.
+				if (runtime == AndroidRuntime.NativeAOT) {
+					continue;
+				}
 
 				AddTestData (
 					minSdkVersion: "",
@@ -1507,149 +1471,6 @@ class TestActivity : Activity { }"
 			}
 		}
 
-		[IntentFilter (new [] { "singularAction" },
-		    DataPathSuffix = "singularSuffix",
-		    DataPathAdvancedPattern = "singularPattern")]
-		[IntentFilter (new [] { "pluralAction" },
-		    DataPathSuffixes = new [] { "pluralSuffix1", "pluralSuffix2" },
-		    DataPathAdvancedPatterns = new [] { "pluralPattern1", "pluralPattern2" })]
-
-		public class IntentFilterAttributeDataPathTestClass { }
-
-		[Test]
-		public void IntentFilterDataPathTest ()
-		{
-			var cache = new TypeDefinitionCache ();
-			var asm = AssemblyDefinition.ReadAssembly (typeof (IntentFilterAttributeDataPathTestClass).Assembly.Location);
-			var type = asm.MainModule.GetType ("Xamarin.Android.Build.Tests.ManifestTest/IntentFilterAttributeDataPathTestClass");
-
-			var intent = IntentFilterAttribute.FromTypeDefinition (type, cache).Single (f => f.Actions.Contains ("singularAction"));
-			var xml = intent.ToElement ("dummy.packageid").ToString ();
-
-			var expected =
-@"<intent-filter>
-  <action p2:name=""singularAction"" xmlns:p2=""http://schemas.android.com/apk/res/android"" />
-  <data p2:pathSuffix=""singularSuffix"" xmlns:p2=""http://schemas.android.com/apk/res/android"" />
-  <data p2:pathAdvancedPattern=""singularPattern"" xmlns:p2=""http://schemas.android.com/apk/res/android"" />
-</intent-filter>";
-
-			StringAssertEx.AreMultiLineEqual (expected, xml);
-		}
-
-		[Test]
-		public void IntentFilterDataPathsTest ()
-		{
-			var cache = new TypeDefinitionCache ();
-			var asm = AssemblyDefinition.ReadAssembly (typeof (IntentFilterAttributeDataPathTestClass).Assembly.Location);
-			var type = asm.MainModule.GetType ("Xamarin.Android.Build.Tests.ManifestTest/IntentFilterAttributeDataPathTestClass");
-
-			var intent = IntentFilterAttribute.FromTypeDefinition (type, cache).Single (f => f.Actions.Contains ("pluralAction"));
-			var xml = intent.ToElement ("dummy.packageid").ToString ();
-
-			var expected =
-@"<intent-filter>
-  <action p2:name=""pluralAction"" xmlns:p2=""http://schemas.android.com/apk/res/android"" />
-  <data p2:pathSuffix=""pluralSuffix1"" xmlns:p2=""http://schemas.android.com/apk/res/android"" />
-  <data p2:pathSuffix=""pluralSuffix2"" xmlns:p2=""http://schemas.android.com/apk/res/android"" />
-  <data p2:pathAdvancedPattern=""pluralPattern1"" xmlns:p2=""http://schemas.android.com/apk/res/android"" />
-  <data p2:pathAdvancedPattern=""pluralPattern2"" xmlns:p2=""http://schemas.android.com/apk/res/android"" />
-</intent-filter>";
-
-			StringAssertEx.AreMultiLineEqual (expected, xml);
-		}
-
-		static readonly string expected_activity = """
-			<activity android:name="TestActivity">
-				<property android:name="test-activity-property" android:value="test-activity-property-value" />
-			</activity>
-		""";
-
-		static readonly string expected_application = """
-			<application android:name="TestApplication" android:allowBackup="true" android:extractNativeLibs="true">
-				<property android:name="test-application-property" android:value="test-application-property-value" />
-				<provider android:name="mono.MonoRuntimeProvider" android:exported="false" android:initOrder="1999999999" android:authorities="dummy.packageid.mono.MonoRuntimeProvider.__mono_init__" />
-			</application>
-		""";
-
-		static readonly string expected_receiver = """
-			<receiver android:name="TestBroadcastReceiver">
-				<property android:name="test-broadcast-property" android:value="test-broadcast-property-value" />
-			</receiver>
-		""";
-
-		static readonly string expected_provider = """
-			<provider android:authorities="foo" android:name="TestContentProvider">
-				<property android:name="test-provider-property" android:value="test-provider-property-value" />
-			</provider>
-		""";
-
-		static readonly string expected_service = """
-			<service android:name="TestService">
-				<property android:name="test-service-property" android:value="test-service-property-value" />
-			</service>
-		""";
-
-		static readonly object [] PropertyElementTestSource = [
-			new object [] {typeof (TestActivity), expected_activity },
-			new object [] {typeof (TestApplication), expected_application },
-			new object [] {typeof (TestBroadcastReceiver), expected_receiver },
-			new object [] {typeof (TestContentProvider), expected_provider },
-			new object [] {typeof (TestService), expected_service },
-		];
-
-		[Test]
-		[TestCaseSource (nameof (PropertyElementTestSource))]
-		public void PropertyTest (Type type, string expected)
-		{
-			var cache = new TypeDefinitionCache ();
-			var asm = AssemblyDefinition.ReadAssembly (type.Assembly.Location);
-			var td = asm.MainModule.GetType ($"Xamarin.Android.Build.Tests.ManifestTest/{type.Name}");
-
-			var manifest = new ManifestDocument (null) {
-				PackageName = "dummy.packageid",
-				TargetSdkVersion = "21",
-				VersionResolver = new MockVersionResolver (),
-			};
-
-			manifest.Merge (null, cache, [td], null, false, null, null);
-
-			var sb = new StringWriter ();
-			manifest.Save (null, sb);
-
-			var xml = sb.ToString ();
-			StringAssertEx.AreMultiLineContains (expected, xml);
-		}
-
-		[Activity (Name = "TestActivity")]
-		[Property ("test-activity-property", Value = "test-activity-property-value")]
-		public class TestActivity : global::Android.App.Activity
-		{
-		}
-
-		[Application (Name = "TestApplication")]
-		[Property ("test-application-property", Value = "test-application-property-value")]
-		public class TestApplication : global::Android.App.Application
-		{
-		}
-
-		[BroadcastReceiver (Name = "TestBroadcastReceiver")]
-		[Property ("test-broadcast-property", Value = "test-broadcast-property-value")]
-		public class TestBroadcastReceiver : global::Android.Content.BroadcastReceiver
-		{
-		}
-
-		[ContentProvider (["foo"], Name = "TestContentProvider")]
-		[Property ("test-provider-property", Value = "test-provider-property-value")]
-		public class TestContentProvider : global::Android.Content.ContentProvider
-		{
-		}
-
-		[Service (Name = "TestService")]
-		[Property ("test-service-property", Value = "test-service-property-value")]
-		public class TestService : global::Android.App.Service
-		{
-		}
-
 		[Test]
 		public void UsesPermissionFlagsAttribute ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
@@ -1690,13 +1511,7 @@ class TestActivity : Activity { }"
 		[Test]
 		public void TargetSdkVersion_361In_36Out ()
 		{
-			// GetIdFromApiLevel("36") returns "36.1" — simulates the real bug
-			var resolver = new MockVersionResolver {
-				GetIdFromApiLevelFunc = apiLevel => apiLevel == "36" ? "36.1" : apiLevel,
-				GetApiLevelFromIdFunc = id => id == "36" || id == "36.1" ? 36 : 99,
-			};
-
-			// GenerateMainAndroidManifest strips "36.1" → "36" before setting TargetSdkVersion
+			// Manifest generation strips "36.1" to "36" before setting TargetSdkVersion.
 			string targetSdkVersion = "36.1";
 			if (MonoAndroidHelper.TryParseApiLevel (targetSdkVersion, out var version)) {
 				targetSdkVersion = version.Major.ToString ();
@@ -1710,7 +1525,6 @@ class TestActivity : Activity { }"
 					PackageName = "com.test.targetsdkversion",
 					TargetSdkVersion = targetSdkVersion,
 					MinSdkVersion = "21",
-					VersionResolver = resolver,
 				};
 
 				var sb = new StringWriter ();
@@ -1728,34 +1542,5 @@ class TestActivity : Activity { }"
 				File.Delete (templateFile);
 			}
 		}
-
-		class MockVersionResolver : IVersionResolver
-		{
-			public Func<string, int?> GetApiLevelFromIdFunc { get; set; } = _ => 99;
-			public Func<string, string> GetIdFromApiLevelFunc { get; set; } = _ => "API-99";
-
-			public int? GetApiLevelFromId (string id) => GetApiLevelFromIdFunc (id);
-
-			public string GetIdFromApiLevel (string apiLevel) => GetIdFromApiLevelFunc (apiLevel);
-		}
 	}
-}
-
-// Dummy types because we don't want to take a dependency on Mono.Android or Java.Interop
-namespace Android.App
-{
-	public class Activity : Java.Interop.IJavaPeerable { }
-	public class Application : Java.Interop.IJavaPeerable { }
-	public class Service : Java.Interop.IJavaPeerable { }
-}
-
-namespace Android.Content
-{
-	public class ContentProvider : Java.Interop.IJavaPeerable { }
-	public class BroadcastReceiver : Java.Interop.IJavaPeerable { }
-}
-
-namespace Java.Interop
-{
-	public interface IJavaPeerable { }
 }

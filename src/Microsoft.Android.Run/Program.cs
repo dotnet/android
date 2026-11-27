@@ -6,6 +6,8 @@ using Xamarin.Android.Tools;
 
 const string Name = "Microsoft.Android.Run";
 const string VersionsFileName = "Microsoft.Android.versions.txt";
+const int CtrlCExitCode = 130; // Standard Unix exit code for SIGINT: 128 + signal 2.
+const int StopAppTimeoutSeconds = 10;
 
 string? adbPath = null;
 string? adbTarget = null;
@@ -14,17 +16,22 @@ string? activity = null;
 string? deviceUserId = null;
 string? instrumentation = null;
 bool verbose = false;
+bool wakeDevice = true;
 int? logcatPid = null;
 Process? logcatProcess = null;
 CancellationTokenSource cts = new ();
+int ctrlCRequested = 0;
 string? logcatArgs = null;
 bool isDotnetTestMode = false;
 string? dotnetTestPipe = null;
+bool waitForExit = true;
+List<PortMapping> forwardPorts = [];
+List<PortMapping> reversePorts = [];
 
 try {
 	return await RunAsync (args);
 } catch (OperationCanceledException) {
-	return 130; // 128 + SIGINT(2), standard Unix convention for Ctrl+C
+	return CtrlCExitCode;
 } catch (Exception ex) {
 	Console.Error.WriteLine ($"Error: {ex.Message}");
 	if (verbose)
@@ -72,9 +79,21 @@ async Task<int> RunAsync (string[] args)
 		{ "v|verbose",
 			"Enable verbose output for debugging.",
 			v => verbose = v != null },
+		{ "no-wake-device",
+			"Do not wake the device or dismiss its keyguard before launching the application.",
+			v => wakeDevice = v == null },
 		{ "logcat-args=",
-			"Extra {ARGUMENTS} to pass to 'adb logcat' (e.g., 'monodroid-assembly:S' to silence a tag).",
+			"Extra {ARGUMENTS} to pass to 'adb logcat' (e.g., 'DOTNET-assembly:S' to silence a tag).",
 			v => logcatArgs = v },
+		{ "no-wait",
+			"Launch the application without waiting for it to exit or streaming logcat.",
+			v => waitForExit = v == null },
+		{ "forward-port=",
+			"Forward a TCP port from the host to the device in {MAPPING} format (HOST_PORT:DEVICE_PORT). May be repeated.",
+			v => forwardPorts.Add (ParsePortMapping (v, "--forward-port")) },
+		{ "reverse-port=",
+			"Reverse a TCP port from the device to the host in {MAPPING} format (DEVICE_PORT:HOST_PORT). May be repeated.",
+			v => reversePorts.Add (ParsePortMapping (v, "--reverse-port")) },
 		{ "version",
 			"Show version information and exit.",
 			v => showVersion = v != null },
@@ -182,21 +201,30 @@ async Task<int> RunAsync (string[] args)
 			Console.WriteLine ($"dotnet test mode (pipe: {dotnetTestPipe})");
 	}
 
+	if (!await ConfigurePortMappingsAsync ())
+		return 1;
+
 	// Set up Ctrl+C handler
 	Console.CancelKeyPress += OnCancelKeyPress;
 
+	int exitCode;
+	bool cancellationRequested;
 	try {
 		if (isDotnetTestMode)
-			return await RunDotnetTestAsync (remaining);
-
-		if (isInstrumentMode)
-			return await RunInstrumentationAsync (remaining);
-
-		return await RunAppAsync ();
+			exitCode = await RunDotnetTestAsync (remaining);
+		else if (isInstrumentMode)
+			exitCode = await RunInstrumentationAsync (remaining);
+		else
+			exitCode = await RunAppAsync ();
 	} finally {
 		Console.CancelKeyPress -= OnCancelKeyPress;
+		cancellationRequested = Volatile.Read (ref ctrlCRequested) != 0;
+		if (cancellationRequested)
+			await StopAppAsync ();
 		cts.Dispose ();
 	}
+
+	return cancellationRequested ? CtrlCExitCode : exitCode;
 }
 
 void OnCancelKeyPress (object? sender, ConsoleCancelEventArgs e)
@@ -205,27 +233,18 @@ void OnCancelKeyPress (object? sender, ConsoleCancelEventArgs e)
 	Console.WriteLine ();
 	Console.WriteLine ("Stopping application...");
 
+	Interlocked.Exchange (ref ctrlCRequested, 1);
 	cts.Cancel ();
-
-	// Force-stop the app (fire-and-forget in cancel handler)
-	_ = StopAppAsync ();
-
-	// Kill logcat process if running
-	try {
-		if (logcatProcess != null && !logcatProcess.HasExited) {
-			logcatProcess.Kill ();
-		}
-	} catch (Exception ex) {
-		if (verbose)
-			Console.Error.WriteLine ($"Error killing logcat process: {ex.Message}");
-	}
 }
 
 async Task<int> RunInstrumentationAsync (List<string> instrumentationArgs)
 {
 	// '-w' waits for the run to complete; '-r' prints raw INSTRUMENTATION_STATUS
 	// blocks as they arrive instead of buffering everything until the end.
-	var cmdArgs = new List<string> { "shell", "am", "instrument", "-w", "-r" };
+	var cmdArgs = new List<string> { "shell", "am", "instrument" };
+	if (waitForExit)
+		cmdArgs.Add ("-w");
+	cmdArgs.Add ("-r");
 	if (!string.IsNullOrEmpty (deviceUserId)) {
 		cmdArgs.Add ("--user");
 		cmdArgs.Add (deviceUserId);
@@ -238,30 +257,21 @@ async Task<int> RunInstrumentationAsync (List<string> instrumentationArgs)
 
 	// Run instrumentation with streaming output
 	var psi = AdbHelper.CreateStartInfo (adbPath, adbTarget, cmdArgs);
-	using var instrumentProcess = new Process { StartInfo = psi };
+	using var instrumentProcess = Process.Start (psi) ?? throw new InvalidOperationException ("Failed to start adb");
 
-	var locker = new Lock ();
 	var output = new StringBuilder ();
+	var outputTask = Task.Run (async () => {
+		await foreach (var line in instrumentProcess.ReadAllLinesAsync (cts.Token)) {
+			output.AppendLine (line.Content);
+			(line.StandardError ? Console.Error : Console.Out).WriteLine (line.Content);
+		}
+	});
 
-	instrumentProcess.OutputDataReceived += (s, e) => {
-		if (e.Data != null)
-			lock (locker) {
-				output.AppendLine (e.Data);
-				Console.WriteLine (e.Data);
-			}
-	};
-
-	instrumentProcess.ErrorDataReceived += (s, e) => {
-		if (e.Data != null)
-			lock (locker) {
-				output.AppendLine (e.Data);
-				Console.Error.WriteLine (e.Data);
-			}
-	};
-
-	instrumentProcess.Start ();
-	instrumentProcess.BeginOutputReadLine ();
-	instrumentProcess.BeginErrorReadLine ();
+	if (!waitForExit) {
+		await instrumentProcess.WaitForExitAsync (cts.Token);
+		await outputTask;
+		return instrumentProcess.ExitCode == 0 ? 0 : 1;
+	}
 
 	// Also stream logcat in the background, which is where Console output from the
 	// app ends up. The app process does not exist yet when `am instrument` starts,
@@ -272,6 +282,7 @@ async Task<int> RunInstrumentationAsync (List<string> instrumentationArgs)
 	try {
 		try {
 			await instrumentProcess.WaitForExitAsync (cts.Token);
+			await outputTask;
 		} catch (OperationCanceledException) {
 			try { instrumentProcess.Kill (); } catch (Exception ex) {
 				if (verbose)
@@ -301,13 +312,8 @@ async Task<int> RunInstrumentationAsync (List<string> instrumentationArgs)
 	}
 
 	// `am instrument` exits 0 even when the instrumentation crashes or reports
-	// failure, so inspect what it printed to decide the exit code. `WaitForExitAsync`
-	// has already drained both readers, but read under the same lock for clarity.
-	string capturedOutput;
-	lock (locker)
-		capturedOutput = output.ToString ();
-
-	var failure = GetInstrumentationFailure (capturedOutput);
+	// failure, so inspect what it printed to decide the exit code.
+	var failure = GetInstrumentationFailure (output.ToString ());
 	if (failure != null) {
 		Console.Error.WriteLine ($"Error: {failure}");
 		return 1;
@@ -492,6 +498,8 @@ async Task<int> RunAppAsync ()
 	// 1. Start the app
 	if (!await StartAppAsync ())
 		return 1;
+	if (!waitForExit)
+		return 0;
 
 	// 2. Get the PID
 	logcatPid = await GetAppPidAsync ();
@@ -515,7 +523,10 @@ async Task<int> RunAppAsync ()
 async Task<bool> StartAppAsync ()
 {
 	var userArg = string.IsNullOrEmpty (deviceUserId) ? "" : $" --user {deviceUserId}";
-	var cmdArgs = $"shell am start -S -W{userArg} -n \"{package}/{activity}\"";
+	// Device preparation is best effort; am start must run and determine the shell exit code.
+	var wakeDeviceCommand = wakeDevice ? "input keyevent KEYCODE_WAKEUP; wm dismiss-keyguard; " : "";
+	var waitArg = waitForExit ? " -W" : "";
+	var cmdArgs = $"shell {wakeDeviceCommand}am start -S{waitArg}{userArg} -n \"{package}/{activity}\"";
 	var (exitCode, output, error) = await AdbHelper.RunAsync (adbPath, adbTarget, cmdArgs, cts.Token, verbose);
 	if (exitCode != 0) {
 		Console.Error.WriteLine ($"Error: Failed to start app: {error}");
@@ -526,6 +537,43 @@ async Task<bool> StartAppAsync ()
 		Console.WriteLine (output);
 
 	return true;
+}
+
+async Task<bool> ConfigurePortMappingsAsync ()
+{
+	foreach (var port in forwardPorts) {
+		var (forwardExitCode, _, forwardError) = await AdbHelper.RunAsync (
+			adbPath, adbTarget, $"forward tcp:{port.Source} tcp:{port.Destination}", cts.Token, verbose);
+		if (forwardExitCode != 0) {
+			Console.Error.WriteLine ($"Error: Failed to forward port {port.Source}:{port.Destination}: {forwardError}");
+			return false;
+		}
+	}
+
+	foreach (var port in reversePorts) {
+		var (reverseExitCode, _, reverseError) = await AdbHelper.RunAsync (
+			adbPath, adbTarget, $"reverse tcp:{port.Source} tcp:{port.Destination}", cts.Token, verbose);
+		if (reverseExitCode != 0) {
+			Console.Error.WriteLine ($"Error: Failed to reverse port {port.Source}:{port.Destination}: {reverseError}");
+			return false;
+		}
+	}
+
+	return true;
+}
+
+PortMapping ParsePortMapping (string value, string option)
+{
+	var ports = value.Split (':');
+	if (ports.Length != 2 ||
+			!int.TryParse (ports [0], out int source) ||
+			!int.TryParse (ports [1], out int destination) ||
+			source is < 1 or > 65535 ||
+			destination is < 1 or > 65535) {
+		throw new OptionException ("Expected two TCP ports between 1 and 65535 in SOURCE:DESTINATION format.", option);
+	}
+
+	return new PortMapping (source, destination);
 }
 
 async Task<int?> GetAppPidAsync ()
@@ -556,57 +604,46 @@ void StartLogcat ()
 	if (verbose)
 		Console.WriteLine ($"Running: adb {psi.Arguments}");
 
-	var locker = new Lock();
-
-	logcatProcess = new Process { StartInfo = psi };
-
-	logcatProcess.OutputDataReceived += (s, e) => {
-		if (e.Data != null)
-			lock (locker)
-				Console.WriteLine (e.Data);
-	};
-
-	logcatProcess.ErrorDataReceived += (s, e) => {
-		if (e.Data != null)
-			lock (locker)
-				Console.Error.WriteLine (e.Data);
-	};
-
-	logcatProcess.Start ();
-	logcatProcess.BeginOutputReadLine ();
-	logcatProcess.BeginErrorReadLine ();
+	logcatProcess = Process.Start (psi) ?? throw new InvalidOperationException ("Failed to start adb logcat");
+	var process = logcatProcess;
+	_ = Task.Run (async () => {
+		await foreach (var line in process.ReadAllLinesAsync (cts.Token))
+			(line.StandardError ? Console.Error : Console.Out).WriteLine (line.Content);
+	});
 }
 
 async Task WaitForAppExitAsync ()
 {
-	while (!cts.Token.IsCancellationRequested) {
-		// Check if app is still running
-		var pid = await GetAppPidAsync ();
-		if (pid == null || pid != logcatPid) {
-			if (verbose)
-				Console.WriteLine ("App has exited.");
-			break;
-		}
-
-		// Also check if logcat process exited unexpectedly
-		if (logcatProcess != null && logcatProcess.HasExited) {
-			if (verbose)
-				Console.WriteLine ("Logcat process exited.");
-			break;
-		}
-
-		await Task.Delay (1000, cts.Token).ConfigureAwait (ConfigureAwaitOptions.SuppressThrowing);
-	}
-
-	// Clean up logcat process
 	try {
-		if (logcatProcess != null && !logcatProcess.HasExited) {
-			logcatProcess.Kill ();
-			logcatProcess.WaitForExit (1000);
+		while (!cts.Token.IsCancellationRequested) {
+			// Check if app is still running
+			var pid = await GetAppPidAsync ();
+			if (pid == null || pid != logcatPid) {
+				if (verbose)
+					Console.WriteLine ("App has exited.");
+				break;
+			}
+
+			// Also check if logcat process exited unexpectedly
+			if (logcatProcess != null && logcatProcess.HasExited) {
+				if (verbose)
+					Console.WriteLine ("Logcat process exited.");
+				break;
+			}
+
+			await Task.Delay (1000, cts.Token).ConfigureAwait (ConfigureAwaitOptions.SuppressThrowing);
 		}
-	} catch (Exception ex) {
-		if (verbose)
-			Console.Error.WriteLine ($"Error cleaning up logcat process: {ex.Message}");
+	} finally {
+		// Clean up logcat process
+		try {
+			if (logcatProcess != null && !logcatProcess.HasExited) {
+				logcatProcess.Kill ();
+				logcatProcess.WaitForExit (1000);
+			}
+		} catch (Exception ex) {
+			if (verbose)
+				Console.Error.WriteLine ($"Error cleaning up logcat process: {ex.Message}");
+		}
 	}
 }
 
@@ -616,7 +653,18 @@ async Task StopAppAsync ()
 		return;
 
 	var userArg = string.IsNullOrEmpty (deviceUserId) ? "" : $" --user {deviceUserId}";
-	await AdbHelper.RunAsync (adbPath, adbTarget, $"shell am force-stop{userArg} {package}", CancellationToken.None, verbose);
+	using var timeoutCts = new CancellationTokenSource (TimeSpan.FromSeconds (StopAppTimeoutSeconds));
+	try {
+		var (exitCode, _, error) = await AdbHelper.RunAsync (adbPath, adbTarget, $"shell am force-stop{userArg} {package}", timeoutCts.Token, verbose);
+		if (exitCode != 0)
+			Console.Error.WriteLine ($"Error: Failed to stop app: {error}");
+	} catch (OperationCanceledException) when (timeoutCts.IsCancellationRequested) {
+		Console.Error.WriteLine ($"Error: Timed out stopping app after {StopAppTimeoutSeconds} seconds.");
+	} catch (Exception ex) {
+		Console.Error.WriteLine ($"Error: Failed to stop app: {ex.Message}");
+		if (verbose)
+			Console.Error.WriteLine (ex.ToString ());
+	}
 }
 
 string? FindAdbPath ()
@@ -675,3 +723,5 @@ string? FindAdbPath ()
 		return (null, null);
 	}
 }
+
+readonly record struct PortMapping (int Source, int Destination);

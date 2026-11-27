@@ -9,19 +9,17 @@ namespace Android.Widget {
 	[Register ("android/widget/BaseAdapter", DoNotGenerateAcw=true)]
 	public abstract partial class BaseAdapter<T> : BaseAdapter {
 
-		static IntPtr java_class_handle;
-		static new IntPtr class_ref {
-			get {
-				return JNIEnv.FindClass ("android/widget/BaseAdapter", ref java_class_handle);
-			}
-		}
-
+		/// <safety>
+		/// A nonzero <paramref name="handle"/> must be a live BaseAdapter-compatible reference from this VM
+		/// usable on this thread until construction returns or throws, with elements compatible with T's conversion.
+		/// Own the requested transfer and exclude release/use of consumed aliases; zero preserves empty-peer initialization.
+		/// Caller-unsafe enforcement on raw peer constructors is deferred; existing initialization APIs are unchanged.
+		/// </safety>
 		public BaseAdapter (IntPtr handle, JniHandleOwnership transfer)
 			: base (handle, transfer)
 		{
 		}
 
-		static IntPtr id_ctor;
 		[Register (".ctor", "()V", "")]
 		public BaseAdapter ()
 			: base (IntPtr.Zero, JniHandleOwnership.DoNotTransfer)
@@ -29,20 +27,15 @@ namespace Android.Widget {
 			if (Handle != IntPtr.Zero)
 				return;
 
-			if (GetType () != typeof (BaseAdapter)) {
+			unsafe {
+				// SAFETY: AllocObject supplies this peer's owned handle; FinishCreateInstance invokes
+				// the ()V constructor while GC.KeepAlive retains this.
 				SetHandle (
-						JNIEnv.StartCreateInstance (GetType (), "()V"),
+						JNIEnv.AllocObject (GetType ()),
 						JniHandleOwnership.TransferLocalRef);
-				JNIEnv.FinishCreateInstance (Handle, "()V");
-				return;
+				JNIEnv.FinishCreateInstance (Handle, "()V"u8);
+				GC.KeepAlive (this);
 			}
-
-			if (id_ctor == IntPtr.Zero)
-				id_ctor = JNIEnv.GetMethodID (class_ref, "<init>", "()V");
-			SetHandle (
-					JNIEnv.StartCreateInstance (class_ref, id_ctor),
-					JniHandleOwnership.TransferLocalRef);
-			JNIEnv.FinishCreateInstance (Handle, class_ref, id_ctor);
 		}
 
 		public override Java.Lang.Object? GetItem (int position)
@@ -54,4 +47,3 @@ namespace Android.Widget {
 
 	}
 }
-

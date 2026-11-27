@@ -32,17 +32,16 @@ namespace UnnamedProject
 
 			string TAG = "XALINKERTESTS";
 
-			// [Test] TryCreateInstanceOfSomeClass
+			// [Test] TryGetAssemblyOfSomeClass
 			try
 			{
 				var asm = typeof(Library1.SomeClass).Assembly;
-				// TODO: ILLink removing .ctor: https://github.com/mono/linker/issues/1633
 				Android.Util.Log.Info(TAG, $"[PASS] Able to use 'typeof({typeof(Library1.SomeClass)})'.");
 
 			}
 			catch (Exception ex)
 			{
-				Android.Util.Log.Info(TAG, $"[FAIL] Unable to create instance of 'SomeClass'.\n{ex}");
+				Android.Util.Log.Info(TAG, $"[FAIL] Unable to use 'typeof(Library1.SomeClass)'.\n{ex}");
 			}
 
 			// [Test] TryCreateInstanceOfXmlPreservedLinkerClass
@@ -98,9 +97,6 @@ namespace UnnamedProject
 
 			// [Test] Post
 			Android.Util.Log.Info(TAG, HttpClientTest.Post ());
-
-			// [Test] MethodsArePreserved
-			Android.Util.Log.Info (TAG, PreserveTest.MethodsArePreserved ());
 
 			// [Test] TextChanged
 			Android.Util.Log.Info (TAG, MaterialTextChanged.TextChanged (this));

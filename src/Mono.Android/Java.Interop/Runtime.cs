@@ -21,31 +21,37 @@ namespace Java.Interop {
 		}
 
 		public static int MaxGlobalReferenceCount {
-			get {return RuntimeNativeMethods._monodroid_max_gref_get ();}
+			get {return JNIEnvInit.max_gref_count;}
 		}
 
 		public static int GlobalReferenceCount {
-			get {return RuntimeNativeMethods._monodroid_gref_get ();}
+			get {return JniEnvironment.Runtime.GlobalReferenceCount;}
 		}
 
 		public static int LocalReferenceCount {
-#if JAVA_INTEROP
 			get {return JniEnvironment.LocalReferenceCount;}
-#else   // !JAVA_INTEROP
-			get {return JNIEnv.lref_count;}
-#endif  // !JAVA_INTEROP
 		}
 
 		public static bool IsGCUserPeer (IJavaObject value)
 		{
 			if (value == null)
 				return false;
-			return IsGCUserPeer (value.Handle);
+			unsafe {
+				// SAFETY: value owns the borrowed JNI peer; KeepAlive retains that owner past the synchronous type test.
+				bool result = IsGCUserPeer (value.Handle);
+				GC.KeepAlive (value);
+				return result;
+			}
 		}
 
+		/// <safety>
+		/// A nonzero <paramref name="value"/> must be a live JNI object reference from this VM usable
+		/// on this thread until the type test returns or throws. Exclude concurrent release; zero returns false.
+		/// </safety>
 		public static bool IsGCUserPeer (IntPtr value)
 		{
-			return JNIEnv.IsGCUserPeer (value);
+			// SAFETY: the caller's contract above keeps value live on this thread for the type test.
+			return unsafe (JNIEnv.IsGCUserPeer (value));
 		}
 	}
 }

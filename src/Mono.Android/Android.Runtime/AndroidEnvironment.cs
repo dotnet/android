@@ -25,7 +25,7 @@ namespace Android.Runtime {
 
 		static IX509TrustManager? sslTrustManager;
 		static KeyStore? certStore;
-		static object lock_ = new object ();
+		static readonly Lock lock_ = new ();
 
 		static void SetupTrustManager ()
 		{
@@ -66,7 +66,7 @@ namespace Android.Runtime {
 
 		[LibraryImport ("libc")]
 		[UnmanagedCallConv (CallConvs = new[] { typeof (CallConvCdecl) })]
-		private static partial void exit (int status);
+		private static safe partial void exit (int status);
 
 		public static void FailFast (string? message)
 		{
@@ -74,37 +74,16 @@ namespace Android.Runtime {
 			exit (-1);
 		}
 
-#if !JAVA_INTEROP
-		internal static Exception GetExceptionForLastThrowable ()
-		{
-			IntPtr e = JNIEnv.ExceptionOccurred ();
-			if (e == IntPtr.Zero)
-				return null;
-			JNIEnv.ExceptionClear ();
-			return HandleToException (e);
-		}
-
-		static System.Exception HandleToException (IntPtr handle)
-		{
-			try {
-				System.Exception result = (System.Exception) Java.Lang.Object.GetObject (handle, JniHandleOwnership.DoNotTransfer, typeof (Java.Lang.Throwable));
-				var p = result as JavaProxyThrowable;
-				if (p != null)
-					return p.InnerException;
-				return result;
-			} finally {
-				JNIEnv.DeleteLocalRef (handle);
-			}
-		}
-#endif  // !JAVA_INTEROP
-
 		public static event EventHandler<RaiseThrowableEventArgs>? UnhandledExceptionRaiser;
 
 		public static void RaiseThrowable (Java.Lang.Throwable throwable)
 		{
-			if (throwable == null)
-				throw new ArgumentNullException ("throwable");
-			JNIEnv.Throw (throwable.Handle);
+			unsafe {
+				// SAFETY: the managed Throwable owns its live JNI throwable reference and existing KeepAlive retains it through the throw operation.
+				ArgumentNullException.ThrowIfNull (throwable);
+				JNIEnv.Throw (throwable.Handle);
+				GC.KeepAlive (throwable);
+			}
 		}
 
 		internal static void UnhandledException (Exception e)
@@ -216,36 +195,6 @@ namespace Android.Runtime {
 		{
 			return factory.GenerateCertificate (new System.IO.MemoryStream (certificateData))
 				.JavaCast<Java.Security.Cert.X509Certificate>()!;
-		}
-
-		// This is invoked by libmonodroid.so.
-		// DO NOT REMOVE
-		static void NotifyTimeZoneChanged ()
-		{
-			var thread            = Thread.CurrentThread;
-			var timeZoneClearInfo = new[]{
-				new { Description = "Thread.CurrentCulture.ClearCachedData()",    Method = (Action) thread.CurrentCulture.ClearCachedData },
-				new { Description = "Thread.CurrentUICulture.ClearCachedData()",  Method = (Action) thread.CurrentUICulture.ClearCachedData },
-			};
-			foreach (var clearInfo in timeZoneClearInfo) {
-				try {
-					clearInfo.Method ();
-				} catch (Exception e) {
-					Logger.Log (LogLevel.Warn, "MonoAndroid", FormattableString.Invariant ($"Ignoring exception from {clearInfo.Description}: {e}"));
-				}
-			}
-		}
-
-		static void DetectCPUAndArchitecture (out ushort builtForCPU, out ushort runningOnCPU, out bool is64bit)
-		{
-			ushort built_for_cpu = 0;
-			ushort running_on_cpu = 0;
-			byte _is64bit = 0;
-
-			RuntimeNativeMethods._monodroid_detect_cpu_and_architecture (ref built_for_cpu, ref running_on_cpu, ref _is64bit);
-			builtForCPU = built_for_cpu;
-			runningOnCPU = running_on_cpu;
-			is64bit = _is64bit != 0;
 		}
 
 		// This is invoked by

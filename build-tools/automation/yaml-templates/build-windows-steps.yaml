@@ -35,7 +35,7 @@ steps:
   displayName: Prepare Solution
   retryCountOnTaskFailure: 1
   inputs:
-    projects: Xamarin.Android.sln
+    projects: Microsoft.Android.slnx
     arguments: '-c $(XA.Build.Configuration) -t:Prepare --no-restore -bl:$(System.DefaultWorkingDirectory)\bin\Build$(XA.Build.Configuration)\dotnet-build-prepare.binlog'
 
 - template: /build-tools/automation/yaml-templates/generate-cgmanifest.yaml
@@ -45,7 +45,7 @@ steps:
 # Build Xamarin.Android and configure local workloads to test improved local build loop
 - template: /build-tools/automation/yaml-templates/run-dotnet-preview.yaml
   parameters:
-    project: Xamarin.Android.sln
+    project: Microsoft.Android.slnx
     arguments: >-
       -t:BuildDotNet -c $(XA.Build.Configuration) -v:n
       -bl:$(System.DefaultWorkingDirectory)\bin\Build$(XA.Build.Configuration)\dotnet-build.binlog
@@ -93,83 +93,46 @@ steps:
 - template: /build-tools/automation/yaml-templates/run-dotnet-preview.yaml@self
   parameters:
     command: test
-    project: tests/Microsoft.Android.Sdk.TrimmableTypeMap.Tests/Microsoft.Android.Sdk.TrimmableTypeMap.Tests.csproj
-    arguments: -c $(XA.Build.Configuration) --logger trx --results-directory $(Agent.TempDirectory)/trimmable-typemap-tests
-    displayName: Test Microsoft.Android.Sdk.TrimmableTypeMap.Tests $(XA.Build.Configuration)
+    project: src/Microsoft.Android.Build.Tasks/Tests/Microsoft.Android.Build.Tasks.Tests/Microsoft.Android.Build.Tasks.Tests.csproj
+    arguments: -c $(XA.Build.Configuration) --logger trx --results-directory $(Agent.TempDirectory)/microsoft-android-build-tasks-tests
+    displayName: Test Microsoft.Android.Build.Tasks.Tests $(XA.Build.Configuration)
+    env:
+      XA_REQUIRE_FULL_MSBUILD_TEST: 'true'
 
 - task: PublishTestResults@2
-  displayName: publish Microsoft.Android.Sdk.TrimmableTypeMap.Tests results
+  displayName: publish Microsoft.Android.Build.Tasks.Tests results
   condition: always()
   inputs:
     testResultsFormat: VSTest
-    testResultsFiles: "$(Agent.TempDirectory)/trimmable-typemap-tests/*.trx"
-    testRunTitle: Microsoft.Android.Sdk.TrimmableTypeMap.Tests
+    testResultsFiles: "$(Agent.TempDirectory)/microsoft-android-build-tasks-tests/*.trx"
+    testRunTitle: Microsoft.Android.Build.Tasks.Tests
 
-- template: /build-tools/automation/yaml-templates/run-dotnet-preview.yaml@self
-  parameters:
-    command: test
-    project: .github/skills/read-assembly-store/tests/AssemblyStore.Tests/AssemblyStore.Tests.csproj
-    arguments: -c $(XA.Build.Configuration) --logger trx --results-directory $(Agent.TempDirectory)/assembly-store-tests
-    displayName: Test AssemblyStore.Tests $(XA.Build.Configuration)
-
-- task: PublishTestResults@2
-  displayName: publish AssemblyStore.Tests results
-  condition: always()
-  inputs:
-    testResultsFormat: VSTest
-    testResultsFiles: "$(Agent.TempDirectory)/assembly-store-tests/*.trx"
-    testRunTitle: AssemblyStore.Tests
-
-- template: /build-tools/automation/yaml-templates/run-dotnet-preview.yaml@self
-  parameters:
-    command: run
-    project: --file .github/skills/read-assembly-store/scripts/read-assembly-store.cs
-    arguments: -- --help
-    displayName: Build read-assembly-store file app
-    continueOnError: false
-
-- template: /build-tools/automation/yaml-templates/run-dotnet-preview.yaml@self
-  parameters:
-    command: run
-    project: --file .github/skills/extract-android-assemblies/scripts/extract-android-assemblies.cs
-    arguments: -- --help
-    displayName: Build extract-android-assemblies file app
-    continueOnError: false
-
-- template: /build-tools/automation/yaml-templates/run-dotnet-preview.yaml@self
-  parameters:
-    command: test
-    project: bin/Test$(XA.Build.Configuration)/$(DotNetTargetFramework)/Microsoft.Android.Sdk.TrimmableTypeMap.IntegrationTests.dll
-    arguments: --logger trx --results-directory $(Agent.TempDirectory)/trimmable-typemap-integration-tests
-    displayName: Test Microsoft.Android.Sdk.TrimmableTypeMap.IntegrationTests $(XA.Build.Configuration)
-
-- task: PublishTestResults@2
-  displayName: publish Microsoft.Android.Sdk.TrimmableTypeMap.IntegrationTests results
-  condition: always()
-  inputs:
-    testResultsFormat: VSTest
-    testResultsFiles: "$(Agent.TempDirectory)/trimmable-typemap-integration-tests/*.trx"
-    testRunTitle: Microsoft.Android.Sdk.TrimmableTypeMap.IntegrationTests
-  continueOnError: true
 - task: BatchScript@1
   displayName: Test dotnet-local.cmd - create template
   inputs:
     filename: dotnet-local.cmd
-    arguments: new android -o $(Build.StagingDirectory)/LocalWorkloadTest
+    arguments: new android -o "$(Build.StagingDirectory)\LocalWorkloadTest"
 
 - task: BatchScript@1
   displayName: Test dotnet-local.cmd - build template
   inputs:
     filename: dotnet-local.cmd
     arguments: >-
-      build -v:n $(Build.StagingDirectory)/LocalWorkloadTest
+      build -v:n "$(Build.StagingDirectory)\LocalWorkloadTest"
+      -p:RestoreConfigFile="$(System.DefaultWorkingDirectory)\NuGet.config"
       -p:AndroidSdkDirectory="$(USERPROFILE)\android-toolchain\sdk"
       -bl:$(System.DefaultWorkingDirectory)\bin\Build$(XA.Build.Configuration)\build-template.binlog
+
+- task: BatchScript@1
+  displayName: Shut down build servers
+  inputs:
+    filename: dotnet-local.cmd
+    arguments: build-server shutdown
 
 # Pack .nupkgs and extract workload packs to dotnet preview test directory
 - template: /build-tools/automation/yaml-templates/run-dotnet-preview.yaml
   parameters:
-    project: Xamarin.Android.sln
+    project: Microsoft.Android.slnx
     arguments: >-
       -t:PackDotNet -c $(XA.Build.Configuration) -v:n
       -bl:$(System.DefaultWorkingDirectory)\bin\Build$(XA.Build.Configuration)\dotnet-pack.binlog

@@ -8,7 +8,8 @@ using Microsoft.Android.Build.Tasks;
 
 namespace Xamarin.Android.Tasks
 {
-	public class ComputeHash : AndroidTask
+	[MSBuildMultiThreadableTask]
+	public class ComputeHash : MultithreadedAndroidTask
 	{
 		public override string TaskPrefix => "CPT";
 
@@ -32,7 +33,6 @@ namespace Xamarin.Android.Tasks
 				output.Add (newItem);
 			}
 			Output = output.ToArray ();
-			Log.LogDebugTaskItems ("Output : ", Output);
 			return !Log.HasLoggedErrors;
 		}
 	}

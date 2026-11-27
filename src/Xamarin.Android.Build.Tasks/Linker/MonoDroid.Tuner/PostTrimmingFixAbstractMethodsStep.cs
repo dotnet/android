@@ -10,23 +10,25 @@ namespace MonoDroid.Tuner;
 
 /// <summary>
 /// Post-trimming version of FixAbstractMethodsStep that delegates to the core logic
-/// in <see cref="FixAbstractMethodsStep"/>. Skips framework assemblies, checks for
-/// AppDomain.CreateDomain usage, and fixes missing abstract method implementations
-/// on Java.Lang.Object subclasses.
+/// in <see cref="FixAbstractMethodsStep"/>. Skips framework assemblies and checks for
+/// AppDomain.CreateDomain usage; legacy builds also fix missing abstract methods.
 /// </summary>
 class PostTrimmingFixAbstractMethodsStep : IAssemblyModifierPipelineStep
 {
 	readonly FixAbstractMethodsStep _step;
 	readonly Action<string> _warn;
+	readonly bool _enableLegacyCompatibilityAssemblyFixups;
 
 	public PostTrimmingFixAbstractMethodsStep (
 		IMetadataResolver cache,
 		Func<AssemblyDefinition?> getMonoAndroidAssembly,
 		Action<string> logMessage,
-		Action<string> warn)
+		Action<string> warn,
+		bool enableLegacyCompatibilityAssemblyFixups)
 	{
 		_step = new FixAbstractMethodsStep (cache, getMonoAndroidAssembly, logMessage);
 		_warn = warn;
+		_enableLegacyCompatibilityAssemblyFixups = enableLegacyCompatibilityAssemblyFixups;
 	}
 
 	public void ProcessAssembly (AssemblyDefinition assembly, StepContext context)
@@ -36,7 +38,7 @@ class PostTrimmingFixAbstractMethodsStep : IAssemblyModifierPipelineStep
 
 		_step.CheckAppDomainUsage (assembly, _warn);
 
-		if (!assembly.MainModule.HasTypeReference ("Java.Lang.Object"))
+		if (!_enableLegacyCompatibilityAssemblyFixups || !assembly.MainModule.HasTypeReference ("Java.Lang.Object"))
 			return;
 
 		context.IsAssemblyModified |= _step.FixAbstractMethods (assembly);

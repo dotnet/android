@@ -12,10 +12,10 @@ _ResolveAssemblies MSBuild target.
 
   <UsingTask TaskName="Xamarin.Android.Tasks.ProcessAssemblies"      AssemblyFile="$(_XamarinAndroidBuildTasksAssembly)" />
   <UsingTask TaskName="Xamarin.Android.Tasks.ProcessNativeLibraries" AssemblyFile="$(_XamarinAndroidBuildTasksAssembly)" />
-  <UsingTask TaskName="Xamarin.Android.Tasks.ProcessRuntimePackLibraryDirectories" AssemblyFile="$(_XamarinAndroidBuildTasksAssembly)" />
-  <UsingTask TaskName="Xamarin.Android.Tasks.StripNativeLibraries" AssemblyFile="$(_XamarinAndroidBuildTasksAssembly)" />
 
   <PropertyGroup Condition=" '$(_ComputeFilesToPublishForRuntimeIdentifiers)' == 'true' ">
+    <!-- Rebuilding references with inner-build properties invalidates their compile-input caches. -->
+    <BuildProjectReferences>false</BuildProjectReferences>
     <OutputPath Condition=" '$(_OuterOutputPath)' != '' ">$(_OuterOutputPath)</OutputPath>
     <OutDir     Condition=" '$(_OuterOutputPath)' != '' ">$(_OuterOutputPath)</OutDir>
     <PublishDir>$(OutputPath)</PublishDir>
@@ -30,10 +30,13 @@ _ResolveAssemblies MSBuild target.
     </CompileDependsOn>
   </PropertyGroup>
 
-  <PropertyGroup>
-    <!-- When marshal methods are enabled, AOT needs to run after the GenerateJavaStubs task -->
-    <_RunAotMaybe Condition=" '$(_AndroidUseMarshalMethods)' != 'True' ">_AndroidAot</_RunAotMaybe>
-  </PropertyGroup>
+  <Target Name="_AndroidInvalidateLinkerCache"
+      BeforeTargets="_RunILLink"
+      DependsOnTargets="_CreatePropertiesCache"
+      Inputs="$(_AndroidBuildPropertiesCache)"
+      Outputs="$(_LinkSemaphore)">
+    <Delete Files="$(_LinkSemaphore)" />
+  </Target>
 
   <!-- Some NuGet packages add assemblies as @(Reference) items with CopyToOutputDirectory
        metadata, or as @(None) items with CopyToOutputDirectory. Both paths flow into
@@ -63,6 +66,15 @@ _ResolveAssemblies MSBuild target.
     </ItemGroup>
   </Target>
 
+  <!-- VSTest collector tools run on the host, not in the Android application.
+       Exclude their private managed dependencies and Windows native libraries. -->
+  <Target Name="_AndroidRemoveVSTestCollectorArtifacts"
+      AfterTargets="CopyTraceDataCollectorArtifacts">
+    <ItemGroup>
+      <ResolvedFileToPublish Remove="@(TraceDataCollectorArtifacts)" />
+    </ItemGroup>
+  </Target>
+
   <!-- RuntimeIdentifier is assigned in these inner builds, after the outer assembly has been compiled.
        _CheckForInvalidConfigurationAndPlatform is a private MSBuild target, but there is no public
        validation-only target. Microsoft.Common.targets explicitly directs custom targets that require
@@ -70,10 +82,30 @@ _ResolveAssemblies MSBuild target.
        _CheckForMismatchingPlatform implementation target.
        See https://github.com/dotnet/msbuild/blob/eae54023463db15e9a9081f35a959c9162797643/src/Tasks/Microsoft.Common.CurrentVersion.targets#L823-L836 -->
   <Target Name="_ComputeFilesToPublishForRuntimeIdentifiers"
-      DependsOnTargets="BuildOnlySettings;_CheckForInvalidConfigurationAndPlatform;_FixupIntermediateAssembly;_PatchNuGetReferenceMetadata;ResolveReferences;ComputeFilesToPublish;$(_RunAotMaybe)"
+      DependsOnTargets="BuildOnlySettings;_CheckForInvalidConfigurationAndPlatform;_FixupIntermediateAssembly;_PatchNuGetReferenceMetadata;ResolveReferences;ComputeFilesToPublish"
       Returns="@(ResolvedFileToPublish)">
+      <PropertyGroup Condition=" '$(_AndroidRuntime)' == 'NativeAOT' ">
+        <_AndroidTypeMapLlvmReadObjPath>$(_NdkBinDir)llvm-readobj</_AndroidTypeMapLlvmReadObjPath>
+        <_AndroidTypeMapLlvmReadObjPath Condition=" $([MSBuild]::IsOSPlatform('windows')) ">$(_NdkBinDir)llvm-readobj.exe</_AndroidTypeMapLlvmReadObjPath>
+        <_AndroidTypeMapLlvmObjDumpPath>$(_NdkBinDir)llvm-objdump</_AndroidTypeMapLlvmObjDumpPath>
+        <_AndroidTypeMapLlvmObjDumpPath Condition=" $([MSBuild]::IsOSPlatform('windows')) ">$(_NdkBinDir)llvm-objdump.exe</_AndroidTypeMapLlvmObjDumpPath>
+      </PropertyGroup>
       <ItemGroup>
         <ResolvedFileToPublish Remove="@(_SourceItemsToCopyToPublishDirectory)" />
+        <!-- Return the exact per-RID producer paths to the outer typemap/R8 build. The
+             ILC object and linked metadata must not be replaced by pre-trim or R2R inputs. -->
+        <ResolvedFileToPublish Update="@(ResolvedFileToPublish)"
+            Condition=" '$(_AndroidEnableTypemapR8Trimming)' == 'true' and '$(_AndroidRuntime)' == 'NativeAOT' "
+            AndroidTypeMapNativeObject="$(NativeObject)"
+            AndroidTypeMapLlvmReadObjPath="$(_AndroidTypeMapLlvmReadObjPath)"
+            AndroidTypeMapLlvmObjDumpPath="$(_AndroidTypeMapLlvmObjDumpPath)" />
+        <_AndroidLinkedTypeMapKeySource Include="@(_GeneratedTypeMapAssembliesFromList->'$(IntermediateOutputPath)linked\%(Filename)%(Extension)')"
+            Condition=" '$(_AndroidEnableTypemapR8Trimming)' != 'false' and '$(_AndroidRuntime)' == 'CoreCLR' and '$(PublishTrimmed)' == 'true' and '$(RunILLink)' != 'false' " />
+        <!-- The root carries the complete generator-known inventory, including trimmed maps
+             replaced by empty stubs. Do not discover maps from publish globs or drop missing files. -->
+        <ResolvedFileToPublish Update="@(ResolvedFileToPublish)"
+            Condition=" '%(ResolvedFileToPublish.Filename)' == '$(_TypeMapAssemblyName)' "
+            AndroidTypeMapLinkedAssemblies="@(_AndroidLinkedTypeMapKeySource)" />
         <ResolvedFileToPublish
             Condition=" '%(ResolvedFileToPublish.RuntimeIdentifier)' == '' "
             Update="@(ResolvedFileToPublish)"
@@ -93,32 +125,31 @@ _ResolveAssemblies MSBuild target.
   </Target>
 
   <!--
-    Resolve-only variant used by the trimmable typemap generator to discover runtime-only assemblies.
+    Resolve-only variant used by the trimmable typemap generator to discover implementation assemblies.
 
     The trimmable typemap generator runs in the RID-independent OUTER build over @(ReferencePath),
-    the compile closure, which omits runtime-only assemblies (e.g. the NativeAOT runtime host) that
-    have no ref-pack counterpart and are only pulled from the RID-specific runtime pack. Runtime-pack
-    resolution (ResolveRuntimePackAssets, reached via ResolveReferences) requires a single
-    RuntimeIdentifier, so the outer build invokes this target through the MSBuild task for one RID.
+    the compile closure, which can contain reference assemblies without private callback metadata and
+    omits runtime-only assemblies (e.g. the NativeAOT runtime host). Runtime-pack and copy-local
+    implementation resolution requires a RuntimeIdentifier, so the outer build invokes this target
+    through the MSBuild task for every RID.
 
     It stops after ResolveReferences - it does NOT run ComputeFilesToPublish/ILLink/ILC/AOT - and
-    returns the Android runtime-pack managed assemblies that are NOT already in @(ReferencePath)
-    (matched on filename). Those are exactly the runtime-only assemblies the outer generator would
-    otherwise miss; everything with a compile reference is already scanned via @(ReferencePath). Only
-    the Android runtime packs (Microsoft.Android.Runtime.*) can carry Java peers, so the .NET/BCL
-    runtime pack (Microsoft.NETCore.App.Runtime.*) is excluded to avoid scanning large BCL assemblies
-    that have none. The managed metadata is RID-independent, so resolving one RID suffices for all. -->
-  <Target Name="_ResolveRuntimeOnlyAssembliesForTypeMap"
+    returns Android runtime-pack managed assemblies as framework inputs plus copy-local implementation
+    assemblies for project/package references as non-framework inputs. -->
+  <Target Name="_ResolveImplementationAssembliesForTypeMap"
       DependsOnTargets="BuildOnlySettings;_FixupIntermediateAssembly;_PatchNuGetReferenceMetadata;ResolveReferences"
-      Returns="@(_TypeMapRuntimeOnlyAssembly)">
+      Returns="@(_TypeMapFrameworkImplementationAssembly);@(_TypeMapReferenceImplementationAssembly)">
     <ItemGroup>
-      <_TypeMapRuntimeOnlyAssembly Include="@(RuntimePackAsset)"
-          Condition=" '%(RuntimePackAsset.Extension)' == '.dll' and '%(RuntimePackAsset.AssetType)' == 'runtime' and $([System.String]::Copy('%(RuntimePackAsset.NuGetPackageId)').StartsWith('Microsoft.Android.Runtime')) " />
-      <!-- Drop any runtime-pack assembly that also has a compile reference (e.g. Mono.Android,
-           Java.Interop): the outer build already scans those via @(ReferencePath), and scanning both
-           the ref and runtime-pack copies would double-process the same assembly (GenerateTrimmableTypeMap
-           groups inputs by path). Match on filename to keep only the runtime-only assemblies. -->
-      <_TypeMapRuntimeOnlyAssembly Remove="@(ReferencePath)" MatchOnMetadata="Filename" />
+      <_TypeMapFrameworkImplementationAssembly Include="@(RuntimePackAsset)"
+          Condition=" '%(RuntimePackAsset.Extension)' == '.dll' and '%(RuntimePackAsset.AssetType)' == 'runtime' and $([System.String]::Copy('%(RuntimePackAsset.NuGetPackageId)').StartsWith('Microsoft.Android.Runtime')) ">
+        <FrameworkAssembly>true</FrameworkAssembly>
+        <RuntimeIdentifier>$(RuntimeIdentifier)</RuntimeIdentifier>
+      </_TypeMapFrameworkImplementationAssembly>
+      <_TypeMapReferenceImplementationAssembly Include="@(ReferenceCopyLocalPaths)"
+          Condition=" '%(ReferenceCopyLocalPaths.Extension)' == '.dll' and '%(ReferenceCopyLocalPaths.DestinationSubDirectory)' == '' and '%(ReferenceCopyLocalPaths.AssetType)' != 'native' and '%(ReferenceCopyLocalPaths.FrameworkReferenceName)' == '' and !$([System.String]::Copy('%(ReferenceCopyLocalPaths.NuGetPackageId)').StartsWith('Microsoft.Android.Runtime')) and !$([System.String]::Copy('%(ReferenceCopyLocalPaths.NuGetPackageId)').StartsWith('Microsoft.NETCore.App.Runtime')) ">
+        <FrameworkAssembly>false</FrameworkAssembly>
+        <RuntimeIdentifier>$(RuntimeIdentifier)</RuntimeIdentifier>
+      </_TypeMapReferenceImplementationAssembly>
     </ItemGroup>
   </Target>
 
@@ -141,6 +172,45 @@ _ResolveAssemblies MSBuild target.
     </ItemGroup>
   </Target>
 
+  <Target Name="_AndroidResolveAssemblyCompressionInputsForRuntimeIdentifier"
+      DependsOnTargets="BuildOnlySettings;_FixupIntermediateAssembly;ResolveReferences;_ReadGeneratedTrimmableTypeMapAssemblies"
+      Returns="@(_AndroidAssemblyCompressionInput)">
+    <ItemGroup>
+      <_AndroidAssemblyCompressionInput
+          Include="@(RuntimePackAsset);@(ReferenceCopyLocalPaths);@(IntermediateAssembly);@(_GeneratedTypeMapAssembliesFromList)"
+          Condition=" '%(Extension)' == '.dll' ">
+        <RuntimeIdentifier>$(RuntimeIdentifier)</RuntimeIdentifier>
+      </_AndroidAssemblyCompressionInput>
+    </ItemGroup>
+    <RemoveDuplicates Inputs="@(_AndroidAssemblyCompressionInput)">
+      <Output TaskParameter="Filtered" ItemName="_AndroidDistinctAssemblyCompressionInput" />
+    </RemoveDuplicates>
+    <ItemGroup>
+      <_AndroidAssemblyCompressionInput Remove="@(_AndroidAssemblyCompressionInput)" />
+      <_AndroidAssemblyCompressionInput Include="@(_AndroidDistinctAssemblyCompressionInput)" />
+    </ItemGroup>
+  </Target>
+
+  <Target Name="_AndroidResolveAssemblyCompressionInputs"
+      Condition=" '$(DesignTimeBuild)' != 'true' and '$(_AndroidRuntime)' == 'CoreCLR' and '$(AndroidIncludeDebugSymbols)' != 'true' and '$(AndroidEnableAssemblyCompression)' == 'true' ">
+    <!-- Use a separate resolve-only instance: publish replaces copy-local inputs with ILLink outputs. -->
+    <MSBuild Projects="$(MSBuildProjectFullPath)"
+        Properties="RuntimeIdentifier=%(_RIDs.Identity);$(_AdditionalProperties);_AndroidResolveCompressionInputsOnly=true;_GenerateResourceDesignerAssemblyOutput=$(_GenerateResourceDesignerAssemblyOutput)"
+        Targets="_AndroidResolveAssemblyCompressionInputsForRuntimeIdentifier">
+      <Output TaskParameter="TargetOutputs" ItemName="_AndroidUntrimmedAssemblyCompressionInput" />
+    </MSBuild>
+    <ProcessAssemblies
+        RuntimeIdentifiers="@(_RIDs)"
+        InputAssemblies="@(_AndroidUntrimmedAssemblyCompressionInput)">
+      <Output TaskParameter="OutputAssemblies" ItemName="_AndroidResolvedAssemblyCompressionInput" />
+    </ProcessAssemblies>
+    <AppendCustomMetadataToItemGroup
+        Inputs="@(_AndroidResolvedAssemblyCompressionInput)"
+        MetaDataItems="@(AndroidCustomMetaDataForReferences)">
+      <Output TaskParameter="Output" ItemName="_AndroidAssemblyCompressionInputs" />
+    </AppendCustomMetadataToItemGroup>
+  </Target>
+
   <Target Name="_ResolveAssemblies" DependsOnTargets="_AndroidConfigureHotReloadEnvironment">
     <ItemGroup>
       <_RIDs Include="$(RuntimeIdentifier)"  Condition=" '$(RuntimeIdentifiers)' == '' " />
@@ -159,31 +229,36 @@ _ResolveAssemblies MSBuild target.
         ;_OuterOutputPath=$(OutputPath)
         ;_OuterIntermediateOutputPath=$(IntermediateOutputPath)
         ;_OuterCustomViewMapFile=$(_CustomViewMapFile)
-        ;_AndroidNdkDirectory=$(_AndroidNdkDirectory)
+        ;_AndroidNdkDirectory=$([MSBuild]::Escape('$(_AndroidNdkDirectory)'))
+        ;$(_AndroidResolvedToolingProperties)
       </_AdditionalProperties>
       <_AndroidBuildRuntimeIdentifiersInParallel Condition=" '$(_AndroidBuildRuntimeIdentifiersInParallel)' == '' ">true</_AndroidBuildRuntimeIdentifiersInParallel>
     </PropertyGroup>
     <ItemGroup>
-      <_ProjectToBuild Include="$(MSBuildProjectFile)" AdditionalProperties="RuntimeIdentifier=%(_RIDs.Identity);$(_AdditionalProperties)" />
+      <_ProjectToBuild Include="$(MSBuildProjectFile)" AdditionalProperties="RuntimeIdentifier=%(_RIDs.Identity)" />
     </ItemGroup>
 
     <MSBuild
         Condition=" '$(DesignTimeBuild)' != 'true' "
         Projects="@(_ProjectToBuild)"
+        Properties="$(_AdditionalProperties)"
         BuildInParallel="$(_AndroidBuildRuntimeIdentifiersInParallel)"
         Targets="_ComputeFilesToPublishForRuntimeIdentifiers">
       <Output TaskParameter="TargetOutputs" ItemName="ResolvedFileToPublish" />
     </MSBuild>
 
-    <!-- This must be done as early as possible, so the runtime libraries location is known to all
-         the tasks that need it and so that the shared library files that are never to be packaged
-         are never taken into consideration in any context.
-    -->
-    <ProcessRuntimePackLibraryDirectories
-        ResolvedFilesToPublish="@(ResolvedFileToPublish)">
-      <Output TaskParameter="RuntimePackLibraryDirectories" ItemName="_RuntimePackLibraryDirectory" />
-      <Output TaskParameter="NativeLibrariesToRemove" ItemName="_NativeLibraryToRemove" />
-    </ProcessRuntimePackLibraryDirectories>
+    <!-- Exclude runtime-pack system library stubs before native-library packaging. -->
+    <ItemGroup>
+      <_AndroidRuntimePackSystemLibrary Include="libc.so;libdl.so;liblog.so;libm.so;libz.so" />
+      <_NativeLibraryToRemove Include="@(ResolvedFileToPublish)"
+          Condition=" '%(ResolvedFileToPublish.RuntimeIdentifier)' != '' and
+            ($([System.String]::Copy('%(ResolvedFileToPublish.NuGetPackageId)').StartsWith('Microsoft.Android.Runtime.CoreCLR.', StringComparison.OrdinalIgnoreCase)) or
+             $([System.String]::Copy('%(ResolvedFileToPublish.NuGetPackageId)').StartsWith('Microsoft.Android.Runtime.NativeAOT.', StringComparison.OrdinalIgnoreCase))) " />
+      <_AndroidRuntimePackLibraryToKeep Include="@(_NativeLibraryToRemove)" />
+      <_AndroidRuntimePackLibraryToKeep Remove="@(_AndroidRuntimePackSystemLibrary)"
+          MatchOnMetadata="Filename;Extension" MatchOnMetadataOptions="CaseInsensitive" />
+      <_NativeLibraryToRemove Remove="@(_AndroidRuntimePackLibraryToKeep)" />
+    </ItemGroup>
 
     <ItemGroup>
       <ResolvedFileToPublish Include="$(_AndroidHotReloadAgentAssemblyPath)" Condition="Exists('$(_AndroidHotReloadAgentAssemblyPath)')" RuntimeIdentifier="%(_RIDs.Identity)" />
@@ -194,7 +269,7 @@ _ResolveAssemblies MSBuild target.
     <PropertyGroup>
       <_InnerIntermediateOutputPath Condition=" '$(RuntimeIdentifier)' == '' ">$(IntermediateOutputPath)%(_RIDs.Identity)\</_InnerIntermediateOutputPath>
       <_InnerIntermediateOutputPath Condition=" '$(RuntimeIdentifier)' != '' ">$(IntermediateOutputPath)</_InnerIntermediateOutputPath>
-      <_ProguardProjectConfiguration Condition=" '$(AndroidLinkTool)' != '' ">$(_InnerIntermediateOutputPath)proguard\proguard_project_references.cfg</_ProguardProjectConfiguration>
+      <_ProguardProjectConfiguration Condition=" '$(AndroidLinkTool)' != '' ">$([System.IO.Path]::Combine('$(_InnerIntermediateOutputPath)', 'proguard', 'proguard_project_references.cfg'))</_ProguardProjectConfiguration>
       <_AndroidLinkFlag Condition=" '$(RuntimeIdentifier)' == '' " >$(_InnerIntermediateOutputPath)link.flag</_AndroidLinkFlag>
     </PropertyGroup>
     <ItemGroup>
@@ -257,7 +332,6 @@ _ResolveAssemblies MSBuild target.
       _ResolveSatellitePaths;
       _CreatePackageWorkspace;
       _LinkAssemblies;
-      _AfterILLinkAdditionalSteps;
     </_PrepareAssembliesDependsOnTargets>
   </PropertyGroup>
 
@@ -312,40 +386,17 @@ _ResolveAssemblies MSBuild target.
                       !$([System.String]::new('%(Identity)').Replace('\','/').Contains('/runtimes/linux-bionic')) " />
     </ItemGroup>
     <ItemGroup>
-      <_MonoComponent Condition=" '$(AndroidEnableProfiler)' == 'true' " Include="diagnostics_tracing" />
-      <_MonoComponent Condition=" '$(AndroidUseInterpreter)' == 'true' " Include="hot_reload" />
-      <_MonoComponent Condition=" '$(AndroidIncludeDebugSymbols)' == 'true' " Include="debugger" />
-      <_MonoComponent Condition=" '$(_AndroidExcludeMarshalIlgenComponent)' != 'true' " Include="marshal-ilgen" />
       <!-- Filename without extension -->
       <_ExcludedNativeLibraries Condition=" '$(_AndroidIncludeSystemGlobalizationNative)' != 'true' " Include="libSystem.Globalization.Native" />
       <_ExcludedNativeLibraries Condition=" '$(_AndroidEnableNativeStackTracing)' != 'true' " Include="libxamarin-native-tracing" />
-      <_ExcludedNativeLibraries Condition=" '$(_AndroidRuntime)' == 'MonoVM' Or '$(_AndroidRuntime)' == '' " Include="libnet-android.debug" />
-      <_ExcludedNativeLibraries Condition=" '$(_AndroidRuntime)' == 'MonoVM' Or '$(_AndroidRuntime)' == '' " Include="libnet-android.release" />
-      <_ExcludedNativeLibraries Condition=" '$(_AndroidRuntime)' == 'CoreCLR' " Include="libmono-android.debug" />
-      <_ExcludedNativeLibraries Condition=" '$(_AndroidRuntime)' == 'CoreCLR' " Include="libmono-android.release" />
       <_ExcludedNativeLibraries Condition=" '$(_AndroidRuntime)' == 'CoreCLR' And '$(AndroidIncludeDebugSymbols)' != 'true' " Include="libmscordaccore" />
       <_ExcludedNativeLibraries Condition=" '$(_AndroidRuntime)' == 'CoreCLR' And '$(AndroidIncludeDebugSymbols)' != 'true' " Include="libmscordbi" />
     </ItemGroup>
 
-    <!-- Let's keep the item group close to the task that uses them, the list is irrelevant for
-         anything else. The group MUST contain only shared libraries from the runtime pack.
-         DO NOT modify the group unless you're absolutely sure what you're doing -->
-    <ItemGroup Condition=" '$(_AndroidRuntime)' == 'CoreCLR' " >
-      <_KnownRuntimeNativeLibrary Include="libSystem.Globalization.Native.so" />
-      <_KnownRuntimeNativeLibrary Include="libSystem.IO.Compression.Native.so" />
-      <_KnownRuntimeNativeLibrary Include="libSystem.Native.so" />
-      <_KnownRuntimeNativeLibrary Include="libSystem.Security.Cryptography.Native.Android.so" />
-      <_KnownRuntimeNativeLibrary Include="libclrjit.so" />
-      <_KnownRuntimeNativeLibrary Include="libcorclr.so" />
-    </ItemGroup>
-
     <ProcessNativeLibraries
-        NativeRuntimeLinking="$(_AndroidEnableNativeRuntimeLinking)"
         InputLibraries="@(_ResolvedNativeLibraries)"
         ExcludedLibraries="@(_ExcludedNativeLibraries)"
-        Components="@(_MonoComponent->Distinct())"
-        IncludeDebugSymbols="$(AndroidIncludeDebugSymbols)"
-        KnownRuntimeNativeLibraries="@(_KnownRuntimeNativeLibrary)">
+        IncludeDebugSymbols="$(AndroidIncludeDebugSymbols)">
       <Output TaskParameter="OutputLibraries" ItemName="FrameworkNativeLibrary" />
     </ProcessNativeLibraries>
   </Target>

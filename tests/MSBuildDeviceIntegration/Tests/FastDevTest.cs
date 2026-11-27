@@ -39,27 +39,22 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		[TestCase ("FastDeploy")]
-		[TestCase ("FastDeploy2")]
-		public void FastDeployUpdatesTypeMapAfterAssemblyEdit (string strategy)
+		public void FastDeployUpdatesTypeMapAfterAssemblyEdit ()
 		{
 			const string logcatMessage = "FAST_DEPLOY_TYPEMAP_TEST_MESSAGE";
 
 			var proj = new XamarinAndroidApplicationProject {
-				PackageName = $"com.xamarin.fastdeploy_typemap_{strategy.ToLowerInvariant ()}",
+				PackageName = "com.xamarin.fastdeploy_typemap",
 			};
 			proj.SetDefaultTargetDevice ();
-			proj.SetProperty ("_AndroidFastDevStrategy", strategy);
 
-			// Fast deployment only syncs managed assemblies, so anything that changes the set of
-			// Java-callable types has to go through a new .apk: new Java stubs, a new .dex, a new
-			// type map inside libxamarin-app.so, and therefore a new signed package.
+			// A new Java-callable type changes the managed type map and Java sources.
+			// Its new class must be compiled into the DEX and installed in a new package.
 			var typeMapTargets = new [] {
+				"_GenerateTrimmableTypeMap",
 				"_GenerateJavaStubs",
 				"_CompileJava",
 				"_CompileToDalvik",
-				"_CompileNativeAssemblySources",
-				"_CreateApplicationSharedLibraries",
 				"_BuildApkFastDev",
 				"_Sign",
 			};
@@ -72,6 +67,9 @@ namespace Xamarin.Android.Build.Tests
 			Assert.IsTrue (builder.Install (proj), "Initial install should have succeeded.");
 			Assert.IsTrue (builder.Output.IsApkInstalled, "The .apk should have been installed by the initial build.");
 			AssertActivityStarts ("MainActivity", "initial-launch.log");
+			var typeMapAssembly = builder.Output.GetIntermediaryPath (Path.Combine ("typemap", "_UnnamedProject.TypeMap.dll"));
+			FileAssert.Exists (typeMapAssembly, "The managed application type map should be generated.");
+			byte [] originalTypeMap = File.ReadAllBytes (typeMapAssembly);
 
 			// 2. A C#-only change that adds a new Java-callable type, so the type map *must* be updated.
 			proj.MainActivity = proj.DefaultMainActivity
@@ -94,6 +92,11 @@ namespace Xamarin.Android.Build.Tests
 			foreach (var target in typeMapTargets) {
 				builder.Output.AssertTargetIsNotSkipped (target, occurrence: 2);
 			}
+			byte [] updatedTypeMap = File.ReadAllBytes (typeMapAssembly);
+			CollectionAssert.AreNotEqual (originalTypeMap, updatedTypeMap, "Adding a Java-callable activity should change the managed type map.");
+			var javaSourceDirectory = builder.Output.GetIntermediaryPath (Path.Combine ("typemap", "java"));
+			Assert.AreEqual (1, Directory.GetFiles (javaSourceDirectory, "SecondActivity.java", SearchOption.AllDirectories).Length,
+				"The new activity should have a generated Java source.");
 			Assert.IsTrue (builder.Output.IsApkInstalled, "The .apk should have been reinstalled after adding a new activity.");
 			AssertActivityStarts ("SecondActivity", "new-activity-launch.log");
 
@@ -104,7 +107,10 @@ namespace Xamarin.Android.Build.Tests
 			Assert.IsTrue (builder.Install (proj, doNotCleanupOnUpdate: true, saveProject: false), "Incremental install should have succeeded.");
 
 			builder.Output.AssertTargetIsNotSkipped ("CoreCompile", occurrence: 3);
-			foreach (var target in new [] { "_CompileNativeAssemblySources", "_CreateApplicationSharedLibraries", "_BuildApkFastDev", "_Sign" }) {
+			builder.Output.AssertTargetIsNotSkipped ("_GenerateTrimmableTypeMap", occurrence: 3);
+			CollectionAssert.AreEqual (updatedTypeMap, File.ReadAllBytes (typeMapAssembly),
+				"A method-body edit should not change the managed type map.");
+			foreach (var target in new [] { "_CompileJava", "_CompileToDalvik", "_BuildApkFastDev", "_Sign" }) {
 				builder.Output.AssertTargetIsSkipped (target, occurrence: 3);
 			}
 			Assert.IsFalse (builder.Output.IsApkInstalled, "The .apk should not be reinstalled for a C#-only change.");
@@ -141,13 +147,12 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		public void TargetsSkipped ([Values(false, true)] bool useManagedResourceGenerator)
+		public void TargetsSkipped ()
 		{
 			var proj = new XamarinAndroidApplicationProject () {
 			};
-			proj.SetProperty ("AndroidUseManagedDesignTimeResourceGenerator", useManagedResourceGenerator.ToString ());
 			proj.SetProperty ("AndroidUseDesignerAssembly", "False");
-			var b = CreateApkBuilder ($"temp/FastDevTargetsSkipped_{useManagedResourceGenerator}", cleanupOnDispose: false);
+			var b = CreateApkBuilder ("temp/FastDevTargetsSkipped", cleanupOnDispose: false);
 			Assert.IsTrue (b.Build (proj), "1 build should have succeeded.");
 
 			// unchanged build
@@ -188,23 +193,14 @@ namespace Xamarin.Android.Build.Tests
 			b.Target = "Compile";
 			var designTimeParams = new string [] { "BuildingInsideVisualStudio=true", "BuildProject=false" };
 			Assert.IsTrue (b.Build (proj, true, designTimeParams, false), "5 update resources should have succeeded.");
-			// _UpdateAndroidResgen should be built.
-			if (useManagedResourceGenerator)
-				Assert.IsTrue (!b.Output.IsTargetSkipped ("_ManagedUpdateAndroidResgen"), $"5 first _ManagedUpdateAndroidResgen was skipped");
-			else
-				Assert.IsTrue (!b.Output.IsTargetSkipped ("_UpdateAndroidResgen"), $"5 first _UpdateAndroidResgen was skipped");
+			// Design-time builds do not regenerate the legacy source designer.
+			Assert.IsTrue (b.Output.IsTargetSkipped ("_UpdateAndroidResgen", defaultIfNotUsed: true), "5 first _UpdateAndroidResgen was not skipped");
 			b.Target = "Build";
 			Assert.IsTrue (b.Build (proj, true, null, false), "5 build should have succeeded.");
-			// _UpdateAndroidResgen should not be built.
-			if (useManagedResourceGenerator) {
-				Assert.IsFalse (b.Output.IsTargetSkipped ("_UpdateAndroidResgen"), "5 second _UpdateAndroidResgen was skipped");
-				// CoreCompile should be built.
-				Assert.IsTrue (b.Output.IsTargetSkipped ("CoreCompile"), "5 CoreCompile was not skipped");
-			} else {
-				Assert.IsTrue (b.Output.IsTargetSkipped ("_UpdateAndroidResgen"), "5 second _UpdateAndroidResgen was not skipped");
-				// CoreCompile should not be built.
-				Assert.IsTrue (b.Output.IsTargetSkipped ("CoreCompile"), "5 CoreCompile was not skipped");
-			}
+			// The normal build processes the resource changes skipped by the design-time build.
+			Assert.IsFalse (b.Output.IsTargetSkipped ("_UpdateAndroidResgen"), "5 second _UpdateAndroidResgen was skipped");
+			// CoreCompile should not be built.
+			Assert.IsTrue (b.Output.IsTargetSkipped ("CoreCompile"), "5 CoreCompile was not skipped");
 
 			// _CompileToDalvik should not be built either.
 			Assert.IsTrue (b.Output.IsTargetSkipped ("_CompileToDalvik"), "5 _CompileToDalvik should be skipped");
@@ -213,23 +209,16 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		public void SimpleInstallAndUninstall ()
+		public void SkipFastDevAlreadyInstalledFile ([Values (false, true)] bool diagnosticLogging)
 		{
 			var proj = new XamarinAndroidApplicationProject {
 			};
 			proj.SetDefaultTargetDevice ();
-			var b = CreateApkBuilder ();
-			Assert.IsTrue (b.Install (proj), "install should have succeeded.");
-			Assert.IsTrue (b.Uninstall (proj), "uninstall should have succeeded.");
-			b.Dispose ();
-		}
-
-		[Test]
-		public void SkipFastDevAlreadyInstalledFile ()
-		{
-			var proj = new XamarinAndroidApplicationProject {
-			};
-			proj.SetDefaultTargetDevice ();
+			if (diagnosticLogging) {
+				proj.SetProperty ("_FastDeploymentDiagnosticLogging", "true");
+			} else {
+				proj.RemoveProperty ("_FastDeploymentDiagnosticLogging");
+			}
 			proj.PackageReferences.Add (KnownPackages.AndroidXAppCompat);
 			proj.MainActivity = proj.DefaultMainActivity.Replace (": Activity", ": AndroidX.AppCompat.App.AppCompatActivity");
 			var b = CreateApkBuilder ();
@@ -251,8 +240,12 @@ namespace Xamarin.Android.Build.Tests
 			};
 			var logLines = b.LastBuildOutput;
 			Assert.IsFalse (logLines.Any (l => l.Contains ("Remove redundant file")), "No redundant files should be deleted");
+			Assert.AreEqual (diagnosticLogging, logLines.Any (l => l.Contains ("NotifySync SkipCopyFile")),
+				"Unchanged-file messages should only be logged when diagnostic logging is enabled.");
 			foreach (var assembly in assemblies) {
-				Assert.IsTrue (logLines.Any (l => l.Contains (assembly) && l.Contains ("NotifySync SkipCopyFile")), $"{assembly} should be skipped, but no relevant log line");
+				Assert.IsFalse (logLines.Any (l => l.Contains (assembly) && l.Contains ("NotifySync CopyFile")), $"{assembly} should not have been uploaded");
+				Assert.AreEqual (diagnosticLogging, logLines.Any (l => l.Contains (assembly) && l.Contains ("NotifySync SkipCopyFile")),
+					$"{assembly} skip logging should match diagnostic logging.");
 			}
 
 			Assert.IsTrue (b.Uninstall (proj), "uninstall should have succeeded.");
@@ -260,46 +253,10 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		public void FastDeploymentStrategyCanBeChanged ()
+		public void FastDeployRestoresMissingRemoteDirectory ()
 		{
 			var proj = new XamarinAndroidApplicationProject {
-				PackageName = "com.xamarin.fastdeployment_strategy_change",
-			};
-			proj.MainActivity = proj.DefaultMainActivity;
-			proj.SetDefaultTargetDevice ();
-			proj.SetProperty ("_AndroidFastDevStrategy", "FastDeploy2");
-			using (var builder = CreateApkBuilder ()) {
-				builder.Verbosity = LoggerVerbosity.Detailed;
-				Assert.IsTrue (builder.Install (proj), "FastDeploy2 install should have succeeded.");
-
-				string assemblyPath = $"files/.__override__/{DeviceAbi}/UnnamedProject.dll";
-				Assert.AreEqual ("symlink", GetOverrideFileKind (proj.PackageName, assemblyPath));
-				RunAdbCommand ($"shell run-as {proj.PackageName} sh -c 'echo preserved > files/fastdeploy-strategy-marker'");
-				Assert.IsTrue (builder.Clean (proj), "clean should have succeeded.");
-
-				proj.MainActivity = proj.MainActivity.Replace ("clicks", "CLICKS");
-				proj.Touch ("MainActivity.cs");
-				proj.SetProperty ("_AndroidFastDevStrategy", "FastDeploy");
-				Assert.IsTrue (builder.Install (proj, doNotCleanupOnUpdate: true), "FastDeploy install should have succeeded after FastDeploy2.");
-				Assert.AreEqual ("regular", GetOverrideFileKind (proj.PackageName, assemblyPath));
-				Assert.AreEqual ("preserved", RunAdbCommand ($"shell run-as {proj.PackageName} cat files/fastdeploy-strategy-marker").Trim ());
-
-				proj.MainActivity = proj.MainActivity.Replace ("CLICKS", "Clicks");
-				proj.Touch ("MainActivity.cs");
-				proj.SetProperty ("_AndroidFastDevStrategy", "FastDeploy2");
-				Assert.IsTrue (builder.Install (proj, doNotCleanupOnUpdate: true), "FastDeploy2 install should have succeeded after FastDeploy.");
-				Assert.AreEqual ("symlink", GetOverrideFileKind (proj.PackageName, assemblyPath));
-				Assert.AreEqual ("preserved", RunAdbCommand ($"shell run-as {proj.PackageName} cat files/fastdeploy-strategy-marker").Trim ());
-
-				Assert.IsTrue (builder.Uninstall (proj), "uninstall should have succeeded.");
-			}
-		}
-
-		[Test]
-		public void FastDeploy2RestoresMissingRemoteDirectory ()
-		{
-			var proj = new XamarinAndroidApplicationProject {
-				PackageName = "com.xamarin.fastdeploy2_restore_remote",
+				PackageName = "com.xamarin.fastdeploy_restore_remote",
 			};
 			proj.MainActivity = proj.DefaultMainActivity;
 			proj.SetDefaultTargetDevice ();
@@ -307,7 +264,7 @@ namespace Xamarin.Android.Build.Tests
 				builder.Verbosity = LoggerVerbosity.Detailed;
 				Assert.IsTrue (builder.Install (proj), "initial install should have succeeded.");
 
-				string remoteDirectory = $"/data/local/tmp/fastdeploy2/{proj.PackageName}/0/{DeviceAbi}";
+				string remoteDirectory = $"/data/local/tmp/fastdeploy/{proj.PackageName}/0/{DeviceAbi}";
 				RunAdbCommand ($"shell rm -rf {remoteDirectory}");
 
 				proj.MainActivity = proj.MainActivity.Replace ("clicks", "CLICKS");
@@ -318,6 +275,76 @@ namespace Xamarin.Android.Build.Tests
 				Assert.AreEqual ("symlink", GetOverrideFileKind (proj.PackageName, assemblyPath));
 				Assert.AreEqual ("exists", RunAdbCommand ($"shell if test -f {remoteDirectory}/UnnamedProject.dll; then echo exists; else echo missing; fi").Trim ());
 				Assert.IsTrue (builder.Uninstall (proj), "uninstall should have succeeded.");
+			}
+		}
+
+		[Test]
+		public void FastDeployCleansOrphanStagingDirectoriesAfterApkInstall ()
+		{
+			string [] orphanDirectories = {
+				"/data/local/tmp/fastdeploy/com.xamarin.fastdeploy_cleanup_one/0",
+				"/data/local/tmp/fastdeploy/com.xamarin.fastdeploy_cleanup_two/0",
+			};
+			string incrementalOrphanDirectory = "/data/local/tmp/fastdeploy/com.xamarin.fastdeploy_cleanup_incremental/0";
+			string symlinkDirectory = "/data/local/tmp/fastdeploy/com.xamarin.fastdeploy_cleanup_symlink";
+			string symlinkTargetDirectory = "/data/local/tmp/fastdeploy_cleanup_symlink_target/0";
+			var proj = new XamarinAndroidApplicationProject {
+				PackageName = "com.xamarin.fastdeploy_cleanup",
+			};
+			proj.MainActivity = proj.DefaultMainActivity;
+			proj.SetDefaultTargetDevice ();
+			var installedProj = new XamarinAndroidApplicationProject {
+				PackageName = "com.xamarin.fastdeploy_cleanup_installed",
+				ProjectName = "FastDeployCleanupInstalled",
+			};
+			installedProj.SetDefaultTargetDevice ();
+			string installedDirectory = $"/data/local/tmp/fastdeploy/{installedProj.PackageName}/0";
+
+			using (var installedBuilder = CreateApkBuilder (Path.Combine ("temp", TestName, installedProj.ProjectName)))
+			using (var builder = CreateApkBuilder (Path.Combine ("temp", TestName, proj.ProjectName))) {
+				builder.Verbosity = LoggerVerbosity.Detailed;
+				try {
+					Assert.IsTrue (installedBuilder.Install (installedProj), "Installed-package fixture should have installed successfully.");
+					foreach (string directory in orphanDirectories) {
+						RunAdbCommand ($"shell mkdir -p {directory}");
+						RunAdbCommand ($"shell touch {directory}/orphan.txt");
+					}
+					RunAdbCommand ($"shell mkdir -p {installedDirectory}");
+					RunAdbCommand ($"shell touch {installedDirectory}/installed.txt");
+					RunAdbCommand ($"shell mkdir -p {symlinkTargetDirectory}");
+					RunAdbCommand ($"shell touch {symlinkTargetDirectory}/outside.txt");
+					RunAdbCommand ($"shell ln -s {Path.GetDirectoryName (symlinkTargetDirectory).Replace ('\\', '/')} {symlinkDirectory}");
+
+					Assert.IsTrue (builder.Install (proj), "FastDeploy install should have succeeded.");
+
+					foreach (string directory in orphanDirectories) {
+						Assert.AreEqual ("missing", RunAdbCommand ($"shell if test -e {directory}; then echo exists; else echo missing; fi").Trim (),
+							$"Orphan staging directory '{directory}' should have been deleted.");
+					}
+					Assert.AreEqual ("exists", RunAdbCommand ($"shell if test -f {installedDirectory}/installed.txt; then echo exists; else echo missing; fi").Trim (),
+						"Staging for an installed package should not be deleted.");
+					Assert.AreEqual ("exists", RunAdbCommand ($"shell if test -f {symlinkTargetDirectory}/outside.txt; then echo exists; else echo missing; fi").Trim (),
+						"Cleanup should not follow a symlinked package directory outside the staging root.");
+
+					RunAdbCommand ($"shell mkdir -p {incrementalOrphanDirectory}");
+					RunAdbCommand ($"shell touch {incrementalOrphanDirectory}/orphan.txt");
+					proj.MainActivity = proj.MainActivity.Replace ("clicks", "CLICKS");
+					proj.Touch ("MainActivity.cs");
+					Assert.IsTrue (builder.Install (proj, doNotCleanupOnUpdate: true, saveProject: false), "Incremental FastDeploy install should have succeeded.");
+					Assert.IsFalse (builder.Output.IsApkInstalled, "The APK should not have been reinstalled.");
+					Assert.AreEqual ("exists", RunAdbCommand ($"shell if test -f {incrementalOrphanDirectory}/orphan.txt; then echo exists; else echo missing; fi").Trim (),
+						"Cleanup should not run during an incremental deployment that skips APK installation.");
+				} finally {
+					foreach (string directory in orphanDirectories) {
+						RunAdbCommand ($"shell rm -rf {directory}");
+					}
+					RunAdbCommand ($"shell rm -rf {installedDirectory}");
+					RunAdbCommand ($"shell rm -rf {incrementalOrphanDirectory}");
+					RunAdbCommand ($"shell rm -rf {symlinkDirectory}");
+					RunAdbCommand ($"shell rm -rf {Path.GetDirectoryName (symlinkTargetDirectory).Replace ('\\', '/')}");
+					builder.Uninstall (proj);
+					installedBuilder.Uninstall (installedProj);
+				}
 			}
 		}
 

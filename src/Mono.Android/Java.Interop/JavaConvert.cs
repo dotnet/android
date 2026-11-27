@@ -72,55 +72,90 @@ namespace Java.Interop {
 				return (h, t) => h == IntPtr.Zero ? null : underlyingConverter (h, t);
 
 			if (target.IsArray)
-				return (h, t) => JNIEnv.GetArray (h, t, target.GetElementType ());
+				// SAFETY: conversion supplies h's live array reference and t's owned transfer.
+				return (h, t) => unsafe(JNIEnv.GetArray (h, t, target.GetElementType ()));
 
 			if (target.IsGenericType && !target.IsGenericTypeDefinition) {
-				if (RuntimeFeature.TrimmableTypeMap) {
-					if (SafeJavaCollectionFactory.TryGetFromJniHandleConverter (target, out var collectionConverter))
-						return collectionConverter;
-				} else if (System.Runtime.CompilerServices.RuntimeFeature.IsDynamicCodeSupported) {
-					var factoryConverter = TryMakeGenericCollectionTypeFactory (target);
-					if (factoryConverter != null)
-						return factoryConverter;
-				} else {
-					throw new NotSupportedException ($"Cannot convert Java collection elements to closed generic array element type '{target}' because the runtime does not support dynamic code generation.");
-				}
+				var collectionConverter = GetGenericCollectionConverter (target);
+				if (collectionConverter != null)
+					return collectionConverter;
 			}
 
 			if (typeof (IDictionary).IsAssignableFrom (target))
-				return (h, t) => JavaDictionary.FromJniHandle (h, t);
+				// SAFETY: conversion supplies h's live Map reference and t's owned transfer.
+				return (h, t) => unsafe(JavaDictionary.FromJniHandle (h, t));
 			if (typeof (IList).IsAssignableFrom (target))
-				return (h, t) => JavaList.FromJniHandle (h, t);
+				// SAFETY: conversion supplies h's live List reference and t's owned transfer.
+				return (h, t) => unsafe(JavaList.FromJniHandle (h, t));
 			if (typeof (ICollection).IsAssignableFrom (target))
-				return (h, t) => JavaCollection.FromJniHandle (h, t);
+				// SAFETY: conversion supplies h's live Collection reference and t's owned transfer.
+				return (h, t) => unsafe(JavaCollection.FromJniHandle (h, t));
 
 			return null;
-
-			[UnconditionalSuppressMessage ("ReflectionAnalysis", "IL2055:RequiresUnreferencedCode",
-				Justification = "The target generic type is expected to be preserved by the trimmer as the target type in marshaling.")]
-			[RequiresDynamicCode ("This API uses reflection to create generic types at runtime, which is not supported in AOT scenarios.")]
-			static Func<IntPtr, JniHandleOwnership, object?>? TryMakeGenericCollectionTypeFactory (Type target)
-			{
-				if (target.GetGenericTypeDefinition() == typeof (IDictionary<,>)) {
-					Type t = typeof (JavaDictionary<,>).MakeGenericType (target.GetGenericArguments ());
-					return GetJniHandleConverterForType (t);
-				}
-				if (target.GetGenericTypeDefinition() == typeof (IList<>)) {
-					Type t = typeof (JavaList<>).MakeGenericType (target.GetGenericArguments ());
-					return GetJniHandleConverterForType (t);
-				}
-				if (target.GetGenericTypeDefinition() == typeof (ICollection<>)) {
-					Type t = typeof (JavaCollection<>).MakeGenericType (target.GetGenericArguments ());
-					return GetJniHandleConverterForType (t);
-				}
-
-				return null;
-			}
 		}
 
-		static Func<IntPtr, JniHandleOwnership, object> GetJniHandleConverterForType ([DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicMethods)] Type t)
+		static Func<IntPtr, JniHandleOwnership, object?>? GetGenericCollectionConverter (Type target)
 		{
-			MethodInfo m = t.GetMethod ("FromJniHandle", BindingFlags.Static | BindingFlags.Public)!;
+			// Normal CoreCLR builds close the wrapper types by reflection, so they don't keep the statically generated
+			// converter universe. PublishAot=true builds, including Debug CoreCLR ones, use the AOT-safe path. See #12793.
+			// ILC treats IsDynamicCodeSupported as a guard only when it is tested on its own: combined with && or ||,
+			// NativeAOT apps get IL3050 for TryMakeGenericCollectionTypeFactory ().
+			// The NativeAOT build in JavaPeerActivationTests.JavaConvertActivatesGenericCollectionWrappersWithoutWarnings
+			// checks for this warning (https://github.com/dotnet/android/pull/13657).
+			if (System.Runtime.CompilerServices.RuntimeFeature.IsDynamicCodeSupported) {
+				if (!RuntimeFeature.UseTypeMapAttributesForJavaDictionaryValueTypeLookups)
+					return TryMakeGenericCollectionTypeFactory (target);
+			}
+			return SafeJavaCollectionFactory.TryGetFromJniHandleConverter (target, out var converter) ? converter : null;
+		}
+
+		[UnconditionalSuppressMessage ("ReflectionAnalysis", "IL2055:RequiresUnreferencedCode",
+			Justification = "MakeGenericType () cannot prove that the runtime element types satisfy the DynamicallyAccessedMembers(Constructors) requirement " +
+				"on the wrapper's element parameters. The wrapper only consumes it when TrimmableTypeMap.CreateInstance () activates a closed generic Java peer " +
+				"element by reflection, and the generated proxy for its open generic definition keeps that constructor with [DynamicDependency]; " +
+				"other elements are activated by their generated JavaPeerProxy.")]
+		[RequiresDynamicCode ("This API uses reflection to create generic types at runtime, which is not supported in AOT scenarios.")]
+		static Func<IntPtr, JniHandleOwnership, object?>? TryMakeGenericCollectionTypeFactory (Type target)
+		{
+			var genericDefinition = target.GetGenericTypeDefinition ();
+			if (genericDefinition == typeof (IDictionary<,>) || genericDefinition == typeof (JavaDictionary<,>)) {
+				Type t = genericDefinition == typeof (JavaDictionary<,>)
+					? target
+					: typeof (JavaDictionary<,>).MakeGenericType (target.GetGenericArguments ());
+				return GetJniHandleConverterForType (t, typeof (JavaDictionary<,>).GetMethod (
+					nameof (JavaDictionary<object, object>.FromJniHandle),
+					BindingFlags.Static | BindingFlags.Public | BindingFlags.DeclaredOnly,
+					[typeof (IntPtr), typeof (JniHandleOwnership)]));
+			}
+			if (genericDefinition == typeof (IList<>) || genericDefinition == typeof (JavaList<>)) {
+				Type t = genericDefinition == typeof (JavaList<>)
+					? target
+					: typeof (JavaList<>).MakeGenericType (target.GetGenericArguments ());
+				return GetJniHandleConverterForType (t, typeof (JavaList<>).GetMethod (
+					nameof (JavaList<object>.FromJniHandle),
+					BindingFlags.Static | BindingFlags.Public | BindingFlags.DeclaredOnly,
+					[typeof (IntPtr), typeof (JniHandleOwnership)]));
+			}
+			if (genericDefinition == typeof (ICollection<>) || genericDefinition == typeof (JavaCollection<>)) {
+				Type t = genericDefinition == typeof (JavaCollection<>)
+					? target
+					: typeof (JavaCollection<>).MakeGenericType (target.GetGenericArguments ());
+				return GetJniHandleConverterForType (t, typeof (JavaCollection<>).GetMethod (
+					nameof (JavaCollection<object>.FromJniHandle),
+					BindingFlags.Static | BindingFlags.Public | BindingFlags.DeclaredOnly,
+					[typeof (IntPtr), typeof (JniHandleOwnership)]));
+			}
+
+			return null;
+		}
+
+		static Func<IntPtr, JniHandleOwnership, object> GetJniHandleConverterForType (Type t, MethodInfo? definitionMethod)
+		{
+			if (definitionMethod is null)
+				throw new MissingMethodException (t.FullName, nameof (JavaList.FromJniHandle));
+
+			// The open definition roots the method; mapping it does not require preserving all public methods.
+			var m = (MethodInfo) t.GetMemberWithSameMetadataDefinitionAs (definitionMethod);
 			return (Func<IntPtr, JniHandleOwnership, object>) Delegate.CreateDelegate (
 					typeof (Func<IntPtr, JniHandleOwnership, object>), m);
 		}
@@ -138,74 +173,78 @@ namespace Java.Interop {
 				useRuntimeTypeMapping = elementType is null || elementType == typeof (object);
 			}
 
-			public object? FromJniHandle (IntPtr handle, JniHandleOwnership transfer)
+			/// <safety>
+			/// <paramref name="handle"/> must be null or a live object reference compatible with this converter's
+			/// element type, usable on this thread until conversion returns or throws. Own the requested transfer;
+			/// conversion may consume it before a later failure, so do not race release or reuse consumed aliases.
+			/// </safety>
+			public unsafe object? FromJniHandle (IntPtr handle, JniHandleOwnership transfer)
 			{
-				if (handle == IntPtr.Zero)
-					return null;
+				unsafe {
+					// SAFETY: the caller supplies the element reference and transfer; cached-peer lookup
+					// does not validate raw addresses, and each branch retains its existing ownership/failure path.
+					if (handle == IntPtr.Zero)
+						return null;
 
-				if (useRuntimeTypeMapping)
-					return FromJniHandleWithRuntimeTypeMapping (handle, transfer);
+					if (useRuntimeTypeMapping)
+						return FromJniHandleWithRuntimeTypeMapping (handle, transfer);
 
-				if (elementType != null) {
-					var peeked = Java.Lang.Object.PeekObject (handle, elementType);
-					if (peeked != null) {
-						JNIEnv.DeleteRef (handle, transfer);
-						return peeked;
+					if (elementType != null) {
+						var peeked = Java.Lang.Object.PeekObject (handle, elementType);
+						if (peeked != null) {
+							JNIEnv.DeleteRef (handle, transfer);
+							return peeked;
+						}
 					}
-				}
 
-				if (converter != null)
-					return converter (handle, transfer);
+					if (converter != null)
+						return converter (handle, transfer);
 
-				if (elementType != null && elementType.IsArray)
-					return JNIEnv.GetArray (handle, transfer, elementType.GetElementType ());
+					if (elementType != null && elementType.IsArray)
+						return JNIEnv.GetArray (handle, transfer, elementType.GetElementType ());
 
-				if (elementType != null && typeof (IJavaPeerable).IsAssignableFrom (elementType)) {
-					if (RuntimeFeature.TrimmableTypeMap)
+					if (elementType != null && typeof (IJavaPeerable).IsAssignableFrom (elementType)) {
 						return FromJniHandleWithTrimmableTypeMapping (handle, transfer, elementType);
-					return GetObjectWithSuppression (handle, transfer, elementType);
+					}
+
+					var value = FromJniHandleWithRuntimeTypeMapping (handle, transfer);
+					if (value == null || elementType == null || elementType.IsAssignableFrom (value.GetType ()))
+						return value;
+					return Convert.ChangeType (value, elementType, CultureInfo.InvariantCulture);
 				}
-
-				var value = FromJniHandleWithRuntimeTypeMapping (handle, transfer);
-				if (value == null || elementType == null || elementType.IsAssignableFrom (value.GetType ()))
-					return value;
-				return Convert.ChangeType (value, elementType, CultureInfo.InvariantCulture);
-			}
-
-			[UnconditionalSuppressMessage ("ReflectionAnalysis", "IL2067:RequiresUnreferencedCode",
-				Justification = "Custom trimmer steps marks the activation constructors on IJavaPeerable types.")]
-			static object? GetObjectWithSuppression (IntPtr handle, JniHandleOwnership transfer, Type? elementType)
-			{
-				return Java.Lang.Object.GetObject (handle, transfer, elementType);
 			}
 		}
 
-		static object? FromJniHandleWithRuntimeTypeMapping (IntPtr handle, JniHandleOwnership transfer)
+		/// <safety>
+		/// Retain the supplied live, current-thread JNI object reference until type lookup/conversion finishes,
+		/// including failure; transfer must match owned reference kind and exclude concurrent release or reuse.
+		/// </safety>
+		static unsafe object? FromJniHandleWithRuntimeTypeMapping (IntPtr handle, JniHandleOwnership transfer)
 		{
-			var converter = GetJniHandleConverter (GetTypeMapping (handle));
+			// SAFETY: the caller's contract above covers type lookup and conversion of handle.
+			var converter = GetJniHandleConverter (unsafe (GetTypeMapping (handle)));
 			if (converter != null)
 				return converter (handle, transfer);
-			return FromJniHandle (handle, transfer);
+			return unsafe (FromJniHandle (handle, transfer));
 		}
 
-		static object? FromJniHandleWithTrimmableTypeMapping (IntPtr handle, JniHandleOwnership transfer, Type elementType)
+		/// <safety>
+		/// Supply a live current-thread JNI object reference compatible with elementType and own the indicated
+		/// transfer. This path may consume the reference on success or failure; do not access released aliases.
+		/// </safety>
+		static unsafe object? FromJniHandleWithTrimmableTypeMapping (IntPtr handle, JniHandleOwnership transfer, Type elementType)
 		{
 			bool consumed = false;
 			try {
-				if (elementType.IsGenericType) {
-					throw new NotSupportedException (
-						FormattableString.Invariant ($"Cannot convert Java collection elements to closed generic array element type '{elementType}'."));
-				}
-
-				// This path intentionally avoids the reflection fallback used by TrimmableTypeMap.CreateInstance ()
-				// because passing array element types there would require DAM annotations.  Closed generic element
-				// types cannot be supported without that fallback: creating a non-generic base peer would not be
-				// assignable to the requested closed generic array element type.  If the requested element type is
-				// already a non-generic base type, the typemap lookup can still select that base mapping.
-				var peer = TrimmableTypeMap.Instance.CreateInstanceWithoutReflectionFallback (handle, elementType);
+				// Closed generic element types are activated through the constructor that the generated proxy
+				// for their open generic definition preserves, so elementType needs no DAM annotation here.
+				var peer = TrimmableTypeMap.Instance.CreateInstance (handle, elementType);
 				if (peer != null) {
 					consumed = true;
-					JNIEnv.DeleteRef (handle, transfer);
+					unsafe {
+						// SAFETY: the caller's transfer contract covers handle; consumed prevents a second release.
+						JNIEnv.DeleteRef (handle, transfer);
+					}
 					return peer;
 				}
 
@@ -213,21 +252,35 @@ namespace Java.Interop {
 					FormattableString.Invariant ($"Cannot convert Java collection element to array element type '{elementType}' using the trimmable type map."));
 			} finally {
 				if (!consumed) {
-					JNIEnv.DeleteRef (handle, transfer);
+					unsafe {
+						// SAFETY: the caller's transfer contract covers handle, which was not consumed above.
+						JNIEnv.DeleteRef (handle, transfer);
+					}
 				}
 			}
 		}
 
-		public static T? FromJniHandle<
+		/// <safety>
+		/// A nonzero handle must be a live current-thread JNI object reference compatible with the requested
+		/// conversion to T. Retain it until conversion returns or throws and own the indicated transfer.
+		/// Conversion may consume the handle before a later failure; exclude release/use through aliases.
+		/// </safety>
+		public static unsafe T? FromJniHandle<
 				[DynamicallyAccessedMembers (Constructors)]
 				T
 		>(IntPtr handle, JniHandleOwnership transfer)
 		{
 			bool set;
-			return FromJniHandle<T>(handle, transfer, out set);
+			// SAFETY: the caller's contract above applies unchanged to the inner conversion.
+			return unsafe (FromJniHandle<T>(handle, transfer, out set));
 		}
 
-		public static T? FromJniHandle<
+		/// <safety>
+		/// A nonzero handle must be a live current-thread JNI object reference compatible with the requested
+		/// conversion to T. Retain it until conversion returns or throws and own the indicated transfer.
+		/// Conversion may consume the handle before a later failure; exclude release/use through aliases.
+		/// </safety>
+		public static unsafe T? FromJniHandle<
 				[DynamicallyAccessedMembers (Constructors)]
 				T
 		>(IntPtr handle, JniHandleOwnership transfer, out bool set)
@@ -241,7 +294,10 @@ namespace Java.Interop {
 			if (interned != null) {
 				T? r = FromJavaObject<T>(interned, out set);
 				if (set) {
-					JNIEnv.DeleteRef (handle, transfer);
+					unsafe {
+						// SAFETY: the caller's transfer contract covers handle; the cached peer replaces it.
+						JNIEnv.DeleteRef (handle, transfer);
+					}
 					return r;
 				}
 			}
@@ -251,8 +307,9 @@ namespace Java.Interop {
 			if (typeof (IJavaObject).IsAssignableFrom (typeof (T)))
 				return (T?) Java.Lang.Object._GetObject<T> (handle, transfer);
 
+			// SAFETY: the caller's contract above keeps handle live for the type lookup.
 			var converter = GetJniHandleConverter (typeof (T)) ??
-				GetJniHandleConverter (GetTypeMapping (handle));
+				GetJniHandleConverter (unsafe (GetTypeMapping (handle)));
 			if (converter != null)
 				return (T?) converter (handle, transfer);
 
@@ -282,15 +339,24 @@ namespace Java.Interop {
 				};
 			}
 
-			var value = FromJniHandle (reference.Handle, transfer, targetType);
-			if (transfer != JniHandleOwnership.DoNotTransfer) {
-				reference = default;
-			}
+			unsafe {
+				// SAFETY: the value manager supplies this live typed reference and ownership options;
+				// transfer is derived from its actual local/global kind, and conversion finishes before reference is cleared.
+				var value = FromJniHandle (reference.Handle, transfer, targetType);
+				if (transfer != JniHandleOwnership.DoNotTransfer) {
+					reference = default;
+				}
 
-			return value;
+				return value;
+			}
 		}
 
-		public static object? FromJniHandle (
+		/// <safety>
+		/// A nonzero handle must be a live JNI object reference from this VM usable on this thread and
+		/// compatible with targetType's conversion. Own the requested transfer, keep the reference until
+		/// conversion returns or throws, and do not race release or reuse aliases after ownership is consumed.
+		/// </safety>
+		public static unsafe object? FromJniHandle (
 				IntPtr handle,
 				JniHandleOwnership transfer,
 				[DynamicallyAccessedMembers (Constructors)]
@@ -304,7 +370,10 @@ namespace Java.Interop {
 			if (interned != null) {
 				var unwrapped = FromJavaObject (interned, targetType);
 				if (unwrapped != null) {
-					JNIEnv.DeleteRef (handle, transfer);
+					unsafe {
+						// SAFETY: the caller's transfer contract covers handle; the cached peer replaces it.
+						JNIEnv.DeleteRef (handle, transfer);
+					}
 					return unwrapped;
 				}
 			}
@@ -312,9 +381,10 @@ namespace Java.Interop {
 			if (targetType != null && typeof (IJavaObject).IsAssignableFrom (targetType))
 				return Java.Lang.Object.GetObject (handle, transfer, targetType);
 
+			// SAFETY: the caller's contract above keeps handle live for the type lookup.
 			var converter = targetType != null
-				? (GetJniHandleConverter (targetType) ?? GetJniHandleConverter (GetTypeMapping (handle)))
-				: GetJniHandleConverter (GetTypeMapping (handle));
+				? (GetJniHandleConverter (targetType) ?? GetJniHandleConverter (unsafe (GetTypeMapping (handle))))
+				: GetJniHandleConverter (unsafe (GetTypeMapping (handle)));
 			if (converter != null)
 				return converter (handle, transfer);
 
@@ -339,7 +409,11 @@ namespace Java.Interop {
 			{ "java/lang/String",     typeof (string) },
 		};
 
-		static Type? GetTypeMapping (IntPtr handle)
+		/// <safety>
+		/// Supply a live JNI object reference from this VM usable on this thread through class lookup,
+		/// including exception unwinding. The local class acquired here does not retain the original object handle.
+		/// </safety>
+		static unsafe Type? GetTypeMapping (IntPtr handle)
 		{
 			var lref = JniEnvironment.Types.GetObjectClass (new JniObjectReference (handle));
 			try {
@@ -410,7 +484,10 @@ namespace Java.Interop {
 			var converter = GetJniHandleConverter (typeof (T));
 			if (converter != null)
 				return (T?) converter (lrefValue, JniHandleOwnership.TransferLocalRef);
-			JNIEnv.DeleteLocalRef (lrefValue);
+			unsafe {
+				// SAFETY: lrefValue is the owned local from ToLocalJniHandle; this is its existing normal-path release.
+				JNIEnv.DeleteLocalRef (lrefValue);
+			}
 			return (T) Convert.ChangeType (value, typeof (T), CultureInfo.InvariantCulture);
 		}
 
@@ -442,7 +519,10 @@ namespace Java.Interop {
 			var converter = GetJniHandleConverter (targetType);
 			if (converter != null)
 				return converter (lrefValue, JniHandleOwnership.TransferLocalRef);
-			JNIEnv.DeleteLocalRef (lrefValue);
+			unsafe {
+				// SAFETY: lrefValue is the owned local from ToLocalJniHandle; this is its existing normal-path release.
+				JNIEnv.DeleteLocalRef (lrefValue);
+			}
 			return Convert.ChangeType (value, targetType, CultureInfo.InvariantCulture);
 		}
 
@@ -593,25 +673,33 @@ namespace Java.Interop {
 
 		public static TReturn WithLocalJniHandle<TValue, TReturn>(TValue value, Func<IntPtr, TReturn> action)
 		{
-			IntPtr lref = ToLocalJniHandle (value);
-			try {
-				return action (lref);
-			}
-			finally {
-				JNIEnv.DeleteLocalRef (lref);
-				GC.KeepAlive (value);
+			unsafe {
+				// SAFETY: ToLocalJniHandle creates lref for value; action borrows it synchronously, and
+				// the existing finally deletes that local and retains value through both return and exception.
+				IntPtr lref = ToLocalJniHandle (value);
+				try {
+					return action (lref);
+				}
+				finally {
+					JNIEnv.DeleteLocalRef (lref);
+					GC.KeepAlive (value);
+				}
 			}
 		}
 
 		public static TReturn WithLocalJniHandle<TReturn>(object? value, Func<IntPtr, TReturn> action)
 		{
-			IntPtr lref = ToLocalJniHandle (value);
-			try {
-				return action (lref);
-			}
-			finally {
-				JNIEnv.DeleteLocalRef (lref);
-				GC.KeepAlive (value);
+			unsafe {
+				// SAFETY: ToLocalJniHandle creates lref for value; action borrows it synchronously, and
+				// the existing finally deletes that local and retains value through both return and exception.
+				IntPtr lref = ToLocalJniHandle (value);
+				try {
+					return action (lref);
+				}
+				finally {
+					JNIEnv.DeleteLocalRef (lref);
+					GC.KeepAlive (value);
+				}
 			}
 		}
 	}

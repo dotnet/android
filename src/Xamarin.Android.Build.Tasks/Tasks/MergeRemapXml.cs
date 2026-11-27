@@ -59,27 +59,42 @@ namespace Xamarin.Android.Tasks
 			var settings    = new XmlReaderSettings {
 				XmlResolver     = null,
 			};
+			var buffer = MemoryStreamPool.Shared.Rent ();
 			try {
-				using var reader    = XmlReader.Create (File.OpenRead (file), settings);
-				if (reader.MoveToContent () != XmlNodeType.Element) {
-					return;
+				using (var input = File.OpenRead (file)) {
+					input.CopyTo (buffer);
 				}
-				if (reader.LocalName != "replacements") {
-					Log.LogCodedWarning ("XA4317", Properties.Resources.XA4317, file);
-					return;
-				}
-				while (reader.Read ()) {
-					if (reader.NodeType != XmlNodeType.Element) {
-						continue;
+				buffer.Position = 0;
+				using (var reader = XmlReader.Create (buffer, settings)) {
+					if (reader.MoveToContent () != XmlNodeType.Element) {
+						return;
 					}
-					writer.WriteNode (reader, defattr: true);
+					if (reader.LocalName != "replacements") {
+						Log.LogCodedWarning ("XA4317", Properties.Resources.XA4317, file);
+						return;
+					}
+					// Validate the complete snapshot before committing any of its nodes.
+					while (reader.Read ()) {
+					}
+				}
+				buffer.Position = 0;
+				using var bufferedReader = XmlReader.Create (buffer, settings);
+				bufferedReader.MoveToContent ();
+				bufferedReader.Read ();
+				while (!bufferedReader.EOF) {
+					if (bufferedReader.NodeType == XmlNodeType.Element) {
+						writer.WriteNode (bufferedReader, defattr: true);
+					} else {
+						bufferedReader.Read ();
+					}
 				}
 			}
-			catch (Exception e) {
+			catch (Exception e) when (e is XmlException || e is IOException || e is UnauthorizedAccessException) {
 				Log.LogCodedWarning ("XA4318", Properties.Resources.XA4318, file, e.Message);
 				Log.LogDebugMessage ($"Input file `{file}` could not be read: {e.ToString ()}");
+			} finally {
+				MemoryStreamPool.Shared.Return (buffer);
 			}
 		}
 	}
 }
-

@@ -200,20 +200,15 @@ namespace MonoDroid.Tuner
 				if (ifaceDef.HasGenericParameters)
 					continue;
 
-				foreach (var iMethod in ifaceDef.Methods.Where (m => m.IsAbstract)) {
-					bool exists = false;
-
+				methods: foreach (var iMethod in ifaceDef.Methods.Where (m => m.IsAbstract)) {
 					foreach (var tMethod in typeMethods) {
 						if (HaveSameSignature (iface, iMethod, tMethod)) {
-							exists = true;
-							break;
+							continue methods;
 						}
 					}
 
-					if (!exists) {
-						AddNewExceptionMethod (type, iMethod);
-						rv = true;
-					}
+					AddNewExceptionMethod (type, iMethod);
+					rv = true;
 				}
 			}
 

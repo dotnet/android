@@ -31,81 +31,54 @@ namespace xamarin::android {
 		static constexpr bool is_release_build = false;
 		static constexpr bool is_debug_build = true;
 #endif
-		static constexpr std::string_view MANGLED_ASSEMBLY_NAME_EXT { ".so" };
 		static constexpr std::string_view dso_suffix { ".so" };
 		static constexpr std::string_view DSO_PREFIX { "lib" };
-
-	private:
-		static constexpr std::string_view RUNTIME_CONFIG_BLOB_BASE_NAME       { "libarc.bin" };
-		static constexpr size_t runtime_config_blob_name_size                 = calc_size (RUNTIME_CONFIG_BLOB_BASE_NAME, MANGLED_ASSEMBLY_NAME_EXT);
-		static constexpr auto RUNTIME_CONFIG_BLOB_NAME_ARRAY                  = concat_string_views<runtime_config_blob_name_size> (RUNTIME_CONFIG_BLOB_BASE_NAME, MANGLED_ASSEMBLY_NAME_EXT);
 
 	public:
 		static constexpr std::string_view NEWLINE { "\n" };
 		static constexpr std::string_view EMPTY { "" };
 		static constexpr std::string_view DIR_SEP { "/" };
 
-		// .data() must be used otherwise string_view length will include the trailing \0 in the array
-		static constexpr std::string_view RUNTIME_CONFIG_BLOB_NAME            { RUNTIME_CONFIG_BLOB_NAME_ARRAY.data () };
 		static constexpr std::string_view OVERRIDE_DIRECTORY_NAME             { ".__override__" };
 
-		/* Android property containing connection information, set by XS */
-		static inline constexpr std::string_view DEBUG_MONO_CONNECT_PROPERTY      { "debug.mono.connect" };
-		static inline constexpr std::string_view DEBUG_MONO_DEBUG_PROPERTY        { "debug.mono.debug" };
-		static inline constexpr std::string_view DEBUG_MONO_ENV_PROPERTY          { "debug.mono.env" };
-		static inline constexpr std::string_view DEBUG_MONO_EXTRA_PROPERTY        { "debug.mono.extra" };
-		static inline constexpr std::string_view DEBUG_MONO_GC_PROPERTY           { "debug.mono.gc" };
-		static inline constexpr std::string_view DEBUG_MONO_GDB_PROPERTY          { "debug.mono.gdb" };
-		static inline constexpr std::string_view DEBUG_MONO_LOG_PROPERTY          { "debug.mono.log" };
-		static inline constexpr std::string_view DEBUG_MONO_MAX_GREFC             { "debug.mono.max_grefc" };
-		static inline constexpr std::string_view DEBUG_MONO_PROFILE_PROPERTY      { "debug.mono.profile" };
-		static inline constexpr std::string_view DEBUG_MONO_RUNTIME_ARGS_PROPERTY { "debug.mono.runtime_args" };
-		static inline constexpr std::string_view DEBUG_MONO_SOFT_BREAKPOINTS      { "debug.mono.soft_breakpoints" };
-		static inline constexpr std::string_view DEBUG_MONO_TRACE_PROPERTY        { "debug.mono.trace" };
-		static inline constexpr std::string_view DEBUG_MONO_WREF_PROPERTY         { "debug.mono.wref" };
-		static constexpr std::string_view DEBUG_MONO_TIMING                       { "debug.mono.timing" };
-
+		static inline constexpr std::string_view DEBUG_DOTNET_LOG_PROPERTY          { "debug.dotnet.log" };
+		static inline constexpr std::string_view DEBUG_DOTNET_MAX_GREFC             { "debug.dotnet.max_grefc" };
+		static inline constexpr std::string_view DEBUG_DOTNET_PROFILE_PROPERTY      { "debug.dotnet.profile" };
 		static constexpr std::string_view LOG_CATEGORY_NAME_NONE                  { "*none*" };
-		static constexpr std::string_view LOG_CATEGORY_NAME_MONODROID             { "monodroid" };
-		static constexpr std::string_view LOG_CATEGORY_NAME_MONODROID_ASSEMBLY    { "monodroid-assembly" };
-		static constexpr std::string_view LOG_CATEGORY_NAME_MONODROID_DEBUG       { "monodroid-debug" };
-		static constexpr std::string_view LOG_CATEGORY_NAME_MONODROID_GC          { "monodroid-gc" };
-		static constexpr std::string_view LOG_CATEGORY_NAME_MONODROID_GREF        { "monodroid-gref" };
-		static constexpr std::string_view LOG_CATEGORY_NAME_MONODROID_LREF        { "monodroid-lref" };
-		static constexpr std::string_view LOG_CATEGORY_NAME_MONODROID_TIMING      { "monodroid-timing" };
-		static constexpr std::string_view LOG_CATEGORY_NAME_MONODROID_BUNDLE      { "monodroid-bundle" };
-		static constexpr std::string_view LOG_CATEGORY_NAME_MONODROID_NETWORK     { "monodroid-network" };
-		static constexpr std::string_view LOG_CATEGORY_NAME_MONODROID_NETLINK     { "monodroid-netlink" };
+		static constexpr std::string_view LOG_CATEGORY_NAME_MONODROID             { "DOTNET" };
+		static constexpr std::string_view LOG_CATEGORY_NAME_MONODROID_ASSEMBLY    { "DOTNET-assembly" };
+		static constexpr std::string_view LOG_CATEGORY_NAME_MONODROID_GC          { "DOTNET-gc" };
+		static constexpr std::string_view LOG_CATEGORY_NAME_MONODROID_TIMING      { "DOTNET-timing" };
+		static constexpr std::string_view LOG_CATEGORY_NAME_MONODROID_NETWORK     { "DOTNET-network" };
 		static constexpr std::string_view LOG_CATEGORY_NAME_ERROR                 { "*error*" };
 
 #if defined(__arm__)
 		static constexpr std::string_view android_abi        { "armeabi_v7a" };
 		static constexpr std::string_view android_lib_abi    { "armeabi-v7a" };
 		static constexpr std::string_view runtime_identifier { "android-arm" };
+		static constexpr std::string_view split_config_abi_apk_name { "/split_config.armeabi_v7a.apk" };
 #elif defined(__aarch64__)
 		static constexpr std::string_view android_abi        { "arm64_v8a" };
 		static constexpr std::string_view android_lib_abi    { "arm64-v8a" };
 		static constexpr std::string_view runtime_identifier { "android-arm64" };
+		static constexpr std::string_view split_config_abi_apk_name { "/split_config.arm64_v8a.apk" };
 #elif defined(__x86_64__)
 		static constexpr std::string_view android_abi        { "x86_64" };
 		static constexpr std::string_view android_lib_abi    { "x86_64" };
 		static constexpr std::string_view runtime_identifier { "android-x64" };
+		static constexpr std::string_view split_config_abi_apk_name { "/split_config.x86_64.apk" };
 #elif defined(__i386__)
 		static constexpr std::string_view android_abi        { "x86" };
 		static constexpr std::string_view android_lib_abi    { "x86" };
 		static constexpr std::string_view runtime_identifier { "android-x86" };
+		static constexpr std::string_view split_config_abi_apk_name { "/split_config.x86.apk" };
 #endif
 
 		static constexpr std::string_view split_config_prefix { "/split_config." };
 		static constexpr std::string_view split_config_extension { ".apk" };
 
-	private:
-		static constexpr size_t split_config_abi_apk_name_size = calc_size (split_config_prefix, android_abi, split_config_extension);
-
-	public:
 		static constexpr std::string_view assembly_store_file_name { "libassembly-store.so" };
 
-		static constexpr auto split_config_abi_apk_name = concat_string_views<split_config_abi_apk_name_size> (split_config_prefix, android_abi, split_config_extension);
 		static constexpr std::string_view base_apk_name = { "/base.apk" };
 
 		//
@@ -114,7 +87,6 @@ namespace xamarin::android {
 		static constexpr size_t APP_DIRS_FILES_DIR_INDEX = 0uz;
 		static constexpr size_t APP_DIRS_CACHE_DIR_INDEX = 1uz;
 		static constexpr size_t APP_DIRS_DATA_DIR_INDEX = 2uz;
-		static constexpr size_t APP_DIRS_CODE_CACHE_DIR_INDEX = 3uz;
 
 		static inline constexpr size_t PROPERTY_VALUE_BUFFER_LEN = PROP_VALUE_MAX + 1uz;
 
@@ -142,14 +114,8 @@ namespace xamarin::android {
 		static constexpr std::string_view JNIENVINIT_CLASS_NAME               { "JNIEnvInit" };
 		static constexpr std::string_view JNIENV_CLASS_NAME                   { "JNIEnv" };
 
-	private:
-		static constexpr size_t JNIENVINIT_FULL_TYPE_NAME_SIZE = calc_size (ANDROID_RUNTIME_NS_NAME, "."sv, JNIENVINIT_CLASS_NAME);
-		static constexpr auto JNIENVINIT_FULL_TYPE_NAME_ARRAY = concat_string_views<JNIENVINIT_FULL_TYPE_NAME_SIZE> (ANDROID_RUNTIME_NS_NAME, "."sv, JNIENVINIT_CLASS_NAME);
-
-	public:
-		static constexpr std::string_view JNIENVINIT_FULL_TYPE_NAME { JNIENVINIT_FULL_TYPE_NAME_ARRAY.data () };
+		static constexpr std::string_view JNIENVINIT_FULL_TYPE_NAME { "Android.Runtime.JNIEnvInit" };
 
 		static constexpr std::string_view ANDROID_ENVIRONMENT_CLASS_NAME      { "AndroidEnvironment" };
-		static constexpr std::string_view ANDROID_RUNTIME_INTERNAL_CLASS_NAME { "AndroidRuntimeInternal" };
 	};
 }

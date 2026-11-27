@@ -1,0 +1,42 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>$(DotNetStableTargetFramework)</TargetFramework>
+    <RootNamespace>Microsoft.Android.TrimmingTests</RootNamespace>
+    <OutputPath>..\..\bin\Test$(Configuration)\TrimmingTests\</OutputPath>
+    <SignAssembly>true</SignAssembly>
+    <AssemblyOriginatorKeyFile>..\..\product.snk</AssemblyOriginatorKeyFile>
+    <DebugSymbols>True</DebugSymbols>
+    <DebugType>portable</DebugType>
+    <Nullable>annotations</Nullable>
+  </PropertyGroup>
+
+  <Import Project="..\..\Configuration.props" />
+  <Import Project="..\..\src\Microsoft.Android.Build.BaseTasks\MSBuildReferences.projitems" />
+  <Import Project="..\..\build-tools\scripts\NUnitReferences.projitems" />
+
+  <ItemGroup>
+    <Compile Include="..\..\src\Xamarin.Android.Build.Tasks\Tests\Xamarin.Android.Build.Tests\Utilities\*.cs">
+      <Link>Utilities\%(FileName).cs</Link>
+    </Compile>
+    <None Include="..\..\src\Xamarin.Android.Build.Tasks\Tests\Xamarin.Android.Build.Tests\App.config" Link="App.config" />
+    <Compile Include="..\Utilities\AssemblyStore\**\*.cs" />
+  </ItemGroup>
+
+  <!-- Each case is a standalone file-based app, built by the tests in its own directory. -->
+  <ItemGroup>
+    <Compile Remove="Cases\**" />
+    <None Include="Cases\**" Exclude="Cases\**\bin\**;Cases\**\obj\**" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="MSBuild.StructuredLogger" Version="2.3.269" />
+    <PackageReference Include="ICSharpCode.Decompiler" Version="7.2.1.6856" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\Xamarin.Android.Build.Tasks\Xamarin.Android.Build.Tasks.csproj" />
+    <ProjectReference Include="..\..\src\Xamarin.Android.Build.Tasks\Tests\Xamarin.ProjectTools\Xamarin.ProjectTools.csproj" />
+  </ItemGroup>
+
+</Project>

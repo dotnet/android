@@ -62,7 +62,8 @@ namespace Xamarin.Android.Tasks
 				return base.RunTask ();
 			}
 			finally {
-				File.Delete (responseFilePath);
+				if (responseFilePath != null)
+					File.Delete (responseFilePath);
 			}
 		}
 
@@ -90,7 +91,7 @@ namespace Xamarin.Android.Tasks
 			// Arguments sent to java.exe
 			cmd.AppendSwitchIfNotNull ("-jar ", JavaSourceUtilsJar);
 
-			cmd.AppendSwitch ($"@{responseFilePath}");
+			cmd.AppendSwitch ($"\"@{responseFilePath}\"");
 
 
 			return cmd.ToString ();
@@ -99,6 +100,7 @@ namespace Xamarin.Android.Tasks
 		string CreateResponseFile ()
 		{
 			var responseFile    = Path.GetTempFileName ();
+			responseFilePath = responseFile;
 
 			using var response  = new StreamWriter (responseFile, append: false, encoding: Files.UTF8withoutBOM);
 			Log.LogDebugMessage ("[java-source-utils] response file contents: {0}", responseFile);
@@ -130,7 +132,7 @@ namespace Xamarin.Android.Tasks
 						AppendArg (response, Path.GetFullPath (r.ItemSpec));
 						continue;
 					}
-					Log.LogError ($"Unsupported @(Reference) item: {r.ItemSpec}");
+					Log.LogCodedError ("XA1037", Properties.Resources.XA1037, r.ItemSpec);
 				}
 			}
 			AppendArg (response, "--output-javadoc");

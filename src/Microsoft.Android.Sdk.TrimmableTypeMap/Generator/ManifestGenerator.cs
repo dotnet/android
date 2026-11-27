@@ -16,17 +16,6 @@ class ManifestGenerator
 	static readonly XNamespace AndroidNs = ManifestConstants.AndroidNs;
 	static readonly XName AttName = ManifestConstants.AttName;
 	static readonly char [] PlaceholderSeparators = [';'];
-	static readonly HashSet<string> ComponentElementNames = new (StringComparer.Ordinal) {
-		"application",
-		"activity",
-		"instrumentation",
-		"service",
-		"receiver",
-		"provider",
-	};
-
-	/// <summary>Warning code for library-manifest merge failures (maps to XA4302).</summary>
-	internal const int LibraryManifestMergeWarningCode = 4302;
 
 	int appInitOrder = 2000000000;
 
@@ -40,36 +29,16 @@ class ManifestGenerator
 	public bool Debug { get; set; }
 	public bool NeedsInternet { get; set; }
 	public bool EmbedAssemblies { get; set; }
-	public bool ForceDebuggable { get; set; }
-	public bool ForceExtractNativeLibs { get; set; }
 	public string? ManifestPlaceholders { get; set; }
 	public string? ApplicationJavaClass { get; set; }
 	public Action<int, string>? Warn { get; set; }
 	public Action<string>? WarnInvalidPlaceholder { get; set; }
 
-	/// <summary>
-	/// Absolute paths to extracted library (.aar) manifests that must be merged into the
-	/// application manifest. Only used by the legacy manifest merger; manifestmerger.jar handles
-	/// this downstream in the _ManifestMerger target. Mirrors the legacy ManifestDocument merge.
-	/// </summary>
-	public IReadOnlyList<string> LibraryManifests { get; set; } = [];
-
 	static readonly XNamespace ToolsNs = "http://schemas.android.com/tools";
 
-	// Attributes whose values are component names that must be qualified with the library's
-	// own package when they are relative (start with '.'). Mirrors ManifestDocument.ManifestAttributeFixups.
-	static readonly Dictionary<string, string []> ManifestAttributeFixups = new (StringComparer.Ordinal) {
-		{ "activity", ["name"] },
-		{ "application", ["backupAgent"] },
-		{ "instrumentation", ["name"] },
-		{ "provider", ["name"] },
-		{ "receiver", ["name"] },
-		{ "service", ["name"] },
-	};
-
 	/// <summary>
-	/// Generates the merged manifest from an optional pre-loaded template and writes it to <paramref name="outputPath"/>.
-	/// Returns the list of additional content provider names (for ApplicationRegistration.java).
+	/// Generates the application manifest from an optional pre-loaded template.
+	/// Returns the list of additional runtime provider class names to generate.
 	/// </summary>
 	public (XDocument Document, IList<string> ProviderNames) Generate (
 		XDocument? manifestTemplate,
@@ -82,7 +51,12 @@ class ManifestGenerator
 			throw new InvalidOperationException ("Manifest document has no root element.");
 		}
 
+		ValidateApplicationDeclarations (allPeers, assemblyInfo);
 		EnsureManifestAttributes (manifest);
+		// Template component names must be resolved before compat-name rewriting.
+		ApplyPlaceholders (doc, ManifestPlaceholders, PackageName);
+		var templateAttributes = new HashSet<XAttribute> (doc.Descendants ().Attributes ());
+		var generatedAttributes = new HashSet<XAttribute> ();
 		var app = EnsureApplicationElement (manifest);
 		var targetSdkVersionValue = GetTargetSdkVersionValue (manifest);
 
@@ -92,8 +66,16 @@ class ManifestGenerator
 
 		// Apply assembly-level [Application] properties
 		if (assemblyInfo.ApplicationProperties is not null) {
-			AssemblyLevelElementBuilder.ApplyApplicationProperties (app, assemblyInfo.ApplicationProperties, allPeers, Warn);
+			AssemblyLevelElementBuilder.ApplyApplicationProperties (
+				app,
+				assemblyInfo.ApplicationProperties,
+				allPeers,
+				Warn,
+				generatedAttributes);
 		}
+		AssemblyLevelElementBuilder.AddUsesLibraries (app, assemblyInfo.UsesLibraries);
+		AssemblyLevelElementBuilder.AddInstrumentations (manifest, assemblyInfo.Instrumentations);
+		AssemblyLevelElementBuilder.AddAssemblyLevelElements (manifest, app, assemblyInfo);
 
 		var existingTypes = new HashSet<string> (
 			app.Descendants ()
@@ -119,7 +101,14 @@ class ManifestGenerator
 
 			// Skip Application types (handled separately via assembly-level attribute)
 			if (peer.ComponentAttribute.Kind == ComponentKind.Application) {
-				ComponentElementBuilder.UpdateApplicationElement (app, peer, targetSdkVersionValue);
+				ComponentElementBuilder.UpdateApplicationElement (app, peer, targetSdkVersionValue, generatedAttributes);
+				AssemblyLevelElementBuilder.ApplyApplicationProperties (
+					app,
+					peer.ComponentAttribute.Properties,
+					allPeers,
+					Warn,
+					generatedAttributes,
+					preserveGeneratedNameWhenEmpty: true);
 				continue;
 			}
 
@@ -139,9 +128,6 @@ class ManifestGenerator
 			}
 		}
 
-		// Add assembly-level manifest elements
-		AssemblyLevelElementBuilder.AddAssemblyLevelElements (manifest, app, assemblyInfo);
-
 		// Add runtime provider
 		var providerNames = AddRuntimeProviders (app);
 
@@ -152,13 +138,12 @@ class ManifestGenerator
 
 		// Handle debuggable
 		bool needDebuggable = Debug && app.Attribute (AndroidNs + "debuggable") is null;
-		if (ForceDebuggable || needDebuggable) {
+		if (needDebuggable) {
 			app.SetAttributeValue (AndroidNs + "debuggable", "true");
 		}
 
 		// Handle extractNativeLibs
-		if (targetSdkVersionValue >= 23 &&
-		    (ForceExtractNativeLibs || app.Attribute (AndroidNs + "extractNativeLibs") is null)) {
+		if (targetSdkVersionValue >= 23 && app.Attribute (AndroidNs + "extractNativeLibs") is null) {
 			app.SetAttributeValue (AndroidNs + "extractNativeLibs", "true");
 		}
 
@@ -167,77 +152,58 @@ class ManifestGenerator
 			AssemblyLevelElementBuilder.AddInternetPermission (manifest);
 		}
 
-		// Merge extracted library (.aar) manifests (legacy merger only — manifestmerger.jar does
-		// this downstream). Mirrors ManifestDocument: merge, then dedup, then strip node="remove",
-		// all before placeholder substitution so ${applicationId} resolves in merged content.
-		MergeLibraryManifests (manifest);
-		RemoveDuplicateElements (doc);
-		RemoveNodes (doc);
-
 		// Apply manifest placeholders
 		ApplyPlaceholders (doc, ManifestPlaceholders, PackageName, WarnInvalidPlaceholder);
+		ReplaceGeneratedPackageNameTokens (doc, PackageName, templateAttributes, generatedAttributes);
+
+		RemoveDuplicateElements (doc);
+		RemoveNodes (doc);
 
 		return (doc, providerNames);
 	}
 
-	/// <summary>
-	/// Merges each library manifest's top-level elements into the application manifest, mirroring
-	/// ManifestDocument.MergeLibraryManifest: elements with a matching android:name append their
-	/// children to the existing element, otherwise the element is added; relative component names
-	/// are qualified with the library's own package.
-	/// </summary>
-	void MergeLibraryManifests (XElement manifest)
+	internal static void ValidateApplicationDeclarations (
+		IReadOnlyList<JavaPeerInfo> allPeers,
+		AssemblyManifestInfo assemblyInfo)
 	{
-		foreach (var path in LibraryManifests) {
-			if (path.IsNullOrEmpty () || !File.Exists (path)) {
-				continue;
-			}
+		if (assemblyInfo.ApplicationAttributeCount > 1) {
+			throw new InvalidOperationException ("There can be only one [assembly:Application] attribute defined.");
+		}
 
-			XDocument libDoc;
-			try {
-				libDoc = XDocument.Load (path);
-			} catch (Exception ex) {
-				Warn?.Invoke (LibraryManifestMergeWarningCode, $"Unable to merge library manifest '{path}': {ex.Message}");
-				continue;
+		var applicationPeers = allPeers
+			.Where (peer => peer.ComponentAttribute?.Kind == ComponentKind.Application)
+			.ToList ();
+		foreach (var peer in applicationPeers) {
+			if (!AssemblyLevelElementBuilder.IsSubclassOf (peer, "android/app/Application", allPeers)) {
+				throw new InvalidOperationException (
+					$"Found [Application] on type {peer.ManagedTypeName}.  [Application] can only be used on subclasses of Application.");
 			}
-
-			if (libDoc.Root is not { } libRoot) {
-				continue;
-			}
-
-			var package = (string?) libRoot.Attribute ("package") ?? "";
-			foreach (var top in libRoot.Elements ().ToList ()) {
-				var name = (string?) top.Attribute (AndroidNs + "name");
-				XElement? existing = name is not null
-					? manifest.Elements (top.Name).FirstOrDefault (e => (string?) e.Attribute (AndroidNs + "name") == name)
-					: manifest.Elements (top.Name).FirstOrDefault ();
-
-				if (existing is not null) {
-					// Append the library element's children to the matching element.
-					existing.Add (FixupNameElements (package, top.Nodes ()));
-				} else {
-					manifest.Add (FixupNameElements (package, [top]));
-				}
-			}
+		}
+		if (applicationPeers.Count > 1) {
+			throw new InvalidOperationException (
+				"There can be only one type with an [Application] attribute; found: " +
+				string.Join (", ", applicationPeers.Select (peer => peer.ManagedTypeName)));
+		}
+		if (assemblyInfo.ApplicationAttributeCount > 0 && applicationPeers.Count > 0) {
+			throw new InvalidOperationException (
+				"Application cannot have both a type with an [Application] attribute and an [assembly:Application] attribute.");
 		}
 	}
 
-	/// <summary>
-	/// Qualifies relative component names (those starting with '.') with the supplied package,
-	/// mirroring ManifestDocument.FixupNameElements.
-	/// </summary>
-	static IEnumerable<XNode> FixupNameElements (string packageName, IEnumerable<XNode> nodes)
+	static void ReplaceGeneratedPackageNameTokens (
+		XDocument doc,
+		string packageName,
+		ISet<XAttribute> templateAttributes,
+		ISet<XAttribute> generatedAttributes)
 	{
-		var nodeList = nodes.ToList ();
-		foreach (var element in nodeList.OfType<XElement> ().Where (x => ManifestAttributeFixups.ContainsKey (x.Name.LocalName))) {
-			var attributes = ManifestAttributeFixups [element.Name.LocalName];
-			foreach (var attr in element.Attributes ().Where (x => attributes.Contains (x.Name.LocalName))) {
-				if (attr.Value.StartsWith (".", StringComparison.Ordinal)) {
-					attr.Value = packageName + attr.Value;
-				}
+		foreach (var attribute in doc.Descendants ().Attributes ()) {
+			if (templateAttributes.Contains (attribute) && !generatedAttributes.Contains (attribute)) {
+				continue;
+			}
+			if (attribute.Value.Contains ("@PACKAGE_NAME@", StringComparison.Ordinal)) {
+				attribute.Value = attribute.Value.Replace ("@PACKAGE_NAME@", packageName);
 			}
 		}
-		return nodeList;
 	}
 
 	/// <summary>
@@ -320,20 +286,22 @@ class ManifestGenerator
 				continue;
 			}
 
-			var nameAttr = element.Attribute (AttName);
-			if (nameAttr is null) {
+			var classNameAttr = element.Name.LocalName == "activity-alias"
+				? element.Attribute (AndroidNs + "targetActivity")
+				: element.Attribute (AttName);
+			if (classNameAttr is null) {
 				continue;
 			}
-			var resolved = ManifestNameResolver.Resolve (nameAttr.Value, packageName);
+			var resolved = ManifestNameResolver.Resolve (classNameAttr.Value, packageName);
 			if (compatToCrc.TryGetValue (resolved, out var crcName)) {
-				nameAttr.Value = crcName;
+				classNameAttr.Value = crcName;
 			}
 		}
 	}
 
 	static bool IsComponentElement (XElement element)
 	{
-		return element.Name.NamespaceName.Length == 0 && ComponentElementNames.Contains (element.Name.LocalName);
+		return element.Name.NamespaceName.Length == 0 && ManifestConstants.ComponentElementNames.Contains (element.Name.LocalName);
 	}
 
 	void EnsureManifestAttributes (XElement manifest)
@@ -345,10 +313,7 @@ class ManifestGenerator
 		// produced by GetAndroidPackageName, which substitutes placeholders and canonicalizes the
 		// package). This matches the legacy GenerateMainAndroidManifest; a valid explicit package is
 		// preserved so compat-name resolution keeps using it.
-		var packageAttr = (string?) manifest.Attribute ("package") ?? "";
-		if ((packageAttr.Length == 0 || packageAttr.Contains ("${")) && !PackageName.IsNullOrEmpty ()) {
-			manifest.SetAttributeValue ("package", PackageName);
-		}
+		ResolvePackageName (manifest, PackageName);
 
 		if (manifest.Attribute (AndroidNs + "versionCode") is null) {
 			manifest.SetAttributeValue (AndroidNs + "versionCode",
@@ -377,6 +342,14 @@ class ManifestGenerator
 				throw new InvalidOperationException ("MinSdkVersion must be provided by MSBuild.");
 			}
 			usesSdk.SetAttributeValue (AndroidNs + "minSdkVersion", MinSdkVersion);
+		}
+	}
+
+	internal static void ResolvePackageName (XElement manifest, string? packageName)
+	{
+		var packageAttr = (string?) manifest.Attribute ("package") ?? "";
+		if ((packageAttr.Length == 0 || packageAttr.Contains ("${")) && !packageName.IsNullOrEmpty ()) {
+			manifest.SetAttributeValue ("package", packageName);
 		}
 	}
 

@@ -55,13 +55,12 @@ Read `.gitmodules` for all submodules. Current submodules and their license file
 
 | Submodule | URL | License File |
 |-----------|-----|-------------|
-| Java.Interop | https://github.com/dotnet/java-interop | `external/Java.Interop/LICENSE` |
-| lz4 | https://github.com/dotnet/lz4 (fork of https://github.com/lz4/lz4) | `external/lz4/lib/LICENSE` |
-| xxHash | https://github.com/Cyan4973/xxHash | `external/xxHash/LICENSE` |
-| constexpr-xxh3 | https://github.com/chys87/constexpr-xxh3 | `external/constexpr-xxh3/LICENSE` |
-| robin-map | https://github.com/xamarin/robin-map (fork of https://github.com/Tessil/robin-map) | `external/robin-map/LICENSE` |
-| libunwind | https://github.com/libunwind/libunwind | `external/libunwind/LICENSE` |
 | android-api-docs | https://github.com/dotnet/android-api-docs | (not a third-party dep) |
+
+#### Integrated Java.Interop (`src/Java.Interop*/`)
+Java.Interop is integrated source, not a submodule. Keep its `dotnet/java-interop`
+notice; its license is in `Documentation/Java.Interop/LICENSE` and its additional
+third-party notices are in `Documentation/Java.Interop/ThirdPartyNotices.txt`.
 
 #### Vendored Source (`src-ThirdParty/`)
 List contents of `src-ThirdParty/` directory. Current vendored code and license sources:
@@ -69,11 +68,6 @@ List contents of `src-ThirdParty/` directory. Current vendored code and license 
 | Directory | Name | License Source |
 |-----------|------|---------------|
 | `android-platform-tools-base/` | android/platform/tools/base | https://android.googlesource.com/platform/tools/base/+/refs/heads/main/sdk-common/NOTICE (Apache 2.0) |
-| `bionic/` | google/bionic | https://android.googlesource.com/platform/bionic/ (Apache 2.0) |
-| `crc32.net/` | force-net/crc32.net | https://github.com/force-net/Crc32.NET (MIT) |
-| `StrongNameSigner/` | brutaldev/StrongNameSigner | https://github.com/brutaldev/StrongNameSigner/ (Apache 2.0) |
-
-Note: `Mono.Security.Cryptography/`, `System.Diagnostics.CodeAnalysis/`, `System.Runtime.CompilerServices/`, and `dotnet/` are Microsoft-owned and do not need TPN entries.
 
 #### NuGet Packages
 Search `.csproj` files for `<PackageReference>` elements. Current third-party NuGet packages needing TPNs:
@@ -81,13 +75,9 @@ Search `.csproj` files for `<PackageReference>` elements. Current third-party Nu
 | Package | Name in TPN | License URL |
 |---------|------------|-------------|
 | ELFSharp | KonradKuczynski/ELFSharp | https://elfsharp.it/ (MIT + LLVM) |
-| K4os.Compression.LZ4 | MiloszKrajewski/K4os.Compression.LZ4 | https://github.com/MiloszKrajewski/K4os.Compression.LZ4/ (MIT) |
-| Xamarin.LibZipSharp | xamarin/LibZipSharp | https://github.com/xamarin/LibZipSharp/ (MIT) |
 | Irony | IronyProject/Irony | https://github.com/IronyProject/Irony (MIT) |
-| Newtonsoft.Json | JamesNK/Newtonsoft.Json | https://github.com/JamesNK/Newtonsoft.Json (MIT) |
-| NuGet.ProjectModel | NuGet/NuGet.Client | https://github.com/NuGet/NuGet.Client (Apache 2.0) |
+| NuGet.Versioning | NuGet/NuGet.Client | https://github.com/NuGet/NuGet.Client (Apache 2.0) |
 | Mono.Cecil | mono/cecil | https://github.com/mono/cecil/ (MIT) |
-| Microsoft.Xml.SgmlReader | lovettchris/SgmlReader | https://github.com/lovettchris/SgmlReader/ (Apache 2.0) |
 
 Note: Microsoft-owned NuGet packages (Microsoft.*, System.*) do not need TPN entries.
 
@@ -99,7 +89,9 @@ The `src/Xamarin.Android.Build.Tasks/Linker/External/` directory contains vendor
 | Linker/External/ | mono/linker | https://github.com/mono/linker/ (MIT) |
 
 #### Native Libraries (from CMakeLists.txt)
-Check `src/native/` CMakeLists.txt files for references to external native code. The submodules above (lz4, xxHash, libunwind, robin-map) are compiled into native libraries.
+Check `src/native/` CMakeLists.txt files and their source/header dependencies for
+references to external native code. Do not assume that every submodule is
+compiled into native libraries; confirm which dependencies are actually used.
 
 #### Android SDK Tools
 These are downloaded and shipped with the SDK:
@@ -109,14 +101,6 @@ These are downloaded and shipped with the SDK:
 | aapt2 | google/aapt2 | https://mvnrepository.com/artifact/com.android.tools.build/aapt2 (Apache 2.0) |
 | bundletool | google/bundletool | https://github.com/google/bundletool (Apache 2.0) |
 | r8 | google/r8 | https://r8.googlesource.com/r8/ (BSD-3-Clause) |
-| binutils | gnu/binutils | https://sourceware.org/git/?p=binutils-gdb.git;a=tree;hb=HEAD (GPLv3) |
-
-#### libzip (via LibZipSharp NuGet)
-LibZipSharp bundles libzip internally:
-
-| Source | Name in TPN | License Location |
-|--------|------------|-----------------|
-| libzip (in LibZipSharp NuGet) | nih-at/libzip | LibZipSharp NuGet `Licences/libzip/LICENSE` or https://github.com/nih-at/libzip/ (BSD-3-Clause) |
 
 ### Step 2 — Cross-reference
 

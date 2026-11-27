@@ -2,11 +2,11 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.IO.Compression;
 using System.Linq;
 using System.Xml.Linq;
 using Microsoft.Build.Utilities;
 using Microsoft.Build.Framework;
-using Xamarin.Tools.Zip;
 using Xamarin.Android.Tools;
 using System.Reflection.Metadata;
 using System.Reflection.PortableExecutable;
@@ -71,8 +71,6 @@ namespace Xamarin.Android.Tasks
 		internal const string OriginalFile = "OriginalFile";
 		internal const string AndroidSkipResourceProcessing = "AndroidSkipResourceProcessing";
 
-		internal const string ResourceDirectoryArchive = "ResourceDirectoryArchive";
-
 		internal const string NuGetPackageVersion = "NuGetPackageVersion";
 
 		internal const string NuGetPackageId = "NuGetPackageId";
@@ -80,7 +78,6 @@ namespace Xamarin.Android.Tasks
 		internal static readonly string [] KnownMetadata = new [] {
 			OriginalFile,
 			AndroidSkipResourceProcessing,
-			ResourceDirectoryArchive,
 			NuGetPackageId,
 			NuGetPackageVersion,
 		};
@@ -105,7 +102,7 @@ namespace Xamarin.Android.Tasks
 			assemblyMap.Load (AssemblyIdentityMapFile);
 			try {
 				Extract (jars, resolvedResourceDirectories, resolvedAssetDirectories, resolvedEnvironmentFiles, proguardConfigFiles, extractedDirectories);
-			} catch (ZipIOException ex) {
+			} catch (InvalidDataException ex) {
 				Log.LogCodedError ("XA1004", ex.Message);
 				Log.LogDebugMessage (ex.ToString ());
 			}
@@ -121,12 +118,14 @@ namespace Xamarin.Android.Tasks
 				.Select (s => new TaskItem (Path.GetFullPath (Path.Combine (s.ItemSpec, "../..")) + ".stamp"))
 				.ToArray ();
 
-			foreach (var directory in ResolvedResourceDirectories) {
-				Files.SetDirectoryWriteable (directory.ItemSpec);
-			}
+			if (OS.IsWindows) {
+				foreach (var directory in ResolvedResourceDirectories) {
+					Files.SetDirectoryWriteable (directory.ItemSpec);
+				}
 
-			foreach (var directory in ResolvedAssetDirectories) {
-				Files.SetDirectoryWriteable (directory.ItemSpec);
+				foreach (var directory in ResolvedAssetDirectories) {
+					Files.SetDirectoryWriteable (directory.ItemSpec);
+				}
 			}
 
 			if (!CacheFile.IsNullOrEmpty ()) {
@@ -152,14 +151,6 @@ namespace Xamarin.Android.Tasks
 			}
 
 			assemblyMap.Save (AssemblyIdentityMapFile);
-
-			Log.LogDebugTaskItems ("  Jars: ", Jars);
-			Log.LogDebugTaskItems ("  ResolvedResourceDirectories: ", ResolvedResourceDirectories);
-			Log.LogDebugTaskItems ("  ResolvedAssetDirectories: ", ResolvedAssetDirectories);
-			Log.LogDebugTaskItems ("  ResolvedEnvironmentFiles: ", ResolvedEnvironmentFiles);
-			Log.LogDebugTaskItems ("  ResolvedResourceDirectoryStamps: ", ResolvedResourceDirectoryStamps);
-			Log.LogDebugTaskItems ("  ProguardConfigFiles:", ProguardConfigFiles);
-			Log.LogDebugTaskItems ("  ExtractedDirectories:", ExtractedDirectories);
 
 			return !Log.HasLoggedErrors;
 		}
@@ -204,7 +195,6 @@ namespace Xamarin.Android.Tasks
 				string importsDir = Path.Combine (outDirForDll, ImportsDirectory);
 				string nativeimportsDir = Path.Combine (outDirForDll, NativeImportsDirectory);
 				string resDir = Path.Combine (importsDir, "res");
-				string resDirArchive = Path.Combine (resDir, "..", "res.zip");
 				string assetsDir = Path.Combine (importsDir, "assets");
 				string nuGetPackageId = assemblyItem.GetMetadata (NuGetPackageId) ?? "";
 				string nuGetPackageVersion = assemblyItem.GetMetadata (NuGetPackageVersion) ?? "";
@@ -229,7 +219,6 @@ namespace Xamarin.Android.Tasks
 					if (Directory.Exists (resDir)) {
 						var taskItem = new TaskItem (Path.GetFullPath (resDir), new Dictionary<string, string> {
 							[OriginalFile] = assemblyPath,
-							[ResourceDirectoryArchive] = Path.GetFullPath (resDirArchive),
 							[NuGetPackageId] = nuGetPackageId,
 							[NuGetPackageVersion] = nuGetPackageVersion,
 						});
@@ -268,16 +257,20 @@ namespace Xamarin.Android.Tasks
 						}
 						// embedded jars (EmbeddedJar, EmbeddedReferenceJar)
 						else if (name.EndsWith (".jar", StringComparison.InvariantCultureIgnoreCase)) {
-							using (var stream = pe.GetEmbeddedResourceStream (resource)) {
+							// SAFETY: resource comes from this local reader. The synchronous copy and
+							// stream disposal finish before pe's enclosing using exits, also on failure.
+							using (var stream = unsafe (pe.GetEmbeddedResourceStream (resource))) {
 								AddJar (jars, importsDir, name, assemblyPath, nuGetPackageId: nuGetPackageId, nuGetPackageVersion: nuGetPackageVersion);
-								updated |= Files.CopyIfStreamChanged (stream, Path.Combine (importsDir, name));
+								updated |= Files.CopyIfStreamChanged (stream, Files.GetArchiveExtractionPath (importsDir, name));
 							}
 						}
 						// embedded native libraries
 						else if (name == "__AndroidNativeLibraries__.zip") {
 							List<string> files = new List<string> ();
-							using (var stream = pe.GetEmbeddedResourceStream (resource))
-							using (var zip = Xamarin.Tools.Zip.ZipArchive.Open (stream)) {
+							// SAFETY: resource comes from this local reader. Extraction and both nested
+							// disposals complete before pe is disposed, including exceptions and early returns.
+							using (var stream = unsafe (pe.GetEmbeddedResourceStream (resource)))
+							using (var zip = new ZipArchive (stream, ZipArchiveMode.Read)) {
 								try {
 									updated |= Files.ExtractAll (zip, nativeimportsDir, modifyCallback: (entryFullName) => {
 										files.Add (Path.GetFullPath (Path.Combine (nativeimportsDir, entryFullName)));
@@ -300,8 +293,10 @@ namespace Xamarin.Android.Tasks
 						else if (name == "__AndroidLibraryProjects__.zip") {
 							// temporarily extracted directory will look like:
 							//    __library_projects__/[dllname]/[library_project_imports | jlibs]/bin
-							using (var stream = pe.GetEmbeddedResourceStream (resource))
-							using (var zip = Xamarin.Tools.Zip.ZipArchive.Open (stream)) {
+							// SAFETY: resource comes from this local reader. Extraction and both nested
+							// disposals complete before pe is disposed, including exceptions and early returns.
+							using (var stream = unsafe (pe.GetEmbeddedResourceStream (resource)))
+							using (var zip = new ZipArchive (stream, ZipArchiveMode.Read)) {
 								try {
 									updated |= Files.ExtractAll (zip, importsDir, modifyCallback: (entryFullName) => {
 										var path = entryFullName
@@ -327,10 +322,8 @@ namespace Xamarin.Android.Tasks
 							// which resulted in missing resource issue.
 							// Here we replaced copy with use of '-S' option and made it to work.
 							if (Directory.Exists (resDir)) {
-								CreateResourceArchive (resDir, resDirArchive);
 								var taskItem = new TaskItem (Path.GetFullPath (resDir), new Dictionary<string, string> {
 									[OriginalFile] = assemblyPath,
-									[ResourceDirectoryArchive] = Path.GetFullPath (resDirArchive),
 									[NuGetPackageId] = nuGetPackageId,
 									[NuGetPackageVersion] = nuGetPackageVersion,
 								});
@@ -378,7 +371,6 @@ namespace Xamarin.Android.Tasks
 				string outDirForDll = Path.Combine (OutputImportDirectory, aarIdentityName);
 				string importsDir = Path.Combine (outDirForDll, ImportsDirectory);
 				string resDir = Path.Combine (importsDir, "res");
-				string resDirArchive = Path.Combine (resDir, "..", "res.zip");
 				string rTxt = Path.Combine (importsDir, "R.txt");
 				string assetsDir = Path.Combine (importsDir, "assets");
 				string proguardFile = Path.Combine (importsDir, "proguard.txt");
@@ -410,7 +402,6 @@ namespace Xamarin.Android.Tasks
 						resolvedResourceDirectories.Add (new TaskItem (Path.GetFullPath (resDir), new Dictionary<string, string> {
 							[OriginalFile] = Path.GetFullPath (aarFile.ItemSpec),
 							[AndroidSkipResourceProcessing] = skipProcessing,
-							[ResourceDirectoryArchive] = Path.GetFullPath (resDirArchive),
 							[NuGetPackageId] = nuGetPackageId,
 							[NuGetPackageVersion] = nuGetPackageVersion,
 						}));
@@ -421,6 +412,13 @@ namespace Xamarin.Android.Tasks
 							[NuGetPackageId] = nuGetPackageId,
 							[NuGetPackageVersion] = nuGetPackageVersion,
 						}));
+					if (AndroidApplication && File.Exists (proguardFile)) {
+						proguardConfigFiles.Add (new TaskItem (Path.GetFullPath (proguardFile), new Dictionary<string, string> {
+							[OriginalFile] = aarFullPath,
+							[NuGetPackageId] = nuGetPackageId,
+							[NuGetPackageVersion] = nuGetPackageVersion,
+						}));
+					}
 					continue;
 				}
 
@@ -444,7 +442,7 @@ namespace Xamarin.Android.Tasks
 								AddJar (jars, importsDir, entryFullName, aarFullPath, nuGetPackageId: nuGetPackageId, nuGetPackageVersion: nuGetPackageVersion);
 							} else if (entryFullName.StartsWith (".net/env/", StringComparison.OrdinalIgnoreCase) ||
 									entryFullName.StartsWith (".net\\env\\", StringComparison.OrdinalIgnoreCase)) {
-								var fullPath = Path.GetFullPath (Path.Combine (importsDir, entryFullName));
+								var fullPath = Files.GetArchiveExtractionPath (importsDir, entryFullName);
 								resolvedEnvironments.Add (new TaskItem (fullPath, new Dictionary<string, string> {
 									[OriginalFile] = aarFile.ItemSpec,
 									[NuGetPackageId] = nuGetPackageId,
@@ -466,8 +464,6 @@ namespace Xamarin.Android.Tasks
 					}
 				}
 				if (Directory.Exists (resDir) || File.Exists (rTxt)) {
-					if (Directory.Exists (resDir))
-						CreateResourceArchive (resDir, resDirArchive);
 					var skipProcessing = aarFile.GetMetadata (AndroidSkipResourceProcessing);
 					if (skipProcessing.IsNullOrEmpty ()) {
 						skipProcessing = "True";
@@ -475,7 +471,6 @@ namespace Xamarin.Android.Tasks
 					resolvedResourceDirectories.Add (new TaskItem (Path.GetFullPath (resDir), new Dictionary<string, string> {
 						[OriginalFile] = aarFullPath,
 						[AndroidSkipResourceProcessing] = skipProcessing,
-						[ResourceDirectoryArchive] = Path.GetFullPath (resDirArchive),
 						[NuGetPackageId] = nuGetPackageId,
 						[NuGetPackageVersion] = nuGetPackageVersion,
 					}));
@@ -496,19 +491,9 @@ namespace Xamarin.Android.Tasks
 			}
 		}
 
-		void CreateResourceArchive (string resDir, string outputFile)
-		{
-			var fileMode = File.Exists (outputFile) ? FileMode.Open : FileMode.CreateNew;
-			Files.ArchiveZipUpdate (outputFile, f => {
-				using (var zip = new ZipArchiveEx (f, fileMode)) {
-					zip.AddDirectory (resDir, "res");
-				}
-			});
-		}
-
 		static void AddJar (IDictionary<string, ITaskItem> jars, string destination, string path, string? originalFile = null, string? nuGetPackageId = null, string? nuGetPackageVersion = null)
 		{
-			var fullPath = Path.GetFullPath (Path.Combine (destination, path));
+			var fullPath = Files.GetArchiveExtractionPath (destination, path);
 			AddJar (jars, fullPath, originalFile: originalFile, nuGetPackageId: nuGetPackageId, nuGetPackageVersion: nuGetPackageVersion);
 		}
 

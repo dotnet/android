@@ -2,13 +2,13 @@ using System;
 using System.Buffers;
 using System.Collections.Generic;
 using System.IO;
+using System.IO.Compression;
 using System.Linq;
 
 using Xamarin.Android.AssemblyStore;
 using Xamarin.Android.Tools;
 using Xamarin.Android.Tasks;
 using Xamarin.ProjectTools;
-using Xamarin.Tools.Zip;
 
 namespace Xamarin.Android.Build.Tests
 {
@@ -44,11 +44,11 @@ namespace Xamarin.Android.Build.Tests
 			haveMultipleRids = rids != null && rids.Length > 1;
 
 			string extension = Path.GetExtension (archivePath) ?? String.Empty;
-			if (String.Compare (".aab", extension, StringComparison.OrdinalIgnoreCase) == 0) {
+			if (string.Equals (".aab", extension, StringComparison.OrdinalIgnoreCase)) {
 				assembliesRootDir = "base/lib/";
-			} else if (String.Compare (".apk", extension, StringComparison.OrdinalIgnoreCase) == 0) {
+			} else if (string.Equals (".apk", extension, StringComparison.OrdinalIgnoreCase)) {
 				assembliesRootDir = "lib/";
-			} else if (String.Compare (".zip", extension, StringComparison.OrdinalIgnoreCase) == 0) {
+			} else if (string.Equals (".zip", extension, StringComparison.OrdinalIgnoreCase)) {
 				assembliesRootDir = "lib/";
 			} else {
 				assembliesRootDir = String.Empty;
@@ -125,15 +125,19 @@ namespace Xamarin.Android.Build.Tests
 			}
 
 			using var zip = ZipHelper.OpenZip (archivePath);
+			if (zip == null) {
+				return null;
+			}
 			foreach (string assemblyPath in potentialEntries) {
-				if (!zip.ContainsEntry (assemblyPath)) {
+				var entry = zip.GetEntry (assemblyPath);
+				if (entry == null) {
 					continue;
 				}
 
-				ZipEntry entry = zip.ReadEntry (assemblyPath);
+				using var source = entry.Open ();
 				var ret = new MemoryStream ();
-				entry.Extract (ret);
-				ret.Flush ();
+				source.CopyTo (ret);
+				ret.Position = 0;
 				return ret;
 			}
 
@@ -192,8 +196,8 @@ namespace Xamarin.Android.Build.Tests
 			}
 
 			var entries = new List<string> ();
-			using (var zip = ZipArchive.Open (archivePath, FileMode.Open)) {
-				foreach (var entry in zip) {
+			using (var zip = ZipFile.OpenRead (archivePath)) {
+				foreach (var entry in zip.Entries) {
 					entries.Add (entry.FullName);
 				}
 			}
@@ -300,14 +304,10 @@ namespace Xamarin.Android.Build.Tests
 			List<string> contents = ListArchiveContents (assembliesRootDir, forceRefresh, arch);
 
 			// We must count only .dll.so entries starting with the '-' and '_' characters, as they are the actual managed assemblies.
-			// Other entries in `lib/{arch}` might be AOT shared libraries, which will also have the .dll.so extension.
-			//
-			// `.ni.dll.so` are all ignored, they're an artefact of how CoreCLR runtime works (it asks for .ni.dll for every .dll) and
-			// they are ignored on the runtime. They don't exist in the assembly store except for its index, where they are marked
-			// to be ignored.
+			// Other .dll.so entries are not assembly-store payloads and must not contribute to this count.
 			var dlls = contents.Where (x => {
 				string fileName = Path.GetFileName (x);
-				if (fileName.EndsWith (".ni.dll.so", StringComparison.OrdinalIgnoreCase) || !fileName.EndsWith (".dll.so", StringComparison.OrdinalIgnoreCase)) {
+				if (!fileName.EndsWith (".dll.so", StringComparison.OrdinalIgnoreCase)) {
 					return false;
 				}
 
@@ -424,7 +424,7 @@ namespace Xamarin.Android.Build.Tests
 			foreach (string wantedEntry in potentialEntries) {
 				Console.WriteLine ($"Wanted entry: {wantedEntry}");
 				foreach (string existingEntry in archiveContents) {
-					if (String.Compare (existingEntry, wantedEntry, StringComparison.Ordinal) == 0) {
+					if (string.Equals (existingEntry, wantedEntry, StringComparison.Ordinal)) {
 						return true;
 					}
 				}
@@ -499,8 +499,11 @@ namespace Xamarin.Android.Build.Tests
 		void ArchiveContains (ICollection<string> fileNames, out List<string> existingFiles, out List<string> missingFiles, out List<string> additionalFiles, IEnumerable<AndroidTargetArch>? targetArches = null)
 		{
 			using var zip = ZipHelper.OpenZip (archivePath);
-			existingFiles = zip.Where (a => a.FullName.StartsWith (assembliesRootDir, StringComparison.InvariantCultureIgnoreCase)).Select (a => a.FullName).ToList ();
-			existingFiles.AddRange (zip.Where (a => a.FullName.StartsWith ("lib/", StringComparison.OrdinalIgnoreCase)).Select (a => a.FullName));
+			if (zip == null) {
+				throw new FileNotFoundException ("Archive not found.", archivePath);
+			}
+			existingFiles = zip.Entries.Where (a => a.FullName.StartsWith (assembliesRootDir, StringComparison.InvariantCultureIgnoreCase)).Select (a => a.FullName).ToList ();
+			existingFiles.AddRange (zip.Entries.Where (a => a.FullName.StartsWith ("lib/", StringComparison.OrdinalIgnoreCase)).Select (a => a.FullName));
 
 			List<AndroidTargetArch> arches = GetSupportedArches (targetArches);
 
@@ -525,10 +528,10 @@ namespace Xamarin.Android.Build.Tests
 						fileName = x.Substring (slashIndex + 1);
 					}
 
-					return !zip.ContainsEntry (MonoAndroidHelper.MakeZipArchivePath (prefixAssemblies, x)) &&
-					       !zip.ContainsEntry (MonoAndroidHelper.MakeZipArchivePath (prefixLib, x)) &&
-					       !zip.ContainsEntry (MonoAndroidHelper.MakeZipArchivePath (prefixAssemblies, MonoAndroidHelper.MakeDiscreteAssembliesEntryName (fileName, culture))) &&
-					       !zip.ContainsEntry (MonoAndroidHelper.MakeZipArchivePath (prefixLib, MonoAndroidHelper.MakeDiscreteAssembliesEntryName (fileName, culture)));
+					return zip.GetEntry (MonoAndroidHelper.MakeZipArchivePath (prefixAssemblies, x)) == null &&
+					       zip.GetEntry (MonoAndroidHelper.MakeZipArchivePath (prefixLib, x)) == null &&
+					       zip.GetEntry (MonoAndroidHelper.MakeZipArchivePath (prefixAssemblies, MonoAndroidHelper.MakeDiscreteAssembliesEntryName (fileName, culture))) == null &&
+					       zip.GetEntry (MonoAndroidHelper.MakeZipArchivePath (prefixLib, MonoAndroidHelper.MakeDiscreteAssembliesEntryName (fileName, culture))) == null;
 				});
 			}
 
@@ -551,6 +554,9 @@ namespace Xamarin.Android.Build.Tests
 			additionalFiles = new List<string> ();
 
 			using ZipArchive? zip = ZipHelper.OpenZip (archivePath);
+			if (zip == null) {
+				throw new FileNotFoundException ("Archive not found.", archivePath);
+			}
 
 			List<AndroidTargetArch> arches = GetSupportedArches (targetArches);
 			(IList<AssemblyStoreExplorer>? explorers, string? errorMessage) = AssemblyStoreExplorer.Open (archivePath);
@@ -566,12 +572,12 @@ namespace Xamarin.Android.Build.Tests
 
 					foreach (string file in otherFiles) {
 						string fullPath = prefixAssemblies + file;
-						if (zip.ContainsEntry (fullPath)) {
+						if (zip.GetEntry (fullPath) != null) {
 							existingFiles.Add (file);
 						}
 
 						fullPath = prefixLib + file;
-						if (zip.ContainsEntry (fullPath)) {
+						if (zip.GetEntry (fullPath) != null) {
 							existingFiles.Add (file);
 						}
 					}

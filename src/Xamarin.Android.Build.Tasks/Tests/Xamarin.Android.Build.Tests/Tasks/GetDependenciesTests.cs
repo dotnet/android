@@ -21,10 +21,10 @@ namespace Xamarin.Android.Build.Tests {
 			var referencePath = CreateFauxReferencesDirectory (Path.Combine (path, "references"), new ApiInfo [] {
 				new ApiInfo () { Id = "26", Level = 26, Name = "Oreo", FrameworkVersion = "v8.0", Stable = true },
 			});
-			MonoAndroidHelper.RefreshSupportedVersions (new string [] { referencePath });
 			IBuildEngine engine = new MockBuildEngine (TestContext.Out);
 			var task = new CalculateProjectDependencies {
-				BuildEngine = engine
+				BuildEngine = engine,
+				ReferenceAssemblyPaths = [referencePath],
 			};
 
 			task.AndroidApiLevel = "26";
@@ -59,10 +59,10 @@ namespace Xamarin.Android.Build.Tests {
 			var referencePath = CreateFauxReferencesDirectory (Path.Combine (path, "references"), new ApiInfo[] {
 				new ApiInfo () { Id = "26", Level = 26, Name = "Oreo", FrameworkVersion = "v8.0", Stable = true },
 			} );
-			MonoAndroidHelper.RefreshSupportedVersions (new string [] { referencePath });
 			IBuildEngine engine = new MockBuildEngine (TestContext.Out);
 			var task = new CalculateProjectDependencies {
-				BuildEngine = engine
+				BuildEngine = engine,
+				ReferenceAssemblyPaths = [referencePath],
 			};
 
 			task.AndroidApiLevel = "26";
@@ -92,10 +92,10 @@ namespace Xamarin.Android.Build.Tests {
 			var referencePath = CreateFauxReferencesDirectory (Path.Combine (path, "references"), new ApiInfo[] {
 				new ApiInfo () { Id = "26", Level = 26, Name = "Oreo", FrameworkVersion = "v8.0", Stable = true },
 			} );
-			MonoAndroidHelper.RefreshSupportedVersions (new string [] { referencePath });
 			IBuildEngine engine = new MockBuildEngine (TestContext.Out);
 			var task = new CalculateProjectDependencies {
-				BuildEngine = engine
+				BuildEngine = engine,
+				ReferenceAssemblyPaths = [referencePath],
 			};
 
 
@@ -134,10 +134,10 @@ namespace Xamarin.Android.Build.Tests {
 			var referencePath = CreateFauxReferencesDirectory (Path.Combine (path, "references"), new ApiInfo [] {
 				new ApiInfo () { Id = "36.1", Level = 36, Name = "Baklava", FrameworkVersion = "v16.1", Stable = true },
 			});
-			MonoAndroidHelper.RefreshSupportedVersions (new string [] { referencePath });
 			IBuildEngine engine = new MockBuildEngine (TestContext.Out);
 			var task = new CalculateProjectDependencies {
-				BuildEngine = engine
+				BuildEngine = engine,
+				ReferenceAssemblyPaths = [referencePath],
 			};
 
 			task.AndroidApiLevel = "36.1";

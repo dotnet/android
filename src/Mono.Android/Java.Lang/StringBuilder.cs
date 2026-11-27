@@ -1,4 +1,3 @@
-#if ANDROID_26
 
 // It is introduced since API 26 not because of new member in StringBuffer
 // but in AbstractStringBuilder which is nonpublic and affects the generated API.
@@ -15,5 +14,3 @@ namespace Java.Lang
 		}
 	}
 }
-
-#endif

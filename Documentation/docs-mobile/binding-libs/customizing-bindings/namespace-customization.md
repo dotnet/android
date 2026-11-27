@@ -1,7 +1,7 @@
 ---
 title: "Customizing Namespaces"
 description: "Renaming Java package names to better fit C# namespaces conventions is a very common use of binding metadata. In order to make this task easier, customizations can be made in the MSBuild project file instead of writing metadata."
-ms.author: jopobst
+ms.author: jopepper
 ms.date: 05/06/2024
 ---
 

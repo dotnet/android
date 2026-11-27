@@ -17,7 +17,7 @@ scan excludes `Tests/`, `*Test.cs`, `*Tests.cs`).
 
 ### How to fix
 Either implement the TODO or remove the comment if it's no longer relevant.
-Include a brief explanation in the issue body of why it was resolved or removed.
+Include a brief explanation in the PR body of why it was resolved or removed.
 
 ### What NOT to flag
 - TODOs inside generated files (`*.generated.cs`, `*.Designer.cs`) — never touch those

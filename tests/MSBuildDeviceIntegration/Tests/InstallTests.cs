@@ -4,6 +4,7 @@ using Xamarin.ProjectTools;
 using System.IO;
 using System.Linq;
 using Microsoft.Build.Framework;
+using Microsoft.Build.Logging.StructuredLogger;
 using System.Text;
 using System.Xml.Linq;
 using System.Collections.Generic;
@@ -30,11 +31,12 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		public void ReInstallIfUserUninstalled ([Values (false, true)] bool isRelease)
+		public void ReInstallIfUserUninstalled ([Values (false, true)] bool isRelease, [Values ("apk", "aab")] string packageFormat)
 		{
 			var proj = new XamarinAndroidApplicationProject () {
 				IsRelease = isRelease,
 			};
+			proj.SetProperty ("AndroidPackageFormat", packageFormat);
 			if (isRelease) {
 				proj.SetRuntimeIdentifiers (new[] { DeviceAbi });
 			}
@@ -42,13 +44,19 @@ namespace Xamarin.Android.Build.Tests
 				Assert.IsTrue (builder.Build (proj));
 				Assert.IsTrue (builder.Install (proj));
 				Assert.IsTrue (builder.Output.AreTargetsAllBuilt ("_Upload"), "_Upload should have built completely.");
+				if (packageFormat == "aab")
+					Assert.IsFalse (builder.Output.IsTargetSkipped ("_DeployAppBundle"), "The APK set should be installed.");
 				Assert.IsTrue (builder.Install (proj));
 				Assert.IsTrue (builder.Output.AreTargetsAllSkipped ("_Upload"), "_Upload should have been skipped.");
+				if (packageFormat == "aab")
+					Assert.IsTrue (builder.Output.IsTargetSkipped ("_DeployAppBundle"), "The unchanged APK set should not be installed.");
 				Assert.AreEqual ($"package:{proj.PackageName}", RunAdbCommand ($"shell pm list packages {proj.PackageName}").Trim (),
 					$"{proj.PackageName} is not installed on the device.");
 				Assert.AreEqual ("Success", RunAdbCommand ($"uninstall {proj.PackageName}").Trim (), $"{proj.PackageName} was not uninstalled.");
 				Assert.IsTrue (builder.Install (proj));
 				Assert.IsTrue (builder.Output.AreTargetsAllBuilt ("_Upload"), "_Upload should have built completely.");
+				if (packageFormat == "aab")
+					Assert.IsFalse (builder.Output.IsTargetSkipped ("_DeployAppBundle"), "The externally uninstalled APK set should be installed again.");
 				Assert.AreEqual ($"package:{proj.PackageName}", RunAdbCommand ($"shell pm list packages {proj.PackageName}").Trim (),
 					$"{proj.PackageName} is not installed on the device.");
 				Assert.IsTrue (builder.Uninstall (proj), "unnstall should have succeeded.");
@@ -114,7 +122,7 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		public void SwitchConfigurationsShouldRedeploy ()
+		public void SwitchConfigurationsShouldRedeploy ([Values ("apk", "aab")] string packageFormat)
 		{
 			var proj = new XamarinAndroidApplicationProject () {
 				IsRelease = false,
@@ -122,7 +130,7 @@ namespace Xamarin.Android.Build.Tests
 			// Set debuggable=true to allow run-as command usage with a release build
 			proj.AndroidManifest = proj.AndroidManifest.Replace ("<application ", "<application android:debuggable=\"true\" ");
 			proj.SetRuntimeIdentifiers (new[] { DeviceAbi });
-			proj.SetProperty ("AndroidPackageFormat", "apk");
+			proj.SetProperty ("AndroidPackageFormat", packageFormat);
 			using (var builder = CreateApkBuilder ()) {
 				Assert.IsTrue (builder.Build (proj));
 				Assert.IsTrue (builder.Install (proj));
@@ -170,7 +178,6 @@ namespace Xamarin.Android.Build.Tests
 			proj.SetProperty (proj.ReleaseProperties, "AndroidPackageFormat", "apk");
 
 			string[] abis = runtimeType switch {
-				AndroidRuntime.MonoVM => new [] { "armeabi-v7a", "arm64-v8a", "x86", "x86_64" },
 				AndroidRuntime.CoreCLR => new [] { "arm64-v8a", "x86_64" },
 				_ => throw new NotSupportedException ($"Unsupported runtime {runtimeType}")
 			};
@@ -443,101 +450,195 @@ namespace Xamarin.Android.Build.Tests
 		[TestCase ("aab")]
 		public void IncrementalFastDeployment (string packageFormat)
 		{
-			var class1src = new BuildItem.Source ("Class1.cs") {
-				TextContent = () => "namespace Library1 { public class Class1 { public static int foo = 500; } }"
+			var class1 = new BuildItem.Source ("Class1.cs") {
+				TextContent = () => "namespace Library1 { public class Class1 { public static int GetValue () => 500; } }",
 			};
-			var lib1 = new XamarinAndroidLibraryProject () {
+			var lib1 = new XamarinAndroidLibraryProject {
 				ProjectName = "Library1",
-				Sources = {
-					class1src,
-				}
-			};
-
-			var class2src = new BuildItem.Source ("Class2.cs") {
-				TextContent = () => "namespace Library2 { public class Class2 { public static int foo = 40; } }"
+				Sources = { class1 },
 			};
 			var lib2 = new DotNetStandard {
 				ProjectName = "Library2",
 				Sdk = "Microsoft.NET.Sdk",
 				TargetFramework = "netstandard2.0",
 				Sources = {
-					class2src,
-				}
+					new BuildItem.Source ("Class2.cs") {
+						TextContent = () => "namespace Library2 { public class Class2 { public static int GetValue () => 40; } }",
+					},
+				},
 			};
-
-			var app = new XamarinFormsAndroidApplicationProject () {
+			var app = new XamarinAndroidApplicationProject {
 				EmbedAssembliesIntoApk = false,
 				References = {
-					new BuildItem ("ProjectReference", "..\\Library1\\Library1.csproj"),
-					new BuildItem ("ProjectReference", "..\\Library2\\Library2.csproj"),
+					new BuildItem.ProjectReference ("..\\Library1\\Library1.csproj"),
+					new BuildItem.ProjectReference ("..\\Library2\\Library2.csproj"),
 				},
 			};
 			app.SetProperty ("AndroidPackageFormat", packageFormat);
+			app.SetDefaultTargetDevice ();
+			app.MainActivity = app.DefaultMainActivity.Replace ("//${AFTER_ONCREATE}",
+				"""Console.WriteLine ("INCREMENTAL_FAST_DEPLOY:" + Library1.Class1.GetValue () + ":" + Library2.Class2.GetValue ());""");
 
-			// Set up library projects
-			var rootPath = Path.Combine (Root, "temp", TestName);
-			using (var lb1 = CreateDllBuilder (Path.Combine (rootPath, lib1.ProjectName))) {
-				lb1.BuildLogFile = "build.log";
-				Assert.IsTrue (lb1.Build (lib1), "First library build should have succeeded.");
+			var path = Path.Combine ("temp", TestName);
+			using var lib1Builder = CreateDllBuilder (Path.Combine (path, lib1.ProjectName));
+			using var lib2Builder = CreateDllBuilder (Path.Combine (path, lib2.ProjectName));
+			using var builder = CreateApkBuilder (Path.Combine (path, app.ProjectName));
+			Assert.IsTrue (lib1Builder.Build (lib1), "First library build should succeed.");
+			Assert.IsTrue (lib2Builder.Build (lib2), "Second library build should succeed.");
+			var libraryPath = Path.Combine (Root, path, lib1.ProjectName, lib1.OutputPath, "Library1.dll");
+			byte [] originalLibrary = File.ReadAllBytes (libraryPath);
+
+			builder.Verbosity = LoggerVerbosity.Detailed;
+			builder.BuildLogFile = "initial-install.log";
+			Assert.IsTrue (builder.Install (app), "Initial install should succeed.");
+			AssertDeployedValue ("500", "initial-run.log");
+
+			AssertUnchangedInstall ("unchanged-install.log");
+
+			// A same-size assembly change must still be deployed.
+			class1.TextContent = () => "namespace Library1 { public class Class1 { public static int GetValue () => 501; } }";
+			lib1.Touch ("Class1.cs");
+			lib1Builder.BuildLogFile = "updated-library.log";
+			Assert.IsTrue (lib1Builder.Build (lib1, doNotCleanupOnUpdate: true, saveProject: false), "Updated library build should succeed.");
+			CollectionAssert.Contains (ReadTaskNames (lib1Builder), "Csc", "The updated library should be compiled.");
+			builder.BuildLogFile = "incremental-install.log";
+			Assert.IsTrue (builder.Install (app, doNotCleanupOnUpdate: true, saveProject: false), "Incremental install should succeed.");
+			byte [] updatedLibrary = File.ReadAllBytes (libraryPath);
+			Assert.AreEqual (originalLibrary.Length, updatedLibrary.Length, "The changed library should have the same size.");
+			Assert.IsFalse (originalLibrary.SequenceEqual (updatedLibrary), "The library contents should change.");
+
+			var tasks = ReadTaskNames (builder);
+			CollectionAssert.Contains (tasks, "FastDeploy", "The updated assembly should be fast deployed.");
+			AssertTasksNotExecuted (tasks, "Csc", "D8", "R8", "BuildApk", "BuildAppBundle", "BuildApkSet", "InstallApkSet");
+			Assert.IsFalse (builder.LastBuildOutput.Any (line => line.Contains ("Remove redundant file")), "No files should be deleted.");
+			Assert.IsTrue (builder.LastBuildOutput.Any (line => line.Contains ("NotifySync SkipCopyFile") && line.Contains ("Library2.dll")),
+				"The unchanged library should not be uploaded.");
+			builder.Output.AssertTargetIsSkipped ("_CompileToDalvik");
+			builder.Output.AssertTargetIsSkipped ("_BuildApkFastDev");
+			if (packageFormat == "aab") {
+				builder.Output.AssertTargetIsSkipped ("_BuildApkSet");
+				builder.Output.AssertTargetIsSkipped ("_DeployAppBundle");
 			}
-			using (var lb2 = CreateDllBuilder (Path.Combine (rootPath, lib2.ProjectName))) {
-				lb2.BuildLogFile = "build.log";
-				Assert.IsTrue (lb2.Build (lib2), "Second library build should have succeeded.");
-			}
+			AssertDeployedValue ("501", "incremental-run.log");
+			AssertUnchangedInstall ("unchanged-after-change-install.log");
+			Assert.IsTrue (builder.Uninstall (app), "Uninstall should succeed.");
 
-			long lib1FirstBuildSize = new FileInfo (Path.Combine (rootPath, lib1.ProjectName, lib1.OutputPath, "Library1.dll")).Length;
-
-			using (var builder = CreateApkBuilder (Path.Combine (rootPath, app.ProjectName))) {
-				builder.Verbosity = LoggerVerbosity.Detailed;
-				builder.ThrowOnBuildFailure = false;
-				builder.BuildLogFile = "install.log";
-				Assert.IsTrue (builder.Install (app), "First install should have succeeded.");
-				var logLines = builder.LastBuildOutput;
-				Assert.IsTrue (logLines.Any (l => l.Contains ("NotifySync CopyFile") && l.Contains ("UnnamedProject.dll")), "UnnamedProject.dll should have been uploaded");
-				Assert.IsTrue (logLines.Any (l => l.Contains ("NotifySync CopyFile") && l.Contains ("Library1.dll")), "Library1.dll should have been uploaded");
-				Assert.IsTrue (logLines.Any (l => l.Contains ("NotifySync CopyFile") && l.Contains ("Library2.dll")), "Library2.dll should have been uploaded");
-				var firstInstallTime = builder.LastBuildTime;
-				builder.BuildLogFile = "install2.log";
-				Assert.IsTrue (builder.Install (app, doNotCleanupOnUpdate: true, saveProject: false), "Second install should have succeeded.");
-				var secondInstallTime = builder.LastBuildTime;
-
-				var filesToTouch = new [] {
-					Path.Combine (rootPath, lib2.ProjectName, "Class2.cs"),
-					Path.Combine (rootPath, app.ProjectName, "MainPage.xaml"),
-				};
-				foreach (var file in filesToTouch) {
-					FileAssert.Exists (file);
-					File.SetLastWriteTimeUtc (file, DateTime.UtcNow);
+			void AssertUnchangedInstall (string logFile)
+			{
+				builder.BuildLogFile = logFile;
+				Assert.IsTrue (builder.Install (app, doNotCleanupOnUpdate: true, saveProject: false), "Unchanged install should succeed.");
+				AssertTasksNotExecuted (ReadTaskNames (builder), "Csc", "GenerateTrimmableTypeMap", "D8", "R8",
+					"BuildApk", "BuildAppBundle", "BuildApkSet", "InstallApkSet", "FastDeploy");
+				foreach (var target in new [] { "CoreCompile", "_CompileToDalvik", "_BuildApkFastDev", "_Upload" })
+					builder.Output.AssertTargetIsSkipped (target);
+				builder.Output.AssertTargetIsSkipped ("_GenerateTrimmableTypeMap", defaultIfNotUsed: true);
+				if (packageFormat == "aab") {
+					builder.Output.AssertTargetIsSkipped ("_BuildApkSet");
+					builder.Output.AssertTargetIsSkipped ("_DeployAppBundle");
 				}
-
-				class1src.TextContent = () => "namespace Library1 { public class Class1 { public static int foo = 1; } }";
-				class1src.Timestamp = DateTime.UtcNow.AddSeconds(1);
-				using (var lb1 = CreateDllBuilder (Path.Combine (rootPath, lib1.ProjectName))) {
-					lb1.BuildLogFile = "build2.log";
-					Assert.IsTrue (lb1.Build (lib1), "Second library build should have succeeded.");
-				}
-
-				long lib1SecondBuildSize = new FileInfo (Path.Combine (rootPath, lib1.ProjectName, lib1.OutputPath, "Library1.dll")).Length;
-				Assert.AreEqual (lib1FirstBuildSize, lib1SecondBuildSize, "Library1.dll was not the same size.");
-
-				builder.BuildLogFile = "install3.log";
-				Assert.IsTrue (builder.Install (app, doNotCleanupOnUpdate: true, saveProject: false), "Third install should have succeeded.");
-				logLines = builder.LastBuildOutput;
-				Assert.IsFalse (logLines.Any (l => l.Contains ("Remove redundant file")), "No redundant files should be deleted");
-				Assert.IsTrue (logLines.Any (l => l.Contains ("NotifySync CopyFile") && l.Contains ("UnnamedProject.dll")), "UnnamedProject.dll should have been uploaded");
-				Assert.IsTrue (logLines.Any (l => l.Contains ("NotifySync CopyFile") && l.Contains ("Library1.dll")), "Library1.dll should have been uploaded");
-				Assert.IsTrue (logLines.Any (l => l.Contains ("NotifySync SkipCopyFile") && l.Contains ("Library2.dll")), "Library2.dll should not have been uploaded");
-				var thirdInstallTime = builder.LastBuildTime;
-				builder.BuildLogFile = "install4.log";
-				Assert.IsTrue (builder.Install (app, doNotCleanupOnUpdate: true, saveProject: false), "Fourth install should have succeeded.");
-				var fourthInstalTime = builder.LastBuildTime;
-
-				Assert.IsTrue (thirdInstallTime < firstInstallTime, $"Third incremental install: '{thirdInstallTime}' should be faster than clean install: '{firstInstallTime}'.");
-				Assert.IsTrue (secondInstallTime < firstInstallTime && secondInstallTime < thirdInstallTime,
-					$"Second unchanged install: '{secondInstallTime}' should be faster than clean install: '{firstInstallTime}' and incremental install: '{thirdInstallTime}'.");
-				Assert.IsTrue (fourthInstalTime < firstInstallTime && fourthInstalTime < thirdInstallTime,
-					$"Fourth unchanged install: '{fourthInstalTime}' should be faster than clean install: '{firstInstallTime}' and incremental install: '{thirdInstallTime}'.");
 			}
+
+			string [] ReadTaskNames (ProjectBuilder projectBuilder)
+			{
+				var binlog = Path.ChangeExtension (Path.Combine (Root, projectBuilder.ProjectDirectory, projectBuilder.BuildLogFile), ".binlog");
+				FileAssert.Exists (binlog);
+				return BinaryLog.ReadBuild (binlog)
+					.FindChildrenRecursive<Microsoft.Build.Logging.StructuredLogger.Task> ()
+					.Select (task => task.Name)
+					.ToArray ();
+			}
+
+			void AssertTasksNotExecuted (string [] tasks, params string [] names)
+			{
+				foreach (var name in names) {
+					CollectionAssert.DoesNotContain (tasks, name, $"{name} should not run in any project.");
+				}
+			}
+
+			void AssertDeployedValue (string value, string logFile)
+			{
+				string message = $"INCREMENTAL_FAST_DEPLOY:{value}:40";
+				ClearAdbLogcat ();
+				Assert.IsTrue (MonitorAdbLogcat (
+					line => line.Contains (message),
+					Path.Combine (Root, builder.ProjectDirectory, logFile),
+					ActivityStartTimeoutInSeconds,
+					onMonitoringStarted: () => StartActivityAndAssert (app)
+				), $"The deployed app should log {message}.");
+			}
+		}
+
+		[Test]
+		public void AppBundleDeploymentInvalidation ()
+		{
+			var proj = new XamarinAndroidApplicationProject ();
+			proj.SetProperty ("AndroidPackageFormat", "aab");
+			using var builder = CreateApkBuilder ();
+			Assert.IsTrue (builder.Build (proj), "Initial build should succeed.");
+			builder.BuildLogFile = "install.log";
+			Assert.IsTrue (builder.Install (proj), "Initial install should succeed.");
+
+			void AssertUnchangedInstall (string logFile)
+			{
+				builder.BuildLogFile = logFile;
+				Assert.IsTrue (builder.Install (proj, doNotCleanupOnUpdate: true), "Unchanged install should succeed.");
+				Assert.IsTrue (builder.Output.AreTargetsAllSkipped ("_DeployAppBundle", "_Upload"), "Unchanged package and managed payload should not be deployed.");
+			}
+
+			AssertUnchangedInstall ("unchanged.log");
+
+			proj.AndroidResources.Add (new AndroidItem.AndroidResource ("Resources\\values\\added.xml") {
+				TextContent = () => """<resources><string name="added">New packaged resource</string></resources>""",
+			});
+			builder.BuildLogFile = "resource.log";
+			Assert.IsTrue (builder.Install (proj, doNotCleanupOnUpdate: true), "Resource update should succeed.");
+			Assert.IsFalse (builder.Output.IsTargetSkipped ("_DeployAppBundle"), "A resource change should install the updated APK set.");
+			AssertUnchangedInstall ("resource-unchanged.log");
+
+			var module = new BuildItem ("AndroidInstallModules", "base");
+			proj.OtherBuildItems.Add (module);
+			builder.BuildLogFile = "module.log";
+			Assert.IsTrue (builder.Install (proj, doNotCleanupOnUpdate: true), "Module selection update should succeed.");
+			Assert.IsFalse (builder.Output.IsTargetSkipped ("_DeployAppBundle"), "A module selection change should reinstall the APK set.");
+			AssertUnchangedInstall ("module-unchanged.log");
+
+			proj.OtherBuildItems.Remove (module);
+			builder.BuildLogFile = "module-removed.log";
+			Assert.IsTrue (builder.Install (proj, doNotCleanupOnUpdate: true), "Removing explicit module selection should succeed.");
+			Assert.IsFalse (builder.Output.IsTargetSkipped ("_DeployAppBundle"), "Removing module selection should reinstall the APK set.");
+
+			proj.SetProperty ("AndroidDeviceUserId", "0");
+			builder.BuildLogFile = "user.log";
+			Assert.IsTrue (builder.Install (proj, doNotCleanupOnUpdate: true), "User selection update should succeed.");
+			Assert.IsFalse (builder.Output.IsTargetSkipped ("_DeployAppBundle"), "A user selection change should reinstall the APK set.");
+			AssertUnchangedInstall ("user-unchanged.log");
+
+			var installFlag = Path.Combine (Root, builder.ProjectDirectory, proj.IntermediateOutputPath, "appbundle-install.flag");
+			FileAssert.Exists (installFlag);
+			File.Delete (installFlag);
+			builder.BuildLogFile = "missing-install-flag.log";
+			Assert.IsTrue (builder.Install (proj, doNotCleanupOnUpdate: true), "Install with missing package state should succeed.");
+			Assert.IsTrue (builder.Output.AreTargetsAllBuilt ("_DeployAppBundle", "_Upload"), "Missing package state should invalidate both package installation and managed deployment.");
+			AssertUnchangedInstall ("missing-install-flag-unchanged.log");
+
+			Assert.IsTrue (builder.Uninstall (proj), "Uninstall should succeed.");
+		}
+
+		[Test]
+		public void InstallAppBundleWithoutWarnings ()
+		{
+			var proj = new XamarinAndroidApplicationProject {
+				IsRelease = true,
+				PackageName = "com.xamarin.installappbundlewithoutwarnings",
+			};
+			proj.SetRuntimeIdentifiers ([DeviceAbi]);
+			proj.SetProperty ("AndroidPackageFormat", "aab");
+			RunAdbCommand ($"uninstall {proj.PackageName}");
+
+			using var builder = CreateApkBuilder ();
+			Assert.IsTrue (builder.Install (proj), "Install should have succeeded.");
+			builder.AssertHasNoWarnings ();
+			Assert.IsTrue (builder.Uninstall (proj), "Uninstall should have succeeded.");
 		}
 
 		[Test]
@@ -558,11 +659,14 @@ namespace Xamarin.Android.Build.Tests
 
 			// Change $(AdbTarget) to not be blank
 			var serial = GetAttachedDeviceSerial ();
-			Assert.IsTrue (b.Install (proj, parameters: new [] { $"AdbTarget=\"-e {serial}\"" }), "second build should have succeeded.");
+			Assert.IsTrue (b.Install (proj, parameters: new [] { $"AdbTarget=\"-s {serial}\"" }), "second build should have succeeded.");
 
 			FileAssert.Exists (apkset);
 			var after = File.GetLastWriteTimeUtc (apkset);
 			Assert.AreNotEqual (before, after, $"{apkset} should change!");
+			Assert.IsFalse (b.Output.IsTargetSkipped ("_DeployAppBundle"), "Changing AdbTarget should install the APK set.");
+			Assert.IsTrue (b.Install (proj, parameters: new [] { $"AdbTarget=\"-s {serial}\"" }), "unchanged install should succeed.");
+			Assert.IsTrue (b.Output.AreTargetsAllSkipped ("_DeployAppBundle", "_Upload"), "Unchanged deployment to the same target should be skipped.");
 		}
 
 		[Test]

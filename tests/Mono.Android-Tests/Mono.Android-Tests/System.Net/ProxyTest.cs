@@ -2,22 +2,24 @@ using System;
 using System.IO;
 using System.Net;
 
-using NUnit.Framework;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 using Xamarin.Android.NetTests;
 
 namespace System.NetTests {
 
-	[TestFixture, Category ("InetAccess")]
+	[TestClass, TestCategory ("InetAccess")]
 	public class ProxyTest {
 
 		// https://bugzilla.xamarin.com/show_bug.cgi?id=14968
-		[Test]
+		[TestMethod]
 		public void QuoteInvalidQuoteUrlsShouldWork ()
 		{
 			using var server = LocalHttpServer.Start ();
 			string url      = $"{server.Url}ok?query&foo|bar";
+#pragma warning disable SYSLIB0014 // Regression coverage for HttpWebRequest URL handling.
 			var request     = (HttpWebRequest) WebRequest.Create (url);
+#pragma warning restore SYSLIB0014
 			request.Method  = "GET";
 			var response    = (HttpWebResponse) request.GetResponse ();
 			int len = 0;

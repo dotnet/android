@@ -1,0 +1,10 @@
+<Project>
+  <Target Name="_UseDotNetPublicMaven" BeforeTargets="_MavenRestore">
+    <ItemGroup>
+      <AndroidMavenLibrary
+          Update="@(AndroidMavenLibrary)"
+          Repository="https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-public-maven/maven/v1"
+          Condition="'%(AndroidMavenLibrary.Repository)' == ''" />
+    </ItemGroup>
+  </Target>
+</Project>

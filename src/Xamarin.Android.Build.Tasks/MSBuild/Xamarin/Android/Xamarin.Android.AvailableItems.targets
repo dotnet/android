@@ -11,14 +11,12 @@ This item group populates the Build Action drop-down in IDEs.
 
   <!-- Not legacy binding projects -->
   <ItemGroup>
-    <AvailableItemName Include="AndroidAotProfile" />
     <AvailableItemName Include="AndroidAsset" />
     <AvailableItemName Include="AndroidEnvironment" />
     <AvailableItemName Include="AndroidExternalJavaLibrary" />
     <AvailableItemName Include="AndroidInterfaceDescription" />
     <AvailableItemName Include="AndroidJavaSource" />
     <AvailableItemName Include="AndroidLibrary" />
-    <AvailableItemName Include="AndroidLintConfig" />
     <AvailableItemName Include="AndroidResourceAnalysisConfig" />
     <AvailableItemName Include="AndroidNativeLibrary" />
     <AvailableItemName Include="AndroidResource" />
@@ -35,8 +33,6 @@ This item group populates the Build Action drop-down in IDEs.
     <AvailableItemName Include="AndroidGradleProject" />
     <AvailableItemName Include="TransformFile" />
     <AvailableItemName Include="LibraryProjectProperties" />
-    <AvailableItemName Include="JavaDocIndex" />
-    <AvailableItemName Include="JavaDocJar" />
     <AvailableItemName Include="JavaSourceJar" />
   </ItemGroup>
 
@@ -74,7 +70,9 @@ This item group populates the Build Action drop-down in IDEs.
     <ItemGroup Condition=" '$(AndroidApplication)' != 'true' ">
       <EmbeddedNativeLibrary Include="@(AndroidNativeLibrary)" />
       <AndroidAarLibrary  Include="@(AndroidLibrary)" Condition=" '%(AndroidLibrary.Extension)' == '.aar' and '%(AndroidLibrary.Bind)' != 'true' " />
+      <_AndroidReferenceLibraryProjectZip Include="@(AndroidLibrary)" Condition=" '%(AndroidLibrary.Extension)' == '.aar' and '%(AndroidLibrary.Bind)' != 'true' " />
       <AndroidJavaLibrary Include="@(AndroidLibrary)" Condition=" '%(AndroidLibrary.Extension)' == '.jar' and '%(AndroidLibrary.Bind)' != 'true' " />
+      <ReferenceJar       Include="@(AndroidLibrary)" Condition=" '%(AndroidLibrary.Extension)' == '.jar' and '%(AndroidLibrary.Bind)' != 'true' " />
       <EmbeddedJar        Include="@(AndroidLibrary)" Condition=" '%(AndroidLibrary.Extension)' == '.jar' and '%(AndroidLibrary.Bind)' == 'true' " />
       <!-- .aar files should be copied to $(OutputPath) in .NET 6+ -->
       <None Include="@(AndroidLibrary)" Condition=" '%(AndroidLibrary.Extension)' == '.aar' " TfmSpecificPackageFile="%(AndroidLibrary.Pack)" Pack="false" CopyToOutputDirectory="PreserveNewest" Link="%(Filename)%(Extension)" />

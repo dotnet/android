@@ -1,7 +1,7 @@
 ---
 title: "Customizing Bindings"
 description: "You can customize a .NET for Android binding by editing the metadata that controls the binding process. These manual modifications are often necessary for resolving build errors and for shaping the resulting API so that it is more consistent with C#/.NET. These guides explain the structure of this metadata and how to modify the metadata."
-ms.author: jopobst
+ms.author: jopepper
 ms.date: 05/06/2024
 ---
 

@@ -1,7 +1,7 @@
 ---
 title: Binding Projects MSBuild Items
 description: This guide documents the various MSBuild items available for bindings projects.
-ms.author: jopobst
+ms.author: jopepper
 ms.date: 05/08/2024
 ---
 

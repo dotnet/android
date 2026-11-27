@@ -38,7 +38,7 @@ darc update-dependencies --channel ".NET 6"
 To configure automatic updates, use the [`darc add-subscription`][5] command
 to enroll a target repo/branch into updates from a particular channel:
 ```
-darc add-subscription --channel ".NET 6" --source-repo https://github.com/dotnet/installer --target-repo https://github.com/xamarin/xamarin-android --target-branch main --update-frequency everyWeek --standard-automerge
+darc add-subscription --channel ".NET 6" --source-repo https://github.com/dotnet/installer --target-repo https://github.com/dotnet/android --target-branch main --update-frequency everyWeek --standard-automerge
 ```
 
 Once a subscription is configured, pull requests will be created automatically
@@ -57,17 +57,17 @@ to a default darc/maestro channel if one is configured.  Default channels are
 manually managed at this time.  To configure a new default repo+branch <-> channel
 association, run the [`darc add-default-channel`][6] command:
 ```
-darc add-default-channel --channel ".NET 6" --branch "main" --repo https://github.com/xamarin/xamarin-android
+darc add-default-channel --channel ".NET 6" --branch "main" --repo https://github.com/dotnet/android
 ```
 
 When a new release branch is created, this command should look something like this:
 ```
-darc add-default-channel --channel ".NET 6.0.1xx SDK Preview 4" --branch "release/6.0.1xx-preview4" --repo https://github.com/xamarin/xamarin-android
+darc add-default-channel --channel ".NET 6.0.1xx SDK Preview 4" --branch "release/6.0.1xx-preview4" --repo https://github.com/dotnet/android
 ```
 
 Other products/tools can consume our package version info in the following way:
 ```
-darc add-dependency -n Microsoft.Android.Sdk.Windows -t product -r https://github.com/xamarin/xamarin-android -v 1.2.3
+darc add-dependency -n Microsoft.Android.Sdk.Windows -t product -r https://github.com/dotnet/android -v 1.2.3
 ```
 
 

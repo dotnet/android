@@ -34,8 +34,11 @@ namespace Xamarin.Android.Tasks
 		public string? ProguardGeneratedApplicationConfiguration { get; set; }
 		public string? ProguardCommonXamarinConfiguration { get; set; }
 		public string? ProguardMappingFileOutput { get; set; }
+		public string? BuildMetadataFileOutput { get; set; }
 		public ITaskItem []? ProguardConfigurationFiles { get; set; }
-		public bool UseTrimmableNativeAotProguardConfiguration { get; set; }
+		public bool UseTypeMapProguardConfiguration { get; set; }
+		public bool UseScopedTypeMapMembers { get; set; }
+		public string ObfuscationMode { get; set; } = "private-members";
 
 		// User-authored AndroidJavaSource (Bind != true) .java files. These have no managed peer and are
 		// therefore absent from the acw-map, so they must be kept explicitly when shrinking is enabled.
@@ -122,6 +125,11 @@ namespace Xamarin.Android.Tasks
 			// Now append R8-specific arguments to the response file
 			using var response = new StreamWriter (responseFile, append: true, encoding: Files.UTF8withoutBOM);
 
+			if (!BuildMetadataFileOutput.IsNullOrEmpty ()) {
+				WriteArg (response, "--build-metadata-output");
+				WriteArg (response, Path.GetFullPath (BuildMetadataFileOutput));
+			}
+
 			if (EnableMultiDex) {
 				if (MinSdkVersion >= 21) {
 					if (CustomMainDexListFiles?.Length > 0) {
@@ -154,18 +162,22 @@ namespace Xamarin.Android.Tasks
 			}
 
 			if (EnableShrinking) {
-				if (UseTrimmableNativeAotProguardConfiguration && !ProguardGeneratedApplicationConfiguration.IsNullOrEmpty ()) {
-					// ACW keep rules come from the DGML/acw-map-driven proguard_project_references.cfg on
-					// the trimmable path. User-authored AndroidJavaSource (Bind != true) has no managed peer
+				bool runtimeRemapping = string.Equals (ObfuscationMode, "runtime-remapping", StringComparison.OrdinalIgnoreCase);
+				if (UseTypeMapProguardConfiguration && !runtimeRemapping) {
+					WriteArg (response, "--no-minification");
+				}
+				if (UseTypeMapProguardConfiguration && !ProguardGeneratedApplicationConfiguration.IsNullOrEmpty ()) {
+					// Class roots come from retained typemap keys, not the complete ACW map.
+					// User-authored AndroidJavaSource (Bind != true) has no managed peer
 					// and is absent from that map, so keep it here explicitly; otherwise R8 shrinks it away
 					// (e.g. dropping large unreferenced sources so an app that needs multidex no longer does).
 					using (var appcfg = File.CreateText (ProguardGeneratedApplicationConfiguration)) {
-						appcfg.WriteLine ("# ACW keep rules are generated from NativeAOT ILC metadata.");
+						appcfg.WriteLine ("# Class keep rules are generated from retained typemap keys.");
 						foreach (var java in GetUserJavaTypes ()) {
-							appcfg.WriteLine ($"-keep class {java} {{ *; }}");
+							appcfg.WriteLine ($"{KeepOption} class {java} {{ *; }}");
 						}
 					}
-				} else if (!AcwMapFile.IsNullOrEmpty ()) {
+				} else if (!UseTypeMapProguardConfiguration && !AcwMapFile.IsNullOrEmpty ()) {
 					var acwMap      = MonoAndroidHelper.LoadMapFile (BuildEngine4, Path.GetFullPath (AcwMapFile), StringComparer.OrdinalIgnoreCase);
 					var javaTypes   = new List<string> (acwMap.Values.Count);
 					foreach (var v in acwMap.Values) {
@@ -174,19 +186,24 @@ namespace Xamarin.Android.Tasks
 					javaTypes.Sort (StringComparer.Ordinal);
 					using (var appcfg = File.CreateText (ProguardGeneratedApplicationConfiguration)) {
 						foreach (var java in javaTypes) {
-							appcfg.WriteLine ($"-keep class {java} {{ *; }}");
+							appcfg.WriteLine ($"{KeepOption} class {java} {{ *; }}");
 						}
 						// User-authored AndroidJavaSource (Bind != true) has no managed peer and is absent
 						// from the acw-map, so keep it explicitly; otherwise shrinking removes it.
 						foreach (var java in GetUserJavaTypes ()) {
-							appcfg.WriteLine ($"-keep class {java} {{ *; }}");
+							appcfg.WriteLine ($"{KeepOption} class {java} {{ *; }}");
 						}
 					}
 				}
 				if (!ProguardCommonXamarinConfiguration.IsNullOrWhiteSpace ()) {
 					using (var xamcfg = File.CreateText (ProguardCommonXamarinConfiguration)) {
-						if (UseTrimmableNativeAotProguardConfiguration) {
-							using var stream = GetEmbeddedResourceStream ("proguard_trimmable_nativeaot.cfg");
+						WriteObfuscationRules (
+							xamcfg,
+							UseTypeMapProguardConfiguration && !runtimeRemapping ? "disabled" : ObfuscationMode);
+						xamcfg.WriteLine ();
+						xamcfg.Flush ();
+						if (UseTypeMapProguardConfiguration) {
+							using var stream = GetEmbeddedResourceStream (UseScopedTypeMapMembers ? "proguard_typemap_coreclr.cfg" : "proguard_typemap.cfg");
 							stream.CopyTo (xamcfg.BaseStream);
 						} else {
 							using var stream = GetEmbeddedResourceStream ("proguard_xamarin.cfg");
@@ -208,6 +225,7 @@ namespace Xamarin.Android.Tasks
 				WriteArg (response, "--no-minification");
 				// Rules to turn off optimizations
 				var temp = Path.GetTempFileName ();
+				tempFiles.Add (temp);
 				var lines = new List<string> {
 					"-dontoptimize",
 					"-dontpreverify",
@@ -222,7 +240,6 @@ namespace Xamarin.Android.Tasks
 					lines.Add ($"-printmapping \"{Path.GetFullPath (ProguardMappingFileOutput)}\"");
 				}
 				File.WriteAllLines (temp, lines);
-				tempFiles.Add (temp);
 				WriteArg (response, "--pg-conf");
 				WriteArg (response, temp);
 			}
@@ -244,6 +261,50 @@ namespace Xamarin.Android.Tasks
 			}
 
 			return responseFile;
+		}
+
+		internal string KeepOption => string.Equals (ObfuscationMode, "runtime-remapping", StringComparison.OrdinalIgnoreCase) ? "-keep,allowobfuscation" : "-keep";
+
+		internal static void WriteObfuscationRules (TextWriter writer, string obfuscationMode)
+		{
+			if (string.Equals (obfuscationMode, "disabled", StringComparison.OrdinalIgnoreCase)) {
+				writer.WriteLine ("-dontobfuscate");
+				return;
+			}
+
+			if (string.Equals (obfuscationMode, "runtime-remapping", StringComparison.OrdinalIgnoreCase)) {
+				// Keep names used by bootstrap JNI and resource/interface lookups that do not
+				// pass through the generated member-remapping tables.
+				writer.WriteLine ("-keep class mono.NativeLibraryHelper { *; <init>(...); }");
+				writer.WriteLine ("-keep class mono.android.Runtime { *; }");
+				writer.WriteLine ("-keep class mono.android.GCUserPeer { <init>(); }");
+				writer.WriteLine ("-keepclassmembernames interface * { *; }");
+				writer.WriteLine ("-keepclassmembernames,includedescriptorclasses class * { native <methods>; }");
+				// Inherited field lookups try the original name before base remaps. A renamed
+				// subclass field can reuse the base field's original name and resolve to the
+				// wrong field, even when the declaring base's remap is retained.
+				writer.WriteLine ("-keepclassmembernames class * { <fields>; }");
+				writer.WriteLine ("-keepnames public class *");
+				writer.WriteLine ("-keepnames class **$*");
+				// Kotlin value-class structs call these helpers by name over JNI.
+				writer.WriteLine ("-keepclassmembernames class * { *** box?impl(...); *** unbox?impl(...); *** constructor?impl(...); }");
+				// Kotlin default-argument overloads call these helpers by name over JNI.
+				writer.WriteLine ("-keepclassmembernames class * { static *** *$default(...); }");
+				return;
+			}
+			if (!string.Equals (obfuscationMode, "private-members", StringComparison.OrdinalIgnoreCase)) {
+				throw new InvalidOperationException ($"Unsupported R8 obfuscation mode '{obfuscationMode}'.");
+			}
+
+			writer.WriteLine ("-keep,allowshrinking,allowoptimization class **");
+			writer.WriteLine ("-keepclassmembers,allowshrinking,allowoptimization class ** {");
+			writer.WriteLine ("   public protected *;");
+			writer.WriteLine ("}");
+			// Managed interface proxy selection observes Class.getInterfaces(), which R8 cannot infer.
+			writer.WriteLine ("-keep,allowoptimization interface ** {");
+			writer.WriteLine ("   public protected *;");
+			writer.WriteLine ("}");
+			writer.WriteLine ("-keep,allowshrinking class * implements **");
 		}
 
 		// ProGuard "global" options that affect the whole build and are not allowed inside
@@ -316,7 +377,7 @@ namespace Xamarin.Android.Tasks
 
 		Stream GetEmbeddedResourceStream (string resourceName)
 		{
-			var stream = GetType ().Assembly.GetManifestResourceStream (resourceName);
+			var stream = typeof (R8).Assembly.GetManifestResourceStream (resourceName);
 			if (stream == null) {
 				throw new InvalidOperationException ($"Missing embedded resource '{resourceName}'.");
 			}

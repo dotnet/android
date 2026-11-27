@@ -128,7 +128,7 @@
         href: "messages/index.md#xa0xxx-environment-issue-or-missing-tooling"
       - name: XA0000
         href: messages/xa0000.md
-      - name: XA0001
+      - name: XA0001 (legacy)
         href: messages/xa0001.md
       - name: XA0002
         href: messages/xa0002.md
@@ -168,13 +168,13 @@
         href: messages/xa0111.md
       - name: XA0112
         href: messages/xa0112.md
-      - name: XA0113
+      - name: XA0113 (legacy)
         href: messages/xa0113.md
       - name: XA0115
         href: messages/xa0115.md
       - name: XA0116
         href: messages/xa0116.md
-      - name: XA0117
+      - name: XA0117 (legacy)
         href: messages/xa0117.md
       - name: XA0118
         href: messages/xa0118.md
@@ -272,6 +272,12 @@
         href: messages/xa1043.md
       - name: XA1048
         href: messages/xa1048.md
+      - name: XA1049
+        href: messages/xa1049.md
+      - name: XA1050
+        href: messages/xa1050.md
+      - name: XA1051
+        href: messages/xa1051.md
     - name: "XA2xxx: Linker"
       items:
       - name: "XA2xxx: Linker"
@@ -283,7 +289,13 @@
       - name: XA2002
         href: messages/xa2002.md
     - name: "XA3xxx: Unmanaged code compilation"
-      href: "messages/index.md#xa3xxx-unmanaged-code-compilation"
+      items:
+      - name: "XA3xxx: Unmanaged code compilation"
+        href: "messages/index.md#xa3xxx-unmanaged-code-compilation"
+      - name: XA3007
+        href: messages/xa3007.md
+      - name: XA3008
+        href: messages/xa3008.md
     - name: "XA4xxx: Code generation"
       items:
       - name: "XA4xxx: Code generation"
@@ -310,6 +322,8 @@
         href: messages/xa4237.md
       - name: XA4239
         href: messages/xa4239.md
+      - name: XA4240
+        href: messages/xa4240.md
       - name: XA4241
         href: messages/xa4241.md
       - name: XA4242
@@ -328,6 +342,28 @@
         href: messages/xa4248.md
       - name: XA4249
         href: messages/xa4249.md
+      - name: XA4256
+        href: messages/xa4256.md
+      - name: XA4257
+        href: messages/xa4257.md
+      - name: XA4258
+        href: messages/xa4258.md
+      - name: XA4259
+        href: messages/xa4259.md
+      - name: XA4260
+        href: messages/xa4260.md
+      - name: XA4261
+        href: messages/xa4261.md
+      - name: XA4262
+        href: messages/xa4262.md
+      - name: XA4263
+        href: messages/xa4263.md
+      - name: XA4264
+        href: messages/xa4264.md
+      - name: XA4266
+        href: messages/xa4266.md
+      - name: XA4268
+        href: messages/xa4268.md
       - name: XA4301
         href: messages/xa4301.md
       - name: XA4302
@@ -358,10 +394,32 @@
         href: messages/xa4315.md
       - name: XA4323
         href: messages/xa4323.md
+      - name: XA4324
+        href: messages/xa4324.md
+      - name: XA4325
+        href: messages/xa4325.md
+      - name: XA4326
+        href: messages/xa4326.md
+      - name: XA4327
+        href: messages/xa4327.md
+      - name: XA4328
+        href: messages/xa4328.md
+      - name: XA4329
+        href: messages/xa4329.md
+      - name: XA4330
+        href: messages/xa4330.md
+      - name: XA4331
+        href: messages/xa4331.md
     - name: "XA5xxx: GCC and toolchain"
       items:
       - name: "XA5xxx: GCC and toolchain"
         href: "messages/index.md#xa5xxx-gcc-and-toolchain"
+      - name: XA5101
+        href: messages/xa5101.md
+      - name: XA5104
+        href: messages/xa5104.md
+      - name: XA5105
+        href: messages/xa5105.md
       - name: XA5205
         href: messages/xa5205.md
       - name: XA5207
@@ -372,6 +430,20 @@
         href: messages/xa5301.md
       - name: XA5302
         href: messages/xa5302.md
+      - name: XA5305
+        href: messages/xa5305.md
+      - name: XA5306
+        href: messages/xa5306.md
+      - name: XA5307
+        href: messages/xa5307.md
+      - name: XA5308
+        href: messages/xa5308.md
+      - name: XA5309
+        href: messages/xa5309.md
+      - name: XA5310
+        href: messages/xa5310.md
+      - name: XA5311
+        href: messages/xa5311.md
     - name: "XA6xxx: Internal tools"
       href: "messages/index.md#xa6xxx-internal-tools"
     - name: "XAccc7xxx: Unhandled MSBuild exceptions"
@@ -387,10 +459,10 @@
     - name: .NET 8 Release Notes
       items:
       - name: .NET 8 34.0.95
-        href: https://github.com/xamarin/xamarin-android/releases/tag/34.0.95
+        href: https://github.com/dotnet/android/releases/tag/34.0.95
       - name: .NET 8 34.0.85
-        href: https://github.com/xamarin/xamarin-android/releases/tag/34.0.85
+        href: https://github.com/dotnet/android/releases/tag/34.0.85
       - name: .NET 8 34.0.79
-        href: https://github.com/xamarin/xamarin-android/releases/tag/34.0.85
+        href: https://github.com/dotnet/android/releases/tag/34.0.79
       - name: .NET 8 34.0.52
-        href: https://github.com/xamarin/xamarin-android/releases/tag/34.0.52
+        href: https://github.com/dotnet/android/releases/tag/34.0.52

@@ -1,14 +1,19 @@
-// https://github.com/xamarin/xamarin-android/blob/34acbbae6795854cc4e9f8eb7167ab011e0266b4/src/Xamarin.Android.Build.Tasks/Tests/Xamarin.Android.Build.Tests/MonoAndroidHelperTests.cs
-// https://github.com/xamarin/xamarin-android/blob/799506a9dfb746b8bdc8a4ab77e19eee875f00e3/src/Xamarin.Android.Build.Tasks/Tests/Xamarin.Android.Build.Tests/FilesTests.cs
+// https://github.com/dotnet/android/blob/34acbbae6795854cc4e9f8eb7167ab011e0266b4/src/Xamarin.Android.Build.Tasks/Tests/Xamarin.Android.Build.Tests/MonoAndroidHelperTests.cs
+// https://github.com/dotnet/android/blob/799506a9dfb746b8bdc8a4ab77e19eee875f00e3/src/Xamarin.Android.Build.Tasks/Tests/Xamarin.Android.Build.Tests/FilesTests.cs
 
 using NUnit.Framework;
 using System;
+using System.Collections.Generic;
+using System.Diagnostics;
+using System.Globalization;
 using System.IO;
+using System.IO.Compression;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using Xamarin.Tools.Zip;
+using System.Xml.Linq;
+using Microsoft.Build.Framework;
 using Microsoft.Android.Build.Tasks;
 
 namespace Microsoft.Android.Build.BaseTasks.Tests
@@ -19,14 +24,14 @@ namespace Microsoft.Android.Build.BaseTasks.Tests
 		bool IsWindows = RuntimeInformation.IsOSPlatform (OSPlatform.Windows);
 		const int MaxFileName = 255;
 
-		static readonly Encoding encoding = Encoding.UTF8;
+		static readonly Encoding encoding = new UTF8Encoding (false);
 		string tempDir;
 		MemoryStream stream;
 
 		[SetUp]
 		public void SetUp ()
 		{
-			tempDir = Path.Combine (Path.GetTempPath (), TestContext.CurrentContext.Test.Name);
+			tempDir = Path.Combine (TestContext.CurrentContext.WorkDirectory, "Microsoft.Android.Build.BaseTasks.Tests", TestContext.CurrentContext.Test.ID);
 			stream = new MemoryStream ();
 		}
 
@@ -53,6 +58,29 @@ namespace Microsoft.Android.Build.BaseTasks.Tests
 
 			Assert.AreEqual (Files.LongPathPrefix + path, longPath, "Long path prefix should be added.");
 			Assert.AreEqual (longPath, Files.ToLongPath (longPath), "Long path prefix should not be added twice.");
+		}
+
+		[Test]
+		public void SaveXmlUsesProjectPathAndRetrySettings ()
+		{
+			Directory.CreateDirectory (tempDir);
+			var environment = TaskEnvironment.CreateWithProjectDirectoryAndEnvironment (
+				Path.GetFullPath (tempDir), new Dictionary<string, string> {
+					["DOTNET_ANDROID_FILE_WRITE_RETRY_ATTEMPTS"] = "0",
+					["DOTNET_ANDROID_FILE_WRITE_RETRY_DELAY_MS"] = "0",
+				});
+			var doc = new XDocument (new XElement ("Devices"));
+			Assert.IsTrue (doc.SaveIfChanged ("devices.cache", environment));
+			var path = Path.Combine (tempDir, "devices.cache");
+			var timestamp = File.GetLastWriteTimeUtc (path);
+			Assert.IsFalse (doc.SaveIfChanged ("devices.cache", environment));
+			Assert.AreEqual (timestamp, File.GetLastWriteTimeUtc (path));
+			Assert.IsFalse (doc.SaveIfChanged (path), "The existing overload must produce the same XML.");
+			Assert.IsFalse (doc.SaveIfChanged (path, null), "A null environment must use the fallback.");
+			using var locked = new FileStream (path, FileMode.Open, FileAccess.ReadWrite, FileShare.None);
+			var stopwatch = Stopwatch.StartNew ();
+			Assert.Throws<IOException> (() => doc.SaveIfChanged ("devices.cache", environment));
+			Assert.Less (stopwatch.Elapsed, TimeSpan.FromSeconds (2), "The project's retry limit must be used.");
 		}
 
 		[Test]
@@ -100,6 +128,46 @@ namespace Microsoft.Android.Build.BaseTasks.Tests
 				writer.WriteLine ();
 				writer.Flush ();
 				Assert.IsTrue (Files.CopyIfStreamChanged (foo, tempFile), "Should write when changed.");
+			}
+		}
+
+		[Test]
+		public void CopyIfStreamChanged_TaskEnvironment ()
+		{
+			var environment = TaskEnvironment.CreateWithProjectDirectoryAndEnvironment (tempDir, new System.Collections.Generic.Dictionary<string, string> ());
+			var destination = environment.GetAbsolutePath ("nested/foo.txt");
+			stream.WriteByte (42);
+			Assert.IsTrue (Files.CopyIfStreamChanged (stream, destination, environment));
+			CollectionAssert.AreEqual (new byte [] { 42 }, File.ReadAllBytes (destination));
+			Assert.IsFalse (Files.CopyIfStreamChanged (stream, destination, environment));
+			stream.SetLength (0);
+			stream.WriteByte (43);
+			Assert.IsTrue (Files.CopyIfStreamChanged (stream, destination, environment));
+			CollectionAssert.AreEqual (new byte [] { 43 }, File.ReadAllBytes (destination));
+		}
+
+		[TestCase (0)]
+		[TestCase (2)]
+		public void CopyIfStreamChanged_ProjectScopedRetries (int retries)
+		{
+			var environment = TaskEnvironment.CreateWithProjectDirectoryAndEnvironment (tempDir, new System.Collections.Generic.Dictionary<string, string> {
+				["DOTNET_ANDROID_FILE_WRITE_RETRY_ATTEMPTS"] = retries.ToString (CultureInfo.InvariantCulture),
+				["DOTNET_ANDROID_FILE_WRITE_RETRY_DELAY_MS"] = "0",
+			});
+			using var source = new SharingViolationStream ();
+			source.WriteByte (42);
+			Assert.Throws<IOException> (() => Files.CopyIfStreamChanged (source, environment.GetAbsolutePath ("foo.txt"), environment));
+			Assert.AreEqual (retries + 1, source.Attempts);
+		}
+
+		sealed class SharingViolationStream : MemoryStream
+		{
+			public int Attempts { get; private set; }
+
+			public override void CopyTo (Stream destination, int bufferSize)
+			{
+				Attempts++;
+				throw new IOException ("Simulated sharing violation.", unchecked ((int) 0x80070020));
 			}
 		}
 
@@ -271,9 +339,17 @@ namespace Microsoft.Android.Build.BaseTasks.Tests
 
 		bool ExtractAll (MemoryStream stream)
 		{
-			using (var zip = ZipArchive.Open (stream)) {
+			stream.Position = 0;
+			using (var zip = new ZipArchive (stream, ZipArchiveMode.Read, leaveOpen: true)) {
 				return Files.ExtractAll (zip, tempDir);
 			}
+		}
+
+		static void WriteEntry (ZipArchive zip, string name, string contents)
+		{
+			var entry = zip.CreateEntry (name);
+			using var writer = new StreamWriter (entry.Open (), encoding);
+			writer.Write (contents);
 		}
 
 		string NewFile (string contents = null, string fileName = "")
@@ -506,11 +582,26 @@ namespace Microsoft.Android.Build.BaseTasks.Tests
 		}
 
 		[Test]
+		public void CopyIfChanged_ProjectScopedRetries ()
+		{
+			var environment = TaskEnvironment.CreateWithProjectDirectoryAndEnvironment (tempDir, new Dictionary<string, string> {
+				["DOTNET_ANDROID_FILE_WRITE_RETRY_ATTEMPTS"] = "0",
+				["DOTNET_ANDROID_FILE_WRITE_RETRY_DELAY_MS"] = "0",
+			});
+			var dest = NewFile (contents: "foo", fileName: "foo_locked");
+			var src = NewFile (contents: "foo0", fileName: "foo");
+			using var locked = new FileStream (dest, FileMode.Open, FileAccess.ReadWrite, FileShare.None);
+			var stopwatch = Stopwatch.StartNew ();
+			Assert.Throws<IOException> (() => Files.CopyIfChanged (src, dest, environment));
+			Assert.Less (stopwatch.Elapsed, TimeSpan.FromSeconds (2), "The project's retry limit must be used.");
+		}
+
+		[Test]
 		public void ExtractAll ()
 		{
-			using (var zip = ZipArchive.Create (stream)) {
-				zip.AddEntry ("a.txt", "a", encoding);
-				zip.AddEntry ("b/b.txt", "b", encoding);
+			using (var zip = new ZipArchive (stream, ZipArchiveMode.Create, leaveOpen: true)) {
+				WriteEntry (zip, "a.txt", "a");
+				WriteEntry (zip, "b/b.txt", "b");
 			}
 
 			bool changes = ExtractAll (stream);
@@ -523,18 +614,19 @@ namespace Microsoft.Android.Build.BaseTasks.Tests
 		[Test]
 		public void ExtractAll_NoChanges ()
 		{
-			using (var zip = ZipArchive.Create (stream)) {
-				zip.AddEntry ("a.txt", "a", encoding);
-				zip.AddEntry ("b/b.txt", "b", encoding);
+			using (var zip = new ZipArchive (stream, ZipArchiveMode.Create, leaveOpen: true)) {
+				WriteEntry (zip, "a.txt", "a");
+				WriteEntry (zip, "b/b.txt", "b");
 			}
 
 			bool changes = ExtractAll (stream);
 			Assert.IsTrue (changes, "ExtractAll should report changes.");
 
 			stream.SetLength (0);
-			using (var zip = ZipArchive.Open (stream)) {
-				zip.AddEntry ("a.txt", "a", encoding);
-				zip.AddEntry ("b/b.txt", "b", encoding);
+			stream.Position = 0;
+			using (var zip = new ZipArchive (stream, ZipArchiveMode.Create, leaveOpen: true)) {
+				WriteEntry (zip, "a.txt", "a");
+				WriteEntry (zip, "b/b.txt", "b");
 			}
 
 			changes = ExtractAll (stream);
@@ -547,19 +639,20 @@ namespace Microsoft.Android.Build.BaseTasks.Tests
 		[Test]
 		public void ExtractAll_NewFile ()
 		{
-			using (var zip = ZipArchive.Create (stream)) {
-				zip.AddEntry ("a.txt", "a", encoding);
-				zip.AddEntry ("b/b.txt", "b", encoding);
+			using (var zip = new ZipArchive (stream, ZipArchiveMode.Create, leaveOpen: true)) {
+				WriteEntry (zip, "a.txt", "a");
+				WriteEntry (zip, "b/b.txt", "b");
 			}
 
 			bool changes = ExtractAll (stream);
 			Assert.IsTrue (changes, "ExtractAll should report changes.");
 
 			stream.SetLength (0);
-			using (var zip = ZipArchive.Open (stream)) {
-				zip.AddEntry ("a.txt", "a", encoding);
-				zip.AddEntry ("b/b.txt", "b", encoding);
-				zip.AddEntry ("c/c.txt", "c", encoding);
+			stream.Position = 0;
+			using (var zip = new ZipArchive (stream, ZipArchiveMode.Create, leaveOpen: true)) {
+				WriteEntry (zip, "a.txt", "a");
+				WriteEntry (zip, "b/b.txt", "b");
+				WriteEntry (zip, "c/c.txt", "c");
 			}
 
 			changes = ExtractAll (stream);
@@ -573,16 +666,17 @@ namespace Microsoft.Android.Build.BaseTasks.Tests
 		[Test]
 		public void ExtractAll_FileChanged ()
 		{
-			using (var zip = ZipArchive.Create (stream)) {
-				zip.AddEntry ("foo.txt", "foo", encoding);
+			using (var zip = new ZipArchive (stream, ZipArchiveMode.Create, leaveOpen: true)) {
+				WriteEntry (zip, "foo.txt", "foo");
 			}
 
 			bool changes = ExtractAll (stream);
 			Assert.IsTrue (changes, "ExtractAll should report changes.");
 
 			stream.SetLength (0);
-			using (var zip = ZipArchive.Create (stream)) {
-				zip.AddEntry ("foo.txt", "bar", encoding);
+			stream.Position = 0;
+			using (var zip = new ZipArchive (stream, ZipArchiveMode.Create, leaveOpen: true)) {
+				WriteEntry (zip, "foo.txt", "bar");
 			}
 
 			changes = ExtractAll (stream);
@@ -594,17 +688,18 @@ namespace Microsoft.Android.Build.BaseTasks.Tests
 		[Test]
 		public void ExtractAll_FileDeleted ()
 		{
-			using (var zip = ZipArchive.Create (stream)) {
-				zip.AddEntry ("a.txt", "a", encoding);
-				zip.AddEntry ("b/b.txt", "b", encoding);
+			using (var zip = new ZipArchive (stream, ZipArchiveMode.Create, leaveOpen: true)) {
+				WriteEntry (zip, "a.txt", "a");
+				WriteEntry (zip, "b/b.txt", "b");
 			}
 
 			bool changes = ExtractAll (stream);
 			Assert.IsTrue (changes, "ExtractAll should report changes.");
 
 			stream.SetLength (0);
-			using (var zip = ZipArchive.Open (stream)) {
-				zip.AddEntry ("a.txt", "a", encoding);
+			stream.Position = 0;
+			using (var zip = new ZipArchive (stream, ZipArchiveMode.Create, leaveOpen: true)) {
+				WriteEntry (zip, "a.txt", "a");
 			}
 
 			changes = ExtractAll (stream);
@@ -617,13 +712,13 @@ namespace Microsoft.Android.Build.BaseTasks.Tests
 		[Test]
 		public void ExtractAll_ModifyCallback ()
 		{
-			using (var zip = ZipArchive.Create (stream)) {
-				zip.AddEntry ("foo/a.txt", "a", encoding);
-				zip.AddEntry ("foo/b/b.txt", "b", encoding);
+			using (var zip = new ZipArchive (stream, ZipArchiveMode.Create, leaveOpen: true)) {
+				WriteEntry (zip, "foo/a.txt", "a");
+				WriteEntry (zip, "foo/b/b.txt", "b");
 			}
 
 			stream.Position = 0;
-			using (var zip = ZipArchive.Open (stream)) {
+			using (var zip = new ZipArchive (stream, ZipArchiveMode.Read, leaveOpen: true)) {
 				bool changes = Files.ExtractAll (zip, tempDir, modifyCallback: e => e.Replace ("foo/", ""));
 				Assert.IsTrue (changes, "ExtractAll should report changes.");
 			}
@@ -635,13 +730,13 @@ namespace Microsoft.Android.Build.BaseTasks.Tests
 		[Test]
 		public void ExtractAll_SkipCallback ()
 		{
-			using (var zip = ZipArchive.Create (stream)) {
-				zip.AddEntry ("a.txt", "a", encoding);
-				zip.AddEntry ("b/b.txt", "b", encoding);
+			using (var zip = new ZipArchive (stream, ZipArchiveMode.Create, leaveOpen: true)) {
+				WriteEntry (zip, "a.txt", "a");
+				WriteEntry (zip, "b/b.txt", "b");
 			}
 
 			stream.Position = 0;
-			using (var zip = ZipArchive.Open (stream)) {
+			using (var zip = new ZipArchive (stream, ZipArchiveMode.Read, leaveOpen: true)) {
 				bool changes = Files.ExtractAll (zip, tempDir, skipCallback: e => e == "a.txt");
 				Assert.IsTrue (changes, "ExtractAll should report changes.");
 			}
@@ -653,10 +748,10 @@ namespace Microsoft.Android.Build.BaseTasks.Tests
 		[Test]
 		public void ExtractAll_MacOSFiles ()
 		{
-			using (var zip = ZipArchive.Create (stream)) {
-				zip.AddEntry ("a/.DS_Store", "a", encoding);
-				zip.AddEntry ("b/__MACOSX/b.txt", "b", encoding);
-				zip.AddEntry ("c/__MACOSX", "c", encoding);
+			using (var zip = new ZipArchive (stream, ZipArchiveMode.Create, leaveOpen: true)) {
+				WriteEntry (zip, "a/.DS_Store", "a");
+				WriteEntry (zip, "b/__MACOSX/b.txt", "b");
+				WriteEntry (zip, "c/__MACOSX", "c");
 			}
 
 			bool changes = ExtractAll (stream);
@@ -665,72 +760,67 @@ namespace Microsoft.Android.Build.BaseTasks.Tests
 		}
 
 		[Test]
-		public void ExtractAll_SkipsPathTraversal ()
+		public void ExtractAll_RejectsPathTraversal ()
 		{
-			using (var zip = ZipArchive.Create (stream)) {
-				zip.AddEntry ("a.txt", "a", encoding);
+			using (var zip = new ZipArchive (stream, ZipArchiveMode.Create, leaveOpen: true)) {
+				WriteEntry (zip, "a.txt", "a");
 			}
 
 			var destinationDir = Path.Combine (tempDir, "dest");
 			stream.Position = 0;
-			using (var zip = ZipArchive.Open (stream)) {
+			using (var zip = new ZipArchive (stream, ZipArchiveMode.Read, leaveOpen: true)) {
 				// modifyCallback introduces a path traversal
-				bool changes = Files.ExtractAll (zip, destinationDir, modifyCallback: e => "../" + e);
-				Assert.IsFalse (changes, "ExtractAll should not report changes for skipped entries.");
+				Assert.Throws<InvalidDataException> (() => Files.ExtractAll (zip, destinationDir, modifyCallback: e => "../" + e));
 			}
 			FileAssert.DoesNotExist (Path.Combine (tempDir, "a.txt"));
 		}
 
 		[Test]
-		public void ExtractAll_SkipsPathTraversal_ExtractsValidEntries ()
+		public void ExtractAll_RejectsTraversalBeforeWritingValidEntries ()
 		{
-			using (var zip = ZipArchive.Create (stream)) {
-				zip.AddEntry ("good.txt", "good", encoding);
-				zip.AddEntry ("relative.txt", "relative", encoding);
+			using (var zip = new ZipArchive (stream, ZipArchiveMode.Create, leaveOpen: true)) {
+				WriteEntry (zip, "good.txt", "good");
+				WriteEntry (zip, "relative.txt", "relative");
 			}
 
 			var destinationDir = Path.Combine (tempDir, "dest");
 			stream.Position = 0;
-			using (var zip = ZipArchive.Open (stream)) {
+			using (var zip = new ZipArchive (stream, ZipArchiveMode.Read, leaveOpen: true)) {
 				// Only relative.txt gets a traversal prefix
-				bool changes = Files.ExtractAll (zip, destinationDir, modifyCallback: e =>
-					e == "relative.txt" ? "../" + e : e);
-				Assert.IsTrue (changes, "ExtractAll should report changes for the valid entry.");
+				Assert.Throws<InvalidDataException> (() => Files.ExtractAll (zip, destinationDir, modifyCallback: e =>
+					e == "relative.txt" ? "../" + e : e));
 			}
-			AssertFile (Path.Combine ("dest", "good.txt"), "good");
+			FileAssert.DoesNotExist (Path.Combine (destinationDir, "good.txt"));
 			FileAssert.DoesNotExist (Path.Combine (tempDir, "relative.txt"));
 		}
 
 		[TestCase ("../../")]
 		[TestCase ("foo/../../../")]
-		public void ExtractAll_SkipsPathTraversal_ForwardSlash (string prefix)
+		public void ExtractAll_RejectsPathTraversal_ForwardSlash (string prefix)
 		{
-			using (var zip = ZipArchive.Create (stream)) {
-				zip.AddEntry ("a.txt", "a", encoding);
+			using (var zip = new ZipArchive (stream, ZipArchiveMode.Create, leaveOpen: true)) {
+				WriteEntry (zip, "a.txt", "a");
 			}
 
 			var destinationDir = Path.Combine (tempDir, "dest");
 			stream.Position = 0;
-			using (var zip = ZipArchive.Open (stream)) {
-				bool changes = Files.ExtractAll (zip, destinationDir, modifyCallback: e => prefix + e);
-				Assert.IsFalse (changes, $"Entry with prefix '{prefix}' should be skipped.");
+			using (var zip = new ZipArchive (stream, ZipArchiveMode.Read, leaveOpen: true)) {
+				Assert.Throws<InvalidDataException> (() => Files.ExtractAll (zip, destinationDir, modifyCallback: e => prefix + e));
 			}
 		}
 
 		[TestCase ("..\\")]
 		[TestCase ("..\\..\\")]
-		[Platform ("Win")]
-		public void ExtractAll_SkipsPathTraversal_BackSlash (string prefix)
+		public void ExtractAll_RejectsPathTraversal_BackSlash (string prefix)
 		{
-			using (var zip = ZipArchive.Create (stream)) {
-				zip.AddEntry ("a.txt", "a", encoding);
+			using (var zip = new ZipArchive (stream, ZipArchiveMode.Create, leaveOpen: true)) {
+				WriteEntry (zip, "a.txt", "a");
 			}
 
 			var destinationDir = Path.Combine (tempDir, "dest");
 			stream.Position = 0;
-			using (var zip = ZipArchive.Open (stream)) {
-				bool changes = Files.ExtractAll (zip, destinationDir, modifyCallback: e => prefix + e);
-				Assert.IsFalse (changes, $"Entry with prefix '{prefix}' should be skipped.");
+			using (var zip = new ZipArchive (stream, ZipArchiveMode.Read, leaveOpen: true)) {
+				Assert.Throws<InvalidDataException> (() => Files.ExtractAll (zip, destinationDir, modifyCallback: e => prefix + e));
 			}
 		}
 
@@ -748,13 +838,14 @@ namespace Microsoft.Android.Build.BaseTasks.Tests
 			Directory.CreateDirectory (tempDir);
 			var destination = Path.Combine (tempDir, "dest.zip");
 
-			using (var zip = ZipArchive.Create (stream)) {
-				zip.AddEntry ("a.txt", "a", encoding);
+			using (var zip = new ZipArchive (stream, ZipArchiveMode.Create, leaveOpen: true)) {
+				WriteEntry (zip, "a.txt", "a");
 			}
 			stream.Position = 0;
 
 			Assert.IsTrue (Files.CopyIfZipChanged (stream, destination), "Should copy on new file.");
 			FileAssert.Exists (destination);
+			stream.Position = 0;
 			Assert.IsFalse (Files.CopyIfZipChanged (stream, destination), "Should *not* copy when unchanged.");
 		}
 
@@ -765,8 +856,8 @@ namespace Microsoft.Android.Build.BaseTasks.Tests
 			var source = Path.Combine (tempDir, "source.zip");
 			var destination = Path.Combine (tempDir, "dest.zip");
 
-			using (var zip = ZipArchive.Create (stream)) {
-				zip.AddEntry ("a.txt", "a", encoding);
+			using (var zip = new ZipArchive (stream, ZipArchiveMode.Create, leaveOpen: true)) {
+				WriteEntry (zip, "a.txt", "a");
 			}
 			stream.Position = 0;
 			using (var f = File.Create (source)) {
@@ -788,8 +879,8 @@ namespace Microsoft.Android.Build.BaseTasks.Tests
 				Directory.CreateDirectory (tempDir);
 				Directory.SetCurrentDirectory (tempDir);
 
-				using (var zip = ZipArchive.Create (stream)) {
-					zip.AddEntry ("a.txt", "a", encoding);
+				using (var zip = new ZipArchive (stream, ZipArchiveMode.Create, leaveOpen: true)) {
+					WriteEntry (zip, "a.txt", "a");
 				}
 				stream.Position = 0;
 
@@ -815,5 +906,17 @@ namespace Microsoft.Android.Build.BaseTasks.Tests
 			Directory.CreateDirectory (path);
 			Assert.DoesNotThrow (() => Files.DeleteFile (path, "not a TaskLoggingHelper"));
 		}
+
+		[Test]
+		public void TryDeleteFile_LogsFailure ()
+		{
+			var path = Path.Combine (tempDir, "directory-instead-of-file-try-delete");
+			Directory.CreateDirectory (path);
+			string message = "";
+
+			Assert.DoesNotThrow (() => Files.TryDeleteFile (path, value => message = value));
+			Assert.That (message, Does.Contain (path));
+		}
+
 	}
 }

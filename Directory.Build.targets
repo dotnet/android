@@ -7,7 +7,7 @@
   <!-- NuGet Package Versions -->
   <ItemGroup>
     <PackageReference Update="Microsoft.Win32.Registry"                     Version="5.0.0" />
-    <PackageReference Update="System.CodeDom"                               Version="10.0.10" />
+    <PackageReference Update="System.CodeDom"                               Version="10.0.12" />
     <PackageReference Update="Irony"                                        Version="1.5.3" />
   </ItemGroup>
 
@@ -21,19 +21,14 @@
       tasks are compiled against (System.IO.Hashing bumps its AssemblyVersion every patch), producing a
       MissingMethodException (XACRP7000) on System.IO.Hashing.Crc64.Hash at build
       time. Exclude SourceLink's runtime assets so it can never contribute a floating System.IO.Hashing;
-      source linking is unaffected (it runs via SourceLink's build assets). Mirrors the same pin in
-      external/Java.Interop/Directory.Build.targets.
+      source linking is unaffected (it runs via SourceLink's build assets).
     -->
     <PackageReference Include="Microsoft.SourceLink.GitHub" Version="$(SourceLinkGitHubPackageVersion)" PrivateAssets="All" ExcludeAssets="runtime" />
   </ItemGroup>
 
   <!-- Automatically add NRT attribute support for netstandard2.0 projects using NRT -->
-  <ItemGroup Condition=" '$(UseProjectNullableAttributes)' != 'true' AND '$(TargetFramework)' == 'netstandard2.0' AND ('$(Nullable)' == 'enable' OR '$(Nullable)' == 'annotations') ">
-    <Compile Include="$(MSBuildThisFileDirectory)external\Java.Interop\src\utils\NullableAttributes.cs" Visible="false" />
+  <ItemGroup Condition=" '$(TargetFramework)' == 'netstandard2.0' AND ('$(Nullable)' == 'enable' OR '$(Nullable)' == 'annotations') ">
+    <Compile Include="$(MSBuildThisFileDirectory)src\utils\NullableAttributes.cs" Visible="false" />
   </ItemGroup>
-  
-  <PropertyGroup Condition=" '$(UseProjectNullableAttributes)' != 'true' AND '$(TargetFramework)' == 'netstandard2.0' AND ('$(Nullable)' == 'enable' OR '$(Nullable)' == 'annotations') ">
-    <DefineConstants>$(DefineConstants);INTERNAL_NULLABLE_ATTRIBUTES</DefineConstants>
-  </PropertyGroup>
 
 </Project>

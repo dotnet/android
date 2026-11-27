@@ -1,5 +1,7 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using NUnit.Framework;
 using Microsoft.Build.Framework;
 using Xamarin.Android.Tasks;
@@ -47,14 +49,17 @@ namespace Xamarin.Android.Build.Tests
 		{
 			var src = NewFile ("foo");
 			var dest = NewFile ();
+			var messages = new List<BuildMessageEventArgs> ();
 
 			var task = new CopyIfChanged {
-				BuildEngine = new MockBuildEngine (TestContext.Out),
+				BuildEngine = new MockBuildEngine (TestContext.Out, messages: messages),
 				SourceFiles = ToArray (src),
 				DestinationFiles = ToArray (dest),
 			};
 			Assert.IsTrue (task.Execute (), "task.Execute() should have succeeded.");
 			Assert.AreEqual (1, task.ModifiedFiles.Length, "Changes should have been made.");
+			Assert.AreEqual (dest, task.ModifiedFiles [0].ItemSpec);
+			Assert.IsEmpty (messages, "ModifiedFiles should not be dumped to the log.");
 			FileAssert.AreEqual (src, dest);
 		}
 
@@ -66,14 +71,17 @@ namespace Xamarin.Android.Build.Tests
 			var now = DateTime.UtcNow;
 			File.SetLastWriteTimeUtc (src, now);
 			File.SetLastWriteTimeUtc (dest, now);
+			var messages = new List<BuildMessageEventArgs> ();
 
 			var task = new CopyIfChanged {
-				BuildEngine = new MockBuildEngine (TestContext.Out),
+				BuildEngine = new MockBuildEngine (TestContext.Out, messages: messages),
 				SourceFiles = ToArray (src),
 				DestinationFiles = ToArray (dest),
 			};
 			Assert.IsTrue (task.Execute (), "task.Execute() should have succeeded.");
 			Assert.AreEqual (0, task.ModifiedFiles.Length, "No changes should have been made.");
+			Assert.IsTrue (messages.Any (m => m.Message.Contains ("it was not changed.")));
+			Assert.IsFalse (messages.Any (m => m.Message == " ModifiedFiles:"));
 		}
 
 		[Test]
@@ -131,6 +139,53 @@ namespace Xamarin.Android.Build.Tests
 			};
 			Assert.IsTrue (task.Execute (), "task.Execute() should have succeeded.");
 			Assert.AreEqual (0, task.ModifiedFiles.Length, "No changes should have been made.");
+		}
+
+		[Test]
+		public void SourceOlderSameLengthDifferentContent ()
+		{
+			var src = NewFile ("foo");
+			var dest = NewFile ("bar");
+			File.SetLastWriteTimeUtc (src, new DateTime (2020, 1, 1, 0, 0, 0, DateTimeKind.Utc));
+			File.SetLastWriteTimeUtc (dest, new DateTime (2020, 1, 2, 0, 0, 0, DateTimeKind.Utc));
+			var timestamp = File.GetLastWriteTimeUtc (dest);
+
+			var task = new CopyIfChanged {
+				BuildEngine = new MockBuildEngine (TestContext.Out),
+				SourceFiles = ToArray (src),
+				DestinationFiles = ToArray (dest),
+			};
+			Assert.IsTrue (task.Execute (), "task.Execute() should have succeeded.");
+			Assert.IsEmpty (task.ModifiedFiles, "The default should trust the newer destination timestamp.");
+			Assert.AreEqual ("bar", File.ReadAllText (dest));
+			Assert.AreEqual (timestamp, File.GetLastWriteTimeUtc (dest));
+		}
+
+		[TestCase ("bar", true)]
+		[TestCase ("foo", false)]
+		public void VerifyContentWithNewerDestination (string destinationContent, bool expectCopy)
+		{
+			var src = NewFile ("foo");
+			var dest = NewFile (destinationContent);
+			File.SetLastWriteTimeUtc (src, new DateTime (2020, 1, 1, 0, 0, 0, DateTimeKind.Utc));
+			File.SetLastWriteTimeUtc (dest, new DateTime (2020, 1, 2, 0, 0, 0, DateTimeKind.Utc));
+			var timestamp = File.GetLastWriteTimeUtc (dest);
+
+			var task = new CopyIfChanged {
+				BuildEngine = new MockBuildEngine (TestContext.Out),
+				SourceFiles = ToArray (src),
+				DestinationFiles = ToArray (dest),
+				VerifyContent = true,
+			};
+			Assert.IsTrue (task.Execute (), "task.Execute() should have succeeded.");
+			FileAssert.AreEqual (src, dest);
+			if (expectCopy) {
+				Assert.AreEqual (1, task.ModifiedFiles.Length, "Different content should be copied despite the newer destination timestamp.");
+				Assert.AreEqual (dest, task.ModifiedFiles [0].ItemSpec);
+			} else {
+				Assert.IsEmpty (task.ModifiedFiles, "Identical content should not be copied.");
+				Assert.AreEqual (timestamp, File.GetLastWriteTimeUtc (dest));
+			}
 		}
 
 		[Test]

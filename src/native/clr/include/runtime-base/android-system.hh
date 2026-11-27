@@ -1,33 +1,41 @@
 #pragma once
 
 #include <array>
-#include <cstring>
+#include <cstdio>
 #include <limits>
 #include <span>
-#include <string>
 #include <string_view>
-#include <unordered_map>
 
 #include "../constants.hh"
-#include "../shared/log_types.hh"
+#include <shared/log_types.hh>
 #include "../runtime-base/cpu-arch.hh"
 #include <runtime-base/jni-wrappers.hh>
-#include <runtime-base/strings.hh>
 #include "util.hh"
 
-struct BundledProperty;
-
 namespace xamarin::android {
+#if defined (DEBUG)
+	// A system property bundled with the application, read from the environment override files.
+	// `name` is allocated together with the structure and never changes, `value` is allocated
+	// separately so that it can be replaced when the same property is set more than once.
+	struct BundledProperty
+	{
+		BundledProperty *next;
+		char            *name;
+		char            *value;
+		size_t           value_len;
+	};
+#endif
+
 	class AndroidSystem
 	{
 #if !defined (XA_HOST_NATIVEAOT)
 		// This optimizes things a little bit. The array is allocated at build time, so we pay no cost for its
 		// allocation and at run time it allows us to skip dynamic memory allocation.
-		inline static std::array<std::string, 1> single_app_lib_directory{};
-		inline static std::span<std::string> app_lib_directories;
+		inline static const char *single_app_lib_directory [1] { "" };
+		inline static std::span<const char*> app_lib_directories;
 
 		// TODO: override dirs not implemented
-		inline static std::array<std::string, 1> override_dirs{};
+		inline static const char *override_dirs [1] { "" };
 
 		static constexpr std::array<std::string_view, 7> android_abi_names {
 			std::string_view { "unknown" },     // CPU_KIND_UNKNOWN
@@ -64,44 +72,37 @@ namespace xamarin::android {
 			running_in_emulator = yesno;
 		}
 
-#if defined (XA_HOST_NATIVEAOT)
 		static auto get_primary_override_dir () noexcept -> const char*
 		{
 			return primary_override_dir;
 		}
-#else
-		static auto get_primary_override_dir () noexcept -> std::string const&
-		{
-			return primary_override_dir;
-		}
-#endif
 
 		static void set_primary_override_dir (jstring_wrapper& home) noexcept
 		{
-#if defined (XA_HOST_NATIVEAOT)
-			determine_primary_override_dir (home, primary_override_dir, sizeof (primary_override_dir));
-#else
-			primary_override_dir = determine_primary_override_dir (home);
-#endif
+			char stack_buffer [Constants::SENSIBLE_PATH_MAX];
+			char *path = stack_buffer;
+			ssize_t result = format_primary_override_dir (home, path, sizeof (stack_buffer));
+			if (result < 0) {
+				size_t required_capacity = static_cast<size_t>(-result);
+				path = static_cast<char*> (std::malloc (required_capacity));
+				abort_unless (path != nullptr, "Failed to allocate primary override directory path");
+				result = format_primary_override_dir (home, path, required_capacity);
+			}
+			abort_unless (result >= 0, "Failed to format primary override directory path using the required capacity");
+
+			primary_override_dir = Util::duplicate_string (path);
+			if (path != stack_buffer) {
+				std::free (path);
+			}
 		}
 
 #if !defined (XA_HOST_NATIVEAOT)
-		static auto get_app_code_cache_dir () noexcept -> std::string const&
-		{
-			return app_code_cache_dir;
-		}
-
-		static void set_app_code_cache_dir (jstring_wrapper& code_cache_dir) noexcept
-		{
-			app_code_cache_dir.assign (code_cache_dir.get_cstr ());
-		}
-
-		static auto get_native_libraries_dir () noexcept -> std::string const&
+		static auto get_native_libraries_dir () noexcept -> const char*
 		{
 			return native_libraries_dir;
 		}
 
-		static void create_update_dir (std::string const& override_dir) noexcept
+		static void create_update_dir (const char *override_dir) noexcept
 		{
 			if constexpr (Constants::is_release_build) {
 				/*
@@ -111,13 +112,14 @@ namespace xamarin::android {
 				 * However, if any logging is enabled (which should _not_ happen with
 				 * pre-loaded apps!), we need the .__override__ directory...
 				 */
-				dynamic_local_property_string value;
-				if (log_categories == 0 && monodroid_get_system_property (Constants::DEBUG_MONO_PROFILE_PROPERTY, value) == 0) [[likely]] {
+				char value[Constants::PROPERTY_VALUE_BUFFER_LEN];
+				if (log_categories == 0 &&
+				    monodroid_get_system_property (Constants::DEBUG_DOTNET_PROFILE_PROPERTY.data (), value, sizeof (value)) == nullptr) [[likely]] {
 					return;
 				}
 			}
 
-			log_debug (LOG_DEFAULT, "Creating public update directory: `{}`", override_dir);
+			log_debugf (LOG_DEFAULT, "Creating public update directory: `%s`", override_dir);
 			Util::create_public_directory (override_dir);
 		}
 #endif
@@ -127,28 +129,58 @@ namespace xamarin::android {
 			return embedded_dso_mode_enabled;
 		}
 
-		static auto monodroid_get_system_property (std::string_view const& name, dynamic_local_property_string &value) noexcept -> int;
+		// Returns the property's NUL-terminated value, or `nullptr` if it is not set. A property
+		// that is set to an empty value is reported as not set, matching `__system_property_get`,
+		// which cannot tell the two apart.
+		//
+		// `value` is a scratch buffer of at least `Constants::PROPERTY_VALUE_BUFFER_LEN` bytes, used
+		// to receive Android system properties. Bundled properties are returned without copying, so
+		// their length is not limited by `value_size`.
+		//
+		// Nothing is ever allocated and the caller must not free the result: it is either `value` or
+		// a pointer to bundled property data. The latter is only guaranteed to stay valid until the
+		// next `setup_environment()` call, because in Debug builds bundled properties are stored in
+		// a mutable map. Copy the value if you need to retain it.
+		static auto monodroid_get_system_property (const char *name, char *value, size_t value_size) noexcept -> const char*;
 		static void detect_embedded_dso_mode (jstring_array_wrapper& appDirs) noexcept;
 		static void setup_environment () noexcept;
 		static void setup_app_library_directories (jstring_array_wrapper& runtimeApks, jstring_array_wrapper& appDirs, bool have_split_apks) noexcept;
 		static auto load_dso_from_any_directories (std::string_view const& name, int dl_flags, bool is_jni) noexcept -> void*;
 
 	private:
-		static auto get_full_dso_path (std::string const& base_dir, std::string_view const& dso_path, dynamic_local_string<SENSIBLE_PATH_MAX>& path) noexcept -> bool;
+		static auto format_full_dso_path (const char *base_dir, std::string_view const& dso_path, char *buffer, size_t buffer_size) noexcept -> ssize_t;
+
+		static auto get_full_dso_path (const char *base_dir, std::string_view const& dso_path, char *stack_buffer, size_t stack_buffer_size) noexcept -> char*
+		{
+			ssize_t result = format_full_dso_path (base_dir, dso_path, stack_buffer, stack_buffer_size);
+			if (result >= 0) {
+				return stack_buffer;
+			}
+
+			size_t required_capacity = static_cast<size_t>(-result);
+			char *heap_buffer = static_cast<char*> (std::malloc (required_capacity));
+			abort_unless (heap_buffer != nullptr, "Failed to allocate full DSO path");
+			result = format_full_dso_path (base_dir, dso_path, heap_buffer, required_capacity);
+			abort_unless (result >= 0, "Failed to format full DSO path using the required capacity");
+			return heap_buffer;
+		}
 
 		template<class TContainer> // TODO: replace with a concept
 		static auto load_dso_from_specified_dirs (TContainer directories, std::string_view const& dso_name, int dl_flags, bool is_jni) noexcept -> void*;
 		static auto load_dso_from_app_lib_dirs (std::string_view const& name, int dl_flags, bool is_jni) noexcept -> void*;
 		static auto load_dso_from_override_dirs (std::string_view const& name, int dl_flags, bool is_jni) noexcept -> void*;
-		static auto lookup_system_property (std::string_view const &name, size_t &value_len) noexcept -> const char*;
-		static auto monodroid__system_property_get (std::string_view const&, char *sp_value, size_t sp_value_len) noexcept -> int;
+		static auto lookup_system_property (const char *name, size_t &value_len) noexcept -> const char*;
+#if defined (DEBUG)
+		static auto find_bundled_property (const char *name) noexcept -> BundledProperty*;
+#endif
+		static auto monodroid__system_property_get (const char *name, char *sp_value) noexcept -> int;
 		static auto get_max_gref_count_from_system () noexcept -> long;
 		static void add_apk_libdir (std::string_view const& apk, size_t &index, std::string_view const& abi) noexcept;
         static void setup_apk_directories (unsigned short running_on_cpu, jstring_array_wrapper &runtimeApks, bool have_split_apks) noexcept;
 #if defined(DEBUG)
 		static void add_system_property (const char *name, const char *value) noexcept;
 		static void setup_environment (const char *name, const char *value) noexcept;
-		static void setup_environment_from_override_file (dynamic_local_string<Constants::SENSIBLE_PATH_MAX> const& path) noexcept;
+		static void setup_environment_from_override_file (const char *path) noexcept;
 #endif
 
 		static void set_embedded_dso_mode_enabled (bool yesno) noexcept
@@ -156,44 +188,48 @@ namespace xamarin::android {
 			embedded_dso_mode_enabled = yesno;
 		}
 
-#if defined (XA_HOST_NATIVEAOT)
-		static void determine_primary_override_dir (jstring_wrapper &home, char *buffer, size_t buffer_size) noexcept
+		static auto format_primary_override_dir (jstring_wrapper &home, char *buffer, size_t buffer_size) noexcept -> ssize_t
 		{
-			dynamic_local_string<SENSIBLE_PATH_MAX> name { home.get_cstr () };
-			name.append ("/")
-				.append (Constants::OVERRIDE_DIRECTORY_NAME)
-				.append ("/")
-				.append (Constants::android_lib_abi);
+			abort_unless (buffer != nullptr, "Primary override directory buffer must not be null");
 
-			abort_unless (name.length () < buffer_size, "Primary override directory path is too long");
-			memcpy (buffer, name.get (), name.length () + 1);
-		}
-#else
-		static auto determine_primary_override_dir (jstring_wrapper &home) noexcept -> std::string
-		{
-			dynamic_local_string<SENSIBLE_PATH_MAX> name { home.get_cstr () };
-			name.append ("/")
-				.append (Constants::OVERRIDE_DIRECTORY_NAME)
-				.append ("/")
-				.append (Constants::android_lib_abi);
+			// `jstring_wrapper::get_cstr()` returns `nullptr` for a null `jstring`, and passing that
+			// to `%s` is undefined behaviour. An app without a files directory cannot work anyway.
+			const char *home_path = home.get_cstr ();
+			abort_unless (home_path != nullptr, "Application home directory must not be null");
 
-			return {name.get (), name.length ()};
+			int length = snprintf (
+				buffer,
+				buffer_size,
+				"%s/%.*s/%.*s",
+				home_path,
+				static_cast<int>(Constants::OVERRIDE_DIRECTORY_NAME.length ()),
+				Constants::OVERRIDE_DIRECTORY_NAME.data (),
+				static_cast<int>(Constants::android_lib_abi.length ()),
+				Constants::android_lib_abi.data ()
+			);
+			abort_unless (length >= 0, "Failed to format primary override directory path");
+			size_t required_capacity = Helpers::add_with_overflow_check<size_t> (static_cast<size_t>(length), 1uz);
+			abort_unless (required_capacity <= static_cast<size_t>(std::numeric_limits<ssize_t>::max ()), "Primary override directory path is too long");
+			if (buffer_size < required_capacity) {
+				return -static_cast<ssize_t>(required_capacity);
+			}
+			return static_cast<ssize_t>(length);
 		}
-#endif
 
 	private:
 		static inline long max_gref_count = 0;
 		static inline bool running_in_emulator = false;
 		static inline bool embedded_dso_mode_enabled = false;
-#if defined (XA_HOST_NATIVEAOT)
-		static inline char primary_override_dir[Constants::SENSIBLE_PATH_MAX] {};
-#else
-		static inline std::string primary_override_dir;
-		static inline std::string native_libraries_dir;
-		static inline std::string app_code_cache_dir;
+		// These are set once, early during startup, and are read for as long as the process lives.
+		// They are plain pointers so that they are constant-initialized: a `std::string` here would
+		// make the compiler emit a guard variable and an `atexit` registration in every translation
+		// unit which includes this header.
+		static inline const char *primary_override_dir = "";
+#if !defined (XA_HOST_NATIVEAOT)
+		static inline const char *native_libraries_dir = "";
 
 #if defined (DEBUG)
-		static inline std::unordered_map<std::string, std::string> bundled_properties;
+		static inline BundledProperty *bundled_properties = nullptr;
 #endif
 #endif
 	};

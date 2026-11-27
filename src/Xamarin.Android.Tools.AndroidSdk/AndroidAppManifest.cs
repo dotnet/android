@@ -5,7 +5,6 @@ using System.Collections.Generic;
 using System.Xml.Linq;
 using System.Text.RegularExpressions;
 using System.Text;
-using System.IO;
 
 namespace Xamarin.Android.Tools
 {
@@ -116,28 +115,13 @@ namespace Xamarin.Android.Tools
 		{
 			var xmlSettings = new XmlWriterSettings () {
 				Encoding = Encoding.UTF8,
-				CloseOutput = false,
 				Indent = true,
 				IndentChars = "\t",
 				NewLineChars = "\n",
 			};
 
-			var tempFile = FileUtil.GetTempFilenameForWrite (fileName);
-			bool success = false;
-			try {
-				using (var writer = XmlTextWriter.Create (tempFile, xmlSettings)) {
-					Write (writer);
-				}
-				FileUtil.SystemRename (tempFile, fileName);
-				success = true;
-			} finally {
-				if (!success) {
-					try {
-						File.Delete (tempFile);
-					} catch {
-						//the original exception is more important than this one
-					}
-				}
+			using (var writer = XmlWriter.Create (fileName, xmlSettings)) {
+				Write (writer);
 			}
 		}
 
@@ -353,8 +337,8 @@ namespace Xamarin.Android.Tools
 		{
 			return GetLaunchableActivities ()
 				.Select (a => (string?) a.Attribute (aName))
-				.Where (name => !string.IsNullOrEmpty (name) && name != "mono.android.__FastDevLauncher")
-				.Select (name => name!);
+				.OfType<string> ()
+				.Where (name => !string.IsNullOrEmpty (name) && name != "mono.android.__FastDevLauncher");
 		}
 	}
 }

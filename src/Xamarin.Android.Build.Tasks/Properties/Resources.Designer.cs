@@ -167,56 +167,11 @@ namespace Xamarin.Android.Tasks.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Could not determine API level for $(TargetFrameworkVersion) of &apos;{0}&apos;..
-        /// </summary>
-        public static string XA0000_API_for_TargetFrameworkVersion {
-            get {
-                return ResourceManager.GetString("XA0000_API_for_TargetFrameworkVersion", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Could not determine $(AndroidApiLevel) or $(TargetFrameworkVersion); should not be reached..
-        /// </summary>
-        public static string XA0000_API_or_TargetFrameworkVersion_Fail {
-            get {
-                return ResourceManager.GetString("XA0000_API_or_TargetFrameworkVersion_Fail", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Unhandled exception: {0}.
         /// </summary>
         public static string XA0000_Exception {
             get {
                 return ResourceManager.GetString("XA0000_Exception", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Could not determine $(TargetFrameworkVersion) for API level &apos;{0}.&apos;.
-        /// </summary>
-        public static string XA0000_TargetFrameworkVersion_for_API {
-            get {
-                return ResourceManager.GetString("XA0000_TargetFrameworkVersion_for_API", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Unsupported or invalid $(TargetFrameworkVersion) value of &apos;{0}&apos;. Please update your Project Options..
-        /// </summary>
-        public static string XA0001 {
-            get {
-                return ResourceManager.GetString("XA0001", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Could not find mono.android.jar.
-        /// </summary>
-        public static string XA0002 {
-            get {
-                return ResourceManager.GetString("XA0002", resourceCulture);
             }
         }
         
@@ -248,17 +203,6 @@ namespace Xamarin.Android.Tasks.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Java SDK {0} or above is required when using {1}.
-        ///Download the latest JDK at: https://aka.ms/msopenjdk
-        ///Note: the Android Designer is incompatible with Java SDK 11.0: https://aka.ms/vs2019-and-jdk-11.
-        /// </summary>
-        public static string XA0031 {
-            get {
-                return ResourceManager.GetString("XA0031", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Java SDK {0} or above is required when using .NET 6 or higher. Download the latest JDK at: https://aka.ms/msopenjdk.
         /// </summary>
         public static string XA0031_NET {
@@ -268,29 +212,11 @@ namespace Xamarin.Android.Tasks.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Java SDK {0} or above is required when using Android SDK Build-Tools {1}..
-        /// </summary>
-        public static string XA0032 {
-            get {
-                return ResourceManager.GetString("XA0032", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Failed to get the Java SDK version because the returned value does not appear to contain a valid version number. `{0} -version` returned: ```{1}```.
         /// </summary>
         public static string XA0033 {
             get {
                 return ResourceManager.GetString("XA0033", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Failed to get the Java SDK version. Please ensure you have Java {0} or above installed..
-        /// </summary>
-        public static string XA0034 {
-            get {
-                return ResourceManager.GetString("XA0034", resourceCulture);
             }
         }
         
@@ -313,15 +239,6 @@ namespace Xamarin.Android.Tasks.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Unknown mode: {0}.
-        /// </summary>
-        public static string XA0037 {
-            get {
-                return ResourceManager.GetString("XA0037", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to EmbeddedNativeLibrary &apos;{0}&apos; is invalid in Android Application projects. Please use AndroidNativeLibrary instead..
         /// </summary>
         public static string XA0100 {
@@ -331,23 +248,14 @@ namespace Xamarin.Android.Tasks.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Invalid value for `$(AndroidSequencePointsMode)`: {0}.
+        ///   Looks up a localized string similar to @(Content) build action is not supported.
         /// </summary>
-        public static string XA0104 {
+        public static string XA0101 {
             get {
-                return ResourceManager.GetString("XA0104", resourceCulture);
+                return ResourceManager.GetString("XA0101", resourceCulture);
             }
         }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to The $(TargetFrameworkVersion) for {0} ({1}) is greater than the $(TargetFrameworkVersion) for the application project ({2}). Please increase the $(TargetFrameworkVersion) for the application project..
-        /// </summary>
-        public static string XA0105 {
-            get {
-                return ResourceManager.GetString("XA0105", resourceCulture);
-            }
-        }
-        
+
         /// <summary>
         ///   Looks up a localized string similar to {0} is a Reference Assembly..
         /// </summary>
@@ -358,20 +266,11 @@ namespace Xamarin.Android.Tasks.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Ignoring Reference Assembly `{0}`..
+        ///   Looks up a localized string similar to The &apos;AndroidLintEnabled&apos; MSBuild property is no longer supported. Remove it. If needed, run the Android &apos;lint&apos; tool directly..
         /// </summary>
-        public static string XA0107_Ignoring {
+        public static string XA0108_LintEnabled {
             get {
-                return ResourceManager.GetString("XA0107_Ignoring", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Could not get version from &apos;{0}&apos;. Defaulting to 1.0.
-        /// </summary>
-        public static string XA0108 {
-            get {
-                return ResourceManager.GetString("XA0108", resourceCulture);
+                return ResourceManager.GetString("XA0108_LintEnabled", resourceCulture);
             }
         }
         
@@ -394,74 +293,11 @@ namespace Xamarin.Android.Tasks.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Google Play requires that new applications and updates must use a TargetFrameworkVersion of {0} (API level {1}) or above. You are currently targeting {2} (API level {3})..
-        /// </summary>
-        public static string XA0113 {
-            get {
-                return ResourceManager.GetString("XA0113", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Unable to find `EmbeddedResource` named `{0}`..
+        ///   Looks up a localized string similar to Unable to find required SDK file `{0}`..
         /// </summary>
         public static string XA0116 {
             get {
                 return ResourceManager.GetString("XA0116", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to The TargetFrameworkVersion {0} is deprecated. Please update it to be v5.0 or higher..
-        /// </summary>
-        public static string XA0117 {
-            get {
-                return ResourceManager.GetString("XA0117", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Could not parse &apos;{0}&apos;.
-        /// </summary>
-        public static string XA0118_Parse {
-            get {
-                return ResourceManager.GetString("XA0118_Parse", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Could not resolve `target` in lock file for &apos;{0}&apos;.
-        /// </summary>
-        public static string XA0118_Target {
-            get {
-                return ResourceManager.GetString("XA0118_Target", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Using Fast Deployment and Android App Bundles at the same time is not currently supported. Use Fast Deployment for Debug configurations and Android App Bundles for Release configurations..
-        /// </summary>
-        public static string XA0119_AAB {
-            get {
-                return ResourceManager.GetString("XA0119_AAB", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Using fast deployment and AOT at the same time is not recommended. Use fast deployment for Debug configurations and AOT for Release configurations..
-        /// </summary>
-        public static string XA0119_AOT {
-            get {
-                return ResourceManager.GetString("XA0119_AOT", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Disabling the interpreter; using the interpreter and AOT at the same time is not supported. Use the interpreter for hot reload support in Debug configurations and AOT for Release configurations..
-        /// </summary>
-        public static string XA0119_Interpreter {
-            get {
-                return ResourceManager.GetString("XA0119_Interpreter", resourceCulture);
             }
         }
         
@@ -502,49 +338,11 @@ namespace Xamarin.Android.Tasks.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Assembly &apos;{0}&apos; is using a deprecated attribute &apos;[assembly: {1}]&apos;. Use a newer version of this NuGet package or notify the library author..
-        /// </summary>
-        public static string XA0122 {
-            get {
-                return ResourceManager.GetString("XA0122", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Removing {0} from {1}. Lint {2} does not support this check..
-        /// </summary>
-        public static string XA0123 {
-            get {
-                return ResourceManager.GetString("XA0123", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to &apos;{0}&apos; is using a deprecated debug information level.
-        ///Set the debugging information to Portable in the Visual Studio project property pages or edit the project file in a text editor and set the &apos;DebugType&apos; MSBuild property to &apos;portable&apos; to use the newer, cross-platform debug information level.
-        ///If this file comes from a NuGet package, update to a newer version of the NuGet package or notify the library author..
-        /// </summary>
-        public static string XA0125 {
-            get {
-                return ResourceManager.GetString("XA0125", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to %(AndroidAsset.AssetPack) and %(AndroidAsset.AssetPack) item metadata are only supported when `$(AndroidApplication)` is `true`..
         /// </summary>
         public static string XA0138 {
             get {
                 return ResourceManager.GetString("XA0138", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to `@(AndroidAsset)` `{0}` has an invalid `DeliveryType` metadata of `{1}`. Supported values are `installtime`, `ondemand` or `fastfollow`..
-        /// </summary>
-        public static string XA0139 {
-            get {
-                return ResourceManager.GetString("XA0139", resourceCulture);
             }
         }
         
@@ -608,15 +406,6 @@ namespace Xamarin.Android.Tasks.Properties {
         public static string XA0146 {
             get {
                 return ResourceManager.GetString("XA0146", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Attempt to check whether &apos;{0}&apos; is a valid ELF file failed with exception, ignoring AOT check for the file..
-        /// </summary>
-        public static string XA0147 {
-            get {
-                return ResourceManager.GetString("XA0147", resourceCulture);
             }
         }
         
@@ -765,33 +554,6 @@ namespace Xamarin.Android.Tasks.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to More than one Android Wear project is specified as the paired project. It can be at most one..
-        /// </summary>
-        public static string XA1015 {
-            get {
-                return ResourceManager.GetString("XA1015", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Target Wear application&apos;s project &apos;{0}&apos; does not specify required &apos;AndroidManifest&apos; project property..
-        /// </summary>
-        public static string XA1016 {
-            get {
-                return ResourceManager.GetString("XA1016", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Target Wear application&apos;s AndroidManifest.xml does not specify required &apos;package&apos; attribute..
-        /// </summary>
-        public static string XA1017 {
-            get {
-                return ResourceManager.GetString("XA1017", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Specified AndroidManifest file does not exist: {0}..
         /// </summary>
         public static string XA1018 {
@@ -801,29 +563,11 @@ namespace Xamarin.Android.Tasks.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to `LibraryProjectProperties` file `{0}` is located in a parent directory of the bindings project&apos;s intermediate output directory. Please adjust the path to use the original `project.properties` file directly from the Android library project directory..
-        /// </summary>
-        public static string XA1019 {
-            get {
-                return ResourceManager.GetString("XA1019", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to At least one Java library is required for binding. Check that a Java library is included in the project and has the appropriate build action: &apos;LibraryProjectZip&apos; (for AAR or ZIP), &apos;EmbeddedJar&apos;, &apos;InputJar&apos; (for JAR), or &apos;LibraryProjectProperties&apos; (project.properties)..
         /// </summary>
         public static string XA1020 {
             get {
                 return ResourceManager.GetString("XA1020", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Specified source Java library not found: {0}.
-        /// </summary>
-        public static string XA1021 {
-            get {
-                return ResourceManager.GetString("XA1021", resourceCulture);
             }
         }
         
@@ -846,15 +590,6 @@ namespace Xamarin.Android.Tasks.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to The experimental &apos;Hybrid&apos; value for the &apos;AndroidAotMode&apos; MSBuild propertyis not currently compatible with the armeabi-v7a target ABI. To continue using the experimental &apos;Hybrid&apos; value for &apos;AndroidAotMode&apos;, deselect the armeabi-v7a target ABI in the Visual Studio project property pages or edit the project file in a text editor and remove &apos;armeabi-v7a&apos; from the &apos;AndroidSupportedAbis&apos; MSBuild property..
-        /// </summary>
-        public static string XA1025 {
-            get {
-                return ResourceManager.GetString("XA1025", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to The &apos;EnableProguard&apos; MSBuild property is set to &apos;true&apos; and the &apos;AndroidLinkTool&apos; MSBuild property is empty, so &apos;AndroidLinkTool&apos; will default to &apos;proguard&apos;..
         /// </summary>
         public static string XA1027 {
@@ -873,24 +608,6 @@ namespace Xamarin.Android.Tasks.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to The &apos;AotAssemblies&apos; MSBuild property is deprecated. Edit the project file in a text editor to remove this property, and use the &apos;RunAOTCompilation&apos; MSBuild property instead..
-        /// </summary>
-        public static string XA1029 {
-            get {
-                return ResourceManager.GetString("XA1029", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to The &apos;RunAOTCompilation&apos; MSBuild property is only supported when trimming is enabled. Edit the project file in a text editor to set &apos;PublishTrimmed&apos; to &apos;true&apos; for this build configuration..
-        /// </summary>
-        public static string XA1030 {
-            get {
-                return ResourceManager.GetString("XA1030", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Your project references &apos;{0}&apos; which uses the `_Microsoft.Android.Resource.Designer` assembly, but you do not have this feature enabled. Please set the `AndroidUseDesignerAssembly` MSBuild property to `true` in your project file..
         /// </summary>
         public static string XA1034 {
@@ -900,7 +617,7 @@ namespace Xamarin.Android.Tasks.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to The &apos;BundleAssemblies&apos; property is deprecated and it has no effect on the application build. Equivalent functionality is implemented by the &apos;AndroidUseAssemblyStore&apos; and &apos;AndroidEnableAssemblyCompression&apos; properties..
+        ///   Looks up a localized string similar to The &apos;BundleAssemblies&apos; property is deprecated and no longer affects the build. Remove it. CoreCLR and NativeAOT do not use Mono&apos;s mkbundle..
         /// </summary>
         public static string XA1035 {
             get {
@@ -917,16 +634,16 @@ namespace Xamarin.Android.Tasks.Properties {
                 return ResourceManager.GetString("XA1036", resourceCulture);
             }
         }
-        
+
         /// <summary>
-        ///   Looks up a localized string similar to The &apos;{0}&apos; MSBuild property is deprecated and will be removed in .NET {1}. See https://aka.ms/net-android-deprecations for more details..
+        ///   Looks up a localized string similar to Unsupported @(Reference) item: {0}.
         /// </summary>
         public static string XA1037 {
             get {
                 return ResourceManager.GetString("XA1037", resourceCulture);
             }
         }
-        
+
         /// <summary>
         ///   Looks up a localized string similar to The &apos;{0}&apos; MSBuild property has an invalid value of &apos;{1}&apos;. A valid value is one of: {2}..
         /// </summary>
@@ -942,15 +659,6 @@ namespace Xamarin.Android.Tasks.Properties {
         public static string XA1039 {
             get {
                 return ResourceManager.GetString("XA1039", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to The {0} runtime on Android is an experimental feature and not yet suitable for production use. File issues at: https://github.com/dotnet/android/issues.
-        /// </summary>
-        public static string XA1040 {
-            get {
-                return ResourceManager.GetString("XA1040", resourceCulture);
             }
         }
         
@@ -982,7 +690,7 @@ namespace Xamarin.Android.Tasks.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to The MSBuild property &apos;{0}&apos; is not compatible with the {1} runtime. The build cannot continue while this property is enabled. Either remove the property or guard it with a condition: Condition=&quot;&apos;$(UseMonoRuntime)&apos; == &apos;true&apos;&quot;.
+        ///   Looks up a localized string similar to The MSBuild property &apos;{0}&apos; is not compatible with the {1} runtime. The build cannot continue while this property is enabled. Remove the property..
         /// </summary>
         public static string XA1044 {
             get {
@@ -991,38 +699,47 @@ namespace Xamarin.Android.Tasks.Properties {
         }
 
         /// <summary>
-        ///   Looks up a localized string similar to Input file `{0}` does not start with `&lt;replacements/&gt;`..
+        ///   Looks up a localized string similar to The MSBuild property &apos;RunAOTCompilation&apos; is not compatible with the CoreCLR runtime. The build cannot continue while this property is set to &apos;false&apos;. Remove the property. Starting with .NET 11, set &apos;PublishReadyToRun&apos; to &apos;false&apos; to disable ReadyToRun (R2R) AOT compilation..
         /// </summary>
-        public static string XA1045 {
+        public static string XA1044_RunAOTCompilationDisabled {
             get {
-                return ResourceManager.GetString("XA1045", resourceCulture);
+                return ResourceManager.GetString("XA1044_RunAOTCompilationDisabled", resourceCulture);
             }
         }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Attribute &apos;{0}&apos; in element &apos;{1}&apos; has value &apos;{2}&apos; that cannot be parsed as boolean; {3} line {4}..
-        /// </summary>
-        public static string XA1046 {
-            get {
-                return ResourceManager.GetString("XA1046", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Required attribute &apos;{0}&apos; missing from element &apos;{1}&apos;; {2} line {3}..
-        /// </summary>
-        public static string XA1047 {
-            get {
-                return ResourceManager.GetString("XA1047", resourceCulture);
-            }
-        }
-        
+
         /// <summary>
         ///   Looks up a localized string similar to &apos;{0}&apos; does not contain an &lt;instrumentation&gt; element. Add an Android.App.Instrumentation subclass to the application, or set the $(AndroidInstrumentation) MSBuild property to the name of one..
         /// </summary>
         public static string XA1048 {
             get {
                 return ResourceManager.GetString("XA1048", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to The &apos;AndroidEnableMarshalMethods&apos; MSBuild property is no longer supported. Remove it or set it to &apos;false&apos;..
+        /// </summary>
+        public static string XA1049 {
+            get {
+                return ResourceManager.GetString("XA1049", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to The &apos;AndroidR8ObfuscationMode&apos; MSBuild property has an invalid value of &apos;{0}&apos;. Valid values are &apos;disabled&apos;, &apos;private-members&apos;, and &apos;runtime-remapping&apos;..
+        /// </summary>
+        public static string XA1050 {
+            get {
+                return ResourceManager.GetString("XA1050", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to The AndroidStaticJniInitFunction MSBuild item is not supported with NativeAOT. Remove it from the project or use a NativeAOT-compatible version of the library that adds it..
+        /// </summary>
+        public static string XA1051 {
+            get {
+                return ResourceManager.GetString("XA1051", resourceCulture);
             }
         }
         
@@ -1036,15 +753,6 @@ namespace Xamarin.Android.Tasks.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Support for the &apos;MONO_GC_PARAMS=bridge-implementation=old&apos; value will be removed in .NET 7..
-        /// </summary>
-        public static string XA2000_gcParams_bridgeImpl {
-            get {
-                return ResourceManager.GetString("XA2000_gcParams_bridgeImpl", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Source file &apos;{0}&apos; could not be found..
         /// </summary>
         public static string XA2001 {
@@ -1054,110 +762,11 @@ namespace Xamarin.Android.Tasks.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Can not resolve reference: `{0}`, referenced by {1}. Perhaps it doesn&apos;t exist in the .NET for Android profile?.
-        /// </summary>
-        public static string XA2002_Framework {
-            get {
-                return ResourceManager.GetString("XA2002_Framework", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Can not resolve reference: `{0}`, referenced by {1}. Please add a NuGet package or assembly reference for `{0}`, or remove the reference to `{2}`..
-        /// </summary>
-        public static string XA2002_NuGet {
-            get {
-                return ResourceManager.GetString("XA2002_NuGet", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Unable to load assembly &apos;{0}&apos;..
-        /// </summary>
-        public static string XA2024 {
-            get {
-                return ResourceManager.GetString("XA2024", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Assembly {0} does not exist..
         /// </summary>
         public static string XA2025 {
             get {
                 return ResourceManager.GetString("XA2025", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Could not resolve reference to &apos;{0}&apos; (defined in assembly &apos;{1}&apos;) with scope &apos;{2}&apos;. When the scope is different from the defining assembly, it usually means that the type is forwarded..
-        /// </summary>
-        public static string XA2006 {
-            get {
-                return ResourceManager.GetString("XA2006", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Exception while loading assemblies: {0}.
-        /// </summary>
-        public static string XA2007 {
-            get {
-                return ResourceManager.GetString("XA2007", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to In referenced assembly {0}, Java.Interop.DoNotPackageAttribute requires non-null file name..
-        /// </summary>
-        public static string XA2008 {
-            get {
-                return ResourceManager.GetString("XA2008", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Could not AOT the assembly: {0}.
-        /// </summary>
-        public static string XA3001 {
-            get {
-                return ResourceManager.GetString("XA3001", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Invalid AOT mode: {0}.
-        /// </summary>
-        public static string XA3002 {
-            get {
-                return ResourceManager.GetString("XA3002", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Android NDK r10d is buggy and provides an incompatible x86_64 libm.so. See https://code.google.com/p/android/issues/detail?id=161422..
-        /// </summary>
-        public static string XA3004 {
-            get {
-                return ResourceManager.GetString("XA3004", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to The detected Android NDK version is incompatible with the targeted LLVM configuration. Please upgrade to NDK r10d or newer..
-        /// </summary>
-        public static string XA3005 {
-            get {
-                return ResourceManager.GetString("XA3005", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Could not compile native assembly file: {0}{1}.
-        /// </summary>
-        public static string XA3006 {
-            get {
-                return ResourceManager.GetString("XA3006", resourceCulture);
             }
         }
         
@@ -1180,24 +789,6 @@ namespace Xamarin.Android.Tasks.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Failed to generate Java type for class: {0} due to {1}.
-        /// </summary>
-        public static string XA4209 {
-            get {
-                return ResourceManager.GetString("XA4209", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Please add a reference to Mono.Android.Export.dll when using ExportAttribute or ExportFieldAttribute..
-        /// </summary>
-        public static string XA4210 {
-            get {
-                return ResourceManager.GetString("XA4210", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to AndroidManifest.xml //uses-sdk/@android:targetSdkVersion &apos;{0}&apos; is less than $(TargetPlatformVersion) &apos;{1}&apos;. Using API-{2} for ACW compilation..
         /// </summary>
         public static string XA4211 {
@@ -1207,38 +798,11 @@ namespace Xamarin.Android.Tasks.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to The type &apos;{0}&apos; must provide a public default constructor.
-        /// </summary>
-        public static string XA4213 {
-            get {
-                return ResourceManager.GetString("XA4213", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Type `{0}` implements `Android.Runtime.IJavaObject` but does not inherit `Java.Lang.Object` or `Java.Lang.Throwable`. This is not supported..
         /// </summary>
         public static string XA4212 {
             get {
                 return ResourceManager.GetString("XA4212", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to The managed type `{0}` exists in multiple assemblies: {1}. Please refactor the managed type names in these assemblies so that they are not identical..
-        /// </summary>
-        public static string XA4214 {
-            get {
-                return ResourceManager.GetString("XA4214", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to References to the type `{0}` will refer to `{0}, {1}`..
-        /// </summary>
-        public static string XA4214_Result {
-            get {
-                return ResourceManager.GetString("XA4214_Result", resourceCulture);
             }
         }
         
@@ -1284,15 +848,6 @@ namespace Xamarin.Android.Tasks.Properties {
         public static string XA4216_TargetSdkVersion {
             get {
                 return ResourceManager.GetString("XA4216_TargetSdkVersion", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Architecture &apos;{0}&apos; has Java types which have no counterparts in template architecture &apos;{1}&apos;: {2}.
-        /// </summary>
-        public static string XA4217 {
-            get {
-                return ResourceManager.GetString("XA4217", resourceCulture);
             }
         }
         
@@ -1378,24 +933,6 @@ namespace Xamarin.Android.Tasks.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Architecture &apos;{0}&apos; doesn&apos;t match all marshal methods in architecture &apos;{1}&apos;. Please see detailed MSBuild logs for more information..
-        /// </summary>
-        public static string XA4227 {
-            get {
-                return ResourceManager.GetString("XA4227", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Unable to find specified //activity-alias/@android:targetActivity: &apos;{0}&apos;.
-        /// </summary>
-        public static string XA4228 {
-            get {
-                return ResourceManager.GetString("XA4228", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Unrecognized `TransformFile` root element: {0}..
         /// </summary>
         public static string XA4229 {
@@ -1414,16 +951,7 @@ namespace Xamarin.Android.Tasks.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to The Android class parser value &apos;{0}&apos; is deprecated and will be removed in a future version of .NET for Android. Update the project properties to use &apos;class-parse&apos;..
-        /// </summary>
-        public static string XA4231 {
-            get {
-                return ResourceManager.GetString("XA4231", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to The Android code generation target &apos;{0}&apos; is deprecated and will be removed in a future version of .NET for Android. Update the project properties to use &apos;XAJavaInterop1&apos;..
+        ///   Looks up a localized string similar to The Android code generation target &apos;{0}&apos; is no longer supported. The &apos;AndroidCodegenTarget&apos; property only supports &apos;XAJavaInterop1&apos;..
         /// </summary>
         public static string XA4232 {
             get {
@@ -1477,6 +1005,16 @@ namespace Xamarin.Android.Tasks.Properties {
                 return ResourceManager.GetString("XA4237", resourceCulture);
             }
         }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Failed to resolve POM for Maven artifact &apos;{0}&apos; from &apos;{1}&apos;.
+        ///- {2}.
+        /// </summary>
+        public static string XA4237_Details {
+            get {
+                return ResourceManager.GetString("XA4237_Details", resourceCulture);
+            }
+        }
         
         /// <summary>
         ///   Looks up a localized string similar to Unknown Maven repository: &apos;{0}&apos;..
@@ -1487,6 +1025,15 @@ namespace Xamarin.Android.Tasks.Properties {
             }
         }
         
+        /// <summary>
+        ///   Looks up a localized string similar to The Java callable wrapper code generation target &apos;{0}&apos; is no longer supported. The &apos;_AndroidJcwCodegenTarget&apos; property only supports &apos;XAJavaInterop1&apos;; &apos;XamarinAndroid&apos; and &apos;JavaInterop1&apos; are not supported..
+        /// </summary>
+        public static string XA4240 {
+            get {
+                return ResourceManager.GetString("XA4240", resourceCulture);
+            }
+        }
+
         /// <summary>
         ///   Looks up a localized string similar to Java dependency &apos;{0}&apos; is not satisfied..
         /// </summary>
@@ -1502,15 +1049,6 @@ namespace Xamarin.Android.Tasks.Properties {
         public static string XA4242 {
             get {
                 return ResourceManager.GetString("XA4242", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Attribute &apos;{0}&apos; is required when using &apos;{1}&apos; for &apos;{2}&apos; item &apos;{3}&apos;..
-        /// </summary>
-        public static string XA4243 {
-            get {
-                return ResourceManager.GetString("XA4243", resourceCulture);
             }
         }
         
@@ -1588,24 +1126,6 @@ namespace Xamarin.Android.Tasks.Properties {
         }
 
         /// <summary>
-        ///   Looks up a localized string similar to Generated Java callable wrapper code changed: &apos;{0}&apos;.
-        /// </summary>
-        public static string XA4253 {
-            get {
-                return ResourceManager.GetString("XA4253", resourceCulture);
-            }
-        }
-
-        /// <summary>
-        ///   Looks up a localized string similar to Type &apos;{0}&apos; uses [JniAddNativeMethodRegistrationAttribute], which is not supported by the trimmable type map. To work around this, do not target the trimmable type map (for example, by switching to the &apos;llvm-ir&apos; type map implementation), and please report this scenario at https://github.com/dotnet/android/issues so the team can evaluate whether to support it..
-        /// </summary>
-        public static string XA4251 {
-            get {
-                return ResourceManager.GetString("XA4251", resourceCulture);
-            }
-        }
-
-        /// <summary>
         ///   Looks up a localized string similar to Trimmable type map Java source input directory &apos;{0}&apos; and output directory &apos;{1}&apos; must be different..
         /// </summary>
         public static string XA4254 {
@@ -1642,14 +1162,69 @@ namespace Xamarin.Android.Tasks.Properties {
         }
 
         /// <summary>
-        ///   Looks up a localized string similar to Native library &apos;{0}&apos; will not be bundled because it has an unsupported ABI. Move this file to a directory with a valid Android ABI name such as &apos;libs/armeabi-v7a/&apos;..
+        ///   Looks up a localized string similar to Java name &apos;{0}&apos; contains invalid or unsupported Java identifier &apos;{1}&apos;. Change the package or type name..
         /// </summary>
-        public static string XA4300 {
+        public static string XA4258 {
             get {
-                return ResourceManager.GetString("XA4300", resourceCulture);
+                return ResourceManager.GetString("XA4258", resourceCulture);
             }
         }
-        
+
+        /// <summary>
+        ///   Looks up a localized string similar to Type &apos;{0}&apos; has multiple managed constructors that map to the same Java Native Interface (JNI) signature &apos;{1}&apos;. Change the constructor parameter types so each constructor has a unique JNI signature..
+        /// </summary>
+        public static string XA4259 {
+            get {
+                return ResourceManager.GetString("XA4259", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Type &apos;{0}&apos; has a constructor parameter type &apos;{1}&apos; that cannot be represented in a Java constructor. Remove the constructor or change the parameter to a supported Java type..
+        /// </summary>
+        public static string XA4260 {
+            get {
+                return ResourceManager.GetString("XA4260", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Type &apos;{0}&apos; has Java constructor signature &apos;{1}&apos;, but its base type does not expose a compatible Java constructor. Add a compatible base constructor or remove the derived constructor..
+        /// </summary>
+        public static string XA4261 {
+            get {
+                return ResourceManager.GetString("XA4261", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Type &apos;{0}&apos; has an invalid [Export] SuperArgumentsString value &apos;{1}&apos;. The value references a constructor parameter that does not exist..
+        /// </summary>
+        public static string XA4262 {
+            get {
+                return ResourceManager.GetString("XA4262", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to The exported member &apos;{0}&apos; has unsupported signature type &apos;{1}&apos;.
+        ///   Use a Java peer type, a supported managed-to-Java mapping, or [ExportParameter]..
+        /// </summary>
+        public static string XA4263 {
+            get {
+                return ResourceManager.GetString("XA4263", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Assembly &apos;{0}&apos; has different Java peer callback metadata in runtime-specific implementations &apos;{1}&apos; and &apos;{2}&apos;. All RuntimeIdentifiers must provide equivalent callback metadata..
+        /// </summary>
+        public static string XA4266 {
+            get {
+                return ResourceManager.GetString("XA4266", resourceCulture);
+            }
+        }
+
         /// <summary>
         ///   Looks up a localized string similar to APK already contains the item {0}; ignoring..
         /// </summary>
@@ -1687,15 +1262,6 @@ namespace Xamarin.Android.Tasks.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Unhandled exception merging `AndroidManifest.xml`: {0}.
-        /// </summary>
-        public static string XA4302 {
-            get {
-                return ResourceManager.GetString("XA4302", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Error extracting resources from &quot;{0}&quot;: {1}.
         /// </summary>
         public static string XA4303 {
@@ -1723,38 +1289,11 @@ namespace Xamarin.Android.Tasks.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Multidex is enabled, but the `$(_AndroidMainDexListFile)` file &apos;{0}&apos; does not exist..
-        /// </summary>
-        public static string XA4305_File_Missing {
-            get {
-                return ResourceManager.GetString("XA4305_File_Missing", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to R8 does not support `@(MultiDexMainDexList)` files when android:minSdkVersion &gt;= 21.
         /// </summary>
         public static string XA4306 {
             get {
                 return ResourceManager.GetString("XA4306", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Invalid ProGuard configuration file. {0}.
-        /// </summary>
-        public static string XA4307 {
-            get {
-                return ResourceManager.GetString("XA4307", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Failed to generate type maps.
-        /// </summary>
-        public static string XA4308 {
-            get {
-                return ResourceManager.GetString("XA4308", resourceCulture);
             }
         }
         
@@ -1773,15 +1312,6 @@ namespace Xamarin.Android.Tasks.Properties {
         public static string XA4310 {
             get {
                 return ResourceManager.GetString("XA4310", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to The application won&apos;t contain the paired Wear package because the Wear application package APK is not created yet. If building on the command line, be sure to build the &quot;SignAndroidPackage&quot; target..
-        /// </summary>
-        public static string XA4311 {
-            get {
-                return ResourceManager.GetString("XA4311", resourceCulture);
             }
         }
         
@@ -1851,33 +1381,6 @@ namespace Xamarin.Android.Tasks.Properties {
         }
 
         /// <summary>
-        ///   Looks up a localized string similar to No NativeAOT DGML files were provided..
-        /// </summary>
-        public static string XA4319 {
-            get {
-                return ResourceManager.GetString("XA4319", resourceCulture);
-            }
-        }
-
-        /// <summary>
-        ///   Looks up a localized string similar to ACW map file &apos;{0}&apos; was not found..
-        /// </summary>
-        public static string XA4320 {
-            get {
-                return ResourceManager.GetString("XA4320", resourceCulture);
-            }
-        }
-
-        /// <summary>
-        ///   Looks up a localized string similar to NativeAOT DGML file &apos;{0}&apos; was not found..
-        /// </summary>
-        public static string XA4321 {
-            get {
-                return ResourceManager.GetString("XA4321", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Skipping library ProGuard configuration file &apos;{1}&apos; (from {2}) because it contains the unsupported global option &apos;{0}&apos;. Global ProGuard options are only allowed in application projects..
         /// </summary>
         public static string XA4322 {
@@ -1895,6 +1398,178 @@ namespace Xamarin.Android.Tasks.Properties {
             }
         }
         
+        public static string XA4325 {
+            get {
+                return ResourceManager.GetString("XA4325", resourceCulture);
+            }
+        }
+
+        public static string XA4325_MappingNotFound {
+            get {
+                return ResourceManager.GetString("XA4325_MappingNotFound", resourceCulture);
+            }
+        }
+
+        public static string XA4325_MappingDataFailure {
+            get {
+                return ResourceManager.GetString("XA4325_MappingDataFailure", resourceCulture);
+            }
+        }
+
+        public static string XA4325_AssemblyReadFailure {
+            get {
+                return ResourceManager.GetString("XA4325_AssemblyReadFailure", resourceCulture);
+            }
+        }
+
+        public static string XA4325_AssemblyNotFound {
+            get {
+                return ResourceManager.GetString("XA4325_AssemblyNotFound", resourceCulture);
+            }
+        }
+
+        public static string XA4325_AssemblyHasNoMetadata {
+            get {
+                return ResourceManager.GetString("XA4325_AssemblyHasNoMetadata", resourceCulture);
+            }
+        }
+
+        public static string XA4325_AmbiguousEntry {
+            get {
+                return ResourceManager.GetString("XA4325_AmbiguousEntry", resourceCulture);
+            }
+        }
+
+        public static string XA4325_NativeAotObjectRequired {
+            get {
+                return ResourceManager.GetString("XA4325_NativeAotObjectRequired", resourceCulture);
+            }
+        }
+
+        public static string XA4325_NativeAotObjectReadFailure {
+            get {
+                return ResourceManager.GetString("XA4325_NativeAotObjectReadFailure", resourceCulture);
+            }
+        }
+
+        public static string XA4325_NativeAotModeRequired {
+            get {
+                return ResourceManager.GetString("XA4325_NativeAotModeRequired", resourceCulture);
+            }
+        }
+
+        public static string XA4325_NativeAotObjectFormat {
+            get {
+                return ResourceManager.GetString("XA4325_NativeAotObjectFormat", resourceCulture);
+            }
+        }
+
+        public static string XA4325_NativeAotInvalidSection {
+            get {
+                return ResourceManager.GetString("XA4325_NativeAotInvalidSection", resourceCulture);
+            }
+        }
+
+        public static string XA4325_NativeAotTruncatedSection {
+            get {
+                return ResourceManager.GetString("XA4325_NativeAotTruncatedSection", resourceCulture);
+            }
+        }
+
+        public static string XA4325_NativeAotMissingSections {
+            get {
+                return ResourceManager.GetString("XA4325_NativeAotMissingSections", resourceCulture);
+            }
+
+        }
+
+        public static string XA4325_NativeAotInvalidDehydration {
+            get {
+                return ResourceManager.GetString("XA4325_NativeAotInvalidDehydration", resourceCulture);
+            }
+        }
+
+        public static string XA4326 {
+            get {
+                return ResourceManager.GetString("XA4326", resourceCulture);
+            }
+        }
+
+        public static string XA4326_ConflictingEntry {
+            get {
+                return ResourceManager.GetString("XA4326_ConflictingEntry", resourceCulture);
+            }
+        }
+
+        public static string XA4326_UnsupportedSignature {
+            get {
+                return ResourceManager.GetString("XA4326_UnsupportedSignature", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Could not extract Java type map keys from &apos;{0}&apos;: {1}.
+        /// </summary>
+        public static string XA4327 {
+            get {
+                return ResourceManager.GetString("XA4327", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Could not generate typemap ProGuard configuration from &apos;{0}&apos;: {1}.
+        /// </summary>
+        public static string XA4328 {
+            get {
+                return ResourceManager.GetString("XA4328", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to No retained Java type map key files were provided..
+        /// </summary>
+        public static string XA4328_NoInputs {
+            get {
+                return ResourceManager.GetString("XA4328_NoInputs", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Line {0} contains an invalid retained Java class name: &apos;{1}&apos;..
+        /// </summary>
+        public static string XA4328_InvalidName {
+            get {
+                return ResourceManager.GetString("XA4328_InvalidName", resourceCulture);
+            }
+        }
+
+        public static string XA4329_RequiredProperty {
+            get {
+                return ResourceManager.GetString("XA4329_RequiredProperty", resourceCulture);
+            }
+        }
+
+        public static string XA4329_UnsupportedRuntime {
+            get {
+                return ResourceManager.GetString("XA4329_UnsupportedRuntime", resourceCulture);
+            }
+        }
+
+        public static string XA4330 {
+            get {
+                return ResourceManager.GetString("XA4330", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Failed to process bundle config file &apos;{0}&apos;, split config files will be ignored at run time..
+        /// </summary>
+        public static string XA4331 {
+            get {
+                return ResourceManager.GetString("XA4331", resourceCulture);
+            }
+        }
+
         /// <summary>
         ///   Looks up a localized string similar to Missing Android NDK toolchains directory &apos;{0}&apos;. Please install the Android NDK..
         /// </summary>
@@ -1903,22 +1578,13 @@ namespace Xamarin.Android.Tasks.Properties {
                 return ResourceManager.GetString("XA5101", resourceCulture);
             }
         }
-        
+
         /// <summary>
-        ///   Looks up a localized string similar to C compiler for target {0} was not found. Tried paths: &quot;{1}&quot;.
+        ///   Looks up a localized string similar to Could not locate Android NDK Clang runtime libraries. Searched under: {0}. Please install a complete Android NDK..
         /// </summary>
-        public static string XA5101_C_Compiler {
+        public static string XA5101_ClangRuntime {
             get {
-                return ResourceManager.GetString("XA5101_C_Compiler", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Toolchain directory for target {0} was not found..
-        /// </summary>
-        public static string XA5101_Toolchain {
-            get {
-                return ResourceManager.GetString("XA5101_Toolchain", resourceCulture);
+                return ResourceManager.GetString("XA5101_ClangRuntime", resourceCulture);
             }
         }
         
@@ -1946,15 +1612,6 @@ namespace Xamarin.Android.Tasks.Properties {
         public static string XA5205 {
             get {
                 return ResourceManager.GetString("XA5205", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Cannot find `{0}` in the Android SDK. Please set its path via /p:LintToolPath..
-        /// </summary>
-        public static string XA5205_Lint {
-            get {
-                return ResourceManager.GetString("XA5205_Lint", resourceCulture);
             }
         }
         
@@ -1988,29 +1645,11 @@ namespace Xamarin.Android.Tasks.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Embedded Wear app package name differs from handheld app package name ({0} != {1})..
-        /// </summary>
-        public static string XA5211 {
-            get {
-                return ResourceManager.GetString("XA5211", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to java.lang.OutOfMemoryError. Consider increasing the value of $(JavaMaximumHeapSize). Java ran out of memory while executing &apos;{0} {1}&apos;.
         /// </summary>
         public static string XA5213 {
             get {
                 return ResourceManager.GetString("XA5213", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to No Android platforms installed at &apos;{0}&apos;. Please install an SDK Platform with the `{1}{2}tools{2}{3}` program..
-        /// </summary>
-        public static string XA5300_Android_Platforms {
-            get {
-                return ResourceManager.GetString("XA5300_Android_Platforms", resourceCulture);
             }
         }
         
@@ -2031,15 +1670,6 @@ namespace Xamarin.Android.Tasks.Properties {
         public static string XA5300_Java_SDK {
             get {
                 return ResourceManager.GetString("XA5300_Java_SDK", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Failed to generate Java type for class: {0} due to MAX_PATH: {1}.
-        /// </summary>
-        public static string XA5301 {
-            get {
-                return ResourceManager.GetString("XA5301", resourceCulture);
             }
         }
         
@@ -2079,6 +1709,15 @@ namespace Xamarin.Android.Tasks.Properties {
             }
         }
         
+        /// <summary>
+        ///   Looks up a localized string similar to GenerateNativeApplicationConfigSources only supports CoreCLR bootstrap configuration. The supplied AndroidRuntime value was &apos;{0}&apos;..
+        /// </summary>
+        public static string XAGCA7009_UnsupportedRuntime {
+            get {
+                return ResourceManager.GetString("XAGCA7009_UnsupportedRuntime", resourceCulture);
+            }
+        }
+
         /// <summary>
         ///   Looks up a localized string similar to Executable &apos;gradlew&apos; not found in project directory &apos;{0}&apos;. Please ensure the path to your Gradle project folder is correct, and that it contains Gradle Wrapper scripts..
         /// </summary>

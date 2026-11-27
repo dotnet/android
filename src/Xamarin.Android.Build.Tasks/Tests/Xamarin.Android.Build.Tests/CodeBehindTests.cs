@@ -273,11 +273,9 @@ namespace Xamarin.Android.Build.Tests
 				},
 			};
 
-			// TODO: for some reason the tests no longer produce both aab and apk packages, at least locally? Fine? Bug?
 			produced_binaries = new List <string> {
 				$"{ProjectName}.dll",
 				"CommonSampleLibrary.dll",
-//				$"{PackageName}-Signed.apk",
 				$"{PackageName}.aab",
 				$"{PackageName}-Signed.aab",
 			};
@@ -338,6 +336,58 @@ namespace Xamarin.Android.Build.Tests
 		public void SuccessfulAndroidXApp ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			RunTest (TestName, many: true, dtb: false, runner: SuccessfulBuild_AndroidX, runtime: runtime);
+		}
+
+		[Test]
+		public void AndroidXFragmentBindingPreservesConstructors ()
+		{
+			if (IgnoreUnsupportedConfiguration (AndroidRuntime.NativeAOT, release: true)) {
+				return;
+			}
+
+			var project = new XamarinAndroidApplicationProject {
+				IsRelease = true,
+				LayoutMain = """
+					<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+						xmlns:xamarin="http://schemas.xamarin.com/android/xamarin/tools"
+						android:orientation="vertical"
+						android:layout_width="match_parent"
+						android:layout_height="match_parent">
+						<fragment android:name="androidx.fragment.app.Fragment"
+							android:id="@+id/my_fragment"
+							android:layout_width="match_parent"
+							android:layout_height="match_parent"
+							xamarin:managedType="AndroidX.Fragment.App.Fragment" />
+					</LinearLayout>
+					""",
+				MainActivity = """
+					using Android.App;
+					using Android.OS;
+					using AndroidX.Fragment.App;
+
+					namespace UnnamedProject {
+						[Activity (MainLauncher = true)]
+						public class MainActivity : FragmentActivity {
+							protected override void OnCreate (Bundle? savedInstanceState) {
+								base.OnCreate (savedInstanceState);
+								SetContentView (Resource.Layout.Main);
+								var fragment = new Binding.Main (this).my_fragment;
+							}
+						}
+					}
+					""",
+			};
+			project.SetRuntime (AndroidRuntime.NativeAOT);
+			project.SetRuntimeIdentifiers (["arm64-v8a"]);
+			project.SetProperty ("AndroidGenerateLayoutBindings", "true");
+			project.SetProperty ("DefineConstants", "$(DefineConstants);__HAVE_ANDROIDX__");
+			project.SetProperty ("TrimmerSingleWarn", "false");
+			project.SetProperty ("NoWarn", "IL2104;IL2122;IL3053");
+			project.SetProperty ("WarningsAsErrors", "IL2091");
+			project.PackageReferences.Add (KnownPackages.AndroidXAppCompat);
+
+			using var builder = CreateApkBuilder ();
+			Assert.IsTrue (builder.Build (project), "AndroidX fragment binding should build without IL2091.");
 		}
 
 		void SuccessfulBuild_AndroidX (TestProjectInfo testInfo, bool many, bool dtb, LocalBuilder builder, AndroidRuntime runtime)
@@ -521,6 +571,7 @@ namespace Xamarin.Android.Build.Tests
 			var noWarn = new List<string> {
 				"CA1416",
 				"CS0414",
+				"CS0618",
 				"CS1591",
 				"XA1005",
 				"XA4225",
@@ -544,7 +595,6 @@ namespace Xamarin.Android.Build.Tests
 					// with non-AQN type names; this is expected until those libraries rebuild.
 					noWarn.Add ("IL2122");
 					noWarn.Add ("IL3053");
-					noWarn.Add ("XA1040");
 				}
 			}
 
@@ -736,7 +786,7 @@ namespace Xamarin.Android.Build.Tests
 			CopyFile (Path.Combine (XABuildPaths.TopDirectory, "Directory.Build.props"), Path.Combine (tempRoot, "Directory.Build.props" ));
 			CopyFile (Path.Combine (XABuildPaths.TopDirectory, "eng", "Versions.props"), Path.Combine (tempRoot, "eng", "Versions.props"));
 			var project = new XamarinAndroidApplicationProject ();
-			project.CopyNuGetConfig (Path.Combine (tempRoot, "NuGet.config"));
+			project.CopyNuGetConfig (tempRoot);
 
 			PatchProject (Path.Combine (tempRoot, CommonSampleLibraryName, $"{CommonSampleLibraryName}.NET.csproj"));
 			PatchProject (Path.Combine (temporaryProjectPath, $"{ProjectName}.csproj"));
@@ -747,8 +797,7 @@ namespace Xamarin.Android.Build.Tests
 			{
 				AssertExists (testName, csprojPath);
 				var sb = new StringBuilder (File.ReadAllText (csprojPath));
-				sb.Replace ("@UseMonoRuntime@", (runtime == AndroidRuntime.MonoVM).ToString ())
-				  .Replace ("@PublishAot@", (runtime == AndroidRuntime.NativeAOT).ToString ())
+				sb.Replace ("@PublishAot@", (runtime == AndroidRuntime.NativeAOT).ToString ())
 				  .Replace ("@Configuration@", isRelease ? "Release" : "Debug");
 				File.WriteAllText (csprojPath, sb.ToString ());
 			}

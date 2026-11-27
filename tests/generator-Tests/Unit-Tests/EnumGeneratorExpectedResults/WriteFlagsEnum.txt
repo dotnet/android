@@ -1,0 +1,12 @@
+namespace Android.App
+{
+[System.Flags]
+public enum RecentTaskFlags 
+{
+	[global::System.Runtime.Versioning.SupportedOSPlatformAttribute ("android30.0")]
+	WithExcluded = 1,
+
+	IgnoreUnavailable = 2,
+
+}
+}

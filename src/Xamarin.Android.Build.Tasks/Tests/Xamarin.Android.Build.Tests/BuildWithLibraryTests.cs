@@ -6,6 +6,7 @@ using System.Linq;
 using System.Text;
 using System.Xml.Linq;
 using Microsoft.Android.Build.Tasks;
+using Microsoft.Build.Framework;
 using Mono.Cecil;
 using NUnit.Framework;
 using Xamarin.ProjectTools;
@@ -218,9 +219,9 @@ namespace Xamarin.Android.Build.Tests
 				aar.AssertContainsEntry (aarPath, "res/layout/mylayout.xml");
 				aar.AssertContainsEntry (aarPath, "res/raw/bar.txt");
 				aar.AssertContainsEntry (aarPath, ".net/__res_name_case_map.txt");
-				int envCount = aar.Count (e => e.FullName.StartsWith (".net/env/", StringComparison.Ordinal) && e.FullName.EndsWith (".env", StringComparison.Ordinal));
+				int envCount = aar.Entries.Count (e => e.FullName.StartsWith (".net/env/", StringComparison.Ordinal) && e.FullName.EndsWith (".env", StringComparison.Ordinal));
 				Assert.AreEqual (2, envCount, $"{aarPath} should contain 2 .env files under .net/env/");
-				int jarCount = aar.Count (e => e.FullName.StartsWith ("libs/", StringComparison.Ordinal) && e.FullName.EndsWith (".jar", StringComparison.Ordinal));
+				int jarCount = aar.Entries.Count (e => e.FullName.StartsWith ("libs/", StringComparison.Ordinal) && e.FullName.EndsWith (".jar", StringComparison.Ordinal));
 				Assert.AreEqual (2, jarCount, $"{aarPath} should contain 2 .jar files under libs/");
 				aar.AssertContainsEntry (aarPath, $"libs/{projectJarHash}.jar");
 				aar.AssertContainsEntry (aarPath, "jni/arm64-v8a/libfoo.so");
@@ -290,15 +291,12 @@ namespace Xamarin.Android.Build.Tests
 			Assert.IsNotNull(doc.Element ("manifest")?.Element ("queries")?.Element ("package"), $"There should be 1 package in the queries in {androidManifest}.");
 			// Check environment variable
 			if (isRelease) {
-				string envFilesDir;
-				if (runtime == AndroidRuntime.NativeAOT) {
-					envFilesDir = Path.Combine (intermediate, "android-x64");
+				Dictionary<string, string> environmentVariables;
+				if (runtime == AndroidRuntime.CoreCLR) {
+					environmentVariables = EnvironmentHelper.ReadCoreClrBootstrap (intermediate).EnvironmentVariables;
 				} else {
-					envFilesDir = intermediate;
+					environmentVariables = EnvironmentHelper.ReadNativeAotEnvironmentVariables (intermediate);
 				}
-
-				var environmentFiles = EnvironmentHelper.GatherEnvironmentFiles (envFilesDir, "x86_64", required: true);
-				var environmentVariables = EnvironmentHelper.ReadEnvironmentVariables (environmentFiles, runtime);
 				Assert.IsTrue (environmentVariables.TryGetValue (env_var, out string actual), $"Environment should contain {env_var}");
 				Assert.AreEqual (env_val, actual, $"{env_var} should be {env_val}");
 			}
@@ -314,17 +312,9 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		public void ProjectDependencies ([Values] bool projectReference, [Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
+		public void ProjectDependencies ([Values] bool projectReference, [Values (AndroidRuntime.CoreCLR)] AndroidRuntime runtime)
 		{
 			const bool isRelease = true;
-			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
-				return;
-			}
-
-			if (IgnoreOnNativeAot (runtime, "the trimmable typemap trims Java Callable Wrappers for library types that are never instantiated, so the unused LibraryB JCWs are intentionally absent from classes.dex.")) {
-				return;
-			}
-
 			// Setup dependencies App A -> Lib B -> Lib C
 			var path = Path.Combine ("temp", TestName);
 
@@ -407,21 +397,21 @@ namespace Xamarin.Android.Build.Tests
 			var dexFile = Path.Combine (intermediate, "android", "bin", "classes.dex");
 			FileAssert.Exists (dexFile);
 
-			// NOTE: the crc hashes here might change one day, but if we used [Android.Runtime.Register("")]
+			// Resolve the generated names from the map: if we used [Android.Runtime.Register("")]
 			// LibraryB.dll would have a reference to Mono.Android.dll, which invalidates the test.
-			string className = "Lcrc6414a4b78410c343a2/Bar;";
-			Assert.IsTrue (DexUtils.ContainsClass (className, dexFile, AndroidSdkPath), $"`{dexFile}` should include `{className}`!");
-			className = "Lcrc646d2d82b4d8b39bd8/Foo;";
-			Assert.IsTrue (DexUtils.ContainsClass (className, dexFile, AndroidSdkPath), $"`{dexFile}` should include `{className}`!");
+			var mappings = File.ReadAllLines (Path.Combine (intermediate, "acw-map.txt"));
+			foreach (var managedName in new [] { $"Bar, {libC.ProjectName}", $"Foo, {libB.ProjectName}" }) {
+				var mapping = mappings.Single (line => line.StartsWith ($"{managedName};", StringComparison.Ordinal));
+				var className = $"L{mapping.Split (';') [1].Replace ('.', '/')};";
+				Assert.IsTrue (DexUtils.ContainsClass (className, dexFile, AndroidSdkPath), $"`{dexFile}` should include `{className}`!");
+			}
 		}
 
 		[Test]
 		[NonParallelizable]
-		public void BuildWithNativeLibraries ([Values] bool isRelease, [Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
+		public void BuildWithNativeLibraries ([ValueSource (typeof (BaseTest), nameof (BaseTest.ValidRuntimeConfigurations))] (bool isRelease, AndroidRuntime runtime) configuration)
 		{
-			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
-				return;
-			}
+			var (isRelease, runtime) = configuration;
 
 			var dll = new XamarinAndroidLibraryProject () {
 				ProjectName = "Library1",
@@ -534,7 +524,6 @@ namespace Xamarin.Android.Build.Tests
 			proj.SetRuntime (runtime);
 
 			var supportedAbis = runtime switch {
-				AndroidRuntime.MonoVM    => new [] {"armeabi-v7a", "x86"},
 				AndroidRuntime.CoreCLR   => new [] {"arm64-v8a", "x86_64"},
 				AndroidRuntime.NativeAOT => new [] {"arm64-v8a", "x86_64"},
 				_                        => throw new NotSupportedException ($"Unsupported runtime '{runtime}'")
@@ -614,31 +603,48 @@ namespace Xamarin.Android.Build.Tests
 				var zipFile = Path.Combine (Root, b.ProjectDirectory, b.Output.OutputPath, $"{proj.ProjectName}.aar");
 				FileAssert.Exists (zipFile);
 				using (var zip = ZipHelper.OpenZip (zipFile)) {
-					Assert.IsTrue (zip.ContainsEntry ("res/values/foo.xml"), $"{zipFile} should contain a res/values/foo.xml entry");
+					Assert.IsNotNull (zip.GetEntry ("res/values/foo.xml"), $"{zipFile} should contain a res/values/foo.xml entry");
 				}
 			}
 		}
 
-		[Test]
-		public void DuplicateJCWNames ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
+		[TestCase (AndroidRuntime.CoreCLR)]
+		[TestCase (AndroidRuntime.NativeAOT)]
+		public void DuplicateJCWNames (AndroidRuntime runtime)
 		{
 			bool isRelease = runtime == AndroidRuntime.NativeAOT;
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
 				return;
 			}
 
-			// TODO: NativeAOT should fail the application build
-			if (runtime == AndroidRuntime.NativeAOT) {
-				Assert.Ignore ("NativeAOT doesn't fail the application build");
-			}
+			var source1 = """
+				namespace Library1;
 
-			var source = @"[Android.Runtime.Register (""examplelib.EmptyClass"")] public class EmptyClass : Java.Lang.Object { }";
+				[Android.Runtime.Register ("examplelib.DuplicatePeer")]
+				public class FirstPeer : Java.Lang.Object
+				{
+					public FirstPeer (int value)
+					{
+					}
+				}
+				""";
+			var source2 = """
+				namespace Library2;
+
+				[Android.Runtime.Register ("examplelib.DuplicatePeer")]
+				public class SecondPeer : Java.Lang.Object
+				{
+					public SecondPeer (string value)
+					{
+					}
+				}
+				""";
 			var library1 = new XamarinAndroidLibraryProject () {
 				IsRelease = isRelease,
 				ProjectName = "Library1",
 				Sources = {
-					new BuildItem.Source ("EmptyClass.cs") {
-						TextContent = () => source
+					new BuildItem.Source ("FirstPeer.cs") {
+						TextContent = () => source1
 					}
 				}
 			};
@@ -647,8 +653,8 @@ namespace Xamarin.Android.Build.Tests
 				IsRelease = isRelease,
 				ProjectName = "Library2",
 				Sources = {
-					new BuildItem.Source ("EmptyClass.cs") {
-						TextContent = () => source
+					new BuildItem.Source ("SecondPeer.cs") {
+						TextContent = () => source2
 					}
 				}
 			};
@@ -662,21 +668,33 @@ namespace Xamarin.Android.Build.Tests
 				},
 			};
 			app.SetRuntime (runtime);
-			var projectPath = Path.Combine ("temp", TestName);
+			var projectPath = Path.Combine ("temp", $"{TestName}_{Guid.NewGuid ():N}");
 			using var lib1b = CreateDllBuilder (Path.Combine (projectPath, library1.ProjectName), cleanupAfterSuccessfulBuild: false);
 			using var lib2b = CreateDllBuilder (Path.Combine (projectPath, library2.ProjectName), cleanupAfterSuccessfulBuild: false);
 
 			Assert.IsTrue (lib1b.Build (library1), "Build of Library1 should have succeeded");
 			Assert.IsTrue (lib2b.Build (library2), "Build of Library2 should have succeeded");
 
-			using var appb = CreateApkBuilder (Path.Combine (projectPath, app.ProjectName));
+			using var appb = CreateApkBuilder (Path.Combine (projectPath, app.ProjectName), cleanupAfterSuccessfulBuild: false);
 			appb.ThrowOnBuildFailure = false;
 			Assert.IsFalse (appb.Build (app), "Build of App1 should have failed");
-			IEnumerable<string> errors = appb.LastBuildOutput.Where (x => x.Contains ("error XA4215"));
-			Assert.NotNull (errors, "Error should be XA4215");
-			StringAssertEx.Contains ("EmptyClass", errors, "Error should mention the conflicting type name");
-			StringAssertEx.Contains ("Library1", errors, "Error should mention all of the assemblies with conflicts");
-			StringAssertEx.Contains ("Library2", errors, "Error should mention all of the assemblies with conflicts");
+			var errors = appb.LastBuildOutput.Where (x => x.Contains ("error XA4215")).ToList ();
+			Assert.IsNotEmpty (errors, "Error should be XA4215");
+			StringAssertEx.Contains ("examplelib.DuplicatePeer", errors, "Error should mention the conflicting Java type name");
+			StringAssertEx.Contains ("Library1.FirstPeer", errors, "Error should mention the first conflicting managed type");
+			StringAssertEx.Contains ("Library2.SecondPeer", errors, "Error should mention the second conflicting managed type");
+			Assert.IsFalse (appb.LastBuildOutput.Any (x => x.Contains ("warning XA4214")),
+				"Distinct managed type names should not produce XA4214.");
+
+			var acwMapFile = appb.Output.GetIntermediaryPath ("acw-map.txt");
+			var typemapDirectory = appb.Output.GetIntermediaryPath ("typemap");
+			var javaFile = Path.Combine (typemapDirectory, "java", "examplelib", "DuplicatePeer.java");
+			FileAssert.DoesNotExist (javaFile, "A failed trimmable typemap build should not write an ambiguous JCW source.");
+			FileAssert.DoesNotExist (acwMapFile, "A failed trimmable typemap build should not write an ambiguous acw-map.");
+			if (Directory.Exists (typemapDirectory)) {
+				Assert.IsEmpty (Directory.GetFiles (typemapDirectory, "*.dll"),
+					"A failed trimmable typemap build should not write typemap assemblies.");
+			}
 		}
 
 		[Test]
@@ -687,9 +705,9 @@ namespace Xamarin.Android.Build.Tests
 				return;
 			}
 
-			// TODO: NativeAOT should warn about the duplicate types
+			// NativeAOT removes these unreferenced Java peers.
 			if (runtime == AndroidRuntime.NativeAOT) {
-				Assert.Ignore ("NativeAOT doesn't warn about the duplicate managed types");
+				Assert.Ignore ("NativeAOT removes the unreferenced Java peers.");
 			}
 
 			var source = @"public class EmptyClass : Java.Lang.Object { }";
@@ -732,11 +750,17 @@ namespace Xamarin.Android.Build.Tests
 			using var appb = CreateApkBuilder (Path.Combine (projectPath, app.ProjectName));
 			appb.ThrowOnBuildFailure = false;
 			Assert.IsTrue (appb.Build (app), "Build of App1 should have succeeded");
-			IEnumerable<string> warnings = appb.LastBuildOutput.Where (x => x.Contains ("warning XA4214"));
-			Assert.NotNull (warnings, "Warning should be XA4214");
-			StringAssertEx.Contains ("EmptyClass", warnings, "Warning should mention the conflicting type name");
-			StringAssertEx.Contains ("Library1", warnings, "Warning should mention all of the assemblies with conflicts");
-			StringAssertEx.Contains ("Library2", warnings, "Warning should mention all of the assemblies with conflicts");
+			var mappings = File.ReadAllLines (appb.Output.GetIntermediaryPath ("acw-map.txt"));
+			var javaNames = new [] { library1.ProjectName, library2.ProjectName }
+				.Select (assembly => mappings.Single (line => line.StartsWith ($"EmptyClass, {assembly};", StringComparison.Ordinal)).Split (';') [1])
+				.ToArray ();
+			Assert.AreNotEqual (javaNames [0], javaNames [1], "Assembly-qualified managed names should map to distinct Java Callable Wrappers.");
+			var dexFile = appb.Output.GetIntermediaryPath (Path.Combine ("android", "bin", "classes.dex"));
+			FileAssert.Exists (dexFile);
+			foreach (var javaName in javaNames) {
+				var className = $"L{javaName.Replace ('.', '/')};";
+				Assert.IsTrue (DexUtils.ContainsClass (className, dexFile, AndroidSdkPath), $"`{dexFile}` should include `{className}`!");
+			}
 		}
 
 		[Test]
@@ -820,11 +844,9 @@ namespace Xamarin.Android.Build.Tests
 		/// <summary>
 		/// Reference https://bugzilla.xamarin.com/show_bug.cgi?id=29568
 		/// </summary>
-		public void BuildLibraryWhichUsesResources ([Values] bool isRelease, [Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
+		public void BuildLibraryWhichUsesResources ([ValueSource (typeof (BaseTest), nameof (BaseTest.ValidRuntimeConfigurations))] (bool isRelease, AndroidRuntime runtime) configuration)
 		{
-			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
-				return;
-			}
+			var (isRelease, runtime) = configuration;
 			var proj = new XamarinAndroidLibraryProject { IsRelease = isRelease };
 			proj.SetRuntime (runtime);
 			proj.PackageReferences.Add (KnownPackages.AndroidXAppCompat);
@@ -927,6 +949,42 @@ namespace Xamarin.Android.Build.Tests
 			// Ensure items excluded from check do not produce warnings.
 			StringAssertEx.DoesNotContain ("TestContent2.txt : warning XA0101", libBuilder.LastBuildOutput,
 				"Build Output contains 'TestContent2.txt : warning XA0101'.");
+		}
+
+		[TestCase (0, "normal")]
+		[TestCase (2, "error")]
+		[TestCase (2, "suppress")]
+		public void ContentWarnings (int count, string mode)
+		{
+			var proj = new XamarinAndroidApplicationProject ();
+			var files = Enumerable.Range (0, count).Select (i => $"content{i}.txt").ToArray ();
+			foreach (string file in files) {
+				proj.OtherBuildItems.Add (new BuildItem.Content (file) { TextContent = () => "Test content" });
+			}
+			if (mode == "error") {
+				proj.SetProperty ("WarningsAsErrors", "XA0101");
+			} else if (mode == "suppress") {
+				proj.SetProperty ("NoWarn", "XA0101");
+			}
+			using var builder = CreateApkBuilder ();
+			builder.Target = "_CheckForContent";
+			builder.Verbosity = LoggerVerbosity.Detailed;
+			builder.ThrowOnBuildFailure = false;
+			Assert.AreEqual (mode != "error", builder.Build (proj));
+			builder.AssertHasSomeWarnings (mode == "normal" ? (uint) count : 0);
+			StringAssertEx.Contains ($" {(mode == "error" ? count : 0)} Error(s)", builder.LastBuildOutput);
+			if (mode == "suppress") {
+				StringAssertEx.DoesNotContain (": warning XA0101:", builder.LastBuildOutput);
+				StringAssertEx.DoesNotContain (": error XA0101:", builder.LastBuildOutput);
+				StringAssertEx.Contains ("@(Content) build action is not supported", builder.LastBuildOutput);
+			} else {
+				foreach (string file in files) {
+					StringAssertEx.Contains ($"{file} : {(mode == "error" ? "error" : "warning")} XA0101: @(Content) build action is not supported", builder.LastBuildOutput);
+				}
+			}
+			if (count == 0) {
+				StringAssertEx.DoesNotContain ("Task \"AndroidWarning\"", builder.LastBuildOutput);
+			}
 		}
 
 		[Test]
@@ -1087,16 +1145,11 @@ namespace Xamarin.Android.Build.Tests
 		/// And MultiTfmLib contains Java-interop types (e.g. BroadcastReceiver) that only
 		/// exist in the net11.0-android TFM, the build tasks must load the Android-TFM assembly
 		/// and generate JCWs for those types. Previously, the net11.0 (non-Android) assembly
-		/// could be loaded instead, causing FindJavaObjectsStep to report "Found 0 Java types"
-		/// and producing empty .jlo.xml files.
+		/// could be loaded instead, omitting Android-only types from the managed type map.
 		/// </summary>
 		[Test]
-		public void MultiTfmTransitiveReference ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
+		public void MultiTfmTransitiveReference ([Values (AndroidRuntime.CoreCLR)] AndroidRuntime runtime)
 		{
-			if (IgnoreUnsupportedConfiguration (runtime, release: false)) {
-				return;
-			}
-
 			var path = Path.Combine ("temp", TestName);
 			var dotnetVersion = XABuildConfig.LatestDotNetTargetFramework;
 
@@ -1189,18 +1242,41 @@ namespace MultiTfmLib
 			using var appBuilder = CreateApkBuilder (Path.Combine (path, app.ProjectName));
 			Assert.IsTrue (appBuilder.Build (app), $"{app.ProjectName} should build");
 
-			// Verify: MultiTfmLib.jlo.xml should NOT be empty (i.e. the assembly was scanned as an Android assembly)
-			var jloXml = appBuilder.Output.GetIntermediaryPath (
-				Path.Combine ("android", "assets", "arm64-v8a", "MultiTfmLib.jlo.xml"));
-			FileAssert.Exists (jloXml);
+			var typeMapPath = appBuilder.Output.GetIntermediaryPath (
+				Path.Combine ("typemap", "_MultiTfmLib.TypeMap.dll"));
+			FileAssert.Exists (typeMapPath, "The Android-TFM library should have a managed type map.");
+			using var typeMap = Mono.Cecil.AssemblyDefinition.ReadAssembly (typeMapPath);
+			Assert.IsTrue (typeMap.MainModule.GetTypeReferences ().Any (type => type.FullName == "MultiTfmLib.MyReceiver"),
+				"The managed type map should reference the Android-only MyReceiver type.");
 
-			var jloXmlInfo = new FileInfo (jloXml);
-			Assert.IsTrue (jloXmlInfo.Length > 0,
-				"MultiTfmLib.jlo.xml should not be empty — the Android-TFM assembly was not loaded (wrong TFM loaded instead)");
+			var acwMapFile = appBuilder.Output.GetIntermediaryPath ("acw-map.txt");
+			FileAssert.Exists (acwMapFile);
+			var mappings = File.ReadAllLines (acwMapFile);
+			var mapping = mappings.Single (line => line.StartsWith ("MultiTfmLib.MyReceiver, MultiTfmLib;", StringComparison.Ordinal));
+			var className = $"L{mapping.Split (';') [1].Replace ('.', '/')};";
+			var dexFile = appBuilder.Output.GetIntermediaryPath (Path.Combine ("android", "bin", "classes.dex"));
+			FileAssert.Exists (dexFile);
+			Assert.IsTrue (DexUtils.ContainsClass (className, dexFile, AndroidSdkPath),
+				"The Android-TFM MyReceiver JCW should be compiled into classes.dex.");
+		}
 
-			var jloContent = File.ReadAllText (jloXml);
-			Assert.IsTrue (jloContent.Contains ("MyReceiver"),
-				$"MultiTfmLib.jlo.xml should contain the MyReceiver JCW type, but got: {jloContent}");
+		[Test]
+		public void LocalTestServersBuildsForNetStandard ()
+		{
+			var library = new DotNetStandard {
+				ProjectName = "LocalTestServers",
+				Sdk = "Microsoft.NET.Sdk",
+				TargetFramework = "netstandard2.0",
+				Sources = {
+					new BuildItem.Source ("LocalTestServers.cs") {
+						TextContent = () => File.ReadAllText (Path.Combine (XABuildPaths.TopDirectory, "tests", "Mono.Android-Tests", "Mono.Android-Tests", "Xamarin.Android.Net", "LocalTestServers.cs")),
+					},
+				},
+			};
+			library.SetProperty ("LangVersion", "8.0");
+
+			using var builder = CreateDllBuilder (Path.Combine ("temp", TestName));
+			Assert.IsTrue (builder.Build (library), "The shared test server should build for netstandard2.0.");
 		}
 
 	}

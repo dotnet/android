@@ -1,14 +1,14 @@
 #pragma once
 
+#include <cstdint>
+#include <pthread.h>
 #include <semaphore.h>
-
-#include <jni.h>
 
 #include <shared/cpp-util.hh>
 
 struct JniObjectReferenceControlBlock
 {
-	jobject handle;
+	void *handle;
 	int handle_type;
 	int refs_added;
 };
@@ -17,12 +17,6 @@ struct HandleContext
 {
 	int32_t identity_hash_code;
 	JniObjectReferenceControlBlock *control_block;
-
-	bool is_collected () const noexcept
-	{
-		abort_unless (control_block != nullptr, "Control block must not be null");
-		return control_block->handle == nullptr;
-	}
 };
 
 struct StronglyConnectedComponent
@@ -39,66 +33,46 @@ struct ComponentCrossReference
 
 struct MarkCrossReferencesArgs
 {
-    size_t ComponentCount;
-    StronglyConnectedComponent *Components;
-    size_t CrossReferenceCount;
-    ComponentCrossReference *CrossReferences;
+	size_t ComponentCount;
+	StronglyConnectedComponent *Components;
+	size_t CrossReferenceCount;
+	ComponentCrossReference *CrossReferences;
 };
 
-using BridgeProcessingStartedFtn = void (*)(MarkCrossReferencesArgs*);
-using BridgeProcessingFinishedFtn = void (*)(MarkCrossReferencesArgs*);
 using BridgeProcessingFtn = void (*)(MarkCrossReferencesArgs*);
 
 namespace xamarin::android {
 	class GCBridge
 	{
 	public:
-		static void initialize_on_onload (JNIEnv *env) noexcept;
-		static void initialize_on_runtime_init (JNIEnv *env, jclass runtimeClass) noexcept;
-
-		static BridgeProcessingFtn initialize_callback (
-			BridgeProcessingStartedFtn bridge_processing_started,
-			BridgeProcessingFinishedFtn bridge_processing_finished) noexcept
+		static BridgeProcessingFtn initialize_callback (BridgeProcessingFtn managed_bridge_processing_callback) noexcept
 		{
-			abort_if_invalid_pointer_argument (bridge_processing_started, "bridge_processing_started");
-			abort_if_invalid_pointer_argument (bridge_processing_finished, "bridge_processing_finished");
-			abort_unless (GCBridge::bridge_processing_started_callback == nullptr, "GC bridge processing started callback is already set");
-			abort_unless (GCBridge::bridge_processing_finished_callback == nullptr, "GC bridge processing finished callback is already set");
+			abort_if_invalid_pointer_argument (managed_bridge_processing_callback, "managed_bridge_processing_callback");
+			abort_unless (!initialized, "GC bridge callback is already initialized");
 
-			GCBridge::bridge_processing_started_callback = bridge_processing_started;
-			GCBridge::bridge_processing_finished_callback = bridge_processing_finished;
-
+			bridge_processing_callback = managed_bridge_processing_callback;
 			initialize_shared_args_semaphore ();
+			initialized = true;
 			start_bridge_processing_thread ();
 
 			return mark_cross_references;
 		}
 
-		static void trigger_java_gc (JNIEnv *env) noexcept;
-
 	private:
 		static inline sem_t shared_args_semaphore {};
 		// JavaMarshal serializes bridge rounds: it does not publish another argument block until
-		// bridge_processing_finished_callback has completed. This is therefore a single-slot
-		// handoff; the semaphore signals availability but does not queue distinct argument blocks.
+		// FinishCrossReferenceProcessing has completed. This is therefore a single-slot handoff;
+		// the semaphore signals availability but does not queue distinct argument blocks.
 		static inline MarkCrossReferencesArgs *shared_args = nullptr;
-
-		static inline jobject Runtime_instance = nullptr;
-		static inline jmethodID Runtime_gc = nullptr;
-
-		static inline BridgeProcessingStartedFtn bridge_processing_started_callback = nullptr;
-		static inline BridgeProcessingFinishedFtn bridge_processing_finished_callback = nullptr;
+		static inline BridgeProcessingFtn bridge_processing_callback = nullptr;
+		static inline bool initialized {};
 
 		static void initialize_shared_args_semaphore () noexcept;
 		static void start_bridge_processing_thread () noexcept;
 		static void publish_shared_args (MarkCrossReferencesArgs *args) noexcept;
 		static auto wait_for_shared_args () noexcept -> MarkCrossReferencesArgs*;
-
 		static void bridge_processing () noexcept;
 		static auto bridge_processing_thread_entry (void *arg) noexcept -> void*;
 		static void mark_cross_references (MarkCrossReferencesArgs *args) noexcept;
-		
-		static void log_mark_cross_references_args_if_enabled (MarkCrossReferencesArgs *args) noexcept;
-		static void log_handle_context (JNIEnv *env, HandleContext *ctx) noexcept;
 	};
 }

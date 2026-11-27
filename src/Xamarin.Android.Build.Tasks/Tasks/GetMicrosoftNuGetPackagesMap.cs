@@ -1,5 +1,6 @@
 #nullable enable
 using System;
+using System.Globalization;
 using System.IO;
 using Microsoft.Build.Framework;
 using Microsoft.Android.Build.Tasks;
@@ -20,7 +21,7 @@ public class GetMicrosoftNuGetPackagesMap : AsyncTask
 	/// The cache directory to use for Maven artifacts.
 	/// </summary>
 	[Required]
-	public string MavenCacheDirectory { get; set; } = null!; // NRT enforced by [Required]
+	public string MavenCacheDirectory { get; set; } = "";
 
 	[Output]
 	public string? ResolvedPackageMap { get; set; }
@@ -38,7 +39,7 @@ public class GetMicrosoftNuGetPackagesMap : AsyncTask
 			// No file for today, download a new one
 			try {
 				var json = await http_client.GetStringAsync ("https://aka.ms/ms-nuget-packages");
-				var outfile = Path.Combine (MavenCacheDirectory, $"microsoft-packages-{DateTime.Today:yyyyMMdd}.json");
+				var outfile = Path.Combine (MavenCacheDirectory, PackagesFile.GetFileName (DateTime.Today));
 
 				File.WriteAllText (outfile, json);
 
@@ -75,6 +76,9 @@ class PackagesFile
 		DownloadDate = downloadDate;
 	}
 
+	public static string GetFileName (DateTime date) =>
+		$"microsoft-packages-{date.ToString ("yyyyMMdd", CultureInfo.InvariantCulture)}.json";
+
 	public static List<PackagesFile> FindAll (string directory)
 	{
 		var files = new List<PackagesFile> ();
@@ -100,7 +104,7 @@ class PackagesFile
 
 		var date = filename.Substring ("microsoft-packages-".Length);
 
-		if (!DateTime.TryParseExact (date, "yyyyMMdd", null, System.Globalization.DateTimeStyles.None, out var downloadDate))
+		if (!DateTime.TryParseExact (date, "yyyyMMdd", CultureInfo.InvariantCulture, DateTimeStyles.None, out var downloadDate))
 			return false;
 
 		file = new PackagesFile (filepath, downloadDate);

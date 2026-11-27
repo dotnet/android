@@ -1,8 +1,8 @@
 using System;
 using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
-using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using System.Runtime.InteropServices.Java;
 using System.Threading;
 
 using Java.Interop;
@@ -17,228 +17,153 @@ namespace Android.Runtime
 	{
 #pragma warning disable 0649
 		// NOTE: Keep this in sync with the native side in src/native/common/include/managed-interface.hh
+		[ExtendedLayout (ExtendedLayoutKind.CStruct)]
 		internal struct JnienvInitializeArgs {
-			public IntPtr          javaVm;
-			public IntPtr          env;
-			public IntPtr          grefLoader;
-			public IntPtr          Loader_loadClass;
-			public IntPtr          grefClass; // TODO: remove, not needed anymore
-			public uint            logCategories;
-			public int             version; // TODO: remove, not needed anymore
-			public int             grefGcThreshold;
-			public IntPtr          grefIGCUserPeer;
-			public byte            brokenExceptionTransitions;
-			public int             packageNamingPolicy;
-			public byte            ioExceptionType;
-			public int             jniAddNativeMethodRegistrationAttributePresent;
-			public bool            jniRemappingInUse;
-			public bool            marshalMethodsEnabled;
-			public IntPtr          grefGCUserPeerable;
-			public IntPtr          propagateUncaughtExceptionFn;
-			public IntPtr          registerJniNativesFn;
+			// SAFETY: Fields copy non-overlapping scalar values and addresses; native use keeps its existing unsafe contracts.
+			public safe IntPtr          javaVm;
+			public safe IntPtr          env;
+			public safe IntPtr          grefLoader;
+			public safe uint            logCategories;
+			public safe int             grefGcThreshold;
+			public safe IntPtr          grefIGCUserPeer;
+			public safe byte            brokenExceptionTransitions;
+			public safe int             packageNamingPolicy;
+			public safe byte            ioExceptionType;
+			public safe IntPtr          jniRemappingData;
+			public safe IntPtr          propagateUncaughtExceptionFn;
+			public safe int             maxGrefCount;
+			public safe delegate* unmanaged<delegate* unmanaged<MarkCrossReferencesArgs*, void>, delegate* unmanaged<MarkCrossReferencesArgs*, void>> initializeGCBridge;
 		}
 #pragma warning restore 0649
 
-		internal static bool jniRemappingInUse;
-		internal static bool MarshalMethodsEnabled;
 		internal static bool PropagateExceptions;
 		internal static BoundExceptionType BoundExceptionType;
 		internal static int gref_gc_threshold;
+		internal static int max_gref_count;
 		internal static IntPtr grefIGCUserPeer_class;
-		internal static IntPtr grefGCUserPeerable_class;
-		internal static IntPtr java_class_loader;
 
 		internal static JniRuntime? androidRuntime;
 
 		[UnmanagedCallersOnly]
 		static void PropagateUncaughtException (IntPtr env, IntPtr javaThread, IntPtr javaException)
 		{
-			JNIEnv.PropagateUncaughtException (env, javaThread, javaException);
-		}
-
-		[UnmanagedCallersOnly]
-		[RequiresUnreferencedCode ("Uses reflection to access System.StartupHookProvider.")]
-		static unsafe void RegisterJniNatives (IntPtr typeName_ptr, int typeName_len, IntPtr jniClass, IntPtr methods_ptr, int methods_len)
-		{
-			string typeName = new string ((char*) typeName_ptr, 0, typeName_len);
-			var type = Type.GetType (typeName, throwOnError: false);
-			if (type == null) {
-				RuntimeNativeMethods.monodroid_log (LogLevel.Error,
-				               LogCategories.Default,
-				               $"Could not load type '{typeName}'. Skipping JNI registration of type '{Java.Interop.TypeManager.GetClassName (jniClass)}'.");
-				return;
-			}
-
-			var className = Java.Interop.TypeManager.GetClassName (jniClass);
-			Java.Interop.TypeManager.RegisterType (className, type);
-
-			JniType? jniType = null;
-			JniType.GetCachedJniType (ref jniType, className);
-
-			ReadOnlySpan<char> methods = new ReadOnlySpan<char> ((void*) methods_ptr, methods_len);
-			if (androidRuntime is null) {
-				throw new InvalidOperationException ("androidRuntime has not been initialized");
-			}
-			androidRuntime.TypeManager.RegisterNativeMembers (jniType, type, methods);
-		}
-
-		// This must be called by NativeAOT before InitializeJniRuntime, as early as possible
-		internal static void NativeAotInitializeMaxGrefGet ()
-		{
-			gref_gc_threshold = RuntimeNativeMethods._monodroid_max_gref_get ();
-			if (gref_gc_threshold != int.MaxValue) {
-				gref_gc_threshold = checked((gref_gc_threshold * 9) / 10);
+			unsafe {
+				// SAFETY: the registered native callback supplies this thread's live environment and
+				// borrowed Throwable; reporting completes within the callback without transferring its input reference.
+				JNIEnv.PropagateUncaughtException (env, javaThread, javaException);
 			}
 		}
 
-		internal static void InitializeBeforeRuntimeCreation (JnienvInitializeArgs args)
+		/// <safety>
+		/// <paramref name="args"/> must come from the native host with the matching descriptor layout,
+		/// process-lifetime remapping data, and runtime-lifetime global references.
+		/// </safety>
+		internal static unsafe void InitializeBeforeRuntimeCreation (JnienvInitializeArgs args)
 		{
-			InitializeCommonState (args);
-			InitializeTrimmableTypeMapDataIfNeeded ();
+			unsafe {
+				// SAFETY: the native host retains the remapping body and global references beyond initialization.
+				InitializeCommonState (args);
+			}
+			TypeMapLoader.Initialize ();
+		}
+
+		internal static void InitializeMaxGrefCounts (JnienvInitializeArgs args)
+		{
+			gref_gc_threshold = args.grefGcThreshold;
+			max_gref_count = args.maxGrefCount;
 		}
 
 		// NOTE: should have different name than `Initialize` to avoid:
 		// * Assertion at /__w/1/s/src/mono/mono/metadata/icall.c:6258, condition `!only_unmanaged_callers_only' not met
-		// Only used for NativeAOT after the runtime has been created. MonoVM and CoreCLR use Initialize().
-		internal static void InitializeNativeAotRuntime (JniRuntime runtime, JnienvInitializeArgs args)
+		// Only used for NativeAOT after the runtime has been created. CoreCLR uses Initialize().
+		/// <safety>
+		/// <paramref name="args"/> must retain the native host's matching descriptor and process-lifetime
+		/// GC-bridge initializer. Its VM and global references must remain live for the runtime lifetime.
+		/// </safety>
+		internal static unsafe void InitializeNativeAotRuntime (JniRuntime runtime, JnienvInitializeArgs args)
 		{
 			if (!RuntimeFeature.IsNativeAotRuntime) {
 				throw new NotSupportedException ("JNIEnvInit.InitializeNativeAotRuntime can only be used to initialize NativeAOT.");
 			}
-			if (RuntimeFeature.IsMonoRuntime || RuntimeFeature.IsCoreClrRuntime) {
-				throw new NotSupportedException ("Internal error: NativeAOT cannot be enabled with MonoVM or CoreCLR.");
+			if (RuntimeFeature.IsCoreClrRuntime) {
+				throw new NotSupportedException ("Internal error: NativeAOT cannot be enabled with CoreCLR.");
 			}
 
+			if (RuntimeFeature.StartupNoGCRegion) {
+				StartupNoGCRegion.Start ();
+			}
 			androidRuntime = runtime;
 			JniRuntime.SetCurrent (runtime);
-			RegisterTrimmableTypeMapNativeMethodsIfNeeded ();
+			unsafe {
+				// SAFETY: the caller retains the native host's process-lifetime initializer and matching runtime descriptor.
+				JavaMarshalGCBridge.Initialize (args);
+			}
+			TrimmableTypeMap.RegisterNativeMethods ();
 			SetSynchronizationContext ();
 		}
 
-		// Only used for MonoVM and CoreCLR. NativeAOT uses InitializeNativeAotRuntime().
+		// Only used for CoreCLR. NativeAOT uses InitializeNativeAotRuntime().
+		/// <safety>
+		/// <paramref name="args"/> must address the native host's readable and writable initialization descriptor
+		/// for the call. Its VM must outlive the runtime, environment must belong to the current thread,
+		/// and global references/remapping data must retain their documented runtime/process lifetimes.
+		/// </safety>
 		[UnmanagedCallersOnly]
 		internal static unsafe void Initialize (JnienvInitializeArgs* args)
 		{
-			if (RuntimeFeature.IsNativeAotRuntime) {
-				throw new NotSupportedException ("JNIEnvInit.Initialize cannot be used to initialize NativeAOT.");
+			unsafe {
+				// SAFETY: the native host calls this entry point with its matching live descriptor, current-thread environment and runtime-lifetime VM/global references.
+				ArgumentNullException.ThrowIfNull (args);
+				if (RuntimeFeature.IsNativeAotRuntime) {
+					throw new NotSupportedException ("JNIEnvInit.Initialize cannot be used to initialize NativeAOT.");
+				}
+				if (!RuntimeFeature.IsCoreClrRuntime) {
+					throw new NotSupportedException ("Internal error: CoreCLR must be enabled.");
+				}
+
+				if (RuntimeFeature.StartupNoGCRegion) {
+					StartupNoGCRegion.Start ();
+				}
+
+				InitializeBeforeRuntimeCreation (*args);
+
+				androidRuntime = new AndroidRuntime (
+						args->env,
+						args->javaVm,
+						args->grefLoader,
+						new TrimmableTypeMapTypeManager (),
+						new TrimmableTypeMapValueManager ()
+				);
+				JniRuntime.SetCurrent (androidRuntime);
+				JavaMarshalGCBridge.Initialize (*args);
+				TrimmableTypeMap.RegisterNativeMethods ();
+
+				args->propagateUncaughtExceptionFn = (IntPtr)(delegate* unmanaged<IntPtr, IntPtr, IntPtr, void>)&PropagateUncaughtException;
+
+				RunStartupHooksIfNeeded ();
+				SetSynchronizationContext ();
 			}
-			if (RuntimeFeature.IsMonoRuntime == RuntimeFeature.IsCoreClrRuntime) {
-				throw new NotSupportedException ("Internal error: exactly one of RuntimeFeature.IsMonoRuntime or RuntimeFeature.IsCoreClrRuntime must be enabled.");
-			}
-
-			IntPtr total_timing_sequence = IntPtr.Zero;
-			IntPtr partial_timing_sequence = IntPtr.Zero;
-
-			InitializeBeforeRuntimeCreation (*args);
-
-			JniRuntime.JniTypeManager typeManager = CreateTypeManager (*args);
-			JniRuntime.JniValueManager valueManager = CreateValueManager ();
-			androidRuntime = new AndroidRuntime (
-					args->env,
-					args->javaVm,
-					args->grefLoader,
-					typeManager,
-					valueManager,
-					args->jniAddNativeMethodRegistrationAttributePresent != 0
-			);
-			JniRuntime.SetCurrent (androidRuntime);
-			RegisterTrimmableTypeMapNativeMethodsIfNeeded ();
-
-			args->propagateUncaughtExceptionFn = (IntPtr)(delegate* unmanaged<IntPtr, IntPtr, IntPtr, void>)&PropagateUncaughtException;
-
-			if (!RuntimeFeature.TrimmableTypeMap) {
-				args->registerJniNativesFn = GetRegisterJniNativesFnPtr ();
-			}
-			RunStartupHooksIfNeeded ();
-			SetSynchronizationContext ();
-
-			[UnconditionalSuppressMessage ("Trimming", "IL2026", Justification = "This method is never used with the trimmable type map.")]
-			IntPtr GetRegisterJniNativesFnPtr () =>
-				(IntPtr)(delegate* unmanaged<IntPtr, int, IntPtr, IntPtr, int, void>)&RegisterJniNatives;
 		}
 
-		[UnconditionalSuppressMessage ("Trimming", "IL2026", Justification = "The AndroidTypeManager branch is only reached when RuntimeFeature.TrimmableTypeMap is false; the linker substitutes the feature switch and trims this branch in trimmable apps.")]
-		internal static JniRuntime.JniTypeManager CreateTypeManager (JnienvInitializeArgs args)
-		{
-			if (RuntimeFeature.TrimmableTypeMap) {
-				return new TrimmableTypeMapTypeManager ();
-			}
-
-			return CreateAndroidTypeManager (args);
-
-			[UnconditionalSuppressMessage ("Trimming", "IL2026", Justification = "This type manager won't be used in Native AOT builds.")]
-			[UnconditionalSuppressMessage ("Trimming", "IL3050", Justification = "This type manager won't be used in Native AOT builds.")]
-			static JniRuntime.JniTypeManager CreateAndroidTypeManager (JnienvInitializeArgs args) => new AndroidTypeManager (args.jniAddNativeMethodRegistrationAttributePresent != 0);
-		}
-
-		internal static JniRuntime.JniValueManager CreateValueManager ()
-		{
-			if (RuntimeFeature.TrimmableTypeMap) {
-				return new TrimmableTypeMapValueManager ();
-			}
-
-			if (RuntimeFeature.IsMonoRuntime) {
-				return CreateAndroidValueManager ();
-			}
-
-			if (RuntimeFeature.IsCoreClrRuntime) {
-				return CreateJavaMarshalValueManager ();
-			}
-
-			if (RuntimeFeature.IsNativeAotRuntime) {
-				return CreateJavaMarshalValueManager ();
-			}
-
-			throw new NotSupportedException ("Internal error: unknown runtime not supported");
-
-			[UnconditionalSuppressMessage ("Trimming", "IL2026", Justification = "CoreCLR value manager is preserved by the MarkJavaObjects trimmer step.")]
-			[UnconditionalSuppressMessage ("Trimming", "IL3050", Justification = "This value manager won't be used in Native AOT builds in the future.")]
-			JniRuntime.JniValueManager CreateJavaMarshalValueManager () => new JavaMarshalValueManager ();
-
-			[UnconditionalSuppressMessage ("Trimming", "IL2026", Justification = "Mono value manager is preserved by the MarkJavaObjects trimmer step.")]
-			[UnconditionalSuppressMessage ("Trimming", "IL3050", Justification = "This value manager won't be used in Native AOT builds in the future.")]
-			JniRuntime.JniValueManager CreateAndroidValueManager () => new AndroidValueManager ();
-		}
-
-		static void InitializeCommonState (JnienvInitializeArgs args)
+		/// <safety>
+		/// <paramref name="args"/> must retain its native remapping body for the process lifetime
+		/// and its JNI global references for the runtime lifetime.
+		/// </safety>
+		static unsafe void InitializeCommonState (JnienvInitializeArgs args)
 		{
 			Logger.SetLogCategories ((LogCategories)args.logCategories);
 
-			gref_gc_threshold = args.grefGcThreshold;
-			jniRemappingInUse = args.jniRemappingInUse;
-			MarshalMethodsEnabled = args.marshalMethodsEnabled;
-			java_class_loader = args.grefLoader;
-
+			InitializeMaxGrefCounts (args);
+			if (RuntimeFeature.JniRemapping) {
+				unsafe {
+					// SAFETY: the host supplies the process-lifetime descriptor and remapping body.
+					JniRemappingLookup.Initialize (args.jniRemappingData);
+				}
+			}
 			BoundExceptionType = (BoundExceptionType)args.ioExceptionType;
 			grefIGCUserPeer_class = args.grefIGCUserPeer;
-			grefGCUserPeerable_class = args.grefGCUserPeerable;
 			PropagateExceptions = args.brokenExceptionTransitions == 0;
-
 			JavaNativeTypeManager.PackageNamingPolicy = (PackageNamingPolicy)args.packageNamingPolicy;
-		}
-
-		static void InitializeTrimmableTypeMapDataIfNeeded ()
-		{
-			if (RuntimeFeature.TrimmableTypeMap) {
-				InitializeTrimmableTypeMapData ();
-			}
-		}
-
-		static void RegisterTrimmableTypeMapNativeMethodsIfNeeded ()
-		{
-			if (RuntimeFeature.TrimmableTypeMap) {
-				// TypeMapLoader.Initialize() only loads managed typemap data. Registering
-				// mono.android.Runtime natives requires JniRuntime.Current and its ClassLoader.
-				TrimmableTypeMap.RegisterNativeMethods ();
-			}
-		}
-
-		// Separate method so the JIT doesn't try to resolve TypeMapLoader (from _Microsoft.Android.TypeMaps.dll)
-		// when compiling JNIEnvInit.Initialize() in non-trimmable builds where that assembly isn't present.
-		[MethodImpl (MethodImplOptions.NoInlining)]
-		static void InitializeTrimmableTypeMapData ()
-		{
-			TypeMapLoader.Initialize ();
 		}
 
 		static void RunStartupHooksIfNeeded ()
@@ -260,7 +185,7 @@ namespace Android.Runtime
 
 			var type = typeof(object).Assembly.GetType (typeName, throwOnError: false);
 			if (type is null) {
-				RuntimeNativeMethods.monodroid_log (LogLevel.Warn, LogCategories.Default,
+				Logger.Log (LogLevel.Warn, "DOTNET",
 					$"Could not load type '{typeName}'. Skipping startup hooks.");
 				return;
 			}
@@ -268,7 +193,7 @@ namespace Android.Runtime
 			var method = type.GetMethod (methodName, 
 				BindingFlags.NonPublic | BindingFlags.Static, null, [ typeof(string) ], null);
 			if (method is null) {
-				RuntimeNativeMethods.monodroid_log (LogLevel.Warn, LogCategories.Default,
+				Logger.Log (LogLevel.Warn, "DOTNET",
 					$"Could not load method '{typeName}.{methodName}'. Skipping startup hooks.");
 				return;
 			}

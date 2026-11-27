@@ -1,4 +1,5 @@
 #nullable enable
+using System;
 using Microsoft.Android.Build.Tasks;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
@@ -7,12 +8,24 @@ using Properties = Xamarin.Android.Tasks.Properties;
 namespace Microsoft.Android.Tasks;
 
 /// <summary>
-/// Minimal <see cref="ITaskItem"/> helpers for <see cref="CompressAssemblies"/>, duplicated
-/// here to keep this net11.0 assembly self-contained (the full versions live in
+/// Minimal <see cref="ITaskItem"/> helpers for modern build tasks, duplicated
+/// here to keep this net12.0 assembly self-contained (the full versions live in
 /// <c>ITaskItemExtensions</c> in Xamarin.Android.Build.Tasks).
 /// </summary>
 static class TaskItemExtensions
 {
+	public static bool GetMetadataOrDefault (this ITaskItem item, string name, bool defaultValue)
+	{
+		string value = item.GetMetadata (name);
+		return string.IsNullOrWhiteSpace (value) ? defaultValue : bool.Parse (value);
+	}
+
+	public static string GetMetadataOrDefault (this ITaskItem item, string name, string defaultValue)
+	{
+		string value = item.GetMetadata (name);
+		return string.IsNullOrWhiteSpace (value) ? defaultValue : value;
+	}
+
 	public static bool TryGetRequiredMetadata (this ITaskItem item, string itemName, string name, TaskLoggingHelper log, out string value)
 	{
 		value = item.GetMetadata (name);

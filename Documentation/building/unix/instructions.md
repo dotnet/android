@@ -22,9 +22,10 @@ can also be used by setting the `$(MSBUILD)` make variable to `xbuild`.
         # -or-
         make prepare MSBUILD=msbuild
 
-    This will ensure that the build dependencies are installed, perform
-    `git submodule update`, download NuGet dependencies, and other
-    "preparatory" and pre-build tasks that need to be performed.
+    This will ensure that the build dependencies are installed, initialize
+    the `external/android-api-docs` submodule, download NuGet dependencies,
+    and perform other "preparatory" and pre-build tasks that need to be
+    performed.
 
  7. Build the project:
 
@@ -68,7 +69,7 @@ Create a new project with `./dotnet-local.sh new android`:
 ```xml
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFramework>net11.0-android</TargetFramework>
+    <TargetFramework>net12.0-android</TargetFramework>
     <OutputType>Exe</OutputType>
   </PropertyGroup>
 </Project>
@@ -118,9 +119,8 @@ All NUnit-based tests can be executed via the `make run-nunit-tests` target:
 
 	$ make run-nunit-tests
 
-All `.apk`-based unit tests can be executed via the `make run-apk-tests` target:
-
-	$ make run-apk-tests
+All `.apk`-based (on-device) unit tests are run with `dotnet test`; see
+[Running On-Device Tests](#running-on-device-tests) below.
 
 
 ## Running Individual NUnit Tests
@@ -138,7 +138,7 @@ In order to get a list of the tests you can use the `list-nunit-tests` make targ
 
 or via the `ListNUnitTests` target
 
-    msbuild Xamarin.Android.sln /t:ListNUnitTests
+    msbuild Microsoft.Android.slnx /t:ListNUnitTests
 
 This will produce a list of the tests in all of the test assemblies.
 
@@ -151,79 +151,109 @@ or msbuild property.
 
 or via
 
-    msbuild Xamarin.Android.sln /t:RunNunitTests /p:TEST=Xamarin.Android.Build.Tests.Aapt2Tests.Aapt2Compile
+    msbuild Microsoft.Android.slnx /t:RunNunitTests /p:TEST=Xamarin.Android.Build.Tests.Aapt2Tests.Aapt2Compile
 
-## Running Individual `.apk` Projects
+## Running On-Device Tests
 
-You can run selected apk test by passing PACKAGES variable to
-`make run-apk-tests`. For example:
+The on-device test apps are ordinary `dotnet test` projects that run their
+NUnit tests inside an Android instrumentation. Install the app, then run the
+tests against the attached device or emulator:
 
-    make run-apk-tests PACKAGES="Xamarin.Forms_Performance_Integration;Xamarin.Android.Locale_Tests"
+    $ ./dotnet-local.sh build -t:Install -c Release \
+        tests/Mono.Android-Tests/Mono.Android-Tests/Mono.Android.NET-Tests.csproj
+    $ (cd tests/Mono.Android-Tests/Mono.Android-Tests && \
+        ../../../dotnet-local.sh test Mono.Android.NET-Tests.csproj --no-build -c Release \
+            --report-trx --results-directory ../../../bin/TestRelease/TestResults)
 
-or with msbuild:
+The same pattern works for
+`tests/CodeGen-Binding/Xamarin.Android.JcwGen-Tests/Xamarin.Android.JcwGen-Tests.csproj`.
 
-    msbuild /t:RunApkTests tests/RunApkTests.targets /p:ApkTests='"Xamarin.Forms_Performance_Integration;Xamarin.Android.Locale_Tests"'
+Results are written as `.trx` files into the `--results-directory` directory.
 
-Another possibility is to run them manually as described below.
+Individual results stream as tests finish; use `--output Detailed` to display
+them. If instrumentation is interrupted, the adapter also prints observed
+outcomes, partial counts, and unfinished tests without needing a TRX file.
+Unfinished tests are context, not proven crash causes, and partial counts do
+not establish that every intended test ran. Normal TRX reporting is unchanged.
 
-See also the [`tests/RunApkTests.targets`](../../../tests/RunApkTests.targets) and
-[`build-tools/scripts/TestApks.targets`](../../../build-tools/scripts/TestApks.targets)
-files.
+### Running Specific On-Device Tests
 
-All `.apk`-based unit test projects provide the following targets:
+`dotnet test` filtering options apply, for example:
 
-  * `DeployTestApks`: Installs the associated `.apk` to an Android device.
-  * `UndeployTestApks`: Uninstalls the associated `.apk` from an Android device.
-  * `RunTestApks`: Executes the unit tests contained within a `.apk`.
-    This target must be executed *after* the `DeployTestApks` target.
+    $ ../../../dotnet-local.sh test Mono.Android.NET-Tests.csproj --no-build \
+        --filter-class "Xamarin.Android.RuntimeTests.JnienvTest"
 
-To run an individual `.apk`-based test project, a package must be built, using the
-`SignAndroidPackage` target, installed, and executed.
+### Running On-Device Tests with Include/Exclude
 
-## Running `.apk` Projects with Include/Exclude
-
-If an `.apk`-based unit test uses the NUnit `[Category]` custom attribute, then
-those tests can be explicitly included or excluded from execution by setting
-the `$(INCLUDECATEGORIES)` or `$(EXCLUDECATEGORIES)` make variables.
+If an on-device test uses the NUnit `[Category]` custom attribute, then those
+tests can be explicitly included or excluded from execution by setting the
+`$(IncludeCategories)` or `$(ExcludeCategories)` MSBuild properties when
+building the test app. These flow to the on-device instrumentation through
+`runtimeconfig.json`.
 
 For example, to exclude tests that use the internet (`InetAccess`) category:
 
-	$ make run-apk-tests EXCLUDECATEGORIES=InetAccess
-
-`$(INCLUDECATEGORIES)` functions in the same fashion.
+    $ ./dotnet-local.sh build -t:Install -c Release \
+        -p:ExcludeCategories=InetAccess \
+        tests/Mono.Android-Tests/Mono.Android-Tests/Mono.Android.NET-Tests.csproj
 
 To specify multiple categories, separate each category with a `:` character.
 
+### Isolated JNI reference leak checks
 
-### Running A Single Test Fixture
+Run `JniReferenceLeak` separately from unrelated tests: reference counts are
+process-wide. `JavaSideActivation` in `Xamarin.Android.JcwGen-Tests` is an explicit
+test; the category filter selects it without adding it to ordinary full-suite runs.
 
-A single NUnit *Test Fixture* -- a class with the `[TestFixture]`
-custom attribute -- may be executed instead of executing *all* test fixtures.
+    $ ./dotnet-local.sh build -t:Install -c Debug \
+        -p:IncludeCategories=JniReferenceLeak -p:RuntimeIdentifier=android-arm64 \
+        -p:AdbTarget="-s emulator-PORT" \
+        tests/CodeGen-Binding/Xamarin.Android.JcwGen-Tests/Xamarin.Android.JcwGen-Tests.csproj
+    $ (cd tests/CodeGen-Binding/Xamarin.Android.JcwGen-Tests && \
+        ../../../dotnet-local.sh test Xamarin.Android.JcwGen-Tests.csproj --device emulator-PORT --no-build -c Debug \
+            -p:IncludeCategories=JniReferenceLeak -p:RuntimeIdentifier=android-arm64 \
+            -p:AdbTarget="-s emulator-PORT" \
+            --report-trx --results-directory ../../../bin/TestDebug/JniReferenceLeakResults)
 
-The `RunTestApks` target accepts a `TestFixture` MSBuild property
-to specify the test fixture class to execute.
+Replace `emulator-PORT` with a dedicated device's serial. Use the same pattern
+with `Mono.Android.NET-Tests.csproj` from the examples above to run the string
+and UTF-8 `TryFindClass` leak checks and the four direct `ReleasePeer` checks. These checks
+remain category-tagged, not explicit; the runtime test instrumentation excludes
+them unless `JniReferenceLeak` is the only included category.
+To run only the deterministic completion-protocol regressions on Android, use
+`IncludeCategories=JniReferenceLeakMeasurement` with `Mono.Android.NET-Tests.csproj`.
+When changing categories on a NativeAOT build, use `-t:Rebuild;Install` to refresh
+the embedded runtime configuration and APK. Verify the reported test count:
+one in `Xamarin.Android.JcwGen-Tests` and six in `Mono.Android.NET-Tests`.
+If rebuilding removes a referenced project's NuGet assets, run
+`./dotnet-local.sh clean` first, then
+`./dotnet-local.sh build '-t:Build;Install'` so restore follows cleaning.
 
-If using `Xamarin.Android.NUnitLite` for projects outside the `dotnet/android`
-repository, such as NUnit tests for a custom app, the `RunTestApks` target
-will not exist. In such scenarios, the [`adb shell am`][adb-shell-am]
-`instrument` command can be used instead. It follows the format:
+Both baseline and measured samples wait for collection completion, not for the
+count to fall below a desired value. Android uses an unreachable peer cycle as
+a collection witness, a changed bridge-completion generation on CoreCLR/NativeAOT,
+and a stable snapshot with no transient weak globals. Timeout diagnostics
+include strong/weak counts and generation; a timeout must not be mistaken for
+evidence of a leak. The retained-GREF positive controls have been removed because
+their exact process-wide deltas were unstable. This loses positive-control
+verification that the measurement helper detects deliberately retained references;
+it does not fix a runtime leak or establish its root cause. The remaining checks,
+measurement helper, and thresholds are unchanged.
 
-[adb-shell-am]: https://developer.android.com/studio/command-line/adb.html#am
-
-	$ adb shell am instrument -e suite FIXTURE -w PACKAGE/INSTRUMENTATION
-
-Where:
-
-  * `FIXTURE` is the full *managed* class name of the NUnit test fixture to
-    execute.
-  * `PACKAGE` is the Android package name containing the NUnit tests
-  * `INSTRUMENTATION` is the *Java callable wrapper* class name to execute,
-    located within the Android package `PACKAGE`.
-
-For example:
-
-	$ adb shell am instrument -e suite Xamarin.Android.LocaleTests.SatelliteAssemblyTests \
-		-w "Xamarin.Android.Locale_Tests/xamarin.android.localetests.TestInstrumentation"
+The witness publishes a finalization flag rather than inspecting a peer weak
+reference: CoreCLR/NativeAOT weak-reference reads can themselves wait for bridge
+completion. Managed GC/finalizer waits run off the timeout thread; JNI peer
+draining remains on the instrumentation thread.
+Successful sampling also requires the collection worker to finish. Timeout
+handling checks for a completed worker fault before reporting the timeout.
+If another collection is needed to finalize the witness, the previous bridge
+must complete first, and the next sample requires a generation newer than
+that new request. An additional unreachable cycle ensures the retry requests
+bridge work even if the original witness finalizes just before its GC.
+A timeout does not cancel an uninterruptible runtime
+GC/finalizer wait; it poisons the
+measurement helper for the rest of that process, preventing further batches or
+GC workers. Restart the test process instead of retrying in the same process.
 
 
 # How do I build `Mono.Android.dll` for a given API Level?
@@ -256,7 +286,7 @@ There are a few ways to do it:
 
 ## The short way
 
-From the top of the Xamarin Android source tree you can run make for the following
+From the top of the .NET for Android source tree you can run make for the following
 targets, which implement the steps to rebuild the runtime and BCL described further
 down in the document:
 
@@ -318,7 +348,7 @@ The `ForceBuild` target can be executed as:
 
 The `ForceBuild` target will build mono for *all* configured architectures,
 then invoke the `_InstallRuntimes` target when all the mono's have finished
-building; see the `$(AndroidSupportedTargetAotAbis)`, and `$(AndroidSupportedTargetJitAbis)`
+building; see the `$(AndroidSupportedTargetJitAbis)`
 MSBuild properties within [README.md](../../README.md). This may not always be
 desirable, for example if you're trying to fix a Mono runtime bug for a
 specific ABI, and improving turnaround time is paramount.
@@ -337,4 +367,3 @@ For example, to rebuild Mono for armeabi-v7a:
 
 	# This updates bin/$(Configuration)/lib/xamarin.android/xbuild/Xamarin/Android/lib/armeabi-v7a/libmonosgen-2.0.so
 	$ msbuild /t:_InstallRuntimes src/mono-runtimes/mono-runtimes.csproj
-

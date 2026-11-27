@@ -3,98 +3,199 @@ using System.Collections.Generic;
 using NUnit.Framework;
 using System.IO;
 using System.Linq;
+using System.Security;
 using Microsoft.Build.Framework;
+using Microsoft.Build.Utilities;
 using Xamarin.Android.Tasks;
+using Xamarin.Android.Tools;
 using Xamarin.ProjectTools;
-using ResolveAndroidTooling = Xamarin.Android.Tasks.Legacy.ResolveAndroidTooling;
-using ValidateJavaVersion = Xamarin.Android.Tasks.Legacy.ValidateJavaVersion;
+using System.Xml;
+using System.Xml.Linq;
+using Microsoft.Build.Construction;
+using Microsoft.Build.Evaluation;
+using Microsoft.Build.Execution;
 
 namespace Xamarin.Android.Build.Tests {
 
 	[TestFixture]
 	[NonParallelizable] // NOTE: This test was hanging without this
 	public class ResolveSdksTaskTests : BaseTest {
-#pragma warning disable 414
+		// These tests do not use adb; do not stop the shared server during host-only checks.
+		protected override void AfterAllTests () { }
 
 		static ApiInfo [] apiInfoSelection = new ApiInfo [] {
-			new ApiInfo () { Id = "25", Level = 25, Name = "Nougat", FrameworkVersion = "v7.1",  Stable = true },
-			new ApiInfo () { Id = "26", Level = 26, Name = "Oreo", FrameworkVersion = "v8.0",  Stable = true  },
-			new ApiInfo () { Id = "27", Level = 27, Name = "Oreo", FrameworkVersion = "v8.1",  Stable = true  },
-			new ApiInfo () { Id = "28", Level = 28, Name = "Pie",    FrameworkVersion = "v9.0", Stable = false },
-			new ApiInfo () { Id = "29", Level = 29, Name = "Android10", FrameworkVersion = "v10.0", Stable = false },
-			new ApiInfo () { Id = "30", Level = 30, Name = "Android11", FrameworkVersion = "v11.0", Stable = false },
-			new ApiInfo () { Id = "S",  Level = 31, Name = "S",         FrameworkVersion = "v11.0.99", Stable = false },
-			new ApiInfo () { Id = "Z",  Level = 127, Name = "Z",    FrameworkVersion = "v108.1.99", Stable = false },
+			new ApiInfo () { Id = "35", Level = 35, Name = "Android15", FrameworkVersion = "v15.0", Stable = true },
+			new ApiInfo () { Id = "36", Level = 36, Name = "Android16", FrameworkVersion = "v16.0", Stable = true },
+			new ApiInfo () { Id = "Preview", Level = 37, Name = "Preview", FrameworkVersion = "v16.0.99", Stable = false },
 		};
 
 		// via Xamarin.Android.Common.props
 		const   string  MinimumSupportedJavaVersion     = "1.6.0";
 		const   string  LatestSupportedJavaVersion      = "11.0.99";
 
-		static object [] ResolveAndroidToolingTestCases = new object [] {
-			new object[] {
-				/* buildtools */   "26.0.3",
-				/* jdk */ "1.8.0",
-				/* apis*/ apiInfoSelection,
-				/* targetFrameworkVersion */ "v9.0",
-				/* expectedTaskResult */ true,
-				/* expectedTargetFramework */ "v9.0",
-				/* expectedError */ "",
-				/* expectedErrorMessage */ "",
-			},
-			new object[] {
-				/* buildtools */   "26.0.3",
-				/* jdk */ "1.8.0",
-				/* apis*/ apiInfoSelection,
-				/* targetFrameworkVersion */ "v8.1",
-				/* expectedTaskResult */ true,
-				/* expectedTargetFramework */ "v8.1",
-				/* expectedError */ "",
-				/* expectedErrorMessage */ "",
-			},
-			new object[] {
-				/* buildtools */   "26.0.3",
-				/* jdk */ "1.8.0",
-				/* apis*/ apiInfoSelection,
-				/* targetFrameworkVersion */ "v8.0",
-				/* expectedTaskResult */ true,
-				/* expectedTargetFramework */ "v8.0",
-				/* expectedError */ "",
-				/* expectedErrorMessage */ "",
-			},
-			new object[] {
-				/* buildtools */   "26.0.3",
-				/* jdk */ "1.8.0",
-				/* apis*/ apiInfoSelection,
-				/* targetFrameworkVersion */ "v6.0",
-				/* expectedTaskResult */ false,
-				/* expectedTargetFramework */ "v6.0",
-				/* expectedError */ "XA0001",
-				/* expectedErrorMessage */ "Unsupported or invalid $(TargetFrameworkVersion) value of 'v6.0'. Please update your Project Options.",
-			},
-			new object[] {
-				/* buildtools */   "30.0.0",
-				/* jdk */ "11.0",
-				/* apis*/ apiInfoSelection,
-				/* targetFrameworkVersion */ "v11.0.99",
-				/* expectedTaskResult */ true,
-				/* expectedTargetFramework */ "v11.0.99",
-				/* expectedError */ "",
-				/* expectedErrorMessage */ "",
-			},
-		};
-		#pragma warning restore 414
 		[Test]
-		[TestCaseSource(nameof(ResolveAndroidToolingTestCases))]
-		public void ResolveAndroidToolingTest (string buildtools, string jdk, ApiInfo[] apis, string targetFrameworkVersion, bool expectedTaskResult, string expectedTargetFramework, string expectedError = "", string expectedErrorMessage = "")
+		public void ResolveSdksUsesProjectPaths ()
+		{
+			var path = Path.Combine ("temp", TestName);
+			var tasks = new ResolveSdks [2];
+			var engine = new MockBuildEngine (TextWriter.Synchronized (new StringWriter ()));
+			try {
+				for (int i = 0; i < tasks.Length; i++) {
+					var project = Path.Combine (path, $"project-{i}");
+					var sdk = CreateFauxAndroidSdkDirectory (Path.Combine (project, "sdk"), "37.0.0");
+					var ndk = CreateFauxAndroidNdkDirectory (Path.Combine (project, "ndk"));
+					var jdk = CreateFauxJavaSdkDirectory (Path.Combine (project, "jdk"), "21.0.8", out _, out _);
+					if (IsWindows) {
+						File.Move (Path.Combine (sdk, "platform-tools", "adb.exe"), Path.Combine (sdk, "platform-tools", "adb.DISCOVERY"));
+						File.Move (Path.Combine (ndk, "ndk-stack.cmd"), Path.Combine (ndk, "ndk-stack.DISCOVERY"));
+						foreach (var file in Directory.GetFiles (Path.Combine (jdk, "bin")))
+							File.Move (file, Path.ChangeExtension (file, ".DISCOVERY"));
+					}
+					tasks [i] = new ResolveSdks {
+						BuildEngine = engine,
+						TaskEnvironment = TaskEnvironment.CreateWithProjectDirectoryAndEnvironment (
+							Path.Combine (Root, project), new Dictionary<string, string> {
+								["JI_JAVA_HOME"] = "jdk",
+								["ANDROID_HOME"] = "sdk",
+								["PATH"] = "ndk",
+								["PATHEXT"] = ".DISCOVERY",
+								["XAMARIN_ANDROID_REGKEY"] = $@"Software\ResolveSdksTests\{Guid.NewGuid ():N}",
+							}),
+						AndroidSdkPath = " ",
+						AndroidNdkPath = " ",
+						JavaSdkPath = " ",
+						MonoAndroidToolsPath = "tools",
+						MinimumSupportedJavaVersion = "21.0",
+						LatestSupportedJavaVersion = "25.0.99",
+					};
+				}
+				System.Threading.Tasks.Parallel.For (0, tasks.Length, i => {
+					var task = tasks [i];
+					var directory = task.TaskEnvironment.ProjectDirectory.Value;
+					Assert.IsTrue (task.Execute ());
+					Assert.AreEqual (Path.Combine (directory, "sdk"), task.AndroidSdkPath);
+					Assert.AreEqual (Path.Combine (directory, "ndk"), task.AndroidNdkPath);
+					Assert.AreEqual (Path.Combine (directory, "jdk"), task.JavaSdkPath);
+					Assert.AreEqual (Path.Combine (directory, "tools"), task.MonoAndroidToolsPath);
+				});
+			} finally {
+				Directory.Delete (Path.Combine (Root, path), recursive: true);
+			}
+		}
+
+		[TestCase (false)]
+		[TestCase (true)]
+		public void ResolveSdksUsesEngineEnvironment (bool multithreaded)
+		{
+			var directory = Path.Combine (Root, "temp", TestName);
+			TestOutputDirectories [TestContext.CurrentContext.Test.ID] = directory;
+			var resources = new List<ProjectResource> ();
+			var assembly = SecurityElement.Escape (Path.Combine (TestEnvironment.AndroidMSBuildDirectory, "Xamarin.Android.Build.Tasks.dll"));
+			foreach (var name in new [] { "first", "second" }) {
+				var path = Path.Combine ("temp", TestName, name);
+				CreateFauxAndroidSdkDirectory (Path.Combine (path, "sdk"), "37.0.0");
+				CreateFauxAndroidNdkDirectory (Path.Combine (path, "ndk"));
+				CreateFauxJavaSdkDirectory (Path.Combine (path, "jdk"), "21.0.8", out _, out _);
+				CreateFauxReferencesDirectory (Path.Combine (path, "references"), apiInfoSelection);
+				resources.Add (new ProjectResource {
+					Path = Path.Combine (name, "resolve.proj"),
+					Content = $"""
+						<Project>
+						  <UsingTask TaskName="Xamarin.Android.Tasks.ResolveSdks" AssemblyFile="{assembly}" />
+						  <Target Name="Build">
+						    <ResolveSdks AndroidSdkPath="{Path.Combine ("sdk", "..", "sdk")}" AndroidNdkPath="ndk" JavaSdkPath="jdk"
+						        ReferenceAssemblyPaths="references" MinimumSupportedJavaVersion="21.0" LatestSupportedJavaVersion="25.0.99">
+						      <Output TaskParameter="AndroidSdkPath" PropertyName="Sdk" />
+						      <Output TaskParameter="AndroidNdkPath" PropertyName="Ndk" />
+						      <Output TaskParameter="JavaSdkPath" PropertyName="Jdk" />
+						    </ResolveSdks>
+						    <Error Condition="'$(Sdk)' != '{Path.Combine ("$(MSBuildProjectDirectory)", "sdk")}'
+						        or '$(Ndk)' != '{Path.Combine ("$(MSBuildProjectDirectory)", "ndk")}'
+						        or '$(Jdk)' != '{Path.Combine ("$(MSBuildProjectDirectory)", "jdk")}'"
+						        Text="Incorrect SDK paths: $(Sdk);$(Ndk);$(Jdk)" />
+						  </Target>
+						</Project>
+						""",
+				});
+			}
+			resources.Add (new ProjectResource {
+				Path = "driver.proj",
+				Content = """
+					<Project>
+					  <ItemGroup>
+					    <Child Include="first/resolve.proj;second/resolve.proj" />
+					  </ItemGroup>
+					  <Target Name="Build">
+					    <MSBuild Projects="@(Child)" BuildInParallel="true" />
+					  </Target>
+					</Project>
+					""",
+			});
+			new XamarinAndroidApplicationProject ().UpdateProjectFiles (directory, resources, doNotCleanup: true);
+			var dotnet = new DotNetCLI (Path.Combine (directory, "driver.proj")) { Verbosity = "diagnostic" };
+			dotnet.EnvironmentVariables ["DOTNET_CLI_USE_MSBUILD_SERVER"] = "0";
+			dotnet.EnvironmentVariables ["MSBUILDDISABLENODEREUSE"] = "1";
+			string [] arguments = multithreaded ?
+				["--no-restore", "-m:2", "-mt", "-nr:false", "-warnaserror:MSB4286,MSB4287,MSB4288"] :
+				["--no-restore", "-m:2", "-nr:false"];
+			Assert.IsTrue (dotnet.Build (msbuildArguments: arguments),
+				string.Join (Environment.NewLine, dotnet.LastBuildOutput) + File.ReadAllText (dotnet.ProcessLogFile));
+			if (multithreaded) {
+				Assert.IsEmpty (dotnet.LastBuildOutput.Where (line =>
+					line.Contains (nameof (ResolveSdks), StringComparison.Ordinal) && line.Contains ("ran in TaskHost process", StringComparison.Ordinal)),
+					"ResolveSdks must run in-process with -mt.");
+			}
+		}
+
+		[TestCase (false)]
+		[TestCase (true)]
+		[Platform ("Win")]
+		public void ResolveSdksEnvironmentPreservesMissingToolErrors (bool missingSdk)
+		{
+			var path   = Path.Combine ("temp", TestName);
+			var sdk    = CreateFauxAndroidSdkDirectory (Path.Combine (path, "sdk"), "37.0.0");
+			var jdk    = CreateFauxJavaSdkDirectory (Path.Combine (path, "jdk"), "21.0.8", out _, out _);
+			var errors = new List<BuildErrorEventArgs> ();
+			try {
+				File.Move (Path.Combine (sdk, "platform-tools", "adb.exe"), Path.Combine (sdk, "platform-tools", "adb.DISCOVERY"));
+				foreach (var file in Directory.GetFiles (Path.Combine (jdk, "bin")))
+					File.Move (file, Path.ChangeExtension (file, ".DISCOVERY"));
+				var task = new ResolveSdks {
+					BuildEngine = new MockBuildEngine (TestContext.Out, errors),
+					TaskEnvironment = TaskEnvironment.CreateWithProjectDirectoryAndEnvironment (
+						Path.Combine (Root, path), new Dictionary<string, string> {
+							["PATHEXT"] = ".DISCOVERY",
+							["XAMARIN_ANDROID_REGKEY"] = $@"Software\ResolveSdksTests\{Guid.NewGuid ():N}",
+						}),
+					AndroidSdkPath = missingSdk ? Path.Combine (sdk, "missing") : sdk,
+					JavaSdkPath = missingSdk ? jdk : Path.Combine (jdk, "missing"),
+					MinimumSupportedJavaVersion = "21.0",
+					LatestSupportedJavaVersion = "25.0.99",
+				};
+				Assert.IsFalse (task.Execute ());
+				Assert.AreEqual ("XA5300", errors.Single ().Code);
+				StringAssert.Contains (missingSdk ? "Android SDK" : "Java SDK", errors [0].Message);
+			} finally {
+				Directory.Delete (Path.Combine (Root, path), recursive: true);
+			}
+		}
+
+		[TestCase ("36.0.0", "35.0", "35", "35")]
+		[TestCase ("36.0.0", "36.0", "36", "36")]
+		[TestCase ("36.0.0", "36.1", "36.1", "36.1")]
+		[TestCase ("37.0.0", "37.0", "37", "Preview")]
+		[TestCase ("36.0.0", null, "36", "36")]
+		[TestCase ("36.0.0", "", "36", "36")]
+		[TestCase ("36.0.0", "invalid", "36", "36")]
+		public void ResolveAndroidToolingTest (string buildtools, string targetPlatformVersion, string expectedApiLevel, string expectedApiLevelName)
 		{
 			var path = Path.Combine ("temp", "ResolveAndroidToolingTest_" + Guid.NewGuid ());
-			var androidSdkPath = CreateFauxAndroidSdkDirectory (Path.Combine (path, "android-sdk"), buildtools, apis);
+			var androidSdkPath = CreateFauxAndroidSdkDirectory (Path.Combine (path, "android-sdk"), buildtools, apiInfoSelection);
 			var androidNdkPath = CreateFauxAndroidNdkDirectory (Path.Combine (path, "android-ndk"));
 			string javaExe = string.Empty;
 			string javacExe;
-			var javaPath = CreateFauxJavaSdkDirectory (Path.Combine (path, "jdk"), jdk, out javaExe, out javacExe);
-			var referencePath = CreateFauxReferencesDirectory (Path.Combine (path, "references"), apis);
+			var javaPath = CreateFauxJavaSdkDirectory (Path.Combine (path, "jdk"), "21.0.8", out javaExe, out javacExe);
+			var referencePath = CreateFauxReferencesDirectory (Path.Combine (path, "references"), apiInfoSelection);
 			var errors = new List<BuildErrorEventArgs> ();
 			IBuildEngine engine = new MockBuildEngine (TestContext.Out, errors);
 			var resolveSdks = new ResolveSdks {
@@ -102,43 +203,36 @@ namespace Xamarin.Android.Build.Tests {
 				AndroidSdkPath = androidSdkPath,
 				AndroidNdkPath = androidNdkPath,
 				JavaSdkPath = javaPath,
-				MinimumSupportedJavaVersion = MinimumSupportedJavaVersion,
-				LatestSupportedJavaVersion  = LatestSupportedJavaVersion,
+				MinimumSupportedJavaVersion = "21.0",
+				LatestSupportedJavaVersion = "25.0.99",
 				ReferenceAssemblyPaths = new [] {
 					Path.Combine (referencePath, "MonoAndroid"),
 				},
 			};
-			var validateJavaVersion = new ValidateJavaVersion {
-				BuildEngine = engine,
-				TargetFrameworkVersion = targetFrameworkVersion,
-				AndroidSdkBuildToolsVersion = buildtools,
-				JavaSdkPath = javaPath,
-				JavaToolExe = javaExe,
-				JavacToolExe = javacExe,
-				LatestSupportedJavaVersion = LatestSupportedJavaVersion,
-				MinimumSupportedJavaVersion = "1.7.0",
-			};
 			var androidTooling = new ResolveAndroidTooling {
 				BuildEngine = engine,
+				ReferenceAssemblyPaths = resolveSdks.ReferenceAssemblyPaths,
 				AndroidSdkPath = androidSdkPath,
-				TargetFrameworkVersion = targetFrameworkVersion,
+				TargetPlatformVersion = targetPlatformVersion,
 				AndroidSdkBuildToolsVersion = buildtools,
-				AotAssemblies = false,
-				SequencePointsMode = "None",
-				AndroidApplication = true,
 			};
-			Assert.AreEqual (expectedTaskResult, resolveSdks.Execute () && validateJavaVersion.Execute () && androidTooling.Execute (), $"Tasks should have {(expectedTaskResult ? "succeeded" : "failed" )}.");
-			Assert.AreEqual (expectedTargetFramework, androidTooling.TargetFrameworkVersion, $"TargetFrameworkVersion should be {expectedTargetFramework} but was {androidTooling.TargetFrameworkVersion}");
-			if (!string.IsNullOrWhiteSpace (expectedError)) {
-				Assert.AreEqual (1, errors.Count (), "An error should have been raised.");
-				Assert.AreEqual (expectedError, errors [0].Code, $"Expected error code {expectedError} but found {errors [0].Code}");
-				Assert.AreEqual (expectedErrorMessage, errors [0].Message, $"Expected error code {expectedErrorMessage} but found {errors [0].Message}");
+			try {
+				Assert.IsTrue (resolveSdks.Execute (), "ResolveSdks should succeed.");
+				Assert.IsTrue (androidTooling.Execute (), "ResolveAndroidTooling should succeed.");
+				Assert.AreEqual (targetPlatformVersion, androidTooling.TargetPlatformVersion, "TargetPlatformVersion should not be modified.");
+				Assert.AreEqual (expectedApiLevel, androidTooling.AndroidApiLevel);
+				Assert.AreEqual (expectedApiLevelName, androidTooling.AndroidApiLevelName);
+				Assert.AreEqual (Path.Combine (androidSdkPath, "build-tools", buildtools), androidTooling.AndroidSdkBuildToolsPath);
+				Assert.IsNotEmpty (androidTooling.Aapt2Version);
+				Assert.IsEmpty (errors);
+			} finally {
+				Directory.Delete (Path.Combine (Root, path), recursive: true);
 			}
-			Directory.Delete (Path.Combine (Root, path), recursive: true);
 		}
 
-		[Test, NonParallelizable]
-		public void ResolveSdkTiming ()
+		[TestCase (false)]
+		[TestCase (true)]
+		public void ResolveSdkOutputs (bool discoverJava)
 		{
 			var path = Path.Combine ("temp", TestName);
 			var androidSdkPath = CreateFauxAndroidSdkDirectory (Path.Combine (path, "android-sdk"), "26.0.3");
@@ -150,45 +244,35 @@ namespace Xamarin.Android.Build.Tests {
 				new ApiInfo () { Id = "26", Level = 26, Name = "Oreo", FrameworkVersion = "v8.0", Stable = true },
 				new ApiInfo () { Id = "27", Level = 27, Name = "Oreo", FrameworkVersion = "v8.1", Stable = true },
 			});
-			IBuildEngine engine = new MockBuildEngine (TestContext.Out);
+			var messages = new List<BuildMessageEventArgs> ();
+			IBuildEngine engine = new MockBuildEngine (TestContext.Out, messages: messages);
 			var resolveSdks = new ResolveSdks {
 				BuildEngine = engine,
+				TaskEnvironment = discoverJava ? TaskEnvironment.CreateWithProjectDirectoryAndEnvironment (
+					Root, new Dictionary<string, string> {
+						["JI_JAVA_HOME"] = javaPath,
+						["PATHEXT"] = $".EXE{Path.PathSeparator}.CMD",
+					}) : TaskEnvironment.Fallback,
 				AndroidSdkPath = androidSdkPath,
 				AndroidNdkPath = androidNdkPath,
-				JavaSdkPath = javaPath,
+				JavaSdkPath = discoverJava ? null : javaPath,
 				MinimumSupportedJavaVersion = MinimumSupportedJavaVersion,
 				LatestSupportedJavaVersion  = LatestSupportedJavaVersion,
 				ReferenceAssemblyPaths = new [] {
 					Path.Combine (referencePath, "MonoAndroid"),
 				},
 			};
-			var validateJavaVersion = new ValidateJavaVersion {
-				BuildEngine = engine,
-				TargetFrameworkVersion = "v8.0",
-				AndroidSdkBuildToolsVersion = "26.0.3",
-				JavaSdkPath = javaPath,
-				JavaToolExe = javaExe,
-				JavacToolExe = javacExe,
-				LatestSupportedJavaVersion = "1.8.0",
-				MinimumSupportedJavaVersion = "1.7.0",
-			};
 			var androidTooling = new ResolveAndroidTooling {
 				BuildEngine = engine,
+				ReferenceAssemblyPaths = resolveSdks.ReferenceAssemblyPaths,
 				AndroidSdkPath = androidSdkPath,
-				TargetFrameworkVersion = "v8.0",
+				TargetPlatformVersion = "26.0",
 				AndroidSdkBuildToolsVersion = "26.0.3",
-				AotAssemblies = false,
-				SequencePointsMode = "None",
-				AndroidApplication = true,
 			};
-			var start = DateTime.UtcNow;
 			Assert.IsTrue (resolveSdks.Execute (), "ResolveSdks should succeed!");
-			Assert.IsTrue (validateJavaVersion.Execute (), "ValidateJavaVersion should succeed!");
 			Assert.IsTrue (androidTooling.Execute (), "ResolveAndroidTooling should succeed!");
-			var executionTime = DateTime.UtcNow - start;
-			Assert.LessOrEqual (executionTime, TimeSpan.FromSeconds(2), "Task should not take more than 2 seconds to run.");
 			Assert.AreEqual (androidTooling.AndroidApiLevel, "26", "AndroidApiLevel should be 26");
-			Assert.AreEqual (androidTooling.TargetFrameworkVersion, "v8.0", "TargetFrameworkVersion should be v8.0");
+			Assert.AreEqual ("26.0", androidTooling.TargetPlatformVersion, "TargetPlatformVersion should be unchanged");
 			Assert.AreEqual (androidTooling.AndroidApiLevelName, "26", "AndroidApiLevelName should be 26");
 			Assert.NotNull (resolveSdks.ReferenceAssemblyPaths, "ReferenceAssemblyPaths should not be null.");
 			Assert.AreEqual (resolveSdks.ReferenceAssemblyPaths.Length, 1, "ReferenceAssemblyPaths should have 1 entry.");
@@ -208,47 +292,506 @@ namespace Xamarin.Android.Build.Tests {
 			Assert.AreEqual (androidTooling.AndroidSdkBuildToolsPath, expected, $"AndroidSdkBuildToolsPath should be {expected}");
 			Assert.AreEqual (androidTooling.AndroidSdkBuildToolsBinPath, expected, "AndroidSdkBuildToolsBinPath should be {expected}");
 			Assert.AreEqual (androidTooling.ZipAlignPath, expected, "ZipAlignPath should be {expected}");
-			Assert.AreEqual (androidTooling.AndroidSequencePointsMode, "None", "AndroidSequencePointsMode should be None");
-			expected = Path.Combine (androidSdkPath, "tools");
-			Assert.AreEqual (androidTooling.LintToolPath, expected, $"LintToolPath should be {expected}");
 			expected = Path.Combine (androidSdkPath, "build-tools", "26.0.3", "lib", "apksigner.jar");
 			Assert.AreEqual (androidTooling.ApkSignerJar, expected, $"ApkSignerJar should be {expected}");
 			Assert.AreEqual (androidTooling.AndroidUseApkSigner, false, "AndroidUseApkSigner should be false");
-			Assert.AreEqual (validateJavaVersion.JdkVersion, "1.8.0", "JdkVersion should be 1.8.0");
-			Assert.AreEqual (validateJavaVersion.MinimumRequiredJdkVersion, "1.8", "MinimumRequiredJdkVersion should be 1.8");
+			Assert.IsFalse (messages.Any (m => m.Message == "ResolveSdks Outputs:" ||
+				m.Message == "ResolveAndroidTooling Outputs:" ||
+				m.Message.StartsWith ("  AndroidSdkPath:", StringComparison.Ordinal) ||
+				m.Message.StartsWith ("  AndroidApiLevel:", StringComparison.Ordinal) ||
+				m.Message.StartsWith ("  TargetFrameworkVersion:", StringComparison.Ordinal) ||
+				m.Message.StartsWith ("  TargetPlatformVersion:", StringComparison.Ordinal)));
 			Directory.Delete (Path.Combine (Root, path), recursive: true);
 		}
 
 		[Test]
-		public void ResolveAndroidToolingWithMissingResolvedSdkDoesNotThrow ()
+		public void ResolveAndroidToolingCachesAapt2Version ()
 		{
-			var path = Path.Combine (Path.GetTempPath (), "xa-tests", nameof (ResolveAndroidToolingWithMissingResolvedSdkDoesNotThrow), Guid.NewGuid ().ToString ("N"));
+			var path = Path.Combine ("temp", TestName);
+			var messages = new List<BuildMessageEventArgs> ();
+			var engine = new MockBuildEngine (TestContext.Out, messages: messages);
+			try {
+				for (int project = 0; project < 2; project++) {
+					var projectPath = Path.Combine (path, $"project-{project}");
+					var sdkPath = CreateFauxAndroidSdkDirectory (Path.Combine (projectPath, "sdk"), "36.0.0");
+					CreateFauxReferencesDirectory (Path.Combine (projectPath, "references"), [
+						new ApiInfo { Id = $"Project{project}", Level = 100 + project, Name = "Preview", FrameworkVersion = "v100.0", Stable = true },
+					]);
+					var toolPath = Path.Combine (sdkPath, "build-tools", "36.0.0");
+					File.WriteAllText (Path.Combine (toolPath, IsWindows ? "aapt2.cmd" : "aapt2"), IsWindows ? """
+						@echo off
+						if not exist tooling-version.txt exit /b 1
+						set /p minor=<tooling-version.txt
+						echo Android Asset Packaging Tool (aapt) %ANDROID_TOOLING_TEST_VERSION%.%minor%
+						""" : """
+						#!/bin/sh
+						read -r minor < tooling-version.txt || exit 1
+						printf 'Android Asset Packaging Tool (aapt) %s.%s\n' "$ANDROID_TOOLING_TEST_VERSION" "$minor"
+						""");
+					File.WriteAllText (Path.Combine (Root, projectPath, "tooling-version.txt"), $"{10 + project}\n");
+					var environment = TaskEnvironment.CreateWithProjectDirectoryAndEnvironment (
+						Path.Combine (Root, projectPath), new Dictionary<string, string> {
+							["PATHEXT"] = $".MT{project}{Path.PathSeparator}.CMD",
+							["ANDROID_TOOLING_TEST_VERSION"] = (2 + project).ToString (),
+						});
+					File.WriteAllText (Path.Combine (toolPath, $"probe.MT{project}"), "");
+					Assert.AreEqual ($"probe.MT{project}", MonoAndroidHelper.GetExecutablePath (Path.Combine ("sdk", "build-tools", "36.0.0"), "probe.exe", environment));
+					for (int run = 0; run < 2; run++) {
+						messages.Clear ();
+						var tooling = new ResolveAndroidTooling {
+							BuildEngine = engine,
+							TaskEnvironment = environment,
+							AndroidSdkPath = run == 0 ? "sdk" : Path.Combine ("sdk", "..", "sdk"),
+							ReferenceAssemblyPaths = ["references"],
+							ZipAlignPath = Path.Combine ("sdk", "build-tools", "36.0.0"),
+						};
+						Assert.IsTrue (tooling.Execute ());
+						Assert.AreEqual ($"{2 + project}.{10 + project}", tooling.Aapt2Version);
+						Assert.AreEqual ((100 + project).ToString (), tooling.AndroidApiLevel);
+						Assert.AreEqual ($"Project{project}", tooling.AndroidApiLevelName);
+						Assert.AreEqual (Path.Combine (sdkPath, "build-tools", "36.0.0"), tooling.AndroidSdkBuildToolsPath);
+						Assert.AreEqual (Path.Combine (sdkPath, "build-tools", "36.0.0"), tooling.ZipAlignPath);
+						Assert.AreEqual (run == 1, messages.Any (m => m.Message.StartsWith ("Using cached value for Aapt2Version:", StringComparison.Ordinal)));
+					}
+				}
+			} finally {
+				Directory.Delete (Path.Combine (Root, path), recursive: true);
+			}
+		}
+
+		[Test]
+		public void ResolveAndroidToolingRejectsMissingAapt2Override ()
+		{
+			var path = Path.Combine ("temp", TestName);
+			var sdkPath = CreateFauxAndroidSdkDirectory (Path.Combine (path, "android-sdk"), "36.0.0");
+			var errors = new List<BuildErrorEventArgs> ();
+			var aapt2Path = Path.Combine (sdkPath, "missing-aapt2");
+			try {
+				var tooling = new ResolveAndroidTooling {
+					BuildEngine = new MockBuildEngine (TestContext.Out, errors),
+					AndroidSdkPath = sdkPath,
+					TargetPlatformVersion = "36.0",
+					Aapt2ToolPath = aapt2Path,
+				};
+				Assert.IsFalse (tooling.Execute ());
+				Assert.AreEqual ("XA0112", errors.Single ().Code);
+				StringAssert.Contains (aapt2Path, errors [0].Message);
+			} finally {
+				Directory.Delete (Path.Combine (Root, path), recursive: true);
+			}
+		}
+
+		[Test]
+		[TestCase (false, false)]
+		[TestCase (false, true)]
+		[TestCase (true, false)]
+		[TestCase (true, true)]
+		public void ResolvedToolingInputsEscapeApostrophes (bool tooling, bool changed)
+		{
+			var file = tooling ? Path.Combine ("Microsoft.Android.Sdk", "targets", "Microsoft.Android.Sdk.Tooling.targets") : "Xamarin.Android.Tooling.targets";
+			var document = XDocument.Load (Path.Combine (XABuildPaths.TopDirectory, "src", "Xamarin.Android.Build.Tasks", file));
+			var itemName = tooling ? "_AndroidToolingInput" : "_AndroidSdkInput";
+			var changedItemName = tooling ? "_AndroidChangedToolingInput" : "_AndroidChangedSdkInput";
+			var inputGroups = document.Descendants ().Where (e => e.Name.LocalName == "ItemGroup" &&
+				e.Elements ().Any (i => i.Name.LocalName == itemName || i.Name.LocalName == changedItemName));
+			var input = tooling ? "ZipAlignToolPath" : "AndroidSdkDirectory";
+			var outerInput = tooling ? "_AndroidOuterToolingInputZipAlignToolPath" : "_AndroidOuterSdkInputAndroidSdkDirectory";
+			const string value = "O'Brien/sdk;a=b";
+			var globals = new Dictionary<string, string> {
+				[input] = value,
+				[outerInput] = changed ? value.ToUpperInvariant () : value,
+				["_ComputeFilesToPublishForRuntimeIdentifiers"] = "true",
+				["_AndroidUseResolvedSdk"] = "true",
+			};
+			var outerInputPrefix = tooling ? "_AndroidOuterToolingInput" : "_AndroidOuterSdkInput";
+			foreach (var item in inputGroups.Elements ().Where (e => e.Name.LocalName == itemName)) {
+				var include = (string?) item.Attribute ("Include");
+				if (include == null)
+					continue;
+				foreach (var identity in include.Split (';')) {
+					var propertyName = (string?) item.Attribute ("PropertyName") ?? identity;
+					if (propertyName != "MSBuildProjectFullPath")
+						globals.TryAdd (propertyName, "");
+					globals.TryAdd (outerInputPrefix + identity, "");
+				}
+			}
+			var ns = document.Root?.Name.Namespace ?? XNamespace.None;
+			var projectXml = new XElement (ns + "Project",
+				new XElement (ns + "Target", new XAttribute ("Name", "CaptureInputs"), inputGroups.Select (e => new XElement (e))));
+			using var reader = XmlReader.Create (new StringReader (projectXml.ToString ()));
+			using var collection = new ProjectCollection ();
+			var root = ProjectRootElement.Create (reader, collection);
+			root.FullPath = Path.Combine (Root, "EscapingProbe.proj");
+			globals ["_AndroidOuterSdkInputMSBuildProjectFullPath"] = root.FullPath;
+			var instance = new ProjectInstance (root, globals, toolsVersion: null, collection);
+			Assert.IsTrue (instance.Build ("CaptureInputs", []), "Apostrophes must not break MSBuild property functions.");
+			Assert.AreEqual (changed ? 1 : 0, instance.GetItems (changedItemName).Count,
+				"Input matching must remain ordinal: " + string.Join (", ", instance.GetItems (changedItemName).Select (i =>
+					$"{i.EvaluatedInclude}={i.GetMetadataValue ("EscapedValue")} vs {i.GetMetadataValue ("EscapedOuterValue")}")));
+		}
+
+		[Test]
+		public void SupportedVersionsAreIsolatedAcrossConcurrentTasks ()
+		{
+			var path = Path.Combine ("temp", TestName);
+			var sdkPaths = new string [2];
+			var referencePaths = new string [2][];
+			var environments = new TaskEnvironment [2];
+			for (int i = 0; i < 2; i++) {
+				var projectPath = Path.Combine (path, $"project-{i}");
+				var apis = new [] {
+					new ApiInfo { Id = "Z", Level = 127 + i, Name = "Preview", FrameworkVersion = $"v108.{i}", Stable = true },
+				};
+				sdkPaths [i] = CreateFauxAndroidSdkDirectory (Path.Combine (projectPath, "sdk"), "26.0.3", apis);
+				referencePaths [i] = [CreateFauxReferencesDirectory (Path.Combine (projectPath, "references"), apis)];
+				var projectDirectory = Path.Combine (Root, projectPath);
+				environments [i] = TaskEnvironment.CreateWithProjectDirectoryAndEnvironment (projectDirectory, new Dictionary<string, string> ());
+				new XDocument (new XElement ("manifest",
+					new XAttribute (XNamespace.Xmlns + "android", "http://schemas.android.com/apk/res/android"),
+					new XElement ("uses-sdk",
+						new XAttribute (XName.Get ("targetSdkVersion", "http://schemas.android.com/apk/res/android"), 127 + i))))
+					.Save (Path.Combine (projectDirectory, "AndroidManifest.xml"));
+			}
+			var engine = new MockBuildEngine (TextWriter.Synchronized (new StringWriter ()));
+			try {
+				var first = MonoAndroidHelper.GetSupportedVersions (engine, referencePaths [0]);
+				var second = MonoAndroidHelper.GetSupportedVersions (engine, referencePaths [1]);
+				Assert.AreNotSame (first, second);
+				Assert.AreSame (first, MonoAndroidHelper.GetSupportedVersions (engine, ["references"], environments [0]));
+				Assert.AreSame (second, MonoAndroidHelper.GetSupportedVersions (engine, [Path.Combine ("references", "..", "references")], environments [1]));
+				Assert.AreSame (first, MonoAndroidHelper.GetSupportedVersions (engine, referencePaths [0]));
+				Assert.AreSame (first, MonoAndroidHelper.GetSupportedVersions (engine,
+					referencePaths [0].Select (p => Path.GetRelativePath (Environment.CurrentDirectory, p)).ToArray ()));
+				Assert.AreNotSame (first, MonoAndroidHelper.GetSupportedVersions (new MockBuildEngine (TextWriter.Null), referencePaths [0]));
+				Assert.AreEqual (127, first.GetApiLevelFromId ("Z"));
+				Assert.AreEqual (128, second.GetApiLevelFromId ("Z"));
+				var concurrentEngine = new MockBuildEngine (TextWriter.Synchronized (new StringWriter ()));
+				System.Threading.Tasks.Parallel.For (0, 64, i => {
+					var context = i % 2;
+					var task = new GetJavaPlatformJar {
+						BuildEngine = concurrentEngine,
+						TaskEnvironment = environments [context],
+						AndroidManifest = "AndroidManifest.xml",
+						AndroidSdkDirectory = "sdk",
+						ReferenceAssemblyPaths = ["references"],
+						AndroidApiLevel = "36",
+						TargetFramework = $"{XABuildConfig.LatestDotNetTargetFramework}-android",
+						SupportedOSPlatformVersion = "24.0",
+					};
+					Assert.IsTrue (task.Execute ());
+					Assert.AreEqual ((127 + context).ToString (), task.TargetSdkVersion);
+					Assert.AreEqual (Path.Combine (sdkPaths [context], "platforms", "android-Z", "android.jar"), task.JavaPlatformJarPath);
+				});
+			} finally {
+				Directory.Delete (Path.Combine (Root, path), recursive: true);
+			}
+		}
+
+		[TestCase (false)]
+		[TestCase (true)]
+		public void GetAndroidActivityNameUsesProjectPaths (bool multithreaded)
+		{
+			var directory = Path.Combine (Root, "temp", TestName);
+			TestOutputDirectories [TestContext.CurrentContext.Test.ID] = directory;
+			var resources = new List<ProjectResource> ();
+			foreach (var name in new [] { "first", "second" }) {
+				CreateFauxReferencesDirectory (Path.Combine ("temp", TestName, name, "references"), apiInfoSelection);
+				resources.Add (new ProjectResource {
+					Path = Path.Combine (name, "obj", "AndroidManifest.xml"),
+					Content = $"""
+						<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+						  <application>
+						    <activity android:name=".{name}">
+						      <intent-filter><category android:name="android.intent.category.LAUNCHER" /></intent-filter>
+						    </activity>
+						  </application>
+						</manifest>
+						""",
+				});
+				var project = new XElement ("Project",
+					new XElement ("UsingTask",
+						new XAttribute ("TaskName", "Xamarin.Android.Tasks.GetAndroidActivityName"),
+						new XAttribute ("AssemblyFile", Path.Combine (TestEnvironment.AndroidMSBuildDirectory, "Xamarin.Android.Build.Tasks.dll"))),
+					new XElement ("Target", new XAttribute ("Name", "Build"),
+						new XElement ("GetAndroidActivityName",
+							new XAttribute ("ManifestFile", Path.Combine ("obj", "AndroidManifest.xml")),
+							new XAttribute ("ReferenceAssemblyPaths", Path.Combine ("references", "..", "references")),
+							new XElement ("Output", new XAttribute ("TaskParameter", "ActivityName"), new XAttribute ("PropertyName", "Launcher"))),
+						new XElement ("Error", new XAttribute ("Condition", $"'$(Launcher)' != '.{name}'"), new XAttribute ("Text", "Wrong launcher: $(Launcher)"))));
+				resources.Add (new ProjectResource { Path = Path.Combine (name, "activity.proj"), Content = project.ToString () });
+			}
+			var driver = new XElement ("Project",
+				new XElement ("ItemGroup",
+					new XElement ("Child", new XAttribute ("Include", "first/activity.proj;second/activity.proj"))),
+				new XElement ("Target", new XAttribute ("Name", "Build"),
+					new XElement ("MSBuild", new XAttribute ("Projects", "@(Child)"), new XAttribute ("BuildInParallel", "true"))));
+			resources.Add (new ProjectResource { Path = "driver.proj", Content = driver.ToString () });
+			new XamarinAndroidApplicationProject ().UpdateProjectFiles (directory, resources, doNotCleanup: true);
+			var dotnet = new DotNetCLI (Path.Combine (directory, "driver.proj")) { Verbosity = "diagnostic" };
+			dotnet.EnvironmentVariables ["DOTNET_CLI_USE_MSBUILD_SERVER"] = "0";
+			dotnet.EnvironmentVariables ["MSBUILDDISABLENODEREUSE"] = "1";
+			string [] arguments = multithreaded ?
+				["--no-restore", "-m:2", "-mt", "-nr:false", "-warnaserror:MSB4286,MSB4287,MSB4288"] :
+				["--no-restore", "-m:2", "-nr:false"];
+			Assert.IsTrue (dotnet.Build (msbuildArguments: arguments),
+				string.Join (Environment.NewLine, dotnet.LastBuildOutput) + File.ReadAllText (dotnet.ProcessLogFile));
+		}
+
+		[Test]
+		[Platform ("Win")]
+		public void SupportedVersionsPreserveDriveRelativePaths ()
+		{
+			var path = Path.Combine (Path.GetTempPath (), Path.GetRandomFileName ());
+			try {
+				var references = CreateFauxReferencesDirectory (path, apiInfoSelection);
+				var drive = Path.GetPathRoot (references).Substring (0, 2);
+				var relativePath = drive + Path.GetRelativePath (Path.GetFullPath (drive), references);
+				var engine = new MockBuildEngine (TestContext.Out);
+				Assert.AreSame (
+					MonoAndroidHelper.GetSupportedVersions (engine, [references]),
+					MonoAndroidHelper.GetSupportedVersions (engine, [relativePath]));
+			} finally {
+				Directory.Delete (path, recursive: true);
+			}
+		}
+
+		[TestCase (false)]
+		[TestCase (true)]
+		public void GetJavaPlatformJarMissingPlatform (bool designTimeBuild)
+		{
+			var errors = new List<BuildErrorEventArgs> ();
+			var task = new GetJavaPlatformJar {
+				BuildEngine = new MockBuildEngine (TestContext.Out, errors),
+				TaskEnvironment = TaskEnvironment.CreateWithProjectDirectoryAndEnvironment (Root, new Dictionary<string, string> ()),
+				AndroidSdkDirectory = Path.Combine ("temp", TestName, "missing-sdk"),
+				AndroidApiLevel = "36",
+				SupportedOSPlatformVersion = "24.0",
+				DesignTimeBuild = designTimeBuild,
+			};
+			Assert.AreEqual (designTimeBuild, task.Execute ());
+			Assert.IsNull (task.JavaPlatformJarPath);
+			Assert.AreEqual ("36", task.TargetSdkVersion);
+			if (!designTimeBuild) {
+				Assert.AreEqual ("XA5207", errors.Single ().Code);
+				StringAssert.Contains (Path.Combine (Root, task.AndroidSdkDirectory), errors [0].Message);
+			} else {
+				Assert.IsEmpty (errors);
+			}
+		}
+
+		[Test]
+		public void GetJavaPlatformJarMalformedManifestUsesProjectDirectory ()
+		{
+			var path = Path.Combine (Root, "temp", TestName);
+			Directory.CreateDirectory (path);
+			var manifest = Path.Combine (path, "AndroidManifest.xml");
+			File.WriteAllText (manifest, "<manifest>\n<broken></manifest>");
+			var errors = new List<BuildErrorEventArgs> ();
+			try {
+				var task = new GetJavaPlatformJar {
+					BuildEngine = new MockBuildEngine (TestContext.Out, errors),
+					TaskEnvironment = TaskEnvironment.CreateWithProjectDirectoryAndEnvironment (path, new Dictionary<string, string> ()),
+					AndroidManifest = "AndroidManifest.xml",
+					AndroidApiLevel = "36",
+					SupportedOSPlatformVersion = "24.0",
+				};
+				Assert.IsFalse (task.Execute ());
+				Assert.AreEqual (manifest, errors.Single ().File);
+			} finally {
+				Directory.Delete (path, recursive: true);
+			}
+		}
+
+		[TestCase (null, "XA5300")]
+		[TestCase ("", "XA5300")]
+		[TestCase ("missing", "XA5300")]
+		[TestCase ("empty", "XA5205")]
+		public void ResolveAndroidToolingWithMissingSdkDoesNotThrow (string sdkPath, string expectedError)
+		{
+			var path = Path.Combine (Root, "temp", TestName);
 			Directory.CreateDirectory (path);
 			var errors = new List<BuildErrorEventArgs> ();
-			var originalAndroidSdk = MonoAndroidHelper.AndroidSdk;
 			try {
-				MonoAndroidHelper.AndroidSdk = null;
 				IBuildEngine engine = new MockBuildEngine (TestContext.Out, errors);
-				var androidTooling = new Xamarin.Android.Tasks.ResolveAndroidTooling {
+				var androidTooling = new ResolveAndroidTooling {
 					BuildEngine = engine,
-					AndroidSdkPath = path,
+					AndroidSdkPath = sdkPath == "empty" ? path : sdkPath == "missing" ? Path.Combine (path, "missing") : sdkPath,
 					AndroidSdkBuildToolsVersion = "36.0.0",
 					TargetPlatformVersion = "37.0",
-					AotAssemblies = false,
-					SequencePointsMode = "None",
-					AndroidApplication = true,
 				};
 
-				Assert.IsFalse (androidTooling.Execute (), "ResolveAndroidTooling should fail when SDK resolution has not succeeded.");
+				Assert.IsFalse (androidTooling.Execute (), "ResolveAndroidTooling should fail when the explicit SDK has no tooling.");
 				Assert.AreEqual ("37", androidTooling.AndroidApiLevel, "AndroidApiLevel should still be calculated for dependency resolution.");
-				Assert.IsTrue (errors.Any (e => e.Code == "XA5300"), "XA5300 should be logged when Android SDK tooling is unavailable.");
-				Assert.IsFalse (errors.Any (e => e.Code == "XARAT7001"), "ResolveAndroidTooling should not throw when AndroidSdk is unavailable.");
+				Assert.AreEqual (expectedError, errors.Single ().Code);
 			} finally {
-				MonoAndroidHelper.AndroidSdk = originalAndroidSdk;
 				if (Directory.Exists (path))
 					Directory.Delete (path, recursive: true);
 			}
 		}
 
+		[Test]
+		public void ResolveSdksReturnsAbsolutePaths ([Values (false, true)] bool discoverNdk)
+		{
+			var path = Path.Combine ("temp", TestName);
+			var sdkPath = CreateFauxAndroidSdkDirectory (Path.Combine (path, "android-sdk"), "37.0.0");
+			var ndkPath = CreateFauxAndroidNdkDirectory (discoverNdk ? Path.Combine (path, "android-sdk", "ndk-bundle") : Path.Combine (path, "android-ndk"));
+			var javaPath = CreateFauxJavaSdkDirectory (Path.Combine (path, "jdk"), "1.8.0", out _, out _);
+			try {
+				File.WriteAllText (Path.Combine (ndkPath, "source.properties"), "Pkg.Revision = 21.0.6113669");
+				var resolveSdks = new ResolveSdks {
+					BuildEngine = new MockBuildEngine (TestContext.Out),
+					AndroidSdkPath = Path.GetRelativePath (Environment.CurrentDirectory, sdkPath),
+					AndroidNdkPath = discoverNdk ? null : Path.GetRelativePath (Environment.CurrentDirectory, ndkPath),
+					JavaSdkPath = Path.GetRelativePath (Environment.CurrentDirectory, javaPath),
+					MinimumSupportedJavaVersion = MinimumSupportedJavaVersion,
+					LatestSupportedJavaVersion = LatestSupportedJavaVersion,
+				};
+				Assert.IsTrue (resolveSdks.Execute ());
+				Assert.AreEqual (sdkPath, resolveSdks.AndroidSdkPath);
+				Assert.AreEqual (ndkPath, resolveSdks.AndroidNdkPath);
+				Assert.AreEqual (javaPath, resolveSdks.JavaSdkPath);
+			} finally {
+				Directory.Delete (Path.Combine (Root, path), recursive: true);
+			}
+		}
+
+		[Test]
+		public void ReadAndroidManifestUsesProjectDirectories ()
+		{
+			var path = Path.Combine ("temp", TestName);
+			var warnings = new List<BuildWarningEventArgs> ();
+			var engine = new MockBuildEngine (TestContext.Out, warnings: warnings);
+			try {
+				for (int i = 0; i < 2; i++) {
+					var projectPath = Path.Combine (path, $"project-{i}");
+					var project = new XamarinAndroidApplicationProject {
+						AndroidManifest = $$"""
+							<manifest xmlns:android="http://schemas.android.com/apk/res/android" package="com.example.project{{i}}">
+							  <application>
+							    <uses-library android:name="present" />
+							    <uses-library android:name="missing-optional" android:required="false" />
+							    <uses-library android:name="missing-required" />
+							  </application>
+							</manifest>
+							""",
+					};
+					using var builder = CreateApkBuilder (projectPath);
+					builder.Save (project);
+					var apis = new [] {
+						new ApiInfo { Id = "Z", Level = 127 + i, Name = "Preview", FrameworkVersion = $"v108.{i}", Stable = true },
+					};
+					CreateFauxReferencesDirectory (Path.Combine (projectPath, "references"), apis);
+					var sdk = CreateFauxAndroidSdkDirectory (Path.Combine (projectPath, "sdk"), "36.0.0",
+						[new ApiInfo { Id = (127 + i).ToString () }]);
+					var optionalPath = Path.Combine (sdk, "platforms", $"android-{127 + i}", "optional");
+					Directory.CreateDirectory (optionalPath);
+					File.WriteAllText (Path.Combine (optionalPath, "present.jar"), "");
+					var manifestFile = Path.Combine ("Properties", "AndroidManifest.xml");
+					var task = new ReadAndroidManifest {
+						BuildEngine = engine,
+						TaskEnvironment = TaskEnvironment.CreateWithProjectDirectoryAndEnvironment (
+							Path.Combine (Root, projectPath), new Dictionary<string, string> ()),
+						ManifestFile = manifestFile,
+						AndroidSdkDirectory = "sdk",
+						ReferenceAssemblyPaths = ["references"],
+						AndroidApiLevel = "Z",
+					};
+					warnings.Clear ();
+					Assert.IsTrue (task.Execute ());
+					Assert.AreEqual ($"com.example.project{i}", task.PackageName);
+					var libraries = task.UsesLibraries;
+					Assert.IsNotNull (libraries);
+					Assert.AreEqual (Path.Combine (optionalPath, "present.jar"), libraries.Single ().ItemSpec);
+					var warning = warnings.Single ();
+					Assert.AreEqual ("XA4218", warning.Code);
+					Assert.AreEqual (manifestFile, warning.File);
+					Assert.AreEqual (0, warning.LineNumber);
+					Assert.AreEqual (0, warning.ColumnNumber);
+					StringAssert.Contains (Path.Combine (optionalPath, "missing-required.jar"), warning.Message);
+				}
+			} finally {
+				Directory.Delete (Path.Combine (Root, path), recursive: true);
+			}
+		}
+
+		[Test]
+		public void SdkConsumersUseExplicitPaths ()
+		{
+			var path = Path.Combine ("temp", TestName);
+			var firstSdk = CreateFauxAndroidSdkDirectory (Path.Combine (path, "first-sdk"), "37.0.0", [new ApiInfo { Id = "37" }]);
+			var secondSdk = CreateFauxAndroidSdkDirectory (Path.Combine (path, "second-sdk"), "36.0.0", [new ApiInfo { Id = "37" }]);
+			var javaPath = CreateFauxJavaSdkDirectory (Path.Combine (path, "jdk"), "1.8.0", out _, out _);
+			var engine = new MockBuildEngine (TestContext.Out);
+			var resolveSdks = new ResolveSdks {
+				BuildEngine = engine,
+				AndroidSdkPath = firstSdk,
+				JavaSdkPath = javaPath,
+				MinimumSupportedJavaVersion = MinimumSupportedJavaVersion,
+				LatestSupportedJavaVersion = LatestSupportedJavaVersion,
+			};
+			try {
+				Assert.IsTrue (resolveSdks.Execute ());
+				var tooling = new ResolveAndroidTooling {
+					BuildEngine = engine,
+					AndroidSdkPath = secondSdk,
+					TargetPlatformVersion = "37.0",
+				};
+				Assert.IsTrue (tooling.Execute ());
+				Assert.AreEqual (Path.Combine (secondSdk, "build-tools", "36.0.0"), tooling.AndroidSdkBuildToolsPath);
+
+				var proj = new XamarinAndroidApplicationProject {
+					AndroidManifest = """
+						<manifest xmlns:android="http://schemas.android.com/apk/res/android" package="com.example.isolation">
+						  <application><uses-library android:name="example" /></application>
+						</manifest>
+						""",
+				};
+				using var builder = CreateApkBuilder (Path.Combine (path, "manifest"));
+				builder.Save (proj);
+				foreach (var sdk in new [] { secondSdk, firstSdk }) {
+					var platformJar = Path.Combine (sdk, "platforms", "android-37", "android.jar");
+					var optionalJar = Path.Combine (sdk, "platforms", "android-37", "optional", "example.jar");
+					Directory.CreateDirectory (Path.GetDirectoryName (optionalJar));
+					File.WriteAllText (optionalJar, "");
+					var platform = new GetJavaPlatformJar {
+						BuildEngine = engine,
+						AndroidSdkDirectory = sdk,
+						AndroidApiLevel = "37",
+						SupportedOSPlatformVersion = XABuildConfig.AndroidMinimumDotNetApiLevel.ToString (),
+					};
+					Assert.IsTrue (platform.Execute ());
+					Assert.AreEqual (platformJar, platform.JavaPlatformJarPath);
+					var manifest = new ReadAndroidManifest {
+						BuildEngine = engine,
+						AndroidSdkDirectory = sdk,
+						AndroidApiLevel = "37",
+						ManifestFile = Path.Combine (Root, builder.ProjectDirectory, "Properties", "AndroidManifest.xml"),
+					};
+					Assert.IsTrue (manifest.Execute ());
+					var libraries = manifest.UsesLibraries;
+					Assert.IsNotNull (libraries);
+					Assert.AreEqual (optionalJar, libraries.Single ().ItemSpec);
+				}
+			} finally {
+				Directory.Delete (Path.Combine (Root, path), recursive: true);
+			}
+		}
+
+		[TestCase (null, "XA5300")]
+		[TestCase ("", "XA5300")]
+		[TestCase ("missing", "XA5207")]
+		public void PlatformJarWithMissingSdkDoesNotThrow (string sdkPath, string expectedError)
+		{
+			var errors = new List<BuildErrorEventArgs> ();
+			var engine = new MockBuildEngine (TestContext.Out, errors);
+			var platform = new GetJavaPlatformJar {
+				BuildEngine = engine,
+				AndroidSdkDirectory = sdkPath == "missing" ? Path.Combine (Root, "temp", TestName, "missing-sdk") : sdkPath,
+				AndroidApiLevel = "37",
+				SupportedOSPlatformVersion = XABuildConfig.AndroidMinimumDotNetApiLevel.ToString (),
+			};
+			Assert.IsFalse (platform.Execute ());
+			Assert.AreEqual (expectedError, errors.Single ().Code);
+		}
 	}
 }

@@ -27,28 +27,31 @@ sealed class SingleUniverseTypeMap : ITypeMap
 		_proxyTypeMap = proxyTypeMap;
 	}
 
-	public IEnumerable<Type> GetProxyTypes (string jniName)
+	public void CollectProxyTypes (string jniName, ref JniProxyCacheBuilder builder)
 	{
 		if (!_typeMap.TryGetValue (jniName, out var mappedType)) {
-			yield break;
+			return;
 		}
 
 		// Fast path: non-alias entry
-		if (mappedType.GetCustomAttribute<JavaPeerProxy> (inherit: false) is not null) {
-			yield return mappedType;
-			yield break;
+		var proxy = mappedType.GetCustomAttribute<JavaPeerProxy> (inherit: false);
+		if (proxy is not null) {
+			builder.Add (proxy);
+			return;
 		}
 
 		// Slow path: alias holder — follow each alias key
 		var aliases = mappedType.GetCustomAttribute<JavaPeerAliasesAttribute> (inherit: false);
 		if (aliases is null) {
-			yield break;
+			return;
 		}
 
 		foreach (var key in aliases.Aliases) {
-			if (_typeMap.TryGetValue (key, out var aliasEntryType) &&
-				aliasEntryType.GetCustomAttribute<JavaPeerProxy> (inherit: false) is not null) {
-				yield return aliasEntryType;
+			if (_typeMap.TryGetValue (key, out var aliasEntryType)) {
+				var aliasProxy = aliasEntryType.GetCustomAttribute<JavaPeerProxy> (inherit: false);
+				if (aliasProxy is not null) {
+					builder.Add (aliasProxy);
+				}
 			}
 		}
 	}
@@ -69,14 +72,23 @@ sealed class SingleUniverseTypeMap : ITypeMap
 		// Slow path: alias holder — find the alias whose target type matches
 		var aliases = mappedProxyType.GetCustomAttribute<JavaPeerAliasesAttribute> (inherit: false);
 		if (aliases is not null) {
+			// A generic definition can match a base alias; prefer its own proxy.
+			Type? compatibleProxyType = null;
 			foreach (var key in aliases.Aliases) {
 				if (_typeMap.TryGetValue (key, out var aliasProxyType)) {
 					var aliasProxy = aliasProxyType.GetCustomAttribute<JavaPeerProxy> (inherit: false);
 					if (aliasProxy is not null && TrimmableTypeMap.TargetTypeMatches (managedType, aliasProxy.TargetType)) {
-						proxyType = aliasProxyType;
-						return true;
+						if (!managedType.IsGenericTypeDefinition || aliasProxy.TargetType == managedType) {
+							proxyType = aliasProxyType;
+							return true;
+						}
+						compatibleProxyType ??= aliasProxyType;
 					}
 				}
+			}
+			if (compatibleProxyType is not null) {
+				proxyType = compatibleProxyType;
+				return true;
 			}
 		}
 

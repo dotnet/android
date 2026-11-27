@@ -21,6 +21,11 @@ resources:
     type: git
     name: DevDiv/Xamarin.yaml-templates
     ref: refs/heads/main
+  - repository: macios-devtools
+    type: github
+    name: dotnet/macios-devtools
+    ref: refs/heads/main
+    endpoint: xamarin
   - repository: maui
     type: github
     name: dotnet/maui
@@ -75,10 +80,12 @@ extends:
       sourceRepositoriesToScan:
         exclude:
         - repository: yaml-templates
+        - repository: macios-devtools
         - repository: maui
       suppression:
         suppressionFile: $(Build.SourcesDirectory)\.gdn\.gdnsuppress
     settings:
+      networkIsolationPolicy: DefaultDeny,CFSClean
       skipBuildTagsForGitHubPullRequests: true
     stages:
     - template: /build-tools/automation/yaml-templates/build-macos.yaml@self
@@ -97,18 +104,8 @@ extends:
 
     - template: /build-tools/automation/yaml-templates/stage-msbuild-emulator-tests.yaml@self
       parameters:
+        agent_count: ${{ variables.MSBuildEmulatorTestAgentCount }}
         usesCleanImages: ${{ parameters.macTestAgentsUseCleanImages }}
-
-    - template: /build-tools/automation/yaml-templates/stage-java-interop-tests.yaml@self
-      parameters:
-        # The internal Xamarin.Android pipeline uses 1ES Pipeline Templates, which
-        # require Windows jobs to run on a 1ES-hosted pool. macOS is fine on the
-        # hosted Azure Pipelines pool as long as `os: macOS` is set (which is now
-        # the template default).
-        windowsPool:
-          name: MAUI-1ESPT
-          image: $(WindowsPoolImage1ESPT)
-          os: windows
 
     - template: /build-tools/automation/yaml-templates/stage-xamarin-android-tools-tests.yaml@self
       parameters:
@@ -130,6 +127,8 @@ extends:
       # Check - "Xamarin.Android (MAUI Tests MAUI Integration)"
       - job: maui_tests_integration
         displayName: MAUI Integration
+        # Re-enable when dotnet/maui's net12.0 branch exists: https://github.com/dotnet/android/issues/13088
+        condition: 'false'
         pool:
           name: MAUI-1ESPT
           image: $(WindowsPoolImage1ESPT)
@@ -153,7 +152,6 @@ extends:
             xaSourcePath: $(Build.SourcesDirectory)/android
             androidSdkPlatforms: $(DefaultTestSdkPlatforms)
             dotnetVersion: $(DotNetSdkVersion)
-            dotnetQuality: $(DotNetSdkQuality)
 
         - task: NuGetAuthenticate@1
           displayName: authenticate with azure artifacts
@@ -185,29 +183,34 @@ extends:
         - task: DotNetCoreCLI@2
           displayName: Update Android SDK band in Workloads.csproj
           inputs:
-            projects: $(Build.SourcesDirectory)/android/Xamarin.Android.sln
+            projects: $(Build.SourcesDirectory)/android/Microsoft.Android.slnx
             arguments: -t:UpdateMauiWorkloadsProj -c $(XA.Build.Configuration) --no-restore -v:n -bl:$(Build.StagingDirectory)/logs/update-maui-workloadsproj.binlog
 
         - pwsh: ./build.ps1 --target=dotnet --configuration="$(XA.Build.Configuration)" --nugetsource="$(Build.StagingDirectory)\android-packs" --verbosity=diagnostic
           displayName: Install .NET
           retryCountOnTaskFailure: 3
           workingDirectory: $(Build.SourcesDirectory)/maui
+          env:
+            _SkipUpdateBuildNumber: 'true'
 
         - pwsh: ./build.ps1 --target=dotnet-pack --configuration="$(XA.Build.Configuration)" --nugetsource="$(Build.StagingDirectory)\android-packs" --verbosity=diagnostic
           displayName: Pack .NET Maui
           workingDirectory: $(Build.SourcesDirectory)/maui
+          env:
+            _SkipUpdateBuildNumber: 'true'
+            NoWarn: CS0618
 
         - task: DotNetCoreCLI@2
           displayName: Install MAUI workload packs
           retryCountOnTaskFailure: 3
           inputs:
-            projects: $(Build.SourcesDirectory)/android/Xamarin.Android.sln
+            projects: $(Build.SourcesDirectory)/android/Microsoft.Android.slnx
             arguments: -t:InstallMaui -p:MauiUseLocalPacks=true -p:MauiWorkloadToInstall=maui -p:MauiManifestDiagnosticsPath=$(Build.StagingDirectory)/logs/maui-manifest -c $(XA.Build.Configuration) --no-restore -v:n -bl:$(Build.StagingDirectory)/logs/install-maui.binlog
 
         - template: /build-tools/automation/yaml-templates/run-dotnet-preview.yaml@self
           parameters:
             command: new
-            arguments: maui -o $(Build.StagingDirectory)/MauiTestProj
+            arguments: maui -o $(Build.StagingDirectory)/MauiTestProj --no-restore
             xaSourcePath: $(Build.SourcesDirectory)/android
             displayName: Create MAUI template
             continueOnError: false
@@ -222,6 +225,7 @@ extends:
             arguments: >-
               -f $(DotNetTargetFramework)-android -c Debug
               --configfile $(Build.SourcesDirectory)/maui/NuGet.config
+              -p:RestoreAdditionalProjectSources=https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet12/nuget/v3/index.json
               -bl:$(Build.StagingDirectory)/logs/MauiTestProj-Debug.binlog
             xaSourcePath: $(Build.SourcesDirectory)/android
             displayName: Build MAUI template - Debug
@@ -232,9 +236,17 @@ extends:
             arguments: >-
               -f $(DotNetTargetFramework)-android -c Release
               --configfile $(Build.SourcesDirectory)/maui/NuGet.config
+              -p:RestoreAdditionalProjectSources=https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet12/nuget/v3/index.json
               -bl:$(Build.StagingDirectory)/logs/MauiTestProj-Release.binlog
             xaSourcePath: $(Build.SourcesDirectory)/android
             displayName: Build MAUI template - Release
+
+        - template: /build-tools/automation/yaml-templates/run-maui-r2r-helix-matrix.yaml@self
+          parameters:
+            project: $(Build.StagingDirectory)/MauiTestProj/MauiTestProj.csproj
+            xaSourcePath: $(Build.SourcesDirectory)/android
+            logsDirectory: $(Build.StagingDirectory)/logs
+            extraBuildArguments: --configfile $(Build.SourcesDirectory)/maui/NuGet.config -p:RestoreAdditionalProjectSources=https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet12/nuget/v3/index.json
 
         - task: CopyFiles@2
           displayName: copy build logs
@@ -262,6 +274,10 @@ extends:
       - mac_build
       - linux_build
       condition: and(in(dependencies.mac_build.result, 'Succeeded', 'SucceededWithIssues'), in(dependencies.linux_build.result, 'Succeeded', 'SucceededWithIssues'), eq(variables['Build.DefinitionName'], 'Xamarin.Android'))
+      variables:
+      # Keep signing and MSI creation out of MSBuild multithreaded mode.
+      - name: MSBUILDENABLEMULTITHREADED
+        value: '0'
       jobs:
       # Check - "Xamarin.Android (Prepare .NET Release Sign Archives)"
       - template: sign-artifacts/jobs/v4.yml@yaml-templates
@@ -300,6 +316,7 @@ extends:
       - template: nuget-msi-convert/job/v5.yml@yaml-templates
         parameters:
           yamlResourceName: yaml-templates
+          reportReleaseDropStatus: false
           dependsOn: sign_net_mac_win
           artifactName: nuget-signed
           artifactPatterns: |
@@ -368,14 +385,8 @@ extends:
         - template: /build-tools/automation/yaml-templates/use-dot-net.yaml@self
           parameters:
             version: $(DotNetSdkVersion)
-            quality: $(DotNetSdkQuality)
 
         # Download symbols to be published to the symbols artifact drop declared above
-        - task: DownloadPipelineArtifact@2
-          inputs:
-            artifactName: $(WindowsToolchainPdbArtifactName)
-            downloadPath: $(Build.StagingDirectory)\symbols
-
         - task: DownloadPipelineArtifact@2
           inputs:
             artifactName: nuget-unsigned-symbols
@@ -470,18 +481,3 @@ extends:
         policheckPtbScanFolder: $(Build.SourcesDirectory)\Localize\loc\pt-BR
         policheckRusScanFolder: $(Build.SourcesDirectory)\Localize\loc\ru
         policheckTrkScanFolder: $(Build.SourcesDirectory)\Localize\loc\tr
-
-    - ${{ if eq(variables['Build.DefinitionName'], 'Xamarin.Android-PR') }}:
-      - stage: BuildSummary
-        dependsOn:
-        - mac_build
-        - win_build_test
-        - linux_build
-        - smoke_tests
-        - linux_tests
-        - msbuild_dotnet
-        - msbuilddevice_tests
-        - maui_tests
-        condition: failed()
-        jobs:
-        - template: build-summary/v1.yml@yaml-templates

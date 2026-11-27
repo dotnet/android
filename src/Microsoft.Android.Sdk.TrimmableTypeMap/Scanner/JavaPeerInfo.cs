@@ -58,19 +58,37 @@ public sealed record JavaPeerInfo
 	public string? BaseJavaName { get; init; }
 
 	/// <summary>
-	/// JNI names of Java interfaces this type implements, e.g., ["android/view/View$OnClickListener"].
-	/// Needed by JCW Java source generation ("implements" clause).
+	/// JNI names of direct Java interfaces this type implements, in managed metadata order.
 	/// </summary>
 	public IReadOnlyList<string> ImplementedInterfaceJavaNames { get; init; } = Array.Empty<string> ();
 
+	/// <summary>
+	/// Ordered JNI names to emit in the Java callable wrapper's implements clause.
+	/// Redundant parent interfaces and duplicate Java names are omitted.
+	/// </summary>
+	internal IReadOnlyList<string>? JavaCallableWrapperInterfaceJavaNames { get; init; }
+
+	/// <summary>
+	/// Java annotations forwarded from managed custom attributes decorated with
+	/// <c>Android.Runtime.AnnotationAttribute</c>.
+	/// </summary>
+	public IReadOnlyList<JavaAnnotationInfo> Annotations { get; init; } = [];
+
 	public bool IsInterface { get; init; }
 	public bool IsAbstract { get; init; }
+	public bool IsSealed { get; init; }
 
 	/// <summary>
 	/// If true, this is a Managed Callable Wrapper (MCW) binding type.
 	/// No JCW or RegisterNatives will be generated for it.
 	/// </summary>
 	public bool DoNotGenerateAcw { get; init; }
+
+	/// <summary>
+	/// True for a Kotlin value-class struct. It has no proxy; its typemap entry only lets
+	/// R8 keep the Kotlin class when the struct survives trimming.
+	/// </summary>
+	public bool IsKotlinValueClass { get; init; }
 
 	/// <summary>
 	/// True when the type was discovered via <c>[JniTypeSignatureAttribute]</c>
@@ -113,6 +131,12 @@ public sealed record JavaPeerInfo
 	/// Each has a JNI signature and an ordinal index for the nctor_N native method.
 	/// </summary>
 	public IReadOnlyList<JavaConstructorInfo> JavaConstructors { get; init; } = [];
+
+	/// <summary>
+	/// Constructor shapes which cannot be emitted safely by the trimmable type map.
+	/// Generation reports these before producing any Java or type-map output.
+	/// </summary>
+	public IReadOnlyList<ConstructorDiagnosticInfo> ConstructorDiagnostics { get; init; } = [];
 
 	/// <summary>
 	/// Java fields from [ExportField] attributes.
@@ -159,6 +183,11 @@ public sealed record JavaPeerInfo
 /// </summary>
 public sealed record MarshalMethodInfo
 {
+	internal static readonly TypeRefData DefaultReturnType = new () {
+		ManagedTypeName = "System.Void",
+		AssemblyName = "System.Runtime",
+	};
+
 	/// <summary>
 	/// JNI method name, e.g., "onCreate".
 	/// This is the Java method name (without n_ prefix).
@@ -267,10 +296,7 @@ public sealed record MarshalMethodInfo
 	/// <summary>
 	/// Managed return type, including the defining assembly.
 	/// </summary>
-	internal TypeRefData ManagedReturnType { get; init; } = new () {
-		ManagedTypeName = "System.Void",
-		AssemblyName = "System.Runtime",
-	};
+	internal TypeRefData ManagedReturnType { get; init; } = DefaultReturnType;
 
 	/// <summary>
 	/// [ExportParameter] kind applied to the return value, if any.
@@ -296,6 +322,28 @@ public sealed record MarshalMethodInfo
 	/// <c>new virtual</c> while reusing the same JNI name and signature.
 	/// </summary>
 	public bool CallManagedMethodDirectly { get; init; }
+
+	/// <summary>
+	/// True when the generated <c>n_*</c> callback carries
+	/// <c>[System.Runtime.InteropServices.UnmanagedCallersOnly]</c>. Such a callback has no
+	/// <c>Get*Handler ()</c> connector method and must never be called from managed code, so
+	/// RegisterNatives binds its address directly instead of going through a generated wrapper.
+	/// </summary>
+	public bool IsUnmanagedCallersOnlyCallback { get; init; }
+
+	/// <summary>
+	/// Java annotations forwarded from the managed method or constructor.
+	/// </summary>
+	public IReadOnlyList<JavaAnnotationInfo> Annotations { get; init; } = [];
+}
+
+/// <summary>
+/// Describes a Java annotation forwarded from a managed custom attribute.
+/// </summary>
+public sealed record JavaAnnotationInfo
+{
+	public required string Name { get; init; }
+	public IReadOnlyList<KeyValuePair<string, string>> Properties { get; init; } = [];
 }
 
 /// <summary>
@@ -336,14 +384,44 @@ public sealed record JavaConstructorInfo
 	public string? SuperArgumentsString { get; init; }
 
 	/// <summary>
+	/// For [Export] constructors: Java exception types that the constructor declares it can throw.
+	/// Null for [Register] constructors.
+	/// </summary>
+	public IReadOnlyList<string>? ThrownNames { get; init; }
+
+	/// <summary>
 	/// Managed constructor parameter types, in declaration order.
 	/// </summary>
 	internal IReadOnlyList<TypeRefData> ManagedParameterTypes { get; init; } = [];
 
 	/// <summary>
+	/// Per-parameter [ExportParameter] kinds for constructor argument marshalling.
+	/// </summary>
+	internal IReadOnlyList<ExportParameterKindInfo> ManagedParameterExportKinds { get; init; } = [];
+
+	/// <summary>
 	/// True when this Java constructor has a matching public managed constructor on the target type.
 	/// </summary>
 	public bool HasMatchingManagedCtor { get; init; }
+
+	/// <summary>
+	/// Java annotations forwarded from the managed constructor.
+	/// </summary>
+	public IReadOnlyList<JavaAnnotationInfo> Annotations { get; init; } = [];
+}
+
+public sealed record ConstructorDiagnosticInfo
+{
+	public required ConstructorDiagnosticKind Kind { get; init; }
+	public required string Detail { get; init; }
+}
+
+public enum ConstructorDiagnosticKind
+{
+	AmbiguousJniSignature,
+	UnsupportedParameterType,
+	MissingBaseConstructor,
+	InvalidSuperArgumentsString,
 }
 
 /// <summary>
@@ -363,6 +441,12 @@ public sealed record JavaFieldInfo
 	public required string JavaTypeName { get; init; }
 
 	/// <summary>
+	/// JNI type descriptor retained for validation and source generation where Java source
+	/// dots cannot distinguish package segments, nested types, and top-level '$' identifiers.
+	/// </summary>
+	internal string? JniTypeName { get; init; }
+
+	/// <summary>
 	/// Name of the method that initializes this field, e.g., "GetInstance".
 	/// </summary>
 	public required string InitializerMethodName { get; init; }
@@ -376,6 +460,11 @@ public sealed record JavaFieldInfo
 	/// Whether the field is static.
 	/// </summary>
 	public bool IsStatic { get; init; }
+
+	/// <summary>
+	/// Java annotations forwarded from the managed field initializer method.
+	/// </summary>
+	public IReadOnlyList<JavaAnnotationInfo> Annotations { get; init; } = [];
 }
 
 /// <summary>

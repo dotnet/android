@@ -7,10 +7,11 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <RollForward>Major</RollForward>
+    <LangVersion>preview</LangVersion>
+    <MemorySafetyRulesVersion>2</MemorySafetyRulesVersion>
   </PropertyGroup>
 
   <ItemGroup>
     <PackageReference Include="Mono.Options" Version="$(MonoOptionsVersion)" />
-    <PackageReference Include="Newtonsoft.Json" Version="$(NewtonsoftJsonPackageVersion)" />
   </ItemGroup>
 </Project>

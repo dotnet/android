@@ -19,8 +19,7 @@ static class SafeArrayFactory
 	{
 		ValidateRank (rank);
 
-		if (elementType == null)
-			throw new ArgumentNullException (nameof (elementType));
+		ArgumentNullException.ThrowIfNull (elementType);
 
 		if (!TryGetVectorType (elementType, out arrayType)) {
 			arrayType = null;
@@ -51,8 +50,7 @@ static class SafeArrayFactory
 		ValidateRank (rank);
 		ArgumentOutOfRangeException.ThrowIfNegative (length);
 
-		if (elementType == null)
-			throw new ArgumentNullException (nameof (elementType));
+		ArgumentNullException.ThrowIfNull (elementType);
 
 		if (rank == 1 && ValueTypeFactory.PrimitiveTypeFactories.TryGetValue (elementType, out var factory)) {
 			array = factory.CreateArray (length);
@@ -94,9 +92,6 @@ static class SafeArrayFactory
 			"This helper is only used for reference element types, or for already-created array types when adding jagged rank. " +
 			"Those shapes canonicalize to __Canon/reference-array templates in NativeAOT's TypeBuilder. " +
 			"First-rank value-type vectors are returned from explicit typeof(T[])/new T[length] maps before this helper is used.")]
-	[UnconditionalSuppressMessage ("Trimming", "IL2055:MakeGenericType",
-		Justification = "Creating an SZArray type does not perform member discovery. " +
-			"Value-type vectors are not passed here unless they are already array reference types for an outer jagged rank.")]
 	internal static Type MakeReferenceArrayType (Type elementType)
 	{
 		return elementType.MakeArrayType ();

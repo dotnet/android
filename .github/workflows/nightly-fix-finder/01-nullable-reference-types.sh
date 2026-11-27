@@ -13,7 +13,7 @@ follow clear patterns.
 **Scope: shipped code only.** The scan deliberately excludes test
 infrastructure (`/Tests/`, `/Test/`, `*Test.cs`, `*Tests.cs`) because we don't
 spend cycles enabling NRT in non-shipped code. If you can't find a shipped-code
-candidate in the scan data, call `noop` — do NOT file an issue for a test file.
+candidate in the scan data, call `noop` — do NOT open a PR for a test file.
 
 ### ⚠️ CRITICAL — Check the owning csproj TargetFramework FIRST
 

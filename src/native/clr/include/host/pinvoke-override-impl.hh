@@ -1,50 +1,59 @@
 #pragma once
 
-#if !defined(PINVOKE_OVERRIDE_INLINE)
-#error The PINVOKE_OVERRIDE_INLINE macro must be defined before including this header file
-#endif
+#include <dlfcn.h>
 
 #include "pinvoke-override.hh"
-#include "../runtime-base/logger.hh"
 #include "../runtime-base/monodroid-dl.hh"
+#include <shared/log_functions.hh>
 
 namespace xamarin::android {
-	PINVOKE_OVERRIDE_INLINE
-	auto PinvokeOverride::load_library_symbol (std::string_view const& library_name, std::string_view const& symbol_name) noexcept -> void*
+	auto PinvokeOverride::load_symbol (const char *library_name, const char *symbol_name) noexcept -> const void*
 	{
+		log_debugf (LOG_ASSEMBLY, "load_symbol (\"%s\", \"%s\")", optional_string (library_name), optional_string (symbol_name));
+		if (library_name == nullptr || symbol_name == nullptr) {
+			return nullptr;
+		}
+
 		void *lib_handle = nullptr;
 
 		// Handle p/invokes of the form [DllImport ("liblog")] or [DllImport ("log")]
-		// TODO: try modifying the name to contain both the `log` prefix and the `.so` suffix
-		dynamic_local_path_string short_library_name;
 		if (!Util::path_has_directory_components (library_name)) {
-			if (!library_name.starts_with (Constants::DSO_PREFIX)) {
-				short_library_name.append (Constants::DSO_PREFIX);
-			}
-			short_library_name.append (library_name);
-			if (!short_library_name.ends_with (Constants::dso_suffix)) {
-				short_library_name.append (Constants::dso_suffix);
-			}
+			char stack_buffer [Util::LocalPathBufferSize];
+			char *short_library_name = Util::format_dso_name (stack_buffer, sizeof (stack_buffer), library_name, true);
 
-			log_debug (LOG_ASSEMBLY, "Modified p/invoke library name to '{}'", short_library_name.get ());
-			lib_handle = MonodroidDl::monodroid_dlopen (short_library_name.get (), microsoft::java_interop::JAVA_INTEROP_LIB_LOAD_LOCALLY);
+			log_debugf (LOG_ASSEMBLY, "Modified p/invoke library name to '%s'", short_library_name);
+			lib_handle = MonodroidDl::monodroid_dlopen (short_library_name, RTLD_NOW | RTLD_LOCAL);
+			if (short_library_name != stack_buffer) {
+				std::free (short_library_name);
+			}
 		}
 
 		if (lib_handle == nullptr) {
-			lib_handle = MonodroidDl::monodroid_dlopen (library_name, microsoft::java_interop::JAVA_INTEROP_LIB_LOAD_LOCALLY);
+			lib_handle = MonodroidDl::monodroid_dlopen (library_name, RTLD_NOW | RTLD_LOCAL);
 		}
 
 		if (lib_handle == nullptr) {
-			log_warn (LOG_ASSEMBLY, "Shared library '{}' not loaded, p/invoke '{}' may fail", library_name, symbol_name);
+			log_warnf (LOG_ASSEMBLY, "Shared library '%s' not loaded, p/invoke '%s' may fail", library_name, symbol_name);
+			log_debugf (LOG_DEFAULT, "p/invoke not found");
 			return nullptr;
 		}
 
-		void *entry_handle = MonodroidDl::monodroid_dlsym (lib_handle, symbol_name);
+		dlerror ();
+		void *entry_handle = dlsym (lib_handle, symbol_name);
 		if (entry_handle == nullptr) {
-			log_warn (LOG_ASSEMBLY, "Symbol '{}' not found in shared library '{}', p/invoke may fail", symbol_name, library_name);
+			const char *error = dlerror ();
+			log_errorf (
+				LOG_ASSEMBLY,
+				"Could not find symbol '%s' in shared library '%s': %s",
+				symbol_name,
+				library_name,
+				optional_string (error, "Unknown error")
+			);
+			log_debugf (LOG_DEFAULT, "p/invoke not found");
 			return nullptr;
 		}
 
+		log_debugf (LOG_DEFAULT, "p/invoke found");
 		return entry_handle;
 	}
 }

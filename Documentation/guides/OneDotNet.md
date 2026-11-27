@@ -115,7 +115,7 @@ not be supported:
 ```
 
 [rids]: https://docs.microsoft.com/dotnet/core/rid-catalog
-[abet-sys]: https://github.com/xamarin/xamarin-android/issues/4127
+[abet-sys]: https://github.com/dotnet/android/issues/4127
 
 ## Default file inclusion
 
@@ -163,40 +163,6 @@ It is recommended to migrate to the new linker settings, as
 
 [linker]: https://docs.microsoft.com/dotnet/core/deploying/trimming-options
 [linker-full]: https://docs.microsoft.com/dotnet/core/deploying/trimming-options#trimmed-assemblies
-
-## AOT
-
-`$(RunAOTCompilation)` will be the new MSBuild property for enabling
-AOT. This is the same property used for [Blazor WASM][blazor].
-`$(AotAssemblies)` will also enable AOT, in order to help with
-migration from "legacy" Xamarin.Android to .NET 6.
-
-It is recommended to migrate to the new `$(RunAOTCompilation)`
-property, as `$(AotAssemblies)` is deprecated in .NET 7.
-
-[blazor]: https://docs.microsoft.com/aspnet/core/blazor/host-and-deploy/webassembly/#ahead-of-time-aot-compilation
-
-We want to choose the optimal settings for startup time and app size.
-By default `Release` builds will default to:
-
-```xml
-<PropertyGroup Condition="'$(Configuration)' == 'Release'">
-  <RunAOTCompilation>true</RunAOTCompilation>
-  <AndroidEnableProfiledAot>true</AndroidEnableProfiledAot>
-</PropertyGroup>
-```
-This is the behavior when `$(RunAOTCompilation)` and
-`$(AndroidEnableProfiledAot)` are blank.
-
-So if you would like to *disable* AOT, you would need to explicitly
-turn these settings off:
-
-```xml
-<PropertyGroup Condition="'$(Configuration)' == 'Release'">
-  <RunAOTCompilation>false</RunAOTCompilation>
-  <AndroidEnableProfiledAot>false</AndroidEnableProfiledAot>
-</PropertyGroup>
-```
 
 ## dotnet cli
 

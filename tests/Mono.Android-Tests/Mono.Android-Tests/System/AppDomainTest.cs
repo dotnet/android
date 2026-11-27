@@ -1,16 +1,18 @@
 using System;
 using System.Globalization;
-using NUnit.Framework;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace SystemTests {
 
-	[TestFixture]
+	[TestClass]
 	public class AppDomainTest {
 
-		[Test]
+		[TestMethod]
 		public void AppDomain_CreateDomain_Throws ()
 		{
-			Assert.Throws<PlatformNotSupportedException> (() => AppDomain.CreateDomain ("other domain"));
+#pragma warning disable SYSLIB0024 // Verify that the unsupported AppDomain API throws.
+			Assert.ThrowsExactly<PlatformNotSupportedException> (() => AppDomain.CreateDomain ("other domain"));
+#pragma warning restore SYSLIB0024
 		}
 	}
 }

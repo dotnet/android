@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Reflection;
 using System.Reflection.Metadata;
 using System.Reflection.Metadata.Ecma335;
@@ -42,11 +43,10 @@ namespace Microsoft.Android.Sdk.TrimmableTypeMap;
 ///     // UCO wrappers — [UnmanagedCallersOnly] entry points for JNI native methods (ACWs only):
 ///     public static void n_OnCreate_uco_0(IntPtr jnienv, IntPtr self, IntPtr p0)
 ///     {
-///         AndroidRuntimeInternal.WaitForBridgeProcessing();
 ///         try {
 ///             Activity.n_OnCreate(jnienv, self, p0);
 ///         } catch (Exception e) {
-///             AndroidEnvironmentInternal.UnhandledException(e);
+///             AndroidEnvironment.UnhandledException(e);
 ///         }
 ///     }
 ///
@@ -101,6 +101,7 @@ sealed class TypeMapAssemblyEmitter
 	MemberReferenceHandle _notSupportedExceptionCtorRef;
 	MemberReferenceHandle _jniObjectReferenceCtorRef;
 	MemberReferenceHandle _jniEnvDeleteRefRef;
+	MemberReferenceHandle _jniEnvToJniObjectReferenceOptionsRef;
 	MemberReferenceHandle _jniEnvGetStringRef;
 	MemberReferenceHandle _jniEnvGetArrayRef;
 	MemberReferenceHandle _javaLangObjectGetObjectRef;
@@ -108,7 +109,6 @@ sealed class TypeMapAssemblyEmitter
 	MemberReferenceHandle _getActivationPeerRef;
 	MemberReferenceHandle _setActivationPeerReferenceRef;
 	MemberReferenceHandle _markActivationPeerReplaceableRef;
-	MemberReferenceHandle _waitForBridgeProcessingRef;
 	MemberReferenceHandle _androidEnvironmentUnhandledExceptionRef;
 	MemberReferenceHandle _ucoAttrCtorRef;
 	BlobHandle _ucoAttrBlobHandle;
@@ -124,8 +124,7 @@ sealed class TypeMapAssemblyEmitter
 	TypeReferenceHandle _jniTransitionRef;
 	TypeReferenceHandle _jniRuntimeRef;
 	TypeReferenceHandle _exceptionRef;
-	TypeReferenceHandle _androidRuntimeInternalRef;
-	TypeReferenceHandle _androidEnvironmentInternalRef;
+	TypeReferenceHandle _androidEnvironmentRef;
 
 	MemberReferenceHandle _beginMarshalMethodRef;
 	MemberReferenceHandle _endMarshalMethodRef;
@@ -137,12 +136,20 @@ sealed class TypeMapAssemblyEmitter
 	MemberReferenceHandle _jniEnvTypesRegisterNativesRef;
 	MemberReferenceHandle _readOnlySpanOfJniNativeMethodCtorRef;
 
+	// These handles belong to this emitter's readonly PE metadata builder and must not be shared
+	// across emitter instances.
+	BlobHandle _activationCtorSignature;
+	BlobHandle _createInstanceSignature;
+	MemberReferenceHandle _dynamicallyAccessedMembersAttrCtorRef;
+
 	EntityHandle _anchorTypeHandle;
 
 	ExportMethodDispatchEmitter? _exportMethodDispatchEmitter;
 
 	// Cached open TypeMapAttribute`1 ref shared across closed TypeSpecs.
 	TypeReferenceHandle _typeMapAttrOpenRef;
+
+	readonly Dictionary<string, MemberReferenceHandle> _callbackMemberRefs = new (StringComparer.Ordinal);
 
 	/// <summary>
 	/// Creates a new emitter.
@@ -165,21 +172,41 @@ sealed class TypeMapAssemblyEmitter
 	/// share a single typemap universe. When false, emits a per-assembly <c>__TypeMapAnchor</c>.
 	/// </param>
 	public void Emit (TypeMapAssemblyData model, Stream stream, bool useSharedTypemapUniverse = false)
-	{
-		if (model is null) {
-			throw new ArgumentNullException (nameof (model));
-		}
-		if (stream is null) {
-			throw new ArgumentNullException (nameof (stream));
-		}
+		=> Emit (model, stream, useSharedTypemapUniverse, contentFingerprint: null);
 
-		EmitCore (model, useSharedTypemapUniverse);
+	/// <param name="contentFingerprint">
+	/// Pre-computed content fingerprint seeding the deterministic MVID. When <see langword="null"/>
+	/// it is computed here; callers that already walked the model should pass it in to avoid a
+	/// second walk.
+	/// </param>
+	internal void Emit (TypeMapAssemblyData model, Stream stream, bool useSharedTypemapUniverse, byte []? contentFingerprint)
+	{
+		ArgumentNullException.ThrowIfNull (model);
+		ArgumentNullException.ThrowIfNull (stream);
+
+		EmitCore (model, useSharedTypemapUniverse, contentFingerprint);
 		_pe.WritePE (stream);
 	}
 
-	void EmitCore (TypeMapAssemblyData model, bool useSharedTypemapUniverse)
+	/// <summary>
+	/// Emits a PE assembly from the given model and returns a read-only stream over the serialised
+	/// image, avoiding the copy into a second buffer that <see cref="Emit(TypeMapAssemblyData, Stream, bool, byte[])"/>
+	/// performs.
+	/// </summary>
+	internal Stream EmitToStream (TypeMapAssemblyData model, bool useSharedTypemapUniverse, byte []? contentFingerprint)
 	{
-		_pe.EmitPreamble (model.AssemblyName, model.ModuleName, MetadataHelper.ComputeContentFingerprint (model));
+		ArgumentNullException.ThrowIfNull (model);
+
+		EmitCore (model, useSharedTypemapUniverse, contentFingerprint);
+		return _pe.CreatePEStream ();
+	}
+
+	void EmitCore (TypeMapAssemblyData model, bool useSharedTypemapUniverse, byte []? contentFingerprint)
+	{
+		contentFingerprint ??= MetadataHelper
+			.ComputeFingerprints (model, _systemRuntimeVersion, useSharedTypemapUniverse, includeIncremental: false)
+			.Content;
+		_pe.EmitPreamble (model.AssemblyName, model.ModuleName, contentFingerprint);
 
 		_javaInteropRef = _pe.AddAssemblyRef ("Java.Interop", new Version (0, 0, 0, 0));
 
@@ -195,8 +222,13 @@ sealed class TypeMapAssemblyEmitter
 		}
 		EmitMemberReferences ();
 
+		var validRegistrations = EnumerateValidNativeRegistrations (model.ProxyTypes);
+		_pe.PrepareUtf8Fields (
+			validRegistrations.Select (registration => registration.JniSignature),
+			validRegistrations.Select (registration => registration.JniMethodName));
+
 		// Track wrapper targets → handles for RegisterNatives.
-		var wrapperHandles = new Dictionary<UcoWrapperTargetData, MethodDefinitionHandle> ();
+		var wrapperHandles = new Dictionary<UcoWrapperTargetData, EntityHandle> ();
 
 		foreach (var proxy in OrderProxiesForWrapperTargets (model.ProxyTypes)) {
 			EmitProxyType (proxy, wrapperHandles);
@@ -215,6 +247,32 @@ sealed class TypeMapAssemblyEmitter
 		}
 
 		_pe.EmitIgnoresAccessChecksToAttribute (model.IgnoresAccessChecksTo);
+	}
+
+	static List<NativeRegistrationData> EnumerateValidNativeRegistrations (IReadOnlyList<JavaPeerProxyData> proxies)
+	{
+		var wrapperTargets = new HashSet<UcoWrapperTargetData> ();
+		foreach (var proxy in proxies) {
+			foreach (var method in proxy.UcoMethods) {
+				wrapperTargets.Add (UcoWrapperTargetData.From (proxy, method.WrapperName));
+			}
+			foreach (var constructor in proxy.UcoConstructors) {
+				wrapperTargets.Add (UcoWrapperTargetData.From (proxy, constructor.WrapperName));
+			}
+		}
+
+		var registrations = new List<NativeRegistrationData> ();
+		foreach (var proxy in proxies) {
+			if (!proxy.IsAcw) {
+				continue;
+			}
+			foreach (var registration in proxy.NativeRegistrations) {
+				if (registration.DirectCallback is not null || wrapperTargets.Contains (registration.WrapperTarget)) {
+					registrations.Add (registration);
+				}
+			}
+		}
+		return registrations;
 	}
 
 	static List<JavaPeerProxyData> OrderProxiesForWrapperTargets (IReadOnlyList<JavaPeerProxyData> proxies)
@@ -311,11 +369,8 @@ sealed class TypeMapAssemblyEmitter
 			metadata.GetOrAddString ("Java.Interop"), metadata.GetOrAddString ("JniRuntime"));
 		_exceptionRef = metadata.AddTypeReference (_pe.SystemRuntimeRef,
 			metadata.GetOrAddString ("System"), metadata.GetOrAddString ("Exception"));
-		var monoAndroidRuntimeRef = _pe.AddAssemblyRef ("Mono.Android.Runtime", new Version (0, 0, 0, 0));
-		_androidRuntimeInternalRef = metadata.AddTypeReference (monoAndroidRuntimeRef,
-			metadata.GetOrAddString ("Android.Runtime"), metadata.GetOrAddString ("AndroidRuntimeInternal"));
-		_androidEnvironmentInternalRef = metadata.AddTypeReference (monoAndroidRuntimeRef,
-			metadata.GetOrAddString ("Android.Runtime"), metadata.GetOrAddString ("AndroidEnvironmentInternal"));
+		_androidEnvironmentRef = metadata.AddTypeReference (_pe.MonoAndroidRef,
+			metadata.GetOrAddString ("Android.Runtime"), metadata.GetOrAddString ("AndroidEnvironment"));
 
 		// ReadOnlySpan<JniNativeMethod> — TypeSpec for generic instantiation
 		_readOnlySpanOpenRef = metadata.AddTypeReference (_pe.SystemRuntimeRef,
@@ -382,6 +437,16 @@ sealed class TypeMapAssemblyEmitter
 					p.AddParameter ().Type ().Type (_jniHandleOwnershipRef, true);
 				}));
 
+		// JNIEnv.ToJniObjectReferenceOptions(JniHandleOwnership) — static, internal
+		// Maps the activation ctor's ownership argument onto the JniObjectReferenceOptions
+		// a Java.Interop-style ctor takes. Kept in Mono.Android so the mapping is plain C#.
+		_jniEnvToJniObjectReferenceOptionsRef = _pe.AddMemberRef (_jniEnvRef, "ToJniObjectReferenceOptions",
+			sig => sig.MethodSignature ().Parameters (1,
+				rt => rt.Type ().Type (_jniObjectReferenceOptionsRef, true),
+				p => {
+					p.AddParameter ().Type ().Type (_jniHandleOwnershipRef, true);
+				}));
+
 		_jniEnvGetStringRef = _pe.AddMemberRef (_jniEnvRef, "GetString",
 			sig => sig.MethodSignature ().Parameters (2,
 				rt => rt.Type ().String (),
@@ -432,10 +497,7 @@ sealed class TypeMapAssemblyEmitter
 				rt => rt.Void (),
 				p => p.AddParameter ().Type ().IntPtr ()));
 
-		_waitForBridgeProcessingRef = _pe.AddMemberRef (_androidRuntimeInternalRef, "WaitForBridgeProcessing",
-			sig => sig.MethodSignature ().Parameters (0, rt => rt.Void (), p => { }));
-
-		_androidEnvironmentUnhandledExceptionRef = _pe.AddMemberRef (_androidEnvironmentInternalRef, "UnhandledException",
+		_androidEnvironmentUnhandledExceptionRef = _pe.AddMemberRef (_androidEnvironmentRef, "UnhandledException",
 			sig => sig.MethodSignature ().Parameters (1,
 				rt => rt.Void (),
 				p => p.AddParameter ().Type ().Type (_exceptionRef, false)));
@@ -598,18 +660,8 @@ sealed class TypeMapAssemblyEmitter
 		return _exportMethodDispatchEmitter;
 	}
 
-	void EmitProxyType (JavaPeerProxyData proxy, Dictionary<UcoWrapperTargetData, MethodDefinitionHandle> wrapperHandles)
+	void EmitProxyType (JavaPeerProxyData proxy, Dictionary<UcoWrapperTargetData, EntityHandle> wrapperHandles)
 	{
-		if (proxy.IsAcw) {
-			// RegisterNatives uses RVA-backed UTF-8 fields under <PrivateImplementationDetails>.
-			// Materialize those helper types before adding the proxy TypeDef, otherwise the
-			// later RegisterNatives method can be attached to the helper type instead.
-			foreach (var reg in proxy.NativeRegistrations) {
-				_pe.GetOrAddUtf8Field (reg.JniMethodName);
-				_pe.GetOrAddUtf8Field (reg.JniSignature);
-			}
-		}
-
 		var metadata = _pe.Metadata;
 		var targetTypeRef = _pe.ResolveTypeRef (proxy.TargetType);
 
@@ -617,21 +669,22 @@ sealed class TypeMapAssemblyEmitter
 		// as a ctor parameter. This keeps TargetType correct for every shape: concrete peers,
 		// open generic definitions (whose T isn't available via the TypeMapLazyDictionary loader),
 		// and interfaces (which have no constructors). Peers are activated from their generated
-		// CreateInstance / InvokerType, never by reflecting over the target type.
-		var proxyBaseType = (EntityHandle) _javaPeerProxyRef;
+		// CreateInstance / InvokerType; only closed instantiations of open generic definitions are
+		// activated by reflection (see EmitCodeForGenericType).
 		var baseCtorRef = _pe.AddMemberRef (_javaPeerProxyRef, ".ctor",
-			sig => sig.MethodSignature (isInstanceMethod: true).Parameters (2,
+			sig => sig.MethodSignature (isInstanceMethod: true).Parameters (3,
 				rt => rt.Void (),
 				p => {
 					p.AddParameter ().Type ().String ();
 					p.AddParameter ().Type ().Type (_systemTypeRef, false);
+					p.AddParameter ().Type ().Boolean ();
 				}));
 
 		var typeDefHandle = metadata.AddTypeDefinition (
 			TypeAttributes.Public | TypeAttributes.Sealed | TypeAttributes.Class,
 			metadata.GetOrAddString (proxy.Namespace),
 			metadata.GetOrAddString (proxy.TypeName),
-			proxyBaseType,
+			_javaPeerProxyRef,
 			MetadataTokens.FieldDefinitionHandle (metadata.GetRowCount (TableIndex.Field) + 1),
 			MetadataTokens.MethodDefinitionHandle (metadata.GetRowCount (TableIndex.MethodDef) + 1));
 
@@ -648,7 +701,8 @@ sealed class TypeMapAssemblyEmitter
 				encoder.LoadString (metadata.GetOrAddUserString (proxy.JniName));
 				encoder.LoadToken (targetTypeRef);
 				encoder.Call (_getTypeFromHandleRef, parameterCount: 1, returnsValue: true);
-				encoder.Call (baseCtorRef, parameterCount: 2, isInstance: true);
+				encoder.LoadConstantI4 (proxy.CanResolveFromSealedTargetType ? 1 : 0);
+				encoder.Call (baseCtorRef, parameterCount: 3, isInstance: true);
 				encoder.Return ();
 			});
 
@@ -672,6 +726,15 @@ sealed class TypeMapAssemblyEmitter
 		foreach (var uco in proxy.UcoConstructors) {
 			var handle = EmitUcoConstructor (uco, proxy);
 			wrapperHandles [UcoWrapperTargetData.From (proxy, uco.WrapperName)] = handle;
+		}
+
+		// Callbacks which are already [UnmanagedCallersOnly] in their own assembly have no wrapper:
+		// RegisterNatives ldftn's them directly. Emitting a forwarder would be illegal, because a
+		// UCO method cannot be called from managed code.
+		foreach (var reg in proxy.NativeRegistrations) {
+			if (reg.DirectCallback is not null) {
+				wrapperHandles [reg.WrapperTarget] = CreateCallbackMemberRef (reg.DirectCallback);
+			}
 		}
 
 		// RegisterNatives
@@ -741,7 +804,7 @@ sealed class TypeMapAssemblyEmitter
 		}
 
 		if (proxy.IsGenericDefinition) {
-			EmitCreateInstanceGenericDefinition ();
+			EmitCodeForGenericType (proxy);
 			return;
 		}
 
@@ -791,13 +854,58 @@ sealed class TypeMapAssemblyEmitter
 		});
 	}
 
-	void EmitCreateInstanceGenericDefinition ()
+	void EmitCodeForGenericType (JavaPeerProxyData proxy)
 	{
 		EmitCreateInstanceBody (encoder => {
 			encoder.LoadString (_pe.Metadata.GetOrAddUserString ("Cannot create instance of open generic type."));
 			encoder.NewObject (_notSupportedExceptionCtorRef, parameterCount: 1);
 			encoder.Throw ();
 		});
+
+		// JavaPeerProxy activates closed instantiations of an open generic peer through the leaf type's
+		// (IntPtr, JniHandleOwnership) constructor. Returning the definition from an annotated override
+		// lets ILLink and ILC keep that constructor for as long as this proxy is kept.
+		if (proxy.ActivationCtor is { IsOnLeafType: true, Style: ActivationCtorStyle.XamarinAndroid }) {
+			EmitGetGenericTargetTypeDefinition (_pe.ResolveTypeRef (proxy.TargetType));
+		}
+	}
+
+	void EmitGetGenericTargetTypeDefinition (EntityHandle targetTypeRef)
+	{
+		_pe.EmitBody ("GetGenericTargetTypeDefinition",
+			MethodAttributes.Family | MethodAttributes.Virtual | MethodAttributes.HideBySig,
+			sig => sig.MethodSignature (isInstanceMethod: true).Parameters (0,
+				rt => rt.Type ().Type (_systemTypeRef, false),
+				p => { }),
+			encoder => {
+				encoder.LoadToken (targetTypeRef);
+				encoder.Call (_getTypeFromHandleRef, parameterCount: 1, returnsValue: true);
+				encoder.Return (returnsValue: true);
+			});
+
+		// The override must match the base method's [return: DynamicallyAccessedMembers] annotation.
+		// The return value's Param row (sequence 0) belongs to the method definition emitted just above.
+		var returnParameter = _pe.Metadata.AddParameter (ParameterAttributes.None, default, sequenceNumber: 0);
+		const int PublicAndNonPublicConstructors = 0x0003 | 0x0004;
+		_pe.Metadata.AddCustomAttribute (returnParameter, GetDynamicallyAccessedMembersAttrCtorRef (),
+			_pe.BuildAttributeBlob (b => b.WriteInt32 (PublicAndNonPublicConstructors)));
+	}
+
+	MemberReferenceHandle GetDynamicallyAccessedMembersAttrCtorRef ()
+	{
+		if (_dynamicallyAccessedMembersAttrCtorRef.IsNil) {
+			var metadata = _pe.Metadata;
+			var codeAnalysis = metadata.GetOrAddString ("System.Diagnostics.CodeAnalysis");
+			var attrRef = metadata.AddTypeReference (_pe.SystemRuntimeRef,
+				codeAnalysis, metadata.GetOrAddString ("DynamicallyAccessedMembersAttribute"));
+			var memberTypesRef = metadata.AddTypeReference (_pe.SystemRuntimeRef,
+				codeAnalysis, metadata.GetOrAddString ("DynamicallyAccessedMemberTypes"));
+			_dynamicallyAccessedMembersAttrCtorRef = _pe.AddMemberRef (attrRef, ".ctor",
+				sig => sig.MethodSignature (isInstanceMethod: true).Parameters (1,
+					rt => rt.Void (),
+					p => p.AddParameter ().Type ().Type (memberTypesRef, true)));
+		}
+		return _dynamicallyAccessedMembersAttrCtorRef;
 	}
 
 	void EmitCreateInstanceViaNewobj (EntityHandle typeRef)
@@ -811,36 +919,17 @@ sealed class TypeMapAssemblyEmitter
 		});
 	}
 
-	void EmitCreateInstanceInheritedCtor (EntityHandle targetTypeRef, ActivationCtorData activationCtor)
-	{
-		var baseActivationCtorRef = AddActivationCtorRef (_pe.ResolveTypeRef (activationCtor.DeclaringType));
-		EmitCreateInstanceBody (encoder => {
-			encoder.LoadToken (targetTypeRef);
-			encoder.Call (_getTypeFromHandleRef, parameterCount: 1, returnsValue: true);
-			encoder.Call (_getUninitializedObjectRef, parameterCount: 1, returnsValue: true);
-			encoder.CastClass (targetTypeRef);
-
-			encoder.OpCode (ILOpCode.Dup);
-			encoder.OpCode (ILOpCode.Ldarg_1);
-			encoder.OpCode (ILOpCode.Ldarg_2);
-			encoder.Call (baseActivationCtorRef, parameterCount: 2, isInstance: true);
-
-			encoder.Return (returnsValue: true);
-		});
-	}
-
 	/// <summary>
 	/// Emits CreateInstance for JavaInterop-style activation (leaf type):
 	///   var jniRef = new JniObjectReference(handle);
-	///   var result = new TargetType(ref jniRef, JniObjectReferenceOptions.Copy);
-	///   JNIEnv.DeleteRef(handle, ownership);
-	///   return result;
+	///   var options = JNIEnv.ToJniObjectReferenceOptions(ownership);
+	///   try { return new TargetType(ref jniRef, options); }
+	///   finally { JNIEnv.DeleteRef(handle, ownership); }
 	/// </summary>
 	void EmitCreateInstanceViaJavaInteropNewobj (EntityHandle typeRef)
 	{
 		var ctorRef = AddJavaInteropActivationCtorRef (typeRef);
-		EmitCreateInstanceBodyWithLocals (
-			EncodeJniObjectReferenceAndObjectLocals,
+		EmitJavaInteropActivationWithCleanup (
 			encoder => {
 				// var jniRef = new JniObjectReference(handle, JniObjectReferenceType.Invalid);
 				encoder.LoadLocalAddress (0);
@@ -848,72 +937,50 @@ sealed class TypeMapAssemblyEmitter
 				encoder.LoadConstantI4 (0); // JniObjectReferenceType.Invalid
 				encoder.Call (_jniObjectReferenceCtorRef, parameterCount: 2, isInstance: true);
 
-				// var result = new TargetType(ref jniRef, JniObjectReferenceOptions.Copy);
+				// var result = new TargetType(ref jniRef, JNIEnv.ToJniObjectReferenceOptions(ownership));
 				encoder.LoadLocalAddress (0);
-				encoder.LoadConstantI4 (1); // JniObjectReferenceOptions.Copy
+				EmitJniObjectReferenceOptions (encoder);
 				encoder.NewObject (ctorRef, parameterCount: 2);
 				encoder.StoreLocal (1); // save result
-
-				// JNIEnv.DeleteRef(handle, ownership);
-				encoder.OpCode (ILOpCode.Ldarg_1); // handle
-				encoder.OpCode (ILOpCode.Ldarg_2); // ownership
-				encoder.Call (_jniEnvDeleteRefRef, parameterCount: 2);
-
-				encoder.LoadLocal (1); // load result
-				encoder.Return (returnsValue: true);
 			});
+	}
+
+	void EmitJavaInteropActivationWithCleanup (Action<TrackedInstructionEncoder> activate)
+	{
+		_pe.EmitBody ("CreateInstance",
+			MethodAttributes.Public | MethodAttributes.Virtual | MethodAttributes.HideBySig,
+			GetCreateInstanceSignature (),
+			(encoder, flow) => {
+				var tryStart = encoder.DefineLabel ();
+				var finallyStart = encoder.DefineLabel ();
+				var returnStart = encoder.DefineLabel ();
+
+				encoder.MarkLabel (tryStart);
+				activate (encoder);
+				encoder.Branch (ILOpCode.Leave, returnStart);
+				encoder.MarkLabel (finallyStart);
+				encoder.OpCode (ILOpCode.Ldarg_1);
+				encoder.OpCode (ILOpCode.Ldarg_2);
+				encoder.Call (_jniEnvDeleteRefRef, parameterCount: 2);
+				encoder.OpCode (ILOpCode.Endfinally);
+				encoder.MarkLabel (returnStart);
+				encoder.LoadLocal (1);
+				encoder.Return (returnsValue: true);
+				flow.AddFinallyRegion (tryStart, finallyStart, finallyStart, returnStart);
+			},
+			EncodeJniObjectReferenceAndObjectLocals);
 	}
 
 	/// <summary>
-	/// Emits CreateInstance for JavaInterop-style activation (inherited ctor):
-	///   var obj = (TargetType)RuntimeHelpers.GetUninitializedObject(typeof(TargetType));
-	///   var jniRef = new JniObjectReference(handle);
-	///   obj.BaseCtor(ref jniRef, JniObjectReferenceOptions.Copy);
-	///   JNIEnv.DeleteRef(handle, ownership);
-	///   return obj;
+	/// Emits the conversion of this method's <c>JniHandleOwnership</c> argument into the
+	/// <c>JniObjectReferenceOptions</c> a Java.Interop-style activation constructor expects,
+	/// by calling <c>JNIEnv.ToJniObjectReferenceOptions (ownership)</c>. The mapping itself
+	/// lives in Mono.Android so it is expressed in readable C# rather than raw IL.
 	/// </summary>
-	void EmitCreateInstanceInheritedJavaInteropCtor (EntityHandle targetTypeRef, ActivationCtorData activationCtor)
+	void EmitJniObjectReferenceOptions (PEAssemblyBuilder.TrackedInstructionEncoder encoder)
 	{
-		var baseCtorRef = AddJavaInteropActivationCtorRef (_pe.ResolveTypeRef (activationCtor.DeclaringType));
-		EmitCreateInstanceBodyWithLocals (
-			EncodeJniObjectReferenceLocal,
-			encoder => {
-				// var obj = (TargetType)RuntimeHelpers.GetUninitializedObject(typeof(TargetType));
-				encoder.LoadToken (targetTypeRef);
-				encoder.Call (_getTypeFromHandleRef, parameterCount: 1, returnsValue: true);
-				encoder.Call (_getUninitializedObjectRef, parameterCount: 1, returnsValue: true);
-				encoder.CastClass (targetTypeRef);
-
-				// dup obj (one copy for the call, one for the return)
-				encoder.OpCode (ILOpCode.Dup);
-
-				// var jniRef = new JniObjectReference(handle, JniObjectReferenceType.Invalid);
-				encoder.LoadLocalAddress (0);
-				encoder.OpCode (ILOpCode.Ldarg_1); // handle
-				encoder.LoadConstantI4 (0); // JniObjectReferenceType.Invalid
-				encoder.Call (_jniObjectReferenceCtorRef, parameterCount: 2, isInstance: true);
-
-				// obj.BaseCtor(ref jniRef, JniObjectReferenceOptions.Copy);
-				encoder.LoadLocalAddress (0);
-				encoder.LoadConstantI4 (1); // JniObjectReferenceOptions.Copy
-				encoder.Call (baseCtorRef, parameterCount: 2, isInstance: true);
-
-				// JNIEnv.DeleteRef(handle, ownership);
-				encoder.OpCode (ILOpCode.Ldarg_1); // handle
-				encoder.OpCode (ILOpCode.Ldarg_2); // ownership
-				encoder.Call (_jniEnvDeleteRefRef, parameterCount: 2);
-
-				encoder.Return (returnsValue: true);
-			});
-	}
-
-	void EncodeJniObjectReferenceLocal (BlobBuilder blob)
-	{
-		// LOCAL_SIG header (0x07), count = 1, ELEMENT_TYPE_VALUETYPE + compressed token
-		blob.WriteByte ((byte) SignatureKind.LocalVariables);
-		blob.WriteCompressedInteger (1); // 1 local variable
-		blob.WriteByte ((byte) SignatureTypeKind.ValueType);
-		blob.WriteCompressedInteger (CodedIndex.TypeDefOrRefOrSpec (_jniObjectReferenceRef));
+		encoder.OpCode (ILOpCode.Ldarg_2);
+		encoder.Call (_jniEnvToJniObjectReferenceOptionsRef, parameterCount: 1, returnsValue: true);
 	}
 
 	void EncodeJniObjectReferenceAndObjectLocals (BlobBuilder blob)
@@ -941,42 +1008,45 @@ sealed class TypeMapAssemblyEmitter
 				}));
 	}
 
-	void EmitCreateInstanceBody (Action<TrackedInstructionEncoder> emitIL)
+	MethodDefinitionHandle EmitCreateInstanceBody (Action<TrackedInstructionEncoder> emitIL)
 	{
-		_pe.EmitBody ("CreateInstance",
+		return _pe.EmitBody ("CreateInstance",
 			MethodAttributes.Public | MethodAttributes.Virtual | MethodAttributes.HideBySig,
-			sig => sig.MethodSignature (isInstanceMethod: true).Parameters (2,
-				rt => rt.Type ().Type (_iJavaPeerableRef, false),
-				p => {
-					p.AddParameter ().Type ().IntPtr ();
-					p.AddParameter ().Type ().Type (_jniHandleOwnershipRef, true);
-				}),
+			GetCreateInstanceSignature (),
 			emitIL);
-	}
-
-	void EmitCreateInstanceBodyWithLocals (Action<BlobBuilder> encodeLocals, Action<TrackedInstructionEncoder> emitIL)
-	{
-		_pe.EmitBody ("CreateInstance",
-			MethodAttributes.Public | MethodAttributes.Virtual | MethodAttributes.HideBySig,
-			sig => sig.MethodSignature (isInstanceMethod: true).Parameters (2,
-				rt => rt.Type ().Type (_iJavaPeerableRef, false),
-				p => {
-					p.AddParameter ().Type ().IntPtr ();
-					p.AddParameter ().Type ().Type (_jniHandleOwnershipRef, true);
-				}),
-			emitIL,
-			encodeLocals);
 	}
 
 	MemberReferenceHandle AddActivationCtorRef (EntityHandle declaringTypeRef)
 	{
-		return _pe.AddMemberRef (declaringTypeRef, ".ctor",
-			sig => sig.MethodSignature (isInstanceMethod: true).Parameters (2,
-				rt => rt.Void (),
-				p => {
-					p.AddParameter ().Type ().IntPtr ();
-					p.AddParameter ().Type ().Type (_jniHandleOwnershipRef, true);
-				}));
+		return _pe.AddMemberRef (declaringTypeRef, ".ctor", GetActivationCtorSignature ());
+	}
+
+	BlobHandle GetActivationCtorSignature ()
+	{
+		if (_activationCtorSignature.IsNil) {
+			_activationCtorSignature = _pe.GetOrAddSignature (
+				sig => sig.MethodSignature (isInstanceMethod: true).Parameters (2,
+					rt => rt.Void (),
+					p => {
+						p.AddParameter ().Type ().IntPtr ();
+						p.AddParameter ().Type ().Type (_jniHandleOwnershipRef, true);
+					}));
+		}
+		return _activationCtorSignature;
+	}
+
+	BlobHandle GetCreateInstanceSignature ()
+	{
+		if (_createInstanceSignature.IsNil) {
+			_createInstanceSignature = _pe.GetOrAddSignature (
+				sig => sig.MethodSignature (isInstanceMethod: true).Parameters (2,
+					rt => rt.Type ().Type (_iJavaPeerableRef, false),
+					p => {
+						p.AddParameter ().Type ().IntPtr ();
+						p.AddParameter ().Type ().Type (_jniHandleOwnershipRef, true);
+					}));
+		}
+		return _createInstanceSignature;
 	}
 
 	MemberReferenceHandle AddManagedCtorRef (EntityHandle declaringTypeRef, IReadOnlyList<TypeRefData> parameterTypes)
@@ -991,30 +1061,36 @@ sealed class TypeMapAssemblyEmitter
 		return _pe.Metadata.AddMemberReference (declaringTypeRef, _pe.Metadata.GetOrAddString (".ctor"), _pe.Metadata.GetOrAddBlob (blob));
 	}
 
-	MethodDefinitionHandle EmitUcoMethod (UcoMethodData uco, JavaPeerProxyData proxy)
+	/// <summary>
+	/// Builds a MemberRef for the real MCW <c>n_*</c> callback, mirroring its signature. JNI boolean
+	/// and char are ambiguous (bool/sbyte, char/ushort) across generator versions, so when we could
+	/// read the real <c>n_*</c> method's signature (NuGet binding implementation assemblies, e.g.
+	/// AndroidX) we use it exactly. When we couldn't — framework callbacks, because the generator
+	/// scans the compile-time *reference* assemblies (Microsoft.Android.Ref) which strip the private
+	/// static <c>n_*</c> methods — we fall back to the blittable encoding (sbyte/ushort). That is
+	/// correct for those callbacks because framework bindings are always produced by the current
+	/// (post-#1296) generator.
+	/// </summary>
+	MemberReferenceHandle CreateCallbackMemberRef (UcoMethodData uco)
 	{
+		var cacheKey = string.Join ("\u001f", new [] {
+			GetTypeRefCacheKey (uco.CallbackType),
+			uco.CallbackMethodName,
+			uco.JniSignature,
+			uco.CallbackReturnTypeName ?? "",
+			uco.CallbackParameterTypeNames is null
+				? "\u0000"
+				: string.Join ("\u001e", uco.CallbackParameterTypeNames),
+		});
+		if (_callbackMemberRefs.TryGetValue (cacheKey, out var existing)) {
+			return existing;
+		}
+
 		var jniParams = JniSignatureHelper.ParseParameterTypes (uco.JniSignature);
 		var returnKind = JniSignatureHelper.ParseReturnType (uco.JniSignature);
 		int paramCount = 2 + jniParams.Count;
 		bool isVoid = returnKind == JniParamKind.Void;
 
-		// UCO wrapper signature: uses JNI ABI types (byte for boolean)
-		Action<BlobEncoder> encodeSig = sig => sig.MethodSignature ().Parameters (paramCount,
-			rt => { if (isVoid) rt.Void (); else JniSignatureHelper.EncodeClrType (rt.Type (), returnKind); },
-			p => {
-				p.AddParameter ().Type ().IntPtr ();
-				p.AddParameter ().Type ().IntPtr ();
-				for (int j = 0; j < jniParams.Count; j++)
-					JniSignatureHelper.EncodeClrType (p.AddParameter ().Type (), jniParams [j]);
-			});
-
-		// Callback member reference: mirror the real MCW n_* method's signature. JNI boolean and char
-		// are ambiguous (bool/sbyte, char/ushort) across generator versions, so when we could read the
-		// real n_* method's signature (NuGet binding implementation assemblies, e.g. AndroidX) we use it
-		// exactly. When we couldn't — framework callbacks, because the generator scans the compile-time
-		// *reference* assemblies (Microsoft.Android.Ref) which strip the private static n_* methods — we
-		// fall back to the blittable encoding (sbyte/ushort). That is correct for those callbacks because
-		// framework bindings are always produced by the current (post-#1296) generator.
 		var capturedParameterTypeNames = uco.CallbackParameterTypeNames;
 		var capturedReturnTypeName = uco.CallbackReturnTypeName;
 		bool hasCapturedCallbackSignature = capturedParameterTypeNames is not null &&
@@ -1044,6 +1120,37 @@ sealed class TypeMapAssemblyEmitter
 
 		var callbackTypeHandle = _pe.ResolveTypeRef (uco.CallbackType);
 		var callbackRef = _pe.AddMemberRef (callbackTypeHandle, uco.CallbackMethodName, encodeCallbackSig);
+		_callbackMemberRefs.Add (cacheKey, callbackRef);
+		return callbackRef;
+	}
+
+	static string GetTypeRefCacheKey (TypeRefData typeRef)
+	{
+		var typeKind = typeRef.EncodeAsValueType ? "valuetype" : "class";
+		if (typeRef.GenericArguments.Count == 0) {
+			return $"{typeKind}:{typeRef.AssemblyName}:{typeRef.ManagedTypeName}";
+		}
+		return $"{typeKind}:{typeRef.AssemblyName}:{typeRef.ManagedTypeName}<{string.Join (",", typeRef.GenericArguments.Select (GetTypeRefCacheKey))}>";
+	}
+
+	MethodDefinitionHandle EmitUcoMethod (UcoMethodData uco, JavaPeerProxyData proxy)
+	{
+		var jniParams = JniSignatureHelper.ParseParameterTypes (uco.JniSignature);
+		var returnKind = JniSignatureHelper.ParseReturnType (uco.JniSignature);
+		int paramCount = 2 + jniParams.Count;
+		bool isVoid = returnKind == JniParamKind.Void;
+
+		// UCO wrapper signature: uses JNI ABI types (byte for boolean)
+		Action<BlobEncoder> encodeSig = sig => sig.MethodSignature ().Parameters (paramCount,
+			rt => { if (isVoid) rt.Void (); else JniSignatureHelper.EncodeClrType (rt.Type (), returnKind); },
+			p => {
+				p.AddParameter ().Type ().IntPtr ();
+				p.AddParameter ().Type ().IntPtr ();
+				for (int j = 0; j < jniParams.Count; j++)
+					JniSignatureHelper.EncodeClrType (p.AddParameter ().Type (), jniParams [j]);
+			});
+
+		var callbackRef = CreateCallbackMemberRef (uco);
 
 		var handle = _pe.EmitBody (uco.WrapperName,
 			MethodAttributes.Public | MethodAttributes.Static | MethodAttributes.HideBySig,
@@ -1066,7 +1173,6 @@ sealed class TypeMapAssemblyEmitter
 		var catchStart = encoder.DefineLabel ();
 		var afterAll = encoder.DefineLabel ();
 
-		encoder.Call (_waitForBridgeProcessingRef, parameterCount: 0);
 		encoder.MarkLabel (tryStart);
 		emitCallback (encoder);
 		if (!isVoid) {
@@ -1177,7 +1283,7 @@ sealed class TypeMapAssemblyEmitter
 		if (uco.HasMatchingManagedCtor) {
 			var ctorRef = AddManagedCtorRef (targetTypeRef, uco.ManagedParameterTypes);
 			var managedCtorHandle = EmitUcoConstructorBody (uco.WrapperName, encodeSig,
-				enc => EmitManagedConstructorActivation (enc, targetTypeRef, ctorRef, uco.ManagedParameterTypes, jniParams),
+				enc => EmitManagedConstructorActivation (enc, targetTypeRef, ctorRef, uco.ManagedParameterTypes, uco.ParameterKinds, jniParams),
 				blob => EncodeUcoConstructorLocals_DefaultConstructor (blob, targetTypeRef));
 			AddUnmanagedCallersOnlyAttribute (managedCtorHandle);
 			return managedCtorHandle;
@@ -1261,11 +1367,13 @@ sealed class TypeMapAssemblyEmitter
 		Action<TrackedInstructionEncoder> emitActivation,
 		Action<BlobBuilder> encodeLocals)
 	{
-		return _pe.EmitBody (wrapperName,
+		var handle = _pe.EmitBody (wrapperName,
 			MethodAttributes.Public | MethodAttributes.Static | MethodAttributes.HideBySig,
 			encodeSig,
 			(encoder, cfb) => EmitUcoConstructorBodyWithMarshal (encoder, cfb, emitActivation),
 			encodeLocals);
+		_pe.AddDebuggerDisableUserUnhandledExceptionsAttribute (handle);
+		return handle;
 	}
 
 	void EmitManagedConstructorActivation (
@@ -1273,6 +1381,7 @@ sealed class TypeMapAssemblyEmitter
 		EntityHandle targetTypeRef,
 		MemberReferenceHandle ctorRef,
 		IReadOnlyList<TypeRefData> managedParameterTypes,
+		IReadOnlyList<ExportParameterKindInfo> parameterKinds,
 		IReadOnlyList<JniParamKind> jniParams)
 	{
 		var havePeer = enc.DefineLabel ();
@@ -1298,7 +1407,8 @@ sealed class TypeMapAssemblyEmitter
 		enc.MarkLabel (havePeer);
 		enc.LoadLocal (4);
 		for (int i = 0; i < managedParameterTypes.Count; i++) {
-			EmitManagedConstructorArgument (enc, managedParameterTypes [i], jniParams [i], i + 2);
+			var parameterKind = i < parameterKinds.Count ? parameterKinds [i] : ExportParameterKindInfo.Unspecified;
+			EmitManagedConstructorArgument (enc, managedParameterTypes [i], parameterKind, jniParams [i], i + 2);
 		}
 		enc.Call (ctorRef, managedParameterTypes.Count, isInstance: true);
 
@@ -1378,95 +1488,15 @@ sealed class TypeMapAssemblyEmitter
 		cfb.AddFinallyRegion (tryStart, finallyStart, finallyStart, afterAll);
 	}
 
-	void EmitManagedConstructorArgument (TrackedInstructionEncoder encoder, TypeRefData managedType, JniParamKind jniKind, int argumentIndex)
+	void EmitManagedConstructorArgument (
+		TrackedInstructionEncoder encoder,
+		TypeRefData managedType,
+		ExportParameterKindInfo exportKind,
+		JniParamKind jniKind,
+		int argumentIndex)
 	{
-		if (managedType.ManagedTypeName == "System.Boolean") {
-			encoder.LoadArgument (argumentIndex);
-			encoder.LoadConstantI4 (0);
-			encoder.OpCode (ILOpCode.Cgt_un);
-			return;
-		}
-
-		if (jniKind != JniParamKind.Object) {
-			encoder.LoadArgument (argumentIndex);
-			return;
-		}
-
-		if (managedType.ManagedTypeName == "System.String") {
-			encoder.LoadArgument (argumentIndex);
-			encoder.LoadConstantI4 (0); // JniHandleOwnership.DoNotTransfer
-			encoder.Call (_jniEnvGetStringRef, parameterCount: 2, returnsValue: true);
-			return;
-		}
-
-		if (TryGetSzArrayElementType (managedType.ManagedTypeName, out var elementType)) {
-			var arrayType = ResolveManagedTypeHandle (managedType.ManagedTypeName, managedType.AssemblyName);
-			var elementTypeHandle = ResolveManagedTypeHandle (elementType, managedType.AssemblyName);
-
-			encoder.LoadArgument (argumentIndex);
-			encoder.LoadConstantI4 (0); // JniHandleOwnership.DoNotTransfer
-			encoder.LoadToken (elementTypeHandle);
-			encoder.Call (_getTypeFromHandleRef, parameterCount: 1, returnsValue: true);
-			encoder.Call (_jniEnvGetArrayRef, parameterCount: 3, returnsValue: true);
-			encoder.CastClass (arrayType);
-			return;
-		}
-
-		encoder.LoadArgument (argumentIndex);
-		encoder.LoadConstantI4 (0); // JniHandleOwnership.DoNotTransfer
-		if (managedType.ManagedTypeName == "System.Object") {
-			encoder.OpCode (ILOpCode.Ldnull);
-			encoder.Call (_javaLangObjectGetObjectRef, parameterCount: 3, returnsValue: true);
-			return;
-		}
-
-		var managedTypeHandle = ResolveManagedTypeHandle (managedType.ManagedTypeName, managedType.AssemblyName);
-		encoder.LoadToken (managedTypeHandle);
-		encoder.Call (_getTypeFromHandleRef, parameterCount: 1, returnsValue: true);
-		encoder.Call (_javaLangObjectGetObjectRef, parameterCount: 3, returnsValue: true);
-		encoder.CastClass (managedTypeHandle);
+		GetExportMethodDispatchEmitter ().LoadManagedArgument (encoder, managedType, exportKind, jniKind, argumentIndex);
 	}
-
-	EntityHandle ResolveRuntimeTypeSpec (RuntimeTypeSpec type)
-	{
-		if (type is NamedRuntimeTypeSpec namedType) {
-			return _pe.ResolveTypeRef (namedType.Type);
-		}
-
-		var blob = new BlobBuilder (64);
-		EncodeRuntimeTypeSpec (blob, type);
-		return _pe.Metadata.AddTypeSpecification (_pe.Metadata.GetOrAddBlob (blob));
-	}
-
-	void EncodeRuntimeTypeSpec (BlobBuilder blob, RuntimeTypeSpec type)
-	{
-		switch (type) {
-		case NamedRuntimeTypeSpec namedType:
-			_pe.WriteTypeSignature (blob, namedType.Type);
-			break;
-		case SzArrayRuntimeTypeSpec arrayType:
-			blob.WriteByte ((byte) SignatureTypeCode.SZArray);
-			EncodeRuntimeTypeSpec (blob, arrayType.ElementType);
-			break;
-		case GenericRuntimeTypeSpec genericType:
-			blob.WriteByte ((byte) SignatureTypeCode.GenericTypeInstance);
-			blob.WriteByte ((byte) SignatureTypeKind.Class);
-			blob.WriteCompressedInteger (CodedIndex.TypeDefOrRefOrSpec (genericType.OpenType));
-			blob.WriteCompressedInteger (1); // generic arity = 1
-			EncodeRuntimeTypeSpec (blob, genericType.Argument);
-			break;
-		default:
-			throw new InvalidOperationException ($"Unsupported runtime type spec '{type.GetType ()}'.");
-		}
-	}
-
-	abstract record RuntimeTypeSpec;
-
-	sealed record NamedRuntimeTypeSpec (TypeRefData Type) : RuntimeTypeSpec;
-
-	sealed record SzArrayRuntimeTypeSpec (RuntimeTypeSpec ElementType) : RuntimeTypeSpec;
-
-	sealed record GenericRuntimeTypeSpec (EntityHandle OpenType, RuntimeTypeSpec Argument) : RuntimeTypeSpec;
 
 	EntityHandle ResolveManagedTypeHandle (string managedType, string defaultAssemblyName)
 	{
@@ -1604,11 +1634,11 @@ sealed class TypeMapAssemblyEmitter
 	}
 
 	void EmitRegisterNatives (JavaPeerProxyData proxy,
-		Dictionary<UcoWrapperTargetData, MethodDefinitionHandle> wrapperHandles)
+		Dictionary<UcoWrapperTargetData, EntityHandle> wrapperHandles)
 	{
 		// Filter to only registrations that have corresponding wrapper methods
 		var registrations = proxy.NativeRegistrations;
-		var validRegs = new List<(NativeRegistrationData Reg, MethodDefinitionHandle Wrapper)> (registrations.Count);
+		var validRegs = new List<(NativeRegistrationData Reg, EntityHandle Wrapper)> (registrations.Count);
 		foreach (var reg in registrations) {
 			if (wrapperHandles.TryGetValue (reg.WrapperTarget, out var wrapperHandle)) {
 				validRegs.Add ((reg, wrapperHandle));
@@ -1626,12 +1656,13 @@ sealed class TypeMapAssemblyEmitter
 			return;
 		}
 
-		// Get or create deduplicated RVA fields for each unique name/signature string.
+		// Method names are unique per registration because R8 member mappings are owner-specific.
+		// Signatures remain safely deduplicated because descriptor class mappings are owner-independent.
 		var nameFields = new FieldDefinitionHandle [validRegs.Count];
 		var sigFields = new FieldDefinitionHandle [validRegs.Count];
 		for (int i = 0; i < validRegs.Count; i++) {
-			nameFields [i] = _pe.GetOrAddUtf8Field (validRegs [i].Reg.JniMethodName);
-			sigFields [i] = _pe.GetOrAddUtf8Field (validRegs [i].Reg.JniSignature);
+			nameFields [i] = _pe.GetUniqueUtf8Field (validRegs [i].Reg.JniMethodName);
+			sigFields [i] = _pe.GetUtf8Field (validRegs [i].Reg.JniSignature);
 		}
 
 		int methodCount = validRegs.Count;
@@ -1721,16 +1752,15 @@ sealed class TypeMapAssemblyEmitter
 	{
 		var ctorRef = entry.IsUnconditional ? _typeMapAttrCtorRef2Arg : _typeMapAttrCtorRef3Arg;
 
-		var blob = _pe.BuildAttributeBlob (b => {
-			b.WriteSerializedString (entry.MapKey);
-			b.WriteSerializedString (entry.ProxyTypeReference);
-			if (!entry.IsUnconditional) {
-				if (entry.TargetTypeReference is null) {
-					throw new InvalidOperationException ($"TargetTypeReference must not be null for conditional entry '{entry.MapKey}'");
-				}
-				b.WriteSerializedString (entry.TargetTypeReference);
+		BlobHandle blob;
+		if (entry.IsUnconditional) {
+			blob = _pe.BuildAttributeBlob (entry.MapKey, entry.ProxyTypeReference);
+		} else {
+			if (entry.TargetTypeReference is null) {
+				throw new InvalidOperationException ($"TargetTypeReference must not be null for conditional entry '{entry.MapKey}'");
 			}
-		});
+			blob = _pe.BuildAttributeBlob (entry.MapKey, entry.ProxyTypeReference, entry.TargetTypeReference);
+		}
 		_pe.Metadata.AddCustomAttribute (EntityHandle.AssemblyDefinition, ctorRef, blob);
 	}
 
@@ -1738,10 +1768,7 @@ sealed class TypeMapAssemblyEmitter
 	{
 		var ctorRef = _typeMapAssociationAttrCtorRef;
 
-		var blob = _pe.BuildAttributeBlob (b => {
-			b.WriteSerializedString (assoc.SourceTypeReference);
-			b.WriteSerializedString (assoc.AliasProxyTypeReference);
-		});
+		var blob = _pe.BuildAttributeBlob (assoc.SourceTypeReference, assoc.AliasProxyTypeReference);
 		_pe.Metadata.AddCustomAttribute (EntityHandle.AssemblyDefinition, ctorRef, blob);
 	}
 

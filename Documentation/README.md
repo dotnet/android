@@ -12,6 +12,7 @@
   * [Submitting Bugs, Feature Requests, and Pull Requests][bugs]
   * [Directory Structure](project-docs/ExploringSources.md)
   * [Assembly store format](project-docs/AssemblyStores.md)
+  * [Java.Interop](Java.Interop/README.md)
 
 [bugs]: https://github.com/dotnet/android/wiki/Submitting-Bugs,-Feature-Requests,-and-Pull-Requests
 
@@ -23,6 +24,7 @@
   * [`.axml` CodeBehind Support](docs-mobile/features/layout-code-behind/index.md)
   * [MSBuild Best Practices](guides/MSBuildBestPractices.md)
   * [D8 and R8 Integration](guides/D8andR8.md)
+  * [Java and managed interoperability](guides/internals/JavaJNI_Interop.md)
   * [Profiling Startup](guides/profiling.md)
 
 

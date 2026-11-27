@@ -1,7 +1,7 @@
 ---
 title: "Creating enumerations"
 description: There are cases where Java Android libraries use integer constants to represent states that are passed to properties or methods of the libraries. For widely distributed bindings, it may useful to bind these integer constants to enums in C# to provide a nicer API for consumers.
-ms.author: jopobst
+ms.author: jopepper
 ms.date: 05/08/2024
 ---
 

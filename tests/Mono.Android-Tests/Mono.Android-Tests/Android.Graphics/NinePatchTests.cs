@@ -5,15 +5,15 @@ using Android.Content.Res;
 using Android.Graphics;
 using Android.Graphics.Drawables;
 using Android.Runtime;
-using NUnit.Framework;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Android.GraphicsTests
 {
 	// https://bugzilla.xamarin.com/show_bug.cgi?id=23823
-	[TestFixture]
+	[TestClass]
 	public class NinePatchTests
 	{
-		static object[] NinePatchDrawables = {
+		public static readonly object [][] NinePatchDrawables = {
 			new object[] {
 				Xamarin.Android.RuntimeTests.Resource.Drawable.image,
 				"image" // Drawable from App project.
@@ -24,25 +24,29 @@ namespace Android.GraphicsTests
 			}
 		};
 
-		[Test, TestCaseSource (nameof (NinePatchDrawables))]
+		[TestMethod, DynamicData (nameof (NinePatchDrawables))]
 		public void DrawableFromRes_ShouldBeTypeNinePatchDrawable (int resId, string name)
 		{
+#pragma warning disable CS0618 // Exercise the legacy resource-loading path for nine-patch images.
 			var d = Application.Context.Resources.GetDrawable (resId);
+#pragma warning restore CS0618
 			Assert.IsNotNull (d, $"An image should have been retrieved from resource `{name}`.");
 			Assert.IsNotNull (d as NinePatchDrawable, $"The drawable created from resource `{name}` should be a NinePatchDrawable.");
 		}
 
-		[Test, TestCaseSource (nameof (NinePatchDrawables))]
+		[TestMethod, DynamicData (nameof (NinePatchDrawables))]
 		public void DrawableFromResStream_ShouldBeTypeNinePatchDrawable (int resId, string name)
 		{
 			var value = new Android.Util.TypedValue ();
 			InputStreamInvoker si = GetResourceStream (resId, value);
+#pragma warning disable CA1422 // Drawable.CreateFromResourceStream overload with BitmapFactory.Options is obsolete since API 28.
 			var d = Drawable.CreateFromResourceStream (Application.Context.Resources, value, si, value.String.ToString (), null);
+#pragma warning restore CA1422
 			Assert.IsNotNull (d, $"An image should have been retrieved from resource `{name}`.");
 			Assert.IsNotNull (d as NinePatchDrawable, $"The drawable created from resource `{name}` should be a NinePatchDrawable.");
 		}
 
-		[Test, TestCaseSource (nameof (NinePatchDrawables))]
+		[TestMethod, DynamicData (nameof (NinePatchDrawables))]
 		public void BitmapFromDecodeRes_ShouldContainNinePatchChunk (int resId, string name)
 		{
 			Bitmap bm = BitmapFactory.DecodeResource (Application.Context.Resources, resId);
@@ -51,7 +55,7 @@ namespace Android.GraphicsTests
 				$"Bitmap decoded from resource `{name}` did not contain a valid NinePatch chunk.");
 		}
 
-		[Test, TestCaseSource (nameof (NinePatchDrawables))]
+		[TestMethod, DynamicData (nameof (NinePatchDrawables))]
 		public void BitmapFromDecodeResStream_ShouldContainNinePatchChunk (int resId, string name)
 		{
 			var value = new Android.Util.TypedValue();
@@ -73,11 +77,15 @@ namespace Android.GraphicsTests
 		IntPtr AssetManager_openNonAsset;
 		IntPtr OpenNonAsset (AssetManager manager, int cookie, string fileName, int accessMode)
 		{
-			if (AssetManager_openNonAsset == IntPtr.Zero)
-				AssetManager_openNonAsset = JNIEnv.GetMethodID (manager.Class.Handle, "openNonAsset", "(ILjava/lang/String;I)Ljava/io/InputStream;");
+			if (AssetManager_openNonAsset == IntPtr.Zero) {
+				using var klass = manager.Class;
+				AssetManager_openNonAsset = JNIEnv.GetMethodID (klass.Handle, "openNonAsset", "(ILjava/lang/String;I)Ljava/io/InputStream;");
+			}
 
 			using (var f = new Java.Lang.String (fileName)) {
-				return JNIEnv.CallObjectMethod (manager.Handle, AssetManager_openNonAsset, new JValue (cookie), new JValue (f), new JValue (accessMode));
+				IntPtr result = JNIEnv.CallObjectMethod (manager.Handle, AssetManager_openNonAsset, new JValue (cookie), new JValue (f), new JValue (accessMode));
+				GC.KeepAlive (manager);
+				return result;
 			}
 		}
 	}
