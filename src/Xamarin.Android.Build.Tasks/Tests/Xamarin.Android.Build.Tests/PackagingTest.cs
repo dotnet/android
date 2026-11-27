@@ -64,8 +64,8 @@ namespace Xamarin.Android.Build.Tests
 			arches = [AndroidTargetArch.Arm64];
 			proj.SetRuntimeIdentifiers (arches);
 			Assert.IsTrue (builder.Build (proj, doNotCleanupOnUpdate: true), "Removing ABIs should succeed.");
-			FileAssert.DoesNotExist (removedStore);
-			FileAssert.DoesNotExist (removedStore + ".manifest");
+			Assert.IsFalse (File.Exists (removedStore));
+			Assert.IsFalse (File.Exists (removedStore + ".manifest"));
 			AssertArchive ();
 
 			void AssertArchive ()

@@ -64,7 +64,8 @@ public class BindingTrimmingTests : TrimmingTestBase
 	}
 
 	// Reading Context.CacheDir keeps only the activation constructor of Java.IO.File, not all of its constructors.
-	[Test]
+	[TestMethod]
+	[CombinatorialData]
 	[Ignore ("https://github.com/dotnet/android/issues/13649: GetObject<T> keeps every constructor of every bound return type.")]
 	public void BoundReturnTypesKeepOnlyTheActivationConstructorWithoutWarnings ([TrimmingConfigurations] TrimmingConfiguration configuration)
 	{
@@ -73,7 +74,8 @@ public class BindingTrimmingTests : TrimmingTestBase
 	}
 
 	// AndroidMessageHandler's authentication modules are removed when PreAuthenticationData is never set.
-	[Test]
+	[TestMethod]
+	[CombinatorialData]
 	public void UnusedAuthenticationModulesAreRemovedWithoutWarnings ([TrimmingConfigurations] TrimmingConfiguration configuration)
 	{
 		var app = BuildAndRun ("Cases/AndroidMessageHandlerAuthModules.cs", configuration);
@@ -81,7 +83,8 @@ public class BindingTrimmingTests : TrimmingTestBase
 	}
 
 	// NativeAOT compiles only the JavaDictionary<TKey,TValue> value-type instantiations the app uses.
-	[Test]
+	[TestMethod]
+	[CombinatorialData]
 	public void UnusedValueTypeDictionariesAreNotCompiledWithoutWarnings ([TrimmingConfigurations] TrimmingConfiguration configuration)
 	{
 		var app = BuildAndRun ("Cases/ValueTypeDictionaryInstantiations.cs", configuration);

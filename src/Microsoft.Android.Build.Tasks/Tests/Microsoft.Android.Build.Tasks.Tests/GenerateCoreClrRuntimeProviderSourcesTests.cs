@@ -25,12 +25,12 @@ public class GenerateCoreClrRuntimeProviderSourcesTests : BaseTest
 		Assert.Contains ("class MonoRuntimeProvider_1", File.ReadAllText (provider));
 	}
 
-	[Test]
+	[TestMethod]
 	public void RemovesObsoleteNumberedProviders ()
 	{
 		var outputDirectory = Path.Combine (Root, "temp", TestName, "android");
 		var task = new GenerateCoreClrRuntimeProviderSources {
-			BuildEngine = new MockBuildEngine (TestContext.Out),
+			BuildEngine = new MockBuildEngine (Console.Out),
 			AdditionalProviderSources = ["MonoRuntimeProvider_1", "MonoRuntimeProvider_2"],
 			OutputDirectory = outputDirectory,
 		};
@@ -46,15 +46,15 @@ public class GenerateCoreClrRuntimeProviderSourcesTests : BaseTest
 
 		task.AdditionalProviderSources = ["MonoRuntimeProvider_1"];
 		Assert.IsTrue (task.Execute ());
-		FileAssert.Exists (first);
-		FileAssert.DoesNotExist (second);
-		FileAssert.Exists (unrelated);
-		FileAssert.Exists (similarName);
+		Assert.IsTrue (File.Exists (first));
+		Assert.IsFalse (File.Exists (second));
+		Assert.IsTrue (File.Exists (unrelated));
+		Assert.IsTrue (File.Exists (similarName));
 		CollectionAssert.AreEquivalent (new [] { second }, task.DeletedSources);
 
 		task.AdditionalProviderSources = [];
 		Assert.IsTrue (task.Execute ());
-		FileAssert.DoesNotExist (first);
+		Assert.IsFalse (File.Exists (first));
 		CollectionAssert.AreEquivalent (new [] { first }, task.DeletedSources);
 	}
 }

@@ -19,29 +19,32 @@ public class JavaPeerActivationTests : TrimmingTestBase
 	}
 
 	// A bound type that the app uses only in a type check of an Android-created object is still activated.
-	[Test]
+	[TestMethod]
+	[CombinatorialData]
 	public void TypeCheckOnJavaCreatedPeerSucceedsWithoutWarnings ([TrimmingConfigurations] TrimmingConfiguration configuration)
 	{
 		if (configuration == TrimmingConfiguration.CoreClrPartialTrimming) {
-			Assert.Ignore ("https://github.com/dotnet/android/issues/13286: ILLink doesn't keep the type map entry of an isinst target in a copied assembly.");
+			Assert.Inconclusive ("https://github.com/dotnet/android/issues/13286: ILLink doesn't keep the type map entry of an isinst target in a copied assembly.");
 		}
 		var app = BuildAndRun ("Cases/TypeCheckOnJavaCreatedPeer.cs", configuration);
 		AssertTrimmingExpectations (app);
 	}
 
 	// A bound type that the app uses only in a cast of an Android-created object is still activated.
-	[Test]
+	[TestMethod]
+	[CombinatorialData]
 	public void CastToJavaCreatedPeerSucceedsWithoutWarnings ([TrimmingConfigurations] TrimmingConfiguration configuration)
 	{
 		if (configuration != TrimmingConfiguration.NativeAot) {
-			Assert.Ignore ("https://github.com/dotnet/android/issues/13286: ILLink doesn't keep the type map entry of a castclass target.");
+			Assert.Inconclusive ("https://github.com/dotnet/android/issues/13286: ILLink doesn't keep the type map entry of a castclass target.");
 		}
 		var app = BuildAndRun ("Cases/CastClassToBoundType.cs", configuration);
 		AssertTrimmingExpectations (app);
 	}
 
 	// JavaAs<T> () returns the interface of a Java object whose most derived binding was trimmed.
-	[Test]
+	[TestMethod]
+	[CombinatorialData]
 	public void JavaAsReturnsInterfaceOfTrimmedClassWithoutWarnings ([TrimmingConfigurations] TrimmingConfiguration configuration)
 	{
 		var app = BuildAndRun ("Cases/JavaAsInterfaceOfTrimmedClass.cs", configuration);
@@ -49,7 +52,8 @@ public class JavaPeerActivationTests : TrimmingTestBase
 	}
 
 	// A Java object is activated through its Java interfaces when its Java superclasses' bindings are trimmed.
-	[Test]
+	[TestMethod]
+	[CombinatorialData]
 	public void InterfaceThroughTrimmedSuperclassIsActivatedWithoutWarnings ([TrimmingConfigurations] TrimmingConfiguration configuration)
 	{
 		var app = BuildAndRun ("Cases/InterfaceThroughTrimmedSuperclass.cs", configuration);
@@ -57,7 +61,8 @@ public class JavaPeerActivationTests : TrimmingTestBase
 	}
 
 	// A Java list is converted to a list of a bound interface type from a runtime Type.
-	[Test]
+	[TestMethod]
+	[CombinatorialData]
 	public void InterfaceElementCollectionsAreConvertedWithoutWarnings ([TrimmingConfigurations] TrimmingConfiguration configuration)
 	{
 		var app = BuildAndRun ("Cases/InterfaceElementCollections.cs", configuration);
@@ -65,7 +70,8 @@ public class JavaPeerActivationTests : TrimmingTestBase
 	}
 
 	// Java creates managed peers through their user constructors: an exception with a cause, and Handler.Post ()'s runnable.
-	[Test]
+	[TestMethod]
+	[CombinatorialData]
 	public void JavaActivatesUserConstructorsWithoutWarnings ([TrimmingConfigurations] TrimmingConfiguration configuration)
 	{
 		var app = BuildAndRun ("Cases/JavaActivatedUserConstructors.cs", configuration);
@@ -93,7 +99,8 @@ public class JavaPeerActivationTests : TrimmingTestBase
 
 	// The case app converts Java collections to IDictionary<string, double>, IDictionary<long, string>, and IList<int> through
 	// JavaConvert, without naming the wrappers; NativeAOT maps the mixed dictionaries' constructors from rooted exemplars.
-	[Test]
+	[TestMethod]
+	[CombinatorialData]
 	public void JavaConvertActivatesValueTypeCollectionWrappersWithoutWarnings ([TrimmingConfigurations] TrimmingConfiguration configuration)
 	{
 		var app = BuildAndRun ("Cases/ValueTypeCollectionConversion.cs", configuration);

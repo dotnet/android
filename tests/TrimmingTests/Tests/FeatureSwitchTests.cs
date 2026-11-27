@@ -1,16 +1,17 @@
 #nullable enable
-using NUnit.Framework;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Microsoft.VisualStudio.TestTools.UnitTesting.Combinatorial;
 
 namespace Microsoft.Android.TrimmingTests;
 
 /// <summary>Feature switches whose defaults depend on the trimming configuration.</summary>
-[TestFixture]
-[Category ("UsesDevice")]
-[Parallelizable (ParallelScope.Children)]
+[TestClass]
+[TestCategory ("UsesDevice")]
 public class FeatureSwitchTests : TrimmingTestBase
 {
 	// DefaultValueAttribute (Type, string) keeps working in partial mode, which suppresses the warning that explains it.
-	[Test]
+	[TestMethod]
+	[CombinatorialData]
 	public void DefaultValueAttributeWorksInPartialModeWithoutWarnings ([TrimmingConfigurations (TrimmingConfiguration.CoreClrPartialTrimming)] TrimmingConfiguration configuration)
 	{
 		var app = BuildAndRun ("Cases/DefaultValueAttributeInPartialMode.cs", configuration);

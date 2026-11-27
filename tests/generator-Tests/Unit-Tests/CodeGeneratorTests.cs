@@ -1338,7 +1338,7 @@ namespace generatortests
 			Assert.AreEqual (11, gens.Single (g => g.Name == "MyClass").Methods.Single (m => m.Name == "DoStuff").DeprecatedSince?.ApiLevel ?? 0);
 		}
 
-		[Test]
+		[TestMethodAttribute]
 		public void ScopedObsoleteAndFinalizeWarningSuppressions ()
 		{
 			options.UseObsoletedOSPlatformAttributes = true;
@@ -1401,7 +1401,7 @@ namespace generatortests
 				namespace Com.Example {
 				""" + "\n" + allSource + "\n}";
 			Compiler.CompileSources ([sourceText], out var hasErrors, out var output, out _, allowWarnings: false);
-			Assert.False (hasErrors, output + "\n" + sourceText);
+			Assert.IsFalse (hasErrors, output + "\n" + sourceText);
 
 			// Verify pragma scoping, restoration, and isolation of unrelated/ObsoletedOSPlatform members.
 			var active = new Dictionary<string, int> (StringComparer.Ordinal);

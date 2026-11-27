@@ -1,16 +1,17 @@
 #nullable enable
-using NUnit.Framework;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Microsoft.VisualStudio.TestTools.UnitTesting.Combinatorial;
 
 namespace Microsoft.Android.TrimmingTests;
 
-[TestFixture]
-[Category ("UsesDevice")]
-[Parallelizable (ParallelScope.Children)]
+[TestClass]
+[TestCategory ("UsesDevice")]
 public class BuildIntegrationTests : TrimmingTestBase
 {
 	// The code generated for layout bindings builds without trimming warnings and finds its views.
-	[Test]
-	[NonParallelizable] // Launches an activity; see TrimmingTestBase.
+	[TestMethod]
+	[CombinatorialData]
+	[DoNotParallelize] // Launches an activity; see TrimmingTestBase.
 	public void LayoutBindingsWorkWithoutWarnings ([TrimmingConfigurations] TrimmingConfiguration configuration)
 	{
 		var app = BuildAndRun ("Cases/LayoutBindings/LayoutBindings.cs", configuration);
@@ -19,7 +20,8 @@ public class BuildIntegrationTests : TrimmingTestBase
 
 	// A user TrimmerRootAssembly item without RootMode metadata builds. BuildTest.TrimmerRootAssemblyWithoutRootMode covers
 	// CoreCLR Release builds, so this only adds NativeAOT.
-	[Test]
+	[TestMethod]
+	[CombinatorialData]
 	public void TrimmerRootAssemblyWithoutRootModeBuildsWithoutWarnings ([TrimmingConfigurations (TrimmingConfiguration.NativeAot)] TrimmingConfiguration configuration)
 	{
 		var app = BuildAndRun ("Cases/TrimmerRootAssemblyWithoutRootMode/TrimmerRootAssemblyWithoutRootMode.cs", configuration);

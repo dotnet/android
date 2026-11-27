@@ -1,15 +1,16 @@
 #nullable enable
-using NUnit.Framework;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Microsoft.VisualStudio.TestTools.UnitTesting.Combinatorial;
 
 namespace Microsoft.Android.TrimmingTests;
 
-[TestFixture]
-[Category ("UsesDevice")]
-[Parallelizable (ParallelScope.Children)]
+[TestClass]
+[TestCategory ("UsesDevice")]
 public class PackageTests : TrimmingTestBase
 {
 	// A binding package whose types are all trimmed doesn't break the type map at startup.
-	[Test]
+	[TestMethod]
+	[CombinatorialData]
 	public void UnusedBindingPackageIsRemovedWithoutWarnings ([TrimmingConfigurations] TrimmingConfiguration configuration)
 	{
 		var app = BuildAndRun ("Cases/UnusedBindingPackage.cs", configuration);
@@ -17,8 +18,9 @@ public class PackageTests : TrimmingTestBase
 	}
 
 	// Library code that reads its Android resource IDs works.
-	[Test]
-	[NonParallelizable] // Launches an activity; see TrimmingTestBase.
+	[TestMethod]
+	[CombinatorialData]
+	[DoNotParallelize] // Launches an activity; see TrimmingTestBase.
 	public void LibraryResourceDesignerIsAvailableWithoutWarnings ([TrimmingConfigurations] TrimmingConfiguration configuration)
 	{
 		var app = BuildAndRun ("Cases/LibraryResourceDesigner.cs", configuration);
@@ -27,7 +29,8 @@ public class PackageTests : TrimmingTestBase
 
 	// A C# listener for a binding interface that registers a compatibility method gets a Java callable wrapper that compiles.
 	// The package's dependencies have mismatched version ranges (NU1608).
-	[Test]
+	[TestMethod]
+	[CombinatorialData]
 	public void CompatibilityMethodListenerCompilesWithoutWarnings ([TrimmingConfigurations] TrimmingConfiguration configuration)
 	{
 		var app = BuildAndRun ("Cases/CompatibilityMethodListener.cs", configuration, expectedWarnings: ["NU1608"]);
