@@ -157,6 +157,74 @@ namespace Java.InteropTests
 			Assert.IsFalse (Volatile.Read (ref missingObject), "GetObject returned null for a nonzero callback instance");
 		}
 
+		const int JNI_EDETACHED = -2;
+
+		[DllImport ("reuse-threads")]
+		static safe extern int rt_get_env_status ();
+
+		[DllImport ("reuse-threads")]
+		static safe extern int rt_use_jni_on_thread_exit ();
+
+		[DllImport ("reuse-threads")]
+		static safe extern int rt_get_thread_exit_jni_result ();
+
+		[TestMethod]
+		public void ManagedThreadIsDetachedOnExit ()
+		{
+			Exception? error = null;
+			Java.Lang.Thread? javaThread = null;
+			var thread = new Thread (() => {
+				try {
+					Assert.AreEqual (JNI_EDETACHED, rt_get_env_status (), "The worker was attached before its first JNI call");
+					Volatile.Write (ref javaThread, Java.Lang.Thread.CurrentThread ());
+				} catch (Exception e) {
+					Volatile.Write (ref error, e);
+				}
+			});
+			thread.Start ();
+			Assert.IsTrue (thread.Join (5000), "The worker did not exit");
+			Assert.IsNull (Volatile.Read (ref error), $"The worker failed: {error}");
+
+			using var exited = Volatile.Read (ref javaThread);
+			Assert.IsNotNull (exited, "The worker has no java.lang.Thread");
+			// The worker is detached by a pthread key destructor, which can run after Join () returns.
+			Assert.IsTrue (WaitUntil (() => !exited.IsAlive), "The worker is still attached to the VM after it exited");
+		}
+
+		[TestMethod]
+		public void NativeDestructorCanUseJniOnThreadExit ()
+		{
+			Exception? error = null;
+			int registered = -1;
+			var thread = new Thread (() => {
+				try {
+					Assert.AreEqual (JNI_EDETACHED, rt_get_env_status (), "The worker was attached before its first JNI call");
+					_ = Java.Lang.JavaSystem.NanoTime ();
+					Volatile.Write (ref registered, rt_use_jni_on_thread_exit ());
+				} catch (Exception e) {
+					Volatile.Write (ref error, e);
+				}
+			});
+			thread.Start ();
+			Assert.IsTrue (thread.Join (5000), "The worker did not exit");
+			Assert.IsNull (Volatile.Read (ref error), $"The worker failed: {error}");
+			Assert.AreEqual (0, Volatile.Read (ref registered), "The native thread-exit destructor was not registered");
+
+			int result = 0;
+			Assert.IsTrue (WaitUntil (() => (result = rt_get_thread_exit_jni_result ()) != 0), "The native thread-exit destructor did not run");
+			Assert.AreEqual (1, result, "The native thread-exit destructor could not use JNI because the thread was already detached");
+		}
+
+		static bool WaitUntil (Func<bool> condition)
+		{
+			for (int i = 0; i < 500; i++) {
+				if (condition ())
+					return true;
+				Thread.Sleep (20);
+			}
+			return condition ();
+		}
+
 		[TestMethod]
 		public void DeleteLrefOnWrongThread ()
 		{

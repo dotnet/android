@@ -322,3 +322,60 @@ rt_register_type_on_new_thread (const char *java_type_name, jobject class_loader
 
 	return (int)(intptr_t)tr;
 }
+
+JNIEXPORT int JNICALL
+rt_get_env_status (void)
+{
+	JNIEnv *env;
+	if (gvm == NULL)
+		return -300;
+	return (*gvm)->GetEnv (gvm, (void**) &env, JNI_VERSION_1_6);
+}
+
+/* Like a native library with per-thread state: its pthread key is created after the runtime's,
+ * and its destructor needs JNI while the thread exits.
+ * Result: 0 = destructor hasn't run, 1 = JNI was usable, 2 = the thread was already detached. */
+static pthread_key_t thread_exit_jni_key;
+static pthread_once_t thread_exit_jni_key_once = PTHREAD_ONCE_INIT;
+static int thread_exit_jni_key_status = -1;
+static int thread_exit_jni_result;
+
+static void
+_use_jni_on_thread_exit (void *data)
+{
+	JNIEnv *env = NULL;
+	int result = 2;
+	if ((*gvm)->GetEnv (gvm, (void**) &env, JNI_VERSION_1_6) == JNI_OK && env != NULL) {
+		jclass Thread_class = (*env)->FindClass (env, "java/lang/Thread");
+		if (Thread_class != NULL) {
+			(*env)->DeleteLocalRef (env, Thread_class);
+			result = 1;
+		} else {
+			(*env)->ExceptionClear (env);
+		}
+	}
+	__atomic_store_n (&thread_exit_jni_result, result, __ATOMIC_SEQ_CST);
+}
+
+static void
+_create_thread_exit_jni_key (void)
+{
+	thread_exit_jni_key_status = pthread_key_create (&thread_exit_jni_key, _use_jni_on_thread_exit);
+}
+
+JNIEXPORT int JNICALL
+rt_use_jni_on_thread_exit (void)
+{
+	if (gvm == NULL)
+		return -300;
+	if (pthread_once (&thread_exit_jni_key_once, _create_thread_exit_jni_key) != 0 || thread_exit_jni_key_status != 0)
+		return -301;
+	__atomic_store_n (&thread_exit_jni_result, 0, __ATOMIC_SEQ_CST);
+	return pthread_setspecific (thread_exit_jni_key, &thread_exit_jni_key);
+}
+
+JNIEXPORT int JNICALL
+rt_get_thread_exit_jni_result (void)
+{
+	return __atomic_load_n (&thread_exit_jni_result, __ATOMIC_SEQ_CST);
+}
