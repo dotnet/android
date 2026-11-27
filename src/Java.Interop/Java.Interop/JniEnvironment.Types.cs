@@ -133,17 +133,16 @@ namespace Java.Interop
 
 				// Class names here are binary/JNI names, so `NewStringUTF()` lets the fallback
 				// avoid a managed UTF-16 allocation while still calling `Class.forName()`.
-				int javaNameLength = checked (classname.Length + 1);
-				Span<byte> javaName = javaNameLength <= 256
-					? stackalloc byte [javaNameLength]
-					: new byte [javaNameLength];
+				Span<byte> javaName = classname.Length + 1 <= 256
+					? stackalloc byte [classname.Length + 1]
+					: new byte [classname.Length + 1];
 
 				classname.Replace (javaName, (byte) '/', (byte) '.');
 				javaName [classname.Length] = 0;
 
 				IntPtr s;
 				unsafe {
-					// SAFETY: Pin the validated NUL-terminated modified UTF-8 name through NewStringUTF on this thread's live JNI environment.
+					// SAFETY: Pin the NUL-terminated name through NewStringUTF on this thread's live JNI environment.
 					fixed (byte* pJavaName = javaName)
 						s = (*((JNIEnv**) env))->NewStringUTF (env, (IntPtr) pJavaName);
 				}
@@ -327,10 +326,9 @@ namespace Java.Interop
 				Span<JniNativeMethod> natives = useStackAllocatedBuffers
 					? stackalloc JniNativeMethod [numMethods]
 					: new JniNativeMethod [numMethods];
-				int unmanagedStringCount = checked (numMethods * 2);
 				Span<IntPtr> unmanagedStrings = useStackAllocatedBuffers
-					? stackalloc IntPtr [unmanagedStringCount]
-					: new IntPtr [unmanagedStringCount];
+					? stackalloc IntPtr [numMethods * 2]
+					: new IntPtr [numMethods * 2];
 				unmanagedStrings.Clear ();
 				try {
 					for (int i = 0; i < numMethods; ++i) {
@@ -484,10 +482,9 @@ namespace Java.Interop
 					return unsafe (TryFindClassFromPtr (info, classname, classname, terminator, throwOnError));
 				}
 
-				int jniClassNameLength = checked (nameLength + 1);
-				Span<byte> jniClassName = jniClassNameLength <= 256
-					? stackalloc byte [jniClassNameLength]
-					: new byte [jniClassNameLength];
+				Span<byte> jniClassName = nameLength + 1 <= 256
+					? stackalloc byte [nameLength + 1]
+					: new byte [nameLength + 1];
 				classname.Slice (0, nameLength).Replace (jniClassName, (byte) '.', (byte) '/');
 				jniClassName [nameLength] = 0;
 
