@@ -14,7 +14,15 @@ namespace Xamarin.Android.Tasks
 	[MSBuildMultiThreadableTask]
 	public class LinkAssembliesNoShrink : AssemblyModifierPipeline
 	{
+		readonly KeepAliveFixupReporter keepAliveFixupReporter;
+
 		public override string TaskPrefix => "LNS";
+
+		public LinkAssembliesNoShrink ()
+		{
+			keepAliveFixupReporter = new KeepAliveFixupReporter (
+				(message, args) => Log.LogCodedWarning ("XA0150", message, args));
+		}
 
 		public bool AddKeepAlives { get; set; }
 
@@ -22,6 +30,12 @@ namespace Xamarin.Android.Tasks
 		public bool EnableLegacyCompatibilityAssemblyFixups { get; set; } = true;
 
 		public bool UseDesignerAssembly { get; set; }
+
+		public override bool RunTask ()
+		{
+			keepAliveFixupReporter.Reset ();
+			return base.RunTask ();
+		}
 
 		protected override void BuildPipeline (AssemblyPipeline pipeline, MSBuildLinkContext context)
 		{
@@ -40,7 +54,7 @@ namespace Xamarin.Android.Tasks
 
 				// AddKeepAlivesStep
 				if (AddKeepAlives) {
-					var addKeepAliveStep = new AddKeepAlivesStep ();
+					var addKeepAliveStep = new AddKeepAlivesStep (keepAliveFixupReporter);
 					addKeepAliveStep.Initialize (context);
 					pipeline.Steps.Add (addKeepAliveStep);
 				}

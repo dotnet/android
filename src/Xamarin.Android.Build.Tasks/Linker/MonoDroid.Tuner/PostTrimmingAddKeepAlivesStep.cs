@@ -15,16 +15,27 @@ class PostTrimmingAddKeepAlivesStep : IAssemblyModifierPipelineStep
 	readonly IMetadataResolver cache;
 	readonly Func<AssemblyDefinition?> getCorlibAssembly;
 	readonly Action<string> logMessage;
+	readonly KeepAliveFixupReporter reporter;
 
-	public PostTrimmingAddKeepAlivesStep (IMetadataResolver cache, Func<AssemblyDefinition?> getCorlibAssembly, Action<string> logMessage)
+	public PostTrimmingAddKeepAlivesStep (
+		IMetadataResolver cache,
+		Func<AssemblyDefinition?> getCorlibAssembly,
+		Action<string> logMessage,
+		KeepAliveFixupReporter reporter)
 	{
 		this.cache = cache;
 		this.getCorlibAssembly = getCorlibAssembly;
 		this.logMessage = logMessage;
+		this.reporter = reporter;
 	}
 
 	public void ProcessAssembly (AssemblyDefinition assembly, StepContext context)
 	{
-		context.IsAssemblyModified |= AddKeepAlivesHelper.AddKeepAlives (assembly, cache, getCorlibAssembly, logMessage);
+		bool changed = AddKeepAlivesHelper.AddKeepAlives (assembly, cache, getCorlibAssembly, logMessage);
+		context.IsAssemblyModified |= changed;
+
+		if (changed) {
+			reporter.Report (assembly, context.Source.ItemSpec);
+		}
 	}
 }

@@ -1,9 +1,11 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using Java.Interop.Tools.Cecil;
 using Mono.Cecil;
 using Mono.Cecil.Cil;
 using Xamarin.Android.Tasks;
+using Resources = Xamarin.Android.Tasks.Properties.Resources;
 
 namespace MonoDroid.Tuner
 {
@@ -115,5 +117,25 @@ namespace MonoDroid.Tuner
 				default: return Instruction.Create (OpCodes.Ldarg, parameter);
 			}
 		}
+	}
+
+	internal sealed class KeepAliveFixupReporter
+	{
+		readonly Action<string, object []> logWarning;
+		readonly HashSet<string> warnedAssemblies = new (StringComparer.Ordinal);
+
+		public KeepAliveFixupReporter (Action<string, object []> logWarning)
+		{
+			this.logWarning = logWarning;
+		}
+
+		public void Report (AssemblyDefinition assembly, string sourcePath)
+		{
+			if (warnedAssemblies.Add (assembly.Name.FullName)) {
+				logWarning (Resources.XA0150, [assembly.Name.Name, sourcePath]);
+			}
+		}
+
+		public void Reset () => warnedAssemblies.Clear ();
 	}
 }
