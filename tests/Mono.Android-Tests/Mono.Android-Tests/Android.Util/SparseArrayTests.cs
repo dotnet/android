@@ -23,11 +23,21 @@ namespace Android.UtilTests {
 		}
 
 		[TestMethod]
-		public void GenericAppendDispatchesToJavaOverride ()
+		public void GenericMethodsDispatchToJavaOverrides ()
 		{
 			using var values = new JavaOverrideSparseArray ();
-			((SparseArray<string>) values).Append (1, "one");
-			Assert.AreEqual (1, values.AppendedKey);
+			SparseArray<string> generic = values;
+
+			generic.Append (1, "one");
+			Assert.AreEqual ("append", values.Called);
+			generic.Put (1, "one");
+			Assert.AreEqual ("put", values.Called);
+			generic.SetValueAt (0, "one");
+			Assert.AreEqual ("setValueAt", values.Called);
+			Assert.AreEqual (42, generic.IndexOfValue ("one"));
+			Assert.AreEqual ("get", generic.Get (1));
+			Assert.AreEqual ("getOrDefault", generic.Get (1, "default"));
+			Assert.AreEqual ("valueAt", generic.ValueAt (0));
 		}
 
 		[TestMethod]
@@ -72,9 +82,20 @@ namespace Android.UtilTests {
 
 			// Give the generated Java subclass its own peer metadata.
 			public override JniPeerMembers JniPeerMembers => members;
-			public int AppendedKey { get; private set; } = -1;
+			public string Called { get; private set; }
 
-			public override void Append (int key, Java.Lang.Object value) => AppendedKey = key;
+			public override void Append (int key, Java.Lang.Object value) => Called = "append";
+			public override void Put (int key, Java.Lang.Object value) => Called = "put";
+			public override void SetValueAt (int index, Java.Lang.Object value) => Called = "setValueAt";
+			public override int IndexOfValue (Java.Lang.Object value) => 42;
+			public override Java.Lang.Object Get (int key, Java.Lang.Object valueIfKeyNotFound) => new Java.Lang.String ("getOrDefault");
+
+			// SparseArray<E> hides the non-generic get(int) and valueAt(int), so export their Java overrides.
+			[Export ("get")]
+			public Java.Lang.Object JavaGet (int key) => new Java.Lang.String ("get");
+
+			[Export ("valueAt")]
+			public Java.Lang.Object JavaValueAt (int index) => new Java.Lang.String ("valueAt");
 		}
 
 		public class ManagedDerivedSparseArray : SparseArray<string> {
