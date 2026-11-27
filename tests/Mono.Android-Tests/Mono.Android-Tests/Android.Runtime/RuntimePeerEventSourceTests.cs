@@ -33,16 +33,16 @@ namespace Android.RuntimeTests
 
 			int managedHash;
 			int jniHash;
-			using (var instance = new Java.Lang.Object ()) {
+			using (var instance = new Java.Lang.Integer (42)) {
 				managedHash = RuntimeHelpers.GetHashCode (instance);
 				jniHash = instance.JniIdentityHashCode;
 			}
 
 			var events = listener.GetEventsForManagedObject (managedHash);
 			Assert.AreEqual (3, events.Count, "Expected JavaPeerCreated, ManagedPeerReleasedJavaPeer, and JavaPeerReleasedManagedPeer.");
-			AssertLifecycleEvent (events [0], RuntimeEventSource.JavaPeerCreatedEventId, "JavaPeerCreated", jniHash, managedHash);
-			AssertLifecycleEvent (events [1], RuntimeEventSource.ManagedPeerReleasedJavaPeerEventId, "ManagedPeerReleasedJavaPeer", jniHash, managedHash);
-			AssertLifecycleEvent (events [2], RuntimeEventSource.JavaPeerReleasedManagedPeerEventId, "JavaPeerReleasedManagedPeer", jniHash, managedHash);
+			AssertLifecycleEvent (events [0], RuntimeEventSource.JavaPeerCreatedEventId, "JavaPeerCreated", "Java.Lang.Integer", "java/lang/Integer", jniHash, managedHash);
+			AssertLifecycleEvent (events [1], RuntimeEventSource.ManagedPeerReleasedJavaPeerEventId, "ManagedPeerReleasedJavaPeer", "Java.Lang.Integer", "java/lang/Integer", jniHash, managedHash);
+			AssertLifecycleEvent (events [2], RuntimeEventSource.JavaPeerReleasedManagedPeerEventId, "JavaPeerReleasedManagedPeer", "Java.Lang.Integer", "java/lang/Integer", jniHash, managedHash);
 		}
 
 		[TestMethod]
@@ -50,27 +50,27 @@ namespace Android.RuntimeTests
 		{
 			using var listener = new PeerEventListener (RuntimeEventSource.PeerLifecycleKeyword);
 
-			IntPtr klass = JNIEnv.FindClass ("java/lang/Object");
-			Assert.AreNotEqual (IntPtr.Zero, klass, "Failed to resolve java/lang/Object class.");
 			int managedHash;
 			int jniHash;
-			try {
-				IntPtr ctor = JNIEnv.GetMethodID (klass, "<init>", "()V");
-				IntPtr handle = JNIEnv.NewObject (klass, ctor);
-				Assert.AreNotEqual (IntPtr.Zero, handle, "Failed to create java/lang/Object instance.");
+			using (var type = new JniType ("java/lang/Object")) {
+				var ctor = type.GetConstructor ("()V");
+				JniObjectReference handle;
+				unsafe {
+					// SAFETY: The live type's no-argument constructor is invoked without arguments.
+					handle = JniEnvironment.Object.NewObject (type.PeerReference, ctor);
+				}
+				Assert.IsTrue (handle.IsValid, "Failed to create java/lang/Object instance.");
 
-				using var wrapper = Java.Lang.Object.GetObject<Java.Lang.Object> (handle, JniHandleOwnership.TransferLocalRef);
+				using var wrapper = Java.Lang.Object.GetObject<Java.Lang.Object> (handle.Handle, JniHandleOwnership.TransferLocalRef);
 				Assert.IsNotNull (wrapper);
 				managedHash = RuntimeHelpers.GetHashCode (wrapper);
 				jniHash = wrapper.JniIdentityHashCode;
-			} finally {
-				JNIEnv.DeleteLocalRef (klass);
 			}
 
 			var created = listener.GetEventsForManagedObject (managedHash)
 				.FindAll (e => e.EventId == RuntimeEventSource.ManagedPeerCreatedEventId);
 			Assert.AreEqual (1, created.Count, "Expected one ManagedPeerCreated event.");
-			AssertLifecycleEvent (created [0], RuntimeEventSource.ManagedPeerCreatedEventId, "ManagedPeerCreated", jniHash, managedHash);
+			AssertLifecycleEvent (created [0], RuntimeEventSource.ManagedPeerCreatedEventId, "ManagedPeerCreated", "Java.Lang.Object", "java/lang/Object", jniHash, managedHash);
 		}
 
 		[TestMethod]
@@ -124,13 +124,13 @@ namespace Android.RuntimeTests
 			Microsoft.Android.Runtime.RuntimeFeature.IsCoreClrRuntime ? "CoreCLR" :
 			"Unknown";
 
-		static void AssertLifecycleEvent (CapturedEvent captured, int eventId, string eventName, int jniHash, int managedHash)
+		static void AssertLifecycleEvent (CapturedEvent captured, int eventId, string eventName, string managedType, string javaType, int jniHash, int managedHash)
 		{
 			Assert.AreEqual (eventId, captured.EventId);
 			Assert.AreEqual (eventName, captured.EventName);
 			Assert.AreEqual (5, captured.Payload.Count);
-			Assert.AreEqual ("Java.Lang.Object", captured.Payload [0]);
-			Assert.AreEqual ("java/lang/Object", captured.Payload [1]);
+			Assert.AreEqual (managedType, captured.Payload [0]);
+			Assert.AreEqual (javaType, captured.Payload [1]);
 			Assert.AreEqual (jniHash, captured.Payload [2]);
 			Assert.AreEqual (managedHash, captured.Payload [3]);
 			Assert.AreEqual (ExpectedRuntimeFlavor, captured.Payload [4]);
