@@ -5,12 +5,17 @@
   <Import Project="..\..\build-tools\scripts\Xamarin.Android.Tools.Versioning.targets" />
 
   <PropertyGroup>
+    <!--
+      CA1305 - SDK/JDK discovery and user-facing messages preserve historical formatting.
+    -->
+    <NoWarn>$(NoWarn);CA1305</NoWarn>
     <AndroidToolsDisableMultiTargeting Condition=" '$(AndroidToolsDisableMultiTargeting)' == '' ">true</AndroidToolsDisableMultiTargeting>
     <TargetFrameworks>netstandard2.0</TargetFrameworks>
     <TargetFrameworks Condition=" '$(AndroidToolsDisableMultiTargeting)' != 'true' ">$(TargetFrameworks);$(DotNetTargetFramework)</TargetFrameworks>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <Nullable>enable</Nullable>
-    <NoWarn>$(NoWarn);CA1305;CA5350</NoWarn>
+    <DefineConstants>INTERNAL_NULLABLE_ATTRIBUTES</DefineConstants>
+    <UseProjectNullableAttributes>true</UseProjectNullableAttributes>
     <SignAssembly>true</SignAssembly>
     <AssemblyOriginatorKeyFile>..\..\product.snk</AssemblyOriginatorKeyFile>
     <Title>Xamarin.Android.Tools</Title>

@@ -107,10 +107,10 @@ namespace Xamarin.Android.Tasks
 			}
 
 			if (minSdk is not null) {
-				cmd.AppendSwitchIfNotNull ("--min-sdk-version ", minSdk.ToString ());
+				cmd.AppendSwitchIfNotNull ("--min-sdk-version ", minSdk.Value.ToString ());
 			}
 			if (maxSdk is not null) {
-				cmd.AppendSwitchIfNotNull ("--max-sdk-version ", maxSdk.ToString ());
+				cmd.AppendSwitchIfNotNull ("--max-sdk-version ", maxSdk.Value.ToString ());
 			}
 
 

@@ -8,13 +8,20 @@
     <TargetFramework>$(DotNetStableTargetFramework)</TargetFramework>
   </PropertyGroup>
   <PropertyGroup>
-    <NoWarn>$(NoWarn);1591;CS8981</NoWarn>
+    <!--
+      CS1591 - Historical Java.Interop public interop APIs include members without XML documentation.
+      CS8981 - Lowercase aliases mirror JNI typedef names such as jobject.
+    -->
+    <NoWarn>$(NoWarn);CS1591;CS8981</NoWarn>
     <SignAssembly>true</SignAssembly>
     <AssemblyOriginatorKeyFile>..\..\product.snk</AssemblyOriginatorKeyFile>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <Nullable>enable</Nullable>
     <ProduceReferenceAssembly>true</ProduceReferenceAssembly>
     <MSBuildWarningsAsMessages>NU1702</MSBuildWarningsAsMessages>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
+    <DefineConstants>DEBUG;$(DefineConstants)</DefineConstants>
   </PropertyGroup>
   <Import Project="..\..\build-tools\trim-analyzers\trim-analyzers.props" />
   <PropertyGroup>

@@ -1,12 +1,16 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
+    <!--
+      CA1019 - Test attributes intentionally model legacy wrappers without public argument accessors.
+      CA1813 - Test attribute types remain unsealed to preserve their historical fixture shape.
+    -->
+    <NoWarn>$(NoWarn);CA1019;CA1813</NoWarn>
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
     <Version>11.0.0</Version>
     <TargetFramework>$(DotNetStableTargetFramework)</TargetFramework>
     <IsPackable>false</IsPackable>
     <DefineConstants>$(DefineConstants);HAVE_CECIL;JCW_ONLY_TYPE_NAMES</DefineConstants>
-    <NoWarn>$(NoWarn);CA1019;CA1813</NoWarn>
   </PropertyGroup>
 
   <Import Project="..\..\Configuration.props" />

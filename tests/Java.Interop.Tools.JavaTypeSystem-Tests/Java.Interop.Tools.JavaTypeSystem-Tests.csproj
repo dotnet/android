@@ -6,6 +6,8 @@
     <TargetFramework>$(DotNetStableTargetFramework)</TargetFramework>
     <IsPackable>false</IsPackable>
     <RootNamespace>Java.Interop.Tools.JavaTypeSystem.Tests</RootNamespace>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <MSBuildTreatWarningsAsErrors>true</MSBuildTreatWarningsAsErrors>
   </PropertyGroup>
 
   <Import Project="..\..\Configuration.props" />

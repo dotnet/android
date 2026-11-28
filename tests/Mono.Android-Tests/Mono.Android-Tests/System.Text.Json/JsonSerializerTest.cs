@@ -1,5 +1,6 @@
 using System;
 using System.Diagnostics.CodeAnalysis;
+using System.Runtime.CompilerServices;
 using System.Text.Json;
 
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -10,25 +11,29 @@ namespace System.Text.JsonTests {
 	public class JsonSerializerTest {
 
 		[TestMethod]
+		[RequiresDynamicCode ("Tests reflection-based JSON serialization.")]
 		[RequiresUnreferencedCode ("Tests trimming unsafe features")]
 		public void Serialize ()
 		{
-			// FIXME: https://github.com/dotnet/android/issues/8724
-			#pragma warning disable IL3050
-			string text = JsonSerializer.Serialize(42);
-			#pragma warning restore IL3050
-			Assert.AreEqual("42", text);
+			if (RuntimeFeature.IsDynamicCodeSupported) {
+				string text = JsonSerializer.Serialize (42);
+				Assert.AreEqual ("42", text);
+			} else {
+				Assert.Inconclusive ("Reflection-based JSON serialization requires dynamic code.");
+			}
 		}
 
 		[TestMethod]
+		[RequiresDynamicCode ("Tests reflection-based JSON deserialization.")]
 		[RequiresUnreferencedCode ("Tests trimming unsafe features")]
 		public void Deserialize ()
 		{
-			// FIXME: https://github.com/dotnet/android/issues/8724
-			#pragma warning disable IL3050
-			object value = JsonSerializer.Deserialize("42", typeof(int));
-			#pragma warning restore IL3050
-			Assert.AreEqual(42, value);
+			if (RuntimeFeature.IsDynamicCodeSupported) {
+				object value = JsonSerializer.Deserialize ("42", typeof (int));
+				Assert.AreEqual (42, value);
+			} else {
+				Assert.Inconclusive ("Reflection-based JSON deserialization requires dynamic code.");
+			}
 		}
 	}
 }
