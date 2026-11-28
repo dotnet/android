@@ -1,5 +1,9 @@
 <Project>
 
+  <PropertyGroup Condition=" '$(TargetFrameworkIdentifier)' == '.NETCoreApp' and $([MSBuild]::VersionGreaterThanOrEquals($(TargetFrameworkVersion.TrimStart('v')), '12.0')) ">
+    <Features>$(Features);runtime-async=on</Features>
+  </PropertyGroup>
+
   <PropertyGroup>
     <SourceLinkGitHubPackageVersion Condition=" '$(SourceLinkGitHubPackageVersion)' == '' ">8.0.0</SourceLinkGitHubPackageVersion>
   </PropertyGroup>

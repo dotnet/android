@@ -169,8 +169,7 @@ public class JavaMarshalGCBridgeTests
 			CreatePeerCycle (roots, out first, out second, out ulong firstHandle, out ulong secondHandle);
 			await GCBridgeTestHelpers.WaitForBridgeRoundsAsync (testContext.CancellationToken);
 
-			Assert.IsTrue (first.TryGetTarget (out _) && second.TryGetTarget (out _),
-				"All peers in the managed cycle should survive while Java roots one peer.");
+			AssertPeersAreAlive (first, second);
 			AssertCycleSurvivedJavaCollection (listener, firstHandle, secondHandle);
 		} finally {
 			roots.Dispose ();
@@ -179,6 +178,14 @@ public class JavaMarshalGCBridgeTests
 		await GCBridgeTestHelpers.CollectUnreachablePeersAsync (testContext.CancellationToken);
 		Assert.IsFalse (first.TryGetTarget (out _) || second.TryGetTarget (out _),
 			"Both peers should be collected after releasing the Java root.");
+	}
+
+	[MethodImpl (MethodImplOptions.NoInlining)]
+	static void AssertPeersAreAlive (WeakReference<BridgeCyclePeer> first, WeakReference<BridgeCyclePeer> second)
+	{
+		// Keep TryGetTarget's strong-reference temporaries out of the async frame used during collection.
+		Assert.IsTrue (first.TryGetTarget (out _) && second.TryGetTarget (out _),
+			"All peers in the managed cycle should survive while Java roots one peer.");
 	}
 
 	[MethodImpl (MethodImplOptions.NoInlining)]
