@@ -647,7 +647,12 @@ struct JniProxyCacheBuilder
 		}
 
 		multiple ??= new List<JavaPeerProxy> (2) { firstProxy };
-		multiple.Add (proxy);
+		// Debug collects separate library universes, so generator alias ordering is not enough.
+		if (multiple [0].TargetType.IsGenericTypeDefinition && !proxy.TargetType.IsGenericTypeDefinition) {
+			multiple.Insert (0, proxy);
+		} else {
+			multiple.Add (proxy);
+		}
 	}
 
 	public object Build ()

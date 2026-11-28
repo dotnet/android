@@ -1,0 +1,5 @@
+<Project>
+  <ItemGroup>
+    <AndroidJavaSource Update="AliasPeer.java" Bind="false" />
+  </ItemGroup>
+</Project>

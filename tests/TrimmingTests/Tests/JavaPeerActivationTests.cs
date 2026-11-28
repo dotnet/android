@@ -17,6 +17,14 @@ public class JavaPeerActivationTests : TrimmingTestBase
 		AssertTrimmingExpectations (app);
 	}
 
+	// Untyped Java activation must prefer a non-generic binding when two libraries bind the same Java class.
+	[Test]
+	public void UntypedJavaActivationPrefersNonGenericBindingWithoutWarnings ([TrimmingConfigurations] TrimmingConfiguration configuration)
+	{
+		var app = BuildAndRun ("Cases/GenericBindingAliases/GenericBindingAliases.cs", configuration);
+		AssertTrimmingExpectations (app);
+	}
+
 	// A bound type that the app uses only in a type check of an Android-created object is still activated.
 	[Test]
 	public void TypeCheckOnJavaCreatedPeerSucceedsWithoutWarnings ([TrimmingConfigurations] TrimmingConfiguration configuration)

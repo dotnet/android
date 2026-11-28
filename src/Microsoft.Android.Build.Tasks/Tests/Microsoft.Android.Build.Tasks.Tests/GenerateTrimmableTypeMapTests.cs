@@ -18,6 +18,44 @@ namespace Xamarin.Android.Build.Tests {
 	public class GenerateTrimmableTypeMapTests : BaseTest {
 
 		[Test]
+		public void AliasResolutionPrefersNonGenericBinding (
+			[Values ("AGenericBinding", "Mono.Android")] string genericAssembly,
+			[Values] bool reverseOrder)
+		{
+			JavaPeerInfo CreatePeer (string ns, string name, string assemblyName, bool generic) => new JavaPeerInfo {
+				JavaName = "example/AliasPeer",
+				CompatJniName = "example/AliasPeer",
+				ManagedTypeName = $"{ns}.{name}",
+				ManagedTypeNamespace = ns,
+				ManagedTypeShortName = name,
+				AssemblyName = assemblyName,
+				IsGenericDefinition = generic,
+				DoNotGenerateAcw = true,
+				ActivationCtor = new ActivationCtorInfo {
+					DeclaringTypeName = $"{ns}.{name}",
+					DeclaringAssemblyName = assemblyName,
+					DeclaringType = new TypeRefData { ManagedTypeName = $"{ns}.{name}", AssemblyName = assemblyName },
+					Style = ActivationCtorStyle.XamarinAndroid,
+				},
+			};
+			var genericPeer = CreatePeer ("A", "GenericPeer`1", genericAssembly, generic: true);
+			var nonGenericPeer = CreatePeer ("Z", "NonGenericPeer", "ZNonGenericBinding", generic: false);
+			var peers = reverseOrder
+				? new List<JavaPeerInfo> { nonGenericPeer, genericPeer }
+				: new List<JavaPeerInfo> { genericPeer, nonGenericPeer };
+
+			var model = new TypeMapAssemblyGenerator (new Version (12, 0)).CreateModel (peers, "_Alias.TypeMap");
+			var aliases = model.AliasHolders.Single ();
+			var firstEntry = model.Entries.Single (entry => entry.MapKey == aliases.AliasKeys [0]);
+			var firstProxy = model.ProxyTypes.Single (proxy =>
+				firstEntry.ProxyTypeReference == $"{proxy.Namespace}.{proxy.TypeName}, _Alias.TypeMap");
+
+			Assert.AreEqual ("Z.NonGenericPeer", firstProxy.TargetType.ManagedTypeName,
+				"An untyped Java-to-managed lookup must prefer a non-generic binding, regardless of assembly or type-name order.");
+			Assert.AreEqual (2, model.ProxyTypes.Count, "The generic binding must remain available for closed-generic lookups.");
+		}
+
+		[Test]
 		public void SealedFrameworkProxiesPassIsSealedToBase (
 			[Values ("Mono.Android", "Other")] string assemblyName,
 			[Values] bool isSealed,

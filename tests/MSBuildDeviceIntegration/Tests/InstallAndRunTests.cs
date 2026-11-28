@@ -95,6 +95,65 @@ namespace Xamarin.Android.Build.Tests
 			StartActivityAndAssert (proj);
 		}
 
+		[Test]
+		public void TrimmableTypeMapGenericBindingAliases (
+			[Values] bool reverseReferences)
+		{
+			const string success = "NON_GENERIC_BINDING_ACTIVATED";
+			var proj = new XamarinAndroidApplicationProject (
+				packageName: PackageUtils.MakePackageName (AndroidRuntime.CoreCLR, "genericalias"));
+			proj.SetRuntime (AndroidRuntime.CoreCLR);
+			proj.SetRuntimeIdentifiers ([DeviceAbi]);
+			proj.SetDefaultTargetDevice ();
+			var caseDirectory = Path.Combine (XABuildPaths.TopDirectory, "tests", "TrimmingTests", "Cases", "GenericBindingAliases");
+			var libraries = new [] { ("AGenericBinding", "GenericPeer.cs"), ("ZNonGenericBinding", "NonGenericPeer.cs") };
+			foreach (var (name, source) in reverseReferences ? libraries.Reverse () : libraries) {
+				var library = new XamarinAndroidLibraryProject { ProjectName = name };
+				library.Sources.Add (new BuildItem.Source (source) {
+					TextContent = () => File.ReadAllText (Path.Combine (caseDirectory, name, source)),
+				});
+				library.AndroidResources.Clear ();
+				library.SetProperty ("AndroidGenerateResourceDesigner", "false");
+				proj.AddReference (library);
+				proj.OtherBuildItems.Add (new BuildItem ("TrimmerRootAssembly", library.ProjectName));
+				using var libraryBuilder = CreateDllBuilder (Path.Combine ("temp", TestName, library.ProjectName));
+				Assert.IsTrue (libraryBuilder.Build (library), $"{library.ProjectName} should build.");
+			}
+			proj.AndroidJavaSources.Add (new AndroidItem.AndroidJavaSource ("example/AliasPeer.java") {
+				TextContent = () => "package example; public class AliasPeer {}",
+				Encoding = new UTF8Encoding (encoderShouldEmitUTF8Identifier: false),
+				Metadata = { { "Bind", "False" } },
+			});
+			proj.MainActivity = proj.DefaultMainActivity.Replace ("//${AFTER_ONCREATE}", """
+				var runtime = Java.Interop.JniEnvironment.Runtime;
+				var mappedType = runtime.TypeManager.GetType (new Java.Interop.JniTypeSignature ("example/AliasPeer"));
+				var reference = new Java.Interop.JniObjectReference (
+					Android.Runtime.JNIEnv.CreateInstance ("example/AliasPeer", "()V"), Java.Interop.JniObjectReferenceType.Local);
+				using var peer = runtime.ValueManager.CreatePeer (
+					ref reference, Java.Interop.JniObjectReferenceOptions.CopyAndDispose, targetType: null);
+				using var genericPeer = Java.Lang.Object.GetObject<A.GenericPeer<Java.Lang.Object>> (
+					Android.Runtime.JNIEnv.CreateInstance ("example/AliasPeer", "()V"), Android.Runtime.JniHandleOwnership.TransferLocalRef);
+				if (mappedType != typeof (Z.NonGenericPeer) || peer?.GetType () != typeof (Z.NonGenericPeer) ||
+						genericPeer?.GetType () != typeof (A.GenericPeer<Java.Lang.Object>)) {
+					throw new InvalidOperationException ($"Wrong peers: {mappedType}, {peer?.GetType ()}, {genericPeer?.GetType ()}");
+				}
+				Android.Util.Log.Info ("GenericAliases", "NON_GENERIC_BINDING_ACTIVATED");
+				""");
+
+			using var builder = CreateApkBuilder (Path.Combine ("temp", TestName, "App"));
+			Assert.IsTrue (builder.Install (proj), "The two-library alias app should install.");
+			ClearAdbLogcat ();
+			AdbStartActivity ($"{proj.PackageName}/{proj.JavaPackageName}.MainActivity");
+			try {
+				Assert.IsTrue (MonitorAdbLogcat (line => line.Contains (success, StringComparison.Ordinal),
+					Path.Combine (Root, builder.ProjectDirectory, "generic-alias-logcat.log"),
+					ActivityStartTimeoutInSeconds),
+					"Untyped activation should use the non-generic binding and closed-generic activation should still work.");
+			} finally {
+				Assert.IsTrue (builder.Uninstall (proj), "The alias app should uninstall.");
+			}
+		}
+
 		[TestCase (true)]
 		[TestCase (false)]
 		public void CoreCLRAssemblyStoreConcurrentLoads (bool compressed)
