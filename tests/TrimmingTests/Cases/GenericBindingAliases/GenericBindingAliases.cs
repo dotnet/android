@@ -11,19 +11,24 @@
 
 using System;
 using Android.App;
-using Android.OS;
 using Android.Runtime;
 using Microsoft.Android.TrimmingTests.Expectations;
 
 [assembly: KeptTypeInAssembly ("AGenericBinding", "A.GenericPeer`1")]
 [assembly: KeptTypeInAssembly ("ZNonGenericBinding", "Z.NonGenericPeer")]
 
-[Activity (Label = "GenericBindingAliases", MainLauncher = true)]
-public class MainActivity : Activity
+[Instrumentation (Name = "net.dot.trimmingtests.CaseInstrumentation")]
+public class CaseInstrumentation : Instrumentation
 {
-	protected override void OnCreate (Bundle? savedInstanceState)
+	// Android creates instrumentations before the runtime starts, so their peer is activated later through this constructor.
+	public CaseInstrumentation (IntPtr handle, JniHandleOwnership transfer)
+		: base (handle, transfer)
 	{
-		base.OnCreate (savedInstanceState);
+	}
+
+	public override void CallApplicationOnCreate (Application? app)
+	{
+		base.CallApplicationOnCreate (app);
 		try {
 			var runtime = Java.Interop.JniEnvironment.Runtime;
 			var mappedType = runtime.TypeManager.GetType (new Java.Interop.JniTypeSignature ("example/AliasPeer"));

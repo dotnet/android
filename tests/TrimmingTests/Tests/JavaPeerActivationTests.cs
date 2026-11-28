@@ -19,7 +19,6 @@ public class JavaPeerActivationTests : TrimmingTestBase
 
 	// Untyped Java activation must prefer a non-generic binding when two libraries bind the same Java class.
 	[Test]
-	[NonParallelizable]
 	public void UntypedJavaActivationPrefersNonGenericBindingWithoutWarnings ([TrimmingConfigurations] TrimmingConfiguration configuration)
 	{
 		var app = BuildAndRun ("Cases/GenericBindingAliases/GenericBindingAliases.cs", configuration);
