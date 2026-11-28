@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -7,8 +8,6 @@ using NUnit.Framework;
 using Xamarin.Android.Tasks;
 using Xamarin.Android.Tools;
 using Microsoft.Android.Build.Tasks;
-using TPL = System.Threading.Tasks;
-using System.Threading;
 
 namespace Xamarin.Android.Build.Tests
 {
@@ -24,6 +23,13 @@ namespace Xamarin.Android.Build.Tests
 			messages = new List<BuildMessageEventArgs> ();
 			tempDirectory = Path.Combine (Path.GetTempPath (), Path.GetRandomFileName ());
 			Directory.CreateDirectory (tempDirectory);
+		}
+
+		[TearDown]
+		public void TearDown ()
+		{
+			if (Directory.Exists (tempDirectory))
+				Directory.Delete (tempDirectory, recursive: true);
 		}
 
 		string NewFile (string fileName = "")
@@ -141,26 +147,36 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test, Category ("SmokeTests")]
-		public async TPL.Task DirectoryInUseWithRetry ()
+		public void DirectoryInUseWithRetry ()
 		{
-			if (OS.IsMac) {
-				Assert.Ignore ("This is not an issue on macos.");
+			if (!IsWindows) {
+				Assert.Ignore ("An open file only prevents directory deletion on Windows.");
 				return;
 			}
-			var file = NewFile ();
+			using var locked = File.OpenWrite (NewFile ());
 			var task = CreateTask ();
-			var ev = new ManualResetEvent (false);
-			var t = TPL.Task.Run (async () => {
-				using (var f = File.OpenWrite (file)) {
-					ev.Set ();
-					await TPL.Task.Delay (2500);
+			task.RetryDelayMs = 0;
+			int attempts = 0;
+			bool firstAttemptFailed = false;
+			task.DeleteDirectory = (path, recursive) => {
+				attempts++;
+				if (attempts > 1) {
+					Directory.Delete (path, recursive);
+					return;
 				}
-			});
-			ev.WaitOne ();
+				try {
+					Directory.Delete (path, recursive);
+				} catch (Exception e) when (e is IOException || e is UnauthorizedAccessException) {
+					firstAttemptFailed = true;
+					locked.Dispose ();
+					throw;
+				}
+			};
 			Assert.IsTrue (task.Execute (), "task.Execute() should have succeeded.");
+			Assert.IsTrue (firstAttemptFailed, "The first attempt should fail because the file is locked.");
+			Assert.AreEqual (2, attempts, "Deletion should succeed on the first retry after the lock is released.");
 			Assert.AreEqual (1, task.RemovedDirectories.Length, "Changes should have been made.");
 			DirectoryAssert.DoesNotExist (tempDirectory);
-			await t;
 		}
 
 		[Test]
@@ -185,27 +201,37 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		public async TPL.Task DirectoryInUseWithCustomRetry ()
+		public void DirectoryInUseWithCustomRetry ()
 		{
-			if (!OS.IsWindows) {
-				Assert.Ignore ("This is not an issue on non-Windows platforms.");
-				return;
-			}
-			var file = NewFile ();
-			// Test with default retry behavior 
-			var task = CreateTask ();
-			var ev = new ManualResetEvent (false);
-			var t = TPL.Task.Run (async () => {
-				using (var f = File.OpenWrite (file)) {
-					ev.Set ();
-					await TPL.Task.Delay (800); // Should succeed on first retry with default timing
-				}
-			});
-			ev.WaitOne ();
+			var task = CreateTaskWithRetry (retryAttempts: 3, retryDelayMs: 0);
+			int attempts = 0;
+			task.DeleteDirectory = (path, recursive) => {
+				if (++attempts <= 3)
+					throw SharingViolation ();
+				Directory.Delete (path, recursive);
+			};
 			Assert.IsTrue (task.Execute (), "task.Execute() should have succeeded.");
+			Assert.AreEqual (4, attempts, "Deletion should be retried three times.");
 			Assert.AreEqual (1, task.RemovedDirectories.Length, "Changes should have been made.");
 			DirectoryAssert.DoesNotExist (tempDirectory);
-			await t;
 		}
+
+		[Test]
+		public void DirectoryInUseWithNoRetry ()
+		{
+			var task = CreateTaskWithRetry (retryAttempts: 0, retryDelayMs: 0);
+			int attempts = 0;
+			task.DeleteDirectory = (path, recursive) => {
+				attempts++;
+				throw SharingViolation ();
+			};
+			Assert.IsFalse (task.Execute (), "task.Execute() should have failed.");
+			Assert.AreEqual (1, attempts, "Deletion should not be retried.");
+			Assert.AreEqual (0, task.RemovedDirectories.Length, "Changes should not have been made.");
+			DirectoryAssert.Exists (tempDirectory);
+		}
+
+		static IOException SharingViolation () =>
+			new IOException ("Simulated sharing violation.", unchecked ((int) 0x80070020));
 	}
 }

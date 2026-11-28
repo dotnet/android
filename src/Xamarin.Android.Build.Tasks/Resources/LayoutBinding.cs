@@ -106,7 +106,10 @@ namespace Xamarin.Android.Design
 #pragma warning restore CA1422
 
 #if __HAVE_ANDROIDX__
-		protected T FindFragment<T> (int resourceId, global::AndroidX.Fragment.App.Fragment? __ignoreMe, ref T? cachedField)
+		protected T FindFragment<
+				[DynamicallyAccessedMembers (Constructors)]
+				T
+		> (int resourceId, global::AndroidX.Fragment.App.Fragment? __ignoreMe, ref T? cachedField)
 			where T : global::AndroidX.Fragment.App.Fragment
 		{
 			return __FindFragment(resourceId, (activity) => {

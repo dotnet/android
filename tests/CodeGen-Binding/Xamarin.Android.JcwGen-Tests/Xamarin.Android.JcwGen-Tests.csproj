@@ -5,8 +5,6 @@
 
   <PropertyGroup>
     <TargetFramework>$(DotNetAndroidTargetFramework)</TargetFramework>
-    <LangVersion>preview</LangVersion>
-    <MemorySafetyRulesVersion>2</MemorySafetyRulesVersion>
     <SupportedOSPlatformVersion>$(AndroidMinimumDotNetApiLevel)</SupportedOSPlatformVersion>
     <OutputType>Exe</OutputType>
     <Nullable>enable</Nullable>
@@ -21,9 +19,15 @@
 
   <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
     <TrimMode Condition=" '$(TrimMode)' == '' ">full</TrimMode>
+    <!-- MSTest's referenced-fixture scan is trim-unsafe on CoreCLR.
+         Keep IL2026 visible as a warning for this project, not just that call. -->
+    <WarningsNotAsErrors Condition=" '$(PublishAot)' != 'true' ">$(WarningsNotAsErrors);IL2026</WarningsNotAsErrors>
+    <TrimmerSingleWarn>false</TrimmerSingleWarn>
   </PropertyGroup>
 
   <ItemGroup>
+    <!-- The Android instrumentation builds its runner with telemetry disabled, not through desktop builder hooks. -->
+    <TestingPlatformBuilderHook Remove="98058041-B5B6-4A75-9834-58E6DF796A22" />
     <Compile Include="../../Mono.Android-Tests/Java.Interop-Tests/Java.Interop/JniReferenceLeakMeasurement.cs" Link="JniReferenceLeakMeasurement.cs" />
     <AndroidJavaSource Include="../Xamarin.Android.McwGen-Tests/java/**/*.java" />
     <Compile Remove="TimingTests.cs" />
@@ -39,6 +43,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <TrimmerRootDescriptor Include="Linker.xml" />
     <RuntimeHostConfigurationOption Include="IncludeCategories" Value="$(IncludeCategories)" Condition=" '$(IncludeCategories)' != '' " />
     <!-- Retained until exact rootless NativeAOT execution is possible: JavaAbstractMethodTest
          already aborts in ic.NewMethod() with both the original NUnit and native MSTest runners. -->

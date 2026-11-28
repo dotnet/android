@@ -35,10 +35,13 @@ namespace generator.SourceWriters
 
 		public static void AddField (TypeWriter tw, GenBase type, Field field, CodeGenerationOptions opt)
 		{
+			bool? isShadow = tw is InterfaceConstsClass
+				? GenBase.RequiresNewForSystemObject (field.Name)
+				: (bool?) null;
 			if (field.NeedsProperty)
-				tw.Properties.Add (new BoundFieldAsProperty (type, field, opt));
+				tw.Properties.Add (new BoundFieldAsProperty (type, field, opt, isShadow));
 			else
-				tw.Fields.Add (new BoundField (type, field, opt));
+				tw.Fields.Add (new BoundField (type, field, opt, isShadow));
 		}
 
 		public static bool AddFields (TypeWriter tw, GenBase gen, List<Field> fields, HashSet<string> seen, CodeGenerationOptions opt, CodeGeneratorContext context)
@@ -135,7 +138,7 @@ namespace generator.SourceWriters
 			foreach (var r in refs)
 				tw.Fields.Add (new WeakImplementorField (r, opt));
 
-			tw.Methods.Add (new CreateImplementorMethod (iface, opt));
+			tw.Methods.Add (new CreateImplementorMethod (iface, target, opt));
 		}
 
 		// Parameter 'setListenerMethod' refers to the method used to set the listener, like 'addOnRoutingChangedListener'/'setOnRoutingChangedListener'.
@@ -187,7 +190,7 @@ namespace generator.SourceWriters
 						.FirstOrDefault ();
 					var hasHandlerArgument = mt != null && mt.IsListenerConnector && mt.Parameters.Count == 2 && mt.Parameters [1].Type == "Android.OS.Handler";
 
-					tw.Events.Add (new InterfaceListenerEvent (iface, setListenerMethod, name, nameSpec, full_delegate_name, connector_fmt, add, remove, hasHandlerArgument, opt));
+					tw.Events.Add (new InterfaceListenerEvent (iface, target, setListenerMethod, name, nameSpec, full_delegate_name, connector_fmt, add, remove, hasHandlerArgument, opt));
 				}
 			} else {
 				if (opt.GetSafeIdentifier (name) != name) {
@@ -195,8 +198,8 @@ namespace generator.SourceWriters
 					return;
 				}
 
-				tw.Properties.Add (new InterfaceListenerPropertyImplementor (iface, name, opt));
-				tw.Properties.Add (new InterfaceListenerProperty (iface, name, nameSpec, method.AdjustedName, full_delegate_name, opt));
+				tw.Properties.Add (new InterfaceListenerPropertyImplementor (iface, name, opt, target));
+				tw.Properties.Add (new InterfaceListenerProperty (iface, name, nameSpec, method.AdjustedName, full_delegate_name, opt, target));
 			}
 		}
 
@@ -442,6 +445,105 @@ namespace generator.SourceWriters
 			// Here it makes sense to still write 'android15' because it will be missing in later versions like `android35`.
 			if (since > 0)
 				attributes.Add (new UnsupportedOSPlatformAttr (since));
+		}
+
+		internal static bool WillEmitObsolete (string message, CodeGenerationOptions opt, bool forceDeprecate = false, AndroidSdkVersion? deprecatedSince = null)
+		{
+			if ((!forceDeprecate && !message.HasValue ()) || message == "not deprecated")
+				return false;
+
+			if (opt.UseObsoletedOSPlatformAttributes && deprecatedSince.HasValue && deprecatedSince.Value > opt.MinimumApiLevel)
+				return false;
+
+			return true;
+		}
+
+		internal static bool IsTypeObsolete (GenBase type, CodeGenerationOptions opt)
+		{
+			for (var t = type; t != null; t = t.Unnest ? null : t.DeclaringType) {
+				if (WillEmitObsolete (t.DeprecatedComment, opt, forceDeprecate: t.IsDeprecated, deprecatedSince: t.DeprecatedSince))
+					return true;
+			}
+			return false;
+		}
+
+		internal static bool IsSymbolObsolete (ISymbol symbol, CodeGenerationOptions opt)
+		{
+			if (symbol == null)
+				return false;
+			if (symbol is GenBase gen)
+				return IsTypeObsolete (gen, opt);
+			if (symbol is ArraySymbol arr)
+				return IsSymbolObsolete (arr.ElementSymbol, opt);
+			if (symbol is GenericSymbol gs)
+				return IsSymbolObsolete (gs.Gen, opt) || gs.TypeParams?.Any (tp => IsSymbolObsolete (tp, opt)) == true;
+			if (symbol is CollectionSymbol cs)
+				return cs.TypeParams?.Any (tp => IsSymbolObsolete (tp, opt)) == true;
+			return false;
+		}
+
+		internal static bool ReferencesObsoleteType (MethodBase method, CodeGenerationOptions opt)
+		{
+			if (method == null)
+				return false;
+			if (method is Method m && IsSymbolObsolete (m.RetVal?.Symbol, opt))
+				return true;
+			return method.Parameters.Any (p => IsSymbolObsolete (p.Symbol, opt));
+		}
+
+		internal static bool ReferencesObsoleteType (Property property, CodeGenerationOptions opt)
+		{
+			if (property == null)
+				return false;
+			return ReferencesObsoleteType (property.Getter, opt) || ReferencesObsoleteType (property.Setter, opt);
+		}
+
+		internal static bool WillBaseMethodEmitObsolete (GenBase type, Method method, CodeGenerationOptions opt)
+		{
+			var bm = type.FindOverriddenBaseMethod (method, opt);
+			if (bm == null)
+				return false;
+			return WillEmitObsolete (bm.Deprecated, opt, deprecatedSince: bm.DeprecatedSince);
+		}
+
+		internal static bool WillBasePropertyEmitObsolete (GenBase gen, Property property, CodeGenerationOptions opt)
+		{
+			var baseProp = gen.BaseSymbol?.GetPropertyByName (property.Name, true);
+			if (baseProp == null || baseProp.Getter == null)
+				return false;
+			// BoundAbstractProperty never emits [Obsolete].
+			if (baseProp.Getter.IsAbstract || (baseProp.Setter?.IsAbstract ?? false))
+				return false;
+			if (!baseProp.IsWholePropertyDeprecated)
+				return false;
+			return WillEmitObsolete (baseProp.Getter.Deprecated.Trim (), opt, deprecatedSince: baseProp.Getter.DeprecatedSince);
+		}
+
+		internal static void AddDisabledWarning (ref List<string> warnings, string code)
+		{
+			warnings ??= new List<string> ();
+			warnings.Add (code);
+		}
+
+		internal static void WriteWithWarningsDisabled (CodeWriter writer, bool disable, string code, Action write)
+		{
+			if (disable)
+				writer.WriteLineNoIndent ($"#pragma warning disable {code}");
+			write ();
+			if (disable)
+				writer.WriteLineNoIndent ($"#pragma warning restore {code}");
+		}
+
+		internal static void WriteWithWarningsDisabled (CodeWriter writer, IReadOnlyList<string> warnings, Action write)
+		{
+			if (warnings != null && warnings.Count > 0) {
+				var codes = string.Join (", ", warnings);
+				writer.WriteLineNoIndent ($"#pragma warning disable {codes}");
+				write ();
+				writer.WriteLineNoIndent ($"#pragma warning restore {codes}");
+			} else {
+				write ();
+			}
 		}
 
 		public static void AddObsolete (List<AttributeWriter> attributes, string message, CodeGenerationOptions opt, bool forceDeprecate = false, bool isError = false, AndroidSdkVersion? deprecatedSince = null)

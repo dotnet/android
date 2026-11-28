@@ -7,8 +7,8 @@
 #include <xamarin-app.hh>
 #include <host/assembly-store.hh>
 #include <runtime-base/crc32.hh>
+#include <runtime-base/mutex.hh>
 #include <runtime-base/util.hh>
-#include <runtime-base/startup-aware-lock.hh>
 #include <runtime-base/zstd.hh>
 
 using namespace xamarin::android;
@@ -115,7 +115,7 @@ auto AssemblyStore::get_assembly_data (AssemblyStoreSingleAssemblyRuntimeData &e
 		};
 
 		if (!is_loaded ()) {
-			StartupAwareLock decompress_lock (assembly_data_mutex);
+			lock_guard decompress_lock (assembly_data_mutex);
 
 			if (is_loaded ()) {
 				set_assembly_data_and_size (data_buffer, cad.uncompressed_file_size, assembly_data, assembly_data_size);
@@ -163,7 +163,7 @@ auto AssemblyStore::get_assembly_data (AssemblyStoreSingleAssemblyRuntimeData &e
 		// requested identity, so subsequent probes reuse the same process-lifetime image.
 		uint8_t *rw_pointer = __atomic_load_n (&e.writable_image_data, __ATOMIC_ACQUIRE);
 		if (rw_pointer == nullptr) {
-			StartupAwareLock copy_lock (assembly_data_mutex);
+			lock_guard copy_lock (assembly_data_mutex);
 			rw_pointer = __atomic_load_n (&e.writable_image_data, __ATOMIC_ACQUIRE);
 			if (rw_pointer == nullptr) {
 				log_debugf (LOG_ASSEMBLY, "Copying assembly data to an r/w memory area");

@@ -82,3 +82,78 @@ stages:
     - template: /build-tools/automation/yaml-templates/fail-on-issue.yaml
       parameters:
         condition: ${{ parameters.shouldFailOnIssue }}
+
+  # Purpose-built apps that check what trimming keeps and removes; see tests/TrimmingTests.
+  - job: ${{ parameters.job_name }}_trimming
+    displayName: "macOS > Tests > Trimming+Emulator"
+    # One job per configuration: each case builds a Release app, which takes 1-2 minutes on a hosted agent.
+    strategy:
+      matrix:
+        CoreClrFullTrimming:
+          TrimmingConfiguration: CoreClrFullTrimming
+          TrimmingTestFilter: Name~CoreClrFullTrimming
+        NativeAot:
+          TrimmingConfiguration: NativeAot
+          TrimmingTestFilter: Name~NativeAot
+        # Also runs the tests that don't take a configuration.
+        CoreClrPartialTrimming:
+          TrimmingConfiguration: CoreClrPartialTrimming
+          TrimmingTestFilter: Name!~CoreClrFullTrimming&Name!~NativeAot
+    pool:
+      name: Azure Pipelines
+      vmImage: $(HostedMacImageWithEmulator)
+      os: macOS
+    timeoutInMinutes: 180
+    cancelTimeoutInMinutes: 5
+    workspace:
+      clean: all
+    steps:
+    - template: /build-tools/automation/yaml-templates/setup-test-environment.yaml
+      parameters:
+        installApkDiff: false
+        xaSourcePath: ${{ parameters.xaSourcePath }}
+        repositoryAlias: ${{ parameters.repositoryAlias }}
+        commit: ${{ parameters.commit }}
+        use1ESTemplate: ${{ parameters.use1ESTemplate }}
+
+    - task: DownloadPipelineArtifact@2
+      inputs:
+        artifactName: $(TestAssembliesArtifactName)
+        downloadPath: ${{ parameters.xaSourcePath }}/bin/Test$(XA.Build.Configuration)
+
+    - template: /build-tools/automation/yaml-templates/run-dotnet-preview.yaml@self
+      parameters:
+        project: Microsoft.Android.slnx
+        arguments: -t:PrepareOpenJDK -c $(XA.Build.Configuration) --no-restore
+        displayName: prepare OpenJDK $(XA.Build.Configuration)
+        continueOnError: false
+
+    - template: /build-tools/automation/yaml-templates/start-stop-emulator.yaml
+      parameters:
+        xaSourcePath: ${{ parameters.xaSourcePath }}
+        startContinueOnError: ${{ parameters.emulatorStartContinueOnError }}
+
+    # Two tests at a time share the emulator, matching [assembly: LevelOfParallelism (2)].
+    - template: /build-tools/automation/yaml-templates/run-nunit-tests.yaml
+      parameters:
+        testAssembly: ${{ parameters.xaSourcePath }}/bin/Test$(XA.Build.Configuration)/TrimmingTests/$(DotNetStableTargetFramework)/TrimmingTests.dll
+        testRunTitle: TrimmingTests On Device - macOS - $(TrimmingConfiguration)
+        dotNetTestExtraArgs: --filter "$(TrimmingTestFilter)"
+        workers: 2
+        timeoutInMinutes: 120
+
+    - ${{ if ne(parameters.usesCleanImages, true) }}:
+      - template: start-stop-emulator.yaml
+        parameters:
+          command: stop
+          xaSourcePath: ${{ parameters.xaSourcePath }}
+
+    - template: /build-tools/automation/yaml-templates/upload-results.yaml
+      parameters:
+        artifactName: Test Results - Trimming With Emulator - macOS - $(TrimmingConfiguration)
+        xaSourcePath: ${{ parameters.xaSourcePath }}
+        use1ESTemplate: ${{ parameters.use1ESTemplate }}
+
+    - template: /build-tools/automation/yaml-templates/fail-on-issue.yaml
+      parameters:
+        condition: ${{ parameters.shouldFailOnIssue }}

@@ -84,11 +84,11 @@ namespace Java.Interop.Tools.Generator.Enumification
 			// - A,0,,0,Java.MyEnum,None
 			// - E,1,java/class/member1,1,Java.MyEnum,Member1
 			// - E,1,java/class/member2,2,Java.MyEnum,Member2
-			var sorted = constants.Where (c => c.JavaSignature.HasValue ()).OrderBy (c => c.JavaSignature).ToList ();
+			var sorted = constants.Where (c => c.JavaSignature.HasValue ()).OrderBy (c => c.JavaSignature, StringComparer.Ordinal).ToList ();
 
 			// Try to put members without signatures at the beginning of the section with
 			// their fellow enum members. If not, put them at the end of the list.
-			foreach (var c in constants.Where (c => !c.JavaSignature.HasValue ()).OrderBy (c => $"{c.EnumFullType}.{c.EnumMember}")) {
+			foreach (var c in constants.Where (c => !c.JavaSignature.HasValue ()).OrderBy (c => $"{c.EnumFullType}.{c.EnumMember}", StringComparer.Ordinal)) {
 				var sibling_index = sorted.FindIndex (c2 => c2.EnumFullType == c.EnumFullType);
 
 				if (sibling_index >= 0)

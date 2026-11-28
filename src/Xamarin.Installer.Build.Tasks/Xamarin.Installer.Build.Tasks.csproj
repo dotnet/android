@@ -2,11 +2,9 @@
   <Import Project="$(MSBuildThisFileDirectory)..\..\Configuration.props" />
   <PropertyGroup>
     <NoWarn>$(NoWarn);CA1305</NoWarn>
-    <MemorySafetyRulesVersion>2</MemorySafetyRulesVersion>
   </PropertyGroup>
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
-    <LangVersion>preview</LangVersion>
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
     <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
     <OutputPath>$(MicrosoftAndroidSdkOutDir)</OutputPath>
@@ -22,6 +20,7 @@
     </None>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="..\Xamarin.Android.Tools.AndroidSdk\SdkPackageListParser.cs" Link="SdkPackageListParser.cs" />
     <ProjectReference Include="..\Xamarin.Android.Tools.AndroidSdk\Xamarin.Android.Tools.AndroidSdk.csproj" />
     <ProjectReference Include="..\Microsoft.Android.Build.BaseTasks\Microsoft.Android.Build.BaseTasks.csproj" />
   </ItemGroup>

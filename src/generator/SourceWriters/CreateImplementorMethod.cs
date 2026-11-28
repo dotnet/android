@@ -10,13 +10,22 @@ namespace generator.SourceWriters
 {
 	public class CreateImplementorMethod : MethodWriter
 	{
-		public CreateImplementorMethod (InterfaceGen iface, CodeGenerationOptions opt)
+		readonly bool suppress_obsolete_warning;
+
+		public CreateImplementorMethod (InterfaceGen iface, ClassGen target, CodeGenerationOptions opt)
 		{
 			Name = $"__Create{iface.Name}Implementor";
 
 			ReturnType = new TypeReferenceWriter ($"{opt.GetOutputName (iface.FullName)}Implementor");
 
 			Body.Add ($"return new {opt.GetOutputName (iface.FullName)}Implementor ({(iface.NeedsSender ? "this" : "")});");
+
+			suppress_obsolete_warning = !SourceWriterExtensions.IsTypeObsolete (target, opt) && SourceWriterExtensions.IsTypeObsolete (iface, opt);
+		}
+
+		public override void Write (CodeWriter writer)
+		{
+			SourceWriterExtensions.WriteWithWarningsDisabled (writer, suppress_obsolete_warning, "0618", () => base.Write (writer));
 		}
 	}
 }

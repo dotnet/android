@@ -4,6 +4,12 @@
 
   <PropertyGroup>
     <DirectoryBuildPropsImported>true</DirectoryBuildPropsImported>
+    <!-- Updated memory-safety rules require preview; removal is tracked in:
+         https://github.com/dotnet/android/issues/13085
+         Use the property instead of Features: satellite compilation forwards Features but not LangVersion.
+         https://github.com/dotnet/sdk/issues/56839 -->
+    <MemorySafetyRulesVersion>2</MemorySafetyRulesVersion>
+    <LangVersion Condition=" '$(LangVersion)' == '' ">preview</LangVersion>
     <DotNetTargetFrameworkVersion>12.0</DotNetTargetFrameworkVersion>
     <DotNetTargetFramework>net$(DotNetTargetFrameworkVersion)</DotNetTargetFramework>
     <DotNetAndroidTargetFramework>$(DotNetTargetFramework)-android</DotNetAndroidTargetFramework>
@@ -63,9 +69,6 @@
       This can be opted into locally with $(_AndroidTreatWarningsAsErrors) = true.
     -->
     <_AllowProjectWarnings Condition=" '$(MSBuildProjectFile)' == 'Mono.Android.csproj' ">true</_AllowProjectWarnings>
-    <_AllowProjectWarnings Condition=" '$(MSBuildProjectFile)' == 'NativeAOT.csproj' ">true</_AllowProjectWarnings>
-    <_AllowProjectWarnings Condition=" '$(MSBuildProjectFile)' == 'TestRunner.Core.NET.csproj' ">true</_AllowProjectWarnings>
-    <_AllowProjectWarnings Condition=" '$(MSBuildProjectFile)' == 'Xamarin.Android.JcwGen-Tests.csproj' ">true</_AllowProjectWarnings>
     <TreatWarningsAsErrors Condition=" ('$(RunningOnCI)' == 'true' OR '$(_AndroidTreatWarningsAsErrors)' == 'true') AND '$(_AllowProjectWarnings)' != 'true' ">true</TreatWarningsAsErrors>
   </PropertyGroup>
 

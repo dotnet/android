@@ -107,6 +107,17 @@ namespace generatortests
 		}
 
 		[Test]
+		[SetCulture ("tr-TR")]
+		public void CreateField_UsesInvariantCasing ()
+		{
+			var klass = new TestClass ("object", "MyNamespace.MyType");
+			var xml = XDocument.Parse ("<field name=\"item_info\" />");
+			var field = XmlApiImporter.CreateField (klass, xml.Root);
+
+			Assert.AreEqual ("ItemInfo", field.Name);
+		}
+
+		[Test]
 		public void CreateField_EnsureValidName ()
 		{
 			var klass = new TestClass ("object", "MyNamespace.MyType");

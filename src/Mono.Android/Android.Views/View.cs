@@ -40,46 +40,39 @@ namespace Android.Views {
 
 		public bool Post (Action action)
 		{
-			var runnable    = new Java.Lang.Thread.RunnableImplementor (action, removable: true);
-			if (Post (runnable)) {
-				return true;
-			}
-			runnable.Dispose ();
-			return false;
+			return Post (Java.Lang.Thread.RunnableImplementor.GetOrCreate (this, action));
 		}
 
 		public bool PostDelayed (Action action, long delayMillis)
 		{
-			var runnable    = new Java.Lang.Thread.RunnableImplementor (action, removable: true);
-			if (PostDelayed (runnable, delayMillis)) {
-				return true;
-			}
-			runnable.Dispose ();
-			return false;
+			return PostDelayed (Java.Lang.Thread.RunnableImplementor.GetOrCreate (this, action), delayMillis);
 		}
 
 		public bool RemoveCallbacks (Action action)
 		{
-			var runnable = Java.Lang.Thread.RunnableImplementor.Remove (action);
-			if (runnable == null)
-				return false;
-			bool result = RemoveCallbacks (runnable);
-			runnable.Dispose ();
-			return result;
+			bool removed = false;
+			var runnable = Java.Lang.Thread.RunnableImplementor.Find (this, action);
+			if (runnable != null)
+				removed = RemoveCallbacks (runnable);
+			// Also cancel drawable callbacks scheduled through this View's ScheduleDrawable (who, Action, long).
+			foreach (var scheduled in Java.Lang.Thread.RunnableImplementor.FindAllScheduled (this, action))
+				removed |= RemoveCallbacks (scheduled);
+			return removed;
 		}
 
 		public void ScheduleDrawable (Android.Graphics.Drawables.Drawable who, Action what, long when)
 		{
-			ScheduleDrawable (who, new Java.Lang.Thread.RunnableImplementor (what, true), when);
+			ScheduleDrawable (who, Java.Lang.Thread.RunnableImplementor.GetOrCreateScheduled (this, who, what), when);
 		}
 
 		public void UnscheduleDrawable (Android.Graphics.Drawables.Drawable who, Action what)
 		{
-			var runnable = Java.Lang.Thread.RunnableImplementor.Remove (what);
-			if (runnable == null)
-				return;
-			UnscheduleDrawable (who, runnable);
-			runnable.Dispose ();
+			var scheduled = Java.Lang.Thread.RunnableImplementor.FindScheduled (this, who, what);
+			if (scheduled != null)
+				UnscheduleDrawable (who, scheduled);
+			var runnable = Java.Lang.Thread.RunnableImplementor.Find (who, what);
+			if (runnable != null)
+				UnscheduleDrawable (who, runnable);
 		}
 
 		[Obsolete ("Please Use DispatchSystemUiVisibilityChanged(SystemUiFlags)")]

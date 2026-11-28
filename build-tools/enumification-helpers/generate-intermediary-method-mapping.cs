@@ -74,7 +74,7 @@ public class MethodMapGen
 
 		sources = new List<SourceEntry> (sources.Where (e => !e.TargetLink.Contains ("GLES") && !e.TargetLink.Contains ("android/R.")).Distinct (new SourceEntryComparer ()).ToArray ());
 
-		sources.Sort ((e1, e2) => string.Compare (e1.ReferrerDoc, e2.ReferrerDoc));
+		sources.Sort ((e1, e2) => string.Compare (e1.ReferrerDoc, e2.ReferrerDoc, StringComparison.Ordinal));
 		XmlNodeList links = null;
 		string prev = null;
 		foreach (var e in sources) {

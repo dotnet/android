@@ -84,7 +84,7 @@ namespace Microsoft.Android.Tasks {
 
 		AssemblyIdentityMap assemblyMap = new AssemblyIdentityMap ();
 		List<string> tempFiles = new List<string> ();
-		SortedSet<string> rulesFiles = new SortedSet<string> ();
+		SortedSet<string> rulesFiles = new SortedSet<string> (StringComparer.Ordinal);
 		Dictionary<string, long> apks = new Dictionary<string, long> ();
 		string? resourceSymbolsTextFileTemp;
 		AndroidVersions? supportedVersions;

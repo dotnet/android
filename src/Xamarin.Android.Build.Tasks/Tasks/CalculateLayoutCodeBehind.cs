@@ -424,9 +424,9 @@ namespace Xamarin.Android.Tasks
 			foreach (string p in name.Split ('.')) {
 				// Since it's quite common...
 				if (p.Length == 2)
-					parts.Add (p.ToUpper ());
+					parts.Add (p.ToUpperInvariant ());
 				else
-					parts.Add ($"{Char.ToUpper (p[0])}{p.Substring (1)}");
+					parts.Add ($"{Char.ToUpperInvariant (p[0])}{p.Substring (1)}");
 			}
 			return String.Join (".", parts);
 		}
@@ -478,7 +478,7 @@ namespace Xamarin.Android.Tasks
 
 			var sb = new StringBuilder (id.Substring (id.IndexOf ('/') + 1));
 			if (capitalize)
-				sb [0] = Char.ToUpper (sb [0]);
+				sb [0] = Char.ToUpperInvariant (sb [0]);
 
 			name = sb.ToString ();
 			parsedId = $"{ns}.{name}";

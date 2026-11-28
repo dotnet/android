@@ -101,9 +101,11 @@ static class PrimitiveArrayInfo
 		public override bool TryCreateObjectReference (object value, out JniObjectReference reference)
 		{
 			if (value is TArray array) {
-				reference = array.PeerReference.IsValid
-					? array.PeerReference.NewLocalRef ()
+				var r = array.PeerReference;
+				reference = r.IsValid
+					? r.NewLocalRef ()
 					: new JniObjectReference ();
+				GC.KeepAlive (array);
 				return true;
 			}
 
@@ -114,8 +116,9 @@ static class PrimitiveArrayInfo
 
 			var marshaledArray = createCopy (list);
 			try {
-				reference = marshaledArray.PeerReference.IsValid
-					? marshaledArray.PeerReference.NewLocalRef ()
+				var r = marshaledArray.PeerReference;
+				reference = r.IsValid
+					? r.NewLocalRef ()
 					: new JniObjectReference ();
 				return true;
 			} finally {

@@ -103,6 +103,10 @@ Use `-warnaserror:MSB4286,MSB4287,MSB4288` for the strict checks. Inspect a
 binary log to confirm that each migrated task ran in-process and that item
 paths still belong to the correct project.
 
+CI sets `MSBUILDENABLEMULTITHREADED=1` in
+`build-tools/automation/yaml-templates/variables.yaml`, so builds run with `-mt`
+unless they pass `-mt:false`. Signing steps set it to `0`.
+
 `GeneratePackageManagerJava` runs from `Microsoft.Android.Build.Tasks.dll` on
 .NET, using the .NET task host when invoked by .NET Framework MSBuild.
 It resolves its output directory through `TaskEnvironment` and preserves the

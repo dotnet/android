@@ -12,10 +12,11 @@ namespace generator.SourceWriters
 	public class BoundMethod : MethodWriter
 	{
 		readonly MethodCallback callback;
+		List<string> disabled_warnings;
 
 		public Method JavaMethod { get; }
 
-		public BoundMethod (GenBase type, Method method, CodeGenerationOptions opt, bool generateCallbacks)
+		public BoundMethod (GenBase type, Method method, CodeGenerationOptions opt, bool generateCallbacks, bool forceOverride = false, bool? isShadow = null, bool isInvoker = false, bool? isObsoleteContext = null)
 		{
 			JavaMethod = method;
 
@@ -31,13 +32,13 @@ namespace generator.SourceWriters
 
 			// TODO: Clean up this logic
 			var is_explicit = opt.SupportDefaultInterfaceMethods && type is InterfaceGen && method.OverriddenInterfaceMethod != null;
-			var virt_ov = is_explicit ? string.Empty : method.IsOverride ? (opt.SupportDefaultInterfaceMethods && method.OverriddenInterfaceMethod != null ? " virtual" : " override") : method.IsVirtual ? " virtual" : string.Empty;
+			var virt_ov = is_explicit ? string.Empty : forceOverride ? " override" : method.IsOverride ? (opt.SupportDefaultInterfaceMethods && method.OverriddenInterfaceMethod != null ? " virtual" : " override") : method.IsVirtual ? " virtual" : string.Empty;
 
 			IsVirtual = virt_ov.Trim () == "virtual";
 			IsOverride = virt_ov.Trim () == "override";
 
 			// When using DIM, don't generate "virtual sealed" methods, remove both modifiers instead
-			if (opt.SupportDefaultInterfaceMethods && method.OverriddenInterfaceMethod != null && IsVirtual && IsSealed) {
+			if (!forceOverride && opt.SupportDefaultInterfaceMethods && method.OverriddenInterfaceMethod != null && IsVirtual && IsSealed) {
 				IsVirtual = false;
 				IsSealed = false;
 			}
@@ -49,20 +50,25 @@ namespace generator.SourceWriters
 			if (method.ExplicitInterface.HasValue ())
 				ExplicitInterfaceImplementation = method.ExplicitInterface;
 
-			if ((IsVirtual || !IsOverride) && type.RequiresNew (method.AdjustedName, method))
-				IsShadow = true;
-
 			// Allow user to override our virtual/override logic
-			if (string.Equals (method.ManagedOverride, "virtual", StringComparison.OrdinalIgnoreCase)) {
+			if (!forceOverride && string.Equals (method.ManagedOverride, "virtual", StringComparison.OrdinalIgnoreCase)) {
 				IsVirtual = true;
 				IsOverride = false;
-			} else if (string.Equals (method.ManagedOverride, "override", StringComparison.OrdinalIgnoreCase)) {
+			} else if (!forceOverride && string.Equals (method.ManagedOverride, "override", StringComparison.OrdinalIgnoreCase)) {
 				IsVirtual = false;
 				IsOverride = true;
-			} else if (string.Equals (method.ManagedOverride, "none", StringComparison.OrdinalIgnoreCase)) {
+			} else if (!forceOverride && string.Equals (method.ManagedOverride, "none", StringComparison.OrdinalIgnoreCase)) {
 				IsVirtual = false;
 				IsOverride = false;
+			} else if (!forceOverride && string.Equals (method.ManagedOverride, "new", StringComparison.OrdinalIgnoreCase)) {
+				IsVirtual = false;
+				IsOverride = false;
+				IsSealed = false;
+				IsShadow = true;
 			}
+
+			if (!IsOverride && !ExplicitInterfaceImplementation.HasValue () && (isShadow ?? type.RequiresNew (method.AdjustedName, method, opt)))
+				IsShadow = true;
 
 			ReturnType = new TypeReferenceWriter (opt.GetTypeReferenceName (method.RetVal));
 
@@ -85,6 +91,19 @@ namespace generator.SourceWriters
 			this.AddMethodParameters (method.Parameters, opt);
 
 			SourceWriterExtensions.AddMethodBody (Body, method, opt);
+
+			var hasObsoleteAttr = Attributes.OfType<ObsoleteAttr> ().Any ();
+			var inObsoleteContext = isObsoleteContext ?? SourceWriterExtensions.IsTypeObsolete (type, opt);
+
+			if (Name == "Finalize" && Parameters.Count == 0)
+				SourceWriterExtensions.AddDisabledWarning (ref disabled_warnings, "0465");
+
+			if (!inObsoleteContext && !hasObsoleteAttr && SourceWriterExtensions.ReferencesObsoleteType (method, opt))
+				SourceWriterExtensions.AddDisabledWarning (ref disabled_warnings, "0618");
+
+			if (!isInvoker && IsOverride && string.IsNullOrEmpty (ExplicitInterfaceImplementation) && hasObsoleteAttr &&
+					!SourceWriterExtensions.WillBaseMethodEmitObsolete (type, method, opt))
+				SourceWriterExtensions.AddDisabledWarning (ref disabled_warnings, "0809");
 		}
 
 		static string GetDeclaringTypeOfExplicitInterfaceMethod (Method method)
@@ -98,7 +117,7 @@ namespace generator.SourceWriters
 		{
 			callback?.Write (writer);
 
-			base.Write (writer);
+			SourceWriterExtensions.WriteWithWarningsDisabled (writer, disabled_warnings, () => base.Write (writer));
 		}
 	}
 }

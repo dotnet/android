@@ -14,7 +14,7 @@ namespace generator.SourceWriters
 		// [Register ("VIBRATION_EFFECT_SUPPORT_UNKNOWN", ApiSince = 30)]
 		// [Obsolete ("This constant will be removed in the future version. Use Android.OS.VibrationEffectSupport enum directly instead of this field.", error: true)]
 		// public const Android.OS.VibrationEffectSupport VibrationEffectSupportUnknown = (Android.OS.VibrationEffectSupport) 0;
-		public BoundField (GenBase type, Field field, CodeGenerationOptions opt)
+		public BoundField (GenBase type, Field field, CodeGenerationOptions opt, bool? isShadow = null)
 		{
 			Name = field.Name;
 			Type = new TypeReferenceWriter (opt.GetOutputName (field.Symbol.FullName));
@@ -35,6 +35,7 @@ namespace generator.SourceWriters
 				Attributes.Add (new CustomAttr (field.Annotation));
 
 			SetVisibility (field.Visibility);
+			IsShadow = isShadow ?? type.RequiresNew (field, opt);
 			IsConst = true;
 
 			// the Value complication is due to constant enum from negative integer value (C# compiler requires explicit parenthesis).

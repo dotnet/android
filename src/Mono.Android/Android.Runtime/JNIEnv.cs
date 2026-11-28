@@ -1916,6 +1916,7 @@ namespace Android.Runtime {
 		/// <safety>
 		/// <paramref name="elementClass"/> must be null where supported, or a live JNI class reference of the required type usable on the current thread for the call.
 		/// </safety>
+		/// <exception cref="ArgumentOutOfRangeException"><paramref name="length"/> is negative.</exception>
 		public static IntPtr NewObjectArray (int length, IntPtr elementClass)
 		{
 			// SAFETY: the caller retains elementClass as a live class; the three-argument overload initializes each new element with the JNI null reference.
@@ -1926,8 +1927,12 @@ namespace Android.Runtime {
 		/// <paramref name="elementClass"/> must be null where supported, or a live JNI class reference of the required type usable on the current thread for the call.
 		/// <paramref name="initialElement"/> must be null where supported, or a live JNI object reference of the required type usable on the current thread for the call.
 		/// </safety>
+		/// <exception cref="ArgumentOutOfRangeException"><paramref name="length"/> is negative.</exception>
 		public static IntPtr NewObjectArray (int length, IntPtr elementClass, IntPtr initialElement)
 		{
+			if (length < 0)
+				throw new ArgumentOutOfRangeException (nameof (length));
+
 			return JniEnvironment.Arrays.NewObjectArray (length, new JniObjectReference (elementClass), new JniObjectReference (initialElement)).Handle;
 		}
 

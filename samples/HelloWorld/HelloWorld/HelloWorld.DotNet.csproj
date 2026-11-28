@@ -3,8 +3,6 @@
     <TargetFramework>$(DotNetAndroidTargetFramework)</TargetFramework>
     <OutputType>Exe</OutputType>
     <RootNamespace>HelloWorld</RootNamespace>
-    <LangVersion>preview</LangVersion>
-    <MemorySafetyRulesVersion>2</MemorySafetyRulesVersion>
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="..\HelloLibrary\HelloLibrary.DotNet.csproj" />

@@ -6,6 +6,7 @@ using System.IO;
 using System.Text.RegularExpressions;
 using System.Xml.Linq;
 using Microsoft.Build.Framework;
+using Microsoft.Build.Utilities;
 using NUnit.Framework;
 
 using Xamarin.ProjectTools;
@@ -17,6 +18,43 @@ namespace Xamarin.Android.Build.Tests
 	[Parallelizable (ParallelScope.Children)]
 	public class CodeBehindTests : BaseTest
 	{
+		[Test]
+		[SetCulture ("tr-TR")]
+		public void LayoutBindingIdentifiersUseInvariantCasing ()
+		{
+			var directory = Path.Combine (Root, "temp", nameof (LayoutBindingIdentifiersUseInvariantCasing));
+			TestOutputDirectories [TestContext.CurrentContext.Test.ID] = directory;
+			Directory.CreateDirectory (directory);
+			var layout = Path.Combine (directory, "culture.xml");
+			File.WriteAllText (layout, """
+				<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android">
+				  <com.google.io.indicator.CustomView android:id="@android:id/input" />
+				</LinearLayout>
+				""");
+			var engine = new MockBuildEngine (TestContext.Out);
+			var calculate = new CalculateLayoutCodeBehind {
+				BuildEngine = engine,
+				BaseNamespace = "Test.Binding",
+				OutputLanguage = "C#",
+				OutputFileExtension = ".cs",
+				BoundLayouts = [new TaskItem (layout)],
+			};
+			Assert.IsTrue (calculate.Execute ());
+			Assert.IsNotNull (calculate.LayoutBindingFiles);
+
+			var generate = new GenerateLayoutBindings {
+				BuildEngine = engine,
+				MonoAndroidCodeBehindDir = directory,
+				AndroidFragmentType = "Android.App.Fragment",
+				ResourceFiles = calculate.LayoutBindingFiles,
+			};
+			Assert.IsTrue (generate.Execute ());
+			Assert.IsNotNull (generate.GeneratedFiles);
+			var source = File.ReadAllText (generate.GeneratedFiles.Single ().ItemSpec);
+			StringAssert.Contains ("IO.Indicator.CustomView", source);
+			StringAssert.Contains ("global::Android.Resource.Id.Input", source);
+		}
+
 		sealed class LocalBuilder : Builder
 		{
 			public LocalBuilder ()
@@ -336,6 +374,58 @@ namespace Xamarin.Android.Build.Tests
 		public void SuccessfulAndroidXApp ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			RunTest (TestName, many: true, dtb: false, runner: SuccessfulBuild_AndroidX, runtime: runtime);
+		}
+
+		[Test]
+		public void AndroidXFragmentBindingPreservesConstructors ()
+		{
+			if (IgnoreUnsupportedConfiguration (AndroidRuntime.NativeAOT, release: true)) {
+				return;
+			}
+
+			var project = new XamarinAndroidApplicationProject {
+				IsRelease = true,
+				LayoutMain = """
+					<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+						xmlns:xamarin="http://schemas.xamarin.com/android/xamarin/tools"
+						android:orientation="vertical"
+						android:layout_width="match_parent"
+						android:layout_height="match_parent">
+						<fragment android:name="androidx.fragment.app.Fragment"
+							android:id="@+id/my_fragment"
+							android:layout_width="match_parent"
+							android:layout_height="match_parent"
+							xamarin:managedType="AndroidX.Fragment.App.Fragment" />
+					</LinearLayout>
+					""",
+				MainActivity = """
+					using Android.App;
+					using Android.OS;
+					using AndroidX.Fragment.App;
+
+					namespace UnnamedProject {
+						[Activity (MainLauncher = true)]
+						public class MainActivity : FragmentActivity {
+							protected override void OnCreate (Bundle? savedInstanceState) {
+								base.OnCreate (savedInstanceState);
+								SetContentView (Resource.Layout.Main);
+								var fragment = new Binding.Main (this).my_fragment;
+							}
+						}
+					}
+					""",
+			};
+			project.SetRuntime (AndroidRuntime.NativeAOT);
+			project.SetRuntimeIdentifiers (["arm64-v8a"]);
+			project.SetProperty ("AndroidGenerateLayoutBindings", "true");
+			project.SetProperty ("DefineConstants", "$(DefineConstants);__HAVE_ANDROIDX__");
+			project.SetProperty ("TrimmerSingleWarn", "false");
+			project.SetProperty ("NoWarn", "IL2104;IL2122;IL3053");
+			project.SetProperty ("WarningsAsErrors", "IL2091");
+			project.PackageReferences.Add (KnownPackages.AndroidXAppCompat);
+
+			using var builder = CreateApkBuilder ();
+			Assert.IsTrue (builder.Build (project), "AndroidX fragment binding should build without IL2091.");
 		}
 
 		void SuccessfulBuild_AndroidX (TestProjectInfo testInfo, bool many, bool dtb, LocalBuilder builder, AndroidRuntime runtime)

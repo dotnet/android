@@ -320,6 +320,8 @@
   <attr path="/api/package[@name='java.lang']/interface[@name='Iterable']" name="name">Iterable&lt;T&gt;</attr>
   <attr path="/api/package[@name='java.nio.channels']/class[@name='Channels']/method[@name='newChannel' and @return='java.nio.channels.ReadableByteChannel']" name="managedName">NewReadableChannel</attr>
   <attr path="/api/package[@name='java.nio.channels']/class[@name='Channels']/method[@name='newChannel' and @return='java.nio.channels.WritableByteChannel']" name="managedName">NewWritableChannel</attr>
+  <!-- Only interestOps() returns the operations set; interestOps(int) returns SelectionKey. -->
+  <attr path="/api/package[@name='java.nio.channels']/class[@name='SelectionKey']/method[@name='interestOps' and count(parameter)=0]" name="enumReturn">Java.Nio.Channels.Operations</attr>
   <attr path="/api/package[@name='java.util']/class[@name='Dictionary']/method/parameter[@name='key']" name="type">K</attr>
   <attr path="/api/package[@name='java.util']/class[@name='Dictionary']/method/parameter[@name='value']" name="type">V</attr>
   <attr path="/api/package[@name='java.util']/class[@name='Dictionary']" name="name">Dictionary&lt;K, V&gt;</attr>
@@ -1628,6 +1630,8 @@
   <!-- Google has added getCellIdentity and getCellSignalStrength as abstract method on the base class.  Bind manually for API-compatibility. -->
   <remove-node api-since="30" path="/api/package[@name='android.telephony']/class[@name='CellInfo']/method[@name='getCellIdentity' and count(parameter)=0]" />
   <remove-node api-since="30" path="/api/package[@name='android.telephony']/class[@name='CellInfo']/method[@name='getCellSignalStrength' and count(parameter)=0]" />
+  <attr api-since="30" path="/api/package[@name='android.telephony']/class[@extends='android.telephony.CellInfo']/method[@name='getCellIdentity' and count(parameter)=0]" name="managedOverride">new</attr>
+  <attr api-since="30" path="/api/package[@name='android.telephony']/class[@extends='android.telephony.CellInfo']/method[@name='getCellSignalStrength' and count(parameter)=0]" name="managedOverride">new</attr>
 
   <!-- Work around a generator bug where having multiple Listener methods with the same name cause multiple conflicting EventArgs classes to be created. -->
   <!-- These are "default" method versions, so it's ok to remove them from an interface. -->

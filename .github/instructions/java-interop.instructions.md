@@ -72,6 +72,7 @@ and [exception-handling guide](../../Documentation/project-docs/exception-handli
 ### Memory management
 - **Local references** — cleaned up at JNI frame boundaries, but explicit cleanup prevents local-reference-table exhaustion in loops.
 - **Owned global references** — must be explicitly freed via `JniObjectReference.Dispose (ref reference)`.
+- **Borrowed peer references (`GC.KeepAlive`)** — `JniObjectReference` and `JniArgumentValue` don't root their `IJavaPeerable` owner. Keep every borrowed owner alive past JNI calls (and strongly retain owners in multi-call native wrappers until disposal); see the [JNI Peer Lifetimes checklist](../skills/code-review/references/interop-rules.md#jni-peer-lifetimes-gckeepalive-review-checklist).
 - Use `using` for disposable managed peers and `try`/`finally` for JNI reference cleanup.
 
 ### Threading
@@ -96,9 +97,8 @@ and [exception-handling guide](../../Documentation/project-docs/exception-handli
   the implementation provides. Preserve explicitly deferred ownership work.
 - Keep changes small and minimize indentation churn using normal formatting.
   Update canonical templates and generated outputs together when they change.
-- Preserve existing base-branch tests. Add new tests for demonstrated bugs fixed
-  by the change, not annotation-only matrices; do not restore explicitly deferred
-  coverage or invoke invalid pointers to manufacture a failing baseline.
+- Preserve existing base-branch tests; add new ones only per the top-level
+  testing rule, never to manufacture a failing baseline.
 - Attribute validation to the exact source and mode tested. Compilation, metadata
   checks, runtime tests and combined-stack results are different evidence.
 
@@ -109,9 +109,10 @@ Use the top-level build and test workflow for Android runtime integration;
 prerequisites are documented in the top-level `.github/copilot-instructions.md`.
 
 Standalone host tooling builds and tooling tests do not require a locally built
-Android SDK. The standalone tooling and test target framework is .NET 10 via
-`DotNetStableTargetFramework` in the root `Directory.Build.props`, independently of the Android
-product's target framework. Follow the Java.Interop
+Android SDK. Standalone host tools and tooling tests target
+`$(DotNetStableTargetFramework)` in the root `Directory.Build.props` (some shared
+libraries target `netstandard2.0`), independently of the Android product's
+`$(DotNetTargetFramework)`. Follow the Java.Interop
 [README](../../Documentation/Java.Interop/README.md#building) and
 [build configuration](../../Documentation/Java.Interop/BuildConfiguration.md)
 for shared build configuration and JDK tool-path settings

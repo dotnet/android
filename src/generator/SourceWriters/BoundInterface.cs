@@ -14,6 +14,10 @@ namespace generator.SourceWriters
 		readonly List<TypeWriter> pre_sibling_types = new List<TypeWriter> ();
 		readonly List<ISourceWriter> post_sibling_types = new List<ISourceWriter> ();
 		readonly bool dont_generate;
+		bool suppress_obsolete_signature;
+
+		internal IReadOnlyList<TypeWriter> PreSiblingTypes => pre_sibling_types;
+		internal IReadOnlyList<ISourceWriter> PostSiblingTypes => post_sibling_types;
 
 		public BoundInterface (InterfaceGen iface, CodeGenerationOptions opt, CodeGeneratorContext context, GenerationInfo genInfo)
 		{
@@ -39,7 +43,7 @@ namespace generator.SourceWriters
 			// Renaming happens up front, before any member is written, so that every writer -- and
 			// in particular the callback name allocator, which snapshots a type's members the first
 			// time it is asked about one of them -- observes the final managed names.
-			FixupInvokerMethodNames (iface);
+			iface.FixupInvokerMethodNames ();
 
 			SetVisibility (iface.Visibility);
 
@@ -66,6 +70,8 @@ namespace generator.SourceWriters
 			AddFields (iface, opt, context);
 			AddProperties (iface, opt);
 			AddMethods (iface, opt);
+			if (opt.SupportDefaultInterfaceMethods)
+				KotlinDefaultArguments.AddMethods (this, iface, opt, context);
 			AddNestedTypes (iface, opt, context, genInfo);
 
 			// If this interface is just constant fields we don't need to add all the invoker bits
@@ -141,6 +147,7 @@ namespace generator.SourceWriters
 
 		void AddInheritedInterfaces (InterfaceGen iface, CodeGenerationOptions opt)
 		{
+			var ifaceIsObsolete = SourceWriterExtensions.IsTypeObsolete (iface, opt);
 			foreach (var isym in iface.Interfaces) {
 				var igen = (isym is GenericSymbol ? (isym as GenericSymbol).Gen : isym) as InterfaceGen;
 
@@ -152,6 +159,8 @@ namespace generator.SourceWriters
 					continue;
 
 				Implements.Add (opt.GetOutputName (isym.FullName));
+				if (!ifaceIsObsolete && SourceWriterExtensions.IsSymbolObsolete (isym, opt))
+					suppress_obsolete_signature = true;
 			}
 
 			if (Implements.Count == 0 && !iface.IsConstSugar (opt)) {
@@ -203,24 +212,14 @@ namespace generator.SourceWriters
 					Properties.Add (bound_property);
 
 					if (prop.Type.StartsWith ("Java.Lang.ICharSequence", StringComparison.Ordinal) && !bound_property.IsOverride)
-						Properties.Add (new BoundPropertyStringVariant (prop, opt, bound_property));
+						Properties.Add (new BoundPropertyStringVariant (prop, opt, bound_property, iface));
 				} else {
 					var bound_property = new BoundProperty (iface, prop, opt, true, false);
 					Properties.Add (bound_property);
 
 					if (prop.Type.StartsWith ("Java.Lang.ICharSequence", StringComparison.Ordinal) && !bound_property.IsOverride)
-						Properties.Add (new BoundPropertyStringVariant (prop, opt, bound_property));
+						Properties.Add (new BoundPropertyStringVariant (prop, opt, bound_property, iface));
 				}
-			}
-		}
-
-		// A method whose managed name would collide with the interface itself or with one of its
-		// properties is prefixed with "Invoke".
-		static void FixupInvokerMethodNames (InterfaceGen iface)
-		{
-			foreach (var m in iface.Methods.Where (m => !m.IsStatic && !m.IsInterfaceDefaultMethod)) {
-				if (m.Name == iface.Name || iface.ContainsProperty (m.Name, true))
-					m.Name = "Invoke" + m.Name;
 			}
 		}
 
@@ -239,14 +238,11 @@ namespace generator.SourceWriters
 
 				Methods.Add (new BoundMethod (iface, method, opt, true));
 
-				var name_and_jnisig = method.JavaName + method.JniSignature.Replace ("java/lang/CharSequence", "java/lang/String");
-				var gen_string_overload = !method.IsOverride && method.Parameters.HasCharSequence && !iface.ContainsMethod (name_and_jnisig);
-
-				if (gen_string_overload || method.IsReturnCharSequence)
-					Methods.Add (new BoundMethodStringOverload (method, opt));
+				if (iface.MethodEmitsStringOverload (method))
+					Methods.Add (new BoundMethodStringOverload (method, opt, iface));
 
 				if (method.Asyncify)
-					Methods.Add (new MethodAsyncWrapper (method, opt));
+					Methods.Add (new MethodAsyncWrapper (method, opt, iface));
 			}
 		}
 
@@ -255,8 +251,17 @@ namespace generator.SourceWriters
 			// Generate nested types for supported nested types.  This is a new addition in C#8.
 			// Prior to this, types nested in an interface had to be generated as sibling types.
 			// The "Unnest" property is used to support backwards compatibility with pre-C#8 bindings.
-			foreach (var nest in iface.NestedTypes.Where (t => !t.Unnest))
-				NestedTypes.Add (SourceWriterExtensions.BuildManagedTypeModel (nest, opt, context, genInfo));
+			foreach (var nest in iface.NestedTypes.Where (t => !t.Unnest)) {
+				var nestedWriter = SourceWriterExtensions.BuildManagedTypeModel (nest, opt, context, genInfo);
+				if (iface.RequiresNewForMemberName (nestedWriter.Name, opt))
+					nestedWriter.IsShadow = true;
+				NestedTypes.Add (nestedWriter);
+			}
+		}
+
+		public override void WriteSignature (CodeWriter writer)
+		{
+			SourceWriterExtensions.WriteWithWarningsDisabled (writer, suppress_obsolete_signature, "0618", () => base.WriteSignature (writer));
 		}
 
 		public override void Write (CodeWriter writer)

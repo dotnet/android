@@ -123,11 +123,11 @@ namespace Xamarin.SourceWriter
 			if (IsOverride)
 				writer.Write ("override ");
 
-			if (IsStatic)
-				writer.Write ("static ");
-
 			if (IsShadow)
 				writer.Write ("new ");
+
+			if (IsStatic)
+				writer.Write ("static ");
 
 			if (IsAbstract)
 				writer.Write ("abstract ");

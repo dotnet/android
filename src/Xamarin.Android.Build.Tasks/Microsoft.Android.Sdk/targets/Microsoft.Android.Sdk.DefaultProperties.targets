@@ -87,11 +87,8 @@
     <DiagnosticConfiguration Condition=" '$(DiagnosticSuspend)' != 'true' ">$(DiagnosticConfiguration),nosuspend</DiagnosticConfiguration>
   </PropertyGroup>
 
-  <!--  User-facing configuration-specific defaults -->
-  <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
-    <AndroidLinkMode Condition=" '$(AndroidLinkMode)' == '' ">None</AndroidLinkMode>
-  </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
+  <!-- User-facing defaults for optimized builds -->
+  <PropertyGroup Condition=" '$(Optimize)' == 'true' ">
     <AndroidEnableFastDeployment Condition=" '$(AndroidEnableFastDeployment)' == '' ">false</AndroidEnableFastDeployment>
     <AndroidManagedSymbols Condition=" '$(AndroidManagedSymbols)' == '' ">true</AndroidManagedSymbols>
     <AndroidPackageFormats Condition=" '$(AndroidPackageFormats)' == '' " >aab;apk</AndroidPackageFormats>
@@ -112,7 +109,7 @@
     <PublishReferencesDocumentationFiles Condition=" '$(PublishReferencesDocumentationFiles)' == '' ">false</PublishReferencesDocumentationFiles>
     <UseCurrentRuntimeIdentifier>false</UseCurrentRuntimeIdentifier>
     <PublishTrimmed Condition=" '$(PublishTrimmed)' == '' and ('$(AndroidLinkMode)' == 'SdkOnly' or '$(AndroidLinkMode)' == 'Full') ">true</PublishTrimmed>
-    <PublishTrimmed Condition=" '$(PublishTrimmed)' == '' and '$(Configuration)' == 'Release' and '$(AndroidLinkMode)' != 'None' ">true</PublishTrimmed>
+    <PublishTrimmed Condition=" '$(PublishTrimmed)' == '' and '$(Optimize)' == 'true' and '$(AndroidLinkMode)' != 'None' ">true</PublishTrimmed>
     <AndroidLinkMode Condition=" '$(AndroidLinkMode)' == '' and '$(_AndroidRuntime)' == 'NativeAOT' ">Full</AndroidLinkMode>
     <AndroidLinkMode Condition=" '$(AndroidLinkMode)' == '' and '$(PublishTrimmed)' == 'true' ">SdkOnly</AndroidLinkMode>
     <AndroidLinkMode Condition=" '$(AndroidLinkMode)' == '' ">None</AndroidLinkMode>

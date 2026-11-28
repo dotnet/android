@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+  <application android:label="ManifestOnlyActivity">
+    <!-- Only this manifest refers to the activity. -->
+    <activity android:name="net.dot.trimmingtests.ManifestDeclaredActivity" android:exported="false" />
+  </application>
+</manifest>

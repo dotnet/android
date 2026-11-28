@@ -122,9 +122,9 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		public void BuildNativeAotAppBundleIncludesDebugSymbols ()
+		public void PublishNativeAotAppBundleIncludesDebugSymbolsCustomConfiguration ()
 		{
-			var proj = new XamarinAndroidApplicationProject {
+			var proj = new XamarinAndroidApplicationProject (releaseConfigurationName: "Store") {
 				IsRelease = true,
 				ProjectName = "テスト\u2002Me",
 				RootNamespace = "Test.Me",
@@ -134,12 +134,16 @@ namespace Xamarin.Android.Build.Tests
 			proj.SetRuntimeIdentifiers (abis);
 			proj.SetProperty ("AndroidPackageFormat", "aab");
 			proj.SetProperty ("DebugSymbols", "false");
+			// Keep separate native symbols in this unoptimized configuration.
+			proj.AndroidEnableFastDeployment = false;
 
-			using var builder = CreateApkBuilder ();
-			Assert.IsTrue (builder.Build (proj), "NativeAOT AAB build should succeed.");
-			string bundle = Path.Combine (Root, builder.ProjectDirectory, proj.OutputPath, $"{proj.PackageName}-Signed.aab");
+			using var builder = CreateDllBuilder ();
+			builder.Save (proj);
+			var dotnet = new DotNetCLI (Path.Combine (Root, builder.ProjectDirectory, proj.ProjectFilePath));
+			Assert.IsTrue (dotnet.Publish (parameters: new [] { $"Configuration={proj.Configuration}" }), "NativeAOT AAB publish should succeed.");
+			string bundle = Path.Combine (Root, builder.ProjectDirectory, proj.OutputPath, "publish", $"{proj.PackageName}-Signed.aab");
 			FileAssert.Exists (bundle);
-			string extractedDirectory = builder.Output.GetIntermediaryPath ("nativeaot-debug-symbols");
+			string extractedDirectory = Path.Combine (Root, builder.ProjectDirectory, "nativeaot-debug-symbols");
 			Directory.CreateDirectory (extractedDirectory);
 			using var archive = ZipHelper.OpenZip (bundle);
 			foreach (string abi in abis) {

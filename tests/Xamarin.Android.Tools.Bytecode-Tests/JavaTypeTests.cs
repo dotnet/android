@@ -347,7 +347,20 @@ namespace Xamarin.Android.Tools.BytecodeTests {
 		}
 
 		[Test]
-		public void XmlDeclaration_WithJavaType_class ()
+		[SetCulture ("en-US")]
+		public void XmlDeclaration_WithJavaType_class_en_US ()
+		{
+			AssertXmlDeclaration_WithJavaType_class ();
+		}
+
+		[Test]
+		[SetCulture ("fa-IR")]
+		public void XmlDeclaration_WithJavaType_class_fa_IR ()
+		{
+			AssertXmlDeclaration_WithJavaType_class ();
+		}
+
+		void AssertXmlDeclaration_WithJavaType_class ()
 		{
 			AssertXmlDeclaration ("JavaType.class", "JavaType.xml");
 		}

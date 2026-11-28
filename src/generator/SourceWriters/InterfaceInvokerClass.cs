@@ -33,7 +33,7 @@ namespace generator.SourceWriters
 
 			Properties.Add (new JniPeerMembersGetter (members));
 
-			foreach (var i in GetCompleteImplementedInterfaces (new (), iface).OrderBy (x => x.JavaFullNameId)) {
+			foreach (var i in GetCompleteImplementedInterfaces (new (), iface).OrderBy (x => x.JavaFullNameId, StringComparer.Ordinal)) {
 				var mi = new PeerMembersField (opt, i.RawJniName, $"{iface.Name}Invoker", isInterface:false, name: $"_members_{i.JavaFullNameId}");
 				Fields.Add (mi);
 			}

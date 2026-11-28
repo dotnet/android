@@ -42,10 +42,10 @@ public class Driver
 			Value = f.Attribute ("value")?.Value,
 			Level = levels [f.Document.BaseUri] 
 			})
-			.OrderBy (c => c.Package)
-			.ThenBy (c => c.ParentType)
-			.ThenBy (c => c.Name)
-			.ThenBy (c => c.Level)
+			.OrderBy (c => c.Package, StringComparer.Ordinal)
+			.ThenBy (c => c.ParentType, StringComparer.Ordinal)
+			.ThenBy (c => c.Name, StringComparer.Ordinal)
+			.ThenBy (c => c.Level, StringComparer.Ordinal)
 			.ToArray ();
 
 		for (int i = 1; i < consts.Length; i++) {

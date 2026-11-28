@@ -8,7 +8,8 @@ using Xamarin.Android.Tasks;
 using Properties = Xamarin.Android.Tasks.Properties;
 
 namespace Microsoft.Android.Tasks {
-	public partial class CheckForInvalidResourceFileNames : AndroidTask {
+	[MSBuildMultiThreadableTask]
+	public partial class CheckForInvalidResourceFileNames : MultithreadedAndroidTask {
 		public override string TaskPrefix => "CFI";
 
 		[Required]

@@ -7,16 +7,17 @@ namespace Android.Graphics.Drawables {
 
 		public void ScheduleSelf (Action what, long when)
 		{
-			ScheduleSelf (new Java.Lang.Thread.RunnableImplementor (what, true), when);
+			ScheduleSelf (Java.Lang.Thread.RunnableImplementor.GetOrCreate (this, what), when);
 		}
 
 		public void UnscheduleSelf (Action what)
 		{
-			var runnable = Java.Lang.Thread.RunnableImplementor.Remove (what);
-			if (runnable == null)
-				return;
-			UnscheduleSelf (runnable);
-			runnable.Dispose ();
+			var runnable = Java.Lang.Thread.RunnableImplementor.Find (this, what);
+			if (runnable != null)
+				UnscheduleSelf (runnable);
+			// Also cancel what the hosting View scheduled for this drawable via View.ScheduleDrawable (who, Action, long).
+			if (Callback is Android.Views.View view && Java.Lang.Thread.RunnableImplementor.FindScheduled (view, this, what) is { } scheduled)
+				UnscheduleSelf (scheduled);
 		}
 	}
 }

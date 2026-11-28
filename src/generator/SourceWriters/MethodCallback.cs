@@ -23,6 +23,8 @@ namespace generator.SourceWriters
 		readonly MethodWriter delegate_getter;
 		readonly UnmanagedCallbackKind kind;
 		readonly TypedCallbackShape typed_shape;
+		readonly bool marshal_target_is_shadow;
+		readonly bool suppress_obsolete_warning;
 
 		// static sbyte n_ByteValueExact (IntPtr jnienv, IntPtr native__this)
 		// {
@@ -42,21 +44,47 @@ namespace generator.SourceWriters
 			if (kind == UnmanagedCallbackKind.UnmanagedTyped)
 				UnmanagedCallbackSupport.TryGetTypedShape (type, method, options, propertyName, isFormatted, out typed_shape);
 
+			Name = UnmanagedCallbackSupport.GetCallbackName (type, method, options);
+			target_name = UnmanagedCallbackSupport.GetCallbackTargetName (type, method, options);
+
+			bool hidesDelegateField = false;
+			bool hidesDelegateGetter = false;
+			bool hidesCallbackMethod = false;
+			bool hidesMarshalTarget = false;
+
+			if (declaringType == null && type is ClassGen cls && cls.HasEnclosingAncestor (options)) {
+				foreach (var (ancOwner, ancMethod, ancPropName, ancIsFormatted) in cls.GetEnclosingAncestorCallbackEntries (options)) {
+					var ancKind = UnmanagedCallbackSupport.GetCallbackKind (ancOwner, ancMethod, options, ancPropName, ancIsFormatted);
+					if (kind == UnmanagedCallbackKind.Legacy && ancKind == UnmanagedCallbackKind.Legacy) {
+						if (ancMethod.EscapedCallbackName == method.EscapedCallbackName)
+							hidesDelegateField = true;
+						if (ancMethod.ConnectorName == method.ConnectorName)
+							hidesDelegateGetter = true;
+					}
+					if (UnmanagedCallbackSupport.GetCallbackName (ancOwner, ancMethod, options) == Name && NativeParametersMatch (ancMethod, method))
+						hidesCallbackMethod = true;
+					if (typed_shape == null && ancKind != UnmanagedCallbackKind.UnmanagedTyped &&
+							UnmanagedCallbackSupport.GetCallbackTargetName (ancOwner, ancMethod, options) == target_name &&
+							NativeParametersMatch (ancMethod, method))
+						hidesMarshalTarget = true;
+				}
+			}
+
 			if (kind == UnmanagedCallbackKind.Legacy) {
-				delegate_field = new MethodCallbackDelegateField (method, options);
-				delegate_getter = new GetDelegateHandlerMethod (method, options);
+				delegate_field = new MethodCallbackDelegateField (method, options) { IsShadow = hidesDelegateField };
+				delegate_getter = new GetDelegateHandlerMethod (method, options) { IsShadow = hidesDelegateGetter };
 			} else {
 				// Keep the shared _JniMarshal_* delegate declarations for hand-written
 				// and legacy generated callbacks even when this callback has no connector.
 				method.GetDelegateType (options);
 			}
 
-			Name = UnmanagedCallbackSupport.GetCallbackName (type, method, options);
-			target_name = UnmanagedCallbackSupport.GetCallbackTargetName (type, method, options);
 			// Interface invokers marshal an interface peer but declare the target on the invoker.
 			declaring_type = opt.GetOutputName (declaringType ?? type.FullName);
 			ReturnType = new TypeReferenceWriter (method.RetVal.NativeType);
 
+			IsShadow = hidesCallbackMethod;
+			marshal_target_is_shadow = hidesMarshalTarget;
 			IsStatic = true;
 			IsPrivate = method.IsInterfaceDefaultMethod;
 			IsUnsafe = true;
@@ -79,6 +107,10 @@ namespace generator.SourceWriters
 
 			foreach (var p in method.Parameters)
 				Parameters.Add (new MethodParameterWriter (options.GetSafeIdentifier (p.UnsafeNativeName), new TypeReferenceWriter (p.NativeType)));
+
+			suppress_obsolete_warning = !SourceWriterExtensions.IsTypeObsolete (type, options) &&
+				!Attributes.OfType<ObsoleteAttr> ().Any () &&
+				SourceWriterExtensions.ReferencesObsoleteType (method, options);
 		}
 
 		protected override void WriteBody (CodeWriter writer)
@@ -118,7 +150,7 @@ namespace generator.SourceWriters
 			if (typed_shape != null)
 				writer.WriteLine (typed_shape.GetTargetSignature (opt.GetOutputName (type.FullName), target_name, opt.NullableOperator));
 			else
-				writer.WriteLine ($"private static unsafe {method.RetVal.NativeType} {target_name} (IntPtr jnienv, IntPtr native__this{method.Parameters.GetCallbackSignature (opt)})");
+				writer.WriteLine ($"private {(marshal_target_is_shadow ? "new " : "")}static unsafe {method.RetVal.NativeType} {target_name} (IntPtr jnienv, IntPtr native__this{method.Parameters.GetCallbackSignature (opt)})");
 			writer.WriteLine ("{");
 
 			writer.Indent ();
@@ -182,6 +214,17 @@ namespace generator.SourceWriters
 			writer.WriteLine ("}");
 		}
 
+		static bool NativeParametersMatch (Method a, Method b)
+		{
+			if (a.Parameters.Count != b.Parameters.Count)
+				return false;
+			for (int i = 0; i < a.Parameters.Count; i++) {
+				if (a.Parameters [i].NativeType != b.Parameters [i].NativeType)
+					return false;
+			}
+			return true;
+		}
+
 		// Object parameters are marshaled by the shared typed helper and arrive already converted;
 		// only the pure scalar projections (bool, char, enums) remain for the target method.
 		IEnumerable<string> GetTypedCallbackPrep ()
@@ -198,7 +241,8 @@ namespace generator.SourceWriters
 		{
 			delegate_field?.Write (writer);
 
-			writer.WriteLineNoIndent ("#pragma warning disable 0169");
+			var pragma = suppress_obsolete_warning ? "0169, 0618" : "0169";
+			writer.WriteLineNoIndent ($"#pragma warning disable {pragma}");
 
 			if (delegate_getter != null) {
 				delegate_getter.Write (writer);
@@ -208,7 +252,7 @@ namespace generator.SourceWriters
 			base.Write (writer);
 			WriteMarshalBody (writer);
 
-			writer.WriteLineNoIndent ("#pragma warning restore 0169");
+			writer.WriteLineNoIndent ($"#pragma warning restore {pragma}");
 			writer.WriteLine ();
 		}
 	}

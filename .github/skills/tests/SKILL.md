@@ -15,7 +15,7 @@ Consult `references/test-catalog.md` for the full mapping of test areas → asse
 ## Test categories
 
 - **Standalone** — `dotnet test <project>.csproj`. No local SDK needed.
-- **Full-build** — requires the local SDK at `bin/Debug/dotnet/dotnet` (or Release). Use `./dotnet-local.sh` (macOS/Linux) or `dotnet-local.cmd` (Windows).
+- **Full-build** — requires the local SDK at `bin/Debug/dotnet/dotnet` (or Release). Use `./dotnet-local.sh` (macOS/Linux) or `dotnet-local.cmd` (Windows); see `local-build` if the wrapper selects the wrong configuration.
 
 Check for the local SDK in the configuration needed by the tests:
 ```bash
@@ -25,7 +25,7 @@ test -x "bin/${CONFIGURATION}/dotnet/dotnet"
 
 **If the local SDK is missing, prepare and build it, then run the full-build tests.** On macOS/Linux, use `make prepare && make leeroy` (not `make all`); on Windows, use `build.cmd`. For Release tests on macOS/Linux, use `make prepare CONFIGURATION=Release && make leeroy CONFIGURATION=Release`. The presence of the `dotnet` executable only confirms provisioning, not that the SDK or test assemblies have been built. Rebuild after source changes so tests exercise the updated SDK. See `local-build` for per-project rebuilds and known issues, and `android-devices` for emulators.
 
-**Validate code changes locally before pushing.** Full SDK builds and relevant host/device tests are expected development work. Do not label them prohibitively slow, ask whether to skip them solely because of presumed duration, or rely on CI as the first validation. Start with focused tests while iterating and expand coverage as needed for the affected components. Never silently skip tests: if the user explicitly limits validation or an actual environment constraint blocks it, report the exact command, failure or missing prerequisite, and remaining unvalidated coverage. Include commands and outcomes in the handoff.
+Validation and test-adding rules are in `.github/copilot-instructions.md` (Testing).
 
 ## Workflow
 
@@ -47,7 +47,7 @@ Classify the user's request:
 | `src/Microsoft.Android.Build.Tasks/Tasks/` | Standalone: `Microsoft.Android.Build.Tasks.Tests.csproj` |
 | `src/Xamarin.Android.Build.Tasks/Utilities/` | Host: `Xamarin.Android.Build.Tests.dll` — grep for test classes referencing the utility |
 | `src/Xamarin.Android.Build.Tasks/**/*.targets` | Host: `Xamarin.Android.Build.Tests.dll`. Device: `MSBuildDeviceIntegration.dll` |
-| `src/Microsoft.Android.Sdk.TrimmableTypeMap/` | On-device: `Mono.Android.NET-Tests.csproj`. Host: `GenerateTrimmableTypeMapTests`, `TrimmableTypeMapIncrementalTests`, `TrimmableTypeMapManifestAliasTests`, `TrimmableTypeMapRidCallbackTests`, `ExtractTypeMapKeysFromNativeAotObjectTests`, `TrimmableTypeMapBuildTests` |
+| `src/Microsoft.Android.Sdk.TrimmableTypeMap/` | On-device: `Mono.Android.NET-Tests.csproj`, `TrimmingTests.dll`. Host: `GenerateTrimmableTypeMapTests`, `TrimmableTypeMapIncrementalTests`, `TrimmableTypeMapManifestAliasTests`, `TrimmableTypeMapRidCallbackTests`, `ExtractTypeMapKeysFromNativeAotObjectTests`, `TrimmableTypeMapBuildTests` |
 | `src/Java.Interop/` | On-device: core JNI tests in `tests/Mono.Android-Tests/Java.Interop-Tests/`, run with `Mono.Android.NET-Tests.csproj` |
 | `src/Java.Interop.Tools.*/`, `src/generator/`, `src/class-parse/` | Standalone tooling tests under `tests/` |
 | `src/native/` | On-device runtime tests in `Mono.Android.NET-Tests.csproj` |
@@ -65,6 +65,7 @@ Escalate only when the change or focused results require it.
 | Standalone libraries (`Microsoft.Android.Build.BaseTasks`, `Xamarin.Android.Tools.AndroidSdk`, `Microsoft.Android.Build.Tasks`, Java.Interop tooling, `generator`, `class-parse`) | `dotnet build` + standalone tests |
 | `src/Xamarin.Android.Build.Tasks` | Focused `Xamarin.Android.Build.Tests.dll` filters on the local SDK; `MSBuildDeviceIntegration.dll` only if install/deploy/run changes |
 | `src/Mono.Android`, core `src/Java.Interop`, `src/native`, typemaps, hosting | `Mono.Android.NET-Tests` on device for each affected runtime |
+| Code reached by reflection or other trimming/AOT-sensitive paths | Add or run a `TrimmingTests.dll` case (CoreCLR full trimming and NativeAOT) |
 | `Makefile`, `build-tools/`, `eng/`, CI YAML | Run the affected entry point or pipeline command locally |
 
 ## Running tests
@@ -76,6 +77,7 @@ The `${TFM}` placeholder = `DotNetStableTargetFramework` from `Directory.Build.p
 dotnet test <project>.csproj -v minimal
 dotnet test <project>.csproj -v minimal --filter "Name~TestName"
 ```
+In a worktree with no commits on its branch, SourceLink fails with `Repository has no commit`; add `-p:EnableSourceLink=false -p:EnableSourceControlManagerQueries=false` locally. Omit `--no-restore` from test commands in new worktrees and scratch projects (NETSDK1004).
 
 ### Host-side MSBuild tests (full-build)
 ```bash

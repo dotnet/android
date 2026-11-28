@@ -39,6 +39,8 @@ namespace MonoDroid.Generation {
 			}
 		}
 
+		internal ISymbol ElementSymbol => sym;
+
 		public string FullName {
 			get {
 				return (is_params ? "params " : String.Empty) + ElementType + "[]";

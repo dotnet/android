@@ -1,5 +1,7 @@
 #!/usr/bin/env dotnet
 #:property TargetFramework=net11.0
+#:property EnableSourceLink=false
+#:property EnableSourceControlManagerQueries=false
 // Evidence-based failure analysis for one dnceng-public `dotnet-android` build.
 // This tool is read-only: it never retries Azure stages or mutates GitHub issues.
 //
