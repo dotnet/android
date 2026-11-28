@@ -1,6 +1,10 @@
 using System;
+using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 using System.Threading;
 using Android.OS;
+using Android.Runtime;
+using Java.Interop;
 
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
@@ -27,6 +31,124 @@ namespace Xamarin.Android.RuntimeTests {
         
         t.QuitSafely ();
       }
+		}
+
+		[TestMethod]
+		public void RemoveCallbacksCancelsEveryPendingPost ()
+		{
+			using var t = new HandlerThread ("RemoveCallbacksCancelsEveryPendingPost");
+			t.Start ();
+			using var h = new Handler (t.Looper);
+			using var token = new Java.Lang.String ("token");
+			using var otherToken = new Java.Lang.String ("other");
+			using var blocked = new ManualResetEventSlim ();
+			using var release = new ManualResetEventSlim ();
+			using var done = new ManualResetEventSlim ();
+			int calls = 0;
+			Action action = () => Interlocked.Increment (ref calls);
+
+			try {
+				Assert.IsTrue (h.Post (() => { blocked.Set (); release.Wait (); }));
+				Assert.IsTrue (blocked.Wait (TimeSpan.FromSeconds (10)));
+				for (int i = 0; i < 2; i++) {
+					Assert.IsTrue (h.Post (action));
+					Assert.IsTrue (h.PostDelayed (action, 0));
+					h.RemoveCallbacks (action);
+				}
+				long now = SystemClock.UptimeMillis ();
+				Assert.IsTrue (h.PostAtTime (action, token, now));
+				Assert.IsTrue (h.PostAtTime (action, token, now));
+				Assert.IsTrue (h.PostAtTime (action, otherToken, now));
+				h.RemoveCallbacks (action, token);
+				Assert.IsTrue (h.Post (action));
+				Assert.IsTrue (h.Post (action));
+				Assert.IsTrue (h.Post (done.Set));
+				release.Set ();
+				Assert.IsTrue (done.Wait (TimeSpan.FromSeconds (10)));
+				Assert.AreEqual (3, calls);
+			} finally {
+				release.Set ();
+				Quit (t);
+			}
+		}
+
+		[TestMethod]
+		public void RemoveCallbacksThroughReplacementWrapper ()
+		{
+			using var t = new HandlerThread ("RemoveCallbacksThroughReplacementWrapper");
+			t.Start ();
+			using var blocked = new ManualResetEventSlim ();
+			using var release = new ManualResetEventSlim ();
+			using var done = new ManualResetEventSlim ();
+			int calls = 0;
+			Action action = () => Interlocked.Increment (ref calls);
+			var h = new Handler (t.Looper);
+			var handle = h.PeerReference.NewGlobalRef ();
+
+			try {
+				Assert.IsTrue (h.Post (() => { blocked.Set (); release.Wait (); }));
+				Assert.IsTrue (blocked.Wait (TimeSpan.FromSeconds (10)));
+				Assert.IsTrue (h.Post (action));
+				Assert.IsTrue (h.PostDelayed (action, 0));
+				h.Dispose ();
+
+				using var replacement = Java.Lang.Object.GetObject<Handler> (handle.Handle, JniHandleOwnership.DoNotTransfer);
+				Assert.IsNotNull (replacement);
+				Assert.AreNotSame (h, replacement);
+				replacement.RemoveCallbacks (action);
+				Assert.IsTrue (replacement.Post (done.Set));
+				release.Set ();
+				Assert.IsTrue (done.Wait (TimeSpan.FromSeconds (10)));
+				Assert.AreEqual (0, calls);
+			} finally {
+				release.Set ();
+				h.Dispose ();
+				JniObjectReference.Dispose (ref handle);
+				Quit (t);
+			}
+		}
+
+		[TestMethod]
+		public void CancelledActionCallbacksAreCollectible ()
+		{
+			using var t = new HandlerThread ("CancelledActionCallbacksAreCollectible");
+			t.Start ();
+			using var h = new Handler (t.Looper);
+			try {
+				var actions = PostAndCancel (h, 100);
+				for (int i = 0; i < 100 && actions.Exists (a => a.IsAlive); i++) {
+					GC.Collect ();
+					GC.WaitForPendingFinalizers ();
+					Java.Lang.Runtime.GetRuntime ().Gc ();
+					JniEnvironment.Runtime.ValueManager.CollectPeers ();
+					Thread.Sleep (100);
+				}
+				Assert.IsFalse (actions.Exists (a => a.IsAlive), "Canceled callbacks must not keep their Action alive.");
+			} finally {
+				GC.KeepAlive (h);
+				Quit (t);
+			}
+		}
+
+		static void Quit (HandlerThread t)
+		{
+			t.QuitSafely ();
+			t.Join (10_000);
+		}
+
+		[MethodImpl (MethodImplOptions.NoInlining)]
+		static List<WeakReference> PostAndCancel (Handler h, int count)
+		{
+			var actions = new List<WeakReference> ();
+			for (int i = 0; i < count; i++) {
+				var payload = new object ();
+				Action action = () => GC.KeepAlive (payload);
+				actions.Add (new WeakReference (action));
+				Assert.IsTrue (h.PostDelayed (action, 3_600_000));
+				Assert.IsTrue (h.PostDelayed (action, 3_600_000));
+				h.RemoveCallbacks (action);
+			}
+			return actions;
 		}
 	}
 }
