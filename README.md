@@ -52,6 +52,10 @@ dotnet new android-console -n HelloAndroid
 dotnet run --file HelloAndroid.cs
 ```
 
+For an in-process BenchmarkDotNet app, use `dotnet new android-benchmark -n Benchmarks`
+and `dotnet run --file Benchmarks.cs -c Release`. See the
+[Android benchmarks guide](tests/Android.Benchmarks/README.md#console-projects) for details.
+
 # Contributing
 
 If you are interested in fixing issues and contributing directly to the code base, please see the following:
