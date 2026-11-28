@@ -162,15 +162,11 @@ namespace Java.Interop
 			/// </safety>
 			static unsafe bool TryRawFindClass (IntPtr env, string classname, out IntPtr klass, out IntPtr thrown)
 			{
-				var _classname_ptr = Marshal.StringToCoTaskMemUTF8 (classname);
+				using var nativeName = new JniUtf8String (classname);
 				unsafe {
-					// SAFETY: This helper owns the UTF8 allocation until JNI and exception polling finish; env comes from the calling thread's JniEnvironmentInfo.
-					klass   = JniNativeMethods.FindClass (env, _classname_ptr);
+					// SAFETY: This helper owns the terminated allocation through lookup and exception polling; env belongs to this thread.
+					klass   = JniNativeMethods.FindClass (env, nativeName.Pointer);
 					thrown  = JniNativeMethods.ExceptionOccurred (env);
-				}
-				unsafe {
-					// SAFETY: Release only this call's CoTaskMemUTF8 allocation after JNI has finished reading it.
-					Marshal.ZeroFreeCoTaskMemUTF8 (_classname_ptr);
 				}
 				if (thrown == IntPtr.Zero) {
 					return true;
@@ -341,6 +337,8 @@ namespace Java.Interop
 						var m       = methods [i];
 						if (m.Marshaler == null)
 							throw new ArgumentException ($"JniNativeMethodRegistration[{i}] ({m.Name}{m.Signature}) has a null Marshaler delegate.", nameof (methods));
+						ArgumentNullException.ThrowIfNull (m.Name, nameof (m.Name));
+						ArgumentNullException.ThrowIfNull (m.Signature, nameof (m.Signature));
 						IntPtr name = Marshal.StringToCoTaskMemUTF8 (m.Name);
 						unmanagedStrings [i * 2] = name;
 						IntPtr sig  = Marshal.StringToCoTaskMemUTF8 (m.Signature);
@@ -366,11 +364,12 @@ namespace Java.Interop
 
 			/// <summary>
 			/// Registers JNI native methods using blittable <see cref="JniNativeMethod"/> structs
-			/// with raw function pointers and UTF-8 name/signature pointers.
+			/// with raw function pointers and NUL-terminated JNI modified UTF-8 name/signature pointers.
 			/// Calls the JNI RegisterNatives function directly without delegate marshaling.
+			/// Malformed or truncated UTF-8 throws <see cref="ArgumentException"/> before JNI reads it.
 			/// </summary>
 			/// <safety>
-			/// Each method's name and signature must address readable NUL-terminated UTF-8 memory
+			/// Each method's name and signature must address readable NUL-terminated JNI modified UTF-8 memory
 			/// through this call. Each callback must match its JNI descriptor's ABI, including
 			/// the leading JNIEnv and receiver/class pointers. Keep callback storage callable and
 			/// rooted for as long as JNI can invoke it, including after failed or partial registration.
@@ -385,6 +384,13 @@ namespace Java.Interop
 			{
 				if (!type.IsValid)
 					throw new ArgumentException ("Handle must be valid.", nameof (type));
+
+				foreach (var method in methods) {
+					unsafe {
+						// SAFETY: The caller retains every descriptor string through registration.
+						method.EnsureValidModifiedUtf8Strings ();
+					}
+				}
 
 				IntPtr env = JniEnvironment.EnvironmentPointer;
 				int r;

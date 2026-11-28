@@ -212,6 +212,12 @@ namespace Xamarin.Java.Interop
 				o.WriteLine ("\t\t{");
 				o.WriteLine ("\t\t\tunsafe {");
 				o.WriteLine ("\t\t\t\t// SAFETY: The caller supplies this thread's live JNIEnv and arguments matching the {0} JNI slot.", entry.Name);
+				if (entry.Name != "ReleaseStringUTFChars") {
+					foreach (var p in entry.Parameters) {
+						if (p.Type is StringTypeInfo && p.Type.JniType == "const char*")
+							o.WriteLine ($"\t\t\t\tJniModifiedUtf8.Validate ((byte*) {Escape (p.Name)}, \"{p.Name}\");");
+					}
+				}
 				o.Write ("\t\t\t\t");
 				if (returnType != "void") {
 					o.Write ("return ");
@@ -769,7 +775,7 @@ namespace Xamarin.Java.Interop
 
 		public override string GetManagedToMarshalExpression (string variable)
 		{
-			return $"_{variable}_ptr";
+			return $"_{variable}_utf8.Pointer";
 		}
 
 		public override string[] GetMarshalToManagedStatements (string variable, JniFunction entry)
@@ -794,17 +800,7 @@ namespace Xamarin.Java.Interop
 		public override string[] GetManagedToMarshalPrepareStatements (string variable)
 		{
 			return new[]{
-				$"var _{variable}_ptr = Marshal.StringToCoTaskMemUTF8 ({variable});",
-			};
-		}
-
-		public override string[] GetManagedToMarshalCleanupStatements (string variable)
-		{
-			return new[]{
-				"unsafe {",
-				$"\t// SAFETY: _{variable}_ptr is owned here and freed after its last native use; earlier failures do not reach this cleanup.",
-				$"\tMarshal.ZeroFreeCoTaskMemUTF8 (_{variable}_ptr);",
-				"}",
+				$"using var _{variable}_utf8 = new JniUtf8String ({variable});",
 			};
 		}
 	}

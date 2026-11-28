@@ -356,22 +356,13 @@ namespace Java.Interop {
 
 		IntPtr RawGetMethodID (IntPtr env, string name, string signature, out IntPtr thrown)
 		{
-			var _name = Marshal.StringToCoTaskMemUTF8 (name);
-			var _sig  = Marshal.StringToCoTaskMemUTF8 (signature);
-			try {
-				unsafe {
-					// SAFETY: Both terminated buffers are allocated above and remain owned until the matching finally.
-					var id      = JniNativeMethods.GetMethodID (env, PeerReference.Handle, _name, _sig);
-					thrown      = JniNativeMethods.ExceptionOccurred (env);
-					return id;
-				}
-			}
-			finally {
-				unsafe {
-					// SAFETY: Free the two CoTaskMemUTF8 allocations once, after native lookup and exception capture.
-					Marshal.ZeroFreeCoTaskMemUTF8 (_name);
-					Marshal.ZeroFreeCoTaskMemUTF8 (_sig);
-				}
+			using var nativeName = new JniUtf8String (name);
+			using var nativeSignature = new JniUtf8String (signature);
+			unsafe {
+				// SAFETY: Both terminated buffers remain owned through lookup and exception capture.
+				var id      = JniNativeMethods.GetMethodID (env, PeerReference.Handle, nativeName.Pointer, nativeSignature.Pointer);
+				thrown      = JniNativeMethods.ExceptionOccurred (env);
+				return id;
 			}
 		}
 
@@ -420,22 +411,13 @@ namespace Java.Interop {
 
 		IntPtr RawGetStaticMethodID (IntPtr env, string name, string signature, out IntPtr thrown)
 		{
-			var _name = Marshal.StringToCoTaskMemUTF8 (name);
-			var _sig  = Marshal.StringToCoTaskMemUTF8 (signature);
-			try {
-				unsafe {
-					// SAFETY: This call owns both terminated CoTaskMem buffers through static lookup and exception capture.
-					var id      = JniNativeMethods.GetStaticMethodID (env, PeerReference.Handle, _name, _sig);
-					thrown      = JniNativeMethods.ExceptionOccurred (env);
-					return id;
-				}
-			}
-			finally {
-				unsafe {
-					// SAFETY: Release only the CoTaskMemUTF8 allocations created above, in their existing failure-safe order.
-					Marshal.ZeroFreeCoTaskMemUTF8 (_name);
-					Marshal.ZeroFreeCoTaskMemUTF8 (_sig);
-				}
+			using var nativeName = new JniUtf8String (name);
+			using var nativeSignature = new JniUtf8String (signature);
+			unsafe {
+				// SAFETY: Both terminated buffers remain owned through static lookup and exception capture.
+				var id      = JniNativeMethods.GetStaticMethodID (env, PeerReference.Handle, nativeName.Pointer, nativeSignature.Pointer);
+				thrown      = JniNativeMethods.ExceptionOccurred (env);
+				return id;
 			}
 		}
 

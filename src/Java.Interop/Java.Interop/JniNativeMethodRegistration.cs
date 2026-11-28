@@ -37,7 +37,8 @@ namespace Java.Interop {
 		/// <remarks>
 		/// This constructor stores addresses without reading their memory or invoking the callback.
 		/// When registering this descriptor, <paramref name="name"/> and <paramref name="signature"/>
-		/// must address readable NUL-terminated UTF-8 memory through registration. <paramref name="functionPointer"/>
+		/// must address readable NUL-terminated JNI modified UTF-8 memory through registration.
+		/// <paramref name="functionPointer"/>
 		/// must have the JNI-compatible ABI for the signature, including the environment and
 		/// receiver arguments, and remain callable and rooted for as long as JNI can invoke it,
 		/// including after failed or partial registration. Prevent new calls to the registered
@@ -50,6 +51,21 @@ namespace Java.Interop {
 			this.name = name;
 			this.signature = signature;
 			this.functionPointer = functionPointer;
+		}
+
+		/// <safety>
+		/// <see cref="name"/> and <see cref="signature"/>, when non-null, must remain readable
+		/// and unchanged through their NUL terminators for the duration of this scan.
+		/// </safety>
+		internal unsafe readonly void EnsureValidModifiedUtf8Strings ()
+		{
+			unsafe {
+				// SAFETY: The caller keeps both descriptor strings readable and NUL-terminated through registration.
+				ArgumentNullException.ThrowIfNull (name);
+				ArgumentNullException.ThrowIfNull (signature);
+				JniModifiedUtf8.Validate (name);
+				JniModifiedUtf8.Validate (signature);
+			}
 		}
 	}
 }
