@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Threading;
 using NUnit.Framework;
 using NUnit.Framework.Interfaces;
 using Xamarin.Android.Tasks;
@@ -55,6 +54,7 @@ namespace Xamarin.Android.Build.Tests
 				IsRelease = isRelease,
 			};
 			proj.SetRuntime (runtime);
+			proj.SetDefaultTargetDevice ();
 			proj.MainActivity = proj.DefaultMainActivity.Replace ("//${AFTER_ONCREATE}", @"button.Text = $""TimeZoneInfo={TimeZoneInfo.Local.Id}"";
 			Console.WriteLine ($""TimeZoneInfoNative={Java.Util.TimeZone.Default.ID}"");
 			Console.WriteLine ($""TimeZoneInfoTests.TimeZoneInfo={TimeZoneInfo.Local.Id}"");
@@ -242,7 +242,6 @@ namespace Xamarin.Android.Build.Tests
 
 			Assert.AreEqual (timeZone, deviceTz, $"The command to set the device timezone to {timeZone} failed. Current device timezone is {deviceTz}");
 			ClearAdbLogcat ();
-			Thread.Sleep (1000);
 			StartActivityAndAssert (proj);
 
 			string logcatSearchString = "TimeZoneInfoTests.TimeZoneInfo=";
