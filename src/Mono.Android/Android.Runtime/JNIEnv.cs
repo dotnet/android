@@ -1907,11 +1907,11 @@ namespace Android.Runtime {
 
 		// We do these translations here instead of in the binding to force a compile
 		// time error if using an older Java.Interop.dll instead of a runtime error
-		public static IntPtr NewArray (uint[] array) => NewArray ((int[])(object)array);
+		public static IntPtr NewArray (uint[]? array) => NewArray ((int[]?) (object?) array);
 
-		public static IntPtr NewArray (ushort[] array) => NewArray ((short[])(object)array);
+		public static IntPtr NewArray (ushort[]? array) => NewArray ((short[]?) (object?) array);
 
-		public static IntPtr NewArray (ulong[] array) => NewArray ((long[])(object)array);
+		public static IntPtr NewArray (ulong[]? array) => NewArray ((long[]?) (object?) array);
 
 		/// <safety>
 		/// <paramref name="elementClass"/> must be null where supported, or a live JNI class reference of the required type usable on the current thread for the call.
