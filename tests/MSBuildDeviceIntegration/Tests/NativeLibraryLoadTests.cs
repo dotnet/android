@@ -638,7 +638,7 @@ public class NativeLibraryLoadTests : DeviceTest
 		string progress = "";
 		if (failureLine != null || !completed) {
 			progress = $" Last progress marker: {lastProgressLine ?? "<none>"}.";
-			TestContext.Out.WriteLine (CaptureWorkerJniLibraryLoadDiagnostics (proj.PackageName, Path.Combine (Root, builder.ProjectDirectory)));
+			Console.Out.WriteLine (CaptureWorkerJniLibraryLoadDiagnostics (proj.PackageName, Path.Combine (Root, builder.ProjectDirectory)));
 		}
 		Assert.IsNull (failureLine, $"Worker JNI library load failed: {failureLine}{progress}");
 		Assert.IsTrue (completed, $"Output did not contain {completedMessage}.{progress}");
@@ -647,7 +647,7 @@ public class NativeLibraryLoadTests : DeviceTest
 	// Best-effort and bounded: failures of individual commands are reported rather than thrown, so they
 	// cannot mask the original assertion. The output goes to the test's standard output because CI task
 	// logs keep it for failed first attempts, even when an automatic retry later passes.
-	static string CaptureWorkerJniLibraryLoadDiagnostics (string packageName, string outputDirectory)
+	string CaptureWorkerJniLibraryLoadDiagnostics (string packageName, string outputDirectory)
 	{
 		const int MaxLogcatLines = 400;
 		var sb = new StringBuilder ();
@@ -674,7 +674,7 @@ public class NativeLibraryLoadTests : DeviceTest
 			string logcatPath = Path.Combine (outputDirectory, "worker-jni-library-load-diagnostics.log");
 			try {
 				File.WriteAllText (logcatPath, logcat);
-				TestContext.AddTestAttachment (logcatPath);
+				TestContext.AddResultFile (logcatPath);
 			} catch (Exception ex) {
 				sb.AppendLine ($"Could not save {logcatPath}: {ex.Message}");
 			}
