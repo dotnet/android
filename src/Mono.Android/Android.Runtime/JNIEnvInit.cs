@@ -56,12 +56,12 @@ namespace Android.Runtime
 
 		/// <safety>
 		/// <paramref name="args"/> must come from the native host with the matching descriptor layout,
-		/// process-lifetime remapping data, and runtime-lifetime global references.
+		/// process-lifetime remapping data, and a runtime-lifetime grefIGCUserPeer reference.
 		/// </safety>
 		internal static unsafe void InitializeBeforeRuntimeCreation (JnienvInitializeArgs args)
 		{
 			unsafe {
-				// SAFETY: the native host retains the remapping body and global references beyond initialization.
+				// SAFETY: the native host retains the remapping body and GC user-peer global beyond initialization.
 				InitializeCommonState (args);
 			}
 			TypeMapLoader.Initialize ();
@@ -105,14 +105,15 @@ namespace Android.Runtime
 		// Only used for CoreCLR. NativeAOT uses InitializeNativeAotRuntime().
 		/// <safety>
 		/// <paramref name="args"/> must address the native host's readable and writable initialization descriptor
-		/// for the call. Its VM must outlive the runtime, environment must belong to the current thread,
-		/// and global references/remapping data must retain their documented runtime/process lifetimes.
+		/// for the call. Its VM and grefIGCUserPeer must outlive the runtime, the environment must belong to
+		/// the current thread, and remapping data must remain valid for the process lifetime. The grefLoader reference must
+		/// remain live for this call; the runtime creates its own global reference.
 		/// </safety>
 		[UnmanagedCallersOnly]
 		internal static unsafe void Initialize (JnienvInitializeArgs* args)
 		{
 			unsafe {
-				// SAFETY: the native host calls this entry point with its matching live descriptor, current-thread environment and runtime-lifetime VM/global references.
+				// SAFETY: the native host retains the descriptor and loader for this call, and the VM and GC user-peer global for the runtime lifetime.
 				ArgumentNullException.ThrowIfNull (args);
 				if (RuntimeFeature.IsNativeAotRuntime) {
 					throw new NotSupportedException ("JNIEnvInit.Initialize cannot be used to initialize NativeAOT.");
@@ -147,7 +148,7 @@ namespace Android.Runtime
 
 		/// <safety>
 		/// <paramref name="args"/> must retain its native remapping body for the process lifetime
-		/// and its JNI global references for the runtime lifetime.
+		/// and its grefIGCUserPeer reference for the runtime lifetime.
 		/// </safety>
 		static unsafe void InitializeCommonState (JnienvInitializeArgs args)
 		{

@@ -1062,11 +1062,15 @@ namespace Android.Runtime {
 				{ typeof (double?), (type, source, index) => GetNullableArrayElement (source, index, typeof (double?)) },
 				{ typeof (string), (type, source, index) => {
 					unsafe {
-						// SAFETY: the checked local is null or a String before its existing conversion consumes it.
+						// SAFETY: the checked local is null or a String; conversion transfers it to the peer or releases it in finally.
 						IntPtr elem = GetStringArrayElement (source, index);
 						if (type == typeof (Java.Lang.String))
 							return new Java.Lang.String (elem, JniHandleOwnership.TransferLocalRef);
-						return GetString (elem, JniHandleOwnership.TransferLocalRef);
+						try {
+							return GetString (elem, JniHandleOwnership.DoNotTransfer);
+						} finally {
+							DeleteLocalRef (elem);
+						}
 					}
 				} },
 				{ typeof (IJavaObject), (type, source, index) => {
@@ -1372,11 +1376,14 @@ namespace Android.Runtime {
 				throw new ArgumentNullException ("src");
 
 			unsafe {
-				// SAFETY: the caller retains dest as a String-compatible object array; each temporary NewString reference is passed to SetObjectArrayElement before normal-path deletion.
+				// SAFETY: the caller retains dest as a String-compatible object array; each temporary String local is released in finally.
 				for (int i = 0; i < src.Length; i++) {
 					IntPtr native = NewString (src [i]);
-					JniEnvironment.Arrays.SetObjectArrayElement (new JniObjectReference (dest), i, new JniObjectReference (native));
-					DeleteLocalRef (native);
+					try {
+						JniEnvironment.Arrays.SetObjectArrayElement (new JniObjectReference (dest), i, new JniObjectReference (native));
+					} finally {
+						DeleteLocalRef (native);
+					}
 				}
 			}
 		}
@@ -1392,8 +1399,11 @@ namespace Android.Runtime {
 
 			for (int i = 0; i < src.Length; i++) {
 				IJavaObject o = src [i];
-				JniEnvironment.Arrays.SetObjectArrayElement (new JniObjectReference (dest), i, new JniObjectReference (o == null ? IntPtr.Zero : o.Handle));
-				GC.KeepAlive (o);
+				try {
+					JniEnvironment.Arrays.SetObjectArrayElement (new JniObjectReference (dest), i, new JniObjectReference (o == null ? IntPtr.Zero : o.Handle));
+				} finally {
+					GC.KeepAlive (o);
+				}
 			}
 		}
 
@@ -1508,11 +1518,17 @@ namespace Android.Runtime {
 					int len = source.GetLength (0);
 					for (int i = 0; i < len; ++i) {
 						unsafe {
-							// SAFETY: dest/i supply the nested array; conversion and the existing local release stay together.
+							// SAFETY: dest/i supply the nested array; its local reference is released even when conversion fails.
 							IntPtr _dest = GetObjectArrayElement (dest, i);
-							Array  _source  = (Array) source.GetValue (i)!;
-							CopyArray (_source, _source.GetType ().GetElementType ()!, _dest);
-							JNIEnv.DeleteLocalRef (_dest);
+							try {
+								Array? _source = (Array?) source.GetValue (i);
+								if (_source == null)
+									throw new NullReferenceException ();
+								Type elementType = _source.GetType ().GetElementType () ?? throw new InvalidOperationException ("The source must be an array.");
+								CopyArray (_source, elementType, _dest);
+							} finally {
+								JNIEnv.DeleteLocalRef (_dest);
+							}
 						}
 					}
 				} },
@@ -1897,11 +1913,15 @@ namespace Android.Runtime {
 				return IntPtr.Zero;
 
 			unsafe {
-				// SAFETY: NewObjectArray creates a String array of array.Length; CopyArray uses that owned local reference and exactly the managed source's elements.
+				// SAFETY: NewObjectArray creates a String array of array.Length; a failed copy releases that owned local.
 				IntPtr result = NewObjectArray (array.Length, Java.Lang.Class.String, IntPtr.Zero);
-				CopyArray (array, result);
-
-				return result;
+				try {
+					CopyArray (array, result);
+					return result;
+				} catch {
+					DeleteLocalRef (result);
+					throw;
+				}
 			}
 		}
 
@@ -1944,26 +1964,30 @@ namespace Android.Runtime {
 					return IntPtr.Zero;
 
 				IntPtr grefArrayElementClass = GetArrayElementClass (values);
-				if (JniEnvironment.Types.GetJniTypeNameFromClass (new JniObjectReference (grefArrayElementClass)) == "mono/android/runtime/JavaObject") {
-					DeleteGlobalRef (grefArrayElementClass);
-					grefArrayElementClass = NewGlobalRef (Java.Lang.Class.Object);
-				}
 				try {
-					IntPtr lrefArray = NewObjectArray (values.Length, grefArrayElementClass, IntPtr.Zero);
-
-					for (int i = 0; i < values.Length; ++i) {
-						JavaConvert.WithLocalJniHandle (values [i], lref => {
-								SetObjectArrayElement (lrefArray, i, lref);
-								return IntPtr.Zero;
-						});
+					if (JniEnvironment.Types.GetJniTypeNameFromClass (new JniObjectReference (grefArrayElementClass)) == "mono/android/runtime/JavaObject") {
+						IntPtr objectClass = NewGlobalRef (Java.Lang.Class.Object);
+						DeleteGlobalRef (grefArrayElementClass);
+						grefArrayElementClass = objectClass;
 					}
 
-					return lrefArray;
-				}
-				finally {
+					IntPtr lrefArray = NewObjectArray (values.Length, grefArrayElementClass, IntPtr.Zero);
+					try {
+						for (int i = 0; i < values.Length; ++i) {
+							JavaConvert.WithLocalJniHandle (values [i], lref => {
+									SetObjectArrayElement (lrefArray, i, lref);
+									return IntPtr.Zero;
+							});
+						}
+
+						return lrefArray;
+					} catch {
+						DeleteLocalRef (lrefArray);
+						throw;
+					}
+				} finally {
 					DeleteGlobalRef (grefArrayElementClass);
 				}
-
 			}
 		}
 
@@ -2046,9 +2070,13 @@ namespace Android.Runtime {
 					DeleteGlobalRef (grefClass);
 				}
 
-				CopyArray (array, result);
-
-				return result;
+				try {
+					CopyArray (array, result);
+					return result;
+				} catch {
+					DeleteLocalRef (result);
+					throw;
+				}
 			}
 		}
 
@@ -2175,15 +2203,18 @@ namespace Android.Runtime {
 				throw new ArgumentNullException ("value");
 
 			unsafe {
-				// SAFETY: elementClass is retained by the calling factory; the new array has value.Length slots and each generated subarray is inserted before normal-path local deletion.
+				// SAFETY: elementClass is retained by the calling factory; the new array and each generated subarray are released on failure.
 				IntPtr array = IntPtr.Zero;
 				try {
 					array = NewObjectArray (value.Length, elementClass, IntPtr.Zero);
 
 					for (int i = 0; i < value.Length; ++i) {
 						IntPtr subarray = NewArray ((Array) value.GetValue (i)!, elementType.GetElementType ());
-						SetObjectArrayElement (array, i, subarray);
-						DeleteLocalRef (subarray);
+						try {
+							SetObjectArrayElement (array, i, subarray);
+						} finally {
+							DeleteLocalRef (subarray);
+						}
 					}
 
 					return array;
@@ -2302,9 +2333,12 @@ namespace Android.Runtime {
 				{ typeof (Array), (dest, index, value) => {
 					IntPtr _v = NewArray ((Array) value!);
 					unsafe {
-						// SAFETY: the marshaler retains dest and the local element for this in-range set.
-						SetObjectArrayElement (dest, index, _v);
-						JNIEnv.DeleteLocalRef (_v);
+						// SAFETY: the marshaler retains dest and the local element for this in-range set; the local is released in finally.
+						try {
+							SetObjectArrayElement (dest, index, _v);
+						} finally {
+							JNIEnv.DeleteLocalRef (_v);
+						}
 					}
 				} },
 			};

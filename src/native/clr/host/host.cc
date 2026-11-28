@@ -428,6 +428,9 @@ void Host::Java_mono_android_Runtime_initInternal (
 
 	log_debugf (LOG_DEFAULT, "Calling into managed runtime init");
 	initialize (&init);
+	// JniRuntime has copied the class loader into its own global reference.
+	env->DeleteGlobalRef (init.grefLoader);
+	init.grefLoader = nullptr;
 
 	jnienv_propagate_uncaught_exception = init.propagateUncaughtExceptionFn;
 	abort_unless (jnienv_propagate_uncaught_exception != nullptr, "Failed to obtain unmanaged-callers-only function pointer to the PropagateUncaughtException method.");

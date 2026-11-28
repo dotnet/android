@@ -427,16 +427,26 @@ namespace Android.Runtime {
 				throw new ArgumentException ("array");
 
 			unsafe {
-				// SAFETY: java.util.Collection.toArray.()[Ljava/lang/Object; matches this peer's JNI ABI. Result locals transfer to conversion.
+				// SAFETY: java.util.Collection.toArray.()[Ljava/lang/Object; matches this peer's JNI ABI; each element local remains caller-owned until deleted in finally.
 				if (id_toArray == IntPtr.Zero)
 					id_toArray = JNIEnv.GetMethodID (collection_class, "toArray", "()[Ljava/lang/Object;");
 
 				IntPtr lrefArray = JNIEnv.CallObjectMethod (Handle, id_toArray);
-				for (int i = 0; i < Count; i++)
-					array [array_index + i] = JavaConvert.FromJniHandle<T>(
-							JNIEnv.GetObjectArrayElement (lrefArray, i),
-							JniHandleOwnership.TransferLocalRef)!;
-				JNIEnv.DeleteLocalRef (lrefArray);
+				try {
+					for (int i = 0; i < Count; i++) {
+						IntPtr lrefElement = JNIEnv.GetObjectArrayElement (lrefArray, i);
+						try {
+							array [array_index + i] = JavaConvert.FromJniHandle<T> (
+									lrefElement,
+									JniHandleOwnership.DoNotTransfer)!;
+						} finally {
+							JNIEnv.DeleteLocalRef (lrefElement);
+						}
+					}
+				} finally {
+					JNIEnv.DeleteLocalRef (lrefArray);
+					GC.KeepAlive (this);
+				}
 			}
 		}
 
