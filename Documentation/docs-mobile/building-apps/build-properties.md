@@ -301,6 +301,23 @@ Possible values include:
 The default and only supported value is `XAJavaInterop1`, including for
 the NativeAOT runtime.
 
+## AndroidConsoleApplication
+
+A boolean property that controls whether an application project runs as
+a console application. A console application keeps `OutputType=Exe`, and
+`dotnet run` invokes its entry point (`Main` or top-level statements)
+through an instrumentation, forwarding the console output, arguments,
+and exit code.
+
+By default, a C# project with `OutputType=Exe` is a console application
+when it has no `AndroidManifest.xml` and does not set `$(ApplicationId)`,
+`$(AndroidManifest)`, `$(EnableMSTestRunner)`, or
+`$(AndroidUseInstrumentation)`. Set `AndroidConsoleApplication` to `true`
+to run a project with an explicit `$(ApplicationId)` as a console
+application, or to `false` to disable the detection.
+
+Added in .NET 12.
+
 ## AndroidCreatePackagePerAbi
 
 A boolean property that determines whether to create one `.apk` per selected

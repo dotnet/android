@@ -253,6 +253,11 @@ namespace Xamarin.ProjectTools
 			return ExecuteProcess (arguments.ToArray ());
 		}
 
+		public Process StartFileBasedRun ()
+		{
+			return ExecuteProcess (["run", "--file", $"\"{projectOrSolution}\""], workingDirectory: ProjectDirectory);
+		}
+
 		/// <summary>
 		/// Starts `dotnet test` and returns a running Process that can be monitored and killed.
 		/// </summary>
