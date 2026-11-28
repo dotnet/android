@@ -45,9 +45,35 @@ steps:
     }
 
     & dotnet $assembly @testArgs --report-trx --results-directory $resultsDirectory --progress off
-    if ($LASTEXITCODE -ne 0) {
-      Write-Host "##vso[task.logissue type=error]Test run failed with exit code $LASTEXITCODE."
-      exit $LASTEXITCODE
+    $testExitCode = $LASTEXITCODE
+
+    # The Retry extension writes each attempt to Retries/<id>/<attempt>/. Publish the first attempt without the
+    # failures it retried, and the later attempts as a separate (Auto-Retry) run.
+    $retries = Join-Path $resultsDirectory "Retries"
+    if (Test-Path $retries) {
+      $first = Join-Path $resultsDirectory "first"
+      $retried = Join-Path $resultsDirectory "retried"
+      New-Item -ItemType Directory -Force -Path $first, $retried | Out-Null
+      foreach ($trx in Get-ChildItem -Path $retries -Recurse -Filter *.trx) {
+        $attempt = [int] $trx.Directory.Name
+        $destination = Join-Path ($attempt -eq 1 ? $first : $retried) "$attempt-$($trx.Directory.Parent.Name)-$($trx.Name)"
+        Copy-Item $trx.FullName $destination
+      }
+      if (Get-ChildItem -Path $retried -Filter *.trx) {
+        Write-Host "##vso[task.setvariable variable=MSTestTestsRetried]true"
+        foreach ($trx in Get-ChildItem -Path $first -Filter *.trx) {
+          [xml] $xml = Get-Content -Raw $trx.FullName
+          foreach ($result in @($xml.TestRun.Results.UnitTestResult | Where-Object { $_.outcome -eq "Failed" })) {
+            [void] $result.ParentNode.RemoveChild($result)
+          }
+          $xml.Save($trx.FullName)
+        }
+      }
+    }
+
+    if ($testExitCode -ne 0) {
+      Write-Host "##vso[task.logissue type=error]Test run failed with exit code $testExitCode."
+      exit $testExitCode
     }
   displayName: run ${{ parameters.testRunTitle }}
   workingDirectory: ${{ parameters.xaSourcePath }}
@@ -62,7 +88,7 @@ steps:
     testResultsFormat: VSTest
     searchFolder: $(MSTestResultsDirectory)
     ${{ if gt(parameters.retryFailedTests, 0) }}:
-      testResultsFiles: Retries/**/*.trx
+      testResultsFiles: first/*.trx
     ${{ else }}:
       testResultsFiles: '*.trx'
     mergeTestResults: true
@@ -71,6 +97,20 @@ steps:
     ${{ else }}:
       testRunTitle: ${{ parameters.testRunTitle }}
   condition: and(${{ parameters.condition }}, ne(variables['MSTestResultsDirectory'], ''))
+
+- ${{ if gt(parameters.retryFailedTests, 0) }}:
+  - task: PublishTestResults@2
+    displayName: publish ${{ parameters.testRunTitle }} (Auto-Retry) results
+    inputs:
+      testResultsFormat: VSTest
+      searchFolder: $(MSTestResultsDirectory)
+      testResultsFiles: retried/*.trx
+      mergeTestResults: true
+      ${{ if eq(parameters.sliceTests, true) }}:
+        testRunTitle: ${{ parameters.testRunTitle }}-$(System.JobPositionInPhase) (Auto-Retry)
+      ${{ else }}:
+        testRunTitle: ${{ parameters.testRunTitle }} (Auto-Retry)
+    condition: and(${{ parameters.condition }}, eq(variables['MSTestTestsRetried'], 'true'))
 
 - template: /build-tools/automation/yaml-templates/diagnose-hanging-processes.yaml
 

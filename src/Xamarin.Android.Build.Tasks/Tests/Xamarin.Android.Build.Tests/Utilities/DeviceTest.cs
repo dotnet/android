@@ -136,6 +136,14 @@ namespace Xamarin.Android.Build.Tests
 			}
 		}
 
+		/// <summary>Prepares the device again, e.g. after <see cref="RestartDevice"/>, without counting another class.</summary>
+		protected static void ResetupDevice ()
+		{
+			lock (deviceClassesLock) {
+				SetupDevice ();
+			}
+		}
+
 		static void SetupDevice ()
 		{
 			if (IsDeviceAttached ()) {

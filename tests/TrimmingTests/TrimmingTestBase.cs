@@ -95,7 +95,7 @@ public abstract class TrimmingTestBase : DeviceTest
 	{
 		if (!IsDeviceAttached (refreshCachedValue: true)) {
 			RestartDevice ();
-			DeviceSetup (context);
+			ResetupDevice ();
 		}
 		AssertHasDevices ();
 		AssertPackageManagerResponsive ();
