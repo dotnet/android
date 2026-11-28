@@ -10,7 +10,7 @@
 using System;
 using Android.App;
 using Android.Content;
-using Android.OS;
+using Android.Runtime;
 using Microsoft.Android.TrimmingTests.Expectations;
 
 [assembly: KeptTypeInAssembly ("Mono.Android", "Android.Content.ISharedPreferencesInvoker")]
@@ -29,14 +29,21 @@ using Microsoft.Android.TrimmingTests.Expectations;
 [assembly: RemovedTypeInAssembly ("Mono.Android", "Android.Content.ISharedPreferencesOnSharedPreferenceChangeListenerInvoker")]
 [assembly: RemovedTypeInAssembly ("Mono.Android", "Android.Text.ITextWatcherInvoker")]
 
-[Activity (Label = "JavaInterfaceInvokers", MainLauncher = true)]
-public class MainActivity : Activity
+[Instrumentation (Name = "net.dot.trimmingtests.CaseInstrumentation")]
+public class CaseInstrumentation : Instrumentation
 {
-	protected override void OnCreate (Bundle? savedInstanceState)
+	// Android creates instrumentations before the runtime starts, so their peer is activated later through this constructor.
+	public CaseInstrumentation (IntPtr handle, JniHandleOwnership transfer)
+		: base (handle, transfer)
 	{
-		base.OnCreate (savedInstanceState);
+	}
+
+	public override void CallApplicationOnCreate (Application? app)
+	{
+		base.CallApplicationOnCreate (app);
 		try {
-			var preferences = GetSharedPreferences ("trimming-tests", FileCreationMode.Private)
+			var context = app ?? throw new InvalidOperationException ("No application.");
+			var preferences = context.GetSharedPreferences ("trimming-tests", FileCreationMode.Private)
 				?? throw new InvalidOperationException ("GetSharedPreferences returned null.");
 			var editor = preferences.Edit ()?.PutString ("key", "value") ?? throw new InvalidOperationException ("Edit returned null.");
 			if (!editor.Commit ()) {

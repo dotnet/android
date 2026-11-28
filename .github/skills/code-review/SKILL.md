@@ -84,7 +84,7 @@ Based on the changed files and diff content identified in step 2, read the appro
 - `references/msbuild-rules.md` — When `.targets`, `.props`, `.projitems`, or `.csproj` files changed, or when MSBuild task C# files changed (e.g., files under `src/Xamarin.Android.Build.Tasks/` or `src/Microsoft.Android.Build.BaseTasks/`).
 - `references/native-rules.md` — When `.c`, `.cpp`, `.h`, or `.hpp` files changed. Covers memory management, C++ best practices, symbol visibility, and platform-specific code.
 - `references/interop-rules.md` — When interop markers or Java/JNI name conversions appear, or files under `src/Java.Interop/`, `src/Mono.Android/`, `src/native/`, or `src/Microsoft.Android.Sdk.TrimmableTypeMap/` change.
-- `references/testing-rules.md` — When test files changed (e.g., files under `tests/`, `**/Tests/`, or test project directories).
+- `references/testing-rules.md` — When test files changed (e.g., files under `tests/`, `**/Tests/`, or test project directories). Includes the flake-prevention checklist.
 - `references/security-rules.md` — When any code files changed (C#, C/C++, or MSBuild).
 
 ### 6. Analyze the diff
@@ -100,7 +100,7 @@ For each changed file, check against the review rules. Record issues as:
 2. **Safety** — thread safety, resource leaks, security vulnerabilities
 3. **Performance** — O(n²) patterns, unnecessary allocations, missing caches, startup-time regressions
 4. **Trimmer/NativeAOT compatibility** — reflection without `[DynamicallyAccessedMembers]`, `Type.GetType()` misuse
-5. **Tests** — unprotected behavior or regressions; redundant or brittle test additions (see `testing-rules.md`)
+5. **Tests** — untested error paths, edge cases or regressions; redundant or brittle tests that can fail nondeterministically (timing thresholds, sleeps, shared directories or state, network dependencies, stale logs; see `references/testing-rules.md`)
 6. **Code duplication** — near-identical methods that should be consolidated
 7. **Consistency** — dedup patterns mixed within the same PR, API return types inconsistent with repo conventions
 8. **Documentation** — misleading comments, undocumented behavioral decisions

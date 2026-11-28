@@ -1625,16 +1625,13 @@ using System.Runtime.Serialization.Json;
 				return;
 			}
 
-			if (testOnly && runtime == AndroidRuntime.NativeAOT) {
-				// TODO: NativeAOT Release deploys an app bundle through InstallApkSet, which does not pass
-				// bundletool's `--allow-test-only`, so installing a test-only bundle fails with INSTALL_FAILED_TEST_ONLY.
-				Assert.Ignore ("Installing a test-only app bundle fails with INSTALL_FAILED_TEST_ONLY.");
-			}
-
 			var proj = new XamarinAndroidApplicationProject (packageName: PackageUtils.MakePackageName (runtime)) {
 				IsRelease = isRelease,
 			};
 			proj.SetRuntime (runtime);
+			proj.SetDefaultTargetDevice ();
+			if (runtime == AndroidRuntime.CoreCLR)
+				proj.SetProperty ("AndroidPackageFormat", "aab");
 			proj.SetProperty ("ApplicationId", "com.i.should.get.overridden.by.the.manifest");
 			if (testOnly)
 				proj.AndroidManifest = proj.AndroidManifest.Replace ("<application", "<application android:testOnly=\"true\"");
@@ -1642,6 +1639,7 @@ using System.Runtime.Serialization.Json;
 			proj.SetRuntimeIdentifiers (new[] { DeviceAbi });
 			builder = CreateApkBuilder ();
 			Assert.IsTrue (builder.Install (proj), "Install should have succeeded.");
+			Assert.IsFalse (builder.Output.IsTargetSkipped ("_DeployAppBundle"), "The app bundle should be installed.");
 			RunProjectAndAssert (proj, builder);
 
 			var didStart = WaitForActivityToStart (proj.PackageName, "MainActivity",

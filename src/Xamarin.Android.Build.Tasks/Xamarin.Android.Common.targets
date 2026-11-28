@@ -1884,7 +1884,7 @@ because xbuild doesn't support framework reference assemblies.
         Include="com.android.tools/r8.json:$(_AndroidR8BuildMetadataFile)"
     />
     <AndroidAppBundleMetaDataFile
-        Condition=" '$(Configuration)' == 'Release' And '$(AndroidPackageFormat)' == 'aab' And '$(_AndroidRuntime)' == 'NativeAOT' And '%(ResolvedFileToPublish._AndroidNativeAotDebugSymbols)' != '' And Exists('%(ResolvedFileToPublish._AndroidNativeAotDebugSymbols)') "
+        Condition=" '$(AndroidPackageFormat)' == 'aab' And '$(_AndroidRuntime)' == 'NativeAOT' And '%(ResolvedFileToPublish._AndroidNativeAotDebugSymbols)' != '' And Exists('%(ResolvedFileToPublish._AndroidNativeAotDebugSymbols)') "
         Include="com.android.tools.build.debugsymbols/%(ResolvedFileToPublish._AndroidNativeAotAbi)/lib$(TargetName).so.dbg:%(ResolvedFileToPublish._AndroidNativeAotDebugSymbols)"
     />
   </ItemGroup>
@@ -2271,6 +2271,10 @@ because xbuild doesn't support framework reference assemblies.
   <ItemGroup Condition="'@(_BuildTargetAbis)' == ''">
     <_BuildTargetAbis Include="$(AndroidSupportedAbis.Split(',;', StringSplitOptions.RemoveEmptyEntries))" />
   </ItemGroup>
+  <!-- Packaging runs after IncrementalClean, so record its expected raw stores here. -->
+  <ItemGroup Condition=" '$(AndroidApplication)' == 'true' and '$(EmbedAssembliesIntoApk)' == 'true' and '$(_AndroidRuntime)' != 'NativeAOT' ">
+    <FileWrites Include="@(_BuildTargetAbis->'$(_AndroidApplicationSharedLibraryPath)%(Identity)\assembly-store.so');@(_BuildTargetAbis->'$(_AndroidApplicationSharedLibraryPath)%(Identity)\assembly-store.so.manifest')" />
+  </ItemGroup>
   <Error Code="XA0115"
       Condition=" '%(_BuildTargetAbis.Identity)' == 'armeabi' "
       Text="Invalid value 'armeabi' in %24(AndroidSupportedAbis). This ABI is no longer supported. Please update your project properties to remove the old value. If the properties page does not show an 'armeabi' checkbox, un-check and re-check one of the other ABIs and save the changes."
@@ -2628,6 +2632,7 @@ because xbuild doesn't support framework reference assemblies.
 	<RemoveDirFixed Directories="$(IntermediateOutputPath)$(_LibraryProjectImportsDirectoryName)" Condition="Exists ('$(IntermediateOutputPath)$(_LibraryProjectImportsDirectoryName)')" />
 	<RemoveDirFixed Directories="$(IntermediateOutputPath)$(_NativeLibraryImportsDirectoryName)" Condition="Exists ('$(IntermediateOutputPath)$(_NativeLibraryImportsDirectoryName)')" />
 	<RemoveDirFixed Directories="$(IntermediateOutputPath)assets" Condition="Exists ('$(IntermediateOutputPath)assets')" />
+	<RemoveDirFixed Directories="$(IntermediateOutputPath)assetpacks" Condition="Exists ('$(IntermediateOutputPath)assetpacks')" />
  	<RemoveDirFixed Directories="$(IntermediateOutputPath)java" Condition="Exists ('$(IntermediateOutputPath)java')" />
 	<RemoveDirFixed Directories="$(IntermediateOutputPath)binary-blobs" Condition="Exists ('$(IntermediateOutputPath)binary-blobs')" />
 	<ItemGroup>
@@ -2766,6 +2771,7 @@ because xbuild doesn't support framework reference assemblies.
       AdbToolPath="$(AdbToolPath)"
       AdbTarget="$(AdbTarget)"
       ApkSet="$(_ApkSetIntermediate)"
+      IsTestOnly="$(_AndroidIsTestOnlyPackage)"
       Modules="@(AndroidInstallModules)"
   />
   <Touch Files="$(_AndroidAppBundleInstallFlag)" AlwaysCreate="true" />

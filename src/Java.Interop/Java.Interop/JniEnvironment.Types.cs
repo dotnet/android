@@ -421,49 +421,41 @@ namespace Java.Interop
 			}
 
 			/// <summary>
-			/// Finds a Java class using a null-terminated UTF-8 class name span.
-			/// Use with <c>"java/lang/Object"u8</c> literals to avoid string marshalling overhead.
+			/// Finds a Java class using a UTF-8 class name span, ending at the span length or an earlier NUL byte.
 			/// </summary>
 			/// <safety>
-			/// The caller must ensure the backing storage remains readable and NUL-terminated
-			/// for the duration of the call. C# UTF-8 literals provide a
-			/// terminator immediately beyond the span length; copies and slices do not carry that guarantee.
-			/// Keep the backing bytes readable and unchanged until completion, including failure;
-			/// another thread must not mutate or reclaim an alias. The wrapper pins managed
-			/// backing storage during the JNI read.
+			/// Keep the bytes in <paramref name="classname"/> readable and unchanged until completion,
+			/// including failure; another thread must not mutate or reclaim an alias. The wrapper pins
+			/// managed backing storage during the JNI read.
 			/// </safety>
 			public static unsafe JniObjectReference FindClass (ReadOnlySpan<byte> classname)
 			{
-				// SAFETY: The caller guarantees the terminator and byte lifetime; lookup pins the span only for JNI's synchronous read.
+				// SAFETY: The caller keeps the span readable and unchanged; lookup bounds reads to the span length or an earlier NUL.
 				return unsafe (TryFindClass (classname, throwOnError: true));
 			}
 
 			/// <summary>
-			/// Tries to find a Java class using a null-terminated UTF-8 class name span.
+			/// Tries to find a Java class using a UTF-8 class name span, ending at the span length or an earlier NUL byte.
 			/// Returns <c>true</c> if the class was found, <c>false</c> otherwise.
 			/// </summary>
 			/// <safety>
-			/// The caller must ensure the backing storage remains readable and NUL-terminated
-			/// for the duration of the call. C# UTF-8 literals provide a
-			/// terminator immediately beyond the span length; copies and slices do not carry that guarantee.
-			/// Keep the backing bytes readable and unchanged until completion, including failure;
-			/// another thread must not mutate or reclaim an alias. The wrapper pins managed
-			/// backing storage during the JNI read.
+			/// Keep the bytes in <paramref name="classname"/> readable and unchanged until completion,
+			/// including failure; another thread must not mutate or reclaim an alias. The wrapper pins
+			/// managed backing storage during the JNI read.
 			/// </safety>
 			public static unsafe bool TryFindClass (ReadOnlySpan<byte> classname, out JniObjectReference instance)
 			{
-				// SAFETY: The caller supplies readable terminated bytes through failed or successful lookup; the helper owns JNI pinning.
+				// SAFETY: The caller keeps the span readable and unchanged; lookup bounds reads to the span length or an earlier NUL.
 				instance = unsafe (TryFindClass (classname, throwOnError: false));
 				return instance.IsValid;
 			}
 
 			/// <safety>
-			/// <paramref name="classname"/> must have readable, unchanged NUL-terminated backing
-			/// storage through lookup and fallback, even when the terminator is beyond its length.
+			/// <paramref name="classname"/> must remain readable and unchanged through lookup and fallback.
 			/// </safety>
 			static unsafe JniObjectReference TryFindClass (ReadOnlySpan<byte> classname, bool throwOnError)
 			{
-				if (classname.Length == 0)
+				if (classname.Length == 0 || classname [0] == 0)
 					throw new ArgumentException ("'classname' cannot be a zero-length string.", nameof (classname));
 
 				var info = JniEnvironment.CurrentInfo;
@@ -474,8 +466,8 @@ namespace Java.Interop
 				// Convert dot-separated names (e.g. "java.lang.Object"u8) to JNI form ("java/lang/Object")
 				// before calling FindClass, because ART's CheckJNI aborts the process on dot-separated names.
 				bool hasDots = classname.Slice (0, nameLength).IndexOf ((byte) '.') >= 0;
-				if (!hasDots) {
-					// SAFETY: No copy is made; the caller's termination guarantee applies to the pinned classname storage.
+				if (terminator >= 0 && !hasDots) {
+					// SAFETY: classname contains an in-bounds NUL terminator and no dots, so pinning it directly cannot read past classname.Length.
 					return unsafe (TryFindClassFromPtr (info, classname, classname, terminator, throwOnError));
 				}
 
@@ -483,8 +475,7 @@ namespace Java.Interop
 				Span<byte> jniClassName = jniClassNameLength <= 256
 					? stackalloc byte [jniClassNameLength]
 					: new byte [jniClassNameLength];
-				for (int i = 0; i < nameLength; ++i)
-					jniClassName [i] = classname [i] == (byte) '.' ? (byte) '/' : classname [i];
+				classname.Slice (0, nameLength).Replace (jniClassName, (byte) '.', (byte) '/');
 				jniClassName [nameLength] = 0;
 
 				// SAFETY: jniClassName owns its appended NUL; the original caller-owned span remains readable for bounded fallback conversion.

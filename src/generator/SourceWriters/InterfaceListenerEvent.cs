@@ -11,8 +11,9 @@ namespace generator.SourceWriters
 	public class InterfaceListenerEvent : EventWriter
 	{
 		readonly InterfaceListenerEventHandlerHelper helper_method;
+		readonly bool suppress_obsolete_warning;
 
-		public InterfaceListenerEvent (InterfaceGen iface, Method method, string name, string nameSpec, string fullDelegateName, string wrefSuffix, string add, string remove, bool hasHandlerArgument, CodeGenerationOptions opt)
+		public InterfaceListenerEvent (InterfaceGen iface, ClassGen target, Method method, string name, string nameSpec, string fullDelegateName, string wrefSuffix, string add, string remove, bool hasHandlerArgument, CodeGenerationOptions opt)
 		{
 			Name = name;
 			EventType = new TypeReferenceWriter (opt.GetOutputName (fullDelegateName));
@@ -39,13 +40,18 @@ namespace generator.SourceWriters
 
 			if (hasHandlerArgument)
 				helper_method = new InterfaceListenerEventHandlerHelper (iface, method, add, opt);
+
+			suppress_obsolete_warning = !SourceWriterExtensions.IsTypeObsolete (target, opt) && (
+				SourceWriterExtensions.IsTypeObsolete (iface, opt) ||
+				SourceWriterExtensions.WillEmitObsolete (method?.Deprecated, opt, deprecatedSince: method?.DeprecatedSince));
 		}
 
 		public override void Write (CodeWriter writer)
 		{
-			base.Write (writer);
-
-			helper_method?.Write (writer);
+			SourceWriterExtensions.WriteWithWarningsDisabled (writer, suppress_obsolete_warning, "0618", () => {
+				base.Write (writer);
+				helper_method?.Write (writer);
+			});
 		}
 	}
 

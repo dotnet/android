@@ -24,6 +24,7 @@ namespace generator.SourceWriters
 		readonly UnmanagedCallbackKind kind;
 		readonly TypedCallbackShape typed_shape;
 		readonly bool marshal_target_is_shadow;
+		readonly bool suppress_obsolete_warning;
 
 		// static sbyte n_ByteValueExact (IntPtr jnienv, IntPtr native__this)
 		// {
@@ -106,6 +107,10 @@ namespace generator.SourceWriters
 
 			foreach (var p in method.Parameters)
 				Parameters.Add (new MethodParameterWriter (options.GetSafeIdentifier (p.UnsafeNativeName), new TypeReferenceWriter (p.NativeType)));
+
+			suppress_obsolete_warning = !SourceWriterExtensions.IsTypeObsolete (type, options) &&
+				!Attributes.OfType<ObsoleteAttr> ().Any () &&
+				SourceWriterExtensions.ReferencesObsoleteType (method, options);
 		}
 
 		protected override void WriteBody (CodeWriter writer)
@@ -236,7 +241,8 @@ namespace generator.SourceWriters
 		{
 			delegate_field?.Write (writer);
 
-			writer.WriteLineNoIndent ("#pragma warning disable 0169");
+			var pragma = suppress_obsolete_warning ? "0169, 0618" : "0169";
+			writer.WriteLineNoIndent ($"#pragma warning disable {pragma}");
 
 			if (delegate_getter != null) {
 				delegate_getter.Write (writer);
@@ -246,7 +252,7 @@ namespace generator.SourceWriters
 			base.Write (writer);
 			WriteMarshalBody (writer);
 
-			writer.WriteLineNoIndent ("#pragma warning restore 0169");
+			writer.WriteLineNoIndent ($"#pragma warning restore {pragma}");
 			writer.WriteLine ();
 		}
 	}

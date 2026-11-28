@@ -15,7 +15,7 @@ The tools below are required as follows: `az` is always required; `gh` is requir
 |------|-------|----------------|
 | `gh` (GitHub CLI) | `gh --version` | https://docs.github.com/github-cli/github-cli/quickstart |
 | `az` (Azure CLI + DevOps ext) | `az --version` | Install: https://learn.microsoft.com/cli/azure/install-azure-cli — Extension: `az extension add --name azure-devops` — Docs: https://learn.microsoft.com/cli/azure/devops — Then: `az login` and `az devops configure --defaults organization=https://dev.azure.com/ORGNAME project=PROJECTNAME` |
-| `binlogtool` (.NET global tool) | `dotnet tool list -g` | `dotnet tool install -g binlogtool` — https://www.nuget.org/packages/binlogtool |
+| `binlogtool` (.NET global tool) | `dotnet tool list -g` | `dotnet tool install -g binlogtool --configfile <absolute-path-to-repo>/NuGet.config` |
 
 ## Workflow
 

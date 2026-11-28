@@ -17,7 +17,7 @@ namespace Xamarin.AndroidTools.AnnotationSupport
 				return new ZipArchive (zipFile).Entries
 				    .Where (e => e.Name.EndsWith ("annotations.xml", StringComparison.Ordinal))
 				    .SelectMany (e => ParseArchiveEntry (file, e))
-				    .OrderBy (k => k.Name)
+				    .OrderBy (k => k.Name, StringComparer.Ordinal)
 				    .ToArray ();
 		}
 

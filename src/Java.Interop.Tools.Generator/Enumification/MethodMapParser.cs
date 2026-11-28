@@ -41,7 +41,7 @@ namespace Java.Interop.Tools.Generator.Enumification
 
 		public static void SaveMethodMapCsv (IEnumerable<MethodMapEntry> entries, TextWriter writer, bool version2)
 		{
-			foreach (var entry in entries.OrderBy (e => e.JavaSignature))
+			foreach (var entry in entries.OrderBy (e => e.JavaSignature, StringComparer.Ordinal))
 				writer.WriteLine (version2 ? entry.ToVersion2String () : entry.ToVersion1String ());
 		}
 

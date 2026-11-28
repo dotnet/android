@@ -365,21 +365,24 @@ namespace Java.InteropTests
 		}
 
 		[TestMethod]
-		[Ignore ("This crashes on the emulator")]
 		public void NewObjectArrayWithBadValues ()
 		{
+			IntPtr elementClass = JNIEnv.FindClass (typeof (Java.Lang.Object));
 			try {
-				JNIEnv.NewObjectArray (-1, JNIEnv.FindClass (typeof (Java.Lang.Object)));
-				Assert.Fail ("Must throw");
-			} catch (Java.Lang.OutOfMemoryError) {
-				//XXX shouldn't this exception be an ArgumentException?
-			}
+				var negativeLength = Assert.ThrowsExactly<ArgumentOutOfRangeException> (() => JNIEnv.NewObjectArray (-1, elementClass));
+				Assert.AreEqual ("length", negativeLength.ParamName);
+				Assert.ThrowsExactly<ArgumentOutOfRangeException> (() => JNIEnv.NewObjectArray (int.MinValue, elementClass, IntPtr.Zero));
+				Assert.ThrowsExactly<ArgumentException> (() => JNIEnv.NewObjectArray (1, IntPtr.Zero));
+				Assert.ThrowsExactly<ArgumentException> (() => JNIEnv.NewObjectArray (1, IntPtr.Zero, IntPtr.Zero));
 
-			try {
-				JNIEnv.NewObjectArray (1, IntPtr.Zero);
-				Assert.Fail ("Must throw");
-			} catch (Java.Lang.NullPointerException) {
-				//XXX shouldn't this exception be an ArgumentException?
+				IntPtr array = JNIEnv.NewObjectArray (0, elementClass);
+				try {
+					Assert.AreEqual (0, JNIEnv.GetArrayLength (array));
+				} finally {
+					JNIEnv.DeleteLocalRef (array);
+				}
+			} finally {
+				JNIEnv.DeleteGlobalRef (elementClass);
 			}
 		}
 

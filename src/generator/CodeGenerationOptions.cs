@@ -38,7 +38,7 @@ namespace MonoDroid.Generation
 			}
 		}
 
-		readonly SortedSet<string> jni_marshal_delegates = new SortedSet<string> ();
+		readonly SortedSet<string> jni_marshal_delegates = new SortedSet<string> (StringComparer.Ordinal);
 		readonly Lock jni_marshal_delegates_lock = new Lock ();
 
 		public string ApiXmlFile { get; set; }

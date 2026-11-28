@@ -25,6 +25,8 @@ namespace Xamarin.Android.Tasks
 
 		public string[]? Modules  { get; set; }
 
+		public bool IsTestOnly { get; set; }
+
 		internal override CommandLineBuilder GetCommandLineBuilder ()
 		{
 			var cmd = base.GetCommandLineBuilder ();
@@ -32,6 +34,8 @@ namespace Xamarin.Android.Tasks
 			cmd.AppendSwitchIfNotNull ("--apks ", ApkSet);
 			AppendAdbOptions (cmd);
 			cmd.AppendSwitch ("--allow-downgrade");
+			if (IsTestOnly)
+				cmd.AppendSwitch ("--allow-test-only");
 
 			// --modules: List of modules to be installed, or "_ALL_" for all modules.
 			// Defaults to modules installed during first install, i.e. not on-demand.

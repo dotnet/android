@@ -86,11 +86,24 @@ stages:
   # Purpose-built apps that check what trimming keeps and removes; see tests/TrimmingTests.
   - job: ${{ parameters.job_name }}_trimming
     displayName: "macOS > Tests > Trimming+Emulator"
+    # One job per configuration: each case builds a Release app, which takes 1-2 minutes on a hosted agent.
+    strategy:
+      matrix:
+        CoreClrFullTrimming:
+          TrimmingConfiguration: CoreClrFullTrimming
+          TrimmingTestFilter: Name~CoreClrFullTrimming
+        NativeAot:
+          TrimmingConfiguration: NativeAot
+          TrimmingTestFilter: Name~NativeAot
+        # Also runs the tests that don't take a configuration.
+        CoreClrPartialTrimming:
+          TrimmingConfiguration: CoreClrPartialTrimming
+          TrimmingTestFilter: Name!~CoreClrFullTrimming&Name!~NativeAot
     pool:
       name: Azure Pipelines
       vmImage: $(HostedMacImageWithEmulator)
       os: macOS
-    timeoutInMinutes: 120
+    timeoutInMinutes: 180
     cancelTimeoutInMinutes: 5
     workspace:
       clean: all
@@ -124,9 +137,10 @@ stages:
     - template: /build-tools/automation/yaml-templates/run-nunit-tests.yaml
       parameters:
         testAssembly: ${{ parameters.xaSourcePath }}/bin/Test$(XA.Build.Configuration)/TrimmingTests/$(DotNetStableTargetFramework)/TrimmingTests.dll
-        testRunTitle: TrimmingTests On Device - macOS
+        testRunTitle: TrimmingTests On Device - macOS - $(TrimmingConfiguration)
+        dotNetTestExtraArgs: --filter "$(TrimmingTestFilter)"
         workers: 2
-        timeoutInMinutes: 90
+        timeoutInMinutes: 120
 
     - ${{ if ne(parameters.usesCleanImages, true) }}:
       - template: start-stop-emulator.yaml
@@ -136,7 +150,7 @@ stages:
 
     - template: /build-tools/automation/yaml-templates/upload-results.yaml
       parameters:
-        artifactName: Test Results - Trimming With Emulator - macOS
+        artifactName: Test Results - Trimming With Emulator - macOS - $(TrimmingConfiguration)
         xaSourcePath: ${{ parameters.xaSourcePath }}
         use1ESTemplate: ${{ parameters.use1ESTemplate }}
 

@@ -28,6 +28,7 @@ namespace generator.SourceWriters
 				Fields.Add (new FieldWriter { Name = "sender", Type = type });
 			}
 			Attributes.Add (new RegisterAttr (jni_class, additionalProperties: iface.AdditionalAttributeString ()) { UseGlobal = true });
+			SourceWriterExtensions.AddObsolete (Attributes, iface.DeprecatedComment, opt, iface.IsDeprecated, deprecatedSince: iface.DeprecatedSince);
 
 			AddConstructor (iface);
 			AddMethods (iface, opt);
@@ -94,6 +95,7 @@ namespace generator.SourceWriters
 		readonly bool needs_sender;
 		readonly string method_spec;
 		readonly string args_name;
+		readonly bool suppress_obsolete_warning;
 
 		public InterfaceEventHandlerImplMethod (InterfaceGen iface, Method method, List<string> handlers, CodeGenerationOptions opt)
 		{
@@ -113,6 +115,8 @@ namespace generator.SourceWriters
 			IsPublic = true;
 
 			this.AddMethodParameters (method.Parameters, opt);
+
+			suppress_obsolete_warning = !SourceWriterExtensions.IsTypeObsolete (iface, opt) && SourceWriterExtensions.ReferencesObsoleteType (method, opt);
 		}
 
 		protected override void WriteBody (CodeWriter writer)
@@ -146,14 +150,16 @@ namespace generator.SourceWriters
 
 		public override void Write (CodeWriter writer)
 		{
-			if (method.EventName != string.Empty) {
-				writer.WriteLine ("#pragma warning disable 0649");
-				writer.WriteLine ($"public {iface.GetEventDelegateName (method)}{opt.NullableOperator} {method_spec}Handler;");
-				writer.WriteLine ("#pragma warning restore 0649");
-				writer.WriteLine ();
-			}
+			SourceWriterExtensions.WriteWithWarningsDisabled (writer, suppress_obsolete_warning, "0618", () => {
+				if (method.EventName != string.Empty) {
+					writer.WriteLine ("#pragma warning disable 0649");
+					writer.WriteLine ($"public {iface.GetEventDelegateName (method)}{opt.NullableOperator} {method_spec}Handler;");
+					writer.WriteLine ("#pragma warning restore 0649");
+					writer.WriteLine ();
+				}
 
-			base.Write (writer);
+				base.Write (writer);
+			});
 		}
 	}
 }

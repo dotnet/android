@@ -11,6 +11,7 @@ using System.Threading.Tasks;
 namespace Xamarin.Android.Net
 {
 	// This code is heavily inspired by System.Net.Http.AuthenticationHelper
+	[Obsolete ("AndroidMessageHandler is obsolete. Use System.Net.Http.SocketsHttpHandler instead.")]
 	internal static class NegotiateAuthenticationHelper
 	{
 		const int MaxRequests = 10;

@@ -424,14 +424,14 @@ namespace Xamarin.Android.Binder
 		static void GenerateMappingReportFile (List<GenBase> gens, string mapping_file)
 		{
 			using (var fs = File.CreateText (mapping_file)) {
-				foreach (var gen in gens.OrderBy (g => g.JniName)) {
+				foreach (var gen in gens.OrderBy (g => g.JniName, StringComparer.Ordinal)) {
 					fs.Write (gen.JniName.Substring (1, gen.JniName.Length - 2)); // skip 'L' and ';' at head and tail.
 					fs.Write (" = ");
 					fs.WriteLine (gen.FullName);
 
 					var cls = gen as ClassGen;
 					if (cls != null) {
-						foreach (var m in cls.Ctors.OrderBy (_ => _.JniSignature)) {
+						foreach (var m in cls.Ctors.OrderBy (_ => _.JniSignature, StringComparer.Ordinal)) {
 							fs.Write ("  ");
 							fs.Write ("<init>");
 							fs.Write (m.JniSignature);
@@ -441,14 +441,14 @@ namespace Xamarin.Android.Binder
 						}
 					}
 
-					foreach (var f in gen.Fields.OrderBy (f => f.Name)) {
+					foreach (var f in gen.Fields.OrderBy (f => f.Name, StringComparer.Ordinal)) {
 						fs.Write ("  ");
 						fs.Write (f.JavaName);
 						fs.Write (" = ");
 						fs.WriteLine (f.Name);
 					}
 
-					foreach (var p in gen.Properties.OrderBy (_ => _.Name)) {
+					foreach (var p in gen.Properties.OrderBy (_ => _.Name, StringComparer.Ordinal)) {
 						if (p.Getter != null) {
 							fs.Write ("  ");
 							fs.Write (p.Getter.JavaName);
@@ -465,7 +465,7 @@ namespace Xamarin.Android.Binder
 						}
 					}
 
-					foreach (var m in gen.Methods.OrderBy (_ => _.AdjustedName)) {
+					foreach (var m in gen.Methods.OrderBy (_ => _.AdjustedName, StringComparer.Ordinal)) {
 						fs.Write ("  ");
 						fs.Write (m.JavaName);
 						fs.Write (m.JniSignature);

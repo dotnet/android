@@ -296,7 +296,7 @@ namespace Xamarin.Android.Tasks
 		{
 			engine?.RegisterTaskObjectAssemblyLocal (mapFile, map, RegisteredTaskObjectLifetime.Build);
 			using (var writer = MemoryStreamPool.Shared.CreateStreamWriter ()) {
-				foreach (var i in map.OrderBy (x => x.Key)) {
+				foreach (var i in map.OrderBy (x => x.Key, StringComparer.Ordinal)) {
 					writer.WriteLine ($"{i.Key};{i.Value}");
 				}
 				writer.Flush ();
@@ -321,8 +321,8 @@ namespace Xamarin.Android.Tasks
 		{
 			engine?.RegisterTaskObjectAssemblyLocal (mapFile, map, RegisteredTaskObjectLifetime.Build);
 			using (var writer = MemoryStreamPool.Shared.CreateStreamWriter ()) {
-				foreach (var i in map.OrderBy (x => x.Key)) {
-					foreach (var v in i.Value.OrderBy (x => x))
+				foreach (var i in map.OrderBy (x => x.Key, StringComparer.Ordinal)) {
+					foreach (var v in i.Value.OrderBy (x => x, StringComparer.Ordinal))
 						writer.WriteLine ($"{i.Key};{v}");
 				}
 				writer.Flush ();

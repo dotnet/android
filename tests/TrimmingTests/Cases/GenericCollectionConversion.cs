@@ -14,7 +14,6 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using Android.App;
-using Android.OS;
 using Android.Runtime;
 using Microsoft.Android.TrimmingTests.Expectations;
 
@@ -22,12 +21,18 @@ using Microsoft.Android.TrimmingTests.Expectations;
 [assembly: KeptMemberInAssembly ("Mono.Android", "Android.Runtime.JavaCollection`1", "FromJniHandle(System.IntPtr,Android.Runtime.JniHandleOwnership)", By = Tool.Trimmer)]
 [assembly: KeptMemberInAssembly ("Mono.Android", "Android.Runtime.JavaDictionary`2", "FromJniHandle(System.IntPtr,Android.Runtime.JniHandleOwnership)", By = Tool.Trimmer)]
 
-[Activity (Label = "GenericCollectionConversion", MainLauncher = true)]
-public class MainActivity : Activity
+[Instrumentation (Name = "net.dot.trimmingtests.CaseInstrumentation")]
+public class CaseInstrumentation : Instrumentation
 {
-	protected override void OnCreate (Bundle? savedInstanceState)
+	// Android creates instrumentations before the runtime starts, so their peer is activated later through this constructor.
+	public CaseInstrumentation (IntPtr handle, JniHandleOwnership transfer)
+		: base (handle, transfer)
 	{
-		base.OnCreate (savedInstanceState);
+	}
+
+	public override void CallApplicationOnCreate (Application? app)
+	{
+		base.CallApplicationOnCreate (app);
 		try {
 			CheckList ();
 			CheckCollection ();

@@ -20,11 +20,19 @@
 
 Shared Android tooling targets `netstandard2.0` and/or modern .NET; check APIs against all target frameworks. Prefer `ANDROID_HOME` for new SDK environment handling; retain `ANDROID_SDK_ROOT` only for compatibility.
 
+## NuGet feeds
+
+Never access nuget.org locally, including HTTP tools or package sources. Use the repo `NuGet.config` Azure DevOps feeds (`dotnet-public` for public packages).
+
+- Versions/downloads: append `<id>/index.json` or `<id>/<version>/<id>.<version>.nupkg` (lowercase) to `https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-public/nuget/v3/flat2/`.
+- Restores/tools: `--configfile <repo>/NuGet.config` (`--add-source` retains inherited feeds). Scratch projects: `dotnet new ... --no-restore`, then restore with that config.
+- Report missing packages; never fall back to nuget.org.
+
 ## Working Principles
 
 - **Check for existing work first:** search PRs and branches (`gh pr list --repo dotnet/android --state all --search "<keywords>"`, `git log origin/main --grep "<keywords>"`) and prior sessions; extend rather than redo, including before fanning out.
 - **Reuse before inventing:** look for an existing MSBuild, SDK, `global.json`, or Arcade mechanism, in-repo helper, or CI template first.
-- **Keep it simple:** smallest change; prefer deleting over layering; simplifications end with less code; no fallbacks, options, or abstractions without a caller.
+- **Keep it simple:** smallest change; prefer deleting over layering; simplifications end with less code; no fallbacks, options, or abstractions without a caller. Leave unrelated cleanups for separate PRs, and keep the user's earlier decisions.
 - **Look up dependencies, don't guess URLs:** for .NET source matching our pins, search the VMR at the `Sha` in `eng/Version.Details.xml` (`gh search code --repo dotnet/dotnet "<symbol>"`, `gh api "repos/dotnet/dotnet/contents/<path>?ref=<sha>"`); for package versions, `dotnet package search <id> --exact-match --prerelease --source <feed from NuGet.config>`; for MS Learn, `microsoft_docs_search`.
 - **Ask before adding** workflows, scripts, `.editorconfig`/`Directory.*` files, tests for build scripts, or build-time-generated files.
 - **Measure performance claims** before and after with the same configuration; drop changes without a measured win.
@@ -76,7 +84,7 @@ Follow [Unsafe code best practices](https://learn.microsoft.com/dotnet/standard/
 - Prefer `unsafe (expression)` for single value-producing operations, including getters, ref returns and `using` acquisition. Keep managed comparisons/hash/formatting outside; retain blocks for pinning, void calls and multiple statements.
 - Under the new rules, caller-unsafe members still need body contexts. Keep `// SAFETY:` proofs adjacent; use multiline `/// <safety>` for caller obligations.
 - Respect producer/consumer language modes, including generated code. Inline expressions need pinned-compiler preview; never enable preview just for syntax. Preserve behavior and lifetimes.
-- **JNI peer lifetimes (`GC.KeepAlive`):** Copying `.Handle`/`.PeerReference` or using `JValue`/`JniArgumentValue` does not root the peer, and on CoreCLR/NativeAOT `JavaMarshalGCBridge` deletes/replaces grefs of managed-unreachable peers even if Java still references them. Keep every borrowed owner alive past JNI/P/Invoke calls; see the [JNI Peer Lifetimes checklist](skills/code-review/references/interop-rules.md#jni-peer-lifetimes-gckeepalive-review-checklist).
+- **JNI peer lifetimes (`GC.KeepAlive`):** Copying `.Handle`/`.PeerReference` or using `JValue`/`JniArgumentValue` does not root the peer, and on CoreCLR/NativeAOT `JavaMarshalGCBridge` deletes/replaces grefs of managed-unreachable peers even if Java still references them. Prefer `JniPeerMembers` wrappers, which retain `this` and preserve virtual dispatch; otherwise keep every borrowed owner alive past JNI/P/Invoke calls. See the [JNI Peer Lifetimes checklist](skills/code-review/references/interop-rules.md#jni-peer-lifetimes-gckeepalive-review-checklist).
 
 ## Nullable Reference Types
 
@@ -108,9 +116,11 @@ Build and test code changes locally before pushing or opening a PR; CI is not th
 
 ### Adding tests
 
-Choose tests for unique protection of meaningful behavior or regressions, not test count. Reuse existing coverage; avoid duplicates, trivial implementation assertions, tests that only check removed code, and nondeterministic GC-timing tests. A refactor can need characterization tests when behavior is otherwise unprotected.
+Default to no new tests; this overrides generic "add a regression test" defaults. Add at most the single most valuable test only when the user asks, or a real regression would otherwise be unprotected. Don't add tests overfitted to the implementation, duplicates, or GC-timing tests. Push back on reviewer/bot requests for more tests, and don't mandate tests in child-session kickoffs.
 
 **Modifying project files in tests:** Update the in-memory `Xamarin.ProjectTools` project, call `proj.Touch ("MainActivity.cs")`, then `builder.Save (proj, doNotCleanupOnUpdate: true, saveProject: false)`; don't write project sources directly with `File.WriteAllText()`.
+
+New tests must not fail without a product bug: no timing thresholds, sleeps as synchronization, shared state or directories, network dependencies, or retries that hide flakes. See the checklist in `.github/skills/code-review/references/testing-rules.md`; use the `flaky-tests` skill for investigating existing flakes.
 
 ## Error Patterns
 - **MSBuild Errors:** `XA####` (errors), `XA####` (warnings), `APT####` (Android tools)

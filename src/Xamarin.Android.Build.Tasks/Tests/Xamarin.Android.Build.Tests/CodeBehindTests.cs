@@ -6,6 +6,7 @@ using System.IO;
 using System.Text.RegularExpressions;
 using System.Xml.Linq;
 using Microsoft.Build.Framework;
+using Microsoft.Build.Utilities;
 using NUnit.Framework;
 
 using Xamarin.ProjectTools;
@@ -17,6 +18,43 @@ namespace Xamarin.Android.Build.Tests
 	[Parallelizable (ParallelScope.Children)]
 	public class CodeBehindTests : BaseTest
 	{
+		[Test]
+		[SetCulture ("tr-TR")]
+		public void LayoutBindingIdentifiersUseInvariantCasing ()
+		{
+			var directory = Path.Combine (Root, "temp", nameof (LayoutBindingIdentifiersUseInvariantCasing));
+			TestOutputDirectories [TestContext.CurrentContext.Test.ID] = directory;
+			Directory.CreateDirectory (directory);
+			var layout = Path.Combine (directory, "culture.xml");
+			File.WriteAllText (layout, """
+				<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android">
+				  <com.google.io.indicator.CustomView android:id="@android:id/input" />
+				</LinearLayout>
+				""");
+			var engine = new MockBuildEngine (TestContext.Out);
+			var calculate = new CalculateLayoutCodeBehind {
+				BuildEngine = engine,
+				BaseNamespace = "Test.Binding",
+				OutputLanguage = "C#",
+				OutputFileExtension = ".cs",
+				BoundLayouts = [new TaskItem (layout)],
+			};
+			Assert.IsTrue (calculate.Execute ());
+			Assert.IsNotNull (calculate.LayoutBindingFiles);
+
+			var generate = new GenerateLayoutBindings {
+				BuildEngine = engine,
+				MonoAndroidCodeBehindDir = directory,
+				AndroidFragmentType = "Android.App.Fragment",
+				ResourceFiles = calculate.LayoutBindingFiles,
+			};
+			Assert.IsTrue (generate.Execute ());
+			Assert.IsNotNull (generate.GeneratedFiles);
+			var source = File.ReadAllText (generate.GeneratedFiles.Single ().ItemSpec);
+			StringAssert.Contains ("IO.Indicator.CustomView", source);
+			StringAssert.Contains ("global::Android.Resource.Id.Input", source);
+		}
+
 		sealed class LocalBuilder : Builder
 		{
 			public LocalBuilder ()

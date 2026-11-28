@@ -16,6 +16,7 @@ namespace generator.SourceWriters
 		protected CodeGenerationOptions opt;
 		protected CodeGeneratorContext context;
 		readonly string context_this;
+		readonly bool references_obsolete_type;
 
 		public BoundConstructor (ClassGen klass, Ctor constructor, bool useBase, CodeGenerationOptions opt, CodeGeneratorContext context)
 		{
@@ -49,6 +50,15 @@ namespace generator.SourceWriters
 			context_this = context.ContextType.GetObjectHandleProperty (opt, "this");
 
 			this.AddMethodParameters (constructor.Parameters, opt);
+
+			references_obsolete_type = !SourceWriterExtensions.IsTypeObsolete (klass, opt) &&
+				SourceWriterExtensions.ReferencesObsoleteType (constructor, opt);
+		}
+
+		public override void Write (CodeWriter writer)
+		{
+			var suppress = references_obsolete_type && !Attributes.OfType<ObsoleteAttr> ().Any ();
+			SourceWriterExtensions.WriteWithWarningsDisabled (writer, suppress, "0618", () => base.Write (writer));
 		}
 
 		protected override void WriteBody (CodeWriter writer)

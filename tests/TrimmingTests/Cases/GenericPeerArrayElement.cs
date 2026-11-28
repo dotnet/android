@@ -5,14 +5,14 @@
 #:project TrimmingTests.Expectations/TrimmingTests.Expectations.csproj
 
 // JNIEnv.GetArray<T> () reaches TrimmableTypeMap.CreateInstance () with only a runtime Type. For a closed generic
-// peer the runtime reflects over the (IntPtr, JniHandleOwnership) constructor, which nothing else in this app keeps.
-// The generated proxy of the open generic definition keeps that constructor with [DynamicDependency]; that must not
-// keep generic peers the app doesn't use, nor make NativeAOT compile instantiations the app doesn't use.
+// peer the runtime needs the (IntPtr, JniHandleOwnership) constructor, which nothing else in this app keeps.
+// The generated proxy of the open generic definition returns it from GetGenericTargetTypeDefinition (), annotated to keep
+// its constructors, and the runtime maps that constructor onto the closed type (#13721). That must not keep generic
+// peers the app doesn't use, nor make NativeAOT compile instantiations the app doesn't use.
 
 using System;
 using System.Collections.Generic;
 using Android.App;
-using Android.OS;
 using Android.Runtime;
 using Microsoft.Android.TrimmingTests.Expectations;
 
@@ -21,14 +21,20 @@ using Microsoft.Android.TrimmingTests.Expectations;
 [assembly: KeptTypeInAssembly ("GenericPeerArrayElement", "GenericArrayElement`1<System.String>", By = Tool.NativeAot)]
 [assembly: RemovedTypeInAssembly ("GenericPeerArrayElement", "GenericArrayElement`1<System.Int64>", By = Tool.NativeAot)]
 [assembly: RemovedTypeInAssembly ("GenericPeerArrayElement", "GenericArrayElement`1<System.Object>", By = Tool.NativeAot)]
-[assembly: RemovedTypeInAssembly ("GenericPeerArrayElement", "GenericArrayElement`1<MainActivity>", By = Tool.NativeAot)]
+[assembly: RemovedTypeInAssembly ("GenericPeerArrayElement", "GenericArrayElement`1<CaseInstrumentation>", By = Tool.NativeAot)]
 
-[Activity (Label = "GenericPeerArrayElement", MainLauncher = true)]
-public class MainActivity : Activity
+[Instrumentation (Name = "net.dot.trimmingtests.CaseInstrumentation")]
+public class CaseInstrumentation : Instrumentation
 {
-	protected override void OnCreate (Bundle? savedInstanceState)
+	// Android creates instrumentations before the runtime starts, so their peer is activated later through this constructor.
+	public CaseInstrumentation (IntPtr handle, JniHandleOwnership transfer)
+		: base (handle, transfer)
 	{
-		base.OnCreate (savedInstanceState);
+	}
+
+	public override void CallApplicationOnCreate (Application? app)
+	{
+		base.CallApplicationOnCreate (app);
 		try {
 			Check ("managed state");
 			Check (42);
@@ -78,7 +84,7 @@ public class GenericArrayElement<T> : Java.Lang.Object
 	public T? Value { get; set; }
 }
 
-// A generic peer the app never uses, with the same shape: its proxy, and so its [DynamicDependency], must not keep it.
+// A generic peer the app never uses, with the same shape: its proxy, and so its constructor annotation, must not keep it.
 [Removed]
 public class UnusedGenericElement<T> : Java.Lang.Object
 {

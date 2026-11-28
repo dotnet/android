@@ -66,7 +66,7 @@ namespace Xamarin.Android.Net
 				try {
 					httpConnection.Disconnect ();
 				} catch (Exception ex) {
-					Logger.Log (LogLevel.Info, AndroidMessageHandler.LOG_APP, $"Disconnection exception: {ex}");
+					Logger.Log (LogLevel.Info, Logger.NetLogTag, $"Disconnection exception: {ex}");
 				}
 			}
 		}
