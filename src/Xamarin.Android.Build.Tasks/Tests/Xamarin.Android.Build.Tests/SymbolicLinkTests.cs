@@ -5,6 +5,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 namespace Xamarin.Android.Build.Tests
 {
 	[TestClass]
+	[DoNotParallelize]
 	public class SymbolicLinkTests
 	{
 		string tempDirectory = "";

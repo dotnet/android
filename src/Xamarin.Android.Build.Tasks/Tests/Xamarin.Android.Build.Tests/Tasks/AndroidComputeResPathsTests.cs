@@ -13,6 +13,7 @@ using Microsoft.Android.Build.Tasks;
 namespace Xamarin.Android.Build.Tests {
 	[TestClass]
 	[DoNotParallelize]
+	[NoClassCleanup]
 	public class AndroidComputeResPathsTests : BaseTest {
 
 		[TestMethod]

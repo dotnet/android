@@ -121,8 +121,22 @@ namespace Xamarin.Android.Build.Tests
 			}
 		}
 
+		// Classes can overlap under method-level parallelism, so only the first class to start
+		// prepares the device and only the last one to finish cleans it up.
+		static readonly object deviceClassesLock = new object ();
+		static int activeDeviceClasses;
+
 		[ClassInitialize (InheritanceBehavior.BeforeEachDerivedClass)]
 		public static void DeviceSetup (TestContext context)
+		{
+			lock (deviceClassesLock) {
+				if (activeDeviceClasses++ > 0)
+					return;
+				SetupDevice ();
+			}
+		}
+
+		static void SetupDevice ()
 		{
 			if (IsDeviceAttached ()) {
 				try {
@@ -153,7 +167,16 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[ClassCleanup (InheritanceBehavior.BeforeEachDerivedClass)]
-		public static void DeviceTearDown ()
+		public static void DeviceTearDown (TestContext context)
+		{
+			lock (deviceClassesLock) {
+				if (--activeDeviceClasses > 0 || SkipsClassCleanup (context))
+					return;
+				TearDownDevice ();
+			}
+		}
+
+		static void TearDownDevice ()
 		{
 			if (IsDeviceAttached ()) {
 				// make sure we are not on a guest user anymore.

@@ -13,6 +13,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 namespace Xamarin.Android.Build.Tests;
 
 [TestClass]
+[DoNotParallelize]
 public class TrimmableTypeMapValueTypeTests
 {
 	// A Kotlin value-class struct gets only a typemap entry, trimmed with the struct,

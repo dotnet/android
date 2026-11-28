@@ -23,6 +23,14 @@ using ICSharpCode.Decompiler.Metadata;
 
 namespace Xamarin.Android.Build.Tests
 {
+	/// <summary>
+	/// Skips the inherited class cleanup (device teardown and, on Windows, stopping adb) for this test class.
+	/// </summary>
+	[AttributeUsage (AttributeTargets.Class)]
+	public sealed class NoClassCleanupAttribute : Attribute
+	{
+	}
+
 	public class BaseTest
 	{
 		public static ConcurrentDictionary<string, string> TestOutputDirectories = new ConcurrentDictionary<string, string> ();
@@ -674,10 +682,16 @@ namespace Xamarin.Android.Build.Tests
 			Console.Out.Flush ();
 		}
 
+		protected static bool SkipsClassCleanup (TestContext context) =>
+			typeof (BaseTest).Assembly.GetType (context.FullyQualifiedTestClassName)?.IsDefined (typeof (NoClassCleanupAttribute), inherit: false) == true;
+
 		[ClassCleanup (InheritanceBehavior.BeforeEachDerivedClass)]
-		public static void AfterAllTests ()
+		public static void AfterAllTests (TestContext context)
 		{
 			if (System.Diagnostics.Debugger.IsAttached)
+				return;
+
+			if (SkipsClassCleanup (context))
 				return;
 
 			//NOTE: adb.exe can cause a couple issues on Windows

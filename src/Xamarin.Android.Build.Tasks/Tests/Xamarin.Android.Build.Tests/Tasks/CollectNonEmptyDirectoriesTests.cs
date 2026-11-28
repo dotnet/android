@@ -14,6 +14,7 @@ namespace Xamarin.Android.Build.Tests
 {
 	[TestClass]
 	[DoNotParallelize]
+	[NoClassCleanup]
 	public class CollectNonEmptyDirectoriesTests : BaseTest
 	{
 		[TestMethod]

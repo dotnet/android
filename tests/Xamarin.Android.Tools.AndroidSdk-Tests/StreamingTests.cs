@@ -65,6 +65,7 @@ public class StreamingTests
 		foreach (var outcome in new [] { "passed", "failed", "skipped", "unexpected" })
 			Assert.Contains ($"[{outcome}] Tests.{outcome}", error.ToString ());
 		Assert.Contains ("[unfinished] Tests.ActiveOne", error.ToString ());
+		Assert.Contains ("[unfinished] Tests.ActiveTwo", error.ToString ());
 		Assert.Contains ("not necessarily the cause", error.ToString ());
 		Assert.IsEmpty (state.ReportedFinal, "Observation must not depend on MTP publication.");
 	}
@@ -84,6 +85,7 @@ public class StreamingTests
 		parser.Complete ();
 		state.WritePartialResults ();
 		Assert.Contains ("passed=0", error.ToString ());
+		Assert.Contains ("[unfinished] Tests.One", error.ToString ());
 	}
 
 	const string Progress = """
@@ -127,6 +129,7 @@ public class StreamingTests
 		var (exitCode, output) = await RunAndroidTestsAsync (transcript);
 		if (reportFailure) {
 			Assert.AreNotEqual (0, exitCode, output);
+			Assert.Contains ("results.trx' is denied", output);
 			Assert.IsFalse (File.Exists (Path.Combine (directory, "results.trx")));
 		} else {
 			Assert.AreEqual (!crash, exitCode == 0, output);
@@ -145,9 +148,12 @@ public class StreamingTests
 		}
 		if (crash) {
 			Assert.Contains ("Incomplete test run", output);
+			Assert.Contains ("passed=1, failed=0, skipped=0, unknown=0", output);
 			Assert.Contains ("[passed] Tests.One", output);
+			Assert.Contains ("[unfinished] Tests.Two", output);
 		} else {
 			Assert.DoesNotContain ("Incomplete test run", output);
+			Assert.DoesNotContain ("[unfinished]", output);
 		}
 	}
 
@@ -164,6 +170,7 @@ public class StreamingTests
 		Assert.Contains ("Incomplete test run", output);
 		Assert.Contains (transcript == Progress ? "passed=1" : "passed=0", output);
 		Assert.DoesNotContain ("process crashed", output);
+		Assert.DoesNotContain ("native crash", output);
 	}
 
 	[TestMethod]
@@ -173,6 +180,7 @@ public class StreamingTests
 		Assert.AreNotEqual (0, exitCode, output);
 		Assert.Contains ("An error occurred trying to start process", output);
 		Assert.Contains ("Incomplete test run", output);
+		Assert.Contains ("passed=0", output);
 	}
 
 	[TestMethod]
@@ -194,7 +202,9 @@ public class StreamingTests
 		Assert.AreEqual ("Failed", result.Attribute ("outcome")?.Value);
 		Assert.AreEqual ("This was the last observed active test, not necessarily the cause of the incomplete run.\nThe test run ended before all tests completed.", result.Element (ns + "Output")?.Element (ns + "ErrorInfo")?.Element (ns + "Message")?.Value);
 		Assert.Contains ("passed=0", output);
+		Assert.Contains ("[unfinished] Tests.One", output);
 		Assert.DoesNotContain ("process crashed", output);
+		Assert.DoesNotContain ("native crash", output);
 	}
 
 	[TestMethod]
@@ -205,7 +215,9 @@ public class StreamingTests
 		Assert.AreEqual (130, exitCode, output);
 		Assert.IsLessThan (TimeSpan.FromSeconds (25), stopwatch.Elapsed, "Ctrl+C must stop the still-running adb invocation.");
 		Assert.Contains ("Incomplete test run", output);
+		Assert.Contains ("passed=1, failed=0, skipped=0, unknown=0", output);
 		Assert.Contains ("[passed] Tests.One", output);
+		Assert.Contains ("[unfinished] Tests.Two", output);
 	}
 
 	[TestMethod]

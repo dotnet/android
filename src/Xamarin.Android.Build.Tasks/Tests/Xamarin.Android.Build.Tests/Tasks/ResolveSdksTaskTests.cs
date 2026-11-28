@@ -20,6 +20,7 @@ namespace Xamarin.Android.Build.Tests {
 
 	[TestClass]
 	[DoNotParallelize] // NOTE: This test was hanging without this
+	[NoClassCleanup]
 	public class ResolveSdksTaskTests : BaseTest {
 		static ApiInfo [] apiInfoSelection = new ApiInfo [] {
 			new ApiInfo () { Id = "35", Level = 35, Name = "Android15", FrameworkVersion = "v15.0", Stable = true },

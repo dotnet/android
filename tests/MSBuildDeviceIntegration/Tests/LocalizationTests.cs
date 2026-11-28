@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Runtime.ExceptionServices;
 using System.Threading;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Xamarin.ProjectTools;
@@ -12,12 +13,14 @@ using Xamarin.Android.Tasks;
 namespace Xamarin.Android.Build.Tests
 {
 	[TestClass]
+	[NoClassCleanup]
 	public class LocalizationCoreCLRTests : LocalizationTests
 	{
 		public LocalizationCoreCLRTests () : base (AndroidRuntime.CoreCLR) { }
 	}
 
 	[TestClass]
+	[NoClassCleanup]
 	public class LocalizationNativeAOTTests : LocalizationTests
 	{
 		public LocalizationNativeAOTTests () : base (AndroidRuntime.NativeAOT) { }
@@ -28,6 +31,8 @@ namespace Xamarin.Android.Build.Tests
 	public abstract class LocalizationTests : DeviceTest
 	{
 		static readonly Dictionary<AndroidRuntime, (ProjectBuilder builder, XamarinAndroidApplicationProject proj)> installedApps = new ();
+		// Like NUnit's [OneTimeSetUp], a failed setup fails the remaining rows without retrying the install.
+		static readonly Dictionary<AndroidRuntime, ExceptionDispatchInfo> setupFailures = new ();
 
 		ProjectBuilder builder;
 		XamarinAndroidApplicationProject proj;
@@ -80,10 +85,17 @@ using System.Globalization;");
 		[TestInitialize]
 		public override void SetupTest ()
 		{
+			if (setupFailures.TryGetValue (runtime, out var failure))
+				failure.Throw ();
 			if (installedApps.TryGetValue (runtime, out var app)) {
 				(builder, proj) = app;
 			} else {
-				BeforeAllTests ();
+				try {
+					BeforeAllTests ();
+				} catch (Exception ex) {
+					setupFailures [runtime] = ExceptionDispatchInfo.Capture (ex);
+					throw;
+				}
 				installedApps [runtime] = (builder, proj);
 			}
 

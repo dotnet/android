@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Runtime.ExceptionServices;
 using System.Threading;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Xamarin.Android.Tasks;
@@ -10,12 +11,14 @@ using Xamarin.ProjectTools;
 namespace Xamarin.Android.Build.Tests
 {
 	[TestClass]
+	[NoClassCleanup]
 	public class TimeZoneInfoCoreCLRTests : TimeZoneInfoTests
 	{
 		public TimeZoneInfoCoreCLRTests () : base (AndroidRuntime.CoreCLR) { }
 	}
 
 	[TestClass]
+	[NoClassCleanup]
 	public class TimeZoneInfoNativeAOTTests : TimeZoneInfoTests
 	{
 		public TimeZoneInfoNativeAOTTests () : base (AndroidRuntime.NativeAOT) { }
@@ -26,6 +29,8 @@ namespace Xamarin.Android.Build.Tests
 	public abstract class TimeZoneInfoTests : DeviceTest
 	{
 		static readonly Dictionary<AndroidRuntime, (ProjectBuilder builder, XamarinAndroidApplicationProject proj)> installedApps = new ();
+		// Like NUnit's [OneTimeSetUp], a failed setup fails the remaining rows without retrying the install.
+		static readonly Dictionary<AndroidRuntime, ExceptionDispatchInfo> setupFailures = new ();
 
 		ProjectBuilder builder;
 		XamarinAndroidApplicationProject proj;
@@ -67,10 +72,17 @@ namespace Xamarin.Android.Build.Tests
 		[TestInitialize]
 		public override void SetupTest ()
 		{
+			if (setupFailures.TryGetValue (runtime, out var failure))
+				failure.Throw ();
 			if (installedApps.TryGetValue (runtime, out var app)) {
 				(builder, proj) = app;
 			} else {
-				BeforeAllTests ();
+				try {
+					BeforeAllTests ();
+				} catch (Exception ex) {
+					setupFailures [runtime] = ExceptionDispatchInfo.Capture (ex);
+					throw;
+				}
 				installedApps [runtime] = (builder, proj);
 			}
 
