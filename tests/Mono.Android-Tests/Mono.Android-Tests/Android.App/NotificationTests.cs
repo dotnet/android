@@ -18,12 +18,12 @@ public class NotificationTests
 		using var notification = new Android.App.Notification ();
 		long [] pattern = [0, 100, 50, 200];
 		notification.Vibrate = pattern;
-		CollectionAssert.AreEqual (pattern, notification.Vibrate);
+		Assert.AreSequenceEqual (pattern, notification.Vibrate);
 		var localReferences = Java.Interop.JniEnvironment.LocalReferenceCount;
 
 		for (int i = 0; i < 16; ++i) {
 			notification.Vibrate = pattern;
-			CollectionAssert.AreEqual (pattern, notification.Vibrate);
+			Assert.AreSequenceEqual (pattern, notification.Vibrate);
 			notification.Vibrate = [];
 			Assert.IsEmpty (notification.Vibrate);
 		}

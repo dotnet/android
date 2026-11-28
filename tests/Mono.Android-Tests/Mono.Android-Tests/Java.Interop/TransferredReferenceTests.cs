@@ -231,7 +231,7 @@ namespace Java.InteropTests
 						} else {
 							failure = Assert.ThrowsExactly<Java.Lang.IllegalStateException> (() => new Java.Lang.Throwable (handle, transfer));
 						}
-						StringAssert.Contains (failure.Message, "transfer-extraction-" + stage);
+						Assert.Contains ("transfer-extraction-" + stage, failure.Message);
 						if (stage == 4) {
 							Assert.IsNull (JniEnvironment.Runtime.ValueManager.PeekPeer (new JniObjectReference (source)),
 								"Failed stack-trace extraction must release the partially constructed wrapper.");
@@ -254,7 +254,7 @@ namespace Java.InteropTests
 			WithInput ("java/lang/Throwable", ownership, (handle, transfer) => {
 				using var peer = new Java.Lang.Throwable (handle, transfer);
 				Assert.IsTrue (peer.PeerReference.IsValid);
-				StringAssert.Contains (peer.StackTrace, "java.lang.Throwable");
+				Assert.Contains ("java.lang.Throwable", peer.StackTrace);
 			});
 		}
 

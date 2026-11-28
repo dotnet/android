@@ -1,3 +1,5 @@
+using System.Collections;
+
 using Com.Xamarin.Android;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
@@ -16,11 +18,11 @@ namespace Xamarin.Android.JcwGenTests
 
 			int [] invalid = [0];
 			Assert.AreEqual (1, peer.UpdateInt32Array (invalid));
-			CollectionAssert.AreEqual (new int [] { 0 }, invalid);
+			Assert.AreSequenceEqual (new int [] { 0 }, invalid);
 
 			int [] value = [1, 2, 3];
 			Assert.AreEqual (0, peer.UpdateInt32Array (value));
-			CollectionAssert.AreEqual (new int [] { 2, 4, 6 }, value);
+			Assert.AreSequenceEqual (new int [] { 2, 4, 6 }, value);
 		}
 
 		[TestMethod]
@@ -33,7 +35,7 @@ namespace Xamarin.Android.JcwGenTests
 			int [][] invalid = [[0]];
 			Assert.AreEqual (1, peer.UpdateInt32ArrayArray (invalid));
 			int [][] expectedInvalid = [[0]];
-			CollectionAssert.AreEqual (expectedInvalid, invalid);
+			Assert.AreSequenceEqual (expectedInvalid, invalid, StructuralComparisons.StructuralEqualityComparer);
 
 			int [][] value = [
 				[11, 12, 13],
@@ -44,7 +46,7 @@ namespace Xamarin.Android.JcwGenTests
 				[22, 24, 26],
 				[42, 44, 46],
 			];
-			CollectionAssert.AreEqual (expected, value);
+			Assert.AreSequenceEqual (expected, value, StructuralComparisons.StructuralEqualityComparer);
 		}
 
 		[TestMethod]
@@ -57,7 +59,7 @@ namespace Xamarin.Android.JcwGenTests
 			int [][][] invalid = [[[1]]];
 			Assert.AreEqual (1, peer.UpdateInt32ArrayArrayArray (invalid));
 			int [][][] expectedInvalid = [[[1]]];
-			CollectionAssert.AreEqual (expectedInvalid, invalid);
+			Assert.AreSequenceEqual (expectedInvalid, invalid, StructuralComparisons.StructuralEqualityComparer);
 
 			int [][][] value = [
 				[
@@ -80,7 +82,7 @@ namespace Xamarin.Android.JcwGenTests
 					[442, 444, 446],
 				],
 			];
-			CollectionAssert.AreEqual (expected, value);
+			Assert.AreSequenceEqual (expected, value, StructuralComparisons.StructuralEqualityComparer);
 		}
 	}
 }

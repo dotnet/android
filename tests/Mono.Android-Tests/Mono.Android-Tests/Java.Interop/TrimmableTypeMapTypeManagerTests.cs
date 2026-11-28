@@ -159,7 +159,7 @@ namespace Java.InteropTests
 			cache [jniName] = new object ();
 			try {
 				var exception = Assert.ThrowsExactly<InvalidOperationException> (() => instance.TryGetTargetType (jniName, out _));
-				StringAssert.Contains (exception?.Message, "Unexpected JNI proxy cache entry type");
+				Assert.Contains ("Unexpected JNI proxy cache entry type", exception?.Message);
 			} finally {
 				cache.TryRemove (jniName, out _);
 			}
@@ -479,16 +479,16 @@ namespace Java.InteropTests
 		public void BuildRuntimeArrayTypes_ReferenceLeaf_ReturnsProxyContract ()
 		{
 			var rank1 = TrimmableTypeMapTypeManager.BuildRuntimeArrayTypes (typeof (Java.Lang.Object), rank: 1);
-			CollectionAssert.AreEquivalent (
+			Assert.AreSequenceEqual (
 				new [] {
 					typeof (JavaObjectArray<Java.Lang.Object>),
 					typeof (Java.Interop.JavaArray<Java.Lang.Object>),
 					typeof (Java.Lang.Object[]),
 				},
-				rank1.ToArray ());
+				rank1.ToArray (), SequenceOrder.InAnyOrder);
 
 			var rank2 = TrimmableTypeMapTypeManager.BuildRuntimeArrayTypes (typeof (Java.Lang.Object), rank: 2);
-			CollectionAssert.AreEquivalent (
+			Assert.AreSequenceEqual (
 				new [] {
 					typeof (JavaObjectArray<JavaObjectArray<Java.Lang.Object>>),
 					typeof (JavaObjectArray<Java.Lang.Object>[]),
@@ -497,24 +497,24 @@ namespace Java.InteropTests
 					typeof (JavaObjectArray<Java.Lang.Object[]>),
 					typeof (Java.Lang.Object[][]),
 				},
-				rank2.ToArray ());
+				rank2.ToArray (), SequenceOrder.InAnyOrder);
 		}
 
 		[TestMethod]
 		public void BuildRuntimeArrayTypes_PrimitiveLeaf_ReturnsProxyContract ()
 		{
 			var rank1 = TrimmableTypeMapTypeManager.BuildRuntimeArrayTypes (typeof (sbyte), rank: 1);
-			CollectionAssert.AreEquivalent (
+			Assert.AreSequenceEqual (
 				new [] {
 					typeof (sbyte[]),
 					typeof (Java.Interop.JavaArray<sbyte>),
 					typeof (JavaPrimitiveArray<sbyte>),
 					typeof (JavaSByteArray),
 				},
-				rank1.ToArray ());
+				rank1.ToArray (), SequenceOrder.InAnyOrder);
 
 			var rank2 = TrimmableTypeMapTypeManager.BuildRuntimeArrayTypes (typeof (sbyte), rank: 2);
-			CollectionAssert.AreEquivalent (
+			Assert.AreSequenceEqual (
 				new [] {
 					typeof (JavaObjectArray<sbyte[]>),
 					typeof (sbyte[][]),
@@ -525,7 +525,7 @@ namespace Java.InteropTests
 					typeof (JavaObjectArray<JavaSByteArray>),
 					typeof (JavaSByteArray[]),
 				},
-				rank2.ToArray ());
+				rank2.ToArray (), SequenceOrder.InAnyOrder);
 		}
 
 		[TestMethod]
@@ -534,10 +534,10 @@ namespace Java.InteropTests
 			// Nullable primitives have no array proxy and no AOT-safe Java.Interop array wrapper, so the
 			// fallback returns just the exact rooted vector (int?[]) rather than an unrooted value generic.
 			var rank1 = TrimmableTypeMapTypeManager.BuildRuntimeArrayTypes (typeof (int?), rank: 1);
-			CollectionAssert.AreEquivalent (new [] { typeof (int?[]) }, rank1.ToArray ());
+			Assert.AreSequenceEqual (new [] { typeof (int?[]) }, rank1.ToArray (), SequenceOrder.InAnyOrder);
 
 			var rank2 = TrimmableTypeMapTypeManager.BuildRuntimeArrayTypes (typeof (int?), rank: 2);
-			CollectionAssert.AreEquivalent (new [] { typeof (int?[][]) }, rank2.ToArray ());
+			Assert.AreSequenceEqual (new [] { typeof (int?[][]) }, rank2.ToArray (), SequenceOrder.InAnyOrder);
 		}
 
 		static ConcurrentDictionary<Type, JavaPeerProxy> GetProxyCache (TrimmableTypeMap instance)

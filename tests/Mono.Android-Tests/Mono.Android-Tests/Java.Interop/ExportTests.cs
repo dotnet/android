@@ -114,11 +114,11 @@ namespace Java.InteropTests
 				IntPtr resultHandle = JNIEnv.CallObjectMethod (e.Handle, m, new JValue (argHandle));
 				try {
 					var output = (int []) JNIEnv.GetArray (resultHandle, JniHandleOwnership.DoNotTransfer, typeof (int));
-					CollectionAssert.AreEqual (new [] { 2, 4, 6 }, output, "return array should have doubled values");
+					Assert.AreSequenceEqual (new [] { 2, 4, 6 }, output, "return array should have doubled values");
 
 					// Copy-back: the input handle should also reflect the doubled values
 					var roundTrippedInput = (int []) JNIEnv.GetArray (argHandle, JniHandleOwnership.DoNotTransfer, typeof (int));
-					CollectionAssert.AreEqual (new [] { 2, 4, 6 }, roundTrippedInput, "input array mutations should propagate back to JNI handle");
+					Assert.AreSequenceEqual (new [] { 2, 4, 6 }, roundTrippedInput, "input array mutations should propagate back to JNI handle");
 				} finally {
 					JNIEnv.DeleteLocalRef (resultHandle);
 				}
@@ -197,7 +197,7 @@ namespace Java.InteropTests
 				JNIEnv.CallIntMethod (e.Handle, m);
 			} catch (Exception ex) {
 				Assert.AreSame (e.PrimitiveException, ex);
-				StringAssert.Contains (ex.Message, "boom", "exception message should preserve 'boom'");
+				Assert.Contains ("boom", ex.Message, "exception message should preserve 'boom'");
 				return;
 			}
 			Assert.Fail ("Expected the original export exception.");
@@ -261,7 +261,7 @@ namespace Java.InteropTests
 			var ex = Assert.Throws<global::System.Exception> (() => JNIEnv.CallIntMethod (e.Handle, outer));
 			Assert.IsNotNull (ex, "expected an exception from the nested call, got null");
 			Assert.AreSame (e.InnerException, ex);
-			StringAssert.Contains (ex.Message, "reentrant-boom",
+			Assert.Contains ("reentrant-boom", ex.Message,
 				"the original inner-export exception message must propagate through both [Export] wrappers");
 		}
 

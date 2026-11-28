@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 
 using Android.App;
 using Android.Content;
@@ -36,7 +37,7 @@ namespace Java.LangTests {
 					: JNIEnv.GetArray (array.Handle, JniHandleOwnership.DoNotTransfer, typeof (object));
 				Assert.IsNotNull (converted);
 				Assert.AreEqual (generic ? typeof (object[]) : source.GetType (), converted?.GetType ());
-				CollectionAssert.AreEqual (source, converted);
+				Assert.AreSequenceEqual (source, converted);
 			}
 		}
 
@@ -49,7 +50,7 @@ namespace Java.LangTests {
 			for (int i = 0; i < length; i++)
 				values [i] = i + 1;
 			using var array = new Java.Lang.Object (JNIEnv.NewArray (values), JniHandleOwnership.TransferLocalRef);
-			CollectionAssert.AreEqual (values, array.ToArray<IConvertible> ());
+			Assert.AreSequenceEqual (values, array.ToArray<IConvertible> ());
 		}
 
 		[TestMethod]
@@ -94,7 +95,7 @@ namespace Java.LangTests {
 
 			using var array = new Java.Lang.Object (JNIEnv.NewArray (values), JniHandleOwnership.TransferLocalRef);
 			Assert.AreEqual ("[Ljava/lang/Object;", JNIEnv.GetClassNameFromInstance (array.Handle));
-			CollectionAssert.AreEqual (expected, array.ToArray<string> ());
+			Assert.AreSequenceEqual (expected, array.ToArray<string> ());
 		}
 
 		[TestMethod]
@@ -111,7 +112,7 @@ namespace Java.LangTests {
 			Assert.AreEqual ("[Ljava/lang/Object;", JNIEnv.GetClassNameFromInstance (array.Handle));
 			var converted = array.ToArray<Java.Lang.String> ();
 			try {
-				CollectionAssert.AreEqual (values, converted);
+				Assert.AreSequenceEqual (values, converted);
 			} finally {
 				if (converted != null) {
 					foreach (var item in converted)
@@ -125,8 +126,8 @@ namespace Java.LangTests {
 		{
 			using var array = new Java.Lang.Object (
 				JNIEnv.NewArray (new Java.Lang.Object [1]), JniHandleOwnership.TransferLocalRef);
-			CollectionAssert.AreEqual (new string [1], array.ToArray<string> ());
-			CollectionAssert.AreEqual (new Java.Lang.String [1], array.ToArray<Java.Lang.String> ());
+			Assert.AreSequenceEqual (new string [1], array.ToArray<string> ());
+			Assert.AreSequenceEqual (new Java.Lang.String [1], array.ToArray<Java.Lang.String> ());
 		}
 
 		[TestMethod]
@@ -161,7 +162,7 @@ namespace Java.LangTests {
 			}
 
 			using var array = new Java.Lang.Object (JNIEnv.NewArray (values), JniHandleOwnership.TransferLocalRef);
-			CollectionAssert.AreEqual (expected, array.ToArray<string[]> ());
+			Assert.AreSequenceEqual (expected, array.ToArray<string[]> (), StructuralComparisons.StructuralEqualityComparer);
 		}
 
 		[TestMethod]
@@ -200,7 +201,7 @@ namespace Java.LangTests {
 			Assert.ThrowsExactly<InvalidCastException> (() => primitiveArray.ToArray<Array> ());
 			Assert.ThrowsExactly<InvalidCastException> (() => primitiveArray.ToArray<IJavaObject[]> ());
 			Assert.ThrowsExactly<InvalidCastException> (() => primitiveArray.ToArray<Array[]> ());
-			CollectionAssert.AreEqual (new int [length], primitiveArray.ToArray<int> ());
+			Assert.AreSequenceEqual (new int [length], primitiveArray.ToArray<int> ());
 		}
 
 		[TestMethod]
@@ -214,7 +215,7 @@ namespace Java.LangTests {
 				values [i] = value;
 
 			using var array = new Java.Lang.Object (JNIEnv.NewArray (values), JniHandleOwnership.TransferLocalRef);
-			CollectionAssert.AreEqual (values, array.ToArray<IJavaObject> ());
+			Assert.AreSequenceEqual (values, array.ToArray<IJavaObject> ());
 		}
 
 		[TestMethod]
@@ -228,7 +229,7 @@ namespace Java.LangTests {
 				values [i] = new [] { value };
 
 			using var array = new Java.Lang.Object (JNIEnv.NewArray (values), JniHandleOwnership.TransferLocalRef);
-			CollectionAssert.AreEqual (values, array.ToArray<IJavaObject[]> ());
+			Assert.AreSequenceEqual (values, array.ToArray<IJavaObject[]> (), StructuralComparisons.StructuralEqualityComparer);
 		}
 
 		[TestMethod]
@@ -241,7 +242,7 @@ namespace Java.LangTests {
 				values [i] = new [] { i, 42 };
 
 			using var array = new Java.Lang.Object (JNIEnv.NewArray (values), JniHandleOwnership.TransferLocalRef);
-			CollectionAssert.AreEqual (values, array.ToArray<Array> ());
+			Assert.AreSequenceEqual (values, array.ToArray<Array> (), StructuralComparisons.StructuralEqualityComparer);
 		}
 
 		[TestMethod]
@@ -254,7 +255,7 @@ namespace Java.LangTests {
 				values [i] = new [] { new [] { i, 42 } };
 
 			using var array = new Java.Lang.Object (JNIEnv.NewArray (values), JniHandleOwnership.TransferLocalRef);
-			CollectionAssert.AreEqual (values, array.ToArray<Array[]> ());
+			Assert.AreSequenceEqual (values, array.ToArray<Array[]> (), StructuralComparisons.StructuralEqualityComparer);
 		}
 
 		[TestMethod]
@@ -264,8 +265,8 @@ namespace Java.LangTests {
 		{
 			using var array = new Java.Lang.Object (
 				JNIEnv.NewArray (new Java.Lang.Object [length]), JniHandleOwnership.TransferLocalRef);
-			CollectionAssert.AreEqual (new IJavaObject [length][], array.ToArray<IJavaObject[]> ());
-			CollectionAssert.AreEqual (new Array [length][], array.ToArray<Array[]> ());
+			Assert.AreSequenceEqual (new IJavaObject [length][], array.ToArray<IJavaObject[]> ());
+			Assert.AreSequenceEqual (new Array [length][], array.ToArray<Array[]> ());
 		}
 
 		[TestMethod]
@@ -301,7 +302,7 @@ namespace Java.LangTests {
 				Assert.AreEqual (1, values.Length);
 				using (var dataObject = values [0]) {
 					byte[] data = (byte[]) dataObject;
-					CollectionAssert.AreEqual (new byte[]{1, 2, 3}, data);
+					Assert.AreSequenceEqual (new byte[]{1, 2, 3}, data);
 				}
 			}
 		}

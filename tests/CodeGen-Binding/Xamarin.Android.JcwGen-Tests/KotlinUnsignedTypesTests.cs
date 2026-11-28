@@ -49,10 +49,10 @@ namespace Xamarin.Android.JcwGenTests
 			var ulong_array = new ulong [] { 1u, 2u, ulong.MaxValue };
 			var ubyte_array = new byte [] { 1, 2, byte.MaxValue };
 
-			CollectionAssert.AreEqual (uint_array, foo.UintArrayInstanceMethod (uint_array));
-			CollectionAssert.AreEqual (ushort_array, foo.UshortArrayInstanceMethod (ushort_array));
-			CollectionAssert.AreEqual (ulong_array, foo.UlongArrayInstanceMethod (ulong_array));
-			CollectionAssert.AreEqual (ubyte_array, foo.UbyteArrayInstanceMethod (ubyte_array));
+			Assert.AreSequenceEqual (uint_array, foo.UintArrayInstanceMethod (uint_array));
+			Assert.AreSequenceEqual (ushort_array, foo.UshortArrayInstanceMethod (ushort_array));
+			Assert.AreSequenceEqual (ulong_array, foo.UlongArrayInstanceMethod (ulong_array));
+			Assert.AreSequenceEqual (ubyte_array, foo.UbyteArrayInstanceMethod (ubyte_array));
 		}
 
 		[TestMethod]
@@ -68,7 +68,7 @@ namespace Xamarin.Android.JcwGenTests
 			foo.UnsignedInterfaceProperty = uint.MaxValue;
 			Assert.AreEqual (uint.MaxValue, foo.UnsignedInterfaceProperty);
 
-			CollectionAssert.AreEqual (uint_array, foo.UnsignedArrayInterfaceMethod (uint_array));
+			Assert.AreSequenceEqual (uint_array, foo.UnsignedArrayInterfaceMethod (uint_array));
 		}
 
 		[TestMethod]

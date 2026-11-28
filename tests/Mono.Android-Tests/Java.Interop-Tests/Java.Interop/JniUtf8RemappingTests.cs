@@ -29,9 +29,9 @@ public class JniUtf8RemappingTests {
 
 		var text = info.ToString ();
 		var formatted = $"\"0x{pointer:x}\"";
-		StringAssert.Contains (text, $"TargetJniTypeUtf8 = {formatted}");
-		StringAssert.Contains (text, $"TargetJniMethodNameUtf8 = {formatted}");
-		StringAssert.Contains (text, $"TargetJniMethodSignatureUtf8 = {formatted}");
-		StringAssert.Contains (text, "TargetJniType = \"example/Target\"");
+		Assert.Contains ($"TargetJniTypeUtf8 = {formatted}", text);
+		Assert.Contains ($"TargetJniMethodNameUtf8 = {formatted}", text);
+		Assert.Contains ($"TargetJniMethodSignatureUtf8 = {formatted}", text);
+		Assert.Contains ("TargetJniType = \"example/Target\"", text);
 	}
 }

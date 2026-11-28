@@ -39,7 +39,7 @@ public class InterfaceCollectionMarshallingTests
 			list.Add (second);
 			Assert.AreEqual (5, list.Count, "list count after add");
 			Assert.AreSame (second, list [4], "added list reference");
-			CollectionAssert.AreEqual (
+			Assert.AreSequenceEqual (
 				new [] { 11, 11, 22, 22 },
 				list.Where (value => value != null).Select (value => value.Value).ToArray (),
 				"list enumeration");
@@ -172,7 +172,7 @@ public class InterfaceCollectionMarshallingTests
 			Assert.AreSame (first, dictionary ["first"], "repeated value lookup");
 			AssertDistinctJavaObjects (first, second);
 			Assert.IsNull (dictionary ["null"], "null dictionary value");
-			CollectionAssert.AreEqual (
+			Assert.AreSequenceEqual (
 				new IValueProvider [] { first, duplicate, second, null },
 				dictionary.Select (entry => entry.Value).ToArray (),
 				"dictionary value enumeration");
@@ -257,7 +257,7 @@ public class InterfaceCollectionMarshallingTests
 		var wrapperType = wrapper.GetType ();
 		Assert.IsTrue (wrapperType.IsGenericType, "wrapper must be generic");
 		Assert.AreEqual (expectedGenericDefinition, wrapperType.GetGenericTypeDefinition (), "wrapper generic definition");
-		CollectionAssert.AreEqual (expectedArguments, wrapperType.GenericTypeArguments, "wrapper generic arguments");
+		Assert.AreSequenceEqual (expectedArguments, wrapperType.GenericTypeArguments, "wrapper generic arguments");
 	}
 
 	static void AssertKeyDictionaryEnumeration (

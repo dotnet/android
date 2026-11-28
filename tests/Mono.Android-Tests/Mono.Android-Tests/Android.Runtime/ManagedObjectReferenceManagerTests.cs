@@ -68,7 +68,7 @@ namespace Xamarin.Android.RuntimeTests {
 
 			int [] expectedIds = [11, 13, 15, 16, 14, 12];
 			expectedIds = expectedIds.Where (id => id is 15 or 16 ? localEvents : globalEvents).ToArray ();
-			CollectionAssert.AreEqual (expectedIds, events.Select (e => e.Id).ToArray ());
+			Assert.AreSequenceEqual (expectedIds, events.Select (e => e.Id).ToArray ());
 			string [] globalNames = ["sourceHandle", "handle", "sourceType", "referenceType", "globalCount", "weakCount", "managedThreadId", "bridgeOperation"];
 			string [] localNames = ["sourceHandle", "handle", "localCount", "managedThreadId", "bridgeOperation"];
 			int threadId = Environment.CurrentManagedThreadId;
@@ -82,8 +82,8 @@ namespace Xamarin.Android.RuntimeTests {
 					12 => [Handle (globalHandle), 0ul, 2, 0, 0, 0, threadId, 0],
 					_ => throw new InvalidOperationException ($"Unexpected reference event {captured.Id}."),
 				};
-				CollectionAssert.AreEqual (captured.Id is 15 or 16 ? localNames : globalNames, captured.Names);
-				CollectionAssert.AreEqual (payload, captured.Payload);
+				Assert.AreSequenceEqual (captured.Id is 15 or 16 ? localNames : globalNames, captured.Names);
+				Assert.AreSequenceEqual (payload, captured.Payload);
 			}
 			// Exercise the collected-reference wire contract without relying on a nondeterministic Java GC outcome.
 			RuntimeEventSource.WeakGlobalReferenceCollected (weakHandle);
@@ -93,9 +93,9 @@ namespace Xamarin.Android.RuntimeTests {
 			if (globalEvents) {
 				Assert.AreEqual (EventLevel.Verbose, collectedEvents [0].Level);
 				Assert.AreEqual (0x10, (long)collectedEvents [0].Keywords & 0x0FFFFFFFFFFF);
-				CollectionAssert.AreEqual (new [] { "handle" }, collectedEvents [0].Names);
+				Assert.AreSequenceEqual (new [] { "handle" }, collectedEvents [0].Names);
 				Assert.IsInstanceOfType<ulong> (collectedEvents [0].Payload [0]);
-				CollectionAssert.AreEqual (new object [] { Handle (weakHandle) }, collectedEvents [0].Payload);
+				Assert.AreSequenceEqual (new object [] { Handle (weakHandle) }, collectedEvents [0].Payload);
 			}
 		}
 
@@ -131,7 +131,7 @@ namespace Xamarin.Android.RuntimeTests {
 			local = new JniObjectReference (handle, JniObjectReferenceType.Local);
 			manager.CreatedLocalReference (local, ref count);
 			try {
-				CollectionAssert.AreEqual (new [] { 15, 17, 15 },
+				Assert.AreSequenceEqual (new [] { 15, 17, 15 },
 					listener.GetEvents ().Where (e => e.ThreadId == Environment.CurrentManagedThreadId).Select (e => e.Id).ToArray (),
 					"Releasing ownership must not report JNI deletion.");
 				Assert.IsTrue (JniEnvironment.Types.IsSameObject (peer.PeerReference, local),
@@ -164,9 +164,9 @@ namespace Xamarin.Android.RuntimeTests {
 			RuntimeEventSource.WeakGlobalReferenceCollected (referenceHandle);
 			var events = listener.GetEvents ().Where (e => e.ThreadId == Environment.CurrentManagedThreadId).ToArray ();
 			bool expectStacks = collectStacks && Microsoft.Android.Runtime.RuntimeFeature.IsNativeAotRuntime;
-			CollectionAssert.AreEqual (expectStacks ? new [] { 11, 21, 12, 21, 20, 21 } : new [] { 11, 12, 20 }, events.Select (e => e.Id).ToArray ());
+			Assert.AreSequenceEqual (expectStacks ? new [] { 11, 21, 12, 21, 20, 21 } : new [] { 11, 12, 20 }, events.Select (e => e.Id).ToArray ());
 			foreach (var captured in events.Where (e => e.Id == 21)) {
-				CollectionAssert.AreEqual (new [] { "referenceEventId", "handle", "managedThreadId", "stackTrace" }, captured.Names);
+				Assert.AreSequenceEqual (new [] { "referenceEventId", "handle", "managedThreadId", "stackTrace" }, captured.Names);
 				Assert.AreEqual (4, captured.Payload.Length);
 				int index = Array.IndexOf (events, captured);
 				Assert.AreEqual (events [index - 1].Id, captured.Payload [0],
@@ -174,7 +174,7 @@ namespace Xamarin.Android.RuntimeTests {
 				Assert.AreEqual (handle, captured.Payload [1]);
 				Assert.AreEqual (Environment.CurrentManagedThreadId, captured.Payload [2]);
 				var stack = captured.Payload [3] as string ?? throw new InvalidOperationException ("The stack payload should be a string.");
-				StringAssert.Contains (stack, nameof (NativeAotStacksRequireExplicitOptIn),
+				Assert.Contains (nameof (NativeAotStacksRequireExplicitOptIn), stack,
 					$"Reference event {captured.Payload [0]} must retain the caller even when runtime wrappers are inlined.");
 				Assert.IsFalse ((stack).Contains ("RuntimeEventSource.GetReferenceStackTrace", global::System.StringComparison.Ordinal),
 					"The stack capture helper itself should be omitted.");
