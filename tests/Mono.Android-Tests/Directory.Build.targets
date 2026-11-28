@@ -1,5 +1,9 @@
 <Project>
 
+  <PropertyGroup Condition=" '$(TargetFrameworkIdentifier)' == '.NETCoreApp' and $([MSBuild]::VersionGreaterThanOrEquals($(TargetFrameworkVersion.TrimStart('v')), '12.0')) ">
+    <Features>$(Features);runtime-async=on</Features>
+  </PropertyGroup>
+
   <Target Name="BuildNativeLibs"
       BeforeTargets="CoreBuild"
       DependsOnTargets="AndroidPrepareForBuild"
