@@ -46,6 +46,22 @@ sealed partial class TrimmableTypeMapValueManager : JniRuntime.JniValueManager
 		JavaMarshalRegisteredPeers.RemovePeer (value);
 	}
 
+	public override void DisposePeer (IJavaPeerable value)
+	{
+		ArgumentNullException.ThrowIfNull (value);
+		if (RuntimeEventSource.PeerLifecycleEventsEnabled) {
+			JniObjectReference reference = value.PeerReference;
+			if (reference.IsValid) {
+				RuntimeEventSource.ManagedPeerReleasedJavaPeer (
+					value.GetType ().FullName,
+					JniEnvironment.Types.GetJniTypeNameFromInstance (reference),
+					value.JniIdentityHashCode,
+					RuntimeHelpers.GetHashCode (value));
+			}
+		}
+		base.DisposePeer (value);
+	}
+
 	public override void FinalizePeer (IJavaPeerable value)
 	{
 		JavaMarshalRegisteredPeers.FinalizePeer (value);
@@ -91,6 +107,14 @@ sealed partial class TrimmableTypeMapValueManager : JniRuntime.JniValueManager
 
 		peer.SetPeerReference (newRef);
 		peer.SetJniIdentityHashCode (JniEnvironment.References.GetIdentityHashCode (newRef));
+		if (RuntimeEventSource.PeerLifecycleEventsEnabled) {
+			var javaType = newRef.IsValid ? JniEnvironment.Types.GetJniTypeNameFromInstance (newRef) : null;
+			RuntimeEventSource.JavaPeerCreated (
+				peer.GetType ().FullName,
+				javaType,
+				peer.JniIdentityHashCode,
+				RuntimeHelpers.GetHashCode (peer));
+		}
 
 		var o = Runtime.ObjectReferenceManager;
 		if (o.LogGlobalReferenceMessages) {
@@ -120,8 +144,18 @@ sealed partial class TrimmableTypeMapValueManager : JniRuntime.JniValueManager
 
 		try {
 			var resolvedTargetType = ResolvePeerType (targetType);
-			return TrimmableTypeMap.Instance.CreateInstance (reference.Handle, resolvedTargetType)
+			var peer = TrimmableTypeMap.Instance.CreateInstance (reference.Handle, resolvedTargetType)
 				?? NotFoundFallback (ref reference, targetType, resolvedTargetType);
+			if (peer != null && RuntimeEventSource.PeerLifecycleEventsEnabled) {
+				var peerReference = peer.PeerReference;
+				var javaType = peerReference.IsValid ? JniEnvironment.Types.GetJniTypeNameFromInstance (peerReference) : null;
+				RuntimeEventSource.ManagedPeerCreated (
+					peer.GetType ().FullName,
+					javaType,
+					peer.JniIdentityHashCode,
+					RuntimeHelpers.GetHashCode (peer));
+			}
+			return peer;
 		} finally {
 			JniObjectReference.Dispose (ref reference, transfer);
 		}

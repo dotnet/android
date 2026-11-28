@@ -95,11 +95,27 @@ static class JavaMarshalGCBridge
 				bool gcBridgeEventEnabled = RuntimeFeature.EventSourceSupport && RuntimeEventSource.GCBridgeStart ();
 				HandleContext.EnsureAllContextsAreOurs (args);
 				Process (args);
-				ReadOnlySpan<GCHandle> handlesToFree = ProcessCollectedContexts (args);
+
+				bool captureBridgeProcessingMetrics = RuntimeFeature.EventSourceSupport && InteropCounterEventSource.AreBridgeProcessingCountersEnabled ();
+				List<ReachabilityEventData>? reachabilityEvents = RuntimeFeature.EventSourceSupport && RuntimeEventSource.ReachabilityEventsEnabled ? [] : null;
+				ReadOnlySpan<GCHandle> handlesToFree = ProcessCollectedContexts (args, reachabilityEvents, captureBridgeProcessingMetrics, out BridgeProcessingMetrics metrics);
 
 				JavaMarshal.FinishCrossReferenceProcessing (args, handlesToFree);
 
 				Interlocked.Increment (ref bridgeProcessingGeneration);
+				// Diagnostics are written only after FinishCrossReferenceProcessing so that listeners cannot delay the GC.
+				if (RuntimeFeature.EventSourceSupport) {
+					if (captureBridgeProcessingMetrics) {
+						InteropCounterEventSource.ReportBridgeProcessingMetrics (
+							metrics.ManagedObjectsOnlyReachableFromJavaCount,
+							metrics.JavaObjectsOnlyReachableFromManagedCount);
+					}
+					if (reachabilityEvents != null) {
+						foreach (ReachabilityEventData eventData in reachabilityEvents) {
+							eventData.Write ();
+						}
+					}
+				}
 				// Keep the switch here so ILLink removes the EventSource when it is disabled.
 				if (RuntimeFeature.EventSourceSupport) {
 					if (gcBridgeEventEnabled) {
@@ -112,31 +128,49 @@ static class JavaMarshalGCBridge
 		}
 	}
 
-	static ReadOnlySpan<GCHandle> ProcessCollectedContexts (MarkCrossReferencesArgs* mcr)
+	static ReadOnlySpan<GCHandle> ProcessCollectedContexts (
+			MarkCrossReferencesArgs* mcr,
+			List<ReachabilityEventData>? reachabilityEvents,
+			bool captureBridgeProcessingMetrics,
+			out BridgeProcessingMetrics metrics)
 	{
 		unsafe {
 			// SAFETY: the CLR retains mcr's counted components and contexts for this callback; collected contexts are queued for later free, after their associated handles are passed back to the CLR.
 			List<GCHandle> handlesToFree = [];
+			BridgeProcessingMetrics currentMetrics = default;
 
 			for (int i = 0; (nuint)i < mcr->ComponentCount; i++) {
 				StronglyConnectedComponent component = mcr->Components [i];
 				for (int j = 0; (nuint)j < component.Count; j++) {
-					ProcessContext ((HandleContext*)component.Contexts [j]);
+					ProcessContext ((HandleContext*)component.Contexts [j], i, j);
 				}
 			}
 
-			void ProcessContext (HandleContext* context)
+			metrics = currentMetrics;
+			return CollectionsMarshal.AsSpan (handlesToFree);
+
+			void ProcessContext (HandleContext* context, int componentIndex, int contextIndex)
 			{
 				if (context == null) {
 					throw new ArgumentNullException (nameof (context), "HandleContext should never be null.");
 				}
 
-				// Ignore contexts which were not collected
-				if (!context->IsCollected) {
+				bool isCollected = context->IsCollected;
+				if (captureBridgeProcessingMetrics) {
+					currentMetrics = currentMetrics.WithContext (isCollected);
+				}
+
+				if (!isCollected && reachabilityEvents == null) {
 					return;
 				}
 
 				GCHandle handle = HandleContext.GetAssociatedGCHandle (context);
+				reachabilityEvents?.Add (ReachabilityEventData.Capture (context, handle, componentIndex, contextIndex, isCollected));
+
+				// Ignore contexts which were not collected
+				if (!isCollected) {
+					return;
+				}
 
 				// Note: modifying the RegisteredInstances dictionary while processing the collected contexts
 				// is tricky and can lead to deadlocks, so we remember which contexts were collected and we will free
@@ -146,8 +180,84 @@ static class JavaMarshalGCBridge
 				// important: we must not free the handle before passing it to JavaMarshal.FinishCrossReferenceProcessing
 				handlesToFree.Add (handle);
 			}
+		}
+	}
 
-			return CollectionsMarshal.AsSpan (handlesToFree);
+	readonly struct ReachabilityEventData
+	{
+		readonly string? managedType;
+		readonly string? javaType;
+		readonly int jniIdentityHashCode;
+		readonly int managedObjectHashCode;
+		readonly int componentIndex;
+		readonly int contextIndex;
+		readonly long contextPointer;
+		readonly bool isCollected;
+
+		ReachabilityEventData (
+				string? managedType,
+				string? javaType,
+				int jniIdentityHashCode,
+				int managedObjectHashCode,
+				int componentIndex,
+				int contextIndex,
+				long contextPointer,
+				bool isCollected)
+		{
+			this.managedType = managedType;
+			this.javaType = javaType;
+			this.jniIdentityHashCode = jniIdentityHashCode;
+			this.managedObjectHashCode = managedObjectHashCode;
+			this.componentIndex = componentIndex;
+			this.contextIndex = contextIndex;
+			this.contextPointer = contextPointer;
+			this.isCollected = isCollected;
+		}
+
+		internal static ReachabilityEventData Capture (HandleContext* context, GCHandle handle, int componentIndex, int contextIndex, bool isCollected)
+		{
+			unsafe {
+				// SAFETY: context is a registered bridge context retained by the CLR for this callback; its peer reference is a live global reference or invalid once collected.
+				IJavaPeerable? peer = handle.Target as IJavaPeerable;
+				JniObjectReference reference = context->PeerReference;
+				return new ReachabilityEventData (
+					peer?.GetType ().FullName,
+					reference.IsValid ? JniEnvironment.Types.GetJniTypeNameFromInstance (reference) : null,
+					context->PeerIdentityHashCode,
+					peer != null ? RuntimeHelpers.GetHashCode (peer) : 0,
+					componentIndex,
+					contextIndex,
+					(long) (nint) context,
+					isCollected);
+			}
+		}
+
+		internal void Write ()
+		{
+			if (isCollected) {
+				RuntimeEventSource.JavaPeerOnlyReachableFromManagedPeer (managedType, javaType, jniIdentityHashCode, managedObjectHashCode, componentIndex, contextIndex, contextPointer);
+			} else {
+				RuntimeEventSource.ManagedPeerOnlyReachableFromJavaPeer (managedType, javaType, jniIdentityHashCode, managedObjectHashCode, componentIndex, contextIndex, contextPointer);
+			}
+		}
+	}
+
+	readonly struct BridgeProcessingMetrics
+	{
+		public int ManagedObjectsOnlyReachableFromJavaCount { get; }
+		public int JavaObjectsOnlyReachableFromManagedCount { get; }
+
+		public BridgeProcessingMetrics (int managedObjectsOnlyReachableFromJavaCount, int javaObjectsOnlyReachableFromManagedCount)
+		{
+			ManagedObjectsOnlyReachableFromJavaCount = managedObjectsOnlyReachableFromJavaCount;
+			JavaObjectsOnlyReachableFromManagedCount = javaObjectsOnlyReachableFromManagedCount;
+		}
+
+		public BridgeProcessingMetrics WithContext (bool isCollected)
+		{
+			return isCollected
+				? new BridgeProcessingMetrics (ManagedObjectsOnlyReachableFromJavaCount, JavaObjectsOnlyReachableFromManagedCount + 1)
+				: new BridgeProcessingMetrics (ManagedObjectsOnlyReachableFromJavaCount + 1, JavaObjectsOnlyReachableFromManagedCount);
 		}
 	}
 

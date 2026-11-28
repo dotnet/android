@@ -13,6 +13,12 @@ internal static class RuntimeEventSource
 {
 	internal const string ProviderName = "Microsoft.Android.Runtime";
 
+	internal const int ManagedPeerCreatedEventId = 1;
+	internal const int JavaPeerCreatedEventId = 2;
+	internal const int ManagedPeerReleasedJavaPeerEventId = 3;
+	internal const int JavaPeerReleasedManagedPeerEventId = 4;
+	internal const int ManagedPeerOnlyReachableFromJavaPeerEventId = 5;
+	internal const int JavaPeerOnlyReachableFromManagedPeerEventId = 6;
 	internal const int GCBridgeStartEventId = 7;
 	internal const int GCBridgeStopEventId = 8;
 	internal const int TypeMapLookupStartEventId = 9;
@@ -29,6 +35,8 @@ internal static class RuntimeEventSource
 	internal const int WeakGlobalReferenceCollectedEventId = 20;
 	internal const int ReferenceStackTraceEventId = 21;
 
+	internal const EventKeywords PeerLifecycleKeyword = (EventKeywords) 0x1;
+	internal const EventKeywords ReachabilityKeyword = (EventKeywords) 0x2;
 	internal const EventKeywords GCBridgeKeyword = (EventKeywords) 0x8;
 	internal const EventKeywords TypeMapKeyword = (EventKeywords) 0x4;
 	internal const EventKeywords GlobalReferenceKeyword = (EventKeywords) 0x10;
@@ -39,6 +47,8 @@ internal static class RuntimeEventSource
 
 	internal const string JavaToManagedTypeMapDirection = "JavaToManaged";
 	internal const string ManagedToJavaTypeMapDirection = "ManagedToJava";
+
+	const string UnknownValue = "Unknown";
 
 	internal static void Initialize ()
 	{
@@ -77,6 +87,53 @@ internal static class RuntimeEventSource
 	internal static void TypeMapLookupStop (string direction)
 	{
 		RuntimeEventSourceHolder.Instance.TypeMapLookupStop (direction);
+	}
+
+	internal static bool PeerLifecycleEventsEnabled =>
+		RuntimeFeature.EventSourceSupport && RuntimeEventSourceHolder.Instance.IsEnabled (EventLevel.Informational, PeerLifecycleKeyword);
+
+	internal static bool ReachabilityEventsEnabled =>
+		RuntimeFeature.EventSourceSupport && RuntimeEventSourceHolder.Instance.IsEnabled (EventLevel.Informational, ReachabilityKeyword);
+
+	internal static void ManagedPeerCreated (string? managedType, string? javaType, int jniIdentityHashCode, int managedObjectHashCode)
+	{
+		RuntimeEventSourceHolder.Instance.ManagedPeerCreated (managedType ?? UnknownValue, javaType ?? UnknownValue, jniIdentityHashCode, managedObjectHashCode, GetRuntimeFlavor ());
+	}
+
+	internal static void JavaPeerCreated (string? managedType, string? javaType, int jniIdentityHashCode, int managedObjectHashCode)
+	{
+		RuntimeEventSourceHolder.Instance.JavaPeerCreated (managedType ?? UnknownValue, javaType ?? UnknownValue, jniIdentityHashCode, managedObjectHashCode, GetRuntimeFlavor ());
+	}
+
+	internal static void ManagedPeerReleasedJavaPeer (string? managedType, string? javaType, int jniIdentityHashCode, int managedObjectHashCode)
+	{
+		RuntimeEventSourceHolder.Instance.ManagedPeerReleasedJavaPeer (managedType ?? UnknownValue, javaType ?? UnknownValue, jniIdentityHashCode, managedObjectHashCode, GetRuntimeFlavor ());
+	}
+
+	internal static void JavaPeerReleasedManagedPeer (string? managedType, string? javaType, int jniIdentityHashCode, int managedObjectHashCode)
+	{
+		RuntimeEventSourceHolder.Instance.JavaPeerReleasedManagedPeer (managedType ?? UnknownValue, javaType ?? UnknownValue, jniIdentityHashCode, managedObjectHashCode, GetRuntimeFlavor ());
+	}
+
+	internal static void ManagedPeerOnlyReachableFromJavaPeer (string? managedType, string? javaType, int jniIdentityHashCode, int managedObjectHashCode, int componentIndex, int contextIndex, long contextPointer)
+	{
+		RuntimeEventSourceHolder.Instance.ManagedPeerOnlyReachableFromJavaPeer (managedType ?? UnknownValue, javaType ?? UnknownValue, jniIdentityHashCode, managedObjectHashCode, GetRuntimeFlavor (), componentIndex, contextIndex, contextPointer);
+	}
+
+	internal static void JavaPeerOnlyReachableFromManagedPeer (string? managedType, string? javaType, int jniIdentityHashCode, int managedObjectHashCode, int componentIndex, int contextIndex, long contextPointer)
+	{
+		RuntimeEventSourceHolder.Instance.JavaPeerOnlyReachableFromManagedPeer (managedType ?? UnknownValue, javaType ?? UnknownValue, jniIdentityHashCode, managedObjectHashCode, GetRuntimeFlavor (), componentIndex, contextIndex, contextPointer);
+	}
+
+	static string GetRuntimeFlavor ()
+	{
+		if (RuntimeFeature.IsNativeAotRuntime) {
+			return "NativeAOT";
+		}
+		if (RuntimeFeature.IsCoreClrRuntime) {
+			return "CoreCLR";
+		}
+		return UnknownValue;
 	}
 
 	internal static bool GlobalReferenceEventsEnabled =>
@@ -210,6 +267,8 @@ internal static class RuntimeEventSource
 
 		public static class Keywords
 		{
+			public const EventKeywords PeerLifecycle = PeerLifecycleKeyword;
+			public const EventKeywords Reachability = ReachabilityKeyword;
 			public const EventKeywords GCBridge = GCBridgeKeyword;
 			public const EventKeywords TypeMap = TypeMapKeyword;
 			public const EventKeywords GlobalReference = GlobalReferenceKeyword;
@@ -221,6 +280,42 @@ internal static class RuntimeEventSource
 		{
 			public const EventTask GCBridge = GCBridgeTask;
 			public const EventTask TypeMap = TypeMapTask;
+		}
+
+		[Event (ManagedPeerCreatedEventId, Level = EventLevel.Informational, Keywords = Keywords.PeerLifecycle)]
+		public void ManagedPeerCreated (string managedType, string javaType, int jniIdentityHashCode, int managedObjectHashCode, string runtimeFlavor)
+		{
+			WriteEvent (ManagedPeerCreatedEventId, managedType, javaType, jniIdentityHashCode, managedObjectHashCode, runtimeFlavor);
+		}
+
+		[Event (JavaPeerCreatedEventId, Level = EventLevel.Informational, Keywords = Keywords.PeerLifecycle)]
+		public void JavaPeerCreated (string managedType, string javaType, int jniIdentityHashCode, int managedObjectHashCode, string runtimeFlavor)
+		{
+			WriteEvent (JavaPeerCreatedEventId, managedType, javaType, jniIdentityHashCode, managedObjectHashCode, runtimeFlavor);
+		}
+
+		[Event (ManagedPeerReleasedJavaPeerEventId, Level = EventLevel.Informational, Keywords = Keywords.PeerLifecycle)]
+		public void ManagedPeerReleasedJavaPeer (string managedType, string javaType, int jniIdentityHashCode, int managedObjectHashCode, string runtimeFlavor)
+		{
+			WriteEvent (ManagedPeerReleasedJavaPeerEventId, managedType, javaType, jniIdentityHashCode, managedObjectHashCode, runtimeFlavor);
+		}
+
+		[Event (JavaPeerReleasedManagedPeerEventId, Level = EventLevel.Informational, Keywords = Keywords.PeerLifecycle)]
+		public void JavaPeerReleasedManagedPeer (string managedType, string javaType, int jniIdentityHashCode, int managedObjectHashCode, string runtimeFlavor)
+		{
+			WriteEvent (JavaPeerReleasedManagedPeerEventId, managedType, javaType, jniIdentityHashCode, managedObjectHashCode, runtimeFlavor);
+		}
+
+		[Event (ManagedPeerOnlyReachableFromJavaPeerEventId, Level = EventLevel.Informational, Keywords = Keywords.Reachability)]
+		public void ManagedPeerOnlyReachableFromJavaPeer (string managedType, string javaType, int jniIdentityHashCode, int managedObjectHashCode, string runtimeFlavor, int componentIndex, int contextIndex, long contextPointer)
+		{
+			WriteEvent (ManagedPeerOnlyReachableFromJavaPeerEventId, managedType, javaType, jniIdentityHashCode, managedObjectHashCode, runtimeFlavor, componentIndex, contextIndex, contextPointer);
+		}
+
+		[Event (JavaPeerOnlyReachableFromManagedPeerEventId, Level = EventLevel.Informational, Keywords = Keywords.Reachability)]
+		public void JavaPeerOnlyReachableFromManagedPeer (string managedType, string javaType, int jniIdentityHashCode, int managedObjectHashCode, string runtimeFlavor, int componentIndex, int contextIndex, long contextPointer)
+		{
+			WriteEvent (JavaPeerOnlyReachableFromManagedPeerEventId, managedType, javaType, jniIdentityHashCode, managedObjectHashCode, runtimeFlavor, componentIndex, contextIndex, contextPointer);
 		}
 
 		[Event (GCBridgeStartEventId, Level = EventLevel.Informational, Keywords = Keywords.GCBridge, Task = Tasks.GCBridge, Opcode = EventOpcode.Start)]

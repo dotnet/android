@@ -313,6 +313,8 @@ The runtime instrumentation defines the following events:
 
 | Event IDs | Keyword | Area |
 |---|---|---|
+| 1-4 | `0x1` | Peer lifecycle |
+| 5-6 | `0x2` | GC bridge peer reachability |
 | 7-8 | `0x8` | GC bridge start/stop |
 | 9-10 | `0x4` | Trimmable type-map lookup start/stop |
 | 11-14, 18, 20 | `0x10` | Global and weak-global reference operations and diagnostics |
@@ -351,6 +353,49 @@ Stop event has no success or found payload, so the lookup result must be
 determined from the consuming runtime operation. Enablement is checked once
 when cache population begins and latched for exception-safe pairing, so a
 Start is followed by Stop even when the backend lookup throws.
+
+### Peer lifecycle and reachability events
+
+Peer lifecycle (keyword `0x1`) and GC bridge reachability (keyword `0x2`)
+events are informational-level events:
+
+```sh
+$ dotnet-trace collect --dsrouter android-emu --providers Microsoft.Android.Runtime:0x3:4
+```
+
+| ID | Event | Emitted when |
+|---|---|---|
+| 1 | `ManagedPeerCreated` | A managed peer is created for an existing Java instance. |
+| 2 | `JavaPeerCreated` | A managed peer is bound to a newly constructed Java instance. |
+| 3 | `ManagedPeerReleasedJavaPeer` | A managed peer releases its Java reference when disposed or finalized. |
+| 4 | `JavaPeerReleasedManagedPeer` | A managed peer is removed from the peer registry. |
+| 5 | `ManagedPeerOnlyReachableFromJavaPeer` | A bridged peer survives a GC bridge round. |
+| 6 | `JavaPeerOnlyReachableFromManagedPeer` | A bridged peer is collected by a GC bridge round. |
+
+All six events have the payload `managedType` (`string`), `javaType`
+(`string`), `jniIdentityHashCode` (`int`), `managedObjectHashCode` (`int`),
+and `runtimeFlavor` (`string`: `CoreCLR`, `NativeAOT`, or `Unknown`). Values
+which cannot be determined are reported as `Unknown`; in particular, `javaType`
+is always `Unknown` for event 6 because the Java object has already been
+collected. Reachability events (5, 6)
+additionally contain `componentIndex` (`int`), `contextIndex` (`int`), and
+`contextPointer` (`long`), which identify the peer within the GC bridge graph.
+Reachability events are buffered and written after
+`JavaMarshal.FinishCrossReferenceProcessing` so that listeners cannot extend
+the GC pause.
+
+Aggregate counts per GC bridge round are available from the separate
+`Microsoft.Android.Runtime.InteropMetrics` EventCounters provider without
+enabling the per-peer events:
+
+```sh
+$ dotnet-counters monitor --dsrouter android-emu --counters Microsoft.Android.Runtime.InteropMetrics
+```
+
+| Counter | Meaning |
+|---|---|
+| `managed-objects-only-reachable-from-java` | Mean number of bridged peers which survived each GC bridge round. |
+| `java-objects-only-reachable-from-managed` | Mean number of bridged peers which were collected in each GC bridge round. |
 
 ### JNI reference events
 

@@ -196,6 +196,7 @@ static class JavaMarshalRegisteredPeers
 
 		ArgumentNullException.ThrowIfNull (value);
 
+		bool removed = false;
 		lock (s_instancesLock) {
 			int key = value.JniIdentityHashCode;
 			if (!RegisteredInstances.TryGetValue (key, out RegisteredPeerBucket peers))
@@ -207,6 +208,7 @@ static class JavaMarshalRegisteredPeers
 				if (ReferenceEquals (value, target)) {
 					peers.RemoveAt (i);
 					peer.Dispose ();
+					removed = true;
 				}
 				GC.KeepAlive (target);
 			}
@@ -214,6 +216,16 @@ static class JavaMarshalRegisteredPeers
 				RegisteredInstances.Remove (key);
 			else
 				RegisteredInstances [key] = peers;
+		}
+
+		if (removed && RuntimeEventSource.PeerLifecycleEventsEnabled) {
+			JniObjectReference reference = value.PeerReference;
+			var javaType = reference.IsValid ? JniEnvironment.Types.GetJniTypeNameFromInstance (reference) : null;
+			RuntimeEventSource.JavaPeerReleasedManagedPeer (
+				value.GetType ().FullName,
+				javaType,
+				value.JniIdentityHashCode,
+				RuntimeHelpers.GetHashCode (value));
 		}
 	}
 
@@ -246,6 +258,13 @@ static class JavaMarshalRegisteredPeers
 					value.JniIdentityHashCode.ToString ("x", CultureInfo.InvariantCulture),
 					RuntimeHelpers.GetHashCode (value).ToString ("x", CultureInfo.InvariantCulture),
 					value.GetType ().ToString ());
+		}
+		if (RuntimeEventSource.PeerLifecycleEventsEnabled) {
+			RuntimeEventSource.ManagedPeerReleasedJavaPeer (
+				value.GetType ().FullName,
+				JniEnvironment.Types.GetJniTypeNameFromInstance (h),
+				value.JniIdentityHashCode,
+				RuntimeHelpers.GetHashCode (value));
 		}
 		value.SetPeerReference (new JniObjectReference ());
 		JniObjectReference.Dispose (ref h);
