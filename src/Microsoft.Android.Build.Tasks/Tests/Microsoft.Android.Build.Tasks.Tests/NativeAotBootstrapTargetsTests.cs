@@ -243,17 +243,18 @@ public class NativeAotBootstrapTargetsTests : BaseTest
 				.Select (file => Path.GetFullPath (file.GetProperty ("Identity").GetString ()
 					?? throw new InvalidOperationException ("FileWrites item has no identity"))).ToArray ();
 			CollectionAssert.Contains (files, sourceFile);
+			CollectionAssert.Contains (files, Path.Combine (sourceDirectory, "NativeAotAppComponentFactory.java"));
 			CollectionAssert.Contains (files, Path.Combine (sourceDirectory, "NativeAotRuntimeProvider_1.java"));
 			CollectionAssert.Contains (files, Path.Combine (sourceDirectory, "NativeAotRuntimeProvider_12.java"));
 			CollectionAssert.Contains (files, Path.Combine (path, "nativeaot-bootstrap.inputs"));
 			CollectionAssert.Contains (files, objectFile);
-			Assert.AreEqual (6, files.Length, "Only minimal Java providers, static bootstrap data and fingerprints belong in FileWrites.");
+			Assert.AreEqual (7, files.Length, "Only minimal Java providers, static bootstrap data and fingerprints belong in FileWrites.");
 			foreach (string file in files.Where (file => file.EndsWith (".java", StringComparison.Ordinal))) {
 				Assert.AreEqual (Path.GetFullPath (sourceDirectory), Path.GetDirectoryName (file));
 			}
 		}
 		CollectionAssert.AreEquivalent (
-			new [] { "JavaInteropRuntime.java", "NativeAotRuntimeProvider_1.java", "NativeAotRuntimeProvider_12.java" },
+			new [] { "JavaInteropRuntime.java", "NativeAotAppComponentFactory.java", "NativeAotRuntimeProvider_1.java", "NativeAotRuntimeProvider_12.java" },
 			Directory.GetFiles (path, "*.java", SearchOption.AllDirectories).Select (Path.GetFileName));
 		StringAssert.Contains ("class NativeAotRuntimeProvider_12", File.ReadAllText (Path.Combine (sourceDirectory, "NativeAotRuntimeProvider_12.java")));
 		CollectionAssert.AreEqual (
