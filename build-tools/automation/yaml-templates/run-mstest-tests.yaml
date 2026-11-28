@@ -47,27 +47,32 @@ steps:
     & dotnet $assembly @testArgs --report-trx --results-directory $resultsDirectory --progress off
     $testExitCode = $LASTEXITCODE
 
-    # The Retry extension writes each attempt to Retries/<id>/<attempt>/. Publish the first attempt without the
-    # failures it retried, and the later attempts as a separate (Auto-Retry) run.
+    # The TRX in the results directory is the final attempt. When tests were retried, the Retry extension also keeps
+    # the first attempt under Retries/<id>/1/; publish that without the failures it retried, and the later attempts
+    # as a separate (Auto-Retry) run.
     $retries = Join-Path $resultsDirectory "Retries"
     if (Test-Path $retries) {
       $first = Join-Path $resultsDirectory "first"
       $retried = Join-Path $resultsDirectory "retried"
       New-Item -ItemType Directory -Force -Path $first, $retried | Out-Null
-      foreach ($trx in Get-ChildItem -Path $retries -Recurse -Filter *.trx) {
-        $attempt = [int] $trx.Directory.Name
-        $destination = Join-Path ($attempt -eq 1 ? $first : $retried) "$attempt-$($trx.Directory.Parent.Name)-$($trx.Name)"
-        Copy-Item $trx.FullName $destination
-      }
-      if (Get-ChildItem -Path $retried -Filter *.trx) {
+      $final = @(Get-ChildItem -Path $resultsDirectory -Filter *.trx)
+      $finalHashes = @($final | ForEach-Object { (Get-FileHash $_.FullName).Hash })
+      $attempts = @(Get-ChildItem -Path $retries -Recurse -Filter *.trx | Where-Object { $finalHashes -notcontains (Get-FileHash $_.FullName).Hash })
+      $firstAttempts = @($attempts | Where-Object { $_.Directory.Name -eq "1" })
+      if ($firstAttempts.Count -gt 0) {
         Write-Host "##vso[task.setvariable variable=MSTestTestsRetried]true"
-        foreach ($trx in Get-ChildItem -Path $first -Filter *.trx) {
+        foreach ($trx in $firstAttempts) {
           [xml] $xml = Get-Content -Raw $trx.FullName
           foreach ($result in @($xml.TestRun.Results.UnitTestResult | Where-Object { $_.outcome -eq "Failed" })) {
             [void] $result.ParentNode.RemoveChild($result)
           }
-          $xml.Save($trx.FullName)
+          $xml.Save((Join-Path $first "$($trx.Directory.Parent.Name)-$($trx.Name)"))
         }
+        foreach ($trx in @($attempts | Where-Object { $_.Directory.Name -ne "1" }) + $final) {
+          Copy-Item $trx.FullName (Join-Path $retried "$($trx.Directory.Name)-$($trx.Directory.Parent.Name)-$($trx.Name)")
+        }
+      } else {
+        $final | Copy-Item -Destination $first
       }
     }
 

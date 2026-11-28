@@ -140,6 +140,7 @@ namespace Xamarin.Android.Build.Tests
 		protected static void ResetupDevice ()
 		{
 			lock (deviceClassesLock) {
+				IsDeviceAttached (refreshCachedValue: true);
 				SetupDevice ();
 			}
 		}
