@@ -29,5 +29,4 @@ dotnet bin/TestDebug/net11.0/Xamarin.SourceWriter-Tests.dll --report-trx
 
 ## CI
 
-The public pipeline runs this suite only when the `runNativeMtpHostTests`
-parameter is enabled, using the command above on Linux and publishing the TRX.
+CI does not run this suite.
