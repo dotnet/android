@@ -79,9 +79,9 @@ namespace generatortests
 			foreach (var gen in gens)
 				gen.FixupMethodOverrides (options);
 
-			if (options.SupportDefaultInterfaceMethods)
+			if (options.SupportNullableReferenceTypes || options.SupportDefaultInterfaceMethods)
 				foreach (var gen in gens)
-					gen.FixupInterfaceMethodNullability ();
+					gen.FixupInterfaceMethodNullability (options);
 
 			return gens;
 		}

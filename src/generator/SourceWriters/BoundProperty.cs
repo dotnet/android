@@ -36,7 +36,8 @@ namespace generator.SourceWriters
 					setter_callback = new MethodCallback (gen, property.Setter, opt, property.AdjustedName, false);
 			}
 
-			if (forceOverride || ShouldForceOverride (property)) {
+			var forced_adapter_override = !forceOverride && ShouldForceOverride (property);
+			if (forceOverride || forced_adapter_override) {
 				IsVirtual = false;
 				IsOverride = true;
 			}
@@ -95,6 +96,7 @@ namespace generator.SourceWriters
 			SourceWriterExtensions.AddRestrictToWarning (SetterAttributes, property.Setter?.AnnotatedVisibility, false, opt);
 
 			SourceWriterExtensions.AddSupportedOSPlatform (Attributes, property.Getter, opt);
+			SourceWriterExtensions.AddAllowNull (Attributes, property, opt);
 
 			SourceWriterExtensions.AddMethodCustomAttributes (GetterAttributes, property.Getter);
 
@@ -139,6 +141,9 @@ namespace generator.SourceWriters
 			if (IsOverride && string.IsNullOrEmpty (ExplicitInterfaceImplementation) && (hasObsoleteAttr || hasAccessorObsoleteAttr) &&
 					!SourceWriterExtensions.WillBasePropertyEmitObsolete (gen, property, opt))
 				SourceWriterExtensions.AddDisabledWarning (ref disabled_warnings, "0809");
+
+			if (opt.SupportNullableReferenceTypes && forced_adapter_override)
+				SourceWriterExtensions.AddDisabledWarning (ref disabled_warnings, "8764");
 		}
 
 		public override void Write (CodeWriter writer)

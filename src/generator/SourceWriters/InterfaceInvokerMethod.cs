@@ -23,16 +23,23 @@ namespace generator.SourceWriters
 			IsPublic = true;
 			IsStatic = method.IsStatic;
 
-			if (GenBase.CanOverrideJavaObjectMethod (Name, method, opt))
+			var forceReturnNotNull = false;
+			if (GenBase.CanOverrideJavaObjectMethod (Name, method, opt)) {
 				IsOverride = true;
-			else if (GenBase.RequiresNewForJavaObjectMethod (Name, method, opt))
+				var jloMethod = GenBase.FindOverriddenJavaObjectMethod (Name, method, opt);
+				if (opt.SupportNullableReferenceTypes && jloMethod != null && jloMethod.RetVal.NotNull && !method.RetVal.NotNull) {
+					ReturnType = new TypeReferenceWriter (opt.GetOutputName (method.RetVal.FullName));
+					forceReturnNotNull = true;
+				}
+			} else if (GenBase.RequiresNewForJavaObjectMethod (Name, method, opt)) {
 				IsShadow = true;
+			}
 
 			method_callback = new MethodCallback (iface, method, opt, null, method.IsReturnCharSequence, iface.FullName + "Invoker");
 			SourceWriterExtensions.AddSupportedOSPlatform (Attributes, method, opt);
 
 			this.AddMethodParameters (method.Parameters, opt);
-			SourceWriterExtensions.AddMethodBody (Body, method, opt, $"_members_{method.DeclaringType.JavaFullNameId}");
+			SourceWriterExtensions.AddMethodBody (Body, method, opt, $"_members_{method.DeclaringType.JavaFullNameId}", forceReturnNotNull);
 		}
 
 		public override void Write (CodeWriter writer)

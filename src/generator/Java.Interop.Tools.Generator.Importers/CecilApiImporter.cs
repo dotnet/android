@@ -222,6 +222,12 @@ namespace MonoDroid.Generation
 			foreach (var p in m.GetParameters (reg_attr, opt))
 				method.Parameters.Add (p);
 
+			if (m.IsSetter && method.Parameters.Count == 1 &&
+					m.DeclaringType.Properties.Any (p => p.SetMethod == m && HasAllowNullAttribute (p.CustomAttributes))) {
+				method.Parameters [0].NotNull = false;
+				method.IsSetterAllowNull = true;
+			}
+
 			string valueClass = null;
 			if (reg_attr != null) {
 				var jnisig = (string) (reg_attr.ConstructorArguments.Count > 1 ? reg_attr.ConstructorArguments [1].Value : reg_attr.Properties.First (p => p.Name == "JniSignature").Argument.Value);
@@ -275,6 +281,9 @@ namespace MonoDroid.Generation
 
 		static CustomAttribute GetJavaDefaultInterfaceMethodAttribute (Collection<CustomAttribute> attributes) =>
 			attributes.FirstOrDefault (a => a.AttributeType.FullName == "Java.Interop.JavaInterfaceDefaultMethodAttribute");
+
+		static bool HasAllowNullAttribute (Collection<CustomAttribute> attributes) =>
+			attributes.Any (a => a.AttributeType.FullName == "System.Diagnostics.CodeAnalysis.AllowNullAttribute");
 
 		static CustomAttribute GetGeneratedEnumAttribute (Collection<CustomAttribute> attributes) =>
 			attributes.FirstOrDefault (a => a.AttributeType.FullName == "Android.Runtime.GeneratedEnumAttribute");

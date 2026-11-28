@@ -18,6 +18,7 @@ namespace generator.SourceWriters
 
 			PropertyType = new TypeReferenceWriter (opt.GetTypeReferenceName (property));
 			IsAutoProperty = true;
+			SourceWriterExtensions.AddAllowNull (Attributes, property, opt);
 
 			if (!ExplicitInterfaceImplementation.HasValue () && gen.RequiresNew (property, opt))
 				IsShadow = true;

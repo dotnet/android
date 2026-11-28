@@ -26,6 +26,7 @@ namespace generator.SourceWriters
 				IsShadow = true;
 
 			SourceWriterExtensions.AddSupportedOSPlatform (Attributes, property.Getter, opt);
+			SourceWriterExtensions.AddAllowNull (Attributes, property, opt);
 
 			HasGet = property.Getter != null;
 

@@ -24,7 +24,7 @@ namespace MonoDroid.Generation
 			set {
 				setter = value;
 
-				if (Getter?.RetVal?.NotNull == true)
+				if (value != null && Getter?.RetVal?.NotNull == true && !value.IsSetterAllowNull)
 					Setter.Parameters.First ().NotNull = true;
 			}
 		}

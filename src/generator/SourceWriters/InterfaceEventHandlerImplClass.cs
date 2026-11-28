@@ -145,7 +145,8 @@ namespace generator.SourceWriters
 			}
 
 			writer.WriteLine ($"var __h = {method_spec}Handler;");
-			writer.WriteLine ($"return __h != null ? __h ({method.Parameters.GetCall (opt)}) : default ({opt.GetTypeReferenceName (method.RetVal)});");
+			var nullForgive = opt.IsNonNullableReferenceType (method.RetVal) ? opt.NullForgivingOperator : string.Empty;
+			writer.WriteLine ($"return __h != null ? __h ({method.Parameters.GetCall (opt)}) : default ({opt.GetTypeReferenceName (method.RetVal)}){nullForgive};");
 		}
 
 		public override void Write (CodeWriter writer)
