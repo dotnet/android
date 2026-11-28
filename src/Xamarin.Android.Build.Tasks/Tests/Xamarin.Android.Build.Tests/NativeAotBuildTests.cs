@@ -1,6 +1,7 @@
 using System;
 using System.IO;
 using System.Linq;
+using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
 using System.Xml.Linq;
@@ -229,6 +230,7 @@ namespace Xamarin.Android.Build.Tests
 					},
 					new BuildItem ("None", "second-environment.txt") {
 						TextContent = () => "BOOTSTRAP_TEST=second\ndebug.dotnet.max_grefc=5678",
+						Timestamp = new DateTimeOffset (2000, 1, 1, 0, 0, 0, TimeSpan.Zero),
 					},
 				},
 			};
@@ -284,7 +286,7 @@ namespace Xamarin.Android.Build.Tests
 			var inputTimestamps = inputs.Select (File.GetLastWriteTimeUtc).ToArray ();
 			StringAssert.Contains ("NativeLibraryHelper.loadLibrary(\"BootstrapOriginal\", context);", File.ReadAllText (sourceFile));
 			string nativeObject = Path.Combine (intermediate, "android-arm64", "native", "BootstrapOriginal.o");
-			DateTime nativeObjectTimestamp = File.GetLastWriteTimeUtc (nativeObject);
+			byte [] nativeObjectHash = SHA256.HashData (File.ReadAllBytes (nativeObject));
 			DateTime bootstrapSourceTimestamp = File.GetLastWriteTimeUtc (sourceFile);
 			Assert.Less (File.GetLastWriteTimeUtc (inputs [3]), File.GetLastWriteTimeUtc (environmentObject),
 				"The alternate environment file must predate the bootstrap outputs.");
@@ -292,7 +294,7 @@ namespace Xamarin.Android.Build.Tests
 			Assert.IsTrue (builder.Build (proj, doNotCleanupOnUpdate: true, saveProject: false, parameters: [
 				"AssemblyName=BootstrapOriginal", "_BootstrapEnvironmentFlavor=second", "DefineConstants=BOOTSTRAP_SECOND",
 			]));
-			Assert.Greater (File.GetLastWriteTimeUtc (nativeObject), nativeObjectTimestamp, "The managed build flavor must recompile.");
+			CollectionAssert.AreNotEqual (nativeObjectHash, SHA256.HashData (File.ReadAllBytes (nativeObject)), "The managed build flavor must recompile.");
 			CollectionAssert.AreEqual (inputTimestamps, inputs.Select (File.GetLastWriteTimeUtc),
 				"Selecting a pre-existing environment file must not change the other bootstrap inputs.");
 			Assert.AreEqual ("second", EnvironmentHelper.ReadNativeAotEnvironmentVariables (intermediate) ["BOOTSTRAP_TEST"]);
@@ -300,7 +302,7 @@ namespace Xamarin.Android.Build.Tests
 			builder.Output.AssertTargetIsNotSkipped ("_AndroidGenerateNativeAotBootstrapObject");
 			builder.Output.AssertTargetIsSkipped ("_AndroidGenerateNativeAotBootstrapSources", defaultIfNotUsed: true);
 			Assert.AreEqual (bootstrapSourceTimestamp, File.GetLastWriteTimeUtc (sourceFile), "Unchanged library/provider selection must not rewrite Java.");
-			nativeObjectTimestamp = File.GetLastWriteTimeUtc (nativeObject);
+			DateTime nativeObjectTimestamp = File.GetLastWriteTimeUtc (nativeObject);
 
 			foreach (var (flavor, expectedValue) in new [] { ("forward", "second"), ("reverse", "first") }) {
 				Assert.IsTrue (builder.Build (proj, doNotCleanupOnUpdate: true, saveProject: false, parameters: [

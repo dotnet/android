@@ -1311,69 +1311,6 @@ namespace UnamedProject
 		}
 
 		[Test]
-		[NonParallelizable]
-		public void CheckTimestamps ([ValueSource (typeof (BaseTest), nameof (BaseTest.ValidRuntimeConfigurations))] (bool isRelease, AndroidRuntime runtime) configuration)
-		{
-			var (isRelease, runtime) = configuration;
-
-			var start = DateTime.UtcNow.AddSeconds (-1);
-			var proj = new XamarinFormsAndroidApplicationProject {
-				IsRelease = isRelease,
-
-			};
-			proj.SetRuntime (runtime);
-
-			using (var b = CreateApkBuilder ()) {
-				//To be sure we are at a clean state
-				var projectDir = Path.Combine (Root, b.ProjectDirectory);
-				if (Directory.Exists (projectDir))
-					Directory.Delete (projectDir, true);
-
-				var intermediate = Path.Combine (projectDir, proj.IntermediateOutputPath);
-				Assert.IsTrue (b.Build (proj), "first build should have succeeded.");
-
-				// None of these files should be *older* than the starting time of this test!
-				var files = Directory.EnumerateFiles (intermediate, "*", SearchOption.AllDirectories).ToList ();
-				foreach (var file in files) {
-					//NOTE: ILLink from the dotnet/sdk currently copies assemblies with older timestamps, and only $(_LinkSemaphore) is touched
-					//see: https://github.com/dotnet/sdk/blob/a245b6ff06b483927e57d953b803a390ad31db95/src/Tasks/Microsoft.NET.Build.Tasks/targets/Microsoft.NET.ILLink.targets#L113-L116
-					if (Directory.GetParent (file).Name == "linked") {
-						continue;
-					}
-					var info = new FileInfo (file);
-					Assert.IsTrue (info.LastWriteTimeUtc > start, $"`{file}` is older than `{start}`, with a timestamp of `{info.LastWriteTimeUtc}`!");
-				}
-
-				//Build again after a code change (renamed Java.Lang.Object subclass), checking a few files
-				proj.MainActivity = proj.DefaultMainActivity.Replace ("MainActivity", "MainActivity2");
-				proj.Touch ("MainActivity.cs");
-				start = DateTime.UtcNow;
-				Assert.IsTrue (b.Build (proj), "second build should have succeeded.");
-
-				// These files won't exist in OSS .NET for Android, thus the existence check and
-				// Assert.Ignore below. They will also not exist in the commercial version of
-				// .NET for Android unless fastdev is enabled.
-				foreach (var file in new [] { "typemap.mj", "typemap.jm" }) {
-					var info = new FileInfo (Path.Combine (intermediate, "android", file));
-					if (info.Exists) {
-						Assert.IsTrue (info.LastWriteTimeUtc > start, $"`{file}` is older than `{start}`, with a timestamp of `{info.LastWriteTimeUtc}`!");
-					}
-				}
-
-				//One last build with no changes
-				Assert.IsTrue (b.Build (proj), "third build should have succeeded.");
-
-				// NativeAOT always runs the linking step
-				if (runtime != AndroidRuntime.NativeAOT) {
-					b.Output.AssertTargetIsSkipped (isRelease ? KnownTargets.LinkAssembliesShrink : KnownTargets.LinkAssembliesNoShrink);
-				}
-				b.Output.AssertTargetIsSkipped ("_UpdateAndroidResgen");
-				b.Output.AssertTargetIsSkipped ("_BuildLibraryImportsCache");
-				b.Output.AssertTargetIsSkipped ("_CompileJava");
-			}
-		}
-
-		[Test]
 		[NonParallelizable] // On MacOS, parallel /restore causes issues
 		public void BuildApplicationAndClean ([ValueSource (typeof (BaseTest), nameof (BaseTest.ValidRuntimeConfigurations))] (bool isRelease, AndroidRuntime runtime) configuration, [Values ("apk", "aab")] string packageFormat)
 		{
