@@ -128,13 +128,9 @@ namespace Java.InteropTests
 			CB cb = (env, instance) => {
 				IntPtr priorEnvironment = JNIEnv.Handle;
 				// NOTE: this callback runs on a raw native pthread spawned by
-				// libreuse-threads.so and attached to the JVM. NUnit 3 replaces
-				// Console.Out with a TextCapture that resolves the current
-				// TestExecutionContext on every write; from a thread NUnit doesn't
-				// know about it tries to manufacture an AdhocContext and NREs in
-				// MethodWrapper.get_Name, which SIGABRTs the entire process and
-				// causes the test host to report "0 tests ran" for the assembly.
-				// Route diagnostics through Android.Util.Log instead.
+				// libreuse-threads.so and attached to the JVM, outside of any
+				// test execution context. Route diagnostics through
+				// Android.Util.Log instead of the test framework's captured Console.Out.
 				if (instance == IntPtr.Zero)
 					return;
 				using (var o = Java.Lang.Object.GetObject<Java.Lang.Object>(env, instance, JniHandleOwnership.DoNotTransfer)) {

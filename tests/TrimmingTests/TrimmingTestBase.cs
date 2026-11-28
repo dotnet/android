@@ -3,11 +3,13 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Text.RegularExpressions;
 using System.Threading;
 using Microsoft.Build.Logging.StructuredLogger;
 using BuildLog = Microsoft.Build.Logging.StructuredLogger.Build;
-using NUnit.Framework;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Microsoft.VisualStudio.TestTools.UnitTesting.Combinatorial;
 using Xamarin.Android.Build.Tests;
 using Xamarin.Android.Tasks;
 using Xamarin.Android.Tools;
@@ -32,17 +34,21 @@ public enum TrimmingConfiguration
 /// The configurations a test runs in: all of them by default, or the ones listed.
 /// </summary>
 [AttributeUsage (AttributeTargets.Parameter)]
-public sealed class TrimmingConfigurationsAttribute : ValuesAttribute
+public sealed class TrimmingConfigurationsAttribute : Attribute, ICombinatorialValuesProvider
 {
+	readonly TrimmingConfiguration [] configurations;
+
 	public TrimmingConfigurationsAttribute ()
 		: this (TrimmingConfiguration.CoreClrFullTrimming, TrimmingConfiguration.NativeAot, TrimmingConfiguration.CoreClrPartialTrimming)
 	{
 	}
 
 	public TrimmingConfigurationsAttribute (params TrimmingConfiguration [] configurations)
-		: base (configurations.Cast<object?> ().ToArray ())
 	{
+		this.configurations = configurations;
 	}
+
+	public object [] GetValues (ParameterInfo parameter) => configurations.Cast<object> ().ToArray ();
 }
 
 /// <summary>A case app that <see cref="TrimmingTestBase.BuildAndRun"/> built and ran.</summary>
@@ -66,11 +72,11 @@ public sealed record TrimmedApp (string CaseFile, TrimmingConfiguration Configur
 /// <c>AndroidManifest.xml</c>, or a <c>Case.targets</c> with MSBuild items. Cases that reproduce a reported bug link to it.
 /// </para>
 /// <para>
-/// Tests in a fixture may run in parallel (<c>[Parallelizable (ParallelScope.Children)]</c>), also on the device: each test builds in
-/// its own directory, installs its own package (<c>ApplicationId</c> plus the configuration), and reads only its app's logcat output.
-/// Tests of activity cases must be <c>[NonParallelizable]</c>: an activity started in another task before the app's process attaches
+/// Two tests run at a time (<c>[assembly: Parallelize]</c>), also on the device: each test builds in its own directory, installs
+/// its own package (<c>ApplicationId</c> plus the configuration), and reads only its app's logcat output. Test classes can overlap,
+/// so the per-class device setup and cleanup of <see cref="DeviceTest"/> must not disturb apps that are running.
+/// Tests of activity cases must be <c>[DoNotParallelize]</c>: an activity started in another task before the app's process attaches
 /// covers the app's activity, and Android then never creates it. Instrumentations don't depend on which activity is on top.
-/// Fixtures run one after another, so the one-time device setup of <see cref="DeviceTest"/> never runs concurrently.
 /// </para>
 /// <para>
 /// <see cref="BuildAndRun"/> requires a build without warnings, unless the test lists the expected warning codes, and a launch
@@ -83,13 +89,13 @@ public abstract class TrimmingTestBase : DeviceTest
 	const string ResultTag = "TRIMMING_TEST_RESULT:";
 	const string ExpectationsProject = "TrimmingTests.Expectations";
 
-	// Tests share the device, so check it once per fixture, where restarting it can't disrupt a running test.
-	[OneTimeSetUp]
-	public void AssertDeviceAttached ()
+	// Tests share the device, so check it once per class instead of before every test.
+	[ClassInitialize (InheritanceBehavior.BeforeEachDerivedClass)]
+	public static void AssertDeviceAttached (TestContext context)
 	{
 		if (!IsDeviceAttached (refreshCachedValue: true)) {
 			RestartDevice ();
-			DeviceSetup ();
+			ResetupDevice ();
 		}
 		AssertHasDevices ();
 		AssertPackageManagerResponsive ();
@@ -108,7 +114,7 @@ public abstract class TrimmingTestBase : DeviceTest
 		var caseFile = Path.GetFileName (casePath);
 		var directory = Path.Combine (Root, "temp", TestName);
 		// BaseTest deletes it after a passing test and attaches its logs and binlogs to a failing one.
-		TestOutputDirectories [TestContext.CurrentContext.Test.ID] = directory;
+		TestOutputDirectories [TestId] = directory;
 		var source = CopyCase (casePath, directory);
 		// Each configuration gets its own package, so concurrent tests can install and run their apps side by side.
 		var packageName = $"{GetApplicationId (source)}.{configuration.ToString ().ToLowerInvariant ()}";
@@ -144,7 +150,7 @@ public abstract class TrimmingTestBase : DeviceTest
 		var apk = Directory.GetFiles (artifacts, $"{packageName}-Signed.apk", SearchOption.AllDirectories).SingleOrDefault ();
 		Assert.IsNotNull (apk, $"{caseFile} should produce {packageName}-Signed.apk under {artifacts}.");
 		var install = RunAdbCommand ($"install -r \"{apk}\"", timeout: 120);
-		StringAssert.Contains ("Success", install, $"{caseFile} should install.");
+		Assert.Contains ("Success", install, $"{caseFile} should install.");
 		try {
 			AssertLaunchReportsPass (caseFile, configuration, packageName, directory);
 		} finally {
@@ -156,9 +162,9 @@ public abstract class TrimmingTestBase : DeviceTest
 
 	static string CopyCase (string casePath, string directory)
 	{
-		var source = Path.Combine (TestContext.CurrentContext.TestDirectory, casePath);
-		FileAssert.Exists (source, $"{casePath} should be copied next to the test assembly.");
-		var cases = Path.Combine (TestContext.CurrentContext.TestDirectory, "Cases");
+		var source = Path.Combine (AppContext.BaseDirectory, casePath);
+		Assert.IsTrue (File.Exists (source), $"{casePath} should be copied next to the test assembly.");
+		var cases = Path.Combine (AppContext.BaseDirectory, "Cases");
 		var caseDirectory = Path.GetDirectoryName (source) ?? throw new InvalidOperationException ($"{casePath} has no directory.");
 		if (Directory.Exists (directory)) {
 			Directory.Delete (directory, recursive: true);
@@ -238,10 +244,10 @@ public abstract class TrimmingTestBase : DeviceTest
 			if (instrumentation is not null) {
 				// Without -w, `am instrument` returns once the instrumentation is started and prints nothing unless that fails.
 				var started = RunAdbCommand ($"shell am instrument {instrumentation}", timeout: ActivityStartTimeoutInSeconds);
-				Assert.IsEmpty (started.Trim (), $"{caseFile} should start {instrumentation} on {configuration}.");
+				Assert.AreEqual ("", started.Trim (), $"{caseFile} should start {instrumentation} on {configuration}.");
 			} else {
 				var started = RunAdbCommand ($"shell am start -W -n {activity}", timeout: ActivityStartTimeoutInSeconds);
-				StringAssert.Contains ("Complete", started, $"{caseFile} should start on {configuration}.");
+				Assert.Contains ("Complete", started, $"{caseFile} should start on {configuration}.");
 			}
 			// `am start -W` and `am instrument` can return before the app's process exists, so give it a moment to appear.
 			var deadline = DateTime.UtcNow.AddSeconds (10);
@@ -254,7 +260,7 @@ public abstract class TrimmingTestBase : DeviceTest
 			}
 		});
 		Assert.IsNotNull (result, $"{caseFile} did not report a result from process {pid}. See {logcat}");
-		StringAssert.Contains ($"{ResultTag} PASS", result, $"{caseFile} failed on {configuration}. See {logcat}");
+		Assert.Contains ($"{ResultTag} PASS", result, $"{caseFile} failed on {configuration}. See {logcat}");
 	}
 
 	/// <summary>Checks the expectation attributes the case declares against the trimmed output of <paramref name="app"/>.</summary>

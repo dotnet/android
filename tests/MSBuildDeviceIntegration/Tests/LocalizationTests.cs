@@ -3,46 +3,50 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Runtime.ExceptionServices;
 using System.Threading;
-using NUnit.Framework;
-using NUnit.Framework.Interfaces;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Xamarin.ProjectTools;
 using Humanizer;
 using Xamarin.Android.Tasks;
 
 namespace Xamarin.Android.Build.Tests
 {
-	[TestFixture]
-	[TestFixtureSource (nameof (Get_Fixture_Args))]
-	[Category ("Localization")]
-	[NonParallelizable]
-	public class LocalizationTests : DeviceTest
+	[TestClass]
+	[NoClassCleanup]
+	public class LocalizationCoreCLRTests : LocalizationTests
 	{
+		public LocalizationCoreCLRTests () : base (AndroidRuntime.CoreCLR) { }
+	}
+
+	[TestClass]
+	[NoClassCleanup]
+	public class LocalizationNativeAOTTests : LocalizationTests
+	{
+		public LocalizationNativeAOTTests () : base (AndroidRuntime.NativeAOT) { }
+	}
+
+	[TestCategory ("Localization")]
+	[DoNotParallelize]
+	public abstract class LocalizationTests : DeviceTest
+	{
+		static readonly Dictionary<AndroidRuntime, (ProjectBuilder builder, XamarinAndroidApplicationProject proj)> installedApps = new ();
+		// Like NUnit's [OneTimeSetUp], a failed setup fails the remaining rows without retrying the install.
+		static readonly Dictionary<AndroidRuntime, ExceptionDispatchInfo> setupFailures = new ();
+
 		ProjectBuilder builder;
 		XamarinAndroidApplicationProject proj;
 		string localeFileSuffix;
 		readonly AndroidRuntime runtime;
 		readonly bool isRelease;
 
-		static IEnumerable<object[]> Get_Fixture_Args ()
-		{
-			var ret = new List<object[]> ();
-
-			foreach (AndroidRuntime runtime in new[] { AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT }) {
-				ret.Add (new object[] { runtime });
-			}
-
-			return ret;
-		}
-
-		public LocalizationTests (AndroidRuntime runtime)
+		protected LocalizationTests (AndroidRuntime runtime)
 		{
 			this.runtime = runtime;
 			isRelease = runtime == AndroidRuntime.NativeAOT;
 		}
 
-		[OneTimeSetUp]
-		public void BeforeAllTests ()
+		void BeforeAllTests ()
 		{
 			AssertHasDevices ();
 
@@ -73,15 +77,29 @@ using System.Globalization;");
 			InlineData.AddCultureResourcesToProject (proj, "Strings", "SomeString");
 			InlineData.AddCultureResourceDesignerToProject (proj, proj.RootNamespace ?? proj.ProjectName, "Strings", "SomeString");
 
-			builder = CreateApkBuilder (Path.Combine ("temp", TestName));
+			builder = CreateApkBuilder (Path.Combine ("temp", $"LocalizationTests{runtime}"));
 			builder.BuildLogFile = "onetimesetup-install.log";
 			Assert.IsTrue (builder.Install (proj), "Install should have succeeded.");
 		}
 
-		[SetUp]
+		[TestInitialize]
 		public override void SetupTest ()
 		{
-			var localeParam = TestContext.CurrentContext.Test.Arguments[0] as string;
+			if (setupFailures.TryGetValue (runtime, out var failure))
+				failure.Throw ();
+			if (installedApps.TryGetValue (runtime, out var app)) {
+				(builder, proj) = app;
+			} else {
+				try {
+					BeforeAllTests ();
+				} catch (Exception ex) {
+					setupFailures [runtime] = ExceptionDispatchInfo.Capture (ex);
+					throw;
+				}
+				installedApps [runtime] = (builder, proj);
+			}
+
+			var localeParam = TestContext.TestData? [0] as string;
 			if (!string.IsNullOrEmpty (localeParam)) {
 				localeFileSuffix = localeParam.Replace ("/", "-");
 			}
@@ -91,28 +109,35 @@ using System.Globalization;");
 		/// Calling BaseTest.CleanupTest() will cause our shared test directory to be deleted after any test passes
 		/// This can be problematic for cases that run dozens or hundreds of tests with the same root (CheckTimeZoneInfoIsCorrect, CheckLocalizationIsCorrect)
 		/// </summary>
-		[TearDown]
-		protected override void CleanupTest ()
+		[TestCleanup]
+		public override void CleanupTest ()
 		{
 			string output = Path.Combine (Root, builder?.ProjectDirectory);
-			if (TestContext.CurrentContext.Result.Outcome.Status == TestStatus.Failed && Directory.Exists (output)) {
+			if (TestContext.CurrentTestOutcome == UnitTestOutcome.Failed && Directory.Exists (output)) {
 				foreach (var setupFile in Directory.GetFiles (output, $"*onetimesetup*log", SearchOption.AllDirectories)) {
-					TestContext.AddTestAttachment (setupFile, Path.GetFileNameWithoutExtension (setupFile));
+					TestContext.AddResultFile (setupFile);
 				}
 				foreach (var testFile in Directory.GetFiles (output, $"*{localeFileSuffix}*log", SearchOption.AllDirectories)) {
-					TestContext.AddTestAttachment (testFile, Path.GetFileNameWithoutExtension (testFile));
+					TestContext.AddResultFile (testFile);
 				}
 			}
 		}
 
-		protected override void DeviceTearDown ()
+		/// <summary>
+		/// CheckLocalizationIsCorrect changes the device-wide locale; restore the default so later suites on the same device are unaffected.
+		/// </summary>
+		[ClassCleanup (InheritanceBehavior.BeforeEachDerivedClass)]
+		public static void RestoreDeviceLocale ()
 		{
+			if (!IsDeviceAttached ())
+				return;
+			ClearAdbLogcat ();
+			RunAdbCommand ("shell \"su root setprop persist.sys.locale en-US;su root stop;sleep 5;su root start;\"");
+			var logcatFile = Path.Combine (XABuildPaths.TestOutputDirectory, "restore-locale-logcat.log");
+			if (!MonitorAdbLogcat (l => l.Contains ("ActivityManager: Finished processing BOOT_COMPLETED"), logcatFile, timeout: 60))
+				Console.Out.WriteLine ($"{nameof (RestoreDeviceLocale)}: waiting for boot to complete failed or timed out.");
 		}
 
-		[OneTimeTearDown]
-		protected override void AfterAllTests ()
-		{
-		}
 
 
 		const int LOCALIZATION_NODE_COUNT = 15;
@@ -127,11 +152,11 @@ using System.Globalization;");
 			};
 			foreach (CultureInfo ci in CultureInfo.GetCultures(CultureTypes.SpecificCultures)) {
 				if (ci.Name.Length > 5) {
-					TestContext.WriteLine ($"Skipping {ci.Name} Localization Test");
+					Console.WriteLine ($"Skipping {ci.Name} Localization Test");
 					continue;
 				}
 				if (ignore.Contains (ci.Name)) {
-					TestContext.WriteLine ($"Ignoring {ci.Name} Localization Test");
+					Console.WriteLine ($"Ignoring {ci.Name} Localization Test");
 					continue;
 				}
 				tests.Add (ci.Name);
@@ -145,84 +170,84 @@ using System.Globalization;");
 			return tests.Where (p => tests.IndexOf (p) % LOCALIZATION_NODE_COUNT == node).ToArray ();
 		}
 
-		[Test]
-		[Retry (LOCALIZATION_RETRY_COUNT)]
-		[TestCaseSource (nameof (GetLocalizationTestCases), new object [] { 0 })]
+		[TestMethod]
+		[Retry (LOCALIZATION_RETRY_COUNT - 1)]
+		[DynamicData (nameof (GetLocalizationTestCases), new object [] { 0 })]
 		public void CheckLocalizationIsCorrectNode1 (string locale) => CheckLocalizationIsCorrect (locale);
 
-		[Test]
-		[Retry (LOCALIZATION_RETRY_COUNT)]
-		[TestCaseSource (nameof (GetLocalizationTestCases), new object [] { 1 })]
+		[TestMethod]
+		[Retry (LOCALIZATION_RETRY_COUNT - 1)]
+		[DynamicData (nameof (GetLocalizationTestCases), new object [] { 1 })]
 		public void CheckLocalizationIsCorrectNode2 (string locale) => CheckLocalizationIsCorrect (locale);
 
-		[Test]
-		[Retry (LOCALIZATION_RETRY_COUNT)]
-		[TestCaseSource (nameof (GetLocalizationTestCases), new object [] { 2 })]
+		[TestMethod]
+		[Retry (LOCALIZATION_RETRY_COUNT - 1)]
+		[DynamicData (nameof (GetLocalizationTestCases), new object [] { 2 })]
 		public void CheckLocalizationIsCorrectNode3 (string locale) => CheckLocalizationIsCorrect (locale);
 
-		[Test]
-		[Retry (LOCALIZATION_RETRY_COUNT)]
-		[TestCaseSource (nameof (GetLocalizationTestCases), new object [] { 3 })]
+		[TestMethod]
+		[Retry (LOCALIZATION_RETRY_COUNT - 1)]
+		[DynamicData (nameof (GetLocalizationTestCases), new object [] { 3 })]
 		public void CheckLocalizationIsCorrectNode4 (string locale) => CheckLocalizationIsCorrect (locale);
 
-		[Test]
-		[Retry (LOCALIZATION_RETRY_COUNT)]
-		[TestCaseSource (nameof (GetLocalizationTestCases), new object [] { 4 })]
+		[TestMethod]
+		[Retry (LOCALIZATION_RETRY_COUNT - 1)]
+		[DynamicData (nameof (GetLocalizationTestCases), new object [] { 4 })]
 		public void CheckLocalizationIsCorrectNode5 (string locale) => CheckLocalizationIsCorrect (locale);
 
-		[Test]
-		[Retry (LOCALIZATION_RETRY_COUNT)]
-		[TestCaseSource (nameof (GetLocalizationTestCases), new object [] { 5 })]
+		[TestMethod]
+		[Retry (LOCALIZATION_RETRY_COUNT - 1)]
+		[DynamicData (nameof (GetLocalizationTestCases), new object [] { 5 })]
 		public void CheckLocalizationIsCorrectNode6 (string locale) => CheckLocalizationIsCorrect (locale);
 
-		[Test]
-		[Retry (LOCALIZATION_RETRY_COUNT)]
-		[TestCaseSource (nameof (GetLocalizationTestCases), new object [] { 6 })]
+		[TestMethod]
+		[Retry (LOCALIZATION_RETRY_COUNT - 1)]
+		[DynamicData (nameof (GetLocalizationTestCases), new object [] { 6 })]
 		public void CheckLocalizationIsCorrectNode7 (string locale) => CheckLocalizationIsCorrect (locale);
 
-		[Test]
-		[Retry (LOCALIZATION_RETRY_COUNT)]
-		[TestCaseSource (nameof (GetLocalizationTestCases), new object [] { 7 })]
+		[TestMethod]
+		[Retry (LOCALIZATION_RETRY_COUNT - 1)]
+		[DynamicData (nameof (GetLocalizationTestCases), new object [] { 7 })]
 		public void CheckLocalizationIsCorrectNode8 (string locale) => CheckLocalizationIsCorrect (locale);
 
-		[Test]
-		[Retry (LOCALIZATION_RETRY_COUNT)]
-		[TestCaseSource (nameof (GetLocalizationTestCases), new object [] { 8 })]
+		[TestMethod]
+		[Retry (LOCALIZATION_RETRY_COUNT - 1)]
+		[DynamicData (nameof (GetLocalizationTestCases), new object [] { 8 })]
 		public void CheckLocalizationIsCorrectNode9 (string locale) => CheckLocalizationIsCorrect (locale);
 
-		[Test]
-		[Retry (LOCALIZATION_RETRY_COUNT)]
-		[TestCaseSource (nameof (GetLocalizationTestCases), new object [] { 9 })]
+		[TestMethod]
+		[Retry (LOCALIZATION_RETRY_COUNT - 1)]
+		[DynamicData (nameof (GetLocalizationTestCases), new object [] { 9 })]
 		public void CheckLocalizationIsCorrectNode10 (string locale) => CheckLocalizationIsCorrect (locale);
 
-		[Test]
-		[Retry (LOCALIZATION_RETRY_COUNT)]
-		[TestCaseSource (nameof (GetLocalizationTestCases), new object [] { 10 })]
+		[TestMethod]
+		[Retry (LOCALIZATION_RETRY_COUNT - 1)]
+		[DynamicData (nameof (GetLocalizationTestCases), new object [] { 10 })]
 		public void CheckLocalizationIsCorrectNode11 (string locale) => CheckLocalizationIsCorrect (locale);
 
-		[Test]
-		[Retry (LOCALIZATION_RETRY_COUNT)]
-		[TestCaseSource (nameof (GetLocalizationTestCases), new object [] { 11 })]
+		[TestMethod]
+		[Retry (LOCALIZATION_RETRY_COUNT - 1)]
+		[DynamicData (nameof (GetLocalizationTestCases), new object [] { 11 })]
 		public void CheckLocalizationIsCorrectNode12 (string locale) => CheckLocalizationIsCorrect (locale);
 
-		[Test]
-		[Retry (LOCALIZATION_RETRY_COUNT)]
-		[TestCaseSource (nameof (GetLocalizationTestCases), new object [] { 12 })]
+		[TestMethod]
+		[Retry (LOCALIZATION_RETRY_COUNT - 1)]
+		[DynamicData (nameof (GetLocalizationTestCases), new object [] { 12 })]
 		public void CheckLocalizationIsCorrectNode13 (string locale) => CheckLocalizationIsCorrect (locale);
 
-		[Test]
-		[Retry (LOCALIZATION_RETRY_COUNT)]
-		[TestCaseSource (nameof (GetLocalizationTestCases), new object [] { 13 })]
+		[TestMethod]
+		[Retry (LOCALIZATION_RETRY_COUNT - 1)]
+		[DynamicData (nameof (GetLocalizationTestCases), new object [] { 13 })]
 		public void CheckLocalizationIsCorrectNode14 (string locale) => CheckLocalizationIsCorrect (locale);
 
-		[Test]
-		[Retry (LOCALIZATION_RETRY_COUNT)]
-		[TestCaseSource (nameof (GetLocalizationTestCases), new object [] { 14 })]
+		[TestMethod]
+		[Retry (LOCALIZATION_RETRY_COUNT - 1)]
+		[DynamicData (nameof (GetLocalizationTestCases), new object [] { 14 })]
 		public void CheckLocalizationIsCorrectNode15 (string locale) => CheckLocalizationIsCorrect (locale);
 
-		[Test]
-		[Retry (LOCALIZATION_RETRY_COUNT)]
-		[TestCaseSource (nameof (GetLocalizationTestInfo))]
+		[TestMethod]
+		[Retry (LOCALIZATION_RETRY_COUNT - 1)]
+		[DynamicData (nameof (GetLocalizationTestInfo))]
 		public void CheckLocalizationIsCorrectWithSlicer (string locale) => CheckLocalizationIsCorrect (locale);
 
 
@@ -243,10 +268,10 @@ using System.Globalization;");
 
 			var appStartupLogcatFile = Path.Combine (Root, builder.ProjectDirectory, $"startup-logcat-{locale.Replace ("/", "-")}.log");
 			string deviceLocale = RunAdbCommand ("shell getprop persist.sys.locale")?.Trim ();
-			TestContext.Out.WriteLine ($"test value:{locale}, prop value:{deviceLocale}");
+			Console.Out.WriteLine ($"test value:{locale}, prop value:{deviceLocale}");
 
 			for (int attempt = 0; attempt < 5; attempt++) {
-				TestContext.Out.WriteLine ($"{nameof(CheckLocalizationIsCorrect)}: Setting Locale to {locale}, attempt {attempt}...");
+				Console.Out.WriteLine ($"{nameof(CheckLocalizationIsCorrect)}: Setting Locale to {locale}, attempt {attempt}...");
 				ClearAdbLogcat ();
 				var rebootLogcatFile = Path.Combine (Root, builder.ProjectDirectory, $"reboot{attempt}-logcat-{locale.Replace ("/", "-")}.log");
 
@@ -258,7 +283,7 @@ using System.Globalization;");
 						return true;
 					return false;
 				}, rebootLogcatFile, timeout: 60)) {
-					TestContext.Out.WriteLine ($"{nameof(CheckLocalizationIsCorrect)}: wating for boot to complete failed or timed out.");
+					Console.Out.WriteLine ($"{nameof(CheckLocalizationIsCorrect)}: wating for boot to complete failed or timed out.");
 				}
 				deviceLocale = RunAdbCommand ("shell getprop persist.sys.locale")?.Trim ();
 				if (deviceLocale == locale) {

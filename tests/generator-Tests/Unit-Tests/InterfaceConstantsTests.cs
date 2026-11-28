@@ -1,10 +1,10 @@
 using System;
 using MonoDroid.Generation;
-using NUnit.Framework;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace generatortests
 {
-	[TestFixture]
+	[TestClassAttribute]
 	class XAJavaInteropInterfaceConstantsTests : CodeGeneratorTestBase
 	{
 		protected override CodeGenerationOptions CreateOptions ()
@@ -16,7 +16,7 @@ namespace generatortests
 			return options;
 		}
 
-		[Test]
+		[TestMethodAttribute]
 		public void WriteConstSugarInterfaceFields ()
 		{
 			// Need a JLO class "FromXml" to trigger ConstSugar logic. (ie: this is "building" Mono.Android.dll)

@@ -5,70 +5,70 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Xml.Linq;
-using NUnit.Framework;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Xamarin.Android.Tools.Bytecode;
 
 namespace Xamarin.Android.Tools.BytecodeTests
 {
-	[TestFixture]
+	[TestClass]
 	public class KotlinFixupsTests : ClassFileFixture
 	{
-		[Test]
+		[TestMethod]
 		public void HideInternalClass ()
 		{
 			var klass = LoadClassFile ("InternalClass.class");
 			var inner_class = klass.InnerClasses.First ();
 
-			Assert.True (klass.AccessFlags.HasFlag (ClassAccessFlags.Public));
-			Assert.True (inner_class.InnerClassAccessFlags.HasFlag (ClassAccessFlags.Public));
+			Assert.IsTrue (klass.AccessFlags.HasFlag (ClassAccessFlags.Public));
+			Assert.IsTrue (inner_class.InnerClassAccessFlags.HasFlag (ClassAccessFlags.Public));
 
 			KotlinFixups.Fixup (new [] { klass });
 
-			Assert.False (klass.AccessFlags.HasFlag (ClassAccessFlags.Public));
-			Assert.False (inner_class.InnerClassAccessFlags.HasFlag (ClassAccessFlags.Public));
+			Assert.IsFalse (klass.AccessFlags.HasFlag (ClassAccessFlags.Public));
+			Assert.IsFalse (inner_class.InnerClassAccessFlags.HasFlag (ClassAccessFlags.Public));
 
 			var output = new XmlClassDeclarationBuilder (klass).ToXElement ().ToString ();
-			Assert.True (output.Contains ("visibility=\"private\""));
+			Assert.IsTrue (output.Contains ("visibility=\"private\""));
 		}
 
-		[Test]
+		[TestMethod]
 		public void MakeInternalInterfacePackagePrivate ()
 		{
 			var klass = LoadClassFile ("InternalInterface.class");
 			var inner_class = klass.InnerClasses.First ();
 
-			Assert.True (klass.AccessFlags.HasFlag (ClassAccessFlags.Public));
-			Assert.True (inner_class.InnerClassAccessFlags.HasFlag (ClassAccessFlags.Public));
+			Assert.IsTrue (klass.AccessFlags.HasFlag (ClassAccessFlags.Public));
+			Assert.IsTrue (inner_class.InnerClassAccessFlags.HasFlag (ClassAccessFlags.Public));
 
 			KotlinFixups.Fixup (new [] { klass });
 
 			// "package-private" is denoted as no visibility flags
-			Assert.False (klass.AccessFlags.HasFlag (ClassAccessFlags.Public));
-			Assert.False (klass.AccessFlags.HasFlag (ClassAccessFlags.Protected));
-			Assert.False (klass.AccessFlags.HasFlag (ClassAccessFlags.Private));
+			Assert.IsFalse (klass.AccessFlags.HasFlag (ClassAccessFlags.Public));
+			Assert.IsFalse (klass.AccessFlags.HasFlag (ClassAccessFlags.Protected));
+			Assert.IsFalse (klass.AccessFlags.HasFlag (ClassAccessFlags.Private));
 
-			Assert.False (inner_class.InnerClassAccessFlags.HasFlag (ClassAccessFlags.Public));
-			Assert.False (inner_class.InnerClassAccessFlags.HasFlag (ClassAccessFlags.Protected));
-			Assert.False (inner_class.InnerClassAccessFlags.HasFlag (ClassAccessFlags.Private));
+			Assert.IsFalse (inner_class.InnerClassAccessFlags.HasFlag (ClassAccessFlags.Public));
+			Assert.IsFalse (inner_class.InnerClassAccessFlags.HasFlag (ClassAccessFlags.Protected));
+			Assert.IsFalse (inner_class.InnerClassAccessFlags.HasFlag (ClassAccessFlags.Private));
 		}
 
-		[Test]
+		[TestMethod]
 		public void HideInternalConstructor ()
 		{
 			var klass = LoadClassFile ("InternalConstructor.class");
 			var ctor = klass.Methods.First (m => m.Name == "<init>");
 
-			Assert.True (ctor.AccessFlags.HasFlag (MethodAccessFlags.Public));
+			Assert.IsTrue (ctor.AccessFlags.HasFlag (MethodAccessFlags.Public));
 
 			KotlinFixups.Fixup (new [] { klass });
 
-			Assert.False (ctor.AccessFlags.HasFlag (MethodAccessFlags.Public));
+			Assert.IsFalse (ctor.AccessFlags.HasFlag (MethodAccessFlags.Public));
 
 			var output = new XmlClassDeclarationBuilder (klass).ToXElement ().ToString ();
-			Assert.True (output.Contains ("visibility=\"kotlin-internal\""));
+			Assert.IsTrue (output.Contains ("visibility=\"kotlin-internal\""));
 		}
 
-		[Test]
+		[TestMethod]
 		public void HideDefaultConstructorMarker ()
 		{
 			var klass = LoadClassFile ("DefaultConstructor.class");
@@ -82,19 +82,19 @@ namespace Xamarin.Android.Tools.BytecodeTests
 			// init (string p0, int p1, DefaultConstructorMarker p2)
 			var ctor_3p = klass.Methods.Single (m => m.Name == "<init>" && m.GetParameters ().Length == 3);
 
-			Assert.True (ctor_3p.AccessFlags.HasFlag (MethodAccessFlags.Public));
+			Assert.IsTrue (ctor_3p.AccessFlags.HasFlag (MethodAccessFlags.Public));
 
 			KotlinFixups.Fixup (new [] { klass });
 
 			// Assert that the normal constructors are still public
-			Assert.True (ctor_0p.AccessFlags.HasFlag (MethodAccessFlags.Public));
-			Assert.True (ctor_1p.AccessFlags.HasFlag (MethodAccessFlags.Public));
+			Assert.IsTrue (ctor_0p.AccessFlags.HasFlag (MethodAccessFlags.Public));
+			Assert.IsTrue (ctor_1p.AccessFlags.HasFlag (MethodAccessFlags.Public));
 
 			// Assert that the synthetic "DefaultConstructorMarker" constructor has been marked private
-			Assert.False (ctor_3p.AccessFlags.HasFlag (MethodAccessFlags.Public));
+			Assert.IsFalse (ctor_3p.AccessFlags.HasFlag (MethodAccessFlags.Public));
 		}
 
-		[Test]
+		[TestMethod]
 		public void HidePrivateDefaultConstructorMarker ()
 		{
 			var klass = LoadClassFile ("PrivateDefaultConstructor.class");
@@ -105,31 +105,31 @@ namespace Xamarin.Android.Tools.BytecodeTests
 			// init (int isFoo, DefaultConstructorMarker p1)
 			var ctor_2p = klass.Methods.Single (m => m.Name == "<init>" && m.GetParameters ().Length == 2);
 
-			Assert.True (ctor_2p.AccessFlags.HasFlag (MethodAccessFlags.Public));
+			Assert.IsTrue (ctor_2p.AccessFlags.HasFlag (MethodAccessFlags.Public));
 
 			KotlinFixups.Fixup ([klass]);
 
 			// Assert that the normal constructor is still public
-			Assert.False (ctor_1p.AccessFlags.HasFlag (MethodAccessFlags.Public));
+			Assert.IsFalse (ctor_1p.AccessFlags.HasFlag (MethodAccessFlags.Public));
 
 			// Assert that the synthetic "DefaultConstructorMarker" constructor has been marked private
-			Assert.False (ctor_2p.AccessFlags.HasFlag (MethodAccessFlags.Public));
+			Assert.IsFalse (ctor_2p.AccessFlags.HasFlag (MethodAccessFlags.Public));
 		}
 
-		[Test]
+		[TestMethod]
 		public void HideImplementationMethod ()
 		{
 			var klass = LoadClassFile ("MethodImplementation.class");
 			var method = klass.Methods.First (m => m.Name == "toString-impl");
 
-			Assert.True (method.AccessFlags.HasFlag (MethodAccessFlags.Public));
+			Assert.IsTrue (method.AccessFlags.HasFlag (MethodAccessFlags.Public));
 
 			KotlinFixups.Fixup (new [] { klass });
 
-			Assert.False (method.AccessFlags.HasFlag (MethodAccessFlags.Public));
+			Assert.IsFalse (method.AccessFlags.HasFlag (MethodAccessFlags.Public));
 		}
 
-		[Test]
+		[TestMethod]
 		public void RenameExtensionParameter ()
 		{
 			var klass = LoadClassFile ("RenameExtensionParameterKt.class");
@@ -143,39 +143,39 @@ namespace Xamarin.Android.Tools.BytecodeTests
 			Assert.AreEqual ("obj", p.Name);
 		}
 
-		[Test]
+		[TestMethod]
 		public void HideInternalMethod ()
 		{
 			var klass = LoadClassFile ("InternalMethod.class");
 			var method = klass.Methods.First (m => m.Name == "take$main");
 
-			Assert.True (method.AccessFlags.HasFlag (MethodAccessFlags.Public));
+			Assert.IsTrue (method.AccessFlags.HasFlag (MethodAccessFlags.Public));
 
 			KotlinFixups.Fixup (new [] { klass });
 
-			Assert.False (method.AccessFlags.HasFlag (MethodAccessFlags.Public));
+			Assert.IsFalse (method.AccessFlags.HasFlag (MethodAccessFlags.Public));
 
 			var output = new XmlClassDeclarationBuilder (klass).ToXElement ().ToString ();
-			Assert.True (output.Contains ("visibility=\"kotlin-internal\""));
+			Assert.IsTrue (output.Contains ("visibility=\"kotlin-internal\""));
 		}
 
-		[Test]
+		[TestMethod]
 		public void HideInternalField ()
 		{
 			var klass = LoadClassFile ("InternalField.class");
 			var field = klass.Fields.First (m => m.Name == "city");
 
-			Assert.True (field.AccessFlags.HasFlag (FieldAccessFlags.Public));
+			Assert.IsTrue (field.AccessFlags.HasFlag (FieldAccessFlags.Public));
 
 			KotlinFixups.Fixup (new [] { klass });
 
-			Assert.False (field.AccessFlags.HasFlag (FieldAccessFlags.Public));
+			Assert.IsFalse (field.AccessFlags.HasFlag (FieldAccessFlags.Public));
 
 			var output = new XmlClassDeclarationBuilder (klass).ToXElement ().ToString ();
-			Assert.True (output.Contains ("visibility=\"kotlin-internal\""));
+			Assert.IsTrue (output.Contains ("visibility=\"kotlin-internal\""));
 		}
 
-		[Test]
+		[TestMethod]
 		public void ParameterName ()
 		{
 			var klass = LoadClassFile ("ParameterName.class");
@@ -189,26 +189,26 @@ namespace Xamarin.Android.Tools.BytecodeTests
 			Assert.AreEqual ("count", p.Name);
 		}
 
-		[Test]
+		[TestMethod]
 		public void HideInternalProperty ()
 		{
 			var klass = LoadClassFile ("InternalProperty.class");
 			var getter = klass.Methods.First (m => m.Name == "getCity$main");
 			var setter = klass.Methods.First (m => m.Name == "setCity$main");
 
-			Assert.True (getter.AccessFlags.HasFlag (MethodAccessFlags.Public));
-			Assert.True (setter.AccessFlags.HasFlag (MethodAccessFlags.Public));
+			Assert.IsTrue (getter.AccessFlags.HasFlag (MethodAccessFlags.Public));
+			Assert.IsTrue (setter.AccessFlags.HasFlag (MethodAccessFlags.Public));
 
 			KotlinFixups.Fixup (new [] { klass });
 
-			Assert.False (getter.AccessFlags.HasFlag (MethodAccessFlags.Public));
-			Assert.False (setter.AccessFlags.HasFlag (MethodAccessFlags.Public));
+			Assert.IsFalse (getter.AccessFlags.HasFlag (MethodAccessFlags.Public));
+			Assert.IsFalse (setter.AccessFlags.HasFlag (MethodAccessFlags.Public));
 
 			var output = new XmlClassDeclarationBuilder (klass).ToXElement ().ToString ();
-			Assert.True (output.Contains ("visibility=\"kotlin-internal\""));
+			Assert.IsTrue (output.Contains ("visibility=\"kotlin-internal\""));
 		}
 
-		[Test]
+		[TestMethod]
 		public void RenameSetterParameter ()
 		{
 			var klass = LoadClassFile ("SetterParameterName.class");
@@ -222,7 +222,7 @@ namespace Xamarin.Android.Tools.BytecodeTests
 			Assert.AreEqual ("value", p.Name);
 		}
 
-		[Test]
+		[TestMethod]
 		public void UnsignedMethods ()
 		{
 			var klass = LoadClassFile ("UnsignedTypes.class");
@@ -266,11 +266,11 @@ namespace Xamarin.Android.Tools.BytecodeTests
 			// Kotlin's Array<UIntArray> does not trigger this code because it is not
 			// encoded as Java's "[[I", instead it is exposed as "UIntArray[]", so
 			// we treat it as a normal class array.
-			Assert.Null (uintarrayarray_method.GetParameters () [0].KotlinType);
-			Assert.Null (uintarrayarray_method.KotlinReturnType);
+			Assert.IsNull (uintarrayarray_method.GetParameters () [0].KotlinType);
+			Assert.IsNull (uintarrayarray_method.KotlinReturnType);
 		}
 
-		[Test]
+		[TestMethod]
 		public void UnsignedFields ()
 		{
 			var klass = LoadClassFile ("UnsignedTypesKt.class");
@@ -288,7 +288,7 @@ namespace Xamarin.Android.Tools.BytecodeTests
 			Assert.AreEqual ("ubyte", ubyte_field.KotlinType);
 		}
 
-		[Test]
+		[TestMethod]
 		public void UnsignedFieldsXml ()
 		{
 			// Ensure Kotlin unsigned types end up in the xml
@@ -304,7 +304,7 @@ namespace Xamarin.Android.Tools.BytecodeTests
 			Assert.AreEqual ("ubyte", xml.Elements ("field").Single (f => f.Attribute ("name").Value == "UBYTE_CONST").Attribute ("type").Value);
 		}
 
-		[Test]
+		[TestMethod]
 		public void UnsignedMethodsXml ()
 		{
 			// Ensure Kotlin unsigned types end up in the xml
@@ -339,43 +339,43 @@ namespace Xamarin.Android.Tools.BytecodeTests
 			Assert.AreEqual ("ubyte[]", xml.Elements ("method").Single (f => f.Attribute ("name").Value == "foo_ubytearray-GBYM_sE").Element ("parameter").Attribute ("type").Value);
 		}
 
-		[Test]
+		[TestMethod]
 		public void HandleKotlinNameShadowing ()
 		{
 			var klass = LoadClassFile ("NameShadowing.class");
 
 			KotlinFixups.Fixup (new [] { klass });
 
-			Assert.True (klass.Methods.Single (m => m.Name == "count").AccessFlags.HasFlag (MethodAccessFlags.Public));
-			Assert.True (klass.Methods.Single (m => m.Name == "hitCount").AccessFlags.HasFlag (MethodAccessFlags.Public));
+			Assert.IsTrue (klass.Methods.Single (m => m.Name == "count").AccessFlags.HasFlag (MethodAccessFlags.Public));
+			Assert.IsTrue (klass.Methods.Single (m => m.Name == "hitCount").AccessFlags.HasFlag (MethodAccessFlags.Public));
 
 			// Private property and explicit getter/setter
 			// There is no generated getter/setter, and explicit ones should be public
-			Assert.True (klass.Methods.Single (m => m.Name == "getType").AccessFlags.HasFlag (MethodAccessFlags.Public));
-			Assert.True (klass.Methods.Single (m => m.Name == "setType").AccessFlags.HasFlag (MethodAccessFlags.Public));
+			Assert.IsTrue (klass.Methods.Single (m => m.Name == "getType").AccessFlags.HasFlag (MethodAccessFlags.Public));
+			Assert.IsTrue (klass.Methods.Single (m => m.Name == "setType").AccessFlags.HasFlag (MethodAccessFlags.Public));
 
 			// Private immutable property and explicit getter/setter
 			// There is no generated getter/setter, and explicit ones should be public
-			Assert.True (klass.Methods.Single (m => m.Name == "getType2").AccessFlags.HasFlag (MethodAccessFlags.Public));
-			Assert.True (klass.Methods.Single (m => m.Name == "setType2").AccessFlags.HasFlag (MethodAccessFlags.Public));
+			Assert.IsTrue (klass.Methods.Single (m => m.Name == "getType2").AccessFlags.HasFlag (MethodAccessFlags.Public));
+			Assert.IsTrue (klass.Methods.Single (m => m.Name == "setType2").AccessFlags.HasFlag (MethodAccessFlags.Public));
 
 			// Internal property and explicit getter/setter
 			// Generated getter/setter should not be public, and explicit ones should be public
-			Assert.False (klass.Methods.Single (m => m.Name == "getItype$main").AccessFlags.HasFlag (MethodAccessFlags.Public));
-			Assert.False (klass.Methods.Single (m => m.Name == "setItype$main").AccessFlags.HasFlag (MethodAccessFlags.Public));
-			Assert.True (klass.Methods.Single (m => m.Name == "getItype").AccessFlags.HasFlag (MethodAccessFlags.Public));
-			Assert.True (klass.Methods.Single (m => m.Name == "setItype").AccessFlags.HasFlag (MethodAccessFlags.Public));
+			Assert.IsFalse (klass.Methods.Single (m => m.Name == "getItype$main").AccessFlags.HasFlag (MethodAccessFlags.Public));
+			Assert.IsFalse (klass.Methods.Single (m => m.Name == "setItype$main").AccessFlags.HasFlag (MethodAccessFlags.Public));
+			Assert.IsTrue (klass.Methods.Single (m => m.Name == "getItype").AccessFlags.HasFlag (MethodAccessFlags.Public));
+			Assert.IsTrue (klass.Methods.Single (m => m.Name == "setItype").AccessFlags.HasFlag (MethodAccessFlags.Public));
 
 			// Internal immutable property and explicit getter/setter
 			// Generated getter should not be public, and explicit ones should be public
-			Assert.False (klass.Methods.Single (m => m.Name == "getItype2$main").AccessFlags.HasFlag (MethodAccessFlags.Public));
-			Assert.True (klass.Methods.Single (m => m.Name == "getItype2").AccessFlags.HasFlag (MethodAccessFlags.Public));
-			Assert.True (klass.Methods.Single (m => m.Name == "setItype2").AccessFlags.HasFlag (MethodAccessFlags.Public));
+			Assert.IsFalse (klass.Methods.Single (m => m.Name == "getItype2$main").AccessFlags.HasFlag (MethodAccessFlags.Public));
+			Assert.IsTrue (klass.Methods.Single (m => m.Name == "getItype2").AccessFlags.HasFlag (MethodAccessFlags.Public));
+			Assert.IsTrue (klass.Methods.Single (m => m.Name == "setItype2").AccessFlags.HasFlag (MethodAccessFlags.Public));
 
 			// Internal property with unsigned type
 			// Generated getter/setter should not be public
-			Assert.False (klass.Methods.Single (m => m.Name == "getUnsignedInternalProperty-pVg5ArA$main").AccessFlags.HasFlag (MethodAccessFlags.Public));
-			Assert.False (klass.Methods.Single (m => m.Name == "setUnsignedInternalProperty-WZ4Q5Ns$main").AccessFlags.HasFlag (MethodAccessFlags.Public));
+			Assert.IsFalse (klass.Methods.Single (m => m.Name == "getUnsignedInternalProperty-pVg5ArA$main").AccessFlags.HasFlag (MethodAccessFlags.Public));
+			Assert.IsFalse (klass.Methods.Single (m => m.Name == "setUnsignedInternalProperty-WZ4Q5Ns$main").AccessFlags.HasFlag (MethodAccessFlags.Public));
 
 			// Public property with unsigned type
 			// We want to check that KotlinType/KotlinReturnType are filled it as it proves our FindJavaProperty[Getter|Setter] functions are matching
@@ -384,7 +384,7 @@ namespace Xamarin.Android.Tools.BytecodeTests
 			Assert.AreEqual ("uint", klass.Methods.Single (m => m.Name == "setUnsignedPublicProperty-WZ4Q5Ns").GetParameters () [0].KotlinType);
 		}
 
-		[Test]
+		[TestMethod]
 		public void MatchParametersWithReceiver ()
 		{
 			var klass = LoadClassFile ("DeepRecursiveKt.class");
@@ -400,7 +400,7 @@ namespace Xamarin.Android.Tools.BytecodeTests
 			Assert.AreEqual (2, end);
 		}
 
-		[Test]
+		[TestMethod]
 		public void MatchParametersWithContinuation ()
 		{
 			var klass = LoadClassFile ("DeepRecursiveScope.class");
@@ -416,7 +416,7 @@ namespace Xamarin.Android.Tools.BytecodeTests
 			Assert.AreEqual (1, end);
 		}
 
-		[Test]
+		[TestMethod]
 		public void MatchParametersWithStaticThis ()
 		{
 			var klass = LoadClassFile ("UByteArray.class");
@@ -432,7 +432,7 @@ namespace Xamarin.Android.Tools.BytecodeTests
 			Assert.AreEqual (2, end);
 		}
 
-		[Test]
+		[TestMethod]
 		public void MatchMetadataToMultipleMethodsWithSameMangledName ()
 		{
 			var klass = LoadClassFile ("UByteArray.class");
@@ -454,7 +454,7 @@ namespace Xamarin.Android.Tools.BytecodeTests
 			Assert.AreEqual ("ubyte", java_methods.ElementAt (1).GetParameters ().Single (p => p.Name == "element").KotlinType);
 		}
 
-		[Test]
+		[TestMethod]
 		public void AmbiguousFunctionMetadata_SyntheticBridgeIsSkippedWithoutWarning ()
 		{
 			var klass = LoadClassFile ("AmbiguousOverloads.class");
@@ -467,7 +467,7 @@ namespace Xamarin.Android.Tools.BytecodeTests
 			Assert.IsEmpty (warnings);
 		}
 
-		[Test]
+		[TestMethod]
 		public void AmbiguousFunctionMetadata_ReportsWarning ()
 		{
 			var klass = LoadClassFile ("AmbiguousOverloads.class");
@@ -480,12 +480,12 @@ namespace Xamarin.Android.Tools.BytecodeTests
 
 			Assert.IsTrue (method.AccessFlags.HasFlag (MethodAccessFlags.Public));
 			Assert.AreEqual (1, warnings.Count, string.Join (Environment.NewLine, warnings));
-			StringAssert.StartsWith ("class-parse: warning XA4268: ", warnings [0]);
-			StringAssert.Contains ("'xat/bytecode/tests/AmbiguousOverloads.put(Ljava/lang/Object;)V'", warnings [0]);
-			StringAssert.Contains ("put(I)V, put(Ljava/lang/String;)V", warnings [0]);
+			Assert.StartsWith ("class-parse: warning XA4268: ", warnings [0]);
+			Assert.Contains ("'xat/bytecode/tests/AmbiguousOverloads.put(Ljava/lang/Object;)V'", warnings [0]);
+			Assert.Contains ("put(I)V, put(Ljava/lang/String;)V", warnings [0]);
 		}
 
-		[Test]
+		[TestMethod]
 		public void JvmNameOnlySignatureHasNoJvmSignature ()
 		{
 			var klass = LoadClassFile ("AmbiguousOverloads.class");
@@ -506,7 +506,7 @@ namespace Xamarin.Android.Tools.BytecodeTests
 			return warnings;
 		}
 
-		[Test]
+		[TestMethod]
 		public void GetMethodNameWithoutUnsignedSuffix ()
 		{
 			// Just a few quick tests to ensure the various cases are covered
@@ -516,7 +516,7 @@ namespace Xamarin.Android.Tools.BytecodeTests
 			Assert.AreEqual ("setFoo$main", KotlinUtilities.GetMethodNameWithoutUnsignedSuffix ("setFoo$main"));
 		}
 
-		[Test]
+		[TestMethod]
 		public void NullabilityFromKotlinMetadata ()
 		{
 			var klass = LoadClassFile ("Nullability.class");

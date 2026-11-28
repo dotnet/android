@@ -1,4 +1,4 @@
-using NUnit.Framework;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
 using System.IO;
 using System.Linq;
@@ -7,8 +7,8 @@ using Xamarin.ProjectTools;
 
 namespace Xamarin.Android.Build.Tests
 {
-	[TestFixtureSource (nameof (Get_ConstructorParameters))]
-	[Category ("UsesDevice")]
+	[TestClass]
+	[TestCategory ("UsesDevice")]
 	public class BundleToolNoAbiSplitTests : DeviceTest
 	{
 		static readonly string [] Abis = ["arm64-v8a", "x86_64"];
@@ -32,18 +32,6 @@ namespace Xamarin.Android.Build.Tests
       }
     }
 }";
-		readonly AndroidRuntime runtime;
-
-		static Array Get_ConstructorParameters ()
-		{
-			return new[] { AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT };
-		}
-
-		public BundleToolNoAbiSplitTests (AndroidRuntime runtime)
-		{
-			this.runtime = runtime;
-		}
-
 		AndroidItem.AndroidAsset MakeAndroidAsset (string include, string content, string? assetPack = null, string? deliveryType = null)
 		{
 			var ret = new AndroidItem.AndroidAsset (include) {
@@ -61,8 +49,7 @@ namespace Xamarin.Android.Build.Tests
 			return ret;
 		}
 
-		[OneTimeSetUp]
-		public void OneTimeSetUp ()
+		void BuildApp (AndroidRuntime runtime)
 		{
 			var path = Path.Combine ("temp", TestName);
 
@@ -133,32 +120,30 @@ namespace Xamarin.Android.Build.Tests
 			}
 		}
 
-		[TearDown]
+		[TestCleanup]
 		public void TearDown ()
 		{
-			var status = TestContext.CurrentContext.Result.Outcome.Status;
-			if (status == NUnit.Framework.Interfaces.TestStatus.Failed) {
+			if (TestContext.CurrentTestOutcome == UnitTestOutcome.Failed) {
 				if (appBuilder != null)
 					appBuilder.CleanupOnDispose = false;
 			}
-		}
-
-		[OneTimeTearDown]
-		public void OneTimeTearDown ()
-		{
 			appBuilder?.Dispose ();
 		}
 
-		[Test]
-		public void InstallAndRun ()
+		[TestMethod]
+		[DataRow (AndroidRuntime.CoreCLR)]
+		[DataRow (AndroidRuntime.NativeAOT)]
+		public void InstallAndRun (AndroidRuntime runtime)
 		{
+			BuildApp (runtime);
+
 			if (runtime == AndroidRuntime.NativeAOT) {
 				// TODO: Xamarin.Forms startup cannot find the ResourcesProvider constructor under NativeAOT.
-				Assert.Ignore ("NativeAOT Xamarin.Forms startup throws MissingMethodException.");
+				Assert.Inconclusive ("NativeAOT Xamarin.Forms startup throws MissingMethodException.");
 			}
 			Assert.IsTrue (appBuilder.Install (app), "Install should have succeeded.");
 			RunProjectAndAssert (app, appBuilder);
-			Assert.True (
+			Assert.IsTrue (
 				WaitForActivityToStart (app.PackageName, "MainActivity", Path.Combine (Root, appBuilder.ProjectDirectory, "logcat.log"), ActivityStartTimeoutInSeconds),
 				"Activity should have started."
 			);

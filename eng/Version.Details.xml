@@ -52,6 +52,10 @@
       <Uri>https://github.com/microsoft/testfx</Uri>
       <Sha>2a8ebadb17a3b388b62bbb0cedd407999e3ce10a</Sha>
     </Dependency>
+    <Dependency Name="Microsoft.Testing.Extensions.Retry" Version="2.6.0-preview.26531.5">
+      <Uri>https://github.com/microsoft/testfx</Uri>
+      <Sha>2a8ebadb17a3b388b62bbb0cedd407999e3ce10a</Sha>
+    </Dependency>
     <Dependency Name="Microsoft.DotNet.Helix.Sdk" Version="12.0.0-beta.26556.115">
       <Uri>https://github.com/dotnet/dotnet</Uri>
       <Sha>6e6f978fd9ca19b62796a13ff5230b21af0c42fa</Sha>

@@ -5,7 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Text.Json;
-using NUnit.Framework;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Xamarin.Android.Build.Tests;
 
@@ -21,7 +21,7 @@ static class NativeToolTestHelper
 			.Single (attribute => attribute.Key == "AndroidNdkDirectory").Value;
 		string directory = ResolveNdkDirectory (
 			runtimeDirectory, Environment.GetFolderPath (Environment.SpecialFolder.UserProfile), buildDirectory);
-		DirectoryAssert.Exists (directory, "The configured NDK must exist on the executing test host.");
+		Assert.IsTrue (Directory.Exists (directory), "The configured NDK must exist on the executing test host.");
 
 		string host = OperatingSystem.IsMacOS () ? "darwin-x86_64" :
 			OperatingSystem.IsLinux () ? "linux-x86_64" :
@@ -29,7 +29,7 @@ static class NativeToolTestHelper
 			throw new PlatformNotSupportedException ("No Android NDK toolchain is configured for this host.");
 		string executable = name + (OperatingSystem.IsWindows () ? ".exe" : "");
 		string path = Path.Combine (directory, "toolchains", "llvm", "prebuilt", host, "bin", executable);
-		FileAssert.Exists (path, "The configured NDK must contain the host's LLVM inspection tools.");
+		Assert.IsTrue (File.Exists (path), "The configured NDK must contain the host's LLVM inspection tools.");
 		return path;
 	}
 

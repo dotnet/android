@@ -41,7 +41,4 @@
   <Folder Name="/tests/Mono.Android-Tests/Mono.Android.NET-Tests/">
     <Project Path="tests/Mono.Android-Tests/Mono.Android-Tests/Mono.Android.NET-Tests.csproj" />
   </Folder>
-  <Folder Name="/tests/TestRunner.Core/">
-    <Project Path="tests/TestRunner.Core/TestRunner.Core.NET.csproj" />
-  </Folder>
 </Solution>

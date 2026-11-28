@@ -1,5 +1,4 @@
-using NUnit.Framework;
-using NUnit.Framework.Interfaces;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
@@ -35,9 +34,9 @@ namespace Xamarin.Android.Build.Tests
 		// It is recommended that no test waiting for the "Displayed:" message waits shorter than this
 		public const int ActivityStartTimeoutInSeconds = 150;
 
-		protected string DeviceAbi { get; private set; }
+		protected static string DeviceAbi { get; private set; }
 
-		protected int DeviceSdkVersion { get; private set;}
+		protected static int DeviceSdkVersion { get; private set;}
 
 		static string _shellEchoOutput = null;
 		protected static bool IsDeviceAttached (bool refreshCachedValue = false)
@@ -47,7 +46,7 @@ namespace Xamarin.Android.Build.Tests
 				// device as "offline".
 				RunAdbCommand ("devices");
 				var devices = RunAdbCommand ("devices");
-				TestContext.Out.WriteLine ($"LOG adb devices: {devices}");
+				Console.Out.WriteLine ($"LOG adb devices: {devices}");
 				_shellEchoOutput = RunAdbCommand ("shell echo OK", timeout: 15);
 			}
 			return _shellEchoOutput.Contains ("OK");
@@ -57,14 +56,14 @@ namespace Xamarin.Android.Build.Tests
 		/// Checks if there is a device available
 		/// * Defaults to Assert.Fail ()
 		/// </summary>
-		public void AssertHasDevices (bool fail = true)
+		public static void AssertHasDevices (bool fail = true)
 		{
 			if (!IsDeviceAttached (refreshCachedValue: true)) {
 				var message = "This test requires an attached device or emulator.";
 				if (fail) {
 					Assert.Fail (message);
 				} else {
-					Assert.Ignore (message);
+					Assert.Inconclusive (message);
 				}
 			}
 		}
@@ -104,13 +103,13 @@ namespace Xamarin.Android.Build.Tests
 		/// restart first; if the service is still broken the run is marked inconclusive
 		/// (an infrastructure problem, not a product regression).
 		/// </summary>
-		protected void AssertPackageManagerResponsive ()
+		protected static void AssertPackageManagerResponsive ()
 		{
 			if (IsPackageManagerResponsive (out _)) {
 				return;
 			}
 
-			TestContext.Out.WriteLine ("Android package manager service is unresponsive; restarting the emulator.");
+			Console.Out.WriteLine ("Android package manager service is unresponsive; restarting the emulator.");
 			RestartDevice ();
 			AssertHasDevices ();
 
@@ -122,8 +121,31 @@ namespace Xamarin.Android.Build.Tests
 			}
 		}
 
-		[OneTimeSetUp]
-		public void DeviceSetup ()
+		// Classes can overlap under method-level parallelism, so only the first class to start
+		// prepares the device and only the last one to finish cleans it up.
+		static readonly object deviceClassesLock = new object ();
+		static int activeDeviceClasses;
+
+		[ClassInitialize (InheritanceBehavior.BeforeEachDerivedClass)]
+		public static void DeviceSetup (TestContext context)
+		{
+			lock (deviceClassesLock) {
+				if (activeDeviceClasses++ > 0)
+					return;
+				SetupDevice ();
+			}
+		}
+
+		/// <summary>Prepares the device again, e.g. after <see cref="RestartDevice"/>, without counting another class.</summary>
+		protected static void ResetupDevice ()
+		{
+			lock (deviceClassesLock) {
+				IsDeviceAttached (refreshCachedValue: true);
+				SetupDevice ();
+			}
+		}
+
+		static void SetupDevice ()
 		{
 			if (IsDeviceAttached ()) {
 				try {
@@ -139,7 +161,7 @@ namespace Xamarin.Android.Build.Tests
 							DeviceAbi = DeviceAbi.Split (',')[0];
 						}
 					} else {
-						TestContext.Out.WriteLine ($"LOG GetSdkVersion: {DeviceSdkVersion}");
+						Console.Out.WriteLine ($"LOG GetSdkVersion: {DeviceSdkVersion}");
 						DeviceAbi = "x86_64";
 					}
 				} catch (Exception ex) {
@@ -149,12 +171,21 @@ namespace Xamarin.Android.Build.Tests
 				CreateGuestUser (GuestUserName);
 				return;
 			}
-			TestContext.Out.WriteLine ($"LOG DeviceSetup: No Device!!!!");
+			Console.Out.WriteLine ($"LOG DeviceSetup: No Device!!!!");
 			DeviceAbi = RuntimeInformation.OSArchitecture == Architecture.Arm64 ? "arm64-v8a" : "x86_64";
 		}
 
-		[OneTimeTearDown]
-		protected virtual void DeviceTearDown ()
+		[ClassCleanup (InheritanceBehavior.BeforeEachDerivedClass)]
+		public static void DeviceTearDown (TestContext context)
+		{
+			lock (deviceClassesLock) {
+				if (--activeDeviceClasses > 0 || SkipsClassCleanup (context))
+					return;
+				TearDownDevice ();
+			}
+		}
+
+		static void TearDownDevice ()
 		{
 			if (IsDeviceAttached ()) {
 				// make sure we are not on a guest user anymore.
@@ -169,7 +200,7 @@ namespace Xamarin.Android.Build.Tests
 			}
 		}
 
-		[SetUp]
+		[TestInitialize]
 		public virtual void SetupTest ()
 		{
 			if (!IsDeviceAttached (refreshCachedValue: true)) {
@@ -188,11 +219,11 @@ namespace Xamarin.Android.Build.Tests
 			ClearAdbLogcat ();
 		}
 
-		[TearDown]
-		protected override void CleanupTest ()
+		[TestCleanup]
+		public override void CleanupTest ()
 		{
-			if (TestContext.CurrentContext.Result.Outcome.Status == TestStatus.Failed && IsDeviceAttached () &&
-					TestOutputDirectories.TryGetValue (TestContext.CurrentContext.Test.ID, out string outputDir)) {
+			if (TestContext.CurrentTestOutcome == UnitTestOutcome.Failed && IsDeviceAttached () &&
+					TestOutputDirectories.TryGetValue (TestId, out string outputDir)) {
 				Directory.CreateDirectory (outputDir);
 				string local = Path.Combine (outputDir, "screenshot.png");
 				string deviceLog = Path.Combine (outputDir, "logcat-failed.log");
@@ -207,16 +238,16 @@ namespace Xamarin.Android.Build.Tests
 				RunAdbCommand ($"pull {remote} \"{local}\"");
 				RunAdbCommand ($"shell rm {remote}");
 				if (File.Exists (local)) {
-					TestContext.AddTestAttachment (local);
+					TestContext.AddResultFile (local);
 				} else {
-					TestContext.WriteLine ($"{local} did not exist!");
+					Console.WriteLine ($"{local} did not exist!");
 				}
 				var ui = GetUI (timeoutInSeconds: 0);
 				ui.Save (localUi);
 				if (File.Exists (localUi)) {
-					TestContext.AddTestAttachment (localUi);
+					TestContext.AddResultFile (localUi);
 				} else {
-					TestContext.WriteLine ($"{localUi} did not exist!");
+					Console.WriteLine ($"{localUi} did not exist!");
 				}
 
 				CaptureDeviceState (outputDir);
@@ -231,13 +262,13 @@ namespace Xamarin.Android.Build.Tests
 		// storage-service readiness (dumpsys storaged - the StorageStatsManager NPE seen
 		// during install-create), boot completion, and how many test apps have piled up.
 		// See dotnet/android#11830.
-		static void CaptureDeviceState (string outputDir)
+		void CaptureDeviceState (string outputDir)
 		{
 			// Re-check attachment (the cached value can be stale if the device
 			// disconnected mid-test); otherwise each adb command below would wait
 			// the full timeout against an unresponsive device.
 			if (!IsDeviceAttached (refreshCachedValue: true)) {
-				TestContext.WriteLine ("No device attached; skipping device-state capture.");
+				Console.WriteLine ("No device attached; skipping device-state capture.");
 				return;
 			}
 
@@ -261,13 +292,13 @@ namespace Xamarin.Android.Build.Tests
 			string localState = Path.Combine (outputDir, "device-state-failed.log");
 			File.WriteAllText (localState, sb.ToString ());
 			if (File.Exists (localState)) {
-				TestContext.AddTestAttachment (localState);
+				TestContext.AddResultFile (localState);
 			} else {
-				TestContext.WriteLine ($"{localState} did not exist!");
+				Console.WriteLine ($"{localState} did not exist!");
 			}
 		}
 
-		protected int GetSdkVersion ()
+		protected static int GetSdkVersion ()
 		{
 			var command = $"shell getprop ro.build.version.sdk";
 			var result = RunAdbCommand (command);
@@ -276,7 +307,7 @@ namespace Xamarin.Android.Build.Tests
 				// * daemon not running; starting now at tcp:5037
 				// * daemon started successfully
 				// adb.exe: device offline
-				TestContext.WriteLine ($"Retrying:\n{command}\n{result}");
+				Console.WriteLine ($"Retrying:\n{command}\n{result}");
 				result = RunAdbCommand (command);
 			}
 			if (!int.TryParse (result, out var sdkVersion)) {
@@ -287,7 +318,7 @@ namespace Xamarin.Android.Build.Tests
 
 		public static void RestartDevice ()
 		{
-			TestContext.Out.WriteLine ($"Trying to restart Emulator");
+			Console.Out.WriteLine ($"Trying to restart Emulator");
 			// shell out to msbuild and start the emulator again
 			var dotnet = new DotNetCLI (Path.Combine (XABuildPaths.TopDirectory, "src", "Xamarin.Android.Build.Tasks", "Tests", "Xamarin.Android.Build.Tests", "Emulator.csproj"));
 			dotnet.ProjectDirectory = XABuildPaths.TestAssemblyOutputDirectory;
@@ -332,7 +363,7 @@ namespace Xamarin.Android.Build.Tests
 		protected static void RunProjectAndAssert (XamarinAndroidApplicationProject proj, ProjectBuilder builder, string logName = "run.log", Dictionary<string, string> environmentVariables = null, bool doNotCleanupOnUpdate = false, string [] parameters = null)
 		{
 			builder.BuildLogFile = logName;
-			Assert.True (builder.RunTarget (proj, "Run", doNotCleanupOnUpdate: doNotCleanupOnUpdate, parameters: parameters, environmentVariables: environmentVariables), "Project should have run.");
+			Assert.IsTrue (builder.RunTarget (proj, "Run", doNotCleanupOnUpdate: doNotCleanupOnUpdate, parameters: parameters, environmentVariables: environmentVariables), "Project should have run.");
 		}
 
 		protected static void StartActivityAndAssert (XamarinAndroidApplicationProject proj)
@@ -488,7 +519,7 @@ namespace Xamarin.Android.Build.Tests
 					""";
 			}
 			File.AppendAllText (logcatFilePath, diagnostics);
-			TestContext.Out.WriteLine (diagnostics);
+			Console.Out.WriteLine (diagnostics);
 			return result;
 		}
 

@@ -1,15 +1,16 @@
 #nullable enable
-using NUnit.Framework;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Microsoft.VisualStudio.TestTools.UnitTesting.Combinatorial;
 
 namespace Microsoft.Android.TrimmingTests;
 
-[TestFixture]
-[Category ("UsesDevice")]
-[Parallelizable (ParallelScope.Children)]
+[TestClass]
+[TestCategory ("UsesDevice")]
 public class CallbackTests : TrimmingTestBase
 {
 	// Java calls managed Handler.Callback (boolean) and CharSequence (char) implementations.
-	[Test]
+	[TestMethod]
+	[CombinatorialData]
 	public void BooleanAndCharCallbacksAreInvokedWithoutWarnings ([TrimmingConfigurations] TrimmingConfiguration configuration)
 	{
 		var app = BuildAndRun ("Cases/BooleanAndCharCallbacks.cs", configuration);
@@ -17,7 +18,8 @@ public class CallbackTests : TrimmingTestBase
 	}
 
 	// A C# event keeps only the Implementor of the listener it uses.
-	[Test]
+	[TestMethod]
+	[CombinatorialData]
 	public void EventKeepsOnlyItsImplementorWithoutWarnings ([TrimmingConfigurations] TrimmingConfiguration configuration)
 	{
 		var app = BuildAndRun ("Cases/EventImplementors.cs", configuration);

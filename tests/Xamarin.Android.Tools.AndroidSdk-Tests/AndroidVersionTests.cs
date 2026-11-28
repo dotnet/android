@@ -2,22 +2,22 @@
 using System.IO;
 using System.Text;
 
-using NUnit.Framework;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Xamarin.Android.Tools.Tests
 {
-	[TestFixture]
+	[TestClass]
 	public class AndroidVersionTests
 	{
-		[Test]
+		[TestMethod]
 		public void Constructor_Exceptions ()
 		{
-			Assert.Throws<ArgumentNullException> (() => new AndroidVersion (0, null));
-			Assert.Throws<ArgumentException> (() => new AndroidVersion (0, "not a number"));
-			Assert.Throws<ArgumentNullException> (() => new AndroidVersion ((Version) null, osVersion: "1.0"));
+			Assert.ThrowsExactly<ArgumentNullException> (() => new AndroidVersion (0, null));
+			Assert.ThrowsExactly<ArgumentException> (() => new AndroidVersion (0, "not a number"));
+			Assert.ThrowsExactly<ArgumentNullException> (() => new AndroidVersion ((Version) null, osVersion: "1.0"));
 		}
 
-		[Test]
+		[TestMethod]
 		public void Constructor ()
 		{
 			var v   = new AndroidVersion (apiLevel: 1, osVersion: "2.3", codeName: "Four", id: "E", stable: false);
@@ -32,7 +32,7 @@ namespace Xamarin.Android.Tools.Tests
 			Assert.IsTrue (v.Ids.SetEquals (new [] { "1", "1.0", "E" }), $"Actual Ids: {{ {string.Join (", ", v.Ids)} }}");
 		}
 
-		[Test]
+		[TestMethod]
 		public void Constructor_NoId ()
 		{
 			var v   = new AndroidVersion (apiLevel: 1, osVersion: "2.3", codeName: "Four", stable: false);
@@ -51,23 +51,23 @@ namespace Xamarin.Android.Tools.Tests
 			Assert.IsTrue (v.Ids.SetEquals (new [] { "2", "2.3" }), $"Actual Ids: {{ {string.Join (", ", v.Ids)} }}");
 		}
 
-		[Test]
+		[TestMethod]
 		public void Load_NoFile ()
 		{
-			Assert.Throws<ArgumentNullException> (() => AndroidVersion.Load ((string) null));
+			Assert.ThrowsExactly<ArgumentNullException> (() => AndroidVersion.Load ((string) null));
 
 			var p   = Path.GetTempFileName ();
 			File.Delete (p);
-			Assert.Throws<FileNotFoundException> (() => AndroidVersion.Load (p));
+			Assert.ThrowsExactly<FileNotFoundException> (() => AndroidVersion.Load (p));
 		}
 
-		[Test]
+		[TestMethod]
 		public void Load_NoStream ()
 		{
-			Assert.Throws<ArgumentNullException> (() => AndroidVersion.Load ((Stream) null));
+			Assert.ThrowsExactly<ArgumentNullException> (() => AndroidVersion.Load ((Stream) null));
 		}
 
-		[Test]
+		[TestMethod]
 		public void Load ()
 		{
 			var xml = @"<AndroidApiInfo>
@@ -89,7 +89,7 @@ namespace Xamarin.Android.Tools.Tests
 			Assert.IsTrue (v.Ids.SetEquals (new [] { "26", "26.0", "O" }), $"Actual Ids: {{ {string.Join (", ", v.Ids)} }}");
 		}
 
-		[Test]
+		[TestMethod]
 		public void Load_VersionCodeFull_Replaces_Level ()
 		{
 			var xml = @"<AndroidApiInfo>

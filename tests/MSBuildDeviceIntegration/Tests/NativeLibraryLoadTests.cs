@@ -8,18 +8,19 @@ using System.Text.RegularExpressions;
 using System.Threading;
 using Microsoft.Android.Tasks;
 using Microsoft.Build.Utilities;
-using NUnit.Framework;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Microsoft.VisualStudio.TestTools.UnitTesting.Combinatorial;
 using Xamarin.Android.Tasks;
 using Xamarin.Android.Tools;
 using Xamarin.ProjectTools;
 
 namespace Xamarin.Android.Build.Tests;
 
-[TestFixture]
-[Category ("UsesDevice")]
+[TestClass]
+[TestCategory ("UsesDevice")]
 public class NativeLibraryLoadTests : DeviceTest
 {
-	[Test]
+	[TestMethod]
 	public void UnknownSystemLibraryLoadsWithoutMainThreadDispatch ()
 	{
 		if (IgnoreUnsupportedConfiguration (AndroidRuntime.CoreCLR, release: false)) {
@@ -87,8 +88,9 @@ public class NativeLibraryLoadTests : DeviceTest
 		Assert.IsTrue (appCompleted, $"Output did not contain {completedMessage}.");
 	}
 
-	[Test]
-	public void ExemptJniLibraryLoadsOnWorkerThreadWithBlockedMainThread ([Values] bool extractNativeLibs)
+	[TestMethod]
+	[CombinatorialData]
+	public void ExemptJniLibraryLoadsOnWorkerThreadWithBlockedMainThread (bool extractNativeLibs)
 	{
 		if (IgnoreUnsupportedConfiguration (AndroidRuntime.CoreCLR, release: true)) {
 			return;
@@ -636,7 +638,7 @@ public class NativeLibraryLoadTests : DeviceTest
 		string progress = "";
 		if (failureLine != null || !completed) {
 			progress = $" Last progress marker: {lastProgressLine ?? "<none>"}.";
-			TestContext.Out.WriteLine (CaptureWorkerJniLibraryLoadDiagnostics (proj.PackageName, Path.Combine (Root, builder.ProjectDirectory)));
+			Console.Out.WriteLine (CaptureWorkerJniLibraryLoadDiagnostics (proj.PackageName, Path.Combine (Root, builder.ProjectDirectory)));
 		}
 		Assert.IsNull (failureLine, $"Worker JNI library load failed: {failureLine}{progress}");
 		Assert.IsTrue (completed, $"Output did not contain {completedMessage}.{progress}");
@@ -645,7 +647,7 @@ public class NativeLibraryLoadTests : DeviceTest
 	// Best-effort and bounded: failures of individual commands are reported rather than thrown, so they
 	// cannot mask the original assertion. The output goes to the test's standard output because CI task
 	// logs keep it for failed first attempts, even when an automatic retry later passes.
-	static string CaptureWorkerJniLibraryLoadDiagnostics (string packageName, string outputDirectory)
+	string CaptureWorkerJniLibraryLoadDiagnostics (string packageName, string outputDirectory)
 	{
 		const int MaxLogcatLines = 400;
 		var sb = new StringBuilder ();
@@ -672,7 +674,7 @@ public class NativeLibraryLoadTests : DeviceTest
 			string logcatPath = Path.Combine (outputDirectory, "worker-jni-library-load-diagnostics.log");
 			try {
 				File.WriteAllText (logcatPath, logcat);
-				TestContext.AddTestAttachment (logcatPath);
+				TestContext.AddResultFile (logcatPath);
 			} catch (Exception ex) {
 				sb.AppendLine ($"Could not save {logcatPath}: {ex.Message}");
 			}
@@ -723,7 +725,7 @@ public class NativeLibraryLoadTests : DeviceTest
 
 	byte [] CompileJniFixtureLibrary (string directory, string libraryFileName, string source)
 	{
-		var log = new TaskLoggingHelper (new MockBuildEngine (TestContext.Out), nameof (NativeLibraryLoadTests));
+		var log = new TaskLoggingHelper (new MockBuildEngine (Console.Out), nameof (NativeLibraryLoadTests));
 		var ndk = AndroidNdkTools.Create (AndroidNdkPath, log)
 			?? throw new InvalidOperationException ("The configured Android NDK must be available.");
 		string clang = ndk.GetToolPath ("clang")
@@ -763,8 +765,9 @@ public class NativeLibraryLoadTests : DeviceTest
 		return File.ReadAllBytes (outputPath);
 	}
 
-	[Test]
-	public void MissingNativeLibraryHasUsefulErrorMessage ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
+	[TestMethod]
+	[CombinatorialData]
+	public void MissingNativeLibraryHasUsefulErrorMessage ([CombinatorialValues (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 	{
 		bool isRelease = runtime == AndroidRuntime.NativeAOT;
 		if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {

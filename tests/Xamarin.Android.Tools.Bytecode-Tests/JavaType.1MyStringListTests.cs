@@ -2,16 +2,16 @@
 
 using Xamarin.Android.Tools.Bytecode;
 
-using NUnit.Framework;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Xamarin.Android.Tools.BytecodeTests {
 
-	[TestFixture]
+	[TestClass]
 	public class JavaType_1MyStringListTests : ClassFileFixture {
 
 		const string JavaType = "JavaType$1MyStringList";
 
-		[Test]
+		[TestMethod]
 		public void ClassFileDescription ()
 		{
 			var vallist = new ParameterInfo ("val$unboundedList", "Ljava/util/List;", "Ljava/util/List;");
@@ -120,7 +120,7 @@ namespace Xamarin.Android.Tools.BytecodeTests {
 			}.Assert (c);
 		}
 
-		[Test]
+		[TestMethod]
 		public void XmlDescription ()
 		{
 			AssertXmlDeclaration (JavaType + ".class", JavaType + ".xml");

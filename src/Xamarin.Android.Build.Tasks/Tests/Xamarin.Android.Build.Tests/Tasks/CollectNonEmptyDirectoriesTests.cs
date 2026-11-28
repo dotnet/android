@@ -6,24 +6,22 @@ using System.Security;
 using Microsoft.Android.Build.Tasks;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
-using NUnit.Framework;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Xamarin.Android.Tasks;
 using Xamarin.ProjectTools;
 
 namespace Xamarin.Android.Build.Tests
 {
+	[TestClass]
+	[DoNotParallelize]
+	[NoClassCleanup]
 	public class CollectNonEmptyDirectoriesTests : BaseTest
 	{
-		// These tests use no device or adb server.
-		protected override void AfterAllTests ()
-		{
-		}
-
-		[Test]
+		[TestMethod]
 		public void RelativeDirectoriesUseProjectDirectory ()
 		{
 			var path = Path.Combine (Root, "temp", TestName);
-			TestOutputDirectories [TestContext.CurrentContext.Test.ID] = path;
+			TestOutputDirectories [TestId] = path;
 			Directory.CreateDirectory (path);
 			var assembly = SecurityElement.Escape (Path.Combine (TestEnvironment.AndroidMSBuildDirectory, "Xamarin.Android.Build.Tasks.dll"));
 			var resources = new List<ProjectResource> ();
@@ -67,8 +65,8 @@ namespace Xamarin.Android.Build.Tests
 			Assert.IsTrue (dotnet.Build (msbuildArguments:
 				["--no-restore", "-m:2", "-mt", "-nr:false", "-warnaserror:MSB4286,MSB4287,MSB4288"]), File.ReadAllText (dotnet.ProcessLogFile));
 			var buildLog = File.ReadAllText (dotnet.BuildLogFile);
-			StringAssert.Contains ("Task \"CollectNonEmptyDirectories\"", buildLog);
-			StringAssert.DoesNotContain ("Task \"CollectNonEmptyDirectories\" ran in TaskHost", buildLog);
+			Assert.Contains ("Task \"CollectNonEmptyDirectories\"", buildLog);
+			Assert.DoesNotContain ("Task \"CollectNonEmptyDirectories\" ran in TaskHost", buildLog);
 			foreach (var name in new [] { "first", "second" }) {
 				var projectDirectory = Path.Combine (path, name);
 				string cache = Path.Combine ("res", "..", $"{Files.HashString ("res")}-files.cache");
@@ -81,12 +79,13 @@ namespace Xamarin.Android.Build.Tests
 			}
 		}
 
-		[TestCase (false)]
-		[TestCase (true)]
+		[TestMethod]
+		[DataRow (false)]
+		[DataRow (true)]
 		public void RelativeCacheUsesStampTimestamp (bool stale)
 		{
 			var path = Path.Combine (Root, "temp", TestName);
-			TestOutputDirectories [TestContext.CurrentContext.Test.ID] = path;
+			TestOutputDirectories [TestId] = path;
 			Directory.CreateDirectory (Path.Combine (path, "res", "values"));
 			string resourceDirectory = Path.Combine ("res", "..", "res") + Path.DirectorySeparatorChar + Path.DirectorySeparatorChar;
 			string actual = Path.Combine (resourceDirectory, "values", "actual.xml");
@@ -103,7 +102,7 @@ namespace Xamarin.Android.Build.Tests
 				{ "Custom", "preserved" },
 			});
 			var task = new CollectNonEmptyDirectories {
-				BuildEngine = new MockBuildEngine (TestContext.Out),
+				BuildEngine = new MockBuildEngine (Console.Out),
 				TaskEnvironment = TaskEnvironment.CreateWithProjectDirectoryAndEnvironment (path, new Dictionary<string, string> ()),
 				Directories = [input],
 				LibraryProjectIntermediatePath = "lp",
@@ -127,16 +126,16 @@ namespace Xamarin.Android.Build.Tests
 			Assert.AreEqual ("", input.GetMetadata ("FileFound"), "Input metadata must not change.");
 			var cacheTimestamp = File.GetLastWriteTimeUtc (Path.Combine (path, "custom.cache"));
 			if (stale)
-				Assert.Greater (cacheTimestamp, timestamp, "A stale cache must be refreshed even if its contents did not change.");
+				Assert.IsGreaterThan (timestamp, cacheTimestamp, "A stale cache must be refreshed even if its contents did not change.");
 			else
 				Assert.AreEqual (File.GetLastWriteTimeUtc (Path.Combine (path, "custom.stamp")), cacheTimestamp, "A valid cache must not be rewritten.");
 		}
 
-		[Test]
+		[TestMethod]
 		public void CollectNonEmptyDirectoriesTest ()
 		{
 			var path = Path.Combine (Root, "temp", TestName);
-			TestOutputDirectories [TestContext.CurrentContext.Test.ID] = path;
+			TestOutputDirectories [TestId] = path;
 			var resPath = Path.Combine (path, "res");
 			var resizerPath = Path.Combine (path, "resizer");
 			Directory.CreateDirectory (Path.Combine (path, "stamps"));
@@ -154,7 +153,7 @@ namespace Xamarin.Android.Build.Tests
 			File.WriteAllText (Path.Combine (libPath, "0", "res", "values", "strings.xml"), "");
 			File.WriteAllText (Path.Combine (libPath, "1", "res", "values", "strings.xml"), "");
 			var errors = new List<BuildErrorEventArgs> ();
-			IBuildEngine engine = new MockBuildEngine (TestContext.Out, errors);
+			IBuildEngine engine = new MockBuildEngine (Console.Out, errors);
 			var task = new CollectNonEmptyDirectories {
 				BuildEngine = engine,
 				Directories = new ITaskItem[] {
@@ -173,7 +172,7 @@ namespace Xamarin.Android.Build.Tests
 				LibraryProjectIntermediatePath = libPath,
 				StampDirectory = Path.Combine(path, "stamps"),
 			};
-			Assert.True (task.Execute (), $"task should have succeeded. {string.Join (";", errors.Select (x => x.Message))}");
+			Assert.IsTrue (task.Execute (), $"task should have succeeded. {string.Join (";", errors.Select (x => x.Message))}");
 			Assert.AreEqual (4, task.Output.Length, "Output should have 4 items in it.");
 			Assert.AreEqual (5, task.LibraryResourceFiles.Length, "Output should have 5 items in it.");
 			Assert.AreEqual ("layout_main.xml.flat", task.LibraryResourceFiles[0].GetMetadata ("_FlatFile"));
@@ -187,7 +186,7 @@ namespace Xamarin.Android.Build.Tests
 			foreach (var item in task.Output) {
 				Assert.IsNotNull (item.GetMetadata ("FilesCache"), "FilesCache should have been set");
 				var cacheFile = item.GetMetadata ("FilesCache");
-				FileAssert.Exists (cacheFile, $"{cacheFile} should have been created.");
+				Assert.IsTrue (File.Exists (cacheFile), $"{cacheFile} should have been created.");
 			}
 		}
 	}

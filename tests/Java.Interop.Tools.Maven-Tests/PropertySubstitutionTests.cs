@@ -4,9 +4,10 @@ using Java.Interop.Tools.Maven_Tests.Extensions;
 
 namespace Java.Interop.Tools.Maven_Tests;
 
+[TestClass]
 public class PropertySubstitutionTests
 {
-	[Test]
+	[TestMethod]
 	public void Resolve_ExplicitProperty ()
 	{
 		// This POM:
@@ -27,7 +28,7 @@ public class PropertySubstitutionTests
 		Assert.AreEqual ("2.0.6", result.Version);
 	}
 
-	[Test]
+	[TestMethod]
 	public void Resolve_ExplicitPropertyFromParent ()
 	{
 		// This POM:
@@ -53,7 +54,7 @@ public class PropertySubstitutionTests
 		Assert.AreEqual ("2.0.6", result.Version);
 	}
 
-	[Test]
+	[TestMethod]
 	public void Resolve_ProjectProperty ()
 	{
 		// This POM:
@@ -74,7 +75,7 @@ public class PropertySubstitutionTests
 		Assert.AreEqual ("bar:foo:2.0", result.Name);
 	}
 
-	[Test]
+	[TestMethod]
 	public void Resolve_ProjectPropertyFromParent ()
 	{
 		// This POM:
@@ -100,7 +101,7 @@ public class PropertySubstitutionTests
 		Assert.AreEqual ("bar:foo:2.0", result.Name);
 	}
 
-	[Test]
+	[TestMethod]
 	public void Resolve_RecursiveProperties ()
 	{
 		// This POM:
@@ -129,7 +130,7 @@ public class PropertySubstitutionTests
 		Assert.AreEqual ("2.0", result.Version);
 	}
 
-	[Test]
+	[TestMethod]
 	public void Resolve_ChildPropertiesTakePrecedenceOverParentProperties ()
 	{
 		// This POM:

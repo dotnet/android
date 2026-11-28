@@ -2,23 +2,23 @@
 
 using System;
 using System.IO;
-using NUnit.Framework;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Microsoft.Android.Build.Tasks;
 
 namespace Microsoft.Android.Build.BaseTasks.Tests
 {
-	[TestFixture]
+	[TestClass]
 	public class MemoryStreamPoolTests
 	{
 		MemoryStreamPool pool;
 
-		[SetUp]
+		[TestInitialize]
 		public void SetUp ()
 		{
 			pool = new MemoryStreamPool ();
 		}
 
-		[Test]
+		[TestMethod]
 		public void Reuse ()
 		{
 			var expected = pool.Rent ();
@@ -26,15 +26,15 @@ namespace Microsoft.Android.Build.BaseTasks.Tests
 			pool.Return (expected);
 			var actual = pool.Rent ();
 			Assert.AreSame (expected, actual);
-			Assert.AreEqual (0, actual.Length);
+			Assert.AreEqual (0L, actual.Length);
 		}
 
-		[Test]
+		[TestMethod]
 		public void PutDisposed ()
 		{
 			var stream = new MemoryStream ();
 			stream.Dispose ();
-			Assert.Throws<NotSupportedException> (() => pool.Return (stream));
+			Assert.ThrowsExactly<NotSupportedException> (() => pool.Return (stream));
 		}
 	}
 }

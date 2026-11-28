@@ -1,13 +1,14 @@
 using System;
 using System.Xml.Linq;
 using Java.Interop.Tools.Generator;
-using NUnit.Framework;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Java.Interop.Tools.Generator_Tests
 {
+	[TestClass]
 	public class NamespaceTransformTests
 	{
-		[Test]
+		[TestMethod]
 		public void ParseNamespaceTransform ()
 		{
 			var doc = XDocument.Parse ("<metadata><ns-replace source='com.example' replacement='Xamarin' /></metadata>");
@@ -19,7 +20,7 @@ namespace Java.Interop.Tools.Generator_Tests
 			Assert.AreEqual ("Xamarin", nt.NewValue);
 		}
 
-		[Test]
+		[TestMethod]
 		public void ParseNamespaceTransform2 ()
 		{
 			var doc = XDocument.Parse ("<metadata><ns-replace source='com.example' replacement='' /></metadata>");
@@ -31,7 +32,7 @@ namespace Java.Interop.Tools.Generator_Tests
 			Assert.AreEqual ("", nt.NewValue);
 		}
 
-		[Test]
+		[TestMethod]
 		public void ParseInvalidNamespaceTransform ()
 		{
 			// Logs: warning BG8A07: Invalid namespace transform '<ns-replace source="com.example" />'
@@ -42,7 +43,7 @@ namespace Java.Interop.Tools.Generator_Tests
 			Assert.IsNull (nt);
 		}
 
-		[Test]
+		[TestMethod]
 		public void ParseInvalidNamespaceTransform2 ()
 		{
 			// Logs: warning BG8A07: Invalid namespace transform '<ns-replace source="" replacement="Xamarin" />'
@@ -53,7 +54,7 @@ namespace Java.Interop.Tools.Generator_Tests
 			Assert.IsNull (nt);
 		}
 
-		[Test]
+		[TestMethod]
 		public void GetTransformedNamespace ()
 		{
 			// Normal and case-insensitive

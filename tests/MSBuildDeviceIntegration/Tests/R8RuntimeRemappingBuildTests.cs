@@ -7,17 +7,18 @@ using System.Text;
 using ELFSharp.ELF;
 using ELFSharp.ELF.Sections;
 using Microsoft.Build.Logging.StructuredLogger;
-using NUnit.Framework;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Xamarin.Android.Tasks;
 using Xamarin.ProjectTools;
 
 namespace Xamarin.Android.Build.Tests
 {
-	[TestFixture]
+	[TestClass]
 	public class R8RuntimeRemappingBuildTests : BaseTest
 	{
-		[TestCase (AndroidRuntime.CoreCLR, false)]
-		[TestCase (AndroidRuntime.NativeAOT, true)]
+		[TestMethod]
+		[DataRow (AndroidRuntime.CoreCLR, false)]
+		[DataRow (AndroidRuntime.NativeAOT, true)]
 		public void BuildWithoutRemappingKeepsOnlyCoreClrBootstrap (AndroidRuntime runtime, bool release)
 		{
 			if (IgnoreUnsupportedConfiguration (runtime, release)) {
@@ -51,14 +52,15 @@ namespace Xamarin.Android.Build.Tests
 			Assert.IsTrue (builder.Build (proj), "A deleted presence stamp must be recreated.");
 			Assert.AreEqual (hasBootstrap ? "true" : "false", File.ReadAllText (stamp));
 			Assert.IsTrue (builder.Clean (proj));
-			FileAssert.DoesNotExist (stamp);
+			Assert.IsFalse (File.Exists (stamp));
 			foreach (var blob in blobs)
-				FileAssert.DoesNotExist (blob);
+				Assert.IsFalse (File.Exists (blob));
 		}
 
-		[TestCase (AndroidRuntime.CoreCLR, false)]
-		[TestCase (AndroidRuntime.CoreCLR, true)]
-		[TestCase (AndroidRuntime.NativeAOT, true)]
+		[TestMethod]
+		[DataRow (AndroidRuntime.CoreCLR, false)]
+		[DataRow (AndroidRuntime.CoreCLR, true)]
+		[DataRow (AndroidRuntime.NativeAOT, true)]
 		public void MamRemappingTransitionsUpdatePackages (AndroidRuntime runtime, bool aab)
 		{
 			if (IgnoreUnsupportedConfiguration (runtime, release: true))
@@ -77,7 +79,7 @@ namespace Xamarin.Android.Build.Tests
 			string missingNdk = Path.Combine (Root, "missing-ndk-for-coreclr-binary-blobs");
 			string [] parameters = [];
 			if (runtime == AndroidRuntime.CoreCLR) {
-				DirectoryAssert.DoesNotExist (missingNdk);
+				Assert.IsFalse (Directory.Exists (missingNdk));
 				parameters = [$"AndroidNdkDirectory=\"{missingNdk}\""];
 			}
 			using var builder = CreateApkBuilder ();
@@ -129,13 +131,13 @@ namespace Xamarin.Android.Build.Tests
 			builder.ThrowOnBuildFailure = false;
 			Assert.IsFalse (Build (), "An unwritable library output must fail generation.");
 			StringAssertEx.Contains ("error XA4325", builder.LastBuildOutput);
-			FileAssert.DoesNotExist (stamp, "Failure must invalidate the previous completion stamp.");
+			Assert.IsFalse (File.Exists (stamp), "Failure must invalidate the previous completion stamp.");
 			Directory.Delete (binaryBlob);
 			File.WriteAllBytes (binaryBlob, [0, 1, 2]);
 			builder.ThrowOnBuildFailure = true;
 			Assert.IsTrue (Build (), "A failed write must not make a partial library up to date.");
 			Assert.IsFalse (builder.Output.IsTargetSkipped (producer));
-			Assert.Greater (new FileInfo (binaryBlob).Length, 3);
+			Assert.IsGreaterThan (3, new FileInfo (binaryBlob).Length);
 			AssertPackage (true);
 			mapping = """{"ClassRewrites":[]}""";
 			proj.Touch ("mam.json");
@@ -152,12 +154,13 @@ namespace Xamarin.Android.Build.Tests
 			Assert.IsEmpty (Directory.GetFiles (intermediate, stampName, SearchOption.AllDirectories));
 		}
 
-		[TestCase (AndroidRuntime.CoreCLR, false, false, false, false, false)]
-		[TestCase (AndroidRuntime.CoreCLR, true, false, false, false, false)]
-		[TestCase (AndroidRuntime.CoreCLR, true, true, false, false, false)]
-		[TestCase (AndroidRuntime.CoreCLR, true, false, true, false, false)]
-		[TestCase (AndroidRuntime.CoreCLR, true, false, true, true, false)]
-		[TestCase (AndroidRuntime.CoreCLR, true, false, true, false, true)]
+		[TestMethod]
+		[DataRow (AndroidRuntime.CoreCLR, false, false, false, false, false)]
+		[DataRow (AndroidRuntime.CoreCLR, true, false, false, false, false)]
+		[DataRow (AndroidRuntime.CoreCLR, true, true, false, false, false)]
+		[DataRow (AndroidRuntime.CoreCLR, true, false, true, false, false)]
+		[DataRow (AndroidRuntime.CoreCLR, true, false, true, true, false)]
+		[DataRow (AndroidRuntime.CoreCLR, true, false, true, false, true)]
 		public void ReservedBinaryBlobLibraryNameIsRejected (AndroidRuntime runtime, bool release, bool aab, bool useSonameAlias, bool useShadowDynstr, bool useTrailingDynamicEntry)
 		{
 			if (IgnoreUnsupportedConfiguration (runtime, release))
@@ -197,12 +200,13 @@ namespace Xamarin.Android.Build.Tests
 			StringAssertEx.Contains ("error XA4330", builder.LastBuildOutput);
 		}
 
-		[TestCase (false, false, false, false, false)]
-		[TestCase (false, false, true, false, false)]
-		[TestCase (true, false, false, false, false)]
-		[TestCase (true, true, true, false, false)]
-		[TestCase (false, false, true, false, true)]
-		[TestCase (false, false, false, true, false)]
+		[TestMethod]
+		[DataRow (false, false, false, false, false)]
+		[DataRow (false, false, true, false, false)]
+		[DataRow (true, false, false, false, false)]
+		[DataRow (true, true, true, false, false)]
+		[DataRow (false, false, true, false, true)]
+		[DataRow (false, false, false, true, false)]
 		public void ReservedBinaryBlobLibraryInJarIsRejected (bool release, bool aab, bool useSonameAlias, bool useBackslashPath, bool useShadowDynstr)
 		{
 			if (IgnoreUnsupportedConfiguration (AndroidRuntime.CoreCLR, release))
@@ -259,7 +263,7 @@ namespace Xamarin.Android.Build.Tests
 			Assert.AreEqual (original.Length, replacement.Length, "The replacement SONAME must preserve the ELF string-table size.");
 			byte [] result = (byte [])elf.Clone ();
 			int offset = result.AsSpan ().IndexOf (original);
-			Assert.GreaterOrEqual (offset, 0, "The ELF fixture must contain the original SONAME.");
+			Assert.IsGreaterThanOrEqualTo (0, offset, "The ELF fixture must contain the original SONAME.");
 			replacement.CopyTo (result, offset);
 			return result;
 		}
@@ -273,11 +277,11 @@ namespace Xamarin.Android.Build.Tests
 			int dynamicHeaderOffset = checked ((int)sectionHeadersOffset) + sectionHeaderSize * 4;
 			ulong dynamicOffset = BinaryPrimitives.ReadUInt64LittleEndian (elf.AsSpan (dynamicHeaderOffset + 24, 8));
 			ulong dynamicSize = BinaryPrimitives.ReadUInt64LittleEndian (elf.AsSpan (dynamicHeaderOffset + 32, 8));
-			Assert.AreEqual (112, dynamicSize, "Expected six dynamic tags and DT_NULL in the generated fixture.");
+			Assert.AreEqual (112UL, dynamicSize, "Expected six dynamic tags and DT_NULL in the generated fixture.");
 
 			byte [] result = (byte [])elf.Clone ();
 			ulong dynamicTerminatorOffset = dynamicOffset + dynamicSize - 16;
-			Assert.AreEqual (0, BinaryPrimitives.ReadUInt64LittleEndian (result.AsSpan (checked ((int)dynamicTerminatorOffset), 8)));
+			Assert.AreEqual (0UL, BinaryPrimitives.ReadUInt64LittleEndian (result.AsSpan (checked ((int)dynamicTerminatorOffset), 8)));
 			ulong trailingEntryOffset = dynamicOffset + dynamicSize;
 			BinaryPrimitives.WriteUInt64LittleEndian (result.AsSpan (checked ((int)trailingEntryOffset), 8), 10); // DT_STRSZ
 			BinaryPrimitives.WriteUInt64LittleEndian (result.AsSpan (checked ((int)trailingEntryOffset + 8), 8), 0);
@@ -302,7 +306,7 @@ namespace Xamarin.Android.Build.Tests
 				.Where (project => project.GlobalProperties != null && project.GlobalProperties.ContainsKey ("AndroidNdkDirectory"))
 				.Select (project => project.GlobalProperties ["AndroidNdkDirectory"]).ToArray ();
 			Assert.IsNotEmpty (directories, "The binlog must record the effective global AndroidNdkDirectory.");
-			Assert.That (directories, Is.All.EqualTo (expected), "Every project must use the deliberately missing NDK, not the harness default.");
+			Assert.IsTrue (directories.All (v => v == expected), "Every project must use the deliberately missing NDK, not the harness default.");
 		}
 
 		static byte [] CreateShadowDynstrLibrary (byte [] elf)
@@ -327,7 +331,7 @@ namespace Xamarin.Android.Build.Tests
 			ulong sectionNamesSize = BinaryPrimitives.ReadUInt64LittleEndian (sectionHeaders.AsSpan (sectionNamesHeaderOffset + 32, 8));
 			byte [] dynamicStrings = elf.AsSpan (checked ((int)dynamicStringsOffset), checked ((int)dynamicStringsSize)).ToArray ();
 			byte [] fakeDynamicStrings = (byte [])dynamicStrings.Clone ();
-			Assert.GreaterOrEqual (dynamicStrings.AsSpan ().IndexOf (Encoding.ASCII.GetBytes ("libbinary_blobs.so")), 0,
+			Assert.IsGreaterThanOrEqualTo (0, dynamicStrings.AsSpan ().IndexOf (Encoding.ASCII.GetBytes ("libbinary_blobs.so")),
 				"The ELF fixture's linked string table must contain the reserved SONAME.");
 			RenameSonameInStringTable (fakeDynamicStrings, "libbinary_blobs.so", "libcustom_blobs.so");
 
@@ -373,12 +377,13 @@ namespace Xamarin.Android.Build.Tests
 			byte [] replacement = Encoding.ASCII.GetBytes (replacementSoname);
 			Assert.AreEqual (original.Length, replacement.Length, "The replacement SONAME must preserve the ELF string-table size.");
 			int offset = strings.AsSpan ().IndexOf (original);
-			Assert.GreaterOrEqual (offset, 0, "The ELF string-table fixture must contain its SONAME.");
+			Assert.IsGreaterThanOrEqualTo (0, offset, "The ELF string-table fixture must contain its SONAME.");
 			replacement.CopyTo (strings, offset);
 		}
 
-		[TestCase (true)]
-		[TestCase (false)]
+		[TestMethod]
+		[DataRow (true)]
+		[DataRow (false)]
 		public void UnchangedProguardRulesDoNotRerunR8 (bool obfuscation)
 		{
 			if (IgnoreUnsupportedConfiguration (AndroidRuntime.CoreCLR, release: true)) {
@@ -431,15 +436,15 @@ namespace Xamarin.Android.Build.Tests
 			string? originalMemberRules = null;
 			DateTime originalMemberTime = default;
 			if (obfuscation) {
-				StringAssert.Contains ("first(...)", originalRules);
-				FileAssert.Exists (rules + ".stamp");
+				Assert.Contains ("first(...)", originalRules);
+				Assert.IsTrue (File.Exists (rules + ".stamp"));
 			} else {
-				StringAssert.Contains ("-keep class example.Peer", originalRules);
-				StringAssert.DoesNotContain ("first(...)", originalRules);
+				Assert.Contains ("-keep class example.Peer", originalRules);
+				Assert.DoesNotContain ("first(...)", originalRules);
 				memberRules = Directory.GetFiles (intermediate, "proguard_typemap_members.cfg", SearchOption.AllDirectories).Single ();
 				originalMemberRules = File.ReadAllText (memberRules);
 				originalMemberTime = File.GetLastWriteTimeUtc (memberRules);
-				StringAssert.Contains ("-keepclassmembers class example.Peer { *; }", originalMemberRules);
+				Assert.Contains ("-keepclassmembers class example.Peer { *; }", originalMemberRules);
 			}
 
 			proj.MainActivity = proj.MainActivity.Replace ("peer.First ()", "peer.First () + 1");
@@ -454,11 +459,11 @@ namespace Xamarin.Android.Build.Tests
 			if (obfuscation) {
 				Assert.AreEqual (originalTime, File.GetLastWriteTimeUtc (rules));
 			} else {
-				Assert.Greater (File.GetLastWriteTimeUtc (rules), originalTime);
+				Assert.IsGreaterThan (originalTime, File.GetLastWriteTimeUtc (rules));
 			}
 			if (memberRules != null) {
 				Assert.AreEqual (originalMemberRules, File.ReadAllText (memberRules));
-				Assert.Greater (File.GetLastWriteTimeUtc (memberRules), originalMemberTime);
+				Assert.IsGreaterThan (originalMemberTime, File.GetLastWriteTimeUtc (memberRules));
 				originalMemberTime = File.GetLastWriteTimeUtc (memberRules);
 			}
 
@@ -481,7 +486,7 @@ namespace Xamarin.Android.Build.Tests
 			Assert.IsTrue (builder.Build (proj), "Newly retained bindings must update the keep rules.");
 			if (obfuscation) {
 				AssertTaskCount ("GenerateProguardConfiguration", 1);
-				StringAssert.Contains ("second(...)", File.ReadAllText (rules));
+				Assert.Contains ("second(...)", File.ReadAllText (rules));
 				Assert.AreNotEqual (originalRules, File.ReadAllText (rules));
 				AssertTaskCount ("R8", 1);
 			} else {
@@ -492,10 +497,10 @@ namespace Xamarin.Android.Build.Tests
 				Assert.AreEqual (originalRules, File.ReadAllText (rules));
 				Assert.IsNotNull (memberRules);
 				if (memberRules == null) {
-					throw new AssertionException ("Scoped member rules were not generated.");
+					throw new AssertFailedException ("Scoped member rules were not generated.");
 				}
 				Assert.AreEqual (originalMemberRules, File.ReadAllText (memberRules));
-				Assert.Greater (File.GetLastWriteTimeUtc (memberRules), originalMemberTime);
+				Assert.IsGreaterThan (originalMemberTime, File.GetLastWriteTimeUtc (memberRules));
 			}
 
 			Assert.IsTrue (builder.Clean (proj));
@@ -506,12 +511,13 @@ namespace Xamarin.Android.Build.Tests
 			}
 		}
 
-		[TestCase (AndroidRuntime.CoreCLR, false, false)]
-		[TestCase (AndroidRuntime.CoreCLR, true, false)]
-		[TestCase (AndroidRuntime.NativeAOT, false, false)]
-		[TestCase (AndroidRuntime.NativeAOT, true, false)]
-		[TestCase (AndroidRuntime.CoreCLR, false, true)]
-		[TestCase (AndroidRuntime.NativeAOT, false, true)]
+		[TestMethod]
+		[DataRow (AndroidRuntime.CoreCLR, false, false)]
+		[DataRow (AndroidRuntime.CoreCLR, true, false)]
+		[DataRow (AndroidRuntime.NativeAOT, false, false)]
+		[DataRow (AndroidRuntime.NativeAOT, true, false)]
+		[DataRow (AndroidRuntime.CoreCLR, false, true)]
+		[DataRow (AndroidRuntime.NativeAOT, false, true)]
 		public void MultiRidUsesOneR8Mapping (AndroidRuntime runtime, bool explicitPrimaryRid, bool aab)
 		{
 			if (IgnoreUnsupportedConfiguration (runtime, release: true)) {
@@ -536,7 +542,7 @@ namespace Xamarin.Android.Build.Tests
 			string missingNdk = Path.Combine (Root, "missing-ndk-for-coreclr-binary-blobs");
 			string [] parameters = [];
 			if (runtime == AndroidRuntime.CoreCLR) {
-				DirectoryAssert.DoesNotExist (missingNdk);
+				Assert.IsFalse (Directory.Exists (missingNdk));
 				parameters = [$"AndroidNdkDirectory=\"{missingNdk}\""];
 			}
 
@@ -615,7 +621,7 @@ namespace Xamarin.Android.Build.Tests
 			Assert.IsTrue (Build (), "A missing ABI blob should be regenerated.");
 			Assert.AreEqual ((0, runtime == AndroidRuntime.NativeAOT ? 1 : 0), ReadInvocationCounts (),
 				"Restoring static data relinks only the affected NativeAOT RID, without rerunning R8.");
-			FileAssert.Exists (missingBlob);
+			Assert.IsTrue (File.Exists (missingBlob));
 			foreach (var entry in objects)
 				Assert.AreEqual (entry.Value, File.GetLastWriteTimeUtc (entry.Key), "Restoring data must not recompile ILC.");
 			remapping = "<replacements />";
@@ -634,7 +640,7 @@ namespace Xamarin.Android.Build.Tests
 				AssertNdkDirectory (builder, missingNdk);
 			}
 			foreach (var blob in binaryBlobs.Keys)
-				FileAssert.DoesNotExist (blob, "Clean must remove generated binary-blob libraries.");
+				Assert.IsFalse (File.Exists (blob), "Clean must remove generated binary-blob libraries.");
 		}
 	}
 }

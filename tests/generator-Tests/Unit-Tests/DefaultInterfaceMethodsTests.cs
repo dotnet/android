@@ -1,11 +1,11 @@
 using System;
 using System.Linq;
 using MonoDroid.Generation;
-using NUnit.Framework;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace generatortests
 {
-	[TestFixture]
+	[TestClassAttribute]
 	class XAJavaInteropDefaultInterfaceMethodsTests : CodeGeneratorTestBase
 	{
 		protected override CodeGenerationOptions CreateOptions ()
@@ -18,7 +18,7 @@ namespace generatortests
 			return options;
 		}
 
-		[Test]
+		[TestMethodAttribute]
 		public void WriteInterfaceDefaultMethod ()
 		{
 			// Create an interface with a default method
@@ -33,7 +33,7 @@ namespace generatortests
 			AssertTargetedExpected (nameof (WriteInterfaceDefaultMethod), writer.ToString ());
 		}
 
-		[Test]
+		[TestMethodAttribute]
 		public void DefaultInterfaceNullabilityPreservesNullableOverridesAcrossLevels ()
 		{
 			options.SupportNullableReferenceTypes = true;
@@ -67,18 +67,18 @@ namespace generatortests
 			var middle = gens.Single (g => g.Name == "IMiddle").Methods.Single ();
 			var leaf = gens.Single (g => g.Name == "ILeaf").Methods.Single ();
 
-			Assert.False (middle.Parameters [0].NotNull);
-			Assert.False (leaf.Parameters [0].NotNull);
-			Assert.True (leaf.Parameters [1].NotNull);
-			Assert.True (leaf.RetVal.NotNull);
+			Assert.IsFalse (middle.Parameters [0].NotNull);
+			Assert.IsFalse (leaf.Parameters [0].NotNull);
+			Assert.IsTrue (leaf.Parameters [1].NotNull);
+			Assert.IsTrue (leaf.RetVal.NotNull);
 
 			foreach (var gen in gens)
 				GetGeneratedTypeOutput (gen);
 			var source = writer.ToString ();
-			StringAssert.Contains ("Com.Example.IArgument? value, string required", source);
-			StringAssert.DoesNotContain ("value ?? throw", source);
-			StringAssert.Contains ("required ?? throw new global::Java.Lang.NullPointerException ()", source);
-			StringAssert.Contains ("TransferLocalRef) ?? throw new global::Java.Lang.NullPointerException ()", source);
+			Assert.Contains ("Com.Example.IArgument? value, string required", source);
+			Assert.DoesNotContain ("value ?? throw", source);
+			Assert.Contains ("required ?? throw new global::Java.Lang.NullPointerException ()", source);
+			Assert.Contains ("TransferLocalRef) ?? throw new global::Java.Lang.NullPointerException ()", source);
 
 			var support = $$"""
 				using System;
@@ -91,10 +91,10 @@ namespace generatortests
 				"#nullable enable\nusing System; using Android.Runtime; using Java.Interop; namespace Com.Example {\n" + source + "\n}",
 				support,
 			], out var hasErrors, out var output, out _, allowWarnings: false);
-			Assert.False (hasErrors, output + "\n" + source);
+			Assert.IsFalse (hasErrors, output + "\n" + source);
 		}
 
-		[Test]
+		[TestMethodAttribute]
 		public void WriteInterfaceRedeclaredDefaultMethod ()
 		{
 			// Create an interface with a default method
@@ -116,7 +116,7 @@ namespace generatortests
 			AssertTargetedExpected (nameof (WriteInterfaceRedeclaredDefaultMethod), writer.ToString ());
 		}
 
-		[Test]
+		[TestMethodAttribute]
 		public void WriteInterfaceDefaultProperty ()
 		{
 			// Create an interface with a default method
@@ -135,7 +135,7 @@ namespace generatortests
 			AssertTargetedExpected (nameof (WriteInterfaceDefaultProperty), writer.ToString ());
 		}
 
-		[Test]
+		[TestMethodAttribute]
 		public void WriteInterfaceDefaultPropertyGetterOnly ()
 		{
 			// Create an interface with a default method
@@ -155,7 +155,7 @@ namespace generatortests
 		}
 
 
-		[Test]
+		[TestMethodAttribute]
 		public void WriteDefaultInterfaceMethodInvoker ()
 		{
 			// Create an interface with a default method
@@ -173,7 +173,7 @@ namespace generatortests
 			AssertTargetedExpected (nameof (WriteDefaultInterfaceMethodInvoker), writer.ToString ());
 		}
 
-		[Test]
+		[TestMethodAttribute]
 		public void WriteSealedOverriddenDefaultMethod ()
 		{
 			// Create an interface with a default method
@@ -196,10 +196,10 @@ namespace generatortests
 			generator.Context.ContextTypes.Pop ();
 
 			// The method should not be marked as 'virtual sealed'
-			Assert.False (writer.ToString ().Contains ("virtual sealed"));
+			Assert.IsFalse (writer.ToString ().Contains ("virtual sealed"));
 		}
 
-		[Test]
+		[TestMethodAttribute]
 		public void WriteInterfaceRedeclaredChainDefaultMethod ()
 		{
 			// Fix a case where a property declared in this hierarchy was generated as "override" instead of "virtual"
@@ -238,10 +238,10 @@ namespace generatortests
 			generator.WriteType (klass, string.Empty, new GenerationInfo (string.Empty, string.Empty, "MyAssembly"));
 			generator.Context.ContextTypes.Pop ();
 
-			Assert.True (writer.ToString ().Contains ("public virtual int Bar"));
+			Assert.IsTrue (writer.ToString ().Contains ("public virtual int Bar"));
 		}
 
-		[Test]
+		[TestMethodAttribute]
 		public void WriteStaticInterfaceMethod ()
 		{
 			// Create an interface with a static method
@@ -255,7 +255,7 @@ namespace generatortests
 			AssertTargetedExpected (nameof (WriteStaticInterfaceMethod), writer.ToString ());
 		}
 
-		[Test]
+		[TestMethodAttribute]
 		public void WriteStaticInterfaceProperty ()
 		{
 			// Create an interface with a static property
@@ -302,7 +302,7 @@ namespace generatortests
 			  </package>
 			</api>";
 
-		[Test]
+		[TestMethodAttribute]
 		public void WriteUnnestedInterfaceTypes ()
 		{
 			// Ensure we don't break the original un-nested interface types
@@ -317,7 +317,7 @@ namespace generatortests
 			AssertTargetedExpected (nameof (WriteUnnestedInterfaceTypes), writer.ToString ());
 		}
 
-		[Test]
+		[TestMethodAttribute]
 		public void WriteNestedInterfaceTypes ()
 		{
 			// Traditionally this would have created namespace.IParent and namespace.IParentChild
@@ -335,7 +335,7 @@ namespace generatortests
 			AssertTargetedExpected (nameof (WriteNestedInterfaceTypes), writer.ToString ());
 		}
 
-		[Test]
+		[TestMethodAttribute]
 		public void WriteNestedInterfaceClass ()
 		{
 			// Traditionally this would have created namespace.IParent and namespace.IParentChild
@@ -353,7 +353,7 @@ namespace generatortests
 			AssertTargetedExpected (nameof (WriteNestedInterfaceClass), writer.ToString ());
 		}
 
-		[Test]
+		[TestMethodAttribute]
 		public void DontWriteInterfaceConstsClass ()
 		{
 			// If SupportInterfaceConstants is true we no longer write the legacy
@@ -378,10 +378,10 @@ namespace generatortests
 
 			generator.WriteType (iface, string.Empty, new GenerationInfo (string.Empty, string.Empty, "MyAssembly"));
 
-			Assert.False (writer.ToString ().Contains ("class ParentConsts"));
+			Assert.IsFalse (writer.ToString ().Contains ("class ParentConsts"));
 		}
 
-		[Test]
+		[TestMethodAttribute]
 		public void ObsoleteInterfaceAlternativeClass ()
 		{
 			// If SupportInterfaceConstants and SupportDefaultInterfaceMethods is true we want to
@@ -413,7 +413,7 @@ namespace generatortests
 			AssertTargetedExpected (nameof (ObsoleteInterfaceAlternativeClass), writer.ToString ());
 		}
 
-		[Test]
+		[TestMethodAttribute]
 		public void RespectNoAlternativesForInterfaces ()
 		{
 			// If an interface is marked with no-alternatives='true', do
@@ -442,11 +442,11 @@ namespace generatortests
 
 			generator.WriteType (iface, string.Empty, new GenerationInfo (string.Empty, string.Empty, "MyAssembly"));
 
-			Assert.False (writer.ToString ().Contains ("class ParentConsts"));
-			Assert.False (writer.ToString ().Contains ("class Parent"));
+			Assert.IsFalse (writer.ToString ().Contains ("class ParentConsts"));
+			Assert.IsFalse (writer.ToString ().Contains ("class Parent"));
 		}
 
-		[Test]
+		[TestMethodAttribute]
 		public void DontInvalidateInterfaceDueToStaticOrDefaultMethods ()
 		{
 			// This interface contains a static and a default interface method that cannot
@@ -469,19 +469,19 @@ namespace generatortests
 			var result = iface.Validate (options, new GenericParameterDefinitionList (), new CodeGeneratorContext ());
 
 			// Inteface should pass validation despite invalid static/default methods
-			Assert.True (result);
+			Assert.IsTrue (result);
 
 			generator.WriteType (iface, string.Empty, new GenerationInfo (string.Empty, string.Empty, "MyAssembly"));
 
 			var generated = writer.ToString ();
 
-			Assert.True (generated.Contains ("interface IParent"));
-			Assert.True (generated.Contains ("NormalMethod"));
-			Assert.False (generated.Contains ("StaticMethod"));
-			Assert.False (generated.Contains ("DefaultMethod"));
+			Assert.IsTrue (generated.Contains ("interface IParent"));
+			Assert.IsTrue (generated.Contains ("NormalMethod"));
+			Assert.IsFalse (generated.Contains ("StaticMethod"));
+			Assert.IsFalse (generated.Contains ("DefaultMethod"));
 		}
 
-		[Test]
+		[TestMethodAttribute]
 		public void GenerateProperNestedInterfaceSignatures ()
 		{
 			// https://github.com/dotnet/java-interop/issues/661
@@ -508,11 +508,11 @@ namespace generatortests
 
 			var generated = writer.ToString ();
 
-			Assert.True (generated.Contains ("GetOnActivityDestroyed_IHandler:Com.Xamarin.Android.Application/IActivityLifecycleInterface, MyAssembly"));
-			Assert.False (generated.Contains ("GetOnActivityDestroyed_IHandler:Com.Xamarin.Android.Application.IActivityLifecycleInterface, MyAssembly"));
+			Assert.IsTrue (generated.Contains ("GetOnActivityDestroyed_IHandler:Com.Xamarin.Android.Application/IActivityLifecycleInterface, MyAssembly"));
+			Assert.IsFalse (generated.Contains ("GetOnActivityDestroyed_IHandler:Com.Xamarin.Android.Application.IActivityLifecycleInterface, MyAssembly"));
 		}
 
-		[Test]
+		[TestMethodAttribute]
 		public void WriteInterfaceFieldAsDimProperty ()
 		{
 			// Ensure we write interface fields that are not constant, and thus must be written as properties
@@ -529,7 +529,7 @@ namespace generatortests
 			var iface = gens.OfType<InterfaceGen> ().Single ();
 
 			var result = iface.Validate (options, new GenericParameterDefinitionList (), new CodeGeneratorContext ());
-			Assert.True (result);
+			Assert.IsTrue (result);
 
 			generator.WriteType (iface, string.Empty, new GenerationInfo (string.Empty, string.Empty, "MyAssembly"));
 
@@ -538,7 +538,7 @@ namespace generatortests
 			AssertTargetedExpected (nameof (WriteInterfaceFieldAsDimProperty), writer.ToString ());
 		}
 
-		[Test]
+		[TestMethodAttribute]
 		public void CompatVirtualMethod_Interface ()
 		{
 			var xml = @"<api>
@@ -560,11 +560,11 @@ namespace generatortests
 			generator.Context.ContextTypes.Pop ();
 
 			var generated = writer.ToString ();
-			Assert.True (generated.NormalizeLineEndings ().Contains ("catch (Java.Lang.NoSuchMethodError) { throw new Java.Lang.AbstractMethodError (__id); }".NormalizeLineEndings ()), $"was: `{writer}`");
+			Assert.IsTrue (generated.NormalizeLineEndings ().Contains ("catch (Java.Lang.NoSuchMethodError) { throw new Java.Lang.AbstractMethodError (__id); }".NormalizeLineEndings ()), $"was: `{writer}`");
 			Assert.AreEqual (generated.Count (c => c == '{'), generated.Count (c => c == '}'), generated);
 		}
 
-		[Test]
+		[TestMethodAttribute]
 		public void FixDefaultInterfaceMethodStackOverflow ()
 		{
 			// The bug was that this causes a stack overflow, but this also tests

@@ -3,7 +3,7 @@ name: tests
 description: >-
   Runs, discovers, or recommends dotnet/android tests. Handles standalone tests
   (plain dotnet test), full-build tests (local SDK required), and on-device
-  MTP/NUnit tests. Maps source files to relevant test suites. Trigger on test
+  MTP tests. Maps source files to relevant test suites. Trigger on test
   execution requests, questions about available tests, or "which tests should I
   run for this change?"
 ---
@@ -81,25 +81,23 @@ In a worktree with no commits on its branch, SourceLink fails with `Repository h
 
 ### Host-side MSBuild tests (full-build)
 ```bash
-./dotnet-local.sh test bin/TestDebug/${TFM}/Xamarin.Android.Build.Tests.dll
-./dotnet-local.sh test bin/TestDebug/${TFM}/Xamarin.Android.Build.Tests.dll --filter "Name~BuildBasicApplication"
-./dotnet-local.sh test bin/TestDebug/${TFM}/Xamarin.Android.Build.Tests.dll --filter "FullyQualifiedName~NativeAotBuildTests"
+./dotnet-local.sh test --test-modules bin/TestDebug/${TFM}/Xamarin.Android.Build.Tests.dll
+./dotnet-local.sh test --test-modules bin/TestDebug/${TFM}/Xamarin.Android.Build.Tests.dll --filter "Name~BuildBasicApplication"
+./dotnet-local.sh test --test-modules bin/TestDebug/${TFM}/Xamarin.Android.Build.Tests.dll --filter "FullyQualifiedName~NativeAotBuildTests"
 ```
 
 ### Device integration tests (full-build + device)
 ```bash
-./dotnet-local.sh test bin/TestDebug/MSBuildDeviceIntegration/${TFM}/MSBuildDeviceIntegration.dll
-./dotnet-local.sh test bin/TestDebug/MSBuildDeviceIntegration/${TFM}/MSBuildDeviceIntegration.dll --filter "Name~InstallAndRunTests"
+./dotnet-local.sh test --test-modules bin/TestDebug/MSBuildDeviceIntegration/${TFM}/MSBuildDeviceIntegration.dll
+./dotnet-local.sh test --test-modules bin/TestDebug/MSBuildDeviceIntegration/${TFM}/MSBuildDeviceIntegration.dll --filter "Name~InstallAndRunTests"
 # With more than one device attached:
-ADB_TARGET='-s emulator-5554' ./dotnet-local.sh test bin/TestDebug/MSBuildDeviceIntegration/${TFM}/MSBuildDeviceIntegration.dll --filter "Name~InstallAndRunTests"
+ADB_TARGET='-s emulator-5554' ./dotnet-local.sh test --test-modules bin/TestDebug/MSBuildDeviceIntegration/${TFM}/MSBuildDeviceIntegration.dll --filter "Name~InstallAndRunTests"
 ```
 
-CI runs these assemblies with Microsoft Testing Platform, and splits them across jobs with
-`build-tools/automation/scripts/RunSlicedTests.cs`:
+CI runs these assemblies with Microsoft Testing Platform. `build-tools/automation/yaml-templates/run-mstest-tests.yaml` splits them across jobs: it lists the tests with `--list-tests json`, takes every N-th test UID for its slice, and runs them with `--filter-uid`. To run a single slice locally the same way:
 ```bash
-./bin/Debug/dotnet/dotnet run build-tools/automation/scripts/RunSlicedTests.cs -- \
-  --test-assembly bin/TestDebug/${TFM}/Xamarin.Android.Build.Tests.dll --results-directory bin/TestDebug/TestResults \
-  --filter "FullyQualifiedName~BuildTest2" --slice 1 --total-slices 4
+dotnet bin/TestDebug/${TFM}/Xamarin.Android.Build.Tests.dll --list-tests json --filter "FullyQualifiedName~BuildTest2"
+dotnet bin/TestDebug/${TFM}/Xamarin.Android.Build.Tests.dll --filter-uid <uid> [<uid> ...]
 ```
 
 ### On-device runtime tests (native MSTest/MTP, full-build + device)

@@ -1,4 +1,4 @@
-using NUnit.Framework;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -9,9 +9,8 @@ using System.IO.Compression;
 
 namespace Xamarin.Android.Build.Tests
 {
-	[TestFixture (AndroidRuntime.CoreCLR)]
-	[TestFixture (AndroidRuntime.NativeAOT)]
-	[Category ("XamarinBuildDownload")]
+	[TestClass]
+	[TestCategory ("XamarinBuildDownload")]
 	public class BundleToolTests : DeviceTest
 	{
 		static readonly string [] Abis = ["arm64-v8a", "x86_64"];
@@ -20,7 +19,7 @@ namespace Xamarin.Android.Build.Tests
 		ProjectBuilder libBuilder, appBuilder;
 		string intermediate;
 		string bin;
-		readonly AndroidRuntime runtime;
+		AndroidRuntime runtime;
 
 		// Disable split by language
 		const string BuildConfig = @"{
@@ -41,21 +40,20 @@ namespace Xamarin.Android.Build.Tests
 	}
 }";
 
-		public BundleToolTests (AndroidRuntime runtime)
+		// Keep these checks in one case so CI slicing cannot repeat the project builds.
+		[TestMethod]
+		[TestCategory ("UsesDevice")]
+		[DataRow (AndroidRuntime.CoreCLR)]
+		[DataRow (AndroidRuntime.NativeAOT)]
+		public void BundleArtifacts (AndroidRuntime runtime)
 		{
 			this.runtime = runtime;
-		}
-
-		// Keep these checks in one case so CI slicing cannot repeat the project builds.
-		[Test, Category ("UsesDevice")]
-		public void BundleArtifacts ()
-		{
 			const bool isRelease = true;
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
 				return;
 			}
 
-			var path = Path.Combine ("temp", $"{TestName}{runtime}");
+			var path = Path.Combine ("temp", TestName);
 			lib = new XamarinAndroidLibraryProject {
 				ProjectName = "Localization",
 				IsRelease = isRelease,
@@ -107,19 +105,16 @@ namespace Xamarin.Android.Build.Tests
 			intermediate = Path.Combine (projectDir, app.IntermediateOutputPath);
 			bin = Path.Combine (projectDir, app.OutputPath);
 
-			Assert.Multiple (() => {
-				CheckBaseZip ();
-				CheckAppBundle ();
-				CheckAppBundleSigned ();
-				CheckApkSet ();
-			});
+			CheckBaseZip ();
+			CheckAppBundle ();
+			CheckAppBundleSigned ();
+			CheckApkSet ();
 		}
 
-		[TearDown]
+		[TestCleanup]
 		public void TearDown ()
 		{
-			var status = TestContext.CurrentContext.Result.Outcome.Status;
-			if (status == NUnit.Framework.Interfaces.TestStatus.Failed) {
+			if (TestContext.CurrentTestOutcome == UnitTestOutcome.Failed) {
 				if (libBuilder != null)
 					libBuilder.CleanupOnDispose = false;
 				if (appBuilder != null)
@@ -187,7 +182,7 @@ namespace Xamarin.Android.Build.Tests
 		void CheckAppBundle ()
 		{
 			var aab = Path.Combine (intermediate, "android", "bin", $"{app.PackageName}.aab");
-			FileAssert.Exists (aab);
+			Assert.IsTrue (File.Exists (aab));
 			var contents = ListArchiveContents (aab, usesAssembliesBlob: runtime == AndroidRuntime.CoreCLR);
 			var expectedFiles = new List<string> {
 				"base/dex/classes.dex",
@@ -237,7 +232,7 @@ namespace Xamarin.Android.Build.Tests
 		void CheckAppBundleSigned ()
 		{
 			var aab = Path.Combine (bin, $"{app.PackageName}-Signed.aab");
-			FileAssert.Exists (aab);
+			Assert.IsTrue (File.Exists (aab));
 			var contents = ListArchiveContents (aab, usesAssembliesBlob: false);
 			Assert.IsTrue (StringAssertEx.ContainsText (contents, "META-INF/MANIFEST.MF"), $"{aab} is not signed!");
 		}
@@ -248,7 +243,7 @@ namespace Xamarin.Android.Build.Tests
 			Assert.IsTrue (appBuilder.RunTarget (app, "Install"), "App should have installed.");
 
 			var aab = Path.Combine (intermediate, "android", "bin", $"{app.PackageName}.apks");
-			FileAssert.Exists (aab);
+			Assert.IsTrue (File.Exists (aab));
 			// Expecting: splits/base-arm64_v8a.apk, splits/base-master.apk, splits/base-xxxhdpi.apk
 			// This are split up based on: abi, base, and dpi
 			var contents = ListArchiveContents (aab, usesAssembliesBlob: false).Where (a => a.EndsWith (".apk", StringComparison.OrdinalIgnoreCase)).ToArray ();

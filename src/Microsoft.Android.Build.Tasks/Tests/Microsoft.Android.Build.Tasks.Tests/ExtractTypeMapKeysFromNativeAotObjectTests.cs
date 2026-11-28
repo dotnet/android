@@ -6,26 +6,26 @@ using System.Text.Json;
 using System.Threading.Tasks;
 using Microsoft.Android.Tasks;
 using Microsoft.Build.Framework;
-using NUnit.Framework;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 using TaskItem = Microsoft.Build.Utilities.TaskItem;
 
 namespace Xamarin.Android.Build.Tests;
 
-[TestFixture]
-[Parallelizable (ParallelScope.Children)]
+[TestClass]
 public class ExtractTypeMapKeysFromNativeAotObjectTests : BaseTest
 {
 	const string JavaGroup = "_ZTV29Mono_Android_Java_Lang_Object";
 
-	[TestCase ("Mono_Android_Android_Runtime_JavaDictionary")]
-	[TestCase ("Mono_Android_Java_Lang_ObjectExtra")]
-	[TestCase ("ThirdParty_TypeMap___TypeMapAnchor")]
-	[TestCase ("_Other_TypeMap___TypeMapAnchorExtra")]
-	[TestCase ("Mono_Android_0_Android_Runtime_JavaDictionary")]
-	[TestCase ("Mono_Android_x_Java_Lang_Object")]
-	[TestCase ("Mono_Android_01_Java_Lang_Object")]
-	[TestCase ("_Owner_TypeMap_x___TypeMapAnchor")]
-	[TestCase ("_Owner_TypeMap_0___TypeMapAnchorExtra")]
+	[TestMethod]
+	[DataRow ("Mono_Android_Android_Runtime_JavaDictionary")]
+	[DataRow ("Mono_Android_Java_Lang_ObjectExtra")]
+	[DataRow ("ThirdParty_TypeMap___TypeMapAnchor")]
+	[DataRow ("_Other_TypeMap___TypeMapAnchorExtra")]
+	[DataRow ("Mono_Android_0_Android_Runtime_JavaDictionary")]
+	[DataRow ("Mono_Android_x_Java_Lang_Object")]
+	[DataRow ("Mono_Android_01_Java_Lang_Object")]
+	[DataRow ("_Owner_TypeMap_x___TypeMapAnchor")]
+	[DataRow ("_Owner_TypeMap_0___TypeMapAnchorExtra")]
 	public void MissingRecognizedJavaGroupIsNotAnEmptySuccess (string typeName)
 	{
 		var fixture = CreateFixture ();
@@ -40,12 +40,13 @@ public class ExtractTypeMapKeysFromNativeAotObjectTests : BaseTest
 		Assert.IsFalse (File.Exists (fixture.OutputFile), "Non-Java groups must not produce an empty key file.");
 	}
 
-	[TestCase ("Mono_Android_0_Java_Lang_Object")]
-	[TestCase ("Mono_Android_12_Java_Lang_Object")]
-	[TestCase ("_Owner_TypeMap_0___TypeMapAnchor")]
-	[TestCase ("_Owner_TypeMap_12___TypeMapAnchor")]
-	[TestCase ("Mono_Android_0_Java_Lang_Object_1")]
-	[TestCase ("_Owner_TypeMap_12___TypeMapAnchor_0")]
+	[TestMethod]
+	[DataRow ("Mono_Android_0_Java_Lang_Object")]
+	[DataRow ("Mono_Android_12_Java_Lang_Object")]
+	[DataRow ("_Owner_TypeMap_0___TypeMapAnchor")]
+	[DataRow ("_Owner_TypeMap_12___TypeMapAnchor")]
+	[DataRow ("Mono_Android_0_Java_Lang_Object_1")]
+	[DataRow ("_Owner_TypeMap_12___TypeMapAnchor_0")]
 	public void DisambiguatedJavaGroupRetainsKeys (string typeName)
 	{
 		var fixture = CreateFixture ();
@@ -57,13 +58,14 @@ public class ExtractTypeMapKeysFromNativeAotObjectTests : BaseTest
 		Assert.AreEqual ("test/Live\n", File.ReadAllText (fixture.OutputFile));
 	}
 
-	[TestCase ("", TestName = "MalformedToolJsonFailsWithFileContext_Empty")]
-	[TestCase ("not JSON", TestName = "MalformedToolJsonFailsWithFileContext_InvalidJson")]
-	[TestCase ("{}", TestName = "MalformedToolJsonFailsWithFileContext_Object")]
-	[TestCase ("[]", TestName = "MalformedToolJsonFailsWithFileContext_EmptyArray")]
-	[TestCase ("[{},{}]", TestName = "MalformedToolJsonFailsWithFileContext_MultipleObjects")]
-	[TestCase ("[null]", TestName = "MalformedToolJsonFailsWithFileContext_Null")]
-	[TestCase ("[{}]", TestName = "MalformedToolJsonFailsWithFileContext_MissingMetadata")]
+	[TestMethod]
+	[DataRow ("", DisplayName = "MalformedToolJsonFailsWithFileContext_Empty")]
+	[DataRow ("not JSON", DisplayName = "MalformedToolJsonFailsWithFileContext_InvalidJson")]
+	[DataRow ("{}", DisplayName = "MalformedToolJsonFailsWithFileContext_Object")]
+	[DataRow ("[]", DisplayName = "MalformedToolJsonFailsWithFileContext_EmptyArray")]
+	[DataRow ("[{},{}]", DisplayName = "MalformedToolJsonFailsWithFileContext_MultipleObjects")]
+	[DataRow ("[null]", DisplayName = "MalformedToolJsonFailsWithFileContext_Null")]
+	[DataRow ("[{}]", DisplayName = "MalformedToolJsonFailsWithFileContext_MissingMetadata")]
 	public void MalformedToolJsonFailsWithFileContext (string json)
 	{
 		var fixture = CreateFixture ();
@@ -78,7 +80,7 @@ public class ExtractTypeMapKeysFromNativeAotObjectTests : BaseTest
 		Assert.IsFalse (File.Exists (fixture.OutputFile), "Invalid tool output must not produce a partial key file.");
 	}
 
-	[Test]
+	[TestMethod]
 	public void OutputWriteFailurePreservesExistingOutputAndRemovesTemporaryFile ()
 	{
 		var fixture = CreateFixture ();
@@ -90,16 +92,17 @@ public class ExtractTypeMapKeysFromNativeAotObjectTests : BaseTest
 		Assert.IsFalse (task.Execute ());
 		AssertCodedError (errors, fixture.OutputFile, "Could not finish writing output.");
 		Assert.AreEqual ("test/Live\n", File.ReadAllText (fixture.OutputFile));
-		Assert.That (task.PartialOutputFile, Is.Not.Null.And.Not.EqualTo (fixture.OutputFile));
+		Assert.IsNotNull (task.PartialOutputFile);
+		Assert.AreNotEqual (fixture.OutputFile, task.PartialOutputFile);
 		Assert.IsFalse (File.Exists (task.PartialOutputFile));
 		Assert.IsEmpty (Directory.GetFiles (fixture.OutputDirectory, "*.tmp"));
 	}
 
-	[Test]
+	[TestMethod]
 	public async Task ObjdumpStreamsOutputBeforeProcessExit ()
 	{
 		if (OperatingSystem.IsWindows ()) {
-			Assert.Ignore ("The fake llvm-objdump is a shell script.");
+			Assert.Inconclusive ("The fake llvm-objdump is a shell script.");
 			return;
 		}
 
@@ -138,7 +141,7 @@ public class ExtractTypeMapKeysFromNativeAotObjectTests : BaseTest
 			throw new InvalidOperationException ("RunObjdumpAsync did not return a task.");
 		}
 		await run;
-		Assert.That (stdout.ToString (), Is.EqualTo ("symbol output\n"));
+		Assert.AreEqual ("symbol output\n", stdout.ToString ());
 	}
 
 	sealed class SignalingWriter (string signalFile) : StringWriter
@@ -154,11 +157,11 @@ public class ExtractTypeMapKeysFromNativeAotObjectTests : BaseTest
 
 	static void AssertCodedError (IList<BuildErrorEventArgs> errors, string file, string? reason = null)
 	{
-		Assert.That (errors, Has.Count.EqualTo (1));
-		Assert.That (errors [0].Code, Is.EqualTo ("XA4327"));
-		StringAssert.Contains (file, errors [0].Message);
+		Assert.HasCount (1, errors);
+		Assert.AreEqual ("XA4327", errors [0].Code);
+		Assert.Contains (file, errors [0].Message);
 		if (reason != null) {
-			StringAssert.Contains (reason, errors [0].Message);
+			Assert.Contains (reason, errors [0].Message);
 		}
 	}
 
@@ -211,7 +214,7 @@ public class ExtractTypeMapKeysFromNativeAotObjectTests : BaseTest
 		{
 			var errors = new List<BuildErrorEventArgs> ();
 			return (new MetadataTask {
-				BuildEngine = new MockBuildEngine (TestContext.Out, errors),
+				BuildEngine = new MockBuildEngine (Console.Out, errors),
 				NativeObjectFiles = [new TaskItem (ObjectFile)],
 				LlvmReadObjPath = toolPath,
 				OutputFile = OutputFile,

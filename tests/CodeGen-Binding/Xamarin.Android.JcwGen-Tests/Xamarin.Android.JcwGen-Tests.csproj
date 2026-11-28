@@ -30,7 +30,6 @@
     <TestingPlatformBuilderHook Remove="98058041-B5B6-4A75-9834-58E6DF796A22" />
     <Compile Include="../../Mono.Android-Tests/Java.Interop-Tests/Java.Interop/JniReferenceLeakMeasurement.cs" Link="JniReferenceLeakMeasurement.cs" />
     <AndroidJavaSource Include="../Xamarin.Android.McwGen-Tests/java/**/*.java" />
-    <Compile Remove="TimingTests.cs" />
     <AndroidLibrary Include="../Xamarin.Android.McwGen-Tests/Jars/KotlinUnsignedTypes.jar" />
     <EmbeddedResource Include="../PrecompiledThresholdConsumer/LegacyThresholdConsumer.dll"
         LogicalName="Xamarin.Android.JcwGenTests.LegacyThresholdConsumer.dll" />
@@ -46,7 +45,7 @@
     <TrimmerRootDescriptor Include="Linker.xml" />
     <RuntimeHostConfigurationOption Include="IncludeCategories" Value="$(IncludeCategories)" Condition=" '$(IncludeCategories)' != '' " />
     <!-- Retained until exact rootless NativeAOT execution is possible: JavaAbstractMethodTest
-         already aborts in ic.NewMethod() with both the original NUnit and native MSTest runners. -->
+         aborts in ic.NewMethod() under NativeAOT. -->
     <TrimmerRootAssembly Include="$(AssemblyName)" RootMode="All" />
   </ItemGroup>
 

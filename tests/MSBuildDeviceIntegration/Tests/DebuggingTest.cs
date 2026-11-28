@@ -4,7 +4,8 @@ using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Net;
-using NUnit.Framework;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Microsoft.VisualStudio.TestTools.UnitTesting.Combinatorial;
 using Xamarin.ProjectTools;
 using System.Collections.Generic;
 using Microsoft.Build.Framework;
@@ -13,8 +14,8 @@ using Xamarin.Android.Tools;
 
 namespace Xamarin.Android.Build.Tests
 {
-	[TestFixture]
-	[Category ("UsesDevice")]
+	[TestClass]
+	[TestCategory ("UsesDevice")]
 	public class DebuggingTest : DeviceTest
 	{
 		const int DEBUGGER_MAX_CONNECTIONS = 100;
@@ -45,7 +46,7 @@ namespace Xamarin.Android.Build.Tests
 			return -1;
 		}
 
-		static IEnumerable<TestCaseData> ApplicationRunsWithoutDebuggerCases ()
+		static IEnumerable<object []> ApplicationRunsWithoutDebuggerCases ()
 		{
 			foreach (var configuration in BaseTest.ValidRuntimeConfigurations) {
 				foreach (var extractNativeLibs in new [] { false, true }) {
@@ -54,20 +55,21 @@ namespace Xamarin.Android.Build.Tests
 						if (configuration.isRelease && configuration.runtime == AndroidRuntime.CoreCLR && useEmbeddedDex) {
 							continue;
 						}
-						yield return new TestCaseData (configuration, extractNativeLibs, useEmbeddedDex);
+						yield return [configuration, extractNativeLibs, useEmbeddedDex];
 					}
 				}
 			}
 		}
 
-		[TestCaseSource (nameof (ApplicationRunsWithoutDebuggerCases))]
+		[TestMethod]
+		[DynamicData (nameof (ApplicationRunsWithoutDebuggerCases))]
 		public void ApplicationRunsWithoutDebugger ((bool isRelease, AndroidRuntime runtime) configuration, bool extractNativeLibs, bool useEmbeddedDex)
 		{
 			var (isRelease, runtime) = configuration;
 
 			if (runtime == AndroidRuntime.NativeAOT) {
 				// TODO: Xamarin.Forms startup cannot find the ResourcesProvider constructor under NativeAOT.
-				Assert.Ignore ("NativeAOT Xamarin.Forms startup throws MissingMethodException.");
+				Assert.Inconclusive ("NativeAOT Xamarin.Forms startup throws MissingMethodException.");
 			}
 
 			SwitchUser ();
@@ -88,19 +90,20 @@ namespace Xamarin.Android.Build.Tests
 			using (var b = CreateApkBuilder ()) {
 				SetTargetFrameworkAndManifest (proj, b, null);
 				proj.AndroidManifest = proj.AndroidManifest.Replace ("<application ", $"<application android:extractNativeLibs=\"{extractNativeLibs.ToString ().ToLowerInvariant ()}\" android:useEmbeddedDex=\"{useEmbeddedDex.ToString ().ToLowerInvariant ()}\" ");
-				Assert.True (b.Install (proj), "Project should have installed.");
+				Assert.IsTrue (b.Install (proj), "Project should have installed.");
 				var manifest = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath, "android", "AndroidManifest.xml");
 				AssertExtractNativeLibs (manifest, extractNativeLibs);
 				RunProjectAndAssert (proj, b);
-				Assert.True (WaitForActivityToStart (proj.PackageName, "MainActivity",
+				Assert.IsTrue (WaitForActivityToStart (proj.PackageName, "MainActivity",
 					Path.Combine (Root, b.ProjectDirectory, "logcat.log"), ActivityStartTimeoutInSeconds), "Activity should have started.");
 				b.BuildLogFile = "uninstall.log";
-				Assert.True (b.Uninstall (proj), "Project should have uninstalled.");
+				Assert.IsTrue (b.Uninstall (proj), "Project should have uninstalled.");
 			}
 		}
 
-		[Test]
-		public void ClassLibraryMainLauncherRuns ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
+		[TestMethod]
+		[CombinatorialData]
+		public void ClassLibraryMainLauncherRuns ([CombinatorialValues (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			bool isRelease = runtime == AndroidRuntime.NativeAOT;
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
@@ -148,9 +151,9 @@ namespace Xamarin.Android.Build.Tests
 			using (var appBuilder = CreateApkBuilder (Path.Combine (path, app.ProjectName))) {
 				SetTargetFrameworkAndManifest (app, appBuilder, null);
 				Assert.IsTrue (libBuilder.Build (lib), "library build should have succeeded.");
-				Assert.True (appBuilder.Install (app), "app should have installed.");
+				Assert.IsTrue (appBuilder.Install (app), "app should have installed.");
 				RunProjectAndAssert (app, appBuilder);
-				Assert.True (WaitForActivityToStart (app.PackageName, "MainActivity",
+				Assert.IsTrue (WaitForActivityToStart (app.PackageName, "MainActivity",
 					Path.Combine (Root, appBuilder.ProjectDirectory, "logcat.log"), ActivityStartTimeoutInSeconds), "Activity should have started.");
 			}
 		}

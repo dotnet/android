@@ -1,9 +1,9 @@
 using System;
-using NUnit.Framework;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace generatortests
 {
-	[TestFixture]
+	[TestClassAttribute]
 	public class Interfaces : BaseGeneratorTest
 	{
 		public Interfaces ()
@@ -14,7 +14,7 @@ namespace generatortests
 		}
 
 
-		[Test]
+		[TestMethodAttribute]
 		public void Generated_OK ()
 		{
 			RunTarget (

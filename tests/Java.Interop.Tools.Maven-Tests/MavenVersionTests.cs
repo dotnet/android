@@ -1,11 +1,13 @@
+using System.Globalization;
 using System.Linq;
 using Java.Interop.Tools.Maven.Models;
 
 namespace Java.Interop.Tools.Maven_Tests;
 
+[TestClass]
 public class MavenVersionTests
 {
-	[Test]
+	[TestMethod]
 	public void ParseTest ()
 	{
 		TestParse ("", null, null, null, false);
@@ -27,7 +29,7 @@ public class MavenVersionTests
 		TestParse ("A-B.2.3", "A-B", "2", "3", false);
 	}
 
-	[Test]
+	[TestMethod]
 	public void SortTest ()
 	{
 		// Normal versions
@@ -52,16 +54,21 @@ public class MavenVersionTests
 		TestSort ("1.0.1.0,1.0.10.1,1.0.10.2,1.0.9.3", "1.0.9.3", "1.0.10.1", "1.0.1.0", "1.0.10.2");
 	}
 
-	[Test]
-	[SetCulture ("tr-TR")]
+	[TestMethod]
 	public void QualifierComparisonsUseOrdinalOrdering ()
 	{
-		Assert.Less (MavenVersion.Parse ("1.0-RC").CompareTo (MavenVersion.Parse ("1.0-rc")), 0);
-		Assert.Less (MavenVersion.Parse ("1.0.0.1-I").CompareTo (MavenVersion.Parse ("1.0.0.1-i")), 0);
-		Assert.Less (MavenVersion.Parse ("1.0-I").CompareTo (MavenVersion.Parse ("1.0-a")), 0);
+		var culture = CultureInfo.CurrentCulture;
+		try {
+			CultureInfo.CurrentCulture = CultureInfo.GetCultureInfo ("tr-TR");
+			Assert.IsLessThan (0, MavenVersion.Parse ("1.0-RC").CompareTo (MavenVersion.Parse ("1.0-rc")));
+			Assert.IsLessThan (0, MavenVersion.Parse ("1.0.0.1-I").CompareTo (MavenVersion.Parse ("1.0.0.1-i")));
+			Assert.IsLessThan (0, MavenVersion.Parse ("1.0-I").CompareTo (MavenVersion.Parse ("1.0-a")));
 
-		var range = MavenVersionRange.Parse ("[1.0-I,1.0-a]").Single ();
-		Assert.IsTrue (range.ContainsVersion (MavenVersion.Parse ("1.0-Z")));
+			var range = MavenVersionRange.Parse ("[1.0-I,1.0-a]").Single ();
+			Assert.IsTrue (range.ContainsVersion (MavenVersion.Parse ("1.0-Z")));
+		} finally {
+			CultureInfo.CurrentCulture = culture;
+		}
 	}
 
 	static void TestParse (string input, string? major, string? minor, string? patch, bool isValid)

@@ -8,16 +8,17 @@ using System.Reflection.PortableExecutable;
 
 using Microsoft.Android.Sdk.TrimmableTypeMap;
 
-using NUnit.Framework;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Xamarin.Android.Build.Tests;
 
-[TestFixture]
+[TestClass]
+[DoNotParallelize]
 public class TrimmableTypeMapValueTypeTests
 {
 	// A Kotlin value-class struct gets only a typemap entry, trimmed with the struct,
 	// so the typemap-based R8 rules keep the Kotlin class only when the struct is used.
-	[Test]
+	[TestMethod]
 	public void RegisteredValueTypeGetsOnlyATypeMapEntry ()
 	{
 		using var assembly = CreateRegisteredValueTypeAssembly ();

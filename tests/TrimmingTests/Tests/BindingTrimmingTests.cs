@@ -1,15 +1,16 @@
 #nullable enable
-using NUnit.Framework;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Microsoft.VisualStudio.TestTools.UnitTesting.Combinatorial;
 
 namespace Microsoft.Android.TrimmingTests;
 
-[TestFixture]
-[Category ("UsesDevice")]
-[Parallelizable (ParallelScope.Children)]
+[TestClass]
+[TestCategory ("UsesDevice")]
 public class BindingTrimmingTests : TrimmingTestBase
 {
 	// The app launches, builds without warnings, and only the bindings it uses survive trimming.
-	[Test]
+	[TestMethod]
+	[CombinatorialData]
 	public void UnusedBindingsAreRemovedWithoutWarnings ([TrimmingConfigurations] TrimmingConfiguration configuration)
 	{
 		var app = BuildAndRun ("Cases/UnusedBindings.cs", configuration);
@@ -17,7 +18,8 @@ public class BindingTrimmingTests : TrimmingTestBase
 	}
 
 	// Java calls back into a managed click listener on a TextView; the binding members the app uses are kept, the rest are removed.
-	[Test]
+	[TestMethod]
+	[CombinatorialData]
 	public void UsedBindingMembersAreKeptWithoutWarnings ([TrimmingConfigurations] TrimmingConfiguration configuration)
 	{
 		var app = BuildAndRun ("Cases/UsedBindings.cs", configuration);
@@ -25,7 +27,8 @@ public class BindingTrimmingTests : TrimmingTestBase
 	}
 
 	// A Java exception is activated as its bound type; unrelated exception bindings are removed.
-	[Test]
+	[TestMethod]
+	[CombinatorialData]
 	public void JavaExceptionIsActivatedAsBoundTypeWithoutWarnings ([TrimmingConfigurations] TrimmingConfiguration configuration)
 	{
 		var app = BuildAndRun ("Cases/JavaExceptions.cs", configuration);
@@ -33,7 +36,8 @@ public class BindingTrimmingTests : TrimmingTestBase
 	}
 
 	// Java-implemented interfaces are activated as their invokers; only the invoker members the app calls are kept.
-	[Test]
+	[TestMethod]
+	[CombinatorialData]
 	public void InterfaceInvokersKeepOnlyUsedMembersWithoutWarnings ([TrimmingConfigurations] TrimmingConfiguration configuration)
 	{
 		var app = BuildAndRun ("Cases/JavaInterfaceInvokers.cs", configuration);
@@ -41,7 +45,8 @@ public class BindingTrimmingTests : TrimmingTestBase
 	}
 
 	// A java.lang.Integer returned as java.lang.Object is activated as Java.Lang.Integer; unused members are removed.
-	[Test]
+	[TestMethod]
+	[CombinatorialData]
 	public void JavaObjectIsActivatedAsMostDerivedBindingWithoutWarnings ([TrimmingConfigurations] TrimmingConfiguration configuration)
 	{
 		var app = BuildAndRun ("Cases/JavaObjectActivation.cs", configuration);
@@ -49,7 +54,8 @@ public class BindingTrimmingTests : TrimmingTestBase
 	}
 
 	// An app that never converts Java boxed values does not keep JavaConvert or the Java.Lang boxing bindings.
-	[Test]
+	[TestMethod]
+	[CombinatorialData]
 	[Ignore ("https://github.com/dotnet/android/issues/13635: every app keeps JavaConvert and the Java.Lang boxing bindings.")]
 	public void UnusedBoxingBindingsAreRemovedWithoutWarnings ([TrimmingConfigurations] TrimmingConfiguration configuration)
 	{
@@ -58,7 +64,8 @@ public class BindingTrimmingTests : TrimmingTestBase
 	}
 
 	// Reading Context.CacheDir keeps only the activation constructor of Java.IO.File, not all of its constructors.
-	[Test]
+	[TestMethod]
+	[CombinatorialData]
 	[Ignore ("https://github.com/dotnet/android/issues/13649: GetObject<T> keeps every constructor of every bound return type.")]
 	public void BoundReturnTypesKeepOnlyTheActivationConstructorWithoutWarnings ([TrimmingConfigurations] TrimmingConfiguration configuration)
 	{
@@ -67,7 +74,8 @@ public class BindingTrimmingTests : TrimmingTestBase
 	}
 
 	// AndroidMessageHandler's authentication modules are removed when PreAuthenticationData is never set.
-	[Test]
+	[TestMethod]
+	[CombinatorialData]
 	public void UnusedAuthenticationModulesAreRemovedWithoutWarnings ([TrimmingConfigurations] TrimmingConfiguration configuration)
 	{
 		var app = BuildAndRun ("Cases/AndroidMessageHandlerAuthModules.cs", configuration);
@@ -75,7 +83,8 @@ public class BindingTrimmingTests : TrimmingTestBase
 	}
 
 	// NativeAOT compiles only the JavaDictionary<TKey,TValue> value-type instantiations the app uses.
-	[Test]
+	[TestMethod]
+	[CombinatorialData]
 	public void UnusedValueTypeDictionariesAreNotCompiledWithoutWarnings ([TrimmingConfigurations] TrimmingConfiguration configuration)
 	{
 		var app = BuildAndRun ("Cases/ValueTypeDictionaryInstantiations.cs", configuration);

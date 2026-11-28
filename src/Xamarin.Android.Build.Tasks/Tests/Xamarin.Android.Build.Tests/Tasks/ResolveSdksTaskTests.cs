@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
-using NUnit.Framework;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Microsoft.VisualStudio.TestTools.UnitTesting.Combinatorial;
 using System.IO;
 using System.Linq;
 using System.Security;
@@ -17,12 +18,10 @@ using Microsoft.Build.Execution;
 
 namespace Xamarin.Android.Build.Tests {
 
-	[TestFixture]
-	[NonParallelizable] // NOTE: This test was hanging without this
+	[TestClass]
+	[DoNotParallelize] // NOTE: This test was hanging without this
+	[NoClassCleanup]
 	public class ResolveSdksTaskTests : BaseTest {
-		// These tests do not use adb; do not stop the shared server during host-only checks.
-		protected override void AfterAllTests () { }
-
 		static ApiInfo [] apiInfoSelection = new ApiInfo [] {
 			new ApiInfo () { Id = "35", Level = 35, Name = "Android15", FrameworkVersion = "v15.0", Stable = true },
 			new ApiInfo () { Id = "36", Level = 36, Name = "Android16", FrameworkVersion = "v16.0", Stable = true },
@@ -33,7 +32,7 @@ namespace Xamarin.Android.Build.Tests {
 		const   string  MinimumSupportedJavaVersion     = "1.6.0";
 		const   string  LatestSupportedJavaVersion      = "11.0.99";
 
-		[Test]
+		[TestMethod]
 		public void ResolveSdksUsesProjectPaths ()
 		{
 			var path = Path.Combine ("temp", TestName);
@@ -83,12 +82,13 @@ namespace Xamarin.Android.Build.Tests {
 			}
 		}
 
-		[TestCase (false)]
-		[TestCase (true)]
+		[TestMethod]
+		[DataRow (false)]
+		[DataRow (true)]
 		public void ResolveSdksUsesEngineEnvironment (bool multithreaded)
 		{
 			var directory = Path.Combine (Root, "temp", TestName);
-			TestOutputDirectories [TestContext.CurrentContext.Test.ID] = directory;
+			TestOutputDirectories [TestId] = directory;
 			var resources = new List<ProjectResource> ();
 			var assembly = SecurityElement.Escape (Path.Combine (TestEnvironment.AndroidMSBuildDirectory, "Xamarin.Android.Build.Tasks.dll"));
 			foreach (var name in new [] { "first", "second" }) {
@@ -147,9 +147,10 @@ namespace Xamarin.Android.Build.Tests {
 			}
 		}
 
-		[TestCase (false)]
-		[TestCase (true)]
-		[Platform ("Win")]
+		[TestMethod]
+		[DataRow (false)]
+		[DataRow (true)]
+		[OSCondition (OperatingSystems.Windows)]
 		public void ResolveSdksEnvironmentPreservesMissingToolErrors (bool missingSdk)
 		{
 			var path   = Path.Combine ("temp", TestName);
@@ -161,7 +162,7 @@ namespace Xamarin.Android.Build.Tests {
 				foreach (var file in Directory.GetFiles (Path.Combine (jdk, "bin")))
 					File.Move (file, Path.ChangeExtension (file, ".DISCOVERY"));
 				var task = new ResolveSdks {
-					BuildEngine = new MockBuildEngine (TestContext.Out, errors),
+					BuildEngine = new MockBuildEngine (Console.Out, errors),
 					TaskEnvironment = TaskEnvironment.CreateWithProjectDirectoryAndEnvironment (
 						Path.Combine (Root, path), new Dictionary<string, string> {
 							["PATHEXT"] = ".DISCOVERY",
@@ -174,19 +175,20 @@ namespace Xamarin.Android.Build.Tests {
 				};
 				Assert.IsFalse (task.Execute ());
 				Assert.AreEqual ("XA5300", errors.Single ().Code);
-				StringAssert.Contains (missingSdk ? "Android SDK" : "Java SDK", errors [0].Message);
+				Assert.Contains (missingSdk ? "Android SDK" : "Java SDK", errors [0].Message);
 			} finally {
 				Directory.Delete (Path.Combine (Root, path), recursive: true);
 			}
 		}
 
-		[TestCase ("36.0.0", "35.0", "35", "35")]
-		[TestCase ("36.0.0", "36.0", "36", "36")]
-		[TestCase ("36.0.0", "36.1", "36.1", "36.1")]
-		[TestCase ("37.0.0", "37.0", "37", "Preview")]
-		[TestCase ("36.0.0", null, "36", "36")]
-		[TestCase ("36.0.0", "", "36", "36")]
-		[TestCase ("36.0.0", "invalid", "36", "36")]
+		[TestMethod]
+		[DataRow ("36.0.0", "35.0", "35", "35")]
+		[DataRow ("36.0.0", "36.0", "36", "36")]
+		[DataRow ("36.0.0", "36.1", "36.1", "36.1")]
+		[DataRow ("37.0.0", "37.0", "37", "Preview")]
+		[DataRow ("36.0.0", null, "36", "36")]
+		[DataRow ("36.0.0", "", "36", "36")]
+		[DataRow ("36.0.0", "invalid", "36", "36")]
 		public void ResolveAndroidToolingTest (string buildtools, string targetPlatformVersion, string expectedApiLevel, string expectedApiLevelName)
 		{
 			var path = Path.Combine ("temp", "ResolveAndroidToolingTest_" + Guid.NewGuid ());
@@ -197,7 +199,7 @@ namespace Xamarin.Android.Build.Tests {
 			var javaPath = CreateFauxJavaSdkDirectory (Path.Combine (path, "jdk"), "21.0.8", out javaExe, out javacExe);
 			var referencePath = CreateFauxReferencesDirectory (Path.Combine (path, "references"), apiInfoSelection);
 			var errors = new List<BuildErrorEventArgs> ();
-			IBuildEngine engine = new MockBuildEngine (TestContext.Out, errors);
+			IBuildEngine engine = new MockBuildEngine (Console.Out, errors);
 			var resolveSdks = new ResolveSdks {
 				BuildEngine = engine,
 				AndroidSdkPath = androidSdkPath,
@@ -230,8 +232,9 @@ namespace Xamarin.Android.Build.Tests {
 			}
 		}
 
-		[TestCase (false)]
-		[TestCase (true)]
+		[TestMethod]
+		[DataRow (false)]
+		[DataRow (true)]
 		public void ResolveSdkOutputs (bool discoverJava)
 		{
 			var path = Path.Combine ("temp", TestName);
@@ -245,7 +248,7 @@ namespace Xamarin.Android.Build.Tests {
 				new ApiInfo () { Id = "27", Level = 27, Name = "Oreo", FrameworkVersion = "v8.1", Stable = true },
 			});
 			var messages = new List<BuildMessageEventArgs> ();
-			IBuildEngine engine = new MockBuildEngine (TestContext.Out, messages: messages);
+			IBuildEngine engine = new MockBuildEngine (Console.Out, messages: messages);
 			var resolveSdks = new ResolveSdks {
 				BuildEngine = engine,
 				TaskEnvironment = discoverJava ? TaskEnvironment.CreateWithProjectDirectoryAndEnvironment (
@@ -271,30 +274,30 @@ namespace Xamarin.Android.Build.Tests {
 			};
 			Assert.IsTrue (resolveSdks.Execute (), "ResolveSdks should succeed!");
 			Assert.IsTrue (androidTooling.Execute (), "ResolveAndroidTooling should succeed!");
-			Assert.AreEqual (androidTooling.AndroidApiLevel, "26", "AndroidApiLevel should be 26");
+			Assert.AreEqual ("26", androidTooling.AndroidApiLevel, "AndroidApiLevel should be 26");
 			Assert.AreEqual ("26.0", androidTooling.TargetPlatformVersion, "TargetPlatformVersion should be unchanged");
-			Assert.AreEqual (androidTooling.AndroidApiLevelName, "26", "AndroidApiLevelName should be 26");
-			Assert.NotNull (resolveSdks.ReferenceAssemblyPaths, "ReferenceAssemblyPaths should not be null.");
-			Assert.AreEqual (resolveSdks.ReferenceAssemblyPaths.Length, 1, "ReferenceAssemblyPaths should have 1 entry.");
-			Assert.AreEqual (resolveSdks.ReferenceAssemblyPaths[0], Path.Combine (referencePath, "MonoAndroid"), $"ReferenceAssemblyPaths should be {Path.Combine (referencePath, "MonoAndroid")}.");
+			Assert.AreEqual ("26", androidTooling.AndroidApiLevelName, "AndroidApiLevelName should be 26");
+			Assert.IsNotNull (resolveSdks.ReferenceAssemblyPaths, "ReferenceAssemblyPaths should not be null.");
+			Assert.AreEqual (1, resolveSdks.ReferenceAssemblyPaths.Length, "ReferenceAssemblyPaths should have 1 entry.");
+			Assert.AreEqual (Path.Combine (referencePath, "MonoAndroid"), resolveSdks.ReferenceAssemblyPaths[0], $"ReferenceAssemblyPaths should be {Path.Combine (referencePath, "MonoAndroid")}.");
 			var expected = Path.GetDirectoryName (GetType ().Assembly.Location);
-			Assert.AreEqual (resolveSdks.MonoAndroidToolsPath, expected, $"MonoAndroidToolsPath should be {expected}");
+			Assert.AreEqual (expected, resolveSdks.MonoAndroidToolsPath, $"MonoAndroidToolsPath should be {expected}");
 			expected += Path.DirectorySeparatorChar;
 			if (resolveSdks.MonoAndroidBinPath != expected) {
 				//For non-Windows platforms, remove a directory such as "Darwin", MonoAndroidBinPath also has a trailing /
 				var binPath = Path.GetDirectoryName (Path.GetDirectoryName (resolveSdks.MonoAndroidBinPath)) + Path.DirectorySeparatorChar;
-				Assert.AreEqual (binPath, expected, $"MonoAndroidBinPath should be {expected}");
+				Assert.AreEqual (expected, binPath, $"MonoAndroidBinPath should be {expected}");
 			}
-			Assert.AreEqual (resolveSdks.AndroidSdkPath, androidSdkPath, $"AndroidSdkPath should be {androidSdkPath}");
-			Assert.AreEqual (resolveSdks.AndroidNdkPath, androidNdkPath, $"AndroidNdkPath should be {androidNdkPath}");
-			Assert.AreEqual (resolveSdks.JavaSdkPath, javaPath, $"JavaSdkPath should be {javaPath}");
+			Assert.AreEqual (androidSdkPath, resolveSdks.AndroidSdkPath, $"AndroidSdkPath should be {androidSdkPath}");
+			Assert.AreEqual (androidNdkPath, resolveSdks.AndroidNdkPath, $"AndroidNdkPath should be {androidNdkPath}");
+			Assert.AreEqual (javaPath, resolveSdks.JavaSdkPath, $"JavaSdkPath should be {javaPath}");
 			expected = Path.Combine (androidSdkPath, "build-tools", "26.0.3");
-			Assert.AreEqual (androidTooling.AndroidSdkBuildToolsPath, expected, $"AndroidSdkBuildToolsPath should be {expected}");
-			Assert.AreEqual (androidTooling.AndroidSdkBuildToolsBinPath, expected, "AndroidSdkBuildToolsBinPath should be {expected}");
-			Assert.AreEqual (androidTooling.ZipAlignPath, expected, "ZipAlignPath should be {expected}");
+			Assert.AreEqual (expected, androidTooling.AndroidSdkBuildToolsPath, $"AndroidSdkBuildToolsPath should be {expected}");
+			Assert.AreEqual (expected, androidTooling.AndroidSdkBuildToolsBinPath, "AndroidSdkBuildToolsBinPath should be {expected}");
+			Assert.AreEqual (expected, androidTooling.ZipAlignPath, "ZipAlignPath should be {expected}");
 			expected = Path.Combine (androidSdkPath, "build-tools", "26.0.3", "lib", "apksigner.jar");
-			Assert.AreEqual (androidTooling.ApkSignerJar, expected, $"ApkSignerJar should be {expected}");
-			Assert.AreEqual (androidTooling.AndroidUseApkSigner, false, "AndroidUseApkSigner should be false");
+			Assert.AreEqual (expected, androidTooling.ApkSignerJar, $"ApkSignerJar should be {expected}");
+			Assert.IsFalse (androidTooling.AndroidUseApkSigner, "AndroidUseApkSigner should be false");
 			Assert.IsFalse (messages.Any (m => m.Message == "ResolveSdks Outputs:" ||
 				m.Message == "ResolveAndroidTooling Outputs:" ||
 				m.Message.StartsWith ("  AndroidSdkPath:", StringComparison.Ordinal) ||
@@ -304,12 +307,12 @@ namespace Xamarin.Android.Build.Tests {
 			Directory.Delete (Path.Combine (Root, path), recursive: true);
 		}
 
-		[Test]
+		[TestMethod]
 		public void ResolveAndroidToolingCachesAapt2Version ()
 		{
 			var path = Path.Combine ("temp", TestName);
 			var messages = new List<BuildMessageEventArgs> ();
-			var engine = new MockBuildEngine (TestContext.Out, messages: messages);
+			var engine = new MockBuildEngine (Console.Out, messages: messages);
 			try {
 				for (int project = 0; project < 2; project++) {
 					var projectPath = Path.Combine (path, $"project-{project}");
@@ -359,7 +362,7 @@ namespace Xamarin.Android.Build.Tests {
 			}
 		}
 
-		[Test]
+		[TestMethod]
 		public void ResolveAndroidToolingRejectsMissingAapt2Override ()
 		{
 			var path = Path.Combine ("temp", TestName);
@@ -368,24 +371,24 @@ namespace Xamarin.Android.Build.Tests {
 			var aapt2Path = Path.Combine (sdkPath, "missing-aapt2");
 			try {
 				var tooling = new ResolveAndroidTooling {
-					BuildEngine = new MockBuildEngine (TestContext.Out, errors),
+					BuildEngine = new MockBuildEngine (Console.Out, errors),
 					AndroidSdkPath = sdkPath,
 					TargetPlatformVersion = "36.0",
 					Aapt2ToolPath = aapt2Path,
 				};
 				Assert.IsFalse (tooling.Execute ());
 				Assert.AreEqual ("XA0112", errors.Single ().Code);
-				StringAssert.Contains (aapt2Path, errors [0].Message);
+				Assert.Contains (aapt2Path, errors [0].Message);
 			} finally {
 				Directory.Delete (Path.Combine (Root, path), recursive: true);
 			}
 		}
 
-		[Test]
-		[TestCase (false, false)]
-		[TestCase (false, true)]
-		[TestCase (true, false)]
-		[TestCase (true, true)]
+		[TestMethod]
+		[DataRow (false, false)]
+		[DataRow (false, true)]
+		[DataRow (true, false)]
+		[DataRow (true, true)]
 		public void ResolvedToolingInputsEscapeApostrophes (bool tooling, bool changed)
 		{
 			var file = tooling ? Path.Combine ("Microsoft.Android.Sdk", "targets", "Microsoft.Android.Sdk.Tooling.targets") : "Xamarin.Android.Tooling.targets";
@@ -430,7 +433,7 @@ namespace Xamarin.Android.Build.Tests {
 					$"{i.EvaluatedInclude}={i.GetMetadataValue ("EscapedValue")} vs {i.GetMetadataValue ("EscapedOuterValue")}")));
 		}
 
-		[Test]
+		[TestMethod]
 		public void SupportedVersionsAreIsolatedAcrossConcurrentTasks ()
 		{
 			var path = Path.Combine ("temp", TestName);
@@ -487,12 +490,13 @@ namespace Xamarin.Android.Build.Tests {
 			}
 		}
 
-		[TestCase (false)]
-		[TestCase (true)]
+		[TestMethod]
+		[DataRow (false)]
+		[DataRow (true)]
 		public void GetAndroidActivityNameUsesProjectPaths (bool multithreaded)
 		{
 			var directory = Path.Combine (Root, "temp", TestName);
-			TestOutputDirectories [TestContext.CurrentContext.Test.ID] = directory;
+			TestOutputDirectories [TestId] = directory;
 			var resources = new List<ProjectResource> ();
 			foreach (var name in new [] { "first", "second" }) {
 				CreateFauxReferencesDirectory (Path.Combine ("temp", TestName, name, "references"), apiInfoSelection);
@@ -537,8 +541,8 @@ namespace Xamarin.Android.Build.Tests {
 				string.Join (Environment.NewLine, dotnet.LastBuildOutput) + File.ReadAllText (dotnet.ProcessLogFile));
 		}
 
-		[Test]
-		[Platform ("Win")]
+		[TestMethod]
+		[OSCondition (OperatingSystems.Windows)]
 		public void SupportedVersionsPreserveDriveRelativePaths ()
 		{
 			var path = Path.Combine (Path.GetTempPath (), Path.GetRandomFileName ());
@@ -546,7 +550,7 @@ namespace Xamarin.Android.Build.Tests {
 				var references = CreateFauxReferencesDirectory (path, apiInfoSelection);
 				var drive = Path.GetPathRoot (references).Substring (0, 2);
 				var relativePath = drive + Path.GetRelativePath (Path.GetFullPath (drive), references);
-				var engine = new MockBuildEngine (TestContext.Out);
+				var engine = new MockBuildEngine (Console.Out);
 				Assert.AreSame (
 					MonoAndroidHelper.GetSupportedVersions (engine, [references]),
 					MonoAndroidHelper.GetSupportedVersions (engine, [relativePath]));
@@ -555,13 +559,14 @@ namespace Xamarin.Android.Build.Tests {
 			}
 		}
 
-		[TestCase (false)]
-		[TestCase (true)]
+		[TestMethod]
+		[DataRow (false)]
+		[DataRow (true)]
 		public void GetJavaPlatformJarMissingPlatform (bool designTimeBuild)
 		{
 			var errors = new List<BuildErrorEventArgs> ();
 			var task = new GetJavaPlatformJar {
-				BuildEngine = new MockBuildEngine (TestContext.Out, errors),
+				BuildEngine = new MockBuildEngine (Console.Out, errors),
 				TaskEnvironment = TaskEnvironment.CreateWithProjectDirectoryAndEnvironment (Root, new Dictionary<string, string> ()),
 				AndroidSdkDirectory = Path.Combine ("temp", TestName, "missing-sdk"),
 				AndroidApiLevel = "36",
@@ -573,13 +578,13 @@ namespace Xamarin.Android.Build.Tests {
 			Assert.AreEqual ("36", task.TargetSdkVersion);
 			if (!designTimeBuild) {
 				Assert.AreEqual ("XA5207", errors.Single ().Code);
-				StringAssert.Contains (Path.Combine (Root, task.AndroidSdkDirectory), errors [0].Message);
+				Assert.Contains (Path.Combine (Root, task.AndroidSdkDirectory), errors [0].Message);
 			} else {
 				Assert.IsEmpty (errors);
 			}
 		}
 
-		[Test]
+		[TestMethod]
 		public void GetJavaPlatformJarMalformedManifestUsesProjectDirectory ()
 		{
 			var path = Path.Combine (Root, "temp", TestName);
@@ -589,7 +594,7 @@ namespace Xamarin.Android.Build.Tests {
 			var errors = new List<BuildErrorEventArgs> ();
 			try {
 				var task = new GetJavaPlatformJar {
-					BuildEngine = new MockBuildEngine (TestContext.Out, errors),
+					BuildEngine = new MockBuildEngine (Console.Out, errors),
 					TaskEnvironment = TaskEnvironment.CreateWithProjectDirectoryAndEnvironment (path, new Dictionary<string, string> ()),
 					AndroidManifest = "AndroidManifest.xml",
 					AndroidApiLevel = "36",
@@ -602,17 +607,18 @@ namespace Xamarin.Android.Build.Tests {
 			}
 		}
 
-		[TestCase (null, "XA5300")]
-		[TestCase ("", "XA5300")]
-		[TestCase ("missing", "XA5300")]
-		[TestCase ("empty", "XA5205")]
+		[TestMethod]
+		[DataRow (null, "XA5300")]
+		[DataRow ("", "XA5300")]
+		[DataRow ("missing", "XA5300")]
+		[DataRow ("empty", "XA5205")]
 		public void ResolveAndroidToolingWithMissingSdkDoesNotThrow (string sdkPath, string expectedError)
 		{
 			var path = Path.Combine (Root, "temp", TestName);
 			Directory.CreateDirectory (path);
 			var errors = new List<BuildErrorEventArgs> ();
 			try {
-				IBuildEngine engine = new MockBuildEngine (TestContext.Out, errors);
+				IBuildEngine engine = new MockBuildEngine (Console.Out, errors);
 				var androidTooling = new ResolveAndroidTooling {
 					BuildEngine = engine,
 					AndroidSdkPath = sdkPath == "empty" ? path : sdkPath == "missing" ? Path.Combine (path, "missing") : sdkPath,
@@ -629,8 +635,9 @@ namespace Xamarin.Android.Build.Tests {
 			}
 		}
 
-		[Test]
-		public void ResolveSdksReturnsAbsolutePaths ([Values (false, true)] bool discoverNdk)
+		[TestMethod]
+		[CombinatorialData]
+		public void ResolveSdksReturnsAbsolutePaths ([CombinatorialValues (false, true)] bool discoverNdk)
 		{
 			var path = Path.Combine ("temp", TestName);
 			var sdkPath = CreateFauxAndroidSdkDirectory (Path.Combine (path, "android-sdk"), "37.0.0");
@@ -639,7 +646,7 @@ namespace Xamarin.Android.Build.Tests {
 			try {
 				File.WriteAllText (Path.Combine (ndkPath, "source.properties"), "Pkg.Revision = 21.0.6113669");
 				var resolveSdks = new ResolveSdks {
-					BuildEngine = new MockBuildEngine (TestContext.Out),
+					BuildEngine = new MockBuildEngine (Console.Out),
 					AndroidSdkPath = Path.GetRelativePath (Environment.CurrentDirectory, sdkPath),
 					AndroidNdkPath = discoverNdk ? null : Path.GetRelativePath (Environment.CurrentDirectory, ndkPath),
 					JavaSdkPath = Path.GetRelativePath (Environment.CurrentDirectory, javaPath),
@@ -655,12 +662,12 @@ namespace Xamarin.Android.Build.Tests {
 			}
 		}
 
-		[Test]
+		[TestMethod]
 		public void ReadAndroidManifestUsesProjectDirectories ()
 		{
 			var path = Path.Combine ("temp", TestName);
 			var warnings = new List<BuildWarningEventArgs> ();
-			var engine = new MockBuildEngine (TestContext.Out, warnings: warnings);
+			var engine = new MockBuildEngine (Console.Out, warnings: warnings);
 			try {
 				for (int i = 0; i < 2; i++) {
 					var projectPath = Path.Combine (path, $"project-{i}");
@@ -707,21 +714,21 @@ namespace Xamarin.Android.Build.Tests {
 					Assert.AreEqual (manifestFile, warning.File);
 					Assert.AreEqual (0, warning.LineNumber);
 					Assert.AreEqual (0, warning.ColumnNumber);
-					StringAssert.Contains (Path.Combine (optionalPath, "missing-required.jar"), warning.Message);
+					Assert.Contains (Path.Combine (optionalPath, "missing-required.jar"), warning.Message);
 				}
 			} finally {
 				Directory.Delete (Path.Combine (Root, path), recursive: true);
 			}
 		}
 
-		[Test]
+		[TestMethod]
 		public void SdkConsumersUseExplicitPaths ()
 		{
 			var path = Path.Combine ("temp", TestName);
 			var firstSdk = CreateFauxAndroidSdkDirectory (Path.Combine (path, "first-sdk"), "37.0.0", [new ApiInfo { Id = "37" }]);
 			var secondSdk = CreateFauxAndroidSdkDirectory (Path.Combine (path, "second-sdk"), "36.0.0", [new ApiInfo { Id = "37" }]);
 			var javaPath = CreateFauxJavaSdkDirectory (Path.Combine (path, "jdk"), "1.8.0", out _, out _);
-			var engine = new MockBuildEngine (TestContext.Out);
+			var engine = new MockBuildEngine (Console.Out);
 			var resolveSdks = new ResolveSdks {
 				BuildEngine = engine,
 				AndroidSdkPath = firstSdk,
@@ -777,13 +784,14 @@ namespace Xamarin.Android.Build.Tests {
 			}
 		}
 
-		[TestCase (null, "XA5300")]
-		[TestCase ("", "XA5300")]
-		[TestCase ("missing", "XA5207")]
+		[TestMethod]
+		[DataRow (null, "XA5300")]
+		[DataRow ("", "XA5300")]
+		[DataRow ("missing", "XA5207")]
 		public void PlatformJarWithMissingSdkDoesNotThrow (string sdkPath, string expectedError)
 		{
 			var errors = new List<BuildErrorEventArgs> ();
-			var engine = new MockBuildEngine (TestContext.Out, errors);
+			var engine = new MockBuildEngine (Console.Out, errors);
 			var platform = new GetJavaPlatformJar {
 				BuildEngine = engine,
 				AndroidSdkDirectory = sdkPath == "missing" ? Path.Combine (Root, "temp", TestName, "missing-sdk") : sdkPath,

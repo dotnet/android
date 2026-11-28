@@ -1,23 +1,23 @@
 using System;
 using System.Linq;
 using Java.Interop.Tools.JavaTypeSystem.Models;
-using NUnit.Framework;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Java.Interop.Tools.JavaTypeSystem.Tests
 {
-	[TestFixture]
+	[TestClass]
 	public class GenericInheritanceMappingTests
 	{
-		JavaTypeCollection api;
+		static JavaTypeCollection api;
 
-		[OneTimeSetUp]
-		public void SetupFixture ()
+		[ClassInitialize]
+		public static void SetupFixture (TestContext context)
 		{
 			api = JavaApiTestHelper.GetLoadedApi ();
 			api.ResolveCollection ();
 		}
 
-		[Test]
+		[TestMethod]
 		public void GenericInheritanceMappings ()
 		{
 			var obj = api.FindType ("java.lang.Object") as JavaClassModel;
@@ -45,7 +45,7 @@ namespace Java.Interop.Tools.JavaTypeSystem.Tests
 			Assert.AreEqual ("android.database.ContentObserver", mapped.ReferencedType.FullName, "unexpected resolved type");
 		}
 
-		[Test]
+		[TestMethod]
 		public void GenericDerivation ()
 		{
 			var dic = api.FindType ("java.util.Dictionary") as JavaClassModel;
@@ -72,7 +72,7 @@ namespace Java.Interop.Tools.JavaTypeSystem.Tests
 			Assert.AreEqual ("java.lang.Object", props.GenericInheritanceMapping [v].ReferencedType.FullName, "Properties: mapping for K is not to java.lang.Object.");
 		}
 
-		[Test]
+		[TestMethod]
 		public void NonGenericDerivation ()
 		{
 			var viewGroup = api.FindType ("android.view.ViewGroup") as JavaClassModel;

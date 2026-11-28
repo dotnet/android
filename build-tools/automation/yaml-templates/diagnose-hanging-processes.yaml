@@ -24,10 +24,6 @@ steps:
     ps aux | grep -i java || echo "No Java processes found"
     echo ""
     echo "=========================================="
-    echo "nunit processes:"
-    ps aux | grep -i nunit || echo "No nunit processes found"
-    echo ""
-    echo "=========================================="
     echo "Process tree:"
     pstree -p $$ 2>/dev/null || echo "pstree not available"
     echo ""
@@ -87,11 +83,6 @@ steps:
     Write-Host "Java processes:"
     Get-Process -Name java* -ErrorAction SilentlyContinue | Format-Table -AutoSize
     if (-not $?) { Write-Host "No Java processes found" }
-    Write-Host ""
-    Write-Host "=========================================="
-    Write-Host "nunit processes:"
-    Get-Process -Name *nunit* -ErrorAction SilentlyContinue | Format-Table -AutoSize
-    if (-not $?) { Write-Host "No nunit processes found" }
     Write-Host ""
     Write-Host "=========================================="
     Write-Host "Network connections (ESTABLISHED):"

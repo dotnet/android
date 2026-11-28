@@ -4,4 +4,3 @@ last=DOTNET-timing:\s+(?<message>.*)$
 # measure time of runtime and JNIEnv initialization end
 init=DOTNET-timing:\s+(?<message>Runtime\.init: end native-to-managed.*)$
 JNI.init=DOTNET-timing:\s+(?<message>JNIEnv\.Initialize end;.*)$
-NUnit.results=NUnitLite: Passed:

@@ -2,14 +2,16 @@ using System;
 using System.Linq;
 using System.Xml.Linq;
 using Java.Interop.Tools.Generator;
-using NUnit.Framework;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+#pragma warning disable MSTESTEXP // Preserve grouped assertions with the native preview API.
 
 namespace generatortests
 {
-	[TestFixture]
+	[TestClassAttribute]
 	public class FixupXmlDocumentTests
 	{
-		[Test]
+		[TestMethodAttribute]
 		public void RemoveNode ()
 		{
 			var api = GetXmlApiDocument ();
@@ -20,7 +22,7 @@ namespace generatortests
 			Assert.AreEqual ("<api><package name='java' jni-name='java' /></api>", api.ApiDocument.ToString (SaveOptions.DisableFormatting).Replace ('\"', '\''));
 		}
 
-		[Test]
+		[TestMethodAttribute]
 		public void AddNode ()
 		{
 			var api = GetXmlApiDocument ();
@@ -31,7 +33,7 @@ namespace generatortests
 			Assert.AreEqual ("<api><package name='android' jni-name='android' /><package name='java' jni-name='java' /><package name='new-package' /></api>", api.ApiDocument.ToString (SaveOptions.DisableFormatting).Replace ('\"', '\''));
 		}
 
-		[Test]
+		[TestMethodAttribute]
 		public void AddNode_PreservesJniOverrides ()
 		{
 			var api = GetXmlApiDocument ();
@@ -44,7 +46,7 @@ namespace generatortests
 			Assert.AreEqual ("Ljava/lang/Object;", method.Element ("parameter").Attribute ("managed-jni-type").Value);
 		}
 
-		[Test]
+		[TestMethodAttribute]
 		public void AddNode_GenericJniTypeUsesErasedMethodSignature ()
 		{
 			var api = GetXmlApiDocument ();
@@ -53,13 +55,13 @@ namespace generatortests
 			api.ApplyFixupFile (fixup);
 
 			var method = api.ApiDocument.Root.Element ("package").Element ("method");
-			Assert.Multiple (() => {
+			using (Assert.Scope ()) {
 				Assert.AreEqual ("(Ljava/lang/Object;)V", method.Attribute ("managed-jni-signature").Value);
 				Assert.IsNull (method.Element ("parameter").Attribute ("managed-jni-type"));
-			});
+			}
 		}
 
-		[Test]
+		[TestMethodAttribute]
 		public void AddNode_DoesNotPreserveConstructorJniType ()
 		{
 			var api = GetXmlApiDocument ();
@@ -71,7 +73,7 @@ namespace generatortests
 			Assert.IsNull (constructor.Element ("parameter").Attribute ("managed-jni-type"));
 		}
 
-		[Test]
+		[TestMethodAttribute]
 		public void AddNode_ParameterTransformInvalidatesJniOverrides ()
 		{
 			var api = GetXmlApiDocument ();
@@ -82,13 +84,13 @@ namespace generatortests
 			api.ApplyFixupFile (fixup);
 
 			var method = api.ApiDocument.Root.Element ("package").Element ("method");
-			Assert.Multiple (() => {
+			using (Assert.Scope ()) {
 				Assert.IsNull (method.Attribute ("managed-jni-signature"));
 				Assert.IsNull (method.Element ("parameter").Attribute ("managed-jni-type"));
-			});
+			}
 		}
 
-		[Test]
+		[TestMethodAttribute]
 		public void AddNode_ReturnTransformInvalidatesJniOverride ()
 		{
 			var api = GetXmlApiDocument ();
@@ -102,7 +104,7 @@ namespace generatortests
 			Assert.IsNull (method.Attribute ("managed-jni-signature"));
 		}
 
-		[Test]
+		[TestMethodAttribute]
 		public void AddNode_EnumTransformsPreserveJniOverrides ()
 		{
 			var api = GetXmlApiDocument ();
@@ -114,14 +116,14 @@ namespace generatortests
 			api.ApplyFixupFile (fixup);
 
 			var method = api.ApiDocument.Root.Element ("package").Element ("method");
-			Assert.Multiple (() => {
+			using (Assert.Scope ()) {
 				Assert.AreEqual ("(Lexample/Listener;I)I", method.Attribute ("managed-jni-signature").Value);
 				Assert.AreEqual ("Lexample/Listener;", method.Elements ("parameter").First ().Attribute ("managed-jni-type").Value);
 				Assert.AreEqual ("I", method.Elements ("parameter").Last ().Attribute ("managed-jni-type").Value);
-			});
+			}
 		}
 
-		[Test]
+		[TestMethodAttribute]
 		public void AddNode_ParameterInvalidatesJniSignatureOverride ()
 		{
 			var api = GetXmlApiDocument ();
@@ -136,7 +138,7 @@ namespace generatortests
 			Assert.AreEqual ("Ljava/lang/String;", method.Elements ("parameter").First ().Attribute ("managed-jni-type").Value);
 		}
 
-		[Test]
+		[TestMethodAttribute]
 		public void AddNode_DirectParameterPreservesJniTypeOverride ()
 		{
 			var api = GetXmlApiDocument ();
@@ -147,13 +149,13 @@ namespace generatortests
 			api.ApplyFixupFile (fixup);
 
 			var method = api.ApiDocument.Root.Element ("package").Element ("method");
-			Assert.Multiple (() => {
+			using (Assert.Scope ()) {
 				Assert.IsNull (method.Attribute ("managed-jni-signature"));
 				Assert.AreEqual ("Ljava/lang/Object;", method.Element ("parameter").Attribute ("managed-jni-type").Value);
-			});
+			}
 		}
 
-		[Test]
+		[TestMethodAttribute]
 		public void RemoveNode_ParameterInvalidatesJniSignatureOverride ()
 		{
 			var api = GetXmlApiDocument ();
@@ -168,7 +170,7 @@ namespace generatortests
 			Assert.AreEqual ("Ljava/lang/String;", method.Element ("parameter").Attribute ("managed-jni-type").Value);
 		}
 
-		[Test]
+		[TestMethodAttribute]
 		public void AddNode_DoesNotPreserveEmptyJniOverrides ()
 		{
 			var api = GetXmlApiDocument ();
@@ -177,13 +179,13 @@ namespace generatortests
 			api.ApplyFixupFile (fixup);
 
 			var method = api.ApiDocument.Root.Element ("package").Element ("method");
-			Assert.Multiple (() => {
+			using (Assert.Scope ()) {
 				Assert.IsNull (method.Attribute ("managed-jni-signature"));
 				Assert.IsNull (method.Element ("parameter").Attribute ("managed-jni-type"));
-			});
+			}
 		}
 
-		[Test]
+		[TestMethodAttribute]
 		public void ChangeNode ()
 		{
 			var api = GetXmlApiDocument ();
@@ -194,7 +196,7 @@ namespace generatortests
 			Assert.AreEqual ("<api><method name='android' jni-name='android' /><package name='java' jni-name='java' /></api>", api.ApiDocument.ToString (SaveOptions.DisableFormatting).Replace ('\"', '\''));
 		}
 
-		[Test]
+		[TestMethodAttribute]
 		public void ChangeNode_ParameterInvalidatesJniSignatureOverride ()
 		{
 			var api = GetXmlApiDocument ();
@@ -208,7 +210,7 @@ namespace generatortests
 			Assert.IsNull (method.Attribute ("managed-jni-signature"));
 		}
 
-		[Test]
+		[TestMethodAttribute]
 		public void MoveNode ()
 		{
 			var api = GetXmlApiDocument ();
@@ -219,7 +221,7 @@ namespace generatortests
 			Assert.AreEqual ("<api><package name='android' jni-name='android'><package name='java' jni-name='java' /></package></api>", api.ApiDocument.ToString (SaveOptions.DisableFormatting).Replace ('\"', '\''));
 		}
 
-		[Test]
+		[TestMethodAttribute]
 		public void MoveNode_ParameterInvalidatesJniSignatureOverrides ()
 		{
 			var api = GetXmlApiDocument ();
@@ -230,14 +232,14 @@ namespace generatortests
 			api.ApplyFixupFile (fixup);
 
 			var methods = api.ApiDocument.Root.Element ("package").Elements ("method").ToArray ();
-			Assert.Multiple (() => {
+			using (Assert.Scope ()) {
 				Assert.IsNull (methods [0].Attribute ("managed-jni-signature"));
 				Assert.IsNull (methods [1].Attribute ("managed-jni-signature"));
 				Assert.AreEqual ("I", methods [1].Element ("parameter").Attribute ("managed-jni-type").Value);
-			});
+			}
 		}
 
-		[Test]
+		[TestMethodAttribute]
 		public void SetNewAttribute ()
 		{
 			var api = GetXmlApiDocument ();
@@ -248,7 +250,7 @@ namespace generatortests
 			Assert.AreEqual ("<api><package name='android' jni-name='android' new-attr='true' /><package name='java' jni-name='java' /></api>", api.ApiDocument.ToString (SaveOptions.DisableFormatting).Replace ('\"', '\''));
 		}
 
-		[Test]
+		[TestMethodAttribute]
 		public void ChangeAttribute ()
 		{
 			var api = GetXmlApiDocument ();
@@ -259,7 +261,7 @@ namespace generatortests
 			Assert.AreEqual ("<api><package name='android2' jni-name='android' /><package name='java' jni-name='java' /></api>", api.ApiDocument.ToString (SaveOptions.DisableFormatting).Replace ('\"', '\''));
 		}
 
-		[Test]
+		[TestMethodAttribute]
 		public void RemoveAttribute ()
 		{
 			var api = GetXmlApiDocument ();
@@ -270,7 +272,7 @@ namespace generatortests
 			Assert.AreEqual ("<api><package jni-name='android' /><package name='java' jni-name='java' /></api>", api.ApiDocument.ToString (SaveOptions.DisableFormatting).Replace ('\"', '\''));
 		}
 
-		[Test]
+		[TestMethodAttribute]
 		public void RemoveNotFoundAttribute ()
 		{
 			// Attribute 'foo' doesn't exist on node
@@ -282,7 +284,7 @@ namespace generatortests
 			Assert.AreEqual ("<api><package name='android' jni-name='android' /><package name='java' jni-name='java' /></api>", api.ApiDocument.ToString (SaveOptions.DisableFormatting).Replace ('\"', '\''));
 		}
 
-		[Test]
+		[TestMethodAttribute]
 		public void ParseNamespaceTransforms ()
 		{
 			var fixup = GetFixupXmlDocument ("<ns-replace source='androidx' replacement='AndroidX' /><ns-replace source='com.google' replacement='Xamarin' />");

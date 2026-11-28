@@ -6,16 +6,16 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Xml.Linq;
 using MonoDroid.Generation;
-using NUnit.Framework;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 using Java.Interop.Tools.Generator;
 
 namespace generatortests
 {
-	[TestFixture]
+	[TestClassAttribute]
 	public class EnumMappingsTests
 	{
-		[Test]
+		[TestMethodAttribute]
 		public void BasicEnumificationTest ()
 		{
 			// This should create a new enum and remove the field
@@ -35,7 +35,7 @@ namespace generatortests
 			Assert.AreEqual ("[Cdsect, 5]", enums.First ().Value.Members.Single ().ToString ());
 		}
 
-		[Test]
+		[TestMethodAttribute]
 		public void RemoveFieldOnlyTest ()
 		{
 			// This should only remove the field
@@ -51,7 +51,7 @@ namespace generatortests
 			Assert.AreEqual (0, enums.Count);
 		}
 
-		[Test]
+		[TestMethodAttribute]
 		public void AddConstantOnlyTest ()
 		{
 			// This should only add an enum
@@ -71,7 +71,7 @@ namespace generatortests
 			Assert.AreEqual ("[Cdsect, 5]", enums.First ().Value.Members.Single ().ToString ());
 		}
 
-		[Test]
+		[TestMethodAttribute]
 		public void FlagsEnumerationTest ()
 		{
 			// This should create a new enum with [Flags] because of the ",Flags" field
@@ -85,7 +85,7 @@ namespace generatortests
 			Assert.AreEqual (true, enums.Single ().Value.BitField);
 		}
 
-		[Test]
+		[TestMethodAttribute]
 		public void ExternalFlagsEnumerationTest ()
 		{
 			// This should create a new enum with [Flags] because of the "enumFlags" parameter
@@ -99,7 +99,7 @@ namespace generatortests
 			Assert.AreEqual (true, enums.Single ().Value.BitField);
 		}
 
-		[Test]
+		[TestMethodAttribute]
 		public void ApiVersionExcludedTest ()
 		{
 			// This should be completely ignored because it's API=10 and we're looking for API=5
@@ -114,7 +114,7 @@ namespace generatortests
 			Assert.AreEqual (0, enums.Count);
 		}
 
-		[Test]
+		[TestMethodAttribute]
 		public void TransientEnumificationTest ()
 		{
 			// This should create a new enum and remove the field
@@ -134,7 +134,7 @@ namespace generatortests
 			Assert.AreEqual ("[Cdsect, 5]", enums.First ().Value.Members.Single ().ToString ());
 		}
 
-		[Test]
+		[TestMethodAttribute]
 		public void TransientRemoveFieldOnlyTest ()
 		{
 			// Transient has no effect here
@@ -150,7 +150,7 @@ namespace generatortests
 			Assert.AreEqual (0, enums.Count);
 		}
 
-		[Test]
+		[TestMethodAttribute]
 		public void TransientAddConstantOnlyTest ()
 		{
 			// This should only add an enum
@@ -169,7 +169,7 @@ namespace generatortests
 			Assert.AreEqual ("", enums.First ().Value.Members.Single ().JavaSignature);
 			Assert.AreEqual ("[Cdsect, 5]", enums.First ().Value.Members.Single ().ToString ());
 		}
-		[Test]
+		[TestMethodAttribute]
 		public void BasicEnumificationV2Test ()
 		{
 			// This should create a new enum and remove the field
@@ -189,7 +189,7 @@ namespace generatortests
 			Assert.AreEqual ("[Cdsect, 5]", enums.First ().Value.Members.Single ().ToString ());
 		}
 
-		[Test]
+		[TestMethodAttribute]
 		public void RemoveFieldOnlyV2Test ()
 		{
 			// This should only remove the field
@@ -205,7 +205,7 @@ namespace generatortests
 			Assert.AreEqual (0, enums.Count);
 		}
 
-		[Test]
+		[TestMethodAttribute]
 		public void AddConstantOnlyV2Test ()
 		{
 			// This should only add an enum
@@ -225,7 +225,7 @@ namespace generatortests
 			Assert.AreEqual ("[Cdsect, 5]", enums.First ().Value.Members.Single ().ToString ());
 		}
 
-		[Test]
+		[TestMethodAttribute]
 		public void FlagsEnumerationV2Test ()
 		{
 			// This should create a new enum with [Flags] because of the ",Flags" field
@@ -239,7 +239,7 @@ namespace generatortests
 			Assert.AreEqual (true, enums.Single ().Value.BitField);
 		}
 
-		[Test]
+		[TestMethodAttribute]
 		public void ExternalFlagsEnumerationV2Test ()
 		{
 			// This should create a new enum with [Flags] because of the "enumFlags" parameter
@@ -253,7 +253,7 @@ namespace generatortests
 			Assert.AreEqual (true, enums.Single ().Value.BitField);
 		}
 
-		[Test]
+		[TestMethodAttribute]
 		public void ApiVersionExcludedV2Test ()
 		{
 			// This should be completely ignored because it's API=10 and we're looking for API=5
@@ -268,7 +268,7 @@ namespace generatortests
 			Assert.AreEqual (0, enums.Count);
 		}
 
-		[Test]
+		[TestMethodAttribute]
 		public void TransientEnumificationV2Test ()
 		{
 			// This should create a new enum and remove the field
@@ -288,7 +288,7 @@ namespace generatortests
 			Assert.AreEqual ("[Cdsect, 5]", enums.First ().Value.Members.Single ().ToString ());
 		}
 
-		[Test]
+		[TestMethodAttribute]
 		public void XmlEnumMapWithJNI ()
 		{
 			var xml = @"<enum-field-mappings>
@@ -309,10 +309,10 @@ namespace generatortests
 				"0, Android.Support.V4.App.FragmentTagType, Tag, android/support/v4/app/FragmentActivity$FragmentTag.Fragment_tag, 2"
 			};
 
-			Assert.AreEqual (expected, lines);
+			CollectionAssert.AreEqual (expected, lines);
 		}
 
-		[Test]
+		[TestMethodAttribute]
 		public void XmlEnumMapWithInterfaceJNI ()
 		{
 			var xml = @"<enum-field-mappings>
@@ -333,10 +333,10 @@ namespace generatortests
 				"0, Android.Support.V4.App.FragmentTagType, Tag, I:android/support/v4/app/FragmentActivity$FragmentTag.Fragment_tag, 2, Flags"
 			};
 
-			Assert.AreEqual (expected, lines);
+			CollectionAssert.AreEqual (expected, lines);
 		}
 
-		[Test]
+		[TestMethodAttribute]
 		public void XmlEnumMapWithoutJNI ()
 		{
 			var xml = @"<enum-field-mappings>
@@ -357,10 +357,10 @@ namespace generatortests
 				"0, Android.Support.V4.App.FragmentTagType, Tag, , 2, Flags"
 			};
 
-			Assert.AreEqual (expected, lines);
+			CollectionAssert.AreEqual (expected, lines);
 		}
 
-		[Test]
+		[TestMethodAttribute]
 		public void XmlEnumMapWithMixedJNI ()
 		{
 			var xml = @"<enum-field-mappings>
@@ -381,7 +381,7 @@ namespace generatortests
 				"0, Android.Support.V4.App.FragmentTagType, Tag, , 2, Flags"
 			};
 
-			Assert.AreEqual (expected, lines);
+			CollectionAssert.AreEqual (expected, lines);
 		}
 	}
 }

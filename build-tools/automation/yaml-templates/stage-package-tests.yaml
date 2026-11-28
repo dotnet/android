@@ -193,7 +193,7 @@ stages:
         artifactSource: bin/Test$(XA.Build.Configuration)/$(DotNetTargetFramework)-android/Xamarin.Android.JcwGen_Tests-Signed.apk
         artifactFolder: $(DotNetTargetFramework)-Default
 
-    - template: /build-tools/automation/yaml-templates/run-nunit-tests.yaml
+    - template: /build-tools/automation/yaml-templates/run-mstest-tests.yaml
       parameters:
         testRunTitle: Xamarin.Android.Tools.Aidl-Tests - macOS
         testAssembly: $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/$(DotNetStableTargetFramework)/Xamarin.Android.Tools.Aidl-Tests.dll

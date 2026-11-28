@@ -8,28 +8,29 @@ using System.Linq;
 using Microsoft.Android.Tasks;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
-using NUnit.Framework;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Xamarin.Android.Build.Tests.Tasks
 {
-	[TestFixture]
+	[TestClass]
+	[DoNotParallelize]
 	public class GetAssetPacksTests : BaseTest
 	{
-		[Test]
-		[SetCulture ("en-US")]
-		public void GroupsAssetsByAssetPack_en_US ()
+		[TestMethod]
+		[DataRow ("en-US")]
+		[DataRow ("fa-IR")]
+		public void GroupsAssetsByAssetPack (string cultureName)
 		{
-			GroupsAssetsByAssetPack ();
+			var culture = CultureInfo.CurrentCulture;
+			try {
+				CultureInfo.CurrentCulture = CultureInfo.GetCultureInfo (cultureName);
+				AssertGroupsAssetsByAssetPack ();
+			} finally {
+				CultureInfo.CurrentCulture = culture;
+			}
 		}
 
-		[Test]
-		[SetCulture ("fa-IR")]
-		public void GroupsAssetsByAssetPack_fa_IR ()
-		{
-			GroupsAssetsByAssetPack ();
-		}
-
-		void GroupsAssetsByAssetPack ()
+		void AssertGroupsAssetsByAssetPack ()
 		{
 			var dir = Path.Combine (Root, "temp", TestName);
 			Directory.CreateDirectory (dir);
@@ -40,7 +41,7 @@ namespace Xamarin.Android.Build.Tests.Tasks
 
 			var errors = new List<BuildErrorEventArgs> ();
 			var task = new GetAssetPacks {
-				BuildEngine = new MockBuildEngine (TestContext.Out, errors: errors),
+				BuildEngine = new MockBuildEngine (Console.Out, errors: errors),
 				IntermediateDir = new TaskItem (Path.Combine (dir, "assetpacks")),
 				Assets = [
 					Asset (asset1, "My_Pack1", "OnDemand"),
@@ -71,15 +72,16 @@ namespace Xamarin.Android.Build.Tests.Tasks
 			Assert.AreEqual (originalWriteTime, File.GetLastWriteTimeUtc (cacheFile));
 		}
 
-		[TestCase ("my-pack")]
-		[TestCase ("my.pack")]
-		[TestCase ("my_pack\u0131")]
+		[TestMethod]
+		[DataRow ("my-pack")]
+		[DataRow ("my.pack")]
+		[DataRow ("my_pack\u0131")]
 		public void InvalidAssetPackName (string assetPack)
 		{
 			var dir = Path.Combine (Root, "temp", TestName);
 			var errors = new List<BuildErrorEventArgs> ();
 			var task = new GetAssetPacks {
-				BuildEngine = new MockBuildEngine (TestContext.Out, errors: errors),
+				BuildEngine = new MockBuildEngine (Console.Out, errors: errors),
 				IntermediateDir = new TaskItem (Path.Combine (dir, "assetpacks")),
 				Assets = [Asset (Path.Combine (dir, "a.txt"), assetPack, "")],
 			};

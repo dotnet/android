@@ -3,11 +3,12 @@ using System.Collections.Generic;
 using System.IO;
 
 using Microsoft.Android.Tasks;
-using NUnit.Framework;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Xamarin.Android.Build.Tests.Tasks;
 
-[TestFixture]
+[TestClass]
+[DoNotParallelize]
 public class RuntimePropertiesParserTests : BaseTest
 {
 	const string RuntimeConfigJson = """
@@ -27,7 +28,7 @@ public class RuntimePropertiesParserTests : BaseTest
 	string runtimeConfigPath = "";
 	string runtimeConfigDevPath = "";
 
-	[SetUp]
+	[TestInitialize]
 	public void SetUp ()
 	{
 		directory = Path.Combine (Root, "temp", TestName);
@@ -39,15 +40,15 @@ public class RuntimePropertiesParserTests : BaseTest
 
 	static Dictionary<string, string> Parse (string runtimeConfigPath, string? runtimeConfigDevPath = null) =>
 		RuntimePropertiesParser.ParseConfig (runtimeConfigPath, runtimeConfigDevPath) ??
-			throw new AssertionException ($"Could not parse '{runtimeConfigPath}'.");
+			throw new AssertFailedException ($"Could not parse '{runtimeConfigPath}'.");
 
-	[Test]
+	[TestMethod]
 	public void MissingConfigReturnsNull ()
 	{
 		Assert.IsNull (RuntimePropertiesParser.ParseConfig (Path.Combine (directory, "does-not-exist.json")));
 	}
 
-	[Test]
+	[TestMethod]
 	public void ConfigPropertiesAreParsed ()
 	{
 		var properties = Parse (runtimeConfigPath);
@@ -56,7 +57,7 @@ public class RuntimePropertiesParserTests : BaseTest
 		Assert.AreEqual ("true", properties ["Microsoft.Android.Runtime.RuntimeFeature.IsAssignableFromCheck"]);
 	}
 
-	[Test]
+	[TestMethod]
 	public void DevConfigPropertiesWin ()
 	{
 		// This is what the .NET SDK emits for `Debug` builds
@@ -78,7 +79,7 @@ public class RuntimePropertiesParserTests : BaseTest
 		Assert.AreEqual ("true", properties ["Microsoft.Android.Runtime.RuntimeFeature.IsAssignableFromCheck"], "Properties absent from the dev file should be preserved.");
 	}
 
-	[Test]
+	[TestMethod]
 	public void DevConfigWithoutConfigPropertiesIsIgnored ()
 	{
 		// Pre-net6.0 style dev file, which only carries probing paths
@@ -95,7 +96,7 @@ public class RuntimePropertiesParserTests : BaseTest
 		Assert.AreEqual ("false", properties ["System.Reflection.Metadata.MetadataUpdater.IsSupported"]);
 	}
 
-	[Test]
+	[TestMethod]
 	public void MissingDevConfigIsIgnored ()
 	{
 		var properties = Parse (runtimeConfigPath, runtimeConfigDevPath);
@@ -103,7 +104,7 @@ public class RuntimePropertiesParserTests : BaseTest
 		Assert.AreEqual ("false", properties ["System.StartupHookProvider.IsSupported"]);
 	}
 
-	[Test]
+	[TestMethod]
 	public void ConfigWithoutConfigPropertiesStillGetsDevProperties ()
 	{
 		// A project that sets no feature switches gets a `*.runtimeconfig.json` without `configProperties`

@@ -12,7 +12,7 @@ verification and task diagnostics. Build the local SDK and test assembly first,
 then run the focused tests from the repository root:
 
 ```text
-dotnet-local.cmd test bin\TestDebug\net10.0\Xamarin.Android.Build.Tests.dll --filter FullyQualifiedName~OpenJdkSignatureTests
+dotnet-local.cmd test --test-modules bin\TestDebug\net10.0\Xamarin.Android.Build.Tests.dll --filter FullyQualifiedName~OpenJdkSignatureTests
 ```
 
 The explicit integration tests download a Microsoft JDK archive, verify its
@@ -20,7 +20,7 @@ signature, reject changed archive contents, and install the JDK through the
 production dependency task:
 
 ```text
-dotnet-local.cmd test bin\TestDebug\net10.0\Xamarin.Android.Build.Tests.dll --filter "FullyQualifiedName~OpenJdkSignatureTests.PublishedMicrosoftArchive|FullyQualifiedName~OpenJdkSignatureTests.InstallMicrosoftJdk"
+dotnet-local.cmd test --test-modules bin\TestDebug\net10.0\Xamarin.Android.Build.Tests.dll --filter "FullyQualifiedName~OpenJdkSignatureTests.PublishedMicrosoftArchive|FullyQualifiedName~OpenJdkSignatureTests.InstallMicrosoftJdk"
 ```
 
 ### OpenJDK signing-key maintenance

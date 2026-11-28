@@ -3,22 +3,22 @@ using System.IO;
 using System.Linq;
 using System.Xml;
 using Java.Interop.Tools.JavaTypeSystem.Models;
-using NUnit.Framework;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Java.Interop.Tools.JavaTypeSystem.Tests
 {
-	[TestFixture]
+	[TestClass]
 	public class JavaTypeModelsTests
 	{
-		JavaTypeCollection api;
+		static JavaTypeCollection api;
 		
-		[OneTimeSetUp]
-		public void SetupFixture ()
+		[ClassInitialize]
+		public static void SetupFixture (TestContext context)
 		{
 			api = JavaApiTestHelper.GetLoadedApi ();
 		}
 		
-		[Test]
+		[TestMethod]
 		public void TestToString ()
 		{
 			var pkg = api.Packages["android.database"];
@@ -28,7 +28,7 @@ namespace Java.Interop.Tools.JavaTypeSystem.Tests
 			Assert.AreEqual ("[Class] android.database.ContentObservable", kls.ToString ());
 		}
 
-		[Test]
+		[TestMethod]
 		public void AnnotatedVisibility ()
 		{
 			// Ensure the 'annotated-visibility' attribute gets passed through

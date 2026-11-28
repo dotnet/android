@@ -1,19 +1,20 @@
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 
 using Xamarin.Android.Tools.Bytecode;
 
-using NUnit.Framework;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 using Assembly = System.Reflection.Assembly;
 
 namespace Xamarin.Android.Tools.BytecodeTests {
 
-	[TestFixture]
+	[TestClass]
 	public class JavaTypeTests : ClassFileFixture {
 
-		[Test]
+		[TestMethod]
 		public void ClassFile_WithJavaType_class ()
 		{
 			var c   = LoadClassFile ("JavaType.class");
@@ -346,18 +347,18 @@ namespace Xamarin.Android.Tools.BytecodeTests {
 			}.Assert (c);
 		}
 
-		[Test]
-		[SetCulture ("en-US")]
-		public void XmlDeclaration_WithJavaType_class_en_US ()
+		[TestMethod]
+		[DataRow ("en-US")]
+		[DataRow ("fa-IR")]
+		public void XmlDeclaration_WithJavaType_class (string cultureName)
 		{
-			AssertXmlDeclaration_WithJavaType_class ();
-		}
-
-		[Test]
-		[SetCulture ("fa-IR")]
-		public void XmlDeclaration_WithJavaType_class_fa_IR ()
-		{
-			AssertXmlDeclaration_WithJavaType_class ();
+			var culture = CultureInfo.CurrentCulture;
+			try {
+				CultureInfo.CurrentCulture = CultureInfo.GetCultureInfo (cultureName);
+				AssertXmlDeclaration_WithJavaType_class ();
+			} finally {
+				CultureInfo.CurrentCulture = culture;
+			}
 		}
 
 		void AssertXmlDeclaration_WithJavaType_class ()

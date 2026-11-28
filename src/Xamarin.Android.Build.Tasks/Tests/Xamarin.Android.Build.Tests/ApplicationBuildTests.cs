@@ -5,14 +5,15 @@ using System.Linq;
 using System.Text;
 
 using Microsoft.Build.Framework;
-using NUnit.Framework;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Microsoft.VisualStudio.TestTools.UnitTesting.Combinatorial;
 using Xamarin.Android.Build;
 using Xamarin.Android.Tasks;
 using Xamarin.ProjectTools;
 
 namespace Xamarin.Android.Build.Tests
 {
-	[Parallelizable (ParallelScope.Children)]
+	[TestClass]
 	public class ApplicationBuildTests : BaseTest
 	{
 		static IEnumerable<object[]> GetBuildApplicationWithSpecialCharactersData ()
@@ -23,8 +24,8 @@ namespace Xamarin.Android.Build.Tests
 			}
 		}
 
-		[Test]
-		[TestCaseSource (nameof (GetBuildApplicationWithSpecialCharactersData))]
+		[TestMethod]
+		[DynamicData (nameof (GetBuildApplicationWithSpecialCharactersData))]
 		public void BuildApplicationWithSpecialCharactersInProject (string projectName, bool isRelease)
 		{
 			var rootPath = Path.Combine (Root, "temp", TestName);
@@ -37,12 +38,13 @@ namespace Xamarin.Android.Build.Tests
 			Assert.IsTrue (builder.Build (project), "Build should have succeeded.");
 		}
 
-		[Test]
-		[NonParallelizable]
-		public void BuildApplicationWithSpecialCharactersInToolchainPath ([Values] bool isRelease)
+		[TestMethod]
+		[CombinatorialData]
+		[DoNotParallelize]
+		public void BuildApplicationWithSpecialCharactersInToolchainPath (bool isRelease)
 		{
 			if (!IsWindows) {
-				Assert.Ignore ("Symbolic-link handling for this path scenario is Windows-specific.");
+				Assert.Inconclusive ("Symbolic-link handling for this path scenario is Windows-specific.");
 			}
 
 			string toolchainRoot = Path.Combine (Root, "temp", $"{TestName}-toolchain");
@@ -51,9 +53,9 @@ namespace Xamarin.Android.Build.Tests
 			string? oldSdkPath = Environment.GetEnvironmentVariable ("TEST_ANDROID_SDK_PATH");
 			try {
 				if (!SymbolicLink.Create (sdkPath, AndroidSdkPath)) {
-					Assert.Ignore ("Creating symbolic links requires Windows Developer Mode or elevated permissions.");
+					Assert.Inconclusive ("Creating symbolic links requires Windows Developer Mode or elevated permissions.");
 				}
-				DirectoryAssert.Exists (Path.Combine (sdkPath, "platforms"), "The SDK symbolic link should resolve.");
+				Assert.IsTrue (Directory.Exists (Path.Combine (sdkPath, "platforms")), "The SDK symbolic link should resolve.");
 				Environment.SetEnvironmentVariable ("TEST_ANDROID_SDK_PATH", sdkPath);
 
 				var project = new XamarinAndroidApplicationProject {
@@ -74,18 +76,18 @@ namespace Xamarin.Android.Build.Tests
 						Directory.Delete (toolchainRoot, recursive: true);
 					}
 				} catch (Exception e) {
-					TestContext.Out.WriteLine ($"Failed to delete '{toolchainRoot}': {e}");
+					Console.Out.WriteLine ($"Failed to delete '{toolchainRoot}': {e}");
 				}
 			}
 		}
 
-		[Test]
-		[NonParallelizable]
-		[Category ("XamarinBuildDownload")]
+		[TestMethod]
+		[DoNotParallelize]
+		[TestCategory ("XamarinBuildDownload")]
 		public void BuildAMassiveApp ()
 		{
 			var testPath = Path.Combine ("temp", TestName);
-			TestOutputDirectories [TestContext.CurrentContext.Test.ID] = Path.Combine (Root, testPath);
+			TestOutputDirectories [TestId] = Path.Combine (Root, testPath);
 			using var solution = new SolutionBuilder ("BuildAMassiveApp.sln") {
 				SolutionPath = Path.Combine (Root, testPath),
 				BuildingInsideVisualStudio = false,

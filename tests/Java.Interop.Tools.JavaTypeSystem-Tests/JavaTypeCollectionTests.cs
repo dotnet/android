@@ -1,23 +1,23 @@
 using System;
 using System.Linq;
 using Java.Interop.Tools.JavaTypeSystem.Models;
-using NUnit.Framework;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Java.Interop.Tools.JavaTypeSystem.Tests
 {
-	[TestFixture]
+	[TestClass]
 	public class JavaTypeCollectionTests
 	{
-		JavaTypeCollection api;
+		static JavaTypeCollection api;
 		
-		[OneTimeSetUp]
-		public void SetupFixture ()
+		[ClassInitialize]
+		public static void SetupFixture (TestContext context)
 		{
 			api = JavaApiTestHelper.GetLoadedApi ();
 			api.ResolveCollection ();
 		}
 
-		[Test]
+		[TestMethod]
 		public void TestResolvedTypes ()
 		{
 			var type = api.FindType ("android.database.ContentObservable");
@@ -29,7 +29,7 @@ namespace Java.Interop.Tools.JavaTypeSystem.Tests
 			Assert.IsNotNull (kls.BaseTypeReference.ReferencedType, "referenced type is not correctly resolved");
 		}
 
-		[Test]
+		[TestMethod]
 		public void ResolveGenericArguments ()
 		{
 			var type = api.FindType ("java.util.concurrent.ConcurrentHashMap");
@@ -47,7 +47,7 @@ namespace Java.Interop.Tools.JavaTypeSystem.Tests
 			                 "referenced type is not correctly resolved");
 		}
 
-		[Test]
+		[TestMethod]
 		public void IntentServiceHack ()
 		{
 			// https://github.com/dotnet/java-interop/issues/717
@@ -74,7 +74,7 @@ namespace Java.Interop.Tools.JavaTypeSystem.Tests
 			Assert.AreSame (new_intent_service, api.FindType ("android.app.IntentService"));
 		}
 
-		[Test]
+		[TestMethod]
 		public void InheritedGenericTypeParameters ()
 		{
 			// Ensure we can resolve generic type parameters from parent types:
@@ -123,7 +123,7 @@ namespace Java.Interop.Tools.JavaTypeSystem.Tests
 			Assert.IsNotNull (t.Methods.SingleOrDefault (m => m.Name == "DoU"), "Method with generic U not found");
 		}
 
-		[Test]
+		[TestMethod]
 		public void InvalidBaseTypeResolution ()
 		{
 			var api = new JavaTypeCollection ();

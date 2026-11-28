@@ -60,12 +60,14 @@ stages:
         xaSourcePath: ${{ parameters.xaSourcePath }}
         startContinueOnError: ${{ parameters.emulatorStartContinueOnError }}
 
-    - template: /build-tools/automation/yaml-templates/run-sliced-nunit-tests.yaml
+    - template: /build-tools/automation/yaml-templates/run-mstest-tests.yaml
       parameters:
         testAssembly: ${{ parameters.xaSourcePath }}/bin/Test$(XA.Build.Configuration)/MSBuildDeviceIntegration/$(DotNetStableTargetFramework)/MSBuildDeviceIntegration.dll
         testFilter: $(ExcludedNightlyTestCategories)
         testRunTitle: MSBuildDeviceIntegration On Device - macOS
         xaSourcePath: ${{ parameters.xaSourcePath }}
+        sliceTests: true
+        retryFailedTests: 1
 
     - ${{ if ne(parameters.usesCleanImages, true) }}:
       - template: start-stop-emulator.yaml
@@ -133,13 +135,13 @@ stages:
         xaSourcePath: ${{ parameters.xaSourcePath }}
         startContinueOnError: ${{ parameters.emulatorStartContinueOnError }}
 
-    # Two tests at a time share the emulator, matching [assembly: LevelOfParallelism (2)].
-    - template: /build-tools/automation/yaml-templates/run-nunit-tests.yaml
+    # Two tests at a time share the emulator ([assembly: Parallelize (Workers = 2)]).
+    - template: /build-tools/automation/yaml-templates/run-mstest-tests.yaml
       parameters:
         testAssembly: ${{ parameters.xaSourcePath }}/bin/Test$(XA.Build.Configuration)/TrimmingTests/$(DotNetStableTargetFramework)/TrimmingTests.dll
+        testFilter: $(TrimmingTestFilter)
         testRunTitle: TrimmingTests On Device - macOS - $(TrimmingConfiguration)
-        dotNetTestExtraArgs: --filter "$(TrimmingTestFilter)"
-        workers: 2
+        xaSourcePath: ${{ parameters.xaSourcePath }}
         timeoutInMinutes: 120
 
     - ${{ if ne(parameters.usesCleanImages, true) }}:

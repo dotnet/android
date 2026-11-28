@@ -4,14 +4,15 @@ using System.IO;
 using System.Linq;
 using System.Xml.Linq;
 using Mono.Cecil;
-using NUnit.Framework;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Microsoft.VisualStudio.TestTools.UnitTesting.Combinatorial;
 using Xamarin.Android.Tasks;
 using Xamarin.Android.Tools;
 using Xamarin.ProjectTools;
 
 namespace Xamarin.Android.Build.Tests
 {
-	[Parallelizable (ParallelScope.Children)]
+	[TestClass]
 	public partial class SingleProjectTest : BaseTest
 	{
 		static IEnumerable<object[]> Get_AndroidManifestProperties_Data ()
@@ -63,8 +64,8 @@ namespace Xamarin.Android.Build.Tests
 			}
 		}
 
-		[Test]
-		[TestCaseSource (nameof (Get_AndroidManifestProperties_Data))]
+		[TestMethod]
+		[DynamicData (nameof (Get_AndroidManifestProperties_Data))]
 		public void AndroidManifestProperties (string versionName, string versionCode, string errorMessage, AndroidRuntime runtime)
 		{
 			bool isRelease = runtime == AndroidRuntime.NativeAOT;
@@ -100,7 +101,7 @@ namespace Xamarin.Android.Build.Tests
 
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
 				var manifest = b.Output.GetIntermediaryPath ("android/AndroidManifest.xml");
-				FileAssert.Exists (manifest);
+				Assert.IsTrue (File.Exists (manifest));
 
 				using (var stream = File.OpenRead (manifest)) {
 					var doc = XDocument.Load (stream);
@@ -115,7 +116,7 @@ namespace Xamarin.Android.Build.Tests
 					_ => "apk"
 				};
 				var apk = b.Output.GetIntermediaryPath ($"android/bin/{packageName}.{packageExtension}");
-				FileAssert.Exists (apk);
+				Assert.IsTrue (File.Exists (apk));
 
 				// If not valid version, skip
 				if (!Version.TryParse (versionName, out _))
@@ -131,7 +132,7 @@ namespace Xamarin.Android.Build.Tests
 						AndroidRuntime.NativeAOT => b.Output.GetIntermediaryPath ($"{MonoAndroidHelper.AbiToRid (abi)}/linked/{proj.ProjectName}.dll"),
 						_ => b.Output.GetIntermediaryPath ($"android/assets/{abi}/{proj.ProjectName}.dll")
 					};
-					FileAssert.Exists (assemblyPath);
+					Assert.IsTrue (File.Exists (assemblyPath));
 					using var assembly = AssemblyDefinition.ReadAssembly (assemblyPath);
 
 					// System.Reflection.AssemblyVersion
@@ -150,8 +151,9 @@ namespace Xamarin.Android.Build.Tests
 			}
 		}
 
-		[Test]
-		public void AndroidManifestValuesWin ([Values (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
+		[TestMethod]
+		[CombinatorialData]
+		public void AndroidManifestValuesWin ([CombinatorialValues (AndroidRuntime.CoreCLR, AndroidRuntime.NativeAOT)] AndroidRuntime runtime)
 		{
 			bool isRelease = runtime == AndroidRuntime.NativeAOT;
 			if (IgnoreUnsupportedConfiguration (runtime, release: isRelease)) {
@@ -181,7 +183,7 @@ namespace Xamarin.Android.Build.Tests
 			using var b = CreateApkBuilder ();
 			Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
 			var manifest = b.Output.GetIntermediaryPath ("android/AndroidManifest.xml");
-			FileAssert.Exists (manifest);
+			Assert.IsTrue (File.Exists (manifest));
 
 			using var stream = File.OpenRead (manifest);
 			var doc = XDocument.Load (stream);
