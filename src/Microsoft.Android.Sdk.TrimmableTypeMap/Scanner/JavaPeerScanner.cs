@@ -144,11 +144,11 @@ public sealed class JavaPeerScanner : IDisposable
 	static bool TryReadNativeCallbackSignature (AssemblyIndex callbackIndex, TypeDefinitionHandle callbackTypeHandle,
 		string nativeCallbackName, int jniParameterCount,
 		[NotNullWhen (true)] out IReadOnlyList<string>? parameterTypeNames, [NotNullWhen (true)] out string? returnTypeName,
-		out bool isUnmanagedCallersOnly)
+		out CallbackBoundary boundary)
 	{
 		parameterTypeNames = null;
 		returnTypeName = null;
-		isUnmanagedCallersOnly = false;
+		boundary = CallbackBoundary.Unavailable;
 
 		var reader = callbackIndex.Reader;
 		var typeDef = reader.GetTypeDefinition (callbackTypeHandle);
@@ -178,8 +178,7 @@ public sealed class JavaPeerScanner : IDisposable
 			}
 			parameterTypeNames = names;
 			returnTypeName = signature.ReturnType;
-			isUnmanagedCallersOnly = callbackIndex.UsesUnmanagedCallersOnlyCallbacks &&
-				HasUnmanagedCallersOnlyAttribute (methodDef, reader);
+			boundary = callbackIndex.ClassifyCallback (methodHandle);
 			return true;
 		}
 
@@ -187,33 +186,17 @@ public sealed class JavaPeerScanner : IDisposable
 	}
 
 	/// <summary>
-	/// True when a generated <c>n_*</c> callback carries
-	/// <c>[System.Runtime.InteropServices.UnmanagedCallersOnly]</c>, meaning it can only be reached
-	/// through JNI: it has no <c>Get*Handler ()</c> connector, and managed code — including a
-	/// generated forwarding wrapper — must never call it.
-	/// </summary>
-	static bool HasUnmanagedCallersOnlyAttribute (MethodDefinition methodDef, MetadataReader reader)
-	{
-		foreach (var caHandle in methodDef.GetCustomAttributes ()) {
-			var ca = reader.GetCustomAttribute (caHandle);
-			if (AssemblyIndex.IsCustomAttributeMatch (ca, reader, "System.Runtime.InteropServices", "UnmanagedCallersOnlyAttribute")) {
-				return true;
-			}
-		}
-		return false;
-	}
-
-	/// <summary>
 	/// Captures the real n_* callback signature on the resolved callback owner. A missing callback in
 	/// the versioned format cannot safely be assumed to be a managed-callable legacy callback.
 	/// </summary>
-	(IReadOnlyList<string>? ParameterTypeNames, string? ReturnTypeName, bool IsUnmanagedCallersOnly) CaptureNativeCallbackSignature (
+	(IReadOnlyList<string>? ParameterTypeNames, string? ReturnTypeName, bool IsUnmanagedCallersOnly, CallbackBoundary Boundary) CaptureNativeCallbackSignature (
 		TypeRefData declaringType, string nativeCallbackName, string jniSignature, bool mustResolve)
 	{
 		if (TryResolveType (declaringType.ManagedTypeName, declaringType.AssemblyName, out var handle, out var index)) {
 			int jniParameterCount = JniSignatureHelper.ParseParameterTypes (jniSignature).Count;
-			if (TryReadNativeCallbackSignature (index, handle, nativeCallbackName, jniParameterCount, out var parameterTypeNames, out var returnTypeName, out var isUnmanagedCallersOnly)) {
-				return (parameterTypeNames, returnTypeName, isUnmanagedCallersOnly);
+			if (TryReadNativeCallbackSignature (index, handle, nativeCallbackName, jniParameterCount, out var parameterTypeNames, out var returnTypeName, out var boundary)) {
+				logger?.LogCallbackBoundaryInfo (declaringType.AssemblyName, declaringType.ManagedTypeName, nativeCallbackName, boundary.Kind.ToString (), boundary.Reason);
+				return (parameterTypeNames, returnTypeName, boundary.Kind == CallbackBoundaryKind.UnmanagedCallersOnly, boundary);
 			}
 		}
 		if (mustResolve) {
@@ -221,15 +204,10 @@ public sealed class JavaPeerScanner : IDisposable
 				$"Cannot resolve binding callback '{declaringType.ManagedTypeName}.{nativeCallbackName}' with JNI signature '{jniSignature}' in assembly '{declaringType.AssemblyName}'. " +
 				"The UnmanagedCallersOnly callback format requires the callback's metadata; provide the binding implementation assembly rather than a reference assembly.");
 		}
-		return (null, null, false);
+		logger?.LogCallbackBoundaryInfo (declaringType.AssemblyName, declaringType.ManagedTypeName, nativeCallbackName,
+			CallbackBoundaryKind.Unavailable.ToString (), CallbackBoundary.Unavailable.Reason);
+		return (null, null, false, CallbackBoundary.Unavailable);
 	}
-
-	/// <summary>
-	/// True when at least one scanned assembly declares the
-	/// <c>[UnmanagedCallersOnly]</c> callback format.  When no assembly does — the overwhelmingly
-	/// common case — the scanner skips the extra callback resolution entirely.
-	/// </summary>
-	bool AnyUnmanagedCallersOnlyAssembly { get; set; }
 
 	/// <summary>
 	/// Looks up the [Register] JNI name for a type identified by name + assembly.
@@ -256,8 +234,7 @@ public sealed class JavaPeerScanner : IDisposable
 			var index = AssemblyIndex.Create (assembly.Reader, assembly.Name, assembly.Path);
 			if (assemblyCache.TryGetValue (index.AssemblyName, out var existingIndex)) {
 				if (!existingIndex.IsReferenceAssembly && !index.IsReferenceAssembly) {
-					if ((existingIndex.UsesUnmanagedCallersOnlyCallbacks || index.UsesUnmanagedCallersOnlyCallbacks) &&
-					    !HasEquivalentCallbackMetadata (existingIndex, index)) {
+					if (!HasEquivalentCallbackMetadata (existingIndex, index)) {
 						if (logger is not null) {
 							logger.LogRidSpecificCallbackMetadataMismatchError (
 								index.AssemblyName,
@@ -277,7 +254,6 @@ public sealed class JavaPeerScanner : IDisposable
 			}
 			assemblyCache [index.AssemblyName] = index;
 			resolvabilityCache [index.AssemblyName] = new ResolvabilityResult? [index.Reader.TypeDefinitions.Count + 1];
-			AnyUnmanagedCallersOnlyAssembly |= index.UsesUnmanagedCallersOnlyCallbacks;
 		}
 
 		// Key by (managedTypeName, assemblyName) to avoid collisions when two assemblies
@@ -1637,11 +1613,11 @@ public sealed class JavaPeerScanner : IDisposable
 		bool isConstructor = registerInfo.JniName == "<init>" || registerInfo.JniName == ".ctor";
 		string nativeCallbackName = GetNativeCallbackName (registerInfo.Connector, methodName, isConstructor);
 		var callbackType = GetNativeCallbackDeclaringType (result.Value.DeclaringType, registerInfo.Connector);
-		var (callbackParameterTypeNames, callbackReturnTypeName, isUnmanagedCallersOnlyCallback) =
-			!isConstructor && (JniSignatureHelper.HasAmbiguousCallbackType (registerInfo.Signature) || AnyUnmanagedCallersOnlyAssembly)
+		var (callbackParameterTypeNames, callbackReturnTypeName, isUnmanagedCallersOnlyCallback, boundary) =
+			!isConstructor
 				? CaptureNativeCallbackSignature (callbackType, nativeCallbackName, registerInfo.Signature,
 					MustResolveNativeCallback (callbackType, result.Value.DeclaringType.AssemblyName))
-				: (null, null, false);
+				: (null, null, false, CallbackBoundary.Unavailable);
 		return new MarshalMethodInfo {
 			JniName = registerInfo.JniName,
 			JniSignature = registerInfo.Signature,
@@ -1650,6 +1626,7 @@ public sealed class JavaPeerScanner : IDisposable
 			NativeCallbackName = nativeCallbackName,
 			NativeCallbackParameterTypeNames = callbackParameterTypeNames,
 			NativeCallbackReturnTypeName = callbackReturnTypeName,
+			NativeCallbackBoundary = boundary,
 			IsUnmanagedCallersOnlyCallback = isUnmanagedCallersOnlyCallback,
 			IsConstructor = isConstructor,
 			DeclaringTypeName = callbackType.ManagedTypeName,
@@ -1693,11 +1670,9 @@ public sealed class JavaPeerScanner : IDisposable
 			if (propRegister is not null && propRegister.Signature is not null) {
 				string nativeCallbackName = GetNativeCallbackName (propRegister.Connector, getterName, false);
 				var callbackType = GetNativeCallbackDeclaringType (baseTypeRef, propRegister.Connector);
-				var (callbackParameterTypeNames, callbackReturnTypeName, isUnmanagedCallersOnlyCallback) =
-					JniSignatureHelper.HasAmbiguousCallbackType (propRegister.Signature) || AnyUnmanagedCallersOnlyAssembly
-						? CaptureNativeCallbackSignature (callbackType, nativeCallbackName, propRegister.Signature,
-							MustResolveNativeCallback (callbackType, baseIndex.AssemblyName))
-						: (null, null, false);
+				var (callbackParameterTypeNames, callbackReturnTypeName, isUnmanagedCallersOnlyCallback, boundary) =
+					CaptureNativeCallbackSignature (callbackType, nativeCallbackName, propRegister.Signature,
+						MustResolveNativeCallback (callbackType, baseIndex.AssemblyName));
 				return new MarshalMethodInfo {
 					JniName = propRegister.JniName,
 					JniSignature = propRegister.Signature,
@@ -1706,6 +1681,7 @@ public sealed class JavaPeerScanner : IDisposable
 					NativeCallbackName = nativeCallbackName,
 					NativeCallbackParameterTypeNames = callbackParameterTypeNames,
 					NativeCallbackReturnTypeName = callbackReturnTypeName,
+					NativeCallbackBoundary = boundary,
 					IsUnmanagedCallersOnlyCallback = isUnmanagedCallersOnlyCallback,
 					IsConstructor = false,
 					DeclaringTypeName = callbackType.ManagedTypeName,
@@ -1789,11 +1765,11 @@ public sealed class JavaPeerScanner : IDisposable
 		IReadOnlyList<string>? nativeCallbackParameterTypeNames = null;
 		string? nativeCallbackReturnTypeName = null;
 		bool isUnmanagedCallersOnlyCallback = false;
-		if (!isConstructor && !isExport &&
-		    (JniSignatureHelper.HasAmbiguousCallbackType (jniSignature) || AnyUnmanagedCallersOnlyAssembly)) {
+		var boundary = CallbackBoundary.Unavailable;
+		if (!isConstructor && !isExport) {
 			var callbackType = GetNativeCallbackDeclaringType (
 				index.GetTypeRef (methodDef.GetDeclaringType (), rawTypeKind: 0), registerInfo.Connector);
-			(nativeCallbackParameterTypeNames, nativeCallbackReturnTypeName, isUnmanagedCallersOnlyCallback) =
+			(nativeCallbackParameterTypeNames, nativeCallbackReturnTypeName, isUnmanagedCallersOnlyCallback, boundary) =
 				CaptureNativeCallbackSignature (callbackType, nativeCallbackName, jniSignature,
 					!callManagedMethodDirectly && MustResolveNativeCallback (callbackType, index.AssemblyName));
 			if (!declaringTypeName.IsNullOrEmpty ()) {
@@ -1812,6 +1788,7 @@ public sealed class JavaPeerScanner : IDisposable
 			NativeCallbackName = nativeCallbackName,
 			NativeCallbackParameterTypeNames = nativeCallbackParameterTypeNames,
 			NativeCallbackReturnTypeName = nativeCallbackReturnTypeName,
+			NativeCallbackBoundary = boundary,
 			ManagedParameterTypes = managedParameterTypes,
 			ManagedParameterExportKinds = parameterKinds,
 			ManagedReturnType = callManagedMethodDirectly

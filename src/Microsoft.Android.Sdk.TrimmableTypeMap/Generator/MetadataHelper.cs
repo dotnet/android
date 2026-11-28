@@ -215,6 +215,7 @@ static class MetadataHelper
 		writer.WriteString (sink, method.JniSignature);
 		WriteOptionalStrings (writer, sink, method.CallbackParameterTypeNames);
 		writer.WriteOptionalString (sink, method.CallbackReturnTypeName);
+		writer.WriteBoolean (sink, method.CallbackOwnsBoundary);
 		WriteExportMethodDispatch (writer, sink, method.ExportMethodDispatch);
 		writer.WriteBoolean (sink, method.IsDirectUnmanagedCallersOnlyCallback);
 	}
